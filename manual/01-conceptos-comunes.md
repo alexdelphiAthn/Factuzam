@@ -210,14 +210,12 @@ junto a cada opción en los capítulos siguientes.
 | Pedidos | `[Shift]+[Ctrl]+[P]` |
 | Albaranes | `[Shift]+[Ctrl]+[A]` |
 | Facturas | `[Shift]+[Ctrl]+[Alt]+[F]` |
-| Formas de pago | `[Shift]+[Ctrl]+[G]` |
 
 ### Ventas Mayor
 
 | Pantalla | Atajo |
 |----------|-------|
 | Facturas | `[Ctrl]+[Alt]+[F]` |
-| Formas de pago | `[Ctrl]+[Alt]+[G]` |
 | Pedidos | `[Ctrl]+[Alt]+[P]` |
 | Albaranes | `[Ctrl]+[Alt]+[A]` |
 | Listados de ventas | `[Ctrl]+[Alt]+[V]` |
@@ -251,6 +249,7 @@ junto a cada opción en los capítulos siguientes.
 | Grupos de IVA | `[Ctrl]+[O]` |
 | Impuesto IVA | `[Ctrl]+[I]` |
 | Contadores | `[Ctrl]+[R]` |
+| Formas de pago documentos | `[Shift]+[Ctrl]+[G]` |
 | Usuarios | `[Ctrl]+[H]` |
 | Grupos | `[Ctrl]+[J]` |
 | Perfiles | `[Ctrl]+[W]` |

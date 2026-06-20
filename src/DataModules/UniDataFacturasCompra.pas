@@ -65,6 +65,7 @@ type
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryTablaGAfterPost(DataSet: TDataSet);
+    procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
     procedure unqryFacturasCompraLineasAfterInsert(DataSet: TDataSet);
     procedure unqryFacturasCompraLineasBeforePost(DataSet: TDataSet);
     procedure unqryFacturasCompraLineasAfterPost(DataSet: TDataSet);
@@ -92,8 +93,8 @@ type
     // Carga en la cabecera (FORMA_PAGO_FACC) la forma de pago del proveedor.
     // Se llama al cargar/cambiar el proveedor en la factura.
     procedure CargarFormaPagoProveedor(const ACodigoPrv: string);
-    // Registra un pago sobre un efecto (PRC_EFEC_REGISTRAR_PAGO) y refresca
-    // la rejilla. Devuelve el nº de pago asignado (>0) o 0/-1 si no se pudo.
+    // Concilia un pago sobre un efecto y refresca la rejilla. Si es parcial,
+    // la BBDD divide el efecto en pagado y pendiente.
     function RegistrarPagoEfecto(ANumEfecto: Integer; AFecha: TDateTime;
       AImporte: Double; const ATipo, AReferencia: string): Integer;
     // Abre unqryCabFaccPrint y unqryLinFaccPrint con los parametros
@@ -342,7 +343,7 @@ begin
     sp := TUniStoredProc.Create(nil);
     try
       sp.Connection     := inLibGlobalVar.oConn;
-      sp.StoredProcName := 'PRC_EFEC_REGISTRAR_PAGO';
+      sp.StoredProcName := 'PRC_EFEC_CONCILIAR_PAGO';
       sp.Params.Clear;
       sp.Params.CreateParam(ftString,  'p_SERIE',      ptInput);
       sp.Params.CreateParam(ftString,  'p_NUMERO',     ptInput);
@@ -403,6 +404,8 @@ begin
     FieldByName('CODIGO_PRV_FACC').AsString := '0';
     AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
       'CODIGO_EMP_FACC', 'ESIVA_RECARGO_COMPRAS_FACC');
+    AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
+      'FACC');
   end;
   FTransicionEstadoFacc := '';
 end;
@@ -417,6 +420,8 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_FACC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_FACC').AsString = '') then
     GetCodigoAutoFacturaCompra;
+  AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
+    'FACC');
   CalcularTotalesFacturaCompra;
   // Deteccion de transicion de ESTADO_FACC. Solo aplica en modo Edit
   // (en Insert la factura nace ABIERTA y los movimientos los genera
@@ -479,6 +484,95 @@ begin
   // La factura de compra NO mueve stock (lo hizo el albaran). El cambio de
   // estado solo refleja el ciclo administrativo de la factura.
   FTransicionEstadoFacc := '';
+end;
+
+procedure TdmFacturasCompra.unqryTablaGBeforeDelete(DataSet: TDataSet);
+var
+  q: TUniQuery;
+  sSerie: string;
+  sNumero: string;
+  iBloqueos: Integer;
+
+  procedure AsignarDocumento;
+  begin
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNumero;
+  end;
+
+begin
+  inherited;
+  sSerie  := DataSet.FieldByName('SERIE_FACC').AsString;
+  sNumero := DataSet.FieldByName('NUMERO_FACC').AsString;
+  if (sSerie <> '') and (sNumero <> '') then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Text :=
+        'SELECT COUNT(*) AS N ' +
+        '  FROM fza_efectos_compra E ' +
+        ' WHERE E.SERIE_FACC_EFEC  = :s ' +
+        '   AND E.NUMERO_FACC_EFEC = :n ' +
+        '   AND (COALESCE(E.IMPORTE_PAGADO_EFEC, 0) <> 0 ' +
+        '    OR COALESCE(E.ESCONCILIADO_EFEC, ''N'') = ''S'' ' +
+        '    OR COALESCE(E.SERIE_REMC_EFEC, '''') <> '''' ' +
+        '    OR COALESCE(E.NUMERO_REMC_EFEC, '''') <> '''' ' +
+        '    OR COALESCE(E.ESTADO_EFEC, '''') IN ' +
+        '       (''PAGADO'', ''REMESADO'', ''DEVUELTO'', ' +
+        '        ''CONCILIADO''))';
+      AsignarDocumento;
+      q.Open;
+      iBloqueos := q.FieldByName('N').AsInteger;
+      q.Close;
+      if iBloqueos > 0 then
+        raise Exception.Create(
+          'No se puede borrar la factura: tiene efectos pagados, ' +
+          'remesados o conciliados.');
+      q.SQL.Text :=
+        'UPDATE fza_albaranes_compra_lineas ' +
+        '   SET ESFACTURADA_ALBCLIN = ''N'', ' +
+        '       NUMERO_FAC_ALBCLIN  = NULL, ' +
+        '       SERIE_FAC_ALBCLIN   = NULL, ' +
+        '       LINEA_FAC_ALBCLIN   = NULL, ' +
+        '       USUARIO_MODIF       = :u ' +
+        ' WHERE SERIE_FAC_ALBCLIN   = :s ' +
+        '   AND NUMERO_FAC_ALBCLIN  = :n';
+      AsignarDocumento;
+      q.ParamByName('u').AsString := oUser;
+      q.ExecSQL;
+      q.SQL.Text :=
+        'UPDATE fza_albaranes_compra ' +
+        '   SET ESTADO_ALBC     = ''CERRADO'', ' +
+        '       NUMERO_FAC_ALBC = NULL, ' +
+        '       SERIE_FAC_ALBC  = NULL, ' +
+        '       USUARIO_MODIF   = :u ' +
+        ' WHERE SERIE_FAC_ALBC  = :s ' +
+        '   AND NUMERO_FAC_ALBC = :n';
+      AsignarDocumento;
+      q.ParamByName('u').AsString := oUser;
+      q.ExecSQL;
+      q.SQL.Text :=
+        'DELETE FROM fza_facturas_compra_celdas ' +
+        ' WHERE SERIE_FACC_FACCCEL  = :s ' +
+        '   AND NUMERO_FACC_FACCCEL = :n';
+      AsignarDocumento;
+      q.ExecSQL;
+      q.SQL.Text :=
+        'DELETE FROM fza_facturas_compra_lineas ' +
+        ' WHERE SERIE_FACC_FACCLIN  = :s ' +
+        '   AND NUMERO_FACC_FACCLIN = :n';
+      AsignarDocumento;
+      q.ExecSQL;
+      q.SQL.Text :=
+        'DELETE FROM fza_efectos_compra ' +
+        ' WHERE SERIE_FACC_EFEC  = :s ' +
+        '   AND NUMERO_FACC_EFEC = :n';
+      AsignarDocumento;
+      q.ExecSQL;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
 end;
 
 procedure TdmFacturasCompra.unqryFacturasCompraLineasAfterInsert(
@@ -602,6 +696,8 @@ begin
         unqrySkusFacc.Close;
       end;
     end;
+    PrepararLineaFiscalCompra(inLibGlobalVar.oConn, unqryTablaG,
+      unqryFacturasCompraLineas, 'FACC', 'FACCLIN', 'TOTAL_FACCLIN');
   end;
 end;
 

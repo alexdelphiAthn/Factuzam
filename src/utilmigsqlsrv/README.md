@@ -54,6 +54,12 @@ src/utilmigsqlsrv/
 │                                                fza_empresas_series +
 │                                                fza_contadores +
 │                                                CONTADOR_ART_FAM (familias)
+├── inLibMigCompras.pas            ocped/ocalbpro/ocfacpro →
+│                                                pedidos, albaranes y
+│                                                facturas de compra
+├── inLibMigEfectosCompra.pas      ocbanrem/octipefe/ocefepro/occobpro/
+│                                  ocrempro → bancos, tipos, efectos,
+│                                                pagos y remesas de compra
 ├── inLibMigFotos.pas              dbo.ocartcol.ArchivoFoto →
 │                                                PNG 300/600/real en disco +
 │                                                fza_articulos_fotos
@@ -131,9 +137,10 @@ también la incluya con datos.
 ## Cambios de esquema requeridos
 
 Algunos mappers necesitan columnas nuevas en el destino que no existían
-en la versión original. Para BBDD ya creadas hay que ejecutar antes el
-script correspondiente; las BBDD creadas desde `factuzam_original.sql`
-de este branch ya las traen:
+en la versión original. Para BBDD ya creadas, o esqueletos generados antes
+de estos cambios, hay que ejecutar antes el script correspondiente. Si se
+genera el esqueleto desde una BBDD de desarrollo ya actualizada, esas
+columnas saldrán incluidas en el esqueleto:
 
 | Migración    | Script idempotente para BBDD existente             |
 |--------------|----------------------------------------------------|
@@ -141,7 +148,7 @@ de este branch ya las traen:
 |              | (añade `fza_proveedores.NOMBRE_PRV varchar(200)`)  |
 | Proveedores  | `DESARROLLOS EN CURSO/proveedores_pagos_defecto.sql` |
 |              | (añade `CODIGO_FP_PRV` y `CODIGO_EMPBAN_PRV`; el   |
-|              | migrador rellena `CODIGO_FP_PRV` desde `ocpro.TipoEfecto`) |
+|              | migrador rellena `CODIGO_FP_PRV` desde `ocpro.FormaPago` / `TipoEfecto`) |
 | Clientes     | `DESARROLLOS EN CURSO/widen_codigo_cli.sql`        |
 |              | (amplía `CODIGO_CLI_*` de varchar(10) a varchar(20)|
 |              | en clientes, facturas, albaranes y pedidos —       |
@@ -154,6 +161,9 @@ de este branch ya las traen:
 |              | (amplía `LINEA_INVLIN` de varchar(4) → varchar(8). |
 |              | Si un almacén legacy tiene >9999 SKUs en stock no  |
 |              | cabe en 4 chars). |
+| Facturas compra | `DESARROLLOS EN CURSO/facturas_compra_temporada.sql` |
+|              | (añade `ID_PV_TEMPORADA_FACC`; el migrador rellena |
+|              | la temporada de cabecera desde `ocfacpro.Temporada`) |
 | Empleados    | `DESARROLLOS EN CURSO/empleados_ampliar_ocemp.sql` |
 |              | (añade datos de contacto/identificación de         |
 |              | `dbo.ocemp` a `fza_empleados`, sin tocar usuarios).|
@@ -210,12 +220,14 @@ workers de la actual han terminado.
 
 | Wave | Dominios | Depende de |
 |------|----------|------------|
-| 0 | formas_pago · ivas_grupos · ivas · empresas · empleados · proveedores · familias · colores_maestros · tallas_maestras | — |
-| 1 | almacenes · clientes · articulos · tallajes | Wave 0 |
+| 0 | empresas · empleados · proveedores · tipos_efecto_compra · familias · colores_maestros · tallas_maestras | — |
+| 1 | almacenes · clientes · articulos · tallajes · bancos_empresa | Wave 0 |
 | 2 | articulos_colores · articulos_tallas · articulos_tallajes_asign · skus | Wave 1 |
 | 3 | inventarios · movimientos · ventas · pedidos_venta · albaranes_venta · pedidos_compra · albaranes_compra | Wave 2 |
 | 4 | facturas | Wave 3 |
-| 5 | facturas_venta_mayor | Wave 4 |
+| 5 | facturas_venta_mayor · facturas_compra | Wave 4 |
+| 6 | efectos_compra | Wave 5 |
+| 7 | remesas_compra | Wave 6 |
 
 El dominio `fotos` **no entra en las waves**: se lanza en un hilo
 independiente al principio de la corrida y avanza en paralelo a toda la
@@ -306,10 +318,11 @@ por bloque. Reduce drasticamente las roundtrips a MariaDB.
 - **Tipo de IVA por artículo**: el origen guarda un entero; el destino
   un char(2) ('N'/'R'/'S'/'E'). Por defecto migramos como `'N'`. Hay
   que repasar después.
-- **Forma de pago en cliente**: en origen es texto descriptivo +
-  TipoEfecto (int). Usamos TipoEfecto como CODIGO_FP_CLI; debe existir
-  previamente en `fza_formas_pago` (por eso "formas_pago" va antes
-  que "clientes" en el listado).
+- **Forma de pago en clientes/proveedores/documentos**: en origen es texto
+  descriptivo + TipoEfecto (int). Usamos `FormaPago` recortado a 20
+  caracteres cuando viene informado y, si no existe, `TipoEfecto` como
+  codigo. `tipos_efecto_compra` corre en wave 0 y asegura esos codigos
+  legacy en `fza_formas_pago` antes de migrar documentos.
 - **Familias de artículos**: se migran desde `dbo.ocniv` filtrando
   `Nivel IN (2, 4)`. Origen tiene 194 filas; de ellas:
   - 12 con Nivel=2 (SECCIONES: `SEÑORA`, `CABALLERO`...), código 2 chars.

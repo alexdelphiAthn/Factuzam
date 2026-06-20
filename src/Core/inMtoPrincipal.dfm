@@ -1477,11 +1477,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Caption = 'Cargar efectos en remesa...'
         OnClick = CargarEfectos1Click
       end
-      object Formasdepago2: TMenuItem
-        Caption = 'Formas de pago'
-        ShortCut = 24647
-        OnClick = Formasdepago2Click
-      end
       object mnuComprasListados: TMenuItem
         Caption = 'Listados'
         object mnuListadoDocsProveedor: TMenuItem
@@ -1627,11 +1622,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Caption = 'Borradores'
         ShortCut = 49222
         OnClick = mnuFacturasClick
-      end
-      object mnuFormaPagoVenta: TMenuItem
-        Caption = 'Formas de pago'
-        ShortCut = 49223
-        OnClick = mnuFormaPagoVentaClick
       end
       object mnuPedidosVenta: TMenuItem
         Caption = '&Pedidos'
@@ -2145,6 +2135,11 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Caption = 'Contadores'
         ShortCut = 16466
         OnClick = mnuContadoresClick
+      end
+      object Formasdepago2: TMenuItem
+        Caption = 'Formas de pago documentos'
+        ShortCut = 24647
+        OnClick = Formasdepago2Click
       end
       object N1: TMenuItem
         Caption = '-'

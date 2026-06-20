@@ -327,14 +327,18 @@ const
   // Cubre TODO lo que escribe el migrador bajo USUARIO_ALTA: documentos
   // (facturas, compras), caja, movimientos, articulos y maestros. Solo
   // tablas con columna USUARIO_ALTA (el DELETE filtra por ella).
-  aTablas: array[0..45] of string = (
+  aTablas: array[0..51] of string = (
     // Documentos comerciales, caja y movimientos (hojas primero)
+    'fza_efectos_compra',
+    'fza_remesas_compra',
     'fza_facturas_lineas',
     'fza_facturas',
     'fza_albaranes_lineas',
     'fza_albaranes',
     'fza_pedidos_lineas',
     'fza_pedidos',
+    'fza_facturas_compra_lineas',
+    'fza_facturas_compra',
     'fza_albaranes_compra_lineas',
     'fza_albaranes_compra',
     'fza_pedidos_compra_lineas',
@@ -375,8 +379,10 @@ const
     'fza_contadores',
     'fza_clientes',
     'fza_proveedores',
+    'fza_empresas_bancos',
     'fza_almacenes',
     'fza_empresas',
+    'fza_tipos_efecto',
     'fza_formas_pago',
     'fza_ivas',
     'fza_ivas_grupos'
@@ -423,7 +429,7 @@ const
   // Tablas con USUARIO_ALTA: DELETE por filtro de usuario demo.
   // Orden hijos -> padres para minimizar problemas de FK (aunque
   // el esquema usa FKs LOGICAS, no fisicas).
-  aConAudit: array[0..49] of string = (
+  aConAudit: array[0..55] of string = (
     // Cadena de articulos (hijos primero)
     'fza_codigos_barras',
     'fza_atributos_sku',
@@ -446,6 +452,8 @@ const
     'fza_propiedades',
     'fza_variaciones',
     // Documentos comerciales (lineas antes que cabecera)
+    'fza_efectos_compra',
+    'fza_remesas_compra',
     'fza_facturas_pagos',
     'fza_facturas_lineas',
     'fza_facturas',
@@ -453,6 +461,8 @@ const
     'fza_albaranes',
     'fza_pedidos_lineas',
     'fza_pedidos',
+    'fza_facturas_compra_lineas',
+    'fza_facturas_compra',
     'fza_albaranes_compra_lineas',
     'fza_albaranes_compra',
     'fza_pedidos_compra_lineas',
@@ -477,6 +487,8 @@ const
     'fza_almacenes',
     'fza_clientes',
     'fza_proveedores',
+    'fza_empresas_bancos',
+    'fza_tipos_efecto',
     'fza_formas_pago',
     'fza_tarifas',
     'fza_empresas'

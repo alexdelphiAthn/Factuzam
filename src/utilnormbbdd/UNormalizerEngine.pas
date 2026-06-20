@@ -244,7 +244,6 @@ begin
   AddSuf('fza_contadores',                      'CON');
   AddSuf('fza_depositos_cliente',               'DEP');
   AddSuf('fza_efectos_compra',                  'EFEC');
-  AddSuf('fza_efectos_compra_pagos',            'EFECPAG');
   AddSuf('fza_empleados',                       'EMPL');
   AddSuf('fza_empresas',                        'EMP');
   AddSuf('fza_empresas_bancos',                 'EMPBAN');
@@ -393,7 +392,6 @@ begin
   AddOwn('fza_facturas_compra_celdas',         ['FACTURA','COMPRA','CELDA']);
   AddOwn('fza_facturas_compra_lineas',         ['FACTURA','COMPRA','LINEA']);
   AddOwn('fza_efectos_compra',                 ['EFECTO','COMPRA']);
-  AddOwn('fza_efectos_compra_pagos',           ['EFECTO','COMPRA','PAGO']);
   AddOwn('fza_remesas_compra',                 ['REMESA','COMPRA']);
   AddOwn('fza_tipos_efecto',                   ['TIPO','EFECTO']);
 

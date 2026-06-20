@@ -18,11 +18,11 @@ más relevantes.
 | [00 · Acceso y primeros pasos](00-acceso-y-primeros-pasos.md) | Arranque, login, configuración de la conexión a la base de datos y la pantalla principal. |
 | [01 · Conceptos comunes](01-conceptos-comunes.md) | Cómo funcionan las pantallas de mantenimiento: lista, ficha, búsqueda, navegador y exportación. **Léelo antes que los demás.** |
 | [02 · Menú Archivo](02-menu-archivo.md) | Datos maestros: Empresas, Almacenes, Clientes, Proveedores, Artículos y Tablas Auxiliares. |
-| [03 · Menú Compras](03-menu-compras.md) | Sesiones de compra, Pedidos, Albaranes, Devoluciones a proveedor, Facturas de compra y Formas de pago. |
-| [04 · Menú Ventas Mayor](04-menu-ventas-mayor.md) | Facturación a mayor: Facturas, Pedidos, Albaranes, Formas de pago y Listados de ventas. |
+| [03 · Menú Compras](03-menu-compras.md) | Sesiones de compra, Pedidos, Albaranes, Devoluciones a proveedor y Facturas de compra. |
+| [04 · Menú Ventas Mayor](04-menu-ventas-mayor.md) | Facturación a mayor: Facturas, Pedidos, Albaranes y Listados de ventas. |
 | [05 · Menú Caja](05-menu-caja.md) | Punto de venta (TPV): menú de caja, parámetros, depósitos, históricos, arqueos y facturas simplificadas. |
 | [06 · Menú Almacén](06-menu-almacen.md) | Movimientos de almacén, Inventarios e Informes de stock. |
-| [07 · Menú Otros](07-menu-otros.md) | Parámetros del entorno, IVA, Contadores, Usuarios/Permisos, Copias de seguridad y Generador de procesos. |
+| [07 · Menú Otros](07-menu-otros.md) | Parámetros del entorno, IVA, Contadores, Formas de pago documentos, Usuarios/Permisos, Copias de seguridad y Generador de procesos. |
 | [08 · Menú Ayuda](08-menu-ayuda.md) | Acerca de y datos de versión. |
 | [09 · Instalación en Windows](09-instalacion-windows.md) | MariaDB, base de datos inicial, instalación por puesto y puesta en marcha. |
 | [10 · Migración desde software legacy](10-migracion-legacy.md) | Traslado de datos del ERP anterior (SQL Server) con el Factuzam Migrator. |
@@ -36,13 +36,13 @@ más relevantes.
 Archivo        Compras        Ventas Mayor   Caja           Almacén        Otros          Ayuda
 ─────────      ─────────      ────────────   ─────          ────────       ─────          ─────
 Empresas       Sesiones       Facturas       Menú de Caja   Movimientos    Parám. entorno Acerca de
-Almacenes      Pedidos        Formas de pago Parám. de Caja Inventarios    Grupos de IVA
-Clientes       Albaranes      Pedidos        Formas de Pago Informes       Impuesto IVA
-Proveedores    Devoluciones   Albaranes      Depósitos                     Contadores
-Artículos      Facturas       Listados       Históricos                    Usuarios y Perfiles
-Tablas Aux.    Formas de pago                Fac. Simplif.                 Copias de Seguridad
-Invocar login                                                              Generador de Procesos
-Salir
+Almacenes      Pedidos        Pedidos        Parám. de Caja Inventarios    Grupos de IVA
+Clientes       Albaranes      Albaranes      Formas de Pago Informes       Impuesto IVA
+Proveedores    Devoluciones   Listados       Depósitos                     Contadores
+Artículos      Facturas                      Históricos                    Formas pago docs
+Tablas Aux.                                  Fac. Simplif.                 Usuarios y Perfiles
+Invocar login                                                              Copias de Seguridad
+Salir                                                                      Generador de Procesos
 ```
 
 > **Nota:** las opciones visibles dependen de tu **perfil de usuario y de

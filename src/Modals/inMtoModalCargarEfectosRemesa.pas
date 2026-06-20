@@ -26,9 +26,9 @@ uses
   cxClasses, cxLocalization, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, Vcl.Menus, cxButtons, cxContainer, cxEdit, cxLabel,
   cxTextEdit, cxButtonEdit, cxMaskEdit, cxDropDownEdit, cxRadioGroup,
-  cxCalendar, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage,
-  cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
-  cxGridTableView, cxGridDBTableView, cxGrid;
+  cxCalendar, cxCurrencyEdit, cxStyles, cxCustomData, cxFilter, cxData,
+  cxDataStorage, cxDBData, cxGridLevel, cxGridCustomView,
+  cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid;
 
 type
   TfrmModalCargarEfectosRemesa = class(TfrmBase)
@@ -80,6 +80,7 @@ type
     function  CrearRemesaNueva(const AEmp: string;
                                out ASerie, ANumero: string): Boolean;
   public
+    procedure PrepararRemesaExistente(const AEmp, ASerie, ANumero: string);
     property Confirmado:   Boolean read FConfirmado;
     property RemesaSerie:  string  read FRemSerie;
     property RemesaNumero: string  read FRemNumero;
@@ -171,7 +172,8 @@ begin
   ActualizarModo;
 end;
 
-procedure TfrmModalCargarEfectosRemesa.CargarRemesasAbiertas(const AEmp: string);
+procedure TfrmModalCargarEfectosRemesa.CargarRemesasAbiertas(
+  const AEmp: string);
 begin
   FRemSeries.Clear;
   FRemNumeros.Clear;
@@ -198,6 +200,22 @@ begin
     FQryRem.Next;
   end;
   FQryRem.Close;
+end;
+
+procedure TfrmModalCargarEfectosRemesa.PrepararRemesaExistente(const AEmp,
+  ASerie, ANumero: string);
+var
+  i: Integer;
+begin
+  btnEmpresa.Text := AEmp;
+  rgModo.ItemIndex := 1;
+  ActualizarModo;
+  btnBuscarClick(btnBuscar);
+  for i := 0 to FRemSeries.Count - 1 do
+  begin
+    if (FRemSeries[i] = ASerie) and (FRemNumeros[i] = ANumero) then
+      cbbRemExistente.ItemIndex := i;
+  end;
 end;
 
 procedure TfrmModalCargarEfectosRemesa.btnBuscarClick(Sender: TObject);

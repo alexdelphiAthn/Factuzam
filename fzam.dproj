@@ -759,9 +759,6 @@
         <DCCReference Include="src\Modals\inMtoModalRegistrarPago.pas">
             <Form>frmModalRegistrarPago</Form>
         </DCCReference>
-        <DCCReference Include="src\Modals\inMtoModalVerPagosEfecto.pas">
-            <Form>frmModalVerPagosEfecto</Form>
-        </DCCReference>
         <DCCReference Include="src\Forms\inMtoPedidosCompra.pas">
             <Form>frmMtoPedidosCompra</Form>
         </DCCReference>

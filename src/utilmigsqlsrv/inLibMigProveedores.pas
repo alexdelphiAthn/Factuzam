@@ -28,7 +28,7 @@
 {      Pais                   → PAIS_PRV                                       }
 {      PersonaContacto        → CONTACTO_PRV                                   }
 {      IBAN                   → IBAN_PRV                                       }
-{      TipoEfecto             → CODIGO_FP_PRV (si la columna existe)          }
+{      TipoEfecto/FormaPago   → CODIGO_FP_PRV (si la columna existe)          }
 {      Observacion (text)     → OBSERVACIONES_PRV                              }
 {      Estado='B'             → ESACTIVO_PRV='N', resto 'S'                    }
 {      Abreviatura            → REFERENCIA_PRV                                 }
@@ -78,11 +78,16 @@ var
   iTipo: Integer;
 begin
   Result := '';
+  if q.FindField('FormaPago') <> nil then
+    Result := Copy(Trim(q.FieldByName('FormaPago').AsString), 1, 20);
   if q.FindField('TipoEfecto') <> nil then
   begin
-    iTipo := q.FieldByName('TipoEfecto').AsInteger;
-    if iTipo > 0 then
-      Result := IntToStr(iTipo);
+    if Result = '' then
+    begin
+      iTipo := q.FieldByName('TipoEfecto').AsInteger;
+      if iTipo > 0 then
+        Result := IntToStr(iTipo);
+    end;
   end;
 end;
 
@@ -93,7 +98,8 @@ const
     '       Direccion1, Direccion2, CodPostal, Poblacion, Provincia, ' +
     '       Pais, Telefono1, TelefonoMovil, Email, ' +
     '       PersonaContacto, Abreviatura, IBAN, ' +
-    '       ISNULL(TipoEfecto, 0) AS TipoEfecto, Estado, ' +
+    '       ISNULL(TipoEfecto, 0) AS TipoEfecto, ' +
+    '       ISNULL(FormaPago, '''') AS FormaPago, Estado, ' +
     '       CAST(Observacion AS varchar(4000)) AS Observacion ' +
     'FROM dbo.ocpro ' +
     'ORDER BY Proveedor';

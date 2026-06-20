@@ -923,18 +923,9 @@ inherited frmMtoFacturasCompra: TfrmMtoFacturasCompra
                   Top = 5
                   Width = 160
                   Height = 26
-                  Caption = 'Registrar pago'
+                  Caption = 'Conciliar efecto'
                   TabOrder = 1
                   OnClick = btnRegistrarPagoClick
-                end
-                object btnVerPagos: TcxButton
-                  Left = 344
-                  Top = 5
-                  Width = 160
-                  Height = 26
-                  Caption = 'Ver pagos'
-                  TabOrder = 2
-                  OnClick = btnVerPagosClick
                 end
               end
               object cxgrdEfectos: TcxGrid
@@ -983,6 +974,11 @@ inherited frmMtoFacturasCompra: TfrmMtoFacturasCompra
                     Caption = 'Estado'
                     DataBinding.FieldName = 'ESTADO_EFEC'
                     Width = 100
+                  end
+                  object colEfeReferenciaDocumento: TcxGridDBColumn
+                    Caption = 'Ref. doc.'
+                    DataBinding.FieldName = 'REFERENCIA_DOCUMENTO_EFEC'
+                    Width = 130
                   end
                 end
                 object lvlEfectos: TcxGridLevel

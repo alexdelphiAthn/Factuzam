@@ -4,7 +4,8 @@
 
 El menú **Otros** agrupa la **administración y configuración** de la
 aplicación: parámetros globales, impuestos, contadores de numeración,
-seguridad (usuarios y permisos), copias de seguridad y herramientas
+formas de pago de documentos, seguridad (usuarios y permisos),
+copias de seguridad y herramientas
 avanzadas. Son opciones que usa principalmente el **administrador**.
 
 Estructura del menú:
@@ -15,6 +16,7 @@ Otros
 ├── Grupos de IVA
 ├── Impuesto IVA
 ├── Contadores
+├── Formas de pago documentos
 ├── Usuarios, Grupos y Perfiles
 │   ├── Usuarios
 │   ├── Empleados
@@ -87,6 +89,25 @@ correlativo del contador correspondiente.
 
 > Los números de factura deben ser **correlativos y sin huecos** por
 > exigencia legal. No retrocedas ni reutilices contadores de facturación.
+
+---
+
+## Formas de pago documentos
+
+Catálogo de **formas de pago** aplicables a los documentos de compra y
+venta mayor (contado, transferencia, giro a X días, etc.). Define
+vencimientos y comportamiento de cobro/pago para facturas, pedidos y
+albaranes.
+
+Sub-pestañas: **Más Datos**, **Ventas** (uso en ventas) y **Otros**.
+
+![Formas de pago](img/03-formas-pago.png)
+*▢ Captura pendiente — Catálogo de formas de pago.*
+
+**Atajo de menú:** `[Shift]+[Ctrl]+[G]`
+
+> No es el mismo mantenimiento que **Formas de Pago Caja**, que configura
+> los botones y tipos de pago del TPV.
 
 ---
 

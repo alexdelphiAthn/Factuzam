@@ -1,22 +1,24 @@
 -- ============================================================================
--- Efectos de pago a proveedor, historico de pagos y remesas — esquema base
+-- Efectos de pago a proveedor, conciliacion y remesas — esquema base
 --
 -- Segundo eslabon de la cadena de cuentas a pagar, despues de
 -- facturas_compra.sql:
 --
---   factura de compra  --(efectos)-->  vencimientos de pago
---        |                                   |
---        |                          historico de pagos (con fechas)
---        +-----------------------------> remesa (agrupa efectos)
+--   factura de compra  --(efectos)-->  vencimientos de pago / pagos
+--                                            |
+--                                   remesa (agrupa efectos)
 --
 -- Tablas (espejo MariaDB del legacy ocefepro / occobpro / ocrempro /
 -- octipefe, acotado al lado de COMPRA / PAGO):
 --
 --   fza_tipos_efecto         (TEFE)    catalogo de tipos de efecto
 --   fza_efectos_compra       (EFEC)    un efecto/vencimiento por plazo de
---                                      la factura, con fecha de vencimiento
---   fza_efectos_compra_pagos (EFECPAG) HISTORICO de pagos con fecha: varios
---                                      pagos por efecto (control contable)
+--                                      la factura. Cuando se concilia un
+--                                      pago parcial, el efecto se divide en
+--                                      uno pagado y otro pendiente. Varios
+--                                      impagados pueden fusionarse en un
+--                                      efecto resumen; los origenes quedan
+--                                      CONCILIADO con referencia documental.
 --   fza_remesas_compra       (REMC)    remesa que agrupa efectos para pago
 --
 -- Sufijos registrados en LIBRO_DE_ESTILO_BBDD.md §2 y en
@@ -103,7 +105,7 @@ SET @ddl := IF(@tab_exists = 0,
   '  `CODIGO_TEFE_EFEC` varchar(20) NULL DEFAULT NULL'
   '       COMMENT ''FK logica a fza_tipos_efecto'','
   '  `ESTADO_EFEC`      varchar(20) NULL DEFAULT ''PENDIENTE'''
-  '       COMMENT ''PENDIENTE, PARCIAL, PAGADO, REMESADO, DEVUELTO, ANULADO'','
+  '       COMMENT ''PENDIENTE, PAGADO, REMESADO, DEVUELTO, ANULADO, CONCILIADO'','
   '  `ORDEN_PLAZO_EFEC` int(11)     NULL DEFAULT 1'
   '       COMMENT ''Numero de plazo segun la forma de pago'','
   '  `FECHA_EMISION_EFEC`     date NULL DEFAULT NULL,'
@@ -111,9 +113,17 @@ SET @ddl := IF(@tab_exists = 0,
   '       COMMENT ''Vencimiento del pago (clave para el control contable)'','
   '  `FECHA_PAGO_EFEC`        date NULL DEFAULT NULL'
   '       COMMENT ''Fecha del ultimo pago aplicado'','
+  '  `TIPO_PAGO_EFEC`         varchar(50) NULL DEFAULT NULL'
+  '       COMMENT ''Medio de pago conciliado'','
+  '  `REFERENCIA_PAGO_EFEC`   varchar(100) NULL DEFAULT NULL'
+  '       COMMENT ''Nro transferencia / cheque / justificante'','
+  '  `ENTIDAD_PAGO_EFEC`      varchar(100) NULL DEFAULT NULL'
+  '       COMMENT ''Banco / entidad desde la que se paga'','
+  '  `ESCONCILIADO_EFEC`      varchar(1) NULL DEFAULT ''N'''
+  '       COMMENT ''S/N — conciliado con el extracto bancario'','
   '  `IMPORTE_EFEC`           decimal(18,6) NULL DEFAULT ''0.000000'','
   '  `IMPORTE_PAGADO_EFEC`    decimal(18,6) NULL DEFAULT ''0.000000'''
-  '       COMMENT ''Suma del historico de pagos del efecto'','
+  '       COMMENT ''Importe pagado del propio efecto'','
   '  `IMPORTE_PENDIENTE_EFEC` decimal(18,6) NULL DEFAULT ''0.000000'','
   '  `SERIE_REMC_EFEC`  varchar(20) NULL DEFAULT NULL'
   '       COMMENT ''FK logica a fza_remesas_compra (si esta remesado)'','
@@ -123,8 +133,20 @@ SET @ddl := IF(@tab_exists = 0,
   '  `DIGITO_CONTROL_EFEC` varchar(2)  NULL DEFAULT NULL,'
   '  `CUENTA_EFEC`         varchar(10) NULL DEFAULT NULL,'
   '  `IBAN_EFEC`           varchar(34) NULL DEFAULT NULL,'
+  '  `CODIGO_EMPBAN_EFEC` varchar(8) NULL DEFAULT NULL'
+  '       COMMENT ''Cuenta de la empresa (cargo)'',' 
+  '  `IBAN_EMP_EFEC`      varchar(34) NULL DEFAULT NULL'
+  '       COMMENT ''IBAN de la empresa (cargo)'',' 
   '  `DOC_EXTERNO_EFEC`    varchar(50) NULL DEFAULT NULL'
   '       COMMENT ''Nro de factura del proveedor (traza)'','
+  '  `REFERENCIA_DOCUMENTO_EFEC` varchar(100) NULL DEFAULT NULL'
+  '       COMMENT ''Referencia del documento de conciliacion'','
+  '  `SERIE_FACC_CONCILIACION_EFEC` varchar(20) NULL DEFAULT NULL'
+  '       COMMENT ''Serie factura del efecto que agrupa esta conciliacion'','
+  '  `NUMERO_FACC_CONCILIACION_EFEC` varchar(20) NULL DEFAULT NULL'
+  '       COMMENT ''Numero factura del efecto que agrupa esta conciliacion'','
+  '  `NUMERO_EFEC_CONCILIACION_EFEC` int(11) NULL DEFAULT NULL'
+  '       COMMENT ''Numero del efecto que agrupa esta conciliacion'','
   '  `OBSERVACIONES_EFEC`  varchar(1000) NULL DEFAULT '''','
   '  `INSTANTE_MODIF` timestamp NOT NULL'
   '       DEFAULT current_timestamp() ON UPDATE current_timestamp(),'
@@ -134,6 +156,172 @@ SET @ddl := IF(@tab_exists = 0,
   '  `USUARIO_MODIF`  varchar(100) NOT NULL,'
   '  PRIMARY KEY (`SERIE_FACC_EFEC`,`NUMERO_FACC_EFEC`,`NUMERO_EFEC`)'
   ')',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Columnas añadidas sobre instalaciones que ya tengan fza_efectos_compra.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_efectos_compra'
+     AND COLUMN_NAME  = 'TIPO_PAGO_EFEC'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_efectos_compra` '
+  'ADD COLUMN `TIPO_PAGO_EFEC` varchar(50) NULL DEFAULT NULL '
+  'COMMENT ''Medio de pago conciliado'' AFTER `FECHA_PAGO_EFEC`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_efectos_compra'
+     AND COLUMN_NAME  = 'REFERENCIA_PAGO_EFEC'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_efectos_compra` '
+  'ADD COLUMN `REFERENCIA_PAGO_EFEC` varchar(100) NULL DEFAULT NULL '
+  'COMMENT ''Nro transferencia / cheque / justificante'' '
+  'AFTER `TIPO_PAGO_EFEC`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_efectos_compra'
+     AND COLUMN_NAME  = 'ENTIDAD_PAGO_EFEC'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_efectos_compra` '
+  'ADD COLUMN `ENTIDAD_PAGO_EFEC` varchar(100) NULL DEFAULT NULL '
+  'COMMENT ''Banco / entidad desde la que se paga'' '
+  'AFTER `REFERENCIA_PAGO_EFEC`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_efectos_compra'
+     AND COLUMN_NAME  = 'ESCONCILIADO_EFEC'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_efectos_compra` '
+  'ADD COLUMN `ESCONCILIADO_EFEC` varchar(1) NULL DEFAULT ''N'' '
+  'COMMENT ''S/N — conciliado con el extracto bancario'' '
+  'AFTER `ENTIDAD_PAGO_EFEC`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_efectos_compra'
+     AND COLUMN_NAME  = 'CODIGO_EMPBAN_EFEC'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_efectos_compra` '
+  'ADD COLUMN `CODIGO_EMPBAN_EFEC` varchar(8) NULL DEFAULT NULL '
+  'COMMENT ''Cuenta de la empresa (cargo)'' AFTER `IBAN_EFEC`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_efectos_compra'
+     AND COLUMN_NAME  = 'IBAN_EMP_EFEC'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_efectos_compra` '
+  'ADD COLUMN `IBAN_EMP_EFEC` varchar(34) NULL DEFAULT NULL '
+  'COMMENT ''IBAN de la empresa (cargo)'' AFTER `CODIGO_EMPBAN_EFEC`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_efectos_compra'
+     AND COLUMN_NAME  = 'REFERENCIA_DOCUMENTO_EFEC'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_efectos_compra` '
+  'ADD COLUMN `REFERENCIA_DOCUMENTO_EFEC` varchar(100) NULL DEFAULT NULL '
+  'COMMENT ''Referencia del documento de conciliacion'' '
+  'AFTER `DOC_EXTERNO_EFEC`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+UPDATE `fza_efectos_compra`
+   SET `REFERENCIA_DOCUMENTO_EFEC` =
+       COALESCE(NULLIF(`DOC_EXTERNO_EFEC`, ''),
+                CONCAT(`SERIE_FACC_EFEC`, '/', `NUMERO_FACC_EFEC`))
+ WHERE COALESCE(`REFERENCIA_DOCUMENTO_EFEC`, '') = '';
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_efectos_compra'
+     AND COLUMN_NAME  = 'SERIE_FACC_CONCILIACION_EFEC'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_efectos_compra` '
+  'ADD COLUMN `SERIE_FACC_CONCILIACION_EFEC` varchar(20) '
+  'NULL DEFAULT NULL '
+  'COMMENT ''Serie factura del efecto que agrupa esta conciliacion'' '
+  'AFTER `REFERENCIA_DOCUMENTO_EFEC`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_efectos_compra'
+     AND COLUMN_NAME  = 'NUMERO_FACC_CONCILIACION_EFEC'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_efectos_compra` '
+  'ADD COLUMN `NUMERO_FACC_CONCILIACION_EFEC` varchar(20) '
+  'NULL DEFAULT NULL '
+  'COMMENT ''Numero factura del efecto que agrupa esta conciliacion'' '
+  'AFTER `SERIE_FACC_CONCILIACION_EFEC`',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = 'fza_efectos_compra'
+     AND COLUMN_NAME  = 'NUMERO_EFEC_CONCILIACION_EFEC'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `fza_efectos_compra` '
+  'ADD COLUMN `NUMERO_EFEC_CONCILIACION_EFEC` int(11) NULL DEFAULT NULL '
+  'COMMENT ''Numero del efecto que agrupa esta conciliacion'' '
+  'AFTER `NUMERO_FACC_CONCILIACION_EFEC`',
   'SELECT 1');
 PREPARE stmt FROM @ddl;
 EXECUTE stmt;
@@ -195,68 +383,25 @@ PREPARE stmt FROM @ddl;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- ----------------------------------------------------------------------------
--- 3. fza_efectos_compra_pagos (EFECPAG): historico de pagos con fecha
---    Varios pagos por efecto -> permite pagos parciales y trazabilidad
---    contable. PK incluye NUMERO_PAGO_EFECPAG (secuencial del pago).
--- ----------------------------------------------------------------------------
-SET @tab_exists := (
-  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME   = 'fza_efectos_compra_pagos'
-);
-SET @ddl := IF(@tab_exists = 0,
-  'CREATE TABLE `fza_efectos_compra_pagos` ('
-  '  `SERIE_FACC_EFECPAG`  varchar(20) NOT NULL,'
-  '  `NUMERO_FACC_EFECPAG` varchar(20) NOT NULL,'
-  '  `NUMERO_EFEC_EFECPAG` int(11)     NOT NULL'
-  '       COMMENT ''Efecto al que se aplica el pago'','
-  '  `NUMERO_PAGO_EFECPAG` int(11)     NOT NULL'
-  '       COMMENT ''Secuencial del pago dentro del efecto (1..N)'','
-  '  `FECHA_EFECPAG`   date NULL DEFAULT NULL'
-  '       COMMENT ''Fecha del pago (control contable)'','
-  '  `IMPORTE_EFECPAG` decimal(18,6) NULL DEFAULT ''0.000000'','
-  '  `TIPO_EFECPAG`    varchar(50) NULL DEFAULT ''TRANSFERENCIA'''
-  '       COMMENT ''Medio de pago: TRANSFERENCIA, EFECTIVO, CHEQUE, ...'','
-  '  `CODIGO_FP_EFECPAG` varchar(20) NULL DEFAULT NULL'
-  '       COMMENT ''FK logica a fza_formas_pago (opcional)'','
-  '  `REFERENCIA_EFECPAG` varchar(100) NULL DEFAULT NULL'
-  '       COMMENT ''Nro de transferencia / cheque / justificante'','
-  '  `ENTIDAD_PAGO_EFECPAG` varchar(100) NULL DEFAULT NULL'
-  '       COMMENT ''Banco / entidad desde la que se paga'','
-  '  `ESCONCILIADO_EFECPAG` varchar(1) NULL DEFAULT ''N'''
-  '       COMMENT ''S/N — conciliado con el extracto bancario'','
-  '  `OBSERVACIONES_EFECPAG` varchar(500) NULL DEFAULT '''','
-  '  `INSTANTE_MODIF` timestamp NOT NULL'
-  '       DEFAULT current_timestamp() ON UPDATE current_timestamp(),'
-  '  `INSTANTE_ALTA`  timestamp NOT NULL'
-  '       DEFAULT ''0000-00-00 00:00:00'','
-  '  `USUARIO_ALTA`   varchar(100) NOT NULL,'
-  '  `USUARIO_MODIF`  varchar(100) NOT NULL,'
-  '  PRIMARY KEY (`SERIE_FACC_EFECPAG`,`NUMERO_FACC_EFECPAG`,'
-  '               `NUMERO_EFEC_EFECPAG`,`NUMERO_PAGO_EFECPAG`)'
-  ')',
-  'SELECT 1');
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
 SET @idx_exists := (
   SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
    WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME   = 'fza_efectos_compra_pagos'
-     AND INDEX_NAME   = 'IDX_EFECPAG_FECHA'
+     AND TABLE_NAME   = 'fza_efectos_compra'
+     AND INDEX_NAME   = 'IDX_EFEC_CONCILIACION'
 );
 SET @ddl := IF(@idx_exists = 0,
-  'ALTER TABLE `fza_efectos_compra_pagos` '
-  'ADD INDEX `IDX_EFECPAG_FECHA` (`FECHA_EFECPAG`)',
+  'ALTER TABLE `fza_efectos_compra` '
+  'ADD INDEX `IDX_EFEC_CONCILIACION` '
+  '(`SERIE_FACC_CONCILIACION_EFEC`,'
+  '`NUMERO_FACC_CONCILIACION_EFEC`,'
+  '`NUMERO_EFEC_CONCILIACION_EFEC`)',
   'SELECT 1');
 PREPARE stmt FROM @ddl;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 -- ----------------------------------------------------------------------------
--- 4. fza_remesas_compra (REMC): remesa de pagos que agrupa efectos
+-- 3. fza_remesas_compra (REMC): remesa de pagos que agrupa efectos
 -- ----------------------------------------------------------------------------
 SET @tab_exists := (
   SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
@@ -269,7 +414,7 @@ SET @ddl := IF(@tab_exists = 0,
   '  `SERIE_REMC`  varchar(20) NOT NULL,'
   '  `FECHA_REMC`  date NULL DEFAULT NULL,'
   '  `ESTADO_REMC` varchar(20) NULL DEFAULT ''ABIERTA'''
-  '       COMMENT ''ABIERTA, CERRADA, ENVIADA, PAGADA, CANCELADA'','
+  '       COMMENT ''ABIERTA, PARCIAL, CERRADA, ENVIADA, PAGADA, CANCELADA'','
   '  `CODIGO_EMP_REMC` varchar(8) NULL DEFAULT NULL,'
   '  `TIPO_REMC`   varchar(20) NULL DEFAULT ''NORMA34'''
   '       COMMENT ''Norma SEPA de pago (p.ej. cuaderno 34)'','
@@ -380,9 +525,10 @@ CREATE OR REPLACE VIEW `vi_efectos_compra_pendientes` AS
 SELECT  e.*,
         prv.NOMBRE_PRV        AS NOMBRE_PRV_VIEW_EFEC
   FROM  fza_efectos_compra e
-  LEFT  JOIN fza_proveedores prv
+ LEFT  JOIN fza_proveedores prv
          ON prv.CODIGO_PRV_PRV = e.CODIGO_PRV_EFEC
- WHERE  COALESCE(e.ESTADO_EFEC, '') NOT IN ('PAGADO', 'ANULADO')
+ WHERE  COALESCE(e.ESTADO_EFEC, '') NOT IN
+        ('PAGADO', 'ANULADO', 'CONCILIADO')
    AND  COALESCE(e.IMPORTE_PENDIENTE_EFEC, 0) > 0;
 
 -- 6c. Remesas con datos de empresa.
@@ -398,7 +544,7 @@ SELECT  r.*,
 --    una factura segun su forma de pago (N plazos x N dias entre plazos).
 --    Reparte TOTAL_LIQUIDO_FACC entre los plazos (el ultimo absorbe el
 --    redondeo). No toca efectos ya pagados / remesados (aborta con 0 para
---    no destruir historico).
+--    no destruir pagos ya conciliados).
 --    p_RESULTADO: nº de efectos generados, 0 si no habia nada que hacer.
 -- ----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS `PRC_EFEC_GENERAR_DESDE_FACTURA`;
@@ -444,9 +590,12 @@ BEGIN
     FROM fza_efectos_compra
    WHERE SERIE_FACC_EFEC  = p_SERIE
      AND NUMERO_FACC_EFEC = p_NUMERO
-     AND (COALESCE(ESTADO_EFEC, '') IN ('PAGADO', 'PARCIAL', 'REMESADO')
+     AND (COALESCE(ESTADO_EFEC, '') IN ('PAGADO', 'REMESADO')
           OR COALESCE(IMPORTE_PAGADO_EFEC, 0) > 0
-          OR SERIE_REMC_EFEC IS NOT NULL);
+          OR COALESCE(ESTADO_EFEC, '') = 'CONCILIADO'
+          OR COALESCE(ESCONCILIADO_EFEC, 'N') = 'S'
+          OR SERIE_REMC_EFEC IS NOT NULL
+          OR SERIE_FACC_CONCILIACION_EFEC IS NOT NULL);
   IF v_bloqueados = 0 THEN
     -- Datos de la factura.
     SELECT COALESCE(TOTAL_LIQUIDO_FACC, 0), FORMA_PAGO_FACC,
@@ -472,9 +621,6 @@ BEGIN
     SET v_tefe = IF(v_escontado = 'S', 'CONTADO', 'RECIBO');
     -- Limpiar efectos previos (todos PENDIENTE en este punto).
     START TRANSACTION;
-    DELETE FROM fza_efectos_compra_pagos
-     WHERE SERIE_FACC_EFECPAG  = p_SERIE
-       AND NUMERO_FACC_EFECPAG = p_NUMERO;
     DELETE FROM fza_efectos_compra
      WHERE SERIE_FACC_EFEC  = p_SERIE
        AND NUMERO_FACC_EFEC = p_NUMERO;
@@ -494,13 +640,15 @@ BEGIN
          FECHA_EMISION_EFEC, FECHA_VENCIMIENTO_EFEC, IMPORTE_EFEC,
          IMPORTE_PAGADO_EFEC, IMPORTE_PENDIENTE_EFEC, ENTIDAD_EFEC,
          OFICINA_EFEC, DIGITO_CONTROL_EFEC, CUENTA_EFEC, IBAN_EFEC,
-         DOC_EXTERNO_EFEC, INSTANTE_ALTA, USUARIO_ALTA,
-         INSTANTE_MODIF, USUARIO_MODIF)
+         DOC_EXTERNO_EFEC, REFERENCIA_DOCUMENTO_EFEC, INSTANTE_ALTA,
+         USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF)
       VALUES
         (p_SERIE, p_NUMERO, v_i, v_emp, v_prv, v_razon, v_nif,
          v_tefe, 'PENDIENTE', v_i, v_fecha, v_vto, v_imp,
          0, v_imp, v_ent, v_ofi, v_dc, v_cta, v_iban,
-         v_docext, NOW(), p_USUARIO, NOW(), p_USUARIO);
+         v_docext, COALESCE(NULLIF(v_docext, ''),
+         CONCAT(p_SERIE, '/', p_NUMERO)), NOW(), p_USUARIO, NOW(),
+         p_USUARIO);
       SET v_i = v_i + 1;
     END WHILE;
     COMMIT;
@@ -510,14 +658,16 @@ END ;;
 DELIMITER ;
 
 -- ----------------------------------------------------------------------------
--- 8. PRC_EFEC_REGISTRAR_PAGO: anota un pago en el HISTORICO de un efecto y
---    recalcula importes/estado. Permite pagos parciales: el efecto pasa a
---    PARCIAL mientras quede pendiente y a PAGADO cuando se salda.
---    p_RESULTADO: numero de pago asignado (1..N), 0 si el efecto no existe.
+-- 8. PRC_EFEC_CONCILIAR_PAGO: concilia un pago contra el propio efecto.
+--    Si el pago es parcial, divide el efecto en dos: el original queda
+--    PAGADO por el importe conciliado y se crea otro PENDIENTE por el resto.
+--    No usa tabla de pagos: el efecto es el espejo del pago.
+--    p_RESULTADO: 1 pago completo, 2 pago parcial con split, 0 sin efecto.
 -- ----------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS `PRC_EFEC_REGISTRAR_PAGO`;
+DROP PROCEDURE IF EXISTS `PRC_EFEC_CONCILIAR_PAGO`;
 DELIMITER ;;
-CREATE PROCEDURE `PRC_EFEC_REGISTRAR_PAGO`(
+CREATE PROCEDURE `PRC_EFEC_CONCILIAR_PAGO`(
     IN  p_SERIE      varchar(20),
     IN  p_NUMERO     varchar(20),
     IN  p_NUM_EFEC   int,
@@ -531,10 +681,10 @@ CREATE PROCEDURE `PRC_EFEC_REGISTRAR_PAGO`(
 BEGIN
   DECLARE v_existe   int DEFAULT 0;
   DECLARE v_importe  decimal(18,6) DEFAULT 0;
-  DECLARE v_pagado   decimal(18,6) DEFAULT 0;
   DECLARE v_pend     decimal(18,6) DEFAULT 0;
-  DECLARE v_npago    int DEFAULT 0;
-  DECLARE v_estado   varchar(20);
+  DECLARE v_pago     decimal(18,6) DEFAULT 0;
+  DECLARE v_resto    decimal(18,6) DEFAULT 0;
+  DECLARE v_nuevo    int DEFAULT 0;
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
   BEGIN
     ROLLBACK;
@@ -542,50 +692,108 @@ BEGIN
     RESIGNAL;
   END;
   SET p_RESULTADO = 0;
-  SELECT COUNT(*), MAX(COALESCE(IMPORTE_EFEC, 0)),
-         MAX(COALESCE(IMPORTE_PAGADO_EFEC, 0))
-    INTO v_existe, v_importe, v_pagado
+  START TRANSACTION;
+  SELECT COUNT(*)
+    INTO v_existe
     FROM fza_efectos_compra
    WHERE SERIE_FACC_EFEC  = p_SERIE
      AND NUMERO_FACC_EFEC = p_NUMERO
-     AND NUMERO_EFEC      = p_NUM_EFEC;
-  IF v_existe > 0 THEN
-    START TRANSACTION;
-    SELECT COALESCE(MAX(NUMERO_PAGO_EFECPAG), 0) + 1
-      INTO v_npago
-      FROM fza_efectos_compra_pagos
-     WHERE SERIE_FACC_EFECPAG  = p_SERIE
-       AND NUMERO_FACC_EFECPAG = p_NUMERO
-       AND NUMERO_EFEC_EFECPAG = p_NUM_EFEC;
-    INSERT INTO fza_efectos_compra_pagos
-      (SERIE_FACC_EFECPAG, NUMERO_FACC_EFECPAG, NUMERO_EFEC_EFECPAG,
-       NUMERO_PAGO_EFECPAG, FECHA_EFECPAG, IMPORTE_EFECPAG, TIPO_EFECPAG,
-       REFERENCIA_EFECPAG, ENTIDAD_PAGO_EFECPAG, INSTANTE_ALTA,
-       USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF)
-    VALUES
-      (p_SERIE, p_NUMERO, p_NUM_EFEC, v_npago,
-       COALESCE(p_FECHA, CURDATE()), COALESCE(p_IMPORTE, 0),
-       COALESCE(p_TIPO, 'TRANSFERENCIA'), p_REFERENCIA, p_ENTIDAD,
-       NOW(), p_USUARIO, NOW(), p_USUARIO);
-    SET v_pagado = v_pagado + COALESCE(p_IMPORTE, 0);
-    SET v_pend   = v_importe - v_pagado;
-    IF v_pend <= 0 THEN
-      SET v_estado = 'PAGADO';
-    ELSE
-      SET v_estado = 'PARCIAL';
-    END IF;
-    UPDATE fza_efectos_compra
-       SET IMPORTE_PAGADO_EFEC    = v_pagado,
-           IMPORTE_PENDIENTE_EFEC = v_pend,
-           FECHA_PAGO_EFEC        = COALESCE(p_FECHA, CURDATE()),
-           ESTADO_EFEC            = v_estado,
-           USUARIO_MODIF          = p_USUARIO
+     AND NUMERO_EFEC      = p_NUM_EFEC
+     AND COALESCE(ESTADO_EFEC, '') NOT IN
+         ('PAGADO', 'ANULADO', 'DEVUELTO', 'CONCILIADO')
+     AND COALESCE(IMPORTE_PENDIENTE_EFEC, IMPORTE_EFEC, 0) > 0;
+  IF v_existe > 0 AND COALESCE(p_IMPORTE, 0) > 0 THEN
+    SELECT COALESCE(IMPORTE_EFEC, 0),
+           COALESCE(IMPORTE_PENDIENTE_EFEC, IMPORTE_EFEC, 0)
+      INTO v_importe, v_pend
+      FROM fza_efectos_compra
      WHERE SERIE_FACC_EFEC  = p_SERIE
        AND NUMERO_FACC_EFEC = p_NUMERO
-       AND NUMERO_EFEC      = p_NUM_EFEC;
-    COMMIT;
-    SET p_RESULTADO = v_npago;
+       AND NUMERO_EFEC      = p_NUM_EFEC
+       FOR UPDATE;
+    SET v_pago = COALESCE(p_IMPORTE, 0);
+    IF v_pago > v_pend THEN
+      SET v_pago = v_pend;
+    END IF;
+    SET v_resto = v_pend - v_pago;
+    IF v_resto <= 0.000001 THEN
+      UPDATE fza_efectos_compra
+         SET IMPORTE_PAGADO_EFEC    = v_importe,
+             IMPORTE_PENDIENTE_EFEC = 0,
+             FECHA_PAGO_EFEC        = COALESCE(p_FECHA, CURDATE()),
+             TIPO_PAGO_EFEC         = NULLIF(p_TIPO, ''),
+             REFERENCIA_PAGO_EFEC   = NULLIF(p_REFERENCIA, ''),
+             ENTIDAD_PAGO_EFEC      = NULLIF(p_ENTIDAD, ''),
+             ESCONCILIADO_EFEC      = 'S',
+             ESTADO_EFEC            = 'PAGADO',
+             INSTANTE_MODIF         = NOW(),
+             USUARIO_MODIF          = p_USUARIO
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      SET p_RESULTADO = 1;
+    ELSE
+      SELECT COALESCE(MAX(NUMERO_EFEC), 0) + 1
+        INTO v_nuevo
+        FROM fza_efectos_compra
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO;
+      UPDATE fza_efectos_compra
+         SET IMPORTE_EFEC           = v_pago,
+             IMPORTE_PAGADO_EFEC    = v_pago,
+             IMPORTE_PENDIENTE_EFEC = 0,
+             FECHA_PAGO_EFEC        = COALESCE(p_FECHA, CURDATE()),
+             TIPO_PAGO_EFEC         = NULLIF(p_TIPO, ''),
+             REFERENCIA_PAGO_EFEC   = NULLIF(p_REFERENCIA, ''),
+             ENTIDAD_PAGO_EFEC      = NULLIF(p_ENTIDAD, ''),
+             ESCONCILIADO_EFEC      = 'S',
+             ESTADO_EFEC            = 'PAGADO',
+             INSTANTE_MODIF         = NOW(),
+             USUARIO_MODIF          = p_USUARIO
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      INSERT INTO fza_efectos_compra
+        (SERIE_FACC_EFEC, NUMERO_FACC_EFEC, NUMERO_EFEC,
+         CODIGO_EMP_EFEC, CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC,
+         NIF_PRV_EFEC, CODIGO_TEFE_EFEC, ESTADO_EFEC,
+         ORDEN_PLAZO_EFEC, FECHA_EMISION_EFEC, FECHA_VENCIMIENTO_EFEC,
+         FECHA_PAGO_EFEC, TIPO_PAGO_EFEC, REFERENCIA_PAGO_EFEC,
+         ENTIDAD_PAGO_EFEC, ESCONCILIADO_EFEC, IMPORTE_EFEC,
+         IMPORTE_PAGADO_EFEC, IMPORTE_PENDIENTE_EFEC, SERIE_REMC_EFEC,
+         NUMERO_REMC_EFEC, ENTIDAD_EFEC, OFICINA_EFEC,
+         DIGITO_CONTROL_EFEC, CUENTA_EFEC, IBAN_EFEC,
+         CODIGO_EMPBAN_EFEC, IBAN_EMP_EFEC, DOC_EXTERNO_EFEC,
+         REFERENCIA_DOCUMENTO_EFEC, SERIE_FACC_CONCILIACION_EFEC,
+         NUMERO_FACC_CONCILIACION_EFEC, NUMERO_EFEC_CONCILIACION_EFEC,
+         OBSERVACIONES_EFEC, INSTANTE_ALTA, USUARIO_ALTA,
+         INSTANTE_MODIF, USUARIO_MODIF)
+      SELECT SERIE_FACC_EFEC, NUMERO_FACC_EFEC, v_nuevo,
+             CODIGO_EMP_EFEC, CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC,
+             NIF_PRV_EFEC, CODIGO_TEFE_EFEC,
+             CASE
+               WHEN COALESCE(SERIE_REMC_EFEC, '') <> '' THEN 'REMESADO'
+               ELSE 'PENDIENTE'
+             END,
+             ORDEN_PLAZO_EFEC, FECHA_EMISION_EFEC,
+             FECHA_VENCIMIENTO_EFEC, NULL, NULL, NULL, NULL, 'N',
+             v_resto, 0, v_resto, SERIE_REMC_EFEC, NUMERO_REMC_EFEC,
+             ENTIDAD_EFEC, OFICINA_EFEC, DIGITO_CONTROL_EFEC,
+             CUENTA_EFEC, IBAN_EFEC, CODIGO_EMPBAN_EFEC, IBAN_EMP_EFEC,
+             DOC_EXTERNO_EFEC, REFERENCIA_DOCUMENTO_EFEC,
+             SERIE_FACC_CONCILIACION_EFEC,
+             NUMERO_FACC_CONCILIACION_EFEC,
+             NUMERO_EFEC_CONCILIACION_EFEC,
+             OBSERVACIONES_EFEC, NOW(), p_USUARIO,
+             NOW(), p_USUARIO
+        FROM fza_efectos_compra
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      SET p_RESULTADO = 2;
+    END IF;
   END IF;
+  COMMIT;
 END ;;
 DELIMITER ;
 
@@ -660,7 +868,9 @@ BEGIN
      AND NUMERO_FACC_EFEC = p_NUMERO_FAC
      AND NUMERO_EFEC      = p_NUM_EFEC
      AND SERIE_REMC_EFEC IS NULL
-     AND COALESCE(ESTADO_EFEC, '') NOT IN ('PAGADO', 'ANULADO');
+     AND COALESCE(ESTADO_EFEC, '') NOT IN
+         ('PAGADO', 'ANULADO', 'CONCILIADO')
+     AND COALESCE(IMPORTE_PENDIENTE_EFEC, 0) > 0;
   IF v_rem > 0 AND v_efe > 0 THEN
     START TRANSACTION;
     UPDATE fza_efectos_compra
@@ -690,8 +900,7 @@ CREATE PROCEDURE `PRC_REMC_RECALCULAR`(
 BEGIN
   DECLARE v_n     int DEFAULT 0;
   DECLARE v_total decimal(18,6) DEFAULT 0;
-  SELECT COUNT(*), COALESCE(SUM(COALESCE(IMPORTE_PENDIENTE_EFEC,
-                                         IMPORTE_EFEC)), 0)
+  SELECT COUNT(*), COALESCE(SUM(COALESCE(IMPORTE_EFEC, 0)), 0)
     INTO v_n, v_total
     FROM fza_efectos_compra
    WHERE SERIE_REMC_EFEC  = p_SERIE

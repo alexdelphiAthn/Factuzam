@@ -167,6 +167,7 @@ uses
   inLibMigArticulosTarifas,
   inLibMigEntorno,
   inLibMigCompras,
+  inLibMigEfectosCompra,
   inLibMigFotos,
   inLibPathTokens;
 
@@ -298,10 +299,9 @@ begin
   // El ORDEN importa: el listado se ejecuta de arriba a abajo y las
   // dependencias (articulos necesita familias, skus necesitan
   // articulos, etc.) deben respetarse.
-  // NOTA: formas_pago, grupos de IVA y tipos de IVA NO se migran.
-  // Los IVAs ya estan definidos en el destino; los mappers conservan
-  // el codigo legacy TipoEfecto en clientes/proveedores/documentos
-  // para enlazar con las formas de pago ya cargadas.
+  // NOTA: grupos de IVA y tipos de IVA NO se migran. Las formas de pago
+  // base ya existen en destino; tipos_efecto_compra asegura ademas los
+  // codigos legacy usados por clientes/proveedores/documentos.
   FEngine.Registrar('empresas', 'Empresas',
     'dbo.ocemp → fza_empresas',
     MigrarEmpresas);
@@ -412,7 +412,15 @@ begin
   FEngine.Registrar('entorno_series', 'Series por empresa (ocseract)',
     'dbo.ocseract → fza_empresas_series',
     MigrarEntornoSeries);
-  // Compras: pedidos y albaranes de entrada (modelo plano, sin celdas; ver
+  FEngine.Registrar('bancos_empresa',
+    'Bancos de cargo por empresa (ocbanrem)',
+    'ocbanrem + usos en compras → fza_empresas_bancos',
+    MigrarBancosEmpresa);
+  FEngine.Registrar('tipos_efecto_compra',
+    'Tipos de efecto y formas de pago legacy (octipefe)',
+    'dbo.octipefe → fza_tipos_efecto + fza_formas_pago',
+    MigrarTiposEfectoCompra);
+  // Compras: pedidos, albaranes y facturas (modelo plano, sin celdas; ver
   // inLibMigCompras / migracion_compras.md).
   FEngine.Registrar('pedidos_compra', 'Pedidos de compra (ocped)',
     'dbo.ocped → fza_pedidos_compra + lineas',
@@ -420,6 +428,16 @@ begin
   FEngine.Registrar('albaranes_compra', 'Albaranes de compra (ocalbpro)',
     'dbo.ocalbpro → fza_albaranes_compra + lineas',
     MigrarAlbaranesCompra);
+  FEngine.Registrar('facturas_compra', 'Facturas de compra (ocfacpro)',
+    'dbo.ocfacpro/ocfacproart → fza_facturas_compra + lineas',
+    MigrarFacturasCompra);
+  FEngine.Registrar('efectos_compra',
+    'Efectos y pagos de compra (ocefepro/occobpro)',
+    'dbo.ocefepro/occobpro → fza_efectos_compra + pagos',
+    MigrarEfectosCompra);
+  FEngine.Registrar('remesas_compra', 'Remesas de pago (ocrempro)',
+    'dbo.ocrempro → fza_remesas_compra',
+    MigrarRemesasCompra);
   // Fotos legacy por color: ocartcol.ArchivoFoto guarda la ruta SIN la
   // carpeta raiz; raiz, destino y pool se configuran en los campos
   // "Raiz fotos legacy" / "Destino fotos" / "Hilos fotos". NO entra en
@@ -971,6 +989,7 @@ begin
   if (sCodigo = 'empresas')         or
      (sCodigo = 'empleados')        or
      (sCodigo = 'proveedores')      or
+     (sCodigo = 'tipos_efecto_compra') or
      (sCodigo = 'familias')         or
      (sCodigo = 'colores_maestros') or
      (sCodigo = 'tallas_maestras') then
@@ -979,6 +998,7 @@ begin
      (sCodigo = 'clientes')    or
      (sCodigo = 'articulos')   or
      (sCodigo = 'tallajes')    or
+     (sCodigo = 'bancos_empresa') or
      (sCodigo = 'entorno_contadores')         or
      (sCodigo = 'entorno_contadores_familia') then
     Result := 1
@@ -1008,8 +1028,13 @@ begin
   // con su factura (REF_MOV) y necesita los movimientos ya migrados.
   else if (sCodigo = 'facturas') then
     Result := 4
-  else if (sCodigo = 'facturas_venta_mayor') then
+  else if (sCodigo = 'facturas_venta_mayor') or
+          (sCodigo = 'facturas_compra') then
     Result := 5
+  else if (sCodigo = 'efectos_compra') then
+    Result := 6
+  else if (sCodigo = 'remesas_compra') then
+    Result := 7
   // Default: wave 0 (conservador, sin deps conocidas)
   else
     Result := 0;
@@ -1127,7 +1152,7 @@ begin
             .Run;
         end;
 
-      for iWave := 0 to 5 do
+      for iWave := 0 to 7 do
       begin
         if task.CancellationToken.IsSignalled then Break;
 

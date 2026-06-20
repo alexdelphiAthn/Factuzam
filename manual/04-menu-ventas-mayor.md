@@ -12,7 +12,6 @@ Estructura del menú:
 ```
 Ventas Mayor
 ├── Facturas
-├── Formas de pago
 ├── Pedidos
 ├── Albaranes
 └── Listados
@@ -51,19 +50,6 @@ configuración de certificado de la empresa (ver
 > Una factura puede crearse manualmente o **a partir de albaranes**
 > pendientes de facturar (incluso agrupando varios albaranes de un cliente
 > en un rango de fechas).
-
----
-
-## Formas de pago
-
-**Atajo de menú:** `[Ctrl]+[Alt]+[G]`
-
-Acceso al catálogo de **formas de pago** (el mismo descrito en
-[Compras ▸ Formas de pago](03-menu-compras.md#formas-de-pago)), aquí
-enfocado a su uso en ventas: condiciones de cobro, vencimientos y forma de
-pago por defecto que se propone a los clientes.
-
----
 
 ## Pedidos
 

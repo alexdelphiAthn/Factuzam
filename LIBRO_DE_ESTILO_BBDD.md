@@ -75,7 +75,6 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_devoluciones_compra_celdas`     | `DEVCCEL` |
 | `fza_devoluciones_compra_lineas`     | `DEVCLIN` |
 | `fza_efectos_compra`                 | `EFEC`    |
-| `fza_efectos_compra_pagos`           | `EFECPAG` |
 | `fza_empleados`                      | `EMPL`    |
 | `fza_empresas`                       | `EMP`     |
 | `fza_empresas_bancos`                | `EMPBAN`  |

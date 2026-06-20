@@ -205,6 +205,8 @@ begin
     FieldByName('CODIGO_PRV_DEVC').AsString := '0';
     AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
       'CODIGO_EMP_DEVC', 'ESIVA_RECARGO_COMPRAS_DEVC');
+    AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
+      'DEVC');
   end;
   FTransicionEstadoDevc := '';
 end;
@@ -219,6 +221,8 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_DEVC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_DEVC').AsString = '') then
     GetCodigoAutoDevolucionCompra;
+  AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
+    'DEVC');
   CalcularTotalesDevolucionCompra;
   // Deteccion de transicion de ESTADO_DEVC. Solo aplica en modo Edit
   // (en Insert la devolucion nace ABIERTA y los movimientos los genera
@@ -417,6 +421,8 @@ begin
         unqrySkusDevc.Close;
       end;
     end;
+    PrepararLineaFiscalCompra(inLibGlobalVar.oConn, unqryTablaG,
+      unqryDevolucionesCompraLineas, 'DEVC', 'DEVCLIN', 'TOTAL_DEVCLIN');
   end;
 end;
 

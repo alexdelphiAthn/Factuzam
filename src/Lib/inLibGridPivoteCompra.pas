@@ -141,6 +141,7 @@ type
     FPivotColorProveedor: TDictionary<Integer,string>;
     FPivotColorCodigo : TDictionary<Integer,string>;
     FPivotIdAc        : TDictionary<Integer,Integer>;
+    FPivotSinTalla    : TDictionary<Integer,Boolean>;
     FPivotMaxAvTalla  : Integer;
     FOrigColIndexAlm     : Integer;
     FOrigColIndexCol     : Integer;
@@ -150,6 +151,7 @@ type
     function  GetSerieNumeroActivos(out ASerie, ANumero: string): Boolean;
     function  GetEstadoFila(iLinea: Integer): TEstadoFilaRecibida;
     function  GetColorEstadoFila(AEstado: TEstadoFilaRecibida): TColor;
+    function  EsLineaSinTalla(iLinea: Integer): Boolean;
   public
     constructor Create(const ACfg: TGridPivoteCompraConfig);
     destructor Destroy; override;
@@ -234,6 +236,7 @@ type
     procedure CargarCachePivot;
     procedure PublicarCantidadesPivot;
     procedure AplicarVisibilidadColumnasPivot(AModoPivot: Boolean);
+    procedure AplicarColumnaCantidadSinTalla;
     procedure IntercambiarPosicionColorAlmacen(AModoPivot: Boolean);
     procedure PintarCeldaTalla3Segmentos(
                 ACanvas: TcxCanvas;
@@ -244,6 +247,7 @@ type
   end;
 
 const
+  ID_AV_SIN_TALLA : Integer = 0;
   // Colores pastel para estados de recepcion (BGR).
   COL_REC_NADA    : TColor = $0099FFFF;  // amarillo
   COL_REC_PARCIAL : TColor = $0099FF99;  // verde
@@ -277,6 +281,7 @@ begin
   FPivotColorProveedor     := TDictionary<Integer,string>.Create;
   FPivotColorCodigo        := TDictionary<Integer,string>.Create;
   FPivotIdAc               := TDictionary<Integer,Integer>.Create;
+  FPivotSinTalla           := TDictionary<Integer,Boolean>.Create;
   FPivotMaxAvTalla         := 0;
   FOrigColIndexAlm         := -1;
   FOrigColIndexCol         := -1;
@@ -299,6 +304,7 @@ begin
   FreeAndNil(FPivotColorProveedor);
   FreeAndNil(FPivotColorCodigo);
   FreeAndNil(FPivotIdAc);
+  FreeAndNil(FPivotSinTalla);
   inherited;
 end;
 
@@ -329,7 +335,9 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := FCfg.Conexion;
-    // 1. Articulos sin sistema de tallas asignado en la linea.
+    // 1. Articulos con talla real pero sin sistema de tallas asignado
+    // en la linea. Los articulos con color y sin tallaje son pivotables:
+    // se muestran en una unica columna "Cantidad".
     q.SQL.Text :=
       'SELECT DISTINCT L.' + FCfg.FieldArt + ' AS ART ' +
       '  FROM ' + FCfg.TablaLineas + ' L ' +
@@ -337,6 +345,12 @@ begin
       '   AND L.' + FCfg.FieldNumeroLin + ' = :NUMERO ' +
       '   AND (L.' + FCfg.FieldIdAcPivot + ' IS NULL ' +
       '        OR L.' + FCfg.FieldIdAcPivot + ' = 0) ' +
+      '   AND EXISTS ( ' +
+      '         SELECT 1 FROM fza_atributos_sku SAT ' +
+      '          JOIN fza_atributos_valores AVT ' +
+      '            ON AVT.ID_AV = SAT.ID_AV_SA ' +
+      '           AND AVT.ID_VA_AV = ''TAL'' ' +
+      '         WHERE SAT.CODIGO_UNIDAD_SKU_SA = L.' + FCfg.FieldSku + ') ' +
       ' ORDER BY ART';
     q.ParamByName('SERIE').AsString  := sSerie;
     q.ParamByName('NUMERO').AsString := sNumero;
@@ -445,6 +459,7 @@ begin
     FCfg.Gestor.RecalcularMaxColumnas;
     FCfg.Gestor.ActualizarCaptionsLineaActiva;
   end;
+  AplicarColumnaCantidadSinTalla;
   PublicarCantidadesPivot;
   FActivo := True;
 end;
@@ -475,6 +490,7 @@ begin
   FPivotColorProveedor.Clear;
   FPivotColorCodigo.Clear;
   FPivotIdAc.Clear;
+  FPivotSinTalla.Clear;
   AplicarVisibilidadColumnasPivot(False);
   // Ocultar todas las columnas talla al volver a vista plana.
   for i := 0 to High(FCfg.ColumnasTallas) do
@@ -673,6 +689,7 @@ begin
     FCfg.Gestor.RecalcularMaxColumnas;
     FCfg.Gestor.ActualizarCaptionsLineaActiva;
   end;
+  AplicarColumnaCantidadSinTalla;
   PublicarCantidadesPivot;
 end;
 
@@ -714,6 +731,7 @@ begin
   FPivotColorProveedor.Clear;
   FPivotColorCodigo.Clear;
   FPivotIdAc.Clear;
+  FPivotSinTalla.Clear;
   FPivotMaxAvTalla := 0;
   if not GetSerieNumeroActivos(sSerie, sNumero) then Exit;
   bTieneRecibida := FCfg.FieldCantidadRecibida <> '';
@@ -848,12 +866,53 @@ begin
         FCeldaLineaPedido.AddOrSetValue(iKeyPivot, sLineaRaw);
         if iTallaAv > FPivotMaxAvTalla then FPivotMaxAvTalla := iTallaAv;
       end;
+      if iTallaAv <= 0 then
+      begin
+        FPivotSinTalla.AddOrSetValue(iLineaRepr, True);
+        iKeyPivot := Int64(iLineaRepr) * 100000 + ID_AV_SIN_TALLA;
+        if FPivotCantidades.ContainsKey(iKeyPivot) then
+          FPivotCantidades[iKeyPivot] := FPivotCantidades[iKeyPivot] + rCant
+        else
+          FPivotCantidades.Add(iKeyPivot, rCant);
+        if FPivotCantidadesRecibidas.ContainsKey(iKeyPivot) then
+          FPivotCantidadesRecibidas[iKeyPivot] :=
+                                FPivotCantidadesRecibidas[iKeyPivot] + rRecibida
+        else
+          FPivotCantidadesRecibidas.Add(iKeyPivot, rRecibida);
+        FCeldaSku.AddOrSetValue(iKeyPivot, sSku);
+        FCeldaAlmacen.AddOrSetValue(iKeyPivot, sAlmEfe);
+        FCeldaLineaPedido.AddOrSetValue(iKeyPivot, sLineaRaw);
+      end;
       q.Next;
     end;
     q.Close;
   finally
     FreeAndNil(q);
     FreeAndNil(dictRepr);
+  end;
+end;
+
+function TGridPivoteCompra.EsLineaSinTalla(iLinea: Integer): Boolean;
+begin
+  Result := (FPivotSinTalla <> nil) and FPivotSinTalla.ContainsKey(iLinea);
+end;
+
+procedure TGridPivoteCompra.AplicarColumnaCantidadSinTalla;
+var
+  i       : Integer;
+  bVisible: Boolean;
+begin
+  if (FPivotSinTalla = nil) or (FPivotSinTalla.Count = 0) then Exit;
+  if Length(FCfg.ColumnasTallas) = 0 then Exit;
+  if FCfg.ColumnasTallas[0] = nil then Exit;
+  bVisible := False;
+  for i := 0 to High(FCfg.ColumnasTallas) do
+    if (FCfg.ColumnasTallas[i] <> nil) and FCfg.ColumnasTallas[i].Visible then
+      bVisible := True;
+  if not bVisible then
+  begin
+    FCfg.ColumnasTallas[0].Visible := True;
+    FCfg.ColumnasTallas[0].Caption := 'Cantidad';
   end;
 end;
 
@@ -882,7 +941,6 @@ begin
       iLinea := StrToIntDef(VarToStr(vLinea), 0);
       if iLinea <= 0 then Continue;
       if not FPivotIdAc.TryGetValue(iLinea, iAc) then Continue;
-      if iAc <= 0 then Continue;
       if Assigned(FCfg.ColColorPivot) and Assigned(FPivotColorTexto) then
       begin
         if FPivotColorTexto.ContainsKey(iLinea) then
@@ -896,6 +954,20 @@ begin
           FCfg.Grid.DataController.Values[recIdx,
                   FCfg.ColColorProveedorPivot.Index] := FPivotColorProveedor[iLinea];
       end;
+      if EsLineaSinTalla(iLinea) then
+      begin
+        if FExpandido then Continue;
+        if (Length(FCfg.ColumnasTallas) > 0) and
+           (FCfg.ColumnasTallas[0] <> nil) then
+        begin
+          iKey := Int64(iLinea) * 100000 + ID_AV_SIN_TALLA;
+          if FPivotCantidades.TryGetValue(iKey, rCant) and (rCant <> 0) then
+            FCfg.Grid.DataController.Values[recIdx,
+                                  FCfg.ColumnasTallas[0].Index] := rCant;
+        end;
+        Continue;
+      end;
+      if iAc <= 0 then Continue;
       // En modo EXPANDIDO no publicamos pedida en Values[]: la pinta la
       // lib desde FPivotCantidades, y Values[] es el buffer "A recibir"
       // que el usuario teclea.
@@ -1040,6 +1112,7 @@ var
   rPedido   : Double;
   rRecibida : Double;
   rARecibir : Double;
+  bSinTalla : Boolean;
 begin
   if (not FActivo) or (FCfg.Gestor = nil) then Exit;
   if AViewInfo.GridRecord = nil then Exit;
@@ -1065,10 +1138,18 @@ begin
   // y nunca pintabamos las cantidades.
   iAc := 0;
   if not FPivotIdAc.TryGetValue(iLinea, iAc) then iAc := 0;
+  bSinTalla := EsLineaSinTalla(iLinea);
 
   // 1. GRAY-OUT de celdas talla fuera del conjunto pivot (no depende de
   //    modo expandido).
-  if bEsTalla and (iAc > 0) then
+  if bEsTalla and bSinTalla and (Col.Tag > 1) then
+  begin
+    ACanvas.Brush.Color := $00E8E8E8;
+    ACanvas.FillRect(AViewInfo.Bounds);
+    ADone := True;
+    Exit;
+  end;
+  if bEsTalla and (not bSinTalla) and (iAc > 0) then
   begin
     arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
     if Col.Tag > Length(arr) then
@@ -1101,10 +1182,18 @@ begin
     //   1. Pedido    (gris)
     //   2. Recibido  (verde italic)
     //   3. A recibir (azul, negrita, EDITABLE)
-    if iAc <= 0 then Exit;
-    arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
-    if Col.Tag > Length(arr) then Exit;
-    iTallaAv  := arr[Col.Tag - 1].IdAv;
+    if bSinTalla then
+    begin
+      if Col.Tag <> 1 then Exit;
+      iTallaAv := ID_AV_SIN_TALLA;
+    end
+    else
+    begin
+      if iAc <= 0 then Exit;
+      arr := FCfg.Gestor.GetPosicionesConjunto(iAc);
+      if Col.Tag > Length(arr) then Exit;
+      iTallaAv := arr[Col.Tag - 1].IdAv;
+    end;
     iKey      := Int64(iLinea) * 100000 + iTallaAv;
     rPedido   := 0;
     rRecibida := 0;
@@ -1227,11 +1316,18 @@ procedure TGridPivoteCompra.EditingCeldaTalla(Sender: TcxCustomGridTableView;
 var
   iAc : Integer;
   arr : TArrPosConjunto;
+  iLinea: Integer;
 begin
   if AItem = nil then Exit;
   if (AItem.Tag < 1) or (AItem.Tag > FCfg.MaxColumnasTallas) then Exit;
   if FCfg.Gestor = nil then Exit;
   if (FCfg.SourceLineas = nil) or FCfg.SourceLineas.IsEmpty then Exit;
+  iLinea := FCfg.SourceLineas.FieldByName(FCfg.FieldLinea).AsInteger;
+  if EsLineaSinTalla(iLinea) then
+  begin
+    AAllow := False;
+    Exit;
+  end;
   iAc := FCfg.SourceLineas.FieldByName(FCfg.FieldIdAcPivot).AsInteger;
   if iAc <= 0 then Exit;
   arr := FCfg.Gestor.GetPosicionesConjunto(iAc);

@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 20/06/2026 6:21:10
+-- Backup generado: 20/06/2026 9:26:46
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -5683,7 +5683,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 431, 3, 'S', 'S', '2026-06-20 06:21:02', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 437, 3, 'S', 'S', '2026-06-20 09:26:29', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 24, 2, 'S', 'S', '2026-06-13 09:58:34', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -5913,6 +5913,10 @@ CREATE TABLE `fza_efectos_compra` (
   `FECHA_EMISION_EFEC` date NULL DEFAULT NULL,
   `FECHA_VENCIMIENTO_EFEC` date NULL DEFAULT NULL COMMENT 'Vencimiento del pago (clave para el control contable)',
   `FECHA_PAGO_EFEC` date NULL DEFAULT NULL COMMENT 'Fecha del ultimo pago aplicado',
+  `TIPO_PAGO_EFEC` varchar(50) NULL DEFAULT NULL COMMENT 'Medio de pago conciliado',
+  `REFERENCIA_PAGO_EFEC` varchar(100) NULL DEFAULT NULL COMMENT 'Nro transferencia / cheque / justificante',
+  `ENTIDAD_PAGO_EFEC` varchar(100) NULL DEFAULT NULL COMMENT 'Banco / entidad desde la que se paga',
+  `ESCONCILIADO_EFEC` varchar(1) NULL DEFAULT 'N' COMMENT 'S/N — conciliado con el extracto bancario',
   `IMPORTE_EFEC` decimal(18,6) NULL DEFAULT '0.000000',
   `IMPORTE_PAGADO_EFEC` decimal(18,6) NULL DEFAULT '0.000000' COMMENT 'Suma del historico de pagos del efecto',
   `IMPORTE_PENDIENTE_EFEC` decimal(18,6) NULL DEFAULT '0.000000',
@@ -5926,6 +5930,10 @@ CREATE TABLE `fza_efectos_compra` (
   `CODIGO_EMPBAN_EFEC` varchar(8) NULL DEFAULT NULL COMMENT 'Cuenta de la empresa (cargo) — FK a fza_empresas_bancos',
   `IBAN_EMP_EFEC` varchar(34) NULL DEFAULT NULL COMMENT 'IBAN de la empresa (cargo), denormalizado del banco',
   `DOC_EXTERNO_EFEC` varchar(50) NULL DEFAULT NULL COMMENT 'Nro de factura del proveedor (traza)',
+  `REFERENCIA_DOCUMENTO_EFEC` varchar(100) NULL DEFAULT NULL COMMENT 'Referencia del documento de conciliacion',
+  `SERIE_FACC_CONCILIACION_EFEC` varchar(20) NULL DEFAULT NULL COMMENT 'Serie factura del efecto que agrupa esta conciliacion',
+  `NUMERO_FACC_CONCILIACION_EFEC` varchar(20) NULL DEFAULT NULL COMMENT 'Numero factura del efecto que agrupa esta conciliacion',
+  `NUMERO_EFEC_CONCILIACION_EFEC` int(11) NULL DEFAULT NULL COMMENT 'Numero del efecto que agrupa esta conciliacion',
   `OBSERVACIONES_EFEC` varchar(1000) NULL DEFAULT '',
   `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
   `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
@@ -5933,14 +5941,15 @@ CREATE TABLE `fza_efectos_compra` (
   `USUARIO_MODIF` varchar(100) NOT NULL,
   PRIMARY KEY (`SERIE_FACC_EFEC`,`NUMERO_FACC_EFEC`,`NUMERO_EFEC`)
 );
+ALTER TABLE `fza_efectos_compra` ADD INDEX `IDX_EFEC_CONCILIACION` (`SERIE_FACC_CONCILIACION_EFEC`, `NUMERO_FACC_CONCILIACION_EFEC`, `NUMERO_EFEC_CONCILIACION_EFEC`);
 ALTER TABLE `fza_efectos_compra` ADD INDEX `IDX_EFEC_ESTADO` (`ESTADO_EFEC`);
 ALTER TABLE `fza_efectos_compra` ADD INDEX `IDX_EFEC_PROVEEDOR` (`CODIGO_PRV_EFEC`);
 ALTER TABLE `fza_efectos_compra` ADD INDEX `IDX_EFEC_REMESA` (`SERIE_REMC_EFEC`, `NUMERO_REMC_EFEC`);
 ALTER TABLE `fza_efectos_compra` ADD INDEX `IDX_EFEC_VENCIMIENTO` (`FECHA_VENCIMIENTO_EFEC`);
 
 -- Datos de fza_efectos_compra
-INSERT INTO `fza_efectos_compra` (`SERIE_FACC_EFEC`, `NUMERO_FACC_EFEC`, `NUMERO_EFEC`, `CODIGO_EMP_EFEC`, `CODIGO_PRV_EFEC`, `RAZON_SOCIAL_PRV_EFEC`, `NIF_PRV_EFEC`, `CODIGO_TEFE_EFEC`, `ESTADO_EFEC`, `ORDEN_PLAZO_EFEC`, `FECHA_EMISION_EFEC`, `FECHA_VENCIMIENTO_EFEC`, `FECHA_PAGO_EFEC`, `IMPORTE_EFEC`, `IMPORTE_PAGADO_EFEC`, `IMPORTE_PENDIENTE_EFEC`, `SERIE_REMC_EFEC`, `NUMERO_REMC_EFEC`, `ENTIDAD_EFEC`, `OFICINA_EFEC`, `DIGITO_CONTROL_EFEC`, `CUENTA_EFEC`, `IBAN_EFEC`, `CODIGO_EMPBAN_EFEC`, `IBAN_EMP_EFEC`, `DOC_EXTERNO_EFEC`, `OBSERVACIONES_EFEC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('-', '000000', 1, '012', 'ANGEL', 'ANGEL MARTIN JULIÁN', NULL, 'RECIBO', 'PAGADO', 1, '2026-06-11 00:00:00', '2026-08-10 00:00:00', '2026-06-11 00:00:00', 282, 282, 0, '-', '000000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '2026-06-11 16:16:23', '2026-06-11 07:51:39', 'Administrador', 'Administrador');
+INSERT INTO `fza_efectos_compra` (`SERIE_FACC_EFEC`, `NUMERO_FACC_EFEC`, `NUMERO_EFEC`, `CODIGO_EMP_EFEC`, `CODIGO_PRV_EFEC`, `RAZON_SOCIAL_PRV_EFEC`, `NIF_PRV_EFEC`, `CODIGO_TEFE_EFEC`, `ESTADO_EFEC`, `ORDEN_PLAZO_EFEC`, `FECHA_EMISION_EFEC`, `FECHA_VENCIMIENTO_EFEC`, `FECHA_PAGO_EFEC`, `TIPO_PAGO_EFEC`, `REFERENCIA_PAGO_EFEC`, `ENTIDAD_PAGO_EFEC`, `ESCONCILIADO_EFEC`, `IMPORTE_EFEC`, `IMPORTE_PAGADO_EFEC`, `IMPORTE_PENDIENTE_EFEC`, `SERIE_REMC_EFEC`, `NUMERO_REMC_EFEC`, `ENTIDAD_EFEC`, `OFICINA_EFEC`, `DIGITO_CONTROL_EFEC`, `CUENTA_EFEC`, `IBAN_EFEC`, `CODIGO_EMPBAN_EFEC`, `IBAN_EMP_EFEC`, `DOC_EXTERNO_EFEC`, `REFERENCIA_DOCUMENTO_EFEC`, `SERIE_FACC_CONCILIACION_EFEC`, `NUMERO_FACC_CONCILIACION_EFEC`, `NUMERO_EFEC_CONCILIACION_EFEC`, `OBSERVACIONES_EFEC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('-', '000000', 1, '012', 'ANGEL', 'ANGEL MARTIN JULIÁN', NULL, 'RECIBO', 'PAGADO', 1, '2026-06-11 00:00:00', '2026-08-10 00:00:00', '2026-06-11 00:00:00', NULL, NULL, NULL, 'N', 282, 282, 0, '-', '000000', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '-/000000', NULL, NULL, NULL, '', '2026-06-20 09:26:12', '2026-06-11 07:51:39', 'Administrador', 'Administrador');
 -- 1 registros exportados
 
 
@@ -6711,6 +6720,7 @@ CREATE TABLE `fza_facturas_compra` (
   `TOTAL_FACC` decimal(18,6) NULL DEFAULT NULL COMMENT 'Total factura = bases + impuestos',
   `TOTAL_LIQUIDO_FACC` decimal(18,6) NULL DEFAULT NULL COMMENT 'A pagar al proveedor (con retencion / descuentos)',
   `FORMA_PAGO_FACC` varchar(200) NULL DEFAULT NULL COMMENT 'Codigo de forma de pago (fza_formas_pago)',
+  `ID_PV_TEMPORADA_FACC` int(11) NULL DEFAULT NULL COMMENT 'FK logica fza_propiedades_valores.ID_PV_ARTPROP con ID_PROP_PV=TEMPORADA. Procede de ocfacpro.Temporada en la migracion.',
   `ESAGRUPAR_ALBARANES_FACC` varchar(1) NULL DEFAULT 'S' COMMENT 'S/N — agrupa varios albaranes en esta factura',
   `ENTIDAD_FACC` varchar(4) NULL DEFAULT NULL,
   `OFICINA_FACC` varchar(4) NULL DEFAULT NULL,
@@ -6732,10 +6742,11 @@ ALTER TABLE `fza_facturas_compra` ADD INDEX `IDX_FACC_DOC_EXTERNO` (`CODIGO_PRV_
 ALTER TABLE `fza_facturas_compra` ADD INDEX `IDX_FACC_EMPRESA` (`CODIGO_EMP_FACC`);
 ALTER TABLE `fza_facturas_compra` ADD INDEX `IDX_FACC_ESTADO` (`ESTADO_FACC`);
 ALTER TABLE `fza_facturas_compra` ADD INDEX `IDX_FACC_PROVEEDOR_FECHA` (`CODIGO_PRV_FACC`, `FECHA_FACC`);
+ALTER TABLE `fza_facturas_compra` ADD INDEX `IDX_FACC_TEMPORADA` (`ID_PV_TEMPORADA_FACC`);
 
 -- Datos de fza_facturas_compra
-INSERT INTO `fza_facturas_compra` (`NUMERO_FACC`, `SERIE_FACC`, `FECHA_FACC`, `FECHA_VALOR_FACC`, `ESTADO_FACC`, `DOC_EXTERNO_FACC`, `REF_PROVEEDOR_FACC`, `CODIGO_EMP_FACC`, `RAZON_SOCIAL_EMPRESA_FACC`, `NIF_EMPRESA_FACC`, `MOVIL_EMPRESA_FACC`, `EMAIL_EMPRESA_FACC`, `DIRECCION1_EMPRESA_FACC`, `DIRECCION2_EMPRESA_FACC`, `POBLACION_EMPRESA_FACC`, `PROVINCIA_EMPRESA_FACC`, `CODIGO_PAI_EMPRESA_FACC`, `NOMBRE_PAI_EMPRESA_FACC`, `CODIGO_POSTAL_EMPRESA_FACC`, `CODIGO_PRV_FACC`, `RAZON_SOCIAL_PRV_FACC`, `NIF_PRV_FACC`, `MOVIL_PRV_FACC`, `EMAIL_PRV_FACC`, `DIRECCION1_PRV_FACC`, `DIRECCION2_PRV_FACC`, `POBLACION_PRV_FACC`, `PROVINCIA_PRV_FACC`, `CODIGO_PAI_PRV_FACC`, `NOMBRE_PAI_PRV_FACC`, `CODIGO_POSTAL_PRV_FACC`, `CODIGO_ALM_FACC`, `CODIGO_IVA_FACC`, `ESIVA_RECARGO_COMPRAS_FACC`, `PORCENTAJE_IVAN_FACC`, `TOTAL_BASEI_IVAN_FACC`, `TOTAL_IVAN_FACC`, `PORCENTAJE_REN_FACC`, `TOTAL_REN_FACC`, `PORCENTAJE_IVAR_FACC`, `TOTAL_BASEI_IVAR_FACC`, `TOTAL_IVAR_FACC`, `PORCENTAJE_RER_FACC`, `TOTAL_RER_FACC`, `PORCENTAJE_IVAS_FACC`, `TOTAL_BASEI_IVAS_FACC`, `TOTAL_IVAS_FACC`, `PORCENTAJE_RES_FACC`, `TOTAL_RES_FACC`, `PORCENTAJE_IVAE_FACC`, `TOTAL_BASEI_IVAE_FACC`, `TOTAL_IVAE_FACC`, `PORCENTAJE_REE_FACC`, `TOTAL_REE_FACC`, `PORCENTAJE_DTO_COMERCIAL_FACC`, `TOTAL_DTO_COMERCIAL_FACC`, `PORCENTAJE_PRONTO_PAGO_FACC`, `TOTAL_PRONTO_PAGO_FACC`, `PORCENTAJE_RAPPEL_FACC`, `TOTAL_RAPPEL_FACC`, `PORCENTAJE_FINANCIACION_FACC`, `TOTAL_FINANCIACION_FACC`, `TOTAL_PORTES_FACC`, `PORCENTAJE_RETENCION_FACC`, `TOTAL_RETENCION_FACC`, `TOTAL_BRUTO_FACC`, `TOTAL_BASES_FACC`, `TOTAL_IMPUESTOS_FACC`, `TOTAL_FACC`, `TOTAL_LIQUIDO_FACC`, `FORMA_PAGO_FACC`, `ESAGRUPAR_ALBARANES_FACC`, `ENTIDAD_FACC`, `OFICINA_FACC`, `DIGITO_CONTROL_FACC`, `CUENTA_FACC`, `IBAN_FACC`, `CONTADOR_LINEAS_FACC`, `COMENTARIOS_FACC`, `OBSERVACIONES_FACC`, `ESPIVOTE_HORIZONTAL_FACC`, `INSTANTE_CONTABILIZACION_FACC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('000000', '-', '2026-06-11 00:00:00', NULL, 'ABIERTA', NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'ANGEL', 'ANGEL MARTIN JULIÁN', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, 'GEN', NULL, 'N', 0, 0, 0, NULL, NULL, 0, 0, 0, NULL, NULL, 0, 0, 0, NULL, NULL, 0, 1471, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1471, 282, 0, 1471, 282, '60DIAS', 'S', NULL, NULL, NULL, NULL, NULL, '530', '', '', 'S', NULL, '2026-06-11 07:39:42', '2026-06-11 07:20:03', 'Administrador', 'Administrador');
+INSERT INTO `fza_facturas_compra` (`NUMERO_FACC`, `SERIE_FACC`, `FECHA_FACC`, `FECHA_VALOR_FACC`, `ESTADO_FACC`, `DOC_EXTERNO_FACC`, `REF_PROVEEDOR_FACC`, `CODIGO_EMP_FACC`, `RAZON_SOCIAL_EMPRESA_FACC`, `NIF_EMPRESA_FACC`, `MOVIL_EMPRESA_FACC`, `EMAIL_EMPRESA_FACC`, `DIRECCION1_EMPRESA_FACC`, `DIRECCION2_EMPRESA_FACC`, `POBLACION_EMPRESA_FACC`, `PROVINCIA_EMPRESA_FACC`, `CODIGO_PAI_EMPRESA_FACC`, `NOMBRE_PAI_EMPRESA_FACC`, `CODIGO_POSTAL_EMPRESA_FACC`, `CODIGO_PRV_FACC`, `RAZON_SOCIAL_PRV_FACC`, `NIF_PRV_FACC`, `MOVIL_PRV_FACC`, `EMAIL_PRV_FACC`, `DIRECCION1_PRV_FACC`, `DIRECCION2_PRV_FACC`, `POBLACION_PRV_FACC`, `PROVINCIA_PRV_FACC`, `CODIGO_PAI_PRV_FACC`, `NOMBRE_PAI_PRV_FACC`, `CODIGO_POSTAL_PRV_FACC`, `CODIGO_ALM_FACC`, `CODIGO_IVA_FACC`, `ESIVA_RECARGO_COMPRAS_FACC`, `PORCENTAJE_IVAN_FACC`, `TOTAL_BASEI_IVAN_FACC`, `TOTAL_IVAN_FACC`, `PORCENTAJE_REN_FACC`, `TOTAL_REN_FACC`, `PORCENTAJE_IVAR_FACC`, `TOTAL_BASEI_IVAR_FACC`, `TOTAL_IVAR_FACC`, `PORCENTAJE_RER_FACC`, `TOTAL_RER_FACC`, `PORCENTAJE_IVAS_FACC`, `TOTAL_BASEI_IVAS_FACC`, `TOTAL_IVAS_FACC`, `PORCENTAJE_RES_FACC`, `TOTAL_RES_FACC`, `PORCENTAJE_IVAE_FACC`, `TOTAL_BASEI_IVAE_FACC`, `TOTAL_IVAE_FACC`, `PORCENTAJE_REE_FACC`, `TOTAL_REE_FACC`, `PORCENTAJE_DTO_COMERCIAL_FACC`, `TOTAL_DTO_COMERCIAL_FACC`, `PORCENTAJE_PRONTO_PAGO_FACC`, `TOTAL_PRONTO_PAGO_FACC`, `PORCENTAJE_RAPPEL_FACC`, `TOTAL_RAPPEL_FACC`, `PORCENTAJE_FINANCIACION_FACC`, `TOTAL_FINANCIACION_FACC`, `TOTAL_PORTES_FACC`, `PORCENTAJE_RETENCION_FACC`, `TOTAL_RETENCION_FACC`, `TOTAL_BRUTO_FACC`, `TOTAL_BASES_FACC`, `TOTAL_IMPUESTOS_FACC`, `TOTAL_FACC`, `TOTAL_LIQUIDO_FACC`, `FORMA_PAGO_FACC`, `ID_PV_TEMPORADA_FACC`, `ESAGRUPAR_ALBARANES_FACC`, `ENTIDAD_FACC`, `OFICINA_FACC`, `DIGITO_CONTROL_FACC`, `CUENTA_FACC`, `IBAN_FACC`, `CONTADOR_LINEAS_FACC`, `COMENTARIOS_FACC`, `OBSERVACIONES_FACC`, `ESPIVOTE_HORIZONTAL_FACC`, `INSTANTE_CONTABILIZACION_FACC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('000000', '-', '2026-06-11 00:00:00', NULL, 'ABIERTA', NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'ANGEL', 'ANGEL MARTIN JULIÁN', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, 'GEN', NULL, 'N', 0, 0, 0, NULL, NULL, 0, 0, 0, NULL, NULL, 0, 0, 0, NULL, NULL, 0, 1471, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1471, 282, 0, 1471, 282, '60DIAS', NULL, 'S', NULL, NULL, NULL, NULL, NULL, '530', '', '', 'S', NULL, '2026-06-11 07:39:42', '2026-06-11 07:20:03', 'Administrador', 'Administrador');
 -- 1 registros exportados
 
 
@@ -18524,8 +18535,3551 @@ FROM `fza_devoluciones_compra` alb
 LEFT JOIN `fza_empresas`     emp ON emp.`CODIGO_EMP_EMP` = alb.`CODIGO_EMP_DEVC`
 LEFT JOIN `fza_proveedores`  prv ON prv.`CODIGO_PRV_PRV` = alb.`CODIGO_PRV_DEVC`
 LEFT JOIN `fza_almacenes`    alm ON alm.`CODIGO_ALM_ALM` = alb.`CODIGO_ALM_DEVC`;
-', '2026-06-20 06:21:02', '2026-06-20 06:21:02', 'Administrador', 'Administrador');
--- 42 registros exportados
+', '2026-06-20 06:21:02', '2026-06-20 06:21:02', 'Administrador', 'Administrador'),
+  ('431', 'efectos_remesas_compra', '-- ============================================================================
+-- Efectos de pago a proveedor, conciliacion y remesas — esquema base
+--
+-- Segundo eslabon de la cadena de cuentas a pagar, despues de
+-- facturas_compra.sql:
+--
+--   factura de compra  --(efectos)-->  vencimientos de pago / pagos
+--                                            |
+--                                   remesa (agrupa efectos)
+--
+-- Tablas (espejo MariaDB del legacy ocefepro / occobpro / ocrempro /
+-- octipefe, acotado al lado de COMPRA / PAGO):
+--
+--   fza_tipos_efecto         (TEFE)    catalogo de tipos de efecto
+--   fza_efectos_compra       (EFEC)    un efecto/vencimiento por plazo de
+--                                      la factura. Cuando se concilia un
+--                                      pago parcial, el efecto se divide en
+--                                      uno pagado y otro pendiente.
+--   fza_remesas_compra       (REMC)    remesa que agrupa efectos para pago
+--
+-- Sufijos registrados en LIBRO_DE_ESTILO_BBDD.md §2 y en
+-- UNormalizerEngine.pas / InitDefaults. Idempotente (INFORMATION_SCHEMA);
+-- las SP usan DROP ... IF EXISTS y DELIMITER (cliente DELIMITER-aware).
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. fza_tipos_efecto (TEFE): catalogo de tipos de efecto
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_tipos_efecto''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_tipos_efecto` (''
+  ''  `CODIGO_TEFE`        varchar(20)  NOT NULL,''
+  ''  `DESCRIPCION_TEFE`   varchar(100) NOT NULL,''
+  ''  `ESDOMICILIADO_TEFE` varchar(1)   NULL DEFAULT ''''N''''''
+  ''       COMMENT ''''S/N — el pago se domicilia en cuenta bancaria'''',''
+  ''  `ESREMESABLE_TEFE`   varchar(1)   NULL DEFAULT ''''N''''''
+  ''       COMMENT ''''S/N — el efecto puede agruparse en una remesa'''',''
+  ''  `ORDEN_TEFE`         int(11)      NULL DEFAULT 0,''
+  ''  `ESACTIVO_TEFE`      varchar(1)   NULL DEFAULT ''''S'''',''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`CODIGO_TEFE`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Semilla de tipos de efecto habituales (idempotente).
+INSERT INTO `fza_tipos_efecto`
+  (`CODIGO_TEFE`, `DESCRIPCION_TEFE`, `ESDOMICILIADO_TEFE`,
+   `ESREMESABLE_TEFE`, `ORDEN_TEFE`, `ESACTIVO_TEFE`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`)
+SELECT seed.c, seed.d, seed.dom, seed.rem, seed.o, seed.a,
+       NOW(), ''SISTEMA'', NOW(), ''SISTEMA''
+  FROM (
+  SELECT ''CONTADO''       AS c, ''Pago al contado''        AS d,
+         ''N'' AS dom, ''N'' AS rem, 1  AS o, ''S'' AS a
+  UNION ALL SELECT ''TRANSFERENCIA'', ''Transferencia bancaria'',
+         ''N'', ''N'', 2, ''S''
+  UNION ALL SELECT ''RECIBO'', ''Recibo domiciliado'',
+         ''S'', ''S'', 3, ''S''
+  UNION ALL SELECT ''PAGARE'', ''Pagare'',
+         ''N'', ''S'', 4, ''S''
+  UNION ALL SELECT ''CONFIRMING'', ''Confirming'',
+         ''S'', ''S'', 5, ''S''
+) seed
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_tipos_efecto`
+    WHERE `CODIGO_TEFE` = seed.c
+ );
+
+-- ----------------------------------------------------------------------------
+-- 2. fza_efectos_compra (EFEC): un efecto/vencimiento por plazo de factura
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_efectos_compra` (''
+  ''  `SERIE_FACC_EFEC`  varchar(20) NOT NULL''
+  ''       COMMENT ''''Factura de compra origen (serie)'''',''
+  ''  `NUMERO_FACC_EFEC` varchar(20) NOT NULL''
+  ''       COMMENT ''''Factura de compra origen (numero)'''',''
+  ''  `NUMERO_EFEC`      int(11)     NOT NULL''
+  ''       COMMENT ''''Secuencial del efecto dentro de la factura (1..N)'''',''
+  ''  `CODIGO_EMP_EFEC`  varchar(8)  NULL DEFAULT NULL,''
+  ''  `CODIGO_PRV_EFEC`  varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_proveedores (denormalizado)'''',''
+  ''  `RAZON_SOCIAL_PRV_EFEC` varchar(200) NULL DEFAULT NULL,''
+  ''  `NIF_PRV_EFEC`     varchar(50) NULL DEFAULT NULL,''
+  ''  `CODIGO_TEFE_EFEC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_tipos_efecto'''',''
+  ''  `ESTADO_EFEC`      varchar(20) NULL DEFAULT ''''PENDIENTE''''''
+  ''       COMMENT ''''PENDIENTE, PAGADO, REMESADO, DEVUELTO, ANULADO'''',''
+  ''  `ORDEN_PLAZO_EFEC` int(11)     NULL DEFAULT 1''
+  ''       COMMENT ''''Numero de plazo segun la forma de pago'''',''
+  ''  `FECHA_EMISION_EFEC`     date NULL DEFAULT NULL,''
+  ''  `FECHA_VENCIMIENTO_EFEC` date NULL DEFAULT NULL''
+  ''       COMMENT ''''Vencimiento del pago (clave para el control contable)'''',''
+  ''  `FECHA_PAGO_EFEC`        date NULL DEFAULT NULL''
+  ''       COMMENT ''''Fecha del ultimo pago aplicado'''',''
+  ''  `TIPO_PAGO_EFEC`         varchar(50) NULL DEFAULT NULL''
+  ''       COMMENT ''''Medio de pago conciliado'''',''
+  ''  `REFERENCIA_PAGO_EFEC`   varchar(100) NULL DEFAULT NULL''
+  ''       COMMENT ''''Nro transferencia / cheque / justificante'''',''
+  ''  `ENTIDAD_PAGO_EFEC`      varchar(100) NULL DEFAULT NULL''
+  ''       COMMENT ''''Banco / entidad desde la que se paga'''',''
+  ''  `ESCONCILIADO_EFEC`      varchar(1) NULL DEFAULT ''''N''''''
+  ''       COMMENT ''''S/N — conciliado con el extracto bancario'''',''
+  ''  `IMPORTE_EFEC`           decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `IMPORTE_PAGADO_EFEC`    decimal(18,6) NULL DEFAULT ''''0.000000''''''
+  ''       COMMENT ''''Importe pagado del propio efecto'''',''
+  ''  `IMPORTE_PENDIENTE_EFEC` decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `SERIE_REMC_EFEC`  varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_remesas_compra (si esta remesado)'''',''
+  ''  `NUMERO_REMC_EFEC` varchar(20) NULL DEFAULT NULL,''
+  ''  `ENTIDAD_EFEC`        varchar(4)  NULL DEFAULT NULL,''
+  ''  `OFICINA_EFEC`        varchar(4)  NULL DEFAULT NULL,''
+  ''  `DIGITO_CONTROL_EFEC` varchar(2)  NULL DEFAULT NULL,''
+  ''  `CUENTA_EFEC`         varchar(10) NULL DEFAULT NULL,''
+  ''  `IBAN_EFEC`           varchar(34) NULL DEFAULT NULL,''
+  ''  `CODIGO_EMPBAN_EFEC` varchar(8) NULL DEFAULT NULL''
+  ''       COMMENT ''''Cuenta de la empresa (cargo)'''','' 
+  ''  `IBAN_EMP_EFEC`      varchar(34) NULL DEFAULT NULL''
+  ''       COMMENT ''''IBAN de la empresa (cargo)'''','' 
+  ''  `DOC_EXTERNO_EFEC`    varchar(50) NULL DEFAULT NULL''
+  ''       COMMENT ''''Nro de factura del proveedor (traza)'''',''
+  ''  `OBSERVACIONES_EFEC`  varchar(1000) NULL DEFAULT '''''''',''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`SERIE_FACC_EFEC`,`NUMERO_FACC_EFEC`,`NUMERO_EFEC`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Columnas añadidas sobre instalaciones que ya tengan fza_efectos_compra.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''TIPO_PAGO_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `TIPO_PAGO_EFEC` varchar(50) NULL DEFAULT NULL ''
+  ''COMMENT ''''Medio de pago conciliado'''' AFTER `FECHA_PAGO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''REFERENCIA_PAGO_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `REFERENCIA_PAGO_EFEC` varchar(100) NULL DEFAULT NULL ''
+  ''COMMENT ''''Nro transferencia / cheque / justificante'''' ''
+  ''AFTER `TIPO_PAGO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''ENTIDAD_PAGO_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `ENTIDAD_PAGO_EFEC` varchar(100) NULL DEFAULT NULL ''
+  ''COMMENT ''''Banco / entidad desde la que se paga'''' ''
+  ''AFTER `REFERENCIA_PAGO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''ESCONCILIADO_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `ESCONCILIADO_EFEC` varchar(1) NULL DEFAULT ''''N'''' ''
+  ''COMMENT ''''S/N — conciliado con el extracto bancario'''' ''
+  ''AFTER `ENTIDAD_PAGO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''CODIGO_EMPBAN_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `CODIGO_EMPBAN_EFEC` varchar(8) NULL DEFAULT NULL ''
+  ''COMMENT ''''Cuenta de la empresa (cargo)'''' AFTER `IBAN_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''IBAN_EMP_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `IBAN_EMP_EFEC` varchar(34) NULL DEFAULT NULL ''
+  ''COMMENT ''''IBAN de la empresa (cargo)'''' AFTER `CODIGO_EMPBAN_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND INDEX_NAME   = ''IDX_EFEC_VENCIMIENTO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD INDEX `IDX_EFEC_VENCIMIENTO` (`FECHA_VENCIMIENTO_EFEC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND INDEX_NAME   = ''IDX_EFEC_ESTADO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD INDEX `IDX_EFEC_ESTADO` (`ESTADO_EFEC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND INDEX_NAME   = ''IDX_EFEC_PROVEEDOR''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD INDEX `IDX_EFEC_PROVEEDOR` (`CODIGO_PRV_EFEC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND INDEX_NAME   = ''IDX_EFEC_REMESA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD INDEX `IDX_EFEC_REMESA` (`SERIE_REMC_EFEC`,`NUMERO_REMC_EFEC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 3. fza_remesas_compra (REMC): remesa de pagos que agrupa efectos
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_remesas_compra''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_remesas_compra` (''
+  ''  `NUMERO_REMC` varchar(20) NOT NULL,''
+  ''  `SERIE_REMC`  varchar(20) NOT NULL,''
+  ''  `FECHA_REMC`  date NULL DEFAULT NULL,''
+  ''  `ESTADO_REMC` varchar(20) NULL DEFAULT ''''ABIERTA''''''
+  ''       COMMENT ''''ABIERTA, PARCIAL, CERRADA, ENVIADA, PAGADA, CANCELADA'''',''
+  ''  `CODIGO_EMP_REMC` varchar(8) NULL DEFAULT NULL,''
+  ''  `TIPO_REMC`   varchar(20) NULL DEFAULT ''''NORMA34''''''
+  ''       COMMENT ''''Norma SEPA de pago (p.ej. cuaderno 34)'''',''
+  ''  `NORMA_REMC`  varchar(10) NULL DEFAULT NULL,''
+  ''  `ENTIDAD_REMC`        varchar(4)  NULL DEFAULT NULL,''
+  ''  `OFICINA_REMC`        varchar(4)  NULL DEFAULT NULL,''
+  ''  `DIGITO_CONTROL_REMC` varchar(2)  NULL DEFAULT NULL,''
+  ''  `CUENTA_REMC`         varchar(10) NULL DEFAULT NULL,''
+  ''  `IBAN_REMC`           varchar(34) NULL DEFAULT NULL''
+  ''       COMMENT ''''Cuenta de cargo de la empresa'''',''
+  ''  `CONTADOR_EFECTOS_REMC` int(11) NULL DEFAULT 0,''
+  ''  `TOTAL_REMC`          decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `TOTAL_GASTOS_REMC`   decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `TOTAL_COMISION_REMC` decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `FECHA_CARGO_REMC`    date NULL DEFAULT NULL''
+  ''       COMMENT ''''Fecha de cargo en cuenta'''',''
+  ''  `ARCHIVO_REMC`        varchar(200) NULL DEFAULT NULL''
+  ''       COMMENT ''''Fichero SEPA generado'''',''
+  ''  `OBSERVACIONES_REMC`  varchar(1000) NULL DEFAULT '''''''',''
+  ''  `INSTANTE_CONTABILIZACION_REMC` datetime NULL DEFAULT NULL,''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`NUMERO_REMC`,`SERIE_REMC`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_remesas_compra''
+     AND INDEX_NAME   = ''IDX_REMC_EMPRESA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_remesas_compra` ''
+  ''ADD INDEX `IDX_REMC_EMPRESA` (`CODIGO_EMP_REMC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_remesas_compra''
+     AND INDEX_NAME   = ''IDX_REMC_ESTADO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_remesas_compra` ''
+  ''ADD INDEX `IDX_REMC_ESTADO` (`ESTADO_REMC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 5. Registrar el tipo de documento ''RP'' (REMESA DE PAGOS) y su contador.
+--    Codigo libre en fza_tipos_documentos. Las facturas usan ''FP''.
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_tipos_documentos`
+  (`CODIGO_TIPO_DOCUMENTO_TD`, `DESCRIPCION_TIPO_DOCUMENTO_TD`,
+   `TABLA_ORIGEN_TIPO_DOCUMENTO_TD`)
+SELECT ''RP'', ''REMESA DE PAGOS'', ''fza_remesas_compra''
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_tipos_documentos`
+    WHERE `CODIGO_TIPO_DOCUMENTO_TD` = ''RP''
+ );
+
+INSERT INTO `fza_contadores`
+  (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
+   `NUM_DIGITOS_CON`, `ESACTIVO_CON`, `DEFAULT_CON`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`)
+SELECT ''RP'', ''-'', ''-'', 0, 6, ''S'', ''S'',
+       NOW(), ''SISTEMA'', NOW(), ''SISTEMA''
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_contadores`
+    WHERE `TIPO_DOC_CON` = ''RP'' AND `SERIE_CON` = ''-''
+ );
+
+-- ----------------------------------------------------------------------------
+-- 6. Vistas de lectura
+-- ----------------------------------------------------------------------------
+-- 6a. Efectos con datos de factura, proveedor, tipo y remesa.
+CREATE OR REPLACE VIEW `vi_efectos_compra` AS
+SELECT  e.*,
+        f.FECHA_FACC          AS FECHA_FACTURA_VIEW_EFEC,
+        f.DOC_EXTERNO_FACC    AS DOC_EXTERNO_FACTURA_VIEW_EFEC,
+        f.TOTAL_LIQUIDO_FACC  AS TOTAL_LIQUIDO_FACTURA_VIEW_EFEC,
+        prv.NOMBRE_PRV        AS NOMBRE_PRV_VIEW_EFEC,
+        t.DESCRIPCION_TEFE    AS DESCRIPCION_TEFE_VIEW_EFEC
+  FROM  fza_efectos_compra e
+  LEFT  JOIN fza_facturas_compra f
+         ON f.SERIE_FACC  = e.SERIE_FACC_EFEC
+        AND f.NUMERO_FACC = e.NUMERO_FACC_EFEC
+  LEFT  JOIN fza_proveedores prv
+         ON prv.CODIGO_PRV_PRV = e.CODIGO_PRV_EFEC
+  LEFT  JOIN fza_tipos_efecto t
+         ON t.CODIGO_TEFE = e.CODIGO_TEFE_EFEC;
+
+-- 6b. Solo los efectos pendientes (cartera de pagos por vencimiento).
+CREATE OR REPLACE VIEW `vi_efectos_compra_pendientes` AS
+SELECT  e.*,
+        prv.NOMBRE_PRV        AS NOMBRE_PRV_VIEW_EFEC
+  FROM  fza_efectos_compra e
+  LEFT  JOIN fza_proveedores prv
+         ON prv.CODIGO_PRV_PRV = e.CODIGO_PRV_EFEC
+ WHERE  COALESCE(e.ESTADO_EFEC, '''') NOT IN (''PAGADO'', ''ANULADO'')
+   AND  COALESCE(e.IMPORTE_PENDIENTE_EFEC, 0) > 0;
+
+-- 6c. Remesas con datos de empresa.
+CREATE OR REPLACE VIEW `vi_remesas_compra` AS
+SELECT  r.*,
+        emp.RAZON_SOCIAL_EMP  AS RAZON_SOCIAL_EMPRESA_VIEW_REMC
+  FROM  fza_remesas_compra r
+  LEFT  JOIN fza_empresas emp
+         ON emp.CODIGO_EMP_EMP = r.CODIGO_EMP_REMC;
+
+-- ----------------------------------------------------------------------------
+-- 7. PRC_EFEC_GENERAR_DESDE_FACTURA: genera los efectos (vencimientos) de
+--    una factura segun su forma de pago (N plazos x N dias entre plazos).
+--    Reparte TOTAL_LIQUIDO_FACC entre los plazos (el ultimo absorbe el
+--    redondeo). No toca efectos ya pagados / remesados (aborta con 0 para
+--    no destruir pagos ya conciliados).
+--    p_RESULTADO: nº de efectos generados, 0 si no habia nada que hacer.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_EFEC_GENERAR_DESDE_FACTURA`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_EFEC_GENERAR_DESDE_FACTURA`(
+    IN  p_SERIE   varchar(20),
+    IN  p_NUMERO  varchar(20),
+    IN  p_USUARIO varchar(100),
+    OUT p_RESULTADO int)
+BEGIN
+  DECLARE v_liquido  decimal(18,6) DEFAULT 0;
+  DECLARE v_fp       varchar(200);
+  DECLARE v_fecha    date;
+  DECLARE v_emp      varchar(8);
+  DECLARE v_prv      varchar(20);
+  DECLARE v_razon    varchar(200);
+  DECLARE v_nif      varchar(50);
+  DECLARE v_docext   varchar(50);
+  DECLARE v_ent      varchar(4);
+  DECLARE v_ofi      varchar(4);
+  DECLARE v_dc       varchar(2);
+  DECLARE v_cta      varchar(10);
+  DECLARE v_iban     varchar(34);
+  DECLARE v_nplazos  int DEFAULT 1;
+  DECLARE v_dias     int DEFAULT 0;
+  DECLARE v_escontado varchar(1) DEFAULT ''N'';
+  DECLARE v_tefe     varchar(20);
+  DECLARE v_bloqueados int DEFAULT 0;
+  DECLARE v_i        int DEFAULT 1;
+  DECLARE v_imp      decimal(18,6) DEFAULT 0;
+  DECLARE v_acum     decimal(18,6) DEFAULT 0;
+  DECLARE v_vto      date;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    SET p_RESULTADO = -1;
+    RESIGNAL;
+  END;
+  SET p_RESULTADO = 0;
+  -- ¿Hay efectos que no se pueden regenerar (pagados / remesados)?
+  SELECT COUNT(*)
+    INTO v_bloqueados
+    FROM fza_efectos_compra
+   WHERE SERIE_FACC_EFEC  = p_SERIE
+     AND NUMERO_FACC_EFEC = p_NUMERO
+     AND (COALESCE(ESTADO_EFEC, '''') IN (''PAGADO'', ''REMESADO'')
+          OR COALESCE(IMPORTE_PAGADO_EFEC, 0) > 0
+          OR SERIE_REMC_EFEC IS NOT NULL);
+  IF v_bloqueados = 0 THEN
+    -- Datos de la factura.
+    SELECT COALESCE(TOTAL_LIQUIDO_FACC, 0), FORMA_PAGO_FACC,
+           COALESCE(FECHA_FACC, CURDATE()), CODIGO_EMP_FACC,
+           CODIGO_PRV_FACC, RAZON_SOCIAL_PRV_FACC, NIF_PRV_FACC,
+           DOC_EXTERNO_FACC, ENTIDAD_FACC, OFICINA_FACC,
+           DIGITO_CONTROL_FACC, CUENTA_FACC, IBAN_FACC
+      INTO v_liquido, v_fp, v_fecha, v_emp, v_prv, v_razon, v_nif,
+           v_docext, v_ent, v_ofi, v_dc, v_cta, v_iban
+      FROM fza_facturas_compra
+     WHERE SERIE_FACC = p_SERIE AND NUMERO_FACC = p_NUMERO;
+    -- Parametros de la forma de pago (si existe).
+    SELECT COALESCE(N_PLAZOS_FORMA_PAGO_FP, 1),
+           COALESCE(N_DIAS_ENTRE_PLAZOS_FORMA_PAGO_FP, 0),
+           COALESCE(ESCONTADO_FORMA_PAGO_FP, ''N'')
+      INTO v_nplazos, v_dias, v_escontado
+      FROM fza_formas_pago
+     WHERE CODIGO_FP_FP = v_fp;
+    IF v_nplazos IS NULL OR v_nplazos < 1 THEN
+      SET v_nplazos = 1;
+    END IF;
+    -- Tipo de efecto por defecto segun contado/aplazado.
+    SET v_tefe = IF(v_escontado = ''S'', ''CONTADO'', ''RECIBO'');
+    -- Limpiar efectos previos (todos PENDIENTE en este punto).
+    START TRANSACTION;
+    DELETE FROM fza_efectos_compra
+     WHERE SERIE_FACC_EFEC  = p_SERIE
+       AND NUMERO_FACC_EFEC = p_NUMERO;
+    SET v_acum = 0;
+    WHILE v_i <= v_nplazos DO
+      IF v_i = v_nplazos THEN
+        SET v_imp = v_liquido - v_acum;          -- ultimo: resto exacto
+      ELSE
+        SET v_imp = ROUND(v_liquido / v_nplazos, 2);
+        SET v_acum = v_acum + v_imp;
+      END IF;
+      SET v_vto = DATE_ADD(v_fecha, INTERVAL (v_i * v_dias) DAY);
+      INSERT INTO fza_efectos_compra
+        (SERIE_FACC_EFEC, NUMERO_FACC_EFEC, NUMERO_EFEC, CODIGO_EMP_EFEC,
+         CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC, NIF_PRV_EFEC,
+         CODIGO_TEFE_EFEC, ESTADO_EFEC, ORDEN_PLAZO_EFEC,
+         FECHA_EMISION_EFEC, FECHA_VENCIMIENTO_EFEC, IMPORTE_EFEC,
+         IMPORTE_PAGADO_EFEC, IMPORTE_PENDIENTE_EFEC, ENTIDAD_EFEC,
+         OFICINA_EFEC, DIGITO_CONTROL_EFEC, CUENTA_EFEC, IBAN_EFEC,
+         DOC_EXTERNO_EFEC, INSTANTE_ALTA, USUARIO_ALTA,
+         INSTANTE_MODIF, USUARIO_MODIF)
+      VALUES
+        (p_SERIE, p_NUMERO, v_i, v_emp, v_prv, v_razon, v_nif,
+         v_tefe, ''PENDIENTE'', v_i, v_fecha, v_vto, v_imp,
+         0, v_imp, v_ent, v_ofi, v_dc, v_cta, v_iban,
+         v_docext, NOW(), p_USUARIO, NOW(), p_USUARIO);
+      SET v_i = v_i + 1;
+    END WHILE;
+    COMMIT;
+    SET p_RESULTADO = v_nplazos;
+  END IF;
+END ;;
+DELIMITER ;
+
+-- ----------------------------------------------------------------------------
+-- 8. PRC_EFEC_CONCILIAR_PAGO: concilia un pago contra el propio efecto.
+--    Si el pago es parcial, divide el efecto en dos: el original queda
+--    PAGADO por el importe conciliado y se crea otro PENDIENTE por el resto.
+--    No usa tabla de pagos: el efecto es el espejo del pago.
+--    p_RESULTADO: 1 pago completo, 2 pago parcial con split, 0 sin efecto.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_EFEC_REGISTRAR_PAGO`;
+DROP PROCEDURE IF EXISTS `PRC_EFEC_CONCILIAR_PAGO`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_EFEC_CONCILIAR_PAGO`(
+    IN  p_SERIE      varchar(20),
+    IN  p_NUMERO     varchar(20),
+    IN  p_NUM_EFEC   int,
+    IN  p_FECHA      date,
+    IN  p_IMPORTE    decimal(18,6),
+    IN  p_TIPO       varchar(50),
+    IN  p_REFERENCIA varchar(100),
+    IN  p_ENTIDAD    varchar(100),
+    IN  p_USUARIO    varchar(100),
+    OUT p_RESULTADO  int)
+BEGIN
+  DECLARE v_existe   int DEFAULT 0;
+  DECLARE v_importe  decimal(18,6) DEFAULT 0;
+  DECLARE v_pend     decimal(18,6) DEFAULT 0;
+  DECLARE v_pago     decimal(18,6) DEFAULT 0;
+  DECLARE v_resto    decimal(18,6) DEFAULT 0;
+  DECLARE v_nuevo    int DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    SET p_RESULTADO = -1;
+    RESIGNAL;
+  END;
+  SET p_RESULTADO = 0;
+  START TRANSACTION;
+  SELECT COUNT(*)
+    INTO v_existe
+    FROM fza_efectos_compra
+   WHERE SERIE_FACC_EFEC  = p_SERIE
+     AND NUMERO_FACC_EFEC = p_NUMERO
+     AND NUMERO_EFEC      = p_NUM_EFEC
+     AND COALESCE(ESTADO_EFEC, '''') NOT IN
+         (''PAGADO'', ''ANULADO'', ''DEVUELTO'')
+     AND COALESCE(IMPORTE_PENDIENTE_EFEC, IMPORTE_EFEC, 0) > 0;
+  IF v_existe > 0 AND COALESCE(p_IMPORTE, 0) > 0 THEN
+    SELECT COALESCE(IMPORTE_EFEC, 0),
+           COALESCE(IMPORTE_PENDIENTE_EFEC, IMPORTE_EFEC, 0)
+      INTO v_importe, v_pend
+      FROM fza_efectos_compra
+     WHERE SERIE_FACC_EFEC  = p_SERIE
+       AND NUMERO_FACC_EFEC = p_NUMERO
+       AND NUMERO_EFEC      = p_NUM_EFEC
+       FOR UPDATE;
+    SET v_pago = COALESCE(p_IMPORTE, 0);
+    IF v_pago > v_pend THEN
+      SET v_pago = v_pend;
+    END IF;
+    SET v_resto = v_pend - v_pago;
+    IF v_resto <= 0.000001 THEN
+      UPDATE fza_efectos_compra
+         SET IMPORTE_PAGADO_EFEC    = v_importe,
+             IMPORTE_PENDIENTE_EFEC = 0,
+             FECHA_PAGO_EFEC        = COALESCE(p_FECHA, CURDATE()),
+             TIPO_PAGO_EFEC         = NULLIF(p_TIPO, ''''),
+             REFERENCIA_PAGO_EFEC   = NULLIF(p_REFERENCIA, ''''),
+             ENTIDAD_PAGO_EFEC      = NULLIF(p_ENTIDAD, ''''),
+             ESCONCILIADO_EFEC      = ''S'',
+             ESTADO_EFEC            = ''PAGADO'',
+             INSTANTE_MODIF         = NOW(),
+             USUARIO_MODIF          = p_USUARIO
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      SET p_RESULTADO = 1;
+    ELSE
+      SELECT COALESCE(MAX(NUMERO_EFEC), 0) + 1
+        INTO v_nuevo
+        FROM fza_efectos_compra
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO;
+      UPDATE fza_efectos_compra
+         SET IMPORTE_EFEC           = v_pago,
+             IMPORTE_PAGADO_EFEC    = v_pago,
+             IMPORTE_PENDIENTE_EFEC = 0,
+             FECHA_PAGO_EFEC        = COALESCE(p_FECHA, CURDATE()),
+             TIPO_PAGO_EFEC         = NULLIF(p_TIPO, ''''),
+             REFERENCIA_PAGO_EFEC   = NULLIF(p_REFERENCIA, ''''),
+             ENTIDAD_PAGO_EFEC      = NULLIF(p_ENTIDAD, ''''),
+             ESCONCILIADO_EFEC      = ''S'',
+             ESTADO_EFEC            = ''PAGADO'',
+             INSTANTE_MODIF         = NOW(),
+             USUARIO_MODIF          = p_USUARIO
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      INSERT INTO fza_efectos_compra
+        (SERIE_FACC_EFEC, NUMERO_FACC_EFEC, NUMERO_EFEC,
+         CODIGO_EMP_EFEC, CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC,
+         NIF_PRV_EFEC, CODIGO_TEFE_EFEC, ESTADO_EFEC,
+         ORDEN_PLAZO_EFEC, FECHA_EMISION_EFEC, FECHA_VENCIMIENTO_EFEC,
+         FECHA_PAGO_EFEC, TIPO_PAGO_EFEC, REFERENCIA_PAGO_EFEC,
+         ENTIDAD_PAGO_EFEC, ESCONCILIADO_EFEC, IMPORTE_EFEC,
+         IMPORTE_PAGADO_EFEC, IMPORTE_PENDIENTE_EFEC, SERIE_REMC_EFEC,
+         NUMERO_REMC_EFEC, ENTIDAD_EFEC, OFICINA_EFEC,
+         DIGITO_CONTROL_EFEC, CUENTA_EFEC, IBAN_EFEC,
+         CODIGO_EMPBAN_EFEC, IBAN_EMP_EFEC, DOC_EXTERNO_EFEC,
+         OBSERVACIONES_EFEC, INSTANTE_ALTA, USUARIO_ALTA,
+         INSTANTE_MODIF, USUARIO_MODIF)
+      SELECT SERIE_FACC_EFEC, NUMERO_FACC_EFEC, v_nuevo,
+             CODIGO_EMP_EFEC, CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC,
+             NIF_PRV_EFEC, CODIGO_TEFE_EFEC,
+             CASE
+               WHEN COALESCE(SERIE_REMC_EFEC, '''') <> '''' THEN ''REMESADO''
+               ELSE ''PENDIENTE''
+             END,
+             ORDEN_PLAZO_EFEC, FECHA_EMISION_EFEC,
+             FECHA_VENCIMIENTO_EFEC, NULL, NULL, NULL, NULL, ''N'',
+             v_resto, 0, v_resto, SERIE_REMC_EFEC, NUMERO_REMC_EFEC,
+             ENTIDAD_EFEC, OFICINA_EFEC, DIGITO_CONTROL_EFEC,
+             CUENTA_EFEC, IBAN_EFEC, CODIGO_EMPBAN_EFEC, IBAN_EMP_EFEC,
+             DOC_EXTERNO_EFEC, OBSERVACIONES_EFEC, NOW(), p_USUARIO,
+             NOW(), p_USUARIO
+        FROM fza_efectos_compra
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      SET p_RESULTADO = 2;
+    END IF;
+  END IF;
+  COMMIT;
+END ;;
+DELIMITER ;
+
+-- ----------------------------------------------------------------------------
+-- 9. PRC_REMC_CREAR: crea una remesa de pagos vacia, numerada con el
+--    contador ''RP''. Devuelve su serie/numero para ir anyadiendo efectos.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_REMC_CREAR`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_REMC_CREAR`(
+    IN  p_EMPRESA varchar(8),
+    IN  p_IBAN    varchar(34),
+    IN  p_USUARIO varchar(100),
+    OUT p_SERIE_OUT  varchar(20),
+    OUT p_NUMERO_OUT varchar(20))
+BEGIN
+  DECLARE v_nro   bigint DEFAULT 0;
+  DECLARE v_serie varchar(3);
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    RESIGNAL;
+  END;
+  START TRANSACTION;
+  CALL PRC_FNC_GET_NEXT_NRO_DOC(''RP'', v_nro);
+  CALL PRC_FNC_GET_SERIE_TIPODOC(''RP'', v_serie);
+  SET p_NUMERO_OUT = LPAD(v_nro, 6, ''0'');
+  SET p_SERIE_OUT  = v_serie;
+  INSERT INTO fza_remesas_compra
+    (NUMERO_REMC, SERIE_REMC, FECHA_REMC, ESTADO_REMC, CODIGO_EMP_REMC,
+     IBAN_REMC, CONTADOR_EFECTOS_REMC, TOTAL_REMC,
+     INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF)
+  VALUES
+    (p_NUMERO_OUT, p_SERIE_OUT, CURDATE(), ''ABIERTA'', p_EMPRESA,
+     p_IBAN, 0, 0, NOW(), p_USUARIO, NOW(), p_USUARIO);
+  COMMIT;
+END ;;
+DELIMITER ;
+
+-- ----------------------------------------------------------------------------
+-- 10. PRC_REMC_ANYADIR_EFECTO: agrupa un efecto en una remesa (lo marca
+--     REMESADO y enlaza) y recalcula los totales de la remesa. No re-remesa
+--     un efecto ya remesado ni uno ya pagado.
+--     p_RESULTADO: 1 ok, 0 nada que hacer, -1 error.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_REMC_ANYADIR_EFECTO`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_REMC_ANYADIR_EFECTO`(
+    IN  p_SERIE_REM  varchar(20),
+    IN  p_NUMERO_REM varchar(20),
+    IN  p_SERIE_FAC  varchar(20),
+    IN  p_NUMERO_FAC varchar(20),
+    IN  p_NUM_EFEC   int,
+    IN  p_USUARIO    varchar(100),
+    OUT p_RESULTADO  int)
+BEGIN
+  DECLARE v_rem  int DEFAULT 0;
+  DECLARE v_efe  int DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    SET p_RESULTADO = -1;
+    RESIGNAL;
+  END;
+  SET p_RESULTADO = 0;
+  SELECT COUNT(*) INTO v_rem
+    FROM fza_remesas_compra
+   WHERE SERIE_REMC = p_SERIE_REM AND NUMERO_REMC = p_NUMERO_REM;
+  SELECT COUNT(*) INTO v_efe
+    FROM fza_efectos_compra
+   WHERE SERIE_FACC_EFEC  = p_SERIE_FAC
+     AND NUMERO_FACC_EFEC = p_NUMERO_FAC
+     AND NUMERO_EFEC      = p_NUM_EFEC
+     AND SERIE_REMC_EFEC IS NULL
+     AND COALESCE(ESTADO_EFEC, '''') NOT IN (''PAGADO'', ''ANULADO'');
+  IF v_rem > 0 AND v_efe > 0 THEN
+    START TRANSACTION;
+    UPDATE fza_efectos_compra
+       SET SERIE_REMC_EFEC  = p_SERIE_REM,
+           NUMERO_REMC_EFEC = p_NUMERO_REM,
+           ESTADO_EFEC      = ''REMESADO'',
+           USUARIO_MODIF    = p_USUARIO
+     WHERE SERIE_FACC_EFEC  = p_SERIE_FAC
+       AND NUMERO_FACC_EFEC = p_NUMERO_FAC
+       AND NUMERO_EFEC      = p_NUM_EFEC;
+    CALL PRC_REMC_RECALCULAR(p_SERIE_REM, p_NUMERO_REM);
+    SET p_RESULTADO = 1;
+    COMMIT;
+  END IF;
+END ;;
+DELIMITER ;
+
+-- ----------------------------------------------------------------------------
+-- 11. PRC_REMC_RECALCULAR: recuenta efectos e importe de una remesa a
+--     partir de los efectos enlazados.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_REMC_RECALCULAR`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_REMC_RECALCULAR`(
+    IN p_SERIE  varchar(20),
+    IN p_NUMERO varchar(20))
+BEGIN
+  DECLARE v_n     int DEFAULT 0;
+  DECLARE v_total decimal(18,6) DEFAULT 0;
+  SELECT COUNT(*), COALESCE(SUM(COALESCE(IMPORTE_EFEC, 0)), 0)
+    INTO v_n, v_total
+    FROM fza_efectos_compra
+   WHERE SERIE_REMC_EFEC  = p_SERIE
+     AND NUMERO_REMC_EFEC = p_NUMERO;
+  UPDATE fza_remesas_compra
+     SET CONTADOR_EFECTOS_REMC = v_n,
+         TOTAL_REMC            = v_total
+   WHERE SERIE_REMC = p_SERIE AND NUMERO_REMC = p_NUMERO;
+END ;;
+DELIMITER ;
+
+
+-- ----------------------------------------------------------------------------
+-- 12. Registrar los Mtos de efectos y remesas en fza_winforms (idempotente).
+--     Cablean ''Compras -> Efectos de pago'' (EfectosCompra1) y
+--     ''Compras -> Remesas de pago'' (RemesasCompra1).
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+SELECT ''EfectosCompra'',
+       ''Efectos de Pago a Proveedor'',
+       ''EfectosCompra1'',
+       ''inMtoEfectosCompra.TfrmMtoEfectosCompra'',
+       ''Ctrl+Alt+E'',
+       ''UniDataEfectosCompra.TdmEfectosCompra'',
+       5
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_winforms` WHERE `CALL_WINF` = ''EfectosCompra''
+ );
+
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+SELECT ''RemesasCompra'',
+       ''Remesas de Pago'',
+       ''RemesasCompra1'',
+       ''inMtoRemesasCompra.TfrmMtoRemesasCompra'',
+       ''Ctrl+Alt+R'',
+       ''UniDataRemesasCompra.TdmRemesasCompra'',
+       5
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_winforms` WHERE `CALL_WINF` = ''RemesasCompra''
+ );
+', '2026-06-20 08:29:14', '2026-06-20 08:29:14', 'Administrador', 'Administrador'),
+  ('432', 'formato_documentos_empresa', '-- =============================================================================
+-- Formato visible de documentos por empresa.
+--
+-- Anade FORMATO_DOCUMENTO_EMP a fza_empresas y expone DOCUMENTO_FORMATO en
+-- las vistas de impresion. No altera factuzam_original.sql.
+-- =============================================================================
+
+-- ---------------------------------------------------------------------------
+-- 1. Parametro de empresa
+-- ---------------------------------------------------------------------------
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_empresas''
+     AND COLUMN_NAME = ''FORMATO_DOCUMENTO_EMP''
+);
+
+SET @sSql := IF(
+  @sExisteCol = 0,
+  ''ALTER TABLE fza_empresas
+     ADD COLUMN FORMATO_DOCUMENTO_EMP varchar(80) NOT NULL
+       DEFAULT ''''Serie.NroDocumento''''
+       COMMENT ''''Formato visible de documentos. Tokens: Serie y NroDocumento''''
+       AFTER TEXTO_LEGAL_FACTURA_EMP'',
+  ''SELECT ''''FORMATO_DOCUMENTO_EMP ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+UPDATE fza_empresas
+   SET FORMATO_DOCUMENTO_EMP = ''Serie.NroDocumento''
+ WHERE FORMATO_DOCUMENTO_EMP IS NULL
+    OR FORMATO_DOCUMENTO_EMP = '''';
+
+-- ---------------------------------------------------------------------------
+-- 2. Procedimiento comun de formato
+-- ---------------------------------------------------------------------------
+DROP FUNCTION IF EXISTS FN_FORMATO_DOCUMENTO;
+DROP PROCEDURE IF EXISTS PRC_FORMATO_DOCUMENTO;
+
+DELIMITER ;;
+CREATE PROCEDURE PRC_FORMATO_DOCUMENTO(
+  IN p_FORMATO varchar(80),
+  IN p_SERIE varchar(50),
+  IN p_NUMERO varchar(50),
+  OUT p_DOCUMENTO_FORMATO varchar(200)
+)
+BEGIN
+  DECLARE v_formato varchar(80);
+  DECLARE v_original varchar(200);
+  DECLARE v_resultado varchar(200);
+  DECLARE v_serie varchar(50);
+  DECLARE v_numero varchar(50);
+
+  SET v_serie = TRIM(COALESCE(p_SERIE, ''''));
+  SET v_numero = TRIM(COALESCE(p_NUMERO, ''''));
+
+  IF v_serie = '''' THEN
+    SET p_DOCUMENTO_FORMATO = v_numero;
+  ELSEIF v_numero = '''' THEN
+    SET p_DOCUMENTO_FORMATO = v_serie;
+  ELSE
+    SET v_formato = NULLIF(TRIM(COALESCE(p_FORMATO, '''')), '''');
+
+    IF v_formato IS NULL THEN
+      SET v_formato = ''Serie.NroDocumento'';
+    END IF;
+
+    SET v_resultado = v_formato;
+    SET v_original = v_resultado;
+
+    SET v_resultado = REPLACE(v_resultado, ''NroDocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''nrodocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NRODOCUMENTO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NumeroDocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''numerodocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NUMERODOCUMENTO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NúmeroDocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''númerodocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NÚMERODOCUMENTO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NroFactura'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''nrofactura'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NROFACTURA'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NroDoc'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''nrodoc'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NRODOC'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''Numero'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''numero'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NUMERO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''Número'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''número'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NÚMERO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''Serie'', v_serie);
+    SET v_resultado = REPLACE(v_resultado, ''serie'', v_serie);
+    SET v_resultado = REPLACE(v_resultado, ''SERIE'', v_serie);
+
+    IF v_resultado = v_original THEN
+      SET p_DOCUMENTO_FORMATO = CONCAT(v_serie, ''.'', v_numero);
+    ELSE
+      SET p_DOCUMENTO_FORMATO = v_resultado;
+    END IF;
+  END IF;
+END;;
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------
+-- 3. Empresas
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_empresas` AS
+SELECT `fza_empresas`.`CODIGO_EMP_EMP`                AS `CODIGO_EMP_EMP`,
+       `fza_empresas`.`ORDEN_EMP`                     AS `ORDEN_EMP`,
+       `fza_empresas`.`ESACTIVO_EMP`                  AS `ESACTIVO_EMP`,
+       `fza_empresas`.`RAZON_SOCIAL_EMP`              AS `RAZON_SOCIAL_EMP`,
+       `fza_empresas`.`NIF_EMP`                       AS `NIF_EMP`,
+       `fza_empresas`.`MOVIL_EMP`                     AS `MOVIL_EMP`,
+       `fza_empresas`.`EMAIL_EMP`                     AS `EMAIL_EMP`,
+       `fza_empresas`.`DIRECCION1_EMP`                AS `DIRECCION1_EMP`,
+       `fza_empresas`.`DIRECCION2_EMP`                AS `DIRECCION2_EMP`,
+       `fza_empresas`.`CODIGO_POSTAL_EMP`             AS `CODIGO_POSTAL_EMP`,
+       `fza_empresas`.`POBLACION_EMP`                 AS `POBLACION_EMP`,
+       `fza_empresas`.`PROVINCIA_EMP`                 AS `PROVINCIA_EMP`,
+       `fza_empresas`.`NOMBRE_PAI_EMP`                AS `NOMBRE_PAI_EMP`,
+       `fza_empresas`.`CODIGO_PAI_EMP`                AS `CODIGO_PAI_EMP`,
+       `fza_empresas`.`IBAN_EMP`                      AS `IBAN_EMP`,
+       `fza_empresas`.`GRUPO_ZONA_IVA_EMP`            AS `GRUPO_ZONA_IVA_EMP`,
+       `fza_ivas_grupos`.`DESCRIPCION_IVA_IVAGRP`     AS `DESCRIPCION_IVA_IVAGRP`,
+       `fza_empresas`.`ESRETENCIONES_EMP`             AS `ESRETENCIONES_EMP`,
+       `fza_empresas`.`ESREGIMENESPECIALAGRICOLA_EMP` AS `ESREGIMENESPECIALAGRICOLA_EMP`,
+       `fza_empresas`.`TEXTO_LEGAL_FACTURA_EMP`       AS `TEXTO_LEGAL_FACTURA_EMP`,
+       `fza_empresas`.`FORMATO_DOCUMENTO_EMP`         AS `FORMATO_DOCUMENTO_EMP`,
+       `fza_empresas`.`CODIGO_CERTIFICADO_EMP`        AS `CODIGO_CERTIFICADO_EMP`,
+       `fza_empresas`.`TITULAR_CERTIFICADO_EMP`       AS `TITULAR_CERTIFICADO_EMP`,
+       `fza_empresas`.`TIPO_CERTIFICADO_EMP`          AS `TIPO_CERTIFICADO_EMP`,
+       `fza_empresas`.`FECHA_DESDE_CERTIFICADO_EMP`   AS `FECHA_DESDE_CERTIFICADO_EMP`,
+       `fza_empresas`.`FECHA_HASTA_CERTIFICADO_EMP`   AS `FECHA_HASTA_CERTIFICADO_EMP`,
+       `fza_empresas`.`INSTANTE_MODIF`                AS `INSTANTE_MODIF`,
+       `fza_empresas`.`INSTANTE_ALTA`                 AS `INSTANTE_ALTA`,
+       `fza_empresas`.`USUARIO_ALTA`                  AS `USUARIO_ALTA`,
+       `fza_empresas`.`USUARIO_MODIF`                 AS `USUARIO_MODIF`
+  FROM (`fza_empresas`
+        LEFT JOIN `fza_ivas_grupos`
+          ON (`fza_empresas`.`GRUPO_ZONA_IVA_EMP` =
+              `fza_ivas_grupos`.`IVA_IVAGRP`))
+ ORDER BY `fza_empresas`.`ORDEN_EMP`;
+
+-- ---------------------------------------------------------------------------
+-- 4. Facturas emitidas
+-- ---------------------------------------------------------------------------
+-- Las vistas no pueden llamar al procedimiento; DOCUMENTO_FORMATO va en linea.
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_facturas_print` AS
+SELECT `fza_facturas`.*,
+       `fza_formas_pago`.`DESCRIPCION_FORMA_PAGO_FP`
+              AS `DESCRIPCION_FORMA_PAGO_FP`,
+       `fza_formas_pago`.`ESCONTADO_FORMA_PAGO_FP`
+              AS `ESCONTADO_FORMA_PAGO_FP`,
+       (select group_concat('' '',
+                 date_format(`fza_recibos`.`FECHA_VENCIMIENTO_RECIBO_REC`,
+                             ''%d/%m/%Y''),
+                 ''=> '',
+                 format(`fza_recibos`.`EUROS_RECIBO_REC`, 2),
+                 ''€'' separator '','')
+          from `fza_recibos`
+         where `fza_recibos`.`NUMERO_FAC_REC` = `fza_facturas`.`NUMERO_FAC`
+           and `fza_recibos`.`SERIE_FAC_REC`  = `fza_facturas`.`SERIE_FAC`)
+              AS `VENCIMIENTOS_RECIBOS`,
+       `fza_empresas`.`IBAN_EMP` AS `IBAN_EMP`,
+       `fza_empresas`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,
+       CASE WHEN TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, '''')) = '''' THEN TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, '''')) WHEN TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, '''')) = '''' THEN TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, '''')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''serie'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''númerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrofactura'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodoc'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numero'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''número'') > 0) THEN CONCAT(TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, '''')), ''.'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento''), ''NroDocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''nrodocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NRODOCUMENTO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NumeroDocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''numerodocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NUMERODOCUMENTO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NúmeroDocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''númerodocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NÚMERODOCUMENTO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NroFactura'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''nrofactura'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NROFACTURA'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NroDoc'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''nrodoc'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NRODOC'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''Numero'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''numero'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NUMERO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''Número'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''número'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NÚMERO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''Serie'', TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, ''''))), ''serie'', TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, ''''))), ''SERIE'', TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, ''''))) END
+              AS `DOCUMENTO_FORMATO`,
+       `fza_clientes`.`IBAN_CLI` AS `IBAN_CLI`,
+       `fza_formas_pago`.`ESVERBANCOEMPRESA_FORMA_PAGO_FP`
+              AS `ESVERBANCOEMPRESA_FORMA_PAGO_FP`,
+       `c`.`ID_FACCON`                          AS `ID_FACCON`,
+       `c`.`REQUEST_ID_CONSOLIDACION_FACCON`    AS `REQUEST_ID_CONSOLIDACION_FACCON`,
+       `c`.`ISSUER_IRS_ID_CONSOLIDACION_FACCON` AS `ISSUER_IRS_ID_CONSOLIDACION_FACCON`,
+       `c`.`ISSUED_TIME_FACCON`                 AS `ISSUED_TIME_FACCON`,
+       `c`.`CHAIN_NUMBER_FACCON`                AS `CHAIN_NUMBER_FACCON`,
+       `c`.`CHAIN_HASH_FACCON`                  AS `CHAIN_HASH_FACCON`,
+       `c`.`VERIFACTU_URL_FACCON`               AS `VERIFACTU_URL_FACCON`,
+       `c`.`QRCODE_BASE64_FACCON`               AS `QRCODE_BASE64_FACCON`,
+       `c`.`QRCODE_PNG_FACCON`                  AS `QRCODE_PNG_FACCON`,
+       `c`.`FECHA_PROCESAMIENTO_FACCON`         AS `FECHA_PROCESAMIENTO_FACCON`,
+       `c`.`ESTADO_FACCON`                      AS `ESTADO_FACCON`
+  from ((((`fza_facturas`
+       left join `fza_formas_pago`
+              on(`fza_facturas`.`FORMA_PAGO_FAC` =
+                 `fza_formas_pago`.`CODIGO_FP_FP`))
+       left join `fza_empresas`
+              on(`fza_facturas`.`CODIGO_EMP_FAC` =
+                 `fza_empresas`.`CODIGO_EMP_EMP`))
+       left join `fza_clientes`
+              on(`fza_facturas`.`CODIGO_CLI_FAC` =
+                 `fza_clientes`.`CODIGO_CLI_CLI`))
+       left join `fza_facturas_consolidaciones` `c`
+              on(`c`.`SERIE_FAC_FACCON`  = `fza_facturas`.`SERIE_FAC`
+             and `c`.`NUMERO_FAC_FACCON` = `fza_facturas`.`NUMERO_FAC`))
+ order by `fza_facturas`.`FECHA_FAC` desc;
+
+-- ---------------------------------------------------------------------------
+-- 5. Compras: sesiones, albaranes y devoluciones
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE VIEW `vi_compras_sesiones_cab_print` AS
+SELECT
+  ses.`SERIE_SES`,
+  ses.`NUMERO_SES`,
+  ses.`FECHA_SES`,
+  ses.`ESTADO_SES`,
+  ses.`REF_PRV_SES`,
+  ses.`COMENTARIOS_SES`,
+  ses.`PORCENTAJE_MARGEN_SES`,
+  ses.`MULTIPLO_REDONDEO_SES`,
+  ses.`AJUSTE_FINAL_SES`,
+  ses.`MONEDA_SES`,
+  ses.`TIPO_IVA_SES`,
+  ses.`ESFORMATO_DISTRIBUIDO_SES`,
+  ses.`CODIGO_EMP_SES`,
+  emp.`FORMATO_DOCUMENTO_EMP`,
+  CASE WHEN TRIM(COALESCE(ses.`SERIE_SES`, '''')) = '''' THEN TRIM(COALESCE(ses.`NUMERO_SES`, '''')) WHEN TRIM(COALESCE(ses.`NUMERO_SES`, '''')) = '''' THEN TRIM(COALESCE(ses.`SERIE_SES`, '''')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''serie'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''númerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrofactura'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodoc'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numero'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''número'') > 0) THEN CONCAT(TRIM(COALESCE(ses.`SERIE_SES`, '''')), ''.'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento''), ''NroDocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''nrodocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NRODOCUMENTO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NumeroDocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''numerodocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NUMERODOCUMENTO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NúmeroDocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''númerodocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NÚMERODOCUMENTO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NroFactura'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''nrofactura'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NROFACTURA'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NroDoc'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''nrodoc'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NRODOC'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''Numero'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''numero'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NUMERO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''Número'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''número'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NÚMERO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''Serie'', TRIM(COALESCE(ses.`SERIE_SES`, ''''))), ''serie'', TRIM(COALESCE(ses.`SERIE_SES`, ''''))), ''SERIE'', TRIM(COALESCE(ses.`SERIE_SES`, ''''))) END AS `DOCUMENTO_FORMATO`,
+  emp.`RAZON_SOCIAL_EMP`,
+  emp.`DIRECCION1_EMP`,
+  emp.`CODIGO_POSTAL_EMP`,
+  emp.`POBLACION_EMP`,
+  emp.`PROVINCIA_EMP`,
+  emp.`NIF_EMP`        AS `CIF_EMP`,
+  emp.`MOVIL_EMP`      AS `TELEFONO1_EMP`,
+  ses.`CODIGO_PRV_SES`,
+  prv.`RAZON_SOCIAL_PRV`,
+  prv.`DIRECCION1_PRV`,
+  prv.`CODIGO_POSTAL_PRV`,
+  prv.`POBLACION_PRV`,
+  prv.`PROVINCIA_PRV`,
+  prv.`NIF_PRV`        AS `CIF_PRV`,
+  COALESCE(prv.`TELEFONO_PRV`, prv.`MOVIL_PRV`) AS `TELEFONO1_PRV`,
+  ses.`CODIGO_TAR_SES`,
+  ses.`CODIGO_FAM_SES`,
+  ses.`CODIGO_ALM_SES`,
+  ses.`INSTANTE_ALTA`,
+  ses.`USUARIO_ALTA`,
+  (SELECT COALESCE(SUM(`TOTAL_UNIDADES_SESLIN`), 0)
+     FROM `fza_compras_sesiones_lineas` lin
+    WHERE lin.`SERIE_SES_SESLIN`  = ses.`SERIE_SES`
+      AND lin.`NUMERO_SES_SESLIN` = ses.`NUMERO_SES`) AS `TOTAL_UNIDADES_SES`,
+  (SELECT COALESCE(SUM(`TOTAL_LINEA_SESLIN`), 0)
+     FROM `fza_compras_sesiones_lineas` lin
+    WHERE lin.`SERIE_SES_SESLIN`  = ses.`SERIE_SES`
+      AND lin.`NUMERO_SES_SESLIN` = ses.`NUMERO_SES`) AS `TOTAL_LINEAS_SES`,
+  (SELECT COUNT(*)
+     FROM `fza_compras_sesiones_lineas` lin
+    WHERE lin.`SERIE_SES_SESLIN`  = ses.`SERIE_SES`
+      AND lin.`NUMERO_SES_SESLIN` = ses.`NUMERO_SES`) AS `NUM_LINEAS_SES`
+FROM `fza_compras_sesiones` ses
+LEFT JOIN `fza_empresas`     emp ON emp.`CODIGO_EMP_EMP` = ses.`CODIGO_EMP_SES`
+LEFT JOIN `fza_proveedores`  prv ON prv.`CODIGO_PRV_PRV` = ses.`CODIGO_PRV_SES`;
+
+CREATE OR REPLACE VIEW `vi_albaranes_compra_cab_print` AS
+SELECT
+  alb.`SERIE_ALBC`,
+  alb.`NUMERO_ALBC`,
+  alb.`FECHA_ALBC`,
+  alb.`ESTADO_ALBC`,
+  alb.`REF_PROVEEDOR_ALBC`,
+  alb.`COMENTARIOS_ALBC`,
+  alb.`OBSERVACIONES_ALBC`,
+  alb.`CODIGO_EMP_ALBC`,
+  emp.`FORMATO_DOCUMENTO_EMP`,
+  CASE WHEN TRIM(COALESCE(alb.`SERIE_ALBC`, '''')) = '''' THEN TRIM(COALESCE(alb.`NUMERO_ALBC`, '''')) WHEN TRIM(COALESCE(alb.`NUMERO_ALBC`, '''')) = '''' THEN TRIM(COALESCE(alb.`SERIE_ALBC`, '''')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''serie'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''númerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrofactura'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodoc'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numero'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''número'') > 0) THEN CONCAT(TRIM(COALESCE(alb.`SERIE_ALBC`, '''')), ''.'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento''), ''NroDocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''nrodocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NRODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NumeroDocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''numerodocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NUMERODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NúmeroDocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''númerodocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NÚMERODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NroFactura'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''nrofactura'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NROFACTURA'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NroDoc'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''nrodoc'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NRODOC'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''Numero'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''numero'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NUMERO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''Número'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''número'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NÚMERO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''Serie'', TRIM(COALESCE(alb.`SERIE_ALBC`, ''''))), ''serie'', TRIM(COALESCE(alb.`SERIE_ALBC`, ''''))), ''SERIE'', TRIM(COALESCE(alb.`SERIE_ALBC`, ''''))) END AS `DOCUMENTO_FORMATO`,
+  emp.`RAZON_SOCIAL_EMP`,
+  emp.`DIRECCION1_EMP`,
+  emp.`CODIGO_POSTAL_EMP`,
+  emp.`POBLACION_EMP`,
+  emp.`PROVINCIA_EMP`,
+  emp.`NIF_EMP`        AS `CIF_EMP`,
+  emp.`MOVIL_EMP`      AS `TELEFONO1_EMP`,
+  alb.`CODIGO_PRV_ALBC`,
+  prv.`RAZON_SOCIAL_PRV`,
+  prv.`DIRECCION1_PRV`,
+  prv.`CODIGO_POSTAL_PRV`,
+  prv.`POBLACION_PRV`,
+  prv.`PROVINCIA_PRV`,
+  prv.`NIF_PRV`        AS `CIF_PRV`,
+  COALESCE(prv.`TELEFONO_PRV`, prv.`MOVIL_PRV`) AS `TELEFONO1_PRV`,
+  alb.`CODIGO_ALM_ALBC`,
+  alm.`NOMBRE_ALM_ALM`  AS `NOMBRE_ALM_ALBC`,
+  alm.`DIRECCION_ALM`   AS `DIRECCION_ALM_ALBC`,
+  alm.`CODIGO_POSTAL_ALM` AS `CODIGO_POSTAL_ALM_ALBC`,
+  alm.`POBLACION_ALM`   AS `POBLACION_ALM_ALBC`,
+  alm.`PROVINCIA_ALM`   AS `PROVINCIA_ALM_ALBC`,
+  alm.`TELEFONO_ALM`    AS `TELEFONO_ALM_ALBC`,
+  alm.`EMAIL_ALM`       AS `EMAIL_ALM_ALBC`,
+  alb.`CODIGO_IVA_ALBC`,
+  alb.`PORCENTAJE_IVAN_ALBC`,
+  alb.`PORCENTAJE_IVAR_ALBC`,
+  alb.`PORCENTAJE_IVAS_ALBC`,
+  alb.`PORCENTAJE_IVAE_ALBC`,
+  alb.`TOTAL_BASES_ALBC`,
+  alb.`TOTAL_IMPUESTOS_ALBC`,
+  alb.`TOTAL_LIQUIDO_ALBC`,
+  alb.`INSTANTE_ALTA`,
+  alb.`USUARIO_ALTA`,
+  (SELECT COALESCE(SUM(`CANTIDAD_ALBCLIN`), 0)
+     FROM `fza_albaranes_compra_lineas` lin
+    WHERE lin.`SERIE_ALBC_ALBCLIN`  = alb.`SERIE_ALBC`
+      AND lin.`NUMERO_ALBC_ALBCLIN` = alb.`NUMERO_ALBC`) AS `TOTAL_UNIDADES_SES`,
+  (SELECT COALESCE(SUM(`TOTAL_ALBCLIN`), 0)
+     FROM `fza_albaranes_compra_lineas` lin
+    WHERE lin.`SERIE_ALBC_ALBCLIN`  = alb.`SERIE_ALBC`
+      AND lin.`NUMERO_ALBC_ALBCLIN` = alb.`NUMERO_ALBC`) AS `TOTAL_LINEAS_SES`,
+  (SELECT COUNT(*)
+     FROM `fza_albaranes_compra_lineas` lin
+    WHERE lin.`SERIE_ALBC_ALBCLIN`  = alb.`SERIE_ALBC`
+      AND lin.`NUMERO_ALBC_ALBCLIN` = alb.`NUMERO_ALBC`) AS `NUM_LINEAS_SES`
+FROM `fza_albaranes_compra` alb
+LEFT JOIN `fza_empresas`     emp ON emp.`CODIGO_EMP_EMP` = alb.`CODIGO_EMP_ALBC`
+LEFT JOIN `fza_proveedores`  prv ON prv.`CODIGO_PRV_PRV` = alb.`CODIGO_PRV_ALBC`
+LEFT JOIN `fza_almacenes`    alm ON alm.`CODIGO_ALM_ALM` = alb.`CODIGO_ALM_ALBC`;
+
+CREATE OR REPLACE VIEW `vi_devoluciones_compra_cab_print` AS
+SELECT
+  alb.`SERIE_DEVC`,
+  alb.`NUMERO_DEVC`,
+  alb.`FECHA_DEVC`,
+  alb.`ESTADO_DEVC`,
+  alb.`REF_PROVEEDOR_DEVC`,
+  alb.`COMENTARIOS_DEVC`,
+  alb.`OBSERVACIONES_DEVC`,
+  alb.`CODIGO_EMP_DEVC`,
+  emp.`FORMATO_DOCUMENTO_EMP`,
+  CASE WHEN TRIM(COALESCE(alb.`SERIE_DEVC`, '''')) = '''' THEN TRIM(COALESCE(alb.`NUMERO_DEVC`, '''')) WHEN TRIM(COALESCE(alb.`NUMERO_DEVC`, '''')) = '''' THEN TRIM(COALESCE(alb.`SERIE_DEVC`, '''')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''serie'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''númerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrofactura'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodoc'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numero'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''número'') > 0) THEN CONCAT(TRIM(COALESCE(alb.`SERIE_DEVC`, '''')), ''.'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento''), ''NroDocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''nrodocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NRODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NumeroDocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''numerodocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NUMERODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NúmeroDocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''númerodocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NÚMERODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NroFactura'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''nrofactura'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NROFACTURA'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NroDoc'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''nrodoc'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NRODOC'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''Numero'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''numero'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NUMERO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''Número'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''número'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NÚMERO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''Serie'', TRIM(COALESCE(alb.`SERIE_DEVC`, ''''))), ''serie'', TRIM(COALESCE(alb.`SERIE_DEVC`, ''''))), ''SERIE'', TRIM(COALESCE(alb.`SERIE_DEVC`, ''''))) END AS `DOCUMENTO_FORMATO`,
+  emp.`RAZON_SOCIAL_EMP`,
+  emp.`DIRECCION1_EMP`,
+  emp.`CODIGO_POSTAL_EMP`,
+  emp.`POBLACION_EMP`,
+  emp.`PROVINCIA_EMP`,
+  emp.`NIF_EMP`        AS `CIF_EMP`,
+  emp.`MOVIL_EMP`      AS `TELEFONO1_EMP`,
+  alb.`CODIGO_PRV_DEVC`,
+  prv.`RAZON_SOCIAL_PRV`,
+  prv.`DIRECCION1_PRV`,
+  prv.`CODIGO_POSTAL_PRV`,
+  prv.`POBLACION_PRV`,
+  prv.`PROVINCIA_PRV`,
+  prv.`NIF_PRV`        AS `CIF_PRV`,
+  COALESCE(prv.`TELEFONO_PRV`, prv.`MOVIL_PRV`) AS `TELEFONO1_PRV`,
+  alb.`CODIGO_ALM_DEVC`,
+  alm.`NOMBRE_ALM_ALM`  AS `NOMBRE_ALM_DEVC`,
+  alm.`DIRECCION_ALM`   AS `DIRECCION_ALM_DEVC`,
+  alm.`CODIGO_POSTAL_ALM` AS `CODIGO_POSTAL_ALM_DEVC`,
+  alm.`POBLACION_ALM`   AS `POBLACION_ALM_DEVC`,
+  alm.`PROVINCIA_ALM`   AS `PROVINCIA_ALM_DEVC`,
+  alm.`TELEFONO_ALM`    AS `TELEFONO_ALM_DEVC`,
+  alm.`EMAIL_ALM`       AS `EMAIL_ALM_DEVC`,
+  alb.`CODIGO_IVA_DEVC`,
+  alb.`PORCENTAJE_IVAN_DEVC`,
+  alb.`PORCENTAJE_IVAR_DEVC`,
+  alb.`PORCENTAJE_IVAS_DEVC`,
+  alb.`PORCENTAJE_IVAE_DEVC`,
+  alb.`TOTAL_BASES_DEVC`,
+  alb.`TOTAL_IMPUESTOS_DEVC`,
+  alb.`TOTAL_LIQUIDO_DEVC`,
+  alb.`INSTANTE_ALTA`,
+  alb.`USUARIO_ALTA`,
+  (SELECT COALESCE(SUM(`CANTIDAD_DEVCLIN`), 0)
+     FROM `fza_devoluciones_compra_lineas` lin
+    WHERE lin.`SERIE_DEVC_DEVCLIN`  = alb.`SERIE_DEVC`
+      AND lin.`NUMERO_DEVC_DEVCLIN` = alb.`NUMERO_DEVC`) AS `TOTAL_UNIDADES_SES`,
+  (SELECT COALESCE(SUM(`TOTAL_DEVCLIN`), 0)
+     FROM `fza_devoluciones_compra_lineas` lin
+    WHERE lin.`SERIE_DEVC_DEVCLIN`  = alb.`SERIE_DEVC`
+      AND lin.`NUMERO_DEVC_DEVCLIN` = alb.`NUMERO_DEVC`) AS `TOTAL_LINEAS_SES`,
+  (SELECT COUNT(*)
+     FROM `fza_devoluciones_compra_lineas` lin
+    WHERE lin.`SERIE_DEVC_DEVCLIN`  = alb.`SERIE_DEVC`
+      AND lin.`NUMERO_DEVC_DEVCLIN` = alb.`NUMERO_DEVC`) AS `NUM_LINEAS_SES`
+FROM `fza_devoluciones_compra` alb
+LEFT JOIN `fza_empresas`     emp ON emp.`CODIGO_EMP_EMP` = alb.`CODIGO_EMP_DEVC`
+LEFT JOIN `fza_proveedores`  prv ON prv.`CODIGO_PRV_PRV` = alb.`CODIGO_PRV_DEVC`
+LEFT JOIN `fza_almacenes`    alm ON alm.`CODIGO_ALM_ALM` = alb.`CODIGO_ALM_DEVC`;
+', '2026-06-20 09:22:43', '2026-06-20 09:22:43', 'Administrador', 'Administrador'),
+  ('433', 'efectos_remesas_compra', '-- ============================================================================
+-- Efectos de pago a proveedor, conciliacion y remesas — esquema base
+--
+-- Segundo eslabon de la cadena de cuentas a pagar, despues de
+-- facturas_compra.sql:
+--
+--   factura de compra  --(efectos)-->  vencimientos de pago / pagos
+--                                            |
+--                                   remesa (agrupa efectos)
+--
+-- Tablas (espejo MariaDB del legacy ocefepro / occobpro / ocrempro /
+-- octipefe, acotado al lado de COMPRA / PAGO):
+--
+--   fza_tipos_efecto         (TEFE)    catalogo de tipos de efecto
+--   fza_efectos_compra       (EFEC)    un efecto/vencimiento por plazo de
+--                                      la factura. Cuando se concilia un
+--                                      pago parcial, el efecto se divide en
+--                                      uno pagado y otro pendiente. Varios
+--                                      impagados pueden fusionarse en un
+--                                      efecto resumen; los origenes quedan
+--                                      CONCILIADO con referencia documental.
+--   fza_remesas_compra       (REMC)    remesa que agrupa efectos para pago
+--
+-- Sufijos registrados en LIBRO_DE_ESTILO_BBDD.md §2 y en
+-- UNormalizerEngine.pas / InitDefaults. Idempotente (INFORMATION_SCHEMA);
+-- las SP usan DROP ... IF EXISTS y DELIMITER (cliente DELIMITER-aware).
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. fza_tipos_efecto (TEFE): catalogo de tipos de efecto
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_tipos_efecto''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_tipos_efecto` (''
+  ''  `CODIGO_TEFE`        varchar(20)  NOT NULL,''
+  ''  `DESCRIPCION_TEFE`   varchar(100) NOT NULL,''
+  ''  `ESDOMICILIADO_TEFE` varchar(1)   NULL DEFAULT ''''N''''''
+  ''       COMMENT ''''S/N — el pago se domicilia en cuenta bancaria'''',''
+  ''  `ESREMESABLE_TEFE`   varchar(1)   NULL DEFAULT ''''N''''''
+  ''       COMMENT ''''S/N — el efecto puede agruparse en una remesa'''',''
+  ''  `ORDEN_TEFE`         int(11)      NULL DEFAULT 0,''
+  ''  `ESACTIVO_TEFE`      varchar(1)   NULL DEFAULT ''''S'''',''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`CODIGO_TEFE`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Semilla de tipos de efecto habituales (idempotente).
+INSERT INTO `fza_tipos_efecto`
+  (`CODIGO_TEFE`, `DESCRIPCION_TEFE`, `ESDOMICILIADO_TEFE`,
+   `ESREMESABLE_TEFE`, `ORDEN_TEFE`, `ESACTIVO_TEFE`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`)
+SELECT seed.c, seed.d, seed.dom, seed.rem, seed.o, seed.a,
+       NOW(), ''SISTEMA'', NOW(), ''SISTEMA''
+  FROM (
+  SELECT ''CONTADO''       AS c, ''Pago al contado''        AS d,
+         ''N'' AS dom, ''N'' AS rem, 1  AS o, ''S'' AS a
+  UNION ALL SELECT ''TRANSFERENCIA'', ''Transferencia bancaria'',
+         ''N'', ''N'', 2, ''S''
+  UNION ALL SELECT ''RECIBO'', ''Recibo domiciliado'',
+         ''S'', ''S'', 3, ''S''
+  UNION ALL SELECT ''PAGARE'', ''Pagare'',
+         ''N'', ''S'', 4, ''S''
+  UNION ALL SELECT ''CONFIRMING'', ''Confirming'',
+         ''S'', ''S'', 5, ''S''
+) seed
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_tipos_efecto`
+    WHERE `CODIGO_TEFE` = seed.c
+ );
+
+-- ----------------------------------------------------------------------------
+-- 2. fza_efectos_compra (EFEC): un efecto/vencimiento por plazo de factura
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_efectos_compra` (''
+  ''  `SERIE_FACC_EFEC`  varchar(20) NOT NULL''
+  ''       COMMENT ''''Factura de compra origen (serie)'''',''
+  ''  `NUMERO_FACC_EFEC` varchar(20) NOT NULL''
+  ''       COMMENT ''''Factura de compra origen (numero)'''',''
+  ''  `NUMERO_EFEC`      int(11)     NOT NULL''
+  ''       COMMENT ''''Secuencial del efecto dentro de la factura (1..N)'''',''
+  ''  `CODIGO_EMP_EFEC`  varchar(8)  NULL DEFAULT NULL,''
+  ''  `CODIGO_PRV_EFEC`  varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_proveedores (denormalizado)'''',''
+  ''  `RAZON_SOCIAL_PRV_EFEC` varchar(200) NULL DEFAULT NULL,''
+  ''  `NIF_PRV_EFEC`     varchar(50) NULL DEFAULT NULL,''
+  ''  `CODIGO_TEFE_EFEC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_tipos_efecto'''',''
+  ''  `ESTADO_EFEC`      varchar(20) NULL DEFAULT ''''PENDIENTE''''''
+  ''       COMMENT ''''PENDIENTE, PAGADO, REMESADO, DEVUELTO, ANULADO, CONCILIADO'''',''
+  ''  `ORDEN_PLAZO_EFEC` int(11)     NULL DEFAULT 1''
+  ''       COMMENT ''''Numero de plazo segun la forma de pago'''',''
+  ''  `FECHA_EMISION_EFEC`     date NULL DEFAULT NULL,''
+  ''  `FECHA_VENCIMIENTO_EFEC` date NULL DEFAULT NULL''
+  ''       COMMENT ''''Vencimiento del pago (clave para el control contable)'''',''
+  ''  `FECHA_PAGO_EFEC`        date NULL DEFAULT NULL''
+  ''       COMMENT ''''Fecha del ultimo pago aplicado'''',''
+  ''  `TIPO_PAGO_EFEC`         varchar(50) NULL DEFAULT NULL''
+  ''       COMMENT ''''Medio de pago conciliado'''',''
+  ''  `REFERENCIA_PAGO_EFEC`   varchar(100) NULL DEFAULT NULL''
+  ''       COMMENT ''''Nro transferencia / cheque / justificante'''',''
+  ''  `ENTIDAD_PAGO_EFEC`      varchar(100) NULL DEFAULT NULL''
+  ''       COMMENT ''''Banco / entidad desde la que se paga'''',''
+  ''  `ESCONCILIADO_EFEC`      varchar(1) NULL DEFAULT ''''N''''''
+  ''       COMMENT ''''S/N — conciliado con el extracto bancario'''',''
+  ''  `IMPORTE_EFEC`           decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `IMPORTE_PAGADO_EFEC`    decimal(18,6) NULL DEFAULT ''''0.000000''''''
+  ''       COMMENT ''''Importe pagado del propio efecto'''',''
+  ''  `IMPORTE_PENDIENTE_EFEC` decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `SERIE_REMC_EFEC`  varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_remesas_compra (si esta remesado)'''',''
+  ''  `NUMERO_REMC_EFEC` varchar(20) NULL DEFAULT NULL,''
+  ''  `ENTIDAD_EFEC`        varchar(4)  NULL DEFAULT NULL,''
+  ''  `OFICINA_EFEC`        varchar(4)  NULL DEFAULT NULL,''
+  ''  `DIGITO_CONTROL_EFEC` varchar(2)  NULL DEFAULT NULL,''
+  ''  `CUENTA_EFEC`         varchar(10) NULL DEFAULT NULL,''
+  ''  `IBAN_EFEC`           varchar(34) NULL DEFAULT NULL,''
+  ''  `CODIGO_EMPBAN_EFEC` varchar(8) NULL DEFAULT NULL''
+  ''       COMMENT ''''Cuenta de la empresa (cargo)'''','' 
+  ''  `IBAN_EMP_EFEC`      varchar(34) NULL DEFAULT NULL''
+  ''       COMMENT ''''IBAN de la empresa (cargo)'''','' 
+  ''  `DOC_EXTERNO_EFEC`    varchar(50) NULL DEFAULT NULL''
+  ''       COMMENT ''''Nro de factura del proveedor (traza)'''',''
+  ''  `REFERENCIA_DOCUMENTO_EFEC` varchar(100) NULL DEFAULT NULL''
+  ''       COMMENT ''''Referencia del documento de conciliacion'''',''
+  ''  `SERIE_FACC_CONCILIACION_EFEC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''Serie factura del efecto que agrupa esta conciliacion'''',''
+  ''  `NUMERO_FACC_CONCILIACION_EFEC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''Numero factura del efecto que agrupa esta conciliacion'''',''
+  ''  `NUMERO_EFEC_CONCILIACION_EFEC` int(11) NULL DEFAULT NULL''
+  ''       COMMENT ''''Numero del efecto que agrupa esta conciliacion'''',''
+  ''  `OBSERVACIONES_EFEC`  varchar(1000) NULL DEFAULT '''''''',''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`SERIE_FACC_EFEC`,`NUMERO_FACC_EFEC`,`NUMERO_EFEC`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Columnas añadidas sobre instalaciones que ya tengan fza_efectos_compra.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''TIPO_PAGO_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `TIPO_PAGO_EFEC` varchar(50) NULL DEFAULT NULL ''
+  ''COMMENT ''''Medio de pago conciliado'''' AFTER `FECHA_PAGO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+UPDATE `fza_efectos_compra`
+   SET `REFERENCIA_DOCUMENTO_EFEC` =
+       COALESCE(NULLIF(`DOC_EXTERNO_EFEC`, ''''),
+                CONCAT(`SERIE_FACC_EFEC`, ''/'', `NUMERO_FACC_EFEC`))
+ WHERE COALESCE(`REFERENCIA_DOCUMENTO_EFEC`, '''') = '''';
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''REFERENCIA_PAGO_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `REFERENCIA_PAGO_EFEC` varchar(100) NULL DEFAULT NULL ''
+  ''COMMENT ''''Nro transferencia / cheque / justificante'''' ''
+  ''AFTER `TIPO_PAGO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''ENTIDAD_PAGO_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `ENTIDAD_PAGO_EFEC` varchar(100) NULL DEFAULT NULL ''
+  ''COMMENT ''''Banco / entidad desde la que se paga'''' ''
+  ''AFTER `REFERENCIA_PAGO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''ESCONCILIADO_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `ESCONCILIADO_EFEC` varchar(1) NULL DEFAULT ''''N'''' ''
+  ''COMMENT ''''S/N — conciliado con el extracto bancario'''' ''
+  ''AFTER `ENTIDAD_PAGO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''CODIGO_EMPBAN_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `CODIGO_EMPBAN_EFEC` varchar(8) NULL DEFAULT NULL ''
+  ''COMMENT ''''Cuenta de la empresa (cargo)'''' AFTER `IBAN_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''IBAN_EMP_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `IBAN_EMP_EFEC` varchar(34) NULL DEFAULT NULL ''
+  ''COMMENT ''''IBAN de la empresa (cargo)'''' AFTER `CODIGO_EMPBAN_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''REFERENCIA_DOCUMENTO_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `REFERENCIA_DOCUMENTO_EFEC` varchar(100) NULL DEFAULT NULL ''
+  ''COMMENT ''''Referencia del documento de conciliacion'''' ''
+  ''AFTER `DOC_EXTERNO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''SERIE_FACC_CONCILIACION_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `SERIE_FACC_CONCILIACION_EFEC` varchar(20) ''
+  ''NULL DEFAULT NULL ''
+  ''COMMENT ''''Serie factura del efecto que agrupa esta conciliacion'''' ''
+  ''AFTER `REFERENCIA_DOCUMENTO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''NUMERO_FACC_CONCILIACION_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `NUMERO_FACC_CONCILIACION_EFEC` varchar(20) ''
+  ''NULL DEFAULT NULL ''
+  ''COMMENT ''''Numero factura del efecto que agrupa esta conciliacion'''' ''
+  ''AFTER `SERIE_FACC_CONCILIACION_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''NUMERO_EFEC_CONCILIACION_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `NUMERO_EFEC_CONCILIACION_EFEC` int(11) NULL DEFAULT NULL ''
+  ''COMMENT ''''Numero del efecto que agrupa esta conciliacion'''' ''
+  ''AFTER `NUMERO_FACC_CONCILIACION_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND INDEX_NAME   = ''IDX_EFEC_VENCIMIENTO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD INDEX `IDX_EFEC_VENCIMIENTO` (`FECHA_VENCIMIENTO_EFEC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND INDEX_NAME   = ''IDX_EFEC_ESTADO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD INDEX `IDX_EFEC_ESTADO` (`ESTADO_EFEC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND INDEX_NAME   = ''IDX_EFEC_PROVEEDOR''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD INDEX `IDX_EFEC_PROVEEDOR` (`CODIGO_PRV_EFEC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND INDEX_NAME   = ''IDX_EFEC_REMESA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD INDEX `IDX_EFEC_REMESA` (`SERIE_REMC_EFEC`,`NUMERO_REMC_EFEC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND INDEX_NAME   = ''IDX_EFEC_CONCILIACION''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD INDEX `IDX_EFEC_CONCILIACION` ''
+  ''(`SERIE_FACC_CONCILIACION_EFEC`,''
+  ''`NUMERO_FACC_CONCILIACION_EFEC`,''
+  ''`NUMERO_EFEC_CONCILIACION_EFEC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 3. fza_remesas_compra (REMC): remesa de pagos que agrupa efectos
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_remesas_compra''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_remesas_compra` (''
+  ''  `NUMERO_REMC` varchar(20) NOT NULL,''
+  ''  `SERIE_REMC`  varchar(20) NOT NULL,''
+  ''  `FECHA_REMC`  date NULL DEFAULT NULL,''
+  ''  `ESTADO_REMC` varchar(20) NULL DEFAULT ''''ABIERTA''''''
+  ''       COMMENT ''''ABIERTA, PARCIAL, CERRADA, ENVIADA, PAGADA, CANCELADA'''',''
+  ''  `CODIGO_EMP_REMC` varchar(8) NULL DEFAULT NULL,''
+  ''  `TIPO_REMC`   varchar(20) NULL DEFAULT ''''NORMA34''''''
+  ''       COMMENT ''''Norma SEPA de pago (p.ej. cuaderno 34)'''',''
+  ''  `NORMA_REMC`  varchar(10) NULL DEFAULT NULL,''
+  ''  `ENTIDAD_REMC`        varchar(4)  NULL DEFAULT NULL,''
+  ''  `OFICINA_REMC`        varchar(4)  NULL DEFAULT NULL,''
+  ''  `DIGITO_CONTROL_REMC` varchar(2)  NULL DEFAULT NULL,''
+  ''  `CUENTA_REMC`         varchar(10) NULL DEFAULT NULL,''
+  ''  `IBAN_REMC`           varchar(34) NULL DEFAULT NULL''
+  ''       COMMENT ''''Cuenta de cargo de la empresa'''',''
+  ''  `CONTADOR_EFECTOS_REMC` int(11) NULL DEFAULT 0,''
+  ''  `TOTAL_REMC`          decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `TOTAL_GASTOS_REMC`   decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `TOTAL_COMISION_REMC` decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `FECHA_CARGO_REMC`    date NULL DEFAULT NULL''
+  ''       COMMENT ''''Fecha de cargo en cuenta'''',''
+  ''  `ARCHIVO_REMC`        varchar(200) NULL DEFAULT NULL''
+  ''       COMMENT ''''Fichero SEPA generado'''',''
+  ''  `OBSERVACIONES_REMC`  varchar(1000) NULL DEFAULT '''''''',''
+  ''  `INSTANTE_CONTABILIZACION_REMC` datetime NULL DEFAULT NULL,''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`NUMERO_REMC`,`SERIE_REMC`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_remesas_compra''
+     AND INDEX_NAME   = ''IDX_REMC_EMPRESA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_remesas_compra` ''
+  ''ADD INDEX `IDX_REMC_EMPRESA` (`CODIGO_EMP_REMC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_remesas_compra''
+     AND INDEX_NAME   = ''IDX_REMC_ESTADO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_remesas_compra` ''
+  ''ADD INDEX `IDX_REMC_ESTADO` (`ESTADO_REMC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 5. Registrar el tipo de documento ''RP'' (REMESA DE PAGOS) y su contador.
+--    Codigo libre en fza_tipos_documentos. Las facturas usan ''FP''.
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_tipos_documentos`
+  (`CODIGO_TIPO_DOCUMENTO_TD`, `DESCRIPCION_TIPO_DOCUMENTO_TD`,
+   `TABLA_ORIGEN_TIPO_DOCUMENTO_TD`)
+SELECT ''RP'', ''REMESA DE PAGOS'', ''fza_remesas_compra''
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_tipos_documentos`
+    WHERE `CODIGO_TIPO_DOCUMENTO_TD` = ''RP''
+ );
+
+INSERT INTO `fza_contadores`
+  (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
+   `NUM_DIGITOS_CON`, `ESACTIVO_CON`, `DEFAULT_CON`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`)
+SELECT ''RP'', ''-'', ''-'', 0, 6, ''S'', ''S'',
+       NOW(), ''SISTEMA'', NOW(), ''SISTEMA''
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_contadores`
+    WHERE `TIPO_DOC_CON` = ''RP'' AND `SERIE_CON` = ''-''
+ );
+
+-- ----------------------------------------------------------------------------
+-- 6. Vistas de lectura
+-- ----------------------------------------------------------------------------
+-- 6a. Efectos con datos de factura, proveedor, tipo y remesa.
+CREATE OR REPLACE VIEW `vi_efectos_compra` AS
+SELECT  e.*,
+        f.FECHA_FACC          AS FECHA_FACTURA_VIEW_EFEC,
+        f.DOC_EXTERNO_FACC    AS DOC_EXTERNO_FACTURA_VIEW_EFEC,
+        f.TOTAL_LIQUIDO_FACC  AS TOTAL_LIQUIDO_FACTURA_VIEW_EFEC,
+        prv.NOMBRE_PRV        AS NOMBRE_PRV_VIEW_EFEC,
+        t.DESCRIPCION_TEFE    AS DESCRIPCION_TEFE_VIEW_EFEC
+  FROM  fza_efectos_compra e
+  LEFT  JOIN fza_facturas_compra f
+         ON f.SERIE_FACC  = e.SERIE_FACC_EFEC
+        AND f.NUMERO_FACC = e.NUMERO_FACC_EFEC
+  LEFT  JOIN fza_proveedores prv
+         ON prv.CODIGO_PRV_PRV = e.CODIGO_PRV_EFEC
+  LEFT  JOIN fza_tipos_efecto t
+         ON t.CODIGO_TEFE = e.CODIGO_TEFE_EFEC;
+
+-- 6b. Solo los efectos pendientes (cartera de pagos por vencimiento).
+CREATE OR REPLACE VIEW `vi_efectos_compra_pendientes` AS
+SELECT  e.*,
+        prv.NOMBRE_PRV        AS NOMBRE_PRV_VIEW_EFEC
+  FROM  fza_efectos_compra e
+ LEFT  JOIN fza_proveedores prv
+         ON prv.CODIGO_PRV_PRV = e.CODIGO_PRV_EFEC
+ WHERE  COALESCE(e.ESTADO_EFEC, '''') NOT IN
+        (''PAGADO'', ''ANULADO'', ''CONCILIADO'')
+   AND  COALESCE(e.IMPORTE_PENDIENTE_EFEC, 0) > 0;
+
+-- 6c. Remesas con datos de empresa.
+CREATE OR REPLACE VIEW `vi_remesas_compra` AS
+SELECT  r.*,
+        emp.RAZON_SOCIAL_EMP  AS RAZON_SOCIAL_EMPRESA_VIEW_REMC
+  FROM  fza_remesas_compra r
+  LEFT  JOIN fza_empresas emp
+         ON emp.CODIGO_EMP_EMP = r.CODIGO_EMP_REMC;
+
+-- ----------------------------------------------------------------------------
+-- 7. PRC_EFEC_GENERAR_DESDE_FACTURA: genera los efectos (vencimientos) de
+--    una factura segun su forma de pago (N plazos x N dias entre plazos).
+--    Reparte TOTAL_LIQUIDO_FACC entre los plazos (el ultimo absorbe el
+--    redondeo). No toca efectos ya pagados / remesados (aborta con 0 para
+--    no destruir pagos ya conciliados).
+--    p_RESULTADO: nº de efectos generados, 0 si no habia nada que hacer.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_EFEC_GENERAR_DESDE_FACTURA`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_EFEC_GENERAR_DESDE_FACTURA`(
+    IN  p_SERIE   varchar(20),
+    IN  p_NUMERO  varchar(20),
+    IN  p_USUARIO varchar(100),
+    OUT p_RESULTADO int)
+BEGIN
+  DECLARE v_liquido  decimal(18,6) DEFAULT 0;
+  DECLARE v_fp       varchar(200);
+  DECLARE v_fecha    date;
+  DECLARE v_emp      varchar(8);
+  DECLARE v_prv      varchar(20);
+  DECLARE v_razon    varchar(200);
+  DECLARE v_nif      varchar(50);
+  DECLARE v_docext   varchar(50);
+  DECLARE v_ent      varchar(4);
+  DECLARE v_ofi      varchar(4);
+  DECLARE v_dc       varchar(2);
+  DECLARE v_cta      varchar(10);
+  DECLARE v_iban     varchar(34);
+  DECLARE v_nplazos  int DEFAULT 1;
+  DECLARE v_dias     int DEFAULT 0;
+  DECLARE v_escontado varchar(1) DEFAULT ''N'';
+  DECLARE v_tefe     varchar(20);
+  DECLARE v_bloqueados int DEFAULT 0;
+  DECLARE v_i        int DEFAULT 1;
+  DECLARE v_imp      decimal(18,6) DEFAULT 0;
+  DECLARE v_acum     decimal(18,6) DEFAULT 0;
+  DECLARE v_vto      date;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    SET p_RESULTADO = -1;
+    RESIGNAL;
+  END;
+  SET p_RESULTADO = 0;
+  -- ¿Hay efectos que no se pueden regenerar (pagados / remesados)?
+  SELECT COUNT(*)
+    INTO v_bloqueados
+    FROM fza_efectos_compra
+   WHERE SERIE_FACC_EFEC  = p_SERIE
+     AND NUMERO_FACC_EFEC = p_NUMERO
+     AND (COALESCE(ESTADO_EFEC, '''') IN (''PAGADO'', ''REMESADO'')
+          OR COALESCE(IMPORTE_PAGADO_EFEC, 0) > 0
+          OR COALESCE(ESTADO_EFEC, '''') = ''CONCILIADO''
+          OR COALESCE(ESCONCILIADO_EFEC, ''N'') = ''S''
+          OR SERIE_REMC_EFEC IS NOT NULL
+          OR SERIE_FACC_CONCILIACION_EFEC IS NOT NULL);
+  IF v_bloqueados = 0 THEN
+    -- Datos de la factura.
+    SELECT COALESCE(TOTAL_LIQUIDO_FACC, 0), FORMA_PAGO_FACC,
+           COALESCE(FECHA_FACC, CURDATE()), CODIGO_EMP_FACC,
+           CODIGO_PRV_FACC, RAZON_SOCIAL_PRV_FACC, NIF_PRV_FACC,
+           DOC_EXTERNO_FACC, ENTIDAD_FACC, OFICINA_FACC,
+           DIGITO_CONTROL_FACC, CUENTA_FACC, IBAN_FACC
+      INTO v_liquido, v_fp, v_fecha, v_emp, v_prv, v_razon, v_nif,
+           v_docext, v_ent, v_ofi, v_dc, v_cta, v_iban
+      FROM fza_facturas_compra
+     WHERE SERIE_FACC = p_SERIE AND NUMERO_FACC = p_NUMERO;
+    -- Parametros de la forma de pago (si existe).
+    SELECT COALESCE(N_PLAZOS_FORMA_PAGO_FP, 1),
+           COALESCE(N_DIAS_ENTRE_PLAZOS_FORMA_PAGO_FP, 0),
+           COALESCE(ESCONTADO_FORMA_PAGO_FP, ''N'')
+      INTO v_nplazos, v_dias, v_escontado
+      FROM fza_formas_pago
+     WHERE CODIGO_FP_FP = v_fp;
+    IF v_nplazos IS NULL OR v_nplazos < 1 THEN
+      SET v_nplazos = 1;
+    END IF;
+    -- Tipo de efecto por defecto segun contado/aplazado.
+    SET v_tefe = IF(v_escontado = ''S'', ''CONTADO'', ''RECIBO'');
+    -- Limpiar efectos previos (todos PENDIENTE en este punto).
+    START TRANSACTION;
+    DELETE FROM fza_efectos_compra
+     WHERE SERIE_FACC_EFEC  = p_SERIE
+       AND NUMERO_FACC_EFEC = p_NUMERO;
+    SET v_acum = 0;
+    WHILE v_i <= v_nplazos DO
+      IF v_i = v_nplazos THEN
+        SET v_imp = v_liquido - v_acum;          -- ultimo: resto exacto
+      ELSE
+        SET v_imp = ROUND(v_liquido / v_nplazos, 2);
+        SET v_acum = v_acum + v_imp;
+      END IF;
+      SET v_vto = DATE_ADD(v_fecha, INTERVAL (v_i * v_dias) DAY);
+      INSERT INTO fza_efectos_compra
+        (SERIE_FACC_EFEC, NUMERO_FACC_EFEC, NUMERO_EFEC, CODIGO_EMP_EFEC,
+         CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC, NIF_PRV_EFEC,
+         CODIGO_TEFE_EFEC, ESTADO_EFEC, ORDEN_PLAZO_EFEC,
+         FECHA_EMISION_EFEC, FECHA_VENCIMIENTO_EFEC, IMPORTE_EFEC,
+         IMPORTE_PAGADO_EFEC, IMPORTE_PENDIENTE_EFEC, ENTIDAD_EFEC,
+         OFICINA_EFEC, DIGITO_CONTROL_EFEC, CUENTA_EFEC, IBAN_EFEC,
+         DOC_EXTERNO_EFEC, REFERENCIA_DOCUMENTO_EFEC, INSTANTE_ALTA,
+         USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF)
+      VALUES
+        (p_SERIE, p_NUMERO, v_i, v_emp, v_prv, v_razon, v_nif,
+         v_tefe, ''PENDIENTE'', v_i, v_fecha, v_vto, v_imp,
+         0, v_imp, v_ent, v_ofi, v_dc, v_cta, v_iban,
+         v_docext, COALESCE(NULLIF(v_docext, ''''),
+         CONCAT(p_SERIE, ''/'', p_NUMERO)), NOW(), p_USUARIO, NOW(),
+         p_USUARIO);
+      SET v_i = v_i + 1;
+    END WHILE;
+    COMMIT;
+    SET p_RESULTADO = v_nplazos;
+  END IF;
+END ;;
+DELIMITER ;
+
+-- ----------------------------------------------------------------------------
+-- 8. PRC_EFEC_CONCILIAR_PAGO: concilia un pago contra el propio efecto.
+--    Si el pago es parcial, divide el efecto en dos: el original queda
+--    PAGADO por el importe conciliado y se crea otro PENDIENTE por el resto.
+--    No usa tabla de pagos: el efecto es el espejo del pago.
+--    p_RESULTADO: 1 pago completo, 2 pago parcial con split, 0 sin efecto.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_EFEC_REGISTRAR_PAGO`;
+DROP PROCEDURE IF EXISTS `PRC_EFEC_CONCILIAR_PAGO`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_EFEC_CONCILIAR_PAGO`(
+    IN  p_SERIE      varchar(20),
+    IN  p_NUMERO     varchar(20),
+    IN  p_NUM_EFEC   int,
+    IN  p_FECHA      date,
+    IN  p_IMPORTE    decimal(18,6),
+    IN  p_TIPO       varchar(50),
+    IN  p_REFERENCIA varchar(100),
+    IN  p_ENTIDAD    varchar(100),
+    IN  p_USUARIO    varchar(100),
+    OUT p_RESULTADO  int)
+BEGIN
+  DECLARE v_existe   int DEFAULT 0;
+  DECLARE v_importe  decimal(18,6) DEFAULT 0;
+  DECLARE v_pend     decimal(18,6) DEFAULT 0;
+  DECLARE v_pago     decimal(18,6) DEFAULT 0;
+  DECLARE v_resto    decimal(18,6) DEFAULT 0;
+  DECLARE v_nuevo    int DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    SET p_RESULTADO = -1;
+    RESIGNAL;
+  END;
+  SET p_RESULTADO = 0;
+  START TRANSACTION;
+  SELECT COUNT(*)
+    INTO v_existe
+    FROM fza_efectos_compra
+   WHERE SERIE_FACC_EFEC  = p_SERIE
+     AND NUMERO_FACC_EFEC = p_NUMERO
+     AND NUMERO_EFEC      = p_NUM_EFEC
+     AND COALESCE(ESTADO_EFEC, '''') NOT IN
+         (''PAGADO'', ''ANULADO'', ''DEVUELTO'', ''CONCILIADO'')
+     AND COALESCE(IMPORTE_PENDIENTE_EFEC, IMPORTE_EFEC, 0) > 0;
+  IF v_existe > 0 AND COALESCE(p_IMPORTE, 0) > 0 THEN
+    SELECT COALESCE(IMPORTE_EFEC, 0),
+           COALESCE(IMPORTE_PENDIENTE_EFEC, IMPORTE_EFEC, 0)
+      INTO v_importe, v_pend
+      FROM fza_efectos_compra
+     WHERE SERIE_FACC_EFEC  = p_SERIE
+       AND NUMERO_FACC_EFEC = p_NUMERO
+       AND NUMERO_EFEC      = p_NUM_EFEC
+       FOR UPDATE;
+    SET v_pago = COALESCE(p_IMPORTE, 0);
+    IF v_pago > v_pend THEN
+      SET v_pago = v_pend;
+    END IF;
+    SET v_resto = v_pend - v_pago;
+    IF v_resto <= 0.000001 THEN
+      UPDATE fza_efectos_compra
+         SET IMPORTE_PAGADO_EFEC    = v_importe,
+             IMPORTE_PENDIENTE_EFEC = 0,
+             FECHA_PAGO_EFEC        = COALESCE(p_FECHA, CURDATE()),
+             TIPO_PAGO_EFEC         = NULLIF(p_TIPO, ''''),
+             REFERENCIA_PAGO_EFEC   = NULLIF(p_REFERENCIA, ''''),
+             ENTIDAD_PAGO_EFEC      = NULLIF(p_ENTIDAD, ''''),
+             ESCONCILIADO_EFEC      = ''S'',
+             ESTADO_EFEC            = ''PAGADO'',
+             INSTANTE_MODIF         = NOW(),
+             USUARIO_MODIF          = p_USUARIO
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      SET p_RESULTADO = 1;
+    ELSE
+      SELECT COALESCE(MAX(NUMERO_EFEC), 0) + 1
+        INTO v_nuevo
+        FROM fza_efectos_compra
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO;
+      UPDATE fza_efectos_compra
+         SET IMPORTE_EFEC           = v_pago,
+             IMPORTE_PAGADO_EFEC    = v_pago,
+             IMPORTE_PENDIENTE_EFEC = 0,
+             FECHA_PAGO_EFEC        = COALESCE(p_FECHA, CURDATE()),
+             TIPO_PAGO_EFEC         = NULLIF(p_TIPO, ''''),
+             REFERENCIA_PAGO_EFEC   = NULLIF(p_REFERENCIA, ''''),
+             ENTIDAD_PAGO_EFEC      = NULLIF(p_ENTIDAD, ''''),
+             ESCONCILIADO_EFEC      = ''S'',
+             ESTADO_EFEC            = ''PAGADO'',
+             INSTANTE_MODIF         = NOW(),
+             USUARIO_MODIF          = p_USUARIO
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      INSERT INTO fza_efectos_compra
+        (SERIE_FACC_EFEC, NUMERO_FACC_EFEC, NUMERO_EFEC,
+         CODIGO_EMP_EFEC, CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC,
+         NIF_PRV_EFEC, CODIGO_TEFE_EFEC, ESTADO_EFEC,
+         ORDEN_PLAZO_EFEC, FECHA_EMISION_EFEC, FECHA_VENCIMIENTO_EFEC,
+         FECHA_PAGO_EFEC, TIPO_PAGO_EFEC, REFERENCIA_PAGO_EFEC,
+         ENTIDAD_PAGO_EFEC, ESCONCILIADO_EFEC, IMPORTE_EFEC,
+         IMPORTE_PAGADO_EFEC, IMPORTE_PENDIENTE_EFEC, SERIE_REMC_EFEC,
+         NUMERO_REMC_EFEC, ENTIDAD_EFEC, OFICINA_EFEC,
+         DIGITO_CONTROL_EFEC, CUENTA_EFEC, IBAN_EFEC,
+         CODIGO_EMPBAN_EFEC, IBAN_EMP_EFEC, DOC_EXTERNO_EFEC,
+         REFERENCIA_DOCUMENTO_EFEC, SERIE_FACC_CONCILIACION_EFEC,
+         NUMERO_FACC_CONCILIACION_EFEC, NUMERO_EFEC_CONCILIACION_EFEC,
+         OBSERVACIONES_EFEC, INSTANTE_ALTA, USUARIO_ALTA,
+         INSTANTE_MODIF, USUARIO_MODIF)
+      SELECT SERIE_FACC_EFEC, NUMERO_FACC_EFEC, v_nuevo,
+             CODIGO_EMP_EFEC, CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC,
+             NIF_PRV_EFEC, CODIGO_TEFE_EFEC,
+             CASE
+               WHEN COALESCE(SERIE_REMC_EFEC, '''') <> '''' THEN ''REMESADO''
+               ELSE ''PENDIENTE''
+             END,
+             ORDEN_PLAZO_EFEC, FECHA_EMISION_EFEC,
+             FECHA_VENCIMIENTO_EFEC, NULL, NULL, NULL, NULL, ''N'',
+             v_resto, 0, v_resto, SERIE_REMC_EFEC, NUMERO_REMC_EFEC,
+             ENTIDAD_EFEC, OFICINA_EFEC, DIGITO_CONTROL_EFEC,
+             CUENTA_EFEC, IBAN_EFEC, CODIGO_EMPBAN_EFEC, IBAN_EMP_EFEC,
+             DOC_EXTERNO_EFEC, REFERENCIA_DOCUMENTO_EFEC,
+             SERIE_FACC_CONCILIACION_EFEC,
+             NUMERO_FACC_CONCILIACION_EFEC,
+             NUMERO_EFEC_CONCILIACION_EFEC,
+             OBSERVACIONES_EFEC, NOW(), p_USUARIO,
+             NOW(), p_USUARIO
+        FROM fza_efectos_compra
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      SET p_RESULTADO = 2;
+    END IF;
+  END IF;
+  COMMIT;
+END ;;
+DELIMITER ;
+
+-- ----------------------------------------------------------------------------
+-- 9. PRC_REMC_CREAR: crea una remesa de pagos vacia, numerada con el
+--    contador ''RP''. Devuelve su serie/numero para ir anyadiendo efectos.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_REMC_CREAR`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_REMC_CREAR`(
+    IN  p_EMPRESA varchar(8),
+    IN  p_IBAN    varchar(34),
+    IN  p_USUARIO varchar(100),
+    OUT p_SERIE_OUT  varchar(20),
+    OUT p_NUMERO_OUT varchar(20))
+BEGIN
+  DECLARE v_nro   bigint DEFAULT 0;
+  DECLARE v_serie varchar(3);
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    RESIGNAL;
+  END;
+  START TRANSACTION;
+  CALL PRC_FNC_GET_NEXT_NRO_DOC(''RP'', v_nro);
+  CALL PRC_FNC_GET_SERIE_TIPODOC(''RP'', v_serie);
+  SET p_NUMERO_OUT = LPAD(v_nro, 6, ''0'');
+  SET p_SERIE_OUT  = v_serie;
+  INSERT INTO fza_remesas_compra
+    (NUMERO_REMC, SERIE_REMC, FECHA_REMC, ESTADO_REMC, CODIGO_EMP_REMC,
+     IBAN_REMC, CONTADOR_EFECTOS_REMC, TOTAL_REMC,
+     INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF)
+  VALUES
+    (p_NUMERO_OUT, p_SERIE_OUT, CURDATE(), ''ABIERTA'', p_EMPRESA,
+     p_IBAN, 0, 0, NOW(), p_USUARIO, NOW(), p_USUARIO);
+  COMMIT;
+END ;;
+DELIMITER ;
+
+-- ----------------------------------------------------------------------------
+-- 10. PRC_REMC_ANYADIR_EFECTO: agrupa un efecto en una remesa (lo marca
+--     REMESADO y enlaza) y recalcula los totales de la remesa. No re-remesa
+--     un efecto ya remesado ni uno ya pagado.
+--     p_RESULTADO: 1 ok, 0 nada que hacer, -1 error.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_REMC_ANYADIR_EFECTO`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_REMC_ANYADIR_EFECTO`(
+    IN  p_SERIE_REM  varchar(20),
+    IN  p_NUMERO_REM varchar(20),
+    IN  p_SERIE_FAC  varchar(20),
+    IN  p_NUMERO_FAC varchar(20),
+    IN  p_NUM_EFEC   int,
+    IN  p_USUARIO    varchar(100),
+    OUT p_RESULTADO  int)
+BEGIN
+  DECLARE v_rem  int DEFAULT 0;
+  DECLARE v_efe  int DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    SET p_RESULTADO = -1;
+    RESIGNAL;
+  END;
+  SET p_RESULTADO = 0;
+  SELECT COUNT(*) INTO v_rem
+    FROM fza_remesas_compra
+   WHERE SERIE_REMC = p_SERIE_REM AND NUMERO_REMC = p_NUMERO_REM;
+  SELECT COUNT(*) INTO v_efe
+    FROM fza_efectos_compra
+   WHERE SERIE_FACC_EFEC  = p_SERIE_FAC
+     AND NUMERO_FACC_EFEC = p_NUMERO_FAC
+     AND NUMERO_EFEC      = p_NUM_EFEC
+     AND SERIE_REMC_EFEC IS NULL
+     AND COALESCE(ESTADO_EFEC, '''') NOT IN
+         (''PAGADO'', ''ANULADO'', ''CONCILIADO'')
+     AND COALESCE(IMPORTE_PENDIENTE_EFEC, 0) > 0;
+  IF v_rem > 0 AND v_efe > 0 THEN
+    START TRANSACTION;
+    UPDATE fza_efectos_compra
+       SET SERIE_REMC_EFEC  = p_SERIE_REM,
+           NUMERO_REMC_EFEC = p_NUMERO_REM,
+           ESTADO_EFEC      = ''REMESADO'',
+           USUARIO_MODIF    = p_USUARIO
+     WHERE SERIE_FACC_EFEC  = p_SERIE_FAC
+       AND NUMERO_FACC_EFEC = p_NUMERO_FAC
+       AND NUMERO_EFEC      = p_NUM_EFEC;
+    CALL PRC_REMC_RECALCULAR(p_SERIE_REM, p_NUMERO_REM);
+    SET p_RESULTADO = 1;
+    COMMIT;
+  END IF;
+END ;;
+DELIMITER ;
+
+-- ----------------------------------------------------------------------------
+-- 11. PRC_REMC_RECALCULAR: recuenta efectos e importe de una remesa a
+--     partir de los efectos enlazados.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_REMC_RECALCULAR`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_REMC_RECALCULAR`(
+    IN p_SERIE  varchar(20),
+    IN p_NUMERO varchar(20))
+BEGIN
+  DECLARE v_n     int DEFAULT 0;
+  DECLARE v_total decimal(18,6) DEFAULT 0;
+  SELECT COUNT(*), COALESCE(SUM(COALESCE(IMPORTE_EFEC, 0)), 0)
+    INTO v_n, v_total
+    FROM fza_efectos_compra
+   WHERE SERIE_REMC_EFEC  = p_SERIE
+     AND NUMERO_REMC_EFEC = p_NUMERO;
+  UPDATE fza_remesas_compra
+     SET CONTADOR_EFECTOS_REMC = v_n,
+         TOTAL_REMC            = v_total
+   WHERE SERIE_REMC = p_SERIE AND NUMERO_REMC = p_NUMERO;
+END ;;
+DELIMITER ;
+
+
+-- ----------------------------------------------------------------------------
+-- 12. Registrar los Mtos de efectos y remesas en fza_winforms (idempotente).
+--     Cablean ''Compras -> Efectos de pago'' (EfectosCompra1) y
+--     ''Compras -> Remesas de pago'' (RemesasCompra1).
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+SELECT ''EfectosCompra'',
+       ''Efectos de Pago a Proveedor'',
+       ''EfectosCompra1'',
+       ''inMtoEfectosCompra.TfrmMtoEfectosCompra'',
+       ''Ctrl+Alt+E'',
+       ''UniDataEfectosCompra.TdmEfectosCompra'',
+       5
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_winforms` WHERE `CALL_WINF` = ''EfectosCompra''
+ );
+
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+SELECT ''RemesasCompra'',
+       ''Remesas de Pago'',
+       ''RemesasCompra1'',
+       ''inMtoRemesasCompra.TfrmMtoRemesasCompra'',
+       ''Ctrl+Alt+R'',
+       ''UniDataRemesasCompra.TdmRemesasCompra'',
+       5
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_winforms` WHERE `CALL_WINF` = ''RemesasCompra''
+ );
+', '2026-06-20 09:22:48', '2026-06-20 09:22:48', 'Administrador', 'Administrador'),
+  ('434', 'efectos_remesas_compra', '-- ============================================================================
+-- Efectos de pago a proveedor, conciliacion y remesas — esquema base
+--
+-- Segundo eslabon de la cadena de cuentas a pagar, despues de
+-- facturas_compra.sql:
+--
+--   factura de compra  --(efectos)-->  vencimientos de pago / pagos
+--                                            |
+--                                   remesa (agrupa efectos)
+--
+-- Tablas (espejo MariaDB del legacy ocefepro / occobpro / ocrempro /
+-- octipefe, acotado al lado de COMPRA / PAGO):
+--
+--   fza_tipos_efecto         (TEFE)    catalogo de tipos de efecto
+--   fza_efectos_compra       (EFEC)    un efecto/vencimiento por plazo de
+--                                      la factura. Cuando se concilia un
+--                                      pago parcial, el efecto se divide en
+--                                      uno pagado y otro pendiente. Varios
+--                                      impagados pueden fusionarse en un
+--                                      efecto resumen; los origenes quedan
+--                                      CONCILIADO con referencia documental.
+--   fza_remesas_compra       (REMC)    remesa que agrupa efectos para pago
+--
+-- Sufijos registrados en LIBRO_DE_ESTILO_BBDD.md §2 y en
+-- UNormalizerEngine.pas / InitDefaults. Idempotente (INFORMATION_SCHEMA);
+-- las SP usan DROP ... IF EXISTS y DELIMITER (cliente DELIMITER-aware).
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. fza_tipos_efecto (TEFE): catalogo de tipos de efecto
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_tipos_efecto''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_tipos_efecto` (''
+  ''  `CODIGO_TEFE`        varchar(20)  NOT NULL,''
+  ''  `DESCRIPCION_TEFE`   varchar(100) NOT NULL,''
+  ''  `ESDOMICILIADO_TEFE` varchar(1)   NULL DEFAULT ''''N''''''
+  ''       COMMENT ''''S/N — el pago se domicilia en cuenta bancaria'''',''
+  ''  `ESREMESABLE_TEFE`   varchar(1)   NULL DEFAULT ''''N''''''
+  ''       COMMENT ''''S/N — el efecto puede agruparse en una remesa'''',''
+  ''  `ORDEN_TEFE`         int(11)      NULL DEFAULT 0,''
+  ''  `ESACTIVO_TEFE`      varchar(1)   NULL DEFAULT ''''S'''',''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`CODIGO_TEFE`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Semilla de tipos de efecto habituales (idempotente).
+INSERT INTO `fza_tipos_efecto`
+  (`CODIGO_TEFE`, `DESCRIPCION_TEFE`, `ESDOMICILIADO_TEFE`,
+   `ESREMESABLE_TEFE`, `ORDEN_TEFE`, `ESACTIVO_TEFE`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`)
+SELECT seed.c, seed.d, seed.dom, seed.rem, seed.o, seed.a,
+       NOW(), ''SISTEMA'', NOW(), ''SISTEMA''
+  FROM (
+  SELECT ''CONTADO''       AS c, ''Pago al contado''        AS d,
+         ''N'' AS dom, ''N'' AS rem, 1  AS o, ''S'' AS a
+  UNION ALL SELECT ''TRANSFERENCIA'', ''Transferencia bancaria'',
+         ''N'', ''N'', 2, ''S''
+  UNION ALL SELECT ''RECIBO'', ''Recibo domiciliado'',
+         ''S'', ''S'', 3, ''S''
+  UNION ALL SELECT ''PAGARE'', ''Pagare'',
+         ''N'', ''S'', 4, ''S''
+  UNION ALL SELECT ''CONFIRMING'', ''Confirming'',
+         ''S'', ''S'', 5, ''S''
+) seed
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_tipos_efecto`
+    WHERE `CODIGO_TEFE` = seed.c
+ );
+
+-- ----------------------------------------------------------------------------
+-- 2. fza_efectos_compra (EFEC): un efecto/vencimiento por plazo de factura
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_efectos_compra` (''
+  ''  `SERIE_FACC_EFEC`  varchar(20) NOT NULL''
+  ''       COMMENT ''''Factura de compra origen (serie)'''',''
+  ''  `NUMERO_FACC_EFEC` varchar(20) NOT NULL''
+  ''       COMMENT ''''Factura de compra origen (numero)'''',''
+  ''  `NUMERO_EFEC`      int(11)     NOT NULL''
+  ''       COMMENT ''''Secuencial del efecto dentro de la factura (1..N)'''',''
+  ''  `CODIGO_EMP_EFEC`  varchar(8)  NULL DEFAULT NULL,''
+  ''  `CODIGO_PRV_EFEC`  varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_proveedores (denormalizado)'''',''
+  ''  `RAZON_SOCIAL_PRV_EFEC` varchar(200) NULL DEFAULT NULL,''
+  ''  `NIF_PRV_EFEC`     varchar(50) NULL DEFAULT NULL,''
+  ''  `CODIGO_TEFE_EFEC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_tipos_efecto'''',''
+  ''  `ESTADO_EFEC`      varchar(20) NULL DEFAULT ''''PENDIENTE''''''
+  ''       COMMENT ''''PENDIENTE, PAGADO, REMESADO, DEVUELTO, ANULADO, CONCILIADO'''',''
+  ''  `ORDEN_PLAZO_EFEC` int(11)     NULL DEFAULT 1''
+  ''       COMMENT ''''Numero de plazo segun la forma de pago'''',''
+  ''  `FECHA_EMISION_EFEC`     date NULL DEFAULT NULL,''
+  ''  `FECHA_VENCIMIENTO_EFEC` date NULL DEFAULT NULL''
+  ''       COMMENT ''''Vencimiento del pago (clave para el control contable)'''',''
+  ''  `FECHA_PAGO_EFEC`        date NULL DEFAULT NULL''
+  ''       COMMENT ''''Fecha del ultimo pago aplicado'''',''
+  ''  `TIPO_PAGO_EFEC`         varchar(50) NULL DEFAULT NULL''
+  ''       COMMENT ''''Medio de pago conciliado'''',''
+  ''  `REFERENCIA_PAGO_EFEC`   varchar(100) NULL DEFAULT NULL''
+  ''       COMMENT ''''Nro transferencia / cheque / justificante'''',''
+  ''  `ENTIDAD_PAGO_EFEC`      varchar(100) NULL DEFAULT NULL''
+  ''       COMMENT ''''Banco / entidad desde la que se paga'''',''
+  ''  `ESCONCILIADO_EFEC`      varchar(1) NULL DEFAULT ''''N''''''
+  ''       COMMENT ''''S/N — conciliado con el extracto bancario'''',''
+  ''  `IMPORTE_EFEC`           decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `IMPORTE_PAGADO_EFEC`    decimal(18,6) NULL DEFAULT ''''0.000000''''''
+  ''       COMMENT ''''Importe pagado del propio efecto'''',''
+  ''  `IMPORTE_PENDIENTE_EFEC` decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `SERIE_REMC_EFEC`  varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''FK logica a fza_remesas_compra (si esta remesado)'''',''
+  ''  `NUMERO_REMC_EFEC` varchar(20) NULL DEFAULT NULL,''
+  ''  `ENTIDAD_EFEC`        varchar(4)  NULL DEFAULT NULL,''
+  ''  `OFICINA_EFEC`        varchar(4)  NULL DEFAULT NULL,''
+  ''  `DIGITO_CONTROL_EFEC` varchar(2)  NULL DEFAULT NULL,''
+  ''  `CUENTA_EFEC`         varchar(10) NULL DEFAULT NULL,''
+  ''  `IBAN_EFEC`           varchar(34) NULL DEFAULT NULL,''
+  ''  `CODIGO_EMPBAN_EFEC` varchar(8) NULL DEFAULT NULL''
+  ''       COMMENT ''''Cuenta de la empresa (cargo)'''','' 
+  ''  `IBAN_EMP_EFEC`      varchar(34) NULL DEFAULT NULL''
+  ''       COMMENT ''''IBAN de la empresa (cargo)'''','' 
+  ''  `DOC_EXTERNO_EFEC`    varchar(50) NULL DEFAULT NULL''
+  ''       COMMENT ''''Nro de factura del proveedor (traza)'''',''
+  ''  `REFERENCIA_DOCUMENTO_EFEC` varchar(100) NULL DEFAULT NULL''
+  ''       COMMENT ''''Referencia del documento de conciliacion'''',''
+  ''  `SERIE_FACC_CONCILIACION_EFEC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''Serie factura del efecto que agrupa esta conciliacion'''',''
+  ''  `NUMERO_FACC_CONCILIACION_EFEC` varchar(20) NULL DEFAULT NULL''
+  ''       COMMENT ''''Numero factura del efecto que agrupa esta conciliacion'''',''
+  ''  `NUMERO_EFEC_CONCILIACION_EFEC` int(11) NULL DEFAULT NULL''
+  ''       COMMENT ''''Numero del efecto que agrupa esta conciliacion'''',''
+  ''  `OBSERVACIONES_EFEC`  varchar(1000) NULL DEFAULT '''''''',''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`SERIE_FACC_EFEC`,`NUMERO_FACC_EFEC`,`NUMERO_EFEC`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Columnas añadidas sobre instalaciones que ya tengan fza_efectos_compra.
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''TIPO_PAGO_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `TIPO_PAGO_EFEC` varchar(50) NULL DEFAULT NULL ''
+  ''COMMENT ''''Medio de pago conciliado'''' AFTER `FECHA_PAGO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''REFERENCIA_PAGO_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `REFERENCIA_PAGO_EFEC` varchar(100) NULL DEFAULT NULL ''
+  ''COMMENT ''''Nro transferencia / cheque / justificante'''' ''
+  ''AFTER `TIPO_PAGO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''ENTIDAD_PAGO_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `ENTIDAD_PAGO_EFEC` varchar(100) NULL DEFAULT NULL ''
+  ''COMMENT ''''Banco / entidad desde la que se paga'''' ''
+  ''AFTER `REFERENCIA_PAGO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''ESCONCILIADO_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `ESCONCILIADO_EFEC` varchar(1) NULL DEFAULT ''''N'''' ''
+  ''COMMENT ''''S/N — conciliado con el extracto bancario'''' ''
+  ''AFTER `ENTIDAD_PAGO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''CODIGO_EMPBAN_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `CODIGO_EMPBAN_EFEC` varchar(8) NULL DEFAULT NULL ''
+  ''COMMENT ''''Cuenta de la empresa (cargo)'''' AFTER `IBAN_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''IBAN_EMP_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `IBAN_EMP_EFEC` varchar(34) NULL DEFAULT NULL ''
+  ''COMMENT ''''IBAN de la empresa (cargo)'''' AFTER `CODIGO_EMPBAN_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''REFERENCIA_DOCUMENTO_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `REFERENCIA_DOCUMENTO_EFEC` varchar(100) NULL DEFAULT NULL ''
+  ''COMMENT ''''Referencia del documento de conciliacion'''' ''
+  ''AFTER `DOC_EXTERNO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+UPDATE `fza_efectos_compra`
+   SET `REFERENCIA_DOCUMENTO_EFEC` =
+       COALESCE(NULLIF(`DOC_EXTERNO_EFEC`, ''''),
+                CONCAT(`SERIE_FACC_EFEC`, ''/'', `NUMERO_FACC_EFEC`))
+ WHERE COALESCE(`REFERENCIA_DOCUMENTO_EFEC`, '''') = '''';
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''SERIE_FACC_CONCILIACION_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `SERIE_FACC_CONCILIACION_EFEC` varchar(20) ''
+  ''NULL DEFAULT NULL ''
+  ''COMMENT ''''Serie factura del efecto que agrupa esta conciliacion'''' ''
+  ''AFTER `REFERENCIA_DOCUMENTO_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''NUMERO_FACC_CONCILIACION_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `NUMERO_FACC_CONCILIACION_EFEC` varchar(20) ''
+  ''NULL DEFAULT NULL ''
+  ''COMMENT ''''Numero factura del efecto que agrupa esta conciliacion'''' ''
+  ''AFTER `SERIE_FACC_CONCILIACION_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND COLUMN_NAME  = ''NUMERO_EFEC_CONCILIACION_EFEC''
+);
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD COLUMN `NUMERO_EFEC_CONCILIACION_EFEC` int(11) NULL DEFAULT NULL ''
+  ''COMMENT ''''Numero del efecto que agrupa esta conciliacion'''' ''
+  ''AFTER `NUMERO_FACC_CONCILIACION_EFEC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND INDEX_NAME   = ''IDX_EFEC_VENCIMIENTO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD INDEX `IDX_EFEC_VENCIMIENTO` (`FECHA_VENCIMIENTO_EFEC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND INDEX_NAME   = ''IDX_EFEC_ESTADO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD INDEX `IDX_EFEC_ESTADO` (`ESTADO_EFEC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND INDEX_NAME   = ''IDX_EFEC_PROVEEDOR''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD INDEX `IDX_EFEC_PROVEEDOR` (`CODIGO_PRV_EFEC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND INDEX_NAME   = ''IDX_EFEC_REMESA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD INDEX `IDX_EFEC_REMESA` (`SERIE_REMC_EFEC`,`NUMERO_REMC_EFEC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_efectos_compra''
+     AND INDEX_NAME   = ''IDX_EFEC_CONCILIACION''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_efectos_compra` ''
+  ''ADD INDEX `IDX_EFEC_CONCILIACION` ''
+  ''(`SERIE_FACC_CONCILIACION_EFEC`,''
+  ''`NUMERO_FACC_CONCILIACION_EFEC`,''
+  ''`NUMERO_EFEC_CONCILIACION_EFEC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 3. fza_remesas_compra (REMC): remesa de pagos que agrupa efectos
+-- ----------------------------------------------------------------------------
+SET @tab_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_remesas_compra''
+);
+SET @ddl := IF(@tab_exists = 0,
+  ''CREATE TABLE `fza_remesas_compra` (''
+  ''  `NUMERO_REMC` varchar(20) NOT NULL,''
+  ''  `SERIE_REMC`  varchar(20) NOT NULL,''
+  ''  `FECHA_REMC`  date NULL DEFAULT NULL,''
+  ''  `ESTADO_REMC` varchar(20) NULL DEFAULT ''''ABIERTA''''''
+  ''       COMMENT ''''ABIERTA, PARCIAL, CERRADA, ENVIADA, PAGADA, CANCELADA'''',''
+  ''  `CODIGO_EMP_REMC` varchar(8) NULL DEFAULT NULL,''
+  ''  `TIPO_REMC`   varchar(20) NULL DEFAULT ''''NORMA34''''''
+  ''       COMMENT ''''Norma SEPA de pago (p.ej. cuaderno 34)'''',''
+  ''  `NORMA_REMC`  varchar(10) NULL DEFAULT NULL,''
+  ''  `ENTIDAD_REMC`        varchar(4)  NULL DEFAULT NULL,''
+  ''  `OFICINA_REMC`        varchar(4)  NULL DEFAULT NULL,''
+  ''  `DIGITO_CONTROL_REMC` varchar(2)  NULL DEFAULT NULL,''
+  ''  `CUENTA_REMC`         varchar(10) NULL DEFAULT NULL,''
+  ''  `IBAN_REMC`           varchar(34) NULL DEFAULT NULL''
+  ''       COMMENT ''''Cuenta de cargo de la empresa'''',''
+  ''  `CONTADOR_EFECTOS_REMC` int(11) NULL DEFAULT 0,''
+  ''  `TOTAL_REMC`          decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `TOTAL_GASTOS_REMC`   decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `TOTAL_COMISION_REMC` decimal(18,6) NULL DEFAULT ''''0.000000'''',''
+  ''  `FECHA_CARGO_REMC`    date NULL DEFAULT NULL''
+  ''       COMMENT ''''Fecha de cargo en cuenta'''',''
+  ''  `ARCHIVO_REMC`        varchar(200) NULL DEFAULT NULL''
+  ''       COMMENT ''''Fichero SEPA generado'''',''
+  ''  `OBSERVACIONES_REMC`  varchar(1000) NULL DEFAULT '''''''',''
+  ''  `INSTANTE_CONTABILIZACION_REMC` datetime NULL DEFAULT NULL,''
+  ''  `INSTANTE_MODIF` timestamp NOT NULL''
+  ''       DEFAULT current_timestamp() ON UPDATE current_timestamp(),''
+  ''  `INSTANTE_ALTA`  timestamp NOT NULL''
+  ''       DEFAULT ''''0000-00-00 00:00:00'''',''
+  ''  `USUARIO_ALTA`   varchar(100) NOT NULL,''
+  ''  `USUARIO_MODIF`  varchar(100) NOT NULL,''
+  ''  PRIMARY KEY (`NUMERO_REMC`,`SERIE_REMC`)''
+  '')'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_remesas_compra''
+     AND INDEX_NAME   = ''IDX_REMC_EMPRESA''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_remesas_compra` ''
+  ''ADD INDEX `IDX_REMC_EMPRESA` (`CODIGO_EMP_REMC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_remesas_compra''
+     AND INDEX_NAME   = ''IDX_REMC_ESTADO''
+);
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_remesas_compra` ''
+  ''ADD INDEX `IDX_REMC_ESTADO` (`ESTADO_REMC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- ----------------------------------------------------------------------------
+-- 5. Registrar el tipo de documento ''RP'' (REMESA DE PAGOS) y su contador.
+--    Codigo libre en fza_tipos_documentos. Las facturas usan ''FP''.
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_tipos_documentos`
+  (`CODIGO_TIPO_DOCUMENTO_TD`, `DESCRIPCION_TIPO_DOCUMENTO_TD`,
+   `TABLA_ORIGEN_TIPO_DOCUMENTO_TD`)
+SELECT ''RP'', ''REMESA DE PAGOS'', ''fza_remesas_compra''
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_tipos_documentos`
+    WHERE `CODIGO_TIPO_DOCUMENTO_TD` = ''RP''
+ );
+
+INSERT INTO `fza_contadores`
+  (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
+   `NUM_DIGITOS_CON`, `ESACTIVO_CON`, `DEFAULT_CON`,
+   `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`)
+SELECT ''RP'', ''-'', ''-'', 0, 6, ''S'', ''S'',
+       NOW(), ''SISTEMA'', NOW(), ''SISTEMA''
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_contadores`
+    WHERE `TIPO_DOC_CON` = ''RP'' AND `SERIE_CON` = ''-''
+ );
+
+-- ----------------------------------------------------------------------------
+-- 6. Vistas de lectura
+-- ----------------------------------------------------------------------------
+-- 6a. Efectos con datos de factura, proveedor, tipo y remesa.
+CREATE OR REPLACE VIEW `vi_efectos_compra` AS
+SELECT  e.*,
+        f.FECHA_FACC          AS FECHA_FACTURA_VIEW_EFEC,
+        f.DOC_EXTERNO_FACC    AS DOC_EXTERNO_FACTURA_VIEW_EFEC,
+        f.TOTAL_LIQUIDO_FACC  AS TOTAL_LIQUIDO_FACTURA_VIEW_EFEC,
+        prv.NOMBRE_PRV        AS NOMBRE_PRV_VIEW_EFEC,
+        t.DESCRIPCION_TEFE    AS DESCRIPCION_TEFE_VIEW_EFEC
+  FROM  fza_efectos_compra e
+  LEFT  JOIN fza_facturas_compra f
+         ON f.SERIE_FACC  = e.SERIE_FACC_EFEC
+        AND f.NUMERO_FACC = e.NUMERO_FACC_EFEC
+  LEFT  JOIN fza_proveedores prv
+         ON prv.CODIGO_PRV_PRV = e.CODIGO_PRV_EFEC
+  LEFT  JOIN fza_tipos_efecto t
+         ON t.CODIGO_TEFE = e.CODIGO_TEFE_EFEC;
+
+-- 6b. Solo los efectos pendientes (cartera de pagos por vencimiento).
+CREATE OR REPLACE VIEW `vi_efectos_compra_pendientes` AS
+SELECT  e.*,
+        prv.NOMBRE_PRV        AS NOMBRE_PRV_VIEW_EFEC
+  FROM  fza_efectos_compra e
+ LEFT  JOIN fza_proveedores prv
+         ON prv.CODIGO_PRV_PRV = e.CODIGO_PRV_EFEC
+ WHERE  COALESCE(e.ESTADO_EFEC, '''') NOT IN
+        (''PAGADO'', ''ANULADO'', ''CONCILIADO'')
+   AND  COALESCE(e.IMPORTE_PENDIENTE_EFEC, 0) > 0;
+
+-- 6c. Remesas con datos de empresa.
+CREATE OR REPLACE VIEW `vi_remesas_compra` AS
+SELECT  r.*,
+        emp.RAZON_SOCIAL_EMP  AS RAZON_SOCIAL_EMPRESA_VIEW_REMC
+  FROM  fza_remesas_compra r
+  LEFT  JOIN fza_empresas emp
+         ON emp.CODIGO_EMP_EMP = r.CODIGO_EMP_REMC;
+
+-- ----------------------------------------------------------------------------
+-- 7. PRC_EFEC_GENERAR_DESDE_FACTURA: genera los efectos (vencimientos) de
+--    una factura segun su forma de pago (N plazos x N dias entre plazos).
+--    Reparte TOTAL_LIQUIDO_FACC entre los plazos (el ultimo absorbe el
+--    redondeo). No toca efectos ya pagados / remesados (aborta con 0 para
+--    no destruir pagos ya conciliados).
+--    p_RESULTADO: nº de efectos generados, 0 si no habia nada que hacer.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_EFEC_GENERAR_DESDE_FACTURA`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_EFEC_GENERAR_DESDE_FACTURA`(
+    IN  p_SERIE   varchar(20),
+    IN  p_NUMERO  varchar(20),
+    IN  p_USUARIO varchar(100),
+    OUT p_RESULTADO int)
+BEGIN
+  DECLARE v_liquido  decimal(18,6) DEFAULT 0;
+  DECLARE v_fp       varchar(200);
+  DECLARE v_fecha    date;
+  DECLARE v_emp      varchar(8);
+  DECLARE v_prv      varchar(20);
+  DECLARE v_razon    varchar(200);
+  DECLARE v_nif      varchar(50);
+  DECLARE v_docext   varchar(50);
+  DECLARE v_ent      varchar(4);
+  DECLARE v_ofi      varchar(4);
+  DECLARE v_dc       varchar(2);
+  DECLARE v_cta      varchar(10);
+  DECLARE v_iban     varchar(34);
+  DECLARE v_nplazos  int DEFAULT 1;
+  DECLARE v_dias     int DEFAULT 0;
+  DECLARE v_escontado varchar(1) DEFAULT ''N'';
+  DECLARE v_tefe     varchar(20);
+  DECLARE v_bloqueados int DEFAULT 0;
+  DECLARE v_i        int DEFAULT 1;
+  DECLARE v_imp      decimal(18,6) DEFAULT 0;
+  DECLARE v_acum     decimal(18,6) DEFAULT 0;
+  DECLARE v_vto      date;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    SET p_RESULTADO = -1;
+    RESIGNAL;
+  END;
+  SET p_RESULTADO = 0;
+  -- ¿Hay efectos que no se pueden regenerar (pagados / remesados)?
+  SELECT COUNT(*)
+    INTO v_bloqueados
+    FROM fza_efectos_compra
+   WHERE SERIE_FACC_EFEC  = p_SERIE
+     AND NUMERO_FACC_EFEC = p_NUMERO
+     AND (COALESCE(ESTADO_EFEC, '''') IN (''PAGADO'', ''REMESADO'')
+          OR COALESCE(IMPORTE_PAGADO_EFEC, 0) > 0
+          OR COALESCE(ESTADO_EFEC, '''') = ''CONCILIADO''
+          OR COALESCE(ESCONCILIADO_EFEC, ''N'') = ''S''
+          OR SERIE_REMC_EFEC IS NOT NULL
+          OR SERIE_FACC_CONCILIACION_EFEC IS NOT NULL);
+  IF v_bloqueados = 0 THEN
+    -- Datos de la factura.
+    SELECT COALESCE(TOTAL_LIQUIDO_FACC, 0), FORMA_PAGO_FACC,
+           COALESCE(FECHA_FACC, CURDATE()), CODIGO_EMP_FACC,
+           CODIGO_PRV_FACC, RAZON_SOCIAL_PRV_FACC, NIF_PRV_FACC,
+           DOC_EXTERNO_FACC, ENTIDAD_FACC, OFICINA_FACC,
+           DIGITO_CONTROL_FACC, CUENTA_FACC, IBAN_FACC
+      INTO v_liquido, v_fp, v_fecha, v_emp, v_prv, v_razon, v_nif,
+           v_docext, v_ent, v_ofi, v_dc, v_cta, v_iban
+      FROM fza_facturas_compra
+     WHERE SERIE_FACC = p_SERIE AND NUMERO_FACC = p_NUMERO;
+    -- Parametros de la forma de pago (si existe).
+    SELECT COALESCE(N_PLAZOS_FORMA_PAGO_FP, 1),
+           COALESCE(N_DIAS_ENTRE_PLAZOS_FORMA_PAGO_FP, 0),
+           COALESCE(ESCONTADO_FORMA_PAGO_FP, ''N'')
+      INTO v_nplazos, v_dias, v_escontado
+      FROM fza_formas_pago
+     WHERE CODIGO_FP_FP = v_fp;
+    IF v_nplazos IS NULL OR v_nplazos < 1 THEN
+      SET v_nplazos = 1;
+    END IF;
+    -- Tipo de efecto por defecto segun contado/aplazado.
+    SET v_tefe = IF(v_escontado = ''S'', ''CONTADO'', ''RECIBO'');
+    -- Limpiar efectos previos (todos PENDIENTE en este punto).
+    START TRANSACTION;
+    DELETE FROM fza_efectos_compra
+     WHERE SERIE_FACC_EFEC  = p_SERIE
+       AND NUMERO_FACC_EFEC = p_NUMERO;
+    SET v_acum = 0;
+    WHILE v_i <= v_nplazos DO
+      IF v_i = v_nplazos THEN
+        SET v_imp = v_liquido - v_acum;          -- ultimo: resto exacto
+      ELSE
+        SET v_imp = ROUND(v_liquido / v_nplazos, 2);
+        SET v_acum = v_acum + v_imp;
+      END IF;
+      SET v_vto = DATE_ADD(v_fecha, INTERVAL (v_i * v_dias) DAY);
+      INSERT INTO fza_efectos_compra
+        (SERIE_FACC_EFEC, NUMERO_FACC_EFEC, NUMERO_EFEC, CODIGO_EMP_EFEC,
+         CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC, NIF_PRV_EFEC,
+         CODIGO_TEFE_EFEC, ESTADO_EFEC, ORDEN_PLAZO_EFEC,
+         FECHA_EMISION_EFEC, FECHA_VENCIMIENTO_EFEC, IMPORTE_EFEC,
+         IMPORTE_PAGADO_EFEC, IMPORTE_PENDIENTE_EFEC, ENTIDAD_EFEC,
+         OFICINA_EFEC, DIGITO_CONTROL_EFEC, CUENTA_EFEC, IBAN_EFEC,
+         DOC_EXTERNO_EFEC, REFERENCIA_DOCUMENTO_EFEC, INSTANTE_ALTA,
+         USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF)
+      VALUES
+        (p_SERIE, p_NUMERO, v_i, v_emp, v_prv, v_razon, v_nif,
+         v_tefe, ''PENDIENTE'', v_i, v_fecha, v_vto, v_imp,
+         0, v_imp, v_ent, v_ofi, v_dc, v_cta, v_iban,
+         v_docext, COALESCE(NULLIF(v_docext, ''''),
+         CONCAT(p_SERIE, ''/'', p_NUMERO)), NOW(), p_USUARIO, NOW(),
+         p_USUARIO);
+      SET v_i = v_i + 1;
+    END WHILE;
+    COMMIT;
+    SET p_RESULTADO = v_nplazos;
+  END IF;
+END ;;
+DELIMITER ;
+
+-- ----------------------------------------------------------------------------
+-- 8. PRC_EFEC_CONCILIAR_PAGO: concilia un pago contra el propio efecto.
+--    Si el pago es parcial, divide el efecto en dos: el original queda
+--    PAGADO por el importe conciliado y se crea otro PENDIENTE por el resto.
+--    No usa tabla de pagos: el efecto es el espejo del pago.
+--    p_RESULTADO: 1 pago completo, 2 pago parcial con split, 0 sin efecto.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_EFEC_REGISTRAR_PAGO`;
+DROP PROCEDURE IF EXISTS `PRC_EFEC_CONCILIAR_PAGO`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_EFEC_CONCILIAR_PAGO`(
+    IN  p_SERIE      varchar(20),
+    IN  p_NUMERO     varchar(20),
+    IN  p_NUM_EFEC   int,
+    IN  p_FECHA      date,
+    IN  p_IMPORTE    decimal(18,6),
+    IN  p_TIPO       varchar(50),
+    IN  p_REFERENCIA varchar(100),
+    IN  p_ENTIDAD    varchar(100),
+    IN  p_USUARIO    varchar(100),
+    OUT p_RESULTADO  int)
+BEGIN
+  DECLARE v_existe   int DEFAULT 0;
+  DECLARE v_importe  decimal(18,6) DEFAULT 0;
+  DECLARE v_pend     decimal(18,6) DEFAULT 0;
+  DECLARE v_pago     decimal(18,6) DEFAULT 0;
+  DECLARE v_resto    decimal(18,6) DEFAULT 0;
+  DECLARE v_nuevo    int DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    SET p_RESULTADO = -1;
+    RESIGNAL;
+  END;
+  SET p_RESULTADO = 0;
+  START TRANSACTION;
+  SELECT COUNT(*)
+    INTO v_existe
+    FROM fza_efectos_compra
+   WHERE SERIE_FACC_EFEC  = p_SERIE
+     AND NUMERO_FACC_EFEC = p_NUMERO
+     AND NUMERO_EFEC      = p_NUM_EFEC
+     AND COALESCE(ESTADO_EFEC, '''') NOT IN
+         (''PAGADO'', ''ANULADO'', ''DEVUELTO'', ''CONCILIADO'')
+     AND COALESCE(IMPORTE_PENDIENTE_EFEC, IMPORTE_EFEC, 0) > 0;
+  IF v_existe > 0 AND COALESCE(p_IMPORTE, 0) > 0 THEN
+    SELECT COALESCE(IMPORTE_EFEC, 0),
+           COALESCE(IMPORTE_PENDIENTE_EFEC, IMPORTE_EFEC, 0)
+      INTO v_importe, v_pend
+      FROM fza_efectos_compra
+     WHERE SERIE_FACC_EFEC  = p_SERIE
+       AND NUMERO_FACC_EFEC = p_NUMERO
+       AND NUMERO_EFEC      = p_NUM_EFEC
+       FOR UPDATE;
+    SET v_pago = COALESCE(p_IMPORTE, 0);
+    IF v_pago > v_pend THEN
+      SET v_pago = v_pend;
+    END IF;
+    SET v_resto = v_pend - v_pago;
+    IF v_resto <= 0.000001 THEN
+      UPDATE fza_efectos_compra
+         SET IMPORTE_PAGADO_EFEC    = v_importe,
+             IMPORTE_PENDIENTE_EFEC = 0,
+             FECHA_PAGO_EFEC        = COALESCE(p_FECHA, CURDATE()),
+             TIPO_PAGO_EFEC         = NULLIF(p_TIPO, ''''),
+             REFERENCIA_PAGO_EFEC   = NULLIF(p_REFERENCIA, ''''),
+             ENTIDAD_PAGO_EFEC      = NULLIF(p_ENTIDAD, ''''),
+             ESCONCILIADO_EFEC      = ''S'',
+             ESTADO_EFEC            = ''PAGADO'',
+             INSTANTE_MODIF         = NOW(),
+             USUARIO_MODIF          = p_USUARIO
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      SET p_RESULTADO = 1;
+    ELSE
+      SELECT COALESCE(MAX(NUMERO_EFEC), 0) + 1
+        INTO v_nuevo
+        FROM fza_efectos_compra
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO;
+      UPDATE fza_efectos_compra
+         SET IMPORTE_EFEC           = v_pago,
+             IMPORTE_PAGADO_EFEC    = v_pago,
+             IMPORTE_PENDIENTE_EFEC = 0,
+             FECHA_PAGO_EFEC        = COALESCE(p_FECHA, CURDATE()),
+             TIPO_PAGO_EFEC         = NULLIF(p_TIPO, ''''),
+             REFERENCIA_PAGO_EFEC   = NULLIF(p_REFERENCIA, ''''),
+             ENTIDAD_PAGO_EFEC      = NULLIF(p_ENTIDAD, ''''),
+             ESCONCILIADO_EFEC      = ''S'',
+             ESTADO_EFEC            = ''PAGADO'',
+             INSTANTE_MODIF         = NOW(),
+             USUARIO_MODIF          = p_USUARIO
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      INSERT INTO fza_efectos_compra
+        (SERIE_FACC_EFEC, NUMERO_FACC_EFEC, NUMERO_EFEC,
+         CODIGO_EMP_EFEC, CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC,
+         NIF_PRV_EFEC, CODIGO_TEFE_EFEC, ESTADO_EFEC,
+         ORDEN_PLAZO_EFEC, FECHA_EMISION_EFEC, FECHA_VENCIMIENTO_EFEC,
+         FECHA_PAGO_EFEC, TIPO_PAGO_EFEC, REFERENCIA_PAGO_EFEC,
+         ENTIDAD_PAGO_EFEC, ESCONCILIADO_EFEC, IMPORTE_EFEC,
+         IMPORTE_PAGADO_EFEC, IMPORTE_PENDIENTE_EFEC, SERIE_REMC_EFEC,
+         NUMERO_REMC_EFEC, ENTIDAD_EFEC, OFICINA_EFEC,
+         DIGITO_CONTROL_EFEC, CUENTA_EFEC, IBAN_EFEC,
+         CODIGO_EMPBAN_EFEC, IBAN_EMP_EFEC, DOC_EXTERNO_EFEC,
+         REFERENCIA_DOCUMENTO_EFEC, SERIE_FACC_CONCILIACION_EFEC,
+         NUMERO_FACC_CONCILIACION_EFEC, NUMERO_EFEC_CONCILIACION_EFEC,
+         OBSERVACIONES_EFEC, INSTANTE_ALTA, USUARIO_ALTA,
+         INSTANTE_MODIF, USUARIO_MODIF)
+      SELECT SERIE_FACC_EFEC, NUMERO_FACC_EFEC, v_nuevo,
+             CODIGO_EMP_EFEC, CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC,
+             NIF_PRV_EFEC, CODIGO_TEFE_EFEC,
+             CASE
+               WHEN COALESCE(SERIE_REMC_EFEC, '''') <> '''' THEN ''REMESADO''
+               ELSE ''PENDIENTE''
+             END,
+             ORDEN_PLAZO_EFEC, FECHA_EMISION_EFEC,
+             FECHA_VENCIMIENTO_EFEC, NULL, NULL, NULL, NULL, ''N'',
+             v_resto, 0, v_resto, SERIE_REMC_EFEC, NUMERO_REMC_EFEC,
+             ENTIDAD_EFEC, OFICINA_EFEC, DIGITO_CONTROL_EFEC,
+             CUENTA_EFEC, IBAN_EFEC, CODIGO_EMPBAN_EFEC, IBAN_EMP_EFEC,
+             DOC_EXTERNO_EFEC, REFERENCIA_DOCUMENTO_EFEC,
+             SERIE_FACC_CONCILIACION_EFEC,
+             NUMERO_FACC_CONCILIACION_EFEC,
+             NUMERO_EFEC_CONCILIACION_EFEC,
+             OBSERVACIONES_EFEC, NOW(), p_USUARIO,
+             NOW(), p_USUARIO
+        FROM fza_efectos_compra
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      SET p_RESULTADO = 2;
+    END IF;
+  END IF;
+  COMMIT;
+END ;;
+DELIMITER ;
+
+-- ----------------------------------------------------------------------------
+-- 9. PRC_REMC_CREAR: crea una remesa de pagos vacia, numerada con el
+--    contador ''RP''. Devuelve su serie/numero para ir anyadiendo efectos.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_REMC_CREAR`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_REMC_CREAR`(
+    IN  p_EMPRESA varchar(8),
+    IN  p_IBAN    varchar(34),
+    IN  p_USUARIO varchar(100),
+    OUT p_SERIE_OUT  varchar(20),
+    OUT p_NUMERO_OUT varchar(20))
+BEGIN
+  DECLARE v_nro   bigint DEFAULT 0;
+  DECLARE v_serie varchar(3);
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    RESIGNAL;
+  END;
+  START TRANSACTION;
+  CALL PRC_FNC_GET_NEXT_NRO_DOC(''RP'', v_nro);
+  CALL PRC_FNC_GET_SERIE_TIPODOC(''RP'', v_serie);
+  SET p_NUMERO_OUT = LPAD(v_nro, 6, ''0'');
+  SET p_SERIE_OUT  = v_serie;
+  INSERT INTO fza_remesas_compra
+    (NUMERO_REMC, SERIE_REMC, FECHA_REMC, ESTADO_REMC, CODIGO_EMP_REMC,
+     IBAN_REMC, CONTADOR_EFECTOS_REMC, TOTAL_REMC,
+     INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF)
+  VALUES
+    (p_NUMERO_OUT, p_SERIE_OUT, CURDATE(), ''ABIERTA'', p_EMPRESA,
+     p_IBAN, 0, 0, NOW(), p_USUARIO, NOW(), p_USUARIO);
+  COMMIT;
+END ;;
+DELIMITER ;
+
+-- ----------------------------------------------------------------------------
+-- 10. PRC_REMC_ANYADIR_EFECTO: agrupa un efecto en una remesa (lo marca
+--     REMESADO y enlaza) y recalcula los totales de la remesa. No re-remesa
+--     un efecto ya remesado ni uno ya pagado.
+--     p_RESULTADO: 1 ok, 0 nada que hacer, -1 error.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_REMC_ANYADIR_EFECTO`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_REMC_ANYADIR_EFECTO`(
+    IN  p_SERIE_REM  varchar(20),
+    IN  p_NUMERO_REM varchar(20),
+    IN  p_SERIE_FAC  varchar(20),
+    IN  p_NUMERO_FAC varchar(20),
+    IN  p_NUM_EFEC   int,
+    IN  p_USUARIO    varchar(100),
+    OUT p_RESULTADO  int)
+BEGIN
+  DECLARE v_rem  int DEFAULT 0;
+  DECLARE v_efe  int DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    SET p_RESULTADO = -1;
+    RESIGNAL;
+  END;
+  SET p_RESULTADO = 0;
+  SELECT COUNT(*) INTO v_rem
+    FROM fza_remesas_compra
+   WHERE SERIE_REMC = p_SERIE_REM AND NUMERO_REMC = p_NUMERO_REM;
+  SELECT COUNT(*) INTO v_efe
+    FROM fza_efectos_compra
+   WHERE SERIE_FACC_EFEC  = p_SERIE_FAC
+     AND NUMERO_FACC_EFEC = p_NUMERO_FAC
+     AND NUMERO_EFEC      = p_NUM_EFEC
+     AND SERIE_REMC_EFEC IS NULL
+     AND COALESCE(ESTADO_EFEC, '''') NOT IN
+         (''PAGADO'', ''ANULADO'', ''CONCILIADO'')
+     AND COALESCE(IMPORTE_PENDIENTE_EFEC, 0) > 0;
+  IF v_rem > 0 AND v_efe > 0 THEN
+    START TRANSACTION;
+    UPDATE fza_efectos_compra
+       SET SERIE_REMC_EFEC  = p_SERIE_REM,
+           NUMERO_REMC_EFEC = p_NUMERO_REM,
+           ESTADO_EFEC      = ''REMESADO'',
+           USUARIO_MODIF    = p_USUARIO
+     WHERE SERIE_FACC_EFEC  = p_SERIE_FAC
+       AND NUMERO_FACC_EFEC = p_NUMERO_FAC
+       AND NUMERO_EFEC      = p_NUM_EFEC;
+    CALL PRC_REMC_RECALCULAR(p_SERIE_REM, p_NUMERO_REM);
+    SET p_RESULTADO = 1;
+    COMMIT;
+  END IF;
+END ;;
+DELIMITER ;
+
+-- ----------------------------------------------------------------------------
+-- 11. PRC_REMC_RECALCULAR: recuenta efectos e importe de una remesa a
+--     partir de los efectos enlazados.
+-- ----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_REMC_RECALCULAR`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_REMC_RECALCULAR`(
+    IN p_SERIE  varchar(20),
+    IN p_NUMERO varchar(20))
+BEGIN
+  DECLARE v_n     int DEFAULT 0;
+  DECLARE v_total decimal(18,6) DEFAULT 0;
+  SELECT COUNT(*), COALESCE(SUM(COALESCE(IMPORTE_EFEC, 0)), 0)
+    INTO v_n, v_total
+    FROM fza_efectos_compra
+   WHERE SERIE_REMC_EFEC  = p_SERIE
+     AND NUMERO_REMC_EFEC = p_NUMERO;
+  UPDATE fza_remesas_compra
+     SET CONTADOR_EFECTOS_REMC = v_n,
+         TOTAL_REMC            = v_total
+   WHERE SERIE_REMC = p_SERIE AND NUMERO_REMC = p_NUMERO;
+END ;;
+DELIMITER ;
+
+
+-- ----------------------------------------------------------------------------
+-- 12. Registrar los Mtos de efectos y remesas en fza_winforms (idempotente).
+--     Cablean ''Compras -> Efectos de pago'' (EfectosCompra1) y
+--     ''Compras -> Remesas de pago'' (RemesasCompra1).
+-- ----------------------------------------------------------------------------
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+SELECT ''EfectosCompra'',
+       ''Efectos de Pago a Proveedor'',
+       ''EfectosCompra1'',
+       ''inMtoEfectosCompra.TfrmMtoEfectosCompra'',
+       ''Ctrl+Alt+E'',
+       ''UniDataEfectosCompra.TdmEfectosCompra'',
+       5
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_winforms` WHERE `CALL_WINF` = ''EfectosCompra''
+ );
+
+INSERT INTO `fza_winforms`
+  (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF_WINF`,
+   `SHORTCUT_WINF`, `DATAMODULE_WINF`, `NUM_VENTANAS_WINF`)
+SELECT ''RemesasCompra'',
+       ''Remesas de Pago'',
+       ''RemesasCompra1'',
+       ''inMtoRemesasCompra.TfrmMtoRemesasCompra'',
+       ''Ctrl+Alt+R'',
+       ''UniDataRemesasCompra.TdmRemesasCompra'',
+       5
+ WHERE NOT EXISTS (
+   SELECT 1 FROM `fza_winforms` WHERE `CALL_WINF` = ''RemesasCompra''
+ );
+', '2026-06-20 09:26:12', '2026-06-20 09:26:12', 'Administrador', 'Administrador'),
+  ('435', 'facturas_compra_temporada', '-- =============================================================================
+-- facturas_compra_temporada.sql
+--
+-- Anade la temporada de cabecera a fza_facturas_compra. En el legacy Herreras
+-- viene en ocfacpro.Temporada y se traduce al catalogo TEMPORADA de
+-- fza_propiedades_valores, igual que ID_PV_TEMPORADA_PEDC en pedidos.
+--
+-- FK logica a fza_propiedades_valores.ID_PV_ARTPROP con ID_PROP_PV=''TEMPORADA''.
+--
+-- Idempotente: se puede ejecutar varias veces.
+-- =============================================================================
+
+SET @col_exists := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra''
+     AND COLUMN_NAME  = ''ID_PV_TEMPORADA_FACC''
+);
+
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra` ''
+  ''ADD COLUMN `ID_PV_TEMPORADA_FACC` int(11) NULL DEFAULT NULL ''
+  ''  COMMENT ''''FK logica fza_propiedades_valores.ID_PV_ARTPROP con ''
+  ''ID_PROP_PV=TEMPORADA. Procede de ocfacpro.Temporada en la migracion.'''' ''
+  ''AFTER `FORMA_PAGO_FACC`'',
+  ''SELECT ''''ID_PV_TEMPORADA_FACC ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_facturas_compra''
+     AND INDEX_NAME   = ''IDX_FACC_TEMPORADA''
+);
+
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_facturas_compra` ''
+  ''ADD INDEX `IDX_FACC_TEMPORADA` (`ID_PV_TEMPORADA_FACC`)'',
+  ''SELECT ''''IDX_FACC_TEMPORADA ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+', '2026-06-20 09:26:23', '2026-06-20 09:26:23', 'Administrador', 'Administrador'),
+  ('436', 'formato_documentos_empresa', '-- =============================================================================
+-- Formato visible de documentos por empresa.
+--
+-- Anade FORMATO_DOCUMENTO_EMP a fza_empresas y expone DOCUMENTO_FORMATO en
+-- las vistas de impresion. No altera factuzam_original.sql.
+-- =============================================================================
+
+-- ---------------------------------------------------------------------------
+-- 1. Parametro de empresa
+-- ---------------------------------------------------------------------------
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_empresas''
+     AND COLUMN_NAME = ''FORMATO_DOCUMENTO_EMP''
+);
+
+SET @sSql := IF(
+  @sExisteCol = 0,
+  ''ALTER TABLE fza_empresas
+     ADD COLUMN FORMATO_DOCUMENTO_EMP varchar(80) NOT NULL
+       DEFAULT ''''Serie.NroDocumento''''
+       COMMENT ''''Formato visible de documentos. Tokens: Serie y NroDocumento''''
+       AFTER TEXTO_LEGAL_FACTURA_EMP'',
+  ''SELECT ''''FORMATO_DOCUMENTO_EMP ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+UPDATE fza_empresas
+   SET FORMATO_DOCUMENTO_EMP = ''Serie.NroDocumento''
+ WHERE FORMATO_DOCUMENTO_EMP IS NULL
+    OR FORMATO_DOCUMENTO_EMP = '''';
+
+-- ---------------------------------------------------------------------------
+-- 2. Procedimiento comun de formato
+-- ---------------------------------------------------------------------------
+DROP FUNCTION IF EXISTS FN_FORMATO_DOCUMENTO;
+DROP PROCEDURE IF EXISTS PRC_FORMATO_DOCUMENTO;
+
+DELIMITER ;;
+CREATE PROCEDURE PRC_FORMATO_DOCUMENTO(
+  IN p_FORMATO varchar(80),
+  IN p_SERIE varchar(50),
+  IN p_NUMERO varchar(50),
+  OUT p_DOCUMENTO_FORMATO varchar(200)
+)
+BEGIN
+  DECLARE v_formato varchar(80);
+  DECLARE v_original varchar(200);
+  DECLARE v_resultado varchar(200);
+  DECLARE v_serie varchar(50);
+  DECLARE v_numero varchar(50);
+
+  SET v_serie = TRIM(COALESCE(p_SERIE, ''''));
+  SET v_numero = TRIM(COALESCE(p_NUMERO, ''''));
+
+  IF v_serie = '''' THEN
+    SET p_DOCUMENTO_FORMATO = v_numero;
+  ELSEIF v_numero = '''' THEN
+    SET p_DOCUMENTO_FORMATO = v_serie;
+  ELSE
+    SET v_formato = NULLIF(TRIM(COALESCE(p_FORMATO, '''')), '''');
+
+    IF v_formato IS NULL THEN
+      SET v_formato = ''Serie.NroDocumento'';
+    END IF;
+
+    SET v_resultado = v_formato;
+    SET v_original = v_resultado;
+
+    SET v_resultado = REPLACE(v_resultado, ''NroDocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''nrodocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NRODOCUMENTO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NumeroDocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''numerodocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NUMERODOCUMENTO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NúmeroDocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''númerodocumento'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NÚMERODOCUMENTO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NroFactura'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''nrofactura'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NROFACTURA'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NroDoc'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''nrodoc'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NRODOC'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''Numero'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''numero'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NUMERO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''Número'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''número'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''NÚMERO'', v_numero);
+    SET v_resultado = REPLACE(v_resultado, ''Serie'', v_serie);
+    SET v_resultado = REPLACE(v_resultado, ''serie'', v_serie);
+    SET v_resultado = REPLACE(v_resultado, ''SERIE'', v_serie);
+
+    IF v_resultado = v_original THEN
+      SET p_DOCUMENTO_FORMATO = CONCAT(v_serie, ''.'', v_numero);
+    ELSE
+      SET p_DOCUMENTO_FORMATO = v_resultado;
+    END IF;
+  END IF;
+END;;
+DELIMITER ;
+
+-- ---------------------------------------------------------------------------
+-- 3. Empresas
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_empresas` AS
+SELECT `fza_empresas`.`CODIGO_EMP_EMP`                AS `CODIGO_EMP_EMP`,
+       `fza_empresas`.`ORDEN_EMP`                     AS `ORDEN_EMP`,
+       `fza_empresas`.`ESACTIVO_EMP`                  AS `ESACTIVO_EMP`,
+       `fza_empresas`.`RAZON_SOCIAL_EMP`              AS `RAZON_SOCIAL_EMP`,
+       `fza_empresas`.`NIF_EMP`                       AS `NIF_EMP`,
+       `fza_empresas`.`MOVIL_EMP`                     AS `MOVIL_EMP`,
+       `fza_empresas`.`EMAIL_EMP`                     AS `EMAIL_EMP`,
+       `fza_empresas`.`DIRECCION1_EMP`                AS `DIRECCION1_EMP`,
+       `fza_empresas`.`DIRECCION2_EMP`                AS `DIRECCION2_EMP`,
+       `fza_empresas`.`CODIGO_POSTAL_EMP`             AS `CODIGO_POSTAL_EMP`,
+       `fza_empresas`.`POBLACION_EMP`                 AS `POBLACION_EMP`,
+       `fza_empresas`.`PROVINCIA_EMP`                 AS `PROVINCIA_EMP`,
+       `fza_empresas`.`NOMBRE_PAI_EMP`                AS `NOMBRE_PAI_EMP`,
+       `fza_empresas`.`CODIGO_PAI_EMP`                AS `CODIGO_PAI_EMP`,
+       `fza_empresas`.`IBAN_EMP`                      AS `IBAN_EMP`,
+       `fza_empresas`.`GRUPO_ZONA_IVA_EMP`            AS `GRUPO_ZONA_IVA_EMP`,
+       `fza_ivas_grupos`.`DESCRIPCION_IVA_IVAGRP`     AS `DESCRIPCION_IVA_IVAGRP`,
+       `fza_empresas`.`ESRETENCIONES_EMP`             AS `ESRETENCIONES_EMP`,
+       `fza_empresas`.`ESREGIMENESPECIALAGRICOLA_EMP` AS `ESREGIMENESPECIALAGRICOLA_EMP`,
+       `fza_empresas`.`TEXTO_LEGAL_FACTURA_EMP`       AS `TEXTO_LEGAL_FACTURA_EMP`,
+       `fza_empresas`.`FORMATO_DOCUMENTO_EMP`         AS `FORMATO_DOCUMENTO_EMP`,
+       `fza_empresas`.`CODIGO_CERTIFICADO_EMP`        AS `CODIGO_CERTIFICADO_EMP`,
+       `fza_empresas`.`TITULAR_CERTIFICADO_EMP`       AS `TITULAR_CERTIFICADO_EMP`,
+       `fza_empresas`.`TIPO_CERTIFICADO_EMP`          AS `TIPO_CERTIFICADO_EMP`,
+       `fza_empresas`.`FECHA_DESDE_CERTIFICADO_EMP`   AS `FECHA_DESDE_CERTIFICADO_EMP`,
+       `fza_empresas`.`FECHA_HASTA_CERTIFICADO_EMP`   AS `FECHA_HASTA_CERTIFICADO_EMP`,
+       `fza_empresas`.`INSTANTE_MODIF`                AS `INSTANTE_MODIF`,
+       `fza_empresas`.`INSTANTE_ALTA`                 AS `INSTANTE_ALTA`,
+       `fza_empresas`.`USUARIO_ALTA`                  AS `USUARIO_ALTA`,
+       `fza_empresas`.`USUARIO_MODIF`                 AS `USUARIO_MODIF`
+  FROM (`fza_empresas`
+        LEFT JOIN `fza_ivas_grupos`
+          ON (`fza_empresas`.`GRUPO_ZONA_IVA_EMP` =
+              `fza_ivas_grupos`.`IVA_IVAGRP`))
+ ORDER BY `fza_empresas`.`ORDEN_EMP`;
+
+-- ---------------------------------------------------------------------------
+-- 4. Facturas emitidas
+-- ---------------------------------------------------------------------------
+-- Las vistas no pueden llamar al procedimiento; DOCUMENTO_FORMATO va en linea.
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_facturas_print` AS
+SELECT `fza_facturas`.*,
+       `fza_formas_pago`.`DESCRIPCION_FORMA_PAGO_FP`
+              AS `DESCRIPCION_FORMA_PAGO_FP`,
+       `fza_formas_pago`.`ESCONTADO_FORMA_PAGO_FP`
+              AS `ESCONTADO_FORMA_PAGO_FP`,
+       (select group_concat('' '',
+                 date_format(`fza_recibos`.`FECHA_VENCIMIENTO_RECIBO_REC`,
+                             ''%d/%m/%Y''),
+                 ''=> '',
+                 format(`fza_recibos`.`EUROS_RECIBO_REC`, 2),
+                 ''€'' separator '','')
+          from `fza_recibos`
+         where `fza_recibos`.`NUMERO_FAC_REC` = `fza_facturas`.`NUMERO_FAC`
+           and `fza_recibos`.`SERIE_FAC_REC`  = `fza_facturas`.`SERIE_FAC`)
+              AS `VENCIMIENTOS_RECIBOS`,
+       `fza_empresas`.`IBAN_EMP` AS `IBAN_EMP`,
+       `fza_empresas`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,
+       CASE WHEN TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, '''')) = '''' THEN TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, '''')) WHEN TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, '''')) = '''' THEN TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, '''')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''serie'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''númerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrofactura'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodoc'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numero'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''número'') > 0) THEN CONCAT(TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, '''')), ''.'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(`fza_empresas`.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento''), ''NroDocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''nrodocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NRODOCUMENTO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NumeroDocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''numerodocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NUMERODOCUMENTO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NúmeroDocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''númerodocumento'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NÚMERODOCUMENTO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NroFactura'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''nrofactura'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NROFACTURA'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NroDoc'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''nrodoc'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NRODOC'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''Numero'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''numero'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NUMERO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''Número'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''número'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''NÚMERO'', TRIM(COALESCE(`fza_facturas`.`NUMERO_FAC`, ''''))), ''Serie'', TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, ''''))), ''serie'', TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, ''''))), ''SERIE'', TRIM(COALESCE(`fza_facturas`.`SERIE_FAC`, ''''))) END
+              AS `DOCUMENTO_FORMATO`,
+       `fza_clientes`.`IBAN_CLI` AS `IBAN_CLI`,
+       `fza_formas_pago`.`ESVERBANCOEMPRESA_FORMA_PAGO_FP`
+              AS `ESVERBANCOEMPRESA_FORMA_PAGO_FP`,
+       `c`.`ID_FACCON`                          AS `ID_FACCON`,
+       `c`.`REQUEST_ID_CONSOLIDACION_FACCON`    AS `REQUEST_ID_CONSOLIDACION_FACCON`,
+       `c`.`ISSUER_IRS_ID_CONSOLIDACION_FACCON` AS `ISSUER_IRS_ID_CONSOLIDACION_FACCON`,
+       `c`.`ISSUED_TIME_FACCON`                 AS `ISSUED_TIME_FACCON`,
+       `c`.`CHAIN_NUMBER_FACCON`                AS `CHAIN_NUMBER_FACCON`,
+       `c`.`CHAIN_HASH_FACCON`                  AS `CHAIN_HASH_FACCON`,
+       `c`.`VERIFACTU_URL_FACCON`               AS `VERIFACTU_URL_FACCON`,
+       `c`.`QRCODE_BASE64_FACCON`               AS `QRCODE_BASE64_FACCON`,
+       `c`.`QRCODE_PNG_FACCON`                  AS `QRCODE_PNG_FACCON`,
+       `c`.`FECHA_PROCESAMIENTO_FACCON`         AS `FECHA_PROCESAMIENTO_FACCON`,
+       `c`.`ESTADO_FACCON`                      AS `ESTADO_FACCON`
+  from ((((`fza_facturas`
+       left join `fza_formas_pago`
+              on(`fza_facturas`.`FORMA_PAGO_FAC` =
+                 `fza_formas_pago`.`CODIGO_FP_FP`))
+       left join `fza_empresas`
+              on(`fza_facturas`.`CODIGO_EMP_FAC` =
+                 `fza_empresas`.`CODIGO_EMP_EMP`))
+       left join `fza_clientes`
+              on(`fza_facturas`.`CODIGO_CLI_FAC` =
+                 `fza_clientes`.`CODIGO_CLI_CLI`))
+       left join `fza_facturas_consolidaciones` `c`
+              on(`c`.`SERIE_FAC_FACCON`  = `fza_facturas`.`SERIE_FAC`
+             and `c`.`NUMERO_FAC_FACCON` = `fza_facturas`.`NUMERO_FAC`))
+ order by `fza_facturas`.`FECHA_FAC` desc;
+
+-- ---------------------------------------------------------------------------
+-- 5. Compras: sesiones, albaranes y devoluciones
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE VIEW `vi_compras_sesiones_cab_print` AS
+SELECT
+  ses.`SERIE_SES`,
+  ses.`NUMERO_SES`,
+  ses.`FECHA_SES`,
+  ses.`ESTADO_SES`,
+  ses.`REF_PRV_SES`,
+  ses.`COMENTARIOS_SES`,
+  ses.`PORCENTAJE_MARGEN_SES`,
+  ses.`MULTIPLO_REDONDEO_SES`,
+  ses.`AJUSTE_FINAL_SES`,
+  ses.`MONEDA_SES`,
+  ses.`TIPO_IVA_SES`,
+  ses.`ESFORMATO_DISTRIBUIDO_SES`,
+  ses.`CODIGO_EMP_SES`,
+  emp.`FORMATO_DOCUMENTO_EMP`,
+  CASE WHEN TRIM(COALESCE(ses.`SERIE_SES`, '''')) = '''' THEN TRIM(COALESCE(ses.`NUMERO_SES`, '''')) WHEN TRIM(COALESCE(ses.`NUMERO_SES`, '''')) = '''' THEN TRIM(COALESCE(ses.`SERIE_SES`, '''')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''serie'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''númerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrofactura'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodoc'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numero'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''número'') > 0) THEN CONCAT(TRIM(COALESCE(ses.`SERIE_SES`, '''')), ''.'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento''), ''NroDocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''nrodocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NRODOCUMENTO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NumeroDocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''numerodocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NUMERODOCUMENTO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NúmeroDocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''númerodocumento'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NÚMERODOCUMENTO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NroFactura'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''nrofactura'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NROFACTURA'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NroDoc'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''nrodoc'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NRODOC'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''Numero'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''numero'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NUMERO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''Número'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''número'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''NÚMERO'', TRIM(COALESCE(ses.`NUMERO_SES`, ''''))), ''Serie'', TRIM(COALESCE(ses.`SERIE_SES`, ''''))), ''serie'', TRIM(COALESCE(ses.`SERIE_SES`, ''''))), ''SERIE'', TRIM(COALESCE(ses.`SERIE_SES`, ''''))) END AS `DOCUMENTO_FORMATO`,
+  emp.`RAZON_SOCIAL_EMP`,
+  emp.`DIRECCION1_EMP`,
+  emp.`CODIGO_POSTAL_EMP`,
+  emp.`POBLACION_EMP`,
+  emp.`PROVINCIA_EMP`,
+  emp.`NIF_EMP`        AS `CIF_EMP`,
+  emp.`MOVIL_EMP`      AS `TELEFONO1_EMP`,
+  ses.`CODIGO_PRV_SES`,
+  prv.`RAZON_SOCIAL_PRV`,
+  prv.`DIRECCION1_PRV`,
+  prv.`CODIGO_POSTAL_PRV`,
+  prv.`POBLACION_PRV`,
+  prv.`PROVINCIA_PRV`,
+  prv.`NIF_PRV`        AS `CIF_PRV`,
+  COALESCE(prv.`TELEFONO_PRV`, prv.`MOVIL_PRV`) AS `TELEFONO1_PRV`,
+  ses.`CODIGO_TAR_SES`,
+  ses.`CODIGO_FAM_SES`,
+  ses.`CODIGO_ALM_SES`,
+  ses.`INSTANTE_ALTA`,
+  ses.`USUARIO_ALTA`,
+  (SELECT COALESCE(SUM(`TOTAL_UNIDADES_SESLIN`), 0)
+     FROM `fza_compras_sesiones_lineas` lin
+    WHERE lin.`SERIE_SES_SESLIN`  = ses.`SERIE_SES`
+      AND lin.`NUMERO_SES_SESLIN` = ses.`NUMERO_SES`) AS `TOTAL_UNIDADES_SES`,
+  (SELECT COALESCE(SUM(`TOTAL_LINEA_SESLIN`), 0)
+     FROM `fza_compras_sesiones_lineas` lin
+    WHERE lin.`SERIE_SES_SESLIN`  = ses.`SERIE_SES`
+      AND lin.`NUMERO_SES_SESLIN` = ses.`NUMERO_SES`) AS `TOTAL_LINEAS_SES`,
+  (SELECT COUNT(*)
+     FROM `fza_compras_sesiones_lineas` lin
+    WHERE lin.`SERIE_SES_SESLIN`  = ses.`SERIE_SES`
+      AND lin.`NUMERO_SES_SESLIN` = ses.`NUMERO_SES`) AS `NUM_LINEAS_SES`
+FROM `fza_compras_sesiones` ses
+LEFT JOIN `fza_empresas`     emp ON emp.`CODIGO_EMP_EMP` = ses.`CODIGO_EMP_SES`
+LEFT JOIN `fza_proveedores`  prv ON prv.`CODIGO_PRV_PRV` = ses.`CODIGO_PRV_SES`;
+
+CREATE OR REPLACE VIEW `vi_albaranes_compra_cab_print` AS
+SELECT
+  alb.`SERIE_ALBC`,
+  alb.`NUMERO_ALBC`,
+  alb.`FECHA_ALBC`,
+  alb.`ESTADO_ALBC`,
+  alb.`REF_PROVEEDOR_ALBC`,
+  alb.`COMENTARIOS_ALBC`,
+  alb.`OBSERVACIONES_ALBC`,
+  alb.`CODIGO_EMP_ALBC`,
+  emp.`FORMATO_DOCUMENTO_EMP`,
+  CASE WHEN TRIM(COALESCE(alb.`SERIE_ALBC`, '''')) = '''' THEN TRIM(COALESCE(alb.`NUMERO_ALBC`, '''')) WHEN TRIM(COALESCE(alb.`NUMERO_ALBC`, '''')) = '''' THEN TRIM(COALESCE(alb.`SERIE_ALBC`, '''')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''serie'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''númerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrofactura'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodoc'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numero'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''número'') > 0) THEN CONCAT(TRIM(COALESCE(alb.`SERIE_ALBC`, '''')), ''.'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento''), ''NroDocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''nrodocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NRODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NumeroDocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''numerodocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NUMERODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NúmeroDocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''númerodocumento'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NÚMERODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NroFactura'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''nrofactura'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NROFACTURA'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NroDoc'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''nrodoc'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NRODOC'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''Numero'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''numero'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NUMERO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''Número'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''número'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''NÚMERO'', TRIM(COALESCE(alb.`NUMERO_ALBC`, ''''))), ''Serie'', TRIM(COALESCE(alb.`SERIE_ALBC`, ''''))), ''serie'', TRIM(COALESCE(alb.`SERIE_ALBC`, ''''))), ''SERIE'', TRIM(COALESCE(alb.`SERIE_ALBC`, ''''))) END AS `DOCUMENTO_FORMATO`,
+  emp.`RAZON_SOCIAL_EMP`,
+  emp.`DIRECCION1_EMP`,
+  emp.`CODIGO_POSTAL_EMP`,
+  emp.`POBLACION_EMP`,
+  emp.`PROVINCIA_EMP`,
+  emp.`NIF_EMP`        AS `CIF_EMP`,
+  emp.`MOVIL_EMP`      AS `TELEFONO1_EMP`,
+  alb.`CODIGO_PRV_ALBC`,
+  prv.`RAZON_SOCIAL_PRV`,
+  prv.`DIRECCION1_PRV`,
+  prv.`CODIGO_POSTAL_PRV`,
+  prv.`POBLACION_PRV`,
+  prv.`PROVINCIA_PRV`,
+  prv.`NIF_PRV`        AS `CIF_PRV`,
+  COALESCE(prv.`TELEFONO_PRV`, prv.`MOVIL_PRV`) AS `TELEFONO1_PRV`,
+  alb.`CODIGO_ALM_ALBC`,
+  alm.`NOMBRE_ALM_ALM`  AS `NOMBRE_ALM_ALBC`,
+  alm.`DIRECCION_ALM`   AS `DIRECCION_ALM_ALBC`,
+  alm.`CODIGO_POSTAL_ALM` AS `CODIGO_POSTAL_ALM_ALBC`,
+  alm.`POBLACION_ALM`   AS `POBLACION_ALM_ALBC`,
+  alm.`PROVINCIA_ALM`   AS `PROVINCIA_ALM_ALBC`,
+  alm.`TELEFONO_ALM`    AS `TELEFONO_ALM_ALBC`,
+  alm.`EMAIL_ALM`       AS `EMAIL_ALM_ALBC`,
+  alb.`CODIGO_IVA_ALBC`,
+  alb.`PORCENTAJE_IVAN_ALBC`,
+  alb.`PORCENTAJE_IVAR_ALBC`,
+  alb.`PORCENTAJE_IVAS_ALBC`,
+  alb.`PORCENTAJE_IVAE_ALBC`,
+  alb.`TOTAL_BASES_ALBC`,
+  alb.`TOTAL_IMPUESTOS_ALBC`,
+  alb.`TOTAL_LIQUIDO_ALBC`,
+  alb.`INSTANTE_ALTA`,
+  alb.`USUARIO_ALTA`,
+  (SELECT COALESCE(SUM(`CANTIDAD_ALBCLIN`), 0)
+     FROM `fza_albaranes_compra_lineas` lin
+    WHERE lin.`SERIE_ALBC_ALBCLIN`  = alb.`SERIE_ALBC`
+      AND lin.`NUMERO_ALBC_ALBCLIN` = alb.`NUMERO_ALBC`) AS `TOTAL_UNIDADES_SES`,
+  (SELECT COALESCE(SUM(`TOTAL_ALBCLIN`), 0)
+     FROM `fza_albaranes_compra_lineas` lin
+    WHERE lin.`SERIE_ALBC_ALBCLIN`  = alb.`SERIE_ALBC`
+      AND lin.`NUMERO_ALBC_ALBCLIN` = alb.`NUMERO_ALBC`) AS `TOTAL_LINEAS_SES`,
+  (SELECT COUNT(*)
+     FROM `fza_albaranes_compra_lineas` lin
+    WHERE lin.`SERIE_ALBC_ALBCLIN`  = alb.`SERIE_ALBC`
+      AND lin.`NUMERO_ALBC_ALBCLIN` = alb.`NUMERO_ALBC`) AS `NUM_LINEAS_SES`
+FROM `fza_albaranes_compra` alb
+LEFT JOIN `fza_empresas`     emp ON emp.`CODIGO_EMP_EMP` = alb.`CODIGO_EMP_ALBC`
+LEFT JOIN `fza_proveedores`  prv ON prv.`CODIGO_PRV_PRV` = alb.`CODIGO_PRV_ALBC`
+LEFT JOIN `fza_almacenes`    alm ON alm.`CODIGO_ALM_ALM` = alb.`CODIGO_ALM_ALBC`;
+
+CREATE OR REPLACE VIEW `vi_devoluciones_compra_cab_print` AS
+SELECT
+  alb.`SERIE_DEVC`,
+  alb.`NUMERO_DEVC`,
+  alb.`FECHA_DEVC`,
+  alb.`ESTADO_DEVC`,
+  alb.`REF_PROVEEDOR_DEVC`,
+  alb.`COMENTARIOS_DEVC`,
+  alb.`OBSERVACIONES_DEVC`,
+  alb.`CODIGO_EMP_DEVC`,
+  emp.`FORMATO_DOCUMENTO_EMP`,
+  CASE WHEN TRIM(COALESCE(alb.`SERIE_DEVC`, '''')) = '''' THEN TRIM(COALESCE(alb.`NUMERO_DEVC`, '''')) WHEN TRIM(COALESCE(alb.`NUMERO_DEVC`, '''')) = '''' THEN TRIM(COALESCE(alb.`SERIE_DEVC`, '''')) WHEN NOT (INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''serie'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''númerodocumento'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrofactura'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''nrodoc'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''numero'') > 0 OR INSTR(LOWER(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento'')), ''número'') > 0) THEN CONCAT(TRIM(COALESCE(alb.`SERIE_DEVC`, '''')), ''.'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))) ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(TRIM(COALESCE(emp.`FORMATO_DOCUMENTO_EMP`, '''')), ''''), ''Serie.NroDocumento''), ''NroDocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''nrodocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NRODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NumeroDocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''numerodocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NUMERODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NúmeroDocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''númerodocumento'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NÚMERODOCUMENTO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NroFactura'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''nrofactura'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NROFACTURA'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NroDoc'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''nrodoc'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NRODOC'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''Numero'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''numero'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NUMERO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''Número'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''número'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''NÚMERO'', TRIM(COALESCE(alb.`NUMERO_DEVC`, ''''))), ''Serie'', TRIM(COALESCE(alb.`SERIE_DEVC`, ''''))), ''serie'', TRIM(COALESCE(alb.`SERIE_DEVC`, ''''))), ''SERIE'', TRIM(COALESCE(alb.`SERIE_DEVC`, ''''))) END AS `DOCUMENTO_FORMATO`,
+  emp.`RAZON_SOCIAL_EMP`,
+  emp.`DIRECCION1_EMP`,
+  emp.`CODIGO_POSTAL_EMP`,
+  emp.`POBLACION_EMP`,
+  emp.`PROVINCIA_EMP`,
+  emp.`NIF_EMP`        AS `CIF_EMP`,
+  emp.`MOVIL_EMP`      AS `TELEFONO1_EMP`,
+  alb.`CODIGO_PRV_DEVC`,
+  prv.`RAZON_SOCIAL_PRV`,
+  prv.`DIRECCION1_PRV`,
+  prv.`CODIGO_POSTAL_PRV`,
+  prv.`POBLACION_PRV`,
+  prv.`PROVINCIA_PRV`,
+  prv.`NIF_PRV`        AS `CIF_PRV`,
+  COALESCE(prv.`TELEFONO_PRV`, prv.`MOVIL_PRV`) AS `TELEFONO1_PRV`,
+  alb.`CODIGO_ALM_DEVC`,
+  alm.`NOMBRE_ALM_ALM`  AS `NOMBRE_ALM_DEVC`,
+  alm.`DIRECCION_ALM`   AS `DIRECCION_ALM_DEVC`,
+  alm.`CODIGO_POSTAL_ALM` AS `CODIGO_POSTAL_ALM_DEVC`,
+  alm.`POBLACION_ALM`   AS `POBLACION_ALM_DEVC`,
+  alm.`PROVINCIA_ALM`   AS `PROVINCIA_ALM_DEVC`,
+  alm.`TELEFONO_ALM`    AS `TELEFONO_ALM_DEVC`,
+  alm.`EMAIL_ALM`       AS `EMAIL_ALM_DEVC`,
+  alb.`CODIGO_IVA_DEVC`,
+  alb.`PORCENTAJE_IVAN_DEVC`,
+  alb.`PORCENTAJE_IVAR_DEVC`,
+  alb.`PORCENTAJE_IVAS_DEVC`,
+  alb.`PORCENTAJE_IVAE_DEVC`,
+  alb.`TOTAL_BASES_DEVC`,
+  alb.`TOTAL_IMPUESTOS_DEVC`,
+  alb.`TOTAL_LIQUIDO_DEVC`,
+  alb.`INSTANTE_ALTA`,
+  alb.`USUARIO_ALTA`,
+  (SELECT COALESCE(SUM(`CANTIDAD_DEVCLIN`), 0)
+     FROM `fza_devoluciones_compra_lineas` lin
+    WHERE lin.`SERIE_DEVC_DEVCLIN`  = alb.`SERIE_DEVC`
+      AND lin.`NUMERO_DEVC_DEVCLIN` = alb.`NUMERO_DEVC`) AS `TOTAL_UNIDADES_SES`,
+  (SELECT COALESCE(SUM(`TOTAL_DEVCLIN`), 0)
+     FROM `fza_devoluciones_compra_lineas` lin
+    WHERE lin.`SERIE_DEVC_DEVCLIN`  = alb.`SERIE_DEVC`
+      AND lin.`NUMERO_DEVC_DEVCLIN` = alb.`NUMERO_DEVC`) AS `TOTAL_LINEAS_SES`,
+  (SELECT COUNT(*)
+     FROM `fza_devoluciones_compra_lineas` lin
+    WHERE lin.`SERIE_DEVC_DEVCLIN`  = alb.`SERIE_DEVC`
+      AND lin.`NUMERO_DEVC_DEVCLIN` = alb.`NUMERO_DEVC`) AS `NUM_LINEAS_SES`
+FROM `fza_devoluciones_compra` alb
+LEFT JOIN `fza_empresas`     emp ON emp.`CODIGO_EMP_EMP` = alb.`CODIGO_EMP_DEVC`
+LEFT JOIN `fza_proveedores`  prv ON prv.`CODIGO_PRV_PRV` = alb.`CODIGO_PRV_DEVC`
+LEFT JOIN `fza_almacenes`    alm ON alm.`CODIGO_ALM_ALM` = alb.`CODIGO_ALM_DEVC`;
+', '2026-06-20 09:26:29', '2026-06-20 09:26:29', 'Administrador', 'Administrador');
+-- 48 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -21838,7 +25392,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-06-20 06:20:26', '2026-06-20 06:20:26', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-06-20 09:26:03', '2026-06-20 09:26:03', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '56D744105F6BDAF0A908EA531E1C9964', 'Vendedores', 'S', '012', '2026-06-09 09:48:50', '2026-06-09 09:48:50', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
 -- 2 registros exportados
 
@@ -31548,9 +35102,21 @@ INSERT INTO `fza_verifactu_eventos` (`ID_LOG`, `TIMESTAMP_LOG`, `TIPO_EVENTO_LOG
   (200, '2026-06-20 05:40:00', 102, 'Administrador', '1.0.15.202606190020.alpha', 'Cierre del sistema', NULL, 'F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C', '54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F', '1520AE6AF9BD23887DC340995954046311BD5648315484C679648D570841BF06', '2026-06-20 05:40:00', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606190020.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T05:40:00+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T05:38:06+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>F5627B4A3050A3A28F984D08FA005CF618109A60B421E6E91C1486D5EC961C0C</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>hpUAqr3S/hCm56l0uXN9yBCZAdelCpvpHtT4lYaCWB4=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>kwvgWUGLbY0JFPS13BWRdRpn0GqyqeX1GyRFXBmClzM=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>n57vYOTuAOnEy3IhDZJPH4dhR5IetahLWXqxNhP/X7VncyAUplYndDLHCEVizcRQOoS/xFT14oPIbbSKbotU5n2ENbmKPUDdk8DpXJWHyeYMcOHYQGCuTSTlEotefrDKwCBKBYUn+XhX2D6So2cRhWlGNb2yq1NxvOlCutHc/Or8fGZsCMH1UzV0gOUBP5Ji3OwerFYhEQK/hn9cpJPLRJWJoin4pECHBkZ/rvOxIVvxo1BjLoYwoLf1W4s8gtuucp3oFozdMhuBrOz1NjcPBSx2/PjcqI2dv0Fzz9hvAFuCWQf7Tq19qy+ztgkZjKKHkwO52gC/EADYBOqOR4a06g==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-Object"><xades:QualifyingProperties Id="FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-Object-QualifyingProperties" Target="#FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T05:40:00+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'n57vYOTuAOnEy3IhDZJPH4dhR5IetahLWXqxNhP/X7VncyAUplYndDLHCEVizcRQOoS/xFT14oPIbbSKbotU5n2ENbmKPUDdk8DpXJWHyeYMcOHYQGCuTSTlEotefrDKwCBKBYUn+XhX2D6So2cRhWlGNb2yq1NxvOlCutHc/Or8fGZsCMH1UzV0gOUBP5Ji3OwerFYhEQK/hn9cpJPLRJWJoin4pECHBkZ/rvOxIVvxo1BjLoYwoLf1W4s8gtuucp3oFozdMhuBrOz1NjcPBSx2/PjcqI2dv0Fzz9hvAFuCWQf7Tq19qy+ztgkZjKKHkwO52gC/EADYBOqOR4a06g==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
   (201, '2026-06-20 05:48:00', 101, 'Administrador', '1.0.15.202606190020.alpha', 'Inicio del sistema', NULL, '54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F', '5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0', '8BB92CA83C6B44CF06016DDF63A790978E3AE9150DEE03C9EDDE96AAD5487233', '2026-06-20 05:48:00', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606190020.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T05:48:00+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T05:40:00+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>54FF44BAAD603E11F42341FC1B14BD940FBC8AF35AB88E63F0E8AA3086768D7F</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>sXLRTwFknp1Tfz+2oCoGTi2jWFyCyaMtrlmLMQX9AkY=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>SJ0wmVY+h0NLQsujHWuBlBMz4jocDUITKkxYJma1PKI=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>ULdB85xJZLyXoRE8ISJt2uxZILe/po/vSSeWd8exZT7fvvMxwX463xo/8SDKZoXlOVsVUQvBcKhZTcI4EYebNitM2DQ20QfgPwsNCTNzBxpzAeIYOkOA6vB3MPL6o/S6LvUET2sQUXuXd6+Sf0IkZiua3a2tOleYwQ1repP6dnnSYj6aqeMID7P9dMjnhdTV5zbv6khmHWtLA3Jtqb6SdB2RuokgWaWJJyD2eUHrE+rh5h42ECDDlx7asxfYnD04Y5gx7wv2ZKlOxauUUPw12pjuJhwHCrTTvuHEm4wYT0XhNWtFK5HooX58c2cB8VIvaTvanFJXTGKnuXTDnf+wpw==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-Object"><xades:QualifyingProperties Id="FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-Object-QualifyingProperties" Target="#FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T05:48:00+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'ULdB85xJZLyXoRE8ISJt2uxZILe/po/vSSeWd8exZT7fvvMxwX463xo/8SDKZoXlOVsVUQvBcKhZTcI4EYebNitM2DQ20QfgPwsNCTNzBxpzAeIYOkOA6vB3MPL6o/S6LvUET2sQUXuXd6+Sf0IkZiua3a2tOleYwQ1repP6dnnSYj6aqeMID7P9dMjnhdTV5zbv6khmHWtLA3Jtqb6SdB2RuokgWaWJJyD2eUHrE+rh5h42ECDDlx7asxfYnD04Y5gx7wv2ZKlOxauUUPw12pjuJhwHCrTTvuHEm4wYT0XhNWtFK5HooX58c2cB8VIvaTvanFJXTGKnuXTDnf+wpw==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
   (202, '2026-06-20 05:48:33', 102, 'Administrador', '1.0.15.202606190020.alpha', 'Cierre del sistema', NULL, '5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0', '5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC', '6AB9493DDAEAA9BF1A806C72C9CD8F46FC12B6800647D3336278B162852CCBE5', '2026-06-20 05:48:33', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606190020.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T05:48:33+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T05:48:00+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>5A03162BFC69C1AB7A8B87FD6EC564B016794901C530CE80CC402A82D35D9FF0</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>6W7dWEhcfjIrHhzOkDQeFgLHoIY1u+shGSeFDli0aD8=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>vWLHazIm+nwRxDQAp8+Gz7H5adCCCU4liwErhrGDUgU=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>i5wddbp5ZzpQvv+V01y8CcLW1y1EQPXXs+n06+pKaoRPPv+8n/74M+qPS1Uy4Yr/0CfFypvAmDQ8LXrLg4i4sZ8cE188rESbhmJK0CZeaALd2Cq4w+gDWcsFUj1MJHhiFNC3FWuoVtHohaap5KByEjcWVnsxHUiziIs+Iy0EzX4M5raDpTLUT++JQhapkwsyLwBB/adv2nkVN4b6FJ5MP90j06LCssMI5rNwvKE8JFVu6XNwU5g3iJUNo6IxWGkJhH6lBHPtxy42m92B2H++RESIw8glzB1KeYBpdP1kniZHcSj9CII/1TdqAejq555G1o0ttKJy+6MGEIXG0uv4OA==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-Object"><xades:QualifyingProperties Id="FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-Object-QualifyingProperties" Target="#FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T05:48:33+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'i5wddbp5ZzpQvv+V01y8CcLW1y1EQPXXs+n06+pKaoRPPv+8n/74M+qPS1Uy4Yr/0CfFypvAmDQ8LXrLg4i4sZ8cE188rESbhmJK0CZeaALd2Cq4w+gDWcsFUj1MJHhiFNC3FWuoVtHohaap5KByEjcWVnsxHUiziIs+Iy0EzX4M5raDpTLUT++JQhapkwsyLwBB/adv2nkVN4b6FJ5MP90j06LCssMI5rNwvKE8JFVu6XNwU5g3iJUNo6IxWGkJhH6lBHPtxy42m92B2H++RESIw8glzB1KeYBpdP1kniZHcSj9CII/1TdqAejq555G1o0ttKJy+6MGEIXG0uv4OA==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
-  (203, '2026-06-20 06:20:27', 101, 'Administrador', '1.0.15.202606200040.alpha', 'Inicio del sistema', NULL, '5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC', '78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708', 'CD4F0CC1185E079A68672A48DCAB07BD7CCD18DD58A52271937FB789BA43629F', '2026-06-20 06:20:27', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200040.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T06:20:27+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T05:48:33+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>zHPweMoLHFcveoIvbanKAjGluS/Rzj4nQN7+cTXyKco=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>agDITgIkfAuuqCAbAv1flScN5nIPqHRjCsm5KK0DZ+g=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>gqBx6MbiLjw7UZOBKDTe+ymreboRxc0cV8CzGna9MgiWwGr348En744aU8bxjcOigLXhr+pYhhjCycWrM6A9yoeT/TQI78ieY5dje/ovrDmvU8sp0WVr1yiMrynZLs4ZK9SN/ib1PVkB+dDKPYWMTtW3dkCRegXyNCSnkfXaPy68hx+yF/o0sHPDZ7VN3VU14hkrVukIbZ89SiLPkkROUI/WGGQt4UFXV2bQnzLr8JEMB08+fF9x8l7cBKsmTpB/SDvWmx+6iaW7o1NT41iz8im2btJLr1GaCHdYSKfTDLlz/QxDeiLZNG/o5F7Ifn2HIyN1hpk/ThLwB+TqM6I5zg==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Object"><xades:QualifyingProperties Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Object-QualifyingProperties" Target="#FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T06:20:27+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'gqBx6MbiLjw7UZOBKDTe+ymreboRxc0cV8CzGna9MgiWwGr348En744aU8bxjcOigLXhr+pYhhjCycWrM6A9yoeT/TQI78ieY5dje/ovrDmvU8sp0WVr1yiMrynZLs4ZK9SN/ib1PVkB+dDKPYWMTtW3dkCRegXyNCSnkfXaPy68hx+yF/o0sHPDZ7VN3VU14hkrVukIbZ89SiLPkkROUI/WGGQt4UFXV2bQnzLr8JEMB08+fF9x8l7cBKsmTpB/SDvWmx+6iaW7o1NT41iz8im2btJLr1GaCHdYSKfTDLlz/QxDeiLZNG/o5F7Ifn2HIyN1hpk/ThLwB+TqM6I5zg==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6');
+  (203, '2026-06-20 06:20:27', 101, 'Administrador', '1.0.15.202606200040.alpha', 'Inicio del sistema', NULL, '5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC', '78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708', 'CD4F0CC1185E079A68672A48DCAB07BD7CCD18DD58A52271937FB789BA43629F', '2026-06-20 06:20:27', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200040.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T06:20:27+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T05:48:33+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>5DFF3276A2001DABF1CF83798C3322BCA89101AB81F991E55E3B6929688969FC</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>zHPweMoLHFcveoIvbanKAjGluS/Rzj4nQN7+cTXyKco=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>agDITgIkfAuuqCAbAv1flScN5nIPqHRjCsm5KK0DZ+g=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>gqBx6MbiLjw7UZOBKDTe+ymreboRxc0cV8CzGna9MgiWwGr348En744aU8bxjcOigLXhr+pYhhjCycWrM6A9yoeT/TQI78ieY5dje/ovrDmvU8sp0WVr1yiMrynZLs4ZK9SN/ib1PVkB+dDKPYWMTtW3dkCRegXyNCSnkfXaPy68hx+yF/o0sHPDZ7VN3VU14hkrVukIbZ89SiLPkkROUI/WGGQt4UFXV2bQnzLr8JEMB08+fF9x8l7cBKsmTpB/SDvWmx+6iaW7o1NT41iz8im2btJLr1GaCHdYSKfTDLlz/QxDeiLZNG/o5F7Ifn2HIyN1hpk/ThLwB+TqM6I5zg==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Object"><xades:QualifyingProperties Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Object-QualifyingProperties" Target="#FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T06:20:27+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'gqBx6MbiLjw7UZOBKDTe+ymreboRxc0cV8CzGna9MgiWwGr348En744aU8bxjcOigLXhr+pYhhjCycWrM6A9yoeT/TQI78ieY5dje/ovrDmvU8sp0WVr1yiMrynZLs4ZK9SN/ib1PVkB+dDKPYWMTtW3dkCRegXyNCSnkfXaPy68hx+yF/o0sHPDZ7VN3VU14hkrVukIbZ89SiLPkkROUI/WGGQt4UFXV2bQnzLr8JEMB08+fF9x8l7cBKsmTpB/SDvWmx+6iaW7o1NT41iz8im2btJLr1GaCHdYSKfTDLlz/QxDeiLZNG/o5F7Ifn2HIyN1hpk/ThLwB+TqM6I5zg==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (204, '2026-06-20 06:22:12', 102, 'Administrador', '1.0.15.202606200040.alpha', 'Cierre del sistema', NULL, '78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708', '387F5D9BC12D2B4B2E1AD9E61B80D0A285BFCE772EBCB036CFE02855A36BA690', '18659D44A78ABD1ED7F721F57B3A7DDF01393FB2DC42A827ADC3BF2A7AA6784F', '2026-06-20 06:22:12', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200040.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T06:22:12+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T06:20:27+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>78CF9410AB0DC179B1A565A152436F20E6F1C1036E743AEB9367BEB87566B708</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>387F5D9BC12D2B4B2E1AD9E61B80D0A285BFCE772EBCB036CFE02855A36BA690</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-387F5D9BC12D2B4B2E1AD9E61B80D0A285BFCE772EBCB036CFE02855A36BA690-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-387F5D9BC12D2B4B2E1AD9E61B80D0A285BFCE772EBCB036CFE02855A36BA690-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>wTZnCslR2FiUYVS6uJs2ZnayzYCJVDhlYB/gV9+Dq3k=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-387F5D9BC12D2B4B2E1AD9E61B80D0A285BFCE772EBCB036CFE02855A36BA690-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>Mo+z/3MSYRnlhdSduGz6uiW4EZ5251SkncHDKUHSutE=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>ByIikF5BnpbxptQgWgbKvA10wfOfx6mPA7b6Q4fACIOqL5CZKF17pSf3SRKIcqo3r7X/PbNu1DXDLTobe7rv+d2Fk6/Q9Ark1wNGNZtU6SB41bh/MoHtwisKbFGh/6NX5NHaLABKT7ouGYC4hZfdKiTFrChXO6P07GOqtwq+9l7XZi/vVWnFeDRVGLAZwBZUqwE++6CGmFWesdHQzd+P0nneZkMBHUA7B8ql2Iy45Sy8iKQjyY1wQ9u74i753HgvA/Jcr9CGDQsFZN9V6P2cj4xkLGPCuqdH/qgEafhI1LdthB3EqLw7xNFSS1x2nfLiQ1wAVrJJQCX3y5xD6HZTRQ==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-387F5D9BC12D2B4B2E1AD9E61B80D0A285BFCE772EBCB036CFE02855A36BA690-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-387F5D9BC12D2B4B2E1AD9E61B80D0A285BFCE772EBCB036CFE02855A36BA690-Object"><xades:QualifyingProperties Id="FZ-EVENTO-387F5D9BC12D2B4B2E1AD9E61B80D0A285BFCE772EBCB036CFE02855A36BA690-Object-QualifyingProperties" Target="#FZ-EVENTO-387F5D9BC12D2B4B2E1AD9E61B80D0A285BFCE772EBCB036CFE02855A36BA690-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-387F5D9BC12D2B4B2E1AD9E61B80D0A285BFCE772EBCB036CFE02855A36BA690-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T06:22:12+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-387F5D9BC12D2B4B2E1AD9E61B80D0A285BFCE772EBCB036CFE02855A36BA690-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'ByIikF5BnpbxptQgWgbKvA10wfOfx6mPA7b6Q4fACIOqL5CZKF17pSf3SRKIcqo3r7X/PbNu1DXDLTobe7rv+d2Fk6/Q9Ark1wNGNZtU6SB41bh/MoHtwisKbFGh/6NX5NHaLABKT7ouGYC4hZfdKiTFrChXO6P07GOqtwq+9l7XZi/vVWnFeDRVGLAZwBZUqwE++6CGmFWesdHQzd+P0nneZkMBHUA7B8ql2Iy45Sy8iKQjyY1wQ9u74i753HgvA/Jcr9CGDQsFZN9V6P2cj4xkLGPCuqdH/qgEafhI1LdthB3EqLw7xNFSS1x2nfLiQ1wAVrJJQCX3y5xD6HZTRQ==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (205, '2026-06-20 06:56:59', 101, 'Administrador', '1.0.15.202606200040.alpha', 'Inicio del sistema', NULL, '387F5D9BC12D2B4B2E1AD9E61B80D0A285BFCE772EBCB036CFE02855A36BA690', '6C40C8065F1712C5552C4D37DB51572998C2C5184B7B40A71D8380AE215AEC91', '97743B0DA7294CD2A44A6EF2C1AB38F585455EAFEF42508A9ED85B8F92187467', '2026-06-20 06:56:59', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200040.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T06:56:59+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T06:22:12+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>387F5D9BC12D2B4B2E1AD9E61B80D0A285BFCE772EBCB036CFE02855A36BA690</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>6C40C8065F1712C5552C4D37DB51572998C2C5184B7B40A71D8380AE215AEC91</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-6C40C8065F1712C5552C4D37DB51572998C2C5184B7B40A71D8380AE215AEC91-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-6C40C8065F1712C5552C4D37DB51572998C2C5184B7B40A71D8380AE215AEC91-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>bCOHB7m+zAhgSHpqb9d+mBPLdFRaS3i5l6MAKccw2ZM=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-6C40C8065F1712C5552C4D37DB51572998C2C5184B7B40A71D8380AE215AEC91-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>Cfb2Um2M/r0bchyA637r8RqcoKW+d6fzvccpPp51beY=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>NDMAex3rcP3H1LQl6wm1pUewKGAyhGSSgm1eY3CMacw4eG2+0ykMw7uuhbkb2q2pyG0avLnaMa4mfY4Jqt/PZ9JtOY0hOe/9hUJy4SYP2b/YL1L+gmQPgkaZ3l4F1z8HCM2HfRA9NuIQ+nKzzpMwjPE/mtJwboXI5Omy9ljYxjgUVLWeK5nQA3WCefBWtkS4GJK0agSbWgdHGpMr27BQjLeF7Hh00PXGkCAo5DuNtzLxveCf97C7wOyCle2HXeY8jQ9rzJo5jWWN+dmBeu48xInwIgAkg6nekQqFcZVmlCWPhPsNC0E4cCPmw0aAMTjHoBlAfkUlqJ2mKQvs/g9j5Q==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-6C40C8065F1712C5552C4D37DB51572998C2C5184B7B40A71D8380AE215AEC91-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-6C40C8065F1712C5552C4D37DB51572998C2C5184B7B40A71D8380AE215AEC91-Object"><xades:QualifyingProperties Id="FZ-EVENTO-6C40C8065F1712C5552C4D37DB51572998C2C5184B7B40A71D8380AE215AEC91-Object-QualifyingProperties" Target="#FZ-EVENTO-6C40C8065F1712C5552C4D37DB51572998C2C5184B7B40A71D8380AE215AEC91-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-6C40C8065F1712C5552C4D37DB51572998C2C5184B7B40A71D8380AE215AEC91-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T06:56:59+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-6C40C8065F1712C5552C4D37DB51572998C2C5184B7B40A71D8380AE215AEC91-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'NDMAex3rcP3H1LQl6wm1pUewKGAyhGSSgm1eY3CMacw4eG2+0ykMw7uuhbkb2q2pyG0avLnaMa4mfY4Jqt/PZ9JtOY0hOe/9hUJy4SYP2b/YL1L+gmQPgkaZ3l4F1z8HCM2HfRA9NuIQ+nKzzpMwjPE/mtJwboXI5Omy9ljYxjgUVLWeK5nQA3WCefBWtkS4GJK0agSbWgdHGpMr27BQjLeF7Hh00PXGkCAo5DuNtzLxveCf97C7wOyCle2HXeY8jQ9rzJo5jWWN+dmBeu48xInwIgAkg6nekQqFcZVmlCWPhPsNC0E4cCPmw0aAMTjHoBlAfkUlqJ2mKQvs/g9j5Q==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (206, '2026-06-20 06:57:05', 102, 'Administrador', '1.0.15.202606200040.alpha', 'Cierre del sistema', NULL, '6C40C8065F1712C5552C4D37DB51572998C2C5184B7B40A71D8380AE215AEC91', 'B505BA3B656DB52D2628EBBBC4A675F9C5456BFF6235A05490E0D9B18EDD55E7', 'AE2FD9FF2263255DBB7B8E9CF173369E40219678B769684056D3FD384C80218E', '2026-06-20 06:57:05', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200040.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T06:57:05+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T06:56:59+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>6C40C8065F1712C5552C4D37DB51572998C2C5184B7B40A71D8380AE215AEC91</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>B505BA3B656DB52D2628EBBBC4A675F9C5456BFF6235A05490E0D9B18EDD55E7</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-B505BA3B656DB52D2628EBBBC4A675F9C5456BFF6235A05490E0D9B18EDD55E7-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-B505BA3B656DB52D2628EBBBC4A675F9C5456BFF6235A05490E0D9B18EDD55E7-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>4if7cfZmCKS/HlfzMdn5gdCs6eamkXdqEsXDSMU5sRg=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-B505BA3B656DB52D2628EBBBC4A675F9C5456BFF6235A05490E0D9B18EDD55E7-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>CgP474H3BKSMb3Ocox56YDTbLsJ6Y0mEkGjPActFCEA=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>MD61reYtYnCB9KVL+pnd7Nus35aLS/5/83I/EFCjrOdAjh/M2aDLild8ZinkazQS/UIUTCpFTNhO5SG+Wd9sRWAO8BE0sLPwENlzZmPqX1FdlilebDzEeAg3yHhyGQpjC81ywLBvefd0EelL/T1Kw5Or+sLeX48vxOYtyzh3YsCAuNGH+vGcTbGTvZ6obhO/Ea9MY/IgpPipA0Hcu1D9z5nk+FOwYaaX0hk7IpfYbXwh2q0kW2IaIL6+V53R48By51ZVGAZUQjnktYinhlAJCWHAF46AO6ioXv6J6XAn5HaqydheinFnSFBMy2KNermGirBpnBoZsqlq0Vh2EfTmAw==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-B505BA3B656DB52D2628EBBBC4A675F9C5456BFF6235A05490E0D9B18EDD55E7-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-B505BA3B656DB52D2628EBBBC4A675F9C5456BFF6235A05490E0D9B18EDD55E7-Object"><xades:QualifyingProperties Id="FZ-EVENTO-B505BA3B656DB52D2628EBBBC4A675F9C5456BFF6235A05490E0D9B18EDD55E7-Object-QualifyingProperties" Target="#FZ-EVENTO-B505BA3B656DB52D2628EBBBC4A675F9C5456BFF6235A05490E0D9B18EDD55E7-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-B505BA3B656DB52D2628EBBBC4A675F9C5456BFF6235A05490E0D9B18EDD55E7-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T06:57:05+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-B505BA3B656DB52D2628EBBBC4A675F9C5456BFF6235A05490E0D9B18EDD55E7-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'MD61reYtYnCB9KVL+pnd7Nus35aLS/5/83I/EFCjrOdAjh/M2aDLild8ZinkazQS/UIUTCpFTNhO5SG+Wd9sRWAO8BE0sLPwENlzZmPqX1FdlilebDzEeAg3yHhyGQpjC81ywLBvefd0EelL/T1Kw5Or+sLeX48vxOYtyzh3YsCAuNGH+vGcTbGTvZ6obhO/Ea9MY/IgpPipA0Hcu1D9z5nk+FOwYaaX0hk7IpfYbXwh2q0kW2IaIL6+V53R48By51ZVGAZUQjnktYinhlAJCWHAF46AO6ioXv6J6XAn5HaqydheinFnSFBMy2KNermGirBpnBoZsqlq0Vh2EfTmAw==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (207, '2026-06-20 07:01:52', 101, 'Administrador', '1.0.15.202606200090.alpha', 'Inicio del sistema', NULL, 'B505BA3B656DB52D2628EBBBC4A675F9C5456BFF6235A05490E0D9B18EDD55E7', '87F71B712ECF5E0974320B090544BD8CB78A9C005EF7C9F5AC14ED466FD1187C', '01AB406952D08507A3FFAE0F85B755EC629DFDD096FA42EA277D07210EB8E23B', '2026-06-20 07:01:52', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200090.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T07:01:52+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T06:57:05+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>B505BA3B656DB52D2628EBBBC4A675F9C5456BFF6235A05490E0D9B18EDD55E7</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>87F71B712ECF5E0974320B090544BD8CB78A9C005EF7C9F5AC14ED466FD1187C</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-87F71B712ECF5E0974320B090544BD8CB78A9C005EF7C9F5AC14ED466FD1187C-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-87F71B712ECF5E0974320B090544BD8CB78A9C005EF7C9F5AC14ED466FD1187C-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>VHkaxRfsgiSyEuyuV8JUiim61Q74Y4PAJ023UCF8LSg=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-87F71B712ECF5E0974320B090544BD8CB78A9C005EF7C9F5AC14ED466FD1187C-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>JLrsMjd/xZCDsZoqsLo+ICksWOJ9XmP57oRIta2JIOQ=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>D6HbB/SAKXRn6vMfvBAEee53VD1tdlrFN68tRsyr1TX7ncdGWlWBQyxZoukqd95juasPRuM+6whjn0p5KM06hwrUtmOFBTwnWHSo0cmGKR3pW/Yt1wjodryLTRNLL1TbHMLwtsm17a4HuNwfbJguav0J4vIWiidkuigeBu0RFA4pwBSjkpsREmOiPaC5/9a6u69k8CZFs5h1sY3rIUzdwJWZRl2r/tqqhpsKdneRhutUJh7m462zH7VnodcrejlP0KKVhodtFGqLs+8oT8dEptE9kAp72lv7DHsdA9T6nT+Qz+ppfZ7Y2kI+IzHyIGVEjXeqbAnR8mVweE2FZFUIFg==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-87F71B712ECF5E0974320B090544BD8CB78A9C005EF7C9F5AC14ED466FD1187C-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-87F71B712ECF5E0974320B090544BD8CB78A9C005EF7C9F5AC14ED466FD1187C-Object"><xades:QualifyingProperties Id="FZ-EVENTO-87F71B712ECF5E0974320B090544BD8CB78A9C005EF7C9F5AC14ED466FD1187C-Object-QualifyingProperties" Target="#FZ-EVENTO-87F71B712ECF5E0974320B090544BD8CB78A9C005EF7C9F5AC14ED466FD1187C-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-87F71B712ECF5E0974320B090544BD8CB78A9C005EF7C9F5AC14ED466FD1187C-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T07:01:52+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-87F71B712ECF5E0974320B090544BD8CB78A9C005EF7C9F5AC14ED466FD1187C-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'D6HbB/SAKXRn6vMfvBAEee53VD1tdlrFN68tRsyr1TX7ncdGWlWBQyxZoukqd95juasPRuM+6whjn0p5KM06hwrUtmOFBTwnWHSo0cmGKR3pW/Yt1wjodryLTRNLL1TbHMLwtsm17a4HuNwfbJguav0J4vIWiidkuigeBu0RFA4pwBSjkpsREmOiPaC5/9a6u69k8CZFs5h1sY3rIUzdwJWZRl2r/tqqhpsKdneRhutUJh7m462zH7VnodcrejlP0KKVhodtFGqLs+8oT8dEptE9kAp72lv7DHsdA9T6nT+Qz+ppfZ7Y2kI+IzHyIGVEjXeqbAnR8mVweE2FZFUIFg==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (208, '2026-06-20 07:02:16', 102, 'Administrador', '1.0.15.202606200090.alpha', 'Cierre del sistema', NULL, '87F71B712ECF5E0974320B090544BD8CB78A9C005EF7C9F5AC14ED466FD1187C', 'C7EA0701B72AFB389DC8ED75DAB4EB08313D784A9499AEBAF2347E299CB9001F', 'ECA5814E974E29DEA9CCD3E2C80234B96057CA06527B57A01D084ACAEC5E651C', '2026-06-20 07:02:16', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200090.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T07:02:16+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T07:01:52+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>87F71B712ECF5E0974320B090544BD8CB78A9C005EF7C9F5AC14ED466FD1187C</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>C7EA0701B72AFB389DC8ED75DAB4EB08313D784A9499AEBAF2347E299CB9001F</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-C7EA0701B72AFB389DC8ED75DAB4EB08313D784A9499AEBAF2347E299CB9001F-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-C7EA0701B72AFB389DC8ED75DAB4EB08313D784A9499AEBAF2347E299CB9001F-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>Yn9h1FmjLzllx2Vgcgk++wF11btqdBvhcH+WvLANyK8=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-C7EA0701B72AFB389DC8ED75DAB4EB08313D784A9499AEBAF2347E299CB9001F-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>oECeFhg4iOfhsEP/QIneQEaPcQPjm3DEPGVUUEHNxa4=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>jptI9S1aHLbhcbTEs4dkoRlOFrgtzjsHwFhAAQO98AmZDXitotSnTUCC7DwSZ62rewybH0qfLanbqpss5f7Orst3Z9/UFshS+KjyGevLcXudq3T13ZSN/kjX1Oj+DOxb5wf88/wFWkfeee/Acpe33274+Fu0S4gmb8t2lsNAvBAJcWYCCjIrQDuyv830tgpjXdvMhg3Nd5/U+f+0dk431kL2BY6YK6lOc0PPQ8PnLMFm0hB75ev155AEMTPq3iRa6B/9qG5QEfX8SPq7w0dYOnZ7GOcq+5BEFO8Z/ycg7FuoKALLZE4D21GQ0WFTecjrBWUH+YtmU/r99i6wbpjDtg==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-C7EA0701B72AFB389DC8ED75DAB4EB08313D784A9499AEBAF2347E299CB9001F-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-C7EA0701B72AFB389DC8ED75DAB4EB08313D784A9499AEBAF2347E299CB9001F-Object"><xades:QualifyingProperties Id="FZ-EVENTO-C7EA0701B72AFB389DC8ED75DAB4EB08313D784A9499AEBAF2347E299CB9001F-Object-QualifyingProperties" Target="#FZ-EVENTO-C7EA0701B72AFB389DC8ED75DAB4EB08313D784A9499AEBAF2347E299CB9001F-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-C7EA0701B72AFB389DC8ED75DAB4EB08313D784A9499AEBAF2347E299CB9001F-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T07:02:16+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-C7EA0701B72AFB389DC8ED75DAB4EB08313D784A9499AEBAF2347E299CB9001F-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'jptI9S1aHLbhcbTEs4dkoRlOFrgtzjsHwFhAAQO98AmZDXitotSnTUCC7DwSZ62rewybH0qfLanbqpss5f7Orst3Z9/UFshS+KjyGevLcXudq3T13ZSN/kjX1Oj+DOxb5wf88/wFWkfeee/Acpe33274+Fu0S4gmb8t2lsNAvBAJcWYCCjIrQDuyv830tgpjXdvMhg3Nd5/U+f+0dk431kL2BY6YK6lOc0PPQ8PnLMFm0hB75ev155AEMTPq3iRa6B/9qG5QEfX8SPq7w0dYOnZ7GOcq+5BEFO8Z/ycg7FuoKALLZE4D21GQ0WFTecjrBWUH+YtmU/r99i6wbpjDtg==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (209, '2026-06-20 08:18:36', 101, 'Administrador', '1.0.15.202606200180.alpha', 'Inicio del sistema', NULL, 'C7EA0701B72AFB389DC8ED75DAB4EB08313D784A9499AEBAF2347E299CB9001F', '060951DA13C228CCF41361308D439FC5643CBD471C63CC9E492E2FDABB76D9A8', 'A5800EEA170EE35A25AF991D483613DE07602B7A54D96B9F005477BF8550BEBB', '2026-06-20 08:18:36', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200180.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T08:18:36+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T07:02:16+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>C7EA0701B72AFB389DC8ED75DAB4EB08313D784A9499AEBAF2347E299CB9001F</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>060951DA13C228CCF41361308D439FC5643CBD471C63CC9E492E2FDABB76D9A8</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-060951DA13C228CCF41361308D439FC5643CBD471C63CC9E492E2FDABB76D9A8-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-060951DA13C228CCF41361308D439FC5643CBD471C63CC9E492E2FDABB76D9A8-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>SaSezJfdZp+ZjE8cUS7rwXAA9pMOyUV1iorS3MVgcKs=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-060951DA13C228CCF41361308D439FC5643CBD471C63CC9E492E2FDABB76D9A8-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>zb6jeBduqsXUxhbPQqH0N70j69SfRQfkCiGs2iIkVKk=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>nIqtxzUWw9rLE1h9O25B7Q1bq7JnXGl57lFkrRZDCJoELKj7qy9eZdQSc3aplci0vfoTMZZp0fx/KZ6buzNB4A/Hx26L/u86OGsCPxtzPCBb4tEmGSlWXM1+dCpiw9CoQGnyBoBMawNo6eb2RIQ6AmsE3uXS/ucPfMIaJ0xM3YNV8U7Qt7AUKerClqMp645I8zpvP0Z+fJuZKOs7nRbyTIj/tw/2l4sBr8sLn95KUSmlDQuBAAuMznqopWyK/md9dA2+KKvlv/mTwSp5Wk/Adeutj16fJEnBtKtGhrjGH7bhGH5UC9jj7zFUy1CiKF7EMB9yRQcLtj21Ic2AXWdevQ==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-060951DA13C228CCF41361308D439FC5643CBD471C63CC9E492E2FDABB76D9A8-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-060951DA13C228CCF41361308D439FC5643CBD471C63CC9E492E2FDABB76D9A8-Object"><xades:QualifyingProperties Id="FZ-EVENTO-060951DA13C228CCF41361308D439FC5643CBD471C63CC9E492E2FDABB76D9A8-Object-QualifyingProperties" Target="#FZ-EVENTO-060951DA13C228CCF41361308D439FC5643CBD471C63CC9E492E2FDABB76D9A8-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-060951DA13C228CCF41361308D439FC5643CBD471C63CC9E492E2FDABB76D9A8-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T08:18:36+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-060951DA13C228CCF41361308D439FC5643CBD471C63CC9E492E2FDABB76D9A8-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'nIqtxzUWw9rLE1h9O25B7Q1bq7JnXGl57lFkrRZDCJoELKj7qy9eZdQSc3aplci0vfoTMZZp0fx/KZ6buzNB4A/Hx26L/u86OGsCPxtzPCBb4tEmGSlWXM1+dCpiw9CoQGnyBoBMawNo6eb2RIQ6AmsE3uXS/ucPfMIaJ0xM3YNV8U7Qt7AUKerClqMp645I8zpvP0Z+fJuZKOs7nRbyTIj/tw/2l4sBr8sLn95KUSmlDQuBAAuMznqopWyK/md9dA2+KKvlv/mTwSp5Wk/Adeutj16fJEnBtKtGhrjGH7bhGH5UC9jj7zFUy1CiKF7EMB9yRQcLtj21Ic2AXWdevQ==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (210, '2026-06-20 08:26:08', 102, 'Administrador', '1.0.15.202606200180.alpha', 'Cierre del sistema', NULL, '060951DA13C228CCF41361308D439FC5643CBD471C63CC9E492E2FDABB76D9A8', '3A4D7E20E019B12B2CC8DF4264965C1D46FA888853D9045D039AB9FB4D6938B4', 'C8B6CF1DD864FFA29368C9B8B6A6E709BB36117826918E3B6B2A469CC5EBD033', '2026-06-20 08:26:08', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200180.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T08:26:08+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T08:18:36+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>060951DA13C228CCF41361308D439FC5643CBD471C63CC9E492E2FDABB76D9A8</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>3A4D7E20E019B12B2CC8DF4264965C1D46FA888853D9045D039AB9FB4D6938B4</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-3A4D7E20E019B12B2CC8DF4264965C1D46FA888853D9045D039AB9FB4D6938B4-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-3A4D7E20E019B12B2CC8DF4264965C1D46FA888853D9045D039AB9FB4D6938B4-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>tWUjE5o5y1lKcRpwCTKQKygXiPRx3kcihmJgr+q0OUA=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-3A4D7E20E019B12B2CC8DF4264965C1D46FA888853D9045D039AB9FB4D6938B4-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>06nmJu5tN1vCwi8QmP/JpjswI2YICAy0u5LmWf8c8HA=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>JTyhWx/UAhbLUr6DMyXqElk7p4wg/CNrqYo7z6NxR/A9EqK8R9QKgkJob7c8Hq4HmR8/1JQZwe1oC2bu5uyYaVqSFCY2omxWmG6kraf4FpW3YVGlitOsajf2/ceVP6yQzCe/pizqzpAtFj3gsYAZgc8KqyR+Euf9oaxFG5NCbRf55Wrs/RNR8lXoI1Juv1Pwbr8pI3s9/nJ3koVgkhPKJCQG2HImJSgtBU97WxHwFsRkqelepNvWZTZ+gxz74uy9/JbCJ+kMmswxE8UfLSUBNCVfHhVz95ag0s89tIW1CTR0E5zE/OqdRM6LCc/Vfvf7WCX1phNu/oCVFa1Ak7lTxA==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-3A4D7E20E019B12B2CC8DF4264965C1D46FA888853D9045D039AB9FB4D6938B4-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-3A4D7E20E019B12B2CC8DF4264965C1D46FA888853D9045D039AB9FB4D6938B4-Object"><xades:QualifyingProperties Id="FZ-EVENTO-3A4D7E20E019B12B2CC8DF4264965C1D46FA888853D9045D039AB9FB4D6938B4-Object-QualifyingProperties" Target="#FZ-EVENTO-3A4D7E20E019B12B2CC8DF4264965C1D46FA888853D9045D039AB9FB4D6938B4-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-3A4D7E20E019B12B2CC8DF4264965C1D46FA888853D9045D039AB9FB4D6938B4-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T08:26:08+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-3A4D7E20E019B12B2CC8DF4264965C1D46FA888853D9045D039AB9FB4D6938B4-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'JTyhWx/UAhbLUr6DMyXqElk7p4wg/CNrqYo7z6NxR/A9EqK8R9QKgkJob7c8Hq4HmR8/1JQZwe1oC2bu5uyYaVqSFCY2omxWmG6kraf4FpW3YVGlitOsajf2/ceVP6yQzCe/pizqzpAtFj3gsYAZgc8KqyR+Euf9oaxFG5NCbRf55Wrs/RNR8lXoI1Juv1Pwbr8pI3s9/nJ3koVgkhPKJCQG2HImJSgtBU97WxHwFsRkqelepNvWZTZ+gxz74uy9/JbCJ+kMmswxE8UfLSUBNCVfHhVz95ag0s89tIW1CTR0E5zE/OqdRM6LCc/Vfvf7WCX1phNu/oCVFa1Ak7lTxA==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (211, '2026-06-20 08:29:03', 101, 'Administrador', '1.0.15.202606200190.alpha', 'Inicio del sistema', NULL, '3A4D7E20E019B12B2CC8DF4264965C1D46FA888853D9045D039AB9FB4D6938B4', '7E0346FBE1B08BAF04C97B26CD34EB50FD7D79DBF7AA18A7C50D83B004313C14', 'FBFFF38E547F8B8026680280DEC3D5C67E32D4C0642D2E793FD751EE31DE6B9F', '2026-06-20 08:29:03', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200190.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T08:29:03+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T08:26:08+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>3A4D7E20E019B12B2CC8DF4264965C1D46FA888853D9045D039AB9FB4D6938B4</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>7E0346FBE1B08BAF04C97B26CD34EB50FD7D79DBF7AA18A7C50D83B004313C14</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-7E0346FBE1B08BAF04C97B26CD34EB50FD7D79DBF7AA18A7C50D83B004313C14-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-7E0346FBE1B08BAF04C97B26CD34EB50FD7D79DBF7AA18A7C50D83B004313C14-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>wil3JCHHKH0QXH0HGw1F4QQODmcK0GA+QHXtRVCWuXY=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-7E0346FBE1B08BAF04C97B26CD34EB50FD7D79DBF7AA18A7C50D83B004313C14-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>qoSvV2CBsn5y1Hw6es3eIVySJ3RLPDmdNNdHZn1QR1I=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>fAJXm+VET60HJrEe/A0PUjyP7tplVfLep0URvpTanBPDKOHusBrX0MOmXe9uusNNVgzLKVZ6AifYaKyzuuY4Mf45lbTmOohzaqur77HwXlmc011uJInefHV/WLqyY6G0yVhdydzjTaqlPYAW38zlYpkYvGNHtFDR9bYgPNfJT/VX2Uqf7J9mgg2dSPBf4504jDNKIQhUGMfNzmvgGJEi5M/tU0ot/JDNTtFnDmSaILNdNBMlcRNAlXg/DQ6ufnbaHcnnoGZgyh2tshZ7WcSOQe4ftuhKt/DDVpyOpLopMR4JvYP14YVUlakpv6bR+SbsIgoID289TEDD8vv0YZ+Ppw==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-7E0346FBE1B08BAF04C97B26CD34EB50FD7D79DBF7AA18A7C50D83B004313C14-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-7E0346FBE1B08BAF04C97B26CD34EB50FD7D79DBF7AA18A7C50D83B004313C14-Object"><xades:QualifyingProperties Id="FZ-EVENTO-7E0346FBE1B08BAF04C97B26CD34EB50FD7D79DBF7AA18A7C50D83B004313C14-Object-QualifyingProperties" Target="#FZ-EVENTO-7E0346FBE1B08BAF04C97B26CD34EB50FD7D79DBF7AA18A7C50D83B004313C14-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-7E0346FBE1B08BAF04C97B26CD34EB50FD7D79DBF7AA18A7C50D83B004313C14-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T08:29:03+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-7E0346FBE1B08BAF04C97B26CD34EB50FD7D79DBF7AA18A7C50D83B004313C14-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'fAJXm+VET60HJrEe/A0PUjyP7tplVfLep0URvpTanBPDKOHusBrX0MOmXe9uusNNVgzLKVZ6AifYaKyzuuY4Mf45lbTmOohzaqur77HwXlmc011uJInefHV/WLqyY6G0yVhdydzjTaqlPYAW38zlYpkYvGNHtFDR9bYgPNfJT/VX2Uqf7J9mgg2dSPBf4504jDNKIQhUGMfNzmvgGJEi5M/tU0ot/JDNTtFnDmSaILNdNBMlcRNAlXg/DQ6ufnbaHcnnoGZgyh2tshZ7WcSOQe4ftuhKt/DDVpyOpLopMR4JvYP14YVUlakpv6bR+SbsIgoID289TEDD8vv0YZ+Ppw==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (212, '2026-06-20 08:30:00', 102, 'Administrador', '1.0.15.202606200190.alpha', 'Cierre del sistema', NULL, '7E0346FBE1B08BAF04C97B26CD34EB50FD7D79DBF7AA18A7C50D83B004313C14', '990389D03DA8FB516E064B901DC1AD69615ACD1CC5B846CA5FD6B147D29FE586', '0A97043CABE6CD2FED0365947F9C9265A6E1A9C2DA859B177593CAA5BDD52576', '2026-06-20 08:30:00', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200190.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T08:30:00+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T08:29:03+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>7E0346FBE1B08BAF04C97B26CD34EB50FD7D79DBF7AA18A7C50D83B004313C14</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>990389D03DA8FB516E064B901DC1AD69615ACD1CC5B846CA5FD6B147D29FE586</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-990389D03DA8FB516E064B901DC1AD69615ACD1CC5B846CA5FD6B147D29FE586-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-990389D03DA8FB516E064B901DC1AD69615ACD1CC5B846CA5FD6B147D29FE586-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>UHpUSpfKPwFIar+zcMnbyQmEeMfnEFszfxVDS5ME/Q8=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-990389D03DA8FB516E064B901DC1AD69615ACD1CC5B846CA5FD6B147D29FE586-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>lRmAjwQg4WsmE9lmj+owYTAAFaNAWspfVALgexkZ1YI=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>UiFTkpmdHeWncNaNxZt7V55M/MG8BmtEGQCPEm5MydoPv9liS+AXw2/5yVUZkyJgdrAaBHHb6LlsxTBTibarXMnhwzqemZUXLI8gweqDwp+c9n4jR0FYVuxMrgW2HrXuPpnchuFX8TNSpoRzI6bTsV61CkN97Br95o/+OdiBSAEAVyolqVweBmaqXhWi/g/GdCYKHxXaRBMYjUr7o3ZN+qLGkfn/ziM+dsS9lYtLKZSRVmFsQ1R/BUexWn2vu5clWsJLRIqx4+y5hzYJqGoO1QWhrZR0tmj+RoAOCSrBZw+WBPJ8KvNCIjL4BngfRsBZIyUalqmRNAdU6FsAUKsTZQ==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-990389D03DA8FB516E064B901DC1AD69615ACD1CC5B846CA5FD6B147D29FE586-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-990389D03DA8FB516E064B901DC1AD69615ACD1CC5B846CA5FD6B147D29FE586-Object"><xades:QualifyingProperties Id="FZ-EVENTO-990389D03DA8FB516E064B901DC1AD69615ACD1CC5B846CA5FD6B147D29FE586-Object-QualifyingProperties" Target="#FZ-EVENTO-990389D03DA8FB516E064B901DC1AD69615ACD1CC5B846CA5FD6B147D29FE586-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-990389D03DA8FB516E064B901DC1AD69615ACD1CC5B846CA5FD6B147D29FE586-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T08:30:00+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-990389D03DA8FB516E064B901DC1AD69615ACD1CC5B846CA5FD6B147D29FE586-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'UiFTkpmdHeWncNaNxZt7V55M/MG8BmtEGQCPEm5MydoPv9liS+AXw2/5yVUZkyJgdrAaBHHb6LlsxTBTibarXMnhwzqemZUXLI8gweqDwp+c9n4jR0FYVuxMrgW2HrXuPpnchuFX8TNSpoRzI6bTsV61CkN97Br95o/+OdiBSAEAVyolqVweBmaqXhWi/g/GdCYKHxXaRBMYjUr7o3ZN+qLGkfn/ziM+dsS9lYtLKZSRVmFsQ1R/BUexWn2vu5clWsJLRIqx4+y5hzYJqGoO1QWhrZR0tmj+RoAOCSrBZw+WBPJ8KvNCIjL4BngfRsBZIyUalqmRNAdU6FsAUKsTZQ==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (213, '2026-06-20 09:22:25', 101, 'Administrador', '1.0.15.202606200240.alpha', 'Inicio del sistema', NULL, '990389D03DA8FB516E064B901DC1AD69615ACD1CC5B846CA5FD6B147D29FE586', '46B7D56A2C9CCD02BE296EDA4CBB544038D6F348925CF08530726FFEB6046D8A', '516CD95A9F196DA959708764E0E01A1E6D5816B43EDDE0B23E62E5597A5F0C33', '2026-06-20 09:22:25', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200240.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T09:22:25+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T08:30:00+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>990389D03DA8FB516E064B901DC1AD69615ACD1CC5B846CA5FD6B147D29FE586</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>46B7D56A2C9CCD02BE296EDA4CBB544038D6F348925CF08530726FFEB6046D8A</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-46B7D56A2C9CCD02BE296EDA4CBB544038D6F348925CF08530726FFEB6046D8A-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-46B7D56A2C9CCD02BE296EDA4CBB544038D6F348925CF08530726FFEB6046D8A-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>BWm/Z+UA1kuvugvFr16D/RAsUyV7ycm/pc84qHr79co=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-46B7D56A2C9CCD02BE296EDA4CBB544038D6F348925CF08530726FFEB6046D8A-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>zL7vPTVcg/5oVBjBgtiwvx9MvatE2+r6JRSuCjZBcr8=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>BwaNnaWKNd9LM/z/+ybSUvOmlGJBLfxDczIH9+X1BuaxtMu/lXkh4ThZ4p/3PgzGE+ka8G8sif5nz8FlUP4qmcWuyWxKaD8mGZa2/je1AgFF0fO8cv3n8nYVEmeL+XQchBCZxEImEQXu11UhQ3uSkE/yVLoxGs47y+0VuJpNio6E7YUfZP1/63izfSH36Y+GDPL8uYBMWqGXhHDboyzlNPkXSg3ikZASoZfFaYQkf/dyTLrps6CsWbaOlHZCiogwMc8o98J8GfRFqbHO9LMxVXlrjyJJwRxDtWsjRJ1lR23uVimcnUCrUbl6Pgan6aP3TJU355R9iI0gxpyiYPZ5Zg==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-46B7D56A2C9CCD02BE296EDA4CBB544038D6F348925CF08530726FFEB6046D8A-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-46B7D56A2C9CCD02BE296EDA4CBB544038D6F348925CF08530726FFEB6046D8A-Object"><xades:QualifyingProperties Id="FZ-EVENTO-46B7D56A2C9CCD02BE296EDA4CBB544038D6F348925CF08530726FFEB6046D8A-Object-QualifyingProperties" Target="#FZ-EVENTO-46B7D56A2C9CCD02BE296EDA4CBB544038D6F348925CF08530726FFEB6046D8A-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-46B7D56A2C9CCD02BE296EDA4CBB544038D6F348925CF08530726FFEB6046D8A-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T09:22:25+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-46B7D56A2C9CCD02BE296EDA4CBB544038D6F348925CF08530726FFEB6046D8A-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'BwaNnaWKNd9LM/z/+ybSUvOmlGJBLfxDczIH9+X1BuaxtMu/lXkh4ThZ4p/3PgzGE+ka8G8sif5nz8FlUP4qmcWuyWxKaD8mGZa2/je1AgFF0fO8cv3n8nYVEmeL+XQchBCZxEImEQXu11UhQ3uSkE/yVLoxGs47y+0VuJpNio6E7YUfZP1/63izfSH36Y+GDPL8uYBMWqGXhHDboyzlNPkXSg3ikZASoZfFaYQkf/dyTLrps6CsWbaOlHZCiogwMc8o98J8GfRFqbHO9LMxVXlrjyJJwRxDtWsjRJ1lR23uVimcnUCrUbl6Pgan6aP3TJU355R9iI0gxpyiYPZ5Zg==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (214, '2026-06-20 09:23:29', 102, 'Administrador', '1.0.15.202606200240.alpha', 'Cierre del sistema', NULL, '46B7D56A2C9CCD02BE296EDA4CBB544038D6F348925CF08530726FFEB6046D8A', '0D9F568F41C78CFEAF7DF4460F49AC8636D70A6A9CAC1E0549E7A17FB045085E', 'FA4B590CC66D37812B5CC4C89D1CA486576FF2B320B3895E540A5E763C28CD96', '2026-06-20 09:23:29', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200240.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T09:23:29+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T09:22:25+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>46B7D56A2C9CCD02BE296EDA4CBB544038D6F348925CF08530726FFEB6046D8A</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>0D9F568F41C78CFEAF7DF4460F49AC8636D70A6A9CAC1E0549E7A17FB045085E</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-0D9F568F41C78CFEAF7DF4460F49AC8636D70A6A9CAC1E0549E7A17FB045085E-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-0D9F568F41C78CFEAF7DF4460F49AC8636D70A6A9CAC1E0549E7A17FB045085E-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>645XkDPssVcEKY8NI5a84gwp7L6cC9mKtnxXlkbhVpk=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-0D9F568F41C78CFEAF7DF4460F49AC8636D70A6A9CAC1E0549E7A17FB045085E-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>9/NUzmzFweHIdGWhZquLunrHtc0L5SauhXMN3a7QnKs=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>GBZQ00Yer6QHrsmRczDLTCWuXHmGBRAEdCVPVm3qDKxnwnerEggbZUokQZBuS0ftCgJDNo2qdAIHaT8uBIUGMR71SpHgJb4olI263PSD3BQEssk1h5nGbnveJADNldHjr1wRufZTeppjmVP1yyGQxOPirXOlsNESNNs9ZPwPlGUiHu/kKS6RNlazVCCrimnH3G2VMynfIk3DIMMoPTz5GKNXJXQXrDKcGGJcarsSPgha9bRfon51e+qptjjCl6m2qAHIePy3LV9CnBDlmQMJrKdCI13UORfuHKIPYKREUFYUcRw9sFvuSHD7nCROWZqS9u/KWflVS+iDFqgPoHwrBw==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-0D9F568F41C78CFEAF7DF4460F49AC8636D70A6A9CAC1E0549E7A17FB045085E-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-0D9F568F41C78CFEAF7DF4460F49AC8636D70A6A9CAC1E0549E7A17FB045085E-Object"><xades:QualifyingProperties Id="FZ-EVENTO-0D9F568F41C78CFEAF7DF4460F49AC8636D70A6A9CAC1E0549E7A17FB045085E-Object-QualifyingProperties" Target="#FZ-EVENTO-0D9F568F41C78CFEAF7DF4460F49AC8636D70A6A9CAC1E0549E7A17FB045085E-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-0D9F568F41C78CFEAF7DF4460F49AC8636D70A6A9CAC1E0549E7A17FB045085E-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T09:23:29+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-0D9F568F41C78CFEAF7DF4460F49AC8636D70A6A9CAC1E0549E7A17FB045085E-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'GBZQ00Yer6QHrsmRczDLTCWuXHmGBRAEdCVPVm3qDKxnwnerEggbZUokQZBuS0ftCgJDNo2qdAIHaT8uBIUGMR71SpHgJb4olI263PSD3BQEssk1h5nGbnveJADNldHjr1wRufZTeppjmVP1yyGQxOPirXOlsNESNNs9ZPwPlGUiHu/kKS6RNlazVCCrimnH3G2VMynfIk3DIMMoPTz5GKNXJXQXrDKcGGJcarsSPgha9bRfon51e+qptjjCl6m2qAHIePy3LV9CnBDlmQMJrKdCI13UORfuHKIPYKREUFYUcRw9sFvuSHD7nCROWZqS9u/KWflVS+iDFqgPoHwrBw==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6'),
+  (215, '2026-06-20 09:26:03', 101, 'Administrador', '1.0.15.202606200240.alpha', 'Inicio del sistema', NULL, '0D9F568F41C78CFEAF7DF4460F49AC8636D70A6A9CAC1E0549E7A17FB045085E', '48BF53CF35F4A411B705F762DEC9125F6A39A54D18E3C9AE4EDDFDD4016BF863', 'D7118A2CB04E8FA3BD27CF44086BC59DAECF35CFB73E61BF3C8989D267FF3750', '2026-06-20 09:26:03', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606200240.alpha</sf:Version><sf:NumeroInstalacion>1</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-06-20T09:26:03+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-06-20T09:23:29+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>0D9F568F41C78CFEAF7DF4460F49AC8636D70A6A9CAC1E0549E7A17FB045085E</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>48BF53CF35F4A411B705F762DEC9125F6A39A54D18E3C9AE4EDDFDD4016BF863</sf:HuellaEvento><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-48BF53CF35F4A411B705F762DEC9125F6A39A54D18E3C9AE4EDDFDD4016BF863-Signature"><ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod><ds:Reference Id="FZ-EVENTO-48BF53CF35F4A411B705F762DEC9125F6A39A54D18E3C9AE4EDDFDD4016BF863-Reference-Documento" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>d/ImfhVk8RT4xzSSueu1Nb63Q2VPX6Ya7CDRKeSEYLk=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#FZ-EVENTO-48BF53CF35F4A411B705F762DEC9125F6A39A54D18E3C9AE4EDDFDD4016BF863-SignedProperties"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></ds:DigestMethod><ds:DigestValue>vviOhVIkl65Q3Mn+vRShznusGvmAyjaE/IH8Dv+lu48=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>N6Gxk6liVR8MmzqwLvs1iJUEJ9kQZx8eVOpIOv2MeqKWNP/2eMsRvQo+5J8Of+qeVJNPafDBpM6dD9MQt3lJTWkgYAJA4sjyT/RHVEbgf6Ep1rE2ieu83M7E8EJrnlkxamTusNB1tjDbHzTvhtM6HH2U2Bluz+6dclJlCCr+VbpiViOH+4/7eWRueJr5Oo4v60BPoyAjz7E2zWPNAuFvwv/MmGZIHtt8hchH/RQ7NSJtomU5uXYA0dxXD8031Y5Cf04lxLivJ2GM+aOxyD88h+DayxjRQB7n8rKoLn+0nYc8PBPPLdGiRVWKXYiPhPXrtJRoBwPJraOGGuvyWzpIIA==</ds:SignatureValue><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="FZ-EVENTO-48BF53CF35F4A411B705F762DEC9125F6A39A54D18E3C9AE4EDDFDD4016BF863-KeyInfo"><ds:X509Data><ds:X509Certificate>MIIHojCCBoqgAwIBAgIQROKLVCkYu6xnJnM1exMg7DANBgkqhkiG9w0BAQsFADBLMQswCQYDVQQGEwJFUzERMA8GA1UECgwIRk5NVC1SQ00xDjAMBgNVBAsMBUNlcmVzMRkwFwYDVQQDDBBBQyBGTk1UIFVzdWFyaW9zMB4XDTI0MTEwMjE4NDUwOVoXDTI4MTEwMjE4NDUwOVowgYUxCzAJBgNVBAYTAkVTMRgwFgYDVQQFEw9JRENFUy00NTY4NDEzNFExEjAQBgNVBCoMCUFMRUpBTkRSTzEYMBYGA1UEBAwPTEFPUkRFTiBISURBTEdPMS4wLAYDVQQDDCVMQU9SREVOIEhJREFMR08gQUxFSkFORFJPIC0gNDU2ODQxMzRRMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQI6lenP50hVbPt6XuIAO8qodbgUwCRjyWOsmPijEyiz8DHeMUphDkgH8V3ULtxtSXWrF2GlJnDG/PWBwDOJafO/mVTH8UjF5OO4UgRGhYN6WyGFt2GsArhUwT2QiKGmBV44XGQKXrFKit0arEGMcVADNSgWi87hGLiNkdiarR+OZHa9ZLeF3oCzObPGwUgfInEIEsIVFDio8vsVwu1BYmFxM72Rf+dAFQ1Mzw2QNvpyV4wFp56eMX1YuXrZonrau02k11Cb158rqE/xaXZ2n9VMUWewR0wvJJFJPOl1KO0jmwTWEqklR3NFYqcdH17+Q9Wbj1nvppaecdqcZPGonQIDAQABo4IERTCCBEEwcQYDVR0RBGowaKRmMGQxGDAWBgkrBgEEAaxmAQQMCTQ1Njg0MTM0UTEWMBQGCSsGAQQBrGYBAwwHSElEQUxHTzEWMBQGCSsGAQQBrGYBAgwHTEFPUkRFTjEYMBYGCSsGAQQBrGYBAQwJQUxFSkFORFJPMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgXgMCoGA1UdJQQjMCEGCCsGAQUFBwMCBgorBgEEAYI3CgMMBgkqhkiG9y8BAQUwHQYDVR0OBBYEFLAcRQxH3doYNe3rvHNw11kc5piSMB8GA1UdIwQYMBaAFLHUT8QjefpEBQnG6znP6DWwuCBkMIGCBggrBgEFBQcBAQR2MHQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwdXN1LmNlcnQuZm5tdC5lcy9vY3NwdXN1L09jc3BSZXNwb25kZXIwMwYIKwYBBQUHMAKGJ2h0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NlcnRzL0FDVVNVLmNydDCCARUGA1UdIASCAQwwggEIMIH6BgorBgEEAaxmAwoBMIHrMCkGCCsGAQUFBwIBFh1odHRwOi8vd3d3LmNlcnQuZm5tdC5lcy9kcGNzLzCBvQYIKwYBBQUHAgIwgbAMga1DZXJ0aWZpY2FkbyBjdWFsaWZpY2FkbyBkZSBmaXJtYSBlbGVjdHLDs25pY2EuIFN1amV0byBhIGxhcyBjb25kaWNpb25lcyBkZSB1c28gZXhwdWVzdGFzIGVuIGxhIERQQyBkZSBsYSBGTk1ULVJDTSBjb24gTklGOiBRMjgyNjAwNC1KIChDL0pvcmdlIEp1YW4gMTA2LTI4MDA5LU1hZHJpZC1Fc3Bhw7FhKTAJBgcEAIvsQAEAMIG6BggrBgEFBQcBAwSBrTCBqjAIBgYEAI5GAQEwCwYGBACORgEDAgEPMBMGBgQAjkYBBjAJBgcEAI5GAQYBMHwGBgQAjkYBBTByMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lcy5wZGYTAmVzMDcWMWh0dHBzOi8vd3d3LmNlcnQuZm5tdC5lcy9wZHMvUERTQUNVc3Vhcmlvc19lbi5wZGYTAmVuMIHmBgNVHR8Egd4wgdswgdiggdWggdKGgZ9sZGFwOi8vbGRhcHVzdS5jZXJ0LmZubXQuZXMvY249Q1JMVTE4ODUsY249QUMlMjBGTk1UJTIwVXN1YXJpb3Msb3U9Q0VSRVMsbz1GTk1ULVJDTSxjPUVTP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q7YmluYXJ5P2Jhc2U/b2JqZWN0Y2xhc3M9Y1JMRGlzdHJpYnV0aW9uUG9pbnSGLmh0dHA6Ly93d3cuY2VydC5mbm10LmVzL2NybHNhY3VzdS9DUkxVMTg4NS5jcmwwDQYJKoZIhvcNAQELBQADggEBAG1MaUS/8oOoB3AA9o1Hj9O5T6rtRXW7RDBukXdycq7D4aqpLBvxeVpc6DhUauUqbeFs6zylLuWIE5Glzm2mqY9kpvF36ueRQEn2b1Sgwamlq5cyBPV58zRSbn1iwBHHjQiTPRx5HFAccKfxvgLZvEHtGHej/4b+A9yWgOiNj//zddciWH8kNcZYRztrHIz9jZE4sgYLTlUqPwEe1/8yrTZa/RjDXNt6PSeC8z8oknDSmQUAeoNmQm3IKcO7TnM4YUzqZof0ROtPnK5xKJa4Sb+pEmEWYxfzOg7+qKovBj2lM9jXhyLq6SUHtnDBevlbgDxQ1ewijnD8511QxXFRvHQ=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object Id="FZ-EVENTO-48BF53CF35F4A411B705F762DEC9125F6A39A54D18E3C9AE4EDDFDD4016BF863-Object"><xades:QualifyingProperties Id="FZ-EVENTO-48BF53CF35F4A411B705F762DEC9125F6A39A54D18E3C9AE4EDDFDD4016BF863-Object-QualifyingProperties" Target="#FZ-EVENTO-48BF53CF35F4A411B705F762DEC9125F6A39A54D18E3C9AE4EDDFDD4016BF863-Signature"><xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="FZ-EVENTO-48BF53CF35F4A411B705F762DEC9125F6A39A54D18E3C9AE4EDDFDD4016BF863-SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2026-06-20T09:26:03+02:00</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">xpEwITR5B36Kdq8y8Zro9X44i+Y=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName xmlns:ds="http://www.w3.org/2000/09/xmldsig#">C=ES, O=FNMT-RCM, OU=Ceres, CN=AC FNMT Usuarios</ds:X509IssuerName><ds:X509SerialNumber xmlns:ds="http://www.w3.org/2000/09/xmldsig#">91563788726222495067050989923251462380</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate><xades:SignaturePolicyIdentifier><xades:SignaturePolicyId><xades:SigPolicyId><xades:Identifier>urn:oid:2.16.724.1.3.1.1.2.1.9</xades:Identifier></xades:SigPolicyId><xades:SigPolicyHash><ds:DigestMethod xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue xmlns:ds="http://www.w3.org/2000/09/xmldsig#">G7roucf600+f03r/o0bAOQ6WAs0=</ds:DigestValue></xades:SigPolicyHash><xades:SigPolicyQualifiers><xades:SigPolicyQualifier><xades:SPURI>https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf</xades:SPURI></xades:SigPolicyQualifier></xades:SigPolicyQualifiers></xades:SignaturePolicyId></xades:SignaturePolicyIdentifier></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#FZ-EVENTO-48BF53CF35F4A411B705F762DEC9125F6A39A54D18E3C9AE4EDDFDD4016BF863-Reference-Documento"><xades:ObjectIdentifier><xades:Identifier>urn:oid:1.2.840.10003.5.109.10</xades:Identifier><xades:Description/></xades:ObjectIdentifier><xades:MimeType>text/xml</xades:MimeType><xades:Encoding>UTF-8</xades:Encoding></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties><xades:UnsignedProperties/></xades:QualifyingProperties></ds:Object></ds:Signature></sf:Evento></sf:RegistroEvento>', 'N6Gxk6liVR8MmzqwLvs1iJUEJ9kQZx8eVOpIOv2MeqKWNP/2eMsRvQo+5J8Of+qeVJNPafDBpM6dD9MQt3lJTWkgYAJA4sjyT/RHVEbgf6Ep1rE2ieu83M7E8EJrnlkxamTusNB1tjDbHzTvhtM6HH2U2Bluz+6dclJlCCr+VbpiViOH+4/7eWRueJr5Oo4v60BPoyAjz7E2zWPNAuFvwv/MmGZIHtt8hchH/RQ7NSJtomU5uXYA0dxXD8031Y5Cf04lxLivJ2GM+aOxyD88h+DayxjRQB7n8rKoLn+0nYc8PBPPLdGiRVWKXYiPhPXrtJRoBwPJraOGGuvyWzpIIA==', 'EC20137B35732667ACBB1829548BE244', 'LAORDEN HIDALGO ALEJANDRO - 45684134Q', 'C69130213479077E8A76AF32F19AE8F57E388BE6');
 /*!40000 ALTER TABLE `fza_verifactu_eventos` ENABLE KEYS */;
--- 203 registros exportados
+-- 215 registros exportados
 
 
 -- Tabla: fza_verifactu_operaciones
@@ -31965,11 +35531,11 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_devoluciones_compra_lin_print` AS with pos_
 
 -- Vista: vi_efectos_compra
 DROP VIEW IF EXISTS `vi_efectos_compra`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_efectos_compra` AS select `e`.`SERIE_FACC_EFEC` AS `SERIE_FACC_EFEC`,`e`.`NUMERO_FACC_EFEC` AS `NUMERO_FACC_EFEC`,`e`.`NUMERO_EFEC` AS `NUMERO_EFEC`,`e`.`CODIGO_EMP_EFEC` AS `CODIGO_EMP_EFEC`,`e`.`CODIGO_PRV_EFEC` AS `CODIGO_PRV_EFEC`,`e`.`RAZON_SOCIAL_PRV_EFEC` AS `RAZON_SOCIAL_PRV_EFEC`,`e`.`NIF_PRV_EFEC` AS `NIF_PRV_EFEC`,`e`.`CODIGO_TEFE_EFEC` AS `CODIGO_TEFE_EFEC`,`e`.`ESTADO_EFEC` AS `ESTADO_EFEC`,`e`.`ORDEN_PLAZO_EFEC` AS `ORDEN_PLAZO_EFEC`,`e`.`FECHA_EMISION_EFEC` AS `FECHA_EMISION_EFEC`,`e`.`FECHA_VENCIMIENTO_EFEC` AS `FECHA_VENCIMIENTO_EFEC`,`e`.`FECHA_PAGO_EFEC` AS `FECHA_PAGO_EFEC`,`e`.`IMPORTE_EFEC` AS `IMPORTE_EFEC`,`e`.`IMPORTE_PAGADO_EFEC` AS `IMPORTE_PAGADO_EFEC`,`e`.`IMPORTE_PENDIENTE_EFEC` AS `IMPORTE_PENDIENTE_EFEC`,`e`.`SERIE_REMC_EFEC` AS `SERIE_REMC_EFEC`,`e`.`NUMERO_REMC_EFEC` AS `NUMERO_REMC_EFEC`,`e`.`ENTIDAD_EFEC` AS `ENTIDAD_EFEC`,`e`.`OFICINA_EFEC` AS `OFICINA_EFEC`,`e`.`DIGITO_CONTROL_EFEC` AS `DIGITO_CONTROL_EFEC`,`e`.`CUENTA_EFEC` AS `CUENTA_EFEC`,`e`.`IBAN_EFEC` AS `IBAN_EFEC`,`e`.`DOC_EXTERNO_EFEC` AS `DOC_EXTERNO_EFEC`,`e`.`OBSERVACIONES_EFEC` AS `OBSERVACIONES_EFEC`,`e`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`e`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`e`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`e`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`f`.`FECHA_FACC` AS `FECHA_FACTURA_VIEW_EFEC`,`f`.`DOC_EXTERNO_FACC` AS `DOC_EXTERNO_FACTURA_VIEW_EFEC`,`f`.`TOTAL_LIQUIDO_FACC` AS `TOTAL_LIQUIDO_FACTURA_VIEW_EFEC`,`prv`.`NOMBRE_PRV` AS `NOMBRE_PRV_VIEW_EFEC`,`t`.`DESCRIPCION_TEFE` AS `DESCRIPCION_TEFE_VIEW_EFEC` from (((`fza_efectos_compra` `e` left join `fza_facturas_compra` `f` on(`f`.`SERIE_FACC` = `e`.`SERIE_FACC_EFEC` and `f`.`NUMERO_FACC` = `e`.`NUMERO_FACC_EFEC`)) left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `e`.`CODIGO_PRV_EFEC`)) left join `fza_tipos_efecto` `t` on(`t`.`CODIGO_TEFE` = `e`.`CODIGO_TEFE_EFEC`));
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_efectos_compra` AS select `e`.`SERIE_FACC_EFEC` AS `SERIE_FACC_EFEC`,`e`.`NUMERO_FACC_EFEC` AS `NUMERO_FACC_EFEC`,`e`.`NUMERO_EFEC` AS `NUMERO_EFEC`,`e`.`CODIGO_EMP_EFEC` AS `CODIGO_EMP_EFEC`,`e`.`CODIGO_PRV_EFEC` AS `CODIGO_PRV_EFEC`,`e`.`RAZON_SOCIAL_PRV_EFEC` AS `RAZON_SOCIAL_PRV_EFEC`,`e`.`NIF_PRV_EFEC` AS `NIF_PRV_EFEC`,`e`.`CODIGO_TEFE_EFEC` AS `CODIGO_TEFE_EFEC`,`e`.`ESTADO_EFEC` AS `ESTADO_EFEC`,`e`.`ORDEN_PLAZO_EFEC` AS `ORDEN_PLAZO_EFEC`,`e`.`FECHA_EMISION_EFEC` AS `FECHA_EMISION_EFEC`,`e`.`FECHA_VENCIMIENTO_EFEC` AS `FECHA_VENCIMIENTO_EFEC`,`e`.`FECHA_PAGO_EFEC` AS `FECHA_PAGO_EFEC`,`e`.`TIPO_PAGO_EFEC` AS `TIPO_PAGO_EFEC`,`e`.`REFERENCIA_PAGO_EFEC` AS `REFERENCIA_PAGO_EFEC`,`e`.`ENTIDAD_PAGO_EFEC` AS `ENTIDAD_PAGO_EFEC`,`e`.`ESCONCILIADO_EFEC` AS `ESCONCILIADO_EFEC`,`e`.`IMPORTE_EFEC` AS `IMPORTE_EFEC`,`e`.`IMPORTE_PAGADO_EFEC` AS `IMPORTE_PAGADO_EFEC`,`e`.`IMPORTE_PENDIENTE_EFEC` AS `IMPORTE_PENDIENTE_EFEC`,`e`.`SERIE_REMC_EFEC` AS `SERIE_REMC_EFEC`,`e`.`NUMERO_REMC_EFEC` AS `NUMERO_REMC_EFEC`,`e`.`ENTIDAD_EFEC` AS `ENTIDAD_EFEC`,`e`.`OFICINA_EFEC` AS `OFICINA_EFEC`,`e`.`DIGITO_CONTROL_EFEC` AS `DIGITO_CONTROL_EFEC`,`e`.`CUENTA_EFEC` AS `CUENTA_EFEC`,`e`.`IBAN_EFEC` AS `IBAN_EFEC`,`e`.`CODIGO_EMPBAN_EFEC` AS `CODIGO_EMPBAN_EFEC`,`e`.`IBAN_EMP_EFEC` AS `IBAN_EMP_EFEC`,`e`.`DOC_EXTERNO_EFEC` AS `DOC_EXTERNO_EFEC`,`e`.`REFERENCIA_DOCUMENTO_EFEC` AS `REFERENCIA_DOCUMENTO_EFEC`,`e`.`SERIE_FACC_CONCILIACION_EFEC` AS `SERIE_FACC_CONCILIACION_EFEC`,`e`.`NUMERO_FACC_CONCILIACION_EFEC` AS `NUMERO_FACC_CONCILIACION_EFEC`,`e`.`NUMERO_EFEC_CONCILIACION_EFEC` AS `NUMERO_EFEC_CONCILIACION_EFEC`,`e`.`OBSERVACIONES_EFEC` AS `OBSERVACIONES_EFEC`,`e`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`e`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`e`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`e`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`f`.`FECHA_FACC` AS `FECHA_FACTURA_VIEW_EFEC`,`f`.`DOC_EXTERNO_FACC` AS `DOC_EXTERNO_FACTURA_VIEW_EFEC`,`f`.`TOTAL_LIQUIDO_FACC` AS `TOTAL_LIQUIDO_FACTURA_VIEW_EFEC`,`prv`.`NOMBRE_PRV` AS `NOMBRE_PRV_VIEW_EFEC`,`t`.`DESCRIPCION_TEFE` AS `DESCRIPCION_TEFE_VIEW_EFEC` from (((`fza_efectos_compra` `e` left join `fza_facturas_compra` `f` on(`f`.`SERIE_FACC` = `e`.`SERIE_FACC_EFEC` and `f`.`NUMERO_FACC` = `e`.`NUMERO_FACC_EFEC`)) left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `e`.`CODIGO_PRV_EFEC`)) left join `fza_tipos_efecto` `t` on(`t`.`CODIGO_TEFE` = `e`.`CODIGO_TEFE_EFEC`));
 
 -- Vista: vi_efectos_compra_pendientes
 DROP VIEW IF EXISTS `vi_efectos_compra_pendientes`;
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_efectos_compra_pendientes` AS select `e`.`SERIE_FACC_EFEC` AS `SERIE_FACC_EFEC`,`e`.`NUMERO_FACC_EFEC` AS `NUMERO_FACC_EFEC`,`e`.`NUMERO_EFEC` AS `NUMERO_EFEC`,`e`.`CODIGO_EMP_EFEC` AS `CODIGO_EMP_EFEC`,`e`.`CODIGO_PRV_EFEC` AS `CODIGO_PRV_EFEC`,`e`.`RAZON_SOCIAL_PRV_EFEC` AS `RAZON_SOCIAL_PRV_EFEC`,`e`.`NIF_PRV_EFEC` AS `NIF_PRV_EFEC`,`e`.`CODIGO_TEFE_EFEC` AS `CODIGO_TEFE_EFEC`,`e`.`ESTADO_EFEC` AS `ESTADO_EFEC`,`e`.`ORDEN_PLAZO_EFEC` AS `ORDEN_PLAZO_EFEC`,`e`.`FECHA_EMISION_EFEC` AS `FECHA_EMISION_EFEC`,`e`.`FECHA_VENCIMIENTO_EFEC` AS `FECHA_VENCIMIENTO_EFEC`,`e`.`FECHA_PAGO_EFEC` AS `FECHA_PAGO_EFEC`,`e`.`IMPORTE_EFEC` AS `IMPORTE_EFEC`,`e`.`IMPORTE_PAGADO_EFEC` AS `IMPORTE_PAGADO_EFEC`,`e`.`IMPORTE_PENDIENTE_EFEC` AS `IMPORTE_PENDIENTE_EFEC`,`e`.`SERIE_REMC_EFEC` AS `SERIE_REMC_EFEC`,`e`.`NUMERO_REMC_EFEC` AS `NUMERO_REMC_EFEC`,`e`.`ENTIDAD_EFEC` AS `ENTIDAD_EFEC`,`e`.`OFICINA_EFEC` AS `OFICINA_EFEC`,`e`.`DIGITO_CONTROL_EFEC` AS `DIGITO_CONTROL_EFEC`,`e`.`CUENTA_EFEC` AS `CUENTA_EFEC`,`e`.`IBAN_EFEC` AS `IBAN_EFEC`,`e`.`DOC_EXTERNO_EFEC` AS `DOC_EXTERNO_EFEC`,`e`.`OBSERVACIONES_EFEC` AS `OBSERVACIONES_EFEC`,`e`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`e`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`e`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`e`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`prv`.`NOMBRE_PRV` AS `NOMBRE_PRV_VIEW_EFEC` from (`fza_efectos_compra` `e` left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `e`.`CODIGO_PRV_EFEC`)) where coalesce(`e`.`ESTADO_EFEC`,'') not in ('PAGADO','ANULADO') and coalesce(`e`.`IMPORTE_PENDIENTE_EFEC`,0) > 0;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_efectos_compra_pendientes` AS select `e`.`SERIE_FACC_EFEC` AS `SERIE_FACC_EFEC`,`e`.`NUMERO_FACC_EFEC` AS `NUMERO_FACC_EFEC`,`e`.`NUMERO_EFEC` AS `NUMERO_EFEC`,`e`.`CODIGO_EMP_EFEC` AS `CODIGO_EMP_EFEC`,`e`.`CODIGO_PRV_EFEC` AS `CODIGO_PRV_EFEC`,`e`.`RAZON_SOCIAL_PRV_EFEC` AS `RAZON_SOCIAL_PRV_EFEC`,`e`.`NIF_PRV_EFEC` AS `NIF_PRV_EFEC`,`e`.`CODIGO_TEFE_EFEC` AS `CODIGO_TEFE_EFEC`,`e`.`ESTADO_EFEC` AS `ESTADO_EFEC`,`e`.`ORDEN_PLAZO_EFEC` AS `ORDEN_PLAZO_EFEC`,`e`.`FECHA_EMISION_EFEC` AS `FECHA_EMISION_EFEC`,`e`.`FECHA_VENCIMIENTO_EFEC` AS `FECHA_VENCIMIENTO_EFEC`,`e`.`FECHA_PAGO_EFEC` AS `FECHA_PAGO_EFEC`,`e`.`TIPO_PAGO_EFEC` AS `TIPO_PAGO_EFEC`,`e`.`REFERENCIA_PAGO_EFEC` AS `REFERENCIA_PAGO_EFEC`,`e`.`ENTIDAD_PAGO_EFEC` AS `ENTIDAD_PAGO_EFEC`,`e`.`ESCONCILIADO_EFEC` AS `ESCONCILIADO_EFEC`,`e`.`IMPORTE_EFEC` AS `IMPORTE_EFEC`,`e`.`IMPORTE_PAGADO_EFEC` AS `IMPORTE_PAGADO_EFEC`,`e`.`IMPORTE_PENDIENTE_EFEC` AS `IMPORTE_PENDIENTE_EFEC`,`e`.`SERIE_REMC_EFEC` AS `SERIE_REMC_EFEC`,`e`.`NUMERO_REMC_EFEC` AS `NUMERO_REMC_EFEC`,`e`.`ENTIDAD_EFEC` AS `ENTIDAD_EFEC`,`e`.`OFICINA_EFEC` AS `OFICINA_EFEC`,`e`.`DIGITO_CONTROL_EFEC` AS `DIGITO_CONTROL_EFEC`,`e`.`CUENTA_EFEC` AS `CUENTA_EFEC`,`e`.`IBAN_EFEC` AS `IBAN_EFEC`,`e`.`CODIGO_EMPBAN_EFEC` AS `CODIGO_EMPBAN_EFEC`,`e`.`IBAN_EMP_EFEC` AS `IBAN_EMP_EFEC`,`e`.`DOC_EXTERNO_EFEC` AS `DOC_EXTERNO_EFEC`,`e`.`REFERENCIA_DOCUMENTO_EFEC` AS `REFERENCIA_DOCUMENTO_EFEC`,`e`.`SERIE_FACC_CONCILIACION_EFEC` AS `SERIE_FACC_CONCILIACION_EFEC`,`e`.`NUMERO_FACC_CONCILIACION_EFEC` AS `NUMERO_FACC_CONCILIACION_EFEC`,`e`.`NUMERO_EFEC_CONCILIACION_EFEC` AS `NUMERO_EFEC_CONCILIACION_EFEC`,`e`.`OBSERVACIONES_EFEC` AS `OBSERVACIONES_EFEC`,`e`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`e`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`e`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`e`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`prv`.`NOMBRE_PRV` AS `NOMBRE_PRV_VIEW_EFEC` from (`fza_efectos_compra` `e` left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `e`.`CODIGO_PRV_EFEC`)) where coalesce(`e`.`ESTADO_EFEC`,'') not in ('PAGADO','ANULADO','CONCILIADO') and coalesce(`e`.`IMPORTE_PENDIENTE_EFEC`,0) > 0;
 
 -- Vista: vi_empleados
 DROP VIEW IF EXISTS `vi_empleados`;
@@ -33744,6 +37310,139 @@ BEGIN
 END ;;
 DELIMITER ;
 
+-- Procedimiento: PRC_EFEC_CONCILIAR_PAGO
+DROP PROCEDURE IF EXISTS `PRC_EFEC_CONCILIAR_PAGO`;
+DELIMITER ;;
+CREATE  PROCEDURE `PRC_EFEC_CONCILIAR_PAGO`(
+    IN  p_SERIE      varchar(20),
+    IN  p_NUMERO     varchar(20),
+    IN  p_NUM_EFEC   int,
+    IN  p_FECHA      date,
+    IN  p_IMPORTE    decimal(18,6),
+    IN  p_TIPO       varchar(50),
+    IN  p_REFERENCIA varchar(100),
+    IN  p_ENTIDAD    varchar(100),
+    IN  p_USUARIO    varchar(100),
+    OUT p_RESULTADO  int)
+BEGIN
+  DECLARE v_existe   int DEFAULT 0;
+  DECLARE v_importe  decimal(18,6) DEFAULT 0;
+  DECLARE v_pend     decimal(18,6) DEFAULT 0;
+  DECLARE v_pago     decimal(18,6) DEFAULT 0;
+  DECLARE v_resto    decimal(18,6) DEFAULT 0;
+  DECLARE v_nuevo    int DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    SET p_RESULTADO = -1;
+    RESIGNAL;
+  END;
+  SET p_RESULTADO = 0;
+  START TRANSACTION;
+  SELECT COUNT(*)
+    INTO v_existe
+    FROM fza_efectos_compra
+   WHERE SERIE_FACC_EFEC  = p_SERIE
+     AND NUMERO_FACC_EFEC = p_NUMERO
+     AND NUMERO_EFEC      = p_NUM_EFEC
+     AND COALESCE(ESTADO_EFEC, '') NOT IN
+         ('PAGADO', 'ANULADO', 'DEVUELTO', 'CONCILIADO')
+     AND COALESCE(IMPORTE_PENDIENTE_EFEC, IMPORTE_EFEC, 0) > 0;
+  IF v_existe > 0 AND COALESCE(p_IMPORTE, 0) > 0 THEN
+    SELECT COALESCE(IMPORTE_EFEC, 0),
+           COALESCE(IMPORTE_PENDIENTE_EFEC, IMPORTE_EFEC, 0)
+      INTO v_importe, v_pend
+      FROM fza_efectos_compra
+     WHERE SERIE_FACC_EFEC  = p_SERIE
+       AND NUMERO_FACC_EFEC = p_NUMERO
+       AND NUMERO_EFEC      = p_NUM_EFEC
+       FOR UPDATE;
+    SET v_pago = COALESCE(p_IMPORTE, 0);
+    IF v_pago > v_pend THEN
+      SET v_pago = v_pend;
+    END IF;
+    SET v_resto = v_pend - v_pago;
+    IF v_resto <= 0.000001 THEN
+      UPDATE fza_efectos_compra
+         SET IMPORTE_PAGADO_EFEC    = v_importe,
+             IMPORTE_PENDIENTE_EFEC = 0,
+             FECHA_PAGO_EFEC        = COALESCE(p_FECHA, CURDATE()),
+             TIPO_PAGO_EFEC         = NULLIF(p_TIPO, ''),
+             REFERENCIA_PAGO_EFEC   = NULLIF(p_REFERENCIA, ''),
+             ENTIDAD_PAGO_EFEC      = NULLIF(p_ENTIDAD, ''),
+             ESCONCILIADO_EFEC      = 'S',
+             ESTADO_EFEC            = 'PAGADO',
+             INSTANTE_MODIF         = NOW(),
+             USUARIO_MODIF          = p_USUARIO
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      SET p_RESULTADO = 1;
+    ELSE
+      SELECT COALESCE(MAX(NUMERO_EFEC), 0) + 1
+        INTO v_nuevo
+        FROM fza_efectos_compra
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO;
+      UPDATE fza_efectos_compra
+         SET IMPORTE_EFEC           = v_pago,
+             IMPORTE_PAGADO_EFEC    = v_pago,
+             IMPORTE_PENDIENTE_EFEC = 0,
+             FECHA_PAGO_EFEC        = COALESCE(p_FECHA, CURDATE()),
+             TIPO_PAGO_EFEC         = NULLIF(p_TIPO, ''),
+             REFERENCIA_PAGO_EFEC   = NULLIF(p_REFERENCIA, ''),
+             ENTIDAD_PAGO_EFEC      = NULLIF(p_ENTIDAD, ''),
+             ESCONCILIADO_EFEC      = 'S',
+             ESTADO_EFEC            = 'PAGADO',
+             INSTANTE_MODIF         = NOW(),
+             USUARIO_MODIF          = p_USUARIO
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      INSERT INTO fza_efectos_compra
+        (SERIE_FACC_EFEC, NUMERO_FACC_EFEC, NUMERO_EFEC,
+         CODIGO_EMP_EFEC, CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC,
+         NIF_PRV_EFEC, CODIGO_TEFE_EFEC, ESTADO_EFEC,
+         ORDEN_PLAZO_EFEC, FECHA_EMISION_EFEC, FECHA_VENCIMIENTO_EFEC,
+         FECHA_PAGO_EFEC, TIPO_PAGO_EFEC, REFERENCIA_PAGO_EFEC,
+         ENTIDAD_PAGO_EFEC, ESCONCILIADO_EFEC, IMPORTE_EFEC,
+         IMPORTE_PAGADO_EFEC, IMPORTE_PENDIENTE_EFEC, SERIE_REMC_EFEC,
+         NUMERO_REMC_EFEC, ENTIDAD_EFEC, OFICINA_EFEC,
+         DIGITO_CONTROL_EFEC, CUENTA_EFEC, IBAN_EFEC,
+         CODIGO_EMPBAN_EFEC, IBAN_EMP_EFEC, DOC_EXTERNO_EFEC,
+         REFERENCIA_DOCUMENTO_EFEC, SERIE_FACC_CONCILIACION_EFEC,
+         NUMERO_FACC_CONCILIACION_EFEC, NUMERO_EFEC_CONCILIACION_EFEC,
+         OBSERVACIONES_EFEC, INSTANTE_ALTA, USUARIO_ALTA,
+         INSTANTE_MODIF, USUARIO_MODIF)
+      SELECT SERIE_FACC_EFEC, NUMERO_FACC_EFEC, v_nuevo,
+             CODIGO_EMP_EFEC, CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC,
+             NIF_PRV_EFEC, CODIGO_TEFE_EFEC,
+             CASE
+               WHEN COALESCE(SERIE_REMC_EFEC, '') <> '' THEN 'REMESADO'
+               ELSE 'PENDIENTE'
+             END,
+             ORDEN_PLAZO_EFEC, FECHA_EMISION_EFEC,
+             FECHA_VENCIMIENTO_EFEC, NULL, NULL, NULL, NULL, 'N',
+             v_resto, 0, v_resto, SERIE_REMC_EFEC, NUMERO_REMC_EFEC,
+             ENTIDAD_EFEC, OFICINA_EFEC, DIGITO_CONTROL_EFEC,
+             CUENTA_EFEC, IBAN_EFEC, CODIGO_EMPBAN_EFEC, IBAN_EMP_EFEC,
+             DOC_EXTERNO_EFEC, REFERENCIA_DOCUMENTO_EFEC,
+             SERIE_FACC_CONCILIACION_EFEC,
+             NUMERO_FACC_CONCILIACION_EFEC,
+             NUMERO_EFEC_CONCILIACION_EFEC,
+             OBSERVACIONES_EFEC, NOW(), p_USUARIO,
+             NOW(), p_USUARIO
+        FROM fza_efectos_compra
+       WHERE SERIE_FACC_EFEC  = p_SERIE
+         AND NUMERO_FACC_EFEC = p_NUMERO
+         AND NUMERO_EFEC      = p_NUM_EFEC;
+      SET p_RESULTADO = 2;
+    END IF;
+  END IF;
+  COMMIT;
+END ;;
+DELIMITER ;
+
 -- Procedimiento: PRC_EFEC_GENERAR_DESDE_FACTURA
 DROP PROCEDURE IF EXISTS `PRC_EFEC_GENERAR_DESDE_FACTURA`;
 DELIMITER ;;
@@ -33788,9 +37487,12 @@ BEGIN
     FROM fza_efectos_compra
    WHERE SERIE_FACC_EFEC  = p_SERIE
      AND NUMERO_FACC_EFEC = p_NUMERO
-     AND (COALESCE(ESTADO_EFEC, '') IN ('PAGADO', 'PARCIAL', 'REMESADO')
+     AND (COALESCE(ESTADO_EFEC, '') IN ('PAGADO', 'REMESADO')
           OR COALESCE(IMPORTE_PAGADO_EFEC, 0) > 0
-          OR SERIE_REMC_EFEC IS NOT NULL);
+          OR COALESCE(ESTADO_EFEC, '') = 'CONCILIADO'
+          OR COALESCE(ESCONCILIADO_EFEC, 'N') = 'S'
+          OR SERIE_REMC_EFEC IS NOT NULL
+          OR SERIE_FACC_CONCILIACION_EFEC IS NOT NULL);
   IF v_bloqueados = 0 THEN
     /* Datos de la factura. */
     SELECT COALESCE(TOTAL_LIQUIDO_FACC, 0), FORMA_PAGO_FACC,
@@ -33816,9 +37518,6 @@ BEGIN
     SET v_tefe = IF(v_escontado = 'S', 'CONTADO', 'RECIBO');
     /* Limpiar efectos previos (todos PENDIENTE en este punto). */
     START TRANSACTION;
-    DELETE FROM fza_efectos_compra_pagos
-     WHERE SERIE_FACC_EFECPAG  = p_SERIE
-       AND NUMERO_FACC_EFECPAG = p_NUMERO;
     DELETE FROM fza_efectos_compra
      WHERE SERIE_FACC_EFEC  = p_SERIE
        AND NUMERO_FACC_EFEC = p_NUMERO;
@@ -33838,92 +37537,19 @@ BEGIN
          FECHA_EMISION_EFEC, FECHA_VENCIMIENTO_EFEC, IMPORTE_EFEC,
          IMPORTE_PAGADO_EFEC, IMPORTE_PENDIENTE_EFEC, ENTIDAD_EFEC,
          OFICINA_EFEC, DIGITO_CONTROL_EFEC, CUENTA_EFEC, IBAN_EFEC,
-         DOC_EXTERNO_EFEC, INSTANTE_ALTA, USUARIO_ALTA,
-         INSTANTE_MODIF, USUARIO_MODIF)
+         DOC_EXTERNO_EFEC, REFERENCIA_DOCUMENTO_EFEC, INSTANTE_ALTA,
+         USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF)
       VALUES
         (p_SERIE, p_NUMERO, v_i, v_emp, v_prv, v_razon, v_nif,
          v_tefe, 'PENDIENTE', v_i, v_fecha, v_vto, v_imp,
          0, v_imp, v_ent, v_ofi, v_dc, v_cta, v_iban,
-         v_docext, NOW(), p_USUARIO, NOW(), p_USUARIO);
+         v_docext, COALESCE(NULLIF(v_docext, ''),
+         CONCAT(p_SERIE, '/', p_NUMERO)), NOW(), p_USUARIO, NOW(),
+         p_USUARIO);
       SET v_i = v_i + 1;
     END WHILE;
     COMMIT;
     SET p_RESULTADO = v_nplazos;
-  END IF;
-END ;;
-DELIMITER ;
-
--- Procedimiento: PRC_EFEC_REGISTRAR_PAGO
-DROP PROCEDURE IF EXISTS `PRC_EFEC_REGISTRAR_PAGO`;
-DELIMITER ;;
-CREATE  PROCEDURE `PRC_EFEC_REGISTRAR_PAGO`(
-    IN  p_SERIE      varchar(20),
-    IN  p_NUMERO     varchar(20),
-    IN  p_NUM_EFEC   int,
-    IN  p_FECHA      date,
-    IN  p_IMPORTE    decimal(18,6),
-    IN  p_TIPO       varchar(50),
-    IN  p_REFERENCIA varchar(100),
-    IN  p_ENTIDAD    varchar(100),
-    IN  p_USUARIO    varchar(100),
-    OUT p_RESULTADO  int)
-BEGIN
-  DECLARE v_existe   int DEFAULT 0;
-  DECLARE v_importe  decimal(18,6) DEFAULT 0;
-  DECLARE v_pagado   decimal(18,6) DEFAULT 0;
-  DECLARE v_pend     decimal(18,6) DEFAULT 0;
-  DECLARE v_npago    int DEFAULT 0;
-  DECLARE v_estado   varchar(20);
-  DECLARE EXIT HANDLER FOR SQLEXCEPTION
-  BEGIN
-    ROLLBACK;
-    SET p_RESULTADO = -1;
-    RESIGNAL;
-  END;
-  SET p_RESULTADO = 0;
-  SELECT COUNT(*), MAX(COALESCE(IMPORTE_EFEC, 0)),
-         MAX(COALESCE(IMPORTE_PAGADO_EFEC, 0))
-    INTO v_existe, v_importe, v_pagado
-    FROM fza_efectos_compra
-   WHERE SERIE_FACC_EFEC  = p_SERIE
-     AND NUMERO_FACC_EFEC = p_NUMERO
-     AND NUMERO_EFEC      = p_NUM_EFEC;
-  IF v_existe > 0 THEN
-    START TRANSACTION;
-    SELECT COALESCE(MAX(NUMERO_PAGO_EFECPAG), 0) + 1
-      INTO v_npago
-      FROM fza_efectos_compra_pagos
-     WHERE SERIE_FACC_EFECPAG  = p_SERIE
-       AND NUMERO_FACC_EFECPAG = p_NUMERO
-       AND NUMERO_EFEC_EFECPAG = p_NUM_EFEC;
-    INSERT INTO fza_efectos_compra_pagos
-      (SERIE_FACC_EFECPAG, NUMERO_FACC_EFECPAG, NUMERO_EFEC_EFECPAG,
-       NUMERO_PAGO_EFECPAG, FECHA_EFECPAG, IMPORTE_EFECPAG, TIPO_EFECPAG,
-       REFERENCIA_EFECPAG, ENTIDAD_PAGO_EFECPAG, INSTANTE_ALTA,
-       USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF)
-    VALUES
-      (p_SERIE, p_NUMERO, p_NUM_EFEC, v_npago,
-       COALESCE(p_FECHA, CURDATE()), COALESCE(p_IMPORTE, 0),
-       COALESCE(p_TIPO, 'TRANSFERENCIA'), p_REFERENCIA, p_ENTIDAD,
-       NOW(), p_USUARIO, NOW(), p_USUARIO);
-    SET v_pagado = v_pagado + COALESCE(p_IMPORTE, 0);
-    SET v_pend   = v_importe - v_pagado;
-    IF v_pend <= 0 THEN
-      SET v_estado = 'PAGADO';
-    ELSE
-      SET v_estado = 'PARCIAL';
-    END IF;
-    UPDATE fza_efectos_compra
-       SET IMPORTE_PAGADO_EFEC    = v_pagado,
-           IMPORTE_PENDIENTE_EFEC = v_pend,
-           FECHA_PAGO_EFEC        = COALESCE(p_FECHA, CURDATE()),
-           ESTADO_EFEC            = v_estado,
-           USUARIO_MODIF          = p_USUARIO
-     WHERE SERIE_FACC_EFEC  = p_SERIE
-       AND NUMERO_FACC_EFEC = p_NUMERO
-       AND NUMERO_EFEC      = p_NUM_EFEC;
-    COMMIT;
-    SET p_RESULTADO = v_npago;
   END IF;
 END ;;
 DELIMITER ;
@@ -38760,7 +42386,9 @@ BEGIN
      AND NUMERO_FACC_EFEC = p_NUMERO_FAC
      AND NUMERO_EFEC      = p_NUM_EFEC
      AND SERIE_REMC_EFEC IS NULL
-     AND COALESCE(ESTADO_EFEC, '') NOT IN ('PAGADO', 'ANULADO');
+     AND COALESCE(ESTADO_EFEC, '') NOT IN
+         ('PAGADO', 'ANULADO', 'CONCILIADO')
+     AND COALESCE(IMPORTE_PENDIENTE_EFEC, 0) > 0;
   IF v_rem > 0 AND v_efe > 0 THEN
     START TRANSACTION;
     UPDATE fza_efectos_compra
@@ -38820,8 +42448,7 @@ CREATE  PROCEDURE `PRC_REMC_RECALCULAR`(
 BEGIN
   DECLARE v_n     int DEFAULT 0;
   DECLARE v_total decimal(18,6) DEFAULT 0;
-  SELECT COUNT(*), COALESCE(SUM(COALESCE(IMPORTE_PENDIENTE_EFEC,
-                                         IMPORTE_EFEC)), 0)
+  SELECT COUNT(*), COALESCE(SUM(COALESCE(IMPORTE_EFEC, 0)), 0)
     INTO v_n, v_total
     FROM fza_efectos_compra
    WHERE SERIE_REMC_EFEC  = p_SERIE
@@ -39152,4 +42779,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 20/06/2026 6:21:13
+-- Backup completado: 20/06/2026 9:26:50

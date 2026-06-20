@@ -140,6 +140,7 @@ inherited frmModalCargarEfectosRemesa: TfrmModalCargarEfectosRemesa
           Caption = 'Pendiente'
           DataBinding.FieldName = 'IMPORTE_PENDIENTE_EFEC'
           PropertiesClassName = 'TcxCurrencyEditProperties'
+          Properties.DisplayFormat = '#,##0.00 '#8364
           Width = 110
         end
         object colEstado: TcxGridDBColumn

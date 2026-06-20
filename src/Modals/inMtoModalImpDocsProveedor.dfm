@@ -224,7 +224,7 @@ inherited frmPrintDocsProveedor: TfrmPrintDocsProveedor
           Frame.Typ = [ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            'Ctd.')
+            'Lin.')
           ParentFont = False
         end
         object MemoHBase: TfrxMemoView
@@ -296,6 +296,34 @@ inherited frmPrintDocsProveedor: TfrmPrintDocsProveedor
           ParentFont = False
         end
       end
+      object GroupHeaderTipo: TfrxGroupHeader
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
+        Height = 20.000000000000000000
+        Top = 60.000000000000000000
+        Width = 1046.000000000000000000
+        Condition = 'DocsProveedor."TIPO_DOC"'
+        object MemoTipoGrupo: TfrxMemoView
+          AllowVectorExport = True
+          Top = 2.000000000000000000
+          Width = 1046.000000000000000000
+          Height = 16.000000000000000000
+          Color = 14540253
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -10
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          Memo.UTF8W = (
+            '[DocsProveedor."TIPO_DOC_NOMBRE"]')
+          ParentFont = False
+        end
+      end
       object GroupHeaderProveedor: TfrxGroupHeader
         FillType = ftBrush
         FillGap.Top = 0
@@ -304,7 +332,7 @@ inherited frmPrintDocsProveedor: TfrmPrintDocsProveedor
         FillGap.Right = 0
         Frame.Typ = []
         Height = 18.000000000000000000
-        Top = 60.000000000000000000
+        Top = 84.000000000000000000
         Width = 1046.000000000000000000
         Condition = 'DocsProveedor."CODIGO_PRV"'
         object MemoProvGrupo: TfrxMemoView
@@ -331,7 +359,7 @@ inherited frmPrintDocsProveedor: TfrmPrintDocsProveedor
         FillGap.Right = 0
         Frame.Typ = []
         Height = 16.000000000000000000
-        Top = 82.000000000000000000
+        Top = 106.000000000000000000
         Width = 1046.000000000000000000
         DataSet = fxdsDocsProveedor
         DataSetName = 'DocsProveedor'
@@ -581,7 +609,7 @@ inherited frmPrintDocsProveedor: TfrmPrintDocsProveedor
         FillGap.Right = 0
         Frame.Typ = []
         Height = 18.000000000000000000
-        Top = 102.000000000000000000
+        Top = 126.000000000000000000
         Width = 1046.000000000000000000
         object MemoTotProv: TfrxMemoView
           AllowVectorExport = True
@@ -698,6 +726,131 @@ inherited frmPrintDocsProveedor: TfrmPrintDocsProveedor
           ParentFont = False
         end
       end
+      object GroupFooterTipo: TfrxGroupFooter
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
+        Height = 20.000000000000000000
+        Top = 150.000000000000000000
+        Width = 1046.000000000000000000
+        object MemoTotTipo: TfrxMemoView
+          AllowVectorExport = True
+          Top = 2.000000000000000000
+          Width = 678.000000000000000000
+          Height = 16.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -10
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          Memo.UTF8W = (
+            'TOTAL [DocsProveedor."TIPO_DOC_NOMBRE"]')
+          ParentFont = False
+        end
+        object MemoTotTipoCtd: TfrxMemoView
+          AllowVectorExport = True
+          Left = 680.000000000000000000
+          Top = 2.000000000000000000
+          Width = 58.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.FormatStr = '%g'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[SUM(<DocsProveedor."CANTIDAD_DOC">,MasterData1)]')
+          ParentFont = False
+        end
+        object MemoTotTipoBase: TfrxMemoView
+          AllowVectorExport = True
+          Left = 740.000000000000000000
+          Top = 2.000000000000000000
+          Width = 72.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[SUM(<DocsProveedor."TOTAL_BASES_DOC">,MasterData1)]')
+          ParentFont = False
+        end
+        object MemoTotTipoIva: TfrxMemoView
+          AllowVectorExport = True
+          Left = 814.000000000000000000
+          Top = 2.000000000000000000
+          Width = 64.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[SUM(<DocsProveedor."TOTAL_IVA_DOC">,MasterData1)]')
+          ParentFont = False
+        end
+        object MemoTotTipoRe: TfrxMemoView
+          AllowVectorExport = True
+          Left = 880.000000000000000000
+          Top = 2.000000000000000000
+          Width = 64.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[SUM(<DocsProveedor."TOTAL_RE_DOC">,MasterData1)]')
+          ParentFont = False
+        end
+        object MemoTotTipoTotal: TfrxMemoView
+          AllowVectorExport = True
+          Left = 946.000000000000000000
+          Top = 2.000000000000000000
+          Width = 82.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[SUM(<DocsProveedor."TOTAL_LIQUIDO_DOC">,MasterData1)]')
+          ParentFont = False
+        end
+      end
       object ReportSummary1: TfrxReportSummary
         FillType = ftBrush
         FillGap.Top = 0
@@ -706,7 +859,7 @@ inherited frmPrintDocsProveedor: TfrmPrintDocsProveedor
         FillGap.Right = 0
         Frame.Typ = []
         Height = 20.000000000000000000
-        Top = 124.000000000000000000
+        Top = 174.000000000000000000
         Width = 1046.000000000000000000
         object MemoTotalGeneral: TfrxMemoView
           AllowVectorExport = True
@@ -720,7 +873,7 @@ inherited frmPrintDocsProveedor: TfrmPrintDocsProveedor
           Font.Style = [fsBold]
           Frame.Typ = [ftTop, ftBottom]
           Memo.UTF8W = (
-            'TOTAL GRUPO')
+            'TOTAL GENERAL')
           ParentFont = False
         end
         object MemoTotGenCtd: TfrxMemoView
@@ -831,7 +984,7 @@ inherited frmPrintDocsProveedor: TfrmPrintDocsProveedor
         FillGap.Right = 0
         Frame.Typ = []
         Height = 16.000000000000000000
-        Top = 148.000000000000000000
+        Top = 198.000000000000000000
         Width = 1046.000000000000000000
         object MemoPagina: TfrxMemoView
           AllowVectorExport = True

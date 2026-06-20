@@ -259,7 +259,6 @@ uses
   inMtoModalCargarEfectosRemesa in 'src\Modals\inMtoModalCargarEfectosRemesa.pas' {frmModalCargarEfectosRemesa},
   inMtoModalSeleccionarBanco in 'src\Modals\inMtoModalSeleccionarBanco.pas' {frmModalSeleccionarBanco},
   inMtoModalRegistrarPago in 'src\Modals\inMtoModalRegistrarPago.pas' {frmModalRegistrarPago},
-  inMtoModalVerPagosEfecto in 'src\Modals\inMtoModalVerPagosEfecto.pas' {frmModalVerPagosEfecto},
   inMtoPedidosCompra in 'src\Forms\inMtoPedidosCompra.pas' {frmMtoPedidosCompra},
   UniDataPedidosCompra in 'src\DataModules\UniDataPedidosCompra.pas' {dmPedidosCompra: TdmPedidosCompra},
   inMtoModalSelAlmacenPedido in 'src\Modals\inMtoModalSelAlmacenPedido.pas' {frmModalSelAlmacenPedido},

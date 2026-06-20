@@ -1,5 +1,5 @@
 inherited frmModalRegistrarPago: TfrmModalRegistrarPago
-  Caption = 'Registrar pago del efecto'
+  Caption = 'Conciliar efecto'
   ClientHeight = 240
   ClientWidth = 360
   StyleElements = [seFont, seClient, seBorder]
@@ -38,7 +38,7 @@ inherited frmModalRegistrarPago: TfrmModalRegistrarPago
     object lblImporte: TcxLabel
       Left = 170
       Top = 48
-      Caption = 'Importe a pagar'
+      Caption = 'Importe conciliado'
       Transparent = True
     end
     object curImporte: TcxCurrencyEdit

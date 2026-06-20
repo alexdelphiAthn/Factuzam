@@ -11,6 +11,7 @@ inherited frmMtoEfectosCompra: TfrmMtoEfectosCompra
         ExplicitHeight = 484
         inherited cxGrdPrincipal: TcxGrid
           inherited cxGrdDBTabPrin: TcxGridDBTableView
+            OptionsSelection.MultiSelect = True
             object dbcGrdDBTabPrinNUMERO_FACC_EFEC: TcxGridDBColumn
               Caption = 'Borrador'
               DataBinding.FieldName = 'NUMERO_FACC_EFEC'
@@ -44,17 +45,26 @@ inherited frmMtoEfectosCompra: TfrmMtoEfectosCompra
             object dbcGrdDBTabPrinIMPORTE_EFEC: TcxGridDBColumn
               Caption = 'Importe'
               DataBinding.FieldName = 'IMPORTE_EFEC'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 100
             end
             object dbcGrdDBTabPrinIMPORTE_PENDIENTE_EFEC: TcxGridDBColumn
               Caption = 'Pendiente'
               DataBinding.FieldName = 'IMPORTE_PENDIENTE_EFEC'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 100
             end
             object dbcGrdDBTabPrinESTADO_EFEC: TcxGridDBColumn
               Caption = 'Estado'
               DataBinding.FieldName = 'ESTADO_EFEC'
               Width = 100
+            end
+            object dbcGrdDBTabPrinREFERENCIA_DOCUMENTO_EFEC: TcxGridDBColumn
+              Caption = 'Ref. doc.'
+              DataBinding.FieldName = 'REFERENCIA_DOCUMENTO_EFEC'
+              Width = 130
             end
             object dbcGrdDBTabPrinFECHA_PAGO_EFEC: TcxGridDBColumn
               Caption = 'F. pago'
@@ -92,18 +102,18 @@ inherited frmMtoEfectosCompra: TfrmMtoEfectosCompra
       Top = 200
       Width = 137
       Height = 44
-      Caption = 'Registrar pago'
+      Caption = 'Conciliar efecto'
       TabOrder = 2
       OnClick = btnRegistrarPagoClick
     end
-    object btnVerPagos: TcxButton
+    object btnFusionarEfectos: TcxButton
       Left = 0
       Top = 250
       Width = 137
       Height = 44
-      Caption = 'Ver pagos'
+      Caption = 'Fusionar efectos'
       TabOrder = 3
-      OnClick = btnVerPagosClick
+      OnClick = btnFusionarEfectosClick
     end
   end
   inherited dsTablaG: TDataSource

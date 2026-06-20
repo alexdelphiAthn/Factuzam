@@ -10,6 +10,8 @@
 {      dbo.ocpedarp    (líneas pedido)                    → fza_pedidos_compra_lineas
 {      dbo.ocalbpro    (cab. albarán entrada, TipoDoc 'AE') → fza_albaranes_compra
 {      dbo.ocalbproarp (líneas albarán)                   → fza_albaranes_compra_lineas
+{      dbo.ocfacpro    (cab. factura proveedor)           → fza_facturas_compra
+{      dbo.ocfacproart (líneas factura proveedor)         → fza_facturas_compra_lineas
 {                                                                              }
 {    Modelo PLANO (decisión del usuario): una línea Factuzam por cada fila     }
 {    del legacy (un SKU concreto Articulo/Color/Talla), con su almacén en la   }
@@ -23,12 +25,12 @@
 {        copian tal cual a las columnas *_PRV_*.                               }
 {      - Cabecera ← empresa emisora: se rellena al final desde fza_empresas    }
 {        (igual que en facturas de venta).                                     }
-{      - Albarán → pedido: NUMERO/SERIE_PED_ALBC con la MISMA clave que genera }
-{        este módulo para el pedido ('<Ejercicio>.<Serie>' / NroPedido a 6).   }
+{      - Albarán → pedido/factura: NUMERO/SERIE_* con la MISMA clave que genera}
+{        este módulo ('<Ejercicio>.<Serie>' / número a 6).                     }
 {                                                                              }
 {    Clave Factuzam (PK NUMERO+SERIE):                                         }
 {      SERIE  = '<Ejercicio>.<Serie>'   (p.ej. '2007.90')                      }
-{      NUMERO = NroPedido / NroAlbaran a 6 dígitos                             }
+{      NUMERO = NroPedido / NroAlbaran / NroFactura a 6 dígitos                }
 {                                                                              }
 {    IVA: 4 bandas legacy (ImpBaseImp/PorIVA/CuotaIVA 1-4) clasificadas en     }
 {    N/R/S/E por su %. Totales (bases/impuestos/líquido) del propio legacy.    }
@@ -36,15 +38,15 @@
 {    facturas generadas desde albaran hereden la banda correcta.               }
 {    El recargo de equivalencia (RE) no aplica a la cabecera de compra.        }
 {                                                                              }
-{    Forma de pago: se guarda el codigo legacy TipoEfecto si viene informado;  }
-{    si no, se conserva el texto FormaPago como fallback historico.            }
+{    Forma de pago: se conserva el texto FormaPago si viene informado; si no, }
+{    se guarda el codigo legacy TipoEfecto como fallback historico.            }
 {                                                                              }
 {    Idempotente: borra al arrancar lo migrado por el usuario y reinserta      }
 {    (INSERT IGNORE por lotes para las líneas/cabeceras).                      }
 {                                                                              }
 {    NO genera stock: los movimientos de entrada ya entran por la migración    }
-{    de Movimientos (ocmovarp). El enlace movimiento↔albarán (REF_MOV) se      }
-{    deja pendiente (la línea de albarán no guarda NUMERO_MOV).                }
+{    de Movimientos (ocmovarp). El enlace movimiento↔documento se conserva     }
+{    solo a nivel documental pedido/albarán/factura.                           }
 {******************************************************************************}
 unit inLibMigCompras;
 
@@ -55,6 +57,7 @@ uses
 
 procedure MigrarPedidosCompra(Eng: TMigEngine; var Stats: TMigStats);
 procedure MigrarAlbaranesCompra(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarFacturasCompra(Eng: TMigEngine; var Stats: TMigStats);
 
 implementation
 
@@ -76,6 +79,26 @@ var
 function F(v: Double): string;
 begin
   Result := FloatToStr(v, fsCompras);
+end;
+
+function FechaCampoASQL(q: TUniQuery; const sCampo: string): string;
+begin
+  Result := 'NULL';
+  if (q.FindField(sCampo) <> nil) and not q.FieldByName(sCampo).IsNull then
+    Result := DateTimeASQL(Trunc(q.FieldByName(sCampo).AsDateTime));
+end;
+
+function UnirValores(const aValores: array of string): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  for i := Low(aValores) to High(aValores) do
+  begin
+    if i > Low(aValores) then
+      Result := Result + ', ';
+    Result := Result + aValores[i];
+  end;
 end;
 
 function EsColorVacio(const s: string): Boolean;
@@ -137,25 +160,27 @@ var
   oCampoForma: TField;
 begin
   Result := '';
+  oCampoForma := q.FindField('FormaPago');
+  if oCampoForma <> nil then
+    Result := Copy(Trim(oCampoForma.AsString), 1, 20);
   if q.FindField('TipoEfecto') <> nil then
   begin
-    iTipo := q.FieldByName('TipoEfecto').AsInteger;
-    if iTipo > 0 then
-      Result := IntToStr(iTipo);
-  end;
-  if Result = '' then
-  begin
-    oCampoForma := q.FindField('FormaPago');
-    if oCampoForma <> nil then
-      Result := Copy(Trim(oCampoForma.AsString), 1, 200);
+    if Result = '' then
+    begin
+      iTipo := q.FieldByName('TipoEfecto').AsInteger;
+      if iTipo > 0 then
+        Result := IntToStr(iTipo);
+    end;
   end;
 end;
 
 type
-  // Desglose de IVA de cabecera de compra por bandas N/R/S/E (sólo % y cuota;
-  // la cabecera de compra no guarda base por banda ni RE).
+  // Desglose de IVA de cabecera de compra por bandas N/R/S/E.
   TIvaCompra = record
-    Pn, Tn, Pr, Tr, Ps, Ts, Pe, Te: Double;
+    Pn, Bn, Tn: Double;
+    Pr, Br, Tr: Double;
+    Ps, Bs, Ts: Double;
+    Pe, Be, Te: Double;
   end;
 
 // Lee las 4 bandas legacy (ImpBaseImp/PorIVA/CuotaIVA 1-4) y las acumula por
@@ -164,11 +189,12 @@ procedure CalcularIvaCompra(q: TUniQuery; var R: TIvaCompra);
 var
   i, b:                Integer;
   base, rate, cuota:   Double;
-  aRate, aCuota:       array[0..3] of Double;
+  aRate, aBase, aCuota: array[0..3] of Double;
 begin
   for b := 0 to 3 do
   begin
     aRate[b]  := 0;
+    aBase[b]  := 0;
     aCuota[b] := 0;
   end;
   for i := 1 to 4 do
@@ -181,18 +207,23 @@ begin
       if (cuota = 0) and (rate > 0) then
         cuota := base * rate / 100;
       b := BandaIva(rate);
+      aBase[b]  := aBase[b] + base;
       aCuota[b] := aCuota[b] + cuota;
       if rate > aRate[b] then
         aRate[b] := rate;
     end;
   end;
   R.Pn := aRate[0];
+  R.Bn := aBase[0];
   R.Tn := aCuota[0];
   R.Pr := aRate[1];
+  R.Br := aBase[1];
   R.Tr := aCuota[1];
   R.Ps := aRate[2];
+  R.Bs := aBase[2];
   R.Ts := aCuota[2];
   R.Pe := aRate[3];
+  R.Be := aBase[3];
   R.Te := aCuota[3];
 end;
 
@@ -327,6 +358,27 @@ begin
     Result := IntToStr(iId)
   else
     Result := 'NULL';
+end;
+
+procedure AsegurarEsquemaFacturasCompra(Eng: TMigEngine);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.COLUMNS ' +
+      'WHERE TABLE_SCHEMA = DATABASE() ' +
+      'AND TABLE_NAME = ''fza_facturas_compra'' ' +
+      'AND COLUMN_NAME = ''ID_PV_TEMPORADA_FACC''';
+    q.Open;
+    if q.FieldByName('N').AsInteger = 0 then
+      raise Exception.Create(
+        'Falta ejecutar DESARROLLOS EN CURSO/facturas_compra_temporada.sql');
+  finally
+    q.Free;
+  end;
 end;
 
 // =========================================================================
@@ -611,6 +663,8 @@ const
     '       ISNULL(a.FormaPago, '''') AS FormaPago, ' +
     '       a.EjercicioPedido, ISNULL(a.SeriePedido, '''') AS SeriePedido, ' +
     '       ISNULL(a.NroPedido, 0) AS NroPedido, ' +
+    '       a.EjercicioFactura, ISNULL(a.SerieFactura, '''') AS SerieFactura, ' +
+    '       ISNULL(a.NroFactura, 0) AS NroFactura, ' +
     '       ISNULL(a.ImpBaseImp1, 0) AS ImpBaseImp1, ' +
     '       ISNULL(a.PorIVA1, 0) AS PorIVA1, ISNULL(a.CuotaIVA1, 0) AS CuotaIVA1, ' +
     '       ISNULL(a.ImpBaseImp2, 0) AS ImpBaseImp2, ' +
@@ -638,6 +692,8 @@ const
     '       ISNULL(l.PorIVA, 0) AS PorIVA, ' +
     '       l.EjercicioPedido, ISNULL(l.SeriePedido, '''') AS SeriePedido, ' +
     '       ISNULL(l.NroPedido, 0) AS NroPedido, ' +
+    '       l.EjercicioFactura, ISNULL(l.SerieFactura, '''') AS SerieFactura, ' +
+    '       ISNULL(l.NroFactura, 0) AS NroFactura, ' +
     '       CASE ' +
     '         WHEN l.Color IS NOT NULL ' +
     '           AND LTRIM(RTRIM(l.Color)) <> '''' ' +
@@ -662,7 +718,8 @@ const
     'WHERE a.TipoDoc = ''AE''';
   cColsCab =
     'NUMERO_ALBC, SERIE_ALBC, FECHA_ALBC, ESTADO_ALBC, NUMERO_PED_ALBC, ' +
-    'SERIE_PED_ALBC, CODIGO_EMP_ALBC, CODIGO_PRV_ALBC, RAZON_SOCIAL_PRV_ALBC, ' +
+    'SERIE_PED_ALBC, NUMERO_FAC_ALBC, SERIE_FAC_ALBC, CODIGO_EMP_ALBC, ' +
+    'CODIGO_PRV_ALBC, RAZON_SOCIAL_PRV_ALBC, ' +
     'NIF_PRV_ALBC, DIRECCION1_PRV_ALBC, DIRECCION2_PRV_ALBC, POBLACION_PRV_ALBC, ' +
     'PROVINCIA_PRV_ALBC, CODIGO_POSTAL_PRV_ALBC, REF_PROVEEDOR_ALBC, ' +
     'CODIGO_ALM_ALBC, PORCENTAJE_IVAN_ALBC, TOTAL_IVAN_ALBC, PORCENTAJE_IVAR_ALBC, ' +
@@ -676,7 +733,8 @@ const
     'DESCRIPCION_ARTICULO_ALBCLIN, CANTIDAD_ALBCLIN, TIPO_IVA_ARTICULO_ALBCLIN, ' +
     'PORCENTAJE_IVA_ALBCLIN, PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN, ' +
     'PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN, TOTAL_ALBCLIN, CODIGO_ALMACEN_ALBCLIN, ' +
-    'REF_PRV_ALBCLIN, ' +
+    'REF_PRV_ALBCLIN, ESFACTURADA_ALBCLIN, NUMERO_FAC_ALBCLIN, ' +
+    'SERIE_FAC_ALBCLIN, LINEA_FAC_ALBCLIN, ' +
     'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
 var
   qCab, qLin:       TUniQuery;
@@ -684,6 +742,7 @@ var
   oMapTal:          TDictionary<string, Integer>;
   sAhora, sUser:    string;
   sNum, sSerie, sAlm, sArt, sUni, sEstado, sNumPed, sSeriePed: string;
+  sNumFac, sSerieFac, sEsFacturada: string;
   iva:              TIvaCompra;
 begin
   BorrarPorUsuario(Eng, 'fza_albaranes_compra_lineas');
@@ -712,12 +771,23 @@ begin
                   Trim(qCab.FieldByName('Serie').AsString)]);
       sNum   := Format('%.6d', [qCab.FieldByName('NroAlbaran').AsInteger]);
       sAlm   := UpperCase(Trim(qCab.FieldByName('AbrevAlm').AsString));
-      // Albarán histórico = mercancía YA recibida con su stock ya migrado
-      // (dominio Movimientos). El Mto de compras maneja ABIERTO↔CERRADO
-      // (CERRADO = stock generado), así que lo dejamos CERRADO. No usamos
-      // FACTURADO: no migramos facturas de compra en esta pasada y dejaría
-      // una referencia de factura colgando.
-      sEstado := 'CERRADO';
+      // Albarán histórico = mercancía YA recibida con su stock ya migrado.
+      // Si el legacy lo trae facturado, conservamos el enlace documental.
+      if qCab.FieldByName('NroFactura').AsInteger > 0 then
+      begin
+        sEstado := 'FACTURADO';
+        sNumFac := ValorOrNull(Format('%.6d',
+                     [qCab.FieldByName('NroFactura').AsInteger]));
+        sSerieFac := ValorOrNull(Format('%d.%s',
+                       [qCab.FieldByName('EjercicioFactura').AsInteger,
+                        Trim(qCab.FieldByName('SerieFactura').AsString)]));
+      end
+      else
+      begin
+        sEstado := 'CERRADO';
+        sNumFac := 'NULL';
+        sSerieFac := 'NULL';
+      end;
       // Enlace al pedido (si lo hay), con la MISMA clave que el pedido migrado.
       if qCab.FieldByName('NroPedido').AsInteger > 0 then
       begin
@@ -734,13 +804,10 @@ begin
       end;
       CalcularIvaCompra(qCab, iva);
       try
-        bCab.Add(Format(
-          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
-          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
-          '%s',
-          [ValorOrNull(sNum), ValorOrNull(sSerie),
+        bCab.Add(UnirValores([
+           ValorOrNull(sNum), ValorOrNull(sSerie),
            DateTimeASQL(qCab.FieldByName('Fecha').AsDateTime),
-           ValorOrNull(sEstado), sNumPed, sSeriePed,
+           ValorOrNull(sEstado), sNumPed, sSeriePed, sNumFac, sSerieFac,
            ValorOrNull(IntToStr(qCab.FieldByName('Empresa').AsInteger)),
            ValorOrNull(Trim(qCab.FieldByName('Proveedor').AsString)),
            ValorOrNull(Copy(Trim(qCab.FieldByName('RazonSocial').AsString), 1, 200)),
@@ -822,11 +889,24 @@ begin
         sNumPed   := 'NULL';
         sSeriePed := 'NULL';
       end;
+      if qLin.FieldByName('NroFactura').AsInteger > 0 then
+      begin
+        sEsFacturada := ValorOrNull('S');
+        sNumFac := ValorOrNull(Format('%.6d',
+                     [qLin.FieldByName('NroFactura').AsInteger]));
+        sSerieFac := ValorOrNull(Format('%d.%s',
+                       [qLin.FieldByName('EjercicioFactura').AsInteger,
+                        Trim(qLin.FieldByName('SerieFactura').AsString)]));
+      end
+      else
+      begin
+        sEsFacturada := ValorOrNull('N');
+        sNumFac := 'NULL';
+        sSerieFac := 'NULL';
+      end;
       try
-        bLin.Add(Format(
-          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
-          '%s, %s, %s, %s',
-          [ValorOrNull(sNum), ValorOrNull(sSerie),
+        bLin.Add(UnirValores([
+           ValorOrNull(sNum), ValorOrNull(sSerie),
            ValorOrNull(Format('%.4d', [qLin.FieldByName('Orden').AsInteger])),
            sNumPed, sSeriePed,
            ValorOrNull(sArt), ValorOrNull(sUni),
@@ -838,8 +918,9 @@ begin
            F(qLin.FieldByName('PrecioSIva').AsFloat),
            F(qLin.FieldByName('PrecioCIva').AsFloat),
            F(qLin.FieldByName('ImpNetoSIva').AsFloat),
-           ValorOrNull(sAlm) +
-             ', ' + ValorOrNull(Trim(qLin.FieldByName('Modelo').AsString)),
+           ValorOrNull(sAlm),
+           ValorOrNull(Trim(qLin.FieldByName('Modelo').AsString)),
+           sEsFacturada, sNumFac, sSerieFac, 'NULL',
            sAhora, sAhora, sUser, sUser]));
         Inc(Stats.Insertadas);
       except
@@ -862,6 +943,407 @@ begin
   begin
     EnlazarEmpresaCompra(Eng, 'fza_albaranes_compra', 'ALBC');
     Eng.Log('  albaranes de compra: datos de empresa emisora rellenados.');
+  end;
+end;
+
+procedure EnlazarAlbaranesDesdeFacturasCompra(Eng: TMigEngine);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text :=
+      'UPDATE fza_albaranes_compra a ' +
+      'JOIN fza_facturas_compra_lineas l ' +
+      '  ON l.NUMERO_ALBC_FACCLIN = a.NUMERO_ALBC ' +
+      ' AND l.SERIE_ALBC_FACCLIN = a.SERIE_ALBC ' +
+      'JOIN fza_facturas_compra f ' +
+      '  ON f.NUMERO_FACC = l.NUMERO_FACC_FACCLIN ' +
+      ' AND f.SERIE_FACC = l.SERIE_FACC_FACCLIN ' +
+      'SET a.ESTADO_ALBC = ''FACTURADO'', ' +
+      '    a.NUMERO_FAC_ALBC = f.NUMERO_FACC, ' +
+      '    a.SERIE_FAC_ALBC = f.SERIE_FACC ' +
+      'WHERE f.USUARIO_ALTA = :u';
+    q.ParamByName('u').AsString := Eng.Usuario;
+    q.ExecSQL;
+    q.SQL.Text :=
+      'UPDATE fza_albaranes_compra_lineas a ' +
+      'JOIN fza_facturas_compra_lineas l ' +
+      '  ON l.NUMERO_ALBC_FACCLIN = a.NUMERO_ALBC_ALBCLIN ' +
+      ' AND l.SERIE_ALBC_FACCLIN = a.SERIE_ALBC_ALBCLIN ' +
+      ' AND l.LINEA_ALBC_FACCLIN = a.LINEA_ALBCLIN ' +
+      'JOIN fza_facturas_compra f ' +
+      '  ON f.NUMERO_FACC = l.NUMERO_FACC_FACCLIN ' +
+      ' AND f.SERIE_FACC = l.SERIE_FACC_FACCLIN ' +
+      'SET a.ESFACTURADA_ALBCLIN = ''S'', ' +
+      '    a.NUMERO_FAC_ALBCLIN = f.NUMERO_FACC, ' +
+      '    a.SERIE_FAC_ALBCLIN = f.SERIE_FACC, ' +
+      '    a.LINEA_FAC_ALBCLIN = l.LINEA_FACCLIN ' +
+      'WHERE f.USUARIO_ALTA = :u';
+    q.ParamByName('u').AsString := Eng.Usuario;
+    q.ExecSQL;
+    q.SQL.Text :=
+      'UPDATE fza_facturas_compra f ' +
+      'LEFT JOIN ( ' +
+      '  SELECT NUMERO_FACC_FACCLIN, SERIE_FACC_FACCLIN, ' +
+      '         MAX(CAST(LINEA_FACCLIN AS UNSIGNED)) AS MAX_LINEA ' +
+      '  FROM fza_facturas_compra_lineas ' +
+      '  WHERE USUARIO_ALTA = :u ' +
+      '  GROUP BY NUMERO_FACC_FACCLIN, SERIE_FACC_FACCLIN ' +
+      ') l ON l.NUMERO_FACC_FACCLIN = f.NUMERO_FACC ' +
+      '   AND l.SERIE_FACC_FACCLIN = f.SERIE_FACC ' +
+      'SET f.CONTADOR_LINEAS_FACC = LPAD(COALESCE(l.MAX_LINEA, 0), 8, ''0'') ' +
+      'WHERE f.USUARIO_ALTA = :u';
+    q.ParamByName('u').AsString := Eng.Usuario;
+    q.ExecSQL;
+  finally
+    q.Free;
+  end;
+end;
+
+// =========================================================================
+//  3. Facturas de compra
+// =========================================================================
+
+procedure MigrarFacturasCompra(Eng: TMigEngine; var Stats: TMigStats);
+const
+  cSelCab =
+    'SELECT f.Empresa, f.Ejercicio, ISNULL(f.Serie, '''') AS Serie, ' +
+    '       f.NroFactura, f.Fecha, f.FechaValor, ' +
+    '       ISNULL(alm.Abreviatura, '''') AS AbrevAlm, ' +
+    '       ISNULL(f.Almacen, 0) AS Almacen, ' +
+    '       ISNULL(f.Proveedor, 0) AS Proveedor, ' +
+    '       ISNULL(f.RazonSocial, '''') AS RazonSocial, ' +
+    '       ISNULL(f.NIF, '''') AS NIF, ' +
+    '       ISNULL(f.Direccion1, '''') AS Direccion1, ' +
+    '       ISNULL(f.Direccion2, '''') AS Direccion2, ' +
+    '       ISNULL(f.Poblacion, '''') AS Poblacion, ' +
+    '       ISNULL(f.Provincia, '''') AS Provincia, ' +
+    '       ISNULL(f.CodPostal, '''') AS CodPostal, ' +
+    '       ISNULL(f.DocExterno, '''') AS DocExterno, ' +
+    '       ISNULL(f.TipoEfecto, 0) AS TipoEfecto, ' +
+    '       ISNULL(f.FormaPago, '''') AS FormaPago, ' +
+    '       ISNULL(f.Entidad, '''') AS Entidad, ' +
+    '       ISNULL(f.Oficina, '''') AS Oficina, ' +
+    '       ISNULL(f.DigitosControl, '''') AS DigitosControl, ' +
+    '       ISNULL(f.NroCuenta, '''') AS NroCuenta, ' +
+    '       ISNULL(f.IBAN, '''') AS IBAN, ' +
+    '       ISNULL(f.AgruparAlbaranes, '''') AS AgruparAlbaranes, ' +
+    '       CONVERT(varchar(2000), f.ObsFactura) AS ObsFactura, ' +
+    '       ISNULL(f.PorDtoComercial, 0) AS PorDtoComercial, ' +
+    '       ISNULL(f.ImpDtoComercial, 0) AS ImpDtoComercial, ' +
+    '       ISNULL(f.PorProntoPago, 0) AS PorProntoPago, ' +
+    '       ISNULL(f.ImpProntoPago, 0) AS ImpProntoPago, ' +
+    '       ISNULL(f.PorRappel, 0) AS PorRappel, ' +
+    '       ISNULL(f.ImpRappel, 0) AS ImpRappel, ' +
+    '       ISNULL(f.PorFinanciacion, 0) AS PorFinanciacion, ' +
+    '       ISNULL(f.ImpFinanciacion, 0) AS ImpFinanciacion, ' +
+    '       ISNULL(f.ImpPortes, 0) AS ImpPortes, ' +
+    '       ISNULL(f.PorRetencion, 0) AS PorRetencion, ' +
+    '       ISNULL(f.ImpRetencion, 0) AS ImpRetencion, ' +
+    '       ISNULL(f.ImpBrutoLineas, 0) AS ImpBrutoLineas, ' +
+    '       ISNULL(f.ImpBaseImp1, 0) AS ImpBaseImp1, ' +
+    '       ISNULL(f.PorIVA1, 0) AS PorIVA1, ' +
+    '       ISNULL(f.CuotaIVA1, 0) AS CuotaIVA1, ' +
+    '       ISNULL(f.ImpBaseImp2, 0) AS ImpBaseImp2, ' +
+    '       ISNULL(f.PorIVA2, 0) AS PorIVA2, ' +
+    '       ISNULL(f.CuotaIVA2, 0) AS CuotaIVA2, ' +
+    '       ISNULL(f.ImpBaseImp3, 0) AS ImpBaseImp3, ' +
+    '       ISNULL(f.PorIVA3, 0) AS PorIVA3, ' +
+    '       ISNULL(f.CuotaIVA3, 0) AS CuotaIVA3, ' +
+    '       ISNULL(f.ImpBaseImp4, 0) AS ImpBaseImp4, ' +
+    '       ISNULL(f.PorIVA4, 0) AS PorIVA4, ' +
+    '       ISNULL(f.CuotaIVA4, 0) AS CuotaIVA4, ' +
+    '       ISNULL(f.ImpBaseImp, 0) AS ImpBaseImp, ' +
+    '       ISNULL(f.TotalIVA, 0) AS TotalIVA, ' +
+    '       ISNULL(f.ImpFactura, 0) AS ImpFactura, ' +
+    '       ISNULL(f.ImpLiquido, 0) AS ImpLiquido, ' +
+    '       ISNULL(NULLIF(LTRIM(RTRIM(te.Nombre)), ''''), ' +
+    '              ISNULL(f.Temporada, '''')) AS TemporadaNombre ' +
+    'FROM dbo.ocfacpro f ' +
+    'LEFT JOIN dbo.ocalm alm ON alm.Empresa = f.Empresa ' +
+    '                       AND alm.Almacen = f.Almacen ' +
+    'LEFT JOIN dbo.octem te ON te.Temporada = f.Temporada';
+  cSelLin =
+    'SELECT l.Empresa, l.Ejercicio, l.Serie, l.NroFactura, l.Fila, ' +
+    '       l.Orden, l.Id, ' +
+    '       ROW_NUMBER() OVER (PARTITION BY l.Empresa, l.Ejercicio, ' +
+    '         l.Serie, l.NroFactura ORDER BY l.Fila, l.Orden, l.Id) ' +
+    '         * 10 AS LineaFactuzam, ' +
+    '       l.Articulo, l.Color, l.Talla, ' +
+    '       ISNULL(alml.Abreviatura, '''') AS AbrevAlmLin, ' +
+    '       ISNULL(l.Almacen, 0) AS AlmLin, ' +
+    '       ISNULL(l.Descripcion, '''') AS Descripcion, ' +
+    '       ISNULL(l.Cantidad, 0) AS Cantidad, ' +
+    '       ISNULL(l.PrecioSIva, 0) AS PrecioSIva, ' +
+    '       ISNULL(l.PrecioCIva, 0) AS PrecioCIva, ' +
+    '       ISNULL(l.ImpNetoSIva, 0) AS ImpNetoSIva, ' +
+    '       ISNULL(l.PorIVA, 0) AS PorIVA, ' +
+    '       ISNULL(l.EjercicioAlbaran, 0) AS EjercicioAlbaran, ' +
+    '       ISNULL(l.SerieAlbaran, '''') AS SerieAlbaran, ' +
+    '       ISNULL(l.NroAlbaran, 0) AS NroAlbaran, ' +
+    '       COALESCE(NULLIF(l.IdAlb, 0), l.Orden, 0) AS LineaAlbaran, ' +
+    '       CASE ' +
+    '         WHEN l.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(l.Color)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
+    '         WHEN co.Descripcion IS NOT NULL ' +
+    '           AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' ' +
+    '           THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
+    '         ELSE ''0'' ' +
+    '       END AS DescColor, ' +
+    '       (SELECT TOP 1 ISNULL(ap.Modelo, '''') FROM dbo.ocartp ap ' +
+    '         WHERE ap.Articulo = l.Articulo) AS Modelo ' +
+    'FROM dbo.ocfacproart l ' +
+    'INNER JOIN dbo.ocfacpro f ON f.Empresa = l.Empresa ' +
+    '                         AND f.Ejercicio = l.Ejercicio ' +
+    '                         AND f.Serie = l.Serie ' +
+    '                         AND f.NroFactura = l.NroFactura ' +
+    'LEFT JOIN dbo.ocalm alml ON alml.Empresa = l.Empresa ' +
+    '                        AND alml.Almacen = l.Almacen ' +
+    'LEFT JOIN dbo.ocartcol ac ON ac.Articulo = l.Articulo ' +
+    '                         AND ac.Color    = l.Color ' +
+    'LEFT JOIN dbo.occolor co ON co.ColorBasico = ac.ColorBasico';
+  cColsCab =
+    'NUMERO_FACC, SERIE_FACC, FECHA_FACC, FECHA_VALOR_FACC, ESTADO_FACC, ' +
+    'DOC_EXTERNO_FACC, REF_PROVEEDOR_FACC, CODIGO_EMP_FACC, CODIGO_PRV_FACC, ' +
+    'RAZON_SOCIAL_PRV_FACC, NIF_PRV_FACC, DIRECCION1_PRV_FACC, ' +
+    'DIRECCION2_PRV_FACC, POBLACION_PRV_FACC, PROVINCIA_PRV_FACC, ' +
+    'CODIGO_POSTAL_PRV_FACC, CODIGO_ALM_FACC, ESIVA_RECARGO_COMPRAS_FACC, ' +
+    'PORCENTAJE_IVAN_FACC, TOTAL_BASEI_IVAN_FACC, TOTAL_IVAN_FACC, ' +
+    'PORCENTAJE_REN_FACC, TOTAL_REN_FACC, PORCENTAJE_IVAR_FACC, ' +
+    'TOTAL_BASEI_IVAR_FACC, TOTAL_IVAR_FACC, PORCENTAJE_RER_FACC, ' +
+    'TOTAL_RER_FACC, PORCENTAJE_IVAS_FACC, TOTAL_BASEI_IVAS_FACC, ' +
+    'TOTAL_IVAS_FACC, PORCENTAJE_RES_FACC, TOTAL_RES_FACC, ' +
+    'PORCENTAJE_IVAE_FACC, TOTAL_BASEI_IVAE_FACC, TOTAL_IVAE_FACC, ' +
+    'PORCENTAJE_REE_FACC, TOTAL_REE_FACC, PORCENTAJE_DTO_COMERCIAL_FACC, ' +
+    'TOTAL_DTO_COMERCIAL_FACC, PORCENTAJE_PRONTO_PAGO_FACC, ' +
+    'TOTAL_PRONTO_PAGO_FACC, PORCENTAJE_RAPPEL_FACC, TOTAL_RAPPEL_FACC, ' +
+    'PORCENTAJE_FINANCIACION_FACC, TOTAL_FINANCIACION_FACC, ' +
+    'TOTAL_PORTES_FACC, PORCENTAJE_RETENCION_FACC, TOTAL_RETENCION_FACC, ' +
+    'TOTAL_BRUTO_FACC, TOTAL_BASES_FACC, TOTAL_IMPUESTOS_FACC, TOTAL_FACC, ' +
+    'TOTAL_LIQUIDO_FACC, FORMA_PAGO_FACC, ID_PV_TEMPORADA_FACC, ' +
+    'ESAGRUPAR_ALBARANES_FACC, ' +
+    'ENTIDAD_FACC, OFICINA_FACC, DIGITO_CONTROL_FACC, CUENTA_FACC, ' +
+    'IBAN_FACC, COMENTARIOS_FACC, OBSERVACIONES_FACC, ESPIVOTE_HORIZONTAL_FACC, ' +
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
+  cColsLin =
+    'NUMERO_FACC_FACCLIN, SERIE_FACC_FACCLIN, LINEA_FACCLIN, ' +
+    'NUMERO_ALBC_FACCLIN, SERIE_ALBC_FACCLIN, LINEA_ALBC_FACCLIN, ' +
+    'CODIGO_ART_FACCLIN, CODIGO_UNIDAD_FACCLIN, REF_PRV_FACCLIN, ' +
+    'ID_AC_PIVOT_FACCLIN, DESCRIPCION_ARTICULO_FACCLIN, CANTIDAD_FACCLIN, ' +
+    'TOTAL_UNIDADES_FACCLIN, TIPO_IVA_ARTICULO_FACCLIN, ' +
+    'PORCENTAJE_IVA_FACCLIN, PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN, ' +
+    'PRECIO_COMPRA_CIVA_ARTICULO_FACCLIN, TOTAL_FACCLIN, ' +
+    'CODIGO_ALMACEN_FACCLIN, DESCRIPCION_VARIACION_FACCLIN, ' +
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
+var
+  qCab, qLin: TUniQuery;
+  bCab, bLin: TBulkInsert;
+  oMapTal, oMapTemp: TDictionary<string, Integer>;
+  sAhora, sUser: string;
+  sNum, sSerie, sAlm, sArt, sUni, sLinea, sDocExterno: string;
+  sNumAlb, sSerieAlb, sLineaAlb, sVariacion, sAgrupar: string;
+  iva: TIvaCompra;
+  fTotal: Double;
+begin
+  AsegurarEsquemaFacturasCompra(Eng);
+  BorrarPorUsuario(Eng, 'fza_facturas_compra_lineas');
+  BorrarPorUsuario(Eng, 'fza_facturas_compra');
+  sAhora := DateTimeASQL(Now);
+  sUser := ValorOrNull(Eng.Usuario);
+  bCab := TBulkInsert.Create(Eng.ConDst, 'fza_facturas_compra', cColsCab,
+                             BATCH);
+  qCab := NuevoQOrigen(Eng, cSelCab);
+  qCab.UniDirectional := True;
+  oMapTemp := TDictionary<string, Integer>.Create;
+  try
+    CargarMapaTemporada(Eng, oMapTemp);
+    Eng.Log('  compras factura 1/2: cabeceras (ocfacpro)...');
+    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocfacpro'));
+    qCab.Open;
+    while not qCab.Eof do
+    begin
+      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      begin
+        Eng.Log('  Cancelacion detectada en facturas de compra...');
+        Break;
+      end;
+      Inc(Stats.Leidas);
+      Eng.IncRow;
+      sSerie := Format('%d.%s', [qCab.FieldByName('Ejercicio').AsInteger,
+                  Trim(qCab.FieldByName('Serie').AsString)]);
+      sNum := Format('%.6d', [qCab.FieldByName('NroFactura').AsInteger]);
+      sAlm := UpperCase(Trim(qCab.FieldByName('AbrevAlm').AsString));
+      if sAlm = '' then
+        sAlm := IntToStr(qCab.FieldByName('Almacen').AsInteger);
+      sDocExterno := Trim(qCab.FieldByName('DocExterno').AsString);
+      sAgrupar := UpperCase(Trim(qCab.FieldByName('AgruparAlbaranes').AsString));
+      if sAgrupar <> 'S' then
+        sAgrupar := 'N';
+      CalcularIvaCompra(qCab, iva);
+      fTotal := qCab.FieldByName('ImpLiquido').AsFloat;
+      if fTotal = 0 then
+        fTotal := qCab.FieldByName('ImpFactura').AsFloat;
+      try
+        bCab.Add(UnirValores([
+          ValorOrNull(sNum), ValorOrNull(sSerie),
+          FechaCampoASQL(qCab, 'Fecha'), FechaCampoASQL(qCab, 'FechaValor'),
+          ValorOrNull('ABIERTA'),
+          ValorOrNull(Copy(sDocExterno, 1, 50)),
+          ValorOrNull(Copy(sDocExterno, 1, 50)),
+          ValorOrNull(IntToStr(qCab.FieldByName('Empresa').AsInteger)),
+          ValorOrNull(Trim(qCab.FieldByName('Proveedor').AsString)),
+          ValorOrNull(Copy(Trim(qCab.FieldByName('RazonSocial').AsString), 1, 200)),
+          ValorOrNull(Trim(qCab.FieldByName('NIF').AsString)),
+          ValorOrNull(Copy(Trim(qCab.FieldByName('Direccion1').AsString), 1, 200)),
+          ValorOrNull(Copy(Trim(qCab.FieldByName('Direccion2').AsString), 1, 200)),
+          ValorOrNull(Copy(Trim(qCab.FieldByName('Poblacion').AsString), 1, 200)),
+          ValorOrNull(Copy(Trim(qCab.FieldByName('Provincia').AsString), 1, 200)),
+          ValorOrNull(Trim(qCab.FieldByName('CodPostal').AsString)),
+          ValorOrNull(sAlm), ValorOrNull('N'),
+          F(iva.Pn), F(iva.Bn), F(iva.Tn), F(0), F(0),
+          F(iva.Pr), F(iva.Br), F(iva.Tr), F(0), F(0),
+          F(iva.Ps), F(iva.Bs), F(iva.Ts), F(0), F(0),
+          F(iva.Pe), F(iva.Be), F(iva.Te), F(0), F(0),
+          F(qCab.FieldByName('PorDtoComercial').AsFloat),
+          F(qCab.FieldByName('ImpDtoComercial').AsFloat),
+          F(qCab.FieldByName('PorProntoPago').AsFloat),
+          F(qCab.FieldByName('ImpProntoPago').AsFloat),
+          F(qCab.FieldByName('PorRappel').AsFloat),
+          F(qCab.FieldByName('ImpRappel').AsFloat),
+          F(qCab.FieldByName('PorFinanciacion').AsFloat),
+          F(qCab.FieldByName('ImpFinanciacion').AsFloat),
+          F(qCab.FieldByName('ImpPortes').AsFloat),
+          F(qCab.FieldByName('PorRetencion').AsFloat),
+          F(qCab.FieldByName('ImpRetencion').AsFloat),
+          F(qCab.FieldByName('ImpBrutoLineas').AsFloat),
+          F(qCab.FieldByName('ImpBaseImp').AsFloat),
+          F(qCab.FieldByName('TotalIVA').AsFloat),
+          F(qCab.FieldByName('ImpFactura').AsFloat),
+          F(fTotal), ValorOrNull(CodigoFormaPagoCompra(qCab)),
+          TempPvToken(oMapTemp,
+                      qCab.FieldByName('TemporadaNombre').AsString),
+          ValorOrNull(sAgrupar),
+          ValorOrNull(Copy(Trim(qCab.FieldByName('Entidad').AsString), 1, 4)),
+          ValorOrNull(Copy(Trim(qCab.FieldByName('Oficina').AsString), 1, 4)),
+          ValorOrNull(Copy(Trim(qCab.FieldByName('DigitosControl').AsString), 1, 2)),
+          ValorOrNull(Copy(Trim(qCab.FieldByName('NroCuenta').AsString), 1, 10)),
+          ValorOrNull(Copy(Trim(qCab.FieldByName('IBAN').AsString), 1, 34)),
+          ValorOrNull(Copy(Trim(qCab.FieldByName('ObsFactura').AsString), 1, 1000)),
+          ValorOrNull(Copy(Trim(qCab.FieldByName('ObsFactura').AsString), 1, 2000)),
+          ValorOrNull('N'), sAhora, sAhora, sUser, sUser]));
+        Inc(Stats.Insertadas);
+      except
+        on E: Exception do
+        begin
+          Inc(Stats.Errores);
+          Eng.LogError('factura_compra', sSerie + '/' + sNum, E.Message, '',
+            'requiere Empresas/Proveedores/Almacenes migrados');
+        end;
+      end;
+      qCab.Next;
+    end;
+    bCab.FlushPendiente;
+  finally
+    bCab.Free;
+    qCab.Free;
+    oMapTemp.Free;
+  end;
+  oMapTal := TDictionary<string, Integer>.Create;
+  CargarMapaTallaje(Eng, oMapTal);
+  bLin := TBulkInsert.Create(Eng.ConDst, 'fza_facturas_compra_lineas',
+                             cColsLin, BATCH);
+  qLin := NuevoQOrigen(Eng, cSelLin);
+  qLin.UniDirectional := True;
+  try
+    Eng.Log('  compras factura 2/2: lineas (ocfacproart)...');
+    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocfacproart'));
+    qLin.Open;
+    while not qLin.Eof do
+    begin
+      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      begin
+        Eng.Log('  Cancelacion detectada en lineas de factura de compra...');
+        Break;
+      end;
+      Inc(Stats.Leidas);
+      Eng.IncRow;
+      sSerie := Format('%d.%s', [qLin.FieldByName('Ejercicio').AsInteger,
+                  Trim(qLin.FieldByName('Serie').AsString)]);
+      sNum := Format('%.6d', [qLin.FieldByName('NroFactura').AsInteger]);
+      sLinea := Format('%.4d',
+                 [qLin.FieldByName('LineaFactuzam').AsInteger]);
+      sArt := Trim(qLin.FieldByName('Articulo').AsString);
+      sUni := ConstruirCodigoUnidad(sArt,
+                Trim(qLin.FieldByName('DescColor').AsString),
+                Trim(qLin.FieldByName('Talla').AsString));
+      sAlm := UpperCase(Trim(qLin.FieldByName('AbrevAlmLin').AsString));
+      if sAlm = '' then
+        sAlm := IntToStr(qLin.FieldByName('AlmLin').AsInteger);
+      if qLin.FieldByName('NroAlbaran').AsInteger > 0 then
+      begin
+        sNumAlb := ValorOrNull(Format('%.6d',
+                     [qLin.FieldByName('NroAlbaran').AsInteger]));
+        sSerieAlb := ValorOrNull(Format('%d.%s',
+                       [qLin.FieldByName('EjercicioAlbaran').AsInteger,
+                        Trim(qLin.FieldByName('SerieAlbaran').AsString)]));
+        if qLin.FieldByName('LineaAlbaran').AsInteger > 0 then
+          sLineaAlb := ValorOrNull(Format('%.4d',
+                         [qLin.FieldByName('LineaAlbaran').AsInteger]))
+        else
+          sLineaAlb := 'NULL';
+      end
+      else
+      begin
+        sNumAlb := 'NULL';
+        sSerieAlb := 'NULL';
+        sLineaAlb := 'NULL';
+      end;
+      sVariacion := Trim(qLin.FieldByName('DescColor').AsString) + '/' +
+                    Trim(qLin.FieldByName('Talla').AsString);
+      try
+        bLin.Add(UnirValores([
+          ValorOrNull(sNum), ValorOrNull(sSerie), ValorOrNull(sLinea),
+          sNumAlb, sSerieAlb, sLineaAlb,
+          ValorOrNull(sArt), ValorOrNull(sUni),
+          ValorOrNull(Trim(qLin.FieldByName('Modelo').AsString)),
+          AcPivotToken(oMapTal, sArt),
+          ValorOrNull(Copy(Trim(qLin.FieldByName('Descripcion').AsString), 1, 100)),
+          F(qLin.FieldByName('Cantidad').AsFloat),
+          F(qLin.FieldByName('Cantidad').AsFloat),
+          ValorOrNull(TipoIvaArticuloCompra(qLin.FieldByName('PorIVA').AsFloat)),
+          F(qLin.FieldByName('PorIVA').AsFloat),
+          F(qLin.FieldByName('PrecioSIva').AsFloat),
+          F(qLin.FieldByName('PrecioCIva').AsFloat),
+          F(qLin.FieldByName('ImpNetoSIva').AsFloat),
+          ValorOrNull(sAlm), ValorOrNull(Copy(sVariacion, 1, 200)),
+          sAhora, sAhora, sUser, sUser]));
+        Inc(Stats.Insertadas);
+      except
+        on E: Exception do
+        begin
+          Inc(Stats.Errores);
+          Eng.LogError('factura_compra_linea', sSerie + '/' + sNum, E.Message,
+            Format('orden=%s', [sLinea]), '');
+        end;
+      end;
+      qLin.Next;
+    end;
+    bLin.FlushPendiente;
+    Eng.Log('  facturas de compra: lineas enviadas a destino = %d.',
+            [bLin.TotalInsertadas]);
+  finally
+    bLin.Free;
+    qLin.Free;
+    oMapTal.Free;
+  end;
+  if not Eng.IsCancelado then
+  begin
+    EnlazarEmpresaCompra(Eng, 'fza_facturas_compra', 'FACC');
+    EnlazarAlbaranesDesdeFacturasCompra(Eng);
+    Eng.Log('  facturas de compra: empresa, contadores y albaranes enlazados.');
   end;
 end;
 

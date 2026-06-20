@@ -136,7 +136,9 @@ Configura en este orden antes de empezar a trabajar:
    (*Otros ▸ Contadores*).
 4. **Almacenes y Cajas** — al menos un almacén y su caja de venta
    (*Archivo ▸ Almacenes*).
-5. **Formas de pago** (general y de caja).
+5. **Formas de pago** — documentos en
+   *Otros ▸ Formas de pago documentos* y caja en
+   *Caja ▸ Formas de Pago Caja*.
 6. **Tablas auxiliares y catálogo** — familias, tallas/atributos,
    tarifas y artículos (*Archivo ▸ Tablas Auxiliares*; o mediante la
    [migración desde el software anterior](10-migracion-legacy.md)).
