@@ -93,10 +93,19 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := Eng.ConDst;
-    q.SQL.Text := 'DELETE FROM fza_facturas_lineas WHERE USUARIO_ALTA = :u';
+    q.SQL.Text :=
+      'DELETE l FROM fza_facturas_lineas l ' +
+      'JOIN fza_facturas f ON f.NUMERO_FAC = l.NUMERO_FAC_FACLIN ' +
+      '                    AND f.SERIE_FAC = l.SERIE_FAC_FACLIN ' +
+      'WHERE l.USUARIO_ALTA = :u ' +
+      '  AND f.USUARIO_ALTA = :u ' +
+      '  AND COALESCE(f.TIPO_FAC, '''') = ''SIMPLIFICADA''';
     q.ParamByName('u').AsString := Eng.Usuario;
     q.ExecSQL;
-    q.SQL.Text := 'DELETE FROM fza_facturas WHERE USUARIO_ALTA = :u';
+    q.SQL.Text :=
+      'DELETE FROM fza_facturas ' +
+      'WHERE USUARIO_ALTA = :u ' +
+      '  AND COALESCE(TIPO_FAC, '''') = ''SIMPLIFICADA''';
     q.ParamByName('u').AsString := Eng.Usuario;
     q.ExecSQL;
   finally
