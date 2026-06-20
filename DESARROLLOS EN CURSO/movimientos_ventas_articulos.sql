@@ -163,6 +163,37 @@ BEGIN
        SET g.`DESC_GRP` = COALESCE(f.`DESCRIPCION_FAM`, f.`NOMBRE_FAM_FAM`,
                                    g.`COD_GRP`);
 
+    -- Universo de artículos por los filtros que NO dependen de movimientos
+    -- (familia, proveedor, temporada, lista). Se materializa ANTES de los
+    -- escaneos de compras/ventas/coste para restringirlos al conjunto pedido
+    -- en vez de agregar todo el catálogo y descartar al final. El filtro
+    -- "Inicio compras" se aplica después sobre este universo (tmp_mva_arts).
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts0`;
+    CREATE TEMPORARY TABLE `tmp_mva_arts0` (
+        `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
+    );
+    INSERT IGNORE INTO `tmp_mva_arts0` (`CODIGO_ART`)
+    SELECT a.`CODIGO_ART_ART`
+      FROM `fza_articulos` a
+     WHERE a.`ESACTIVO_ART` = 'S'
+       AND (p_ARTICULOS = ''
+            OR FIND_IN_SET(a.`CODIGO_ART_ART`, p_ARTICULOS))
+       AND (p_FAMILIAS = ''
+            OR a.`CODIGO_FAM_ART` IN (SELECT `CODIGO_FAM` FROM `tmp_mva_fam`))
+       AND (p_PROVEEDORES = ''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_proveedores` ap
+                        WHERE ap.`CODIGO_ART_AP` = a.`CODIGO_ART_ART`
+                          AND FIND_IN_SET(ap.`CODIGO_PRV_AP`, p_PROVEEDORES)))
+       AND (p_TEMPORADAS = ''
+            OR EXISTS (SELECT 1 FROM `fza_articulos_propiedades` tp
+                        LEFT JOIN `fza_propiedades_valores` tpv
+                          ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
+                        WHERE tp.`CODIGO_ART_ART` = a.`CODIGO_ART_ART`
+                          AND tp.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
+                          AND FIND_IN_SET(
+                                COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`),
+                                p_TEMPORADAS)));
+
     -- Entradas de stock por artículo y, si procede, almacén: totales de
     -- unidades y coste. Se cuentan las entradas que representan adquisición
     -- REAL de género: compra (AC) y albarán de entrada (AE). Se EXCLUYEN los
@@ -191,6 +222,9 @@ BEGIN
        AND m.`TIPO_MOV` = 'E'
        AND m.`TIPO_DOC_MOV` IN ('AC', 'AE')
        AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
+       -- Solo los artículos del informe: no agregar las compras de todo el
+       -- catálogo para descartarlas al unir con tmp_mva_base.
+       AND sk.`CODIGO_ART_SKU` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
      GROUP BY sk.`CODIGO_ART_SKU`, IF(v_por_alm, m.`CODIGO_ALM_MOV`, '');
 
     -- Primera ENTRADA por artículo, para el filtro Inicio compras: el artículo
@@ -213,6 +247,8 @@ BEGIN
        AND m.`TIPO_MOV` = 'E'
        AND m.`TIPO_DOC_MOV` IN ('AC', 'AE')
        AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
+       -- Solo los artículos del informe (mismo universo que las entradas).
+       AND sk.`CODIGO_ART_SKU` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
      GROUP BY sk.`CODIGO_ART_SKU`;
 
     -- Ventas del periodo por artículo y, si procede, almacén (líneas de
@@ -243,40 +279,25 @@ BEGIN
      WHERE COALESCE(fl.`CODIGO_ALM_FACLIN`, f.`CODIGO_ALM_FAC`)
            IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
        AND DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta
+       -- Solo los artículos del informe: no agregar las ventas de todo el
+       -- catálogo para descartarlas al unir con tmp_mva_base.
+       AND sk.`CODIGO_ART_SKU` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
      GROUP BY sk.`CODIGO_ART_SKU`,
               IF(v_por_alm, COALESCE(fl.`CODIGO_ALM_FACLIN`, f.`CODIGO_ALM_FAC`), '');
 
-    -- Conjunto de artículos activos que pasan familia, proveedor, temporada,
-    -- lista de artículos e Inicio compras (primera compra >= v_ini_cmp).
+    -- Universo final = tmp_mva_arts0 (familia/proveedor/temporada/lista) más
+    -- el filtro Inicio compras (primera compra AC/AE >= v_ini_cmp).
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts`;
     CREATE TEMPORARY TABLE `tmp_mva_arts` (
         `CODIGO_ART` VARCHAR(20) NOT NULL PRIMARY KEY
     );
     INSERT IGNORE INTO `tmp_mva_arts` (`CODIGO_ART`)
-    SELECT a.`CODIGO_ART_ART`
-      FROM `fza_articulos` a
-     WHERE a.`ESACTIVO_ART` = 'S'
-       AND (p_ARTICULOS = ''
-            OR FIND_IN_SET(a.`CODIGO_ART_ART`, p_ARTICULOS))
-       AND (p_FAMILIAS = ''
-            OR a.`CODIGO_FAM_ART` IN (SELECT `CODIGO_FAM` FROM `tmp_mva_fam`))
-       AND (p_PROVEEDORES = ''
-            OR EXISTS (SELECT 1 FROM `fza_articulos_proveedores` ap
-                        WHERE ap.`CODIGO_ART_AP` = a.`CODIGO_ART_ART`
-                          AND FIND_IN_SET(ap.`CODIGO_PRV_AP`, p_PROVEEDORES)))
-       AND (p_TEMPORADAS = ''
-            OR EXISTS (SELECT 1 FROM `fza_articulos_propiedades` tp
-                        LEFT JOIN `fza_propiedades_valores` tpv
-                          ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
-                        WHERE tp.`CODIGO_ART_ART` = a.`CODIGO_ART_ART`
-                          AND tp.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
-                          AND FIND_IN_SET(
-                                COALESCE(tpv.`PV`, tp.`VALOR_LIBRE_ARTPROP`),
-                                p_TEMPORADAS)))
-       AND (NOT v_filtra_cmp
-            OR EXISTS (SELECT 1 FROM `tmp_mva_primera` pc
-                        WHERE pc.`CODIGO_ART` = a.`CODIGO_ART_ART`
-                          AND pc.`PRIMERA` >= v_ini_cmp));
+    SELECT a0.`CODIGO_ART`
+      FROM `tmp_mva_arts0` a0
+     WHERE NOT v_filtra_cmp
+        OR EXISTS (SELECT 1 FROM `tmp_mva_primera` pc
+                    WHERE pc.`CODIGO_ART` = a0.`CODIGO_ART`
+                      AND pc.`PRIMERA` >= v_ini_cmp);
 
     -- Coste medio ponderado (PMP) por artículo desde el stock actual de los
     -- almacenes filtrados (respaldo: último precio de compra del proveedor).
@@ -293,6 +314,8 @@ BEGIN
       JOIN `fza_articulos_skus` sk
         ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
      WHERE st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
+       -- Solo los artículos del informe (se une por artículo ya filtrado).
+       AND sk.`CODIGO_ART_SKU` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
      GROUP BY sk.`CODIGO_ART_SKU`;
 
     -- Universo de filas del informe: (artículo, almacén) presentes en compras
@@ -448,6 +471,9 @@ BEGIN
                    MAX(t.`PRECIO_FINAL_ARTTAR`) AS `PVP`
               FROM `fza_articulos_tarifas` t
              WHERE IFNULL(t.`CODIGO_UNIDAD_ARTTAR`, '') = ''
+               -- Solo los artículos del informe (se une por artículo).
+               AND t.`CODIGO_ART_ARTTAR` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
                AND t.`ESACTIVO_ARTTAR` = 'S'
                AND (t.`FECHA_DESDE_ARTTAR` IS NULL
                     OR t.`FECHA_DESDE_ARTTAR` <= CURRENT_DATE)
@@ -465,6 +491,9 @@ BEGIN
               LEFT JOIN `fza_proveedores` pr
                 ON pr.`CODIGO_PRV_PRV` = ap.`CODIGO_PRV_AP`
              WHERE ap.`ESPROVEEDORPRINCIPAL_AP` = 'S'
+               -- Solo los artículos del informe (se une por artículo).
+               AND ap.`CODIGO_ART_AP` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
              GROUP BY ap.`CODIGO_ART_AP`
            ) prov ON prov.`CODIGO_ART` = b.`CODIGO_ART`
       -- Temporada a nivel ARTICULO (Fase 3): este informe es por articulo,
@@ -479,6 +508,9 @@ BEGIN
                 ON tpv.`ID_PV_ARTPROP` = tp.`ID_PV_ARTPROP`
              WHERE tp.`CODIGO_PROP_ARTPROP` = 'TEMPORADA'
                AND tp.`CODIGO_UNIDAD_ARTPROP` = ''
+               -- Solo los artículos del informe (se une por artículo).
+               AND tp.`CODIGO_ART_ART` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
              GROUP BY tp.`CODIGO_ART_ART`
            ) tmp ON tmp.`CODIGO_ART` = b.`CODIGO_ART`
      -- "Solo artículos con ventas": descarta las filas sin ventas en el
@@ -493,6 +525,7 @@ BEGIN
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_base`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_coste`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts0`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ven`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_primera`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ent`;
