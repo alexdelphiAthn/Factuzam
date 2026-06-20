@@ -440,6 +440,10 @@ BEGIN
                                0 AS `DELTA_HASTA`
                           FROM `fza_articulos_stockactual` st2
                          WHERE st2.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+                           -- Solo los SKUs del informe (IDX_STK_UNIDAD): no
+                           -- recorrer todo el stock para descartarlo al unir.
+                           AND st2.`CODIGO_UNIDAD_STK` IN
+                               (SELECT `CODIGO_UNIDAD` FROM `tmp_bat_sku`)
                         UNION ALL
                         SELECT m.`CODIGO_UNIDAD_MOV`,
                                IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''),
@@ -490,6 +494,14 @@ BEGIN
                           FROM `fza_movimientos_almacen` m
                          WHERE m.`ESACTIVO_MOV` = 'S'
                            AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+                           -- Solo los SKUs del informe (igual que el LEFT JOIN
+                           -- de abajo): no agrega TODA la tabla de movimientos
+                           -- para descartarla. Indexado por CODIGO_UNIDAD_MOV.
+                           AND m.`CODIGO_UNIDAD_MOV` IN
+                               (SELECT `CODIGO_UNIDAD` FROM `tmp_bat_sku`)
+                           -- Movs. anteriores a 'desde' aportan 0 a las 16
+                           -- medidas (todas exigen fecha >= desde): se podan.
+                           AND m.`FECHA_MOV` >= v_desde
                        ) u
                  GROUP BY u.`CODIGO_UNIDAD`, u.`ALM`
                ) mv ON mv.`CODIGO_UNIDAD` = s.`CODIGO_UNIDAD`
@@ -813,6 +825,9 @@ BEGIN
                    MAX(t.`PRECIO_FINAL_ARTTAR`) AS `PVP`
               FROM `fza_articulos_tarifas` t
              WHERE t.`CODIGO_TAR_ARTTAR` = v_tarifa
+               -- Solo los artículos del informe (se une por artículo filtrado).
+               AND t.`CODIGO_ART_ARTTAR` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_bat_arts`)
                AND IFNULL(t.`CODIGO_UNIDAD_ARTTAR`, '') = ''
                AND t.`ESACTIVO_ARTTAR` = 'S'
                AND (t.`FECHA_DESDE_ARTTAR` IS NULL
@@ -831,6 +846,9 @@ BEGIN
               JOIN `fza_articulos_skus` sk
                 ON sk.`CODIGO_UNIDAD_SKU` = st.`CODIGO_UNIDAD_STK`
              WHERE st.`CODIGO_ALM_STK` IN (SELECT `CODIGO_ALM` FROM `tmp_bat_alm`)
+               -- Solo los SKUs del informe (se une por artículo ya filtrado).
+               AND st.`CODIGO_UNIDAD_STK` IN
+                   (SELECT `CODIGO_UNIDAD` FROM `tmp_bat_sku`)
              GROUP BY sk.`CODIGO_ART_SKU`
            ) cst ON cst.`CODIGO_ART` = p.`CODIGO_ART`
       LEFT JOIN (
@@ -843,6 +861,9 @@ BEGIN
               LEFT JOIN `fza_proveedores` pr
                 ON pr.`CODIGO_PRV_PRV` = ap.`CODIGO_PRV_AP`
              WHERE ap.`ESPROVEEDORPRINCIPAL_AP` = 'S'
+               -- Solo los artículos del informe (se une por artículo filtrado).
+               AND ap.`CODIGO_ART_AP` IN
+                   (SELECT `CODIGO_ART` FROM `tmp_bat_arts`)
              GROUP BY ap.`CODIGO_ART_AP`
            ) prov ON prov.`CODIGO_ART` = p.`CODIGO_ART`
       -- Temporada EFECTIVA por color (Fase 3): la vista de propiedades
