@@ -393,7 +393,18 @@ end;
 
 procedure TfrmMtoCajaPagosHist.AplicarLayoutInstanciaBusqueda;
 begin
-  inherited;
+  tsLista.TabVisible := True;
+  tsFicha.TabVisible := False;
+  tsPerfil.TabVisible := False;
+  pcPantalla.ActivePage := tsLista;
+  edtBusqGlobal.Visible := False;
+  lblTextoaBuscar.Visible := False;
+  rbBBDD.Visible := False;
+  rbGrid.Visible := False;
+  sbExportExcel.Visible := False;
+  sbGrabarGrid.Visible := False;
+  sbResetGrid.Visible := False;
+  sbBestFit.Visible := False;
   pnlFiltrosCaja.Visible := False;
 end;
 

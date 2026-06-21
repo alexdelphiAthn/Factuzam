@@ -1718,6 +1718,11 @@
         ShortCut = 49225
         OnClick = mnuInventariosClick
       end
+      object mnuDocumentosTrabajo: TMenuItem
+        Caption = 'Documentos de Trabajo'
+        ShortCut = 16471
+        OnClick = mnuDocumentosTrabajoClick
+      end
       object mnuAlmacenInformes: TMenuItem
         Caption = 'Informes'
         object mnuBalanceAlmacenHorizontal: TMenuItem
@@ -2703,7 +2708,7 @@
             249F01070E420000000000000000000000000000000000000000000000000000
             0000000000000000000000000000000000000000000000000000}
           Caption = 'Perfiles'
-          ShortCut = 16471
+          ShortCut = 57424
           OnClick = mnuPerfilesClick
         end
         object mnuPermisos: TMenuItem

@@ -701,6 +701,13 @@
             <Form>dmMovimientosAlmacen</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoDocumentosTrabajo.pas">
+            <Form>frmMtoDocumentosTrabajo</Form>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataDocumentosTrabajo.pas">
+            <Form>dmDocumentosTrabajo</Form>
+            <DesignClass>TdmDocumentosTrabajo</DesignClass>
+        </DCCReference>
         <DCCReference Include="src\Forms\inMtoDepositosCliente.pas">
             <Form>frmMtoDepositosCliente</Form>
         </DCCReference>
@@ -887,6 +894,7 @@
             <Form>frmModalSelFamilia</Form>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibFotos.pas"/>
+        <DCCReference Include="src\Lib\inLibDocumentosTrabajo.pas"/>
         <DCCReference Include="src\Lib\inLibImagen.pas"/>
         <DCCReference Include="src\Lib\inLibFotosNube.pas"/>
         <DCCReference Include="src\Forms\inMtoFotoArticulo.pas">

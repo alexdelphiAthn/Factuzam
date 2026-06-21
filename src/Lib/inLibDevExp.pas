@@ -191,6 +191,34 @@ begin
     Result := nil;
 end;
 
+function CamposClaveDisponibles(ADataSet: TDataSet;
+                                const ACamposClave: string): Boolean;
+var
+  Campos :TStringList;
+  i      :Integer;
+  sCampo :string;
+begin
+  Result := Assigned(ADataSet) and (Trim(ACamposClave) <> '');
+  if Result then
+  begin
+    Campos := TStringList.Create;
+    try
+      Campos.StrictDelimiter := True;
+      Campos.Delimiter := ';';
+      Campos.DelimitedText := ACamposClave;
+      i := 0;
+      while Result and (i < Campos.Count) do
+      begin
+        sCampo := Trim(Campos[i]);
+        Result := (sCampo <> '') and Assigned(ADataSet.FindField(sCampo));
+        Inc(i);
+      end;
+    finally
+      FreeAndNil(Campos);
+    end;
+  end;
+end;
+
 function CrearItemsFaltantes(AView: TcxCustomGridTableView): Integer;
 var
   oCtrl       : TcxGridDBDataController;
@@ -441,11 +469,29 @@ begin
   end;
 
   sCamposClave := oDBDataCtrl.KeyFieldNames;
+  if (sCamposClave <> '') and
+     (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
+  begin
+    Log.LogWarning(Format('RestaurarFocoGrid: vista=%s clave="%s" ' +
+      'no disponible en la SELECT activa',
+      [AcxgrdtvVista.Name, sCamposClave]));
+    oDBDataCtrl.KeyFieldNames := '';
+    sCamposClave := '';
+  end;
   if sCamposClave = '' then
   begin
     sCamposClave := ObtenerClavePrimaria(oDBDataCtrl.DataSet);
-    if sCamposClave <> '' then
+    if (sCamposClave <> '') and
+       CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave) then
       oDBDataCtrl.KeyFieldNames := sCamposClave;
+    if (sCamposClave <> '') and
+       (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
+    begin
+      Log.LogWarning(Format('RestaurarFocoGrid: vista=%s clave="%s" ' +
+        'descartada porque faltan campos',
+        [AcxgrdtvVista.Name, sCamposClave]));
+      sCamposClave := '';
+    end;
   end;
 
   if sCamposClave = '' then
@@ -509,11 +555,29 @@ begin
 
   // Obtenemos la clave (con la función que vimos antes de UniDAC)
   sCamposClave := oDBDataCtrl.KeyFieldNames;
+  if (sCamposClave <> '') and
+     (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
+  begin
+    Log.LogWarning(Format('CollectSettingsColumnProfile: vista=%s ' +
+      'clave="%s" no disponible en la SELECT activa',
+      [AcxgrdtvVista.Name, sCamposClave]));
+    oDBDataCtrl.KeyFieldNames := '';
+    sCamposClave := '';
+  end;
   if sCamposClave = '' then
   begin
     sCamposClave := ObtenerClavePrimaria(oDBDataCtrl.DataSet);
-    if sCamposClave <> '' then
+    if (sCamposClave <> '') and
+       CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave) then
       oDBDataCtrl.KeyFieldNames := sCamposClave;
+    if (sCamposClave <> '') and
+       (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
+    begin
+      Log.LogWarning(Format('CollectSettingsColumnProfile: vista=%s ' +
+        'clave="%s" descartada porque faltan campos',
+        [AcxgrdtvVista.Name, sCamposClave]));
+      sCamposClave := '';
+    end;
   end;
 
   if sCamposClave <> '' then

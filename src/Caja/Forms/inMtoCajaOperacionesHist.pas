@@ -107,6 +107,7 @@ type
     FactIrCliente: TAction;
     FactIrDeposito: TAction;
     FactIrFormaPago: TAction;
+    FactIrPagoHist: TAction;
     FactIrMovimiento: TAction;
     FactIrVale: TAction;
     FactExportarOperacionExcel: TAction;
@@ -160,6 +161,7 @@ type
     procedure actIrClienteExecute(Sender: TObject);
     procedure actIrDepositoExecute(Sender: TObject);
     procedure actIrFormaPagoExecute(Sender: TObject);
+    procedure actIrPagoHistExecute(Sender: TObject);
     procedure actIrMovimientoExecute(Sender: TObject);
     procedure actIrValeExecute(Sender: TObject);
     procedure actExportarOperacionExcelExecute(Sender: TObject);
@@ -817,6 +819,10 @@ begin
                                       'Ir a forma de pago',
                                       'Ctrl+Shift+P',
                                       actIrFormaPagoExecute);
+  FactIrPagoHist := CrearAccionFicha('actHistIrPagoHist',
+                                     'Ir a hist. pagos',
+                                     'Ctrl+Shift+H',
+                                     actIrPagoHistExecute);
   FactIrMovimiento := CrearAccionFicha('actHistIrMovimiento',
                                        'Ir a movimiento',
                                        'Ctrl+M',
@@ -979,6 +985,34 @@ begin
   inherited;
   sFormaPago := ValorCampoVista(FtvDetallePagos, 'CODIGO_FP_CFP');
   AbrirMantenimiento('CajaFormasPago', sFormaPago);
+end;
+
+procedure TfrmMtoCajaOperacionesHist.actIrPagoHistExecute(Sender: TObject);
+var
+  sEmpresa: string;
+  sAlmacen: string;
+  sCaja: string;
+  sSerie: string;
+  sOperacion: string;
+  sLinea: string;
+  sClave: string;
+begin
+  inherited;
+  sEmpresa := ValorCampoVista(FtvDetallePagos, 'CODIGO_EMP_PAGO');
+  sAlmacen := ValorCampoVista(FtvDetallePagos, 'CODIGO_ALM_PAGO');
+  sCaja := ValorCampoVista(FtvDetallePagos, 'CODIGO_CAJA_PAGO');
+  sSerie := ValorCampoVista(FtvDetallePagos, 'SERIE_OPERACION_PAGO');
+  sOperacion := ValorCampoVista(FtvDetallePagos, 'NUMERO_OPERACION_PAGO');
+  sLinea := ValorCampoVista(FtvDetallePagos, 'NUMERO_LINEA_PAGO');
+  sClave := '';
+  if (sEmpresa <> '') and
+     (sAlmacen <> '') and
+     (sCaja <> '') and
+     (sOperacion <> '') and
+     (sLinea <> '') then
+    sClave := sEmpresa + ',' + sAlmacen + ',' + sCaja + ',' + sSerie + ',' +
+              sOperacion + ',' + sLinea;
+  AbrirMantenimiento('CajaPagosHist', sClave);
 end;
 
 procedure TfrmMtoCajaOperacionesHist.actIrMovimientoExecute(Sender: TObject);
@@ -1363,8 +1397,7 @@ begin
     FtvDetalleOperacion := CrearVistaDetalle(FtsDetalleOperacion,
       'Operación', 'tvHistCajaOperacion', FdmConsulta.dsOperacion);
     CrearBarraAcciones(FtsDetalleOperacion,
-      [actIrFacturaSimplif, FactIrCliente, FactIrDeposito,
-       FactExportarOperacionExcel]);
+      [FactExportarOperacionExcel]);
     AnadirColumna(FtvDetalleOperacion, 'colHistOpeFecha', 'Fecha/Hora',
       'FECHA_OPERACION_OPCAJA', 140, 'TcxDateEditProperties',
       'dd/mm/yyyy hh:nn:ss');
@@ -1389,7 +1422,7 @@ begin
     FtvDetallePagos := CrearVistaDetalle(FtsDetallePagos,
       'Pagos', 'tvHistCajaPagos', FdmConsulta.dsPagos);
     CrearBarraAcciones(FtsDetallePagos,
-      [FactIrFormaPago, FactExportarOperacionExcel]);
+      [FactIrPagoHist, FactIrFormaPago, FactExportarOperacionExcel]);
     FtvDetallePagos.OptionsView.Footer := True;
     AnadirColumna(FtvDetallePagos, 'colHistPagLinea', 'Línea',
       'NUMERO_LINEA_PAGO', 96);

@@ -227,7 +227,12 @@ begin
   //  Los vales (emitidos / redimidos) van en su propia pestaña.
   // ------------------------------------------------------------------
   qryPagos.SQL.Text :=
-    'SELECT p.NUMERO_LINEA_PAGO, '                                    +
+    'SELECT p.CODIGO_EMP_PAGO, '                                      +
+    '       p.CODIGO_ALM_PAGO, '                                      +
+    '       p.CODIGO_CAJA_PAGO, '                                     +
+    '       p.SERIE_OPERACION_PAGO, '                                 +
+    '       p.NUMERO_OPERACION_PAGO, '                                +
+    '       p.NUMERO_LINEA_PAGO, '                                    +
     '       p.CODIGO_FP_CFP, '                                        +
     '       fp.DESCRIPCION_FORMA_PAGO_CFP, '                          +
     '       p.IMPORTE_ENTREGADO_PAGO, '                               +
