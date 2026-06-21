@@ -166,7 +166,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            
+
               '[Albaran."CODIGO_POSTAL_ALM_ALBC"] [Albaran."POBLACION_ALM_ALBC"' +
               '] ([Albaran."PROVINCIA_ALM_ALBC"])')
           ParentFont = False
@@ -185,7 +185,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            
+
               'Tel: [Albaran."TELEFONO_ALM_ALBC"]   Email: [Albaran."EMAIL_ALM_' +
               'ALBC"]')
           ParentFont = False
@@ -257,7 +257,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            
+
               '[Albaran."CODIGO_POSTAL_PRV"] [Albaran."POBLACION_PRV"] ([Albara' +
               'n."PROVINCIA_PRV"])')
           ParentFont = False
@@ -1145,7 +1145,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T01"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T01">), '#39#39')]')
           ParentFont = False
@@ -1166,7 +1166,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T02"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T02">), '#39#39')]')
           ParentFont = False
@@ -1187,7 +1187,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T03"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T03">), '#39#39')]')
           ParentFont = False
@@ -1208,7 +1208,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T04"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T04">), '#39#39')]')
           ParentFont = False
@@ -1229,7 +1229,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T05"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T05">), '#39#39')]')
           ParentFont = False
@@ -1250,7 +1250,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T06"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T06">), '#39#39')]')
           ParentFont = False
@@ -1271,7 +1271,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T07"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T07">), '#39#39')]')
           ParentFont = False
@@ -1292,7 +1292,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T08"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T08">), '#39#39')]')
           ParentFont = False
@@ -1313,7 +1313,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T09"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T09">), '#39#39')]')
           ParentFont = False
@@ -1334,7 +1334,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T10"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T10">), '#39#39')]')
           ParentFont = False
@@ -1355,7 +1355,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T11"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T11">), '#39#39')]')
           ParentFont = False
@@ -1376,7 +1376,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T12"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T12">), '#39#39')]')
           ParentFont = False
@@ -1397,7 +1397,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T13"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T13">), '#39#39')]')
           ParentFont = False
@@ -1418,7 +1418,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T14"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T14">), '#39#39')]')
           ParentFont = False
@@ -1439,7 +1439,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T15"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T15">), '#39#39')]')
           ParentFont = False
@@ -1460,7 +1460,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T16"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T16">), '#39#39')]')
           ParentFont = False
@@ -1481,7 +1481,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T17"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T17">), '#39#39')]')
           ParentFont = False
@@ -1502,7 +1502,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T18"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T18">), '#39#39')]')
           ParentFont = False
@@ -1523,7 +1523,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T19"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T19">), '#39#39')]')
           ParentFont = False
@@ -1544,7 +1544,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasAlbaran."T20"> > 0, FormatFloat('#39'0'#39', <LineasAlbaran.' +
               '"T20">), '#39#39')]')
           ParentFont = False
@@ -1593,6 +1593,73 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
           VAlign = vaCenter
         end
       end
+      object ReportSummaryTotalesFiscales: TfrxReportSummary
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
+        Height = 120.944960000000000000
+        Top = 381.732530000000000000
+        Width = 1046.929810000000000000
+        object MemoTotalesFiscales: TfrxMemoView
+          AllowVectorExport = True
+          Left = 0.000000000000000000
+          Top = 7.559060000000000000
+          Width = 1046.929500000000000000
+          Height = 105.826840000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -10
+          Font.Name = 'Courier New'
+          Font.Style = []
+          Frame.Typ = [ftTop, ftBottom]
+          Memo.UTF8W = (
+            'DESGLOSE IVA / RE'
+
+              'Normal       Base [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_BASE' +
+              'I_IVAN_ALBC">)]  IVA [FormatFloat('#39'0.##'#39', <Albaran."PORCENTAJE' +
+              '_IVAN_ALBC">)]% [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_IVAN' +
+              '_ALBC">)][IIF(<Albaran."TOTAL_REN_ALBC"> <> 0, '#39'  RE '#39' + For' +
+              'matFloat('#39'0.##'#39', <Albaran."PORCENTAJE_REN_ALBC">) + '#39'% '#39' + ' +
+              'FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_REN_ALBC">), '#39#39')]'
+
+              'Reducido     Base [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_BASE' +
+              'I_IVAR_ALBC">)]  IVA [FormatFloat('#39'0.##'#39', <Albaran."PORCENTAJE' +
+              '_IVAR_ALBC">)]% [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_IVAR' +
+              '_ALBC">)][IIF(<Albaran."TOTAL_RER_ALBC"> <> 0, '#39'  RE '#39' + For' +
+              'matFloat('#39'0.##'#39', <Albaran."PORCENTAJE_RER_ALBC">) + '#39'% '#39' + ' +
+              'FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_RER_ALBC">), '#39#39')]'
+
+              'Super red.   Base [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_BASE' +
+              'I_IVAS_ALBC">)]  IVA [FormatFloat('#39'0.##'#39', <Albaran."PORCENTAJE' +
+              '_IVAS_ALBC">)]% [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_IVAS' +
+              '_ALBC">)][IIF(<Albaran."TOTAL_RES_ALBC"> <> 0, '#39'  RE '#39' + For' +
+              'matFloat('#39'0.##'#39', <Albaran."PORCENTAJE_RES_ALBC">) + '#39'% '#39' + ' +
+              'FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_RES_ALBC">), '#39#39')]'
+
+              'Exento       Base [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_BASE' +
+              'I_IVAE_ALBC">)]  IVA [FormatFloat('#39'0.##'#39', <Albaran."PORCENTAJE' +
+              '_IVAE_ALBC">)]% [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_IVAE' +
+              '_ALBC">)][IIF(<Albaran."TOTAL_REE_ALBC"> <> 0, '#39'  RE '#39' + For' +
+              'matFloat('#39'0.##'#39', <Albaran."PORCENTAJE_REE_ALBC">) + '#39'% '#39' + ' +
+              'FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_REE_ALBC">), '#39#39')]'
+
+              'Base total [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_BASES_ALBC' +
+              '">)]   Impuestos [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_IMPU' +
+              'ESTOS_ALBC">)]'
+
+              '[IIF(<Albaran."TOTAL_RETENCION_ALBC"> <> 0, '#39'Retencion IRPF '#39 +
+              ' + FormatFloat('#39'0.##'#39', <Albaran."PORCENTAJE_RETENCION_ALBC">)' +
+              ' + '#39'% -'#39' + FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_RETENCION' +
+              '_ALBC">), '#39#39')]'
+
+              'TOTAL LIQUIDO [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_LIQUID' +
+              'O_ALBC">)] EUR')
+          ParentFont = False
+        end
+      end
       object PageFooter1: TfrxPageFooter
         FillType = ftBrush
         FillGap.Top = 0
@@ -1601,7 +1668,7 @@ inherited frmPrintAlbCompra: TfrmPrintAlbCompra
         FillGap.Right = 0
         Frame.Typ = []
         Height = 26.456710000000000000
-        Top = 381.732530000000000000
+        Top = 506.457020000000000000
         Width = 1046.929810000000000000
         object MemoTotalUds: TfrxMemoView
           AllowVectorExport = True

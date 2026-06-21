@@ -34,7 +34,7 @@ uses
   dxScrollbarAnnotations, dxCore, cxRadioGroup, Vcl.AppEvnts, JvComponentBase,
   JvEnterTab, dxShellDialogs, System.Actions, Vcl.ActnList, cxCalendar,
   UniDataConsultaOpe, dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes,
-  dxSpreadSheetStyles;
+  dxSpreadSheetStyles, dxHashUtils;
 
 type
   TfrmMtoCajaOperacionesHist = class(TfrmMtoGen)
@@ -172,6 +172,7 @@ type
                                   ARow,
                                   ACol: Integer;
                                   AField: TField);
+    function  VistaTieneDatos(AVista: TcxGridDBTableView): Boolean;
     procedure ExportarResumenExcel(ASheetControl: TdxSpreadSheet);
     procedure ExportarVistaExcel(ASheetControl: TdxSpreadSheet;
                                  const AHoja,
@@ -181,6 +182,8 @@ type
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function  DataSourcesParaFoto: TArray<TDataSource>; override;
     procedure RecogerPerfilesParticulares(var oList: TPerfilList;
                                           const sPermisos: string); override;
     procedure PrepararBusquedaExterna(const ABusq: string); override;
@@ -195,7 +198,7 @@ implementation
 uses
   inLibWin, inLibUser, inLibGlobalVar, inLibShowMto, inMtoPrincipal,
   inMtoModalGenImpSave, inMtoModalImpOperaciones, inMtoPreviewExcel,
-  inLibDevExcel;
+  inLibDevExcel, inLibAppParam, inLibFotos, dxSpreadSheetGraphics;
 
 {$R *.dfm}
 
@@ -314,6 +317,54 @@ begin
     FCargaInicialHecha := True;
     AbrirConProgreso;
   end;
+end;
+
+procedure TfrmMtoCajaOperacionesHist.ResolverArtSkuActivo(
+  out ACodArt, ACodSku: string);
+var
+  ds: TDataSet;
+  procedure LeerDeVista(AVista: TcxGridDBTableView);
+  begin
+    if (ACodArt = '') and
+       Assigned(AVista) and
+       Assigned(AVista.DataController.DataSource) then
+    begin
+      ds := AVista.DataController.DataSource.DataSet;
+      inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+    end;
+  end;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  if Assigned(FpcDetalleCaja) and
+     (pcPantalla.ActivePage = tsFicha) then
+  begin
+    if FpcDetalleCaja.ActivePage = FtsDetalleMovimientos then
+      LeerDeVista(FtvDetalleMovimientos)
+    else if FpcDetalleCaja.ActivePage = FtsDetalleDepositos then
+      LeerDeVista(FtvDetalleDepositos)
+    else if FpcDetalleCaja.ActivePage = FtsDetalleFactura then
+      LeerDeVista(FtvDetalleFacturaLin);
+    if ACodArt = '' then
+    begin
+      LeerDeVista(FtvDetalleMovimientos);
+      LeerDeVista(FtvDetalleDepositos);
+      LeerDeVista(FtvDetalleFacturaLin);
+    end;
+  end;
+  if ACodArt = '' then
+    inherited ResolverArtSkuActivo(ACodArt, ACodSku);
+end;
+
+function TfrmMtoCajaOperacionesHist.DataSourcesParaFoto:
+  TArray<TDataSource>;
+begin
+  if Assigned(FdmConsulta) then
+    Result := [FdmConsulta.dsMovimientos,
+               FdmConsulta.dsDepositos,
+               FdmConsulta.dsFacturaLin]
+  else
+    Result := inherited DataSourcesParaFoto;
 end;
 
 procedure TfrmMtoCajaOperacionesHist.CargarAnyosFiltro;
@@ -963,24 +1014,24 @@ begin
     ShowMessage('No hay ninguna operación seleccionada para exportar.')
   else
   begin
-    Screen.Cursor := crHourGlass;
     try
-      RefrescarFichaOperacion;
-      fPreview := TfrmMtoPreviewExcel.Create(Self);
-      fPreview.PopupParent := Self;
-      fPreview.DialogoGuardar.InitialDir :=
-        oAppParams.GetPath('appDirExcel');
-      sNombre := 'Operacion_Caja_' +
-                 ValorCampoPrincipal('CODIGO_EMP_OPCAJA') + '_' +
-                 ValorCampoPrincipal('CODIGO_ALM_OPCAJA') + '_' +
-                 ValorCampoPrincipal('CODIGO_CAJA_OPCAJA') + '_' +
-                 ValorCampoPrincipal('NUMERO_OPERACION_OPCAJA');
-      fPreview.DialogoGuardar.FileName := sNombre;
-      ExportarOperacionExcel(fPreview.dxSpreadSheet1);
-    finally
-      Screen.Cursor := crDefault;
-    end;
-    try
+      Screen.Cursor := crHourGlass;
+      try
+        RefrescarFichaOperacion;
+        fPreview := TfrmMtoPreviewExcel.Create(Self);
+        fPreview.PopupParent := Self;
+        fPreview.DialogoGuardar.InitialDir :=
+          oAppParams.GetPath('appDirExcel');
+        sNombre := 'Operacion_Caja_' +
+                   ValorCampoPrincipal('CODIGO_EMP_OPCAJA') + '_' +
+                   ValorCampoPrincipal('CODIGO_ALM_OPCAJA') + '_' +
+                   ValorCampoPrincipal('CODIGO_CAJA_OPCAJA') + '_' +
+                   ValorCampoPrincipal('NUMERO_OPERACION_OPCAJA');
+        fPreview.DialogoGuardar.FileName := sNombre;
+        ExportarOperacionExcel(fPreview.dxSpreadSheet1);
+      finally
+        Screen.Cursor := crDefault;
+      end;
       fPreview.ShowModal;
     finally
       FreeAndNil(fPreview);
@@ -1060,6 +1111,23 @@ begin
   end;
 end;
 
+function TfrmMtoCajaOperacionesHist.VistaTieneDatos(
+  AVista: TcxGridDBTableView): Boolean;
+var
+  ds: TDataSet;
+begin
+  Result := False;
+  ds := nil;
+  if Assigned(AVista) and
+     Assigned(AVista.DataController.DataSource) then
+    ds := AVista.DataController.DataSource.DataSet;
+  if Assigned(ds) and
+     ds.Active and
+     (not ds.IsEmpty) and
+     (AVista.VisibleColumnCount > 0) then
+    Result := True;
+end;
+
 procedure TfrmMtoCajaOperacionesHist.ExportarResumenExcel(
   ASheetControl: TdxSpreadSheet);
 var
@@ -1120,24 +1188,16 @@ var
   Col: TcxGridDBColumn;
   iCol, iRow, iFilaCabecera: Integer;
 begin
-  Sheet := CrearHojaExcel(ASheetControl, AHoja);
-  Sheet.BeginUpdate;
-  try
-    iRow := 1;
-    W(Sheet, iRow, 0, ATitulo, True);
-    Sheet.Cells[iRow, 0].Style.Font.Size := 14;
-    Inc(iRow, 2);
-    ds := nil;
-    if Assigned(AVista) and
-       Assigned(AVista.DataController.DataSource) then
+  if VistaTieneDatos(AVista) then
+  begin
+    Sheet := CrearHojaExcel(ASheetControl, AHoja);
+    Sheet.BeginUpdate;
+    try
+      iRow := 1;
+      W(Sheet, iRow, 0, ATitulo, True);
+      Sheet.Cells[iRow, 0].Style.Font.Size := 14;
+      Inc(iRow, 2);
       ds := AVista.DataController.DataSource.DataSet;
-    if (ds = nil) or
-       (not ds.Active) or
-       ds.IsEmpty or
-       (AVista.VisibleColumnCount = 0) then
-      W(Sheet, iRow, 0, 'Sin datos')
-    else
-    begin
       iFilaCabecera := iRow;
       for iCol := 0 to AVista.VisibleColumnCount - 1 do
       begin
@@ -1169,20 +1229,20 @@ begin
         end;
         if ds.BookmarkValid(Bm) then
           ds.GotoBookmark(Bm);
+        finally
+          ds.FreeBookmark(Bm);
+          ds.EnableControls;
+        end;
+        PintarCuadro(Sheet,
+                     iFilaCabecera,
+                     0,
+                     iRow - 1,
+                     AVista.VisibleColumnCount - 1,
+                     sscbsThin);
       finally
-        ds.FreeBookmark(Bm);
-        ds.EnableControls;
+        Sheet.EndUpdate;
       end;
-      PintarCuadro(Sheet,
-                   iFilaCabecera,
-                   0,
-                   iRow - 1,
-                   AVista.VisibleColumnCount - 1,
-                   sscbsThin);
     end;
-  finally
-    Sheet.EndUpdate;
-  end;
 end;
 
 procedure TfrmMtoCajaOperacionesHist.ExportarOperacionExcel(

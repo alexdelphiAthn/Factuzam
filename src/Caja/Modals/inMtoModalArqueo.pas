@@ -453,7 +453,7 @@ end;
 procedure TfrmModalArqueo.actTiraCajaExecute(Sender: TObject);
 var
   Series, SeleccionSeries: TArray<string>;
-  bQR, bVerifactu, bCronologico: Boolean;
+  bQR, bVerifactu, bCronologico, bExcel: Boolean;
   bIncluirTraspasos: Boolean;
   bIncluirIngresos: Boolean;
   bIncluirGastos: Boolean;
@@ -476,22 +476,30 @@ begin
   // El QR solo aplica con Verifactu activo (envío PRE o PRO).
   bVerifactu := VerifactuActivo;
   bQR        := False;
-  // El diálogo se muestra siempre: serie (multi-selección), agrupamiento, QR y
-  // los bloques opcionales (traspasos, ingresos, gastos, ventas a crédito).
+  // El diálogo se muestra siempre: serie (multi-selección), agrupamiento, QR,
+  // los bloques opcionales y la elección entre Imprimir y Ver Excel.
   if not TfrmModalTiraCaja.Ejecutar(Self, FCaja, Series, bVerifactu,
-                                    SeleccionSeries, bQR, bCronologico,
+                                    SeleccionSeries, bQR, bCronologico, bExcel,
                                     bIncluirTraspasos, bIncluirIngresos,
                                     bIncluirGastos, bIncluirCredito) then
     Exit;
   Screen.Cursor := crHourGlass;
   try
-    TTiraCajaTicket.Imprimir(FConn, FEmpresa, FAlmacen, FCaja,
-                             FechaDesdeSeleccionada,
-                             FechaHastaSeleccionada,
-                             SeleccionSeries, bQR, oNomImpresoraCaja,
-                             bCronologico,
-                             bIncluirTraspasos, bIncluirIngresos,
-                             bIncluirGastos, bIncluirCredito);
+    if bExcel then
+      TTiraCajaTicket.ExportarExcel(Self, FConn, FEmpresa, FAlmacen, FCaja,
+                                    FechaDesdeSeleccionada,
+                                    FechaHastaSeleccionada,
+                                    SeleccionSeries, bCronologico,
+                                    bIncluirTraspasos, bIncluirIngresos,
+                                    bIncluirGastos, bIncluirCredito)
+    else
+      TTiraCajaTicket.Imprimir(FConn, FEmpresa, FAlmacen, FCaja,
+                               FechaDesdeSeleccionada,
+                               FechaHastaSeleccionada,
+                               SeleccionSeries, bQR, oNomImpresoraCaja,
+                               bCronologico,
+                               bIncluirTraspasos, bIncluirIngresos,
+                               bIncluirGastos, bIncluirCredito);
   finally
     Screen.Cursor := crDefault;
   end;

@@ -1,4 +1,4 @@
-﻿inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
+inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
   Caption = 'Imprimir Albarán de Compra (Vertical)'
   ClientHeight = 220
   ClientWidth = 460
@@ -634,6 +634,73 @@
           ParentFont = False
         end
       end
+      object ReportSummaryTotalesFiscales: TfrxReportSummary
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
+        Height = 134.000000000000000000
+        Top = 1010.000000000000000000
+        Width = 718.110700000000000000
+        object MemoTotalesFiscales: TfrxMemoView
+          AllowVectorExport = True
+          Left = 0.000000000000000000
+          Top = 6.000000000000000000
+          Width = 718.000000000000000000
+          Height = 120.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Courier New'
+          Font.Style = []
+          Frame.Typ = [ftTop, ftBottom]
+          Memo.UTF8W = (
+            'DESGLOSE IVA / RE'
+
+              'Normal       Base [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_BASE' +
+              'I_IVAN_ALBC">)]  IVA [FormatFloat('#39'0.##'#39', <Albaran."PORCENTAJE' +
+              '_IVAN_ALBC">)]% [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_IVAN' +
+              '_ALBC">)][IIF(<Albaran."TOTAL_REN_ALBC"> <> 0, '#39'  RE '#39' + For' +
+              'matFloat('#39'0.##'#39', <Albaran."PORCENTAJE_REN_ALBC">) + '#39'% '#39' + ' +
+              'FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_REN_ALBC">), '#39#39')]'
+
+              'Reducido     Base [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_BASE' +
+              'I_IVAR_ALBC">)]  IVA [FormatFloat('#39'0.##'#39', <Albaran."PORCENTAJE' +
+              '_IVAR_ALBC">)]% [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_IVAR' +
+              '_ALBC">)][IIF(<Albaran."TOTAL_RER_ALBC"> <> 0, '#39'  RE '#39' + For' +
+              'matFloat('#39'0.##'#39', <Albaran."PORCENTAJE_RER_ALBC">) + '#39'% '#39' + ' +
+              'FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_RER_ALBC">), '#39#39')]'
+
+              'Super red.   Base [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_BASE' +
+              'I_IVAS_ALBC">)]  IVA [FormatFloat('#39'0.##'#39', <Albaran."PORCENTAJE' +
+              '_IVAS_ALBC">)]% [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_IVAS' +
+              '_ALBC">)][IIF(<Albaran."TOTAL_RES_ALBC"> <> 0, '#39'  RE '#39' + For' +
+              'matFloat('#39'0.##'#39', <Albaran."PORCENTAJE_RES_ALBC">) + '#39'% '#39' + ' +
+              'FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_RES_ALBC">), '#39#39')]'
+
+              'Exento       Base [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_BASE' +
+              'I_IVAE_ALBC">)]  IVA [FormatFloat('#39'0.##'#39', <Albaran."PORCENTAJE' +
+              '_IVAE_ALBC">)]% [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_IVAE' +
+              '_ALBC">)][IIF(<Albaran."TOTAL_REE_ALBC"> <> 0, '#39'  RE '#39' + For' +
+              'matFloat('#39'0.##'#39', <Albaran."PORCENTAJE_REE_ALBC">) + '#39'% '#39' + ' +
+              'FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_REE_ALBC">), '#39#39')]'
+
+              'Base total [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_BASES_ALBC' +
+              '">)]   Impuestos [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_IMPU' +
+              'ESTOS_ALBC">)]'
+
+              '[IIF(<Albaran."TOTAL_RETENCION_ALBC"> <> 0, '#39'Retencion IRPF '#39 +
+              ' + FormatFloat('#39'0.##'#39', <Albaran."PORCENTAJE_RETENCION_ALBC">)' +
+              ' + '#39'% -'#39' + FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_RETENCION' +
+              '_ALBC">), '#39#39')]'
+
+              'TOTAL LIQUIDO [FormatFloat('#39'#,##0.00'#39', <Albaran."TOTAL_LIQUID' +
+              'O_ALBC">)] EUR')
+          ParentFont = False
+        end
+      end
       object PageFooter1: TfrxPageFooter
         FillType = ftBrush
         FillGap.Top = 0
@@ -642,7 +709,7 @@
         FillGap.Right = 0
         Frame.Typ = []
         Height = 30.000000000000000000
-        Top = 1010.000000000000000000
+        Top = 1148.000000000000000000
         Width = 718.110700000000000000
         object MemoTotBaseV: TfrxMemoView
           AllowVectorExport = True

@@ -172,7 +172,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            
+
               '[Sesiones."CODIGO_POSTAL_EMP"] [Sesiones."POBLACION_EMP"] ([Sesi' +
               'ones."PROVINCIA_EMP"])')
           ParentFont = False
@@ -269,7 +269,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            
+
               '[Sesiones."CODIGO_POSTAL_PRV"] [Sesiones."POBLACION_PRV"] ([Sesi' +
               'ones."PROVINCIA_PRV"])')
           ParentFont = False
@@ -1101,7 +1101,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           Memo.UTF8W = (
-            
+
               '[IIF(<Sesiones."ESFORMATO_DISTRIBUIDO_SES"> = '#39'S'#39', <LineasSesion' +
               'es."REF_PRV"> + '#39' / '#39' + <LineasSesiones."CODIGO_ALM">, <LineasSe' +
               'siones."REF_PRV">)]')
@@ -1180,7 +1180,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T01"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T01">), '#39#39')]')
           ParentFont = False
@@ -1201,7 +1201,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T02"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T02">), '#39#39')]')
           ParentFont = False
@@ -1222,7 +1222,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T03"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T03">), '#39#39')]')
           ParentFont = False
@@ -1243,7 +1243,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T04"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T04">), '#39#39')]')
           ParentFont = False
@@ -1264,7 +1264,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T05"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T05">), '#39#39')]')
           ParentFont = False
@@ -1285,7 +1285,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T06"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T06">), '#39#39')]')
           ParentFont = False
@@ -1306,7 +1306,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T07"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T07">), '#39#39')]')
           ParentFont = False
@@ -1327,7 +1327,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T08"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T08">), '#39#39')]')
           ParentFont = False
@@ -1348,7 +1348,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T09"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T09">), '#39#39')]')
           ParentFont = False
@@ -1369,7 +1369,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T10"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T10">), '#39#39')]')
           ParentFont = False
@@ -1390,7 +1390,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T11"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T11">), '#39#39')]')
           ParentFont = False
@@ -1411,7 +1411,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T12"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T12">), '#39#39')]')
           ParentFont = False
@@ -1432,7 +1432,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T13"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T13">), '#39#39')]')
           ParentFont = False
@@ -1453,7 +1453,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T14"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T14">), '#39#39')]')
           ParentFont = False
@@ -1474,7 +1474,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T15"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T15">), '#39#39')]')
           ParentFont = False
@@ -1495,7 +1495,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T16"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T16">), '#39#39')]')
           ParentFont = False
@@ -1516,7 +1516,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T17"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T17">), '#39#39')]')
           ParentFont = False
@@ -1537,7 +1537,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T18"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T18">), '#39#39')]')
           ParentFont = False
@@ -1558,7 +1558,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T19"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T19">), '#39#39')]')
           ParentFont = False
@@ -1579,7 +1579,7 @@ inherited frmPrintSesion: TfrmPrintSesion
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasSesiones."T20"> > 0, FormatFloat('#39'0'#39', <LineasSesione' +
               's."T20">), '#39#39')]')
           ParentFont = False
@@ -1628,6 +1628,73 @@ inherited frmPrintSesion: TfrmPrintSesion
           VAlign = vaCenter
         end
       end
+      object ReportSummaryTotalesFiscales: TfrxReportSummary
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
+        Height = 120.944960000000000000
+        Top = 381.732530000000000000
+        Width = 1046.929810000000000000
+        object MemoTotalesFiscales: TfrxMemoView
+          AllowVectorExport = True
+          Left = 0.000000000000000000
+          Top = 7.559060000000000000
+          Width = 1046.929500000000000000
+          Height = 105.826840000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -10
+          Font.Name = 'Courier New'
+          Font.Style = []
+          Frame.Typ = [ftTop, ftBottom]
+          Memo.UTF8W = (
+            'DESGLOSE IVA / RE'
+
+              'Normal       Base [FormatFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_BASE' +
+              'I_IVAN_SES">)]  IVA [FormatFloat('#39'0.##'#39', <Sesiones."PORCENTAJE_' +
+              'IVAN_SES">)]% [FormatFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_IVAN_S' +
+              'ES">)][IIF(<Sesiones."TOTAL_REN_SES"> <> 0, '#39'  RE '#39' + FormatFl' +
+              'oat('#39'0.##'#39', <Sesiones."PORCENTAJE_REN_SES">) + '#39'% '#39' + Forma' +
+              'tFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_REN_SES">), '#39#39')]'
+
+              'Reducido     Base [FormatFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_BASE' +
+              'I_IVAR_SES">)]  IVA [FormatFloat('#39'0.##'#39', <Sesiones."PORCENTAJE_' +
+              'IVAR_SES">)]% [FormatFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_IVAR_S' +
+              'ES">)][IIF(<Sesiones."TOTAL_RER_SES"> <> 0, '#39'  RE '#39' + FormatFl' +
+              'oat('#39'0.##'#39', <Sesiones."PORCENTAJE_RER_SES">) + '#39'% '#39' + Forma' +
+              'tFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_RER_SES">), '#39#39')]'
+
+              'Super red.   Base [FormatFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_BASE' +
+              'I_IVAS_SES">)]  IVA [FormatFloat('#39'0.##'#39', <Sesiones."PORCENTAJE_' +
+              'IVAS_SES">)]% [FormatFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_IVAS_S' +
+              'ES">)][IIF(<Sesiones."TOTAL_RES_SES"> <> 0, '#39'  RE '#39' + FormatFl' +
+              'oat('#39'0.##'#39', <Sesiones."PORCENTAJE_RES_SES">) + '#39'% '#39' + Forma' +
+              'tFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_RES_SES">), '#39#39')]'
+
+              'Exento       Base [FormatFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_BASE' +
+              'I_IVAE_SES">)]  IVA [FormatFloat('#39'0.##'#39', <Sesiones."PORCENTAJE_' +
+              'IVAE_SES">)]% [FormatFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_IVAE_S' +
+              'ES">)][IIF(<Sesiones."TOTAL_REE_SES"> <> 0, '#39'  RE '#39' + FormatFl' +
+              'oat('#39'0.##'#39', <Sesiones."PORCENTAJE_REE_SES">) + '#39'% '#39' + Forma' +
+              'tFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_REE_SES">), '#39#39')]'
+
+              'Base total [FormatFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_BASES_SES">' +
+              ')]   Impuestos [FormatFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_IMPUE' +
+              'STOS_SES">)]'
+
+              '[IIF(<Sesiones."TOTAL_RETENCION_SES"> <> 0, '#39'Retencion IRPF '#39' ' +
+              '+ FormatFloat('#39'0.##'#39', <Sesiones."PORCENTAJE_RETENCION_SES">) +' +
+              ' '#39'% -'#39' + FormatFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_RETENCION_' +
+              'SES">), '#39#39')]'
+
+              'TOTAL LIQUIDO [FormatFloat('#39'#,##0.00'#39', <Sesiones."TOTAL_LIQUID' +
+              'O_SES">)] EUR')
+          ParentFont = False
+        end
+      end
       object PageFooter1: TfrxPageFooter
         FillType = ftBrush
         FillGap.Top = 0
@@ -1636,7 +1703,7 @@ inherited frmPrintSesion: TfrmPrintSesion
         FillGap.Right = 0
         Frame.Typ = []
         Height = 26.456710000000000000
-        Top = 381.732530000000000000
+        Top = 506.457020000000000000
         Width = 1046.929810000000000000
         object MemoTotalUds: TfrxMemoView
           AllowVectorExport = True

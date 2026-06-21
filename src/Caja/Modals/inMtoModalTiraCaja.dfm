@@ -93,23 +93,32 @@ object frmModalTiraCaja: TfrmModalTiraCaja
     Width = 430
   end
   object btnImprimir: TcxButton
-    Left = 110
+    Left = 12
     Top = 344
-    Width = 150
+    Width = 140
     Height = 40
     Caption = 'Imprimir'
     Default = True
     ModalResult = 1
     TabOrder = 7
   end
-  object btnCancelar: TcxButton
-    Left = 290
+  object btnExcel: TcxButton
+    Left = 162
     Top = 344
-    Width = 150
+    Width = 140
+    Height = 40
+    Caption = 'Ver Excel'
+    ModalResult = 6
+    TabOrder = 8
+  end
+  object btnCancelar: TcxButton
+    Left = 312
+    Top = 344
+    Width = 145
     Height = 40
     Cancel = True
     Caption = 'Cancelar (ESC)'
     ModalResult = 2
-    TabOrder = 8
+    TabOrder = 9
   end
 end
