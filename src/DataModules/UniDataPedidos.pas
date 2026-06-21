@@ -22,7 +22,8 @@ uses
   Data.DB, MemDS, DBAccess, Uni,
   UniDataGen, inLibUser, inMtoPrincipal,
   frxClass, frxDBSet,
-  inLibPresta, frCoreClasses;
+  inLibPresta, frCoreClasses,
+  inLibArticulosValidador;
 
 type
   TdmPedidos = class(TdmBase)
@@ -87,6 +88,11 @@ type
     // Localiza el cliente del pedido PS por NIF/email; si no existe lo da de
     // alta y devuelve su CODIGO_CLI_CLI. Devuelve '0' solo si no hay datos.
     function ResolverCodigoCliente(aOrder: TOrder): string;
+    // Localiza el articulo de una linea PS por EAN13/referencia; si no existe
+    // crea articulo sin variacion + SKU + codigo de barras y devuelve el
+    // CODIGO_ART_ART. Devuelve '' solo si no hay datos para crearlo.
+    function ResolverCodigoArticulo(oValidador: TArticulosValidador;
+                                    const lp: TLineaPed): string;
 
     procedure OpenTables;
     // Override: abre las queries detalle del Mto de Pedidos tras
@@ -102,7 +108,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibLog, System.Diagnostics, inLibArticulosValidador;
+  inLibGlobalVar, inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -761,18 +767,99 @@ begin
   end;
 end;
 
+function TdmPedidos.ResolverCodigoArticulo(oValidador: TArticulosValidador;
+  const lp: TLineaPed): string;
+var
+  res: TArtResolucionEntrada;
+  q: TUniQuery;
+  sOrden, sDesc: string;
+  bTx: Boolean;
+begin
+  Result := '';
+  // 1) Match: primero por EAN13, luego por referencia PS
+  res := oValidador.ResolverCodigoBarras(lp.sCodEAN13);
+  if (not res.Encontrado) and (lp.sRefProd <> '') then
+    res := oValidador.Resolver(lp.sRefProd);
+  if res.Encontrado then
+    Result := res.CodigoArticulo
+  else
+  begin
+    // 2) Alta rapida: articulo sin variacion + SKU + codigo de barras.
+    //    PS no aporta familia, por lo que se numera con el contador 'AR'.
+    //    El IVA por defecto es 'N' (Normal); revisar si fuera reducido.
+    Result := ObtenerContador('AR');
+    sOrden := ObtenerContador('AO');
+    sDesc  := lp.sDescripcion;
+    if sDesc = '' then
+      sDesc := 'Articulo PrestaShop ' + Result;
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      // Las 3 altas (articulo + SKU + barras) deben ser atomicas entre si
+      bTx := not inLibGlobalVar.oConn.InTransaction;
+      if bTx then
+        inLibGlobalVar.oConn.StartTransaction;
+      try
+        // Articulo padre (ESVARIACION_ART = 'N', IVA Normal por defecto)
+        q.SQL.Text :=
+          'INSERT INTO fza_articulos (CODIGO_ART_ART, ORDEN_ART, ' +
+          ' ESACTIVO_ART, TIPO_ART, DESCRIPCION_ART, TIPO_IVA_ART, ' +
+          ' ESACTIVO_FIJO_ART, TIPO_CANTIDAD_ART, ESVARIACION_ART, ' +
+          ' ESTRAZABLE_ART, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+          'VALUES (:cod, :ord, ''S'', ''ESTANDAR'', :des, ''N'', ' +
+          '        ''N'', ''Uds'', ''N'', ''N'', NOW(), :usu, :usu)';
+        q.ParamByName('cod').AsString  := Result;
+        q.ParamByName('ord').AsInteger := StrToIntDef(sOrden, 0);
+        q.ParamByName('des').AsString  := sDesc;
+        q.ParamByName('usu').AsString  := oUser;
+        q.Execute;
+        // SKU unico (sin variacion: CODIGO_VAR_SKU = '-')
+        q.SQL.Text :=
+          'INSERT INTO fza_articulos_skus (CODIGO_UNIDAD_SKU, ' +
+          ' CODIGO_ART_SKU, CODIGO_VAR_SKU, ESACTIVO_SKU, ' +
+          ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+          'VALUES (:cod, :cod, ''-'', ''S'', NOW(), :usu, :usu)';
+        q.ParamByName('cod').AsString := Result;
+        q.ParamByName('usu').AsString := oUser;
+        q.Execute;
+        // Codigo de barras (solo si la linea trae EAN13)
+        if lp.sCodEAN13 <> '' then
+        begin
+          q.SQL.Text :=
+            'INSERT INTO fza_codigos_barras (CODIGO_BARRAS_CB, ' +
+            ' CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ESPRINCIPAL_CB, ' +
+            ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+            'VALUES (:ean, :cod, ''EAN13'', ''S'', NOW(), :usu, :usu)';
+          q.ParamByName('ean').AsString := lp.sCodEAN13;
+          q.ParamByName('cod').AsString := Result;
+          q.ParamByName('usu').AsString := oUser;
+          q.Execute;
+        end;
+        if bTx then
+          inLibGlobalVar.oConn.Commit;
+      except
+        if bTx and inLibGlobalVar.oConn.InTransaction then
+          inLibGlobalVar.oConn.Rollback;
+        raise;
+      end;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+end;
+
 function TdmPedidos.ImportarPedidoPrestaShop(aOrder: TOrder): Boolean;
 var
   qIns: TUniQuery;
   qLin: TUniQuery;
   qMsg: TUniQuery;
   i: Integer;
-  sNumero, sSerie, sCodigoCli, sCodArt: string;
+  sNumero, sSerie, sCodigoCli: string;
   lp: TLineaPed;
   tm: TMensaje;
   bTxOwned: Boolean;
   oValidador: TArticulosValidador;
-  resArt: TArtResolucionEntrada;
+  aCodArt: TArray<string>;
 begin
   Result := False;
   if aOrder = nil then Exit;
@@ -796,13 +883,21 @@ begin
     raise;
   end;
 
-  // Resolver/crear cliente ANTES de la tx (el contador hace COMMIT propio)
+  // Resolver/crear cliente y articulos ANTES de la tx: los contadores
+  // (PRC_GET_NEXT_CONT) hacen COMMIT propio y romperian la tx del pedido.
   sCodigoCli := ResolverCodigoCliente(aOrder);
+  oValidador := TArticulosValidador.Create(inLibGlobalVar.oConn);
+  try
+    SetLength(aCodArt, aOrder.LineasPedido.Count);
+    for i := 0 to aOrder.LineasPedido.Count - 1 do
+      aCodArt[i] := ResolverCodigoArticulo(oValidador, aOrder.LineasPedido[i]);
+  finally
+    FreeAndNil(oValidador);
+  end;
 
   qIns := TUniQuery.Create(nil);
   qLin := TUniQuery.Create(nil);
   qMsg := TUniQuery.Create(nil);
-  oValidador := TArticulosValidador.Create(inLibGlobalVar.oConn);
   try
     // Importacion atomica: cabecera + lineas + mensajes, todo o nada
     bTxOwned := not inLibGlobalVar.oConn.InTransaction;
@@ -899,14 +994,7 @@ begin
         qLin.ParamByName('IDPPS').AsString   := lp.idProducto;
         qLin.ParamByName('REFPROD').AsString := lp.sRefProd;
         qLin.ParamByName('IDATRIB').AsString := lp.sRefAtrib;
-        // Match de articulo: primero por EAN13, luego por referencia PS
-        sCodArt := '';
-        resArt := oValidador.ResolverCodigoBarras(lp.sCodEAN13);
-        if (not resArt.Encontrado) and (lp.sRefProd <> '') then
-          resArt := oValidador.Resolver(lp.sRefProd);
-        if resArt.Encontrado then
-          sCodArt := resArt.CodigoArticulo;
-        qLin.ParamByName('CODART').AsString  := sCodArt;
+        qLin.ParamByName('CODART').AsString  := aCodArt[i];
         qLin.ParamByName('EAN13').AsString   := lp.sCodEAN13;
         qLin.ParamByName('DESCR').AsString   := lp.sDescripcion;
         qLin.ParamByName('CANT').AsFloat     := StrToFloatDef(lp.sCantidad, 1);
@@ -950,7 +1038,6 @@ begin
       raise;
     end;
   finally
-    FreeAndNil(oValidador);
     FreeAndNil(qIns);
     FreeAndNil(qLin);
     FreeAndNil(qMsg);

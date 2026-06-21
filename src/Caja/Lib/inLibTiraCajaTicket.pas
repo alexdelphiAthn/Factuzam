@@ -126,7 +126,8 @@ implementation
 
 uses
   Vcl.Forms,
-  dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes,
+  dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetGraphics,
+  dxSpreadSheetTypes,
   inMtoPreviewTicket, inLibDir, inLibFormatoDocumento, inLibVerifactu,
   inLibPermisos, inMtoPreviewExcel, inLibDevExcel;
 
@@ -563,6 +564,104 @@ begin
 end;
 
 // =============================================================================
+//   SQL común del cursor maestro (lo comparten Imprimir y ExportarExcel)
+// =============================================================================
+
+class function TTiraCajaTicket.SQLOperaciones(const ASeries: TArray<string>;
+  ACronologico, AIncluirTraspasos, AIncluirIngresos, AIncluirGastos,
+  AIncluirCredito: Boolean): string;
+var
+  sCond, sLista, sSerieIn, sSQL: string;
+  i: Integer;
+begin
+  // Placeholders de las series marcadas (vacío = todas).
+  sSerieIn := '';
+  for i := 0 to High(ASeries) do
+  begin
+    if sSerieIn <> '' then
+      sSerieIn := sSerieIn + ',';
+    sSerieIn := sSerieIn + ':pS' + IntToStr(i);
+  end;
+  // Condición de ventas facturadas (excluyendo los tipos de los bloques) más
+  // los tipos opcionales marcados.
+  sCond := ' (o.SERIE_FAC_OPCAJA IS NOT NULL                             ' +
+           '  AND o.SERIE_FAC_OPCAJA <> ''''                             ' +
+           '  AND o.TIPO_OPERACION_OPCAJA                                ' +
+           '        NOT IN (''TR'',''AT'',''EC'',''GC'',''DE'') ';
+  if sSerieIn <> '' then
+    sCond := sCond + ' AND o.SERIE_FAC_OPCAJA IN (' + sSerieIn + ') ';
+  sCond := sCond + ') ';
+  sLista := '';
+  if AIncluirTraspasos then
+    sLista := sLista + ',''TR'',''AT''';
+  if AIncluirIngresos then
+    sLista := sLista + ',''EC''';
+  if AIncluirGastos then
+    sLista := sLista + ',''GC''';
+  if AIncluirCredito then
+    sLista := sLista + ',''DE''';
+  if sLista <> '' then
+  begin
+    Delete(sLista, 1, 1);
+    sCond := sCond + ' OR o.TIPO_OPERACION_OPCAJA IN (' + sLista + ') ';
+  end;
+  sSQL :=
+    ' SELECT o.CODIGO_EMP_OPCAJA, o.CODIGO_ALM_OPCAJA,                 ' +
+    '        o.CODIGO_CAJA_OPCAJA, o.NUMERO_OPERACION_OPCAJA,          ' +
+    '        o.FECHA_OPERACION_OPCAJA, o.SERIE_FAC_OPCAJA,             ' +
+    '        o.NUMERO_FAC_OPCAJA, o.IMPORTE_TOTAL_OPCAJA,              ' +
+    '        o.CONCEPTO_GASTO_INGRESO_OPCAJA,                          ' +
+    '        o.CODIGO_ALM_CONTRA_OPCAJA,                               ' +
+    '        f.TOTAL_LIQUIDO_FAC, f.FECHA_FAC, f.NIF_EMPRESA_FAC,      ' +
+    '        CASE                                                      ' +
+    '          WHEN o.TIPO_OPERACION_OPCAJA IN (''TR'',''AT'')         ' +
+    '            THEN ''TRA''                                          ' +
+    '          WHEN o.TIPO_OPERACION_OPCAJA = ''EC'' THEN ''ING''      ' +
+    '          WHEN o.TIPO_OPERACION_OPCAJA = ''GC'' THEN ''GAS''      ' +
+    '          WHEN o.TIPO_OPERACION_OPCAJA = ''DE'' THEN ''DEP''      ' +
+    '          ELSE ''VEN'' END                       AS GRUPO,       ' +
+    '        CASE                                                      ' +
+    '          WHEN o.TIPO_OPERACION_OPCAJA IN (''TR'',''AT'') THEN 2  ' +
+    '          WHEN o.TIPO_OPERACION_OPCAJA = ''EC'' THEN 3            ' +
+    '          WHEN o.TIPO_OPERACION_OPCAJA = ''GC'' THEN 4            ' +
+    '          WHEN o.TIPO_OPERACION_OPCAJA = ''DE'' THEN 5            ' +
+    '          ELSE 1 END                             AS GRUPO_ORDEN   ' +
+    '   FROM fza_caja_operaciones o                                    ' +
+    '   LEFT JOIN fza_facturas f                                       ' +
+    '     ON f.SERIE_FAC  = o.SERIE_FAC_OPCAJA                         ' +
+    '    AND f.NUMERO_FAC = o.NUMERO_FAC_OPCAJA                        ' +
+    '  WHERE o.CODIGO_EMP_OPCAJA   = :pEMP                             ' +
+    '    AND o.CODIGO_ALM_OPCAJA   = :pALM                             ' +
+    '    AND o.CODIGO_CAJA_OPCAJA  = :pCAJA                            ' +
+    '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                      ' +
+    '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                      ' +
+    '    AND (' + sCond + ') ';
+  if ACronologico then
+    sSQL := sSQL +
+      '  ORDER BY o.FECHA_OPERACION_OPCAJA, o.NUMERO_OPERACION_OPCAJA  '
+  else
+    sSQL := sSQL +
+      '  ORDER BY GRUPO_ORDEN, o.FECHA_OPERACION_OPCAJA,               ' +
+      '           o.NUMERO_OPERACION_OPCAJA                            ';
+  Result := sSQL;
+end;
+
+class procedure TTiraCajaTicket.AsignarParamsOperaciones(AQuery: TUniQuery;
+  const AEmpresa, AAlmacen, ACaja: string;
+  AFechaDesde, AFechaHasta: TDate; const ASeries: TArray<string>);
+var
+  i: Integer;
+begin
+  AQuery.ParamByName('pEMP').AsString      := AEmpresa;
+  AQuery.ParamByName('pALM').AsString      := AAlmacen;
+  AQuery.ParamByName('pCAJA').AsString     := ACaja;
+  AQuery.ParamByName('pFDESDE').AsDateTime := AFechaDesde;
+  AQuery.ParamByName('pFHASTA').AsDateTime := AFechaHasta;
+  for i := 0 to High(ASeries) do
+    AQuery.ParamByName('pS' + IntToStr(i)).AsString := ASeries[i];
+end;
+
+// =============================================================================
 //   API pública
 // =============================================================================
 
@@ -624,7 +723,7 @@ var
   Ope: TUniQuery;
   Ticket: TTicketTermico;
   Preview: TFormVisualizador;
-  ComandosESC, RutaPDF, sSQL, sCond, sLista, sSerieIn, sSerieTxt: string;
+  ComandosESC, RutaPDF, sSerieTxt: string;
   sGrupo, sPrevGrupo: string;
   i: Integer;
   bVerCoste: Boolean;
@@ -795,85 +894,16 @@ begin
     Ticket.Negrita(False);
     Ticket.Alinear(alIzquierda);
     Ticket.SaltarLineas(1);
-    // Condición: ventas facturadas (multi-serie, excluyendo los tipos de los
-    // bloques) más los tipos opcionales marcados.
-    sSerieIn := '';
-    for i := 0 to High(ASeries) do
-    begin
-      if sSerieIn <> '' then
-        sSerieIn := sSerieIn + ',';
-      sSerieIn := sSerieIn + ':pS' + IntToStr(i);
-    end;
-    sCond := ' (o.SERIE_FAC_OPCAJA IS NOT NULL                             ' +
-             '  AND o.SERIE_FAC_OPCAJA <> ''''                             ' +
-             '  AND o.TIPO_OPERACION_OPCAJA                                ' +
-             '        NOT IN (''TR'',''AT'',''EC'',''GC'',''DE'') ';
-    if sSerieIn <> '' then
-      sCond := sCond + ' AND o.SERIE_FAC_OPCAJA IN (' + sSerieIn + ') ';
-    sCond := sCond + ') ';
-    sLista := '';
-    if AIncluirTraspasos then
-      sLista := sLista + ',''TR'',''AT''';
-    if AIncluirIngresos then
-      sLista := sLista + ',''EC''';
-    if AIncluirGastos then
-      sLista := sLista + ',''GC''';
-    if AIncluirCredito then
-      sLista := sLista + ',''DE''';
-    if sLista <> '' then
-    begin
-      Delete(sLista, 1, 1);
-      sCond := sCond + ' OR o.TIPO_OPERACION_OPCAJA IN (' + sLista + ') ';
-    end;
+    // Cursor maestro: el mismo SQL (ventas multi-serie + tipos marcados) que
+    // usa el volcado a Excel, para que ambos muestren exactamente lo mismo.
     Ope := TUniQuery.Create(nil);
     try
       Ope.Connection := AConn;
-      sSQL :=
-        ' SELECT o.CODIGO_EMP_OPCAJA, o.CODIGO_ALM_OPCAJA,                 ' +
-        '        o.CODIGO_CAJA_OPCAJA, o.NUMERO_OPERACION_OPCAJA,          ' +
-        '        o.FECHA_OPERACION_OPCAJA, o.SERIE_FAC_OPCAJA,             ' +
-        '        o.NUMERO_FAC_OPCAJA, o.IMPORTE_TOTAL_OPCAJA,              ' +
-        '        o.CONCEPTO_GASTO_INGRESO_OPCAJA,                          ' +
-        '        o.CODIGO_ALM_CONTRA_OPCAJA,                               ' +
-        '        f.TOTAL_LIQUIDO_FAC, f.FECHA_FAC, f.NIF_EMPRESA_FAC,      ' +
-        '        CASE                                                      ' +
-        '          WHEN o.TIPO_OPERACION_OPCAJA IN (''TR'',''AT'')         ' +
-        '            THEN ''TRA''                                          ' +
-        '          WHEN o.TIPO_OPERACION_OPCAJA = ''EC'' THEN ''ING''      ' +
-        '          WHEN o.TIPO_OPERACION_OPCAJA = ''GC'' THEN ''GAS''      ' +
-        '          WHEN o.TIPO_OPERACION_OPCAJA = ''DE'' THEN ''DEP''      ' +
-        '          ELSE ''VEN'' END                       AS GRUPO,       ' +
-        '        CASE                                                      ' +
-        '          WHEN o.TIPO_OPERACION_OPCAJA IN (''TR'',''AT'') THEN 2  ' +
-        '          WHEN o.TIPO_OPERACION_OPCAJA = ''EC'' THEN 3            ' +
-        '          WHEN o.TIPO_OPERACION_OPCAJA = ''GC'' THEN 4            ' +
-        '          WHEN o.TIPO_OPERACION_OPCAJA = ''DE'' THEN 5            ' +
-        '          ELSE 1 END                             AS GRUPO_ORDEN   ' +
-        '   FROM fza_caja_operaciones o                                    ' +
-        '   LEFT JOIN fza_facturas f                                       ' +
-        '     ON f.SERIE_FAC  = o.SERIE_FAC_OPCAJA                         ' +
-        '    AND f.NUMERO_FAC = o.NUMERO_FAC_OPCAJA                        ' +
-        '  WHERE o.CODIGO_EMP_OPCAJA   = :pEMP                             ' +
-        '    AND o.CODIGO_ALM_OPCAJA   = :pALM                             ' +
-        '    AND o.CODIGO_CAJA_OPCAJA  = :pCAJA                            ' +
-        '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                      ' +
-        '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                      ' +
-        '    AND (' + sCond + ') ';
-      if ACronologico then
-        sSQL := sSQL +
-          '  ORDER BY o.FECHA_OPERACION_OPCAJA, o.NUMERO_OPERACION_OPCAJA  '
-      else
-        sSQL := sSQL +
-          '  ORDER BY GRUPO_ORDEN, o.FECHA_OPERACION_OPCAJA,               ' +
-          '           o.NUMERO_OPERACION_OPCAJA                            ';
-      Ope.SQL.Text := sSQL;
-      Ope.ParamByName('pEMP').AsString      := AEmpresa;
-      Ope.ParamByName('pALM').AsString      := AAlmacen;
-      Ope.ParamByName('pCAJA').AsString     := ACaja;
-      Ope.ParamByName('pFDESDE').AsDateTime := AFechaDesde;
-      Ope.ParamByName('pFHASTA').AsDateTime := AFechaHasta;
-      for i := 0 to High(ASeries) do
-        Ope.ParamByName('pS' + IntToStr(i)).AsString := ASeries[i];
+      Ope.SQL.Text := SQLOperaciones(ASeries, ACronologico,
+                                     AIncluirTraspasos, AIncluirIngresos,
+                                     AIncluirGastos, AIncluirCredito);
+      AsignarParamsOperaciones(Ope, AEmpresa, AAlmacen, ACaja,
+                               AFechaDesde, AFechaHasta, ASeries);
       Ope.Open;
       sPrevGrupo := '';
       while not Ope.Eof do
@@ -960,6 +990,444 @@ begin
     end;
   finally
     FreeAndNil(Ticket);
+  end;
+end;
+
+class procedure TTiraCajaTicket.ExportarExcel(AOwner: TComponent;
+  AConn: TUniConnection; const AEmpresa, AAlmacen, ACaja: string;
+  AFechaDesde, AFechaHasta: TDate; const ASeries: TArray<string>;
+  ACronologico: Boolean = False; AIncluirTraspasos: Boolean = False;
+  AIncluirIngresos: Boolean = False; AIncluirGastos: Boolean = False;
+  AIncluirCredito: Boolean = False);
+const
+  cTIPO  = 0;
+  cFECHA = 1;
+  cDOC   = 2;
+  cREF   = 3;
+  cSKU   = 4;
+  cDESC  = 5;
+  cCANT  = 6;
+  cIMP   = 7;
+  cCOB   = 8;
+  cPEN   = 9;
+var
+  Frm: TfrmMtoPreviewExcel;
+  Sheet: TdxSpreadSheetTableView;
+  Ope: TUniQuery;
+  r, i: Integer;
+  bVerCoste: Boolean;
+  sGrupo, sPrevGrupo, sSerieTxt: string;
+  impVen, impTra, impIng, impGas, vtaDep, cobDep: Currency;
+  nVen, nTra, nIng, nGas, nDep: Integer;
+
+  // Importe con formato de moneda en una celda.
+  procedure WMoney(ARow, ACol: Integer; const AValor: Currency);
+  begin
+    W(Sheet, ARow, ACol, AValor, False, ssahRight);
+    Sheet.Cells[ARow, ACol].Style.DataFormat.FormatCode := '#,##0.00';
+  end;
+
+  // Documento formateado de la fila actual o, si no lo tiene, nº de operación.
+  function RefDoc: string;
+  begin
+    if Trim(Ope.FieldByName('SERIE_FAC_OPCAJA').AsString) <> '' then
+      Result := FormatearDocumentoEmpresa(
+        Ope.FieldByName('CODIGO_EMP_OPCAJA').AsString,
+        Ope.FieldByName('SERIE_FAC_OPCAJA').AsString,
+        Ope.FieldByName('NUMERO_FAC_OPCAJA').AsString)
+    else
+      Result := 'Op.' + Ope.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
+  end;
+
+  function FechaOpe: string;
+  begin
+    Result := FormatDateTime('dd/mm/yyyy hh:nn',
+      Ope.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime);
+  end;
+
+  procedure VolcarVenta;
+  var
+    Q: TUniQuery;
+    sDoc: string;
+  begin
+    sDoc := RefDoc;
+    Q := TUniQuery.Create(nil);
+    try
+      Q.Connection := AConn;
+      Q.SQL.Text :=
+        ' SELECT CODIGO_UNIDAD_FACLIN, DESCRIPCION_ARTICULO_FACLIN,     ' +
+        '        CANTIDAD_FACLIN, TOTAL_FACLIN                          ' +
+        '   FROM fza_facturas_lineas                                    ' +
+        '  WHERE CODIGO_EMP_FACLIN       = :pEMP                        ' +
+        '    AND CODIGO_ALM_FACLIN       = :pALM                        ' +
+        '    AND CODIGO_CAJA_FACLIN      = :pCAJA                       ' +
+        '    AND NUMERO_OPERACION_FACLIN = :pOPE                        ' +
+        '  ORDER BY LINEA_FACLIN                                        ';
+      Q.ParamByName('pEMP').AsString  :=
+        Ope.FieldByName('CODIGO_EMP_OPCAJA').AsString;
+      Q.ParamByName('pALM').AsString  :=
+        Ope.FieldByName('CODIGO_ALM_OPCAJA').AsString;
+      Q.ParamByName('pCAJA').AsString :=
+        Ope.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
+      Q.ParamByName('pOPE').AsString  :=
+        Ope.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
+      Q.Open;
+      while not Q.Eof do
+      begin
+        W(Sheet, r, cTIPO,  'Venta');
+        W(Sheet, r, cFECHA, FechaOpe);
+        W(Sheet, r, cDOC,   sDoc);
+        W(Sheet, r, cSKU,   Q.FieldByName('CODIGO_UNIDAD_FACLIN').AsString);
+        W(Sheet, r, cDESC,
+          Q.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString);
+        W(Sheet, r, cCANT,  Q.FieldByName('CANTIDAD_FACLIN').AsFloat,
+          False, ssahRight);
+        WMoney(r, cIMP, Q.FieldByName('TOTAL_FACLIN').AsCurrency);
+        impVen := impVen + Q.FieldByName('TOTAL_FACLIN').AsCurrency;
+        Inc(r);
+        Q.Next;
+      end;
+    finally
+      FreeAndNil(Q);
+    end;
+    Inc(nVen);
+  end;
+
+  procedure VolcarTraspaso;
+  var
+    Q: TUniQuery;
+    sDoc, sDest: string;
+    dCant, dCoste: Double;
+  begin
+    sDoc  := RefDoc;
+    sDest := Trim(Ope.FieldByName('CODIGO_ALM_CONTRA_OPCAJA').AsString);
+    Q := TUniQuery.Create(nil);
+    try
+      Q.Connection := AConn;
+      Q.SQL.Text :=
+        ' SELECT m.CODIGO_UNIDAD_MOV, m.CANTIDAD_MOV,                   ' +
+        '        COALESCE(NULLIF(TRIM(m.DESCRIPCION_ARTICULO_MOV),''''),' +
+        '                 a.DESCRIPCION_ART, '''') AS DESCRIPCION,      ' +
+        '        m.PRECIO_COSTE_UNITARIO_MOV                            ' +
+        '   FROM fza_movimientos_almacen m                             ' +
+        '   LEFT JOIN fza_articulos a                                  ' +
+        '     ON a.CODIGO_ART_ART = m.CODIGO_ART_MOV                   ' +
+        '  WHERE m.CODIGO_EMP_MOV           = :pEMP                    ' +
+        '    AND m.CODIGO_ALM_DOC_MOV       = :pALM                    ' +
+        '    AND m.CODIGO_CAJA_DOC_MOV      = :pCAJA                   ' +
+        '    AND m.NUMERO_OPERACION_DOC_MOV = :pOPE                    ' +
+        '    AND m.TIPO_MOV = ''S''                                   ' +
+        '  ORDER BY m.LINEA_MOV                                       ';
+      Q.ParamByName('pEMP').AsString  :=
+        Ope.FieldByName('CODIGO_EMP_OPCAJA').AsString;
+      Q.ParamByName('pALM').AsString  :=
+        Ope.FieldByName('CODIGO_ALM_OPCAJA').AsString;
+      Q.ParamByName('pCAJA').AsString :=
+        Ope.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
+      Q.ParamByName('pOPE').AsString  :=
+        Ope.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
+      Q.Open;
+      while not Q.Eof do
+      begin
+        dCant  := Q.FieldByName('CANTIDAD_MOV').AsFloat;
+        dCoste := Q.FieldByName('PRECIO_COSTE_UNITARIO_MOV').AsFloat;
+        W(Sheet, r, cTIPO,  'Traspaso');
+        W(Sheet, r, cFECHA, FechaOpe);
+        W(Sheet, r, cDOC,   sDoc);
+        W(Sheet, r, cREF,   sDest);
+        W(Sheet, r, cSKU,   Q.FieldByName('CODIGO_UNIDAD_MOV').AsString);
+        W(Sheet, r, cDESC,  Q.FieldByName('DESCRIPCION').AsString);
+        W(Sheet, r, cCANT,  dCant, False, ssahRight);
+        if bVerCoste then
+        begin
+          WMoney(r, cIMP, dCant * dCoste);
+          impTra := impTra + dCant * dCoste;
+        end;
+        Inc(r);
+        Q.Next;
+      end;
+    finally
+      FreeAndNil(Q);
+    end;
+    Inc(nTra);
+  end;
+
+  procedure VolcarIngresoGasto(const ATipo: string);
+  var
+    dImp: Currency;
+  begin
+    dImp := Ope.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
+    W(Sheet, r, cTIPO,  ATipo);
+    W(Sheet, r, cFECHA, FechaOpe);
+    W(Sheet, r, cDOC,
+      'Op.' + Ope.FieldByName('NUMERO_OPERACION_OPCAJA').AsString);
+    W(Sheet, r, cDESC,
+      Trim(Ope.FieldByName('CONCEPTO_GASTO_INGRESO_OPCAJA').AsString));
+    WMoney(r, cIMP, dImp);
+    if ATipo = 'Ingreso' then
+    begin
+      impIng := impIng + dImp;
+      Inc(nIng);
+    end
+    else
+    begin
+      impGas := impGas + dImp;
+      Inc(nGas);
+    end;
+    Inc(r);
+  end;
+
+  procedure VolcarDeposito;
+  var
+    Q: TUniQuery;
+    dCant: Double;
+    dPre, dTot, dAnt: Currency;
+  begin
+    Q := TUniQuery.Create(nil);
+    try
+      Q.Connection := AConn;
+      Q.SQL.Text :=
+        ' SELECT d.CODIGO_CLI_DEP,                                      ' +
+        '        COALESCE(c.RAZON_SOCIAL_CLI,'''') AS CLIENTE,          ' +
+        '        d.CODIGO_UNIDAD_DEP,                                   ' +
+        '        COALESCE(a.DESCRIPCION_ART,'''')  AS DESCRIPCION,      ' +
+        '        d.PRECIO_VENTA_DEP,                                    ' +
+        '        COALESCE(d.CANTIDAD_PENDIENTE_DEP,1) AS CANTIDAD,      ' +
+        '        d.IMPORTE_ANTICIPO_DEP                                 ' +
+        '   FROM fza_depositos_cliente d                               ' +
+        '   LEFT JOIN fza_clientes  c                                  ' +
+        '     ON c.CODIGO_CLI_CLI = d.CODIGO_CLI_DEP                    ' +
+        '   LEFT JOIN fza_articulos a                                  ' +
+        '     ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP                    ' +
+        '  WHERE d.CODIGO_EMP_DEP       = :pEMP                         ' +
+        '    AND d.CODIGO_ALM_DEP       = :pALM                         ' +
+        '    AND d.CODIGO_CAJA_DEP      = :pCAJA                        ' +
+        '    AND d.NUMERO_OPERACION_DEP = :pOPE                         ' +
+        '  ORDER BY d.ID_DEPOSITO_DEP                                   ';
+      Q.ParamByName('pEMP').AsString  :=
+        Ope.FieldByName('CODIGO_EMP_OPCAJA').AsString;
+      Q.ParamByName('pALM').AsString  :=
+        Ope.FieldByName('CODIGO_ALM_OPCAJA').AsString;
+      Q.ParamByName('pCAJA').AsString :=
+        Ope.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
+      Q.ParamByName('pOPE').AsString  :=
+        Ope.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
+      Q.Open;
+      while not Q.Eof do
+      begin
+        dPre  := Q.FieldByName('PRECIO_VENTA_DEP').AsCurrency;
+        dCant := Q.FieldByName('CANTIDAD').AsFloat;
+        dAnt  := Q.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
+        dTot  := dPre * dCant;
+        W(Sheet, r, cTIPO,  'Crédito (depósito)');
+        W(Sheet, r, cFECHA, FechaOpe);
+        W(Sheet, r, cDOC,
+          'Op.' + Ope.FieldByName('NUMERO_OPERACION_OPCAJA').AsString);
+        W(Sheet, r, cREF,
+          Trim(Q.FieldByName('CODIGO_CLI_DEP').AsString + ' ' +
+               Q.FieldByName('CLIENTE').AsString));
+        W(Sheet, r, cSKU,   Q.FieldByName('CODIGO_UNIDAD_DEP').AsString);
+        W(Sheet, r, cDESC,  Q.FieldByName('DESCRIPCION').AsString);
+        W(Sheet, r, cCANT,  dCant, False, ssahRight);
+        WMoney(r, cIMP, dTot);
+        WMoney(r, cCOB, dAnt);
+        WMoney(r, cPEN, dTot - dAnt);
+        vtaDep := vtaDep + dTot;
+        cobDep := cobDep + dAnt;
+        Inc(r);
+        Q.Next;
+      end;
+    finally
+      FreeAndNil(Q);
+    end;
+    Inc(nDep);
+  end;
+
+  // Título de sección (modo por tipo de documento).
+  procedure TituloGrupo(const AG: string);
+  begin
+    if AG = 'TRA' then
+      W(Sheet, r, cTIPO, 'TRASPASOS SALIENTES (ORIGEN)', True)
+    else if AG = 'ING' then
+      W(Sheet, r, cTIPO, 'INGRESOS POR CAJA', True)
+    else if AG = 'GAS' then
+      W(Sheet, r, cTIPO, 'GASTOS POR CAJA', True)
+    else if AG = 'DEP' then
+      W(Sheet, r, cTIPO, 'VENTAS A CREDITO (DEPOSITOS)', True)
+    else
+      W(Sheet, r, cTIPO, 'VENTAS FACTURADAS', True);
+    Inc(r);
+  end;
+
+  // Subtotal de un grupo según sus acumuladores.
+  procedure SubtotalGrupo(const AG: string);
+  begin
+    if AG = 'TRA' then
+    begin
+      W(Sheet, r, cDESC, 'SUBTOTAL TRASPASOS (coste)', True, ssahRight);
+      if bVerCoste then
+        WMoney(r, cIMP, impTra);
+    end
+    else if AG = 'ING' then
+    begin
+      W(Sheet, r, cDESC, 'SUBTOTAL INGRESOS', True, ssahRight);
+      WMoney(r, cIMP, impIng);
+    end
+    else if AG = 'GAS' then
+    begin
+      W(Sheet, r, cDESC, 'SUBTOTAL GASTOS', True, ssahRight);
+      WMoney(r, cIMP, impGas);
+    end
+    else if AG = 'DEP' then
+    begin
+      W(Sheet, r, cDESC, 'SUBTOTAL DEPOSITOS', True, ssahRight);
+      WMoney(r, cIMP, vtaDep);
+      WMoney(r, cCOB, cobDep);
+    end
+    else
+    begin
+      W(Sheet, r, cDESC, 'SUBTOTAL VENTAS', True, ssahRight);
+      WMoney(r, cIMP, impVen);
+    end;
+    Inc(r);
+  end;
+
+  // Vuelca la fila actual del cursor según su grupo.
+  procedure VolcarFila(const AG: string);
+  begin
+    if AG = 'TRA' then
+      VolcarTraspaso
+    else if AG = 'ING' then
+      VolcarIngresoGasto('Ingreso')
+    else if AG = 'GAS' then
+      VolcarIngresoGasto('Gasto')
+    else if AG = 'DEP' then
+      VolcarDeposito
+    else
+      VolcarVenta;
+  end;
+
+begin
+  if (AConn = nil) or (not AConn.Connected) then
+    Exit;
+  impVen := 0;
+  impTra := 0;
+  impIng := 0;
+  impGas := 0;
+  vtaDep := 0;
+  cobDep := 0;
+  nVen := 0;
+  nTra := 0;
+  nIng := 0;
+  nGas := 0;
+  nDep := 0;
+  bVerCoste := Assigned(oPermisos)
+               and oPermisos.TienePermiso('caja.verCoste', False);
+  Frm := TfrmMtoPreviewExcel.Create(AOwner);
+  try
+    if Frm.dxSpreadSheet1.SheetCount = 0 then
+      Frm.dxSpreadSheet1.AddSheet('Tira de Caja', TdxSpreadSheetTableView);
+    Sheet := Frm.dxSpreadSheet1.ActiveSheetAsTable;
+    if Sheet <> nil then
+    begin
+      Sheet.BeginUpdate;
+      try
+        // Cabecera informativa (caja, rango, series y orden).
+        W(Sheet, 0, cTIPO, 'TIRA DE CAJA · CAJA ' + ACaja, True);
+        W(Sheet, 1, cTIPO, 'DEL ' +
+          FormatDateTime('dd/mm/yyyy hh:nn', AFechaDesde) + '  AL ' +
+          FormatDateTime('dd/mm/yyyy hh:nn', AFechaHasta));
+        if Length(ASeries) = 0 then
+          sSerieTxt := 'TODAS LAS SERIES'
+        else
+        begin
+          sSerieTxt := 'SERIES: ';
+          for i := 0 to High(ASeries) do
+          begin
+            if i > 0 then
+              sSerieTxt := sSerieTxt + ', ';
+            sSerieTxt := sSerieTxt + ASeries[i];
+          end;
+        end;
+        W(Sheet, 2, cTIPO, sSerieTxt);
+        if ACronologico then
+          W(Sheet, 3, cTIPO, 'ORDEN: CRONOLOGICO')
+        else
+          W(Sheet, 3, cTIPO, 'ORDEN: POR TIPO DE DOCUMENTO');
+        // Cabecera de columnas.
+        W(Sheet, 5, cTIPO,  'Tipo',            True);
+        W(Sheet, 5, cFECHA, 'Fecha',           True);
+        W(Sheet, 5, cDOC,   'Documento',       True);
+        W(Sheet, 5, cREF,   'Cliente/Destino', True);
+        W(Sheet, 5, cSKU,   'SKU',             True);
+        W(Sheet, 5, cDESC,  'Descripción',     True);
+        W(Sheet, 5, cCANT,  'Cantidad',        True, ssahRight);
+        W(Sheet, 5, cIMP,   'Importe',         True, ssahRight);
+        W(Sheet, 5, cCOB,   'Cobrado',         True, ssahRight);
+        W(Sheet, 5, cPEN,   'Pendiente',       True, ssahRight);
+        r := 6;
+        Ope := TUniQuery.Create(nil);
+        try
+          Ope.Connection := AConn;
+          Ope.SQL.Text := SQLOperaciones(ASeries, ACronologico,
+                                         AIncluirTraspasos, AIncluirIngresos,
+                                         AIncluirGastos, AIncluirCredito);
+          AsignarParamsOperaciones(Ope, AEmpresa, AAlmacen, ACaja,
+                                   AFechaDesde, AFechaHasta, ASeries);
+          Ope.Open;
+          sPrevGrupo := '';
+          while not Ope.Eof do
+          begin
+            sGrupo := Ope.FieldByName('GRUPO').AsString;
+            // Modo por tipo: subtotal del grupo anterior + título del nuevo.
+            if (not ACronologico) and (sGrupo <> sPrevGrupo) then
+            begin
+              if sPrevGrupo <> '' then
+              begin
+                SubtotalGrupo(sPrevGrupo);
+                Inc(r);
+              end;
+              TituloGrupo(sGrupo);
+            end;
+            VolcarFila(sGrupo);
+            sPrevGrupo := sGrupo;
+            Ope.Next;
+          end;
+        finally
+          FreeAndNil(Ope);
+        end;
+        // Cierre: subtotal del último grupo (por tipo) o resumen (cronológico).
+        if (nVen + nTra + nIng + nGas + nDep) = 0 then
+          W(Sheet, r, cTIPO, 'Sin operaciones')
+        else if not ACronologico then
+          SubtotalGrupo(sPrevGrupo)
+        else
+        begin
+          Inc(r);
+          W(Sheet, r, cTIPO, 'RESUMEN', True);
+          Inc(r);
+          if nVen > 0 then
+            SubtotalGrupo('VEN');
+          if nTra > 0 then
+            SubtotalGrupo('TRA');
+          if nIng > 0 then
+            SubtotalGrupo('ING');
+          if nGas > 0 then
+            SubtotalGrupo('GAS');
+          if nDep > 0 then
+            SubtotalGrupo('DEP');
+        end;
+      finally
+        Sheet.EndUpdate;
+      end;
+      if AOwner is TForm then
+        Frm.PopupParent := TForm(AOwner);
+      Frm.DialogoGuardar.FileName := 'TiraCaja_' +
+        FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+      Frm.ShowModal;
+    end;
+  finally
+    FreeAndNil(Frm);
   end;
 end;
 

@@ -166,7 +166,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            
+
               '[Devolucion."CODIGO_POSTAL_ALM_DEVC"] [Devolucion."POBLACION_ALM_DEVC"' +
               '] ([Devolucion."PROVINCIA_ALM_DEVC"])')
           ParentFont = False
@@ -185,7 +185,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            
+
               'Tel: [Devolucion."TELEFONO_ALM_DEVC"]   Email: [Devolucion."EMAIL_ALM_' +
               'DEVC"]')
           ParentFont = False
@@ -257,7 +257,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            
+
               '[Devolucion."CODIGO_POSTAL_PRV"] [Devolucion."POBLACION_PRV"] ([Albara' +
               'n."PROVINCIA_PRV"])')
           ParentFont = False
@@ -1145,7 +1145,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T01"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T01">), '#39#39')]')
           ParentFont = False
@@ -1166,7 +1166,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T02"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T02">), '#39#39')]')
           ParentFont = False
@@ -1187,7 +1187,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T03"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T03">), '#39#39')]')
           ParentFont = False
@@ -1208,7 +1208,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T04"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T04">), '#39#39')]')
           ParentFont = False
@@ -1229,7 +1229,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T05"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T05">), '#39#39')]')
           ParentFont = False
@@ -1250,7 +1250,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T06"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T06">), '#39#39')]')
           ParentFont = False
@@ -1271,7 +1271,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T07"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T07">), '#39#39')]')
           ParentFont = False
@@ -1292,7 +1292,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T08"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T08">), '#39#39')]')
           ParentFont = False
@@ -1313,7 +1313,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T09"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T09">), '#39#39')]')
           ParentFont = False
@@ -1334,7 +1334,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T10"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T10">), '#39#39')]')
           ParentFont = False
@@ -1355,7 +1355,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T11"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T11">), '#39#39')]')
           ParentFont = False
@@ -1376,7 +1376,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T12"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T12">), '#39#39')]')
           ParentFont = False
@@ -1397,7 +1397,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T13"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T13">), '#39#39')]')
           ParentFont = False
@@ -1418,7 +1418,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T14"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T14">), '#39#39')]')
           ParentFont = False
@@ -1439,7 +1439,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T15"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T15">), '#39#39')]')
           ParentFont = False
@@ -1460,7 +1460,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T16"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T16">), '#39#39')]')
           ParentFont = False
@@ -1481,7 +1481,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T17"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T17">), '#39#39')]')
           ParentFont = False
@@ -1502,7 +1502,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T18"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T18">), '#39#39')]')
           ParentFont = False
@@ -1523,7 +1523,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T19"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T19">), '#39#39')]')
           ParentFont = False
@@ -1544,7 +1544,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            
+
               '[IIF(<LineasDevolucion."T20"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
               '"T20">), '#39#39')]')
           ParentFont = False
@@ -1593,6 +1593,77 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
           VAlign = vaCenter
         end
       end
+      object ReportSummaryTotalesFiscales: TfrxReportSummary
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
+        Height = 120.944960000000000000
+        Top = 381.732530000000000000
+        Width = 1046.929810000000000000
+        object MemoTotalesFiscales: TfrxMemoView
+          AllowVectorExport = True
+          Left = 0.000000000000000000
+          Top = 7.559060000000000000
+          Width = 1046.929500000000000000
+          Height = 105.826840000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -10
+          Font.Name = 'Courier New'
+          Font.Style = []
+          Frame.Typ = [ftTop, ftBottom]
+          Memo.UTF8W = (
+            'DESGLOSE IVA / RE'
+
+              'Normal       Base [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_B' +
+              'ASEI_IVAN_DEVC">)]  IVA [FormatFloat('#39'0.##'#39', <Devolucion."POR' +
+              'CENTAJE_IVAN_DEVC">)]% [FormatFloat('#39'#,##0.00'#39', <Devolucion."' +
+              'TOTAL_IVAN_DEVC">)][IIF(<Devolucion."TOTAL_REN_DEVC"> <> 0, '#39 +
+              '  RE '#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_REN_DEV' +
+              'C">) + '#39'% '#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_REN' +
+              '_DEVC">), '#39#39')]'
+
+              'Reducido     Base [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_B' +
+              'ASEI_IVAR_DEVC">)]  IVA [FormatFloat('#39'0.##'#39', <Devolucion."POR' +
+              'CENTAJE_IVAR_DEVC">)]% [FormatFloat('#39'#,##0.00'#39', <Devolucion."' +
+              'TOTAL_IVAR_DEVC">)][IIF(<Devolucion."TOTAL_RER_DEVC"> <> 0, '#39 +
+              '  RE '#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_RER_DEV' +
+              'C">) + '#39'% '#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_RER' +
+              '_DEVC">), '#39#39')]'
+
+              'Super red.   Base [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_B' +
+              'ASEI_IVAS_DEVC">)]  IVA [FormatFloat('#39'0.##'#39', <Devolucion."POR' +
+              'CENTAJE_IVAS_DEVC">)]% [FormatFloat('#39'#,##0.00'#39', <Devolucion."' +
+              'TOTAL_IVAS_DEVC">)][IIF(<Devolucion."TOTAL_RES_DEVC"> <> 0, '#39 +
+              '  RE '#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_RES_DEV' +
+              'C">) + '#39'% '#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_RES' +
+              '_DEVC">), '#39#39')]'
+
+              'Exento       Base [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_B' +
+              'ASEI_IVAE_DEVC">)]  IVA [FormatFloat('#39'0.##'#39', <Devolucion."POR' +
+              'CENTAJE_IVAE_DEVC">)]% [FormatFloat('#39'#,##0.00'#39', <Devolucion."' +
+              'TOTAL_IVAE_DEVC">)][IIF(<Devolucion."TOTAL_REE_DEVC"> <> 0, '#39 +
+              '  RE '#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_REE_DEV' +
+              'C">) + '#39'% '#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_REE' +
+              '_DEVC">), '#39#39')]'
+
+              'Base total [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_BASES_DE' +
+              'VC">)]   Impuestos [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL' +
+              '_IMPUESTOS_DEVC">)]'
+
+              '[IIF(<Devolucion."TOTAL_RETENCION_DEVC"> <> 0, '#39'Retencion IRPF ' +
+              ''#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_RETENCION_D' +
+              'EVC">) + '#39'% -'#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_R' +
+              'ETENCION_DEVC">), '#39#39')]'
+
+              'TOTAL LIQUIDO [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_LIQU' +
+              'IDO_DEVC">)] EUR')
+          ParentFont = False
+        end
+      end
       object PageFooter1: TfrxPageFooter
         FillType = ftBrush
         FillGap.Top = 0
@@ -1601,7 +1672,7 @@ inherited frmPrintDevCompra: TfrmPrintDevCompra
         FillGap.Right = 0
         Frame.Typ = []
         Height = 26.456710000000000000
-        Top = 381.732530000000000000
+        Top = 506.457020000000000000
         Width = 1046.929810000000000000
         object MemoTotalUds: TfrxMemoView
           AllowVectorExport = True

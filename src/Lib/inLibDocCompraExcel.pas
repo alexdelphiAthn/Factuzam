@@ -82,6 +82,169 @@ uses
 
 // ===== Helpers internos =====================================================
 
+function CampoFloat(const ADataSet: TDataSet; const ACampo: string): Double;
+var
+  oCampo: TField;
+begin
+  Result := 0;
+  oCampo := nil;
+  if ADataSet <> nil then
+    oCampo := ADataSet.FindField(ACampo);
+  if oCampo <> nil then
+    if not oCampo.IsNull then
+      Result := oCampo.AsFloat;
+end;
+
+function SufijoFiscalCompra(const ADataSet: TDataSet): string;
+const
+  SUFIJOS: array[0..4] of string = ('SES', 'PEDC', 'ALBC', 'FACC', 'DEVC');
+var
+  i: Integer;
+begin
+  Result := '';
+  i := Low(SUFIJOS);
+  while (Result = '') and (i <= High(SUFIJOS)) do
+  begin
+    if (ADataSet <> nil) and
+       (ADataSet.FindField('TOTAL_BASES_' + SUFIJOS[i]) <> nil) then
+      Result := SUFIJOS[i];
+    Inc(i);
+  end;
+end;
+
+function TieneTipoFiscal(const ADataSet: TDataSet; const ASufijo,
+  ACodigoIva, ACodigoRe: string): Boolean;
+begin
+  Result :=
+    (Abs(CampoFloat(ADataSet, 'TOTAL_BASEI_' + ACodigoIva + '_' +
+                   ASufijo)) > 0.001) or
+    (Abs(CampoFloat(ADataSet, 'TOTAL_' + ACodigoIva + '_' +
+                   ASufijo)) > 0.001) or
+    (Abs(CampoFloat(ADataSet, 'TOTAL_' + ACodigoRe + '_' +
+                   ASufijo)) > 0.001);
+end;
+
+function TieneRecargoFiscal(const ADataSet: TDataSet;
+  const ASufijo: string): Boolean;
+begin
+  Result :=
+    (Abs(CampoFloat(ADataSet, 'TOTAL_REN_' + ASufijo)) > 0.001) or
+    (Abs(CampoFloat(ADataSet, 'TOTAL_RER_' + ASufijo)) > 0.001) or
+    (Abs(CampoFloat(ADataSet, 'TOTAL_RES_' + ASufijo)) > 0.001) or
+    (Abs(CampoFloat(ADataSet, 'TOTAL_REE_' + ASufijo)) > 0.001);
+end;
+
+procedure PintarLineaFiscalCompra(Sheet: TdxSpreadSheetTableView;
+  const ADataSet: TDataSet; const ASufijo, ATitulo, ACodigoIva,
+  ACodigoRe: string; var ARow: Integer; AColInicio: Integer;
+  ATieneRe: Boolean);
+var
+  rBase, rIva, rPorIva, rRe, rPorRe: Double;
+begin
+  if TieneTipoFiscal(ADataSet, ASufijo, ACodigoIva, ACodigoRe) then
+  begin
+    rBase := CampoFloat(ADataSet, 'TOTAL_BASEI_' + ACodigoIva + '_' +
+      ASufijo);
+    rIva := CampoFloat(ADataSet, 'TOTAL_' + ACodigoIva + '_' + ASufijo);
+    rPorIva := CampoFloat(ADataSet, 'PORCENTAJE_' + ACodigoIva + '_' +
+      ASufijo);
+    rRe := CampoFloat(ADataSet, 'TOTAL_' + ACodigoRe + '_' + ASufijo);
+    rPorRe := CampoFloat(ADataSet, 'PORCENTAJE_' + ACodigoRe + '_' +
+      ASufijo);
+    Inc(ARow);
+    W(Sheet, ARow, AColInicio, ATitulo);
+    W(Sheet, ARow, AColInicio + 1, rBase, False, ssahRight);
+    Sheet.Cells[ARow, AColInicio + 1].Style.DataFormat.FormatCode := FMT_EUR;
+    W(Sheet, ARow, AColInicio + 2, rPorIva, False, ssahRight);
+    Sheet.Cells[ARow, AColInicio + 2].Style.DataFormat.FormatCode :=
+      '0.##"%"';
+    W(Sheet, ARow, AColInicio + 3, rIva, False, ssahRight);
+    Sheet.Cells[ARow, AColInicio + 3].Style.DataFormat.FormatCode := FMT_EUR;
+    if ATieneRe then
+    begin
+      W(Sheet, ARow, AColInicio + 4, rPorRe, False, ssahRight);
+      Sheet.Cells[ARow, AColInicio + 4].Style.DataFormat.FormatCode :=
+        '0.##"%"';
+      W(Sheet, ARow, AColInicio + 5, rRe, False, ssahRight);
+      Sheet.Cells[ARow, AColInicio + 5].Style.DataFormat.FormatCode :=
+        FMT_EUR;
+    end;
+  end;
+end;
+
+procedure PintarTotalesFiscalesCompra(Sheet: TdxSpreadSheetTableView;
+  const ADataSet: TDataSet; var ARow: Integer; AColInicio: Integer);
+var
+  sSufijo: string;
+  iColFin, iFilaInicio: Integer;
+  bTieneRe, bTieneRetencion: Boolean;
+begin
+  sSufijo := SufijoFiscalCompra(ADataSet);
+  if sSufijo <> '' then
+  begin
+    bTieneRe := TieneRecargoFiscal(ADataSet, sSufijo);
+    bTieneRetencion :=
+      Abs(CampoFloat(ADataSet, 'TOTAL_RETENCION_' + sSufijo)) > 0.001;
+    iColFin := AColInicio + 3;
+    if bTieneRe then
+      iColFin := AColInicio + 5;
+    Inc(ARow, 2);
+    iFilaInicio := ARow;
+    W(Sheet, ARow, AColInicio, 'DESGLOSE IVA / RE', True);
+    Merge(Sheet, ARow, AColInicio, iColFin - AColInicio + 1, 1);
+    Inc(ARow);
+    W(Sheet, ARow, AColInicio, 'Tipo', True);
+    W(Sheet, ARow, AColInicio + 1, 'Base', True, ssahRight);
+    W(Sheet, ARow, AColInicio + 2, '% IVA', True, ssahRight);
+    W(Sheet, ARow, AColInicio + 3, 'IVA', True, ssahRight);
+    if bTieneRe then
+    begin
+      W(Sheet, ARow, AColInicio + 4, '% RE', True, ssahRight);
+      W(Sheet, ARow, AColInicio + 5, 'RE', True, ssahRight);
+    end;
+    PintarLineaFiscalCompra(Sheet, ADataSet, sSufijo, 'Normal',
+      'IVAN', 'REN', ARow, AColInicio, bTieneRe);
+    PintarLineaFiscalCompra(Sheet, ADataSet, sSufijo, 'Reducido',
+      'IVAR', 'RER', ARow, AColInicio, bTieneRe);
+    PintarLineaFiscalCompra(Sheet, ADataSet, sSufijo, 'Super reducido',
+      'IVAS', 'RES', ARow, AColInicio, bTieneRe);
+    PintarLineaFiscalCompra(Sheet, ADataSet, sSufijo, 'Exento',
+      'IVAE', 'REE', ARow, AColInicio, bTieneRe);
+    Inc(ARow);
+    W(Sheet, ARow, AColInicio, 'Total bases', True);
+    W(Sheet, ARow, AColInicio + 1,
+      CampoFloat(ADataSet, 'TOTAL_BASES_' + sSufijo), True, ssahRight);
+    Sheet.Cells[ARow, AColInicio + 1].Style.DataFormat.FormatCode := FMT_EUR;
+    W(Sheet, ARow, AColInicio + 2, 'Impuestos', True, ssahRight);
+    W(Sheet, ARow, AColInicio + 3,
+      CampoFloat(ADataSet, 'TOTAL_IMPUESTOS_' + sSufijo), True, ssahRight);
+    Sheet.Cells[ARow, AColInicio + 3].Style.DataFormat.FormatCode := FMT_EUR;
+    if bTieneRetencion then
+    begin
+      Inc(ARow);
+      W(Sheet, ARow, AColInicio, 'Retencion IRPF', True);
+      W(Sheet, ARow, AColInicio + 2,
+        CampoFloat(ADataSet, 'PORCENTAJE_RETENCION_' + sSufijo),
+        False, ssahRight);
+      Sheet.Cells[ARow, AColInicio + 2].Style.DataFormat.FormatCode :=
+        '0.##"%"';
+      W(Sheet, ARow, AColInicio + 3,
+        -CampoFloat(ADataSet, 'TOTAL_RETENCION_' + sSufijo),
+        False, ssahRight);
+      Sheet.Cells[ARow, AColInicio + 3].Style.DataFormat.FormatCode :=
+        FMT_EUR;
+      Sheet.Cells[ARow, AColInicio + 3].Style.Font.Color := clRed;
+    end;
+    Inc(ARow);
+    W(Sheet, ARow, AColInicio + 2, 'TOTAL LIQUIDO', True, ssahRight);
+    W(Sheet, ARow, AColInicio + 3,
+      CampoFloat(ADataSet, 'TOTAL_LIQUIDO_' + sSufijo), True, ssahRight);
+    Sheet.Cells[ARow, AColInicio + 3].Style.DataFormat.FormatCode := FMT_EUR;
+    Sheet.Cells[ARow, AColInicio + 3].Style.Font.Size := 13;
+    PintarCuadro(Sheet, iFilaInicio, AColInicio, ARow, iColFin, sscbsThin);
+  end;
+end;
+
 procedure PintarCabeceraDoc(Sheet: TdxSpreadSheetTableView;
   const QMaster: TDataSet; const ACfg: TDocCompraCabCfg;
   AColMax: Integer; out AFilaSiguiente: Integer);
@@ -412,6 +575,7 @@ begin
       if Sheet.Cells[iRow, c] <> nil then
         Sheet.Cells[iRow, c].Style.Borders[bTop].Style := sscbsThin;
   end;
+  PintarTotalesFiscalesCompra(Sheet, QMaster, iRow, COL_ART);
   // --- Anchos de columna ---
   Sheet.Columns[COL_ART].Size   := 90;
   Sheet.Columns[COL_REF].Size   := 70;
@@ -536,26 +700,7 @@ begin
                 GetRef(iFilaFinLineas, COL_CANT) + ')',
       '0');
     Sheet.Cells[iRow, COL_CANT].Style.Font.Style := [fsBold];
-    var RefTotalBase := GetRef(iRow, COL_TOTAL);
-    // IVA (si la cabecera tiene datos de impuestos)
-    if (QMaster.FindField('TOTAL_IMPUESTOS_ALBC') <> nil) then
-    begin
-      Inc(iRow);
-      W(Sheet, iRow, COL_PREC, 'Total IVA:', True, ssahRight);
-      W(Sheet, iRow, COL_TOTAL,
-        QMaster.FieldByName('TOTAL_IMPUESTOS_ALBC').AsFloat,
-        False, ssahRight);
-      Sheet.Cells[iRow, COL_TOTAL].Style.DataFormat.FormatCode := FMT_EUR;
-      var RefTotalIVA := GetRef(iRow, COL_TOTAL);
-      // Total liquido
-      Inc(iRow);
-      W(Sheet, iRow, COL_PREC, 'TOTAL:', True, ssahRight);
-      WFormula(Sheet, iRow, COL_TOTAL,
-        '=' + RefTotalBase + '+' + RefTotalIVA,
-        FMT_EUR);
-      Sheet.Cells[iRow, COL_TOTAL].Style.Font.Style := [fsBold];
-      Sheet.Cells[iRow, COL_TOTAL].Style.Font.Size := 14;
-    end;
+    PintarTotalesFiscalesCompra(Sheet, QMaster, iRow, COL_LINEA);
   end;
   // --- Anchos de columna ---
   Sheet.Columns[COL_LINEA].Size := 45;

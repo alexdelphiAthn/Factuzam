@@ -1,4 +1,4 @@
-﻿inherited frmPrintDevCompraV: TfrmPrintDevCompraV
+inherited frmPrintDevCompraV: TfrmPrintDevCompraV
   Caption = 'Imprimir Albarán de Compra (Vertical)'
   ClientHeight = 220
   ClientWidth = 460
@@ -634,6 +634,77 @@
           ParentFont = False
         end
       end
+      object ReportSummaryTotalesFiscales: TfrxReportSummary
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
+        Height = 134.000000000000000000
+        Top = 1010.000000000000000000
+        Width = 718.110700000000000000
+        object MemoTotalesFiscales: TfrxMemoView
+          AllowVectorExport = True
+          Left = 0.000000000000000000
+          Top = 6.000000000000000000
+          Width = 718.000000000000000000
+          Height = 120.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Courier New'
+          Font.Style = []
+          Frame.Typ = [ftTop, ftBottom]
+          Memo.UTF8W = (
+            'DESGLOSE IVA / RE'
+
+              'Normal       Base [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_B' +
+              'ASEI_IVAN_DEVC">)]  IVA [FormatFloat('#39'0.##'#39', <Devolucion."POR' +
+              'CENTAJE_IVAN_DEVC">)]% [FormatFloat('#39'#,##0.00'#39', <Devolucion."' +
+              'TOTAL_IVAN_DEVC">)][IIF(<Devolucion."TOTAL_REN_DEVC"> <> 0, '#39 +
+              '  RE '#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_REN_DEV' +
+              'C">) + '#39'% '#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_REN' +
+              '_DEVC">), '#39#39')]'
+
+              'Reducido     Base [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_B' +
+              'ASEI_IVAR_DEVC">)]  IVA [FormatFloat('#39'0.##'#39', <Devolucion."POR' +
+              'CENTAJE_IVAR_DEVC">)]% [FormatFloat('#39'#,##0.00'#39', <Devolucion."' +
+              'TOTAL_IVAR_DEVC">)][IIF(<Devolucion."TOTAL_RER_DEVC"> <> 0, '#39 +
+              '  RE '#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_RER_DEV' +
+              'C">) + '#39'% '#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_RER' +
+              '_DEVC">), '#39#39')]'
+
+              'Super red.   Base [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_B' +
+              'ASEI_IVAS_DEVC">)]  IVA [FormatFloat('#39'0.##'#39', <Devolucion."POR' +
+              'CENTAJE_IVAS_DEVC">)]% [FormatFloat('#39'#,##0.00'#39', <Devolucion."' +
+              'TOTAL_IVAS_DEVC">)][IIF(<Devolucion."TOTAL_RES_DEVC"> <> 0, '#39 +
+              '  RE '#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_RES_DEV' +
+              'C">) + '#39'% '#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_RES' +
+              '_DEVC">), '#39#39')]'
+
+              'Exento       Base [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_B' +
+              'ASEI_IVAE_DEVC">)]  IVA [FormatFloat('#39'0.##'#39', <Devolucion."POR' +
+              'CENTAJE_IVAE_DEVC">)]% [FormatFloat('#39'#,##0.00'#39', <Devolucion."' +
+              'TOTAL_IVAE_DEVC">)][IIF(<Devolucion."TOTAL_REE_DEVC"> <> 0, '#39 +
+              '  RE '#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_REE_DEV' +
+              'C">) + '#39'% '#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_REE' +
+              '_DEVC">), '#39#39')]'
+
+              'Base total [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_BASES_DE' +
+              'VC">)]   Impuestos [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL' +
+              '_IMPUESTOS_DEVC">)]'
+
+              '[IIF(<Devolucion."TOTAL_RETENCION_DEVC"> <> 0, '#39'Retencion IRPF ' +
+              ''#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_RETENCION_D' +
+              'EVC">) + '#39'% -'#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_R' +
+              'ETENCION_DEVC">), '#39#39')]'
+
+              'TOTAL LIQUIDO [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_LIQU' +
+              'IDO_DEVC">)] EUR')
+          ParentFont = False
+        end
+      end
       object PageFooter1: TfrxPageFooter
         FillType = ftBrush
         FillGap.Top = 0
@@ -642,7 +713,7 @@
         FillGap.Right = 0
         Frame.Typ = []
         Height = 30.000000000000000000
-        Top = 1010.000000000000000000
+        Top = 1148.000000000000000000
         Width = 718.110700000000000000
         object MemoTotBaseV: TfrxMemoView
           AllowVectorExport = True

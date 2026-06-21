@@ -43,15 +43,17 @@ type
     chkGastos: TcxCheckBox;
     chkCredito: TcxCheckBox;
     btnImprimir: TcxButton;
+    btnExcel: TcxButton;
     btnCancelar: TcxButton;
     procedure FormCreate(Sender: TObject);
   private
     FVerifactu: Boolean;
   public
-    // Devuelve True si el usuario pulsa Imprimir.
+    // Devuelve True si el usuario pulsa Imprimir o Ver Excel.
     //   ASeleccionSeries : series marcadas; vacío = todas las series.
     //   AImprimirQR      : solo puede salir True si AVerifactu lo era.
     //   ACronologico     : True = orden cronológico; False = por tipo de doc.
+    //   AExcel           : True si se pulsó "Ver Excel" (en vez de Imprimir).
     //   AIncluir*        : bloques opcionales a adjuntar (traspasos, ingresos,
     //                      gastos, ventas a crédito).
     class function Ejecutar(AOwner: TComponent;
@@ -61,6 +63,7 @@ type
                             out ASeleccionSeries: TArray<string>;
                             out AImprimirQR: Boolean;
                             out ACronologico: Boolean;
+                            out AExcel: Boolean;
                             out AIncluirTraspasos: Boolean;
                             out AIncluirIngresos: Boolean;
                             out AIncluirGastos: Boolean;
@@ -82,6 +85,7 @@ class function TfrmModalTiraCaja.Ejecutar(AOwner: TComponent;
                                           out ASeleccionSeries: TArray<string>;
                                           out AImprimirQR: Boolean;
                                           out ACronologico: Boolean;
+                                          out AExcel: Boolean;
                                           out AIncluirTraspasos: Boolean;
                                           out AIncluirIngresos: Boolean;
                                           out AIncluirGastos: Boolean;
@@ -89,12 +93,13 @@ class function TfrmModalTiraCaja.Ejecutar(AOwner: TComponent;
 var
   Frm: TfrmModalTiraCaja;
   Item: TcxCheckComboBoxItem;
-  i: Integer;
+  iResultado, i: Integer;
 begin
   Result            := False;
   SetLength(ASeleccionSeries, 0);
   AImprimirQR       := False;
   ACronologico      := False;
+  AExcel            := False;
   AIncluirTraspasos := False;
   AIncluirIngresos  := False;
   AIncluirGastos    := False;
@@ -128,7 +133,9 @@ begin
     Frm.chkIngresos.Checked  := False;
     Frm.chkGastos.Checked    := False;
     Frm.chkCredito.Checked   := False;
-    if Frm.ShowModal = mrOk then
+    // Imprimir -> mrOk; Ver Excel -> mrYes. Ambos devuelven las selecciones.
+    iResultado := Frm.ShowModal;
+    if (iResultado = mrOk) or (iResultado = mrYes) then
     begin
       // Series marcadas (por índice). Si no hay ninguna, se deja vacío = todas.
       for i := 0 to High(ASeries) do
@@ -138,6 +145,7 @@ begin
           ASeleccionSeries[High(ASeleccionSeries)] := ASeries[i];
         end;
       ACronologico      := Frm.cbAgrupamiento.ItemIndex = 1;
+      AExcel            := iResultado = mrYes;
       AImprimirQR       := Frm.chkQR.Checked and AVerifactu;
       AIncluirTraspasos := Frm.chkTraspasos.Checked;
       AIncluirIngresos  := Frm.chkIngresos.Checked;
