@@ -55,7 +55,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.Generics.Collections,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
-  Vcl.StdCtrls, Vcl.Imaging.pngimage,
+  Vcl.StdCtrls, Vcl.Menus, Vcl.Imaging.pngimage,
   Data.DB, DBAccess, Uni,
   cxClasses, cxLookAndFeels, cxLookAndFeelPainters, cxContainer,
   cxEdit, cxLabel, cxTextEdit, cxButtonEdit, cxButtons, cxMaskEdit,
@@ -66,7 +66,7 @@ uses
   cxGridDBTableView, cxGrid, cxPC, cxGraphics, cxLocalization,
   dxSkinsCore, dxSkinBlue, dxSkinsForm, dxScrollbarAnnotations,
   dxDateRanges, cxMemo, cxControls, dxCoreGraphics, cxCustomListBox,
-  cxRadioGroup, inLibLectorScanner;
+  cxRadioGroup, inLibLectorScanner, inLibDocumentosTrabajo;
 
 const
   // Detector por velocidad de tecleo (codigo de barras + CR, sin STX/ETX).
@@ -172,6 +172,8 @@ type
     FVerCoste       : Boolean;   // permiso para ver el coste (precio compra)
     FrbSimplificado : TcxRadioButton;
     FrbDesglosado   : TcxRadioButton;
+    FPopMenuStock   : TPopupMenu;
+    FMenuAgregarDoc : TMenuItem;
     // Lectura con pistola a nivel de formulario (KeyPreview=True): trama
     // STX/ETX y deteccion por velocidad de tecleo. Resuelve el codigo SOLO
     // contra codigos de barras y carga el articulo via SetArticuloSku, este
@@ -180,6 +182,8 @@ type
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure AplicarLecturaCodigoBarras(const ACodigo: string);
     procedure LectorCodigoLeido(Sender: TObject; const ACodigo: string);
+    procedure PopMenuStockPopup(Sender: TObject);
+    procedure MenuAgregarDocClick(Sender: TObject);
     procedure   PoblarComboEstados;
     procedure   GuardarModoUsuario;
     procedure   CargarModoUsuario;
@@ -203,6 +207,10 @@ type
                                  AEsColor: Boolean): string;
     function  EstadoBaseSelect: string;  // CTE/source segun estado
     function  EstadoBaseSelectFor(AEstado: TEstadoStock): string;
+    function  ResolverCodigoSkuDocumentoTrabajo(const AColor, ATalla: string;
+              out ACodigoSku, AMensaje: string): Boolean;
+    function  ResolverCeldaDocumentoTrabajo(out ALinea:
+              TDocTrabajoLineaOrigen; out AMensaje: string): Boolean;
     procedure ReconstruirColumnas(const ATallas: TArray<TInfoColumna>;
                                    AEsColor: Boolean);
     procedure RecargarConsulta;
@@ -349,6 +357,13 @@ begin
   // del color, via la libreria inLibAtributosPaleta (que se encarga del
   // lookup contra fza_atributos_basicos por texto/codigo y la cache).
   tvStock.OnCustomDrawCell := tvStockCustomDrawCell;
+  FPopMenuStock := TPopupMenu.Create(Self);
+  FPopMenuStock.OnPopup := PopMenuStockPopup;
+  FMenuAgregarDoc := TMenuItem.Create(FPopMenuStock);
+  FMenuAgregarDoc.Caption := 'Agregar a Documento de Trabajo...';
+  FMenuAgregarDoc.OnClick := MenuAgregarDocClick;
+  FPopMenuStock.Items.Add(FMenuAgregarDoc);
+  grdStock.PopupMenu := FPopMenuStock;
 
   // Lista paralela combo -> estado y radios de modo
   FEstadosCombo := TList<TEstadoStock>.Create;
@@ -572,6 +587,268 @@ begin
     SetArticuloSku(Resolucion.CodigoArticulo, Resolucion.CodigoSku)
   else
     MostrarError('Código de barras no encontrado: ' + ACodigo);
+end;
+
+procedure TfrmStockConsulta.PopMenuStockPopup(Sender: TObject);
+var
+  linea: TDocTrabajoLineaOrigen;
+  sMsg : string;
+begin
+  FMenuAgregarDoc.Enabled := ResolverCeldaDocumentoTrabajo(linea, sMsg);
+end;
+
+procedure TfrmStockConsulta.MenuAgregarDocClick(Sender: TObject);
+var
+  linea: TDocTrabajoLineaOrigen;
+  sMsg : string;
+begin
+  if ResolverCeldaDocumentoTrabajo(linea, sMsg) then
+  begin
+    try
+      AgregarUnidadADocumentoTrabajo(Self, inLibGlobalVar.oConn, linea);
+    except
+      on E: Exception do
+      begin
+        MostrarError(E.Message);
+      end;
+    end;
+  end
+  else
+  begin
+    Application.MessageBox(PChar(sMsg), 'Documento de Trabajo',
+      MB_OK or MB_ICONINFORMATION or MB_TOPMOST or MB_SETFOREGROUND);
+  end;
+end;
+
+function TfrmStockConsulta.ResolverCodigoSkuDocumentoTrabajo(
+  const AColor, ATalla: string; out ACodigoSku, AMensaje: string): Boolean;
+var
+  q     : TUniQuery;
+  sSql  : string;
+  iCount: Integer;
+begin
+  Result := False;
+  ACodigoSku := '';
+  AMensaje := '';
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    sSql :=
+      'SELECT sk.CODIGO_UNIDAD_SKU ' +
+      '  FROM fza_articulos_skus sk ' +
+      ' WHERE sk.CODIGO_ART_SKU = :ART ' +
+      '   AND sk.ESACTIVO_SKU = ''S'' ';
+    if Trim(AColor) <> '' then
+    begin
+      sSql := sSql +
+        '   AND EXISTS (SELECT 1 ' +
+        '                 FROM fza_atributos_sku sa ' +
+        '                 JOIN fza_atributos_valores av ' +
+        '                   ON av.ID_AV = sa.ID_AV_SA ' +
+        '                WHERE sa.CODIGO_UNIDAD_SKU_SA = ' +
+        'sk.CODIGO_UNIDAD_SKU ' +
+        '                  AND av.ID_VA_AV = ''CO'' ' +
+        '                  AND av.AV = :COLOR) ';
+    end;
+    if Trim(ATalla) <> '' then
+    begin
+      sSql := sSql +
+        '   AND EXISTS (SELECT 1 ' +
+        '                 FROM fza_atributos_sku sa ' +
+        '                 JOIN fza_atributos_valores av ' +
+        '                   ON av.ID_AV = sa.ID_AV_SA ' +
+        '                WHERE sa.CODIGO_UNIDAD_SKU_SA = ' +
+        'sk.CODIGO_UNIDAD_SKU ' +
+        '                  AND av.ID_VA_AV <> ''CO'' ' +
+        '                  AND av.AV = :TALLA) ';
+    end;
+    sSql := sSql + ' ORDER BY sk.CODIGO_UNIDAD_SKU';
+    q.SQL.Text := sSql;
+    q.ParamByName('ART').AsString := FCodArt;
+    if Trim(AColor) <> '' then
+    begin
+      q.ParamByName('COLOR').AsString := AColor;
+    end;
+    if Trim(ATalla) <> '' then
+    begin
+      q.ParamByName('TALLA').AsString := ATalla;
+    end;
+    q.Open;
+    iCount := 0;
+    while not q.Eof do
+    begin
+      Inc(iCount);
+      if iCount = 1 then
+      begin
+        ACodigoSku := q.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+      end;
+      q.Next;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+  if iCount = 1 then
+  begin
+    Result := True;
+  end
+  else if iCount = 0 then
+  begin
+    AMensaje := 'No se ha encontrado un SKU activo para la celda seleccionada.';
+  end
+  else
+  begin
+    AMensaje := 'La celda seleccionada coincide con varios SKUs. ' +
+                'Acote color, talla o almacen antes de agregarla.';
+  end;
+end;
+
+function TfrmStockConsulta.ResolverCeldaDocumentoTrabajo(
+  out ALinea: TDocTrabajoLineaOrigen; out AMensaje: string): Boolean;
+var
+  rec      : TcxCustomGridRecord;
+  col      : TcxGridDBColumn;
+  vCantidad: Variant;
+  sCampo   : string;
+  sGrupo   : string;
+  sColor   : string;
+  sTalla   : string;
+  sAlm     : string;
+  iTalla   : Integer;
+  alms     : TArray<string>;
+  colores  : TArray<string>;
+begin
+  Result := False;
+  ALinea.Clear;
+  AMensaje := '';
+  rec := nil;
+  col := nil;
+  sCampo := '';
+  sGrupo := '';
+  sColor := '';
+  sTalla := '';
+  sAlm := '';
+  iTalla := -1;
+  if Trim(FCodArt) = '' then
+  begin
+    AMensaje := 'Seleccione primero un articulo.';
+  end;
+  if (AMensaje = '') and (not FEsModoTodo) and
+     (EstadoActual <> esExistencias) then
+  begin
+    AMensaje := 'Cambie el estado a Existencias para agregar stock disponible.';
+  end;
+  if AMensaje = '' then
+  begin
+    rec := tvStock.Controller.FocusedRecord;
+    if rec = nil then
+    begin
+      AMensaje := 'Seleccione una celda de stock.';
+    end;
+  end;
+  if AMensaje = '' then
+  begin
+    if not (tvStock.Controller.FocusedColumn is TcxGridDBColumn) then
+    begin
+      AMensaje := 'Seleccione una celda de cantidad.';
+    end;
+  end;
+  if AMensaje = '' then
+  begin
+    col := TcxGridDBColumn(tvStock.Controller.FocusedColumn);
+    sCampo := col.DataBinding.FieldName;
+    if FEsModoTodo then
+    begin
+      if (FColEstado = nil) or
+         (StrToIntDef(VarToStr(rec.Values[FColEstado.Index]), -1) <>
+          Ord(esExistencias)) then
+      begin
+        AMensaje :=
+          'Seleccione la fila de Existencias para agregar stock disponible.';
+      end;
+    end;
+  end;
+  if AMensaje = '' then
+  begin
+    if StartsText('T', sCampo) and
+       TryStrToInt(Copy(sCampo, 2, MaxInt), iTalla) and
+       (iTalla >= 0) and (iTalla <= High(FColumnas)) then
+    begin
+      sTalla := FColumnas[iTalla].Codigo;
+    end
+    else if SameText(sCampo, 'TOTAL') and (Length(FColumnas) = 0) then
+    begin
+      sTalla := '';
+    end
+    else
+    begin
+      AMensaje :=
+        'Seleccione una columna de talla o una columna Total sin tallas.';
+    end;
+  end;
+  if (AMensaje = '') and (FColGrupo = nil) then
+  begin
+    AMensaje := 'No se ha podido leer el grupo de la fila.';
+  end;
+  if AMensaje = '' then
+  begin
+    sGrupo := VarToStr(rec.Values[FColGrupo.Index]);
+    if FEsModoColor then
+    begin
+      sColor := sGrupo;
+      alms := AlmacenesSeleccionadosLista;
+      if Length(alms) = 1 then
+      begin
+        sAlm := alms[0];
+      end
+      else
+      begin
+        AMensaje :=
+          'Seleccione un solo almacen para agregar una unidad concreta.';
+      end;
+    end
+    else
+    begin
+      sAlm := sGrupo;
+      colores := ColoresSeleccionadosLista;
+      if Length(colores) = 1 then
+      begin
+        sColor := colores[0];
+      end
+      else if (Length(colores) = 0) and (clbColores.Items.Count = 0) then
+      begin
+        sColor := '';
+      end
+      else
+      begin
+        AMensaje := 'Seleccione un solo color para agregar una unidad concreta.';
+      end;
+    end;
+  end;
+  if AMensaje = '' then
+  begin
+    if ResolverCodigoSkuDocumentoTrabajo(sColor, sTalla,
+                                         ALinea.CodigoSku, AMensaje) then
+    begin
+      vCantidad := rec.Values[col.Index];
+      if VarIsNull(vCantidad) or VarIsEmpty(vCantidad) then
+      begin
+        ALinea.CantidadStock := 0;
+      end
+      else
+      begin
+        ALinea.CantidadStock := VarAsType(vCantidad, varDouble);
+      end;
+      ALinea.CodigoArticulo := FCodArt;
+      ALinea.CodigoAlmacen := sAlm;
+      ALinea.Cantidad := ALinea.CantidadStock;
+      ALinea.Origen := 'CTRL_U';
+      if Trim(sColor + sTalla) <> '' then
+      begin
+        ALinea.DescripcionSku := Trim(sColor + ' ' + sTalla);
+      end;
+      Result := True;
+    end;
+  end;
 end;
 
 // Muestra un mensaje de error por ENCIMA de la ventana. Como el form es

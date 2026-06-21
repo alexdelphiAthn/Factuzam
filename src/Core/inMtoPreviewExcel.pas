@@ -50,7 +50,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
-    { Private declarations }
+    procedure MaximizarVentana;
+    procedure WmMaximizarPreviewExcel(var Msg: TMessage);
+      message WM_USER + 120;
   public
     { Public declarations }
   end;
@@ -89,13 +91,33 @@ procedure TfrmMtoPreviewExcel.FormCreate(Sender: TObject);
 begin
   inherited;
   ApplySpanishTranslation;
-
 end;
 
 procedure TfrmMtoPreviewExcel.FormShow(Sender: TObject);
 begin
   inherited;
-  Self.WindowState := wsMaximized;
+  PostMessage(Handle, WM_USER + 120, 0, 0);
+end;
+
+procedure TfrmMtoPreviewExcel.MaximizarVentana;
+var
+  R :TRect;
+begin
+  WindowState := wsNormal;
+  if Assigned(Monitor) then
+    R := Monitor.WorkareaRect
+  else
+    R := Screen.PrimaryMonitor.WorkareaRect;
+  SetBounds(R.Left, R.Top, R.Width, R.Height);
+  // El spreadsheet recalcula la tira de hojas al recibir el resize real.
+  SendMessage(Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+  dxSpreadSheet1.Invalidate;
+end;
+
+procedure TfrmMtoPreviewExcel.WmMaximizarPreviewExcel(var Msg: TMessage);
+begin
+  MaximizarVentana;
+  Msg.Result := 0;
 end;
 
 end.
