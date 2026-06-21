@@ -16,24 +16,51 @@ unit UniDataDocumentosTrabajo;
 interface
 
 uses
-  System.SysUtils, System.Classes, Data.DB, MemDS, DBAccess, Uni,
+  System.SysUtils, System.Classes, Vcl.ComCtrls, cxListView,
+  Data.DB, MemDS, DBAccess, Uni,
   UniDataGen;
 
 type
+  TDocTrabajoAmbito = (dtaPropios, dtaCompartidos);
+
   TdmDocumentosTrabajo = class(TdmBase)
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
+    procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryLineasAfterInsert(DataSet: TDataSet);
+    procedure unqryLineasBeforeDelete(DataSet: TDataSet);
     procedure unqryLineasBeforePost(DataSet: TDataSet);
+    procedure unqryCompartidosAfterInsert(DataSet: TDataSet);
+    procedure unqryCompartidosBeforeDelete(DataSet: TDataSet);
+    procedure unqryCompartidosBeforePost(DataSet: TDataSet);
   private
+    FAmbito: TDocTrabajoAmbito;
     procedure ConfigurarQueries;
+    procedure ConfigurarSqlCabecera;
+    procedure ConfigurarQueryCompartidos;
+    procedure ExpandirEtiquetasPorCantidadDoc(ADmArt: TObject;
+                                              AIdDtr: Int64;
+                                              const AAlmacenesCsv: string);
+    function ObtenerAlmacenesSql(const AAlmacenesCsv: string): string;
+    function ObtenerSkusDocumentoCsv(AIdDtr: Int64;
+                                     const AAlmacenesCsv: string): string;
     function SiguienteLinea: string;
+    function PuedeEditarDocumentoActual: Boolean;
   public
     unqryLineas: TUniQuery;
+    unqryCompartidos: TUniQuery;
     dsLineas: TDataSource;
+    dsCompartidos: TDataSource;
+    property Ambito: TDocTrabajoAmbito read FAmbito;
     procedure AbrirDetalles; override;
+    procedure CambiarAmbito(const AAmbito: TDocTrabajoAmbito);
+    procedure CargarAlmacenesEtiquetasDoc(AIdDtr: Int64; ALV: TcxListView);
+    procedure CrearDataSetEtiquetasDoc(ADmArt: TObject; AIdDtr: Int64;
+                                       const ACodTarifa,
+                                             AAlmacenesCsv: string;
+                                       AFecha: TDateTime);
   end;
 
 var
@@ -44,7 +71,8 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
-  inLibGlobalVar, inMtoDocumentosTrabajo;
+  System.Generics.Collections, System.Variants,
+  UniDataArticulos, inLibGlobalVar, inMtoDocumentosTrabajo;
 
 {$R *.dfm}
 
@@ -55,9 +83,13 @@ end;
 procedure TdmDocumentosTrabajo.DataModuleCreate(Sender: TObject);
 begin
   inherited;
+  FAmbito := dtaPropios;
   unqryLineas := TUniQuery.Create(Self);
+  unqryCompartidos := TUniQuery.Create(Self);
   dsLineas := TDataSource.Create(Self);
+  dsCompartidos := TDataSource.Create(Self);
   dsLineas.DataSet := unqryLineas;
+  dsCompartidos.DataSet := unqryCompartidos;
   ConfigurarQueries;
 end;
 
@@ -67,17 +99,41 @@ begin
   begin
     unqryLineas.Close;
   end;
+  if Assigned(unqryCompartidos) then
+  begin
+    unqryCompartidos.Close;
+  end;
   inherited;
+end;
+
+procedure TdmDocumentosTrabajo.ConfigurarSqlCabecera;
+begin
+  if FAmbito = dtaCompartidos then
+  begin
+    unqryTablaG.SQL.Text :=
+      'SELECT d.* ' +
+      '  FROM fza_documentos_trabajo d ' +
+      '  JOIN fza_documentos_trabajo_compartidos c ' +
+      '    ON c.ID_DTR_DTC = d.ID_DTR ' +
+      ' WHERE c.USUARIO_DTC = :USUARIO ' +
+      ' ORDER BY d.INSTANTE_DOCUMENTO_DTR DESC, d.ID_DTR DESC';
+  end
+  else
+  begin
+    unqryTablaG.SQL.Text :=
+      'SELECT * ' +
+      '  FROM fza_documentos_trabajo ' +
+      ' WHERE USUARIO_DTR = :USUARIO ' +
+      ' ORDER BY INSTANTE_DOCUMENTO_DTR DESC, ID_DTR DESC';
+  end;
+  unqryTablaG.ParamByName('USUARIO').AsString := oUser;
 end;
 
 procedure TdmDocumentosTrabajo.ConfigurarQueries;
 var
   frm: TfrmMtoDocumentosTrabajo;
 begin
-  unqryTablaG.SQL.Text :=
-    'SELECT * ' +
-    '  FROM fza_documentos_trabajo ' +
-    ' ORDER BY INSTANTE_DOCUMENTO_DTR DESC, ID_DTR DESC';
+  ConfigurarSqlCabecera;
   unqryTablaG.KeyFields := 'ID_DTR';
   unqryTablaG.SQLInsert.Text :=
     'INSERT INTO fza_documentos_trabajo ' +
@@ -108,6 +164,7 @@ begin
   unqryTablaG.SQLLock.Text :=
     'SELECT * FROM fza_documentos_trabajo WHERE ID_DTR = :Old_ID_DTR FOR UPDATE';
   unqryTablaG.AfterInsert := unqryTablaGAfterInsert;
+  unqryTablaG.BeforeDelete := unqryTablaGBeforeDelete;
   unqryTablaG.BeforePost := unqryTablaGBeforePost;
   unqryLineas.Connection := oConn;
   unqryLineas.SQL.Text :=
@@ -164,7 +221,310 @@ begin
     'SELECT * FROM fza_documentos_trabajo_lineas ' +
     ' WHERE ID_DTL = :Old_ID_DTL FOR UPDATE';
   unqryLineas.AfterInsert := unqryLineasAfterInsert;
+  unqryLineas.BeforeDelete := unqryLineasBeforeDelete;
   unqryLineas.BeforePost := unqryLineasBeforePost;
+  ConfigurarQueryCompartidos;
+end;
+
+procedure TdmDocumentosTrabajo.ConfigurarQueryCompartidos;
+var
+  frm: TfrmMtoDocumentosTrabajo;
+begin
+  unqryCompartidos.Connection := oConn;
+  unqryCompartidos.SQL.Text :=
+    'SELECT * ' +
+    '  FROM fza_documentos_trabajo_compartidos ' +
+    ' WHERE ID_DTR_DTC = :ID_DTR ' +
+    ' ORDER BY USUARIO_DTC';
+  unqryCompartidos.KeyFields := 'ID_DTC';
+  unqryCompartidos.MasterFields := 'ID_DTR';
+  unqryCompartidos.DetailFields := 'ID_DTR_DTC';
+  frm := GetOwnerForm<TfrmMtoDocumentosTrabajo>;
+  if frm <> nil then
+  begin
+    unqryCompartidos.MasterSource := frm.dsTablaG;
+  end;
+  unqryCompartidos.SQLInsert.Text :=
+    'INSERT INTO fza_documentos_trabajo_compartidos ' +
+    '  (ID_DTR_DTC, USUARIO_DTC, PERMISO_DTC, INSTANTE_ALTA, ' +
+    '   USUARIO_ALTA, USUARIO_MODIF) ' +
+    'VALUES ' +
+    '  (:ID_DTR_DTC, :USUARIO_DTC, :PERMISO_DTC, :INSTANTE_ALTA, ' +
+    '   :USUARIO_ALTA, :USUARIO_MODIF)';
+  unqryCompartidos.SQLUpdate.Text :=
+    'UPDATE fza_documentos_trabajo_compartidos SET ' +
+    '  ID_DTR_DTC = :ID_DTR_DTC, ' +
+    '  USUARIO_DTC = :USUARIO_DTC, ' +
+    '  PERMISO_DTC = :PERMISO_DTC, ' +
+    '  USUARIO_MODIF = :USUARIO_MODIF ' +
+    'WHERE ID_DTC = :Old_ID_DTC';
+  unqryCompartidos.SQLDelete.Text :=
+    'DELETE FROM fza_documentos_trabajo_compartidos ' +
+    ' WHERE ID_DTC = :Old_ID_DTC';
+  unqryCompartidos.SQLRefresh.Text :=
+    'SELECT * FROM fza_documentos_trabajo_compartidos WHERE ID_DTC = :ID_DTC';
+  unqryCompartidos.SQLLock.Text :=
+    'SELECT * FROM fza_documentos_trabajo_compartidos ' +
+    ' WHERE ID_DTC = :Old_ID_DTC FOR UPDATE';
+  unqryCompartidos.AfterInsert := unqryCompartidosAfterInsert;
+  unqryCompartidos.BeforeDelete := unqryCompartidosBeforeDelete;
+  unqryCompartidos.BeforePost := unqryCompartidosBeforePost;
+end;
+
+function TdmDocumentosTrabajo.ObtenerAlmacenesSql(
+  const AAlmacenesCsv: string): string;
+var
+  i: Integer;
+  lst: TStringList;
+  sCodigo: string;
+begin
+  Result := '';
+  if Trim(AAlmacenesCsv) <> '' then
+  begin
+    lst := TStringList.Create;
+    try
+      lst.StrictDelimiter := True;
+      lst.Delimiter := ',';
+      lst.DelimitedText := AAlmacenesCsv;
+      for i := 0 to lst.Count - 1 do
+      begin
+        sCodigo := Trim(lst[i]);
+        if sCodigo <> '' then
+        begin
+          if Result <> '' then
+          begin
+            Result := Result + ',';
+          end;
+          Result := Result + QuotedStr(sCodigo);
+        end;
+      end;
+    finally
+      FreeAndNil(lst);
+    end;
+  end;
+end;
+
+function TdmDocumentosTrabajo.ObtenerSkusDocumentoCsv(AIdDtr: Int64;
+  const AAlmacenesCsv: string): string;
+var
+  q: TUniQuery;
+  sAlmacenes: string;
+begin
+  Result := '';
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := oConn;
+    sAlmacenes := ObtenerAlmacenesSql(AAlmacenesCsv);
+    q.SQL.Text :=
+      'SELECT DISTINCT CODIGO_UNIDAD_DTL ' +
+      '  FROM fza_documentos_trabajo_lineas ' +
+      ' WHERE ID_DTR_DTL = :ID_DTR ' +
+      '   AND COALESCE(CODIGO_UNIDAD_DTL, '''') <> ''''';
+    if sAlmacenes <> '' then
+    begin
+      q.SQL.Add('   AND CODIGO_ALM_DTL IN (' + sAlmacenes + ')');
+    end;
+    q.SQL.Add(' ORDER BY CODIGO_UNIDAD_DTL');
+    q.ParamByName('ID_DTR').AsLargeInt := AIdDtr;
+    q.Open;
+    while not q.Eof do
+    begin
+      if Result <> '' then
+      begin
+        Result := Result + ',';
+      end;
+      Result := Result + QuotedStr(
+        q.FieldByName('CODIGO_UNIDAD_DTL').AsString);
+      q.Next;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure TdmDocumentosTrabajo.CargarAlmacenesEtiquetasDoc(AIdDtr: Int64;
+  ALV: TcxListView);
+var
+  q: TUniQuery;
+  oItem: TListItem;
+begin
+  if ALV <> nil then
+  begin
+    ALV.Items.BeginUpdate;
+    try
+      ALV.Clear;
+      q := TUniQuery.Create(nil);
+      try
+        q.Connection := oConn;
+        q.SQL.Text :=
+          'SELECT DISTINCT L.CODIGO_ALM_DTL AS COD, ' +
+          '       COALESCE(A.NOMBRE_ALM_ALM, L.CODIGO_ALM_DTL) AS NOM ' +
+          '  FROM fza_documentos_trabajo_lineas L ' +
+          '  LEFT JOIN fza_almacenes A ' +
+          '    ON A.CODIGO_ALM_ALM = L.CODIGO_ALM_DTL ' +
+          ' WHERE L.ID_DTR_DTL = :ID_DTR ' +
+          '   AND COALESCE(L.CODIGO_ALM_DTL, '''') <> '''' ' +
+          ' ORDER BY COD';
+        q.ParamByName('ID_DTR').AsLargeInt := AIdDtr;
+        q.Open;
+        while not q.Eof do
+        begin
+          oItem := ALV.Items.Add;
+          oItem.Caption := q.FieldByName('COD').AsString;
+          oItem.SubItems.Add(q.FieldByName('NOM').AsString);
+          oItem.Checked := True;
+          q.Next;
+        end;
+      finally
+        FreeAndNil(q);
+      end;
+    finally
+      ALV.Items.EndUpdate;
+    end;
+  end;
+end;
+
+procedure TdmDocumentosTrabajo.ExpandirEtiquetasPorCantidadDoc(ADmArt: TObject;
+  AIdDtr: Int64; const AAlmacenesCsv: string);
+var
+  q: TUniQuery;
+  oDmArt: TdmArticulos;
+  oCantidades: TDictionary<string, Integer>;
+  Filas: array of array of Variant;
+  i, j, k, iOriginales, iSkuIdx, iStockIdx, iCantidad: Integer;
+  sAlmacenes, sSku: string;
+begin
+  if ADmArt is TdmArticulos then
+  begin
+    oDmArt := TdmArticulos(ADmArt);
+    oCantidades := TDictionary<string, Integer>.Create;
+    try
+      q := TUniQuery.Create(nil);
+      try
+        q.Connection := oConn;
+        sAlmacenes := ObtenerAlmacenesSql(AAlmacenesCsv);
+        q.SQL.Text :=
+          'SELECT CODIGO_UNIDAD_DTL, ' +
+          '       SUM(COALESCE(CANTIDAD_DTL, 0)) AS CANTIDAD ' +
+          '  FROM fza_documentos_trabajo_lineas ' +
+          ' WHERE ID_DTR_DTL = :ID_DTR ' +
+          '   AND COALESCE(CODIGO_UNIDAD_DTL, '''') <> ''''';
+        if sAlmacenes <> '' then
+        begin
+          q.SQL.Add('   AND CODIGO_ALM_DTL IN (' + sAlmacenes + ')');
+        end;
+        q.SQL.Add(' GROUP BY CODIGO_UNIDAD_DTL');
+        q.ParamByName('ID_DTR').AsLargeInt := AIdDtr;
+        q.Open;
+        while not q.Eof do
+        begin
+          iCantidad := Trunc(q.FieldByName('CANTIDAD').AsFloat);
+          sSku := q.FieldByName('CODIGO_UNIDAD_DTL').AsString;
+          if (sSku <> '') and (iCantidad > 0) then
+          begin
+            oCantidades.AddOrSetValue(sSku, iCantidad);
+          end;
+          q.Next;
+        end;
+      finally
+        FreeAndNil(q);
+      end;
+
+      if oDmArt.cdsEtiquetasArt.Active then
+      begin
+        if (not oDmArt.cdsEtiquetasArt.IsEmpty) and
+           (oDmArt.cdsEtiquetasArt.FindField('CODIGO_UNIDAD_SKU') <> nil) then
+        begin
+          iSkuIdx := oDmArt.cdsEtiquetasArt.FieldByName(
+            'CODIGO_UNIDAD_SKU').Index;
+          iStockIdx := -1;
+          if oDmArt.cdsEtiquetasArt.FindField('STOCK_FILTRADO') <> nil then
+          begin
+            iStockIdx := oDmArt.cdsEtiquetasArt.FieldByName(
+              'STOCK_FILTRADO').Index;
+          end;
+          oDmArt.cdsEtiquetasArt.DisableControls;
+          oDmArt.cdsEtiquetasArt.DisableConstraints;
+          try
+            for j := 0 to oDmArt.cdsEtiquetasArt.FieldCount - 1 do
+            begin
+              oDmArt.cdsEtiquetasArt.Fields[j].ReadOnly := False;
+              oDmArt.cdsEtiquetasArt.Fields[j].Required := False;
+            end;
+            iOriginales := oDmArt.cdsEtiquetasArt.RecordCount;
+            SetLength(Filas, iOriginales);
+            oDmArt.cdsEtiquetasArt.First;
+            for i := 0 to iOriginales - 1 do
+            begin
+              SetLength(Filas[i], oDmArt.cdsEtiquetasArt.FieldCount);
+              for j := 0 to oDmArt.cdsEtiquetasArt.FieldCount - 1 do
+              begin
+                Filas[i][j] := oDmArt.cdsEtiquetasArt.Fields[j].Value;
+              end;
+              oDmArt.cdsEtiquetasArt.Next;
+            end;
+            oDmArt.cdsEtiquetasArt.EmptyDataSet;
+            for i := 0 to iOriginales - 1 do
+            begin
+              sSku := VarToStr(Filas[i][iSkuIdx]);
+              if oCantidades.TryGetValue(sSku, iCantidad) then
+              begin
+                if iCantidad > 0 then
+                begin
+                  for k := 1 to iCantidad do
+                  begin
+                    oDmArt.cdsEtiquetasArt.Append;
+                    for j := 0 to oDmArt.cdsEtiquetasArt.FieldCount - 1 do
+                    begin
+                      oDmArt.cdsEtiquetasArt.Fields[j].Value := Filas[i][j];
+                    end;
+                    if iStockIdx >= 0 then
+                    begin
+                      oDmArt.cdsEtiquetasArt.Fields[iStockIdx].AsInteger :=
+                        iCantidad;
+                    end;
+                    oDmArt.cdsEtiquetasArt.Post;
+                  end;
+                end;
+              end;
+            end;
+          finally
+            oDmArt.cdsEtiquetasArt.EnableConstraints;
+            oDmArt.cdsEtiquetasArt.EnableControls;
+          end;
+        end
+        else
+        begin
+          oDmArt.cdsEtiquetasArt.EmptyDataSet;
+        end;
+      end;
+    finally
+      oCantidades.Free;
+    end;
+  end;
+end;
+
+procedure TdmDocumentosTrabajo.CrearDataSetEtiquetasDoc(ADmArt: TObject;
+  AIdDtr: Int64; const ACodTarifa, AAlmacenesCsv: string; AFecha: TDateTime);
+var
+  oDmArt: TdmArticulos;
+  sSkus: string;
+begin
+  if ADmArt is TdmArticulos then
+  begin
+    oDmArt := TdmArticulos(ADmArt);
+    sSkus := ObtenerSkusDocumentoCsv(AIdDtr, AAlmacenesCsv);
+    if sSkus <> '' then
+    begin
+      oDmArt.CrearDataSetEtiquetasArt('', ACodTarifa, '', AFecha, sSkus);
+      ExpandirEtiquetasPorCantidadDoc(oDmArt, AIdDtr, AAlmacenesCsv);
+    end
+    else
+    begin
+      oDmArt.CrearDataSetEtiquetasArt('DUMMY_SIN_LINEAS',
+                                      ACodTarifa, '', AFecha);
+    end;
+  end;
 end;
 
 procedure TdmDocumentosTrabajo.AbrirDetalles;
@@ -177,9 +537,68 @@ begin
   begin
     unqryLineas.MasterSource := frm.dsTablaG;
   end;
+  if (frm <> nil) and (unqryCompartidos.MasterSource = nil) then
+  begin
+    unqryCompartidos.MasterSource := frm.dsTablaG;
+  end;
   if not unqryLineas.Active then
   begin
     unqryLineas.Open;
+  end;
+  if not unqryCompartidos.Active then
+  begin
+    unqryCompartidos.Open;
+  end;
+end;
+
+procedure TdmDocumentosTrabajo.CambiarAmbito(const AAmbito: TDocTrabajoAmbito);
+var
+  bAbrir: Boolean;
+begin
+  if FAmbito <> AAmbito then
+  begin
+    FAmbito := AAmbito;
+    bAbrir := unqryTablaG.Active;
+    if unqryCompartidos.Active then
+    begin
+      unqryCompartidos.Close;
+    end;
+    if unqryLineas.Active then
+    begin
+      unqryLineas.Close;
+    end;
+    if unqryTablaG.Active then
+    begin
+      unqryTablaG.Close;
+    end;
+    ConfigurarSqlCabecera;
+    if bAbrir then
+    begin
+      unqryTablaG.Open;
+      AbrirDetalles;
+    end;
+  end;
+end;
+
+function TdmDocumentosTrabajo.PuedeEditarDocumentoActual: Boolean;
+begin
+  Result := False;
+  if FAmbito = dtaPropios then
+  begin
+    if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+    begin
+      Result := SameText(unqryTablaG.FieldByName('USUARIO_DTR').AsString,
+                         oUser);
+    end;
+  end;
+end;
+
+procedure TdmDocumentosTrabajo.unqryTablaGBeforeDelete(DataSet: TDataSet);
+begin
+  if not PuedeEditarDocumentoActual then
+  begin
+    raise ERangeError.Create(
+      'Solo el propietario puede borrar un Documento de Trabajo.');
   end;
 end;
 
@@ -198,6 +617,19 @@ end;
 procedure TdmDocumentosTrabajo.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
+  if DataSet.State = dsInsert then
+  begin
+    DataSet.FieldByName('USUARIO_DTR').AsString := oUser;
+  end;
+  if Trim(DataSet.FieldByName('USUARIO_DTR').AsString) = '' then
+  begin
+    DataSet.FieldByName('USUARIO_DTR').AsString := oUser;
+  end;
+  if not SameText(DataSet.FieldByName('USUARIO_DTR').AsString, oUser) then
+  begin
+    raise ERangeError.Create(
+      'El propietario del Documento de Trabajo no se puede cambiar.');
+  end;
   if Trim(DataSet.FieldByName('TITULO_DTR').AsString) = '' then
   begin
     raise ERangeError.Create('Indique el titulo del Documento de Trabajo.');
@@ -255,8 +687,22 @@ begin
   DataSet.FieldByName('ORIGEN_DTL').AsString := 'MANUAL';
 end;
 
+procedure TdmDocumentosTrabajo.unqryLineasBeforeDelete(DataSet: TDataSet);
+begin
+  if not PuedeEditarDocumentoActual then
+  begin
+    raise ERangeError.Create(
+      'Solo el propietario puede borrar lineas del Documento de Trabajo.');
+  end;
+end;
+
 procedure TdmDocumentosTrabajo.unqryLineasBeforePost(DataSet: TDataSet);
 begin
+  if not PuedeEditarDocumentoActual then
+  begin
+    raise ERangeError.Create(
+      'Solo el propietario puede editar lineas del Documento de Trabajo.');
+  end;
   if DataSet.FieldByName('ID_DTR_DTL').IsNull then
   begin
     raise ERangeError.Create('Grabe primero la cabecera del Documento de Trabajo.');
@@ -276,6 +722,51 @@ begin
   if DataSet.FieldByName('INSTANTE_STOCK_DTL').IsNull then
   begin
     DataSet.FieldByName('INSTANTE_STOCK_DTL').AsDateTime := Now;
+  end;
+  odmConn.ActualizarUserTimeModif(DataSet);
+end;
+
+procedure TdmDocumentosTrabajo.unqryCompartidosAfterInsert(DataSet: TDataSet);
+begin
+  if not unqryTablaG.FieldByName('ID_DTR').IsNull then
+  begin
+    DataSet.FieldByName('ID_DTR_DTC').AsLargeInt :=
+      unqryTablaG.FieldByName('ID_DTR').AsLargeInt;
+  end;
+  DataSet.FieldByName('PERMISO_DTC').AsString := 'LECTURA';
+end;
+
+procedure TdmDocumentosTrabajo.unqryCompartidosBeforeDelete(DataSet: TDataSet);
+begin
+  if not PuedeEditarDocumentoActual then
+  begin
+    raise ERangeError.Create(
+      'Solo el propietario puede dejar de compartir el Documento de Trabajo.');
+  end;
+end;
+
+procedure TdmDocumentosTrabajo.unqryCompartidosBeforePost(DataSet: TDataSet);
+begin
+  if not PuedeEditarDocumentoActual then
+  begin
+    raise ERangeError.Create(
+      'Solo el propietario puede compartir el Documento de Trabajo.');
+  end;
+  if DataSet.FieldByName('ID_DTR_DTC').IsNull then
+  begin
+    raise ERangeError.Create('Grabe primero la cabecera del Documento de Trabajo.');
+  end;
+  if Trim(DataSet.FieldByName('USUARIO_DTC').AsString) = '' then
+  begin
+    raise ERangeError.Create('Indique el usuario con el que se comparte.');
+  end;
+  if SameText(DataSet.FieldByName('USUARIO_DTC').AsString, oUser) then
+  begin
+    raise ERangeError.Create('No es necesario compartir el documento consigo mismo.');
+  end;
+  if Trim(DataSet.FieldByName('PERMISO_DTC').AsString) = '' then
+  begin
+    DataSet.FieldByName('PERMISO_DTC').AsString := 'LECTURA';
   end;
   odmConn.ActualizarUserTimeModif(DataSet);
 end;

@@ -155,6 +155,7 @@ begin
       '       INSTANTE_DOCUMENTO_DTR, ESTADO_DTR ' +
       '  FROM fza_documentos_trabajo ' +
       ' WHERE ESTADO_DTR = ''ABIERTO'' ' +
+      '   AND USUARIO_DTR = ' + QuotedStr(oUser) + ' ' +
       ' ORDER BY INSTANTE_DOCUMENTO_DTR DESC, ID_DTR DESC';
     if TBusquedaUtils.EjecutarBusqueda('Documentos de Trabajo abiertos',
                                        sSql, 'ID_DTR', sId,

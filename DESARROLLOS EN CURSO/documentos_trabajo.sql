@@ -71,6 +71,19 @@ CREATE TABLE IF NOT EXISTS `fza_documentos_trabajo_lineas` (
   UNIQUE KEY `UQ_DTL_DTR_LINEA` (`ID_DTR_DTL`, `LINEA_DTL`)
 );
 
+CREATE TABLE IF NOT EXISTS `fza_documentos_trabajo_compartidos` (
+  `ID_DTC` bigint(20) NOT NULL AUTO_INCREMENT,
+  `ID_DTR_DTC` bigint(20) NOT NULL,
+  `USUARIO_DTC` varchar(100) NOT NULL,
+  `PERMISO_DTC` varchar(20) NOT NULL DEFAULT 'LECTURA',
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT 'SISTEMA',
+  `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT 'SISTEMA',
+  PRIMARY KEY (`ID_DTC`),
+  UNIQUE KEY `UQ_DTC_DTR_USUARIO` (`ID_DTR_DTC`, `USUARIO_DTC`)
+);
+
 SET @sExisteIdx := (
   SELECT COUNT(*)
     FROM INFORMATION_SCHEMA.STATISTICS
@@ -165,6 +178,34 @@ SET @sExisteIdx := (
 SET @sSql := IF(@sExisteIdx = 0,
   'CREATE INDEX IDX_DTL_ALM ON fza_documentos_trabajo_lineas (CODIGO_ALM_DTL)',
   'SELECT ''IDX_DTL_ALM ya existe, se omite'' AS info');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_documentos_trabajo_compartidos'
+     AND INDEX_NAME = 'IDX_DTC_USUARIO'
+);
+SET @sSql := IF(@sExisteIdx = 0,
+  'CREATE INDEX IDX_DTC_USUARIO ON fza_documentos_trabajo_compartidos (USUARIO_DTC)',
+  'SELECT ''IDX_DTC_USUARIO ya existe, se omite'' AS info');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_documentos_trabajo_compartidos'
+     AND INDEX_NAME = 'IDX_DTC_DTR'
+);
+SET @sSql := IF(@sExisteIdx = 0,
+  'CREATE INDEX IDX_DTC_DTR ON fza_documentos_trabajo_compartidos (ID_DTR_DTC)',
+  'SELECT ''IDX_DTC_DTR ya existe, se omite'' AS info');
 PREPARE stmt FROM @sSql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;

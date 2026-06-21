@@ -53,7 +53,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.Generics.Collections,
+  System.Classes, System.Generics.Collections, System.UITypes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
   Vcl.StdCtrls, Vcl.Menus, Vcl.Imaging.pngimage,
   Data.DB, DBAccess, Uni,
@@ -66,7 +66,7 @@ uses
   cxGridDBTableView, cxGrid, cxPC, cxGraphics, cxLocalization,
   dxSkinsCore, dxSkinBlue, dxSkinsForm, dxScrollbarAnnotations,
   dxDateRanges, cxMemo, cxControls, dxCoreGraphics, cxCustomListBox,
-  cxRadioGroup, inLibLectorScanner, inLibDocumentosTrabajo;
+  cxRadioGroup, inLibLectorScanner, inLibDocumentosTrabajo, inLibFotos;
 
 const
   // Detector por velocidad de tecleo (codigo de barras + CR, sin STX/ETX).
@@ -100,6 +100,9 @@ type
     Hex    : string;     // HEX (solo para color, '' si no)
     EsColor: Boolean;
   end;
+
+  TDimensionFotos = (dfFamilia, dfProveedor, dfTemporada);
+  TDimensionesFotos = set of TDimensionFotos;
 
   TfrmStockConsulta = class(TForm)
     pnlCabecera   : TPanel;
@@ -179,6 +182,20 @@ type
     // contra codigos de barras y carga el articulo via SetArticuloSku, este
     // donde este el foco.
     FLector: TLectorScanner;
+    FTsFotos        : array[TDimensionFotos] of TcxTabSheet;
+    FScrFotos       : TScrollBox;
+    FBtnFiltroFoto1 : TcxButton;
+    FBtnFiltroFoto2 : TcxButton;
+    FFotosCargadas  : array[TDimensionFotos] of Boolean;
+    FFotosArt       : array[TDimensionFotos] of string;
+    FFotosFiltros   : array[TDimensionFotos] of TDimensionesFotos;
+    FFotosFiltrosCache: array[TDimensionFotos] of TDimensionesFotos;
+    FBtnHistAnterior: TcxButton;
+    FBtnHistSiguiente: TcxButton;
+    FHistorialArticulos: TStringList;
+    FHistorialPos   : Integer;
+    FMoviendoHistorial: Boolean;
+    FSilenciarCambioVista: Boolean;
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure AplicarLecturaCodigoBarras(const ACodigo: string);
     procedure LectorCodigoLeido(Sender: TObject; const ACodigo: string);
@@ -193,6 +210,28 @@ type
     procedure CargarPropsPorColor;
     procedure ActualizarLetreroColor;
     procedure CargarFoto;
+    procedure CrearBotonesHistorial;
+    procedure HistorialAnteriorClick(Sender: TObject);
+    procedure HistorialSiguienteClick(Sender: TObject);
+    procedure RegistrarArticuloHistorial(const ACodArt: string);
+    procedure ActualizarBotonesHistorial;
+    procedure CrearPestanasFotos;
+    procedure InvalidarFotosRelacionadas;
+    procedure MostrarVistaFotosRelacionadas(AVisible: Boolean);
+    procedure LimpiarFotosRelacionadas;
+    procedure MostrarMensajeFotosRelacionadas(const AMsg: string);
+    procedure ConfigurarFiltrosFotos(ADimension: TDimensionFotos);
+    procedure BotonFiltroFotosClick(Sender: TObject);
+    procedure CargarFotosRelacionadasSiProcede;
+    procedure CargarFotosRelacionadas(ADimension: TDimensionFotos);
+    procedure PintarTarjetaRelacionada(AIndice: Integer;
+              AColumnas: Integer; ADataSet: TDataSet;
+              AFotos: TDictionary<string, TFotoInfo>);
+    procedure TarjetaFotoDblClick(Sender: TObject);
+    procedure NavegarArticuloRelacionado(const ACodArt: string);
+    function  DimensionFotosActiva(out ADimension: TDimensionFotos): Boolean;
+    function  NombreDimensionFotos(ADimension: TDimensionFotos): string;
+    function  FiltroSQLDimension(ADimension: TDimensionFotos): string;
     procedure CargarInfoCabecera;
     procedure CrearLeyenda;
     procedure CrearEstilosEstado;
@@ -231,7 +270,7 @@ implementation
 
 uses
   System.StrUtils,
-  inLibGlobalVar, inLibAppParam, inLibFotos, inLibAtributosPaleta,
+  inLibGlobalVar, inLibAppParam, inLibAtributosPaleta,
   inLibGenBusq, inLibUser, UniDataPerfiles, inLibPermisos,
   inLibArticulosValidador;
 
@@ -344,6 +383,9 @@ begin
   tvStock.DataController.DataSource := FDs;
   FColsDin := TList<TcxGridDBColumn>.Create;
   FPropsPorColor := TDictionary<string, string>.Create;
+  FHistorialArticulos := TStringList.Create;
+  FHistorialPos := -1;
+  CrearBotonesHistorial;
   // Letrero de aviso: oculto por defecto, rojo y en negrita para que "cante"
   // las propiedades propias del color (color/SKU) al pincharlo. El texto lo
   // rellena ActualizarLetreroColor.
@@ -386,6 +428,7 @@ begin
     FrbDesglosado.Checked := True
   else
     FrbSimplificado.Checked := True;
+  CrearPestanasFotos;
   PoblarComboEstados;
   cbbEstado.Style.TextColor := ColorEstado(esExistencias);
 
@@ -523,6 +566,7 @@ end;
 
 procedure TfrmStockConsulta.FormDestroy(Sender: TObject);
 begin
+  LimpiarFotosRelacionadas;
   FreeAndNil(FLector);
   if Assigned(FQry) then
   begin
@@ -533,6 +577,7 @@ begin
   FreeAndNil(FColsDin);
   FreeAndNil(FEstadosCombo);
   FreeAndNil(FPropsPorColor);
+  FreeAndNil(FHistorialArticulos);
 end;
 
 procedure TfrmStockConsulta.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -1152,10 +1197,23 @@ end;
 procedure TfrmStockConsulta.SetArticuloSku(const ACodArt, ACodSku: string);
 var
   q: TUniQuery;
+  dim: TDimensionFotos;
+  bArticuloEncontrado: Boolean;
 begin
   FCodArt := ACodArt;
   FCodSku := ACodSku;
   btnArt.Text := ACodArt;
+  InvalidarFotosRelacionadas;
+  bArticuloEncontrado := False;
+  if DimensionFotosActiva(dim) then
+  begin
+    FSilenciarCambioVista := True;
+    try
+      pcVistas.ActivePage := tsPorAlmacen;
+    finally
+      FSilenciarCambioVista := False;
+    end;
+  end;
 
   lblDescr.Caption := '';
   if Trim(ACodArt) <> '' then
@@ -1169,7 +1227,10 @@ begin
       q.ParamByName('p').AsString := ACodArt;
       q.Open;
       if not q.IsEmpty then
+      begin
+        bArticuloEncontrado := True;
         lblDescr.Caption := q.FieldByName('DESCRIPCION_ART').AsString;
+      end;
     finally
       FreeAndNil(q);
     end;
@@ -1188,6 +1249,9 @@ begin
   // El letrero arranca oculto: solo "canta" cuando el usuario pincha un color.
   lblLetreroTemp.Caption := '';
   lblLetreroTemp.Visible := False;
+  if bArticuloEncontrado then
+    RegistrarArticuloHistorial(ACodArt);
+  ActualizarBotonesHistorial;
   RecargarConsulta;
 end;
 
@@ -1209,6 +1273,568 @@ begin
   finally
     FreeAndNil(png);
   end;
+end;
+
+procedure TfrmStockConsulta.CrearBotonesHistorial;
+begin
+  FBtnHistAnterior := TcxButton.Create(Self);
+  FBtnHistAnterior.Parent := pnlCabecera;
+  FBtnHistAnterior.Caption := '<';
+  FBtnHistAnterior.Hint := 'Artículo anterior';
+  FBtnHistAnterior.ShowHint := True;
+  FBtnHistAnterior.SetBounds(btnArt.Left + btnArt.Width + 8,
+                             btnArt.Top, 28, btnArt.Height);
+  FBtnHistAnterior.OnClick := HistorialAnteriorClick;
+  FBtnHistSiguiente := TcxButton.Create(Self);
+  FBtnHistSiguiente.Parent := pnlCabecera;
+  FBtnHistSiguiente.Caption := '>';
+  FBtnHistSiguiente.Hint := 'Artículo siguiente';
+  FBtnHistSiguiente.ShowHint := True;
+  FBtnHistSiguiente.SetBounds(FBtnHistAnterior.Left +
+                              FBtnHistAnterior.Width + 4,
+                              btnArt.Top, 28, btnArt.Height);
+  FBtnHistSiguiente.OnClick := HistorialSiguienteClick;
+  ActualizarBotonesHistorial;
+end;
+
+procedure TfrmStockConsulta.HistorialAnteriorClick(Sender: TObject);
+begin
+  if (FHistorialArticulos <> nil) and (FHistorialPos > 0) then
+  begin
+    Dec(FHistorialPos);
+    FMoviendoHistorial := True;
+    try
+      SetArticuloSku(FHistorialArticulos[FHistorialPos], '');
+    finally
+      FMoviendoHistorial := False;
+      ActualizarBotonesHistorial;
+    end;
+  end;
+end;
+
+procedure TfrmStockConsulta.HistorialSiguienteClick(Sender: TObject);
+begin
+  if (FHistorialArticulos <> nil) and
+     (FHistorialPos < FHistorialArticulos.Count - 1) then
+  begin
+    Inc(FHistorialPos);
+    FMoviendoHistorial := True;
+    try
+      SetArticuloSku(FHistorialArticulos[FHistorialPos], '');
+    finally
+      FMoviendoHistorial := False;
+      ActualizarBotonesHistorial;
+    end;
+  end;
+end;
+
+procedure TfrmStockConsulta.RegistrarArticuloHistorial(const ACodArt: string);
+begin
+  if (FHistorialArticulos <> nil) and (not FMoviendoHistorial) and
+     (Trim(ACodArt) <> '') then
+  begin
+    if (FHistorialPos < 0) or
+       (not SameText(FHistorialArticulos[FHistorialPos], ACodArt)) then
+    begin
+      while FHistorialArticulos.Count - 1 > FHistorialPos do
+        FHistorialArticulos.Delete(FHistorialArticulos.Count - 1);
+      FHistorialArticulos.Add(ACodArt);
+      FHistorialPos := FHistorialArticulos.Count - 1;
+    end;
+  end;
+end;
+
+procedure TfrmStockConsulta.ActualizarBotonesHistorial;
+begin
+  if FBtnHistAnterior <> nil then
+    FBtnHistAnterior.Enabled := (FHistorialArticulos <> nil) and
+                                (FHistorialPos > 0);
+  if FBtnHistSiguiente <> nil then
+    FBtnHistSiguiente.Enabled := (FHistorialArticulos <> nil) and
+                                 (FHistorialPos <
+                                  FHistorialArticulos.Count - 1);
+end;
+
+function TfrmStockConsulta.NombreDimensionFotos(
+  ADimension: TDimensionFotos): string;
+begin
+  case ADimension of
+    dfFamilia:
+      Result := 'Familia';
+    dfProveedor:
+      Result := 'Proveedor';
+    dfTemporada:
+      Result := 'Temporada';
+  else
+    Result := '';
+  end;
+end;
+
+procedure TfrmStockConsulta.CrearPestanasFotos;
+var
+  dim: TDimensionFotos;
+  ts : TcxTabSheet;
+begin
+  for dim := Low(TDimensionFotos) to High(TDimensionFotos) do
+  begin
+    ts := TcxTabSheet.Create(Self);
+    ts.PageControl := pcVistas;
+    case dim of
+      dfFamilia:
+        ts.Caption := 'Fotos misma familia';
+      dfProveedor:
+        ts.Caption := 'Fotos mismo proveedor';
+      dfTemporada:
+        ts.Caption := 'Fotos misma temporada';
+    end;
+    FTsFotos[dim] := ts;
+    FFotosCargadas[dim] := False;
+    FFotosArt[dim] := '';
+    FFotosFiltros[dim] := [];
+    FFotosFiltrosCache[dim] := [];
+  end;
+  FScrFotos := TScrollBox.Create(Self);
+  FScrFotos.Parent := pnlDer;
+  FScrFotos.Align := alClient;
+  FScrFotos.BorderStyle := bsNone;
+  FScrFotos.Visible := False;
+  FBtnFiltroFoto1 := TcxButton.Create(Self);
+  FBtnFiltroFoto1.Parent := FScrFotos;
+  FBtnFiltroFoto1.SetBounds(12, 10, 128, 26);
+  FBtnFiltroFoto1.OnClick := BotonFiltroFotosClick;
+  FBtnFiltroFoto2 := TcxButton.Create(Self);
+  FBtnFiltroFoto2.Parent := FScrFotos;
+  FBtnFiltroFoto2.SetBounds(148, 10, 128, 26);
+  FBtnFiltroFoto2.OnClick := BotonFiltroFotosClick;
+end;
+
+procedure TfrmStockConsulta.InvalidarFotosRelacionadas;
+var
+  dim: TDimensionFotos;
+begin
+  for dim := Low(TDimensionFotos) to High(TDimensionFotos) do
+  begin
+    FFotosCargadas[dim] := False;
+    FFotosArt[dim] := '';
+  end;
+end;
+
+function TfrmStockConsulta.DimensionFotosActiva(
+  out ADimension: TDimensionFotos): Boolean;
+var
+  dim: TDimensionFotos;
+begin
+  Result := False;
+  for dim := Low(TDimensionFotos) to High(TDimensionFotos) do
+    if pcVistas.ActivePage = FTsFotos[dim] then
+    begin
+      ADimension := dim;
+      Result := True;
+    end;
+end;
+
+procedure TfrmStockConsulta.MostrarVistaFotosRelacionadas(AVisible: Boolean);
+begin
+  if FScrFotos <> nil then
+  begin
+    grdStock.Visible := not AVisible;
+    FScrFotos.Visible := AVisible;
+    if AVisible then
+      FScrFotos.BringToFront
+    else
+      grdStock.BringToFront;
+  end
+  else
+    grdStock.Visible := True;
+end;
+
+procedure TfrmStockConsulta.LimpiarFotosRelacionadas;
+var
+  i  : Integer;
+  ctl: TControl;
+begin
+  if FScrFotos <> nil then
+    for i := FScrFotos.ControlCount - 1 downto 0 do
+    begin
+      ctl := FScrFotos.Controls[i];
+      if (ctl <> FBtnFiltroFoto1) and (ctl <> FBtnFiltroFoto2) then
+        ctl.Free;
+    end;
+end;
+
+procedure TfrmStockConsulta.MostrarMensajeFotosRelacionadas(
+  const AMsg: string);
+var
+  lbl: TcxLabel;
+begin
+  if FScrFotos <> nil then
+  begin
+    LimpiarFotosRelacionadas;
+    lbl := TcxLabel.Create(FScrFotos);
+    lbl.Parent := FScrFotos;
+    lbl.SetBounds(16, 50, FScrFotos.ClientWidth - 32, 40);
+    lbl.AutoSize := False;
+    lbl.Caption := AMsg;
+    lbl.Properties.WordWrap := True;
+    lbl.Transparent := True;
+  end;
+end;
+
+procedure TfrmStockConsulta.ConfigurarFiltrosFotos(
+  ADimension: TDimensionFotos);
+var
+  filtro1: TDimensionFotos;
+  filtro2: TDimensionFotos;
+  procedure ConfigBoton(ABoton: TcxButton; AFiltro: TDimensionFotos);
+  var
+    sMarca: string;
+  begin
+    ABoton.Tag := Ord(AFiltro);
+    if AFiltro in FFotosFiltros[ADimension] then
+      sMarca := '[X] '
+    else
+      sMarca := '[ ] ';
+    ABoton.Caption := sMarca + NombreDimensionFotos(AFiltro);
+    ABoton.Visible := True;
+  end;
+begin
+  case ADimension of
+    dfFamilia:
+      begin
+        filtro1 := dfProveedor;
+        filtro2 := dfTemporada;
+      end;
+    dfProveedor:
+      begin
+        filtro1 := dfFamilia;
+        filtro2 := dfTemporada;
+      end;
+  else
+    filtro1 := dfFamilia;
+    filtro2 := dfProveedor;
+  end;
+  if (FBtnFiltroFoto1 <> nil) and (FBtnFiltroFoto2 <> nil) then
+  begin
+    ConfigBoton(FBtnFiltroFoto1, filtro1);
+    ConfigBoton(FBtnFiltroFoto2, filtro2);
+    FBtnFiltroFoto1.BringToFront;
+    FBtnFiltroFoto2.BringToFront;
+  end;
+end;
+
+procedure TfrmStockConsulta.BotonFiltroFotosClick(Sender: TObject);
+var
+  dim   : TDimensionFotos;
+  filtro: TDimensionFotos;
+begin
+  if DimensionFotosActiva(dim) and (Sender is TcxButton) then
+  begin
+    filtro := TDimensionFotos(TcxButton(Sender).Tag);
+    if filtro in FFotosFiltros[dim] then
+      Exclude(FFotosFiltros[dim], filtro)
+    else
+      Include(FFotosFiltros[dim], filtro);
+    FFotosCargadas[dim] := False;
+    ConfigurarFiltrosFotos(dim);
+    CargarFotosRelacionadas(dim);
+  end;
+end;
+
+function TfrmStockConsulta.FiltroSQLDimension(
+  ADimension: TDimensionFotos): string;
+begin
+  case ADimension of
+    dfFamilia:
+      Result :=
+        '   AND LENGTH(TRIM(BASE.CODIGO_FAM_ART)) > 0 ' +
+        '   AND A.CODIGO_FAM_ART = BASE.CODIGO_FAM_ART';
+    dfProveedor:
+      Result :=
+        '   AND EXISTS (SELECT 1 ' +
+        '                 FROM fza_articulos_proveedores BP ' +
+        '                 JOIN fza_articulos_proveedores AP ' +
+        '                   ON AP.CODIGO_PRV_AP = BP.CODIGO_PRV_AP ' +
+        '                WHERE BP.CODIGO_ART_AP = ' +
+        'BASE.CODIGO_ART_ART ' +
+        '                  AND AP.CODIGO_ART_AP = A.CODIGO_ART_ART)';
+  else
+    Result :=
+      '   AND EXISTS (SELECT 1 ' +
+      '                 FROM fza_articulos_propiedades BTP ' +
+      '                 JOIN fza_articulos_propiedades ATP ' +
+      '                   ON ATP.CODIGO_PROP_ARTPROP = ' +
+      'BTP.CODIGO_PROP_ARTPROP ' +
+      '                  AND ATP.CODIGO_UNIDAD_ARTPROP = '''' ' +
+      '                  AND ATP.CODIGO_ART_ART = A.CODIGO_ART_ART ' +
+      '                  AND ((BTP.ID_PV_ARTPROP IS NOT NULL ' +
+      '                        AND ATP.ID_PV_ARTPROP = ' +
+      'BTP.ID_PV_ARTPROP) ' +
+      '                       OR (LENGTH(TRIM(' +
+      'IFNULL(BTP.VALOR_LIBRE_ARTPROP, ''''))) > 0 ' +
+      '                           AND ATP.VALOR_LIBRE_ARTPROP = ' +
+      'BTP.VALOR_LIBRE_ARTPROP)) ' +
+      '                WHERE BTP.CODIGO_ART_ART = ' +
+      'BASE.CODIGO_ART_ART ' +
+      '                  AND BTP.CODIGO_PROP_ARTPROP = ''TEMPORADA'' ' +
+      '                  AND BTP.CODIGO_UNIDAD_ARTPROP = '''')';
+  end;
+end;
+
+procedure TfrmStockConsulta.CargarFotosRelacionadasSiProcede;
+var
+  dim: TDimensionFotos;
+begin
+  if DimensionFotosActiva(dim) then
+  begin
+    ConfigurarFiltrosFotos(dim);
+    if (not FFotosCargadas[dim]) or
+       (not SameText(FFotosArt[dim], FCodArt)) or
+       (FFotosFiltrosCache[dim] <> FFotosFiltros[dim]) then
+      CargarFotosRelacionadas(dim);
+  end;
+end;
+
+procedure TfrmStockConsulta.CargarFotosRelacionadas(
+  ADimension: TDimensionFotos);
+var
+  q       : TUniQuery;
+  codigos : TList<string>;
+  fotos   : TDictionary<string, TFotoInfo>;
+  arr     : TArray<string>;
+  filtros : TDimensionesFotos;
+  dim     : TDimensionFotos;
+  i       : Integer;
+  columnas: Integer;
+begin
+  LimpiarFotosRelacionadas;
+  ConfigurarFiltrosFotos(ADimension);
+  FFotosCargadas[ADimension] := False;
+  FFotosArt[ADimension] := FCodArt;
+  FFotosFiltrosCache[ADimension] := FFotosFiltros[ADimension];
+  if Trim(FCodArt) = '' then
+  begin
+    MostrarMensajeFotosRelacionadas('Seleccione primero un artículo.');
+    FFotosCargadas[ADimension] := True;
+  end
+  else
+  begin
+    Screen.Cursor := crHourGlass;
+    q := TUniQuery.Create(nil);
+    codigos := TList<string>.Create;
+    fotos := nil;
+    try
+      filtros := FFotosFiltros[ADimension] + [ADimension];
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Clear;
+      q.SQL.Add('SELECT A.CODIGO_ART_ART,');
+      q.SQL.Add('       A.DESCRIPCION_ART,');
+      q.SQL.Add('       COALESCE((');
+      q.SQL.Add('         SELECT GROUP_CONCAT(DISTINCT AV.AV');
+      q.SQL.Add('                ORDER BY AV.ORDEN_AV, AV.AV');
+      q.SQL.Add('                SEPARATOR '', '')');
+      q.SQL.Add('           FROM fza_articulos_skus SKU');
+      q.SQL.Add('           JOIN fza_articulos_stockactual STK');
+      q.SQL.Add('             ON STK.CODIGO_UNIDAD_STK =');
+      q.SQL.Add('                SKU.CODIGO_UNIDAD_SKU');
+      q.SQL.Add('            AND STK.CANTIDAD_STK > 0');
+      q.SQL.Add('           JOIN fza_atributos_sku SA');
+      q.SQL.Add('             ON SA.CODIGO_UNIDAD_SKU_SA =');
+      q.SQL.Add('                SKU.CODIGO_UNIDAD_SKU');
+      q.SQL.Add('           JOIN fza_atributos_valores AV');
+      q.SQL.Add('             ON AV.ID_AV = SA.ID_AV_SA');
+      q.SQL.Add('          WHERE SKU.CODIGO_ART_SKU =');
+      q.SQL.Add('                A.CODIGO_ART_ART');
+      q.SQL.Add('            AND SKU.ESACTIVO_SKU = ''S''');
+      q.SQL.Add('            AND AV.ID_VA_AV = ''CO''), '''') AS COLORES,');
+      q.SQL.Add('       COALESCE((');
+      q.SQL.Add('         SELECT GROUP_CONCAT(DISTINCT AV.AV');
+      q.SQL.Add('                ORDER BY AV.ORDEN_AV, AV.AV');
+      q.SQL.Add('                SEPARATOR '', '')');
+      q.SQL.Add('           FROM fza_articulos_skus SKU');
+      q.SQL.Add('           JOIN fza_articulos_stockactual STK');
+      q.SQL.Add('             ON STK.CODIGO_UNIDAD_STK =');
+      q.SQL.Add('                SKU.CODIGO_UNIDAD_SKU');
+      q.SQL.Add('            AND STK.CANTIDAD_STK > 0');
+      q.SQL.Add('           JOIN fza_atributos_sku SA');
+      q.SQL.Add('             ON SA.CODIGO_UNIDAD_SKU_SA =');
+      q.SQL.Add('                SKU.CODIGO_UNIDAD_SKU');
+      q.SQL.Add('           JOIN fza_atributos_valores AV');
+      q.SQL.Add('             ON AV.ID_AV = SA.ID_AV_SA');
+      q.SQL.Add('          WHERE SKU.CODIGO_ART_SKU =');
+      q.SQL.Add('                A.CODIGO_ART_ART');
+      q.SQL.Add('            AND SKU.ESACTIVO_SKU = ''S''');
+      q.SQL.Add('            AND AV.ID_VA_AV <> ''CO''), '''') AS TALLAS');
+      q.SQL.Add('  FROM fza_articulos BASE');
+      q.SQL.Add('  JOIN fza_articulos A');
+      q.SQL.Add('    ON A.CODIGO_ART_ART <> BASE.CODIGO_ART_ART');
+      q.SQL.Add(' WHERE BASE.CODIGO_ART_ART = :art');
+      q.SQL.Add('   AND A.ESACTIVO_ART = ''S''');
+      for dim := Low(TDimensionFotos) to High(TDimensionFotos) do
+        if dim in filtros then
+          q.SQL.Add(FiltroSQLDimension(dim));
+      q.SQL.Add('   AND EXISTS (');
+      q.SQL.Add('       SELECT 1');
+      q.SQL.Add('         FROM fza_articulos_skus SKU');
+      q.SQL.Add('         JOIN fza_articulos_stockactual STK');
+      q.SQL.Add('           ON STK.CODIGO_UNIDAD_STK =');
+      q.SQL.Add('              SKU.CODIGO_UNIDAD_SKU');
+      q.SQL.Add('          AND STK.CANTIDAD_STK > 0');
+      q.SQL.Add('        WHERE SKU.CODIGO_ART_SKU = A.CODIGO_ART_ART');
+      q.SQL.Add('          AND SKU.ESACTIVO_SKU = ''S'')');
+      q.SQL.Add(' ORDER BY A.DESCRIPCION_ART, A.CODIGO_ART_ART');
+      q.ParamByName('art').AsString := FCodArt;
+      q.Open;
+      if q.IsEmpty then
+        MostrarMensajeFotosRelacionadas(
+          'No hay otros artículos con stock para este filtrado.')
+      else
+      begin
+        while not q.Eof do
+        begin
+          codigos.Add(q.FieldByName('CODIGO_ART_ART').AsString);
+          q.Next;
+        end;
+        SetLength(arr, codigos.Count);
+        for i := 0 to codigos.Count - 1 do
+          arr[i] := codigos[i];
+        fotos := inLibFotos.oFotos.ResolverArticulosLote(arr);
+        q.First;
+        columnas := (FScrFotos.ClientWidth - 12) div 176;
+        if columnas < 1 then
+          columnas := 1;
+        i := 0;
+        while not q.Eof do
+        begin
+          PintarTarjetaRelacionada(i, columnas, q, fotos);
+          Inc(i);
+          q.Next;
+        end;
+      end;
+      FFotosCargadas[ADimension] := True;
+    finally
+      FreeAndNil(fotos);
+      FreeAndNil(codigos);
+      FreeAndNil(q);
+      Screen.Cursor := crDefault;
+    end;
+  end;
+end;
+
+procedure TfrmStockConsulta.PintarTarjetaRelacionada(AIndice: Integer;
+  AColumnas: Integer; ADataSet: TDataSet;
+  AFotos: TDictionary<string, TFotoInfo>);
+const
+  CAncho  = 164;
+  CAlto   = 238;
+  CMargen = 12;
+  CTop    = 48;
+var
+  pnl       : TPanel;
+  img       : TImage;
+  lbl       : TcxLabel;
+  lblStock  : TcxLabel;
+  info      : TFotoInfo;
+  png       : TPngImage;
+  sArt      : string;
+  sDescr    : string;
+  sRuta     : string;
+  sColores  : string;
+  sTallas   : string;
+  x         : Integer;
+  y         : Integer;
+  procedure PrepararDobleClick(AControl: TControl);
+  begin
+    AControl.Hint := sArt;
+    AControl.ShowHint := True;
+    AControl.Cursor := crHandPoint;
+  end;
+begin
+  sArt := ADataSet.FieldByName('CODIGO_ART_ART').AsString;
+  sDescr := ADataSet.FieldByName('DESCRIPCION_ART').AsString;
+  sColores := Trim(ADataSet.FieldByName('COLORES').AsString);
+  sTallas := Trim(ADataSet.FieldByName('TALLAS').AsString);
+  if sColores = '' then
+    sColores := 'sin color';
+  if sTallas = '' then
+    sTallas := 'sin talla';
+  x := CMargen + (AIndice mod AColumnas) * (CAncho + CMargen);
+  y := CTop + CMargen + (AIndice div AColumnas) * (CAlto + CMargen);
+  pnl := TPanel.Create(FScrFotos);
+  pnl.Parent := FScrFotos;
+  pnl.SetBounds(x, y, CAncho, CAlto);
+  pnl.BevelOuter := bvLowered;
+  pnl.Color := clWindow;
+  pnl.ParentBackground := False;
+  PrepararDobleClick(pnl);
+  pnl.OnDblClick := TarjetaFotoDblClick;
+  sRuta := '';
+  if (AFotos <> nil) and AFotos.TryGetValue(sArt, info) then
+    sRuta := inLibFotos.oFotos.RutaFoto(info, frPx300);
+  if sRuta <> '' then
+  begin
+    img := TImage.Create(pnl);
+    img.Parent := pnl;
+    img.SetBounds(8, 8, CAncho - 16, 118);
+    img.Center := True;
+    img.Proportional := True;
+    img.Stretch := True;
+    PrepararDobleClick(img);
+    img.OnDblClick := TarjetaFotoDblClick;
+    png := TPngImage.Create;
+    try
+      png.LoadFromFile(sRuta);
+      img.Picture.Assign(png);
+    finally
+      FreeAndNil(png);
+    end;
+  end
+  else
+  begin
+    lbl := TcxLabel.Create(pnl);
+    lbl.Parent := pnl;
+    lbl.SetBounds(8, 8, CAncho - 16, 118);
+    lbl.AutoSize := False;
+    lbl.Caption := sDescr;
+    lbl.Properties.Alignment.Horz := taCenter;
+    lbl.Properties.Alignment.Vert := taVCenter;
+    lbl.Properties.WordWrap := True;
+    lbl.Transparent := True;
+    PrepararDobleClick(lbl);
+    lbl.OnDblClick := TarjetaFotoDblClick;
+  end;
+  lbl := TcxLabel.Create(pnl);
+  lbl.Parent := pnl;
+  lbl.SetBounds(8, 130, CAncho - 16, 38);
+  lbl.AutoSize := False;
+  lbl.Caption := sArt;
+  lbl.Style.Font.Style := [fsBold];
+  lbl.Properties.WordWrap := True;
+  lbl.Transparent := True;
+  PrepararDobleClick(lbl);
+  lbl.OnDblClick := TarjetaFotoDblClick;
+  lblStock := TcxLabel.Create(pnl);
+  lblStock.Parent := pnl;
+  lblStock.SetBounds(8, 168, CAncho - 16, 62);
+  lblStock.AutoSize := False;
+  lblStock.Caption := 'Colores: ' + sColores + sLineBreak +
+                      'Tallas: ' + sTallas;
+  lblStock.Style.Font.Height := -11;
+  lblStock.Properties.WordWrap := True;
+  lblStock.Transparent := True;
+  PrepararDobleClick(lblStock);
+  lblStock.OnDblClick := TarjetaFotoDblClick;
+end;
+
+procedure TfrmStockConsulta.TarjetaFotoDblClick(Sender: TObject);
+begin
+  if Sender is TControl then
+    NavegarArticuloRelacionado(TControl(Sender).Hint);
+end;
+
+procedure TfrmStockConsulta.NavegarArticuloRelacionado(const ACodArt: string);
+begin
+  if Trim(ACodArt) <> '' then
+    SetArticuloSku(ACodArt, '');
 end;
 
 // Pinta el bloque de info de la cabecera (propiedades + tarifas vigentes +
@@ -1914,39 +2540,57 @@ procedure TfrmStockConsulta.RecargarConsulta;
 var
   tallas  : TArray<TInfoColumna>;
   bEsColor: Boolean;
+  dim     : TDimensionFotos;
 begin
-  if FQry.Active then FQry.Close;
-  bEsColor := pcVistas.ActivePage = tsPorColor;
-  // Cursor de espera: el pivote en modo "Todos los estados" puede tardar y
-  // bloquea el hilo de UI; al menos el usuario ve que esta trabajando y no
-  // parece que la ventana se haya colgado.
-  Screen.Cursor := crHourGlass;
-  try
+  if FQry.Active then
+    FQry.Close;
+  if DimensionFotosActiva(dim) then
+  begin
+    MostrarVistaFotosRelacionadas(True);
     try
-      if Trim(FCodArt) = '' then
-      begin
-        ReconstruirColumnas([], bEsColor);
-        FQry.SQL.Text := 'SELECT '''' AS GRUPO, '''' AS HEX, 0 AS ORDEN, ' +
-                         '0 AS TOTAL FROM dual WHERE 0';
-      end
-      else
-      begin
-        tallas := TallasArticulo;
-        ReconstruirColumnas(tallas, bEsColor);
-        FQry.SQL.Text := ConstruirSQLPivot(tallas, bEsColor);
-      end;
-      FQry.Open;
+      CargarFotosRelacionadasSiProcede;
     except
       on E: Exception do
       begin
-        if FQry.Active then
-          FQry.Close;
-        // El error sale por encima de la ventana (fsStayOnTop).
         MostrarError(E.Message);
       end;
     end;
-  finally
-    Screen.Cursor := crDefault;
+  end
+  else
+  begin
+    MostrarVistaFotosRelacionadas(False);
+    bEsColor := pcVistas.ActivePage = tsPorColor;
+    // Cursor de espera: el pivote en modo "Todos los estados" puede tardar y
+    // bloquea el hilo de UI; al menos el usuario ve que esta trabajando y no
+    // parece que la ventana se haya colgado.
+    Screen.Cursor := crHourGlass;
+    try
+      try
+        if Trim(FCodArt) = '' then
+        begin
+          ReconstruirColumnas([], bEsColor);
+          FQry.SQL.Text := 'SELECT '''' AS GRUPO, '''' AS HEX, 0 AS ORDEN, ' +
+                           '0 AS TOTAL FROM dual WHERE 0';
+        end
+        else
+        begin
+          tallas := TallasArticulo;
+          ReconstruirColumnas(tallas, bEsColor);
+          FQry.SQL.Text := ConstruirSQLPivot(tallas, bEsColor);
+        end;
+        FQry.Open;
+      except
+        on E: Exception do
+        begin
+          if FQry.Active then
+            FQry.Close;
+          // El error sale por encima de la ventana (fsStayOnTop).
+          MostrarError(E.Message);
+        end;
+      end;
+    finally
+      Screen.Cursor := crDefault;
+    end;
   end;
 end;
 
@@ -2080,8 +2724,18 @@ begin
 end;
 
 procedure TfrmStockConsulta.pcVistasChange(Sender: TObject);
+var
+  dim: TDimensionFotos;
 begin
-  RecargarConsulta;
+  if not FSilenciarCambioVista then
+  begin
+    if DimensionFotosActiva(dim) then
+    begin
+      FFotosFiltros[dim] := [];
+      FFotosCargadas[dim] := False;
+    end;
+    RecargarConsulta;
+  end;
 end;
 
 initialization

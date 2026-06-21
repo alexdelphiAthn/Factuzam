@@ -243,6 +243,7 @@ begin
   AddSuf('fza_config_campos',                   'CC');
   AddSuf('fza_contadores',                      'CON');
   AddSuf('fza_depositos_cliente',               'DEP');
+  AddSuf('fza_documentos_trabajo_compartidos',  'DTC');
   AddSuf('fza_documentos_trabajo',              'DTR');
   AddSuf('fza_documentos_trabajo_lineas',       'DTL');
   AddSuf('fza_efectos_compra',                  'EFEC');

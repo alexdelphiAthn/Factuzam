@@ -71,6 +71,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_config_campos`                  | `CC`      |
 | `fza_contadores`                     | `CON`     |
 | `fza_depositos_cliente`              | `DEP`     |
+| `fza_documentos_trabajo_compartidos` | `DTC`     |
 | `fza_documentos_trabajo`             | `DTR`     |
 | `fza_documentos_trabajo_lineas`      | `DTL`     |
 | `fza_devoluciones_compra`            | `DEVC`    |
