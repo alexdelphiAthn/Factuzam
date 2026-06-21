@@ -53,7 +53,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.Generics.Collections, System.UITypes,
+  System.Classes, System.Generics.Collections,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
   Vcl.StdCtrls, Vcl.Menus, Vcl.Imaging.pngimage,
   Data.DB, DBAccess, Uni,
@@ -1731,8 +1731,8 @@ const
 var
   pnl       : TPanel;
   img       : TImage;
-  lbl       : TcxLabel;
-  lblStock  : TcxLabel;
+  lbl       : TLabel;
+  lblStock  : TLabel;
   info      : TFotoInfo;
   png       : TPngImage;
   sArt      : string;
@@ -1790,37 +1790,43 @@ begin
   end
   else
   begin
-    lbl := TcxLabel.Create(pnl);
+    lbl := TLabel.Create(pnl);
     lbl.Parent := pnl;
     lbl.SetBounds(8, 8, CAncho - 16, 118);
     lbl.AutoSize := False;
     lbl.Caption := sDescr;
-    lbl.Properties.Alignment.Horz := taCenter;
-    lbl.Properties.Alignment.Vert := taVCenter;
-    lbl.Properties.WordWrap := True;
-    lbl.Transparent := True;
+    lbl.Alignment := taCenter;
+    lbl.Layout := tlCenter;
+    lbl.WordWrap := True;
+    lbl.Transparent := False;
+    lbl.Color := clWindow;
+    lbl.Font.Color := clWindowText;
     PrepararDobleClick(lbl);
     lbl.OnDblClick := TarjetaFotoDblClick;
   end;
-  lbl := TcxLabel.Create(pnl);
+  lbl := TLabel.Create(pnl);
   lbl.Parent := pnl;
   lbl.SetBounds(8, 130, CAncho - 16, 38);
   lbl.AutoSize := False;
   lbl.Caption := sArt;
-  lbl.Style.Font.Style := [fsBold];
-  lbl.Properties.WordWrap := True;
-  lbl.Transparent := True;
+  lbl.Font.Style := [fsBold];
+  lbl.Font.Color := clWindowText;
+  lbl.WordWrap := True;
+  lbl.Transparent := False;
+  lbl.Color := clWindow;
   PrepararDobleClick(lbl);
   lbl.OnDblClick := TarjetaFotoDblClick;
-  lblStock := TcxLabel.Create(pnl);
+  lblStock := TLabel.Create(pnl);
   lblStock.Parent := pnl;
   lblStock.SetBounds(8, 168, CAncho - 16, 62);
   lblStock.AutoSize := False;
   lblStock.Caption := 'Colores: ' + sColores + sLineBreak +
                       'Tallas: ' + sTallas;
-  lblStock.Style.Font.Height := -11;
-  lblStock.Properties.WordWrap := True;
-  lblStock.Transparent := True;
+  lblStock.Font.Height := -11;
+  lblStock.Font.Color := clWindowText;
+  lblStock.WordWrap := True;
+  lblStock.Transparent := False;
+  lblStock.Color := clWindow;
   PrepararDobleClick(lblStock);
   lblStock.OnDblClick := TarjetaFotoDblClick;
 end;

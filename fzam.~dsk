@@ -3,23 +3,26 @@ File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Modals\inMtoModa
 File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalSeleccionarBanco.pas',0,1,107,1,128,0,0,,
 File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasCompra.pas',0,1,725,65,738,0,0,,
 File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalFacturarTicket.pas',0,1,423,36,436,0,0,,
-File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas',0,1,1,46,8,0,0,,
-File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaMenu.pas',0,1,169,35,181,0,0,,
-File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoAppParam.pas',0,1,118,46,130,0,0,,
-File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuCola.pas',0,1,321,43,343,0,0,,
-File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas',0,1,1163,43,1180,0,0,,
-File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoLogon.pas',0,1,152,29,164,0,0,,
-File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPrincipal.pas',0,1,2440,88,1,0,0,,
-File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibFacturae.pas',0,1,1,1,1,0,0,,
-File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas',0,1,1,1,1,0,0,,
-File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibXades.pas',0,1,14,1,26,0,0,,
-File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibVerifactuNoVerifactuExport.pas',0,1,426,1,1,0,0,,
+File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaMenu.pas',0,1,169,35,181,0,0,,
+File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoAppParam.pas',0,1,118,46,130,0,0,,
+File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuCola.pas',0,1,321,43,343,0,0,,
+File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuEnvio.pas',0,1,1163,43,1180,0,0,,
+File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoLogon.pas',0,1,152,29,164,0,0,,
+File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPrincipal.pas',0,1,2440,88,1,0,0,,
+File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibFacturae.pas',0,1,1,1,1,0,0,,
+File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasSimplif.pas',0,1,1,1,1,0,0,,
+File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibXades.pas',0,1,14,1,26,0,0,,
+File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibVerifactuNoVerifactuExport.pas',0,1,426,1,1,0,0,,
 
 [Modules]
-Module0=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoTarifas.pas
-Module1=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
-Count=2
+Module0=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas
+Module1=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoTarifas.pas
+Module2=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
+Count=3
 EditWindowCount=1
+
+[C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas]
+ModuleType=TSourceModule
 
 [C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoTarifas.pas]
 ModuleType=TSourceModule
@@ -29,7 +32,7 @@ ModuleType=TBaseProject
 
 [EditWindow0]
 ViewCount=3
-CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoTarifas.pas
+CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas
 View0=0
 View1=1
 View2=2
@@ -89,8 +92,15 @@ Bookmarks=
 EditViewName=Borland.FormDesignerView
 
 [View2]
-CustomEditViewType=TOTACustomEditView
-OTAEditViewType=WelcomePage.MainPage
+CustomEditViewType=TEditView
+Module=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas
+CursorX=46
+CursorY=8
+TopLine=1
+LeftCol=1
+Elisions=
+Bookmarks=
+EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas
 
 [Watches]
 Count=0
@@ -243,8 +253,8 @@ SplitPos=135
 
 [PropInspDesignerSelection]
 ArrangeBy=Name
-SelectedItem=AlignWithMargins,
-ExpandedItems=Anchors=0,Automation=0,Colors=0,Constraints=0,Font=0,LiveBindings=0,"LiveBindings Designer=0",Margins=0,BorderIcons=0,DataBinding=0
+SelectedItem=Caption,
+ExpandedItems=Anchors=0,BorderIcons=0
 
 [frmDesignPreview]
 PercentageSizes=1
@@ -255,11 +265,11 @@ State=0
 Left=0
 Top=0
 Width=1500
-Height=6123
+Height=6193
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1500
-ClientHeight=6123
+ClientHeight=6193
 TBDockHeight=5956
 LRDockWidth=2510
 Dockable=1
@@ -271,8 +281,8 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=-1622
-Top=251
+Left=0
+Top=0
 Width=276
 Height=360
 MaxLeft=-1
@@ -395,11 +405,11 @@ State=0
 Left=0
 Top=0
 Width=2339
-Height=921
+Height=1149
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=2339
-ClientHeight=921
+ClientHeight=1149
 TBDockHeight=2316
 LRDockWidth=2823
 Dockable=1
@@ -460,11 +470,11 @@ State=0
 Left=0
 Top=0
 Width=1500
-Height=6123
+Height=6193
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1500
-ClientHeight=6123
+ClientHeight=6193
 TBDockHeight=4886
 LRDockWidth=7151
 Dockable=1
@@ -476,8 +486,8 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=384
-Top=889
+Left=0
+Top=0
 Width=2854
 Height=3211
 MaxLeft=-1
@@ -609,8 +619,8 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=950
-Top=36
+Left=8
+Top=8
 Width=3823
 Height=1421
 MaxLeft=-1

@@ -182,6 +182,10 @@ type
     // SELECT parsing
     function ParseExprAggregate(AParent: TSQLElement; EO: TExpressionOptions)
       : TSQLAggregateFunctionExpression;
+    function ParseOverClause(AParent: TSQLElement; AFunc: TSQLExpression)
+      : TSQLWindowFunctionExpression;
+    function ParseRawFunctionCall(AParent: TSQLElement; const AName: string)
+      : TSQLExpression;
     procedure ParseFromClause(AParent: TSQLSelectStatement;
       AList: TSQLelementList);
     procedure ParseGroupBy(AParent: TSQLSelectStatement;
@@ -1523,37 +1527,43 @@ var
 
 begin
   // On Entry, we're on the ( token
-  Repeat
-    GetNextToken;
-
-    // --- SOPORTE MARIADB: opcional IN / OUT / INOUT ---
-    Dir := '';
-    if CurrentToken = tsqlIN then
-    begin
-      Dir := 'IN';
-      GetNextToken;
-    end
-    else if (CurrentToken = tsqlIdentifier) and
-            (SameText(CurrentTokenString, 'OUT') or
-             SameText(CurrentTokenString, 'INOUT')) then
-    begin
-      Dir := UpperCase(CurrentTokenString);
-      GetNextToken;
-    end;
-
-    Expect(tsqlIdentifier);
-    P := TSQLProcedureParamDef(CreateElement(TSQLProcedureParamDef, AParent));
-    try
-      AList.Add(P);
-    except
-      P.free;
-      raise;
-    end;
-    P.Direction := Dir;
-    P.ParamName := CreateIdentifier(P, CurrentTokenString);
-    // Typedefinition will go to next token
-    P.ParamType := ParseTypeDefinition(P, [ptProcedureParam]);
-  Until (CurrentToken <> tsqlComma);
+  GetNextToken; // primer token tras '(' (o ')' si la lista esta vacia)
+  // Lista de parametros vacia: PROCEDURE nombre()
+  if CurrentToken <> tsqlBraceClose then
+  begin
+    Repeat
+      // En la 2a y siguientes vueltas venimos sobre ',': saltamos al
+      // primer token del parametro.
+      if CurrentToken = tsqlComma then
+        GetNextToken;
+      // --- SOPORTE MARIADB: opcional IN / OUT / INOUT ---
+      Dir := '';
+      if CurrentToken = tsqlIN then
+      begin
+        Dir := 'IN';
+        GetNextToken;
+      end
+      else if (CurrentToken = tsqlIdentifier) and
+              (SameText(CurrentTokenString, 'OUT') or
+               SameText(CurrentTokenString, 'INOUT')) then
+      begin
+        Dir := UpperCase(CurrentTokenString);
+        GetNextToken;
+      end;
+      Expect(tsqlIdentifier);
+      P := TSQLProcedureParamDef(CreateElement(TSQLProcedureParamDef, AParent));
+      try
+        AList.Add(P);
+      except
+        P.free;
+        raise;
+      end;
+      P.Direction := Dir;
+      P.ParamName := CreateIdentifier(P, CurrentTokenString);
+      // Typedefinition will go to next token
+      P.ParamType := ParseTypeDefinition(P, [ptProcedureParam]);
+    Until (CurrentToken <> tsqlComma);
+  end;
   Consume(tsqlBraceClose);
 end;
 
@@ -2271,12 +2281,33 @@ begin
   Coll := nil;
   case GetNextToken of
     tsqlIdentifier :
-      if not(ptfAllowDomainName in Flags) then
-        Error(SErrDomainNotAllowed)
-      else
       begin
+        // MariaDB: tipos no tokenizados (TINYINT, MEDIUMINT, BIGINT, TEXT,
+        // TINYTEXT, MEDIUMTEXT, LONGTEXT, DATETIME, ENUM, SET, JSON, BOOL,
+        // DOUBLE...) o nombres de dominio. Llegan como identificador; los
+        // aceptamos como nombre de tipo y capturamos un posible (n) / (n,m) /
+        // ('a','b') como parte del nombre, para reproducirlo tal cual.
         DT := sdtDomain;
         TN := CurrentTokenString;
+        if PeekNextToken = tsqlBraceOpen then
+        begin
+          GetNextToken; // sobre '('
+          TN := TN + '(';
+          GetNextToken;
+          while not (CurrentToken in [tsqlBraceClose, tsqlEOF]) do
+          begin
+            if CurrentToken = tsqlString then
+              TN := TN + '''' + CurrentTokenString + ''''
+            else if CurrentToken = tsqlComma then
+              TN := TN + ', '
+            else
+              TN := TN + CurrentTokenString;
+            GetNextToken;
+          end;
+          TN := TN + ')';
+          GN := False; // ya gestionamos el avance tras ')'
+          GetNextToken; // token siguiente al ')'
+        end;
       end;
     tsqlInt,
       tsqlInteger :
@@ -2993,6 +3024,101 @@ begin
   end;
 end;
 
+function TSQLParser.ParseOverClause(AParent : TSQLElement;
+  AFunc : TSQLExpression) : TSQLWindowFunctionExpression;
+var
+  O : TSQLOrderByElement;
+begin
+  // Al entrar estamos en el identificador OVER. AFunc es la llamada a
+  // funcion / agregado sobre la que actua la clausula ventana.
+  Result := TSQLWindowFunctionExpression
+    (CreateElement(TSQLWindowFunctionExpression, AParent));
+  try
+    Result.FunctionExpr := AFunc;
+    GetNextToken;
+    Consume(tsqlBraceOpen);
+    // PARTITION BY (opcional)
+    if (CurrentToken = tsqlIdentifier) and
+       SameText(CurrentTokenString, 'PARTITION') then
+    begin
+      GetNextToken;
+      Expect(tsqlBy);
+      Repeat
+        GetNextToken;
+        Result.PartitionBy.Add(ParseExprLevel1(Result, []));
+      until (CurrentToken <> tsqlComma);
+    end;
+    // ORDER BY (opcional)
+    if (CurrentToken = tsqlOrder) then
+    begin
+      GetNextToken;
+      Expect(tsqlBy);
+      Repeat
+        GetNextToken;
+        O := TSQLOrderByElement(CreateElement(TSQLOrderByElement, Result));
+        Result.OrderBy.Add(O);
+        O.Field := ParseExprLevel1(O, []);
+        if (CurrentToken in [tsqlDesc, tsqlAsc, tsqlDescending,
+          tsqlAscending]) then
+        begin
+          if (CurrentToken in [tsqlDesc, tsqlDescending]) then
+            O.OrderBy := obDescending
+          else
+            O.OrderBy := obAscending;
+          GetNextToken;
+        end;
+      until (CurrentToken <> tsqlComma);
+    end;
+    Consume(tsqlBraceClose);
+  except
+    // El caller sigue siendo dueño de AFunc; evitamos el doble free
+    Result.FunctionExpr := nil;
+    FreeAndNil(Result);
+    raise;
+  end;
+end;
+
+function TSQLParser.ParseRawFunctionCall(AParent : TSQLElement;
+  const AName : string) : TSQLExpression;
+var
+  N : string;
+  PCount : Integer;
+begin
+  // Captura cruda del contenido de funciones MySQL con sintaxis no estandar
+  // (GROUP_CONCAT, TRIM ... FROM ...). Reproduce el texto tal cual, ya que el
+  // arbol no modela estas variantes. Al entrar estamos en el '(' inicial.
+  N := AName + '(';
+  PCount := 1;
+  GetNextToken;
+  while (PCount > 0) and (CurrentToken <> tsqlEOF) do
+  begin
+    if CurrentToken = tsqlBraceOpen then
+      Inc(PCount)
+    else if CurrentToken = tsqlBraceClose then
+      Dec(PCount);
+    if PCount > 0 then
+    begin
+      // No separar el '(' del token previo ni romper rutas tabla.campo
+      if (N[Length(N)] <> '(') and
+         (CurrentToken <> tsqlDot) and
+         (CurrentToken <> tsqlBraceOpen) and
+         (PreviousToken <> tsqlDot) then
+        N := N + ' ';
+      if CurrentToken = tsqlString then
+        N := N + '''' + CurrentTokenString + ''''
+      else
+        N := N + CurrentTokenString;
+      GetNextToken;
+    end;
+  end;
+  N := N + ')';
+  if CurrentToken = tsqlBraceClose then
+    GetNextToken;
+  Result := TSQLIdentifierExpression
+    (CreateElement(TSQLIdentifierExpression, AParent));
+  TSQLIdentifierExpression(Result).Identifier := CreateIdentifier(Result, N);
+end;
+
 function TSQLParser.ParseExprPrimitive(AParent : TSQLElement;
   EO : TExpressionOptions) : TSQLExpression;
 var
@@ -3001,7 +3127,6 @@ var
   C : TSQLElementClass;
   E : TSQLExtractElement;
   WhenNode: TSQLCaseWhenNode;
-  PCount: Integer;
 begin
   Result := nil;
   try
@@ -3161,7 +3286,10 @@ begin
             CreateIdentifier(Result, N);
           Consume(tsqlIdentifier);
         end;
-      tsqlIdentifier, tsqlIf:
+      // tsqlLeft / tsqlRight son palabras reservadas (LEFT/RIGHT JOIN) pero
+      // tambien funciones de cadena MySQL LEFT(str,n) / RIGHT(str,n). En una
+      // expresion solo pueden ser la funcion, asi que las tratamos como tal.
+      tsqlIdentifier, tsqlIf, tsqlLeft, tsqlRight:
         begin
           if CurrentToken = tsqlIf then
             N := 'IF'
@@ -3200,34 +3328,8 @@ begin
           end
           else
           begin
-            if SameText(N, 'GROUP_CONCAT') then
-            begin
-              N := N + '(';
-              PCount := 1;
-              GetNextToken;
-              while (PCount > 0) and (CurrentToken <> tsqlEOF) do
-              begin
-                if CurrentToken = tsqlBraceOpen then Inc(PCount)
-                else if CurrentToken = tsqlBraceClose then Dec(PCount);
-                if PCount > 0 then
-                begin
-                  if (N[Length(N)] <> '(') and
-                     (CurrentToken <> tsqlDot) and
-                     (PreviousToken <> tsqlDot) then
-                    N := N + ' ';
-                  if CurrentToken = tsqlString then
-                    N := N + '''' + CurrentTokenString + ''''
-                  else
-                    N := N + CurrentTokenString;
-                  GetNextToken;
-                end;
-              end;
-              N := N + ')';
-              if CurrentToken = tsqlBraceClose then
-                GetNextToken;
-              Result := TSQLIdentifierExpression(CreateElement(TSQLIdentifierExpression, AParent));
-              TSQLIdentifierExpression(Result).Identifier := CreateIdentifier(Result, N);
-            end
+            if SameText(N, 'GROUP_CONCAT') or SameText(N, 'TRIM') then
+              Result := ParseRawFunctionCall(AParent, N)
             else
             begin
               L := ParseValueList(AParent, EO);
@@ -3242,6 +3344,12 @@ begin
     else
       UnexpectedToken;
     end;
+    // Funcion ventana: detectamos OVER tras una llamada a funcion o agregado
+    if (CurrentToken = tsqlIdentifier) and
+       SameText(CurrentTokenString, 'OVER') and
+       ((Result is TSQLFunctionCallExpression) or
+        (Result is TSQLAggregateFunctionExpression)) then
+      Result := ParseOverClause(AParent, Result);
   except
     FreeAndNil(Result);
     raise;
@@ -4636,7 +4744,7 @@ const
   // Keywords de inicio de sentencia DML (fuerzan salto al depth 0)
   StmtStartKw : TSQLTokens = [tsqlSelect, tsqlInsert, tsqlUpdate, tsqlDelete];
 var
-  Depth             : Integer;
+  BlockStack        : string;
   ParenDepth        : Integer;
   Indent            : Integer;
   ClauseIndent      : Integer;
@@ -4664,6 +4772,10 @@ var
     // propio "INSERT INTO" y no debe romper.
     if SameText(Upper, 'INTO') then
       Exit(not PendingInsertInto);
+    // "JOIN" no rompe linea si va precedido de su prefijo (LEFT/RIGHT/INNER/
+    // OUTER): asi "LEFT JOIN" queda junto, partiendo solo antes de LEFT.
+    if SameText(Upper, 'JOIN') then
+      Exit(not (PreviousToken in [tsqlLeft, tsqlRight, tsqlInner, tsqlOuter]));
     Result := SameText(Upper, 'FROM') or SameText(Upper, 'WHERE') or
               SameText(Upper, 'SET') or SameText(Upper, 'VALUES') or
               SameText(Upper, 'ORDER') or SameText(Upper, 'GROUP') or
@@ -4697,9 +4809,12 @@ var
       if not (CurrentToken in [tsqlComma, tsqlSemicolon, tsqlDot, tsqlColon,
                                tsqlBraceClose, tsqlSquareBraceClose]) then
       begin
-        // Sin espacio antes de '(' si previo es identifier-like (función)
-        if not ((CurrentToken = tsqlBraceOpen) and
-                (PreviousToken in FunctionCallPrev)) then
+        // Sin espacio antes de '(' si previo es identifier-like (función), ni
+        // entre ':' y '=' para no romper el operador de asignacion ':=' de
+        // MariaDB (SET var := valor).
+        if (not ((CurrentToken = tsqlBraceOpen) and
+                 (PreviousToken in FunctionCallPrev))) and
+           (not ((CurrentToken = tsqlEQ) and (PreviousToken = tsqlColon))) then
           Result := Result + ' ';
       end;
     end;
@@ -4716,7 +4831,7 @@ var
 
 begin
   Result := '';
-  Depth := 0;
+  BlockStack := '';
   ParenDepth := 0;
   Indent := 0;
   ClauseIndent := 0;
@@ -4740,22 +4855,45 @@ begin
     CurRow := FScanner.CurRow;
     Upper := UpperCase(CurrentTokenString);
 
-    // Tracking de profundidad BEGIN/END
+    // Tracking de bloques mediante pila (BlockStack). Un 'END' simple puede
+    // cerrar tanto un bloque BEGIN..END como una expresion CASE..END, asi que
+    // necesitamos saber cual es el bloque abierto mas interno. 'B' = BEGIN,
+    // 'C' = CASE. Los subbloques IF/WHILE/LOOP/REPEAT no se apilan: se cierran
+    // con 'END IF/WHILE/LOOP/REPEAT' y no afectan a la profundidad.
     if CurrentToken = tsqlBegin then
-      Inc(Depth)
+      BlockStack := BlockStack + 'B'
+    else if CurrentToken = tsqlCase then
+      BlockStack := BlockStack + 'C'
     else if CurrentToken = tsqlEnd then
     begin
       PeekTok := PeekNextToken;
       PeekStr := UpperCase(FPeekTokenString);
-      if not ((PeekTok = tsqlIf) or
-              (PeekTok = tsqlWhile) or
-              (PeekTok = tsqlCase) or
-              ((PeekTok = tsqlIdentifier) and
-               (SameText(PeekStr, 'LOOP') or SameText(PeekStr, 'REPEAT')))) then
+      if (PeekTok = tsqlCase) then
       begin
-        Dec(Depth);
-        if Depth = 0 then
-          Done := True;
+        // 'END CASE': cierre de un CASE de sentencia.
+        if (BlockStack <> '') and (BlockStack[Length(BlockStack)] = 'C') then
+          Delete(BlockStack, Length(BlockStack), 1);
+      end
+      else if (PeekTok = tsqlIf) or (PeekTok = tsqlWhile) or
+              ((PeekTok = tsqlIdentifier) and
+               (SameText(PeekStr, 'LOOP') or SameText(PeekStr, 'REPEAT'))) then
+      begin
+        // 'END IF/WHILE/LOOP/REPEAT': subbloque no apilado, no toca la pila.
+      end
+      else
+      begin
+        // 'END' simple: cierra el bloque mas interno.
+        if (BlockStack <> '') and (BlockStack[Length(BlockStack)] = 'C') then
+          // Cierre de una expresion CASE..END: no cierra ningun BEGIN.
+          Delete(BlockStack, Length(BlockStack), 1)
+        else
+        begin
+          if BlockStack <> '' then
+            Delete(BlockStack, Length(BlockStack), 1);
+          // Pila vacia => era el END del BEGIN exterior del procedure.
+          if BlockStack = '' then
+            Done := True;
+        end;
       end;
     end;
 

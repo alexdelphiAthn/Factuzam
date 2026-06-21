@@ -382,5 +382,10 @@ begin
 //                            begin
 //                              inLibDiag.ProbarStackTrace;
 //                            end);
-  Application.Run;
+  try
+    Application.Run;
+  finally
+    inLibGlobalVar.oCerrandoApp := True;
+    TVerifactuCola.DetenerHilo;
+  end;
 end.
