@@ -104,6 +104,9 @@ type
     mnuBalanceAlmacenHorizontal: TMenuItem;
     mnuBalanceAlmacenSinTallas: TMenuItem;
     mnuMovVentasArt: TMenuItem;
+    EfectosVenta1: TMenuItem;
+    RemesasVenta1: TMenuItem;
+    CargarEfectosVenta1: TMenuItem;
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuAlmacenesClick(Sender: TObject);
     procedure mnuInvocarLoginClick(Sender: TObject);
@@ -188,6 +191,9 @@ type
     mnuAlbaranesVenta: TMenuItem;
     procedure mnuPedidosVentaClick(Sender: TObject);
     procedure mnuAlbaranesVentaClick(Sender: TObject);
+    procedure EfectosVenta1Click(Sender: TObject);
+    procedure RemesasVenta1Click(Sender: TObject);
+    procedure CargarEfectosVenta1Click(Sender: TObject);
     procedure Sesiones1Click(Sender: TObject);
     procedure Albaranes1Click(Sender: TObject);
     procedure Devoluciones1Click(Sender: TObject);
@@ -336,6 +342,7 @@ uses inLibUser,
   inMtoModalImpEfectosPago,
   inMtoModalFacturarAlbaranes,
   inMtoModalCargarEfectosRemesa,
+  inMtoModalCargarEfectosRemesaVenta,
   inLibCajaParam,
   inLibAppParam,
   inLibUnidadesMedida,
@@ -1839,6 +1846,37 @@ begin
   inherited;
   if mnuAlbaranesVenta.Visible then
     ShowMto(Self, 'Albaranes');
+end;
+
+procedure TfrmMtoPrincipal.EfectosVenta1Click(Sender: TObject);
+begin
+  inherited;
+  if EfectosVenta1.Visible then
+    ShowMto(Self, 'EfectosVenta');
+end;
+
+procedure TfrmMtoPrincipal.RemesasVenta1Click(Sender: TObject);
+begin
+  inherited;
+  if RemesasVenta1.Visible then
+    ShowMto(Self, 'RemesasVenta');
+end;
+
+procedure TfrmMtoPrincipal.CargarEfectosVenta1Click(Sender: TObject);
+var
+  f: TfrmModalCargarEfectosRemesaVenta;
+begin
+  inherited;
+  if CargarEfectosVenta1.Visible then
+  begin
+    f := TfrmModalCargarEfectosRemesaVenta.Create(nil);
+    try
+      if f.ShowModal = mrOk then
+        ShowMto(Self, 'RemesasVenta');
+    finally
+      f.Free;
+    end;
+  end;
 end;
 
 procedure TfrmMtoPrincipal.Sesiones1Click(Sender: TObject);

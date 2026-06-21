@@ -86,6 +86,14 @@ type
                                   AAlm,
                                   ACaja,
                                   ATextoLibre: string);
+    procedure CerrarPestanasHijas;
+    procedure CargarDetalleOperacion(const AEmp,
+                                           AAlm,
+                                           ACaja,
+                                           ANumOp,
+                                           ACliente,
+                                           ASerie,
+                                           ANroFac: string);
     procedure RefrescarPestanasHijas;
     function  TienePagos:       Boolean;
     function  TieneVales:       Boolean;
@@ -403,9 +411,109 @@ begin
     ' ORDER BY l.LINEA_FACLIN ';
 end;
 
+procedure TdmConsultaOpe.CerrarPestanasHijas;
+begin
+  qryOperacion.Close;
+  qryPagos.Close;
+  qryVales.Close;
+  qryMovimientos.Close;
+  qryCliente.Close;
+  qryDepositos.Close;
+  qryFactura.Close;
+  qryFacturaLin.Close;
+  FUltimaClaveHijas := '';
+end;
+
+procedure TdmConsultaOpe.CargarDetalleOperacion(const AEmp,
+                                                     AAlm,
+                                                     ACaja,
+                                                     ANumOp,
+                                                     ACliente,
+                                                     ASerie,
+                                                     ANroFac: string);
+var
+  sClave: string;
+begin
+  // Escudo anti-recarga redundante: si la fila activa del maestro no ha
+  // cambiado, no relanzamos las 8 queries hijas.
+  sClave := AEmp + '|' + AAlm + '|' + ACaja + '|' + ANumOp;
+  if sClave = FUltimaClaveHijas then
+  begin
+    Log.LogInfo(Format('CargarDetalleOperacion: SKIP (misma op "%s")',
+                       [sClave]));
+    Exit;
+  end;
+  Log.LogInfo(Format('CargarDetalleOperacion: cargando op "%s" (prev="%s")',
+                     [sClave, FUltimaClaveHijas]));
+  // --- Operacion ---
+  qryOperacion.Close;
+  qryOperacion.ParamByName('PEMP').AsString    := AEmp;
+  qryOperacion.ParamByName('PALM').AsString    := AAlm;
+  qryOperacion.ParamByName('PCAJA').AsString   := ACaja;
+  qryOperacion.ParamByName('PNUMOP').AsString  := ANumOp;
+  AbrirSeguro(qryOperacion, 'Operaciones');
+
+  // --- Pagos ---
+  qryPagos.Close;
+  qryPagos.ParamByName('PEMP').AsString    := AEmp;
+  qryPagos.ParamByName('PALM').AsString    := AAlm;
+  qryPagos.ParamByName('PCAJA').AsString   := ACaja;
+  qryPagos.ParamByName('PNUMOP').AsString  := ANumOp;
+  AbrirSeguro(qryPagos, 'Pagos');
+
+  // --- Vales ---
+  qryVales.Close;
+  qryVales.ParamByName('PEMP').AsString    := AEmp;
+  qryVales.ParamByName('PALM').AsString    := AAlm;
+  qryVales.ParamByName('PCAJA').AsString   := ACaja;
+  qryVales.ParamByName('PNUMOP').AsString  := ANumOp;
+  AbrirSeguro(qryVales, 'Vales');
+
+  // --- Movimientos ---
+  qryMovimientos.Close;
+  qryMovimientos.ParamByName('PEMP').AsString    := AEmp;
+  qryMovimientos.ParamByName('PALM').AsString    := AAlm;
+  qryMovimientos.ParamByName('PCAJA').AsString   := ACaja;
+  qryMovimientos.ParamByName('PNUMOP').AsString  := ANumOp;
+  AbrirSeguro(qryMovimientos, 'Movimientos');
+
+  // --- Cliente ---
+  qryCliente.Close;
+  if Trim(ACliente) <> '' then
+  begin
+    qryCliente.ParamByName('PCLI').AsString := ACliente;
+    AbrirSeguro(qryCliente, 'Clientes');
+  end;
+
+  // --- Depositos ---
+  qryDepositos.Close;
+  qryDepositos.ParamByName('PEMP').AsString    := AEmp;
+  qryDepositos.ParamByName('PALM').AsString    := AAlm;
+  qryDepositos.ParamByName('PCAJA').AsString   := ACaja;
+  qryDepositos.ParamByName('PNUMOP').AsString  := ANumOp;
+  AbrirSeguro(qryDepositos, 'Depositos');
+
+  // --- Factura (cabecera + lineas) ---
+  qryFactura.Close;
+  qryFacturaLin.Close;
+  qryFactura.ParamByName('PEMP').AsString    := AEmp;
+  qryFactura.ParamByName('PALM').AsString    := AAlm;
+  qryFactura.ParamByName('PCAJA').AsString   := ACaja;
+  qryFactura.ParamByName('PNUMOP').AsString  := ANumOp;
+  AbrirSeguro(qryFactura, 'Facturas');
+  if (not qryFactura.IsEmpty) and (Trim(ASerie) <> '')
+     and (Trim(ANroFac) <> '') then
+  begin
+    qryFacturaLin.ParamByName('PSERIE').AsString  := ASerie;
+    qryFacturaLin.ParamByName('PNROFAC').AsString := ANroFac;
+    AbrirSeguro(qryFacturaLin, 'Lineas de Facturas');
+  end;
+  FUltimaClaveHijas := sClave;
+end;
+
 procedure TdmConsultaOpe.RefrescarPestanasHijas;
 var
-  sEmp, sAlm, sCaja, sNumOp, sCli, sSerie, sNroFac, sClave: string;
+  sEmp, sAlm, sCaja, sNumOp, sCli, sSerie, sNroFac: string;
 begin
   if FCargando then
   begin
@@ -417,15 +525,7 @@ begin
     if FUltimaClaveHijas <> '' then
     begin
       Log.LogInfo('RefrescarPestanasHijas: maestro vacio, cerrando hijas');
-      qryOperacion.Close;
-      qryPagos.Close;
-      qryVales.Close;
-      qryMovimientos.Close;
-      qryCliente.Close;
-      qryDepositos.Close;
-      qryFactura.Close;
-      qryFacturaLin.Close;
-      FUltimaClaveHijas := '';
+      CerrarPestanasHijas;
     end
     else
       Log.LogInfo('RefrescarPestanasHijas: maestro vacio (no-op, ya cerradas)');
@@ -438,81 +538,13 @@ begin
   sCli    := qryMaestro.FieldByName('CLIENTE').AsString;
   sSerie  := qryMaestro.FieldByName('SERIE_FAC').AsString;
   sNroFac := qryMaestro.FieldByName('NUMERO_FAC').AsString;
-  // Escudo anti-recarga redundante: si la fila activa del maestro no ha
-  // cambiado, no relanzamos las 8 queries hijas.
-  sClave := sEmp + '|' + sAlm + '|' + sCaja + '|' + sNumOp;
-  if sClave = FUltimaClaveHijas then
-  begin
-    Log.LogInfo(Format('RefrescarPestanasHijas: SKIP (misma op "%s")',
-                       [sClave]));
-    Exit;
-  end;
-  Log.LogInfo(Format('RefrescarPestanasHijas: cargando op "%s" (prev="%s")',
-                     [sClave, FUltimaClaveHijas]));
-  // --- Operacion ---
-  qryOperacion.Close;
-  qryOperacion.ParamByName('PEMP').AsString    := sEmp;
-  qryOperacion.ParamByName('PALM').AsString    := sAlm;
-  qryOperacion.ParamByName('PCAJA').AsString   := sCaja;
-  qryOperacion.ParamByName('PNUMOP').AsString  := sNumOp;
-  AbrirSeguro(qryOperacion, 'Operaciones');
-
-  // --- Pagos ---
-  qryPagos.Close;
-  qryPagos.ParamByName('PEMP').AsString    := sEmp;
-  qryPagos.ParamByName('PALM').AsString    := sAlm;
-  qryPagos.ParamByName('PCAJA').AsString   := sCaja;
-  qryPagos.ParamByName('PNUMOP').AsString  := sNumOp;
-  AbrirSeguro(qryPagos, 'Pagos');
-
-  // --- Vales ---
-  qryVales.Close;
-  qryVales.ParamByName('PEMP').AsString    := sEmp;
-  qryVales.ParamByName('PALM').AsString    := sAlm;
-  qryVales.ParamByName('PCAJA').AsString   := sCaja;
-  qryVales.ParamByName('PNUMOP').AsString  := sNumOp;
-  AbrirSeguro(qryVales, 'Vales');
-
-  // --- Movimientos ---
-  qryMovimientos.Close;
-  qryMovimientos.ParamByName('PEMP').AsString    := sEmp;
-  qryMovimientos.ParamByName('PALM').AsString    := sAlm;
-  qryMovimientos.ParamByName('PCAJA').AsString   := sCaja;
-  qryMovimientos.ParamByName('PNUMOP').AsString  := sNumOp;
-  AbrirSeguro(qryMovimientos, 'Movimientos');
-
-  // --- Cliente ---
-  qryCliente.Close;
-  if Trim(sCli) <> '' then
-  begin
-    qryCliente.ParamByName('PCLI').AsString := sCli;
-    AbrirSeguro(qryCliente, 'Clientes');
-  end;
-
-  // --- Depositos ---
-  qryDepositos.Close;
-  qryDepositos.ParamByName('PEMP').AsString    := sEmp;
-  qryDepositos.ParamByName('PALM').AsString    := sAlm;
-  qryDepositos.ParamByName('PCAJA').AsString   := sCaja;
-  qryDepositos.ParamByName('PNUMOP').AsString  := sNumOp;
-  AbrirSeguro(qryDepositos, 'Depositos');
-
-  // --- Factura (cabecera + lineas) ---
-  qryFactura.Close;
-  qryFacturaLin.Close;
-  qryFactura.ParamByName('PEMP').AsString    := sEmp;
-  qryFactura.ParamByName('PALM').AsString    := sAlm;
-  qryFactura.ParamByName('PCAJA').AsString   := sCaja;
-  qryFactura.ParamByName('PNUMOP').AsString  := sNumOp;
-  AbrirSeguro(qryFactura, 'Facturas');
-  if (not qryFactura.IsEmpty) and (Trim(sSerie) <> '')
-     and (Trim(sNroFac) <> '') then
-  begin
-    qryFacturaLin.ParamByName('PSERIE').AsString  := sSerie;
-    qryFacturaLin.ParamByName('PNROFAC').AsString := sNroFac;
-    AbrirSeguro(qryFacturaLin, 'Lineas de Facturas');
-  end;
-  FUltimaClaveHijas := sClave;
+  CargarDetalleOperacion(sEmp,
+                         sAlm,
+                         sCaja,
+                         sNumOp,
+                         sCli,
+                         sSerie,
+                         sNroFac);
 end;
 
 // -----------------------------------------------------------------------------

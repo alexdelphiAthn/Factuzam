@@ -244,6 +244,7 @@ begin
   AddSuf('fza_contadores',                      'CON');
   AddSuf('fza_depositos_cliente',               'DEP');
   AddSuf('fza_efectos_compra',                  'EFEC');
+  AddSuf('fza_efectos_venta',                   'EFV');
   AddSuf('fza_empleados',                       'EMPL');
   AddSuf('fza_empresas',                        'EMP');
   AddSuf('fza_empresas_bancos',                 'EMPBAN');
@@ -280,6 +281,7 @@ begin
   AddSuf('fza_proveedores_familias_conjuntos',  'PFC');
   AddSuf('fza_recibos',                         'REC');
   AddSuf('fza_remesas_compra',                  'REMC');
+  AddSuf('fza_remesas_venta',                   'REMV');
   AddSuf('fza_tarifas',                         'TAR');
   AddSuf('fza_tarifas_cambios',                 'TARC');
   AddSuf('fza_tarifas_cambios_lineas',          'TARCLIN');
@@ -393,6 +395,8 @@ begin
   AddOwn('fza_facturas_compra_lineas',         ['FACTURA','COMPRA','LINEA']);
   AddOwn('fza_efectos_compra',                 ['EFECTO','COMPRA']);
   AddOwn('fza_remesas_compra',                 ['REMESA','COMPRA']);
+  AddOwn('fza_efectos_venta',                  ['EFECTO','VENTA']);
+  AddOwn('fza_remesas_venta',                  ['REMESA','VENTA']);
   AddOwn('fza_tipos_efecto',                   ['TIPO','EFECTO']);
 
   // ========== Auditoría ==========

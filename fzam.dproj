@@ -750,11 +750,28 @@
             <Form>dmRemesasCompra</Form>
             <DesignClass>TdmRemesasCompra</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoEfectosVenta.pas">
+            <Form>frmMtoEfectosVenta</Form>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataEfectosVenta.pas">
+            <Form>dmEfectosVenta</Form>
+            <DesignClass>TdmEfectosVenta</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoRemesasVenta.pas">
+            <Form>frmMtoRemesasVenta</Form>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataRemesasVenta.pas">
+            <Form>dmRemesasVenta</Form>
+            <DesignClass>TdmRemesasVenta</DesignClass>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalFacturarAlbaranes.pas">
             <Form>frmModalFacturarAlbaranes</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalCargarEfectosRemesa.pas">
             <Form>frmModalCargarEfectosRemesa</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalCargarEfectosRemesaVenta.pas">
+            <Form>frmModalCargarEfectosRemesaVenta</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalSeleccionarBanco.pas">
             <Form>frmModalSeleccionarBanco</Form>

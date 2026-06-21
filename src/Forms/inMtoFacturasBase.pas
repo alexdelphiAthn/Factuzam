@@ -539,6 +539,13 @@ type
     // (y desde el resolver al teclear el articulo) y se vacia al recrear
     // la tabla principal.
     FArtMostrarSku: TDictionary<string, Boolean>;
+    function  EsVentaMayorNormal: Boolean;
+    function  TextoCobroPlural: string;
+    function  PrefijoExportCobros: string;
+    procedure AplicarTerminologiaCobros;
+    procedure AplicarOrigenCobros;
+    procedure ConfigurarColumnasRecibos;
+    procedure ConfigurarColumnasEfectosVenta;
     // Modo creacion de articulos de la cabecera (ESCREARARTICULOS_FAC='S').
     function  ModoCreacionActivo: Boolean;
     // Visibilidad de las columnas de creacion de articulos del detalle.
@@ -608,6 +615,7 @@ uses
   inMtoModalFacRec,
   inMtoModalImpRecFac,
   inMtoModalImpFac,
+  inMtoModalRegistrarPago,
   inMtoModalSeleccionarBanco,
   inMtoPrincipal,
   inLibUser,
@@ -734,21 +742,221 @@ begin
   end;
 end;
 
+function TfrmMtoFacturasBase.EsVentaMayorNormal: Boolean;
+begin
+  Result := SameText(TipoFacturaFiltro, 'NORMAL');
+end;
+
+function TfrmMtoFacturasBase.TextoCobroPlural: string;
+begin
+  if EsVentaMayorNormal then
+    Result := 'efectos de cobro'
+  else
+    Result := 'recibos';
+end;
+
+function TfrmMtoFacturasBase.PrefijoExportCobros: string;
+begin
+  if EsVentaMayorNormal then
+    Result := 'EfectosCobro_Borrador_'
+  else
+    Result := 'Recibos_Borrador_';
+end;
+
+procedure TfrmMtoFacturasBase.ConfigurarColumnasRecibos;
+begin
+  tvRecibos.DataController.DataSource := dmmFacturas.dsRecibos;
+  tvRecibos.OptionsData.Appending := True;
+  tvRecibos.OptionsData.Deleting := True;
+  tvRecibos.OptionsData.Editing := True;
+  tvRecibos.OptionsData.Inserting := True;
+  tvRecibos.Navigator.Buttons.Insert.Visible := True;
+  tvRecibos.Navigator.Buttons.Delete.Visible := True;
+  tvRecibos.Navigator.Buttons.Post.Visible := True;
+  tvRecibos.Navigator.Buttons.Cancel.Visible := True;
+  cxgrdbclmnRecibosNRO_FACTURA_RECIBO.DataBinding.FieldName :=
+    'NUMERO_FAC_REC';
+  cxgrdbclmnRecibosSERIE_FACTURA_RECIBO.DataBinding.FieldName :=
+    'SERIE_FAC_REC';
+  cxgrdbclmnRecibosNRO_PLAZO_RECIBO.DataBinding.FieldName :=
+    'NUMERO_PLAZO_REC';
+  cxgrdbclmnRecibosFORMA_PAGO_ORIGEN_RECIBO.DataBinding.FieldName :=
+    'FORMA_PAGO_ORIGEN_RECIBO_REC';
+  cxgrdbclmnRecibosFORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO.DataBinding.FieldName :=
+    'FORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO_REC';
+  cxgrdbclmnRecibosEUROS_RECIBO.DataBinding.FieldName :=
+    'EUROS_RECIBO_REC';
+  cxgrdbclmnRecibosESTADO_RECIBO.DataBinding.FieldName :=
+    'ESTADO_RECIBO_REC';
+  cxgrdbclmnRecibosFECHA_EXPEDICION_RECIBO.DataBinding.FieldName :=
+    'FECHA_EXPEDICION_RECIBO_REC';
+  cxgrdbclmnRecibosFECHA_VENCIMIENTO_RECIBO.DataBinding.FieldName :=
+    'FECHA_VENCIMIENTO_RECIBO_REC';
+  cxgrdbclmnRecibosIBAN_CLIENTE_RECIBO.DataBinding.FieldName :=
+    'IBAN_CLI_REC';
+  cxgrdbclmnRecibosFECHA_PAGO_RECIBO.DataBinding.FieldName :=
+    'FECHA_PAGO_RECIBO_REC';
+  cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO.DataBinding.FieldName :=
+    'LOCALIDAD_EXPEDICION_RECIBO_REC';
+  cxgrdbclmnRecibosCODIGO_CLIENTE_RECIBO.DataBinding.FieldName :=
+    'CODIGO_CLI_REC';
+  cxgrdbclmnRecibosRAZONSOCIAL_CLIENTE_RECIBO.DataBinding.FieldName :=
+    'RAZON_SOCIAL_CLI_REC';
+  cxgrdbclmnRecibosDIRECCION1_CLIENTE_RECIBO.DataBinding.FieldName :=
+    'DIRECCION1_CLIENTE_RECIBO_REC';
+  cxgrdbclmnRecibosPOBLACION_CLIENTE_RECIBO.DataBinding.FieldName :=
+    'POBLACION_CLI_REC';
+  cxgrdbclmnRecibosPROVINCIA_CLIENTE_RECIBO.DataBinding.FieldName :=
+    'PROVINCIA_CLI_REC';
+  cxgrdbclmnRecibosCPOSTAL_CLIENTE_RECIBO.DataBinding.FieldName :=
+    'CODIGO_POSTAL_CLI_REC';
+  cxgrdbclmnRecibosIMPORTE_LETRA_RECIBO.DataBinding.FieldName :=
+    'IMPORTE_LETRA_RECIBO_REC';
+  cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO.Visible := True;
+  cxgrdbclmnRecibosDIRECCION1_CLIENTE_RECIBO.Visible := True;
+  cxgrdbclmnRecibosPOBLACION_CLIENTE_RECIBO.Visible := True;
+  cxgrdbclmnRecibosPROVINCIA_CLIENTE_RECIBO.Visible := True;
+  cxgrdbclmnRecibosCPOSTAL_CLIENTE_RECIBO.Visible := True;
+  cxgrdbclmnRecibosIMPORTE_LETRA_RECIBO.Visible := True;
+end;
+
+procedure TfrmMtoFacturasBase.ConfigurarColumnasEfectosVenta;
+begin
+  tvRecibos.DataController.DataSource := dmmFacturas.dsEfectosVenta;
+  tvRecibos.OptionsData.Appending := False;
+  tvRecibos.OptionsData.Deleting := False;
+  tvRecibos.OptionsData.Editing := False;
+  tvRecibos.OptionsData.Inserting := False;
+  tvRecibos.Navigator.Buttons.Insert.Visible := False;
+  tvRecibos.Navigator.Buttons.Delete.Visible := False;
+  tvRecibos.Navigator.Buttons.Post.Visible := False;
+  tvRecibos.Navigator.Buttons.Cancel.Visible := False;
+  cxgrdbclmnRecibosNRO_FACTURA_RECIBO.DataBinding.FieldName :=
+    'NUMERO_FAC_EFV';
+  cxgrdbclmnRecibosSERIE_FACTURA_RECIBO.DataBinding.FieldName :=
+    'SERIE_FAC_EFV';
+  cxgrdbclmnRecibosNRO_PLAZO_RECIBO.DataBinding.FieldName := 'NUMERO_EFV';
+  cxgrdbclmnRecibosFORMA_PAGO_ORIGEN_RECIBO.DataBinding.FieldName :=
+    'CODIGO_TEFE_EFV';
+  cxgrdbclmnRecibosFORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO.DataBinding.FieldName :=
+    'DESCRIPCION_TEFE_VIEW_EFV';
+  cxgrdbclmnRecibosEUROS_RECIBO.DataBinding.FieldName := 'IMPORTE_EFV';
+  cxgrdbclmnRecibosESTADO_RECIBO.DataBinding.FieldName := 'ESTADO_EFV';
+  cxgrdbclmnRecibosFECHA_EXPEDICION_RECIBO.DataBinding.FieldName :=
+    'FECHA_EMISION_EFV';
+  cxgrdbclmnRecibosFECHA_VENCIMIENTO_RECIBO.DataBinding.FieldName :=
+    'FECHA_VENCIMIENTO_EFV';
+  cxgrdbclmnRecibosIBAN_CLIENTE_RECIBO.DataBinding.FieldName := 'IBAN_EFV';
+  cxgrdbclmnRecibosFECHA_PAGO_RECIBO.DataBinding.FieldName :=
+    'FECHA_COBRO_EFV';
+  cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO.DataBinding.FieldName :=
+    'REFERENCIA_DOCUMENTO_EFV';
+  cxgrdbclmnRecibosCODIGO_CLIENTE_RECIBO.DataBinding.FieldName :=
+    'CODIGO_CLI_EFV';
+  cxgrdbclmnRecibosRAZONSOCIAL_CLIENTE_RECIBO.DataBinding.FieldName :=
+    'RAZON_SOCIAL_CLI_EFV';
+  cxgrdbclmnRecibosDIRECCION1_CLIENTE_RECIBO.DataBinding.FieldName :=
+    'OBSERVACIONES_EFV';
+  cxgrdbclmnRecibosPOBLACION_CLIENTE_RECIBO.DataBinding.FieldName :=
+    'OBSERVACIONES_EFV';
+  cxgrdbclmnRecibosPROVINCIA_CLIENTE_RECIBO.DataBinding.FieldName :=
+    'OBSERVACIONES_EFV';
+  cxgrdbclmnRecibosCPOSTAL_CLIENTE_RECIBO.DataBinding.FieldName :=
+    'OBSERVACIONES_EFV';
+  cxgrdbclmnRecibosIMPORTE_LETRA_RECIBO.DataBinding.FieldName :=
+    'OBSERVACIONES_EFV';
+  cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO.Visible := True;
+  cxgrdbclmnRecibosDIRECCION1_CLIENTE_RECIBO.Visible := False;
+  cxgrdbclmnRecibosPOBLACION_CLIENTE_RECIBO.Visible := False;
+  cxgrdbclmnRecibosPROVINCIA_CLIENTE_RECIBO.Visible := False;
+  cxgrdbclmnRecibosCPOSTAL_CLIENTE_RECIBO.Visible := False;
+  cxgrdbclmnRecibosIMPORTE_LETRA_RECIBO.Visible := False;
+end;
+
+procedure TfrmMtoFacturasBase.AplicarOrigenCobros;
+begin
+  if Assigned(dmmFacturas) then
+  begin
+    if EsVentaMayorNormal then
+      ConfigurarColumnasEfectosVenta
+    else
+      ConfigurarColumnasRecibos;
+  end;
+  AplicarTerminologiaCobros;
+end;
+
+procedure TfrmMtoFacturasBase.AplicarTerminologiaCobros;
+begin
+  if EsVentaMayorNormal then
+  begin
+    tsRecibos.Caption := '&3_Efectos';
+    btnGenerarRecibos.Caption := 'Generar efectos';
+    btnGenerarRecibos2.Caption := 'Generar efectos';
+    btnImprimirRecibo.Caption := 'Imprimir efecto';
+    btnImprimirRecibo.Visible := False;
+    btnReciboEmitido.Caption := '&Pendiente';
+    btnReciboPagado.Caption := '&Cobrado';
+    btnReciboDevuelto.Caption := '&Devuelto';
+    cxgrdbclmnRecibosNRO_FACTURA_RECIBO.Caption :=
+      'Nro Borrador Efecto';
+    cxgrdbclmnRecibosSERIE_FACTURA_RECIBO.Caption :=
+      'Serie Borrador Efecto';
+    cxgrdbclmnRecibosNRO_PLAZO_RECIBO.Caption := 'Efecto';
+    cxgrdbclmnRecibosEUROS_RECIBO.Caption := 'Total efecto';
+    cxgrdbclmnRecibosESTADO_RECIBO.Caption := 'Estado efecto';
+    cxgrdbclmnRecibosFECHA_EXPEDICION_RECIBO.Caption :=
+      'Fecha emisión efecto';
+    cxgrdbclmnRecibosFECHA_PAGO_RECIBO.Caption := 'Fecha cobro';
+    cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO.Caption :=
+      'Referencia';
+  end
+  else
+  begin
+    tsRecibos.Caption := '&3_Recibos';
+    btnGenerarRecibos.Caption := 'Generar &Recibo/s';
+    btnGenerarRecibos2.Caption := 'Generar &Recibo/s';
+    btnImprimirRecibo.Caption := 'Imprimir &Recibo';
+    btnImprimirRecibo.Visible := True;
+    btnReciboEmitido.Caption := '&Emitido';
+    btnReciboPagado.Caption := '&Pagado';
+    btnReciboDevuelto.Caption := '&Devuelto';
+    cxgrdbclmnRecibosNRO_FACTURA_RECIBO.Caption :=
+      'Nro Borrador Recibo';
+    cxgrdbclmnRecibosSERIE_FACTURA_RECIBO.Caption :=
+      'Serie Borrador Recibo';
+    cxgrdbclmnRecibosNRO_PLAZO_RECIBO.Caption := 'Nro Plazo';
+    cxgrdbclmnRecibosEUROS_RECIBO.Caption := 'Total Recibo';
+    cxgrdbclmnRecibosESTADO_RECIBO.Caption := 'Estado Recibo';
+    cxgrdbclmnRecibosFECHA_EXPEDICION_RECIBO.Caption :=
+      'Fecha Expedición Recibo';
+    cxgrdbclmnRecibosFECHA_PAGO_RECIBO.Caption := 'Fecha Pago Recibo';
+    cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO.Caption :=
+      'Localidad Expedición';
+  end;
+end;
+
 procedure TfrmMtoFacturasBase.btnImprimirReciboClick(Sender: TObject);
 var
   form:TfrmPrintRecFac;
 begin
   inherited;
-  form := TfrmPrintRecFac.Create(Application);
-  try
-    form.dmFac := dmmFacturas;
-    form.edtNroFac.Text := dsTablaG.DataSet.findField('NUMERO_FAC').AsString;
-    form.edtSerie.Text := dsTablaG.DataSet.findField('SERIE_FAC').AsString;
-    form.edtPlazoRecFac.Text :=
-                dmmFacturas.unqryRecibos.FindField('NUMERO_PLAZO_REC').AsString;
-    form.ShowModal;
-  finally
-    FreeAndNil(form);
+  if EsVentaMayorNormal then
+    ShowMessage('La impresión de efectos de cobro se gestiona desde ' +
+                'Remesas de Cobro.')
+  else
+  begin
+    form := TfrmPrintRecFac.Create(Application);
+    try
+      form.dmFac := dmmFacturas;
+      form.edtNroFac.Text :=
+        dsTablaG.DataSet.findField('NUMERO_FAC').AsString;
+      form.edtSerie.Text := dsTablaG.DataSet.findField('SERIE_FAC').AsString;
+      form.edtPlazoRecFac.Text :=
+        dmmFacturas.unqryRecibos.FindField('NUMERO_PLAZO_REC').AsString;
+      form.ShowModal;
+    finally
+      FreeAndNil(form);
+    end;
   end;
 end;
 
@@ -919,7 +1127,7 @@ end;
 procedure TfrmMtoFacturasBase.btnExportarRecibosClick(Sender: TObject);
 begin
   inherited;
-  ExportarExcel(cxGrdLineasFactura, 'Recibos_Borrador_' +
+  ExportarExcel(cxgrdRecibos, PrefijoExportCobros +
                       dsTablaG.Dataset.FieldByName(fseriefac).AsString +
                       '_' +
                       dsTablaG.Dataset.FieldByName(fnrofac).AsString);
@@ -928,6 +1136,9 @@ end;
 procedure TfrmMtoFacturasBase.btnGenerarRecibosClick(Sender: TObject);
 var
   bReemplazar:Boolean;
+  iRes: Integer;
+  qCobros: TDataSet;
+  sMensaje: string;
   sEmp, sCli, sPref: string;
   selBanco: TSeleccionBancoResult;
 begin
@@ -938,9 +1149,19 @@ begin
     if ((State = dsEdit) or (State = dsInsert)) then
       Post;
   end;
-  if (dmmFacturas.unqryRecibos.RecordCount > 0) then
+  if EsVentaMayorNormal then
+    dmmFacturas.AsegurarEfectosVentaAbierta
+  else
+    dmmFacturas.AsegurarRecibosAbierta;
+  if EsVentaMayorNormal then
+    qCobros := dmmFacturas.unqryEfectosVenta
+  else
+    qCobros := dmmFacturas.unqryRecibos;
+  if (qCobros <> nil) and (qCobros.RecordCount > 0) then
   begin
-    if ( Application.MessageBox( 'Hay recibos creados, ¿desea reemplazarlos?',
+    sMensaje := 'Hay ' + TextoCobroPlural +
+                ' creados, ¿desea reemplazarlos?';
+    if ( Application.MessageBox( PChar(sMensaje),
                                  'Mensaje Advertencia',
                                  MB_YESNO ) = ID_YES ) then
       bReemplazar := True
@@ -957,26 +1178,43 @@ begin
     selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, inLibGlobalVar.oConn,
                                                    sEmp, ubeCobro, sPref);
     if not selBanco.Aceptado then
-      ShowMessage('Generación de recibos cancelada.')
+      ShowMessage('Generación de ' + TextoCobroPlural + ' cancelada.')
     else
     begin
-      with dmmFacturas.unstrdprcGetRecibos do
+      if EsVentaMayorNormal then
       begin
-        ParamByName('pNRO_FACTURA').AsString :=
-                             dsTablaG.DataSet.FieldByName(fnrofac).AsString;
-        ParamByName('pSERIE_FACTURA').AsString :=
-                           dsTablaG.DataSet.FieldByName(fseriefac).AsString;
-        ParamByName('pUSUARIO').AsString := oUser;
-        ExecProc;
-        dmmFacturas.unqryRecibos.Close;
-        dmmFacturas.unqryRecibos.Open;
+        iRes := dmmFacturas.GenerarEfectosVenta(selBanco.CodigoEmpban,
+                                                selBanco.Iban);
+        if iRes > 0 then
+          ShowMessage(Format('Generados %d efecto(s) de cobro.', [iRes]))
+        else if iRes = 0 then
+          ShowMessage('No se generaron efectos. Revisa que el borrador ' +
+                      'tenga forma de pago y total, y que no tenga efectos ' +
+                      'cobrados o remesados.')
+        else
+          ShowMessage('No hay borrador activo o no se pudieron generar ' +
+                      'efectos.');
+      end
+      else
+      begin
+        with dmmFacturas.unstrdprcGetRecibos do
+        begin
+          ParamByName('pNRO_FACTURA').AsString :=
+                               dsTablaG.DataSet.FieldByName(fnrofac).AsString;
+          ParamByName('pSERIE_FACTURA').AsString :=
+                             dsTablaG.DataSet.FieldByName(fseriefac).AsString;
+          ParamByName('pUSUARIO').AsString := oUser;
+          ExecProc;
+          dmmFacturas.unqryRecibos.Close;
+          dmmFacturas.unqryRecibos.Open;
+        end;
+        // Estampar la cuenta de la empresa (ingreso) en los recibos.
+        if selBanco.CodigoEmpban <> '' then
+          dmmFacturas.EstamparBancoRecibos(
+            dsTablaG.DataSet.FieldByName(fseriefac).AsString,
+            dsTablaG.DataSet.FieldByName(fnrofac).AsString,
+            selBanco.CodigoEmpban, selBanco.Iban);
       end;
-      // Estampar la cuenta de la empresa (ingreso) en los recibos.
-      if selBanco.CodigoEmpban <> '' then
-        dmmFacturas.EstamparBancoRecibos(
-          dsTablaG.DataSet.FieldByName(fseriefac).AsString,
-          dsTablaG.DataSet.FieldByName(fnrofac).AsString,
-          selBanco.CodigoEmpban, selBanco.Iban);
     end;
   end;
 end;
@@ -1018,19 +1256,84 @@ end;
 procedure TfrmMtoFacturasBase.btnReciboDevueltoClick(Sender: TObject);
 begin
   inherited;
-  CambiarEstadoRecibo('Devuelto');
+  if EsVentaMayorNormal then
+  begin
+    dmmFacturas.AsegurarEfectosVentaAbierta;
+    if dmmFacturas.CambiarEstadoEfectoVenta('DEVUELTO') then
+      ShowMessage('Efecto marcado como devuelto.')
+    else
+      ShowMessage('No se pudo marcar el efecto como devuelto.');
+  end
+  else
+    CambiarEstadoRecibo('Devuelto');
 end;
 
 procedure TfrmMtoFacturasBase.btnReciboEmitidoClick(Sender: TObject);
 begin
   inherited;
-  CambiarEstadoRecibo('Emitido');
+  if EsVentaMayorNormal then
+  begin
+    dmmFacturas.AsegurarEfectosVentaAbierta;
+    if dmmFacturas.CambiarEstadoEfectoVenta('PENDIENTE') then
+      ShowMessage('Efecto marcado como pendiente.')
+    else
+      ShowMessage('No se pudo marcar el efecto como pendiente.');
+  end
+  else
+    CambiarEstadoRecibo('Emitido');
 end;
 
 procedure TfrmMtoFacturasBase.btnReciboPagadoClick(Sender: TObject);
+var
+  frm: TfrmModalRegistrarPago;
+  q: TDataSet;
+  iEfe: Integer;
+  iRes: Integer;
+  fPend: Double;
 begin
   inherited;
-  CambiarEstadoRecibo('Pagado');
+  if EsVentaMayorNormal then
+  begin
+    dmmFacturas.AsegurarEfectosVentaAbierta;
+    if (dmmFacturas.unqryEfectosVenta <> nil) and
+       dmmFacturas.unqryEfectosVenta.Active and
+       (not dmmFacturas.unqryEfectosVenta.IsEmpty) then
+    begin
+      q := dmmFacturas.unqryEfectosVenta;
+      iEfe := q.FieldByName('NUMERO_EFV').AsInteger;
+      fPend := q.FieldByName('IMPORTE_PENDIENTE_EFV').AsFloat;
+      if fPend <= 0.0001 then
+        ShowMessage('El efecto seleccionado no tiene importe pendiente.')
+      else
+      begin
+        frm := TfrmModalRegistrarPago.Create(nil);
+        try
+          frm.SetDatos(
+            Format('Efecto %d - vto %s - pendiente %.2f',
+              [iEfe,
+               FormatDateTime('dd/mm/yyyy',
+                 q.FieldByName('FECHA_VENCIMIENTO_EFV').AsDateTime),
+               fPend]),
+            fPend);
+          if frm.ShowModal = mrOk then
+          begin
+            iRes := dmmFacturas.RegistrarCobroEfectoVenta(iEfe, frm.Fecha,
+                      frm.Importe, frm.Tipo, frm.Referencia);
+            if iRes > 0 then
+              ShowMessage('Efecto conciliado.')
+            else
+              ShowMessage('No se pudo conciliar el efecto.');
+          end;
+        finally
+          frm.Free;
+        end;
+      end;
+    end
+    else
+      ShowMessage('Selecciona un efecto en la rejilla.');
+  end
+  else
+    CambiarEstadoRecibo('Pagado');
 end;
 
 function TfrmMtoFacturasBase.MostrarSkuArticulo(const ACodArt: string): Boolean;
@@ -1506,7 +1809,9 @@ begin
   cbbFORMAPAGO.Properties.ListSource := dmmFacturas.dsFormasPago;
   tvLineasFactura.DataController.DataSource := dmmFacturas.dsLinFac;
   cbbTARIFA_ARTICULOS_CLIENTES.Properties.ListSource := dmmFacturas.dsTarifas;
-  tvRecibos.DataController.DataSource := dmmFacturas.dsRecibos;
+  AplicarOrigenCobros;
+  btnReciboEmitido.OnClick := btnReciboEmitidoClick;
+  btnReciboDevuelto.OnClick := btnReciboDevueltoClick;
   tvMovimientosFac.DataController.DataSource := dmmFacturas.dsMovimientosFac;
   cbbPaisesEmp.Properties.ListSource := dmmFacturas.dsPaisesEmp;
   cbbPaisesCli.Properties.ListSource := dmmFacturas.dsPaisesCli;
@@ -1540,6 +1845,7 @@ begin
   // Convertir en normal solo aplica a facturas simplificadas (F3 AEAT)
   btnVerifactuFacturar.Visible :=
                               SameText(TipoFacturaFiltro, 'SIMPLIFICADA');
+  AplicarOrigenCobros;
   // Carga perezosa de sub-pestañas detail (Recibos, Consolidacion,
   // Errores, Movimientos). Solo se abren al activar su pestaña.
   pcDetail.OnChange := PcDetailChange;
@@ -1963,6 +2269,7 @@ begin
   // inherited -> PonerAnchosTitulos repuso la visibilidad de las columnas
   // desde el perfil (por defecto visibles). Reimponemos nuestras reglas.
   ReaplicarVisibilidadDetalle;
+  AplicarOrigenCobros;
 end;
 
 procedure TfrmMtoFacturasBase.dsLinFacDataChange(Sender: TObject;
@@ -2551,7 +2858,12 @@ begin
   // abre al activarse. Lineas (tsLineasFactura) se abre desde
   // AbrirDetalles por ser la pestaña por defecto y la mas usada.
   if pcDetail.ActivePage = tsRecibos then
-    dmmFacturas.AsegurarRecibosAbierta
+  begin
+    if EsVentaMayorNormal then
+      dmmFacturas.AsegurarEfectosVentaAbierta
+    else
+      dmmFacturas.AsegurarRecibosAbierta;
+  end
   else if pcDetail.ActivePage = tsVerifactu then
     dmmFacturas.AsegurarConsolidacionAbierta
   else if pcDetail.ActivePage = tsRegistro then

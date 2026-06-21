@@ -75,6 +75,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_devoluciones_compra_celdas`     | `DEVCCEL` |
 | `fza_devoluciones_compra_lineas`     | `DEVCLIN` |
 | `fza_efectos_compra`                 | `EFEC`    |
+| `fza_efectos_venta`                  | `EFV`     |
 | `fza_empleados`                      | `EMPL`    |
 | `fza_empresas`                       | `EMP`     |
 | `fza_empresas_bancos`                | `EMPBAN`  |
@@ -114,6 +115,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_proveedores_kits_det`           | `PRVKITD` |
 | `fza_recibos`                        | `REC`     |
 | `fza_remesas_compra`                 | `REMC`    |
+| `fza_remesas_venta`                  | `REMV`    |
 | `fza_tarifas`                        | `TAR`     |
 | `fza_tarifas_cambios`                | `TARC`    |
 | `fza_tarifas_cambios_lineas`         | `TARCLIN` |

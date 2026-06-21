@@ -3,7 +3,7 @@ object frmModalTiraCaja: TfrmModalTiraCaja
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Tira de Caja'
-  ClientHeight = 352
+  ClientHeight = 404
   ClientWidth = 470
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -16,7 +16,7 @@ object frmModalTiraCaja: TfrmModalTiraCaja
   TextHeight = 19
   object lblTitulo: TcxLabel
     Left = 20
-    Top = 16
+    Top = 12
     Caption = 'Tira de Caja'
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
@@ -28,75 +28,88 @@ object frmModalTiraCaja: TfrmModalTiraCaja
   end
   object lblSerie: TcxLabel
     Left = 20
-    Top = 72
-    Caption = 'Serie:'
+    Top = 48
+    Caption = 'Serie de Factura Simplificada:'
     Transparent = True
   end
-  object cbSerie: TcxComboBox
-    Left = 110
-    Top = 68
-    Properties.DropDownListStyle = lsFixedList
+  object ccbSerie: TcxCheckComboBox
+    Left = 20
+    Top = 72
+    Properties.EmptySelectionText = '(todas las series)'
     TabOrder = 0
-    Width = 330
+    Width = 430
+  end
+  object lblAgrupamiento: TcxLabel
+    Left = 20
+    Top = 110
+    Caption = 'Agrupamiento:'
+    Transparent = True
+  end
+  object cbAgrupamiento: TcxComboBox
+    Left = 20
+    Top = 134
+    Properties.DropDownListStyle = lsFixedList
+    TabOrder = 1
+    Width = 430
   end
   object chkQR: TcxCheckBox
-    Left = 110
-    Top = 112
+    Left = 20
+    Top = 178
     Caption = 'Imprimir QR Verifactu'
-    TabOrder = 1
-    Transparent = True
-    Width = 330
-  end
-  object chkTraspasos: TcxCheckBox
-    Left = 110
-    Top = 144
-    Caption = 'Incluir traspasos salientes (origen)'
     TabOrder = 2
     Transparent = True
-    Width = 330
+    Width = 430
   end
-  object chkIngresos: TcxCheckBox
-    Left = 110
-    Top = 176
-    Caption = 'Incluir ingresos por caja'
+  object chkTraspasos: TcxCheckBox
+    Left = 20
+    Top = 208
+    Caption = 'Incluir traspasos salientes (origen)'
     TabOrder = 3
     Transparent = True
-    Width = 330
+    Width = 430
   end
-  object chkGastos: TcxCheckBox
-    Left = 110
-    Top = 208
-    Caption = 'Incluir gastos por caja'
+  object chkIngresos: TcxCheckBox
+    Left = 20
+    Top = 236
+    Caption = 'Incluir ingresos por caja'
     TabOrder = 4
     Transparent = True
-    Width = 330
+    Width = 430
   end
-  object chkCredito: TcxCheckBox
-    Left = 110
-    Top = 240
-    Caption = 'Incluir ventas a crédito (depósitos)'
+  object chkGastos: TcxCheckBox
+    Left = 20
+    Top = 264
+    Caption = 'Incluir gastos por caja'
     TabOrder = 5
     Transparent = True
-    Width = 330
+    Width = 430
+  end
+  object chkCredito: TcxCheckBox
+    Left = 20
+    Top = 292
+    Caption = 'Incluir ventas a crédito (depósitos)'
+    TabOrder = 6
+    Transparent = True
+    Width = 430
   end
   object btnImprimir: TcxButton
     Left = 110
-    Top = 292
+    Top = 344
     Width = 150
     Height = 40
     Caption = 'Imprimir'
     Default = True
     ModalResult = 1
-    TabOrder = 6
+    TabOrder = 7
   end
   object btnCancelar: TcxButton
     Left = 290
-    Top = 292
+    Top = 344
     Width = 150
     Height = 40
     Cancel = True
     Caption = 'Cancelar (ESC)'
     ModalResult = 2
-    TabOrder = 7
+    TabOrder = 8
   end
 end

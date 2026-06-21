@@ -10,18 +10,20 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Genera e imprime la "tira de caja": una tira térmica con el desglose de   }
-{    cada operación facturada (venta / devolución) entre dos fechas para una   }
-{    misma empresa / almacén / caja. Por cada operación pinta el nº de         }
-{    factura, el nº de operación, la fecha y hora, el almacén y la caja, las   }
-{    líneas del ticket con su precio y, al final, las formas de pago y el      }
-{    total de la operación. Formato resumido del ticket de venta.              }
+{    las operaciones entre dos fechas para una empresa / almacén / caja. Las   }
+{    ventas facturadas llevan nº de factura, nº de operación, fecha, líneas y  }
+{    formas de pago. De forma opcional adjunta los traspasos salientes, los    }
+{    ingresos por caja, los gastos por caja y las ventas a crédito (depósitos).}
 {                                                                              }
-{    Puede acotarse a una serie concreta (ASerie) o emitir todas (ASerie='').  }
+{    Las ventas pueden acotarse a varias series de factura simplificada        }
+{    (ASeries; vacío = todas). El agrupamiento (ACronologico) decide el orden: }
+{    por tipo de documento (secciones con doble línea al romper el tipo) o por }
+{    orden cronológico (operaciones intercaladas, cada una rotulada con su     }
+{    tipo). En ambos modos hay una línea simple tras cada operación.           }
+{                                                                              }
 {    Si AImprimirQR es True y Verifactu está activo (envío PRE o PRO), añade   }
-{    el QR tributario de cada operación igual que el ticket de venta.          }
-{                                                                              }
-{    Si la impresora es 'DEBUG' abre el preview (TFormVisualizador) en vez de  }
-{    mandar a la impresora física.                                            }
+{    el QR tributario de cada venta. Si la impresora es 'DEBUG' abre el        }
+{    preview (TFormVisualizador) en vez de mandar a la impresora física.       }
 {******************************************************************************}
 unit inLibTiraCajaTicket;
 
@@ -54,36 +56,39 @@ type
                                       AConn: TUniConnection;
                                       AOpe: TUniQuery;
                                       AImprimirQR: Boolean);
-    // Bloque simple (ingresos EC / gastos GC): una fila por operación del rango
-    // cuyo TIPO_OPERACION_OPCAJA está en AFiltroTipos (lista ya entrecomillada
-    // para el IN, ej. '''EC'''). AMostrarContra pinta el almacén destino;
-    // AValorar imprime importes y subtotal. Devuelve el subtotal acumulado.
-    class function EscribirBloque(ATicket: TTicketTermico;
-                                  AConn: TUniConnection;
+    // Render de una operación de traspaso saliente (cursor maestro posicionado):
+    // cabecera (referencia + fecha) + almacén destino + detalle de artículos
+    // (SKU, descripción, cantidad) de fza_movimientos_almacen. Con AValorar
+    // (permiso caja.verCoste) añade el coste por línea y el total a coste, que
+    // además devuelve.
+    class function EscribirTraspasoOpe(ATicket: TTicketTermico;
+                                       AConn: TUniConnection;
+                                       AOpe: TUniQuery;
+                                       AValorar: Boolean): Currency;
+    // Render de una operación de ingreso (EC) o gasto (GC): referencia + fecha
+    // + importe y el concepto. Devuelve el importe de la operación.
+    class function EscribirIngresoGastoOpe(ATicket: TTicketTermico;
+                                           AOpe: TUniQuery): Currency;
+    // Render de una operación de depósito (DE = venta a crédito): por cada
+    // depósito ligado a la operación, el cliente, el artículo (SKU +
+    // descripción), la valoración (precio x cantidad), lo entregado a cuenta
+    // (cobro del cliente) y el pendiente. Devuelve el total vendido y, en
+    // ACobrado, lo entregado a cuenta.
+    class function EscribirDepositoOpe(ATicket: TTicketTermico;
+                                       AConn: TUniConnection;
+                                       AOpe: TUniQuery;
+                                       out ACobrado: Currency): Currency;
+    // SQL del cursor maestro de operaciones (ventas multi-serie + tipos
+    // opcionales), clasificadas por GRUPO. Lo comparten la impresión y el
+    // volcado a Excel para que ambos muestren exactamente lo mismo.
+    class function SQLOperaciones(const ASeries: TArray<string>;
+                                  ACronologico, AIncluirTraspasos,
+                                  AIncluirIngresos, AIncluirGastos,
+                                  AIncluirCredito: Boolean): string;
+    class procedure AsignarParamsOperaciones(AQuery: TUniQuery;
                                   const AEmpresa, AAlmacen, ACaja: string;
                                   AFechaDesde, AFechaHasta: TDate;
-                                  const ATitulo, AFiltroTipos: string;
-                                  AMostrarContra, AValorar: Boolean): Currency;
-    // Bloque de traspasos salientes (TR/AT con origen propio): por operación,
-    // cabecera + almacén destino + detalle de artículos (SKU, descripción,
-    // cantidad) de fza_movimientos_almacen. AValorar (solo con permiso
-    // caja.verCoste) añade el coste por línea, el total por operación y el
-    // subtotal del bloque.
-    class procedure EscribirBloqueTraspasos(ATicket: TTicketTermico;
-                                            AConn: TUniConnection;
-                                            const AEmpresa, AAlmacen,
-                                                  ACaja: string;
-                                            AFechaDesde, AFechaHasta: TDate;
-                                            AValorar: Boolean);
-    // Bloque de ventas a crédito (depósitos DE): por depósito de
-    // fza_depositos_cliente creado en el rango, el cliente, el artículo (SKU +
-    // descripción), la valoración (precio x cantidad), lo entregado a cuenta
-    // (cobro del cliente) y el pendiente, con subtotales de venta y cobrado.
-    class procedure EscribirBloqueCredito(ATicket: TTicketTermico;
-                                          AConn: TUniConnection;
-                                          const AEmpresa, AAlmacen,
-                                                ACaja: string;
-                                          AFechaDesde, AFechaHasta: TDate);
+                                  const ASeries: TArray<string>);
   public
     // Series facturadas distintas en el rango para la caja (para preguntar
     // la serie cuando hay más de una). Devuelve [] si no hay operaciones.
@@ -94,20 +99,36 @@ type
     class procedure Imprimir(AConn: TUniConnection;
                              const AEmpresa, AAlmacen, ACaja: string;
                              AFechaDesde, AFechaHasta: TDate;
-                             const ASerie: string = '';
+                             const ASeries: TArray<string>;
                              AImprimirQR: Boolean = False;
                              const ANombreImpresora: string = 'DEBUG';
+                             ACronologico: Boolean = False;
                              AIncluirTraspasos: Boolean = False;
                              AIncluirIngresos: Boolean = False;
                              AIncluirGastos: Boolean = False;
                              AIncluirCredito: Boolean = False);
+    // Vuelca las mismas operaciones de la tira a una hoja de cálculo y la abre
+    // en el visor de Excel (TfrmMtoPreviewExcel), con detalle por línea y el
+    // mismo orden / agrupamiento que la impresión.
+    class procedure ExportarExcel(AOwner: TComponent;
+                                  AConn: TUniConnection;
+                                  const AEmpresa, AAlmacen, ACaja: string;
+                                  AFechaDesde, AFechaHasta: TDate;
+                                  const ASeries: TArray<string>;
+                                  ACronologico: Boolean = False;
+                                  AIncluirTraspasos: Boolean = False;
+                                  AIncluirIngresos: Boolean = False;
+                                  AIncluirGastos: Boolean = False;
+                                  AIncluirCredito: Boolean = False);
   end;
 
 implementation
 
 uses
+  Vcl.Forms,
+  dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes,
   inMtoPreviewTicket, inLibDir, inLibFormatoDocumento, inLibVerifactu,
-  inLibPermisos;
+  inLibPermisos, inMtoPreviewExcel, inLibDevExcel;
 
 // =============================================================================
 //   Helpers de formato
@@ -336,160 +357,68 @@ begin
       ATicket.Alinear(alIzquierda);
     end;
   end;
-  ATicket.SaltarLineas(1);
 end;
 
 // =============================================================================
-//   Bloque opcional de operaciones (traspasos / ingresos / gastos / crédito)
+//   Render por operación (traspaso / ingreso-gasto / depósito)
 // =============================================================================
 
-class function TTiraCajaTicket.EscribirBloque(ATicket: TTicketTermico;
-                                              AConn: TUniConnection;
-                                              const AEmpresa, AAlmacen,
-                                                    ACaja: string;
-                                              AFechaDesde, AFechaHasta: TDate;
-                                              const ATitulo,
-                                                    AFiltroTipos: string;
-                                              AMostrarContra,
-                                              AValorar: Boolean): Currency;
+class function TTiraCajaTicket.EscribirIngresoGastoOpe(
+  ATicket: TTicketTermico; AOpe: TUniQuery): Currency;
 var
-  Q: TUniQuery;
-  iFilas: Integer;
-  sIzq, sDoc, sConcepto, sDestino: string;
-  dImporte: Currency;
+  sRef, sConcepto: string;
+  iMax: Integer;
 begin
-  Result := 0;
-  iFilas := 0;
-  // Cabecera del bloque siempre, para dejar constancia aunque salga vacío.
-  ATicket.LineaSeparadora('=');
-  ATicket.Alinear(alCentro);
-  ATicket.Negrita(True);
-  ATicket.EscribirLinea(ATitulo);
-  ATicket.Negrita(False);
-  ATicket.Alinear(alIzquierda);
-  Q := TUniQuery.Create(nil);
-  try
-    Q.Connection := AConn;
-    // El filtro de tipos va embebido (constantes internas, sin entrada de
-    // usuario). No se acota por serie: son movimientos de caja del periodo,
-    // no ligados a la serie de facturación de las ventas.
-    Q.SQL.Text :=
-      ' SELECT NUMERO_OPERACION_OPCAJA, FECHA_OPERACION_OPCAJA,            ' +
-      '        SERIE_FAC_OPCAJA, NUMERO_FAC_OPCAJA,                        ' +
-      '        IMPORTE_TOTAL_OPCAJA, CONCEPTO_GASTO_INGRESO_OPCAJA,        ' +
-      '        CODIGO_ALM_CONTRA_OPCAJA                                    ' +
-      '   FROM fza_caja_operaciones                                       ' +
-      '  WHERE CODIGO_EMP_OPCAJA      = :pEMP                             ' +
-      '    AND CODIGO_ALM_OPCAJA      = :pALM                             ' +
-      '    AND CODIGO_CAJA_OPCAJA     = :pCAJA                            ' +
-      '    AND FECHA_OPERACION_OPCAJA >= :pFDESDE                         ' +
-      '    AND FECHA_OPERACION_OPCAJA <= :pFHASTA                         ' +
-      '    AND TIPO_OPERACION_OPCAJA IN (' + AFiltroTipos + ')            ' +
-      '  ORDER BY FECHA_OPERACION_OPCAJA, NUMERO_OPERACION_OPCAJA         ';
-    Q.ParamByName('pEMP').AsString      := AEmpresa;
-    Q.ParamByName('pALM').AsString      := AAlmacen;
-    Q.ParamByName('pCAJA').AsString     := ACaja;
-    Q.ParamByName('pFDESDE').AsDateTime := AFechaDesde;
-    Q.ParamByName('pFHASTA').AsDateTime := AFechaHasta;
-    Q.Open;
-    while not Q.Eof do
-    begin
-      dImporte  := Q.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
-      sConcepto := Trim(Q.FieldByName(
-                     'CONCEPTO_GASTO_INGRESO_OPCAJA').AsString);
-      sDestino  := Trim(Q.FieldByName('CODIGO_ALM_CONTRA_OPCAJA').AsString);
-      // Referencia: nº de documento formateado si lo tiene; si no, nº de op.
-      sDoc := Trim(Q.FieldByName('SERIE_FAC_OPCAJA').AsString);
-      if (sDoc <> '') and
-         (Trim(Q.FieldByName('NUMERO_FAC_OPCAJA').AsString) <> '') then
-        sDoc := FormatearDocumentoEmpresa(AEmpresa, sDoc,
-                  Q.FieldByName('NUMERO_FAC_OPCAJA').AsString)
-      else
-        sDoc := 'Op.' + Q.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
-      // Fila 1: referencia + fecha/hora; importe a la derecha si se valora.
-      sIzq := sDoc + ' ' +
-              FormatDateTime('dd/mm/yy hh:nn',
-                Q.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime);
-      if Length(sIzq) > N_CHAR_LIN then
-        sIzq := Copy(sIzq, 1, N_CHAR_LIN);
-      if AValorar then
-        ATicket.TextoColumnas(sIzq, FmtImp(dImporte))
-      else
-        ATicket.EscribirLinea(sIzq);
-      // Fila 2: destino del traspaso (almacén contra), cuando aplica.
-      if AMostrarContra and (sDestino <> '') then
-        ATicket.EscribirLinea('  -> ' + sDestino);
-      // Fila 3: concepto descriptivo (gasto / ingreso / depósito), recortado.
-      if sConcepto <> '' then
-        ATicket.EscribirLinea(Copy(sConcepto, 1, N_CHAR_LIN));
-      Result := Result + dImporte;
-      Inc(iFilas);
-      Q.Next;
-    end;
-  finally
-    FreeAndNil(Q);
-  end;
-  // Pie del bloque: nº de operaciones y, si se valora, el subtotal.
-  if iFilas = 0 then
-  begin
-    ATicket.EscribirLinea('Sin movimientos');
-    Result := 0;
-  end
-  else
-  begin
-    ATicket.TextoColumnas('OPERACIONES', IntToStr(iFilas));
-    if AValorar then
-    begin
-      ATicket.Negrita(True);
-      ATicket.TextoColumnas('SUBTOTAL', FmtImp(Result));
-      ATicket.Negrita(False);
-    end;
-  end;
+  Result := AOpe.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
+  sConcepto := Trim(AOpe.FieldByName(
+                 'CONCEPTO_GASTO_INGRESO_OPCAJA').AsString);
+  // Fila 1: referencia (nº op + fecha) e importe a la derecha.
+  sRef := 'Op.' + AOpe.FieldByName('NUMERO_OPERACION_OPCAJA').AsString + ' ' +
+          FormatDateTime('dd/mm/yy hh:nn',
+            AOpe.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime);
+  iMax := N_CHAR_LIN - Length(FmtImp(Result)) - 1;
+  if Length(sRef) > iMax then
+    sRef := Copy(sRef, 1, iMax);
+  ATicket.TextoColumnas(sRef, FmtImp(Result));
+  // Fila 2: concepto descriptivo (gasto / ingreso), recortado.
+  if sConcepto <> '' then
+    ATicket.EscribirLinea(Copy(sConcepto, 1, N_CHAR_LIN));
 end;
 
-class procedure TTiraCajaTicket.EscribirBloqueTraspasos(
-  ATicket: TTicketTermico; AConn: TUniConnection;
-  const AEmpresa, AAlmacen, ACaja: string;
-  AFechaDesde, AFechaHasta: TDate; AValorar: Boolean);
+class function TTiraCajaTicket.EscribirTraspasoOpe(ATicket: TTicketTermico;
+                                                   AConn: TUniConnection;
+                                                   AOpe: TUniQuery;
+                                                   AValorar: Boolean): Currency;
 var
-  Ope, Lin: TUniQuery;
-  iFilas, iMax: Integer;
-  sRef, sDestino, sOpe, sSku, sDesc, sIzq: string;
+  Lin: TUniQuery;
+  iMax: Integer;
+  sEmp, sAlm, sCaja, sOpe, sRef, sDestino, sSku, sDesc, sIzq: string;
   dCantidad, dCosteUnit: Double;
-  dTotalOpe, dSubtotal: Currency;
 begin
-  iFilas    := 0;
-  dSubtotal := 0;
-  ATicket.LineaSeparadora('=');
-  ATicket.Alinear(alCentro);
+  Result   := 0;
+  sEmp     := AOpe.FieldByName('CODIGO_EMP_OPCAJA').AsString;
+  sAlm     := AOpe.FieldByName('CODIGO_ALM_OPCAJA').AsString;
+  sCaja    := AOpe.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
+  sOpe     := AOpe.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
+  sDestino := Trim(AOpe.FieldByName('CODIGO_ALM_CONTRA_OPCAJA').AsString);
+  // Referencia: documento formateado si lo tiene; si no, nº de operación.
+  sRef := Trim(AOpe.FieldByName('SERIE_FAC_OPCAJA').AsString);
+  if (sRef <> '') and
+     (Trim(AOpe.FieldByName('NUMERO_FAC_OPCAJA').AsString) <> '') then
+    sRef := FormatearDocumentoEmpresa(sEmp, sRef,
+              AOpe.FieldByName('NUMERO_FAC_OPCAJA').AsString)
+  else
+    sRef := 'Op.' + sOpe;
   ATicket.Negrita(True);
-  ATicket.EscribirLinea('-TRASPASOS SALIENTES (ORIGEN)-');
+  ATicket.EscribirLinea(sRef + ' ' +
+    FormatDateTime('dd/mm/yy hh:nn',
+      AOpe.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime));
   ATicket.Negrita(False);
-  ATicket.Alinear(alIzquierda);
-  Ope := TUniQuery.Create(nil);
+  if sDestino <> '' then
+    ATicket.EscribirLinea('  -> ' + sDestino);
   Lin := TUniQuery.Create(nil);
   try
-    Ope.Connection := AConn;
     Lin.Connection := AConn;
-    // Operaciones de traspaso salientes de esta caja (origen = almacén propio).
-    Ope.SQL.Text :=
-      ' SELECT NUMERO_OPERACION_OPCAJA, FECHA_OPERACION_OPCAJA,            ' +
-      '        SERIE_FAC_OPCAJA, NUMERO_FAC_OPCAJA,                        ' +
-      '        CODIGO_ALM_CONTRA_OPCAJA                                    ' +
-      '   FROM fza_caja_operaciones                                       ' +
-      '  WHERE CODIGO_EMP_OPCAJA      = :pEMP                             ' +
-      '    AND CODIGO_ALM_OPCAJA      = :pALM                             ' +
-      '    AND CODIGO_CAJA_OPCAJA     = :pCAJA                            ' +
-      '    AND FECHA_OPERACION_OPCAJA >= :pFDESDE                         ' +
-      '    AND FECHA_OPERACION_OPCAJA <= :pFHASTA                         ' +
-      '    AND TIPO_OPERACION_OPCAJA IN (''TR'', ''AT'')                  ' +
-      '  ORDER BY FECHA_OPERACION_OPCAJA, NUMERO_OPERACION_OPCAJA         ';
-    Ope.ParamByName('pEMP').AsString      := AEmpresa;
-    Ope.ParamByName('pALM').AsString      := AAlmacen;
-    Ope.ParamByName('pCAJA').AsString     := ACaja;
-    Ope.ParamByName('pFDESDE').AsDateTime := AFechaDesde;
-    Ope.ParamByName('pFHASTA').AsDateTime := AFechaHasta;
-    Ope.Open;
     // Detalle de artículos: las salidas del origen (TIPO_MOV='S') de la op. La
     // descripción usa la denormalizada del movimiento y, si viene vacía, cae a
     // la del artículo (fza_articulos por CODIGO_ART_MOV), para que siempre haya
@@ -508,136 +437,96 @@ begin
       '    AND m.NUMERO_OPERACION_DOC_MOV = :pOPE                        ' +
       '    AND m.TIPO_MOV = ''S''                                       ' +
       '  ORDER BY m.LINEA_MOV                                           ';
-    while not Ope.Eof do
+    Lin.ParamByName('pEMP').AsString  := sEmp;
+    Lin.ParamByName('pALM').AsString  := sAlm;
+    Lin.ParamByName('pCAJA').AsString := sCaja;
+    Lin.ParamByName('pOPE').AsString  := sOpe;
+    Lin.Open;
+    while not Lin.Eof do
     begin
-      sOpe     := Ope.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
-      sDestino := Trim(Ope.FieldByName('CODIGO_ALM_CONTRA_OPCAJA').AsString);
-      // Referencia: documento formateado si lo tiene; si no, nº de operación.
-      sRef := Trim(Ope.FieldByName('SERIE_FAC_OPCAJA').AsString);
-      if (sRef <> '') and
-         (Trim(Ope.FieldByName('NUMERO_FAC_OPCAJA').AsString) <> '') then
-        sRef := FormatearDocumentoEmpresa(AEmpresa, sRef,
-                  Ope.FieldByName('NUMERO_FAC_OPCAJA').AsString)
-      else
-        sRef := 'Op.' + sOpe;
-      ATicket.Negrita(True);
-      ATicket.EscribirLinea(sRef + ' ' +
-        FormatDateTime('dd/mm/yy hh:nn',
-          Ope.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime));
-      ATicket.Negrita(False);
-      if sDestino <> '' then
-        ATicket.EscribirLinea('  -> ' + sDestino);
-      dTotalOpe := 0;
-      Lin.Close;
-      Lin.ParamByName('pEMP').AsString  := AEmpresa;
-      Lin.ParamByName('pALM').AsString  := AAlmacen;
-      Lin.ParamByName('pCAJA').AsString := ACaja;
-      Lin.ParamByName('pOPE').AsString  := sOpe;
-      Lin.Open;
-      while not Lin.Eof do
-      begin
-        sSku       := Trim(Lin.FieldByName('CODIGO_UNIDAD_MOV').AsString);
-        sDesc      := Trim(Lin.FieldByName('DESCRIPCION').AsString);
-        dCantidad  := Lin.FieldByName('CANTIDAD_MOV').AsFloat;
-        dCosteUnit := Lin.FieldByName('PRECIO_COSTE_UNITARIO_MOV').AsFloat;
-        sIzq := FormatFloat('0.##', dCantidad) + 'x ' + sSku;
-        // SKU con cantidad; el coste a la derecha solo si hay permiso.
-        if AValorar then
-        begin
-          iMax := N_CHAR_LIN - Length(FmtImp(dCantidad * dCosteUnit)) - 1;
-          if Length(sIzq) > iMax then
-            sIzq := Copy(sIzq, 1, iMax);
-          ATicket.TextoColumnas(sIzq, FmtImp(dCantidad * dCosteUnit));
-        end
-        else
-          ATicket.EscribirLinea(Copy(sIzq, 1, N_CHAR_LIN));
-        if sDesc <> '' then
-          ATicket.EscribirLinea(Copy(sDesc, 1, N_CHAR_LIN));
-        dTotalOpe := dTotalOpe + Currency(dCantidad * dCosteUnit);
-        Lin.Next;
-      end;
-      Lin.Close;
+      sSku       := Trim(Lin.FieldByName('CODIGO_UNIDAD_MOV').AsString);
+      sDesc      := Trim(Lin.FieldByName('DESCRIPCION').AsString);
+      dCantidad  := Lin.FieldByName('CANTIDAD_MOV').AsFloat;
+      dCosteUnit := Lin.FieldByName('PRECIO_COSTE_UNITARIO_MOV').AsFloat;
+      sIzq := FormatFloat('0.##', dCantidad) + 'x ' + sSku;
+      // SKU con cantidad; el coste a la derecha solo si hay permiso.
       if AValorar then
       begin
-        ATicket.Negrita(True);
-        ATicket.TextoColumnas('TOTAL TRASPASO (coste)', FmtImp(dTotalOpe));
-        ATicket.Negrita(False);
-      end;
-      dSubtotal := dSubtotal + dTotalOpe;
-      Inc(iFilas);
-      Ope.Next;
+        iMax := N_CHAR_LIN - Length(FmtImp(dCantidad * dCosteUnit)) - 1;
+        if Length(sIzq) > iMax then
+          sIzq := Copy(sIzq, 1, iMax);
+        ATicket.TextoColumnas(sIzq, FmtImp(dCantidad * dCosteUnit));
+      end
+      else
+        ATicket.EscribirLinea(Copy(sIzq, 1, N_CHAR_LIN));
+      if sDesc <> '' then
+        ATicket.EscribirLinea(Copy(sDesc, 1, N_CHAR_LIN));
+      Result := Result + dCantidad * dCosteUnit;
+      Lin.Next;
     end;
   finally
     FreeAndNil(Lin);
-    FreeAndNil(Ope);
   end;
-  // Pie del bloque.
-  if iFilas = 0 then
-    ATicket.EscribirLinea('Sin movimientos')
-  else
+  if AValorar then
   begin
-    ATicket.TextoColumnas('TRASPASOS', IntToStr(iFilas));
-    if AValorar then
-    begin
-      ATicket.Negrita(True);
-      ATicket.TextoColumnas('SUBTOTAL (coste)', FmtImp(dSubtotal));
-      ATicket.Negrita(False);
-    end;
+    ATicket.Negrita(True);
+    ATicket.TextoColumnas('TOTAL TRASPASO (coste)', FmtImp(Result));
+    ATicket.Negrita(False);
   end;
 end;
 
-class procedure TTiraCajaTicket.EscribirBloqueCredito(
-  ATicket: TTicketTermico; AConn: TUniConnection;
-  const AEmpresa, AAlmacen, ACaja: string;
-  AFechaDesde, AFechaHasta: TDate);
+class function TTiraCajaTicket.EscribirDepositoOpe(ATicket: TTicketTermico;
+                                                   AConn: TUniConnection;
+                                                   AOpe: TUniQuery;
+                                                   out ACobrado: Currency)
+                                                   : Currency;
 var
   Q: TUniQuery;
-  iFilas, iMax: Integer;
-  sCli, sCliNom, sSku, sDesc, sIzq: string;
+  iMax: Integer;
+  sEmp, sAlm, sCaja, sOpe, sCli, sCliNom, sSku, sDesc, sIzq: string;
   dCantidad: Double;
   dPrecio, dTotal, dAnticipo, dPendiente: Currency;
-  dSubVenta, dSubCobrado: Currency;
 begin
-  iFilas      := 0;
-  dSubVenta   := 0;
-  dSubCobrado := 0;
-  ATicket.LineaSeparadora('=');
-  ATicket.Alinear(alCentro);
+  Result   := 0;
+  ACobrado := 0;
+  sEmp  := AOpe.FieldByName('CODIGO_EMP_OPCAJA').AsString;
+  sAlm  := AOpe.FieldByName('CODIGO_ALM_OPCAJA').AsString;
+  sCaja := AOpe.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
+  sOpe  := AOpe.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
+  // Cabecera del depósito: referencia de operación + fecha.
   ATicket.Negrita(True);
-  ATicket.EscribirLinea('-VENTAS A CREDITO (DEPOSITOS)-');
+  ATicket.EscribirLinea('Op.' + sOpe + ' ' +
+    FormatDateTime('dd/mm/yy hh:nn',
+      AOpe.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime));
   ATicket.Negrita(False);
-  ATicket.Alinear(alIzquierda);
   Q := TUniQuery.Create(nil);
   try
     Q.Connection := AConn;
-    // Depósitos creados en el rango por esta caja. Un depósito = un SKU. La
-    // valoración es PRECIO_VENTA_DEP x CANTIDAD; IMPORTE_ANTICIPO_DEP es lo
-    // entregado a cuenta por el cliente hasta la fecha.
+    // Depósitos ligados a la operación. Un depósito = un SKU; una operación
+    // puede tener varios. La valoración es PRECIO_VENTA_DEP x CANTIDAD;
+    // IMPORTE_ANTICIPO_DEP es lo entregado a cuenta por el cliente.
     Q.SQL.Text :=
-      ' SELECT d.NUMERO_OPERACION_DEP, d.FECHA_CREACION_DEP,              ' +
-      '        d.CODIGO_CLI_DEP,                                          ' +
-      '        COALESCE(c.RAZON_SOCIAL_CLI, '''') AS CLIENTE,             ' +
-      '        d.CODIGO_UNIDAD_DEP,                                       ' +
-      '        COALESCE(a.DESCRIPCION_ART, '''')   AS DESCRIPCION,        ' +
-      '        d.PRECIO_VENTA_DEP,                                        ' +
-      '        COALESCE(d.CANTIDAD_PENDIENTE_DEP, 1) AS CANTIDAD,         ' +
-      '        d.IMPORTE_ANTICIPO_DEP                                     ' +
-      '   FROM fza_depositos_cliente d                                   ' +
-      '   LEFT JOIN fza_clientes  c                                      ' +
-      '     ON c.CODIGO_CLI_CLI = d.CODIGO_CLI_DEP                        ' +
-      '   LEFT JOIN fza_articulos a                                      ' +
-      '     ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP                        ' +
-      '  WHERE d.CODIGO_EMP_DEP      = :pEMP                             ' +
-      '    AND d.CODIGO_ALM_DEP      = :pALM                             ' +
-      '    AND d.CODIGO_CAJA_DEP     = :pCAJA                            ' +
-      '    AND d.FECHA_CREACION_DEP >= :pFDESDE                          ' +
-      '    AND d.FECHA_CREACION_DEP <= :pFHASTA                          ' +
-      '  ORDER BY d.FECHA_CREACION_DEP, d.NUMERO_OPERACION_DEP           ';
-    Q.ParamByName('pEMP').AsString      := AEmpresa;
-    Q.ParamByName('pALM').AsString      := AAlmacen;
-    Q.ParamByName('pCAJA').AsString     := ACaja;
-    Q.ParamByName('pFDESDE').AsDateTime := AFechaDesde;
-    Q.ParamByName('pFHASTA').AsDateTime := AFechaHasta;
+      ' SELECT d.CODIGO_CLI_DEP,                                         ' +
+      '        COALESCE(c.RAZON_SOCIAL_CLI, '''') AS CLIENTE,            ' +
+      '        d.CODIGO_UNIDAD_DEP,                                      ' +
+      '        COALESCE(a.DESCRIPCION_ART, '''')   AS DESCRIPCION,       ' +
+      '        d.PRECIO_VENTA_DEP,                                       ' +
+      '        COALESCE(d.CANTIDAD_PENDIENTE_DEP, 1) AS CANTIDAD,        ' +
+      '        d.IMPORTE_ANTICIPO_DEP                                    ' +
+      '   FROM fza_depositos_cliente d                                  ' +
+      '   LEFT JOIN fza_clientes  c                                     ' +
+      '     ON c.CODIGO_CLI_CLI = d.CODIGO_CLI_DEP                       ' +
+      '   LEFT JOIN fza_articulos a                                     ' +
+      '     ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP                       ' +
+      '  WHERE d.CODIGO_EMP_DEP        = :pEMP                           ' +
+      '    AND d.CODIGO_ALM_DEP        = :pALM                           ' +
+      '    AND d.CODIGO_CAJA_DEP       = :pCAJA                          ' +
+      '    AND d.NUMERO_OPERACION_DEP  = :pOPE                           ' +
+      '  ORDER BY d.ID_DEPOSITO_DEP                                      ';
+    Q.ParamByName('pEMP').AsString  := sEmp;
+    Q.ParamByName('pALM').AsString  := sAlm;
+    Q.ParamByName('pCAJA').AsString := sCaja;
+    Q.ParamByName('pOPE').AsString  := sOpe;
     Q.Open;
     while not Q.Eof do
     begin
@@ -650,13 +539,6 @@ begin
       dAnticipo := Q.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
       dTotal    := dPrecio * dCantidad;
       dPendiente := dTotal - dAnticipo;
-      // Cabecera del depósito: referencia de operación + fecha.
-      ATicket.Negrita(True);
-      ATicket.EscribirLinea('Op.' +
-        Q.FieldByName('NUMERO_OPERACION_DEP').AsString + ' ' +
-        FormatDateTime('dd/mm/yy hh:nn',
-          Q.FieldByName('FECHA_CREACION_DEP').AsDateTime));
-      ATicket.Negrita(False);
       ATicket.EscribirLinea(Copy('Cli: ' + Trim(sCli + ' ' + sCliNom),
                                  1, N_CHAR_LIN));
       // Artículo: SKU con cantidad y valoración (precio x cantidad).
@@ -671,25 +553,12 @@ begin
       if dAnticipo <> 0 then
         ATicket.TextoColumnas('  Entregado a cuenta', FmtImp(dAnticipo));
       ATicket.TextoColumnas('  Pendiente', FmtImp(dPendiente));
-      dSubVenta   := dSubVenta   + dTotal;
-      dSubCobrado := dSubCobrado + dAnticipo;
-      Inc(iFilas);
+      Result   := Result + dTotal;
+      ACobrado := ACobrado + dAnticipo;
       Q.Next;
     end;
   finally
     FreeAndNil(Q);
-  end;
-  // Pie del bloque: nº de depósitos, total vendido a crédito y total cobrado.
-  if iFilas = 0 then
-    ATicket.EscribirLinea('Sin movimientos')
-  else
-  begin
-    ATicket.TextoColumnas('DEPOSITOS', IntToStr(iFilas));
-    ATicket.Negrita(True);
-    ATicket.TextoColumnas('SUBTOTAL VENTA', FmtImp(dSubVenta));
-    ATicket.Negrita(False);
-    if dSubCobrado <> 0 then
-      ATicket.TextoColumnas('SUBTOTAL COBRADO', FmtImp(dSubCobrado));
   end;
 end;
 
@@ -743,36 +612,160 @@ class procedure TTiraCajaTicket.Imprimir(AConn: TUniConnection;
                                          const AEmpresa, AAlmacen,
                                                ACaja: string;
                                          AFechaDesde, AFechaHasta: TDate;
-                                         const ASerie: string = '';
-                                         AImprimirQR: Boolean = False;
-                                         const ANombreImpresora: string
-                                               = 'DEBUG';
-                                         AIncluirTraspasos: Boolean = False;
-                                         AIncluirIngresos: Boolean = False;
-                                         AIncluirGastos: Boolean = False;
-                                         AIncluirCredito: Boolean = False);
+                                         const ASeries: TArray<string>;
+                                         AImprimirQR: Boolean;
+                                         const ANombreImpresora: string;
+                                         ACronologico: Boolean;
+                                         AIncluirTraspasos: Boolean;
+                                         AIncluirIngresos: Boolean;
+                                         AIncluirGastos: Boolean;
+                                         AIncluirCredito: Boolean);
 var
   Ope: TUniQuery;
   Ticket: TTicketTermico;
   Preview: TFormVisualizador;
-  ComandosESC, RutaPDF, sSQL: string;
-  iOperaciones: Integer;
-  dTotal: Currency;
+  ComandosESC, RutaPDF, sSQL, sCond, sLista, sSerieIn, sSerieTxt: string;
+  sGrupo, sPrevGrupo: string;
+  i: Integer;
   bVerCoste: Boolean;
+  dCobradoOp: Currency;
+  nVen, nTra, nIng, nGas, nDep: Integer;
+  totVen, totTra, totIng, totGas, totDepV, totDepC: Currency;
+
+  // Rótulo corto del tipo, para el modo cronológico.
+  function RotuloGrupo(const AG: string): string;
+  begin
+    if AG = 'TRA' then
+      Result := 'TRASPASO'
+    else if AG = 'ING' then
+      Result := 'INGRESO'
+    else if AG = 'GAS' then
+      Result := 'GASTO'
+    else if AG = 'DEP' then
+      Result := 'DEPOSITO'
+    else
+      Result := 'VENTA';
+  end;
+
+  // Cabecera de sección (modo por tipo de documento).
+  procedure CabeceraGrupo(const AG: string);
+  begin
+    Ticket.Alinear(alCentro);
+    Ticket.Negrita(True);
+    if AG = 'TRA' then
+      Ticket.EscribirLinea('-TRASPASOS SALIENTES (ORIGEN)-')
+    else if AG = 'ING' then
+      Ticket.EscribirLinea('-INGRESOS POR CAJA-')
+    else if AG = 'GAS' then
+      Ticket.EscribirLinea('-GASTOS POR CAJA-')
+    else if AG = 'DEP' then
+      Ticket.EscribirLinea('-VENTAS A CREDITO (DEPOSITOS)-')
+    else
+      Ticket.EscribirLinea('-VENTAS FACTURADAS-');
+    Ticket.Negrita(False);
+    Ticket.Alinear(alIzquierda);
+  end;
+
+  // Pie / subtotal de un grupo según sus acumuladores.
+  procedure SubtotalGrupo(const AG: string);
+  begin
+    if AG = 'TRA' then
+    begin
+      Ticket.TextoColumnas('TRASPASOS', IntToStr(nTra));
+      if bVerCoste then
+      begin
+        Ticket.Negrita(True);
+        Ticket.TextoColumnas('SUBTOTAL (coste)', FmtImp(totTra));
+        Ticket.Negrita(False);
+      end;
+    end
+    else if AG = 'ING' then
+    begin
+      Ticket.TextoColumnas('INGRESOS', IntToStr(nIng));
+      Ticket.Negrita(True);
+      Ticket.TextoColumnas('SUBTOTAL', FmtImp(totIng));
+      Ticket.Negrita(False);
+    end
+    else if AG = 'GAS' then
+    begin
+      Ticket.TextoColumnas('GASTOS', IntToStr(nGas));
+      Ticket.Negrita(True);
+      Ticket.TextoColumnas('SUBTOTAL', FmtImp(totGas));
+      Ticket.Negrita(False);
+    end
+    else if AG = 'DEP' then
+    begin
+      Ticket.TextoColumnas('DEPOSITOS', IntToStr(nDep));
+      Ticket.Negrita(True);
+      Ticket.TextoColumnas('SUBTOTAL VENTA', FmtImp(totDepV));
+      Ticket.Negrita(False);
+      if totDepC <> 0 then
+        Ticket.TextoColumnas('SUBTOTAL COBRADO', FmtImp(totDepC));
+    end
+    else
+    begin
+      Ticket.TextoColumnas('OPERACIONES', IntToStr(nVen));
+      Ticket.Negrita(True);
+      Ticket.TextoColumnas('TOTAL VENTAS', FmtImp(totVen));
+      Ticket.Negrita(False);
+    end;
+  end;
+
+  // Render de la fila actual del cursor según su grupo, acumulando totales.
+  procedure RenderFila(const AG: string);
+  begin
+    if AG = 'TRA' then
+    begin
+      totTra := totTra + EscribirTraspasoOpe(Ticket, AConn, Ope, bVerCoste);
+      Inc(nTra);
+    end
+    else if AG = 'ING' then
+    begin
+      totIng := totIng + EscribirIngresoGastoOpe(Ticket, Ope);
+      Inc(nIng);
+    end
+    else if AG = 'GAS' then
+    begin
+      totGas := totGas + EscribirIngresoGastoOpe(Ticket, Ope);
+      Inc(nGas);
+    end
+    else if AG = 'DEP' then
+    begin
+      totDepV := totDepV + EscribirDepositoOpe(Ticket, AConn, Ope, dCobradoOp);
+      totDepC := totDepC + dCobradoOp;
+      Inc(nDep);
+    end
+    else
+    begin
+      EscribirOperacion(Ticket, AConn, Ope, AImprimirQR);
+      totVen := totVen + Ope.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency;
+      Inc(nVen);
+    end;
+  end;
+
 begin
   if (AConn = nil) or (not AConn.Connected) then
     Exit;
-  iOperaciones := 0;
-  dTotal       := 0;
-  // Los traspasos solo se valoran (importes + subtotal) si el usuario tiene
-  // permiso para ver coste; en caso contrario salen sin importe.
+  nVen   := 0;
+  nTra   := 0;
+  nIng   := 0;
+  nGas   := 0;
+  nDep   := 0;
+  totVen   := 0;
+  totTra   := 0;
+  totIng   := 0;
+  totGas   := 0;
+  totDepV  := 0;
+  totDepC  := 0;
+  // Los traspasos solo se valoran (coste) si el usuario tiene permiso para ver
+  // coste; el resto de bloques (ingresos, gastos, depósitos) siempre se valoran.
   bVerCoste := Assigned(oPermisos)
                and oPermisos.TienePermiso('caja.verCoste', False);
   Ticket := TTicketTermico.Create(ANombreImpresora);
   try
     Ticket.Inicializar;
     EscribirCabeceraEmpresa(Ticket, AConn, AEmpresa);
-    // Título: una sola caja y el rango exacto seleccionado por el usuario.
+    // Título: caja, rango exacto, series seleccionadas y modo de agrupamiento.
     Ticket.SaltarLineas(1);
     Ticket.Alinear(alCentro);
     Ticket.Negrita(True);
@@ -782,16 +775,56 @@ begin
       [FormatDateTime('dd/mm/yy hh:nn', AFechaDesde)]));
     Ticket.EscribirLinea(Format('AL  %s',
       [FormatDateTime('dd/mm/yy hh:nn', AFechaHasta)]));
-    if Trim(ASerie) <> '' then
-      Ticket.EscribirLinea('SERIE: ' + ASerie)
+    if Length(ASeries) = 0 then
+      Ticket.EscribirLinea('TODAS LAS SERIES')
     else
-      Ticket.EscribirLinea('TODAS LAS SERIES');
+    begin
+      sSerieTxt := '';
+      for i := 0 to High(ASeries) do
+      begin
+        if sSerieTxt <> '' then
+          sSerieTxt := sSerieTxt + ', ';
+        sSerieTxt := sSerieTxt + ASeries[i];
+      end;
+      Ticket.EscribirLinea('SERIES: ' + sSerieTxt);
+    end;
+    if ACronologico then
+      Ticket.EscribirLinea('ORDEN: CRONOLOGICO')
+    else
+      Ticket.EscribirLinea('ORDEN: POR TIPO DE DOCUMENTO');
     Ticket.Negrita(False);
     Ticket.Alinear(alIzquierda);
     Ticket.SaltarLineas(1);
-    // Operaciones facturadas del rango (ventas y devoluciones), opcionalmente
-    // acotadas a una serie. Las que no tienen factura no llevan nº de factura
-    // ni serie, así que quedan fuera de la tira.
+    // Condición: ventas facturadas (multi-serie, excluyendo los tipos de los
+    // bloques) más los tipos opcionales marcados.
+    sSerieIn := '';
+    for i := 0 to High(ASeries) do
+    begin
+      if sSerieIn <> '' then
+        sSerieIn := sSerieIn + ',';
+      sSerieIn := sSerieIn + ':pS' + IntToStr(i);
+    end;
+    sCond := ' (o.SERIE_FAC_OPCAJA IS NOT NULL                             ' +
+             '  AND o.SERIE_FAC_OPCAJA <> ''''                             ' +
+             '  AND o.TIPO_OPERACION_OPCAJA                                ' +
+             '        NOT IN (''TR'',''AT'',''EC'',''GC'',''DE'') ';
+    if sSerieIn <> '' then
+      sCond := sCond + ' AND o.SERIE_FAC_OPCAJA IN (' + sSerieIn + ') ';
+    sCond := sCond + ') ';
+    sLista := '';
+    if AIncluirTraspasos then
+      sLista := sLista + ',''TR'',''AT''';
+    if AIncluirIngresos then
+      sLista := sLista + ',''EC''';
+    if AIncluirGastos then
+      sLista := sLista + ',''GC''';
+    if AIncluirCredito then
+      sLista := sLista + ',''DE''';
+    if sLista <> '' then
+    begin
+      Delete(sLista, 1, 1);
+      sCond := sCond + ' OR o.TIPO_OPERACION_OPCAJA IN (' + sLista + ') ';
+    end;
     Ope := TUniQuery.Create(nil);
     try
       Ope.Connection := AConn;
@@ -799,8 +832,23 @@ begin
         ' SELECT o.CODIGO_EMP_OPCAJA, o.CODIGO_ALM_OPCAJA,                 ' +
         '        o.CODIGO_CAJA_OPCAJA, o.NUMERO_OPERACION_OPCAJA,          ' +
         '        o.FECHA_OPERACION_OPCAJA, o.SERIE_FAC_OPCAJA,             ' +
-        '        o.NUMERO_FAC_OPCAJA,                                      ' +
-        '        f.TOTAL_LIQUIDO_FAC, f.FECHA_FAC, f.NIF_EMPRESA_FAC       ' +
+        '        o.NUMERO_FAC_OPCAJA, o.IMPORTE_TOTAL_OPCAJA,              ' +
+        '        o.CONCEPTO_GASTO_INGRESO_OPCAJA,                          ' +
+        '        o.CODIGO_ALM_CONTRA_OPCAJA,                               ' +
+        '        f.TOTAL_LIQUIDO_FAC, f.FECHA_FAC, f.NIF_EMPRESA_FAC,      ' +
+        '        CASE                                                      ' +
+        '          WHEN o.TIPO_OPERACION_OPCAJA IN (''TR'',''AT'')         ' +
+        '            THEN ''TRA''                                          ' +
+        '          WHEN o.TIPO_OPERACION_OPCAJA = ''EC'' THEN ''ING''      ' +
+        '          WHEN o.TIPO_OPERACION_OPCAJA = ''GC'' THEN ''GAS''      ' +
+        '          WHEN o.TIPO_OPERACION_OPCAJA = ''DE'' THEN ''DEP''      ' +
+        '          ELSE ''VEN'' END                       AS GRUPO,       ' +
+        '        CASE                                                      ' +
+        '          WHEN o.TIPO_OPERACION_OPCAJA IN (''TR'',''AT'') THEN 2  ' +
+        '          WHEN o.TIPO_OPERACION_OPCAJA = ''EC'' THEN 3            ' +
+        '          WHEN o.TIPO_OPERACION_OPCAJA = ''GC'' THEN 4            ' +
+        '          WHEN o.TIPO_OPERACION_OPCAJA = ''DE'' THEN 5            ' +
+        '          ELSE 1 END                             AS GRUPO_ORDEN   ' +
         '   FROM fza_caja_operaciones o                                    ' +
         '   LEFT JOIN fza_facturas f                                       ' +
         '     ON f.SERIE_FAC  = o.SERIE_FAC_OPCAJA                         ' +
@@ -808,59 +856,86 @@ begin
         '  WHERE o.CODIGO_EMP_OPCAJA   = :pEMP                             ' +
         '    AND o.CODIGO_ALM_OPCAJA   = :pALM                             ' +
         '    AND o.CODIGO_CAJA_OPCAJA  = :pCAJA                            ' +
-        '    AND o.SERIE_FAC_OPCAJA   IS NOT NULL                          ' +
-        '    AND o.SERIE_FAC_OPCAJA  <> ''''                               ' +
         '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                      ' +
-        '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                      ';
-      if Trim(ASerie) <> '' then
-        sSQL := sSQL + ' AND o.SERIE_FAC_OPCAJA = :pSERIE ';
-      sSQL := sSQL +
-        '  ORDER BY o.FECHA_OPERACION_OPCAJA, o.NUMERO_OPERACION_OPCAJA    ';
+        '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                      ' +
+        '    AND (' + sCond + ') ';
+      if ACronologico then
+        sSQL := sSQL +
+          '  ORDER BY o.FECHA_OPERACION_OPCAJA, o.NUMERO_OPERACION_OPCAJA  '
+      else
+        sSQL := sSQL +
+          '  ORDER BY GRUPO_ORDEN, o.FECHA_OPERACION_OPCAJA,               ' +
+          '           o.NUMERO_OPERACION_OPCAJA                            ';
       Ope.SQL.Text := sSQL;
       Ope.ParamByName('pEMP').AsString      := AEmpresa;
       Ope.ParamByName('pALM').AsString      := AAlmacen;
       Ope.ParamByName('pCAJA').AsString     := ACaja;
       Ope.ParamByName('pFDESDE').AsDateTime := AFechaDesde;
       Ope.ParamByName('pFHASTA').AsDateTime := AFechaHasta;
-      if Trim(ASerie) <> '' then
-        Ope.ParamByName('pSERIE').AsString := ASerie;
+      for i := 0 to High(ASeries) do
+        Ope.ParamByName('pS' + IntToStr(i)).AsString := ASeries[i];
       Ope.Open;
+      sPrevGrupo := '';
       while not Ope.Eof do
       begin
-        EscribirOperacion(Ticket, AConn, Ope, AImprimirQR);
-        Inc(iOperaciones);
-        dTotal := dTotal + Ope.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency;
+        sGrupo := Ope.FieldByName('GRUPO').AsString;
+        if ACronologico then
+        begin
+          // Cada operación rotulada con su tipo, para saber qué es cada una.
+          Ticket.Negrita(True);
+          Ticket.EscribirLinea('[' + RotuloGrupo(sGrupo) + ']');
+          Ticket.Negrita(False);
+        end
+        else
+        begin
+          // Cambio de tipo: cierra el grupo anterior (subtotal), lo rompe con
+          // doble línea y abre la cabecera del nuevo grupo.
+          if sGrupo <> sPrevGrupo then
+          begin
+            if sPrevGrupo <> '' then
+            begin
+              SubtotalGrupo(sPrevGrupo);
+              Ticket.LineaSeparadora('=');
+              Ticket.LineaSeparadora('=');
+            end
+            else
+              Ticket.LineaSeparadora('=');
+            CabeceraGrupo(sGrupo);
+          end;
+        end;
+        RenderFila(sGrupo);
+        // Línea simple tras cada operación, en ambos modos.
+        Ticket.LineaSeparadora('-');
+        sPrevGrupo := sGrupo;
         Ope.Next;
       end;
     finally
       FreeAndNil(Ope);
     end;
-    // Resumen final de las ventas facturadas (no incluye los bloques aparte).
-    Ticket.LineaSeparadora('=');
-    Ticket.TextoColumnas('OPERACIONES', IntToStr(iOperaciones));
-    Ticket.Negrita(True);
-    Ticket.TextoColumnas('TOTAL', FmtImp(dTotal));
-    Ticket.Negrita(False);
-    // Bloques opcionales adjuntos, cada uno con su propio subtotal. Se acotan
-    // al mismo rango y caja. Traspasos y depósitos llevan detalle de artículos;
-    // ingresos (EC) y gastos (GC) son una fila por operación. Los traspasos
-    // solo se valoran con permiso (bVerCoste).
-    if AIncluirTraspasos then
-      EscribirBloqueTraspasos(Ticket, AConn, AEmpresa, AAlmacen, ACaja,
-                              AFechaDesde, AFechaHasta, bVerCoste);
-    if AIncluirIngresos then
-      EscribirBloque(Ticket, AConn, AEmpresa, AAlmacen, ACaja,
-                     AFechaDesde, AFechaHasta,
-                     '-INGRESOS POR CAJA-', '''EC''',
-                     False, True);
-    if AIncluirGastos then
-      EscribirBloque(Ticket, AConn, AEmpresa, AAlmacen, ACaja,
-                     AFechaDesde, AFechaHasta,
-                     '-GASTOS POR CAJA-', '''GC''',
-                     False, True);
-    if AIncluirCredito then
-      EscribirBloqueCredito(Ticket, AConn, AEmpresa, AAlmacen, ACaja,
-                            AFechaDesde, AFechaHasta);
+    // Cierre: subtotal del último grupo (por tipo) o resumen (cronológico).
+    if (nVen + nTra + nIng + nGas + nDep) = 0 then
+      Ticket.EscribirLinea('Sin operaciones')
+    else if not ACronologico then
+      SubtotalGrupo(sPrevGrupo)
+    else
+    begin
+      Ticket.LineaSeparadora('=');
+      Ticket.Alinear(alCentro);
+      Ticket.Negrita(True);
+      Ticket.EscribirLinea('-RESUMEN-');
+      Ticket.Negrita(False);
+      Ticket.Alinear(alIzquierda);
+      if nVen > 0 then
+        SubtotalGrupo('VEN');
+      if nTra > 0 then
+        SubtotalGrupo('TRA');
+      if nIng > 0 then
+        SubtotalGrupo('ING');
+      if nGas > 0 then
+        SubtotalGrupo('GAS');
+      if nDep > 0 then
+        SubtotalGrupo('DEP');
+    end;
     Ticket.SaltarLineas(1);
     Ticket.Alinear(alCentro);
     Ticket.EscribirLinea(FormatDateTime('dd/mm/yyyy hh:nn:ss', Now));

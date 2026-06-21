@@ -1,21 +1,21 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalTiraCaja                                            }
 {    Tipo:       Formulario (Modal)                                            }
-{ Versión:       1.0.0                                                         }
+{ Versión:       2.0.0                                                         }
 {   Fecha:       18/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Pregunta las opciones de la "tira de caja" antes de imprimirla: la serie  }
-{    (cuando hay más de una; por defecto todas) y si se imprime el QR          }
-{    tributario por operación (solo cuando Verifactu está activo con envío     }
-{    PRE o PRO). Además ofrece incluir, de forma opcional, bloques aparte de   }
-{    las ventas facturadas: traspasos salientes (origen), ingresos por caja,   }
-{    gastos por caja y ventas a crédito (depósitos). Devuelve la elección a    }
-{    través de Ejecutar.                                                        }
+{    Pregunta las opciones de la "tira de caja" antes de imprimirla: las       }
+{    series de factura simplificada (multi-selección; ninguna marcada = todas),}
+{    el agrupamiento (por tipo de documento o por orden cronológico) y si se   }
+{    imprime el QR tributario por operación (solo cuando Verifactu está activo }
+{    con envío PRE o PRO). Además ofrece incluir, de forma opcional, los       }
+{    traspasos salientes (origen), los ingresos por caja, los gastos por caja  }
+{    y las ventas a crédito (depósitos). Devuelve la elección por Ejecutar.    }
 {******************************************************************************}
 unit inMtoModalTiraCaja;
 
@@ -27,14 +27,16 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxTextEdit, cxMaskEdit, cxDropDownEdit,
-  cxCheckBox, cxLabel, cxButtons, cxClasses, cxStyles,
+  cxCheckBox, cxCheckComboBox, cxLabel, cxButtons, cxClasses, cxStyles,
   inMtoFrmBase;
 
 type
   TfrmModalTiraCaja = class(TfrmBase)
     lblTitulo: TcxLabel;
     lblSerie: TcxLabel;
-    cbSerie: TcxComboBox;
+    ccbSerie: TcxCheckComboBox;
+    lblAgrupamiento: TcxLabel;
+    cbAgrupamiento: TcxComboBox;
     chkQR: TcxCheckBox;
     chkTraspasos: TcxCheckBox;
     chkIngresos: TcxCheckBox;
@@ -46,16 +48,19 @@ type
   private
     FVerifactu: Boolean;
   public
-    // Devuelve True si el usuario pulsa Imprimir. ASerie = '' significa todas
-    // las series. AImprimirQR solo puede salir True si AVerifactu lo era.
-    // Los cuatro últimos out indican qué bloques opcionales adjuntar tras las
-    // ventas: traspasos salientes, ingresos, gastos y ventas a crédito.
+    // Devuelve True si el usuario pulsa Imprimir.
+    //   ASeleccionSeries : series marcadas; vacío = todas las series.
+    //   AImprimirQR      : solo puede salir True si AVerifactu lo era.
+    //   ACronologico     : True = orden cronológico; False = por tipo de doc.
+    //   AIncluir*        : bloques opcionales a adjuntar (traspasos, ingresos,
+    //                      gastos, ventas a crédito).
     class function Ejecutar(AOwner: TComponent;
                             const ACaja: string;
                             const ASeries: TArray<string>;
                             AVerifactu: Boolean;
-                            out ASerie: string;
+                            out ASeleccionSeries: TArray<string>;
                             out AImprimirQR: Boolean;
+                            out ACronologico: Boolean;
                             out AIncluirTraspasos: Boolean;
                             out AIncluirIngresos: Boolean;
                             out AIncluirGastos: Boolean;
@@ -74,19 +79,22 @@ class function TfrmModalTiraCaja.Ejecutar(AOwner: TComponent;
                                           const ACaja: string;
                                           const ASeries: TArray<string>;
                                           AVerifactu: Boolean;
-                                          out ASerie: string;
+                                          out ASeleccionSeries: TArray<string>;
                                           out AImprimirQR: Boolean;
+                                          out ACronologico: Boolean;
                                           out AIncluirTraspasos: Boolean;
                                           out AIncluirIngresos: Boolean;
                                           out AIncluirGastos: Boolean;
                                           out AIncluirCredito: Boolean): Boolean;
 var
   Frm: TfrmModalTiraCaja;
+  Item: TcxCheckComboBoxItem;
   i: Integer;
 begin
   Result            := False;
-  ASerie            := '';
+  SetLength(ASeleccionSeries, 0);
   AImprimirQR       := False;
+  ACronologico      := False;
   AIncluirTraspasos := False;
   AIncluirIngresos  := False;
   AIncluirGastos    := False;
@@ -95,12 +103,21 @@ begin
   try
     Frm.FVerifactu := AVerifactu;
     Frm.lblTitulo.Caption := Format('Tira de Caja · Caja %s', [ACaja]);
-    // El índice 0 es siempre "Todas las series"; el resto, una por serie.
-    Frm.cbSerie.Properties.Items.Clear;
-    Frm.cbSerie.Properties.Items.Add('Todas las series');
+    // Una entrada por serie; sin marcar ninguna se entienden todas. El índice
+    // de cada item coincide con el de ASeries para mapear marcado -> serie.
+    Frm.ccbSerie.Properties.Items.Clear;
     for i := 0 to High(ASeries) do
-      Frm.cbSerie.Properties.Items.Add(ASeries[i]);
-    Frm.cbSerie.ItemIndex := 0;
+    begin
+      Item := Frm.ccbSerie.Properties.Items.Add;
+      Item.Description := ASeries[i];
+    end;
+    Frm.ccbSerie.Properties.EmptySelectionText := '(todas las series)';
+    // Los ítems recién añadidos salen desmarcados (ninguna serie = todas).
+    // Agrupamiento: por tipo de documento (índice 0) o cronológico (índice 1).
+    Frm.cbAgrupamiento.Properties.Items.Clear;
+    Frm.cbAgrupamiento.Properties.Items.Add('Por tipo de documento');
+    Frm.cbAgrupamiento.Properties.Items.Add('Por orden cronológico');
+    Frm.cbAgrupamiento.ItemIndex := 0;
     // El QR solo se ofrece (y marca por defecto) si Verifactu está activo.
     Frm.chkQR.Enabled := AVerifactu;
     Frm.chkQR.Checked := AVerifactu;
@@ -113,10 +130,14 @@ begin
     Frm.chkCredito.Checked   := False;
     if Frm.ShowModal = mrOk then
     begin
-      if Frm.cbSerie.ItemIndex <= 0 then
-        ASerie := ''
-      else
-        ASerie := ASeries[Frm.cbSerie.ItemIndex - 1];
+      // Series marcadas (por índice). Si no hay ninguna, se deja vacío = todas.
+      for i := 0 to High(ASeries) do
+        if Frm.ccbSerie.States[i] = cbsChecked then
+        begin
+          SetLength(ASeleccionSeries, Length(ASeleccionSeries) + 1);
+          ASeleccionSeries[High(ASeleccionSeries)] := ASeries[i];
+        end;
+      ACronologico      := Frm.cbAgrupamiento.ItemIndex = 1;
       AImprimirQR       := Frm.chkQR.Checked and AVerifactu;
       AIncluirTraspasos := Frm.chkTraspasos.Checked;
       AIncluirIngresos  := Frm.chkIngresos.Checked;

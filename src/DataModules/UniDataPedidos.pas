@@ -84,6 +84,9 @@ type
     // Importación PrestaShop
     function ImportarPedidoPrestaShop(aOrder: TOrder): Boolean;
     function ExistePedidoPrestaShop(const sIdPS: string): Boolean;
+    // Localiza el cliente del pedido PS por NIF/email; si no existe lo da de
+    // alta y devuelve su CODIGO_CLI_CLI. Devuelve '0' solo si no hay datos.
+    function ResolverCodigoCliente(aOrder: TOrder): string;
 
     procedure OpenTables;
     // Override: abre las queries detalle del Mto de Pedidos tras
@@ -92,12 +95,14 @@ type
     procedure AbrirDetalles; override;
   private
     FProcsInstalados: Boolean;
+    // Devuelve el siguiente contador (PRC_GET_NEXT_CONT) del tipo indicado.
+    function ObtenerContador(const sTipo: string): string;
   end;
 
 implementation
 
 uses
-  inLibGlobalVar, inLibLog, System.Diagnostics;
+  inLibGlobalVar, inLibLog, System.Diagnostics, inLibArticulosValidador;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -641,15 +646,133 @@ begin
   end;
 end;
 
+function TdmPedidos.ObtenerContador(const sTipo: string): string;
+begin
+  with unstrdprcGetContador do
+  begin
+    Params.Clear;
+    Params.CreateParam(ftString, 'ptipodoc', ptInput);
+    Params.CreateParam(ftString, 'pcont',    ptOutput);
+    Params.CreateParam(ftString, 'pUSUARIO', ptInput);
+    ParamByName('ptipodoc').AsString := sTipo;
+    ParamByName('pUSUARIO').AsString  := oUser;
+    ExecProc;
+    Result := ParamByName('pcont').AsString;
+  end;
+end;
+
+function TdmPedidos.ResolverCodigoCliente(aOrder: TOrder): string;
+var
+  q: TUniQuery;
+  sNif, sEmail, sRazon: string;
+  sDir1, sDir2, sPobl, sProv, sCP, sMovil, sOrden: string;
+begin
+  Result := '0';
+  if aOrder = nil then
+    Exit;
+  // Identificadores de busqueda: se prioriza el domicilio fiscal (Bil)
+  sNif := aOrder.Vat_numberBil;
+  if sNif = '' then
+    sNif := aOrder.DniBil;
+  if sNif = '' then
+    sNif := aOrder.Vat_numberDel;
+  if sNif = '' then
+    sNif := aOrder.DniDel;
+  sEmail := aOrder.custMail;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    // 1) Buscar por NIF
+    if sNif <> '' then
+    begin
+      q.SQL.Text :=
+        'SELECT CODIGO_CLI_CLI FROM fza_clientes WHERE NIF_CLI = :nif LIMIT 1';
+      q.ParamByName('nif').AsString := sNif;
+      q.Open;
+      if q.RecordCount > 0 then
+        Result := q.Fields[0].AsString;
+      q.Close;
+    end;
+    // 2) Si no hay match por NIF, buscar por email
+    if (Result = '0') and (sEmail <> '') then
+    begin
+      q.SQL.Text :=
+        'SELECT CODIGO_CLI_CLI FROM fza_clientes WHERE EMAIL_CLI = :ema ' +
+        'LIMIT 1';
+      q.ParamByName('ema').AsString := sEmail;
+      q.Open;
+      if q.RecordCount > 0 then
+        Result := q.Fields[0].AsString;
+      q.Close;
+    end;
+    // 3) Si sigue sin encontrarse, dar de alta el cliente nuevo
+    if Result = '0' then
+    begin
+      // Datos del nuevo cliente (domicilio fiscal con fallback a envio)
+      sRazon := aOrder.CompanyBil;
+      if sRazon = '' then
+        sRazon := Trim(aOrder.FirstnameBil + ' ' + aOrder.LastNameBil);
+      if sRazon = '' then
+        sRazon := aOrder.custName;
+      sDir1 := aOrder.Address1Bil;
+      if sDir1 = '' then
+        sDir1 := aOrder.Address1Del;
+      sDir2 := aOrder.Address2Bil;
+      if sDir2 = '' then
+        sDir2 := aOrder.Address2Del;
+      sPobl := aOrder.CityBil;
+      if sPobl = '' then
+        sPobl := aOrder.CityDel;
+      sProv := aOrder.NameStateBil;
+      if sProv = '' then
+        sProv := aOrder.NameStateDel;
+      sCP := aOrder.PostcodeBil;
+      if sCP = '' then
+        sCP := aOrder.PostcodeDel;
+      sMovil := aOrder.PhoneBil;
+      if sMovil = '' then
+        sMovil := aOrder.PhoneDel;
+      // Contadores (PRC_GET_NEXT_CONT hace COMMIT propio: fuera de la tx)
+      Result := ObtenerContador('CL');
+      sOrden := ObtenerContador('CO');
+      q.SQL.Text :=
+        'INSERT INTO fza_clientes (CODIGO_CLI_CLI, ORDEN_CLI, ' +
+        ' RAZON_SOCIAL_CLI, NIF_CLI, EMAIL_CLI, MOVIL_CLI, ' +
+        ' DIRECCION1_CLI, DIRECCION2_CLI, POBLACION_CLI, PROVINCIA_CLI, ' +
+        ' CODIGO_POSTAL_CLI, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+        'VALUES (:cod, :ord, :raz, :nif, :ema, :mov, ' +
+        '        :dir1, :dir2, :pob, :prov, :cp, NOW(), :usu, :usu)';
+      q.ParamByName('cod').AsString  := Result;
+      q.ParamByName('ord').AsInteger := StrToIntDef(sOrden, 0);
+      q.ParamByName('raz').AsString  := sRazon;
+      q.ParamByName('nif').AsString  := sNif;
+      q.ParamByName('ema').AsString  := sEmail;
+      q.ParamByName('mov').AsString  := sMovil;
+      q.ParamByName('dir1').AsString := sDir1;
+      q.ParamByName('dir2').AsString := sDir2;
+      q.ParamByName('pob').AsString  := sPobl;
+      q.ParamByName('prov').AsString := sProv;
+      q.ParamByName('cp').AsString   := sCP;
+      q.ParamByName('usu').AsString  := oUser;
+      q.Execute;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
 function TdmPedidos.ImportarPedidoPrestaShop(aOrder: TOrder): Boolean;
 var
   qIns: TUniQuery;
   qLin: TUniQuery;
   qMsg: TUniQuery;
   i: Integer;
-  sNumero, sSerie: string;
+  sNumero, sSerie, sCodigoCli, sCodArt: string;
   lp: TLineaPed;
   tm: TMensaje;
+  bTxOwned: Boolean;
+  oValidador: TArticulosValidador;
+  resArt: TArtResolucionEntrada;
 begin
   Result := False;
   if aOrder = nil then Exit;
@@ -673,134 +796,161 @@ begin
     raise;
   end;
 
+  // Resolver/crear cliente ANTES de la tx (el contador hace COMMIT propio)
+  sCodigoCli := ResolverCodigoCliente(aOrder);
+
   qIns := TUniQuery.Create(nil);
   qLin := TUniQuery.Create(nil);
   qMsg := TUniQuery.Create(nil);
+  oValidador := TArticulosValidador.Create(inLibGlobalVar.oConn);
   try
-    qIns.Connection := inLibGlobalVar.oConn;
-    qIns.SQL.Text :=
-      'INSERT INTO fza_pedidos (NUMERO_PED, SERIE_PED, FECHA_PED, ESTADO_PED, '
-        +
-      ' IDPS_PED, FECHAPS_PED, REFERENCIAPS_PED, ' +
-      ' FORMAPAGOPS_PED, TRANSPORTISTAPS_PED, ESTADOPEDIDOPS_PED, ' +
-      ' EMAIL_CLIENTE_PED, NIF_CLIENTE_PED, ' +
-      ' NOMBRE_CLI_ENVIO_PED, MOVIL_CLIENTE_ENVIO_PED, ' +
-      ' DIRECCION1_CLIENTE_ENVIO_PED, DIRECCION2_CLIENTE_ENVIO_PED, ' +
-      ' POBLACION_CLIENTE_ENVIO_PED, PROVINCIA_CLIENTE_ENVIO_PED, ' +
-      ' CODIGO_POSTAL_CLIENTE_ENVIO_PED, ' +
-      ' RAZON_SOCIAL_CLIENTE_FISCAL_PED, MOVIL_CLIENTE_FISCAL_PED, ' +
-      ' DIRECCION1_CLIENTE_FISCAL_PED, DIRECCION2_CLIENTE_FISCAL_PED, ' +
-      ' POBLACION_CLIENTE_FISCAL_PED, PROVINCIA_CLIENTE_FISCAL_PED, ' +
-      ' CODIGO_POSTAL_CLIENTE_FISCAL_PED, ' +
-      ' TOTAL_LIQUIDO_PED, TOTAL_PAGADOREALPS_PED, ' +
-      ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'VALUES (:NUMERO, :SERIE, :FECHA, :ESTADO, ' +
-      '        :IDPS, :FECHAPS, :REFPS, ' +
-      '        :FORMAPAGO, :TRANSP, :ESTADOPS, ' +
-      '        :EMAILCLI, :NIFCLI, ' +
-      '        :NOMENV, :MOVENV, :DIR1ENV, :DIR2ENV, ' +
-      '        :POBLENV, :PROVENV, :CPENV, ' +
-      '        :RSFIS, :MOVFIS, :DIR1FIS, :DIR2FIS, ' +
-      '        :POBLFIS, :PROVFIS, :CPFIS, ' +
-      '        :TOTAL, :PAGADO, ' +
-      '        NOW(), :USU, :USU)';
-    qIns.ParamByName('NUMERO').AsString  := sNumero;
-    qIns.ParamByName('SERIE').AsString   := sSerie;
-    qIns.ParamByName('FECHA').AsDateTime := Date;
-    qIns.ParamByName('ESTADO').AsString  := 'IMPORTADO';
-    qIns.ParamByName('IDPS').AsString    := aOrder.idPedido;
-    qIns.ParamByName('FECHAPS').AsString := aOrder.FechaCreacion;
-    qIns.ParamByName('REFPS').AsString   := aOrder.ReferenciaCliente;
-    qIns.ParamByName('FORMAPAGO').AsString := aOrder.FormaPago;
-    qIns.ParamByName('TRANSP').AsString    := aOrder.Transportista;
-    qIns.ParamByName('ESTADOPS').AsString  := aOrder.EstadoPedido;
-    qIns.ParamByName('EMAILCLI').AsString  := aOrder.custMail;
-    qIns.ParamByName('NIFCLI').AsString    := aOrder.DniDel;
-    qIns.ParamByName('NOMENV').AsString    :=
-      aOrder.FirstnameDel + ' ' + aOrder.LastNameDel;
-    qIns.ParamByName('MOVENV').AsString    := aOrder.PhoneDel;
-    qIns.ParamByName('DIR1ENV').AsString   := aOrder.Address1Del;
-    qIns.ParamByName('DIR2ENV').AsString   := aOrder.Address2Del;
-    qIns.ParamByName('POBLENV').AsString   := aOrder.CityDel;
-    qIns.ParamByName('PROVENV').AsString   := aOrder.NameStateDel;
-    qIns.ParamByName('CPENV').AsString     := aOrder.PostcodeDel;
-    qIns.ParamByName('RSFIS').AsString     := aOrder.CompanyBil;
-    qIns.ParamByName('MOVFIS').AsString    := aOrder.PhoneBil;
-    qIns.ParamByName('DIR1FIS').AsString   := aOrder.Address1Bil;
-    qIns.ParamByName('DIR2FIS').AsString   := aOrder.Address2Bil;
-    qIns.ParamByName('POBLFIS').AsString   := aOrder.CityBil;
-    qIns.ParamByName('PROVFIS').AsString   := aOrder.NameStateBil;
-    qIns.ParamByName('CPFIS').AsString     := aOrder.PostcodeBil;
-    qIns.ParamByName('TOTAL').AsCurrency   := aOrder.TotalPedCIVA;
-    qIns.ParamByName('PAGADO').AsCurrency  := aOrder.TotalPagadoReal;
-    qIns.ParamByName('USU').AsString       := oUser;
-    qIns.Execute;
-
-    // Líneas
-    qLin.Connection := inLibGlobalVar.oConn;
-    qLin.SQL.Text :=
-      'INSERT INTO fza_pedidos_lineas (NUMERO_PED_PEDLIN, SERIE_PED_PEDLIN, ' +
-      'LINEA_PEDLIN, ' +
-      ' IDLINEAPS_PEDLIN, IDPRODPS_PEDLIN, CODIGOPRODPS_PEDLIN, ' +
-      'IDATRIBPRODPS_PEDLIN, ' +
-      ' CODBAR_ART_PEDLIN, DESCRIPCION_ARTICULO_PEDLIN, ' +
-      ' CANTIDAD_PEDLIN, CANTIDAD_ENTREGADA_PEDLIN, ' +
-      'CANTIDAD_PENDIENTE_PEDLIN, ESENTREGADA_PEDLIN, ' +
-      ' PRECIO_VENTA_SIVA_ARTICULO_PEDLIN, ' +
-      'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN, TOTAL_PEDLIN, ' +
-      ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'VALUES (:NUMERO, :SERIE, :LIN, ' +
-      '        :IDLPS, :IDPPS, :REFPROD, :IDATRIB, ' +
-      '        :EAN13, :DESCR, ' +
-      '        :CANT, 0, :CANT, ''N'', ' +
-      '        :PSIVA, :PCIVA, :TOT, ' +
-      '        NOW(), :USU, :USU)';
-    for i := 0 to aOrder.LineasPedido.Count - 1 do
-    begin
-      lp := aOrder.LineasPedido[i];
-      qLin.ParamByName('NUMERO').AsString  := sNumero;
-      qLin.ParamByName('SERIE').AsString   := sSerie;
-      qLin.ParamByName('LIN').AsString     := Format('%.4d', [(i + 1) * 10]);
-      qLin.ParamByName('IDLPS').AsString   := lp.idLinea;
-      qLin.ParamByName('IDPPS').AsString   := lp.idProducto;
-      qLin.ParamByName('REFPROD').AsString := lp.sRefProd;
-      qLin.ParamByName('IDATRIB').AsString := lp.sRefAtrib;
-      qLin.ParamByName('EAN13').AsString   := lp.sCodEAN13;
-      qLin.ParamByName('DESCR').AsString   := lp.sDescripcion;
-      qLin.ParamByName('CANT').AsFloat     := StrToFloatDef(lp.sCantidad, 1);
-      qLin.ParamByName('PSIVA').AsCurrency := lp.cPrecioSIVA;
-      qLin.ParamByName('PCIVA').AsCurrency := lp.cPrecioCIVA;
-      qLin.ParamByName('TOT').AsCurrency   :=
-        lp.cPrecioCIVA * StrToFloatDef(lp.sCantidad, 1);
-      qLin.ParamByName('USU').AsString     := oUser;
-      qLin.Execute;
-    end;
-
-    // Mensajes (si hay)
-    qMsg.Connection := inLibGlobalVar.oConn;
-    qMsg.SQL.Text :=
-      'INSERT INTO fza_pedidos_mensajes (IDPS_MENSAJES_PEDMSG, ' +
-      'IDMENSAJEPS_PEDMSG, ' +
-      ' IDEMPLEADOPS_PEDMSG, MENSAJEPS_PEDMSG, FECHAPS_PEDMSG, ' +
-      ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'VALUES (:HILO, :IDM, :IDE, :MSG, :FECHA, NOW(), :USU, :USU)';
-    for tm in aOrder.MensajesPedido.LMensajes do
-    begin
-      qMsg.ParamByName('HILO').AsString  :=
-        aOrder.MensajesPedido.idCustomer_Threat;
-      qMsg.ParamByName('IDM').AsString   := tm.idMensaje;
-      qMsg.ParamByName('IDE').AsString   := tm.idEmpleado;
-      qMsg.ParamByName('MSG').AsString   := tm.Texto;
-      qMsg.ParamByName('FECHA').AsDateTime := tm.InstanteMsg;
-      qMsg.ParamByName('USU').AsString   := oUser;
-      try
-        qMsg.Execute;
-      except
-        // Si el mensaje ya existe (hilo PK), saltar
+    // Importacion atomica: cabecera + lineas + mensajes, todo o nada
+    bTxOwned := not inLibGlobalVar.oConn.InTransaction;
+    if bTxOwned then
+      inLibGlobalVar.oConn.StartTransaction;
+    try
+      qIns.Connection := inLibGlobalVar.oConn;
+      qIns.SQL.Text :=
+        'INSERT INTO fza_pedidos (NUMERO_PED, SERIE_PED, FECHA_PED, '
+          +
+        'ESTADO_PED, CODIGO_CLI_PED, ' +
+        ' IDPS_PED, FECHAPS_PED, REFERENCIAPS_PED, ' +
+        ' FORMAPAGOPS_PED, TRANSPORTISTAPS_PED, ESTADOPEDIDOPS_PED, ' +
+        ' EMAIL_CLIENTE_PED, NIF_CLIENTE_PED, ' +
+        ' NOMBRE_CLI_ENVIO_PED, MOVIL_CLIENTE_ENVIO_PED, ' +
+        ' DIRECCION1_CLIENTE_ENVIO_PED, DIRECCION2_CLIENTE_ENVIO_PED, ' +
+        ' POBLACION_CLIENTE_ENVIO_PED, PROVINCIA_CLIENTE_ENVIO_PED, ' +
+        ' CODIGO_POSTAL_CLIENTE_ENVIO_PED, ' +
+        ' RAZON_SOCIAL_CLIENTE_FISCAL_PED, MOVIL_CLIENTE_FISCAL_PED, ' +
+        ' DIRECCION1_CLIENTE_FISCAL_PED, DIRECCION2_CLIENTE_FISCAL_PED, ' +
+        ' POBLACION_CLIENTE_FISCAL_PED, PROVINCIA_CLIENTE_FISCAL_PED, ' +
+        ' CODIGO_POSTAL_CLIENTE_FISCAL_PED, ' +
+        ' TOTAL_LIQUIDO_PED, TOTAL_PAGADOREALPS_PED, ' +
+        ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+        'VALUES (:NUMERO, :SERIE, :FECHA, :ESTADO, :CODCLI, ' +
+        '        :IDPS, :FECHAPS, :REFPS, ' +
+        '        :FORMAPAGO, :TRANSP, :ESTADOPS, ' +
+        '        :EMAILCLI, :NIFCLI, ' +
+        '        :NOMENV, :MOVENV, :DIR1ENV, :DIR2ENV, ' +
+        '        :POBLENV, :PROVENV, :CPENV, ' +
+        '        :RSFIS, :MOVFIS, :DIR1FIS, :DIR2FIS, ' +
+        '        :POBLFIS, :PROVFIS, :CPFIS, ' +
+        '        :TOTAL, :PAGADO, ' +
+        '        NOW(), :USU, :USU)';
+      qIns.ParamByName('NUMERO').AsString  := sNumero;
+      qIns.ParamByName('SERIE').AsString   := sSerie;
+      qIns.ParamByName('FECHA').AsDateTime := Date;
+      qIns.ParamByName('ESTADO').AsString  := 'IMPORTADO';
+      qIns.ParamByName('CODCLI').AsString  := sCodigoCli;
+      qIns.ParamByName('IDPS').AsString    := aOrder.idPedido;
+      qIns.ParamByName('FECHAPS').AsString := aOrder.FechaCreacion;
+      qIns.ParamByName('REFPS').AsString   := aOrder.ReferenciaCliente;
+      qIns.ParamByName('FORMAPAGO').AsString := aOrder.FormaPago;
+      qIns.ParamByName('TRANSP').AsString    := aOrder.Transportista;
+      qIns.ParamByName('ESTADOPS').AsString  := aOrder.EstadoPedido;
+      qIns.ParamByName('EMAILCLI').AsString  := aOrder.custMail;
+      qIns.ParamByName('NIFCLI').AsString    := aOrder.DniDel;
+      qIns.ParamByName('NOMENV').AsString    :=
+        aOrder.FirstnameDel + ' ' + aOrder.LastNameDel;
+      qIns.ParamByName('MOVENV').AsString    := aOrder.PhoneDel;
+      qIns.ParamByName('DIR1ENV').AsString   := aOrder.Address1Del;
+      qIns.ParamByName('DIR2ENV').AsString   := aOrder.Address2Del;
+      qIns.ParamByName('POBLENV').AsString   := aOrder.CityDel;
+      qIns.ParamByName('PROVENV').AsString   := aOrder.NameStateDel;
+      qIns.ParamByName('CPENV').AsString     := aOrder.PostcodeDel;
+      qIns.ParamByName('RSFIS').AsString     := aOrder.CompanyBil;
+      qIns.ParamByName('MOVFIS').AsString    := aOrder.PhoneBil;
+      qIns.ParamByName('DIR1FIS').AsString   := aOrder.Address1Bil;
+      qIns.ParamByName('DIR2FIS').AsString   := aOrder.Address2Bil;
+      qIns.ParamByName('POBLFIS').AsString   := aOrder.CityBil;
+      qIns.ParamByName('PROVFIS').AsString   := aOrder.NameStateBil;
+      qIns.ParamByName('CPFIS').AsString     := aOrder.PostcodeBil;
+      qIns.ParamByName('TOTAL').AsCurrency   := aOrder.TotalPedCIVA;
+      qIns.ParamByName('PAGADO').AsCurrency  := aOrder.TotalPagadoReal;
+      qIns.ParamByName('USU').AsString       := oUser;
+      qIns.Execute;
+      // Lineas
+      qLin.Connection := inLibGlobalVar.oConn;
+      qLin.SQL.Text :=
+        'INSERT INTO fza_pedidos_lineas (NUMERO_PED_PEDLIN, ' +
+        'SERIE_PED_PEDLIN, LINEA_PEDLIN, ' +
+        ' IDLINEAPS_PEDLIN, IDPRODPS_PEDLIN, CODIGOPRODPS_PEDLIN, ' +
+        'IDATRIBPRODPS_PEDLIN, ' +
+        ' CODIGO_ART_PEDLIN, CODBAR_ART_PEDLIN, ' +
+        'DESCRIPCION_ARTICULO_PEDLIN, ' +
+        ' CANTIDAD_PEDLIN, CANTIDAD_ENTREGADA_PEDLIN, ' +
+        'CANTIDAD_PENDIENTE_PEDLIN, ESENTREGADA_PEDLIN, ' +
+        ' PRECIO_VENTA_SIVA_ARTICULO_PEDLIN, ' +
+        'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN, TOTAL_PEDLIN, ' +
+        ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+        'VALUES (:NUMERO, :SERIE, :LIN, ' +
+        '        :IDLPS, :IDPPS, :REFPROD, :IDATRIB, ' +
+        '        :CODART, :EAN13, :DESCR, ' +
+        '        :CANT, 0, :CANT, ''N'', ' +
+        '        :PSIVA, :PCIVA, :TOT, ' +
+        '        NOW(), :USU, :USU)';
+      for i := 0 to aOrder.LineasPedido.Count - 1 do
+      begin
+        lp := aOrder.LineasPedido[i];
+        qLin.ParamByName('NUMERO').AsString  := sNumero;
+        qLin.ParamByName('SERIE').AsString   := sSerie;
+        qLin.ParamByName('LIN').AsString     := Format('%.4d', [(i + 1) * 10]);
+        qLin.ParamByName('IDLPS').AsString   := lp.idLinea;
+        qLin.ParamByName('IDPPS').AsString   := lp.idProducto;
+        qLin.ParamByName('REFPROD').AsString := lp.sRefProd;
+        qLin.ParamByName('IDATRIB').AsString := lp.sRefAtrib;
+        // Match de articulo: primero por EAN13, luego por referencia PS
+        sCodArt := '';
+        resArt := oValidador.ResolverCodigoBarras(lp.sCodEAN13);
+        if (not resArt.Encontrado) and (lp.sRefProd <> '') then
+          resArt := oValidador.Resolver(lp.sRefProd);
+        if resArt.Encontrado then
+          sCodArt := resArt.CodigoArticulo;
+        qLin.ParamByName('CODART').AsString  := sCodArt;
+        qLin.ParamByName('EAN13').AsString   := lp.sCodEAN13;
+        qLin.ParamByName('DESCR').AsString   := lp.sDescripcion;
+        qLin.ParamByName('CANT').AsFloat     := StrToFloatDef(lp.sCantidad, 1);
+        qLin.ParamByName('PSIVA').AsCurrency := lp.cPrecioSIVA;
+        qLin.ParamByName('PCIVA').AsCurrency := lp.cPrecioCIVA;
+        qLin.ParamByName('TOT').AsCurrency   :=
+          lp.cPrecioCIVA * StrToFloatDef(lp.sCantidad, 1);
+        qLin.ParamByName('USU').AsString     := oUser;
+        qLin.Execute;
       end;
+      // Mensajes (si hay)
+      qMsg.Connection := inLibGlobalVar.oConn;
+      qMsg.SQL.Text :=
+        'INSERT INTO fza_pedidos_mensajes (IDPS_MENSAJES_PEDMSG, ' +
+        'IDMENSAJEPS_PEDMSG, ' +
+        ' IDEMPLEADOPS_PEDMSG, MENSAJEPS_PEDMSG, FECHAPS_PEDMSG, ' +
+        ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+        'VALUES (:HILO, :IDM, :IDE, :MSG, :FECHA, NOW(), :USU, :USU)';
+      for tm in aOrder.MensajesPedido.LMensajes do
+      begin
+        qMsg.ParamByName('HILO').AsString  :=
+          aOrder.MensajesPedido.idCustomer_Threat;
+        qMsg.ParamByName('IDM').AsString   := tm.idMensaje;
+        qMsg.ParamByName('IDE').AsString   := tm.idEmpleado;
+        qMsg.ParamByName('MSG').AsString   := tm.Texto;
+        qMsg.ParamByName('FECHA').AsDateTime := tm.InstanteMsg;
+        qMsg.ParamByName('USU').AsString   := oUser;
+        // El error de duplicado (mismo mensaje) no aborta la tx en InnoDB
+        try
+          qMsg.Execute;
+        except
+          // Si el mensaje ya existe (hilo PK), saltar
+        end;
+      end;
+      if bTxOwned then
+        inLibGlobalVar.oConn.Commit;
+      Result := True;
+    except
+      if bTxOwned and inLibGlobalVar.oConn.InTransaction then
+        inLibGlobalVar.oConn.Rollback;
+      raise;
     end;
-    Result := True;
   finally
+    FreeAndNil(oValidador);
     FreeAndNil(qIns);
     FreeAndNil(qLin);
     FreeAndNil(qMsg);

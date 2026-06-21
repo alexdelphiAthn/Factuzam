@@ -123,6 +123,10 @@ type
     lblTemporada             : TcxLabel;
     cbbTemporada             : TcxDBLookupComboBox;
     chkFormatoDistribuido    : TcxDBCheckBox;
+    lblTipoIvaDefecto        : TcxLabel;
+    cbbTipoIvaDefecto        : TcxDBComboBox;
+    chkVariosTiposIva        : TcxDBCheckBox;
+    chkRecargoCompras        : TcxDBCheckBox;
     lblMargen                : TcxLabel;
     spnMargen                : TcxDBSpinEdit;
     lblMultiploRedondeo      : TcxLabel;
@@ -159,6 +163,7 @@ type
     dbcLinCodArt: TcxGridDBColumn;
     dbcLinRefPrv: TcxGridDBColumn;
     dbcLinDescripcion: TcxGridDBColumn;
+    dbcLinTipoIva: TcxGridDBColumn;
     dbcLinColor: TcxGridDBColumn;
     dbcLinColorBasico: TcxGridDBColumn;
     dbcLinPrecioCompra: TcxGridDBColumn;
@@ -176,6 +181,49 @@ type
     btnArbolFamilias: TcxButton;
     btnDescargarFotos: TcxButton;
     lblHint: TcxLabel;
+    tsTotales: TcxTabSheet;
+    pnlTotales: TPanel;
+    lblTotalBasesSes: TcxLabel;
+    curTotalesTOTAL_BASES_SES: TcxDBCurrencyEdit;
+    lblTotalImpuestosSes: TcxLabel;
+    curTotalesTOTAL_IMPUESTOS_SES: TcxDBCurrencyEdit;
+    lblPorcRetencionSes: TcxLabel;
+    spnTotalesPORCENTAJE_RETENCION_SES: TcxDBSpinEdit;
+    lblTotalRetencionSes: TcxLabel;
+    curTotalesTOTAL_RETENCION_SES: TcxDBCurrencyEdit;
+    lblTotalLiquidoSes: TcxLabel;
+    curTotalesTOTAL_LIQUIDO_SES: TcxDBCurrencyEdit;
+    chkTotalesESIVA_RECARGO_COMPRAS_SES: TcxDBCheckBox;
+    grpDesgloseIvaSes: TGroupBox;
+    lblTotSesBase: TcxLabel;
+    lblTotSesPorIva: TcxLabel;
+    lblTotSesTotalIva: TcxLabel;
+    lblTotSesPorRe: TcxLabel;
+    lblTotSesTotalRe: TcxLabel;
+    lblTotSesIVAN: TcxLabel;
+    lblTotSesIVAR: TcxLabel;
+    lblTotSesIVAS: TcxLabel;
+    lblTotSesIVAE: TcxLabel;
+    curTotSesTOTAL_BASEI_IVAN_SES: TcxDBCurrencyEdit;
+    curTotSesTOTAL_BASEI_IVAR_SES: TcxDBCurrencyEdit;
+    curTotSesTOTAL_BASEI_IVAS_SES: TcxDBCurrencyEdit;
+    curTotSesTOTAL_BASEI_IVAE_SES: TcxDBCurrencyEdit;
+    spnTotSesPORCENTAJE_IVAN_SES: TcxDBSpinEdit;
+    spnTotSesPORCENTAJE_IVAR_SES: TcxDBSpinEdit;
+    spnTotSesPORCENTAJE_IVAS_SES: TcxDBSpinEdit;
+    spnTotSesPORCENTAJE_IVAE_SES: TcxDBSpinEdit;
+    curTotSesTOTAL_IVAN_SES: TcxDBCurrencyEdit;
+    curTotSesTOTAL_IVAR_SES: TcxDBCurrencyEdit;
+    curTotSesTOTAL_IVAS_SES: TcxDBCurrencyEdit;
+    curTotSesTOTAL_IVAE_SES: TcxDBCurrencyEdit;
+    spnTotSesPORCENTAJE_REN_SES: TcxDBSpinEdit;
+    spnTotSesPORCENTAJE_RER_SES: TcxDBSpinEdit;
+    spnTotSesPORCENTAJE_RES_SES: TcxDBSpinEdit;
+    spnTotSesPORCENTAJE_REE_SES: TcxDBSpinEdit;
+    curTotSesTOTAL_REN_SES: TcxDBCurrencyEdit;
+    curTotSesTOTAL_RER_SES: TcxDBCurrencyEdit;
+    curTotSesTOTAL_RES_SES: TcxDBCurrencyEdit;
+    curTotSesTOTAL_REE_SES: TcxDBCurrencyEdit;
     tsDocumentos: TcxTabSheet;
     pnlDocsTop: TPanel;
     btnIrADoc: TcxButton;
@@ -316,6 +364,9 @@ type
     procedure dbcLinFamiliaPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinCodArtPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinRefPrvPropertiesEditValueChanged(Sender: TObject);
+    procedure cbbTipoIvaDefectoPropertiesChange(Sender: TObject);
+    procedure chkVariosTiposIvaPropertiesChange(Sender: TObject);
+    procedure chkRecargoComprasPropertiesChange(Sender: TObject);
     procedure cxgrdLineasEnter(Sender: TObject);
     procedure cxgrdLineasExit(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
@@ -372,6 +423,7 @@ type
     function  DispararEditButtonLineaActiva: Boolean;
     procedure CrearColumnasTallas;
     procedure InicializarGestorTallas;
+    procedure RefrescarVisibilidadTipoIva;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure unqrySesionLinAfterPostHook(DataSet: TDataSet);
     procedure unqrySesionLinBeforeInsertHook(DataSet: TDataSet);
@@ -435,7 +487,8 @@ uses
   inMtoModalSelFamilia,
   inMtoModalImpSesion,
   inMtoModalIncidencias,
-  inLibFotosNube;
+  inLibFotosNube,
+  inLibComprasImpuestos;
 
 const
   fIdVaColor = 'CO';
@@ -604,6 +657,7 @@ begin
   // Pintar el rotulo del proveedor de la sesion enfocada al abrir el form.
   ActualizarLabelProveedor;
   RecargarProveedorSesion;
+  RefrescarVisibilidadTipoIva;
 end;
 
 procedure TfrmMtoComprasSesiones.dsTablaGDataChangeHook(Sender: TObject;
@@ -622,8 +676,29 @@ begin
     // usuario esta cambiando el proveedor en la cabecera, no al navegar.
     if (Field <> nil) and (Dmm <> nil) and
        (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
+    begin
       CopiarDefectosProveedor;
+      RefrescarVisibilidadTipoIva;
+    end;
   end;
+  if (Field <> nil) and SameText(Field.FieldName, 'CODIGO_EMP_SES') and
+     (Dmm <> nil) and (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
+  begin
+    AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, Dmm.unqryTablaG,
+      'CODIGO_EMP_SES', 'ESIVA_RECARGO_COMPRAS_SES');
+    Dmm.RefrescarTotalesSesion;
+  end;
+  if (Field <> nil) and
+     (SameText(Field.FieldName, 'TIPO_IVA_SES') or
+      SameText(Field.FieldName, 'ESIVA_RECARGO_COMPRAS_SES')) and
+     (Dmm <> nil) then
+  begin
+    Dmm.RefrescarTotalesSesion;
+    RefrescarVisibilidadTipoIva;
+  end;
+  if (Field <> nil) and SameText(Field.FieldName,
+     'ESVARIOS_TIPOS_IVA_SES') then
+    RefrescarVisibilidadTipoIva;
   // FIX: El formato distribuido solo se puede cambiar al crear la sesión.
   // Si el estado no es dsInsert, ponemos el check como ReadOnly.
   if (Field = nil) and (Dmm <> nil) and (Dmm.unqryTablaG <> nil) then
@@ -633,17 +708,65 @@ begin
   // puntual de un campo del registro actual). Es el momento de
   // recalcular columnas y volver a publicar las cantidades de las
   // lineas de esta sesion.
-  if Field <> nil then Exit;
-  if FGestorTallas = nil then Exit;
-  FGestorTallas.InvalidarCache;
-  FGestorTallas.RecalcularMaxColumnas;
-  FGestorTallas.CargarCantidadesTodasLineas;
-  FGestorTallas.ActualizarCaptionsLineaActiva;
+  if Field = nil then
+  begin
+    RefrescarVisibilidadTipoIva;
+    if FGestorTallas <> nil then
+    begin
+      FGestorTallas.InvalidarCache;
+      FGestorTallas.RecalcularMaxColumnas;
+      FGestorTallas.CargarCantidadesTodasLineas;
+      FGestorTallas.ActualizarCaptionsLineaActiva;
+    end;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.RefrescarVisibilidadTipoIva;
+var
+  sVarios : string;
+begin
+  if dbcLinTipoIva <> nil then
+  begin
+    dbcLinTipoIva.Visible := False;
+    if (Dmm <> nil) and Dmm.unqryTablaG.Active and
+       (Dmm.unqryTablaG.FindField('ESVARIOS_TIPOS_IVA_SES') <> nil) then
+    begin
+      sVarios := UpperCase(Trim(
+        Dmm.unqryTablaG.FieldByName('ESVARIOS_TIPOS_IVA_SES').AsString));
+      dbcLinTipoIva.Visible := sVarios = 'S';
+    end;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.cbbTipoIvaDefectoPropertiesChange(
+  Sender: TObject);
+begin
+  inherited;
+  RefrescarVisibilidadTipoIva;
+  if Dmm <> nil then
+    Dmm.RefrescarTotalesSesion;
+end;
+
+procedure TfrmMtoComprasSesiones.chkVariosTiposIvaPropertiesChange(
+  Sender: TObject);
+begin
+  inherited;
+  RefrescarVisibilidadTipoIva;
+end;
+
+procedure TfrmMtoComprasSesiones.chkRecargoComprasPropertiesChange(
+  Sender: TObject);
+begin
+  inherited;
+  if Dmm <> nil then
+    Dmm.RefrescarTotalesSesion;
 end;
 
 procedure TfrmMtoComprasSesiones.unqrySesionLinAfterPostHook(
                                                       DataSet: TDataSet);
 begin
+  Dmm.unqrySesionLinAfterPost(DataSet);
+  RefrescarVisibilidadTipoIva;
   // Cuando el usuario cambia de fila el dataset hace Post automatico:
   // cxGrid reacciona repintando la fila desde el dataset y eso borra
   // los Values[] no-bound (tallas) de la fila que abandona. Re-cargamos
@@ -672,6 +795,7 @@ begin
     begin
       if Assigned(FGestorTallas) then
         FGestorTallas.CargarCantidadesTodasLineas;
+      RefrescarVisibilidadTipoIva;
     end);
 end;
 
@@ -740,6 +864,7 @@ begin
   // y anade la recalculacion de columnas de talla del grid.
   LogSes('AfterDelete: RefrescarTotalesSesion + RecalcularMaxColumnas');
   Dmm.RefrescarTotalesSesion;
+  RefrescarVisibilidadTipoIva;
   if Assigned(FGestorTallas) then
     FGestorTallas.RecalcularMaxColumnas;
 end;
@@ -1145,9 +1270,8 @@ end;
 
 procedure TfrmMtoComprasSesiones.CopiarDefectosProveedor;
 begin
-  // Copia a la cabecera el margen por defecto del proveedor recien
-  // elegido: PORCENTAJE_MARGEN_PRV -> PORCENTAJE_MARGEN_SES (alimenta el
-  // PVP propuesto). Solo pisa cuando el proveedor tiene valor.
+  // Copia a la cabecera los defectos de compras del proveedor recien
+  // elegido. El margen solo pisa cuando el proveedor tiene valor.
   if (Dmm <> nil) and Dmm.unqryPrvFicha.Active and
      (not Dmm.unqryPrvFicha.IsEmpty) then
   begin
@@ -1157,6 +1281,23 @@ begin
         Dmm.unqryTablaG.Edit;
       Dmm.unqryTablaG.FieldByName('PORCENTAJE_MARGEN_SES').AsFloat :=
         Dmm.unqryPrvFicha.FieldByName('PORCENTAJE_MARGEN_PRV').AsFloat;
+    end;
+    if (Dmm.unqryPrvFicha.FindField(
+       'ESVARIOS_TIPOS_IVA_PRV') <> nil) and
+       (Dmm.unqryTablaG.FindField(
+       'ESVARIOS_TIPOS_IVA_SES') <> nil) then
+    begin
+      if not (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
+        Dmm.unqryTablaG.Edit;
+      Dmm.unqryTablaG.FieldByName('ESVARIOS_TIPOS_IVA_SES').AsString :=
+        UpperCase(Trim(
+          Dmm.unqryPrvFicha.FieldByName(
+            'ESVARIOS_TIPOS_IVA_PRV').AsString));
+      if Dmm.unqryTablaG.FieldByName(
+         'ESVARIOS_TIPOS_IVA_SES').AsString = '' then
+        Dmm.unqryTablaG.FieldByName(
+          'ESVARIOS_TIPOS_IVA_SES').AsString := 'N';
+      RefrescarVisibilidadTipoIva;
     end;
   end;
 end;
