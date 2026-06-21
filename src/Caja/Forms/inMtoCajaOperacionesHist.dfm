@@ -1,4 +1,4 @@
-inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
+﻿inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
   Caption = 'Hist'#243'rico de Operaciones de Caja'
   OnDestroy = FormDestroy
   TextHeight = 19
@@ -12,7 +12,9 @@ inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
         ExplicitHeight = 484
         inherited cxGrdPrincipal: TcxGrid
           inherited cxGrdDBTabPrin: TcxGridDBTableView
-            OptionsData.Editing = True
+            OptionsData.Deleting = False
+            OptionsData.Editing = False
+            OptionsData.Inserting = False
             object cxGrdDBTabPrinCODIGO_EMPRESA_OPCAJA: TcxGridDBColumn
               Caption = 'Empresa'
               DataBinding.FieldName = 'CODIGO_EMP_OPCAJA'
@@ -34,124 +36,53 @@ inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
               Width = 160
             end
             object cxGrdDBTabPrinFECHA_OPERACION_OPCAJA: TcxGridDBColumn
-              Caption = 'Fecha Operaci'#243'n'
-              DataBinding.FieldName = 'FECHA_OPERACION_OPCAJA'
-              Width = 160
+              Caption = 'Fecha/Hora'
+              DataBinding.FieldName = 'FECHA_OP'
+              PropertiesClassName = 'TcxDateEditProperties'
+              Properties.DisplayFormat = 'dd/mm/yyyy hh:nn'
+              Width = 128
             end
             object cxGrdDBTabPrinTIPO_OPERACION_OPCAJA: TcxGridDBColumn
-              Caption = 'Tipo'
-              DataBinding.FieldName = 'TIPO_OPERACION_OPCAJA'
-              Width = 70
+              Caption = 'Tipos'
+              DataBinding.FieldName = 'TIPOS_OP'
+              Width = 86
             end
             object cxGrdDBTabPrinCODIGO_EMPLEADO_OPCAJA: TcxGridDBColumn
               Caption = 'Empleado'
-              DataBinding.FieldName = 'CODIGO_EMPLEADO_OPCAJA'
-              Width = 110
+              DataBinding.FieldName = 'EMPLEADO'
+              Width = 100
             end
             object cxGrdDBTabPrinIMPORTE_TOTAL_OPCAJA: TcxGridDBColumn
-              Caption = 'Importe Total'
-              DataBinding.FieldName = 'IMPORTE_TOTAL_OPCAJA'
+              Caption = 'Importe'
+              DataBinding.FieldName = 'IMPORTE_TOTAL'
               PropertiesClassName = 'TcxCurrencyEditProperties'
-              Width = 130
+              Properties.DisplayFormat = '#,##0.00 '#8364
+              Width = 101
             end
             object cxGrdDBTabPrinCODIGO_CLIENTE_OPCAJA: TcxGridDBColumn
               Caption = 'Cliente'
-              DataBinding.FieldName = 'CODIGO_CLI_OPCAJA'
-              Width = 130
+              DataBinding.FieldName = 'CLIENTE'
+              Width = 78
+            end
+            object cxGrdDBTabPrinRAZON_SOCIAL_CLI: TcxGridDBColumn
+              Caption = 'Raz'#243'n social'
+              DataBinding.FieldName = 'RAZON_SOCIAL_CLI'
+              Width = 226
             end
             object cxGrdDBTabPrinSERIE_FACTURA_OPCAJA: TcxGridDBColumn
-              Caption = 'Serie Borrador'
-              DataBinding.FieldName = 'SERIE_FAC_OPCAJA'
-              Width = 110
+              Caption = 'Serie'
+              DataBinding.FieldName = 'SERIE_FAC'
+              Width = 78
             end
             object cxGrdDBTabPrinNRO_FACTURA_OPCAJA: TcxGridDBColumn
-              Caption = 'Nro Borrador'
-              DataBinding.FieldName = 'NUMERO_FAC_OPCAJA'
-              Width = 110
-            end
-            object cxGrdDBTabPrinESTADO_DEVOLUCION_OPCAJA: TcxGridDBColumn
-              Caption = 'Devuelto'
-              DataBinding.FieldName = 'ESTADO_DEVOLUCION_OPCAJA'
-              PropertiesClassName = 'TcxCheckBoxProperties'
-              Properties.ValueChecked = 'S'
-              Properties.ValueUnchecked = 'N'
-              Width = 90
-            end
-            object cxGrdDBTabPrinIMPORTE_DEVUELTO_ACUM_OPCAJA: TcxGridDBColumn
-              Caption = 'Importe Devuelto Acum.'
-              DataBinding.FieldName = 'IMPORTE_DEVUELTO_ACUM_OPCAJA'
-              Width = 160
-            end
-            object cxGrdDBTabPrinMOTIVO_DEVOLUCION_OPCAJA: TcxGridDBColumn
-              Caption = 'Motivo Devoluci'#243'n'
-              DataBinding.FieldName = 'MOTIVO_DEVOLUCION_OPCAJA'
-              Width = 160
-            end
-            object cxGrdDBTabPrinSERIE_REF_ORIGEN_OPCAJA: TcxGridDBColumn
-              Caption = 'Serie Ref. Origen'
-              DataBinding.FieldName = 'SERIE_REF_ORIGEN_OPCAJA'
-              Width = 130
-            end
-            object cxGrdDBTabPrinNUMERO_REF_ORIGEN_OPCAJA: TcxGridDBColumn
-              Caption = 'N'#250'mero Ref. Origen'
-              DataBinding.FieldName = 'NUMERO_REF_ORIGEN_OPCAJA'
-              Width = 150
+              Caption = 'N'#186' Borrador'
+              DataBinding.FieldName = 'NUMERO_FAC'
+              Width = 97
             end
             object cxGrdDBTabPrinCONCEPTO_GASTO_INGRESO_OPCAJA: TcxGridDBColumn
-              Caption = 'Concepto Gasto/Ingreso'
-              DataBinding.FieldName = 'CONCEPTO_GASTO_INGRESO_OPCAJA'
-              Width = 200
-            end
-            object cxGrdDBTabPrinES_TRASPASO_OPCAJA: TcxGridDBColumn
-              Caption = 'Es Traspaso'
-              DataBinding.FieldName = 'ESTRASPASO_OPCAJA'
-              PropertiesClassName = 'TcxCheckBoxProperties'
-              Properties.ValueChecked = 'S'
-              Properties.ValueUnchecked = 'N'
-              Width = 90
-            end
-            object cxGrdDBTabPrinCODIGO_EMPRESA_CONTRA_OPCAJA: TcxGridDBColumn
-              Caption = 'Empresa Contra'
-              DataBinding.FieldName = 'CODIGO_EMP_CONTRA_OPCAJA'
-              Width = 130
-              Visible = False
-            end
-            object cxGrdDBTabPrinCODIGO_ALMACEN_CONTRA_OPCAJA: TcxGridDBColumn
-              Caption = 'Almac'#233'n Contra'
-              DataBinding.FieldName = 'CODIGO_ALM_CONTRA_OPCAJA'
-              Width = 130
-              Visible = False
-            end
-            object cxGrdDBTabPrinCODIGO_ARQUEO_OPCAJA: TcxGridDBColumn
-              Caption = 'C'#243'digo Arqueo'
-              DataBinding.FieldName = 'CODIGO_ARQUEO_OPCAJA'
-              Width = 130
-            end
-            object cxGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn
-              Caption = 'Instante Alta'
-              DataBinding.FieldName = 'INSTANTE_ALTA'
-              Options.Editing = False
-              Width = 150
-            end
-            object cxGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn
-              Caption = 'Instante Modif'
-              DataBinding.FieldName = 'INSTANTE_MODIF'
-              Options.Editing = False
-              Visible = False
-              Width = 150
-            end
-            object cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn
-              Caption = 'Usuario Alta'
-              DataBinding.FieldName = 'USUARIO_ALTA'
-              Options.Editing = False
-              Width = 130
-            end
-            object cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn
-              Caption = 'Usuario Modif'
-              DataBinding.FieldName = 'USUARIO_MODIF'
-              Options.Editing = False
-              Visible = False
-              Width = 130
+              Caption = 'Conceptos'
+              DataBinding.FieldName = 'CONCEPTOS'
+              Width = 230
             end
           end
         end
@@ -230,7 +161,6 @@ inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
         end
       end
       inherited tsFicha: TcxTabSheet
-        TabVisible = False
         ExplicitLeft = 4
         ExplicitTop = 30
         ExplicitWidth = 943

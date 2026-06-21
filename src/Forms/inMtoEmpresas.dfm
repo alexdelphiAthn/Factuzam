@@ -121,6 +121,14 @@
               Properties.ValueUnchecked = 'N'
               Width = 170
             end
+            object cxgrdbclmnGrdDBTabPrinESIVA_RECARGO_COMPRAS_EMPRESA: TcxGridDBColumn
+              Caption = 'R.E. compras'
+              DataBinding.FieldName = 'ESIVA_RECARGO_COMPRAS_EMP'
+              PropertiesClassName = 'TcxCheckBoxProperties'
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Width = 115
+            end
             object cxgrdbclmnGrdDBTabPrinTEXTO_LEGAL_FACTURA_EMPRESA: TcxGridDBColumn
               Caption = 'Texto en Borrador'
               DataBinding.FieldName = 'TEXTO_LEGAL_FACTURA_EMP'

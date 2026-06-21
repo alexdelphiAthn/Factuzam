@@ -104,6 +104,27 @@ SELECT t.orden AS orden_aplicacion,
                        WHERE ROUTINE_SCHEMA = DATABASE()
                          AND ROUTINE_NAME = 'PRC_EFEC_GENERAR_DESDE_FACTURA')
     UNION ALL
+    SELECT 91, 'efectos_remesas_venta.sql',
+           'fza_efectos_venta + remesas de cobro + vistas/SP',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_efectos_venta')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_remesas_venta')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_efectos_venta')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_remesas_venta')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = 'PRC_EFV_GENERAR_DESDE_FACTURA')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = 'PRC_REMV_CREAR')
+    UNION ALL
     SELECT 92, 'bancos_catalogo.sql',
            'tabla fza_bancos',
            EXISTS(SELECT 1 FROM information_schema.TABLES

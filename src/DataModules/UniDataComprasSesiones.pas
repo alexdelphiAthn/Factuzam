@@ -153,6 +153,7 @@ type
   private
     FInstanteCargaSesion: TDateTime;
     procedure CalcularTotalesLineaActual;
+    procedure PersistirTotalesSesion;
   public
     procedure GetCodigoAutoSesion;
     procedure AsegurarSerieEnEmpresasSeries(const AEmpresa, ASerie: string);
@@ -295,6 +296,8 @@ begin
     FieldByName('AJUSTE_FINAL_SES').AsFloat       := 0;
     FieldByName('ESPRECIO_POR_SKU_SES').AsString  := 'N';
     FieldByName('ESVAR_FIJA_SES').AsString        := 'N';
+    if FindField('ESVARIOS_TIPOS_IVA_SES') <> nil then
+      FieldByName('ESVARIOS_TIPOS_IVA_SES').AsString := 'N';
     FieldByName('ESGENERA_PEDIDO_SES').AsString   := 'N';
     FieldByName('ESGENERA_ALBARAN_SES').AsString  := 'N';
     if FindField('ESFORMATO_DISTRIBUIDO_SES') <> nil then
@@ -312,6 +315,7 @@ begin
       FieldByName('CODIGO_ALM_SES').AsString := oAlmacen;
     AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
       'CODIGO_EMP_SES', 'ESIVA_RECARGO_COMPRAS_SES');
+    AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG, 'SES');
     // Si solo hay una variacion definida, preseleccionarla. Es el caso
     // mayoritario (la mayoria de instalaciones solo tienen 'TC').
     if unqryVariaciones.Active and (unqryVariaciones.RecordCount = 1) then
@@ -386,6 +390,8 @@ begin
         'EMPRESA=' + sEmpresa + ', SERIE=' + sSerie + ') o que el SP ' +
         'PRC_GET_NEXT_CONT_FACT_SERIE este disponible.');
   end;
+  RefrescarTotalesSesion;
+  PersistirTotalesSesion;
   unqryTablaG.FieldByName('USUARIO_MODIF').AsString  := oUser;
   unqryTablaG.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
@@ -436,6 +442,9 @@ begin
     FieldByName('LINEA_SESLIN').AsInteger     := iNuevaLinea;
     FieldByName('TIPO_LINEA_SESLIN').AsString := 'MATRIZ';
     FieldByName('TIPO_ART_SESLIN').AsString   := 'ESTANDAR';
+    if FindField('TIPO_IVA_SESLIN') <> nil then
+      FieldByName('TIPO_IVA_SESLIN').AsString :=
+        unqryTablaG.FieldByName('TIPO_IVA_SES').AsString;
     FieldByName('TIPO_CANTIDAD_SESLIN').AsString := 'Uds';
     FieldByName('ESDUPLICADO_SESLIN').AsString := 'N';
     // NOT NULL con DEFAULT en BBDD: hay que darles valor en cliente o Post
@@ -489,6 +498,12 @@ begin
     unqrySesionLin.FieldByName('TIPO_ART_SESLIN').AsString := 'KIT'
   else
     unqrySesionLin.FieldByName('TIPO_ART_SESLIN').AsString := 'ESTANDAR';
+  if (unqryTablaG.FindField('ESVARIOS_TIPOS_IVA_SES') = nil) or
+     (UpperCase(Trim(unqryTablaG.FieldByName(
+       'ESVARIOS_TIPOS_IVA_SES').AsString)) <> 'S') or
+     (Trim(unqrySesionLin.FieldByName('TIPO_IVA_SESLIN').AsString) = '') then
+    unqrySesionLin.FieldByName('TIPO_IVA_SESLIN').AsString :=
+      unqryTablaG.FieldByName('TIPO_IVA_SES').AsString;
   // Saneo del color del proveedor al confirmar la linea: el usuario ve ya el
   // token real que ira al SKU (mayusculas, espacios->'-', simbolos prohibidos).
   // Misma regla que aplica el materializador (SanearColorSku) y la foto.
@@ -722,10 +737,97 @@ begin
 end;
 
 procedure TdmComprasSesiones.RefrescarTotalesSesion;
+var
+  EstadoInicial: TDataSetState;
+  sCampoTipoIvaLinea: string;
 begin
-  // Sumatorios globales se calculan al vuelo desde la vista VI_SES_RESUMEN
-  // o se mantienen en la propia cabecera. Implementación pendiente al
-  // conectar la pestaña Resumen del formulario.
+  if Assigned(unqryTablaG) and unqryTablaG.Active and
+     Assigned(unqrySesionLin) and unqrySesionLin.Active and
+     (not unqryTablaG.IsEmpty) then
+  begin
+    EstadoInicial := unqryTablaG.State;
+    sCampoTipoIvaLinea := '';
+    if (unqryTablaG.FindField('ESVARIOS_TIPOS_IVA_SES') <> nil) and
+       (UpperCase(Trim(unqryTablaG.FieldByName(
+         'ESVARIOS_TIPOS_IVA_SES').AsString)) = 'S') then
+      sCampoTipoIvaLinea := 'TIPO_IVA_SESLIN';
+    CalcularTotalesDocumentoCompra(inLibGlobalVar.oConn, unqryTablaG,
+      unqrySesionLin, 'SES', 'TOTAL_LINEA_SESLIN',
+      sCampoTipoIvaLinea, 'PORCENTAJE_IVA_SESLIN');
+    if EstadoInicial = dsBrowse then
+    begin
+      PersistirTotalesSesion;
+      if unqryTablaG.State = dsEdit then
+      begin
+        unqryTablaG.Cancel;
+        unqryTablaG.Refresh;
+      end;
+    end;
+  end;
+end;
+
+procedure TdmComprasSesiones.PersistirTotalesSesion;
+const
+  CAMPOS_TOTALES: array[0..27] of string = (
+    'CODIGO_IVA_SES',
+    'PORCENTAJE_IVAN_SES', 'TOTAL_BASEI_IVAN_SES', 'TOTAL_IVAN_SES',
+    'PORCENTAJE_REN_SES', 'TOTAL_REN_SES',
+    'PORCENTAJE_IVAR_SES', 'TOTAL_BASEI_IVAR_SES', 'TOTAL_IVAR_SES',
+    'PORCENTAJE_RER_SES', 'TOTAL_RER_SES',
+    'PORCENTAJE_IVAS_SES', 'TOTAL_BASEI_IVAS_SES', 'TOTAL_IVAS_SES',
+    'PORCENTAJE_RES_SES', 'TOTAL_RES_SES',
+    'PORCENTAJE_IVAE_SES', 'TOTAL_BASEI_IVAE_SES', 'TOTAL_IVAE_SES',
+    'PORCENTAJE_REE_SES', 'TOTAL_REE_SES',
+    'PORCENTAJE_RETENCION_SES', 'TOTAL_RETENCION_SES',
+    'TOTAL_BRUTO_SES', 'TOTAL_BASES_SES', 'TOTAL_IMPUESTOS_SES',
+    'TOTAL_SES', 'TOTAL_LIQUIDO_SES');
+var
+  q       : TUniQuery;
+  oCampo  : TField;
+  sCampo  : string;
+  sSql    : string;
+  iCampos : Integer;
+begin
+  if (unqryTablaG.State <> dsInsert) and
+     (Trim(unqryTablaG.FieldByName('SERIE_SES').AsString) <> '') and
+     (Trim(unqryTablaG.FieldByName('NUMERO_SES').AsString) <> '') then
+  begin
+    sSql := 'UPDATE fza_compras_sesiones SET ';
+    iCampos := 0;
+    for sCampo in CAMPOS_TOTALES do
+    begin
+      if unqryTablaG.FindField(sCampo) <> nil then
+      begin
+        if iCampos > 0 then
+          sSql := sSql + ', ';
+        sSql := sSql + '`' + sCampo + '` = :' + sCampo;
+        Inc(iCampos);
+      end;
+    end;
+    if iCampos > 0 then
+    begin
+      sSql := sSql +
+        ' WHERE `SERIE_SES` = :SERIE AND `NUMERO_SES` = :NUMERO';
+      q := TUniQuery.Create(nil);
+      try
+        q.Connection := inLibGlobalVar.oConn;
+        q.SQL.Text := sSql;
+        for sCampo in CAMPOS_TOTALES do
+        begin
+          oCampo := unqryTablaG.FindField(sCampo);
+          if oCampo <> nil then
+            q.ParamByName(sCampo).Value := oCampo.Value;
+        end;
+        q.ParamByName('SERIE').AsString :=
+          unqryTablaG.FieldByName('SERIE_SES').AsString;
+        q.ParamByName('NUMERO').AsString :=
+          unqryTablaG.FieldByName('NUMERO_SES').AsString;
+        q.ExecSQL;
+      finally
+        FreeAndNil(q);
+      end;
+    end;
+  end;
 end;
 
 function TdmComprasSesiones.DetectarConflictoConcurrencia: Boolean;

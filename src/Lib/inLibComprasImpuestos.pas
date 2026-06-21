@@ -478,7 +478,7 @@ var
   bk: TBookmark;
   iIndice: Integer;
   rTotal, rPorIva, rPorRe, rBase, rIva, rRe, rImp, rRet, rPorRet: Double;
-  sArticulo, sSufijoLinea, sTipoArt, sTipoIva: string;
+  sArticulo, sSufijoLinea, sTipoArt, sTipoIva, sTipoLinea: string;
   bAplicaRe: Boolean;
 begin
   if Assigned(ACabecera) and Assigned(ALineas) and ALineas.Active then
@@ -495,8 +495,11 @@ begin
       ALineas.First;
       while not ALineas.Eof do
       begin
-        sTipoIva := NormalizarTipoIva(CampoString(ALineas,
-          ACampoTipoIvaLinea));
+        sTipoLinea := CampoString(ALineas, ACampoTipoIvaLinea);
+        if Trim(sTipoLinea) = '' then
+          sTipoLinea := CampoString(ACabecera,
+            'TIPO_IVA_' + ASufijoCabecera);
+        sTipoIva := NormalizarTipoIva(sTipoLinea);
         if sSufijoLinea <> '' then
         begin
           sArticulo := CampoString(ALineas, 'CODIGO_ART_' + sSufijoLinea);

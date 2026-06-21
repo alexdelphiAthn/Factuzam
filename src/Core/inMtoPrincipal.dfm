@@ -1,4 +1,4 @@
-inherited frmMtoPrincipal: TfrmMtoPrincipal
+﻿inherited frmMtoPrincipal: TfrmMtoPrincipal
   Caption = 'Fzam'
   ClientHeight = 533
   ClientWidth = 1120
@@ -1626,6 +1626,18 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Caption = 'Borradores'
         ShortCut = 49222
         OnClick = mnuFacturasClick
+      end
+      object EfectosVenta1: TMenuItem
+        Caption = 'Efectos de cobro'
+        OnClick = EfectosVenta1Click
+      end
+      object RemesasVenta1: TMenuItem
+        Caption = 'Remesas de cobro'
+        OnClick = RemesasVenta1Click
+      end
+      object CargarEfectosVenta1: TMenuItem
+        Caption = 'Cargar efectos en remesa...'
+        OnClick = CargarEfectosVenta1Click
       end
       object mnuPedidosVenta: TMenuItem
         Caption = '&Pedidos'

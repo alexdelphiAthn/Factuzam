@@ -46,6 +46,14 @@
               Properties.ValueUnchecked = 'N'
               Width = 67
             end
+            object cxgrdbclmnGrdDBTabPrinVARIOS_TIPOS_IVA_PRV: TcxGridDBColumn
+              Caption = 'Varios IVA'
+              DataBinding.FieldName = 'ESVARIOS_TIPOS_IVA_PRV'
+              PropertiesClassName = 'TcxCheckBoxProperties'
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Width = 95
+            end
             object cxgrdbclmnGrdDBTabPrinRAZONSOCIAL_CLIENTE: TcxGridDBColumn
               Caption = 'Raz'#243'n Social'
               DataBinding.FieldName = 'RAZON_SOCIAL_PRV'
@@ -1196,13 +1204,25 @@
                   TabOrder = 1
                   Width = 92
                 end
+                object chkVariosTiposIvaPrv: TcxDBCheckBox
+                  Left = 224
+                  Top = 26
+                  Caption = 'Varios tipos IVA'
+                  DataBinding.DataField = 'ESVARIOS_TIPOS_IVA_PRV'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ValueChecked = 'S'
+                  Properties.ValueUnchecked = 'N'
+                  Style.TransparentBorder = False
+                  TabOrder = 2
+                  Transparent = True
+                end
                 object lblDefectosInfo: TcxLabel
                   Left = 16
                   Top = 60
                   Caption =
-                    'El margen % se copia a la cabecera al elegir este proveedor en u' +
-                    'na sesi'#243'n de compra.'
-                  TabOrder = 2
+                    'El margen % y Varios tipos IVA se copian a la cabecera a' +
+                    'l elegir este proveedor en una sesi'#243'n de compra.'
+                  TabOrder = 3
                   Transparent = True
                 end
               end

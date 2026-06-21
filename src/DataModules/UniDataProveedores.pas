@@ -406,6 +406,9 @@ begin
   inherited;
   unqryTablaG.FindField('CODIGO_PRV_PRV').AsString := '0';
   unqryTablaG.FindField('ORDEN_PRV').AsString := '0';
+  if unqryTablaG.FindField('ESVARIOS_TIPOS_IVA_PRV') <> nil then
+    unqryTablaG.FieldByName(
+      'ESVARIOS_TIPOS_IVA_PRV').AsString := 'N';
 end;
 
 procedure TdmProveedores.unqryTablaGBeforePost(DataSet: TDataSet);

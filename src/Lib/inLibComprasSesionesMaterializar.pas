@@ -172,7 +172,11 @@ begin
       'L.CODIGO_ART_TENTATIVO_SESLIN), ' +
       '       ''S'', L.TIPO_ART_SESLIN, L.DESCRIPCION_SESLIN, ' +
       '       COALESCE(L.CODIGO_FAM_SESLIN, S.CODIGO_FAM_SES), ' +
-      '       COALESCE(L.TIPO_IVA_SESLIN, S.TIPO_IVA_SES, ''N''), ' +
+      '       CASE WHEN IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
+      '            THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
+      '                          NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+      '            ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+      '       END, ' +
       '       L.TIPO_CANTIDAD_SESLIN, ' +
       '       CASE WHEN L.TIPO_LINEA_SESLIN = ''MATRIZ'' THEN ''S'' ELSE ' +
       '''N'' END, ' +
@@ -1066,8 +1070,8 @@ end;
 
 // Rellena los % IVA en la CABECERA del albaran desde vi_ivas_empresa
 // (resuelve el IVA por defecto del grupo de la empresa de la cabecera).
-// El INSERT inicial deja esos campos a 0 porque la sesion origen no
-// maneja IVA. Llamar antes de RellenarIvaLineasAlbaranCompra.
+// El INSERT inicial deja esos campos a 0; la sesion aporta el tipo efectivo,
+// pero los porcentajes se resuelven desde el IVA de cabecera.
 procedure AsignarIvaCabeceraAlbaranCompra(AConn: TUniConnection;
                                            const ASerieAlbc, ANumAlbc: string);
 var
@@ -1102,8 +1106,8 @@ end;
 // Rellena PORCENTAJE_IVA_ALBCLIN y PRECIO_COMPRA_CIVA en las lineas
 // del albaran a partir de los porcentajes que viven en la cabecera
 // (PORCENTAJE_IVAN_ALBC, _IVAR_ALBC, _IVAS_ALBC, _IVAE_ALBC), mapeando
-// por TIPO_IVA_ARTICULO_ALBCLIN. La sesion origen no maneja IVA, por
-// eso InsertarLineaAlbaranCompra inserta el porcentaje a 0 y aqui se
+// por TIPO_IVA_ARTICULO_ALBCLIN. La sesion origen aporta el tipo efectivo,
+// pero InsertarLineaAlbaranCompra inserta el porcentaje a 0 y aqui se
 // reconstruye. Llamar SIEMPRE antes de RecalcularTotalesAlbaranCompra
 // — los totales suman IVA con este porcentaje. Requiere que la
 // cabecera ya tenga los % asignados (AsignarIvaCabeceraAlbaranCompra).
@@ -1256,7 +1260,11 @@ begin
       '    SUM(C.CANTIDAD_SESCEL) AS CANTIDAD_TOTAL, ' +
       '    L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
       '    L.CODIGO_FAM_SESLIN, ' +
-      '    IFNULL(L.TIPO_IVA_SESLIN, ''N'') AS TIPO_IVA, ' +
+      '    CASE WHEN IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
+      '         THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
+      '                       NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+      '         ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+      '    END AS TIPO_IVA, ' +
       '    L.TIPO_LINEA_SESLIN, ' +
       '    IFNULL(L.REF_PRV_SESLIN, '''') AS REF_PRV ' +
       '  FROM fza_compras_sesiones_celdas C ' +
@@ -1264,6 +1272,9 @@ begin
       '    ON L.SERIE_SES_SESLIN  = C.SERIE_SES_SESCEL ' +
       '   AND L.NUMERO_SES_SESLIN = C.NUMERO_SES_SESCEL ' +
       '   AND L.LINEA_SESLIN      = C.LINEA_SES_SESCEL ' +
+      '  JOIN fza_compras_sesiones S ' +
+      '    ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
+      '   AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
       ' WHERE C.SERIE_SES_SESCEL  = :s ' +
       '   AND C.NUMERO_SES_SESCEL = :n ' +
       '   AND C.CANTIDAD_SESCEL   > 0 ' +
@@ -1525,7 +1536,11 @@ begin
       '    SUM(C.CANTIDAD_SESCEL) AS CANTIDAD_TOTAL, ' +
       '    L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
       '    L.CODIGO_FAM_SESLIN, ' +
-      '    IFNULL(L.TIPO_IVA_SESLIN, ''N'') AS TIPO_IVA, ' +
+      '    CASE WHEN IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
+      '         THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
+      '                       NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+      '         ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+      '    END AS TIPO_IVA, ' +
       '    L.TIPO_LINEA_SESLIN, ' +
       '    IFNULL(L.REF_PRV_SESLIN, '''') AS REF_PRV ' +
       '  FROM fza_compras_sesiones_celdas C ' +
@@ -1533,6 +1548,9 @@ begin
       '    ON L.SERIE_SES_SESLIN  = C.SERIE_SES_SESCEL ' +
       '   AND L.NUMERO_SES_SESLIN = C.NUMERO_SES_SESCEL ' +
       '   AND L.LINEA_SESLIN      = C.LINEA_SES_SESCEL ' +
+      '  JOIN fza_compras_sesiones S ' +
+      '    ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
+      '   AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
       ' WHERE C.SERIE_SES_SESCEL  = :s ' +
       '   AND C.NUMERO_SES_SESCEL = :n ' +
       '   AND C.CANTIDAD_SESCEL   > 0 ' +
@@ -1774,13 +1792,19 @@ begin
       '       CASE WHEN IFNULL(S.ESIVA_RECARGO_COMPRAS_SES, ' +
       '                         IFNULL(E.ESIVA_RECARGO_COMPRAS_EMP, ''N'')) = ''S'' ' +
       '            THEN L.PRECIO_COMPRA_SESLIN * ' +
-      '              (1 + (CASE IFNULL(L.TIPO_IVA_SESLIN, ''N'') ' +
+      '              (1 + (CASE (CASE WHEN IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
+      '                       THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
+      '                                     NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+      '                       ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') END) ' +
       '                       WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_IVA, 0) ' +
       '                       WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_IVA, 0) ' +
       '                       WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_IVA, 0) ' +
       '                       WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_IVA, 0) ' +
       '                       ELSE 0 END + ' +
-      '                     CASE IFNULL(L.TIPO_IVA_SESLIN, ''N'') ' +
+      '                     CASE (CASE WHEN IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
+      '                       THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
+      '                                     NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+      '                       ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') END) ' +
       '                       WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
       '                       WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
       '                       WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
@@ -1960,13 +1984,19 @@ begin
           '       CASE WHEN IFNULL(S.ESIVA_RECARGO_COMPRAS_SES, ' +
           '                         IFNULL(E.ESIVA_RECARGO_COMPRAS_EMP, ''N'')) = ''S'' ' +
           '            THEN L.PRECIO_COMPRA_SESLIN * ' +
-          '              (1 + (CASE IFNULL(L.TIPO_IVA_SESLIN, ''N'') ' +
+          '              (1 + (CASE (CASE WHEN IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
+          '                       THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
+          '                                     NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+          '                       ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') END) ' +
           '                       WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_IVA, 0) ' +
           '                       WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_IVA, 0) ' +
           '                       WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_IVA, 0) ' +
           '                       WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_IVA, 0) ' +
           '                       ELSE 0 END + ' +
-          '                     CASE IFNULL(L.TIPO_IVA_SESLIN, ''N'') ' +
+          '                     CASE (CASE WHEN IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
+          '                       THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
+          '                                     NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+          '                       ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') END) ' +
           '                       WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
           '                       WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
           '                       WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
@@ -2077,7 +2107,7 @@ begin
                                   ASeriePed, ANumPed, AUsuario,
                                   AFiltroAlmacen);
       // 4. IVA en cabecera + lineas y totales. Reusamos el patron del
-      //    albaran porque la sesion origen no maneja IVA explicito.
+      //    albaran: la sesion aporta el tipo y el documento los porcentajes.
       AsignarIvaCabeceraPedidoCompra(conn, ASeriePed, ANumPed);
       RellenarIvaLineasPedidoCompra(conn, ASeriePed, ANumPed);
       RecalcularTotalesPedidoCompra(conn, ASeriePed, ANumPed);

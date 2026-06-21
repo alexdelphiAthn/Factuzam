@@ -1,0 +1,393 @@
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoRemesasVenta                                             }
+{    Tipo:       Formulario (Mto)                                               }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       10/06/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Remesas de cobro que agrupan efectos (consulta).                          }
+{******************************************************************************}
+unit inMtoRemesasVenta;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.UITypes, inMtoGen, dxSkinsCore,
+  dxSkinsDefaultPainters, cxGraphics, cxControls,
+  cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
+  cxData, cxDataStorage, cxEdit, cxNavigator, dxDateRanges, Data.DB, cxDBData,
+  cxContainer, Vcl.Menus, dxSkinsForm, cxClasses, cxLocalization, Vcl.StdCtrls,
+  cxButtons, cxDBNavigator, Vcl.Buttons, dxBevel, cxLabel, cxTextEdit,
+  cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
+  cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataRemesasVenta,
+  cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
+  cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs,
+  cxDBEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxCurrencyEdit, cxMemo,
+  cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox;
+
+type
+  TfrmMtoRemesasVenta = class(TfrmMtoGen)
+    dbcGrdDBTabPrinNUMERO_REMV: TcxGridDBColumn;
+    dbcGrdDBTabPrinSERIE_REMV: TcxGridDBColumn;
+    dbcGrdDBTabPrinFECHA_REMV: TcxGridDBColumn;
+    dbcGrdDBTabPrinESTADO_REMV: TcxGridDBColumn;
+    dbcGrdDBTabPrinCODIGO_EMP_REMV: TcxGridDBColumn;
+    dbcGrdDBTabPrinRAZON_SOCIAL_EMPRESA_VIEW_REMV: TcxGridDBColumn;
+    dbcGrdDBTabPrinCONTADOR_EFECTOS_REMV: TcxGridDBColumn;
+    dbcGrdDBTabPrinTOTAL_REMV: TcxGridDBColumn;
+    dbcGrdDBTabPrinFECHA_CARGO_REMV: TcxGridDBColumn;
+    dbcGrdDBTabPrinIBAN_REMV: TcxGridDBColumn;
+    pnlFichaCabecera: TPanel;
+    lblNumero: TcxLabel;
+    txtNUMERO_REMV: TcxDBTextEdit;
+    lblSerie: TcxLabel;
+    txtSERIE_REMV: TcxDBTextEdit;
+    lblFecha: TcxLabel;
+    dteFECHA_REMV: TcxDBDateEdit;
+    lblEstado: TcxLabel;
+    txtESTADO_REMV: TcxDBTextEdit;
+    lblEmpresa: TcxLabel;
+    txtCODIGO_EMP_REMV: TcxDBTextEdit;
+    lblRazonSocial: TcxLabel;
+    txtRAZON_SOCIAL_EMPRESA_VIEW_REMV: TcxDBTextEdit;
+    lblTotal: TcxLabel;
+    curTOTAL_REMV: TcxDBCurrencyEdit;
+    lblContadorEfectos: TcxLabel;
+    txtCONTADOR_EFECTOS_REMV: TcxDBTextEdit;
+    lblFechaCobro: TcxLabel;
+    dteFECHA_CARGO_REMV: TcxDBDateEdit;
+    lblIBAN: TcxLabel;
+    txtIBAN_REMV: TcxDBTextEdit;
+    lblCobroRealizado: TcxLabel;
+    curTOTAL_COBRADO_REMV: TcxDBCurrencyEdit;
+    lblPendienteCobro: TcxLabel;
+    curTOTAL_PENDIENTE_REMV: TcxDBCurrencyEdit;
+    lblBancoCobro: TcxLabel;
+    cbbBancoCobroRemesa: TcxLookupComboBox;
+    lblObservaciones: TcxLabel;
+    memOBSERVACIONES_REMV: TcxDBMemo;
+    pnlFichaDetalle: TPanel;
+    pnlEfectosTitulo: TPanel;
+    lblEfectosRemesa: TcxLabel;
+    cxgrdEfectosRemesa: TcxGrid;
+    tvEfectosRemesa: TcxGridDBTableView;
+    tvEfectosRemesaNUMERO_FAC_EFV: TcxGridDBColumn;
+    tvEfectosRemesaSERIE_FAC_EFV: TcxGridDBColumn;
+    tvEfectosRemesaNUMERO_EFV: TcxGridDBColumn;
+    tvEfectosRemesaCLIENTE_VIEW_EFV: TcxGridDBColumn;
+    tvEfectosRemesaDESCRIPCION_TEFE_VIEW_EFV: TcxGridDBColumn;
+    tvEfectosRemesaFECHA_VENCIMIENTO_EFV: TcxGridDBColumn;
+    tvEfectosRemesaIMPORTE_EFV: TcxGridDBColumn;
+    tvEfectosRemesaIMPORTE_COBRADO_EFV: TcxGridDBColumn;
+    tvEfectosRemesaIMPORTE_PENDIENTE_EFV: TcxGridDBColumn;
+    tvEfectosRemesaESTADO_EFV: TcxGridDBColumn;
+    tvEfectosRemesaREFERENCIA_DOCUMENTO_EFV: TcxGridDBColumn;
+    tvEfectosRemesaFECHA_COBRO_EFV: TcxGridDBColumn;
+    tvEfectosRemesaDOC_EXTERNO_EFV: TcxGridDBColumn;
+    lvlEfectosRemesa: TcxGridLevel;
+    btnAnadirEfecto: TcxButton;
+    btnQuitarEfecto: TcxButton;
+    btnCobrarEfecto: TcxButton;
+    btnCobrarRemesa: TcxButton;
+    btnAsignarBanco: TcxButton;
+    btnFechaCobro: TcxButton;
+    dbcGrdDBTabPrinTOTAL_COBRADO_REMV: TcxGridDBColumn;
+    dbcGrdDBTabPrinTOTAL_PENDIENTE_REMV: TcxGridDBColumn;
+    procedure btnAnadirEfectoClick(Sender: TObject);
+    procedure btnQuitarEfectoClick(Sender: TObject);
+    procedure btnCobrarEfectoClick(Sender: TObject);
+    procedure btnCobrarRemesaClick(Sender: TObject);
+    procedure btnAsignarBancoClick(Sender: TObject);
+    procedure btnFechaCobroClick(Sender: TObject);
+  private
+    procedure ActualizarBancoCobro;
+    procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
+    function BancoRemesaAsignado: Boolean;
+    function RemesaSeleccionada: Boolean;
+  public
+    dmmRemesasVenta: TdmRemesasVenta;
+    procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
+  end;
+
+var
+  frmMtoRemesasVenta: TfrmMtoRemesasVenta;
+
+implementation
+
+uses
+  inLibWin, inMtoPrincipal, inMtoModalCargarEfectosRemesaVenta,
+  inMtoModalRegistrarPago;
+
+{$R *.dfm}
+
+procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TfrmMtoRemesasVenta.CrearTablaPrincipal;
+begin
+  inherited;
+  dmmRemesasVenta := tdmDataModule as TdmRemesasVenta;
+  tvEfectosRemesa.DataController.DataSource :=
+    dmmRemesasVenta.dsEfectosRemesa;
+  dmmRemesasVenta.unqryEfectosRemesa.MasterSource := dsTablaG;
+  dmmRemesasVenta.unqryBancosEmpresa.MasterSource := dsTablaG;
+  cbbBancoCobroRemesa.Properties.ListSource :=
+    dmmRemesasVenta.dsBancosEmpresa;
+  cbbBancoCobroRemesa.Properties.KeyFieldNames := 'CODIGO_EMPBAN';
+  cbbBancoCobroRemesa.Properties.ListFieldNames := 'BANCO_VIEW_EMPBAN';
+  dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+  pkFieldName := 'NUMERO_REMV;SERIE_REMV';
+end;
+
+procedure TfrmMtoRemesasVenta.ResetForm;
+begin
+  inherited;
+end;
+
+function TfrmMtoRemesasVenta.RemesaSeleccionada: Boolean;
+begin
+  Result := Assigned(dmmRemesasVenta) and
+            dmmRemesasVenta.unqryTablaG.Active and
+            (not dmmRemesasVenta.unqryTablaG.IsEmpty);
+end;
+
+function TfrmMtoRemesasVenta.BancoRemesaAsignado: Boolean;
+begin
+  Result := RemesaSeleccionada and
+            (Trim(dmmRemesasVenta.unqryTablaG.FieldByName('IBAN_REMV')
+              .AsString) <> '');
+end;
+
+procedure TfrmMtoRemesasVenta.ActualizarBancoCobro;
+var
+  sIban: string;
+begin
+  cbbBancoCobroRemesa.EditValue := Null;
+  if Assigned(dmmRemesasVenta) and dmmRemesasVenta.unqryBancosEmpresa.Active
+     and RemesaSeleccionada then
+  begin
+    sIban := Trim(dmmRemesasVenta.unqryTablaG.FieldByName('IBAN_REMV')
+      .AsString);
+    if (sIban <> '') and
+       dmmRemesasVenta.unqryBancosEmpresa.Locate('IBAN_EMPBAN', sIban, []) then
+      cbbBancoCobroRemesa.EditValue :=
+        dmmRemesasVenta.unqryBancosEmpresa.FieldByName('CODIGO_EMPBAN')
+          .AsString
+    else if (sIban = '') and
+            (not dmmRemesasVenta.unqryBancosEmpresa.IsEmpty) then
+    begin
+      dmmRemesasVenta.unqryBancosEmpresa.First;
+      cbbBancoCobroRemesa.EditValue :=
+        dmmRemesasVenta.unqryBancosEmpresa.FieldByName('CODIGO_EMPBAN')
+          .AsString;
+    end;
+  end;
+end;
+
+procedure TfrmMtoRemesasVenta.dsTablaGDataChangeHook(Sender: TObject;
+  Field: TField);
+begin
+  if Field = nil then
+    ActualizarBancoCobro;
+end;
+
+procedure TfrmMtoRemesasVenta.btnAnadirEfectoClick(Sender: TObject);
+var
+  frm: TfrmModalCargarEfectosRemesaVenta;
+  q: TDataSet;
+begin
+  inherited;
+  if not RemesaSeleccionada then
+    ShowMessage('Selecciona una remesa.')
+  else if dmmRemesasVenta.RemesaTieneCobro then
+    ShowMessage('No se pueden añadir efectos a una remesa con cobro realizado.')
+  else
+  begin
+    q := dmmRemesasVenta.unqryTablaG;
+    frm := TfrmModalCargarEfectosRemesaVenta.Create(nil);
+    try
+      frm.PrepararRemesaExistente(q.FieldByName('CODIGO_EMP_REMV').AsString,
+        q.FieldByName('SERIE_REMV').AsString,
+        q.FieldByName('NUMERO_REMV').AsString);
+      if frm.ShowModal = mrOk then
+      begin
+        dmmRemesasVenta.RefrescarDatos;
+        ActualizarBancoCobro;
+      end;
+    finally
+      frm.Free;
+    end;
+  end;
+end;
+
+procedure TfrmMtoRemesasVenta.btnQuitarEfectoClick(Sender: TObject);
+begin
+  inherited;
+  if not RemesaSeleccionada then
+    ShowMessage('Selecciona una remesa.')
+  else if not dmmRemesasVenta.unqryEfectosRemesa.Active then
+    ShowMessage('No hay efectos cargados.')
+  else if dmmRemesasVenta.unqryEfectosRemesa.IsEmpty then
+    ShowMessage('Selecciona un efecto de la remesa.')
+  else if dmmRemesasVenta.RemesaTieneCobro then
+    ShowMessage('No se pueden quitar efectos de una remesa con cobro ' +
+                'realizado.')
+  else if MessageDlg('¿Quitar el efecto seleccionado de la remesa?',
+          mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  begin
+    if dmmRemesasVenta.QuitarEfectoActual then
+      ShowMessage('Efecto quitado de la remesa.')
+    else
+      ShowMessage('No se pudo quitar el efecto.');
+    ActualizarBancoCobro;
+  end;
+end;
+
+procedure TfrmMtoRemesasVenta.btnCobrarEfectoClick(Sender: TObject);
+var
+  frm: TfrmModalRegistrarPago;
+  q: TDataSet;
+  iRes: Integer;
+  fPend: Double;
+begin
+  inherited;
+  if not RemesaSeleccionada then
+    ShowMessage('Selecciona una remesa.')
+  else if not BancoRemesaAsignado then
+    ShowMessage('Asigna primero el banco de cobro de la remesa.')
+  else if not dmmRemesasVenta.unqryEfectosRemesa.Active then
+    ShowMessage('No hay efectos cargados.')
+  else if dmmRemesasVenta.unqryEfectosRemesa.IsEmpty then
+    ShowMessage('Selecciona un efecto de la remesa.')
+  else
+  begin
+    q := dmmRemesasVenta.unqryEfectosRemesa;
+    fPend := q.FieldByName('IMPORTE_PENDIENTE_EFV').AsFloat;
+    if fPend <= 0.0001 then
+      ShowMessage('El efecto seleccionado no tiene importe pendiente.')
+    else
+    begin
+      frm := TfrmModalRegistrarPago.Create(nil);
+      try
+        frm.SetDatos(Format('Efecto %d - pendiente %.2f',
+          [q.FieldByName('NUMERO_EFV').AsInteger, fPend]), fPend);
+        if frm.ShowModal = mrOk then
+        begin
+          iRes := dmmRemesasVenta.RegistrarCobroEfectoActual(frm.Fecha,
+            frm.Importe, frm.Tipo, frm.Referencia);
+          if iRes > 0 then
+            ShowMessage('Efecto conciliado.')
+          else
+            ShowMessage('No se pudo conciliar el efecto.');
+          ActualizarBancoCobro;
+        end;
+      finally
+        frm.Free;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoRemesasVenta.btnCobrarRemesaClick(Sender: TObject);
+var
+  frm: TfrmModalRegistrarPago;
+  iRes: Integer;
+  fPend: Double;
+begin
+  inherited;
+  if not RemesaSeleccionada then
+    ShowMessage('Selecciona una remesa.')
+  else if not BancoRemesaAsignado then
+    ShowMessage('Asigna primero el banco de cobro de la remesa.')
+  else
+  begin
+    fPend := dmmRemesasVenta.PendienteRemesa;
+    if fPend <= 0.0001 then
+      ShowMessage('La remesa no tiene importe pendiente.')
+    else
+    begin
+      frm := TfrmModalRegistrarPago.Create(nil);
+      try
+        frm.SetDatos(Format('Remesa pendiente %.2f', [fPend]), fPend);
+        if frm.ShowModal = mrOk then
+        begin
+          iRes := dmmRemesasVenta.RegistrarCobroRemesa(frm.Fecha,
+            frm.Importe, frm.Tipo, frm.Referencia);
+          if iRes > 0 then
+            ShowMessage(Format('Conciliados %d efecto(s).', [iRes]))
+          else
+            ShowMessage('No se pudo conciliar la remesa.');
+          ActualizarBancoCobro;
+        end;
+      finally
+        frm.Free;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoRemesasVenta.btnAsignarBancoClick(Sender: TObject);
+var
+  sCodigo: string;
+begin
+  inherited;
+  if not RemesaSeleccionada then
+    ShowMessage('Selecciona una remesa.')
+  else
+  begin
+    sCodigo := VarToStr(cbbBancoCobroRemesa.EditValue);
+    if sCodigo = '' then
+      ShowMessage('Selecciona un banco de cobro.')
+    else if dmmRemesasVenta.AsignarBancoRemesa(sCodigo) then
+    begin
+      ShowMessage('Banco de cobro asignado.');
+      ActualizarBancoCobro;
+    end
+    else
+      ShowMessage('No se pudo asignar el banco de cobro.');
+  end;
+end;
+
+procedure TfrmMtoRemesasVenta.btnFechaCobroClick(Sender: TObject);
+var
+  sFecha: string;
+  dFecha: TDateTime;
+begin
+  inherited;
+  if not RemesaSeleccionada then
+    ShowMessage('Selecciona una remesa.')
+  else
+  begin
+    sFecha := FormatDateTime('dd/mm/yyyy', Date);
+    if not dmmRemesasVenta.unqryTablaG.FieldByName('FECHA_CARGO_REMV')
+       .IsNull then
+      sFecha := FormatDateTime('dd/mm/yyyy',
+        dmmRemesasVenta.unqryTablaG.FieldByName('FECHA_CARGO_REMV')
+          .AsDateTime);
+    if InputQuery('Fecha de cobro', 'Fecha de cobro:', sFecha) then
+    begin
+      if TryStrToDate(sFecha, dFecha) then
+      begin
+        if dmmRemesasVenta.ActualizarFechaCobro(dFecha) then
+          ShowMessage('Fecha de cobro actualizada.')
+        else
+          ShowMessage('No se pudo actualizar la fecha de cobro.');
+        ActualizarBancoCobro;
+      end
+      else
+        ShowMessage('Fecha no válida.');
+    end;
+  end;
+end;
+
+initialization
+  ForceReferenceToClass(TfrmMtoRemesasVenta);
+end.
+
+

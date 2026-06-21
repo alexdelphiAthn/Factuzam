@@ -77,6 +77,8 @@ type
     unqryErrores: TUniQuery;
     unqryMovimientosFac: TUniQuery;
     dsMovimientosFac:    TDataSource;
+    unqryEfectosVenta:   TUniQuery;
+    dsEfectosVenta:      TDataSource;
     unstrdprcInsertarMovFac: TUniStoredProc;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
@@ -151,6 +153,7 @@ public
     procedure AbrirDetalles; override;
     // Carga perezosa de sub-pestañas detail de la ficha de factura.
     procedure AsegurarRecibosAbierta;
+    procedure AsegurarEfectosVentaAbierta;
     procedure AsegurarConsolidacionAbierta;
     procedure AsegurarErroresAbierta;
     procedure AsegurarMovimientosFacAbierta;
@@ -162,6 +165,12 @@ public
     // (CODIGO_EMPBAN_CLI) para pre-seleccionarla en el modal de banco al
     // generar recibos. '' si no tiene.
     function GetBancoDefectoCliente(const ACodigoCli: string): string;
+    function GenerarEfectosVenta(const ACodEmpban: string = '';
+                                 const AIbanEmp: string = ''): Integer;
+    function RegistrarCobroEfectoVenta(ANumEfecto: Integer;
+      AFecha: TDateTime; AImporte: Double;
+      const ATipo, AReferencia: string): Integer;
+    function CambiarEstadoEfectoVenta(const AEstado: string): Boolean;
 
     // Genera movimientos de salida de stock para todas las líneas de la
     // factura cargada (sólo se llama automáticamente en facturas
@@ -995,8 +1004,22 @@ begin
   unqryErrores.Connection := inLibGlobalVar.oConn;
   unqryMovimientosFac.Connection := inLibGlobalVar.oConn;
   unstrdprcInsertarMovFac.Connection := inLibGlobalVar.oConn;
+  unqryEfectosVenta := TUniQuery.Create(Self);
+  unqryEfectosVenta.Connection := inLibGlobalVar.oConn;
+  unqryEfectosVenta.SQL.Text :=
+    'SELECT * ' +
+    '  FROM vi_efectos_venta ' +
+    ' WHERE NUMERO_FAC_EFV = :NUMERO_FAC ' +
+    '   AND SERIE_FAC_EFV  = :SERIE_FAC ' +
+    ' ORDER BY NUMERO_EFV';
+  unqryEfectosVenta.MasterFields := 'NUMERO_FAC;SERIE_FAC';
+  unqryEfectosVenta.DetailFields := 'NUMERO_FAC_EFV;SERIE_FAC_EFV';
+  dsEfectosVenta := TDataSource.Create(Self);
+  dsEfectosVenta.DataSet := unqryEfectosVenta;
   unqryLinfac.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
   unqryRecibos.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
+  unqryEfectosVenta.MasterSource :=
+    (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
   unqryConsolidacion.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
   unqryErrores.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
   unqryMovimientosFac.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
@@ -1095,6 +1118,28 @@ begin
   end;
 end;
 
+procedure TdmFacturas.AsegurarEfectosVentaAbierta;
+var swQ: TStopwatch;
+begin
+  if (unqryEfectosVenta <> nil) and (not unqryEfectosVenta.Active) then
+  begin
+    swQ := TStopwatch.StartNew;
+    try
+      RellenarParamsDesdeMaestro(unqryEfectosVenta);
+      unqryEfectosVenta.Open;
+      inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryEfectosVenta OK',
+        swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        inLibLog.Log.LogPerf('Facturas.Lazy',
+          'unqryEfectosVenta ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+        raise;
+      end;
+    end;
+  end;
+end;
+
 procedure TdmFacturas.EstamparBancoRecibos(const ASerie, ANumero,
                                            ACodEmpban, AIban: string);
 var
@@ -1139,6 +1184,150 @@ begin
       Result := q.FieldByName('CODIGO_EMPBAN_CLI').AsString;
   finally
     FreeAndNil(q);
+  end;
+end;
+
+function TdmFacturas.GenerarEfectosVenta(const ACodEmpban: string = '';
+                                         const AIbanEmp: string = ''): Integer;
+var
+  sp: TUniStoredProc;
+  sSerie: string;
+  sNumero: string;
+begin
+  Result := -1;
+  if (unqryTablaG <> nil) and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+  begin
+    if unqryTablaG.State in [dsEdit, dsInsert] then
+    begin
+      CalcularFactura;
+      unqryTablaG.Post;
+    end;
+    sSerie := unqryTablaG.FieldByName('SERIE_FAC').AsString;
+    sNumero := unqryTablaG.FieldByName('NUMERO_FAC').AsString;
+    sp := TUniStoredProc.Create(nil);
+    try
+      sp.Connection := inLibGlobalVar.oConn;
+      sp.StoredProcName := 'PRC_EFV_GENERAR_DESDE_FACTURA';
+      sp.Params.Clear;
+      sp.Params.CreateParam(ftString, 'p_SERIE', ptInput);
+      sp.Params.CreateParam(ftString, 'p_NUMERO', ptInput);
+      sp.Params.CreateParam(ftString, 'p_USUARIO', ptInput);
+      sp.Params.CreateParam(ftString, 'p_CODIGO_EMPBAN', ptInput);
+      sp.Params.CreateParam(ftString, 'p_IBAN_EMP', ptInput);
+      sp.Params.CreateParam(ftInteger, 'p_RESULTADO', ptOutput);
+      sp.ParamByName('p_SERIE').AsString := sSerie;
+      sp.ParamByName('p_NUMERO').AsString := sNumero;
+      sp.ParamByName('p_USUARIO').AsString := oUser;
+      sp.ParamByName('p_CODIGO_EMPBAN').AsString := ACodEmpban;
+      sp.ParamByName('p_IBAN_EMP').AsString := AIbanEmp;
+      sp.ExecProc;
+      Result := sp.ParamByName('p_RESULTADO').AsInteger;
+    finally
+      FreeAndNil(sp);
+    end;
+    if Assigned(unqryEfectosVenta) then
+    begin
+      unqryEfectosVenta.Close;
+      unqryEfectosVenta.Open;
+    end;
+  end;
+end;
+
+function TdmFacturas.RegistrarCobroEfectoVenta(ANumEfecto: Integer;
+  AFecha: TDateTime; AImporte: Double;
+  const ATipo, AReferencia: string): Integer;
+var
+  sp: TUniStoredProc;
+  sSerie: string;
+  sNumero: string;
+begin
+  Result := -1;
+  if (unqryTablaG <> nil) and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+  begin
+    sSerie := unqryTablaG.FieldByName('SERIE_FAC').AsString;
+    sNumero := unqryTablaG.FieldByName('NUMERO_FAC').AsString;
+    sp := TUniStoredProc.Create(nil);
+    try
+      sp.Connection := inLibGlobalVar.oConn;
+      sp.StoredProcName := 'PRC_EFV_CONCILIAR_COBRO';
+      sp.Params.Clear;
+      sp.Params.CreateParam(ftString, 'p_SERIE', ptInput);
+      sp.Params.CreateParam(ftString, 'p_NUMERO', ptInput);
+      sp.Params.CreateParam(ftInteger, 'p_NUM_EFV', ptInput);
+      sp.Params.CreateParam(ftDate, 'p_FECHA', ptInput);
+      sp.Params.CreateParam(ftFloat, 'p_IMPORTE', ptInput);
+      sp.Params.CreateParam(ftString, 'p_TIPO', ptInput);
+      sp.Params.CreateParam(ftString, 'p_REFERENCIA', ptInput);
+      sp.Params.CreateParam(ftString, 'p_ENTIDAD', ptInput);
+      sp.Params.CreateParam(ftString, 'p_USUARIO', ptInput);
+      sp.Params.CreateParam(ftInteger, 'p_RESULTADO', ptOutput);
+      sp.ParamByName('p_SERIE').AsString := sSerie;
+      sp.ParamByName('p_NUMERO').AsString := sNumero;
+      sp.ParamByName('p_NUM_EFV').AsInteger := ANumEfecto;
+      sp.ParamByName('p_FECHA').AsDateTime := AFecha;
+      sp.ParamByName('p_IMPORTE').AsFloat := AImporte;
+      sp.ParamByName('p_TIPO').AsString := ATipo;
+      sp.ParamByName('p_REFERENCIA').AsString := AReferencia;
+      sp.ParamByName('p_ENTIDAD').AsString := '';
+      sp.ParamByName('p_USUARIO').AsString := oUser;
+      sp.ExecProc;
+      Result := sp.ParamByName('p_RESULTADO').AsInteger;
+    finally
+      FreeAndNil(sp);
+    end;
+    if Assigned(unqryEfectosVenta) then
+    begin
+      unqryEfectosVenta.Close;
+      unqryEfectosVenta.Open;
+    end;
+  end;
+end;
+
+function TdmFacturas.CambiarEstadoEfectoVenta(
+  const AEstado: string): Boolean;
+var
+  q: TUniQuery;
+  sEstado: string;
+begin
+  Result := False;
+  if (unqryEfectosVenta <> nil) and unqryEfectosVenta.Active and
+     (not unqryEfectosVenta.IsEmpty) then
+  begin
+    sEstado := UpperCase(Trim(AEstado));
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Text :=
+        'UPDATE fza_efectos_venta ' +
+        '   SET ESTADO_EFV = :estado, ' +
+        '       FECHA_COBRO_EFV = CASE ' +
+        '         WHEN :estado = ''PENDIENTE'' THEN NULL ' +
+        '         WHEN :estado = ''DEVUELTO'' THEN NULL ' +
+        '         ELSE FECHA_COBRO_EFV END, ' +
+        '       INSTANTE_MODIF = NOW(), ' +
+        '       USUARIO_MODIF = :usuario ' +
+        ' WHERE SERIE_FAC_EFV = :serie ' +
+        '   AND NUMERO_FAC_EFV = :numero ' +
+        '   AND NUMERO_EFV = :efecto ' +
+        '   AND COALESCE(IMPORTE_COBRADO_EFV, 0) <= 0.0001 ' +
+        '   AND COALESCE(ESCONCILIADO_EFV, ''N'') <> ''S''';
+      q.ParamByName('estado').AsString := sEstado;
+      q.ParamByName('usuario').AsString := oUser;
+      q.ParamByName('serie').AsString :=
+        unqryEfectosVenta.FieldByName('SERIE_FAC_EFV').AsString;
+      q.ParamByName('numero').AsString :=
+        unqryEfectosVenta.FieldByName('NUMERO_FAC_EFV').AsString;
+      q.ParamByName('efecto').AsInteger :=
+        unqryEfectosVenta.FieldByName('NUMERO_EFV').AsInteger;
+      q.ExecSQL;
+      Result := q.RowsAffected > 0;
+    finally
+      FreeAndNil(q);
+    end;
+    unqryEfectosVenta.Close;
+    unqryEfectosVenta.Open;
   end;
 end;
 
@@ -1212,12 +1401,16 @@ begin
   unqryFormaPago.Close;
   //unqryPerfiles.Close;
   unqryRecibos.Close;
+  if Assigned(unqryEfectosVenta) then
+    unqryEfectosVenta.Close;
   unqryPaisesEmp.Close;
   unqryPaisesCli.Close;
   unqryConsolidacion.Close;
   unqryErrores.Close;
   if Assigned(unqryMovimientosFac) and unqryMovimientosFac.Active then
     unqryMovimientosFac.Close;
+  FreeAndNil(dsEfectosVenta);
+  FreeAndNil(unqryEfectosVenta);
   //unqrySeriesEditCombo.Close;
   //unqryCabIVA.Close;
   inherited;
@@ -1550,6 +1743,7 @@ procedure TdmFacturas.unqryTablaGBeforeDelete(DataSet: TDataSet);
   var
   qryBorrarLineas : TUniQuery;
   qryBorrarRecibos: TUniquery;
+  qryBorrarEfectos: TUniQuery;
 begin
   // Una factura lanzada a Verifactu (fuera de BORRADOR) ya está
   // registrada en la AEAT: no se borra, se anula o rectifica
@@ -1562,6 +1756,55 @@ begin
                 ': ya se ha lanzado a Verifactu y no puede borrarse. ' +
                 'Use Anular registro fiscal o emita una rectificativa.');
     Abort;
+  end;
+  qryBorrarEfectos := TUniQuery.Create(Self);
+  try
+    qryBorrarEfectos.Connection := inLibGlobalVar.oConn;
+    qryBorrarEfectos.SQL.Text :=
+      'SELECT COUNT(*) AS N ' +
+      '  FROM INFORMATION_SCHEMA.TABLES ' +
+      ' WHERE TABLE_SCHEMA = DATABASE() ' +
+      '   AND TABLE_NAME = ''fza_efectos_venta''';
+    qryBorrarEfectos.Open;
+    if qryBorrarEfectos.FieldByName('N').AsInteger > 0 then
+    begin
+      qryBorrarEfectos.Close;
+      qryBorrarEfectos.SQL.Text :=
+        'SELECT COUNT(*) AS N ' +
+        '  FROM fza_efectos_venta ' +
+        ' WHERE SERIE_FAC_EFV = :serie ' +
+        '   AND NUMERO_FAC_EFV = :nrofactura ' +
+        '   AND (COALESCE(IMPORTE_COBRADO_EFV, 0) > 0.0001 ' +
+        '    OR COALESCE(ESCONCILIADO_EFV, ''N'') = ''S'' ' +
+        '    OR COALESCE(SERIE_REMV_EFV, '''') <> '''' ' +
+        '    OR COALESCE(NUMERO_REMV_EFV, '''') <> '''' ' +
+        '    OR COALESCE(ESTADO_EFV, '''') IN ' +
+        '       (''COBRADO'', ''REMESADO'', ''CONCILIADO''))';
+      qryBorrarEfectos.ParamByName('serie').AsString :=
+        unqryTablaG.FieldByName(fseriefac).AsString;
+      qryBorrarEfectos.ParamByName('nrofactura').AsString :=
+        unqryTablaG.FieldByName(fnrofac).AsString;
+      qryBorrarEfectos.Open;
+      if qryBorrarEfectos.FieldByName('N').AsInteger > 0 then
+      begin
+        ShowMessage('El borrador tiene efectos de cobro cobrados, ' +
+                    'conciliados o remesados. No puede borrarse.');
+        Abort;
+      end;
+      qryBorrarEfectos.Close;
+      qryBorrarEfectos.SQL.Text :=
+        'DELETE ' +
+        '  FROM fza_efectos_venta ' +
+        ' WHERE SERIE_FAC_EFV = :serie ' +
+        '   AND NUMERO_FAC_EFV = :nrofactura';
+      qryBorrarEfectos.ParamByName('serie').AsString :=
+        unqryTablaG.FieldByName(fseriefac).AsString;
+      qryBorrarEfectos.ParamByName('nrofactura').AsString :=
+        unqryTablaG.FieldByName(fnrofac).AsString;
+      qryBorrarEfectos.ExecSQL;
+    end;
+  finally
+    FreeAndNil(qryBorrarEfectos);
   end;
   qryBorrarLineas := TUniQuery.Create(Self);
   with qryBorrarLineas do

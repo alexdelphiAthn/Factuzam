@@ -116,6 +116,7 @@ type
     cxdbm2: TcxDBMemo;
     chkActivo: TcxDBCheckBox;
     cxgrdbclmnGrdDBTabPrinACTIVO_CLIENTE: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinVARIOS_TIPOS_IVA_PRV: TcxGridDBColumn;
     tsArticulos: TcxTabSheet;
     pnl6: TPanel;
     btnIraArticulo: TcxButton;
@@ -178,6 +179,7 @@ type
     gbDefectosCompras: TcxGroupBox;
     lblMargenPrv: TcxLabel;
     spnMargenPrv: TcxDBSpinEdit;
+    chkVariosTiposIvaPrv: TcxDBCheckBox;
     lblDefectosInfo: TcxLabel;
     gbKitsPrv: TcxGroupBox;
     pnlKitsTop: TPanel;

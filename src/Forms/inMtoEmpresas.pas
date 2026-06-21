@@ -82,6 +82,7 @@ type
     cxgrdbclmnGrdDBTabPrinCPOSTAL_EMPRESA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrin_ESREGIMENESPECIALAGRICOLA_EMPRESA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinESRETENCIONES_EMPRESA: TcxGridDBColumn;
+    cxgrdbclmnGrdDBTabPrinESIVA_RECARGO_COMPRAS_EMPRESA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinTEXTO_LEGAL_FACTURA_EMPRESA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinINSTANTEMODIF: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinINSTANTEALTA: TcxGridDBColumn;

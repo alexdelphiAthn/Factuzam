@@ -33,9 +33,11 @@ final solo necesita el capítulo
 <tr><td><strong>Base de datos</strong></td><td><strong>MariaDB</strong> (compatible MySQL). Puede instalarse en el mismo equipo o en un servidor de la red local.</td></tr>
 <tr><td><strong>Aplicación</strong></td><td><code>fzam.exe</code> — es un ejecutable autónomo, <strong>no requiere instalador</strong> ni librerías adicionales.</td></tr>
 <tr><td><strong>Red</strong></td><td>Si hay varios puestos, todos deben ver el servidor MariaDB por TCP (puerto <code>3306</code> por defecto).</td></tr>
-<tr><td><strong>Periféricos (TPV)</strong></td><td>Impresora de tickets y <strong>lector de códigos de barras</strong> (teclado/USB-HID); ambos opcionales fuera de Caja.</td></tr>
+<tr><td><strong>Periféricos (TPV)</strong></td><td>Impresora de tickets compatible <strong>ESC/POS</strong> y <strong>lector de códigos de barras</strong> USB en simulación de teclado; ambos opcionales fuera de Caja.</td></tr>
 </tbody>
 </table>
+<p>Requisitos concretos para Caja:</p>
+<ul><li>La <strong>impresora de tickets</strong> debe poder imprimir códigos QR en modo nativo <strong>ESC/POS</strong>.</li><li>El <strong>lector de códigos de barras</strong> debe funcionar por USB en simulación de teclado y enviar el código con prefijo <strong>STX</strong> (<code>0x02</code>) y sufijo <strong>ETX</strong> (<code>0x03</code>).</li><li>El lector no debe añadir ningún otro prefijo ni sufijo: nada de intro, tabulador ni caracteres adicionales antes o después del código.</li></ul>
 <hr>
 <h2 id="2-instalar-el-servidor-mariadb">2. Instalar el servidor MariaDB</h2>
 <ol><li>Descarga MariaDB para Windows desde</li></ol>

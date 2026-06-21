@@ -452,9 +452,8 @@ end;
 
 procedure TfrmModalArqueo.actTiraCajaExecute(Sender: TObject);
 var
-  Series: TArray<string>;
-  sSerie: string;
-  bQR, bVerifactu, bMostrar: Boolean;
+  Series, SeleccionSeries: TArray<string>;
+  bQR, bVerifactu, bCronologico: Boolean;
   bIncluirTraspasos: Boolean;
   bIncluirIngresos: Boolean;
   bIncluirGastos: Boolean;
@@ -476,30 +475,21 @@ begin
   end;
   // El QR solo aplica con Verifactu activo (envío PRE o PRO).
   bVerifactu := VerifactuActivo;
-  sSerie     := '';
   bQR        := False;
-  bIncluirTraspasos := False;
-  bIncluirIngresos  := False;
-  bIncluirGastos    := False;
-  bIncluirCredito   := False;
-  // El diálogo se muestra siempre: además de la serie y el QR, ofrece los
-  // bloques opcionales (traspasos, ingresos, gastos, ventas a crédito), que
-  // tienen sentido aunque haya una sola serie y sin Verifactu.
-  bMostrar := True;
-  if bMostrar then
-  begin
-    if not TfrmModalTiraCaja.Ejecutar(Self, FCaja, Series, bVerifactu,
-                                      sSerie, bQR, bIncluirTraspasos,
-                                      bIncluirIngresos, bIncluirGastos,
-                                      bIncluirCredito) then
-      Exit;
-  end;
+  // El diálogo se muestra siempre: serie (multi-selección), agrupamiento, QR y
+  // los bloques opcionales (traspasos, ingresos, gastos, ventas a crédito).
+  if not TfrmModalTiraCaja.Ejecutar(Self, FCaja, Series, bVerifactu,
+                                    SeleccionSeries, bQR, bCronologico,
+                                    bIncluirTraspasos, bIncluirIngresos,
+                                    bIncluirGastos, bIncluirCredito) then
+    Exit;
   Screen.Cursor := crHourGlass;
   try
     TTiraCajaTicket.Imprimir(FConn, FEmpresa, FAlmacen, FCaja,
                              FechaDesdeSeleccionada,
                              FechaHastaSeleccionada,
-                             sSerie, bQR, oNomImpresoraCaja,
+                             SeleccionSeries, bQR, oNomImpresoraCaja,
+                             bCronologico,
                              bIncluirTraspasos, bIncluirIngresos,
                              bIncluirGastos, bIncluirCredito);
   finally

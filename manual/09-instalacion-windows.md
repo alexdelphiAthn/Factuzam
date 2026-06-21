@@ -18,7 +18,13 @@ final solo necesita el capítulo
 | **Base de datos** | **MariaDB** (compatible MySQL). Puede instalarse en el mismo equipo o en un servidor de la red local. |
 | **Aplicación** | `fzam.exe` — es un ejecutable autónomo, **no requiere instalador** ni librerías adicionales. |
 | **Red** | Si hay varios puestos, todos deben ver el servidor MariaDB por TCP (puerto `3306` por defecto). |
-| **Periféricos (TPV)** | Impresora de tickets y **lector de códigos de barras** (teclado/USB-HID); ambos opcionales fuera de Caja. |
+| **Periféricos (TPV)** | Impresora de tickets compatible **ESC/POS** y **lector de códigos de barras** USB en simulación de teclado; ambos opcionales fuera de Caja. |
+
+Requisitos concretos para Caja:
+
+- La **impresora de tickets** debe poder imprimir códigos QR en modo nativo **ESC/POS**.
+- El **lector de códigos de barras** debe funcionar por USB en simulación de teclado y enviar el código con prefijo **STX** (`0x02`) y sufijo **ETX** (`0x03`).
+- El lector no debe añadir ningún otro prefijo ni sufijo: nada de intro, tabulador ni caracteres adicionales antes o después del código.
 
 ---
 
