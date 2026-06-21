@@ -1465,12 +1465,13 @@ begin
     try
       if FTareasActivas.Count > 0 then
       begin
+        if (tdmDataModule <> nil) and (tdmDataModule is TdmBase) then
+          TdmBase(tdmDataModule).CancelarEjecucionActiva;
         if inLibGlobalVar.oCerrandoApp then
-          // Apagado de la app: esperamos a que las tareas terminen del todo.
-          // Si abandonaramos aqui (timeout) y liberasemos FConn / el data
-          // module, la tarea quedaria viva usando objetos ya liberados y el
-          // pool de TTask se colgaria al finalizar el proceso, dejando la app
-          // sin devolver el control. Las consultas en curso terminan solas.
+          // Apagado de la app: primero pedimos BreakExec a las queries/SPs
+          // y despues esperamos a que las tareas terminen del todo. Si
+          // liberaramos FConn / el data module antes de que salgan, el
+          // thread quedaria vivo usando objetos destruidos.
           TTask.WaitForAll(FTareasActivas.ToArray)
         else
           // Cierre de una sola pestaña: si MySQL no responde en 5s asumimos

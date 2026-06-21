@@ -409,6 +409,24 @@ type
     property Arguments: TSQLElementList read FArguments write FArguments;
   end;
 
+  { TSQLWindowFunctionExpression }
+  // Funcion ventana: <fn>(...) OVER (PARTITION BY ... ORDER BY ...)
+  TSQLWindowFunctionExpression = class(TSQLExpression)
+  private
+    FFunctionExpr: TSQLExpression;
+    FPartitionBy: TSQLElementList;
+    FOrderBy: TSQLElementList;
+  public
+    constructor Create(AParent: TSQLElement); override;
+    destructor Destroy; override;
+    function GetAsSQL(Options: TSQLFormatOptions;
+      AIndent: Integer = 0): TSQLStringType; override;
+    // Expresion base (la llamada a funcion o el agregado) sobre la que actua OVER
+    property FunctionExpr: TSQLExpression read FFunctionExpr write FFunctionExpr;
+    property PartitionBy: TSQLElementList read FPartitionBy;
+    property OrderBy: TSQLElementList read FOrderBy;
+  end;
+
   TSQLAggregateFunction = (afCount, afSum, afAVG, afMax, afMin);
   TSQLAggregateOption = (aoNone, aoAsterisk, aoAll, aoDistinct);
 
@@ -2695,6 +2713,61 @@ begin
       Result := Result + FArguments[I].GetAsSQL(Options, AIndent);
     end;
   Result := SQLKeyWord(Identifier, Options) + '(' + Result + ')';
+end;
+
+{ TSQLWindowFunctionExpression }
+
+constructor TSQLWindowFunctionExpression.Create(AParent: TSQLElement);
+begin
+  inherited Create(AParent);
+  FPartitionBy := TSQLElementList.Create(True);
+  FOrderBy := TSQLElementList.Create(True);
+end;
+
+destructor TSQLWindowFunctionExpression.Destroy;
+begin
+  FreeAndNil(FFunctionExpr);
+  FreeAndNil(FPartitionBy);
+  FreeAndNil(FOrderBy);
+  inherited Destroy;
+end;
+
+function TSQLWindowFunctionExpression.GetAsSQL(Options: TSQLFormatOptions;
+  AIndent: Integer): TSQLStringType;
+var
+  I: Integer;
+  Sep, Inner: TSQLStringType;
+begin
+  Result := '';
+  if Assigned(FFunctionExpr) then
+    Result := FFunctionExpr.GetAsSQL(Options, AIndent);
+  Sep := SQLListSeparator(Options);
+  Inner := '';
+  // PARTITION BY (opcional)
+  if FPartitionBy.Count > 0 then
+  begin
+    Inner := SQLKeyWord('PARTITION BY', Options) + ' ';
+    for I := 0 to FPartitionBy.Count - 1 do
+    begin
+      if I > 0 then
+        Inner := Inner + Sep;
+      Inner := Inner + FPartitionBy[I].GetAsSQL(Options, AIndent);
+    end;
+  end;
+  // ORDER BY (opcional)
+  if FOrderBy.Count > 0 then
+  begin
+    if Inner <> '' then
+      Inner := Inner + ' ';
+    Inner := Inner + SQLKeyWord('ORDER BY', Options) + ' ';
+    for I := 0 to FOrderBy.Count - 1 do
+    begin
+      if I > 0 then
+        Inner := Inner + Sep;
+      Inner := Inner + FOrderBy[I].GetAsSQL(Options, AIndent);
+    end;
+  end;
+  Result := Result + ' ' + SQLKeyWord('OVER', Options) + ' (' + Inner + ')';
 end;
 
 { TSQLTernaryExpression }

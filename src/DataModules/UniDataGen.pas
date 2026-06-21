@@ -46,6 +46,10 @@ type
     // para que cada pestaña use una conexion propia del pool en lugar de
     // la global `oConn` (asi dos tabs no se serializan a nivel de conexion).
     procedure ReasignarConexion(NewConn: TUniConnection);
+    // Corta consultas/procedimientos UniDAC en curso antes de destruir el
+    // mantenimiento. Se llama desde el hilo principal mientras la tarea BBDD
+    // corre en background.
+    procedure CancelarEjecucionActiva;
     // Abre las queries detalle/lookup propias del Mto. Default no hace
     // nada; cada TdmXxx override para listar sus queries en el orden
     // adecuado. Lo invoca TfrmMtoGen.AbrirTablaPrincipalAsync DENTRO del
@@ -165,6 +169,27 @@ end;
 procedure TdmBase.ReactivarControlesTrasAbrir;
 begin
   // Default: nada.
+end;
+
+procedure TdmBase.CancelarEjecucionActiva;
+var
+  i: Integer;
+  Comp: TComponent;
+begin
+  for i := 0 to ComponentCount - 1 do
+  begin
+    Comp := Components[i];
+    try
+      if Comp is TUniQuery then
+        TUniQuery(Comp).BreakExec
+      else if Comp is TUniStoredProc then
+        TUniStoredProc(Comp).BreakExec;
+    except
+      on E: Exception do
+        inLibLog.Log.LogError('No se pudo cancelar ' + Comp.Name + ': ' +
+                              E.Message);
+    end;
+  end;
 end;
 
 procedure TdmBase.ResetGridsProfile(sGrid, sForm, sPermisos: String);

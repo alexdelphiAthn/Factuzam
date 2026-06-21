@@ -1516,11 +1516,16 @@ begin
                          unqryMetadatos.FieldByName(
                            'NOMBRE_META_META').AsString;
       unqryEstructura.Open;
-      syndtEstructura.Lines.Text := StringReplace(unqryEstructura.FieldByName(
+      // Quitamos el DEFINER y pasamos por el formateador, igual que las vistas.
+      // No tocamos backticks ni espacios dobles para no alterar literales del
+      // cuerpo del procedure.
+      var sSQLProc := StringReplace(unqryEstructura.FieldByName(
                                                  'Create Procedure').AsString,
                                                  ' DEFINER=`root`@`localhost`',
                                                  '',
                                                  [rfReplaceAll]);
+      Formatter := GetSQLFormatter;
+      syndtEstructura.Lines.Text := Formatter.Format(sSQLProc);
     end
       else
         syndtEstructura.Lines.Clear;
