@@ -33,6 +33,12 @@ uses
   frCoreClasses, system.Rtti;
 
 type
+  TCrearDataSetEtiquetasProc = procedure(ADmArt: TObject;
+                                          const ACodTarifa,
+                                                AAlmacenesCsv: string;
+                                          AFecha: TDateTime) of object;
+  TCargarAlmacenesEtiquetasProc = procedure(ALV: TcxListView) of object;
+
   TfrmPrintEtiqArt = class(TfrmPrint)
     pnlOpciones: TPanel;
     cxlblTarifa: TcxLabel;
@@ -50,8 +56,12 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnEditarClick(Sender: TObject);
   private
+    FCrearDataSetExterno: TCrearDataSetEtiquetasProc;
+    FCargarAlmacenesExterno: TCargarAlmacenesEtiquetasProc;
+    FTextoOrigenExterno: string;
     FCodigosTarifa: TStringList;
     FLayout: TLayoutLoader;
+    procedure AplicarOrigenExterno;
     procedure RestaurarLayout;
     procedure GuardarLayout;
     function ObtenerCodigoTarifa: string;
@@ -65,6 +75,12 @@ type
     procedure AfterReportLoaded; override;
     function RelacionarClientDataSetConQuery(aCDS: TDataSet): TDataSet; override; // <-- AÑADIR
     procedure OnGuiasAplicadas; override;
+    property CrearDataSetExterno: TCrearDataSetEtiquetasProc
+      read FCrearDataSetExterno write FCrearDataSetExterno;
+    property CargarAlmacenesExterno: TCargarAlmacenesEtiquetasProc
+      read FCargarAlmacenesExterno write FCargarAlmacenesExterno;
+    property TextoOrigenExterno: string
+      read FTextoOrigenExterno write FTextoOrigenExterno;
   end;
 
 implementation
@@ -132,23 +148,34 @@ end;
 procedure TfrmPrintEtiqArt.OnGuiasAplicadas;
 begin
   inherited;
-  if Assigned(DM) and DM.unqryArtPrint.Active then
+  if Assigned(DM) then
   begin
-    // 1. Esto destruye y recrea el ClientDataSet bajo nuestros pies
-    DM.PoblarCdsEtiquetasArtDesdeUniQuery;
+    if Assigned(FCrearDataSetExterno) then
+    begin
+      FCrearDataSetExterno(DM, ObtenerCodigoTarifa, ObtenerAlmacenesCsv,
+                           dtFechaAplicacion.Date);
+      DM.fxdsEtiquetasArt.DataSet := nil;
+      DM.fxdsEtiquetasArt.DataSet := DM.cdsEtiquetasArt;
+      DM.fxdsEtiquetasArt.FieldAliases.Clear;
+    end
+    else if DM.unqryArtPrint.Active then
+    begin
+      // 1. Esto destruye y recrea el ClientDataSet bajo nuestros pies
+      DM.PoblarCdsEtiquetasArtDesdeUniQuery;
 
-    // 2. Expandimos por stock si es necesario
-    if Trim(ObtenerAlmacenesCsv) <> '' then
-      DM.ExpandirEtiquetasPorStock('STOCK_FILTRADO');
+      // 2. Expandimos por stock si es necesario
+      if Trim(ObtenerAlmacenesCsv) <> '' then
+        DM.ExpandirEtiquetasPorStock('STOCK_FILTRADO');
 
-    DM.cdsEtiquetasArt.First;
+      DM.cdsEtiquetasArt.First;
 
-    // 3. PARCHE: Refrescamos la caché del puente de FastReport
-    // Como el paso 1 acaba de destruir la estructura en memoria,
-    // forzamos al componente de FastReport a re-leerla.
-    DM.fxdsEtiquetasArt.DataSet := nil;
-    DM.fxdsEtiquetasArt.DataSet := DM.cdsEtiquetasArt;
-    DM.fxdsEtiquetasArt.FieldAliases.Clear;
+      // 3. PARCHE: Refrescamos la caché del puente de FastReport
+      // Como el paso 1 acaba de destruir la estructura en memoria,
+      // forzamos al componente de FastReport a re-leerla.
+      DM.fxdsEtiquetasArt.DataSet := nil;
+      DM.fxdsEtiquetasArt.DataSet := DM.cdsEtiquetasArt;
+      DM.fxdsEtiquetasArt.FieldAliases.Clear;
+    end;
   end;
 end;
 
@@ -200,6 +227,7 @@ var
   Idx: Integer;
 begin
   inherited;
+  AplicarOrigenExterno;
   // Las cargas que dependen de DM se hacen aqui (no en FormCreate)
   // porque la asignacion formulario.DM := dmmArticulos en el invocador
   // ocurre DESPUES del Create y ANTES del ShowModal.
@@ -209,9 +237,27 @@ begin
     DM.CargarTarifasEtiquetas(cbbTarifa.Properties.Items, FCodigosTarifa, Idx);
     if Idx >= 0 then
       cbbTarifa.ItemIndex := Idx;
-    DM.CargarAlmacenesEtiquetas(lvAlmacenes);
+    if Assigned(FCargarAlmacenesExterno) then
+    begin
+      FCargarAlmacenesExterno(lvAlmacenes);
+    end
+    else
+    begin
+      DM.CargarAlmacenesEtiquetas(lvAlmacenes);
+    end;
   end;
   RestaurarLayout;
+end;
+
+procedure TfrmPrintEtiqArt.AplicarOrigenExterno;
+begin
+  if Trim(FTextoOrigenExterno) <> '' then
+  begin
+    cxlblArticulo.Caption := 'Documento:';
+    edtCodArt.Text := FTextoOrigenExterno;
+    chkSoloEsteArt.Checked := False;
+    chkSoloEsteArt.Visible := False;
+  end;
 end;
 
 procedure TfrmPrintEtiqArt.FormDestroy(Sender: TObject);
@@ -282,15 +328,25 @@ begin
     ShowMessage('Seleccione una tarifa antes de imprimir.');
     Abort;
   end;
-  // chkSoloEsteArt limita a un unico articulo. Si esta sin marcar la consulta
-  // ataca a todos los articulos activos del catalogo.
-  sCodArt := '';
-  if chkSoloEsteArt.Checked then
-    sCodArt := Trim(edtCodArt.Text);
-  DM.CrearDataSetEtiquetasArt(sCodArt,
-                              ObtenerCodigoTarifa,
-                              ObtenerAlmacenesCsv,
-                              dtFechaAplicacion.Date);
+  if Assigned(FCrearDataSetExterno) then
+  begin
+    FCrearDataSetExterno(DM,
+                         ObtenerCodigoTarifa,
+                         ObtenerAlmacenesCsv,
+                         dtFechaAplicacion.Date);
+  end
+  else
+  begin
+    // chkSoloEsteArt limita a un unico articulo. Si esta sin marcar la consulta
+    // ataca a todos los articulos activos del catalogo.
+    sCodArt := '';
+    if chkSoloEsteArt.Checked then
+      sCodArt := Trim(edtCodArt.Text);
+    DM.CrearDataSetEtiquetasArt(sCodArt,
+                                ObtenerCodigoTarifa,
+                                ObtenerAlmacenesCsv,
+                                dtFechaAplicacion.Date);
+  end;
 end;
 
 end.

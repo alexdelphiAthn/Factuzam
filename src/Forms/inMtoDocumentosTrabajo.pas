@@ -26,11 +26,14 @@ uses
   cxTextEdit, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls,
   cxSplitter, cxCurrencyEdit, cxCalendar, cxBlobEdit,
-  dxScrollbarAnnotations, dxCore, cxRadioGroup, Vcl.AppEvnts,
+  dxScrollbarAnnotations, dxCore, cxRadioGroup, cxListView, Vcl.AppEvnts,
   JvComponentBase, JvEnterTab, dxShellDialogs, UniDataDocumentosTrabajo;
 
 type
   TfrmMtoDocumentosTrabajo = class(TfrmMtoGen)
+    pcAmbitoDTR: TcxPageControl;
+    tsAmbitoPropiosDTR: TcxTabSheet;
+    tsAmbitoCompartidosDTR: TcxTabSheet;
     colDtrId: TcxGridDBColumn;
     colDtrTitulo: TcxGridDBColumn;
     colDtrTipo: TcxGridDBColumn;
@@ -41,7 +44,12 @@ type
     colDtrAlmacen: TcxGridDBColumn;
     splLineasDTR: TcxSplitter;
     pnlLineasDTR: TPanel;
+    pnlAccionesDTR: TPanel;
     lblLineasDTR: TcxLabel;
+    btnImprimirEtiquetasDTR: TcxButton;
+    pcDetalleDTR: TcxPageControl;
+    tsLineasDTR: TcxTabSheet;
+    tsCompartirDTR: TcxTabSheet;
     cxgrdLineasDTR: TcxGrid;
     tvLineasDTR: TcxGridDBTableView;
     colDtlLinea: TcxGridDBColumn;
@@ -55,8 +63,22 @@ type
     colDtlOrigen: TcxGridDBColumn;
     colDtlInstanteStock: TcxGridDBColumn;
     glLineasDTR: TcxGridLevel;
+    cxgrdCompartidosDTR: TcxGrid;
+    tvCompartidosDTR: TcxGridDBTableView;
+    colDtcUsuario: TcxGridDBColumn;
+    colDtcPermiso: TcxGridDBColumn;
+    colDtcAlta: TcxGridDBColumn;
+    glCompartidosDTR: TcxGridLevel;
+    procedure btnImprimirEtiquetasDTRClick(Sender: TObject);
+    procedure pcAmbitoDTRChange(Sender: TObject);
   private
-    { Private declarations }
+    FIdEtiquetasDTR: Int64;
+    procedure AplicarEstadoAmbito;
+    procedure CargarAlmacenesEtiquetasDTR(ALV: TcxListView);
+    procedure CrearDataSetEtiquetasDTR(ADmArt: TObject;
+                                       const ACodTarifa,
+                                             AAlmacenesCsv: string;
+                                       AFecha: TDateTime);
   public
     dmmDocumentosTrabajo: TdmDocumentosTrabajo;
     procedure CrearTablaPrincipal; override;
@@ -71,7 +93,7 @@ var
 implementation
 
 uses
-  inLibFotos;
+  UniDataArticulos, inLibFotos, inMtoModalEtiqArt;
 
 {$R *.dfm}
 
@@ -87,8 +109,120 @@ begin
   begin
     dsTablaG.DataSet := dmmDocumentosTrabajo.unqryTablaG;
     tvLineasDTR.DataController.DataSource := dmmDocumentosTrabajo.dsLineas;
+    tvCompartidosDTR.DataController.DataSource :=
+      dmmDocumentosTrabajo.dsCompartidos;
+    AplicarEstadoAmbito;
   end;
   pkFieldName := 'ID_DTR';
+end;
+
+procedure TfrmMtoDocumentosTrabajo.AplicarEstadoAmbito;
+var
+  bPropios: Boolean;
+begin
+  bPropios := True;
+  if dmmDocumentosTrabajo <> nil then
+  begin
+    bPropios := dmmDocumentosTrabajo.Ambito = dtaPropios;
+  end;
+  cxGrdDBTabPrin.OptionsData.Editing := bPropios;
+  tvLineasDTR.OptionsData.Editing := bPropios;
+  tvCompartidosDTR.OptionsData.Editing := bPropios;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.CargarAlmacenesEtiquetasDTR(
+  ALV: TcxListView);
+begin
+  if dmmDocumentosTrabajo <> nil then
+  begin
+    dmmDocumentosTrabajo.CargarAlmacenesEtiquetasDoc(FIdEtiquetasDTR, ALV);
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.CrearDataSetEtiquetasDTR(ADmArt: TObject;
+  const ACodTarifa, AAlmacenesCsv: string; AFecha: TDateTime);
+begin
+  if dmmDocumentosTrabajo <> nil then
+  begin
+    dmmDocumentosTrabajo.CrearDataSetEtiquetasDoc(ADmArt,
+                                                  FIdEtiquetasDTR,
+                                                  ACodTarifa,
+                                                  AAlmacenesCsv,
+                                                  AFecha);
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.btnImprimirEtiquetasDTRClick(
+  Sender: TObject);
+var
+  formulario: TfrmPrintEtiqArt;
+  dmArt: TdmArticulos;
+  sTitulo: string;
+begin
+  inherited;
+  if dmmDocumentosTrabajo <> nil then
+  begin
+    if (dmmDocumentosTrabajo.unqryTablaG.Active) and
+       (not dmmDocumentosTrabajo.unqryTablaG.IsEmpty) then
+    begin
+      if dmmDocumentosTrabajo.unqryLineas.State in dsEditModes then
+      begin
+        dmmDocumentosTrabajo.unqryLineas.Post;
+      end;
+      if dmmDocumentosTrabajo.unqryTablaG.State in dsEditModes then
+      begin
+        dmmDocumentosTrabajo.unqryTablaG.Post;
+      end;
+      if not dmmDocumentosTrabajo.unqryTablaG.FieldByName('ID_DTR').IsNull then
+      begin
+        FIdEtiquetasDTR := dmmDocumentosTrabajo.unqryTablaG.FieldByName(
+          'ID_DTR').AsLargeInt;
+        sTitulo := dmmDocumentosTrabajo.unqryTablaG.FieldByName(
+          'TITULO_DTR').AsString;
+        dmArt := TdmArticulos.Create(nil);
+        try
+          formulario := TfrmPrintEtiqArt.Create(Application);
+          try
+            formulario.DM := dmArt;
+            formulario.Caption :=
+              'Impresion de Etiquetas de Documento de Trabajo';
+            formulario.TextoOrigenExterno := sTitulo;
+            formulario.CargarAlmacenesExterno := CargarAlmacenesEtiquetasDTR;
+            formulario.CrearDataSetExterno := CrearDataSetEtiquetasDTR;
+            formulario.ShowModal;
+          finally
+            FreeAndNil(formulario);
+          end;
+        finally
+          FreeAndNil(dmArt);
+        end;
+      end
+      else
+      begin
+        ShowMessage('Grabe el Documento de Trabajo antes de imprimir etiquetas.');
+      end;
+    end
+    else
+    begin
+      ShowMessage('Seleccione un Documento de Trabajo antes de imprimir etiquetas.');
+    end;
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.pcAmbitoDTRChange(Sender: TObject);
+begin
+  if dmmDocumentosTrabajo <> nil then
+  begin
+    if pcAmbitoDTR.ActivePage = tsAmbitoCompartidosDTR then
+    begin
+      dmmDocumentosTrabajo.CambiarAmbito(dtaCompartidos);
+    end
+    else
+    begin
+      dmmDocumentosTrabajo.CambiarAmbito(dtaPropios);
+    end;
+    AplicarEstadoAmbito;
+  end;
 end;
 
 procedure TfrmMtoDocumentosTrabajo.ResetForm;
