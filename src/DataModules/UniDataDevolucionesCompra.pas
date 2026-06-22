@@ -232,6 +232,8 @@ begin
     else
       FieldByName('CODIGO_EMP_DEVC').AsString := '0';
     FieldByName('CODIGO_PRV_DEVC').AsString := '0';
+    if FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil then
+      FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString := 'S';
     AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
       'CODIGO_EMP_DEVC', 'ESIVA_RECARGO_COMPRAS_DEVC');
     AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
