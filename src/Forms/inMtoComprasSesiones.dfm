@@ -4,7 +4,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
   ClientWidth = 1240
   StyleElements = [seFont, seClient, seBorder]
   OnDestroy = FormDestroy
-  ExplicitTop = 3
   ExplicitWidth = 1240
   ExplicitHeight = 720
   TextHeight = 17
@@ -96,7 +95,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           Align = alTop
           Caption = ' Cabecera '
           TabOrder = 0
-          ExplicitTop = 1
           Height = 235
           Width = 1092
           object lblSerie: TcxLabel
@@ -112,7 +110,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             DataBinding.DataField = 'SERIE_SES'
             DataBinding.DataSource = dsTablaG
             Properties.CharCase = ecUpperCase
-            Properties.DropDownListStyle = lsEditList
             Properties.MaxLength = 12
             Properties.OnInitPopup = cbbSeriePropertiesInitPopup
             TabOrder = 1
@@ -228,7 +225,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             DataBinding.DataSource = dsTablaG
             Properties.MaxLength = 100
             TabOrder = 11
-            Width = 200
+            Width = 149
           end
           object lblAlmacen: TcxLabel
             Left = 12
@@ -313,15 +310,15 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Transparent = True
           end
           object lblTipoIvaDefecto: TcxLabel
-            Left = 880
-            Top = 152
+            Left = 772
+            Top = 189
             Caption = 'IVA defecto'
             TabOrder = 31
             Transparent = True
           end
           object cbbTipoIvaDefecto: TcxDBComboBox
-            Left = 980
-            Top = 149
+            Left = 869
+            Top = 188
             DataBinding.DataField = 'TIPO_IVA_SES'
             DataBinding.DataSource = dsTablaG
             Properties.DropDownListStyle = lsFixedList
@@ -334,22 +331,9 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             TabOrder = 32
             Width = 60
           end
-          object chkRecargoCompras: TcxDBCheckBox
-            Left = 656
-            Top = 190
-            Caption = 'Recargo equivalencia compras'
-            DataBinding.DataField = 'ESIVA_RECARGO_COMPRAS_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.ValueChecked = 'S'
-            Properties.ValueUnchecked = 'N'
-            Properties.OnChange = chkRecargoComprasPropertiesChange
-            Style.TransparentBorder = False
-            TabOrder = 33
-            Transparent = True
-          end
           object chkVariosTiposIva: TcxDBCheckBox
-            Left = 880
-            Top = 190
+            Left = 616
+            Top = 188
             Caption = 'Varios tipos IVA'
             DataBinding.DataField = 'ESVARIOS_TIPOS_IVA_SES'
             DataBinding.DataSource = dsTablaG
@@ -357,7 +341,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Properties.ValueUnchecked = 'N'
             Properties.OnChange = chkVariosTiposIvaPropertiesChange
             Style.TransparentBorder = False
-            TabOrder = 34
+            TabOrder = 33
             Transparent = True
           end
           object lblMargen: TcxLabel
@@ -460,41 +444,36 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         end
         object pnlBottFich: TPanel
           Left = 0
-          Top = 225
+          Top = 243
           Width = 1092
-          Height = 423
+          Height = 405
           Align = alClient
           TabOrder = 1
-          ExplicitTop = 209
-          ExplicitHeight = 439
           object cxPageControl2: TcxPageControl
             Left = 1
             Top = 1
             Width = 1090
-            Height = 421
+            Height = 403
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = cxTabSheet1
+            Properties.ActivePage = tsTotales
             Properties.CustomButtons.Buttons = <>
-            ExplicitHeight = 437
-            ClientRectBottom = 417
+            ClientRectBottom = 399
             ClientRectLeft = 4
             ClientRectRight = 1086
             ClientRectTop = 28
             object cxTabSheet1: TcxTabSheet
               Caption = '&1_Lineas de Art'#237'culos'
               ImageIndex = 0
-              ExplicitHeight = 405
               object cxgrdLineas: TcxGrid
                 Left = 0
                 Top = 36
                 Width = 1082
-                Height = 353
+                Height = 335
                 Align = alClient
                 TabOrder = 0
                 OnEnter = cxgrdLineasEnter
                 OnExit = cxgrdLineasExit
-                ExplicitHeight = 369
                 object tvLineas: TcxGridDBTableView
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Buttons.PriorPage.Visible = False
@@ -734,7 +713,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Left = 0
                 Top = 0
                 Width = 1082
-                Height = 389
+                Height = 371
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
@@ -892,58 +871,58 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                     Transparent = True
                   end
                   object lblTotSesIVAS: TcxLabel
-                    Left = 20
+                    Left = 13
                     Top = 170
                     Caption = 'S'#250'per reducido'
                     TabOrder = 7
                     Transparent = True
                   end
                   object lblTotSesIVAE: TcxLabel
-                    Left = 74
+                    Left = 73
                     Top = 218
                     Caption = 'Exento'
                     TabOrder = 8
                     Transparent = True
                   end
                   object curTotSesTOTAL_BASEI_IVAN_SES: TcxDBCurrencyEdit
-                    Left = 116
+                    Left = 125
                     Top = 70
                     DataBinding.DataField = 'TOTAL_BASEI_IVAN_SES'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 9
-                    Width = 105
+                    Width = 95
                   end
                   object curTotSesTOTAL_BASEI_IVAR_SES: TcxDBCurrencyEdit
-                    Left = 116
+                    Left = 125
                     Top = 118
                     DataBinding.DataField = 'TOTAL_BASEI_IVAR_SES'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 10
-                    Width = 105
+                    Width = 95
                   end
                   object curTotSesTOTAL_BASEI_IVAS_SES: TcxDBCurrencyEdit
-                    Left = 116
+                    Left = 125
                     Top = 166
                     DataBinding.DataField = 'TOTAL_BASEI_IVAS_SES'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 11
-                    Width = 105
+                    Width = 95
                   end
                   object curTotSesTOTAL_BASEI_IVAE_SES: TcxDBCurrencyEdit
-                    Left = 116
+                    Left = 125
                     Top = 214
                     DataBinding.DataField = 'TOTAL_BASEI_IVAE_SES'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 12
-                    Width = 105
+                    Width = 95
                   end
                   object spnTotSesPORCENTAJE_IVAN_SES: TcxDBSpinEdit
                     Left = 226
@@ -1135,7 +1114,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object tsDocumentos: TcxTabSheet
               Caption = '&3_Documentos creados'
               ImageIndex = 1
-              ExplicitHeight = 405
               object pnlDocsTop: TPanel
                 Left = 0
                 Top = 0
@@ -1169,10 +1147,9 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Left = 0
                 Top = 40
                 Width = 1082
-                Height = 349
+                Height = 331
                 Align = alClient
                 TabOrder = 1
-                ExplicitHeight = 365
                 object tvDocs: TcxGridDBTableView
                   OnDblClick = tvDocsDblClick
                   OptionsCustomize.ColumnHiding = True
@@ -1224,7 +1201,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Left = 0
                 Top = 0
                 Width = 560
-                Height = 389
+                Height = 371
                 Align = alLeft
                 BevelOuter = bvNone
                 TabOrder = 0
@@ -1234,7 +1211,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   Align = alClient
                   Caption = ' Datos del proveedor '
                   TabOrder = 0
-                  Height = 389
+                  Height = 371
                   Width = 560
                   object lblProvCodigo: TcxLabel
                     Left = 12
@@ -1484,7 +1461,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                     Caption = 'Ir a proveedor (ficha)'
                     LookAndFeel.Kind = lfFlat
                     LookAndFeel.NativeStyle = False
-                    TabOrder = 32
+                    TabOrder = 30
                     OnClick = btnIrProveedorClick
                   end
                 end
@@ -1495,11 +1472,11 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Align = alClient
                 Caption = ' Kits de cantidades por talla '
                 TabOrder = 1
-                Height = 389
+                Height = 371
                 Width = 522
                 object pnlProvKitsTop: TPanel
                   Left = 2
-                  Top = 18
+                  Top = 22
                   Width = 518
                   Height = 36
                   Align = alTop
@@ -1528,14 +1505,13 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 end
                 object cxgrdPrvKits: TcxGrid
                   Left = 2
-                  Top = 54
+                  Top = 58
                   Width = 308
-                  Height = 333
+                  Height = 311
                   Align = alClient
                   TabOrder = 1
                   object tvPrvKits: TcxGridDBTableView
                     OnDblClick = tvPrvKitsDblClick
-                    Navigator.Visible = False
                     OptionsData.Deleting = False
                     OptionsData.DeletingConfirmation = False
                     OptionsData.Editing = False
@@ -1563,13 +1539,12 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 end
                 object cxgrdPrvKitsDet: TcxGrid
                   Left = 310
-                  Top = 54
+                  Top = 58
                   Width = 210
-                  Height = 333
+                  Height = 311
                   Align = alRight
                   TabOrder = 2
                   object tvPrvKitsDet: TcxGridDBTableView
-                    Navigator.Visible = False
                     OptionsData.Deleting = False
                     OptionsData.DeletingConfirmation = False
                     OptionsData.Editing = False
@@ -1598,7 +1573,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         end
         object splSplitterFicha: TcxSplitter
           Left = 0
-          Top = 217
+          Top = 235
           Width = 1092
           Height = 8
           Cursor = crSizeNS
@@ -1609,8 +1584,6 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           HotZoneClassName = 'TcxMediaPlayer9Style'
           HotZone.SizePercent = 50
           AlignSplitter = salTop
-          ExplicitLeft = 17
-          ExplicitTop = 232
         end
       end
       inherited tsPerfil: TcxTabSheet

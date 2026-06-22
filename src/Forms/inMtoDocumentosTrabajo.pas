@@ -26,8 +26,9 @@ uses
   cxTextEdit, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls,
   cxSplitter, cxCurrencyEdit, cxCalendar, cxBlobEdit,
-  dxScrollbarAnnotations, dxCore, cxRadioGroup, cxListView, Vcl.AppEvnts,
-  JvComponentBase, JvEnterTab, dxShellDialogs, UniDataDocumentosTrabajo;
+  dxScrollbarAnnotations, dxCore, cxRadioGroup, cxListView, cxMaskEdit,
+  cxDropDownEdit, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
+  dxShellDialogs, UniDataDocumentosTrabajo;
 
 type
   TfrmMtoDocumentosTrabajo = class(TfrmMtoGen)
@@ -46,6 +47,7 @@ type
     pnlLineasDTR: TPanel;
     pnlAccionesDTR: TPanel;
     lblLineasDTR: TcxLabel;
+    btnCompartirDTR: TcxButton;
     btnImprimirEtiquetasDTR: TcxButton;
     pcDetalleDTR: TcxPageControl;
     tsLineasDTR: TcxTabSheet;
@@ -65,10 +67,12 @@ type
     glLineasDTR: TcxGridLevel;
     cxgrdCompartidosDTR: TcxGrid;
     tvCompartidosDTR: TcxGridDBTableView;
-    colDtcUsuario: TcxGridDBColumn;
+    colDtcTipoDestino: TcxGridDBColumn;
+    colDtcUsuarioGrupo: TcxGridDBColumn;
     colDtcPermiso: TcxGridDBColumn;
     colDtcAlta: TcxGridDBColumn;
     glCompartidosDTR: TcxGridLevel;
+    procedure btnCompartirDTRClick(Sender: TObject);
     procedure btnImprimirEtiquetasDTRClick(Sender: TObject);
     procedure pcAmbitoDTRChange(Sender: TObject);
   private
@@ -93,7 +97,7 @@ var
 implementation
 
 uses
-  UniDataArticulos, inLibFotos, inMtoModalEtiqArt;
+  Uni, UniDataArticulos, inLibFotos, inLibGenBusq, inMtoModalEtiqArt;
 
 {$R *.dfm}
 
@@ -128,6 +132,7 @@ begin
   cxGrdDBTabPrin.OptionsData.Editing := bPropios;
   tvLineasDTR.OptionsData.Editing := bPropios;
   tvCompartidosDTR.OptionsData.Editing := bPropios;
+  btnCompartirDTR.Enabled := bPropios;
 end;
 
 procedure TfrmMtoDocumentosTrabajo.CargarAlmacenesEtiquetasDTR(
@@ -149,6 +154,59 @@ begin
                                                   ACodTarifa,
                                                   AAlmacenesCsv,
                                                   AFecha);
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.btnCompartirDTRClick(Sender: TObject);
+var
+  q: TUniQuery;
+  sDestino: string;
+  sTipo: string;
+begin
+  inherited;
+  if dmmDocumentosTrabajo <> nil then
+  begin
+    if (not dmmDocumentosTrabajo.unqryTablaG.Active) or
+       (dmmDocumentosTrabajo.unqryTablaG.IsEmpty) then
+    begin
+      ShowMessage('Seleccione un Documento de Trabajo antes de compartir.');
+    end
+    else
+    begin
+      q := TUniQuery.Create(nil);
+      try
+        q.SQL.Text :=
+          'SELECT ''USUARIO'' AS TIPO, ' +
+          '       USUARIO_USU AS DESTINO ' +
+          '  FROM fza_usuarios ' +
+          ' WHERE COALESCE(ESACTIVO_USU, ''S'') = ''S'' ' +
+          ' UNION ALL ' +
+          'SELECT ''GRUPO'' AS TIPO, ' +
+          '       GRUPO_USUGRP AS DESTINO ' +
+          '  FROM fza_usuarios_grupos ' +
+          ' ORDER BY TIPO, DESTINO';
+        if TBusquedaUtils.EjecutarBusqueda('Compartir Documento de Trabajo',
+                                           q,
+                                           'frmBuscarCompartirDTR',
+                                           Self) then
+        begin
+          sTipo := q.FieldByName('TIPO').AsString;
+          sDestino := q.FieldByName('DESTINO').AsString;
+          if dmmDocumentosTrabajo.CompartirDocumentoActual(sDestino,
+                                                           sTipo) then
+          begin
+            ShowMessage('Documento compartido.');
+          end
+          else
+          begin
+            ShowMessage('El Documento de Trabajo ya estaba compartido.');
+          end;
+          pcDetalleDTR.ActivePage := tsCompartirDTR;
+        end;
+      finally
+        FreeAndNil(q);
+      end;
+    end;
   end;
 end;
 
@@ -199,12 +257,14 @@ begin
       end
       else
       begin
-        ShowMessage('Grabe el Documento de Trabajo antes de imprimir etiquetas.');
+        ShowMessage(
+          'Grabe el Documento de Trabajo antes de imprimir etiquetas.');
       end;
     end
     else
     begin
-      ShowMessage('Seleccione un Documento de Trabajo antes de imprimir etiquetas.');
+      ShowMessage(
+        'Seleccione un Documento de Trabajo antes de imprimir etiquetas.');
     end;
   end;
 end;

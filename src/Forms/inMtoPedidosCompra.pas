@@ -183,6 +183,8 @@ type
     procedure actIrDocumentoExecute(Sender: TObject);
     procedure cbbSERIE_PEDCPropertiesInitPopup(Sender: TObject);
     procedure btnRecibirTodoClick(Sender: TObject);
+    procedure btnCODIGO_PRV_PEDCPropertiesButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -196,6 +198,7 @@ type
   // Reservado por compatibilidad con la libreria. Siempre nil ahora
   // que la columna Color es unica.
   FColColorProveedorPivot : TcxGridDBColumn;
+    FAfterPostLineasOriginal: TDataSetNotifyEvent;
     // Guarda contra la reentrancia que provoca PersistirPreferenciaPivote:
     // su Edit + set field + Post dispara OnDataChange tres veces, y entre
     // el Edit y el set la cabecera todavia tiene el ESPIVOTE viejo. Sin
@@ -215,10 +218,12 @@ type
     function  RecogerCeldasARecibirVertical(
                                 const ACodigoAlm: string): TArray<TCeldaARecibir>;
     // Hook unificado para OnEditValueChanged de columnas talla: en
-    // pivote expandido captura el valor en el dict de la libreria
-    // (persistencia frente a Post de cxGrid); en el resto de modos
+    // pivote lo resuelve la libreria de compras; fuera de pivote
     // delega en el gestor de tallas como antes.
     procedure TallaEditValueChangedHook(Sender: TObject);
+    procedure TallaValidateHook(Sender: TObject; var DisplayValue: Variant;
+                                var ErrorText: TCaption;
+                                var Error: Boolean);
     function  ColumnaPedidosCompraExiste(const ANombreColumna: string): Boolean;
     // Devuelve el almacen efectivo de la primera linea del pedido
     // (CODIGO_ALMACEN_PEDCLIN, con fallback al CODIGO_ALM_PEDC de
@@ -257,8 +262,10 @@ uses
   inLibFotos,
   inLibAtributosPaleta,
   inLibPedidosCompra,
+  inLibLog,
   inLibtb,
-  inMtoModalSelAlmacenPedido, inMtoModalDocsCreados, inLibShowMto;
+  inMtoModalSelAlmacenPedido, inMtoModalDocsCreados, inLibShowMto,
+  inLibGenBusq;
 
 {$R *.dfm}
 
@@ -328,8 +335,10 @@ begin
   // controlador recarga su cache y republica.
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
   // Hook AfterPost del detail: cxGrid borra los Values[] no-bound al
-  // repintar tras Post; encadenamos totales del DM + recarga del
+  // repintar tras Post; conservamos la logica del DM y recargamos el
   // controlador.
+  FAfterPostLineasOriginal :=
+    dmmPedidosCompra.unqryPedidosCompraLineas.AfterPost;
   dmmPedidosCompra.unqryPedidosCompraLineas.AfterPost :=
                                              unqryLineasAfterPostHook;
   // Hook AfterOpen del detail: al abrir el cursor (al entrar al form y
@@ -457,8 +466,12 @@ begin
   FGestorTallas := TGestorGridTallas.Create(cfgT);
   for i := 0 to CANT_TALLAS_MAX - 1 do
     if FTallaColumns[i] <> nil then
+    begin
       TcxCurrencyEditProperties(FTallaColumns[i].Properties).
         OnEditValueChanged := TallaEditValueChangedHook;
+      TcxCurrencyEditProperties(FTallaColumns[i].Properties).
+        OnValidate := TallaValidateHook;
+    end;
   // 2. Orquestador de pivote (libreria nueva compartida con albaranes).
   cfgP := Default(TGridPivoteCompraConfig);
   cfgP.Conexion             := inLibGlobalVar.oConn;
@@ -479,6 +492,9 @@ begin
   cfgP.FieldArt             := 'CODIGO_ART_PEDCLIN';
   cfgP.FieldSku             := 'CODIGO_UNIDAD_PEDCLIN';
   cfgP.FieldCantidad        := 'CANTIDAD_PEDCLIN';
+  cfgP.FieldPrecioBase      := 'PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN';
+  cfgP.FieldTotalUds        := 'TOTAL_UNIDADES_PEDCLIN';
+  cfgP.FieldTotalLinea      := 'TOTAL_PEDCLIN';
   cfgP.FieldCantidadRecibida:= 'CANTIDAD_RECIBIDA_PEDCLIN';
   cfgP.FieldCantidadRecibida:= 'CANTIDAD_RECIBIDA_PEDCLIN';
   cfgP.FieldIdAcPivot       := 'ID_AC_PIVOT_PEDCLIN';
@@ -728,6 +744,11 @@ end;
 
 procedure TfrmMtoPedidosCompra.btnGrabarClick(Sender: TObject);
 begin
+  if inLibLog.Log <> nil then
+    inLibLog.Log.LogInfo('PedidosCompra.btnGrabarClick: INICIO');
+  if Assigned(FPivote) and FPivote.Activo and
+     (not FPivote.Expandido) then
+    FPivote.PersistirCantidadesPendientes;
   inherited;
   if dsTablaG.State in dsEditModes then
   begin
@@ -773,11 +794,13 @@ begin
   FPivote.RecargarYRepublicar;
 end;
 
-// Hook AfterPost del detail: encadena la logica original del DM
-// (totales) con la republicacion de Values[] no-bound del controlador.
+// Hook AfterPost del detail: encadena la logica original del DM con la
+// republicacion de Values[] no-bound del controlador.
 procedure TfrmMtoPedidosCompra.unqryLineasAfterPostHook(DataSet: TDataSet);
 begin
-  if Assigned(dmmPedidosCompra) then
+  if Assigned(FAfterPostLineasOriginal) then
+    FAfterPostLineasOriginal(DataSet)
+  else if Assigned(dmmPedidosCompra) then
     dmmPedidosCompra.CalcularTotalesPedidoCompra;
   if Assigned(FPivote) and FPivote.Activo then
     FPivote.RecargarYRepublicar;
@@ -851,6 +874,34 @@ begin
       ShowMto(Self.Owner,
               'Articulos',
               FieldByName('CODIGO_ART_PEDCLIN').AsString);
+end;
+
+procedure TfrmMtoPedidosCompra.btnCODIGO_PRV_PEDCPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sCodigo : string;
+  ds      : TDataSet;
+begin
+  inherited;
+  if Assigned(dmmPedidosCompra) then
+  begin
+    ds := dmmPedidosCompra.unqryTablaG;
+    if ds.IsEmpty then
+      MessageDlg('Crea o selecciona un pedido de compra antes de ' +
+                 'elegir el proveedor.', mtInformation, [mbOk], 0)
+    else if TBusquedaUtils.EjecutarBusqueda(
+              'Búsqueda de proveedores',
+              'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
+              'CODIGO_PRV_PRV',
+              sCodigo,
+              'frmMtoPedcProvSearch',
+              Self) then
+    begin
+      if not (ds.State in [dsInsert, dsEdit]) then
+        ds.Edit;
+      ds.FieldByName('CODIGO_PRV_PEDC').AsString := sCodigo;
+    end;
+  end;
 end;
 
 // "Ir a documento" (Ctrl+May+A) desde la pestania Albaranes del pedido:
@@ -1014,10 +1065,23 @@ end;
 // linea del dataset, y devuelve las que tengan cantidad > 0.
 procedure TfrmMtoPedidosCompra.TallaEditValueChangedHook(Sender: TObject);
 begin
-  if Assigned(FPivote) and FPivote.Activo and FPivote.Expandido then
-    FPivote.CapturarARecibirEditValueChanged(Sender)
+  if Assigned(FPivote) and FPivote.Activo then
+  begin
+    if FPivote.Expandido then
+      FPivote.CapturarARecibirEditValueChanged(Sender)
+    else
+      FPivote.CapturarCantidadEditValueChanged(Sender);
+  end
   else if Assigned(FGestorTallas) then
     FGestorTallas.PersistirCeldaActiva(Sender);
+end;
+
+procedure TfrmMtoPedidosCompra.TallaValidateHook(Sender: TObject;
+  var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
+begin
+  if (not Error) and Assigned(FPivote) and FPivote.Activo and
+     (not FPivote.Expandido) then
+    FPivote.PersistirCantidadEditValueChanged(Sender, DisplayValue);
 end;
 
 function TfrmMtoPedidosCompra.PrimerAlmacenARecibirVertical: string;

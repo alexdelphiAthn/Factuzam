@@ -16,26 +16,27 @@ File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibVerifactuNo
 
 [Modules]
 Module0=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas
-Module1=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoTarifas.pas
-Module2=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
+Module1=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
+Module2=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoTarifas.pas
 Count=3
 EditWindowCount=1
 
 [C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas]
 ModuleType=TSourceModule
 
-[C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoTarifas.pas]
-ModuleType=TSourceModule
-
 [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 ModuleType=TBaseProject
 
+[C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoTarifas.pas]
+ModuleType=TSourceModule
+
 [EditWindow0]
-ViewCount=3
+ViewCount=4
 CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas
 View0=0
 View1=1
 View2=2
+View3=3
 PercentageSizes=1
 Create=1
 Visible=1
@@ -70,17 +71,21 @@ BottomMiddlePanelClients=DockSite0,GraphDrawingModel
 BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E67566965779F1D00000000000002F706000000000000FFFFFFFF
 
 [View0]
+CustomEditViewType=TOTACustomEditView
+OTAEditViewType=WelcomePage.MainPage
+
+[View1]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
 CursorX=46
 CursorY=22
-TopLine=6
+TopLine=24
 LeftCol=1
 Elisions=
 Bookmarks=
 EditViewName=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
 
-[View1]
+[View2]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoTarifas.pas
 CursorX=1
@@ -91,11 +96,11 @@ Elisions=
 Bookmarks=
 EditViewName=Borland.FormDesignerView
 
-[View2]
+[View3]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasNormal.pas
-CursorX=46
-CursorY=8
+CursorX=54
+CursorY=13
 TopLine=1
 LeftCol=1
 Elisions=
@@ -251,11 +256,6 @@ Dockable=1
 StayOnTop=0
 SplitPos=135
 
-[PropInspDesignerSelection]
-ArrangeBy=Name
-SelectedItem=Caption,
-ExpandedItems=Anchors=0,BorderIcons=0
-
 [frmDesignPreview]
 PercentageSizes=1
 Create=1
@@ -265,11 +265,11 @@ State=0
 Left=0
 Top=0
 Width=1500
-Height=6193
+Height=8237
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1500
-ClientHeight=6193
+ClientHeight=8237
 TBDockHeight=5956
 LRDockWidth=2510
 Dockable=1
@@ -470,11 +470,11 @@ State=0
 Left=0
 Top=0
 Width=1500
-Height=6193
+Height=8237
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1500
-ClientHeight=6193
+ClientHeight=8237
 TBDockHeight=4886
 LRDockWidth=7151
 Dockable=1

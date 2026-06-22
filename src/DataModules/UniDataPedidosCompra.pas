@@ -52,6 +52,8 @@ type
     procedure unqryPedidosCompraLineasBeforePost(DataSet: TDataSet);
     procedure unqryPedidosCompraLineasAfterPost(DataSet: TDataSet);
     procedure unqryPedidosCompraLineasBeforeDelete(DataSet: TDataSet);
+  private
+    FCalculandoTotales: Boolean;
   public
     procedure GetCodigoAutoPedidoCompra;
     procedure CalcularTotalesPedidoCompra;
@@ -419,9 +421,17 @@ end;
 
 procedure TdmPedidosCompra.CalcularTotalesPedidoCompra;
 begin
-  CalcularTotalesDocumentoCompra(inLibGlobalVar.oConn, unqryTablaG,
-    unqryPedidosCompraLineas, 'PEDC', 'TOTAL_PEDCLIN',
-    'TIPO_IVA_ARTICULO_PEDCLIN', 'PORCENTAJE_IVA_PEDCLIN');
+  if not FCalculandoTotales then
+  begin
+    FCalculandoTotales := True;
+    try
+      CalcularTotalesDocumentoCompra(inLibGlobalVar.oConn, unqryTablaG,
+        unqryPedidosCompraLineas, 'PEDC', 'TOTAL_PEDCLIN',
+        'TIPO_IVA_ARTICULO_PEDCLIN', 'PORCENTAJE_IVA_PEDCLIN');
+    finally
+      FCalculandoTotales := False;
+    end;
+  end;
 end;
 
 end.

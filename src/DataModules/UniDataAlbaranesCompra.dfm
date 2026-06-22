@@ -1,4 +1,4 @@
-inherited dmAlbaranesCompra: TdmAlbaranesCompra
+﻿inherited dmAlbaranesCompra: TdmAlbaranesCompra
   Height = 480
   Width = 626
   PixelsPerInch = 120
@@ -84,7 +84,7 @@ inherited dmAlbaranesCompra: TdmAlbaranesCompra
       end>
   end
   object unstrdprcGetContadorAlbc: TUniStoredProc
-    StoredProcName = 'PRC_GET_CONTADOR_FACTURA'
+    StoredProcName = 'PRC_GET_NEXT_CONT_FACT_SERIE'
     Connection = dmConn.conUni
     Left = 256
     Top = 24

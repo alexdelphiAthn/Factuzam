@@ -1,4 +1,4 @@
-inherited dmDevolucionesCompra: TdmDevolucionesCompra
+﻿inherited dmDevolucionesCompra: TdmDevolucionesCompra
   Height = 480
   Width = 626
   PixelsPerInch = 120
@@ -82,8 +82,31 @@ inherited dmDevolucionesCompra: TdmDevolucionesCompra
         Value = nil
       end>
   end
+  object unqryAlmacenesDevc: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM'
+      '  FROM fza_almacenes'
+      ' WHERE ESACTIVO_ALM = '#39'S'#39
+      '   AND (CODIGO_EMP_ALM = :EMPRESA OR :EMPRESA = '#39#39')'
+      ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM')
+    Left = 160
+    Top = 360
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'EMPRESA'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object dsAlmacenesDevc: TDataSource
+    DataSet = unqryAlmacenesDevc
+    Left = 160
+    Top = 424
+  end
   object unstrdprcGetContadorDevc: TUniStoredProc
-    StoredProcName = 'PRC_GET_CONTADOR_FACTURA'
+    StoredProcName = 'PRC_GET_NEXT_CONT_FACT_SERIE'
     Connection = dmConn.conUni
     Left = 256
     Top = 24

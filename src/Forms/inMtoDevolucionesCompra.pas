@@ -81,7 +81,7 @@ type
     lblRefProveedor:    TcxLabel;
     txtREF_PROVEEDOR_DEVC: TcxDBTextEdit;
     lblCodigoAlmacen:   TcxLabel;
-    txtCODIGO_ALM_DEVC: TcxDBTextEdit;
+    cbbCODIGO_ALM_DEVC: TcxDBLookupComboBox;
 
     // Totales
     lblTotalBases:        TcxLabel;
@@ -151,6 +151,13 @@ type
     procedure cxgrdLineasDevolucionEnter(Sender: TObject);
     procedure cxgrdLineasDevolucionExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
+    procedure btnCODIGO_PRV_DEVCPropertiesButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
+    procedure colLineaDevcCODIGO_ARTPropertiesButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
+    procedure colLineaDevcCODIGO_ARTPropertiesValidate(Sender: TObject;
+                var DisplayValue: Variant; var ErrorText: TCaption;
+                var Error: Boolean);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -158,6 +165,7 @@ type
     FAtribColumns    : array[0..CANT_ATRIB_MAX-1]  of TcxGridDBColumn;
     FMostrarAtributos: Boolean;
     FColColorPivot   : TcxGridDBColumn;
+    FAplicandoArticulo: Boolean;
     // Guarda contra reentrada del toggle desde dsTablaGDataChangeHook
     // disparado por el Edit/Post de PersistirPreferenciaPivote (entre
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
@@ -171,6 +179,15 @@ type
     procedure CargarCaptionsAtributosLineaActiva;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
+    function BuscarArticuloDevolucion: string;
+    function CodigoEmpresaActiva: string;
+    procedure AplicarArticuloDevolucion(const ACodigoArt: string);
+    procedure RefrescarAlmacenesCabecera;
+    procedure AsegurarCabeceraPersistidaParaLineas;
+    procedure TallaEditValueChangedHook(Sender: TObject);
+    procedure TallaValidateHook(Sender: TObject;
+                var DisplayValue: Variant; var ErrorText: TCaption;
+                var Error: Boolean);
     procedure PersistirPreferenciaPivote;
   public
     dmmDevolucionesCompra: TdmDevolucionesCompra;
@@ -188,10 +205,11 @@ uses
   System.StrUtils,
   inLibGlobalVar,
   inLibFotos,
+  inLibArticulosResolver,
   UniDataArticulos,
   inMtoModalImpDevCompra,
   inMtoModalImpDevCompraV,
-  inMtoModalEtiqDev, inLibShowMto;
+  inMtoModalEtiqDev, inLibShowMto, inLibGenBusq;
 
 {$R *.dfm}
 
@@ -240,6 +258,12 @@ begin
   FColColorPivot.Visible := False;
   FColColorPivot.Options.Editing := False;
   inherited;
+  if Assigned(dmmDevolucionesCompra) then
+  begin
+    cbbCODIGO_ALM_DEVC.Properties.ListSource :=
+      dmmDevolucionesCompra.dsAlmacenesDevc;
+    RefrescarAlmacenesCabecera;
+  end;
   InicializarGestorYPivote;
   if Assigned(FPivote) then
     FColColorPivot.OnCustomDrawCell := FPivote.CustomDrawColorCell;
@@ -255,6 +279,73 @@ begin
   FMostrarAtributos := False;
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
+end;
+
+function TfrmMtoDevolucionesCompra.CodigoEmpresaActiva: string;
+var
+  ds: TDataSet;
+  f : TField;
+begin
+  Result := '';
+  ds := dsTablaG.DataSet;
+  if Assigned(ds) and ds.Active and (not ds.IsEmpty) then
+  begin
+    f := ds.FindField('CODIGO_EMP_DEVC');
+    if f <> nil then
+      Result := Trim(f.AsString);
+  end;
+  if Result = '' then
+    Result := Trim(oEmpresa);
+end;
+
+procedure TfrmMtoDevolucionesCompra.RefrescarAlmacenesCabecera;
+begin
+  if Assigned(dmmDevolucionesCompra) then
+    dmmDevolucionesCompra.RefrescarAlmacenes(CodigoEmpresaActiva);
+end;
+
+procedure TfrmMtoDevolucionesCompra.AsegurarCabeceraPersistidaParaLineas;
+var
+  dsCab: TDataSet;
+  dsLin: TDataSet;
+  sNumero: string;
+begin
+  if not Assigned(dmmDevolucionesCompra) then
+    Exit;
+  dsCab := dmmDevolucionesCompra.unqryTablaG;
+  dsLin := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
+  if (dsCab = nil) or (not dsCab.Active) or dsCab.IsEmpty then
+    raise Exception.Create(
+      'Crea o selecciona una devolucion antes de añadir lineas.');
+  if (dsCab.FindField('CODIGO_ALM_DEVC') <> nil) and
+     (Trim(dsCab.FieldByName('CODIGO_ALM_DEVC').AsString) = '') then
+  begin
+    pcCab.ActivePage := tsCabecera;
+    if cbbCODIGO_ALM_DEVC.CanFocus then
+      cbbCODIGO_ALM_DEVC.SetFocus;
+    raise Exception.Create(
+      'Debe seleccionar el almacen de salida de la devolucion.');
+  end;
+  sNumero := Trim(dsCab.FieldByName('NUMERO_DEVC').AsString);
+  if Assigned(dsLin) and dsLin.Active and (dsLin.State = dsInsert) then
+  begin
+    if (sNumero = '') or (sNumero = '0') then
+      dsLin.Cancel
+    else if (Trim(dsLin.FieldByName('CODIGO_ART_DEVCLIN').AsString) = '') and
+            (Trim(dsLin.FieldByName('CODIGO_UNIDAD_DEVCLIN').AsString) = '') then
+      dsLin.Cancel;
+  end;
+  if (dsCab.State in dsEditModes) or (sNumero = '') or (sNumero = '0') then
+  begin
+    if not (dsCab.State in dsEditModes) then
+      dsCab.Edit;
+    dsCab.Post;
+  end;
+  if Assigned(dsLin) and dsLin.Active and (not (dsLin.State in dsEditModes)) then
+  begin
+    dsLin.Close;
+    dsLin.Open;
+  end;
 end;
 
 procedure TfrmMtoDevolucionesCompra.CrearTablaPrincipal;
@@ -383,12 +474,16 @@ begin
   cfgT.IdFilaFijo         := 1;
   cfgT.MaxColumnas        := CANT_TALLAS_MAX;
   FGestorTallas := TGestorGridTallas.Create(cfgT);
-  // Hookea el OnEditValueChanged de cada columna talla al gestor para
-  // que persista la celda y refresque totales al teclear.
+  // Hookea cada columna talla: en pivote actualiza la linea SKU real;
+  // fuera de pivote persiste la celda inline.
   for i := 0 to CANT_TALLAS_MAX - 1 do
     if FTallaColumns[i] <> nil then
+    begin
       TcxCurrencyEditProperties(FTallaColumns[i].Properties).
-        OnEditValueChanged := FGestorTallas.PersistirCeldaActiva;
+        OnEditValueChanged := TallaEditValueChangedHook;
+      TcxCurrencyEditProperties(FTallaColumns[i].Properties).
+        OnValidate := TallaValidateHook;
+    end;
   // 2. Orquestador de pivote (libreria nueva, compartida con pedidos).
   cfgP := Default(TGridPivoteCompraConfig);
   cfgP.Conexion             := inLibGlobalVar.oConn;
@@ -408,6 +503,9 @@ begin
   cfgP.FieldArt             := 'CODIGO_ART_DEVCLIN';
   cfgP.FieldSku             := 'CODIGO_UNIDAD_DEVCLIN';
   cfgP.FieldCantidad        := 'CANTIDAD_DEVCLIN';
+  cfgP.FieldPrecioBase      := 'PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN';
+  cfgP.FieldTotalUds        := 'TOTAL_UNIDADES_DEVCLIN';
+  cfgP.FieldTotalLinea      := 'TOTAL_DEVCLIN';
   cfgP.FieldIdAcPivot       := 'ID_AC_PIVOT_DEVCLIN';
   cfgP.FieldAlmacen         := 'CODIGO_ALMACEN_DEVCLIN';
   cfgP.FieldAlmacenMaster   := 'CODIGO_ALM_DEVC';
@@ -666,6 +764,19 @@ end;
 
 procedure TfrmMtoDevolucionesCompra.btnGrabarClick(Sender: TObject);
 begin
+  if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
+     (dsTablaG.DataSet.FindField('CODIGO_ALM_DEVC') <> nil) and
+     (Trim(dsTablaG.DataSet.FieldByName('CODIGO_ALM_DEVC').AsString) = '') then
+  begin
+    pcCab.ActivePage := tsCabecera;
+    if cbbCODIGO_ALM_DEVC.CanFocus then
+      cbbCODIGO_ALM_DEVC.SetFocus;
+    raise Exception.Create(
+      'Debe seleccionar el almacen de salida de la devolucion.');
+  end;
+  if Assigned(FPivote) and FPivote.Activo and
+     (not FPivote.Expandido) then
+    FPivote.PersistirCantidadesPendientes;
   inherited;
   if dsTablaG.State in dsEditModes then
   begin
@@ -687,8 +798,12 @@ procedure TfrmMtoDevolucionesCompra.dsTablaGDataChangeHook(Sender: TObject;
 var
   bDeberiaEstarActivo: Boolean;
 begin
-  if Field <> nil then Exit;
-  if FPivote = nil then Exit;
+  if (Field = nil) or SameText(Field.FieldName, 'CODIGO_EMP_DEVC') then
+    RefrescarAlmacenesCabecera;
+  if Field <> nil then
+    Exit;
+  if FPivote = nil then
+    Exit;
   if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
      (not dsTablaG.DataSet.IsEmpty) and
      (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil) then
@@ -771,6 +886,292 @@ begin
   inLibGridTallasInline.ActivarEnterComoTab(Self, True);
 end;
 
+procedure TfrmMtoDevolucionesCompra.TallaEditValueChangedHook(Sender: TObject);
+begin
+  if Assigned(FPivote) and FPivote.Activo then
+  begin
+    if FPivote.Expandido then
+      FPivote.CapturarARecibirEditValueChanged(Sender)
+    else
+      FPivote.CapturarCantidadEditValueChanged(Sender);
+  end
+  else if Assigned(FGestorTallas) then
+    FGestorTallas.PersistirCeldaActiva(Sender);
+end;
+
+procedure TfrmMtoDevolucionesCompra.TallaValidateHook(Sender: TObject;
+  var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
+begin
+  if (not Error) and Assigned(FPivote) and FPivote.Activo and
+     (not FPivote.Expandido) then
+    FPivote.PersistirCantidadEditValueChanged(Sender, DisplayValue);
+end;
+
+function TfrmMtoDevolucionesCompra.BuscarArticuloDevolucion: string;
+var
+  qry: TUniQuery;
+begin
+  Result := '';
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := inLibGlobalVar.oConn;
+    qry.SQL.Text :=
+      'SELECT * ' +
+      '  FROM vi_articulos ' +
+      ' WHERE COALESCE(ESACTIVO_ART, ''S'') = ''S'' ' +
+      ' ORDER BY CODIGO_ART_ART';
+    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de artículos', qry,
+         'frmMtoDevcArtSearch', Self) and
+       (qry.FindField('CODIGO_ART_ART') <> nil) then
+      Result := qry.FieldByName('CODIGO_ART_ART').AsString;
+  finally
+    FreeAndNil(qry);
+  end;
+end;
+
+procedure TfrmMtoDevolucionesCompra.AplicarArticuloDevolucion(
+  const ACodigoArt: string);
+var
+  ds       : TDataSet;
+  Resolver : TArticulosResolver;
+  Datos    : TArticuloDatos;
+  qry      : TUniQuery;
+  sArt     : string;
+  sPrv     : string;
+  sAlm     : string;
+  sModeloPrv: string;
+  dFecha   : TDateTime;
+  iAcPivot : Integer;
+  rCantidad: Double;
+
+  function CampoCabeceraString(const ACampo: string): string;
+  var
+    Campo: TField;
+  begin
+    Result := '';
+    if Assigned(dsTablaG) and Assigned(dsTablaG.DataSet) then
+    begin
+      Campo := dsTablaG.DataSet.FindField(ACampo);
+      if Campo <> nil then
+        Result := Trim(Campo.AsString);
+    end;
+  end;
+
+  function FechaCabecera: TDateTime;
+  var
+    Campo: TField;
+  begin
+    Result := Date;
+    if Assigned(dsTablaG) and Assigned(dsTablaG.DataSet) then
+    begin
+      Campo := dsTablaG.DataSet.FindField('FECHA_DEVC');
+      if (Campo <> nil) and (not Campo.IsNull) then
+        Result := Campo.AsDateTime;
+    end;
+  end;
+
+  function ResolverConjuntoPivotArticulo(const ACodigoArticulo: string): Integer;
+  begin
+    Result := 0;
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := inLibGlobalVar.oConn;
+      qry.SQL.Text :=
+        'SELECT aca.ID_AC_ACA ' +
+        '  FROM fza_articulos_conjuntos_asign aca ' +
+        ' WHERE aca.CODIGO_ART_ACA = :art ' +
+        '   AND aca.ID_VA_ACA <> ''CO'' ' +
+        ' ORDER BY aca.ID_VA_ACA ' +
+        ' LIMIT 1';
+      qry.ParamByName('art').AsString := ACodigoArticulo;
+      qry.Open;
+      if not qry.IsEmpty then
+        Result := qry.FieldByName('ID_AC_ACA').AsInteger;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+
+  function ModeloProveedorArticulo(const ACodigoArticulo,
+                                        ACodigoProveedor: string): string;
+  begin
+    Result := '';
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := inLibGlobalVar.oConn;
+      qry.SQL.Text :=
+        'SELECT ap.REF_PROVEEDOR_AP ' +
+        '  FROM fza_articulos_proveedores ap ' +
+        ' WHERE ap.CODIGO_ART_AP = :art ' +
+        '   AND COALESCE(TRIM(ap.REF_PROVEEDOR_AP), '''') <> '''' ' +
+        ' ORDER BY CASE WHEN ap.CODIGO_PRV_AP = :prv THEN 0 ELSE 1 END, ' +
+        '          CASE ap.ESPROVEEDORPRINCIPAL_AP WHEN ''S'' THEN 0 ' +
+        '               ELSE 1 END, ' +
+        '          ap.FECHA_VALIDEZ_AP DESC, ap.CODIGO_PRV_AP ' +
+        ' LIMIT 1';
+      qry.ParamByName('art').AsString := ACodigoArticulo;
+      qry.ParamByName('prv').AsString := ACodigoProveedor;
+      qry.Open;
+      if not qry.IsEmpty then
+        Result := qry.FieldByName('REF_PROVEEDOR_AP').AsString;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+
+  procedure PonerString(const ACampo, AValor: string);
+  var
+    Campo: TField;
+  begin
+    Campo := ds.FindField(ACampo);
+    if Campo <> nil then
+      Campo.AsString := AValor;
+  end;
+
+  procedure PonerFloat(const ACampo: string; AValor: Double);
+  var
+    Campo: TField;
+  begin
+    Campo := ds.FindField(ACampo);
+    if Campo <> nil then
+      Campo.AsFloat := AValor;
+  end;
+
+  procedure PonerInteger(const ACampo: string; AValor: Integer);
+  var
+    Campo: TField;
+  begin
+    Campo := ds.FindField(ACampo);
+    if Campo <> nil then
+      Campo.AsInteger := AValor;
+  end;
+
+  procedure LimpiarCampo(const ACampo: string);
+  var
+    Campo: TField;
+  begin
+    Campo := ds.FindField(ACampo);
+    if Campo <> nil then
+      Campo.Clear;
+  end;
+
+begin
+  sArt := Trim(ACodigoArt);
+  if (sArt <> '') and Assigned(dmmDevolucionesCompra) and
+     (not FAplicandoArticulo) then
+  begin
+    AsegurarCabeceraPersistidaParaLineas;
+    ds := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
+    if Assigned(ds) and ds.Active then
+    begin
+      FAplicandoArticulo := True;
+      try
+        if ds.IsEmpty then
+          ds.Append;
+        if not (ds.State in dsEditModes) then
+          ds.Edit;
+        sPrv := CampoCabeceraString('CODIGO_PRV_DEVC');
+        sAlm := CampoCabeceraString('CODIGO_ALM_DEVC');
+        dFecha := FechaCabecera;
+        Resolver := TArticulosResolver.Create(inLibGlobalVar.oConn);
+        try
+          Datos := Resolver.ResolverDatos(sArt, '', '', dFecha, sAlm, sPrv);
+          if Datos.Encontrado and Datos.RequiereSku then
+            Datos.UltimoCoste := Resolver.ResolverUltimoCoste(
+              Datos.CodigoArticulo, sPrv, '');
+        finally
+          FreeAndNil(Resolver);
+        end;
+        if Datos.Encontrado then
+        begin
+          iAcPivot := ResolverConjuntoPivotArticulo(Datos.CodigoArticulo);
+          sModeloPrv := ModeloProveedorArticulo(Datos.CodigoArticulo, sPrv);
+          if sModeloPrv = '' then
+            sModeloPrv := Datos.UltimoCoste.RefProveedor;
+          PonerString('CODIGO_ART_DEVCLIN', Datos.CodigoArticulo);
+          PonerString('CODIGO_UNIDAD_DEVCLIN', Datos.CodigoSku);
+          PonerString('REF_PRV_DEVCLIN', sModeloPrv);
+          PonerString('CODIGO_FAM_DEVCLIN', Datos.CodigoFamilia);
+          PonerString('DESCRIPCION_ARTICULO_DEVCLIN',
+                      Datos.DescripcionArticulo);
+          PonerString('TIPO_CANTIDAD_ARTICULO_DEVCLIN',
+                      Datos.TipoCantidad);
+          PonerString('TIPO_IVA_ARTICULO_DEVCLIN', Datos.TipoIVA);
+          PonerFloat('PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN',
+                     Datos.UltimoCoste.PrecioUltCompra);
+          if sAlm <> '' then
+            PonerString('CODIGO_ALMACEN_DEVCLIN', sAlm);
+          if iAcPivot > 0 then
+            PonerInteger('ID_AC_PIVOT_DEVCLIN', iAcPivot)
+          else
+            LimpiarCampo('ID_AC_PIVOT_DEVCLIN');
+          rCantidad := 0;
+          if Datos.RequiereSku and (iAcPivot > 0) then
+          begin
+            PonerFloat('CANTIDAD_DEVCLIN', 0);
+            PonerFloat('TOTAL_UNIDADES_DEVCLIN', 0);
+          end
+          else
+          begin
+            if ds.FindField('CANTIDAD_DEVCLIN') <> nil then
+              rCantidad := ds.FieldByName('CANTIDAD_DEVCLIN').AsFloat;
+            if rCantidad = 0 then
+            begin
+              rCantidad := 1;
+              PonerFloat('CANTIDAD_DEVCLIN', rCantidad);
+            end;
+            if Datos.CodigoSku <> '' then
+              PonerFloat('TOTAL_UNIDADES_DEVCLIN', rCantidad);
+          end;
+          PonerFloat('TOTAL_DEVCLIN',
+                     rCantidad * Datos.UltimoCoste.PrecioUltCompra);
+          if Assigned(FGestorTallas) then
+          begin
+            FGestorTallas.RecalcularMaxColumnas;
+            FGestorTallas.ActualizarCaptionsLineaActiva;
+          end;
+          if FMostrarAtributos then
+            CargarCaptionsAtributosLineaActiva;
+          // En horizontal el pivote necesita la linea ya materializada para
+          // crear/actualizar el SKU al teclear en la talla siguiente.
+          if Assigned(FPivote) and FPivote.Activo and
+             (ds.State in dsEditModes) then
+            ds.Post;
+        end
+        else if Datos.Mensaje <> '' then
+          MessageDlg(Datos.Mensaje, mtWarning, [mbOk], 0);
+      finally
+        FAplicandoArticulo := False;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoDevolucionesCompra.colLineaDevcCODIGO_ARTPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sCodigo: string;
+begin
+  inherited;
+  sCodigo := BuscarArticuloDevolucion;
+  if sCodigo <> '' then
+    AplicarArticuloDevolucion(sCodigo);
+end;
+
+procedure TfrmMtoDevolucionesCompra.colLineaDevcCODIGO_ARTPropertiesValidate(
+  Sender: TObject; var DisplayValue: Variant; var ErrorText: TCaption;
+  var Error: Boolean);
+var
+  sCodigo: string;
+begin
+  if not Error then
+  begin
+    sCodigo := Trim(VarToStr(DisplayValue));
+    if sCodigo <> '' then
+      AplicarArticuloDevolucion(sCodigo);
+  end;
+end;
+
 procedure TfrmMtoDevolucionesCompra.actArticulosExecute(Sender: TObject);
 begin
   inherited;
@@ -780,9 +1181,38 @@ begin
             FieldByName('CODIGO_ART_DEVCLIN').AsString);
 end;
 
+procedure TfrmMtoDevolucionesCompra.btnCODIGO_PRV_DEVCPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sCodigo : string;
+  ds      : TDataSet;
+begin
+  inherited;
+  if Assigned(dmmDevolucionesCompra) then
+  begin
+    ds := dmmDevolucionesCompra.unqryTablaG;
+    if ds.IsEmpty then
+      MessageDlg('Crea o selecciona una devolución de compra antes de ' +
+                 'elegir el proveedor.', mtInformation, [mbOk], 0)
+    else if TBusquedaUtils.EjecutarBusqueda(
+              'Búsqueda de proveedores',
+              'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
+              'CODIGO_PRV_PRV',
+              sCodigo,
+              'frmMtoDevcProvSearch',
+              Self) then
+    begin
+      if not (ds.State in [dsInsert, dsEdit]) then
+        ds.Edit;
+      ds.FieldByName('CODIGO_PRV_DEVC').AsString := sCodigo;
+    end;
+  end;
+end;
+
 procedure TfrmMtoDevolucionesCompra.btnAnadirLineaClick(Sender: TObject);
 begin
   inherited;
+  AsegurarCabeceraPersistidaParaLineas;
   dmmDevolucionesCompra.unqryDevolucionesCompraLineas.Append;
 end;
 

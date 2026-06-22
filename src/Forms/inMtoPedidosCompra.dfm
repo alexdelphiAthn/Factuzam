@@ -1,4 +1,4 @@
-inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
+﻿inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
   Caption = 'Mantenimiento de Pedidos de Compra'
   ClientHeight = 765
   ClientWidth = 1085
@@ -233,6 +233,7 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                     Default = True
                     Kind = bkEllipsis
                   end>
+                Properties.OnButtonClick = btnCODIGO_PRV_PEDCPropertiesButtonClick
                 TabOrder = 13
                 Width = 150
               end
@@ -393,7 +394,7 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                     Width = 120
                   end
                   object colLineaPedcREF_PRV: TcxGridDBColumn
-                    Caption = 'Ref. prov.'
+                    Caption = 'Modelo prov.'
                     DataBinding.FieldName = 'REF_PRV_PEDCLIN'
                     Width = 100
                   end
@@ -969,7 +970,7 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                     Width = 100
                   end
                   object colAlbcPedcREFPRV: TcxGridDBColumn
-                    Caption = 'Ref. prov.'
+                    Caption = 'Modelo prov.'
                     DataBinding.FieldName = 'REF_PROVEEDOR_ALBC'
                     Width = 140
                   end

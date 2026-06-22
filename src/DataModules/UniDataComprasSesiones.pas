@@ -197,6 +197,23 @@ uses
 procedure TdmComprasSesiones.DataModuleCreate(Sender: TObject);
 begin
   inherited;
+  unqryTablaG.SQL.Text :=
+    'SELECT s.*, ' +
+    '       prv.RAZON_SOCIAL_PRV AS RAZON_SOCIAL_PRV_SES, ' +
+    '       prv.NOMBRE_PRV AS NOMBRE_PRV_SES ' +
+    '  FROM fza_compras_sesiones s ' +
+    '  LEFT JOIN fza_proveedores prv ' +
+    '    ON prv.CODIGO_PRV_PRV = s.CODIGO_PRV_SES ' +
+    ' ORDER BY s.FECHA_SES DESC, s.NUMERO_SES DESC';
+  unqryTablaG.SQLRefresh.Text :=
+    'SELECT s.*, ' +
+    '       prv.RAZON_SOCIAL_PRV AS RAZON_SOCIAL_PRV_SES, ' +
+    '       prv.NOMBRE_PRV AS NOMBRE_PRV_SES ' +
+    '  FROM fza_compras_sesiones s ' +
+    '  LEFT JOIN fza_proveedores prv ' +
+    '    ON prv.CODIGO_PRV_PRV = s.CODIGO_PRV_SES ' +
+    ' WHERE s.SERIE_SES = :SERIE_SES ' +
+    '   AND s.NUMERO_SES = :NUMERO_SES';
   unqrySesionLin.Connection         := inLibGlobalVar.oConn;
   unqrySesDocs.Connection           := inLibGlobalVar.oConn;
   unqrySesionFil.Connection         := inLibGlobalVar.oConn;
@@ -754,9 +771,10 @@ begin
     CalcularTotalesDocumentoCompra(inLibGlobalVar.oConn, unqryTablaG,
       unqrySesionLin, 'SES', 'TOTAL_LINEA_SESLIN',
       sCampoTipoIvaLinea, 'PORCENTAJE_IVA_SESLIN');
+    if EstadoInicial <> dsInsert then
+      PersistirTotalesSesion;
     if EstadoInicial = dsBrowse then
     begin
-      PersistirTotalesSesion;
       if unqryTablaG.State = dsEdit then
       begin
         unqryTablaG.Cancel;
