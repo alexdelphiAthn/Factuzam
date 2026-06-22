@@ -79,6 +79,34 @@ begin
   end;
 end;
 
+function CampoFloatDifiere(ADataSet: TDataSet; const ACampo: string;
+  AValor: Double): Boolean;
+var
+  oCampo: TField;
+begin
+  Result := False;
+  if Assigned(ADataSet) then
+  begin
+    oCampo := ADataSet.FindField(ACampo);
+    if oCampo <> nil then
+      Result := oCampo.IsNull or (Abs(oCampo.AsFloat - AValor) > 0.000001);
+  end;
+end;
+
+function CampoStringDifiere(ADataSet: TDataSet; const ACampo,
+  AValor: string): Boolean;
+var
+  oCampo: TField;
+begin
+  Result := False;
+  if Assigned(ADataSet) then
+  begin
+    oCampo := ADataSet.FindField(ACampo);
+    if oCampo <> nil then
+      Result := oCampo.IsNull or (oCampo.AsString <> AValor);
+  end;
+end;
+
 procedure PonerFloat(ADataSet: TDataSet; const ACampo: string;
   AValor: Double);
 var
@@ -87,8 +115,12 @@ begin
   if Assigned(ADataSet) then
   begin
     oCampo := ADataSet.FindField(ACampo);
-    if oCampo <> nil then
+    if (oCampo <> nil) and CampoFloatDifiere(ADataSet, ACampo, AValor) then
+    begin
+      if not (ADataSet.State in dsEditModes) then
+        ADataSet.Edit;
       oCampo.AsFloat := AValor;
+    end;
   end;
 end;
 
@@ -99,8 +131,12 @@ begin
   if Assigned(ADataSet) then
   begin
     oCampo := ADataSet.FindField(ACampo);
-    if oCampo <> nil then
+    if (oCampo <> nil) and CampoStringDifiere(ADataSet, ACampo, AValor) then
+    begin
+      if not (ADataSet.State in dsEditModes) then
+        ADataSet.Edit;
       oCampo.AsString := AValor;
+    end;
   end;
 end;
 
@@ -280,6 +316,43 @@ begin
     'PORCENTAJE_' + CODIGOS_IVA[iIndice] + '_' + ASufijoCabecera);
 end;
 
+function PorcentajeIvaDocumentoCompra(AConn: TUniConnection;
+  ACabecera: TDataSet; const ASufijoCabecera, ATipoIva: string): Double;
+var
+  bEncontrado: Boolean;
+  iIndice: Integer;
+  rIvaN, rIvaR, rIvaS, rIvaE, rRecN, rRecR, rRecS, rRecE: Double;
+  sCodigoIva, sEmpresa: string;
+begin
+  Result := PorcentajeIvaCabecera(ACabecera, ASufijoCabecera, ATipoIva);
+  iIndice := IndiceTipoIva(ATipoIva);
+  bEncontrado := False;
+  sCodigoIva := Trim(CampoString(ACabecera,
+    'CODIGO_IVA_' + ASufijoCabecera));
+  if (sCodigoIva <> '') and (sCodigoIva <> '0') then
+    bEncontrado := LeerPorcentajesIvaPorCodigo(AConn, sCodigoIva,
+      rIvaN, rIvaR, rIvaS, rIvaE, rRecN, rRecR, rRecS, rRecE);
+  if not bEncontrado then
+  begin
+    sEmpresa := CampoString(ACabecera,
+      'CODIGO_EMP_' + ASufijoCabecera);
+    bEncontrado := LeerPorcentajesIvaPorEmpresa(AConn, sEmpresa,
+      sCodigoIva, rIvaN, rIvaR, rIvaS, rIvaE,
+      rRecN, rRecR, rRecS, rRecE);
+  end;
+  if bEncontrado then
+  begin
+    if iIndice = 0 then
+      Result := rIvaN
+    else if iIndice = 1 then
+      Result := rIvaR
+    else if iIndice = 2 then
+      Result := rIvaS
+    else
+      Result := rIvaE;
+  end;
+end;
+
 function SufijoLineaFiscalDesdeCampo(const ACampoTipoIva: string): string;
 const
   PREFIJO = 'TIPO_IVA_ARTICULO_';
@@ -324,8 +397,6 @@ begin
   if Assigned(ACabecera) and
      (ACabecera.FindField(ACampoRecargo) <> nil) then
   begin
-    if not (ACabecera.State in dsEditModes) then
-      ACabecera.Edit;
     sEmpresa := CampoString(ACabecera, ACampoEmpresa);
     PonerString(ACabecera, ACampoRecargo,
                 ObtenerRecargoComprasEmpresa(AConn, sEmpresa));
@@ -357,8 +428,6 @@ begin
     end;
     if bEncontrado then
     begin
-      if not (ACabecera.State in dsEditModes) then
-        ACabecera.Edit;
       PonerString(ACabecera, 'CODIGO_IVA_' + ASufijoCabecera,
                   sCodigoIva);
       PonerFloat(ACabecera, 'PORCENTAJE_IVAN_' + ASufijoCabecera,
@@ -430,8 +499,6 @@ begin
   begin
     sCodigoIva := CampoString(ACabecera, 'CODIGO_IVA_' + ASufijoCabecera);
     LeerPorcentajesRecargo(AConn, sCodigoIva, rRecN, rRecR, rRecS, rRecE);
-    if not (ACabecera.State in dsEditModes) then
-      ACabecera.Edit;
     PonerFloat(ACabecera, 'PORCENTAJE_REN_' + ASufijoCabecera, rRecN);
     PonerFloat(ACabecera, 'PORCENTAJE_RER_' + ASufijoCabecera, rRecR);
     PonerFloat(ACabecera, 'PORCENTAJE_RES_' + ASufijoCabecera, rRecS);
@@ -448,15 +515,16 @@ var
 begin
   if Assigned(ACabecera) and Assigned(ALinea) and ALinea.Active then
   begin
-    AplicarPorcentajesIvaCompra(AConn, ACabecera, ASufijoCabecera);
     sCampoTipo := 'TIPO_IVA_ARTICULO_' + ASufijoLinea;
     sArticulo := CampoString(ALinea, 'CODIGO_ART_' + ASufijoLinea);
     sTipoIva := NormalizarTipoIva(CampoString(ALinea, sCampoTipo));
     sTipoArt := ObtenerTipoIvaArticulo(AConn, sArticulo);
     if sTipoArt <> '' then
       sTipoIva := sTipoArt;
-    rPorIva := PorcentajeIvaCabecera(ACabecera, ASufijoCabecera,
-      sTipoIva);
+    // No editar la cabecera desde el BeforePost de la linea: UniDAC
+    // fuerza CheckBrowseMode del detalle y reentra en este mismo Post.
+    rPorIva := PorcentajeIvaDocumentoCompra(AConn, ACabecera,
+      ASufijoCabecera, sTipoIva);
     rCantidad := CampoFloat(ALinea, 'CANTIDAD_' + ASufijoLinea);
     rPrecioSiva := CampoFloat(ALinea,
       'PRECIO_COMPRA_SIVA_ARTICULO_' + ASufijoLinea);
@@ -480,6 +548,7 @@ var
   rTotal, rPorIva, rPorRe, rBase, rIva, rRe, rImp, rRet, rPorRet: Double;
   sArticulo, sSufijoLinea, sTipoArt, sTipoIva, sTipoLinea: string;
   bAplicaRe: Boolean;
+  bFiltroActivo: Boolean;
 begin
   if Assigned(ACabecera) and Assigned(ALineas) and ALineas.Active then
   begin
@@ -490,8 +559,13 @@ begin
       UpperCase(CampoString(ACabecera,
         'ESIVA_RECARGO_COMPRAS_' + ASufijoCabecera)) = 'S';
     bk := ALineas.GetBookmark;
+    bFiltroActivo := ALineas.Filtered;
     try
       ALineas.DisableControls;
+      // El pivote de tallas filtra visualmente las lineas representantes.
+      // Los totales fiscales deben sumar siempre todas las lineas reales.
+      if bFiltroActivo then
+        ALineas.Filtered := False;
       ALineas.First;
       while not ALineas.Eof do
       begin
@@ -524,13 +598,13 @@ begin
         ALineas.Next;
       end;
     finally
+      if bFiltroActivo then
+        ALineas.Filtered := True;
       if ALineas.BookmarkValid(bk) then
         ALineas.GotoBookmark(bk);
       ALineas.FreeBookmark(bk);
       ALineas.EnableControls;
     end;
-    if not (ACabecera.State in dsEditModes) then
-      ACabecera.Edit;
     rBase := 0;
     rIva  := 0;
     rRe   := 0;

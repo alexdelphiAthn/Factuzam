@@ -1,4 +1,4 @@
-inherited dmPedidosCompra: TdmPedidosCompra
+﻿inherited dmPedidosCompra: TdmPedidosCompra
   Height = 480
   Width = 626
   PixelsPerInch = 120
@@ -78,7 +78,7 @@ inherited dmPedidosCompra: TdmPedidosCompra
       end>
   end
   object unstrdprcGetContadorPedc: TUniStoredProc
-    StoredProcName = 'PRC_GET_CONTADOR_FACTURA'
+    StoredProcName = 'PRC_GET_NEXT_CONT_FACT_SERIE'
     Connection = dmConn.conUni
     Left = 256
     Top = 24

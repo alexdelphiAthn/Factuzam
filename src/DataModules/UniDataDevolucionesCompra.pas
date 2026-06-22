@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataDevolucionesCompra                                        }
 {    Tipo:       Data Module                                                   }
@@ -36,6 +36,8 @@ type
     unqryPrvDataDevc:           TUniQuery;
     unqryArtDataLinDevc:        TUniQuery;
     unqrySkusDevc:              TUniQuery;
+    unqryAlmacenesDevc:         TUniQuery;
+    dsAlmacenesDevc:            TDataSource;
     unstrdprcGetContadorDevc:   TUniStoredProc;
     // Definicion de atributos del articulo padre (para columnas
     // dinamicas ATTR1..ATTR5 en modo "atributo por columna").
@@ -73,6 +75,7 @@ type
     // salida nueva), 'ABRIR' (revertir mov. existentes) o ''.
     FTransicionEstadoDevc: string;
     function ObtenerSkusDevolucionCsv(const ASerie, ANumero: string): string;
+    procedure ValidarAlmacenSalida;
   public
     procedure GetCodigoAutoDevolucionCompra;
     procedure CalcularTotalesDevolucionCompra;
@@ -94,6 +97,7 @@ type
                                               ACodTarifa, AAlmacenesCsv: string;
                                         AFecha: TDateTime);
     procedure OpenTables;
+    procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
     // Override: abre las queries detalle tras unqryTablaG. Llamada
     // desde TfrmMtoGen.AbrirTablaPrincipalAsync.
     procedure AbrirDetalles; override;
@@ -121,6 +125,7 @@ begin
   unqryPrvDataDevc.Connection           := inLibGlobalVar.oConn;
   unqryArtDataLinDevc.Connection        := inLibGlobalVar.oConn;
   unqrySkusDevc.Connection              := inLibGlobalVar.oConn;
+  unqryAlmacenesDevc.Connection         := inLibGlobalVar.oConn;
   unstrdprcGetContadorDevc.Connection   := inLibGlobalVar.oConn;
   unqryDefArticuloDevc.Connection       := inLibGlobalVar.oConn;
   // Master-detail server-side: el WHERE del SQL toma los valores de
@@ -173,9 +178,33 @@ var
 begin
   inherited;
   sw := TStopwatch.StartNew;
+  RefrescarAlmacenes(oEmpresa);
   AbrirConTiempo(unqryDevolucionesCompraLineas,
                  'unqryDevolucionesCompraLineas');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+end;
+
+procedure TdmDevolucionesCompra.RefrescarAlmacenes(
+                                                const ACodigoEmpresa: string);
+var
+  sEmpresa: string;
+begin
+  sEmpresa := Trim(ACodigoEmpresa);
+  if sEmpresa = '' then
+    sEmpresa := Trim(oEmpresa);
+  if unqryAlmacenesDevc.Active and
+     (unqryAlmacenesDevc.ParamByName('EMPRESA').AsString = sEmpresa) then
+    Exit;
+  unqryAlmacenesDevc.Close;
+  unqryAlmacenesDevc.ParamByName('EMPRESA').AsString := sEmpresa;
+  unqryAlmacenesDevc.Open;
+end;
+
+procedure TdmDevolucionesCompra.ValidarAlmacenSalida;
+begin
+  if Trim(unqryTablaG.FieldByName('CODIGO_ALM_DEVC').AsString) = '' then
+    raise Exception.Create(
+      'Debe seleccionar el almacen de salida de la devolucion.');
 end;
 
 procedure TdmDevolucionesCompra.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -218,6 +247,7 @@ var
   qChk: TUniQuery;
 begin
   inherited;
+  ValidarAlmacenSalida;
   if (unqryTablaG.FieldByName('NUMERO_DEVC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_DEVC').AsString = '') then
     GetCodigoAutoDevolucionCompra;
@@ -380,6 +410,10 @@ begin
   end;
   with unqryDevolucionesCompraLineas do
   begin
+    if (Trim(FieldByName('NUMERO_DEVC_DEVCLIN').AsString) = '') or
+       (Trim(FieldByName('NUMERO_DEVC_DEVCLIN').AsString) = '0') then
+      raise Exception.Create(
+        'Graba la cabecera de la devolucion antes de guardar lineas.');
     if (FindField('CANTIDAD_DEVCLIN') <> nil) and
        (FindField('PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN') <> nil) and
        (FindField('TOTAL_DEVCLIN') <> nil) then

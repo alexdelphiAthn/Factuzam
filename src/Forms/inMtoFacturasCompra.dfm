@@ -1,4 +1,4 @@
-inherited frmMtoFacturasCompra: TfrmMtoFacturasCompra
+﻿inherited frmMtoFacturasCompra: TfrmMtoFacturasCompra
   Caption = 'Mantenimiento de Borradores de Compra'
   ClientHeight = 765
   ClientWidth = 1085
@@ -370,7 +370,7 @@ inherited frmMtoFacturasCompra: TfrmMtoFacturasCompra
                     Width = 120
                   end
                   object colLineaFaccREF_PRV: TcxGridDBColumn
-                    Caption = 'Ref. prov.'
+                    Caption = 'Modelo prov.'
                     DataBinding.FieldName = 'REF_PRV_FACCLIN'
                     Width = 100
                   end

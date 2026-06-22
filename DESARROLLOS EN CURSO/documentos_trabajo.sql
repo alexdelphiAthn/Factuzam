@@ -74,15 +74,96 @@ CREATE TABLE IF NOT EXISTS `fza_documentos_trabajo_lineas` (
 CREATE TABLE IF NOT EXISTS `fza_documentos_trabajo_compartidos` (
   `ID_DTC` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID_DTR_DTC` bigint(20) NOT NULL,
-  `USUARIO_DTC` varchar(100) NOT NULL,
+  `USUARIO_DTC` varchar(200) NOT NULL,
+  `USUARIO_GRUPO_DTC` varchar(200) NOT NULL DEFAULT '',
+  `TIPO_DESTINO_DTC` varchar(20) NOT NULL DEFAULT 'USUARIO',
   `PERMISO_DTC` varchar(20) NOT NULL DEFAULT 'LECTURA',
   `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
   `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT 'SISTEMA',
   `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT 'SISTEMA',
   PRIMARY KEY (`ID_DTC`),
-  UNIQUE KEY `UQ_DTC_DTR_USUARIO` (`ID_DTR_DTC`, `USUARIO_DTC`)
+  UNIQUE KEY `UQ_DTC_DTR_TIPO_DESTINO_USUARIO_GRUPO`
+    (`ID_DTR_DTC`, `TIPO_DESTINO_DTC`, `USUARIO_GRUPO_DTC`)
 );
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_documentos_trabajo_compartidos'
+     AND INDEX_NAME = 'UQ_DTC_DTR_USUARIO'
+);
+SET @sSql := IF(@sExisteIdx > 0,
+  'ALTER TABLE fza_documentos_trabajo_compartidos DROP INDEX UQ_DTC_DTR_USUARIO',
+  'SELECT ''UQ_DTC_DTR_USUARIO no existe, se omite'' AS info');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sLongUsuarioDtc := (
+  SELECT COALESCE(MAX(CHARACTER_MAXIMUM_LENGTH), 0)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_documentos_trabajo_compartidos'
+     AND COLUMN_NAME = 'USUARIO_DTC'
+);
+SET @sSql := IF(@sLongUsuarioDtc < 200,
+  'ALTER TABLE fza_documentos_trabajo_compartidos MODIFY COLUMN USUARIO_DTC varchar(200) NOT NULL',
+  'SELECT ''USUARIO_DTC ya tiene longitud suficiente, se omite'' AS info');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_documentos_trabajo_compartidos'
+     AND COLUMN_NAME = 'USUARIO_GRUPO_DTC'
+);
+SET @sSql := IF(@sExisteCol = 0,
+  'ALTER TABLE fza_documentos_trabajo_compartidos ADD COLUMN USUARIO_GRUPO_DTC varchar(200) NOT NULL DEFAULT '''' AFTER USUARIO_DTC',
+  'SELECT ''USUARIO_GRUPO_DTC ya existe, se omite'' AS info');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_documentos_trabajo_compartidos'
+     AND COLUMN_NAME = 'TIPO_DESTINO_DTC'
+);
+SET @sSql := IF(@sExisteCol = 0,
+  'ALTER TABLE fza_documentos_trabajo_compartidos ADD COLUMN TIPO_DESTINO_DTC varchar(20) NOT NULL DEFAULT ''USUARIO'' AFTER USUARIO_GRUPO_DTC',
+  'SELECT ''TIPO_DESTINO_DTC ya existe, se omite'' AS info');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+UPDATE `fza_documentos_trabajo_compartidos`
+   SET `USUARIO_GRUPO_DTC` = `USUARIO_DTC`
+ WHERE COALESCE(`USUARIO_GRUPO_DTC`, '') = '';
+
+UPDATE `fza_documentos_trabajo_compartidos`
+   SET `TIPO_DESTINO_DTC` = 'USUARIO'
+ WHERE COALESCE(`TIPO_DESTINO_DTC`, '') = '';
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_documentos_trabajo_compartidos'
+     AND INDEX_NAME = 'UQ_DTC_DTR_TIPO_DESTINO_USUARIO_GRUPO'
+);
+SET @sSql := IF(@sExisteIdx = 0,
+  'CREATE UNIQUE INDEX UQ_DTC_DTR_TIPO_DESTINO_USUARIO_GRUPO ON fza_documentos_trabajo_compartidos (ID_DTR_DTC, TIPO_DESTINO_DTC, USUARIO_GRUPO_DTC)',
+  'SELECT ''UQ_DTC_DTR_TIPO_DESTINO_USUARIO_GRUPO ya existe, se omite'' AS info');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 SET @sExisteIdx := (
   SELECT COUNT(*)
@@ -192,6 +273,20 @@ SET @sExisteIdx := (
 SET @sSql := IF(@sExisteIdx = 0,
   'CREATE INDEX IDX_DTC_USUARIO ON fza_documentos_trabajo_compartidos (USUARIO_DTC)',
   'SELECT ''IDX_DTC_USUARIO ya existe, se omite'' AS info');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_documentos_trabajo_compartidos'
+     AND INDEX_NAME = 'IDX_DTC_TIPO_DESTINO_USUARIO_GRUPO'
+);
+SET @sSql := IF(@sExisteIdx = 0,
+  'CREATE INDEX IDX_DTC_TIPO_DESTINO_USUARIO_GRUPO ON fza_documentos_trabajo_compartidos (TIPO_DESTINO_DTC, USUARIO_GRUPO_DTC)',
+  'SELECT ''IDX_DTC_TIPO_DESTINO_USUARIO_GRUPO ya existe, se omite'' AS info');
 PREPARE stmt FROM @sSql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;

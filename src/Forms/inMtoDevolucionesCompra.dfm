@@ -1,4 +1,4 @@
-inherited frmMtoDevolucionesCompra: TfrmMtoDevolucionesCompra
+﻿inherited frmMtoDevolucionesCompra: TfrmMtoDevolucionesCompra
   Caption = 'Mantenimiento de Devoluciones a Proveedor'
   ClientHeight = 765
   ClientWidth = 1085
@@ -211,6 +211,7 @@ inherited frmMtoDevolucionesCompra: TfrmMtoDevolucionesCompra
                     Default = True
                     Kind = bkEllipsis
                   end>
+                Properties.OnButtonClick = btnCODIGO_PRV_DEVCPropertiesButtonClick
                 TabOrder = 11
                 Width = 150
               end
@@ -232,17 +233,29 @@ inherited frmMtoDevolucionesCompra: TfrmMtoDevolucionesCompra
               object lblCodigoAlmacen: TcxLabel
                 Left = 520
                 Top = 72
-                Caption = 'Almac'#233'n destino'
+                Caption = 'Almac'#233'n salida'
                 TabOrder = 14
                 Transparent = True
               end
-              object txtCODIGO_ALM_DEVC: TcxDBTextEdit
+              object cbbCODIGO_ALM_DEVC: TcxDBLookupComboBox
                 Left = 520
                 Top = 92
                 DataBinding.DataField = 'CODIGO_ALM_DEVC'
                 DataBinding.DataSource = dsTablaG
+                Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'C'#243'digo'
+                    Width = 60
+                    FieldName = 'CODIGO_ALM_ALM'
+                  end
+                  item
+                    Caption = 'Almac'#233'n'
+                    FieldName = 'NOMBRE_ALM_ALM'
+                  end>
+                Properties.ListOptions.ShowHeader = False
                 TabOrder = 15
-                Width = 120
+                Width = 170
               end
             end
           end
@@ -340,6 +353,14 @@ inherited frmMtoDevolucionesCompra: TfrmMtoDevolucionesCompra
                   object colLineaDevcCODIGO_ART: TcxGridDBColumn
                     Caption = 'Art'#237'culo'
                     DataBinding.FieldName = 'CODIGO_ART_DEVCLIN'
+                    PropertiesClassName = 'TcxButtonEditProperties'
+                    Properties.Buttons = <
+                      item
+                        Default = True
+                        Kind = bkEllipsis
+                      end>
+                    Properties.OnButtonClick = colLineaDevcCODIGO_ARTPropertiesButtonClick
+                    Properties.OnValidate = colLineaDevcCODIGO_ARTPropertiesValidate
                     Width = 100
                   end
                   object colLineaDevcCODIGO_UNIDAD: TcxGridDBColumn
@@ -348,7 +369,7 @@ inherited frmMtoDevolucionesCompra: TfrmMtoDevolucionesCompra
                     Width = 120
                   end
                   object colLineaDevcREF_PRV: TcxGridDBColumn
-                    Caption = 'Ref. prov.'
+                    Caption = 'Modelo prov.'
                     DataBinding.FieldName = 'REF_PRV_DEVCLIN'
                     Width = 100
                   end

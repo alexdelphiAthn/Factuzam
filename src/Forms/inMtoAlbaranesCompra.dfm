@@ -1,4 +1,4 @@
-inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
+﻿inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
   Caption = 'Mantenimiento de Albaranes de Compra'
   ClientHeight = 765
   ClientWidth = 1085
@@ -222,6 +222,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                     Default = True
                     Kind = bkEllipsis
                   end>
+                Properties.OnButtonClick = btnCODIGO_PRV_ALBCPropertiesButtonClick
                 TabOrder = 11
                 Width = 150
               end
@@ -378,7 +379,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                     Width = 120
                   end
                   object colLineaAlbcREF_PRV: TcxGridDBColumn
-                    Caption = 'Ref. prov.'
+                    Caption = 'Modelo prov.'
                     DataBinding.FieldName = 'REF_PRV_ALBCLIN'
                     Width = 100
                   end

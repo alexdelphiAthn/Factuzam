@@ -126,7 +126,6 @@ type
     lblTipoIvaDefecto        : TcxLabel;
     cbbTipoIvaDefecto        : TcxDBComboBox;
     chkVariosTiposIva        : TcxDBCheckBox;
-    chkRecargoCompras        : TcxDBCheckBox;
     lblMargen                : TcxLabel;
     spnMargen                : TcxDBSpinEdit;
     lblMultiploRedondeo      : TcxLabel;
@@ -424,6 +423,7 @@ type
     procedure CrearColumnasTallas;
     procedure InicializarGestorTallas;
     procedure RefrescarVisibilidadTipoIva;
+    procedure TallaEditValueChangedHook(Sender: TObject);
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure unqrySesionLinAfterPostHook(DataSet: TDataSet);
     procedure unqrySesionLinBeforeInsertHook(DataSet: TDataSet);
@@ -1343,6 +1343,8 @@ begin
       if idxRec >= 0 then
         FGestorTallas.CargarCantidadesUnaLinea(idxRec, iLinea);
     end;
+    if Assigned(Dmm) then
+      Dmm.RefrescarTotalesSesion;
     LogSes(Format('AplicarKit %s sobre linea %d', [ACodigoKit, iLinea]));
     // Aviso solo si alguna talla del kit no caso con el sistema de la linea.
     if sResumen <> '' then
@@ -1580,11 +1582,21 @@ begin
 
   FGestorTallas := TGestorGridTallas.Create(cfg);
 
-  // Hookear el OnEditValueChanged de cada columna talla al gestor.
+  // Hookear cada talla al form para recalcular linea y cabecera.
   for i := 0 to CANT_TALLAS_MAX - 1 do
     if FTallaColumns[i] <> nil then
       TcxCurrencyEditProperties(FTallaColumns[i].Properties).OnEditValueChanged
-                                       := FGestorTallas.PersistirCeldaActiva;
+                                       := TallaEditValueChangedHook;
+end;
+
+procedure TfrmMtoComprasSesiones.TallaEditValueChangedHook(Sender: TObject);
+begin
+  if Assigned(FGestorTallas) then
+  begin
+    FGestorTallas.PersistirCeldaActiva(Sender);
+    if Assigned(Dmm) then
+      Dmm.RefrescarTotalesSesion;
+  end;
 end;
 
 // ===========================================================================
@@ -2398,6 +2410,10 @@ begin
       if (i <= High(cantidades)) and (cantidades[i] > 0) then
         FGestorTallas.PersistirCantidad(iNewLinea, arr[i].IdAv, cantidades[i]);
   end;
+  if Assigned(FGestorTallas) then
+    FGestorTallas.RefrescarTotalesLineaActual;
+  if Assigned(Dmm) then
+    Dmm.RefrescarTotalesSesion;
 
   // 6. Refrescar Values[] de TODAS las lineas (incluida la nueva).
   FGestorTallas.RecalcularMaxColumnas;
@@ -3253,6 +3269,8 @@ begin
         FGestorTallas.InvalidarCache;
         FGestorTallas.CargarCantidadesTodasLineas;
       end;
+      if Assigned(Dmm) then
+        Dmm.RefrescarTotalesSesion;
     end;
   finally
     FreeAndNil(oForm);

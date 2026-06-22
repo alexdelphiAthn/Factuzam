@@ -161,6 +161,8 @@ type
     procedure actArticulosExecute(Sender: TObject);
     procedure actIrDocumentoExecute(Sender: TObject);
     procedure cbbSERIE_ALBCPropertiesInitPopup(Sender: TObject);
+    procedure btnCODIGO_PRV_ALBCPropertiesButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -181,6 +183,10 @@ type
     procedure CargarCaptionsAtributosLineaActiva;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
+    procedure TallaEditValueChangedHook(Sender: TObject);
+    procedure TallaValidateHook(Sender: TObject; var DisplayValue: Variant;
+                                var ErrorText: TCaption;
+                                var Error: Boolean);
     procedure PersistirPreferenciaPivote;
   public
     dmmAlbaranesCompra: TdmAlbaranesCompra;
@@ -198,11 +204,12 @@ uses
   System.StrUtils,
   inLibGlobalVar,
   inLibFotos,
+  inLibLog,
   inLibtb,
   UniDataArticulos,
   inMtoModalImpAlbCompra,
   inMtoModalImpAlbCompraV,
-  inMtoModalEtiqAlb, inLibShowMto;
+  inMtoModalEtiqAlb, inLibShowMto, inLibGenBusq;
 
 {$R *.dfm}
 
@@ -420,12 +427,16 @@ begin
   cfgT.IdFilaFijo         := 1;
   cfgT.MaxColumnas        := CANT_TALLAS_MAX;
   FGestorTallas := TGestorGridTallas.Create(cfgT);
-  // Hookea el OnEditValueChanged de cada columna talla al gestor para
-  // que persista la celda y refresque totales al teclear.
+  // Hookea el OnEditValueChanged de cada columna talla. En pivote compra
+  // actualiza la linea SKU real; fuera de pivote usa el gestor inline.
   for i := 0 to CANT_TALLAS_MAX - 1 do
     if FTallaColumns[i] <> nil then
+    begin
       TcxCurrencyEditProperties(FTallaColumns[i].Properties).
-        OnEditValueChanged := FGestorTallas.PersistirCeldaActiva;
+        OnEditValueChanged := TallaEditValueChangedHook;
+      TcxCurrencyEditProperties(FTallaColumns[i].Properties).
+        OnValidate := TallaValidateHook;
+    end;
   // 2. Orquestador de pivote (libreria nueva, compartida con pedidos).
   cfgP := Default(TGridPivoteCompraConfig);
   cfgP.Conexion             := inLibGlobalVar.oConn;
@@ -445,6 +456,9 @@ begin
   cfgP.FieldArt             := 'CODIGO_ART_ALBCLIN';
   cfgP.FieldSku             := 'CODIGO_UNIDAD_ALBCLIN';
   cfgP.FieldCantidad        := 'CANTIDAD_ALBCLIN';
+  cfgP.FieldPrecioBase      := 'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN';
+  cfgP.FieldTotalUds        := 'TOTAL_UNIDADES_ALBCLIN';
+  cfgP.FieldTotalLinea      := 'TOTAL_ALBCLIN';
   cfgP.FieldIdAcPivot       := 'ID_AC_PIVOT_ALBCLIN';
   cfgP.FieldAlmacen         := 'CODIGO_ALMACEN_ALBCLIN';
   cfgP.FieldAlmacenMaster   := 'CODIGO_ALM_ALBC';
@@ -703,6 +717,11 @@ end;
 
 procedure TfrmMtoAlbaranesCompra.btnGrabarClick(Sender: TObject);
 begin
+  if inLibLog.Log <> nil then
+    inLibLog.Log.LogInfo('AlbaranesCompra.btnGrabarClick: INICIO');
+  if Assigned(FPivote) and FPivote.Activo and
+     (not FPivote.Expandido) then
+    FPivote.PersistirCantidadesPendientes;
   inherited;
   if dsTablaG.State in dsEditModes then
   begin
@@ -808,6 +827,27 @@ begin
   inLibGridTallasInline.ActivarEnterComoTab(Self, True);
 end;
 
+procedure TfrmMtoAlbaranesCompra.TallaEditValueChangedHook(Sender: TObject);
+begin
+  if Assigned(FPivote) and FPivote.Activo then
+  begin
+    if FPivote.Expandido then
+      FPivote.CapturarARecibirEditValueChanged(Sender)
+    else
+      FPivote.CapturarCantidadEditValueChanged(Sender);
+  end
+  else if Assigned(FGestorTallas) then
+    FGestorTallas.PersistirCeldaActiva(Sender);
+end;
+
+procedure TfrmMtoAlbaranesCompra.TallaValidateHook(Sender: TObject;
+  var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
+begin
+  if (not Error) and Assigned(FPivote) and FPivote.Activo and
+     (not FPivote.Expandido) then
+    FPivote.PersistirCantidadEditValueChanged(Sender, DisplayValue);
+end;
+
 procedure TfrmMtoAlbaranesCompra.actArticulosExecute(Sender: TObject);
 begin
   inherited;
@@ -815,6 +855,34 @@ begin
     ShowMto(Self.Owner,
             'Articulos',
             FieldByName('CODIGO_ART_ALBCLIN').AsString);
+end;
+
+procedure TfrmMtoAlbaranesCompra.btnCODIGO_PRV_ALBCPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sCodigo : string;
+  ds      : TDataSet;
+begin
+  inherited;
+  if Assigned(dmmAlbaranesCompra) then
+  begin
+    ds := dmmAlbaranesCompra.unqryTablaG;
+    if ds.IsEmpty then
+      MessageDlg('Crea o selecciona un albarán de compra antes de ' +
+                 'elegir el proveedor.', mtInformation, [mbOk], 0)
+    else if TBusquedaUtils.EjecutarBusqueda(
+              'Búsqueda de proveedores',
+              'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
+              'CODIGO_PRV_PRV',
+              sCodigo,
+              'frmMtoAlbcProvSearch',
+              Self) then
+    begin
+      if not (ds.State in [dsInsert, dsEdit]) then
+        ds.Edit;
+      ds.FieldByName('CODIGO_PRV_ALBC').AsString := sCodigo;
+    end;
+  end;
 end;
 
 // "Ir a documento" (Ctrl+May+A): salta al pedido de compra del que nace

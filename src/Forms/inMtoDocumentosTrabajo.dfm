@@ -112,6 +112,16 @@ inherited frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo
               Height = 32
               Width = 160
             end
+            object btnCompartirDTR: TcxButton
+              Left = 643
+              Top = 0
+              Width = 120
+              Height = 32
+              Align = alRight
+              Caption = 'Compartir...'
+              TabOrder = 1
+              OnClick = btnCompartirDTRClick
+            end
             object btnImprimirEtiquetasDTR: TcxButton
               Left = 763
               Top = 0
@@ -119,7 +129,7 @@ inherited frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo
               Height = 32
               Align = alRight
               Caption = 'Imprimir etiquetas'
-              TabOrder = 1
+              TabOrder = 2
               OnClick = btnImprimirEtiquetasDTRClick
             end
           end
@@ -224,10 +234,19 @@ inherited frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo
                   ScrollbarAnnotations.CustomAnnotations = <>
                   OptionsData.Editing = True
                   OptionsView.GroupByBox = False
-                  object colDtcUsuario: TcxGridDBColumn
-                    Caption = 'Usuario'
-                    DataBinding.FieldName = 'USUARIO_DTC'
-                    Width = 180
+                  object colDtcTipoDestino: TcxGridDBColumn
+                    Caption = 'Tipo'
+                    DataBinding.FieldName = 'TIPO_DESTINO_DTC'
+                    PropertiesClassName = 'TcxComboBoxProperties'
+                    Properties.Items.Strings = (
+                      'USUARIO'
+                      'GRUPO')
+                    Width = 90
+                  end
+                  object colDtcUsuarioGrupo: TcxGridDBColumn
+                    Caption = 'Usuario / grupo'
+                    DataBinding.FieldName = 'USUARIO_GRUPO_DTC'
+                    Width = 200
                   end
                   object colDtcPermiso: TcxGridDBColumn
                     Caption = 'Permiso'

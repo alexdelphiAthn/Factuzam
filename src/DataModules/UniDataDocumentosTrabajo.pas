@@ -46,6 +46,8 @@ type
     function ObtenerAlmacenesSql(const AAlmacenesCsv: string): string;
     function ObtenerSkusDocumentoCsv(AIdDtr: Int64;
                                      const AAlmacenesCsv: string): string;
+    function ExisteDestinoCompartir(const ADestino, ATipo: string): Boolean;
+    function NormalizarTipoDestino(const ADestino, ATipo: string): string;
     function SiguienteLinea: string;
     function PuedeEditarDocumentoActual: Boolean;
   public
@@ -57,6 +59,7 @@ type
     procedure AbrirDetalles; override;
     procedure CambiarAmbito(const AAmbito: TDocTrabajoAmbito);
     procedure CargarAlmacenesEtiquetasDoc(AIdDtr: Int64; ALV: TcxListView);
+    function CompartirDocumentoActual(const ADestino, ATipo: string): Boolean;
     procedure CrearDataSetEtiquetasDoc(ADmArt: TObject; AIdDtr: Int64;
                                        const ACodTarifa,
                                              AAlmacenesCsv: string;
@@ -111,11 +114,16 @@ begin
   if FAmbito = dtaCompartidos then
   begin
     unqryTablaG.SQL.Text :=
-      'SELECT d.* ' +
+      'SELECT DISTINCT d.* ' +
       '  FROM fza_documentos_trabajo d ' +
       '  JOIN fza_documentos_trabajo_compartidos c ' +
       '    ON c.ID_DTR_DTC = d.ID_DTR ' +
-      ' WHERE c.USUARIO_DTC = :USUARIO ' +
+      ' WHERE ((COALESCE(c.TIPO_DESTINO_DTC, ''USUARIO'') = ''USUARIO'' ' +
+      '         AND COALESCE(NULLIF(c.USUARIO_GRUPO_DTC, ''''), ' +
+      '                      c.USUARIO_DTC) = :USUARIO) ' +
+      '    OR (COALESCE(c.TIPO_DESTINO_DTC, ''USUARIO'') = ''GRUPO'' ' +
+      '        AND COALESCE(NULLIF(c.USUARIO_GRUPO_DTC, ''''), ' +
+      '                     c.USUARIO_DTC) = :GRUPO)) ' +
       ' ORDER BY d.INSTANTE_DOCUMENTO_DTR DESC, d.ID_DTR DESC';
   end
   else
@@ -127,6 +135,10 @@ begin
       ' ORDER BY INSTANTE_DOCUMENTO_DTR DESC, ID_DTR DESC';
   end;
   unqryTablaG.ParamByName('USUARIO').AsString := oUser;
+  if FAmbito = dtaCompartidos then
+  begin
+    unqryTablaG.ParamByName('GRUPO').AsString := oGroup;
+  end;
 end;
 
 procedure TdmDocumentosTrabajo.ConfigurarQueries;
@@ -162,7 +174,8 @@ begin
   unqryTablaG.SQLRefresh.Text :=
     'SELECT * FROM fza_documentos_trabajo WHERE ID_DTR = :ID_DTR';
   unqryTablaG.SQLLock.Text :=
-    'SELECT * FROM fza_documentos_trabajo WHERE ID_DTR = :Old_ID_DTR FOR UPDATE';
+    'SELECT * FROM fza_documentos_trabajo ' +
+    ' WHERE ID_DTR = :Old_ID_DTR FOR UPDATE';
   unqryTablaG.AfterInsert := unqryTablaGAfterInsert;
   unqryTablaG.BeforeDelete := unqryTablaGBeforeDelete;
   unqryTablaG.BeforePost := unqryTablaGBeforePost;
@@ -235,7 +248,7 @@ begin
     'SELECT * ' +
     '  FROM fza_documentos_trabajo_compartidos ' +
     ' WHERE ID_DTR_DTC = :ID_DTR ' +
-    ' ORDER BY USUARIO_DTC';
+    ' ORDER BY TIPO_DESTINO_DTC, USUARIO_GRUPO_DTC';
   unqryCompartidos.KeyFields := 'ID_DTC';
   unqryCompartidos.MasterFields := 'ID_DTR';
   unqryCompartidos.DetailFields := 'ID_DTR_DTC';
@@ -246,15 +259,18 @@ begin
   end;
   unqryCompartidos.SQLInsert.Text :=
     'INSERT INTO fza_documentos_trabajo_compartidos ' +
-    '  (ID_DTR_DTC, USUARIO_DTC, PERMISO_DTC, INSTANTE_ALTA, ' +
-    '   USUARIO_ALTA, USUARIO_MODIF) ' +
+    '  (ID_DTR_DTC, USUARIO_DTC, USUARIO_GRUPO_DTC, TIPO_DESTINO_DTC, ' +
+    '   PERMISO_DTC, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
     'VALUES ' +
-    '  (:ID_DTR_DTC, :USUARIO_DTC, :PERMISO_DTC, :INSTANTE_ALTA, ' +
+    '  (:ID_DTR_DTC, :USUARIO_DTC, :USUARIO_GRUPO_DTC, ' +
+    '   :TIPO_DESTINO_DTC, :PERMISO_DTC, :INSTANTE_ALTA, ' +
     '   :USUARIO_ALTA, :USUARIO_MODIF)';
   unqryCompartidos.SQLUpdate.Text :=
     'UPDATE fza_documentos_trabajo_compartidos SET ' +
     '  ID_DTR_DTC = :ID_DTR_DTC, ' +
     '  USUARIO_DTC = :USUARIO_DTC, ' +
+    '  USUARIO_GRUPO_DTC = :USUARIO_GRUPO_DTC, ' +
+    '  TIPO_DESTINO_DTC = :TIPO_DESTINO_DTC, ' +
     '  PERMISO_DTC = :PERMISO_DTC, ' +
     '  USUARIO_MODIF = :USUARIO_MODIF ' +
     'WHERE ID_DTC = :Old_ID_DTC';
@@ -527,6 +543,127 @@ begin
   end;
 end;
 
+function TdmDocumentosTrabajo.ExisteDestinoCompartir(const ADestino,
+  ATipo: string): Boolean;
+var
+  q: TUniQuery;
+begin
+  Result := False;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := oConn;
+    if SameText(ATipo, 'USUARIO') then
+    begin
+      q.SQL.Text :=
+        'SELECT USUARIO_USU ' +
+        '  FROM fza_usuarios ' +
+        ' WHERE USUARIO_USU = :DESTINO';
+    end
+    else if SameText(ATipo, 'GRUPO') then
+    begin
+      q.SQL.Text :=
+        'SELECT GRUPO_USUGRP ' +
+        '  FROM fza_usuarios_grupos ' +
+        ' WHERE GRUPO_USUGRP = :DESTINO';
+    end;
+    if q.SQL.Text <> '' then
+    begin
+      q.ParamByName('DESTINO').AsString := ADestino;
+      q.Open;
+      Result := not q.IsEmpty;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+function TdmDocumentosTrabajo.NormalizarTipoDestino(const ADestino,
+  ATipo: string): string;
+var
+  sTipo: string;
+begin
+  Result := '';
+  sTipo := UpperCase(Trim(ATipo));
+  if (sTipo <> '') and (sTipo <> 'USUARIO') and (sTipo <> 'GRUPO') then
+  begin
+    raise ERangeError.Create('El tipo de destino debe ser USUARIO o GRUPO.');
+  end;
+  if sTipo <> '' then
+  begin
+    if not ExisteDestinoCompartir(ADestino, sTipo) then
+    begin
+      raise ERangeError.Create('El usuario o grupo indicado no existe.');
+    end;
+    Result := sTipo;
+  end
+  else if ExisteDestinoCompartir(ADestino, 'USUARIO') then
+  begin
+    Result := 'USUARIO';
+  end
+  else if ExisteDestinoCompartir(ADestino, 'GRUPO') then
+  begin
+    Result := 'GRUPO';
+  end
+  else
+  begin
+    raise ERangeError.Create('El usuario o grupo indicado no existe.');
+  end;
+end;
+
+function TdmDocumentosTrabajo.CompartirDocumentoActual(const ADestino,
+  ATipo: string): Boolean;
+var
+  sDestino: string;
+  sTipo: string;
+begin
+  Result := False;
+  sDestino := Trim(ADestino);
+  if sDestino = '' then
+  begin
+    raise ERangeError.Create('Indique el usuario o grupo con el que comparte.');
+  end;
+  if not PuedeEditarDocumentoActual then
+  begin
+    raise ERangeError.Create(
+      'Solo el propietario puede compartir el Documento de Trabajo.');
+  end;
+  if unqryTablaG.State in dsEditModes then
+  begin
+    unqryTablaG.Post;
+  end;
+  if unqryTablaG.FieldByName('ID_DTR').IsNull then
+  begin
+    raise ERangeError.Create(
+      'Grabe primero la cabecera del Documento de Trabajo.');
+  end;
+  sTipo := NormalizarTipoDestino(sDestino, ATipo);
+  if SameText(sTipo, 'USUARIO') and SameText(sDestino, oUser) then
+  begin
+    raise ERangeError.Create(
+      'No es necesario compartir el documento consigo mismo.');
+  end;
+  if not unqryCompartidos.Active then
+  begin
+    unqryCompartidos.Open;
+  end;
+  if unqryCompartidos.State in dsEditModes then
+  begin
+    unqryCompartidos.Post;
+  end;
+  if not unqryCompartidos.Locate('TIPO_DESTINO_DTC;USUARIO_GRUPO_DTC',
+                                 VarArrayOf([sTipo, sDestino]),
+                                 [loCaseInsensitive]) then
+  begin
+    unqryCompartidos.Append;
+    unqryCompartidos.FieldByName('TIPO_DESTINO_DTC').AsString := sTipo;
+    unqryCompartidos.FieldByName('USUARIO_GRUPO_DTC').AsString := sDestino;
+    unqryCompartidos.FieldByName('USUARIO_DTC').AsString := sDestino;
+    unqryCompartidos.FieldByName('PERMISO_DTC').AsString := 'LECTURA';
+    unqryCompartidos.Post;
+    Result := True;
+  end;
+end;
+
 procedure TdmDocumentosTrabajo.AbrirDetalles;
 var
   frm: TfrmMtoDocumentosTrabajo;
@@ -705,7 +842,8 @@ begin
   end;
   if DataSet.FieldByName('ID_DTR_DTL').IsNull then
   begin
-    raise ERangeError.Create('Grabe primero la cabecera del Documento de Trabajo.');
+    raise ERangeError.Create(
+      'Grabe primero la cabecera del Documento de Trabajo.');
   end;
   if Trim(DataSet.FieldByName('LINEA_DTL').AsString) = '' then
   begin
@@ -733,6 +871,7 @@ begin
     DataSet.FieldByName('ID_DTR_DTC').AsLargeInt :=
       unqryTablaG.FieldByName('ID_DTR').AsLargeInt;
   end;
+  DataSet.FieldByName('TIPO_DESTINO_DTC').AsString := 'USUARIO';
   DataSet.FieldByName('PERMISO_DTC').AsString := 'LECTURA';
 end;
 
@@ -746,6 +885,9 @@ begin
 end;
 
 procedure TdmDocumentosTrabajo.unqryCompartidosBeforePost(DataSet: TDataSet);
+var
+  sDestino: string;
+  sTipo: string;
 begin
   if not PuedeEditarDocumentoActual then
   begin
@@ -754,16 +896,29 @@ begin
   end;
   if DataSet.FieldByName('ID_DTR_DTC').IsNull then
   begin
-    raise ERangeError.Create('Grabe primero la cabecera del Documento de Trabajo.');
+    raise ERangeError.Create(
+      'Grabe primero la cabecera del Documento de Trabajo.');
   end;
-  if Trim(DataSet.FieldByName('USUARIO_DTC').AsString) = '' then
+  sDestino := Trim(DataSet.FieldByName('USUARIO_GRUPO_DTC').AsString);
+  if sDestino = '' then
   begin
-    raise ERangeError.Create('Indique el usuario con el que se comparte.');
+    sDestino := Trim(DataSet.FieldByName('USUARIO_DTC').AsString);
   end;
-  if SameText(DataSet.FieldByName('USUARIO_DTC').AsString, oUser) then
+  if sDestino = '' then
   begin
-    raise ERangeError.Create('No es necesario compartir el documento consigo mismo.');
+    raise ERangeError.Create(
+      'Indique el usuario o grupo con el que se comparte.');
   end;
+  sTipo := NormalizarTipoDestino(
+    sDestino, DataSet.FieldByName('TIPO_DESTINO_DTC').AsString);
+  if SameText(sTipo, 'USUARIO') and SameText(sDestino, oUser) then
+  begin
+    raise ERangeError.Create(
+      'No es necesario compartir el documento consigo mismo.');
+  end;
+  DataSet.FieldByName('TIPO_DESTINO_DTC').AsString := sTipo;
+  DataSet.FieldByName('USUARIO_GRUPO_DTC').AsString := sDestino;
+  DataSet.FieldByName('USUARIO_DTC').AsString := sDestino;
   if Trim(DataSet.FieldByName('PERMISO_DTC').AsString) = '' then
   begin
     DataSet.FieldByName('PERMISO_DTC').AsString := 'LECTURA';
