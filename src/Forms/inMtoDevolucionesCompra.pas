@@ -339,6 +339,9 @@ begin
   begin
     if not (dsCab.State in dsEditModes) then
       dsCab.Edit;
+    if (dsCab.FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil) and
+       (Trim(dsCab.FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString) = '') then
+      dsCab.FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString := 'S';
     dsCab.Post;
   end;
   if Assigned(dsLin) and dsLin.Active and (not (dsLin.State in dsEditModes)) then
