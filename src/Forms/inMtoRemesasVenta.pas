@@ -107,10 +107,16 @@ type
     procedure btnAsignarBancoClick(Sender: TObject);
     procedure btnFechaCobroClick(Sender: TObject);
     procedure btnGenerarSepaClick(Sender: TObject);
+    procedure dteFECHA_CARGO_REMVClick(Sender: TObject);
   private
     procedure ActualizarBancoCobro;
+    procedure actCrearRemesaExecute(Sender: TObject);
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
+    function CrearRemesaDesdeEfectos: Boolean;
+    procedure nvNavegadorButtonsButtonClick(Sender: TObject;
+      AButtonIndex: Integer; var ADone: Boolean);
     function BancoRemesaAsignado: Boolean;
+    function PedirFechaCobroRemesa: Boolean;
     function RemesaSeleccionada: Boolean;
   public
     dmmRemesasVenta: TdmRemesasVenta;
@@ -124,8 +130,9 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inMtoModalCargarEfectosRemesaVenta,
-  inMtoModalRegistrarPago;
+  inLibWin, inLibGlobalVar, inMtoPrincipal,
+  inMtoModalCargarEfectosRemesaVenta, inMtoModalRegistrarPago,
+  inMtoModalSepaRemesaVenta;
 
 {$R *.dfm}
 
@@ -158,6 +165,10 @@ begin
   cbbBancoCobroRemesa.Properties.KeyFieldNames := 'CODIGO_EMPBAN';
   cbbBancoCobroRemesa.Properties.ListFieldNames := 'BANCO_VIEW_EMPBAN';
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+  actInsertarRegistro.Caption := 'Crear remesa';
+  actInsertarRegistro.OnExecute := actCrearRemesaExecute;
+  nvNavegador.Buttons.Insert.Hint := 'Crear remesa';
+  nvNavegador.Buttons.OnButtonClick := nvNavegadorButtonsButtonClick;
   pkFieldName := 'NUMERO_REMV;SERIE_REMV';
 end;
 
@@ -171,6 +182,49 @@ begin
   Result := Assigned(dmmRemesasVenta) and
             dmmRemesasVenta.unqryTablaG.Active and
             (not dmmRemesasVenta.unqryTablaG.IsEmpty);
+end;
+
+function TfrmMtoRemesasVenta.CrearRemesaDesdeEfectos: Boolean;
+var
+  frm: TfrmModalCargarEfectosRemesaVenta;
+  sSerie: string;
+  sNumero: string;
+begin
+  Result := False;
+  frm := TfrmModalCargarEfectosRemesaVenta.Create(nil);
+  try
+    frm.PrepararNuevaRemesa(oEmpresa);
+    if frm.ShowModal = mrOk then
+    begin
+      sSerie := frm.RemesaSerie;
+      sNumero := frm.RemesaNumero;
+      dmmRemesasVenta.RefrescarDatos;
+      if (sSerie <> '') and (sNumero <> '') and
+         dmmRemesasVenta.unqryTablaG.Active then
+        dmmRemesasVenta.unqryTablaG.Locate('SERIE_REMV;NUMERO_REMV',
+          VarArrayOf([sSerie, sNumero]), []);
+      ActualizarBancoCobro;
+      pcPantalla.ActivePage := tsFicha;
+      Result := True;
+    end;
+  finally
+    FreeAndNil(frm);
+  end;
+end;
+
+procedure TfrmMtoRemesasVenta.actCrearRemesaExecute(Sender: TObject);
+begin
+  CrearRemesaDesdeEfectos;
+end;
+
+procedure TfrmMtoRemesasVenta.nvNavegadorButtonsButtonClick(Sender: TObject;
+  AButtonIndex: Integer; var ADone: Boolean);
+begin
+  if AButtonIndex = NBDI_INSERT then
+  begin
+    ADone := True;
+    CrearRemesaDesdeEfectos;
+  end;
 end;
 
 function TfrmMtoRemesasVenta.BancoRemesaAsignado: Boolean;
@@ -220,7 +274,7 @@ var
 begin
   inherited;
   if not RemesaSeleccionada then
-    ShowMessage('Selecciona una remesa.')
+    CrearRemesaDesdeEfectos
   else if dmmRemesasVenta.RemesaTieneCobro then
     ShowMessage('No se pueden añadir efectos a una remesa con cobro realizado.')
   else
@@ -371,11 +425,22 @@ begin
 end;
 
 procedure TfrmMtoRemesasVenta.btnFechaCobroClick(Sender: TObject);
+begin
+  inherited;
+  PedirFechaCobroRemesa;
+end;
+
+procedure TfrmMtoRemesasVenta.dteFECHA_CARGO_REMVClick(Sender: TObject);
+begin
+  PedirFechaCobroRemesa;
+end;
+
+function TfrmMtoRemesasVenta.PedirFechaCobroRemesa: Boolean;
 var
   sFecha: string;
   dFecha: TDateTime;
 begin
-  inherited;
+  Result := False;
   if not RemesaSeleccionada then
     ShowMessage('Selecciona una remesa.')
   else
@@ -391,7 +456,10 @@ begin
       if TryStrToDate(sFecha, dFecha) then
       begin
         if dmmRemesasVenta.ActualizarFechaCobro(dFecha) then
-          ShowMessage('Fecha de cobro actualizada.')
+        begin
+          ShowMessage('Fecha de cobro actualizada.');
+          Result := True;
+        end
         else
           ShowMessage('No se pudo actualizar la fecha de cobro.');
         ActualizarBancoCobro;
@@ -404,8 +472,10 @@ end;
 
 procedure TfrmMtoRemesasVenta.btnGenerarSepaClick(Sender: TObject);
 var
+  bSeguir: Boolean;
   dlg: TSaveDialog;
   iCobros: Integer;
+  rDatosSepa: TDatosSepaRemesaVenta;
   sNombre: string;
 begin
   inherited;
@@ -413,40 +483,56 @@ begin
     ShowMessage('Selecciona una remesa.')
   else if not BancoRemesaAsignado then
     ShowMessage('Asigna primero el banco de cobro de la remesa.')
-  else if dmmRemesasVenta.unqryTablaG.FieldByName('FECHA_CARGO_REMV')
-          .IsNull then
-    ShowMessage('Indica primero la fecha de cobro de la remesa.')
-  else if dmmRemesasVenta.PendienteRemesa <= 0.0001 then
-    ShowMessage('La remesa no tiene importe pendiente.')
   else
   begin
-    sNombre := 'remesa_cobro_' +
-      dmmRemesasVenta.unqryTablaG.FieldByName('SERIE_REMV').AsString + '_' +
-      dmmRemesasVenta.unqryTablaG.FieldByName('NUMERO_REMV').AsString;
-    dlg := TSaveDialog.Create(nil);
-    try
-      dlg.DefaultExt := 'xml';
-      dlg.Filter := 'Orden SEPA XML (*.xml)|*.xml';
-      dlg.FileName := LimpiarNombreArchivo(sNombre) + '.xml';
-      if dlg.Execute then
+    bSeguir := True;
+    if dmmRemesasVenta.unqryTablaG.FieldByName('FECHA_CARGO_REMV').IsNull then
+      bSeguir := PedirFechaCobroRemesa;
+    if bSeguir then
+    begin
+      if dmmRemesasVenta.PendienteRemesa <= 0.0001 then
+        ShowMessage('La remesa no tiene importe pendiente.')
+      else
       begin
         try
-          Screen.Cursor := crHourGlass;
-          try
-            iCobros := dmmRemesasVenta.GenerarOrdenSepa(dlg.FileName);
-          finally
-            Screen.Cursor := crDefault;
+          dmmRemesasVenta.CargarDatosSepa(rDatosSepa);
+          if TfrmModalSepaRemesaVenta.Ejecutar(rDatosSepa) then
+          begin
+            dmmRemesasVenta.GuardarDatosSepa(rDatosSepa);
+            sNombre := 'remesa_cobro_' +
+              dmmRemesasVenta.unqryTablaG.FieldByName('SERIE_REMV').AsString +
+              '_' + dmmRemesasVenta.unqryTablaG.FieldByName('NUMERO_REMV')
+                .AsString;
+            dlg := TSaveDialog.Create(nil);
+            try
+              dlg.DefaultExt := 'xml';
+              dlg.Filter := 'Orden SEPA XML (*.xml)|*.xml';
+              dlg.FileName := LimpiarNombreArchivo(sNombre) + '.xml';
+              if dlg.Execute then
+              begin
+                Screen.Cursor := crHourGlass;
+                try
+                  iCobros := dmmRemesasVenta.GenerarOrdenSepa(dlg.FileName);
+                finally
+                  Screen.Cursor := crDefault;
+                end;
+                ShowMessage(Format('Orden SEPA generada con %d cobro(s).',
+                  [iCobros]));
+                ActualizarBancoCobro;
+              end;
+            finally
+              dlg.Free;
+            end;
           end;
-          ShowMessage(Format('Orden SEPA generada con %d cobro(s).',
-            [iCobros]));
-          ActualizarBancoCobro;
         except
           on E: Exception do
+          begin
+            if Screen.Cursor <> crDefault then
+              Screen.Cursor := crDefault;
             ShowMessage('No se pudo generar la orden SEPA: ' + E.Message);
+          end;
         end;
       end;
-    finally
-      dlg.Free;
     end;
   end;
 end;
@@ -454,5 +540,3 @@ end;
 initialization
   ForceReferenceToClass(TfrmMtoRemesasVenta);
 end.
-
-

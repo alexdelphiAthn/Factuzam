@@ -65,6 +65,7 @@ TDJMNorma1914XML = class //el Ordenante cobra al DEUDOR
    FsNombrePresentador : string; //nombre del presentador (el 'initiator')
    FsIdPresentador : string; //id presentador norma AT02
    FdOrdenesCobro  : TDateTime; //fecha del cargo en cuenta, PARA TODAS LAS ORDENES
+   FsTipoSecuencia : string;
 
    procedure WriteGroupHeader;
    procedure writeOrdenesCobro(oOrdenante:TInfoOrdenante);
@@ -83,6 +84,7 @@ TDJMNorma1914XML = class //el Ordenante cobra al DEUDOR
    procedure SetInfoPresentador(dFileDate:TDateTime;sNombrePresentador:string;
                          sIdPresentador:string;
                          dOrdenesCobro:TDateTime);
+   procedure SetTipoSecuencia(sTipoSecuencia:string);
 
    procedure AddOrdenante(
                          sPayMentId:string;
@@ -128,6 +130,7 @@ begin
   FsNombrePresentador:='';
   FsIdPresentador:='';
   FdOrdenesCobro:=Now;
+  FsTipoSecuencia:='RCUR';
 end;
 
 procedure TDJMNorma1914XML.SetInfoPresentador;
@@ -140,6 +143,13 @@ begin
   //FsNombreOrdenante:=sNombreOrdenante;
   //FsIBANOrdenante:=sIBANOrdenante;
   //FsBICOrdenante:=sBICOrdenante;
+end;
+
+procedure TDJMNorma1914XML.SetTipoSecuencia;
+begin
+  FsTipoSecuencia:=UpperCase(Trim(sTipoSecuencia));
+  if FsTipoSecuencia=''
+  then FsTipoSecuencia:='RCUR';
 end;
 
 destructor TDJMNorma1914XML.destroy;
@@ -272,8 +282,8 @@ begin
   writeLn(FsTxt, '<Cd>'+'CORE'+'</Cd>');
   writeLn(FsTxt, '</LclInstrm>');
 
-  //2.14  Secuencia del adeudo. Los dejamos todos en RCUR
-  writeLn(FsTxt, '<SeqTp>'+'RCUR'+'</SeqTp>');
+  //2.14  Secuencia del adeudo
+  writeLn(FsTxt, '<SeqTp>'+uSEPA_CleanStr(FsTipoSecuencia)+'</SeqTp>');
 
   writeLn(FsTxt, '</PmtTpInf>');
 

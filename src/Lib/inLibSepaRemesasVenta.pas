@@ -27,6 +27,8 @@ type
 
 function GenerarSepaRemesaVenta(AConn: TUniConnection; const ASerie,
   ANumero, AArchivo: string): TResultadoSepaRemesaVenta;
+function CalcularCodigoAcreedorSepaEspanol(const ANif: string): string;
+function CodigoAcreedorSepaValido(const AValor: string): Boolean;
 
 implementation
 
@@ -106,6 +108,18 @@ begin
   end;
 end;
 
+function ValorNoEsTodoCeros(const AValor: string): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := 1 to Length(AValor) do
+  begin
+    if AValor[i] <> '0' then
+      Result := True;
+  end;
+end;
+
 function DosDigitos(AValor: Integer): string;
 begin
   Result := IntToStr(AValor);
@@ -113,7 +127,28 @@ begin
     Result := '0' + Result;
 end;
 
-function IdentificadorAcreedorEspanol(const ANif: string): string;
+function CodigoAcreedorSepaValido(const AValor: string): Boolean;
+var
+  sValor: string;
+  sReordenado: string;
+begin
+  sValor := SoloAlfanumerico(AValor);
+  Result := (sValor <> '') and (Length(sValor) <= 35) and
+    ValorNoEsTodoCeros(sValor);
+  if Result and (Copy(sValor, 1, 2) = 'ES') then
+  begin
+    if Length(sValor) = 16 then
+    begin
+      sReordenado := Copy(sValor, 5, Length(sValor) - 4) +
+        Copy(sValor, 1, 4);
+      Result := Modulo97(CadenaSepaADigitos(sReordenado)) = 1;
+    end
+    else
+      Result := False;
+  end;
+end;
+
+function CalcularCodigoAcreedorSepaEspanol(const ANif: string): string;
 var
   iDc: Integer;
   sNif: string;
@@ -144,10 +179,10 @@ end;
 
 function CrearIdMandato(AEfecto: TDataSet): string;
 begin
-  Result := 'CLI-' + SoloAlfanumerico(ValorCampoStr(AEfecto,
-    'CODIGO_CLI_EFV'));
-  if Result = 'CLI-' then
-    Result := CrearIdCobro(AEfecto);
+  Result := ValorCampoStr(AEfecto, 'ID_MANDATO_SEPA_CLI');
+  if Result = '' then
+    raise Exception.Create('Cliente ' + ValorCampoStr(AEfecto, 'NOMBRE_CLI') +
+      ' sin mandato SEPA.');
 end;
 
 function CrearConcepto(AEfecto: TDataSet): string;
@@ -164,6 +199,7 @@ begin
   AQry.SQL.Text :=
     'SELECT r.SERIE_REMV, r.NUMERO_REMV, r.FECHA_REMV, ' +
     '       r.FECHA_CARGO_REMV, r.IBAN_REMV, r.CODIGO_EMP_REMV, ' +
+    '       r.TIPO_SECUENCIA_SEPA_REMV, ' +
     '       emp.RAZON_SOCIAL_EMP, emp.NIF_EMP ' +
     '  FROM fza_remesas_venta r ' +
     '  LEFT JOIN fza_empresas emp ' +
@@ -178,11 +214,15 @@ end;
 procedure AbrirBanco(AQry: TUniQuery; const ACodigoEmp, AIban: string);
 begin
   AQry.SQL.Text :=
-    'SELECT COALESCE(NULLIF(BIC_EMPBAN, ''''), ' +
-    '                NULLIF(BIC_BAN_VIEW_EMPBAN, ''''), '''') AS BIC ' +
-    '  FROM vi_empresas_bancos ' +
-    ' WHERE CODIGO_EMP_EMPBAN = :empresa ' +
-    '   AND IBAN_EMPBAN = :iban ' +
+    'SELECT COALESCE(NULLIF(eb.BIC_EMPBAN, ''''), ' +
+    '                NULLIF(b.BIC_BAN, ''''), '''') AS BIC, ' +
+    '       COALESCE(NULLIF(eb.CODIGO_ACREEDOR_SEPA_EMPBAN, ''''), '''') ' +
+    '         AS CODIGO_ACREEDOR_SEPA_EMPBAN ' +
+    '  FROM fza_empresas_bancos eb ' +
+    '  LEFT JOIN fza_bancos b ' +
+    '    ON b.CODIGO_BAN = eb.CODIGO_BAN_EMPBAN ' +
+    ' WHERE eb.CODIGO_EMP_EMPBAN = :empresa ' +
+    '   AND eb.IBAN_EMPBAN = :iban ' +
     ' LIMIT 1';
   AQry.ParamByName('empresa').AsString := ACodigoEmp;
   AQry.ParamByName('iban').AsString := AIban;
@@ -197,6 +237,8 @@ begin
     '       COALESCE(NULLIF(e.RAZON_SOCIAL_CLI_EFV, ''''), ' +
     '                cli.RAZON_SOCIAL_CLI, e.CODIGO_CLI_EFV) AS NOMBRE_CLI, ' +
     '       COALESCE(NULLIF(e.IBAN_EFV, ''''), cli.IBAN_CLI) AS IBAN_CLI, ' +
+    '       cli.ID_MANDATO_SEPA_CLI, ' +
+    '       cli.FECHA_FIRMA_MANDATO_SEPA_CLI, ' +
     '       COALESCE(e.IMPORTE_PENDIENTE_EFV, e.IMPORTE_EFV, 0) AS IMPORTE, ' +
     '       e.REFERENCIA_DOCUMENTO_EFV ' +
     '  FROM fza_efectos_venta e ' +
@@ -231,6 +273,7 @@ var
   sIbanEmpresa: string;
   sNombreCliente: string;
   sNombreEmpresa: string;
+  sTipoSecuencia: string;
 begin
   Result.Archivo := Trim(AArchivo);
   Result.NumCobros := 0;
@@ -257,16 +300,26 @@ begin
       sNombreEmpresa := sCodigoEmp;
     sIbanEmpresa := NormalizarIban(ValorCampoStr(qCabecera, 'IBAN_REMV'),
       'Banco de cobro de la remesa');
-    sIdAcreedor := IdentificadorAcreedorEspanol(ValorCampoStr(qCabecera,
-      'NIF_EMP'));
     dFechaCargo := ValorCampoFecha(qCabecera, 'FECHA_CARGO_REMV', 0);
     if dFechaCargo <= 0 then
       raise Exception.Create('La remesa no tiene fecha de cobro.');
+    sTipoSecuencia := UpperCase(ValorCampoStr(qCabecera,
+      'TIPO_SECUENCIA_SEPA_REMV'));
+    if sTipoSecuencia = '' then
+      sTipoSecuencia := 'RCUR';
     AbrirBanco(qBanco, sCodigoEmp, sIbanEmpresa);
+    if qBanco.IsEmpty then
+      raise Exception.Create('No se encuentra el banco de cobro de la remesa.');
     sBicEmpresa := '';
-    if not qBanco.IsEmpty then
-      sBicEmpresa := UpperCase(ValorCampoStr(qBanco, 'BIC'));
+    sBicEmpresa := UpperCase(ValorCampoStr(qBanco, 'BIC'));
+    sIdAcreedor := UpperCase(ValorCampoStr(qBanco,
+      'CODIGO_ACREEDOR_SEPA_EMPBAN'));
+    if sIdAcreedor = '' then
+      raise Exception.Create('El banco de cobro no tiene código acreedor SEPA.');
+    if not CodigoAcreedorSepaValido(sIdAcreedor) then
+      raise Exception.Create('Código acreedor SEPA no válido: ' + sIdAcreedor);
     oSepa.SetInfoPresentador(Now, sNombreEmpresa, sIdAcreedor, dFechaCargo);
+    oSepa.SetTipoSecuencia(sTipoSecuencia);
     oSepa.AddOrdenante('REMV-' + SoloAlfanumerico(ASerie) + '-' +
       SoloAlfanumerico(ANumero), sNombreEmpresa, sIbanEmpresa, sBicEmpresa,
       sIdAcreedor);
@@ -278,8 +331,11 @@ begin
         raise Exception.Create('Efecto sin nombre de cliente.');
       sIbanCliente := NormalizarIban(ValorCampoStr(qEfectos, 'IBAN_CLI'),
         'Cliente ' + sNombreCliente);
-      dFechaFirma := ValorCampoFecha(qEfectos, 'FECHA_EMISION_EFV',
-        ValorCampoFecha(qCabecera, 'FECHA_REMV', Date));
+      dFechaFirma := ValorCampoFecha(qEfectos,
+        'FECHA_FIRMA_MANDATO_SEPA_CLI', 0);
+      if dFechaFirma <= 0 then
+        raise Exception.Create('Cliente ' + sNombreCliente +
+          ' sin fecha de firma del mandato SEPA.');
       oSepa.AddCobro(CrearIdCobro(qEfectos),
         qEfectos.FieldByName('IMPORTE').AsCurrency, CrearIdMandato(qEfectos),
         dFechaFirma, '', sNombreCliente, sIbanCliente, CrearConcepto(qEfectos),

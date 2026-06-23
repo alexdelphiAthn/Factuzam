@@ -275,6 +275,7 @@ uses
   inMtoModalCargarEfectosRemesaVenta in 'src\Modals\inMtoModalCargarEfectosRemesaVenta.pas' {frmModalCargarEfectosRemesaVenta},
   inMtoModalSeleccionarBanco in 'src\Modals\inMtoModalSeleccionarBanco.pas' {frmModalSeleccionarBanco},
   inMtoModalRegistrarPago in 'src\Modals\inMtoModalRegistrarPago.pas' {frmModalRegistrarPago},
+  inMtoModalSepaRemesaVenta in 'src\Modals\inMtoModalSepaRemesaVenta.pas',
   inMtoPedidosCompra in 'src\Forms\inMtoPedidosCompra.pas' {frmMtoPedidosCompra},
   UniDataPedidosCompra in 'src\DataModules\UniDataPedidosCompra.pas' {dmPedidosCompra: TdmPedidosCompra},
   inMtoModalSelAlmacenPedido in 'src\Modals\inMtoModalSelAlmacenPedido.pas' {frmModalSelAlmacenPedido},

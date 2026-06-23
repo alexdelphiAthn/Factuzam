@@ -80,6 +80,7 @@ type
     function  CrearRemesaNueva(const AEmp: string;
                                out ASerie, ANumero: string): Boolean;
   public
+    procedure PrepararNuevaRemesa(const AEmp: string);
     procedure PrepararRemesaExistente(const AEmp, ASerie, ANumero: string);
     property Confirmado:   Boolean read FConfirmado;
     property RemesaSerie:  string  read FRemSerie;
@@ -216,6 +217,14 @@ begin
     if (FRemSeries[i] = ASerie) and (FRemNumeros[i] = ANumero) then
       cbbRemExistente.ItemIndex := i;
   end;
+end;
+
+procedure TfrmModalCargarEfectosRemesaVenta.PrepararNuevaRemesa(
+  const AEmp: string);
+begin
+  btnEmpresa.Text := AEmp;
+  rgModo.ItemIndex := 0;
+  ActualizarModo;
 end;
 
 procedure TfrmModalCargarEfectosRemesaVenta.btnBuscarClick(Sender: TObject);

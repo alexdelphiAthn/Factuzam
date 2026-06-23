@@ -17,7 +17,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Variants, UniDataGen, Data.DB,
-  MemDS, DBAccess, Uni, inLibUser, UniDataConn;
+  MemDS, DBAccess, Uni, inLibUser, UniDataConn, inMtoModalSepaRemesaVenta;
 
 type
   TdmRemesasVenta = class(TdmBase)
@@ -39,7 +39,10 @@ type
     function ActualizarFechaCobro(AFecha: TDateTime): Boolean;
     function AsignarBancoRemesa(const ACodigoEmpban: string): Boolean;
     function CobroRealizadoRemesa: Double;
+    procedure CargarDatosSepa(var ADatos: TDatosSepaRemesaVenta);
     function GenerarOrdenSepa(const AArchivo: string): Integer;
+    function GuardarDatosSepa(
+      const ADatos: TDatosSepaRemesaVenta): Boolean;
     function PendienteRemesa: Double;
     function QuitarEfectoActual: Boolean;
     function RegistrarCobroEfectoActual(AFecha: TDateTime; AImporte: Double;
@@ -232,6 +235,37 @@ begin
   finally
     FreeAndNil(q);
   end;
+end;
+
+function SoloAlfanumericoSepa(const AValor: string): string;
+var
+  i: Integer;
+  sValor: string;
+begin
+  Result := '';
+  sValor := UpperCase(Trim(AValor));
+  for i := 1 to Length(sValor) do
+  begin
+    if CharInSet(sValor[i], ['A'..'Z', '0'..'9']) then
+      Result := Result + sValor[i];
+  end;
+end;
+
+function ValorCampoStrSepa(ADataSet: TDataSet; const ACampo: string): string;
+begin
+  Result := '';
+  if (ADataSet.FindField(ACampo) <> nil) and
+     (not ADataSet.FieldByName(ACampo).IsNull) then
+    Result := Trim(ADataSet.FieldByName(ACampo).AsString);
+end;
+
+function ValorCampoFechaSepa(ADataSet: TDataSet; const ACampo: string;
+  ADefecto: TDateTime): TDateTime;
+begin
+  Result := ADefecto;
+  if (ADataSet.FindField(ACampo) <> nil) and
+     (not ADataSet.FieldByName(ACampo).IsNull) then
+    Result := ADataSet.FieldByName(ACampo).AsDateTime;
 end;
 
 function TdmRemesasVenta.RegistrarCobroEfectoClave(const ASerieFac,
@@ -526,6 +560,193 @@ begin
     end;
     if Result then
       RefrescarDatos;
+  end;
+end;
+
+procedure TdmRemesasVenta.CargarDatosSepa(var ADatos: TDatosSepaRemesaVenta);
+var
+  dFechaRemesa: TDateTime;
+  i: Integer;
+  q: TUniQuery;
+  sCodigoCliente: string;
+  sNifEmpresa: string;
+begin
+  ADatos.CodigoAcreedor := '';
+  ADatos.TipoSecuencia := 'RCUR';
+  SetLength(ADatos.Clientes, 0);
+  if not (unqryTablaG.Active and (not unqryTablaG.IsEmpty)) then
+    raise Exception.Create('Selecciona una remesa.');
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT r.FECHA_REMV, r.TIPO_SECUENCIA_SEPA_REMV, emp.NIF_EMP, ' +
+      '       eb.CODIGO_ACREEDOR_SEPA_EMPBAN ' +
+      '  FROM fza_remesas_venta r ' +
+      '  LEFT JOIN fza_empresas emp ' +
+      '    ON emp.CODIGO_EMP_EMP = r.CODIGO_EMP_REMV ' +
+      '  LEFT JOIN fza_empresas_bancos eb ' +
+      '    ON eb.CODIGO_EMP_EMPBAN = r.CODIGO_EMP_REMV ' +
+      '   AND eb.IBAN_EMPBAN = r.IBAN_REMV ' +
+      ' WHERE r.SERIE_REMV = :serie ' +
+      '   AND r.NUMERO_REMV = :numero';
+    q.ParamByName('serie').AsString :=
+      unqryTablaG.FieldByName('SERIE_REMV').AsString;
+    q.ParamByName('numero').AsString :=
+      unqryTablaG.FieldByName('NUMERO_REMV').AsString;
+    q.Open;
+    if q.IsEmpty then
+      raise Exception.Create('No se encuentra la remesa de venta.');
+    ADatos.CodigoAcreedor := UpperCase(ValorCampoStrSepa(q,
+      'CODIGO_ACREEDOR_SEPA_EMPBAN'));
+    sNifEmpresa := ValorCampoStrSepa(q, 'NIF_EMP');
+    if ADatos.CodigoAcreedor = '' then
+    begin
+      try
+        ADatos.CodigoAcreedor :=
+          CalcularCodigoAcreedorSepaEspanol(sNifEmpresa);
+      except
+        ADatos.CodigoAcreedor := '';
+      end;
+    end;
+    ADatos.TipoSecuencia := UpperCase(ValorCampoStrSepa(q,
+      'TIPO_SECUENCIA_SEPA_REMV'));
+    if ADatos.TipoSecuencia = '' then
+      ADatos.TipoSecuencia := 'RCUR';
+    dFechaRemesa := ValorCampoFechaSepa(q, 'FECHA_REMV', Date);
+    q.Close;
+    q.SQL.Text :=
+      'SELECT e.CODIGO_CLI_EFV, ' +
+      '       COALESCE(NULLIF(cli.RAZON_SOCIAL_CLI, ''''), ' +
+      '                NULLIF(e.RAZON_SOCIAL_CLI_EFV, ''''), ' +
+      '                e.CODIGO_CLI_EFV) AS NOMBRE_CLI, ' +
+      '       cli.ID_MANDATO_SEPA_CLI, ' +
+      '       cli.FECHA_FIRMA_MANDATO_SEPA_CLI, ' +
+      '       MIN(e.FECHA_EMISION_EFV) AS FECHA_SUGERIDA ' +
+      '  FROM fza_efectos_venta e ' +
+      '  LEFT JOIN fza_clientes cli ' +
+      '    ON cli.CODIGO_CLI_CLI = e.CODIGO_CLI_EFV ' +
+      ' WHERE e.SERIE_REMV_EFV = :serie ' +
+      '   AND e.NUMERO_REMV_EFV = :numero ' +
+      '   AND COALESCE(e.IMPORTE_PENDIENTE_EFV, e.IMPORTE_EFV, 0) > 0 ' +
+      ' GROUP BY e.CODIGO_CLI_EFV, cli.RAZON_SOCIAL_CLI, ' +
+      '          e.RAZON_SOCIAL_CLI_EFV, cli.ID_MANDATO_SEPA_CLI, ' +
+      '          cli.FECHA_FIRMA_MANDATO_SEPA_CLI ' +
+      ' ORDER BY NOMBRE_CLI';
+    q.ParamByName('serie').AsString :=
+      unqryTablaG.FieldByName('SERIE_REMV').AsString;
+    q.ParamByName('numero').AsString :=
+      unqryTablaG.FieldByName('NUMERO_REMV').AsString;
+    q.Open;
+    if q.IsEmpty then
+      raise Exception.Create('La remesa no tiene efectos pendientes.');
+    i := 0;
+    while not q.Eof do
+    begin
+      SetLength(ADatos.Clientes, i + 1);
+      sCodigoCliente := ValorCampoStrSepa(q, 'CODIGO_CLI_EFV');
+      ADatos.Clientes[i].CodigoCliente := sCodigoCliente;
+      ADatos.Clientes[i].NombreCliente := ValorCampoStrSepa(q, 'NOMBRE_CLI');
+      ADatos.Clientes[i].IdMandato := UpperCase(ValorCampoStrSepa(q,
+        'ID_MANDATO_SEPA_CLI'));
+      if ADatos.Clientes[i].IdMandato = '' then
+        ADatos.Clientes[i].IdMandato := 'CLI-' +
+          SoloAlfanumericoSepa(sCodigoCliente);
+      ADatos.Clientes[i].FechaFirma := ValorCampoFechaSepa(q,
+        'FECHA_FIRMA_MANDATO_SEPA_CLI', 0);
+      if ADatos.Clientes[i].FechaFirma <= 0 then
+        ADatos.Clientes[i].FechaFirma := ValorCampoFechaSepa(q,
+          'FECHA_SUGERIDA', dFechaRemesa);
+      Inc(i);
+      q.Next;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+function TdmRemesasVenta.GuardarDatosSepa(
+  const ADatos: TDatosSepaRemesaVenta): Boolean;
+var
+  bTxOwned: Boolean;
+  i: Integer;
+  q: TUniQuery;
+  sIban: string;
+  sNumeroRem: string;
+  sSerieRem: string;
+begin
+  Result := False;
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+  begin
+    sSerieRem := unqryTablaG.FieldByName('SERIE_REMV').AsString;
+    sNumeroRem := unqryTablaG.FieldByName('NUMERO_REMV').AsString;
+    sIban := unqryTablaG.FieldByName('IBAN_REMV').AsString;
+    bTxOwned := not inLibGlobalVar.oConn.InTransaction;
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      try
+        if bTxOwned then
+          inLibGlobalVar.oConn.StartTransaction;
+        q.SQL.Text :=
+          'UPDATE fza_empresas_bancos ' +
+          '   SET CODIGO_ACREEDOR_SEPA_EMPBAN = :codigo, ' +
+          '       INSTANTE_MODIF = NOW(), ' +
+          '       USUARIO_MODIF = :usuario ' +
+          ' WHERE CODIGO_EMP_EMPBAN = :empresa ' +
+          '   AND IBAN_EMPBAN = :iban';
+        q.ParamByName('codigo').AsString := ADatos.CodigoAcreedor;
+        q.ParamByName('usuario').AsString := oUser;
+        q.ParamByName('empresa').AsString :=
+          unqryTablaG.FieldByName('CODIGO_EMP_REMV').AsString;
+        q.ParamByName('iban').AsString := sIban;
+        q.ExecSQL;
+        if q.RowsAffected = 0 then
+          raise Exception.Create('No se pudo guardar el código acreedor SEPA.');
+        q.SQL.Text :=
+          'UPDATE fza_remesas_venta ' +
+          '   SET TIPO_SECUENCIA_SEPA_REMV = :tipo, ' +
+          '       INSTANTE_MODIF = NOW(), ' +
+          '       USUARIO_MODIF = :usuario ' +
+          ' WHERE SERIE_REMV = :serie ' +
+          '   AND NUMERO_REMV = :numero';
+        q.ParamByName('tipo').AsString := ADatos.TipoSecuencia;
+        q.ParamByName('usuario').AsString := oUser;
+        q.ParamByName('serie').AsString := sSerieRem;
+        q.ParamByName('numero').AsString := sNumeroRem;
+        q.ExecSQL;
+        i := 0;
+        while i < Length(ADatos.Clientes) do
+        begin
+          q.SQL.Text :=
+            'UPDATE fza_clientes ' +
+            '   SET ID_MANDATO_SEPA_CLI = :mandato, ' +
+            '       FECHA_FIRMA_MANDATO_SEPA_CLI = :fecha, ' +
+            '       INSTANTE_MODIF = NOW(), ' +
+            '       USUARIO_MODIF = :usuario ' +
+            ' WHERE CODIGO_CLI_CLI = :cliente';
+          q.ParamByName('mandato').AsString := ADatos.Clientes[i].IdMandato;
+          q.ParamByName('fecha').AsDateTime := ADatos.Clientes[i].FechaFirma;
+          q.ParamByName('usuario').AsString := oUser;
+          q.ParamByName('cliente').AsString :=
+            ADatos.Clientes[i].CodigoCliente;
+          q.ExecSQL;
+          if q.RowsAffected = 0 then
+            raise Exception.Create('No se pudo guardar el mandato SEPA del ' +
+              'cliente ' + ADatos.Clientes[i].CodigoCliente + '.');
+          Inc(i);
+        end;
+        if bTxOwned then
+          inLibGlobalVar.oConn.Commit;
+        Result := True;
+      except
+        if bTxOwned and inLibGlobalVar.oConn.InTransaction then
+          inLibGlobalVar.oConn.Rollback;
+        raise;
+      end;
+    finally
+      FreeAndNil(q);
+    end;
   end;
 end;
 

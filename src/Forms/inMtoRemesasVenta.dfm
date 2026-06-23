@@ -235,6 +235,7 @@
             DataBinding.DataSource = dsTablaG
             Properties.ReadOnly = True
             TabOrder = 17
+            OnClick = dteFECHA_CARGO_REMVClick
             Width = 104
           end
           object lblIBAN: TcxLabel
