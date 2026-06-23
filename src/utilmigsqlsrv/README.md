@@ -54,9 +54,10 @@ src/utilmigsqlsrv/
 │                                                fza_empresas_series +
 │                                                fza_contadores +
 │                                                CONTADOR_ART_FAM (familias)
-├── inLibMigCompras.pas            ocped/ocalbpro/ocfacpro →
-│                                                pedidos, albaranes y
-│                                                facturas de compra
+├── inLibMigCompras.pas            ocped/ocalbpro/ocreppro/ocfacpro →
+│                                                pedidos, albaranes,
+│                                                devoluciones y facturas
+│                                                de compra
 ├── inLibMigEfectosCompra.pas      ocbanrem/octipefe/ocefepro/occobpro/
 │                                  ocrempro → bancos, tipos, efectos,
 │                                                pagos y remesas de compra
@@ -164,6 +165,9 @@ columnas saldrán incluidas en el esqueleto:
 | Facturas compra | `DESARROLLOS EN CURSO/facturas_compra_temporada.sql` |
 |              | (añade `ID_PV_TEMPORADA_FACC`; el migrador rellena |
 |              | la temporada de cabecera desde `ocfacpro.Temporada`) |
+| Devoluciones compra | `DESARROLLOS EN CURSO/devoluciones_compra.sql` |
+|              | (crea `fza_devoluciones_compra` y sus líneas para |
+|              | importar `ocreppro` / `ocrepproart`) |
 | Empleados    | `DESARROLLOS EN CURSO/empleados_ampliar_ocemp.sql` |
 |              | (añade datos de contacto/identificación de         |
 |              | `dbo.ocemp` a `fza_empleados`, sin tocar usuarios).|
@@ -223,7 +227,7 @@ workers de la actual han terminado.
 | 0 | empresas · empleados · proveedores · tipos_efecto_compra · familias · colores_maestros · tallas_maestras | — |
 | 1 | almacenes · clientes · articulos · tallajes · bancos_empresa | Wave 0 |
 | 2 | articulos_colores · articulos_tallas · articulos_tallajes_asign · skus | Wave 1 |
-| 3 | inventarios · movimientos · ventas · pedidos_venta · albaranes_venta · pedidos_compra · albaranes_compra | Wave 2 |
+| 3 | inventarios · movimientos · ventas · pedidos_venta · albaranes_venta · pedidos_compra · albaranes_compra · devoluciones_compra | Wave 2 |
 | 4 | facturas | Wave 3 |
 | 5 | facturas_venta_mayor · facturas_compra | Wave 4 |
 | 6 | efectos_compra | Wave 5 |

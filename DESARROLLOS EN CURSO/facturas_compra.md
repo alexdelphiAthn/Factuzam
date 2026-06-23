@@ -95,8 +95,9 @@ recalcula bases, impuestos, total, retención y líquido.
    aún no existe.
 2. **Modal "Facturar albaranes"**: selector de albaranes `CERRADO` de un
    proveedor + botón que itera `PRC_FACC_FACTURAR_ALBARAN`.
-3. **Informe** de factura de compra (FastReport) y vista de impresión
-   `vi_facturas_compra_print` (espejo de `vi_albaranes_compra_print`).
+3. **Revisión visual del informe** de factura de compra con datos reales:
+   vistas idempotentes en `vi_facturas_compra_print.sql` y modales H/V
+   cableados desde `inMtoFacturasCompra`.
 4. **Generación de efectos** al cerrar la factura → ver
    `efectos_remesas_compra.md` (`PRC_EFEC_GENERAR_DESDE_FACTURA`).
 5. **Asiento/contabilización**: `INSTANTE_CONTABILIZACION_FACC` está previsto

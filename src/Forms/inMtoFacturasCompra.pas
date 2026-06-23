@@ -185,6 +185,11 @@ type
     procedure CargarCaptionsAtributosLineaActiva;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
+    procedure TallaEditValueChangedHook(Sender: TObject);
+    procedure TallaValidateHook(Sender: TObject; var DisplayValue: Variant;
+                                var ErrorText: TCaption;
+                                var Error: Boolean);
+    procedure AsegurarCabeceraPersistidaParaLineas;
     procedure PersistirPreferenciaPivote;
   public
     dmmFacturasCompra: TdmFacturasCompra;
@@ -203,6 +208,8 @@ uses
   inLibGlobalVar,
   inLibFotos,
   UniDataArticulos,
+  inMtoModalImpFacCompra,
+  inMtoModalImpFacCompraV,
   inLibShowMto, inLibGenBusq, inMtoModalRegistrarPago,
   inMtoModalSeleccionarBanco;
 
@@ -402,8 +409,12 @@ begin
   // que persista la celda y refresque totales al teclear.
   for i := 0 to CANT_TALLAS_MAX - 1 do
     if FTallaColumns[i] <> nil then
+    begin
       TcxCurrencyEditProperties(FTallaColumns[i].Properties).
-        OnEditValueChanged := FGestorTallas.PersistirCeldaActiva;
+        OnEditValueChanged := TallaEditValueChangedHook;
+      TcxCurrencyEditProperties(FTallaColumns[i].Properties).
+        OnValidate := TallaValidateHook;
+    end;
   // 2. Orquestador de pivote (libreria nueva, compartida con pedidos).
   cfgP := Default(TGridPivoteCompraConfig);
   cfgP.Conexion             := inLibGlobalVar.oConn;
@@ -423,6 +434,9 @@ begin
   cfgP.FieldArt             := 'CODIGO_ART_FACCLIN';
   cfgP.FieldSku             := 'CODIGO_UNIDAD_FACCLIN';
   cfgP.FieldCantidad        := 'CANTIDAD_FACCLIN';
+  cfgP.FieldPrecioBase      := 'PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN';
+  cfgP.FieldTotalUds        := 'TOTAL_UNIDADES_FACCLIN';
+  cfgP.FieldTotalLinea      := 'TOTAL_FACCLIN';
   cfgP.FieldIdAcPivot       := 'ID_AC_PIVOT_FACCLIN';
   cfgP.FieldAlmacen         := 'CODIGO_ALMACEN_FACCLIN';
   cfgP.FieldAlmacenMaster   := 'CODIGO_ALM_FACC';
@@ -562,21 +576,78 @@ begin
 end;
 
 procedure TfrmMtoFacturasCompra.btnImprimirHClick(Sender: TObject);
+var
+  form    : TfrmPrintFacCompra;
+  sSerie  : string;
+  sNumero : string;
 begin
   inherited;
-  ShowMessage('Impresion de borrador de compra: pendiente (hito de informes).');
+  if dmmFacturasCompra = nil then
+    ShowMessage('No hay factura de compra activa que imprimir.')
+  else if dmmFacturasCompra.unqryTablaG.IsEmpty then
+    ShowMessage('No hay factura de compra activa que imprimir.')
+  else
+  begin
+    if dmmFacturasCompra.unqryTablaG.State in [dsEdit, dsInsert] then
+      dmmFacturasCompra.unqryTablaG.Post;
+    if dmmFacturasCompra.unqryFacturasCompraLineas.State in
+       [dsEdit, dsInsert] then
+      dmmFacturasCompra.unqryFacturasCompraLineas.Post;
+    sSerie  := dmmFacturasCompra.unqryTablaG.FieldByName(
+                 'SERIE_FACC').AsString;
+    sNumero := dmmFacturasCompra.unqryTablaG.FieldByName(
+                 'NUMERO_FACC').AsString;
+    form := TfrmPrintFacCompra.Create(Application);
+    try
+      form.dmFacc         := dmmFacturasCompra;
+      form.edtSerie.Text  := sSerie;
+      form.edtNumero.Text := sNumero;
+      form.ShowModal;
+    finally
+      FreeAndNil(form);
+    end;
+  end;
 end;
 
 procedure TfrmMtoFacturasCompra.btnImprimirVClick(Sender: TObject);
+var
+  form    : TfrmPrintFacCompraV;
+  sSerie  : string;
+  sNumero : string;
 begin
   inherited;
-  ShowMessage('Impresion de borrador de compra: pendiente (hito de informes).');
+  if dmmFacturasCompra = nil then
+    ShowMessage('No hay factura de compra activa que imprimir.')
+  else if dmmFacturasCompra.unqryTablaG.IsEmpty then
+    ShowMessage('No hay factura de compra activa que imprimir.')
+  else
+  begin
+    if dmmFacturasCompra.unqryTablaG.State in [dsEdit, dsInsert] then
+      dmmFacturasCompra.unqryTablaG.Post;
+    if dmmFacturasCompra.unqryFacturasCompraLineas.State in
+       [dsEdit, dsInsert] then
+      dmmFacturasCompra.unqryFacturasCompraLineas.Post;
+    sSerie  := dmmFacturasCompra.unqryTablaG.FieldByName(
+                 'SERIE_FACC').AsString;
+    sNumero := dmmFacturasCompra.unqryTablaG.FieldByName(
+                 'NUMERO_FACC').AsString;
+    form := TfrmPrintFacCompraV.Create(Application);
+    try
+      form.dmFacc         := dmmFacturasCompra;
+      form.edtSerie.Text  := sSerie;
+      form.edtNumero.Text := sNumero;
+      form.ShowModal;
+    finally
+      FreeAndNil(form);
+    end;
+  end;
 end;
 
 procedure TfrmMtoFacturasCompra.btnPegatinasClick(Sender: TObject);
 begin
   inherited;
-  ShowMessage('Etiquetas de borrador de compra: pendiente (hito de informes).');
+  ShowMessage('Etiquetas de borrador de compra: pendiente (hito de ' +
+              'informes).');
 end;
 
 procedure TfrmMtoFacturasCompra.btnAtributosColumnaClick(Sender: TObject);
@@ -595,6 +666,9 @@ end;
 
 procedure TfrmMtoFacturasCompra.btnGrabarClick(Sender: TObject);
 begin
+  if Assigned(FPivote) and FPivote.Activo and
+     (not FPivote.Expandido) then
+    FPivote.PersistirCantidadesPendientes;
   inherited;
   if dsTablaG.State in dsEditModes then
   begin
@@ -700,6 +774,71 @@ begin
   inLibGridTallasInline.ActivarEnterComoTab(Self, True);
 end;
 
+procedure TfrmMtoFacturasCompra.TallaEditValueChangedHook(Sender: TObject);
+begin
+  if Assigned(FPivote) and FPivote.Activo then
+  begin
+    if FPivote.Expandido then
+      FPivote.CapturarARecibirEditValueChanged(Sender)
+    else
+      FPivote.CapturarCantidadEditValueChanged(Sender);
+  end
+  else if Assigned(FGestorTallas) then
+    FGestorTallas.PersistirCeldaActiva(Sender);
+end;
+
+procedure TfrmMtoFacturasCompra.TallaValidateHook(Sender: TObject;
+  var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
+begin
+  if (not Error) and Assigned(FPivote) and FPivote.Activo and
+     (not FPivote.Expandido) then
+    FPivote.PersistirCantidadEditValueChanged(Sender, DisplayValue);
+end;
+
+procedure TfrmMtoFacturasCompra.AsegurarCabeceraPersistidaParaLineas;
+var
+  dsCab: TDataSet;
+  dsLin: TDataSet;
+  sNumero: string;
+begin
+  if not Assigned(dmmFacturasCompra) then
+    raise Exception.Create('No esta inicializada la factura de compra.')
+  else
+  begin
+    dsCab := dmmFacturasCompra.unqryTablaG;
+    dsLin := dmmFacturasCompra.unqryFacturasCompraLineas;
+    if (dsCab = nil) or (not dsCab.Active) or dsCab.IsEmpty then
+      raise Exception.Create(
+        'Crea o selecciona una factura antes de añadir lineas.');
+    sNumero := Trim(dsCab.FieldByName('NUMERO_FACC').AsString);
+    if Assigned(dsLin) and dsLin.Active and (dsLin.State = dsInsert) then
+    begin
+      if (sNumero = '') or (sNumero = '0') then
+        dsLin.Cancel
+      else if (Trim(dsLin.FieldByName('CODIGO_ART_FACCLIN').AsString) = '') and
+              (Trim(dsLin.FieldByName('CODIGO_UNIDAD_FACCLIN').AsString) = '')
+              then
+        dsLin.Cancel;
+    end;
+    if (dsCab.State in dsEditModes) or (sNumero = '') or (sNumero = '0') then
+    begin
+      if not (dsCab.State in dsEditModes) then
+        dsCab.Edit;
+      if (dsCab.FindField('ESPIVOTE_HORIZONTAL_FACC') <> nil) and
+         (Trim(dsCab.FieldByName('ESPIVOTE_HORIZONTAL_FACC').AsString) = '')
+         then
+        dsCab.FieldByName('ESPIVOTE_HORIZONTAL_FACC').AsString := 'S';
+      dsCab.Post;
+    end;
+    if Assigned(dsLin) and dsLin.Active and
+       (not (dsLin.State in dsEditModes)) then
+    begin
+      dsLin.Close;
+      dsLin.Open;
+    end;
+  end;
+end;
+
 procedure TfrmMtoFacturasCompra.actArticulosExecute(Sender: TObject);
 begin
   inherited;
@@ -717,7 +856,7 @@ var
 begin
   inherited;
   // Caja de busqueda de formas de pago: devuelve CODIGO_FP_FP y lo escribe
-  // en FORMA_PAGO_FACC (lo usa PRC_EFEC_GENERAR_DESDE_FACTURA para los plazos).
+  // en FORMA_PAGO_FACC (lo usa PRC_EFEC_GENERAR_DESDE_FACTURA).
   if Assigned(dmmFacturasCompra) then
   begin
     if TBusquedaUtils.EjecutarBusqueda('Buscar forma de pago',
@@ -778,7 +917,8 @@ begin
         ShowMessage(Format('Generados %d efecto(s) de pago.', [iRes]))
       else if iRes = 0 then
         ShowMessage('No se generaron efectos. Revisa que el borrador tenga ' +
-                    'forma de pago y total, y que no tenga ya efectos pagados ' +
+                    'forma de pago y total, y que no tenga ya efectos ' +
+                    'pagados ' +
                     'o remesados.')
       else
         ShowMessage('No hay borrador activo (o hubo un error al generar).');
@@ -831,6 +971,7 @@ end;
 procedure TfrmMtoFacturasCompra.btnAnadirLineaClick(Sender: TObject);
 begin
   inherited;
+  AsegurarCabeceraPersistidaParaLineas;
   dmmFacturasCompra.unqryFacturasCompraLineas.Append;
 end;
 

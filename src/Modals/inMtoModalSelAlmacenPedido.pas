@@ -127,6 +127,11 @@ procedure TfrmModalSelAlmacenPedido.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
+  cbbAlmacen.OnEnter := DesactivarEnterAsTabTemporal;
+  cbbAlmacen.OnExit  := RestaurarEnterAsTabTemporal;
+  cbbAlmacen.Properties.OnInitPopup := DesactivarEnterAsTabTemporal;
+  cbbAlmacen.Properties.OnCloseUp   := RestaurarEnterAsTabTemporal;
+  cbbAlmacen.Properties.PostPopupValueOnTab := True;
   Aceptado             := False;
   CodigoEmpresa        := '';
   CodigoAlmacen        := '';

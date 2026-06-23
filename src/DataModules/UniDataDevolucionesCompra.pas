@@ -38,6 +38,8 @@ type
     unqrySkusDevc:              TUniQuery;
     unqryAlmacenesDevc:         TUniQuery;
     dsAlmacenesDevc:            TDataSource;
+    unqryMovimientosProveedor:  TUniQuery;
+    dsMovimientosProveedor:     TDataSource;
     unstrdprcGetContadorDevc:   TUniStoredProc;
     // Definicion de atributos del articulo padre (para columnas
     // dinamicas ATTR1..ATTR5 en modo "atributo por columna").
@@ -74,7 +76,11 @@ type
     // generamos/revertimos los movimientos. Valores: 'CERRAR' (mov.
     // salida nueva), 'ABRIR' (revertir mov. existentes) o ''.
     FTransicionEstadoDevc: string;
+    function CampoVistaCabeceraPrintExiste(const ACampo: string): Boolean;
+    procedure PrepararSQLCabeceraPrint;
     function ObtenerSkusDevolucionCsv(const ASerie, ANumero: string): string;
+    function SiguienteLineaDevolucionCompra(const ASerie,
+              ANumero: string): Integer;
     procedure ValidarAlmacenSalida;
   public
     procedure GetCodigoAutoDevolucionCompra;
@@ -106,7 +112,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibAppParam, inLibLog, inLibtb, inLibContadorLineas,
+  inLibGlobalVar, inLibAppParam, inLibLog, inLibtb,
   System.Diagnostics,
   inMtoDevolucionesCompra,
   inLibDevolucionesCompraMovimientos,
@@ -121,17 +127,27 @@ begin
   inherited;
   unqryTablaG.Connection                := inLibGlobalVar.oConn;
   unqryDevolucionesCompraLineas.Connection := inLibGlobalVar.oConn;
+  unqryDevolucionesCompraLineas.KeyFields :=
+    'SERIE_DEVC_DEVCLIN;NUMERO_DEVC_DEVCLIN;LINEA_DEVCLIN';
+  unqryDevolucionesCompraLineas.SQLDelete.Text :=
+    'DELETE FROM fza_devoluciones_compra_lineas ' +
+    ' WHERE SERIE_DEVC_DEVCLIN = :Old_SERIE_DEVC_DEVCLIN ' +
+    '   AND NUMERO_DEVC_DEVCLIN = :Old_NUMERO_DEVC_DEVCLIN ' +
+    '   AND LINEA_DEVCLIN = :Old_LINEA_DEVCLIN';
   unqryEmpDataDevc.Connection           := inLibGlobalVar.oConn;
   unqryPrvDataDevc.Connection           := inLibGlobalVar.oConn;
   unqryArtDataLinDevc.Connection        := inLibGlobalVar.oConn;
   unqrySkusDevc.Connection              := inLibGlobalVar.oConn;
   unqryAlmacenesDevc.Connection         := inLibGlobalVar.oConn;
+  unqryMovimientosProveedor.Connection  := inLibGlobalVar.oConn;
   unstrdprcGetContadorDevc.Connection   := inLibGlobalVar.oConn;
   unqryDefArticuloDevc.Connection       := inLibGlobalVar.oConn;
   // Master-detail server-side: el WHERE del SQL toma los valores de
   // dsTablaG (master), evitando descargar fza_devoluciones_compra_lineas
   // entera y filtrar en cliente.
   unqryDevolucionesCompraLineas.MasterSource :=
+    (GetOwnerForm<TfrmMtoDevolucionesCompra>).dsTablaG;
+  unqryMovimientosProveedor.MasterSource :=
     (GetOwnerForm<TfrmMtoDevolucionesCompra>).dsTablaG;
 end;
 
@@ -140,6 +156,9 @@ begin
   if Assigned(unqryDevolucionesCompraLineas) and
      unqryDevolucionesCompraLineas.Active then
     unqryDevolucionesCompraLineas.Close;
+  if Assigned(unqryMovimientosProveedor) and
+     unqryMovimientosProveedor.Active then
+    unqryMovimientosProveedor.Close;
   inherited;
 end;
 
@@ -181,6 +200,8 @@ begin
   RefrescarAlmacenes(oEmpresa);
   AbrirConTiempo(unqryDevolucionesCompraLineas,
                  'unqryDevolucionesCompraLineas');
+  AbrirConTiempo(unqryMovimientosProveedor,
+                 'unqryMovimientosProveedor');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
@@ -330,6 +351,41 @@ begin
   finally
     FTransicionEstadoDevc := '';
   end;
+  if unqryMovimientosProveedor.Active then
+  begin
+    unqryMovimientosProveedor.Close;
+    unqryMovimientosProveedor.Open;
+  end;
+end;
+
+function TdmDevolucionesCompra.SiguienteLineaDevolucionCompra(
+  const ASerie, ANumero: string): Integer;
+var
+  qry: TUniQuery;
+begin
+  Result := 10;
+  if (Trim(ASerie) <> '') and (Trim(ANumero) <> '') then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := inLibGlobalVar.oConn;
+      qry.SQL.Text :=
+        'SELECT COALESCE(MAX(CAST(NULLIF(LINEA_DEVCLIN, '''') ' +
+        '       AS UNSIGNED)), 0) + 10 AS NV ' +
+        '  FROM fza_devoluciones_compra_lineas ' +
+        ' WHERE SERIE_DEVC_DEVCLIN = :serie ' +
+        '   AND NUMERO_DEVC_DEVCLIN = :numero';
+      qry.ParamByName('serie').AsString := ASerie;
+      qry.ParamByName('numero').AsString := ANumero;
+      qry.Open;
+      if not qry.IsEmpty then
+        Result := qry.FieldByName('NV').AsInteger;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+  if Result <= 0 then
+    Result := 10;
 end;
 
 procedure TdmDevolucionesCompra.unqryDevolucionesCompraLineasAfterInsert(
@@ -343,28 +399,11 @@ begin
   // Asignacion de LINEA_DEVCLIN (clave secundaria, NOT NULL sin default).
   // Sin esto el Post fallaba con 'Field LINEA_DEVCLIN must have a value',
   // incluso en el alta involuntaria que dispara el grid al navegar con
-  // flechas (OptionsData.Appending). Mismo patron que Sesiones de compra:
-  // el helper hace un UPDATE atomico de CONTADOR_LINEAS_DEVC +10 sobre la
-  // cabecera y devuelve el nuevo valor. Formato '0010','0020',... (4
-  // digitos LPAD) para casar con las lineas materializadas y respetar el
-  // ORDER BY LINEA_DEVCLIN (comparacion de texto).
+  // flechas (OptionsData.Appending). En devoluciones se toma el ultimo
+  // LINEA_DEVCLIN grabado del documento y se suma 10.
   sSerie  := unqryTablaG.FieldByName('SERIE_DEVC').AsString;
   sNumero := unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
-  iNuevaLinea := GetSiguienteLineaDoc(CONT_DEVOLUCIONES_COMPRA, sSerie, sNumero);
-  if iNuevaLinea = 0 then
-  begin
-    // Cabecera aun no persistida (devolucion nuevo sin NUMERO real): fallback
-    // al contador en memoria +10. Lo dejamos sincronizado para que la
-    // siguiente linea incremente bien antes de grabar la cabecera.
-    // StrToIntDef y no AsInteger: el contador es varchar NULL en alta y
-    // AsInteger sobre '' lanzaria EConvertError.
-    iNuevaLinea := StrToIntDef(
-      unqryTablaG.FieldByName('CONTADOR_LINEAS_DEVC').AsString, 0) + 10;
-    if not (unqryTablaG.State in [dsEdit, dsInsert]) then
-      unqryTablaG.Edit;
-    unqryTablaG.FieldByName('CONTADOR_LINEAS_DEVC').AsString :=
-      Format('%.8d', [iNuevaLinea]);
-  end;
+  iNuevaLinea := SiguienteLineaDevolucionCompra(sSerie, sNumero);
   with unqryDevolucionesCompraLineas do
   begin
     FieldByName('NUMERO_DEVC_DEVCLIN').AsString :=
@@ -498,9 +537,75 @@ begin
     'TIPO_IVA_ARTICULO_DEVCLIN', 'PORCENTAJE_IVA_DEVCLIN');
 end;
 
+function TdmDevolucionesCompra.CampoVistaCabeceraPrintExiste(
+  const ACampo: string): Boolean;
+var
+  q: TUniQuery;
+begin
+  Result := False;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT 1 ' +
+      '  FROM INFORMATION_SCHEMA.COLUMNS ' +
+      ' WHERE TABLE_SCHEMA = DATABASE() ' +
+      '   AND TABLE_NAME = ''vi_devoluciones_compra_cab_print'' ' +
+      '   AND COLUMN_NAME = :campo ' +
+      ' LIMIT 1';
+    q.ParamByName('campo').AsString := ACampo;
+    q.Open;
+    Result := not q.IsEmpty;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure TdmDevolucionesCompra.PrepararSQLCabeceraPrint;
+var
+  bDoc   : Boolean;
+  bUds   : Boolean;
+  bLineas: Boolean;
+  sSql   : string;
+begin
+  bDoc := CampoVistaCabeceraPrintExiste('DOCUMENTO_FORMATO');
+  bUds := CampoVistaCabeceraPrintExiste('TOTAL_UNIDADES_SES');
+  bLineas := CampoVistaCabeceraPrintExiste('TOTAL_LINEAS_SES');
+  sSql := 'SELECT V.* ';
+  if not bDoc then
+    sSql := sSql +
+      ', CASE WHEN TRIM(COALESCE(V.SERIE_DEVC, '''')) = '''' ' +
+      '       THEN TRIM(COALESCE(V.NUMERO_DEVC, '''')) ' +
+      '       WHEN TRIM(COALESCE(V.NUMERO_DEVC, '''')) = '''' ' +
+      '       THEN TRIM(COALESCE(V.SERIE_DEVC, '''')) ' +
+      '       ELSE CONCAT(TRIM(COALESCE(V.SERIE_DEVC, '''')), ''.'', ' +
+      '                   TRIM(COALESCE(V.NUMERO_DEVC, ''''))) END ' +
+      '       AS DOCUMENTO_FORMATO ';
+  if not bUds then
+    sSql := sSql +
+      ', (SELECT COALESCE(SUM(L.CANTIDAD_DEVCLIN), 0) ' +
+      '     FROM fza_devoluciones_compra_lineas L ' +
+      '    WHERE L.SERIE_DEVC_DEVCLIN = V.SERIE_DEVC ' +
+      '      AND L.NUMERO_DEVC_DEVCLIN = V.NUMERO_DEVC) ' +
+      '       AS TOTAL_UNIDADES_SES ';
+  if not bLineas then
+    sSql := sSql +
+      ', (SELECT COALESCE(SUM(L.TOTAL_DEVCLIN), 0) ' +
+      '     FROM fza_devoluciones_compra_lineas L ' +
+      '    WHERE L.SERIE_DEVC_DEVCLIN = V.SERIE_DEVC ' +
+      '      AND L.NUMERO_DEVC_DEVCLIN = V.NUMERO_DEVC) ' +
+      '       AS TOTAL_LINEAS_SES ';
+  sSql := sSql +
+    '  FROM vi_devoluciones_compra_cab_print V ' +
+    ' WHERE V.SERIE_DEVC = :SERIE_DEVC ' +
+    '   AND V.NUMERO_DEVC = :NUMERO_DEVC';
+  unqryCabDevcPrint.SQL.Text := sSql;
+end;
+
 procedure TdmDevolucionesCompra.PrepararPrint(const ASerie, ANumero: string);
 begin
   unqryCabDevcPrint.Close;
+  PrepararSQLCabeceraPrint;
   unqryCabDevcPrint.ParamByName('SERIE_DEVC').AsString  := ASerie;
   unqryCabDevcPrint.ParamByName('NUMERO_DEVC').AsString := ANumero;
   unqryCabDevcPrint.Open;
@@ -612,6 +717,7 @@ end;
 procedure TdmDevolucionesCompra.PrepararPrintSku(const ASerie, ANumero: string);
 begin
   unqryCabDevcPrint.Close;
+  PrepararSQLCabeceraPrint;
   unqryCabDevcPrint.ParamByName('SERIE_DEVC').AsString  := ASerie;
   unqryCabDevcPrint.ParamByName('NUMERO_DEVC').AsString := ANumero;
   unqryCabDevcPrint.Open;

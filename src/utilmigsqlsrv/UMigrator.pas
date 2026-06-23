@@ -420,14 +420,18 @@ begin
     'Tipos de efecto y formas de pago legacy (octipefe)',
     'dbo.octipefe → fza_tipos_efecto + fza_formas_pago',
     MigrarTiposEfectoCompra);
-  // Compras: pedidos, albaranes y facturas (modelo plano, sin celdas; ver
-  // inLibMigCompras / migracion_compras.md).
+  // Compras: pedidos, albaranes, devoluciones y facturas (modelo plano,
+  // sin celdas; ver inLibMigCompras / migracion_compras.md).
   FEngine.Registrar('pedidos_compra', 'Pedidos de compra (ocped)',
     'dbo.ocped → fza_pedidos_compra + lineas',
     MigrarPedidosCompra);
   FEngine.Registrar('albaranes_compra', 'Albaranes de compra (ocalbpro)',
     'dbo.ocalbpro → fza_albaranes_compra + lineas',
     MigrarAlbaranesCompra);
+  FEngine.Registrar('devoluciones_compra',
+    'Devoluciones a proveedor (ocreppro)',
+    'dbo.ocreppro/ocrepproart → fza_devoluciones_compra + lineas',
+    MigrarDevolucionesCompra);
   FEngine.Registrar('facturas_compra', 'Facturas de compra (ocfacpro)',
     'dbo.ocfacpro/ocfacproart → fza_facturas_compra + lineas',
     MigrarFacturasCompra);
@@ -1012,7 +1016,7 @@ begin
      (sCodigo = 'entorno_series')           or
      (sCodigo = 'skus')                     then
     Result := 2
-  // Compras (pedidos/albaranes) solo necesitan empresas, almacenes,
+  // Compras (pedidos/albaranes/devoluciones) solo necesitan empresas, almacenes,
   // proveedores y SKUs (waves 0-2); no dependen de movimientos ni facturas.
   // NOTA: 'fotos' no aparece aqui: corre en un hilo independiente de
   // las waves (se lanza aparte en EjecutarMigracionesBackground).
@@ -1022,7 +1026,8 @@ begin
      (sCodigo = 'pedidos_venta')    or
      (sCodigo = 'albaranes_venta')  or
      (sCodigo = 'pedidos_compra')   or
-     (sCodigo = 'albaranes_compra') then
+     (sCodigo = 'albaranes_compra') or
+     (sCodigo = 'devoluciones_compra') then
     Result := 3
   // facturas va DESPUES de movimientos: al terminar enlaza cada movimiento
   // con su factura (REF_MOV) y necesita los movimientos ya migrados.

@@ -1,6 +1,6 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Modulo:       inMtoModalImpDevCompra                                        }
+{  Modulo:       inMtoModalImpFacCompra                                        }
 {    Tipo:       Formulario (Modal)                                            }
 { Version:       0.1.0                                                         }
 {   Fecha:       23/05/2026                                                    }
@@ -9,14 +9,14 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripcion:                                                                }
-{    Modal de impresion de un devolucion de compra. Hereda del modal generico     }
+{    Modal de impresion de una factura de compra. Hereda del modal generico    }
 {    TfrmPrint. Misma logica que inMtoModalImpSesion pero contra los datasets  }
-{    de devoluciones (TdmDevolucionesCompra.PrepararPrint y los fxds* asociados).    }
+{    de facturas (TdmFacturasCompra.PrepararPrint y los fxds* asociados).    }
 {    La orientacion (horizontal / vertical) la decide el llamador via la       }
 {    propiedad Orientacion; el report .fr3 embebido en frxrprt1 se disena      }
 {    a mano con el FastReport designer.                                        }
 {******************************************************************************}
-unit inMtoModalImpDevCompra;
+unit inMtoModalImpFacCompra;
 
 interface
 
@@ -36,10 +36,10 @@ uses
   JvComponentBase, JvEnterTab,
   dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes,
   dxSpreadSheetStyles, dxHashUtils,
-  inMtoModalGenImp, UniDataDevolucionesCompra;
+  inMtoModalGenImp, UniDataFacturasCompra;
 
 type
-  TfrmPrintDevCompra = class(TfrmPrint)
+  TfrmPrintFacCompra = class(TfrmPrint)
     lblSerie:  TcxLabel;
     edtSerie:  TcxTextEdit;
     lblNumero: TcxLabel;
@@ -47,7 +47,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure btnExcelClick(Sender: TObject);
   public
-    dmDevc: TdmDevolucionesCompra;
+    dmFacc: TdmFacturasCompra;
     procedure preparar_consulta; override;
     procedure AfterReportLoaded; override;
   end;
@@ -59,61 +59,65 @@ uses
 
 {$R *.dfm}
 
-procedure TfrmPrintDevCompra.btnExcelClick(Sender: TObject);
+procedure TfrmPrintFacCompra.btnExcelClick(Sender: TObject);
 var
   fPreview: TfrmMtoPreviewExcel;
   cfg: TDocCompraCabCfg;
 begin
-  if dmDevc = nil then
-    Exit;
-  dmDevc.PrepararPrint(edtSerie.Text, edtNumero.Text);
-  cfg := Default(TDocCompraCabCfg);
-  cfg.Titulo         := 'DEVOLUCION A PROVEEDOR';
-  cfg.EtiquetaIzq    := 'ALMACEN SALIDA';
-  cfg.FieldRazonIzq  := 'NOMBRE_ALM_DEVC';
-  cfg.FieldDirIzq    := 'DIRECCION_ALM_DEVC';
-  cfg.FieldCPIzq     := 'CODIGO_POSTAL_ALM_DEVC';
-  cfg.FieldPobIzq    := 'POBLACION_ALM_DEVC';
-  cfg.FieldCifIzq    := 'CIF_EMP';
-  cfg.FieldTelIzq    := 'TELEFONO_ALM_DEVC';
-  cfg.FieldProvIzq   := 'PROVINCIA_ALM_DEVC';
-  cfg.FieldRazonPrv  := 'RAZON_SOCIAL_PRV';
-  cfg.FieldDirPrv    := 'DIRECCION1_PRV';
-  cfg.FieldCPPrv     := 'CODIGO_POSTAL_PRV';
-  cfg.FieldPobPrv    := 'POBLACION_PRV';
-  cfg.FieldCifPrv    := 'CIF_PRV';
-  cfg.FieldTelPrv    := 'TELEFONO1_PRV';
-  cfg.FieldProvPrv   := 'PROVINCIA_PRV';
-  cfg.FieldSerie     := 'SERIE_DEVC';
-  cfg.FieldNumero    := 'NUMERO_DEVC';
-  cfg.FieldFecha     := 'FECHA_DEVC';
-  cfg.FieldEstado    := 'ESTADO_DEVC';
-  cfg.FieldRefPrv    := 'REF_PROVEEDOR_DEVC';
-  cfg.MostrarPrecioVenta := False;
-  Screen.Cursor := crHourGlass;
-  fPreview := TfrmMtoPreviewExcel.Create(Self);
-  try
-    fPreview.PopupParent := Self;
-    fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
-    fPreview.DialogoGuardar.FileName :=
-      'DevCompra_' + edtSerie.Text + '_' + edtNumero.Text;
+  if dmFacc = nil then
+    ShowMessage('No hay factura de compra preparada para exportar.')
+  else
+  begin
+    dmFacc.PrepararPrint(edtSerie.Text, edtNumero.Text);
+    cfg := Default(TDocCompraCabCfg);
+    cfg.Titulo         := 'FACTURA DE COMPRA';
+    cfg.EtiquetaIzq    := 'ALMACEN DESTINO';
+    cfg.FieldRazonIzq  := 'NOMBRE_ALM_FACC';
+    cfg.FieldDirIzq    := 'DIRECCION_ALM_FACC';
+    cfg.FieldCPIzq     := 'CODIGO_POSTAL_ALM_FACC';
+    cfg.FieldPobIzq    := 'POBLACION_ALM_FACC';
+    cfg.FieldCifIzq    := 'CIF_EMP';
+    cfg.FieldTelIzq    := 'TELEFONO_ALM_FACC';
+    cfg.FieldProvIzq   := 'PROVINCIA_ALM_FACC';
+    cfg.FieldRazonPrv  := 'RAZON_SOCIAL_PRV';
+    cfg.FieldDirPrv    := 'DIRECCION1_PRV';
+    cfg.FieldCPPrv     := 'CODIGO_POSTAL_PRV';
+    cfg.FieldPobPrv    := 'POBLACION_PRV';
+    cfg.FieldCifPrv    := 'CIF_PRV';
+    cfg.FieldTelPrv    := 'TELEFONO1_PRV';
+    cfg.FieldProvPrv   := 'PROVINCIA_PRV';
+    cfg.FieldSerie     := 'SERIE_FACC';
+    cfg.FieldNumero    := 'NUMERO_FACC';
+    cfg.FieldFecha     := 'FECHA_FACC';
+    cfg.FieldEstado    := 'ESTADO_FACC';
+    cfg.FieldRefPrv    := 'REF_PROVEEDOR_FACC';
+    cfg.MostrarPrecioVenta := False;
+    Screen.Cursor := crHourGlass;
     try
-      ExportarDocCompraHorizontal(
-        fPreview.dxSpreadSheet1,
-        dmDevc.unqryCabDevcPrint,
-        dmDevc.unqryLinDevcPrint,
-        dmDevc.unqryGuiasDevcPrint,
-        cfg);
+      fPreview := TfrmMtoPreviewExcel.Create(Self);
+      try
+        fPreview.PopupParent := Self;
+        fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
+        fPreview.DialogoGuardar.FileName :=
+          'FacCompra_' + edtSerie.Text + '_' + edtNumero.Text;
+        ExportarDocCompraHorizontal(
+          fPreview.dxSpreadSheet1,
+          dmFacc.unqryCabFaccPrint,
+          dmFacc.unqryLinFaccPrint,
+          dmFacc.unqryGuiasFaccPrint,
+          cfg);
+        Screen.Cursor := crDefault;
+        fPreview.ShowModal;
+      finally
+        FreeAndNil(fPreview);
+      end;
     finally
       Screen.Cursor := crDefault;
     end;
-    fPreview.ShowModal;
-  finally
-    FreeAndNil(fPreview);
   end;
 end;
 
-procedure TfrmPrintDevCompra.FormCreate(Sender: TObject);
+procedure TfrmPrintFacCompra.FormCreate(Sender: TObject);
 begin
   inherited;
   // El diseno FastReport vive embebido en frxrprt1 (.dfm). Lo
@@ -124,17 +128,17 @@ begin
   frxReportOrigen.AssignAll(frxrprt1);
 end;
 
-procedure TfrmPrintDevCompra.preparar_consulta;
+procedure TfrmPrintFacCompra.preparar_consulta;
 begin
-  if dmDevc = nil then Exit;
-  dmDevc.PrepararPrint(edtSerie.Text, edtNumero.Text);
+  if dmFacc <> nil then
+    dmFacc.PrepararPrint(edtSerie.Text, edtNumero.Text);
 end;
 
-procedure TfrmPrintDevCompra.AfterReportLoaded;
+procedure TfrmPrintFacCompra.AfterReportLoaded;
 begin
   inherited;
-  if dmDevc <> nil then
-    RebindReportDataSetsByDataModule(frxrprt1, dmDevc);
+  if dmFacc <> nil then
+    RebindReportDataSetsByDataModule(frxrprt1, dmFacc);
 end;
 
 end.

@@ -46,6 +46,41 @@
     Left = 520
     Top = 72
   end
+  object unqryMovimientosProveedor: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT NUMERO_MOV, FECHA_MOV, LINEA_MOV, '
+      '       CODIGO_ALM_MOV, NOMBRE_ALMACEN_ORIGEN, '
+      '       CODIGO_ART_MOV, CODIGO_UNIDAD_MOV, '
+      '       DESCRIPCION_ARTICULO_MOV, '
+      '       TIPO_MOV, CANTIDAD_MOV, '
+      '       PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV '
+      '  FROM vi_movimientos '
+      ' WHERE TIPO_DOC_MOV   = '#39'AC'#39' '
+      '   AND NUMERO_DOC_MOV = :NUMERO_ALBC '
+      '   AND SERIE_DOC_MOV  = :SERIE_ALBC '
+      ' ORDER BY LINEA_MOV')
+    MasterFields = 'NUMERO_ALBC;SERIE_ALBC'
+    ReadOnly = True
+    Left = 520
+    Top = 136
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_ALBC'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_ALBC'
+        Value = nil
+      end>
+  end
+  object dsMovimientosProveedor: TDataSource
+    DataSet = unqryMovimientosProveedor
+    Left = 520
+    Top = 200
+  end
   object unqryEmpDataAlbc: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (

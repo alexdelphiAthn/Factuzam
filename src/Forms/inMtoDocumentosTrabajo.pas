@@ -47,6 +47,7 @@ type
     pnlLineasDTR: TPanel;
     pnlAccionesDTR: TPanel;
     lblLineasDTR: TcxLabel;
+    btnCargarFiltrosDTR: TcxButton;
     btnCompartirDTR: TcxButton;
     btnImprimirEtiquetasDTR: TcxButton;
     pcDetalleDTR: TcxPageControl;
@@ -72,6 +73,7 @@ type
     colDtcPermiso: TcxGridDBColumn;
     colDtcAlta: TcxGridDBColumn;
     glCompartidosDTR: TcxGridLevel;
+    procedure btnCargarFiltrosDTRClick(Sender: TObject);
     procedure btnCompartirDTRClick(Sender: TObject);
     procedure btnImprimirEtiquetasDTRClick(Sender: TObject);
     procedure pcAmbitoDTRChange(Sender: TObject);
@@ -97,7 +99,8 @@ var
 implementation
 
 uses
-  Uni, UniDataArticulos, inLibFotos, inLibGenBusq, inMtoModalEtiqArt;
+  Uni, UniDataArticulos, inLibFotos, inLibGenBusq, inMtoModalEtiqArt,
+  inMtoModalAddBlockDocumentoTrabajo;
 
 {$R *.dfm}
 
@@ -132,6 +135,7 @@ begin
   cxGrdDBTabPrin.OptionsData.Editing := bPropios;
   tvLineasDTR.OptionsData.Editing := bPropios;
   tvCompartidosDTR.OptionsData.Editing := bPropios;
+  btnCargarFiltrosDTR.Enabled := bPropios;
   btnCompartirDTR.Enabled := bPropios;
 end;
 
@@ -154,6 +158,64 @@ begin
                                                   ACodTarifa,
                                                   AAlmacenesCsv,
                                                   AFecha);
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.btnCargarFiltrosDTRClick(Sender: TObject);
+var
+  ds: TDataSet;
+  res: TAddBlockDocumentoTrabajoResult;
+  sAlmacen: string;
+  sTitulo: string;
+begin
+  inherited;
+  if dmmDocumentosTrabajo <> nil then
+  begin
+    ds := dmmDocumentosTrabajo.unqryTablaG;
+    if (not ds.Active) or ds.IsEmpty then
+    begin
+      ShowMessage('Seleccione un Documento de Trabajo antes de cargar.');
+    end
+    else if dmmDocumentosTrabajo.Ambito <> dtaPropios then
+    begin
+      ShowMessage(
+        'Solo el propietario puede cargar articulos en el documento.');
+    end
+    else
+    begin
+      if dmmDocumentosTrabajo.unqryLineas.State in dsEditModes then
+      begin
+        dmmDocumentosTrabajo.unqryLineas.Post;
+      end;
+      if ds.State in dsEditModes then
+      begin
+        ds.Post;
+      end;
+      if ds.FieldByName('ID_DTR').IsNull then
+      begin
+        ShowMessage('Grabe el Documento de Trabajo antes de cargar.');
+      end
+      else
+      begin
+        sAlmacen := ds.FieldByName('CODIGO_ALM_DTR').AsString;
+        sTitulo := ds.FieldByName('TITULO_DTR').AsString;
+        res := TfrmModalAddBlockDocumentoTrabajo.Ejecutar(
+          Self,
+          dmmDocumentosTrabajo.unqryTablaG.Connection,
+          ds.FieldByName('ID_DTR').AsLargeInt,
+          sAlmacen,
+          sTitulo);
+        if res.Aceptado then
+        begin
+          pcDetalleDTR.ActivePage := tsLineasDTR;
+          if dmmDocumentosTrabajo.unqryLineas.Active then
+          begin
+            dmmDocumentosTrabajo.unqryLineas.Close;
+          end;
+          dmmDocumentosTrabajo.unqryLineas.Open;
+        end;
+      end;
+    end;
   end;
 end;
 

@@ -64,6 +64,10 @@ type
     cxgrdLineasAlbaran:  TcxGrid;
     tvLineasAlbaran:     TcxGridDBTableView;
     cxgrdlvlLineasAlbaran: TcxGridLevel;
+    tsProveedor:         TcxTabSheet;
+    cxgrdMovimientosProveedor: TcxGrid;
+    tvMovimientosProveedor: TcxGridDBTableView;
+    cxgrdlvlMovimientosProveedor: TcxGridLevel;
 
     // Cabecera
     lblNroAlbaran:    TcxLabel;
@@ -327,9 +331,12 @@ begin
   end;
   tvLineasAlbaran.DataController.DataSource :=
     dmmAlbaranesCompra.dsAlbaranesCompraLineas;
+  tvMovimientosProveedor.DataController.DataSource :=
+    dmmAlbaranesCompra.dsMovimientosProveedor;
   // MasterSource se enlaza en DataModuleCreate del DM, pero lo
   // re-aseguramos por idempotencia.
   dmmAlbaranesCompra.unqryAlbaranesCompraLineas.MasterSource := dsTablaG;
+  dmmAlbaranesCompra.unqryMovimientosProveedor.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_ALBC;NUMERO_ALBC';
 end;
 

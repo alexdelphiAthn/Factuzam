@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibDocCompraExcel                                           }
 {    Tipo:       Libreria                                                      }
@@ -90,6 +90,46 @@ begin
   oCampo := nil;
   if ADataSet <> nil then
     oCampo := ADataSet.FindField(ACampo);
+  if oCampo <> nil then
+    if not oCampo.IsNull then
+      Result := oCampo.AsFloat;
+end;
+
+function CampoTextoPrimero(const ADataSet: TDataSet;
+  const ACampos: array of string): string;
+var
+  i: Integer;
+  oCampo: TField;
+begin
+  Result := '';
+  oCampo := nil;
+  i := Low(ACampos);
+  while (oCampo = nil) and (i <= High(ACampos)) do
+  begin
+    if ADataSet <> nil then
+      oCampo := ADataSet.FindField(ACampos[i]);
+    Inc(i);
+  end;
+  if oCampo <> nil then
+    if not oCampo.IsNull then
+      Result := oCampo.AsString;
+end;
+
+function CampoFloatPrimero(const ADataSet: TDataSet;
+  const ACampos: array of string): Double;
+var
+  i: Integer;
+  oCampo: TField;
+begin
+  Result := 0;
+  oCampo := nil;
+  i := Low(ACampos);
+  while (oCampo = nil) and (i <= High(ACampos)) do
+  begin
+    if ADataSet <> nil then
+      oCampo := ADataSet.FindField(ACampos[i]);
+    Inc(i);
+  end;
   if oCampo <> nil then
     if not oCampo.IsNull then
       Result := oCampo.AsFloat;
@@ -651,23 +691,29 @@ begin
     while not QLineas.Eof do
     begin
       W(Sheet, iRow, COL_LINEA,
-        QLineas.FieldByName('LINEA_ALBCLIN').AsString, False, ssahCenter);
+        CampoTextoPrimero(QLineas, ['LINEA_ALBCLIN', 'LINEA_DEVCLIN']),
+        False, ssahCenter);
       W(Sheet, iRow, COL_ART,
-        QLineas.FieldByName('CODIGO_ART_ALBCLIN').AsString);
+        CampoTextoPrimero(QLineas,
+          ['CODIGO_ART_ALBCLIN', 'CODIGO_ART_DEVCLIN']));
       W(Sheet, iRow, COL_SKU,
-        QLineas.FieldByName('CODIGO_UNIDAD_ALBCLIN').AsString);
-      if QLineas.FindField('REF_PRV_ALBCLIN') <> nil then
-        W(Sheet, iRow, COL_REF,
-          QLineas.FieldByName('REF_PRV_ALBCLIN').AsString);
+        CampoTextoPrimero(QLineas,
+          ['CODIGO_UNIDAD_ALBCLIN', 'CODIGO_UNIDAD_DEVCLIN']));
+      W(Sheet, iRow, COL_REF,
+        CampoTextoPrimero(QLineas, ['REF_PRV_ALBCLIN', 'REF_PRV_DEVCLIN']));
       W(Sheet, iRow, COL_DESC,
-        QLineas.FieldByName('DESCRIPCION_ARTICULO_ALBCLIN').AsString);
+        CampoTextoPrimero(QLineas,
+          ['DESCRIPCION_ARTICULO_ALBCLIN',
+           'DESCRIPCION_ARTICULO_DEVCLIN']));
       // Cantidad
-      rVal := QLineas.FieldByName('CANTIDAD_ALBCLIN').AsFloat;
+      rVal := CampoFloatPrimero(QLineas,
+        ['CANTIDAD_ALBCLIN', 'CANTIDAD_DEVCLIN']);
       W(Sheet, iRow, COL_CANT, rVal, False, ssahRight);
       Sheet.Cells[iRow, COL_CANT].Style.DataFormat.FormatCode := '#,##0.##';
       // Precio compra sin IVA
-      rVal := QLineas.FieldByName(
-        'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN').AsFloat;
+      rVal := CampoFloatPrimero(QLineas,
+        ['PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN',
+         'PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN']);
       W(Sheet, iRow, COL_PREC, rVal, False, ssahRight);
       Sheet.Cells[iRow, COL_PREC].Style.DataFormat.FormatCode := FMT_EUR;
       // Total linea (formula)

@@ -48,10 +48,12 @@
 {                                                                              }
 {    Heurísticas (primera versión, afinar con el catálogo real del legacy):    }
 {      - Dirección (TIPO_MOV E/S): ocmovarp.Tipo si es 'E'/'S'; si no, signo   }
-{        de UnidadesStock; si no, signo de Cantidad.                           }
+{        de UnidadesStock; si no, signo de Cantidad. En RP manda Cantidad,     }
+{        porque el legacy guarda Tipo='E' aunque sea salida a proveedor.       }
 {      - TIPO_DOC_MOV: ocmovarp.TipoDoc pasa tal cual cuando ya coincide con   }
-{        el destino (AC/AV/TR/AT/IN/DP/VE/AE); sinónimos frecuentes mapeados;  }
-{        desconocido se clasifica por dirección (E→IN, S→VE).                  }
+{        el destino (AC/AV/TR/AT/IN/DP/VE/AE/DC); sinónimos frecuentes         }
+{        mapeados; RP se importa como DC; desconocido se clasifica por         }
+{        dirección (E→IN, S→VE).                                               }
 {                                                                              }
 {    Reimport por REEMPLAZO: al arrancar borra su volcado 'MH' y recarga;      }
 {    el INSERT IGNORE solo cubre duplicados intra-pasada. Stock por UPSERT.    }
@@ -164,6 +166,31 @@ begin
     Result := 'E';
 end;
 
+function DeducirTipoMovDocumento(const sTipoDoc, sTipo: string;
+                                 fUnidades, fCantidad: Double): string;
+var
+  d: string;
+begin
+  d := UpperCase(Trim(sTipoDoc));
+  if d = 'RP' then
+  begin
+    // RP = devolucion a proveedor. El Tipo legacy suele venir 'E';
+    // la direccion real esta en el signo de Cantidad.
+    if fCantidad < 0 then
+      Result := 'S'
+    else if fCantidad > 0 then
+      Result := 'E'
+    else if fUnidades < 0 then
+      Result := 'S'
+    else if fUnidades > 0 then
+      Result := 'E'
+    else
+      Result := DeducirTipoMov(sTipo, fUnidades, fCantidad);
+  end
+  else
+    Result := DeducirTipoMov(sTipo, fUnidades, fCantidad);
+end;
+
 // Mapeo del tipo de documento del legacy al del destino. Los códigos que ya
 // coinciden con el destino (y alimentan acumuladores de stockactual) pasan
 // tal cual. Se reconocen sinónimos frecuentes. Lo desconocido se clasifica
@@ -175,8 +202,11 @@ var
 begin
   d := UpperCase(Trim(sTipoDoc));
   if (d = 'AC') or (d = 'AV') or (d = 'TR') or (d = 'AT')
-  or (d = 'IN') or (d = 'DP') or (d = 'VE') or (d = 'AE') then
+  or (d = 'IN') or (d = 'DP') or (d = 'VE') or (d = 'AE')
+  or (d = 'DC') then
     Result := d
+  else if d = 'RP' then
+    Result := 'DC'
   else if (d = 'FC') or (d = 'FV') or (d = 'TK') or (d = 'TP') then
     Result := 'VE'
   else if (d = 'FP') or (d = 'AP') then
@@ -466,7 +496,9 @@ begin
       sTipoRaw   := Trim(qSrc.FieldByName('Tipo').AsString);
       fUnidades  := qSrc.FieldByName('UnidadesStock').AsFloat;
       fCantidad  := qSrc.FieldByName('Cantidad').AsFloat;
-      sTipoMov   := DeducirTipoMov(sTipoRaw, fUnidades, fCantidad);
+      sTipoMov   := DeducirTipoMovDocumento(
+                      qSrc.FieldByName('TipoDoc').AsString, sTipoRaw,
+                      fUnidades, fCantidad);
       sTipoDoc   := MapearTipoDoc(qSrc.FieldByName('TipoDoc').AsString,
                                   sTipoMov);
       // Traspaso: el legacy marca las DOS patas igual (Tipo='E', TipoMov='SE')

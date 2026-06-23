@@ -79,6 +79,10 @@ uses
   inMtoModalImpFac in 'src\Modals\inMtoModalImpFac.pas' {frmPrintFac},
   inMtoModalImpRecFac in 'src\Modals\inMtoModalImpRecFac.pas' {frmPrintRecFac},
   inMtoModalImpSesion in 'src\Modals\inMtoModalImpSesion.pas' {frmPrintSesion},
+  inMtoModalImpFacCompra in
+    'src\Modals\inMtoModalImpFacCompra.pas' {frmPrintFacCompra},
+  inMtoModalImpFacCompraV in
+    'src\Modals\inMtoModalImpFacCompraV.pas' {frmPrintFacCompraV},
   inMtoModalImpAlbCompra in 'src\Modals\inMtoModalImpAlbCompra.pas' {frmPrintAlbCompra},
   inMtoModalImpAlbCompraV in 'src\Modals\inMtoModalImpAlbCompraV.pas' {frmPrintAlbCompraV},
   inMtoModalEtiqAlb in 'src\Modals\inMtoModalEtiqAlb.pas' {frmPrintEtiqArt: TfrmPrintEtiqAlb},
@@ -285,6 +289,7 @@ uses
   inMtoModalAddBlockBase in 'src\Modals\inMtoModalAddBlockBase.pas' {frmModalAddBlockBase},
   inMtoModalAddBlockInventario in 'src\Modals\inMtoModalAddBlockInventario.pas' {frmModalAddBlockInventario},
   inMtoModalAddBlockTarifa in 'src\Modals\inMtoModalAddBlockTarifa.pas' {frmModalAddBlockTarifa},
+  inMtoModalAddBlockDocumentoTrabajo in 'src\Modals\inMtoModalAddBlockDocumentoTrabajo.pas' {frmModalAddBlockDocumentoTrabajo},
   inLibDBStructure in 'src\Lib\inLibDBStructure.pas',
   inLibBackupWorker in 'src\Lib\inLibBackupWorker.pas',
   UniDataComprasSesiones in 'src\DataModules\UniDataComprasSesiones.pas' {dmComprasSesiones: TdmComprasSesiones},
