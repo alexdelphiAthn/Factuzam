@@ -421,6 +421,83 @@
                 end
               end
             end
+            object tsProveedor: TcxTabSheet
+              Caption = 'Proveedor'
+              object cxgrdMovimientosProveedor: TcxGrid
+                Left = 0
+                Top = 0
+                Width = 929
+                Height = 347
+                Align = alClient
+                TabOrder = 0
+                object tvMovimientosProveedor: TcxGridDBTableView
+                  Navigator.Buttons.CustomButtons = <>
+                  DataController.Summary.DefaultGroupSummaryItems = <>
+                  DataController.Summary.FooterSummaryItems = <>
+                  DataController.Summary.SummaryGroups = <>
+                  OptionsData.Editing = False
+                  OptionsView.GroupByBox = False
+                  object colMovProvAlbcNUMERO_MOV: TcxGridDBColumn
+                    Caption = 'N'#250'mero Mov.'
+                    DataBinding.FieldName = 'NUMERO_MOV'
+                    Width = 110
+                  end
+                  object colMovProvAlbcFECHA_MOV: TcxGridDBColumn
+                    Caption = 'Fecha'
+                    DataBinding.FieldName = 'FECHA_MOV'
+                    Width = 130
+                  end
+                  object colMovProvAlbcLINEA_MOV: TcxGridDBColumn
+                    Caption = 'L'#237'nea'
+                    DataBinding.FieldName = 'LINEA_MOV'
+                    Width = 60
+                  end
+                  object colMovProvAlbcALMACEN: TcxGridDBColumn
+                    Caption = 'Almac'#233'n'
+                    DataBinding.FieldName = 'NOMBRE_ALMACEN_ORIGEN'
+                    Width = 140
+                  end
+                  object colMovProvAlbcARTICULO: TcxGridDBColumn
+                    Caption = 'Art'#237'culo'
+                    DataBinding.FieldName = 'CODIGO_ART_MOV'
+                    Width = 100
+                  end
+                  object colMovProvAlbcSKU: TcxGridDBColumn
+                    Caption = 'SKU'
+                    DataBinding.FieldName = 'CODIGO_UNIDAD_MOV'
+                    Width = 140
+                  end
+                  object colMovProvAlbcDESCRIPCION: TcxGridDBColumn
+                    Caption = 'Descripci'#243'n'
+                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_MOV'
+                    Width = 220
+                  end
+                  object colMovProvAlbcTIPO: TcxGridDBColumn
+                    Caption = 'Tipo'
+                    DataBinding.FieldName = 'TIPO_MOV'
+                    Width = 50
+                  end
+                  object colMovProvAlbcCANTIDAD: TcxGridDBColumn
+                    Caption = 'Cantidad'
+                    DataBinding.FieldName = 'CANTIDAD_MOV'
+                    Width = 90
+                  end
+                  object colMovProvAlbcPMP: TcxGridDBColumn
+                    Caption = 'PMP'
+                    DataBinding.FieldName = 'PRECIO_MEDIO_MOV'
+                    Width = 90
+                  end
+                  object colMovProvAlbcTOTAL: TcxGridDBColumn
+                    Caption = 'Total coste'
+                    DataBinding.FieldName = 'TOTAL_COSTE_MOV'
+                    Width = 100
+                  end
+                end
+                object cxgrdlvlMovimientosProveedor: TcxGridLevel
+                  GridView = tvMovimientosProveedor
+                end
+              end
+            end
             object tsTotales: TcxTabSheet
               Caption = '&2_Totales'
               ImageIndex = 2

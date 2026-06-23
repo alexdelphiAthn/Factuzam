@@ -1,5 +1,5 @@
-﻿inherited frmPrintDevCompra: TfrmPrintDevCompra
-  Caption = 'Imprimir Devolución de Compra'
+inherited frmPrintFacCompra: TfrmPrintFacCompra
+  Caption = 'Imprimir Factura de Compra'
   ClientHeight = 220
   ClientWidth = 460
   StyleElements = [seFont, seClient, seBorder]
@@ -57,15 +57,15 @@
     Top = 184
     Datasets = <
       item
-        DataSet = dmDevolucionesCompra.fxdsCabDevc
-        DataSetName = 'Devolucion'
+        DataSet = dmFacturasCompra.fxdsCabFacc
+        DataSetName = 'Factura'
       end
       item
-        DataSet = dmDevolucionesCompra.fxdsLinDevc
-        DataSetName = 'LineasDevolucion'
+        DataSet = dmFacturasCompra.fxdsLinFacc
+        DataSetName = 'LineasFactura'
       end
       item
-        DataSet = dmComprasSesiones.fxdsGuiasSesion
+        DataSet = dmFacturasCompra.fxdsGuiasFacc
         DataSetName = 'GuiasTallas'
       end>
     Variables = <>
@@ -100,7 +100,7 @@
           Frame.Typ = [ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            'DEVOLUCIÓN A PROVEEDOR')
+            'FACTURA DE COMPRA')
           ParentFont = False
         end
         object MemoEmpLbl: TfrxMemoView
@@ -115,7 +115,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'ALMACÉN SALIDA')
+            'ALMACÉN DESTINO')
           ParentFont = False
         end
         object MemoEmpRazon: TfrxMemoView
@@ -123,8 +123,8 @@
           Top = 45.354360000000000000
           Width = 340.157700000000000000
           Height = 18.897650000000000000
-          DataSet = dmDevolucionesCompra.fxdsCabDevc
-          DataSetName = 'Devolucion'
+          DataSet = dmFacturasCompra.fxdsCabFacc
+          DataSetName = 'Factura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
@@ -132,7 +132,7 @@
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Devolucion."NOMBRE_ALM_DEVC"]')
+            '[Factura."NOMBRE_ALM_FACC"]')
           ParentFont = False
         end
         object MemoEmpDir: TfrxMemoView
@@ -140,8 +140,8 @@
           Top = 64.252010000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
-          DataSet = dmDevolucionesCompra.fxdsCabDevc
-          DataSetName = 'Devolucion'
+          DataSet = dmFacturasCompra.fxdsCabFacc
+          DataSetName = 'Factura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
@@ -149,7 +149,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Devolucion."DIRECCION_ALM_DEVC"]')
+            '[Factura."DIRECCION_ALM_FACC"]')
           ParentFont = False
         end
         object MemoEmpCpPob: TfrxMemoView
@@ -157,8 +157,8 @@
           Top = 79.370130000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
-          DataSet = dmDevolucionesCompra.fxdsCabDevc
-          DataSetName = 'Devolucion'
+          DataSet = dmFacturasCompra.fxdsCabFacc
+          DataSetName = 'Factura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
@@ -167,8 +167,8 @@
           Frame.Typ = []
           Memo.UTF8W = (
 
-              '[Devolucion."CODIGO_POSTAL_ALM_DEVC"] [Devolucion."POBLACION_ALM_DEVC"' +
-              '] ([Devolucion."PROVINCIA_ALM_DEVC"])')
+              '[Factura."CODIGO_POSTAL_ALM_FACC"] [Factura."POBLACION_ALM_FACC"' +
+              '] ([Factura."PROVINCIA_ALM_FACC"])')
           ParentFont = False
         end
         object MemoEmpCif: TfrxMemoView
@@ -176,8 +176,8 @@
           Top = 94.488250000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
-          DataSet = dmDevolucionesCompra.fxdsCabDevc
-          DataSetName = 'Devolucion'
+          DataSet = dmFacturasCompra.fxdsCabFacc
+          DataSetName = 'Factura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
@@ -186,8 +186,8 @@
           Frame.Typ = []
           Memo.UTF8W = (
 
-              'Tel: [Devolucion."TELEFONO_ALM_DEVC"]   Email: [Devolucion."EMAIL_ALM_' +
-              'DEVC"]')
+              'Tel: [Factura."TELEFONO_ALM_FACC"]   Email: [Factura."EMAIL_ALM_' +
+              'FACC"]')
           ParentFont = False
         end
         object MemoPrvLbl: TfrxMemoView
@@ -212,8 +212,8 @@
           Top = 45.354360000000000000
           Width = 340.157700000000000000
           Height = 18.897650000000000000
-          DataSet = dmDevolucionesCompra.fxdsCabDevc
-          DataSetName = 'Devolucion'
+          DataSet = dmFacturasCompra.fxdsCabFacc
+          DataSetName = 'Factura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
@@ -221,7 +221,7 @@
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Devolucion."RAZON_SOCIAL_PRV"]')
+            '[Factura."RAZON_SOCIAL_PRV"]')
           ParentFont = False
         end
         object MemoPrvDir: TfrxMemoView
@@ -230,8 +230,8 @@
           Top = 64.252010000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
-          DataSet = dmDevolucionesCompra.fxdsCabDevc
-          DataSetName = 'Devolucion'
+          DataSet = dmFacturasCompra.fxdsCabFacc
+          DataSetName = 'Factura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
@@ -239,7 +239,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Devolucion."DIRECCION1_PRV"]')
+            '[Factura."DIRECCION1_PRV"]')
           ParentFont = False
         end
         object MemoPrvCpPob: TfrxMemoView
@@ -248,8 +248,8 @@
           Top = 79.370130000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
-          DataSet = dmDevolucionesCompra.fxdsCabDevc
-          DataSetName = 'Devolucion'
+          DataSet = dmFacturasCompra.fxdsCabFacc
+          DataSetName = 'Factura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
@@ -258,8 +258,8 @@
           Frame.Typ = []
           Memo.UTF8W = (
 
-              '[Devolucion."CODIGO_POSTAL_PRV"] [Devolucion."POBLACION_PRV"] ([Devol' +
-              'ucion."PROVINCIA_PRV"])')
+              '[Factura."CODIGO_POSTAL_PRV"] [Factura."POBLACION_PRV"] ([Factur' +
+              'a."PROVINCIA_PRV"])')
           ParentFont = False
         end
         object MemoPrvCif: TfrxMemoView
@@ -268,8 +268,8 @@
           Top = 94.488250000000000000
           Width = 340.157700000000000000
           Height = 15.118120000000000000
-          DataSet = dmDevolucionesCompra.fxdsCabDevc
-          DataSetName = 'Devolucion'
+          DataSet = dmFacturasCompra.fxdsCabFacc
+          DataSetName = 'Factura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
@@ -277,7 +277,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'CIF: [Devolucion."CIF_PRV"]   Tel: [Devolucion."TELEFONO1_PRV"]')
+            'CIF: [Factura."CIF_PRV"]   Tel: [Factura."TELEFONO1_PRV"]')
           ParentFont = False
         end
         object MemoSesLbl: TfrxMemoView
@@ -293,7 +293,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'DEVOLUCIÓN')
+            'FACTURA')
           ParentFont = False
         end
         object MemoSesNumero: TfrxMemoView
@@ -302,8 +302,8 @@
           Top = 45.354360000000000000
           Width = 336.378170000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsCabDevc
-          DataSetName = 'Devolucion'
+          DataSet = dmFacturasCompra.fxdsCabFacc
+          DataSetName = 'Factura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
@@ -312,7 +312,7 @@
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            '[Devolucion."DOCUMENTO_FORMATO"]')
+            '[Factura."DOCUMENTO_FORMATO"]')
           ParentFont = False
         end
         object MemoSesFechaLbl: TfrxMemoView
@@ -337,8 +337,8 @@
           Top = 71.811070000000000000
           Width = 233.386210000000000000
           Height = 15.118120000000000000
-          DataSet = dmDevolucionesCompra.fxdsCabDevc
-          DataSetName = 'Devolucion'
+          DataSet = dmFacturasCompra.fxdsCabFacc
+          DataSetName = 'Factura'
           DisplayFormat.FormatStr = 'dd/mm/yyyy'
           DisplayFormat.Kind = fkDateTime
           Font.Charset = DEFAULT_CHARSET
@@ -348,7 +348,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Devolucion."FECHA_DEVC"]')
+            '[Factura."FECHA_FACC"]')
           ParentFont = False
         end
         object MemoSesEstadoLbl: TfrxMemoView
@@ -373,8 +373,8 @@
           Top = 86.929190000000000000
           Width = 233.386210000000000000
           Height = 15.118120000000000000
-          DataSet = dmDevolucionesCompra.fxdsCabDevc
-          DataSetName = 'Devolucion'
+          DataSet = dmFacturasCompra.fxdsCabFacc
+          DataSetName = 'Factura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
@@ -382,7 +382,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Devolucion."ESTADO_DEVC"]')
+            '[Factura."ESTADO_FACC"]')
           ParentFont = False
         end
         object MemoSesRefPrvLbl: TfrxMemoView
@@ -407,8 +407,8 @@
           Top = 102.047310000000000000
           Width = 233.386210000000000000
           Height = 15.118120000000000000
-          DataSet = dmDevolucionesCompra.fxdsCabDevc
-          DataSetName = 'Devolucion'
+          DataSet = dmFacturasCompra.fxdsCabFacc
+          DataSetName = 'Factura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -14
@@ -416,7 +416,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[Devolucion."REF_PROVEEDOR_DEVC"]')
+            '[Factura."REF_PROVEEDOR_FACC"]')
           ParentFont = False
         end
         object MemoGuiaTitulo: TfrxMemoView
@@ -447,14 +447,14 @@
         Height = 18.897650000000000000
         Top = 211.653680000000000000
         Width = 1046.929810000000000000
-        DataSet = dmComprasSesiones.fxdsGuiasSesion
+        DataSet = dmFacturasCompra.fxdsGuiasFacc
         DataSetName = 'GuiasTallas'
         RowCount = 0
         object GuiaSistema: TfrxMemoView
           AllowVectorExport = True
           Width = 60.000000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -473,7 +473,7 @@
           Left = 60.000000000000000000
           Width = 350.000000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -491,7 +491,7 @@
           Left = 410.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -510,7 +510,7 @@
           Left = 436.500000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -529,7 +529,7 @@
           Left = 463.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -548,7 +548,7 @@
           Left = 489.500000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -567,7 +567,7 @@
           Left = 516.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -586,7 +586,7 @@
           Left = 542.500000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -605,7 +605,7 @@
           Left = 569.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -624,7 +624,7 @@
           Left = 595.500000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -643,7 +643,7 @@
           Left = 622.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -662,7 +662,7 @@
           Left = 648.500000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -681,7 +681,7 @@
           Left = 675.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -700,7 +700,7 @@
           Left = 701.500000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -719,7 +719,7 @@
           Left = 728.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -738,7 +738,7 @@
           Left = 754.500000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -757,7 +757,7 @@
           Left = 781.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -776,7 +776,7 @@
           Left = 807.500000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -795,7 +795,7 @@
           Left = 834.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -814,7 +814,7 @@
           Left = 860.500000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -833,7 +833,7 @@
           Left = 887.000000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -852,7 +852,7 @@
           Left = 913.500000000000000000
           Width = 26.500000000000000000
           Height = 18.897650000000000000
-          DataSet = dmComprasSesiones.fxdsGuiasSesion
+          DataSet = dmFacturasCompra.fxdsGuiasFacc
           DataSetName = 'GuiasTallas'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -883,7 +883,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -901,7 +901,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -11
+          Font.Height = -14
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -919,7 +919,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -11
+          Font.Height = -14
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -937,7 +937,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -11
+          Font.Height = -14
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -955,7 +955,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -11
+          Font.Height = -14
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -973,7 +973,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -11
+          Font.Height = -14
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -991,7 +991,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1009,7 +1009,7 @@
           Height = 22.677180000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWhite
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
@@ -1031,8 +1031,8 @@
         Height = 22.677180000000000000
         Top = 298.582870000000000000
         Width = 1046.929810000000000000
-        DataSet = dmDevolucionesCompra.fxdsLinDevc
-        DataSetName = 'LineasDevolucion'
+        DataSet = dmFacturasCompra.fxdsLinFacc
+        DataSetName = 'LineasFactura'
         RowCount = 0
         object LinCodArt: TfrxMemoView
           AllowVectorExport = True
@@ -1040,16 +1040,16 @@
           Height = 22.677180000000000000
           ContentScaleOptions.Constraints.MaxIterationValue = 0
           ContentScaleOptions.Constraints.MinIterationValue = 0
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
+          Font.Height = -11
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           Memo.UTF8W = (
-            '[LineasDevolucion."CODIGO_ART"]')
+            '[LineasFactura."CODIGO_ART"]')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -1060,16 +1060,16 @@
           Height = 22.677180000000000000
           ContentScaleOptions.Constraints.MaxIterationValue = 0
           ContentScaleOptions.Constraints.MinIterationValue = 0
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -10
+          Font.Height = -14
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           Memo.UTF8W = (
-            '[LineasDevolucion."REF_PRV"]')
+            '[LineasFactura."REF_PRV"]')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -1078,16 +1078,16 @@
           Left = 130.000000000000000000
           Width = 140.000000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -14
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           Memo.UTF8W = (
-            '[LineasDevolucion."DESCRIPCION"]')
+            '[LineasFactura."DESCRIPCION"]')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -1098,16 +1098,16 @@
           Height = 22.677180000000000000
           ContentScaleOptions.Constraints.MaxIterationValue = 0
           ContentScaleOptions.Constraints.MinIterationValue = 0
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -10
+          Font.Height = -11
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           Memo.UTF8W = (
-            '[LineasDevolucion."COLOR_TEXTO"]')
+            '[LineasFactura."COLOR_TEXTO"]')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -1116,17 +1116,17 @@
           Left = 360.000000000000000000
           Width = 50.000000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -14
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            '[LineasDevolucion."NOMBRE_CORTO_AC"]')
+            '[LineasFactura."NOMBRE_CORTO_AC"]')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -1135,18 +1135,18 @@
           Left = 410.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T01"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T01"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T01">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1156,18 +1156,18 @@
           Left = 436.500000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T02"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T02"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T02">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1177,18 +1177,18 @@
           Left = 463.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T03"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T03"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T03">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1198,18 +1198,18 @@
           Left = 489.500000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T04"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T04"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T04">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1219,18 +1219,18 @@
           Left = 516.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T05"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T05"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T05">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1240,18 +1240,18 @@
           Left = 542.500000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T06"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T06"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T06">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1261,18 +1261,18 @@
           Left = 569.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T07"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T07"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T07">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1282,18 +1282,18 @@
           Left = 595.500000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T08"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T08"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T08">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1303,18 +1303,18 @@
           Left = 622.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T09"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T09"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T09">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1324,18 +1324,18 @@
           Left = 648.500000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T10"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T10"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T10">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1345,18 +1345,18 @@
           Left = 675.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T11"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T11"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T11">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1366,18 +1366,18 @@
           Left = 701.500000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T12"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T12"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T12">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1387,18 +1387,18 @@
           Left = 728.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T13"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T13"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T13">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1408,18 +1408,18 @@
           Left = 754.500000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T14"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T14"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T14">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1429,18 +1429,18 @@
           Left = 781.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T15"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T15"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T15">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1450,18 +1450,18 @@
           Left = 807.500000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T16"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T16"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T16">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1471,18 +1471,18 @@
           Left = 834.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T17"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T17"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T17">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1492,18 +1492,18 @@
           Left = 860.500000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T18"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T18"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T18">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1513,18 +1513,18 @@
           Left = 887.000000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T19"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T19"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T19">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1534,18 +1534,18 @@
           Left = 913.500000000000000000
           Width = 26.500000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
 
-              '[IIF(<LineasDevolucion."T20"> > 0, FormatFloat('#39'0'#39', <LineasDevolucion.' +
+              '[IIF(<LineasFactura."T20"> > 0, FormatFloat('#39'0'#39', <LineasFactura.' +
               '"T20">), '#39#39')]')
           ParentFont = False
           VAlign = vaCenter
@@ -1555,19 +1555,19 @@
           Left = 940.000000000000000000
           Width = 45.000000000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           DisplayFormat.FormatStr = '%2.0n'
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            '[LineasDevolucion."TOTAL_UNIDADES"]')
+            '[LineasFactura."TOTAL_UNIDADES"]')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -1576,19 +1576,19 @@
           Left = 985.000000000000000000
           Width = 61.929500000000000000
           Height = 22.677180000000000000
-          DataSet = dmDevolucionesCompra.fxdsLinDevc
-          DataSetName = 'LineasDevolucion'
+          DataSet = dmFacturasCompra.fxdsLinFacc
+          DataSetName = 'LineasFactura'
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
+          Font.Height = -13
           Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            '[LineasDevolucion."TOTAL_LINEA"]')
+            '[LineasFactura."TOTAL_LINEA"]')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -1618,49 +1618,45 @@
           Memo.UTF8W = (
             'DESGLOSE IVA / RE'
 
-              'Normal       Base [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_B' +
-              'ASEI_IVAN_DEVC">)]  IVA [FormatFloat('#39'0.##'#39', <Devolucion."POR' +
-              'CENTAJE_IVAN_DEVC">)]% [FormatFloat('#39'#,##0.00'#39', <Devolucion."' +
-              'TOTAL_IVAN_DEVC">)][IIF(<Devolucion."TOTAL_REN_DEVC"> <> 0, '#39 +
-              '  RE '#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_REN_DEV' +
-              'C">) + '#39'% '#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_REN' +
-              '_DEVC">), '#39#39')]'
+              'Normal       Base [FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_BASE' +
+              'I_IVAN_FACC">)]  IVA [FormatFloat('#39'0.##'#39', <Factura."PORCENTAJE' +
+              '_IVAN_FACC">)]% [FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_IVAN' +
+              '_FACC">)][IIF(<Factura."TOTAL_REN_FACC"> <> 0, '#39'  RE '#39' + For' +
+              'matFloat('#39'0.##'#39', <Factura."PORCENTAJE_REN_FACC">) + '#39'% '#39' + ' +
+              'FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_REN_FACC">), '#39#39')]'
 
-              'Reducido     Base [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_B' +
-              'ASEI_IVAR_DEVC">)]  IVA [FormatFloat('#39'0.##'#39', <Devolucion."POR' +
-              'CENTAJE_IVAR_DEVC">)]% [FormatFloat('#39'#,##0.00'#39', <Devolucion."' +
-              'TOTAL_IVAR_DEVC">)][IIF(<Devolucion."TOTAL_RER_DEVC"> <> 0, '#39 +
-              '  RE '#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_RER_DEV' +
-              'C">) + '#39'% '#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_RER' +
-              '_DEVC">), '#39#39')]'
+              'Reducido     Base [FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_BASE' +
+              'I_IVAR_FACC">)]  IVA [FormatFloat('#39'0.##'#39', <Factura."PORCENTAJE' +
+              '_IVAR_FACC">)]% [FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_IVAR' +
+              '_FACC">)][IIF(<Factura."TOTAL_RER_FACC"> <> 0, '#39'  RE '#39' + For' +
+              'matFloat('#39'0.##'#39', <Factura."PORCENTAJE_RER_FACC">) + '#39'% '#39' + ' +
+              'FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_RER_FACC">), '#39#39')]'
 
-              'Super red.   Base [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_B' +
-              'ASEI_IVAS_DEVC">)]  IVA [FormatFloat('#39'0.##'#39', <Devolucion."POR' +
-              'CENTAJE_IVAS_DEVC">)]% [FormatFloat('#39'#,##0.00'#39', <Devolucion."' +
-              'TOTAL_IVAS_DEVC">)][IIF(<Devolucion."TOTAL_RES_DEVC"> <> 0, '#39 +
-              '  RE '#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_RES_DEV' +
-              'C">) + '#39'% '#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_RES' +
-              '_DEVC">), '#39#39')]'
+              'Super red.   Base [FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_BASE' +
+              'I_IVAS_FACC">)]  IVA [FormatFloat('#39'0.##'#39', <Factura."PORCENTAJE' +
+              '_IVAS_FACC">)]% [FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_IVAS' +
+              '_FACC">)][IIF(<Factura."TOTAL_RES_FACC"> <> 0, '#39'  RE '#39' + For' +
+              'matFloat('#39'0.##'#39', <Factura."PORCENTAJE_RES_FACC">) + '#39'% '#39' + ' +
+              'FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_RES_FACC">), '#39#39')]'
 
-              'Exento       Base [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_B' +
-              'ASEI_IVAE_DEVC">)]  IVA [FormatFloat('#39'0.##'#39', <Devolucion."POR' +
-              'CENTAJE_IVAE_DEVC">)]% [FormatFloat('#39'#,##0.00'#39', <Devolucion."' +
-              'TOTAL_IVAE_DEVC">)][IIF(<Devolucion."TOTAL_REE_DEVC"> <> 0, '#39 +
-              '  RE '#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_REE_DEV' +
-              'C">) + '#39'% '#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_REE' +
-              '_DEVC">), '#39#39')]'
+              'Exento       Base [FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_BASE' +
+              'I_IVAE_FACC">)]  IVA [FormatFloat('#39'0.##'#39', <Factura."PORCENTAJE' +
+              '_IVAE_FACC">)]% [FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_IVAE' +
+              '_FACC">)][IIF(<Factura."TOTAL_REE_FACC"> <> 0, '#39'  RE '#39' + For' +
+              'matFloat('#39'0.##'#39', <Factura."PORCENTAJE_REE_FACC">) + '#39'% '#39' + ' +
+              'FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_REE_FACC">), '#39#39')]'
 
-              'Base total [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_BASES_DE' +
-              'VC">)]   Impuestos [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL' +
-              '_IMPUESTOS_DEVC">)]'
+              'Base total [FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_BASES_FACC' +
+              '">)]   Impuestos [FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_IMPU' +
+              'ESTOS_FACC">)]'
 
-              '[IIF(<Devolucion."TOTAL_RETENCION_DEVC"> <> 0, '#39'Retencion IRPF ' +
-              ''#39' + FormatFloat('#39'0.##'#39', <Devolucion."PORCENTAJE_RETENCION_D' +
-              'EVC">) + '#39'% -'#39' + FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_R' +
-              'ETENCION_DEVC">), '#39#39')]'
+              '[IIF(<Factura."TOTAL_RETENCION_FACC"> <> 0, '#39'Retencion IRPF '#39 +
+              ' + FormatFloat('#39'0.##'#39', <Factura."PORCENTAJE_RETENCION_FACC">)' +
+              ' + '#39'% -'#39' + FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_RETENCION' +
+              '_FACC">), '#39#39')]'
 
-              'TOTAL LIQUIDO [FormatFloat('#39'#,##0.00'#39', <Devolucion."TOTAL_LIQU' +
-              'IDO_DEVC">)] EUR')
+              'TOTAL LIQUIDO [FormatFloat('#39'#,##0.00'#39', <Factura."TOTAL_LIQUID' +
+              'O_FACC">)] EUR')
           ParentFont = False
         end
       end
@@ -1688,7 +1684,7 @@
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            'TOTAL: [Devolucion."TOTAL_UNIDADES_SES"] unidades')
+            'TOTAL: [Factura."TOTAL_UNIDADES_FACC"] unidades')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -1698,8 +1694,8 @@
           Top = 3.779530000000000000
           Width = 106.929500000000000000
           Height = 18.897650000000000000
-          DataSet = dmDevolucionesCompra.fxdsCabDevc
-          DataSetName = 'Devolucion'
+          DataSet = dmFacturasCompra.fxdsCabFacc
+          DataSetName = 'Factura'
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
@@ -1710,7 +1706,7 @@
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            '[Devolucion."TOTAL_LINEAS_SES"]')
+            '[Factura."TOTAL_LINEAS_FACC"]')
           ParentFont = False
           VAlign = vaCenter
         end
@@ -1763,15 +1759,15 @@
     Top = 184
     Datasets = <
       item
-        DataSet = dmDevolucionesCompra.fxdsCabDevc
-        DataSetName = 'Devolucion'
+        DataSet = dmFacturasCompra.fxdsCabFacc
+        DataSetName = 'Factura'
       end
       item
-        DataSet = dmDevolucionesCompra.fxdsLinDevc
-        DataSetName = 'LineasDevolucion'
+        DataSet = dmFacturasCompra.fxdsLinFacc
+        DataSetName = 'LineasFactura'
       end
       item
-        DataSet = dmComprasSesiones.fxdsGuiasSesion
+        DataSet = dmFacturasCompra.fxdsGuiasFacc
         DataSetName = 'GuiasTallas'
       end>
     Variables = <>

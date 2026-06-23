@@ -21,9 +21,9 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxClasses, cxLocalization, cxContainer,
-  cxEdit, cxLabel, dxSkinsCore, dxSkinsDefaultPainters, cxLookAndFeels,
-  dxSkinsForm, dxSkinBlack, dxSkinBlue, dxSkinBlueprint, dxSkinDarkRoom,
-  dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle, dxSkinFoggy,
+  cxEdit, cxLabel, cxDropDownEdit, dxSkinsCore, dxSkinsDefaultPainters,
+  cxLookAndFeels, dxSkinsForm, dxSkinBlack, dxSkinBlue, dxSkinBlueprint,
+  dxSkinDarkRoom, dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle, dxSkinFoggy,
   dxSkinHighContrast, dxSkinMetropolis, dxSkinMetropolisDark,
   dxSkinOffice2010Black, dxSkinOffice2010Blue, dxSkinOffice2010Silver,
   dxSkinOffice2013DarkGray, dxSkinOffice2013LightGray,
@@ -42,18 +42,28 @@ uses
   JvEnterTab;
 
 type
+  TEnterAsTabEstado = record
+    Componente : TJvEnterAsTab;
+    EnterAsTab : Boolean;
+  end;
+
   TfrmBase = class(TForm)
     Localizer1: TcxLocalizer;
     jvntrstb1: TJvEnterAsTab;
     procedure FormCreate(Sender: TObject);
   private
-    { Private declarations }
+    FEnterAsTabEstados: array of TEnterAsTabEstado;
+    FEnterAsTabTemporalActivo: Boolean;
+    procedure GuardarEnterAsTabDe(AOwner: TComponent);
+    function EnterAsTabGuardado(AComp: TJvEnterAsTab): Boolean;
   protected
     // Hooks de log avanzado a nivel de formulario. Se loguean solo si
     // ltAvanzado esta activo en TLog (parametro appLogAvanzado).
     procedure DoShow; override;
     procedure DoClose(var Action: TCloseAction); override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+    procedure DesactivarEnterAsTabTemporal(Sender: TObject);
+    procedure RestaurarEnterAsTabTemporal(Sender: TObject);
   public
     { Public declarations }
     // Articulo/sku del registro/linea en foco, para la consulta de stock
@@ -78,6 +88,7 @@ var
   i: Integer;
 begin
   KeyPreview := True;
+  FEnterAsTabTemporalActivo := False;
   Localizer1.Locale := 1034;
   Localizer1.Active := True;
   // Etiquetas TcxLabel transparentes (sin fondo solido) en toda la jerarquia
@@ -86,6 +97,69 @@ begin
   for i := 0 to ComponentCount - 1 do
     if Components[i] is TcxLabel then
       TcxLabel(Components[i]).Transparent := True;
+end;
+
+function TfrmBase.EnterAsTabGuardado(AComp: TJvEnterAsTab): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := 0 to Length(FEnterAsTabEstados) - 1 do
+    if FEnterAsTabEstados[i].Componente = AComp then
+      Result := True;
+end;
+
+procedure TfrmBase.GuardarEnterAsTabDe(AOwner: TComponent);
+var
+  i: Integer;
+  n: Integer;
+  Comp: TJvEnterAsTab;
+begin
+  if Assigned(AOwner) then
+    for i := 0 to AOwner.ComponentCount - 1 do
+      if AOwner.Components[i] is TJvEnterAsTab then
+      begin
+        Comp := TJvEnterAsTab(AOwner.Components[i]);
+        if not EnterAsTabGuardado(Comp) then
+        begin
+          n := Length(FEnterAsTabEstados);
+          SetLength(FEnterAsTabEstados, n + 1);
+          FEnterAsTabEstados[n].Componente := Comp;
+          FEnterAsTabEstados[n].EnterAsTab := Comp.EnterAsTab;
+          Comp.EnterAsTab := False;
+        end;
+      end;
+end;
+
+procedure TfrmBase.DesactivarEnterAsTabTemporal(Sender: TObject);
+begin
+  if not FEnterAsTabTemporalActivo then
+  begin
+    SetLength(FEnterAsTabEstados, 0);
+    GuardarEnterAsTabDe(Self);
+    GuardarEnterAsTabDe(Owner);
+    GuardarEnterAsTabDe(Application.MainForm);
+    FEnterAsTabTemporalActivo := True;
+  end;
+end;
+
+procedure TfrmBase.RestaurarEnterAsTabTemporal(Sender: TObject);
+var
+  i: Integer;
+  MantenerDesactivado: Boolean;
+begin
+  MantenerDesactivado := False;
+  if Sender is TcxCustomDropDownEdit then
+    MantenerDesactivado := TcxCustomDropDownEdit(Sender).DroppedDown;
+  if FEnterAsTabTemporalActivo and not MantenerDesactivado then
+  begin
+    for i := 0 to Length(FEnterAsTabEstados) - 1 do
+      if Assigned(FEnterAsTabEstados[i].Componente) then
+        FEnterAsTabEstados[i].Componente.EnterAsTab :=
+          FEnterAsTabEstados[i].EnterAsTab;
+    SetLength(FEnterAsTabEstados, 0);
+    FEnterAsTabTemporalActivo := False;
+  end;
 end;
 
 procedure TfrmBase.DoShow;

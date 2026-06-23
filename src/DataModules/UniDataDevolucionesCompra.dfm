@@ -105,6 +105,41 @@
     Left = 160
     Top = 424
   end
+  object unqryMovimientosProveedor: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT NUMERO_MOV, FECHA_MOV, LINEA_MOV, '
+      '       CODIGO_ALM_MOV, NOMBRE_ALMACEN_ORIGEN, '
+      '       CODIGO_ART_MOV, CODIGO_UNIDAD_MOV, '
+      '       DESCRIPCION_ARTICULO_MOV, '
+      '       TIPO_MOV, CANTIDAD_MOV, '
+      '       PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV '
+      '  FROM vi_movimientos '
+      ' WHERE TIPO_DOC_MOV   = '#39'DC'#39' '
+      '   AND NUMERO_DOC_MOV = :NUMERO_DEVC '
+      '   AND SERIE_DOC_MOV  = :SERIE_DEVC '
+      ' ORDER BY LINEA_MOV')
+    MasterFields = 'NUMERO_DEVC;SERIE_DEVC'
+    ReadOnly = True
+    Left = 256
+    Top = 360
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_DEVC'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_DEVC'
+        Value = nil
+      end>
+  end
+  object dsMovimientosProveedor: TDataSource
+    DataSet = unqryMovimientosProveedor
+    Left = 256
+    Top = 424
+  end
   object unstrdprcGetContadorDevc: TUniStoredProc
     StoredProcName = 'PRC_GET_NEXT_CONT_FACT_SERIE'
     Connection = dmConn.conUni

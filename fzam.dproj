@@ -310,6 +310,12 @@
         <DCCReference Include="src\Modals\inMtoModalImpSesion.pas">
             <Form>frmPrintSesion</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalImpFacCompra.pas">
+            <Form>frmPrintFacCompra</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalImpFacCompraV.pas">
+            <Form>frmPrintFacCompraV</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalImpAlbCompra.pas">
             <Form>frmPrintAlbCompra</Form>
         </DCCReference>
@@ -840,6 +846,9 @@
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalAddBlockTarifa.pas">
             <Form>frmModalAddBlockTarifa</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalAddBlockDocumentoTrabajo.pas">
+            <Form>frmModalAddBlockDocumentoTrabajo</Form>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibDBStructure.pas"/>
         <DCCReference Include="src\Lib\inLibBackupWorker.pas"/>

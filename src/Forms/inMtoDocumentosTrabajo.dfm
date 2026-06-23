@@ -112,6 +112,16 @@ inherited frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo
               Height = 32
               Width = 160
             end
+            object btnCargarFiltrosDTR: TcxButton
+              Left = 463
+              Top = 0
+              Width = 180
+              Height = 32
+              Align = alRight
+              Caption = 'Cargar articulos...'
+              TabOrder = 1
+              OnClick = btnCargarFiltrosDTRClick
+            end
             object btnCompartirDTR: TcxButton
               Left = 643
               Top = 0
@@ -119,7 +129,7 @@ inherited frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo
               Height = 32
               Align = alRight
               Caption = 'Compartir...'
-              TabOrder = 1
+              TabOrder = 2
               OnClick = btnCompartirDTRClick
             end
             object btnImprimirEtiquetasDTR: TcxButton
@@ -129,7 +139,7 @@ inherited frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo
               Height = 32
               Align = alRight
               Caption = 'Imprimir etiquetas'
-              TabOrder = 2
+              TabOrder = 3
               OnClick = btnImprimirEtiquetasDTRClick
             end
           end
@@ -195,12 +205,16 @@ inherited frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo
                     Caption = 'Stock'
                     DataBinding.FieldName = 'CANTIDAD_STOCK_DTL'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.##;-#,##0.##;0'
+                    Properties.EditFormat = '#,##0.##'
                     Width = 80
                   end
                   object colDtlCantidad: TcxGridDBColumn
                     Caption = 'Cantidad'
                     DataBinding.FieldName = 'CANTIDAD_DTL'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.##;-#,##0.##;0'
+                    Properties.EditFormat = '#,##0.##'
                     Width = 90
                   end
                   object colDtlOrigen: TcxGridDBColumn

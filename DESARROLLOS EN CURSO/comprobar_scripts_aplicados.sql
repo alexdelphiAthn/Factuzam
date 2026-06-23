@@ -77,6 +77,12 @@ SELECT t.orden AS orden_aplicacion,
                      AND TABLE_NAME = 'fza_facturas_compra'
                      AND COLUMN_NAME = 'ID_PV_TEMPORADA_FACC')
     UNION ALL
+    SELECT 87, 'vi_facturas_compra_print.sql',
+           'vista vi_facturas_compra_cab_print',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'vi_facturas_compra_cab_print')
+    UNION ALL
     SELECT 90, 'efectos_remesas_compra.sql',
            'fza_efectos_compra + remesas + vistas actualizadas',
            EXISTS(SELECT 1 FROM information_schema.TABLES

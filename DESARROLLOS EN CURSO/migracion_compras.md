@@ -1,9 +1,10 @@
-# Migración de compras (pedidos, albaranes y facturas)
+# Migración de compras (pedidos, albaranes, devoluciones y facturas)
 
 Importa la cadena de **compras** del legacy a Factuzam. Nuevo dominio del
 migrador (`src/utilmigsqlsrv/inLibMigCompras.pas`). Requiere que el destino
 tenga las tablas de compras y la ampliación de temporada de factura:
-`DESARROLLOS EN CURSO/facturas_compra_temporada.sql`.
+`DESARROLLOS EN CURSO/facturas_compra_temporada.sql`. Para devoluciones a
+proveedor requiere además `DESARROLLOS EN CURSO/devoluciones_compra.sql`.
 
 | Origen (SQL Server) | Destino (MariaDB) |
 |---|---|
@@ -11,6 +12,8 @@ tenga las tablas de compras y la ampliación de temporada de factura:
 | `dbo.ocpedarp`                  | `fza_pedidos_compra_lineas` |
 | `dbo.ocalbpro` (TipoDoc `'AE'`) | `fza_albaranes_compra` (cabecera) |
 | `dbo.ocalbproarp`               | `fza_albaranes_compra_lineas` |
+| `dbo.ocreppro` (TipoDoc `'RP'`) | `fza_devoluciones_compra` (cabecera) |
+| `dbo.ocrepproart`               | `fza_devoluciones_compra_lineas` |
 | `dbo.ocfacpro`                  | `fza_facturas_compra` (cabecera) |
 | `dbo.ocfacproart` / `ocalbproarp` facturado | `fza_facturas_compra_lineas` |
 
@@ -46,14 +49,19 @@ queda a `NULL`. Resultado: un pedido/albarán migrado se comporta en el Mto
 
 Misma forma que el resto de documentos:
 - `SERIE`  = `'<Ejercicio>.<Serie>'` (p.ej. `2007.90`).
-- `NUMERO` = `NroPedido` / `NroAlbaran` a 6 dígitos (`Format('%.6d')`).
+- `NUMERO` = `NroPedido` / `NroAlbaran` / `NroRep` / `NroFactura` a 6
+  dígitos (`Format('%.6d')`).
 
-PK destino: `(NUMERO_PEDC, SERIE_PEDC)` / `(NUMERO_ALBC, SERIE_ALBC)` y las
-líneas añaden `LINEA` (= `Orden` del legacy a 4 dígitos).
+PK destino: `(NUMERO_PEDC, SERIE_PEDC)`, `(NUMERO_ALBC, SERIE_ALBC)`,
+`(NUMERO_DEVC, SERIE_DEVC)` / `(NUMERO_FACC, SERIE_FACC)` y las líneas añaden
+`LINEA`. En pedidos/albaranes se conserva `Orden` del legacy a 4 dígitos. En
+devoluciones se usa una línea determinista `ROW_NUMBER()*10` por documento,
+ordenada por `Orden, Id`, porque puede haber varias filas legacy con el mismo
+`Orden`.
 
 ## Proveedor y empresa emisora
 
-- **Proveedor**: ya viene **denormalizado** en `ocped`/`ocalbpro`
+- **Proveedor**: ya viene **denormalizado** en `ocped`/`ocalbpro`/`ocreppro`
   (`Proveedor`, `RazonSocial`, `NIF`, dirección…). Se copia tal cual a las
   columnas `*_PRV_*` de la cabecera.
 - **Empresa emisora**: se rellena al final (`EnlazarEmpresaCompra`) desde
@@ -82,19 +90,20 @@ Cabecera: las 4 bandas del legacy (`ImpBaseImp{i}` / `PorIVA{i}` /
 `<13`=Reducido, resto=Normal) y se acumula la cuota en su banda (calculándola
 si el legacy la trae a 0). Los totales (`TOTAL_BASES`, `TOTAL_IMPUESTOS`,
 `TOTAL_LIQUIDO`) salen de los importes del propio documento legacy
-(`ImpBaseImp`, `TotalIVA`, `ImpPedido`/`ImpAlbaran`). En compra **no** hay
-recargo de equivalencia en la cabecera. Cada línea lleva su `PORCENTAJE_IVA` y
-su `TIPO_IVA_ARTICULO` clasificado desde ese porcentaje (`0`=Exento, `<6`=
-Super, `<13`=Reducido, resto=Normal). Esto es importante porque las facturas
-de compra generadas desde albarán copian ese campo de la línea del albarán.
+(`ImpBaseImp`, `TotalIVA`, `ImpPedido`/`ImpAlbaran`/`ImpLiquido`). En compra
+**no** hay recargo de equivalencia en la cabecera. Cada línea lleva su
+`PORCENTAJE_IVA` y su `TIPO_IVA_ARTICULO` clasificado desde ese porcentaje
+(`0`=Exento, `<6`=Super, `<13`=Reducido, resto=Normal). Esto es importante
+porque las facturas de compra generadas desde albarán copian ese campo de la
+línea del albarán.
 
 ## Forma de pago
 
-Pedidos y albaranes guardan `FORMA_PAGO_*` con el código legacy `TipoEfecto`
-cuando viene informado. Si no hay `TipoEfecto`, se conserva el texto histórico
-`FormaPago` como fallback. Las facturas de compra generadas desde albarán
-copian `FORMA_PAGO_ALBC` a `FORMA_PAGO_FACC`, y los efectos usan ese valor para
-repartir vencimientos.
+Pedidos, albaranes y devoluciones guardan `FORMA_PAGO_*` con el código legacy
+`TipoEfecto` cuando viene informado. Si no hay `TipoEfecto`, se conserva el
+texto histórico `FormaPago` como fallback. Las facturas de compra generadas
+desde albarán copian `FORMA_PAGO_ALBC` a `FORMA_PAGO_FACC`, y los efectos usan
+ese valor para repartir vencimientos.
 
 ## Estado
 
@@ -107,6 +116,29 @@ repartir vencimientos.
   `ABIERTO↔CERRADO` (CERRADO = stock generado), así que se deja `CERRADO`.
   Si el legacy trae `NroFactura`, queda como `FACTURADO` y enlazado a la
   factura importada.
+- **Devolución** (`ESTADO_DEVC`): **`CERRADO`** siempre, salvo que el legacy
+  traiga `NroFactura`, en cuyo caso queda `FACTURADO`. Igual que el albarán,
+  es documento histórico con stock ya reconstruido por **Movimientos**.
+
+## Devoluciones proveedor y movimientos RP
+
+En el catálogo documental del legacy (`octipdoc` / `ocserie`) el tipo `'RP'`
+corresponde a **devoluciones a proveedor**. En la BBDD `Herreras` se han
+cotejado `ocreppro`/`ocrepproart` contra `ocmovarp`:
+- 1.221 cabeceras en `ocreppro`.
+- 8.398 líneas en `ocrepproart`.
+- 8.395 líneas con `NumeroMovArt`, todas enlazadas con `ocmovarp.Numero`.
+- 0 diferencias de documento, ejercicio, serie, número, almacén, artículo,
+  color, talla y cantidad absoluta en las líneas enlazadas.
+- 3 líneas legacy no tienen movimiento asociado; se importan como documento,
+  pero no afectan a stock porque no existe movimiento que migrar.
+
+El dominio de documentos importa `ocreppro`/`ocrepproart` a las tablas
+`fza_devoluciones_compra*`. El stock no se genera aquí: `ocmovarp.TipoDoc='RP'`
+se importa desde el dominio **Movimientos** como `TIPO_DOC_MOV='DC'`. Para RP
+la dirección real sale del signo de `ocmovarp.Cantidad` (`<0` salida a
+proveedor, `>0` entrada/reversión), porque `ocmovarp.Tipo` puede venir como
+`'E'` incluso en salidas.
 
 ## Enlace albarán → pedido
 
@@ -126,9 +158,9 @@ primera fila). Un fallo de lote se registra y la migración continúa.
 
 ## Cómo ejecutarlo
 
-Dominios **"Pedidos de compra (ocped)"** y **"Albaranes de compra
-(ocalbpro)"**, **wave 3**. Solo necesitan Empresas, Almacenes, Proveedores y
-SKUs (waves 0-2).
+Dominios **"Pedidos de compra (ocped)"**, **"Albaranes de compra
+(ocalbpro)"** y **"Devoluciones a proveedor (ocreppro)"**, **wave 3**. Solo
+necesitan Empresas, Almacenes, Proveedores y SKUs (waves 0-2).
 
 Dominio **"Facturas de compra (ocfacpro)"**, **wave 5**. Entra después de
 albaranes para poder enlazar `NUMERO_FAC_ALBC` / `SERIE_FAC_ALBC` y marcar
@@ -155,6 +187,8 @@ Después de facturas entran los dominios de cartera de pagos:
   materialización nativa tampoco las crea (almacena una línea por SKU con su
   `ID_AC_PIVOT`). El Mto las construye al editar en modo pivote. No es una
   carencia de la migración.
-- **Enlace movimiento ↔ albarán (`REF_MOV`)**: la línea de albarán legacy no
+- **Enlace movimiento ↔ documento (`REF_MOV`)**: la línea de albarán legacy no
   guarda el `NUMERO_MOV` del movimiento que generó, así que no se enlaza la
-  entrada de stock con su albarán (el stock entra igualmente por Movimientos).
+  entrada de stock con su albarán. En devoluciones sí existe
+  `ocrepproart.NumeroMovArt`, pero la tabla de líneas de devolución no tiene
+  una columna `REF_MOV`; el stock entra igualmente por Movimientos como `DC`.

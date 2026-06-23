@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataAlbaranesCompra                                        }
 {    Tipo:       Data Module                                                   }
@@ -35,6 +35,8 @@ type
     unqryPrvDataAlbc:           TUniQuery;
     unqryArtDataLinAlbc:        TUniQuery;
     unqrySkusAlbc:              TUniQuery;
+    unqryMovimientosProveedor:  TUniQuery;
+    dsMovimientosProveedor:     TDataSource;
     unstrdprcGetContadorAlbc:   TUniStoredProc;
     // Definicion de atributos del articulo padre (para columnas
     // dinamicas ATTR1..ATTR5 en modo "atributo por columna").
@@ -120,12 +122,15 @@ begin
   unqryPrvDataAlbc.Connection           := inLibGlobalVar.oConn;
   unqryArtDataLinAlbc.Connection        := inLibGlobalVar.oConn;
   unqrySkusAlbc.Connection              := inLibGlobalVar.oConn;
+  unqryMovimientosProveedor.Connection  := inLibGlobalVar.oConn;
   unstrdprcGetContadorAlbc.Connection   := inLibGlobalVar.oConn;
   unqryDefArticuloAlbc.Connection       := inLibGlobalVar.oConn;
   // Master-detail server-side: el WHERE del SQL toma los valores de
   // dsTablaG (master), evitando descargar fza_albaranes_compra_lineas
   // entera y filtrar en cliente.
   unqryAlbaranesCompraLineas.MasterSource :=
+    (GetOwnerForm<TfrmMtoAlbaranesCompra>).dsTablaG;
+  unqryMovimientosProveedor.MasterSource :=
     (GetOwnerForm<TfrmMtoAlbaranesCompra>).dsTablaG;
 end;
 
@@ -134,6 +139,9 @@ begin
   if Assigned(unqryAlbaranesCompraLineas) and
      unqryAlbaranesCompraLineas.Active then
     unqryAlbaranesCompraLineas.Close;
+  if Assigned(unqryMovimientosProveedor) and
+     unqryMovimientosProveedor.Active then
+    unqryMovimientosProveedor.Close;
   inherited;
 end;
 
@@ -174,6 +182,8 @@ begin
   sw := TStopwatch.StartNew;
   AbrirConTiempo(unqryAlbaranesCompraLineas,
                  'unqryAlbaranesCompraLineas');
+  AbrirConTiempo(unqryMovimientosProveedor,
+                 'unqryMovimientosProveedor');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
@@ -301,6 +311,11 @@ begin
         inLibGlobalVar.oConn, sSerie, sNumero, oUser);
   finally
     FTransicionEstadoAlbc := '';
+  end;
+  if unqryMovimientosProveedor.Active then
+  begin
+    unqryMovimientosProveedor.Close;
+    unqryMovimientosProveedor.Open;
   end;
 end;
 

@@ -10,6 +10,8 @@
 {      dbo.ocpedarp    (líneas pedido)                    → fza_pedidos_compra_lineas
 {      dbo.ocalbpro    (cab. albarán entrada, TipoDoc 'AE') → fza_albaranes_compra
 {      dbo.ocalbproarp (líneas albarán)                   → fza_albaranes_compra_lineas
+{      dbo.ocreppro    (cab. devolución proveedor, 'RP')  → fza_devoluciones_compra
+{      dbo.ocrepproart (líneas devolución proveedor)      → fza_devoluciones_compra_lineas
 {      dbo.ocfacpro    (cab. factura proveedor)           → fza_facturas_compra
 {      dbo.ocfacproart (líneas factura proveedor)         → fza_facturas_compra_lineas
 {                                                                              }
@@ -44,9 +46,9 @@
 {    Idempotente: borra al arrancar lo migrado por el usuario y reinserta      }
 {    (INSERT IGNORE por lotes para las líneas/cabeceras).                      }
 {                                                                              }
-{    NO genera stock: los movimientos de entrada ya entran por la migración    }
-{    de Movimientos (ocmovarp). El enlace movimiento↔documento se conserva     }
-{    solo a nivel documental pedido/albarán/factura.                           }
+{    NO genera stock: los movimientos de entrada/devolución ya entran por la   }
+{    migración de Movimientos (ocmovarp). El enlace movimiento↔documento se    }
+{    conserva solo a nivel documental pedido/albarán/devolución/factura.       }
 {******************************************************************************}
 unit inLibMigCompras;
 
@@ -57,6 +59,7 @@ uses
 
 procedure MigrarPedidosCompra(Eng: TMigEngine; var Stats: TMigStats);
 procedure MigrarAlbaranesCompra(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarDevolucionesCompra(Eng: TMigEngine; var Stats: TMigStats);
 procedure MigrarFacturasCompra(Eng: TMigEngine; var Stats: TMigStats);
 
 implementation
@@ -376,6 +379,75 @@ begin
     if q.FieldByName('N').AsInteger = 0 then
       raise Exception.Create(
         'Falta ejecutar DESARROLLOS EN CURSO/facturas_compra_temporada.sql');
+  finally
+    q.Free;
+  end;
+end;
+
+procedure AsegurarEsquemaDevolucionesCompra(Eng: TMigEngine);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.TABLES ' +
+      'WHERE TABLE_SCHEMA = DATABASE() ' +
+      'AND TABLE_NAME = ''fza_devoluciones_compra''';
+    q.Open;
+    if q.FieldByName('N').AsInteger = 0 then
+      raise Exception.Create(
+        'Falta ejecutar DESARROLLOS EN CURSO/devoluciones_compra.sql');
+    q.Close;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.TABLES ' +
+      'WHERE TABLE_SCHEMA = DATABASE() ' +
+      'AND TABLE_NAME = ''fza_devoluciones_compra_lineas''';
+    q.Open;
+    if q.FieldByName('N').AsInteger = 0 then
+      raise Exception.Create(
+        'Falta ejecutar DESARROLLOS EN CURSO/devoluciones_compra.sql');
+    q.Close;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.COLUMNS ' +
+      'WHERE TABLE_SCHEMA = DATABASE() ' +
+      'AND TABLE_NAME = ''fza_devoluciones_compra'' ' +
+      'AND COLUMN_NAME = ''ESPIVOTE_HORIZONTAL_DEVC''';
+    q.Open;
+    if q.FieldByName('N').AsInteger = 0 then
+      raise Exception.Create(
+        'Falta ejecutar DESARROLLOS EN CURSO/devoluciones_compra.sql');
+    q.Close;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.COLUMNS ' +
+      'WHERE TABLE_SCHEMA = DATABASE() ' +
+      'AND TABLE_NAME = ''fza_devoluciones_compra_lineas'' ' +
+      'AND COLUMN_NAME = ''ID_AC_PIVOT_DEVCLIN''';
+    q.Open;
+    if q.FieldByName('N').AsInteger = 0 then
+      raise Exception.Create(
+        'Falta ejecutar DESARROLLOS EN CURSO/devoluciones_compra.sql');
+    q.Close;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.COLUMNS ' +
+      'WHERE TABLE_SCHEMA = DATABASE() ' +
+      'AND TABLE_NAME = ''fza_devoluciones_compra_lineas'' ' +
+      'AND COLUMN_NAME = ''TOTAL_UNIDADES_DEVCLIN''';
+    q.Open;
+    if q.FieldByName('N').AsInteger = 0 then
+      raise Exception.Create(
+        'Falta ejecutar DESARROLLOS EN CURSO/devoluciones_compra.sql');
+    q.Close;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.COLUMNS ' +
+      'WHERE TABLE_SCHEMA = DATABASE() ' +
+      'AND TABLE_NAME = ''fza_devoluciones_compra_lineas'' ' +
+      'AND COLUMN_NAME = ''REF_PRV_DEVCLIN''';
+    q.Open;
+    if q.FieldByName('N').AsInteger = 0 then
+      raise Exception.Create(
+        'Falta ejecutar DESARROLLOS EN CURSO/devoluciones_compra.sql');
   finally
     q.Free;
   end;
@@ -946,6 +1018,365 @@ begin
   end;
 end;
 
+// =========================================================================
+//  3. Devoluciones de compra (proveedor)
+// =========================================================================
+
+procedure MigrarDevolucionesCompra(Eng: TMigEngine; var Stats: TMigStats);
+const
+  cWhere = 'WHERE r.TipoDoc = ''RP''';
+  cSelCab =
+    'SELECT r.Empresa, r.Ejercicio, ISNULL(r.Serie, '''') AS Serie, ' +
+    '       r.NroRep, r.Fecha, ' +
+    '       ISNULL(alm.Abreviatura, '''') AS AbrevAlm, ' +
+    '       ISNULL(r.Almacen, 0) AS Almacen, ' +
+    '       ISNULL(r.Proveedor, 0) AS Proveedor, ' +
+    '       ISNULL(r.RazonSocial, '''') AS RazonSocial, ' +
+    '       ISNULL(r.NIF, '''') AS NIF, ' +
+    '       ISNULL(r.Direccion1, '''') AS Direccion1, ' +
+    '       ISNULL(r.Direccion2, '''') AS Direccion2, ' +
+    '       ISNULL(r.Poblacion, '''') AS Poblacion, ' +
+    '       ISNULL(r.Provincia, '''') AS Provincia, ' +
+    '       ISNULL(r.CodPostal, '''') AS CodPostal, ' +
+    '       ISNULL(r.DocExterno, '''') AS DocExterno, ' +
+    '       ISNULL(r.FormaEnvio, '''') AS FormaEnvio, ' +
+    '       ISNULL(r.TipoEfecto, 0) AS TipoEfecto, ' +
+    '       ISNULL(r.FormaPago, '''') AS FormaPago, ' +
+    '       r.EjercicioPed, ISNULL(r.SeriePed, '''') AS SeriePed, ' +
+    '       ISNULL(r.NroPedido, 0) AS NroPedido, ' +
+    '       r.EjercicioFra, ISNULL(r.SerieFra, '''') AS SerieFra, ' +
+    '       ISNULL(r.NroFactura, 0) AS NroFactura, ' +
+    '       ISNULL(lc.MaxLinea, 0) AS MaxLinea, ' +
+    '       ISNULL(r.ImpBaseImp1, 0) AS ImpBaseImp1, ' +
+    '       ISNULL(r.PorIVA1, 0) AS PorIVA1, ISNULL(r.CuotaIVA1, 0) AS CuotaIVA1, ' +
+    '       ISNULL(r.ImpBaseImp2, 0) AS ImpBaseImp2, ' +
+    '       ISNULL(r.PorIVA2, 0) AS PorIVA2, ISNULL(r.CuotaIVA2, 0) AS CuotaIVA2, ' +
+    '       ISNULL(r.ImpBaseImp3, 0) AS ImpBaseImp3, ' +
+    '       ISNULL(r.PorIVA3, 0) AS PorIVA3, ISNULL(r.CuotaIVA3, 0) AS CuotaIVA3, ' +
+    '       ISNULL(r.ImpBaseImp4, 0) AS ImpBaseImp4, ' +
+    '       ISNULL(r.PorIVA4, 0) AS PorIVA4, ISNULL(r.CuotaIVA4, 0) AS CuotaIVA4, ' +
+    '       ISNULL(r.ImpBaseImp, 0) AS ImpBaseImp, ' +
+    '       ISNULL(r.TotalIVA, 0) AS TotalIVA, ' +
+    '       ISNULL(r.ImpLiquido, 0) AS ImpLiquido, ' +
+    '       ISNULL(CONVERT(varchar(2000), r.ObsRep), '''') AS ObsRep ' +
+    'FROM dbo.ocreppro r ' +
+    'LEFT JOIN dbo.ocalm alm ON alm.Empresa = r.Empresa ' +
+    '                       AND alm.Almacen = r.Almacen ' +
+    'LEFT JOIN ( ' +
+    '  SELECT Empresa, Ejercicio, Serie, NroRep, COUNT(*) * 10 AS MaxLinea ' +
+    '  FROM dbo.ocrepproart ' +
+    '  GROUP BY Empresa, Ejercicio, Serie, NroRep ' +
+    ') lc ON lc.Empresa = r.Empresa ' +
+    '    AND lc.Ejercicio = r.Ejercicio ' +
+    '    AND lc.Serie = r.Serie ' +
+    '    AND lc.NroRep = r.NroRep ' +
+    cWhere;
+  cSelLin =
+    'SELECT l.Empresa, l.Ejercicio, ISNULL(l.Serie, '''') AS Serie, ' +
+    '       l.NroRep, l.Orden, l.Id, ' +
+    '       ROW_NUMBER() OVER (PARTITION BY l.Empresa, l.Ejercicio, ' +
+    '         l.Serie, l.NroRep ORDER BY l.Orden, l.Id) * 10 AS LineaFactuzam, ' +
+    '       l.Articulo, l.Color, l.Talla, ' +
+    '       ISNULL(alml.Abreviatura, '''') AS AbrevAlmLin, ' +
+    '       ISNULL(l.Almacen, 0) AS AlmLin, ' +
+    '       ISNULL(CONVERT(varchar(1000), l.Descripcion), '''') AS Descripcion, ' +
+    '       ISNULL(l.Cantidad, 0) AS Cantidad, ' +
+    '       ISNULL(l.PrecioSIva, 0) AS PrecioSIva, ' +
+    '       ISNULL(l.PrecioCIva, 0) AS PrecioCIva, ' +
+    '       ISNULL(l.ImpNetoSIva, 0) AS ImpNetoSIva, ' +
+    '       ISNULL(l.PorIVA, 0) AS PorIVA, ' +
+    '       ISNULL(NULLIF(l.EjercicioPedido, 0), h.EjercicioPed) AS EjercicioPedido, ' +
+    '       ISNULL(NULLIF(LTRIM(RTRIM(l.SeriePedido)), ''''), ' +
+    '         ISNULL(h.SeriePed, '''')) AS SeriePedido, ' +
+    '       ISNULL(NULLIF(l.NroPedido, 0), h.NroPedido) AS NroPedido, ' +
+    '       ISNULL(l.IdPed, 0) AS IdPed, ' +
+    '       ISNULL(p.Orden, 0) AS OrdenPedido, ' +
+    '       h.EjercicioFra AS EjercicioFactura, ' +
+    '       ISNULL(h.SerieFra, '''') AS SerieFactura, ' +
+    '       ISNULL(h.NroFactura, 0) AS NroFactura, ' +
+    '       CASE ' +
+    '         WHEN l.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(l.Color)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
+    '         WHEN co.Descripcion IS NOT NULL ' +
+    '           AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' ' +
+    '           THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
+    '         ELSE ''0'' ' +
+    '       END AS DescColor, ' +
+    '       (SELECT TOP 1 ISNULL(ap.Modelo, '''') FROM dbo.ocartp ap ' +
+    '         WHERE ap.Articulo = l.Articulo) AS Modelo ' +
+    'FROM dbo.ocrepproart l ' +
+    'INNER JOIN dbo.ocreppro h ON h.Empresa = l.Empresa ' +
+    '                        AND h.Ejercicio = l.Ejercicio ' +
+    '                        AND h.Serie = l.Serie ' +
+    '                        AND h.NroRep = l.NroRep ' +
+    'LEFT JOIN dbo.ocpedarp p ON p.Empresa = ISNULL(NULLIF(l.EmpresaPedido, 0), h.EmpresaPed) ' +
+    '                        AND p.Ejercicio = ISNULL(NULLIF(l.EjercicioPedido, 0), h.EjercicioPed) ' +
+    '                        AND p.Serie = ISNULL(NULLIF(LTRIM(RTRIM(l.SeriePedido)), ''''), ISNULL(h.SeriePed, '''')) ' +
+    '                        AND p.NroPedido = ISNULL(NULLIF(l.NroPedido, 0), h.NroPedido) ' +
+    '                        AND p.Id = l.IdPed ' +
+    'LEFT JOIN dbo.ocalm alml ON alml.Empresa = l.Empresa ' +
+    '                        AND alml.Almacen = l.Almacen ' +
+    'LEFT JOIN dbo.ocartcol ac ON ac.Articulo = l.Articulo ' +
+    '                         AND ac.Color    = l.Color ' +
+    'LEFT JOIN dbo.occolor co ON co.ColorBasico = ac.ColorBasico ' +
+    'WHERE h.TipoDoc = ''RP''';
+  cColsCab =
+    'NUMERO_DEVC, SERIE_DEVC, FECHA_DEVC, ESTADO_DEVC, NUMERO_PED_DEVC, ' +
+    'SERIE_PED_DEVC, NUMERO_FAC_DEVC, SERIE_FAC_DEVC, CODIGO_EMP_DEVC, ' +
+    'CODIGO_PRV_DEVC, RAZON_SOCIAL_PRV_DEVC, ' +
+    'NIF_PRV_DEVC, DIRECCION1_PRV_DEVC, DIRECCION2_PRV_DEVC, POBLACION_PRV_DEVC, ' +
+    'PROVINCIA_PRV_DEVC, CODIGO_POSTAL_PRV_DEVC, REF_PROVEEDOR_DEVC, ' +
+    'CODIGO_ALM_DEVC, TRANSPORTISTA_DEVC, PORCENTAJE_IVAN_DEVC, TOTAL_IVAN_DEVC, ' +
+    'PORCENTAJE_IVAR_DEVC, TOTAL_IVAR_DEVC, PORCENTAJE_IVAS_DEVC, TOTAL_IVAS_DEVC, ' +
+    'PORCENTAJE_IVAE_DEVC, TOTAL_IVAE_DEVC, TOTAL_BASES_DEVC, ' +
+    'TOTAL_IMPUESTOS_DEVC, TOTAL_LIQUIDO_DEVC, FORMA_PAGO_DEVC, ' +
+    'CONTADOR_LINEAS_DEVC, COMENTARIOS_DEVC, OBSERVACIONES_DEVC, ' +
+    'ESPIVOTE_HORIZONTAL_DEVC, INSTANTE_ALTA, INSTANTE_MODIF, ' +
+    'USUARIO_ALTA, USUARIO_MODIF';
+  cColsLin =
+    'NUMERO_DEVC_DEVCLIN, SERIE_DEVC_DEVCLIN, LINEA_DEVCLIN, ' +
+    'NUMERO_PEDC_DEVCLIN, SERIE_PEDC_DEVCLIN, LINEA_PEDC_DEVCLIN, ' +
+    'CODIGO_ART_DEVCLIN, CODIGO_UNIDAD_DEVCLIN, REF_PRV_DEVCLIN, ' +
+    'ID_AC_PIVOT_DEVCLIN, DESCRIPCION_ARTICULO_DEVCLIN, CANTIDAD_DEVCLIN, ' +
+    'TOTAL_UNIDADES_DEVCLIN, TIPO_IVA_ARTICULO_DEVCLIN, PORCENTAJE_IVA_DEVCLIN, ' +
+    'PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN, PRECIO_COMPRA_CIVA_ARTICULO_DEVCLIN, ' +
+    'TOTAL_DEVCLIN, CODIGO_ALMACEN_DEVCLIN, DESCRIPCION_VARIACION_DEVCLIN, ' +
+    'ESFACTURADA_DEVCLIN, NUMERO_FAC_DEVCLIN, SERIE_FAC_DEVCLIN, ' +
+    'LINEA_FAC_DEVCLIN, INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, ' +
+    'USUARIO_MODIF';
+var
+  qCab, qLin:       TUniQuery;
+  bCab, bLin:       TBulkInsert;
+  oMapTal:          TDictionary<string, Integer>;
+  sAhora, sUser:    string;
+  sNum, sSerie, sAlm, sArt, sUni, sEstado, sNumPed, sSeriePed: string;
+  sNumFac, sSerieFac, sEsFacturada, sLineaPed, sVar: string;
+  iva:              TIvaCompra;
+begin
+  AsegurarEsquemaDevolucionesCompra(Eng);
+  BorrarPorUsuario(Eng, 'fza_devoluciones_compra_lineas');
+  BorrarPorUsuario(Eng, 'fza_devoluciones_compra');
+  sAhora := DateTimeASQL(Now);
+  sUser  := ValorOrNull(Eng.Usuario);
+  // --- PASO 1: cabeceras (ocreppro) ---
+  bCab := TBulkInsert.Create(Eng.ConDst, 'fza_devoluciones_compra',
+                             cColsCab, BATCH);
+  qCab := NuevoQOrigen(Eng, cSelCab);
+  qCab.UniDirectional := True;
+  try
+    Eng.Log('  compras devolucion 1/2: cabeceras (ocreppro)...');
+    Eng.SetTotal(Eng.ContarOrigen(
+      'SELECT COUNT(*) FROM dbo.ocreppro r ' + cWhere));
+    qCab.Open;
+    while not qCab.Eof do
+    begin
+      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      begin
+        Eng.Log('  Cancelacion detectada en Devoluciones de compra...');
+        Break;
+      end;
+      Inc(Stats.Leidas);
+      Eng.IncRow;
+      sSerie := Format('%d.%s', [qCab.FieldByName('Ejercicio').AsInteger,
+                  Trim(qCab.FieldByName('Serie').AsString)]);
+      sNum   := Format('%.6d', [qCab.FieldByName('NroRep').AsInteger]);
+      sAlm   := UpperCase(Trim(qCab.FieldByName('AbrevAlm').AsString));
+      if sAlm = '' then
+        sAlm := IntToStr(qCab.FieldByName('Almacen').AsInteger);
+      if qCab.FieldByName('NroFactura').AsInteger > 0 then
+      begin
+        sEstado := 'FACTURADO';
+        sNumFac := ValorOrNull(Format('%.6d',
+                     [qCab.FieldByName('NroFactura').AsInteger]));
+        sSerieFac := ValorOrNull(Format('%d.%s',
+                       [qCab.FieldByName('EjercicioFra').AsInteger,
+                        Trim(qCab.FieldByName('SerieFra').AsString)]));
+      end
+      else
+      begin
+        sEstado := 'CERRADO';
+        sNumFac := 'NULL';
+        sSerieFac := 'NULL';
+      end;
+      if qCab.FieldByName('NroPedido').AsInteger > 0 then
+      begin
+        sNumPed := ValorOrNull(Format('%.6d',
+                     [qCab.FieldByName('NroPedido').AsInteger]));
+        sSeriePed := ValorOrNull(Format('%d.%s',
+                       [qCab.FieldByName('EjercicioPed').AsInteger,
+                        Trim(qCab.FieldByName('SeriePed').AsString)]));
+      end
+      else
+      begin
+        sNumPed := 'NULL';
+        sSeriePed := 'NULL';
+      end;
+      CalcularIvaCompra(qCab, iva);
+      try
+        bCab.Add(UnirValores([
+           ValorOrNull(sNum), ValorOrNull(sSerie),
+           FechaCampoASQL(qCab, 'Fecha'),
+           ValorOrNull(sEstado), sNumPed, sSeriePed, sNumFac, sSerieFac,
+           ValorOrNull(IntToStr(qCab.FieldByName('Empresa').AsInteger)),
+           ValorOrNull(Trim(qCab.FieldByName('Proveedor').AsString)),
+           ValorOrNull(Copy(Trim(qCab.FieldByName('RazonSocial').AsString), 1, 200)),
+           ValorOrNull(Trim(qCab.FieldByName('NIF').AsString)),
+           ValorOrNull(Copy(Trim(qCab.FieldByName('Direccion1').AsString), 1, 200)),
+           ValorOrNull(Copy(Trim(qCab.FieldByName('Direccion2').AsString), 1, 200)),
+           ValorOrNull(Copy(Trim(qCab.FieldByName('Poblacion').AsString), 1, 200)),
+           ValorOrNull(Copy(Trim(qCab.FieldByName('Provincia').AsString), 1, 200)),
+           ValorOrNull(Trim(qCab.FieldByName('CodPostal').AsString)),
+           ValorOrNull(Trim(qCab.FieldByName('DocExterno').AsString)),
+           ValorOrNull(sAlm),
+           ValorOrNull(Trim(qCab.FieldByName('FormaEnvio').AsString)),
+           F(iva.Pn), F(iva.Tn), F(iva.Pr), F(iva.Tr),
+           F(iva.Ps), F(iva.Ts), F(iva.Pe), F(iva.Te),
+           F(qCab.FieldByName('ImpBaseImp').AsFloat),
+           F(qCab.FieldByName('TotalIVA').AsFloat),
+           F(qCab.FieldByName('ImpLiquido').AsFloat),
+           ValorOrNull(CodigoFormaPagoCompra(qCab)),
+           ValorOrNull(Format('%.8d',
+             [qCab.FieldByName('MaxLinea').AsInteger])),
+           ValorOrNull(Copy(Trim(qCab.FieldByName('ObsRep').AsString), 1, 1000)),
+           ValorOrNull(Copy(Trim(qCab.FieldByName('ObsRep').AsString), 1, 2000)),
+           ValorOrNull('S'), sAhora, sAhora, sUser, sUser]));
+        Inc(Stats.Insertadas);
+      except
+        on E: Exception do
+        begin
+          Inc(Stats.Errores);
+          Eng.LogError('devolucion_compra', sSerie + '/' + sNum, E.Message,
+            '', 'requiere Empresas/Almacenes/Proveedores migrados');
+        end;
+      end;
+      qCab.Next;
+    end;
+    bCab.FlushPendiente;
+  finally
+    bCab.Free;
+    qCab.Free;
+  end;
+  // --- PASO 2: líneas (ocrepproart) ---
+  oMapTal := TDictionary<string, Integer>.Create;
+  CargarMapaTallaje(Eng, oMapTal);
+  bLin := TBulkInsert.Create(Eng.ConDst, 'fza_devoluciones_compra_lineas',
+                             cColsLin, BATCH);
+  qLin := NuevoQOrigen(Eng, cSelLin);
+  qLin.UniDirectional := True;
+  try
+    Eng.Log('  compras devolucion 2/2: lineas (ocrepproart)...');
+    Eng.SetTotal(Eng.ContarOrigen(
+      'SELECT COUNT(*) FROM dbo.ocrepproart l ' +
+      'INNER JOIN dbo.ocreppro h ON h.Empresa = l.Empresa ' +
+      '   AND h.Ejercicio = l.Ejercicio AND h.Serie = l.Serie ' +
+      '   AND h.NroRep = l.NroRep WHERE h.TipoDoc = ''RP'''));
+    qLin.Open;
+    while not qLin.Eof do
+    begin
+      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      begin
+        Eng.Log('  Cancelacion detectada en lineas de devolucion...');
+        Break;
+      end;
+      Inc(Stats.Leidas);
+      Eng.IncRow;
+      sSerie := Format('%d.%s', [qLin.FieldByName('Ejercicio').AsInteger,
+                  Trim(qLin.FieldByName('Serie').AsString)]);
+      sNum   := Format('%.6d', [qLin.FieldByName('NroRep').AsInteger]);
+      sArt   := Trim(qLin.FieldByName('Articulo').AsString);
+      sUni   := ConstruirCodigoUnidad(sArt,
+                  Trim(qLin.FieldByName('DescColor').AsString),
+                  Trim(qLin.FieldByName('Talla').AsString));
+      sAlm   := UpperCase(Trim(qLin.FieldByName('AbrevAlmLin').AsString));
+      if sAlm = '' then
+        sAlm := IntToStr(qLin.FieldByName('AlmLin').AsInteger);
+      if qLin.FieldByName('NroPedido').AsInteger > 0 then
+      begin
+        sNumPed := ValorOrNull(Format('%.6d',
+                     [qLin.FieldByName('NroPedido').AsInteger]));
+        sSeriePed := ValorOrNull(Format('%d.%s',
+                       [qLin.FieldByName('EjercicioPedido').AsInteger,
+                        Trim(qLin.FieldByName('SeriePedido').AsString)]));
+        if qLin.FieldByName('OrdenPedido').AsInteger > 0 then
+          sLineaPed := ValorOrNull(Format('%.4d',
+                         [qLin.FieldByName('OrdenPedido').AsInteger]))
+        else
+          sLineaPed := 'NULL';
+      end
+      else
+      begin
+        sNumPed := 'NULL';
+        sSeriePed := 'NULL';
+        sLineaPed := 'NULL';
+      end;
+      if qLin.FieldByName('NroFactura').AsInteger > 0 then
+      begin
+        sEsFacturada := ValorOrNull('S');
+        sNumFac := ValorOrNull(Format('%.6d',
+                     [qLin.FieldByName('NroFactura').AsInteger]));
+        sSerieFac := ValorOrNull(Format('%d.%s',
+                       [qLin.FieldByName('EjercicioFactura').AsInteger,
+                        Trim(qLin.FieldByName('SerieFactura').AsString)]));
+      end
+      else
+      begin
+        sEsFacturada := ValorOrNull('N');
+        sNumFac := 'NULL';
+        sSerieFac := 'NULL';
+      end;
+      sVar := Trim(qLin.FieldByName('DescColor').AsString);
+      if Trim(qLin.FieldByName('Talla').AsString) <> '' then
+      begin
+        if sVar <> '' then
+          sVar := sVar + ' / ';
+        sVar := sVar + Trim(qLin.FieldByName('Talla').AsString);
+      end;
+      try
+        bLin.Add(UnirValores([
+           ValorOrNull(sNum), ValorOrNull(sSerie),
+           ValorOrNull(Format('%.4d',
+             [qLin.FieldByName('LineaFactuzam').AsInteger])),
+           sNumPed, sSeriePed, sLineaPed,
+           ValorOrNull(sArt), ValorOrNull(sUni),
+           ValorOrNull(Trim(qLin.FieldByName('Modelo').AsString)),
+           AcPivotToken(oMapTal, sArt),
+           ValorOrNull(Copy(Trim(qLin.FieldByName('Descripcion').AsString), 1, 100)),
+           F(qLin.FieldByName('Cantidad').AsFloat),
+           F(qLin.FieldByName('Cantidad').AsFloat),
+           ValorOrNull(TipoIvaArticuloCompra(qLin.FieldByName('PorIVA').AsFloat)),
+           F(qLin.FieldByName('PorIVA').AsFloat),
+           F(qLin.FieldByName('PrecioSIva').AsFloat),
+           F(qLin.FieldByName('PrecioCIva').AsFloat),
+           F(qLin.FieldByName('ImpNetoSIva').AsFloat),
+           ValorOrNull(sAlm), ValorOrNull(Copy(sVar, 1, 100)),
+           sEsFacturada, sNumFac, sSerieFac, 'NULL',
+           sAhora, sAhora, sUser, sUser]));
+        Inc(Stats.Insertadas);
+      except
+        on E: Exception do
+        begin
+          Inc(Stats.Errores);
+          Eng.LogError('devolucion_compra_linea', sSerie + '/' + sNum,
+            E.Message, Format('orden=%d', [qLin.FieldByName('Orden').AsInteger]),
+            '');
+        end;
+      end;
+      qLin.Next;
+    end;
+    bLin.FlushPendiente;
+  finally
+    bLin.Free;
+    qLin.Free;
+    oMapTal.Free;
+  end;
+  if not Eng.IsCancelado then
+  begin
+    EnlazarEmpresaCompra(Eng, 'fza_devoluciones_compra', 'DEVC');
+    Eng.Log('  devoluciones de compra: datos de empresa emisora rellenados.');
+  end;
+end;
+
 procedure EnlazarAlbaranesDesdeFacturasCompra(Eng: TMigEngine);
 var
   q: TUniQuery;
@@ -1003,7 +1434,7 @@ begin
 end;
 
 // =========================================================================
-//  3. Facturas de compra
+//  4. Facturas de compra
 // =========================================================================
 
 procedure MigrarFacturasCompra(Eng: TMigEngine; var Stats: TMigStats);
