@@ -74,37 +74,51 @@ begin
     Result := IntToStr(RandomRange(10000, High(Integer)));  // fallback to simple random number
 end;
 
+function uSEPA_NormalizarChar(c: Char): Char;
+begin
+case Ord(c) of
+  $00C0..$00C5:
+    Result := 'A';
+  $00E0..$00E5:
+    Result := 'a';
+  $00C8..$00CB:
+    Result := 'E';
+  $00E8..$00EB:
+    Result := 'e';
+  $00CC..$00CF:
+    Result := 'I';
+  $00EC..$00EF:
+    Result := 'i';
+  $00D2..$00D6, $00D8:
+    Result := 'O';
+  $00F2..$00F6, $00F8:
+    Result := 'o';
+  $00D9..$00DC:
+    Result := 'U';
+  $00F9..$00FC:
+    Result := 'u';
+  $00D1:
+    Result := 'N';
+  $00F1:
+    Result := 'n';
+  $00C7:
+    Result := 'C';
+  $00E7:
+    Result := 'c';
+  else
+    Result := c;
+  end;
+end;
+
 function uSEPA_CleanStr(sIn:string; iMaxLen : Integer = -1):string;
 var
 i    : integer;
 sOut : string;
 begin
 sOut:=sIn;
-sOut := StringReplace(sOut,'á','a',[rfReplaceAll]);
-sOut := StringReplace(sOut,'Á','A',[rfReplaceAll]);
-sOut := StringReplace(sOut,'é','e',[rfReplaceAll]);
-sOut := StringReplace(sOut,'É','E',[rfReplaceAll]);
-sOut := StringReplace(sOut,'í','i',[rfReplaceAll]);
-sOut := StringReplace(sOut,'Í','I',[rfReplaceAll]);
-sOut := StringReplace(sOut,'ó','o',[rfReplaceAll]);
-sOut := StringReplace(sOut,'Ó','O',[rfReplaceAll]);
-sOut := StringReplace(sOut,'ú','u',[rfReplaceAll]);
-sOut := StringReplace(sOut,'Ú','U',[rfReplaceAll]);
-sOut := StringReplace(sOut,'Á','A',[rfReplaceAll]);
-sOut := StringReplace(sOut,'é','e',[rfReplaceAll]);
-sOut := StringReplace(sOut,'É','E',[rfReplaceAll]);
-sOut := StringReplace(sOut,'í','i',[rfReplaceAll]);
-sOut := StringReplace(sOut,'Í','I',[rfReplaceAll]);
-sOut := StringReplace(sOut,'ó','o',[rfReplaceAll]);
-sOut := StringReplace(sOut,'Ó','O',[rfReplaceAll]);
-sOut := StringReplace(sOut,'ú','u',[rfReplaceAll]);
-sOut := StringReplace(sOut,'Ú','U',[rfReplaceAll]);
-sOut := StringReplace(sOut,'Ö','O',[rfReplaceAll]);
-sOut := StringReplace(sOut,'ö','o',[rfReplaceAll]);
-sOut := StringReplace(sOut,'Ñ','N',[rfReplaceAll]);
-sOut := StringReplace(sOut,'ñ','n',[rfReplaceAll]);
-sOut := StringReplace(sOut,'Ç','C',[rfReplaceAll]);
-sOut := StringReplace(sOut,'ç','c',[rfReplaceAll]);
+// Normalizar acentos antes de aplicar el alfabeto SEPA.
+for i := 1 to Length(sOut) do
+  sOut[i] := uSEPA_NormalizarChar(sOut[i]);
 
 // Recorrer el sOut para eliminar los caracteres no permitidos
 for i := 1 to Length(sOut)
