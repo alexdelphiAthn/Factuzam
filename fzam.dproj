@@ -185,6 +185,7 @@
         <DCCReference Include="src\Lib\inLibNet.pas"/>
         <DCCReference Include="src\Lib\inLibScriptDB.pas"/>
         <DCCReference Include="src\Lib\inLibIBAN.pas"/>
+        <DCCReference Include="src\Lib\inLibSepaRemesasVenta.pas"/>
         <DCCReference Include="src\Lib\inLibFacturas.pas"/>
         <DCCReference Include="src\Lib\inLibFormatoDocumento.pas"/>
         <DCCReference Include="src\Lib\inLibInformesGuiasCache.pas"/>
@@ -606,6 +607,9 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibBuscarImpresora.pas"/>
         <DCCReference Include="src\Lib3par\DelphiZXIngQRCode.pas"/>
+        <DCCReference Include="src\Lib3par\uDJMSepa.pas"/>
+        <DCCReference Include="src\Lib3par\uDJMSepa1914XML.pas"/>
+        <DCCReference Include="src\Lib3par\uDJMSepa3414XML.pas"/>
         <DCCReference Include="src\Lib\inLibGenerarTicket.pas"/>
         <DCCReference Include="src\Lib\inLibGenerarTicketBD.pas"/>
         <DCCReference Include="src\Lib\inLibXades.pas"/>

@@ -35,6 +35,7 @@ var
   {$ifend}
 begin
   {$if CompilerVersion>22}
+    FS := TFormatSettings.Create;
     OldDecimalSeparator := FS.DecimalSeparator;
     FS.DecimalSeparator := '.';
     Result := CurrToStrF(d, ffFixed, digits, FS);
@@ -128,10 +129,14 @@ end;
 
 procedure uSEPA_writeBICInfo;
 begin
- {if (BIC = '') and (OthrID <> '') then
-    WriteLn(FsTxt, '<FinInstnId><Othr><Id>'+uSEPA_CleanString(OthrID)+'</Id></Othr></FinInstnId>')
-  else}
+  if Trim(sBIC) = '' then
+  begin
+    WriteLn(FTxt, '<FinInstnId><Othr><Id>NOTPROVIDED</Id></Othr></FinInstnId>');
+  end
+  else
+  begin
     WriteLn(FTxt, '<FinInstnId><BIC>'+uSEPA_CleanStr(sBIC)+'</BIC></FinInstnId>');
+  end;
 end;
 
 

@@ -39,6 +39,7 @@ type
     function ActualizarFechaCobro(AFecha: TDateTime): Boolean;
     function AsignarBancoRemesa(const ACodigoEmpban: string): Boolean;
     function CobroRealizadoRemesa: Double;
+    function GenerarOrdenSepa(const AArchivo: string): Integer;
     function PendienteRemesa: Double;
     function QuitarEfectoActual: Boolean;
     function RegistrarCobroEfectoActual(AFecha: TDateTime; AImporte: Double;
@@ -51,7 +52,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inMtoRemesasVenta;
+  inLibGlobalVar, inLibSepaRemesasVenta, inMtoRemesasVenta;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -525,6 +526,48 @@ begin
     end;
     if Result then
       RefrescarDatos;
+  end;
+end;
+
+function TdmRemesasVenta.GenerarOrdenSepa(const AArchivo: string): Integer;
+var
+  q: TUniQuery;
+  rSepa: TResultadoSepaRemesaVenta;
+  sNumeroRem: string;
+  sSerieRem: string;
+begin
+  Result := 0;
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+  begin
+    sSerieRem := unqryTablaG.FieldByName('SERIE_REMV').AsString;
+    sNumeroRem := unqryTablaG.FieldByName('NUMERO_REMV').AsString;
+    rSepa := GenerarSepaRemesaVenta(inLibGlobalVar.oConn, sSerieRem,
+      sNumeroRem, AArchivo);
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Text :=
+        'UPDATE fza_remesas_venta ' +
+        '   SET ARCHIVO_REMV = :archivo, ' +
+        '       NORMA_REMV = ''19.14'', ' +
+        '       ESTADO_REMV = CASE ' +
+        '         WHEN COALESCE(ESTADO_REMV, '''') IN ' +
+        '              (''ABIERTA'', ''CERRADA'') THEN ''ENVIADA'' ' +
+        '         ELSE ESTADO_REMV END, ' +
+        '       INSTANTE_MODIF = NOW(), ' +
+        '       USUARIO_MODIF = :usuario ' +
+        ' WHERE SERIE_REMV = :serie ' +
+        '   AND NUMERO_REMV = :numero';
+      q.ParamByName('archivo').AsString := rSepa.Archivo;
+      q.ParamByName('usuario').AsString := oUser;
+      q.ParamByName('serie').AsString := sSerieRem;
+      q.ParamByName('numero').AsString := sNumeroRem;
+      q.ExecSQL;
+    finally
+      FreeAndNil(q);
+    end;
+    Result := rSepa.NumCobros;
+    RefrescarDatos;
   end;
 end;
 
