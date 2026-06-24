@@ -1,6 +1,7 @@
 ; Empaquetador DEMO autoinstalable de Factuzam.
 ; Compilar desde esta carpeta con:
 ;   makensis factuzam_demo_autoinstalable.nsi
+; O desde Publicador, pasando VERSION con /DVERSION=...
 ;
 ; Ficheros esperados:
 ;   ..\Win64\Release\fzam.exe
@@ -19,7 +20,9 @@ RequestExecutionLevel admin
 
 !define APPNAME "Factuzam DEMO"
 !define COMPANYNAME "Factuzam"
-!define VERSION "1.0.15.202606240020.alpha"
+!ifndef VERSION
+  !define VERSION "1.0.15.202606240100.alpha"
+!endif
 !define DBNAME "factuzam"
 !define DBPORT "3310"
 !define DBPASS "Zamora2023"

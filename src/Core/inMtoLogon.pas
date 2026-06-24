@@ -620,9 +620,7 @@ begin
                     sMensaje + sLineBreak + sLineBreak +
                     'La caja queda limitada a ' +
                     IntToStr(LIMITE_TICKETS_DEMO_DIA) +
-                    ' tickets al día.' + sLineBreak +
-                    'Para registrar esta instalación ejecute la aplicación ' +
-                    'con /' + CONMUTADOR_REGISTRO_LICENCIA + '.');
+                    ' tickets al día.');
       end;
     except
       on E: Exception do
@@ -636,9 +634,7 @@ begin
                     sLineBreak + E.Message + sLineBreak + sLineBreak +
                     'La caja queda limitada a ' +
                     IntToStr(LIMITE_TICKETS_DEMO_DIA) +
-                    ' tickets al día.' + sLineBreak +
-                    'Para registrar esta instalación ejecute la aplicación ' +
-                    'con /' + CONMUTADOR_REGISTRO_LICENCIA + '.');
+                    ' tickets al día.');
       end;
     end;
   end;

@@ -1124,11 +1124,7 @@ begin
         'Ya se han emitido ' + IntToStr(iTickets) + ' tickets el día ' +
         FormatDateTime('dd/mm/yyyy', AFecha) + '.' + sLineBreak +
         'El límite de la copia DEMO es ' +
-        IntToStr(LIMITE_TICKETS_DEMO_DIA) + ' tickets al día.' +
-        sLineBreak + sLineBreak +
-        'Para seguir emitiendo tickets debe registrar esta instalación ' +
-        'ejecutando la aplicación con /' +
-        CONMUTADOR_REGISTRO_LICENCIA + '.');
+        IntToStr(LIMITE_TICKETS_DEMO_DIA) + ' tickets al día.');
     end;
   end;
 end;

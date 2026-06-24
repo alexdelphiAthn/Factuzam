@@ -394,11 +394,13 @@ begin
   SourceViews := FSourceDB.GetViews;
   try
     FWriter.AddComment(TRes.MsgHeaderViews);
+    FWriter.AddCommand('');
+    for i := SourceViews.Count - 1 downto 0 do
+      FWriter.AddCommand(FHelpers.GenerateDropView(SourceViews[i]));
+    FWriter.AddCommand('');
     for i := 0 to SourceViews.Count - 1 do
     begin
       FWriter.AddComment(TRes.MsgRecreateView + SourceViews[i]);
-      // MySQL suele requerir DROP antes de create si cambia la definición
-      FWriter.AddCommand(FHelpers.GenerateDropView(SourceViews[i]));
       FWriter.AddCommand(FSourceDB.GetViewDefinition(SourceViews[i]));
     end;
   finally
