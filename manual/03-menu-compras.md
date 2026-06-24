@@ -102,7 +102,6 @@ Cada línea es un **artículo + color** con su escandallo de tallas:
 *▢ Captura pendiente — Pestaña Líneas de Artículos con la matriz de tallas.*
 
 ![Pestaña Proveedor de una sesión de compra](img/03-sesiones-proveedor.png)
-*▢ Captura pendiente — Pestaña Proveedor con ficha, kits disponibles y botón Aplicar kit.*
 
 > **Código duplicado.** Si tecleas un código de artículo que **ya existe**
 > en el catálogo, la aplicación lo detecta y pregunta qué hacer:
@@ -213,7 +212,6 @@ El botón **Crear albarán** permite dos flujos:
   si se está recibiendo mercancía en varias tandas.
 
 ![Crear albarán desde pedido de compra](img/03-pedidos-crear-albaran.png)
-*▢ Captura pendiente — Modal de almacén con la opción de incorporar a un albarán existente.*
 
 ---
 
@@ -262,8 +260,18 @@ Utilidad para convertir uno o varios **albaranes de compra** en un
 **borrador de compra**. Filtra por empresa y proveedor, muestra los
 albaranes pendientes y permite agrupar varios en el mismo borrador.
 
+El formulario trabaja en dos modos:
+
+| Modo | Resultado |
+|------|-----------|
+| **Crear borrador nuevo** | Genera un documento nuevo para los albaranes seleccionados. |
+| **Incorporar a un borrador existente** | Añade los albaranes seleccionados a un borrador abierto del mismo proveedor y empresa. |
+
+Pulsa **Cargar** para listar los albaranes candidatos y **Crear
+borradores** para materializarlos. Al terminar se abre el borrador/factura
+de compra resultante para revisar líneas, totales y efectos.
+
 ![Crear borradores desde albaranes de compra](img/03-compras-crear-borradores.png)
-*▢ Captura pendiente — Modal de selección de albaranes de compra pendientes de facturar.*
 
 ---
 
@@ -273,22 +281,33 @@ albaranes pendientes y permite agrupar varios en el mismo borrador.
 
 Mantenimiento de **Borradores de Compra**. Es el documento de proveedor
 que se registra para control de gasto, IVA soportado y vencimientos de
-pago. Se crea manualmente o a partir de albaranes de compra.
+pago. En la base de datos se guarda como **factura de compra**; el menú
+mantiene la etiqueta Borradores para el trabajo previo de revisión.
+
+Se crea manualmente o a partir de albaranes de compra. Cuando viene de
+albaranes, conserva la referencia al documento de origen y marca esos
+albaranes como facturados para evitar duplicidades.
 
 ![Facturas de compra](img/03-facturas-compra.png)
 *▢ Captura pendiente — Mantenimiento de Borradores de Compra con pestaña Efectos.*
 
 La ficha incluye:
 
-- **Cabecera** — proveedor, empresa, fecha, referencia/documento externo,
-  forma de pago y datos fiscales.
-- **Líneas** — artículos procedentes de los albaranes o introducidos a
-  mano.
+- **Cabecera** — proveedor, empresa, fecha, referencia/documento externo, forma de pago y datos fiscales.
+- **Líneas** — artículos procedentes de los albaranes o introducidos a mano.
 - **Efectos** — vencimientos generados desde la forma de pago.
 
 El botón **Generar efectos** reparte el total líquido en vencimientos y
 pregunta qué **banco de la empresa** se usará como cuenta de cargo. Si el
 proveedor tiene banco para pagos por defecto, aparece preseleccionado.
+
+Estados relacionados:
+
+| Estado | Significado |
+|--------|-------------|
+| **ABIERTO** | Documento editable, pendiente de cerrar o revisar. |
+| **CERRADO** | Documento validado para el circuito de pagos. |
+| **FACTURADO** | Albarán de compra ya incorporado a un borrador/factura de proveedor. |
 
 ---
 
@@ -301,7 +320,6 @@ pago pendiente, pagada, remesada o conciliada. Desde aquí puedes revisar
 vencimientos, registrar pagos y fusionar impagados en un efecto resumen.
 
 ![Efectos de pago a proveedor](img/03-efectos-pago.png)
-*▢ Captura pendiente — Efectos de pago con estado, vencimiento, pendiente y botones de pago/fusión.*
 
 Estados habituales:
 
@@ -320,7 +338,6 @@ Agrupa efectos de pago para preparar una orden de pago bancaria. La remesa
 recoge su banco de cargo, fecha de cargo, número de efectos e importe total.
 
 ![Remesas de pago](img/03-remesas-pago.png)
-*▢ Captura pendiente — Remesa de pago con banco, total y efectos asignados.*
 
 Acciones principales:
 

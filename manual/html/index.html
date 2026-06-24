@@ -34,7 +34,7 @@ más relevantes.</p>
 <tr><td><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></td><td>Cómo funcionan las pantallas de mantenimiento: lista, ficha, búsqueda, navegador y exportación. <strong>Léelo antes que los demás.</strong></td></tr>
 <tr><td><a href="02-menu-archivo.html">02 · Menú Archivo</a></td><td>Datos maestros: Empresas, Almacenes, Clientes, Proveedores, Artículos y Tablas Auxiliares.</td></tr>
 <tr><td><a href="03-menu-compras.html">03 · Menú Compras</a></td><td>Sesiones de compra, Pedidos, Albaranes, Devoluciones a proveedor y Facturas de compra.</td></tr>
-<tr><td><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></td><td>Facturación a mayor: Facturas, Pedidos, Albaranes y Listados de ventas.</td></tr>
+<tr><td><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></td><td>Facturación a mayor: Borradores, cartera de cobro, Pedidos, Albaranes y Listados de ventas.</td></tr>
 <tr><td><a href="05-menu-caja.html">05 · Menú Caja</a></td><td>Punto de venta (TPV): menú de caja, parámetros, depósitos, históricos, arqueos y facturas simplificadas.</td></tr>
 <tr><td><a href="06-menu-almacen.html">06 · Menú Almacén</a></td><td>Movimientos de almacén, Inventarios e Informes de stock.</td></tr>
 <tr><td><a href="07-menu-otros.html">07 · Menú Otros</a></td><td>Parámetros del entorno, IVA, Contadores, Formas de pago documentos, Usuarios/Permisos, Copias de seguridad y Generador de procesos.</td></tr>
@@ -50,13 +50,14 @@ más relevantes.</p>
 <pre><code>Archivo        Compras        Ventas Mayor   Caja           Almacén        Otros          Verifactu      Ayuda
 ─────────      ─────────      ────────────   ─────          ────────       ─────          ─────────     ─────
 Empresas       Sesiones       Borradores     Menú de Caja   Movimientos    Parám. entorno Declaración   Acerca de
-Almacenes      Pedidos        Pedidos        Parám. de Caja Inventarios    Grupos de IVA  Cola envíos
-Clientes       Albaranes      Albaranes      Formas Pago    Informes       Impuesto IVA   Log
-Proveedores    Devoluciones   Listados       Depósitos                     Contadores
-Artículos      Crear borrad.                 Históricos                    Formas pago docs
-Tablas Aux.    Borradores                    Borrad. Simplif.              Usuarios y Perfiles
-Invocar login  Efectos pago                                                Copias de Seguridad
+Almacenes      Pedidos        Efectos cobro  Parám. de Caja Inventarios    Grupos de IVA  Cola envíos
+Clientes       Albaranes      Remesas cobro  Formas Pago    Informes       Impuesto IVA   Log
+Proveedores    Devoluciones   Cargar efectos Depósitos                     Contadores
+Artículos      Crear borrad.  Pedidos        Históricos                    Formas pago docs
+Tablas Aux.    Borradores     Albaranes      Borrad. Simplif.              Usuarios y Perfiles
+Invocar login  Efectos pago   Listados                                     Copias de Seguridad
 Salir          Remesas pago                                                Generador de Procesos
+               Cargar efectos
                Listados</code></pre>
 <blockquote><p><strong>Nota:</strong> las opciones visibles dependen de tu <strong>perfil de usuario y de
 los permisos</strong> asignados. Si una opción aparece deshabilitada o no
@@ -69,7 +70,7 @@ aparece, consulta con el administrador (ver
 <ul><li>Las teclas se muestran entre corchetes, p. ej. <code>[F12]</code>, <code>[Esc]</code>,</li></ul>
 <p>  <code>[Ctrl]+[A]</code>.</p>
 </article>
-<footer>Manual de Factuzam · generado el 20/06/2026</footer>
+<footer>Manual de Factuzam · generado el 24/06/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

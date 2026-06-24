@@ -1616,10 +1616,19 @@ end;
 procedure TdmInventarios.CargarAlmacenesPorEmpresa(
   const ACodigoEmpresa: string);
 begin
-  unqryAlmacenes.Close;
-  if ACodigoEmpresa = '' then Exit;
-  unqryAlmacenes.ParamByName('EMPRESA').AsString := ACodigoEmpresa;
-  unqryAlmacenes.Open;
+  if ACodigoEmpresa = '' then
+  begin
+    if unqryAlmacenes.Active then
+      unqryAlmacenes.Close;
+  end
+  else if not (unqryAlmacenes.Active and
+               SameText(unqryAlmacenes.ParamByName('EMPRESA').AsString,
+                        ACodigoEmpresa)) then
+  begin
+    unqryAlmacenes.Close;
+    unqryAlmacenes.ParamByName('EMPRESA').AsString := ACodigoEmpresa;
+    unqryAlmacenes.Open;
+  end;
 end;
 
 procedure TdmInventarios.CargarSeriesPorEmpresa(const ACodigoEmpresa: string);

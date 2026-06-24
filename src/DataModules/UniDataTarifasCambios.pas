@@ -78,10 +78,24 @@ end;
 
 procedure TdmTarifasCambios.DataModuleDestroy(Sender: TObject);
 begin
+  CancelarEjecucionActiva;
+  if Assigned(dsLineas) then
+    dsLineas.DataSet := nil;
+  if Assigned(dsTarifas) then
+    dsTarifas.DataSet := nil;
   if Assigned(unqryLineas) then
-    unqryLineas.Close;
+  begin
+    if unqryLineas.Active then
+      unqryLineas.Close;
+    unqryLineas.MasterSource := nil;
+    unqryLineas.MasterFields := '';
+    unqryLineas.DetailFields := '';
+  end;
   if Assigned(unqryTarifas) then
-    unqryTarifas.Close;
+  begin
+    if unqryTarifas.Active then
+      unqryTarifas.Close;
+  end;
   inherited;
 end;
 
@@ -317,6 +331,19 @@ begin
       finally
         unqryLineas.EnableControls;
       end;
+      qry.SQL.Text :=
+        'UPDATE fza_tarifas_cambios SET ' +
+        '  ESTADO_TARC = ''BORRADOR'', ' +
+        '  INSTANTE_APLICACION_TARC = NULL, ' +
+        '  USUARIO_APLICACION_TARC = NULL, ' +
+        '  USUARIO_MODIF = :USUARIO, ' +
+        '  INSTANTE_MODIF = NOW() ' +
+        'WHERE CODIGO_TARC = :CODIGO';
+      qry.ParamByName('USUARIO').AsString := oUser;
+      qry.ParamByName('CODIGO').AsInteger :=
+        unqryTablaG.FieldByName('CODIGO_TARC').AsInteger;
+      qry.Execute;
+      unqryTablaG.Refresh;
       unqryLineas.Refresh;
     finally
       FreeAndNil(qry);

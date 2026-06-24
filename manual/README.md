@@ -19,7 +19,7 @@ más relevantes.
 | [01 · Conceptos comunes](01-conceptos-comunes.md) | Cómo funcionan las pantallas de mantenimiento: lista, ficha, búsqueda, navegador y exportación. **Léelo antes que los demás.** |
 | [02 · Menú Archivo](02-menu-archivo.md) | Datos maestros: Empresas, Almacenes, Clientes, Proveedores, Artículos y Tablas Auxiliares. |
 | [03 · Menú Compras](03-menu-compras.md) | Sesiones de compra, Pedidos, Albaranes, Devoluciones a proveedor y Facturas de compra. |
-| [04 · Menú Ventas Mayor](04-menu-ventas-mayor.md) | Facturación a mayor: Facturas, Pedidos, Albaranes y Listados de ventas. |
+| [04 · Menú Ventas Mayor](04-menu-ventas-mayor.md) | Facturación a mayor: Borradores, cartera de cobro, Pedidos, Albaranes y Listados de ventas. |
 | [05 · Menú Caja](05-menu-caja.md) | Punto de venta (TPV): menú de caja, parámetros, depósitos, históricos, arqueos y facturas simplificadas. |
 | [06 · Menú Almacén](06-menu-almacen.md) | Movimientos de almacén, Inventarios e Informes de stock. |
 | [07 · Menú Otros](07-menu-otros.md) | Parámetros del entorno, IVA, Contadores, Formas de pago documentos, Usuarios/Permisos, Copias de seguridad y Generador de procesos. |
@@ -37,13 +37,14 @@ más relevantes.
 Archivo        Compras        Ventas Mayor   Caja           Almacén        Otros          Verifactu      Ayuda
 ─────────      ─────────      ────────────   ─────          ────────       ─────          ─────────     ─────
 Empresas       Sesiones       Borradores     Menú de Caja   Movimientos    Parám. entorno Declaración   Acerca de
-Almacenes      Pedidos        Pedidos        Parám. de Caja Inventarios    Grupos de IVA  Cola envíos
-Clientes       Albaranes      Albaranes      Formas Pago    Informes       Impuesto IVA   Log
-Proveedores    Devoluciones   Listados       Depósitos                     Contadores
-Artículos      Crear borrad.                 Históricos                    Formas pago docs
-Tablas Aux.    Borradores                    Borrad. Simplif.              Usuarios y Perfiles
-Invocar login  Efectos pago                                                Copias de Seguridad
+Almacenes      Pedidos        Efectos cobro  Parám. de Caja Inventarios    Grupos de IVA  Cola envíos
+Clientes       Albaranes      Remesas cobro  Formas Pago    Informes       Impuesto IVA   Log
+Proveedores    Devoluciones   Cargar efectos Depósitos                     Contadores
+Artículos      Crear borrad.  Pedidos        Históricos                    Formas pago docs
+Tablas Aux.    Borradores     Albaranes      Borrad. Simplif.              Usuarios y Perfiles
+Invocar login  Efectos pago   Listados                                     Copias de Seguridad
 Salir          Remesas pago                                                Generador de Procesos
+               Cargar efectos
                Listados
 ```
 

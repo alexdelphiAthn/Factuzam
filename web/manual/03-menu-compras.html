@@ -108,8 +108,7 @@ línea o al aplicar un kit de proveedor.</p></blockquote>
 <ul><li><strong>+ Foto / Bajar fotos</strong> — asocia fotografías al artículo o las descarga.</li></ul>
 <p><img src="img/03-sesiones-lineas.png" alt="Líneas de artículos con matriz de tallas" loading="lazy">
 <em>▢ Captura pendiente — Pestaña Líneas de Artículos con la matriz de tallas.</em></p>
-<p><img src="img/03-sesiones-proveedor.png" alt="Pestaña Proveedor de una sesión de compra" loading="lazy">
-<em>▢ Captura pendiente — Pestaña Proveedor con ficha, kits disponibles y botón Aplicar kit.</em></p>
+<p><img src="img/03-sesiones-proveedor.png" alt="Pestaña Proveedor de una sesión de compra" loading="lazy"></p>
 <blockquote><p><strong>Código duplicado.</strong> Si tecleas un código de artículo que <strong>ya existe</strong>
 en el catálogo, la aplicación lo detecta y pregunta qué hacer:
 <strong>Reusar el artículo existente</strong> (no se crea uno nuevo, se le añade la
@@ -189,8 +188,7 @@ pivote de tallas.</p>
 <p>  cantidades introducidas en <strong>A recibir</strong>.</p>
 <ul><li><strong>Incorporar</strong> esas líneas a un albarán ya existente del mismo pedido,</li></ul>
 <p>  si se está recibiendo mercancía en varias tandas.</p>
-<p><img src="img/03-pedidos-crear-albaran.png" alt="Crear albarán desde pedido de compra" loading="lazy">
-<em>▢ Captura pendiente — Modal de almacén con la opción de incorporar a un albarán existente.</em></p>
+<p><img src="img/03-pedidos-crear-albaran.png" alt="Crear albarán desde pedido de compra" loading="lazy"></p>
 <hr>
 <h2 id="albaranes">Albaranes</h2>
 <p>Mantenimiento de <strong>Albaranes de Compra</strong>. Registra la <strong>recepción real</strong> de
@@ -219,33 +217,57 @@ stock</strong> del almacén y sirve de base para el <strong>abono</strong> del p
 <p>Utilidad para convertir uno o varios <strong>albaranes de compra</strong> en un
 <strong>borrador de compra</strong>. Filtra por empresa y proveedor, muestra los
 albaranes pendientes y permite agrupar varios en el mismo borrador.</p>
-<p><img src="img/03-compras-crear-borradores.png" alt="Crear borradores desde albaranes de compra" loading="lazy">
-<em>▢ Captura pendiente — Modal de selección de albaranes de compra pendientes de facturar.</em></p>
+<p>El formulario trabaja en dos modos:</p>
+<table>
+<thead><tr>
+<th>Modo</th>
+<th>Resultado</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Crear borrador nuevo</strong></td><td>Genera un documento nuevo para los albaranes seleccionados.</td></tr>
+<tr><td><strong>Incorporar a un borrador existente</strong></td><td>Añade los albaranes seleccionados a un borrador abierto del mismo proveedor y empresa.</td></tr>
+</tbody>
+</table>
+<p>Pulsa <strong>Cargar</strong> para listar los albaranes candidatos y <strong>Crear
+borradores</strong> para materializarlos. Al terminar se abre el borrador/factura
+de compra resultante para revisar líneas, totales y efectos.</p>
+<p><img src="img/03-compras-crear-borradores.png" alt="Crear borradores desde albaranes de compra" loading="lazy"></p>
 <hr>
 <h2 id="borradores">Borradores</h2>
 <p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[Alt]+[F]</code></p>
 <p>Mantenimiento de <strong>Borradores de Compra</strong>. Es el documento de proveedor
 que se registra para control de gasto, IVA soportado y vencimientos de
-pago. Se crea manualmente o a partir de albaranes de compra.</p>
+pago. En la base de datos se guarda como <strong>factura de compra</strong>; el menú
+mantiene la etiqueta Borradores para el trabajo previo de revisión.</p>
+<p>Se crea manualmente o a partir de albaranes de compra. Cuando viene de
+albaranes, conserva la referencia al documento de origen y marca esos
+albaranes como facturados para evitar duplicidades.</p>
 <p><img src="img/03-facturas-compra.png" alt="Facturas de compra" loading="lazy">
 <em>▢ Captura pendiente — Mantenimiento de Borradores de Compra con pestaña Efectos.</em></p>
 <p>La ficha incluye:</p>
-<ul><li><strong>Cabecera</strong> — proveedor, empresa, fecha, referencia/documento externo,</li></ul>
-<p>  forma de pago y datos fiscales.</p>
-<ul><li><strong>Líneas</strong> — artículos procedentes de los albaranes o introducidos a</li></ul>
-<p>  mano.</p>
-<ul><li><strong>Efectos</strong> — vencimientos generados desde la forma de pago.</li></ul>
+<ul><li><strong>Cabecera</strong> — proveedor, empresa, fecha, referencia/documento externo, forma de pago y datos fiscales.</li><li><strong>Líneas</strong> — artículos procedentes de los albaranes o introducidos a mano.</li><li><strong>Efectos</strong> — vencimientos generados desde la forma de pago.</li></ul>
 <p>El botón <strong>Generar efectos</strong> reparte el total líquido en vencimientos y
 pregunta qué <strong>banco de la empresa</strong> se usará como cuenta de cargo. Si el
 proveedor tiene banco para pagos por defecto, aparece preseleccionado.</p>
+<p>Estados relacionados:</p>
+<table>
+<thead><tr>
+<th>Estado</th>
+<th>Significado</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>ABIERTO</strong></td><td>Documento editable, pendiente de cerrar o revisar.</td></tr>
+<tr><td><strong>CERRADO</strong></td><td>Documento validado para el circuito de pagos.</td></tr>
+<tr><td><strong>FACTURADO</strong></td><td>Albarán de compra ya incorporado a un borrador/factura de proveedor.</td></tr>
+</tbody>
+</table>
 <hr>
 <h2 id="efectos-de-pago">Efectos de pago</h2>
 <p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[C]</code></p>
 <p>Cartera de vencimientos de proveedor. Cada efecto representa una fecha de
 pago pendiente, pagada, remesada o conciliada. Desde aquí puedes revisar
 vencimientos, registrar pagos y fusionar impagados en un efecto resumen.</p>
-<p><img src="img/03-efectos-pago.png" alt="Efectos de pago a proveedor" loading="lazy">
-<em>▢ Captura pendiente — Efectos de pago con estado, vencimiento, pendiente y botones de pago/fusión.</em></p>
+<p><img src="img/03-efectos-pago.png" alt="Efectos de pago a proveedor" loading="lazy"></p>
 <p>Estados habituales:</p>
 <table>
 <thead><tr>
@@ -263,8 +285,7 @@ vencimientos, registrar pagos y fusionar impagados en un efecto resumen.</p>
 <h2 id="remesas-de-pago">Remesas de pago</h2>
 <p>Agrupa efectos de pago para preparar una orden de pago bancaria. La remesa
 recoge su banco de cargo, fecha de cargo, número de efectos e importe total.</p>
-<p><img src="img/03-remesas-pago.png" alt="Remesas de pago" loading="lazy">
-<em>▢ Captura pendiente — Remesa de pago con banco, total y efectos asignados.</em></p>
+<p><img src="img/03-remesas-pago.png" alt="Remesas de pago" loading="lazy"></p>
 <p>Acciones principales:</p>
 <ul><li><strong>Añadir efecto</strong> — abre la selección de efectos pendientes.</li><li><strong>Quitar efecto</strong> — retira el efecto seleccionado de la remesa.</li><li><strong>Pagar efecto</strong> — registra el pago de un efecto concreto.</li><li><strong>Pagar remesa</strong> — marca como pagados los efectos de la remesa.</li><li><strong>Asignar banco</strong> — fija o cambia el banco de cargo de la empresa.</li></ul>
 <hr>
@@ -280,7 +301,7 @@ proveedor.</p>
 <hr>
 <p><a href="02-menu-archivo.html">◀ Menú Archivo</a> · <a href="index.html">Índice</a> · <a href="04-menu-ventas-mayor.html">Siguiente ▶ Menú Ventas Mayor</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 20/06/2026</footer>
+<footer>Manual de Factuzam · generado el 24/06/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

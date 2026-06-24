@@ -63,10 +63,10 @@ completa (dirección, población, provincia, código postal), Móvil, Email.</p>
 <p>  preseleccionar la cuenta de <strong>cobro</strong> en recibos de cliente y la cuenta de
   <strong>pago</strong> en efectos/remesas de proveedor.</p>
 <ul><li><strong>Certificado / Verifactu</strong> — <em>Número de Serie</em> y <em>Tipo de Certificado</em></li></ul>
-<p>  para la firma y el envío de facturas al sistema <strong>Verifactu (AEAT)</strong>.</p>
+<p>  para la firma y el envío de facturas al sistema <strong>Verifactu (AEAT)</strong> y
+  para la emisión de eDoc firmado cuando corresponda.</p>
 <ul><li><strong>Texto en Factura</strong> — texto legal que se imprimirá en los documentos.</li><li><strong>Zona de IVA principal</strong> — régimen de IVA por defecto de la empresa.</li></ul>
-<p><img src="img/02-empresas-bancos.png" alt="Pestaña Bancos de Empresas" loading="lazy">
-<em>▢ Captura pendiente — Pestaña Bancos con IBAN, banco y marcas de cobro/pago por defecto.</em></p>
+<p><img src="img/02-empresas-bancos.png" alt="Pestaña Bancos de Empresas" loading="lazy"></p>
 <blockquote><p>La configuración correcta de <strong>NIF, series y certificado</strong> es
 imprescindible para emitir facturas válidas y para la integración con
 Verifactu. Si tienes dudas fiscales, consúltalas con tu asesoría antes de
@@ -112,6 +112,24 @@ Contacto y teléfono de contacto, Nº de cuenta.</p>
 </table>
 <blockquote><p>Estos indicadores afectan directamente al <strong>cálculo de impuestos</strong> en
 ventas. Configúralos con cuidado al dar de alta el cliente.</p></blockquote>
+<p><strong>Parámetros eDoc:</strong> esta pestaña guarda los datos necesarios para emitir
+un fichero Facturae firmado desde Ventas Mayor:</p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Para qué sirve</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Oficina contable</strong></td><td>Código DIR3 de la oficina contable del cliente público.</td></tr>
+<tr><td><strong>Órgano gestor</strong></td><td>Código DIR3 del órgano gestor.</td></tr>
+<tr><td><strong>Unidad tramitadora</strong></td><td>Código DIR3 de la unidad tramitadora.</td></tr>
+<tr><td><strong>Nombre persona física</strong></td><td>Nombre cuando el receptor es persona física.</td></tr>
+<tr><td><strong>Apellidos persona física</strong></td><td>Apellidos cuando el receptor es persona física.</td></tr>
+</tbody>
+</table>
+<p>Estos datos se copian como foto a cada borrador de venta mayor al elegir el
+cliente. Si una factura concreta necesita otro valor, se corrige en la
+pestaña <strong>Parámetros eDoc</strong> del propio borrador.</p>
 <hr>
 <h2 id="proveedores">Proveedores</h2>
 <p><img src="img/02-proveedores.png" alt="Ficha de Proveedores" loading="lazy">
@@ -182,8 +200,7 @@ compra de este proveedor:</p>
 <tr><td><strong>Banco para pagos (empresa)</strong></td><td>Cuenta propia de la empresa que se preselecciona al generar efectos o incluirlos en remesas.</td></tr>
 </tbody>
 </table>
-<p><img src="img/02-proveedores-pagos.png" alt="Pestaña Pagos del proveedor" loading="lazy">
-<em>▢ Captura pendiente — Pestaña Pagos con forma de pago y banco de empresa por defecto.</em></p>
+<p><img src="img/02-proveedores-pagos.png" alt="Pestaña Pagos del proveedor" loading="lazy"></p>
 <hr>
 <h2 id="articulos">Artículos</h2>
 <p><img src="img/02-articulos.png" alt="Ficha de Artículos con la pestaña SKUs" loading="lazy">
@@ -230,8 +247,7 @@ Cada tarifa contiene los precios de los artículos.</p>
 <p>El botón <strong>Sesiones cambios</strong> abre una pantalla para preparar cambios
 masivos de precios, revisar las líneas calculadas y aplicarlas a la tarifa
 destino cuando estén validadas.</p>
-<p><img src="img/02-tarifas-cambios.png" alt="Sesión de cambios de tarifa" loading="lazy">
-<em>▢ Captura pendiente — Sesión de cambios de tarifa con cabecera, líneas calculadas y botón Aplicar tarifa.</em></p>
+<p><img src="img/02-tarifas-cambios.png" alt="Sesión de cambios de tarifa" loading="lazy"></p>
 <h3 id="familias">Familias</h3>
 <p><img src="img/02-familias.png" alt="Mantenimiento de Familias" loading="lazy">
 <em>▢ Captura pendiente — Mantenimiento de Familias.</em></p>
@@ -297,7 +313,7 @@ antes de salir.</p>
 <hr>
 <p><a href="01-conceptos-comunes.html">◀ Conceptos comunes</a> · <a href="index.html">Índice</a> · <a href="03-menu-compras.html">Siguiente ▶ Menú Compras</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 20/06/2026</footer>
+<footer>Manual de Factuzam · generado el 24/06/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

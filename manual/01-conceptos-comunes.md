@@ -116,7 +116,6 @@ esté activo en la pantalla. Si cambias de pestaña, de documento o de línea,
 la ventana sigue al registro seleccionado.
 
 ![Foto flotante del artículo o SKU](img/01-foto-articulo.png)
-*▢ Captura pendiente — Ventana flotante de foto con selector de resolución y botones de cambio.*
 
 Desde esa ventana puedes:
 

@@ -274,18 +274,26 @@ begin
 end;
 
 procedure TfrmMtoTarifas.CrearBotonSesionesCambios;
+const
+  cAnchoBotonSesiones = 220;
+  cMargenBotonera = 8;
 begin
   if not Assigned(FBtnSesionesCambios) then
   begin
     FBtnSesionesCambios := TcxButton.Create(Self);
     FBtnSesionesCambios.Parent := pnlBotonera;
-    FBtnSesionesCambios.Top := btnAddBlock.Top;
-    FBtnSesionesCambios.Left := btnAddBlock.Left + btnAddBlock.Width + 8;
-    FBtnSesionesCambios.Width := 132;
-    FBtnSesionesCambios.Height := btnAddBlock.Height;
-    FBtnSesionesCambios.Caption := 'Sesiones cambios';
+    FBtnSesionesCambios.Top := btnAddBlock.Top + btnAddBlock.Height +
+                               cMargenBotonera;
+    FBtnSesionesCambios.Left := btnAddBlock.Left;
+    FBtnSesionesCambios.Width := cAnchoBotonSesiones;
+    FBtnSesionesCambios.Height := btnAddBlock.Height + cMargenBotonera;
+    FBtnSesionesCambios.Caption := 'Sesiones cambios tarifa';
     FBtnSesionesCambios.OnClick := btnSesionesCambiosClick;
   end;
+  if pnlBotonera.Width < FBtnSesionesCambios.Left +
+                         FBtnSesionesCambios.Width + cMargenBotonera then
+    pnlBotonera.Width := FBtnSesionesCambios.Left +
+                         FBtnSesionesCambios.Width + cMargenBotonera;
 end;
 
 procedure TfrmMtoTarifas.btnSesionesCambiosClick(Sender: TObject);

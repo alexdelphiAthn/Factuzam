@@ -217,6 +217,7 @@ type
     FUltimoArticuloPadre: string;
     FProcesandoAtributo: Boolean;
     FInicializandoCombo: Boolean;
+    FRefrescandoLookupsCabecera: Boolean;
     // Setting on/off para construir las columnas dinamicas de atributos.
     // Por defecto OFF: abrir un inventario solo pinta el grid base, sin
     // ejecutar la SQL de definicion de atributos ni el desempaquetado
@@ -290,6 +291,7 @@ type
     // === ACTUALIZACIÓN UI SEGÚN ESTADO ===
     procedure ActualizarEstadoUI;
     procedure HabilitarEdicionLineas(Habilitado: Boolean);
+    procedure RefrescarLookupsCabeceraEmpresa(const AEmpresa: string);
 
     // === HOOKS DATASET ===
     procedure cdsLineasAfterInsertHook(DataSet: TDataSet);
@@ -365,16 +367,32 @@ begin
 end;
 
 procedure TfrmMtoInventarios.CrearTablaPrincipal;
+var
+  emp: string;
 begin
   dmmInventarios := nil;
   inherited;
   dmmInventarios := tdmDataModule as TdmInventarios;
-  // Datasources locales que apuntan a queries del data module
-  cbbCODIGO_EMPRESA_INVENTARIO.Properties.ListSource :=
+  emp := '';
+  if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
+     not dsTablaG.DataSet.IsEmpty then
+    emp := dsTablaG.DataSet.FieldByName('CODIGO_EMP_INV').AsString
+  else if Trim(oEmpresa) <> '' then
+    emp := oEmpresa;
+  RefrescarLookupsCabeceraEmpresa(emp);
+  // Datasources locales que apuntan a queries del data module.
+  // El lookup de almacenes debe estar cargado antes de enlazarse, porque
+  // DevExpress puede validar el valor actual y dejar la cabecera en dsEdit.
+  FRefrescandoLookupsCabecera := True;
+  try
+    cbbCODIGO_EMPRESA_INVENTARIO.Properties.ListSource :=
                                                       dmmInventarios.dsEmpresas;
-  cbbCODIGO_ALMACEN_INVENTARIO.Properties.ListSource :=
+    cbbCODIGO_ALMACEN_INVENTARIO.Properties.ListSource :=
                                                      dmmInventarios.dsAlmacenes;
-  cbbSERIE_INVENTARIO.Properties.ListSource := dmmInventarios.dsSeries;
+    cbbSERIE_INVENTARIO.Properties.ListSource := dmmInventarios.dsSeries;
+  finally
+    FRefrescandoLookupsCabecera := False;
+  end;
   tvLineas.DataController.DataSource := dmmInventarios.dsLineas;
   tvMovs.DataController.DataSource   := dmmInventarios.dsMovsRegul;
   dmmInventarios.cdsLineas.AfterInsert := cdsLineasAfterInsertHook;
@@ -388,6 +406,7 @@ begin
   FUltimoArticuloPadre := '';
   FProcesandoAtributo := False;
   FInicializandoCombo := False;
+  FRefrescandoLookupsCabecera := False;
   // Por defecto OFF: la apertura de un inventario solo lee las lineas, sin
   // ejecutar la SQL de definicion de atributos ni el bucle de Edit/Post
   // sobre cada linea que rellena ATTR1..5_VALOR. El usuario lo activa con
@@ -508,7 +527,7 @@ begin
       emp := dsTablaG.DataSet.FieldByName('CODIGO_EMP_INV').AsString;
       if dmmInventarios <> nil then
       begin
-        dmmInventarios.CargarAlmacenesPorEmpresa(emp);
+        RefrescarLookupsCabeceraEmpresa(emp);
       end;
     end;
   end;
@@ -571,6 +590,20 @@ begin
   tvLineas.OptionsData.Deleting := Habilitado;
 end;
 
+procedure TfrmMtoInventarios.RefrescarLookupsCabeceraEmpresa(
+  const AEmpresa: string);
+begin
+  if dmmInventarios <> nil then
+  begin
+    FRefrescandoLookupsCabecera := True;
+    try
+      dmmInventarios.CargarAlmacenesPorEmpresa(AEmpresa);
+    finally
+      FRefrescandoLookupsCabecera := False;
+    end;
+  end;
+end;
+
 procedure TfrmMtoInventarios.CargarLineasYRefrescar;
 var
   ds: TDataSet;
@@ -617,8 +650,8 @@ begin
     tvLineas.DataController.Refresh;
 end;
 
-procedure TfrmMtoInventarios.cbbCODIGO_EMPRESA_INVENTARIOPropertiesEditValueChanged(
-  Sender: TObject);
+procedure TfrmMtoInventarios.
+  cbbCODIGO_EMPRESA_INVENTARIOPropertiesEditValueChanged(Sender: TObject);
 var
   emp: string;
 begin
@@ -626,17 +659,20 @@ begin
   // (cuando el manager hace AForm.Hide y AForm.Parent := nil), antes y después
   // de FormDestroy. Si el ciclo de vida ha desmontado el dataset principal
   // o el data module, no podemos tocar el data module.
-  if (csDestroying in ComponentState) then
-    Exit;
-  if dmmInventarios = nil then
-    Exit;
-  if (dsTablaG = nil) or (dsTablaG.DataSet = nil) then
-    Exit;
-  emp := VarToStr(cbbCODIGO_EMPRESA_INVENTARIO.EditValue);
-  dmmInventarios.CargarAlmacenesPorEmpresa(emp);
-  // Si el almacén ya escrito no pertenece a la nueva empresa, lo limpiamos
-  if dsTablaG.DataSet.State in [dsEdit, dsInsert] then
-    dsTablaG.DataSet.FieldByName('CODIGO_ALM_INV').Clear;
+  if not (csDestroying in ComponentState) and
+     (dmmInventarios <> nil) and
+     (dsTablaG <> nil) and
+     (dsTablaG.DataSet <> nil) and
+     (not FRefrescandoLookupsCabecera) then
+  begin
+    emp := VarToStr(cbbCODIGO_EMPRESA_INVENTARIO.EditValue);
+    RefrescarLookupsCabeceraEmpresa(emp);
+    // Si el usuario cambia manualmente de empresa, el almacén elegido
+    // anteriormente ya no es fiable. Los refrescos internos no deben borrarlo.
+    if cbbCODIGO_EMPRESA_INVENTARIO.Focused and
+       (dsTablaG.DataSet.State in [dsEdit, dsInsert]) then
+      dsTablaG.DataSet.FieldByName('CODIGO_ALM_INV').Clear;
+  end;
 end;
 
 // ============================================================================

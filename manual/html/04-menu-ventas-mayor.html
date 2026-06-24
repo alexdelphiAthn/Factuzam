@@ -23,6 +23,9 @@ al detalle en tienda, que se hace desde el módulo
 <p>Estructura del menú:</p>
 <pre><code>Ventas Mayor
 ├── Borradores
+├── Efectos de cobro
+├── Remesas de cobro
+├── Cargar efectos en remesa...
 ├── Pedidos
 ├── Albaranes
 └── Listados
@@ -34,20 +37,13 @@ facturar albarán a albarán o agrupar varios albaranes en un solo
 borrador antes de emitirlo.</p></blockquote>
 <hr>
 <h2 id="borradores">Borradores</h2>
-<p><img src="img/04-borradores.png" alt="Borrador de venta: cabecera, líneas y totales" loading="lazy">
-<em>▢ Captura pendiente — Borrador de venta: cabecera, líneas, totales y botones fiscales.</em></p>
+<p><img src="img/04-borradores.png" alt="Borrador de venta: cabecera, líneas y totales" loading="lazy"></p>
 <p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[F]</code></p>
 <p>Mantenimiento de <strong>Borradores de Venta Mayor</strong>. Mientras el documento está
 en fase <strong>BORRADOR</strong> se puede editar; al pulsar <strong>Consolidar</strong> se emite el
 registro fiscal según el modo configurado en Verifactu.</p>
 <p>Cada borrador lleva:</p>
-<ul><li><strong>Cabecera</strong>: cliente, fecha, <strong>serie</strong> y número (según los contadores de</li></ul>
-<p>  la empresa), forma de pago, vencimientos.</p>
-<ul><li><strong>Líneas</strong>: artículos/SKU, cantidades, precio (tomado de la <strong>tarifa</strong></li></ul>
-<p>  del cliente), descuentos.</p>
-<ul><li><strong>Totales e impuestos</strong>: base, IVA por tipo, recargo de equivalencia y</li></ul>
-<p>  retenciones según la configuración fiscal del <strong>cliente</strong> y la
-  <strong>empresa</strong>.</p>
+<ul><li><strong>Cabecera</strong>: cliente, fecha, <strong>serie</strong> y número, forma de pago y vencimientos.</li><li><strong>Líneas</strong>: artículos/SKU, cantidades, precio tomado de la <strong>tarifa</strong> del cliente y descuentos.</li><li><strong>Totales e impuestos</strong>: base, IVA por tipo, recargo de equivalencia y retenciones según cliente y empresa.</li><li><strong>Efectos</strong>: vencimientos de cobro generados desde la forma de pago, con importe, vencimiento, estado y banco asociado.</li></ul>
 <p>Los borradores se firman o comunican a <strong>Verifactu (AEAT)</strong> según la
 configuración de certificado de la empresa (ver
 <a href="02-menu-archivo.html#empresas">Empresas</a>).</p>
@@ -58,6 +54,60 @@ en un rango de fechas.</p></blockquote>
 posteriores se hacen con <strong>Anular</strong>, <strong>Rectificar</strong> o <strong>Subsanar</strong>, según
 el caso fiscal. La pestaña Verifactu muestra QR, URL de cotejo, estado y
 registro asociado.</p>
+<h3 id="efectos-y-edoc-en-el-borrador">Efectos y eDoc en el borrador</h3>
+<p>El botón <strong>Generar efectos</strong> reparte el total líquido en vencimientos según
+la forma de pago. En facturas normales la pestaña 3 muestra <strong>Efectos</strong> de
+cobro; en simplificadas mantiene el circuito de recibos.</p>
+<p>Desde la pestaña de efectos se puede marcar un vencimiento como
+<strong>Cobrado</strong> o <strong>Devuelto</strong>. Para gestionar muchos vencimientos juntos, usa
+las opciones de menú <strong>Efectos de cobro</strong>, <strong>Remesas de cobro</strong> y
+<strong>Cargar efectos en remesa...</strong>.</p>
+<p>La pestaña <strong>Parámetros eDoc</strong> guarda la foto de emisión para Facturae:
+DIR3 de oficina contable, órgano gestor y unidad tramitadora, además de
+nombre y apellidos cuando el receptor es persona física. Se propone desde
+la ficha del cliente y puede corregirse para esa factura concreta.</p>
+<p>El botón <strong>Emitir eDoc</strong> genera un fichero Facturae firmado (<code>.xsig</code>) y
+guarda el XML firmado en la factura. Solo se emite desde facturas normales
+ya consolidadas, con certificado de empresa configurado y datos fiscales
+completos.</p>
+<p><img src="img/04-borradores-edoc.png" alt="Parámetros eDoc del borrador" loading="lazy"></p>
+<hr>
+<h2 id="efectos-de-cobro">Efectos de cobro</h2>
+<p>Mantenimiento de vencimientos de cliente. Cada efecto representa un cobro
+pendiente, cobrado, remesado o conciliado, generado desde un borrador de
+venta mayor.</p>
+<p><img src="img/04-efectos-cobro.png" alt="Efectos de cobro" loading="lazy"></p>
+<p>Acciones principales:</p>
+<ul><li><strong>Conciliar efecto</strong> — registra un cobro total o parcial, con fecha, importe, tipo y referencia.</li><li><strong>Fusionar efectos</strong> — agrupa efectos pendientes cuando se necesita regularizar varios vencimientos en uno.</li></ul>
+<p>Estados habituales:</p>
+<table>
+<thead><tr>
+<th>Estado</th>
+<th>Significado</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>PENDIENTE</strong></td><td>Vencimiento vivo, todavía no cobrado.</td></tr>
+<tr><td><strong>COBRADO</strong></td><td>Cobrado total o parcialmente.</td></tr>
+<tr><td><strong>REMESADO</strong></td><td>Incluido en una remesa de cobro.</td></tr>
+<tr><td><strong>CONCILIADO</strong></td><td>Fusionado o regularizado con otro efecto.</td></tr>
+</tbody>
+</table>
+<hr>
+<h2 id="remesas-de-cobro">Remesas de cobro</h2>
+<p>Agrupa efectos de cliente para gestionar cobros bancarios. La remesa
+recoge empresa, banco de cobro, fecha, número de efectos, total, cobro
+realizado y pendiente.</p>
+<p><img src="img/04-remesas-cobro.png" alt="Remesas de cobro" loading="lazy"></p>
+<p>Acciones principales:</p>
+<ul><li><strong>Añadir efecto</strong> — abre la selección de efectos pendientes.</li><li><strong>Quitar efecto</strong> — retira el efecto seleccionado de la remesa.</li><li><strong>Conciliar efecto</strong> — registra el cobro de un efecto concreto.</li><li><strong>Conciliar remesa</strong> — registra el cobro de todos los efectos de la remesa.</li><li><strong>Asignar banco</strong> — fija o cambia el banco de cobro de la empresa.</li><li><strong>Fecha cobro</strong> — actualiza la fecha de cobro de la remesa.</li><li><strong>Generar SEPA</strong> — crea el fichero bancario cuando la remesa tiene los datos SEPA necesarios.</li></ul>
+<hr>
+<h2 id="cargar-efectos-en-remesa">Cargar efectos en remesa...</h2>
+<p>Acceso directo al selector de efectos pendientes para crear una remesa
+nueva o alimentar una remesa existente.</p>
+<p><img src="img/04-cargar-efectos-remesa.png" alt="Cargar efectos en remesa de cobro" loading="lazy"></p>
+<p>Filtra por empresa y vencimiento máximo. Marca los efectos que quieras
+incluir y pulsa <strong>Cargar en remesa</strong>.</p>
+<hr>
 <h2 id="pedidos">Pedidos</h2>
 <p><img src="img/04-pedidos.png" alt="Pedidos de venta" loading="lazy">
 <em>▢ Captura pendiente — Pedidos de venta.</em></p>
@@ -76,8 +126,7 @@ el documento que después se <strong>factura</strong>.</p>
 <p>Desde los albaranes se pueden crear borradores por rango de fechas. El
 selector permite marcar varios albaranes pendientes y generar un borrador
 agrupado para el mismo cliente.</p>
-<p><img src="img/04-albaranes-crear-borradores.png" alt="Crear borradores desde albaranes de venta" loading="lazy">
-<em>▢ Captura pendiente — Modal de selección de albaranes de venta por fecha para generar borradores.</em></p>
+<p><img src="img/04-albaranes-crear-borradores.png" alt="Crear borradores desde albaranes de venta" loading="lazy"></p>
 <hr>
 <h2 id="listados-ventas">Listados ▸ Ventas</h2>
 <p><img src="img/04-listado-ventas.png" alt="Filtros del listado de ventas" loading="lazy">
@@ -91,7 +140,7 @@ exportar</strong>.</p>
 <hr>
 <p><a href="03-menu-compras.html">◀ Menú Compras</a> · <a href="index.html">Índice</a> · <a href="05-menu-caja.html">Siguiente ▶ Menú Caja</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 20/06/2026</footer>
+<footer>Manual de Factuzam · generado el 24/06/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
