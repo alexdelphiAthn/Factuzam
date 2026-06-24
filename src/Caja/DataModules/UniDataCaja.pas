@@ -237,6 +237,8 @@ type
     procedure AumentarAnticipoDeposito(QryTrx: TUniQuery;
                                        const ACliente, ASku, AUsuario: string;
                                        ANuevoAbono: Currency);
+    function ContarTicketsDemoDia(AFecha: TDateTime): Integer;
+    procedure ValidarLimiteDemoTickets(AFecha: TDateTime);
     procedure InsertarCabeceraFactura(
             QryTrx:          TUniQuery;
             // — identificación —
@@ -410,7 +412,8 @@ uses inLibtb,
      inLibVerifactu,
      inLibVerifactuCola,
      inLibGenerarTicketBD,
-     inLibDocumentoFiscal;
+     inLibDocumentoFiscal,
+     inLibLicenciaAplicacion;
 
 {$R *.dfm}
 
@@ -1085,6 +1088,51 @@ begin
   end;
 end;
 
+function TdmCajaOpe.ContarTicketsDemoDia(AFecha: TDateTime): Integer;
+var
+  Qry: TUniQuery;
+begin
+  Result := 0;
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := inLibGlobalVar.oConn;
+    Qry.SQL.Text :=
+      'SELECT COUNT(*) AS TOTAL ' +
+      '  FROM fza_facturas ' +
+      ' WHERE FECHA_FAC = :FECHA ' +
+      '   AND IFNULL(NUMERO_OPERACION_FAC, '''') <> ''''';
+    Qry.ParamByName('FECHA').AsDate := Trunc(AFecha);
+    Qry.Open;
+    Result := Qry.FieldByName('TOTAL').AsInteger;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+procedure TdmCajaOpe.ValidarLimiteDemoTickets(AFecha: TDateTime);
+var
+  iTickets: Integer;
+begin
+  if oLicenciaAplicacionComprobada and
+     EstadoLicenciaEsDemo(oLicenciaAplicacionEstado) then
+  begin
+    iTickets := ContarTicketsDemoDia(AFecha);
+    if iTickets >= LIMITE_TICKETS_DEMO_DIA then
+    begin
+      raise Exception.Create(
+        'Copia DEMO.' + sLineBreak + sLineBreak +
+        'Ya se han emitido ' + IntToStr(iTickets) + ' tickets el día ' +
+        FormatDateTime('dd/mm/yyyy', AFecha) + '.' + sLineBreak +
+        'El límite de la copia DEMO es ' +
+        IntToStr(LIMITE_TICKETS_DEMO_DIA) + ' tickets al día.' +
+        sLineBreak + sLineBreak +
+        'Para seguir emitiendo tickets debe registrar esta instalación ' +
+        'ejecutando la aplicación con /' +
+        CONMUTADOR_REGISTRO_LICENCIA + '.');
+    end;
+  end;
+end;
+
 function TdmCajaOpe.GrabarFacturaSimplificada(
                           const AEmpresa,
                                 AAlmacen,
@@ -1152,13 +1200,6 @@ begin
   if cdsLineas.State   in [dsEdit, dsInsert] then cdsLineas.Post;
   if cdsLineas.IsEmpty then
     raise Exception.Create('No se puede grabar una operación sin líneas.');
-  if DatosCobro.ImporteEntregado <
-                cdsCabecera.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency then
-  begin
-    TransformarLineasParaCobroParcial(cdsLineas, DatosCobro.ImporteEntregado);
-    if not CuadrarFacturaEnMemoria(cdsCabecera, cdsLineas) then
-      raise Exception.Create('No se pudo cuadrar tras cobro parcial.');
-  end;
   Cab          := LeerCabecera(cdsCabecera);
   // Factura completa desde F8: fecha elegida en el modal de fase cobro
   if AFechaFactura > 0 then
@@ -1265,6 +1306,18 @@ begin
         [ASerieElegida,
          FormatDateTime('dd/mm/yyyy', dUltimaFechaSerie),
          FormatDateTime('dd/mm/yyyy', Cab.Fecha)]);
+  end;
+  if RequiereFactura then
+    ValidarLimiteDemoTickets(Cab.Fecha);
+  if DatosCobro.ImporteEntregado <
+                cdsCabecera.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency then
+  begin
+    TransformarLineasParaCobroParcial(cdsLineas, DatosCobro.ImporteEntregado);
+    if not CuadrarFacturaEnMemoria(cdsCabecera, cdsLineas) then
+      raise Exception.Create('No se pudo cuadrar tras cobro parcial.');
+    Cab := LeerCabecera(cdsCabecera);
+    if AFechaFactura > 0 then
+      Cab.Fecha := AFechaFactura;
   end;
   // =======================================================================
   // INICIO DE LA TRANSACCIÓN GLOBAL EN BASE DE DATOS

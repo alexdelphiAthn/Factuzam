@@ -610,31 +610,35 @@ begin
       end
       else
       begin
-        Result := False;
-        FCerrarAplicacion := True;
-        sSuccess := 'N';
+        oLicenciaAplicacionComprobada := True;
         oLicenciaAplicacionEstado := Estado;
-        oLicenciaAplicacionMensaje := sMensaje;
-        inliblog.Log.LogError('Aplicación no registrada. ' + sMensaje);
+        oLicenciaAplicacionMensaje := 'Copia DEMO. ' + sMensaje;
+        inliblog.Log.LogWarning('Aplicación en modo DEMO. ' + sMensaje);
         inliblog.Log.LogError('Código guardado: ' + sCodigoGuardado +
                               ' Código esperado: ' + sCodigoEsperado);
-        ShowMessage('Aplicación no registrada.' + sLineBreak + sLineBreak +
+        ShowMessage('Copia DEMO.' + sLineBreak + sLineBreak +
                     sMensaje + sLineBreak + sLineBreak +
-                    'Ejecute la aplicación con el conmutador de registro ' +
-                    'para registrar esta instalación.');
+                    'La caja queda limitada a ' +
+                    IntToStr(LIMITE_TICKETS_DEMO_DIA) +
+                    ' tickets al día.' + sLineBreak +
+                    'Para registrar esta instalación ejecute la aplicación ' +
+                    'con /' + CONMUTADOR_REGISTRO_LICENCIA + '.');
       end;
     except
       on E: Exception do
       begin
-        Result := False;
-        FCerrarAplicacion := True;
-        sSuccess := 'N';
+        oLicenciaAplicacionComprobada := True;
         oLicenciaAplicacionEstado := elaInvalida;
-        oLicenciaAplicacionMensaje := E.Message;
+        oLicenciaAplicacionMensaje := 'Copia DEMO. ' + E.Message;
         inliblog.Log.LogError('Error validando licencia: ' + E.Message);
-        ShowMessage('Aplicación no registrada.' + sLineBreak + sLineBreak +
+        ShowMessage('Copia DEMO.' + sLineBreak + sLineBreak +
                     'No se pudo validar la licencia de la aplicación.' +
-                    sLineBreak + E.Message);
+                    sLineBreak + E.Message + sLineBreak + sLineBreak +
+                    'La caja queda limitada a ' +
+                    IntToStr(LIMITE_TICKETS_DEMO_DIA) +
+                    ' tickets al día.' + sLineBreak +
+                    'Para registrar esta instalación ejecute la aplicación ' +
+                    'con /' + CONMUTADOR_REGISTRO_LICENCIA + '.');
       end;
     end;
   end;
