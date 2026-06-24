@@ -616,11 +616,9 @@ begin
         inliblog.Log.LogWarning('Aplicación en modo DEMO. ' + sMensaje);
         inliblog.Log.LogError('Código guardado: ' + sCodigoGuardado +
                               ' Código esperado: ' + sCodigoEsperado);
-        ShowMessage('Copia DEMO.' + sLineBreak + sLineBreak +
-                    sMensaje + sLineBreak + sLineBreak +
-                    'La caja queda limitada a ' +
+        ShowMessage('Modo DEMO: limitado a ' +
                     IntToStr(LIMITE_TICKETS_DEMO_DIA) +
-                    ' tickets al día.');
+                    ' ventas al día.');
       end;
     except
       on E: Exception do
@@ -629,12 +627,11 @@ begin
         oLicenciaAplicacionEstado := elaInvalida;
         oLicenciaAplicacionMensaje := 'Copia DEMO. ' + E.Message;
         inliblog.Log.LogError('Error validando licencia: ' + E.Message);
-        ShowMessage('Copia DEMO.' + sLineBreak + sLineBreak +
-                    'No se pudo validar la licencia de la aplicación.' +
-                    sLineBreak + E.Message + sLineBreak + sLineBreak +
-                    'La caja queda limitada a ' +
+        inliblog.Log.LogWarning('Aplicación en modo DEMO por error ' +
+                                'validando licencia.');
+        ShowMessage('Modo DEMO: limitado a ' +
                     IntToStr(LIMITE_TICKETS_DEMO_DIA) +
-                    ' tickets al día.');
+                    ' ventas al día.');
       end;
     end;
   end;

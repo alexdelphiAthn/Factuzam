@@ -62,6 +62,7 @@ var
   sApartadoD: string;
   sApartadoE: string;
   sApartadoG: string;
+  sApartadoM: string;
   sInfoModalidad: string;
   sQr: string;
 begin
@@ -81,11 +82,12 @@ begin
         'firmar electrónicamente los registros y eventos fiscales y preparar ' +
         'su exportación o conservación en modalidad NO VERI*FACTU.';
       sApartadoE :=
-        'No. La modalidad declarada es NO VERI*FACTU. En esta modalidad el ' +
-        'sistema no realiza la remisión automática y continuada de los ' +
-        'registros de facturación a la AEAT, sino que genera, encadena, ' +
-        'firma, conserva y permite exportar los registros de facturación y ' +
-        'los registros de evento exigibles.';
+        'N - No. Factuzam no se ha producido para funcionar exclusivamente ' +
+        'como «SOLO VERI*FACTU», ya que también contempla la modalidad ' +
+        'NO VERI*FACTU. La modalidad declarada en este texto es ' +
+        'NO VERI*FACTU: el sistema genera, encadena, firma, conserva y ' +
+        'permite exportar los registros de facturación y de evento ' +
+        'exigibles.';
       sApartadoG :=
         'En modalidad NO VERI*FACTU se utiliza firma electrónica XAdES ' +
         'enveloped con certificado electrónico de la empresa emisora ' +
@@ -121,12 +123,14 @@ begin
         'generar el código QR tributario y remitir los registros de ' +
         'facturación a la AEAT en modalidad VERI*FACTU.';
       sApartadoE :=
-        'No como producto único, porque Factuzam también contempla una ' +
-        'modalidad NO VERI*FACTU. La modalidad declarada en este texto es ' +
-        'VERI*FACTU: el sistema trabaja como sistema de emisión de facturas ' +
+        'N - No. Factuzam no se ha producido para funcionar exclusivamente ' +
+        'como «SOLO VERI*FACTU», ya que también contempla la modalidad ' +
+        'NO VERI*FACTU. La modalidad declarada en este texto es VERI*FACTU: ' +
+        'el sistema trabaja como sistema de emisión de facturas ' +
         'verificables, con remisión continuada, segura, correcta, íntegra, ' +
-        'automática, consecutiva, instantánea y fehaciente de los registros ' +
-        'de facturación generados.';
+        'automática, ' +
+        'consecutiva, instantánea y fehaciente de los registros de ' +
+        'facturación generados.';
       sApartadoG :=
         'No procede para la modalidad VERI*FACTU declarada. La comunicación ' +
         'con la AEAT se realiza mediante los mecanismos de identificación y ' +
@@ -144,6 +148,14 @@ begin
         'verificación.';
     end;
   end;
+  sApartadoM :=
+    'Se utiliza DelphiZXingQRCode, port de ZXing QRCode a Delphi por ' +
+    'Debenu Pty Ltd, distribuido bajo licencia Apache 2.0 e integrado ' +
+    'como código fuente en Factuzam. Su funcionalidad se limita a generar ' +
+    'la matriz/imagen del código QR a partir de la URL tributaria ya ' +
+    'construida por Factuzam. No asume la generación de registros de ' +
+    'facturación, huellas, encadenamiento, firma, conservación, ' +
+    'exportación ni remisión a la AEAT.';
   Result :=
     'DECLARACIÓN RESPONSABLE DEL SISTEMA INFORMÁTICO DE FACTURACIÓN' +
     sLineBreak +
@@ -191,6 +203,9 @@ begin
     'L - Fecha y lugar de suscripción: ' +
     ValorDeclaracion(ALugar, 'Lugar pendiente de configurar') + ', ' +
     ValorDeclaracion(AFecha, 'fecha pendiente de configurar') +
+    sLineBreak +
+    'M - Componentes funcionales (CF) de terceros: ' +
+    sApartadoM +
     sLineBreak + sLineBreak +
     'Información adicional de cumplimiento' + sLineBreak + sLineBreak +
     'Integridad e inalterabilidad: una factura registrada no se modifica ' +
