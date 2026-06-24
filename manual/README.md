@@ -9,6 +9,14 @@ aplicación. Cada capítulo documenta un menú y, dentro de él, cada opción
 (item de menú) una por una: qué hace, cuándo usarla y los campos o pasos
 más relevantes.
 
+## Descargar la demo
+
+Para probar el programa puedes descargar la demo desde la raíz de la web:
+
+[Descargar Factuzam_DEMO_1.0.15.202606240020.alpha.exe](/Factuzam_DEMO_1.0.15.202606240020.alpha.exe)
+
+El fichero es `Factuzam_DEMO_1.0.15.202606240020.alpha.exe`.
+
 ---
 
 ## Índice

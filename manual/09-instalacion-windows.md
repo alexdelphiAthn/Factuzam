@@ -10,13 +10,35 @@ final solo necesita el capítulo
 
 ---
 
+## Descargar y probar la demo
+
+Antes de preparar una instalación completa, puedes descargar la demo desde
+la raíz de la web:
+
+[Descargar Factuzam_DEMO_1.0.15.202606240020.alpha.exe](/Factuzam_DEMO_1.0.15.202606240020.alpha.exe)
+
+El fichero publicado se llama
+`Factuzam_DEMO_1.0.15.202606240020.alpha.exe`.
+
+La demo se entrega como instalador **NSIS** autoinstalable. Al ejecutarlo
+en un Windows de 64 bits, el asistente instala **Factuzam DEMO** en
+`%PROGRAMFILES%\Factuzam DEMO`, instala una **MariaDB local** para pruebas
+en el puerto `3310`, crea la base de datos de demostración y deja accesos
+directos en el escritorio y en el menú inicio.
+
+> Esta demo es para probar el programa en local. La instalación definitiva
+> de una empresa puede hacerse con el procedimiento manual de este capítulo
+> o con un paquete preparado para esa instalación concreta.
+
+---
+
 ## 1. Requisitos
 
 | Componente | Requisito |
 |------------|-----------|
 | **Sistema operativo** | Windows 10 / Windows 11 (también Windows Server para el equipo que aloje la base de datos). |
 | **Base de datos** | **MariaDB** (compatible MySQL). Puede instalarse en el mismo equipo o en un servidor de la red local. |
-| **Aplicación** | `fzam.exe` — es un ejecutable autónomo, **no requiere instalador** ni librerías adicionales. |
+| **Aplicación** | En instalación manual, `fzam.exe` es un ejecutable autónomo. La demo descargable usa instalador **NSIS** e incluye MariaDB local de pruebas. |
 | **Red** | Si hay varios puestos, todos deben ver el servidor MariaDB por TCP (puerto `3306` por defecto). |
 | **Periféricos (TPV)** | Impresora de tickets compatible **ESC/POS** y **lector de códigos de barras** USB en simulación de teclado; ambos opcionales fuera de Caja. |
 

@@ -22,6 +22,21 @@ aplicación. Está orientado al <strong>instalador/administrador</strong>; el us
 final solo necesita el capítulo
 <a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a>.</p>
 <hr>
+<h2 id="descargar-y-probar-la-demo">Descargar y probar la demo</h2>
+<p>Antes de preparar una instalación completa, puedes descargar la demo desde
+la raíz de la web:</p>
+<p><a href="/Factuzam_DEMO_1.0.15.202606240020.alpha.exe">Descargar Factuzam_DEMO_1.0.15.202606240020.alpha.exe</a></p>
+<p>El fichero publicado se llama
+<code>Factuzam_DEMO_1.0.15.202606240020.alpha.exe</code>.</p>
+<p>La demo se entrega como instalador <strong>NSIS</strong> autoinstalable. Al ejecutarlo
+en un Windows de 64 bits, el asistente instala <strong>Factuzam DEMO</strong> en
+<code>%PROGRAMFILES%\Factuzam DEMO</code>, instala una <strong>MariaDB local</strong> para pruebas
+en el puerto <code>3310</code>, crea la base de datos de demostración y deja accesos
+directos en el escritorio y en el menú inicio.</p>
+<blockquote><p>Esta demo es para probar el programa en local. La instalación definitiva
+de una empresa puede hacerse con el procedimiento manual de este capítulo
+o con un paquete preparado para esa instalación concreta.</p></blockquote>
+<hr>
 <h2 id="1-requisitos">1. Requisitos</h2>
 <table>
 <thead><tr>
@@ -31,7 +46,7 @@ final solo necesita el capítulo
 <tbody>
 <tr><td><strong>Sistema operativo</strong></td><td>Windows 10 / Windows 11 (también Windows Server para el equipo que aloje la base de datos).</td></tr>
 <tr><td><strong>Base de datos</strong></td><td><strong>MariaDB</strong> (compatible MySQL). Puede instalarse en el mismo equipo o en un servidor de la red local.</td></tr>
-<tr><td><strong>Aplicación</strong></td><td><code>fzam.exe</code> — es un ejecutable autónomo, <strong>no requiere instalador</strong> ni librerías adicionales.</td></tr>
+<tr><td><strong>Aplicación</strong></td><td>En instalación manual, <code>fzam.exe</code> es un ejecutable autónomo. La demo descargable usa instalador <strong>NSIS</strong> e incluye MariaDB local de pruebas.</td></tr>
 <tr><td><strong>Red</strong></td><td>Si hay varios puestos, todos deben ver el servidor MariaDB por TCP (puerto <code>3306</code> por defecto).</td></tr>
 <tr><td><strong>Periféricos (TPV)</strong></td><td>Impresora de tickets compatible <strong>ESC/POS</strong> y <strong>lector de códigos de barras</strong> USB en simulación de teclado; ambos opcionales fuera de Caja.</td></tr>
 </tbody>
