@@ -21,7 +21,7 @@ RequestExecutionLevel admin
 !define APPNAME "Factuzam DEMO"
 !define COMPANYNAME "Factuzam"
 !ifndef VERSION
-  !define VERSION "1.0.15.202606240100.alpha"
+  !define VERSION "1.0.15.202606240120.alpha"
 !endif
 !define DBNAME "factuzam"
 !define DBPORT "3310"

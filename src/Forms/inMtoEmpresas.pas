@@ -59,6 +59,7 @@ type
     tsMasDatos: TcxTabSheet;
     pnlFichaCab: TPanel;
     tsOtros: TcxTabSheet;
+    scrOtros: TScrollBox;
     pnlUserInstantBottom: TPanel;
     cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit;
     lblUsuarioAlta: TcxLabel;

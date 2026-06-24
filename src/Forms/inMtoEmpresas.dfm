@@ -1480,12 +1480,25 @@
               ExplicitTop = 0
               ExplicitWidth = 0
               ExplicitHeight = 0
+              object scrOtros: TScrollBox
+                Left = 0
+                Top = 0
+                Width = 929
+                Height = 421
+                HorzScrollBar.Visible = False
+                VertScrollBar.Tracking = True
+                Align = alClient
+                BorderStyle = bsNone
+                TabOrder = 0
+                DesignSize = (
+                  929
+                  421)
               object pnlUserInstantBottom: TPanel
                 Left = 0
                 Top = 342
                 Width = 929
                 Height = 79
-                Align = alBottom
+                Anchors = [akLeft, akTop, akRight]
                 TabOrder = 4
                 object cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit
                   Left = 17
@@ -1728,6 +1741,7 @@
                 TabOrder = 17
                 Transparent = True
                 Width = 250
+              end
               end
             end
           end
