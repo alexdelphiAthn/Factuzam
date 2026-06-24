@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       UniDataPedidosCompra                                          }
 {    Tipo:       Data Module                                                   }
@@ -68,7 +68,8 @@ uses
   System.Diagnostics,
   inMtoPedidosCompra,
   inLibPedidosCompra,
-  inLibComprasImpuestos;
+  inLibComprasImpuestos,
+  inLibArticulosValidador;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -324,6 +325,10 @@ begin
   end;
   with unqryPedidosCompraLineas do
   begin
+    // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
+    NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn,
+      unqryPedidosCompraLineas, 'CODIGO_ART_PEDCLIN',
+      'CODIGO_UNIDAD_PEDCLIN');
     if (FindField('CANTIDAD_PEDCLIN') <> nil) and
        (FindField('PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN') <> nil) and
        (FindField('TOTAL_PEDCLIN') <> nil) then

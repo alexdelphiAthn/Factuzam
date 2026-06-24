@@ -189,7 +189,8 @@ uses
   inLibLog,
   System.Diagnostics,
   inLibFacturas,
-  inLibDocumentoFiscal;
+  inLibDocumentoFiscal,
+  inLibArticulosValidador;
 
 {$R *.dfm}
 
@@ -1706,6 +1707,10 @@ begin
   inherited;
   with unqryLinFac do
   begin
+    // Salvaguarda si la linea llega con un SKU/codigo de barras sin pasar
+    // por el editor de articulo del formulario.
+    NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn, unqryLinFac,
+      'CODIGO_ART_FACLIN', 'CODIGO_UNIDAD_FACLIN');
     if (FieldByName(fdesart).AsString = '') then
     begin
       DataSet.Cancel;

@@ -107,7 +107,8 @@ uses
   System.Diagnostics,
   inMtoAlbaranesCompra,
   inLibAlbaranesCompraMovimientos,
-  inLibComprasImpuestos;
+  inLibComprasImpuestos,
+  inLibArticulosValidador;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -399,6 +400,10 @@ begin
   end;
   with unqryAlbaranesCompraLineas do
   begin
+    // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
+    NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn,
+      unqryAlbaranesCompraLineas, 'CODIGO_ART_ALBCLIN',
+      'CODIGO_UNIDAD_ALBCLIN');
     if (FindField('CANTIDAD_ALBCLIN') <> nil) and
        (FindField('PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN') <> nil) and
        (FindField('TOTAL_ALBCLIN') <> nil) then

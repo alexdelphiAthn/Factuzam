@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibArticulosValidador                                       }
 {    Tipo:       Librería                                                      }
@@ -123,11 +123,131 @@ type
     function EsValido(const AEntrada: string): Boolean;
   end;
 
+// Normaliza campos de linea que admiten entrada libre: articulo, SKU,
+// codigo de barras o referencia de proveedor. Si hay SKU resuelto, deja
+// guardado el par canonico CODIGO_ART / CODIGO_UNIDAD.
+procedure NormalizarArticuloSkuEnDataSet(AConexion: TUniConnection;
+  ADataSet: TDataSet; const ACampoArticulo, ACampoSku: string;
+  const ACampoCodigoBarras: string = '');
+
 implementation
 
 const
   TIPOS_LEGIBLES: array[TArtTipoCoincidencia] of string =
     ('Desconocido', 'CodigoArt', 'CodigoSku', 'CodigoBarras', 'RefProveedor');
+
+function ValorCampoNormalizacion(ADataSet: TDataSet;
+  const ACampo: string): string;
+var
+  Campo: TField;
+begin
+  Result := '';
+  if Assigned(ADataSet) and (ACampo <> '') then
+  begin
+    Campo := ADataSet.FindField(ACampo);
+    if (Campo <> nil) and (not Campo.IsNull) then
+      Result := Campo.AsString;
+  end;
+end;
+
+procedure PonerCampoNormalizacion(ADataSet: TDataSet;
+  const ACampo, AValor: string);
+var
+  Campo: TField;
+begin
+  if Assigned(ADataSet) and (ACampo <> '') then
+  begin
+    Campo := ADataSet.FindField(ACampo);
+    if (Campo <> nil) and (not Campo.ReadOnly) and
+       (Campo.AsString <> AValor) then
+    begin
+      if not (ADataSet.State in dsEditModes) then
+        ADataSet.Edit;
+      Campo.AsString := AValor;
+    end;
+  end;
+end;
+
+procedure ResolverEntradaNormalizacion(AValidador: TArticulosValidador;
+  const AEntrada: string; out AResolucion: TArtResolucionEntrada);
+begin
+  AResolucion.Clear;
+  if Trim(AEntrada) <> '' then
+    AResolucion := AValidador.Resolver(AEntrada);
+end;
+
+procedure NormalizarArticuloSkuEnDataSet(AConexion: TUniConnection;
+  ADataSet: TDataSet; const ACampoArticulo, ACampoSku: string;
+  const ACampoCodigoBarras: string);
+var
+  Validador: TArticulosValidador;
+  RArt: TArtResolucionEntrada;
+  RSku: TArtResolucionEntrada;
+  RBarras: TArtResolucionEntrada;
+  RElegida: TArtResolucionEntrada;
+  sArticulo: string;
+  sSku: string;
+  sBarras: string;
+  bElegida: Boolean;
+begin
+  if (AConexion <> nil) and Assigned(ADataSet) and ADataSet.Active then
+  begin
+    sArticulo := Trim(ValorCampoNormalizacion(ADataSet, ACampoArticulo));
+    sSku := Trim(ValorCampoNormalizacion(ADataSet, ACampoSku));
+    sBarras := Trim(ValorCampoNormalizacion(ADataSet, ACampoCodigoBarras));
+    if (sArticulo <> '') or (sSku <> '') or (sBarras <> '') then
+    begin
+      Validador := TArticulosValidador.Create(AConexion);
+      try
+        ResolverEntradaNormalizacion(Validador, sArticulo, RArt);
+        ResolverEntradaNormalizacion(Validador, sSku, RSku);
+        ResolverEntradaNormalizacion(Validador, sBarras, RBarras);
+      finally
+        FreeAndNil(Validador);
+      end;
+      RElegida.Clear;
+      bElegida := False;
+      if RArt.Encontrado and (RArt.Tipo <> atcCodigoArt) then
+      begin
+        RElegida := RArt;
+        bElegida := True;
+      end
+      else if RSku.Encontrado and
+              ((not RArt.Encontrado) or
+               SameText(RSku.CodigoArticulo, RArt.CodigoArticulo)) then
+      begin
+        RElegida := RSku;
+        bElegida := True;
+      end
+      else if RBarras.Encontrado and
+              ((not RArt.Encontrado) or
+               SameText(RBarras.CodigoArticulo, RArt.CodigoArticulo)) then
+      begin
+        RElegida := RBarras;
+        bElegida := True;
+      end
+      else if RArt.Encontrado then
+      begin
+        RElegida := RArt;
+        bElegida := True;
+      end;
+      if bElegida then
+      begin
+        PonerCampoNormalizacion(ADataSet, ACampoArticulo,
+                                RElegida.CodigoArticulo);
+        if (RElegida.CodigoSku <> '') and (not RElegida.RequiereSku) then
+          PonerCampoNormalizacion(ADataSet, ACampoSku, RElegida.CodigoSku)
+        else if RArt.Encontrado and RSku.Encontrado and
+                (not SameText(RArt.CodigoArticulo,
+                              RSku.CodigoArticulo)) then
+          PonerCampoNormalizacion(ADataSet, ACampoSku, '');
+        if RElegida.CodigoBarrasMatch <> '' then
+          PonerCampoNormalizacion(ADataSet, ACampoCodigoBarras,
+                                  RElegida.CodigoBarrasMatch);
+      end;
+    end;
+  end;
+end;
 
 { TArtResolucionEntrada ───────────────────────────────────────────────────── }
 

@@ -244,6 +244,8 @@ var
   fCantidad, fEntregada, fPendiente: Double;
 begin
   inherited;
+  NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn, unqryPedidosLineas,
+    'CODIGO_ART_PEDLIN', '', 'CODBAR_ART_PEDLIN');
   RecalcularEntregasLinea;
   // El total de la línea siempre se mantiene coherente
   with unqryPedidosLineas do

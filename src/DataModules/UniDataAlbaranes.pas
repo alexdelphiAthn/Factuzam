@@ -89,7 +89,8 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics;
+  inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics,
+  inLibArticulosValidador;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -232,6 +233,10 @@ begin
   inherited;
   with unqryAlbaranesLineas do
   begin
+    // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
+    NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn,
+      unqryAlbaranesLineas, 'CODIGO_ART_ALBLIN',
+      'CODIGO_UNIDAD_ALBLIN');
     if (FindField('CANTIDAD_ALBLIN') <> nil) and
        (FindField('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN') <> nil) and
        (FindField('TOTAL_ALBLIN') <> nil) then
