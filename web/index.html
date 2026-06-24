@@ -125,29 +125,38 @@
             position: relative;
             display: flex;
             align-items: center;
+            justify-content: space-between;
+            gap: 44px;
             min-height: 92vh;
             padding: 130px 40px 92px;
             overflow: hidden;
             color: var(--tinta);
             background: #f7f8fb;
         }
-        .hero::after {
-            content: "";
-            position: absolute;
-            right: -18px;
-            bottom: 34px;
-            width: min(42vw, 580px);
-            height: min(42vw, 580px);
-            background-image: url("assets/img/hero-factuzam.png");
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: contain;
-            pointer-events: none;
-        }
         .hero__contenido {
-            width: min(760px, 100%);
+            flex: 0 1 650px;
             position: relative;
             z-index: 1;
+        }
+        .hero__media {
+            position: relative;
+            z-index: 0;
+            flex: 1 1 420px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            min-width: 360px;
+        }
+        .hero__media img {
+            width: min(48vw, 720px);
+            height: clamp(320px, 30vw, 430px);
+            object-fit: cover;
+            object-position: 50% 62%;
+            border-radius: 8px;
+            box-shadow: 0 24px 46px rgba(15, 26, 46, 0.14);
+        }
+        .hero__media--movil {
+            display: none;
         }
         .hero__logo {
             width: 250px;
@@ -297,6 +306,55 @@
         .tarjeta:nth-child(3) .tarjeta__indicador,
         .tarjeta:nth-child(6) .tarjeta__indicador {
             background: var(--ambar);
+        }
+        .experiencia {
+            background: var(--panel-suave);
+        }
+        .experiencia__grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+            gap: 34px;
+            align-items: start;
+        }
+        .experiencia__firma {
+            margin-top: 28px;
+            padding-top: 22px;
+            border-top: 1px solid var(--linea);
+            color: var(--marca);
+            font-weight: 800;
+        }
+        .experiencia__firma span {
+            display: block;
+            margin-top: 4px;
+            color: var(--texto);
+            font-size: 0.98rem;
+            font-weight: 600;
+        }
+        .experiencia__bloque {
+            padding: 24px;
+            border: 1px solid var(--linea);
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 12px 30px rgba(15, 26, 46, 0.06);
+        }
+        .experiencia__bloque h3 {
+            margin-bottom: 18px;
+        }
+        .experiencia__lista {
+            display: grid;
+            gap: 14px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        .experiencia__lista li {
+            padding-left: 18px;
+            border-left: 4px solid var(--lila);
+            color: var(--texto);
+        }
+        .experiencia__lista strong {
+            display: block;
+            color: var(--marca);
         }
         .franja {
             background: var(--marca);
@@ -561,8 +619,24 @@
             .hero h1 {
                 font-size: 3.15rem;
             }
-            .hero::after {
-                display: none;
+            .hero {
+                flex-direction: column;
+                align-items: flex-start;
+                min-height: auto;
+                padding-bottom: 54px;
+            }
+            .hero__contenido {
+                flex-basis: auto;
+                width: min(760px, 100%);
+            }
+            .hero__media {
+                justify-content: center;
+                width: 100%;
+                min-width: 0;
+            }
+            .hero__media img {
+                width: min(720px, 100%);
+                height: clamp(300px, 44vw, 390px);
             }
             .rejilla-servicios {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -583,13 +657,12 @@
             }
             .hero {
                 min-height: 88vh;
-                padding: 110px 22px 64px;
-            }
-            .hero::after {
-                display: none;
+                padding: 104px 22px 46px;
+                gap: 28px;
             }
             .hero__logo {
                 width: 210px;
+                margin-bottom: 24px;
             }
             .hero h1 {
                 font-size: 2.05rem;
@@ -601,6 +674,18 @@
             .hero__contenido {
                 width: 100%;
             }
+            .hero__media--escritorio {
+                display: none;
+            }
+            .hero__media--movil {
+                display: flex;
+                flex: 0 0 auto;
+                margin-top: 26px;
+            }
+            .hero__media img {
+                width: min(100%, 520px);
+                height: clamp(210px, 56vw, 300px);
+            }
             .hero__datos {
                 display: none;
             }
@@ -611,6 +696,7 @@
                 font-size: 2rem;
             }
             .verifactu,
+            .experiencia__grid,
             .producto__grid,
             .trabajo__grid,
             .contacto__grid {
@@ -632,6 +718,9 @@
                 max-width: 320px;
                 font-size: 0.9rem;
             }
+            .hero__media img {
+                height: clamp(190px, 58vw, 240px);
+            }
             .tecnologias {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
@@ -645,6 +734,7 @@
         </a>
         <ul class="nav__enlaces">
             <li><a href="#servicios">Servicios</a></li>
+            <li><a href="#experiencia">Experiencia</a></li>
             <li><a href="#verifactu">VeriFactu</a></li>
             <li><a href="#factuzam">Factuzam</a></li>
             <li><a href="#capturas">Pantallas</a></li>
@@ -661,6 +751,9 @@
                 Adapto programas ya existentes a VeriFactu, hago migraciones de datos y
                 trabajo por día bajo presupuesto previo.
             </p>
+            <div class="hero__media hero__media--movil" aria-hidden="true">
+                <img src="assets/img/hero-factuzam.png" alt="" loading="eager" fetchpriority="high">
+            </div>
             <div class="hero__acciones">
                 <a class="boton boton--principal" href="#contacto">Pedir presupuesto</a>
                 <a class="boton boton--secundario" href="manual/index.html">Ver manual</a>
@@ -680,6 +773,9 @@
                     <span>Datos, procesos, APIs y aplicaciones legacy.</span>
                 </div>
             </div>
+        </div>
+        <div class="hero__media hero__media--escritorio" aria-hidden="true">
+            <img src="assets/img/hero-factuzam.png" alt="" loading="eager" fetchpriority="high">
         </div>
     </section>
     <main>
@@ -760,6 +856,50 @@
                         </p>
                     </article>
                 </div>
+            </div>
+        </section>
+        <section id="experiencia" class="experiencia">
+            <div class="contenedor experiencia__grid">
+                <div class="cabecera">
+                    <div class="cabecera__marca">Experiencia</div>
+                    <h2>Software de gestión que sigue trabajando años después.</h2>
+                    <p>
+                        Soy Alejandro Laorden Hidalgo, Ingeniero Técnico en Informática
+                        por la UPSA, Salamanca, promoción 2007. Mi trayectoria está muy
+                        ligada a programas de gestión reales, especialmente en entornos
+                        con tallas, colores, almacenes, facturación e integraciones.
+                    </p>
+                    <p>
+                        He trabajado en aplicaciones grandes como OdaCash+ y ZapaGestion,
+                        y en proyectos para empresas como Correos y COBRA. Mi mayor orgullo
+                        es que mucho de lo que he diseñado todavía está usándose con éxito.
+                    </p>
+                    <div class="experiencia__firma">
+                        Alejandro Laorden Hidalgo
+                        <span>Delphi, DevExpress y FastReports como herramientas principales.</span>
+                    </div>
+                </div>
+                <aside class="experiencia__bloque">
+                    <h3>Trayectoria técnica</h3>
+                    <ul class="experiencia__lista">
+                        <li>
+                            <strong>Tallas y colores</strong>
+                            Experiencia en gestión de artículos complejos, variantes, almacén y venta.
+                        </li>
+                        <li>
+                            <strong>Programas grandes</strong>
+                            Trabajo sobre OdaCash+, ZapaGestion y aplicaciones empresariales en producción.
+                        </li>
+                        <li>
+                            <strong>Empresas y procesos críticos</strong>
+                            Desarrollo y mantenimiento en entornos como Correos y COBRA.
+                        </li>
+                        <li>
+                            <strong>Stack principal</strong>
+                            Delphi, DevExpress, FastReports, bases de datos e informes de gestión.
+                        </li>
+                    </ul>
+                </aside>
             </div>
         </section>
         <section id="verifactu" class="franja">
@@ -898,6 +1038,8 @@
                     </p>
                     <div class="tecnologias" aria-label="Tecnologías">
                         <div class="tecnologia">Delphi</div>
+                        <div class="tecnologia">DevExpress</div>
+                        <div class="tecnologia">FastReports</div>
                         <div class="tecnologia">Visual Basic</div>
                         <div class="tecnologia">.NET</div>
                         <div class="tecnologia">MariaDB</div>

@@ -108,6 +108,16 @@ venta mayor (contado, transferencia, giro a X días, etc.). Define
 vencimientos y comportamiento de cobro/pago para facturas, pedidos y
 albaranes.
 
+Campos principales:
+
+| Campo | Para qué sirve |
+|-------|----------------|
+| **Número de plazos** | Cuántos vencimientos genera al crear efectos o recibos. |
+| **Días entre plazos** | Separación entre vencimientos. |
+| **% Adelanto** | Parte que se cobra o paga por adelantado. |
+| **Ver Banco Empresa en Borrador** | Muestra la selección de banco de la empresa al generar cobros o pagos. |
+| **Código Facturae** | Código oficial `PaymentMeans` (`01` a `19`) usado al emitir eDoc. |
+
 Sub-pestañas: **Más Datos**, **Ventas** (uso en ventas) y **Otros**.
 
 ![Formas de pago](img/03-formas-pago.png)

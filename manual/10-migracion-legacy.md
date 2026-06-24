@@ -50,6 +50,9 @@ siguientes dominios:
 | **Movimientos** | Movimientos de almacén (y reconstruye el **stock actual**). |
 | **Ventas (caja)** | Operaciones de caja, pagos y depósitos de cliente. |
 | **Facturas** | Facturas y sus líneas. |
+| **Compras** | Pedidos, albaranes, devoluciones a proveedor y facturas de compra. |
+| **Cartera de pagos** | Efectos de compra y remesas de pago a proveedor. |
+| **Empleados** | Operarios de caja, traspasos y arqueos, separados de los usuarios de login. |
 
 La migración corre **en paralelo por oleadas**: los dominios sin
 dependencias entre sí se procesan a la vez, y cada oleada espera a que
@@ -82,8 +85,9 @@ externos:
 > en la [instalación](09-instalacion-windows.md#3-crear-la-base-de-datos-inicial).
 > En ese caso, asegúrate de aplicar también los **scripts de esquema**
 > requeridos por el migrador si tu dump es anterior a ellos (ampliaciones
-> de códigos de cliente, nombre de proveedor, jerarquía de familias y
-> líneas de inventario).
+> de códigos de cliente, nombre de proveedor, jerarquía de familias,
+> líneas de inventario, empleados, compras, facturas de compra y cartera
+> de pagos).
 
 ---
 
@@ -94,8 +98,7 @@ externos:
 3. Configura el panel **Origen** (SQL Server): host, puerto, base de
    datos, usuario y contraseña. Pulsa **Probar conexión**.
 4. Configura el panel **Destino** (MariaDB) igual, y prueba la conexión.
-5. **Marca las migraciones** a ejecutar. La lista ya respeta el orden de
-   dependencias; para una migración completa, márcalas todas.
+5. **Marca las migraciones** a ejecutar. La lista ya respeta el orden de dependencias; para una migración completa, márcalas todas. En compras, los dominios entran después de maestros y SKUs: pedidos, albaranes, devoluciones a proveedor, facturas de compra, efectos y remesas de pago.
 6. Pulsa **Ejecutar migraciones**. Durante el proceso:
    - El panel de progreso muestra **una línea por dominio activo** con su
      contador `X / Y (Z %)` en tiempo real.
@@ -139,6 +142,8 @@ conviene repasar a mano una vez terminada la migración:
 | **Forma de pago del cliente** | Se usa el código de efecto del legacy como código de forma de pago. | Verificar que las formas de pago migradas tienen la descripción y comportamiento deseados. |
 | **Familias** | Secciones y familias del legacy van a la misma tabla, conservando la jerarquía sección → familia. | Revisar el árbol de familias resultante. |
 | **Conjuntos de tallas por artículo** | Se migran los catálogos y las asignaciones de color/talla, pero **no** el conjunto concreto de tallas de cada artículo. | Asignar el conjunto de atributos a los artículos que lo necesiten (*Archivo ▸ Tablas Auxiliares ▸ Colecciones de Atributos*). |
+| **Compras históricas** | Los pedidos, albaranes, devoluciones y facturas se reconstruyen con una línea por SKU y su tallaje pivotado. | Abrir muestras en *Compras* y revisar proveedor, almacén, estado, totales e impuestos. |
+| **Efectos de compra** | Los vencimientos legacy se importan y se concilian cuando ya constan pagados. | Revisar efectos pendientes, pagados y remesas antes de empezar a operar. |
 
 ---
 
@@ -152,13 +157,13 @@ Antes de dar la migración por buena:
 2. **Stock**: compara el stock de una muestra de artículos con el sistema
    antiguo (*Almacén ▸ Informes*). El migrador reconstruye el stock a
    partir de los movimientos.
-3. **Documentos**: abre algunas facturas y operaciones de caja migradas y
-   comprueba importes e impuestos.
+3. **Documentos**: abre algunas facturas, operaciones de caja y compras
+   migradas y comprueba importes e impuestos.
 4. **Ventas de prueba**: haz un ticket de prueba en el TPV y una factura
    de prueba en Ventas Mayor.
-5. Aplica los **ajustes manuales** de la sección anterior.
-6. Haz una **copia de seguridad** de la base ya migrada: es tu punto de
-   partida oficial.
+5. **Cartera**: revisa efectos y remesas de compra para comprobar vencimientos, estados y bancos.
+6. Aplica los **ajustes manuales** de la sección anterior.
+7. Haz una **copia de seguridad** de la base ya migrada: es tu punto de partida oficial.
 
 > Hasta completar la verificación, conserva el software y la base de
 > datos antiguos **en solo lectura** como referencia histórica.

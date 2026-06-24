@@ -78,13 +78,18 @@ type
                            AAncho: Integer): TcxGridDBColumn;
     procedure ConfigurarCombos;
     procedure VincularDatos;
+    procedure DesvincularDatos;
+    procedure ActualizarFormatoValor;
     function  GrabarCabeceraSiNecesario: Boolean;
+    procedure cbbTipoAplicacionEditValueChanged(Sender: TObject);
+    procedure dsTablaGDataChange(Sender: TObject; Field: TField);
     procedure btnCargarClick(Sender: TObject);
     procedure btnCalcularClick(Sender: TObject);
     procedure btnAplicarClick(Sender: TObject);
     procedure btnRefrescarClick(Sender: TObject);
   public
     dmmTarifasCambios: TdmTarifasCambios;
+    destructor Destroy; override;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
   end;
@@ -104,6 +109,12 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TfrmMtoTarifasCambios.FormCreate(Sender: TObject);
 begin
   CrearControlesDinamicos;
+  inherited;
+end;
+
+destructor TfrmMtoTarifasCambios.Destroy;
+begin
+  DesvincularDatos;
   inherited;
 end;
 
@@ -219,6 +230,7 @@ begin
   curValor.Left := 820;
   curValor.Top := 6;
   curValor.Width := 90;
+  curValor.Properties.UseDisplayFormatWhenEditing := True;
   CrearEtiqueta(pnlParametros, 'Redondeo', 12, 48);
   curRedondeo := TcxDBCurrencyEdit.Create(Self);
   curRedondeo.Parent := pnlParametros;
@@ -291,7 +303,7 @@ begin
   cxgrdLineas := TcxGrid.Create(Self);
   cxgrdLineas.Parent := tsLineas;
   cxgrdLineas.Align := alClient;
-  tvLineas := TcxGridDBTableView.Create(Self);
+  tvLineas := TcxGridDBTableView.Create(cxgrdLineas);
   glLineas := cxgrdLineas.Levels.Add;
   glLineas.GridView := tvLineas;
   tvLineas.OptionsData.Deleting := False;
@@ -313,6 +325,8 @@ begin
   cbbTipoAplicacion.Properties.Items.Add('INCREMENTO_LINEAL');
   cbbTipoAplicacion.Properties.Items.Add('INCREMENTO_PORCENTUAL');
   cbbTipoAplicacion.Properties.Items.Add('PRECIO_FIJO');
+  cbbTipoAplicacion.Properties.OnEditValueChanged :=
+    cbbTipoAplicacionEditValueChanged;
   cbbTarifaOrigen.Properties.KeyFieldNames := 'CODIGO_TAR_ARTTAR';
   cbbTarifaOrigen.Properties.ListFieldNames := 'NOMBRE_TAR_TAR';
   cbbTarifaDestino.Properties.KeyFieldNames := 'CODIGO_TAR_ARTTAR';
@@ -353,12 +367,17 @@ begin
   dteDtoDesde.DataBinding.DataField := 'FECHA_DESDE_DTO_TARC';
   dteDtoHasta.DataBinding.DataSource := dsTablaG;
   dteDtoHasta.DataBinding.DataField := 'FECHA_HASTA_DTO_TARC';
+  dsTablaG.OnDataChange := dsTablaGDataChange;
+  ActualizarFormatoValor;
 end;
 
 procedure TfrmMtoTarifasCambios.CrearTablaPrincipal;
 begin
   inherited;
   dmmTarifasCambios := tdmDataModule as TdmTarifasCambios;
+  dmmTarifasCambios.unqryLineas.MasterFields := 'CODIGO_TARC';
+  dmmTarifasCambios.unqryLineas.DetailFields := 'CODIGO_TARC_TARCLIN';
+  dmmTarifasCambios.unqryLineas.MasterSource := dsTablaG;
   tvLineas.DataController.DataSource := dmmTarifasCambios.dsLineas;
   cbbTarifaOrigen.Properties.ListSource := dmmTarifasCambios.dsTarifas;
   cbbTarifaDestino.Properties.ListSource := dmmTarifasCambios.dsTarifas;
@@ -366,6 +385,85 @@ begin
   VincularDatos;
   CrearColumnasCabecera;
   CrearColumnasLineas;
+end;
+
+procedure TfrmMtoTarifasCambios.DesvincularDatos;
+begin
+  if Assigned(dsTablaG) then
+    dsTablaG.OnDataChange := nil;
+  if Assigned(cbbTipoAplicacion) then
+    cbbTipoAplicacion.Properties.OnEditValueChanged := nil;
+  if Assigned(tvLineas) then
+  begin
+    tvLineas.DataController.DataSource := nil;
+    FreeAndNil(tvLineas);
+  end;
+  if Assigned(cbbTarifaOrigen) then
+    cbbTarifaOrigen.Properties.ListSource := nil;
+  if Assigned(cbbTarifaDestino) then
+    cbbTarifaDestino.Properties.ListSource := nil;
+  if Assigned(dmmTarifasCambios) then
+  begin
+    if Assigned(dmmTarifasCambios.dsLineas) then
+      dmmTarifasCambios.dsLineas.DataSet := nil;
+    if Assigned(dmmTarifasCambios.dsTarifas) then
+      dmmTarifasCambios.dsTarifas.DataSet := nil;
+    if Assigned(dmmTarifasCambios.unqryLineas) then
+    begin
+      if dmmTarifasCambios.unqryLineas.Active then
+        dmmTarifasCambios.unqryLineas.Close;
+      dmmTarifasCambios.unqryLineas.MasterSource := nil;
+      dmmTarifasCambios.unqryLineas.MasterFields := '';
+      dmmTarifasCambios.unqryLineas.DetailFields := '';
+    end;
+    if Assigned(dmmTarifasCambios.unqryTarifas) and
+       dmmTarifasCambios.unqryTarifas.Active then
+      dmmTarifasCambios.unqryTarifas.Close;
+  end;
+end;
+
+procedure TfrmMtoTarifasCambios.ActualizarFormatoValor;
+var
+  sTipoAplicacion: string;
+begin
+  if not ((csDestroying in ComponentState) or
+          (cbbTipoAplicacion = nil) or (curValor = nil)) then
+  begin
+    sTipoAplicacion := VarToStr(cbbTipoAplicacion.EditValue);
+    if (sTipoAplicacion = '') and Assigned(dsTablaG.DataSet) and
+       (dsTablaG.DataSet.FindField('TIPO_APLICACION_TARC') <> nil) then
+      sTipoAplicacion :=
+        dsTablaG.DataSet.FieldByName('TIPO_APLICACION_TARC').AsString;
+    if SameText(sTipoAplicacion, 'INCREMENTO_PORCENTUAL') then
+    begin
+      curValor.Properties.DisplayFormat := '0.00 %';
+      curValor.Properties.EditFormat := '0.00 %';
+    end
+    else
+    begin
+      curValor.Properties.DisplayFormat :=
+        ',0.00 ' + #8364 + ';-,0.00 ' + #8364;
+      curValor.Properties.EditFormat :=
+        ',0.00 ' + #8364 + ';-,0.00 ' + #8364;
+    end;
+  end;
+end;
+
+procedure TfrmMtoTarifasCambios.cbbTipoAplicacionEditValueChanged(
+  Sender: TObject);
+begin
+  if not (csDestroying in ComponentState) then
+    ActualizarFormatoValor;
+end;
+
+procedure TfrmMtoTarifasCambios.dsTablaGDataChange(Sender: TObject;
+  Field: TField);
+begin
+  if not (csDestroying in ComponentState) then
+  begin
+    if (Field = nil) or SameText(Field.FieldName, 'TIPO_APLICACION_TARC') then
+      ActualizarFormatoValor;
+  end;
 end;
 
 procedure TfrmMtoTarifasCambios.CrearColumnasCabecera;
@@ -480,19 +578,25 @@ end;
 
 procedure TfrmMtoTarifasCambios.btnAplicarClick(Sender: TObject);
 var
-  sMensaje : string;
-  iLineas  : Integer;
+  sMensaje        : string;
+  iLineas         : Integer;
+  iLineasAplicadas: Integer;
 begin
   if GrabarCabeceraSiNecesario then
   begin
-    if MessageDlg('Aplicar las lineas marcadas a la tarifa destino?',
-                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    iLineas := dmmTarifasCambios.RecalcularSesionActual(sMensaje);
+    if sMensaje <> '' then
+      ShowMessage('No se pudo calcular la sesion: ' + sMensaje)
+    else if MessageDlg(Format('%d lineas recalculadas. Aplicar las ' +
+                              'lineas marcadas a la tarifa destino?',
+                              [iLineas]),
+                       mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
-      iLineas := dmmTarifasCambios.AplicarSesionActual(sMensaje);
+      iLineasAplicadas := dmmTarifasCambios.AplicarSesionActual(sMensaje);
       if sMensaje <> '' then
         ShowMessage('No se pudo aplicar la sesion: ' + sMensaje)
       else
-        ShowMessage(Format('%d lineas aplicadas.', [iLineas]));
+        ShowMessage(Format('%d lineas aplicadas.', [iLineasAplicadas]));
     end;
   end;
 end;

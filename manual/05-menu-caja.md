@@ -256,7 +256,6 @@ Desde **Histórico (F8)** puedes reimprimir duplicados del ticket de arqueo
 o del justificante de cierre ya grabado.
 
 ![Histórico de arqueos desde el TPV](img/05-caja-arqueo-historico-tpv.png)
-*▢ Captura pendiente — Histórico de arqueos dentro del TPV con Duplicado ticket y Duplicado cierre.*
 
 ---
 
@@ -368,7 +367,6 @@ por empresa, almacén, caja y rango de fechas. El formato se puede editar y
 guardar desde el diseñador de informes.
 
 ![Informe A4 de histórico de arqueos](img/05-caja-hist-arqueos-informe.png)
-*▢ Captura pendiente — Filtro del informe A4 de arqueos con rango de fechas.*
 
 ---
 
@@ -382,7 +380,6 @@ ticket en borrador normal** a nombre del cliente. Como el resto de
 documentos de venta, se consolidan según el modo fiscal configurado.
 
 ![Borradores simplificados](img/05-caja-borradores-simplificados.png)
-*▢ Captura pendiente — Mantenimiento de Borradores Simplificados.*
 
 ---
 

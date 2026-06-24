@@ -25,7 +25,8 @@ type
   private
     FPageControl: TcxPageControl;
     FForms: TList<TForm>;
-    procedure InternalCloseForm(AForm:TForm);
+    procedure InternalCloseForm(AForm: TForm;
+                                AForzar: Boolean = False);
   protected
     procedure Notification(AComponent: TComponent;
                            Operation: TOperation); override;
@@ -99,8 +100,14 @@ begin
 end;
 
 procedure TEmbeddedFormManager.CloseAll;
+var
+  F: TForm;
 begin
-  FForms.Clear;
+  while FForms.Count > 0 do
+  begin
+    F := FForms[FForms.Count - 1];
+    InternalCloseForm(F, True);
+  end;
 end;
 
 function TEmbeddedFormManager.FindFormByCaption(const ATitle: string): TForm;
@@ -143,7 +150,8 @@ begin
   end;
 end;
 
-procedure TEmbeddedFormManager.InternalCloseForm(AForm: TForm);
+procedure TEmbeddedFormManager.InternalCloseForm(AForm: TForm;
+                                                AForzar: Boolean);
 var
   ParentTab: TWinControl;
 begin
@@ -155,11 +163,14 @@ begin
       FForms.Remove(AForm);
       Exit;
     end;
-    with (AForm as TfrmMtoGen) do
-      if pcPantalla.ActivePage = tsFicha then
+    if (not AForzar) and (AForm is TfrmMtoGen) then
+      with (AForm as TfrmMtoGen) do
       begin
-        pcPantalla.ActivePage := tsLista;
-        Exit;
+        if pcPantalla.ActivePage = tsFicha then
+        begin
+          pcPantalla.ActivePage := tsLista;
+          Exit;
+        end;
       end;
     // Congela todo antes de tocar nada
     SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(False), 0);

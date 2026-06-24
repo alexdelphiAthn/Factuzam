@@ -63,12 +63,12 @@ completa (dirección, población, provincia, código postal), Móvil, Email.
   preseleccionar la cuenta de **cobro** en recibos de cliente y la cuenta de
   **pago** en efectos/remesas de proveedor.
 - **Certificado / Verifactu** — *Número de Serie* y *Tipo de Certificado*
-  para la firma y el envío de facturas al sistema **Verifactu (AEAT)**.
+  para la firma y el envío de facturas al sistema **Verifactu (AEAT)** y
+  para la emisión de eDoc firmado cuando corresponda.
 - **Texto en Factura** — texto legal que se imprimirá en los documentos.
 - **Zona de IVA principal** — régimen de IVA por defecto de la empresa.
 
 ![Pestaña Bancos de Empresas](img/02-empresas-bancos.png)
-*▢ Captura pendiente — Pestaña Bancos con IBAN, banco y marcas de cobro/pago por defecto.*
 
 > La configuración correcta de **NIF, series y certificado** es
 > imprescindible para emitir facturas válidas y para la integración con
@@ -127,6 +127,21 @@ Contacto y teléfono de contacto, Nº de cuenta.
 
 > Estos indicadores afectan directamente al **cálculo de impuestos** en
 > ventas. Configúralos con cuidado al dar de alta el cliente.
+
+**Parámetros eDoc:** esta pestaña guarda los datos necesarios para emitir
+un fichero Facturae firmado desde Ventas Mayor:
+
+| Campo | Para qué sirve |
+|-------|----------------|
+| **Oficina contable** | Código DIR3 de la oficina contable del cliente público. |
+| **Órgano gestor** | Código DIR3 del órgano gestor. |
+| **Unidad tramitadora** | Código DIR3 de la unidad tramitadora. |
+| **Nombre persona física** | Nombre cuando el receptor es persona física. |
+| **Apellidos persona física** | Apellidos cuando el receptor es persona física. |
+
+Estos datos se copian como foto a cada borrador de venta mayor al elegir el
+cliente. Si una factura concreta necesita otro valor, se corrige en la
+pestaña **Parámetros eDoc** del propio borrador.
 
 ---
 
@@ -206,7 +221,6 @@ compra de este proveedor:
 | **Banco para pagos (empresa)** | Cuenta propia de la empresa que se preselecciona al generar efectos o incluirlos en remesas. |
 
 ![Pestaña Pagos del proveedor](img/02-proveedores-pagos.png)
-*▢ Captura pendiente — Pestaña Pagos con forma de pago y banco de empresa por defecto.*
 
 ---
 
@@ -277,7 +291,6 @@ masivos de precios, revisar las líneas calculadas y aplicarlas a la tarifa
 destino cuando estén validadas.
 
 ![Sesión de cambios de tarifa](img/02-tarifas-cambios.png)
-*▢ Captura pendiente — Sesión de cambios de tarifa con cabecera, líneas calculadas y botón Aplicar tarifa.*
 
 ### Familias
 

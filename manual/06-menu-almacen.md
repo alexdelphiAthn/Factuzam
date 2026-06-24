@@ -121,7 +121,6 @@ tallas. Vista resumida del stock cuando no interesa el desglose por
 variante.
 
 ![Balance de almacén sin tallas](img/06-balance-sin-tallas.png)
-*▢ Captura pendiente — Filtros e informe del balance sin tallas con foto del artículo.*
 
 Incluye artículos con o sin tallaje y usa el mismo sistema de filtros,
 bandas, agrupaciones y exportación a Excel que el balance horizontal.
@@ -133,7 +132,6 @@ han vendido, en qué cantidad y periodo. Útil para análisis de rotación y
 reposición.
 
 ![Movimientos de ventas por artículos](img/06-movimientos-ventas-articulos.png)
-*▢ Captura pendiente — Informe de movimientos de ventas por artículos con filtros y márgenes.*
 
 Además del periodo de ventas, puede filtrar por **Inicio compras** para
 analizar solo artículos cuya primera compra sea posterior a una fecha. El

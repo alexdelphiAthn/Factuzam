@@ -165,7 +165,6 @@ XML: registro de eventos y registro de facturación. La exportación solo
 empaqueta registros ya generados; no crea la trazabilidad en ese momento.
 
 ![Exportación NO VERIFACTU](img/11-exportar-noverifactu.png)
-*▢ Captura pendiente — Botón de exportación NO VERIFACTU y diálogo de guardado de XML.*
 
 ---
 
@@ -191,7 +190,6 @@ exportación. Para clientes extranjeros, la aplicación usa los datos de país
 y NIF-IVA/documento para construir el destinatario correcto.
 
 ![Tipo de operación Verifactu en borradores](img/11-tipo-operacion.png)
-*▢ Captura pendiente — Pestaña Otros de un borrador con el selector de tipo de operación Verifactu.*
 
 ![Pestaña Verifactu de una factura](img/11-factura-verifactu.png)
 *▢ Captura pendiente — Pestaña Verifactu de la factura (QR, URL, hash, estado).*
