@@ -1,6 +1,7 @@
 # Archivos compilados de Delphi
 *.dcu
 *.exe
+*.msi
 *.dll
 *.bpl
 *.dcp
