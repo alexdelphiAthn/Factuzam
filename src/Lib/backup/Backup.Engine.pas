@@ -379,14 +379,13 @@ begin
     FWriter.AddComment('========================================');
     FWriter.AddCommand('');
     
+    FWriter.AddComment('Limpieza de vistas');
+    for i := Views.Count - 1 downto 0 do
+      FWriter.AddCommand(FHelpers.GenerateDropView(Views[i]));
+    FWriter.AddCommand('');
     for i := 0 to Views.Count - 1 do
     begin
       FWriter.AddComment('Vista: ' + Views[i]);
-      
-      // Drop view si existe
-      FWriter.AddCommand(Format('DROP VIEW IF EXISTS %s;', 
-                                [FHelpers.QuoteIdentifier(Views[i])]));
-      
       // Obtener definición y crear
       ViewDef := FProvider.GetViewDefinition(Views[i]);
       FWriter.AddCommand(FHelpers.GenerateCreateViewSQL(ViewDef));

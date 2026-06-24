@@ -19,6 +19,11 @@ type
     FUser: string;
     FPassword: string;
     FOwnsConnection: Boolean;
+    procedure OrdenarVistasPorDependencias(Vistas: TStringList);
+    function DDLReferenciaVista(const DDL, Vista: string): Boolean;
+    function ContieneIdentificadorSQL(const Texto,
+                                      Identificador: string): Boolean;
+    function EsCaracterIdentificadorSQL(Caracter: Char): Boolean;
   public
     constructor Create(Conn: TUniConnection; const DBName: string); overload;
     constructor Create(const Host: string;
@@ -524,9 +529,121 @@ begin
       Result.Add(Query.FieldByName('TABLE_NAME').AsString);
       Query.Next;
     end;
+    OrdenarVistasPorDependencias(Result);
   finally
     Query.Free;
   end;
+end;
+
+procedure TMySQLMetadataProvider.OrdenarVistasPorDependencias(
+  Vistas: TStringList);
+var
+  oDDL: TDictionary<string, string>;
+  oOrdenadas: TStringList;
+  oPendientes: TStringList;
+  bAgregado: Boolean;
+  bDepende: Boolean;
+  sNombre: string;
+  sDep: string;
+  sDDL: string;
+  i, j: Integer;
+begin
+  oDDL := TDictionary<string, string>.Create;
+  oOrdenadas := TStringList.Create;
+  oPendientes := TStringList.Create;
+  try
+    for i := 0 to Vistas.Count - 1 do
+      oDDL.Add(Vistas[i], GetViewDefinition(Vistas[i]));
+    oPendientes.Assign(Vistas);
+    oPendientes.Sort;
+    while oPendientes.Count > 0 do
+    begin
+      bAgregado := False;
+      i := 0;
+      while i < oPendientes.Count do
+      begin
+        sNombre := oPendientes[i];
+        bDepende := False;
+        if oDDL.TryGetValue(sNombre, sDDL) then
+        begin
+          for j := 0 to oPendientes.Count - 1 do
+          begin
+            sDep := oPendientes[j];
+            if not SameText(sDep, sNombre) then
+            begin
+              if DDLReferenciaVista(sDDL, sDep) then
+                bDepende := True;
+            end;
+          end;
+        end;
+        if not bDepende then
+        begin
+          oOrdenadas.Add(sNombre);
+          oPendientes.Delete(i);
+          bAgregado := True;
+        end
+        else
+          Inc(i);
+      end;
+      if not bAgregado then
+      begin
+        oOrdenadas.Add(oPendientes[0]);
+        oPendientes.Delete(0);
+      end;
+    end;
+    Vistas.Assign(oOrdenadas);
+  finally
+    oDDL.Free;
+    oOrdenadas.Free;
+    oPendientes.Free;
+  end;
+end;
+
+function TMySQLMetadataProvider.DDLReferenciaVista(const DDL,
+  Vista: string): Boolean;
+begin
+  Result := ContainsText(DDL, '`' + Vista + '`') or
+            ContainsText(DDL, '"' + Vista + '"') or
+            ContieneIdentificadorSQL(DDL, Vista);
+end;
+
+function TMySQLMetadataProvider.ContieneIdentificadorSQL(const Texto,
+  Identificador: string): Boolean;
+var
+  TextoNorm: string;
+  IdNorm: string;
+  Posicion: Integer;
+  LenId: Integer;
+  Inicio: Boolean;
+  Fin: Boolean;
+begin
+  Result := False;
+  TextoNorm := LowerCase(Texto);
+  IdNorm := LowerCase(Identificador);
+  LenId := Length(IdNorm);
+  Posicion := PosEx(IdNorm, TextoNorm, 1);
+  while Posicion > 0 do
+  begin
+    Inicio := (Posicion = 1) or
+      (not EsCaracterIdentificadorSQL(TextoNorm[Posicion - 1]));
+    Fin := (Posicion + LenId > Length(TextoNorm)) or
+      (not EsCaracterIdentificadorSQL(TextoNorm[Posicion + LenId]));
+    if Inicio and Fin then
+      Result := True;
+    if not Result then
+      Posicion := PosEx(IdNorm, TextoNorm, Posicion + LenId)
+    else
+      Posicion := 0;
+  end;
+end;
+
+function TMySQLMetadataProvider.EsCaracterIdentificadorSQL(
+  Caracter: Char): Boolean;
+begin
+  Result := ((Caracter >= 'a') and (Caracter <= 'z')) or
+            ((Caracter >= 'A') and (Caracter <= 'Z')) or
+            ((Caracter >= '0') and (Caracter <= '9')) or
+            (Caracter = '_');
 end;
 
 function TMySQLMetadataProvider.StripDefiner(const SQL: string): string;
