@@ -254,6 +254,7 @@ type
     // anulada en cuanto cualquier form crea su propio TApplicationEvents
     // (multicaster de la VCL), p.ej. el generador de procesos.
     FAppEvents: TApplicationEvents;
+    procedure AplicarTituloVentana;
     procedure AppException(Sender: TObject; E: Exception);
     function ConstruirDetalleException(Sender: TObject; E: Exception): string;
     procedure MostrarDetalleExcepcion(const ATexto: string);
@@ -351,6 +352,7 @@ uses inLibUser,
   inLibBuscarImpresora,
   inLibVerifactu,
   inLibVerifactuCola,
+  inLibLicenciaAplicacion,
   inLibCertificates,
   inMtoGen,
   inMtoFotoArticulo,
@@ -487,6 +489,18 @@ begin
   end;
 end;
 
+procedure TfrmMtoPrincipal.AplicarTituloVentana;
+var
+  sTitulo: string;
+begin
+  if EstadoLicenciaEsDemo(oLicenciaAplicacionEstado) then
+    sTitulo := oAppName + ' DEMO ' + oVersion
+  else
+    sTitulo := oAppName + ' ' + oVersion;
+  Self.Caption := sTitulo;
+  Application.Title := sTitulo;
+end;
+
 function TfrmMtoPrincipal.ContieneDDL(const ASQL: string): Boolean;
 var
   Patron: string;
@@ -620,7 +634,7 @@ begin
     sDis := ' ✪';
   jvStatusBar1.Panels[2].Text := oUser + ' (' + oGroup + ') ' + sDis;
   jvStatusBar1.Panels[3].Text := oEmpresa + '\' + oAlmacen + '\' + oCaja;
-  Self.Caption := oAppName + ' ' + oVersion;
+  AplicarTituloVentana;
   // Aplicar permisos de menú: ocultar items sin acceso
   AplicarPermisosMenu;
   // Visibilidad inicial del panel de monitor SQL: ya no la decide solo el

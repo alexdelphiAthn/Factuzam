@@ -24,6 +24,10 @@ type
                                elaNoEncontrada,
                                elaSinNifEmpresa);
 
+const
+  CONMUTADOR_REGISTRO_LICENCIA = 'SETMAJORLICENCSE';
+  LIMITE_TICKETS_DEMO_DIA      = 20;
+
 function RutaIniLicenciaAplicacion: string;
 function RegistrarLicenciaAplicacion(AConexion: TUniConnection;
                                      out ACodigo: string;
@@ -36,6 +40,7 @@ function ComprobarLicenciaAplicacion(AConexion: TUniConnection;
                                      out ACodigoEsperado: string;
                                      out ACodigoGuardado: string): Boolean;
 function HayConmutadorRegistroLicencia: Boolean;
+function EstadoLicenciaEsDemo(AEstado: TEstadoLicenciaAplicacion): Boolean;
 
 implementation
 
@@ -48,6 +53,7 @@ const
   CLAVE_CODIGO           = 'Code';
   HASH_CONMUTADOR_REG    =
     'C4FC41F78B570CC40A3B12BDAFB6432AB782046241192013742C13EA6CB73306';
+  CONMUTADOR_REGISTRO_LICENCIA_OK = 'SETMAJORLICENSE';
 
 function ParametroIniAplicacion: string;
 begin
@@ -77,10 +83,17 @@ begin
     if sParametro <> '' then
     begin
       sHash := THashSHA2.GetHashString(sParametro);
-      Result := SameText(sHash, HASH_CONMUTADOR_REG);
+      Result := SameText(sParametro, CONMUTADOR_REGISTRO_LICENCIA) or
+                SameText(sParametro, CONMUTADOR_REGISTRO_LICENCIA_OK) or
+                SameText(sHash, HASH_CONMUTADOR_REG);
     end;
     Inc(i);
   end;
+end;
+
+function EstadoLicenciaEsDemo(AEstado: TEstadoLicenciaAplicacion): Boolean;
+begin
+  Result := (AEstado = elaInvalida) or (AEstado = elaNoEncontrada);
 end;
 
 function RutaIniLicenciaAplicacion: string;

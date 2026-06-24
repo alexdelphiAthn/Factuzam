@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibFotos                                                    }
 {    Tipo:       Librería                                                      }
@@ -295,7 +295,8 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibAppParam, Winapi.GDIPOBJ, Winapi.GDIPAPI;
+  inLibGlobalVar, inLibAppParam, inLibArticulosValidador,
+  Winapi.GDIPOBJ, Winapi.GDIPAPI;
 
 { TFotoInfo }
 
@@ -1244,12 +1245,13 @@ end;
 // ============================================================================
 
 const
-  cAliasArt: array[0..18] of string = (
+  cAliasArt: array[0..19] of string = (
     'CODIGO_ART_ART',  'CODIGO_ART_FAC',     'CODIGO_ART_FACLIN',
     'CODIGO_ART_LIN',  'CODIGO_ART_SKU',     'CODIGO_ART_PEDLIN',
     'CODIGO_ART_ALBLIN', 'CODIGO_ART_ARTTAR', 'CODIGO_ART_AAB',
-    // Compras: lineas de albaran y de pedido de compra.
+    // Compras: lineas de albaran, pedido, factura y devolucion.
     'CODIGO_ART_ALBCLIN', 'CODIGO_ART_PEDCLIN',
+    'CODIGO_ART_FACCLIN',
     'CODIGO_ART_DEVCLIN',
     // Inventarios + movimientos de almacen + depositos cliente.
     'CODIGO_ART_INVLIN', 'CODIGO_ART_MOV', 'CODIGO_ART_DEP',
@@ -1258,17 +1260,61 @@ const
     // todavia no creado, ver fza_compras_sesiones_fotos).
     'CODIGO_ART_TENTATIVO_SESLIN',
     'CODIGO_ART',      'CODIGO_ARTICULO');
-  cAliasSku: array[0..14] of string = (
+  cAliasSku: array[0..15] of string = (
     'CODIGO_UNIDAD_SKU',    'CODIGO_UNIDAD_FAC',
     'CODIGO_UNIDAD_FACLIN', 'CODIGO_UNIDAD_LIN',
     'CODIGO_UNIDAD_PEDLIN', 'CODIGO_UNIDAD_ALBLIN',
-    // Compras: lineas de albaran y de pedido de compra.
+    // Compras: lineas de albaran, pedido, factura y devolucion.
     'CODIGO_UNIDAD_ALBCLIN', 'CODIGO_UNIDAD_PEDCLIN',
+    'CODIGO_UNIDAD_FACCLIN',
     'CODIGO_UNIDAD_DEVCLIN',
     'CODIGO_UNIDAD_ARTTAR',
     'CODIGO_UNIDAD_INVLIN', 'CODIGO_UNIDAD_MOV',
     'CODIGO_UNIDAD_DEP', 'CODIGO_UNIDAD_DTL',
     'CODIGO_UNIDAD');
+  cAliasCodBarras: array[0..0] of string = (
+    'CODBAR_ART_PEDLIN');
+
+procedure CompletarSkuDesdeCodigoBarras(ADataSet: TDataSet;
+                                        var ACodArt, ACodSku: string);
+var
+  i        : Integer;
+  f        : TField;
+  sCodigo  : string;
+  validador: TArticulosValidador;
+  res      : TArtResolucionEntrada;
+begin
+  if (ACodSku = '') and (ADataSet <> nil) and ADataSet.Active and
+     (inLibGlobalVar.oConn <> nil) then
+  begin
+    sCodigo := '';
+    for i := Low(cAliasCodBarras) to High(cAliasCodBarras) do
+    begin
+      f := ADataSet.FindField(cAliasCodBarras[i]);
+      if Assigned(f) and (not f.IsNull) then
+      begin
+        sCodigo := Trim(f.AsString);
+        if sCodigo <> '' then
+          Break;
+      end;
+    end;
+    if sCodigo <> '' then
+    begin
+      validador := TArticulosValidador.Create(inLibGlobalVar.oConn);
+      try
+        res := validador.ResolverCodigoBarras(sCodigo);
+        if res.Encontrado and (res.CodigoSku <> '') and
+           ((ACodArt = '') or SameText(res.CodigoArticulo, ACodArt)) then
+        begin
+          ACodArt := res.CodigoArticulo;
+          ACodSku := res.CodigoSku;
+        end;
+      finally
+        FreeAndNil(validador);
+      end;
+    end;
+  end;
+end;
 
 procedure LeerArtSkuDeDataSet(ADataSet: TDataSet;
                               out ACodArt, ACodSku: string);
@@ -1298,6 +1344,7 @@ begin
       Break;
     end;
   end;
+  CompletarSkuDesdeCodigoBarras(ADataSet, ACodArt, ACodSku);
 end;
 
 // Localiza la banda padre del componente y devuelve el TDataSet asociado
