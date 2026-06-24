@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataFacturasCompra                                        }
 {    Tipo:       Data Module                                                   }
@@ -126,7 +126,8 @@ uses
   inLibGlobalVar, inLibAppParam, inLibLog, inLibtb, inLibContadorLineas,
   System.Diagnostics,
   inMtoFacturasCompra,
-  inLibComprasImpuestos;
+  inLibComprasImpuestos,
+  inLibArticulosValidador;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -655,6 +656,10 @@ begin
   end;
   with unqryFacturasCompraLineas do
   begin
+    // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
+    NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn,
+      unqryFacturasCompraLineas, 'CODIGO_ART_FACCLIN',
+      'CODIGO_UNIDAD_FACCLIN');
     if (FindField('CANTIDAD_FACCLIN') <> nil) and
        (FindField('PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN') <> nil) and
        (FindField('TOTAL_FACCLIN') <> nil) then

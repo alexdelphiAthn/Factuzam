@@ -116,7 +116,8 @@ uses
   System.Diagnostics,
   inMtoDevolucionesCompra,
   inLibDevolucionesCompraMovimientos,
-  inLibComprasImpuestos;
+  inLibComprasImpuestos,
+  inLibArticulosValidador;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -451,6 +452,10 @@ begin
   end;
   with unqryDevolucionesCompraLineas do
   begin
+    // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
+    NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn,
+      unqryDevolucionesCompraLineas, 'CODIGO_ART_DEVCLIN',
+      'CODIGO_UNIDAD_DEVCLIN');
     if (Trim(FieldByName('NUMERO_DEVC_DEVCLIN').AsString) = '') or
        (Trim(FieldByName('NUMERO_DEVC_DEVCLIN').AsString) = '0') then
       raise Exception.Create(

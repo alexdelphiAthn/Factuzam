@@ -1,33 +1,41 @@
 ﻿[Closed Files]
-File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigrator.pas',0,1,698,24,712,0,0,,
-File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigConn.pas',0,1,25,11,23,0,0,,
-File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigEngine.pas',0,1,29,1,29,0,0,,
-File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoTraspasoOpe.pas',0,1,1,1,1,0,0,,
-File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoFrmBase.pas',0,1,1,1,1,0,0,,
-File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoTraspasoOpe.pas',0,1,1313,1,1315,0,0,,
-File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas',0,1,794,48,808,0,0,,
-File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoComprasSesiones.pas',0,1,470,33,478,0,0,,
-File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibComprasSesionesMaterializar.pas',0,1,335,1,335,0,0,,
-File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoStockConsulta.pas',0,1,1343,19,1357,0,0,,
-File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibAtributosPaleta.pas',0,1,282,1,303,0,0,,
-File_11=TSourceModule,'c:\program files (x86)\embarcadero\studio\37.0\source\data\Data.DB.pas',0,1,13000,46,13010,0,0,,
-File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalImpSesion.pas',0,1,1,1,1,0,0,,
-File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasBase.pas',0,1,680,1,694,0,0,,
-File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoAlbaranesCompra.pas',0,1,748,9,756,0,0,,
+File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\inLibMigFotos.pas',0,1,1,1,1,0,0,,
+File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigEngine.pas',0,1,29,1,29,0,0,,
+File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoTraspasoOpe.pas',0,1,1,1,1,0,0,,
+File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoFrmBase.pas',0,1,1,1,1,0,0,,
+File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoTraspasoOpe.pas',0,1,1313,1,1315,0,0,,
+File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas',0,1,794,48,808,0,0,,
+File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoComprasSesiones.pas',0,1,470,33,478,0,0,,
+File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibComprasSesionesMaterializar.pas',0,1,335,1,335,0,0,,
+File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoStockConsulta.pas',0,1,1343,19,1357,0,0,,
+File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibAtributosPaleta.pas',0,1,282,1,303,0,0,,
+File_10=TSourceModule,'c:\program files (x86)\embarcadero\studio\37.0\source\data\Data.DB.pas',0,1,13000,46,13010,0,0,,
+File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalImpSesion.pas',0,1,1,1,1,0,0,,
+File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasBase.pas',0,1,680,1,694,0,0,,
 
 [Modules]
-Module0=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dproj
-Count=1
+Module0=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigConn.pas
+Module1=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigrator.pas
+Module2=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dproj
+Count=3
 EditWindowCount=1
+
+[C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigConn.pas]
+ModuleType=TSourceModule
+
+[C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigrator.pas]
+ModuleType=TSourceModule
 
 [C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dproj]
 ModuleType=TBaseProject
 
 [EditWindow0]
-ViewCount=2
-CurrentView=1
+ViewCount=4
+CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigConn.pas
 View0=0
 View1=1
+View2=2
+View3=3
 PercentageSizes=1
 Create=1
 Visible=1
@@ -62,19 +70,41 @@ BottomMiddlePanelClients=DockSite0,GraphDrawingModel
 BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E67566965779F1D00000000000002F706000000000000FFFFFFFF
 
 [View0]
+CustomEditViewType=TOTACustomEditView
+OTAEditViewType=WelcomePage.MainPage
+
+[View1]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dpr
-CursorX=26
-CursorY=22
-TopLine=16
+CursorX=39
+CursorY=41
+TopLine=29
 LeftCol=1
 Elisions=
 Bookmarks=
 EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dpr
 
-[View1]
-CustomEditViewType=TOTACustomEditView
-OTAEditViewType=WelcomePage.MainPage
+[View2]
+CustomEditViewType=TEditView
+Module=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigrator.pas
+CursorX=21
+CursorY=776
+TopLine=764
+LeftCol=1
+Elisions=
+Bookmarks=
+EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigrator.pas
+
+[View3]
+CustomEditViewType=TEditView
+Module=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigConn.pas
+CursorX=30
+CursorY=136
+TopLine=120
+LeftCol=1
+Elisions=
+Bookmarks=
+EditViewName=Borland.FormDesignerView
 
 [Watches]
 Count=0
@@ -222,6 +252,11 @@ LRDockWidth=1526
 Dockable=1
 StayOnTop=0
 SplitPos=135
+
+[PropInspDesignerSelection]
+ArrangeBy=Name
+SelectedItem=Name,
+ExpandedItems=DefaultTransaction=0,"LiveBindings Designer=0",Options=0
 
 [frmDesignPreview]
 PercentageSizes=1
