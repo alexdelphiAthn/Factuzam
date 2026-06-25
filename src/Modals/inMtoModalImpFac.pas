@@ -189,6 +189,7 @@ begin
     fxdsPrintFac.UpdateBounds;
     with unqryLinFacPrint do
     begin
+      Close;
       Params.Clear;
       SQL.Text := '  SELECT * ' +
                   '    FROM vi_FACTURAS_LINEAS_print V  ' +

@@ -119,6 +119,10 @@ private
     // unqryFacBeforePost dentro de la guarda de re-entrancia.
     procedure ValidarCabeceraBeforePost(DataSet: TDataSet);
     procedure GuardarParametrosEDocFactura(ADataSet: TDataSet);
+    function FacturaPermiteRecalcularLineas: Boolean;
+    procedure PrepararCabeceraSinCamposComplejos;
+    procedure QuitarCampoComplejoCabecera(ALista: TStrings;
+                                          const ACampo: string);
 public
     procedure GetCodigoAutoFactura;
     procedure GetCodigoAutoCliente;
@@ -189,6 +193,7 @@ uses
   inLibLog,
   System.Diagnostics,
   inLibFacturas,
+  inLibVerifactu,
   inLibDocumentoFiscal,
   inLibArticulosValidador;
 
@@ -590,33 +595,42 @@ end;
 procedure TdmFacturas.CalcularFactura;
 var
   facTotales: TFacturaTotales;
+  bReadOnlyLineas: Boolean;
 begin
   // Usar TFacturaTotales en lugar del procedimiento almacenado
   if Assigned(unqryTablaG) and unqryTablaG.Active and
-     Assigned(unqryLinFac) and unqryLinFac.Active then
+     Assigned(unqryLinFac) and unqryLinFac.Active and
+     FacturaPermiteRecalcularLineas then
   begin
+    bReadOnlyLineas := unqryLinFac.ReadOnly;
     try
-      facTotales := TFacturaTotales.Create(unqryTablaG, unqryLinFac);
+      if bReadOnlyLineas then
+        unqryLinFac.ReadOnly := False;
       try
-        if facTotales.ProcesarFacturaCompleta then
-        begin
-          // Refrescar para ver los cambios
+        facTotales := TFacturaTotales.Create(unqryTablaG, unqryLinFac);
+        try
+          if facTotales.ProcesarFacturaCompleta then
+          begin
+            // Refrescar para ver los cambios
 //          if unqryTablaG.Active and (unqryTablaG.State <> dsInsert) then
 //            unqryTablaG.RefreshRecord;
-        end
-        else
-        begin
-          // Si hay error, mostrar mensaje
-          if facTotales.MensajeError <> '' then
-            ShowMessage(
-              'Error al calcular borrador: ' + facTotales.MensajeError);
+          end
+          else
+          begin
+            // Si hay error, mostrar mensaje
+            if facTotales.MensajeError <> '' then
+              ShowMessage(
+                'Error al calcular borrador: ' + facTotales.MensajeError);
+          end;
+        finally
+          FreeAndNil(facTotales);
         end;
-      finally
-        FreeAndNil(facTotales);
+      except
+        on E: Exception do
+          ShowMessage('Error en cálculo de borrador: ' + E.Message);
       end;
-    except
-      on E: Exception do
-        ShowMessage('Error en cálculo de borrador: ' + E.Message);
+    finally
+      unqryLinFac.ReadOnly := bReadOnlyLineas;
     end;
   end;
 end;
@@ -979,6 +993,7 @@ begin
   inherited;
   unqryPerfiles.Connection := inLibGlobalVar.oConn;
   unqryTablaG.Connection := inLibGlobalVar.oConn;
+  PrepararCabeceraSinCamposComplejos;
   unqryLinFac.Connection := inLibGlobalVar.oConn;
   unqrySeries.Connection := inLibGlobalVar.oConn;
   unqryIvas.Connection := inLibGlobalVar.oConn;
@@ -1024,6 +1039,85 @@ begin
   unqryConsolidacion.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
   unqryErrores.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
   unqryMovimientosFac.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
+end;
+
+procedure TdmFacturas.QuitarCampoComplejoCabecera(ALista: TStrings;
+                                                  const ACampo: string);
+var
+  sSQL: string;
+begin
+  if ALista <> nil then
+  begin
+    sSQL := ALista.Text;
+    sSQL := StringReplace(sSQL,
+      ', `' + ACampo + '` = :`' + ACampo + '`',
+      '', [rfReplaceAll, rfIgnoreCase]);
+    sSQL := StringReplace(sSQL,
+      ', `' + ACampo + '`',
+      '', [rfReplaceAll, rfIgnoreCase]);
+    sSQL := StringReplace(sSQL,
+      ', :`' + ACampo + '`',
+      '', [rfReplaceAll, rfIgnoreCase]);
+    ALista.Text := sSQL;
+  end;
+end;
+
+function TdmFacturas.FacturaPermiteRecalcularLineas: Boolean;
+var
+  oCampoFase: TField;
+  sFase: string;
+begin
+  Result := True;
+  oCampoFase := unqryTablaG.FindField(ffasefac);
+  if oCampoFase <> nil then
+  begin
+    sFase := Trim(oCampoFase.AsString);
+    Result := (sFase = '') or SameText(sFase, 'BORRADOR') or
+              (SinVerifactuActivo and
+               SameText(sFase, cFaseFacturaSinVerifactu));
+  end;
+end;
+
+procedure TdmFacturas.PrepararCabeceraSinCamposComplejos;
+var
+  qCampos: TUniQuery;
+  sCampo: string;
+  sCampos: string;
+begin
+  sCampos := '';
+  if inLibGlobalVar.oConn <> nil then
+  begin
+    qCampos := TUniQuery.Create(nil);
+    try
+      qCampos.Connection := inLibGlobalVar.oConn;
+      qCampos.SQL.Text := 'SHOW COLUMNS FROM vi_facturas';
+      qCampos.Open;
+      while not qCampos.Eof do
+      begin
+        sCampo := qCampos.FieldByName('Field').AsString;
+        if (not SameText(sCampo, 'DOCUMENTO_FAC')) and
+           (not SameText(sCampo, 'XML_FAC')) then
+        begin
+          if sCampos <> '' then
+            sCampos := sCampos + ', ';
+          sCampos := sCampos + '`' + sCampo + '`';
+        end;
+        qCampos.Next;
+      end;
+    finally
+      FreeAndNil(qCampos);
+    end;
+    if sCampos <> '' then
+      unqryTablaG.SQL.Text := 'SELECT ' + sCampos + ' FROM vi_facturas';
+  end;
+  QuitarCampoComplejoCabecera(unqryTablaG.SQLInsert, 'DOCUMENTO_FAC');
+  QuitarCampoComplejoCabecera(unqryTablaG.SQLInsert, 'XML_FAC');
+  QuitarCampoComplejoCabecera(unqryTablaG.SQLUpdate, 'DOCUMENTO_FAC');
+  QuitarCampoComplejoCabecera(unqryTablaG.SQLUpdate, 'XML_FAC');
+  QuitarCampoComplejoCabecera(unqryTablaG.SQLLock, 'DOCUMENTO_FAC');
+  QuitarCampoComplejoCabecera(unqryTablaG.SQLLock, 'XML_FAC');
+  QuitarCampoComplejoCabecera(unqryTablaG.SQLRefresh, 'DOCUMENTO_FAC');
+  QuitarCampoComplejoCabecera(unqryTablaG.SQLRefresh, 'XML_FAC');
 end;
 
 procedure TdmFacturas.OpenTables;
@@ -1599,7 +1693,7 @@ begin
   begin
     Qry := TUniQuery.Create(nil);
     try
-      Qry.Connection := oConn;
+      Qry.Connection := unqryTablaG.Connection;
       Qry.SQL.Text :=
         ' UPDATE fza_facturas ' +
         ' SET CODIGO_OFICINA_CONTABLE_FAC = :OFICINA, ' +
@@ -2112,8 +2206,10 @@ begin
       IsError := True;
     end;
     // La fecha no puede ser anterior a la ultima factura emitida de la serie
-    // (bloqueo): la numeracion debe seguir orden cronologico.
+    // (bloqueo): la numeracion debe seguir orden cronologico. En modo SIN
+    // Verifactu se permite trabajar sin este control fiscal.
     if (not IsError) and bValidar and
+       (not SinVerifactuActivo) and
        (FieldByName('FECHA_FAC').AsString <> '') then
     begin
       dtUltima := UltimaFechaSerie(FieldByName('SERIE_FAC').AsString,
