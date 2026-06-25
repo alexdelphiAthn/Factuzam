@@ -178,7 +178,8 @@ begin
   end;
   Screen.Cursor := crHourGlass;
   try
-    TArqueoTicket.ImprimirDesdeHistorico(FConn, sCod, oNomImpresoraCaja);
+    TArqueoTicket.ImprimirDesdeHistorico(FConn, FEmpresa, FAlmacen, FCaja,
+                                         sCod, oNomImpresoraCaja);
   finally
     Screen.Cursor := crDefault;
   end;
@@ -196,7 +197,9 @@ begin
   end;
   Screen.Cursor := crHourGlass;
   try
-    TArqueoTicket.ImprimirCierreDesdeHistorico(FConn, sCod, oNomImpresoraCaja);
+    TArqueoTicket.ImprimirCierreDesdeHistorico(FConn, FEmpresa, FAlmacen,
+                                               FCaja, sCod,
+                                               oNomImpresoraCaja);
   finally
     Screen.Cursor := crDefault;
   end;

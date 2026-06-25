@@ -146,8 +146,8 @@ begin
         Ticket.Negrita(False);
         Ticket.SaltarLineas(1);
         Ticket.Alinear(alIzquierda);
-        Ticket.TextoColumnas('Origen (a quien pido):', sOrigen);
-        Ticket.TextoColumnas('Destino (yo):', sDestino);
+        Ticket.TextoColumnas('Origen:', sOrigen);
+        Ticket.TextoColumnas('Destino:', sDestino);
         Ticket.TextoColumnas('Empleado:', sEmpleado);
         Ticket.TextoColumnas('Estado:', sEstado);
         Ticket.TextoColumnas('Fecha:', FormatDateTime('dd/mm/yyyy', dFecha));
