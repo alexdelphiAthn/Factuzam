@@ -30,6 +30,25 @@ simplificadas, gestionar el efectivo de la caja y cuadrarla (arqueo).</p>
 ├── Histórico de Operaciones
 ├── Histórico de Arqueos
 └── Borradores Simplificados</code></pre>
+<h2 id="como-se-trabaja-una-jornada-de-caja">Cómo se trabaja una jornada de caja</h2>
+<p>Una jornada normal de tienda sigue este orden:</p>
+<ol><li>Entrar en <strong>Caja ▸ Menú de Caja</strong> y seleccionar la empresa, el almacén y la caja física del puesto.</li><li>Revisar la <strong>Fecha de Caja</strong>. Si se está registrando una jornada atrasada, cambiarla antes de hacer ventas.</li><li>Registrar la <strong>Entrada de Cambio (F6)</strong> si se mete efectivo inicial o un refuerzo de monedas/billetes.</li><li>Vender desde <strong>Ventas (F5)</strong>, cobrar con <strong>F12</strong> y emitir el ticket o el borrador que corresponda.</li><li>Registrar gastos, retiradas, traspasos y devoluciones durante el día.</li><li>Al cierre, abrir <strong>Arqueo (F11)</strong>, contar efectivo y otras formas de pago, grabar el arqueo e imprimir el justificante.</li></ol>
+<p>La caja separa tres cosas que conviene no mezclar:</p>
+<table>
+<thead><tr>
+<th>Concepto</th>
+<th>Qué es</th>
+<th>Dónde se revisa</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Operación de caja</strong></td><td>Registro de lo que ha ocurrido en el TPV: venta, devolución, gasto, entrada, traspaso o arqueo.</td><td>Buscar / Modificar e Histórico de Operaciones.</td></tr>
+<tr><td><strong>Pago de caja</strong></td><td>Movimiento económico asociado a una operación: efectivo, tarjeta, vale, divisa, cripto o crédito.</td><td>Fase de cobro e Histórico de Pagos.</td></tr>
+<tr><td><strong>Documento fiscal</strong></td><td>Ticket/borrador simplificado o borrador normal que justifica la venta.</td><td>Borradores Simplificados y Facturas/Borradores de venta.</td></tr>
+</tbody>
+</table>
+<blockquote><p>Para evitar descuadres, una operación de venta no se considera terminada
+hasta que la fase de cobro se valida. Volver con <strong>Esc</strong> desde cobro deja el
+ticket abierto y no graba nada.</p></blockquote>
 <hr>
 <h2 id="menu-de-caja">Menú de Caja</h2>
 <p><strong>Atajo de menú:</strong> <code>[F5]</code></p>
@@ -49,8 +68,8 @@ reloj.</p>
 <tbody>
 <tr><td><strong>F3</strong></td><td><strong>Traspasos</strong></td><td>Traspaso de <strong>mercancía</strong> entre almacenes/tiendas (ver detalle más abajo).</td></tr>
 <tr><td><strong>F5</strong></td><td><strong>Ventas</strong></td><td>Pantalla de venta/cobro (ver detalle más abajo).</td></tr>
-<tr><td><strong>F6</strong></td><td><strong>Entrada de Cambio</strong></td><td>Registra el efectivo inicial (cambio) que se mete en el cajón.</td></tr>
-<tr><td><strong>F7</strong></td><td><strong>Gastos por caja</strong></td><td>Registra pagos/gastos en efectivo realizados desde la caja.</td></tr>
+<tr><td><strong>F6</strong></td><td><strong>Entrada de Cambio</strong></td><td>Registra el efectivo inicial o un refuerzo de cambio que entra en el cajón.</td></tr>
+<tr><td><strong>F7</strong></td><td><strong>Gastos por caja</strong></td><td>Registra pagos, gastos y retiradas de efectivo desde la caja.</td></tr>
 <tr><td><strong>F10</strong></td><td><strong>Buscar / Modificar</strong></td><td>Localiza operaciones de la caja para consultarlas o modificarlas (ver detalle más abajo).</td></tr>
 <tr><td><strong>F11</strong></td><td><strong>Arqueo</strong></td><td>Cierre y cuadre de caja (ver detalle más abajo).</td></tr>
 <tr><td>—</td><td><strong>Fecha de Caja</strong></td><td>Fija/cambia la fecha de trabajo de la jornada.</td></tr>
@@ -60,6 +79,11 @@ reloj.</p>
 <blockquote><p>El TPV está pensado para que un dependiente pueda vender, cobrar y cerrar
 caja sin usar el resto de menús. Antes de operar debe haber una <strong>caja
 seleccionada</strong> (empresa + almacén + caja).</p></blockquote>
+<p><img src="img/05-caja-selector-caja.png" alt="Selector de caja" loading="lazy">
+<em>▢ Captura pendiente — Selector de empresa, almacén y caja al entrar al TPV.</em></p>
+<p>El calendario del menú marca los días con ventas y permite cambiar la fecha
+de trabajo. La fecha elegida se arrastra a ventas, traspasos, entradas,
+gastos y arqueos.</p>
 <hr>
 <h3 id="ventas-f5-la-pantalla-de-venta">Ventas (F5) — la pantalla de venta</h3>
 <p>Es la pantalla donde se hace el ticket. Arriba se indica el <strong>Empleado</strong>
@@ -68,13 +92,26 @@ seleccionada</strong> (empresa + almacén + caja).</p></blockquote>
 <p><img src="img/05-caja-ventas.png" alt="Pantalla de Ventas del TPV" loading="lazy">
 <em>▢ Captura pendiente — Operación de venta con líneas y total.</em></p>
 <p><strong>Cómo se añaden líneas:</strong></p>
-<ul><li>Pasando el <strong>lector de código de barras</strong> por el artículo (la pantalla</li></ul>
-<p>  está optimizada para ráfagas de lector).</p>
-<ul><li>Buscando el artículo manualmente con <strong>Buscar (F3)</strong>.</li></ul>
+<ul><li>Pasando el <strong>lector de código de barras</strong> por el artículo (la pantalla está optimizada para ráfagas de lector).</li><li>Buscando el artículo manualmente con <strong>Buscar (F3)</strong>.</li></ul>
 <p>Cada línea muestra: <strong>Vend.</strong> (vendedor de la línea), <strong>Artículo</strong>,
 <strong>Descripción</strong>, <strong>Color/Talla</strong> cuando procede, <strong>Uds.</strong>, <strong>Precio</strong>,
 <strong>%</strong> (descuento), <strong>Menos</strong> (importe descontado) y <strong>Total</strong>. Si el
 artículo tiene foto, se muestra en el panel lateral de stock/foto.</p>
+<p><strong>Flujo normal de venta:</strong></p>
+<ol><li>Indica el <strong>Empleado</strong>. Si el empleado está parametrizado por defecto, la pantalla lo propone automáticamente.</li><li>Indica el <strong>Cliente</strong> si no es una venta de contado. Para tickets de mostrador se puede dejar como <strong>VENTA CONTADO</strong>.</li><li>Escanea artículos o búscalos con <strong>F3</strong>. En artículos con talla/color, el TPV completa o pide el SKU que corresponda.</li><li>Revisa cantidades, descuentos y precio de línea si el usuario tiene permiso para cambiarlos.</li><li>Pulsa <strong>F12 Cobro</strong> cuando el total sea correcto.</li></ol>
+<p><img src="img/05-caja-busqueda-articulos.png" alt="Búsqueda de artículos en caja" loading="lazy">
+<em>▢ Captura pendiente — Búsqueda de artículos desde la venta de caja.</em></p>
+<p><strong>Cliente, cuenta y depósitos:</strong></p>
+<p>Si se asigna un cliente, la cabecera de la venta toma sus datos fiscales,
+tarifa y condiciones. Cuando el cliente tiene depósitos o prendas apartadas,
+<strong>F2 Cargar cta.</strong> trae esas líneas a la venta para cobrarlas, cancelarlas o
+aumentar el anticipo. Las líneas que vienen de depósito se distinguen de una
+línea normal y tienen menos campos editables.</p>
+<p><strong>Varias ventas a la vez:</strong></p>
+<p>Con <strong>F5 Otro</strong> se aparca el ticket actual y se abre otra operación. Es útil
+cuando un cliente sigue mirando o falta confirmar una prenda y hay que atender
+a otra persona. Se pueden mantener hasta <strong>5 operaciones simultáneas</strong>. Antes
+de cerrar el menú de caja, el programa avisa si queda alguna operación abierta.</p>
 <p><strong>Teclas rápidas de la pantalla de Ventas:</strong></p>
 <table>
 <thead><tr>
@@ -96,6 +133,8 @@ artículo tiene foto, se muestra en el panel lateral de stock/foto.</p>
 <tr><td><strong>Esc</strong></td><td><strong>Salir</strong></td><td>Abandona la operación.</td></tr>
 </tbody>
 </table>
+<blockquote><p>El botón <strong>Búsq Tick (F4)</strong> se usa para localizar tickets anteriores, por
+ejemplo cuando hay que preparar una devolución o revisar una venta ya hecha.</p></blockquote>
 <hr>
 <h3 id="fase-de-cobro-f12-desde-ventas">Fase de cobro (F12 desde Ventas)</h3>
 <p>Tras pulsar <strong>Cobro (F12)</strong> se entra en la <strong>Fase de cobro</strong>, donde se
@@ -103,11 +142,7 @@ liquida el ticket:</p>
 <p><img src="img/05-caja-cobro.png" alt="Fase de cobro" loading="lazy">
 <em>▢ Captura pendiente — Fase de cobro con formas de pago y cambio.</em></p>
 <p><strong>Zona de importes:</strong></p>
-<ul><li><strong>Imp. TOTAL a pagar</strong>, con posibilidad de aplicar un <strong>% Descuento</strong> o</li></ul>
-<p>  un <strong>descuento lineal</strong> al total.</p>
-<ul><li><strong>Pendiente de cobro</strong> — lo que falta por cubrir con formas de pago.</li><li><strong>Importe a dejar A CUENTA</strong> — parte que queda como depósito del cliente.</li><li><strong>Vale Emitido / Vale Recogido</strong> — vales generados (devoluciones) o</li></ul>
-<p>  canjeados en esta operación.</p>
-<ul><li><strong>Devolución de cambio</strong> — cambio a devolver al cliente.</li></ul>
+<ul><li><strong>Imp. TOTAL a pagar</strong>, con posibilidad de aplicar un <strong>% Descuento</strong> o un <strong>descuento lineal</strong> al total.</li><li><strong>Pendiente de cobro</strong> — lo que falta por cubrir con formas de pago.</li><li><strong>Importe a dejar A CUENTA</strong> — parte que queda como depósito del cliente.</li><li><strong>Vale Emitido / Vale Recogido</strong> — vales generados (devoluciones) o canjeados en esta operación.</li><li><strong>Devolución de cambio</strong> — cambio a devolver al cliente.</li></ul>
 <p><strong>Rejilla de pagos:</strong> se reparte el total entre una o varias <strong>formas de
 pago</strong> (efectivo, tarjeta, vale…), indicando el <strong>Importe Entregado</strong> de
 cada una. La aplicación calcula el cambio.</p>
@@ -120,10 +155,10 @@ cada una. La aplicación calcula el cambio.</p>
 </tr></thead>
 <tbody>
 <tr><td><strong>F12</strong></td><td><strong>Con ticket</strong></td><td>Cierra la venta <strong>imprimiendo el ticket</strong>.</td></tr>
-<tr><td><strong>F11</strong></td><td><strong>Sin ticket</strong></td><td>Cierra la venta sin imprimir.</td></tr>
-<tr><td><strong>F10</strong></td><td><strong>Sin precios</strong></td><td>Imprime el ticket <strong>sin precios</strong> (ticket regalo).</td></tr>
-<tr><td><strong>F8</strong></td><td><strong>Factura</strong></td><td>Emite <strong>factura nominativa</strong> en lugar de ticket (pide los datos del cliente).</td></tr>
-<tr><td><strong>F7</strong></td><td><strong>Préstamo</strong></td><td>Registra la salida como <strong>préstamo/depósito</strong> al cliente (si tiene crédito permitido).</td></tr>
+<tr><td><strong>F11</strong></td><td><strong>Sin ticket</strong></td><td>Cierra la venta sin imprimir ticket térmico.</td></tr>
+<tr><td><strong>F10</strong></td><td><strong>Sin precios</strong></td><td>Imprime ticket regalo sin precios y conserva el justificante fiscal.</td></tr>
+<tr><td><strong>F8</strong></td><td><strong>Borrador</strong></td><td>Emite borrador normal/factura A4 a nombre del cliente.</td></tr>
+<tr><td><strong>F7</strong></td><td><strong>Préstamo</strong></td><td>Deja el importe pendiente a cuenta del cliente si tiene crédito permitido.</td></tr>
 <tr><td><strong>F6</strong></td><td><strong>Buscar Vale</strong></td><td>Localiza un <strong>vale</strong> emitido para canjearlo como pago.</td></tr>
 <tr><td><strong>F3</strong></td><td><strong>Rellenar</strong></td><td>Rellena automáticamente el importe pendiente en la forma de pago seleccionada.</td></tr>
 <tr><td><strong>F2</strong></td><td><strong>Más datos</strong></td><td>Datos adicionales de la operación.</td></tr>
@@ -134,6 +169,81 @@ cada una. La aplicación calcula el cambio.</p>
 de caja generan <strong>borradores simplificados</strong> que se consolidan según el
 modo fiscal configurado (consultables en
 <a href="#borradores-simplificados">Borradores Simplificados</a>).</p></blockquote>
+<h3 id="formas-de-pago-cambio-y-referencias">Formas de pago, cambio y referencias</h3>
+<p>La rejilla de pagos muestra las formas activas configuradas en
+<strong>Formas de Pago Caja</strong>. Se puede cubrir el total con una sola forma o repartir
+el importe entre varias, por ejemplo efectivo + tarjeta o vale + efectivo.</p>
+<p><strong>Rellenar (F3)</strong> escribe el pendiente en la forma seleccionada. En efectivo,
+si el importe entregado supera el pendiente, la pantalla calcula la
+<strong>Devolución de cambio</strong>. En formas que no devuelven cambio, el importe debe
+cuadrar con el pendiente o con la parte que se quiera cobrar.</p>
+<p>Cuando una forma de pago pide referencia, usa divisa o cripto, se abre una
+pantalla auxiliar:</p>
+<p><img src="img/05-caja-referencia-pago.png" alt="Datos de pago" loading="lazy">
+<em>▢ Captura pendiente — Referencia de tarjeta, divisa o cripto en el cobro.</em></p>
+<table>
+<thead><tr>
+<th>Caso</th>
+<th>Qué se pide</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Referencia</strong></td><td>Número de autorización, bono, localizador o dato que identifique el pago.</td></tr>
+<tr><td><strong>Divisa</strong></td><td>Código de divisa, cotización e importe equivalente.</td></tr>
+<tr><td><strong>Cripto</strong></td><td>Red blockchain y hash de la transacción.</td></tr>
+</tbody>
+</table>
+<h3 id="vales-en-caja">Vales en caja</h3>
+<p>Un <strong>vale emitido</strong> es saldo que se entrega al cliente, normalmente por una
+devolución o por el sobrante de otro vale. Un <strong>vale recogido</strong> es un vale que
+el cliente usa como forma de pago.</p>
+<p>Con <strong>Buscar Vale (F6)</strong> se abre la selección de vales pendientes:</p>
+<p><img src="img/05-caja-seleccionar-vale.png" alt="Seleccionar vale" loading="lazy">
+<em>▢ Captura pendiente — Búsqueda y selección de vales pendientes.</em></p>
+<p>La pantalla muestra <strong>Código Vale</strong>, <strong>Estado</strong>, <strong>Importe</strong>, <strong>Fecha de
+emisión</strong>, <strong>Caducidad</strong> y <strong>Observaciones</strong>. Si la configuración exige PIN,
+también se solicita antes de aceptar. El vale no se canjea definitivamente
+hasta confirmar el cobro.</p>
+<p>Si el vale que se recoge es mayor que el pendiente de la venta, la diferencia
+se registra como <strong>Vale Emitido</strong> para que el cliente no pierda saldo.</p>
+<h3 id="prestamo-f7-o-venta-a-credito">Préstamo (F7) o venta a crédito</h3>
+<p>El botón <strong>Préstamo (F7)</strong> no es una forma de pago. Sirve para cerrar una
+venta dejando el importe pendiente en la cuenta del cliente. En la práctica,
+la mercancía sale de la tienda y el cliente queda con deuda o crédito pendiente.</p>
+<p>Para usarlo deben cumplirse estas condiciones:</p>
+<table>
+<thead><tr>
+<th>Condición</th>
+<th>Motivo</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Cliente asignado</strong></td><td>No se puede dejar deuda a una venta de contado.</td></tr>
+<tr><td><strong>Cliente con crédito permitido</strong></td><td>La ficha del cliente debe permitir cuenta o deuda.</td></tr>
+<tr><td><strong>Límite suficiente</strong></td><td>Si hay límite de crédito, el pendiente no puede superarlo.</td></tr>
+<tr><td><strong>Importe pendiente</strong></td><td>Solo tiene sentido si queda algo sin cubrir por pagos.</td></tr>
+</tbody>
+</table>
+<p>En el arqueo, estas operaciones aparecen separadas como <strong>Ventas Préstamos</strong> y
+también afectan a <strong>Pendiente cobro</strong>. Cuando el cliente pague más adelante, el
+movimiento quedará como cobro de cliente.</p>
+<h3 id="que-ticket-o-documento-se-genera">Qué ticket o documento se genera</h3>
+<table>
+<thead><tr>
+<th>Botón</th>
+<th>Resultado</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Con ticket (F12)</strong></td><td>Graba la operación, genera el borrador simplificado y manda el ticket a la impresora de caja.</td></tr>
+<tr><td><strong>Sin ticket (F11)</strong></td><td>Graba igual, pero no imprime ticket térmico. Puede abrir cajón si la forma de pago lo permite.</td></tr>
+<tr><td><strong>Sin precios (F10)</strong></td><td>Imprime un ticket regalo sin precios; el documento fiscal completo queda registrado.</td></tr>
+<tr><td><strong>Borrador (F8)</strong></td><td>Genera un borrador normal/A4 con serie y fecha, exige cliente con NIF válido.</td></tr>
+</tbody>
+</table>
+<p><img src="img/05-caja-ticket-venta.png" alt="Ticket de venta" loading="lazy">
+<em>▢ Captura pendiente — Ticket de venta con líneas, total, forma de pago y QR.</em></p>
+<p><img src="img/05-caja-ticket-regalo.png" alt="Ticket regalo" loading="lazy">
+<em>▢ Captura pendiente — Ticket sin precios para entregar como regalo.</em></p>
+<blockquote><p>Si el botón <strong>Borrador (F8)</strong> está bloqueado o avisa, revisa que la venta
+tenga cliente, NIF/CIF/NIE válido y datos fiscales suficientes.</p></blockquote>
 <hr>
 <h3 id="traspasos-f3">Traspasos (F3)</h3>
 <p>Gestiona los <strong>traspasos de mercancía entre almacenes</strong> (entre tiendas, o
@@ -154,12 +264,38 @@ destino.</p>
 </tbody>
 </table>
 <p><strong>Modos de trabajo:</strong></p>
-<ul><li><strong>F6 — Solicitar a otro almacén:</strong> crea una <strong>solicitud</strong> de género a</li></ul>
-<p>  otra tienda/almacén (pendiente de que la atiendan).</p>
-<ul><li><strong>F8 — Atender solicitudes:</strong> muestra las solicitudes recibidas para</li></ul>
-<p>  <strong>prepararlas y enviarlas</strong>.</p>
+<ul><li><strong>F6 — Solicitar a otro almacén:</strong> crea una <strong>solicitud</strong> de género a otra tienda/almacén (pendiente de que la atiendan).</li><li><strong>F8 — Atender solicitudes:</strong> muestra las solicitudes recibidas para <strong>prepararlas y enviarlas</strong>.</li></ul>
 <p><strong>Cierre:</strong> <strong>F12 Con ticket</strong> (imprime justificante del traspaso) o
 <strong>F11 Sin ticket</strong>.</p>
+<h3 id="traspaso-directo">Traspaso directo</h3>
+<p>Usa este modo cuando el género sale físicamente del almacén actual y se envía
+a otro almacén en ese momento.</p>
+<ol><li>Revisa el <strong>Almacén origen</strong>. Normalmente coincide con el almacén de la caja activa.</li><li>Selecciona el <strong>Almacén destino</strong>.</li><li>Indica el <strong>Empleado responsable</strong>.</li><li>Escanea o busca las prendas que salen.</li><li>Cierra con <strong>F12 Con ticket</strong> si quieres justificante para la bolsa o caja enviada, o con <strong>F11 Sin ticket</strong> si no hace falta imprimir.</li></ol>
+<p>El traspaso no es una venta y no genera cobro. Sí genera trazabilidad de stock:
+la mercancía deja de estar disponible en el origen y pasa al destino.</p>
+<p><img src="img/05-caja-ticket-traspaso.png" alt="Ticket de traspaso" loading="lazy">
+<em>▢ Captura pendiente — Justificante impreso de un traspaso entre almacenes.</em></p>
+<h3 id="solicitar-a-otro-almacen-f6">Solicitar a otro almacén (F6)</h3>
+<p>Se usa cuando una tienda necesita género que está en otra tienda o en almacén
+central, pero todavía no se está enviando físicamente.</p>
+<p><img src="img/05-caja-solicitar-traspaso.png" alt="Solicitud de traspaso" loading="lazy">
+<em>▢ Captura pendiente — Modo de solicitud a otro almacén con líneas pedidas.</em></p>
+<p>El flujo recomendado es:</p>
+<ol><li>Cambiar al modo <strong>F6 Solicitar a otro almacén</strong>.</li><li>Seleccionar el almacén al que se solicita la mercancía.</li><li>Añadir artículos y tallas igual que en una venta.</li><li>Guardar la solicitud para que el almacén origen pueda prepararla.</li></ol>
+<p>Hasta que se atiende, esta solicitud no debe tratarse como mercancía ya
+recibida. Sirve para organizar trabajo entre tiendas y evitar llamadas o notas
+manuales.</p>
+<h3 id="atender-solicitudes-f8">Atender solicitudes (F8)</h3>
+<p>Se usa en el almacén que recibe peticiones de otras tiendas. Permite revisar
+qué han solicitado, preparar las líneas y cerrar el envío.</p>
+<p><img src="img/05-caja-atender-traspasos.png" alt="Atender solicitudes de traspaso" loading="lazy">
+<em>▢ Captura pendiente — Lista de solicitudes recibidas para preparar envío.</em></p>
+<p>Cuando se atiende una solicitud, conviene imprimir el ticket de traspaso y
+meterlo con la mercancía. Así la tienda destino puede cotejar lo recibido con
+el justificante.</p>
+<blockquote><p>Un traspaso mal cerrado afecta directamente al stock. Si hay dudas entre
+traspaso directo y solicitud, usa solicitud hasta que la mercancía salga de
+verdad del almacén origen.</p></blockquote>
 <hr>
 <h3 id="entrada-de-cambio-f6">Entrada de Cambio (F6)</h3>
 <p>Registra el <strong>efectivo de cambio</strong> que se introduce en el cajón al empezar
@@ -167,12 +303,42 @@ la jornada (o un refuerzo de cambio a mitad de día). Este importe se tiene
 en cuenta en el arqueo como entrada de efectivo.</p>
 <p><img src="img/05-caja-entrada-cambio.png" alt="Entrada de cambio" loading="lazy">
 <em>▢ Captura pendiente — Modal de Entrada de Cambio.</em></p>
+<p>Campos principales:</p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Uso</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Empleado</strong></td><td>Persona que registra o entrega el cambio.</td></tr>
+<tr><td><strong>Importe</strong></td><td>Cantidad de efectivo que entra en la caja.</td></tr>
+<tr><td><strong>Concepto</strong></td><td>Explicación breve: cambio inicial, refuerzo, monedas, etc.</td></tr>
+</tbody>
+</table>
+<p>Se acepta con <strong>F12</strong> y se cancela con <strong>Esc</strong>. En el arqueo aparece como
+<strong>Efectivo entradas</strong>, por lo que aumenta el efectivo esperado en caja.</p>
 <hr>
 <h3 id="gastos-por-caja-f7">Gastos por caja (F7)</h3>
 <p>Registra <strong>pagos en efectivo</strong> hechos desde el cajón (mensajería, compras
 menores…). Restan efectivo en el arqueo y quedan en el histórico de pagos.</p>
 <p><img src="img/05-caja-gastos.png" alt="Gastos por caja" loading="lazy">
 <em>▢ Captura pendiente — Modal de Gastos por caja.</em></p>
+<p>La pantalla permite clasificar la salida:</p>
+<table>
+<thead><tr>
+<th>Tipo</th>
+<th>Cuándo usarlo</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Pago proveedor</strong></td><td>Pago puntual a un proveedor desde el cajón.</td></tr>
+<tr><td><strong>Gastos limpieza</strong></td><td>Gastos menores pagados en efectivo.</td></tr>
+<tr><td><strong>Retirada banco</strong></td><td>Dinero que se saca para ingresarlo en banco.</td></tr>
+<tr><td><strong>Retirada encargado</strong></td><td>Entrega de efectivo al responsable.</td></tr>
+<tr><td><strong>Caja fuerte</strong></td><td>Retirada para dejar efectivo fuera del cajón.</td></tr>
+</tbody>
+</table>
+<p>Además pide <strong>Empleado</strong>, <strong>Importe</strong> y <strong>Concepto</strong>. Se acepta con <strong>F12</strong>.
+Estas salidas restan en <strong>Efectivo salidas</strong> y quedan auditadas en históricos.</p>
 <hr>
 <h3 id="buscar-modificar-f10">Buscar / Modificar (F10)</h3>
 <p>Abre la pantalla <strong>«Buscar operaciones»</strong> para localizar cualquier
@@ -185,10 +351,23 @@ importe, nº de documento…).</p>
 devolución, gasto, traspaso…), <strong>Serie</strong> y <strong>Nº Factura</strong>, <strong>Cliente</strong> y
 Razón social, <strong>Importe</strong>, <strong>Empleado</strong> y <strong>Conceptos</strong>.</p>
 <p><strong>Detalle de la operación seleccionada</strong>, en dos pestañas:</p>
-<ul><li><strong>Operación</strong> — tipo, importe, concepto, id de depósito, documento de</li></ul>
-<p>  referencia (serie/nº), y en devoluciones el <strong>motivo</strong> y su estado.</p>
-<ul><li><strong>Pagos</strong> — desglose por forma de pago: línea, código, forma de pago,</li></ul>
-<p>  <strong>Entregado</strong>, <strong>Cambio</strong> y <strong>Neto</strong>.</p>
+<ul><li><strong>Operación</strong> — tipo, importe, concepto, id de depósito, documento de referencia (serie/nº), y en devoluciones el <strong>motivo</strong> y su estado.</li><li><strong>Pagos</strong> — desglose por forma de pago: línea, código, forma de pago, <strong>Entregado</strong>, <strong>Cambio</strong> y <strong>Neto</strong>.</li></ul>
+<p>Según la operación también pueden aparecer pestañas de <strong>Vales</strong>,
+<strong>Movimientos</strong>, <strong>Cliente</strong>, <strong>Depósitos</strong> y <strong>Factura</strong>. Esta pantalla es la
+forma más rápida de reconstruir qué pasó con un ticket: qué se vendió, cómo se
+cobró, si hubo vale, si movió stock y qué documento fiscal quedó asociado.</p>
+<p>Acciones habituales:</p>
+<table>
+<thead><tr>
+<th>Acción</th>
+<th>Uso</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Reimprimir</strong></td><td>Saca duplicado de ticket, resguardo de depósito o recordatorio según la operación.</td></tr>
+<tr><td><strong>F5</strong></td><td>Recarga la consulta del día.</td></tr>
+<tr><td><strong>Esc</strong></td><td>Cierra la búsqueda y vuelve al menú de caja.</td></tr>
+</tbody>
+</table>
 <blockquote><p>Requiere tener una <strong>caja seleccionada</strong> (empresa/almacén/caja); si no,
 la aplicación pide seleccionarla antes de buscar.</p></blockquote>
 <hr>
@@ -220,24 +399,258 @@ cuadrar el datáfono.</p>
 </tr></thead>
 <tbody>
 <tr><td><strong>F5</strong></td><td><strong>Recalcular</strong> el arqueo tras cambiar fechas.</td></tr>
-<tr><td><strong>F11</strong></td><td><strong>Imprimir</strong> el arqueo.</td></tr>
+<tr><td><strong>F11</strong></td><td><strong>Resumen</strong> / imprimir el arqueo calculado.</td></tr>
+<tr><td><strong>F7</strong></td><td><strong>Tira de Caja</strong> con detalle de tickets y movimientos.</td></tr>
 <tr><td><strong>F8</strong></td><td><strong>Histórico</strong> de arqueos anteriores.</td></tr>
+<tr><td><strong>F2</strong></td><td><strong>Grabar Arqueo y emitir justificante</strong> desde la pestaña Recuento.</td></tr>
 </tbody>
 </table>
 <blockquote><p>Haz el arqueo <strong>al cierre de cada jornada</strong>. El «Efectivo anterior» enlaza
 con el arqueo previo, de modo que los descuadres no se arrastran sin ser
 detectados.</p></blockquote>
+<h3 id="recuento-del-arqueo">Recuento del arqueo</h3>
+<p>La pestaña <strong>Recuento</strong> sirve para introducir lo contado físicamente:</p>
+<p><img src="img/05-caja-arqueo-recuento.png" alt="Recuento de arqueo" loading="lazy">
+<em>▢ Captura pendiente — Recuento de billetes, monedas y otras formas de pago.</em></p>
+<table>
+<thead><tr>
+<th>Zona</th>
+<th>Qué se introduce</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Efectivo</strong></td><td>Unidades por denominación de billetes y monedas.</td></tr>
+<tr><td><strong>Otras formas de pago</strong></td><td>Importe recontado de tarjeta, bono, divisa, cripto u otras formas no efectivo.</td></tr>
+<tr><td><strong>Retirada</strong></td><td>Importe retirado a banco, encargado o caja fuerte.</td></tr>
+<tr><td><strong>Dejo para mañana</strong></td><td>Efectivo que queda como cambio para la siguiente jornada.</td></tr>
+<tr><td><strong>Observaciones</strong></td><td>Aclaraciones sobre diferencias o incidencias.</td></tr>
+<tr><td><strong>Vendedor</strong></td><td>Empleado responsable del cierre.</td></tr>
+</tbody>
+</table>
+<p>La pantalla calcula <strong>Total sistema</strong>, <strong>Total recontado</strong> y <strong>Diferencia</strong>.
+Si la diferencia no es cero, conviene explicar el motivo en observaciones antes
+de grabar.</p>
+<h3 id="tira-de-caja-f7">Tira de Caja (F7)</h3>
+<p>La <strong>Tira de Caja</strong> imprime o exporta un detalle de lo ocurrido en el rango del
+arqueo. Permite seleccionar series de facturas simplificadas y decidir si se
+incluyen traspasos salientes, ingresos por caja, gastos por caja y ventas a
+crédito.</p>
+<p><img src="img/05-caja-tira-caja.png" alt="Tira de caja" loading="lazy">
+<em>▢ Captura pendiente — Opciones de impresión y Excel de la Tira de Caja.</em></p>
+<p>Úsala cuando el responsable quiera revisar el detalle antes del cierre o
+adjuntar una relación de movimientos al arqueo.</p>
 <p>Desde <strong>Histórico (F8)</strong> puedes reimprimir duplicados del ticket de arqueo
 o del justificante de cierre ya grabado.</p>
 <p><img src="img/05-caja-arqueo-historico-tpv.png" alt="Histórico de arqueos desde el TPV" loading="lazy"></p>
 <hr>
 <h2 id="parametros-de-caja">Parámetros de Caja</h2>
 <p><strong>Atajo de menú:</strong> <code>[Ctrl]+[F5]</code></p>
-<p>Configuración del comportamiento del TPV: caja por defecto, impresora de
-tickets, formas de pago habilitadas, textos del ticket, redondeos, etc.
-Normalmente lo configura el responsable al instalar la tienda.</p>
+<p>Configuración del comportamiento del TPV: selector de caja, tarifa por
+defecto, empleado, validación de artículos, vales, lector de códigos,
+impresora, permisos operativos y resumen del arqueo. Normalmente lo
+configura el responsable al instalar la tienda.</p>
 <p><img src="img/05-caja-parametros.png" alt="Parámetros de Caja" loading="lazy">
 <em>▢ Captura pendiente — Parámetros de Caja.</em></p>
+<p>La parte superior tiene tres controles importantes:</p>
+<table>
+<thead><tr>
+<th>Control</th>
+<th>Uso</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Buscar</strong></td><td>Filtra la lista de parámetros por texto. Sirve para localizar rápido impresora, stock, vale, descuento, etc.</td></tr>
+<tr><td><strong>Guardar (F12)</strong></td><td>Graba solo los valores modificados del perfil elegido.</td></tr>
+<tr><td><strong>Usuario / Grupo / Todos</strong></td><td>Permite cargar parámetros propios del usuario, del grupo o generales. Un usuario normal edita los suyos y los de su grupo; <strong>Todos</strong> queda en consulta salvo permisos de administrador.</td></tr>
+</tbody>
+</table>
+<p>Los parámetros se leen con prioridad de usuario, grupo y valores por defecto.
+Cuando se guarda un cambio para el usuario o grupo actual, la caja recarga la
+configuración en memoria.</p>
+<h3 id="control-de-articulos">Control de Artículos</h3>
+<table>
+<thead><tr>
+<th>Parámetro</th>
+<th>Defecto</th>
+<th>Qué controla</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Permitir sólo artículos que existan</strong> (<code>vgerChkExistOnly</code>)</td><td><code>True</code></td><td>Antes de vender un SKU comprueba que exista en <code>fza_articulos_skus</code> y que esté activo. Si no existe o está inactivo, la caja bloquea la línea y avisa al usuario.</td></tr>
+<tr><td><strong>Permitir sólo artículos con stock</strong> (<code>vgerChkStockOnly</code>)</td><td><code>False</code></td><td>Si está activo, la caja no deja vender un SKU sin stock disponible. Si está desactivado, puede venderse, pero puede mostrarse el aviso configurado en <strong>Aviso en artículos sin stock</strong>.</td></tr>
+</tbody>
+</table>
+<p>Uso recomendado:</p>
+<table>
+<thead><tr>
+<th>Situación</th>
+<th>Configuración recomendada</th>
+</tr></thead>
+<tbody>
+<tr><td>Tienda con stock controlado por SKU</td><td>Existencia <code>True</code>, stock <code>True</code>.</td></tr>
+<tr><td>Tienda en arranque o con servicios sin stock</td><td>Existencia <code>True</code>, stock <code>False</code>.</td></tr>
+<tr><td>Carga inicial con artículos todavía incompletos</td><td>Revisar antes de desactivar existencia, porque permite errores de código.</td></tr>
+</tbody>
+</table>
+<h3 id="configuracion-de-caja">Configuración de Caja</h3>
+<table>
+<thead><tr>
+<th>Parámetro</th>
+<th>Defecto</th>
+<th>Qué controla</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Presentar selección de caja</strong> (<code>vgerShowCajaSelection</code>)</td><td><code>False</code></td><td>Al entrar en Caja muestra el selector de empresa, almacén y caja. Si está desactivado, se usan los valores activos del entorno (<code>oEmpresa</code>, <code>oAlmacen</code>, <code>oCaja</code>). Doble clic sobre la cabecera de empresa vuelve a abrir el selector cuando está permitido.</td></tr>
+<tr><td><strong>Rellenar empleado por defecto al abrir</strong> (<code>vgerFillEmpleadoDefecto</code>)</td><td><code>False</code></td><td>Al crear una venta o un traspaso rellena el empleado si no había empleado anterior. Usa el valor de <strong>Código de empleado por defecto</strong>.</td></tr>
+<tr><td><strong>Tarifa por defecto en caja</strong> (<code>vgerDefTarifa</code>)</td><td><code>PVP</code></td><td>Tarifa inicial de una venta de contado. Al seleccionar cliente, puede cambiarse por la tarifa propia del cliente.</td></tr>
+<tr><td><strong>Número de operaciones pendientes</strong> (<code>vgerMaxOpPending</code>)</td><td><code>5</code></td><td>Parámetro preparado para limitar o dimensionar operaciones pendientes. En la versión actual está registrado en la pantalla, pero no se ha localizado uso operativo directo en la caja.</td></tr>
+<tr><td><strong>Cargar depósitos automáticamente al seleccionar cliente</strong> (<code>vgerAutoLoadDepositos</code>)</td><td><code>False</code></td><td>Si el cliente permite deuda y tiene depósitos, la caja carga sus depósitos pendientes al seleccionarlo. Si está desactivado, el usuario debe entrar por <strong>Más datos (F2)</strong>.</td></tr>
+</tbody>
+</table>
+<p>Ejemplo práctico: en una tienda con varias cajas físicas conviene activar
+<strong>Presentar selección de caja</strong> para evitar que un usuario facture desde la
+caja equivocada. En una tienda con un único TPV puede dejarse desactivado.</p>
+<h3 id="devoluciones-y-vales">Devoluciones y Vales</h3>
+<table>
+<thead><tr>
+<th>Parámetro</th>
+<th>Defecto</th>
+<th>Qué controla</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Pedir referencia en devoluciones</strong> (<code>vgerReqRefDevolucion</code>)</td><td><code>False</code></td><td>Parámetro preparado para exigir una referencia en devoluciones. En la versión actual está definido, pero no se ha localizado uso operativo directo en la fase de cobro.</td></tr>
+<tr><td><strong>Recuperar Vale sólo con PIN</strong> (<code>vgerRecuperaValePIN</code>)</td><td><code>False</code></td><td>Al buscar un vale, muestra el campo PIN. Si el vale tiene PIN de seguridad, obliga a introducirlo para canjearlo. También filtra la búsqueda por PIN cuando se rellena.</td></tr>
+<tr><td><strong>Caducidad por defecto en vale</strong> (<code>vgerCaducidadDefVale</code>)</td><td><code>False</code></td><td>Al seleccionar vales para canjear, oculta los caducados cuando está activo. Un vale sin fecha de caducidad sigue siendo válido.</td></tr>
+<tr><td><strong>Días hasta caducidad en vale</strong> (<code>vgerDiasCaducidadVale</code>)</td><td><code>365</code></td><td>Parámetro preparado para calcular caducidad al emitir vales. En la versión actual está registrado, pero la emisión de vales no usa directamente este valor.</td></tr>
+</tbody>
+</table>
+<p>Funcionamiento de vales en cobro:</p>
+<table>
+<thead><tr>
+<th>Caso</th>
+<th>Comportamiento</th>
+</tr></thead>
+<tbody>
+<tr><td>El vale cubre parte de la venta</td><td>Se registra como forma de pago <code>VALE</code> con referencia al código del vale.</td></tr>
+<tr><td>El vale es mayor que lo pendiente</td><td>Se canjea el vale completo y se emite automáticamente un vale nuevo por el exceso.</td></tr>
+<tr><td>El vale no existe, está recogido o está anulado</td><td>La validación de cobro bloquea el cierre.</td></tr>
+<tr><td>Caducidad activa</td><td>La búsqueda solo enseña vales pendientes no caducados.</td></tr>
+</tbody>
+</table>
+<h3 id="avisos-y-busquedas">Avisos y Búsquedas</h3>
+<table>
+<thead><tr>
+<th>Parámetro</th>
+<th>Defecto</th>
+<th>Qué controla</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Aviso en artículos sin stock</strong> (<code>vgerAvisoStockWarning</code>)</td><td><code>Artículo sin stock. Compruebe stock en almacén.</code></td><td>Texto que se muestra cuando se detecta falta de stock y no se bloquea la venta por <strong>Permitir sólo artículos con stock</strong>. Si se deja vacío, no se muestra aviso informativo.</td></tr>
+<tr><td><strong>Búsqueda de artículos sólo con stock</strong> (<code>vgerBusqArtStockOnly</code>)</td><td><code>False</code></td><td>Parámetro preparado para filtrar búsquedas por stock. En la versión actual la búsqueda de artículos de caja filtra por tarifa y vigencia, pero no aplica esta clave directamente.</td></tr>
+<tr><td><strong>Búsqueda de artículos sólo con tarifa</strong> (<code>vgerBusqArtTarifaOnly</code>)</td><td><code>False</code></td><td>Parámetro preparado para filtrar búsquedas solo con tarifa. En la versión actual la búsqueda permite artículos de la tarifa activa o sin tarifa asociada.</td></tr>
+<tr><td><strong>Mover línea al identificar artículo</strong> (<code>vgerMoverLineaIdentif</code>)</td><td><code>False</code></td><td>Decide el salto de foco al identificar un artículo. Si está activo, la caja guarda la línea y abre una nueva línea en <strong>Artículo</strong>. Si está desactivado, deja el foco en la descripción o en atributos para completar la línea.</td></tr>
+</tbody>
+</table>
+<p>Este bloque afecta sobre todo al ritmo de venta:</p>
+<table>
+<thead><tr>
+<th>Forma de trabajar</th>
+<th>Ajuste útil</th>
+</tr></thead>
+<tbody>
+<tr><td>Venta rápida con lector y SKU completos</td><td>Activar <strong>Mover línea al identificar artículo</strong>.</td></tr>
+<tr><td>Venta con artículos que requieren atributos manuales</td><td>Desactivar <strong>Mover línea al identificar artículo</strong>.</td></tr>
+<tr><td>Se permite vender sin stock, pero se quiere advertir</td><td>Stock <code>False</code> y aviso de stock con texto.</td></tr>
+</tbody>
+</table>
+<h3 id="lector-de-codigo-de-barras">Lector de Código de Barras</h3>
+<table>
+<thead><tr>
+<th>Parámetro</th>
+<th>Defecto</th>
+<th>Qué controla</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Detectar lecturas por velocidad de tecleo (código + CR)</strong> (<code>vgerScanVelActivo</code>)</td><td><code>True</code></td><td>Activa el detector que diferencia una lectura de escáner de una entrada manual por teclado.</td></tr>
+<tr><td><strong>Máx. ms entre teclas para considerarlo lectura</strong> (<code>vgerScanVelMs</code>)</td><td><code>40</code></td><td>Umbral de velocidad entre caracteres. Si el escáner escribe más lento que este valor, puede interpretarse como tecleo normal.</td></tr>
+<tr><td><strong>Longitud mínima del código para aceptar la lectura</strong> (<code>vgerScanMinLong</code>)</td><td><code>4</code></td><td>Evita tratar textos muy cortos como códigos escaneados.</td></tr>
+</tbody>
+</table>
+<p>Si el lector no dispara la búsqueda automática, revisa primero
+<strong>Detectar lecturas por velocidad de tecleo</strong> y sube ligeramente el umbral de
+milisegundos. Si se producen falsas lecturas al teclear, baja el umbral o sube
+la longitud mínima.</p>
+<h3 id="impresion">Impresión</h3>
+<table>
+<thead><tr>
+<th>Parámetro</th>
+<th>Defecto</th>
+<th>Qué controla</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Nombre impresora de tickets</strong> (<code>vgerDefPrinter</code>)</td><td>vacío</td><td>Impresora térmica usada por los tickets y por la apertura de cajón. La lista permite elegir entre impresoras instaladas. Si no hay impresora válida o queda en <code>DEBUG</code>, la apertura de cajón no se ejecuta y se avisa al usuario.</td></tr>
+<tr><td><strong>Tipo de Impresión tickets</strong> (<code>vgerTipoImpresion</code>)</td><td><code>ESC POS</code></td><td>Modo de impresión disponible en el selector: <code>ESC POS</code>, <code>ESC POS NOQR</code>, <code>EDITOR</code> o <code>DEBUG</code>. En la versión actual se almacena como parámetro, pero la generación principal de tickets usa la impresora asignada.</td></tr>
+<tr><td><strong>Formato de impresión predeterminado</strong> (<code>vgerFormatoImpPredet</code>)</td><td>vacío</td><td>Parámetro reservado para indicar un formato predeterminado. En la versión actual está registrado, pero no se ha localizado uso operativo directo en caja.</td></tr>
+</tbody>
+</table>
+<p>Notas de soporte:</p>
+<table>
+<thead><tr>
+<th>Valor</th>
+<th>Cuándo usarlo</th>
+</tr></thead>
+<tbody>
+<tr><td><code>ESC POS</code></td><td>Ticket térmico normal con comandos de impresora.</td></tr>
+<tr><td><code>ESC POS NOQR</code></td><td>Variante prevista para tickets sin QR cuando el formato lo soporte.</td></tr>
+<tr><td><code>EDITOR</code></td><td>Modo de edición o pruebas de formato.</td></tr>
+<tr><td><code>DEBUG</code></td><td>Pruebas sin impresora real. No sirve para abrir cajón.</td></tr>
+</tbody>
+</table>
+<h3 id="empleado">Empleado</h3>
+<table>
+<thead><tr>
+<th>Parámetro</th>
+<th>Defecto</th>
+<th>Qué controla</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Código de empleado por defecto</strong> (<code>vgerCodEmpleadoDefecto</code>)</td><td>vacío</td><td>Código que se rellena al abrir venta o traspaso si <strong>Rellenar empleado por defecto al abrir</strong> está activo.</td></tr>
+<tr><td><strong>Mostrar empleado en linea de caja</strong> (<code>vgerShowEmpleadoLinea</code>)</td><td><code>True</code></td><td>Muestra u oculta la columna de empleado en la línea de venta. Si se oculta, la línea sigue pudiendo llevar el vendedor asignado por cabecera o por defecto.</td></tr>
+</tbody>
+</table>
+<p>En tiendas con comisiones por vendedor conviene dejar visible la columna de
+empleado. En tiendas de autoservicio con un solo cajero puede ocultarse para
+ganar espacio en la rejilla.</p>
+<h3 id="permisos-extra">Permisos Extra</h3>
+<table>
+<thead><tr>
+<th>Parámetro</th>
+<th>Defecto</th>
+<th>Qué controla</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Permitir Arqueo de Tarjetas</strong> (<code>vgerArqueoTarjetas</code>)</td><td><code>False</code></td><td>Parámetro preparado para separar permisos del arqueo de tarjetas. En la versión actual está registrado, pero no se ha localizado uso operativo directo.</td></tr>
+<tr><td><strong>Permitir Ventas a Crédito</strong> (<code>vgerVentasCredito</code>)</td><td><code>True</code></td><td>Habilita el botón <strong>Préstamo (F7)</strong> en la fase de cobro, siempre que haya cliente, el cliente permita deuda y quede importe pendiente para dejar en cuenta.</td></tr>
+<tr><td><strong>Permite descuentos en ventas</strong> (<code>vgerDescuentos</code>)</td><td><code>True</code></td><td>Permite editar descuentos de línea, descuento global, total y precio unitario. Si está desactivado, esas vías quedan bloqueadas para evitar descuentos indirectos.</td></tr>
+</tbody>
+</table>
+<p>La venta a crédito no depende solo del parámetro: también exige cliente
+identificado, permiso de deuda en la ficha del cliente y validación de límite
+de crédito.</p>
+<h3 id="arqueo">Arqueo</h3>
+<table>
+<thead><tr>
+<th>Parámetro</th>
+<th>Defecto</th>
+<th>Qué controla</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Niveles de familia en resumen por sección</strong> (<code>vgerArqueoNivelesFamilia</code>)</td><td><code>2</code></td><td>Define cuántos niveles de la ruta de familias aparecen en el resumen por sección del arqueo y en el ticket de arqueo. <code>1</code> muestra solo la sección raíz; <code>2</code> sección y familia; <code>3</code> añade subfamilia. El sistema sanea el valor al rango <code>1..9</code>.</td></tr>
+</tbody>
+</table>
+<p>Usa pocos niveles si el arqueo debe ser rápido y legible. Sube los niveles
+cuando se necesite analizar la venta por familias más concretas.</p>
+<blockquote><p>Cambiar parámetros durante la jornada puede alterar el comportamiento de las
+nuevas operaciones y tickets, pero no modifica operaciones ya grabadas. Para
+evitar confusiones, cambia impresora, caja, stock o descuentos antes de abrir
+la jornada o después de cerrar el arqueo.</p></blockquote>
 <hr>
 <h2 id="formas-de-pago-caja">Formas de Pago Caja</h2>
 <p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[Q]</code></p>
@@ -264,6 +677,20 @@ una en el cobro y en el arqueo.</p>
 </table>
 <blockquote><p>En el arqueo, las formas que no son efectivo se agrupan en
 <strong>«Otros (tarjetas, bonos, divisa, cripto)»</strong> para el recuento.</p></blockquote>
+<p>Configuración recomendada:</p>
+<table>
+<thead><tr>
+<th>Forma</th>
+<th>Recomendación</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Efectivo</strong></td><td>Activar <strong>Devuelve Cambio</strong> y <strong>Abre Cajón</strong>.</td></tr>
+<tr><td><strong>Tarjeta</strong></td><td>Activar <strong>Pide Referencia</strong> si se quiere guardar autorización; no debe devolver cambio.</td></tr>
+<tr><td><strong>Vale</strong></td><td>Usar la gestión propia de vales desde <strong>Buscar Vale (F6)</strong>.</td></tr>
+<tr><td><strong>Divisa</strong></td><td>Marcar <strong>Divisa</strong> para pedir cotización e importe equivalente.</td></tr>
+<tr><td><strong>Cripto</strong></td><td>Marcar <strong>Cripto</strong> y definir red/hash para trazabilidad.</td></tr>
+</tbody>
+</table>
 <hr>
 <h2 id="depositos-de-clientes">Depósitos de Clientes</h2>
 <p><strong>Atajo de menú:</strong> <code>[Ctrl]+[D]</code></p>
@@ -272,6 +699,35 @@ una en el cobro y en el arqueo.</p>
 cta.</strong> en el TPV). Lleva el saldo disponible por cliente.</p>
 <p><img src="img/05-caja-depositos.png" alt="Depósitos de clientes" loading="lazy">
 <em>▢ Captura pendiente — Depósitos de Clientes.</em></p>
+<p>Columnas principales:</p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Qué indica</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>ID Depósito</strong></td><td>Identificador interno del depósito.</td></tr>
+<tr><td><strong>Cliente</strong></td><td>Cliente propietario de la señal o prenda apartada.</td></tr>
+<tr><td><strong>Artículo / SKU</strong></td><td>Prenda reservada, con talla/color si procede.</td></tr>
+<tr><td><strong>Precio Venta</strong></td><td>Precio total previsto para la entrega.</td></tr>
+<tr><td><strong>Anticipo</strong></td><td>Importe ya pagado por el cliente.</td></tr>
+<tr><td><strong>Estado</strong></td><td>Pendiente, entregado, cancelado o situación equivalente.</td></tr>
+<tr><td><strong>Cant. Pendiente</strong></td><td>Unidades que quedan pendientes de entregar o regularizar.</td></tr>
+</tbody>
+</table>
+<p>Desde caja se trabaja con ellos de dos formas:</p>
+<table>
+<thead><tr>
+<th>Acción</th>
+<th>Efecto</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Cargar cta. (F2)</strong></td><td>Lleva los depósitos del cliente al ticket para cobrarlos o cancelarlos.</td></tr>
+<tr><td><strong>Préstamo (F7)</strong></td><td>Deja pendiente de cobro en cuenta si el cliente tiene crédito permitido.</td></tr>
+</tbody>
+</table>
+<blockquote><p>Depósito y préstamo no son lo mismo. El depósito es dinero/prenda ya
+registrada a cuenta. El préstamo es una venta que se cierra dejando deuda.</p></blockquote>
 <hr>
 <h2 id="historico-de-pagos-de-caja">Histórico de Pagos de Caja</h2>
 <p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[J]</code></p>
@@ -280,6 +736,10 @@ formas de pago e importes. Permite filtrar por fechas y revisar el detalle
 del efectivo movido.</p>
 <p><img src="img/05-caja-hist-pagos.png" alt="Histórico de pagos" loading="lazy">
 <em>▢ Captura pendiente — Histórico de Pagos de Caja.</em></p>
+<p>Incluye empresa, almacén, caja, serie y número de operación, línea, fecha,
+forma de pago, divisa, referencia, importe entregado, cambio y observaciones.
+Es la pantalla adecuada para comprobar por qué el datáfono o el efectivo no
+cuadran con el arqueo.</p>
 <hr>
 <h2 id="historico-de-vales">Histórico de Vales</h2>
 <p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[V]</code></p>
@@ -287,6 +747,9 @@ del efectivo movido.</p>
 reembolso en efectivo) y su estado (pendiente, canjeado, caducado).</p>
 <p><img src="img/05-caja-hist-vales.png" alt="Histórico de vales" loading="lazy">
 <em>▢ Captura pendiente — Histórico de Vales.</em></p>
+<p>Muestra el código del vale, estado, importe nominal, fecha de emisión,
+caducidad, PIN si existe, operación de emisión y operación de redención. Sirve
+para saber si un vale está pendiente, si ya se usó y en qué caja se canjeó.</p>
 <hr>
 <h2 id="historico-de-operaciones">Histórico de Operaciones</h2>
 <p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[O]</code></p>
@@ -295,6 +758,9 @@ devoluciones, entradas de cambio, gastos, traspasos… con su trazabilidad.
 Es la vista de auditoría de la actividad de caja.</p>
 <p><img src="img/05-caja-hist-operaciones.png" alt="Histórico de operaciones" loading="lazy">
 <em>▢ Captura pendiente — Histórico de Operaciones.</em></p>
+<p>No es la pantalla de venta diaria, sino una consulta administrativa. Permite
+revisar por años y almacenes, localizar operaciones por cliente, número,
+importe o concepto, e ir al borrador simplificado asociado cuando exista.</p>
 <hr>
 <h2 id="historico-de-arqueos">Histórico de Arqueos</h2>
 <p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[A]</code></p>
@@ -307,6 +773,17 @@ También accesible desde el propio arqueo con <strong>F8</strong>.</p>
 por empresa, almacén, caja y rango de fechas. El formato se puede editar y
 guardar desde el diseñador de informes.</p>
 <p><img src="img/05-caja-hist-arqueos-informe.png" alt="Informe A4 de histórico de arqueos" loading="lazy"></p>
+<p>En el histórico del propio TPV se pueden sacar dos duplicados:</p>
+<table>
+<thead><tr>
+<th>Botón</th>
+<th>Documento</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Duplicado ticket (F2)</strong></td><td>Reimprime el resumen del arqueo.</td></tr>
+<tr><td><strong>Duplicado cierre (F3)</strong></td><td>Reimprime el justificante de cierre grabado.</td></tr>
+</tbody>
+</table>
 <hr>
 <h2 id="borradores-simplificados">Borradores Simplificados</h2>
 <p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[F]</code></p>
@@ -315,10 +792,26 @@ caja. Permite consultarlos, reimprimirlos y, cuando proceda, <strong>convertir u
 ticket en borrador normal</strong> a nombre del cliente. Como el resto de
 documentos de venta, se consolidan según el modo fiscal configurado.</p>
 <p><img src="img/05-caja-borradores-simplificados.png" alt="Borradores simplificados" loading="lazy"></p>
+<p>Usos habituales:</p>
+<table>
+<thead><tr>
+<th>Acción</th>
+<th>Cuándo usarla</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Consultar ticket</strong></td><td>Revisar líneas, IVA, importes y cliente de una venta de caja.</td></tr>
+<tr><td><strong>Reimprimir</strong></td><td>Sacar duplicado del ticket si el cliente lo solicita.</td></tr>
+<tr><td><strong>Convertir a borrador normal</strong></td><td>Cuando el cliente necesita documento nominativo después de la venta.</td></tr>
+<tr><td><strong>Revisar estado fiscal</strong></td><td>Comprobar si el ticket está pendiente, consolidado o relacionado con Verifactu.</td></tr>
+</tbody>
+</table>
+<blockquote><p>Si el cliente pide factura nominativa en el momento de cobrar, lo correcto
+es usar <strong>Borrador (F8)</strong> en la fase de cobro. La conversión posterior queda
+para casos en los que el ticket ya se cerró.</p></blockquote>
 <hr>
 <p><a href="04-menu-ventas-mayor.html">◀ Menú Ventas Mayor</a> · <a href="index.html">Índice</a> · <a href="06-menu-almacen.html">Siguiente ▶ Menú Almacén</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 24/06/2026</footer>
+<footer>Manual de Factuzam · generado el 25/06/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

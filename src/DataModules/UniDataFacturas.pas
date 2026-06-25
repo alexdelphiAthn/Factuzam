@@ -195,7 +195,8 @@ uses
   inLibFacturas,
   inLibVerifactu,
   inLibDocumentoFiscal,
-  inLibArticulosValidador;
+  inLibArticulosValidador,
+  inLibLicenciaAplicacion;
 
 {$R *.dfm}
 
@@ -2240,6 +2241,11 @@ begin
     else
       if ((State = dsEdit) or (State = dsInsert)) then
       begin
+        if (State = dsInsert) and oLicenciaAplicacionComprobada and
+           (FieldByName('FECHA_FAC').AsString <> '') then
+          ValidarLimiteDemoFacturas(inLibGlobalVar.oConn,
+                                    oLicenciaAplicacionEstado,
+                                    FieldByName('FECHA_FAC').AsDateTime);
         if (FieldByName('NUMERO_FAC').AsString = '0') then
           GetCodigoAutoFactura;
         if (FieldByName('CODIGO_CLI_FAC').AsString = '0') then

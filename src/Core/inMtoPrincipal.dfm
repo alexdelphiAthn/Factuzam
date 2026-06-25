@@ -3147,6 +3147,14 @@
     end
     object Ayuda1: TMenuItem
       Caption = 'Ayuda'
+      object mnuManualWeb: TMenuItem
+        Caption = 'Manual web'
+        OnClick = mnuManualWebClick
+      end
+      object mnuForoSoporte: TMenuItem
+        Caption = 'Foro de soporte'
+        OnClick = mnuForoSoporteClick
+      end
       object Acercade1: TMenuItem
         Bitmap.Data = {
           36100000424D3610000000000000360000002800000020000000200000000100

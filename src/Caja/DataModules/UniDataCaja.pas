@@ -237,8 +237,6 @@ type
     procedure AumentarAnticipoDeposito(QryTrx: TUniQuery;
                                        const ACliente, ASku, AUsuario: string;
                                        ANuevoAbono: Currency);
-    function ContarTicketsDemoDia(AFecha: TDateTime): Integer;
-    procedure ValidarLimiteDemoTickets(AFecha: TDateTime);
     procedure InsertarCabeceraFactura(
             QryTrx:          TUniQuery;
             // — identificación —
@@ -1088,47 +1086,6 @@ begin
   end;
 end;
 
-function TdmCajaOpe.ContarTicketsDemoDia(AFecha: TDateTime): Integer;
-var
-  Qry: TUniQuery;
-begin
-  Result := 0;
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := inLibGlobalVar.oConn;
-    Qry.SQL.Text :=
-      'SELECT COUNT(*) AS TOTAL ' +
-      '  FROM fza_facturas ' +
-      ' WHERE FECHA_FAC = :FECHA ' +
-      '   AND IFNULL(NUMERO_OPERACION_FAC, '''') <> ''''';
-    Qry.ParamByName('FECHA').AsDate := Trunc(AFecha);
-    Qry.Open;
-    Result := Qry.FieldByName('TOTAL').AsInteger;
-  finally
-    FreeAndNil(Qry);
-  end;
-end;
-
-procedure TdmCajaOpe.ValidarLimiteDemoTickets(AFecha: TDateTime);
-var
-  iTickets: Integer;
-begin
-  if oLicenciaAplicacionComprobada and
-     EstadoLicenciaEsDemo(oLicenciaAplicacionEstado) then
-  begin
-    iTickets := ContarTicketsDemoDia(AFecha);
-    if iTickets >= LIMITE_TICKETS_DEMO_DIA then
-    begin
-      raise Exception.Create(
-        'Copia DEMO.' + sLineBreak + sLineBreak +
-        'Ya se han emitido ' + IntToStr(iTickets) + ' tickets el día ' +
-        FormatDateTime('dd/mm/yyyy', AFecha) + '.' + sLineBreak +
-        'El límite de la copia DEMO es ' +
-        IntToStr(LIMITE_TICKETS_DEMO_DIA) + ' tickets al día.');
-    end;
-  end;
-end;
-
 function TdmCajaOpe.GrabarFacturaSimplificada(
                           const AEmpresa,
                                 AAlmacen,
@@ -1303,8 +1260,10 @@ begin
          FormatDateTime('dd/mm/yyyy', dUltimaFechaSerie),
          FormatDateTime('dd/mm/yyyy', Cab.Fecha)]);
   end;
-  if RequiereFactura then
-    ValidarLimiteDemoTickets(Cab.Fecha);
+  if RequiereFactura and oLicenciaAplicacionComprobada then
+    ValidarLimiteDemoFacturas(inLibGlobalVar.oConn,
+                              oLicenciaAplicacionEstado,
+                              Cab.Fecha);
   if DatosCobro.ImporteEntregado <
                 cdsCabecera.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency then
   begin

@@ -148,8 +148,7 @@ desactiva, por grupo/usuario, el acceso a cada <strong>menú y acción</strong> 
 aplicación. Es la forma recomendada de configurar la seguridad de forma
 visual.</p>
 <p>El árbol replica el menú real de la aplicación y permite trabajar por:</p>
-<ul><li><strong>Todos</strong>, grupo o usuario.</li><li>Permitir, denegar o heredar una rama completa.</li><li>Copiar permisos de un sujeto a otro, combinando o reemplazando.</li><li>Gestionar permisos de menú y permisos de pantalla: consultar, insertar,</li></ul>
-<p>  modificar, borrar, exportar a Excel e imprimir.</p>
+<ul><li><strong>Todos</strong>, grupo o usuario.</li><li>Permitir, denegar o heredar una rama completa.</li><li>Copiar permisos de un sujeto a otro, combinando o reemplazando.</li><li>Gestionar permisos de menú y permisos de pantalla: consultar, insertar, modificar, borrar, exportar a Excel e imprimir.</li></ul>
 <blockquote><p>Los cambios de permisos se aplican en el próximo login del usuario
 afectado.</p></blockquote>
 <h3 id="permisos-tabla">Permisos (tabla)</h3>
@@ -204,44 +203,18 @@ fichero <code>.sql</code>/<code>.txt</code> del disco como proceso nuevo, tomand
 fichero). El menú contextual del editor ofrece además <em>Seleccionar Todo</em>,
 <em>Ejecutar</em>, <em>Comentar</em> y <em>Abrir Script</em>.</p>
 <h3 id="como-sacar-un-listado">Cómo sacar un listado</h3>
-<ol><li>Pulsa <strong>Insertar registro</strong> y da <strong>Código</strong> y <strong>Nombre</strong> al proceso</li></ol>
-<p>   (p. ej. <code>L001 — Ventas por familia</code>).</p>
-<ol><li>En <strong>1_Código SQL</strong> escribe la consulta <code>SELECT …</code>. Ayudas:</li></ol>
-<ul><li>En <strong>2_Metadatos</strong>, el árbol muestra todas las tablas y vistas;</li></ul>
-<p>     <strong>doble clic</strong> sobre una tabla/vista enseña su contenido en <em>Vista
-     Contenido</em>, y con el foco en el árbol <strong><code>[Ctrl]+[A]</code></strong> envía la
-     estructura del objeto al editor.</p>
-<ul><li><strong>Bonito</strong> reformatea el SQL para hacerlo legible.</li></ul>
+<ol><li>Pulsa <strong>Insertar registro</strong> y da <strong>Código</strong> y <strong>Nombre</strong> al proceso (p. ej. <code>L001 — Ventas por familia</code>).</li><li>En <strong>1_Código SQL</strong> escribe la consulta <code>SELECT …</code>. Ayudas:</li></ol>
+<ul><li>En <strong>2_Metadatos</strong>, el árbol muestra todas las tablas y vistas; <strong>doble clic</strong> sobre una tabla/vista enseña su contenido en <em>Vista Contenido</em>, y con el foco en el árbol <strong><code>[Ctrl]+[A]</code></strong> envía la estructura del objeto al editor.</li><li><strong>Bonito</strong> reformatea el SQL para hacerlo legible.</li></ul>
 <ol><li>Pulsa <strong>Ejecutar (F5)</strong>:</li></ol>
-<ul><li>Si hay <strong>texto seleccionado</strong> en el editor, se ejecuta <strong>solo la selección</strong>; si no, se ejecuta todo el contenido.</li><li>El resultado se abre en <strong>3_VistaDatos</strong>, con el número de registros</li></ul>
-<p>     y el tiempo de ejecución en el panel de resultados.</p>
-<ol><li>Trabaja el resultado en la rejilla (ordenar, agrupar, filtrar) y</li></ol>
-<p>   sácalo con <strong>Exp. Excel</strong> (exporta a Excel) o <strong>Copiar Datos</strong>
-   (al portapapeles).</p>
-<ol><li>Pulsa <strong>Grabar</strong> para conservar el proceso y repetir el listado cuando</li></ol>
-<p>   haga falta.</p>
+<ul><li>Si hay <strong>texto seleccionado</strong> en el editor, se ejecuta <strong>solo la selección</strong>; si no, se ejecuta todo el contenido.</li><li>El resultado se abre en <strong>3_VistaDatos</strong>, con el número de registros y el tiempo de ejecución en el panel de resultados.</li></ul>
+<ol><li>Trabaja el resultado en la rejilla (ordenar, agrupar, filtrar) y sácalo con <strong>Exp. Excel</strong> (exporta a Excel) o <strong>Copiar Datos</strong> (al portapapeles).</li><li>Pulsa <strong>Grabar</strong> para conservar el proceso y repetir el listado cuando haga falta.</li></ol>
 <p><img src="img/07-generador-listado.png" alt="Resultado de un listado en VistaDatos" loading="lazy">
 <em>▢ Captura pendiente — Pestaña VistaDatos con un resultado y el botón Exp. Excel.</em></p>
 <blockquote><p>El botón <strong>Editar Grid</strong> habilita la edición directa del resultado sobre
 la base de datos. Es útil para correcciones puntuales, pero <strong>modifica
 datos reales</strong>: úsalo con la misma cautela que un UPDATE.</p></blockquote>
 <h3 id="como-ejecutar-un-proceso-comandos-y-procedimientos">Cómo ejecutar un proceso (comandos y procedimientos)</h3>
-<ul><li><strong>Comandos</strong> (<code>UPDATE</code>, <code>INSERT</code>, <code>DELETE</code>…): se escriben igual y se</li></ul>
-<p>  lanzan con <strong>Ejecutar (F5)</strong>. En lugar de rejilla, el panel de
-  resultados muestra las <strong>filas afectadas</strong> y el tiempo.</p>
-<ul><li><strong>Procedimientos almacenados</strong>: en el árbol de <strong>2_Metadatos</strong>, haz</li></ul>
-<p>  <strong>doble clic</strong> sobre el procedimiento: la aplicación genera en el editor
-  la plantilla <code>CALL procedimiento(…)</code> con sus <strong>parámetros comentados</strong>
-  (nombre y tipo de cada uno). Sustituye los comentarios por los valores y
-  pulsa <strong>Ejecutar (F5)</strong>. Si el procedimiento devuelve filas, se muestran
-  en <strong>VistaDatos</strong>; si no, se informa como comando.</p>
-<ul><li><strong>Varias sentencias a la vez</strong>: si el editor contiene varias sentencias</li></ul>
-<p>  separadas por <code>;</code>, cada una se ejecuta en su <strong>propia pestaña de
-  resultado</strong> (una rejilla por consulta, un registro de filas afectadas
-  por comando).</p>
-<ul><li><strong>Ejecutar por partes</strong>: selecciona una sentencia concreta y pulsa F5</li></ul>
-<p>  para lanzar <strong>solo esa parte</strong> — la forma más segura de probar un
-  proceso largo paso a paso.</p>
+<ul><li><strong>Comandos</strong> (<code>UPDATE</code>, <code>INSERT</code>, <code>DELETE</code>…): se escriben igual y se lanzan con <strong>Ejecutar (F5)</strong>. En lugar de rejilla, el panel de resultados muestra las <strong>filas afectadas</strong> y el tiempo.</li><li><strong>Procedimientos almacenados</strong>: en el árbol de <strong>2_Metadatos</strong>, haz <strong>doble clic</strong> sobre el procedimiento: la aplicación genera en el editor la plantilla <code>CALL procedimiento(…)</code> con sus <strong>parámetros comentados</strong> (nombre y tipo de cada uno). Sustituye los comentarios por los valores y pulsa <strong>Ejecutar (F5)</strong>. Si el procedimiento devuelve filas, se muestran en <strong>VistaDatos</strong>; si no, se informa como comando.</li><li><strong>Varias sentencias a la vez</strong>: si el editor contiene varias sentencias separadas por <code>;</code>, cada una se ejecuta en su <strong>propia pestaña de resultado</strong> (una rejilla por consulta, un registro de filas afectadas por comando).</li><li><strong>Ejecutar por partes</strong>: selecciona una sentencia concreta y pulsa F5 para lanzar <strong>solo esa parte</strong> — la forma más segura de probar un proceso largo paso a paso.</li></ul>
 <blockquote><p>Pensado para usuarios técnicos. Una sentencia mal escrita puede modificar
 o borrar datos: <strong>haz copia de seguridad antes de un proceso masivo</strong>,
 prueba primero con un <code>SELECT</code> que muestre las filas que vas a tocar, y
@@ -249,7 +222,7 @@ ejecuta por selección antes que el script completo.</p></blockquote>
 <hr>
 <p><a href="06-menu-almacen.html">◀ Menú Almacén</a> · <a href="index.html">Índice</a> · <a href="08-menu-ayuda.html">Siguiente ▶ Menú Ayuda</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 24/06/2026</footer>
+<footer>Manual de Factuzam · generado el 25/06/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

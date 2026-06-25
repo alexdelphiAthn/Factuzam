@@ -37,7 +37,7 @@ normales del manual.
 | Banco de cobro por defecto en clientes. | [Clientes](02-menu-archivo.md#clientes) |
 | Forma de pago y banco de pago por defecto en proveedores. | [Proveedores](02-menu-archivo.md#proveedores) |
 | Kits de cantidades por talla para sesiones de compra. | [Proveedores ▸ Compras](02-menu-archivo.md#pestana-compras-parametros-de-compra-del-proveedor) |
-| Fotos por artículo, color o SKU, con ventana flotante y descarga desde servidor. | [Conceptos comunes ▸ Foto flotante](01-conceptos-comunes.md#foto-flotante-del-articulo--sku) |
+| Fotos por artículo, color o SKU, con ventana flotante y descarga desde servidor. | [Conceptos comunes ▸ Foto flotante](01-conceptos-comunes.md#foto-flotante-del-articulo-sku) |
 | Unidades de medida con decimales por unidad. | [Unidades de Medida](02-menu-archivo.md#unidades-de-medida) |
 | Atributos básicos y equivalencias estándar de color/talla. | [Atributos básicos](02-menu-archivo.md#atributos-basicos) |
 | Sesiones de cambios de tarifa y ventana de fechas para descuentos. | [Tarifas](02-menu-archivo.md#tarifas) |
@@ -46,7 +46,7 @@ normales del manual.
 
 | Función incorporada | Dónde verlo |
 |---------------------|-------------|
-| Sesiones de compra con aplicación de kits, pestaña proveedor y fotos de sesión. | [Sesiones de compra](03-menu-compras.md#sesiones--crear-articulos-y-un-pedido-o-un-albaran) |
+| Sesiones de compra con aplicación de kits, pestaña proveedor y fotos de sesión. | [Sesiones de compra](03-menu-compras.md#sesiones-crear-articulos-y-un-pedido-o-un-albaran) |
 | Pedidos con control de cantidades **A recibir** e incorporación a albarán existente. | [Pedidos de compra](03-menu-compras.md#pedidos) |
 | Marca informativa **Depósito** en albaranes de compra. | [Albaranes de compra](03-menu-compras.md#albaranes) |
 | Devoluciones a proveedor como documento propio con salida de stock. | [Devoluciones a Proveedor](03-menu-compras.md#devoluciones-a-proveedor) |
@@ -60,7 +60,9 @@ normales del manual.
 | Terminología de **Borradores** antes del cierre fiscal. | [Ventas Mayor ▸ Borradores](04-menu-ventas-mayor.md#borradores) |
 | Crear borradores de venta desde albaranes por rango de fechas. | [Albaranes de venta](04-menu-ventas-mayor.md#albaranes) |
 | Borradores simplificados de caja y conversión a borrador normal. | [Caja ▸ Borradores Simplificados](05-menu-caja.md#borradores-simplificados) |
-| TPV con foto, color/talla y datos de SKU en líneas. | [Caja ▸ Ventas](05-menu-caja.md#ventas-f5--la-pantalla-de-venta) |
+| TPV con foto, color/talla y datos de SKU en líneas. | [Caja ▸ Ventas](05-menu-caja.md#ventas-f5-la-pantalla-de-venta) |
+| Ampliación completa del flujo de caja: jornada, tickets, vales, préstamos, traspasos, recuento y tira de caja. | [Caja](05-menu-caja.md) |
+| Detalle de todos los parámetros de Caja y su efecto operativo actual. | [Caja ▸ Parámetros de Caja](05-menu-caja.md#parametros-de-caja) |
 | Histórico de arqueos desde TPV con duplicado de ticket/cierre. | [Caja ▸ Arqueo](05-menu-caja.md#arqueo-f11) |
 | Informe A4 de histórico de arqueos. | [Caja ▸ Histórico de Arqueos](05-menu-caja.md#historico-de-arqueos) |
 

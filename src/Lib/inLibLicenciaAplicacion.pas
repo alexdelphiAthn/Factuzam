@@ -26,7 +26,7 @@ type
 
 const
   CONMUTADOR_REGISTRO_LICENCIA = 'SETMAJORLICENCSE';
-  LIMITE_TICKETS_DEMO_DIA      = 20;
+  LIMITE_FACTURAS_DEMO_DIA     = 10;
 
 function RutaIniLicenciaAplicacion: string;
 function RegistrarLicenciaAplicacion(AConexion: TUniConnection;
@@ -41,6 +41,11 @@ function ComprobarLicenciaAplicacion(AConexion: TUniConnection;
                                      out ACodigoGuardado: string): Boolean;
 function HayConmutadorRegistroLicencia: Boolean;
 function EstadoLicenciaEsDemo(AEstado: TEstadoLicenciaAplicacion): Boolean;
+function ContarFacturasDemoDia(AConexion: TUniConnection;
+                               AFecha: TDateTime): Integer;
+procedure ValidarLimiteDemoFacturas(AConexion: TUniConnection;
+                                    AEstado: TEstadoLicenciaAplicacion;
+                                    AFecha: TDateTime);
 
 implementation
 
@@ -94,6 +99,48 @@ end;
 function EstadoLicenciaEsDemo(AEstado: TEstadoLicenciaAplicacion): Boolean;
 begin
   Result := (AEstado = elaInvalida) or (AEstado = elaNoEncontrada);
+end;
+
+function ContarFacturasDemoDia(AConexion: TUniConnection;
+                               AFecha: TDateTime): Integer;
+var
+  Qry: TUniQuery;
+begin
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := AConexion;
+    Qry.SQL.Text :=
+      'SELECT COUNT(*) AS TOTAL ' +
+      '  FROM fza_facturas ' +
+      ' WHERE FECHA_FAC = :FECHA';
+    Qry.ParamByName('FECHA').AsDate := Trunc(AFecha);
+    Qry.Open;
+    Result := Qry.FieldByName('TOTAL').AsInteger;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+procedure ValidarLimiteDemoFacturas(AConexion: TUniConnection;
+                                    AEstado: TEstadoLicenciaAplicacion;
+                                    AFecha: TDateTime);
+var
+  iFacturas: Integer;
+begin
+  if (AConexion <> nil) and AConexion.Connected and
+     EstadoLicenciaEsDemo(AEstado) then
+  begin
+    iFacturas := ContarFacturasDemoDia(AConexion, AFecha);
+    if iFacturas >= LIMITE_FACTURAS_DEMO_DIA then
+    begin
+      raise Exception.Create(
+        'Límite DEMO.' + sLineBreak + sLineBreak +
+        'Ya se han emitido ' + IntToStr(iFacturas) + ' facturas el día ' +
+        FormatDateTime('dd/mm/yyyy', AFecha) + '.' + sLineBreak +
+        'El límite de la copia DEMO es ' +
+        IntToStr(LIMITE_FACTURAS_DEMO_DIA) + ' facturas al día.');
+    end;
+  end;
 end;
 
 function RutaIniLicenciaAplicacion: string;

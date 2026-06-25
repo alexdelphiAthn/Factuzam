@@ -187,6 +187,8 @@ type
     mnuPermisos: TMenuItem;
     mnuPermisosTabla: TMenuItem;
     Acercade1: TMenuItem;
+    mnuManualWeb: TMenuItem;
+    mnuForoSoporte: TMenuItem;
     Listados1: TMenuItem;
     mnuLisVentas: TMenuItem;
     mnuPedidosVenta: TMenuItem;
@@ -233,6 +235,8 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
     procedure mnuAcercadeClick(Sender: TObject);
+    procedure mnuManualWebClick(Sender: TObject);
+    procedure mnuForoSoporteClick(Sender: TObject);
     function IsShortCut(var Message: TWMKey): Boolean; override;
 //    procedure undmp1Error(Sender: TObject; E: Exception; SQL: string;
 //      var Action: TErrorAction);
@@ -254,6 +258,7 @@ type
     // anulada en cuanto cualquier form crea su propio TApplicationEvents
     // (multicaster de la VCL), p.ej. el generador de procesos.
     FAppEvents: TApplicationEvents;
+    procedure AbrirUrlAyuda(const AUrl: string);
     procedure AplicarTituloVentana;
     procedure AppException(Sender: TObject; E: Exception);
     function ConstruirDetalleException(Sender: TObject; E: Exception): string;
@@ -363,6 +368,10 @@ uses inLibUser,
   Vcl.Clipbrd;
 
 {$R *.dfm}
+
+const
+  URL_MANUAL_WEB = 'https://www.veryverifactu.com/manual/index.html';
+  URL_FORO_SOPORTE = 'https://foro.veryverifactu.com/';
 
 procedure RegistrarEventoFiscalSeguro(ATipoEvento: Integer;
                                       const ADescripcion: string);
@@ -1778,6 +1787,20 @@ begin
   Self.WindowState := wsMinimized;
 end;
 
+procedure TfrmMtoPrincipal.AbrirUrlAyuda(const AUrl: string);
+var
+  Resultado: HINST;
+begin
+  Resultado := ShellExecute(0,
+                            'open',
+                            PChar(AUrl),
+                            nil,
+                            nil,
+                            SW_SHOWNORMAL);
+  if Resultado <= 32 then
+    ShowMessage('No se ha podido abrir la dirección: ' + AUrl);
+end;
+
 procedure TfrmMtoPrincipal.mnuAcercadeClick(Sender: TObject);
 var
   frmSplash: TfrmSplash;
@@ -1789,6 +1812,18 @@ begin
   finally
     FreeAndNil(frmSplash);
   end;
+end;
+
+procedure TfrmMtoPrincipal.mnuForoSoporteClick(Sender: TObject);
+begin
+  inherited;
+  AbrirUrlAyuda(URL_FORO_SOPORTE);
+end;
+
+procedure TfrmMtoPrincipal.mnuManualWebClick(Sender: TObject);
+begin
+  inherited;
+  AbrirUrlAyuda(URL_MANUAL_WEB);
 end;
 
 procedure TfrmMtoPrincipal.mnuAlmacenesClick(Sender: TObject);
