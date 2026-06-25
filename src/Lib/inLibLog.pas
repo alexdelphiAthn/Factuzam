@@ -49,6 +49,11 @@ type
     function AcquireMutex: Boolean;
     procedure ReleaseMutex;
     function IsFileAccessible(const FileName: string): Boolean;
+    function FechaLogArchivo(const AFileName: string): TDateTime;
+    function FechaOrdenArchivo(const AFileName: string): TDateTime;
+    function ClaveFechaLog(const AFecha: TDateTime): string;
+    procedure ArchivarGrupoLogs(const AArchivos: TList<string>;
+                                const AFechaLog: TDateTime);
   public
     constructor Create(ALogRetention: Integer = DEFAULT_LOG_RETENTION);
     destructor Destroy; override;
@@ -92,8 +97,26 @@ procedure AplicarModosDepuracion;
 implementation
 
 uses
-  System.DateUtils, inLibWin, inLibGlobalVar,    // oMemoSQL para LogPerf
+  System.DateUtils, System.Generics.Defaults, inLibWin,
+  inLibGlobalVar,                                // oMemoSQL para LogPerf
   inLibAppParam;                                 // oAppParams.GetBool
+
+type
+  TLogFileInfo = record
+    Ruta: string;
+    FechaLog: TDateTime;
+    FechaOrden: TDateTime;
+  end;
+
+function CompararInfoLog(const AIzquierda, ADerecha: TLogFileInfo): Integer;
+begin
+  if AIzquierda.FechaOrden < ADerecha.FechaOrden then
+    Result := -1
+  else if AIzquierda.FechaOrden > ADerecha.FechaOrden then
+    Result := 1
+  else
+    Result := CompareText(AIzquierda.Ruta, ADerecha.Ruta);
+end;
 
 { TLog }
 
@@ -139,8 +162,9 @@ begin
   inherited Create;
   FInstanceID := GenerateInstanceID;
   FLogRetention := ALogRetention;
-  FLogFileName := TPath.Combine(GetLogFolder, 'LOG_' + FInstanceID +'_' +
-                                FormatDateTime('dd_mm_yyyy', Now) + '.log');
+  FLogFileName := TPath.Combine(GetLogFolder, 'LOG_' +
+                                FormatDateTime('yyyy_mm_dd_hhnnss', Now) +
+                                '_' + FInstanceID + '.log');
   if not IsFileAccessible(FLogFileName) then
     raise Exception.CreateFmt('No se puede acceder a %s. Faltan permisos.',
                               [FLogFileName]);
@@ -303,7 +327,8 @@ begin
   // Solo al archivo de log general — TLog.WriteToLog ya es thread-safe
   // (mutex interno). NO tocamos oMemoSQL: es un TcxMemo de DevExpress
   // y NO es thread-safe. Si necesitas ver las metricas junto al log
-  // SQL en debug, abre el archivo de log (fzam-YYYYMMDD.log) en paralelo.
+  // SQL en debug, abre el archivo de log LOG_yyyy_mm_dd_hhnnss_*.log
+  // en paralelo.
   WriteToLog(Format('[PERF:%s] %s | %d ms',
                     [ATag, ADetalle, AElapsedMs]),
              ltPerf);
@@ -324,35 +349,246 @@ begin
   Result := ALogType in FLogFlags;
 end;
 
+function TLog.FechaLogArchivo(const AFileName: string): TDateTime;
+var
+  sNombre: string;
+  dFecha: TDateTime;
+  function ProbarFecha(const ATexto: string; AAnioPrimero: Boolean;
+                       out AFecha: TDateTime): Boolean;
+  var
+    iAnio: Integer;
+    iMes: Integer;
+    iDia: Integer;
+    bFormato: Boolean;
+  begin
+    Result := False;
+    if Length(ATexto) = 10 then
+    begin
+      if AAnioPrimero then
+      begin
+        bFormato := (ATexto[5] = '_') and (ATexto[8] = '_');
+        if bFormato then
+          bFormato := TryStrToInt(Copy(ATexto, 1, 4), iAnio) and
+                      TryStrToInt(Copy(ATexto, 6, 2), iMes) and
+                      TryStrToInt(Copy(ATexto, 9, 2), iDia);
+      end
+      else
+      begin
+        bFormato := (ATexto[3] = '_') and (ATexto[6] = '_');
+        if bFormato then
+          bFormato := TryStrToInt(Copy(ATexto, 1, 2), iDia) and
+                      TryStrToInt(Copy(ATexto, 4, 2), iMes) and
+                      TryStrToInt(Copy(ATexto, 7, 4), iAnio);
+      end;
+      if bFormato then
+      begin
+        try
+          AFecha := EncodeDate(Word(iAnio), Word(iMes), Word(iDia));
+          Result := True;
+        except
+          Result := False;
+        end;
+      end;
+    end;
+  end;
+begin
+  Result := Trunc(TFile.GetLastWriteTime(AFileName));
+  sNombre := TPath.GetFileNameWithoutExtension(AFileName);
+  if (Length(sNombre) >= 14) and
+     SameText(Copy(sNombre, 1, 4), 'LOG_') then
+  begin
+    if ProbarFecha(Copy(sNombre, 5, 10), True, dFecha) then
+      Result := dFecha
+    else if Length(sNombre) >= 10 then
+    begin
+      if ProbarFecha(Copy(sNombre, Length(sNombre) - 9, 10), False,
+                     dFecha) then
+        Result := dFecha;
+    end;
+  end;
+end;
+
+function TLog.FechaOrdenArchivo(const AFileName: string): TDateTime;
+var
+  sNombre: string;
+  sHora: string;
+  iHora: Integer;
+  iMinuto: Integer;
+  iSegundo: Integer;
+  dFecha: TDateTime;
+  bHoraValida: Boolean;
+begin
+  dFecha := FechaLogArchivo(AFileName);
+  Result := dFecha + Frac(TFile.GetLastWriteTime(AFileName));
+  sNombre := TPath.GetFileNameWithoutExtension(AFileName);
+  if (Length(sNombre) >= 21) and
+     SameText(Copy(sNombre, 1, 4), 'LOG_') then
+  begin
+    sHora := Copy(sNombre, 16, 6);
+    bHoraValida := TryStrToInt(Copy(sHora, 1, 2), iHora) and
+                   TryStrToInt(Copy(sHora, 3, 2), iMinuto) and
+                   TryStrToInt(Copy(sHora, 5, 2), iSegundo);
+    if bHoraValida then
+    begin
+      if (iHora >= 0) and (iHora <= 23) and
+         (iMinuto >= 0) and (iMinuto <= 59) and
+         (iSegundo >= 0) and (iSegundo <= 59) then
+        Result := dFecha + EncodeTime(Word(iHora), Word(iMinuto),
+                                      Word(iSegundo), 0);
+    end;
+  end;
+end;
+
+function TLog.ClaveFechaLog(const AFecha: TDateTime): string;
+begin
+  Result := FormatDateTime('yyyy-mm-dd', AFecha);
+end;
+
+procedure TLog.ArchivarGrupoLogs(const AArchivos: TList<string>;
+                                 const AFechaLog: TDateTime);
+var
+  ArchiveFolder: string;
+  ZipFileName: string;
+  EntradaZip: string;
+  Zip: TZipFile;
+  ArchivosParaBorrar: TList<string>;
+  I: Integer;
+  bZipAbierto: Boolean;
+begin
+  if AArchivos.Count > 0 then
+  begin
+    ArchiveFolder := TPath.Combine(GetLogFolder, 'archive');
+    ArchiveFolder := TPath.Combine(ArchiveFolder,
+                                   FormatDateTime('yyyy', AFechaLog));
+    ArchiveFolder := TPath.Combine(ArchiveFolder,
+                                   FormatDateTime('mm', AFechaLog));
+    if not TDirectory.Exists(ArchiveFolder) then
+      TDirectory.CreateDirectory(ArchiveFolder);
+    ZipFileName := TPath.Combine(ArchiveFolder,
+                                 'Logs_' + ClaveFechaLog(AFechaLog) + '.zip');
+    Zip := TZipFile.Create;
+    ArchivosParaBorrar := TList<string>.Create;
+    bZipAbierto := False;
+    try
+      if TFile.Exists(ZipFileName) then
+        Zip.Open(ZipFileName, zmReadWrite)
+      else
+        Zip.Open(ZipFileName, zmWrite);
+      bZipAbierto := True;
+      for I := 0 to AArchivos.Count - 1 do
+      begin
+        EntradaZip := ExtractFileName(AArchivos[I]);
+        try
+          if Zip.IndexOf(EntradaZip) < 0 then
+            Zip.Add(AArchivos[I], EntradaZip);
+          ArchivosParaBorrar.Add(AArchivos[I]);
+        except
+          on E: Exception do
+            WriteToLog('WARNING: No se pudo archivar ' + AArchivos[I] +
+                       ': ' + E.Message, ltWarning);
+        end;
+      end;
+      Zip.Close;
+      bZipAbierto := False;
+      for I := 0 to ArchivosParaBorrar.Count - 1 do
+      begin
+        try
+          if TFile.Exists(ArchivosParaBorrar[I]) then
+            TFile.Delete(ArchivosParaBorrar[I]);
+        except
+          on E: Exception do
+            WriteToLog('WARNING: Log archivado pero no borrado ' +
+                       ArchivosParaBorrar[I] + ': ' + E.Message, ltWarning);
+        end;
+      end;
+    finally
+      if bZipAbierto then
+        Zip.Close;
+      FreeAndNil(ArchivosParaBorrar);
+      FreeAndNil(Zip);
+    end;
+  end;
+end;
+
 procedure TLog.RotateLogs;
 var
   LogFiles: TArray<string>;
   ArchiveFolder: string;
-  ZipFileName: string;
-  Zip: TZipFile;
+  InfoFiles: TList<TLogFileInfo>;
+  Grupo: TList<string>;
+  Info: TLogFileInfo;
   I: Integer;
+  iRetencion: Integer;
+  iArchivar: Integer;
+  dFechaGrupo: TDateTime;
+  bHayGrupo: Boolean;
 begin
-  ArchiveFolder := TPath.Combine(GetLogFolder, 'archive');
-  if not TDirectory.Exists(ArchiveFolder) then
-    TDirectory.CreateDirectory(ArchiveFolder);
-  LogFiles := TDirectory.GetFiles(GetLogFolder, '*.log');
-  if Length(LogFiles) > FLogRetention then
-  begin
-    TArray.Sort<string>(LogFiles);
-    ZipFileName := TPath.Combine(ArchiveFolder, 'Logs_' +
-                               FormatDateTime('yyyymmdd_hhnnss', Now) + '.zip');
-    Zip := TZipFile.Create;
-    try
-      Zip.Open(ZipFileName, zmWrite);
-      for I := 0 to Length(LogFiles) - FLogRetention - 1 do
-      begin
-        Zip.Add(LogFiles[I], ExtractFileName(LogFiles[I]));
-        TFile.Delete(LogFiles[I]);
+  try
+    ArchiveFolder := TPath.Combine(GetLogFolder, 'archive');
+    if not TDirectory.Exists(ArchiveFolder) then
+      TDirectory.CreateDirectory(ArchiveFolder);
+    LogFiles := TDirectory.GetFiles(GetLogFolder, '*.log');
+    iRetencion := FLogRetention;
+    if iRetencion < 1 then
+      iRetencion := 1;
+    iArchivar := Length(LogFiles) - iRetencion;
+    if iArchivar > 0 then
+    begin
+      InfoFiles := TList<TLogFileInfo>.Create;
+      try
+        for I := 0 to Length(LogFiles) - 1 do
+        begin
+          if not SameText(ExpandFileName(LogFiles[I]),
+                          ExpandFileName(FLogFileName)) then
+          begin
+            Info.Ruta := LogFiles[I];
+            Info.FechaLog := FechaLogArchivo(LogFiles[I]);
+            Info.FechaOrden := FechaOrdenArchivo(LogFiles[I]);
+            InfoFiles.Add(Info);
+          end;
+        end;
+        InfoFiles.Sort(TComparer<TLogFileInfo>.Construct(
+          function(const AIzquierda, ADerecha: TLogFileInfo): Integer
+          begin
+            Result := CompararInfoLog(AIzquierda, ADerecha);
+          end));
+        if iArchivar > InfoFiles.Count then
+          iArchivar := InfoFiles.Count;
+        if iArchivar > 0 then
+        begin
+          Grupo := TList<string>.Create;
+          try
+            bHayGrupo := False;
+            dFechaGrupo := 0;
+            for I := 0 to iArchivar - 1 do
+            begin
+              Info := InfoFiles[I];
+              if (not bHayGrupo) or
+                 (Trunc(Info.FechaLog) <> Trunc(dFechaGrupo)) then
+              begin
+                if bHayGrupo then
+                begin
+                  ArchivarGrupoLogs(Grupo, dFechaGrupo);
+                  Grupo.Clear;
+                end;
+                dFechaGrupo := Trunc(Info.FechaLog);
+                bHayGrupo := True;
+              end;
+              Grupo.Add(Info.Ruta);
+            end;
+            if bHayGrupo then
+              ArchivarGrupoLogs(Grupo, dFechaGrupo);
+          finally
+            FreeAndNil(Grupo);
+          end;
+        end;
+      finally
+        FreeAndNil(InfoFiles);
       end;
-    finally
-      Zip.Close;
-      FreeAndNil(Zip);
     end;
+  except
+    on E: Exception do
+      WriteToLog('WARNING: Error rotando logs: ' + E.Message, ltWarning);
   end;
 end;
 
