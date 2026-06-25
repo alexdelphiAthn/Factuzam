@@ -428,6 +428,14 @@ type
     procedure tvLineasFacturaKeyDown(Sender: TObject;
                                      var Key: Word;
                                      Shift: TShiftState);
+    procedure tvLineasFacturaInitEdit(Sender: TcxCustomGridTableView;
+                                      AItem: TcxCustomGridTableItem;
+                                      AEdit: TcxCustomEdit);
+    procedure tvLineasFacturaEditKeyDown(Sender: TcxCustomGridTableView;
+                                      AItem: TcxCustomGridTableItem;
+                                      AEdit: TcxCustomEdit;
+                                      var Key: Word;
+                                      Shift: TShiftState);
     procedure btnCODIGO_CLIENTEKeyUp( Sender: TObject;
                                       var Key: Word;
                                       Shift: TShiftState);
@@ -459,6 +467,8 @@ type
            cxgrdbclmntv1CODIGO_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged(
       Sender: TObject);
     procedure ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup(
+      Sender: TObject);
+    procedure ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesCloseUp(
       Sender: TObject);
     procedure ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged(
       Sender: TObject);
@@ -539,6 +549,9 @@ type
     // (y desde el resolver al teclear el articulo) y se vacia al recrear
     // la tabla principal.
     FArtMostrarSku: TDictionary<string, Boolean>;
+    FEnterSkuActivo: Boolean;
+    FEnterSkuAnterior: Boolean;
+    FConsolidandoSku: Boolean;
     function  EsVentaMayorNormal: Boolean;
     function  TextoCobroPlural: string;
     function  PrefijoExportCobros: string;
@@ -557,6 +570,12 @@ type
     // articulo tiene variacion (tallas/colores) o es nuevo (aun no existe
     // en la BBDD). Para articulos normales el SKU se autoresuelve y estorba.
     function  MostrarSkuArticulo(const ACodArt: string): Boolean;
+    procedure ActivarSkuArticuloLinea(const ACodArt: string;
+                                      bEnfocar: Boolean);
+    procedure ConsolidarSkuLinea(Sender: TObject);
+    procedure DesactivarEnterSku(Sender: TObject);
+    procedure RestaurarEnterSku(Sender: TObject);
+    procedure SalirEditorSku(Sender: TObject);
     // La columna SKU completa se oculta si ninguna linea la necesita y no
     // hay modo creacion; dentro de una columna visible, las celdas que no
     // proceden se vacian (OnGetDataText) y se bloquean (OnEditing).
@@ -590,6 +609,7 @@ type
     // inplace del cxGrid puede llegar sin Parent durante transiciones
     // de celda; mismo patron defensivo que en inMtoCajaOpe.
     procedure RecalcLineaFacturaSegura(Sender: TObject);
+    procedure GuardarPendienteAntesDeImprimir;
   public
     dmmFacturas : TdmFacturas;
   end;
@@ -683,6 +703,7 @@ end;
 
 destructor TfrmMtoFacturasBase.Destroy;
 begin
+  RestaurarEnterSku(Self);
   FreeAndNil(FArtMostrarSku);
   inherited;
 end;
@@ -1228,9 +1249,8 @@ begin
   // En modo SIN el borrador se imprime directamente, sin consolidar. Si
   // se estaba editando, se graban antes los cambios para que la copia
   // impresa refleje el estado actual del borrador.
-  if SinVerifactuActivo and (tdmDataModule <> nil) and
-     CheckOpenDatasets(tdmDataModule as TDataModule) then
-    btnGrabarClick(Sender);
+  if SinVerifactuActivo then
+    GuardarPendienteAntesDeImprimir;
   // El QR tributario nace al consolidar el registro fiscal: en BORRADOR
   // no hay registro de facturación y no se puede imprimir.
   sFase := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
@@ -1250,6 +1270,50 @@ begin
     form.ShowModal;
   finally
     FreeAndNil(form);
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.GuardarPendienteAntesDeImprimir;
+var
+  ConnGrabar: TUniConnection;
+  bTransaccionPropia: Boolean;
+
+  procedure PostearSiPendiente(ADataSet: TDataSet);
+  begin
+    if Assigned(ADataSet) and ADataSet.Active and
+       (ADataSet.State in [dsEdit, dsInsert]) then
+    begin
+      if (ADataSet.State = dsInsert) or ADataSet.Modified then
+        ADataSet.Post
+      else
+        ADataSet.Cancel;
+    end;
+  end;
+
+begin
+  if Assigned(dmmFacturas) then
+  begin
+    ConnGrabar := dmmFacturas.unqryTablaG.Connection;
+    bTransaccionPropia := not ConnGrabar.InTransaction;
+    try
+      if bTransaccionPropia then
+        ConnGrabar.StartTransaction;
+      if dmmFacturas.unqryTablaG.State = dsInsert then
+        PostearSiPendiente(dmmFacturas.unqryTablaG);
+      PostearSiPendiente(dmmFacturas.unqryLinFac);
+      PostearSiPendiente(dmmFacturas.unqryRecibos);
+      PostearSiPendiente(dmmFacturas.unqryTablaG);
+      if bTransaccionPropia and ConnGrabar.InTransaction then
+        ConnGrabar.Commit;
+    except
+      on E: Exception do
+      begin
+        if bTransaccionPropia and ConnGrabar.InTransaction then
+          ConnGrabar.Rollback;
+        raise Exception.Create('No se pudo guardar la factura antes de ' +
+                               'imprimir: ' + E.Message);
+      end;
+    end;
   end;
 end;
 
@@ -1380,6 +1444,68 @@ begin
   Result := bMostrar;
 end;
 
+procedure TfrmMtoFacturasBase.ActivarSkuArticuloLinea(const ACodArt: string;
+                                                      bEnfocar: Boolean);
+var
+  oCampoSku: TField;
+begin
+  if MostrarSkuArticulo(ACodArt) then
+  begin
+    ctbCODIGO_UNIDAD_FACTURA_LINEA.Visible := True;
+    if bEnfocar and Assigned(dmmFacturas) and
+       dmmFacturas.unqryLinFac.Active and
+       (dmmFacturas.unqryLinFac.State in [dsInsert, dsEdit]) then
+    begin
+      oCampoSku := dmmFacturas.unqryLinFac.FindField('CODIGO_UNIDAD_FACLIN');
+      if (oCampoSku <> nil) and (Trim(oCampoSku.AsString) = '') then
+      begin
+        TThread.ForceQueue(nil,
+          procedure
+          var
+            Edit: TcxCustomEdit;
+          begin
+            DesactivarEnterSku(tvLineasFactura);
+            tvLineasFactura.Controller.FocusedColumn :=
+              ctbCODIGO_UNIDAD_FACTURA_LINEA;
+            tvLineasFactura.Controller.EditingController.ShowEdit;
+            Edit := tvLineasFactura.Controller.EditingController.Edit;
+            if Edit is TcxComboBox then
+              (Edit as TcxComboBox).DroppedDown := True;
+          end);
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.DesactivarEnterSku(Sender: TObject);
+begin
+  if not FEnterSkuActivo then
+  begin
+    FEnterSkuAnterior :=
+      tvLineasFactura.OptionsBehavior.GoToNextCellOnEnter;
+    FEnterSkuActivo := True;
+  end;
+  tvLineasFactura.OptionsBehavior.GoToNextCellOnEnter := False;
+  DesactivarEnterAsTabTemporal(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.RestaurarEnterSku(Sender: TObject);
+begin
+  if FEnterSkuActivo then
+  begin
+    tvLineasFactura.OptionsBehavior.GoToNextCellOnEnter :=
+      FEnterSkuAnterior;
+    FEnterSkuActivo := False;
+  end;
+  RestaurarEnterAsTabTemporal(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.SalirEditorSku(Sender: TObject);
+begin
+  ConsolidarSkuLinea(Sender);
+  RestaurarEnterSku(Sender);
+end;
+
 procedure TfrmMtoFacturasBase.ctbCODIGO_UNIDAD_FACTURA_LINEAGetDataText(
   Sender: TcxCustomGridTableItem; ARecordIndex: Integer; var AText: string);
 var
@@ -1399,8 +1525,36 @@ procedure TfrmMtoFacturasBase.tvLineasFacturaEditing(
 begin
   // El SKU solo es editable cuando procede mostrarlo (variacion o nuevo).
   if (AItem = ctbCODIGO_UNIDAD_FACTURA_LINEA) and Assigned(dmmFacturas) then
+  begin
     AAllow := MostrarSkuArticulo(
       dmmFacturas.unqryLinFac.FieldByName('CODIGO_ART_FACLIN').AsString);
+    if AAllow then
+      DesactivarEnterSku(Sender)
+    else
+      RestaurarEnterSku(Sender);
+  end
+  else
+    RestaurarEnterSku(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.tvLineasFacturaInitEdit(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
+  AEdit: TcxCustomEdit);
+begin
+  if AItem = ctbCODIGO_UNIDAD_FACTURA_LINEA then
+  begin
+    AEdit.OnEnter := DesactivarEnterSku;
+    AEdit.OnExit := SalirEditorSku;
+    DesactivarEnterSku(AEdit);
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.tvLineasFacturaEditKeyDown(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
+  AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
+begin
+  if AItem = ctbCODIGO_UNIDAD_FACTURA_LINEA then
+    DesactivarEnterSku(AEdit);
 end;
 
 procedure TfrmMtoFacturasBase.ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup(
@@ -1415,6 +1569,7 @@ begin
   inherited;
   if not (Sender is TcxComboBox) then Exit;
   Combo := Sender as TcxComboBox;
+  DesactivarEnterSku(Sender);
 
   // El combo se rellena en cada apertura con los SKUs del artículo de la
   // fila activa. dropDownListStyle=lsEditList permite también escribir un
@@ -1437,12 +1592,22 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturasBase.ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged(
+procedure TfrmMtoFacturasBase.ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesCloseUp(
   Sender: TObject);
+begin
+  // CloseUp se dispara dentro de la misma tecla Enter que debe seleccionar el
+  // item; si restauramos aqui, TJvEnterAsTab puede convertirla en Tab.
+  ConsolidarSkuLinea(Sender);
+  DesactivarEnterSku(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.ConsolidarSkuLinea(Sender: TObject);
 var
   e          : TcxCustomEdit;
   Lin        : TDataSet;
+  Validador  : TArticulosValidador;
   Resolver   : TArticulosResolver;
+  Resolucion : TArtResolucionEntrada;
   Datos      : TArticuloDatos;
   Precio     : TArticuloPrecio;
   CodTarifa  : string;
@@ -1453,32 +1618,78 @@ var
   fPorcen    : Currency;
   sTipoIVA   : string;
 begin
-  inherited;
+  if FConsolidandoSku then
+    Exit;
+  if not (Sender is TcxCustomEdit) then
+    Exit;
+  FConsolidandoSku := True;
+  Validador := nil;
+  Resolver := nil;
   Lin := dmmFacturas.unqryLinFac;
-  if not (Lin.State in [dsInsert, dsEdit]) then Exit;
-
-  e      := Sender as TcxCustomEdit;
-  CodSku := Trim(VarToStr(e.EditingValue));
-  CodArt := Lin.FindField('CODIGO_ART_FACLIN').AsString;
-  if (CodSku = '') or (CodArt = '') then Exit;
-
-  CodTarifa := dmmFacturas.unqryTablaG.FindField(
-                                       'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-  FechaFac  := dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
-
-  Resolver := TArticulosResolver.Create(inLibGlobalVar.oConn);
   try
+    if (Lin = nil) or (not Lin.Active) then
+      Exit;
+    if not (Lin.State in [dsInsert, dsEdit]) then
+    begin
+      if Lin.CanModify then
+        Lin.Edit;
+    end;
+    if not (Lin.State in [dsInsert, dsEdit]) then
+      Exit;
+    e      := Sender as TcxCustomEdit;
+    CodSku := Trim(VarToStr(e.EditingValue));
+    if (CodSku = '') and (e is TcxCustomTextEdit) then
+      CodSku := Trim(TcxCustomTextEdit(e).Text);
+    if CodSku = '' then
+      CodSku := Trim(VarToStr(e.EditValue));
+    CodArt := Lin.FindField('CODIGO_ART_FACLIN').AsString;
+    if CodSku = '' then
+      Exit;
+
+    CodTarifa := dmmFacturas.unqryTablaG.FindField(
+                                       'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+    FechaFac  := dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
+
+    Validador := TArticulosValidador.Create(inLibGlobalVar.oConn);
+    Resolver := TArticulosResolver.Create(inLibGlobalVar.oConn);
+    Resolucion := Validador.Resolver(CodSku);
+    if Resolucion.Encontrado and (Resolucion.CodigoSku <> '') then
+    begin
+      CodArt := Resolucion.CodigoArticulo;
+      CodSku := Resolucion.CodigoSku;
+    end
+    else if CodArt = '' then
+      Exit;
     Datos  := Resolver.ResolverDatos(CodArt, CodSku, CodTarifa, FechaFac);
     Precio := Datos.PrecioPedido;
     // Si el SKU tecleado a mano no pertenece al artículo, ResolverDatos lo
     // ignora y deja CodigoSku vacío. En ese caso no tocamos el precio.
     if Datos.CodigoSku = '' then Exit;
 
+    if Assigned(FArtMostrarSku) then
+    begin
+      FArtMostrarSku.AddOrSetValue(Datos.CodigoArticulo,
+                                   Datos.EsVariacion or Datos.RequiereSku);
+    end;
+    ActivarSkuArticuloLinea(Datos.CodigoArticulo, False);
+    Lin.FindField('CODIGO_ART_FACLIN').AsString := Datos.CodigoArticulo;
     if Assigned(Lin.FindField('CODIGO_UNIDAD_FACLIN')) then
       Lin.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := Datos.CodigoSku;
+    if VarToStr(e.EditValue) <> Datos.CodigoSku then
+      e.EditValue := Datos.CodigoSku;
     if Assigned(Lin.FindField('DESCRIPCION_VARIACION_FACLIN')) then
       Lin.FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString :=
         Datos.DescripcionSku;
+    Lin.FindField('DESCRIPCION_ARTICULO_FACLIN').AsString :=
+      Datos.DescripcionArticulo;
+    if Assigned(Lin.FindField('TIPO_ARTICULO_FACLIN')) then
+      Lin.FindField('TIPO_ARTICULO_FACLIN').AsString := Datos.TipoArticulo;
+    Lin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString :=
+      Datos.TipoCantidad;
+    Lin.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString := Datos.TipoIVA;
+    Lin.FindField('CODIGO_FAM_FACLIN').AsString := Datos.CodigoFamilia;
+    Lin.FindField('NOMBRE_FAM_FACLIN').AsString := Datos.DescripcionFamilia;
+    Lin.FindField('CODIGO_TAR_FACLIN').AsString := CodTarifa;
 
     Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat   := Precio.PrecioSalida;
     Lin.FindField('PORCENTAJE_DTO_FACLIN').AsFloat  := Precio.PorcentajeDto;
@@ -1517,8 +1728,17 @@ begin
                                                     1 + fPorcen);
     end;
   finally
+    FreeAndNil(Validador);
     FreeAndNil(Resolver);
+    FConsolidandoSku := False;
   end;
+end;
+
+procedure TfrmMtoFacturasBase.ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  inherited;
+  ConsolidarSkuLinea(Sender);
 end;
 
 procedure TfrmMtoFacturasBase.sbRectificarClick(Sender: TObject);
@@ -1831,6 +2051,14 @@ begin
   FArtMostrarSku.Clear;
   ctbCODIGO_UNIDAD_FACTURA_LINEA.OnGetDataText :=
                                   ctbCODIGO_UNIDAD_FACTURA_LINEAGetDataText;
+  with TcxComboBoxProperties(ctbCODIGO_UNIDAD_FACTURA_LINEA.Properties) do
+  begin
+    ImmediatePost := True;
+    PostPopupValueOnTab := True;
+    OnCloseUp := ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesCloseUp;
+  end;
+  tvLineasFactura.OnInitEdit := tvLineasFacturaInitEdit;
+  tvLineasFactura.OnEditKeyDown := tvLineasFacturaEditKeyDown;
   tvLineasFactura.OnEditing := tvLineasFacturaEditing;
   // La visibilidad del detalle se recalcula cuando cambian/recargan lineas.
   dmmFacturas.dsLinFac.OnDataChange := dsLinFacDataChange;
@@ -2471,7 +2699,12 @@ begin
                                                                    'Borradores',
                                        dmmFacturas.unqryArtDataLinFac,
                                        'frmMtoArtFacSearch') then
+    begin
       dmmFacturas.CopiarArticuloaLinea(dmmFacturas.unqryArtDataLinFac);
+      ActivarSkuArticuloLinea(
+        dmmFacturas.unqryLinFac.FieldByName('CODIGO_ART_FACLIN').AsString,
+        True);
+    end;
   end;
 end;
 
@@ -2485,10 +2718,12 @@ var
   Resolver   : TArticulosResolver;
   Resolucion : TArtResolucionEntrada;
   Datos      : TArticuloDatos;
+  DatosSku   : TArticuloDatos;
   Precio     : TArticuloPrecio;
   Lin        : TDataSet;
   CodTarifa  : string;
   FechaFac   : TDateTime;
+  SkuAnterior: string;
   iPorcen    : Integer;
   fPorcen    : Currency;
   sTipoIVA   : string;
@@ -2500,6 +2735,9 @@ begin
   e      := Sender as TcxCustomEdit;
   sInput := Trim(VarToStr(e.EditingValue));
   if sInput = '' then Exit;
+  SkuAnterior := '';
+  if Assigned(Lin.FindField('CODIGO_UNIDAD_FACLIN')) then
+    SkuAnterior := Trim(Lin.FieldByName('CODIGO_UNIDAD_FACLIN').AsString);
 
   CodTarifa := dmmFacturas.unqryTablaG.FindField(
                                        'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
@@ -2516,17 +2754,26 @@ begin
                                     Resolucion.CodigoSku,
                                     CodTarifa, FechaFac);
     if not Datos.Encontrado then Exit;
+    if Datos.RequiereSku and (Resolucion.CodigoSku = '') and
+       (SkuAnterior <> '') then
+    begin
+      DatosSku := Resolver.ResolverDatos(Resolucion.CodigoArticulo,
+                                         SkuAnterior,
+                                         CodTarifa,
+                                         FechaFac);
+      if DatosSku.Encontrado and (DatosSku.CodigoSku <> '') then
+        Datos := DatosSku;
+    end;
     // Pre-cargamos la regla del SKU de este articulo (ya existe): se mostrara
     // si es de variacion o tiene varios SKUs. Evita reconsultar en el pintado.
     if Assigned(FArtMostrarSku) then
     begin
       FArtMostrarSku.AddOrSetValue(Datos.CodigoArticulo,
                                    Datos.EsVariacion or Datos.RequiereSku);
-      // Si el articulo recien tecleado necesita SKU, mostramos ya la columna
-      // (el rescan al postear/navegar la ocultara de nuevo si procede).
-      if Datos.EsVariacion or Datos.RequiereSku then
-        ctbCODIGO_UNIDAD_FACTURA_LINEA.Visible := True;
     end;
+    // Si el articulo recien tecleado necesita SKU, mostramos ya la columna
+    // (el rescan al postear/navegar la ocultara de nuevo si procede).
+    ActivarSkuArticuloLinea(Datos.CodigoArticulo, Datos.RequiereSku);
 
     // Si el padre tiene varios SKUs y aún no hay SKU, ResolverDatos no calcula
     // precio. Pedimos el del padre para arrastrar IVA y % DTO (mismo patrón
