@@ -329,6 +329,12 @@ inherited dmFacturas: TdmFacturas
         Size = 20
       end
       item
+        FieldName = 'CODIGO_UNIDAD_FACLIN'
+        FieldAlias = 'CODIGO_UNIDAD_FACLIN'
+        FieldType = fftString
+        Size = 50
+      end
+      item
         FieldName = 'CODIGO_FAM_FACLIN'
         FieldAlias = 'CODIGO_FAM_FACLIN'
         FieldType = fftString
@@ -366,6 +372,12 @@ inherited dmFacturas: TdmFacturas
         FieldAlias = 'DESCRIPCION_ARTICULO_FACLIN'
         FieldType = fftString
         Size = 100
+      end
+      item
+        FieldName = 'DESCRIPCION_PRINT_FACLIN'
+        FieldAlias = 'DESCRIPCION_PRINT_FACLIN'
+        FieldType = fftString
+        Size = 160
       end
       item
         FieldName = 'CODIGO_TAR_FACLIN'
