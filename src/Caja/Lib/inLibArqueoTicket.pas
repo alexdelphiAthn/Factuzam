@@ -90,12 +90,14 @@ type
     // del rango son inmutables tras el cierre) y la marca como DUPLICADO.
     class procedure ImprimirDesdeHistorico(
       AConn: TUniConnection;
+      const AEmpresa, AAlmacen, ACaja: string;
       const ACodigoArqueo: string;
       const ANombreImpresora: string = 'DEBUG');
     // Reimpresión (duplicado) del justificante de cierre reconstruido desde
     // fza_caja_arqueos + fza_caja_arqueos_recuento (sin recalcular nada).
     class procedure ImprimirCierreDesdeHistorico(
       AConn: TUniConnection;
+      const AEmpresa, AAlmacen, ACaja: string;
       const ACodigoArqueo: string;
       const ANombreImpresora: string = 'DEBUG');
   end;
@@ -491,8 +493,11 @@ begin
       '   COALESCE(SUM(f.TOTAL_LIQUIDO_FAC), 0)    AS TOTAL                 ' +
       '   FROM fza_caja_operaciones o                                       ' +
       '   JOIN fza_facturas f                                               ' +
-      '     ON f.SERIE_FAC  = o.SERIE_FAC_OPCAJA                            ' +
-      '    AND f.NUMERO_FAC = o.NUMERO_FAC_OPCAJA                           ' +
+      '     ON f.CODIGO_EMP_FAC  = o.CODIGO_EMP_OPCAJA                      ' +
+      '    AND f.CODIGO_ALM_FAC  = o.CODIGO_ALM_OPCAJA                      ' +
+      '    AND f.CODIGO_CAJA_FAC = o.CODIGO_CAJA_OPCAJA                     ' +
+      '    AND f.SERIE_FAC       = o.SERIE_FAC_OPCAJA                       ' +
+      '    AND f.NUMERO_FAC      = o.NUMERO_FAC_OPCAJA                      ' +
       '  WHERE o.TIPO_OPERACION_OPCAJA = ''VE''                             ' +
       '    AND o.CODIGO_EMP_OPCAJA     = :pEMPRESA                          ' +
       '    AND o.CODIGO_ALM_OPCAJA     = :pALMACEN                          ' +
@@ -825,6 +830,7 @@ end;
 
 class procedure TArqueoTicket.ImprimirDesdeHistorico(
   AConn: TUniConnection;
+  const AEmpresa, AAlmacen, ACaja: string;
   const ACodigoArqueo: string;
   const ANombreImpresora: string = 'DEBUG');
 var
@@ -844,8 +850,14 @@ begin
       ' SELECT CODIGO_EMP_ARQ, CODIGO_ALM_ARQ, CODIGO_CAJA_ARQ,             ' +
       '        FECHA_DESDE_ARQ, FECHA_HASTA_ARQ                             ' +
       '   FROM fza_caja_arqueos                                            ' +
-      '  WHERE CODIGO_ARQ = :pARQ                                          ';
+      '  WHERE CODIGO_ARQ      = :pARQ                                      ' +
+      '    AND CODIGO_EMP_ARQ  = :pEMP                                      ' +
+      '    AND CODIGO_ALM_ARQ  = :pALM                                      ' +
+      '    AND CODIGO_CAJA_ARQ = :pCAJA                                     ';
     Q.ParamByName('pARQ').AsString := ACodigoArqueo;
+    Q.ParamByName('pEMP').AsString := AEmpresa;
+    Q.ParamByName('pALM').AsString := AAlmacen;
+    Q.ParamByName('pCAJA').AsString := ACaja;
     Q.Open;
     if not Q.IsEmpty then
     begin
@@ -873,6 +885,7 @@ end;
 
 class procedure TArqueoTicket.ImprimirCierreDesdeHistorico(
   AConn: TUniConnection;
+  const AEmpresa, AAlmacen, ACaja: string;
   const ACodigoArqueo: string;
   const ANombreImpresora: string = 'DEBUG');
 var
@@ -903,8 +916,14 @@ begin
       '   FROM fza_caja_arqueos a                                         ' +
       '   LEFT JOIN fza_empleados e                                       ' +
       '     ON e.CODIGO_EMPL = a.CODIGO_EMPLEADO_ARQ                      ' +
-      '  WHERE a.CODIGO_ARQ = :pARQ                                       ';
+      '  WHERE a.CODIGO_ARQ      = :pARQ                                  ' +
+      '    AND a.CODIGO_EMP_ARQ  = :pEMP                                  ' +
+      '    AND a.CODIGO_ALM_ARQ  = :pALM                                  ' +
+      '    AND a.CODIGO_CAJA_ARQ = :pCAJA                                 ';
     Q.ParamByName('pARQ').AsString := ACodigoArqueo;
+    Q.ParamByName('pEMP').AsString := AEmpresa;
+    Q.ParamByName('pALM').AsString := AAlmacen;
+    Q.ParamByName('pCAJA').AsString := ACaja;
     Q.Open;
     if not Q.IsEmpty then
     begin

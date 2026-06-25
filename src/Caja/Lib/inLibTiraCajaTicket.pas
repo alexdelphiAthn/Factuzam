@@ -628,8 +628,11 @@ begin
     '          ELSE 1 END                             AS GRUPO_ORDEN   ' +
     '   FROM fza_caja_operaciones o                                    ' +
     '   LEFT JOIN fza_facturas f                                       ' +
-    '     ON f.SERIE_FAC  = o.SERIE_FAC_OPCAJA                         ' +
-    '    AND f.NUMERO_FAC = o.NUMERO_FAC_OPCAJA                        ' +
+    '     ON f.CODIGO_EMP_FAC  = o.CODIGO_EMP_OPCAJA                   ' +
+    '    AND f.CODIGO_ALM_FAC  = o.CODIGO_ALM_OPCAJA                   ' +
+    '    AND f.CODIGO_CAJA_FAC = o.CODIGO_CAJA_OPCAJA                  ' +
+    '    AND f.SERIE_FAC       = o.SERIE_FAC_OPCAJA                    ' +
+    '    AND f.NUMERO_FAC      = o.NUMERO_FAC_OPCAJA                   ' +
     '  WHERE o.CODIGO_EMP_OPCAJA   = :pEMP                             ' +
     '    AND o.CODIGO_ALM_OPCAJA   = :pALM                             ' +
     '    AND o.CODIGO_CAJA_OPCAJA  = :pCAJA                            ' +
