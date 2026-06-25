@@ -181,8 +181,14 @@ def md_a_html(texto):
         if re.match(r'^\s*[-*]\s+', linea):
             buf = []
             while i < n and re.match(r'^\s*[-*]\s+', lineas[i]):
-                buf.append(re.sub(r'^\s*[-*]\s+', '', lineas[i]))
+                partes = [re.sub(r'^\s*[-*]\s+', '', lineas[i]).strip()]
                 i += 1
+                while (i < n and re.match(r'^\s{2,}\S', lineas[i])
+                       and not re.match(r'^\s*[-*]\s+', lineas[i])
+                       and not re.match(r'^\s*\d+\.\s+', lineas[i])):
+                    partes.append(lineas[i].strip())
+                    i += 1
+                buf.append(' '.join(partes))
             out.append('<ul>%s</ul>'
                        % ''.join('<li>%s</li>' % inline(x) for x in buf))
             continue
@@ -190,8 +196,14 @@ def md_a_html(texto):
         if re.match(r'^\s*\d+\.\s+', linea):
             buf = []
             while i < n and re.match(r'^\s*\d+\.\s+', lineas[i]):
-                buf.append(re.sub(r'^\s*\d+\.\s+', '', lineas[i]))
+                partes = [re.sub(r'^\s*\d+\.\s+', '', lineas[i]).strip()]
                 i += 1
+                while (i < n and re.match(r'^\s{2,}\S', lineas[i])
+                       and not re.match(r'^\s*[-*]\s+', lineas[i])
+                       and not re.match(r'^\s*\d+\.\s+', lineas[i])):
+                    partes.append(lineas[i].strip())
+                    i += 1
+                buf.append(' '.join(partes))
             out.append('<ol>%s</ol>'
                        % ''.join('<li>%s</li>' % inline(x) for x in buf))
             continue

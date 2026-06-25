@@ -26,10 +26,7 @@ sola vez</strong> en la puesta en marcha. Requiere acceso a las dos bases de
 datos (la antigua y la nueva).</p></blockquote>
 <hr>
 <h2 id="1-que-es-y-que-necesita">1. Qué es y qué necesita</h2>
-<ul><li>Programa <strong>separado</strong> de <code>fzam.exe</code>: se ejecuta solo durante la</li></ul>
-<p>  migración y no forma parte del trabajo diario.</p>
-<ul><li>Conecta a la vez con:</li><li><strong>Origen:</strong> la base de datos SQL Server del software anterior.</li><li><strong>Destino:</strong> la base de datos <code>factuzam</code> en MariaDB.</li><li>Guarda la configuración de conexiones (sin contraseñas) en</li></ul>
-<p>  <code>%USERPROFILE%\Factuzam\migrator.ini</code>.</p>
+<ul><li>Programa <strong>separado</strong> de <code>fzam.exe</code>: se ejecuta solo durante la migración y no forma parte del trabajo diario.</li><li>Conecta a la vez con:</li><li><strong>Origen:</strong> la base de datos SQL Server del software anterior.</li><li><strong>Destino:</strong> la base de datos <code>factuzam</code> en MariaDB.</li><li>Guarda la configuración de conexiones (sin contraseñas) en <code>%USERPROFILE%\Factuzam\migrator.ini</code>.</li></ul>
 <p><img src="img/10-migrator-principal.png" alt="Pantalla principal del Migrator" loading="lazy">
 <em>▢ Captura pendiente — Migrator con los paneles Origen/Destino y la lista de migraciones.</em></p>
 <hr>
@@ -69,17 +66,7 @@ termine la anterior (catálogos → maestros → variantes → documentos).</p>
 <p>El propio Migrator trae una sección <strong>«Preparar BBDD destino»</strong> con tres
 botones, pensada para crear la base nueva sin depender de ficheros
 externos:</p>
-<ol><li><strong>Extraer esqueleto de BBDD viva…</strong> — conecta a una base <code>factuzam</code></li></ol>
-<p>   de referencia y genera un <code>.sql</code> con toda la estructura (tablas,
-   vistas, procedimientos) y los <strong>datos de las tablas de sistema</strong>
-   (países, tipos de IVA, ventanas, metadatos…). Las tablas de negocio
-   (artículos, clientes, facturas…) van vacías porque las rellenará la
-   migración.</p>
-<ol><li><strong>Crear BBDD destino</strong> — crea la base de datos indicada en el panel</li></ol>
-<p>   Destino con juego de caracteres <code>utf8mb4</code> y cotejamiento
-   <code>utf8mb4_spanish_ci</code>.</p>
-<ol><li><strong>Cargar esqueleto en destino…</strong> — vuelca el <code>.sql</code> del paso 1 en la</li></ol>
-<p>   base recién creada.</p>
+<ol><li><strong>Extraer esqueleto de BBDD viva…</strong> — conecta a una base <code>factuzam</code> de referencia y genera un <code>.sql</code> con toda la estructura (tablas, vistas, procedimientos) y los <strong>datos de las tablas de sistema</strong> (países, tipos de IVA, ventanas, metadatos…). Las tablas de negocio (artículos, clientes, facturas…) van vacías porque las rellenará la migración.</li><li><strong>Crear BBDD destino</strong> — crea la base de datos indicada en el panel Destino con juego de caracteres <code>utf8mb4</code> y cotejamiento <code>utf8mb4_spanish_ci</code>.</li><li><strong>Cargar esqueleto en destino…</strong> — vuelca el <code>.sql</code> del paso 1 en la base recién creada.</li></ol>
 <p><img src="img/10-migrator-preparar.png" alt="Sección Preparar BBDD destino" loading="lazy">
 <em>▢ Captura pendiente — Botones de extracción y carga del esqueleto.</em></p>
 <blockquote><p>Alternativa: crear la base destino desde <code>factuzam_original.sql</code> como
@@ -91,13 +78,8 @@ líneas de inventario, empleados, compras, facturas de compra y cartera
 de pagos).</p></blockquote>
 <hr>
 <h2 id="4-ejecutar-la-migracion-paso-a-paso">4. Ejecutar la migración paso a paso</h2>
-<ol><li><strong>Copia de seguridad</strong> de ambas bases de datos (origen y destino).</li><li>Abre <code>FactuzamMigrator.exe</code>.</li><li>Configura el panel <strong>Origen</strong> (SQL Server): host, puerto, base de</li></ol>
-<p>   datos, usuario y contraseña. Pulsa <strong>Probar conexión</strong>.</p>
-<ol><li>Configura el panel <strong>Destino</strong> (MariaDB) igual, y prueba la conexión.</li><li><strong>Marca las migraciones</strong> a ejecutar. La lista ya respeta el orden de dependencias; para una migración completa, márcalas todas. En compras, los dominios entran después de maestros y SKUs: pedidos, albaranes, devoluciones a proveedor, facturas de compra, efectos y remesas de pago.</li><li>Pulsa <strong>Ejecutar migraciones</strong>. Durante el proceso:</li></ol>
-<ul><li>El panel de progreso muestra <strong>una línea por dominio activo</strong> con su</li></ul>
-<p>     contador <code>X / Y (Z %)</code> en tiempo real.</p>
-<ul><li>El botón cambia a <strong>Cancelar</strong>: si lo pulsas, termina el dominio en</li></ul>
-<p>     curso y se detiene (lo ya migrado queda hecho).</p>
+<ol><li><strong>Copia de seguridad</strong> de ambas bases de datos (origen y destino).</li><li>Abre <code>FactuzamMigrator.exe</code>.</li><li>Configura el panel <strong>Origen</strong> (SQL Server): host, puerto, base de datos, usuario y contraseña. Pulsa <strong>Probar conexión</strong>.</li><li>Configura el panel <strong>Destino</strong> (MariaDB) igual, y prueba la conexión.</li><li><strong>Marca las migraciones</strong> a ejecutar. La lista ya respeta el orden de dependencias; para una migración completa, márcalas todas. En compras, los dominios entran después de maestros y SKUs: pedidos, albaranes, devoluciones a proveedor, facturas de compra, efectos y remesas de pago.</li><li>Pulsa <strong>Ejecutar migraciones</strong>. Durante el proceso:</li></ol>
+<ul><li>El panel de progreso muestra <strong>una línea por dominio activo</strong> con su contador <code>X / Y (Z %)</code> en tiempo real.</li><li>El botón cambia a <strong>Cancelar</strong>: si lo pulsas, termina el dominio en curso y se detiene (lo ya migrado queda hecho).</li></ul>
 <ol><li>Al terminar, revisa el resumen y el <strong>panel de errores</strong>.</li></ol>
 <p><img src="img/10-migrator-progreso.png" alt="Migración en curso" loading="lazy">
 <em>▢ Captura pendiente — Progreso por dominios y log al pie.</em></p>
@@ -109,9 +91,7 @@ dominio completo (los demás siguen). Por tanto, ante un fallo puntual se
 puede <strong>corregir la causa y volver a ejecutar</strong> sin duplicar datos.</p>
 <h3 id="log-de-errores">Log de errores</h3>
 <p>Cada ejecución deja registro en tres sitios:</p>
-<ul><li>El <strong>log general</strong> de la pantalla (todo el detalle).</li><li>El <strong>panel rojo de errores</strong> (solo errores y avisos).</li><li>Un fichero <code>migrator_errores_AAAAMMDD_HHMMSS.log</code> en</li></ul>
-<p>  <code>%USERPROFILE%\Factuzam\</code>, para revisarlo después (la ruta exacta se
-  imprime en el log al iniciar).</p>
+<ul><li>El <strong>log general</strong> de la pantalla (todo el detalle).</li><li>El <strong>panel rojo de errores</strong> (solo errores y avisos).</li><li>Un fichero <code>migrator_errores_AAAAMMDD_HHMMSS.log</code> en <code>%USERPROFILE%\Factuzam\</code>, para revisarlo después (la ruta exacta se imprime en el log al iniciar).</li></ul>
 <hr>
 <h2 id="5-ajustes-manuales-despues-de-migrar">5. Ajustes manuales después de migrar</h2>
 <p>La primera versión del migrador aplica algunas <strong>heurísticas</strong> que
@@ -136,23 +116,13 @@ conviene repasar a mano una vez terminada la migración:</p>
 <hr>
 <h2 id="6-verificacion-final">6. Verificación final</h2>
 <p>Antes de dar la migración por buena:</p>
-<ol><li><strong>Cuadra los totales</strong>: nº de clientes, proveedores, artículos, SKUs y</li></ol>
-<p>   facturas entre origen y destino (el resumen del migrador muestra los
-   contadores de insertados/saltados/errores por dominio).</p>
-<ol><li><strong>Stock</strong>: compara el stock de una muestra de artículos con el sistema</li></ol>
-<p>   antiguo (<em>Almacén ▸ Informes</em>). El migrador reconstruye el stock a
-   partir de los movimientos.</p>
-<ol><li><strong>Documentos</strong>: abre algunas facturas, operaciones de caja y compras</li></ol>
-<p>   migradas y comprueba importes e impuestos.</p>
-<ol><li><strong>Ventas de prueba</strong>: haz un ticket de prueba en el TPV y una factura</li></ol>
-<p>   de prueba en Ventas Mayor.</p>
-<ol><li><strong>Cartera</strong>: revisa efectos y remesas de compra para comprobar vencimientos, estados y bancos.</li><li>Aplica los <strong>ajustes manuales</strong> de la sección anterior.</li><li>Haz una <strong>copia de seguridad</strong> de la base ya migrada: es tu punto de partida oficial.</li></ol>
+<ol><li><strong>Cuadra los totales</strong>: nº de clientes, proveedores, artículos, SKUs y facturas entre origen y destino (el resumen del migrador muestra los contadores de insertados/saltados/errores por dominio).</li><li><strong>Stock</strong>: compara el stock de una muestra de artículos con el sistema antiguo (<em>Almacén ▸ Informes</em>). El migrador reconstruye el stock a partir de los movimientos.</li><li><strong>Documentos</strong>: abre algunas facturas, operaciones de caja y compras migradas y comprueba importes e impuestos.</li><li><strong>Ventas de prueba</strong>: haz un ticket de prueba en el TPV y una factura de prueba en Ventas Mayor.</li><li><strong>Cartera</strong>: revisa efectos y remesas de compra para comprobar vencimientos, estados y bancos.</li><li>Aplica los <strong>ajustes manuales</strong> de la sección anterior.</li><li>Haz una <strong>copia de seguridad</strong> de la base ya migrada: es tu punto de partida oficial.</li></ol>
 <blockquote><p>Hasta completar la verificación, conserva el software y la base de
 datos antiguos <strong>en solo lectura</strong> como referencia histórica.</p></blockquote>
 <hr>
 <p><a href="09-instalacion-windows.html">◀ Instalación en Windows</a> · <a href="index.html">Índice</a> · <a href="11-verifactu.html">Siguiente ▶ Verifactu (AEAT)</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 24/06/2026</footer>
+<footer>Manual de Factuzam · generado el 25/06/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

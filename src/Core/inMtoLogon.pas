@@ -617,8 +617,8 @@ begin
         inliblog.Log.LogError('Código guardado: ' + sCodigoGuardado +
                               ' Código esperado: ' + sCodigoEsperado);
         ShowMessage('Modo DEMO: limitado a ' +
-                    IntToStr(LIMITE_TICKETS_DEMO_DIA) +
-                    ' ventas al día.');
+                    IntToStr(LIMITE_FACTURAS_DEMO_DIA) +
+                    ' facturas al día.');
       end;
     except
       on E: Exception do
@@ -630,8 +630,8 @@ begin
         inliblog.Log.LogWarning('Aplicación en modo DEMO por error ' +
                                 'validando licencia.');
         ShowMessage('Modo DEMO: limitado a ' +
-                    IntToStr(LIMITE_TICKETS_DEMO_DIA) +
-                    ' ventas al día.');
+                    IntToStr(LIMITE_FACTURAS_DEMO_DIA) +
+                    ' facturas al día.');
       end;
     end;
   end;
