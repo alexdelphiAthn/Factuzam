@@ -68,6 +68,7 @@ type
     procedure AfterReportLoaded; override;
     procedure ConfigurarNombrePDF;
     function ObtenerNombreFactura(ADataSet: TDataSet): string;
+    procedure AplicarSkuDescripcionReport(AReport: TfrxReport);
   public
     dmFac: TdmFacturas;
   end;
@@ -117,6 +118,7 @@ begin
   inherited;
   if dmFac <> nil then
     RebindReportDataSetsByDataModule(frxrprt1, dmFac);
+  AplicarSkuDescripcionReport(frxrprt1);
   // Solo ajusta el título por tipo (FACTURA / FACTURA SIMPLIFICADA /
   // FACTURA RECTIFICATIVA). NO se inyecta ni se mueve ninguna banda:
   // el A4 conserva su layout original. El QR del A4 se replanteará en
@@ -124,6 +126,26 @@ begin
   if (dmFac <> nil) and dmFac.unqryFacPrint.Active and
      (not dmFac.unqryFacPrint.IsEmpty) then
     AplicarVerifactuEnReportDirecto(frxrprt1, dmFac.unqryFacPrint);
+end;
+
+procedure TfrmPrintFac.AplicarSkuDescripcionReport(AReport: TfrxReport);
+var
+  oComponente: TfrxComponent;
+  oMemo: TfrxMemoView;
+begin
+  if (AReport <> nil) and (dmFac <> nil) then
+  begin
+    oComponente :=
+      AReport.FindObject('LineasFacturasDESCRIPCION_ARTICULO_FACTURA_LINEA');
+    if oComponente is TfrxMemoView then
+    begin
+      oMemo := TfrxMemoView(oComponente);
+      oMemo.DataField := 'DESCRIPCION_PRINT_FACLIN';
+      oMemo.DataSet := dmFac.fxdstPrintLinFac;
+      oMemo.DataSetName := 'Lineas Facturas';
+      oMemo.Memo.Text := '[Lineas Facturas."DESCRIPCION_PRINT_FACLIN"]';
+    end;
+  end;
 end;
 
 procedure TfrmPrintFac.ConfigurarNombrePDF;
@@ -191,11 +213,19 @@ begin
     begin
       Close;
       Params.Clear;
-      SQL.Text := '  SELECT * ' +
-                  '    FROM vi_FACTURAS_LINEAS_print V  ' +
-                  '   WHERE V.NUMERO_FAC_FACLIN = :numfac' +
-                  '     AND V.SERIE_FAC_FACLIN = :serie ' +
-                  'ORDER BY V.LINEA_FACLIN';
+      SQL.Text :=
+        '  SELECT L.*, ' +
+        '         CASE ' +
+        '           WHEN COALESCE(CHAR_LENGTH(TRIM(' +
+        '                  L.CODIGO_UNIDAD_FACLIN)), 0) > 0 ' +
+        '             THEN CONCAT(L.CODIGO_UNIDAD_FACLIN, CHAR(32), ' +
+        '                       L.DESCRIPCION_ARTICULO_FACLIN) ' +
+        '           ELSE L.DESCRIPCION_ARTICULO_FACLIN ' +
+        '         END AS DESCRIPCION_PRINT_FACLIN ' +
+        '    FROM fza_facturas_lineas L ' +
+        '   WHERE L.NUMERO_FAC_FACLIN = :numfac' +
+        '     AND L.SERIE_FAC_FACLIN = :serie ' +
+        'ORDER BY L.LINEA_FACLIN';
       Params.ParamByName('numfac').Value := edtNroFac.text;
       Params.ParamByName('serie').Value := edtSerie.text;
       end;
@@ -225,16 +255,24 @@ begin
     begin
       Close;
       Params.Clear;
-      SQL.Text := '    SELECT *  ' +
-                  '      FROM vi_FACTURAS_LINEAS_print L ' +
-                  'INNER JOIN vi_FACTURAS_print F ' +
-                  '        ON F.NUMERO_FAC = L.NUMERO_FAC_FACLIN ' +
-                  '       AND F.SERIE_FAC = L.SERIE_FAC_FACLIN ' +
-                  '     WHERE F.FECHA_FAC >= :fecha_ini ' +
-                  '       AND  F.FECHA_FAC <= :fecha_fin ' +
-                  '  order by L.NUMERO_FAC_FACLIN, ' +
-                  '           L.SERIE_FAC_FACLIN, ' +
-                  '           L.LINEA_FACLIN';
+      SQL.Text :=
+        '    SELECT L.*, ' +
+        '           CASE ' +
+        '             WHEN COALESCE(CHAR_LENGTH(TRIM(' +
+        '                    L.CODIGO_UNIDAD_FACLIN)), 0) > 0 ' +
+        '               THEN CONCAT(L.CODIGO_UNIDAD_FACLIN, CHAR(32), ' +
+        '                         L.DESCRIPCION_ARTICULO_FACLIN) ' +
+        '             ELSE L.DESCRIPCION_ARTICULO_FACLIN ' +
+        '           END AS DESCRIPCION_PRINT_FACLIN ' +
+        '      FROM fza_facturas_lineas L ' +
+        'INNER JOIN vi_FACTURAS_print F ' +
+        '        ON F.NUMERO_FAC = L.NUMERO_FAC_FACLIN ' +
+        '       AND F.SERIE_FAC = L.SERIE_FAC_FACLIN ' +
+        '     WHERE F.FECHA_FAC >= :fecha_ini ' +
+        '       AND  F.FECHA_FAC <= :fecha_fin ' +
+        '  order by L.NUMERO_FAC_FACLIN, ' +
+        '           L.SERIE_FAC_FACLIN, ' +
+        '           L.LINEA_FACLIN';
       Params.ParamByName('fecha_ini').DataType := ftDate;
       Params.ParamByName('fecha_ini').Value := dedDesde.date;
       Params.ParamByName('fecha_fin').DataType := ftDate;

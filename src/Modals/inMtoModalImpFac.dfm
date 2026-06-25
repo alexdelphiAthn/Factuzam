@@ -1128,7 +1128,7 @@ inherited frmPrintFac: TfrmPrintFac
           Width = 272.126160000000000000
           Height = 18.897650000000000000
           StretchMode = smMaxHeight
-          DataField = 'DESCRIPCION_ARTICULO_FACLIN'
+          DataField = 'DESCRIPCION_PRINT_FACLIN'
           DataSet = dmFacturas.fxdstPrintLinFac
           DataSetName = 'Lineas Facturas'
           Font.Charset = DEFAULT_CHARSET
@@ -1139,7 +1139,7 @@ inherited frmPrintFac: TfrmPrintFac
           Frame.Typ = []
           LineSpacing = 4.000000000000000000
           Memo.UTF8W = (
-            '[Lineas Facturas."DESCRIPCION_ARTICULO_FACLIN"]')
+            '[Lineas Facturas."DESCRIPCION_PRINT_FACLIN"]')
           ParentFont = False
           WordBreak = True
         end
