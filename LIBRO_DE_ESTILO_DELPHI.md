@@ -1529,9 +1529,10 @@ Log.IsLogTypeEnabled(ltSQL): Boolean;
 ```
 
 Los ficheros se generan en `GetLogFolder` con nombre
-`LOG_<UUID>_<dd_mm_yyyy>.log`. Cuando el contador de ficheros supera
-`DEFAULT_LOG_RETENTION` (10), se zippean los más antiguos en
-`archive/`. La rotación se hace al arrancar.
+`LOG_<yyyy_mm_dd_hhnnss>_<UUID>.log` para que ordenen por fecha. Cuando
+el contador de ficheros supera `DEFAULT_LOG_RETENTION` (10), se zippean
+los más antiguos en `archive/<yyyy>/<mm>/Logs_<yyyy-mm-dd>.zip`. La
+rotación se hace al arrancar.
 
 ### 19.6 Sistema de errores — `AppException`
 
