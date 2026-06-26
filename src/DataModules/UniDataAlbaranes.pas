@@ -84,13 +84,14 @@ type
     function GenerarMovimientosSalida: Integer;
   private
     FProcsInstalados: Boolean;
+    FCalculandoTotales: Boolean;
   end;
 
 implementation
 
 uses
   inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics,
-  inLibArticulosValidador;
+  inLibArticulosValidador, inLibVentasImpuestos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -195,6 +196,7 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_ALB').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_ALB').AsString = '') then
     GetCodigoAutoAlbaran;
+  AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'ALB');
   CalcularTotalesAlbaran;
 end;
 
@@ -240,9 +242,8 @@ begin
     if (FindField('CANTIDAD_ALBLIN') <> nil) and
        (FindField('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN') <> nil) and
        (FindField('TOTAL_ALBLIN') <> nil) then
-      FieldByName('TOTAL_ALBLIN').AsFloat :=
-        FieldByName('CANTIDAD_ALBLIN').AsFloat *
-        FieldByName('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN').AsFloat;
+      PrepararLineaFiscalVenta(inLibGlobalVar.oConn, unqryTablaG,
+        unqryAlbaranesLineas, 'ALB', 'ALBLIN', 'TOTAL_ALBLIN');
 
     // Si el usuario ha tecleado un SKU pero no el artículo, lo deducimos
     // consultando fza_articulos_skus.
@@ -296,41 +297,18 @@ begin
 end;
 
 procedure TdmAlbaranes.CalcularTotalesAlbaran;
-var
-  fBase, fIva, fTotal, fPorIva: Double;
-  bk: TBookmark;
 begin
-  if not unqryAlbaranesLineas.Active then Exit;
-  fBase := 0; fIva := 0;
-  bk := unqryAlbaranesLineas.GetBookmark;
-  try
-    unqryAlbaranesLineas.DisableControls;
-    unqryAlbaranesLineas.First;
-    while not unqryAlbaranesLineas.Eof do
-    begin
-      fPorIva :=
-        unqryAlbaranesLineas.FieldByName('PORCENTAJE_IVA_ALBLIN').AsFloat / 100;
-      fTotal  := unqryAlbaranesLineas.FieldByName('CANTIDAD_ALBLIN').AsFloat *
-                 unqryAlbaranesLineas.FieldByName(
-                   'PRECIO_VENTA_SIVA_ARTICULO_ALBLIN').AsFloat;
-      fBase := fBase + fTotal;
-      fIva  := fIva  + (fTotal * fPorIva);
-      unqryAlbaranesLineas.Next;
+  if not FCalculandoTotales then
+  begin
+    FCalculandoTotales := True;
+    try
+      CalcularTotalesDocumentoVenta(inLibGlobalVar.oConn, unqryTablaG,
+        unqryAlbaranesLineas, 'ALB', 'TOTAL_ALBLIN',
+        'TIPO_IVA_ARTICULO_ALBLIN', 'PORCENTAJE_IVA_ALBLIN');
+    finally
+      FCalculandoTotales := False;
     end;
-  finally
-    if unqryAlbaranesLineas.BookmarkValid(bk) then
-      unqryAlbaranesLineas.GotoBookmark(bk);
-    unqryAlbaranesLineas.FreeBookmark(bk);
-    unqryAlbaranesLineas.EnableControls;
   end;
-  if (unqryTablaG.State = dsBrowse) then
-    unqryTablaG.Edit;
-  if unqryTablaG.FindField('TOTAL_BASES_ALB') <> nil then
-    unqryTablaG.FieldByName('TOTAL_BASES_ALB').AsFloat := fBase;
-  if unqryTablaG.FindField('TOTAL_IMPUESTOS_ALB') <> nil then
-    unqryTablaG.FieldByName('TOTAL_IMPUESTOS_ALB').AsFloat := fIva;
-  if unqryTablaG.FindField('TOTAL_LIQUIDO_ALB') <> nil then
-    unqryTablaG.FieldByName('TOTAL_LIQUIDO_ALB').AsFloat := fBase + fIva;
 end;
 
 procedure TdmAlbaranes.CopiarEmpresaaAlbaran(DataSet: TDataSet);
@@ -366,6 +344,7 @@ begin
     FindField('GRUPO_ZONA_IVA_EMPRESA_ALB').AsString :=
       DataSet.FindField('GRUPO_ZONA_IVA_EMP').AsString;
   end;
+  AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'ALB');
 end;
 
 procedure TdmAlbaranes.CopiarClienteaAlbaran(DataSet: TDataSet);
@@ -408,6 +387,7 @@ begin
     FindField('TARIFA_ARTICULO_CLIENTE_ALB').AsString :=
                             DataSet.FindField('TARIFA_ARTICULO_CLI').AsString;
   end;
+  AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'ALB');
 end;
 
 procedure TdmAlbaranes.InstalarProcedimientos;

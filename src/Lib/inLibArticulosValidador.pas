@@ -59,7 +59,7 @@ unit inLibArticulosValidador;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.StrUtils,
+  System.SysUtils, System.Classes, System.StrUtils, System.Variants,
   Data.DB, DBAccess, Uni;
 
 type
@@ -150,6 +150,30 @@ begin
   end;
 end;
 
+function CampoNormalizacionCambiado(ADataSet: TDataSet;
+  const ACampo: string): Boolean;
+var
+  Campo: TField;
+begin
+  Result := False;
+  if Assigned(ADataSet) and (ACampo <> '') and (ADataSet.State = dsEdit) then
+  begin
+    Campo := ADataSet.FindField(ACampo);
+    if Campo <> nil then
+      Result := Trim(Campo.AsString) <> Trim(VarToStr(Campo.OldValue));
+  end;
+end;
+
+function DebeNormalizarArticuloSku(ADataSet: TDataSet;
+  const ACampoArticulo, ACampoSku, ACampoCodigoBarras: string): Boolean;
+begin
+  Result := True;
+  if Assigned(ADataSet) and (ADataSet.State = dsEdit) then
+    Result := CampoNormalizacionCambiado(ADataSet, ACampoArticulo) or
+              CampoNormalizacionCambiado(ADataSet, ACampoSku) or
+              CampoNormalizacionCambiado(ADataSet, ACampoCodigoBarras);
+end;
+
 procedure PonerCampoNormalizacion(ADataSet: TDataSet;
   const ACampo, AValor: string);
 var
@@ -192,58 +216,62 @@ var
 begin
   if (AConexion <> nil) and Assigned(ADataSet) and ADataSet.Active then
   begin
-    sArticulo := Trim(ValorCampoNormalizacion(ADataSet, ACampoArticulo));
-    sSku := Trim(ValorCampoNormalizacion(ADataSet, ACampoSku));
-    sBarras := Trim(ValorCampoNormalizacion(ADataSet, ACampoCodigoBarras));
-    if (sArticulo <> '') or (sSku <> '') or (sBarras <> '') then
+    if DebeNormalizarArticuloSku(ADataSet, ACampoArticulo, ACampoSku,
+                                 ACampoCodigoBarras) then
     begin
-      Validador := TArticulosValidador.Create(AConexion);
-      try
-        ResolverEntradaNormalizacion(Validador, sArticulo, RArt);
-        ResolverEntradaNormalizacion(Validador, sSku, RSku);
-        ResolverEntradaNormalizacion(Validador, sBarras, RBarras);
-      finally
-        FreeAndNil(Validador);
-      end;
-      RElegida.Clear;
-      bElegida := False;
-      if RArt.Encontrado and (RArt.Tipo <> atcCodigoArt) then
+      sArticulo := Trim(ValorCampoNormalizacion(ADataSet, ACampoArticulo));
+      sSku := Trim(ValorCampoNormalizacion(ADataSet, ACampoSku));
+      sBarras := Trim(ValorCampoNormalizacion(ADataSet, ACampoCodigoBarras));
+      if (sArticulo <> '') or (sSku <> '') or (sBarras <> '') then
       begin
-        RElegida := RArt;
-        bElegida := True;
-      end
-      else if RSku.Encontrado and
-              ((not RArt.Encontrado) or
-               SameText(RSku.CodigoArticulo, RArt.CodigoArticulo)) then
-      begin
-        RElegida := RSku;
-        bElegida := True;
-      end
-      else if RBarras.Encontrado and
-              ((not RArt.Encontrado) or
-               SameText(RBarras.CodigoArticulo, RArt.CodigoArticulo)) then
-      begin
-        RElegida := RBarras;
-        bElegida := True;
-      end
-      else if RArt.Encontrado then
-      begin
-        RElegida := RArt;
-        bElegida := True;
-      end;
-      if bElegida then
-      begin
-        PonerCampoNormalizacion(ADataSet, ACampoArticulo,
-                                RElegida.CodigoArticulo);
-        if (RElegida.CodigoSku <> '') and (not RElegida.RequiereSku) then
-          PonerCampoNormalizacion(ADataSet, ACampoSku, RElegida.CodigoSku)
-        else if RArt.Encontrado and RSku.Encontrado and
-                (not SameText(RArt.CodigoArticulo,
-                              RSku.CodigoArticulo)) then
-          PonerCampoNormalizacion(ADataSet, ACampoSku, '');
-        if RElegida.CodigoBarrasMatch <> '' then
-          PonerCampoNormalizacion(ADataSet, ACampoCodigoBarras,
-                                  RElegida.CodigoBarrasMatch);
+        Validador := TArticulosValidador.Create(AConexion);
+        try
+          ResolverEntradaNormalizacion(Validador, sArticulo, RArt);
+          ResolverEntradaNormalizacion(Validador, sSku, RSku);
+          ResolverEntradaNormalizacion(Validador, sBarras, RBarras);
+        finally
+          FreeAndNil(Validador);
+        end;
+        RElegida.Clear;
+        bElegida := False;
+        if RArt.Encontrado and (RArt.Tipo <> atcCodigoArt) then
+        begin
+          RElegida := RArt;
+          bElegida := True;
+        end
+        else if RSku.Encontrado and
+                ((not RArt.Encontrado) or
+                 SameText(RSku.CodigoArticulo, RArt.CodigoArticulo)) then
+        begin
+          RElegida := RSku;
+          bElegida := True;
+        end
+        else if RBarras.Encontrado and
+                ((not RArt.Encontrado) or
+                 SameText(RBarras.CodigoArticulo, RArt.CodigoArticulo)) then
+        begin
+          RElegida := RBarras;
+          bElegida := True;
+        end
+        else if RArt.Encontrado then
+        begin
+          RElegida := RArt;
+          bElegida := True;
+        end;
+        if bElegida then
+        begin
+          PonerCampoNormalizacion(ADataSet, ACampoArticulo,
+                                  RElegida.CodigoArticulo);
+          if (RElegida.CodigoSku <> '') and (not RElegida.RequiereSku) then
+            PonerCampoNormalizacion(ADataSet, ACampoSku, RElegida.CodigoSku)
+          else if RArt.Encontrado and RSku.Encontrado and
+                  (not SameText(RArt.CodigoArticulo,
+                                RSku.CodigoArticulo)) then
+            PonerCampoNormalizacion(ADataSet, ACampoSku, '');
+          if RElegida.CodigoBarrasMatch <> '' then
+            PonerCampoNormalizacion(ADataSet, ACampoCodigoBarras,
+                                    RElegida.CodigoBarrasMatch);
+        end;
       end;
     end;
   end;
@@ -299,7 +327,9 @@ begin
   // Si solo contamos codigos de barras, restringimos a la fila EAN para que
   // NumCoincidencias refleje las coincidencias reales de la lectura.
   if ASoloCodigoBarras then
-    sFiltroTipo := ' AND TIPO_COINCIDENCIA = ''EAN'' '
+    sFiltroTipo :=
+      ' AND TIPO_COINCIDENCIA COLLATE utf8mb4_spanish_ci = ' +
+      '''EAN'' COLLATE utf8mb4_spanish_ci '
   else
     sFiltroTipo := '';
   q := TUniQuery.Create(nil);
@@ -462,7 +492,9 @@ begin
   // resuelva contra fza_codigos_barras (ignora codigo de articulo, SKU y
   // modelo de proveedor aunque coincidan con la cadena leida).
   if ASoloCodigoBarras then
-    sFiltroTipo := ' AND TIPO_COINCIDENCIA = ''EAN'' '
+    sFiltroTipo :=
+      ' AND TIPO_COINCIDENCIA COLLATE utf8mb4_spanish_ci = ' +
+      '''EAN'' COLLATE utf8mb4_spanish_ci '
   else
     sFiltroTipo := '';
   // Orden de prioridad: SKU > CODIGO > EAN > MODELO_PROV
@@ -474,11 +506,15 @@ begin
       '       DESCRIPCION_ART, TIPO_ART, INPUT_BUSQUEDA ' +
       '  FROM vi_caja_busqueda_unificada ' +
       ' WHERE INPUT_BUSQUEDA = :inp ' + sFiltroTipo +
-      ' ORDER BY CASE TIPO_COINCIDENCIA ' +
-      '            WHEN ''SKU''         THEN 1 ' +
-      '            WHEN ''CODIGO''      THEN 2 ' +
-      '            WHEN ''EAN''         THEN 3 ' +
-      '            WHEN ''MODELO_PROV'' THEN 4 ' +
+      ' ORDER BY CASE ' +
+      '            WHEN TIPO_COINCIDENCIA COLLATE utf8mb4_spanish_ci = ' +
+      '                 ''SKU'' COLLATE utf8mb4_spanish_ci THEN 1 ' +
+      '            WHEN TIPO_COINCIDENCIA COLLATE utf8mb4_spanish_ci = ' +
+      '                 ''CODIGO'' COLLATE utf8mb4_spanish_ci THEN 2 ' +
+      '            WHEN TIPO_COINCIDENCIA COLLATE utf8mb4_spanish_ci = ' +
+      '                 ''EAN'' COLLATE utf8mb4_spanish_ci THEN 3 ' +
+      '            WHEN TIPO_COINCIDENCIA COLLATE utf8mb4_spanish_ci = ' +
+      '                 ''MODELO_PROV'' COLLATE utf8mb4_spanish_ci THEN 4 ' +
       '            ELSE 5 END LIMIT 1';
     q.ParamByName('inp').AsString := sEnt;
     q.Open;

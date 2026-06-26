@@ -128,6 +128,53 @@ type
     curTOTAL_IMPUESTOS_PED: TcxDBCurrencyEdit;
     lblTotalLiquido: TcxLabel;
     curTOTAL_LIQUIDO_PED: TcxDBCurrencyEdit;
+    tsTotales: TcxTabSheet;
+    scrTotales: TScrollBox;
+    lblTotalesTotalBase: TcxLabel;
+    curTotalesTOTAL_BASES_PED: TcxDBCurrencyEdit;
+    lblTotalesTotalImpuestos: TcxLabel;
+    curTotalesTOTAL_IMPUESTOS_PED: TcxDBCurrencyEdit;
+    lblTotalesPorcRetencion: TcxLabel;
+    spnTotalesPORCENTAJE_RETENCION_PED: TcxDBSpinEdit;
+    lblTotalesTotalRetencion: TcxLabel;
+    curTotalesTOTAL_RETENCION_PED: TcxDBCurrencyEdit;
+    lblTotalesTotalPagar: TcxLabel;
+    curTotalesTOTAL_LIQUIDO_PED: TcxDBCurrencyEdit;
+    lblTotalesFormaPago: TcxLabel;
+    txtTotalesFORMA_PAGO_PED: TcxDBTextEdit;
+    chkTotalesESIVA_RECARGO_CLIENTE_PED: TcxDBCheckBox;
+    chkTotalesESRETENCIONES_CLIENTE_PED: TcxDBCheckBox;
+    chkTotalesESRETENCIONES_EMPRESA_PED: TcxDBCheckBox;
+    grpDesgloseImpuestos: TGroupBox;
+    lblTotalesBaseNeta: TcxLabel;
+    lblTotalesPorIva: TcxLabel;
+    lblTotalesTotalIva: TcxLabel;
+    lblTotalesPorRe: TcxLabel;
+    lblTotalesTotalRe: TcxLabel;
+    lblTotalesIVAN: TcxLabel;
+    lblTotalesIVAR: TcxLabel;
+    lblTotalesIVAS: TcxLabel;
+    lblTotalesIVAE: TcxLabel;
+    curTotalesTOTAL_BASEI_IVAN_PED: TcxDBCurrencyEdit;
+    curTotalesTOTAL_BASEI_IVAR_PED: TcxDBCurrencyEdit;
+    curTotalesTOTAL_BASEI_IVAS_PED: TcxDBCurrencyEdit;
+    curTotalesTOTAL_BASEI_IVAE_PED: TcxDBCurrencyEdit;
+    spnTotalesPORCENTAJE_IVAN_PED: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_IVAR_PED: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_IVAS_PED: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_IVAE_PED: TcxDBSpinEdit;
+    curTotalesTOTAL_IVAN_PED: TcxDBCurrencyEdit;
+    curTotalesTOTAL_IVAR_PED: TcxDBCurrencyEdit;
+    curTotalesTOTAL_IVAS_PED: TcxDBCurrencyEdit;
+    curTotalesTOTAL_IVAE_PED: TcxDBCurrencyEdit;
+    spnTotalesPORCENTAJE_REN_PED: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_RER_PED: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_RES_PED: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_REE_PED: TcxDBSpinEdit;
+    curTotalesTOTAL_REN_PED: TcxDBCurrencyEdit;
+    curTotalesTOTAL_RER_PED: TcxDBCurrencyEdit;
+    curTotalesTOTAL_RES_PED: TcxDBCurrencyEdit;
+    curTotalesTOTAL_REE_PED: TcxDBCurrencyEdit;
 
     // Botones de acción
     pnlBotonesAcciones: TPanel;
@@ -159,6 +206,7 @@ type
     procedure RellenarLineasAlEntregarTodo;
   public
     dmmPedidos: TdmPedidos;
+    procedure CrearTablaPrincipal; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
@@ -209,21 +257,14 @@ var
   stEnt, stPend: TcxStyle;
 begin
   inherited;
-  dmmPedidos := TdmPedidos.Create(Self);
-  dsTablaG.DataSet := dmmPedidos.unqryTablaG;
-  tvPedidosLineas.DataController.DataSource := dmmPedidos.dsPedidosLineas;
+  tsTotales.TabVisible := True;
+  tsTotales.Enabled := True;
+  if Trim(tsTotales.Caption) = '' then
+    tsTotales.Caption := '&2_Totales';
   // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
   VincularCantidadGrid(
     tvPedidosLineas.GetColumnByFieldName('CANTIDAD_PEDLIN'),
     tvPedidosLineas.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_PEDLIN'));
-  tvAlbaranes.DataController.DataSource     := dmmPedidos.dsAlbaranes;
-  tvMensajes.DataController.DataSource      := dmmPedidos.dsMensajes;
-  // Clave de localizacion para ShowMto (p.ej. "Ir a documento" desde la
-  // ficha del albaran de venta hacia su pedido de origen).
-  pkFieldName := 'SERIE_PED;NUMERO_PED';
-  // OpenTables -> ahora se llama desde TfrmMtoGen.AbrirTablaPrincipalAsync
-  // (callback main thread) via dmmPedidos.AbrirDetalles. Se quita aqui
-  // para no abrir las queries sincronamente durante el FormCreate.
 
   colEnt  := tvPedidosLineas.GetColumnByFieldName('CANTIDAD_ENTREGADA_PEDLIN');
   colPend := tvPedidosLineas.GetColumnByFieldName('CANTIDAD_PENDIENTE_PEDLIN');
@@ -241,6 +282,28 @@ begin
     stPend.Color := $00C4E1FF;
     colPend.Styles.Content := stPend;
   end;
+end;
+
+procedure TfrmMtoPedidos.CrearTablaPrincipal;
+begin
+  inherited;
+  // Tomamos la instancia creada por TfrmMtoGen.CrearTablaPrincipal. Antes
+  // este form creaba otro TdmPedidos en FormCreate; la carga async abria el
+  // DM del padre y el grid quedaba enlazado al segundo DM, con las lineas
+  // cerradas al pulsar "Añadir linea".
+  dmmPedidos := (tdmDataModule as TdmPedidos);
+  if not Assigned(dmmPedidos) then
+  begin
+    dmmPedidos := TdmPedidos.Create(Self);
+    dsTablaG.DataSet := dmmPedidos.unqryTablaG;
+    tdmDataModule := dmmPedidos;
+  end;
+  tvPedidosLineas.DataController.DataSource := dmmPedidos.dsPedidosLineas;
+  tvAlbaranes.DataController.DataSource := dmmPedidos.dsAlbaranes;
+  tvMensajes.DataController.DataSource := dmmPedidos.dsMensajes;
+  dmmPedidos.unqryPedidosLineas.MasterSource := dsTablaG;
+  dmmPedidos.unqryAlbaranes.MasterSource := dsTablaG;
+  pkFieldName := 'SERIE_PED;NUMERO_PED';
 end;
 
 procedure TfrmMtoPedidos.btnNuevoClick(Sender: TObject);
@@ -263,6 +326,8 @@ end;
 procedure TfrmMtoPedidos.btnAnadirLineaClick(Sender: TObject);
 begin
   inherited;
+  if not dmmPedidos.unqryPedidosLineas.Active then
+    dmmPedidos.AbrirDetalles;
   dmmPedidos.unqryPedidosLineas.Append;
 end;
 
@@ -474,8 +539,10 @@ begin
      dmmPedidos.unqryAlbaranes.Active and
      (not dmmPedidos.unqryAlbaranes.IsEmpty) then
   begin
-    sSerie  := Trim(dmmPedidos.unqryAlbaranes.FieldByName('SERIE_ALB').AsString);
-    sNumero := Trim(dmmPedidos.unqryAlbaranes.FieldByName('NUMERO_ALB').AsString);
+    sSerie  := Trim(dmmPedidos.unqryAlbaranes.FieldByName(
+                    'SERIE_ALB').AsString);
+    sNumero := Trim(dmmPedidos.unqryAlbaranes.FieldByName(
+                    'NUMERO_ALB').AsString);
     if (sSerie <> '') and (sNumero <> '') then
       ShowMto(Self.Owner, 'Albaranes', sSerie + ',' + sNumero);
   end;

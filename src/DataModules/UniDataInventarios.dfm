@@ -93,39 +93,39 @@ inherited dmInventarios: TdmInventarios
     OnNewRecord = cdsLineasNewRecord
     Left = 282
     Top = 22
-    object cdsLineasCODIGO_EMPRESA_INVENTARIO_LINEA: TStringField
+    object cdsLineasCODIGO_EMPRESA_INVENTARIO_LINEA: TWideStringField
       FieldName = 'CODIGO_EMP_INVLIN'
       Size = 10
     end
-    object cdsLineasCODIGO_ALMACEN_INVENTARIO_LINEA: TStringField
+    object cdsLineasCODIGO_ALMACEN_INVENTARIO_LINEA: TWideStringField
       FieldName = 'CODIGO_ALM_INVLIN'
       Size = 10
     end
-    object cdsLineasSERIE_INVENTARIO_LINEA: TStringField
+    object cdsLineasSERIE_INVENTARIO_LINEA: TWideStringField
       FieldName = 'SERIE_INV_INVLIN'
     end
-    object cdsLineasNRO_INVENTARIO_LINEA: TStringField
+    object cdsLineasNRO_INVENTARIO_LINEA: TWideStringField
       FieldName = 'NUMERO_INV_INVLIN'
     end
-    object cdsLineasLINEA_INVENTARIO_LINEA: TStringField
+    object cdsLineasLINEA_INVENTARIO_LINEA: TWideStringField
       FieldName = 'LINEA_INVLIN'
-      Size = 4
+      Size = 8
     end
-    object cdsLineasCODIGO_ARTICULO_INVENTARIO_LINEA: TStringField
+    object cdsLineasCODIGO_ARTICULO_INVENTARIO_LINEA: TWideStringField
       FieldName = 'CODIGO_ART_INVLIN'
     end
-    object cdsLineasCODIGO_UNIDAD_INVENTARIO_LINEA: TStringField
+    object cdsLineasCODIGO_UNIDAD_INVENTARIO_LINEA: TWideStringField
       FieldName = 'CODIGO_UNIDAD_INVLIN'
       Size = 50
     end
-    object cdsLineasLOTE_INVENTARIO_LINEA: TStringField
+    object cdsLineasLOTE_INVENTARIO_LINEA: TWideStringField
       FieldName = 'LOTE_INVLIN'
       Size = 50
     end
     object cdsLineasFECHA_CADUCIDAD_INVENTARIO_LINEA: TDateField
       FieldName = 'FECHA_CADUCIDAD_INVLIN'
     end
-    object cdsLineasDESCRIPCION_ARTICULO_INVENTARIO_LINEA: TStringField
+    object cdsLineasDESCRIPCION_ARTICULO_INVENTARIO_LINEA: TWideStringField
       FieldName = 'DESCRIPCION_ARTICULO_INVLIN'
       Size = 200
     end
@@ -161,52 +161,52 @@ inherited dmInventarios: TdmInventarios
       FieldKind = fkInternalCalc
       FieldName = 'NUM_ATRIBUTOS_REQ_INV_LINEA'
     end
-    object cdsLineasATTR1_NOMBRE: TStringField
+    object cdsLineasATTR1_NOMBRE: TWideStringField
       FieldKind = fkInternalCalc
       FieldName = 'ATTR1_NOMBRE'
       Size = 50
     end
-    object cdsLineasATTR1_VALOR: TStringField
+    object cdsLineasATTR1_VALOR: TWideStringField
       FieldKind = fkInternalCalc
       FieldName = 'ATTR1_VALOR'
       Size = 50
     end
-    object cdsLineasATTR2_NOMBRE: TStringField
+    object cdsLineasATTR2_NOMBRE: TWideStringField
       FieldKind = fkInternalCalc
       FieldName = 'ATTR2_NOMBRE'
       Size = 50
     end
-    object cdsLineasATTR2_VALOR: TStringField
+    object cdsLineasATTR2_VALOR: TWideStringField
       FieldKind = fkInternalCalc
       FieldName = 'ATTR2_VALOR'
       Size = 50
     end
-    object cdsLineasATTR3_NOMBRE: TStringField
+    object cdsLineasATTR3_NOMBRE: TWideStringField
       FieldKind = fkInternalCalc
       FieldName = 'ATTR3_NOMBRE'
       Size = 50
     end
-    object cdsLineasATTR3_VALOR: TStringField
+    object cdsLineasATTR3_VALOR: TWideStringField
       FieldKind = fkInternalCalc
       FieldName = 'ATTR3_VALOR'
       Size = 50
     end
-    object cdsLineasATTR4_NOMBRE: TStringField
+    object cdsLineasATTR4_NOMBRE: TWideStringField
       FieldKind = fkInternalCalc
       FieldName = 'ATTR4_NOMBRE'
       Size = 50
     end
-    object cdsLineasATTR4_VALOR: TStringField
+    object cdsLineasATTR4_VALOR: TWideStringField
       FieldKind = fkInternalCalc
       FieldName = 'ATTR4_VALOR'
       Size = 50
     end
-    object cdsLineasATTR5_NOMBRE: TStringField
+    object cdsLineasATTR5_NOMBRE: TWideStringField
       FieldKind = fkInternalCalc
       FieldName = 'ATTR5_NOMBRE'
       Size = 50
     end
-    object cdsLineasATTR5_VALOR: TStringField
+    object cdsLineasATTR5_VALOR: TWideStringField
       FieldKind = fkInternalCalc
       FieldName = 'ATTR5_VALOR'
       Size = 50
@@ -220,11 +220,11 @@ inherited dmInventarios: TdmInventarios
     object cdsLineasINSTANTE_ALTA: TDateTimeField
       FieldName = 'INSTANTE_ALTA'
     end
-    object cdsLineasUSUARIO_ALTA: TStringField
+    object cdsLineasUSUARIO_ALTA: TWideStringField
       FieldName = 'USUARIO_ALTA'
       Size = 50
     end
-    object cdsLineasUSUARIO_MODIF: TStringField
+    object cdsLineasUSUARIO_MODIF: TWideStringField
       FieldName = 'USUARIO_MODIF'
       Size = 50
     end

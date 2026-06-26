@@ -132,6 +132,7 @@ type
     ActionList1: TActionList;
     actArticulos: TAction;
     actIrDocumento: TAction;
+    actIrProveedor: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -164,6 +165,7 @@ type
     procedure cxgrdLineasAlbaranExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
     procedure actIrDocumentoExecute(Sender: TObject);
+    procedure actIrProveedorExecute(Sender: TObject);
     procedure cbbSERIE_ALBCPropertiesInitPopup(Sender: TObject);
     procedure btnCODIGO_PRV_ALBCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
@@ -862,6 +864,21 @@ begin
     ShowMto(Self.Owner,
             'Articulos',
             FieldByName('CODIGO_ART_ALBCLIN').AsString);
+end;
+
+procedure TfrmMtoAlbaranesCompra.actIrProveedorExecute(Sender: TObject);
+var
+  sPrv: string;
+begin
+  sPrv := '';
+  if Assigned(dmmAlbaranesCompra) and
+     (not dmmAlbaranesCompra.unqryTablaG.IsEmpty) then
+    sPrv := Trim(dmmAlbaranesCompra.unqryTablaG.
+                   FieldByName('CODIGO_PRV_ALBC').AsString);
+  if sPrv = '' then
+    ShowMto(Self.Owner, 'Proveedores')
+  else
+    ShowMto(Self.Owner, 'Proveedores', sPrv);
 end;
 
 procedure TfrmMtoAlbaranesCompra.btnCODIGO_PRV_ALBCPropertiesButtonClick(

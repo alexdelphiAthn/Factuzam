@@ -108,9 +108,6 @@ Cada línea es un **artículo + color** con su escandallo de tallas:
 > **Reusar el artículo existente** (no se crea uno nuevo, se le añade la
 > compra) o **Renombrar el código en esta sesión**.
 
-![Aviso de código duplicado](img/03-sesiones-duplicado.png)
-*▢ Captura pendiente — Modal «Código de artículo duplicado».*
-
 ### 3. Materializar la sesión
 
 Cuando la sesión está completa, pulsa **«Crear artículos y albarán»**. Se

@@ -145,6 +145,7 @@ type
     // Atajo Ctrl+May+A en la pestania Albaranes: abre el albaran de
     // compra seleccionado en la rejilla.
     actIrDocumento: TAction;
+    actIrProveedor: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -181,6 +182,7 @@ type
     procedure cxgrdLineasPedidoExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
     procedure actIrDocumentoExecute(Sender: TObject);
+    procedure actIrProveedorExecute(Sender: TObject);
     procedure cbbSERIE_PEDCPropertiesInitPopup(Sender: TObject);
     procedure btnRecibirTodoClick(Sender: TObject);
     procedure btnCODIGO_PRV_PEDCPropertiesButtonClick(Sender: TObject;
@@ -874,6 +876,21 @@ begin
       ShowMto(Self.Owner,
               'Articulos',
               FieldByName('CODIGO_ART_PEDCLIN').AsString);
+end;
+
+procedure TfrmMtoPedidosCompra.actIrProveedorExecute(Sender: TObject);
+var
+  sPrv: string;
+begin
+  sPrv := '';
+  if Assigned(dmmPedidosCompra) and
+     (not dmmPedidosCompra.unqryTablaG.IsEmpty) then
+    sPrv := Trim(dmmPedidosCompra.unqryTablaG.
+                   FieldByName('CODIGO_PRV_PEDC').AsString);
+  if sPrv = '' then
+    ShowMto(Self.Owner, 'Proveedores')
+  else
+    ShowMto(Self.Owner, 'Proveedores', sPrv);
 end;
 
 procedure TfrmMtoPedidosCompra.btnCODIGO_PRV_PEDCPropertiesButtonClick(

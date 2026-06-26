@@ -772,6 +772,249 @@
                 end
               end
             end
+            object tsTotales: TcxTabSheet
+              Caption = '&2_Totales'
+              ImageIndex = 2
+              object scrTotales: TScrollBox
+                Left = 0
+                Top = 0
+                Width = 937
+                Height = 353
+                Align = alClient
+                BorderStyle = bsNone
+                ParentBackground = True
+                TabOrder = 0
+                object lblTotalesTotalBase: TcxLabel
+                  Left = 38
+                  Top = 39
+                  Caption = 'Total Base Imponible'
+                  TabOrder = 0
+                  Transparent = True
+                end
+                object curTotalesTOTAL_BASES_ALB: TcxDBCurrencyEdit
+                  Left = 230
+                  Top = 35
+                  DataBinding.DataField = 'TOTAL_BASES_ALB'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.DecimalPlaces = 2
+                  Properties.ReadOnly = True
+                  TabOrder = 1
+                  Width = 133
+                end
+                object lblTotalesTotalImpuestos: TcxLabel
+                  Left = 79
+                  Top = 77
+                  Caption = 'Total Impuestos'
+                  TabOrder = 2
+                  Transparent = True
+                end
+                object curTotalesTOTAL_IMPUESTOS_ALB: TcxDBCurrencyEdit
+                  Left = 230
+                  Top = 73
+                  DataBinding.DataField = 'TOTAL_IMPUESTOS_ALB'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.DecimalPlaces = 2
+                  Properties.DisplayFormat = ',0.00 '#8364';-,0.00 '#8364
+                  Properties.ReadOnly = True
+                  TabOrder = 3
+                  Width = 133
+                end
+                object lblTotalesTotalPagar: TcxLabel
+                  Left = 105
+                  Top = 118
+                  Caption = 'Total a pagar'
+                  TabOrder = 4
+                  Transparent = True
+                end
+                object curTotalesTOTAL_LIQUIDO_ALB: TcxDBCurrencyEdit
+                  Left = 230
+                  Top = 114
+                  DataBinding.DataField = 'TOTAL_LIQUIDO_ALB'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ReadOnly = True
+                  Properties.UseThousandSeparator = True
+                  TabOrder = 5
+                  Width = 133
+                end
+                object lblTotalesFormaPago: TcxLabel
+                  Left = 90
+                  Top = 158
+                  Caption = 'Forma de Pago'
+                  TabOrder = 6
+                  Transparent = True
+                end
+                object txtTotalesFORMA_PAGO_ALB: TcxDBTextEdit
+                  Left = 230
+                  Top = 154
+                  DataBinding.DataField = 'FORMA_PAGO_ALB'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 7
+                  Width = 133
+                end
+                object chkTotalesESIVA_RECARGO_CLIENTE_ALB: TcxDBCheckBox
+                  Left = 56
+                  Top = 195
+                  Caption = 'Recargo equivalencia cliente'
+                  DataBinding.DataField = 'ESIVA_RECARGO_CLIENTE_ALB'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ValueChecked = 'S'
+                  Properties.ValueUnchecked = 'N'
+                  Style.TransparentBorder = False
+                  TabOrder = 8
+                  Transparent = True
+                end
+                object grpDesgloseImpuestos: TGroupBox
+                  Left = 384
+                  Top = 35
+                  Width = 360
+                  Height = 250
+                  Caption = 'Desglose IVA'
+                  TabOrder = 9
+                  object lblTotalesTotalIva: TcxLabel
+                    Left = 236
+                    Top = 40
+                    Caption = 'Total IVA'
+                    TabOrder = 0
+                    Transparent = True
+                  end
+                  object lblTotalesPorIva: TcxLabel
+                    Left = 161
+                    Top = 40
+                    Caption = '%IVA'
+                    TabOrder = 1
+                    Transparent = True
+                  end
+                  object lblTotalesIVAN: TcxLabel
+                    Left = 90
+                    Top = 82
+                    Caption = 'Normal'
+                    TabOrder = 2
+                    Transparent = True
+                  end
+                  object lblTotalesIVAR: TcxLabel
+                    Left = 73
+                    Top = 126
+                    Caption = 'Reducido'
+                    TabOrder = 3
+                    Transparent = True
+                  end
+                  object lblTotalesIVAS: TcxLabel
+                    Left = 21
+                    Top = 170
+                    Caption = 'S'#250'per Reducido'
+                    TabOrder = 4
+                    Transparent = True
+                  end
+                  object lblTotalesIVAE: TcxLabel
+                    Left = 94
+                    Top = 214
+                    Caption = 'Exento'
+                    TabOrder = 5
+                    Transparent = True
+                  end
+                  object spnTotalesPORCENTAJE_IVAN_ALB: TcxDBSpinEdit
+                    Left = 154
+                    Top = 78
+                    DataBinding.DataField = 'PORCENTAJE_IVAN_ALB'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.AssignedValues.MinValue = True
+                    Properties.DisplayFormat = '0 %'
+                    Properties.EditFormat = '0 %'
+                    Properties.MaxValue = 100.000000000000000000
+                    Properties.ReadOnly = True
+                    Properties.SpinButtons.Visible = False
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 6
+                    Width = 55
+                  end
+                  object spnTotalesPORCENTAJE_IVAR_ALB: TcxDBSpinEdit
+                    Left = 154
+                    Top = 122
+                    DataBinding.DataField = 'PORCENTAJE_IVAR_ALB'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.AssignedValues.MinValue = True
+                    Properties.DisplayFormat = '0 %'
+                    Properties.EditFormat = '0 %'
+                    Properties.MaxValue = 100.000000000000000000
+                    Properties.ReadOnly = True
+                    Properties.SpinButtons.Visible = False
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 7
+                    Width = 55
+                  end
+                  object spnTotalesPORCENTAJE_IVAS_ALB: TcxDBSpinEdit
+                    Left = 154
+                    Top = 166
+                    DataBinding.DataField = 'PORCENTAJE_IVAS_ALB'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.AssignedValues.MinValue = True
+                    Properties.DisplayFormat = '0 %'
+                    Properties.EditFormat = '0 %'
+                    Properties.MaxValue = 100.000000000000000000
+                    Properties.ReadOnly = True
+                    Properties.SpinButtons.Visible = False
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 8
+                    Width = 55
+                  end
+                  object spnTotalesPORCENTAJE_IVAE_ALB: TcxDBSpinEdit
+                    Left = 154
+                    Top = 210
+                    DataBinding.DataField = 'PORCENTAJE_IVAE_ALB'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.AssignedValues.MinValue = True
+                    Properties.DisplayFormat = '0 %'
+                    Properties.EditFormat = '0 %'
+                    Properties.MaxValue = 100.000000000000000000
+                    Properties.ReadOnly = True
+                    Properties.SpinButtons.Visible = False
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 9
+                    Width = 55
+                  end
+                  object curTotalesTOTAL_IVAN_ALB: TcxDBCurrencyEdit
+                    Left = 220
+                    Top = 78
+                    DataBinding.DataField = 'TOTAL_IVAN_ALB'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 10
+                    Width = 100
+                  end
+                  object curTotalesTOTAL_IVAR_ALB: TcxDBCurrencyEdit
+                    Left = 220
+                    Top = 122
+                    DataBinding.DataField = 'TOTAL_IVAR_ALB'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 11
+                    Width = 100
+                  end
+                  object curTotalesTOTAL_IVAS_ALB: TcxDBCurrencyEdit
+                    Left = 220
+                    Top = 166
+                    DataBinding.DataField = 'TOTAL_IVAS_ALB'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 12
+                    Width = 100
+                  end
+                  object curTotalesTOTAL_IVAE_ALB: TcxDBCurrencyEdit
+                    Left = 220
+                    Top = 210
+                    DataBinding.DataField = 'TOTAL_IVAE_ALB'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 13
+                    Width = 100
+                  end
+                end
+              end
+            end
             object tsFacturas: TcxTabSheet
               Caption = 'Borradores'
               object cxGrdFacturas: TcxGrid

@@ -341,7 +341,7 @@ uses inLibUser,
   inMtoModalVerifactuDecl,
   inLibGenerarTicketCaja,
   inMtoStockConsulta,
-  inMtoModalGenFilter,
+  inMtoModalListadoVentas,
   inMtoModalScriptLog,
   inMtoModalImpBalanceTallas,
   inMtoModalImpBalanceSinTallas,
@@ -1732,14 +1732,14 @@ end;
 
 procedure TfrmMtoPrincipal.mnuLisVentasClick(Sender: TObject);
 var
-  frmModalGenFilter: TfrmModalGenFilter;
+  frmListadoVentas: TfrmModalListadoVentas;
 begin
   inherited;
   try
-    frmModalGenFilter := TfrmModalGenFilter.Create(Self);
-    frmModalGenFilter.ShowModal;
+    frmListadoVentas := TfrmModalListadoVentas.Create(Self);
+    frmListadoVentas.ShowModal;
   finally
-    FreeAndNil(frmModalGenFilter);
+    FreeAndNil(frmListadoVentas);
   end;
 end;
 

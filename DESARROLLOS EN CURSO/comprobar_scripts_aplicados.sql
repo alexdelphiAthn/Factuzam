@@ -310,6 +310,28 @@ SELECT t.orden AS orden_aplicacion,
                      AND TABLE_NAME = 'fza_empleados'
                      AND COLUMN_NAME = 'BIC_EMPL')
     UNION ALL
+    SELECT 278, 'recuento_inventarios_factuzam.sql',
+           'fza_inventarios recuento remoto + tabla INVREC',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_inventarios_recuentos')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_inventarios'
+                         AND COLUMN_NAME = 'ESRECUENTO_REMOTO_INV')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_inventarios'
+                         AND COLUMN_NAME = 'INSTANTE_ENVIO_RECUENTO_INV')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_inventarios'
+                         AND COLUMN_NAME = 'INSTANTE_RECOGIDA_RECUENTO_INV')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_inventarios'
+                         AND COLUMN_NAME = 'ID_RECUENTO_REMOTO_INV')
+    UNION ALL
     SELECT 280, 'sku_descripcion_color.sql',
            'fza_articulos_atributos_basicos.DESCRIPCION_AAB + vista',
            EXISTS(SELECT 1 FROM information_schema.COLUMNS
