@@ -100,9 +100,7 @@ Tras validar el login se muestra la ventana principal de Factuzam, con:
 Cuando eliges una opción de menú, la aplicación abre la pantalla de
 mantenimiento correspondiente **como una pestaña nueva** (o reutiliza la
 que ya esté abierta). Algunas pantallas admiten **varias instancias
-simultáneas** (verás un número junto al título, p. ej. *Clientes 2*); una
-de esas instancias queda reservada para las **búsquedas rápidas** con
-`[Ctrl]+[A]`.
+simultáneas** (verás un número junto al título, p. ej. *Clientes 2*).
 
 > El funcionamiento interno de cada pantalla (lista, ficha, búsqueda,
 > navegación, grabado…) es **común a casi todos los mantenimientos** y se

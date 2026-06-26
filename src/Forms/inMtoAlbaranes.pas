@@ -128,6 +128,32 @@ type
     curTOTAL_IMPUESTOS_ALB: TcxDBCurrencyEdit;
     lblTotalLiquido: TcxLabel;
     curTOTAL_LIQUIDO_ALB: TcxDBCurrencyEdit;
+    tsTotales: TcxTabSheet;
+    scrTotales: TScrollBox;
+    lblTotalesTotalBase: TcxLabel;
+    curTotalesTOTAL_BASES_ALB: TcxDBCurrencyEdit;
+    lblTotalesTotalImpuestos: TcxLabel;
+    curTotalesTOTAL_IMPUESTOS_ALB: TcxDBCurrencyEdit;
+    lblTotalesTotalPagar: TcxLabel;
+    curTotalesTOTAL_LIQUIDO_ALB: TcxDBCurrencyEdit;
+    lblTotalesFormaPago: TcxLabel;
+    txtTotalesFORMA_PAGO_ALB: TcxDBTextEdit;
+    chkTotalesESIVA_RECARGO_CLIENTE_ALB: TcxDBCheckBox;
+    grpDesgloseImpuestos: TGroupBox;
+    lblTotalesPorIva: TcxLabel;
+    lblTotalesTotalIva: TcxLabel;
+    lblTotalesIVAN: TcxLabel;
+    lblTotalesIVAR: TcxLabel;
+    lblTotalesIVAS: TcxLabel;
+    lblTotalesIVAE: TcxLabel;
+    spnTotalesPORCENTAJE_IVAN_ALB: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_IVAR_ALB: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_IVAS_ALB: TcxDBSpinEdit;
+    spnTotalesPORCENTAJE_IVAE_ALB: TcxDBSpinEdit;
+    curTotalesTOTAL_IVAN_ALB: TcxDBCurrencyEdit;
+    curTotalesTOTAL_IVAR_ALB: TcxDBCurrencyEdit;
+    curTotalesTOTAL_IVAS_ALB: TcxDBCurrencyEdit;
+    curTotalesTOTAL_IVAE_ALB: TcxDBCurrencyEdit;
 
     // Observaciones
     memObservaciones: TcxDBMemo;

@@ -303,6 +303,9 @@
         <DCCReference Include="src\Modals\inMtoModalGenPass.pas">
             <Form>frmModalGenPass</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalListadoVentas.pas">
+            <Form>frmModalListadoVentas</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalImpFac.pas">
             <Form>frmPrintFac</Form>
         </DCCReference>
@@ -574,6 +577,7 @@
         <DCCReference Include="src\Lib\inLibFacturaExcel.pas"/>
         <DCCReference Include="src\Lib\inLibDocCompraExcel.pas"/>
         <DCCReference Include="src\Lib\inLibComprasImpuestos.pas"/>
+        <DCCReference Include="src\Lib\inLibVentasImpuestos.pas"/>
         <DCCReference Include="src\Lib\inLibInventarioExcel.pas"/>
         <DCCReference Include="src\Lib\inLibBalanceTallasExcel.pas"/>
         <DCCReference Include="src\Lib\inLibBalanceSinTallasExcel.pas"/>

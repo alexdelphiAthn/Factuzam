@@ -1144,5 +1144,10 @@
       ShortCut = 16449
       OnExecute = actArticulosExecute
     end
+    object actIrProveedor: TAction
+      Caption = 'Ir a proveedor'
+      ShortCut = 16464
+      OnExecute = actIrProveedorExecute
+    end
   end
 end

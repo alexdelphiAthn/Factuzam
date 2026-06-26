@@ -77,6 +77,8 @@ uses
   inMtoModalGridGuias in 'src\Modals\inMtoModalGridGuias.pas' {frmModalGridGuias},
   inMtoModalWizardEditar in 'src\Modals\inMtoModalWizardEditar.pas' {frmModalWizardEditar},
   inMtoModalGenPass in 'src\Modals\inMtoModalGenPass.pas' {frmModalGenPass},
+  inMtoModalListadoVentas in
+    'src\Modals\inMtoModalListadoVentas.pas' {frmModalListadoVentas},
   inMtoModalImpFac in 'src\Modals\inMtoModalImpFac.pas' {frmPrintFac},
   inMtoModalImpRecFac in 'src\Modals\inMtoModalImpRecFac.pas' {frmPrintRecFac},
   inMtoModalImpSesion in 'src\Modals\inMtoModalImpSesion.pas' {frmPrintSesion},
@@ -174,6 +176,7 @@ uses
   inLibFacturaExcel in 'src\Lib\inLibFacturaExcel.pas',
   inLibDocCompraExcel in 'src\Lib\inLibDocCompraExcel.pas',
   inLibComprasImpuestos in 'src\Lib\inLibComprasImpuestos.pas',
+  inLibVentasImpuestos in 'src\Lib\inLibVentasImpuestos.pas',
   inLibInventarioExcel in 'src\Lib\inLibInventarioExcel.pas',
   inLibBalanceTallasExcel in 'src\Lib\inLibBalanceTallasExcel.pas',
   inLibBalanceSinTallasExcel in 'src\Lib\inLibBalanceSinTallasExcel.pas',

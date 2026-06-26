@@ -101,6 +101,7 @@ type
     procedure AbrirDetalles; override;
   private
     FProcsInstalados: Boolean;
+    FCalculandoTotales: Boolean;
     // Devuelve el siguiente contador (PRC_GET_NEXT_CONT) del tipo indicado.
     function ObtenerContador(const sTipo: string): string;
   end;
@@ -108,7 +109,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibLog, System.Diagnostics;
+  inLibGlobalVar, inLibLog, System.Diagnostics, inLibVentasImpuestos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -217,6 +218,7 @@ begin
     GetCodigoAutoPedido;
   if (unqryTablaG.FieldByName('CODIGO_CLI_PED').AsString = '0') then
     GetCodigoAutoCliente;
+  AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'PED');
   CalcularTotalesPedido;
 end;
 
@@ -265,10 +267,8 @@ begin
       else
         FieldByName('ESENTREGADA_PEDLIN').AsString := 'N';
     end;
-    if (FindField('PRECIO_VENTA_SIVA_ARTICULO_PEDLIN') <> nil) and
-       (FindField('TOTAL_PEDLIN') <> nil) then
-      FieldByName('TOTAL_PEDLIN').AsFloat :=
-        fCantidad * FieldByName('PRECIO_VENTA_SIVA_ARTICULO_PEDLIN').AsFloat;
+    PrepararLineaFiscalVenta(inLibGlobalVar.oConn, unqryTablaG,
+      unqryPedidosLineas, 'PED', 'PEDLIN', 'TOTAL_PEDLIN');
   end;
 end;
 
@@ -341,41 +341,18 @@ begin
 end;
 
 procedure TdmPedidos.CalcularTotalesPedido;
-var
-  fBase, fIva, fTotal, fPorIva: Double;
-  bk: TBookmark;
 begin
-  if not unqryPedidosLineas.Active then Exit;
-  fBase := 0; fIva := 0;
-  bk := unqryPedidosLineas.GetBookmark;
-  try
-    unqryPedidosLineas.DisableControls;
-    unqryPedidosLineas.First;
-    while not unqryPedidosLineas.Eof do
-    begin
-      fPorIva :=
-        unqryPedidosLineas.FieldByName('PORCENTAJE_IVA_PEDLIN').AsFloat / 100;
-      fTotal := unqryPedidosLineas.FieldByName('CANTIDAD_PEDLIN').AsFloat *
-                unqryPedidosLineas.FieldByName(
-                  'PRECIO_VENTA_SIVA_ARTICULO_PEDLIN').AsFloat;
-      fBase := fBase + fTotal;
-      fIva  := fIva + (fTotal * fPorIva);
-      unqryPedidosLineas.Next;
+  if not FCalculandoTotales then
+  begin
+    FCalculandoTotales := True;
+    try
+      CalcularTotalesDocumentoVenta(inLibGlobalVar.oConn, unqryTablaG,
+        unqryPedidosLineas, 'PED', 'TOTAL_PEDLIN',
+        'TIPO_IVA_ARTICULO_PEDLIN', 'PORCENTAJE_IVA_PEDLIN');
+    finally
+      FCalculandoTotales := False;
     end;
-  finally
-    if unqryPedidosLineas.BookmarkValid(bk) then
-      unqryPedidosLineas.GotoBookmark(bk);
-    unqryPedidosLineas.FreeBookmark(bk);
-    unqryPedidosLineas.EnableControls;
   end;
-  if (unqryTablaG.State = dsBrowse) then
-    unqryTablaG.Edit;
-  if unqryTablaG.FindField('TOTAL_BASES_PED') <> nil then
-    unqryTablaG.FieldByName('TOTAL_BASES_PED').AsFloat := fBase;
-  if unqryTablaG.FindField('TOTAL_IMPUESTOS_PED') <> nil then
-    unqryTablaG.FieldByName('TOTAL_IMPUESTOS_PED').AsFloat := fIva;
-  if unqryTablaG.FindField('TOTAL_LIQUIDO_PED') <> nil then
-    unqryTablaG.FieldByName('TOTAL_LIQUIDO_PED').AsFloat := fBase + fIva;
 end;
 
 procedure TdmPedidos.CopiarEmpresaaPedido(DataSet: TDataSet);
@@ -416,6 +393,7 @@ begin
                             DataSet.FindField(
                               'ESREGIMENESPECIALAGRICOLA_EMP').AsString;
   end;
+  AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'PED');
 end;
 
 procedure TdmPedidos.CopiarClienteaPedido(DataSet: TDataSet);
@@ -462,6 +440,7 @@ begin
     FindField('TARIFA_ARTICULO_CLIENTE_PED').AsString     :=
       DataSet.FindField('TARIFA_ARTICULO_CLI').AsString;
   end;
+  AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'PED');
 end;
 
 procedure TdmPedidos.InstalarProcedimientos;

@@ -6,7 +6,7 @@
 ; Ficheros esperados:
 ;   ..\Win64\Release\fzam.exe
 ;   ..\factuzam.ico
-;   ..\factuzam_original.sql
+;   ..\factuzam_demo.sql
 ;   .\mariadb_installer.msi
 
 Unicode True
@@ -21,7 +21,7 @@ RequestExecutionLevel admin
 !define APPNAME "Factuzam DEMO"
 !define COMPANYNAME "Factuzam"
 !ifndef VERSION
-  !define VERSION "1.0.15.202606240120.alpha"
+  !define VERSION "1.0.15.202606260090.alpha"
 !endif
 !define DBNAME "factuzam"
 !define DBPORT "3310"
@@ -93,9 +93,20 @@ Function EsperarMariaDB
   Abort "MariaDB no responde en 127.0.0.1:${DBPORT}. Revise el servicio ${SERVICENAME}."
 FunctionEnd
 
+Function ExisteBaseDatosDemo
+  nsExec::ExecToStack '"$INSTDIR\BaseDatos\mariadb\bin\mysql.exe" --protocol=tcp --host=127.0.0.1 --port=${DBPORT} --user=root --password=${DBPASS} --default-character-set=utf8mb4 --execute="SELECT 1;" ${DBNAME}'
+  Pop $CodigoSalida
+  Pop $R0
+  ${If} $CodigoSalida == 0
+    Push "S"
+  ${Else}
+    Push "N"
+  ${EndIf}
+FunctionEnd
+
 Function CrearBaseDatosDemo
   DetailPrint "Creando base de datos ${DBNAME}..."
-  nsExec::ExecToLog '"$INSTDIR\BaseDatos\mariadb\bin\mysql.exe" --protocol=tcp --host=127.0.0.1 --port=${DBPORT} --user=root --password=${DBPASS} --default-character-set=utf8mb4 --execute="DROP DATABASE IF EXISTS ${DBNAME}; CREATE DATABASE ${DBNAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci;"'
+  nsExec::ExecToLog '"$INSTDIR\BaseDatos\mariadb\bin\mysql.exe" --protocol=tcp --host=127.0.0.1 --port=${DBPORT} --user=root --password=${DBPASS} --default-character-set=utf8mb4 --execute="CREATE DATABASE ${DBNAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci;"'
   Pop $CodigoSalida
   ${If} $CodigoSalida != 0
     Abort "No se pudo crear la base de datos demo. Codigo: $CodigoSalida"
@@ -113,6 +124,9 @@ FunctionEnd
 
 Function EscribirIniDemo
   SetShellVarContext current
+  IfFileExists "$LOCALAPPDATA\factuzam\${INI_DEMO}" 0 +3
+    DetailPrint "El fichero ${INI_DEMO} ya existe. No se modifica."
+    Return
   CreateDirectory "$LOCALAPPDATA\factuzam"
   WriteINIStr "$LOCALAPPDATA\factuzam\${INI_DEMO}" "ConnData" "HostName" "127.0.0.1"
   WriteINIStr "$LOCALAPPDATA\factuzam\${INI_DEMO}" "ConnData" "Database" "${DBNAME}"
@@ -134,7 +148,7 @@ Section "Factuzam DEMO" SecAplicacion
   File "${LICENCIA_DEMO}"
 
   SetOutPath "$INSTDIR\bbdd"
-  File /oname=factuzam_demo.sql "..\factuzam_original.sql"
+  File "..\factuzam_demo.sql"
 
   SetOutPath "$INSTDIR\instalador"
   !ifdef HAY_MARIADB_MSI
@@ -168,7 +182,8 @@ Section "MariaDB y BBDD DEMO" SecMariaDB
     Abort "No se encontro $INSTDIR\instalador\mariadb_installer.msi."
 
   DetailPrint "Instalando MariaDB como servicio ${SERVICENAME}..."
-  ExecWait '"$SYSDIR\msiexec.exe" /i "$INSTDIR\instalador\mariadb_installer.msi" INSTALLDIR="$INSTDIR\BaseDatos\mariadb" DATADIR="$INSTDIR\BaseDatos\mariadb\data" PORT=${DBPORT} PASSWORD=${DBPASS} SERVICENAME=${SERVICENAME} ADDLOCAL=ALL REMOVE=HeidiSQL /qn' $CodigoSalida
+  DetailPrint "MariaDB mostrara una ventana de progreso durante esta parte."
+  ExecWait '"$SYSDIR\msiexec.exe" /i "$INSTDIR\instalador\mariadb_installer.msi" INSTALLDIR="$INSTDIR\BaseDatos\mariadb" DATADIR="$INSTDIR\BaseDatos\mariadb\data" PORT=${DBPORT} PASSWORD=${DBPASS} SERVICENAME=${SERVICENAME} ADDLOCAL=ALL REMOVE=HeidiSQL /passive /norestart' $CodigoSalida
   ${If} $CodigoSalida != 0
     ${If} $CodigoSalida != 3010
       Abort "No se pudo instalar MariaDB. Codigo MSI: $CodigoSalida"
@@ -179,8 +194,14 @@ Section "MariaDB y BBDD DEMO" SecMariaDB
     Abort "No se encontro mysql.exe en $INSTDIR\BaseDatos\mariadb\bin."
 
   Call EsperarMariaDB
-  Call CrearBaseDatosDemo
-  Call ImportarBaseDatosDemo
+  Call ExisteBaseDatosDemo
+  Pop $R0
+  ${If} $R0 == "S"
+    DetailPrint "La base de datos ${DBNAME} ya existe. No se importa factuzam_demo.sql."
+  ${Else}
+    Call CrearBaseDatosDemo
+    Call ImportarBaseDatosDemo
+  ${EndIf}
   Call EscribirIniDemo
 SectionEnd
 

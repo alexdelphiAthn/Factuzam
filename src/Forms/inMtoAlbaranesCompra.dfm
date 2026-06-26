@@ -1,4 +1,4 @@
-﻿inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
+inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
   Caption = 'Mantenimiento de Albaranes de Compra'
   ClientHeight = 765
   ClientWidth = 1085
@@ -16,6 +16,7 @@
     inherited pcPantalla: TcxPageControl
       Width = 945
       Height = 725
+      Properties.ActivePage = tsLista
       ExplicitWidth = 945
       ExplicitHeight = 725
       ClientRectBottom = 721
@@ -148,7 +149,6 @@
                 Top = 32
                 DataBinding.DataField = 'SERIE_ALBC'
                 DataBinding.DataSource = dsTablaG
-                Properties.DropDownListStyle = lsEditList
                 Properties.MaxLength = 12
                 Properties.OnInitPopup = cbbSERIE_ALBCPropertiesInitPopup
                 TabOrder = 3
@@ -265,7 +265,6 @@
                 Properties.ValueChecked = 'S'
                 Properties.ValueUnchecked = 'N'
                 TabOrder = 16
-                Width = 100
               end
             end
           end
@@ -345,7 +344,7 @@
             ClientRectRight = 933
             ClientRectTop = 28
             object tsLineasAlbaran: TcxTabSheet
-              Caption = 'L'#237'neas'
+              Caption = '&1_L'#237'neas '
               object cxgrdLineasAlbaran: TcxGrid
                 Left = 0
                 Top = 0
@@ -422,7 +421,7 @@
               end
             end
             object tsProveedor: TcxTabSheet
-              Caption = 'Proveedor'
+              Caption = '&2_Movimientos '
               object cxgrdMovimientosProveedor: TcxGrid
                 Left = 0
                 Top = 0
@@ -431,10 +430,6 @@
                 Align = alClient
                 TabOrder = 0
                 object tvMovimientosProveedor: TcxGridDBTableView
-                  Navigator.Buttons.CustomButtons = <>
-                  DataController.Summary.DefaultGroupSummaryItems = <>
-                  DataController.Summary.FooterSummaryItems = <>
-                  DataController.Summary.SummaryGroups = <>
                   OptionsData.Editing = False
                   OptionsView.GroupByBox = False
                   object colMovProvAlbcNUMERO_MOV: TcxGridDBColumn
@@ -499,7 +494,7 @@
               end
             end
             object tsTotales: TcxTabSheet
-              Caption = '&2_Totales'
+              Caption = '&3_Totales'
               ImageIndex = 2
               object scrTotales: TScrollBox
                 Left = 0
@@ -973,7 +968,7 @@
               end
             end
             object tsObservaciones: TcxTabSheet
-              Caption = 'Observaciones'
+              Caption = '&4_Observaciones'
               object memObservaciones: TcxDBMemo
                 Left = 0
                 Top = 0
@@ -1147,6 +1142,11 @@
       Caption = 'Ir a documento (Ctrl+May+A)'
       ShortCut = 24641
       OnExecute = actIrDocumentoExecute
+    end
+    object actIrProveedor: TAction
+      Caption = 'Ir a proveedor'
+      ShortCut = 16464
+      OnExecute = actIrProveedorExecute
     end
   end
 end

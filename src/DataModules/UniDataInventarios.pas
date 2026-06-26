@@ -18,9 +18,9 @@ unit UniDataInventarios;
 interface
 
 uses
-  System.SysUtils, System.Classes, Data.DB, MemDS, DBAccess, Uni,
-  Datasnap.DBClient, Datasnap.Provider, UniProvider, MySQLUniProvider,
-  UniDataGen, vcl.Controls, System.UITypes;
+  System.SysUtils, System.Classes, Winapi.Windows, Data.DB, MemDS, DBAccess,
+  Uni, Datasnap.DBClient, Datasnap.Provider, UniProvider, MySQLUniProvider,
+  UniDataGen, Vcl.Controls, System.UITypes;
 
 type
   // Cabecera (heredado de TdmBase)
@@ -33,16 +33,16 @@ type
     dsLineas: TDataSource;
 
     // === CAMPOS CALCULADOS DE cdsLineas ===
-    cdsLineasCODIGO_EMPRESA_INVENTARIO_LINEA: TStringField;
-    cdsLineasCODIGO_ALMACEN_INVENTARIO_LINEA: TStringField;
-    cdsLineasSERIE_INVENTARIO_LINEA: TStringField;
-    cdsLineasNRO_INVENTARIO_LINEA: TStringField;
-    cdsLineasLINEA_INVENTARIO_LINEA: TStringField;
-    cdsLineasCODIGO_ARTICULO_INVENTARIO_LINEA: TStringField;
-    cdsLineasCODIGO_UNIDAD_INVENTARIO_LINEA: TStringField;
-    cdsLineasLOTE_INVENTARIO_LINEA: TStringField;
+    cdsLineasCODIGO_EMPRESA_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasCODIGO_ALMACEN_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasSERIE_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasNRO_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasLINEA_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasCODIGO_ARTICULO_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasCODIGO_UNIDAD_INVENTARIO_LINEA: TWideStringField;
+    cdsLineasLOTE_INVENTARIO_LINEA: TWideStringField;
     cdsLineasFECHA_CADUCIDAD_INVENTARIO_LINEA: TDateField;
-    cdsLineasDESCRIPCION_ARTICULO_INVENTARIO_LINEA: TStringField;
+    cdsLineasDESCRIPCION_ARTICULO_INVENTARIO_LINEA: TWideStringField;
     cdsLineasCANTIDAD_TEORICA_INVENTARIO_LINEA: TFloatField;
     cdsLineasCANTIDAD_FISICA_INVENTARIO_LINEA: TFloatField;
     cdsLineasCANTIDAD_DIFERENCIA_INVENTARIO_LINEA: TFloatField;
@@ -53,16 +53,16 @@ type
 
     // === Campos in-memory para SKUs dinámicos (1 a 5 atributos) ===
     cdsLineasNUM_ATRIBUTOS_REQ_INV_LINEA: TIntegerField;
-    cdsLineasATTR1_NOMBRE: TStringField;
-    cdsLineasATTR1_VALOR: TStringField;
-    cdsLineasATTR2_NOMBRE: TStringField;
-    cdsLineasATTR2_VALOR: TStringField;
-    cdsLineasATTR3_NOMBRE: TStringField;
-    cdsLineasATTR3_VALOR: TStringField;
-    cdsLineasATTR4_NOMBRE: TStringField;
-    cdsLineasATTR4_VALOR: TStringField;
-    cdsLineasATTR5_NOMBRE: TStringField;
-    cdsLineasATTR5_VALOR: TStringField;
+    cdsLineasATTR1_NOMBRE: TWideStringField;
+    cdsLineasATTR1_VALOR: TWideStringField;
+    cdsLineasATTR2_NOMBRE: TWideStringField;
+    cdsLineasATTR2_VALOR: TWideStringField;
+    cdsLineasATTR3_NOMBRE: TWideStringField;
+    cdsLineasATTR3_VALOR: TWideStringField;
+    cdsLineasATTR4_NOMBRE: TWideStringField;
+    cdsLineasATTR4_VALOR: TWideStringField;
+    cdsLineasATTR5_NOMBRE: TWideStringField;
+    cdsLineasATTR5_VALOR: TWideStringField;
     // Unidades regularizadas (calculado: 0 si ABIERTO, =DIFERENCIA si APLICADO)
     cdsLineasUDS_REGULARIZADAS: TFloatField;
 
@@ -91,8 +91,8 @@ type
     unspAplicar: TUniStoredProc;               // PRC_FZA_INVENTARIOS_APLICAR
     unspEliminarRegul: TUniStoredProc;
     cdsLineasINSTANTE_ALTA: TDateTimeField;
-    cdsLineasUSUARIO_ALTA: TStringField;
-    cdsLineasUSUARIO_MODIF: TStringField;
+    cdsLineasUSUARIO_ALTA: TWideStringField;
+    cdsLineasUSUARIO_MODIF: TWideStringField;
     // PRC_FZA_INVENTARIOS_ELIMINAR_REGUL (nuevo)
     cdsLineasINSTANTE_MODIF: TDateTimeField;
 
@@ -116,13 +116,16 @@ type
     FNumero: string;
     FUsuario: string;
     FDesempaquetando: Boolean;
+    FColumnasRecuentoRemoto: Boolean;
     // Flag idempotente: True cuando ATTR1..ATTR5_VALOR ya estan rellenos
     // a partir del SKU para las lineas actualmente cargadas en cdsLineas.
     // Se resetea a False cada vez que CargarLineasInventario reabre cds.
     FLineasDesempaquetadas: Boolean;
     function ObtenerSeriePorDefecto(const AEmpresa,
                                           ATipoDoc: string): string;
+    function ExisteColumnaInventarios(const ACampo: string): Boolean;
     procedure GetCodigoAutoInventario;
+    procedure PrepararSqlCabecera;
     // Quita Required=True de todos los persistent fields de cdsLineas. La
     // herencia via udspLineas + poIncFieldProps hacia que el cds rechazara
     // el Post antes de cdsLineasBeforePost.
@@ -164,6 +167,7 @@ type
 
     // === ACCIONES SOBRE INVENTARIO ===
     function GetEstadoInventario: string;
+    procedure AbrirDetalles; override;
     procedure RecalcularTeorico;
     // Camino sincrono original. Tiene instrumentacion [PERF:Aplicar] y
     // bloquea la UI hasta terminar. Util para llamadas batch o pruebas.
@@ -181,6 +185,7 @@ type
     property CodigoAlmacen: string read FCodigoAlmacen;
     property Serie: string read FSerie;
     property Numero: string read FNumero;
+    property ColumnasRecuentoRemoto: Boolean read FColumnasRecuentoRemoto;
     // True una vez que DesempaquetarAtributosDesdeSku ha rellenado los
     // ATTR1..ATTR5_VALOR de las lineas actuales. El form consulta este
     // flag para no relanzar el desempaquetado si ya esta hecho.
@@ -331,6 +336,7 @@ begin
   unspActualizarTeorico.Connection := oConn;
   unspAplicar.Connection           := oConn;
   unspEliminarRegul.Connection     := oConn;
+  PrepararSqlCabecera;
 
   unqryLineas.SQLUpdate.Text :=
     'UPDATE fza_inventarios_lineas SET ' + sLineBreak +
@@ -398,6 +404,70 @@ begin
     cdsLineas.FieldDefs[i].Required := False;
 end;
 
+function TdmInventarios.ExisteColumnaInventarios(const ACampo: string): Boolean;
+var
+  qry: TUniQuery;
+begin
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := unqryTablaG.Connection;
+    qry.SQL.Text :=
+      'SELECT COUNT(*) AS N' + sLineBreak +
+      '  FROM INFORMATION_SCHEMA.COLUMNS' + sLineBreak +
+      ' WHERE TABLE_SCHEMA = DATABASE()' + sLineBreak +
+      '   AND TABLE_NAME = ''fza_inventarios''' + sLineBreak +
+      '   AND COLUMN_NAME = :campo';
+    qry.ParamByName('campo').AsString := ACampo;
+    qry.Open;
+    Result := qry.FieldByName('N').AsInteger > 0;
+  finally
+    FreeAndNil(qry);
+  end;
+end;
+
+procedure TdmInventarios.PrepararSqlCabecera;
+begin
+  FColumnasRecuentoRemoto :=
+    ExisteColumnaInventarios('ESRECUENTO_REMOTO_INV') and
+    ExisteColumnaInventarios('INSTANTE_ENVIO_RECUENTO_INV') and
+    ExisteColumnaInventarios('INSTANTE_RECOGIDA_RECUENTO_INV') and
+    ExisteColumnaInventarios('ID_RECUENTO_REMOTO_INV');
+  unqryTablaG.Close;
+  unqryTablaG.SQL.BeginUpdate;
+  try
+    unqryTablaG.SQL.Clear;
+    unqryTablaG.SQL.Add('SELECT');
+    unqryTablaG.SQL.Add('   CODIGO_EMP_INV,');
+    unqryTablaG.SQL.Add('   CODIGO_ALM_INV,');
+    unqryTablaG.SQL.Add('   SERIE_INV,');
+    unqryTablaG.SQL.Add('   NUMERO_INV,');
+    unqryTablaG.SQL.Add('   TIPO_DOC_INV,');
+    unqryTablaG.SQL.Add('   FECHA_INV,');
+    unqryTablaG.SQL.Add('   ESTADO_INV,');
+    unqryTablaG.SQL.Add('   DESCRIPCION_INV,');
+    unqryTablaG.SQL.Add('   OBSERVACIONES_INV,');
+    unqryTablaG.SQL.Add('   TOTAL_UNIDADES_DIFERENCIA_INV,');
+    unqryTablaG.SQL.Add('   TOTAL_EUROS_DIFERENCIA_INV,');
+    if FColumnasRecuentoRemoto then
+    begin
+      unqryTablaG.SQL.Add('   ESRECUENTO_REMOTO_INV,');
+      unqryTablaG.SQL.Add('   INSTANTE_ENVIO_RECUENTO_INV,');
+      unqryTablaG.SQL.Add('   INSTANTE_RECOGIDA_RECUENTO_INV,');
+      unqryTablaG.SQL.Add('   ID_RECUENTO_REMOTO_INV,');
+    end
+    else
+      Log.LogWarning('Inventarios: faltan columnas de recuento remoto. ' +
+        'La lista se abrira sin esos campos; ejecutar ' +
+        'DESARROLLOS EN CURSO\recuento_inventarios_factuzam.sql.');
+    unqryTablaG.SQL.Add('   INSTANTE_ALTA, INSTANTE_MODIF,');
+    unqryTablaG.SQL.Add('   USUARIO_ALTA,  USUARIO_MODIF');
+    unqryTablaG.SQL.Add('FROM fza_inventarios');
+    unqryTablaG.SQL.Add('ORDER BY FECHA_INV DESC');
+  finally
+    unqryTablaG.SQL.EndUpdate;
+  end;
+end;
+
 procedure TdmInventarios.SetClavesActivas(const AEmpresa, AAlmacen, ASerie,
   ANumero: string);
 begin
@@ -409,23 +479,30 @@ end;
 
 procedure TdmInventarios.unqryTablaGAfterScroll(DataSet: TDataSet);
 begin
-  // Cuando navegamos por las cabeceras, refrescamos las dependientes.
-  if DataSet.IsEmpty then
-    Exit;
-  if DataSet.ControlsDisabled then
-    Exit;
-  // OJO: aqui SI hay que resincronizar y refrescar incluso durante dsInsert.
-  // Al pulsar "+" desde una cabecera ya cargada, AfterInsert pone NUMERO='0'
-  // y AfterScroll dispara. Si saltamos por completo, las lineas del inventario
-  // anterior siguen en cdsLineas y aparecen bajo la cabecera nueva (NUMERO=0).
-  // En lugar de saltar, delegamos en CargarLineasInventario, que ya rechaza
-  // FNumero='0' como marcador y vacia cdsLineas sin consultar la BD.
-  SetClavesActivas( DataSet.FieldByName('CODIGO_EMP_INV').AsString,
-                    DataSet.FieldByName('CODIGO_ALM_INV').AsString,
-                    DataSet.FieldByName('SERIE_INV').AsString,
-                    DataSet.FieldByName('NUMERO_INV').AsString );
-  CargarLineasInventario;
-  CargarMovimientosRegularizacion;
+  // La apertura async dispara AfterScroll desde un thread. Las lineas y
+  // movimientos se abren en AbrirDetalles, ya en el hilo principal.
+  if (not DataSet.IsEmpty) and
+     (not DataSet.ControlsDisabled) and
+     (GetCurrentThreadId = MainThreadID) then
+  begin
+    // OJO: aqui SI hay que resincronizar incluso durante dsInsert.
+    // Al pulsar "+" desde una cabecera cargada, AfterInsert pone NUMERO='0'
+    // y CargarLineasInventario vacia el detalle sin consultar la BD.
+    SetClavesActivas(DataSet.FieldByName('CODIGO_EMP_INV').AsString,
+                     DataSet.FieldByName('CODIGO_ALM_INV').AsString,
+                     DataSet.FieldByName('SERIE_INV').AsString,
+                     DataSet.FieldByName('NUMERO_INV').AsString);
+    CargarLineasInventario;
+    CargarMovimientosRegularizacion;
+  end;
+end;
+
+procedure TdmInventarios.AbrirDetalles;
+begin
+  inherited;
+  if (unqryTablaG <> nil) and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+    unqryTablaGAfterScroll(unqryTablaG);
 end;
 
 procedure TdmInventarios.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -456,14 +533,18 @@ begin
 end;
 
 procedure TdmInventarios.unqryTablaGBeforePost(DataSet: TDataSet);
+var
+  campoRecuento: TField;
 begin
   // ESRECUENTO_REMOTO_INV es char(1) NOT NULL en BBDD (default 'N'). Al
   // anadirse al SELECT de la cabecera es un campo Required del dataset, asi
   // que una cabecera nueva (que no se ha enviado a recuento) llegaria al Post
   // con el valor sin asignar y reventaria con "Field 'ESRECUENTO_REMOTO_INV'
   // must have a value". Garantizamos el valor por defecto antes del Post.
-  if Trim(DataSet.FieldByName('ESRECUENTO_REMOTO_INV').AsString) = '' then
-    DataSet.FieldByName('ESRECUENTO_REMOTO_INV').AsString := 'N';
+  campoRecuento := DataSet.FindField('ESRECUENTO_REMOTO_INV');
+  if campoRecuento <> nil then
+    if Trim(campoRecuento.AsString) = '' then
+      campoRecuento.AsString := 'N';
   // Validacion explicita: la serie es parte de la PK de las lineas y
   // varchar(20) NOT NULL en BBDD. Si llega vacia (porque la empresa no
   // tiene una serie por defecto en fza_empresas_series para tipo IN),

@@ -125,6 +125,7 @@ type
     btnPegatinas: TcxButton;
     ActionList1: TActionList;
     actArticulos: TAction;
+    actIrProveedor: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -169,6 +170,7 @@ type
     procedure cxgrdLineasDevolucionEnter(Sender: TObject);
     procedure cxgrdLineasDevolucionExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
+    procedure actIrProveedorExecute(Sender: TObject);
     procedure btnCODIGO_PRV_DEVCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure colLineaDevcCODIGO_ARTPropertiesButtonClick(Sender: TObject;
@@ -2510,6 +2512,21 @@ begin
     ShowMto(Self.Owner,
             'Articulos',
             FieldByName('CODIGO_ART_DEVCLIN').AsString);
+end;
+
+procedure TfrmMtoDevolucionesCompra.actIrProveedorExecute(Sender: TObject);
+var
+  sPrv: string;
+begin
+  sPrv := '';
+  if Assigned(dmmDevolucionesCompra) and
+     (not dmmDevolucionesCompra.unqryTablaG.IsEmpty) then
+    sPrv := Trim(dmmDevolucionesCompra.unqryTablaG.
+                   FieldByName('CODIGO_PRV_DEVC').AsString);
+  if sPrv = '' then
+    ShowMto(Self.Owner, 'Proveedores')
+  else
+    ShowMto(Self.Owner, 'Proveedores', sPrv);
 end;
 
 procedure TfrmMtoDevolucionesCompra.btnCODIGO_PRV_DEVCPropertiesButtonClick(

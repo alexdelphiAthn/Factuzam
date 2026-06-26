@@ -733,6 +733,469 @@
                 end
               end
             end
+            object tsTotales: TcxTabSheet
+              Caption = '&2_Totales'
+              ImageIndex = 2
+              object scrTotales: TScrollBox
+                Left = 0
+                Top = 0
+                Width = 937
+                Height = 353
+                Align = alClient
+                BorderStyle = bsNone
+                ParentBackground = True
+                TabOrder = 0
+                object lblTotalesTotalBase: TcxLabel
+                  Left = 38
+                  Top = 39
+                  Caption = 'Total Base Imponible'
+                  TabOrder = 0
+                  Transparent = True
+                end
+                object curTotalesTOTAL_BASES_PED: TcxDBCurrencyEdit
+                  Left = 230
+                  Top = 35
+                  DataBinding.DataField = 'TOTAL_BASES_PED'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.DecimalPlaces = 2
+                  Properties.ReadOnly = True
+                  TabOrder = 1
+                  Width = 133
+                end
+                object lblTotalesTotalImpuestos: TcxLabel
+                  Left = 79
+                  Top = 77
+                  Caption = 'Total Impuestos'
+                  TabOrder = 2
+                  Transparent = True
+                end
+                object curTotalesTOTAL_IMPUESTOS_PED: TcxDBCurrencyEdit
+                  Left = 230
+                  Top = 73
+                  DataBinding.DataField = 'TOTAL_IMPUESTOS_PED'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.DecimalPlaces = 2
+                  Properties.DisplayFormat = ',0.00 '#8364';-,0.00 '#8364
+                  Properties.ReadOnly = True
+                  TabOrder = 3
+                  Width = 133
+                end
+                object lblTotalesPorcRetencion: TcxLabel
+                  Left = 80
+                  Top = 118
+                  Caption = '% Retenci'#243'n'
+                  TabOrder = 4
+                  Transparent = True
+                end
+                object spnTotalesPORCENTAJE_RETENCION_PED: TcxDBSpinEdit
+                  Left = 230
+                  Top = 114
+                  DataBinding.DataField = 'PORCENTAJE_RETENCION_PED'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.AssignedValues.MinValue = True
+                  Properties.DisplayFormat = '0.00 %'
+                  Properties.EditFormat = '0.00 %'
+                  Properties.MaxValue = 100.000000000000000000
+                  TabOrder = 5
+                  Width = 133
+                end
+                object lblTotalesTotalRetencion: TcxLabel
+                  Left = 70
+                  Top = 158
+                  Caption = 'Total Retenci'#243'n'
+                  TabOrder = 6
+                  Transparent = True
+                end
+                object curTotalesTOTAL_RETENCION_PED: TcxDBCurrencyEdit
+                  Left = 230
+                  Top = 154
+                  DataBinding.DataField = 'TOTAL_RETENCION_PED'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ReadOnly = True
+                  TabOrder = 7
+                  Width = 133
+                end
+                object lblTotalesTotalPagar: TcxLabel
+                  Left = 105
+                  Top = 199
+                  Caption = 'Total a pagar'
+                  TabOrder = 8
+                  Transparent = True
+                end
+                object curTotalesTOTAL_LIQUIDO_PED: TcxDBCurrencyEdit
+                  Left = 230
+                  Top = 195
+                  DataBinding.DataField = 'TOTAL_LIQUIDO_PED'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ReadOnly = True
+                  Properties.UseThousandSeparator = True
+                  TabOrder = 9
+                  Width = 133
+                end
+                object lblTotalesFormaPago: TcxLabel
+                  Left = 90
+                  Top = 238
+                  Caption = 'Forma de Pago'
+                  TabOrder = 10
+                  Transparent = True
+                end
+                object txtTotalesFORMA_PAGO_PED: TcxDBTextEdit
+                  Left = 230
+                  Top = 234
+                  DataBinding.DataField = 'FORMA_PAGO_PED'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 11
+                  Width = 133
+                end
+                object chkTotalesESIVA_RECARGO_CLIENTE_PED: TcxDBCheckBox
+                  Left = 56
+                  Top = 275
+                  Caption = 'Recargo equivalencia cliente'
+                  DataBinding.DataField = 'ESIVA_RECARGO_CLIENTE_PED'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ValueChecked = 'S'
+                  Properties.ValueUnchecked = 'N'
+                  Style.TransparentBorder = False
+                  TabOrder = 12
+                  Transparent = True
+                end
+                object chkTotalesESRETENCIONES_CLIENTE_PED: TcxDBCheckBox
+                  Left = 56
+                  Top = 300
+                  Caption = 'Cliente sujeto a retenci'#243'n'
+                  DataBinding.DataField = 'ESRETENCIONES_CLIENTE_PED'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ValueChecked = 'S'
+                  Properties.ValueUnchecked = 'N'
+                  Style.TransparentBorder = False
+                  TabOrder = 13
+                  Transparent = True
+                end
+                object chkTotalesESRETENCIONES_EMPRESA_PED: TcxDBCheckBox
+                  Left = 56
+                  Top = 325
+                  Caption = 'Empresa aplica retenci'#243'n'
+                  DataBinding.DataField = 'ESRETENCIONES_EMPRESA_PED'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ValueChecked = 'S'
+                  Properties.ValueUnchecked = 'N'
+                  Style.TransparentBorder = False
+                  TabOrder = 14
+                  Transparent = True
+                end
+                object grpDesgloseImpuestos: TGroupBox
+                  Left = 384
+                  Top = 11
+                  Width = 525
+                  Height = 318
+                  Caption = 'Desglose Impuestos'
+                  TabOrder = 15
+                  object lblTotalesTotalRe: TcxLabel
+                    Left = 438
+                    Top = 40
+                    Caption = 'Total R.E.'
+                    TabOrder = 0
+                    Transparent = True
+                  end
+                  object lblTotalesPorRe: TcxLabel
+                    Left = 388
+                    Top = 40
+                    Caption = '%R.E.'
+                    TabOrder = 1
+                    Transparent = True
+                  end
+                  object lblTotalesTotalIva: TcxLabel
+                    Left = 300
+                    Top = 40
+                    Caption = 'Total IVA'
+                    TabOrder = 2
+                    Transparent = True
+                  end
+                  object lblTotalesPorIva: TcxLabel
+                    Left = 244
+                    Top = 40
+                    Caption = '%IVA'
+                    TabOrder = 3
+                    Transparent = True
+                  end
+                  object lblTotalesBaseNeta: TcxLabel
+                    Left = 142
+                    Top = 40
+                    Caption = 'BaseNeta'
+                    TabOrder = 4
+                    Transparent = True
+                  end
+                  object lblTotalesIVAN: TcxLabel
+                    Left = 90
+                    Top = 82
+                    Caption = 'Normal'
+                    TabOrder = 5
+                    Transparent = True
+                  end
+                  object lblTotalesIVAR: TcxLabel
+                    Left = 73
+                    Top = 133
+                    Caption = 'Reducido'
+                    TabOrder = 6
+                    Transparent = True
+                  end
+                  object lblTotalesIVAS: TcxLabel
+                    Left = 21
+                    Top = 181
+                    Caption = 'S'#250'per Reducido'
+                    TabOrder = 7
+                    Transparent = True
+                  end
+                  object lblTotalesIVAE: TcxLabel
+                    Left = 94
+                    Top = 229
+                    Caption = 'Exento'
+                    TabOrder = 8
+                    Transparent = True
+                  end
+                  object curTotalesTOTAL_BASEI_IVAN_PED: TcxDBCurrencyEdit
+                    Left = 132
+                    Top = 78
+                    DataBinding.DataField = 'TOTAL_BASEI_IVAN_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 9
+                    Width = 105
+                  end
+                  object curTotalesTOTAL_BASEI_IVAR_PED: TcxDBCurrencyEdit
+                    Left = 132
+                    Top = 132
+                    DataBinding.DataField = 'TOTAL_BASEI_IVAR_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 10
+                    Width = 105
+                  end
+                  object curTotalesTOTAL_BASEI_IVAS_PED: TcxDBCurrencyEdit
+                    Left = 132
+                    Top = 180
+                    DataBinding.DataField = 'TOTAL_BASEI_IVAS_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 11
+                    Width = 105
+                  end
+                  object curTotalesTOTAL_BASEI_IVAE_PED: TcxDBCurrencyEdit
+                    Left = 132
+                    Top = 228
+                    DataBinding.DataField = 'TOTAL_BASEI_IVAE_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 12
+                    Width = 105
+                  end
+                  object curTotalesTOTAL_IVAN_PED: TcxDBCurrencyEdit
+                    Left = 296
+                    Top = 78
+                    DataBinding.DataField = 'TOTAL_IVAN_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 13
+                    Width = 86
+                  end
+                  object curTotalesTOTAL_IVAR_PED: TcxDBCurrencyEdit
+                    Left = 296
+                    Top = 132
+                    DataBinding.DataField = 'TOTAL_IVAR_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 14
+                    Width = 86
+                  end
+                  object curTotalesTOTAL_IVAS_PED: TcxDBCurrencyEdit
+                    Left = 296
+                    Top = 180
+                    DataBinding.DataField = 'TOTAL_IVAS_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 15
+                    Width = 86
+                  end
+                  object curTotalesTOTAL_IVAE_PED: TcxDBCurrencyEdit
+                    Left = 296
+                    Top = 228
+                    DataBinding.DataField = 'TOTAL_IVAE_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 16
+                    Width = 86
+                  end
+                  object curTotalesTOTAL_REN_PED: TcxDBCurrencyEdit
+                    Left = 442
+                    Top = 78
+                    DataBinding.DataField = 'TOTAL_REN_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 17
+                    Width = 75
+                  end
+                  object curTotalesTOTAL_RER_PED: TcxDBCurrencyEdit
+                    Left = 442
+                    Top = 132
+                    DataBinding.DataField = 'TOTAL_RER_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 18
+                    Width = 75
+                  end
+                  object curTotalesTOTAL_RES_PED: TcxDBCurrencyEdit
+                    Left = 442
+                    Top = 180
+                    DataBinding.DataField = 'TOTAL_RES_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 19
+                    Width = 75
+                  end
+                  object curTotalesTOTAL_REE_PED: TcxDBCurrencyEdit
+                    Left = 442
+                    Top = 228
+                    DataBinding.DataField = 'TOTAL_REE_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 20
+                    Width = 75
+                  end
+                  object spnTotalesPORCENTAJE_IVAN_PED: TcxDBSpinEdit
+                    Left = 238
+                    Top = 78
+                    DataBinding.DataField = 'PORCENTAJE_IVAN_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.AssignedValues.MinValue = True
+                    Properties.DisplayFormat = '0 %'
+                    Properties.EditFormat = '0 %'
+                    Properties.MaxValue = 100.000000000000000000
+                    Properties.ReadOnly = True
+                    Properties.SpinButtons.Visible = False
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 21
+                    Width = 55
+                  end
+                  object spnTotalesPORCENTAJE_IVAR_PED: TcxDBSpinEdit
+                    Left = 238
+                    Top = 132
+                    DataBinding.DataField = 'PORCENTAJE_IVAR_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.AssignedValues.MinValue = True
+                    Properties.DisplayFormat = '0 %'
+                    Properties.EditFormat = '0 %'
+                    Properties.MaxValue = 100.000000000000000000
+                    Properties.ReadOnly = True
+                    Properties.SpinButtons.Visible = False
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 22
+                    Width = 55
+                  end
+                  object spnTotalesPORCENTAJE_IVAS_PED: TcxDBSpinEdit
+                    Left = 238
+                    Top = 180
+                    DataBinding.DataField = 'PORCENTAJE_IVAS_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.AssignedValues.MinValue = True
+                    Properties.DisplayFormat = '0 %'
+                    Properties.EditFormat = '0 %'
+                    Properties.MaxValue = 100.000000000000000000
+                    Properties.ReadOnly = True
+                    Properties.SpinButtons.Visible = False
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 23
+                    Width = 55
+                  end
+                  object spnTotalesPORCENTAJE_IVAE_PED: TcxDBSpinEdit
+                    Left = 238
+                    Top = 228
+                    DataBinding.DataField = 'PORCENTAJE_IVAE_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.AssignedValues.MinValue = True
+                    Properties.DisplayFormat = '0 %'
+                    Properties.EditFormat = '0 %'
+                    Properties.MaxValue = 100.000000000000000000
+                    Properties.ReadOnly = True
+                    Properties.SpinButtons.Visible = False
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 24
+                    Width = 55
+                  end
+                  object spnTotalesPORCENTAJE_REN_PED: TcxDBSpinEdit
+                    Left = 388
+                    Top = 78
+                    DataBinding.DataField = 'PORCENTAJE_REN_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.AssignedValues.MinValue = True
+                    Properties.DisplayFormat = '0.00 %'
+                    Properties.EditFormat = '0.00 %'
+                    Properties.MaxValue = 100.000000000000000000
+                    Properties.ReadOnly = True
+                    Properties.SpinButtons.Visible = False
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 25
+                    Width = 53
+                  end
+                  object spnTotalesPORCENTAJE_RER_PED: TcxDBSpinEdit
+                    Left = 388
+                    Top = 132
+                    DataBinding.DataField = 'PORCENTAJE_RER_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.AssignedValues.MinValue = True
+                    Properties.DisplayFormat = '0.00 %'
+                    Properties.EditFormat = '0.00 %'
+                    Properties.MaxValue = 100.000000000000000000
+                    Properties.ReadOnly = True
+                    Properties.SpinButtons.Visible = False
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 26
+                    Width = 53
+                  end
+                  object spnTotalesPORCENTAJE_RES_PED: TcxDBSpinEdit
+                    Left = 388
+                    Top = 180
+                    DataBinding.DataField = 'PORCENTAJE_RES_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.AssignedValues.MinValue = True
+                    Properties.DisplayFormat = '0.00 %'
+                    Properties.EditFormat = '0.00 %'
+                    Properties.MaxValue = 100.000000000000000000
+                    Properties.ReadOnly = True
+                    Properties.SpinButtons.Visible = False
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 27
+                    Width = 53
+                  end
+                  object spnTotalesPORCENTAJE_REE_PED: TcxDBSpinEdit
+                    Left = 388
+                    Top = 228
+                    DataBinding.DataField = 'PORCENTAJE_REE_PED'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.AssignedValues.MinValue = True
+                    Properties.DisplayFormat = '0.00 %'
+                    Properties.EditFormat = '0.00 %'
+                    Properties.MaxValue = 100.000000000000000000
+                    Properties.ReadOnly = True
+                    Properties.SpinButtons.Visible = False
+                    Style.BorderStyle = ebsNone
+                    TabOrder = 28
+                    Width = 53
+                  end
+                end
+              end
+            end
             object tsAlbaranes: TcxTabSheet
               Caption = 'Albaranes'
               object cxGrdAlbaranes: TcxGrid

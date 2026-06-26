@@ -152,6 +152,7 @@ type
     actIrArticulos       : TAction;
     actIrAlbaranesCompra : TAction;
     actIrPedidosCompra   : TAction;
+    actIrProveedor       : TAction;
     pnlBottFich: TPanel;
     splSplitterFicha: TcxSplitter;
     cxPageControl2: TcxPageControl;
@@ -320,6 +321,7 @@ type
     procedure actIrArticulosExecute(Sender: TObject);
     procedure actIrAlbaranesCompraExecute(Sender: TObject);
     procedure actIrPedidosCompraExecute(Sender: TObject);
+    procedure actIrProveedorExecute(Sender: TObject);
     procedure btnDescargarFotosClick(Sender: TObject);
     procedure tvLineasEditKeyDown(
                 Sender: TcxCustomGridTableView;
@@ -625,6 +627,7 @@ begin
     if not unqrySesDocs.Active then unqrySesDocs.Open;
   end;
   tvLineas.DataController.DataSource := Dmm.dsSesionLin;
+  tvDocs.DataController.DataSource := Dmm.dsSesDocs;
 
   InicializarGestorTallas;
 
@@ -1055,6 +1058,12 @@ begin
   // ShortCut Ctrl+Shift+P. El Mto de pedidos de compra ya existe
   // (CALL_WINF='PedidosCompra' en fza_winforms).
   ShowMto(frmMtoPrincipal, 'PedidosCompra');
+end;
+
+procedure TfrmMtoComprasSesiones.actIrProveedorExecute(Sender: TObject);
+begin
+  // ShortCut Ctrl+P: abre la ficha del proveedor de la cabecera.
+  btnIrProveedorClick(Sender);
 end;
 
 procedure TfrmMtoComprasSesiones.btnDescargarFotosClick(Sender: TObject);
@@ -2124,6 +2133,10 @@ begin
     begin
       LogSes('  master.Refresh');
       Dmm.unqryTablaG.Refresh;
+      if Dmm.unqrySesDocs.Active then
+        Dmm.unqrySesDocs.Refresh
+      else
+        Dmm.unqrySesDocs.Open;
       // Mostrar todos los docs creados con boton "Ir a documento". En
       // modo distribuido salen N albaranes (uno por almacen); en modo
       // clasico solo uno. Sin docs (caso 'sin albaran ni pedido') no

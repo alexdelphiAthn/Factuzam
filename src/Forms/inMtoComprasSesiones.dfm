@@ -1728,6 +1728,11 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
       ShortCut = 24656
       OnExecute = actIrPedidosCompraExecute
     end
+    object actIrProveedor: TAction
+      Caption = 'Ir a Proveedor'
+      ShortCut = 16464
+      OnExecute = actIrProveedorExecute
+    end
   end
   object dsPrvFicha: TDataSource
     Left = 1040

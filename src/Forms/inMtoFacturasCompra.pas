@@ -129,6 +129,7 @@ type
     btnPegatinas: TcxButton;
     ActionList1: TActionList;
     actArticulos: TAction;
+    actIrProveedor: TAction;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -160,6 +161,7 @@ type
     procedure cxgrdLineasFacturaEnter(Sender: TObject);
     procedure cxgrdLineasFacturaExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
+    procedure actIrProveedorExecute(Sender: TObject);
     procedure btnFORMA_PAGO_FACCPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure btnCODIGO_PRV_FACCPropertiesEditValueChanged(Sender: TObject);
@@ -846,6 +848,21 @@ begin
     ShowMto(Self.Owner,
             'Articulos',
             FieldByName('CODIGO_ART_FACCLIN').AsString);
+end;
+
+procedure TfrmMtoFacturasCompra.actIrProveedorExecute(Sender: TObject);
+var
+  sPrv: string;
+begin
+  sPrv := '';
+  if Assigned(dmmFacturasCompra) and
+     (not dmmFacturasCompra.unqryTablaG.IsEmpty) then
+    sPrv := Trim(dmmFacturasCompra.unqryTablaG.
+                   FieldByName('CODIGO_PRV_FACC').AsString);
+  if sPrv = '' then
+    ShowMto(Self.Owner, 'Proveedores')
+  else
+    ShowMto(Self.Owner, 'Proveedores', sPrv);
 end;
 
 procedure TfrmMtoFacturasCompra.btnFORMA_PAGO_FACCPropertiesButtonClick(

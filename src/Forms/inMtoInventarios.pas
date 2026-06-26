@@ -297,6 +297,7 @@ type
     procedure cdsLineasAfterInsertHook(DataSet: TDataSet);
 
     // === HELPERS ===
+    function ComprobarRecuentoRemotoDisponible: Boolean;
     function EstadoActual: string;
     function PuedeEditar: Boolean;
     procedure CargarLineasYRefrescar;
@@ -364,6 +365,16 @@ begin
     Result := [dsTablaG, dmmInventarios.dsLineas]
   else
     Result := [dsTablaG];
+end;
+
+function TfrmMtoInventarios.ComprobarRecuentoRemotoDisponible: Boolean;
+begin
+  Result := Assigned(dmmInventarios) and
+            dmmInventarios.ColumnasRecuentoRemoto;
+  if not Result then
+    ShowMessage('La base de datos no tiene aplicada la migración de recuento ' +
+                'remoto de inventarios. Ejecuta el script ' +
+                'DESARROLLOS EN CURSO\recuento_inventarios_factuzam.sql.');
 end;
 
 procedure TfrmMtoInventarios.CrearTablaPrincipal;
@@ -2593,6 +2604,8 @@ begin
     ShowMessage('Solo se puede enviar a recuento un inventario ABIERTO.');
     Exit;
   end;
+  if not ComprobarRecuentoRemotoDisponible then
+    Exit;
   sEmp    := dmmInventarios.unqryTablaG.FieldByName('CODIGO_EMP_INV').AsString;
   sAlm    := dmmInventarios.unqryTablaG.FieldByName('CODIGO_ALM_INV').AsString;
   sSerie  := dmmInventarios.unqryTablaG.FieldByName('SERIE_INV').AsString;
@@ -2636,6 +2649,8 @@ begin
     ShowMessage('No hay inventario activo.');
     Exit;
   end;
+  if not ComprobarRecuentoRemotoDisponible then
+    Exit;
   idRec := StrToInt64Def(dmmInventarios.unqryTablaG.FieldByName(
                            'ID_RECUENTO_REMOTO_INV').AsString, 0);
   if idRec <= 0 then
