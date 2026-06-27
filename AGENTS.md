@@ -32,10 +32,6 @@ debe conocer antes de tocar nada. Lectura obligatoria al arrancar.
    prompt de sistema de la sesión (`Codex/<tema>-<id>`). Si no lo está,
    pregunta antes de crear branches o pushes.
 
-6. **Pumpear la versión.** Actualizar el unit inLibGlobalVar.pas 
-     por ejemplo oVersion         := '1.0.15.202605161915.alpha'; cambiar a 
-     1.0.15.2026(mes 05)(dia 20)(empezamos en 0000 y vamos de 10 en 10).
-
 
 ---
 
