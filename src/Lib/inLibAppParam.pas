@@ -138,10 +138,11 @@ begin
       // Las claves de geometría/layout (WindowState, Left, Top, Width,
       // Height, Divider) se persisten bajo el mismo KEY_USUPER que los
       // parámetros (véase inLibLayoutForm.TLayoutSaver). No son parámetros
-      // configurables: las saltamos para que no aparezcan como huérfanas en
-      // la categoría "Otros (Heredados de BD)".
+      // configurables. appVerifactuIdInstalacion queda obsoleto: el número
+      // de instalación SIF se guarda por empresa en fza_empresas.
       if not MatchText(KeyDB, ['WindowState', 'Left', 'Top', 'Width',
-                               'Height', 'Divider']) then
+                               'Height', 'Divider',
+                               'appVerifactuIdInstalacion']) then
       begin
         if FParams.TryGetValue(KeyDB, ParamObj) then
           ParamObj.ValorActual := ValueDB
@@ -319,8 +320,9 @@ begin
     'Lugar de suscripción de la declaración responsable', tpString, '');
   RegistrarParametro('Verifactu', 'appVerifactuDeclaracionFecha',
     'Fecha de suscripción de la declaración responsable', tpString, '');
-  RegistrarParametro('Verifactu', 'appVerifactuIdInstalacion',
-    'Número de instalación del SIF (NumeroInstalacion)', tpString, '1');
+  RegistrarParametro('Verifactu', 'appVerifactuInstalacionUrl',
+    'URL del servicio de número de instalación del SIF', tpString,
+    'https://veryverifactu.com/api/instalacion.php');
   RegistrarParametro('Verifactu', 'appVerifactuDescripcionOpe',
     'Texto de DescripcionOperacion del registro de alta', tpString,
     'Venta');

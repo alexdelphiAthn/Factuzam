@@ -75,7 +75,8 @@ uses
   System.Classes, System.StrUtils, System.Hash, System.DateUtils,
   System.TimeSpan, System.NetEncoding, System.Net.HttpClient,
   System.Net.URLClient, Data.DB,
-  inLibGlobalVar, inLibAppParam, inLibVerifactu, inLibXades;
+  inLibGlobalVar, inLibAppParam, inLibVerifactu, inLibVerifactuInstalacion,
+  inLibXades;
 
 const
   // Endpoints oficiales del servicio SOAP de Verifactu. Con certificado
@@ -108,8 +109,12 @@ type
 
   // Datos de la factura y de su emisor para componer el registro
   TDatosFacturaRegistro = record
+    CodigoEmpresa:    string;
     NifEmisor:       string;
     NombreEmisor:    string;
+    NumeroInstalacion:string;
+    VersionInstalacion:string;
+    CodigoSifInstalacion:string;
     FechaFac:        TDateTime;
     FechaExpedicion: string;  // dd-mm-yyyy
     TipoFactura:     string;  // F1 / F2 / R1 / R5
@@ -319,7 +324,8 @@ begin
   try
     Qry.Connection := AConn;
     Qry.SQL.Text :=
-      ' SELECT f.NIF_EMPRESA_FAC, f.RAZON_SOCIAL_EMPRESA_FAC, ' +
+      ' SELECT f.CODIGO_EMP_FAC, f.NIF_EMPRESA_FAC, ' +
+      '        f.RAZON_SOCIAL_EMPRESA_FAC, ' +
       '        f.FECHA_FAC, f.TIPO_FAC, f.NIF_CLIENTE_FAC, ' +
       '        f.RAZON_SOCIAL_CLIENTE_FAC, ' +
       '        f.TOTAL_IMPUESTOS_FAC, f.TOTAL_LIQUIDO_FAC, ' +
@@ -336,7 +342,9 @@ begin
       '        pc.COD_ALPHA2_PAI, pc.ESMIEMBRO_UE_PAI, ' +
       '        vo.CLAVE_REGIMEN_VFO, vo.CALIFICACION_VFO, ' +
       '        vo.OPERACION_EXENTA_VFO, vo.ESREPERCUTE_IVA_VFO, ' +
-      '        e.CODIGO_CERTIFICADO_EMP, e.TITULAR_CERTIFICADO_EMP ' +
+      '        e.CODIGO_CERTIFICADO_EMP, e.TITULAR_CERTIFICADO_EMP, ' +
+      '        e.NUMERO_INSTALACION_EMP, e.VERSION_INSTALACION_EMP, ' +
+      '        e.CODIGO_SIF_INSTALACION_EMP ' +
       ' FROM fza_facturas f ' +
       ' LEFT JOIN fza_empresas e ' +
       '        ON e.CODIGO_EMP_EMP = f.CODIGO_EMP_FAC ' +
@@ -356,10 +364,18 @@ begin
     Result := not Qry.IsEmpty;
     if Result then
     begin
+      ADatos.CodigoEmpresa :=
+        Trim(Qry.FieldByName('CODIGO_EMP_FAC').AsString);
       ADatos.NifEmisor :=
         NormalizarNifVerifactu(Qry.FieldByName('NIF_EMPRESA_FAC').AsString);
       ADatos.NombreEmisor :=
         Trim(Qry.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString);
+      ADatos.NumeroInstalacion :=
+        Trim(Qry.FieldByName('NUMERO_INSTALACION_EMP').AsString);
+      ADatos.VersionInstalacion :=
+        Trim(Qry.FieldByName('VERSION_INSTALACION_EMP').AsString);
+      ADatos.CodigoSifInstalacion :=
+        Trim(Qry.FieldByName('CODIGO_SIF_INSTALACION_EMP').AsString);
       ADatos.FechaFac        := Qry.FieldByName('FECHA_FAC').AsDateTime;
       ADatos.FechaExpedicion :=
         FormatDateTime('dd-mm-yyyy', ADatos.FechaFac);
@@ -578,7 +594,9 @@ begin
       '</sum1:RegistroAnterior></sum1:Encadenamiento>';
 end;
 
-function ConstruirSistemaInformatico(AConn: TUniConnection): string;
+function ConstruirSistemaInformatico(AConn: TUniConnection;
+                                     const ADatos: TDatosFacturaRegistro):
+                                     string;
 var
   Qry:          TUniQuery;
   sMultiOT:     string;
@@ -596,7 +614,12 @@ begin
     raise Exception.Create('Parámetro appVerifactuSifNif (NIF del ' +
       'productor del software) vacío o no válido: "' + sNif + '". ' +
       'Rellenarlo en Parámetros de aplicación, categoría Verifactu.');
-  sInstalacion := oAppParams.GetString('appVerifactuIdInstalacion', '1');
+  ValidarInstalacionSif(ADatos.NumeroInstalacion,
+                        ADatos.VersionInstalacion,
+                        ADatos.CodigoSifInstalacion,
+                        ADatos.NombreEmisor,
+                        ADatos.NifEmisor);
+  sInstalacion := ADatos.NumeroInstalacion;
   // Varios obligados tributarios si hay más de una empresa activa
   sMultiOT := 'N';
   Qry := TUniQuery.Create(nil);
@@ -1115,7 +1138,7 @@ begin
         'ficha de la empresa (NIF de 9 caracteres, sin guiones).');
     ObtenerCadenaParaEnvio(AConn, ADatos.NifEmisor, ACadena);
     sFhGen := FechaHoraHusoGen(Now);
-    sSif   := ConstruirSistemaInformatico(AConn);
+    sSif   := ConstruirSistemaInformatico(AConn, ADatos);
     if ATipoOperacion = 'ANULACION' then
       ARegistro := ConstruirRegistroAnulacion(ADatos, ASerie, ANumero,
                                               ACadena, sSif, sFhGen,

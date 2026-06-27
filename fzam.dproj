@@ -623,6 +623,7 @@
         <DCCReference Include="src\Lib\inLibFacturae.pas"/>
         <DCCReference Include="src\Lib\inLibVerifactuNoVerifactuExport.pas"/>
         <DCCReference Include="src\Lib\inLibVerifactuNoVerifactuVerify.pas"/>
+        <DCCReference Include="src\verifactu\inLibVerifactuInstalacion.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactu.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactuEnvio.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactuCola.pas"/>
