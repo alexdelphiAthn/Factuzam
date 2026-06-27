@@ -136,14 +136,15 @@ HAC/1177/2024 y esquemas `SuministroLR.xsd` / `SuministroInformacion.xsd`):
   completas quedan en la consolidación.
 - **SistemaInformatico**: NombreSistemaInformatico=`Factuzam`,
   IdSistemaInformatico=`FZ`, Version=`oVersion`, productor e instalación
-  en parámetros (`appVerifactuSifNombreRazon`, `appVerifactuSifNif`,
-  `appVerifactuIdInstalacion`), IndicadorMultiplesOT según el nº de
-  empresas activas.
+  desde el productor (`appVerifactuSifNombreRazon`,
+  `appVerifactuSifNif`) y el número guardado por empresa en
+  `fza_empresas.NUMERO_INSTALACION_EMP`, IndicadorMultiplesOT según el
+  nº de empresas activas.
 
 Parámetros añadidos: `appVerifactuFirmaCertificado`,
 `appVerifactuUrlEnvioPre/Pro`, `appVerifactuSifNombreRazon`,
 `appVerifactuSifNif` (**obligatorio rellenarlo**),
-`appVerifactuIdInstalacion`, `appVerifactuDescripcionOpe`.
+`appVerifactuInstalacionUrl`, `appVerifactuDescripcionOpe`.
 
 ### Diagnóstico rápido: «AEAT [1100] Valor o tipo incorrecto del campo: NIF»
 

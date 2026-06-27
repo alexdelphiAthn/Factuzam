@@ -218,6 +218,7 @@ uses
   inLibFacturae in 'src\Lib\inLibFacturae.pas',
   inLibVerifactuNoVerifactuExport in 'src\Lib\inLibVerifactuNoVerifactuExport.pas',
   inLibVerifactuNoVerifactuVerify in 'src\Lib\inLibVerifactuNoVerifactuVerify.pas',
+  inLibVerifactuInstalacion in 'src\verifactu\inLibVerifactuInstalacion.pas',
   inLibVerifactu in 'src\verifactu\inLibVerifactu.pas',
   inLibVerifactuEnvio in 'src\verifactu\inLibVerifactuEnvio.pas',
   inLibVerifactuCola in 'src\verifactu\inLibVerifactuCola.pas',

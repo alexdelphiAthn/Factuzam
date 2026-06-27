@@ -1887,6 +1887,48 @@
               TabOrder = 9
               Width = 333
             end
+            object lblNumeroInstalacionSif: TcxLabel
+              Left = 552
+              Top = 17
+              Caption = 'N'#186' instalaci'#243'n SIF'
+              TabOrder = 11
+              Transparent = True
+            end
+            object txtNUMERO_INSTALACION_EMP: TcxDBTextEdit
+              Left = 690
+              Top = 15
+              DataBinding.DataField = 'NUMERO_INSTALACION_EMP'
+              DataBinding.DataSource = dsTablaG
+              Properties.ReadOnly = True
+              TabOrder = 12
+              Width = 196
+            end
+            object lblVersionInstalacionSif: TcxLabel
+              Left = 552
+              Top = 55
+              Caption = 'Versi'#243'n SIF'
+              TabOrder = 13
+              Transparent = True
+            end
+            object txtVERSION_INSTALACION_EMP: TcxDBTextEdit
+              Left = 690
+              Top = 53
+              DataBinding.DataField = 'VERSION_INSTALACION_EMP'
+              DataBinding.DataSource = dsTablaG
+              Properties.ReadOnly = True
+              TabOrder = 14
+              Width = 196
+            end
+            object btnGenerarInstalacionSif: TcxButton
+              Left = 552
+              Top = 88
+              Width = 334
+              Height = 28
+              Caption = 'Generar / actualizar n'#250'mero SIF'
+              TabOrder = 15
+              WordWrap = True
+              OnClick = btnGenerarInstalacionSifClick
+            end
           end
         end
       end

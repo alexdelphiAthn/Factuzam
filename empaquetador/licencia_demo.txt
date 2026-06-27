@@ -15,8 +15,8 @@ posible contratacion.
 2. Titularidad
 
 Factuzam, su codigo, diseno, estructura, formularios, informes, documentacion,
-marcas, nombres comerciales y elementos visuales son propiedad de su titular o
-de quien este haya autorizado.
+marcas, nombres comerciales y elementos visuales son propiedad de su titular, 
+Alejandro Laorden Hidalgo o de quien este haya autorizado.
 
 La entrega de esta copia DEMO no supone venta, cesion de propiedad intelectual
 ni autorizacion para explotar comercialmente el software.

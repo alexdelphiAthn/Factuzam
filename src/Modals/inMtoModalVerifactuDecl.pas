@@ -10,8 +10,8 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Declaración responsable del sistema informático de facturación            }
-{    (art. 13 del RD 1007/2023). Muestra el texto con los datos del SIF        }
-{    (nombre, versión, productor e instalación) en un memo de solo lectura.    }
+{    (art. 15 de la Orden HAC/1177/2024). Descarga la declaración pública      }
+{    del productor y la muestra en un visor HTML embebido.                     }
 {******************************************************************************}
 unit inMtoModalVerifactuDecl;
 
@@ -19,18 +19,32 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
+  System.Variants, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  Vcl.ExtCtrls, Vcl.OleCtrls, SHDocVw,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
-  cxContainer, cxEdit, cxTextEdit, cxMemo, cxButtons,
+  cxContainer, cxEdit, cxTextEdit, cxMemo, cxButtons, cxLabel,
   inMtoFrmBase;
 
 type
   TfrmModalVerifactuDecl = class(TfrmBase)
     mDeclaracion: TcxMemo;
+    pnlInstalacion: TPanel;
+    lblInstalacionTitulo: TcxLabel;
+    lblInstalacionNumero: TcxLabel;
+    lblInstalacionEstado: TcxLabel;
+    btnGenerarInstalacion: TcxButton;
     pnlButton: TPanel;
+    btnImprimir: TcxButton;
     btnAceptar: TcxButton;
+    procedure btnGenerarInstalacionClick(Sender: TObject);
+    procedure btnImprimirClick(Sender: TObject);
   private
+    FWebDeclaracion: TWebBrowser;
+    FHtmlDeclaracion: string;
+    procedure AsegurarVisorHtml;
+    procedure ActualizarInstalacion;
     procedure CargarTexto;
+    procedure MostrarErrorDeclaracion(const AMensaje: string);
   public
     class procedure Ejecutar(AOwner: TComponent);
   end;
@@ -38,202 +52,403 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibAppParam, inLibVerifactu;
+  System.IOUtils, System.Net.HttpClient, System.Net.URLClient,
+  Data.DB, Uni,
+  inLibGlobalVar, inLibVerifactuInstalacion;
 
 {$R *.dfm}
 
-function ValorDeclaracion(const AValor, APendiente: string): string;
-begin
-  if Trim(AValor) <> '' then
-    Result := Trim(AValor)
-  else
-    Result := APendiente;
-end;
+const
+  cUrlDeclaracionResponsable =
+    'https://veryverifactu.com/declaracion.html';
 
-function ConstruirTextoDeclaracion(const AProductor,
-                                   ANif,
-                                   ADireccion,
-                                   ALugar,
-                                   AFecha,
-                                   AInstalacion: string;
-                                   AModo: TModoVerifactu): string;
+function AjustarHtmlParaVisor(const AHtml: string): string;
 var
-  sModalidad: string;
-  sApartadoD: string;
-  sApartadoE: string;
-  sApartadoG: string;
-  sApartadoM: string;
-  sInfoModalidad: string;
-  sQr: string;
+  iPosHead: Integer;
+  sHtmlMin: string;
+  sBase:    string;
 begin
-  case AModo of
-    mvNoVerifactu:
+  Result   := AHtml;
+  sHtmlMin := AnsiLowerCase(Result);
+  if Pos('<base ', sHtmlMin) = 0 then
+  begin
+    iPosHead := Pos('<head>', sHtmlMin);
+    if iPosHead > 0 then
     begin
-      sModalidad := 'NO VERI*FACTU';
-      sApartadoD :=
-        'Factuzam es un sistema informático de facturación desarrollado en ' +
-        'Delphi VCL para equipos Windows, con base de datos MariaDB y acceso ' +
-        'a datos mediante UniDAC. Puede trabajar en instalaciones locales o ' +
-        'en red, con una o varias empresas configuradas como obligados ' +
-        'tributarios diferenciados. Permite emitir facturas completas y ' +
-        'facturas simplificadas, conservar sus registros de facturación, ' +
-        'generar la huella o hash encadenada, registrar eventos relevantes, ' +
-        'gestionar altas, anulaciones, rectificaciones y subsanaciones, ' +
-        'firmar electrónicamente los registros y eventos fiscales y preparar ' +
-        'su exportación o conservación en modalidad NO VERI*FACTU.';
-      sApartadoE :=
-        'N - No. Factuzam no se ha producido para funcionar exclusivamente ' +
-        'como «SOLO VERI*FACTU», ya que también contempla la modalidad ' +
-        'NO VERI*FACTU. La modalidad declarada en este texto es ' +
-        'NO VERI*FACTU: el sistema genera, encadena, firma, conserva y ' +
-        'permite exportar los registros de facturación y de evento ' +
-        'exigibles.';
-      sApartadoG :=
-        'En modalidad NO VERI*FACTU se utiliza firma electrónica XAdES ' +
-        'enveloped con certificado electrónico de la empresa emisora ' +
-        'seleccionado en la ficha de empresa y disponible en el almacén ' +
-        'personal de certificados de Windows. La firma se realiza con ' +
-        'algoritmos SHA-256/RSA y conserva los datos identificativos del ' +
-        'certificado firmante, incluyendo serie, titular y huella.';
-      sInfoModalidad :=
-        'Modalidad NO VERI*FACTU: los registros de facturación se generan ' +
-        'en el sistema, se encadenan mediante huella, se firman con el ' +
-        'certificado configurado y quedan conservados para consulta, ' +
-        'exportación y puesta a disposición cuando proceda. La ausencia de ' +
-        'remisión automática no elimina la obligación de conservar los ' +
-        'registros íntegros, trazables, accesibles y legibles.';
-      sQr :=
-        'Código QR tributario: las facturas emitidas en esta modalidad ' +
-        'mantienen los datos necesarios de identificación y cotejo conforme ' +
-        'al diseño fiscal aplicable, sin que exista remisión automática ' +
-        'continuada a la AEAT.';
-    end;
-    else
-    begin
-      sModalidad := 'VERI*FACTU';
-      sApartadoD :=
-        'Factuzam es un sistema informático de facturación desarrollado en ' +
-        'Delphi VCL para equipos Windows, con base de datos MariaDB y acceso ' +
-        'a datos mediante UniDAC. Puede trabajar en instalaciones locales o ' +
-        'en red, con una o varias empresas configuradas como obligados ' +
-        'tributarios diferenciados. Permite emitir facturas completas y ' +
-        'facturas simplificadas, conservar sus registros de facturación, ' +
-        'generar la huella o hash encadenada, registrar eventos relevantes, ' +
-        'gestionar altas, anulaciones, rectificaciones y subsanaciones, ' +
-        'generar el código QR tributario y remitir los registros de ' +
-        'facturación a la AEAT en modalidad VERI*FACTU.';
-      sApartadoE :=
-        'N - No. Factuzam no se ha producido para funcionar exclusivamente ' +
-        'como «SOLO VERI*FACTU», ya que también contempla la modalidad ' +
-        'NO VERI*FACTU. La modalidad declarada en este texto es VERI*FACTU: ' +
-        'el sistema trabaja como sistema de emisión de facturas ' +
-        'verificables, con remisión continuada, segura, correcta, íntegra, ' +
-        'automática, ' +
-        'consecutiva, instantánea y fehaciente de los registros de ' +
-        'facturación generados.';
-      sApartadoG :=
-        'No procede para la modalidad VERI*FACTU declarada. La comunicación ' +
-        'con la AEAT se realiza mediante los mecanismos de identificación y ' +
-        'autenticación exigidos para la remisión de registros. Si se activa ' +
-        'la modalidad NO VERI*FACTU, el sistema firma electrónicamente los ' +
-        'registros mediante XAdES con certificado de empresa.';
-      sInfoModalidad :=
-        'Modalidad VERI*FACTU: los registros de facturación se generan y se ' +
-        'remiten electrónicamente a la AEAT desde la cola de envíos. El ' +
-        'sistema conserva el estado de cada envío, la respuesta recibida y ' +
-        'la información de trazabilidad necesaria para revisar incidencias.';
-      sQr :=
-        'Código QR tributario: las facturas emitidas en modalidad ' +
-        'VERI*FACTU incluyen el código QR de cotejo exigido para su ' +
-        'verificación.';
+      sBase := sLineBreak +
+        '    <base href="https://veryverifactu.com/">';
+      Insert(sBase, Result, iPosHead + Length('<head>'));
     end;
   end;
-  sApartadoM :=
-    'Se utiliza DelphiZXingQRCode, port de ZXing QRCode a Delphi por ' +
-    'Debenu Pty Ltd, distribuido bajo licencia Apache 2.0 e integrado ' +
-    'como código fuente en Factuzam. Su funcionalidad se limita a generar ' +
-    'la matriz/imagen del código QR a partir de la URL tributaria ya ' +
-    'construida por Factuzam. No asume la generación de registros de ' +
-    'facturación, huellas, encadenamiento, firma, conservación, ' +
-    'exportación ni remisión a la AEAT.';
+end;
+
+function DescargarHtmlDeclaracion: string;
+var
+  oHttp: THTTPClient;
+  oResp: IHTTPResponse;
+begin
+  Result := '';
+  oHttp  := THTTPClient.Create;
+  try
+    oHttp.ConnectionTimeout := 15000;
+    oHttp.ResponseTimeout   := 30000;
+    oResp := oHttp.Get(cUrlDeclaracionResponsable);
+    if oResp.StatusCode <> 200 then
+    begin
+      raise Exception.CreateFmt('El servidor respondió con HTTP %d %s.',
+        [oResp.StatusCode, oResp.StatusText]);
+    end;
+    Result := oResp.ContentAsString(TEncoding.UTF8);
+    if Trim(Result) = '' then
+      raise Exception.Create('La declaración descargada está vacía.');
+  finally
+    FreeAndNil(oHttp);
+  end;
+end;
+
+function GuardarHtmlTemporal(const AHtml: string): string;
+begin
+  Result := TPath.Combine(TPath.GetTempPath,
+    'factuzam_declaracion_responsable.html');
+  TFile.WriteAllText(Result, AHtml, TEncoding.UTF8);
+end;
+
+function GuardarHtmlTemporalImpresion(const AHtml: string): string;
+begin
+  Result := TPath.Combine(TPath.GetTempPath,
+    'factuzam_declaracion_responsable_impresion.html');
+  TFile.WriteAllText(Result, AHtml, TEncoding.UTF8);
+end;
+
+function HtmlTexto(const AValor: string): string;
+begin
+  Result := StringReplace(AValor, '&', '&amp;', [rfReplaceAll]);
+  Result := StringReplace(Result, '<', '&lt;', [rfReplaceAll]);
+  Result := StringReplace(Result, '>', '&gt;', [rfReplaceAll]);
+  Result := StringReplace(Result, '"', '&quot;', [rfReplaceAll]);
+  Result := StringReplace(Result, '''', '&#39;', [rfReplaceAll]);
+end;
+
+function CssAnexoImpresion: string;
+begin
   Result :=
-    'DECLARACIÓN RESPONSABLE DEL SISTEMA INFORMÁTICO DE FACTURACIÓN' +
+    '<style>' + sLineBreak +
+    '@media screen {.anexo-instalaciones-sif{display:none;}}' +
     sLineBreak +
-    'Modalidad declarada: ' + sModalidad +
-    sLineBreak + sLineBreak +
-    'De conformidad con el artículo 15 de la Orden HAC/1177/2024, ' +
-    'de 17 de octubre, por la que se desarrollan las especificaciones ' +
-    'técnicas, funcionales y de contenido referidas en el Reglamento ' +
-    'aprobado por el Real Decreto 1007/2023, de 5 de diciembre, y en el ' +
-    'Reglamento por el que se regulan las obligaciones de facturación, ' +
-    'aprobado por Real Decreto 1619/2012, de 30 de noviembre, se hace ' +
-    'constar la siguiente declaración responsable.' +
-    sLineBreak + sLineBreak +
-    'A - Nombre del sistema informático: Factuzam' + sLineBreak +
-    'B - Código identificador del sistema informático: FZ' + sLineBreak +
-    'C - Identificador completo de la versión: ' + oVersion + sLineBreak +
-    'D - Componentes, hardware y software, y principales funcionalidades: ' +
-    sApartadoD + sLineBreak + sLineBreak +
-    'E - Indicación de si el sistema informático funciona exclusivamente ' +
-    'como «VERI*FACTU»: ' + sApartadoE + sLineBreak +
-    'F - Indicación de si permite ser usado por varios obligados ' +
-    'tributarios: Sí. Factuzam permite gestionar varios obligados ' +
-    'tributarios mediante empresas diferenciadas, manteniendo separados ' +
-    'los datos y registros de facturación de cada obligado tributario.' +
+    '@media print {' + sLineBreak +
+    '  .anexo-instalaciones-sif{display:block;break-before:page;' +
+    'page-break-before:always;margin-top:24px;font-size:11px;}' +
     sLineBreak +
-    'G - Tipos de firma utilizados si no es «VERI*FACTU»: ' +
-    sApartadoG + sLineBreak +
-    'H - Nombre y apellidos de la persona o razón social de la entidad ' +
-    'productora: ' +
-    ValorDeclaracion(AProductor, 'Pendiente de configurar') + sLineBreak +
-    'I - Número de identificación fiscal (NIF): ' +
-    ValorDeclaracion(ANif, 'Pendiente de configurar') + sLineBreak +
-    'J - Dirección postal completa de contacto: ' +
-    ValorDeclaracion(ADireccion,
-      'Calle Cascajal, 7 1ºB 49159 Villaralbo (Zamora)') + sLineBreak +
-    'K - Declaración de cumplimiento normativo: ' +
-    ValorDeclaracion(AProductor, 'El productor') +
-    ' deja constancia de que el sistema informático Factuzam, en la ' +
-    'versión indicada y en la modalidad declarada, cumple con lo dispuesto ' +
-    'en el artículo 29.2.j) de la Ley 58/2003, de 17 de diciembre, ' +
-    'General Tributaria, en el Reglamento aprobado por el Real Decreto ' +
-    '1007/2023, de 5 de diciembre, en la Orden HAC/1177/2024 y en las ' +
-    'especificaciones publicadas por la Agencia Estatal de Administración ' +
-    'Tributaria que completan dicha orden.' + sLineBreak +
-    'L - Fecha y lugar de suscripción: ' +
-    ValorDeclaracion(ALugar, 'Lugar pendiente de configurar') + ', ' +
-    ValorDeclaracion(AFecha, 'fecha pendiente de configurar') +
+    '  .anexo-instalaciones-sif h2{font-size:18px;margin:0 0 8px;}' +
     sLineBreak +
-    'M - Componentes funcionales (CF) de terceros: ' +
-    sApartadoM +
+    '  .anexo-instalaciones-sif p{margin:0 0 12px;}' + sLineBreak +
+    '  .anexo-instalaciones-sif table{width:100%;border-collapse:collapse;}' +
+    sLineBreak +
+    '  .anexo-instalaciones-sif th,.anexo-instalaciones-sif td{' +
+    'border:1px solid #777;padding:5px 6px;vertical-align:top;}' +
+    sLineBreak +
+    '  .anexo-instalaciones-sif th{background:#eee;text-align:left;}' +
+    sLineBreak +
+    '}' + sLineBreak +
+    '</style>' + sLineBreak;
+end;
+
+function EstadoEmpresaInstalacion(const ANumero, AVersion,
+                                  ACodigoSif: string): string;
+begin
+  if Trim(ANumero) = '' then
+  begin
+    Result := 'Pendiente';
+  end
+  else if not SameText(Trim(ACodigoSif), cCodigoSifFactuzam) then
+  begin
+    Result := 'SIF distinto';
+  end
+  else if not SameText(Trim(AVersion), oVersion) then
+  begin
+    Result := 'Requiere regenerar';
+  end
+  else
+  begin
+    Result := 'Válido';
+  end;
+end;
+
+function AnexoEmpresasInstalacionHtml: string;
+var
+  Qry:       TUniQuery;
+  sFilas:    string;
+  sActivo:   string;
+  sNumero:   string;
+  sVersion:  string;
+  sCodigoSif:string;
+  sEstado:   string;
+  sInstante: string;
+  iTotal:    Integer;
+begin
+  sFilas := '';
+  iTotal := 0;
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := oConn;
+    Qry.SQL.Text :=
+      ' SELECT CODIGO_EMP_EMP, RAZON_SOCIAL_EMP, NIF_EMP, ESACTIVO_EMP, ' +
+      '        NUMERO_INSTALACION_EMP, VERSION_INSTALACION_EMP, ' +
+      '        CODIGO_SIF_INSTALACION_EMP, INSTANTE_INSTALACION_EMP ' +
+      ' FROM fza_empresas ' +
+      ' ORDER BY IF(ESACTIVO_EMP = ''S'', 0, 1), ORDEN_EMP, ' +
+      '          CODIGO_EMP_EMP ';
+    Qry.Open;
+    while not Qry.Eof do
+    begin
+      Inc(iTotal);
+      sNumero := Trim(Qry.FieldByName('NUMERO_INSTALACION_EMP').AsString);
+      sVersion := Trim(Qry.FieldByName('VERSION_INSTALACION_EMP').AsString);
+      sCodigoSif :=
+        Trim(Qry.FieldByName('CODIGO_SIF_INSTALACION_EMP').AsString);
+      sEstado := EstadoEmpresaInstalacion(sNumero, sVersion, sCodigoSif);
+      if Qry.FieldByName('ESACTIVO_EMP').AsString = 'S' then
+      begin
+        sActivo := 'Sí';
+      end
+      else
+      begin
+        sActivo := 'No';
+      end;
+      if Qry.FieldByName('INSTANTE_INSTALACION_EMP').IsNull then
+      begin
+        sInstante := '';
+      end
+      else
+      begin
+        sInstante := FormatDateTime('dd/mm/yyyy hh:nn',
+          Qry.FieldByName('INSTANTE_INSTALACION_EMP').AsDateTime);
+      end;
+      if sNumero = '' then
+      begin
+        sNumero := '(pendiente)';
+      end;
+      if sVersion = '' then
+      begin
+        sVersion := '(pendiente)';
+      end;
+      if sCodigoSif = '' then
+      begin
+        sCodigoSif := '(pendiente)';
+      end;
+      sFilas := sFilas +
+        '<tr>' +
+        '<td>' + HtmlTexto(Qry.FieldByName('CODIGO_EMP_EMP').AsString) +
+        '</td>' +
+        '<td>' + HtmlTexto(Qry.FieldByName('RAZON_SOCIAL_EMP').AsString) +
+        '</td>' +
+        '<td>' + HtmlTexto(Qry.FieldByName('NIF_EMP').AsString) + '</td>' +
+        '<td>' + HtmlTexto(sActivo) + '</td>' +
+        '<td>' + HtmlTexto(sNumero) + '</td>' +
+        '<td>' + HtmlTexto(sVersion) + '</td>' +
+        '<td>' + HtmlTexto(sCodigoSif) + '</td>' +
+        '<td>' + HtmlTexto(sInstante) + '</td>' +
+        '<td>' + HtmlTexto(sEstado) + '</td>' +
+        '</tr>' + sLineBreak;
+      Qry.Next;
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
+  if iTotal = 0 then
+  begin
+    sFilas :=
+      '<p>No hay empresas configuradas en esta base de datos.</p>';
+  end
+  else
+  begin
+    sFilas :=
+      '<table>' + sLineBreak +
+      '<thead><tr>' +
+      '<th>Código</th><th>Razón social</th><th>NIF</th><th>Activa</th>' +
+      '<th>Nº instalación</th><th>Versión</th><th>SIF</th>' +
+      '<th>Fecha generación</th><th>Estado</th>' +
+      '</tr></thead>' + sLineBreak +
+      '<tbody>' + sLineBreak + sFilas + '</tbody></table>';
+  end;
+  Result :=
+    '<section class="anexo-instalaciones-sif">' + sLineBreak +
+    '<h2>Anexo: empresas e instalaciones SIF</h2>' + sLineBreak +
+    '<p>Relación de empresas configuradas en Factuzam para el SIF FZ ' +
+    'en la versión ' + HtmlTexto(oVersion) + '.</p>' + sLineBreak +
+    sFilas + sLineBreak +
+    '</section>' + sLineBreak;
+end;
+
+function AgregarAnexoImpresion(const AHtml: string): string;
+var
+  iPosBody: Integer;
+  sHtmlMin: string;
+  sBloque:  string;
+begin
+  Result := AHtml;
+  sBloque := CssAnexoImpresion + AnexoEmpresasInstalacionHtml;
+  sHtmlMin := AnsiLowerCase(Result);
+  iPosBody := Pos('</body>', sHtmlMin);
+  if iPosBody > 0 then
+  begin
+    Insert(sBloque, Result, iPosBody);
+  end
+  else
+  begin
+    Result := Result + sLineBreak + sBloque;
+  end;
+end;
+
+function EsperarCargaWeb(AWeb: TWebBrowser; ATiempoMaxMs: Cardinal): Boolean;
+var
+  iInicio: Cardinal;
+begin
+  Result := False;
+  iInicio := GetTickCount;
+  while (GetTickCount - iInicio) < ATiempoMaxMs do
+  begin
+    Application.ProcessMessages;
+    if AWeb.ReadyState = READYSTATE_COMPLETE then
+    begin
+      Result := True;
+    end;
+    if Result then
+    begin
+      Break;
+    end;
+    Sleep(50);
+  end;
+end;
+
+procedure TfrmModalVerifactuDecl.AsegurarVisorHtml;
+begin
+  if FWebDeclaracion = nil then
+  begin
+    FWebDeclaracion := TWebBrowser.Create(Self);
+    InsertControl(FWebDeclaracion);
+    FWebDeclaracion.Align := alClient;
+    FWebDeclaracion.Silent := True;
+    FWebDeclaracion.Visible := False;
+  end;
+end;
+
+procedure TfrmModalVerifactuDecl.ActualizarInstalacion;
+var
+  oEstado: TEstadoInstalacionSif;
+  sNumero: string;
+begin
+  try
+    if ObtenerEmpresaInstalacionSifDefecto(oConn, oEstado) then
+    begin
+      sNumero := oEstado.Numero;
+      if sNumero = '' then
+        sNumero := '(pendiente)';
+      lblInstalacionTitulo.Caption :=
+        'Número de instalación SIF - ' + oEstado.RazonSocial +
+        ' (' + oEstado.Nif + ')';
+      lblInstalacionNumero.Caption :=
+        'Número: ' + sNumero + ' | Versión: ' + oEstado.Version;
+      lblInstalacionEstado.Caption := oEstado.Mensaje;
+      btnGenerarInstalacion.Enabled := not oEstado.EsValido;
+      if oEstado.EsValido then
+        lblInstalacionEstado.Style.TextColor := clGreen
+      else
+        lblInstalacionEstado.Style.TextColor := clMaroon;
+      if Trim(oEstado.Version) = '' then
+        lblInstalacionNumero.Caption :=
+          'Número: ' + sNumero + ' | Versión: (pendiente)';
+    end
+    else
+    begin
+      lblInstalacionTitulo.Caption := 'Número de instalación SIF';
+      lblInstalacionNumero.Caption := 'No hay empresa configurada.';
+      lblInstalacionEstado.Caption := '';
+      lblInstalacionEstado.Style.TextColor := clMaroon;
+      btnGenerarInstalacion.Enabled := False;
+    end;
+  except
+    on E: Exception do
+    begin
+      lblInstalacionTitulo.Caption := 'Número de instalación SIF';
+      lblInstalacionNumero.Caption := 'No se pudo leer fza_empresas.';
+      lblInstalacionEstado.Caption := E.Message;
+      lblInstalacionEstado.Style.TextColor := clMaroon;
+      btnGenerarInstalacion.Enabled := False;
+    end;
+  end;
+end;
+
+procedure TfrmModalVerifactuDecl.btnImprimirClick(Sender: TObject);
+var
+  sArchivo:  string;
+  sHtml:     string;
+  vEntrada:  OleVariant;
+  vSalida:   OleVariant;
+begin
+  btnImprimir.Enabled := False;
+  try
+    AsegurarVisorHtml;
+    if Trim(FHtmlDeclaracion) = '' then
+    begin
+      FHtmlDeclaracion := AjustarHtmlParaVisor(DescargarHtmlDeclaracion);
+    end;
+    sHtml := AgregarAnexoImpresion(FHtmlDeclaracion);
+    sArchivo := GuardarHtmlTemporalImpresion(sHtml);
+    FWebDeclaracion.Navigate(sArchivo);
+    if not EsperarCargaWeb(FWebDeclaracion, 15000) then
+    begin
+      raise Exception.Create('No se pudo preparar el documento de ' +
+        'impresión.');
+    end;
+    vEntrada := EmptyParam;
+    vSalida := EmptyParam;
+    FWebDeclaracion.ExecWB(OLECMDID_PRINT, OLECMDEXECOPT_PROMPTUSER,
+      vEntrada, vSalida);
+    FWebDeclaracion.Navigate(GuardarHtmlTemporal(FHtmlDeclaracion));
+  except
+    on E: Exception do
+    begin
+      ShowMessage('No se pudo imprimir la declaración responsable:' +
+        sLineBreak + E.Message);
+    end;
+  end;
+  btnImprimir.Enabled := True;
+end;
+
+procedure TfrmModalVerifactuDecl.btnGenerarInstalacionClick(Sender: TObject);
+var
+  oEstado: TEstadoInstalacionSif;
+begin
+  btnGenerarInstalacion.Enabled := False;
+  lblInstalacionEstado.Caption := 'Solicitando número al servicio...';
+  Application.ProcessMessages;
+  try
+    oEstado := GenerarInstalacionSifEmpresa(oConn, '');
+    lblInstalacionEstado.Caption := 'Número disponible y guardado.';
+    ShowMessage('Número de instalación SIF disponible: ' + oEstado.Numero);
+  except
+    on E: Exception do
+      ShowMessage('No se pudo generar el número de instalación SIF:' +
+        sLineBreak + E.Message);
+  end;
+  ActualizarInstalacion;
+end;
+
+procedure TfrmModalVerifactuDecl.MostrarErrorDeclaracion(
+  const AMensaje: string);
+begin
+  if FWebDeclaracion <> nil then
+    FWebDeclaracion.Visible := False;
+  mDeclaracion.Visible := True;
+  mDeclaracion.BringToFront;
+  mDeclaracion.Lines.Text :=
+    'No se ha podido descargar la declaración responsable.' +
     sLineBreak + sLineBreak +
-    'Información adicional de cumplimiento' + sLineBreak + sLineBreak +
-    'Integridad e inalterabilidad: una factura registrada no se modifica ' +
-    'directamente; las correcciones se realizan mediante los registros ' +
-    'posteriores que correspondan, conservando el rastro fiscal.' +
+    'URL: ' + cUrlDeclaracionResponsable +
     sLineBreak + sLineBreak +
-    'Trazabilidad: los registros de facturación y, cuando proceda, los ' +
-    'registros de evento se encadenan mediante huella o hash para poder ' +
-    'seguir su secuencia cronológica.' + sLineBreak + sLineBreak +
-    'Conservación, accesibilidad y legibilidad: el sistema conserva los ' +
-    'datos fiscales necesarios, permite consultar la cola de envíos y el ' +
-    'registro fiscal, y facilita la revisión de incidencias.' +
-    sLineBreak + sLineBreak +
-    sInfoModalidad + sLineBreak + sLineBreak +
-    sQr + sLineBreak + sLineBreak +
-    'Responsabilidades del usuario: el obligado tributario usuario del ' +
-    'sistema es responsable de la veracidad de los datos introducidos, ' +
-    'de la correcta aplicación de la normativa tributaria, de custodiar ' +
-    'sus copias de seguridad y de no manipular los registros de ' +
-    'facturación ni de evento.' + sLineBreak + sLineBreak +
-    'Ubicación de la declaración: esta declaración se encuentra ' +
-    'disponible dentro de la aplicación en Verifactu > Declaración ' +
-    'Responsable, de forma legible, individualizada y accesible para el ' +
-    'usuario.' + sLineBreak + sLineBreak +
-    'Número de instalación del SIF: ' +
-    ValorDeclaracion(AInstalacion, '1') + sLineBreak +
-    'Fecha de consulta de esta declaración: ' +
-    FormatDateTime('dd/mm/yyyy hh:nn', Now);
+    'Detalle: ' + AMensaje;
+  mDeclaracion.SelStart := 0;
 end;
 
 class procedure TfrmModalVerifactuDecl.Ejecutar(AOwner: TComponent);
@@ -242,6 +457,7 @@ var
 begin
   frm := TfrmModalVerifactuDecl.Create(AOwner);
   try
+    frm.ActualizarInstalacion;
     frm.CargarTexto;
     frm.ShowModal;
   finally
@@ -251,51 +467,27 @@ end;
 
 procedure TfrmModalVerifactuDecl.CargarTexto;
 var
-  sProductor:   string;
-  sNif:         string;
-  sDireccion:   string;
-  sLugar:       string;
-  sFecha:       string;
-  sInstalacion: string;
-  sTextoVerifactu: string;
-  sTextoNoVerifactu: string;
+  sArchivo: string;
 begin
-  sProductor   := oAppParams.GetString('appVerifactuSifNombreRazon',
-                                       'Alejandro Laorden Hidalgo');
-  sNif         := oAppParams.GetString('appVerifactuSifNif', '');
-  sDireccion   := oAppParams.GetString('appVerifactuSifDireccion', '');
-  sLugar       := oAppParams.GetString('appVerifactuDeclaracionLugar', '');
-  sFecha       := oAppParams.GetString('appVerifactuDeclaracionFecha', '');
-  sInstalacion := oAppParams.GetString('appVerifactuIdInstalacion', '1');
-  case ModoVerifactu of
-    mvNoVerifactu:
-      mDeclaracion.Lines.Text := ConstruirTextoDeclaracion(
-        sProductor, sNif, sDireccion, sLugar, sFecha, sInstalacion,
-        mvNoVerifactu);
-    mvVerifactu:
-      mDeclaracion.Lines.Text := ConstruirTextoDeclaracion(
-        sProductor, sNif, sDireccion, sLugar, sFecha, sInstalacion,
-        mvVerifactu);
-    else
-    begin
-      sTextoVerifactu := ConstruirTextoDeclaracion(
-        sProductor, sNif, sDireccion, sLugar, sFecha, sInstalacion,
-        mvVerifactu);
-      sTextoNoVerifactu := ConstruirTextoDeclaracion(
-        sProductor, sNif, sDireccion, sLugar, sFecha, sInstalacion,
-        mvNoVerifactu);
-      mDeclaracion.Lines.Text :=
-        'Modo fiscal actual: SIN.' + sLineBreak +
-        'No hay una modalidad fiscal Verifactu activa. Se muestran las dos ' +
-        'declaraciones tipo disponibles para la versión actual.' +
-        sLineBreak + sLineBreak +
-        sTextoVerifactu + sLineBreak + sLineBreak +
-        '------------------------------------------------------------' +
-        sLineBreak + sLineBreak +
-        sTextoNoVerifactu;
-    end;
-  end;
+  mDeclaracion.Visible := True;
+  mDeclaracion.Lines.Text :=
+    'Descargando declaración responsable...' +
+    sLineBreak + sLineBreak +
+    cUrlDeclaracionResponsable;
   mDeclaracion.SelStart := 0;
+  Application.ProcessMessages;
+  try
+    AsegurarVisorHtml;
+    FHtmlDeclaracion := AjustarHtmlParaVisor(DescargarHtmlDeclaracion);
+    sArchivo := GuardarHtmlTemporal(FHtmlDeclaracion);
+    mDeclaracion.Visible := False;
+    FWebDeclaracion.Visible := True;
+    FWebDeclaracion.BringToFront;
+    FWebDeclaracion.Navigate(sArchivo);
+  except
+    on E: Exception do
+      MostrarErrorDeclaracion(E.Message);
+  end;
 end;
 
 end.

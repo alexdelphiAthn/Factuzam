@@ -146,7 +146,7 @@ uses
   Vcl.Imaging.pngimage,
   DelphiZXIngQRCode, frxDBSet,
   inLibGlobalVar, inLibAppParam, inLibFotos, inLibXades,
-  inLibRelojFiscal;
+  inLibRelojFiscal, inLibVerifactuInstalacion;
 
 const
   cNsEventosSif =
@@ -163,6 +163,8 @@ type
     NifProductor:    string;
     NombreProductor: string;
     IdInstalacion:   string;
+    VersionInstalacion:string;
+    CodigoSifInstalacion:string;
     EsMultiOT:       string;
   end;
 
@@ -303,8 +305,9 @@ begin
     oAppParams.GetString('appVerifactuSifNif', ''));
   ADatos.NombreProductor := oAppParams.GetString(
     'appVerifactuSifNombreRazon', 'Alejandro Laorden Hidalgo');
-  ADatos.IdInstalacion := oAppParams.GetString(
-    'appVerifactuIdInstalacion', '1');
+  ADatos.IdInstalacion := '';
+  ADatos.VersionInstalacion := '';
+  ADatos.CodigoSifInstalacion := '';
   ADatos.EsMultiOT := 'N';
   if Length(ADatos.NifProductor) <> 9 then
     raise Exception.Create('Parámetro appVerifactuSifNif vacío o no ' +
@@ -314,7 +317,8 @@ begin
     Qry.Connection := AConn;
     Qry.SQL.Text :=
       ' SELECT RAZON_SOCIAL_EMP, NIF_EMP, CODIGO_CERTIFICADO_EMP, ' +
-      '        TITULAR_CERTIFICADO_EMP, ' +
+      '        TITULAR_CERTIFICADO_EMP, NUMERO_INSTALACION_EMP, ' +
+      '        VERSION_INSTALACION_EMP, CODIGO_SIF_INSTALACION_EMP, ' +
       '        (SELECT COUNT(*) FROM fza_empresas ' +
       '          WHERE ESACTIVO_EMP = ''S'') AS NUM_EMP ' +
       ' FROM fza_empresas ' +
@@ -333,6 +337,12 @@ begin
       Trim(Qry.FieldByName('CODIGO_CERTIFICADO_EMP').AsString);
     ADatos.TitularCert :=
       Trim(Qry.FieldByName('TITULAR_CERTIFICADO_EMP').AsString);
+    ADatos.IdInstalacion :=
+      Trim(Qry.FieldByName('NUMERO_INSTALACION_EMP').AsString);
+    ADatos.VersionInstalacion :=
+      Trim(Qry.FieldByName('VERSION_INSTALACION_EMP').AsString);
+    ADatos.CodigoSifInstalacion :=
+      Trim(Qry.FieldByName('CODIGO_SIF_INSTALACION_EMP').AsString);
     if Qry.FieldByName('NUM_EMP').AsInteger > 1 then
       ADatos.EsMultiOT := 'S';
   finally
@@ -341,6 +351,11 @@ begin
   if Length(ADatos.NifObligado) <> 9 then
     raise Exception.Create('NIF de la empresa emisora vacío o no válido ' +
       'para firmar eventos NO VERI*FACTU: "' + ADatos.NifObligado + '".');
+  ValidarInstalacionSif(ADatos.IdInstalacion,
+                        ADatos.VersionInstalacion,
+                        ADatos.CodigoSifInstalacion,
+                        ADatos.NombreObligado,
+                        ADatos.NifObligado);
 end;
 
 function ConstruirSistemaInformaticoEvento(

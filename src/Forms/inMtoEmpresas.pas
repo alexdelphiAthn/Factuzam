@@ -283,6 +283,11 @@ type
     lblFormatoDocumento: TcxLabel;
     txtFORMATO_DOCUMENTO_EMP: TcxDBTextEdit;
     lblFormatoDocumentoAyuda: TcxLabel;
+    lblNumeroInstalacionSif: TcxLabel;
+    txtNUMERO_INSTALACION_EMP: TcxDBTextEdit;
+    lblVersionInstalacionSif: TcxLabel;
+    txtVERSION_INSTALACION_EMP: TcxDBTextEdit;
+    btnGenerarInstalacionSif: TcxButton;
     lblPieTicketCaja1: TcxLabel;
     lblPieTicketCaja2: TcxLabel;
     lblPieTicketCaja3: TcxLabel;
@@ -319,6 +324,7 @@ type
     procedure btnValidarClick(Sender: TObject);
     procedure txtCODIGO_PAIS_EMPRESAPropertiesChange(Sender: TObject);
     procedure btnSeleccionarCerClick(Sender: TObject);
+    procedure btnGenerarInstalacionSifClick(Sender: TObject);
   public
     dmmEmpresas: TdmEmpresas;
     procedure CrearTablaPrincipal; override;
@@ -347,6 +353,7 @@ uses
   inLibIBAN,
   inLibFotos,
   inLibGlobalVar,
+  inLibVerifactuInstalacion,
   inLibtb,
   inMtoPrincipal,
   inMtoFacturasBase,
@@ -685,6 +692,51 @@ begin
        (dmmEmpresas.unqryTablaG.State = dsEdit)) then
     dmmEmpresas.unqryTablaG.Post;
     IncorporarCertificados;
+end;
+
+procedure TfrmMtoEmpresas.btnGenerarInstalacionSifClick(Sender: TObject);
+var
+  sCodigoEmpresa: string;
+  oEstado: TEstadoInstalacionSif;
+begin
+  inherited;
+  sCodigoEmpresa := '';
+  if Assigned(dmmEmpresas) then
+  begin
+    with dmmEmpresas.unqryTablaG do
+    begin
+      if Active and (not IsEmpty) then
+      begin
+        if (State = dsInsert) or
+           (State = dsEdit) then
+        begin
+          Post;
+        end;
+        sCodigoEmpresa := Trim(FieldByName('CODIGO_EMP_EMP').AsString);
+      end;
+    end;
+  end;
+  if sCodigoEmpresa = '' then
+  begin
+    ShowMessage('No hay empresa seleccionada.');
+  end
+  else
+  begin
+    btnGenerarInstalacionSif.Enabled := False;
+    try
+      oEstado := GenerarInstalacionSifEmpresa(oConn, sCodigoEmpresa);
+      with dmmEmpresas.unqryTablaG do
+      begin
+        Close;
+        Open;
+        Locate('CODIGO_EMP_EMP', oEstado.CodigoEmpresa, []);
+      end;
+      ShowMessage('Número de instalación SIF disponible para ' +
+        oEstado.RazonSocial + ':' + sLineBreak + oEstado.Numero);
+    finally
+      btnGenerarInstalacionSif.Enabled := True;
+    end;
+  end;
 end;
 
 procedure TfrmMtoEmpresas.btnValidarClick(Sender: TObject);
