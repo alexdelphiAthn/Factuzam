@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoAlbaranes                                                }
 {    Tipo:       Formulario (Mto)                                              }
@@ -137,7 +137,7 @@ type
     lblTotalesTotalPagar: TcxLabel;
     curTotalesTOTAL_LIQUIDO_ALB: TcxDBCurrencyEdit;
     lblTotalesFormaPago: TcxLabel;
-    txtTotalesFORMA_PAGO_ALB: TcxDBTextEdit;
+    cbbTotalesFORMA_PAGO_ALB: TcxDBLookupComboBox;
     chkTotalesESIVA_RECARGO_CLIENTE_ALB: TcxDBCheckBox;
     grpDesgloseImpuestos: TGroupBox;
     lblTotalesPorIva: TcxLabel;
@@ -242,6 +242,7 @@ begin
     tvLineasAlbaran.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_ALBLIN'));
   tvFacturas.DataController.DataSource      := dmmAlbaranes.dsFacturas;
   tvMovimientos.DataController.DataSource   := dmmAlbaranes.dsMovimientosAlb;
+  cbbTotalesFORMA_PAGO_ALB.Properties.ListSource := dmmAlbaranes.dsFormasPago;
   // Clave de localizacion para ShowMto (p.ej. "Ir a documento" desde el
   // pedido de venta o navegacion hacia su pedido de origen).
   pkFieldName := 'SERIE_ALB;NUMERO_ALB';

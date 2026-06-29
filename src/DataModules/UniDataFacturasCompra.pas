@@ -38,6 +38,8 @@ type
     unqryPrvDataFacc:           TUniQuery;
     unqryArtDataLinFacc:        TUniQuery;
     unqrySkusFacc:              TUniQuery;
+    unqryFormasPago:            TUniQuery;
+    dsFormasPago:               TDataSource;
     unstrdprcGetContadorFacc:   TUniStoredProc;
     // Definicion de atributos del articulo padre (para columnas
     // dinamicas ATTR1..ATTR5 en modo "atributo por columna").
@@ -147,6 +149,7 @@ begin
   unqryPrvDataFacc.Connection           := inLibGlobalVar.oConn;
   unqryArtDataLinFacc.Connection        := inLibGlobalVar.oConn;
   unqrySkusFacc.Connection              := inLibGlobalVar.oConn;
+  unqryFormasPago.Connection            := inLibGlobalVar.oConn;
   unstrdprcGetContadorFacc.Connection   := inLibGlobalVar.oConn;
   unqryDefArticuloFacc.Connection       := inLibGlobalVar.oConn;
   // Master-detail server-side: el WHERE del SQL toma los valores de
@@ -164,6 +167,8 @@ begin
   if Assigned(unqryFacturasCompraLineas) and
      unqryFacturasCompraLineas.Active then
     unqryFacturasCompraLineas.Close;
+  if Assigned(unqryFormasPago) and unqryFormasPago.Active then
+    unqryFormasPago.Close;
   inherited;
 end;
 
@@ -205,6 +210,7 @@ begin
   AbrirConTiempo(unqryFacturasCompraLineas,
                  'unqryFacturasCompraLineas');
   AbrirConTiempo(unqryEfectos, 'unqryEfectos');
+  AbrirConTiempo(unqryFormasPago, 'unqryFormasPago');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 

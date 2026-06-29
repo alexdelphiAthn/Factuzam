@@ -119,6 +119,8 @@ type
     spnTotalesPORCENTAJE_IVAE_PEDC: TcxDBSpinEdit;
     spnTotalesPORCENTAJE_REE_PEDC: TcxDBSpinEdit;
     chkTotalesESIVA_RECARGO_COMPRAS_PEDC: TcxDBCheckBox;
+    lblTotalesFormaPago: TcxLabel;
+    cbbTotalesFORMA_PAGO_PEDC: TcxDBLookupComboBox;
     grpDesgloseImpuestos: TGroupBox;
     shpSeparador1: TShape;
     shpSeparador2: TShape;
@@ -386,6 +388,8 @@ begin
   dmmPedidosCompra.unqryPedidosCompraLineas.MasterSource := dsTablaG;
   tvAlbaranesPedc.DataController.DataSource :=
     dmmPedidosCompra.dsAlbaranesPedc;
+  cbbTotalesFORMA_PAGO_PEDC.Properties.ListSource :=
+    dmmPedidosCompra.dsFormasPago;
   dmmPedidosCompra.unqryAlbaranesPedc.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_PEDC;NUMERO_PEDC';
 end;

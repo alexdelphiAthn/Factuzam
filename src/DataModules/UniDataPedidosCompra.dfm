@@ -153,4 +153,17 @@
     Left = 360
     Top = 288
   end
+  object unqryFormasPago: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM vi_formapago')
+    ReadOnly = True
+    Left = 520
+    Top = 136
+  end
+  object dsFormasPago: TDataSource
+    DataSet = unqryFormasPago
+    Left = 520
+    Top = 200
+  end
 end

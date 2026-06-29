@@ -83,7 +83,7 @@ type
     lblCodigoAlmacen:   TcxLabel;
     txtCODIGO_ALM_FACC: TcxDBTextEdit;
     lblFormaPago: TcxLabel;
-    btnFORMA_PAGO_FACC: TcxDBButtonEdit;
+    cbbFORMA_PAGO_FACC: TcxDBLookupComboBox;
     tsEfectos: TcxTabSheet;
     pnlEfectosTop: TPanel;
     btnGenerarEfectos: TcxButton;
@@ -109,6 +109,8 @@ type
     spnTotalesPORCENTAJE_IVAE_FACC: TcxDBSpinEdit;
     spnTotalesPORCENTAJE_REE_FACC: TcxDBSpinEdit;
     chkTotalesESIVA_RECARGO_COMPRAS_FACC: TcxDBCheckBox;
+    lblTotalesFormaPago: TcxLabel;
+    cbbTotalesFORMA_PAGO_FACC: TcxDBLookupComboBox;
     grpDesgloseImpuestos: TGroupBox;
     shpSeparador1: TShape;
     shpSeparador2: TShape;
@@ -162,8 +164,6 @@ type
     procedure cxgrdLineasFacturaExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
     procedure actIrProveedorExecute(Sender: TObject);
-    procedure btnFORMA_PAGO_FACCPropertiesButtonClick(Sender: TObject;
-      AButtonIndex: Integer);
     procedure btnCODIGO_PRV_FACCPropertiesEditValueChanged(Sender: TObject);
     procedure btnGenerarEfectosClick(Sender: TObject);
     procedure btnRegistrarPagoClick(Sender: TObject);
@@ -212,7 +212,7 @@ uses
   UniDataArticulos,
   inMtoModalImpFacCompra,
   inMtoModalImpFacCompraV,
-  inLibShowMto, inLibGenBusq, inMtoModalRegistrarPago,
+  inLibShowMto, inMtoModalRegistrarPago,
   inMtoModalSeleccionarBanco;
 
 {$R *.dfm}
@@ -309,6 +309,10 @@ begin
   // re-aseguramos por idempotencia.
   dmmFacturasCompra.unqryFacturasCompraLineas.MasterSource := dsTablaG;
   tvEfectos.DataController.DataSource := dmmFacturasCompra.dsEfectos;
+  cbbFORMA_PAGO_FACC.Properties.ListSource :=
+    dmmFacturasCompra.dsFormasPago;
+  cbbTotalesFORMA_PAGO_FACC.Properties.ListSource :=
+    dmmFacturasCompra.dsFormasPago;
   dmmFacturasCompra.unqryEfectos.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_FACC;NUMERO_FACC';
 end;
@@ -863,31 +867,6 @@ begin
     ShowMto(Self.Owner, 'Proveedores')
   else
     ShowMto(Self.Owner, 'Proveedores', sPrv);
-end;
-
-procedure TfrmMtoFacturasCompra.btnFORMA_PAGO_FACCPropertiesButtonClick(
-  Sender: TObject; AButtonIndex: Integer);
-var
-  sVal: string;
-  ds: TDataSet;
-begin
-  inherited;
-  // Caja de busqueda de formas de pago: devuelve CODIGO_FP_FP y lo escribe
-  // en FORMA_PAGO_FACC (lo usa PRC_EFEC_GENERAR_DESDE_FACTURA).
-  if Assigned(dmmFacturasCompra) then
-  begin
-    if TBusquedaUtils.EjecutarBusqueda('Buscar forma de pago',
-         'SELECT * FROM fza_formas_pago ' +
-         'WHERE ESACTIVO_FORMA_PAGO_FP = ''S'' ' +
-         'ORDER BY ORDEN_FORMA_PAGO_FP',
-         'CODIGO_FP_FP', sVal, 'srchFpFacc', Self) then
-    begin
-      ds := dmmFacturasCompra.unqryTablaG;
-      if not (ds.State in [dsEdit, dsInsert]) then
-        ds.Edit;
-      ds.FieldByName('FORMA_PAGO_FACC').AsString := sVal;
-    end;
-  end;
 end;
 
 procedure TfrmMtoFacturasCompra.btnCODIGO_PRV_FACCPropertiesEditValueChanged(

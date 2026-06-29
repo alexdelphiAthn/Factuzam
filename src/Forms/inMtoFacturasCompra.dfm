@@ -252,17 +252,27 @@
                 TabOrder = 16
                 Transparent = True
               end
-              object btnFORMA_PAGO_FACC: TcxDBButtonEdit
+              object cbbFORMA_PAGO_FACC: TcxDBLookupComboBox
                 Left = 680
                 Top = 92
                 DataBinding.DataField = 'FORMA_PAGO_FACC'
                 DataBinding.DataSource = dsTablaG
-                Properties.Buttons = <
+                Properties.DropDownSizeable = True
+                Properties.KeyFieldNames = 'CODIGO_FP_FP'
+                Properties.ListColumns = <
                   item
-                    Default = True
-                    Kind = bkEllipsis
+                    Caption = 'C'#243'digo'
+                    MinWidth = 50
+                    Width = 60
+                    FieldName = 'CODIGO_FP_FP'
+                  end
+                  item
+                    Caption = 'Descripci'#243'n'
+                    MinWidth = 160
+                    Width = 220
+                    FieldName = 'DESCRIPCION_FORMA_PAGO_FP'
                   end>
-                Properties.OnButtonClick = btnFORMA_PAGO_FACCPropertiesButtonClick
+                Properties.ListOptions.CaseInsensitive = True
                 TabOrder = 17
                 Width = 240
               end
@@ -518,13 +528,29 @@
                   TabOrder = 10
                   Transparent = True
                 end
-                object txtTotalesFORMA_PAGO_FACC: TcxDBTextEdit
+                object cbbTotalesFORMA_PAGO_FACC: TcxDBLookupComboBox
                   Left = 230
                   Top = 234
                   DataBinding.DataField = 'FORMA_PAGO_FACC'
                   DataBinding.DataSource = dsTablaG
+                  Properties.DropDownSizeable = True
+                  Properties.KeyFieldNames = 'CODIGO_FP_FP'
+                  Properties.ListColumns = <
+                    item
+                      Caption = 'C'#243'digo'
+                      MinWidth = 50
+                      Width = 60
+                      FieldName = 'CODIGO_FP_FP'
+                    end
+                    item
+                      Caption = 'Descripci'#243'n'
+                      MinWidth = 160
+                      Width = 220
+                      FieldName = 'DESCRIPCION_FORMA_PAGO_FP'
+                    end>
+                  Properties.ListOptions.CaseInsensitive = True
                   TabOrder = 11
-                  Width = 133
+                  Width = 220
                 end
                 object chkTotalesESIVA_RECARGO_COMPRAS_FACC: TcxDBCheckBox
                   Left = 56
