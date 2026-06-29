@@ -164,12 +164,14 @@ type
     btnFacturarSeleccionadas: TcxButton;
     btnFacturarTodo: TcxButton;
     btnFacturarPorFechas: TcxButton;
-    btnImprimir: TcxButton;
     // Boton + accion para saltar al pedido de venta de origen del
     // albaran (atajo Ctrl+May+A via actIrDocumento).
     btnIrDocumento: TcxButton;
+    btnIrFacturaCreada: TcxButton;
     ActionList1: TActionList;
     actIrDocumento: TAction;
+    actIrFacturaCreada: TAction;
+    btnImprimir: TcxButton;
 
     procedure FormCreate(Sender: TObject);
     procedure btnNuevoClick(Sender: TObject);
@@ -181,6 +183,7 @@ type
     procedure btnFacturarPorFechasClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
     procedure actIrDocumentoExecute(Sender: TObject);
+    procedure actIrFacturaCreadaExecute(Sender: TObject);
   public
     dmmAlbaranes: TdmAlbaranes;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
@@ -418,6 +421,29 @@ begin
       ShowMto(Self.Owner, 'Pedidos', sSeriePed + ',' + sNumeroPed)
     else
       ShowMessage('Este albaran no procede de ningun pedido de venta.');
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.actIrFacturaCreadaExecute(Sender: TObject);
+var
+  sSerieFac, sNumeroFac: string;
+  sCallFactura: string;
+begin
+  inherited;
+  if (dmmAlbaranes <> nil) and
+     (not dmmAlbaranes.unqryTablaG.IsEmpty) then
+  begin
+    sSerieFac  := Trim(dmmAlbaranes.unqryTablaG.
+                         FieldByName('SERIE_FAC_ALB').AsString);
+    sNumeroFac := Trim(dmmAlbaranes.unqryTablaG.
+                         FieldByName('NUMERO_FAC_ALB').AsString);
+    if (sSerieFac <> '') and (sNumeroFac <> '') then
+    begin
+      sCallFactura := ResolverCallFactura(sNumeroFac, sSerieFac);
+      ShowMto(Self.Owner, sCallFactura, sSerieFac + ',' + sNumeroFac);
+    end
+    else
+      ShowMessage('Este albaran no tiene borrador creado.');
   end;
 end;
 

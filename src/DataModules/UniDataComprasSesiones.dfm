@@ -782,6 +782,18 @@ inherited dmComprasSesiones: TdmComprasSesiones
     Left = 368
     Top = 400
   end
+  object unqryFormasPago: TUniQuery
+    SQL.Strings = (
+      'SELECT * FROM vi_formapago')
+    ReadOnly = True
+    Left = 648
+    Top = 344
+  end
+  object dsFormasPago: TDataSource
+    DataSet = unqryFormasPago
+    Left = 648
+    Top = 424
+  end
   object unqryTemporadas: TUniQuery
     SQL.Strings = (
       'SELECT ID_PV_ARTPROP, PV'

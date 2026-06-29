@@ -80,6 +80,12 @@ type
     dteFECHA_ALBC:    TcxDBDateEdit;
     lblEstadoAlbaran: TcxLabel;
     txtESTADO_ALBC:   TcxDBTextEdit;
+    lblPedidoOrigen:  TcxLabel;
+    txtNUMERO_PED_ALBC: TcxDBTextEdit;
+    txtSERIE_PED_ALBC:  TcxDBTextEdit;
+    lblFacturaDestino: TcxLabel;
+    txtNUMERO_FAC_ALBC: TcxDBTextEdit;
+    txtSERIE_FAC_ALBC:  TcxDBTextEdit;
     lblCodigoEmpresa: TcxLabel;
     btnCODIGO_EMP_ALBC: TcxDBButtonEdit;
     lblCodigoProveedor: TcxLabel;
@@ -134,7 +140,9 @@ type
     ActionList1: TActionList;
     actArticulos: TAction;
     actIrDocumento: TAction;
+    actIrFacturaCreada: TAction;
     actIrProveedor: TAction;
+    btnIrFacturaCreada: TcxButton;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -167,6 +175,7 @@ type
     procedure cxgrdLineasAlbaranExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
     procedure actIrDocumentoExecute(Sender: TObject);
+    procedure actIrFacturaCreadaExecute(Sender: TObject);
     procedure actIrProveedorExecute(Sender: TObject);
     procedure cbbSERIE_ALBCPropertiesInitPopup(Sender: TObject);
     procedure btnCODIGO_PRV_ALBCPropertiesButtonClick(Sender: TObject;
@@ -947,6 +956,25 @@ begin
       ShowMto(Self.Owner, 'PedidosCompra', sSeriePed + ',' + sNumeroPed)
     else
       ShowMessage('Este albaran no procede de ningun pedido de compra.');
+  end;
+end;
+
+procedure TfrmMtoAlbaranesCompra.actIrFacturaCreadaExecute(Sender: TObject);
+var
+  sSerieFac, sNumeroFac: string;
+begin
+  inherited;
+  if (dmmAlbaranesCompra <> nil) and
+     (not dmmAlbaranesCompra.unqryTablaG.IsEmpty) then
+  begin
+    sSerieFac  := Trim(dmmAlbaranesCompra.unqryTablaG.
+                         FieldByName('SERIE_FAC_ALBC').AsString);
+    sNumeroFac := Trim(dmmAlbaranesCompra.unqryTablaG.
+                         FieldByName('NUMERO_FAC_ALBC').AsString);
+    if (sSerieFac <> '') and (sNumeroFac <> '') then
+      ShowMto(Self.Owner, 'FacturasCompra', sSerieFac + ',' + sNumeroFac)
+    else
+      ShowMessage('Este albaran no tiene factura de compra creada.');
   end;
 end;
 
