@@ -258,6 +258,7 @@ inherited dmPedidos: TdmPedidos
     SQL.Strings = (
       'select * from vi_pedidos')
     AfterInsert = unqryTablaGAfterInsert
+    BeforeDelete = unqryTablaGBeforeDelete
     Left = 48
     Top = 24
   end
@@ -381,6 +382,7 @@ inherited dmPedidos: TdmPedidos
     AfterInsert = unqryPedidosLineasAfterInsert
     BeforePost = unqryPedidosLineasBeforePost
     AfterPost = unqryPedidosLineasAfterPost
+    BeforeDelete = unqryPedidosLineasBeforeDelete
     Left = 48
     Top = 80
     ParamData = <

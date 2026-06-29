@@ -146,6 +146,8 @@ type
     // compra seleccionado en la rejilla.
     actIrDocumento: TAction;
     actIrProveedor: TAction;
+    Panel1: TPanel;
+    btnIraalbaran: TcxButton;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -187,6 +189,7 @@ type
     procedure btnRecibirTodoClick(Sender: TObject);
     procedure btnCODIGO_PRV_PEDCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
+    procedure btnIraalbaranClick(Sender: TObject);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -761,6 +764,12 @@ begin
   // RecargarYRepublicar lo solventa.
   if Assigned(FPivote) and FPivote.Activo then
     FPivote.RecargarYRepublicar;
+end;
+
+procedure TfrmMtoPedidosCompra.btnIraalbaranClick(Sender: TObject);
+begin
+  inherited;
+  actIrDocumentoExecute(Sender);
 end;
 
 // Hook del OnDataChange de dsTablaG: solo nos interesa el evento global

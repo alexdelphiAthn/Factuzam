@@ -50,9 +50,11 @@ type
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
+    procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
     procedure unqryPedidosLineasAfterInsert(DataSet: TDataSet);
     procedure unqryPedidosLineasBeforePost(DataSet: TDataSet);
     procedure unqryPedidosLineasAfterPost(DataSet: TDataSet);
+    procedure unqryPedidosLineasBeforeDelete(DataSet: TDataSet);
   public
     procedure GetCodigoAutoPedido;
     procedure GetCodigoAutoCliente;
@@ -102,6 +104,8 @@ type
   private
     FProcsInstalados: Boolean;
     FCalculandoTotales: Boolean;
+    procedure RestarPdteServirPedido(const ASerie, ANumero,
+                                     ALinea: string);
     // Devuelve el siguiente contador (PRC_GET_NEXT_CONT) del tipo indicado.
     function ObtenerContador(const sTipo: string): string;
   end;
@@ -109,7 +113,8 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibLog, System.Diagnostics, inLibVentasImpuestos;
+  inLibGlobalVar, inLibLog, System.Diagnostics, System.UITypes, Vcl.Dialogs,
+  inLibVentasImpuestos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -123,7 +128,9 @@ procedure TdmPedidos.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   unqryTablaG.Connection           := inLibGlobalVar.oConn;
+  unqryTablaG.BeforeDelete         := unqryTablaGBeforeDelete;
   unqryPedidosLineas.Connection    := inLibGlobalVar.oConn;
+  unqryPedidosLineas.BeforeDelete  := unqryPedidosLineasBeforeDelete;
   unqryLinPedido.Connection        := inLibGlobalVar.oConn;
   unqryEmpDataPedido.Connection    := inLibGlobalVar.oConn;
   unqryCliDataPedido.Connection    := inLibGlobalVar.oConn;
@@ -222,6 +229,44 @@ begin
   CalcularTotalesPedido;
 end;
 
+procedure TdmPedidos.unqryTablaGBeforeDelete(DataSet: TDataSet);
+var
+  q: TUniQuery;
+  sSerie: string;
+  sNumero: string;
+begin
+  inherited;
+  sSerie  := DataSet.FieldByName('SERIE_PED').AsString;
+  sNumero := DataSet.FieldByName('NUMERO_PED').AsString;
+  if (sSerie = '') or (sNumero = '') then
+  begin
+    Abort;
+  end;
+  if MessageDlg(Format('¿Borrar el pedido de venta %s / %s?' +
+                       sLineBreak +
+                       'Se eliminaran sus lineas y se descontara el ' +
+                       'pendiente de servir en stock.',
+                       [sSerie, sNumero]),
+                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+  begin
+    Abort;
+  end;
+  RestarPdteServirPedido(sSerie, sNumero, '');
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'DELETE FROM fza_pedidos_lineas ' +
+      ' WHERE SERIE_PED_PEDLIN  = :s ' +
+      '   AND NUMERO_PED_PEDLIN = :n';
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNumero;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
 procedure TdmPedidos.unqryPedidosLineasAfterInsert(DataSet: TDataSet);
 begin
   inherited;
@@ -276,6 +321,100 @@ procedure TdmPedidos.unqryPedidosLineasAfterPost(DataSet: TDataSet);
 begin
   inherited;
   CalcularTotalesPedido;
+end;
+
+procedure TdmPedidos.unqryPedidosLineasBeforeDelete(DataSet: TDataSet);
+var
+  sSerie: string;
+  sNumero: string;
+  sLinea: string;
+begin
+  inherited;
+  sSerie  := DataSet.FieldByName('SERIE_PED_PEDLIN').AsString;
+  sNumero := DataSet.FieldByName('NUMERO_PED_PEDLIN').AsString;
+  sLinea  := DataSet.FieldByName('LINEA_PEDLIN').AsString;
+  if (sSerie <> '') and (sNumero <> '') and (sLinea <> '') then
+  begin
+    RestarPdteServirPedido(sSerie, sNumero, sLinea);
+  end;
+end;
+
+procedure TdmPedidos.RestarPdteServirPedido(const ASerie, ANumero,
+                                            ALinea: string);
+var
+  q: TUniQuery;
+  sFiltroLinea: string;
+begin
+  if (Trim(ASerie) <> '') and (Trim(ANumero) <> '') then
+  begin
+    sFiltroLinea := '';
+    if Trim(ALinea) <> '' then
+    begin
+      sFiltroLinea := '   AND L.LINEA_PEDLIN = :l ';
+    end;
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Text :=
+        'UPDATE fza_articulos_stockactual STK ' +
+        'JOIN ( ' +
+        '  SELECT X.SKU_EFE AS SKU, X.ALM_EFE AS ALM, ' +
+        '         SUM(X.PENDIENTE) AS PENDIENTE ' +
+        '    FROM ( ' +
+        '      SELECT COALESCE(NULLIF(CB.CODIGO_UNIDAD_CB, ''''), ' +
+        '                    NULLIF(SREF.CODIGO_UNIDAD_SKU, ''''), ' +
+        '                    NULLIF(SART.CODIGO_UNIDAD_SKU, ''''), ' +
+        '                    NULLIF(L.CODIGOPRODPS_PEDLIN, ''''), ' +
+        '                    NULLIF(L.CODIGO_ART_PEDLIN, '''')) AS SKU_EFE, ' +
+        '             NULLIF(L.CODIGO_ALMACEN_PEDLIN, '''') AS ALM_EFE, ' +
+        '             GREATEST(IFNULL(L.CANTIDAD_PEDLIN, 0) - ' +
+        '                      IFNULL(L.CANTIDAD_ENTREGADA_PEDLIN, 0), ' +
+        '                      0) AS PENDIENTE ' +
+        '        FROM fza_pedidos_lineas L ' +
+        '        LEFT JOIN ( ' +
+        '          SELECT CODIGO_BARRAS_CB, ' +
+        '                 MIN(CODIGO_UNIDAD_CB) AS CODIGO_UNIDAD_CB ' +
+        '            FROM fza_codigos_barras ' +
+        '           WHERE CODIGO_BARRAS_CB <> '''' ' +
+        '           GROUP BY CODIGO_BARRAS_CB ' +
+        '        ) CB ON CB.CODIGO_BARRAS_CB = L.CODBAR_ART_PEDLIN ' +
+        '        LEFT JOIN fza_articulos_skus SREF ' +
+        '          ON SREF.CODIGO_UNIDAD_SKU = L.CODIGOPRODPS_PEDLIN ' +
+        '        LEFT JOIN ( ' +
+        '          SELECT CODIGO_ART_SKU, ' +
+        '                 MIN(CODIGO_UNIDAD_SKU) AS CODIGO_UNIDAD_SKU ' +
+        '            FROM fza_articulos_skus ' +
+        '           GROUP BY CODIGO_ART_SKU ' +
+        '          HAVING COUNT(*) = 1 ' +
+        '        ) SART ON SART.CODIGO_ART_SKU = L.CODIGO_ART_PEDLIN ' +
+        '       WHERE L.SERIE_PED_PEDLIN  = :s ' +
+        '         AND L.NUMERO_PED_PEDLIN = :n ' +
+        sFiltroLinea +
+        '    ) X ' +
+        '   WHERE X.SKU_EFE IS NOT NULL ' +
+        '     AND X.SKU_EFE <> '''' ' +
+        '     AND X.ALM_EFE IS NOT NULL ' +
+        '     AND X.ALM_EFE <> '''' ' +
+        '     AND X.PENDIENTE > 0 ' +
+        '   GROUP BY X.SKU_EFE, X.ALM_EFE ' +
+        ') P ON P.SKU = STK.CODIGO_UNIDAD_STK ' +
+        '   AND P.ALM = STK.CODIGO_ALM_STK ' +
+        '   AND STK.LOTE_STK = '''' ' +
+        '   SET STK.CANTIDAD_PTE_SERVIR_STK = ' +
+        '       GREATEST(IFNULL(STK.CANTIDAD_PTE_SERVIR_STK, 0) - ' +
+        '                P.PENDIENTE, 0), ' +
+        '       STK.INSTANTE_MODIF = NOW()';
+      q.ParamByName('s').AsString := ASerie;
+      q.ParamByName('n').AsString := ANumero;
+      if Trim(ALinea) <> '' then
+      begin
+        q.ParamByName('l').AsString := ALinea;
+      end;
+      q.ExecSQL;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
 end;
 
 procedure TdmPedidos.RecalcularEntregasLinea;

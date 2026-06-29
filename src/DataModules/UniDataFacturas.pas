@@ -20,7 +20,8 @@ interface
 uses
   SysUtils, Classes,  DB,
    inMtoPrincipal, DBClient, Provider, frxClass, frxDBSet, inLibUser,
-   System.StrUtils, Windows, Dialogs, System.Variants, MemDS, DBAccess, Uni,
+   System.StrUtils, Windows, Dialogs, System.UITypes, System.Variants,
+   MemDS, DBAccess, Uni,
    UniDataGen, frCoreClasses, inLibArticulosResolver;
 
 type
@@ -994,6 +995,11 @@ begin
   inherited;
   unqryPerfiles.Connection := inLibGlobalVar.oConn;
   unqryTablaG.Connection := inLibGlobalVar.oConn;
+  unqryTablaG.KeyFields := 'NUMERO_FAC;SERIE_FAC';
+  unqryTablaG.SQLDelete.Text :=
+    'DELETE FROM fza_facturas ' + sLineBreak +
+    'WHERE NUMERO_FAC = :Old_NUMERO_FAC ' + sLineBreak +
+    '  AND SERIE_FAC = :Old_SERIE_FAC';
   PrepararCabeceraSinCamposComplejos;
   unqryLinFac.Connection := inLibGlobalVar.oConn;
   unqrySeries.Connection := inLibGlobalVar.oConn;
@@ -1855,6 +1861,15 @@ begin
                 DataSet.FieldByName(ffasefac).AsString +
                 ': ya se ha lanzado a Verifactu y no puede borrarse. ' +
                 'Use Anular registro fiscal o emita una rectificativa.');
+    Abort;
+  end;
+  if MessageDlg(Format('¿Borrar la factura %s / %s?' + sLineBreak +
+                       'Se eliminaran sus lineas, recibos/efectos y ' +
+                       'movimientos de stock.',
+                       [unqryTablaG.FieldByName(fseriefac).AsString,
+                        unqryTablaG.FieldByName(fnrofac).AsString]),
+                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+  begin
     Abort;
   end;
   qryBorrarEfectos := TUniQuery.Create(Self);

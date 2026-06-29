@@ -124,7 +124,7 @@ implementation
 
 uses
   inLibGlobalVar, inLibAppParam, inLibLog, inLibtb, inLibContadorLineas,
-  System.Diagnostics,
+  System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inMtoFacturasCompra,
   inLibComprasImpuestos,
   inLibArticulosValidador;
@@ -137,6 +137,11 @@ procedure TdmFacturasCompra.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   unqryTablaG.Connection                := inLibGlobalVar.oConn;
+  unqryTablaG.KeyFields                 := 'NUMERO_FACC;SERIE_FACC';
+  unqryTablaG.SQLDelete.Text            :=
+    'DELETE FROM fza_facturas_compra ' + sLineBreak +
+    'WHERE NUMERO_FACC = :Old_NUMERO_FACC ' + sLineBreak +
+    '  AND SERIE_FACC = :Old_SERIE_FACC';
   unqryFacturasCompraLineas.Connection := inLibGlobalVar.oConn;
   unqryEmpDataFacc.Connection           := inLibGlobalVar.oConn;
   unqryPrvDataFacc.Connection           := inLibGlobalVar.oConn;
@@ -529,6 +534,15 @@ begin
         raise Exception.Create(
           'No se puede borrar la factura: tiene efectos pagados, ' +
           'remesados o conciliados.');
+      if MessageDlg(Format('¿Borrar la factura de compra %s / %s?' +
+                           sLineBreak +
+                           'Se eliminaran sus lineas y efectos, y se ' +
+                           'desmarcaran los albaranes vinculados.',
+                           [sSerie, sNumero]),
+                    mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+      begin
+        Abort;
+      end;
       q.SQL.Text :=
         'UPDATE fza_albaranes_compra_lineas ' +
         '   SET ESFACTURADA_ALBCLIN = ''N'', ' +

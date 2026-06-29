@@ -456,7 +456,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Height = 403
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsTotales
+            Properties.ActivePage = cxTabSheet1
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 399
             ClientRectLeft = 4

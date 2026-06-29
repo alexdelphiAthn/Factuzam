@@ -92,6 +92,8 @@ inherited dmEmpresas: TdmEmpresas
       '  FROM vi_empresas '
       ' ORDER BY orden_emp')
     AfterInsert = unqryTablaGAfterInsert
+    BeforeInsert = unqryTablaGBeforeInsert
+    BeforeEdit = unqryTablaGBeforeEdit
     BeforeDelete = unqryTablaGBeforeDelete
     AfterDelete = unqryTablaGAfterDelete
   end

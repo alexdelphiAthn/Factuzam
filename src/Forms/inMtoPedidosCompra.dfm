@@ -1,4 +1,4 @@
-﻿inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
+inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
   Caption = 'Mantenimiento de Pedidos de Compra'
   ClientHeight = 765
   ClientWidth = 1085
@@ -268,15 +268,15 @@
                 Width = 120
               end
               object lblTemporada: TcxLabel
-                Left = 656
-                Top = 72
+                Left = 568
+                Top = 12
                 Caption = 'Temporada'
                 TabOrder = 18
                 Transparent = True
               end
               object cbbTemporadaPedc: TcxDBLookupComboBox
-                Left = 656
-                Top = 92
+                Left = 568
+                Top = 32
                 DataBinding.DataField = 'ID_PV_TEMPORADA_PEDC'
                 DataBinding.DataSource = dsTablaG
                 Properties.KeyFieldNames = 'ID_PV_ARTPROP'
@@ -301,7 +301,7 @@
           BevelOuter = bvNone
           TabOrder = 1
           object btnRecibirFilaEntera: TcxButton
-            Left = 248
+            Left = 188
             Top = 8
             Width = 162
             Height = 26
@@ -319,7 +319,7 @@
             OnClick = btnTallasHorizontalClick
           end
           object btnExpandirRecibidos: TcxButton
-            Left = 552
+            Left = 492
             Top = 8
             Width = 160
             Height = 26
@@ -328,7 +328,7 @@
             OnClick = btnExpandirRecibidosClick
           end
           object btnRecibirTodo: TcxButton
-            Left = 416
+            Left = 356
             Top = 8
             Width = 130
             Height = 26
@@ -352,7 +352,7 @@
             Height = 416
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsLineasPedido
+            Properties.ActivePage = tsAlbaranesPedc
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 412
             ClientRectLeft = 4
@@ -940,10 +940,11 @@
               object cxgrdAlbaranesPedc: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 929
+                Width = 744
                 Height = 384
                 Align = alClient
                 TabOrder = 0
+                ExplicitWidth = 929
                 object tvAlbaranesPedc: TcxGridDBTableView
                   OptionsData.Deleting = False
                   OptionsData.Editing = False
@@ -982,6 +983,26 @@
                 end
                 object cxgrdlvlAlbaranesPedc: TcxGridLevel
                   GridView = tvAlbaranesPedc
+                end
+              end
+              object Panel1: TPanel
+                Left = 744
+                Top = 0
+                Width = 185
+                Height = 384
+                Align = alRight
+                TabOrder = 1
+                ExplicitLeft = 376
+                ExplicitTop = 48
+                ExplicitHeight = 41
+                object btnIraalbaran: TcxButton
+                  Left = 6
+                  Top = 16
+                  Width = 160
+                  Height = 26
+                  Caption = 'Ir a albar'#225'n'
+                  TabOrder = 0
+                  OnClick = btnIraalbaranClick
                 end
               end
             end

@@ -4,12 +4,18 @@
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
+    SQLDelete.Strings = (
+      'DELETE FROM fza_albaranes_compra'
+      'WHERE'
+      '  NUMERO_ALBC = :Old_NUMERO_ALBC'
+      '  AND SERIE_ALBC = :Old_SERIE_ALBC')
     SQL.Strings = (
       'SELECT * FROM vi_albaranes_compra'
       ' ORDER BY INSTANTE_ALTA DESC, NUMERO_ALBC DESC')
     AfterInsert = unqryTablaGAfterInsert
     BeforePost = unqryTablaGBeforePost
     AfterPost = unqryTablaGAfterPost
+    BeforeDelete = unqryTablaGBeforeDelete
     Left = 48
     Top = 24
   end

@@ -181,6 +181,7 @@ type
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
     // veria discrepancia con Activo).
     FInToggleClick   : Boolean;
+    FAfterOpenLineasOriginal: TDataSetNotifyEvent;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure InicializarGestorYPivote;
@@ -189,6 +190,7 @@ type
     procedure CargarCaptionsAtributosLineaActiva;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
+    procedure unqryLineasAfterOpenHook(DataSet: TDataSet);
     procedure TallaEditValueChangedHook(Sender: TObject);
     procedure TallaValidateHook(Sender: TObject; var DisplayValue: Variant;
                                 var ErrorText: TCaption;
@@ -302,6 +304,10 @@ begin
   // DM (CalcularTotalesAlbaranCompra).
   dmmAlbaranesCompra.unqryAlbaranesCompraLineas.AfterPost :=
                                              unqryLineasAfterPostHook;
+  FAfterOpenLineasOriginal :=
+    dmmAlbaranesCompra.unqryAlbaranesCompraLineas.AfterOpen;
+  dmmAlbaranesCompra.unqryAlbaranesCompraLineas.AfterOpen :=
+                                             unqryLineasAfterOpenHook;
   FMostrarAtributos := False;
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
@@ -782,6 +788,14 @@ procedure TfrmMtoAlbaranesCompra.unqryLineasAfterPostHook(DataSet: TDataSet);
 begin
   if Assigned(dmmAlbaranesCompra) then
     dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
+  if Assigned(FPivote) and FPivote.Activo then
+    FPivote.RecargarYRepublicar;
+end;
+
+procedure TfrmMtoAlbaranesCompra.unqryLineasAfterOpenHook(DataSet: TDataSet);
+begin
+  if Assigned(FAfterOpenLineasOriginal) then
+    FAfterOpenLineasOriginal(DataSet);
   if Assigned(FPivote) and FPivote.Activo then
     FPivote.RecargarYRepublicar;
 end;
