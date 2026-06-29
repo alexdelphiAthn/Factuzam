@@ -64,6 +64,7 @@ type
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryTablaGAfterPost(DataSet: TDataSet);
+    procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
     procedure unqryAlbaranesCompraLineasAfterInsert(DataSet: TDataSet);
     procedure unqryAlbaranesCompraLineasBeforePost(DataSet: TDataSet);
     procedure unqryAlbaranesCompraLineasAfterPost(DataSet: TDataSet);
@@ -104,7 +105,7 @@ implementation
 
 uses
   inLibGlobalVar, inLibAppParam, inLibLog, inLibtb, inLibContadorLineas,
-  System.Diagnostics,
+  System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inMtoAlbaranesCompra,
   inLibAlbaranesCompraMovimientos,
   inLibComprasImpuestos,
@@ -118,6 +119,11 @@ procedure TdmAlbaranesCompra.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   unqryTablaG.Connection                := inLibGlobalVar.oConn;
+  unqryTablaG.KeyFields                 := 'NUMERO_ALBC;SERIE_ALBC';
+  unqryTablaG.SQLDelete.Text            :=
+    'DELETE FROM fza_albaranes_compra ' + sLineBreak +
+    'WHERE NUMERO_ALBC = :Old_NUMERO_ALBC ' + sLineBreak +
+    '  AND SERIE_ALBC = :Old_SERIE_ALBC';
   unqryAlbaranesCompraLineas.Connection := inLibGlobalVar.oConn;
   unqryEmpDataAlbc.Connection           := inLibGlobalVar.oConn;
   unqryPrvDataAlbc.Connection           := inLibGlobalVar.oConn;
@@ -317,6 +323,105 @@ begin
   begin
     unqryMovimientosProveedor.Close;
     unqryMovimientosProveedor.Open;
+  end;
+end;
+
+procedure TdmAlbaranesCompra.unqryTablaGBeforeDelete(DataSet: TDataSet);
+var
+  q: TUniQuery;
+  sSerie: string;
+  sNumero: string;
+  iBloqueos: Integer;
+
+  procedure AsignarDocumento;
+  begin
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNumero;
+  end;
+
+begin
+  inherited;
+  sSerie  := DataSet.FieldByName('SERIE_ALBC').AsString;
+  sNumero := DataSet.FieldByName('NUMERO_ALBC').AsString;
+  if (sSerie = '') or (sNumero = '') then
+  begin
+    Abort;
+  end;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N ' +
+      '  FROM fza_albaranes_compra ' +
+      ' WHERE SERIE_ALBC  = :s ' +
+      '   AND NUMERO_ALBC = :n ' +
+      '   AND (COALESCE(NUMERO_FAC_ALBC, '''') <> '''' ' +
+      '    OR COALESCE(SERIE_FAC_ALBC, '''') <> '''' ' +
+      '    OR COALESCE(ESTADO_ALBC, '''') = ''FACTURADO'')';
+    AsignarDocumento;
+    q.Open;
+    iBloqueos := q.FieldByName('N').AsInteger;
+    q.Close;
+    if iBloqueos = 0 then
+    begin
+      q.SQL.Text :=
+        'SELECT COUNT(*) AS N ' +
+        '  FROM fza_albaranes_compra_lineas ' +
+        ' WHERE SERIE_ALBC_ALBCLIN  = :s ' +
+        '   AND NUMERO_ALBC_ALBCLIN = :n ' +
+        '   AND (COALESCE(ESFACTURADA_ALBCLIN, ''N'') = ''S'' ' +
+        '    OR COALESCE(NUMERO_FAC_ALBCLIN, '''') <> '''' ' +
+        '    OR COALESCE(SERIE_FAC_ALBCLIN, '''') <> '''')';
+      AsignarDocumento;
+      q.Open;
+      iBloqueos := q.FieldByName('N').AsInteger;
+      q.Close;
+    end;
+    if iBloqueos = 0 then
+    begin
+      q.SQL.Text :=
+        'SELECT COUNT(*) AS N ' +
+        '  FROM fza_facturas_compra_lineas ' +
+        ' WHERE SERIE_ALBC_FACCLIN  = :s ' +
+        '   AND NUMERO_ALBC_FACCLIN = :n';
+      AsignarDocumento;
+      q.Open;
+      iBloqueos := q.FieldByName('N').AsInteger;
+      q.Close;
+    end;
+    if iBloqueos > 0 then
+    begin
+      MessageDlg('No se puede borrar el albaran de compra: ya esta ' +
+                 'facturado. Borra o deshaz primero la factura de compra ' +
+                 'vinculada.',
+                 mtWarning, [mbOk], 0);
+      Abort;
+    end;
+    if MessageDlg(Format('¿Borrar el albaran de compra %s / %s?' +
+                         sLineBreak +
+                         'Se eliminaran sus lineas y se revertiran los ' +
+                         'movimientos de stock.',
+                         [sSerie, sNumero]),
+                  mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    begin
+      Abort;
+    end;
+    inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(
+      inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+    q.SQL.Text :=
+      'DELETE FROM fza_albaranes_compra_celdas ' +
+      ' WHERE SERIE_ALBC_ALBCCEL  = :s ' +
+      '   AND NUMERO_ALBC_ALBCCEL = :n';
+    AsignarDocumento;
+    q.ExecSQL;
+    q.SQL.Text :=
+      'DELETE FROM fza_albaranes_compra_lineas ' +
+      ' WHERE SERIE_ALBC_ALBCLIN  = :s ' +
+      '   AND NUMERO_ALBC_ALBCLIN = :n';
+    AsignarDocumento;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
   end;
 end;
 

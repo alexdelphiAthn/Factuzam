@@ -250,7 +250,6 @@ type
     txtRAZONSOCIAL_EMPRESA: TcxDBTextEdit;
     chkActivo: TcxDBCheckBox;
     chkAplicaRetenciones: TcxDBCheckBox;
-    chkRecargoEquivalenciaCompras: TcxDBCheckBox;
     lblCanalIVA: TcxLabel;
     cbbZonaIVA: TcxDBLookupComboBox;
     ActionListEmpresas: TActionList;
@@ -283,11 +282,6 @@ type
     lblFormatoDocumento: TcxLabel;
     txtFORMATO_DOCUMENTO_EMP: TcxDBTextEdit;
     lblFormatoDocumentoAyuda: TcxLabel;
-    lblNumeroInstalacionSif: TcxLabel;
-    txtNUMERO_INSTALACION_EMP: TcxDBTextEdit;
-    lblVersionInstalacionSif: TcxLabel;
-    txtVERSION_INSTALACION_EMP: TcxDBTextEdit;
-    btnGenerarInstalacionSif: TcxButton;
     lblPieTicketCaja1: TcxLabel;
     lblPieTicketCaja2: TcxLabel;
     lblPieTicketCaja3: TcxLabel;
@@ -303,12 +297,18 @@ type
     dbmSeriesSUBITPO_SERIE: TcxGridDBColumn;
     dbmSeriesFECHA_DESDE_SERIE: TcxGridDBColumn;
     dbmSeriesFECHA_HASTA_SERIE: TcxGridDBColumn;
+    cxTabSheet1: TcxTabSheet;
+    lblNumeroInstalacionSif: TcxLabel;
+    txtNUMERO_INSTALACION_EMP: TcxDBTextEdit;
+    lblVersionInstalacionSif: TcxLabel;
+    txtVERSION_INSTALACION_EMP: TcxDBTextEdit;
+    btnGenerarInstalacionSif: TcxButton;
+    chkRecargoEquivalenciaCompras: TcxDBCheckBox;
     procedure tsFichaEnter(Sender: TObject);
     procedure chkAplicaRetencionesPropertiesChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnCargarColumnasClick(Sender: TObject);
     procedure btnNuevaEmpresaClick(Sender: TObject);
-    procedure btnGrabarClick(Sender: TObject);
     procedure btnAddIRPFClick(Sender: TObject);
     procedure btnIraFacturaClick(Sender: TObject);
     procedure btnIraClienteClick(Sender: TObject);
@@ -792,11 +792,6 @@ procedure TfrmMtoEmpresas.btnCargarColumnasClick(Sender: TObject);
 begin
   inherited;
   GetSettingsColumn(tvRetenciones, Self.Name, Self.Owner);
-end;
-
-procedure TfrmMtoEmpresas.btnGrabarClick(Sender: TObject);
-begin
-  inherited;
 end;
 
 procedure TfrmMtoEmpresas.chkAplicaRetencionesPropertiesChange(Sender: TObject);

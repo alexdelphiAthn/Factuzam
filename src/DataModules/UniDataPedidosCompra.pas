@@ -54,6 +54,7 @@ type
     procedure unqryPedidosCompraLineasBeforeDelete(DataSet: TDataSet);
   private
     FCalculandoTotales: Boolean;
+    procedure ConfigurarSqlCabecera;
   public
     procedure GetCodigoAutoPedidoCompra;
     procedure CalcularTotalesPedidoCompra;
@@ -65,7 +66,7 @@ implementation
 
 uses
   inLibGlobalVar, inLibLog, inLibtb, inLibContadorLineas,
-  System.Diagnostics,
+  System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inMtoPedidosCompra,
   inLibPedidosCompra,
   inLibComprasImpuestos,
@@ -75,10 +76,109 @@ uses
 
 {$R *.dfm}
 
+procedure TdmPedidosCompra.ConfigurarSqlCabecera;
+begin
+  unqryTablaG.SQLDelete.Text :=
+    'DELETE FROM fza_pedidos_compra ' + sLineBreak +
+    'WHERE NUMERO_PEDC = :Old_NUMERO_PEDC ' + sLineBreak +
+    '  AND SERIE_PEDC = :Old_SERIE_PEDC';
+  unqryTablaG.SQLUpdate.Text :=
+    'UPDATE fza_pedidos_compra ' + sLineBreak +
+    '   SET NUMERO_PEDC = :NUMERO_PEDC, ' + sLineBreak +
+    '       SERIE_PEDC = :SERIE_PEDC, ' + sLineBreak +
+    '       FECHA_PEDC = :FECHA_PEDC, ' + sLineBreak +
+    '       FECHA_PREVISTA_PEDC = :FECHA_PREVISTA_PEDC, ' + sLineBreak +
+    '       ESTADO_PEDC = :ESTADO_PEDC, ' + sLineBreak +
+    '       CODIGO_EMP_PEDC = :CODIGO_EMP_PEDC, ' + sLineBreak +
+    '       RAZON_SOCIAL_EMPRESA_PEDC = :RAZON_SOCIAL_EMPRESA_PEDC, ' +
+      sLineBreak +
+    '       NIF_EMPRESA_PEDC = :NIF_EMPRESA_PEDC, ' + sLineBreak +
+    '       MOVIL_EMPRESA_PEDC = :MOVIL_EMPRESA_PEDC, ' + sLineBreak +
+    '       EMAIL_EMPRESA_PEDC = :EMAIL_EMPRESA_PEDC, ' + sLineBreak +
+    '       DIRECCION1_EMPRESA_PEDC = :DIRECCION1_EMPRESA_PEDC, ' +
+      sLineBreak +
+    '       DIRECCION2_EMPRESA_PEDC = :DIRECCION2_EMPRESA_PEDC, ' +
+      sLineBreak +
+    '       POBLACION_EMPRESA_PEDC = :POBLACION_EMPRESA_PEDC, ' + sLineBreak +
+    '       PROVINCIA_EMPRESA_PEDC = :PROVINCIA_EMPRESA_PEDC, ' +
+      sLineBreak +
+    '       CODIGO_PAI_EMPRESA_PEDC = :CODIGO_PAI_EMPRESA_PEDC, ' +
+      sLineBreak +
+    '       NOMBRE_PAI_EMPRESA_PEDC = :NOMBRE_PAI_EMPRESA_PEDC, ' +
+      sLineBreak +
+    '       CODIGO_POSTAL_EMPRESA_PEDC = :CODIGO_POSTAL_EMPRESA_PEDC, ' +
+      sLineBreak +
+    '       CODIGO_PRV_PEDC = :CODIGO_PRV_PEDC, ' + sLineBreak +
+    '       RAZON_SOCIAL_PRV_PEDC = :RAZON_SOCIAL_PRV_PEDC, ' + sLineBreak +
+    '       NIF_PRV_PEDC = :NIF_PRV_PEDC, ' + sLineBreak +
+    '       MOVIL_PRV_PEDC = :MOVIL_PRV_PEDC, ' + sLineBreak +
+    '       EMAIL_PRV_PEDC = :EMAIL_PRV_PEDC, ' + sLineBreak +
+    '       DIRECCION1_PRV_PEDC = :DIRECCION1_PRV_PEDC, ' + sLineBreak +
+    '       DIRECCION2_PRV_PEDC = :DIRECCION2_PRV_PEDC, ' + sLineBreak +
+    '       POBLACION_PRV_PEDC = :POBLACION_PRV_PEDC, ' + sLineBreak +
+    '       PROVINCIA_PRV_PEDC = :PROVINCIA_PRV_PEDC, ' + sLineBreak +
+    '       CODIGO_PAI_PRV_PEDC = :CODIGO_PAI_PRV_PEDC, ' + sLineBreak +
+    '       NOMBRE_PAI_PRV_PEDC = :NOMBRE_PAI_PRV_PEDC, ' + sLineBreak +
+    '       CODIGO_POSTAL_PRV_PEDC = :CODIGO_POSTAL_PRV_PEDC, ' +
+      sLineBreak +
+    '       REF_PROVEEDOR_PEDC = :REF_PROVEEDOR_PEDC, ' + sLineBreak +
+    '       CODIGO_ALM_PEDC = :CODIGO_ALM_PEDC, ' + sLineBreak +
+    '       TRANSPORTISTA_PEDC = :TRANSPORTISTA_PEDC, ' + sLineBreak +
+    '       CODIGO_IVA_PEDC = :CODIGO_IVA_PEDC, ' + sLineBreak +
+    '       ESIVA_RECARGO_COMPRAS_PEDC = :ESIVA_RECARGO_COMPRAS_PEDC, ' +
+      sLineBreak +
+    '       PORCENTAJE_IVAN_PEDC = :PORCENTAJE_IVAN_PEDC, ' + sLineBreak +
+    '       TOTAL_BASEI_IVAN_PEDC = :TOTAL_BASEI_IVAN_PEDC, ' + sLineBreak +
+    '       TOTAL_IVAN_PEDC = :TOTAL_IVAN_PEDC, ' + sLineBreak +
+    '       PORCENTAJE_REN_PEDC = :PORCENTAJE_REN_PEDC, ' + sLineBreak +
+    '       TOTAL_REN_PEDC = :TOTAL_REN_PEDC, ' + sLineBreak +
+    '       PORCENTAJE_IVAR_PEDC = :PORCENTAJE_IVAR_PEDC, ' + sLineBreak +
+    '       TOTAL_BASEI_IVAR_PEDC = :TOTAL_BASEI_IVAR_PEDC, ' + sLineBreak +
+    '       TOTAL_IVAR_PEDC = :TOTAL_IVAR_PEDC, ' + sLineBreak +
+    '       PORCENTAJE_RER_PEDC = :PORCENTAJE_RER_PEDC, ' + sLineBreak +
+    '       TOTAL_RER_PEDC = :TOTAL_RER_PEDC, ' + sLineBreak +
+    '       PORCENTAJE_IVAS_PEDC = :PORCENTAJE_IVAS_PEDC, ' + sLineBreak +
+    '       TOTAL_BASEI_IVAS_PEDC = :TOTAL_BASEI_IVAS_PEDC, ' + sLineBreak +
+    '       TOTAL_IVAS_PEDC = :TOTAL_IVAS_PEDC, ' + sLineBreak +
+    '       PORCENTAJE_RES_PEDC = :PORCENTAJE_RES_PEDC, ' + sLineBreak +
+    '       TOTAL_RES_PEDC = :TOTAL_RES_PEDC, ' + sLineBreak +
+    '       PORCENTAJE_IVAE_PEDC = :PORCENTAJE_IVAE_PEDC, ' + sLineBreak +
+    '       TOTAL_BASEI_IVAE_PEDC = :TOTAL_BASEI_IVAE_PEDC, ' + sLineBreak +
+    '       TOTAL_IVAE_PEDC = :TOTAL_IVAE_PEDC, ' + sLineBreak +
+    '       PORCENTAJE_REE_PEDC = :PORCENTAJE_REE_PEDC, ' + sLineBreak +
+    '       TOTAL_REE_PEDC = :TOTAL_REE_PEDC, ' + sLineBreak +
+    '       TOTAL_BASES_PEDC = :TOTAL_BASES_PEDC, ' + sLineBreak +
+    '       TOTAL_IMPUESTOS_PEDC = :TOTAL_IMPUESTOS_PEDC, ' + sLineBreak +
+    '       PORCENTAJE_RETENCION_PEDC = :PORCENTAJE_RETENCION_PEDC, ' +
+      sLineBreak +
+    '       TOTAL_RETENCION_PEDC = :TOTAL_RETENCION_PEDC, ' + sLineBreak +
+    '       TOTAL_LIQUIDO_PEDC = :TOTAL_LIQUIDO_PEDC, ' + sLineBreak +
+    '       FORMA_PAGO_PEDC = :FORMA_PAGO_PEDC, ' + sLineBreak +
+    '       CONTADOR_LINEAS_PEDC = :CONTADOR_LINEAS_PEDC, ' + sLineBreak +
+    '       COMENTARIOS_PEDC = :COMENTARIOS_PEDC, ' + sLineBreak +
+    '       OBSERVACIONES_PEDC = :OBSERVACIONES_PEDC, ' + sLineBreak +
+    '       ESPIVOTE_HORIZONTAL_PEDC = :ESPIVOTE_HORIZONTAL_PEDC, ' +
+      sLineBreak +
+    '       INSTANTE_MODIF = :INSTANTE_MODIF, ' + sLineBreak +
+    '       INSTANTE_ALTA = :INSTANTE_ALTA, ' + sLineBreak +
+    '       USUARIO_ALTA = :USUARIO_ALTA, ' + sLineBreak +
+    '       USUARIO_MODIF = :USUARIO_MODIF, ' + sLineBreak +
+    '       ID_PV_TEMPORADA_PEDC = :ID_PV_TEMPORADA_PEDC ' + sLineBreak +
+    ' WHERE NUMERO_PEDC = :Old_NUMERO_PEDC ' + sLineBreak +
+    '   AND SERIE_PEDC = :Old_SERIE_PEDC';
+  unqryTablaG.SQLRefresh.Text :=
+    'SELECT * ' + sLineBreak +
+    '  FROM vi_pedidos_compra ' + sLineBreak +
+    ' WHERE NUMERO_PEDC = :NUMERO_PEDC ' + sLineBreak +
+    '   AND SERIE_PEDC = :SERIE_PEDC';
+end;
+
 procedure TdmPedidosCompra.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   unqryTablaG.Connection              := inLibGlobalVar.oConn;
+  unqryTablaG.KeyFields               := 'NUMERO_PEDC;SERIE_PEDC';
+  ConfigurarSqlCabecera;
   unqryPedidosCompraLineas.Connection := inLibGlobalVar.oConn;
   unqryEmpDataPedc.Connection         := inLibGlobalVar.oConn;
   unqryPrvDataPedc.Connection         := inLibGlobalVar.oConn;
@@ -224,6 +324,14 @@ begin
   sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
   sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
   if (sSerie = '') or (sNumero = '') then Exit;
+  if MessageDlg(Format('¿Borrar el pedido de compra %s / %s?' +
+                       sLineBreak +
+                       'Se eliminaran sus lineas y pendientes de recibir.',
+                       [sSerie, sNumero]),
+                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+  begin
+    Abort;
+  end;
   inLibPedidosCompra.BorrarPdteRecibirDesdePedido(
     inLibGlobalVar.oConn, sSerie, sNumero);
   // Borrar lineas asociadas para que no se queden huerfanas (no hay

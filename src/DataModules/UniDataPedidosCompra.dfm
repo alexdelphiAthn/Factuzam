@@ -4,6 +4,11 @@
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
+    SQLDelete.Strings = (
+      'DELETE FROM fza_pedidos_compra'
+      'WHERE'
+      '  NUMERO_PEDC = :Old_NUMERO_PEDC'
+      '  AND SERIE_PEDC = :Old_SERIE_PEDC')
     SQL.Strings = (
       'SELECT * FROM vi_pedidos_compra')
     AfterInsert = unqryTablaGAfterInsert

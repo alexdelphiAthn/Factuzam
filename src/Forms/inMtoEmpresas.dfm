@@ -1,4 +1,4 @@
-﻿inherited frmMtoEmpresas: TfrmMtoEmpresas
+inherited frmMtoEmpresas: TfrmMtoEmpresas
   Left = 5
   Top = 4
   Margins.Left = 0
@@ -8,34 +8,35 @@
   Caption = 'Empresas'
   ClientHeight = 715
   ClientWidth = 1085
+  StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 1085
   ExplicitHeight = 715
-  TextHeight = 19
+  TextHeight = 17
   inherited pButtonPage: TPanel
     Width = 945
     Height = 715
     TabOrder = 0
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 945
     ExplicitHeight = 715
     inherited pcPantalla: TcxPageControl
       Width = 945
       Height = 675
       TabOrder = 1
-      Properties.ActivePage = tsFicha
       ExplicitWidth = 945
       ExplicitHeight = 675
       ClientRectBottom = 671
       ClientRectRight = 941
       inherited tsLista: TcxTabSheet
         ExplicitLeft = 4
-        ExplicitTop = 30
+        ExplicitTop = 28
         ExplicitWidth = 937
-        ExplicitHeight = 641
+        ExplicitHeight = 643
         inherited cxGrdPrincipal: TcxGrid
           Width = 937
-          Height = 641
+          Height = 643
           ExplicitWidth = 937
-          ExplicitHeight = 641
+          ExplicitHeight = 643
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_EMPRESA: TcxGridDBColumn
               Caption = 'C'#243'digo'
@@ -166,14 +167,14 @@
       inherited tsFicha: TcxTabSheet
         OnEnter = tsFichaEnter
         ExplicitLeft = 4
-        ExplicitTop = 30
+        ExplicitTop = 28
         ExplicitWidth = 937
-        ExplicitHeight = 641
+        ExplicitHeight = 643
         object pnlFichaDetail: TPanel
           Left = 0
           Top = 186
           Width = 937
-          Height = 455
+          Height = 457
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 2
@@ -181,21 +182,21 @@
             Left = 0
             Top = 0
             Width = 937
-            Height = 455
+            Height = 457
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsSeries
+            Properties.ActivePage = tsMasDatos
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 451
+            ClientRectBottom = 453
             ClientRectLeft = 4
             ClientRectRight = 933
-            ClientRectTop = 30
+            ClientRectTop = 28
             object tsMasDatos: TcxTabSheet
               Caption = '&1_M'#225's Datos'
               ImageIndex = 0
               DesignSize = (
                 929
-                421)
+                425)
               object cxgrpbxIdentificacion: TcxGroupBox
                 AlignWithMargins = True
                 Left = 19
@@ -209,7 +210,7 @@
                 PanelStyle.WordWrap = True
                 TabOrder = 0
                 Transparent = True
-                Height = 415
+                Height = 419
                 Width = 701
                 object lblMovil: TcxLabel
                   Left = 51
@@ -391,20 +392,28 @@
                   TabOrder = 20
                   Width = 203
                 end
+                object chkRecargoEquivalenciaCompras: TcxDBCheckBox
+                  Left = 69
+                  Top = 374
+                  Caption = 'Recargo equivalencia compras'
+                  DataBinding.DataField = 'ESIVA_RECARGO_COMPRAS_EMP'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ValueChecked = 'S'
+                  Properties.ValueUnchecked = 'N'
+                  Style.TransparentBorder = False
+                  TabOrder = 21
+                  Transparent = True
+                end
               end
             end
             object tsRetenciones: TcxTabSheet
               Caption = '&2_Retenciones'
               ImageIndex = 2
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlRetenOpts: TPanel
                 Left = 819
                 Top = 0
                 Width = 110
-                Height = 421
+                Height = 425
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
@@ -422,7 +431,7 @@
                 Left = 0
                 Top = 0
                 Width = 819
-                Height = 421
+                Height = 425
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
@@ -430,7 +439,7 @@
                   Left = 0
                   Top = 0
                   Width = 819
-                  Height = 421
+                  Height = 425
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -536,22 +545,18 @@
             object tsHistoriaFacturacion: TcxTabSheet
               Caption = '&3_Hist'#243'rico Borradores'
               ImageIndex = 3
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlFactura: TPanel
                 Left = 0
                 Top = 0
                 Width = 929
-                Height = 421
+                Height = 425
                 Align = alClient
                 TabOrder = 0
                 object cxgrdEmpresasFacturas: TcxGrid
                   Left = 1
                   Top = 1
                   Width = 810
-                  Height = 419
+                  Height = 423
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -1116,7 +1121,7 @@
                   Left = 811
                   Top = 1
                   Width = 117
-                  Height = 419
+                  Height = 423
                   Align = alRight
                   TabOrder = 1
                   object btnIraFactura: TcxButton
@@ -1165,7 +1170,7 @@
                 Left = 811
                 Top = 0
                 Width = 118
-                Height = 421
+                Height = 425
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
@@ -1193,7 +1198,7 @@
                 Left = 0
                 Top = 0
                 Width = 811
-                Height = 421
+                Height = 425
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
@@ -1201,7 +1206,7 @@
                   Left = 0
                   Top = 0
                   Width = 811
-                  Height = 421
+                  Height = 425
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -1296,7 +1301,7 @@
                 Left = 811
                 Top = 0
                 Width = 118
-                Height = 421
+                Height = 425
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
@@ -1314,7 +1319,7 @@
                 Left = 0
                 Top = 0
                 Width = 811
-                Height = 421
+                Height = 425
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
@@ -1322,7 +1327,7 @@
                   Left = 0
                   Top = 0
                   Width = 811
-                  Height = 421
+                  Height = 425
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -1403,7 +1408,7 @@
               ImageIndex = 5
               DesignSize = (
                 929
-                421)
+                425)
               object lblPieTicketCaja1: TcxLabel
                 Left = 31
                 Top = 31
@@ -1476,15 +1481,11 @@
             object tsOtros: TcxTabSheet
               Caption = '&6_Otros'
               ImageIndex = 3
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object scrOtros: TScrollBox
                 Left = 0
                 Top = 0
                 Width = 929
-                Height = 421
+                Height = 425
                 HorzScrollBar.Visible = False
                 VertScrollBar.Tracking = True
                 Align = alClient
@@ -1492,256 +1493,309 @@
                 TabOrder = 0
                 DesignSize = (
                   929
-                  421)
-              object pnlUserInstantBottom: TPanel
-                Left = 0
-                Top = 342
-                Width = 929
-                Height = 79
-                Anchors = [akLeft, akTop, akRight]
-                TabOrder = 4
-                object cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit
-                  Left = 17
-                  Top = 37
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'USUARIO_ALTA'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.ReadOnly = True
+                  425)
+                object pnlUserInstantBottom: TPanel
+                  Left = 0
+                  Top = 342
+                  Width = 929
+                  Height = 79
+                  Anchors = [akLeft, akTop, akRight]
+                  TabOrder = 4
+                  object cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit
+                    Left = 17
+                    Top = 37
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'USUARIO_ALTA'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    TabOrder = 2
+                    Width = 152
+                  end
+                  object lblUsuarioAlta: TcxLabel
+                    Left = 17
+                    Top = 6
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Usuario Alta'
+                    TabOrder = 0
+                    Transparent = True
+                  end
+                  object lblInstanteAlta: TcxLabel
+                    Left = 177
+                    Top = 6
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Instante Alta'
+                    TabOrder = 1
+                    Transparent = True
+                  end
+                  object cxdbtxtdtUSUARIOALTA: TcxDBTextEdit
+                    Left = 177
+                    Top = 37
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'INSTANTE_ALTA'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    TabOrder = 3
+                    Width = 192
+                  end
+                  object cxdbtxtdtINSTANTEALTA: TcxDBTextEdit
+                    Left = 593
+                    Top = 37
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'INSTANTE_MODIF'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    TabOrder = 7
+                    Width = 188
+                  end
+                  object lblInstanteModif: TcxLabel
+                    Left = 593
+                    Top = 6
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Instante Modificaci'#243'n'
+                    TabOrder = 5
+                    Transparent = True
+                  end
+                  object cxdbtxtdtUSUARIOALTA1: TcxDBTextEdit
+                    Left = 377
+                    Top = 37
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'USUARIO_ALTA'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ReadOnly = True
+                    TabOrder = 4
+                    Width = 168
+                  end
+                  object lblUsuarioModif: TcxLabel
+                    Left = 337
+                    Top = 6
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Usuario '#218'ltima Modificaci'#243'n'
+                    TabOrder = 6
+                    Transparent = True
+                  end
+                end
+                object lblTextoLegal: TcxLabel
+                  Left = 29
+                  Top = 167
+                  Caption = 'Texto legal en Borradores'
                   TabOrder = 2
-                  Width = 152
+                  Transparent = True
                 end
-                object lblUsuarioAlta: TcxLabel
-                  Left = 17
-                  Top = 6
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Usuario Alta'
+                object cxdbmTEXTO_LEGAL_FACTURA_EMPRESA: TcxDBMemo
+                  Left = 31
+                  Top = 196
+                  DataBinding.DataField = 'TEXTO_LEGAL_FACTURA_EMP'
+                  DataBinding.DataSource = dsTablaG
                   TabOrder = 0
-                  Transparent = True
+                  Height = 89
+                  Width = 586
                 end
-                object lblInstanteAlta: TcxLabel
-                  Left = 177
-                  Top = 6
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Instante Alta'
-                  TabOrder = 1
-                  Transparent = True
-                end
-                object cxdbtxtdtUSUARIOALTA: TcxDBTextEdit
-                  Left = 177
-                  Top = 37
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'INSTANTE_ALTA'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.ReadOnly = True
+                object lblOrden: TcxLabel
+                  Left = 22
+                  Top = 291
+                  Caption = 'Orden en Listados'
                   TabOrder = 3
-                  Width = 192
+                  Transparent = True
                 end
-                object cxdbtxtdtINSTANTEALTA: TcxDBTextEdit
-                  Left = 593
-                  Top = 37
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'INSTANTE_MODIF'
+                object cxdbspndtORDEN_EMPRESA: TcxDBSpinEdit
+                  Left = 183
+                  Top = 288
+                  DataBinding.DataField = 'ORDEN_EMP'
                   DataBinding.DataSource = dsTablaG
-                  Properties.ReadOnly = True
-                  TabOrder = 7
-                  Width = 188
+                  TabOrder = 1
+                  Width = 86
                 end
-                object lblInstanteModif: TcxLabel
-                  Left = 593
-                  Top = 6
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Instante Modificaci'#243'n'
+                object lblTextoLegal1: TcxLabel
+                  Left = 31
+                  Top = 18
+                  Caption = 'Firma electr'#243'nica en Borradores'
                   TabOrder = 5
                   Transparent = True
                 end
-                object cxdbtxtdtUSUARIOALTA1: TcxDBTextEdit
-                  Left = 377
-                  Top = 37
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'USUARIO_ALTA'
+                object lblDBNumeroSerieCertificado: TcxDBLabel
+                  Left = 207
+                  Top = 47
+                  DataBinding.DataField = 'CODIGO_CERTIFICADO_EMP'
                   DataBinding.DataSource = dsTablaG
-                  Properties.ReadOnly = True
-                  TabOrder = 4
-                  Width = 168
-                end
-                object lblUsuarioModif: TcxLabel
-                  Left = 337
-                  Top = 6
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Usuario '#218'ltima Modificaci'#243'n'
                   TabOrder = 6
                   Transparent = True
+                  Height = 21
+                  Width = 410
+                end
+                object lblNumSerie: TcxLabel
+                  Left = 60
+                  Top = 47
+                  Caption = 'N'#250'mero de Serie'
+                  TabOrder = 7
+                  Transparent = True
+                end
+                object lblTipoCertificado: TcxLabel
+                  Left = 37
+                  Top = 74
+                  Caption = 'Tipo de Certificado'
+                  TabOrder = 8
+                  Transparent = True
+                end
+                object lblDBTipoCertificado: TcxDBLabel
+                  Left = 207
+                  Top = 74
+                  DataBinding.DataField = 'TIPO_CERTIFICADO_EMP'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 9
+                  Transparent = True
+                  Height = 21
+                  Width = 410
+                end
+                object lblTitular: TcxLabel
+                  Left = 142
+                  Top = 101
+                  Caption = 'Titular'
+                  TabOrder = 10
+                  Transparent = True
+                end
+                object lblDBTitularCertificado: TcxDBLabel
+                  Left = 207
+                  Top = 101
+                  DataBinding.DataField = 'TITULAR_CERTIFICADO_EMP'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 11
+                  Transparent = True
+                  Height = 21
+                  Width = 410
+                end
+                object btnSeleccionarCer: TcxButton
+                  Left = 290
+                  Top = 17
+                  Width = 327
+                  Height = 23
+                  Caption = '&Seleccionar certificado de Almac'#233'n'
+                  TabOrder = 12
+                  WordWrap = True
+                  OnClick = btnSeleccionarCerClick
+                end
+                object lblFechaCaducidad: TcxLabel
+                  Left = 60
+                  Top = 130
+                  Caption = 'FechaCaducidad'
+                  TabOrder = 13
+                  Transparent = True
+                end
+                object txtFECHACADUCIDAD: TcxDBTextEdit
+                  Left = 207
+                  Top = 128
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  DataBinding.DataField = 'FECHA_HASTA_CERTIFICADO_EMP'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ReadOnly = True
+                  TabOrder = 14
+                  Width = 192
+                end
+                object lblFormatoDocumento: TcxLabel
+                  Left = 640
+                  Top = 167
+                  Caption = 'Formato documentos'
+                  TabOrder = 15
+                  Transparent = True
+                end
+                object txtFORMATO_DOCUMENTO_EMP: TcxDBTextEdit
+                  Left = 640
+                  Top = 196
+                  DataBinding.DataField = 'FORMATO_DOCUMENTO_EMP'
+                  DataBinding.DataSource = dsTablaG
+                  TabOrder = 16
+                  Width = 250
+                end
+                object lblFormatoDocumentoAyuda: TcxLabel
+                  Left = 640
+                  Top = 229
+                  Caption = 
+                    'Tokens: Serie y NroDocumento. Ej.: Serie.NroDocumento o NroDocum' +
+                    'ento.Serie'
+                  Properties.WordWrap = True
+                  TabOrder = 17
+                  Transparent = True
+                  Width = 242
                 end
               end
-              object lblTextoLegal: TcxLabel
-                Left = 29
-                Top = 167
-                Caption = 'Texto legal en Borradores'
+            end
+            object cxTabSheet1: TcxTabSheet
+              Caption = '&7_Verifactu'
+              ImageIndex = 7
+              object lblNumeroInstalacionSif: TcxLabel
+                Left = 37
+                Top = 23
+                Caption = 'N'#186' instalaci'#243'n SIF'
+                TabOrder = 0
+                Transparent = True
+              end
+              object txtNUMERO_INSTALACION_EMP: TcxDBTextEdit
+                Left = 37
+                Top = 47
+                DataBinding.DataField = 'NUMERO_INSTALACION_EMP'
+                DataBinding.DataSource = dsTablaG
+                ParentFont = False
+                Properties.ReadOnly = True
+                Style.Font.Charset = ANSI_CHARSET
+                Style.Font.Color = clWindowText
+                Style.Font.Height = -15
+                Style.Font.Name = 'Lucida Sans'
+                Style.Font.Style = []
+                Style.IsFontAssigned = True
+                TabOrder = 1
+                Width = 372
+              end
+              object lblVersionInstalacionSif: TcxLabel
+                Left = 37
+                Top = 79
+                Caption = 'Versi'#243'n SIF'
                 TabOrder = 2
                 Transparent = True
               end
-              object cxdbmTEXTO_LEGAL_FACTURA_EMPRESA: TcxDBMemo
-                Left = 31
-                Top = 196
-                DataBinding.DataField = 'TEXTO_LEGAL_FACTURA_EMP'
-                DataBinding.DataSource = dsTablaG
-                TabOrder = 0
-                Height = 89
-                Width = 586
-              end
-              object lblOrden: TcxLabel
-                Left = 22
-                Top = 291
-                Caption = 'Orden en Listados'
-                TabOrder = 3
-                Transparent = True
-              end
-              object cxdbspndtORDEN_EMPRESA: TcxDBSpinEdit
-                Left = 183
-                Top = 288
-                DataBinding.DataField = 'ORDEN_EMP'
-                DataBinding.DataSource = dsTablaG
-                TabOrder = 1
-                Width = 86
-              end
-              object lblTextoLegal1: TcxLabel
-                Left = 31
-                Top = 18
-                Caption = 'Firma electr'#243'nica en Borradores'
-                TabOrder = 5
-                Transparent = True
-              end
-              object lblDBNumeroSerieCertificado: TcxDBLabel
-                Left = 207
-                Top = 47
-                DataBinding.DataField = 'CODIGO_CERTIFICADO_EMP'
-                DataBinding.DataSource = dsTablaG
-                TabOrder = 6
-                Height = 21
-                Width = 410
-                Transparent = True
-              end
-              object lblNumSerie: TcxLabel
-                Left = 60
-                Top = 47
-                Caption = 'N'#250'mero de Serie'
-                TabOrder = 7
-                Transparent = True
-              end
-              object lblTipoCertificado: TcxLabel
+              object txtVERSION_INSTALACION_EMP: TcxDBTextEdit
                 Left = 37
-                Top = 74
-                Caption = 'Tipo de Certificado'
-                TabOrder = 8
-                Transparent = True
-              end
-              object lblDBTipoCertificado: TcxDBLabel
-                Left = 207
-                Top = 74
-                DataBinding.DataField = 'TIPO_CERTIFICADO_EMP'
-                DataBinding.DataSource = dsTablaG
-                TabOrder = 9
-                Height = 21
-                Width = 410
-                Transparent = True
-              end
-              object lblTitular: TcxLabel
-                Left = 142
-                Top = 101
-                Caption = 'Titular'
-                TabOrder = 10
-                Transparent = True
-              end
-              object lblDBTitularCertificado: TcxDBLabel
-                Left = 207
-                Top = 101
-                DataBinding.DataField = 'TITULAR_CERTIFICADO_EMP'
-                DataBinding.DataSource = dsTablaG
-                TabOrder = 11
-                Height = 21
-                Width = 410
-                Transparent = True
-              end
-              object btnSeleccionarCer: TcxButton
-                Left = 290
-                Top = 17
-                Width = 327
-                Height = 23
-                Caption = '&Seleccionar certificado de Almac'#233'n'
-                TabOrder = 12
-                WordWrap = True
-                OnClick = btnSeleccionarCerClick
-              end
-              object lblFechaCaducidad: TcxLabel
-                Left = 60
-                Top = 130
-                Caption = 'FechaCaducidad'
-                TabOrder = 13
-                Transparent = True
-              end
-              object txtFECHACADUCIDAD: TcxDBTextEdit
-                Left = 207
-                Top = 128
-                Margins.Left = 4
-                Margins.Top = 4
-                Margins.Right = 4
-                Margins.Bottom = 4
-                DataBinding.DataField = 'FECHA_HASTA_CERTIFICADO_EMP'
+                Top = 102
+                DataBinding.DataField = 'VERSION_INSTALACION_EMP'
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
-                TabOrder = 14
-                Width = 192
+                TabOrder = 3
+                Width = 196
               end
-              object lblFormatoDocumento: TcxLabel
-                Left = 640
-                Top = 167
-                Caption = 'Formato documentos'
-                TabOrder = 15
-                Transparent = True
-              end
-              object txtFORMATO_DOCUMENTO_EMP: TcxDBTextEdit
-                Left = 640
-                Top = 196
-                DataBinding.DataField = 'FORMATO_DOCUMENTO_EMP'
-                DataBinding.DataSource = dsTablaG
-                TabOrder = 16
-                Width = 250
-              end
-              object lblFormatoDocumentoAyuda: TcxLabel
-                Left = 640
-                Top = 229
-                Caption =
-                  'Tokens: Serie y NroDocumento. Ej.: Serie.NroDocumento o ' +
-                  'NroDocumento.Serie'
-                Properties.WordWrap = True
-                TabOrder = 17
-                Transparent = True
-                Width = 250
-              end
+              object btnGenerarInstalacionSif: TcxButton
+                Left = 37
+                Top = 145
+                Width = 245
+                Height = 28
+                Caption = 'Generar / actualizar n'#250'mero SIF'
+                TabOrder = 4
+                WordWrap = True
+                OnClick = btnGenerarInstalacionSifClick
               end
             end
           end
@@ -1836,7 +1890,7 @@
             end
             object chkAplicaRetenciones: TcxDBCheckBox
               Left = 24
-              Top = 122
+              Top = 126
               Caption = 'Retiene IRPF'
               DataBinding.DataField = 'ESRETENCIONES_EMP'
               DataBinding.DataSource = dsTablaG
@@ -1845,18 +1899,6 @@
               Properties.OnChange = chkAplicaRetencionesPropertiesChange
               Style.TransparentBorder = False
               TabOrder = 7
-              Transparent = True
-            end
-            object chkRecargoEquivalenciaCompras: TcxDBCheckBox
-              Left = 552
-              Top = 122
-              Caption = 'Recargo equivalencia compras'
-              DataBinding.DataField = 'ESIVA_RECARGO_COMPRAS_EMP'
-              DataBinding.DataSource = dsTablaG
-              Properties.ValueChecked = 'S'
-              Properties.ValueUnchecked = 'N'
-              Style.TransparentBorder = False
-              TabOrder = 10
               Transparent = True
             end
             object lblCanalIVA: TcxLabel
@@ -1870,7 +1912,7 @@
               Properties.Alignment.Horz = taRightJustify
               TabOrder = 8
               Transparent = True
-              AnchorX = 289
+              AnchorX = 279
             end
             object cbbZonaIVA: TcxDBLookupComboBox
               Left = 180
@@ -1887,71 +1929,33 @@
               TabOrder = 9
               Width = 333
             end
-            object lblNumeroInstalacionSif: TcxLabel
-              Left = 552
-              Top = 17
-              Caption = 'N'#186' instalaci'#243'n SIF'
-              TabOrder = 11
-              Transparent = True
-            end
-            object txtNUMERO_INSTALACION_EMP: TcxDBTextEdit
-              Left = 690
-              Top = 15
-              DataBinding.DataField = 'NUMERO_INSTALACION_EMP'
-              DataBinding.DataSource = dsTablaG
-              Properties.ReadOnly = True
-              TabOrder = 12
-              Width = 196
-            end
-            object lblVersionInstalacionSif: TcxLabel
-              Left = 552
-              Top = 55
-              Caption = 'Versi'#243'n SIF'
-              TabOrder = 13
-              Transparent = True
-            end
-            object txtVERSION_INSTALACION_EMP: TcxDBTextEdit
-              Left = 690
-              Top = 53
-              DataBinding.DataField = 'VERSION_INSTALACION_EMP'
-              DataBinding.DataSource = dsTablaG
-              Properties.ReadOnly = True
-              TabOrder = 14
-              Width = 196
-            end
-            object btnGenerarInstalacionSif: TcxButton
-              Left = 552
-              Top = 88
-              Width = 334
-              Height = 28
-              Caption = 'Generar / actualizar n'#250'mero SIF'
-              TabOrder = 15
-              WordWrap = True
-              OnClick = btnGenerarInstalacionSifClick
-            end
           end
         end
       end
       inherited tsPerfil: TcxTabSheet
+        ExplicitLeft = 4
+        ExplicitTop = 28
         ExplicitWidth = 937
-        ExplicitHeight = 641
+        ExplicitHeight = 643
         inherited pnlPerfilTop: TPanel
           Width = 937
+          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 937
           inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 27
+            ExplicitHeight = 25
           end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 937
-          Height = 584
+          Height = 586
+          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 937
-          ExplicitHeight = 584
+          ExplicitHeight = 586
           inherited cxgrdPerfil: TcxGrid
             Width = 937
-            Height = 584
+            Height = 586
             ExplicitWidth = 937
-            ExplicitHeight = 584
+            ExplicitHeight = 586
           end
         end
       end
@@ -1959,16 +1963,17 @@
     inherited pnlTopPage: TPanel
       Width = 945
       TabOrder = 0
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitWidth = 945
       inherited pnlTopGrid: TPanel
         Width = 945
+        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 945
         inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
+          ExplicitHeight = 25
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 296
-          TabOrder = 3
           ExplicitWidth = 296
         end
         inherited lblTextoaBuscar: TcxLabel
@@ -1984,12 +1989,23 @@
     Left = 945
     Height = 715
     TabOrder = 1
+    StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 945
     ExplicitHeight = 715
     inherited pButtonGen: TPanel
       Top = 517
       TabOrder = 2
+      StyleElements = [seFont, seClient, seBorder]
       ExplicitTop = 517
+    end
+    inherited pButtonBDStat: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+      inherited pnStateDataSet: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+      inherited pnlDataSetName: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
     end
     object btnNuevaEmpresa: TcxButton
       Left = 1

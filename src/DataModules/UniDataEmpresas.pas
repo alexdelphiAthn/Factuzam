@@ -40,6 +40,8 @@ type
     unqryPaises: TUniQuery;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGAfterPost(DataSet: TDataSet);
+    procedure unqryTablaGBeforeInsert(DataSet: TDataSet);
+    procedure unqryTablaGBeforeEdit(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryRetencionesAfterInsert(DataSet: TDataSet);
@@ -52,7 +54,7 @@ type
     procedure unqryTablaGAfterDelete(DataSet: TDataSet);
     procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
   private
-
+    function ConfirmarCambioCriticoEmpresa(const sAccion: string): Boolean;
     { Private declarations }
   public
     procedure GetCodigoAutoEmpresa;
@@ -82,6 +84,23 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+function TdmEmpresas.ConfirmarCambioCriticoEmpresa(
+  const sAccion: string): Boolean;
+var
+  sMensaje: string;
+begin
+  sMensaje :=
+    'Atención: ' + sAccion + ' una empresa puede anular la licencia ' +
+    'del programa o invalidar el sistema Verifactu existente.' + sLineBreak +
+    sLineBreak +
+    'Revise que los datos fiscales, certificados y la instalación SIF ' +
+    'siguen siendo correctos.' + sLineBreak +
+    sLineBreak +
+    '¿Desea continuar?';
+  Result := Application.MessageBox(PChar(sMensaje), 'Mensaje Advertencia',
+                                   MB_YESNO or MB_ICONWARNING) = ID_YES;
+end;
 
 procedure TdmEmpresas.unqryRetencionesAfterInsert(DataSet: TDataSet);
 begin
@@ -401,6 +420,8 @@ begin
   unqryFacturasLineasEmpresas.Connection := oConn;
   unqryPaises.Connection                 := oConn;
   unqryTablaG.AfterPost                  := unqryTablaGAfterPost;
+  unqryTablaG.BeforeInsert               := unqryTablaGBeforeInsert;
+  unqryTablaG.BeforeEdit                 := unqryTablaGBeforeEdit;
   unqryFacturasEmpresas.MasterSource :=
                                        (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
   unqryFacturasLineasEmpresas.MasterSource :=
@@ -547,12 +568,38 @@ end;
 procedure TdmEmpresas.unqryTablaGBeforeDelete(DataSet: TDataSet);
 begin
   inherited;
-    if (unqryFacturasEmpresas.RecordCount > 0) then
-      if not ( Application.MessageBox( 'La empresa tiene facturas emitidas, ' +
-                                   ' ¿Desea realmente borrar el registro?',
-                                   'Mensaje Advertencia',
-                                   MB_YESNO ) = ID_YES ) then
-        Abort;
+  if not ConfirmarCambioCriticoEmpresa('borrar') then
+  begin
+    Abort;
+  end;
+  if unqryFacturasEmpresas.RecordCount > 0 then
+  begin
+    if not (Application.MessageBox('La empresa tiene facturas emitidas, ' +
+                                  ' ¿Desea realmente borrar el registro?',
+                                  'Mensaje Advertencia',
+                                  MB_YESNO) = ID_YES) then
+    begin
+      Abort;
+    end;
+  end;
+end;
+
+procedure TdmEmpresas.unqryTablaGBeforeEdit(DataSet: TDataSet);
+begin
+  inherited;
+  if not ConfirmarCambioCriticoEmpresa('editar') then
+  begin
+    Abort;
+  end;
+end;
+
+procedure TdmEmpresas.unqryTablaGBeforeInsert(DataSet: TDataSet);
+begin
+  inherited;
+  if not ConfirmarCambioCriticoEmpresa('crear') then
+  begin
+    Abort;
+  end;
 end;
 
 procedure TdmEmpresas.unqryTablaGBeforePost(DataSet: TDataSet);

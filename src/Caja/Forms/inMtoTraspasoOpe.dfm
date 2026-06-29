@@ -7,6 +7,8 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
   OnKeyDown = FormKeyDown
   OnKeyPress = FormKeyPress
   OnShow = FormShow
+  ExplicitLeft = 3
+  ExplicitTop = 3
   ExplicitWidth = 912
   ExplicitHeight = 678
   TextHeight = 17
@@ -20,7 +22,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     TabOrder = 0
     ExplicitWidth = 894
     object btnModoTraspaso: TcxButton
-      Left = 8
+      Left = 12
       Top = 6
       Width = 200
       Height = 28
@@ -30,7 +32,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     end
     object btnModoSolicitar: TcxButton
       Tag = 1
-      Left = 216
+      Left = 220
       Top = 6
       Width = 220
       Height = 28
@@ -40,7 +42,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     end
     object btnModoAtender: TcxButton
       Tag = 2
-      Left = 444
+      Left = 448
       Top = 6
       Width = 200
       Height = 28
@@ -65,11 +67,11 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       TabOrder = 3
     end
     object txtOrigen: TcxTextEdit
-      Left = 150
-      Top = 15
+      Left = 163
+      Top = 14
       Properties.ReadOnly = True
       TabOrder = 0
-      Width = 220
+      Width = 222
     end
     object lblDestino: TcxLabel
       Left = 420
@@ -78,10 +80,10 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
       TabOrder = 4
     end
     object cboDestino: TcxComboBox
-      Left = 560
-      Top = 15
+      Left = 576
+      Top = 14
       TabOrder = 1
-      Width = 320
+      Width = 304
     end
     object lblEmpleado: TcxLabel
       Left = 16
@@ -91,7 +93,7 @@ inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
     end
     object txtEmpleado: TcxButtonEdit
       Left = 200
-      Top = 53
+      Top = 52
       Properties.Buttons = <
         item
           Default = True

@@ -1,4 +1,4 @@
-﻿inherited frmMtoClientes: TfrmMtoClientes
+inherited frmMtoClientes: TfrmMtoClientes
   Caption = 'Clientes'
   ClientHeight = 703
   ClientWidth = 1141
@@ -19,19 +19,19 @@
       TabOrder = 1
       ExplicitWidth = 1001
       ExplicitHeight = 663
-      ClientRectBottom = 661
-      ClientRectRight = 999
+      ClientRectBottom = 659
+      ClientRectRight = 997
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 27
-        ExplicitWidth = 997
-        ExplicitHeight = 634
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 993
+        ExplicitHeight = 631
         inherited cxGrdPrincipal: TcxGrid
-          Width = 997
-          Height = 634
+          Width = 993
+          Height = 631
           ParentFont = False
-          ExplicitWidth = 997
-          ExplicitHeight = 634
+          ExplicitWidth = 993
+          ExplicitHeight = 631
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_CLIENTE: TcxGridDBColumn
               Caption = 'C'#243'digo'
@@ -184,14 +184,14 @@
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 2
-        ExplicitTop = 27
-        ExplicitWidth = 997
-        ExplicitHeight = 634
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 993
+        ExplicitHeight = 631
         object pnlTopFicha: TPanel
           Left = 0
           Top = 0
-          Width = 997
+          Width = 993
           Height = 179
           Margins.Left = 4
           Margins.Top = 4
@@ -201,7 +201,7 @@
           BevelOuter = bvNone
           TabOrder = 0
           DesignSize = (
-            997
+            993
             179)
           object cxgrpbxObservaciones: TcxGroupBox
             AlignWithMargins = True
@@ -358,9 +358,9 @@
         end
         object pnlBodyFicha: TPanel
           Left = 0
-          Top = 189
-          Width = 997
-          Height = 445
+          Top = 187
+          Width = 993
+          Height = 444
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
@@ -371,8 +371,8 @@
           object pcPestanas: TcxPageControl
             Left = 0
             Top = 0
-            Width = 997
-            Height = 445
+            Width = 993
+            Height = 444
             Margins.Left = 4
             Margins.Top = 4
             Margins.Right = 4
@@ -381,10 +381,10 @@
             TabOrder = 0
             Properties.ActivePage = tsMasDatos
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 443
-            ClientRectLeft = 2
-            ClientRectRight = 995
-            ClientRectTop = 27
+            ClientRectBottom = 440
+            ClientRectLeft = 4
+            ClientRectRight = 989
+            ClientRectTop = 28
             object tsDomicilioFiscal: TcxTabSheet
               Margins.Left = 4
               Margins.Top = 4
@@ -395,288 +395,287 @@
               object scrDomicilioFiscal: TScrollBox
                 Left = 0
                 Top = 0
-                Width = 993
-                Height = 416
+                Width = 985
+                Height = 412
                 Align = alClient
                 BorderStyle = bsNone
-                ParentColor = True
                 TabOrder = 0
                 DesignSize = (
-                  993
-                  416)
-              object cxgrpbxIdentificacion: TcxGroupBox
-                AlignWithMargins = True
-                Left = 18
-                Top = 0
-                TabStop = True
-                Anchors = [akLeft, akTop, akRight]
-                TabOrder = 0
-                Height = 265
-                Width = 646
-                object lblDireccion1Texto: TcxLabel
-                  Left = 47
-                  Top = 25
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Direcci'#243'n 1'
-                  Properties.Alignment.Horz = taRightJustify
+                  985
+                  412)
+                object cxgrpbxIdentificacion: TcxGroupBox
+                  AlignWithMargins = True
+                  Left = 18
+                  Top = 0
+                  TabStop = True
+                  Anchors = [akLeft, akTop, akRight]
                   TabOrder = 0
-                  Transparent = True
-                  AnchorX = 135
+                  Height = 265
+                  Width = 638
+                  object lblDireccion1Texto: TcxLabel
+                    Left = 47
+                    Top = 25
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Direcci'#243'n 1'
+                    Properties.Alignment.Horz = taRightJustify
+                    TabOrder = 0
+                    Transparent = True
+                    AnchorX = 135
+                  end
+                  object txtDIRECCION1_CLIENTE: TcxDBTextEdit
+                    Left = 147
+                    Top = 21
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'DIRECCION1_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 1
+                    Width = 303
+                  end
+                  object lblDireccion2Texto: TcxLabel
+                    Left = 47
+                    Top = 64
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Direcci'#243'n 2'
+                    Properties.Alignment.Horz = taRightJustify
+                    TabOrder = 2
+                    Transparent = True
+                    AnchorX = 135
+                  end
+                  object txtDIRECCION2_CLIENTE: TcxDBTextEdit
+                    Left = 147
+                    Top = 60
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'DIRECCION2_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 3
+                    Width = 304
+                  end
+                  object lblCodPostal: TcxLabel
+                    Left = 29
+                    Top = 103
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'C'#243'digo Postal'
+                    Properties.Alignment.Horz = taRightJustify
+                    TabOrder = 4
+                    Transparent = True
+                    AnchorX = 135
+                  end
+                  object txtCPOSTAL_CLIENTE: TcxDBTextEdit
+                    Left = 147
+                    Top = 99
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'CODIGO_POSTAL_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 5
+                    Width = 77
+                  end
+                  object lblPoblacion: TcxLabel
+                    Left = 58
+                    Top = 143
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Poblaci'#243'n'
+                    Properties.Alignment.Horz = taRightJustify
+                    TabOrder = 6
+                    Transparent = True
+                    AnchorX = 135
+                  end
+                  object txtPOBLACION_CLIENTE: TcxDBTextEdit
+                    Left = 147
+                    Top = 139
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'POBLACION_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 7
+                    Width = 303
+                  end
+                  object lblProvincia: TcxLabel
+                    Left = 63
+                    Top = 182
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Provincia'
+                    Properties.Alignment.Horz = taRightJustify
+                    TabOrder = 8
+                    Transparent = True
+                    AnchorX = 135
+                  end
+                  object txtPROVINCIA_CLIENTE: TcxDBTextEdit
+                    Left = 147
+                    Top = 178
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'PROVINCIA_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 9
+                    Width = 303
+                  end
+                  object lblPais: TcxLabel
+                    Left = 102
+                    Top = 222
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Pa'#237's'
+                    Properties.Alignment.Horz = taRightJustify
+                    TabOrder = 10
+                    Transparent = True
+                    AnchorX = 135
+                  end
+                  object txtPAIS_CLIENTE: TcxDBTextEdit
+                    Left = 147
+                    Top = 218
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'NOMBRE_PAI_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 11
+                    Visible = False
+                    Width = 237
+                  end
+                  object txtNOMBRE_PAIS_CLIENTE: TcxDBTextEdit
+                    Left = 402
+                    Top = 218
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'CODIGO_PAI_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    Enabled = False
+                    Properties.OnChange = txtNOMBRE_PAIS_CLIENTEPropertiesChange
+                    TabOrder = 12
+                    Width = 48
+                  end
+                  object cbbPaises: TcxDBLookupComboBox
+                    Left = 147
+                    Top = 218
+                    DataBinding.DataField = 'CODIGO_PAI_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.KeyFieldNames = 'CODIGO'
+                    Properties.ListColumns = <
+                      item
+                        Caption = 'Nombre Pais'
+                        FieldName = 'NOMBRE'
+                      end>
+                    Properties.ListOptions.CaseInsensitive = True
+                    Properties.ListOptions.ShowHeader = False
+                    Properties.ListSource = dmClientes.dsPaises
+                    TabOrder = 13
+                    Width = 203
+                  end
                 end
-                object txtDIRECCION1_CLIENTE: TcxDBTextEdit
-                  Left = 147
-                  Top = 21
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'DIRECCION1_CLI'
-                  DataBinding.DataSource = dsTablaG
+                object cxgrpbxTratamientoFiscal: TcxGroupBox
+                  Left = 18
+                  Top = 263
+                  TabStop = True
+                  Anchors = [akLeft, akTop, akRight]
+                  Caption = 'Tratamiento Fiscal'
                   TabOrder = 1
-                  Width = 303
+                  Height = 85
+                  Width = 903
+                  object chkREGIMENAGRICOLA: TcxDBCheckBox
+                    Left = 6
+                    Top = 24
+                    Hint = 
+                      'S'#243'lo es importante para empresas que facturen de agricultor a ag' +
+                      'ricultor'
+                    Caption = 'R'#233'gimen especial agricola/ganadero/pesca'
+                    DataBinding.DataField = 'ESREGIMENESPECIALAGRICOLA_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
+                    Style.TransparentBorder = False
+                    TabOrder = 0
+                    Transparent = True
+                  end
+                  object chkINTRACOMUNITARIO: TcxDBCheckBox
+                    Left = 6
+                    Top = 53
+                    Caption = 'Es Intracomunitario'
+                    DataBinding.DataField = 'ESINTRACOMUNITARIO_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.DisplayUnchecked = 'True'
+                    Properties.DisplayGrayed = 'False'
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
+                    Style.TransparentBorder = False
+                    TabOrder = 1
+                    Transparent = True
+                  end
+                  object chkIVAEXENTO: TcxDBCheckBox
+                    Left = 277
+                    Top = 53
+                    Caption = 'IVA Exento'
+                    DataBinding.DataField = 'ESIVA_EXENTO_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.DisplayUnchecked = 'True'
+                    Properties.DisplayGrayed = 'False'
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
+                    Style.TransparentBorder = False
+                    TabOrder = 2
+                    Transparent = True
+                  end
+                  object chkRECARGO_EQUIV: TcxDBCheckBox
+                    Left = 411
+                    Top = 24
+                    Caption = 'Borrador con Recargo de Equivalencia'
+                    DataBinding.DataField = 'ESIVA_RECARGO_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.DisplayUnchecked = 'True'
+                    Properties.DisplayGrayed = 'False'
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
+                    Style.TransparentBorder = False
+                    TabOrder = 3
+                    Transparent = True
+                  end
+                  object chkRETENCIONES: TcxDBCheckBox
+                    Left = 411
+                    Top = 53
+                    Caption = 'Aplicar Retenciones (Es profesional)'
+                    DataBinding.DataField = 'ESRETENCIONES_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.DisplayUnchecked = 'True'
+                    Properties.DisplayGrayed = 'False'
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
+                    Style.TransparentBorder = False
+                    TabOrder = 4
+                    Transparent = True
+                  end
                 end
-                object lblDireccion2Texto: TcxLabel
-                  Left = 47
-                  Top = 64
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Direcci'#243'n 2'
-                  Properties.Alignment.Horz = taRightJustify
-                  TabOrder = 2
-                  Transparent = True
-                  AnchorX = 135
-                end
-                object txtDIRECCION2_CLIENTE: TcxDBTextEdit
-                  Left = 147
-                  Top = 60
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'DIRECCION2_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 3
-                  Width = 304
-                end
-                object lblCodPostal: TcxLabel
-                  Left = 29
-                  Top = 103
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'C'#243'digo Postal'
-                  Properties.Alignment.Horz = taRightJustify
-                  TabOrder = 4
-                  Transparent = True
-                  AnchorX = 135
-                end
-                object txtCPOSTAL_CLIENTE: TcxDBTextEdit
-                  Left = 147
-                  Top = 99
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'CODIGO_POSTAL_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 5
-                  Width = 77
-                end
-                object lblPoblacion: TcxLabel
-                  Left = 58
-                  Top = 143
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Poblaci'#243'n'
-                  Properties.Alignment.Horz = taRightJustify
-                  TabOrder = 6
-                  Transparent = True
-                  AnchorX = 135
-                end
-                object txtPOBLACION_CLIENTE: TcxDBTextEdit
-                  Left = 147
-                  Top = 139
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'POBLACION_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 7
-                  Width = 303
-                end
-                object lblProvincia: TcxLabel
-                  Left = 63
-                  Top = 182
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Provincia'
-                  Properties.Alignment.Horz = taRightJustify
-                  TabOrder = 8
-                  Transparent = True
-                  AnchorX = 135
-                end
-                object txtPROVINCIA_CLIENTE: TcxDBTextEdit
-                  Left = 147
-                  Top = 178
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'PROVINCIA_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 9
-                  Width = 303
-                end
-                object lblPais: TcxLabel
-                  Left = 102
-                  Top = 222
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Pa'#237's'
-                  Properties.Alignment.Horz = taRightJustify
-                  TabOrder = 10
-                  Transparent = True
-                  AnchorX = 135
-                end
-                object txtPAIS_CLIENTE: TcxDBTextEdit
-                  Left = 147
-                  Top = 218
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'NOMBRE_PAI_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 11
-                  Visible = False
-                  Width = 237
-                end
-                object txtNOMBRE_PAIS_CLIENTE: TcxDBTextEdit
-                  Left = 402
-                  Top = 218
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'CODIGO_PAI_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  Enabled = False
-                  Properties.OnChange = txtNOMBRE_PAIS_CLIENTEPropertiesChange
-                  TabOrder = 12
-                  Width = 48
-                end
-                object cbbPaises: TcxDBLookupComboBox
-                  Left = 147
-                  Top = 218
-                  DataBinding.DataField = 'CODIGO_PAI_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.KeyFieldNames = 'CODIGO'
-                  Properties.ListColumns = <
-                    item
-                      Caption = 'Nombre Pais'
-                      FieldName = 'NOMBRE'
-                    end>
-                  Properties.ListOptions.CaseInsensitive = True
-                  Properties.ListOptions.ShowHeader = False
-                  Properties.ListSource = dmClientes.dsPaises
-                  TabOrder = 13
-                  Width = 203
-                end
-              end
-              object cxgrpbxTratamientoFiscal: TcxGroupBox
-                Left = 18
-                Top = 263
-                TabStop = True
-                Anchors = [akLeft, akTop, akRight]
-                Caption = 'Tratamiento Fiscal'
-                TabOrder = 1
-                Height = 85
-                Width = 911
-                object chkREGIMENAGRICOLA: TcxDBCheckBox
-                  Left = 6
-                  Top = 24
-                  Hint = 
-                    'S'#243'lo es importante para empresas que facturen de agricultor a ag' +
-                    'ricultor'
-                  Caption = 'R'#233'gimen especial agricola/ganadero/pesca'
-                  DataBinding.DataField = 'ESREGIMENESPECIALAGRICOLA_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.ValueChecked = 'S'
-                  Properties.ValueUnchecked = 'N'
-                  Style.TransparentBorder = False
-                  TabOrder = 0
-                  Transparent = True
-                end
-                object chkINTRACOMUNITARIO: TcxDBCheckBox
-                  Left = 6
-                  Top = 53
-                  Caption = 'Es Intracomunitario'
-                  DataBinding.DataField = 'ESINTRACOMUNITARIO_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.DisplayUnchecked = 'True'
-                  Properties.DisplayGrayed = 'False'
-                  Properties.ValueChecked = 'S'
-                  Properties.ValueUnchecked = 'N'
-                  Style.TransparentBorder = False
-                  TabOrder = 1
-                  Transparent = True
-                end
-                object chkIVAEXENTO: TcxDBCheckBox
-                  Left = 277
-                  Top = 53
-                  Caption = 'IVA Exento'
-                  DataBinding.DataField = 'ESIVA_EXENTO_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.DisplayUnchecked = 'True'
-                  Properties.DisplayGrayed = 'False'
-                  Properties.ValueChecked = 'S'
-                  Properties.ValueUnchecked = 'N'
-                  Style.TransparentBorder = False
-                  TabOrder = 2
-                  Transparent = True
-                end
-                object chkRECARGO_EQUIV: TcxDBCheckBox
-                  Left = 411
-                  Top = 24
-                  Caption = 'Borrador con Recargo de Equivalencia'
-                  DataBinding.DataField = 'ESIVA_RECARGO_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.DisplayUnchecked = 'True'
-                  Properties.DisplayGrayed = 'False'
-                  Properties.ValueChecked = 'S'
-                  Properties.ValueUnchecked = 'N'
-                  Style.TransparentBorder = False
-                  TabOrder = 3
-                  Transparent = True
-                end
-                object chkRETENCIONES: TcxDBCheckBox
-                  Left = 411
-                  Top = 53
-                  Caption = 'Aplicar Retenciones (Es profesional)'
-                  DataBinding.DataField = 'ESRETENCIONES_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.DisplayUnchecked = 'True'
-                  Properties.DisplayGrayed = 'False'
-                  Properties.ValueChecked = 'S'
-                  Properties.ValueUnchecked = 'N'
-                  Style.TransparentBorder = False
-                  TabOrder = 4
-                  Transparent = True
-                end
-              end
               end
             end
             object tsMasDatos: TcxTabSheet
@@ -685,310 +684,304 @@
               object scrMasDatos: TScrollBox
                 Left = 0
                 Top = 0
-                Width = 993
-                Height = 416
+                Width = 985
+                Height = 412
                 Align = alClient
                 BorderStyle = bsNone
-                ParentColor = True
                 TabOrder = 0
                 DesignSize = (
-                  993
-                  416)
-              object cxgrpbxDomicilio: TcxGroupBox
-                AlignWithMargins = True
-                Left = 21
-                Top = 0
-                TabStop = True
-                Anchors = [akLeft, akTop, akRight]
-                TabOrder = 0
-                Height = 412
-                Width = 890
-                object lblContacto: TcxLabel
-                  Left = 94
-                  Top = 23
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Contacto'
-                  Properties.Alignment.Horz = taRightJustify
+                  985
+                  412)
+                object cxgrpbxDomicilio: TcxGroupBox
+                  AlignWithMargins = True
+                  Left = 21
+                  Top = 0
+                  TabStop = True
+                  Anchors = [akLeft, akTop, akRight]
                   TabOrder = 0
-                  Transparent = True
-                  AnchorX = 163
+                  Height = 412
+                  Width = 882
+                  object lblContacto: TcxLabel
+                    Left = 94
+                    Top = 23
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Contacto'
+                    Properties.Alignment.Horz = taRightJustify
+                    TabOrder = 0
+                    Transparent = True
+                    AnchorX = 163
+                  end
+                  object txtCONTACTO_CLIENTE: TcxDBTextEdit
+                    Left = 170
+                    Top = 19
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'CONTACTO_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 1
+                    Width = 199
+                  end
+                  object lblTelefonoContacto: TcxLabel
+                    Left = 382
+                    Top = 23
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Tel'#233'fono Contacto'
+                    TabOrder = 2
+                    Transparent = True
+                  end
+                  object txtTELEFONO_CONTACTO_CLIENTE: TcxDBTextEdit
+                    Left = 548
+                    Top = 19
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'TELEFONO_CONTACTO_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 3
+                    Width = 159
+                  end
+                  object lblReferencia: TcxLabel
+                    Left = 81
+                    Top = 66
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Referencia'
+                    Properties.Alignment.Horz = taRightJustify
+                    TabOrder = 4
+                    Transparent = True
+                    AnchorX = 163
+                  end
+                  object txtREFERENCIA_CLIENTE: TcxDBTextEdit
+                    Left = 170
+                    Top = 62
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'REFERENCIA_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 5
+                    Width = 537
+                  end
+                  object lblObservaciones: TcxLabel
+                    Left = 52
+                    Top = 101
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Observaciones'
+                    Properties.Alignment.Horz = taRightJustify
+                    TabOrder = 6
+                    Transparent = True
+                    AnchorX = 163
+                  end
+                  object cxdbmOBSERVACIONES_CLIENTE: TcxDBMemo
+                    Left = 170
+                    Top = 101
+                    DataBinding.DataField = 'OBSERVACIONES_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 7
+                    Height = 68
+                    Width = 537
+                  end
+                  object lblFormadePago: TcxLabel
+                    Left = 34
+                    Top = 187
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Forma de Pago'
+                    TabOrder = 8
+                    Transparent = True
+                  end
+                  object cbbFORMAPAGO: TcxDBLookupComboBox
+                    Left = 170
+                    Top = 183
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'CODIGO_FP_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.KeyFieldNames = 'CODIGO_FP_FP'
+                    Properties.ListColumns = <
+                      item
+                        FieldName = 'DESCRIPCION_FORMA_PAGO_FP'
+                      end>
+                    Properties.ListOptions.ShowHeader = False
+                    Properties.ListSource = dmClientes.dsFormasPago
+                    TabOrder = 9
+                    Width = 263
+                  end
+                  object lblBancoCobroCli: TcxLabel
+                    Left = 450
+                    Top = 187
+                    Caption = 'Banco cobro'
+                    TabOrder = 21
+                    Transparent = True
+                  end
+                  object cbbBancoCobroCli: TcxDBLookupComboBox
+                    Left = 552
+                    Top = 183
+                    DataBinding.DataField = 'CODIGO_EMPBAN_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.KeyFieldNames = 'CODIGO_EMPBAN'
+                    Properties.ListColumns = <
+                      item
+                        Caption = 'Cuenta'
+                        MinWidth = 40
+                        FieldName = 'NOMBRE_EMPBAN'
+                      end
+                      item
+                        Caption = 'IBAN'
+                        MinWidth = 40
+                        FieldName = 'IBAN_EMPBAN'
+                      end>
+                    Properties.ListSource = dmClientes.dsEmpresasBancos
+                    TabOrder = 22
+                    Width = 155
+                  end
+                  object lblNroCuenta: TcxLabel
+                    Left = 53
+                    Top = 228
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'IBAN Bancario'
+                    Properties.Alignment.Horz = taRightJustify
+                    TabOrder = 10
+                    Transparent = True
+                    AnchorX = 163
+                  end
+                  object lblTextoLegalAlt: TcxLabel
+                    Left = 8
+                    Top = 268
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Tarifa por defecto'
+                    TabOrder = 11
+                    Transparent = True
+                  end
+                  object cbbTARIFA: TcxDBLookupComboBox
+                    Left = 170
+                    Top = 264
+                    DataBinding.DataField = 'TARIFA_ARTICULO_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.KeyFieldNames = 'CODIGO_TAR_ARTTAR'
+                    Properties.ListColumns = <
+                      item
+                        Fixed = True
+                        FieldName = 'NOMBRE_TAR_TAR'
+                      end>
+                    Properties.ListOptions.ShowHeader = False
+                    TabOrder = 12
+                    Width = 263
+                  end
+                  object txtTARIFA_ARTICULO_CLIENTE: TcxDBTextEdit
+                    Left = 308
+                    Top = 266
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    DataBinding.DataField = 'TARIFA_ARTICULO_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 13
+                    Visible = False
+                    Width = 33
+                  end
+                  object txtIBAN_CLIENTE: TcxDBMaskEdit
+                    Left = 170
+                    Top = 224
+                    DataBinding.DataField = 'IBAN_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.IgnoreMaskBlank = True
+                    Properties.EditMask = 'aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa'
+                    TabOrder = 14
+                    Width = 369
+                  end
+                  object btnValidar: TcxButton
+                    Left = 545
+                    Top = 224
+                    Width = 98
+                    Height = 27
+                    Caption = 'Vali&dar'
+                    TabOrder = 15
+                    OnClick = btnValidarClick
+                  end
+                  object lblExtra1: TcxLabel
+                    Left = 415
+                    Top = 316
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'L'#237'mite Deuda'
+                    Properties.Alignment.Horz = taRightJustify
+                    TabOrder = 16
+                    Transparent = True
+                    AnchorX = 515
+                  end
+                  object curTOTAL_LIMITE_CREDITO_CLI: TcxDBCurrencyEdit
+                    Left = 522
+                    Top = 312
+                    DataBinding.DataField = 'TOTAL_LIMITE_CREDITO_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 17
+                    Width = 121
+                  end
+                  object chkESPERMITE_DEUDA_CLI: TcxDBCheckBox
+                    Left = 170
+                    Top = 311
+                    Caption = 'Permite deuda en Caja'
+                    DataBinding.DataField = 'ESPERMITE_DEUDA_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    Properties.DisplayChecked = 'S'
+                    Properties.DisplayUnchecked = 'N'
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
+                    Style.TransparentBorder = False
+                    TabOrder = 18
+                    Transparent = True
+                  end
+                  object curTOTAL_DEUDA_CLI: TcxDBCurrencyEdit
+                    Left = 523
+                    Top = 347
+                    DataBinding.DataField = 'TOTAL_DEUDA_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    TabOrder = 19
+                    Width = 121
+                  end
+                  object lblExtra2: TcxLabel
+                    Left = 415
+                    Top = 351
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    Caption = 'Deuda Actual'
+                    Properties.Alignment.Horz = taRightJustify
+                    TabOrder = 20
+                    Transparent = True
+                    AnchorX = 516
+                  end
                 end
-                object txtCONTACTO_CLIENTE: TcxDBTextEdit
-                  Left = 170
-                  Top = 19
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'CONTACTO_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 1
-                  Width = 199
-                end
-                object lblTelefonoContacto: TcxLabel
-                  Left = 382
-                  Top = 23
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Tel'#233'fono Contacto'
-                  TabOrder = 2
-                  Transparent = True
-                end
-                object txtTELEFONO_CONTACTO_CLIENTE: TcxDBTextEdit
-                  Left = 548
-                  Top = 19
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'TELEFONO_CONTACTO_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 3
-                  Width = 159
-                end
-                object lblReferencia: TcxLabel
-                  Left = 81
-                  Top = 66
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Referencia'
-                  Properties.Alignment.Horz = taRightJustify
-                  TabOrder = 4
-                  Transparent = True
-                  AnchorX = 163
-                end
-                object txtREFERENCIA_CLIENTE: TcxDBTextEdit
-                  Left = 170
-                  Top = 62
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'REFERENCIA_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 5
-                  Width = 537
-                end
-                object lblObservaciones: TcxLabel
-                  Left = 52
-                  Top = 101
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Observaciones'
-                  Properties.Alignment.Horz = taRightJustify
-                  TabOrder = 6
-                  Transparent = True
-                  AnchorX = 163
-                end
-                object cxdbmOBSERVACIONES_CLIENTE: TcxDBMemo
-                  Left = 170
-                  Top = 101
-                  DataBinding.DataField = 'OBSERVACIONES_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 7
-                  Height = 68
-                  Width = 537
-                end
-                object lblFormadePago: TcxLabel
-                  Left = 34
-                  Top = 187
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Forma de Pago'
-                  TabOrder = 8
-                  Transparent = True
-                end
-                object cbbFORMAPAGO: TcxDBLookupComboBox
-                  Left = 170
-                  Top = 183
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'CODIGO_FP_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.KeyFieldNames = 'CODIGO_FP_FP'
-                  Properties.ListColumns = <
-                    item
-                      FieldName = 'DESCRIPCION_FORMA_PAGO_FP'
-                    end>
-                  Properties.ListOptions.ShowHeader = False
-                  Properties.ListSource = dmClientes.dsFormasPago
-                  TabOrder = 9
-                  Width = 263
-                end
-                object lblBancoCobroCli: TcxLabel
-                  Left = 450
-                  Top = 187
-                  Caption = 'Banco cobro'
-                  TabOrder = 10
-                  Transparent = True
-                end
-                object cbbBancoCobroCli: TcxDBLookupComboBox
-                  Left = 527
-                  Top = 183
-                  DataBinding.DataField = 'CODIGO_EMPBAN_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.KeyFieldNames = 'CODIGO_EMPBAN'
-                  Properties.ListColumns = <
-                    item
-                      Caption = 'Cuenta'
-                      FieldName = 'NOMBRE_EMPBAN'
-                    end
-                    item
-                      Caption = 'IBAN'
-                      FieldName = 'IBAN_EMPBAN'
-                    end
-                    item
-                      Caption = 'Banco'
-                      FieldName = 'NOMBRE_BAN_VIEW_EMPBAN'
-                    end
-                    item
-                      Caption = 'Empresa'
-                      FieldName = 'CODIGO_EMP_EMPBAN'
-                    end>
-                  TabOrder = 11
-                  Width = 180
-                end
-                object lblNroCuenta: TcxLabel
-                  Left = 53
-                  Top = 228
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'IBAN Bancario'
-                  Properties.Alignment.Horz = taRightJustify
-                  TabOrder = 10
-                  Transparent = True
-                  AnchorX = 163
-                end
-                object lblTextoLegalAlt: TcxLabel
-                  Left = 8
-                  Top = 268
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Tarifa por defecto'
-                  TabOrder = 11
-                  Transparent = True
-                end
-                object cbbTARIFA: TcxDBLookupComboBox
-                  Left = 170
-                  Top = 264
-                  DataBinding.DataField = 'TARIFA_ARTICULO_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.KeyFieldNames = 'CODIGO_TAR_ARTTAR'
-                  Properties.ListColumns = <
-                    item
-                      Fixed = True
-                      FieldName = 'NOMBRE_TAR_TAR'
-                    end>
-                  Properties.ListOptions.ShowHeader = False
-                  TabOrder = 12
-                  Width = 263
-                end
-                object txtTARIFA_ARTICULO_CLIENTE: TcxDBTextEdit
-                  Left = 308
-                  Top = 266
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  DataBinding.DataField = 'TARIFA_ARTICULO_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 13
-                  Visible = False
-                  Width = 33
-                end
-                object txtIBAN_CLIENTE: TcxDBMaskEdit
-                  Left = 170
-                  Top = 224
-                  DataBinding.DataField = 'IBAN_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.IgnoreMaskBlank = True
-                  Properties.EditMask = 'aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa'
-                  TabOrder = 14
-                  Width = 369
-                end
-                object btnValidar: TcxButton
-                  Left = 545
-                  Top = 224
-                  Width = 98
-                  Height = 27
-                  Caption = 'Vali&dar'
-                  TabOrder = 15
-                  OnClick = btnValidarClick
-                end
-                object lblExtra1: TcxLabel
-                  Left = 415
-                  Top = 316
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'L'#237'mite Deuda'
-                  Properties.Alignment.Horz = taRightJustify
-                  TabOrder = 16
-                  Transparent = True
-                  AnchorX = 515
-                end
-                object curTOTAL_LIMITE_CREDITO_CLI: TcxDBCurrencyEdit
-                  Left = 522
-                  Top = 312
-                  DataBinding.DataField = 'TOTAL_LIMITE_CREDITO_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 17
-                  Width = 121
-                end
-                object chkESPERMITE_DEUDA_CLI: TcxDBCheckBox
-                  Left = 170
-                  Top = 311
-                  Caption = 'Permite deuda en Caja'
-                  DataBinding.DataField = 'ESPERMITE_DEUDA_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.DisplayChecked = 'S'
-                  Properties.DisplayUnchecked = 'N'
-                  Properties.ValueChecked = 'S'
-                  Properties.ValueUnchecked = 'N'
-                  Style.TransparentBorder = False
-                  TabOrder = 18
-                  Transparent = True
-                end
-                object curTOTAL_DEUDA_CLI: TcxDBCurrencyEdit
-                  Left = 523
-                  Top = 347
-                  DataBinding.DataField = 'TOTAL_DEUDA_CLI'
-                  DataBinding.DataSource = dsTablaG
-                  TabOrder = 19
-                  Width = 121
-                end
-                object lblExtra2: TcxLabel
-                  Left = 415
-                  Top = 351
-                  Margins.Left = 4
-                  Margins.Top = 4
-                  Margins.Right = 4
-                  Margins.Bottom = 4
-                  Caption = 'Deuda Actual'
-                  Properties.Alignment.Horz = taRightJustify
-                  TabOrder = 20
-                  Transparent = True
-                  AnchorX = 516
-                end
-              end
               end
             end
             object tsParametrosEDoc: TcxTabSheet
@@ -1004,7 +997,7 @@
                 Height = 174
                 Width = 890
                 object lblCodigoOficinaContable: TcxLabel
-                  Left = 30
+                  Left = 39
                   Top = 32
                   Caption = 'Oficina contable'
                   Properties.Alignment.Horz = taRightJustify
@@ -1021,7 +1014,7 @@
                   Width = 160
                 end
                 object lblCodigoOrganoGestor: TcxLabel
-                  Left = 57
+                  Left = 56
                   Top = 72
                   Caption = 'Organo gestor'
                   Properties.Alignment.Horz = taRightJustify
@@ -1038,7 +1031,7 @@
                   Width = 160
                 end
                 object lblCodigoUnidadTramitadora: TcxLabel
-                  Left = 23
+                  Left = 21
                   Top = 112
                   Caption = 'Unidad tramitadora'
                   Properties.Alignment.Horz = taRightJustify
@@ -1055,7 +1048,7 @@
                   Width = 160
                 end
                 object lblNombrePersonaCliente: TcxLabel
-                  Left = 350
+                  Left = 376
                   Top = 32
                   Caption = 'Nombre persona f'#237'sica'
                   Properties.Alignment.Horz = taRightJustify
@@ -1072,7 +1065,7 @@
                   Width = 250
                 end
                 object lblApellidosPersonaCliente: TcxLabel
-                  Left = 341
+                  Left = 364
                   Top = 72
                   Caption = 'Apellidos persona f'#237'sica'
                   Properties.Alignment.Horz = taRightJustify
@@ -1096,16 +1089,16 @@
               object pnlFacturaCli: TPanel
                 Left = 0
                 Top = 0
-                Width = 993
-                Height = 416
+                Width = 985
+                Height = 412
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
                 object cxgrdClientesFacturas: TcxGrid
                   Left = 0
                   Top = 0
-                  Width = 876
-                  Height = 416
+                  Width = 868
+                  Height = 412
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -1654,10 +1647,10 @@
                   end
                 end
                 object pnlFacturaOpts: TPanel
-                  Left = 876
+                  Left = 868
                   Top = 0
                   Width = 117
-                  Height = 416
+                  Height = 412
                   Align = alRight
                   BevelOuter = bvNone
                   TabOrder = 1
@@ -1707,8 +1700,8 @@
               object cxgrdPresupuestos: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 993
-                Height = 416
+                Width = 985
+                Height = 412
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1879,16 +1872,16 @@
               object pnlPrestamosBody: TPanel
                 Left = 0
                 Top = 0
-                Width = 993
-                Height = 416
+                Width = 985
+                Height = 412
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
                 object cxgrdPrestamosCliente: TcxGrid
                   Left = 0
                   Top = 0
-                  Width = 876
-                  Height = 416
+                  Width = 868
+                  Height = 412
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -2522,10 +2515,10 @@
                   end
                 end
                 object pnlPrestamosBotones: TPanel
-                  Left = 876
+                  Left = 868
                   Top = 0
                   Width = 117
-                  Height = 416
+                  Height = 412
                   Align = alRight
                   BevelOuter = bvNone
                   TabOrder = 1
@@ -2555,8 +2548,8 @@
               ImageIndex = 4
               object pnlUserInstantBottom: TPanel
                 Left = 0
-                Top = 337
-                Width = 993
+                Top = 333
+                Width = 985
                 Height = 79
                 Align = alBottom
                 BevelOuter = bvNone
@@ -2726,35 +2719,37 @@
         object splFicha: TcxSplitter
           Left = 0
           Top = 179
-          Width = 997
-          Height = 10
+          Width = 993
+          Height = 8
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlTopFicha
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitWidth = 997
-        ExplicitHeight = 634
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 993
+        ExplicitHeight = 631
         inherited pnlPerfilTop: TPanel
-          Width = 997
+          Width = 993
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 997
+          ExplicitWidth = 993
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 25
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 997
-          Height = 577
+          Width = 993
+          Height = 574
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 997
-          ExplicitHeight = 577
+          ExplicitWidth = 993
+          ExplicitHeight = 574
           inherited cxgrdPerfil: TcxGrid
-            Width = 997
-            Height = 577
-            ExplicitWidth = 997
-            ExplicitHeight = 577
+            Width = 993
+            Height = 574
+            ExplicitWidth = 993
+            ExplicitHeight = 574
           end
         end
       end
@@ -2849,6 +2844,7 @@
   end
   inherited dsTablaG: TDataSource
     DataSet = dmClientes.unqryTablaG
-    Left = 552
+    Left = 544
+    Top = 392
   end
 end
