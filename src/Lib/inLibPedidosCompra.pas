@@ -510,7 +510,7 @@ begin
       '   DIRECCION1_PRV_ALBC, DIRECCION2_PRV_ALBC, ' +
       '   POBLACION_PRV_ALBC, PROVINCIA_PRV_ALBC, ' +
       '   CODIGO_POSTAL_PRV_ALBC, ' +
-      '   REF_PROVEEDOR_ALBC, CODIGO_ALM_ALBC, ' +
+      '   REF_PROVEEDOR_ALBC, FORMA_PAGO_ALBC, CODIGO_ALM_ALBC, ' +
       '   TOTAL_BASES_ALBC, TOTAL_IMPUESTOS_ALBC, TOTAL_LIQUIDO_ALBC, ' +
       '   CONTADOR_LINEAS_ALBC, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
@@ -538,7 +538,8 @@ begin
       '       P.DIRECCION1_PRV_PEDC, P.DIRECCION2_PRV_PEDC, ' +
       '       P.POBLACION_PRV_PEDC, P.PROVINCIA_PRV_PEDC, ' +
       '       P.CODIGO_POSTAL_PRV_PEDC, ' +
-      '       IFNULL(NULLIF(:rprv,''''), P.REF_PROVEEDOR_PEDC), :alm, ' +
+      '       IFNULL(NULLIF(:rprv,''''), P.REF_PROVEEDOR_PEDC), ' +
+      '       NULLIF(P.FORMA_PAGO_PEDC, ''''), :alm, ' +
       '       0, 0, 0, ''0'', ' +
       '       NOW(), :u, NOW(), :u ' +
       '  FROM fza_pedidos_compra P ' +
@@ -820,7 +821,7 @@ begin
       '   DIRECCION1_PRV_ALBC, DIRECCION2_PRV_ALBC, ' +
       '   POBLACION_PRV_ALBC, PROVINCIA_PRV_ALBC, ' +
       '   CODIGO_POSTAL_PRV_ALBC, ' +
-      '   REF_PROVEEDOR_ALBC, CODIGO_ALM_ALBC, ' +
+      '   REF_PROVEEDOR_ALBC, FORMA_PAGO_ALBC, CODIGO_ALM_ALBC, ' +
       '   TOTAL_BASES_ALBC, TOTAL_IMPUESTOS_ALBC, TOTAL_LIQUIDO_ALBC, ' +
       '   CONTADOR_LINEAS_ALBC, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
@@ -846,7 +847,8 @@ begin
       '       P.DIRECCION1_PRV_PEDC, P.DIRECCION2_PRV_PEDC, ' +
       '       P.POBLACION_PRV_PEDC, P.PROVINCIA_PRV_PEDC, ' +
       '       P.CODIGO_POSTAL_PRV_PEDC, ' +
-      '       IFNULL(NULLIF(:rprv,''''), P.REF_PROVEEDOR_PEDC), :alm, ' +
+      '       IFNULL(NULLIF(:rprv,''''), P.REF_PROVEEDOR_PEDC), ' +
+      '       NULLIF(P.FORMA_PAGO_PEDC, ''''), :alm, ' +
       '       0, 0, 0, ''0'', ' +
       '       NOW(), :u, NOW(), :u ' +
       '  FROM fza_pedidos_compra P ' +

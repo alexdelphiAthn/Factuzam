@@ -107,6 +107,8 @@ type
     dsTarifas: TDataSource;
     unqryEmpresas: TUniQuery;
     dsEmpresas: TDataSource;
+    unqryFormasPago: TUniQuery;
+    dsFormasPago: TDataSource;
     // Lookup de temporadas (fza_propiedades_valores con ID_PROP_PV='TEMPORADA').
     // Una por sesion; se propaga a fza_articulos_propiedades al materializar.
     unqryTemporadas: TUniQuery;
@@ -152,6 +154,7 @@ type
     procedure unqrySesionCelAfterPost(DataSet: TDataSet);
   private
     FInstanteCargaSesion: TDateTime;
+    procedure ConfigurarSqlCabecera;
     procedure CalcularTotalesLineaActual;
     procedure PersistirTotalesSesion;
   public
@@ -194,9 +197,138 @@ uses
 
 {$R *.dfm}
 
+procedure TdmComprasSesiones.ConfigurarSqlCabecera;
+const
+  CAMPOS_SES: array[0..72] of string = (
+    'SERIE_SES',
+    'NUMERO_SES',
+    'FECHA_SES',
+    'ESTADO_SES',
+    'CODIGO_EMP_SES',
+    'CODIGO_PRV_SES',
+    'REF_PRV_SES',
+    'FORMA_PAGO_SES',
+    'CODIGO_FAM_SES',
+    'CODIGO_ALM_SES',
+    'MONEDA_SES',
+    'TIPO_IVA_SES',
+    'CODIGO_IVA_SES',
+    'ESVARIOS_TIPOS_IVA_SES',
+    'PORCENTAJE_MARGEN_SES',
+    'CODIGO_TAR_SES',
+    'ESPRECIOS_SIN_IVA_SES',
+    'ESREDONDEO_VENTA_SES',
+    'MULTIPLO_REDONDEO_SES',
+    'AJUSTE_FINAL_SES',
+    'CODIGO_VAR_SES',
+    'ID_VA_PIVOT_SES',
+    'ID_AC_PIVOT_SES',
+    'ID_VA_FILA_SES',
+    'ID_AC_FILA_SES',
+    'ESVAR_FIJA_SES',
+    'PREFIJO_EAN_SES',
+    'INSTANTE_MATERIALIZA_SES',
+    'USUARIO_MATERIALIZA_SES',
+    'ESGENERA_PEDIDO_SES',
+    'ESGENERA_ALBARAN_SES',
+    'ESFORMATO_DISTRIBUIDO_SES',
+    'SERIE_PEDC_SES',
+    'NUMERO_PEDC_SES',
+    'SERIE_ALBC_SES',
+    'NUMERO_ALBC_SES',
+    'MENSAJE_ERROR_SES',
+    'CONTADOR_LINEAS_SES',
+    'COMENTARIOS_SES',
+    'INSTANTE_ALTA',
+    'USUARIO_ALTA',
+    'INSTANTE_MODIF',
+    'USUARIO_MODIF',
+    'ESPRECIO_POR_SKU_SES',
+    'ID_PV_TEMPORADA_SES',
+    'ESIVA_RECARGO_COMPRAS_SES',
+    'PORCENTAJE_IVAN_SES',
+    'TOTAL_BASEI_IVAN_SES',
+    'TOTAL_IVAN_SES',
+    'PORCENTAJE_REN_SES',
+    'TOTAL_REN_SES',
+    'PORCENTAJE_IVAR_SES',
+    'TOTAL_BASEI_IVAR_SES',
+    'TOTAL_IVAR_SES',
+    'PORCENTAJE_RER_SES',
+    'TOTAL_RER_SES',
+    'PORCENTAJE_IVAS_SES',
+    'TOTAL_BASEI_IVAS_SES',
+    'TOTAL_IVAS_SES',
+    'PORCENTAJE_RES_SES',
+    'TOTAL_RES_SES',
+    'PORCENTAJE_IVAE_SES',
+    'TOTAL_BASEI_IVAE_SES',
+    'TOTAL_IVAE_SES',
+    'PORCENTAJE_REE_SES',
+    'TOTAL_REE_SES',
+    'PORCENTAJE_RETENCION_SES',
+    'TOTAL_RETENCION_SES',
+    'TOTAL_BRUTO_SES',
+    'TOTAL_BASES_SES',
+    'TOTAL_IMPUESTOS_SES',
+    'TOTAL_SES',
+    'TOTAL_LIQUIDO_SES');
+var
+  i: Integer;
+  sCampos: string;
+  sValores: string;
+  sSet: string;
+
+  procedure AgregarCampo(const ACampo: string);
+  begin
+    if sCampos = '' then
+    begin
+      sCampos := '  (' + ACampo;
+      sValores := '  (:' + ACampo;
+      sSet := '       ' + ACampo + ' = :' + ACampo;
+    end
+    else
+    begin
+      sCampos := sCampos + ',' + sLineBreak + '   ' + ACampo;
+      sValores := sValores + ',' + sLineBreak + '   :' + ACampo;
+      sSet := sSet + ',' + sLineBreak +
+        '       ' + ACampo + ' = :' + ACampo;
+    end;
+  end;
+
+begin
+  sCampos := '';
+  sValores := '';
+  sSet := '';
+  for i := Low(CAMPOS_SES) to High(CAMPOS_SES) do
+    AgregarCampo(CAMPOS_SES[i]);
+  unqryTablaG.SQLInsert.Text :=
+    'INSERT INTO fza_compras_sesiones ' + sLineBreak +
+    sCampos + ')' + sLineBreak +
+    'VALUES ' + sLineBreak +
+    sValores + ')';
+  unqryTablaG.SQLDelete.Text :=
+    'DELETE FROM fza_compras_sesiones ' + sLineBreak +
+    ' WHERE SERIE_SES = :Old_SERIE_SES ' + sLineBreak +
+    '   AND NUMERO_SES = :Old_NUMERO_SES';
+  unqryTablaG.SQLUpdate.Text :=
+    'UPDATE fza_compras_sesiones ' + sLineBreak +
+    '   SET ' + sLineBreak +
+    sSet + sLineBreak +
+    ' WHERE SERIE_SES = :Old_SERIE_SES ' + sLineBreak +
+    '   AND NUMERO_SES = :Old_NUMERO_SES';
+  unqryTablaG.SQLLock.Text :=
+    'SELECT * ' + sLineBreak +
+    '  FROM fza_compras_sesiones ' + sLineBreak +
+    ' WHERE SERIE_SES = :Old_SERIE_SES ' + sLineBreak +
+    '   AND NUMERO_SES = :Old_NUMERO_SES ' + sLineBreak +
+    ' FOR UPDATE';
+end;
+
 procedure TdmComprasSesiones.DataModuleCreate(Sender: TObject);
 begin
   inherited;
+  ConfigurarSqlCabecera;
   unqryTablaG.SQL.Text :=
     'SELECT s.*, ' +
     '       prv.RAZON_SOCIAL_PRV AS RAZON_SOCIAL_PRV_SES, ' +
@@ -273,6 +405,7 @@ begin
   unqryAlmacenes.Connection         := inLibGlobalVar.oConn;
   unqryTarifas.Connection           := inLibGlobalVar.oConn;
   unqryEmpresas.Connection          := inLibGlobalVar.oConn;
+  unqryFormasPago.Connection        := inLibGlobalVar.oConn;
   unqryTemporadas.Connection        := inLibGlobalVar.oConn;
   unqryEmpresaSeries.Connection     := inLibGlobalVar.oConn;
   unqryArticuloExiste.Connection    := inLibGlobalVar.oConn;
@@ -293,6 +426,7 @@ begin
   unqryAlmacenes.Open;
   unqryTarifas.Open;
   unqryEmpresas.Open;
+  unqryFormasPago.Open;
   unqryTemporadas.Open;
 end;
 

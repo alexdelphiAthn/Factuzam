@@ -106,6 +106,9 @@ type
   private
     FProcsInstalados: Boolean;
     FCalculandoTotales: Boolean;
+    procedure CopiarFormaPagoPedidoAAlbaran(const ASeriePed, ANumeroPed,
+                                            ASerieAlb, ANumeroAlb: string;
+                                            AForzar: Boolean);
     procedure RestarPdteServirPedido(const ASerie, ANumero,
                                      ALinea: string);
     // Devuelve el siguiente contador (PRC_GET_NEXT_CONT) del tipo indicado.
@@ -584,8 +587,51 @@ begin
       DataSet.FindField('ESINTRACOMUNITARIO_CLI').AsString;
     FindField('TARIFA_ARTICULO_CLIENTE_PED').AsString     :=
       DataSet.FindField('TARIFA_ARTICULO_CLI').AsString;
+    if (FindField('FORMA_PAGO_PED') <> nil) and
+       (DataSet.FindField('CODIGO_FP_CLI') <> nil) and
+       (Trim(DataSet.FindField('CODIGO_FP_CLI').AsString) <> '') then
+      FindField('FORMA_PAGO_PED').AsString :=
+        Trim(DataSet.FindField('CODIGO_FP_CLI').AsString);
   end;
   AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'PED');
+end;
+
+procedure TdmPedidos.CopiarFormaPagoPedidoAAlbaran(const ASeriePed,
+                                                   ANumeroPed, ASerieAlb,
+                                                   ANumeroAlb: string;
+                                                   AForzar: Boolean);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'UPDATE fza_albaranes A ' +
+      '  JOIN fza_pedidos P ' +
+      '    ON P.SERIE_PED = :sped ' +
+      '   AND P.NUMERO_PED = :nped ' +
+      '   SET A.FORMA_PAGO_ALB = NULLIF(P.FORMA_PAGO_PED, ''''), ' +
+      '       A.INSTANTE_MODIF = NOW(), ' +
+      '       A.USUARIO_MODIF = :u ' +
+      ' WHERE A.SERIE_ALB = :salb ' +
+      '   AND A.NUMERO_ALB = :nalb ' +
+      '   AND TRIM(IFNULL(P.FORMA_PAGO_PED, '''')) <> '''' ' +
+      '   AND (:forzar = ''S'' ' +
+      '        OR TRIM(IFNULL(A.FORMA_PAGO_ALB, '''')) = '''')';
+    q.ParamByName('sped').AsString := ASeriePed;
+    q.ParamByName('nped').AsString := ANumeroPed;
+    q.ParamByName('salb').AsString := ASerieAlb;
+    q.ParamByName('nalb').AsString := ANumeroAlb;
+    q.ParamByName('u').AsString := oUser;
+    if AForzar then
+      q.ParamByName('forzar').AsString := 'S'
+    else
+      q.ParamByName('forzar').AsString := 'N';
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
 end;
 
 procedure TdmPedidos.InstalarProcedimientos;
@@ -640,6 +686,8 @@ begin
   begin
     sNumeroAlb := AAlbExistenteNum;
     sSerieAlb  := AAlbExistenteSerie;
+    CopiarFormaPagoPedidoAAlbaran(sSeriePed, sNumeroPed, sSerieAlb,
+      sNumeroAlb, False);
   end
   else
   begin
@@ -658,6 +706,8 @@ begin
       sNumeroAlb := ParamByName('p_NUMERO_ALB').AsString;
       sSerieAlb  := ParamByName('p_SERIE_ALB').AsString;
     end;
+    CopiarFormaPagoPedidoAAlbaran(sSeriePed, sNumeroPed, sSerieAlb,
+      sNumeroAlb, True);
   end;
 
   // Mayor número de línea ya presente en el albarán destino. En un

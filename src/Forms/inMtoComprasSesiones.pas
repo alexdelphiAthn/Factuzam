@@ -193,6 +193,8 @@ type
     curTotalesTOTAL_RETENCION_SES: TcxDBCurrencyEdit;
     lblTotalLiquidoSes: TcxLabel;
     curTotalesTOTAL_LIQUIDO_SES: TcxDBCurrencyEdit;
+    lblTotalesFormaPagoSes: TcxLabel;
+    cbbTotalesFORMA_PAGO_SES: TcxDBLookupComboBox;
     chkTotalesESIVA_RECARGO_COMPRAS_SES: TcxDBCheckBox;
     grpDesgloseIvaSes: TGroupBox;
     lblTotSesBase: TcxLabel;
@@ -597,6 +599,7 @@ begin
   cbbAlmacen.Properties.ListSource   := Dmm.dsAlmacenes;
   cbbTarifa.Properties.ListSource    := Dmm.dsTarifas;
   cbbTemporada.Properties.ListSource := Dmm.dsTemporadas;
+  cbbTotalesFORMA_PAGO_SES.Properties.ListSource := Dmm.dsFormasPago;
 
   with Dmm do
   begin
@@ -1290,6 +1293,16 @@ begin
         Dmm.unqryTablaG.Edit;
       Dmm.unqryTablaG.FieldByName('PORCENTAJE_MARGEN_SES').AsFloat :=
         Dmm.unqryPrvFicha.FieldByName('PORCENTAJE_MARGEN_PRV').AsFloat;
+    end;
+    if (Dmm.unqryPrvFicha.FindField('CODIGO_FP_PRV') <> nil) and
+       (Dmm.unqryTablaG.FindField('FORMA_PAGO_SES') <> nil) and
+       (Trim(Dmm.unqryTablaG.FieldByName('FORMA_PAGO_SES').AsString) = '') and
+       (Trim(Dmm.unqryPrvFicha.FieldByName('CODIGO_FP_PRV').AsString) <> '') then
+    begin
+      if not (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
+        Dmm.unqryTablaG.Edit;
+      Dmm.unqryTablaG.FieldByName('FORMA_PAGO_SES').AsString :=
+        Trim(Dmm.unqryPrvFicha.FieldByName('CODIGO_FP_PRV').AsString);
     end;
     if (Dmm.unqryPrvFicha.FindField(
        'ESVARIOS_TIPOS_IVA_PRV') <> nil) and
