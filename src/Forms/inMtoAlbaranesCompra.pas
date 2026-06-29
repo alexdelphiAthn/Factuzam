@@ -108,6 +108,8 @@ type
     spnTotalesPORCENTAJE_IVAE_ALBC: TcxDBSpinEdit;
     spnTotalesPORCENTAJE_REE_ALBC: TcxDBSpinEdit;
     chkTotalesESIVA_RECARGO_COMPRAS_ALBC: TcxDBCheckBox;
+    lblTotalesFormaPago: TcxLabel;
+    cbbTotalesFORMA_PAGO_ALBC: TcxDBLookupComboBox;
     grpDesgloseImpuestos: TGroupBox;
     shpSeparador1: TShape;
     shpSeparador2: TShape;
@@ -341,6 +343,8 @@ begin
     dmmAlbaranesCompra.dsAlbaranesCompraLineas;
   tvMovimientosProveedor.DataController.DataSource :=
     dmmAlbaranesCompra.dsMovimientosProveedor;
+  cbbTotalesFORMA_PAGO_ALBC.Properties.ListSource :=
+    dmmAlbaranesCompra.dsFormasPago;
   // MasterSource se enlaza en DataModuleCreate del DM, pero lo
   // re-aseguramos por idempotencia.
   dmmAlbaranesCompra.unqryAlbaranesCompraLineas.MasterSource := dsTablaG;

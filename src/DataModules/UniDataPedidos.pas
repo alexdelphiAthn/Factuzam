@@ -46,6 +46,8 @@ type
     dsAlbaranes:    TDataSource;
     unqryMensajes: TUniQuery;
     dsMensajes:    TDataSource;
+    unqryFormasPago: TUniQuery;
+    dsFormasPago: TDataSource;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -144,6 +146,7 @@ begin
   unqryPerfiles.Connection         := inLibGlobalVar.oConn;
   unqryAlbaranes.Connection        := inLibGlobalVar.oConn;
   unqryMensajes.Connection         := inLibGlobalVar.oConn;
+  unqryFormasPago.Connection       := inLibGlobalVar.oConn;
 end;
 
 procedure TdmPedidos.DataModuleDestroy(Sender: TObject);
@@ -154,6 +157,8 @@ begin
     unqryAlbaranes.Close;
   if Assigned(unqryMensajes) and unqryMensajes.Active then
     unqryMensajes.Close;
+  if Assigned(unqryFormasPago) and unqryFormasPago.Active then
+    unqryFormasPago.Close;
   inherited;
 end;
 
@@ -196,6 +201,7 @@ begin
   AbrirConTiempo(unqryPedidosLineas, 'unqryPedidosLineas');
   AbrirConTiempo(unqryAlbaranes,     'unqryAlbaranes');
   AbrirConTiempo(unqryMensajes,      'unqryMensajes');
+  AbrirConTiempo(unqryFormasPago,    'unqryFormasPago');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 

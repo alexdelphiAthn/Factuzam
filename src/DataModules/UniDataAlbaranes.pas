@@ -35,6 +35,8 @@ type
     dsFacturas:           TDataSource;
     unqryMovimientosAlb:  TUniQuery;
     dsMovimientosAlb:     TDataSource;
+    unqryFormasPago:      TUniQuery;
+    dsFormasPago:         TDataSource;
     unstrdprcGetContadorAlbaran: TUniStoredProc;
     unstrdprcCrearFacturaInicio: TUniStoredProc;
     unstrdprcCrearFacturaLinea:  TUniStoredProc;
@@ -115,6 +117,7 @@ begin
   unqrySkusAlb.Connection                := inLibGlobalVar.oConn;
   unqryFacturas.Connection               := inLibGlobalVar.oConn;
   unqryMovimientosAlb.Connection         := inLibGlobalVar.oConn;
+  unqryFormasPago.Connection             := inLibGlobalVar.oConn;
   unstrdprcGetContadorAlbaran.Connection := inLibGlobalVar.oConn;
   unstrdprcCrearFacturaInicio.Connection := inLibGlobalVar.oConn;
   unstrdprcCrearFacturaLinea.Connection  := inLibGlobalVar.oConn;
@@ -130,6 +133,8 @@ begin
     unqryFacturas.Close;
   if Assigned(unqryMovimientosAlb) and unqryMovimientosAlb.Active then
     unqryMovimientosAlb.Close;
+  if Assigned(unqryFormasPago) and unqryFormasPago.Active then
+    unqryFormasPago.Close;
   inherited;
 end;
 
@@ -176,6 +181,7 @@ begin
   AbrirConTiempo(unqryAlbaranesLineas, 'unqryAlbaranesLineas');
   AbrirConTiempo(unqryFacturas,        'unqryFacturas');
   AbrirConTiempo(unqryMovimientosAlb,  'unqryMovimientosAlb');
+  AbrirConTiempo(unqryFormasPago,      'unqryFormasPago');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 

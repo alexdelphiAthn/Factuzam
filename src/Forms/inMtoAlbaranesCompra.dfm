@@ -19,18 +19,18 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
       Properties.ActivePage = tsLista
       ExplicitWidth = 945
       ExplicitHeight = 725
-      ClientRectBottom = 721
-      ClientRectRight = 941
+      ClientRectBottom = 723
+      ClientRectRight = 943
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 28
-        ExplicitWidth = 937
-        ExplicitHeight = 693
+        ExplicitLeft = 2
+        ExplicitTop = 27
+        ExplicitWidth = 941
+        ExplicitHeight = 696
         inherited cxGrdPrincipal: TcxGrid
-          Width = 937
-          Height = 693
-          ExplicitWidth = 937
-          ExplicitHeight = 693
+          Width = 941
+          Height = 696
+          ExplicitWidth = 941
+          ExplicitHeight = 696
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object dbcGrdAlbcNUMERO_ALBC: TcxGridDBColumn
               Caption = 'N'#250'mero'
@@ -94,14 +94,14 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
         end
       end
       inherited tsFicha: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 28
-        ExplicitWidth = 937
-        ExplicitHeight = 693
+        ExplicitLeft = 2
+        ExplicitTop = 27
+        ExplicitWidth = 941
+        ExplicitHeight = 696
         object pnlTopFicha: TPanel
           Left = 0
           Top = 0
-          Width = 937
+          Width = 941
           Height = 200
           Align = alTop
           BevelOuter = bvNone
@@ -109,16 +109,16 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
           object pcCab: TcxPageControl
             Left = 0
             Top = 0
-            Width = 937
+            Width = 941
             Height = 200
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsCabecera
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 196
-            ClientRectLeft = 4
-            ClientRectRight = 933
-            ClientRectTop = 28
+            ClientRectBottom = 198
+            ClientRectLeft = 2
+            ClientRectRight = 939
+            ClientRectTop = 27
             object tsCabecera: TcxTabSheet
               Caption = 'Cabecera'
               object lblNroAlbaran: TcxLabel
@@ -272,7 +272,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
         object pnlBotonesAcciones: TPanel
           Left = 0
           Top = 200
-          Width = 937
+          Width = 941
           Height = 38
           Align = alTop
           BevelOuter = bvNone
@@ -325,31 +325,31 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
         object pnlBodyFicha: TPanel
           Left = 0
           Top = 238
-          Width = 937
-          Height = 379
+          Width = 941
+          Height = 382
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 2
           object pcAlbaran: TcxPageControl
             Left = 0
             Top = 0
-            Width = 937
-            Height = 379
+            Width = 941
+            Height = 382
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsLineasAlbaran
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 375
-            ClientRectLeft = 4
-            ClientRectRight = 933
-            ClientRectTop = 28
+            ClientRectBottom = 380
+            ClientRectLeft = 2
+            ClientRectRight = 939
+            ClientRectTop = 27
             object tsLineasAlbaran: TcxTabSheet
               Caption = '&1_L'#237'neas '
               object cxgrdLineasAlbaran: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 929
-                Height = 347
+                Width = 937
+                Height = 353
                 Align = alClient
                 TabOrder = 0
                 OnEnter = cxgrdLineasAlbaranEnter
@@ -425,8 +425,8 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
               object cxgrdMovimientosProveedor: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 929
-                Height = 347
+                Width = 937
+                Height = 353
                 Align = alClient
                 TabOrder = 0
                 object tvMovimientosProveedor: TcxGridDBTableView
@@ -499,8 +499,8 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
               object scrTotales: TScrollBox
                 Left = 0
                 Top = 0
-                Width = 929
-                Height = 347
+                Width = 937
+                Height = 353
                 Align = alClient
                 BorderStyle = bsNone
                 ParentBackground = True
@@ -599,11 +599,27 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                   TabOrder = 10
                   Transparent = True
                 end
-                object txtTotalesFORMA_PAGO_ALBC: TcxDBTextEdit
+                object cbbTotalesFORMA_PAGO_ALBC: TcxDBLookupComboBox
                   Left = 230
                   Top = 234
                   DataBinding.DataField = 'FORMA_PAGO_ALBC'
                   DataBinding.DataSource = dsTablaG
+                  Properties.DropDownSizeable = True
+                  Properties.KeyFieldNames = 'CODIGO_FP_FP'
+                  Properties.ListColumns = <
+                    item
+                      Caption = 'C'#243'digo'
+                      MinWidth = 50
+                      Width = 60
+                      FieldName = 'CODIGO_FP_FP'
+                    end
+                    item
+                      Caption = 'Descripci'#243'n'
+                      MinWidth = 160
+                      Width = 220
+                      FieldName = 'DESCRIPCION_FORMA_PAGO_FP'
+                    end>
+                  Properties.ListOptions.CaseInsensitive = True
                   TabOrder = 11
                   Width = 133
                 end
@@ -976,16 +992,16 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 DataBinding.DataField = 'OBSERVACIONES_ALBC'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 0
-                Height = 347
-                Width = 929
+                Height = 353
+                Width = 937
               end
             end
           end
         end
         object pnlBottomTotales: TPanel
           Left = 0
-          Top = 617
-          Width = 937
+          Top = 620
+          Width = 941
           Height = 76
           Align = alBottom
           BevelOuter = bvNone
@@ -1041,29 +1057,27 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 28
-        ExplicitWidth = 937
-        ExplicitHeight = 693
+        ExplicitWidth = 941
+        ExplicitHeight = 696
         inherited pnlPerfilTop: TPanel
-          Width = 937
+          Width = 941
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 937
+          ExplicitWidth = 941
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 25
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 937
-          Height = 636
+          Width = 941
+          Height = 639
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 937
-          ExplicitHeight = 636
+          ExplicitWidth = 941
+          ExplicitHeight = 639
           inherited cxgrdPerfil: TcxGrid
-            Width = 937
-            Height = 636
-            ExplicitWidth = 937
-            ExplicitHeight = 636
+            Width = 941
+            Height = 639
+            ExplicitWidth = 941
+            ExplicitHeight = 639
           end
         end
       end

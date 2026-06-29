@@ -42,6 +42,8 @@ type
     dsTemporadasPedc:         TDataSource;
     unqryAlbaranesPedc:       TUniQuery;
     dsAlbaranesPedc:          TDataSource;
+    unqryFormasPago:          TUniQuery;
+    dsFormasPago:             TDataSource;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -187,6 +189,7 @@ begin
   unqryDefArticuloPedc.Connection     := inLibGlobalVar.oConn;
   unqryTemporadasPedc.Connection      := inLibGlobalVar.oConn;
   unqryTemporadasPedc.Open;
+  unqryFormasPago.Connection          := inLibGlobalVar.oConn;
   unqryPedidosCompraLineas.MasterSource :=
     (GetOwnerForm<TfrmMtoPedidosCompra>).dsTablaG;
   // Albaranes de compra creados desde este pedido (master-detail por
@@ -201,6 +204,8 @@ begin
   if Assigned(unqryPedidosCompraLineas) and
      unqryPedidosCompraLineas.Active then
     unqryPedidosCompraLineas.Close;
+  if Assigned(unqryFormasPago) and unqryFormasPago.Active then
+    unqryFormasPago.Close;
   inherited;
 end;
 
@@ -246,6 +251,23 @@ begin
       begin
         inLibLog.Log.LogPerf(TAG,
           'unqryAlbaranesPedc ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+        raise;
+      end;
+    end;
+  end;
+  if not unqryFormasPago.Active then
+  begin
+    swQ := TStopwatch.StartNew;
+    try
+      unqryFormasPago.Open;
+      inLibLog.Log.LogPerf(TAG, 'unqryFormasPago OK',
+                            swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        inLibLog.Log.LogPerf(TAG,
+          'unqryFormasPago ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
       end;
