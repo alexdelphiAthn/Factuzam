@@ -380,7 +380,7 @@ const
     '       ISNULL(m.TipoMov, '''') AS TipoMov, ' +
     '       ISNULL(m.TipoDoc, '''') AS TipoDoc, ' +
     '       ISNULL(m.PrecioMedioSIva, 0) AS PrecioMedioSIva, ' +
-    '       m.FechaOpe, m.Fecha, ' +
+    '       m.FechaOpe, m.Fecha, m.Ejercicio, ' +
     '       ISNULL(m.Serie, '''') AS Serie, m.NroDoc, ' +
     '       ISNULL(m.Cliente, '''') AS Cliente, ' +
     '       ISNULL(m.NroCaja, 0) AS NroCaja, opc.Operacion AS OpeCaja, ' +
@@ -638,8 +638,13 @@ begin
         else if FechaReal(qSrc.FieldByName('FechaOpe').AsDateTime) then
           sFechaSql := DateTimeASQL(
                          qSrc.FieldByName('FechaOpe').AsDateTime);
-        sSerie   := Trim(qSrc.FieldByName('Serie').AsString);
-        sNroDoc  := Trim(qSrc.FieldByName('NroDoc').AsString);
+        // SERIE_DOC_MOV / NUMERO_DOC_MOV deben cuadrar con el formato de los
+        // documentos migrados (SERIE = '<Ejercicio>.<Serie>', NUMERO a 6
+        // digitos) para que cada movimiento enlace con su albaran/factura: las
+        // pantallas filtran por TIPO_DOC_MOV + SERIE_DOC_MOV + NUMERO_DOC_MOV.
+        sSerie   := Format('%d.%s', [qSrc.FieldByName('Ejercicio').AsInteger,
+                            Trim(qSrc.FieldByName('Serie').AsString)]);
+        sNroDoc  := Format('%.6d', [qSrc.FieldByName('NroDoc').AsInteger]);
         sCliente := Trim(qSrc.FieldByName('Cliente').AsString);
         // Enlace con la operacion de caja que genero el movimiento. Si el
         // documento casa con una operacion de occaj rellenamos caja y numero
