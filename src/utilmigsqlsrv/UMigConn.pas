@@ -169,6 +169,7 @@ begin
   conDst.Password    := sPwd;
   conDst.LoginPrompt := False;
   conDst.SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
+  conDst.SpecificOptions.Values['MySQL.Charset']    := 'utf8mb4';
 end;
 
 procedure TdmMig.ProbarOrigen;
@@ -283,6 +284,7 @@ begin
   Result.Password     := conDst.Password;
   Result.LoginPrompt  := False;
   Result.SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
+  Result.SpecificOptions.Values['MySQL.Charset']    := 'utf8mb4';
 end;
 
 procedure TdmMig.BorrarBBDDDestino(const sNombre: string);

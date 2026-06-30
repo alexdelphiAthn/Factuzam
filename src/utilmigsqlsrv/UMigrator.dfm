@@ -25,7 +25,7 @@ object FormMigrator: TFormMigrator
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 0
-    ExplicitWidth = 1022
+    ExplicitWidth = 1020
     object PanelOrigen: TGroupBox
       Left = 8
       Top = 8
@@ -230,7 +230,7 @@ object FormMigrator: TFormMigrator
     Padding.Right = 8
     Padding.Bottom = 4
     TabOrder = 1
-    ExplicitWidth = 1022
+    ExplicitWidth = 1020
     object GroupSetup: TGroupBox
       Left = 8
       Top = 4
@@ -239,7 +239,7 @@ object FormMigrator: TFormMigrator
       Align = alClient
       Caption = ' Preparar BBDD destino '
       TabOrder = 0
-      ExplicitWidth = 1006
+      ExplicitWidth = 1004
       object btnDumpEsqueleto: TButton
         Left = 16
         Top = 18
@@ -313,7 +313,7 @@ object FormMigrator: TFormMigrator
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 2
-    ExplicitWidth = 1022
+    ExplicitWidth = 1020
     object lblUsuario: TLabel
       Left = 16
       Top = 14
@@ -447,8 +447,8 @@ object FormMigrator: TFormMigrator
     ActivePage = TabProgreso
     Align = alClient
     TabOrder = 3
-    ExplicitWidth = 1022
-    ExplicitHeight = 331
+    ExplicitWidth = 1020
+    ExplicitHeight = 338
     object TabProgreso: TTabSheet
       Caption = 'Progreso (dominios activos)'
       object MemoProgreso: TMemo
@@ -467,8 +467,8 @@ object FormMigrator: TFormMigrator
         ReadOnly = True
         ScrollBars = ssVertical
         TabOrder = 0
-        ExplicitWidth = 1008
-        ExplicitHeight = 293
+        ExplicitWidth = 1006
+        ExplicitHeight = 300
       end
     end
     object TabLog: TTabSheet
@@ -502,7 +502,6 @@ object FormMigrator: TFormMigrator
         Width = 1010
         Height = 301
         Align = alClient
-        Color = clGhostwhite
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clMaroon
         Font.Height = -12
@@ -524,7 +523,7 @@ object FormMigrator: TFormMigrator
       item
         Width = 800
       end>
-    ExplicitTop = 903
-    ExplicitWidth = 1022
+    ExplicitTop = 910
+    ExplicitWidth = 1020
   end
 end
