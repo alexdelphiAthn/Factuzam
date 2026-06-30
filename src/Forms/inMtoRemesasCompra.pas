@@ -107,8 +107,12 @@ type
     procedure btnFechaCargoClick(Sender: TObject);
   private
     procedure ActualizarBancoPago;
+    procedure actEliminarRemesaExecute(Sender: TObject);
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
+    procedure nvNavegadorButtonsButtonClick(Sender: TObject;
+      AButtonIndex: Integer; var ADone: Boolean);
     function BancoRemesaAsignado: Boolean;
+    function EliminarRemesaActual: Boolean;
     function RemesaSeleccionada: Boolean;
   public
     dmmRemesasCompra: TdmRemesasCompra;
@@ -142,6 +146,10 @@ begin
   cbbBancoPagoRemesa.Properties.KeyFieldNames := 'CODIGO_EMPBAN';
   cbbBancoPagoRemesa.Properties.ListFieldNames := 'BANCO_VIEW_EMPBAN';
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+  // La tabla principal es la vista vi_remesas_compra (JOIN, solo lectura): el
+  // DELETE estandar del dataset falla, asi que el borrado se hace a mano.
+  actEliminarRegistro.OnExecute := actEliminarRemesaExecute;
+  nvNavegador.Buttons.OnButtonClick := nvNavegadorButtonsButtonClick;
   pkFieldName := 'NUMERO_REMC;SERIE_REMC';
 end;
 
@@ -162,6 +170,43 @@ begin
   Result := RemesaSeleccionada and
             (Trim(dmmRemesasCompra.unqryTablaG.FieldByName('IBAN_REMC')
               .AsString) <> '');
+end;
+
+procedure TfrmMtoRemesasCompra.nvNavegadorButtonsButtonClick(Sender: TObject;
+  AButtonIndex: Integer; var ADone: Boolean);
+begin
+  if AButtonIndex = NBDI_DELETE then
+  begin
+    ADone := True;
+    EliminarRemesaActual;
+  end;
+end;
+
+procedure TfrmMtoRemesasCompra.actEliminarRemesaExecute(Sender: TObject);
+begin
+  EliminarRemesaActual;
+end;
+
+function TfrmMtoRemesasCompra.EliminarRemesaActual: Boolean;
+begin
+  Result := False;
+  if not RemesaSeleccionada then
+    ShowMessage('Selecciona una remesa.')
+  else if dmmRemesasCompra.RemesaTieneCargo then
+    ShowMessage('No se puede eliminar una remesa con cargo realizado.')
+  else if MessageDlg('¿Eliminar la remesa seleccionada? Los efectos ' +
+          'volveran a quedar pendientes de remesar.',
+          mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  begin
+    if dmmRemesasCompra.EliminarRemesa then
+    begin
+      ShowMessage('Remesa eliminada.');
+      ActualizarBancoPago;
+      Result := True;
+    end
+    else
+      ShowMessage('No se pudo eliminar la remesa.');
+  end;
 end;
 
 procedure TfrmMtoRemesasCompra.ActualizarBancoPago;

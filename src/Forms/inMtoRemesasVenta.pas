@@ -111,8 +111,10 @@ type
   private
     procedure ActualizarBancoCobro;
     procedure actCrearRemesaExecute(Sender: TObject);
+    procedure actEliminarRemesaExecute(Sender: TObject);
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     function CrearRemesaDesdeEfectos: Boolean;
+    function EliminarRemesaActual: Boolean;
     procedure nvNavegadorButtonsButtonClick(Sender: TObject;
       AButtonIndex: Integer; var ADone: Boolean);
     function BancoRemesaAsignado: Boolean;
@@ -167,6 +169,9 @@ begin
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
   actInsertarRegistro.Caption := 'Crear remesa';
   actInsertarRegistro.OnExecute := actCrearRemesaExecute;
+  // La tabla principal es la vista vi_remesas_venta (JOIN, solo lectura): el
+  // DELETE estandar del dataset falla, asi que el borrado se hace a mano.
+  actEliminarRegistro.OnExecute := actEliminarRemesaExecute;
   nvNavegador.Buttons.Insert.Hint := 'Crear remesa';
   nvNavegador.Buttons.OnButtonClick := nvNavegadorButtonsButtonClick;
   pkFieldName := 'NUMERO_REMV;SERIE_REMV';
@@ -224,6 +229,38 @@ begin
   begin
     ADone := True;
     CrearRemesaDesdeEfectos;
+  end
+  else if AButtonIndex = NBDI_DELETE then
+  begin
+    ADone := True;
+    EliminarRemesaActual;
+  end;
+end;
+
+procedure TfrmMtoRemesasVenta.actEliminarRemesaExecute(Sender: TObject);
+begin
+  EliminarRemesaActual;
+end;
+
+function TfrmMtoRemesasVenta.EliminarRemesaActual: Boolean;
+begin
+  Result := False;
+  if not RemesaSeleccionada then
+    ShowMessage('Selecciona una remesa.')
+  else if dmmRemesasVenta.RemesaTieneCobro then
+    ShowMessage('No se puede eliminar una remesa con cobro realizado.')
+  else if MessageDlg('¿Eliminar la remesa seleccionada? Los efectos ' +
+          'volveran a quedar pendientes de remesar.',
+          mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  begin
+    if dmmRemesasVenta.EliminarRemesa then
+    begin
+      ShowMessage('Remesa eliminada.');
+      ActualizarBancoCobro;
+      Result := True;
+    end
+    else
+      ShowMessage('No se pudo eliminar la remesa.');
   end;
 end;
 
