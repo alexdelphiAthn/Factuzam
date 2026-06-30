@@ -378,6 +378,13 @@ begin
     'Facturas venta mayor (ocfaccli)',
     'dbo.ocfaccli/ocfaccliart → fza_facturas + fza_facturas_lineas',
     MigrarFacturasVentaMayor);
+  // Enlace pesado movimiento->factura (REF_MOV) en su PROPIO dominio, que
+  // corre el ULTIMO: las facturas se importan sin esperar a este UPDATE
+  // masivo sobre fza_movimientos_almacen. Es cancelable e idempotente.
+  FEngine.Registrar('enlace_mov_facturas',
+    'Enlace movimientos <-> facturas',
+    'fza_facturas_lineas → fza_movimientos_almacen (pestaña Movimientos)',
+    MigrarEnlaceMovimientosFacturas);
   FEngine.Registrar('vales', 'Vales de tienda (occajvale)',
     'dbo.occajvale → fza_caja_vales',
     MigrarVales);
@@ -1040,6 +1047,10 @@ begin
     Result := 6
   else if (sCodigo = 'remesas_compra') then
     Result := 7
+  // El enlace movimiento->factura va EL ULTIMO: necesita facturas (waves 4-5)
+  // y movimientos (wave 3) ya migrados, y es el paso mas pesado.
+  else if (sCodigo = 'enlace_mov_facturas') then
+    Result := 8
   // Default: wave 0 (conservador, sin deps conocidas)
   else
     Result := 0;
@@ -1157,7 +1168,7 @@ begin
             .Run;
         end;
 
-      for iWave := 0 to 7 do
+      for iWave := 0 to 8 do
       begin
         if task.CancellationToken.IsSignalled then Break;
 
