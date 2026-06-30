@@ -59,10 +59,26 @@ const
   cUrlInstalacionSif =
     'https://veryverifactu.com/api/instalacion.php';
 
-function NormalizarNifInstalacion(const AValor: string): string;
+function NifSoloDigitos(const AValor: string): Boolean;
 var
   i: Integer;
-  c: Char;
+begin
+  Result := AValor <> '';
+  i := 1;
+  while (i <= Length(AValor)) and Result do
+  begin
+    if not CharInSet(AValor[i], ['0'..'9']) then
+      Result := False;
+    Inc(i);
+  end;
+end;
+
+function NormalizarNifInstalacion(const AValor: string): string;
+var
+  i:       Integer;
+  c:       Char;
+  cLetra:  Char;
+  sNumero: string;
 begin
   Result := '';
   for i := 1 to Length(AValor) do
@@ -70,6 +86,24 @@ begin
     c := UpCase(AValor[i]);
     if CharInSet(c, ['0'..'9', 'A'..'Z']) then
       Result := Result + c;
+  end;
+  // Un DNI español tiene 8 dígitos + letra de control (9 caracteres). Si el
+  // primer dígito es 0 suele perderse al almacenarlo o teclearlo, dejando el
+  // NIF en 8 caracteres (p. ej. "9675172S" en vez de "09675172S"). Cuando
+  // detectamos esa forma (solo dígitos + letra final y menos de 9 caracteres)
+  // rellenamos con ceros por la izquierda para devolver el NIF canónico. Los
+  // NIE y CIF empiezan por letra, así que esta corrección no les afecta.
+  if (Length(Result) >= 2) and (Length(Result) < 9) and
+     CharInSet(Result[Length(Result)], ['A'..'Z']) then
+  begin
+    cLetra := Result[Length(Result)];
+    sNumero := Copy(Result, 1, Length(Result) - 1);
+    if NifSoloDigitos(sNumero) then
+    begin
+      while Length(sNumero) < 8 do
+        sNumero := '0' + sNumero;
+      Result := sNumero + cLetra;
+    end;
   end;
 end;
 
