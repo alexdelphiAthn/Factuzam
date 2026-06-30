@@ -62,6 +62,24 @@ begin
   Result := FloatToStr(v, fsVentasMayor);
 end;
 
+// Une una lista de valores SQL ya formateados (literales, ValorOrNull, F...)
+// en "v1, v2, v3" para el INSERT. Sustituye al Format('%s, %s, ...', [...])
+// posicional: el numero de valores es EXACTAMENTE el tamano del array, asi
+// que no puede haber descuadre de %s/argumentos ni interpretacion de '%' en
+// los datos.
+function ValoresSQL(const A: array of string): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  for i := 0 to High(A) do
+  begin
+    if i > 0 then
+      Result := Result + ', ';
+    Result := Result + A[i];
+  end;
+end;
+
 function TextoCampo(q: TUniQuery; const sCampo: string;
                     iMax: Integer = 0): string;
 begin
@@ -1129,35 +1147,35 @@ begin
       if fTotal = 0 then
         fTotal := qCab.FieldByName('ImpFactura').AsFloat;
       try
-        bCab.Add(Format(
-          '%s, %s, %s, ''S'', %s, ''N'', %s, %s, %s, %s, %s, %s, %s, ' +
-          '%s, %s, %s, %s, ''N'', %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
-          '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
-          '%s, %s, %s, %s, %s, ''N'', ''N'', ''N'', %s, %s, %s, %s, %s, %s, %s, %s',
-          [ValorOrNull(sNum), ValorOrNull(sSerie), FechaCampoASQL(qCab, 'Fecha'),
-           ValorOrNull(TipoFacturaVentaMayor(qCab)),
-           ValorOrNull(IntToStr(qCab.FieldByName('Empresa').AsInteger)),
-           ValorOrNull(sCli), ValorOrNull(sNombre),
-           ValorOrNull(TextoCampo(qCab, 'NIF', 50)),
-           ValorOrNull(TextoCampo(qCab, 'Telefono1', 40)),
-           ValorOrNull(TextoCampo(qCab, 'Direccion1', 200)),
-           ValorOrNull(TextoCampo(qCab, 'Direccion2', 200)),
-           ValorOrNull(TextoCampo(qCab, 'Poblacion', 200)),
-           ValorOrNull(TextoCampo(qCab, 'Provincia', 200)),
-           ValorOrNull(TextoCampo(qCab, 'CodPostal', 15)),
-           ValorOrNull(CodigoTarifaVentaMayor(qCab)),
-           F(iva.Pn), F(iva.Tn), F(iva.Rn), F(iva.Trn), F(iva.Bn),
-           F(iva.Pr), F(iva.Tr), F(iva.Rr), F(iva.Trr), F(iva.Br),
-           F(iva.Ps), F(iva.Ts), F(iva.Rs), F(iva.Trs), F(iva.Bs),
-           F(iva.Pe), F(iva.Te), F(iva.Re), F(iva.Tre), F(iva.Be),
-           F(iva.Bases), F(iva.Impuestos),
-           ValorOrNull(CodigoFormaPagoVentaMayor(qCab)),
-           F(qCab.FieldByName('PorRetencion').AsFloat),
-           F(qCab.FieldByName('ImpRetencion').AsFloat), F(fTotal),
-           ValorOrNull(TextoCampo(qCab, 'ObsFactura', 1000)),
-           ValorOrNull(IntToStr(qCab.FieldByName('Vendedor').AsInteger)),
-           ValorOrNull(sAlm), ValorOrNull(sCaja), ValorOrNull(sOpe),
-           sAhora, sAhora, sUser, sUser]));
+        // 56 valores en el MISMO orden que cColsFac. Sin Format posicional:
+        // ValoresSQL une el array, asi no hay descuadre de %s ni problemas con
+        // '%' en los datos (causa del "No argument for format").
+        bCab.Add(ValoresSQL([
+          ValorOrNull(sNum), ValorOrNull(sSerie), FechaCampoASQL(qCab, 'Fecha'),
+          '''S''', ValorOrNull(TipoFacturaVentaMayor(qCab)), '''N''',
+          ValorOrNull(IntToStr(qCab.FieldByName('Empresa').AsInteger)),
+          ValorOrNull(sCli), ValorOrNull(sNombre),
+          ValorOrNull(TextoCampo(qCab, 'NIF', 50)),
+          ValorOrNull(TextoCampo(qCab, 'Telefono1', 40)),
+          ValorOrNull(TextoCampo(qCab, 'Direccion1', 200)),
+          ValorOrNull(TextoCampo(qCab, 'Direccion2', 200)),
+          ValorOrNull(TextoCampo(qCab, 'Poblacion', 200)),
+          ValorOrNull(TextoCampo(qCab, 'Provincia', 200)),
+          ValorOrNull(TextoCampo(qCab, 'CodPostal', 15)),
+          ValorOrNull(CodigoTarifaVentaMayor(qCab)), '''N''',
+          F(iva.Pn), F(iva.Tn), F(iva.Rn), F(iva.Trn), F(iva.Bn),
+          F(iva.Pr), F(iva.Tr), F(iva.Rr), F(iva.Trr), F(iva.Br),
+          F(iva.Ps), F(iva.Ts), F(iva.Rs), F(iva.Trs), F(iva.Bs),
+          F(iva.Pe), F(iva.Te), F(iva.Re), F(iva.Tre), F(iva.Be),
+          F(iva.Bases), F(iva.Impuestos),
+          ValorOrNull(CodigoFormaPagoVentaMayor(qCab)),
+          F(qCab.FieldByName('PorRetencion').AsFloat),
+          F(qCab.FieldByName('ImpRetencion').AsFloat), F(fTotal),
+          ValorOrNull(TextoCampo(qCab, 'ObsFactura', 1000)),
+          '''N''', '''N''', '''N''',
+          ValorOrNull(IntToStr(qCab.FieldByName('Vendedor').AsInteger)),
+          ValorOrNull(sAlm), ValorOrNull(sCaja), ValorOrNull(sOpe),
+          sAhora, sAhora, sUser, sUser]));
         Inc(Stats.Insertadas);
       except
         on E: Exception do
