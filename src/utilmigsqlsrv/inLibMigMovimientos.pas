@@ -202,9 +202,14 @@ var
 begin
   d := UpperCase(Trim(sTipoDoc));
   if (d = 'AC') or (d = 'AV') or (d = 'TR') or (d = 'AT')
-  or (d = 'IN') or (d = 'DP') or (d = 'VE') or (d = 'AE')
+  or (d = 'IN') or (d = 'DP') or (d = 'VE')
   or (d = 'DC') then
     Result := d
+  else if d = 'AE' then
+    // Albaran de ENTRADA (compra) del legacy -> albaran de COMPRA en Factuzam.
+    // La pestaña "Movimientos" del albaran de compra filtra TIPO_DOC_MOV='AC'
+    // y el stock acumula las compras por 'AC' (CANTIDAD_ENT_COMPRA_STK).
+    Result := 'AC'
   else if d = 'RP' then
     Result := 'DC'
   else if (d = 'FC') or (d = 'FV') or (d = 'TK') or (d = 'TP') then
@@ -434,7 +439,8 @@ const
     'PRECIO_COSTE_UNITARIO_MOV, TOTAL_COSTE_MOV, PRECIO_MEDIO_MOV, ' +
     'CODIGO_ALM_CONTRA_MOV, CODIGO_CLI_MOV, ESACTIVO_MOV, ' +
     'CODIGO_ALM_DOC_MOV, CODIGO_CAJA_DOC_MOV, NUMERO_OPERACION_DOC_MOV, ' +
-    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF, ' +
+    'TIPO_DOC_REF_MOV, SERIE_DOC_REF_MOV, NUMERO_DOC_REF_MOV, LINEA_REF_MOV';
 var
   qSrc, qDel:                     TUniQuery;
   bulk:                           TBulkInsert;
@@ -446,6 +452,8 @@ var
   sSerie, sNroDoc, sCliente:      string;
   sContra, sFechaSql, sFila:      string;
   sCajaDoc, sNumOpDoc:            string;
+  sTipoRef, sSerieRef:            string;
+  sNroRef, sLineaRef:             string;
   fUnidades, fCantidad, fEfect:   Double;
   fCantMov, fCoste, fPmp, fTotal: Double;
   fPmpAlm, fSeed, fPrecAlb:       Double;
@@ -681,15 +689,25 @@ begin
         // SERIE_FAC/SERIE_ALB = 'ejercicio.serie').
         sSerie   := IntToStr(qSrc.FieldByName('Ejercicio').AsInteger) + '.' +
                     Trim(qSrc.FieldByName('Serie').AsString);
-        // NUMERO_DOC_MOV con el mismo formato que NUMERO_FAC de la factura
-        // simplificada (IntToStr, sin ceros a la izquierda) para que la pestaña
-        // "Movimientos" case. Si el NroDoc no es numerico se deja tal cual.
+        // NUMERO_DOC_MOV debe casar con el NUMERO del documento destino en
+        // Factuzam. Hay dos formatos: las operaciones de caja (factura
+        // simplificada / ticket) guardan NUMERO_FAC con IntToStr (sin ceros a
+        // la izquierda); el resto de documentos (albaranes y devoluciones de
+        // compra, venta mayor, pedidos) guardan NUMERO con Format('%.6d') (6
+        // digitos rellenos con ceros). Elegimos el formato segun sea o no un
+        // movimiento de caja (OpeCaja). Si el NroDoc no es numerico se deja tal
+        // cual.
         sNroDoc  := Trim(qSrc.FieldByName('NroDoc').AsString);
         if sNroDoc <> '' then
         begin
           iTmpNro := StrToIntDef(sNroDoc, -1);
           if iTmpNro >= 0 then
-            sNroDoc := IntToStr(iTmpNro);
+          begin
+            if not qSrc.FieldByName('OpeCaja').IsNull then
+              sNroDoc := IntToStr(iTmpNro)
+            else
+              sNroDoc := Format('%.6d', [iTmpNro]);
+          end;
         end;
         sCliente := Trim(qSrc.FieldByName('Cliente').AsString);
         // Enlace con la operacion de caja que genero el movimiento. Si el
@@ -705,10 +723,29 @@ begin
           sNumOpDoc := ValorOrNull(Format('%.8d',
                          [qSrc.FieldByName('OpeCaja').AsInteger]));
         end;
-        // 26 columnas en cCols. ESACTIVO_MOV es literal 'S'.
+        // Documento de REFERENCIA del movimiento. La pestaña "Movimientos" del
+        // albaran de VENTA (UniDataAlbaranes) NO filtra por TIPO_DOC_MOV sino por
+        // TIPO_DOC_REF_MOV='AV' + SERIE/NUMERO_DOC_REF_MOV; el resto de pestañas
+        // (factura, albaran/devolucion de compra, inventario) filtran por
+        // *_DOC_MOV. Para que el albaran de venta muestre sus movimientos
+        // apuntamos la referencia al propio albaran (auto-referencia). Los demas
+        // documentos dejan la referencia a NULL (la enlazan luego sus enlaces).
+        sTipoRef  := 'NULL';
+        sSerieRef := 'NULL';
+        sNroRef   := 'NULL';
+        sLineaRef := 'NULL';
+        if sTipoDoc = 'AV' then
+        begin
+          sTipoRef  := ValorOrNull('AV');
+          sSerieRef := Txt(sSerie);
+          sNroRef   := Txt(sNroDoc);
+          sLineaRef := Txt('0001');
+        end;
+        // 30 columnas en cCols. ESACTIVO_MOV es literal 'S'.
         sFila := Format(
           '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
-          '%s, %s, %s, %s, %s, %s, ''S'', %s, %s, %s, %s, %s, %s, %s',
+          '%s, %s, %s, %s, %s, %s, ''S'', %s, %s, %s, %s, %s, %s, %s, ' +
+          '%s, %s, %s, %s',
           [ValorOrNull(PREFIJO_NUM + Format('%.10d',
              [qSrc.FieldByName('Numero').AsInteger])),   // NUMERO_MOV
            ValorOrNull(sTipoDoc),                        // TIPO_DOC_MOV
@@ -733,7 +770,11 @@ begin
            sCajaDoc,                                     // CODIGO_CAJA_DOC_MOV
            sNumOpDoc,                                    // NUMERO_OPERACION_DOC
            sAhora, sAhora,                               // INSTANTE_ALTA/MODIF
-           sUser, sUser]);                               // USUARIO_ALTA/MODIF
+           sUser, sUser,                                 // USUARIO_ALTA/MODIF
+           sTipoRef,                                     // TIPO_DOC_REF_MOV
+           sSerieRef,                                    // SERIE_DOC_REF_MOV
+           sNroRef,                                      // NUMERO_DOC_REF_MOV
+           sLineaRef]);                                  // LINEA_REF_MOV
         try
           bulk.Add(sFila);
           Inc(Stats.Insertadas);
