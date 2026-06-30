@@ -423,7 +423,7 @@
               end
             end
             object tsProveedor: TcxTabSheet
-              Caption = 'Proveedor'
+              Caption = 'Movimientos'
               object cxgrdMovimientosProveedor: TcxGrid
                 Left = 0
                 Top = 0
