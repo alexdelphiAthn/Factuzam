@@ -80,6 +80,12 @@ type
     dteFECHA_ALBC:    TcxDBDateEdit;
     lblEstadoAlbaran: TcxLabel;
     txtESTADO_ALBC:   TcxDBTextEdit;
+    lblPedidoOrigen:  TcxLabel;
+    txtNUMERO_PED_ALBC: TcxDBTextEdit;
+    txtSERIE_PED_ALBC:  TcxDBTextEdit;
+    lblFacturaDestino: TcxLabel;
+    txtNUMERO_FAC_ALBC: TcxDBTextEdit;
+    txtSERIE_FAC_ALBC:  TcxDBTextEdit;
     lblCodigoEmpresa: TcxLabel;
     btnCODIGO_EMP_ALBC: TcxDBButtonEdit;
     lblCodigoProveedor: TcxLabel;
@@ -108,6 +114,8 @@ type
     spnTotalesPORCENTAJE_IVAE_ALBC: TcxDBSpinEdit;
     spnTotalesPORCENTAJE_REE_ALBC: TcxDBSpinEdit;
     chkTotalesESIVA_RECARGO_COMPRAS_ALBC: TcxDBCheckBox;
+    lblTotalesFormaPago: TcxLabel;
+    cbbTotalesFORMA_PAGO_ALBC: TcxDBLookupComboBox;
     grpDesgloseImpuestos: TGroupBox;
     shpSeparador1: TShape;
     shpSeparador2: TShape;
@@ -132,7 +140,9 @@ type
     ActionList1: TActionList;
     actArticulos: TAction;
     actIrDocumento: TAction;
+    actIrFacturaCreada: TAction;
     actIrProveedor: TAction;
+    btnIrFacturaCreada: TcxButton;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -165,6 +175,7 @@ type
     procedure cxgrdLineasAlbaranExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
     procedure actIrDocumentoExecute(Sender: TObject);
+    procedure actIrFacturaCreadaExecute(Sender: TObject);
     procedure actIrProveedorExecute(Sender: TObject);
     procedure cbbSERIE_ALBCPropertiesInitPopup(Sender: TObject);
     procedure btnCODIGO_PRV_ALBCPropertiesButtonClick(Sender: TObject;
@@ -181,6 +192,7 @@ type
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
     // veria discrepancia con Activo).
     FInToggleClick   : Boolean;
+    FAfterOpenLineasOriginal: TDataSetNotifyEvent;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure InicializarGestorYPivote;
@@ -189,6 +201,7 @@ type
     procedure CargarCaptionsAtributosLineaActiva;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
+    procedure unqryLineasAfterOpenHook(DataSet: TDataSet);
     procedure TallaEditValueChangedHook(Sender: TObject);
     procedure TallaValidateHook(Sender: TObject; var DisplayValue: Variant;
                                 var ErrorText: TCaption;
@@ -302,6 +315,10 @@ begin
   // DM (CalcularTotalesAlbaranCompra).
   dmmAlbaranesCompra.unqryAlbaranesCompraLineas.AfterPost :=
                                              unqryLineasAfterPostHook;
+  FAfterOpenLineasOriginal :=
+    dmmAlbaranesCompra.unqryAlbaranesCompraLineas.AfterOpen;
+  dmmAlbaranesCompra.unqryAlbaranesCompraLineas.AfterOpen :=
+                                             unqryLineasAfterOpenHook;
   FMostrarAtributos := False;
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
@@ -335,6 +352,8 @@ begin
     dmmAlbaranesCompra.dsAlbaranesCompraLineas;
   tvMovimientosProveedor.DataController.DataSource :=
     dmmAlbaranesCompra.dsMovimientosProveedor;
+  cbbTotalesFORMA_PAGO_ALBC.Properties.ListSource :=
+    dmmAlbaranesCompra.dsFormasPago;
   // MasterSource se enlaza en DataModuleCreate del DM, pero lo
   // re-aseguramos por idempotencia.
   dmmAlbaranesCompra.unqryAlbaranesCompraLineas.MasterSource := dsTablaG;
@@ -786,6 +805,14 @@ begin
     FPivote.RecargarYRepublicar;
 end;
 
+procedure TfrmMtoAlbaranesCompra.unqryLineasAfterOpenHook(DataSet: TDataSet);
+begin
+  if Assigned(FAfterOpenLineasOriginal) then
+    FAfterOpenLineasOriginal(DataSet);
+  if Assigned(FPivote) and FPivote.Activo then
+    FPivote.RecargarYRepublicar;
+end;
+
 // Al cambiar de linea con foco actualizamos los captions de las columnas
 // talla y, si "atributo por columna" esta activo, recargamos los nombres
 // de atributo del articulo activo.
@@ -929,6 +956,25 @@ begin
       ShowMto(Self.Owner, 'PedidosCompra', sSeriePed + ',' + sNumeroPed)
     else
       ShowMessage('Este albaran no procede de ningun pedido de compra.');
+  end;
+end;
+
+procedure TfrmMtoAlbaranesCompra.actIrFacturaCreadaExecute(Sender: TObject);
+var
+  sSerieFac, sNumeroFac: string;
+begin
+  inherited;
+  if (dmmAlbaranesCompra <> nil) and
+     (not dmmAlbaranesCompra.unqryTablaG.IsEmpty) then
+  begin
+    sSerieFac  := Trim(dmmAlbaranesCompra.unqryTablaG.
+                         FieldByName('SERIE_FAC_ALBC').AsString);
+    sNumeroFac := Trim(dmmAlbaranesCompra.unqryTablaG.
+                         FieldByName('NUMERO_FAC_ALBC').AsString);
+    if (sSerieFac <> '') and (sNumeroFac <> '') then
+      ShowMto(Self.Owner, 'FacturasCompra', sSerieFac + ',' + sNumeroFac)
+    else
+      ShowMessage('Este albaran no tiene factura de compra creada.');
   end;
 end;
 

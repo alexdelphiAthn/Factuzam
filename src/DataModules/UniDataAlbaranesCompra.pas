@@ -37,6 +37,8 @@ type
     unqrySkusAlbc:              TUniQuery;
     unqryMovimientosProveedor:  TUniQuery;
     dsMovimientosProveedor:     TDataSource;
+    unqryFormasPago:            TUniQuery;
+    dsFormasPago:               TDataSource;
     unstrdprcGetContadorAlbc:   TUniStoredProc;
     // Definicion de atributos del articulo padre (para columnas
     // dinamicas ATTR1..ATTR5 en modo "atributo por columna").
@@ -64,6 +66,7 @@ type
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryTablaGAfterPost(DataSet: TDataSet);
+    procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
     procedure unqryAlbaranesCompraLineasAfterInsert(DataSet: TDataSet);
     procedure unqryAlbaranesCompraLineasBeforePost(DataSet: TDataSet);
     procedure unqryAlbaranesCompraLineasAfterPost(DataSet: TDataSet);
@@ -73,6 +76,7 @@ type
     // generamos/revertimos los movimientos. Valores: 'CERRAR' (mov.
     // entrada nueva), 'ABRIR' (revertir mov. existentes) o ''.
     FTransicionEstadoAlbc: string;
+    procedure ConfigurarSqlCabecera;
     function ObtenerSkusAlbaranCsv(const ASerie, ANumero: string): string;
   public
     procedure GetCodigoAutoAlbaranCompra;
@@ -104,7 +108,7 @@ implementation
 
 uses
   inLibGlobalVar, inLibAppParam, inLibLog, inLibtb, inLibContadorLineas,
-  System.Diagnostics,
+  System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inMtoAlbaranesCompra,
   inLibAlbaranesCompraMovimientos,
   inLibComprasImpuestos,
@@ -114,16 +118,129 @@ uses
 
 {$R *.dfm}
 
+procedure TdmAlbaranesCompra.ConfigurarSqlCabecera;
+const
+  CAMPOS_ALBC: array[0..72] of string = (
+    'NUMERO_ALBC',
+    'SERIE_ALBC',
+    'FECHA_ALBC',
+    'ESTADO_ALBC',
+    'NUMERO_PED_ALBC',
+    'SERIE_PED_ALBC',
+    'NUMERO_FAC_ALBC',
+    'SERIE_FAC_ALBC',
+    'CODIGO_EMP_ALBC',
+    'RAZON_SOCIAL_EMPRESA_ALBC',
+    'NIF_EMPRESA_ALBC',
+    'MOVIL_EMPRESA_ALBC',
+    'EMAIL_EMPRESA_ALBC',
+    'DIRECCION1_EMPRESA_ALBC',
+    'DIRECCION2_EMPRESA_ALBC',
+    'POBLACION_EMPRESA_ALBC',
+    'PROVINCIA_EMPRESA_ALBC',
+    'CODIGO_PAI_EMPRESA_ALBC',
+    'NOMBRE_PAI_EMPRESA_ALBC',
+    'CODIGO_POSTAL_EMPRESA_ALBC',
+    'CODIGO_PRV_ALBC',
+    'RAZON_SOCIAL_PRV_ALBC',
+    'NIF_PRV_ALBC',
+    'MOVIL_PRV_ALBC',
+    'EMAIL_PRV_ALBC',
+    'DIRECCION1_PRV_ALBC',
+    'DIRECCION2_PRV_ALBC',
+    'POBLACION_PRV_ALBC',
+    'PROVINCIA_PRV_ALBC',
+    'CODIGO_PAI_PRV_ALBC',
+    'NOMBRE_PAI_PRV_ALBC',
+    'CODIGO_POSTAL_PRV_ALBC',
+    'REF_PROVEEDOR_ALBC',
+    'CODIGO_ALM_ALBC',
+    'TRANSPORTISTA_ALBC',
+    'CODIGO_IVA_ALBC',
+    'ESIVA_RECARGO_COMPRAS_ALBC',
+    'PORCENTAJE_IVAN_ALBC',
+    'TOTAL_BASEI_IVAN_ALBC',
+    'TOTAL_IVAN_ALBC',
+    'PORCENTAJE_REN_ALBC',
+    'TOTAL_REN_ALBC',
+    'PORCENTAJE_IVAR_ALBC',
+    'TOTAL_BASEI_IVAR_ALBC',
+    'TOTAL_IVAR_ALBC',
+    'PORCENTAJE_RER_ALBC',
+    'TOTAL_RER_ALBC',
+    'PORCENTAJE_IVAS_ALBC',
+    'TOTAL_BASEI_IVAS_ALBC',
+    'TOTAL_IVAS_ALBC',
+    'PORCENTAJE_RES_ALBC',
+    'TOTAL_RES_ALBC',
+    'PORCENTAJE_IVAE_ALBC',
+    'TOTAL_BASEI_IVAE_ALBC',
+    'TOTAL_IVAE_ALBC',
+    'PORCENTAJE_REE_ALBC',
+    'TOTAL_REE_ALBC',
+    'TOTAL_BASES_ALBC',
+    'TOTAL_IMPUESTOS_ALBC',
+    'PORCENTAJE_RETENCION_ALBC',
+    'TOTAL_RETENCION_ALBC',
+    'TOTAL_LIQUIDO_ALBC',
+    'FORMA_PAGO_ALBC',
+    'CONTADOR_LINEAS_ALBC',
+    'COMENTARIOS_ALBC',
+    'OBSERVACIONES_ALBC',
+    'ESPIVOTE_HORIZONTAL_ALBC',
+    'CODIGO_TAR_ALBC',
+    'ESDEPOSITO_ALBC',
+    'INSTANTE_MODIF',
+    'INSTANTE_ALTA',
+    'USUARIO_ALTA',
+    'USUARIO_MODIF');
+var
+  i: Integer;
+  sSet: string;
+
+  procedure AgregarCampoUpdate(const ACampo: string);
+  begin
+    if sSet = '' then
+      sSet := '       ' + ACampo + ' = :' + ACampo
+    else
+      sSet := sSet + ',' + sLineBreak +
+        '       ' + ACampo + ' = :' + ACampo;
+  end;
+
+begin
+  unqryTablaG.SQLDelete.Text :=
+    'DELETE FROM fza_albaranes_compra ' + sLineBreak +
+    'WHERE NUMERO_ALBC = :Old_NUMERO_ALBC ' + sLineBreak +
+    '  AND SERIE_ALBC = :Old_SERIE_ALBC';
+  sSet := '';
+  for i := Low(CAMPOS_ALBC) to High(CAMPOS_ALBC) do
+    AgregarCampoUpdate(CAMPOS_ALBC[i]);
+  unqryTablaG.SQLUpdate.Text :=
+    'UPDATE fza_albaranes_compra ' + sLineBreak +
+    '   SET ' + sLineBreak +
+    sSet + sLineBreak +
+    ' WHERE NUMERO_ALBC = :Old_NUMERO_ALBC ' + sLineBreak +
+    '   AND SERIE_ALBC = :Old_SERIE_ALBC';
+  unqryTablaG.SQLRefresh.Text :=
+    'SELECT * ' + sLineBreak +
+    '  FROM vi_albaranes_compra ' + sLineBreak +
+    ' WHERE NUMERO_ALBC = :NUMERO_ALBC ' + sLineBreak +
+    '   AND SERIE_ALBC = :SERIE_ALBC';
+end;
+
 procedure TdmAlbaranesCompra.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   unqryTablaG.Connection                := inLibGlobalVar.oConn;
+  unqryTablaG.KeyFields                 := 'NUMERO_ALBC;SERIE_ALBC';
+  ConfigurarSqlCabecera;
   unqryAlbaranesCompraLineas.Connection := inLibGlobalVar.oConn;
   unqryEmpDataAlbc.Connection           := inLibGlobalVar.oConn;
   unqryPrvDataAlbc.Connection           := inLibGlobalVar.oConn;
   unqryArtDataLinAlbc.Connection        := inLibGlobalVar.oConn;
   unqrySkusAlbc.Connection              := inLibGlobalVar.oConn;
   unqryMovimientosProveedor.Connection  := inLibGlobalVar.oConn;
+  unqryFormasPago.Connection            := inLibGlobalVar.oConn;
   unstrdprcGetContadorAlbc.Connection   := inLibGlobalVar.oConn;
   unqryDefArticuloAlbc.Connection       := inLibGlobalVar.oConn;
   // Master-detail server-side: el WHERE del SQL toma los valores de
@@ -143,6 +260,8 @@ begin
   if Assigned(unqryMovimientosProveedor) and
      unqryMovimientosProveedor.Active then
     unqryMovimientosProveedor.Close;
+  if Assigned(unqryFormasPago) and unqryFormasPago.Active then
+    unqryFormasPago.Close;
   inherited;
 end;
 
@@ -185,6 +304,7 @@ begin
                  'unqryAlbaranesCompraLineas');
   AbrirConTiempo(unqryMovimientosProveedor,
                  'unqryMovimientosProveedor');
+  AbrirConTiempo(unqryFormasPago, 'unqryFormasPago');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
@@ -317,6 +437,105 @@ begin
   begin
     unqryMovimientosProveedor.Close;
     unqryMovimientosProveedor.Open;
+  end;
+end;
+
+procedure TdmAlbaranesCompra.unqryTablaGBeforeDelete(DataSet: TDataSet);
+var
+  q: TUniQuery;
+  sSerie: string;
+  sNumero: string;
+  iBloqueos: Integer;
+
+  procedure AsignarDocumento;
+  begin
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNumero;
+  end;
+
+begin
+  inherited;
+  sSerie  := DataSet.FieldByName('SERIE_ALBC').AsString;
+  sNumero := DataSet.FieldByName('NUMERO_ALBC').AsString;
+  if (sSerie = '') or (sNumero = '') then
+  begin
+    Abort;
+  end;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N ' +
+      '  FROM fza_albaranes_compra ' +
+      ' WHERE SERIE_ALBC  = :s ' +
+      '   AND NUMERO_ALBC = :n ' +
+      '   AND (COALESCE(NUMERO_FAC_ALBC, '''') <> '''' ' +
+      '    OR COALESCE(SERIE_FAC_ALBC, '''') <> '''' ' +
+      '    OR COALESCE(ESTADO_ALBC, '''') = ''FACTURADO'')';
+    AsignarDocumento;
+    q.Open;
+    iBloqueos := q.FieldByName('N').AsInteger;
+    q.Close;
+    if iBloqueos = 0 then
+    begin
+      q.SQL.Text :=
+        'SELECT COUNT(*) AS N ' +
+        '  FROM fza_albaranes_compra_lineas ' +
+        ' WHERE SERIE_ALBC_ALBCLIN  = :s ' +
+        '   AND NUMERO_ALBC_ALBCLIN = :n ' +
+        '   AND (COALESCE(ESFACTURADA_ALBCLIN, ''N'') = ''S'' ' +
+        '    OR COALESCE(NUMERO_FAC_ALBCLIN, '''') <> '''' ' +
+        '    OR COALESCE(SERIE_FAC_ALBCLIN, '''') <> '''')';
+      AsignarDocumento;
+      q.Open;
+      iBloqueos := q.FieldByName('N').AsInteger;
+      q.Close;
+    end;
+    if iBloqueos = 0 then
+    begin
+      q.SQL.Text :=
+        'SELECT COUNT(*) AS N ' +
+        '  FROM fza_facturas_compra_lineas ' +
+        ' WHERE SERIE_ALBC_FACCLIN  = :s ' +
+        '   AND NUMERO_ALBC_FACCLIN = :n';
+      AsignarDocumento;
+      q.Open;
+      iBloqueos := q.FieldByName('N').AsInteger;
+      q.Close;
+    end;
+    if iBloqueos > 0 then
+    begin
+      MessageDlg('No se puede borrar el albaran de compra: ya esta ' +
+                 'facturado. Borra o deshaz primero la factura de compra ' +
+                 'vinculada.',
+                 mtWarning, [mbOk], 0);
+      Abort;
+    end;
+    if MessageDlg(Format('¿Borrar el albaran de compra %s / %s?' +
+                         sLineBreak +
+                         'Se eliminaran sus lineas y se revertiran los ' +
+                         'movimientos de stock.',
+                         [sSerie, sNumero]),
+                  mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    begin
+      Abort;
+    end;
+    inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(
+      inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+    q.SQL.Text :=
+      'DELETE FROM fza_albaranes_compra_celdas ' +
+      ' WHERE SERIE_ALBC_ALBCCEL  = :s ' +
+      '   AND NUMERO_ALBC_ALBCCEL = :n';
+    AsignarDocumento;
+    q.ExecSQL;
+    q.SQL.Text :=
+      'DELETE FROM fza_albaranes_compra_lineas ' +
+      ' WHERE SERIE_ALBC_ALBCLIN  = :s ' +
+      '   AND NUMERO_ALBC_ALBCLIN = :n';
+    AsignarDocumento;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
   end;
 end;
 

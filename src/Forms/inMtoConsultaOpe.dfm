@@ -1,35 +1,37 @@
-﻿inherited frmConsultaOpe: TfrmConsultaOpe
+inherited frmConsultaOpe: TfrmConsultaOpe
   Caption = 'Buscar operaciones'
   ClientHeight = 720
-  ClientWidth = 1200
+  ClientWidth = 1163
   Font.Charset = ANSI_CHARSET
-  Font.Height = -15
   Position = poScreenCenter
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
-  ExplicitWidth = 1216
+  ExplicitLeft = 3
+  ExplicitTop = -31
+  ExplicitWidth = 1179
   ExplicitHeight = 759
-  TextHeight = 18
+  TextHeight = 17
   object splPrincipal: TSplitter [0]
     Left = 0
     Top = 316
-    Width = 1200
+    Width = 1163
     Height = 5
     Cursor = crVSplit
     Align = alTop
+    ExplicitWidth = 1200
   end
   object pnlFiltros: TPanel [1]
     Left = 0
     Top = 0
-    Width = 1200
+    Width = 1163
     Height = 56
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 1198
+    ExplicitWidth = 1200
     object lblFecha: TcxLabel
       Left = 12
       Top = 18
@@ -65,20 +67,20 @@
   object pnlMaestro: TPanel [2]
     Left = 0
     Top = 56
-    Width = 1200
+    Width = 1163
     Height = 260
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 1198
+    ExplicitWidth = 1200
     object cxGridMaestro: TcxGrid
       Left = 0
       Top = 0
-      Width = 1200
+      Width = 1163
       Height = 260
       Align = alClient
       TabOrder = 0
-      ExplicitWidth = 1198
+      ExplicitWidth = 1200
       object cxViewMaestro: TcxGridDBTableView
         OptionsBehavior.FocusCellOnCycle = True
         OptionsData.Deleting = False
@@ -151,32 +153,29 @@
   object pcHijos: TcxPageControl [3]
     Left = 0
     Top = 321
-    Width = 1200
+    Width = 1163
     Height = 360
     Align = alClient
     TabOrder = 2
-    Properties.ActivePage = tsDepositos
+    Properties.ActivePage = tsOperacion
     Properties.CustomButtons.Buttons = <>
-    ExplicitWidth = 1198
-    ExplicitHeight = 352
-    ClientRectBottom = 358
-    ClientRectLeft = 2
-    ClientRectRight = 1198
+    ExplicitWidth = 1200
+    ClientRectBottom = 356
+    ClientRectLeft = 4
+    ClientRectRight = 1159
     ClientRectTop = 28
     object tsOperacion: TcxTabSheet
       Caption = 'Operaci'#243'n '
       ImageIndex = 0
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 1192
       object cxGridOpe: TcxGrid
         Left = 0
         Top = 0
-        Width = 1196
-        Height = 330
+        Width = 1155
+        Height = 328
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 1192
         object cxViewOpe: TcxGridDBTableView
           OptionsData.Deleting = False
           OptionsData.Editing = False
@@ -241,17 +240,15 @@
     object tsPagos: TcxTabSheet
       Caption = 'Pagos'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 1192
       object cxGridPagos: TcxGrid
         Left = 0
         Top = 0
-        Width = 1196
-        Height = 330
+        Width = 1155
+        Height = 328
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 1192
         object cxViewPagos: TcxGridDBTableView
           DataController.Summary.FooterSummaryItems = <
             item
@@ -336,17 +333,15 @@
     object tsVales: TcxTabSheet
       Caption = 'Vales'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 1192
       object cxGridVales: TcxGrid
         Left = 0
         Top = 0
-        Width = 1196
-        Height = 330
+        Width = 1155
+        Height = 328
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 1192
         object cxViewVales: TcxGridDBTableView
           DataController.Summary.FooterSummaryItems = <
             item
@@ -440,17 +435,15 @@
     object tsMovimientos: TcxTabSheet
       Caption = 'Movimientos '
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 1192
       object cxGridMov: TcxGrid
         Left = 0
         Top = 0
-        Width = 1196
-        Height = 330
+        Width = 1155
+        Height = 328
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 1192
         object cxViewMov: TcxGridDBTableView
           OptionsData.Deleting = False
           OptionsData.Editing = False
@@ -531,17 +524,15 @@
     object tsCliente: TcxTabSheet
       Caption = 'Cliente '
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 1192
       object cxGridCli: TcxGrid
         Left = 0
         Top = 0
-        Width = 1196
-        Height = 330
+        Width = 1155
+        Height = 328
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 1192
         object cxViewCli: TcxGridDBTableView
           OptionsData.Deleting = False
           OptionsData.Editing = False
@@ -608,17 +599,15 @@
     object tsDepositos: TcxTabSheet
       Caption = 'Dep'#243'sitos'
       ImageIndex = 3
-      ExplicitWidth = 1194
-      ExplicitHeight = 322
+      ExplicitWidth = 1192
       object cxGridDep: TcxGrid
         Left = 0
         Top = 0
-        Width = 1196
-        Height = 330
+        Width = 1155
+        Height = 328
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 1194
-        ExplicitHeight = 322
+        ExplicitWidth = 1192
         object cxViewDep: TcxGridDBTableView
           DataController.Summary.FooterSummaryItems = <
             item
@@ -755,25 +744,24 @@
     object tsFactura: TcxTabSheet
       Caption = 'Borrador '
       ImageIndex = 4
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 1192
       object pnlFacCabecera: TPanel
         Left = 0
         Top = 0
-        Width = 1196
+        Width = 1155
         Height = 70
         Align = alTop
         BevelOuter = bvNone
         TabOrder = 0
+        ExplicitWidth = 1192
         object cxGridFacCab: TcxGrid
           Left = 0
           Top = 0
-          Width = 1196
+          Width = 1155
           Height = 70
           Align = alClient
           TabOrder = 0
+          ExplicitWidth = 1192
           object cxViewFacCab: TcxGridDBTableView
             OptionsData.Deleting = False
             OptionsData.Editing = False
@@ -841,10 +829,11 @@
       object cxGridFacLin: TcxGrid
         Left = 0
         Top = 70
-        Width = 1196
-        Height = 260
+        Width = 947
+        Height = 258
         Align = alClient
         TabOrder = 1
+        ExplicitWidth = 984
         object cxViewFacLin: TcxGridDBTableView
           OptionsData.Deleting = False
           OptionsData.Editing = False
@@ -930,30 +919,33 @@
         end
       end
       object splFotoConsulta: TcxSplitter
-        Left = 988
+        Left = 947
         Top = 70
         Width = 8
-        Height = 260
+        Height = 258
         AlignSplitter = salRight
         Control = pnlFotoConsulta
+        ExplicitLeft = 984
       end
       object pnlFotoConsulta: TPanel
-        Left = 996
+        Left = 955
         Top = 70
         Width = 200
-        Height = 260
+        Height = 258
         Align = alRight
         BevelOuter = bvLowered
         TabOrder = 2
+        ExplicitLeft = 992
         object imgFotoConsulta: TImage
           Left = 1
           Top = 1
           Width = 198
-          Height = 258
+          Height = 256
           Align = alClient
           Center = True
           Proportional = True
           Stretch = True
+          ExplicitHeight = 258
         end
       end
     end
@@ -961,13 +953,12 @@
   object pnlPie: TPanel [4]
     Left = 0
     Top = 681
-    Width = 1200
+    Width = 1163
     Height = 39
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 3
-    ExplicitTop = 673
-    ExplicitWidth = 1198
+    ExplicitWidth = 1200
     object btnReimprimir: TButton
       Left = 12
       Top = 6
@@ -978,7 +969,7 @@
       OnClick = btnReimprimirClick
     end
     object btnCerrar: TButton
-      Left = 1080
+      Left = 981
       Top = 6
       Width = 108
       Height = 28
@@ -987,7 +978,7 @@
       OnClick = btnCerrarClick
     end
     object btnDevolverAbonar: TButton
-      Left = 220
+      Left = 188
       Top = 6
       Width = 226
       Height = 28
@@ -995,7 +986,7 @@
       TabOrder = 2
     end
     object btnRectificar: TButton
-      Left = 476
+      Left = 436
       Top = 6
       Width = 110
       Height = 28
@@ -1004,7 +995,7 @@
       OnClick = btnRectificarClick
     end
     object btnAnularVerifactu: TButton
-      Left = 594
+      Left = 570
       Top = 6
       Width = 200
       Height = 28
@@ -1013,7 +1004,7 @@
       OnClick = btnAnularVerifactuClick
     end
     object btnFacturarTicket: TButton
-      Left = 802
+      Left = 786
       Top = 6
       Width = 180
       Height = 28

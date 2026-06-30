@@ -35,6 +35,8 @@ type
     dsFacturas:           TDataSource;
     unqryMovimientosAlb:  TUniQuery;
     dsMovimientosAlb:     TDataSource;
+    unqryFormasPago:      TUniQuery;
+    dsFormasPago:         TDataSource;
     unstrdprcGetContadorAlbaran: TUniStoredProc;
     unstrdprcCrearFacturaInicio: TUniStoredProc;
     unstrdprcCrearFacturaLinea:  TUniStoredProc;
@@ -47,6 +49,7 @@ type
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryTablaGAfterPost(DataSet: TDataSet);
+    procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
     procedure unqryAlbaranesLineasAfterInsert(DataSet: TDataSet);
     procedure unqryAlbaranesLineasBeforePost(DataSet: TDataSet);
     procedure unqryAlbaranesLineasAfterPost(DataSet: TDataSet);
@@ -91,7 +94,8 @@ implementation
 
 uses
   inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics,
-  inLibArticulosValidador, inLibVentasImpuestos;
+  System.UITypes, Vcl.Dialogs, inLibArticulosValidador,
+  inLibVentasImpuestos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -101,6 +105,11 @@ procedure TdmAlbaranes.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   unqryTablaG.Connection                 := inLibGlobalVar.oConn;
+  unqryTablaG.KeyFields                  := 'NUMERO_ALB;SERIE_ALB';
+  unqryTablaG.SQLDelete.Text             :=
+    'DELETE FROM fza_albaranes ' + sLineBreak +
+    'WHERE NUMERO_ALB = :Old_NUMERO_ALB ' + sLineBreak +
+    '  AND SERIE_ALB = :Old_SERIE_ALB';
   unqryAlbaranesLineas.Connection        := inLibGlobalVar.oConn;
   unqryEmpDataAlb.Connection             := inLibGlobalVar.oConn;
   unqryCliDataAlb.Connection             := inLibGlobalVar.oConn;
@@ -108,6 +117,7 @@ begin
   unqrySkusAlb.Connection                := inLibGlobalVar.oConn;
   unqryFacturas.Connection               := inLibGlobalVar.oConn;
   unqryMovimientosAlb.Connection         := inLibGlobalVar.oConn;
+  unqryFormasPago.Connection             := inLibGlobalVar.oConn;
   unstrdprcGetContadorAlbaran.Connection := inLibGlobalVar.oConn;
   unstrdprcCrearFacturaInicio.Connection := inLibGlobalVar.oConn;
   unstrdprcCrearFacturaLinea.Connection  := inLibGlobalVar.oConn;
@@ -123,6 +133,8 @@ begin
     unqryFacturas.Close;
   if Assigned(unqryMovimientosAlb) and unqryMovimientosAlb.Active then
     unqryMovimientosAlb.Close;
+  if Assigned(unqryFormasPago) and unqryFormasPago.Active then
+    unqryFormasPago.Close;
   inherited;
 end;
 
@@ -169,6 +181,7 @@ begin
   AbrirConTiempo(unqryAlbaranesLineas, 'unqryAlbaranesLineas');
   AbrirConTiempo(unqryFacturas,        'unqryFacturas');
   AbrirConTiempo(unqryMovimientosAlb,  'unqryMovimientosAlb');
+  AbrirConTiempo(unqryFormasPago,      'unqryFormasPago');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
@@ -210,6 +223,87 @@ begin
   if (Trim(unqryTablaG.FieldByName('NUMERO_ALB').AsString) <> '') and
      (unqryTablaG.FieldByName('NUMERO_ALB').AsString <> '0') then
     GenerarMovimientosSalida;
+end;
+
+procedure TdmAlbaranes.unqryTablaGBeforeDelete(DataSet: TDataSet);
+var
+  q: TUniQuery;
+  sSerie: string;
+  sNumero: string;
+  iBloqueos: Integer;
+
+  procedure AsignarDocumento;
+  begin
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNumero;
+  end;
+
+begin
+  inherited;
+  sSerie  := DataSet.FieldByName('SERIE_ALB').AsString;
+  sNumero := DataSet.FieldByName('NUMERO_ALB').AsString;
+  if (sSerie = '') or (sNumero = '') then
+  begin
+    Abort;
+  end;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N ' +
+      '  FROM fza_albaranes ' +
+      ' WHERE SERIE_ALB  = :s ' +
+      '   AND NUMERO_ALB = :n ' +
+      '   AND (COALESCE(NUMERO_FAC_ALB, '''') <> '''' ' +
+      '    OR COALESCE(SERIE_FAC_ALB, '''') <> '''' ' +
+      '    OR COALESCE(ESTADO_ALB, '''') = ''FACTURADO'')';
+    AsignarDocumento;
+    q.Open;
+    iBloqueos := q.FieldByName('N').AsInteger;
+    q.Close;
+    if iBloqueos = 0 then
+    begin
+      q.SQL.Text :=
+        'SELECT COUNT(*) AS N ' +
+        '  FROM fza_albaranes_lineas ' +
+        ' WHERE SERIE_ALB_ALBLIN  = :s ' +
+        '   AND NUMERO_ALB_ALBLIN = :n ' +
+        '   AND (COALESCE(ESFACTURADA_ALBLIN, ''N'') = ''S'' ' +
+        '    OR COALESCE(NUMERO_FAC_ALBLIN, '''') <> '''' ' +
+        '    OR COALESCE(SERIE_FAC_ALBLIN, '''') <> '''')';
+      AsignarDocumento;
+      q.Open;
+      iBloqueos := q.FieldByName('N').AsInteger;
+      q.Close;
+    end;
+    if iBloqueos > 0 then
+    begin
+      MessageDlg('No se puede borrar el albaran: ya esta facturado. ' +
+                 'Borra o deshaz primero la factura vinculada.',
+                 mtWarning, [mbOk], 0);
+      Abort;
+    end;
+    if MessageDlg(Format('¿Borrar el albaran %s / %s?' + sLineBreak +
+                         'Se eliminaran sus lineas y se revertiran los ' +
+                         'movimientos de stock.',
+                         [sSerie, sNumero]),
+                  mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    begin
+      Abort;
+    end;
+    q.SQL.Text := 'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
+    q.ParamByName('t').AsString := 'AV';
+    AsignarDocumento;
+    q.ExecSQL;
+    q.SQL.Text :=
+      'DELETE FROM fza_albaranes_lineas ' +
+      ' WHERE SERIE_ALB_ALBLIN  = :s ' +
+      '   AND NUMERO_ALB_ALBLIN = :n';
+    AsignarDocumento;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
 end;
 
 procedure TdmAlbaranes.unqryAlbaranesLineasAfterInsert(DataSet: TDataSet);

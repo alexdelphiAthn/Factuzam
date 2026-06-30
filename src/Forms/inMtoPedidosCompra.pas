@@ -119,6 +119,8 @@ type
     spnTotalesPORCENTAJE_IVAE_PEDC: TcxDBSpinEdit;
     spnTotalesPORCENTAJE_REE_PEDC: TcxDBSpinEdit;
     chkTotalesESIVA_RECARGO_COMPRAS_PEDC: TcxDBCheckBox;
+    lblTotalesFormaPago: TcxLabel;
+    cbbTotalesFORMA_PAGO_PEDC: TcxDBLookupComboBox;
     grpDesgloseImpuestos: TGroupBox;
     shpSeparador1: TShape;
     shpSeparador2: TShape;
@@ -146,6 +148,8 @@ type
     // compra seleccionado en la rejilla.
     actIrDocumento: TAction;
     actIrProveedor: TAction;
+    Panel1: TPanel;
+    btnIraalbaran: TcxButton;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -187,6 +191,7 @@ type
     procedure btnRecibirTodoClick(Sender: TObject);
     procedure btnCODIGO_PRV_PEDCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
+    procedure btnIraalbaranClick(Sender: TObject);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -383,6 +388,8 @@ begin
   dmmPedidosCompra.unqryPedidosCompraLineas.MasterSource := dsTablaG;
   tvAlbaranesPedc.DataController.DataSource :=
     dmmPedidosCompra.dsAlbaranesPedc;
+  cbbTotalesFORMA_PAGO_PEDC.Properties.ListSource :=
+    dmmPedidosCompra.dsFormasPago;
   dmmPedidosCompra.unqryAlbaranesPedc.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_PEDC;NUMERO_PEDC';
 end;
@@ -761,6 +768,12 @@ begin
   // RecargarYRepublicar lo solventa.
   if Assigned(FPivote) and FPivote.Activo then
     FPivote.RecargarYRepublicar;
+end;
+
+procedure TfrmMtoPedidosCompra.btnIraalbaranClick(Sender: TObject);
+begin
+  inherited;
+  actIrDocumentoExecute(Sender);
 end;
 
 // Hook del OnDataChange de dsTablaG: solo nos interesa el evento global

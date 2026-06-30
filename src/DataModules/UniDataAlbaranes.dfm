@@ -4,11 +4,17 @@
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
+    SQLDelete.Strings = (
+      'DELETE FROM fza_albaranes'
+      'WHERE'
+      '  NUMERO_ALB = :Old_NUMERO_ALB'
+      '  AND SERIE_ALB = :Old_SERIE_ALB')
     SQL.Strings = (
       'SELECT * FROM vi_albaranes'
       ' ORDER BY INSTANTE_ALTA DESC, NUMERO_ALB DESC')
     AfterInsert = unqryTablaGAfterInsert
     AfterPost = unqryTablaGAfterPost
+    BeforeDelete = unqryTablaGBeforeDelete
     Left = 48
     Top = 24
   end
@@ -198,5 +204,18 @@
     DataSetOptions = []
     Left = 384
     Top = 80
+  end
+  object unqryFormasPago: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM vi_formapago')
+    ReadOnly = True
+    Left = 512
+    Top = 312
+  end
+  object dsFormasPago: TDataSource
+    DataSet = unqryFormasPago
+    Left = 512
+    Top = 368
   end
 end

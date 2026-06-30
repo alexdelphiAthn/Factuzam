@@ -4,6 +4,11 @@
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
+    SQLDelete.Strings = (
+      'DELETE FROM fza_pedidos_compra'
+      'WHERE'
+      '  NUMERO_PEDC = :Old_NUMERO_PEDC'
+      '  AND SERIE_PEDC = :Old_SERIE_PEDC')
     SQL.Strings = (
       'SELECT * FROM vi_pedidos_compra')
     AfterInsert = unqryTablaGAfterInsert
@@ -147,5 +152,18 @@
     DataSet = unqryAlbaranesPedc
     Left = 360
     Top = 288
+  end
+  object unqryFormasPago: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM vi_formapago')
+    ReadOnly = True
+    Left = 520
+    Top = 136
+  end
+  object dsFormasPago: TDataSource
+    DataSet = unqryFormasPago
+    Left = 520
+    Top = 200
   end
 end

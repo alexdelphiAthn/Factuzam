@@ -38,6 +38,8 @@ type
     unqryPrvDataFacc:           TUniQuery;
     unqryArtDataLinFacc:        TUniQuery;
     unqrySkusFacc:              TUniQuery;
+    unqryFormasPago:            TUniQuery;
+    dsFormasPago:               TDataSource;
     unstrdprcGetContadorFacc:   TUniStoredProc;
     // Definicion de atributos del articulo padre (para columnas
     // dinamicas ATTR1..ATTR5 en modo "atributo por columna").
@@ -124,7 +126,7 @@ implementation
 
 uses
   inLibGlobalVar, inLibAppParam, inLibLog, inLibtb, inLibContadorLineas,
-  System.Diagnostics,
+  System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inMtoFacturasCompra,
   inLibComprasImpuestos,
   inLibArticulosValidador;
@@ -137,11 +139,17 @@ procedure TdmFacturasCompra.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   unqryTablaG.Connection                := inLibGlobalVar.oConn;
+  unqryTablaG.KeyFields                 := 'NUMERO_FACC;SERIE_FACC';
+  unqryTablaG.SQLDelete.Text            :=
+    'DELETE FROM fza_facturas_compra ' + sLineBreak +
+    'WHERE NUMERO_FACC = :Old_NUMERO_FACC ' + sLineBreak +
+    '  AND SERIE_FACC = :Old_SERIE_FACC';
   unqryFacturasCompraLineas.Connection := inLibGlobalVar.oConn;
   unqryEmpDataFacc.Connection           := inLibGlobalVar.oConn;
   unqryPrvDataFacc.Connection           := inLibGlobalVar.oConn;
   unqryArtDataLinFacc.Connection        := inLibGlobalVar.oConn;
   unqrySkusFacc.Connection              := inLibGlobalVar.oConn;
+  unqryFormasPago.Connection            := inLibGlobalVar.oConn;
   unstrdprcGetContadorFacc.Connection   := inLibGlobalVar.oConn;
   unqryDefArticuloFacc.Connection       := inLibGlobalVar.oConn;
   // Master-detail server-side: el WHERE del SQL toma los valores de
@@ -159,6 +167,8 @@ begin
   if Assigned(unqryFacturasCompraLineas) and
      unqryFacturasCompraLineas.Active then
     unqryFacturasCompraLineas.Close;
+  if Assigned(unqryFormasPago) and unqryFormasPago.Active then
+    unqryFormasPago.Close;
   inherited;
 end;
 
@@ -200,6 +210,7 @@ begin
   AbrirConTiempo(unqryFacturasCompraLineas,
                  'unqryFacturasCompraLineas');
   AbrirConTiempo(unqryEfectos, 'unqryEfectos');
+  AbrirConTiempo(unqryFormasPago, 'unqryFormasPago');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
@@ -529,6 +540,15 @@ begin
         raise Exception.Create(
           'No se puede borrar la factura: tiene efectos pagados, ' +
           'remesados o conciliados.');
+      if MessageDlg(Format('¿Borrar la factura de compra %s / %s?' +
+                           sLineBreak +
+                           'Se eliminaran sus lineas y efectos, y se ' +
+                           'desmarcaran los albaranes vinculados.',
+                           [sSerie, sNumero]),
+                    mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+      begin
+        Abort;
+      end;
       q.SQL.Text :=
         'UPDATE fza_albaranes_compra_lineas ' +
         '   SET ESFACTURADA_ALBCLIN = ''N'', ' +
