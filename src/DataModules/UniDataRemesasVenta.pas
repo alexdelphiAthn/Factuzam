@@ -39,6 +39,7 @@ type
     function ActualizarFechaCobro(AFecha: TDateTime): Boolean;
     function AsignarBancoRemesa(const ACodigoEmpban: string): Boolean;
     function CobroRealizadoRemesa: Double;
+    function EliminarRemesa: Boolean;
     procedure CargarDatosSepa(var ADatos: TDatosSepaRemesaVenta);
     function GenerarOrdenSepa(const AArchivo: string): Integer;
     function GuardarDatosSepa(
@@ -460,6 +461,68 @@ begin
       ActualizarEstadoRemesa(sSerieRem, sNumeroRem, 0);
       RefrescarDatos;
     end;
+  end;
+end;
+
+function TdmRemesasVenta.EliminarRemesa: Boolean;
+var
+  bTxOwned: Boolean;
+  q: TUniQuery;
+  sSerieRem: string;
+  sNumeroRem: string;
+begin
+  Result := False;
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) and
+     (not RemesaTieneCobro) then
+  begin
+    sSerieRem := unqryTablaG.FieldByName('SERIE_REMV').AsString;
+    sNumeroRem := unqryTablaG.FieldByName('NUMERO_REMV').AsString;
+    bTxOwned := not inLibGlobalVar.oConn.InTransaction;
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      try
+        if bTxOwned then
+          inLibGlobalVar.oConn.StartTransaction;
+        // 1. Desvincular los efectos de la remesa y restaurar su estado.
+        q.SQL.Text :=
+          'UPDATE fza_efectos_venta ' +
+          '   SET SERIE_REMV_EFV = NULL, ' +
+          '       NUMERO_REMV_EFV = NULL, ' +
+          '       ESTADO_EFV = CASE ' +
+          '         WHEN COALESCE(IMPORTE_PENDIENTE_EFV, 0) <= 0 ' +
+          '           THEN ''COBRADO'' ' +
+          '         ELSE ''PENDIENTE'' END, ' +
+          '       INSTANTE_MODIF = NOW(), ' +
+          '       USUARIO_MODIF = :usuario ' +
+          ' WHERE SERIE_REMV_EFV = :serie ' +
+          '   AND NUMERO_REMV_EFV = :numero';
+        q.ParamByName('usuario').AsString := oUser;
+        q.ParamByName('serie').AsString := sSerieRem;
+        q.ParamByName('numero').AsString := sNumeroRem;
+        q.ExecSQL;
+        // 2. Borrar la cabecera contra la tabla base (la vista vi_remesas_venta
+        // es de solo lectura por el JOIN, no admite DELETE).
+        q.SQL.Text :=
+          'DELETE FROM fza_remesas_venta ' +
+          ' WHERE SERIE_REMV = :serie ' +
+          '   AND NUMERO_REMV = :numero';
+        q.ParamByName('serie').AsString := sSerieRem;
+        q.ParamByName('numero').AsString := sNumeroRem;
+        q.ExecSQL;
+        Result := q.RowsAffected > 0;
+        if bTxOwned then
+          inLibGlobalVar.oConn.Commit;
+      except
+        if bTxOwned and inLibGlobalVar.oConn.InTransaction then
+          inLibGlobalVar.oConn.Rollback;
+        raise;
+      end;
+    finally
+      FreeAndNil(q);
+    end;
+    if Result then
+      RefrescarDatos;
   end;
 end;
 
