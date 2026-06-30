@@ -39,6 +39,12 @@ uses
   UMigEngine;
 
 procedure MigrarFacturas(Eng: TMigEngine; var Stats: TMigStats);
+// Enlace masivo movimiento->factura (REF_MOV) como dominio APARTE: se saco
+// de los dominios de facturas para que NO bloquee la importacion de las
+// facturas. Cubre simplificadas y normales en un solo UPDATE. Corre el
+// ultimo (ver WaveDeDominio); si se cancela, las facturas ya estan.
+procedure MigrarEnlaceMovimientosFacturas(Eng: TMigEngine;
+                                          var Stats: TMigStats);
 
 implementation
 
@@ -286,27 +292,10 @@ begin
     q.ParamByName('u').AsString := Eng.Usuario;
     q.ExecSQL;
     Eng.Log('  facturas: datos de cliente rellenados.');
-    // 2) Enlace MOVIMIENTO -> FACTURA por NUMERO_MOV. Sin esto, la pestana
-    //    "Movimientos" de la factura y el detalle del ticket no encuentran
-    //    los movimientos (la app filtra por TIPO/SERIE/NUMERO/LINEA _DOC_REF).
-    //    Ademas fijamos LINEA_MOV = linea de la factura: la rejilla de
-    //    movimientos de la factura MUESTRA y ORDENA por LINEA_MOV (no por
-    //    LINEA_REF_MOV), y en la migracion nacia siempre '0001'; asi cada
-    //    movimiento de venta queda alineado con su linea de factura.
-    q.SQL.Text :=
-      'UPDATE fza_movimientos_almacen m ' +
-      'JOIN fza_facturas_lineas l ON l.NUMERO_MOV_FACLIN = m.NUMERO_MOV ' +
-      'SET m.TIPO_DOC_REF_MOV   = ''FC'', ' +
-      '    m.SERIE_DOC_REF_MOV  = l.SERIE_FAC_FACLIN, ' +
-      '    m.NUMERO_DOC_REF_MOV = l.NUMERO_FAC_FACLIN, ' +
-      '    m.LINEA_REF_MOV      = l.LINEA_FACLIN, ' +
-      '    m.LINEA_MOV          = l.LINEA_FACLIN ' +
-      'WHERE l.USUARIO_ALTA = :u ' +
-      '  AND l.NUMERO_MOV_FACLIN IS NOT NULL ' +
-      '  AND l.NUMERO_MOV_FACLIN <> ''''';
-    q.ParamByName('u').AsString := Eng.Usuario;
-    q.ExecSQL;
-    Eng.Log('  facturas: movimientos enlazados a su factura (REF_MOV).');
+    // El enlace MOVIMIENTO -> FACTURA (UPDATE masivo sobre
+    // fza_movimientos_almacen) ya NO se hace aqui: vive en el dominio
+    // independiente MigrarEnlaceMovimientosFacturas, que corre el ultimo para
+    // no bloquear la importacion de las facturas.
   finally
     q.Free;
   end;
@@ -634,27 +623,85 @@ begin
     bulkLin.Free;
     qLin.Free;
   end;
-  // Persistimos cabeceras y lineas ANTES del post-proceso. Los enlaces
-  // hacen un UPDATE masivo sobre fza_movimientos_almacen que puede tardar y
-  // chocar con "Lock wait timeout"; si reventara dentro de la transaccion
-  // del dominio arrastraria un ROLLBACK que dejaba fza_facturas VACIA. Con
-  // el commit previo las facturas quedan guardadas pase lo que pase en los
-  // enlaces. Tras el commit la conexion vuelve a autocommit, asi que cada
-  // enlace se confirma por su cuenta y bloquea menos.
+  // Persistimos cabeceras y lineas ANTES del post-proceso. Si un enlace
+  // fallara dentro de la transaccion del dominio arrastraria un ROLLBACK que
+  // dejaba fza_facturas VACIA; con el commit previo las facturas quedan
+  // guardadas pase lo que pase. El enlace pesado (movimientos) ya no esta
+  // aqui: corre en su propio dominio al final.
   Eng.ConDst.Commit;
   if not Eng.IsCancelado then
   begin
     try
-      // Indice que permite resolver el enlace conduciendo desde la linea a
-      // su movimiento por PK; sin el, el UPDATE escanea la tabla entera de
-      // movimientos y mantiene bloqueos durante minutos.
-      AsegurarIndice(Eng, 'fza_facturas_lineas', 'IDX_FACLIN_NUMMOV',
-        '`NUMERO_MOV_FACLIN`');
       EnlazarFacturas(Eng);
     except
       on E: Exception do
         Eng.LogError('facturas_enlace', '', E.Message, '',
           'enlace post-insercion fallido; las facturas YA estan guardadas');
+    end;
+  end;
+  // Dejamos una transaccion activa para el Commit final del motor.
+  Eng.ConDst.StartTransaction;
+end;
+
+// =========================================================================
+//  Enlace movimiento -> factura (dominio independiente, corre EL ULTIMO)
+// =========================================================================
+//  Rellena en fza_movimientos_almacen las columnas *_DOC_REF_MOV (+ LINEA_MOV)
+//  para que la pestana "Movimientos" de la factura encuentre sus movimientos.
+//  Es un UPDATE masivo sobre la tabla mas grande del sistema; por eso se saco
+//  de los dominios de facturas (bloqueaba la importacion) a un dominio propio
+//  que corre el ultimo. Cubre simplificadas y normales en una sola pasada
+//  (cualquier linea migrada con NUMERO_MOV_FACLIN). Es idempotente y
+//  cancelable: si se interrumpe, las facturas YA estan importadas y este
+//  enlace se puede relanzar solo.
+procedure MigrarEnlaceMovimientosFacturas(Eng: TMigEngine;
+                                          var Stats: TMigStats);
+var
+  q: TUniQuery;
+begin
+  // Salimos de la transaccion del dominio: trabajamos en autocommit para no
+  // mantener un bloqueo gigante durante todo el UPDATE.
+  Eng.ConDst.Commit;
+  try
+    // Indice que permite conducir desde la linea (pocas filas) y resolver el
+    // movimiento por su PK (NUMERO_MOV), en vez de escanear toda la tabla de
+    // movimientos.
+    AsegurarIndice(Eng, 'fza_facturas_lineas', 'IDX_FACLIN_NUMMOV',
+      '`NUMERO_MOV_FACLIN`');
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := Eng.ConDst;
+      Eng.Log('  enlazando movimientos con su factura (REF_MOV)...');
+      // STRAIGHT_JOIN + lineas como tabla CONDUCTORA: fuerza recorrer las
+      // lineas de factura (pocas) y buscar el movimiento por PK; LINEA_MOV se
+      // fija ademas porque la rejilla de movimientos de la factura ordena por
+      // esa columna (en la migracion nacia siempre '0001').
+      q.SQL.Text :=
+        'UPDATE fza_facturas_lineas l ' +
+        'STRAIGHT_JOIN fza_movimientos_almacen m ' +
+        '  ON m.NUMERO_MOV = l.NUMERO_MOV_FACLIN ' +
+        'SET m.TIPO_DOC_REF_MOV   = ''FC'', ' +
+        '    m.SERIE_DOC_REF_MOV  = l.SERIE_FAC_FACLIN, ' +
+        '    m.NUMERO_DOC_REF_MOV = l.NUMERO_FAC_FACLIN, ' +
+        '    m.LINEA_REF_MOV      = l.LINEA_FACLIN, ' +
+        '    m.LINEA_MOV          = l.LINEA_FACLIN ' +
+        'WHERE l.USUARIO_ALTA = :u ' +
+        '  AND l.NUMERO_MOV_FACLIN IS NOT NULL ' +
+        '  AND l.NUMERO_MOV_FACLIN <> ''''';
+      q.ParamByName('u').AsString := Eng.Usuario;
+      q.ExecSQL;
+      Inc(Stats.Insertadas);
+      Eng.Log('  movimientos enlazados a su factura (REF_MOV).');
+    finally
+      q.Free;
+    end;
+  except
+    on E: Exception do
+    begin
+      Inc(Stats.Errores);
+      Eng.LogError('enlace_mov_facturas', '', E.Message, '',
+        'las facturas YA estan importadas; este enlace es idempotente y se '
+        + 'puede relanzar solo');
     end;
   end;
   // Dejamos una transaccion activa para el Commit final del motor.
