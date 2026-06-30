@@ -445,37 +445,9 @@ begin
   end;
 end;
 
-procedure EnlazarLineasFacturaVentaMayor(Eng: TMigEngine);
-var
-  q: TUniQuery;
-begin
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := Eng.ConDst;
-    // STRAIGHT_JOIN + lineas como tabla CONDUCTORA: se recorren las lineas
-    // de factura (pocas) resolviendo m por su PK (NUMERO_MOV), en vez de
-    // escanear toda fza_movimientos_almacen (historico completo, mucho mayor).
-    q.SQL.Text :=
-      'UPDATE fza_facturas_lineas l ' +
-      'STRAIGHT_JOIN fza_facturas f ON f.NUMERO_FAC = l.NUMERO_FAC_FACLIN ' +
-      '                    AND f.SERIE_FAC = l.SERIE_FAC_FACLIN ' +
-      'STRAIGHT_JOIN fza_movimientos_almacen m ' +
-      '  ON m.NUMERO_MOV = l.NUMERO_MOV_FACLIN ' +
-      'SET m.TIPO_DOC_REF_MOV = ''FC'', ' +
-      '    m.SERIE_DOC_REF_MOV = l.SERIE_FAC_FACLIN, ' +
-      '    m.NUMERO_DOC_REF_MOV = l.NUMERO_FAC_FACLIN, ' +
-      '    m.LINEA_REF_MOV = l.LINEA_FACLIN, ' +
-      '    m.LINEA_MOV = l.LINEA_FACLIN ' +
-      'WHERE l.USUARIO_ALTA = :u ' +
-      '  AND COALESCE(f.TIPO_FAC, '''') <> ''SIMPLIFICADA'' ' +
-      '  AND l.NUMERO_MOV_FACLIN IS NOT NULL ' +
-      '  AND l.NUMERO_MOV_FACLIN <> ''''';
-    q.ParamByName('u').AsString := Eng.Usuario;
-    q.ExecSQL;
-  finally
-    q.Free;
-  end;
-end;
+// El enlace movimiento->factura de venta mayor se unifico con el de tickets
+// en el dominio MigrarEnlaceMovimientosFacturas (inLibMigFacturas), que corre
+// el ultimo y cubre simplificadas y normales en una sola pasada.
 
 // =========================================================================
 //  1. Pedidos de venta mayor
@@ -1280,12 +1252,12 @@ begin
     bLin.Free;
     qLin.Free;
   end;
-  // Persistimos cabeceras y lineas ANTES del post-proceso. El enlace de
-  // movimientos hace un UPDATE masivo sobre fza_movimientos_almacen que
-  // puede tardar y chocar con "Lock wait timeout"; si reventara dentro de
-  // la transaccion del dominio arrastraria un ROLLBACK que dejaba
-  // fza_facturas VACIA. Con el commit previo las facturas quedan guardadas
-  // pase lo que pase en los enlaces.
+  // Persistimos cabeceras y lineas ANTES del post-proceso. Si un enlace
+  // fallara dentro de la transaccion del dominio arrastraria un ROLLBACK que
+  // dejaba fza_facturas VACIA; con el commit previo las facturas quedan
+  // guardadas pase lo que pase. El enlace pesado (movimientos) ya no esta
+  // aqui: corre en el dominio independiente "Enlace movimientos <-> facturas"
+  // al final, para no bloquear la importacion de las facturas.
   Eng.ConDst.Commit;
   if not Eng.IsCancelado then
   begin
@@ -1293,11 +1265,7 @@ begin
       EnlazarEmpresaVentaMayor(Eng, 'fza_facturas', 'FAC');
       EnlazarClientesVentaMayor(Eng, 'fza_facturas', 'FAC');
       AjustarRetencionesVentaMayor(Eng, 'fza_facturas', 'FAC');
-      // Indice que evita el escaneo completo de movimientos en el enlace.
-      AsegurarIndice(Eng, 'fza_facturas_lineas', 'IDX_FACLIN_NUMMOV',
-        '`NUMERO_MOV_FACLIN`');
-      EnlazarLineasFacturaVentaMayor(Eng);
-      Eng.Log('  facturas venta mayor: empresa, cliente y movimientos enlazados.');
+      Eng.Log('  facturas venta mayor: empresa y cliente enlazados.');
     except
       on E: Exception do
         Eng.LogError('facturas_venta_mayor_enlace', '', E.Message, '',
