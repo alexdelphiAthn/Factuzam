@@ -437,7 +437,7 @@ const
     'CODIGO_ALM_DOC_MOV, CODIGO_CAJA_DOC_MOV, NUMERO_OPERACION_DOC_MOV, ' +
     'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
 var
-  qSrc:                           TUniQuery;
+  qSrc, qDel:                     TUniQuery;
   bulk:                           TBulkInsert;
   fs:                             TFormatSettings;
   sAhora, sUser:                  string;
@@ -451,7 +451,7 @@ var
   fCantMov, fCoste, fPmp, fTotal: Double;
   fPmpAlm, fSeed, fPrecAlb:       Double;
   fStkAlm, fValAlm, fStkOri, fValOri: Double;
-  iAlmDes, iTmpNro:               Integer;
+  iAlmDes, iTmpNro, iNoMH, iBorr: Integer;
   sSkuKey, sSkuActual, sAlmOri:   string;
   oStock, oValor:                 TDictionary<string, Double>;
 begin
@@ -465,8 +465,44 @@ begin
   // de cada pasada (sentido E/S, enlace de caja...) se apliquen de verdad sin
   // tener que vaciar la tabla a mano. No toca los 'MV' que genere la app.
   Eng.Log('  movimientos: limpiando volcado historico anterior (MH*)...');
-  EjecutarSQL(Eng,
-    'DELETE FROM fza_movimientos_almacen WHERE NUMERO_MOV LIKE ''MH%''');
+  // Trabajamos en autocommit (fuera de la transaccion del dominio): borrar
+  // ~1,9M filas en una sola transaccion mantenia un bloqueo enorme y chocaba
+  // con "Lock wait timeout". Si la tabla SOLO tiene volcado de migracion (MH*),
+  // TRUNCATE es instantaneo; si hay movimientos de la app (no-MH) se conservan
+  // borrando solo los MH por lotes.
+  Eng.ConDst.Commit;
+  qDel := TUniQuery.Create(nil);
+  try
+    qDel.Connection := Eng.ConDst;
+    qDel.SQL.Text :=
+      'SELECT COUNT(*) FROM fza_movimientos_almacen ' +
+      'WHERE NUMERO_MOV NOT LIKE ''MH%''';
+    qDel.Open;
+    iNoMH := qDel.Fields[0].AsInteger;
+    qDel.Close;
+    if iNoMH = 0 then
+    begin
+      Eng.Log('  movimientos: tabla solo con volcado MH -> TRUNCATE.');
+      Eng.ConDst.ExecSQL('TRUNCATE TABLE fza_movimientos_almacen');
+    end
+    else
+    begin
+      Eng.Log(Format('  movimientos: %d filas no-MH se conservan; ' +
+        'borrando MH por lotes...', [iNoMH]));
+      qDel.SQL.Text :=
+        'DELETE FROM fza_movimientos_almacen ' +
+        'WHERE NUMERO_MOV LIKE ''MH%'' LIMIT 50000';
+      repeat
+        qDel.ExecSQL;
+        iBorr := qDel.RowsAffected;
+      until (iBorr <= 0) or Eng.IsCancelado;
+    end;
+  finally
+    qDel.Free;
+  end;
+  // Reabrimos transaccion: el bulk insert siguiente va en la del dominio y el
+  // motor hace el Commit final.
+  Eng.ConDst.StartTransaction;
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   // Streaming: ocmovarp puede tener cientos de miles de filas; no las
   // cacheamos en memoria (lectura hacia delante).
