@@ -762,22 +762,29 @@ const
     '       ISNULL(l.PrecioSIva, 0) AS PrecioSIva, ISNULL(l.PrecioCIva, 0) AS PrecioCIva, ' +
     '       ISNULL(l.ImpNetoSIva, 0) AS ImpNetoSIva, ISNULL(l.PorIVA, 0) AS PorIVA, ' +
     '       l.EjercicioPedido, ISNULL(l.SeriePedido, '''') AS SeriePedido, ISNULL(l.NroPedido, 0) AS NroPedido, ' +
-    '       ISNULL(pl.Orden, ISNULL(l.IdPed, 0)) AS OrdenPedido, l.EjercicioFactura, ' +
+    // Subconsulta escalar (no JOIN) para el Orden de la linea de pedido: el
+    // JOIN a ocpedcliart por (Empresa,Ejercicio,Serie,NroPedido,Id) podia
+    // multiplicar la fila del albaran cuando Id no era unico, duplicando
+    // lineas. La subconsulta TOP 1 garantiza una sola fila por linea.
+    '       ISNULL((SELECT TOP 1 pl.Orden FROM dbo.ocpedcliart pl ' +
+    '                WHERE pl.Empresa = l.EmpresaPedido ' +
+    '                  AND pl.Ejercicio = l.EjercicioPedido ' +
+    '                  AND pl.Serie = l.SeriePedido ' +
+    '                  AND pl.NroPedido = l.NroPedido ' +
+    '                  AND pl.Id = l.IdPed), ISNULL(l.IdPed, 0)) AS OrdenPedido, ' +
+    '       l.EjercicioFactura, ' +
     '       ISNULL(l.SerieFactura, '''') AS SerieFactura, ISNULL(l.NroFactura, 0) AS NroFactura, ' +
     '       CASE WHEN l.Color IS NOT NULL AND LTRIM(RTRIM(l.Color)) <> '''' THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
     '            WHEN co.Descripcion IS NOT NULL AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
     '            ELSE ''0'' END AS DescColor ' +
     'FROM dbo.ocalbcliart l ' +
-    'LEFT JOIN dbo.ocpedcliart pl ON pl.Empresa = l.EmpresaPedido ' +
-    '                            AND pl.Ejercicio = l.EjercicioPedido ' +
-    '                            AND pl.Serie = l.SeriePedido ' +
-    '                            AND pl.NroPedido = l.NroPedido ' +
-    '                            AND pl.Id = l.IdPed ' +
     'LEFT JOIN dbo.ocalm alml ON alml.Empresa = l.Empresa ' +
     '                        AND alml.Almacen = l.Almacen ' +
     'LEFT JOIN dbo.ocartcol ac ON ac.Articulo = l.Articulo ' +
     '                         AND ac.Color = l.Color ' +
-    'LEFT JOIN dbo.occolor co ON co.ColorBasico = ac.ColorBasico';
+    'LEFT JOIN dbo.occolor co ON co.ColorBasico = ac.ColorBasico ' +
+    // Orden estable para numerar la LINEA secuencialmente por documento.
+    'ORDER BY l.Empresa, l.Ejercicio, l.Serie, l.NroAlbaran, l.Orden, l.Fila';
   cColsCab =
     'NUMERO_ALB, SERIE_ALB, FECHA_ALB, ESCONSOLIDADO_ALB, ESTADO_ALB, ' +
     'NUMERO_PED_ALB, SERIE_PED_ALB, NUMERO_FAC_ALB, SERIE_FAC_ALB, ' +
@@ -805,7 +812,8 @@ var
   bCab, bLin: TBulkInsert;
   sAhora, sUser, sSerie, sNum, sCli, sNombre, sNumPed, sSeriePed: string;
   sNumFac, sSerieFac, sLineaFac, sAlm, sArt, sSku, sLinea, sLineaPed: string;
-  sFacturada: string;
+  sFacturada, sDocActual, sDocLinea: string;
+  iLineaSeq: Integer;
   iva: TIvaVentaMayor;
   fTotal: Double;
 begin
@@ -915,6 +923,8 @@ begin
   try
     Eng.Log('  venta mayor albaranes 2/2: lineas (ocalbcliart)...');
     Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocalbcliart'));
+    sDocActual := '';
+    iLineaSeq := 0;
     qLin.Open;
     while not qLin.Eof do
     begin
@@ -928,7 +938,20 @@ begin
       sSerie := SerieDocumento(qLin.FieldByName('Ejercicio').AsInteger,
                                 qLin.FieldByName('Serie').AsString);
       sNum := NumeroDocumento(qLin.FieldByName('NroAlbaran').AsInteger);
-      sLinea := LineaDocumento(qLin.FieldByName('Orden').AsInteger);
+      // LINEA_ALBLIN secuencial por documento: en venta mayor cada Orden del
+      // albaran trae varias filas (una por talla/color), asi que numerar por
+      // Orden colisionaba en la PK (NUMERO+SERIE+LINEA) y el INSERT IGNORE
+      // descartaba todas menos la primera. Reiniciamos al cambiar de albaran;
+      // la consulta viene ordenada por empresa+ejercicio+serie+nroalbaran.
+      sDocLinea := IntToStr(qLin.FieldByName('Empresa').AsInteger) + '|' +
+                   sSerie + '|' + sNum;
+      if sDocLinea <> sDocActual then
+      begin
+        sDocActual := sDocLinea;
+        iLineaSeq := 0;
+      end;
+      Inc(iLineaSeq);
+      sLinea := LineaDocumento(iLineaSeq);
       sArt := TextoCampo(qLin, 'Articulo', 20);
       sSku := ConstruirCodigoUnidad(sArt, TextoCampo(qLin, 'DescColor', 25),
                                     TextoCampo(qLin, 'Talla', 7));
@@ -1053,7 +1076,9 @@ const
     '                        AND alml.Almacen = l.Almacen ' +
     'LEFT JOIN dbo.ocartcol ac ON ac.Articulo = l.Articulo ' +
     '                         AND ac.Color = l.Color ' +
-    'LEFT JOIN dbo.occolor co ON co.ColorBasico = ac.ColorBasico';
+    'LEFT JOIN dbo.occolor co ON co.ColorBasico = ac.ColorBasico ' +
+    // Orden estable para numerar la LINEA secuencialmente por documento.
+    'ORDER BY l.Empresa, l.Ejercicio, l.Serie, l.NroFactura, l.Orden, l.Fila';
   cColsFac =
     'NUMERO_FAC, SERIE_FAC, FECHA_FAC, ESCONSOLIDADA_FAC, TIPO_FAC, ' +
     'ESMUEVE_STOCK_FAC, CODIGO_EMP_FAC, CODIGO_CLI_FAC, RAZON_SOCIAL_CLIENTE_FAC, ' +
@@ -1085,6 +1110,8 @@ var
   bCab, bLin: TBulkInsert;
   sAhora, sUser, sSerie, sNum, sCli, sNombre, sAlm, sCaja, sOpe: string;
   sArt, sSku, sLinea, sMov, sVariacion: string;
+  sDocActual, sDocLinea: string;
+  iLineaSeq: Integer;
   iva: TIvaVentaMayor;
   fTotal: Double;
 begin
@@ -1178,6 +1205,8 @@ begin
   try
     Eng.Log('  venta mayor facturas 2/2: lineas (ocfaccliart)...');
     Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocfaccliart'));
+    sDocActual := '';
+    iLineaSeq := 0;
     qLin.Open;
     while not qLin.Eof do
     begin
@@ -1191,7 +1220,20 @@ begin
       sSerie := SerieDocumento(qLin.FieldByName('Ejercicio').AsInteger,
                                 qLin.FieldByName('Serie').AsString);
       sNum := NumeroDocumento(qLin.FieldByName('NroFactura').AsInteger);
-      sLinea := LineaDocumento(qLin.FieldByName('Orden').AsInteger);
+      // LINEA_FACLIN secuencial por documento: cada Orden de la factura trae
+      // varias filas (una por talla/color), asi que numerar por Orden
+      // colisionaba en la PK (NUMERO+SERIE+LINEA) y el INSERT IGNORE
+      // descartaba todas menos la primera. Reiniciamos al cambiar de factura;
+      // la consulta viene ordenada por empresa+ejercicio+serie+nrofactura.
+      sDocLinea := IntToStr(qLin.FieldByName('Empresa').AsInteger) + '|' +
+                   sSerie + '|' + sNum;
+      if sDocLinea <> sDocActual then
+      begin
+        sDocActual := sDocLinea;
+        iLineaSeq := 0;
+      end;
+      Inc(iLineaSeq);
+      sLinea := LineaDocumento(iLineaSeq);
       sArt := TextoCampo(qLin, 'Articulo', 20);
       sSku := ConstruirCodigoUnidad(sArt, TextoCampo(qLin, 'DescColor', 25),
                                     TextoCampo(qLin, 'Talla', 7));
