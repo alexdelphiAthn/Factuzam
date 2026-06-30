@@ -646,9 +646,11 @@ end;
 // =========================================================================
 //  Enlace movimiento -> factura (dominio independiente, corre EL ULTIMO)
 // =========================================================================
-//  Rellena en fza_movimientos_almacen las columnas *_DOC_REF_MOV (+ LINEA_MOV)
-//  para que la pestana "Movimientos" de la factura encuentre sus movimientos.
-//  Es un UPDATE masivo sobre la tabla mas grande del sistema; por eso se saco
+//  Rellena en fza_movimientos_almacen (1) las columnas *_DOC_REF_MOV de
+//  trazabilidad para todas las facturas y (2) el documento propio *_DOC_MOV
+//  (SERIE/NUMERO/LINEA) de las SIMPLIFICADAS, que es lo que lee la pestana
+//  "Movimientos" de la factura. Es un UPDATE masivo sobre la tabla mas grande
+//  del sistema; por eso se saco
 //  de los dominios de facturas (bloqueaba la importacion) a un dominio propio
 //  que corre el ultimo. Cubre simplificadas y normales en una sola pasada
 //  (cualquier linea migrada con NUMERO_MOV_FACLIN). Es idempotente y
@@ -671,27 +673,42 @@ begin
     q := TUniQuery.Create(nil);
     try
       q.Connection := Eng.ConDst;
-      Eng.Log('  enlazando movimientos con su factura (REF_MOV)...');
-      // STRAIGHT_JOIN + lineas como tabla CONDUCTORA: fuerza recorrer las
-      // lineas de factura (pocas) y buscar el movimiento por PK; LINEA_MOV se
-      // fija ademas porque la rejilla de movimientos de la factura ordena por
-      // esa columna (en la migracion nacia siempre '0001').
+      // SOLO SIMPLIFICADAS: en el ticket la venta ES la factura, asi que el
+      // movimiento le pertenece. En venta mayor NO se toca, porque el stock se
+      // mueve en el ALBARAN (su pestana usa TIPO_DOC_REF_MOV='AV'); reasignarlo
+      // a la factura rompería el enlace del albaran.
+      // Se fija el documento PROPIO del movimiento (*_DOC_MOV): la pestana
+      // "Movimientos" de la factura (unqryMovimientosFac) filtra por
+      // TIPO_DOC_MOV IN ('FC','VE') AND SERIE_DOC_MOV = SERIE_FAC AND
+      // NUMERO_DOC_MOV = NUMERO_FAC. La migracion de movimientos guardo
+      // SERIE_DOC_MOV sin el ejercicio ('A1' en vez de '2026.A1'), por eso no
+      // casaba y la pestana salia vacia. TIPO_DOC_MOV se deja como esta ('VE',
+      // ya aceptado por la pestana) para no alterar el calculo de stock.
+      // Se rellenan tambien las columnas *_DOC_REF_MOV (trazabilidad / rejilla
+      // de movimientos del articulo). STRAIGHT_JOIN conduce desde la linea.
+      Eng.Log('  enlazando movimientos con su factura simplificada...');
       q.SQL.Text :=
         'UPDATE fza_facturas_lineas l ' +
+        'STRAIGHT_JOIN fza_facturas f ' +
+        '  ON f.NUMERO_FAC = l.NUMERO_FAC_FACLIN ' +
+        ' AND f.SERIE_FAC = l.SERIE_FAC_FACLIN ' +
         'STRAIGHT_JOIN fza_movimientos_almacen m ' +
         '  ON m.NUMERO_MOV = l.NUMERO_MOV_FACLIN ' +
-        'SET m.TIPO_DOC_REF_MOV   = ''FC'', ' +
+        'SET m.SERIE_DOC_MOV      = l.SERIE_FAC_FACLIN, ' +
+        '    m.NUMERO_DOC_MOV     = l.NUMERO_FAC_FACLIN, ' +
+        '    m.LINEA_MOV          = l.LINEA_FACLIN, ' +
+        '    m.TIPO_DOC_REF_MOV   = ''FC'', ' +
         '    m.SERIE_DOC_REF_MOV  = l.SERIE_FAC_FACLIN, ' +
         '    m.NUMERO_DOC_REF_MOV = l.NUMERO_FAC_FACLIN, ' +
-        '    m.LINEA_REF_MOV      = l.LINEA_FACLIN, ' +
-        '    m.LINEA_MOV          = l.LINEA_FACLIN ' +
+        '    m.LINEA_REF_MOV      = l.LINEA_FACLIN ' +
         'WHERE l.USUARIO_ALTA = :u ' +
+        '  AND COALESCE(f.TIPO_FAC, '''') = ''SIMPLIFICADA'' ' +
         '  AND l.NUMERO_MOV_FACLIN IS NOT NULL ' +
         '  AND l.NUMERO_MOV_FACLIN <> ''''';
       q.ParamByName('u').AsString := Eng.Usuario;
       q.ExecSQL;
       Inc(Stats.Insertadas);
-      Eng.Log('  movimientos enlazados a su factura (REF_MOV).');
+      Eng.Log('  movimientos de simplificadas enlazados a su factura.');
     finally
       q.Free;
     end;
