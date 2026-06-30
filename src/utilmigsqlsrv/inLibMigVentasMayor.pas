@@ -1157,7 +1157,7 @@ begin
           '%s, %s, %s, ''S'', %s, ''N'', %s, %s, %s, %s, %s, %s, %s, ' +
           '%s, %s, %s, %s, ''N'', %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
           '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
-          '%s, %s, %s, %s, ''N'', ''N'', ''N'', %s, %s, %s, %s, %s, %s, %s, %s',
+          '%s, %s, %s, %s, %s, ''N'', ''N'', ''N'', %s, %s, %s, %s, %s, %s, %s, %s',
           [ValorOrNull(sNum), ValorOrNull(sSerie), FechaCampoASQL(qCab, 'Fecha'),
            ValorOrNull(TipoFacturaVentaMayor(qCab)),
            ValorOrNull(IntToStr(qCab.FieldByName('Empresa').AsInteger)),
