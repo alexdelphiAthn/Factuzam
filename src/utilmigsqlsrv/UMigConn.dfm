@@ -1,7 +1,6 @@
 object dmMig: TdmMig
-  Height = 300
-  Width = 525
-  PixelsPerInch = 120
+  Height = 240
+  Width = 420
   object conSrv: TUniConnection
     ProviderName = 'SQL Server'
     Port = 1433
@@ -9,24 +8,25 @@ object dmMig: TdmMig
       'SQL Server.Authentication=auWindows'
       'SQL Server.Provider=prDirect')
     LoginPrompt = False
-    Left = 100
-    Top = 50
+    Left = 80
+    Top = 40
   end
   object conDst: TUniConnection
     ProviderName = 'MySQL'
     Port = 3306
     SpecificOptions.Strings = (
-      'MySQL.UseUnicode=True')
+      'MySQL.UseUnicode=True'
+      'MySQL.Charset=utf8mb4')
     LoginPrompt = False
-    Left = 100
-    Top = 150
+    Left = 80
+    Top = 120
   end
   object prvSqlServer: TSQLServerUniProvider
-    Left = 300
-    Top = 50
+    Left = 240
+    Top = 40
   end
   object prvMySQL: TMySQLUniProvider
-    Left = 300
-    Top = 150
+    Left = 240
+    Top = 120
   end
 end
