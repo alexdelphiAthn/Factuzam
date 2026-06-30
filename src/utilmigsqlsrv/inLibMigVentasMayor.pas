@@ -1276,14 +1276,32 @@ begin
     bLin.Free;
     qLin.Free;
   end;
+  // Persistimos cabeceras y lineas ANTES del post-proceso. El enlace de
+  // movimientos hace un UPDATE masivo sobre fza_movimientos_almacen que
+  // puede tardar y chocar con "Lock wait timeout"; si reventara dentro de
+  // la transaccion del dominio arrastraria un ROLLBACK que dejaba
+  // fza_facturas VACIA. Con el commit previo las facturas quedan guardadas
+  // pase lo que pase en los enlaces.
+  Eng.ConDst.Commit;
   if not Eng.IsCancelado then
   begin
-    EnlazarEmpresaVentaMayor(Eng, 'fza_facturas', 'FAC');
-    EnlazarClientesVentaMayor(Eng, 'fza_facturas', 'FAC');
-    AjustarRetencionesVentaMayor(Eng, 'fza_facturas', 'FAC');
-    EnlazarLineasFacturaVentaMayor(Eng);
-    Eng.Log('  facturas venta mayor: empresa, cliente y movimientos enlazados.');
+    try
+      EnlazarEmpresaVentaMayor(Eng, 'fza_facturas', 'FAC');
+      EnlazarClientesVentaMayor(Eng, 'fza_facturas', 'FAC');
+      AjustarRetencionesVentaMayor(Eng, 'fza_facturas', 'FAC');
+      // Indice que evita el escaneo completo de movimientos en el enlace.
+      AsegurarIndice(Eng, 'fza_facturas_lineas', 'IDX_FACLIN_NUMMOV',
+        '`NUMERO_MOV_FACLIN`');
+      EnlazarLineasFacturaVentaMayor(Eng);
+      Eng.Log('  facturas venta mayor: empresa, cliente y movimientos enlazados.');
+    except
+      on E: Exception do
+        Eng.LogError('facturas_venta_mayor_enlace', '', E.Message, '',
+          'enlace post-insercion fallido; las facturas YA estan guardadas');
+    end;
   end;
+  // Dejamos una transaccion activa para el Commit final del motor.
+  Eng.ConDst.StartTransaction;
 end;
 
 initialization

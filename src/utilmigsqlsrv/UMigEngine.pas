@@ -217,6 +217,12 @@ function NuevoQOrigen(Eng: TMigEngine; const sSQL: string): TUniQuery;
 // Ejecuta un INSERT contra destino. Lanza si falla.
 procedure EjecutarSQL(Eng: TMigEngine; const sSQL: string);
 
+// Crea un indice en el destino si aun no existe (idempotente, via
+// INFORMATION_SCHEMA.STATISTICS). Util para acelerar los UPDATE masivos
+// de post-proceso y evitar bloqueos largos ("Lock wait timeout").
+procedure AsegurarIndice(Eng: TMigEngine; const sTabla, sIndice,
+                         sColumnas: string);
+
 // Helpers para columnas de auditoría
 procedure RellenarAuditoria(Q: TUniQuery; const sUsuario: string);
 
@@ -656,6 +662,34 @@ end;
 procedure EjecutarSQL(Eng: TMigEngine; const sSQL: string);
 begin
   Eng.ConDst.ExecSQL(sSQL);
+end;
+
+procedure AsegurarIndice(Eng: TMigEngine; const sTabla, sIndice,
+                         sColumnas: string);
+var q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text :=
+      'SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS ' +
+      'WHERE TABLE_SCHEMA = DATABASE() ' +
+      '  AND TABLE_NAME = :t AND INDEX_NAME = :i';
+    q.ParamByName('t').AsString := sTabla;
+    q.ParamByName('i').AsString := sIndice;
+    q.Open;
+    if q.Fields[0].AsInteger = 0 then
+    begin
+      q.Close;
+      // DDL en MySQL hace commit implicito; el llamante debe invocarlo
+      // FUERA de una transaccion en curso (en autocommit).
+      Eng.ConDst.ExecSQL(Format('ALTER TABLE `%s` ADD INDEX `%s` (%s)',
+        [sTabla, sIndice, sColumnas]));
+      Eng.Log(Format('  indice %s creado en %s.', [sIndice, sTabla]));
+    end;
+  finally
+    q.Free;
+  end;
 end;
 
 procedure RellenarAuditoria(Q: TUniQuery; const sUsuario: string);
