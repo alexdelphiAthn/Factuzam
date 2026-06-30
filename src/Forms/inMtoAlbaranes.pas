@@ -186,6 +186,7 @@ type
     procedure actIrFacturaCreadaExecute(Sender: TObject);
   public
     dmmAlbaranes: TdmAlbaranes;
+    procedure CrearTablaPrincipal; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
@@ -230,35 +231,45 @@ begin
     Result := [dsTablaG];
 end;
 
-procedure TfrmMtoAlbaranes.FormCreate(Sender: TObject);
-var
-  colFact: TcxGridDBColumn;
-  stFact: TcxStyle;
+procedure TfrmMtoAlbaranes.CrearTablaPrincipal;
 begin
   inherited;
-  dmmAlbaranes := TdmAlbaranes.Create(Self);
-  dsTablaG.DataSet := dmmAlbaranes.unqryTablaG;
+  // Reutilizar la instancia de data module creada por
+  // TfrmMtoGen.CrearTablaPrincipal (tdmDataModule). Antes este form creaba
+  // OTRO TdmAlbaranes en FormCreate y enganchaba los grids a ese segundo DM,
+  // cuyas queries de detalle nunca se abren (la carga async abre las del DM
+  // del padre): las pestanas de lineas, facturas y movimientos salian vacias.
+  dmmAlbaranes := (tdmDataModule as TdmAlbaranes);
+  if not Assigned(dmmAlbaranes) then
+  begin
+    dmmAlbaranes := TdmAlbaranes.Create(Self);
+    dsTablaG.DataSet := dmmAlbaranes.unqryTablaG;
+    tdmDataModule := dmmAlbaranes;
+  end;
   tvLineasAlbaran.DataController.DataSource := dmmAlbaranes.dsAlbaranesLineas;
-  // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
-  VincularCantidadGrid(
-    tvLineasAlbaran.GetColumnByFieldName('CANTIDAD_ALBLIN'),
-    tvLineasAlbaran.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_ALBLIN'));
   tvFacturas.DataController.DataSource      := dmmAlbaranes.dsFacturas;
   tvMovimientos.DataController.DataSource   := dmmAlbaranes.dsMovimientosAlb;
   cbbTotalesFORMA_PAGO_ALB.Properties.ListSource := dmmAlbaranes.dsFormasPago;
   // Master-detail: enganchar las queries de detalle a la cabecera (dsTablaG)
   // para que lineas, facturas y movimientos sigan al albaran seleccionado.
-  // Sin asignar MasterSource el grid de lineas no "engancha" con su cabecera.
   dmmAlbaranes.unqryAlbaranesLineas.MasterSource := dsTablaG;
   dmmAlbaranes.unqryFacturas.MasterSource        := dsTablaG;
   dmmAlbaranes.unqryMovimientosAlb.MasterSource  := dsTablaG;
   // Clave de localizacion para ShowMto (p.ej. "Ir a documento" desde el
   // pedido de venta o navegacion hacia su pedido de origen).
   pkFieldName := 'SERIE_ALB;NUMERO_ALB';
-  // OpenTables -> ahora se llama desde TfrmMtoGen.AbrirTablaPrincipalAsync
-  // (callback main thread) via dmmAlbaranes.AbrirDetalles. Se quita aqui
-  // para no abrir las queries sincronamente durante el FormCreate.
+end;
 
+procedure TfrmMtoAlbaranes.FormCreate(Sender: TObject);
+var
+  colFact: TcxGridDBColumn;
+  stFact: TcxStyle;
+begin
+  inherited;
+  // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
+  VincularCantidadGrid(
+    tvLineasAlbaran.GetColumnByFieldName('CANTIDAD_ALBLIN'),
+    tvLineasAlbaran.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_ALBLIN'));
   // Resaltar la columna ESFACTURADA_ALBLIN cuando exista (S/N).
   colFact := tvLineasAlbaran.GetColumnByFieldName('ESFACTURADA_ALBLIN');
   if colFact <> nil then
