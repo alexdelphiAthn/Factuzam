@@ -134,9 +134,9 @@
       '       TIPO_MOV, CANTIDAD_MOV, '
       '       PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV '
       '  FROM vi_movimientos '
-      ' WHERE TIPO_DOC_REF_MOV   = '#39'AV'#39' '
-      '   AND SERIE_DOC_REF_MOV  = :SERIE_ALB '
-      '   AND NUMERO_DOC_REF_MOV = :NUMERO_ALB '
+      ' WHERE TIPO_DOC_MOV   = '#39'AV'#39' '
+      '   AND SERIE_DOC_MOV  = :SERIE_ALB '
+      '   AND NUMERO_DOC_MOV = :NUMERO_ALB '
       ' ORDER BY LINEA_MOV')
     MasterFields = 'NUMERO_ALB;SERIE_ALB'
     Left = 384
