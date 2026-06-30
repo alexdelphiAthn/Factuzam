@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibMigMovimientos                                           }
 {    Tipo:       Librería de migración (sin formulario)                        }
@@ -450,7 +450,7 @@ var
   fCantMov, fCoste, fPmp, fTotal: Double;
   fPmpAlm, fSeed, fPrecAlb:       Double;
   fStkAlm, fValAlm, fStkOri, fValOri: Double;
-  iAlmDes:                        Integer;
+  iAlmDes, iTmpNro:               Integer;
   sSkuKey, sSkuActual, sAlmOri:   string;
   oStock, oValor:                 TDictionary<string, Double>;
 begin
@@ -638,13 +638,23 @@ begin
         else if FechaReal(qSrc.FieldByName('FechaOpe').AsDateTime) then
           sFechaSql := DateTimeASQL(
                          qSrc.FieldByName('FechaOpe').AsDateTime);
-        // SERIE_DOC_MOV / NUMERO_DOC_MOV deben cuadrar con el formato de los
-        // documentos migrados (SERIE = '<Ejercicio>.<Serie>', NUMERO a 6
-        // digitos) para que cada movimiento enlace con su albaran/factura: las
-        // pantallas filtran por TIPO_DOC_MOV + SERIE_DOC_MOV + NUMERO_DOC_MOV.
-        sSerie   := Format('%d.%s', [qSrc.FieldByName('Ejercicio').AsInteger,
-                            Trim(qSrc.FieldByName('Serie').AsString)]);
-        sNroDoc  := Format('%.6d', [qSrc.FieldByName('NroDoc').AsInteger]);
+        // SERIE_DOC_MOV con el ejercicio delante ('2026.A1'), EXACTAMENTE como
+        // guardan la serie las facturas (SERIE_FAC) y albaranes (SERIE_ALB).
+        // Antes se guardaba solo 'A1' y por eso las pestañas "Movimientos" de
+        // factura simplificada y albaran no casaban (filtran SERIE_xxx_MOV =
+        // SERIE_FAC/SERIE_ALB = 'ejercicio.serie').
+        sSerie   := IntToStr(qSrc.FieldByName('Ejercicio').AsInteger) + '.' +
+                    Trim(qSrc.FieldByName('Serie').AsString);
+        // NUMERO_DOC_MOV con el mismo formato que NUMERO_FAC de la factura
+        // simplificada (IntToStr, sin ceros a la izquierda) para que la pestaña
+        // "Movimientos" case. Si el NroDoc no es numerico se deja tal cual.
+        sNroDoc  := Trim(qSrc.FieldByName('NroDoc').AsString);
+        if sNroDoc <> '' then
+        begin
+          iTmpNro := StrToIntDef(sNroDoc, -1);
+          if iTmpNro >= 0 then
+            sNroDoc := IntToStr(iTmpNro);
+        end;
         sCliente := Trim(qSrc.FieldByName('Cliente').AsString);
         // Enlace con la operacion de caja que genero el movimiento. Si el
         // documento casa con una operacion de occaj rellenamos caja y numero
