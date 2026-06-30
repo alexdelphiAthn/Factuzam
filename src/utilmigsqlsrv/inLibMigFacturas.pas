@@ -634,11 +634,31 @@ begin
     bulkLin.Free;
     qLin.Free;
   end;
-  // Post-proceso: empresa emisora + flags en la cabecera y enlace de
-  // movimientos a la factura. Requiere movimientos ya migrados (facturas
-  // corre en una wave posterior).
+  // Persistimos cabeceras y lineas ANTES del post-proceso. Los enlaces
+  // hacen un UPDATE masivo sobre fza_movimientos_almacen que puede tardar y
+  // chocar con "Lock wait timeout"; si reventara dentro de la transaccion
+  // del dominio arrastraria un ROLLBACK que dejaba fza_facturas VACIA. Con
+  // el commit previo las facturas quedan guardadas pase lo que pase en los
+  // enlaces. Tras el commit la conexion vuelve a autocommit, asi que cada
+  // enlace se confirma por su cuenta y bloquea menos.
+  Eng.ConDst.Commit;
   if not Eng.IsCancelado then
-    EnlazarFacturas(Eng);
+  begin
+    try
+      // Indice que permite resolver el enlace conduciendo desde la linea a
+      // su movimiento por PK; sin el, el UPDATE escanea la tabla entera de
+      // movimientos y mantiene bloqueos durante minutos.
+      AsegurarIndice(Eng, 'fza_facturas_lineas', 'IDX_FACLIN_NUMMOV',
+        '`NUMERO_MOV_FACLIN`');
+      EnlazarFacturas(Eng);
+    except
+      on E: Exception do
+        Eng.LogError('facturas_enlace', '', E.Message, '',
+          'enlace post-insercion fallido; las facturas YA estan guardadas');
+    end;
+  end;
+  // Dejamos una transaccion activa para el Commit final del motor.
+  Eng.ConDst.StartTransaction;
 end;
 
 end.

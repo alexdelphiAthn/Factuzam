@@ -163,6 +163,36 @@ anterior; error genérico de la API de Windows (SSPI / SChannel).
 conexión". Si aparece de forma recurrente, cerrar el migrador, esperar
 unos segundos y reabrir.
 
+### 5. `Lock wait timeout exceeded` en `facturas` / `facturas_venta_mayor` → `fza_facturas` vacía
+
+Síntoma: el log muestra `FALLO TOTAL en facturas: #HY000 Lock wait
+timeout exceeded` (y lo mismo en `facturas_venta_mayor`), y al terminar
+`fza_facturas` está **vacía** aunque las cabeceras y líneas llegaron a
+insertarse.
+
+Causa: todo el dominio corría en **una sola transacción**. Tras los
+INSERT, el post-proceso lanza un `UPDATE` masivo sobre
+`fza_movimientos_almacen` (enlace movimiento→factura). Ese `UPDATE`
+escaneaba la tabla entera de movimientos porque
+`fza_facturas_lineas.NUMERO_MOV_FACLIN` (la columna del JOIN) **no
+estaba indexada**, mantenía bloqueos durante minutos y acababa en *lock
+wait timeout*. Al propagarse la excepción, el motor hacía **ROLLBACK de
+todo el dominio** y borraba también las facturas ya insertadas.
+
+**Fix** (en código, `inLibMigFacturas` e `inLibMigVentasMayor`):
+- Se hace **`Commit` de cabeceras y líneas ANTES** del post-proceso, así
+  un fallo en los enlaces ya no puede tirar las facturas.
+- Los enlaces van envueltos en `try/except`: si fallan se registran en el
+  log (`! ERROR ..._enlace ...`) pero las facturas quedan guardadas.
+- Antes del enlace se crea el índice `IDX_FACLIN_NUMMOV`
+  (`UMigEngine.AsegurarIndice`), de modo que el `UPDATE` resuelve por PK y
+  termina en segundos. También está como script idempotente
+  `DESARROLLOS EN CURSO/facturas_lineas_indice_movimiento.sql`.
+
+Recomendación adicional: **cerrar la aplicación Factuzam** (y cualquier
+otra sesión sobre la misma BBDD) mientras se migra, para no competir por
+los bloqueos de `fza_movimientos_almacen`.
+
 ---
 
 ## Consejos para una migración limpia desde cero
@@ -188,6 +218,8 @@ unos segundos y reabrir.
    pendientes el migrador antes de tirar:
    - `proveedores_nombre.sql` (añade `NOMBRE_PRV`)
    - `widen_codigo_cli.sql` (amplía `CODIGO_CLI_*`)
+   - `facturas_lineas_indice_movimiento.sql` (índice que evita el *lock
+     wait timeout* del enlace de facturas; el migrador también lo crea solo)
 
 3. **Repasar tras la primera ejecución** los registros con `! error
    insertando ...` en el log y decidir si hay que limpiar el origen,
