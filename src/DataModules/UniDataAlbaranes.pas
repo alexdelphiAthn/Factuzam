@@ -1033,10 +1033,10 @@ begin
     qExiste.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM fza_movimientos_almacen ' +
-      ' WHERE TIPO_DOC_REF_MOV   = ''AV'' ' +
-      '   AND SERIE_DOC_REF_MOV  = :pSER ' +
-      '   AND NUMERO_DOC_REF_MOV = :pNUM ' +
-      '   AND LINEA_REF_MOV      = :pLIN';
+      ' WHERE TIPO_DOC_MOV   = ''AV'' ' +
+      '   AND SERIE_DOC_MOV  = :pSER ' +
+      '   AND NUMERO_DOC_MOV = :pNUM ' +
+      '   AND LINEA_MOV      = :pLIN';
 
     qLineas.First;
     while not qLineas.Eof do
