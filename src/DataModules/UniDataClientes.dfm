@@ -179,7 +179,7 @@ inherited dmClientes: TdmClientes
       'where ESACTIVO_EMPBAN = '#39'S'#39)
     ReadOnly = True
     Left = 128
-    Top = 200
+    Top = 216
   end
   object dsTarifas: TDataSource
     DataSet = unqryTarifas
@@ -598,8 +598,8 @@ inherited dmClientes: TdmClientes
       'select * from vi_clientes')
     BeforeInsert = unqryTablaGBeforeInsert
     AfterInsert = unqryTablaGAfterInsert
-    AfterPost = unqryTablaGAfterPost
     BeforePost = unqryTablaGBeforePost
+    AfterPost = unqryTablaGAfterPost
     BeforeDelete = unqryTablaGBeforeDelete
     Left = 712
     Top = 32
@@ -676,8 +676,8 @@ inherited dmClientes: TdmClientes
   end
   object dsDepositos: TDataSource
     DataSet = unqryDepositos
-    Left = 152
-    Top = 176
+    Left = 408
+    Top = 168
   end
   object unqryDepositos: TUniQuery
     SQLInsert.Strings = (
@@ -747,7 +747,7 @@ inherited dmClientes: TdmClientes
     MasterFields = 'CODIGO_CLI_CLI'
     DetailFields = 'CODIGO_CLI_DEP'
     ReadOnly = True
-    Left = 152
+    Left = 408
     Top = 240
     ParamData = <
       item

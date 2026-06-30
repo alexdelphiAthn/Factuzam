@@ -587,14 +587,14 @@ begin
     end;
     mtSolicitar:
     begin
-      lblOrigen.Caption := 'ALMACÉN DESTINO (yo)';
-      lblDestino.Caption := 'ALMACÉN ORIGEN (a quién pido)';
+      lblOrigen.Caption := 'ALMACÉN DESTINO';
+      lblDestino.Caption := 'ALMACÉN ORIGEN';
       btnF12.Caption := 'F12 Enviar solicitud';
     end;
     mtAtender:
     begin
-      lblOrigen.Caption := 'ALMACÉN ORIGEN (yo)';
-      lblDestino.Caption := 'SOLICITUD A ATENDER';
+      lblOrigen.Caption := 'ALMACÉN ORIGEN';
+      lblDestino.Caption := 'ALMACÉN DESTINO';
       btnF12.Caption := 'F12 Servir con ticket';
     end;
   end;

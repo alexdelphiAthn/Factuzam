@@ -141,7 +141,7 @@ type
     lblTotalesTotalPagar: TcxLabel;
     curTotalesTOTAL_LIQUIDO_PED: TcxDBCurrencyEdit;
     lblTotalesFormaPago: TcxLabel;
-    txtTotalesFORMA_PAGO_PED: TcxDBTextEdit;
+    cbbTotalesFORMA_PAGO_PED: TcxDBLookupComboBox;
     chkTotalesESIVA_RECARGO_CLIENTE_PED: TcxDBCheckBox;
     chkTotalesESRETENCIONES_CLIENTE_PED: TcxDBCheckBox;
     chkTotalesESRETENCIONES_EMPRESA_PED: TcxDBCheckBox;
@@ -183,7 +183,6 @@ type
     btnEntregarTodo: TcxButton;
     btnCrearAlbaran: TcxButton;
     btnImportarPS: TcxButton;
-    btnImprimir: TcxButton;
 
     // Observaciones
     memObservaciones: TcxDBMemo;
@@ -191,6 +190,7 @@ type
     // seleccionado en la rejilla.
     ActionList1: TActionList;
     actIrDocumento: TAction;
+    btnImprimir: TcxButton;
 
     procedure FormCreate(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
@@ -301,6 +301,7 @@ begin
   tvPedidosLineas.DataController.DataSource := dmmPedidos.dsPedidosLineas;
   tvAlbaranes.DataController.DataSource := dmmPedidos.dsAlbaranes;
   tvMensajes.DataController.DataSource := dmmPedidos.dsMensajes;
+  cbbTotalesFORMA_PAGO_PED.Properties.ListSource := dmmPedidos.dsFormasPago;
   dmmPedidos.unqryPedidosLineas.MasterSource := dsTablaG;
   dmmPedidos.unqryAlbaranes.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_PED;NUMERO_PED';

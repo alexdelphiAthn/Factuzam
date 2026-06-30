@@ -456,7 +456,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             Height = 403
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsTotales
+            Properties.ActivePage = cxTabSheet1
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 399
             ClientRectLeft = 4
@@ -801,9 +801,40 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   TabOrder = 9
                   Width = 130
                 end
+                object lblTotalesFormaPagoSes: TcxLabel
+                  Left = 88
+                  Top = 228
+                  Caption = 'Forma de Pago'
+                  TabOrder = 10
+                  Transparent = True
+                end
+                object cbbTotalesFORMA_PAGO_SES: TcxDBLookupComboBox
+                  Left = 220
+                  Top = 224
+                  DataBinding.DataField = 'FORMA_PAGO_SES'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.DropDownSizeable = True
+                  Properties.KeyFieldNames = 'CODIGO_FP_FP'
+                  Properties.ListColumns = <
+                    item
+                      Caption = 'C'#243'digo'
+                      MinWidth = 50
+                      Width = 60
+                      FieldName = 'CODIGO_FP_FP'
+                    end
+                    item
+                      Caption = 'Descripci'#243'n'
+                      MinWidth = 160
+                      Width = 220
+                      FieldName = 'DESCRIPCION_FORMA_PAGO_FP'
+                    end>
+                  Properties.ListOptions.CaseInsensitive = True
+                  TabOrder = 11
+                  Width = 130
+                end
                 object chkTotalesESIVA_RECARGO_COMPRAS_SES: TcxDBCheckBox
                   Left = 74
-                  Top = 232
+                  Top = 270
                   Caption = 'Recargo equivalencia compras'
                   DataBinding.DataField = 'ESIVA_RECARGO_COMPRAS_SES'
                   DataBinding.DataSource = dsTablaG
@@ -811,7 +842,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   Properties.ValueUnchecked = 'N'
                   Properties.OnChange = chkRecargoComprasPropertiesChange
                   Style.TransparentBorder = False
-                  TabOrder = 10
+                  TabOrder = 12
                   Transparent = True
                 end
                 object grpDesgloseIvaSes: TGroupBox
@@ -820,7 +851,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   Width = 548
                   Height = 286
                   Caption = 'Desglose IVA'
-                  TabOrder = 11
+                  TabOrder = 13
                   object lblTotSesBase: TcxLabel
                     Left = 126
                     Top = 34

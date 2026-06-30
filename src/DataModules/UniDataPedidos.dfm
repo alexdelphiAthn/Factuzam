@@ -258,6 +258,7 @@ inherited dmPedidos: TdmPedidos
     SQL.Strings = (
       'select * from vi_pedidos')
     AfterInsert = unqryTablaGAfterInsert
+    BeforeDelete = unqryTablaGBeforeDelete
     Left = 48
     Top = 24
   end
@@ -381,6 +382,7 @@ inherited dmPedidos: TdmPedidos
     AfterInsert = unqryPedidosLineasAfterInsert
     BeforePost = unqryPedidosLineasBeforePost
     AfterPost = unqryPedidosLineasAfterPost
+    BeforeDelete = unqryPedidosLineasBeforeDelete
     Left = 48
     Top = 80
     ParamData = <
@@ -545,5 +547,18 @@ inherited dmPedidos: TdmPedidos
     Connection = dmConn.conUni
     Left = 256
     Top = 312
+  end
+  object unqryFormasPago: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT * FROM vi_formapago')
+    ReadOnly = True
+    Left = 512
+    Top = 312
+  end
+  object dsFormasPago: TDataSource
+    DataSet = unqryFormasPago
+    Left = 512
+    Top = 368
   end
 end

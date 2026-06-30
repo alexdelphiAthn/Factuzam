@@ -956,7 +956,7 @@ begin
       '   DIRECCION1_PRV_ALBC, DIRECCION2_PRV_ALBC, ' +
       '   POBLACION_PRV_ALBC, PROVINCIA_PRV_ALBC, ' +
       '   CODIGO_POSTAL_PRV_ALBC, ' +
-      '   REF_PROVEEDOR_ALBC, CODIGO_ALM_ALBC, ' +
+      '   REF_PROVEEDOR_ALBC, FORMA_PAGO_ALBC, CODIGO_ALM_ALBC, ' +
       '   TOTAL_BASES_ALBC, TOTAL_IMPUESTOS_ALBC, TOTAL_LIQUIDO_ALBC, ' +
       '   CONTADOR_LINEAS_ALBC, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
@@ -974,7 +974,7 @@ begin
       '       P.DIRECCION1_PRV, P.DIRECCION2_PRV, ' +
       '       P.POBLACION_PRV, P.PROVINCIA_PRV, ' +
       '       P.CODIGO_POSTAL_PRV, ' +
-      '       S.REF_PRV_SES, ' +
+      '       S.REF_PRV_SES, NULLIF(S.FORMA_PAGO_SES, ''''), ' +
       '       CASE WHEN :alm_ovr <> '''' THEN :alm_ovr ELSE S.CODIGO_ALM_SES END, ' +
       '       0, 0, 0, ''0'', ' +
       '       NOW(), :u, NOW(), :u ' +
@@ -1389,7 +1389,7 @@ begin
       '   DIRECCION1_PRV_PEDC, DIRECCION2_PRV_PEDC, ' +
       '   POBLACION_PRV_PEDC, PROVINCIA_PRV_PEDC, ' +
       '   CODIGO_POSTAL_PRV_PEDC, ' +
-      '   REF_PROVEEDOR_PEDC, CODIGO_ALM_PEDC, ' +
+      '   REF_PROVEEDOR_PEDC, FORMA_PAGO_PEDC, CODIGO_ALM_PEDC, ' +
       '   ID_PV_TEMPORADA_PEDC, ' +
       '   TOTAL_BASES_PEDC, TOTAL_IMPUESTOS_PEDC, TOTAL_LIQUIDO_PEDC, ' +
       '   CONTADOR_LINEAS_PEDC, ' +
@@ -1408,7 +1408,7 @@ begin
       '       P.DIRECCION1_PRV, P.DIRECCION2_PRV, ' +
       '       P.POBLACION_PRV, P.PROVINCIA_PRV, ' +
       '       P.CODIGO_POSTAL_PRV, ' +
-      '       S.REF_PRV_SES, ' +
+      '       S.REF_PRV_SES, NULLIF(S.FORMA_PAGO_SES, ''''), ' +
       '       CASE WHEN :alm_ovr <> '''' THEN :alm_ovr ELSE S.CODIGO_ALM_SES END, ' +
       '       S.ID_PV_TEMPORADA_SES, ' +
       '       0, 0, 0, ''0'', ' +
