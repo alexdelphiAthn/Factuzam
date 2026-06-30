@@ -293,9 +293,16 @@ begin
     //    movimientos de la factura MUESTRA y ORDENA por LINEA_MOV (no por
     //    LINEA_REF_MOV), y en la migracion nacia siempre '0001'; asi cada
     //    movimiento de venta queda alineado con su linea de factura.
+    // STRAIGHT_JOIN + lineas como tabla CONDUCTORA: hay muchos menos
+    // movimientos de venta (lineas de factura) que filas en
+    // fza_movimientos_almacen (historico completo). Conduciendo desde l y
+    // resolviendo m por su PK (NUMERO_MOV) se recorren ~filas de factura, no
+    // toda la tabla de movimientos; sin esto MariaDB escaneaba m entera y el
+    // UPDATE tardaba minutos.
     q.SQL.Text :=
-      'UPDATE fza_movimientos_almacen m ' +
-      'JOIN fza_facturas_lineas l ON l.NUMERO_MOV_FACLIN = m.NUMERO_MOV ' +
+      'UPDATE fza_facturas_lineas l ' +
+      'STRAIGHT_JOIN fza_movimientos_almacen m ' +
+      '  ON m.NUMERO_MOV = l.NUMERO_MOV_FACLIN ' +
       'SET m.TIPO_DOC_REF_MOV   = ''FC'', ' +
       '    m.SERIE_DOC_REF_MOV  = l.SERIE_FAC_FACLIN, ' +
       '    m.NUMERO_DOC_REF_MOV = l.NUMERO_FAC_FACLIN, ' +

@@ -452,11 +452,15 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := Eng.ConDst;
+    // STRAIGHT_JOIN + lineas como tabla CONDUCTORA: se recorren las lineas
+    // de factura (pocas) resolviendo m por su PK (NUMERO_MOV), en vez de
+    // escanear toda fza_movimientos_almacen (historico completo, mucho mayor).
     q.SQL.Text :=
-      'UPDATE fza_movimientos_almacen m ' +
-      'JOIN fza_facturas_lineas l ON l.NUMERO_MOV_FACLIN = m.NUMERO_MOV ' +
-      'JOIN fza_facturas f ON f.NUMERO_FAC = l.NUMERO_FAC_FACLIN ' +
+      'UPDATE fza_facturas_lineas l ' +
+      'STRAIGHT_JOIN fza_facturas f ON f.NUMERO_FAC = l.NUMERO_FAC_FACLIN ' +
       '                    AND f.SERIE_FAC = l.SERIE_FAC_FACLIN ' +
+      'STRAIGHT_JOIN fza_movimientos_almacen m ' +
+      '  ON m.NUMERO_MOV = l.NUMERO_MOV_FACLIN ' +
       'SET m.TIPO_DOC_REF_MOV = ''FC'', ' +
       '    m.SERIE_DOC_REF_MOV = l.SERIE_FAC_FACLIN, ' +
       '    m.NUMERO_DOC_REF_MOV = l.NUMERO_FAC_FACLIN, ' +
