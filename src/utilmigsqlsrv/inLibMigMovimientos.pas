@@ -381,6 +381,7 @@ const
     '       ISNULL(m.TipoDoc, '''') AS TipoDoc, ' +
     '       ISNULL(m.PrecioMedioSIva, 0) AS PrecioMedioSIva, ' +
     '       m.FechaOpe, m.Fecha, ' +
+    '       ISNULL(m.Ejercicio, 0) AS Ejercicio, ' +
     '       ISNULL(m.Serie, '''') AS Serie, m.NroDoc, ' +
     '       ISNULL(m.Cliente, '''') AS Cliente, ' +
     '       ISNULL(m.NroCaja, 0) AS NroCaja, opc.Operacion AS OpeCaja, ' +
@@ -450,7 +451,7 @@ var
   fCantMov, fCoste, fPmp, fTotal: Double;
   fPmpAlm, fSeed, fPrecAlb:       Double;
   fStkAlm, fValAlm, fStkOri, fValOri: Double;
-  iAlmDes:                        Integer;
+  iAlmDes, iTmpNro:               Integer;
   sSkuKey, sSkuActual, sAlmOri:   string;
   oStock, oValor:                 TDictionary<string, Double>;
 begin
@@ -638,8 +639,23 @@ begin
         else if FechaReal(qSrc.FieldByName('FechaOpe').AsDateTime) then
           sFechaSql := DateTimeASQL(
                          qSrc.FieldByName('FechaOpe').AsDateTime);
-        sSerie   := Trim(qSrc.FieldByName('Serie').AsString);
+        // SERIE_DOC_MOV con el ejercicio delante ('2026.A1'), EXACTAMENTE como
+        // guardan la serie las facturas (SERIE_FAC) y albaranes (SERIE_ALB).
+        // Antes se guardaba solo 'A1' y por eso las pestañas "Movimientos" de
+        // factura simplificada y albaran no casaban (filtran SERIE_xxx_MOV =
+        // SERIE_FAC/SERIE_ALB = 'ejercicio.serie').
+        sSerie   := IntToStr(qSrc.FieldByName('Ejercicio').AsInteger) + '.' +
+                    Trim(qSrc.FieldByName('Serie').AsString);
+        // NUMERO_DOC_MOV con el mismo formato que NUMERO_FAC de la factura
+        // simplificada (IntToStr, sin ceros a la izquierda) para que la pestaña
+        // "Movimientos" case. Si el NroDoc no es numerico se deja tal cual.
         sNroDoc  := Trim(qSrc.FieldByName('NroDoc').AsString);
+        if sNroDoc <> '' then
+        begin
+          iTmpNro := StrToIntDef(sNroDoc, -1);
+          if iTmpNro >= 0 then
+            sNroDoc := IntToStr(iTmpNro);
+        end;
         sCliente := Trim(qSrc.FieldByName('Cliente').AsString);
         // Enlace con la operacion de caja que genero el movimiento. Si el
         // documento casa con una operacion de occaj rellenamos caja y numero
