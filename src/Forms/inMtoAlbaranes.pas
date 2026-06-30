@@ -246,6 +246,12 @@ begin
   tvFacturas.DataController.DataSource      := dmmAlbaranes.dsFacturas;
   tvMovimientos.DataController.DataSource   := dmmAlbaranes.dsMovimientosAlb;
   cbbTotalesFORMA_PAGO_ALB.Properties.ListSource := dmmAlbaranes.dsFormasPago;
+  // Master-detail: enganchar las queries de detalle a la cabecera (dsTablaG)
+  // para que lineas, facturas y movimientos sigan al albaran seleccionado.
+  // Sin asignar MasterSource el grid de lineas no "engancha" con su cabecera.
+  dmmAlbaranes.unqryAlbaranesLineas.MasterSource := dsTablaG;
+  dmmAlbaranes.unqryFacturas.MasterSource        := dsTablaG;
+  dmmAlbaranes.unqryMovimientosAlb.MasterSource  := dsTablaG;
   // Clave de localizacion para ShowMto (p.ej. "Ir a documento" desde el
   // pedido de venta o navegacion hacia su pedido de origen).
   pkFieldName := 'SERIE_ALB;NUMERO_ALB';
