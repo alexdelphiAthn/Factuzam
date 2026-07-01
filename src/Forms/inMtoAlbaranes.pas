@@ -184,6 +184,26 @@ type
     procedure btnImprimirClick(Sender: TObject);
     procedure actIrDocumentoExecute(Sender: TObject);
     procedure actIrFacturaCreadaExecute(Sender: TObject);
+    procedure btnCODIGO_EMP_ALBPropertiesButtonClick(Sender: TObject;
+                                                     AButtonIndex: Integer);
+    procedure btnCODIGO_CLI_ALBPropertiesButtonClick(Sender: TObject;
+                                                     AButtonIndex: Integer);
+    procedure btnCODIGO_EMP_ALBPropertiesEditValueChanged(Sender: TObject);
+    procedure btnCODIGO_CLI_ALBPropertiesEditValueChanged(Sender: TObject);
+    procedure btnCODIGO_EMP_ALBKeyUp(Sender: TObject; var Key: Word;
+                                     Shift: TShiftState);
+    procedure btnCODIGO_CLI_ALBKeyUp(Sender: TObject; var Key: Word;
+                                     Shift: TShiftState);
+    procedure cxgrdcArtAlbPropertiesButtonClick(Sender: TObject;
+                                                AButtonIndex: Integer);
+    procedure cxgrdcArtAlbPropertiesValidate(Sender: TObject;
+                var DisplayValue: Variant; var ErrorText: TCaption;
+                var Error: Boolean);
+  private
+    FBuscandoDatosCabecera: Boolean;
+    FAplicandoArticulo: Boolean;
+    function BuscarArticuloAlbaran: string;
+    procedure AplicarArticuloAlbaran(const ACodigoArt: string);
   public
     dmmAlbaranes: TdmAlbaranes;
     procedure CrearTablaPrincipal; override;
@@ -198,7 +218,8 @@ implementation
 
 uses
   inMtoModalFacturarAlbaranesFechas, inLibFotos, inLibGridCantidad,
-  inLibShowMto;
+  inLibGenBusq, inLibShowMto, inLibGlobalVar, Uni,
+  inLibArticulosResolver, inLibArticulosValidador, inLibVentasImpuestos;
 
 {$R *.dfm}
 
@@ -229,6 +250,204 @@ begin
     Result := [dsTablaG, dmmAlbaranes.dsAlbaranesLineas]
   else
     Result := [dsTablaG];
+end;
+
+function TfrmMtoAlbaranes.BuscarArticuloAlbaran: string;
+var
+  qry     : TUniQuery;
+  Campo   : TField;
+  sTarifa : string;
+  dFecha  : TDateTime;
+begin
+  Result := '';
+  if Assigned(dmmAlbaranes) then
+  begin
+    sTarifa := dmmAlbaranes.unqryTablaG.
+                 FieldByName('TARIFA_ARTICULO_CLIENTE_ALB').AsString;
+    dFecha := Date;
+    if not dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').IsNull then
+      dFecha := dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').AsDateTime;
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := dmmAlbaranes.unqryTablaG.Connection;
+      qry.SQL.Text :=
+        'SELECT * ' +
+        '  FROM vi_art_busquedas ' +
+        ' WHERE (CODIGO_TAR_ARTTAR = :tarifa ' +
+        '    OR CODIGO_TAR_ARTTAR IS NULL) ' +
+        '   AND FECHA_DESDE_ARTTAR < :fecha ' +
+        '   AND (FECHA_HASTA_ARTTAR IS NULL ' +
+        '        OR FECHA_HASTA_ARTTAR > :fecha)';
+      qry.ParamByName('tarifa').AsString := sTarifa;
+      qry.ParamByName('fecha').AsDateTime := dFecha;
+      if TBusquedaUtils.EjecutarBusqueda(
+           'Búsqueda de Artículos en Líneas de Albarán',
+           qry,
+           'frmMtoArtFacSearch',
+           Self) then
+      begin
+        Campo := qry.FindField('CODIGO_ART_ART');
+        if Campo = nil then
+          Campo := qry.FindField('CODIGO_ART');
+        if Campo <> nil then
+          Result := Campo.AsString;
+      end;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.AplicarArticuloAlbaran(const ACodigoArt: string);
+var
+  ds         : TDataSet;
+  Validador  : TArticulosValidador;
+  Resolver   : TArticulosResolver;
+  Resolucion : TArtResolucionEntrada;
+  Datos      : TArticuloDatos;
+  Precio     : TArticuloPrecio;
+  sInput     : string;
+  sTarifa    : string;
+  dFecha     : TDateTime;
+  rPrecioSiva: Double;
+  rPorIva    : Double;
+
+  procedure PonerString(const ACampo, AValor: string);
+  var
+    Campo: TField;
+  begin
+    Campo := ds.FindField(ACampo);
+    if Campo <> nil then
+      Campo.AsString := AValor;
+  end;
+
+  procedure PonerFloat(const ACampo: string; AValor: Double);
+  var
+    Campo: TField;
+  begin
+    Campo := ds.FindField(ACampo);
+    if Campo <> nil then
+      Campo.AsFloat := AValor;
+  end;
+
+  function PorcentajeIva(const ATipoIva: string): Double;
+  var
+    sTipo: string;
+  begin
+    Result := 0;
+    sTipo := UpperCase(Trim(ATipoIva));
+    if sTipo = 'R' then
+      Result := dmmAlbaranes.unqryTablaG.
+                  FieldByName('PORCENTAJE_IVAR_ALB').AsFloat
+    else if sTipo = 'S' then
+      Result := dmmAlbaranes.unqryTablaG.
+                  FieldByName('PORCENTAJE_IVAS_ALB').AsFloat
+    else if sTipo = 'E' then
+      Result := dmmAlbaranes.unqryTablaG.
+                  FieldByName('PORCENTAJE_IVAE_ALB').AsFloat
+    else
+      Result := dmmAlbaranes.unqryTablaG.
+                  FieldByName('PORCENTAJE_IVAN_ALB').AsFloat;
+  end;
+
+  procedure EnfocarSku;
+  var
+    ColSku: TcxGridDBColumn;
+  begin
+    ColSku := tvLineasAlbaran.GetColumnByFieldName('CODIGO_UNIDAD_ALBLIN');
+    if ColSku <> nil then
+    begin
+      ColSku.Visible := True;
+      TThread.ForceQueue(nil,
+        procedure
+        begin
+          tvLineasAlbaran.Controller.FocusedColumn := ColSku;
+          tvLineasAlbaran.Controller.EditingController.ShowEdit;
+        end);
+    end;
+  end;
+
+begin
+  sInput := Trim(ACodigoArt);
+  if (sInput <> '') and Assigned(dmmAlbaranes) and
+     (not FAplicandoArticulo) then
+  begin
+    ds := dmmAlbaranes.unqryAlbaranesLineas;
+    if Assigned(ds) and ds.Active then
+    begin
+      FAplicandoArticulo := True;
+      Validador := nil;
+      Resolver := nil;
+      try
+        if ds.IsEmpty then
+          ds.Append;
+        if not (ds.State in dsEditModes) then
+          ds.Edit;
+        sTarifa := dmmAlbaranes.unqryTablaG.
+                     FieldByName('TARIFA_ARTICULO_CLIENTE_ALB').AsString;
+        dFecha := Date;
+        if not dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').IsNull then
+          dFecha := dmmAlbaranes.unqryTablaG.
+                      FieldByName('FECHA_ALB').AsDateTime;
+        Validador := TArticulosValidador.Create(
+                       dmmAlbaranes.unqryTablaG.Connection);
+        Resolver := TArticulosResolver.Create(
+                      dmmAlbaranes.unqryTablaG.Connection);
+        Resolucion := Validador.Resolver(sInput);
+        if Resolucion.Encontrado then
+        begin
+          Datos := Resolver.ResolverDatos(Resolucion.CodigoArticulo,
+                                          Resolucion.CodigoSku,
+                                          sTarifa,
+                                          dFecha);
+          if Datos.Encontrado then
+          begin
+            if Datos.RequiereSku then
+              Precio := Resolver.ResolverPrecio(Datos.CodigoArticulo, '',
+                                                sTarifa, dFecha)
+            else
+              Precio := Datos.PrecioPedido;
+            rPorIva := PorcentajeIva(Datos.TipoIVA);
+            rPrecioSiva := Precio.PrecioFinal;
+            if Precio.EsImpIncl and ((1 + rPorIva / 100) <> 0) then
+              rPrecioSiva := Precio.PrecioFinal / (1 + rPorIva / 100);
+            PonerString('CODIGO_ART_ALBLIN', Datos.CodigoArticulo);
+            PonerString('CODIGO_UNIDAD_ALBLIN', Datos.CodigoSku);
+            PonerString('DESCRIPCION_VARIACION_ALBLIN',
+                        Datos.DescripcionSku);
+            PonerString('CODIGO_FAM_ALBLIN', Datos.CodigoFamilia);
+            PonerString('NOMBRE_FAM_ALBLIN', Datos.DescripcionFamilia);
+            PonerString('DESCRIPCION_ARTICULO_ALBLIN',
+                        Datos.DescripcionArticulo);
+            PonerString('TIPO_CANTIDAD_ARTICULO_ALBLIN',
+                        Datos.TipoCantidad);
+            PonerString('TIPO_IVA_ARTICULO_ALBLIN', Datos.TipoIVA);
+            PonerString('CODIGO_TAR_ALBLIN', sTarifa);
+            if Precio.EsImpIncl then
+              PonerString('ESIMP_INCL_TARIFA_ALBLIN', 'S')
+            else
+              PonerString('ESIMP_INCL_TARIFA_ALBLIN', 'N');
+            if Datos.RequiereSku then
+              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', 0)
+            else
+              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', rPrecioSiva);
+            PrepararLineaFiscalVenta(dmmAlbaranes.unqryTablaG.Connection,
+              dmmAlbaranes.unqryTablaG, ds, 'ALB', 'ALBLIN', 'TOTAL_ALBLIN');
+            if Datos.RequiereSku then
+              EnfocarSku;
+          end
+          else if Datos.Mensaje <> '' then
+            MessageDlg(Datos.Mensaje, mtWarning, [mbOk], 0);
+        end
+        else if Resolucion.Mensaje <> '' then
+          MessageDlg(Resolucion.Mensaje, mtWarning, [mbOk], 0);
+      finally
+        FreeAndNil(Resolver);
+        FreeAndNil(Validador);
+        FAplicandoArticulo := False;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoAlbaranes.CrearTablaPrincipal;
@@ -295,6 +514,147 @@ begin
   begin
     dmmAlbaranes.CalcularTotalesAlbaran;
     dsTablaG.DataSet.Post;
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.btnCODIGO_EMP_ALBPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+begin
+  if Assigned(dmmAlbaranes) then
+  begin
+    FBuscandoDatosCabecera := True;
+    try
+      if TBusquedaUtils.EjecutarBusqueda(
+           'Búsqueda de Empresas en Albaranes',
+           dmmAlbaranes.unqryEmpDataAlb,
+           'frmMtoEmpFacSearch',
+           Self) then
+      begin
+        dmmAlbaranes.CopiarEmpresaaAlbaran(dmmAlbaranes.unqryEmpDataAlb);
+      end;
+    finally
+      FBuscandoDatosCabecera := False;
+    end;
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.btnCODIGO_CLI_ALBPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+begin
+  if Assigned(dmmAlbaranes) then
+  begin
+    FBuscandoDatosCabecera := True;
+    try
+      if TBusquedaUtils.EjecutarBusqueda(
+           'Búsqueda de Clientes en Albaranes',
+           dmmAlbaranes.unqryCliDataAlb,
+           'frmMtoCliFacSearch',
+           Self) then
+      begin
+        dmmAlbaranes.CopiarClienteaAlbaran(dmmAlbaranes.unqryCliDataAlb);
+      end;
+    finally
+      FBuscandoDatosCabecera := False;
+    end;
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.btnCODIGO_EMP_ALBPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  e: TcxCustomEdit;
+  sCodigo: string;
+begin
+  inherited;
+  if (not FBuscandoDatosCabecera) and Assigned(dmmAlbaranes) and
+     Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and
+     (dsTablaG.DataSet.State in dsEditModes) and
+     (Sender is TcxCustomEdit) then
+  begin
+    e := Sender as TcxCustomEdit;
+    sCodigo := Trim(VarToStr(e.EditingValue));
+    if (sCodigo <> '') and (sCodigo <> '0') then
+    begin
+      FBuscandoDatosCabecera := True;
+      try
+        dmmAlbaranes.BuscarEmpresa(sCodigo);
+      finally
+        FBuscandoDatosCabecera := False;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.btnCODIGO_CLI_ALBPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  e: TcxCustomEdit;
+  sCodigo: string;
+begin
+  inherited;
+  if (not FBuscandoDatosCabecera) and Assigned(dmmAlbaranes) and
+     Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and
+     (dsTablaG.DataSet.State in dsEditModes) and
+     (Sender is TcxCustomEdit) then
+  begin
+    e := Sender as TcxCustomEdit;
+    sCodigo := Trim(VarToStr(e.EditingValue));
+    if (sCodigo <> '') and (sCodigo <> '0') then
+    begin
+      FBuscandoDatosCabecera := True;
+      try
+        dmmAlbaranes.BuscarCliente(sCodigo);
+      finally
+        FBuscandoDatosCabecera := False;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.btnCODIGO_EMP_ALBKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  inherited;
+  if (Key = VK_RETURN) and (ssCtrl in Shift) then
+  begin
+    Key := 0;
+    btnCODIGO_EMP_ALBPropertiesButtonClick(Sender, 0);
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.btnCODIGO_CLI_ALBKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  inherited;
+  if (Key = VK_RETURN) and (ssCtrl in Shift) then
+  begin
+    Key := 0;
+    btnCODIGO_CLI_ALBPropertiesButtonClick(Sender, 0);
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.cxgrdcArtAlbPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sCodigo: string;
+begin
+  inherited;
+  sCodigo := BuscarArticuloAlbaran;
+  if sCodigo <> '' then
+    AplicarArticuloAlbaran(sCodigo);
+end;
+
+procedure TfrmMtoAlbaranes.cxgrdcArtAlbPropertiesValidate(Sender: TObject;
+  var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
+var
+  sCodigo: string;
+begin
+  inherited;
+  if not Error then
+  begin
+    sCodigo := Trim(VarToStr(DisplayValue));
+    if sCodigo <> '' then
+      AplicarArticuloAlbaran(sCodigo);
   end;
 end;
 

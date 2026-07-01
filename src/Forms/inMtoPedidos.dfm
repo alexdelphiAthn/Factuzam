@@ -247,7 +247,10 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                     Default = True
                     Kind = bkEllipsis
                   end>
+                Properties.OnButtonClick = btnCODIGO_EMPPropertiesButtonClick
+                Properties.OnEditValueChanged = btnCODIGO_EMPPropertiesEditValueChanged
                 TabOrder = 7
+                OnKeyUp = btnCODIGO_EMPKeyUp
                 Width = 130
               end
               object cxdblblRAZON_SOCIAL_EMPRESA_PED: TcxDBLabel
@@ -277,7 +280,10 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                     Default = True
                     Kind = bkEllipsis
                   end>
+                Properties.OnButtonClick = btnCODIGO_CLIPropertiesButtonClick
+                Properties.OnEditValueChanged = btnCODIGO_CLIPropertiesEditValueChanged
                 TabOrder = 8
+                OnKeyUp = btnCODIGO_CLIKeyUp
                 Width = 130
               end
               object cxdblblRAZON_SOCIAL_CLIENTE_PED: TcxDBLabel
@@ -664,7 +670,22 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   object cxgrdcPedLinART: TcxGridDBColumn
                     Caption = 'C'#243'digo Art'#237'culo'
                     DataBinding.FieldName = 'CODIGO_ART_PEDLIN'
+                    PropertiesClassName = 'TcxButtonEditProperties'
+                    Properties.Buttons = <
+                      item
+                        Default = True
+                        Kind = bkEllipsis
+                      end>
+                    Properties.OnButtonClick = cxgrdcPedLinARTPropertiesButtonClick
+                    Properties.OnValidate = cxgrdcPedLinARTPropertiesValidate
                     Width = 154
+                  end
+                  object cxgrdcPedLinSKU: TcxGridDBColumn
+                    Caption = 'SKU'
+                    DataBinding.FieldName = 'CODIGOPRODPS_PEDLIN'
+                    PropertiesClassName = 'TcxTextEditProperties'
+                    Properties.OnValidate = cxgrdcPedLinSKUPropertiesValidate
+                    Width = 150
                   end
                   object cxgrdcPedLinDESCR: TcxGridDBColumn
                     Caption = 'Descripci'#243'n'

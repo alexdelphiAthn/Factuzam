@@ -214,7 +214,9 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                     Default = True
                     Kind = bkEllipsis
                   end>
+                Properties.OnButtonClick = btnCODIGO_EMP_PEDCPropertiesButtonClick
                 TabOrder = 11
+                OnKeyUp = btnCODIGO_EMP_PEDCKeyUp
                 Width = 150
               end
               object lblCodigoProveedor: TcxLabel
@@ -236,6 +238,7 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                   end>
                 Properties.OnButtonClick = btnCODIGO_PRV_PEDCPropertiesButtonClick
                 TabOrder = 13
+                OnKeyUp = btnCODIGO_PRV_PEDCKeyUp
                 Width = 150
               end
               object lblRefProveedor: TcxLabel
@@ -387,6 +390,14 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                   object colLineaPedcCODIGO_ART: TcxGridDBColumn
                     Caption = 'Art'#237'culo'
                     DataBinding.FieldName = 'CODIGO_ART_PEDCLIN'
+                    PropertiesClassName = 'TcxButtonEditProperties'
+                    Properties.Buttons = <
+                      item
+                        Default = True
+                        Kind = bkEllipsis
+                      end>
+                    Properties.OnButtonClick = colLineaPedcCODIGO_ARTPropertiesButtonClick
+                    Properties.OnValidate = colLineaPedcCODIGO_ARTPropertiesValidate
                     Width = 100
                   end
                   object colLineaPedcCODIGO_UNIDAD: TcxGridDBColumn
