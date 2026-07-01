@@ -25,7 +25,8 @@ uses
   cxControls, cxLookAndFeels, cxLookAndFeelPainters, dxCore, cxContainer,
   cxEdit, dxSkinsForm, cxStyles, cxClasses, Vcl.ExtCtrls, cxLabel,
   Vcl.Menus, cxPC, cxTextEdit, cxMemo, inMtoFrmBase, UniDataConn,
-  UniDataPerfiles, cxLocalization, Vcl.Buttons, inLibUnitForm, JvMenus,
+  UniDataPerfiles, UniDataFiltros, cxLocalization, Vcl.Buttons,
+  inLibUnitForm, JvMenus,
   System.UITypes, Uni, dxShellDialogs, dxSkinsCore, dxSkinBlue,
   JvComponentBase, JvEnterTab, dxSkinBasic, dxSkinBlack, dxSkinBlueprint,
   dxSkinCaramel, dxSkinCoffee, dxSkinDarkroom, dxSkinDarkSide,
@@ -300,6 +301,7 @@ type
     FormManager : TEmbeddedFormManager;
     FDmConn: TdmConn;
     FdmDataPerfiles: TdmPerfiles;
+    FdmDataFiltros: TdmFiltros;
     oFzaWinf: TfzaWinF;
     // Splash mostrado al arrancar; lo libera CerrarSplashInicio al final
     // del FormCreate, respetando un suelo minimo de visibilidad.
@@ -610,6 +612,8 @@ begin
   tmr1Timer(Sender);
   FdmDataPerfiles := TdmPerfiles.Create(Self);
   odmPerfiles     := FdmDataPerfiles;
+  FdmDataFiltros  := TdmFiltros.Create(Self);
+  odmFiltros      := FdmDataFiltros;
   oConn           := FDmConn.conUni;
   odmConn         := FDmConn;
   ofrmMto2        := Self;
@@ -1365,6 +1369,8 @@ begin
     FreeAndNil(oFzaWinf);
     if (FdmDataPerfiles <> nil) then
       FreeAndNil(FdmDataPerfiles);
+    if (FdmDataFiltros <> nil) then
+      FreeAndNil(FdmDataFiltros);
     FreeAndNil(FDmConn);
   finally
     inLibLog.Log.LogInfo('Ventana principal Cerrada');

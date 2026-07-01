@@ -73,6 +73,7 @@ type
     dsTablaG: TDataSource;
     pnlTopPage: TPanel;
     pnlTopGrid: TPanel;
+    sbFiltros: TSpeedButton;
     sbExportExcel: TSpeedButton;
     edtBusqGlobal: TcxTextEdit;
     nvNavegador: TcxDBNavigator;
@@ -103,6 +104,7 @@ type
     pnlDataSetName: TPanel;
     lblTablaOrigen: TcxLabel;
     saveDialog: TdxSaveFileDialog;
+    pmFiltros: TPopupMenu;
     tmrBusqGlobal: TTimer;
     alMtoGen: TActionList;
     actEliminarRegistro: TAction;
@@ -123,6 +125,7 @@ type
     procedure cxGrdDBTabPrinDblClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
     procedure sbExportExcelClick(Sender: TObject);
+    procedure sbFiltrosClick(Sender: TObject);
     procedure btnCargarColumnasClick(Sender: TObject);
     procedure btnCargarCaptionsClick(Sender: TObject);
     procedure btnCargarVblesGlobClick(Sender: TObject);
@@ -187,6 +190,14 @@ type
     // el usuario elige Desactivar o Cancelar lo saltamos.
     FBeforeDeleteOrig: TDataSetNotifyEvent;
     FGuardianBorradoInstalado: Boolean;
+    // Filtros guardados (desplegable junto a "Guardar Excel"). Guardan y
+    // comparten DataController.Filter de la lista principal con nombre
+    // propio, independiente del layout de columnas.
+    procedure CargarMenuFiltros;
+    procedure AplicarFiltroDesdeBase64(const ABase64: string);
+    procedure AplicarFiltroGuardadoClick(Sender: TObject);
+    procedure GuardarFiltroActualClick(Sender: TObject);
+    procedure GestionarFiltrosClick(Sender: TObject);
     procedure InstalarGuardianBorrado;
     procedure GuardianBeforeDelete(DataSet: TDataSet);
     procedure PopMenuColumnasPopup(Sender: TObject);
@@ -350,6 +361,8 @@ uses inMtoGenSearch,
      inLibShowMto,
      inLibLog,
      inMtoModalGenImpSave,
+     UniDataFiltros, inMtoModalGuardarFiltro, inMtoModalGestionFiltros,
+     System.NetEncoding,
      UniDataGen, uGenericIfThen, inMtoPrincipal,
      inLibFotos, inMtoFotoArticulo, inMtoStockConsulta,
      inLibGridColumnChooser, inMtoModalGridGuias,
@@ -2505,6 +2518,148 @@ begin
   saveDialog.FilterIndex := 1;
   if ( saveDialog.Execute ) then
     ExportGridToXLSX(saveDialog.FileName, cxGrdPrincipal);
+end;
+
+// ===========================================================================
+//   Filtros guardados (desplegable junto a "Guardar Excel")
+// ===========================================================================
+// Guardan y comparten DataController.Filter de la lista principal con
+// nombre propio. Independientes del filtro incidental que ya guarda
+// "Grabar Grid" (sbGrabarGridClick) junto con el layout. Ver
+// UniDataFiltros.pas para el acceso a BBDD (fza_filtros_guardados /
+// fza_filtros_guardados_compartidos).
+
+procedure TfrmMtoGen.sbFiltrosClick(Sender: TObject);
+var
+  pt: TPoint;
+begin
+  CargarMenuFiltros;
+  pt := sbFiltros.ClientToScreen(Point(0, sbFiltros.Height));
+  pmFiltros.Popup(pt.X, pt.Y);
+end;
+
+procedure TfrmMtoGen.CargarMenuFiltros;
+var
+  oLista: TFiltrosGuardadosList;
+  info: TFiltroGuardadoInfo;
+  oItem: TMenuItem;
+  oSeparador: TMenuItem;
+begin
+  pmFiltros.Items.Clear;
+  if Assigned(odmFiltros) then
+  begin
+    oLista := odmFiltros.ListarFiltros(Self.Name, cxGrdDBTabPrin.Name);
+    try
+      if oLista.Count = 0 then
+      begin
+        oItem := TMenuItem.Create(pmFiltros);
+        oItem.Caption := '(Sin filtros guardados)';
+        oItem.Enabled := False;
+        pmFiltros.Items.Add(oItem);
+      end
+      else
+      begin
+        for info in oLista do
+        begin
+          oItem := TMenuItem.Create(pmFiltros);
+          if info.EsPropio then
+            oItem.Caption := info.Nombre
+          else
+            oItem.Caption := info.Nombre + ' (' + info.Propietario + ')';
+          oItem.Tag := info.Id;
+          oItem.OnClick := AplicarFiltroGuardadoClick;
+          pmFiltros.Items.Add(oItem);
+        end;
+      end;
+    finally
+      FreeAndNil(oLista);
+    end;
+  end;
+  oSeparador := TMenuItem.Create(pmFiltros);
+  oSeparador.Caption := '-';
+  pmFiltros.Items.Add(oSeparador);
+  oItem := TMenuItem.Create(pmFiltros);
+  oItem.Caption := 'Guardar filtro actual...';
+  oItem.OnClick := GuardarFiltroActualClick;
+  pmFiltros.Items.Add(oItem);
+  oItem := TMenuItem.Create(pmFiltros);
+  oItem.Caption := 'Gestionar y compartir filtros...';
+  oItem.OnClick := GestionarFiltrosClick;
+  pmFiltros.Items.Add(oItem);
+end;
+
+procedure TfrmMtoGen.AplicarFiltroDesdeBase64(const ABase64: string);
+var
+  oStreamBin: TMemoryStream;
+  oStreamB64: TStringStream;
+begin
+  if ABase64 = '' then
+  begin
+    ShowMessage('El filtro seleccionado no tiene condiciones guardadas.');
+  end
+  else
+  begin
+    oStreamB64 := TStringStream.Create(ABase64);
+    oStreamBin := TMemoryStream.Create;
+    try
+      oStreamB64.Position := 0;
+      TNetEncoding.Base64.Decode(oStreamB64, oStreamBin);
+      oStreamBin.Position := 0;
+      cxGrdDBTabPrin.DataController.Filter.LoadFromStream(oStreamBin);
+    finally
+      FreeAndNil(oStreamBin);
+      FreeAndNil(oStreamB64);
+    end;
+  end;
+end;
+
+procedure TfrmMtoGen.AplicarFiltroGuardadoClick(Sender: TObject);
+begin
+  AplicarFiltroDesdeBase64(
+    odmFiltros.CargarFiltroBase64((Sender as TMenuItem).Tag));
+end;
+
+procedure TfrmMtoGen.GuardarFiltroActualClick(Sender: TObject);
+var
+  res: TGuardarFiltroResult;
+  oStreamBin: TMemoryStream;
+  oStreamB64: TStringStream;
+begin
+  if cxGrdDBTabPrin.DataController.Filter.IsEmpty then
+  begin
+    ShowMessage('No hay ningun filtro aplicado en la lista para guardar.');
+  end
+  else
+  begin
+    res := TfrmModalGuardarFiltro.Ejecutar(Self);
+    if res.Aceptado then
+    begin
+      oStreamBin := TMemoryStream.Create;
+      oStreamB64 := TStringStream.Create('');
+      try
+        cxGrdDBTabPrin.DataController.Filter.SaveToStream(oStreamBin);
+        oStreamBin.Position := 0;
+        TNetEncoding.Base64.Encode(oStreamBin, oStreamB64);
+        odmFiltros.GuardarFiltroNuevo(Self.Name, cxGrdDBTabPrin.Name,
+                                      res.Nombre, res.Descripcion,
+                                      oStreamB64.DataString);
+        ShowMessage('Filtro guardado correctamente.');
+      finally
+        FreeAndNil(oStreamB64);
+        FreeAndNil(oStreamBin);
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoGen.GestionarFiltrosClick(Sender: TObject);
+var
+  res: TGestionFiltrosResult;
+begin
+  res := TfrmModalGestionFiltros.Ejecutar(Self, Self.Name,
+                                          cxGrdDBTabPrin.Name);
+  if res.Aplicado then
+    AplicarFiltroDesdeBase64(odmFiltros.CargarFiltroBase64(res.IdFiltro));
 end;
 
 initialization
