@@ -17,6 +17,12 @@ Para probar el programa puedes descargar la demo desde la raíz de la web:
 
 El fichero es `Factuzam_DEMO_1.0.15.202606240020.alpha.exe`.
 
+> **Práctica en programa DEMO:** al empezar, entra con el usuario
+> administrador de la demo, crea un usuario propio con su contraseña en
+> [Otros ▸ Usuarios, Grupos y Perfiles](07-menu-otros.md#usuarios-grupos-y-perfiles),
+> asígnalo al grupo **Administradores** y vuelve a entrar desde
+> *Archivo ▸ Invocar login* para trabajar ya con tu propio usuario.
+
 ---
 
 ## Índice

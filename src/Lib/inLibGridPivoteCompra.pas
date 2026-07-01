@@ -161,9 +161,14 @@ type
     FAlturaFilaOriginal  : Integer;
     procedure FilterRecord(DataSet: TDataSet; var Accept: Boolean);
     function  GetSerieNumeroActivos(out ASerie, ANumero: string): Boolean;
+    function  GetLineaActiva(out ALinea: Integer;
+                             out ALineaTexto: string): Boolean;
     function  GetEstadoFila(iLinea: Integer): TEstadoFilaRecibida;
     function  GetColorEstadoFila(AEstado: TEstadoFilaRecibida): TColor;
     function  EsLineaSinTalla(iLinea: Integer): Boolean;
+    function  ResolverAvColorBasico(const ACodigoAtbColor: string;
+                out AIdAv: Integer; out AValorAv, ANombreColor,
+                AMensaje: string): Boolean;
     procedure CapturarEditorActivo;
     procedure CapturarValoresVisibles;
     function  CampoLineaCopiable(const ANombre: string): Boolean;
@@ -246,6 +251,9 @@ type
     procedure PersistirCantidadEditValueChanged(ASender: TObject;
                                                 AValorEditado: Variant);
     function PersistirCantidadesPendientes: Integer;
+    function ColorCodigoLineaActiva: string;
+    function CambiarColorLineaActiva(const ACodigoAtbColor: string;
+                                      out AMensaje: string): Boolean;
     // Devuelve el almacen de la primera celda con cantidad 'A recibir'
     // > 0 (cualquiera vale; itera el dict en orden de insercion). Sin
     // entradas validas devuelve ''. Lo usa el form para precargar el
@@ -360,6 +368,129 @@ begin
   ASerie  := FCfg.SourceMaster.DataSet.FieldByName(FCfg.FieldSerieMaster).AsString;
   ANumero := FCfg.SourceMaster.DataSet.FieldByName(FCfg.FieldNumeroMaster).AsString;
   Result  := (ASerie <> '') and (ANumero <> '');
+end;
+
+function TGridPivoteCompra.GetLineaActiva(out ALinea: Integer;
+                                          out ALineaTexto: string): Boolean;
+var
+  colLinea: TcxGridDBColumn;
+  rec     : TcxCustomGridRecord;
+  vLinea  : Variant;
+begin
+  Result := False;
+  ALinea := 0;
+  ALineaTexto := '';
+  if FCfg.Grid <> nil then
+  begin
+    colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
+    rec := FCfg.Grid.Controller.FocusedRecord;
+    if (colLinea <> nil) and (rec <> nil) then
+    begin
+      vLinea := FCfg.Grid.DataController.Values[rec.RecordIndex,
+                                                colLinea.Index];
+      if not (VarIsNull(vLinea) or VarIsEmpty(vLinea)) then
+      begin
+        ALineaTexto := VarToStr(vLinea);
+        ALinea := StrToIntDef(ALineaTexto, 0);
+        Result := ALinea > 0;
+      end;
+    end;
+  end;
+end;
+
+function TGridPivoteCompra.ResolverAvColorBasico(
+  const ACodigoAtbColor: string; out AIdAv: Integer;
+  out AValorAv, ANombreColor, AMensaje: string): Boolean;
+var
+  q      : TUniQuery;
+  iIdAtb : Integer;
+  sCodigo: string;
+begin
+  Result := False;
+  AIdAv := 0;
+  AValorAv := '';
+  ANombreColor := '';
+  AMensaje := '';
+  sCodigo := Trim(ACodigoAtbColor);
+  if sCodigo = '' then
+    AMensaje := 'Selecciona un color.'
+  else if FCfg.Conexion = nil then
+    AMensaje := 'No hay conexión para resolver el color.'
+  else
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := FCfg.Conexion;
+      q.SQL.Text :=
+        'SELECT ID_ATB, NOMBRE_ATB ' +
+        '  FROM fza_atributos_basicos ' +
+        ' WHERE ID_VA_ATB = ''CO'' ' +
+        '   AND CODIGO_ATB = :cod ' +
+        '   AND COALESCE(ESACTIVO_ATB, ''S'') = ''S'' ' +
+        ' LIMIT 1';
+      q.ParamByName('cod').AsString := sCodigo;
+      q.Open;
+      if q.IsEmpty then
+        AMensaje := 'No existe el color básico "' + sCodigo + '".'
+      else
+      begin
+        iIdAtb := q.FieldByName('ID_ATB').AsInteger;
+        ANombreColor := q.FieldByName('NOMBRE_ATB').AsString;
+        AValorAv := sCodigo;
+        q.Close;
+        q.SQL.Text :=
+          'SELECT ID_AV, ID_ATB_AV ' +
+          '  FROM fza_atributos_valores ' +
+          ' WHERE ID_VA_AV = ''CO'' ' +
+          '   AND AV = :av ' +
+          ' LIMIT 1';
+        q.ParamByName('av').AsString := AValorAv;
+        q.Open;
+        if not q.IsEmpty then
+        begin
+          AIdAv := q.FieldByName('ID_AV').AsInteger;
+          if q.FieldByName('ID_ATB_AV').IsNull and (iIdAtb > 0) then
+          begin
+            q.Close;
+            q.SQL.Text :=
+              'UPDATE fza_atributos_valores ' +
+              '   SET ID_ATB_AV = :id_atb, INSTANTE_MODIF = NOW(), ' +
+              '       USUARIO_MODIF = :usuario ' +
+              ' WHERE ID_AV = :id_av';
+            q.ParamByName('id_atb').AsInteger := iIdAtb;
+            q.ParamByName('usuario').AsString := oUser;
+            q.ParamByName('id_av').AsInteger := AIdAv;
+            q.Execute;
+          end;
+        end
+        else
+        begin
+          q.Close;
+          q.SQL.Text :=
+            'INSERT INTO fza_atributos_valores ' +
+            '  (ID_VA_AV, AV, DESCRIPCION_AV, ID_ATB_AV, ESACTIVO_AV, ' +
+            '   ORDEN_AV, INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, ' +
+            '   USUARIO_MODIF) ' +
+            'VALUES (''CO'', :av, :descripcion, :id_atb, ''S'', 0, ' +
+            '        NOW(), :usuario, NOW(), :usuario)';
+          q.ParamByName('av').AsString := AValorAv;
+          q.ParamByName('descripcion').AsString := ANombreColor;
+          q.ParamByName('id_atb').AsInteger := iIdAtb;
+          q.ParamByName('usuario').AsString := oUser;
+          q.Execute;
+          q.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID_AV';
+          q.Open;
+          if not q.IsEmpty then
+            AIdAv := q.FieldByName('ID_AV').AsInteger;
+        end;
+        Result := AIdAv > 0;
+        if not Result then
+          AMensaje := 'No se pudo resolver el color "' + sCodigo + '".';
+      end;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
 end;
 
 function TGridPivoteCompra.ValidarPivotePosible(var AMensaje: string): Boolean;
@@ -2556,6 +2687,151 @@ begin
     if Trim(sAlm) = '' then Continue;
     Result := sAlm;
     Exit;
+  end;
+end;
+
+function TGridPivoteCompra.ColorCodigoLineaActiva: string;
+var
+  iLinea    : Integer;
+  sLinea    : string;
+begin
+  Result := '';
+  if GetLineaActiva(iLinea, sLinea) and (FPivotColorCodigo <> nil) then
+    FPivotColorCodigo.TryGetValue(iLinea, Result);
+end;
+
+function TGridPivoteCompra.CambiarColorLineaActiva(
+  const ACodigoAtbColor: string; out AMensaje: string): Boolean;
+var
+  q            : TUniQuery;
+  ds           : TDataSet;
+  Campo        : TField;
+  bLineaActual : Boolean;
+  iLinea       : Integer;
+  iIdAv        : Integer;
+  sLinea       : string;
+  sLineaLocate : string;
+  sLineaDs     : string;
+  sArt         : string;
+  sSkuColor    : string;
+  sVarSku      : string;
+  sValorAv     : string;
+  sNombreColor : string;
+  rTotal       : Double;
+begin
+  Result := False;
+  AMensaje := '';
+  rTotal := 0;
+  if not FActivo then
+    AMensaje := 'Activa las tallas en horizontal antes de elegir color.'
+  else if not GetLineaActiva(iLinea, sLinea) then
+    AMensaje := 'No hay una línea activa para cambiar el color.'
+  else if FPivotTotalPedido.TryGetValue(iLinea, rTotal) and
+          (Abs(rTotal) > 0.000001) then
+    AMensaje := 'El color se elige antes de introducir cantidades. ' +
+                'Crea una línea de color nueva para no mezclar tallas.'
+  else if ResolverAvColorBasico(ACodigoAtbColor, iIdAv, sValorAv,
+                                sNombreColor, AMensaje) then
+  begin
+    if (FCfg.SourceLineas = nil) or (not FCfg.SourceLineas.Active) then
+      AMensaje := 'No está abierta la consulta de líneas.'
+    else
+    begin
+      ds := FCfg.SourceLineas;
+      sLineaLocate := sLinea;
+      if StrToIntDef(sLineaLocate, 0) > 0 then
+        sLineaLocate := Format('%.4d', [StrToIntDef(sLineaLocate, 0)]);
+      bLineaActual := False;
+      if (not ds.IsEmpty) and (ds.FindField(FCfg.FieldLinea) <> nil) then
+      begin
+        sLineaDs := Trim(ds.FieldByName(FCfg.FieldLinea).AsString);
+        if StrToIntDef(sLineaDs, 0) > 0 then
+          sLineaDs := Format('%.4d', [StrToIntDef(sLineaDs, 0)]);
+        bLineaActual := SameText(sLineaDs, sLineaLocate);
+      end;
+      if (not bLineaActual) and
+         (not ds.Locate(FCfg.FieldLinea, sLineaLocate, [])) then
+        AMensaje := 'No se encontró la línea activa para cambiar el color.'
+      else
+      begin
+        sArt := Trim(ds.FieldByName(FCfg.FieldArt).AsString);
+        if sArt = '' then
+          AMensaje := 'La línea activa no tiene artículo.'
+        else
+        begin
+          sVarSku := '';
+          FPivotVarSku.TryGetValue(iLinea, sVarSku);
+          if sVarSku = '' then
+          begin
+            q := TUniQuery.Create(nil);
+            try
+              q.Connection := FCfg.Conexion;
+              q.SQL.Text :=
+                'SELECT COALESCE(NULLIF(TIPO_VARIACION_ART, ''''), ''TC'') ' +
+                '       AS VARSKU ' +
+                '  FROM fza_articulos ' +
+                ' WHERE CODIGO_ART_ART = :art ' +
+                ' LIMIT 1';
+              q.ParamByName('art').AsString := sArt;
+              q.Open;
+              if not q.IsEmpty then
+                sVarSku := q.FieldByName('VARSKU').AsString;
+            finally
+              FreeAndNil(q);
+            end;
+          end;
+          if sVarSku = '' then
+            sVarSku := 'TC';
+          sSkuColor := sArt + '/' + sValorAv;
+          q := TUniQuery.Create(nil);
+          try
+            q.Connection := FCfg.Conexion;
+            q.SQL.Text :=
+              'INSERT INTO fza_articulos_skus ' +
+              '  (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ' +
+              '   ESACTIVO_SKU, INSTANTE_ALTA, USUARIO_ALTA, ' +
+              '   INSTANTE_MODIF, USUARIO_MODIF) ' +
+              'VALUES (:sku, :art, :varsku, ''S'', NOW(), :usuario, ' +
+              '        NOW(), :usuario) ' +
+              'ON DUPLICATE KEY UPDATE ESACTIVO_SKU = ''S'', ' +
+              '  INSTANTE_MODIF = NOW(), USUARIO_MODIF = :usuario';
+            q.ParamByName('sku').AsString := sSkuColor;
+            q.ParamByName('art').AsString := sArt;
+            q.ParamByName('varsku').AsString := sVarSku;
+            q.ParamByName('usuario').AsString := oUser;
+            q.Execute;
+            q.SQL.Text :=
+              'INSERT IGNORE INTO fza_atributos_sku ' +
+              '  (CODIGO_UNIDAD_SKU_SA, ID_AV_SA, INSTANTE_ALTA, ' +
+              '   USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+              'VALUES (:sku, :av, NOW(), :usuario, NOW(), :usuario)';
+            q.ParamByName('sku').AsString := sSkuColor;
+            q.ParamByName('av').AsInteger := iIdAv;
+            q.ParamByName('usuario').AsString := oUser;
+            q.Execute;
+          finally
+            FreeAndNil(q);
+          end;
+          if not (ds.State in dsEditModes) then
+            ds.Edit;
+          ds.FieldByName(FCfg.FieldSku).AsString := sSkuColor;
+          if FCfg.FieldColorTexto <> '' then
+          begin
+            Campo := ds.FindField(FCfg.FieldColorTexto);
+            if Campo <> nil then
+              Campo.AsString := sValorAv;
+          end;
+          ds.Post;
+          FPivotColorCodigo.AddOrSetValue(iLinea, ACodigoAtbColor);
+          FPivotColorTexto.AddOrSetValue(iLinea, sValorAv);
+          FPivotColorAv.AddOrSetValue(iLinea, iIdAv);
+          FPivotSkuBase.AddOrSetValue(iLinea, sSkuColor);
+          FPivotSkuPrefijo.AddOrSetValue(iLinea, sSkuColor);
+          FPivotVarSku.AddOrSetValue(iLinea, sVarSku);
+          Result := True;
+        end;
+      end;
+    end;
   end;
 end;
 

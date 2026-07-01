@@ -207,6 +207,8 @@ type
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
     function BuscarArticuloDevolucion: string;
+    function BuscarSkuDevolucion(const ACodigoArt: string): string;
+    function ArticuloLineaActivaDevolucion: string;
     function CodigoEmpresaActiva: string;
     function ValorLineaActiva(const ACampo: string): string;
     procedure EditarPrimeraTallaVisible;
@@ -229,6 +231,8 @@ type
                 const ACodigoArticulo: string; AIdAcPivot: Integer);
     procedure DevolverTodoStock;
     procedure AplicarArticuloDevolucion(const ACodigoArt: string);
+    procedure colLineaDevcCODIGO_UNIDADPropertiesButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
     procedure RefrescarAlmacenesCabecera;
     procedure AsegurarCabeceraPersistidaParaLineas;
     procedure DispararBusquedaArticuloConTecla(var Key: Word;
@@ -300,6 +304,8 @@ begin
 end;
 
 procedure TfrmMtoDevolucionesCompra.FormCreate(Sender: TObject);
+var
+  colSku: TcxGridDBColumn;
 begin
   FColorPivotCodigos := TDictionary<string, string>.Create;
   // Columnas no-bound de tallas y atributos ANTES del inherited.
@@ -313,7 +319,7 @@ begin
   FColColorPivot.Caption := 'Color';
   FColColorPivot.Width   := 110;
   FColColorPivot.Visible := False;
-  FColColorPivot.Options.Editing := False;
+  FColColorPivot.Options.Editing := True;
   FColColorPivot.DataBinding.ValueTypeClass := TcxStringValueType;
   FColColorPivot.PropertiesClass := TcxComboBoxProperties;
   with TcxComboBoxProperties(FColColorPivot.Properties) do
@@ -329,6 +335,19 @@ begin
     OnEditValueChanged := ColorPivotEditValueChanged;
   end;
   inherited;
+  colSku := tvLineasDevolucion.GetColumnByFieldName('CODIGO_UNIDAD_DEVCLIN');
+  if colSku <> nil then
+  begin
+    colSku.PropertiesClass := TcxButtonEditProperties;
+    colSku.Options.ShowEditButtons := isebAlways;
+    with TcxButtonEditProperties(colSku.Properties) do
+    begin
+      Buttons.Clear;
+      with Buttons.Add do
+        Kind := bkEllipsis;
+      OnButtonClick := colLineaDevcCODIGO_UNIDADPropertiesButtonClick;
+    end;
+  end;
   tvLineasDevolucion.OptionsData.Editing := True;
   tvLineasDevolucion.OptionsBehavior.AlwaysShowEditor := True;
   tvLineasDevolucion.OnFocusedItemChanged :=
@@ -2095,6 +2114,68 @@ begin
   end;
 end;
 
+function TfrmMtoDevolucionesCompra.ArticuloLineaActivaDevolucion: string;
+var
+  ds: TDataSet;
+begin
+  Result := '';
+  if Assigned(dmmDevolucionesCompra) then
+  begin
+    ds := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
+    if Assigned(ds) and ds.Active and (not ds.IsEmpty) and
+       (ds.FindField('CODIGO_ART_DEVCLIN') <> nil) then
+      Result := Trim(ds.FieldByName('CODIGO_ART_DEVCLIN').AsString);
+  end;
+end;
+
+function TfrmMtoDevolucionesCompra.BuscarSkuDevolucion(
+  const ACodigoArt: string): string;
+var
+  qry : TUniQuery;
+  sArt: string;
+begin
+  Result := '';
+  sArt := Trim(ACodigoArt);
+  if not Assigned(dmmDevolucionesCompra) then
+    MessageDlg('No está abierta la devolución de compra.',
+               mtInformation, [mbOk], 0)
+  else if sArt = '' then
+    MessageDlg('Selecciona un artículo antes de buscar sus SKUs.',
+               mtInformation, [mbOk], 0)
+  else
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := inLibGlobalVar.oConn;
+      qry.SQL.Text :=
+        'SELECT SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU, ' +
+        '       GROUP_CONCAT(AV.AV ORDER BY COALESCE(VA.ORDEN_VA, 999), ' +
+        '                    AV.ORDEN_AV SEPARATOR '' / '') AS ATRIBUTOS ' +
+        '  FROM fza_articulos_skus SK ' +
+        '  LEFT JOIN fza_atributos_sku SA ' +
+        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
+        '  LEFT JOIN fza_atributos_valores AV ' +
+        '    ON AV.ID_AV = SA.ID_AV_SA ' +
+        '  LEFT JOIN fza_variaciones_atributos VA ' +
+        '    ON VA.ID_VAR_VA = SK.CODIGO_VAR_SKU ' +
+        '   AND VA.ID_ATB_VA = AV.ID_VA_AV ' +
+        ' WHERE SK.CODIGO_ART_SKU = :art ' +
+        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
+        ' GROUP BY SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU ' +
+        ' ORDER BY SK.CODIGO_UNIDAD_SKU';
+      qry.ParamByName('art').AsString := sArt;
+      if TBusquedaUtils.EjecutarBusqueda(
+           'SKUs del artículo ' + sArt,
+           qry,
+           'frmMtoDevcSkuSearch',
+           Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
+        Result := qry.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+end;
+
 procedure TfrmMtoDevolucionesCompra.PrepararColorPendienteArticuloDevolucion(
   const ACodigoArticulo: string; AIdAcPivot: Integer);
 var
@@ -2353,6 +2434,25 @@ var
       Campo.Clear;
   end;
 
+  procedure EnfocarSku(AAbrirBusqueda: Boolean);
+  var
+    colSku: TcxGridDBColumn;
+  begin
+    colSku := tvLineasDevolucion.GetColumnByFieldName('CODIGO_UNIDAD_DEVCLIN');
+    if colSku <> nil then
+    begin
+      colSku.Visible := True;
+      TThread.ForceQueue(nil,
+        procedure
+        begin
+          tvLineasDevolucion.Controller.FocusedColumn := colSku;
+          tvLineasDevolucion.Controller.EditingController.ShowEdit;
+          if AAbrirBusqueda then
+            colLineaDevcCODIGO_UNIDADPropertiesButtonClick(nil, 0);
+        end);
+    end;
+  end;
+
 begin
   sArt := Trim(ACodigoArt);
   if (sArt <> '') and Assigned(dmmDevolucionesCompra) and
@@ -2471,6 +2571,9 @@ begin
             if FPivote.Activo then
               FPivote.RecargarYRepublicar;
           end;
+          if Datos.RequiereSku and (Datos.CodigoSku = '') and
+             ((FPivote = nil) or (not FPivote.Activo)) then
+            EnfocarSku(True);
           RefrescarVisibilidadTallas;
           if FMostrarAtributos then
             CargarCaptionsAtributosLineaActiva;
@@ -2512,6 +2615,18 @@ begin
     if sCodigo <> '' then
       AplicarArticuloDevolucion(sCodigo);
   end;
+end;
+
+procedure TfrmMtoDevolucionesCompra.colLineaDevcCODIGO_UNIDADPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sArt: string;
+  sSku: string;
+begin
+  sArt := ArticuloLineaActivaDevolucion;
+  sSku := BuscarSkuDevolucion(sArt);
+  if sSku <> '' then
+    AplicarArticuloDevolucion(sSku);
 end;
 
 procedure TfrmMtoDevolucionesCompra.actArticulosExecute(Sender: TObject);

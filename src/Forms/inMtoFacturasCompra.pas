@@ -26,7 +26,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
-  Forms, Dialogs, Uni,
+  Forms, Dialogs, Uni, System.Types,
   inMtoGen, dxSkinsCore, dxSkinBlue, dxSkinsForm,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
@@ -47,6 +47,7 @@ uses
 const
   CANT_TALLAS_MAX = 20;
   CANT_ATRIB_MAX  = 5;
+  ID_VA_COLOR     = 'CO';
 
 type
   TfrmMtoFacturasCompra = class(TfrmMtoGen)
@@ -174,6 +175,8 @@ type
     FAtribColumns    : array[0..CANT_ATRIB_MAX-1]  of TcxGridDBColumn;
     FMostrarAtributos: Boolean;
     FColColorPivot   : TcxGridDBColumn;
+    FBasicosColor    : TArray<string>;
+    FAplicandoArticulo: Boolean;
     // Guarda contra reentrada del toggle desde dsTablaGDataChangeHook
     // disparado por el Edit/Post de PersistirPreferenciaPivote (entre
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
@@ -181,6 +184,7 @@ type
     FInToggleClick   : Boolean;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
+    procedure CargarBasicosColorArticulo(const ACodigoArt: string);
     procedure InicializarGestorYPivote;
     procedure RefrescarVisibilidadTallas;
     procedure RefrescarVisibilidadAtributos;
@@ -191,6 +195,19 @@ type
     procedure TallaValidateHook(Sender: TObject; var DisplayValue: Variant;
                                 var ErrorText: TCaption;
                                 var Error: Boolean);
+    function BuscarArticuloFacturaCompra: string;
+    function BuscarSkuFacturaCompra(const ACodigoArt: string): string;
+    function ArticuloLineaActivaFacturaCompra: string;
+    procedure AplicarArticuloFacturaCompra(const ACodigoArt: string);
+    procedure colLineaFaccCODIGO_ARTPropertiesButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
+    procedure colLineaFaccCODIGO_ARTPropertiesValidate(Sender: TObject;
+                var DisplayValue: Variant; var ErrorText: TCaption;
+                var Error: Boolean);
+    procedure colLineaFaccCODIGO_UNIDADPropertiesButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
+    procedure colLinFaccColorPivotButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
     procedure AsegurarCabeceraPersistidaParaLineas;
     procedure PersistirPreferenciaPivote;
   public
@@ -209,11 +226,15 @@ uses
   System.StrUtils,
   inLibGlobalVar,
   inLibFotos,
+  inLibArticulosResolver,
+  inLibArticulosValidador,
+  inLibComprasImpuestos,
+  inLibAtributosPaleta,
   UniDataArticulos,
   inMtoModalImpFacCompra,
   inMtoModalImpFacCompraV,
   inLibShowMto, inMtoModalRegistrarPago,
-  inMtoModalSeleccionarBanco;
+  inMtoModalSeleccionarBanco, inLibGenBusq;
 
 {$R *.dfm}
 
@@ -247,7 +268,174 @@ begin
     Result := [dsTablaG];
 end;
 
+function TfrmMtoFacturasCompra.BuscarArticuloFacturaCompra: string;
+var
+  qry : TUniQuery;
+  sPrv: string;
+begin
+  Result := '';
+  if Assigned(dmmFacturasCompra) then
+  begin
+    sPrv := Trim(dmmFacturasCompra.unqryTablaG.
+                   FieldByName('CODIGO_PRV_FACC').AsString);
+    if (sPrv = '') or (sPrv = '0') then
+      MessageDlg('Selecciona un proveedor antes de buscar artículos.',
+                 mtInformation, [mbOk], 0)
+    else
+    begin
+      qry := TUniQuery.Create(nil);
+      try
+        qry.Connection := dmmFacturasCompra.unqryTablaG.Connection;
+        qry.SQL.Text :=
+          'SELECT art.CODIGO_ART_ART, art.ESACTIVO_ART, art.ORDEN_ART, ' +
+          '       art.DESCRIPCION_ART, art.CODIGO_FAM_ART, ' +
+          '       fam.DESCRIPCION_FAM, art.TIPO_IVA_ART, ' +
+          '       iva.NOMBRE_TIPO_IVA_IVATIP, art.TIPO_CANTIDAD_ART, ' +
+          '       ap.CODIGO_PRV_AP, prv.RAZON_SOCIAL_PRV, prv.NOMBRE_PRV, ' +
+          '       ap.REF_PROVEEDOR_AP AS REF_PROVEEDOR, ' +
+          '       ap.PRECIO_ULT_COMPRA_AP, ap.FECHA_VALIDEZ_AP ' +
+          '  FROM fza_articulos_proveedores ap ' +
+          '  JOIN fza_articulos art ' +
+          '    ON art.CODIGO_ART_ART = ap.CODIGO_ART_AP ' +
+          '  LEFT JOIN fza_articulos_familias fam ' +
+          '    ON fam.CODIGO_FAM_FAM = art.CODIGO_FAM_ART ' +
+          '  LEFT JOIN fza_ivas_tipos iva ' +
+          '    ON iva.CODIGO_ABREVIATURA_IVA_IVATIP = art.TIPO_IVA_ART ' +
+          '  LEFT JOIN fza_proveedores prv ' +
+          '    ON prv.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP ' +
+          ' WHERE ap.CODIGO_PRV_AP = :prv ' +
+          '   AND COALESCE(art.ESACTIVO_ART, ''S'') = ''S'' ' +
+          ' ORDER BY art.ORDEN_ART, art.CODIGO_ART_ART';
+        qry.ParamByName('prv').AsString := sPrv;
+        if TBusquedaUtils.EjecutarBusqueda(
+             'Búsqueda de artículos',
+             qry,
+             'frmMtoFaccArtSearch',
+             Self) and (qry.FindField('CODIGO_ART_ART') <> nil) then
+          Result := qry.FieldByName('CODIGO_ART_ART').AsString;
+      finally
+        FreeAndNil(qry);
+      end;
+    end;
+  end;
+end;
+
+function TfrmMtoFacturasCompra.ArticuloLineaActivaFacturaCompra: string;
+var
+  ds: TDataSet;
+begin
+  Result := '';
+  if Assigned(dmmFacturasCompra) then
+  begin
+    ds := dmmFacturasCompra.unqryFacturasCompraLineas;
+    if Assigned(ds) and ds.Active and (not ds.IsEmpty) and
+       (ds.FindField('CODIGO_ART_FACCLIN') <> nil) then
+      Result := Trim(ds.FieldByName('CODIGO_ART_FACCLIN').AsString);
+  end;
+end;
+
+function TfrmMtoFacturasCompra.BuscarSkuFacturaCompra(
+  const ACodigoArt: string): string;
+var
+  qry : TUniQuery;
+  sArt: string;
+begin
+  Result := '';
+  sArt := Trim(ACodigoArt);
+  if not Assigned(dmmFacturasCompra) then
+    MessageDlg('No está abierta la factura de compra.',
+               mtInformation, [mbOk], 0)
+  else if sArt = '' then
+    MessageDlg('Selecciona un artículo antes de buscar sus SKUs.',
+               mtInformation, [mbOk], 0)
+  else
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := dmmFacturasCompra.unqryTablaG.Connection;
+      qry.SQL.Text :=
+        'SELECT SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU, ' +
+        '       GROUP_CONCAT(AV.AV ORDER BY COALESCE(VA.ORDEN_VA, 999), ' +
+        '                    AV.ORDEN_AV SEPARATOR '' / '') AS ATRIBUTOS ' +
+        '  FROM fza_articulos_skus SK ' +
+        '  LEFT JOIN fza_atributos_sku SA ' +
+        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
+        '  LEFT JOIN fza_atributos_valores AV ' +
+        '    ON AV.ID_AV = SA.ID_AV_SA ' +
+        '  LEFT JOIN fza_variaciones_atributos VA ' +
+        '    ON VA.ID_VAR_VA = SK.CODIGO_VAR_SKU ' +
+        '   AND VA.ID_ATB_VA = AV.ID_VA_AV ' +
+        ' WHERE SK.CODIGO_ART_SKU = :art ' +
+        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
+        ' GROUP BY SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU ' +
+        ' ORDER BY SK.CODIGO_UNIDAD_SKU';
+      qry.ParamByName('art').AsString := sArt;
+      if TBusquedaUtils.EjecutarBusqueda(
+           'SKUs del artículo ' + sArt,
+           qry,
+           'frmMtoFaccSkuSearch',
+           Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
+        Result := qry.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+end;
+
+procedure TfrmMtoFacturasCompra.CargarBasicosColorArticulo(
+  const ACodigoArt: string);
+var
+  q   : TUniQuery;
+  i   : Integer;
+  sArt: string;
+begin
+  SetLength(FBasicosColor, 0);
+  sArt := Trim(ACodigoArt);
+  if sArt <> '' then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Text :=
+        'SELECT ATB.CODIGO_ATB, MIN(ATB.ORDEN_ATB) AS ORDEN_ATB, ' +
+        '       MIN(ATB.NOMBRE_ATB) AS NOMBRE_ATB ' +
+        '  FROM fza_articulos_skus SK ' +
+        '  JOIN fza_atributos_sku SA ' +
+        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
+        '  JOIN fza_atributos_valores AV ' +
+        '    ON AV.ID_AV = SA.ID_AV_SA ' +
+        '   AND AV.ID_VA_AV = :va ' +
+        '  JOIN fza_atributos_basicos ATB ' +
+        '    ON ATB.ID_VA_ATB = :va ' +
+        '   AND (ATB.ID_ATB = AV.ID_ATB_AV ' +
+        '        OR (AV.ID_ATB_AV IS NULL AND ATB.CODIGO_ATB = AV.AV)) ' +
+        ' WHERE SK.CODIGO_ART_SKU = :art ' +
+        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
+        '   AND COALESCE(AV.ESACTIVO_AV, ''S'') = ''S'' ' +
+        '   AND COALESCE(ATB.ESACTIVO_ATB, ''S'') = ''S'' ' +
+        ' GROUP BY ATB.CODIGO_ATB ' +
+        ' ORDER BY ORDEN_ATB, NOMBRE_ATB, ATB.CODIGO_ATB';
+      q.ParamByName('va').AsString := ID_VA_COLOR;
+      q.ParamByName('art').AsString := sArt;
+      q.Open;
+      SetLength(FBasicosColor, q.RecordCount);
+      i := 0;
+      while not q.Eof do
+      begin
+        FBasicosColor[i] := q.FieldByName('CODIGO_ATB').AsString;
+        Inc(i);
+        q.Next;
+      end;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+end;
+
 procedure TfrmMtoFacturasCompra.FormCreate(Sender: TObject);
+var
+  colArt: TcxGridDBColumn;
+  colSku: TcxGridDBColumn;
 begin
   // Columnas no-bound de tallas y atributos ANTES del inherited.
   CrearColumnasTallas;
@@ -260,8 +448,44 @@ begin
   FColColorPivot.Caption := 'Color';
   FColColorPivot.Width   := 110;
   FColColorPivot.Visible := False;
-  FColColorPivot.Options.Editing := False;
+  FColColorPivot.Options.Editing := True;
+  FColColorPivot.Options.ShowEditButtons := isebAlways;
+  FColColorPivot.PropertiesClass := TcxButtonEditProperties;
+  with TcxButtonEditProperties(FColColorPivot.Properties) do
+  begin
+    Buttons.Clear;
+    with Buttons.Add do
+      Kind := bkEllipsis;
+    OnButtonClick := colLinFaccColorPivotButtonClick;
+  end;
   inherited;
+  colArt := tvLineasFactura.GetColumnByFieldName('CODIGO_ART_FACCLIN');
+  if colArt <> nil then
+  begin
+    colArt.PropertiesClass := TcxButtonEditProperties;
+    colArt.Options.ShowEditButtons := isebAlways;
+    with TcxButtonEditProperties(colArt.Properties) do
+    begin
+      Buttons.Clear;
+      with Buttons.Add do
+        Kind := bkEllipsis;
+      OnButtonClick := colLineaFaccCODIGO_ARTPropertiesButtonClick;
+      OnValidate := colLineaFaccCODIGO_ARTPropertiesValidate;
+    end;
+  end;
+  colSku := tvLineasFactura.GetColumnByFieldName('CODIGO_UNIDAD_FACCLIN');
+  if colSku <> nil then
+  begin
+    colSku.PropertiesClass := TcxButtonEditProperties;
+    colSku.Options.ShowEditButtons := isebAlways;
+    with TcxButtonEditProperties(colSku.Properties) do
+    begin
+      Buttons.Clear;
+      with Buttons.Add do
+        Kind := bkEllipsis;
+      OnButtonClick := colLineaFaccCODIGO_UNIDADPropertiesButtonClick;
+    end;
+  end;
   InicializarGestorYPivote;
   if Assigned(FPivote) then
     FColColorPivot.OnCustomDrawCell := FPivote.CustomDrawColorCell;
@@ -841,6 +1065,366 @@ begin
     begin
       dsLin.Close;
       dsLin.Open;
+    end;
+  end;
+end;
+
+procedure TfrmMtoFacturasCompra.AplicarArticuloFacturaCompra(
+  const ACodigoArt: string);
+var
+  ds         : TDataSet;
+  Validador  : TArticulosValidador;
+  Resolver   : TArticulosResolver;
+  Resolucion : TArtResolucionEntrada;
+  Datos      : TArticuloDatos;
+  qry        : TUniQuery;
+  sInput     : string;
+  sPrv       : string;
+  sAlm       : string;
+  sModeloPrv : string;
+  dFecha     : TDateTime;
+  iAcPivot   : Integer;
+  rCantidad  : Double;
+
+  function CampoCabeceraString(const ACampo: string): string;
+  var
+    Campo: TField;
+  begin
+    Result := '';
+    Campo := dmmFacturasCompra.unqryTablaG.FindField(ACampo);
+    if Campo <> nil then
+      Result := Trim(Campo.AsString);
+  end;
+
+  function FechaCabecera: TDateTime;
+  var
+    Campo: TField;
+  begin
+    Result := Date;
+    Campo := dmmFacturasCompra.unqryTablaG.FindField('FECHA_FACC');
+    if (Campo <> nil) and (not Campo.IsNull) then
+      Result := Campo.AsDateTime;
+  end;
+
+  function ResolverConjuntoPivotArticulo(
+    const ACodigoArticulo: string): Integer;
+  begin
+    Result := 0;
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := dmmFacturasCompra.unqryTablaG.Connection;
+      qry.SQL.Text :=
+        'SELECT aca.ID_AC_ACA ' +
+        '  FROM fza_articulos_conjuntos_asign aca ' +
+        ' WHERE aca.CODIGO_ART_ACA = :art ' +
+        '   AND aca.ID_VA_ACA <> ''CO'' ' +
+        ' ORDER BY aca.ID_VA_ACA ' +
+        ' LIMIT 1';
+      qry.ParamByName('art').AsString := ACodigoArticulo;
+      qry.Open;
+      if not qry.IsEmpty then
+        Result := qry.FieldByName('ID_AC_ACA').AsInteger;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+
+  function ModeloProveedorArticulo(const ACodigoArticulo,
+                                        ACodigoProveedor: string): string;
+  begin
+    Result := '';
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := dmmFacturasCompra.unqryTablaG.Connection;
+      qry.SQL.Text :=
+        'SELECT ap.REF_PROVEEDOR_AP ' +
+        '  FROM fza_articulos_proveedores ap ' +
+        ' WHERE ap.CODIGO_ART_AP = :art ' +
+        '   AND COALESCE(TRIM(ap.REF_PROVEEDOR_AP), '''') <> '''' ' +
+        ' ORDER BY CASE WHEN ap.CODIGO_PRV_AP = :prv THEN 0 ELSE 1 END, ' +
+        '          CASE ap.ESPROVEEDORPRINCIPAL_AP WHEN ''S'' THEN 0 ' +
+        '               ELSE 1 END, ' +
+        '          ap.FECHA_VALIDEZ_AP DESC, ap.CODIGO_PRV_AP ' +
+        ' LIMIT 1';
+      qry.ParamByName('art').AsString := ACodigoArticulo;
+      qry.ParamByName('prv').AsString := ACodigoProveedor;
+      qry.Open;
+      if not qry.IsEmpty then
+        Result := qry.FieldByName('REF_PROVEEDOR_AP').AsString;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+
+  procedure PonerString(const ACampo, AValor: string);
+  var
+    Campo: TField;
+  begin
+    Campo := ds.FindField(ACampo);
+    if Campo <> nil then
+      Campo.AsString := AValor;
+  end;
+
+  procedure PonerFloat(const ACampo: string; AValor: Double);
+  var
+    Campo: TField;
+  begin
+    Campo := ds.FindField(ACampo);
+    if Campo <> nil then
+      Campo.AsFloat := AValor;
+  end;
+
+  procedure PonerInteger(const ACampo: string; AValor: Integer);
+  var
+    Campo: TField;
+  begin
+    Campo := ds.FindField(ACampo);
+    if Campo <> nil then
+      Campo.AsInteger := AValor;
+  end;
+
+  procedure LimpiarCampo(const ACampo: string);
+  var
+    Campo: TField;
+  begin
+    Campo := ds.FindField(ACampo);
+    if Campo <> nil then
+      Campo.Clear;
+  end;
+
+  procedure EnfocarSku(AAbrirBusqueda: Boolean);
+  var
+    colSku: TcxGridDBColumn;
+  begin
+    colSku := tvLineasFactura.GetColumnByFieldName('CODIGO_UNIDAD_FACCLIN');
+    if colSku <> nil then
+    begin
+      colSku.Visible := True;
+      TThread.ForceQueue(nil,
+        procedure
+        begin
+          tvLineasFactura.Controller.FocusedColumn := colSku;
+          tvLineasFactura.Controller.EditingController.ShowEdit;
+          if AAbrirBusqueda then
+            colLineaFaccCODIGO_UNIDADPropertiesButtonClick(nil, 0);
+        end);
+    end;
+  end;
+
+begin
+  sInput := Trim(ACodigoArt);
+  if (sInput <> '') and Assigned(dmmFacturasCompra) and
+     (not FAplicandoArticulo) then
+  begin
+    ds := dmmFacturasCompra.unqryFacturasCompraLineas;
+    if Assigned(ds) and ds.Active then
+    begin
+      FAplicandoArticulo := True;
+      Validador := nil;
+      Resolver := nil;
+      try
+        if ds.IsEmpty then
+          ds.Append;
+        if not (ds.State in dsEditModes) then
+          ds.Edit;
+        sPrv := CampoCabeceraString('CODIGO_PRV_FACC');
+        sAlm := CampoCabeceraString('CODIGO_ALM_FACC');
+        dFecha := FechaCabecera;
+        Validador := TArticulosValidador.Create(
+                       dmmFacturasCompra.unqryTablaG.Connection);
+        Resolver := TArticulosResolver.Create(
+                      dmmFacturasCompra.unqryTablaG.Connection);
+        Resolucion := Validador.Resolver(sInput);
+        if Resolucion.Encontrado then
+        begin
+          Datos := Resolver.ResolverDatos(Resolucion.CodigoArticulo,
+                                          Resolucion.CodigoSku,
+                                          '',
+                                          dFecha,
+                                          sAlm,
+                                          sPrv);
+          if Datos.Encontrado then
+          begin
+            if Datos.RequiereSku then
+              Datos.UltimoCoste := Resolver.ResolverUltimoCoste(
+                Datos.CodigoArticulo, sPrv, '');
+            iAcPivot := ResolverConjuntoPivotArticulo(Datos.CodigoArticulo);
+            sModeloPrv := ModeloProveedorArticulo(Datos.CodigoArticulo, sPrv);
+            if sModeloPrv = '' then
+              sModeloPrv := Datos.UltimoCoste.RefProveedor;
+            PonerString('CODIGO_ART_FACCLIN', Datos.CodigoArticulo);
+            PonerString('CODIGO_UNIDAD_FACCLIN', Datos.CodigoSku);
+            PonerString('REF_PRV_FACCLIN', sModeloPrv);
+            PonerString('CODIGO_FAM_FACCLIN', Datos.CodigoFamilia);
+            PonerString('NOMBRE_FAM_FACCLIN', Datos.DescripcionFamilia);
+            PonerString('DESCRIPCION_ARTICULO_FACCLIN',
+                        Datos.DescripcionArticulo);
+            PonerString('TIPO_CANTIDAD_ARTICULO_FACCLIN',
+                        Datos.TipoCantidad);
+            PonerString('TIPO_IVA_ARTICULO_FACCLIN', Datos.TipoIVA);
+            if sAlm <> '' then
+              PonerString('CODIGO_ALMACEN_FACCLIN', sAlm);
+            if iAcPivot > 0 then
+              PonerInteger('ID_AC_PIVOT_FACCLIN', iAcPivot)
+            else
+              LimpiarCampo('ID_AC_PIVOT_FACCLIN');
+            rCantidad := 0;
+            if ds.FindField('CANTIDAD_FACCLIN') <> nil then
+              rCantidad := ds.FieldByName('CANTIDAD_FACCLIN').AsFloat;
+            if Datos.RequiereSku and (Datos.CodigoSku = '') then
+            begin
+              PonerFloat('CANTIDAD_FACCLIN', 0);
+              PonerFloat('TOTAL_UNIDADES_FACCLIN', 0);
+              rCantidad := 0;
+            end
+            else if rCantidad = 0 then
+            begin
+              rCantidad := 1;
+              PonerFloat('CANTIDAD_FACCLIN', rCantidad);
+              PonerFloat('TOTAL_UNIDADES_FACCLIN', rCantidad);
+            end
+            else
+              PonerFloat('TOTAL_UNIDADES_FACCLIN', rCantidad);
+            PonerFloat('PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN',
+                       Datos.UltimoCoste.PrecioUltCompra);
+            PonerFloat('TOTAL_FACCLIN',
+                       rCantidad * Datos.UltimoCoste.PrecioUltCompra);
+            PrepararLineaFiscalCompra(
+              dmmFacturasCompra.unqryTablaG.Connection,
+              dmmFacturasCompra.unqryTablaG, ds, 'FACC', 'FACCLIN',
+              'TOTAL_FACCLIN');
+            if Assigned(FPivote) and
+               (CampoCabeceraString('ESPIVOTE_HORIZONTAL_FACC') <> 'N') then
+            begin
+              if not FPivote.Activo then
+                btnTallasHorizontalClick(nil);
+              if FPivote.Activo then
+              begin
+                if ds.State in dsEditModes then
+                  ds.Post;
+                FPivote.RecargarYRepublicar;
+              end;
+            end;
+            if Datos.RequiereSku and (Datos.CodigoSku = '') and
+               ((FPivote = nil) or (not FPivote.Activo)) then
+              EnfocarSku(True);
+            RefrescarVisibilidadTallas;
+            if FMostrarAtributos then
+              CargarCaptionsAtributosLineaActiva;
+            if Assigned(FPivote) and FPivote.Activo and
+               (ds.State in dsEditModes) then
+              ds.Post;
+          end
+          else if Datos.Mensaje <> '' then
+            MessageDlg(Datos.Mensaje, mtWarning, [mbOk], 0);
+        end
+        else if Resolucion.Mensaje <> '' then
+          MessageDlg(Resolucion.Mensaje, mtWarning, [mbOk], 0);
+      finally
+        FreeAndNil(Resolver);
+        FreeAndNil(Validador);
+        FAplicandoArticulo := False;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoFacturasCompra.colLineaFaccCODIGO_ARTPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sCodigo: string;
+begin
+  inherited;
+  sCodigo := BuscarArticuloFacturaCompra;
+  if sCodigo <> '' then
+    AplicarArticuloFacturaCompra(sCodigo);
+end;
+
+procedure TfrmMtoFacturasCompra.colLineaFaccCODIGO_ARTPropertiesValidate(
+  Sender: TObject; var DisplayValue: Variant; var ErrorText: TCaption;
+  var Error: Boolean);
+var
+  sCodigo: string;
+begin
+  inherited;
+  if not Error then
+  begin
+    sCodigo := Trim(VarToStr(DisplayValue));
+    if sCodigo <> '' then
+    begin
+      AplicarArticuloFacturaCompra(sCodigo);
+      if Assigned(dmmFacturasCompra) and
+         dmmFacturasCompra.unqryFacturasCompraLineas.Active and
+         (dmmFacturasCompra.unqryFacturasCompraLineas.
+            FindField('CODIGO_ART_FACCLIN') <> nil) then
+        DisplayValue := dmmFacturasCompra.unqryFacturasCompraLineas.
+                          FieldByName('CODIGO_ART_FACCLIN').AsString;
+    end;
+  end;
+end;
+
+procedure TfrmMtoFacturasCompra.colLineaFaccCODIGO_UNIDADPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sArt: string;
+  sSku: string;
+begin
+  sArt := ArticuloLineaActivaFacturaCompra;
+  sSku := BuscarSkuFacturaCompra(sArt);
+  if sSku <> '' then
+    AplicarArticuloFacturaCompra(sSku);
+end;
+
+procedure TfrmMtoFacturasCompra.colLinFaccColorPivotButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sArt    : string;
+  sActual : string;
+  sNuevo  : string;
+  sMensaje: string;
+  Edit    : TWinControl;
+  ScrPt   : TPoint;
+  WidHint : Integer;
+begin
+  if (FPivote = nil) or (not FPivote.Activo) then
+  begin
+    MessageDlg('Activa las tallas en horizontal antes de elegir color.',
+               mtInformation, [mbOk], 0);
+  end
+  else
+  begin
+    sArt := ArticuloLineaActivaFacturaCompra;
+    if sArt = '' then
+      MessageDlg('Selecciona un artículo antes de elegir color.',
+                 mtInformation, [mbOk], 0)
+    else
+    begin
+      CargarBasicosColorArticulo(sArt);
+      if Length(FBasicosColor) = 0 then
+        MessageDlg('El artículo "' + sArt + '" no tiene colores básicos ' +
+                   'activos en sus SKUs.',
+                   mtInformation, [mbOk], 0)
+      else
+      begin
+        sActual := FPivote.ColorCodigoLineaActiva;
+        ScrPt.X := -1;
+        ScrPt.Y := -1;
+        WidHint := FColColorPivot.Width;
+        if Sender is TWinControl then
+        begin
+          Edit := TWinControl(Sender);
+          ScrPt := Edit.ClientToScreen(Point(0, Edit.Height));
+          WidHint := Edit.Width;
+        end;
+        if SeleccionarAvConPaleta(ID_VA_COLOR, FBasicosColor, sActual,
+                                  sNuevo, ScrPt.X, ScrPt.Y, WidHint) then
+        begin
+          if FPivote.CambiarColorLineaActiva(sNuevo, sMensaje) then
+            FPivote.RecargarYRepublicar
+          else if sMensaje <> '' then
+            MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+        end
+      end;
     end;
   end;
 end;
