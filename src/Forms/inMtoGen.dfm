@@ -301,6 +301,28 @@ inherited frmMtoGen: TfrmMtoGen
         ParentBackground = False
         ParentCtl3D = False
         TabOrder = 0
+        object sbFiltros: TSpeedButton
+          Left = 781
+          Top = 6
+          Width = 21
+          Height = 23
+          Hint = 'Filtros guardados'
+          Margins.Left = 5
+          Margins.Top = 5
+          Margins.Right = 5
+          Margins.Bottom = 5
+          Flat = True
+          Caption = #9662
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -15
+          Font.Name = 'Lucida Sans'
+          Font.Pitch = fpFixed
+          Font.Style = []
+          Font.Quality = fqClearType
+          ParentFont = False
+          OnClick = sbFiltrosClick
+        end
         object sbExportExcel: TSpeedButton
           Left = 811
           Top = 6
@@ -683,6 +705,10 @@ inherited frmMtoGen: TfrmMtoGen
   object saveDialog: TdxSaveFileDialog
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Left = 424
+    Top = 448
+  end
+  object pmFiltros: TPopupMenu
+    Left = 480
     Top = 448
   end
   object tmrBusqGlobal: TTimer

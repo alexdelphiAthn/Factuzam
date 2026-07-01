@@ -96,6 +96,8 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_familias_atributos`             | `FA`      |
 | `fza_familias_atributos_defecto`     | `FAD`     |
 | `fza_familias_claves_info_defecto`   | `FCI`     |
+| `fza_filtros_guardados`              | `FILT`    |
+| `fza_filtros_guardados_compartidos`  | `FILTC`   |
 | `fza_formas_pago`                    | `FP`      |
 | `fza_generadorprocesos`              | `GP`      |
 | `fza_inventarios`                    | `INV`     |

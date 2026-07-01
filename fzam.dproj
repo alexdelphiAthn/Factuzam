@@ -288,6 +288,12 @@
         <DCCReference Include="src\Modals\inMtoModalGenImpSave.pas">
             <Form>frmModalGenImpSave</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalGuardarFiltro.pas">
+            <Form>frmModalGuardarFiltro</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalGestionFiltros.pas">
+            <Form>frmModalGestionFiltros</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalGuiasBase.pas">
             <Form>frmModalGuiasBase</Form>
         </DCCReference>
@@ -434,6 +440,10 @@
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataPerfiles.pas">
             <Form>dmPerfiles</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataFiltros.pas">
+            <Form>dmFiltros</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataProveedores.pas">

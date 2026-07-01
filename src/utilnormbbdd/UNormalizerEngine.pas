@@ -263,6 +263,8 @@ begin
   AddSuf('fza_familias_atributos',              'FA');
   AddSuf('fza_familias_atributos_defecto',      'FAD');
   AddSuf('fza_familias_claves_info_defecto',    'FCI');
+  AddSuf('fza_filtros_guardados',               'FILT');
+  AddSuf('fza_filtros_guardados_compartidos',   'FILTC');
   AddSuf('fza_formas_pago',                     'FP');
   AddSuf('fza_generadorprocesos',               'GP');
   AddSuf('fza_inventarios',                     'INV');

@@ -18,6 +18,7 @@ interface
 
 uses Uni,
      UniDataPerfiles,
+     UniDataFiltros,
      UniDataConn,cxMemo, inMtoPrincipal,
      inLibInformesGuiasCache,
      inLibConfigCampos,
@@ -36,6 +37,7 @@ type
 
 var
   odmPerfiles    :TdmPerfiles;
+  odmFiltros     :TdmFiltros;
   oInfGuiasCache :TInformesGuiasCache;
   oConn          :TUniConnection;
   odmConn        :TdmConn;
@@ -82,6 +84,7 @@ initialization
   oNomImpresoraCaja:='';
   orootGroup       := 'N';
   odmPerfiles      := nil;
+  odmFiltros       := nil;
   oInfGuiasCache   := nil;
   odmConn          := nil;
   oConn            := nil;
