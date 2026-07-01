@@ -83,7 +83,12 @@ type
     cxdbtxtdt10: TcxDBTextEdit;
     lblProvincia: TcxLabel;
     cxdbtxtdt16: TcxDBTextEdit;
+    chkESIVA_EXENTO_INTRACOMUNITARIO_PRV: TcxDBCheckBox;
     lblPais: TcxLabel;
+    // Combo de pais (fza_paises via vi_paises). cxdbtxtdt16 (PAIS_PRV)
+    // queda oculto: sigue guardando el nombre denormalizado que usan
+    // impresos y ActualizarIvaExentoIntracomunitarioPorPais.
+    cbbPaisPrv: TcxDBLookupComboBox;
     cxdbtxtdtDireccion: TcxDBTextEdit;
     lblDireccion2: TcxLabel;
     tsMasDatos: TcxTabSheet;
@@ -180,6 +185,8 @@ type
     lblMargenPrv: TcxLabel;
     spnMargenPrv: TcxDBSpinEdit;
     chkVariosTiposIvaPrv: TcxDBCheckBox;
+    lblSistemaTallasPrv: TcxLabel;
+    cbbSistemaTallasPrv: TcxDBLookupComboBox;
     lblDefectosInfo: TcxLabel;
     gbKitsPrv: TcxGroupBox;
     pnlKitsTop: TPanel;
@@ -215,10 +222,15 @@ type
     procedure btnGenerarTallasKitClick(Sender: TObject);
     procedure btnAddKitDetClick(Sender: TObject);
     procedure btnDelKitDetClick(Sender: TObject);
+    procedure cxdbtxtdt16PropertiesChange(Sender: TObject);
+    procedure cbbPaisPrvPropertiesChange(Sender: TObject);
   private
     { Private declarations }
     // Carga perezosa de sub-pestañas detail (Articulos, Ventas).
     procedure PcPestanasChange(Sender: TObject);
+    // Evita que el Enter del formulario (tvEnterAsTab) se coma la
+    // seleccion con Enter dentro de un combo desplegado.
+    procedure DesactivarEnterAsTabEnCombo(AComp: TcxDBLookupComboBox);
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -394,11 +406,26 @@ begin
   tvKitsDet.DataController.DataSource := dmmProveedores.dsKitsDet;
   TcxLookupComboBoxProperties(dbcKitSistema.Properties).ListSource :=
     dmmProveedores.dsConjuntosTallas;
+  // Sistema de tallas por defecto del proveedor (cabecera): se copia a la
+  // sesion de compra al elegir este proveedor (ver CopiarDefectosProveedor
+  // en inMtoComprasSesiones). Mismo lookup que el de los kits.
+  TcxLookupComboBoxProperties(cbbSistemaTallasPrv.Properties).ListSource :=
+    dmmProveedores.dsConjuntosTallas;
   // Pestaña Pagos: combos de forma de pago y banco de empresa por defecto.
   TcxLookupComboBoxProperties(cbbFormaPagoPrv.Properties).ListSource :=
     dmmProveedores.dsFormasPago;
   TcxLookupComboBoxProperties(cbbEmpBanPrv.Properties).ListSource :=
     dmmProveedores.dsEmpresasBancos;
+  // Pais del domicilio fiscal: combo sobre fza_paises (vi_paises).
+  TcxLookupComboBoxProperties(cbbPaisPrv.Properties).ListSource :=
+    dmmProveedores.dsPaises;
+  // El Enter del formulario mueve el foco al siguiente control
+  // (tvEnterAsTab): dentro de un combo desplegado eso impide seleccionar
+  // con Enter. Lo desactivamos mientras el combo tiene foco o esta abierto.
+  DesactivarEnterAsTabEnCombo(cbbSistemaTallasPrv);
+  DesactivarEnterAsTabEnCombo(cbbFormaPagoPrv);
+  DesactivarEnterAsTabEnCombo(cbbEmpBanPrv);
+  DesactivarEnterAsTabEnCombo(cbbPaisPrv);
   pcPestanas.ActivePage := tsDomicilioFiscal;
   pkFieldName := 'CODIGO_PRV_PRV';
   // Carga perezosa de sub-pestañas detail (default = tsDomicilioFiscal,
@@ -471,6 +498,50 @@ begin
     dmmProveedores.unqryKitsDet.Cancel
   else if not dmmProveedores.unqryKitsDet.IsEmpty then
     dmmProveedores.unqryKitsDet.Delete;
+end;
+
+procedure TfrmMtoProveedores.cxdbtxtdt16PropertiesChange(Sender: TObject);
+var
+  ePais: TcxCustomEdit;
+begin
+  inherited;
+  if Assigned(dmmProveedores) and
+     ((dsTablaG.State = dsInsert) or (dsTablaG.State = dsEdit)) then
+  begin
+    ePais := Sender as TcxCustomEdit;
+    dmmProveedores.ActualizarIvaExentoIntracomunitarioPorPais(
+      VarToStr(ePais.EditingValue));
+  end;
+end;
+
+// Al elegir un pais en el combo, cbbPaisPrv posiciona dmmProveedores.
+// unqryPaises en la fila elegida: aprovechamos esa fila para refrescar
+// PAIS_PRV (nombre denormalizado, oculto en cxdbtxtdt16) y el IVA exento
+// intracomunitario, igual que hacia el texto libre antes del combo.
+procedure TfrmMtoProveedores.cbbPaisPrvPropertiesChange(Sender: TObject);
+var
+  eCombo: TcxCustomEdit;
+begin
+  inherited;
+  if Assigned(dmmProveedores) and
+     ((dsTablaG.State = dsInsert) or (dsTablaG.State = dsEdit)) then
+  begin
+    eCombo := Sender as TcxCustomEdit;
+    dsTablaG.DataSet.FieldByName('PAIS_PRV').AsString :=
+      dmmProveedores.unqryPaises.FieldByName('NOMBRE').AsString;
+    dmmProveedores.ActualizarIvaExentoIntracomunitarioPorPais(
+      VarToStr(eCombo.EditingValue));
+  end;
+end;
+
+procedure TfrmMtoProveedores.DesactivarEnterAsTabEnCombo(
+  AComp: TcxDBLookupComboBox);
+begin
+  AComp.OnEnter := DesactivarEnterAsTabTemporal;
+  AComp.OnExit  := RestaurarEnterAsTabTemporal;
+  AComp.Properties.OnInitPopup := DesactivarEnterAsTabTemporal;
+  AComp.Properties.OnCloseUp   := RestaurarEnterAsTabTemporal;
+  AComp.Properties.PostPopupValueOnTab := True;
 end;
 
 procedure TfrmMtoProveedores.ResetForm;

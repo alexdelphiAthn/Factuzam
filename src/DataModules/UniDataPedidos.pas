@@ -61,6 +61,9 @@ type
     procedure GetCodigoAutoPedido;
     procedure GetCodigoAutoCliente;
     procedure CalcularTotalesPedido;
+    // Numero total de prendas (suma CANTIDAD_PEDLIN de todas las lineas).
+    // Se muestra en la pestana Totales; no se persiste en BBDD.
+    function TotalPrendasPedido: Double;
     procedure CopiarEmpresaaPedido(DataSet: TDataSet);
     procedure CopiarClienteaPedido(DataSet: TDataSet);
     function BuscarEmpresa(const ACodigo: string): Boolean;
@@ -503,6 +506,12 @@ begin
       FCalculandoTotales := False;
     end;
   end;
+end;
+
+function TdmPedidos.TotalPrendasPedido: Double;
+begin
+  Result := TotalPrendasLineasVenta(unqryPedidosLineas,
+    'TIPO_IVA_ARTICULO_PEDLIN');
 end;
 
 function TdmPedidos.BuscarEmpresa(const ACodigo: string): Boolean;

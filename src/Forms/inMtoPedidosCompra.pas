@@ -90,18 +90,31 @@ type
     dteFECHA_PEDC:   TcxDBDateEdit;
     lblFechaPrevista:TcxLabel;
     dteFECHA_PREVISTA_PEDC: TcxDBDateEdit;
+    lblFechaTopeRecepcionPedc: TcxLabel;
+    dteFECHA_TOPE_RECEPCION_PEDC: TcxDBDateEdit;
     lblEstadoPedido: TcxLabel;
     txtESTADO_PEDC:  TcxDBTextEdit;
     lblCodigoEmpresa:   TcxLabel;
     btnCODIGO_EMP_PEDC: TcxDBButtonEdit;
     lblCodigoProveedor: TcxLabel;
-    btnCODIGO_PRV_PEDC: TcxDBButtonEdit;
+    cbbCODIGO_PRV_PEDC: TcxDBLookupComboBox;
+    // Rotulo resuelto: nombre comercial del proveedor (con razon social
+    // entre parentesis si difiere). Ver ActualizarLabelProveedor.
+    lblProveedorNombrePedc: TcxLabel;
     lblRefProveedor:    TcxLabel;
     txtREF_PROVEEDOR_PEDC: TcxDBTextEdit;
     lblCodigoAlmacen:   TcxLabel;
     txtCODIGO_ALM_PEDC: TcxDBTextEdit;
     lblTemporada:       TcxLabel;
     cbbTemporadaPedc:   TcxDBLookupComboBox;
+    lblCabCantidadPedidaPedc: TcxLabel;
+    curCabCANTIDAD_PEDIDA_PEDC: TcxDBCurrencyEdit;
+    lblCabCantidadRecibidaPedc: TcxLabel;
+    curCabCANTIDAD_RECIBIDA_PEDC: TcxDBCurrencyEdit;
+    lblCabCantidadPendientePedc: TcxLabel;
+    curCabCANTIDAD_PENDIENTE_RECEPCION_PEDC: TcxDBCurrencyEdit;
+    lblCabCantidadAAlbaranarPedc: TcxLabel;
+    curCabCANTIDAD_A_ALBARANAR_PEDC: TcxCurrencyEdit;
 
     // Totales
     lblTotalBases:           TcxLabel;
@@ -120,6 +133,14 @@ type
     spnTotalesPORCENTAJE_IVAE_PEDC: TcxDBSpinEdit;
     spnTotalesPORCENTAJE_REE_PEDC: TcxDBSpinEdit;
     chkTotalesESIVA_RECARGO_COMPRAS_PEDC: TcxDBCheckBox;
+    lblTotalesDtoComercial: TcxLabel;
+    spnTotalesPORCENTAJE_DTO_COMERCIAL_PEDC: TcxDBSpinEdit;
+    curTotalesTOTAL_DTO_COMERCIAL_PEDC: TcxDBCurrencyEdit;
+    lblTotalesDtoFinanciero: TcxLabel;
+    spnTotalesPORCENTAJE_DTO_FINANCIERO_PEDC: TcxDBSpinEdit;
+    curTotalesTOTAL_DTO_FINANCIERO_PEDC: TcxDBCurrencyEdit;
+    lblTotalesTotalPrendas: TcxLabel;
+    curTotalesTOTAL_PRENDAS_PEDC: TcxDBCurrencyEdit;
     lblTotalesFormaPago: TcxLabel;
     cbbTotalesFORMA_PAGO_PEDC: TcxDBLookupComboBox;
     grpDesgloseImpuestos: TGroupBox;
@@ -141,6 +162,7 @@ type
     // cuando entra en modo pivote.
     colLineaPedcARecibir: TcxGridDBColumn;
     btnCrearAlbaran: TcxButton;
+    btnPegatinas: TcxButton;
     lblContextoTalla: TcxLabel;
     ActionList1: TActionList;
     actArticulos: TAction;
@@ -161,6 +183,7 @@ type
     procedure btnTallasHorizontalClick(Sender: TObject);
     procedure btnAtributosColumnaClick(Sender: TObject);
     procedure btnCrearAlbaranClick(Sender: TObject);
+    procedure btnPegatinasClick(Sender: TObject);
     procedure btnExpandirRecibidosClick(Sender: TObject);
     procedure btnRecibirFilaEnteraClick(Sender: TObject);
     procedure tvLineasPedidoFocusedRecordChanged(
@@ -192,11 +215,11 @@ type
     procedure btnRecibirTodoClick(Sender: TObject);
     procedure btnCODIGO_EMP_PEDCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
-    procedure btnCODIGO_PRV_PEDCPropertiesButtonClick(Sender: TObject;
+    procedure cbbCODIGO_PRV_PEDCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure btnCODIGO_EMP_PEDCKeyUp(Sender: TObject; var Key: Word;
                                       Shift: TShiftState);
-    procedure btnCODIGO_PRV_PEDCKeyUp(Sender: TObject; var Key: Word;
+    procedure cbbCODIGO_PRV_PEDCKeyUp(Sender: TObject; var Key: Word;
                                       Shift: TShiftState);
     procedure colLineaPedcCODIGO_ARTPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
@@ -220,6 +243,7 @@ type
     FBasicosColor           : TArray<string>;
     FAplicandoArticulo      : Boolean;
     FAfterPostLineasOriginal: TDataSetNotifyEvent;
+    FEstiloRecepcionVencida : TcxStyle;
     // Guarda contra la reentrancia que provoca PersistirPreferenciaPivote:
     // su Edit + set field + Post dispara OnDataChange tres veces, y entre
     // el Edit y el set la cabecera todavia tiene el ESPIVOTE viejo. Sin
@@ -234,6 +258,10 @@ type
     procedure RefrescarVisibilidadAtributos;
     procedure CargarCaptionsAtributosLineaActiva;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
+    // Pinta lblProveedorNombrePedc con el nombre comercial del proveedor
+    // (razon social entre parentesis si difiere). Ver UniDataPedidosCompra
+    // .unqryPrvDataPedc (lookup completo de fza_proveedores).
+    procedure ActualizarLabelProveedor;
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
     procedure unqryLineasAfterOpenHook(DataSet: TDataSet);
     procedure PersistirPreferenciaPivote;
@@ -268,9 +296,16 @@ type
     // las lineas del pedido con su pendiente (Pedida - Recibida). Las
     // lineas sin pendiente quedan a Null. Devuelve cuantas se rellenaron.
     function  RellenarARecibirVerticalTodo: Integer;
+    function  TotalAAlbaranarVertical: Double;
+    function  TotalAAlbaranar: Double;
+    procedure RefrescarCantidadAAlbaranar;
     // Clamp de la columna "A recibir" en modo vertical: el maximo es el
     // pendiente de la linea (CANTIDAD - CANTIDAD_RECIBIDA).
     procedure ARecibirVerticalEditValueChanged(Sender: TObject);
+    procedure GridListaGetContentStyle(Sender: TcxCustomGridTableView;
+                ARecord: TcxCustomGridRecord;
+                AItem: TcxCustomGridTableItem;
+                var AStyle: TcxStyle);
     // ApplyBestFit + ensanche para la columna Color (el cuadradito de
     // color que pinta FColColorPivot ocupa ~20 px que BestFit no mide).
     procedure BestFitConSwatch;
@@ -297,8 +332,8 @@ uses
   inLibArticulosResolver,
   inLibArticulosValidador,
   inLibComprasImpuestos,
-  inMtoModalSelAlmacenPedido, inMtoModalDocsCreados, inLibShowMto,
-  inLibGenBusq;
+  inMtoModalSelAlmacenPedido, inMtoModalDocsCreados, inMtoModalEtiqPed,
+  inLibShowMto, inLibGenBusq, UniDataArticulos;
 
 {$R *.dfm}
 
@@ -700,6 +735,7 @@ end;
 procedure TfrmMtoPedidosCompra.FormCreate(Sender: TObject);
 var
   colSku: TcxGridDBColumn;
+  i     : Integer;
 begin
   // Mismo orden que albaranes / sesiones: columnas no-bound de tallas
   // y atributos se crean ANTES del inherited.
@@ -727,6 +763,12 @@ begin
   end;
   FColColorProveedorPivot := nil;
   inherited;
+  FEstiloRecepcionVencida := TcxStyle.Create(Self);
+  FEstiloRecepcionVencida.AssignedValues := [svTextColor];
+  FEstiloRecepcionVencida.TextColor := clRed;
+  for i := 0 to cxGrdDBTabPrin.ItemCount - 1 do
+    cxGrdDBTabPrin.Items[i].Styles.OnGetContentStyle :=
+      GridListaGetContentStyle;
   colSku := tvLineasPedido.GetColumnByFieldName('CODIGO_UNIDAD_PEDCLIN');
   if colSku <> nil then
   begin
@@ -753,9 +795,14 @@ begin
   // el dataset esta en el DM hijo y se instancia despues del form).
   cbbTemporadaPedc.Properties.ListSource := dmmPedidosCompra.dsTemporadasPedc;
   cbbTemporadaPedc.Properties.ListFieldNames := 'PV';
+  // ListSource del combo de proveedor (busqueda incremental por codigo).
+  // Reutiliza el lookup unqryPrvDataPedc, ya cargado para el rotulo.
+  cbbCODIGO_PRV_PEDC.Properties.ListSource := dmmPedidosCompra.dsPrvDataPedc;
   // Hook OnDataChange del master: al cambiar de pedido activo, el
   // controlador recarga su cache y republica.
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+  // Pintar el rotulo del proveedor del pedido enfocado al abrir el form.
+  ActualizarLabelProveedor;
   // Hook AfterPost del detail: cxGrid borra los Values[] no-bound al
   // repintar tras Post; conservamos la logica del DM y recargamos el
   // controlador.
@@ -779,6 +826,7 @@ begin
   FMostrarAtributos := False;
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
+  RefrescarCantidadAAlbaranar;
 end;
 
 procedure TfrmMtoPedidosCompra.FormDestroy(Sender: TObject);
@@ -786,6 +834,106 @@ begin
   FreeAndNil(FPivote);
   FreeAndNil(FGestorTallas);
   inherited;
+end;
+
+procedure TfrmMtoPedidosCompra.GridListaGetContentStyle(
+  Sender: TcxCustomGridTableView; ARecord: TcxCustomGridRecord;
+  AItem: TcxCustomGridTableItem; var AStyle: TcxStyle);
+var
+  colFecha: TcxGridDBColumn;
+  colPdte : TcxGridDBColumn;
+  vFecha  : Variant;
+  vPdte   : Variant;
+  dFecha  : TDateTime;
+  rPdte   : Double;
+begin
+  if (ARecord <> nil) and (Sender is TcxGridDBTableView) then
+  begin
+    colFecha :=
+      TcxGridDBTableView(Sender).GetColumnByFieldName(
+        'FECHA_TOPE_RECEPCION_PEDC');
+    colPdte :=
+      TcxGridDBTableView(Sender).GetColumnByFieldName(
+        'CANTIDAD_PENDIENTE_RECEPCION_PEDC');
+    if (colFecha <> nil) and (colPdte <> nil) then
+    begin
+      vFecha := ARecord.Values[colFecha.Index];
+      vPdte := ARecord.Values[colPdte.Index];
+      if not (VarIsNull(vFecha) or VarIsEmpty(vFecha) or
+              VarIsNull(vPdte) or VarIsEmpty(vPdte)) then
+      begin
+        dFecha := VarToDateTime(vFecha);
+        if VarIsNumeric(vPdte) then
+          rPdte := vPdte
+        else
+          rPdte := StrToFloatDef(VarToStr(vPdte), 0);
+        if (rPdte > 0) and (Trunc(dFecha) < Date) then
+          AStyle := FEstiloRecepcionVencida;
+      end;
+    end;
+  end;
+end;
+
+function TfrmMtoPedidosCompra.TotalAAlbaranarVertical: Double;
+var
+  ds     : TUniQuery;
+  bk     : TBookmark;
+  recIdx : Integer;
+  idxCol : Integer;
+  vARec  : Variant;
+  rARec  : Double;
+begin
+  Result := 0;
+  if (dmmPedidosCompra = nil) or (colLineaPedcARecibir = nil) then
+    Exit;
+  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty then
+    Exit;
+  idxCol := colLineaPedcARecibir.Index;
+  bk := ds.GetBookmark;
+  ds.DisableControls;
+  try
+    recIdx := 0;
+    ds.First;
+    while not ds.Eof do
+    begin
+      vARec := tvLineasPedido.DataController.Values[recIdx, idxCol];
+      if not (VarIsNull(vARec) or VarIsEmpty(vARec)) then
+      begin
+        if VarIsNumeric(vARec) then
+          rARec := vARec
+        else
+          rARec := StrToFloatDef(VarToStr(vARec), 0);
+        if rARec > 0 then
+          Result := Result + rARec;
+      end;
+      Inc(recIdx);
+      ds.Next;
+    end;
+  finally
+    if ds.BookmarkValid(bk) then
+      ds.GotoBookmark(bk);
+    ds.FreeBookmark(bk);
+    ds.EnableControls;
+  end;
+end;
+
+function TfrmMtoPedidosCompra.TotalAAlbaranar: Double;
+begin
+  Result := 0;
+  if Assigned(FPivote) and FPivote.Activo then
+  begin
+    if FPivote.Expandido then
+      Result := FPivote.TotalARecibir;
+  end
+  else
+    Result := TotalAAlbaranarVertical;
+end;
+
+procedure TfrmMtoPedidosCompra.RefrescarCantidadAAlbaranar;
+begin
+  if curCabCANTIDAD_A_ALBARANAR_PEDC <> nil then
+    curCabCANTIDAD_A_ALBARANAR_PEDC.EditValue := TotalAAlbaranar;
 end;
 
 procedure TfrmMtoPedidosCompra.CrearTablaPrincipal;
@@ -1174,6 +1322,7 @@ begin
     Exit;
   end;
   iCeldas := FPivote.RecibirFilaEntera;
+  RefrescarCantidadAAlbaranar;
   if iCeldas = 0 then
     MessageDlg('No hay tallas pendientes de recibir en la fila activa.',
                mtInformation, [mbOk], 0);
@@ -1204,6 +1353,7 @@ begin
   else
     // Modo vertical: una fila por SKU, columna "A recibir" editable.
     iRellenadas := RellenarARecibirVerticalTodo;
+  RefrescarCantidadAAlbaranar;
   if iRellenadas = 0 then
     MessageDlg('No hay nada pendiente de recibir en el pedido.',
                mtInformation, [mbOk], 0);
@@ -1233,6 +1383,7 @@ begin
   // RecargarYRepublicar lo solventa.
   if Assigned(FPivote) and FPivote.Activo then
     FPivote.RecargarYRepublicar;
+  RefrescarCantidadAAlbaranar;
 end;
 
 procedure TfrmMtoPedidosCompra.btnIraalbaranClick(Sender: TObject);
@@ -1250,8 +1401,16 @@ procedure TfrmMtoPedidosCompra.dsTablaGDataChangeHook(Sender: TObject;
 var
   bDeberiaEstarActivo: Boolean;
 begin
+  // Refrescar el rotulo del proveedor al navegar entre pedidos (Field=nil)
+  // o al cambiar CODIGO_PRV_PEDC tecleado directamente en el ButtonEdit.
+  if (Field = nil) or SameText(Field.FieldName, 'CODIGO_PRV_PEDC') then
+    ActualizarLabelProveedor;
   if Field <> nil then Exit;
-  if FPivote = nil then Exit;
+  if FPivote = nil then
+  begin
+    RefrescarCantidadAAlbaranar;
+    Exit;
+  end;
   if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
      (not dsTablaG.DataSet.IsEmpty) and
      (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_PEDC') <> nil) then
@@ -1266,12 +1425,56 @@ begin
     else if (not bDeberiaEstarActivo) and FPivote.Activo then
       btnTallasHorizontalClick(nil);
   end;
-  if not FPivote.Activo then Exit;
+  if not FPivote.Activo then
+  begin
+    RefrescarCantidadAAlbaranar;
+    Exit;
+  end;
   // RecargarYRepublicar ya hace RecalcularMaxColumnas + Captions
   // ANTES de publicar. Llamar a RefrescarVisibilidadTallas aqui haria
   // un segundo RecalcularMax tras publicar y limpiaria los Values[]
   // recien puestos.
   FPivote.RecargarYRepublicar;
+  RefrescarCantidadAAlbaranar;
+end;
+
+procedure TfrmMtoPedidosCompra.ActualizarLabelProveedor;
+var
+  sCodigo : string;
+  sNombre : string;
+  sRazon  : string;
+begin
+  // Resuelve NOMBRE_PRV + RAZON_SOCIAL_PRV (via el lookup unqryPrvDataPedc)
+  // y los pinta en el rotulo. Se antepone el nombre comercial: es el que
+  // el usuario reconoce a simple vista; la razon social solo se anade
+  // entre parentesis como referencia si difiere.
+  sCodigo := '';
+  if (dmmPedidosCompra <> nil) and Assigned(dmmPedidosCompra.unqryTablaG) and
+     dmmPedidosCompra.unqryTablaG.Active and
+     (not dmmPedidosCompra.unqryTablaG.IsEmpty) then
+    sCodigo :=
+      Trim(dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_PRV_PEDC').AsString);
+  if sCodigo = '' then
+    lblProveedorNombrePedc.Caption := ''
+  else if (dmmPedidosCompra.unqryPrvDataPedc <> nil) and
+          dmmPedidosCompra.unqryPrvDataPedc.Active and
+          dmmPedidosCompra.unqryPrvDataPedc.Locate('CODIGO_PRV_PRV', sCodigo, []) then
+  begin
+    sRazon  := dmmPedidosCompra.unqryPrvDataPedc.FieldByName('RAZON_SOCIAL_PRV').AsString;
+    sNombre := dmmPedidosCompra.unqryPrvDataPedc.FieldByName('NOMBRE_PRV').AsString;
+    // Si no hay nombre comercial cargado, caemos a la razon social como
+    // rotulo principal. Si hay nombre y difiere de la razon social, la
+    // razon social se anade entre parentesis como referencia.
+    if Trim(sNombre) = '' then
+      lblProveedorNombrePedc.Caption := sCodigo + ' - ' + sRazon
+    else if not SameText(Trim(sNombre), Trim(sRazon)) then
+      lblProveedorNombrePedc.Caption :=
+        sCodigo + ' - ' + sNombre + '  (' + sRazon + ')'
+    else
+      lblProveedorNombrePedc.Caption := sCodigo + ' - ' + sNombre;
+  end
+  else
+    lblProveedorNombrePedc.Caption := sCodigo + ' - (proveedor no encontrado)';
 end;
 
 // Hook AfterPost del detail: encadena la logica original del DM con la
@@ -1284,6 +1487,7 @@ begin
     dmmPedidosCompra.CalcularTotalesPedidoCompra;
   if Assigned(FPivote) and FPivote.Activo then
     FPivote.RecargarYRepublicar;
+  RefrescarCantidadAAlbaranar;
 end;
 
 // Hook AfterOpen del detail: cada vez que se abre el cursor (entrar al
@@ -1294,6 +1498,7 @@ procedure TfrmMtoPedidosCompra.unqryLineasAfterOpenHook(DataSet: TDataSet);
 begin
   if tvLineasPedido <> nil then
     BestFitConSwatch;
+  RefrescarCantidadAAlbaranar;
 end;
 
 // ApplyBestFit estandar + ensanche manual de la columna Color: el
@@ -1399,7 +1604,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoPedidosCompra.btnCODIGO_PRV_PEDCPropertiesButtonClick(
+procedure TfrmMtoPedidosCompra.cbbCODIGO_PRV_PEDCPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
   sCodigo : string;
@@ -1423,6 +1628,10 @@ begin
       if not (ds.State in [dsInsert, dsEdit]) then
         ds.Edit;
       ds.FieldByName('CODIGO_PRV_PEDC').AsString := sCodigo;
+      AplicarIvaExentoIntracomunitarioProveedor(inLibGlobalVar.oConn, ds,
+        'CODIGO_PRV_PEDC', 'ESIVA_EXENTO_INTRACOMUNITARIO_PEDC');
+      dmmPedidosCompra.CalcularTotalesPedidoCompra;
+      ActualizarLabelProveedor;
     end;
   end;
 end;
@@ -1438,14 +1647,14 @@ begin
   end;
 end;
 
-procedure TfrmMtoPedidosCompra.btnCODIGO_PRV_PEDCKeyUp(Sender: TObject;
+procedure TfrmMtoPedidosCompra.cbbCODIGO_PRV_PEDCKeyUp(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
   inherited;
   if (Key = VK_RETURN) and (ssCtrl in Shift) then
   begin
     Key := 0;
-    btnCODIGO_PRV_PEDCPropertiesButtonClick(Sender, 0);
+    cbbCODIGO_PRV_PEDCPropertiesButtonClick(Sender, 0);
   end;
 end;
 
@@ -1722,6 +1931,7 @@ begin
   end
   else if Assigned(FGestorTallas) then
     FGestorTallas.PersistirCeldaActiva(Sender);
+  RefrescarCantidadAAlbaranar;
 end;
 
 procedure TfrmMtoPedidosCompra.TallaValidateHook(Sender: TObject;
@@ -1940,6 +2150,7 @@ begin
       end;
     end;
   end;
+  RefrescarCantidadAAlbaranar;
 end;
 
 // Combo de serie de la cabecera: al desplegar se recargan las series
@@ -1965,6 +2176,44 @@ begin
                   '¿Abrir el mantenimiento de Empresas ahora?',
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       ShowMto(Self.Owner, 'Empresas');
+  end;
+end;
+
+procedure TfrmMtoPedidosCompra.btnPegatinasClick(Sender: TObject);
+var
+  form: TfrmPrintEtiqPed;
+  dmArt: TdmArticulos;
+  sSerie: string;
+  sNumero: string;
+begin
+  inherited;
+  if dmmPedidosCompra = nil then
+    Exit;
+  if dmmPedidosCompra.unqryTablaG.IsEmpty then
+  begin
+    ShowMessage('No hay pedido de compra activo.');
+    Exit;
+  end;
+  if dmmPedidosCompra.unqryTablaG.State in [dsEdit, dsInsert] then
+    dmmPedidosCompra.unqryTablaG.Post;
+  if dmmPedidosCompra.unqryPedidosCompraLineas.State in [dsEdit, dsInsert] then
+    dmmPedidosCompra.unqryPedidosCompraLineas.Post;
+  sSerie  := dmmPedidosCompra.unqryTablaG.FieldByName('SERIE_PEDC').AsString;
+  sNumero := dmmPedidosCompra.unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
+  dmArt := TdmArticulos.Create(nil);
+  try
+    form := TfrmPrintEtiqPed.Create(Application);
+    try
+      form.DMArt  := dmArt;
+      form.DMPedc := dmmPedidosCompra;
+      form.Serie  := sSerie;
+      form.Numero := sNumero;
+      form.ShowModal;
+    finally
+      FreeAndNil(form);
+    end;
+  finally
+    FreeAndNil(dmArt);
   end;
 end;
 
@@ -2085,6 +2334,7 @@ begin
             tvLineasPedido.DataController.EndUpdate;
           end;
         end;
+        RefrescarCantidadAAlbaranar;
         dmmPedidosCompra.unqryTablaG.Refresh;
         dmmPedidosCompra.unqryPedidosCompraLineas.Refresh;
         // Refrescar el grid de la pestania "Albaranes" para que aparezca

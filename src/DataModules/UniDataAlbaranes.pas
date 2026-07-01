@@ -57,6 +57,9 @@ type
   public
     procedure GetCodigoAutoAlbaran;
     procedure CalcularTotalesAlbaran;
+    // Numero total de prendas (suma CANTIDAD_ALBLIN de todas las lineas).
+    // Se muestra en la pestana Totales; no se persiste en BBDD.
+    function TotalPrendasAlbaran: Double;
     procedure CopiarEmpresaaAlbaran(DataSet: TDataSet);
     procedure CopiarClienteaAlbaran(DataSet: TDataSet);
     function BuscarEmpresa(const ACodigo: string): Boolean;
@@ -372,6 +375,12 @@ begin
   inherited;
   CalcularTotalesAlbaran;
   SincronizarMovimientosSalida;
+end;
+
+function TdmAlbaranes.TotalPrendasAlbaran: Double;
+begin
+  Result := TotalPrendasLineasVenta(unqryAlbaranesLineas,
+    'TIPO_IVA_ARTICULO_ALBLIN');
 end;
 
 procedure TdmAlbaranes.GetCodigoAutoAlbaran;

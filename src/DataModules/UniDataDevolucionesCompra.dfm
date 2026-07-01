@@ -57,8 +57,13 @@
   object unqryPrvDataDevc: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT * FROM fza_proveedores')
+      'SELECT * FROM fza_proveedores ORDER BY CODIGO_PRV_PRV')
     Left = 48
+    Top = 248
+  end
+  object dsPrvDataDevc: TDataSource
+    DataSet = unqryPrvDataDevc
+    Left = 112
     Top = 248
   end
   object unqryArtDataLinDevc: TUniQuery
@@ -168,9 +173,18 @@
   object unqryCabDevcPrint: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT * FROM vi_devoluciones_compra_cab_print'
-      'WHERE SERIE_DEVC = :SERIE_DEVC'
-      '  AND NUMERO_DEVC = :NUMERO_DEVC')
+      'SELECT V.*,'
+      '       D.TOTAL_BRUTO_DEVC AS TOTAL_BRUTO_DEVC_PRINT,'
+      '       D.PORCENTAJE_DTO_COMERCIAL_DEVC AS PORCENTAJE_DTO_COMERCIAL_DEVC_PRINT,'
+      '       D.TOTAL_DTO_COMERCIAL_DEVC AS TOTAL_DTO_COMERCIAL_DEVC_PRINT,'
+      '       D.PORCENTAJE_DTO_FINANCIERO_DEVC AS PORCENTAJE_DTO_FINANCIERO_DEVC_PRINT,'
+      '       D.TOTAL_DTO_FINANCIERO_DEVC AS TOTAL_DTO_FINANCIERO_DEVC_PRINT'
+      '  FROM vi_devoluciones_compra_cab_print V'
+      '  LEFT JOIN fza_devoluciones_compra D'
+      '    ON D.SERIE_DEVC = V.SERIE_DEVC'
+      '   AND D.NUMERO_DEVC = V.NUMERO_DEVC'
+      ' WHERE V.SERIE_DEVC = :SERIE_DEVC'
+      '   AND V.NUMERO_DEVC = :NUMERO_DEVC')
     Left = 360
     Top = 24
     ParamData = <

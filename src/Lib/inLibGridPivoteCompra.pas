@@ -259,6 +259,8 @@ type
     // entradas validas devuelve ''. Lo usa el form para precargar el
     // combo del modal Crear Albaran con el almacen mas probable.
     function PrimerAlmacenARecibir: string;
+    // Suma las cantidades "A recibir" tecleadas en el pivote expandido.
+    function TotalARecibir: Double;
     // Engancha al OnInitEdit del grid. Mantenido por compatibilidad,
     // ahora solo hace SelectAll estilo Excel — el ajuste de tamanyo
     // del editor en talla expandida ya no aplica porque el editor
@@ -2687,6 +2689,21 @@ begin
     if Trim(sAlm) = '' then Continue;
     Result := sAlm;
     Exit;
+  end;
+end;
+
+function TGridPivoteCompra.TotalARecibir: Double;
+var
+  pair: TPair<Int64,Double>;
+begin
+  Result := 0;
+  if FARecibirManual <> nil then
+  begin
+    for pair in FARecibirManual do
+    begin
+      if pair.Value > 0 then
+        Result := Result + pair.Value;
+    end;
   end;
 end;
 

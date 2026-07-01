@@ -332,6 +332,11 @@
             <FormType>TfrmPrintEtiqAlb</FormType>
             <DesignClass>TfrmPrintEtiqAlb</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalEtiqPed.pas">
+            <Form>frmPrintEtiqArt</Form>
+            <FormType>TfrmPrintEtiqPed</FormType>
+            <DesignClass>TfrmPrintEtiqPed</DesignClass>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalImpDevCompra.pas">
             <Form>frmPrintDevCompra</Form>
         </DCCReference>

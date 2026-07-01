@@ -122,6 +122,7 @@ type
     dbtvBusqDESCRIPCION_ARTICULO: TcxGridDBColumn;
     dbtvBusqTEMPORADA: TcxGridDBColumn;
     dbtvBusqPROVEEDOR: TcxGridDBColumn;
+    dbtvBusqREF_PROVEEDOR: TcxGridDBColumn;
     edtrepArticulo: TcxEditRepository;
     repSoloTexto: TcxEditRepositoryTextItem;
     repComboBox: TcxEditRepositoryExtLookupComboBoxItem;
@@ -1071,7 +1072,8 @@ begin
   // qryBusq). Anadimos columnas Temporada (LEFT JOIN
   // fza_articulos_propiedades + fza_propiedades_valores con
   // CODIGO_PROP_ARTPROP = 'TEMPORADA') y Proveedor (RAZON_SOCIAL_PROVEEDOR
-  // ya en la vista). Configuramos DisplayLabel/DisplayFormat por campo
+  // ya en la vista), junto con la ref. del proveedor principal.
+  // Configuramos DisplayLabel/DisplayFormat por campo
   // para que la grilla salga legible aunque no haya layout guardado en
   // fza_usuarios_perfiles para frmMtoArtFacSearch; si hay layout,
   // PonerAnchosTitulos lo sobrepone (vease inLibDevExp).
@@ -1085,6 +1087,7 @@ begin
       '    v.DESCRIPCION_FAM,'                                      + sLineBreak +
       '    pv.PV                       AS TEMPORADA,'               + sLineBreak +
       '    v.RAZON_SOCIAL_PROVEEDOR,'                               + sLineBreak +
+      '    v.REF_PROVEEDOR,'                                        + sLineBreak +
       '    v.CODIGO_TAR_ARTTAR,'                                    + sLineBreak +
       '    v.NOMBRE_TAR_TAR,'                                       + sLineBreak +
       '    v.PRECIO_FINAL_ARTTAR,'                                  + sLineBreak +
@@ -1128,6 +1131,8 @@ begin
                 'Temporada',             '');
     ConfigCampo(unqryBusq.FindField('RAZON_SOCIAL_PROVEEDOR'),
                 'Proveedor',             '');
+    ConfigCampo(unqryBusq.FindField('REF_PROVEEDOR'),
+                'Ref. proveedor',        '');
     ConfigCampo(unqryBusq.FindField('CODIGO_TAR_ARTTAR'),
                 'Tarifa',                '');
     ConfigCampo(unqryBusq.FindField('NOMBRE_TAR_TAR'),

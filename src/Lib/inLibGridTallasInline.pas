@@ -200,6 +200,7 @@ procedure SeleccionarTodoEnEditor(AEdit: TcxCustomEdit);
 // sistema de tallas imitando el selector de paleta de colores
 // (inLibAtributosPaleta.SeleccionarAvConPaleta) pero con varias
 // columnas. Un click selecciona y cierra; Esc o click fuera cancelan.
+// Teclear dentro del popup busca siempre por NOMBRE_AC, nunca por ID_AC.
 // Pasa AScreenLeft/AScreenTop = posicion en pantalla justo debajo del
 // editor y AWidthHint = ancho minimo. Devuelve True y el ID_AC elegido
 // en AIdAc; False si se cancela.
@@ -209,7 +210,8 @@ function SeleccionarConjuntoTalla(
                           out AIdAc: Integer;
                           AScreenLeft: Integer = -1;
                           AScreenTop: Integer = -1;
-                          AWidthHint: Integer = 380): Boolean;
+                          AWidthHint: Integer = 380;
+                          const ABusquedaInicial: string = ''): Boolean;
 
 implementation
 
@@ -705,6 +707,12 @@ begin
   RefrescarTotalesLineaActual;
   if idxRec >= 0 then
     CargarCantidadesUnaLinea(idxRec, iLinea);
+
+  // Sin este Invalidate el valor queda correcto en el DataController
+  // pero la celda no se repinta hasta el siguiente evento natural
+  // (p.ej. cambiar de fila). Mismo patron que inLibGridPivoteCompra.pas.
+  if Assigned(FCfg.Grid) and Assigned(FCfg.Grid.Site) then
+    FCfg.Grid.Site.Invalidate;
 end;
 
 // =============================================================================
@@ -748,8 +756,11 @@ type
     FHeader   : TPaintBox;
     FOpciones : TArray<TOpcionConjuntoTalla>;
     FShown    : Boolean;
+    FBusqueda : string;
+    FUltimaTeclaBusqueda : Cardinal;
     procedure CalcularColumnas(AWidth: Integer;
                                out AInicioDesde, AInicioHasta: Integer);
+    procedure SeleccionarPorNombre(const ATexto: string);
     procedure HeaderPaint(Sender: TObject);
     procedure ListBoxDrawItem(Control: TWinControl; Index: Integer;
                               ARect: TRect; State: TOwnerDrawState);
@@ -757,6 +768,7 @@ type
                                Shift: TShiftState; X, Y: Integer);
     procedure ListBoxKeyDown(Sender: TObject;
                              var Key: Word; Shift: TShiftState);
+    procedure ListBoxKeyPress(Sender: TObject; var Key: Char);
     procedure FormShow(Sender: TObject);
     procedure FormDeactivate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -764,7 +776,8 @@ type
     constructor CreateConOpciones(
                   const AOpciones: array of TOpcionConjuntoTalla;
                   const AIdAcActual: Integer;
-                  AScreenLeft, AScreenTop, AWidthHint: Integer);
+                  AScreenLeft, AScreenTop, AWidthHint: Integer;
+                  const ABusquedaInicial: string);
   end;
 
 const
@@ -786,6 +799,41 @@ begin
     AInicioDesde := 80;
     if AInicioHasta < AInicioDesde + 20 then
       AInicioHasta := AInicioDesde + 20;
+  end;
+end;
+
+procedure TfrmSelConjTallaAux.SeleccionarPorNombre(const ATexto: string);
+var
+  i            : Integer;
+  idxContiene  : Integer;
+  sBuscar      : string;
+  sNombre      : string;
+  bEncontrado  : Boolean;
+begin
+  sBuscar := AnsiUpperCase(Trim(ATexto));
+  if sBuscar <> '' then
+  begin
+    idxContiene := -1;
+    bEncontrado := False;
+    i := 0;
+    while (i <= High(FOpciones)) and (not bEncontrado) do
+    begin
+      sNombre := AnsiUpperCase(FOpciones[i].Nombre);
+      if Pos(sBuscar, sNombre) = 1 then
+      begin
+        FListBox.ItemIndex := i;
+        FListBox.TopIndex := Max(0, i - 2);
+        bEncontrado := True;
+      end
+      else if (idxContiene < 0) and (Pos(sBuscar, sNombre) > 0) then
+        idxContiene := i;
+      Inc(i);
+    end;
+    if (not bEncontrado) and (idxContiene >= 0) then
+    begin
+      FListBox.ItemIndex := idxContiene;
+      FListBox.TopIndex := Max(0, idxContiene - 2);
+    end;
   end;
 end;
 
@@ -893,6 +941,37 @@ begin
   end;
 end;
 
+procedure TfrmSelConjTallaAux.ListBoxKeyPress(Sender: TObject;
+  var Key: Char);
+const
+  CADUCIDAD_BUSQUEDA_MS = 1200;
+var
+  iTick : Cardinal;
+begin
+  iTick := GetTickCount;
+  if Key = #8 then
+  begin
+    if FBusqueda <> '' then
+    begin
+      Delete(FBusqueda, Length(FBusqueda), 1);
+      SeleccionarPorNombre(FBusqueda);
+    end;
+    FUltimaTeclaBusqueda := iTick;
+    Key := #0;
+  end
+  else if Key >= #32 then
+  begin
+    if (FBusqueda = '') or
+       (iTick - FUltimaTeclaBusqueda > CADUCIDAD_BUSQUEDA_MS) then
+      FBusqueda := Key
+    else
+      FBusqueda := FBusqueda + Key;
+    FUltimaTeclaBusqueda := iTick;
+    SeleccionarPorNombre(FBusqueda);
+    Key := #0;
+  end;
+end;
+
 procedure TfrmSelConjTallaAux.FormShow(Sender: TObject);
 begin
   FShown := True;
@@ -918,7 +997,8 @@ end;
 constructor TfrmSelConjTallaAux.CreateConOpciones(
               const AOpciones: array of TOpcionConjuntoTalla;
               const AIdAcActual: Integer;
-              AScreenLeft, AScreenTop, AWidthHint: Integer);
+              AScreenLeft, AScreenTop, AWidthHint: Integer;
+              const ABusquedaInicial: string);
 const
   ALTO_FILA = 22;
   ALTO_HDR  = 22;
@@ -943,6 +1023,8 @@ begin
   Caption     := '';
   KeyPreview  := True;
   FShown      := False;
+  FBusqueda   := Trim(ABusquedaInicial);
+  FUltimaTeclaBusqueda := GetTickCount;
   OnShow       := FormShow;
   OnDeactivate := FormDeactivate;
   OnKeyDown    := FormKeyDown;
@@ -964,6 +1046,7 @@ begin
   FListBox.OnDrawItem  := ListBoxDrawItem;
   FListBox.OnMouseDown := ListBoxMouseDown;
   FListBox.OnKeyDown   := ListBoxKeyDown;
+  FListBox.OnKeyPress  := ListBoxKeyPress;
   idxSel := -1;
   for i := 0 to High(AOpciones) do
   begin
@@ -977,6 +1060,8 @@ begin
     idxSel := 0;
   if idxSel >= 0 then
     FListBox.ItemIndex := idxSel;
+  if FBusqueda <> '' then
+    SeleccionarPorNombre(FBusqueda);
   ActiveControl := FListBox;
   W := AWidthHint;
   if W < ANCHO_MIN then W := ANCHO_MIN;
@@ -997,7 +1082,8 @@ function SeleccionarConjuntoTalla(
                           const AOpciones: array of TOpcionConjuntoTalla;
                           const AIdAcActual: Integer;
                           out AIdAc: Integer;
-                          AScreenLeft, AScreenTop, AWidthHint: Integer): Boolean;
+                          AScreenLeft, AScreenTop, AWidthHint: Integer;
+                          const ABusquedaInicial: string): Boolean;
 var
   F : TfrmSelConjTallaAux;
 begin
@@ -1005,7 +1091,8 @@ begin
   Result := False;
   if Length(AOpciones) = 0 then Exit;
   F := TfrmSelConjTallaAux.CreateConOpciones(AOpciones, AIdAcActual,
-                                             AScreenLeft, AScreenTop, AWidthHint);
+                                             AScreenLeft, AScreenTop,
+                                             AWidthHint, ABusquedaInicial);
   try
     if F.ShowModal = mrOk then
     begin

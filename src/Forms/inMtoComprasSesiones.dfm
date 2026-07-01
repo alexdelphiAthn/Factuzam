@@ -46,6 +46,51 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
               DataBinding.FieldName = 'FECHA_SES'
               Width = 100
             end
+            object dbcTemporadaSes: TcxGridDBColumn
+              Caption = 'Temporada'
+              DataBinding.FieldName = 'TEMPORADA_SES'
+              Width = 120
+            end
+            object dbcFechaEfectoStockSes: TcxGridDBColumn
+              Caption = 'F.stock'
+              DataBinding.FieldName = 'FECHA_EFECTO_STOCK_SES'
+              Width = 100
+            end
+            object dbcFechaTopeRecepcionSes: TcxGridDBColumn
+              Caption = 'F.tope recep.'
+              DataBinding.FieldName = 'FECHA_TOPE_RECEPCION_SES'
+              Width = 110
+            end
+            object dbcTotalPrendasSes: TcxGridDBColumn
+              Caption = 'Prendas'
+              DataBinding.FieldName = 'TOTAL_PRENDAS_SES'
+              Width = 90
+            end
+            object dbcTotalLineasSes: TcxGridDBColumn
+              Caption = 'Neto lineas'
+              DataBinding.FieldName = 'TOTAL_LINEAS_SES'
+              Width = 110
+            end
+            object dbcTotalDocumentoSes: TcxGridDBColumn
+              Caption = 'Total doc.'
+              DataBinding.FieldName = 'TOTAL_LIQUIDO_SES'
+              Width = 110
+            end
+            object dbcCantidadPedidaSes: TcxGridDBColumn
+              Caption = 'Pedidas'
+              DataBinding.FieldName = 'CANTIDAD_PEDIDA_SES'
+              Width = 90
+            end
+            object dbcCantidadRecibidaSes: TcxGridDBColumn
+              Caption = 'Recibidas'
+              DataBinding.FieldName = 'CANTIDAD_RECIBIDA_SES'
+              Width = 90
+            end
+            object dbcCantidadPendienteSes: TcxGridDBColumn
+              Caption = 'Pte. recibir'
+              DataBinding.FieldName = 'CANTIDAD_PENDIENTE_RECEPCION_SES'
+              Width = 95
+            end
             object dbcEstadoSes: TcxGridDBColumn
               Caption = 'Estado'
               DataBinding.FieldName = 'ESTADO_SES'
@@ -89,391 +134,43 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         ExplicitTop = 28
         ExplicitWidth = 1092
         ExplicitHeight = 648
-        object gbCabecera: TcxGroupBox
-          Left = 0
-          Top = 0
-          Align = alTop
-          Caption = ' Cabecera '
-          TabOrder = 0
-          Height = 235
-          Width = 1092
-          object lblSerie: TcxLabel
-            Left = 12
-            Top = 24
-            Caption = 'Serie'
-            TabOrder = 0
-            Transparent = True
-          end
-          object cbbSerie: TcxDBComboBox
-            Left = 80
-            Top = 20
-            DataBinding.DataField = 'SERIE_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.CharCase = ecUpperCase
-            Properties.MaxLength = 12
-            Properties.OnInitPopup = cbbSeriePropertiesInitPopup
-            TabOrder = 1
-            Width = 70
-          end
-          object lblNumero: TcxLabel
-            Left = 164
-            Top = 24
-            Caption = 'N'#250'mero'
-            TabOrder = 2
-            Transparent = True
-          end
-          object txtNumero: TcxDBTextEdit
-            Left = 232
-            Top = 20
-            DataBinding.DataField = 'NUMERO_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.ReadOnly = True
-            TabOrder = 3
-            Width = 70
-          end
-          object lblFecha: TcxLabel
-            Left = 316
-            Top = 24
-            Caption = 'Fecha'
-            TabOrder = 4
-            Transparent = True
-          end
-          object dteFecha: TcxDBDateEdit
-            Left = 380
-            Top = 20
-            DataBinding.DataField = 'FECHA_SES'
-            DataBinding.DataSource = dsTablaG
-            TabOrder = 5
-            Width = 120
-          end
-          object lblEstado: TcxLabel
-            Left = 520
-            Top = 24
-            Caption = 'Estado'
-            TabOrder = 18
-            Transparent = True
-          end
-          object txtEstado: TcxDBTextEdit
-            Left = 580
-            Top = 20
-            DataBinding.DataField = 'ESTADO_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.ReadOnly = True
-            TabOrder = 19
-            Width = 100
-          end
-          object lblEmpresa: TcxLabel
-            Left = 12
-            Top = 67
-            Caption = 'Empresa'
-            TabOrder = 6
-            Transparent = True
-          end
-          object cbbEmpresa: TcxDBLookupComboBox
-            Left = 92
-            Top = 63
-            DataBinding.DataField = 'CODIGO_EMP_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.KeyFieldNames = 'CODIGO_EMP_EMP'
-            Properties.ListColumns = <
-              item
-                Caption = 'C'#243'digo'
-                Width = 60
-                FieldName = 'CODIGO_EMP_EMP'
-              end
-              item
-                Caption = 'Empresa'
-                FieldName = 'RAZON_SOCIAL_EMP'
-              end>
-            Properties.ListFieldIndex = 1
-            Properties.ListOptions.ShowHeader = False
-            TabOrder = 7
-            Width = 268
-          end
-          object lblProveedor: TcxLabel
-            Left = 380
-            Top = 67
-            Caption = 'Proveedor'
-            TabOrder = 8
-            Transparent = True
-          end
-          object btnProveedor: TcxDBButtonEdit
-            Left = 470
-            Top = 63
-            DataBinding.DataField = 'CODIGO_PRV_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.Buttons = <
-              item
-                Default = True
-                Kind = bkEllipsis
-              end>
-            Properties.OnButtonClick = btnProveedorPropertiesButtonClick
-            TabOrder = 9
-            Width = 160
-          end
-          object lblRefPrv: TcxLabel
-            Left = 695
-            Top = 24
-            Caption = 'Ref. prov.'
-            TabOrder = 10
-            Transparent = True
-          end
-          object txtRefPrv: TcxDBTextEdit
-            Left = 775
-            Top = 20
-            DataBinding.DataField = 'REF_PRV_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.MaxLength = 100
-            TabOrder = 11
-            Width = 149
-          end
-          object lblAlmacen: TcxLabel
-            Left = 12
-            Top = 111
-            Caption = 'Almac'#233'n'
-            TabOrder = 20
-            Transparent = True
-          end
-          object cbbAlmacen: TcxDBLookupComboBox
-            Left = 92
-            Top = 107
-            DataBinding.DataField = 'CODIGO_ALM_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
-            Properties.ListColumns = <
-              item
-                Caption = 'C'#243'digo'
-                Width = 60
-                FieldName = 'CODIGO_ALM_ALM'
-              end
-              item
-                Caption = 'Almac'#233'n'
-                FieldName = 'NOMBRE_ALM_ALM'
-              end>
-            Properties.ListOptions.ShowHeader = False
-            TabOrder = 21
-            Width = 200
-          end
-          object lblTarifa: TcxLabel
-            Left = 304
-            Top = 111
-            Caption = 'Tarifa venta'
-            TabOrder = 22
-            Transparent = True
-          end
-          object cbbTarifa: TcxDBLookupComboBox
-            Left = 403
-            Top = 107
-            DataBinding.DataField = 'CODIGO_TAR_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.KeyFieldNames = 'CODIGO_TAR_ARTTAR'
-            Properties.ListColumns = <
-              item
-                Caption = 'Tarifa'
-                FieldName = 'NOMBRE_TAR_TAR'
-              end>
-            Properties.ListOptions.ShowHeader = False
-            TabOrder = 23
-            Width = 186
-          end
-          object lblTemporada: TcxLabel
-            Left = 612
-            Top = 111
-            Caption = 'Temporada'
-            TabOrder = 24
-            Transparent = True
-          end
-          object cbbTemporada: TcxDBLookupComboBox
-            Left = 705
-            Top = 107
-            DataBinding.DataField = 'ID_PV_TEMPORADA_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.KeyFieldNames = 'ID_PV_ARTPROP'
-            Properties.ListColumns = <
-              item
-                Caption = 'Temporada'
-                FieldName = 'PV'
-              end>
-            Properties.ListOptions.ShowHeader = False
-            TabOrder = 25
-            Width = 220
-          end
-          object chkFormatoDistribuido: TcxDBCheckBox
-            Left = 656
-            Top = 153
-            Caption = 'Formato distribuido (por almac'#233'n)'
-            DataBinding.DataField = 'ESFORMATO_DISTRIBUIDO_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.ValueChecked = 'S'
-            Properties.ValueUnchecked = 'N'
-            TabOrder = 26
-            Transparent = True
-          end
-          object lblTipoIvaDefecto: TcxLabel
-            Left = 772
-            Top = 189
-            Caption = 'IVA defecto'
-            TabOrder = 31
-            Transparent = True
-          end
-          object cbbTipoIvaDefecto: TcxDBComboBox
-            Left = 869
-            Top = 188
-            DataBinding.DataField = 'TIPO_IVA_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.DropDownListStyle = lsFixedList
-            Properties.Items.Strings = (
-              'N'
-              'R'
-              'S'
-              'E')
-            Properties.OnChange = cbbTipoIvaDefectoPropertiesChange
-            TabOrder = 32
-            Width = 60
-          end
-          object chkVariosTiposIva: TcxDBCheckBox
-            Left = 616
-            Top = 188
-            Caption = 'Varios tipos IVA'
-            DataBinding.DataField = 'ESVARIOS_TIPOS_IVA_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.ValueChecked = 'S'
-            Properties.ValueUnchecked = 'N'
-            Properties.OnChange = chkVariosTiposIvaPropertiesChange
-            Style.TransparentBorder = False
-            TabOrder = 33
-            Transparent = True
-          end
-          object lblMargen: TcxLabel
-            Left = 12
-            Top = 152
-            Caption = 'Margen %'
-            TabOrder = 12
-            Transparent = True
-          end
-          object spnMargen: TcxDBSpinEdit
-            Left = 102
-            Top = 150
-            DataBinding.DataField = 'PORCENTAJE_MARGEN_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.ValueType = vtFloat
-            TabOrder = 13
-            Width = 92
-          end
-          object lblMultiploRedondeo: TcxLabel
-            Left = 200
-            Top = 152
-            Caption = 'M'#250'lt. redondeo'
-            TabOrder = 14
-            Transparent = True
-          end
-          object spnMultiploRedondeo: TcxDBSpinEdit
-            Left = 334
-            Top = 149
-            DataBinding.DataField = 'MULTIPLO_REDONDEO_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.Increment = 0.050000000000000000
-            Properties.ValueType = vtFloat
-            TabOrder = 15
-            Width = 90
-          end
-          object lblAjusteFinal: TcxLabel
-            Left = 430
-            Top = 152
-            Caption = 'Ajuste final'
-            TabOrder = 16
-            Transparent = True
-          end
-          object spnAjusteFinal: TcxDBSpinEdit
-            Left = 530
-            Top = 150
-            DataBinding.DataField = 'AJUSTE_FINAL_SES'
-            DataBinding.DataSource = dsTablaG
-            Properties.Increment = 0.010000000000000000
-            Properties.MaxValue = 10.000000000000000000
-            Properties.MinValue = -10.000000000000000000
-            Properties.ValueType = vtFloat
-            TabOrder = 17
-            Width = 90
-          end
-          object lblProveedorNombre: TcxLabel
-            Left = 639
-            Top = 67
-            ParentFont = False
-            Style.Font.Charset = ANSI_CHARSET
-            Style.Font.Color = clWindowText
-            Style.Font.Height = -15
-            Style.Font.Name = 'Lucida Sans'
-            Style.Font.Style = [fsBold]
-            Style.IsFontAssigned = True
-            TabOrder = 27
-            Transparent = True
-          end
-          object lblKitProv: TcxLabel
-            Left = 12
-            Top = 192
-            Caption = 'Kit a aplicar'
-            TabOrder = 28
-            Transparent = True
-          end
-          object cbbKitProv: TcxLookupComboBox
-            Left = 110
-            Top = 188
-            Properties.KeyFieldNames = 'CODIGO_PRVKIT'
-            Properties.ListColumns = <
-              item
-                FieldName = 'ETIQUETA_KIT'
-              end>
-            Properties.ListOptions.ShowHeader = False
-            TabOrder = 29
-            Width = 320
-          end
-          object btnAplicarKitCab: TcxButton
-            Left = 440
-            Top = 187
-            Width = 160
-            Height = 27
-            Caption = 'Aplicar kit a la l'#237'nea'
-            Colors.Default = 12579775
-            Colors.Normal = 12579775
-            LookAndFeel.Kind = lfFlat
-            LookAndFeel.NativeStyle = False
-            TabOrder = 30
-            OnClick = btnAplicarKitCabClick
-          end
-        end
         object pnlBottFich: TPanel
           Left = 0
-          Top = 243
+          Top = 305
           Width = 1092
-          Height = 405
+          Height = 343
           Align = alClient
-          TabOrder = 1
+          TabOrder = 0
+          ExplicitTop = 243
+          ExplicitHeight = 405
           object cxPageControl2: TcxPageControl
             Left = 1
             Top = 1
             Width = 1090
-            Height = 403
+            Height = 341
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = cxTabSheet1
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 399
+            ExplicitHeight = 403
+            ClientRectBottom = 337
             ClientRectLeft = 4
             ClientRectRight = 1086
             ClientRectTop = 28
             object cxTabSheet1: TcxTabSheet
               Caption = '&1_Lineas de Art'#237'culos'
               ImageIndex = 0
+              ExplicitHeight = 371
               object cxgrdLineas: TcxGrid
                 Left = 0
                 Top = 36
                 Width = 1082
-                Height = 335
+                Height = 273
                 Align = alClient
                 TabOrder = 0
                 OnEnter = cxgrdLineasEnter
                 OnExit = cxgrdLineasExit
+                ExplicitHeight = 335
                 object tvLineas: TcxGridDBTableView
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Buttons.PriorPage.Visible = False
@@ -709,14 +406,16 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object tsTotales: TcxTabSheet
               Caption = '&2_Totales'
               ImageIndex = 3
+              ExplicitHeight = 371
               object pnlTotales: TPanel
                 Left = 0
                 Top = 0
                 Width = 1082
-                Height = 371
+                Height = 309
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
+                ExplicitHeight = 371
                 object lblTotalBasesSes: TcxLabel
                   Left = 42
                   Top = 38
@@ -845,13 +544,69 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   TabOrder = 12
                   Transparent = True
                 end
+                object lblDtoComercialSes: TcxLabel
+                  Left = 64
+                  Top = 305
+                  Caption = 'Dto. comercial'
+                  TabOrder = 13
+                  Transparent = True
+                end
+                object spnTotalesPORCENTAJE_DTO_COMERCIAL_SES: TcxDBSpinEdit
+                  Left = 220
+                  Top = 301
+                  DataBinding.DataField = 'PORCENTAJE_DTO_COMERCIAL_SES'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.AssignedValues.MinValue = True
+                  Properties.DisplayFormat = '0.00 %'
+                  Properties.EditFormat = '0.00 %'
+                  Properties.MaxValue = 100.000000000000000000
+                  TabOrder = 14
+                  Width = 60
+                end
+                object curTotalesTOTAL_DTO_COMERCIAL_SES: TcxDBCurrencyEdit
+                  Left = 286
+                  Top = 301
+                  DataBinding.DataField = 'TOTAL_DTO_COMERCIAL_SES'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ReadOnly = True
+                  TabOrder = 15
+                  Width = 64
+                end
+                object lblDtoFinancieroSes: TcxLabel
+                  Left = 63
+                  Top = 329
+                  Caption = 'Dto. financiero'
+                  TabOrder = 16
+                  Transparent = True
+                end
+                object spnTotalesPORCENTAJE_DTO_FINANCIERO_SES: TcxDBSpinEdit
+                  Left = 220
+                  Top = 325
+                  DataBinding.DataField = 'PORCENTAJE_DTO_FINANCIERO_SES'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.AssignedValues.MinValue = True
+                  Properties.DisplayFormat = '0.00 %'
+                  Properties.EditFormat = '0.00 %'
+                  Properties.MaxValue = 100.000000000000000000
+                  TabOrder = 17
+                  Width = 60
+                end
+                object curTotalesTOTAL_DTO_FINANCIERO_SES: TcxDBCurrencyEdit
+                  Left = 286
+                  Top = 325
+                  DataBinding.DataField = 'TOTAL_DTO_FINANCIERO_SES'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ReadOnly = True
+                  TabOrder = 18
+                  Width = 64
+                end
                 object grpDesgloseIvaSes: TGroupBox
                   Left = 384
                   Top = 22
                   Width = 548
                   Height = 286
                   Caption = 'Desglose IVA'
-                  TabOrder = 13
+                  TabOrder = 19
                   object lblTotSesBase: TcxLabel
                     Left = 126
                     Top = 34
@@ -1145,6 +900,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object tsDocumentos: TcxTabSheet
               Caption = '&3_Documentos creados'
               ImageIndex = 1
+              ExplicitHeight = 371
               object pnlDocsTop: TPanel
                 Left = 0
                 Top = 0
@@ -1178,9 +934,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Left = 0
                 Top = 40
                 Width = 1082
-                Height = 331
+                Height = 269
                 Align = alClient
                 TabOrder = 1
+                ExplicitHeight = 331
                 object tvDocs: TcxGridDBTableView
                   OnDblClick = tvDocsDblClick
                   OptionsCustomize.ColumnHiding = True
@@ -1228,21 +985,24 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
             object tsProveedor: TcxTabSheet
               Caption = '&4_Proveedor'
               ImageIndex = 2
+              ExplicitHeight = 371
               object pnlProvIzq: TPanel
                 Left = 0
                 Top = 0
                 Width = 560
-                Height = 371
+                Height = 309
                 Align = alLeft
                 BevelOuter = bvNone
                 TabOrder = 0
+                ExplicitHeight = 371
                 object gbProvFicha: TcxGroupBox
                   Left = 0
                   Top = 0
                   Align = alClient
                   Caption = ' Datos del proveedor '
                   TabOrder = 0
-                  Height = 371
+                  ExplicitHeight = 371
+                  Height = 309
                   Width = 560
                   object lblProvCodigo: TcxLabel
                     Left = 12
@@ -1503,7 +1263,8 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 Align = alClient
                 Caption = ' Kits de cantidades por talla '
                 TabOrder = 1
-                Height = 371
+                ExplicitHeight = 371
+                Height = 309
                 Width = 522
                 object pnlProvKitsTop: TPanel
                   Left = 2
@@ -1538,9 +1299,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   Left = 2
                   Top = 58
                   Width = 308
-                  Height = 311
+                  Height = 249
                   Align = alClient
                   TabOrder = 1
+                  ExplicitHeight = 311
                   object tvPrvKits: TcxGridDBTableView
                     OnDblClick = tvPrvKitsDblClick
                     OptionsData.Deleting = False
@@ -1572,9 +1334,10 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   Left = 310
                   Top = 58
                   Width = 210
-                  Height = 311
+                  Height = 249
                   Align = alRight
                   TabOrder = 2
+                  ExplicitHeight = 311
                   object tvPrvKitsDet: TcxGridDBTableView
                     OptionsData.Deleting = False
                     OptionsData.DeletingConfirmation = False
@@ -1604,7 +1367,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
         end
         object splSplitterFicha: TcxSplitter
           Left = 0
-          Top = 235
+          Top = 0
           Width = 1092
           Height = 8
           Cursor = crSizeNS
@@ -1615,6 +1378,406 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
           HotZoneClassName = 'TcxMediaPlayer9Style'
           HotZone.SizePercent = 50
           AlignSplitter = salTop
+          ExplicitTop = 235
+        end
+        object cxPageControl1: TcxPageControl
+          Left = 0
+          Top = 8
+          Width = 1092
+          Height = 297
+          Align = alTop
+          TabOrder = 2
+          Properties.ActivePage = cxTabSheet2
+          Properties.CustomButtons.Buttons = <>
+          ClientRectBottom = 293
+          ClientRectLeft = 4
+          ClientRectRight = 1088
+          ClientRectTop = 28
+          object cxTabSheet2: TcxTabSheet
+            Caption = 'Datos Cabecera'
+            ImageIndex = 0
+            object gbCabecera: TcxGroupBox
+              Left = 0
+              Top = 0
+              Align = alTop
+              TabOrder = 0
+              ExplicitLeft = 3
+              ExplicitTop = 13
+              Height = 235
+              Width = 1084
+              object lblSerie: TcxLabel
+                Left = 12
+                Top = 24
+                Caption = 'Serie'
+                TabOrder = 0
+                Transparent = True
+              end
+              object cbbSerie: TcxDBComboBox
+                Left = 80
+                Top = 20
+                DataBinding.DataField = 'SERIE_SES'
+                DataBinding.DataSource = dsTablaG
+                Properties.CharCase = ecUpperCase
+                Properties.MaxLength = 12
+                Properties.OnInitPopup = cbbSeriePropertiesInitPopup
+                TabOrder = 1
+                Width = 70
+              end
+              object lblNumero: TcxLabel
+                Left = 164
+                Top = 24
+                Caption = 'N'#250'mero'
+                TabOrder = 2
+                Transparent = True
+              end
+              object txtNumero: TcxDBTextEdit
+                Left = 232
+                Top = 20
+                DataBinding.DataField = 'NUMERO_SES'
+                DataBinding.DataSource = dsTablaG
+                Properties.ReadOnly = True
+                TabOrder = 3
+                Width = 70
+              end
+              object lblFecha: TcxLabel
+                Left = 316
+                Top = 24
+                Caption = 'Fecha'
+                TabOrder = 4
+                Transparent = True
+              end
+              object dteFecha: TcxDBDateEdit
+                Left = 380
+                Top = 20
+                DataBinding.DataField = 'FECHA_SES'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 5
+                Width = 120
+              end
+              object lblFechaTopeRecepcion: TcxLabel
+                Left = 517
+                Top = 24
+                Caption = 'F.tope recep.'
+                TabOrder = 21
+                Transparent = True
+              end
+              object dteFechaTopeRecepcion: TcxDBDateEdit
+                Left = 627
+                Top = 20
+                DataBinding.DataField = 'FECHA_TOPE_RECEPCION_SES'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 22
+                Width = 120
+              end
+              object lblEstado: TcxLabel
+                Left = 380
+                Top = 151
+                Caption = 'Estado'
+                TabOrder = 12
+                Transparent = True
+              end
+              object txtEstado: TcxDBTextEdit
+                Left = 440
+                Top = 147
+                DataBinding.DataField = 'ESTADO_SES'
+                DataBinding.DataSource = dsTablaG
+                Properties.ReadOnly = True
+                TabOrder = 13
+                Width = 100
+              end
+              object lblEmpresa: TcxLabel
+                Left = 12
+                Top = 67
+                Caption = 'Empresa'
+                TabOrder = 6
+                Transparent = True
+              end
+              object cbbEmpresa: TcxDBLookupComboBox
+                Left = 92
+                Top = 63
+                DataBinding.DataField = 'CODIGO_EMP_SES'
+                DataBinding.DataSource = dsTablaG
+                Properties.KeyFieldNames = 'CODIGO_EMP_EMP'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'C'#243'digo'
+                    Width = 60
+                    FieldName = 'CODIGO_EMP_EMP'
+                  end
+                  item
+                    Caption = 'Empresa'
+                    FieldName = 'RAZON_SOCIAL_EMP'
+                  end>
+                Properties.ListFieldIndex = 1
+                Properties.ListOptions.ShowHeader = False
+                TabOrder = 7
+                Width = 268
+              end
+              object lblProveedor: TcxLabel
+                Left = 380
+                Top = 67
+                Caption = 'Proveedor'
+                TabOrder = 8
+                Transparent = True
+              end
+              object cbbProveedor: TcxDBLookupComboBox
+                Left = 470
+                Top = 63
+                DataBinding.DataField = 'CODIGO_PRV_SES'
+                DataBinding.DataSource = dsTablaG
+                Properties.DropDownListStyle = lsEditList
+                Properties.DropDownRows = 15
+                Properties.KeyFieldNames = 'CODIGO_PRV_PRV'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'C'#243'digo'
+                    FieldName = 'CODIGO_PRV_PRV'
+                  end
+                  item
+                    Caption = 'Proveedor'
+                    FieldName = 'RAZON_SOCIAL_PRV'
+                  end>
+                TabOrder = 9
+                OnKeyUp = cbbProveedorKeyUp
+                Width = 160
+              end
+              object lblRefPrv: TcxLabel
+                Left = 7
+                Top = 151
+                Caption = 'Ref. prov.'
+                TabOrder = 10
+                Transparent = True
+              end
+              object txtRefPrv: TcxDBTextEdit
+                Left = 92
+                Top = 147
+                DataBinding.DataField = 'REF_PRV_SES'
+                DataBinding.DataSource = dsTablaG
+                Properties.MaxLength = 100
+                TabOrder = 11
+                Width = 190
+              end
+              object lblAlmacen: TcxLabel
+                Left = 12
+                Top = 111
+                Caption = 'Almac'#233'n'
+                TabOrder = 14
+                Transparent = True
+              end
+              object cbbAlmacen: TcxDBLookupComboBox
+                Left = 92
+                Top = 107
+                DataBinding.DataField = 'CODIGO_ALM_SES'
+                DataBinding.DataSource = dsTablaG
+                Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'C'#243'digo'
+                    Width = 60
+                    FieldName = 'CODIGO_ALM_ALM'
+                  end
+                  item
+                    Caption = 'Almac'#233'n'
+                    FieldName = 'NOMBRE_ALM_ALM'
+                  end>
+                Properties.ListOptions.ShowHeader = False
+                TabOrder = 15
+                Width = 200
+              end
+              object chkFormatoDistribuido: TcxDBCheckBox
+                Left = 380
+                Top = 111
+                Caption = 'Formato distribuido (por almac'#233'n)'
+                DataBinding.DataField = 'ESFORMATO_DISTRIBUIDO_SES'
+                DataBinding.DataSource = dsTablaG
+                Properties.ValueChecked = 'S'
+                Properties.ValueUnchecked = 'N'
+                Style.TransparentBorder = False
+                TabOrder = 16
+                Transparent = True
+              end
+              object lblProveedorNombre: TcxLabel
+                Left = 639
+                Top = 67
+                ParentFont = False
+                Style.Font.Charset = ANSI_CHARSET
+                Style.Font.Color = clWindowText
+                Style.Font.Height = -15
+                Style.Font.Name = 'Lucida Sans'
+                Style.Font.Style = [fsBold]
+                Style.IsFontAssigned = True
+                TabOrder = 17
+                Transparent = True
+              end
+              object lblKitProv: TcxLabel
+                Left = 12
+                Top = 192
+                Caption = 'Kit a aplicar'
+                TabOrder = 18
+                Transparent = True
+              end
+              object cbbKitProv: TcxLookupComboBox
+                Left = 110
+                Top = 188
+                Properties.KeyFieldNames = 'CODIGO_PRVKIT'
+                Properties.ListColumns = <
+                  item
+                    FieldName = 'ETIQUETA_KIT'
+                  end>
+                Properties.ListOptions.ShowHeader = False
+                TabOrder = 19
+                Width = 320
+              end
+              object btnAplicarKitCab: TcxButton
+                Left = 440
+                Top = 187
+                Width = 160
+                Height = 27
+                Caption = 'Aplicar kit a la l'#237'nea'
+                Colors.Default = 12579775
+                Colors.Normal = 12579775
+                LookAndFeel.Kind = lfFlat
+                LookAndFeel.NativeStyle = False
+                TabOrder = 20
+                OnClick = btnAplicarKitCabClick
+              end
+            end
+          end
+          object cxTabSheet3: TcxTabSheet
+            Caption = 'Ajustes Documento'
+            ImageIndex = 1
+            object lblTemporada: TcxLabel
+              Left = 17
+              Top = 23
+              Caption = 'Temporada'
+              TabOrder = 0
+              Transparent = True
+            end
+            object cbbTemporada: TcxDBLookupComboBox
+              Left = 110
+              Top = 19
+              DataBinding.DataField = 'ID_PV_TEMPORADA_SES'
+              DataBinding.DataSource = dsTablaG
+              Properties.KeyFieldNames = 'ID_PV_ARTPROP'
+              Properties.ListColumns = <
+                item
+                  Caption = 'Temporada'
+                  FieldName = 'PV'
+                end>
+              Properties.ListOptions.ShowHeader = False
+              TabOrder = 1
+              Width = 220
+            end
+            object cbbTarifa: TcxDBLookupComboBox
+              Left = 112
+              Top = 67
+              DataBinding.DataField = 'CODIGO_TAR_SES'
+              DataBinding.DataSource = dsTablaG
+              Properties.KeyFieldNames = 'CODIGO_TAR_ARTTAR'
+              Properties.ListColumns = <
+                item
+                  Caption = 'Tarifa'
+                  FieldName = 'NOMBRE_TAR_TAR'
+                end>
+              Properties.ListOptions.ShowHeader = False
+              TabOrder = 2
+              Width = 186
+            end
+            object lblTarifa: TcxLabel
+              Left = 13
+              Top = 71
+              Caption = 'Tarifa venta'
+              TabOrder = 3
+              Transparent = True
+            end
+            object lblMargen: TcxLabel
+              Left = 20
+              Top = 128
+              Caption = 'Margen %'
+              TabOrder = 4
+              Transparent = True
+            end
+            object spnMargen: TcxDBSpinEdit
+              Left = 110
+              Top = 126
+              DataBinding.DataField = 'PORCENTAJE_MARGEN_SES'
+              DataBinding.DataSource = dsTablaG
+              Properties.ValueType = vtFloat
+              TabOrder = 5
+              Width = 92
+            end
+            object lblMultiploRedondeo: TcxLabel
+              Left = 12
+              Top = 176
+              Caption = 'Redondeo'
+              TabOrder = 6
+              Transparent = True
+            end
+            object spnMultiploRedondeo: TcxDBSpinEdit
+              Left = 112
+              Top = 173
+              DataBinding.DataField = 'MULTIPLO_REDONDEO_SES'
+              DataBinding.DataSource = dsTablaG
+              Properties.Increment = 0.050000000000000000
+              Properties.ValueType = vtFloat
+              TabOrder = 7
+              Width = 90
+            end
+            object lblAjusteFinal: TcxLabel
+              Left = 10
+              Top = 221
+              Caption = 'Ajuste final'
+              TabOrder = 8
+              Transparent = True
+            end
+            object spnAjusteFinal: TcxDBSpinEdit
+              Left = 110
+              Top = 219
+              DataBinding.DataField = 'AJUSTE_FINAL_SES'
+              DataBinding.DataSource = dsTablaG
+              Properties.Increment = 0.010000000000000000
+              Properties.MaxValue = 10.000000000000000000
+              Properties.MinValue = -10.000000000000000000
+              Properties.ValueType = vtFloat
+              TabOrder = 9
+              Width = 90
+            end
+            object chkVariosTiposIva: TcxDBCheckBox
+              Left = 272
+              Top = 126
+              Caption = 'Varios tipos IVA'
+              DataBinding.DataField = 'ESVARIOS_TIPOS_IVA_SES'
+              DataBinding.DataSource = dsTablaG
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Properties.OnChange = chkVariosTiposIvaPropertiesChange
+              Style.TransparentBorder = False
+              TabOrder = 10
+              Transparent = True
+            end
+            object lblTipoIvaDefecto: TcxLabel
+              Left = 432
+              Top = 127
+              Caption = 'IVA defecto'
+              TabOrder = 11
+              Transparent = True
+            end
+            object cbbTipoIvaDefecto: TcxDBComboBox
+              Left = 529
+              Top = 126
+              DataBinding.DataField = 'TIPO_IVA_SES'
+              DataBinding.DataSource = dsTablaG
+              Properties.DropDownListStyle = lsFixedList
+              Properties.Items.Strings = (
+                'N'
+                'R'
+                'S'
+                'E')
+              Properties.OnChange = cbbTipoIvaDefectoPropertiesChange
+              TabOrder = 12
+              Width = 60
+            end
+          end
         end
       end
       inherited tsPerfil: TcxTabSheet
@@ -1685,7 +1848,7 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
       Top = 230
       Width = 137
       Height = 69
-      Caption = 'Crear art'#237'culos y albar'#225'n'
+      Caption = 'Crear Art. y Docs.'
       Colors.Default = 9101247
       Colors.Normal = 9101247
       LookAndFeel.Kind = lfFlat

@@ -196,6 +196,11 @@ type
     FHistorialPos   : Integer;
     FMoviendoHistorial: Boolean;
     FSilenciarCambioVista: Boolean;
+    FCbbCoincidencias: TcxComboBox;
+    FCodigosCoincidencia: TStringList;
+    FSkusCoincidencia: TStringList;
+    FActualizandoArticulo: Boolean;
+    FResolviendoEntrada: Boolean;
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure AplicarLecturaCodigoBarras(const ACodigo: string);
     procedure LectorCodigoLeido(Sender: TObject; const ACodigo: string);
@@ -254,6 +259,18 @@ type
                                    AEsColor: Boolean);
     procedure RecargarConsulta;
     procedure MostrarError(const AMsg: string);
+    procedure btnArtKeyDown(Sender: TObject; var Key: Word;
+              Shift: TShiftState);
+    procedure btnArtExit(Sender: TObject);
+    procedure CrearComboCoincidencias;
+    procedure MostrarComboCoincidencias(ADataSet: TDataSet;
+              const AEntrada: string);
+    procedure OcultarComboCoincidencias;
+    procedure cbbCoincidenciasEditValueChanged(Sender: TObject);
+    procedure cbbCoincidenciasExit(Sender: TObject);
+    procedure cbbCoincidenciasKeyDown(Sender: TObject; var Key: Word;
+              Shift: TShiftState);
+    procedure ResolverTextoArticulo(AMostrarError: Boolean);
   public
     procedure SetArticuloSku(const ACodArt, ACodSku: string);
   end;
@@ -385,6 +402,11 @@ begin
   FPropsPorColor := TDictionary<string, string>.Create;
   FHistorialArticulos := TStringList.Create;
   FHistorialPos := -1;
+  FCodigosCoincidencia := TStringList.Create;
+  FSkusCoincidencia := TStringList.Create;
+  CrearComboCoincidencias;
+  btnArt.OnKeyDown := btnArtKeyDown;
+  btnArt.OnExit := btnArtExit;
   CrearBotonesHistorial;
   // Letrero de aviso: oculto por defecto, rojo y en negrita para que "cante"
   // las propiedades propias del color (color/SKU) al pincharlo. El texto lo
@@ -578,6 +600,9 @@ begin
   FreeAndNil(FEstadosCombo);
   FreeAndNil(FPropsPorColor);
   FreeAndNil(FHistorialArticulos);
+  FreeAndNil(FCodigosCoincidencia);
+  FreeAndNil(FSkusCoincidencia);
+  FreeAndNil(FCbbCoincidencias);
 end;
 
 procedure TfrmStockConsulta.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -593,7 +618,15 @@ begin
   // El detector cierra la lectura por velocidad (rafaga + Enter rapido) y
   // consume el VK_RETURN si procede.
   FLector.KeyDown(Key, Shift);
-  if Key = VK_ESCAPE then
+  if (Key = VK_ESCAPE) and (FCbbCoincidencias <> nil) and
+     FCbbCoincidencias.Visible then
+  begin
+    Key := 0;
+    OcultarComboCoincidencias;
+    if btnArt.CanFocus then
+      btnArt.SetFocus;
+  end
+  else if Key = VK_ESCAPE then
   begin
     Key := 0;
     Close;
@@ -632,6 +665,251 @@ begin
     SetArticuloSku(Resolucion.CodigoArticulo, Resolucion.CodigoSku)
   else
     MostrarError('Código de barras no encontrado: ' + ACodigo);
+end;
+
+procedure TfrmStockConsulta.CrearComboCoincidencias;
+begin
+  if FCbbCoincidencias = nil then
+  begin
+    FCbbCoincidencias := TcxComboBox.Create(Self);
+    FCbbCoincidencias.Parent := pnlCabecera;
+    FCbbCoincidencias.Visible := False;
+    FCbbCoincidencias.Properties.DropDownListStyle := lsFixedList;
+    FCbbCoincidencias.Properties.OnEditValueChanged :=
+      cbbCoincidenciasEditValueChanged;
+    FCbbCoincidencias.OnExit := cbbCoincidenciasExit;
+    FCbbCoincidencias.OnKeyDown := cbbCoincidenciasKeyDown;
+    FCbbCoincidencias.TabOrder := btnArt.TabOrder + 1;
+  end;
+end;
+
+procedure TfrmStockConsulta.OcultarComboCoincidencias;
+begin
+  if FCbbCoincidencias <> nil then
+  begin
+    FCbbCoincidencias.DroppedDown := False;
+    FCbbCoincidencias.Visible := False;
+  end;
+end;
+
+procedure TfrmStockConsulta.MostrarComboCoincidencias(ADataSet: TDataSet;
+  const AEntrada: string);
+var
+  sArt, sSku, sDesc, sPrv, sRef, sItem: string;
+  iAncho, iFilas: Integer;
+begin
+  CrearComboCoincidencias;
+  FCbbCoincidencias.Properties.Items.BeginUpdate;
+  try
+    FCbbCoincidencias.Properties.Items.Clear;
+    FCodigosCoincidencia.Clear;
+    FSkusCoincidencia.Clear;
+    if ADataSet <> nil then
+    begin
+      ADataSet.First;
+      while not ADataSet.Eof do
+      begin
+        sArt := ADataSet.FieldByName('CODIGO_PADRE').AsString;
+        sSku := ADataSet.FieldByName('CODIGO_SKU').AsString;
+        sDesc := ADataSet.FieldByName('DESCRIPCION_ART').AsString;
+        sPrv := ADataSet.FieldByName('PROVEEDOR').AsString;
+        sRef := ADataSet.FieldByName('REF_PROVEEDOR').AsString;
+        sItem := sArt;
+        if Trim(sSku) <> '' then
+          sItem := sItem + ' / ' + sSku;
+        if Trim(sDesc) <> '' then
+          sItem := sItem + ' - ' + sDesc;
+        if Trim(sPrv) <> '' then
+          sItem := sItem + ' - ' + sPrv;
+        if Trim(sRef) <> '' then
+          sItem := sItem + ' (ref. ' + sRef + ')';
+        if FCodigosCoincidencia.IndexOf(sArt) < 0 then
+        begin
+          FCbbCoincidencias.Properties.Items.Add(sItem);
+          FCodigosCoincidencia.Add(sArt);
+          FSkusCoincidencia.Add(sSku);
+        end;
+        ADataSet.Next;
+      end;
+    end;
+  finally
+    FCbbCoincidencias.Properties.Items.EndUpdate;
+  end;
+  if FCbbCoincidencias.Properties.Items.Count > 0 then
+  begin
+    iAncho := pnlCabecera.ClientWidth - btnArt.Left - 20;
+    if iAncho > 620 then
+      iAncho := 620;
+    if iAncho < btnArt.Width then
+      iAncho := btnArt.Width;
+    FCbbCoincidencias.SetBounds(btnArt.Left,
+                                btnArt.Top + btnArt.Height + 2,
+                                iAncho,
+                                btnArt.Height);
+    iFilas := FCbbCoincidencias.Properties.Items.Count;
+    if iFilas > 15 then
+      iFilas := 15;
+    FCbbCoincidencias.Properties.DropDownRows := iFilas;
+    FCbbCoincidencias.ItemIndex := -1;
+    FCbbCoincidencias.Hint := 'Coincidencias para ' + AEntrada;
+    FCbbCoincidencias.Visible := True;
+    FCbbCoincidencias.BringToFront;
+    if FCbbCoincidencias.CanFocus then
+      FCbbCoincidencias.SetFocus;
+    FCbbCoincidencias.DroppedDown := True;
+  end;
+end;
+
+procedure TfrmStockConsulta.cbbCoincidenciasEditValueChanged(Sender: TObject);
+var
+  i: Integer;
+  sArt, sSku: string;
+begin
+  if (FCbbCoincidencias <> nil) and (not FResolviendoEntrada) then
+  begin
+    i := FCbbCoincidencias.ItemIndex;
+    if (i >= 0) and (i < FCodigosCoincidencia.Count) then
+    begin
+      FResolviendoEntrada := True;
+      try
+        sArt := FCodigosCoincidencia[i];
+        sSku := FSkusCoincidencia[i];
+        OcultarComboCoincidencias;
+        SetArticuloSku(sArt, sSku);
+      finally
+        FResolviendoEntrada := False;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmStockConsulta.cbbCoincidenciasExit(Sender: TObject);
+begin
+  if not FResolviendoEntrada then
+    OcultarComboCoincidencias;
+end;
+
+procedure TfrmStockConsulta.cbbCoincidenciasKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_ESCAPE then
+  begin
+    Key := 0;
+    OcultarComboCoincidencias;
+    if btnArt.CanFocus then
+      btnArt.SetFocus;
+  end
+  else if Key = VK_RETURN then
+  begin
+    Key := 0;
+    if (FCbbCoincidencias.ItemIndex < 0) and
+       (FCbbCoincidencias.Properties.Items.Count > 0) then
+      FCbbCoincidencias.ItemIndex := 0
+    else
+      cbbCoincidenciasEditValueChanged(Sender);
+  end;
+end;
+
+procedure TfrmStockConsulta.btnArtKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+  begin
+    Key := 0;
+    ResolverTextoArticulo(True);
+  end;
+end;
+
+procedure TfrmStockConsulta.btnArtExit(Sender: TObject);
+begin
+  if (not FResolviendoEntrada) and (not FActualizandoArticulo) then
+    ResolverTextoArticulo(False);
+end;
+
+procedure TfrmStockConsulta.ResolverTextoArticulo(AMostrarError: Boolean);
+var
+  q: TUniQuery;
+  stArticulos: TStringList;
+  sEntrada, sArt, sSku: string;
+begin
+  if (not FActualizandoArticulo) and (not FResolviendoEntrada) then
+  begin
+    sEntrada := Trim(btnArt.Text);
+    if sEntrada = '' then
+      SetArticuloSku('', '')
+    else if not SameText(sEntrada, FCodArt) then
+    begin
+      FResolviendoEntrada := True;
+      q := TUniQuery.Create(nil);
+      stArticulos := TStringList.Create;
+      try
+        q.Connection := inLibGlobalVar.oConn;
+        q.SQL.Text :=
+          'SELECT DISTINCT X.TIPO_COINCIDENCIA, X.CODIGO_PADRE, ' +
+          '       X.CODIGO_SKU, X.DESCRIPCION_ART, ' +
+          '       COALESCE(AP.REF_PROVEEDOR_AP, '''') AS REF_PROVEEDOR, ' +
+          '       COALESCE(P.RAZON_SOCIAL_PRV, '''') AS PROVEEDOR ' +
+          '  FROM vi_caja_busqueda_unificada X ' +
+          '  LEFT JOIN fza_articulos_proveedores AP ' +
+          '    ON X.TIPO_COINCIDENCIA COLLATE utf8mb4_spanish_ci = ' +
+          '       ''MODELO_PROV'' COLLATE utf8mb4_spanish_ci ' +
+          '   AND AP.CODIGO_ART_AP = X.CODIGO_PADRE ' +
+          '   AND AP.REF_PROVEEDOR_AP COLLATE utf8mb4_spanish_ci = ' +
+          '       X.INPUT_BUSQUEDA COLLATE utf8mb4_spanish_ci ' +
+          '  LEFT JOIN fza_proveedores P ' +
+          '    ON P.CODIGO_PRV_PRV = AP.CODIGO_PRV_AP ' +
+          ' WHERE X.INPUT_BUSQUEDA COLLATE utf8mb4_spanish_ci = :inp ' +
+          ' ORDER BY CASE ' +
+          '            WHEN X.TIPO_COINCIDENCIA ' +
+          '                 COLLATE utf8mb4_spanish_ci = ' +
+          '                 ''SKU'' COLLATE utf8mb4_spanish_ci THEN 1 ' +
+          '            WHEN X.TIPO_COINCIDENCIA ' +
+          '                 COLLATE utf8mb4_spanish_ci = ' +
+          '                 ''CODIGO'' COLLATE utf8mb4_spanish_ci THEN 2 ' +
+          '            WHEN X.TIPO_COINCIDENCIA ' +
+          '                 COLLATE utf8mb4_spanish_ci = ' +
+          '                 ''EAN'' COLLATE utf8mb4_spanish_ci THEN 3 ' +
+          '            WHEN X.TIPO_COINCIDENCIA ' +
+          '                 COLLATE utf8mb4_spanish_ci = ' +
+          '                 ''MODELO_PROV'' COLLATE utf8mb4_spanish_ci ' +
+          '                 THEN 4 ' +
+          '            ELSE 5 END, X.CODIGO_PADRE, X.CODIGO_SKU';
+        q.ParamByName('inp').AsString := sEntrada;
+        q.Open;
+        if q.IsEmpty then
+        begin
+          if AMostrarError then
+            MostrarError('No se encontró "' + sEntrada + '" como artículo, ' +
+                         'SKU, código de barras ni referencia de proveedor.');
+          SetArticuloSku(sEntrada, '');
+        end
+        else
+        begin
+          q.First;
+          while not q.Eof do
+          begin
+            sArt := q.FieldByName('CODIGO_PADRE').AsString;
+            if stArticulos.IndexOf(sArt) < 0 then
+              stArticulos.Add(sArt);
+            q.Next;
+          end;
+          q.First;
+          if stArticulos.Count = 1 then
+          begin
+            sArt := q.FieldByName('CODIGO_PADRE').AsString;
+            sSku := q.FieldByName('CODIGO_SKU').AsString;
+            SetArticuloSku(sArt, sSku);
+          end
+          else
+            MostrarComboCoincidencias(q, sEntrada);
+        end;
+      finally
+        FreeAndNil(stArticulos);
+        FreeAndNil(q);
+        FResolviendoEntrada := False;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmStockConsulta.PopMenuStockPopup(Sender: TObject);
@@ -1202,7 +1480,13 @@ var
 begin
   FCodArt := ACodArt;
   FCodSku := ACodSku;
-  btnArt.Text := ACodArt;
+  FActualizandoArticulo := True;
+  try
+    btnArt.Text := ACodArt;
+  finally
+    FActualizandoArticulo := False;
+  end;
+  OcultarComboCoincidencias;
   InvalidarFotosRelacionadas;
   bArticuloEncontrado := False;
   if DimensionFotosActiva(dim) then
@@ -2640,6 +2924,14 @@ begin
       '    f.DESCRIPCION_FAM,'                                       + sLineBreak +
       '    pv.PV                      AS TEMPORADA,'                 + sLineBreak +
       '    p.RAZON_SOCIAL_PRV         AS PROVEEDOR,'                 + sLineBreak +
+      '    COALESCE((SELECT GROUP_CONCAT(DISTINCT ap2.REF_PROVEEDOR_AP' + sLineBreak +
+      '                                  ORDER BY ap2.REF_PROVEEDOR_AP' + sLineBreak +
+      '                                  SEPARATOR '' '')'            + sLineBreak +
+      '                FROM fza_articulos_proveedores ap2'            + sLineBreak +
+      '               WHERE ap2.CODIGO_ART_AP = a.CODIGO_ART_ART'    + sLineBreak +
+      '                 AND ap2.REF_PROVEEDOR_AP IS NOT NULL'         + sLineBreak +
+      '                 AND ap2.REF_PROVEEDOR_AP <> ''''), '''')'     + sLineBreak +
+      '                                AS REF_PROVEEDOR,'             + sLineBreak +
       '    (SELECT t.PRECIO_FINAL_ARTTAR'                            + sLineBreak +
       '       FROM fza_articulos_tarifas t'                          + sLineBreak +
       '       JOIN fza_tarifas tt'                                   + sLineBreak +
@@ -2674,6 +2966,7 @@ begin
     ConfigCampo(q.FindField('DESCRIPCION_FAM'), 'Familia',     '');
     ConfigCampo(q.FindField('TEMPORADA'),       'Temporada',   '');
     ConfigCampo(q.FindField('PROVEEDOR'),       'Proveedor',   '');
+    ConfigCampo(q.FindField('REF_PROVEEDOR'),   'Ref. proveedor', '');
     ConfigCampo(q.FindField('PRECIO_PVP'),      'PVP',         '#,##0.00 €');
 
     if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos',
@@ -2700,7 +2993,8 @@ end;
 
 procedure TfrmStockConsulta.btnArtPropertiesEditValueChanged(Sender: TObject);
 begin
-  SetArticuloSku(Trim(btnArt.Text), '');
+  if (not FActualizandoArticulo) and (Trim(btnArt.Text) = '') then
+    SetArticuloSku('', '');
 end;
 
 procedure TfrmStockConsulta.cbbEstadoPropertiesEditValueChanged(Sender: TObject);

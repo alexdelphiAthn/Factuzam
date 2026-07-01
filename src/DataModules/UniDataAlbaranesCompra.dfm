@@ -98,8 +98,13 @@
   object unqryPrvDataAlbc: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT * FROM fza_proveedores')
+      'SELECT * FROM fza_proveedores ORDER BY CODIGO_PRV_PRV')
     Left = 48
+    Top = 248
+  end
+  object dsPrvDataAlbc: TDataSource
+    DataSet = unqryPrvDataAlbc
+    Left = 112
     Top = 248
   end
   object unqryArtDataLinAlbc: TUniQuery
@@ -151,9 +156,18 @@
   object unqryCabAlbcPrint: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT * FROM vi_albaranes_compra_cab_print'
-      'WHERE SERIE_ALBC = :SERIE_ALBC'
-      '  AND NUMERO_ALBC = :NUMERO_ALBC')
+      'SELECT V.*,'
+      '       A.TOTAL_BRUTO_ALBC AS TOTAL_BRUTO_ALBC_PRINT,'
+      '       A.PORCENTAJE_DTO_COMERCIAL_ALBC AS PORCENTAJE_DTO_COMERCIAL_ALBC_PRINT,'
+      '       A.TOTAL_DTO_COMERCIAL_ALBC AS TOTAL_DTO_COMERCIAL_ALBC_PRINT,'
+      '       A.PORCENTAJE_DTO_FINANCIERO_ALBC AS PORCENTAJE_DTO_FINANCIERO_ALBC_PRINT,'
+      '       A.TOTAL_DTO_FINANCIERO_ALBC AS TOTAL_DTO_FINANCIERO_ALBC_PRINT'
+      '  FROM vi_albaranes_compra_cab_print V'
+      '  LEFT JOIN fza_albaranes_compra A'
+      '    ON A.SERIE_ALBC = V.SERIE_ALBC'
+      '   AND A.NUMERO_ALBC = V.NUMERO_ALBC'
+      ' WHERE V.SERIE_ALBC = :SERIE_ALBC'
+      '   AND V.NUMERO_ALBC = :NUMERO_ALBC')
     Left = 360
     Top = 24
     ParamData = <

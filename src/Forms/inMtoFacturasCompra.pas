@@ -78,7 +78,10 @@ type
     lblCodigoEmpresa: TcxLabel;
     btnCODIGO_EMP_FACC: TcxDBButtonEdit;
     lblCodigoProveedor: TcxLabel;
-    btnCODIGO_PRV_FACC: TcxDBButtonEdit;
+    cbbCODIGO_PRV_FACC: TcxDBLookupComboBox;
+    // Rotulo resuelto: nombre comercial del proveedor (con razon social
+    // entre parentesis si difiere). Ver ActualizarLabelProveedor.
+    lblProveedorNombreFacc: TcxLabel;
     lblRefProveedor:    TcxLabel;
     txtREF_PROVEEDOR_FACC: TcxDBTextEdit;
     lblCodigoAlmacen:   TcxLabel;
@@ -110,6 +113,14 @@ type
     spnTotalesPORCENTAJE_IVAE_FACC: TcxDBSpinEdit;
     spnTotalesPORCENTAJE_REE_FACC: TcxDBSpinEdit;
     chkTotalesESIVA_RECARGO_COMPRAS_FACC: TcxDBCheckBox;
+    lblTotalesDtoComercial: TcxLabel;
+    spnTotalesPORCENTAJE_DTO_COMERCIAL_FACC: TcxDBSpinEdit;
+    curTotalesTOTAL_DTO_COMERCIAL_FACC: TcxDBCurrencyEdit;
+    lblTotalesDtoFinanciero: TcxLabel;
+    spnTotalesPORCENTAJE_DTO_FINANCIERO_FACC: TcxDBSpinEdit;
+    curTotalesTOTAL_DTO_FINANCIERO_FACC: TcxDBCurrencyEdit;
+    lblTotalesTotalPrendas: TcxLabel;
+    lblTotalPrendasFacc: TcxLabel;
     lblTotalesFormaPago: TcxLabel;
     cbbTotalesFORMA_PAGO_FACC: TcxDBLookupComboBox;
     grpDesgloseImpuestos: TGroupBox;
@@ -165,7 +176,11 @@ type
     procedure cxgrdLineasFacturaExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
     procedure actIrProveedorExecute(Sender: TObject);
-    procedure btnCODIGO_PRV_FACCPropertiesEditValueChanged(Sender: TObject);
+    procedure cbbCODIGO_PRV_FACCPropertiesEditValueChanged(Sender: TObject);
+    procedure cbbCODIGO_PRV_FACCPropertiesButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
+    procedure cbbCODIGO_PRV_FACCKeyUp(Sender: TObject; var Key: Word;
+                                      Shift: TShiftState);
     procedure btnGenerarEfectosClick(Sender: TObject);
     procedure btnRegistrarPagoClick(Sender: TObject);
   private
@@ -190,6 +205,14 @@ type
     procedure RefrescarVisibilidadAtributos;
     procedure CargarCaptionsAtributosLineaActiva;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
+    // Pinta lblProveedorNombreFacc con el nombre comercial del proveedor
+    // (razon social entre parentesis si difiere). Ver UniDataFacturasCompra
+    // .unqryPrvDataFacc (lookup completo de fza_proveedores).
+    procedure ActualizarLabelProveedor;
+    // Pinta lblTotalPrendasFacc con el total de prendas (suma de
+    // CANTIDAD_FACCLIN de todas las lineas). Calculado en Delphi, no
+    // persiste en BBDD.
+    procedure ActualizarLabelPrendas;
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
     procedure TallaEditValueChangedHook(Sender: TObject);
     procedure TallaValidateHook(Sender: TObject; var DisplayValue: Variant;
@@ -493,6 +516,9 @@ begin
   // de pivote recarga y republica. cxGrid pierde los Values[] no-bound al
   // cambiar el record activo.
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+  // Pintar el rotulo del proveedor de la factura enfocada al abrir el form.
+  ActualizarLabelProveedor;
+  ActualizarLabelPrendas;
   // AfterPost del detail: cxGrid borra los Values[] no-bound al repintar.
   // Republicamos via el controlador y conservamos la logica original del
   // DM (CalcularTotalesFacturaCompra).
@@ -537,6 +563,9 @@ begin
     dmmFacturasCompra.dsFormasPago;
   cbbTotalesFORMA_PAGO_FACC.Properties.ListSource :=
     dmmFacturasCompra.dsFormasPago;
+  // ListSource del combo de proveedor (busqueda incremental por codigo).
+  // Reutiliza el lookup unqryPrvDataFacc, ya cargado para el rotulo.
+  cbbCODIGO_PRV_FACC.Properties.ListSource := dmmFacturasCompra.dsPrvDataFacc;
   dmmFacturasCompra.unqryEfectos.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_FACC;NUMERO_FACC';
 end;
@@ -920,6 +949,14 @@ procedure TfrmMtoFacturasCompra.dsTablaGDataChangeHook(Sender: TObject;
 var
   bDeberiaEstarActivo: Boolean;
 begin
+  // Refrescar el rotulo del proveedor al navegar entre facturas (Field=nil)
+  // o al cambiar CODIGO_PRV_FACC tecleado directamente en el ButtonEdit.
+  if (Field = nil) or SameText(Field.FieldName, 'CODIGO_PRV_FACC') then
+    ActualizarLabelProveedor;
+  // Al navegar entre facturas hay que recalcular el total de prendas: las
+  // lineas cargadas son las de la factura recien enfocada.
+  if Field = nil then
+    ActualizarLabelPrendas;
   if Field <> nil then Exit;
   if FPivote = nil then Exit;
   if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
@@ -944,12 +981,63 @@ begin
   FPivote.RecargarYRepublicar;
 end;
 
+procedure TfrmMtoFacturasCompra.ActualizarLabelProveedor;
+var
+  sCodigo : string;
+  sNombre : string;
+  sRazon  : string;
+begin
+  // Resuelve NOMBRE_PRV + RAZON_SOCIAL_PRV (via el lookup unqryPrvDataFacc)
+  // y los pinta en el rotulo. Se antepone el nombre comercial: es el que
+  // el usuario reconoce a simple vista; la razon social solo se anade
+  // entre parentesis como referencia si difiere.
+  sCodigo := '';
+  if (dmmFacturasCompra <> nil) and Assigned(dmmFacturasCompra.unqryTablaG) and
+     dmmFacturasCompra.unqryTablaG.Active and
+     (not dmmFacturasCompra.unqryTablaG.IsEmpty) then
+    sCodigo :=
+      Trim(dmmFacturasCompra.unqryTablaG.FieldByName('CODIGO_PRV_FACC').AsString);
+  if sCodigo = '' then
+    lblProveedorNombreFacc.Caption := ''
+  else if (dmmFacturasCompra.unqryPrvDataFacc <> nil) and
+          dmmFacturasCompra.unqryPrvDataFacc.Active and
+          dmmFacturasCompra.unqryPrvDataFacc.Locate('CODIGO_PRV_PRV', sCodigo, []) then
+  begin
+    sRazon  := dmmFacturasCompra.unqryPrvDataFacc.FieldByName('RAZON_SOCIAL_PRV').AsString;
+    sNombre := dmmFacturasCompra.unqryPrvDataFacc.FieldByName('NOMBRE_PRV').AsString;
+    // Si no hay nombre comercial cargado, caemos a la razon social como
+    // rotulo principal. Si hay nombre y difiere de la razon social, la
+    // razon social se anade entre parentesis como referencia.
+    if Trim(sNombre) = '' then
+      lblProveedorNombreFacc.Caption := sCodigo + ' - ' + sRazon
+    else if not SameText(Trim(sNombre), Trim(sRazon)) then
+      lblProveedorNombreFacc.Caption :=
+        sCodigo + ' - ' + sNombre + '  (' + sRazon + ')'
+    else
+      lblProveedorNombreFacc.Caption := sCodigo + ' - ' + sNombre;
+  end
+  else
+    lblProveedorNombreFacc.Caption := sCodigo + ' - (proveedor no encontrado)';
+end;
+
+procedure TfrmMtoFacturasCompra.ActualizarLabelPrendas;
+begin
+  if (dmmFacturasCompra <> nil) and Assigned(dmmFacturasCompra.unqryTablaG) and
+     dmmFacturasCompra.unqryTablaG.Active and
+     (not dmmFacturasCompra.unqryTablaG.IsEmpty) then
+    lblTotalPrendasFacc.Caption :=
+      FormatFloat('#,##0', dmmFacturasCompra.TotalPrendasFactura)
+  else
+    lblTotalPrendasFacc.Caption := '0';
+end;
+
 // Hook AfterPost del detail: encadena la logica original del DM
 // (CalcularTotalesFacturaCompra) con la republicacion del controlador.
 procedure TfrmMtoFacturasCompra.unqryLineasAfterPostHook(DataSet: TDataSet);
 begin
   if Assigned(dmmFacturasCompra) then
     dmmFacturasCompra.CalcularTotalesFacturaCompra;
+  ActualizarLabelPrendas;
   if Assigned(FPivote) and FPivote.Activo then
     FPivote.RecargarYRepublicar;
 end;
@@ -1453,7 +1541,7 @@ begin
     ShowMto(Self.Owner, 'Proveedores', sPrv);
 end;
 
-procedure TfrmMtoFacturasCompra.btnCODIGO_PRV_FACCPropertiesEditValueChanged(
+procedure TfrmMtoFacturasCompra.cbbCODIGO_PRV_FACCPropertiesEditValueChanged(
   Sender: TObject);
 var
   e: TcxCustomEdit;
@@ -1468,6 +1556,51 @@ begin
     e := Sender as TcxCustomEdit;
     sCodigo := VarToStr(e.EditingValue);
     dmmFacturasCompra.CargarFormaPagoProveedor(sCodigo);
+  end;
+  ActualizarLabelProveedor;
+end;
+
+// Boton "..." del combo de proveedor: busqueda modal por nombre/razon
+// social, acceso alternativo a la busqueda incremental por codigo del
+// propio combo.
+procedure TfrmMtoFacturasCompra.cbbCODIGO_PRV_FACCPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sCodigo : string;
+  ds      : TDataSet;
+begin
+  inherited;
+  if Assigned(dmmFacturasCompra) then
+  begin
+    ds := dmmFacturasCompra.unqryTablaG;
+    if ds.IsEmpty then
+      MessageDlg('Crea o selecciona una factura de compra antes de ' +
+                 'elegir el proveedor.', mtInformation, [mbOk], 0)
+    else if TBusquedaUtils.EjecutarBusqueda(
+              'Búsqueda de proveedores',
+              'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
+              'CODIGO_PRV_PRV',
+              sCodigo,
+              'frmMtoFaccProvSearch',
+              Self) then
+    begin
+      if not (ds.State in [dsInsert, dsEdit]) then
+        ds.Edit;
+      ds.FieldByName('CODIGO_PRV_FACC').AsString := sCodigo;
+      dmmFacturasCompra.CargarFormaPagoProveedor(sCodigo);
+      ActualizarLabelProveedor;
+    end;
+  end;
+end;
+
+procedure TfrmMtoFacturasCompra.cbbCODIGO_PRV_FACCKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  inherited;
+  if (Key = VK_RETURN) and (ssCtrl in Shift) then
+  begin
+    Key := 0;
+    cbbCODIGO_PRV_FACCPropertiesButtonClick(Sender, 0);
   end;
 end;
 

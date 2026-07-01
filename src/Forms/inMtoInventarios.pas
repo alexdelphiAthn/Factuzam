@@ -1706,6 +1706,7 @@ begin
       '    v.DESCRIPCION_FAM,'                                      + sLineBreak +
       '    pv.PV                       AS TEMPORADA,'               + sLineBreak +
       '    v.RAZON_SOCIAL_PROVEEDOR,'                               + sLineBreak +
+      '    v.REF_PROVEEDOR,'                                        + sLineBreak +
       '    v.PRECIO_ULT_COMPRA,'                                    + sLineBreak +
       '    v.PRECIO_FINAL_ARTTAR,'                                  + sLineBreak +
       '    v.TIPO_CANTIDAD_ART'                                     + sLineBreak +
@@ -1729,6 +1730,8 @@ begin
                 'Temporada',             '');
     ConfigCampo(unqryBusq.FindField('RAZON_SOCIAL_PROVEEDOR'),
                 'Proveedor',             '');
+    ConfigCampo(unqryBusq.FindField('REF_PROVEEDOR'),
+                'Ref. proveedor',        '');
     ConfigCampo(unqryBusq.FindField('PRECIO_ULT_COMPRA'),
                 'P. compra',             '#,##0.00 €');
     ConfigCampo(unqryBusq.FindField('PRECIO_FINAL_ARTTAR'),

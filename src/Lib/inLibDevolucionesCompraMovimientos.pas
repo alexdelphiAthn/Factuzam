@@ -148,9 +148,19 @@ begin
       '       L.CODIGO_UNIDAD_DEVCLIN             AS SKU, ' +
       '       L.CODIGO_ART_DEVCLIN                AS ARTICULO, ' +
       '       L.CANTIDAD_DEVCLIN                  AS CANTIDAD, ' +
-      '       L.PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN AS PRECIO, ' +
+      '       L.PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN * ' +
+      '       CASE WHEN IFNULL(A.TOTAL_BRUTO_DEVC, 0) > 0 THEN ' +
+      '              GREATEST(0, 1 - CASE ' +
+      '                WHEN IFNULL(A.TOTAL_DTO_COMERCIAL_DEVC, 0) <> 0 ' +
+      '                THEN IFNULL(A.TOTAL_DTO_COMERCIAL_DEVC, 0) / A.TOTAL_BRUTO_DEVC ' +
+      '                ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_DEVC, 0) / 100 END) ' +
+      '            ELSE GREATEST(0, 1 - IFNULL(A.PORCENTAJE_DTO_COMERCIAL_DEVC, 0) / 100) ' +
+      '       END AS PRECIO, ' +
       '       IFNULL(NULLIF(L.CODIGO_ALMACEN_DEVCLIN, ''''), :alm_cab1) AS ALMACEN ' +
       '  FROM fza_devoluciones_compra_lineas L ' +
+      '  JOIN fza_devoluciones_compra A ' +
+      '    ON A.SERIE_DEVC = L.SERIE_DEVC_DEVCLIN ' +
+      '   AND A.NUMERO_DEVC = L.NUMERO_DEVC_DEVCLIN ' +
       ' WHERE L.SERIE_DEVC_DEVCLIN  = :s1 ' +
       '   AND L.NUMERO_DEVC_DEVCLIN = :n1 ' +
       '   AND IFNULL(L.CANTIDAD_DEVCLIN, 0) > 0 ' +
@@ -165,10 +175,20 @@ begin
       '       L.CODIGO_UNIDAD_DEVCLIN             AS SKU, ' +
       '       L.CODIGO_ART_DEVCLIN                AS ARTICULO, ' +
       '       C.CANTIDAD_DEVCCEL                  AS CANTIDAD, ' +
-      '       L.PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN AS PRECIO, ' +
+      '       L.PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN * ' +
+      '       CASE WHEN IFNULL(A.TOTAL_BRUTO_DEVC, 0) > 0 THEN ' +
+      '              GREATEST(0, 1 - CASE ' +
+      '                WHEN IFNULL(A.TOTAL_DTO_COMERCIAL_DEVC, 0) <> 0 ' +
+      '                THEN IFNULL(A.TOTAL_DTO_COMERCIAL_DEVC, 0) / A.TOTAL_BRUTO_DEVC ' +
+      '                ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_DEVC, 0) / 100 END) ' +
+      '            ELSE GREATEST(0, 1 - IFNULL(A.PORCENTAJE_DTO_COMERCIAL_DEVC, 0) / 100) ' +
+      '       END AS PRECIO, ' +
       '       IFNULL(NULLIF(C.CODIGO_ALM_DEVCCEL, ''''), ' +
       '              IFNULL(NULLIF(L.CODIGO_ALMACEN_DEVCLIN, ''''), :alm_cab2)) AS ALMACEN ' +
       '  FROM fza_devoluciones_compra_lineas L ' +
+      '  JOIN fza_devoluciones_compra A ' +
+      '    ON A.SERIE_DEVC = L.SERIE_DEVC_DEVCLIN ' +
+      '   AND A.NUMERO_DEVC = L.NUMERO_DEVC_DEVCLIN ' +
       '  JOIN fza_devoluciones_compra_celdas C ' +
       '    ON C.SERIE_DEVC_DEVCCEL  = L.SERIE_DEVC_DEVCLIN ' +
       '   AND C.NUMERO_DEVC_DEVCCEL = L.NUMERO_DEVC_DEVCLIN ' +

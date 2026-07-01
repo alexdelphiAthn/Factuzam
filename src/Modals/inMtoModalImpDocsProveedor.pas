@@ -226,7 +226,7 @@ begin
     Add('       D.BASE_DOC AS TOTAL_BASES_DOC,');
     Add('       D.IVA_DOC AS TOTAL_IVA_DOC,');
     Add('       D.RE_DOC AS TOTAL_RE_DOC,');
-    Add('       D.BASE_DOC + D.IVA_DOC + D.RE_DOC AS TOTAL_LIQUIDO_DOC');
+    Add('       D.LIQUIDO_DOC AS TOTAL_LIQUIDO_DOC');
     Add('  FROM (');
     Add('  SELECT ''PED'' AS TIPO_DOC,');
     Add('         ''Pedido'' AS TIPO_DOC_NOMBRE,');
@@ -251,7 +251,8 @@ begin
     Add('         COALESCE(P.TOTAL_REN_PEDC, 0)');
     Add('           + COALESCE(P.TOTAL_RER_PEDC, 0)');
     Add('           + COALESCE(P.TOTAL_RES_PEDC, 0)');
-    Add('           + COALESCE(P.TOTAL_REE_PEDC, 0) AS RE_DOC');
+    Add('           + COALESCE(P.TOTAL_REE_PEDC, 0) AS RE_DOC,');
+    Add('         COALESCE(P.TOTAL_LIQUIDO_PEDC, 0) AS LIQUIDO_DOC');
     Add('    FROM fza_pedidos_compra P');
     Add('    LEFT JOIN fza_propiedades_valores TP');
     Add('      ON TP.ID_PV_ARTPROP = P.ID_PV_TEMPORADA_PEDC');
@@ -299,7 +300,8 @@ begin
     Add('         COALESCE(A.TOTAL_REN_ALBC, 0)');
     Add('           + COALESCE(A.TOTAL_RER_ALBC, 0)');
     Add('           + COALESCE(A.TOTAL_RES_ALBC, 0)');
-    Add('           + COALESCE(A.TOTAL_REE_ALBC, 0) AS RE_DOC');
+    Add('           + COALESCE(A.TOTAL_REE_ALBC, 0) AS RE_DOC,');
+    Add('         COALESCE(A.TOTAL_LIQUIDO_ALBC, 0) AS LIQUIDO_DOC');
     Add('    FROM fza_albaranes_compra A');
     Add('    LEFT JOIN fza_pedidos_compra P');
     Add('      ON P.SERIE_PEDC = A.SERIE_PED_ALBC');
@@ -351,7 +353,8 @@ begin
     Add('         COALESCE(F.TOTAL_REN_FACC, 0)');
     Add('           + COALESCE(F.TOTAL_RER_FACC, 0)');
     Add('           + COALESCE(F.TOTAL_RES_FACC, 0)');
-    Add('           + COALESCE(F.TOTAL_REE_FACC, 0) AS RE_DOC');
+    Add('           + COALESCE(F.TOTAL_REE_FACC, 0) AS RE_DOC,');
+    Add('         COALESCE(F.TOTAL_LIQUIDO_FACC, 0) AS LIQUIDO_DOC');
     Add('    FROM fza_facturas_compra F');
     Add('    LEFT JOIN fza_propiedades_valores TF');
     Add('      ON TF.ID_PV_ARTPROP = F.ID_PV_TEMPORADA_FACC');
@@ -416,7 +419,8 @@ begin
     Add('         -(COALESCE(V.TOTAL_REN_DEVC, 0)');
     Add('           + COALESCE(V.TOTAL_RER_DEVC, 0)');
     Add('           + COALESCE(V.TOTAL_RES_DEVC, 0)');
-    Add('           + COALESCE(V.TOTAL_REE_DEVC, 0)) AS RE_DOC');
+    Add('           + COALESCE(V.TOTAL_REE_DEVC, 0)) AS RE_DOC,');
+    Add('         -COALESCE(V.TOTAL_LIQUIDO_DEVC, 0) AS LIQUIDO_DOC');
     Add('    FROM fza_devoluciones_compra V');
     Add('    LEFT JOIN fza_pedidos_compra P');
     Add('      ON P.SERIE_PEDC = V.SERIE_PED_DEVC');

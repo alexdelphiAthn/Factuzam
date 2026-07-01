@@ -743,6 +743,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       '    v.CODIGO_ART_ART AS CODIGO_PADRE,'
       '    v.DESCRIPCION_ART,'
       '    v.RAZON_SOCIAL_PROVEEDOR,'
+      '    v.REF_PROVEEDOR,'
       '    pv.PV AS TEMPORADA'
       'FROM vi_art_busquedas v'
       'LEFT JOIN fza_articulos_propiedades ap'
@@ -829,6 +830,11 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       object dbtvBusqPROVEEDOR: TcxGridDBColumn
         Caption = 'Proveedor'
         DataBinding.FieldName = 'RAZON_SOCIAL_PROVEEDOR'
+      end
+      object dbtvBusqREF_PROVEEDOR: TcxGridDBColumn
+        Caption = 'Ref. proveedor'
+        DataBinding.FieldName = 'REF_PROVEEDOR'
+        Width = 120
       end
     end
   end

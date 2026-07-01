@@ -46,6 +46,31 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
               DataBinding.FieldName = 'FECHA_ALBC'
               Width = 100
             end
+            object dbcGrdAlbcTEMPORADA_ALBC: TcxGridDBColumn
+              Caption = 'Temporada'
+              DataBinding.FieldName = 'TEMPORADA_ALBC'
+              Width = 120
+            end
+            object dbcGrdAlbcFECHA_EFECTO_STOCK_ALBC: TcxGridDBColumn
+              Caption = 'F.stock'
+              DataBinding.FieldName = 'FECHA_EFECTO_STOCK_ALBC'
+              Width = 100
+            end
+            object dbcGrdAlbcFECHA_TOPE_RECEPCION_ALBC: TcxGridDBColumn
+              Caption = 'F.tope recep.'
+              DataBinding.FieldName = 'FECHA_TOPE_RECEPCION_ALBC'
+              Width = 110
+            end
+            object dbcGrdAlbcTOTAL_PRENDAS_ALBC: TcxGridDBColumn
+              Caption = 'Prendas'
+              DataBinding.FieldName = 'TOTAL_PRENDAS_ALBC'
+              Width = 90
+            end
+            object dbcGrdAlbcTOTAL_LINEAS_ALBC: TcxGridDBColumn
+              Caption = 'Neto lineas'
+              DataBinding.FieldName = 'TOTAL_LINEAS_ALBC'
+              Width = 110
+            end
             object dbcGrdAlbcESTADO_ALBC: TcxGridDBColumn
               Caption = 'Estado'
               DataBinding.FieldName = 'ESTADO_ALBC'
@@ -303,19 +328,26 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 TabOrder = 10
                 Transparent = True
               end
-              object btnCODIGO_PRV_ALBC: TcxDBButtonEdit
+              object cbbCODIGO_PRV_ALBC: TcxDBLookupComboBox
                 Left = 168
                 Top = 100
                 DataBinding.DataField = 'CODIGO_PRV_ALBC'
                 DataBinding.DataSource = dsTablaG
-                Properties.Buttons = <
+                Properties.DropDownListStyle = lsEditList
+                Properties.DropDownRows = 15
+                Properties.IncrementalFiltering = True
+                Properties.KeyFieldNames = 'CODIGO_PRV_PRV'
+                Properties.ListColumns = <
                   item
-                    Default = True
-                    Kind = bkEllipsis
+                    Caption = 'C'#243'digo'
+                    FieldName = 'CODIGO_PRV_PRV'
+                  end
+                  item
+                    Caption = 'Proveedor'
+                    FieldName = 'RAZON_SOCIAL_PRV'
                   end>
-                Properties.OnButtonClick = btnCODIGO_PRV_ALBCPropertiesButtonClick
                 TabOrder = 11
-                OnKeyUp = btnCODIGO_PRV_ALBCKeyUp
+                OnKeyUp = cbbCODIGO_PRV_ALBCKeyUp
                 Width = 150
               end
               object lblRefProveedor: TcxLabel
@@ -357,6 +389,19 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Properties.ValueChecked = 'S'
                 Properties.ValueUnchecked = 'N'
                 TabOrder = 16
+              end
+              object lblProveedorNombreAlbc: TcxLabel
+                Left = 168
+                Top = 124
+                ParentFont = False
+                Style.Font.Charset = ANSI_CHARSET
+                Style.Font.Color = clWindowText
+                Style.Font.Height = -15
+                Style.Font.Name = 'Lucida Sans'
+                Style.Font.Style = [fsBold]
+                Style.IsFontAssigned = True
+                TabOrder = 17
+                Transparent = True
               end
             end
           end
@@ -737,13 +782,87 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                   TabOrder = 12
                   Transparent = True
                 end
+                object lblTotalesDtoComercial: TcxLabel
+                  Left = 60
+                  Top = 305
+                  Caption = 'Dto. comercial'
+                  TabOrder = 13
+                  Transparent = True
+                end
+                object spnTotalesPORCENTAJE_DTO_COMERCIAL_ALBC: TcxDBSpinEdit
+                  Left = 230
+                  Top = 301
+                  DataBinding.DataField = 'PORCENTAJE_DTO_COMERCIAL_ALBC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.AssignedValues.MinValue = True
+                  Properties.DisplayFormat = '0.00 %'
+                  Properties.EditFormat = '0.00 %'
+                  Properties.MaxValue = 100.000000000000000000
+                  TabOrder = 14
+                  Width = 60
+                end
+                object curTotalesTOTAL_DTO_COMERCIAL_ALBC: TcxDBCurrencyEdit
+                  Left = 296
+                  Top = 301
+                  DataBinding.DataField = 'TOTAL_DTO_COMERCIAL_ALBC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ReadOnly = True
+                  TabOrder = 15
+                  Width = 67
+                end
+                object lblTotalesDtoFinanciero: TcxLabel
+                  Left = 59
+                  Top = 329
+                  Caption = 'Dto. financiero'
+                  TabOrder = 16
+                  Transparent = True
+                end
+                object spnTotalesPORCENTAJE_DTO_FINANCIERO_ALBC: TcxDBSpinEdit
+                  Left = 230
+                  Top = 325
+                  DataBinding.DataField = 'PORCENTAJE_DTO_FINANCIERO_ALBC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.AssignedValues.MinValue = True
+                  Properties.DisplayFormat = '0.00 %'
+                  Properties.EditFormat = '0.00 %'
+                  Properties.MaxValue = 100.000000000000000000
+                  TabOrder = 17
+                  Width = 60
+                end
+                object curTotalesTOTAL_DTO_FINANCIERO_ALBC: TcxDBCurrencyEdit
+                  Left = 296
+                  Top = 325
+                  DataBinding.DataField = 'TOTAL_DTO_FINANCIERO_ALBC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ReadOnly = True
+                  TabOrder = 18
+                  Width = 67
+                end
+                object lblTotalesTotalPrendas: TcxLabel
+                  Left = 60
+                  Top = 365
+                  Caption = 'N'#186' de prendas'
+                  TabOrder = 19
+                  Transparent = True
+                end
+                object curTotalesTOTAL_PRENDAS_ALBC: TcxDBCurrencyEdit
+                  Left = 230
+                  Top = 361
+                  DataBinding.DataField = 'TOTAL_PRENDAS_ALBC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.DecimalPlaces = 0
+                  Properties.DisplayFormat = '#,##0'
+                  Properties.ReadOnly = True
+                  TabOrder = 20
+                  Width = 133
+                end
                 object grpDesgloseImpuestos: TGroupBox
                   Left = 384
                   Top = 11
                   Width = 525
                   Height = 318
                   Caption = 'Desglose Impuestos'
-                  TabOrder = 13
+                  TabOrder = 21
                   object shpSeparador1: TShape
                     Left = 128
                     Top = 32

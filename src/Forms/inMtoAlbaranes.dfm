@@ -890,13 +890,30 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                   TabOrder = 8
                   Transparent = True
                 end
+                object lblTotalesTotalPrendas: TcxLabel
+                  Left = 60
+                  Top = 235
+                  Caption = 'N'#186' de prendas'
+                  TabOrder = 9
+                  Transparent = True
+                end
+                object lblTotalPrendasAlb: TcxLabel
+                  Left = 230
+                  Top = 235
+                  AutoSize = False
+                  Caption = '0'
+                  TabOrder = 10
+                  Transparent = True
+                  Height = 20
+                  Width = 133
+                end
                 object grpDesgloseImpuestos: TGroupBox
                   Left = 384
                   Top = 35
                   Width = 360
                   Height = 250
                   Caption = 'Desglose IVA'
-                  TabOrder = 9
+                  TabOrder = 11
                   object lblTotalesTotalIva: TcxLabel
                     Left = 236
                     Top = 40

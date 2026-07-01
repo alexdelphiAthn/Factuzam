@@ -52,6 +52,46 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
               DataBinding.FieldName = 'FECHA_PREVISTA_PEDC'
               Width = 100
             end
+            object dbcGrdPedcFECHA_TOPE_RECEPCION_PEDC: TcxGridDBColumn
+              Caption = 'F.tope recep.'
+              DataBinding.FieldName = 'FECHA_TOPE_RECEPCION_PEDC'
+              Width = 110
+            end
+            object dbcGrdPedcTEMPORADA_PEDC: TcxGridDBColumn
+              Caption = 'Temporada'
+              DataBinding.FieldName = 'TEMPORADA_PEDC'
+              Width = 120
+            end
+            object dbcGrdPedcFECHA_EFECTO_STOCK_PEDC: TcxGridDBColumn
+              Caption = 'F.stock'
+              DataBinding.FieldName = 'FECHA_EFECTO_STOCK_PEDC'
+              Width = 100
+            end
+            object dbcGrdPedcTOTAL_PRENDAS_PEDC: TcxGridDBColumn
+              Caption = 'Prendas'
+              DataBinding.FieldName = 'TOTAL_PRENDAS_PEDC'
+              Width = 90
+            end
+            object dbcGrdPedcTOTAL_LINEAS_PEDC: TcxGridDBColumn
+              Caption = 'Neto lineas'
+              DataBinding.FieldName = 'TOTAL_LINEAS_PEDC'
+              Width = 110
+            end
+            object dbcGrdPedcCANTIDAD_PEDIDA_PEDC: TcxGridDBColumn
+              Caption = 'Pedidas'
+              DataBinding.FieldName = 'CANTIDAD_PEDIDA_PEDC'
+              Width = 90
+            end
+            object dbcGrdPedcCANTIDAD_RECIBIDA_PEDC: TcxGridDBColumn
+              Caption = 'Recibidas'
+              DataBinding.FieldName = 'CANTIDAD_RECIBIDA_PEDC'
+              Width = 90
+            end
+            object dbcGrdPedcCANTIDAD_PENDIENTE_RECEPCION_PEDC: TcxGridDBColumn
+              Caption = 'Pte. recibir'
+              DataBinding.FieldName = 'CANTIDAD_PENDIENTE_RECEPCION_PEDC'
+              Width = 95
+            end
             object dbcGrdPedcESTADO_PEDC: TcxGridDBColumn
               Caption = 'Estado'
               DataBinding.FieldName = 'ESTADO_PEDC'
@@ -181,6 +221,21 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 TabOrder = 7
                 Width = 110
               end
+              object lblFechaTopeRecepcionPedc: TcxLabel
+                Left = 756
+                Top = 12
+                Caption = 'F.tope recep.'
+                TabOrder = 20
+                Transparent = True
+              end
+              object dteFECHA_TOPE_RECEPCION_PEDC: TcxDBDateEdit
+                Left = 756
+                Top = 32
+                DataBinding.DataField = 'FECHA_TOPE_RECEPCION_PEDC'
+                DataBinding.DataSource = dsTablaG
+                TabOrder = 21
+                Width = 115
+              end
               object lblEstadoPedido: TcxLabel
                 Left = 436
                 Top = 12
@@ -226,19 +281,26 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 TabOrder = 12
                 Transparent = True
               end
-              object btnCODIGO_PRV_PEDC: TcxDBButtonEdit
+              object cbbCODIGO_PRV_PEDC: TcxDBLookupComboBox
                 Left = 168
                 Top = 92
                 DataBinding.DataField = 'CODIGO_PRV_PEDC'
                 DataBinding.DataSource = dsTablaG
-                Properties.Buttons = <
+                Properties.DropDownListStyle = lsEditList
+                Properties.DropDownRows = 15
+                Properties.IncrementalFiltering = True
+                Properties.KeyFieldNames = 'CODIGO_PRV_PRV'
+                Properties.ListColumns = <
                   item
-                    Default = True
-                    Kind = bkEllipsis
+                    Caption = 'C'#243'digo'
+                    FieldName = 'CODIGO_PRV_PRV'
+                  end
+                  item
+                    Caption = 'Proveedor'
+                    FieldName = 'RAZON_SOCIAL_PRV'
                   end>
-                Properties.OnButtonClick = btnCODIGO_PRV_PEDCPropertiesButtonClick
                 TabOrder = 13
-                OnKeyUp = btnCODIGO_PRV_PEDCKeyUp
+                OnKeyUp = cbbCODIGO_PRV_PEDCKeyUp
                 Width = 150
               end
               object lblRefProveedor: TcxLabel
@@ -292,6 +354,93 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 Properties.ListOptions.ShowHeader = False
                 TabOrder = 19
                 Width = 180
+              end
+              object lblCabCantidadPedidaPedc: TcxLabel
+                Left = 650
+                Top = 72
+                Caption = 'Pedida'
+                TabOrder = 22
+                Transparent = True
+              end
+              object curCabCANTIDAD_PEDIDA_PEDC: TcxDBCurrencyEdit
+                Left = 650
+                Top = 92
+                DataBinding.DataField = 'CANTIDAD_PEDIDA_PEDC'
+                DataBinding.DataSource = dsTablaG
+                Properties.DecimalPlaces = 3
+                Properties.DisplayFormat = '#,##0.###'
+                Properties.ReadOnly = True
+                TabOrder = 23
+                TabStop = False
+                Width = 68
+              end
+              object lblCabCantidadRecibidaPedc: TcxLabel
+                Left = 722
+                Top = 72
+                Caption = 'Recibida'
+                TabOrder = 24
+                Transparent = True
+              end
+              object curCabCANTIDAD_RECIBIDA_PEDC: TcxDBCurrencyEdit
+                Left = 722
+                Top = 92
+                DataBinding.DataField = 'CANTIDAD_RECIBIDA_PEDC'
+                DataBinding.DataSource = dsTablaG
+                Properties.DecimalPlaces = 3
+                Properties.DisplayFormat = '#,##0.###'
+                Properties.ReadOnly = True
+                TabOrder = 25
+                TabStop = False
+                Width = 68
+              end
+              object lblCabCantidadPendientePedc: TcxLabel
+                Left = 794
+                Top = 72
+                Caption = 'Pte. rec.'
+                TabOrder = 26
+                Transparent = True
+              end
+              object curCabCANTIDAD_PENDIENTE_RECEPCION_PEDC: TcxDBCurrencyEdit
+                Left = 794
+                Top = 92
+                DataBinding.DataField = 'CANTIDAD_PENDIENTE_RECEPCION_PEDC'
+                DataBinding.DataSource = dsTablaG
+                Properties.DecimalPlaces = 3
+                Properties.DisplayFormat = '#,##0.###'
+                Properties.ReadOnly = True
+                TabOrder = 27
+                TabStop = False
+                Width = 68
+              end
+              object lblCabCantidadAAlbaranarPedc: TcxLabel
+                Left = 866
+                Top = 72
+                Caption = 'A alb.'
+                TabOrder = 28
+                Transparent = True
+              end
+              object curCabCANTIDAD_A_ALBARANAR_PEDC: TcxCurrencyEdit
+                Left = 866
+                Top = 92
+                Properties.DecimalPlaces = 3
+                Properties.DisplayFormat = '#,##0.###'
+                Properties.ReadOnly = True
+                TabOrder = 29
+                TabStop = False
+                Width = 64
+              end
+              object lblProveedorNombrePedc: TcxLabel
+                Left = 168
+                Top = 116
+                ParentFont = False
+                Style.Font.Charset = ANSI_CHARSET
+                Style.Font.Color = clWindowText
+                Style.Font.Height = -15
+                Style.Font.Name = 'Lucida Sans'
+                Style.Font.Style = [fsBold]
+                Style.IsFontAssigned = True
+                TabOrder = 30
+                Transparent = True
               end
             end
           end
@@ -602,13 +751,87 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                   TabOrder = 12
                   Transparent = True
                 end
+                object lblTotalesDtoComercial: TcxLabel
+                  Left = 60
+                  Top = 305
+                  Caption = 'Dto. comercial'
+                  TabOrder = 13
+                  Transparent = True
+                end
+                object spnTotalesPORCENTAJE_DTO_COMERCIAL_PEDC: TcxDBSpinEdit
+                  Left = 230
+                  Top = 301
+                  DataBinding.DataField = 'PORCENTAJE_DTO_COMERCIAL_PEDC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.AssignedValues.MinValue = True
+                  Properties.DisplayFormat = '0.00 %'
+                  Properties.EditFormat = '0.00 %'
+                  Properties.MaxValue = 100.000000000000000000
+                  TabOrder = 14
+                  Width = 60
+                end
+                object curTotalesTOTAL_DTO_COMERCIAL_PEDC: TcxDBCurrencyEdit
+                  Left = 296
+                  Top = 301
+                  DataBinding.DataField = 'TOTAL_DTO_COMERCIAL_PEDC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ReadOnly = True
+                  TabOrder = 15
+                  Width = 67
+                end
+                object lblTotalesDtoFinanciero: TcxLabel
+                  Left = 59
+                  Top = 329
+                  Caption = 'Dto. financiero'
+                  TabOrder = 16
+                  Transparent = True
+                end
+                object spnTotalesPORCENTAJE_DTO_FINANCIERO_PEDC: TcxDBSpinEdit
+                  Left = 230
+                  Top = 325
+                  DataBinding.DataField = 'PORCENTAJE_DTO_FINANCIERO_PEDC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.AssignedValues.MinValue = True
+                  Properties.DisplayFormat = '0.00 %'
+                  Properties.EditFormat = '0.00 %'
+                  Properties.MaxValue = 100.000000000000000000
+                  TabOrder = 17
+                  Width = 60
+                end
+                object curTotalesTOTAL_DTO_FINANCIERO_PEDC: TcxDBCurrencyEdit
+                  Left = 296
+                  Top = 325
+                  DataBinding.DataField = 'TOTAL_DTO_FINANCIERO_PEDC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ReadOnly = True
+                  TabOrder = 18
+                  Width = 67
+                end
+                object lblTotalesTotalPrendas: TcxLabel
+                  Left = 60
+                  Top = 365
+                  Caption = 'N'#186' de prendas'
+                  TabOrder = 19
+                  Transparent = True
+                end
+                object curTotalesTOTAL_PRENDAS_PEDC: TcxDBCurrencyEdit
+                  Left = 230
+                  Top = 361
+                  DataBinding.DataField = 'TOTAL_PRENDAS_PEDC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.DecimalPlaces = 0
+                  Properties.DisplayFormat = '#,##0'
+                  Properties.ReadOnly = True
+                  TabOrder = 20
+                  Width = 133
+                end
                 object grpDesgloseImpuestos: TGroupBox
                   Left = 384
                   Top = 11
                   Width = 525
                   Height = 318
                   Caption = 'Desglose Impuestos'
-                  TabOrder = 13
+                  TabOrder = 21
                   object shpSeparador1: TShape
                     Left = 128
                     Top = 32
@@ -1165,6 +1388,15 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
       Caption = 'Crear albar'#225'n'
       TabOrder = 2
       OnClick = btnCrearAlbaranClick
+    end
+    object btnPegatinas: TcxButton
+      Left = 7
+      Top = 322
+      Width = 121
+      Height = 26
+      Caption = 'Etiquetas'
+      TabOrder = 3
+      OnClick = btnPegatinasClick
     end
   end
   object ActionList1: TActionList

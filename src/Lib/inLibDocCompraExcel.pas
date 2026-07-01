@@ -218,6 +218,7 @@ var
   sSufijo: string;
   iColFin, iFilaInicio: Integer;
   bTieneRe, bTieneRetencion: Boolean;
+  bTieneDtoComercial, bTieneDtoFinanciero: Boolean;
 begin
   sSufijo := SufijoFiscalCompra(ADataSet);
   if sSufijo <> '' then
@@ -225,6 +226,14 @@ begin
     bTieneRe := TieneRecargoFiscal(ADataSet, sSufijo);
     bTieneRetencion :=
       Abs(CampoFloat(ADataSet, 'TOTAL_RETENCION_' + sSufijo)) > 0.001;
+    bTieneDtoComercial :=
+      Abs(CampoFloatPrimero(ADataSet,
+      ['TOTAL_DTO_COMERCIAL_' + sSufijo,
+       'TOTAL_DTO_COMERCIAL_' + sSufijo + '_PRINT'])) > 0.001;
+    bTieneDtoFinanciero :=
+      Abs(CampoFloatPrimero(ADataSet,
+      ['TOTAL_DTO_FINANCIERO_' + sSufijo,
+       'TOTAL_DTO_FINANCIERO_' + sSufijo + '_PRINT'])) > 0.001;
     iColFin := AColInicio + 3;
     if bTieneRe then
       iColFin := AColInicio + 5;
@@ -251,6 +260,34 @@ begin
     PintarLineaFiscalCompra(Sheet, ADataSet, sSufijo, 'Exento',
       'IVAE', 'REE', ARow, AColInicio, bTieneRe);
     Inc(ARow);
+    if bTieneDtoComercial then
+    begin
+      W(Sheet, ARow, AColInicio, 'Total bruto', True);
+      W(Sheet, ARow, AColInicio + 1,
+        CampoFloatPrimero(ADataSet,
+        ['TOTAL_BRUTO_' + sSufijo, 'TOTAL_BRUTO_' + sSufijo + '_PRINT']),
+        True, ssahRight);
+      Sheet.Cells[ARow, AColInicio + 1].Style.DataFormat.FormatCode :=
+        FMT_EUR;
+      Inc(ARow);
+      W(Sheet, ARow, AColInicio, 'Dto. comercial', True);
+      W(Sheet, ARow, AColInicio + 2,
+        CampoFloatPrimero(ADataSet,
+        ['PORCENTAJE_DTO_COMERCIAL_' + sSufijo,
+         'PORCENTAJE_DTO_COMERCIAL_' + sSufijo + '_PRINT']),
+        False, ssahRight);
+      Sheet.Cells[ARow, AColInicio + 2].Style.DataFormat.FormatCode :=
+        '0.##"%"';
+      W(Sheet, ARow, AColInicio + 3,
+        -CampoFloatPrimero(ADataSet,
+        ['TOTAL_DTO_COMERCIAL_' + sSufijo,
+         'TOTAL_DTO_COMERCIAL_' + sSufijo + '_PRINT']),
+        False, ssahRight);
+      Sheet.Cells[ARow, AColInicio + 3].Style.DataFormat.FormatCode :=
+        FMT_EUR;
+      Sheet.Cells[ARow, AColInicio + 3].Style.Font.Color := clRed;
+      Inc(ARow);
+    end;
     W(Sheet, ARow, AColInicio, 'Total bases', True);
     W(Sheet, ARow, AColInicio + 1,
       CampoFloat(ADataSet, 'TOTAL_BASES_' + sSufijo), True, ssahRight);
@@ -270,6 +307,26 @@ begin
         '0.##"%"';
       W(Sheet, ARow, AColInicio + 3,
         -CampoFloat(ADataSet, 'TOTAL_RETENCION_' + sSufijo),
+        False, ssahRight);
+      Sheet.Cells[ARow, AColInicio + 3].Style.DataFormat.FormatCode :=
+        FMT_EUR;
+      Sheet.Cells[ARow, AColInicio + 3].Style.Font.Color := clRed;
+    end;
+    if bTieneDtoFinanciero then
+    begin
+      Inc(ARow);
+      W(Sheet, ARow, AColInicio, 'Dto. financiero', True);
+      W(Sheet, ARow, AColInicio + 2,
+        CampoFloatPrimero(ADataSet,
+        ['PORCENTAJE_DTO_FINANCIERO_' + sSufijo,
+         'PORCENTAJE_DTO_FINANCIERO_' + sSufijo + '_PRINT']),
+        False, ssahRight);
+      Sheet.Cells[ARow, AColInicio + 2].Style.DataFormat.FormatCode :=
+        '0.##"%"';
+      W(Sheet, ARow, AColInicio + 3,
+        -CampoFloatPrimero(ADataSet,
+        ['TOTAL_DTO_FINANCIERO_' + sSufijo,
+         'TOTAL_DTO_FINANCIERO_' + sSufijo + '_PRINT']),
         False, ssahRight);
       Sheet.Cells[ARow, AColInicio + 3].Style.DataFormat.FormatCode :=
         FMT_EUR;

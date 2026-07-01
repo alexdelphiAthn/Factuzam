@@ -201,18 +201,27 @@
                 TabOrder = 10
                 Transparent = True
               end
-              object btnCODIGO_PRV_FACC: TcxDBButtonEdit
+              object cbbCODIGO_PRV_FACC: TcxDBLookupComboBox
                 Left = 168
                 Top = 92
                 DataBinding.DataField = 'CODIGO_PRV_FACC'
                 DataBinding.DataSource = dsTablaG
-                Properties.Buttons = <
+                Properties.DropDownListStyle = lsEditList
+                Properties.DropDownRows = 15
+                Properties.IncrementalFiltering = True
+                Properties.KeyFieldNames = 'CODIGO_PRV_PRV'
+                Properties.ListColumns = <
                   item
-                    Default = True
-                    Kind = bkEllipsis
+                    Caption = 'C'#243'digo'
+                    FieldName = 'CODIGO_PRV_PRV'
+                  end
+                  item
+                    Caption = 'Proveedor'
+                    FieldName = 'RAZON_SOCIAL_PRV'
                   end>
-                Properties.OnEditValueChanged = btnCODIGO_PRV_FACCPropertiesEditValueChanged
+                Properties.OnEditValueChanged = cbbCODIGO_PRV_FACCPropertiesEditValueChanged
                 TabOrder = 11
+                OnKeyUp = cbbCODIGO_PRV_FACCKeyUp
                 Width = 150
               end
               object lblRefProveedor: TcxLabel
@@ -275,6 +284,19 @@
                 Properties.ListOptions.CaseInsensitive = True
                 TabOrder = 17
                 Width = 240
+              end
+              object lblProveedorNombreFacc: TcxLabel
+                Left = 168
+                Top = 116
+                ParentFont = False
+                Style.Font.Charset = ANSI_CHARSET
+                Style.Font.Color = clWindowText
+                Style.Font.Height = -15
+                Style.Font.Name = 'Lucida Sans'
+                Style.Font.Style = [fsBold]
+                Style.IsFontAssigned = True
+                TabOrder = 18
+                Transparent = True
               end
             end
           end
@@ -564,13 +586,86 @@
                   TabOrder = 12
                   Transparent = True
                 end
+                object lblTotalesDtoComercial: TcxLabel
+                  Left = 60
+                  Top = 305
+                  Caption = 'Dto. comercial'
+                  TabOrder = 13
+                  Transparent = True
+                end
+                object spnTotalesPORCENTAJE_DTO_COMERCIAL_FACC: TcxDBSpinEdit
+                  Left = 230
+                  Top = 301
+                  DataBinding.DataField = 'PORCENTAJE_DTO_COMERCIAL_FACC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.AssignedValues.MinValue = True
+                  Properties.DisplayFormat = '0.00 %'
+                  Properties.EditFormat = '0.00 %'
+                  Properties.MaxValue = 100.000000000000000000
+                  TabOrder = 14
+                  Width = 60
+                end
+                object curTotalesTOTAL_DTO_COMERCIAL_FACC: TcxDBCurrencyEdit
+                  Left = 296
+                  Top = 301
+                  DataBinding.DataField = 'TOTAL_DTO_COMERCIAL_FACC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ReadOnly = True
+                  TabOrder = 15
+                  Width = 67
+                end
+                object lblTotalesDtoFinanciero: TcxLabel
+                  Left = 59
+                  Top = 329
+                  Caption = 'Dto. financiero'
+                  TabOrder = 16
+                  Transparent = True
+                end
+                object spnTotalesPORCENTAJE_DTO_FINANCIERO_FACC: TcxDBSpinEdit
+                  Left = 230
+                  Top = 325
+                  DataBinding.DataField = 'PORCENTAJE_DTO_FINANCIERO_FACC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.AssignedValues.MinValue = True
+                  Properties.DisplayFormat = '0.00 %'
+                  Properties.EditFormat = '0.00 %'
+                  Properties.MaxValue = 100.000000000000000000
+                  TabOrder = 17
+                  Width = 60
+                end
+                object curTotalesTOTAL_DTO_FINANCIERO_FACC: TcxDBCurrencyEdit
+                  Left = 296
+                  Top = 325
+                  DataBinding.DataField = 'TOTAL_DTO_FINANCIERO_FACC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ReadOnly = True
+                  TabOrder = 18
+                  Width = 67
+                end
+                object lblTotalesTotalPrendas: TcxLabel
+                  Left = 60
+                  Top = 365
+                  Caption = 'N'#186' de prendas'
+                  TabOrder = 19
+                  Transparent = True
+                end
+                object lblTotalPrendasFacc: TcxLabel
+                  Left = 230
+                  Top = 365
+                  AutoSize = False
+                  Caption = '0'
+                  TabOrder = 20
+                  Transparent = True
+                  Height = 20
+                  Width = 133
+                end
                 object grpDesgloseImpuestos: TGroupBox
                   Left = 384
                   Top = 11
                   Width = 525
                   Height = 318
                   Caption = 'Desglose Impuestos'
-                  TabOrder = 13
+                  TabOrder = 21
                   object shpSeparador1: TShape
                     Left = 128
                     Top = 32

@@ -54,18 +54,22 @@ type
     procedure CargarEsquemaDestino(const sRutaFichero: string);
 
     // Borra del destino los datos demo del seed factuzam_original.sql
-    // de TODAS las tablas con datos en el dump (44 con audit + 6 sin
-    // audit). NO toca tablas de sistema (paises, ivas*, winforms,
-    // usuarios*, metadatos, config_campos, tipos_documentos,
-    // contadores, valores_defecto, generadorprocesos, informes_guias,
-    // ivas_zonas, variaciones_atributos).
+    // de TODAS las tablas con datos en el dump (73 con audit + 10 sin
+    // filtro), incluyendo la cadena completa de documentos de venta y
+    // compra (pedidos, albaranes, facturas, devoluciones, efectos,
+    // remesas y sesiones de compra) y movimientos de almacen. NO toca
+    // tablas de sistema (paises, ivas*, winforms, usuarios*,
+    // metadatos, config_campos, tipos_documentos, contadores,
+    // valores_defecto, generadorprocesos, informes_guias, ivas_zonas,
+    // variaciones_atributos).
     //
     // Filtro de usuario "demo" para las tablas con audit:
     //   USUARIO_ALTA IN ('DEMO', 'Administrador', 'Sistema', 'SISTEMA',
     //                    'Admin', 'ADMIN', 'SCRIPT_DEMO', 'SCRIPT_FIX',
     //                    'FIX_SKU_STOCK', 'MIGRACION').
-    // Para las 6 tablas sin audit (stockactual, vinculos, etc.) se
-    // hace DELETE FROM completo, son derivadas o hijo de tablas demo.
+    // Para las tablas sin filtro (stockactual, vinculos, movimientos
+    // de almacen, etc.) se hace DELETE FROM completo: son derivadas,
+    // hijo unico de tablas demo, o su USUARIO_ALTA no es de fiar.
     //
     // Devuelve cuantas filas borro en total.
     function LimpiarDatosDemoDestino: Integer;
@@ -431,7 +435,7 @@ const
   // Tablas con USUARIO_ALTA: DELETE por filtro de usuario demo.
   // Orden hijos -> padres para minimizar problemas de FK (aunque
   // el esquema usa FKs LOGICAS, no fisicas).
-  aConAudit: array[0..55] of string = (
+  aConAudit: array[0..72] of string = (
     // Cadena de articulos (hijos primero)
     'fza_codigos_barras',
     'fza_atributos_sku',
@@ -453,22 +457,44 @@ const
     'fza_propiedades_valores',
     'fza_propiedades',
     'fza_variaciones',
-    // Documentos comerciales (lineas antes que cabecera)
-    'fza_efectos_compra',
-    'fza_remesas_compra',
+    // Documentos de venta (lineas/efectos/remesas antes que cabecera)
+    'fza_efectos_venta',
+    'fza_remesas_venta',
     'fza_facturas_pagos',
+    'fza_facturas_relaciones',
     'fza_facturas_lineas',
     'fza_facturas',
     'fza_albaranes_lineas',
     'fza_albaranes',
+    'fza_pedidos_mensajes',
     'fza_pedidos_lineas',
     'fza_pedidos',
+    // Documentos de compra (lineas/celdas/efectos/remesas antes que cabecera)
+    'fza_efectos_compra_pagos',
+    'fza_efectos_compra',
+    'fza_remesas_compra',
+    'fza_facturas_compra_celdas',
     'fza_facturas_compra_lineas',
     'fza_facturas_compra',
+    'fza_devoluciones_compra_celdas',
+    'fza_devoluciones_compra_lineas',
+    'fza_devoluciones_compra',
+    'fza_albaranes_compra_celdas',
     'fza_albaranes_compra_lineas',
     'fza_albaranes_compra',
+    'fza_pedidos_compra_celdas',
     'fza_pedidos_compra_lineas',
     'fza_pedidos_compra',
+    // Sesiones de compra (movil/tablet) — lineas/celdas/kits/fotos antes
+    // que cabecera. fza_compras_sesiones_celdas y _lineas NO van aqui:
+    // se vacian enteras en aSinAudit (ver comentario de ese array).
+    'fza_compras_sesiones_lineas_filas',
+    'fza_compras_sesiones_lineas_props',
+    'fza_compras_sesiones_lineas_skus_precios',
+    'fza_compras_sesiones_kits',
+    'fza_compras_sesiones_documentos',
+    'fza_compras_sesiones_fotos',
+    'fza_compras_sesiones_props',
     'fza_compras_sesiones',
     // Caja
     'fza_caja_pagos',
@@ -478,7 +504,6 @@ const
     'fza_caja_arqueos',
     'fza_caja_formas_pago',
     // Stock / inventario / movimientos
-    'fza_movimientos_almacen',
     'fza_inventarios_lineas',
     'fza_inventarios',
     // Resto
@@ -496,15 +521,27 @@ const
     'fza_empresas'
   );
 
-  // Tablas sin USUARIO_ALTA: DELETE FROM completo. Son derivadas o
-  // hijo unicamente de tablas demo (al borrar el padre quedan
-  // huerfanas, asi que vaciarlas es lo correcto).
-  aSinAudit: array[0..5] of string = (
+  // Tablas sin filtro: DELETE FROM completo. Unas son derivadas o
+  // hijo unicamente de tablas demo, sin columna USUARIO_ALTA (al
+  // borrar el padre quedan huerfanas, asi que vaciarlas es lo
+  // correcto). fza_facturas_consolidaciones (registro Verifactu/AEAT)
+  // entra por lo mismo: en el escenario de limpieza demo (BBDD recien
+  // sembrada desde factuzam_original.sql) solo contiene
+  // consolidaciones del seed. fza_movimientos_almacen SI tiene
+  // USUARIO_ALTA pero se vacia entera a proposito: los movimientos de
+  // stock pueden generarse con USUARIO_ALTA distinto al de la
+  // cabecera del documento que los origina (procesos internos), asi
+  // que filtrar por usuario demo dejaria restos.
+  aSinAudit: array[0..9] of string = (
     'fza_articulos_stockactual',
     'fza_articulos_vinculos',
     'fza_almacenes_cajas',
     'fza_compras_sesiones_celdas',
     'fza_compras_sesiones_lineas',
+    'fza_compras_sesiones_kits_det',
+    'fza_compras_sesiones_lineas_filas_atr',
+    'fza_facturas_consolidaciones',
+    'fza_movimientos_almacen',
     'fza_familias_atributos'
   );
 var

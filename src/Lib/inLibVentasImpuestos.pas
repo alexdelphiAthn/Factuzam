@@ -30,6 +30,13 @@ procedure CalcularTotalesDocumentoVenta(AConn: TUniConnection;
   ACabecera, ALineas: TDataSet; const ASufijoCabecera,
   ACampoTotalLinea, ACampoTipoIvaLinea, ACampoPorcentajeIvaLinea: string);
 
+// Numero total de prendas del documento: suma CANTIDAD_<sufijo linea> de
+// todas las lineas reales (ignora el filtro visual del pivote de tallas).
+// No requiere que exista un campo TOTAL_PRENDAS_xxx en la cabecera; el
+// formulario lo muestra directamente en un label de la pestana Totales.
+function TotalPrendasLineasVenta(ALineas: TDataSet;
+  const ACampoTipoIvaLinea: string): Double;
+
 implementation
 
 type
@@ -668,6 +675,43 @@ begin
     PonerFloat(ACabecera, 'TOTAL_' + ASufijoCabecera, rBase + rImp);
     PonerFloat(ACabecera, 'TOTAL_LIQUIDO_' + ASufijoCabecera,
       rBase + rImp - rRet);
+  end;
+end;
+
+function TotalPrendasLineasVenta(ALineas: TDataSet;
+  const ACampoTipoIvaLinea: string): Double;
+var
+  bk: TBookmark;
+  sSufijoLinea: string;
+  bFiltroActivo: Boolean;
+begin
+  Result := 0;
+  if not (Assigned(ALineas) and ALineas.Active) then
+    Exit;
+  sSufijoLinea := SufijoLineaFiscalDesdeCampo(ACampoTipoIvaLinea);
+  if sSufijoLinea = '' then
+    Exit;
+  bk := ALineas.GetBookmark;
+  bFiltroActivo := ALineas.Filtered;
+  try
+    ALineas.DisableControls;
+    // El pivote de tallas filtra visualmente las lineas representantes.
+    // El total de prendas debe sumar siempre todas las lineas reales.
+    if bFiltroActivo then
+      ALineas.Filtered := False;
+    ALineas.First;
+    while not ALineas.Eof do
+    begin
+      Result := Result + CampoFloat(ALineas, 'CANTIDAD_' + sSufijoLinea);
+      ALineas.Next;
+    end;
+  finally
+    if bFiltroActivo then
+      ALineas.Filtered := True;
+    if ALineas.BookmarkValid(bk) then
+      ALineas.GotoBookmark(bk);
+    ALineas.FreeBookmark(bk);
+    ALineas.EnableControls;
   end;
 end;
 
