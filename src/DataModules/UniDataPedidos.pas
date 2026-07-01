@@ -63,6 +63,8 @@ type
     procedure CalcularTotalesPedido;
     procedure CopiarEmpresaaPedido(DataSet: TDataSet);
     procedure CopiarClienteaPedido(DataSet: TDataSet);
+    function BuscarEmpresa(const ACodigo: string): Boolean;
+    function BuscarCliente(const ACodigo: string): Boolean;
 
     // Cantidades entregadas / pendientes
     procedure RecalcularEntregasLinea;
@@ -301,7 +303,7 @@ var
 begin
   inherited;
   NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn, unqryPedidosLineas,
-    'CODIGO_ART_PEDLIN', '', 'CODBAR_ART_PEDLIN');
+    'CODIGO_ART_PEDLIN', 'CODIGOPRODPS_PEDLIN', 'CODBAR_ART_PEDLIN');
   RecalcularEntregasLinea;
   // El total de la línea siempre se mantiene coherente
   with unqryPedidosLineas do
@@ -499,6 +501,62 @@ begin
         'TIPO_IVA_ARTICULO_PEDLIN', 'PORCENTAJE_IVA_PEDLIN');
     finally
       FCalculandoTotales := False;
+    end;
+  end;
+end;
+
+function TdmPedidos.BuscarEmpresa(const ACodigo: string): Boolean;
+var
+  q: TUniQuery;
+  sCodigo: string;
+begin
+  Result := False;
+  sCodigo := Trim(ACodigo);
+  if (sCodigo <> '') and (sCodigo <> '0') then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := unqryTablaG.Connection;
+      q.SQL.Text := 'SELECT * ' +
+                    '  FROM fza_empresas ' +
+                    ' WHERE CODIGO_EMP_EMP = :empresa';
+      q.ParamByName('empresa').AsString := sCodigo;
+      q.Open;
+      if not q.IsEmpty then
+      begin
+        CopiarEmpresaaPedido(q);
+        Result := True;
+      end;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+end;
+
+function TdmPedidos.BuscarCliente(const ACodigo: string): Boolean;
+var
+  q: TUniQuery;
+  sCodigo: string;
+begin
+  Result := False;
+  sCodigo := Trim(ACodigo);
+  if (sCodigo <> '') and (sCodigo <> '0') then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := unqryTablaG.Connection;
+      q.SQL.Text := 'SELECT * ' +
+                    '  FROM fza_clientes ' +
+                    ' WHERE CODIGO_CLI_CLI = :cliente';
+      q.ParamByName('cliente').AsString := sCodigo;
+      q.Open;
+      if not q.IsEmpty then
+      begin
+        CopiarClienteaPedido(q);
+        Result := True;
+      end;
+    finally
+      FreeAndNil(q);
     end;
   end;
 end;

@@ -15,9 +15,8 @@
 {    lugar de cliente, precio de compra en lugar de venta).                    }
 {                                                                              }
 {    Movimientos de stock: el data module (UniDataDevolucionesCompra)             }
-{    detecta transiciones de ESTADO_DEVC en BeforePost y dispara en            }
-{    AfterPost la generacion (ABIERTO -> CERRADO) o reversion                  }
-{    (CERRADO -> ABIERTO) via inLibDevolucionesCompraMovimientos.                 }
+{    reconstruye los movimientos DC desde las lineas actuales del              }
+{    documento para mantener el kardex sincronizado tras correcciones.         }
 {    La generacion de factura sigue pendiente para un hito posterior.          }
 {******************************************************************************}
 unit inMtoDevolucionesCompra;
@@ -171,8 +170,14 @@ type
     procedure cxgrdLineasDevolucionExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
     procedure actIrProveedorExecute(Sender: TObject);
+    procedure btnCODIGO_EMP_DEVCPropertiesButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
+    procedure btnCODIGO_EMP_DEVCKeyUp(Sender: TObject; var Key: Word;
+                Shift: TShiftState);
     procedure btnCODIGO_PRV_DEVCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
+    procedure btnCODIGO_PRV_DEVCKeyUp(Sender: TObject; var Key: Word;
+                Shift: TShiftState);
     procedure colLineaDevcCODIGO_ARTPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure colLineaDevcCODIGO_ARTPropertiesValidate(Sender: TObject;
@@ -843,6 +848,7 @@ var
     if dsLin.Active and (not dsLin.IsEmpty) then
       dsLin.First;
     dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
+    dmmDevolucionesCompra.SincronizarMovimientos;
     if (dsCab <> nil) and dsCab.Active and (dsCab.State in dsEditModes) then
       dsCab.Post;
     if bPivotActivo and Assigned(FPivote) and (not FPivote.Activo) then
@@ -1102,7 +1108,7 @@ begin
   // 1. Gestor inline de tallas (libreria existente). Mismo patron que
   //    Sesiones, con los nombres DEVC/DEVCLIN/DEVCCEL.
   cfgT := Default(TGridTallasConfig);
-  cfgT.Conexion           := inLibGlobalVar.oConn;
+  cfgT.Conexion           := dmmDevolucionesCompra.unqryTablaG.Connection;
   cfgT.Usuario            := oUser;
   cfgT.Grid               := tvLineasDevolucion;
   cfgT.SourceMaster       := dsTablaG;
@@ -1138,7 +1144,7 @@ begin
     end;
   // 2. Orquestador de pivote (libreria nueva, compartida con pedidos).
   cfgP := Default(TGridPivoteCompraConfig);
-  cfgP.Conexion             := inLibGlobalVar.oConn;
+  cfgP.Conexion             := dmmDevolucionesCompra.unqryTablaG.Connection;
   cfgP.Grid                 := tvLineasDevolucion;
   cfgP.SourceMaster         := dsTablaG;
   cfgP.SourceLineas         := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
@@ -1901,7 +1907,10 @@ end;
 procedure TfrmMtoDevolucionesCompra.unqryLineasAfterPostHook(DataSet: TDataSet);
 begin
   if Assigned(dmmDevolucionesCompra) then
+  begin
     dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
+    dmmDevolucionesCompra.SincronizarMovimientos;
+  end;
   if Assigned(FPivote) and FPivote.Activo then
     FPivote.RecargarYRepublicar;
 end;
@@ -2529,6 +2538,45 @@ begin
     ShowMto(Self.Owner, 'Proveedores', sPrv);
 end;
 
+procedure TfrmMtoDevolucionesCompra.btnCODIGO_EMP_DEVCPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sCodigo : string;
+  ds      : TDataSet;
+begin
+  inherited;
+  if Assigned(dmmDevolucionesCompra) then
+  begin
+    ds := dmmDevolucionesCompra.unqryTablaG;
+    if ds.IsEmpty then
+      MessageDlg('Crea o selecciona una devolución de compra antes de ' +
+                 'elegir la empresa.', mtInformation, [mbOk], 0)
+    else if TBusquedaUtils.EjecutarBusqueda(
+              'Búsqueda de empresas',
+              'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
+              'CODIGO_EMP_EMP',
+              sCodigo,
+              'frmMtoEmpFacSearch',
+              Self) then
+    begin
+      if not (ds.State in [dsInsert, dsEdit]) then
+        ds.Edit;
+      ds.FieldByName('CODIGO_EMP_DEVC').AsString := sCodigo;
+    end;
+  end;
+end;
+
+procedure TfrmMtoDevolucionesCompra.btnCODIGO_EMP_DEVCKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  inherited;
+  if (Key = VK_RETURN) and (ssCtrl in Shift) then
+  begin
+    Key := 0;
+    btnCODIGO_EMP_DEVCPropertiesButtonClick(Sender, 0);
+  end;
+end;
+
 procedure TfrmMtoDevolucionesCompra.btnCODIGO_PRV_DEVCPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
@@ -2554,6 +2602,17 @@ begin
         ds.Edit;
       ds.FieldByName('CODIGO_PRV_DEVC').AsString := sCodigo;
     end;
+  end;
+end;
+
+procedure TfrmMtoDevolucionesCompra.btnCODIGO_PRV_DEVCKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  inherited;
+  if (Key = VK_RETURN) and (ssCtrl in Shift) then
+  begin
+    Key := 0;
+    btnCODIGO_PRV_DEVCPropertiesButtonClick(Sender, 0);
   end;
 end;
 

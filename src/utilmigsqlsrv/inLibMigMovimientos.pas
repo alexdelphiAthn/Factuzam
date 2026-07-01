@@ -682,11 +682,9 @@ begin
         else if FechaReal(qSrc.FieldByName('FechaOpe').AsDateTime) then
           sFechaSql := DateTimeASQL(
                          qSrc.FieldByName('FechaOpe').AsDateTime);
-        // SERIE_DOC_MOV con el ejercicio delante ('2026.A1'), EXACTAMENTE como
-        // guardan la serie las facturas (SERIE_FAC) y albaranes (SERIE_ALB).
-        // Antes se guardaba solo 'A1' y por eso las pestañas "Movimientos" de
-        // factura simplificada y albaran no casaban (filtran SERIE_xxx_MOV =
-        // SERIE_FAC/SERIE_ALB = 'ejercicio.serie').
+        // SERIE_DOC_MOV con el ejercicio delante ('2026.A1'), igual que
+        // SERIE_FAC/SERIE_ALB. Asi las pestanas "Movimientos" casan el
+        // movimiento migrado con el documento destino.
         sSerie   := IntToStr(qSrc.FieldByName('Ejercicio').AsInteger) + '.' +
                     Trim(qSrc.FieldByName('Serie').AsString);
         // NUMERO_DOC_MOV debe casar con el NUMERO del documento destino en

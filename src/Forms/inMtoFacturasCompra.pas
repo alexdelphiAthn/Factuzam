@@ -387,7 +387,7 @@ begin
   // 1. Gestor inline de tallas (libreria existente). Mismo patron que
   //    Sesiones, con los nombres FACC/FACCLIN/FACCCEL.
   cfgT := Default(TGridTallasConfig);
-  cfgT.Conexion           := inLibGlobalVar.oConn;
+  cfgT.Conexion           := dmmFacturasCompra.unqryTablaG.Connection;
   cfgT.Usuario            := oUser;
   cfgT.Grid               := tvLineasFactura;
   cfgT.SourceMaster       := dsTablaG;
@@ -423,7 +423,7 @@ begin
     end;
   // 2. Orquestador de pivote (libreria nueva, compartida con pedidos).
   cfgP := Default(TGridPivoteCompraConfig);
-  cfgP.Conexion             := inLibGlobalVar.oConn;
+  cfgP.Conexion             := dmmFacturasCompra.unqryTablaG.Connection;
   cfgP.Grid                 := tvLineasFactura;
   cfgP.SourceMaster         := dsTablaG;
   cfgP.SourceLineas         := dmmFacturasCompra.unqryFacturasCompraLineas;

@@ -80,12 +80,13 @@ subtipo replica la de `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT` para que
 |---|---|
 | `NUMERO_MOV` | `'MH' + Numero` a 10 dígitos (PK; prefijo evita choque con el contador `MV`) |
 | `TIPO_DOC_MOV` | `MapearTipoDoc(TipoDoc, dirección)` (heurística, ver abajo) |
-| `SERIE_DOC_MOV` / `NUMERO_DOC_MOV` | `Serie` / `NroDoc` (cadena vacía si faltan; son NOT NULL) |
+| `SERIE_DOC_MOV` | `<Ejercicio>.<Serie>` (por ejemplo `2026.A1`) |
+| `NUMERO_DOC_MOV` | `NroDoc` sin ceros para caja; 6 dígitos para el resto de documentos; cadena vacía si falta |
 | `LINEA_MOV` | `'0001'` (ocmovarp es una fila por movimiento) |
 | `CODIGO_EMP_MOV` | `Empresa` (entero como texto) |
 | `CODIGO_ALM_MOV` | `ocalm.Abreviatura` del almacén, fallback al número |
 | `CODIGO_ALM_CONTRA_MOV` | en traspasos: abreviatura de (`EmpresaDes`,`AlmacenDes`) |
-| `FECHA_MOV` | `FechaOpe`, fallback `Fecha`, fallback NULL |
+| `FECHA_MOV` | `Fecha`, fallback `FechaOpe`, fallback NULL |
 | `CODIGO_ART_MOV` | `Articulo` |
 | `CODIGO_UNIDAD_MOV` | `ARTICULO/COLOR/TALLA` (mismo patrón que SKUs e Inventarios) |
 | `DESCRIPCION_ARTICULO_MOV` | `ocartp.DescripcionLarga`/`Corta` |

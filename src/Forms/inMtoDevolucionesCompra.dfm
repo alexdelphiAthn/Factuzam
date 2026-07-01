@@ -1,4 +1,4 @@
-﻿inherited frmMtoDevolucionesCompra: TfrmMtoDevolucionesCompra
+inherited frmMtoDevolucionesCompra: TfrmMtoDevolucionesCompra
   Caption = 'Mantenimiento de Devoluciones a Proveedor'
   ClientHeight = 765
   ClientWidth = 1085
@@ -16,6 +16,7 @@
     inherited pcPantalla: TcxPageControl
       Width = 945
       Height = 725
+      Properties.ActivePage = tsLista
       ExplicitWidth = 945
       ExplicitHeight = 725
       ClientRectBottom = 721
@@ -191,7 +192,9 @@
                     Default = True
                     Kind = bkEllipsis
                   end>
+                Properties.OnButtonClick = btnCODIGO_EMP_DEVCPropertiesButtonClick
                 TabOrder = 9
+                OnKeyUp = btnCODIGO_EMP_DEVCKeyUp
                 Width = 150
               end
               object lblCodigoProveedor: TcxLabel
@@ -213,6 +216,7 @@
                   end>
                 Properties.OnButtonClick = btnCODIGO_PRV_DEVCPropertiesButtonClick
                 TabOrder = 11
+                OnKeyUp = btnCODIGO_PRV_DEVCKeyUp
                 Width = 150
               end
               object lblRefProveedor: TcxLabel
@@ -336,7 +340,7 @@
             ClientRectRight = 933
             ClientRectTop = 28
             object tsLineasDevolucion: TcxTabSheet
-              Caption = 'L'#237'neas'
+              Caption = '&1_L'#237'neas'
               object cxgrdLineasDevolucion: TcxGrid
                 Left = 0
                 Top = 0
@@ -347,11 +351,11 @@
                 OnEnter = cxgrdLineasDevolucionEnter
                 OnExit = cxgrdLineasDevolucionExit
                 object tvLineasDevolucion: TcxGridDBTableView
-                  OnCustomDrawCell = tvLineasDevolucionCustomDrawCell
-                  OnEditKeyDown = tvLineasDevolucionEditKeyDown
-                  OnEditing = tvLineasDevolucionEditing
-                  OnFocusedRecordChanged = tvLineasDevolucionFocusedRecordChanged
                   OnKeyDown = tvLineasDevolucionKeyDown
+                  OnCustomDrawCell = tvLineasDevolucionCustomDrawCell
+                  OnEditing = tvLineasDevolucionEditing
+                  OnEditKeyDown = tvLineasDevolucionEditKeyDown
+                  OnFocusedRecordChanged = tvLineasDevolucionFocusedRecordChanged
                   OptionsBehavior.FocusCellOnTab = True
                   OptionsBehavior.FocusFirstCellOnNewRecord = True
                   OptionsData.Appending = True
@@ -419,83 +423,6 @@
                 end
                 object cxgrdlvlLineasDevolucion: TcxGridLevel
                   GridView = tvLineasDevolucion
-                end
-              end
-            end
-            object tsProveedor: TcxTabSheet
-              Caption = 'Movimientos'
-              object cxgrdMovimientosProveedor: TcxGrid
-                Left = 0
-                Top = 0
-                Width = 929
-                Height = 347
-                Align = alClient
-                TabOrder = 0
-                object tvMovimientosProveedor: TcxGridDBTableView
-                  Navigator.Buttons.CustomButtons = <>
-                  DataController.Summary.DefaultGroupSummaryItems = <>
-                  DataController.Summary.FooterSummaryItems = <>
-                  DataController.Summary.SummaryGroups = <>
-                  OptionsData.Editing = False
-                  OptionsView.GroupByBox = False
-                  object colMovProvDevcNUMERO_MOV: TcxGridDBColumn
-                    Caption = 'N'#250'mero Mov.'
-                    DataBinding.FieldName = 'NUMERO_MOV'
-                    Width = 110
-                  end
-                  object colMovProvDevcFECHA_MOV: TcxGridDBColumn
-                    Caption = 'Fecha'
-                    DataBinding.FieldName = 'FECHA_MOV'
-                    Width = 130
-                  end
-                  object colMovProvDevcLINEA_MOV: TcxGridDBColumn
-                    Caption = 'L'#237'nea'
-                    DataBinding.FieldName = 'LINEA_MOV'
-                    Width = 60
-                  end
-                  object colMovProvDevcALMACEN: TcxGridDBColumn
-                    Caption = 'Almac'#233'n'
-                    DataBinding.FieldName = 'NOMBRE_ALMACEN_ORIGEN'
-                    Width = 140
-                  end
-                  object colMovProvDevcARTICULO: TcxGridDBColumn
-                    Caption = 'Art'#237'culo'
-                    DataBinding.FieldName = 'CODIGO_ART_MOV'
-                    Width = 100
-                  end
-                  object colMovProvDevcSKU: TcxGridDBColumn
-                    Caption = 'SKU'
-                    DataBinding.FieldName = 'CODIGO_UNIDAD_MOV'
-                    Width = 140
-                  end
-                  object colMovProvDevcDESCRIPCION: TcxGridDBColumn
-                    Caption = 'Descripci'#243'n'
-                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_MOV'
-                    Width = 220
-                  end
-                  object colMovProvDevcTIPO: TcxGridDBColumn
-                    Caption = 'Tipo'
-                    DataBinding.FieldName = 'TIPO_MOV'
-                    Width = 50
-                  end
-                  object colMovProvDevcCANTIDAD: TcxGridDBColumn
-                    Caption = 'Cantidad'
-                    DataBinding.FieldName = 'CANTIDAD_MOV'
-                    Width = 90
-                  end
-                  object colMovProvDevcPMP: TcxGridDBColumn
-                    Caption = 'PMP'
-                    DataBinding.FieldName = 'PRECIO_MEDIO_MOV'
-                    Width = 90
-                  end
-                  object colMovProvDevcTOTAL: TcxGridDBColumn
-                    Caption = 'Total coste'
-                    DataBinding.FieldName = 'TOTAL_COSTE_MOV'
-                    Width = 100
-                  end
-                end
-                object cxgrdlvlMovimientosProveedor: TcxGridLevel
-                  GridView = tvMovimientosProveedor
                 end
               end
             end
@@ -973,8 +900,81 @@
                 end
               end
             end
+            object tsProveedor: TcxTabSheet
+              Caption = '&3_Movimientos'
+              object cxgrdMovimientosProveedor: TcxGrid
+                Left = 0
+                Top = 0
+                Width = 929
+                Height = 347
+                Align = alClient
+                TabOrder = 0
+                object tvMovimientosProveedor: TcxGridDBTableView
+                  OptionsData.Editing = False
+                  OptionsView.GroupByBox = False
+                  object colMovProvDevcNUMERO_MOV: TcxGridDBColumn
+                    Caption = 'N'#250'mero Mov.'
+                    DataBinding.FieldName = 'NUMERO_MOV'
+                    Width = 110
+                  end
+                  object colMovProvDevcFECHA_MOV: TcxGridDBColumn
+                    Caption = 'Fecha'
+                    DataBinding.FieldName = 'FECHA_MOV'
+                    Width = 130
+                  end
+                  object colMovProvDevcLINEA_MOV: TcxGridDBColumn
+                    Caption = 'L'#237'nea'
+                    DataBinding.FieldName = 'LINEA_MOV'
+                    Width = 60
+                  end
+                  object colMovProvDevcALMACEN: TcxGridDBColumn
+                    Caption = 'Almac'#233'n'
+                    DataBinding.FieldName = 'NOMBRE_ALMACEN_ORIGEN'
+                    Width = 140
+                  end
+                  object colMovProvDevcARTICULO: TcxGridDBColumn
+                    Caption = 'Art'#237'culo'
+                    DataBinding.FieldName = 'CODIGO_ART_MOV'
+                    Width = 100
+                  end
+                  object colMovProvDevcSKU: TcxGridDBColumn
+                    Caption = 'SKU'
+                    DataBinding.FieldName = 'CODIGO_UNIDAD_MOV'
+                    Width = 140
+                  end
+                  object colMovProvDevcDESCRIPCION: TcxGridDBColumn
+                    Caption = 'Descripci'#243'n'
+                    DataBinding.FieldName = 'DESCRIPCION_ARTICULO_MOV'
+                    Width = 220
+                  end
+                  object colMovProvDevcTIPO: TcxGridDBColumn
+                    Caption = 'Tipo'
+                    DataBinding.FieldName = 'TIPO_MOV'
+                    Width = 50
+                  end
+                  object colMovProvDevcCANTIDAD: TcxGridDBColumn
+                    Caption = 'Cantidad'
+                    DataBinding.FieldName = 'CANTIDAD_MOV'
+                    Width = 90
+                  end
+                  object colMovProvDevcPMP: TcxGridDBColumn
+                    Caption = 'PMP'
+                    DataBinding.FieldName = 'PRECIO_MEDIO_MOV'
+                    Width = 90
+                  end
+                  object colMovProvDevcTOTAL: TcxGridDBColumn
+                    Caption = 'Total coste'
+                    DataBinding.FieldName = 'TOTAL_COSTE_MOV'
+                    Width = 100
+                  end
+                end
+                object cxgrdlvlMovimientosProveedor: TcxGridLevel
+                  GridView = tvMovimientosProveedor
+                end
+              end
+            end
             object tsObservaciones: TcxTabSheet
-              Caption = 'Observaciones'
+              Caption = '&4_Observaciones'
               object memObservaciones: TcxDBMemo
                 Left = 0
                 Top = 0
