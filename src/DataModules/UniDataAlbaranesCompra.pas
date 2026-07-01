@@ -12,8 +12,8 @@
 {    Data module de albaranes de COMPRA.                                       }
 {    Espejo simplificado de UniDataAlbaranes adaptado a documentos de          }
 {    compra (proveedor en lugar de cliente, precio de compra en lugar          }
-{    de venta). Sin generacion de movimientos de stock ni de factura           }
-{    en esta version inicial: se anadiran en hitos posteriores.                }
+{    de venta). Sincroniza movimientos de stock AC desde la cabecera y         }
+{    lineas actuales del documento.                                            }
 {******************************************************************************}
 unit UniDataAlbaranesCompra;
 
@@ -70,17 +70,20 @@ type
     procedure unqryAlbaranesCompraLineasAfterInsert(DataSet: TDataSet);
     procedure unqryAlbaranesCompraLineasBeforePost(DataSet: TDataSet);
     procedure unqryAlbaranesCompraLineasAfterPost(DataSet: TDataSet);
+    procedure unqryAlbaranesCompraLineasAfterDelete(DataSet: TDataSet);
   private
-    // Transicion de estado detectada en BeforePost. La aplicamos en
-    // AfterPost para que la cabecera ya este guardada en BBDD cuando
-    // generamos/revertimos los movimientos. Valores: 'CERRAR' (mov.
-    // entrada nueva), 'ABRIR' (revertir mov. existentes) o ''.
+    // Transicion detectada en BeforePost. Se conserva para validar el
+    // cierre, pero AfterPost sincroniza movimientos desde el documento
+    // actual sin depender del estado final.
     FTransicionEstadoAlbc: string;
     procedure ConfigurarSqlCabecera;
+    function HayLineasMovimiento(const ASerie, ANumero: string): Boolean;
     function ObtenerSkusAlbaranCsv(const ASerie, ANumero: string): string;
+    procedure RefrescarMovimientosProveedor;
   public
     procedure GetCodigoAutoAlbaranCompra;
     procedure CalcularTotalesAlbaranCompra;
+    procedure SincronizarMovimientos;
     // Abre unqryCabAlbcPrint y unqryLinAlbcPrint con los parametros
     // del albaran a imprimir. Mismo nombre/firma que en sesiones.
     procedure PrepararPrint(const ASerie, ANumero: string);
@@ -359,12 +362,9 @@ begin
   AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
     'ALBC');
   CalcularTotalesAlbaranCompra;
-  // Deteccion de transicion de ESTADO_ALBC. Solo aplica en modo Edit
-  // (en Insert el albaran nace ABIERTO y los movimientos los genera
-  // MaterializarSesion o un Edit posterior). Comparamos OldValue vs
-  // valor actual; UniDAC garantiza que OldValue refleja el snapshot
-  // previo al Edit. Guardamos la transicion para aplicarla en
-  // AfterPost cuando la cabecera ya este persistida.
+  // Deteccion de transicion de ESTADO_ALBC. Solo aplica en modo Edit.
+  // Se usa para prevalidar cierres vacios; los movimientos se
+  // sincronizan siempre tras persistir la cabecera.
   FTransicionEstadoAlbc := '';
   if unqryTablaG.State <> dsEdit then
     Exit;
@@ -408,35 +408,16 @@ begin
   end;
 end;
 
-// Tras persistir la cabecera, aplicamos la transicion de estado
-// detectada en BeforePost: generar movimientos al cerrar o revertir
-// los movimientos al reabrir. Cualquier excepcion se propaga al
-// usuario (el Post original ya quedo aplicado, por lo que el albaran
-// guardara su nuevo estado aunque los movimientos fallen — el usuario
-// debe revisar y reintentar o revertir manualmente).
+// Tras persistir la cabecera, reconstruimos los movimientos AC desde el
+// documento actual. Cualquier excepcion se propaga al usuario (el Post
+// original ya quedo aplicado, por lo que debe revisar y reintentar).
 procedure TdmAlbaranesCompra.unqryTablaGAfterPost(DataSet: TDataSet);
-var
-  sSerie, sNumero: string;
 begin
   inherited;
-  if FTransicionEstadoAlbc = '' then
-    Exit;
-  sSerie  := unqryTablaG.FieldByName('SERIE_ALBC').AsString;
-  sNumero := unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
   try
-    if FTransicionEstadoAlbc = 'CERRAR' then
-      inLibAlbaranesCompraMovimientos.GenerarMovimientosDesdeAlbaranCompra(
-        inLibGlobalVar.oConn, sSerie, sNumero, oUser)
-    else if FTransicionEstadoAlbc = 'ABRIR' then
-      inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(
-        inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+    SincronizarMovimientos;
   finally
     FTransicionEstadoAlbc := '';
-  end;
-  if unqryMovimientosProveedor.Active then
-  begin
-    unqryMovimientosProveedor.Close;
-    unqryMovimientosProveedor.Open;
   end;
 end;
 
@@ -463,7 +444,7 @@ begin
   end;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := unqryTablaG.Connection;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM fza_albaranes_compra ' +
@@ -521,7 +502,7 @@ begin
       Abort;
     end;
     inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(
-      inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+      unqryTablaG.Connection, sSerie, sNumero, oUser);
     q.SQL.Text :=
       'DELETE FROM fza_albaranes_compra_celdas ' +
       ' WHERE SERIE_ALBC_ALBCCEL  = :s ' +
@@ -674,6 +655,15 @@ procedure TdmAlbaranesCompra.unqryAlbaranesCompraLineasAfterPost(
 begin
   inherited;
   CalcularTotalesAlbaranCompra;
+  SincronizarMovimientos;
+end;
+
+procedure TdmAlbaranesCompra.unqryAlbaranesCompraLineasAfterDelete(
+                                                       DataSet: TDataSet);
+begin
+  inherited;
+  CalcularTotalesAlbaranCompra;
+  SincronizarMovimientos;
 end;
 
 procedure TdmAlbaranesCompra.GetCodigoAutoAlbaranCompra;
@@ -700,9 +690,62 @@ end;
 
 procedure TdmAlbaranesCompra.CalcularTotalesAlbaranCompra;
 begin
-  CalcularTotalesDocumentoCompra(inLibGlobalVar.oConn, unqryTablaG,
+  CalcularTotalesDocumentoCompra(unqryTablaG.Connection, unqryTablaG,
     unqryAlbaranesCompraLineas, 'ALBC', 'TOTAL_ALBCLIN',
     'TIPO_IVA_ARTICULO_ALBCLIN', 'PORCENTAJE_IVA_ALBCLIN');
+end;
+
+function TdmAlbaranesCompra.HayLineasMovimiento(const ASerie,
+  ANumero: string): Boolean;
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := unqryTablaG.Connection;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N ' +
+      '  FROM fza_albaranes_compra_lineas ' +
+      ' WHERE SERIE_ALBC_ALBCLIN  = :s ' +
+      '   AND NUMERO_ALBC_ALBCLIN = :n ' +
+      '   AND IFNULL(CANTIDAD_ALBCLIN, 0) > 0';
+    q.ParamByName('s').AsString := ASerie;
+    q.ParamByName('n').AsString := ANumero;
+    q.Open;
+    Result := q.FieldByName('N').AsInteger > 0;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure TdmAlbaranesCompra.RefrescarMovimientosProveedor;
+begin
+  if unqryMovimientosProveedor.Active then
+  begin
+    unqryMovimientosProveedor.Close;
+    unqryMovimientosProveedor.Open;
+  end;
+end;
+
+procedure TdmAlbaranesCompra.SincronizarMovimientos;
+var
+  sNumero: string;
+  sSerie: string;
+begin
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+  begin
+    sSerie := Trim(unqryTablaG.FieldByName('SERIE_ALBC').AsString);
+    sNumero := Trim(unqryTablaG.FieldByName('NUMERO_ALBC').AsString);
+    if (sSerie <> '') and (sNumero <> '') and (sNumero <> '0') then
+    begin
+      inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(
+        unqryTablaG.Connection, sSerie, sNumero, oUser);
+      if HayLineasMovimiento(sSerie, sNumero) then
+        inLibAlbaranesCompraMovimientos.GenerarMovimientosDesdeAlbaranCompra(
+          unqryTablaG.Connection, sSerie, sNumero, oUser);
+      RefrescarMovimientosProveedor;
+    end;
+  end;
 end;
 
 procedure TdmAlbaranesCompra.PrepararPrint(const ASerie, ANumero: string);

@@ -53,11 +53,14 @@ type
     procedure unqryAlbaranesLineasAfterInsert(DataSet: TDataSet);
     procedure unqryAlbaranesLineasBeforePost(DataSet: TDataSet);
     procedure unqryAlbaranesLineasAfterPost(DataSet: TDataSet);
+    procedure unqryAlbaranesLineasAfterDelete(DataSet: TDataSet);
   public
     procedure GetCodigoAutoAlbaran;
     procedure CalcularTotalesAlbaran;
     procedure CopiarEmpresaaAlbaran(DataSet: TDataSet);
     procedure CopiarClienteaAlbaran(DataSet: TDataSet);
+    function BuscarEmpresa(const ACodigo: string): Boolean;
+    function BuscarCliente(const ACodigo: string): Boolean;
     procedure OpenTables;
     // Override: abre las queries detalle del Mto de Albaranes tras
     // unqryTablaG. Invocada desde TfrmMtoGen.AbrirTablaPrincipalAsync
@@ -88,6 +91,8 @@ type
   private
     FProcsInstalados: Boolean;
     FCalculandoTotales: Boolean;
+    procedure BorrarMovimientosSalida;
+    procedure SincronizarMovimientosSalida;
   end;
 
 implementation
@@ -216,13 +221,7 @@ end;
 procedure TdmAlbaranes.unqryTablaGAfterPost(DataSet: TDataSet);
 begin
   inherited;
-  // Tras consolidar la cabecera y las líneas, generamos el movimiento de
-  // salida de stock para cada línea con SKU. Si ya existen movimientos para
-  // este albarán (TIPO_DOC_MOV='AV') la operación es idempotente y no
-  // duplica.
-  if (Trim(unqryTablaG.FieldByName('NUMERO_ALB').AsString) <> '') and
-     (unqryTablaG.FieldByName('NUMERO_ALB').AsString <> '0') then
-    GenerarMovimientosSalida;
+  SincronizarMovimientosSalida;
 end;
 
 procedure TdmAlbaranes.unqryTablaGBeforeDelete(DataSet: TDataSet);
@@ -248,7 +247,7 @@ begin
   end;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := unqryTablaG.Connection;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM fza_albaranes ' +
@@ -365,6 +364,14 @@ procedure TdmAlbaranes.unqryAlbaranesLineasAfterPost(DataSet: TDataSet);
 begin
   inherited;
   CalcularTotalesAlbaran;
+  SincronizarMovimientosSalida;
+end;
+
+procedure TdmAlbaranes.unqryAlbaranesLineasAfterDelete(DataSet: TDataSet);
+begin
+  inherited;
+  CalcularTotalesAlbaran;
+  SincronizarMovimientosSalida;
 end;
 
 procedure TdmAlbaranes.GetCodigoAutoAlbaran;
@@ -396,11 +403,103 @@ begin
   begin
     FCalculandoTotales := True;
     try
-      CalcularTotalesDocumentoVenta(inLibGlobalVar.oConn, unqryTablaG,
+      CalcularTotalesDocumentoVenta(unqryTablaG.Connection, unqryTablaG,
         unqryAlbaranesLineas, 'ALB', 'TOTAL_ALBLIN',
         'TIPO_IVA_ARTICULO_ALBLIN', 'PORCENTAJE_IVA_ALBLIN');
     finally
       FCalculandoTotales := False;
+    end;
+  end;
+end;
+
+procedure TdmAlbaranes.BorrarMovimientosSalida;
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := unqryTablaG.Connection;
+    q.SQL.Text := 'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
+    q.ParamByName('t').AsString := 'AV';
+    q.ParamByName('s').AsString :=
+      unqryTablaG.FieldByName('SERIE_ALB').AsString;
+    q.ParamByName('n').AsString :=
+      unqryTablaG.FieldByName('NUMERO_ALB').AsString;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure TdmAlbaranes.SincronizarMovimientosSalida;
+var
+  sNumero: string;
+  sSerie: string;
+begin
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+  begin
+    sNumero := Trim(unqryTablaG.FieldByName('NUMERO_ALB').AsString);
+    sSerie := Trim(unqryTablaG.FieldByName('SERIE_ALB').AsString);
+    if (sNumero <> '') and (sNumero <> '0') and (sSerie <> '') then
+    begin
+      BorrarMovimientosSalida;
+      GenerarMovimientosSalida;
+    end;
+  end;
+end;
+
+function TdmAlbaranes.BuscarEmpresa(const ACodigo: string): Boolean;
+var
+  q: TUniQuery;
+  sCodigo: string;
+begin
+  Result := False;
+  sCodigo := Trim(ACodigo);
+  if (sCodigo <> '') and (sCodigo <> '0') then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := unqryTablaG.Connection;
+      q.SQL.Text := 'SELECT * ' +
+                    '  FROM fza_empresas ' +
+                    ' WHERE CODIGO_EMP_EMP = :empresa';
+      q.ParamByName('empresa').AsString := sCodigo;
+      q.Open;
+      if not q.IsEmpty then
+      begin
+        CopiarEmpresaaAlbaran(q);
+        Result := True;
+      end;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+end;
+
+function TdmAlbaranes.BuscarCliente(const ACodigo: string): Boolean;
+var
+  q: TUniQuery;
+  sCodigo: string;
+begin
+  Result := False;
+  sCodigo := Trim(ACodigo);
+  if (sCodigo <> '') and (sCodigo <> '0') then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := unqryTablaG.Connection;
+      q.SQL.Text := 'SELECT * ' +
+                    '  FROM fza_clientes ' +
+                    ' WHERE CODIGO_CLI_CLI = :cliente';
+      q.ParamByName('cliente').AsString := sCodigo;
+      q.Open;
+      if not q.IsEmpty then
+      begin
+        CopiarClienteaAlbaran(q);
+        Result := True;
+      end;
+    finally
+      FreeAndNil(q);
     end;
   end;
 end;
@@ -1017,7 +1116,7 @@ begin
   qLineas := TUniQuery.Create(nil);
   qExiste := TUniQuery.Create(nil);
   try
-    qLineas.Connection := inLibGlobalVar.oConn;
+    qLineas.Connection := unqryTablaG.Connection;
     qLineas.SQL.Text :=
       'SELECT LINEA_ALBLIN, CODIGO_UNIDAD_ALBLIN, CODIGO_ART_ALBLIN, ' +
       '       CANTIDAD_ALBLIN, CODIGO_ALMACEN_ALBLIN ' +
@@ -1029,7 +1128,7 @@ begin
     qLineas.ParamByName('pSER').AsString := sSerieAlb;
     qLineas.Open;
 
-    qExiste.Connection := inLibGlobalVar.oConn;
+    qExiste.Connection := unqryTablaG.Connection;
     qExiste.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM fza_movimientos_almacen ' +
@@ -1059,6 +1158,7 @@ begin
         begin
           with unstrdprcInsertarMovAlb do
           begin
+            Connection := unqryTablaG.Connection;
             Params.Clear;
             Params.CreateParam(ftString, 'p_NUMERO_MOV',          ptInput);
             Params.CreateParam(ftString, 'p_TIPO_DOC_MOV',        ptInput);

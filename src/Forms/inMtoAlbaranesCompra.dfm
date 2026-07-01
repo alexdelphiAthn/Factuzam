@@ -291,7 +291,9 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                     Default = True
                     Kind = bkEllipsis
                   end>
+                Properties.OnButtonClick = btnCODIGO_EMP_ALBCPropertiesButtonClick
                 TabOrder = 9
+                OnKeyUp = btnCODIGO_EMP_ALBCKeyUp
                 Width = 150
               end
               object lblCodigoProveedor: TcxLabel
@@ -313,6 +315,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                   end>
                 Properties.OnButtonClick = btnCODIGO_PRV_ALBCPropertiesButtonClick
                 TabOrder = 11
+                OnKeyUp = btnCODIGO_PRV_ALBCKeyUp
                 Width = 150
               end
               object lblRefProveedor: TcxLabel
@@ -457,6 +460,14 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                   object colLineaAlbcCODIGO_ART: TcxGridDBColumn
                     Caption = 'Art'#237'culo'
                     DataBinding.FieldName = 'CODIGO_ART_ALBCLIN'
+                    PropertiesClassName = 'TcxButtonEditProperties'
+                    Properties.Buttons = <
+                      item
+                        Default = True
+                        Kind = bkEllipsis
+                      end>
+                    Properties.OnButtonClick = colLineaAlbcCODIGO_ARTPropertiesButtonClick
+                    Properties.OnValidate = colLineaAlbcCODIGO_ARTPropertiesValidate
                     Width = 100
                   end
                   object colLineaAlbcCODIGO_UNIDAD: TcxGridDBColumn

@@ -136,6 +136,18 @@ const
   TIPOS_LEGIBLES: array[TArtTipoCoincidencia] of string =
     ('Desconocido', 'CodigoArt', 'CodigoSku', 'CodigoBarras', 'RefProveedor');
 
+function NormalizarEntradaLector(const AEntrada: string): string;
+begin
+  Result := Trim(AEntrada);
+  Result := StringReplace(Result, #2, '', [rfReplaceAll]);
+  Result := StringReplace(Result, #3, '', [rfReplaceAll]);
+  if StartsText('STX', Result) then
+    Delete(Result, 1, 3);
+  if EndsText('ETX', Result) then
+    Delete(Result, Length(Result) - 2, 3);
+  Result := Trim(Result);
+end;
+
 function ValorCampoNormalizacion(ADataSet: TDataSet;
   const ACampo: string): string;
 var
@@ -196,7 +208,7 @@ procedure ResolverEntradaNormalizacion(AValidador: TArticulosValidador;
   const AEntrada: string; out AResolucion: TArtResolucionEntrada);
 begin
   AResolucion.Clear;
-  if Trim(AEntrada) <> '' then
+  if NormalizarEntradaLector(AEntrada) <> '' then
     AResolucion := AValidador.Resolver(AEntrada);
 end;
 
@@ -482,7 +494,7 @@ var
 begin
   Result.Clear;
   Result.EntradaOriginal := AEntrada;
-  sEnt := Trim(AEntrada);
+  sEnt := NormalizarEntradaLector(AEntrada);
   if sEnt = '' then
   begin
     Result.Mensaje := 'Entrada vacía.';

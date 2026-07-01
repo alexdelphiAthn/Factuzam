@@ -11,10 +11,8 @@
 {  Descripción:                                                                }
 {    Data module de DEVOLUCIONES A PROVEEDOR (devoluciones de compra).         }
 {    Espejo de UniDataAlbaranesCompra: misma cabecera + lineas sobre           }
-{    proveedor y precio de compra, pero al CERRAR la cabecera                  }
-{    (ABIERTO -> CERRADO) genera movimientos de SALIDA via                     }
-{    inLibDevolucionesCompraMovimientos (la cantidad va en positivo en el      }
-{    documento y RESTA del stock). Codigo de tipo de documento 'DC'.           }
+{    proveedor y precio de compra. Sincroniza movimientos de salida DC         }
+{    desde la cabecera y lineas actuales del documento.                        }
 {******************************************************************************}
 unit UniDataDevolucionesCompra;
 
@@ -67,24 +65,28 @@ type
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryTablaGAfterPost(DataSet: TDataSet);
+    procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
     procedure unqryDevolucionesCompraLineasAfterInsert(DataSet: TDataSet);
     procedure unqryDevolucionesCompraLineasBeforePost(DataSet: TDataSet);
     procedure unqryDevolucionesCompraLineasAfterPost(DataSet: TDataSet);
+    procedure unqryDevolucionesCompraLineasAfterDelete(DataSet: TDataSet);
   private
-    // Transicion de estado detectada en BeforePost. La aplicamos en
-    // AfterPost para que la cabecera ya este guardada en BBDD cuando
-    // generamos/revertimos los movimientos. Valores: 'CERRAR' (mov.
-    // salida nueva), 'ABRIR' (revertir mov. existentes) o ''.
+    // Transicion detectada en BeforePost. Se conserva para validar el
+    // cierre, pero AfterPost sincroniza movimientos desde el documento
+    // actual sin depender del estado final.
     FTransicionEstadoDevc: string;
     function CampoVistaCabeceraPrintExiste(const ACampo: string): Boolean;
+    function HayLineasMovimiento(const ASerie, ANumero: string): Boolean;
     procedure PrepararSQLCabeceraPrint;
     function ObtenerSkusDevolucionCsv(const ASerie, ANumero: string): string;
     function SiguienteLineaDevolucionCompra(const ASerie,
               ANumero: string): Integer;
+    procedure RefrescarMovimientosProveedor;
     procedure ValidarAlmacenSalida;
   public
     procedure GetCodigoAutoDevolucionCompra;
     procedure CalcularTotalesDevolucionCompra;
+    procedure SincronizarMovimientos;
     // Abre unqryCabDevcPrint y unqryLinDevcPrint con los parametros
     // del devolucion a imprimir. Mismo nombre/firma que en sesiones.
     procedure PrepararPrint(const ASerie, ANumero: string);
@@ -113,7 +115,7 @@ implementation
 
 uses
   inLibGlobalVar, inLibAppParam, inLibLog, inLibtb,
-  System.Diagnostics,
+  System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inMtoDevolucionesCompra,
   inLibDevolucionesCompraMovimientos,
   inLibComprasImpuestos,
@@ -278,12 +280,9 @@ begin
   AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
     'DEVC');
   CalcularTotalesDevolucionCompra;
-  // Deteccion de transicion de ESTADO_DEVC. Solo aplica en modo Edit
-  // (en Insert la devolucion nace ABIERTA y los movimientos los genera
-  // un Edit posterior). Comparamos OldValue vs
-  // valor actual; UniDAC garantiza que OldValue refleja el snapshot
-  // previo al Edit. Guardamos la transicion para aplicarla en
-  // AfterPost cuando la cabecera ya este persistida.
+  // Deteccion de transicion de ESTADO_DEVC. Solo aplica en modo Edit.
+  // Se usa para prevalidar cierres vacios; los movimientos se
+  // sincronizan siempre tras persistir la cabecera.
   FTransicionEstadoDevc := '';
   if unqryTablaG.State <> dsEdit then
     Exit;
@@ -327,35 +326,104 @@ begin
   end;
 end;
 
-// Tras persistir la cabecera, aplicamos la transicion de estado
-// detectada en BeforePost: generar movimientos al cerrar o revertir
-// los movimientos al reabrir. Cualquier excepcion se propaga al
-// usuario (el Post original ya quedo aplicado, por lo que la devolucion
-// guardara su nuevo estado aunque los movimientos fallen — el usuario
-// debe revisar y reintentar o revertir manualmente).
+// Tras persistir la cabecera, reconstruimos los movimientos DC desde el
+// documento actual. Cualquier excepcion se propaga al usuario (el Post
+// original ya quedo aplicado, por lo que debe revisar y reintentar).
 procedure TdmDevolucionesCompra.unqryTablaGAfterPost(DataSet: TDataSet);
-var
-  sSerie, sNumero: string;
 begin
   inherited;
-  if FTransicionEstadoDevc = '' then
-    Exit;
-  sSerie  := unqryTablaG.FieldByName('SERIE_DEVC').AsString;
-  sNumero := unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
   try
-    if FTransicionEstadoDevc = 'CERRAR' then
-      inLibDevolucionesCompraMovimientos.GenerarMovimientosDesdeDevolucionCompra(
-        inLibGlobalVar.oConn, sSerie, sNumero, oUser)
-    else if FTransicionEstadoDevc = 'ABRIR' then
-      inLibDevolucionesCompraMovimientos.RevertirMovimientosDesdeDevolucionCompra(
-        inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+    SincronizarMovimientos;
   finally
     FTransicionEstadoDevc := '';
   end;
-  if unqryMovimientosProveedor.Active then
+end;
+
+procedure TdmDevolucionesCompra.unqryTablaGBeforeDelete(DataSet: TDataSet);
+var
+  q: TUniQuery;
+  sNumero: string;
+  sSerie: string;
+  iBloqueos: Integer;
+
+  procedure AsignarDocumento;
   begin
-    unqryMovimientosProveedor.Close;
-    unqryMovimientosProveedor.Open;
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNumero;
+  end;
+
+begin
+  inherited;
+  sSerie := DataSet.FieldByName('SERIE_DEVC').AsString;
+  sNumero := DataSet.FieldByName('NUMERO_DEVC').AsString;
+  if (sSerie = '') or (sNumero = '') then
+  begin
+    Abort;
+  end;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := unqryTablaG.Connection;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N ' +
+      '  FROM fza_devoluciones_compra ' +
+      ' WHERE SERIE_DEVC  = :s ' +
+      '   AND NUMERO_DEVC = :n ' +
+      '   AND (COALESCE(NUMERO_FAC_DEVC, '''') <> '''' ' +
+      '    OR COALESCE(SERIE_FAC_DEVC, '''') <> '''' ' +
+      '    OR COALESCE(ESTADO_DEVC, '''') = ''FACTURADO'')';
+    AsignarDocumento;
+    q.Open;
+    iBloqueos := q.FieldByName('N').AsInteger;
+    q.Close;
+    if iBloqueos = 0 then
+    begin
+      q.SQL.Text :=
+        'SELECT COUNT(*) AS N ' +
+        '  FROM fza_devoluciones_compra_lineas ' +
+        ' WHERE SERIE_DEVC_DEVCLIN  = :s ' +
+        '   AND NUMERO_DEVC_DEVCLIN = :n ' +
+        '   AND (COALESCE(ESFACTURADA_DEVCLIN, ''N'') = ''S'' ' +
+        '    OR COALESCE(NUMERO_FAC_DEVCLIN, '''') <> '''' ' +
+        '    OR COALESCE(SERIE_FAC_DEVCLIN, '''') <> '''')';
+      AsignarDocumento;
+      q.Open;
+      iBloqueos := q.FieldByName('N').AsInteger;
+      q.Close;
+    end;
+    if iBloqueos > 0 then
+    begin
+      MessageDlg('No se puede borrar la devolucion de compra: ya esta ' +
+                 'facturada. Borra o deshaz primero la factura de compra ' +
+                 'vinculada.',
+                 mtWarning, [mbOk], 0);
+      Abort;
+    end;
+    if MessageDlg(Format('¿Borrar la devolucion de compra %s / %s?' +
+                         sLineBreak +
+                         'Se eliminaran sus lineas y se revertiran los ' +
+                         'movimientos de stock.',
+                         [sSerie, sNumero]),
+                  mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    begin
+      Abort;
+    end;
+    inLibDevolucionesCompraMovimientos.
+      RevertirMovimientosDesdeDevolucionCompra(
+        unqryTablaG.Connection, sSerie, sNumero, oUser);
+    q.SQL.Text :=
+      'DELETE FROM fza_devoluciones_compra_celdas ' +
+      ' WHERE SERIE_DEVC_DEVCCEL  = :s ' +
+      '   AND NUMERO_DEVC_DEVCCEL = :n';
+    AsignarDocumento;
+    q.ExecSQL;
+    q.SQL.Text :=
+      'DELETE FROM fza_devoluciones_compra_lineas ' +
+      ' WHERE SERIE_DEVC_DEVCLIN  = :s ' +
+      '   AND NUMERO_DEVC_DEVCLIN = :n';
+    AsignarDocumento;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
   end;
 end;
 
@@ -511,6 +579,15 @@ procedure TdmDevolucionesCompra.unqryDevolucionesCompraLineasAfterPost(
 begin
   inherited;
   CalcularTotalesDevolucionCompra;
+  SincronizarMovimientos;
+end;
+
+procedure TdmDevolucionesCompra.unqryDevolucionesCompraLineasAfterDelete(
+                                                       DataSet: TDataSet);
+begin
+  inherited;
+  CalcularTotalesDevolucionCompra;
+  SincronizarMovimientos;
 end;
 
 procedure TdmDevolucionesCompra.GetCodigoAutoDevolucionCompra;
@@ -537,9 +614,64 @@ end;
 
 procedure TdmDevolucionesCompra.CalcularTotalesDevolucionCompra;
 begin
-  CalcularTotalesDocumentoCompra(inLibGlobalVar.oConn, unqryTablaG,
+  CalcularTotalesDocumentoCompra(unqryTablaG.Connection, unqryTablaG,
     unqryDevolucionesCompraLineas, 'DEVC', 'TOTAL_DEVCLIN',
     'TIPO_IVA_ARTICULO_DEVCLIN', 'PORCENTAJE_IVA_DEVCLIN');
+end;
+
+function TdmDevolucionesCompra.HayLineasMovimiento(const ASerie,
+  ANumero: string): Boolean;
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := unqryTablaG.Connection;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N ' +
+      '  FROM fza_devoluciones_compra_lineas ' +
+      ' WHERE SERIE_DEVC_DEVCLIN  = :s ' +
+      '   AND NUMERO_DEVC_DEVCLIN = :n ' +
+      '   AND IFNULL(CANTIDAD_DEVCLIN, 0) > 0';
+    q.ParamByName('s').AsString := ASerie;
+    q.ParamByName('n').AsString := ANumero;
+    q.Open;
+    Result := q.FieldByName('N').AsInteger > 0;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure TdmDevolucionesCompra.RefrescarMovimientosProveedor;
+begin
+  if unqryMovimientosProveedor.Active then
+  begin
+    unqryMovimientosProveedor.Close;
+    unqryMovimientosProveedor.Open;
+  end;
+end;
+
+procedure TdmDevolucionesCompra.SincronizarMovimientos;
+var
+  sNumero: string;
+  sSerie: string;
+begin
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+  begin
+    sSerie := Trim(unqryTablaG.FieldByName('SERIE_DEVC').AsString);
+    sNumero := Trim(unqryTablaG.FieldByName('NUMERO_DEVC').AsString);
+    if (sSerie <> '') and (sNumero <> '') and (sNumero <> '0') then
+    begin
+      inLibDevolucionesCompraMovimientos.
+        RevertirMovimientosDesdeDevolucionCompra(
+          unqryTablaG.Connection, sSerie, sNumero, oUser);
+      if HayLineasMovimiento(sSerie, sNumero) then
+        inLibDevolucionesCompraMovimientos.
+          GenerarMovimientosDesdeDevolucionCompra(
+            unqryTablaG.Connection, sSerie, sNumero, oUser);
+      RefrescarMovimientosProveedor;
+    end;
+  end;
 end;
 
 function TdmDevolucionesCompra.CampoVistaCabeceraPrintExiste(

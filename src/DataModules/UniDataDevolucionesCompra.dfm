@@ -9,6 +9,7 @@
     AfterInsert = unqryTablaGAfterInsert
     BeforePost = unqryTablaGBeforePost
     AfterPost = unqryTablaGAfterPost
+    BeforeDelete = unqryTablaGBeforeDelete
     Left = 48
     Top = 24
   end
@@ -24,6 +25,7 @@
     AfterInsert = unqryDevolucionesCompraLineasAfterInsert
     BeforePost = unqryDevolucionesCompraLineasBeforePost
     AfterPost = unqryDevolucionesCompraLineasAfterPost
+    AfterDelete = unqryDevolucionesCompraLineasAfterDelete
     Left = 520
     Top = 8
     ParamData = <

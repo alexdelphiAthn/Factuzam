@@ -1792,6 +1792,8 @@ begin
     end;
     vEdit := AValorEditado;
     if VarIsNull(vEdit) or VarIsEmpty(vEdit) or VarIsClear(vEdit) then
+      vEdit := ed.EditingValue;
+    if VarIsNull(vEdit) or VarIsEmpty(vEdit) or VarIsClear(vEdit) then
       vEdit := ed.EditValue;
     if VarIsNull(vEdit) or VarIsEmpty(vEdit) or VarIsClear(vEdit) then
       vEdit := FCfg.Grid.DataController.Values[rec.RecordIndex, col.Index];
@@ -1831,6 +1833,10 @@ begin
             FCfg.SourceLineas.FieldByName(FCfg.FieldTotalLinea).AsFloat :=
               rCantidad * rPrecio;
           end;
+          FCfg.SourceLineas.Post;
+        end
+        else if FCfg.SourceLineas.State in dsEditModes then
+        begin
           FCfg.SourceLineas.Post;
         end;
       end;
@@ -1893,7 +1899,11 @@ begin
   if col.Tag > Length(arr) then Exit;
   iTallaAv := arr[col.Tag - 1].IdAv;
   iKey := Int64(iLineaRepr) * 100000 + iTallaAv;
-  vEdit := ed.EditValue;
+  vEdit := ed.EditingValue;
+  if VarIsNull(vEdit) or VarIsEmpty(vEdit) or VarIsClear(vEdit) then
+    vEdit := ed.EditValue;
+  if VarIsNull(vEdit) or VarIsEmpty(vEdit) or VarIsClear(vEdit) then
+    vEdit := FCfg.Grid.DataController.Values[rec.RecordIndex, col.Index];
   if VarIsNull(vEdit) or VarIsEmpty(vEdit) or VarIsClear(vEdit) then
     rCantidad := 0
   else if VarIsNumeric(vEdit) then
@@ -1928,16 +1938,26 @@ procedure TGridPivoteCompra.CapturarEditorActivo;
 var
   ed: TcxCustomEdit;
 begin
-  if FCfg.Grid = nil then Exit;
-  if FCfg.Grid.Controller.EditingController = nil then Exit;
-  if not FCfg.Grid.Controller.EditingController.IsEditing then Exit;
+  if FCfg.Grid = nil then
+    Exit;
+  if FCfg.Grid.Controller.EditingController = nil then
+    Exit;
+  if not FCfg.Grid.Controller.EditingController.IsEditing then
+    Exit;
   ed := FCfg.Grid.Controller.EditingController.Edit;
-  if ed = nil then Exit;
+  if ed = nil then
+    Exit;
   if FExpandido then
     CapturarARecibirEditValueChanged(ed)
   else
     CapturarCantidadEditValueChanged(ed);
-  FCfg.Grid.Controller.EditingController.HideEdit(False);
+  // Acepta el editor activo para que Grabar no dependa de cambiar de celda.
+  try
+    FCfg.Grid.Controller.EditingController.HideEdit(True);
+  except
+    on E: EInvalidOperation do
+      ;
+  end;
 end;
 
 procedure TGridPivoteCompra.CapturarValoresVisibles;
@@ -2403,6 +2423,11 @@ begin
           end;
           FCfg.SourceLineas.Post;
           Inc(Result);
+        end
+        else if FCfg.SourceLineas.State in dsEditModes then
+        begin
+          FCfg.SourceLineas.Post;
+          Inc(Result);
         end;
       end
       else
@@ -2416,7 +2441,7 @@ begin
     if bFiltro then
       FCfg.SourceLineas.Filtered := True;
     if sLineaFoco <> '' then
-    FCfg.SourceLineas.Locate(FCfg.FieldLinea, sLineaFoco, []);
+      FCfg.SourceLineas.Locate(FCfg.FieldLinea, sLineaFoco, []);
     FCfg.SourceLineas.EnableControls;
     FGuardandoCantidad := False;
     if inLibLog.Log <> nil then
@@ -2470,7 +2495,11 @@ begin
   if col.Tag > Length(arr) then Exit;
   iTallaAv := arr[col.Tag - 1].IdAv;
   iKey     := Int64(iLinea) * 100000 + iTallaAv;
-  vEdit := ed.EditValue;
+  vEdit := ed.EditingValue;
+  if VarIsNull(vEdit) or VarIsEmpty(vEdit) or VarIsClear(vEdit) then
+    vEdit := ed.EditValue;
+  if VarIsNull(vEdit) or VarIsEmpty(vEdit) or VarIsClear(vEdit) then
+    vEdit := FCfg.Grid.DataController.Values[rec.RecordIndex, col.Index];
   if VarIsNull(vEdit) or VarIsEmpty(vEdit) then
     rValor := 0
   else if VarIsNumeric(vEdit) then
