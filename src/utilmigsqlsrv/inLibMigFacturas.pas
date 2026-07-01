@@ -680,10 +680,12 @@ begin
       // Se fija el documento PROPIO del movimiento (*_DOC_MOV): la pestana
       // "Movimientos" de la factura (unqryMovimientosFac) filtra por
       // TIPO_DOC_MOV IN ('FC','VE') AND SERIE_DOC_MOV = SERIE_FAC AND
-      // NUMERO_DOC_MOV = NUMERO_FAC. La migracion de movimientos guardo
-      // SERIE_DOC_MOV sin el ejercicio ('A1' en vez de '2026.A1'), por eso no
-      // casaba y la pestana salia vacia. TIPO_DOC_MOV se deja como esta ('VE',
-      // ya aceptado por la pestana) para no alterar el calculo de stock.
+      // NUMERO_DOC_MOV = NUMERO_FAC. La migracion de movimientos ya guarda
+      // SERIE_DOC_MOV con ejercicio ('2026.A1'), igual que SERIE_FAC. Este
+      // enlace lo reafirma desde la linea de factura y rellena LINEA_MOV
+      // para que la pestana muestre los movimientos de la simplificada.
+      // TIPO_DOC_MOV se deja como esta ('VE', ya aceptado por la pestana)
+      // para no alterar el calculo de stock.
       // Se rellenan tambien las columnas *_DOC_REF_MOV (trazabilidad / rejilla
       // de movimientos del articulo). STRAIGHT_JOIN conduce desde la linea.
       Eng.Log('  enlazando movimientos con su factura simplificada...');

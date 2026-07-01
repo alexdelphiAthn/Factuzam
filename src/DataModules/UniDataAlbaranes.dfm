@@ -27,6 +27,7 @@
     AfterInsert = unqryAlbaranesLineasAfterInsert
     BeforePost = unqryAlbaranesLineasBeforePost
     AfterPost = unqryAlbaranesLineasAfterPost
+    AfterDelete = unqryAlbaranesLineasAfterDelete
     Left = 520
     Top = 8
     ParamData = <

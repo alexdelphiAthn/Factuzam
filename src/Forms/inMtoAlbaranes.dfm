@@ -270,7 +270,10 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                     Default = True
                     Kind = bkEllipsis
                   end>
+                Properties.OnButtonClick = btnCODIGO_EMP_ALBPropertiesButtonClick
+                Properties.OnEditValueChanged = btnCODIGO_EMP_ALBPropertiesEditValueChanged
                 TabOrder = 8
+                OnKeyUp = btnCODIGO_EMP_ALBKeyUp
                 Width = 130
               end
               object cxdblblRAZON_SOCIAL_EMPRESA_ALB: TcxDBLabel
@@ -300,7 +303,10 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                     Default = True
                     Kind = bkEllipsis
                   end>
+                Properties.OnButtonClick = btnCODIGO_CLI_ALBPropertiesButtonClick
+                Properties.OnEditValueChanged = btnCODIGO_CLI_ALBPropertiesEditValueChanged
                 TabOrder = 17
+                OnKeyUp = btnCODIGO_CLI_ALBKeyUp
                 Width = 130
               end
               object cxdblblRAZON_SOCIAL_CLIENTE_ALB: TcxDBLabel
@@ -688,6 +694,14 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                   object cxgrdcArtAlb: TcxGridDBColumn
                     Caption = 'C'#243'digo Art'#237'culo'
                     DataBinding.FieldName = 'CODIGO_ART_ALBLIN'
+                    PropertiesClassName = 'TcxButtonEditProperties'
+                    Properties.Buttons = <
+                      item
+                        Default = True
+                        Kind = bkEllipsis
+                      end>
+                    Properties.OnButtonClick = cxgrdcArtAlbPropertiesButtonClick
+                    Properties.OnValidate = cxgrdcArtAlbPropertiesValidate
                     Width = 130
                   end
                   object cxgrdcSkuAlb: TcxGridDBColumn
