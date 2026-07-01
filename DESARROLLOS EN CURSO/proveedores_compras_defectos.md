@@ -1,9 +1,9 @@
-# Proveedores — Margen por defecto y kits de cantidades por talla
+# Proveedores — Margen por defecto, tallaje por defecto y kits de cantidades por talla
 
 Extiende el proveedor para que las **Sesiones de Compra**
 (`inMtoComprasSesiones`, "Crear artículos y un pedido o un albarán") hereden
-su margen por defecto y dispongan de su biblioteca de kits de cantidades por
-talla.
+su margen por defecto, su sistema de tallas por defecto, y dispongan de su
+biblioteca de kits de cantidades por talla.
 
 Script de esquema: `proveedores_compras_defectos.sql` (idempotente).
 
@@ -14,13 +14,19 @@ Script de esquema: `proveedores_compras_defectos.sql` (idempotente).
 | Campo                           | Significado                                                       |
 |---------------------------------|-------------------------------------------------------------------|
 | `PORCENTAJE_MARGEN_PRV`         | Margen comercial por defecto. Se copia a `PORCENTAJE_MARGEN_SES`. |
+| `ID_AC_TALLAS_PRV`               | Sistema de tallas por defecto. Fija el tallaje-defecto-del-documento (no se copia a ninguna columna de cabecera; ver §3.3). |
 | `fza_proveedores_kits` (+`_det`)| Biblioteca de kits: patrones de cantidades por talla.            |
 
-> El **sistema de tallas por defecto** del proveedor se descartó: cada kit
-> lleva el suyo (`ID_AC_TALLAS_PRVKIT`) y las líneas de la sesión eligen el
-> suyo en la columna «Sistema tallas». La columna `ID_AC_TALLAS_PRV` del
-> primer borrador ya no se crea; si quedó en alguna BBDD migrada es un
-> huérfano inocuo (no se lee).
+> Historial: una primera iteración descartó el tallaje por defecto de
+> proveedor a favor de que cada kit llevara el suyo (`ID_AC_TALLAS_PRVKIT`)
+> y cada línea eligiera el suyo. Ambas cosas conviven: el tallaje por
+> defecto del proveedor solo **propone** el sistema de tallas de la primera
+> línea nueva de la sesión (el usuario lo puede cambiar libremente por
+> línea, igual que antes); los kits y su validación de tallaje
+> (`ID_AC_TALLAS_PRVKIT = ID_AC_PIVOT_SESLIN`) no cambian. La columna
+> `ID_AC_TALLAS_PRV` ya existía físicamente en el esquema base
+> (`factuzam_original.sql` / `factuzam_demo.sql`); no hizo falta ALTER TABLE,
+> solo activarla en UI y en el flujo de sesión.
 
 ### Kits (`PRVKIT` / `PRVKITD`)
 
@@ -47,8 +53,9 @@ Un kit es un patrón de cantidades sobre tallas predefinidas (ver
 
 Pestaña nueva **«6_Compras»**:
 
-- GroupBox «Defectos para sesiones de compra»: solo **margen %**
-  (`spnMargenPrv`).
+- GroupBox «Defectos para sesiones de compra»: **margen %** (`spnMargenPrv`)
+  y **sistema de tallas** (`cbbSistemaTallasPrv`, `DataField=ID_AC_TALLAS_PRV`,
+  mismo lookup `dsConjuntosTallas` que usan los kits).
 - GroupBox «Kits de cantidades por talla»: grid de kits (Código, Nombre,
   Sistema tallas) + grid de detalle (talla / cantidad) con botones
   **+ Kit / − Kit / + Talla / − Talla** y **«Añadir todas las tallas»**:
@@ -94,16 +101,29 @@ sobrantes (`1`, `1.5`). `KeyFieldNames = CODIGO_PRVKIT`, columna visible
   `CODIGO_PRV_SES` (`RecargarProveedorSesion`, con guard para no reabrir si
   no cambia).
 
-### 3.3 Copia del margen al elegir proveedor
+### 3.3 Copia del margen y del tallaje al elegir proveedor
 
 Al cambiar `CODIGO_PRV_SES` con la cabecera en edición/inserción
 (`CopiarDefectosProveedor` desde `dsTablaGDataChangeHook`):
 
 - `PORCENTAJE_MARGEN_PRV` → `PORCENTAJE_MARGEN_SES` (si el proveedor lo tiene;
   alimenta el PVP propuesto al teclear el coste).
-
-El sistema de tallas se elige por línea (columna «Sistema tallas»), no se
-hereda del proveedor.
+- `ID_AC_TALLAS_PRV` (si el proveedor lo tiene) → `Dmm.TallajeDefectoActual`,
+  el **tallaje-defecto-del-documento** (campo en memoria de
+  `TdmComprasSesiones`, no una columna de cabecera). Se usa así:
+  - `unqrySesionLinAfterInsert` lo escribe en `ID_AC_PIVOT_SESLIN` de toda
+    línea **nueva** que se añada (si es &gt; 0), como propuesta inicial; la
+    línea se puede cambiar igual que siempre.
+  - Si el usuario cambia el sistema de tallas de una línea a mano
+    (`dbcLinTallasPropertiesButtonClick`, el selector con ellipsis), ese
+    valor pasa a ser el nuevo tallaje-defecto-del-documento para la
+    siguiente línea nueva — es decir, "se cambia el defecto del documento",
+    no el del proveedor.
+  - `RecargarProveedorSesion` lo resetea a 0 al navegar a otra sesión o al
+    vaciar/cambiar el proveedor, para no arrastrar el de una sesión anterior.
+  - Los kits y su validación de tallaje (§1, `ID_AC_TALLAS_PRVKIT =
+    ID_AC_PIVOT_SESLIN`) siguen igual: el defecto solo agiliza el alta de
+    líneas, no sustituye la selección por línea ni la lógica de kits.
 
 ### 3.4 Aplicar kit a la fila actual
 
@@ -164,10 +184,10 @@ proveedor + kit):
 | `DESARROLLOS EN CURSO/proveedores_compras_defectos.sql` | Esquema (margen + tablas kits).   |
 | `LIBRO_DE_ESTILO_BBDD.md`                         | Sufijos `PRVKIT` / `PRVKITD`.           |
 | `src/DataModules/UniDataProveedores.pas/.dfm`     | Queries kits + lookup tallas + handlers. |
-| `src/Forms/inMtoProveedores.pas/.dfm`             | Pestaña «6_Compras».                    |
-| `src/DataModules/UniDataComprasSesiones.pas/.dfm` | `unqryPrvFicha` / `unqryPrvKits[Det]` / `unqryPrvKitsCombo`. |
+| `src/Forms/inMtoProveedores.pas/.dfm`             | Pestaña «6_Compras» (margen + **sistema de tallas por defecto**). |
+| `src/DataModules/UniDataComprasSesiones.pas/.dfm` | `unqryPrvFicha` / `unqryPrvKits[Det]` / `unqryPrvKitsCombo` + `FTallajeDefectoActual`/`TallajeDefectoActual` + reset en `RecargarProveedorSesion` + aplicación en `unqrySesionLinAfterInsert`. |
 | `src/Lib/inLibComprasSesiones.pas`                | `ValidarKitSobreLineaActual` + `AplicarKitProveedorALinea`. |
-| `src/Forms/inMtoComprasSesiones.pas/.dfm`         | Desplegable + botón en cabecera, pestaña «3_Proveedor», copia de margen. |
+| `src/Forms/inMtoComprasSesiones.pas/.dfm`         | Desplegable + botón en cabecera, pestaña «3_Proveedor», copia de margen y tallaje (`CopiarDefectosProveedor`), actualización del defecto al cambiar tallas de línea (`dbcLinTallasPropertiesButtonClick`). |
 | `src/Modals/inMtoModalDistribuidor.pas/.dfm`      | Modo kit: botones Aplicar/Limpiar por almacén + «en todos». |
 
 ## 5. Pendiente / fuera de alcance

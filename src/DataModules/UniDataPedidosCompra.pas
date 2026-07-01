@@ -35,6 +35,7 @@ type
     dsPedidosCompraLineas:    TDataSource;
     unqryEmpDataPedc:         TUniQuery;
     unqryPrvDataPedc:         TUniQuery;
+    dsPrvDataPedc:            TDataSource;
     unqrySkusPedc:            TUniQuery;
     unstrdprcGetContadorPedc: TUniStoredProc;
     unqryDefArticuloPedc:     TUniQuery;
@@ -57,9 +58,22 @@ type
   private
     FCalculandoTotales: Boolean;
     procedure ConfigurarSqlCabecera;
+    function ObtenerAlmacenesSql(const AAlmacenesCsv: string): string;
+    function ObtenerSkusPedidoCsv(const ASerie, ANumero,
+                                  AAlmacenesCsv: string): string;
   public
     procedure GetCodigoAutoPedidoCompra;
     procedure CalcularTotalesPedidoCompra;
+    procedure CargarAlmacenesDelPedido(const ASerie, ANumero: string;
+                                       ALV: TObject);
+    procedure CrearDataSetEtiquetasPed(ADmArt: TObject;
+                                        const ASerie, ANumero,
+                                              ACodTarifa,
+                                              AAlmacenesCsv: string;
+                                        AFecha: TDateTime);
+    procedure ExpandirEtiquetasPorCantidadPed(ADmArt: TObject;
+                                               const ASerie, ANumero,
+                                                     AAlmacenesCsv: string);
     procedure OpenTables;
     procedure AbrirDetalles; override;
   end;
@@ -68,11 +82,13 @@ implementation
 
 uses
   inLibGlobalVar, inLibLog, inLibtb, inLibContadorLineas,
-  System.Diagnostics, System.UITypes, Vcl.Dialogs,
+  System.Diagnostics, System.UITypes, System.Generics.Collections,
+  Vcl.Dialogs, ComCtrls, cxListView,
   inMtoPedidosCompra,
   inLibPedidosCompra,
   inLibComprasImpuestos,
-  inLibArticulosValidador;
+  inLibArticulosValidador,
+  UniDataArticulos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -90,6 +106,8 @@ begin
     '       SERIE_PEDC = :SERIE_PEDC, ' + sLineBreak +
     '       FECHA_PEDC = :FECHA_PEDC, ' + sLineBreak +
     '       FECHA_PREVISTA_PEDC = :FECHA_PREVISTA_PEDC, ' + sLineBreak +
+    '       FECHA_TOPE_RECEPCION_PEDC = :FECHA_TOPE_RECEPCION_PEDC, ' +
+      sLineBreak +
     '       ESTADO_PEDC = :ESTADO_PEDC, ' + sLineBreak +
     '       CODIGO_EMP_PEDC = :CODIGO_EMP_PEDC, ' + sLineBreak +
     '       RAZON_SOCIAL_EMPRESA_PEDC = :RAZON_SOCIAL_EMPRESA_PEDC, ' +
@@ -129,6 +147,8 @@ begin
     '       CODIGO_IVA_PEDC = :CODIGO_IVA_PEDC, ' + sLineBreak +
     '       ESIVA_RECARGO_COMPRAS_PEDC = :ESIVA_RECARGO_COMPRAS_PEDC, ' +
       sLineBreak +
+    '       ESIVA_EXENTO_INTRACOMUNITARIO_PEDC = ' +
+      ':ESIVA_EXENTO_INTRACOMUNITARIO_PEDC, ' + sLineBreak +
     '       PORCENTAJE_IVAN_PEDC = :PORCENTAJE_IVAN_PEDC, ' + sLineBreak +
     '       TOTAL_BASEI_IVAN_PEDC = :TOTAL_BASEI_IVAN_PEDC, ' + sLineBreak +
     '       TOTAL_IVAN_PEDC = :TOTAL_IVAN_PEDC, ' + sLineBreak +
@@ -149,6 +169,15 @@ begin
     '       TOTAL_IVAE_PEDC = :TOTAL_IVAE_PEDC, ' + sLineBreak +
     '       PORCENTAJE_REE_PEDC = :PORCENTAJE_REE_PEDC, ' + sLineBreak +
     '       TOTAL_REE_PEDC = :TOTAL_REE_PEDC, ' + sLineBreak +
+    '       TOTAL_BRUTO_PEDC = :TOTAL_BRUTO_PEDC, ' + sLineBreak +
+    '       PORCENTAJE_DTO_COMERCIAL_PEDC = ' +
+      ':PORCENTAJE_DTO_COMERCIAL_PEDC, ' + sLineBreak +
+    '       TOTAL_DTO_COMERCIAL_PEDC = :TOTAL_DTO_COMERCIAL_PEDC, ' +
+      sLineBreak +
+    '       PORCENTAJE_DTO_FINANCIERO_PEDC = ' +
+      ':PORCENTAJE_DTO_FINANCIERO_PEDC, ' + sLineBreak +
+    '       TOTAL_DTO_FINANCIERO_PEDC = :TOTAL_DTO_FINANCIERO_PEDC, ' +
+      sLineBreak +
     '       TOTAL_BASES_PEDC = :TOTAL_BASES_PEDC, ' + sLineBreak +
     '       TOTAL_IMPUESTOS_PEDC = :TOTAL_IMPUESTOS_PEDC, ' + sLineBreak +
     '       PORCENTAJE_RETENCION_PEDC = :PORCENTAJE_RETENCION_PEDC, ' +
@@ -184,6 +213,11 @@ begin
   unqryPedidosCompraLineas.Connection := inLibGlobalVar.oConn;
   unqryEmpDataPedc.Connection         := inLibGlobalVar.oConn;
   unqryPrvDataPedc.Connection         := inLibGlobalVar.oConn;
+  // Lookup completo de proveedores (NOMBRE_PRV + RAZON_SOCIAL_PRV) para
+  // el rotulo resuelto de la cabecera y para el combo de busqueda
+  // incremental por codigo (cbbCODIGO_PRV_PEDC). Se abre una vez y se
+  // recorre con Locate; no depende del proveedor del pedido en pantalla.
+  unqryPrvDataPedc.Open;
   unqrySkusPedc.Connection            := inLibGlobalVar.oConn;
   unstrdprcGetContadorPedc.Connection := inLibGlobalVar.oConn;
   unqryDefArticuloPedc.Connection     := inLibGlobalVar.oConn;
@@ -300,6 +334,8 @@ begin
     else
       FieldByName('CODIGO_EMP_PEDC').AsString := '0';
     FieldByName('CODIGO_PRV_PEDC').AsString := '0';
+    if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_PEDC') <> nil then
+      FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_PEDC').AsString := 'N';
     AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
       'CODIGO_EMP_PEDC', 'ESIVA_RECARGO_COMPRAS_PEDC');
     AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
@@ -530,6 +566,320 @@ begin
   if (sSerie = '') or (sNumero = '') then Exit;
   inLibPedidosCompra.BorrarPdteRecibirDesdePedido(
     inLibGlobalVar.oConn, sSerie, sNumero, sLinea);
+end;
+
+function TdmPedidosCompra.ObtenerAlmacenesSql(
+                                            const AAlmacenesCsv: string):
+                                            string;
+var
+  i: Integer;
+  lstCod: TStringList;
+  sCod: string;
+begin
+  Result := '';
+  if Trim(AAlmacenesCsv) <> '' then
+  begin
+    lstCod := TStringList.Create;
+    try
+      lstCod.StrictDelimiter := True;
+      lstCod.Delimiter       := ',';
+      lstCod.DelimitedText   := AAlmacenesCsv;
+      for i := 0 to lstCod.Count - 1 do
+      begin
+        sCod := Trim(lstCod[i]);
+        if sCod <> '' then
+        begin
+          if Result <> '' then
+            Result := Result + ',';
+          Result := Result + QuotedStr(sCod);
+        end;
+      end;
+    finally
+      FreeAndNil(lstCod);
+    end;
+  end;
+end;
+
+procedure TdmPedidosCompra.CargarAlmacenesDelPedido(
+                                      const ASerie, ANumero: string;
+                                      ALV: TObject);
+const
+  cAlmacenEf =
+    'COALESCE(NULLIF(C.CODIGO_ALM_PEDCCEL, ''''), ' +
+    '         NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
+    '         NULLIF(P.CODIGO_ALM_PEDC, ''''))';
+var
+  oQry: TUniQuery;
+  oLv: TcxListView;
+  oItem: TListItem;
+begin
+  if not (ALV is TcxListView) then
+    Exit;
+  oLv := TcxListView(ALV);
+  oLv.Items.BeginUpdate;
+  try
+    oLv.Items.Clear;
+    oQry := TUniQuery.Create(nil);
+    try
+      oQry.Connection := inLibGlobalVar.oConn;
+      oQry.SQL.Text :=
+        'SELECT X.COD, COALESCE(A.NOMBRE_ALM_ALM, X.COD) AS NOM ' +
+        '  FROM ( ' +
+        '        SELECT DISTINCT ' + cAlmacenEf + ' AS COD ' +
+        '          FROM fza_pedidos_compra_lineas L ' +
+        '          JOIN fza_pedidos_compra P ' +
+        '            ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
+        '           AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+        '          LEFT JOIN fza_pedidos_compra_celdas C ' +
+        '            ON C.SERIE_PEDC_PEDCCEL = L.SERIE_PEDC_PEDCLIN ' +
+        '           AND C.NUMERO_PEDC_PEDCCEL = L.NUMERO_PEDC_PEDCLIN ' +
+        '           AND C.LINEA_PEDC_PEDCCEL = L.LINEA_PEDCLIN ' +
+        '         WHERE L.SERIE_PEDC_PEDCLIN = :s ' +
+        '           AND L.NUMERO_PEDC_PEDCLIN = :n ' +
+        '       ) X ' +
+        '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = X.COD ' +
+        ' WHERE COALESCE(X.COD, '''') <> '''' ' +
+        ' ORDER BY X.COD';
+      oQry.ParamByName('s').AsString := ASerie;
+      oQry.ParamByName('n').AsString := ANumero;
+      oQry.Open;
+      while not oQry.Eof do
+      begin
+        oItem := oLv.Items.Add;
+        oItem.Caption := oQry.FieldByName('COD').AsString;
+        oItem.SubItems.Add(oQry.FieldByName('NOM').AsString);
+        oItem.Checked := True;
+        oQry.Next;
+      end;
+    finally
+      FreeAndNil(oQry);
+    end;
+  finally
+    oLv.Items.EndUpdate;
+  end;
+end;
+
+function TdmPedidosCompra.ObtenerSkusPedidoCsv(const ASerie, ANumero,
+                                               AAlmacenesCsv: string):
+                                               string;
+const
+  cAlmacenEf =
+    'COALESCE(NULLIF(C.CODIGO_ALM_PEDCCEL, ''''), ' +
+    '         NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
+    '         NULLIF(P.CODIGO_ALM_PEDC, ''''))';
+var
+  oQry: TUniQuery;
+  sAlmacenes: string;
+begin
+  Result := '';
+  sAlmacenes := ObtenerAlmacenesSql(AAlmacenesCsv);
+  oQry := TUniQuery.Create(nil);
+  try
+    oQry.Connection := inLibGlobalVar.oConn;
+    oQry.SQL.Text :=
+      'SELECT DISTINCT L.CODIGO_UNIDAD_PEDCLIN ' +
+      '  FROM fza_pedidos_compra_lineas L ' +
+      '  JOIN fza_pedidos_compra P ' +
+      '    ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
+      '   AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+      '  LEFT JOIN fza_pedidos_compra_celdas C ' +
+      '    ON C.SERIE_PEDC_PEDCCEL = L.SERIE_PEDC_PEDCLIN ' +
+      '   AND C.NUMERO_PEDC_PEDCCEL = L.NUMERO_PEDC_PEDCLIN ' +
+      '   AND C.LINEA_PEDC_PEDCCEL = L.LINEA_PEDCLIN ' +
+      ' WHERE L.SERIE_PEDC_PEDCLIN = :s ' +
+      '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
+      '   AND COALESCE(L.CODIGO_UNIDAD_PEDCLIN, '''') <> ''''';
+    if sAlmacenes <> '' then
+      oQry.SQL.Add('   AND ' + cAlmacenEf + ' IN (' + sAlmacenes + ')');
+    oQry.SQL.Add(' ORDER BY L.CODIGO_UNIDAD_PEDCLIN');
+    oQry.ParamByName('s').AsString := ASerie;
+    oQry.ParamByName('n').AsString := ANumero;
+    oQry.Open;
+    while not oQry.Eof do
+    begin
+      if Result <> '' then
+        Result := Result + ',';
+      Result := Result + QuotedStr(
+        oQry.FieldByName('CODIGO_UNIDAD_PEDCLIN').AsString);
+      oQry.Next;
+    end;
+  finally
+    FreeAndNil(oQry);
+  end;
+end;
+
+procedure TdmPedidosCompra.ExpandirEtiquetasPorCantidadPed(ADmArt: TObject;
+                                  const ASerie, ANumero,
+                                        AAlmacenesCsv: string);
+const
+  cAlmacenCel =
+    'COALESCE(NULLIF(C.CODIGO_ALM_PEDCCEL, ''''), ' +
+    '         NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
+    '         NULLIF(P.CODIGO_ALM_PEDC, ''''))';
+  cAlmacenLin =
+    'COALESCE(NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
+    '         NULLIF(P.CODIGO_ALM_PEDC, ''''))';
+var
+  oQry: TUniQuery;
+  oDmArt: TdmArticulos;
+  oCantidades: TDictionary<string, Integer>;
+  Filas: array of array of Variant;
+  i, j, k, iOriginales, iSkuIdx, iStockIdx, iCantidad: Integer;
+  sAlmacenes, sSku: string;
+begin
+  if ADmArt is TdmArticulos then
+  begin
+    oDmArt := TdmArticulos(ADmArt);
+    oCantidades := TDictionary<string, Integer>.Create;
+    try
+      oQry := TUniQuery.Create(nil);
+      try
+        oQry.Connection := inLibGlobalVar.oConn;
+        sAlmacenes := ObtenerAlmacenesSql(AAlmacenesCsv);
+        oQry.SQL.Text :=
+          'SELECT X.SKU, SUM(X.CANTIDAD) AS CANTIDAD ' +
+          '  FROM ( ' +
+          '        SELECT L.CODIGO_UNIDAD_PEDCLIN AS SKU, ' +
+          '               COALESCE(C.CANTIDAD_PEDCCEL, 0) AS CANTIDAD ' +
+          '          FROM fza_pedidos_compra_lineas L ' +
+          '          JOIN fza_pedidos_compra P ' +
+          '            ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
+          '           AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+          '          JOIN fza_pedidos_compra_celdas C ' +
+          '            ON C.SERIE_PEDC_PEDCCEL = L.SERIE_PEDC_PEDCLIN ' +
+          '           AND C.NUMERO_PEDC_PEDCCEL = L.NUMERO_PEDC_PEDCLIN ' +
+          '           AND C.LINEA_PEDC_PEDCCEL = L.LINEA_PEDCLIN ' +
+          '         WHERE L.SERIE_PEDC_PEDCLIN = :s ' +
+          '           AND L.NUMERO_PEDC_PEDCLIN = :n ' +
+          '           AND COALESCE(L.CODIGO_UNIDAD_PEDCLIN, '''') <> '''' ' +
+          '           AND COALESCE(C.CANTIDAD_PEDCCEL, 0) > 0 ';
+        if sAlmacenes <> '' then
+          oQry.SQL.Add('           AND ' + cAlmacenCel +
+                       ' IN (' + sAlmacenes + ')');
+        oQry.SQL.Add(
+          '        UNION ALL ' +
+          '        SELECT L.CODIGO_UNIDAD_PEDCLIN AS SKU, ' +
+          '               COALESCE(L.CANTIDAD_PEDCLIN, 0) AS CANTIDAD ' +
+          '          FROM fza_pedidos_compra_lineas L ' +
+          '          JOIN fza_pedidos_compra P ' +
+          '            ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
+          '           AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+          '         WHERE L.SERIE_PEDC_PEDCLIN = :s ' +
+          '           AND L.NUMERO_PEDC_PEDCLIN = :n ' +
+          '           AND COALESCE(L.CODIGO_UNIDAD_PEDCLIN, '''') <> '''' ' +
+          '           AND COALESCE(L.CANTIDAD_PEDCLIN, 0) > 0 ' +
+          '           AND NOT EXISTS ( ' +
+          '             SELECT 1 ' +
+          '               FROM fza_pedidos_compra_celdas C0 ' +
+          '              WHERE C0.SERIE_PEDC_PEDCCEL = ' +
+          '                    L.SERIE_PEDC_PEDCLIN ' +
+          '                AND C0.NUMERO_PEDC_PEDCCEL = ' +
+          '                    L.NUMERO_PEDC_PEDCLIN ' +
+          '                AND C0.LINEA_PEDC_PEDCCEL = L.LINEA_PEDCLIN ' +
+          '           ) ');
+        if sAlmacenes <> '' then
+          oQry.SQL.Add('           AND ' + cAlmacenLin +
+                       ' IN (' + sAlmacenes + ')');
+        oQry.SQL.Add(
+          '       ) X ' +
+          ' GROUP BY X.SKU');
+        oQry.ParamByName('s').AsString := ASerie;
+        oQry.ParamByName('n').AsString := ANumero;
+        oQry.Open;
+        while not oQry.Eof do
+        begin
+          iCantidad := Trunc(oQry.FieldByName('CANTIDAD').AsFloat);
+          sSku := oQry.FieldByName('SKU').AsString;
+          if (sSku <> '') and (iCantidad > 0) then
+            oCantidades.AddOrSetValue(sSku, iCantidad);
+          oQry.Next;
+        end;
+      finally
+        FreeAndNil(oQry);
+      end;
+      if oDmArt.cdsEtiquetasArt.Active then
+      begin
+        if (not oDmArt.cdsEtiquetasArt.IsEmpty) and
+           (oDmArt.cdsEtiquetasArt.FindField('CODIGO_UNIDAD_SKU') <> nil) then
+        begin
+          iSkuIdx := oDmArt.cdsEtiquetasArt.FieldByName(
+            'CODIGO_UNIDAD_SKU').Index;
+          iStockIdx := -1;
+          if oDmArt.cdsEtiquetasArt.FindField('STOCK_FILTRADO') <> nil then
+            iStockIdx := oDmArt.cdsEtiquetasArt.FieldByName(
+              'STOCK_FILTRADO').Index;
+          oDmArt.cdsEtiquetasArt.DisableControls;
+          oDmArt.cdsEtiquetasArt.DisableConstraints;
+          try
+            for j := 0 to oDmArt.cdsEtiquetasArt.FieldCount - 1 do
+            begin
+              oDmArt.cdsEtiquetasArt.Fields[j].ReadOnly := False;
+              oDmArt.cdsEtiquetasArt.Fields[j].Required := False;
+            end;
+            iOriginales := oDmArt.cdsEtiquetasArt.RecordCount;
+            SetLength(Filas, iOriginales);
+            oDmArt.cdsEtiquetasArt.First;
+            for i := 0 to iOriginales - 1 do
+            begin
+              SetLength(Filas[i], oDmArt.cdsEtiquetasArt.FieldCount);
+              for j := 0 to oDmArt.cdsEtiquetasArt.FieldCount - 1 do
+                Filas[i][j] := oDmArt.cdsEtiquetasArt.Fields[j].Value;
+              oDmArt.cdsEtiquetasArt.Next;
+            end;
+            oDmArt.cdsEtiquetasArt.EmptyDataSet;
+            for i := 0 to iOriginales - 1 do
+            begin
+              sSku := VarToStr(Filas[i][iSkuIdx]);
+              if oCantidades.TryGetValue(sSku, iCantidad) then
+              begin
+                for k := 1 to iCantidad do
+                begin
+                  oDmArt.cdsEtiquetasArt.Append;
+                  for j := 0 to oDmArt.cdsEtiquetasArt.FieldCount - 1 do
+                    oDmArt.cdsEtiquetasArt.Fields[j].Value := Filas[i][j];
+                  if iStockIdx >= 0 then
+                    oDmArt.cdsEtiquetasArt.Fields[iStockIdx].AsInteger :=
+                      iCantidad;
+                  oDmArt.cdsEtiquetasArt.Post;
+                end;
+              end;
+            end;
+          finally
+            oDmArt.cdsEtiquetasArt.EnableConstraints;
+            oDmArt.cdsEtiquetasArt.EnableControls;
+          end;
+        end
+        else
+          oDmArt.cdsEtiquetasArt.EmptyDataSet;
+      end;
+    finally
+      oCantidades.Free;
+    end;
+  end;
+end;
+
+procedure TdmPedidosCompra.CrearDataSetEtiquetasPed(ADmArt: TObject;
+                                  const ASerie, ANumero,
+                                        ACodTarifa, AAlmacenesCsv: string;
+                                  AFecha: TDateTime);
+var
+  oDmArt: TdmArticulos;
+  sSkus: string;
+begin
+  if ADmArt is TdmArticulos then
+  begin
+    oDmArt := TdmArticulos(ADmArt);
+    sSkus := ObtenerSkusPedidoCsv(ASerie, ANumero, AAlmacenesCsv);
+    if sSkus <> '' then
+    begin
+      oDmArt.CrearDataSetEtiquetasArt('', ACodTarifa, '', AFecha, sSkus);
+      ExpandirEtiquetasPorCantidadPed(oDmArt, ASerie, ANumero,
+                                       AAlmacenesCsv);
+    end
+    else
+      oDmArt.CrearDataSetEtiquetasArt('DUMMY_SIN_LINEAS',
+                                      ACodTarifa, '', AFecha);
+  end;
 end;
 
 procedure TdmPedidosCompra.GetCodigoAutoPedidoCompra;

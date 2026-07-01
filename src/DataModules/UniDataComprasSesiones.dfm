@@ -610,7 +610,7 @@ inherited dmComprasSesiones: TdmComprasSesiones
     SQL.Strings = (
       'SELECT CODIGO_PRV_PRV, NOMBRE_PRV, RAZON_SOCIAL_PRV'
       '  FROM fza_proveedores'
-      'ORDER BY RAZON_SOCIAL_PRV')
+      'ORDER BY CODIGO_PRV_PRV')
     Left = 496
     Top = 120
   end
@@ -883,9 +883,18 @@ inherited dmComprasSesiones: TdmComprasSesiones
   object unqryCabSesionPrint: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT * FROM vi_compras_sesiones_cab_print'
-      'WHERE SERIE_SES = :SERIE_SES'
-      '  AND NUMERO_SES = :NUMERO_SES')
+      'SELECT V.*,'
+      '       S.TOTAL_BRUTO_SES AS TOTAL_BRUTO_SES_PRINT,'
+      '       S.PORCENTAJE_DTO_COMERCIAL_SES AS PORCENTAJE_DTO_COMERCIAL_SES_PRINT,'
+      '       S.TOTAL_DTO_COMERCIAL_SES AS TOTAL_DTO_COMERCIAL_SES_PRINT,'
+      '       S.PORCENTAJE_DTO_FINANCIERO_SES AS PORCENTAJE_DTO_FINANCIERO_SES_PRINT,'
+      '       S.TOTAL_DTO_FINANCIERO_SES AS TOTAL_DTO_FINANCIERO_SES_PRINT'
+      '  FROM vi_compras_sesiones_cab_print V'
+      '  LEFT JOIN fza_compras_sesiones S'
+      '    ON S.SERIE_SES = V.SERIE_SES'
+      '   AND S.NUMERO_SES = V.NUMERO_SES'
+      ' WHERE V.SERIE_SES = :SERIE_SES'
+      '   AND V.NUMERO_SES = :NUMERO_SES')
     Left = 48
     Top = 544
     ParamData = <

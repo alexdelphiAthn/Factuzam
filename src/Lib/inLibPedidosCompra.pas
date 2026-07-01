@@ -258,7 +258,8 @@ begin
       '       IFNULL(NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
       '              P.CODIGO_ALM_PEDC) AS ALM_EFE, ' +
       '       L.CANTIDAD_PEDCLIN - IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) AS PENDIENTE, ' +
-      '       CASE WHEN IFNULL(P.ESIVA_RECARGO_COMPRAS_PEDC, ''N'') = ''S'' ' +
+      '       CASE WHEN IFNULL(P.ESIVA_EXENTO_INTRACOMUNITARIO_PEDC, ''N'') <> ''S'' ' +
+      '             AND IFNULL(P.ESIVA_RECARGO_COMPRAS_PEDC, ''N'') = ''S'' ' +
       '            THEN L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN * ' +
       '              (1 + (IFNULL(L.PORCENTAJE_IVA_PEDCLIN, 0) + ' +
       '                CASE IFNULL(L.TIPO_IVA_ARTICULO_PEDCLIN, ''N'') ' +
@@ -267,7 +268,14 @@ begin
       '                  WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
       '                  WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
       '                  ELSE 0 END) / 100) ' +
-      '            ELSE L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN END AS PRECIO, ' +
+      '            ELSE L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN END * ' +
+      '       CASE WHEN IFNULL(P.TOTAL_BRUTO_PEDC, 0) > 0 THEN ' +
+      '              GREATEST(0, 1 - CASE ' +
+      '                WHEN IFNULL(P.TOTAL_DTO_COMERCIAL_PEDC, 0) <> 0 ' +
+      '                THEN IFNULL(P.TOTAL_DTO_COMERCIAL_PEDC, 0) / P.TOTAL_BRUTO_PEDC ' +
+      '                ELSE IFNULL(P.PORCENTAJE_DTO_COMERCIAL_PEDC, 0) / 100 END) ' +
+      '            ELSE GREATEST(0, 1 - IFNULL(P.PORCENTAJE_DTO_COMERCIAL_PEDC, 0) / 100) ' +
+      '       END AS PRECIO, ' +
       '       P.CODIGO_PRV_PEDC, P.CODIGO_EMP_PEDC, ' +
       '       P.FECHA_PEDC, P.FECHA_PREVISTA_PEDC ' +
       '  FROM fza_pedidos_compra_lineas L ' +
@@ -371,10 +379,10 @@ begin
       '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''R'' THEN L.TOTAL_ALBCLIN * L.PORCENTAJE_IVA_ALBCLIN / 100 ELSE 0 END), 0) AS IVA_R, ' +
       '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''S'' THEN L.TOTAL_ALBCLIN * L.PORCENTAJE_IVA_ALBCLIN / 100 ELSE 0 END), 0) AS IVA_S, ' +
       '              IFNULL(SUM(CASE WHEN L.TIPO_IVA_ARTICULO_ALBCLIN = ''E'' THEN L.TOTAL_ALBCLIN * L.PORCENTAJE_IVA_ALBCLIN / 100 ELSE 0 END), 0) AS IVA_E, ' +
-      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''N'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_N, ' +
-      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''R'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_R, ' +
-      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''S'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_S, ' +
-      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''E'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_E, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ''N'') <> ''S'' AND IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''N'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_N, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ''N'') <> ''S'' AND IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''R'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_R, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ''N'') <> ''S'' AND IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''S'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_S, ' +
+      '              IFNULL(SUM(CASE WHEN IFNULL(H.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ''N'') <> ''S'' AND IFNULL(H.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' AND L.TIPO_IVA_ARTICULO_ALBCLIN = ''E'' THEN L.TOTAL_ALBCLIN * IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) / 100 ELSE 0 END), 0) AS RE_E, ' +
       '              COUNT(*) AS NLIN ' +
       '         FROM fza_albaranes_compra_lineas L ' +
       '         JOIN fza_albaranes_compra H ' +
@@ -386,26 +394,25 @@ begin
       '        GROUP BY L.NUMERO_ALBC_ALBCLIN, L.SERIE_ALBC_ALBCLIN) T ' +
       '    ON T.NUMERO_ALBC_ALBCLIN = C.NUMERO_ALBC ' +
       '   AND T.SERIE_ALBC_ALBCLIN = C.SERIE_ALBC ' +
-      '   SET C.TOTAL_BASEI_IVAN_ALBC = T.BASE_N, ' +
-      '       C.TOTAL_BASEI_IVAR_ALBC = T.BASE_R, ' +
-      '       C.TOTAL_BASEI_IVAS_ALBC = T.BASE_S, ' +
-      '       C.TOTAL_BASEI_IVAE_ALBC = T.BASE_E, ' +
-      '       C.TOTAL_IVAN_ALBC = T.IVA_N, ' +
-      '       C.TOTAL_IVAR_ALBC = T.IVA_R, ' +
-      '       C.TOTAL_IVAS_ALBC = T.IVA_S, ' +
-      '       C.TOTAL_IVAE_ALBC = T.IVA_E, ' +
-      '       C.TOTAL_REN_ALBC = T.RE_N, ' +
-      '       C.TOTAL_RER_ALBC = T.RE_R, ' +
-      '       C.TOTAL_RES_ALBC = T.RE_S, ' +
-      '       C.TOTAL_REE_ALBC = T.RE_E, ' +
-      '       C.TOTAL_BASES_ALBC = T.BASE, ' +
-      '       C.TOTAL_RETENCION_ALBC = ' +
-      '         T.BASE * IFNULL(C.PORCENTAJE_RETENCION_ALBC, 0) / 100, ' +
-      '       C.TOTAL_IMPUESTOS_ALBC = ' +
-      '         T.IVA_N + T.IVA_R + T.IVA_S + T.IVA_E + T.RE_N + T.RE_R + T.RE_S + T.RE_E, ' +
-      '       C.TOTAL_LIQUIDO_ALBC = ' +
-      '         T.BASE + T.IVA_N + T.IVA_R + T.IVA_S + T.IVA_E + T.RE_N + T.RE_R + T.RE_S + T.RE_E - ' +
-      '         T.BASE * IFNULL(C.PORCENTAJE_RETENCION_ALBC, 0) / 100, ' +
+      '   SET C.TOTAL_BASEI_IVAN_ALBC = T.BASE_N * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_BASEI_IVAR_ALBC = T.BASE_R * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_BASEI_IVAS_ALBC = T.BASE_S * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_BASEI_IVAE_ALBC = T.BASE_E * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_IVAN_ALBC = T.IVA_N * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_IVAR_ALBC = T.IVA_R * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_IVAS_ALBC = T.IVA_S * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_IVAE_ALBC = T.IVA_E * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_REN_ALBC = T.RE_N * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_RER_ALBC = T.RE_R * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_RES_ALBC = T.RE_S * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_REE_ALBC = T.RE_E * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_BRUTO_ALBC = T.BASE, ' +
+      '       C.TOTAL_DTO_COMERCIAL_ALBC = T.BASE - T.BASE * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_DTO_FINANCIERO_ALBC = T.BASE * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) * IFNULL(C.PORCENTAJE_DTO_FINANCIERO_ALBC, 0) / 100, ' +
+      '       C.TOTAL_BASES_ALBC = T.BASE * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_RETENCION_ALBC = T.BASE * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) * IFNULL(C.PORCENTAJE_RETENCION_ALBC, 0) / 100, ' +
+      '       C.TOTAL_IMPUESTOS_ALBC = (T.IVA_N + T.IVA_R + T.IVA_S + T.IVA_E + T.RE_N + T.RE_R + T.RE_S + T.RE_E) * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100), ' +
+      '       C.TOTAL_LIQUIDO_ALBC = T.BASE * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) + (T.IVA_N + T.IVA_R + T.IVA_S + T.IVA_E + T.RE_N + T.RE_R + T.RE_S + T.RE_E) * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) - T.BASE * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) * IFNULL(C.PORCENTAJE_RETENCION_ALBC, 0) / 100 - T.BASE * GREATEST(0, 1 - IFNULL(C.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) * IFNULL(C.PORCENTAJE_DTO_FINANCIERO_ALBC, 0) / 100, ' +
       '       C.CONTADOR_LINEAS_ALBC = LPAD(T.NLIN * 10, 8, ''0''), ' +
       '       C.USUARIO_MODIF = :u, ' +
       '       C.INSTANTE_MODIF = NOW() ' +
@@ -500,6 +507,7 @@ begin
       '   CODIGO_PAI_EMPRESA_ALBC, NOMBRE_PAI_EMPRESA_ALBC, ' +
       '   CODIGO_POSTAL_EMPRESA_ALBC, ' +
       '   CODIGO_IVA_ALBC, ESIVA_RECARGO_COMPRAS_ALBC, ' +
+      '   ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ' +
       '   PORCENTAJE_IVAN_ALBC, PORCENTAJE_IVAR_ALBC, ' +
       '   PORCENTAJE_IVAS_ALBC, PORCENTAJE_IVAE_ALBC, ' +
       '   PORCENTAJE_REN_ALBC, PORCENTAJE_RER_ALBC, ' +
@@ -511,7 +519,10 @@ begin
       '   POBLACION_PRV_ALBC, PROVINCIA_PRV_ALBC, ' +
       '   CODIGO_POSTAL_PRV_ALBC, ' +
       '   REF_PROVEEDOR_ALBC, FORMA_PAGO_ALBC, CODIGO_ALM_ALBC, ' +
-      '   TOTAL_BASES_ALBC, TOTAL_IMPUESTOS_ALBC, TOTAL_LIQUIDO_ALBC, ' +
+      '   TOTAL_BRUTO_ALBC, PORCENTAJE_DTO_COMERCIAL_ALBC, ' +
+      '   TOTAL_DTO_COMERCIAL_ALBC, PORCENTAJE_DTO_FINANCIERO_ALBC, ' +
+      '   TOTAL_DTO_FINANCIERO_ALBC, TOTAL_BASES_ALBC, ' +
+      '   TOTAL_IMPUESTOS_ALBC, TOTAL_LIQUIDO_ALBC, ' +
       '   CONTADOR_LINEAS_ALBC, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
       // Fecha del albaran: override del modal (AFechaRecepcion) > FECHA_PEDC > hoy.
@@ -528,6 +539,7 @@ begin
       '       P.CODIGO_PAI_EMPRESA_PEDC, P.NOMBRE_PAI_EMPRESA_PEDC, ' +
       '       P.CODIGO_POSTAL_EMPRESA_PEDC, ' +
       '       P.CODIGO_IVA_PEDC, IFNULL(P.ESIVA_RECARGO_COMPRAS_PEDC, ''N''), ' +
+      '       IFNULL(P.ESIVA_EXENTO_INTRACOMUNITARIO_PEDC, ''N''), ' +
       '       P.PORCENTAJE_IVAN_PEDC, P.PORCENTAJE_IVAR_PEDC, ' +
       '       P.PORCENTAJE_IVAS_PEDC, P.PORCENTAJE_IVAE_PEDC, ' +
       '       P.PORCENTAJE_REN_PEDC, P.PORCENTAJE_RER_PEDC, ' +
@@ -540,7 +552,9 @@ begin
       '       P.CODIGO_POSTAL_PRV_PEDC, ' +
       '       IFNULL(NULLIF(:rprv,''''), P.REF_PROVEEDOR_PEDC), ' +
       '       NULLIF(P.FORMA_PAGO_PEDC, ''''), :alm, ' +
-      '       0, 0, 0, ''0'', ' +
+      '       0, IFNULL(P.PORCENTAJE_DTO_COMERCIAL_PEDC, 0), ' +
+      '       0, IFNULL(P.PORCENTAJE_DTO_FINANCIERO_PEDC, 0), ' +
+      '       0, 0, 0, 0, ''0'', ' +
       '       NOW(), :u, NOW(), :u ' +
       '  FROM fza_pedidos_compra P ' +
       ' WHERE P.SERIE_PEDC = :s AND P.NUMERO_PEDC = :n';
@@ -583,6 +597,7 @@ begin
       '       L.DESCRIPCION_ARTICULO_PEDCLIN, ' +
       '       L.TIPO_CANTIDAD_ARTICULO_PEDCLIN, ' +
       '       L.TIPO_IVA_ARTICULO_PEDCLIN, L.PORCENTAJE_IVA_PEDCLIN, ' +
+      '       IFNULL(P.ESIVA_EXENTO_INTRACOMUNITARIO_PEDC, ''N'') AS EXENTO_INTRACOM, ' +
       '       L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN, ' +
       '       L.PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN, ' +
       '       L.CANTIDAD_PEDCLIN - IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) AS PENDIENTE ' +
@@ -644,8 +659,18 @@ begin
       qIns.ParamByName('tipcant').AsString :=
         q.FieldByName('TIPO_CANTIDAD_ARTICULO_PEDCLIN').AsString;
       qIns.ParamByName('cant').AsFloat    := q.FieldByName('PENDIENTE').AsFloat;
-      qIns.ParamByName('tiva').AsString   := q.FieldByName('TIPO_IVA_ARTICULO_PEDCLIN').AsString;
-      qIns.ParamByName('piva').AsFloat    := q.FieldByName('PORCENTAJE_IVA_PEDCLIN').AsFloat;
+      if q.FieldByName('EXENTO_INTRACOM').AsString = 'S' then
+      begin
+        qIns.ParamByName('tiva').AsString := 'E';
+        qIns.ParamByName('piva').AsFloat := 0;
+      end
+      else
+      begin
+        qIns.ParamByName('tiva').AsString :=
+          q.FieldByName('TIPO_IVA_ARTICULO_PEDCLIN').AsString;
+        qIns.ParamByName('piva').AsFloat :=
+          q.FieldByName('PORCENTAJE_IVA_PEDCLIN').AsFloat;
+      end;
       qIns.ParamByName('pre').AsFloat     :=
         q.FieldByName('PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN').AsFloat;
       qIns.ParamByName('preciva').AsFloat :=
@@ -811,6 +836,7 @@ begin
       '   CODIGO_PAI_EMPRESA_ALBC, NOMBRE_PAI_EMPRESA_ALBC, ' +
       '   CODIGO_POSTAL_EMPRESA_ALBC, ' +
       '   CODIGO_IVA_ALBC, ESIVA_RECARGO_COMPRAS_ALBC, ' +
+      '   ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ' +
       '   PORCENTAJE_IVAN_ALBC, PORCENTAJE_IVAR_ALBC, ' +
       '   PORCENTAJE_IVAS_ALBC, PORCENTAJE_IVAE_ALBC, ' +
       '   PORCENTAJE_REN_ALBC, PORCENTAJE_RER_ALBC, ' +
@@ -822,7 +848,10 @@ begin
       '   POBLACION_PRV_ALBC, PROVINCIA_PRV_ALBC, ' +
       '   CODIGO_POSTAL_PRV_ALBC, ' +
       '   REF_PROVEEDOR_ALBC, FORMA_PAGO_ALBC, CODIGO_ALM_ALBC, ' +
-      '   TOTAL_BASES_ALBC, TOTAL_IMPUESTOS_ALBC, TOTAL_LIQUIDO_ALBC, ' +
+      '   TOTAL_BRUTO_ALBC, PORCENTAJE_DTO_COMERCIAL_ALBC, ' +
+      '   TOTAL_DTO_COMERCIAL_ALBC, PORCENTAJE_DTO_FINANCIERO_ALBC, ' +
+      '   TOTAL_DTO_FINANCIERO_ALBC, TOTAL_BASES_ALBC, ' +
+      '   TOTAL_IMPUESTOS_ALBC, TOTAL_LIQUIDO_ALBC, ' +
       '   CONTADOR_LINEAS_ALBC, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
       'SELECT :nalbc, :salbc, ' +
@@ -837,6 +866,7 @@ begin
       '       P.CODIGO_PAI_EMPRESA_PEDC, P.NOMBRE_PAI_EMPRESA_PEDC, ' +
       '       P.CODIGO_POSTAL_EMPRESA_PEDC, ' +
       '       P.CODIGO_IVA_PEDC, IFNULL(P.ESIVA_RECARGO_COMPRAS_PEDC, ''N''), ' +
+      '       IFNULL(P.ESIVA_EXENTO_INTRACOMUNITARIO_PEDC, ''N''), ' +
       '       P.PORCENTAJE_IVAN_PEDC, P.PORCENTAJE_IVAR_PEDC, ' +
       '       P.PORCENTAJE_IVAS_PEDC, P.PORCENTAJE_IVAE_PEDC, ' +
       '       P.PORCENTAJE_REN_PEDC, P.PORCENTAJE_RER_PEDC, ' +
@@ -849,7 +879,9 @@ begin
       '       P.CODIGO_POSTAL_PRV_PEDC, ' +
       '       IFNULL(NULLIF(:rprv,''''), P.REF_PROVEEDOR_PEDC), ' +
       '       NULLIF(P.FORMA_PAGO_PEDC, ''''), :alm, ' +
-      '       0, 0, 0, ''0'', ' +
+      '       0, IFNULL(P.PORCENTAJE_DTO_COMERCIAL_PEDC, 0), ' +
+      '       0, IFNULL(P.PORCENTAJE_DTO_FINANCIERO_PEDC, 0), ' +
+      '       0, 0, 0, 0, ''0'', ' +
       '       NOW(), :u, NOW(), :u ' +
       '  FROM fza_pedidos_compra P ' +
       ' WHERE P.SERIE_PEDC = :s AND P.NUMERO_PEDC = :n';
@@ -896,6 +928,7 @@ begin
         '       L.DESCRIPCION_ARTICULO_PEDCLIN, ' +
         '       L.TIPO_CANTIDAD_ARTICULO_PEDCLIN, ' +
         '       L.TIPO_IVA_ARTICULO_PEDCLIN, L.PORCENTAJE_IVA_PEDCLIN, ' +
+        '       IFNULL(P.ESIVA_EXENTO_INTRACOMUNITARIO_PEDC, ''N'') AS EXENTO_INTRACOM, ' +
         '       L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN, ' +
         '       L.PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN, ' +
         '       L.CANTIDAD_PEDCLIN, L.CANTIDAD_RECIBIDA_PEDCLIN ' +
@@ -971,10 +1004,18 @@ begin
       qIns.ParamByName('tipcant').AsString :=
         q.FieldByName('TIPO_CANTIDAD_ARTICULO_PEDCLIN').AsString;
       qIns.ParamByName('cant').AsFloat := rCantidad;
-      qIns.ParamByName('tiva').AsString :=
-        q.FieldByName('TIPO_IVA_ARTICULO_PEDCLIN').AsString;
-      qIns.ParamByName('piva').AsFloat :=
-        q.FieldByName('PORCENTAJE_IVA_PEDCLIN').AsFloat;
+      if q.FieldByName('EXENTO_INTRACOM').AsString = 'S' then
+      begin
+        qIns.ParamByName('tiva').AsString := 'E';
+        qIns.ParamByName('piva').AsFloat := 0;
+      end
+      else
+      begin
+        qIns.ParamByName('tiva').AsString :=
+          q.FieldByName('TIPO_IVA_ARTICULO_PEDCLIN').AsString;
+        qIns.ParamByName('piva').AsFloat :=
+          q.FieldByName('PORCENTAJE_IVA_PEDCLIN').AsFloat;
+      end;
       qIns.ParamByName('pre').AsFloat :=
         q.FieldByName('PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN').AsFloat;
       qIns.ParamByName('preciva').AsFloat :=
@@ -1273,6 +1314,7 @@ begin
       '       L.DESCRIPCION_ARTICULO_PEDCLIN, ' +
       '       L.TIPO_CANTIDAD_ARTICULO_PEDCLIN, ' +
       '       L.TIPO_IVA_ARTICULO_PEDCLIN, L.PORCENTAJE_IVA_PEDCLIN, ' +
+      '       IFNULL(P.ESIVA_EXENTO_INTRACOMUNITARIO_PEDC, ''N'') AS EXENTO_INTRACOM, ' +
       '       L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN, ' +
       '       L.PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN, ' +
       '       L.CANTIDAD_PEDCLIN - IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) AS PENDIENTE ' +
@@ -1334,8 +1376,18 @@ begin
       qIns.ParamByName('tipcant').AsString :=
         q.FieldByName('TIPO_CANTIDAD_ARTICULO_PEDCLIN').AsString;
       qIns.ParamByName('cant').AsFloat    := q.FieldByName('PENDIENTE').AsFloat;
-      qIns.ParamByName('tiva').AsString   := q.FieldByName('TIPO_IVA_ARTICULO_PEDCLIN').AsString;
-      qIns.ParamByName('piva').AsFloat    := q.FieldByName('PORCENTAJE_IVA_PEDCLIN').AsFloat;
+      if q.FieldByName('EXENTO_INTRACOM').AsString = 'S' then
+      begin
+        qIns.ParamByName('tiva').AsString := 'E';
+        qIns.ParamByName('piva').AsFloat := 0;
+      end
+      else
+      begin
+        qIns.ParamByName('tiva').AsString :=
+          q.FieldByName('TIPO_IVA_ARTICULO_PEDCLIN').AsString;
+        qIns.ParamByName('piva').AsFloat :=
+          q.FieldByName('PORCENTAJE_IVA_PEDCLIN').AsFloat;
+      end;
       qIns.ParamByName('pre').AsFloat     :=
         q.FieldByName('PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN').AsFloat;
       qIns.ParamByName('preciva').AsFloat :=
@@ -1438,10 +1490,14 @@ begin
         '       L.DESCRIPCION_ARTICULO_PEDCLIN, ' +
         '       L.TIPO_CANTIDAD_ARTICULO_PEDCLIN, ' +
         '       L.TIPO_IVA_ARTICULO_PEDCLIN, L.PORCENTAJE_IVA_PEDCLIN, ' +
+        '       IFNULL(P.ESIVA_EXENTO_INTRACOMUNITARIO_PEDC, ''N'') AS EXENTO_INTRACOM, ' +
         '       L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN, ' +
         '       L.PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN, ' +
         '       L.CANTIDAD_PEDCLIN, L.CANTIDAD_RECIBIDA_PEDCLIN ' +
         '  FROM fza_pedidos_compra_lineas L ' +
+        '  JOIN fza_pedidos_compra P ' +
+        '    ON P.SERIE_PEDC = L.SERIE_PEDC_PEDCLIN ' +
+        '   AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
         ' WHERE L.SERIE_PEDC_PEDCLIN  = :s ' +
         '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
         '   AND L.LINEA_PEDCLIN       = :l';
@@ -1512,10 +1568,18 @@ begin
       qIns.ParamByName('tipcant').AsString :=
         q.FieldByName('TIPO_CANTIDAD_ARTICULO_PEDCLIN').AsString;
       qIns.ParamByName('cant').AsFloat := rCantidad;
-      qIns.ParamByName('tiva').AsString :=
-        q.FieldByName('TIPO_IVA_ARTICULO_PEDCLIN').AsString;
-      qIns.ParamByName('piva').AsFloat :=
-        q.FieldByName('PORCENTAJE_IVA_PEDCLIN').AsFloat;
+      if q.FieldByName('EXENTO_INTRACOM').AsString = 'S' then
+      begin
+        qIns.ParamByName('tiva').AsString := 'E';
+        qIns.ParamByName('piva').AsFloat := 0;
+      end
+      else
+      begin
+        qIns.ParamByName('tiva').AsString :=
+          q.FieldByName('TIPO_IVA_ARTICULO_PEDCLIN').AsString;
+        qIns.ParamByName('piva').AsFloat :=
+          q.FieldByName('PORCENTAJE_IVA_PEDCLIN').AsFloat;
+      end;
       qIns.ParamByName('pre').AsFloat :=
         q.FieldByName('PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN').AsFloat;
       qIns.ParamByName('preciva').AsFloat :=

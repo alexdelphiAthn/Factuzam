@@ -246,4 +246,17 @@ inherited dmProveedores: TdmProveedores
     Left = 184
     Top = 192
   end
+  object unqryPaises: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'select * from vi_paises')
+    ReadOnly = True
+    Left = 32
+    Top = 136
+  end
+  object dsPaises: TDataSource
+    DataSet = unqryPaises
+    Left = 32
+    Top = 192
+  end
 end

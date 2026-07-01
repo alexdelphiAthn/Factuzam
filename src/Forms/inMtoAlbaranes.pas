@@ -139,6 +139,8 @@ type
     lblTotalesFormaPago: TcxLabel;
     cbbTotalesFORMA_PAGO_ALB: TcxDBLookupComboBox;
     chkTotalesESIVA_RECARGO_CLIENTE_ALB: TcxDBCheckBox;
+    lblTotalesTotalPrendas: TcxLabel;
+    lblTotalPrendasAlb: TcxLabel;
     grpDesgloseImpuestos: TGroupBox;
     lblTotalesPorIva: TcxLabel;
     lblTotalesTotalIva: TcxLabel;
@@ -202,12 +204,28 @@ type
   private
     FBuscandoDatosCabecera: Boolean;
     FAplicandoArticulo: Boolean;
+    // Handlers originales de unqryAlbaranesLineas.AfterPost/AfterDelete
+    // (los que trae el DM) guardados para no perder su logica al
+    // encadenar el refresco del label de prendas. Ver
+    // unqryLineasAfterPostHook / unqryLineasAfterDeleteHook.
+    FOldLineasAfterPost: TDataSetNotifyEvent;
+    FOldLineasAfterDelete: TDataSetNotifyEvent;
     function BuscarArticuloAlbaran: string;
     function BuscarSkuAlbaran(const ACodigoArt: string): string;
     function ArticuloLineaActivaAlbaran: string;
     procedure AplicarArticuloAlbaran(const ACodigoArt: string);
     procedure cxgrdcArtAlbSkuPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
+    // Pinta lblTotalPrendasAlb con el total de prendas (suma de
+    // CANTIDAD_ALBLIN de todas las lineas). Calculado en Delphi, no
+    // persiste en BBDD.
+    procedure ActualizarLabelPrendas;
+    procedure unqryLineasAfterPostHook(DataSet: TDataSet);
+    procedure unqryLineasAfterDeleteHook(DataSet: TDataSet);
+    // Hook OnDataChange de dsTablaG: al navegar entre albaranes
+    // (Field=nil) hay que recalcular el total de prendas con las lineas
+    // del albaran recien enfocado.
+    procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
   public
     dmmAlbaranes: TdmAlbaranes;
     procedure CrearTablaPrincipal; override;
@@ -544,6 +562,46 @@ begin
   // Clave de localizacion para ShowMto (p.ej. "Ir a documento" desde el
   // pedido de venta o navegacion hacia su pedido de origen).
   pkFieldName := 'SERIE_ALB;NUMERO_ALB';
+  // Total de prendas (pestana Totales): se recalcula tras cada Post/Delete
+  // de linea y al navegar entre albaranes. Se conservan los handlers
+  // originales (los que trae el DM) encadenandolos desde los hooks.
+  FOldLineasAfterPost   := dmmAlbaranes.unqryAlbaranesLineas.AfterPost;
+  FOldLineasAfterDelete := dmmAlbaranes.unqryAlbaranesLineas.AfterDelete;
+  dmmAlbaranes.unqryAlbaranesLineas.AfterPost   := unqryLineasAfterPostHook;
+  dmmAlbaranes.unqryAlbaranesLineas.AfterDelete := unqryLineasAfterDeleteHook;
+  dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+  ActualizarLabelPrendas;
+end;
+
+procedure TfrmMtoAlbaranes.ActualizarLabelPrendas;
+begin
+  if (dmmAlbaranes <> nil) and Assigned(dmmAlbaranes.unqryTablaG) and
+     dmmAlbaranes.unqryTablaG.Active and (not dmmAlbaranes.unqryTablaG.IsEmpty) then
+    lblTotalPrendasAlb.Caption :=
+      FormatFloat('#,##0', dmmAlbaranes.TotalPrendasAlbaran)
+  else
+    lblTotalPrendasAlb.Caption := '0';
+end;
+
+procedure TfrmMtoAlbaranes.unqryLineasAfterPostHook(DataSet: TDataSet);
+begin
+  if Assigned(FOldLineasAfterPost) then
+    FOldLineasAfterPost(DataSet);
+  ActualizarLabelPrendas;
+end;
+
+procedure TfrmMtoAlbaranes.unqryLineasAfterDeleteHook(DataSet: TDataSet);
+begin
+  if Assigned(FOldLineasAfterDelete) then
+    FOldLineasAfterDelete(DataSet);
+  ActualizarLabelPrendas;
+end;
+
+procedure TfrmMtoAlbaranes.dsTablaGDataChangeHook(Sender: TObject;
+                                                   Field: TField);
+begin
+  if Field = nil then
+    ActualizarLabelPrendas;
 end;
 
 procedure TfrmMtoAlbaranes.FormCreate(Sender: TObject);

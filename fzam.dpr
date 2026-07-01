@@ -89,6 +89,7 @@ uses
   inMtoModalImpAlbCompra in 'src\Modals\inMtoModalImpAlbCompra.pas' {frmPrintAlbCompra},
   inMtoModalImpAlbCompraV in 'src\Modals\inMtoModalImpAlbCompraV.pas' {frmPrintAlbCompraV},
   inMtoModalEtiqAlb in 'src\Modals\inMtoModalEtiqAlb.pas' {frmPrintEtiqArt: TfrmPrintEtiqAlb},
+  inMtoModalEtiqPed in 'src\Modals\inMtoModalEtiqPed.pas' {frmPrintEtiqArt: TfrmPrintEtiqPed},
   inMtoModalImpDevCompra in 'src\Modals\inMtoModalImpDevCompra.pas' {frmPrintDevCompra},
   inMtoModalImpDevCompraV in 'src\Modals\inMtoModalImpDevCompraV.pas' {frmPrintDevCompraV},
   inMtoModalEtiqDev in 'src\Modals\inMtoModalEtiqDev.pas' {frmPrintEtiqArt: TfrmPrintEtiqDev},

@@ -91,8 +91,13 @@
   object unqryPrvDataFacc: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT * FROM fza_proveedores')
+      'SELECT * FROM fza_proveedores ORDER BY CODIGO_PRV_PRV')
     Left = 48
+    Top = 248
+  end
+  object dsPrvDataFacc: TDataSource
+    DataSet = unqryPrvDataFacc
+    Left = 112
     Top = 248
   end
   object unqryArtDataLinFacc: TUniQuery
@@ -144,9 +149,18 @@
   object unqryCabFaccPrint: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT * FROM vi_facturas_compra_cab_print'
-      'WHERE SERIE_FACC = :SERIE_FACC'
-      '  AND NUMERO_FACC = :NUMERO_FACC')
+      'SELECT V.*,'
+      '       F.TOTAL_BRUTO_FACC AS TOTAL_BRUTO_FACC_PRINT,'
+      '       F.PORCENTAJE_DTO_COMERCIAL_FACC AS PORCENTAJE_DTO_COMERCIAL_FACC_PRINT,'
+      '       F.TOTAL_DTO_COMERCIAL_FACC AS TOTAL_DTO_COMERCIAL_FACC_PRINT,'
+      '       F.PORCENTAJE_DTO_FINANCIERO_FACC AS PORCENTAJE_DTO_FINANCIERO_FACC_PRINT,'
+      '       F.TOTAL_DTO_FINANCIERO_FACC AS TOTAL_DTO_FINANCIERO_FACC_PRINT'
+      '  FROM vi_facturas_compra_cab_print V'
+      '  LEFT JOIN fza_facturas_compra F'
+      '    ON F.SERIE_FACC = V.SERIE_FACC'
+      '   AND F.NUMERO_FACC = V.NUMERO_FACC'
+      ' WHERE V.SERIE_FACC = :SERIE_FACC'
+      '   AND V.NUMERO_FACC = :NUMERO_FACC')
     Left = 360
     Top = 24
     ParamData = <

@@ -126,6 +126,9 @@ private
                                           const ACampo: string);
 public
     procedure GetCodigoAutoFactura;
+    // Numero total de prendas (suma CANTIDAD_FACLIN de todas las lineas).
+    // Se muestra en la pestana Totales; no se persiste en BBDD.
+    function TotalPrendasFactura: Double;
     procedure GetCodigoAutoCliente;
     procedure GetCodigoAutoEmpresa;
     procedure CrearCliente;
@@ -197,7 +200,8 @@ uses
   inLibVerifactu,
   inLibDocumentoFiscal,
   inLibArticulosValidador,
-  inLibLicenciaAplicacion;
+  inLibLicenciaAplicacion,
+  inLibVentasImpuestos;
 
 {$R *.dfm}
 
@@ -1656,6 +1660,12 @@ begin
                                                   ParamByName('pcont').AsString;
     end;
   end;
+end;
+
+function TdmFacturas.TotalPrendasFactura: Double;
+begin
+  Result := TotalPrendasLineasVenta(unqryLinFac,
+    'TIPO_IVA_ARTICULO_FACLIN');
 end;
 
 procedure TdmFacturas.GetCodigoAutoCliente;

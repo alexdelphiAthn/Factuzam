@@ -80,7 +80,10 @@ type
     lblCodigoEmpresa: TcxLabel;
     btnCODIGO_EMP_DEVC: TcxDBButtonEdit;
     lblCodigoProveedor: TcxLabel;
-    btnCODIGO_PRV_DEVC: TcxDBButtonEdit;
+    cbbCODIGO_PRV_DEVC: TcxDBLookupComboBox;
+    // Rotulo resuelto: nombre comercial del proveedor (con razon social
+    // entre parentesis si difiere). Ver ActualizarLabelProveedor.
+    lblProveedorNombreDevc: TcxLabel;
     lblRefProveedor:    TcxLabel;
     txtREF_PROVEEDOR_DEVC: TcxDBTextEdit;
     lblCodigoAlmacen:   TcxLabel;
@@ -103,6 +106,14 @@ type
     spnTotalesPORCENTAJE_IVAE_DEVC: TcxDBSpinEdit;
     spnTotalesPORCENTAJE_REE_DEVC: TcxDBSpinEdit;
     chkTotalesESIVA_RECARGO_COMPRAS_DEVC: TcxDBCheckBox;
+    lblTotalesDtoComercial: TcxLabel;
+    spnTotalesPORCENTAJE_DTO_COMERCIAL_DEVC: TcxDBSpinEdit;
+    curTotalesTOTAL_DTO_COMERCIAL_DEVC: TcxDBCurrencyEdit;
+    lblTotalesDtoFinanciero: TcxLabel;
+    spnTotalesPORCENTAJE_DTO_FINANCIERO_DEVC: TcxDBSpinEdit;
+    curTotalesTOTAL_DTO_FINANCIERO_DEVC: TcxDBCurrencyEdit;
+    lblTotalesTotalPrendas: TcxLabel;
+    lblTotalPrendasDevc: TcxLabel;
     grpDesgloseImpuestos: TGroupBox;
     shpSeparador1: TShape;
     shpSeparador2: TShape;
@@ -174,9 +185,9 @@ type
                 AButtonIndex: Integer);
     procedure btnCODIGO_EMP_DEVCKeyUp(Sender: TObject; var Key: Word;
                 Shift: TShiftState);
-    procedure btnCODIGO_PRV_DEVCPropertiesButtonClick(Sender: TObject;
+    procedure cbbCODIGO_PRV_DEVCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
-    procedure btnCODIGO_PRV_DEVCKeyUp(Sender: TObject; var Key: Word;
+    procedure cbbCODIGO_PRV_DEVCKeyUp(Sender: TObject; var Key: Word;
                 Shift: TShiftState);
     procedure colLineaDevcCODIGO_ARTPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
@@ -205,6 +216,14 @@ type
     procedure RefrescarVisibilidadAtributos;
     procedure CargarCaptionsAtributosLineaActiva;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
+    // Pinta lblProveedorNombreDevc con el nombre comercial del proveedor
+    // (razon social entre parentesis si difiere). Ver UniDataDevolucionesCompra
+    // .unqryPrvDataDevc (lookup completo de fza_proveedores).
+    procedure ActualizarLabelProveedor;
+    // Pinta lblTotalPrendasDevc con el total de prendas (suma de
+    // CANTIDAD_DEVCLIN de todas las lineas). Calculado en Delphi, no
+    // persiste en BBDD.
+    procedure ActualizarLabelPrendas;
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
     function BuscarArticuloDevolucion: string;
     function BuscarSkuDevolucion(const ACodigoArt: string): string;
@@ -262,6 +281,7 @@ uses
   inLibArticulosValidador,
   inLibAtributosPaleta,
   UniDataArticulos,
+  inLibComprasImpuestos,
   inMtoModalImpDevCompra,
   inMtoModalImpDevCompraV,
   inMtoModalEtiqDev, inLibShowMto, inLibGenBusq;
@@ -365,6 +385,10 @@ begin
     cbbCODIGO_ALM_DEVC.Properties.ListSource :=
       dmmDevolucionesCompra.dsAlmacenesDevc;
     RefrescarAlmacenesCabecera;
+    // ListSource del combo de proveedor (busqueda incremental por codigo).
+    // Reutiliza el lookup unqryPrvDataDevc, ya cargado para el rotulo.
+    cbbCODIGO_PRV_DEVC.Properties.ListSource :=
+      dmmDevolucionesCompra.dsPrvDataDevc;
   end;
   InicializarGestorYPivote;
   if Assigned(FPivote) then
@@ -373,6 +397,9 @@ begin
   // de pivote recarga y republica. cxGrid pierde los Values[] no-bound al
   // cambiar el record activo.
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+  // Pintar el rotulo del proveedor de la devolucion enfocada al abrir el form.
+  ActualizarLabelProveedor;
+  ActualizarLabelPrendas;
   // AfterPost del detail: cxGrid borra los Values[] no-bound al repintar.
   // Republicamos via el controlador y conservamos la logica original del
   // DM (CalcularTotalesDevolucionCompra).
@@ -1895,6 +1922,14 @@ var
 begin
   if (Field = nil) or SameText(Field.FieldName, 'CODIGO_EMP_DEVC') then
     RefrescarAlmacenesCabecera;
+  // Refrescar el rotulo del proveedor al navegar entre devoluciones
+  // (Field=nil) o al cambiar CODIGO_PRV_DEVC tecleado directamente.
+  if (Field = nil) or SameText(Field.FieldName, 'CODIGO_PRV_DEVC') then
+    ActualizarLabelProveedor;
+  // Al navegar entre devoluciones hay que recalcular el total de prendas:
+  // las lineas cargadas son las de la devolucion recien enfocada.
+  if Field = nil then
+    ActualizarLabelPrendas;
   if Field <> nil then
     Exit;
   if FPivote = nil then
@@ -1921,6 +1956,58 @@ begin
   FPivote.RecargarYRepublicar;
 end;
 
+procedure TfrmMtoDevolucionesCompra.ActualizarLabelProveedor;
+var
+  sCodigo : string;
+  sNombre : string;
+  sRazon  : string;
+begin
+  // Resuelve NOMBRE_PRV + RAZON_SOCIAL_PRV (via el lookup unqryPrvDataDevc)
+  // y los pinta en el rotulo. Se antepone el nombre comercial: es el que
+  // el usuario reconoce a simple vista; la razon social solo se anade
+  // entre parentesis como referencia si difiere.
+  sCodigo := '';
+  if (dmmDevolucionesCompra <> nil) and
+     Assigned(dmmDevolucionesCompra.unqryTablaG) and
+     dmmDevolucionesCompra.unqryTablaG.Active and
+     (not dmmDevolucionesCompra.unqryTablaG.IsEmpty) then
+    sCodigo :=
+      Trim(dmmDevolucionesCompra.unqryTablaG.FieldByName('CODIGO_PRV_DEVC').AsString);
+  if sCodigo = '' then
+    lblProveedorNombreDevc.Caption := ''
+  else if (dmmDevolucionesCompra.unqryPrvDataDevc <> nil) and
+          dmmDevolucionesCompra.unqryPrvDataDevc.Active and
+          dmmDevolucionesCompra.unqryPrvDataDevc.Locate('CODIGO_PRV_PRV', sCodigo, []) then
+  begin
+    sRazon  := dmmDevolucionesCompra.unqryPrvDataDevc.FieldByName('RAZON_SOCIAL_PRV').AsString;
+    sNombre := dmmDevolucionesCompra.unqryPrvDataDevc.FieldByName('NOMBRE_PRV').AsString;
+    // Si no hay nombre comercial cargado, caemos a la razon social como
+    // rotulo principal. Si hay nombre y difiere de la razon social, la
+    // razon social se anade entre parentesis como referencia.
+    if Trim(sNombre) = '' then
+      lblProveedorNombreDevc.Caption := sCodigo + ' - ' + sRazon
+    else if not SameText(Trim(sNombre), Trim(sRazon)) then
+      lblProveedorNombreDevc.Caption :=
+        sCodigo + ' - ' + sNombre + '  (' + sRazon + ')'
+    else
+      lblProveedorNombreDevc.Caption := sCodigo + ' - ' + sNombre;
+  end
+  else
+    lblProveedorNombreDevc.Caption := sCodigo + ' - (proveedor no encontrado)';
+end;
+
+procedure TfrmMtoDevolucionesCompra.ActualizarLabelPrendas;
+begin
+  if (dmmDevolucionesCompra <> nil) and
+     Assigned(dmmDevolucionesCompra.unqryTablaG) and
+     dmmDevolucionesCompra.unqryTablaG.Active and
+     (not dmmDevolucionesCompra.unqryTablaG.IsEmpty) then
+    lblTotalPrendasDevc.Caption :=
+      FormatFloat('#,##0', dmmDevolucionesCompra.TotalPrendasDevolucion)
+  else
+    lblTotalPrendasDevc.Caption := '0';
+end;
+
 // Hook AfterPost del detail: encadena la logica original del DM
 // (CalcularTotalesDevolucionCompra) con la republicacion del controlador.
 procedure TfrmMtoDevolucionesCompra.unqryLineasAfterPostHook(DataSet: TDataSet);
@@ -1930,6 +2017,7 @@ begin
     dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
     dmmDevolucionesCompra.SincronizarMovimientos;
   end;
+  ActualizarLabelPrendas;
   if Assigned(FPivote) and FPivote.Activo then
     FPivote.RecargarYRepublicar;
 end;
@@ -2692,7 +2780,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoDevolucionesCompra.btnCODIGO_PRV_DEVCPropertiesButtonClick(
+procedure TfrmMtoDevolucionesCompra.cbbCODIGO_PRV_DEVCPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
   sCodigo : string;
@@ -2716,18 +2804,22 @@ begin
       if not (ds.State in [dsInsert, dsEdit]) then
         ds.Edit;
       ds.FieldByName('CODIGO_PRV_DEVC').AsString := sCodigo;
+      AplicarIvaExentoIntracomunitarioProveedor(inLibGlobalVar.oConn, ds,
+        'CODIGO_PRV_DEVC', 'ESIVA_EXENTO_INTRACOMUNITARIO_DEVC');
+      dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
+      ActualizarLabelProveedor;
     end;
   end;
 end;
 
-procedure TfrmMtoDevolucionesCompra.btnCODIGO_PRV_DEVCKeyUp(Sender: TObject;
+procedure TfrmMtoDevolucionesCompra.cbbCODIGO_PRV_DEVCKeyUp(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
   inherited;
   if (Key = VK_RETURN) and (ssCtrl in Shift) then
   begin
     Key := 0;
-    btnCODIGO_PRV_DEVCPropertiesButtonClick(Sender, 0);
+    cbbCODIGO_PRV_DEVCPropertiesButtonClick(Sender, 0);
   end;
 end;
 

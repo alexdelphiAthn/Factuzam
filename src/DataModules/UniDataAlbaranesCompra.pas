@@ -33,6 +33,7 @@ type
     dsAlbaranesCompraLineas:    TDataSource;
     unqryEmpDataAlbc:           TUniQuery;
     unqryPrvDataAlbc:           TUniQuery;
+    dsPrvDataAlbc:              TDataSource;
     unqryArtDataLinAlbc:        TUniQuery;
     unqrySkusAlbc:              TUniQuery;
     unqryMovimientosProveedor:  TUniQuery;
@@ -123,7 +124,7 @@ uses
 
 procedure TdmAlbaranesCompra.ConfigurarSqlCabecera;
 const
-  CAMPOS_ALBC: array[0..72] of string = (
+  CAMPOS_ALBC: array[0..78] of string = (
     'NUMERO_ALBC',
     'SERIE_ALBC',
     'FECHA_ALBC',
@@ -161,6 +162,7 @@ const
     'TRANSPORTISTA_ALBC',
     'CODIGO_IVA_ALBC',
     'ESIVA_RECARGO_COMPRAS_ALBC',
+    'ESIVA_EXENTO_INTRACOMUNITARIO_ALBC',
     'PORCENTAJE_IVAN_ALBC',
     'TOTAL_BASEI_IVAN_ALBC',
     'TOTAL_IVAN_ALBC',
@@ -181,6 +183,11 @@ const
     'TOTAL_IVAE_ALBC',
     'PORCENTAJE_REE_ALBC',
     'TOTAL_REE_ALBC',
+    'TOTAL_BRUTO_ALBC',
+    'PORCENTAJE_DTO_COMERCIAL_ALBC',
+    'TOTAL_DTO_COMERCIAL_ALBC',
+    'PORCENTAJE_DTO_FINANCIERO_ALBC',
+    'TOTAL_DTO_FINANCIERO_ALBC',
     'TOTAL_BASES_ALBC',
     'TOTAL_IMPUESTOS_ALBC',
     'PORCENTAJE_RETENCION_ALBC',
@@ -240,6 +247,11 @@ begin
   unqryAlbaranesCompraLineas.Connection := inLibGlobalVar.oConn;
   unqryEmpDataAlbc.Connection           := inLibGlobalVar.oConn;
   unqryPrvDataAlbc.Connection           := inLibGlobalVar.oConn;
+  // Lookup completo de proveedores (NOMBRE_PRV + RAZON_SOCIAL_PRV) para
+  // el rotulo resuelto de la cabecera y para el combo de busqueda
+  // incremental por codigo (cbbCODIGO_PRV_ALBC). Se abre una vez y se
+  // recorre con Locate; no depende del proveedor del albaran en pantalla.
+  unqryPrvDataAlbc.Open;
   unqryArtDataLinAlbc.Connection        := inLibGlobalVar.oConn;
   unqrySkusAlbc.Connection              := inLibGlobalVar.oConn;
   unqryMovimientosProveedor.Connection  := inLibGlobalVar.oConn;
@@ -341,6 +353,8 @@ begin
     // (albaran_compra_deposito.sql).
     if FindField('ESDEPOSITO_ALBC') <> nil then
       FieldByName('ESDEPOSITO_ALBC').AsString := 'N';
+    if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_ALBC') <> nil then
+      FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_ALBC').AsString := 'N';
     AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
       'CODIGO_EMP_ALBC', 'ESIVA_RECARGO_COMPRAS_ALBC');
     AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,

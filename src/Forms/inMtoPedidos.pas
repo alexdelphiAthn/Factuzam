@@ -145,6 +145,8 @@ type
     chkTotalesESIVA_RECARGO_CLIENTE_PED: TcxDBCheckBox;
     chkTotalesESRETENCIONES_CLIENTE_PED: TcxDBCheckBox;
     chkTotalesESRETENCIONES_EMPRESA_PED: TcxDBCheckBox;
+    lblTotalesTotalPrendas: TcxLabel;
+    lblTotalPrendasPed: TcxLabel;
     grpDesgloseImpuestos: TGroupBox;
     lblTotalesBaseNeta: TcxLabel;
     lblTotalesPorIva: TcxLabel;
@@ -223,6 +225,10 @@ type
   private
     FBuscandoDatosCabecera: Boolean;
     FAplicandoArticulo: Boolean;
+    // Handler original de unqryPedidosLineas.AfterPost (el que traia el DM)
+    // guardado para no perder su logica al encadenar el refresco del label
+    // de prendas. Ver unqryLineasAfterPostHook.
+    FOldLineasAfterPost: TDataSetNotifyEvent;
     function BuscarArticuloPedido: string;
     function BuscarSkuPedido(const ACodigoArt: string): string;
     function ArticuloLineaActivaPedido: string;
@@ -230,6 +236,17 @@ type
     procedure cxgrdcPedLinSKUPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure RellenarLineasAlEntregarTodo;
+    // Pinta lblTotalPrendasPed con el total de prendas (suma de
+    // CANTIDAD_PEDLIN de todas las lineas). Calculado en Delphi, no
+    // persiste en BBDD.
+    procedure ActualizarLabelPrendas;
+    // Hook AfterPost de las lineas: conserva el calculo de totales que
+    // hacia el DM (CalcularTotalesPedido) y anade el refresco del label.
+    procedure unqryLineasAfterPostHook(DataSet: TDataSet);
+    // Hook OnDataChange de dsTablaG: al navegar entre pedidos (Field=nil)
+    // hay que recalcular el total de prendas con las lineas del pedido
+    // recien enfocado.
+    procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
   public
     dmmPedidos: TdmPedidos;
     procedure CrearTablaPrincipal; override;
@@ -606,6 +623,42 @@ begin
   dmmPedidos.unqryPedidosLineas.MasterSource := dsTablaG;
   dmmPedidos.unqryAlbaranes.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_PED;NUMERO_PED';
+  // Total de prendas (pestana Totales): se recalcula tras cada Post de
+  // linea y al navegar entre pedidos. Se conserva el handler original
+  // (el que trae el DM) encadenandolo desde unqryLineasAfterPostHook.
+  FOldLineasAfterPost := dmmPedidos.unqryPedidosLineas.AfterPost;
+  dmmPedidos.unqryPedidosLineas.AfterPost := unqryLineasAfterPostHook;
+  dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+  ActualizarLabelPrendas;
+end;
+
+procedure TfrmMtoPedidos.ActualizarLabelPrendas;
+begin
+  if (dmmPedidos <> nil) and Assigned(dmmPedidos.unqryTablaG) and
+     dmmPedidos.unqryTablaG.Active and (not dmmPedidos.unqryTablaG.IsEmpty) then
+    lblTotalPrendasPed.Caption :=
+      FormatFloat('#,##0', dmmPedidos.TotalPrendasPedido)
+  else
+    lblTotalPrendasPed.Caption := '0';
+end;
+
+// Hook AfterPost de unqryPedidosLineas: encadena el handler original del
+// DM (que ya calcula los totales fiscales) y anade el refresco del
+// label de prendas, sin perder la logica original.
+procedure TfrmMtoPedidos.unqryLineasAfterPostHook(DataSet: TDataSet);
+begin
+  if Assigned(FOldLineasAfterPost) then
+    FOldLineasAfterPost(DataSet);
+  ActualizarLabelPrendas;
+end;
+
+// Hook OnDataChange de dsTablaG: solo nos interesa el evento global
+// (Field=nil) que se dispara al cambiar de pedido activo.
+procedure TfrmMtoPedidos.dsTablaGDataChangeHook(Sender: TObject;
+                                                Field: TField);
+begin
+  if Field = nil then
+    ActualizarLabelPrendas;
 end;
 
 procedure TfrmMtoPedidos.btnNuevoClick(Sender: TObject);

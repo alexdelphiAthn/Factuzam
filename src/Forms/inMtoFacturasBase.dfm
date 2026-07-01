@@ -1321,6 +1321,23 @@
                 TabOrder = 6
                 OnClick = btnGenerarRecibosClick
               end
+              object lblTotalesTotalPrendas: TcxLabel
+                Left = 60
+                Top = 335
+                Caption = 'N'#186' de prendas'
+                TabOrder = 14
+                Transparent = True
+              end
+              object lblTotalPrendasFactura: TcxLabel
+                Left = 230
+                Top = 335
+                AutoSize = False
+                Caption = '0'
+                TabOrder = 15
+                Transparent = True
+                Height = 20
+                Width = 133
+              end
               object grpDesgloseImpuestos: TGroupBox
                 Left = 432
                 Top = 11

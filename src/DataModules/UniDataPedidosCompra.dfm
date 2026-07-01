@@ -62,8 +62,13 @@
   object unqryPrvDataPedc: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT * FROM fza_proveedores')
+      'SELECT * FROM fza_proveedores ORDER BY CODIGO_PRV_PRV')
     Left = 48
+    Top = 248
+  end
+  object dsPrvDataPedc: TDataSource
+    DataSet = unqryPrvDataPedc
+    Left = 112
     Top = 248
   end
   object unqrySkusPedc: TUniQuery

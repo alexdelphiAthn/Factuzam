@@ -36,6 +36,7 @@ type
     dsEfectos:                 TDataSource;
     unqryEmpDataFacc:           TUniQuery;
     unqryPrvDataFacc:           TUniQuery;
+    dsPrvDataFacc:              TDataSource;
     unqryArtDataLinFacc:        TUniQuery;
     unqrySkusFacc:              TUniQuery;
     unqryFormasPago:            TUniQuery;
@@ -81,6 +82,9 @@ type
   public
     procedure GetCodigoAutoFacturaCompra;
     procedure CalcularTotalesFacturaCompra;
+    // Numero total de prendas (suma CANTIDAD_FACCLIN de todas las lineas).
+    // Se muestra en la pestana Totales; no se persiste en BBDD.
+    function TotalPrendasFactura: Double;
     // Genera los efectos de pago de la factura activa segun su forma de pago
     // (PRC_EFEC_GENERAR_DESDE_FACTURA) y refresca la rejilla. Devuelve nº de
     // efectos generados, 0 si nada, -1 sin factura activa / error. Si se pasa
@@ -147,6 +151,12 @@ begin
   unqryFacturasCompraLineas.Connection := inLibGlobalVar.oConn;
   unqryEmpDataFacc.Connection           := inLibGlobalVar.oConn;
   unqryPrvDataFacc.Connection           := inLibGlobalVar.oConn;
+  // Lookup completo de proveedores (NOMBRE_PRV + RAZON_SOCIAL_PRV) para
+  // el rotulo resuelto de la cabecera y para el combo de busqueda
+  // incremental por codigo (cbbCODIGO_PRV_FACC). Se abre una vez y se
+  // recorre con Locate; no depende del proveedor de la factura en
+  // pantalla.
+  unqryPrvDataFacc.Open;
   unqryArtDataLinFacc.Connection        := inLibGlobalVar.oConn;
   unqrySkusFacc.Connection              := inLibGlobalVar.oConn;
   unqryFormasPago.Connection            := inLibGlobalVar.oConn;
@@ -330,12 +340,19 @@ procedure TdmFacturasCompra.CargarFormaPagoProveedor(const ACodigoPrv: string);
 var
   sFp: string;
 begin
-  if ((ACodigoPrv <> '') and (ACodigoPrv <> '0') and
-      (unqryTablaG.State in [dsEdit, dsInsert])) then
+  if unqryTablaG.State in [dsEdit, dsInsert] then
   begin
-    sFp := GetFormaPagoDefectoProveedor(ACodigoPrv);
-    if sFp <> '' then
-      unqryTablaG.FieldByName('FORMA_PAGO_FACC').AsString := sFp;
+    if unqryTablaG.FindField('ESIVA_EXENTO_INTRACOMUNITARIO_FACC') <> nil then
+      unqryTablaG.FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_FACC').AsString :=
+        ObtenerIvaExentoIntracomunitarioProveedor(inLibGlobalVar.oConn,
+          ACodigoPrv);
+    if (ACodigoPrv <> '') and (ACodigoPrv <> '0') then
+    begin
+      sFp := GetFormaPagoDefectoProveedor(ACodigoPrv);
+      if sFp <> '' then
+        unqryTablaG.FieldByName('FORMA_PAGO_FACC').AsString := sFp;
+    end;
+    CalcularTotalesFacturaCompra;
   end;
 end;
 
@@ -414,6 +431,8 @@ begin
     else
       FieldByName('CODIGO_EMP_FACC').AsString := '0';
     FieldByName('CODIGO_PRV_FACC').AsString := '0';
+    if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_FACC') <> nil then
+      FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_FACC').AsString := 'N';
     AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
       'CODIGO_EMP_FACC', 'ESIVA_RECARGO_COMPRAS_FACC');
     AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
@@ -760,6 +779,12 @@ begin
   CalcularTotalesDocumentoCompra(inLibGlobalVar.oConn, unqryTablaG,
     unqryFacturasCompraLineas, 'FACC', 'TOTAL_FACCLIN',
     'TIPO_IVA_ARTICULO_FACCLIN', 'PORCENTAJE_IVA_FACCLIN');
+end;
+
+function TdmFacturasCompra.TotalPrendasFactura: Double;
+begin
+  Result := TotalPrendasLineasCompra(unqryFacturasCompraLineas,
+    'TIPO_IVA_ARTICULO_FACCLIN');
 end;
 
 procedure TdmFacturasCompra.PrepararPrint(const ASerie, ANumero: string);

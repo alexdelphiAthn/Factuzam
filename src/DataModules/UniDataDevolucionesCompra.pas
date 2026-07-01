@@ -32,6 +32,7 @@ type
     dsDevolucionesCompraLineas:    TDataSource;
     unqryEmpDataDevc:           TUniQuery;
     unqryPrvDataDevc:           TUniQuery;
+    dsPrvDataDevc:              TDataSource;
     unqryArtDataLinDevc:        TUniQuery;
     unqrySkusDevc:              TUniQuery;
     unqryAlmacenesDevc:         TUniQuery;
@@ -86,6 +87,9 @@ type
   public
     procedure GetCodigoAutoDevolucionCompra;
     procedure CalcularTotalesDevolucionCompra;
+    // Numero total de prendas (suma CANTIDAD_DEVCLIN de todas las lineas).
+    // Se muestra en la pestana Totales; no se persiste en BBDD.
+    function TotalPrendasDevolucion: Double;
     procedure SincronizarMovimientos;
     // Abre unqryCabDevcPrint y unqryLinDevcPrint con los parametros
     // del devolucion a imprimir. Mismo nombre/firma que en sesiones.
@@ -139,6 +143,12 @@ begin
     '   AND LINEA_DEVCLIN = :Old_LINEA_DEVCLIN';
   unqryEmpDataDevc.Connection           := inLibGlobalVar.oConn;
   unqryPrvDataDevc.Connection           := inLibGlobalVar.oConn;
+  // Lookup completo de proveedores (NOMBRE_PRV + RAZON_SOCIAL_PRV) para
+  // el rotulo resuelto de la cabecera y para el combo de busqueda
+  // incremental por codigo (cbbCODIGO_PRV_DEVC). Se abre una vez y se
+  // recorre con Locate; no depende del proveedor de la devolucion en
+  // pantalla.
+  unqryPrvDataDevc.Open;
   unqryArtDataLinDevc.Connection        := inLibGlobalVar.oConn;
   unqrySkusDevc.Connection              := inLibGlobalVar.oConn;
   unqryAlmacenesDevc.Connection         := inLibGlobalVar.oConn;
@@ -256,6 +266,8 @@ begin
     else
       FieldByName('CODIGO_EMP_DEVC').AsString := '0';
     FieldByName('CODIGO_PRV_DEVC').AsString := '0';
+    if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_DEVC') <> nil then
+      FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_DEVC').AsString := 'N';
     if FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil then
       FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString := 'S';
     AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
@@ -617,6 +629,12 @@ begin
   CalcularTotalesDocumentoCompra(unqryTablaG.Connection, unqryTablaG,
     unqryDevolucionesCompraLineas, 'DEVC', 'TOTAL_DEVCLIN',
     'TIPO_IVA_ARTICULO_DEVCLIN', 'PORCENTAJE_IVA_DEVCLIN');
+end;
+
+function TdmDevolucionesCompra.TotalPrendasDevolucion: Double;
+begin
+  Result := TotalPrendasLineasCompra(unqryDevolucionesCompraLineas,
+    'TIPO_IVA_ARTICULO_DEVCLIN');
 end;
 
 function TdmDevolucionesCompra.HayLineasMovimiento(const ASerie,

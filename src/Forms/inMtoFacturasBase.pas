@@ -302,6 +302,8 @@ type
     ctbPRECIOSALIDA_FACTURA_LINEA: TcxGridDBColumn;
     ctbPORCEN_DTO_FACTURA_LINEA: TcxGridDBColumn;
     ctbPRECIO_DTO_FACTURA_LINEA: TcxGridDBColumn;
+    lblTotalesTotalPrendas: TcxLabel;
+    lblTotalPrendasFactura: TcxLabel;
     grpDesgloseImpuestos: TGroupBox;
     lblTotRE: TcxLabel;
     PorRE: TcxLabel;
@@ -585,6 +587,10 @@ type
     // PonerAnchosTitulos (inLibDevExp) repone la visibilidad desde el perfil
     // (por defecto visible) y pisa lo que fijamos en CrearTablaPrincipal.
     procedure ReaplicarVisibilidadDetalle;
+    // Pinta lblTotalPrendasFactura con el total de prendas (suma de
+    // CANTIDAD_FACLIN de todas las lineas). Calculado en Delphi, no
+    // persiste en BBDD.
+    procedure ActualizarLabelPrendas;
     procedure dsLinFacDataChange(Sender: TObject; Field: TField);
     procedure ctbCODIGO_UNIDAD_FACTURA_LINEAGetDataText(
       Sender: TcxCustomGridTableItem; ARecordIndex: Integer; var AText: string);
@@ -2064,6 +2070,7 @@ begin
   dmmFacturas.dsLinFac.OnDataChange := dsLinFacDataChange;
   // Estado inicial: Variacion oculta, creacion/SKU segun cab/lineas.
   ReaplicarVisibilidadDetalle;
+  ActualizarLabelPrendas;
   Self.pkFieldName := 'NUMERO_FAC; SERIE_FAC';
   AsignarControles;
   // El check de mover stock solo aplica a facturas NORMAL: en SIMPLIFICADA
@@ -2491,6 +2498,16 @@ begin
   SincronizarColumnaSku;
 end;
 
+procedure TfrmMtoFacturasBase.ActualizarLabelPrendas;
+begin
+  if (dmmFacturas <> nil) and Assigned(dmmFacturas.unqryTablaG) and
+     dmmFacturas.unqryTablaG.Active and (not dmmFacturas.unqryTablaG.IsEmpty) then
+    lblTotalPrendasFactura.Caption :=
+      FormatFloat('#,##0', dmmFacturas.TotalPrendasFactura)
+  else
+    lblTotalPrendasFactura.Caption := '0';
+end;
+
 procedure TfrmMtoFacturasBase.AplicarEtiquetas;
 begin
   inherited;
@@ -2506,7 +2523,11 @@ begin
   // Field = nil: cambio de registro de linea, recarga del detalle (al navegar
   // de factura) o alta/baja de linea. Re-evaluamos la visibilidad del detalle.
   if Field = nil then
+  begin
     ReaplicarVisibilidadDetalle;
+    // Alta/baja/edicion de linea cambia el total de prendas.
+    ActualizarLabelPrendas;
+  end;
 end;
 
 procedure TfrmMtoFacturasBase.chkCrearArticulosPropertiesChange(Sender: TObject);
@@ -2626,6 +2647,9 @@ begin
     ActualizarBloqueoEdicion;
     // Cada factura lleva su propio modo creacion: re-evaluamos al navegar.
     ReaplicarVisibilidadDetalle;
+    // Al navegar entre facturas hay que recalcular el total de prendas:
+    // las lineas cargadas son las de la factura recien enfocada.
+    ActualizarLabelPrendas;
   end;
 end;
 

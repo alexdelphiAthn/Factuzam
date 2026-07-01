@@ -47,7 +47,7 @@
               Width = 67
             end
             object cxgrdbclmnGrdDBTabPrinVARIOS_TIPOS_IVA_PRV: TcxGridDBColumn
-              Caption = 'Varios IVA'
+              Caption = 'Varios IVA art.'
               DataBinding.FieldName = 'ESVARIOS_TIPOS_IVA_PRV'
               PropertiesClassName = 'TcxCheckBoxProperties'
               Properties.ValueChecked = 'S'
@@ -488,8 +488,39 @@
                 Margins.Bottom = 4
                 DataBinding.DataField = 'PAIS_PRV'
                 DataBinding.DataSource = dsTablaG
+                Properties.OnChange = cxdbtxtdt16PropertiesChange
                 TabOrder = 10
+                Visible = False
                 Width = 303
+              end
+              object cbbPaisPrv: TcxDBLookupComboBox
+                Left = 147
+                Top = 218
+                DataBinding.DataField = 'CODIGO_PAI_PRV'
+                DataBinding.DataSource = dsTablaG
+                Properties.KeyFieldNames = 'CODIGO'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'Nombre Pais'
+                    FieldName = 'NOMBRE'
+                  end>
+                Properties.ListOptions.CaseInsensitive = True
+                Properties.ListOptions.ShowHeader = False
+                Properties.OnChange = cbbPaisPrvPropertiesChange
+                TabOrder = 11
+                Width = 233
+              end
+              object chkESIVA_EXENTO_INTRACOMUNITARIO_PRV: TcxDBCheckBox
+                Left = 477
+                Top = 218
+                Caption = 'IVA exento intracom.'
+                DataBinding.DataField = 'ESIVA_EXENTO_INTRACOMUNITARIO_PRV'
+                DataBinding.DataSource = dsTablaG
+                Properties.ValueChecked = 'S'
+                Properties.ValueUnchecked = 'N'
+                Style.TransparentBorder = False
+                TabOrder = 12
+                Transparent = True
               end
               object lblPais: TcxLabel
                 Left = 98
@@ -1186,7 +1217,7 @@
                 Align = alTop
                 Caption = ' Defectos para sesiones de compra '
                 TabOrder = 0
-                Height = 92
+                Height = 130
                 Width = 698
                 object lblMargenPrv: TcxLabel
                   Left = 16
@@ -1207,7 +1238,7 @@
                 object chkVariosTiposIvaPrv: TcxDBCheckBox
                   Left = 224
                   Top = 26
-                  Caption = 'Varios tipos IVA'
+                  Caption = 'Varios tipos IVA artículos'
                   DataBinding.DataField = 'ESVARIOS_TIPOS_IVA_PRV'
                   DataBinding.DataSource = dsTablaG
                   Properties.ValueChecked = 'S'
@@ -1216,23 +1247,45 @@
                   TabOrder = 2
                   Transparent = True
                 end
+                object lblSistemaTallasPrv: TcxLabel
+                  Left = 16
+                  Top = 64
+                  Caption = 'Sistema tallas'
+                  TabOrder = 3
+                  Transparent = True
+                end
+                object cbbSistemaTallasPrv: TcxDBLookupComboBox
+                  Left = 104
+                  Top = 60
+                  DataBinding.DataField = 'ID_AC_TALLAS_PRV'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.KeyFieldNames = 'ID_AC'
+                  Properties.ListColumns = <
+                    item
+                      FieldName = 'NOMBRE_AC'
+                    end>
+                  Properties.ListOptions.ShowHeader = False
+                  TabOrder = 4
+                  Width = 220
+                end
                 object lblDefectosInfo: TcxLabel
                   Left = 16
-                  Top = 60
+                  Top = 94
                   Caption =
-                    'El margen % y Varios tipos IVA se copian a la cabecera a' +
-                    'l elegir este proveedor en una sesi'#243'n de compra.'
-                  TabOrder = 3
+                    'Se aplican al elegir este proveedor en una sesi'#243'n de compra' +
+                    ' (el sistema de tallas solo propone el defecto; cada l'#237'nea ' +
+                    'lo puede cambiar).'
+                  TabOrder = 5
                   Transparent = True
                 end
               end
               object gbKitsPrv: TcxGroupBox
                 Left = 0
-                Top = 92
+                Top = 130
                 Align = alClient
                 Caption = ' Kits de cantidades por talla '
                 TabOrder = 1
-                Height = 180
+                Height = 142
                 Width = 698
                 object pnlKitsTop: TPanel
                   Left = 2

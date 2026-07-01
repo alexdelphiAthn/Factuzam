@@ -154,10 +154,23 @@ type
     procedure unqrySesionCelAfterPost(DataSet: TDataSet);
   private
     FInstanteCargaSesion: TDateTime;
+    FTallajeDefectoActual: Integer;
+                        // Sistema de tallas (ID_AC) que se propone a la
+                        // siguiente linea NUEVA de la sesion. Arranca en 0
+                        // (sin defecto). CopiarDefectosProveedor lo fija al
+                        // ID_AC_TALLAS_PRV del proveedor recien elegido;
+                        // cuando el usuario cambia el sistema de tallas de
+                        // una linea (dbcLinTallasPropertiesButtonClick) pasa
+                        // a ser ese, no el del proveedor: "se cambia el
+                        // defecto del documento", no el del proveedor.
+                        // RecargarProveedorSesion lo resetea a 0 al navegar
+                        // a otra sesion o proveedor.
     procedure ConfigurarSqlCabecera;
     procedure CalcularTotalesLineaActual;
     procedure PersistirTotalesSesion;
   public
+    property TallajeDefectoActual: Integer read FTallajeDefectoActual
+                                            write FTallajeDefectoActual;
     procedure GetCodigoAutoSesion;
     procedure AsegurarSerieEnEmpresasSeries(const AEmpresa, ASerie: string);
     procedure ChequearDuplicado(const ACodigoArt: string;
@@ -199,10 +212,11 @@ uses
 
 procedure TdmComprasSesiones.ConfigurarSqlCabecera;
 const
-  CAMPOS_SES: array[0..72] of string = (
+  CAMPOS_SES: array[0..78] of string = (
     'SERIE_SES',
     'NUMERO_SES',
     'FECHA_SES',
+    'FECHA_TOPE_RECEPCION_SES',
     'ESTADO_SES',
     'CODIGO_EMP_SES',
     'CODIGO_PRV_SES',
@@ -246,6 +260,7 @@ const
     'ESPRECIO_POR_SKU_SES',
     'ID_PV_TEMPORADA_SES',
     'ESIVA_RECARGO_COMPRAS_SES',
+    'ESIVA_EXENTO_INTRACOMUNITARIO_SES',
     'PORCENTAJE_IVAN_SES',
     'TOTAL_BASEI_IVAN_SES',
     'TOTAL_IVAN_SES',
@@ -269,6 +284,10 @@ const
     'PORCENTAJE_RETENCION_SES',
     'TOTAL_RETENCION_SES',
     'TOTAL_BRUTO_SES',
+    'PORCENTAJE_DTO_COMERCIAL_SES',
+    'TOTAL_DTO_COMERCIAL_SES',
+    'PORCENTAJE_DTO_FINANCIERO_SES',
+    'TOTAL_DTO_FINANCIERO_SES',
     'TOTAL_BASES_SES',
     'TOTAL_IMPUESTOS_SES',
     'TOTAL_SES',
@@ -332,18 +351,94 @@ begin
   unqryTablaG.SQL.Text :=
     'SELECT s.*, ' +
     '       prv.RAZON_SOCIAL_PRV AS RAZON_SOCIAL_PRV_SES, ' +
-    '       prv.NOMBRE_PRV AS NOMBRE_PRV_SES ' +
+    '       prv.NOMBRE_PRV AS NOMBRE_PRV_SES, ' +
+    '       t.PV AS TEMPORADA_SES, ' +
+    '       s.FECHA_SES AS FECHA_REALIZACION_SES, ' +
+    '       alb.FECHA_ALBC AS FECHA_EFECTO_STOCK_SES, ' +
+    '       COALESCE(r.TOTAL_PRENDAS_SES, 0) AS TOTAL_PRENDAS_SES, ' +
+    '       COALESCE(r.TOTAL_PRENDAS_SES, 0) AS CANTIDAD_PEDIDA_SES, ' +
+    '       COALESCE(r.TOTAL_LINEAS_SES, 0) AS TOTAL_LINEAS_SES, ' +
+    '       CASE WHEN COALESCE(s.NUMERO_ALBC_SES, '''') <> '''' ' +
+    '            THEN COALESCE(r.TOTAL_PRENDAS_SES, 0) ' +
+    '            ELSE COALESCE(ped.CANTIDAD_RECIBIDA_PEDC, 0) END ' +
+    '          AS CANTIDAD_RECIBIDA_SES, ' +
+    '       GREATEST(COALESCE(r.TOTAL_PRENDAS_SES, 0) - ' +
+    '         CASE WHEN COALESCE(s.NUMERO_ALBC_SES, '''') <> '''' ' +
+    '              THEN COALESCE(r.TOTAL_PRENDAS_SES, 0) ' +
+    '              ELSE COALESCE(ped.CANTIDAD_RECIBIDA_PEDC, 0) END, 0) ' +
+    '          AS CANTIDAD_PENDIENTE_RECEPCION_SES ' +
     '  FROM fza_compras_sesiones s ' +
     '  LEFT JOIN fza_proveedores prv ' +
     '    ON prv.CODIGO_PRV_PRV = s.CODIGO_PRV_SES ' +
+    '  LEFT JOIN fza_propiedades_valores t ' +
+    '    ON t.ID_PV_ARTPROP = s.ID_PV_TEMPORADA_SES ' +
+    '   AND t.ID_PROP_PV = ''TEMPORADA'' ' +
+    '  LEFT JOIN fza_albaranes_compra alb ' +
+    '    ON alb.SERIE_ALBC = s.SERIE_ALBC_SES ' +
+    '   AND alb.NUMERO_ALBC = s.NUMERO_ALBC_SES ' +
+    '  LEFT JOIN (SELECT l.SERIE_SES_SESLIN, l.NUMERO_SES_SESLIN, ' +
+    '                    COALESCE(SUM(l.TOTAL_UNIDADES_SESLIN), 0) ' +
+    '                      AS TOTAL_PRENDAS_SES, ' +
+    '                    COALESCE(SUM(l.TOTAL_LINEA_SESLIN), 0) ' +
+    '                      AS TOTAL_LINEAS_SES ' +
+    '               FROM fza_compras_sesiones_lineas l ' +
+    '              GROUP BY l.SERIE_SES_SESLIN, l.NUMERO_SES_SESLIN) r ' +
+    '    ON r.SERIE_SES_SESLIN = s.SERIE_SES ' +
+    '   AND r.NUMERO_SES_SESLIN = s.NUMERO_SES ' +
+    '  LEFT JOIN (SELECT l.SERIE_PEDC_PEDCLIN, l.NUMERO_PEDC_PEDCLIN, ' +
+    '                    COALESCE(SUM(l.CANTIDAD_RECIBIDA_PEDCLIN), 0) ' +
+    '                      AS CANTIDAD_RECIBIDA_PEDC ' +
+    '               FROM fza_pedidos_compra_lineas l ' +
+    '              GROUP BY l.SERIE_PEDC_PEDCLIN, ' +
+    '                       l.NUMERO_PEDC_PEDCLIN) ped ' +
+    '    ON ped.SERIE_PEDC_PEDCLIN = s.SERIE_PEDC_SES ' +
+    '   AND ped.NUMERO_PEDC_PEDCLIN = s.NUMERO_PEDC_SES ' +
     ' ORDER BY s.FECHA_SES DESC, s.NUMERO_SES DESC';
   unqryTablaG.SQLRefresh.Text :=
     'SELECT s.*, ' +
     '       prv.RAZON_SOCIAL_PRV AS RAZON_SOCIAL_PRV_SES, ' +
-    '       prv.NOMBRE_PRV AS NOMBRE_PRV_SES ' +
+    '       prv.NOMBRE_PRV AS NOMBRE_PRV_SES, ' +
+    '       t.PV AS TEMPORADA_SES, ' +
+    '       s.FECHA_SES AS FECHA_REALIZACION_SES, ' +
+    '       alb.FECHA_ALBC AS FECHA_EFECTO_STOCK_SES, ' +
+    '       COALESCE(r.TOTAL_PRENDAS_SES, 0) AS TOTAL_PRENDAS_SES, ' +
+    '       COALESCE(r.TOTAL_PRENDAS_SES, 0) AS CANTIDAD_PEDIDA_SES, ' +
+    '       COALESCE(r.TOTAL_LINEAS_SES, 0) AS TOTAL_LINEAS_SES, ' +
+    '       CASE WHEN COALESCE(s.NUMERO_ALBC_SES, '''') <> '''' ' +
+    '            THEN COALESCE(r.TOTAL_PRENDAS_SES, 0) ' +
+    '            ELSE COALESCE(ped.CANTIDAD_RECIBIDA_PEDC, 0) END ' +
+    '          AS CANTIDAD_RECIBIDA_SES, ' +
+    '       GREATEST(COALESCE(r.TOTAL_PRENDAS_SES, 0) - ' +
+    '         CASE WHEN COALESCE(s.NUMERO_ALBC_SES, '''') <> '''' ' +
+    '              THEN COALESCE(r.TOTAL_PRENDAS_SES, 0) ' +
+    '              ELSE COALESCE(ped.CANTIDAD_RECIBIDA_PEDC, 0) END, 0) ' +
+    '          AS CANTIDAD_PENDIENTE_RECEPCION_SES ' +
     '  FROM fza_compras_sesiones s ' +
     '  LEFT JOIN fza_proveedores prv ' +
     '    ON prv.CODIGO_PRV_PRV = s.CODIGO_PRV_SES ' +
+    '  LEFT JOIN fza_propiedades_valores t ' +
+    '    ON t.ID_PV_ARTPROP = s.ID_PV_TEMPORADA_SES ' +
+    '   AND t.ID_PROP_PV = ''TEMPORADA'' ' +
+    '  LEFT JOIN fza_albaranes_compra alb ' +
+    '    ON alb.SERIE_ALBC = s.SERIE_ALBC_SES ' +
+    '   AND alb.NUMERO_ALBC = s.NUMERO_ALBC_SES ' +
+    '  LEFT JOIN (SELECT l.SERIE_SES_SESLIN, l.NUMERO_SES_SESLIN, ' +
+    '                    COALESCE(SUM(l.TOTAL_UNIDADES_SESLIN), 0) ' +
+    '                      AS TOTAL_PRENDAS_SES, ' +
+    '                    COALESCE(SUM(l.TOTAL_LINEA_SESLIN), 0) ' +
+    '                      AS TOTAL_LINEAS_SES ' +
+    '               FROM fza_compras_sesiones_lineas l ' +
+    '              GROUP BY l.SERIE_SES_SESLIN, l.NUMERO_SES_SESLIN) r ' +
+    '    ON r.SERIE_SES_SESLIN = s.SERIE_SES ' +
+    '   AND r.NUMERO_SES_SESLIN = s.NUMERO_SES ' +
+    '  LEFT JOIN (SELECT l.SERIE_PEDC_PEDCLIN, l.NUMERO_PEDC_PEDCLIN, ' +
+    '                    COALESCE(SUM(l.CANTIDAD_RECIBIDA_PEDCLIN), 0) ' +
+    '                      AS CANTIDAD_RECIBIDA_PEDC ' +
+    '               FROM fza_pedidos_compra_lineas l ' +
+    '              GROUP BY l.SERIE_PEDC_PEDCLIN, ' +
+    '                       l.NUMERO_PEDC_PEDCLIN) ped ' +
+    '    ON ped.SERIE_PEDC_PEDCLIN = s.SERIE_PEDC_SES ' +
+    '   AND ped.NUMERO_PEDC_PEDCLIN = s.NUMERO_PEDC_SES ' +
     ' WHERE s.SERIE_SES = :SERIE_SES ' +
     '   AND s.NUMERO_SES = :NUMERO_SES';
   unqrySesionLin.Connection         := inLibGlobalVar.oConn;
@@ -414,6 +509,9 @@ begin
   unqryCabSesionPrint.Connection    := inLibGlobalVar.oConn;
   unqryLinSesionPrint.Connection    := inLibGlobalVar.oConn;
   unqryGuiasSesionPrint.Connection  := inLibGlobalVar.oConn;
+  // unqryProveedores alimenta tanto el rotulo resuelto de la cabecera
+  // (ActualizarLabelProveedor via Locate) como cbbProveedor, el combo de
+  // busqueda incremental por codigo.
   unqryProveedores.Open;
   unqryFamilias.Open;
   unqryVariaciones.Open;
@@ -449,6 +547,8 @@ begin
     FieldByName('ESVAR_FIJA_SES').AsString        := 'N';
     if FindField('ESVARIOS_TIPOS_IVA_SES') <> nil then
       FieldByName('ESVARIOS_TIPOS_IVA_SES').AsString := 'N';
+    if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_SES') <> nil then
+      FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_SES').AsString := 'N';
     FieldByName('ESGENERA_PEDIDO_SES').AsString   := 'N';
     FieldByName('ESGENERA_ALBARAN_SES').AsString  := 'N';
     if FindField('ESFORMATO_DISTRIBUIDO_SES') <> nil then
@@ -610,6 +710,13 @@ begin
     FieldByName('DESCRIPCION_SESLIN').AsString          := '';
     FieldByName('USUARIO_ALTA').AsString := oUser;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+    // Sistema de tallas por defecto del documento (ver FTallajeDefectoActual):
+    // viene del proveedor al elegirlo, o del ultimo que el usuario eligio a
+    // mano en una linea. Solo se propone; el usuario lo puede cambiar en la
+    // linea igual que siempre.
+    if (FTallajeDefectoActual > 0) and
+       (FindField('ID_AC_PIVOT_SESLIN') <> nil) then
+      FieldByName('ID_AC_PIVOT_SESLIN').AsInteger := FTallajeDefectoActual;
   end;
 end;
 
@@ -920,7 +1027,7 @@ end;
 
 procedure TdmComprasSesiones.PersistirTotalesSesion;
 const
-  CAMPOS_TOTALES: array[0..27] of string = (
+  CAMPOS_TOTALES: array[0..31] of string = (
     'CODIGO_IVA_SES',
     'PORCENTAJE_IVAN_SES', 'TOTAL_BASEI_IVAN_SES', 'TOTAL_IVAN_SES',
     'PORCENTAJE_REN_SES', 'TOTAL_REN_SES',
@@ -931,7 +1038,10 @@ const
     'PORCENTAJE_IVAE_SES', 'TOTAL_BASEI_IVAE_SES', 'TOTAL_IVAE_SES',
     'PORCENTAJE_REE_SES', 'TOTAL_REE_SES',
     'PORCENTAJE_RETENCION_SES', 'TOTAL_RETENCION_SES',
-    'TOTAL_BRUTO_SES', 'TOTAL_BASES_SES', 'TOTAL_IMPUESTOS_SES',
+    'TOTAL_BRUTO_SES',
+    'PORCENTAJE_DTO_COMERCIAL_SES', 'TOTAL_DTO_COMERCIAL_SES',
+    'PORCENTAJE_DTO_FINANCIERO_SES', 'TOTAL_DTO_FINANCIERO_SES',
+    'TOTAL_BASES_SES', 'TOTAL_IMPUESTOS_SES',
     'TOTAL_SES', 'TOTAL_LIQUIDO_SES');
 var
   q       : TUniQuery;
@@ -1036,6 +1146,12 @@ end;
 
 procedure TdmComprasSesiones.RecargarProveedorSesion(const ACodigoPrv: string);
 begin
+  // Reset del tallaje-defecto-del-documento: se recalcula desde el
+  // proveedor (CopiarDefectosProveedor) solo cuando el usuario ESTA
+  // cambiando el proveedor de la cabecera; al navegar a otra sesion (o
+  // dejar el proveedor en blanco) no debe arrastrarse el de la sesion
+  // anterior.
+  FTallajeDefectoActual := 0;
   // Ficha + kits del proveedor para la pestaña Proveedor. El detalle de
   // kits es master/detail de unqryPrvKits y sigue solo al master.
   unqryPrvFicha.Close;

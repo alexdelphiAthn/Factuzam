@@ -43,6 +43,11 @@ type
     dsFormasPago: TDataSource;
     unqryEmpresasBancos: TUniQuery;
     dsEmpresasBancos: TDataSource;
+    // Combo de pais del domicilio fiscal (vi_paises). Se abre en
+    // AbrirDetalles, igual que en Clientes: es una tabla pequena y el
+    // combo la necesita desde el primer momento.
+    unqryPaises: TUniQuery;
+    dsPaises: TDataSource;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
@@ -57,6 +62,8 @@ type
     { Private declarations }
   public
     procedure GetCodigoAutoProveedor;
+    procedure ActualizarIvaExentoIntracomunitarioPorPais(
+      const APais: string);
     // Override: ya no abre nada en el flujo inicial. Las dos queries
     // detail (Articulos, LinFacturasArticulos) son lazy por sub-pestaña.
     procedure AbrirDetalles; override;
@@ -76,7 +83,8 @@ type
 implementation
 
 uses
-  inMtoProveedores, inLibGlobalVar, inLibLog, System.Diagnostics;
+  inMtoProveedores, inLibGlobalVar, inLibLog, inLibDocumentoFiscal,
+  System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -98,6 +106,7 @@ begin
   // pestaña (AsegurarPagosAbierta), igual que el resto de detalles lazy.
   unqryFormaPago.Connection := oConn;
   unqryEmpresasBancos.Connection := oConn;
+  unqryPaises.Connection := oConn;
 end;
 
 procedure TdmProveedores.AbrirDetalles;
@@ -126,9 +135,10 @@ var sw: TStopwatch;
 begin
   inherited;
   sw := TStopwatch.StartNew;
-  // Ambas queries son lazy. AbrirDetalles solo registra el TOTAL para
-  // mantener consistencia con los demas Mtos.
-  inLibLog.Log.LogPerf(TAG, 'TOTAL (todo lazy)', sw.ElapsedMilliseconds);
+  // Articulos/LinFacturasArticulos/Kits/Pagos son lazy. Paises es un
+  // lookup pequeno que el combo del domicilio fiscal necesita ya abierto.
+  AbrirConTiempo(unqryPaises, 'unqryPaises');
+  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmProveedores.AsegurarArticulosAbierta;
@@ -401,6 +411,64 @@ begin
   end;
 end;
 
+function PaisIntracomunitarioExento(AConn: TUniConnection;
+  const APais: string): Boolean;
+var
+  q: TUniQuery;
+  sPais: string;
+begin
+  Result := False;
+  sPais := UpperCase(Trim(APais));
+  if (AConn <> nil) and (sPais <> '') and
+     (not PaisEsEspana('', sPais)) then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := AConn;
+      q.SQL.Text :=
+        'SELECT CODIGO_PAI_PAI, IFNULL(ESMIEMBRO_UE_PAI, ''N'') AS UE ' +
+        '  FROM fza_paises ' +
+        ' WHERE UPPER(TRIM(CODIGO_PAI_PAI)) = :pais ' +
+        '    OR UPPER(TRIM(COD_ALPHA2_PAI)) = :pais ' +
+        '    OR UPPER(TRIM(COD_ALPHA3_PAI)) = :pais ' +
+        '    OR UPPER(TRIM(NOMBRE_SPA_PAI)) = :pais ' +
+        '    OR UPPER(TRIM(NOMBRE_ENG_PAI)) = :pais ' +
+        ' LIMIT 1';
+      q.ParamByName('pais').AsString := sPais;
+      q.Open;
+      Result := (not q.Eof) and
+        SameText(Trim(q.FieldByName('UE').AsString), 'S') and
+        (not PaisEsEspana(q.FieldByName('CODIGO_PAI_PAI').AsString, APais));
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+end;
+
+procedure TdmProveedores.ActualizarIvaExentoIntracomunitarioPorPais(
+  const APais: string);
+var
+  fExento: TField;
+  sExento: string;
+begin
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+  begin
+    fExento := unqryTablaG.FindField('ESIVA_EXENTO_INTRACOMUNITARIO_PRV');
+    if fExento <> nil then
+    begin
+      sExento := 'N';
+      if PaisIntracomunitarioExento(oConn, APais) then
+        sExento := 'S';
+      if fExento.IsNull or (fExento.AsString <> sExento) then
+      begin
+        if not (unqryTablaG.State in dsEditModes) then
+          unqryTablaG.Edit;
+        fExento.AsString := sExento;
+      end;
+    end;
+  end;
+end;
+
 procedure TdmProveedores.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
@@ -409,11 +477,28 @@ begin
   if unqryTablaG.FindField('ESVARIOS_TIPOS_IVA_PRV') <> nil then
     unqryTablaG.FieldByName(
       'ESVARIOS_TIPOS_IVA_PRV').AsString := 'N';
+  if unqryTablaG.FindField('ESIVA_EXENTO_INTRACOMUNITARIO_PRV') <> nil then
+    unqryTablaG.FieldByName(
+      'ESIVA_EXENTO_INTRACOMUNITARIO_PRV').AsString := 'N';
 end;
 
 procedure TdmProveedores.unqryTablaGBeforePost(DataSet: TDataSet);
+var
+  sPais: string;
 begin
   inherited;
+  if unqryTablaG.FindField('PAIS_PRV') <> nil then
+  begin
+    // Preferimos el codigo exacto del combo (CODIGO_PAI_PRV) sobre el
+    // texto libre heredado: mismo criterio de fza_paises, mas fiable.
+    sPais := unqryTablaG.FieldByName('PAIS_PRV').AsString;
+    if unqryTablaG.FindField('CODIGO_PAI_PRV') <> nil then
+    begin
+      if Trim(unqryTablaG.FieldByName('CODIGO_PAI_PRV').AsString) <> '' then
+        sPais := unqryTablaG.FieldByName('CODIGO_PAI_PRV').AsString;
+    end;
+    ActualizarIvaExentoIntracomunitarioPorPais(sPais);
+  end;
   GetCodigoAutoProveedor;
 end;
 

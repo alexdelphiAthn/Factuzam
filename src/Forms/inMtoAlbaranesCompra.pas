@@ -89,7 +89,10 @@ type
     lblCodigoEmpresa: TcxLabel;
     btnCODIGO_EMP_ALBC: TcxDBButtonEdit;
     lblCodigoProveedor: TcxLabel;
-    btnCODIGO_PRV_ALBC: TcxDBButtonEdit;
+    cbbCODIGO_PRV_ALBC: TcxDBLookupComboBox;
+    // Rotulo resuelto: nombre comercial del proveedor (con razon social
+    // entre parentesis si difiere). Ver ActualizarLabelProveedor.
+    lblProveedorNombreAlbc: TcxLabel;
     lblRefProveedor:    TcxLabel;
     txtREF_PROVEEDOR_ALBC: TcxDBTextEdit;
     lblCodigoAlmacen:   TcxLabel;
@@ -114,6 +117,14 @@ type
     spnTotalesPORCENTAJE_IVAE_ALBC: TcxDBSpinEdit;
     spnTotalesPORCENTAJE_REE_ALBC: TcxDBSpinEdit;
     chkTotalesESIVA_RECARGO_COMPRAS_ALBC: TcxDBCheckBox;
+    lblTotalesDtoComercial: TcxLabel;
+    spnTotalesPORCENTAJE_DTO_COMERCIAL_ALBC: TcxDBSpinEdit;
+    curTotalesTOTAL_DTO_COMERCIAL_ALBC: TcxDBCurrencyEdit;
+    lblTotalesDtoFinanciero: TcxLabel;
+    spnTotalesPORCENTAJE_DTO_FINANCIERO_ALBC: TcxDBSpinEdit;
+    curTotalesTOTAL_DTO_FINANCIERO_ALBC: TcxDBCurrencyEdit;
+    lblTotalesTotalPrendas: TcxLabel;
+    curTotalesTOTAL_PRENDAS_ALBC: TcxDBCurrencyEdit;
     lblTotalesFormaPago: TcxLabel;
     cbbTotalesFORMA_PAGO_ALBC: TcxDBLookupComboBox;
     grpDesgloseImpuestos: TGroupBox;
@@ -180,11 +191,11 @@ type
     procedure cbbSERIE_ALBCPropertiesInitPopup(Sender: TObject);
     procedure btnCODIGO_EMP_ALBCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
-    procedure btnCODIGO_PRV_ALBCPropertiesButtonClick(Sender: TObject;
+    procedure cbbCODIGO_PRV_ALBCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure btnCODIGO_EMP_ALBCKeyUp(Sender: TObject; var Key: Word;
                                       Shift: TShiftState);
-    procedure btnCODIGO_PRV_ALBCKeyUp(Sender: TObject; var Key: Word;
+    procedure cbbCODIGO_PRV_ALBCKeyUp(Sender: TObject; var Key: Word;
                                       Shift: TShiftState);
     procedure colLineaAlbcCODIGO_ARTPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
@@ -214,6 +225,10 @@ type
     procedure RefrescarVisibilidadAtributos;
     procedure CargarCaptionsAtributosLineaActiva;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
+    // Pinta lblProveedorNombreAlbc con el nombre comercial del proveedor
+    // (razon social entre parentesis si difiere). Ver UniDataAlbaranesCompra
+    // .unqryPrvDataAlbc (lookup completo de fza_proveedores).
+    procedure ActualizarLabelProveedor;
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
     procedure unqryLineasAfterOpenHook(DataSet: TDataSet);
     procedure TallaEditValueChangedHook(Sender: TObject);
@@ -775,6 +790,8 @@ begin
   // de pivote recarga y republica. cxGrid pierde los Values[] no-bound al
   // cambiar el record activo.
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+  // Pintar el rotulo del proveedor del albaran enfocado al abrir el form.
+  ActualizarLabelProveedor;
   // AfterPost del detail: cxGrid borra los Values[] no-bound al repintar.
   // Republicamos via el controlador y conservamos la logica original del
   // DM (CalcularTotalesAlbaranCompra).
@@ -819,6 +836,9 @@ begin
     dmmAlbaranesCompra.dsMovimientosProveedor;
   cbbTotalesFORMA_PAGO_ALBC.Properties.ListSource :=
     dmmAlbaranesCompra.dsFormasPago;
+  // ListSource del combo de proveedor (busqueda incremental por codigo).
+  // Reutiliza el lookup unqryPrvDataAlbc, ya cargado para el rotulo.
+  cbbCODIGO_PRV_ALBC.Properties.ListSource := dmmAlbaranesCompra.dsPrvDataAlbc;
   // MasterSource se enlaza en DataModuleCreate del DM, pero lo
   // re-aseguramos por idempotencia.
   dmmAlbaranesCompra.unqryAlbaranesCompraLineas.MasterSource := dsTablaG;
@@ -1236,6 +1256,10 @@ procedure TfrmMtoAlbaranesCompra.dsTablaGDataChangeHook(Sender: TObject;
 var
   bDeberiaEstarActivo: Boolean;
 begin
+  // Refrescar el rotulo del proveedor al navegar entre albaranes (Field=nil)
+  // o al cambiar CODIGO_PRV_ALBC tecleado directamente en el ButtonEdit.
+  if (Field = nil) or SameText(Field.FieldName, 'CODIGO_PRV_ALBC') then
+    ActualizarLabelProveedor;
   if Field <> nil then Exit;
   if FPivote = nil then Exit;
   if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
@@ -1258,6 +1282,45 @@ begin
   // un segundo RecalcularMax tras publicar y limpiaria los Values[]
   // recien puestos.
   FPivote.RecargarYRepublicar;
+end;
+
+procedure TfrmMtoAlbaranesCompra.ActualizarLabelProveedor;
+var
+  sCodigo : string;
+  sNombre : string;
+  sRazon  : string;
+begin
+  // Resuelve NOMBRE_PRV + RAZON_SOCIAL_PRV (via el lookup unqryPrvDataAlbc)
+  // y los pinta en el rotulo. Se antepone el nombre comercial: es el que
+  // el usuario reconoce a simple vista; la razon social solo se anade
+  // entre parentesis como referencia si difiere.
+  sCodigo := '';
+  if (dmmAlbaranesCompra <> nil) and Assigned(dmmAlbaranesCompra.unqryTablaG) and
+     dmmAlbaranesCompra.unqryTablaG.Active and
+     (not dmmAlbaranesCompra.unqryTablaG.IsEmpty) then
+    sCodigo :=
+      Trim(dmmAlbaranesCompra.unqryTablaG.FieldByName('CODIGO_PRV_ALBC').AsString);
+  if sCodigo = '' then
+    lblProveedorNombreAlbc.Caption := ''
+  else if (dmmAlbaranesCompra.unqryPrvDataAlbc <> nil) and
+          dmmAlbaranesCompra.unqryPrvDataAlbc.Active and
+          dmmAlbaranesCompra.unqryPrvDataAlbc.Locate('CODIGO_PRV_PRV', sCodigo, []) then
+  begin
+    sRazon  := dmmAlbaranesCompra.unqryPrvDataAlbc.FieldByName('RAZON_SOCIAL_PRV').AsString;
+    sNombre := dmmAlbaranesCompra.unqryPrvDataAlbc.FieldByName('NOMBRE_PRV').AsString;
+    // Si no hay nombre comercial cargado, caemos a la razon social como
+    // rotulo principal. Si hay nombre y difiere de la razon social, la
+    // razon social se anade entre parentesis como referencia.
+    if Trim(sNombre) = '' then
+      lblProveedorNombreAlbc.Caption := sCodigo + ' - ' + sRazon
+    else if not SameText(Trim(sNombre), Trim(sRazon)) then
+      lblProveedorNombreAlbc.Caption :=
+        sCodigo + ' - ' + sNombre + '  (' + sRazon + ')'
+    else
+      lblProveedorNombreAlbc.Caption := sCodigo + ' - ' + sNombre;
+  end
+  else
+    lblProveedorNombreAlbc.Caption := sCodigo + ' - (proveedor no encontrado)';
 end;
 
 // Hook AfterPost del detail: encadena la logica original del DM
@@ -1404,7 +1467,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoAlbaranesCompra.btnCODIGO_PRV_ALBCPropertiesButtonClick(
+procedure TfrmMtoAlbaranesCompra.cbbCODIGO_PRV_ALBCPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
   sCodigo : string;
@@ -1428,6 +1491,10 @@ begin
       if not (ds.State in [dsInsert, dsEdit]) then
         ds.Edit;
       ds.FieldByName('CODIGO_PRV_ALBC').AsString := sCodigo;
+      AplicarIvaExentoIntracomunitarioProveedor(inLibGlobalVar.oConn, ds,
+        'CODIGO_PRV_ALBC', 'ESIVA_EXENTO_INTRACOMUNITARIO_ALBC');
+      dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
+      ActualizarLabelProveedor;
     end;
   end;
 end;
@@ -1443,14 +1510,14 @@ begin
   end;
 end;
 
-procedure TfrmMtoAlbaranesCompra.btnCODIGO_PRV_ALBCKeyUp(Sender: TObject;
+procedure TfrmMtoAlbaranesCompra.cbbCODIGO_PRV_ALBCKeyUp(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
   inherited;
   if (Key = VK_RETURN) and (ssCtrl in Shift) then
   begin
     Key := 0;
-    btnCODIGO_PRV_ALBCPropertiesButtonClick(Sender, 0);
+    cbbCODIGO_PRV_ALBCPropertiesButtonClick(Sender, 0);
   end;
 end;
 

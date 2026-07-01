@@ -911,13 +911,30 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                   TabOrder = 14
                   Transparent = True
                 end
+                object lblTotalesTotalPrendas: TcxLabel
+                  Left = 60
+                  Top = 350
+                  Caption = 'N'#186' de prendas'
+                  TabOrder = 15
+                  Transparent = True
+                end
+                object lblTotalPrendasPed: TcxLabel
+                  Left = 230
+                  Top = 350
+                  AutoSize = False
+                  Caption = '0'
+                  TabOrder = 16
+                  Transparent = True
+                  Height = 20
+                  Width = 133
+                end
                 object grpDesgloseImpuestos: TGroupBox
                   Left = 384
                   Top = 11
                   Width = 525
                   Height = 318
                   Caption = 'Desglose Impuestos'
-                  TabOrder = 15
+                  TabOrder = 17
                   object lblTotalesTotalRe: TcxLabel
                     Left = 438
                     Top = 40

@@ -8,7 +8,7 @@
 -- mostrado por orden_aplicacion.
 --
 -- Cubre los scripts de esquema detectables de las últimas tandas
--- (jun-2026). Los scripts solo-datos no se pueden detectar por
+-- (jun/jul-2026). Los scripts solo-datos no se pueden detectar por
 -- esquema; ver la lista al final del fichero.
 SELECT t.orden AS orden_aplicacion,
        t.script,
@@ -338,6 +338,291 @@ SELECT t.orden AS orden_aplicacion,
                    WHERE TABLE_SCHEMA = DATABASE()
                      AND TABLE_NAME = 'fza_articulos_atributos_basicos'
                      AND COLUMN_NAME = 'DESCRIPCION_AAB')
+    UNION ALL
+    SELECT 290, 'documentos_trabajo.sql',
+           'tablas documentos de trabajo + menú',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_documentos_trabajo')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_documentos_trabajo_lineas')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME =
+                             'fza_documentos_trabajo_compartidos')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_documentos_trabajo'
+                         AND COLUMN_NAME = 'TITULO_DTR')
+           AND EXISTS(SELECT 1 FROM fza_winforms
+                       WHERE CALL_WINF = 'DocumentosTrabajo')
+    UNION ALL
+    SELECT 300, 'compras_sesiones_totales_iva.sql',
+           'sesiones compra con desglose IVA y total líquido',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_empresas'
+                     AND COLUMN_NAME = 'ESIVA_RECARGO_COMPRAS_EMP')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_proveedores'
+                         AND COLUMN_NAME = 'ESVARIOS_TIPOS_IVA_PRV')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_compras_sesiones'
+                         AND COLUMN_NAME = 'CODIGO_IVA_SES')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_compras_sesiones'
+                         AND COLUMN_NAME = 'ESIVA_RECARGO_COMPRAS_SES')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_compras_sesiones'
+                         AND COLUMN_NAME = 'TOTAL_LIQUIDO_SES')
+    UNION ALL
+    SELECT 310, 'vi_compras_sesiones_cab_print_formato.sql',
+           'vi_compras_sesiones_cab_print.ESFORMATO_DISTRIBUIDO_SES',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'vi_compras_sesiones_cab_print'
+                     AND COLUMN_NAME = 'ESFORMATO_DISTRIBUIDO_SES')
+    UNION ALL
+    SELECT 320, 'vi_albaranes_compra_print.sql',
+           'vistas print albaranes compra cab/lin/guias',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'vi_albaranes_compra_cab_print')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_albaranes_compra_lin_print')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_albaranes_compra_guias_print')
+    UNION ALL
+    SELECT 330, 'vi_empresas_recargo_compras.sql',
+           'vi_empresas.ESIVA_RECARGO_COMPRAS_EMP',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_empresas'
+                     AND COLUMN_NAME = 'ESIVA_RECARGO_COMPRAS_EMP')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_empresas'
+                         AND COLUMN_NAME = 'ESIVA_RECARGO_COMPRAS_EMP')
+    UNION ALL
+    SELECT 340, 'formato_documentos_empresa.sql',
+           'FORMATO_DOCUMENTO_EMP + DOCUMENTO_FORMATO en prints',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_empresas'
+                     AND COLUMN_NAME = 'FORMATO_DOCUMENTO_EMP')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = 'PRC_FORMATO_DOCUMENTO')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_facturas_print'
+                         AND COLUMN_NAME = 'DOCUMENTO_FORMATO')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_compras_sesiones_cab_print'
+                         AND COLUMN_NAME = 'DOCUMENTO_FORMATO')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_albaranes_compra_cab_print'
+                         AND COLUMN_NAME = 'DOCUMENTO_FORMATO')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_devoluciones_compra_cab_print'
+                         AND COLUMN_NAME = 'DOCUMENTO_FORMATO')
+    UNION ALL
+    SELECT 350, 'sepa_remesas_venta_datos.sql',
+           'datos SEPA en bancos, clientes y remesas venta',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_empresas_bancos'
+                     AND COLUMN_NAME = 'CODIGO_ACREEDOR_SEPA_EMPBAN')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_clientes'
+                         AND COLUMN_NAME = 'ID_MANDATO_SEPA_CLI')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_clientes'
+                         AND COLUMN_NAME = 'FECHA_FIRMA_MANDATO_SEPA_CLI')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_remesas_venta'
+                         AND COLUMN_NAME = 'TIPO_SECUENCIA_SEPA_REMV')
+    UNION ALL
+    SELECT 360, 'vi_caja_busqueda_unificada_colaciones.sql',
+           'vi_caja_busqueda_unificada con MODELO_PROV y colación fija',
+           EXISTS(SELECT 1 FROM information_schema.VIEWS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'vi_caja_busqueda_unificada'
+                     AND UPPER(VIEW_DEFINITION) LIKE '%MODELO_PROV%'
+                     AND UPPER(VIEW_DEFINITION) LIKE '%REF_PROVEEDOR_AP%'
+                     AND VIEW_DEFINITION LIKE '%utf8mb4_spanish_ci%')
+    UNION ALL
+    SELECT 370, 'verifactu_numero_instalacion_empresa.sql',
+           'datos instalación Verifactu en empresa',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_empresas'
+                     AND COLUMN_NAME = 'NUMERO_INSTALACION_EMP')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_empresas'
+                         AND COLUMN_NAME = 'VERSION_INSTALACION_EMP')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_empresas'
+                         AND COLUMN_NAME = 'CODIGO_SIF_INSTALACION_EMP')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_empresas'
+                         AND COLUMN_NAME = 'INSTANTE_INSTALACION_EMP')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_empresas'
+                         AND COLUMN_NAME = 'NUMERO_INSTALACION_EMP')
+    UNION ALL
+    SELECT 380, 'compras_sesiones_forma_pago.sql',
+           'fza_compras_sesiones.FORMA_PAGO_SES + vista',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_compras_sesiones'
+                     AND COLUMN_NAME = 'FORMA_PAGO_SES')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_compras_sesiones'
+                         AND COLUMN_NAME = 'FORMA_PAGO_SES')
+    UNION ALL
+    SELECT 390, 'facturas_lineas_indice_movimiento.sql',
+           'índice fza_facturas_lineas.IDX_FACLIN_NUMMOV',
+           EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_facturas_lineas'
+                     AND INDEX_NAME = 'IDX_FACLIN_NUMMOV')
+    UNION ALL
+    SELECT 400, 'proveedores_iva_exento_intracomunitario.sql',
+           'IVA exento intracomunitario en compras',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_proveedores'
+                     AND COLUMN_NAME = 'ESIVA_EXENTO_INTRACOMUNITARIO_PRV')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_compras_sesiones'
+                         AND COLUMN_NAME =
+                             'ESIVA_EXENTO_INTRACOMUNITARIO_SES')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_pedidos_compra'
+                         AND COLUMN_NAME =
+                             'ESIVA_EXENTO_INTRACOMUNITARIO_PEDC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_albaranes_compra'
+                         AND COLUMN_NAME =
+                             'ESIVA_EXENTO_INTRACOMUNITARIO_ALBC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_facturas_compra'
+                         AND COLUMN_NAME =
+                             'ESIVA_EXENTO_INTRACOMUNITARIO_FACC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_devoluciones_compra'
+                         AND COLUMN_NAME =
+                             'ESIVA_EXENTO_INTRACOMUNITARIO_DEVC')
+    UNION ALL
+    SELECT 410, 'descuentos_globales_compra.sql',
+           'descuentos globales compra + SP factura compra',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_compras_sesiones'
+                     AND COLUMN_NAME = 'PORCENTAJE_DTO_COMERCIAL_SES')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_pedidos_compra'
+                         AND COLUMN_NAME = 'TOTAL_DTO_FINANCIERO_PEDC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_albaranes_compra'
+                         AND COLUMN_NAME = 'TOTAL_DTO_FINANCIERO_ALBC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_devoluciones_compra'
+                         AND COLUMN_NAME = 'TOTAL_DTO_FINANCIERO_DEVC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_facturas_compra'
+                         AND COLUMN_NAME = 'TOTAL_DTO_FINANCIERO_FACC')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = 'PRC_FACC_RECALCULAR_TOTALES')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME =
+                             'PRC_FACC_ACTUALIZAR_DTOS_ALBARANES')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = 'PRC_FACC_FACTURAR_ALBARAN')
+    UNION ALL
+    SELECT 420, 'recepcion_tope_compras.sql',
+           'fecha tope recepción en sesiones/pedidos y vistas',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_compras_sesiones'
+                     AND COLUMN_NAME = 'FECHA_TOPE_RECEPCION_SES')
+           AND EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_compras_sesiones'
+                         AND INDEX_NAME = 'IDX_SES_FECHA_TOPE_RECEPCION')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_pedidos_compra'
+                         AND COLUMN_NAME = 'FECHA_TOPE_RECEPCION_PEDC')
+           AND EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_pedidos_compra'
+                         AND INDEX_NAME = 'IDX_PEDC_FECHA_TOPE_RECEPCION')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_pedidos_compra'
+                         AND COLUMN_NAME =
+                             'CANTIDAD_PENDIENTE_RECEPCION_PEDC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_albaranes_compra'
+                         AND COLUMN_NAME = 'FECHA_TOPE_RECEPCION_ALBC')
+    UNION ALL
+    SELECT 430, 'quitar_esdefault_tar.sql',
+           'fza_tarifas y vistas sin ESDEFAULT_TAR',
+           NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_tarifas'
+                         AND COLUMN_NAME = 'ESDEFAULT_TAR')
+           AND NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                           WHERE TABLE_SCHEMA = DATABASE()
+                             AND TABLE_NAME = 'vi_tarifas'
+                             AND COLUMN_NAME = 'ESDEFAULT_TAR')
+           AND NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                           WHERE TABLE_SCHEMA = DATABASE()
+                             AND TABLE_NAME = 'vi_articulos_tarifas'
+                             AND COLUMN_NAME = 'ESDEFAULT_TAR')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_tarifas')
+    UNION ALL
+    SELECT 440, 'vi_art_busquedas_ref_proveedor.sql',
+           'vi_art_busquedas.REF_PROVEEDOR',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'vi_art_busquedas'
+                     AND COLUMN_NAME = 'REF_PROVEEDOR')
   ) t
  ORDER BY t.aplicado, t.orden;
 -- Scripts solo-datos, no detectables por esquema. Son idempotentes:
@@ -354,3 +639,5 @@ SELECT t.orden AS orden_aplicacion,
 --   pedidos_albaranes_compra_pivote_default_horizontal.sql
 --   albc_pivote_tarifa.sql
 --   tarifas_limpiar_porcentaje_dto_basura.sql
+--   compras_sesiones_recalcular_totales.sql
+--   facturas_simplificadas_cabecera_empresa.sql
