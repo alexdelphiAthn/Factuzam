@@ -203,7 +203,11 @@ type
     FBuscandoDatosCabecera: Boolean;
     FAplicandoArticulo: Boolean;
     function BuscarArticuloAlbaran: string;
+    function BuscarSkuAlbaran(const ACodigoArt: string): string;
+    function ArticuloLineaActivaAlbaran: string;
     procedure AplicarArticuloAlbaran(const ACodigoArt: string);
+    procedure cxgrdcArtAlbSkuPropertiesButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
   public
     dmmAlbaranes: TdmAlbaranes;
     procedure CrearTablaPrincipal; override;
@@ -298,6 +302,68 @@ begin
   end;
 end;
 
+function TfrmMtoAlbaranes.ArticuloLineaActivaAlbaran: string;
+var
+  ds: TDataSet;
+begin
+  Result := '';
+  if Assigned(dmmAlbaranes) then
+  begin
+    ds := dmmAlbaranes.unqryAlbaranesLineas;
+    if Assigned(ds) and ds.Active and (not ds.IsEmpty) and
+       (ds.FindField('CODIGO_ART_ALBLIN') <> nil) then
+      Result := Trim(ds.FieldByName('CODIGO_ART_ALBLIN').AsString);
+  end;
+end;
+
+function TfrmMtoAlbaranes.BuscarSkuAlbaran(
+  const ACodigoArt: string): string;
+var
+  qry : TUniQuery;
+  sArt: string;
+begin
+  Result := '';
+  sArt := Trim(ACodigoArt);
+  if not Assigned(dmmAlbaranes) then
+    MessageDlg('No está abierto el albarán de venta.',
+               mtInformation, [mbOk], 0)
+  else if sArt = '' then
+    MessageDlg('Selecciona un artículo antes de buscar sus SKUs.',
+               mtInformation, [mbOk], 0)
+  else
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := dmmAlbaranes.unqryTablaG.Connection;
+      qry.SQL.Text :=
+        'SELECT SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU, ' +
+        '       GROUP_CONCAT(AV.AV ORDER BY COALESCE(VA.ORDEN_VA, 999), ' +
+        '                    AV.ORDEN_AV SEPARATOR '' / '') AS ATRIBUTOS ' +
+        '  FROM fza_articulos_skus SK ' +
+        '  LEFT JOIN fza_atributos_sku SA ' +
+        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
+        '  LEFT JOIN fza_atributos_valores AV ' +
+        '    ON AV.ID_AV = SA.ID_AV_SA ' +
+        '  LEFT JOIN fza_variaciones_atributos VA ' +
+        '    ON VA.ID_VAR_VA = SK.CODIGO_VAR_SKU ' +
+        '   AND VA.ID_ATB_VA = AV.ID_VA_AV ' +
+        ' WHERE SK.CODIGO_ART_SKU = :art ' +
+        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
+        ' GROUP BY SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU ' +
+        ' ORDER BY SK.CODIGO_UNIDAD_SKU';
+      qry.ParamByName('art').AsString := sArt;
+      if TBusquedaUtils.EjecutarBusqueda(
+           'SKUs del artículo ' + sArt,
+           qry,
+           'frmMtoAlbSkuSearch',
+           Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
+        Result := qry.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+end;
+
 procedure TfrmMtoAlbaranes.AplicarArticuloAlbaran(const ACodigoArt: string);
 var
   ds         : TDataSet;
@@ -334,7 +400,6 @@ var
   var
     sTipo: string;
   begin
-    Result := 0;
     sTipo := UpperCase(Trim(ATipoIva));
     if sTipo = 'R' then
       Result := dmmAlbaranes.unqryTablaG.
@@ -350,7 +415,7 @@ var
                   FieldByName('PORCENTAJE_IVAN_ALB').AsFloat;
   end;
 
-  procedure EnfocarSku;
+  procedure EnfocarSku(AAbrirBusqueda: Boolean);
   var
     ColSku: TcxGridDBColumn;
   begin
@@ -363,6 +428,8 @@ var
         begin
           tvLineasAlbaran.Controller.FocusedColumn := ColSku;
           tvLineasAlbaran.Controller.EditingController.ShowEdit;
+          if AAbrirBusqueda then
+            cxgrdcArtAlbSkuPropertiesButtonClick(nil, 0);
         end);
     end;
   end;
@@ -434,7 +501,7 @@ begin
             PrepararLineaFiscalVenta(dmmAlbaranes.unqryTablaG.Connection,
               dmmAlbaranes.unqryTablaG, ds, 'ALB', 'ALBLIN', 'TOTAL_ALBLIN');
             if Datos.RequiereSku then
-              EnfocarSku;
+              EnfocarSku(True);
           end
           else if Datos.Mensaje <> '' then
             MessageDlg(Datos.Mensaje, mtWarning, [mbOk], 0);
@@ -481,7 +548,7 @@ end;
 
 procedure TfrmMtoAlbaranes.FormCreate(Sender: TObject);
 var
-  colFact: TcxGridDBColumn;
+  colFact, colSku: TcxGridDBColumn;
   stFact: TcxStyle;
 begin
   inherited;
@@ -489,6 +556,19 @@ begin
   VincularCantidadGrid(
     tvLineasAlbaran.GetColumnByFieldName('CANTIDAD_ALBLIN'),
     tvLineasAlbaran.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_ALBLIN'));
+  colSku := tvLineasAlbaran.GetColumnByFieldName('CODIGO_UNIDAD_ALBLIN');
+  if colSku <> nil then
+  begin
+    colSku.PropertiesClass := TcxButtonEditProperties;
+    colSku.Options.ShowEditButtons := isebAlways;
+    with TcxButtonEditProperties(colSku.Properties) do
+    begin
+      Buttons.Clear;
+      with Buttons.Add do
+        Kind := bkEllipsis;
+      OnButtonClick := cxgrdcArtAlbSkuPropertiesButtonClick;
+    end;
+  end;
   // Resaltar la columna ESFACTURADA_ALBLIN cuando exista (S/N).
   colFact := tvLineasAlbaran.GetColumnByFieldName('ESFACTURADA_ALBLIN');
   if colFact <> nil then
@@ -654,8 +734,28 @@ begin
   begin
     sCodigo := Trim(VarToStr(DisplayValue));
     if sCodigo <> '' then
+    begin
       AplicarArticuloAlbaran(sCodigo);
+      if Assigned(dmmAlbaranes) and
+         dmmAlbaranes.unqryAlbaranesLineas.Active and
+         (dmmAlbaranes.unqryAlbaranesLineas.
+            FindField('CODIGO_ART_ALBLIN') <> nil) then
+        DisplayValue := dmmAlbaranes.unqryAlbaranesLineas.
+                          FieldByName('CODIGO_ART_ALBLIN').AsString;
+    end;
   end;
+end;
+
+procedure TfrmMtoAlbaranes.cxgrdcArtAlbSkuPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sArt: string;
+  sSku: string;
+begin
+  sArt := ArticuloLineaActivaAlbaran;
+  sSku := BuscarSkuAlbaran(sArt);
+  if sSku <> '' then
+    AplicarArticuloAlbaran(sSku);
 end;
 
 procedure TfrmMtoAlbaranes.btnAnadirLineaClick(Sender: TObject);

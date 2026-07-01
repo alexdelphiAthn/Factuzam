@@ -28,7 +28,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
-  Forms, Dialogs, Uni, System.Generics.Collections,
+  Forms, Dialogs, Uni, System.Generics.Collections, System.Types,
   inMtoGen, dxSkinsCore, dxSkinBlue, dxSkinsForm,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
@@ -48,6 +48,7 @@ uses
 const
   CANT_TALLAS_MAX = 20;
   CANT_ATRIB_MAX  = 5;
+  ID_VA_COLOR     = 'CO';
   // Ancho (px) de cada columna talla en modo pivote. Tambien actua de
   // suelo tras ApplyBestFit: el BestFit mide solo el Value numerico corto
   // de la celda y, al ignorar el custom-draw (rotulo de talla + sub-cifras
@@ -212,11 +213,12 @@ type
     // "Color": cuadradito del color basico + texto del color del SKU
     // (AV.AV, p.ej. "VERDE"). Columna unica - antes habia 2 (Color
     // proveedor + C. Basico) pero el usuario decidio unificarlas.
-  FColColorPivot          : TcxGridDBColumn;
-  // Reservado por compatibilidad con la libreria. Siempre nil ahora
-  // que la columna Color es unica.
-  FColColorProveedorPivot : TcxGridDBColumn;
-    FAplicandoArticulo: Boolean;
+    FColColorPivot          : TcxGridDBColumn;
+    // Reservado por compatibilidad con la libreria. Siempre nil ahora
+    // que la columna Color es unica.
+    FColColorProveedorPivot : TcxGridDBColumn;
+    FBasicosColor           : TArray<string>;
+    FAplicandoArticulo      : Boolean;
     FAfterPostLineasOriginal: TDataSetNotifyEvent;
     // Guarda contra la reentrancia que provoca PersistirPreferenciaPivote:
     // su Edit + set field + Post dispara OnDataChange tres veces, y entre
@@ -226,6 +228,7 @@ type
     FInToggleClick   : Boolean;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
+    procedure CargarBasicosColorArticulo(const ACodigoArt: string);
     procedure InicializarGestorYPivote;
     procedure RefrescarVisibilidadTallas;
     procedure RefrescarVisibilidadAtributos;
@@ -244,7 +247,13 @@ type
                                 var ErrorText: TCaption;
                                 var Error: Boolean);
     function BuscarArticuloPedidoCompra: string;
+    function BuscarSkuPedidoCompra(const ACodigoArt: string): string;
+    function ArticuloLineaActivaPedidoCompra: string;
     procedure AplicarArticuloPedidoCompra(const ACodigoArt: string);
+    procedure colLineaPedcCODIGO_UNIDADPropertiesButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
+    procedure colLinPedcColorPivotButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
     function  ColumnaPedidosCompraExiste(const ANombreColumna: string): Boolean;
     // Devuelve el almacen efectivo de la primera linea del pedido
     // (CODIGO_ALMACEN_PEDCLIN, con fallback al CODIGO_ALM_PEDC de
@@ -375,6 +384,68 @@ begin
   end;
 end;
 
+function TfrmMtoPedidosCompra.ArticuloLineaActivaPedidoCompra: string;
+var
+  ds: TDataSet;
+begin
+  Result := '';
+  if Assigned(dmmPedidosCompra) then
+  begin
+    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if Assigned(ds) and ds.Active and (not ds.IsEmpty) and
+       (ds.FindField('CODIGO_ART_PEDCLIN') <> nil) then
+      Result := Trim(ds.FieldByName('CODIGO_ART_PEDCLIN').AsString);
+  end;
+end;
+
+function TfrmMtoPedidosCompra.BuscarSkuPedidoCompra(
+  const ACodigoArt: string): string;
+var
+  qry : TUniQuery;
+  sArt: string;
+begin
+  Result := '';
+  sArt := Trim(ACodigoArt);
+  if not Assigned(dmmPedidosCompra) then
+    MessageDlg('No está abierto el pedido de compra.',
+               mtInformation, [mbOk], 0)
+  else if sArt = '' then
+    MessageDlg('Selecciona un artículo antes de buscar sus SKUs.',
+               mtInformation, [mbOk], 0)
+  else
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := dmmPedidosCompra.unqryTablaG.Connection;
+      qry.SQL.Text :=
+        'SELECT SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU, ' +
+        '       GROUP_CONCAT(AV.AV ORDER BY COALESCE(VA.ORDEN_VA, 999), ' +
+        '                    AV.ORDEN_AV SEPARATOR '' / '') AS ATRIBUTOS ' +
+        '  FROM fza_articulos_skus SK ' +
+        '  LEFT JOIN fza_atributos_sku SA ' +
+        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
+        '  LEFT JOIN fza_atributos_valores AV ' +
+        '    ON AV.ID_AV = SA.ID_AV_SA ' +
+        '  LEFT JOIN fza_variaciones_atributos VA ' +
+        '    ON VA.ID_VAR_VA = SK.CODIGO_VAR_SKU ' +
+        '   AND VA.ID_ATB_VA = AV.ID_VA_AV ' +
+        ' WHERE SK.CODIGO_ART_SKU = :art ' +
+        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
+        ' GROUP BY SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU ' +
+        ' ORDER BY SK.CODIGO_UNIDAD_SKU';
+      qry.ParamByName('art').AsString := sArt;
+      if TBusquedaUtils.EjecutarBusqueda(
+           'SKUs del artículo ' + sArt,
+           qry,
+           'frmMtoPedcSkuSearch',
+           Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
+        Result := qry.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+end;
+
 procedure TfrmMtoPedidosCompra.AplicarArticuloPedidoCompra(
   const ACodigoArt: string);
 var
@@ -498,6 +569,25 @@ var
       Campo.Clear;
   end;
 
+  procedure EnfocarSku(AAbrirBusqueda: Boolean);
+  var
+    colSku: TcxGridDBColumn;
+  begin
+    colSku := tvLineasPedido.GetColumnByFieldName('CODIGO_UNIDAD_PEDCLIN');
+    if colSku <> nil then
+    begin
+      colSku.Visible := True;
+      TThread.ForceQueue(nil,
+        procedure
+        begin
+          tvLineasPedido.Controller.FocusedColumn := colSku;
+          tvLineasPedido.Controller.EditingController.ShowEdit;
+          if AAbrirBusqueda then
+            colLineaPedcCODIGO_UNIDADPropertiesButtonClick(nil, 0);
+        end);
+    end;
+  end;
+
 begin
   sInput := Trim(ACodigoArt);
   if (sInput <> '') and Assigned(dmmPedidosCompra) and
@@ -589,6 +679,9 @@ begin
                 FPivote.RecargarYRepublicar;
               end;
             end;
+            if Datos.RequiereSku and (Datos.CodigoSku = '') and
+               ((FPivote = nil) or (not FPivote.Activo)) then
+              EnfocarSku(True);
           end
           else if Datos.Mensaje <> '' then
             MessageDlg(Datos.Mensaje, mtWarning, [mbOk], 0);
@@ -605,6 +698,8 @@ begin
 end;
 
 procedure TfrmMtoPedidosCompra.FormCreate(Sender: TObject);
+var
+  colSku: TcxGridDBColumn;
 begin
   // Mismo orden que albaranes / sesiones: columnas no-bound de tallas
   // y atributos se crean ANTES del inherited.
@@ -620,9 +715,31 @@ begin
   FColColorPivot.Caption := 'Color';
   FColColorPivot.Width   := 130;
   FColColorPivot.Visible := False;
-  FColColorPivot.Options.Editing := False;
+  FColColorPivot.Options.Editing := True;
+  FColColorPivot.Options.ShowEditButtons := isebAlways;
+  FColColorPivot.PropertiesClass := TcxButtonEditProperties;
+  with TcxButtonEditProperties(FColColorPivot.Properties) do
+  begin
+    Buttons.Clear;
+    with Buttons.Add do
+      Kind := bkEllipsis;
+    OnButtonClick := colLinPedcColorPivotButtonClick;
+  end;
   FColColorProveedorPivot := nil;
   inherited;
+  colSku := tvLineasPedido.GetColumnByFieldName('CODIGO_UNIDAD_PEDCLIN');
+  if colSku <> nil then
+  begin
+    colSku.PropertiesClass := TcxButtonEditProperties;
+    colSku.Options.ShowEditButtons := isebAlways;
+    with TcxButtonEditProperties(colSku.Properties) do
+    begin
+      Buttons.Clear;
+      with Buttons.Add do
+        Kind := bkEllipsis;
+      OnButtonClick := colLineaPedcCODIGO_UNIDADPropertiesButtonClick;
+    end;
+  end;
   InicializarGestorYPivote;
   // Pintado del swatch de color en la columna no-bound: delegamos en el
   // controlador de pivote.
@@ -729,6 +846,56 @@ begin
     col.Visible := False;
     col.Options.Editing := False;
     FAtribColumns[i] := col;
+  end;
+end;
+
+procedure TfrmMtoPedidosCompra.CargarBasicosColorArticulo(
+  const ACodigoArt: string);
+var
+  q   : TUniQuery;
+  i   : Integer;
+  sArt: string;
+begin
+  SetLength(FBasicosColor, 0);
+  sArt := Trim(ACodigoArt);
+  if sArt <> '' then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Text :=
+        'SELECT ATB.CODIGO_ATB, MIN(ATB.ORDEN_ATB) AS ORDEN_ATB, ' +
+        '       MIN(ATB.NOMBRE_ATB) AS NOMBRE_ATB ' +
+        '  FROM fza_articulos_skus SK ' +
+        '  JOIN fza_atributos_sku SA ' +
+        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
+        '  JOIN fza_atributos_valores AV ' +
+        '    ON AV.ID_AV = SA.ID_AV_SA ' +
+        '   AND AV.ID_VA_AV = :va ' +
+        '  JOIN fza_atributos_basicos ATB ' +
+        '    ON ATB.ID_VA_ATB = :va ' +
+        '   AND (ATB.ID_ATB = AV.ID_ATB_AV ' +
+        '        OR (AV.ID_ATB_AV IS NULL AND ATB.CODIGO_ATB = AV.AV)) ' +
+        ' WHERE SK.CODIGO_ART_SKU = :art ' +
+        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
+        '   AND COALESCE(AV.ESACTIVO_AV, ''S'') = ''S'' ' +
+        '   AND COALESCE(ATB.ESACTIVO_ATB, ''S'') = ''S'' ' +
+        ' GROUP BY ATB.CODIGO_ATB ' +
+        ' ORDER BY ORDEN_ATB, NOMBRE_ATB, ATB.CODIGO_ATB';
+      q.ParamByName('va').AsString := ID_VA_COLOR;
+      q.ParamByName('art').AsString := sArt;
+      q.Open;
+      SetLength(FBasicosColor, q.RecordCount);
+      i := 0;
+      while not q.Eof do
+      begin
+        FBasicosColor[i] := q.FieldByName('CODIGO_ATB').AsString;
+        Inc(i);
+        q.Next;
+      end;
+    finally
+      FreeAndNil(q);
+    end;
   end;
 end;
 
@@ -1304,7 +1471,84 @@ begin
   begin
     sCodigo := Trim(VarToStr(DisplayValue));
     if sCodigo <> '' then
+    begin
       AplicarArticuloPedidoCompra(sCodigo);
+      if Assigned(dmmPedidosCompra) and
+         dmmPedidosCompra.unqryPedidosCompraLineas.Active and
+         (dmmPedidosCompra.unqryPedidosCompraLineas.
+            FindField('CODIGO_ART_PEDCLIN') <> nil) then
+        DisplayValue := dmmPedidosCompra.unqryPedidosCompraLineas.
+                          FieldByName('CODIGO_ART_PEDCLIN').AsString;
+    end;
+  end;
+end;
+
+procedure TfrmMtoPedidosCompra.colLineaPedcCODIGO_UNIDADPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sArt: string;
+  sSku: string;
+begin
+  sArt := ArticuloLineaActivaPedidoCompra;
+  sSku := BuscarSkuPedidoCompra(sArt);
+  if sSku <> '' then
+    AplicarArticuloPedidoCompra(sSku);
+end;
+
+procedure TfrmMtoPedidosCompra.colLinPedcColorPivotButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sArt    : string;
+  sActual : string;
+  sNuevo  : string;
+  sMensaje: string;
+  Edit    : TWinControl;
+  ScrPt   : TPoint;
+  WidHint : Integer;
+begin
+  if (FPivote = nil) or (not FPivote.Activo) then
+  begin
+    MessageDlg('Activa las tallas en horizontal antes de elegir color.',
+               mtInformation, [mbOk], 0);
+  end
+  else
+  begin
+    sArt := ArticuloLineaActivaPedidoCompra;
+    if sArt = '' then
+      MessageDlg('Selecciona un artículo antes de elegir color.',
+                 mtInformation, [mbOk], 0)
+    else
+    begin
+      CargarBasicosColorArticulo(sArt);
+      if Length(FBasicosColor) = 0 then
+        MessageDlg('El artículo "' + sArt + '" no tiene colores básicos ' +
+                   'activos en sus SKUs.',
+                   mtInformation, [mbOk], 0)
+      else
+      begin
+        sActual := FPivote.ColorCodigoLineaActiva;
+        ScrPt.X := -1;
+        ScrPt.Y := -1;
+        WidHint := FColColorPivot.Width;
+        if Sender is TWinControl then
+        begin
+          Edit := TWinControl(Sender);
+          ScrPt := Edit.ClientToScreen(Point(0, Edit.Height));
+          WidHint := Edit.Width;
+        end;
+        if SeleccionarAvConPaleta(ID_VA_COLOR, FBasicosColor, sActual,
+                                  sNuevo, ScrPt.X, ScrPt.Y, WidHint) then
+        begin
+          if FPivote.CambiarColorLineaActiva(sNuevo, sMensaje) then
+          begin
+            FPivote.RecargarYRepublicar;
+            BestFitConSwatch;
+          end
+          else if sMensaje <> '' then
+            MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+        end
+      end;
+    end;
   end;
 end;
 

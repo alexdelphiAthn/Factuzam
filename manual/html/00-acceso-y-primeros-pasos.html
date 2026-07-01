@@ -18,6 +18,11 @@
 <p><a href="index.html">◀ Volver al índice</a></p>
 <p>Este capítulo describe lo que ocurre desde que arrancas Factuzam hasta que
 tienes la ventana principal lista para trabajar.</p>
+<blockquote><p><strong>Práctica en programa DEMO:</strong> en la primera entrada, usa el usuario
+administrador de la demo solo para crear tu usuario propio con contraseña
+en <a href="07-menu-otros.html#usuarios-grupos-y-perfiles">Otros ▸ Usuarios, Grupos y Perfiles</a>.
+Asígnalo al grupo <strong>Administradores</strong> y después entra de nuevo desde
+<em>Archivo ▸ Invocar login</em> para continuar las pruebas con tu usuario.</p></blockquote>
 <hr>
 <h2 id="1-pantalla-de-presentacion-splash">1. Pantalla de presentación (Splash)</h2>
 <p>Al ejecutar la aplicación se muestra durante unos segundos la pantalla de
@@ -44,8 +49,9 @@ momento desde <em>Ayuda ▸ Acerca de</em>.</p>
 <tr><td><strong>Arranque sin login</strong></td><td>Si se marca, la aplicación entra directamente la próxima vez sin pedir credenciales.</td></tr>
 </tbody>
 </table>
-<p>Si hay un cambio de usuario dentro de la misma sesión, en la aplicación se puede invocar desde 
-Archivo-&gt;Invocar Login o desde la combinación de teclas Control + Mayúsculas + L</p>
+<p>Si hay un cambio de usuario dentro de la misma sesión, en la aplicación se
+puede invocar desde <em>Archivo ▸ Invocar login</em> o desde la combinación de
+teclas <code>[Ctrl]+[Mayúsculas]+[L]</code>.</p>
 <p><strong>Botones:</strong></p>
 <ul><li><strong>Aceptar (F12)</strong> — valida las credenciales y entra a la aplicación.</li><li><strong>Salir (Esc)</strong> — cierra la aplicación sin entrar.</li></ul>
 <blockquote><p>El usuario determina tu <strong>perfil de permisos</strong>, que decide qué menús y
@@ -92,6 +98,26 @@ navegación, grabado…) es <strong>común a casi todos los mantenimientos</stro
 explica una sola vez en el capítulo
 <a href="01-conceptos-comunes.html">01 · Conceptos comunes</a>. Conviene leerlo antes
 de los capítulos de cada menú.</p></blockquote>
+<hr>
+<h2 id="5-practica-en-programa-demo-datos-basicos">5. Práctica en programa DEMO: datos básicos</h2>
+<p>Después de entrar con tu usuario propio, usa la demo para preparar un
+entorno mínimo de pruebas. La idea es crear pocos registros, pero bien
+relacionados, para poder comprar, vender y revisar stock sin depender de
+datos reales.</p>
+<blockquote><p>En la demo puedes probar sin miedo, pero conviene seguir este orden:
+primero datos de administración, después catálogos de tallas/colores y,
+al final, artículos y documentos.</p></blockquote>
+<h3 id="51-empresas-documentos-y-formas-de-pago">5.1 Empresas, documentos y formas de pago</h3>
+<ol><li>Abre <em>Archivo ▸ Empresas</em> y crea o revisa una empresa de prueba. Rellena los datos fiscales básicos y entra en la sub-pestaña <strong>Series</strong> para definir las series de facturación que usarán los documentos.</li><li>Abre <em>Otros ▸ Impuesto IVA</em> y <em>Otros ▸ Grupos de IVA</em>. En una demo normalmente basta con revisar los tipos existentes antes de tocar nada.</li><li>Abre <em>Otros ▸ Contadores</em> y comprueba la numeración inicial de facturas, albaranes, pedidos y otros documentos por empresa y serie.</li><li>Abre <em>Otros ▸ Formas de pago documentos</em> y crea las formas habituales para compras y ventas mayor: contado, transferencia, giro, etc.</li><li>Si más adelante se va a probar el TPV, deja previstas también las formas de cobro de caja: efectivo, tarjeta, vale o las que necesites.</li></ol>
+<h3 id="52-almacenes-y-cajas-de-venta">5.2 Almacenes y cajas de venta</h3>
+<ol><li>Abre <em>Archivo ▸ Almacenes</em> y crea al menos un almacén de venta. Rellena su nombre, dirección si procede y los usos del almacén.</li><li>En la sub-pestaña <strong>Cajas de Venta</strong>, crea las cajas físicas asociadas a ese almacén. Cada caja representa un puesto, mostrador o terminal de venta dentro del almacén.</li><li>Si hay varios puestos de cobro, crea una caja por puesto para poder separar después las operaciones, arqueos y movimientos de efectivo.</li><li>En una práctica sencilla basta con un almacén de venta y una caja de venta activa.</li></ol>
+<h3 id="53-tallas-colores-temporadas-y-tarifas">5.3 Tallas, colores, temporadas y tarifas</h3>
+<ol><li>Abre <em>Archivo ▸ Tablas Auxiliares ▸ Atributos básicos</em> y da de alta los valores elementales que vas a usar: tallas, colores y equivalencias normalizadas.</li><li>Abre <em>Archivo ▸ Tablas Auxiliares ▸ Tipos de Variaciones</em> y crea los ejes <strong>Talla</strong> y <strong>Color</strong>. En cada uno, añade sus atributos: S, M, L, XL, 38, 40, rojo, azul, negro, etc.</li><li>Abre <em>Archivo ▸ Tablas Auxiliares ▸ Colecciones de Atributos</em> y prepara los sistemas de tallas reutilizables, por ejemplo <em>Mujer S-XL</em>, <em>Calzado 36-41</em> o <em>Niño 2-16</em>. Así podrás aplicarlos a varios artículos sin repetir la misma curva.</li><li>Abre <em>Archivo ▸ Tablas Auxiliares ▸ Propiedades</em> y crea la propiedad <strong>Temporada</strong> con valores como <em>Primavera-Verano</em>, <em>Otoño-Invierno</em> o el año/campaña que uses en la prueba.</li><li>Abre <em>Archivo ▸ Tablas Auxiliares ▸ Tarifas</em> y crea una tarifa de venta de prueba. Más adelante, al crear artículos o sesiones de compra, asignarás precios a esa tarifa.</li></ol>
+<h3 id="54-articulos-de-prueba-y-primer-circuito">5.4 Artículos de prueba y primer circuito</h3>
+<ol><li>Abre <em>Archivo ▸ Artículos</em> y crea un artículo sencillo: descripción, familia, unidad de medida, IVA y tarifa.</li><li>En la ficha del artículo, usa las variaciones y colecciones para generar sus SKUs de talla/color. Cada SKU representa una combinación vendible y con stock propio.</li><li>Para probar una entrada real de género, abre <em>Compras ▸ Sesiones</em>. Ahí puedes crear artículos con colores y tallas, repartir unidades por talla y generar el pedido o albarán de compra.</li><li>Comprueba el resultado en <em>Almacén ▸ Informes</em> o en la consulta de stock del artículo. Con esto quedan preparados los datos básicos para probar después compras, ventas o movimientos.</li></ol>
+<p>Cuando termines esta práctica, tendrás creados los datos básicos mínimos:
+empresa, documentos, almacén, caja, tallas, colores, sistemas de tallas,
+temporadas, tarifas y artículos de prueba.</p>
 <hr>
 <p><a href="index.html">◀ Índice</a> · <a href="01-conceptos-comunes.html">Siguiente ▶ Conceptos comunes</a></p>
 </article>

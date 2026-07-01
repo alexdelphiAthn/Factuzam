@@ -224,7 +224,11 @@ type
     FBuscandoDatosCabecera: Boolean;
     FAplicandoArticulo: Boolean;
     function BuscarArticuloPedido: string;
+    function BuscarSkuPedido(const ACodigoArt: string): string;
+    function ArticuloLineaActivaPedido: string;
     procedure AplicarArticuloPedido(const ACodigoArt: string);
+    procedure cxgrdcPedLinSKUPropertiesButtonClick(Sender: TObject;
+                AButtonIndex: Integer);
     procedure RellenarLineasAlEntregarTodo;
   public
     dmmPedidos: TdmPedidos;
@@ -321,6 +325,67 @@ begin
   end;
 end;
 
+function TfrmMtoPedidos.ArticuloLineaActivaPedido: string;
+var
+  ds: TDataSet;
+begin
+  Result := '';
+  if Assigned(dmmPedidos) then
+  begin
+    ds := dmmPedidos.unqryPedidosLineas;
+    if Assigned(ds) and ds.Active and (not ds.IsEmpty) and
+       (ds.FindField('CODIGO_ART_PEDLIN') <> nil) then
+      Result := Trim(ds.FieldByName('CODIGO_ART_PEDLIN').AsString);
+  end;
+end;
+
+function TfrmMtoPedidos.BuscarSkuPedido(const ACodigoArt: string): string;
+var
+  qry : TUniQuery;
+  sArt: string;
+begin
+  Result := '';
+  sArt := Trim(ACodigoArt);
+  if not Assigned(dmmPedidos) then
+    MessageDlg('No está abierto el pedido de venta.',
+               mtInformation, [mbOk], 0)
+  else if sArt = '' then
+    MessageDlg('Selecciona un artículo antes de buscar sus SKUs.',
+               mtInformation, [mbOk], 0)
+  else
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := dmmPedidos.unqryTablaG.Connection;
+      qry.SQL.Text :=
+        'SELECT SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU, ' +
+        '       GROUP_CONCAT(AV.AV ORDER BY COALESCE(VA.ORDEN_VA, 999), ' +
+        '                    AV.ORDEN_AV SEPARATOR '' / '') AS ATRIBUTOS ' +
+        '  FROM fza_articulos_skus SK ' +
+        '  LEFT JOIN fza_atributos_sku SA ' +
+        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
+        '  LEFT JOIN fza_atributos_valores AV ' +
+        '    ON AV.ID_AV = SA.ID_AV_SA ' +
+        '  LEFT JOIN fza_variaciones_atributos VA ' +
+        '    ON VA.ID_VAR_VA = SK.CODIGO_VAR_SKU ' +
+        '   AND VA.ID_ATB_VA = AV.ID_VA_AV ' +
+        ' WHERE SK.CODIGO_ART_SKU = :art ' +
+        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
+        ' GROUP BY SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU ' +
+        ' ORDER BY SK.CODIGO_UNIDAD_SKU';
+      qry.ParamByName('art').AsString := sArt;
+      if TBusquedaUtils.EjecutarBusqueda(
+           'SKUs del artículo ' + sArt,
+           qry,
+           'frmMtoPedSkuSearch',
+           Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
+        Result := qry.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+end;
+
 procedure TfrmMtoPedidos.AplicarArticuloPedido(const ACodigoArt: string);
 var
   ds         : TDataSet;
@@ -357,7 +422,6 @@ var
   var
     sTipo: string;
   begin
-    Result := 0;
     sTipo := UpperCase(Trim(ATipoIva));
     if sTipo = 'R' then
       Result := dmmPedidos.unqryTablaG.
@@ -373,7 +437,7 @@ var
                   FieldByName('PORCENTAJE_IVAN_PED').AsFloat;
   end;
 
-  procedure EnfocarSku;
+  procedure EnfocarSku(AAbrirBusqueda: Boolean);
   var
     ColSku: TcxGridDBColumn;
   begin
@@ -386,6 +450,8 @@ var
         begin
           tvPedidosLineas.Controller.FocusedColumn := ColSku;
           tvPedidosLineas.Controller.EditingController.ShowEdit;
+          if AAbrirBusqueda then
+            cxgrdcPedLinSKUPropertiesButtonClick(nil, 0);
         end);
     end;
   end;
@@ -457,7 +523,7 @@ begin
             PrepararLineaFiscalVenta(dmmPedidos.unqryTablaG.Connection,
               dmmPedidos.unqryTablaG, ds, 'PED', 'PEDLIN', 'TOTAL_PEDLIN');
             if Datos.RequiereSku then
-              EnfocarSku;
+              EnfocarSku(True);
           end
           else if Datos.Mensaje <> '' then
             MessageDlg(Datos.Mensaje, mtWarning, [mbOk], 0);
@@ -475,7 +541,7 @@ end;
 
 procedure TfrmMtoPedidos.FormCreate(Sender: TObject);
 var
-  colEnt, colPend: TcxGridDBColumn;
+  colEnt, colPend, colSku: TcxGridDBColumn;
   stEnt, stPend: TcxStyle;
 begin
   inherited;
@@ -487,6 +553,19 @@ begin
   VincularCantidadGrid(
     tvPedidosLineas.GetColumnByFieldName('CANTIDAD_PEDLIN'),
     tvPedidosLineas.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_PEDLIN'));
+  colSku := tvPedidosLineas.GetColumnByFieldName('CODIGOPRODPS_PEDLIN');
+  if colSku <> nil then
+  begin
+    colSku.PropertiesClass := TcxButtonEditProperties;
+    colSku.Options.ShowEditButtons := isebAlways;
+    with TcxButtonEditProperties(colSku.Properties) do
+    begin
+      Buttons.Clear;
+      with Buttons.Add do
+        Kind := bkEllipsis;
+      OnButtonClick := cxgrdcPedLinSKUPropertiesButtonClick;
+    end;
+  end;
 
   colEnt  := tvPedidosLineas.GetColumnByFieldName('CANTIDAD_ENTREGADA_PEDLIN');
   colPend := tvPedidosLineas.GetColumnByFieldName('CANTIDAD_PENDIENTE_PEDLIN');
@@ -683,7 +762,14 @@ begin
   begin
     sCodigo := Trim(VarToStr(DisplayValue));
     if sCodigo <> '' then
+    begin
       AplicarArticuloPedido(sCodigo);
+      if Assigned(dmmPedidos) and dmmPedidos.unqryPedidosLineas.Active and
+         (dmmPedidos.unqryPedidosLineas.
+            FindField('CODIGO_ART_PEDLIN') <> nil) then
+        DisplayValue := dmmPedidos.unqryPedidosLineas.
+                          FieldByName('CODIGO_ART_PEDLIN').AsString;
+    end;
   end;
 end;
 
@@ -697,8 +783,27 @@ begin
   begin
     sCodigo := Trim(VarToStr(DisplayValue));
     if sCodigo <> '' then
+    begin
       AplicarArticuloPedido(sCodigo);
+      if Assigned(dmmPedidos) and dmmPedidos.unqryPedidosLineas.Active and
+         (dmmPedidos.unqryPedidosLineas.
+            FindField('CODIGOPRODPS_PEDLIN') <> nil) then
+        DisplayValue := dmmPedidos.unqryPedidosLineas.
+                          FieldByName('CODIGOPRODPS_PEDLIN').AsString;
+    end;
   end;
+end;
+
+procedure TfrmMtoPedidos.cxgrdcPedLinSKUPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+var
+  sArt: string;
+  sSku: string;
+begin
+  sArt := ArticuloLineaActivaPedido;
+  sSku := BuscarSkuPedido(sArt);
+  if sSku <> '' then
+    AplicarArticuloPedido(sSku);
 end;
 
 procedure TfrmMtoPedidos.btnAnadirLineaClick(Sender: TObject);
