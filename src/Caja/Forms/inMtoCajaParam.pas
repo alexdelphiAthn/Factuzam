@@ -92,6 +92,8 @@ type
                                    Strings: TStrings);
     procedure GetImpresorasList(Sender: TJvCustomInspectorItem;
                                 Strings: TStrings);
+    procedure GetTarifasList(Sender: TJvCustomInspectorItem;
+                             Strings: TStrings);
   end;
 
 var
@@ -299,6 +301,14 @@ begin
               ItemCombo.Flags := ItemCombo.Flags + [iifValueList,
                                                          iifAllowNonListValues];
               ItemCombo.OnGetValueList := GetImpresorasList;
+            end
+            else if SameText(Param.Nombre, 'vgerDefTarifa') then
+            begin
+              // Única definición de la tarifa por defecto del sistema
+              // (véase inLibCajaParam.TarifaDefecto)
+              ItemCombo.Flags := ItemCombo.Flags + [iifValueList,
+                                                         iifAllowNonListValues];
+              ItemCombo.OnGetValueList := GetTarifasList;
             end;
           end;
       end;
@@ -559,6 +569,30 @@ begin
   Strings.Add('ESC POS NOQR');
   Strings.Add('EDITOR');
   Strings.Add('DEBUG');
+end;
+
+procedure TfrmMtoCajaParam.GetTarifasList(Sender: TJvCustomInspectorItem;
+                                          Strings: TStrings);
+var
+  qry: TUniQuery;
+begin
+  Strings.Clear;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'SELECT CODIGO_TAR_ARTTAR FROM fza_tarifas' +
+      ' WHERE ESACTIVO_ARTTAR = ''S''' +
+      ' ORDER BY ORDEN_TAR';
+    qry.Open;
+    while not qry.Eof do
+    begin
+      Strings.Add(qry.FieldByName('CODIGO_TAR_ARTTAR').AsString);
+      qry.Next;
+    end;
+  finally
+    FreeAndNil(qry);
+  end;
 end;
 
 function TfrmMtoCajaParam.BuscarItemPorNombre(ItemPadre: TJvCustomInspectorItem;

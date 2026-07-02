@@ -53,11 +53,18 @@ type
     procedure AbrirListadoParaGrid(const AMto, AVista: string);
     function ListarFiltros(const AMto,
                            AVista: string): TFiltrosGuardadosList;
+    function BuscarFiltroPropio(const AMto,
+                                AVista,
+                                ANombre: string): Int64;
     function GuardarFiltroNuevo(const AMto,
                                 AVista,
                                 ANombre,
                                 ADescripcion,
                                 AFiltroBase64: string): Int64;
+    procedure SobrescribirFiltro(AIdFiltro: Int64;
+                                 const ANombre,
+                                 ADescripcion,
+                                 AFiltroBase64: string);
     procedure RenombrarFiltro(AIdFiltro: Int64;
                               const ANombre, ADescripcion: string);
     procedure BorrarFiltro(AIdFiltro: Int64);
@@ -178,6 +185,38 @@ begin
   end;
 end;
 
+function TdmFiltros.BuscarFiltroPropio(const AMto,
+                                       AVista,
+                                       ANombre: string): Int64;
+var
+  qry: TUniQuery;
+begin
+  Result := 0;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'SELECT ID_FILT ' +
+      '  FROM fza_filtros_guardados ' +
+      ' WHERE MTO_FILT = :MTO ' +
+      '   AND VISTA_FILT = :VISTA ' +
+      '   AND NOMBRE_FILT = :NOMBRE ' +
+      '   AND USUARIO_PROPIETARIO_FILT = :USUARIO';
+    qry.ParamByName('MTO').AsString := AMto;
+    qry.ParamByName('VISTA').AsString := AVista;
+    qry.ParamByName('NOMBRE').AsString := ANombre;
+    qry.ParamByName('USUARIO').AsString := oUser;
+    qry.Open;
+    if not qry.IsEmpty then
+    begin
+      Result := qry.FieldByName('ID_FILT').AsLargeInt;
+    end;
+    qry.Close;
+  finally
+    FreeAndNil(qry);
+  end;
+end;
+
 function TdmFiltros.GuardarFiltroNuevo(const AMto,
                                        AVista,
                                        ANombre,
@@ -217,6 +256,36 @@ begin
       Result := qry.FieldByName('ID').AsLargeInt;
     end;
     qry.Close;
+  finally
+    FreeAndNil(qry);
+  end;
+end;
+
+procedure TdmFiltros.SobrescribirFiltro(AIdFiltro: Int64;
+                                        const ANombre,
+                                        ADescripcion,
+                                        AFiltroBase64: string);
+var
+  qry: TUniQuery;
+begin
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConn;
+    qry.SQL.Text :=
+      'UPDATE fza_filtros_guardados ' +
+      '   SET NOMBRE_FILT = :NOMBRE, ' +
+      '       DESCRIPCION_FILT = :DESCRIPCION, ' +
+      '       FILTRO_FILT = :FILTRO, ' +
+      '       USUARIO_MODIF = :USUARIO ' +
+      ' WHERE ID_FILT = :ID ' +
+      '   AND USUARIO_PROPIETARIO_FILT = :USUARIO';
+    qry.ParamByName('NOMBRE').AsString := ANombre;
+    qry.ParamByName('DESCRIPCION').AsString := ADescripcion;
+    qry.ParamByName('FILTRO').DataType := ftMemo;
+    qry.ParamByName('FILTRO').AsString := AFiltroBase64;
+    qry.ParamByName('USUARIO').AsString := oUser;
+    qry.ParamByName('ID').AsLargeInt := AIdFiltro;
+    qry.Execute;
   finally
     FreeAndNil(qry);
   end;

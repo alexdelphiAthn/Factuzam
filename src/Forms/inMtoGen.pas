@@ -190,10 +190,15 @@ type
     // el usuario elige Desactivar o Cancelar lo saltamos.
     FBeforeDeleteOrig: TDataSetNotifyEvent;
     FGuardianBorradoInstalado: Boolean;
+    FFiltroMenuBase64: string;
+    FBusqGlobalMenu: string;
     // Filtros guardados (desplegable junto a "Guardar Excel"). Guardan y
     // comparten DataController.Filter de la lista principal con nombre
     // propio, independiente del layout de columnas.
     procedure CargarMenuFiltros;
+    function SerializarFiltroActualBase64: string;
+    function ExtraerBusquedaGlobalDelFiltro: string;
+    procedure RestaurarFiltroCapturado;
     procedure AplicarFiltroDesdeBase64(const ABase64: string);
     procedure AplicarFiltroGuardadoClick(Sender: TObject);
     procedure GuardarFiltroActualClick(Sender: TObject);
@@ -2580,6 +2585,21 @@ procedure TfrmMtoGen.sbFiltrosClick(Sender: TObject);
 var
   pt: TPoint;
 begin
+  tmrBusqGlobal.Enabled := False;
+  if edtBusqGlobal.Text <> '' then
+  begin
+    BusqAllGrid(cxGrdDBTabPrin,
+                edtBusqGlobal.Text);
+  end;
+  FBusqGlobalMenu := edtBusqGlobal.Text;
+  if cxGrdDBTabPrin.DataController.Filter.IsEmpty then
+  begin
+    FFiltroMenuBase64 := '';
+  end
+  else
+  begin
+    FFiltroMenuBase64 := SerializarFiltroActualBase64;
+  end;
   CargarMenuFiltros;
   pt := sbFiltros.ClientToScreen(Point(0, sbFiltros.Height));
   pmFiltros.Popup(pt.X, pt.Y);
@@ -2635,10 +2655,121 @@ begin
   pmFiltros.Items.Add(oItem);
 end;
 
+function TfrmMtoGen.SerializarFiltroActualBase64: string;
+var
+  oStreamBin: TMemoryStream;
+  oStreamB64: TStringStream;
+begin
+  Result := '';
+  oStreamBin := TMemoryStream.Create;
+  oStreamB64 := TStringStream.Create('');
+  try
+    cxGrdDBTabPrin.DataController.Filter.SaveToStream(oStreamBin);
+    oStreamBin.Position := 0;
+    TNetEncoding.Base64.Encode(oStreamBin, oStreamB64);
+    Result := oStreamB64.DataString;
+  finally
+    FreeAndNil(oStreamB64);
+    FreeAndNil(oStreamBin);
+  end;
+end;
+
+function TfrmMtoGen.ExtraerBusquedaGlobalDelFiltro: string;
+  function TextoDesdeLike(const AValor: string): string;
+  var
+    sValor: string;
+  begin
+    Result := '';
+    sValor := Trim(AValor);
+    if (Length(sValor) >= 2) and
+       (sValor[1] = '%') and
+       (sValor[Length(sValor)] = '%') then
+    begin
+      Result := Copy(sValor, 2, Length(sValor) - 2);
+    end;
+  end;
+var
+  i: Integer;
+  bValido: Boolean;
+  oItemBase: TcxCustomFilterCriteriaItem;
+  oItem: TcxFilterCriteriaItem;
+  sTexto: string;
+  sTextoItem: string;
+begin
+  Result := '';
+  sTexto := '';
+  bValido :=
+    cxGrdDBTabPrin.DataController.Filter.Root.BoolOperatorKind = fboOr;
+  bValido := bValido and
+    (cxGrdDBTabPrin.DataController.Filter.Root.Count > 0);
+  i := 0;
+  oItem := nil;
+  while bValido and
+        (i < cxGrdDBTabPrin.DataController.Filter.Root.Count) do
+  begin
+    oItemBase := cxGrdDBTabPrin.DataController.Filter.Root.Items[i];
+    bValido := (not oItemBase.IsItemList) and
+               (oItemBase is TcxFilterCriteriaItem);
+    if bValido then
+    begin
+      oItem := TcxFilterCriteriaItem(oItemBase);
+      bValido := oItem.OperatorKind = foLike;
+    end;
+    if bValido then
+    begin
+      sTextoItem := TextoDesdeLike(VarToStr(oItem.Value));
+      if sTextoItem = '' then
+      begin
+        sTextoItem := TextoDesdeLike(oItem.DisplayValue);
+      end;
+      bValido := sTextoItem <> '';
+    end;
+    if bValido then
+    begin
+      if sTexto = '' then
+      begin
+        sTexto := sTextoItem;
+      end
+      else
+      begin
+        bValido := SameText(sTexto, sTextoItem);
+      end;
+    end;
+    Inc(i);
+  end;
+  if bValido then
+  begin
+    Result := sTexto;
+  end;
+end;
+
+procedure TfrmMtoGen.RestaurarFiltroCapturado;
+begin
+  if not (csDestroying in ComponentState) then
+  begin
+    tmrBusqGlobal.Enabled := False;
+    if edtBusqGlobal.Text <> FBusqGlobalMenu then
+    begin
+      edtBusqGlobal.Text := FBusqGlobalMenu;
+    end;
+    tmrBusqGlobal.Enabled := False;
+    if FBusqGlobalMenu <> '' then
+    begin
+      BusqAllGrid(cxGrdDBTabPrin,
+                  FBusqGlobalMenu);
+    end
+    else if FFiltroMenuBase64 <> '' then
+    begin
+      AplicarFiltroDesdeBase64(FFiltroMenuBase64);
+    end;
+  end;
+end;
+
 procedure TfrmMtoGen.AplicarFiltroDesdeBase64(const ABase64: string);
 var
   oStreamBin: TMemoryStream;
   oStreamB64: TStringStream;
+  sBusqGlobal: string;
 begin
   if ABase64 = '' then
   begin
@@ -2653,6 +2784,17 @@ begin
       TNetEncoding.Base64.Decode(oStreamB64, oStreamBin);
       oStreamBin.Position := 0;
       cxGrdDBTabPrin.DataController.Filter.LoadFromStream(oStreamBin);
+      cxGrdDBTabPrin.DataController.Filter.Active :=
+        not cxGrdDBTabPrin.DataController.Filter.IsEmpty;
+      sBusqGlobal := ExtraerBusquedaGlobalDelFiltro;
+      tmrBusqGlobal.Enabled := False;
+      if edtBusqGlobal.Text <> sBusqGlobal then
+      begin
+        edtBusqGlobal.Text := sBusqGlobal;
+      end;
+      tmrBusqGlobal.Enabled := False;
+      FBusqGlobalMenu := sBusqGlobal;
+      FFiltroMenuBase64 := ABase64;
     finally
       FreeAndNil(oStreamBin);
       FreeAndNil(oStreamB64);
@@ -2661,40 +2803,101 @@ begin
 end;
 
 procedure TfrmMtoGen.AplicarFiltroGuardadoClick(Sender: TObject);
+var
+  sFiltroBase64: string;
 begin
-  AplicarFiltroDesdeBase64(
-    odmFiltros.CargarFiltroBase64((Sender as TMenuItem).Tag));
+  tmrBusqGlobal.Enabled := False;
+  sFiltroBase64 := odmFiltros.CargarFiltroBase64((Sender as TMenuItem).Tag);
+  AplicarFiltroDesdeBase64(sFiltroBase64);
+  tmrBusqGlobal.Enabled := False;
 end;
 
 procedure TfrmMtoGen.GuardarFiltroActualClick(Sender: TObject);
 var
   res: TGuardarFiltroResult;
-  oStreamBin: TMemoryStream;
-  oStreamB64: TStringStream;
+  sFiltroBase64: string;
+  sBusqGlobal: string;
+  iIdFiltro: Int64;
 begin
-  if cxGrdDBTabPrin.DataController.Filter.IsEmpty then
+  if tmrBusqGlobal.Enabled then
+  begin
+    tmrBusqGlobal.Enabled := False;
+    BusqAllGrid(cxGrdDBTabPrin,
+                edtBusqGlobal.Text);
+  end;
+  sFiltroBase64 := '';
+  sBusqGlobal := edtBusqGlobal.Text;
+  if (sBusqGlobal = '') and (FBusqGlobalMenu <> '') then
+  begin
+    sBusqGlobal := FBusqGlobalMenu;
+  end;
+  tmrBusqGlobal.Enabled := False;
+  if edtBusqGlobal.Text <> sBusqGlobal then
+  begin
+    edtBusqGlobal.Text := sBusqGlobal;
+  end;
+  tmrBusqGlobal.Enabled := False;
+  if sBusqGlobal <> '' then
+  begin
+    BusqAllGrid(cxGrdDBTabPrin,
+                sBusqGlobal);
+    sFiltroBase64 := SerializarFiltroActualBase64;
+    BusqAllGrid(cxGrdDBTabPrin,
+                sBusqGlobal);
+  end
+  else if not cxGrdDBTabPrin.DataController.Filter.IsEmpty then
+  begin
+    sFiltroBase64 := SerializarFiltroActualBase64;
+  end
+  else if FFiltroMenuBase64 <> '' then
+  begin
+    sFiltroBase64 := FFiltroMenuBase64;
+    AplicarFiltroDesdeBase64(sFiltroBase64);
+  end;
+  if sFiltroBase64 = '' then
   begin
     ShowMessage('No hay ningun filtro aplicado en la lista para guardar.');
   end
   else
   begin
-    res := TfrmModalGuardarFiltro.Ejecutar(Self);
-    if res.Aceptado then
-    begin
-      oStreamBin := TMemoryStream.Create;
-      oStreamB64 := TStringStream.Create('');
-      try
-        cxGrdDBTabPrin.DataController.Filter.SaveToStream(oStreamBin);
-        oStreamBin.Position := 0;
-        TNetEncoding.Base64.Encode(oStreamBin, oStreamB64);
-        odmFiltros.GuardarFiltroNuevo(Self.Name, cxGrdDBTabPrin.Name,
-                                      res.Nombre, res.Descripcion,
-                                      oStreamB64.DataString);
-        ShowMessage('Filtro guardado correctamente.');
-      finally
-        FreeAndNil(oStreamB64);
-        FreeAndNil(oStreamBin);
+    try
+      FFiltroMenuBase64 := sFiltroBase64;
+      FBusqGlobalMenu := sBusqGlobal;
+      RestaurarFiltroCapturado;
+      TThread.ForceQueue(nil,
+        procedure
+        begin
+          RestaurarFiltroCapturado;
+        end);
+      res := TfrmModalGuardarFiltro.Ejecutar(Self);
+      if res.Aceptado then
+      begin
+        iIdFiltro := odmFiltros.BuscarFiltroPropio(Self.Name,
+                                                   cxGrdDBTabPrin.Name,
+                                                   res.Nombre);
+        if iIdFiltro > 0 then
+        begin
+          if Application.MessageBox(
+              'Ya existe un filtro propio con ese nombre. ' +
+              'Desea sobrescribirlo?',
+              'Sobrescribir filtro',
+              MB_YESNO + MB_ICONQUESTION) = ID_YES then
+          begin
+            odmFiltros.SobrescribirFiltro(iIdFiltro, res.Nombre,
+                                          res.Descripcion, sFiltroBase64);
+            ShowMessage('Filtro sobrescrito correctamente.');
+          end;
+        end
+        else
+        begin
+          odmFiltros.GuardarFiltroNuevo(Self.Name, cxGrdDBTabPrin.Name,
+                                        res.Nombre, res.Descripcion,
+                                        sFiltroBase64);
+          ShowMessage('Filtro guardado correctamente.');
+        end;
       end;
+    finally
+      RestaurarFiltroCapturado;
     end;
   end;
 end;

@@ -20,7 +20,7 @@ uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
   Uni, inLibUser, UniDataConn, inLibLog, cxListView, Vcl.Forms, vcl.dialogs,
   Vcl.ComCtrls, Winapi.Windows, system.strUtils, cxGridDBTableView,
-  cxCustomData, cxFilter, inLibAppParam,
+  cxCustomData, cxFilter, inLibAppParam, inLibCajaParam,
   System.Variants, vcl.Controls, Datasnap.Provider, Datasnap.DBClient,
   System.Generics.Collections,
   frxClass, frxDBSet, frCoreClasses, System.UITypes;
@@ -819,7 +819,7 @@ begin
       Itm.Caption := FindField('CODIGO_TAR_ARTTAR').AsString;
       Itm.SubItems.Add(FindField('NOMBRE_TAR_TAR').AsString);
       if SameText(FindField('CODIGO_TAR_ARTTAR').AsString,
-                  oAppParams.GetString('appTarifaDefecto', 'PVP')) then
+                  TarifaDefecto) then
         Itm.Checked := True;
       Next;
     end;
@@ -1063,7 +1063,7 @@ begin
     codigos.Add(unqryTarifasPrint.FieldByName('CODIGO_TAR_ARTTAR').AsString);
     if (aIdxDefault = -1) and
        SameText(unqryTarifasPrint.FieldByName('CODIGO_TAR_ARTTAR').AsString,
-                oAppParams.GetString('appTarifaDefecto', 'PVP')) then
+                TarifaDefecto) then
       aIdxDefault := i;
     Inc(i);
     unqryTarifasPrint.Next;

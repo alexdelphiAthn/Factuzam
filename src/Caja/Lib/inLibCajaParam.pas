@@ -75,6 +75,12 @@ type
 // 'vgerArqueoNivelesFamilia' (1 = solo la sección raíz).
 function NivelesFamiliaArqueo: Integer;
 
+// Tarifa por defecto del sistema (código de tarifa). ÚNICA definición:
+// parámetro de caja 'vgerDefTarifa' (Parámetros de Caja > Configuración
+// de Caja). Sustituye a los antiguos appTarifaDefecto / appTarifaDefault
+// (inLibAppParam) y al flag ESDEFAULT_TAR de fza_tarifas, ya eliminados.
+function TarifaDefecto: string;
+
 var
   oCajaParams: TCajaParams;
 
@@ -403,6 +409,14 @@ begin
     Result := 1;
   if Result > 9 then
     Result := 9;
+end;
+
+function TarifaDefecto: string;
+begin
+  if Assigned(oCajaParams) then
+    Result := oCajaParams.GetString('vgerDefTarifa', 'PVP')
+  else
+    Result := 'PVP';
 end;
 
 initialization

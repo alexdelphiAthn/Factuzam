@@ -95,8 +95,6 @@ type
                            Strings: TStrings);
     procedure GetPaletasList(Sender: TJvCustomInspectorItem;
                               Strings: TStrings);
-    procedure GetTarifasList(Sender: TJvCustomInspectorItem;
-                              Strings: TStrings);
     procedure GetTemporadasList(Sender: TJvCustomInspectorItem;
                                 Strings: TStrings);
     procedure GetNifsEmpresasList(Sender: TJvCustomInspectorItem;
@@ -302,12 +300,6 @@ begin
                                  [iifValueList, iifAllowNonListValues];
               ItemCombo.OnGetValueList := GetPaletasList;
             end
-            else if SameText(Param.Nombre, 'appTarifaDefecto') then
-            begin
-              ItemCombo.Flags := ItemCombo.Flags +
-                                 [iifValueList, iifAllowNonListValues];
-              ItemCombo.OnGetValueList := GetTarifasList;
-            end
             else if SameText(Param.Nombre, 'appTemporadaDefecto') then
             begin
               ItemCombo.Flags := ItemCombo.Flags +
@@ -444,31 +436,6 @@ begin
 
   finally
     Strings.EndUpdate;
-  end;
-end;
-
-procedure TfrmMtoAppParam.GetTarifasList(
-  Sender: TJvCustomInspectorItem; Strings: TStrings);
-var
-  qry: TUniQuery;
-begin
-  Strings.Clear;
-  Strings.Add('');
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := oConn;
-    qry.SQL.Text :=
-      'SELECT CODIGO_TAR_ARTTAR FROM fza_tarifas' +
-      ' WHERE ESACTIVO_ARTTAR = ''S''' +
-      ' ORDER BY ORDEN_TAR';
-    qry.Open;
-    while not qry.Eof do
-    begin
-      Strings.Add(qry.FieldByName('CODIGO_TAR_ARTTAR').AsString);
-      qry.Next;
-    end;
-  finally
-    FreeAndNil(qry);
   end;
 end;
 

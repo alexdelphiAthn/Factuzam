@@ -132,18 +132,22 @@ end;
 
 procedure TfrmModalGestionFiltros.CargarDatos;
 begin
-  dmFiltros.AbrirListadoParaGrid(FMto, FVista);
-  tvFiltros.DataController.DataSource := dmFiltros.dsListado;
+  if Assigned(odmFiltros) then
+  begin
+    odmFiltros.AbrirListadoParaGrid(FMto, FVista);
+    tvFiltros.DataController.DataSource := odmFiltros.dsListado;
+  end;
   RefrescarCompartidoCon;
 end;
 
 function TfrmModalGestionFiltros.IdFiltroSeleccionado: Int64;
 begin
   Result := 0;
-  if dmFiltros.unqryListado.Active and
-     (not dmFiltros.unqryListado.IsEmpty) then
+  if Assigned(odmFiltros) and
+     odmFiltros.unqryListado.Active and
+     (not odmFiltros.unqryListado.IsEmpty) then
   begin
-    Result := dmFiltros.unqryListado.FieldByName('ID_FILT').AsLargeInt;
+    Result := odmFiltros.unqryListado.FieldByName('ID_FILT').AsLargeInt;
   end;
 end;
 
@@ -152,13 +156,14 @@ var
   bHayFiltro: Boolean;
   bEsPropio: Boolean;
 begin
-  bHayFiltro := dmFiltros.unqryListado.Active and
-               (not dmFiltros.unqryListado.IsEmpty);
+  bHayFiltro := Assigned(odmFiltros) and
+                odmFiltros.unqryListado.Active and
+                (not odmFiltros.unqryListado.IsEmpty);
   bEsPropio := False;
   if bHayFiltro then
   begin
     bEsPropio :=
-      dmFiltros.unqryListado.FieldByName('ESPROPIO_FILT').AsString = 'S';
+      odmFiltros.unqryListado.FieldByName('ESPROPIO_FILT').AsString = 'S';
   end;
   btnAplicar.Enabled := bHayFiltro;
   btnRenombrar.Enabled := bHayFiltro and bEsPropio;
@@ -183,7 +188,7 @@ begin
   lbCompartidoCon.Items.Clear;
   if IdFiltroSeleccionado > 0 then
   begin
-    FDestinos := dmFiltros.ListarDestinosCompartidos(IdFiltroSeleccionado);
+    FDestinos := odmFiltros.ListarDestinosCompartidos(IdFiltroSeleccionado);
     for info in FDestinos do
     begin
       if info.TipoDestino = 'TODOS' then
@@ -244,12 +249,12 @@ begin
   else
   begin
     res := TfrmModalGuardarFiltro.Ejecutar(Self,
-      dmFiltros.unqryListado.FieldByName('NOMBRE_FILT').AsString,
-      dmFiltros.unqryListado.FieldByName('DESCRIPCION_FILT').AsString);
+      odmFiltros.unqryListado.FieldByName('NOMBRE_FILT').AsString,
+      odmFiltros.unqryListado.FieldByName('DESCRIPCION_FILT').AsString);
     if res.Aceptado then
     begin
-      dmFiltros.RenombrarFiltro(IdFiltroSeleccionado, res.Nombre,
-                                res.Descripcion);
+      odmFiltros.RenombrarFiltro(IdFiltroSeleccionado, res.Nombre,
+                                 res.Descripcion);
       CargarDatos;
     end;
   end;
@@ -268,7 +273,7 @@ begin
                               'Confirmar borrado',
                               MB_YESNO + MB_ICONQUESTION) = ID_YES then
     begin
-      dmFiltros.BorrarFiltro(IdFiltroSeleccionado);
+      odmFiltros.BorrarFiltro(IdFiltroSeleccionado);
       CargarDatos;
     end;
   end;
@@ -294,8 +299,8 @@ begin
                                        'frmBuscarUsuarioFiltro', Self) then
     begin
       sUsuario := q.FieldByName('USUARIO').AsString;
-      dmFiltros.CompartirConDestino(IdFiltroSeleccionado, 'USUARIO',
-                                    sUsuario);
+      odmFiltros.CompartirConDestino(IdFiltroSeleccionado, 'USUARIO',
+                                     sUsuario);
       RefrescarCompartidoCon;
     end;
   finally
@@ -322,8 +327,8 @@ begin
                                          'frmBuscarGrupoFiltro', Self) then
       begin
         sGrupo := q.FieldByName('GRUPO').AsString;
-        dmFiltros.CompartirConDestino(IdFiltroSeleccionado, 'GRUPO',
-                                      sGrupo);
+        odmFiltros.CompartirConDestino(IdFiltroSeleccionado, 'GRUPO',
+                                       sGrupo);
         RefrescarCompartidoCon;
       end;
     finally
@@ -332,7 +337,7 @@ begin
   end
   else
   begin
-    dmFiltros.CompartirConDestino(IdFiltroSeleccionado, 'GRUPO', oGroup);
+    odmFiltros.CompartirConDestino(IdFiltroSeleccionado, 'GRUPO', oGroup);
     RefrescarCompartidoCon;
     ShowMessage('Filtro compartido con tu grupo (' + oGroup + ').');
   end;
@@ -341,7 +346,7 @@ end;
 procedure TfrmModalGestionFiltros.btnCompartirTodosClick(Sender: TObject);
 begin
   inherited;
-  dmFiltros.CompartirConDestino(IdFiltroSeleccionado, 'TODOS', '');
+  odmFiltros.CompartirConDestino(IdFiltroSeleccionado, 'TODOS', '');
   RefrescarCompartidoCon;
   ShowMessage('Filtro compartido con todos los usuarios.');
 end;
@@ -351,7 +356,7 @@ begin
   inherited;
   if (lbCompartidoCon.ItemIndex >= 0) and Assigned(FDestinos) then
   begin
-    dmFiltros.QuitarDestinoCompartido(
+    odmFiltros.QuitarDestinoCompartido(
       FDestinos[lbCompartidoCon.ItemIndex].Id);
     RefrescarCompartidoCon;
   end;

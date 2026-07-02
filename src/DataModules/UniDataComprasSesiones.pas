@@ -200,6 +200,7 @@ uses
   System.Variants,
   inLibGlobalVar,
   inLibAppParam,
+  inLibCajaParam,
   inLibtb,
   inLibComprasSesiones,
   inLibComprasSesionesMaterializar,
@@ -579,10 +580,9 @@ begin
        and unqryTemporadas.Locate('PV', sTemp, []) then
       FieldByName('ID_PV_TEMPORADA_SES').AsInteger :=
         unqryTemporadas.FieldByName('ID_PV_ARTPROP').AsInteger;
-    // Tarifa sugerida desde parámetros
-    if oAppParams.GetString('appTarifaDefecto') <> '' then
-      FieldByName('CODIGO_TAR_SES').AsString :=
-        oAppParams.GetString('appTarifaDefecto');
+    // Tarifa sugerida desde parámetros (vgerDefTarifa, inLibCajaParam)
+    if TarifaDefecto <> '' then
+      FieldByName('CODIGO_TAR_SES').AsString := TarifaDefecto;
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='SE'
     if Trim(oEmpresa) <> '' then
     begin

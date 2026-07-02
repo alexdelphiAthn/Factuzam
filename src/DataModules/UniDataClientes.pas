@@ -69,7 +69,8 @@ type
 implementation
 
 uses
-  inMtoClientes, inLibGlobalVar, inLibAppParam, inLibtb, inLibLog,
+  inMtoClientes, inLibGlobalVar, inLibAppParam, inLibCajaParam, inLibtb,
+  inLibLog,
   System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -251,8 +252,7 @@ begin
                                             GetDefaultValue('fza_formas_pago',
                                                             'CODIGO_FP_FP',
                                                      'ESDEFAULT_FORMA_PAGO_FP');
-  unqryTablaG.FindField('TARIFA_ARTICULO_CLI').AsString :=
-    oAppParams.GetString('appTarifaDefecto', 'PVP');
+  unqryTablaG.FindField('TARIFA_ARTICULO_CLI').AsString := TarifaDefecto;
 end;
 
 procedure TdmClientes.GuardarParametrosEDocCliente(ADataSet: TDataSet);

@@ -404,6 +404,7 @@ implementation
 uses inLibtb,
      inLibData,
      inLibAppParam,
+     inLibCajaParam,
      inMtoCajaOpe,
      inLibDevExp,
      inLibFacturas,
@@ -1963,7 +1964,7 @@ end;
 
 function TdmCajaOpe.GetTarifaDefault: string;
 begin
-  Result := oAppParams.GetString('appTarifaDefecto', 'PVP');
+  Result := TarifaDefecto;  // vgerDefTarifa (inLibCajaParam)
 end;
 
 procedure TdmCajaOpe.cdsCabeceraAfterInsert(DataSet: TDataSet);

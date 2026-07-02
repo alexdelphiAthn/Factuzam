@@ -623,6 +623,16 @@ SELECT t.orden AS orden_aplicacion,
                    WHERE TABLE_SCHEMA = DATABASE()
                      AND TABLE_NAME = 'vi_art_busquedas'
                      AND COLUMN_NAME = 'REF_PROVEEDOR')
+    UNION ALL
+    SELECT 450, 'filtros_guardados.sql',
+           'tablas fza_filtros_guardados / compartidos',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_filtros_guardados')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME =
+                             'fza_filtros_guardados_compartidos')
   ) t
  ORDER BY t.aplicado, t.orden;
 -- Scripts solo-datos, no detectables por esquema. Son idempotentes:
