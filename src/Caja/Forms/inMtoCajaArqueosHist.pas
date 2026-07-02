@@ -61,6 +61,8 @@ type
     dmmCajaArqueosHist: TdmCajaArqueosHist;
   public
     procedure CrearTablaPrincipal; override;
+    // Restricción de la precarga a la empresa/almacén/caja del usuario
+    function SqlRestriccionUsuario: string; override;
     procedure ResetForm; override;
   end;
 
@@ -70,13 +72,21 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inMtoModalImpArqueos;
+  inLibWin, inMtoPrincipal, inMtoModalImpArqueos, inLibFiltroUsuario;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoCajaArqueosHist }
+
+function TfrmMtoCajaArqueosHist.SqlRestriccionUsuario: string;
+begin
+  // Arqueos: empresa, almacén y caja del terminal
+  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_ARQ',
+                                'CODIGO_ALM_ARQ',
+                                'CODIGO_CAJA_ARQ');
+end;
 
 procedure TfrmMtoCajaArqueosHist.CrearTablaPrincipal;
 begin

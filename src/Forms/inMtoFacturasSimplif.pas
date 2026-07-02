@@ -87,7 +87,7 @@ type
 implementation
 
 uses
-  inLibUser;
+  inLibUser, inLibFiltroUsuario;
 
 {$R *.dfm}
 
@@ -194,10 +194,13 @@ begin
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := dmmFacturas.unqryTablaG.Connection;
+    // Con la restricción por usuario activa el combo solo ofrece su
+    // empresa/almacén (fza_almacenes lleva la empresa en CODIGO_EMP_ALM).
     qry.SQL.Text :=
       'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM ' +
       '  FROM fza_almacenes ' +
       ' WHERE ESACTIVO_ALM = ''S'' ' +
+      SqlFiltroEmpAlmCaja('CODIGO_EMP_ALM', 'CODIGO_ALM_ALM', '') +
       ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM';
     qry.Open;
     while not qry.Eof do
@@ -329,6 +332,12 @@ begin
     Result := Result + ' AND YEAR(FECHA_FAC) IN (' + sAnyos + ')';
   if sAlm <> '' then
     Result := Result + ' AND CODIGO_ALM_FAC IN (' + sAlm + ')';
+  // Restricción por usuario (appRestringirEmpAlmCaja): mismo fragmento
+  // que SqlRestriccionUsuario de la base, integrado aquí porque este Mto
+  // recompone su SQL al cambiar los filtros de carga.
+  Result := Result + SqlFiltroEmpAlmCaja('CODIGO_EMP_FAC',
+                                         'CODIGO_ALM_FAC',
+                                         'CODIGO_CAJA_FAC');
 end;
 
 function TfrmMtoFacturasSimplif.ConstruirSqlFacturas: string;

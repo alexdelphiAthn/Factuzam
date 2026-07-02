@@ -91,7 +91,7 @@ implementation
 
 uses
   inLibWin, inLibUser, inLibGlobalVar, inMtoPrincipal,
-  inMtoModalGenImpSave, inMtoModalImpPagos;
+  inMtoModalGenImpSave, inMtoModalImpPagos, inLibFiltroUsuario;
 
 {$R *.dfm}
 
@@ -253,6 +253,11 @@ begin
   Result := ' WHERE 1 = 1';
   if sAnyos <> '' then
     Result := Result + ' AND YEAR(FECHA_PAGO) IN (' + sAnyos + ')';
+  // Restricción por usuario (appRestringirEmpAlmCaja): acota a su
+  // empresa/almacén/caja por encima del filtro de años.
+  Result := Result + SqlFiltroEmpAlmCaja('CODIGO_EMP_PAGO',
+                                         'CODIGO_ALM_PAGO',
+                                         'CODIGO_CAJA_PAGO');
 end;
 
 function TfrmMtoCajaPagosHist.ConstruirSqlPagos: string;

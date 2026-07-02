@@ -312,6 +312,8 @@ type
   public
     dmmPedidosCompra: TdmPedidosCompra;
     procedure CrearTablaPrincipal; override;
+    // Restricción de la precarga a la empresa/almacén del usuario
+    function SqlRestriccionUsuario: string; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
@@ -324,6 +326,7 @@ implementation
 uses
   System.StrUtils,
   inLibGlobalVar,
+  inLibFiltroUsuario,
   inLibFotos,
   inLibAtributosPaleta,
   inLibPedidosCompra,
@@ -934,6 +937,12 @@ procedure TfrmMtoPedidosCompra.RefrescarCantidadAAlbaranar;
 begin
   if curCabCANTIDAD_A_ALBARANAR_PEDC <> nil then
     curCabCANTIDAD_A_ALBARANAR_PEDC.EditValue := TotalAAlbaranar;
+end;
+
+function TfrmMtoPedidosCompra.SqlRestriccionUsuario: string;
+begin
+  // Documentos de compra: empresa y almacén (no llevan caja)
+  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_PEDC', 'CODIGO_ALM_PEDC', '');
 end;
 
 procedure TfrmMtoPedidosCompra.CrearTablaPrincipal;

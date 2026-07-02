@@ -67,7 +67,7 @@ implementation
 
 {$R *.dfm}
 
-uses UniDataConn;
+uses UniDataConn, inLibFiltroUsuario;
 
 procedure TfrmMtoModalCajDef.Action1Execute(Sender: TObject);
 begin
@@ -106,6 +106,12 @@ procedure TfrmMtoModalCajDef.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
+  // Restricción por usuario (appRestringirEmpAlmCaja): la selección de
+  // caja solo ofrece la empresa/almacén/caja por defecto del usuario.
+  // Se inyecta aquí porque los callers abren qrySeleccion tras el Create.
+  qrySeleccion.SQL.Text :=
+    InyectarFiltroSql(qrySeleccion.SQL.Text,
+                      SqlFiltroEmpAlmCaja('Empresa', 'Almacen', 'Caja'));
 end;
 
 procedure TfrmMtoModalCajDef.FormShow(Sender: TObject);

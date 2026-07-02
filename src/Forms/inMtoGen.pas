@@ -240,6 +240,11 @@ type
     // varias llamadas a Bloquear=True solo muestran el overlay una vez,
     // y solo se oculta cuando todas se compensan con un False.
     procedure BloquearTabPorOcupado(Bloquear: Boolean);
+    // Inyecta SqlRestriccionUsuario en la SQL de la tabla principal antes
+    // de abrirla (precarga). Idempotente: si el filtro ya esta en la SQL
+    // (reapertura, o el propio Mto lo integro en su ConstruirWhere*) no
+    // toca nada. Cierra la query si venia activa del DFM streaming.
+    procedure AplicarRestriccionUsuario(unqry: TUniQuery);
   public
     tdmDataModule:TObject;
     sDataModuleName:string;
@@ -342,6 +347,16 @@ type
     // lo usa para, si la precarga supero el umbral de filas, mostrar el
     // dialogo de filtrado y reabrir la lista ya acotada.
     procedure TrasPrecargaAsync; virtual;
+    // ----- Restricción por empresa/almacén/caja del usuario ----------------
+    // Fragmento WHERE (' AND col = valor') que acota la tabla principal a
+    // la empresa/almacén/caja del usuario cuando el parámetro
+    // appRestringirEmpAlmCaja está activo (véase inLibFiltroUsuario).
+    // Vacío por defecto: cada Mto de documentos/operaciones lo
+    // sobreescribe devolviendo SqlFiltroEmpAlmCaja con sus columnas. Las
+    // pantallas que recomponen la SQL en runtime (facturas simplificadas,
+    // históricos de caja con filtros propios) integran el filtro en su
+    // ConstruirWhere* en lugar de este override.
+    function SqlRestriccionUsuario: string; virtual;
   public
     destructor Destroy; override;
   end;
@@ -367,6 +382,7 @@ uses inMtoGenSearch,
      inLibFotos, inMtoFotoArticulo, inMtoStockConsulta,
      inLibGridColumnChooser, inMtoModalGridGuias,
      inLibInformesGuiasCache,
+     inLibFiltroUsuario,    // restricción por empresa/almacén/caja
      SQLBuilder4D, SQLBuilder4D.Parser, SQLBuilder4D.Parser.GaSQLParser,
      System.Diagnostics,    // TStopwatch para cronometrar carga inicial
      System.StrUtils,       // StartsText en DiagnosticarCamposBooleanos
@@ -1266,6 +1282,10 @@ begin
   unqry := dmDat.unqryTablaG;
   if unqry = nil then
     Exit;
+  // Antes de entrar: restricción por empresa/almacén/caja del usuario.
+  // Si cierra una query activa del DFM, el flujo normal de abajo la
+  // reabre ya filtrada (yaActiva quedará False).
+  AplicarRestriccionUsuario(unqry);
   // unqryTablaG puede llegar abierta por el DFM streaming (Active=True
   // en su DFM, es lo habitual para que componentes del form puedan
   // resolver el field 'CODIGO_ART_ART' en CrearTablaPrincipal). En ese
@@ -1362,6 +1382,31 @@ begin
   // Default: nada. Los Mtos que lo necesiten lo sobreescriben.
 end;
 
+function TfrmMtoGen.SqlRestriccionUsuario: string;
+begin
+  // Default: sin restricción. Los Mto de documentos/operaciones
+  // sobreescriben devolviendo SqlFiltroEmpAlmCaja con sus columnas.
+  Result := '';
+end;
+
+procedure TfrmMtoGen.AplicarRestriccionUsuario(unqry: TUniQuery);
+var
+  sFiltro: string;
+begin
+  sFiltro := SqlRestriccionUsuario;
+  // Idempotente: si el fragmento ya está en la SQL (reapertura del tab,
+  // o el propio Mto lo integró al recomponer su SQL) no se toca nada.
+  if (sFiltro <> '') and (Pos(sFiltro, unqry.SQL.Text) = 0) then
+  begin
+    // Si venía activa del DFM streaming hay que reabrirla ya filtrada
+    if unqry.Active then
+      unqry.Close;
+    unqry.SQL.Text := InyectarFiltroSql(unqry.SQL.Text, sFiltro);
+    inLibLog.Log.LogInfo(Self.Name +
+      ': precarga restringida por usuario (appRestringirEmpAlmCaja)');
+  end;
+end;
+
 procedure TfrmMtoGen.AbrirTablaPrincipalSincrono;
 var
   dmDat: TdmBase;
@@ -1375,6 +1420,8 @@ begin
   unqry := dmDat.unqryTablaG;
   if unqry = nil then
     Exit;
+  // Antes de entrar: restricción por empresa/almacén/caja del usuario
+  AplicarRestriccionUsuario(unqry);
   // Modo sincrono: la UI esta congelada durante el Open. Forzamos cursor
   // de reloj global (Screen.Cursor) para que el usuario sepa que la app
   // esta ocupada — no muerta. Self.Cursor solo afecta cuando el raton

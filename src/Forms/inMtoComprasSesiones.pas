@@ -491,6 +491,8 @@ type
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     procedure CrearTablaPrincipal; override;
+    // Restricción de la precarga a la empresa/almacén del usuario
+    function SqlRestriccionUsuario: string; override;
     procedure ResetForm; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
@@ -504,6 +506,7 @@ implementation
 uses
   inLibGlobalVar,
   inLibUser,
+  inLibFiltroUsuario,
   inLibGenBusq,
   inLibComprasSesiones,
   inMtoModalDistribuidor,
@@ -612,6 +615,12 @@ begin
     Result := [dsTablaG, dmm.dsSesionLin]
   else
     Result := [dsTablaG];
+end;
+
+function TfrmMtoComprasSesiones.SqlRestriccionUsuario: string;
+begin
+  // Sesiones de compra: empresa y almacén destino (no llevan caja)
+  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_SES', 'CODIGO_ALM_SES', '');
 end;
 
 procedure TfrmMtoComprasSesiones.CrearTablaPrincipal;

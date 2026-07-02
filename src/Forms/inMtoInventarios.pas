@@ -305,6 +305,8 @@ type
   public
     dmmInventarios: TdmInventarios;
     procedure CrearTablaPrincipal; override;
+    // Restricción de la precarga a la empresa/almacén del usuario
+    function SqlRestriccionUsuario: string; override;
     procedure ResetForm; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
@@ -318,6 +320,7 @@ implementation
 uses
   inLibWin,
   inLibUser,
+  inLibFiltroUsuario,
   inLibShowMto,
   inLibDevExp,
   inLibFotos,
@@ -375,6 +378,12 @@ begin
     ShowMessage('La base de datos no tiene aplicada la migración de recuento ' +
                 'remoto de inventarios. Ejecuta el script ' +
                 'DESARROLLOS EN CURSO\recuento_inventarios_factuzam.sql.');
+end;
+
+function TfrmMtoInventarios.SqlRestriccionUsuario: string;
+begin
+  // Inventarios: empresa y almacén (no llevan caja)
+  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_INV', 'CODIGO_ALM_INV', '');
 end;
 
 procedure TfrmMtoInventarios.CrearTablaPrincipal;

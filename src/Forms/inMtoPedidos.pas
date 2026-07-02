@@ -250,6 +250,8 @@ type
   public
     dmmPedidos: TdmPedidos;
     procedure CrearTablaPrincipal; override;
+    // Restricción de la precarga a la empresa del usuario
+    function SqlRestriccionUsuario: string; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
@@ -262,7 +264,7 @@ implementation
 uses
   inMtoModalImportarPedidosPS, inLibFotos, inLibGridCantidad,
   inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibGenBusq,
-  inLibShowMto, inLibGlobalVar, Uni, inLibArticulosResolver,
+  inLibShowMto, inLibGlobalVar, inLibFiltroUsuario, Uni, inLibArticulosResolver,
   inLibArticulosValidador, inLibVentasImpuestos;
 
 {$R *.dfm}
@@ -600,6 +602,12 @@ begin
     stPend.Color := $00C4E1FF;
     colPend.Styles.Content := stPend;
   end;
+end;
+
+function TfrmMtoPedidos.SqlRestriccionUsuario: string;
+begin
+  // Los pedidos de venta solo llevan empresa en cabecera
+  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_PED', '', '');
 end;
 
 procedure TfrmMtoPedidos.CrearTablaPrincipal;

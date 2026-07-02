@@ -200,7 +200,8 @@ implementation
 uses
   inLibWin, inLibUser, inLibGlobalVar, inLibShowMto, inMtoPrincipal,
   inMtoModalGenImpSave, inMtoModalImpOperaciones, inMtoPreviewExcel,
-  inLibDevExcel, inLibAppParam, inLibFotos, dxSpreadSheetGraphics;
+  inLibDevExcel, inLibAppParam, inLibFotos, inLibFiltroUsuario,
+  dxSpreadSheetGraphics;
 
 {$R *.dfm}
 
@@ -424,10 +425,13 @@ begin
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := dmmCajaOperacionesHist.unqryTablaG.Connection;
+    // Con la restricción por usuario activa el combo solo ofrece su
+    // empresa/almacén (fza_almacenes lleva la empresa en CODIGO_EMP_ALM).
     qry.SQL.Text :=
       'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM ' +
       '  FROM fza_almacenes ' +
       ' WHERE ESACTIVO_ALM = ''S'' ' +
+      SqlFiltroEmpAlmCaja('CODIGO_EMP_ALM', 'CODIGO_ALM_ALM', '') +
       ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM';
     qry.Open;
     while not qry.Eof do
@@ -564,6 +568,11 @@ begin
               ' AND YEAR(o.FECHA_OPERACION_OPCAJA) IN (' + sAnyos + ')';
   if sAlm <> '' then
     Result := Result + ' AND o.CODIGO_ALM_OPCAJA IN (' + sAlm + ')';
+  // Restricción por usuario (appRestringirEmpAlmCaja): acota a su
+  // empresa/almacén/caja por encima de lo marcado en los combos.
+  Result := Result + SqlFiltroEmpAlmCaja('o.CODIGO_EMP_OPCAJA',
+                                         'o.CODIGO_ALM_OPCAJA',
+                                         'o.CODIGO_CAJA_OPCAJA');
 end;
 
 function TfrmMtoCajaOperacionesHist.ConstruirSqlOperaciones: string;

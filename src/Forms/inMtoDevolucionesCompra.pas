@@ -264,6 +264,8 @@ type
   public
     dmmDevolucionesCompra: TdmDevolucionesCompra;
     procedure CrearTablaPrincipal; override;
+    // Restricción de la precarga a la empresa/almacén del usuario
+    function SqlRestriccionUsuario: string; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
@@ -276,6 +278,7 @@ implementation
 uses
   System.StrUtils,
   inLibGlobalVar,
+  inLibFiltroUsuario,
   inLibFotos,
   inLibArticulosResolver,
   inLibArticulosValidador,
@@ -1046,6 +1049,12 @@ begin
     Key := 0;
     colLineaDevcCODIGO_ARTPropertiesButtonClick(nil, 0);
   end;
+end;
+
+function TfrmMtoDevolucionesCompra.SqlRestriccionUsuario: string;
+begin
+  // Documentos de compra: empresa y almacén (no llevan caja)
+  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_DEVC', 'CODIGO_ALM_DEVC', '');
 end;
 
 procedure TfrmMtoDevolucionesCompra.CrearTablaPrincipal;

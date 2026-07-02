@@ -229,6 +229,8 @@ type
   public
     dmmAlbaranes: TdmAlbaranes;
     procedure CrearTablaPrincipal; override;
+    // Restricción de la precarga a la empresa del usuario
+    function SqlRestriccionUsuario: string; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
@@ -240,7 +242,7 @@ implementation
 
 uses
   inMtoModalFacturarAlbaranesFechas, inLibFotos, inLibGridCantidad,
-  inLibGenBusq, inLibShowMto, inLibGlobalVar, Uni,
+  inLibGenBusq, inLibShowMto, inLibGlobalVar, inLibFiltroUsuario, Uni,
   inLibArticulosResolver, inLibArticulosValidador, inLibVentasImpuestos;
 
 {$R *.dfm}
@@ -533,6 +535,12 @@ begin
       end;
     end;
   end;
+end;
+
+function TfrmMtoAlbaranes.SqlRestriccionUsuario: string;
+begin
+  // Los albaranes de venta solo llevan empresa en cabecera
+  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_ALB', '', '');
 end;
 
 procedure TfrmMtoAlbaranes.CrearTablaPrincipal;

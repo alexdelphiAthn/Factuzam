@@ -40,6 +40,7 @@ uses
   inLibConfigCampos in 'src\Lib\inLibConfigCampos.pas',
   inLibPermisos in 'src\Lib\inLibPermisos.pas',
   inLibPermisosAdmin in 'src\Lib\inLibPermisosAdmin.pas',
+  inLibFiltroUsuario in 'src\Lib\inLibFiltroUsuario.pas',
   inLibLicenciaAplicacion in 'src\Lib\inLibLicenciaAplicacion.pas',
   inMtoFrmBase in 'src\Core\inMtoFrmBase.pas' {frmBase},
   inMtoLogon in 'src\Core\inMtoLogon.pas' {frmLogon},
