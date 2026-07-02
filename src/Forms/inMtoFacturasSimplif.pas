@@ -55,6 +55,8 @@ type
     FFiltrosCargando: Boolean;
     // La carga inicial con barra de progreso se hace una sola vez.
     FCargaInicialHecha: Boolean;
+    // Evita reentradas si la UI dispara eventos durante la apertura.
+    FAbriendoConProgreso: Boolean;
     // CODIGO_ALM_ALM paralelo a ccbFiltroAlmacen.Properties.Items.
     FCodigosAlmacen: TStringList;
     // Overlay de progreso (creado perezosamente).
@@ -391,59 +393,65 @@ var
   nTotal, nLeidos: Integer;
   cursorPrev: TCursor;
 begin
-  if Assigned(dmmFacturas) and Assigned(dmmFacturas.unqryTablaG) then
+  if (not FAbriendoConProgreso) and
+     Assigned(dmmFacturas) and Assigned(dmmFacturas.unqryTablaG) then
   begin
-    qry := dmmFacturas.unqryTablaG;
-    cursorPrev := Screen.Cursor;
-    Screen.Cursor := crHourGlass;
-    MostrarProgresoCarga(0);
-    // FetchRows define el tamaño de bloque; al recorrer, UniDAC trae los
-    // registros por bloques (FetchAll por defecto es False) y vamos
-    // avanzando la barra. DisableControls evita que el grid fuerce el
-    // fetch completo de golpe. FetchRows solo se puede fijar con la query
-    // cerrada, asi que lo dejamos puesto (no se restaura).
-    qry.DisableControls;
+    FAbriendoConProgreso := True;
     try
-      nTotal := ContarFacturas;
-      // Tope de seguridad: cargar cientos de miles de filas de golpe
-      // bloquea el grid. Si la seleccion es enorme (p.ej. el año "1900" de
-      // fechas vacias, o todos), avisamos y NO cargamos.
-      if nTotal > MAX_FILAS_CARGA then
-      begin
+      qry := dmmFacturas.unqryTablaG;
+      cursorPrev := Screen.Cursor;
+      Screen.Cursor := crHourGlass;
+      MostrarProgresoCarga(0);
+      // FetchRows define el tamaño de bloque; al recorrer, UniDAC trae los
+      // registros por bloques (FetchAll por defecto es False) y vamos
+      // avanzando la barra. DisableControls evita que el grid fuerce el
+      // fetch completo de golpe. FetchRows solo se puede fijar con la query
+      // cerrada, asi que lo dejamos puesto (no se restaura).
+      qry.DisableControls;
+      try
+        nTotal := ContarFacturas;
+        // Tope de seguridad: cargar cientos de miles de filas de golpe
+        // bloquea el grid. Si la seleccion es enorme (p.ej. el año "1900" de
+        // fechas vacias, o todos), avisamos y NO cargamos.
+        if nTotal > MAX_FILAS_CARGA then
+        begin
+          OcultarProgresoCarga;
+          Screen.Cursor := cursorPrev;
+          MessageDlg(Format('La selección cargaría %s registros, demasiados ' +
+            'para mostrarlos de una vez.' + sLineBreak +
+            'Acota los filtros (años / almacenes) y vuelve a intentarlo.',
+            [FormatFloat('#,##0', nTotal)]), mtWarning, [mbOK], 0);
+        end
+        else
+        begin
+          if Assigned(FbarProgreso) then
+          begin
+            if nTotal > 0 then
+              FbarProgreso.Max := nTotal
+            else
+              FbarProgreso.Max := 1;
+          end;
+          qry.Close;
+          qry.FetchRows := TAM_BLOQUE;
+          qry.Open;
+          nLeidos := 0;
+          qry.First;
+          while not qry.Eof do
+          begin
+            Inc(nLeidos);
+            if (nLeidos mod 200) = 0 then
+              ActualizarProgresoCarga(nLeidos, nTotal);
+            qry.Next;
+          end;
+          qry.First;
+        end;
+      finally
+        qry.EnableControls;
         OcultarProgresoCarga;
         Screen.Cursor := cursorPrev;
-        MessageDlg(Format('La selección cargaría %s registros, demasiados ' +
-          'para mostrarlos de una vez.' + sLineBreak +
-          'Acota los filtros (años / almacenes) y vuelve a intentarlo.',
-          [FormatFloat('#,##0', nTotal)]), mtWarning, [mbOK], 0);
-      end
-      else
-      begin
-        if Assigned(FbarProgreso) then
-        begin
-          if nTotal > 0 then
-            FbarProgreso.Max := nTotal
-          else
-            FbarProgreso.Max := 1;
-        end;
-        qry.Close;
-        qry.FetchRows := TAM_BLOQUE;
-        qry.Open;
-        nLeidos := 0;
-        qry.First;
-        while not qry.Eof do
-        begin
-          Inc(nLeidos);
-          if (nLeidos mod 200) = 0 then
-            ActualizarProgresoCarga(nLeidos, nTotal);
-          qry.Next;
-        end;
-        qry.First;
       end;
     finally
-      qry.EnableControls;
-      OcultarProgresoCarga;
-      Screen.Cursor := cursorPrev;
+      FAbriendoConProgreso := False;
     end;
   end;
 end;
@@ -482,7 +490,7 @@ begin
   FPnlProgreso.Top := (Self.ClientHeight - FPnlProgreso.Height) div 2;
   FPnlProgreso.BringToFront;
   FPnlProgreso.Visible := True;
-  Application.ProcessMessages;
+  FPnlProgreso.Update;
 end;
 
 procedure TfrmMtoFacturasSimplif.ActualizarProgresoCarga(const APos,
@@ -497,7 +505,7 @@ begin
     FlblProgreso.Caption := 'Cargando borradores: ' +
                             FormatFloat('#,##0', APos) + ' / ' +
                             FormatFloat('#,##0', AMax);
-    Application.ProcessMessages;
+    FPnlProgreso.Update;
   end;
 end;
 

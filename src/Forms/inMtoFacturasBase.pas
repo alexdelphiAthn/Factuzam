@@ -556,6 +556,8 @@ type
     FEnterSkuActivo: Boolean;
     FEnterSkuAnterior: Boolean;
     FConsolidandoSku: Boolean;
+    FReaplicandoVisibilidadDetalle: Boolean;
+    FActualizandoLabelPrendas: Boolean;
     function  EsVentaMayorNormal: Boolean;
     function  TextoCobroPlural: string;
     function  PrefijoExportCobros: string;
@@ -2501,25 +2503,42 @@ end;
 
 procedure TfrmMtoFacturasBase.ReaplicarVisibilidadDetalle;
 begin
-  // - Variacion: nunca visible.
-  // - Columnas de creacion: solo en modo creacion de la cabecera.
-  // - SKU: solo si alguna linea lo necesita (variacion / varios SKUs /
-  //   nuevo) o hay modo creacion.
-  // Estas reglas mandan sobre el perfil de usuario (PonerAnchosTitulos).
-//  if ctbDESCRIPCION_VARIACION_FACTURA_LINEA.Visible then
-//    ctbDESCRIPCION_VARIACION_FACTURA_LINEA.Visible := False;
-  SincronizarColumnasCreacion;
-  SincronizarColumnaSku;
+  if not FReaplicandoVisibilidadDetalle then
+  begin
+    FReaplicandoVisibilidadDetalle := True;
+    try
+      // - Variacion: nunca visible.
+      // - Columnas de creacion: solo en modo creacion de la cabecera.
+      // - SKU: solo si alguna linea lo necesita (variacion / varios SKUs /
+      //   nuevo) o hay modo creacion.
+      // Estas reglas mandan sobre el perfil de usuario (PonerAnchosTitulos).
+//      if ctbDESCRIPCION_VARIACION_FACTURA_LINEA.Visible then
+//        ctbDESCRIPCION_VARIACION_FACTURA_LINEA.Visible := False;
+      SincronizarColumnasCreacion;
+      SincronizarColumnaSku;
+    finally
+      FReaplicandoVisibilidadDetalle := False;
+    end;
+  end;
 end;
 
 procedure TfrmMtoFacturasBase.ActualizarLabelPrendas;
 begin
-  if (dmmFacturas <> nil) and Assigned(dmmFacturas.unqryTablaG) and
-     dmmFacturas.unqryTablaG.Active and (not dmmFacturas.unqryTablaG.IsEmpty) then
-    lblTotalPrendasFactura.Caption :=
-      FormatFloat('#,##0', dmmFacturas.TotalPrendasFactura)
-  else
-    lblTotalPrendasFactura.Caption := '0';
+  if not FActualizandoLabelPrendas then
+  begin
+    FActualizandoLabelPrendas := True;
+    try
+      if (dmmFacturas <> nil) and Assigned(dmmFacturas.unqryTablaG) and
+         dmmFacturas.unqryTablaG.Active and
+         (not dmmFacturas.unqryTablaG.IsEmpty) then
+        lblTotalPrendasFactura.Caption :=
+          FormatFloat('#,##0', dmmFacturas.TotalPrendasFactura)
+      else
+        lblTotalPrendasFactura.Caption := '0';
+    finally
+      FActualizandoLabelPrendas := False;
+    end;
+  end;
 end;
 
 procedure TfrmMtoFacturasBase.AplicarEtiquetas;

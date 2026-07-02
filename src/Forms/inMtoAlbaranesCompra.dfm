@@ -146,7 +146,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
           Left = 0
           Top = 0
           Width = 937
-          Height = 161
+          Height = 200
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 0
@@ -154,13 +154,12 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             Left = 0
             Top = 0
             Width = 937
-            Height = 161
+            Height = 200
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsCabecera
             Properties.CustomButtons.Buttons = <>
-            ExplicitHeight = 200
-            ClientRectBottom = 157
+            ClientRectBottom = 196
             ClientRectLeft = 4
             ClientRectRight = 933
             ClientRectTop = 28
@@ -406,15 +405,25 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             end
           end
         end
+        object splSplitterFicha: TcxSplitter
+          Left = 0
+          Top = 200
+          Width = 937
+          Height = 8
+          Cursor = crSizeNS
+          HotZoneClassName = 'TcxMediaPlayer9Style'
+          HotZone.SizePercent = 50
+          AlignSplitter = salTop
+          Control = pnlTopFicha
+        end
         object pnlBotonesAcciones: TPanel
           Left = 0
-          Top = 161
+          Top = 208
           Width = 937
           Height = 38
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 1
-          ExplicitTop = 200
           object btnAnadirLinea: TcxButton
             Left = 8
             Top = 6

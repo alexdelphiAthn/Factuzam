@@ -41,7 +41,7 @@ uses
   inLibGridTallasInline,
   inLibGridPivoteCompra,
   UniDataDevolucionesCompra, cxBlobEdit, dxShellDialogs, System.Actions,
-  Vcl.ActnList;
+  Vcl.ActnList, cxSplitter;
 
 const
   CANT_TALLAS_MAX = 20;
@@ -50,6 +50,7 @@ const
 type
   TfrmMtoDevolucionesCompra = class(TfrmMtoGen)
     pnlTopFicha:         TPanel;
+    splSplitterFicha:    TcxSplitter;
     pcCab:               TcxPageControl;
     tsCabecera:          TcxTabSheet;
     pnlBotonesAcciones:  TPanel;

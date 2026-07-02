@@ -529,6 +529,10 @@ type
     // vuelca la seleccion del usuario a los filtros del Mto.
     procedure MostrarDialogoRefinar;
     procedure AplicarFiltrosArticulos;
+    function  ObtenerFacturaLineaActiva(out ANumero,
+                                        ASerie: string): Boolean;
+    procedure AbrirFacturaLineaActiva(const ANumero,
+                                      ASerie: string);
   public
     procedure RecogerPerfilesParticulares(var oList: TPerfilList;
                                           const sPermisos: string); override;
@@ -915,20 +919,56 @@ begin
               'Empresas');
 end;
 
+function TfrmMtoArticulos.ObtenerFacturaLineaActiva(out ANumero,
+  ASerie: string): Boolean;
+var
+  oDataSet: TDataSet;
+  oCampoNumero: TField;
+  oCampoSerie: TField;
+begin
+  Result := False;
+  ANumero := '';
+  ASerie := '';
+  oDataSet := nil;
+  if Assigned(tvLinFac) and
+     Assigned(tvLinFac.DataController) and
+     Assigned(tvLinFac.DataController.DataSource) then
+    oDataSet := tvLinFac.DataController.DataSource.DataSet;
+  if Assigned(oDataSet) and oDataSet.Active and (not oDataSet.IsEmpty) then
+  begin
+    oCampoNumero := oDataSet.FindField('NUMERO_FAC_FACLIN');
+    oCampoSerie := oDataSet.FindField('SERIE_FAC_FACLIN');
+    if Assigned(oCampoNumero) and Assigned(oCampoSerie) and
+       (not oCampoNumero.IsNull) and (not oCampoSerie.IsNull) then
+    begin
+      ANumero := Trim(oCampoNumero.AsString);
+      ASerie := Trim(oCampoSerie.AsString);
+      Result := (ANumero <> '') and (ASerie <> '');
+    end;
+  end;
+end;
+
+procedure TfrmMtoArticulos.AbrirFacturaLineaActiva(const ANumero,
+  ASerie: string);
+begin
+  ShowMto(Self.Owner,
+          ResolverCallFactura(ANumero, ASerie),
+          ANumero + ',' + ASerie);
+end;
+
 procedure TfrmMtoArticulos.actFacturasExecute(Sender: TObject);
+var
+  sNum: string;
+  sSer: string;
 begin
   inherited;
   //Control + F   -> Facturas
-   with tvLinFac.DataController.DataSet do
-    if (
-        (pcDetail.ActivePage = tsLineasFactura)        and
-        (not(FieldByName('NUMERO_FAC_FACLIN').IsNull))  and
-        (not(FieldByName('SERIE_FAC_FACLIN').IsNull))
-       ) then
-      btnIraFacturaClick(Sender)
-    else
-      ShowMto(Self.Owner,
-              'Facturas');
+  if (pcDetail.ActivePage = tsLineasFactura) and
+     ObtenerFacturaLineaActiva(sNum, sSer) then
+    AbrirFacturaLineaActiva(sNum, sSer)
+  else
+    ShowMto(Self.Owner,
+            'Facturas');
 end;
 
 procedure TfrmMtoArticulos.actFamiliasExecute(Sender: TObject);
@@ -1324,14 +1364,11 @@ var
   sNum, sSer: string;
 begin
   inherited;
-  with tvLinFac.DataController.DataSource.DataSet do
-  begin
-    sNum := FieldByName('NUMERO_FAC_FACLIN').AsString;
-    sSer := FieldByName('SERIE_FAC_FACLIN').AsString;
+  if ObtenerFacturaLineaActiva(sNum, sSer) then
+    AbrirFacturaLineaActiva(sNum, sSer)
+  else
     ShowMto(Self.Owner,
-            ResolverCallFactura(sNum, sSer),
-            sNum + ',' + sSer);
-  end;
+            'Facturas');
 end;
 
 procedure TfrmMtoArticulos.btnIraProveedorClick(Sender: TObject);
