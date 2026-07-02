@@ -64,7 +64,7 @@ type
     lblNroAlbaran: TcxLabel;
     txtNUMERO_ALB: TcxDBTextEdit;
     lblSerieAlbaran: TcxLabel;
-    txtSERIE_ALB: TcxDBTextEdit;
+    cbbSERIE_ALB: TcxDBComboBox;
     lblFechaAlbaran: TcxLabel;
     dteFECHA_ALB: TcxDBDateEdit;
     lblEstadoAlbaran: TcxLabel;
@@ -186,6 +186,7 @@ type
     procedure btnImprimirClick(Sender: TObject);
     procedure actIrDocumentoExecute(Sender: TObject);
     procedure actIrFacturaCreadaExecute(Sender: TObject);
+    procedure cbbSERIE_ALBPropertiesInitPopup(Sender: TObject);
     procedure btnCODIGO_EMP_ALBPropertiesButtonClick(Sender: TObject;
                                                      AButtonIndex: Integer);
     procedure btnCODIGO_CLI_ALBPropertiesButtonClick(Sender: TObject;
@@ -243,11 +244,40 @@ implementation
 uses
   inMtoModalFacturarAlbaranesFechas, inLibFotos, inLibGridCantidad,
   inLibGenBusq, inLibShowMto, inLibGlobalVar, inLibFiltroUsuario, Uni,
-  inLibArticulosResolver, inLibArticulosValidador, inLibVentasImpuestos;
+  inLibArticulosResolver, inLibArticulosValidador, inLibVentasImpuestos,
+  inLibtb;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TfrmMtoAlbaranes.cbbSERIE_ALBPropertiesInitPopup(Sender: TObject);
+var
+  sEmpresa: string;
+begin
+  sEmpresa := '';
+  if (dmmAlbaranes <> nil) and dmmAlbaranes.unqryTablaG.Active then
+  begin
+    sEmpresa := Trim(dmmAlbaranes.unqryTablaG.
+                       FieldByName('CODIGO_EMP_ALB').AsString);
+  end;
+  if (sEmpresa = '') or (sEmpresa = '0') then
+  begin
+    sEmpresa := Trim(inLibGlobalVar.oEmpresa);
+  end;
+  CargarSeriesEmpresa(sEmpresa, 'AV', cbbSERIE_ALB.Properties.Items);
+  if cbbSERIE_ALB.Properties.Items.Count = 0 then
+  begin
+    if MessageDlg('No hay series de albaranes de venta mayor (tipo AV) ' +
+                  'para la empresa "' + sEmpresa + '".' + sLineBreak +
+                  'Se dan de alta en Empresas -> Series. ' +
+                  '¿Abrir el mantenimiento de Empresas ahora?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    begin
+      ShowMto(Self.Owner, 'Empresas');
+    end;
+  end;
+end;
 
 // dsTablaG apunta a la cabecera de albaran. El articulo activo vive en
 // la fila del sub-grid tvLineasAlbaran (CODIGO_ART_ALBLIN /

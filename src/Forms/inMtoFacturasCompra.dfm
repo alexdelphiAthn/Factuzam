@@ -135,11 +135,13 @@
                 TabOrder = 2
                 Transparent = True
               end
-              object txtSERIE_FACC: TcxDBTextEdit
+              object cbbSERIE_FACC: TcxDBComboBox
                 Left = 116
                 Top = 32
                 DataBinding.DataField = 'SERIE_FACC'
                 DataBinding.DataSource = dsTablaG
+                Properties.MaxLength = 12
+                Properties.OnInitPopup = cbbSERIE_FACCPropertiesInitPopup
                 TabOrder = 3
                 Width = 80
               end

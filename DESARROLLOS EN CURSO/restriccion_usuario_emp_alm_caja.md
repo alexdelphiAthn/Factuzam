@@ -31,8 +31,10 @@ empresa/almacén/caja ya existen en `fza_usuarios`
   devuelven el valor de `fza_usuarios` o `''` si no hay restricción.
   Un defecto vacío no filtra esa dimensión.
 - `SqlFiltroEmpAlmCaja(colEmp, colAlm, colCaja)`: fragmento
-  `' AND col = ''valor'''` por cada dimensión con columna y valor.
-  Columna `''` = esa pantalla no tiene esa dimensión.
+  `' AND (col = ''valor'' OR col IS NULL)'` por cada dimensión con
+  columna y valor. Columna `''` = esa pantalla no tiene esa dimensión.
+  El `OR IS NULL` evita excluir documentos sin esa dimensión (p. ej.
+  facturas de mayor con `CODIGO_CAJA_FAC` NULL — bug B1 de las pruebas).
 - `InyectarFiltroSql(sql, filtro)`: mete el filtro en el WHERE de nivel
   superior de una SELECT (añade `WHERE 1 = 1` si no hay), insertando
   antes del primer GROUP BY / HAVING / ORDER BY / LIMIT de nivel
@@ -63,6 +65,8 @@ empresa/almacén/caja ya existen en `fza_usuarios`
 | Inventarios             | `CODIGO_EMP_INV`, `CODIGO_ALM_INV`                  |
 | Histórico arqueos       | `CODIGO_EMP_ARQ`, `CODIGO_ALM_ARQ`, `CODIGO_CAJA_ARQ` |
 | Histórico vales         | `CODIGO_EMP_EMI_VL`, `CODIGO_ALM_EMI_VL`, `CODIGO_CAJA_EMI_VL` (por emisión) |
+| Efectos de cobro        | `CODIGO_EMP_EFV` (empresa de la factura origen; mejora M1) |
+| Efectos de pago         | `CODIGO_EMP_EFEC` (empresa de la factura origen; mejora M1) |
 
 ## Pantallas que recomponen su SQL (filtro en su `ConstruirWhere*`)
 

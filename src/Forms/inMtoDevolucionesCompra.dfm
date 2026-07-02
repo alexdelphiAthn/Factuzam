@@ -1,4 +1,4 @@
-inherited frmMtoDevolucionesCompra: TfrmMtoDevolucionesCompra
+﻿inherited frmMtoDevolucionesCompra: TfrmMtoDevolucionesCompra
   Caption = 'Mantenimiento de Devoluciones a Proveedor'
   ClientHeight = 765
   ClientWidth = 1085
@@ -136,11 +136,13 @@ inherited frmMtoDevolucionesCompra: TfrmMtoDevolucionesCompra
                 TabOrder = 2
                 Transparent = True
               end
-              object txtSERIE_DEVC: TcxDBTextEdit
+              object cbbSERIE_DEVC: TcxDBComboBox
                 Left = 116
                 Top = 32
                 DataBinding.DataField = 'SERIE_DEVC'
                 DataBinding.DataSource = dsTablaG
+                Properties.MaxLength = 12
+                Properties.OnInitPopup = cbbSERIE_DEVCPropertiesInitPopup
                 TabOrder = 3
                 Width = 80
               end

@@ -27,9 +27,11 @@ function RestriccionEmpAlmCajaActiva: Boolean;
 function EmpresaRestringida: string;
 function AlmacenRestringido: string;
 function CajaRestringida: string;
-// Construye el fragmento SQL ' AND <col> = ''valor''' para inyectar en el
-// WHERE de la precarga de cada pantalla. Se pasa el nombre de columna de
-// cada dimensión ('' para omitirla, p. ej. pantallas sin caja).
+// Construye el fragmento SQL ' AND (<col> = ''valor'' OR <col> IS NULL)'
+// para inyectar en el WHERE de la precarga de cada pantalla. Se pasa el
+// nombre de columna de cada dimensión ('' para omitirla, p. ej. pantallas
+// sin caja). El OR IS NULL evita excluir documentos sin esa dimensión
+// (p. ej. facturas de mayor con CODIGO_CAJA_FAC NULL).
 function SqlFiltroEmpAlmCaja(const AColEmpresa,
                              AColAlmacen,
                              AColCaja: string): string;
@@ -82,6 +84,16 @@ end;
 function SqlFiltroEmpAlmCaja(const AColEmpresa,
                              AColAlmacen,
                              AColCaja: string): string;
+
+  // Fragmento de una dimensión tolerante a NULL: un documento sin esa
+  // dimensión (columna NULL) no se excluye, igual que un defecto vacío
+  // del usuario no filtra esa dimensión.
+  function Fragmento(const ACol, AValor: string): string;
+  begin
+    Result := ' AND (' + ACol + ' = ' + QuotedStr(AValor) +
+              ' OR ' + ACol + ' IS NULL)';
+  end;
+
 begin
   Result := '';
   if not RestriccionEmpAlmCajaActiva then
@@ -91,11 +103,11 @@ begin
   else
   begin
     if (AColEmpresa <> '') and (oEmpresa <> '') then
-      Result := Result + ' AND ' + AColEmpresa + ' = ' + QuotedStr(oEmpresa);
+      Result := Result + Fragmento(AColEmpresa, oEmpresa);
     if (AColAlmacen <> '') and (oAlmacen <> '') then
-      Result := Result + ' AND ' + AColAlmacen + ' = ' + QuotedStr(oAlmacen);
+      Result := Result + Fragmento(AColAlmacen, oAlmacen);
     if (AColCaja <> '') and (oCaja <> '') then
-      Result := Result + ' AND ' + AColCaja + ' = ' + QuotedStr(oCaja);
+      Result := Result + Fragmento(AColCaja, oCaja);
   end;
 end;
 

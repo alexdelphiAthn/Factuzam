@@ -1,4 +1,4 @@
-inherited frmMtoPedidos: TfrmMtoPedidos
+﻿inherited frmMtoPedidos: TfrmMtoPedidos
   Caption = 'Mantenimiento de Pedidos'
   ClientHeight = 765
   ClientWidth = 1085
@@ -144,11 +144,13 @@ inherited frmMtoPedidos: TfrmMtoPedidos
                 TabOrder = 10
                 Transparent = True
               end
-              object txtSERIE_PED: TcxDBTextEdit
+              object cbbSERIE_PED: TcxDBComboBox
                 Left = 106
                 Top = 32
                 DataBinding.DataField = 'SERIE_PED'
                 DataBinding.DataSource = dsTablaG
+                Properties.MaxLength = 12
+                Properties.OnInitPopup = cbbSERIE_PEDPropertiesInitPopup
                 TabOrder = 1
                 Width = 70
               end

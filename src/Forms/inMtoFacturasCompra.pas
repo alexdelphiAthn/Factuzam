@@ -71,7 +71,7 @@ type
     lblNroFactura:    TcxLabel;
     txtNUMERO_FACC:   TcxDBTextEdit;
     lblSerieFactura:  TcxLabel;
-    txtSERIE_FACC:    TcxDBTextEdit;
+    cbbSERIE_FACC:    TcxDBComboBox;
     lblFechaFactura:  TcxLabel;
     dteFECHA_FACC:    TcxDBDateEdit;
     lblEstadoFactura: TcxLabel;
@@ -177,6 +177,7 @@ type
     procedure cxgrdLineasFacturaExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
     procedure actIrProveedorExecute(Sender: TObject);
+    procedure cbbSERIE_FACCPropertiesInitPopup(Sender: TObject);
     procedure cbbCODIGO_PRV_FACCPropertiesEditValueChanged(Sender: TObject);
     procedure cbbCODIGO_PRV_FACCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
@@ -261,11 +262,41 @@ uses
   inMtoModalImpFacCompra,
   inMtoModalImpFacCompraV,
   inLibShowMto, inMtoModalRegistrarPago,
-  inMtoModalSeleccionarBanco, inLibGenBusq;
+  inMtoModalSeleccionarBanco, inLibGenBusq, inLibtb;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TfrmMtoFacturasCompra.cbbSERIE_FACCPropertiesInitPopup(
+  Sender: TObject);
+var
+  sEmpresa: string;
+begin
+  sEmpresa := '';
+  if (dmmFacturasCompra <> nil) and
+     dmmFacturasCompra.unqryTablaG.Active then
+  begin
+    sEmpresa := Trim(dmmFacturasCompra.unqryTablaG.
+                       FieldByName('CODIGO_EMP_FACC').AsString);
+  end;
+  if (sEmpresa = '') or (sEmpresa = '0') then
+  begin
+    sEmpresa := Trim(inLibGlobalVar.oEmpresa);
+  end;
+  CargarSeriesEmpresa(sEmpresa, 'FP', cbbSERIE_FACC.Properties.Items);
+  if cbbSERIE_FACC.Properties.Items.Count = 0 then
+  begin
+    if MessageDlg('No hay series de facturas de compra (tipo FP) para la ' +
+                  'empresa "' + sEmpresa + '".' + sLineBreak +
+                  'Se dan de alta en Empresas -> Series. ' +
+                  '¿Abrir el mantenimiento de Empresas ahora?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    begin
+      ShowMto(Self.Owner, 'Empresas');
+    end;
+  end;
+end;
 
 // dsTablaG apunta a la cabecera del factura de compra. El articulo
 // activo vive en la fila del sub-grid tvLineasFactura

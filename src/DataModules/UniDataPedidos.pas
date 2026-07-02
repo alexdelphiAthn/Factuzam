@@ -111,6 +111,9 @@ type
   private
     FProcsInstalados: Boolean;
     FCalculandoTotales: Boolean;
+    // Propone la serie PE de fza_empresas_series de la empresa emisora
+    // en documentos nuevos sin numerar (al cambiar la empresa en el alta)
+    procedure ProponerSerieEmpresa(const AEmpresa: string);
     procedure CopiarFormaPagoPedidoAAlbaran(const ASeriePed, ANumeroPed,
                                             ASerieAlb, ANumeroAlb: string;
                                             AForzar: Boolean);
@@ -123,8 +126,8 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibLog, System.Diagnostics, System.UITypes, Vcl.Dialogs,
-  inLibVentasImpuestos;
+  inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics, System.UITypes,
+  Vcl.Dialogs, inLibVentasImpuestos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -214,6 +217,8 @@ begin
 end;
 
 procedure TdmPedidos.unqryTablaGAfterInsert(DataSet: TDataSet);
+var
+  sSerie: string;
 begin
   inherited;
   with unqryTablaG do
@@ -222,8 +227,13 @@ begin
     FieldByName('CODIGO_EMP_PED').AsString := '0';
     FieldByName('CODIGO_CLI_PED').AsString := '0';
     FieldByName('NUMERO_PED').AsString     := '0';
+    // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='PE'
+    // (mismo criterio que compras); fallback historico 'A1'
+    sSerie := ObtenerSerieDefecto(oEmpresa, 'PE');
+    if sSerie = '' then
+      sSerie := 'A1';
     if FindField('SERIE_PED') <> nil then
-      FieldByName('SERIE_PED').AsString    := 'A1';
+      FieldByName('SERIE_PED').AsString    := sSerie;
     if FindField('ESTADO_PED') <> nil then
       FieldByName('ESTADO_PED').AsString   := 'ABIERTO';
     if FindField('ESCONSOLIDADO_PED') <> nil then
@@ -482,11 +492,11 @@ begin
   with unstrdprcGetContador do
   begin
     Params.Clear;
-    Params.CreateParam(ftString, 'ptipodoc',     ptInput);
-    Params.CreateParam(ftString, 'pcont',        ptOutput);
-    Params.CreateParam(ftString, 'pUSUARIO',     ptInput);
+    Params.CreateParam(ftString, 'ptipodoc',       ptInput);
+    Params.CreateParam(ftString, 'pcont',          ptOutput);
+    Params.CreateParam(ftString, 'pUSUARIO_MODIF', ptInput);
     ParamByName('ptipodoc').AsString := 'CL';
-    ParamByName('pUSUARIO').AsString  := oUser;
+    ParamByName('pUSUARIO_MODIF').AsString := oUser;
     ExecProc;
     unqryTablaG.FieldByName('CODIGO_CLI_PED').AsString :=
                             ParamByName('pcont').AsString;
@@ -534,10 +544,31 @@ begin
       if not q.IsEmpty then
       begin
         CopiarEmpresaaPedido(q);
+        // La serie acompana a la empresa emisora (fza_empresas_series)
+        ProponerSerieEmpresa(sCodigo);
         Result := True;
       end;
     finally
       FreeAndNil(q);
+    end;
+  end;
+end;
+
+procedure TdmPedidos.ProponerSerieEmpresa(const AEmpresa: string);
+var
+  sSerie: string;
+  sNumero: string;
+begin
+  if (unqryTablaG.State in [dsInsert, dsEdit]) then
+  begin
+    sNumero := Trim(unqryTablaG.FieldByName('NUMERO_PED').AsString);
+    // Solo documentos nuevos sin numerar: un documento ya numerado
+    // conserva su serie aunque se retoque la empresa
+    if (sNumero = '') or (sNumero = '0') then
+    begin
+      sSerie := ObtenerSerieDefecto(AEmpresa, 'PE');
+      if sSerie <> '' then
+        unqryTablaG.FieldByName('SERIE_PED').AsString := sSerie;
     end;
   end;
 end;
@@ -900,11 +931,11 @@ begin
   with unstrdprcGetContador do
   begin
     Params.Clear;
-    Params.CreateParam(ftString, 'ptipodoc', ptInput);
-    Params.CreateParam(ftString, 'pcont',    ptOutput);
-    Params.CreateParam(ftString, 'pUSUARIO', ptInput);
+    Params.CreateParam(ftString, 'ptipodoc',       ptInput);
+    Params.CreateParam(ftString, 'pcont',          ptOutput);
+    Params.CreateParam(ftString, 'pUSUARIO_MODIF', ptInput);
     ParamByName('ptipodoc').AsString := sTipo;
-    ParamByName('pUSUARIO').AsString  := oUser;
+    ParamByName('pUSUARIO_MODIF').AsString := oUser;
     ExecProc;
     Result := ParamByName('pcont').AsString;
   end;

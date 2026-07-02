@@ -1188,7 +1188,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                   Top = 44
                   Width = 108
                   Height = 48
-                  Caption = 'Crear series doc / almac'#233'n'
+                  Caption = 'A'#241'adir serie a todos'
                   TabOrder = 1
                   WordWrap = True
                   OnClick = btnCrearSeriesDocClick
