@@ -89,8 +89,17 @@ primero en MariaDB aislada (sandbox) y después en la app:
   propio, sin colisión con 000001/A1 de 012. **Limitación residual**:
   el AfterInsert sigue proponiendo 'A1' y al cambiar la empresa emisora
   no se repropone la serie; si el usuario deja 'A1' con otra empresa,
-  el 1062 sigue siendo posible. Mejora sugerida: reproponer con
-  `ObtenerSerieDefecto(empresa, 'AV'/'PE')` en BuscarEmpresa.
+  el 1062 sigue siendo posible. **Resuelta y probada** (compilado en
+  IDE, Success): AV/PE proponen la serie de `fza_empresas_series` en el
+  alta y al cambiar la empresa emisora — ver ampliación julio 2026 en
+  `series_por_almacen.md`. Retest: pedido nuevo propone A1 para 012
+  (sin serie PE propia, fallback) y al poner empresa 1 salta solo a
+  AG1; grabado el pedido 000001/AG1 sin 1062. Albarán: mismo
+  comportamiento (alta cancelada sin grabar). Matiz: al volver de la
+  empresa 1 a 012 la serie se queda en AG1 porque 012 no tiene serie
+  AV/PE en fza_empresas_series (la repropuesta solo actúa si la
+  empresa destino tiene serie); dar de alta series AV/PE a 012 lo
+  elimina.
 - **M1 implementado** (pendiente recompilar y probar): override de
   `SqlRestriccionUsuario` en efectos de venta (`CODIGO_EMP_EFV`) y de
   compra (`CODIGO_EMP_EFEC`). `PRC_EFV_GENERAR_DESDE_FACTURA` rellena

@@ -544,6 +544,8 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                   OnEditing = tvLineasPedidoEditing
                   OnFocusedRecordChanged = tvLineasPedidoFocusedRecordChanged
                   OnInitEdit = tvLineasPedidoInitEdit
+                  Navigator.Buttons.ConfirmDelete = True
+                  Navigator.Visible = True
                   OptionsBehavior.FocusCellOnTab = True
                   OptionsBehavior.FocusFirstCellOnNewRecord = True
                   OptionsData.Appending = True

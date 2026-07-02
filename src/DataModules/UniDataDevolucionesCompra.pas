@@ -269,7 +269,7 @@ begin
     if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_DEVC') <> nil then
       FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_DEVC').AsString := 'N';
     if FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil then
-      FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString := 'S';
+      FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString := 'N';
     AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
       'CODIGO_EMP_DEVC', 'ESIVA_RECARGO_COMPRAS_DEVC');
     AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
@@ -286,6 +286,10 @@ var
 begin
   inherited;
   ValidarAlmacenSalida;
+  if (DataSet.FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil) and
+     (Trim(DataSet.FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString) = '')
+  then
+    DataSet.FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString := 'N';
   if (unqryTablaG.FieldByName('NUMERO_DEVC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_DEVC').AsString = '') then
     GetCodigoAutoDevolucionCompra;
@@ -603,15 +607,18 @@ begin
 end;
 
 procedure TdmDevolucionesCompra.GetCodigoAutoDevolucionCompra;
+var
+  iNumero: Int64;
+  sNumero: string;
 begin
   with unstrdprcGetContadorDevc do
   begin
     Params.Clear;
     Params.CreateParam(ftString, 'pserie',            ptInput);
     Params.CreateParam(ftString, 'ptipodoc',          ptInput);
-    Params.CreateParam(ftString, 'pcont',             ptOutput);
     Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
     Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
+    Params.CreateParam(ftString, 'pcont',             ptOutput);
     ParamByName('pserie').AsString :=
       unqryTablaG.FieldByName('SERIE_DEVC').AsString;
     ParamByName('ptipodoc').AsString := 'DC';
@@ -619,8 +626,16 @@ begin
     ParamByName('pEMPRESA_CONTADOR').AsString :=
       unqryTablaG.FieldByName('CODIGO_EMP_DEVC').AsString;
     ExecProc;
-    unqryTablaG.FieldByName('NUMERO_DEVC').AsString :=
-      ParamByName('pcont').AsString;
+    sNumero := Trim(ParamByName('pcont').AsString);
+    if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
+       (iNumero <= 0) then
+      raise Exception.Create(
+        'No se pudo obtener un numero de devolucion de compra valido. ' +
+        'Revise el contador DC de la serie ' +
+        unqryTablaG.FieldByName('SERIE_DEVC').AsString +
+        ' y empresa ' +
+        unqryTablaG.FieldByName('CODIGO_EMP_DEVC').AsString + '.');
+    unqryTablaG.FieldByName('NUMERO_DEVC').AsString := sNumero;
   end;
 end;
 

@@ -1,6 +1,7 @@
 -- Anyade campos a fza_albaranes_compra (idempotente):
---   ESPIVOTE_HORIZONTAL_ALBC : 'S' para que el Mto abra el albaran ya en
---                              modo 'Tallas en horizontal' por defecto.
+--   ESPIVOTE_HORIZONTAL_ALBC : recuerda si el documento abre en modo
+--                              'Tallas en horizontal'. Las altas nacen en
+--                              vertical ('N').
 --   CODIGO_TAR_ALBC          : tarifa de venta sugerida al imprimir
 --                              pegatinas (PVP calculado a partir de ella).
 -- ============================================================================

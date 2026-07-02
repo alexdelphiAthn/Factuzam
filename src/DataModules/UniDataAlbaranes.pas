@@ -394,15 +394,18 @@ begin
 end;
 
 procedure TdmAlbaranes.GetCodigoAutoAlbaran;
+var
+  iNumero: Int64;
+  sNumero: string;
 begin
   with unstrdprcGetContadorAlbaran do
   begin
     Params.Clear;
     Params.CreateParam(ftString, 'pserie',            ptInput);
     Params.CreateParam(ftString, 'ptipodoc',          ptInput);
-    Params.CreateParam(ftString, 'pcont',             ptOutput);
     Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
     Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
+    Params.CreateParam(ftString, 'pcont',             ptOutput);
     ParamByName('pserie').AsString    :=
       unqryTablaG.FieldByName('SERIE_ALB').AsString;
     ParamByName('ptipodoc').AsString  := 'AV';
@@ -411,8 +414,16 @@ begin
                                   unqryTablaG.FieldByName(
                                     'CODIGO_EMP_ALB').AsString;
     ExecProc;
-    unqryTablaG.FieldByName('NUMERO_ALB').AsString :=
-                                                  ParamByName('pcont').AsString;
+    sNumero := Trim(ParamByName('pcont').AsString);
+    if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
+       (iNumero <= 0) then
+      raise Exception.Create(
+        'No se pudo obtener un numero de albaran valido. ' +
+        'Revise el contador AV de la serie ' +
+        unqryTablaG.FieldByName('SERIE_ALB').AsString +
+        ' y empresa ' +
+        unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString + '.');
+    unqryTablaG.FieldByName('NUMERO_ALB').AsString := sNumero;
   end;
 end;
 
@@ -486,9 +497,8 @@ begin
       q.Open;
       if not q.IsEmpty then
       begin
+        // CopiarEmpresaaAlbaran ya repropone la serie de la empresa
         CopiarEmpresaaAlbaran(q);
-        // La serie acompana a la empresa emisora (fza_empresas_series)
-        ProponerSerieEmpresa(sCodigo);
         Result := True;
       end;
     finally
@@ -577,6 +587,9 @@ begin
     FindField('GRUPO_ZONA_IVA_EMPRESA_ALB').AsString :=
       DataSet.FindField('GRUPO_ZONA_IVA_EMP').AsString;
   end;
+  // La serie acompana a la empresa emisora (fza_empresas_series).
+  // Cubre las dos rutas: codigo tecleado (BuscarEmpresa) y modal.
+  ProponerSerieEmpresa(DataSet.FindField('CODIGO_EMP_EMP').AsString);
   AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'ALB');
 end;
 

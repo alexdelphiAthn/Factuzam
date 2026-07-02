@@ -280,6 +280,8 @@ type
     function BuscarSkuPedidoCompra(const ACodigoArt: string): string;
     function ArticuloLineaActivaPedidoCompra: string;
     procedure AplicarArticuloPedidoCompra(const ACodigoArt: string);
+    procedure AsegurarCabeceraPersistidaParaLineas;
+    function PuedeActivarTallasHorizontal(var AMensaje: string): Boolean;
     procedure colLineaPedcCODIGO_UNIDADPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure colLinPedcColorPivotButtonClick(Sender: TObject;
@@ -486,6 +488,188 @@ begin
   end;
 end;
 
+procedure TfrmMtoPedidosCompra.AsegurarCabeceraPersistidaParaLineas;
+var
+  dsCab  : TDataSet;
+  dsLin  : TDataSet;
+  sNumero: string;
+
+  function ValorLinea(const ACampo: string): string;
+  var
+    Campo: TField;
+  begin
+    Result := '';
+    Campo := dsLin.FindField(ACampo);
+    if Campo <> nil then
+      Result := Trim(Campo.AsString);
+  end;
+
+  function LineaActualVacia: Boolean;
+  begin
+    Result := (ValorLinea('CODIGO_ART_PEDCLIN') = '') and
+              (ValorLinea('CODIGO_UNIDAD_PEDCLIN') = '');
+  end;
+
+  procedure SincronizarCabeceraEnLinea;
+  begin
+    if Assigned(dsLin) and dsLin.Active and
+       (dsLin.State in dsEditModes) then
+    begin
+      if dsLin.FindField('NUMERO_PEDC_PEDCLIN') <> nil then
+        dsLin.FieldByName('NUMERO_PEDC_PEDCLIN').AsString :=
+          dsCab.FieldByName('NUMERO_PEDC').AsString;
+      if dsLin.FindField('SERIE_PEDC_PEDCLIN') <> nil then
+        dsLin.FieldByName('SERIE_PEDC_PEDCLIN').AsString :=
+          dsCab.FieldByName('SERIE_PEDC').AsString;
+    end;
+  end;
+
+begin
+  if not Assigned(dmmPedidosCompra) then
+    raise Exception.Create('No esta inicializado el pedido de compra.')
+  else
+  begin
+    dsCab := dmmPedidosCompra.unqryTablaG;
+    dsLin := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if (dsCab = nil) or (not dsCab.Active) or dsCab.IsEmpty then
+      raise Exception.Create(
+        'Crea o selecciona un pedido antes de añadir lineas.');
+    sNumero := Trim(dsCab.FieldByName('NUMERO_PEDC').AsString);
+    if Assigned(dsLin) and dsLin.Active and (dsLin.State = dsInsert) and
+       ((sNumero = '') or (sNumero = '0')) and LineaActualVacia then
+      dsLin.Cancel;
+    if (dsCab.State in dsEditModes) or (sNumero = '') or
+       (sNumero = '0') then
+    begin
+      if not (dsCab.State in dsEditModes) then
+        dsCab.Edit;
+      if (dsCab.FindField('ESPIVOTE_HORIZONTAL_PEDC') <> nil) and
+         (Trim(dsCab.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString) = '')
+         then
+        dsCab.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString := 'N';
+      dsCab.Post;
+    end;
+    SincronizarCabeceraEnLinea;
+    if Assigned(dsLin) and dsLin.Active and
+       (not (dsLin.State in dsEditModes)) then
+    begin
+      dsLin.Close;
+      dsLin.Open;
+    end;
+  end;
+end;
+
+function TfrmMtoPedidosCompra.PuedeActivarTallasHorizontal(
+  var AMensaje: string): Boolean;
+var
+  dsCab      : TDataSet;
+  dsLin      : TDataSet;
+  q          : TUniQuery;
+  incidencias: TStringList;
+  sSerie     : string;
+  sNumero    : string;
+
+  function ValorLinea(const ACampo: string): string;
+  var
+    Campo: TField;
+  begin
+    Result := '';
+    Campo := dsLin.FindField(ACampo);
+    if Campo <> nil then
+      Result := Trim(Campo.AsString);
+  end;
+
+  function LineaActualTieneArticulo: Boolean;
+  begin
+    Result := (ValorLinea('CODIGO_ART_PEDCLIN') <> '') or
+              (ValorLinea('CODIGO_UNIDAD_PEDCLIN') <> '');
+  end;
+
+  function LineaActualTieneSistemaTallas: Boolean;
+  var
+    Campo: TField;
+  begin
+    Result := False;
+    Campo := dsLin.FindField('ID_AC_PIVOT_PEDCLIN');
+    if Campo <> nil then
+      Result := (not Campo.IsNull) and (Campo.AsInteger > 0);
+  end;
+
+begin
+  Result := False;
+  AMensaje := '';
+  if (dmmPedidosCompra = nil) or (FPivote = nil) then
+    Result := True
+  else
+  begin
+    dsCab := dmmPedidosCompra.unqryTablaG;
+    dsLin := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if (dsCab = nil) or (not dsCab.Active) or dsCab.IsEmpty then
+      AMensaje := 'Crea o selecciona un pedido antes de activar tallas.'
+    else if Assigned(dsLin) and dsLin.Active and
+            (dsLin.State in dsEditModes) then
+    begin
+      if LineaActualTieneArticulo and
+         (not LineaActualTieneSistemaTallas) then
+        AMensaje :=
+          'El articulo en curso no tiene sistema de tallas asignado.'
+      else if LineaActualTieneArticulo then
+      begin
+        AsegurarCabeceraPersistidaParaLineas;
+        if dsLin.State in dsEditModes then
+          dsLin.Post;
+      end
+      else if dsCab.State = dsInsert then
+        AMensaje :=
+          'En alta, selecciona primero un articulo con sistema de tallas.';
+    end
+    else if dsCab.State = dsInsert then
+      AMensaje :=
+        'En alta, selecciona primero un articulo con sistema de tallas.';
+    if AMensaje = '' then
+    begin
+      sNumero := Trim(dsCab.FieldByName('NUMERO_PEDC').AsString);
+      if (sNumero = '') or (sNumero = '0') then
+        AsegurarCabeceraPersistidaParaLineas;
+      sSerie := Trim(dsCab.FieldByName('SERIE_PEDC').AsString);
+      sNumero := Trim(dsCab.FieldByName('NUMERO_PEDC').AsString);
+      incidencias := TStringList.Create;
+      q := TUniQuery.Create(nil);
+      try
+        q.Connection := dmmPedidosCompra.unqryTablaG.Connection;
+        q.SQL.Text :=
+          'SELECT DISTINCT L.CODIGO_ART_PEDCLIN AS ART ' +
+          '  FROM fza_pedidos_compra_lineas L ' +
+          ' WHERE L.SERIE_PEDC_PEDCLIN = :serie ' +
+          '   AND L.NUMERO_PEDC_PEDCLIN = :numero ' +
+          '   AND COALESCE(TRIM(L.CODIGO_ART_PEDCLIN), '''') <> '''' ' +
+          '   AND (L.ID_AC_PIVOT_PEDCLIN IS NULL ' +
+          '        OR L.ID_AC_PIVOT_PEDCLIN = 0) ' +
+          ' ORDER BY ART';
+        q.ParamByName('serie').AsString := sSerie;
+        q.ParamByName('numero').AsString := sNumero;
+        q.Open;
+        while not q.Eof do
+        begin
+          incidencias.Add('- Articulo sin sistema de tallas: ' +
+                          q.FieldByName('ART').AsString);
+          q.Next;
+        end;
+        if incidencias.Count > 0 then
+          AMensaje := 'No se puede activar tallas en horizontal:' +
+                      sLineBreak + sLineBreak +
+                      incidencias.Text + sLineBreak +
+                      'Asigna un sistema de tallas o elimina la linea.'
+        else
+          Result := FPivote.ValidarPivotePosible(AMensaje);
+      finally
+        FreeAndNil(q);
+        FreeAndNil(incidencias);
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmMtoPedidosCompra.AplicarArticuloPedidoCompra(
   const ACodigoArt: string);
 var
@@ -633,6 +817,7 @@ begin
   if (sInput <> '') and Assigned(dmmPedidosCompra) and
      (not FAplicandoArticulo) then
   begin
+    AsegurarCabeceraPersistidaParaLineas;
     ds := dmmPedidosCompra.unqryPedidosCompraLineas;
     if Assigned(ds) and ds.Active then
     begin
@@ -707,16 +892,24 @@ begin
               dmmPedidosCompra.unqryTablaG.Connection,
               dmmPedidosCompra.unqryTablaG, ds, 'PEDC', 'PEDCLIN',
               'TOTAL_PEDCLIN');
-            if Assigned(FPivote) and
-               (CampoCabeceraString('ESPIVOTE_HORIZONTAL_PEDC') <> 'N') then
+            if Assigned(FPivote) then
             begin
-              if not FPivote.Activo then
-                btnTallasHorizontalClick(nil);
-              if FPivote.Activo then
+              if iAcPivot <= 0 then
               begin
-                if ds.State in dsEditModes then
-                  ds.Post;
-                FPivote.RecargarYRepublicar;
+                if FPivote.Activo then
+                  btnTallasHorizontalClick(nil);
+              end
+              else if CampoCabeceraString('ESPIVOTE_HORIZONTAL_PEDC') <> 'N'
+              then
+              begin
+                if not FPivote.Activo then
+                  btnTallasHorizontalClick(nil);
+                if FPivote.Activo then
+                begin
+                  if ds.State in dsEditModes then
+                    ds.Post;
+                  FPivote.RecargarYRepublicar;
+                end;
               end;
             end;
             if Datos.RequiereSku and (Datos.CodigoSku = '') and
@@ -1238,10 +1431,10 @@ begin
   try
     if not FPivote.Activo then
     begin
-      if not FPivote.ValidarPivotePosible(sMensaje) then
+      if not PuedeActivarTallasHorizontal(sMensaje) then
       begin
-        // Sender=nil => apertura automatica con la preferencia por
-        // defecto (horizontal). Si el documento no es pivotable dejamos
+        // Sender=nil => apertura automatica por preferencia guardada.
+        // Si el documento no es pivotable dejamos
         // la vista vertical en silencio; solo avisamos cuando el usuario
         // pulsa el boton expresamente (Sender<>nil).
         if Sender <> nil then
@@ -1300,7 +1493,7 @@ begin
     // Si el pivote no esta activo, lo activamos primero.
     if not FPivote.Activo then
     begin
-      if not FPivote.ValidarPivotePosible(sMensaje) then
+      if not PuedeActivarTallasHorizontal(sMensaje) then
       begin
         MessageDlg(sMensaje, mtWarning, [mbOk], 0);
         Exit;
@@ -1426,9 +1619,13 @@ begin
      (not dsTablaG.DataSet.IsEmpty) and
      (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_PEDC') <> nil) then
   begin
-    // Por defecto la vista es horizontal: solo un 'N' explicito
-    // (excepcion que el usuario guardo a mano) la mantiene vertical.
-    // NULL / vacio / 'S' abren en horizontal.
+    if dsTablaG.DataSet.State = dsInsert then
+    begin
+      if FPivote.Activo then
+        btnTallasHorizontalClick(nil);
+      RefrescarCantidadAAlbaranar;
+      Exit;
+    end;
     bDeberiaEstarActivo :=
       dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString <> 'N';
     if bDeberiaEstarActivo and (not FPivote.Activo) then
@@ -1917,6 +2114,7 @@ end;
 procedure TfrmMtoPedidosCompra.btnAnadirLineaClick(Sender: TObject);
 begin
   inherited;
+  AsegurarCabeceraPersistidaParaLineas;
   dmmPedidosCompra.unqryPedidosCompraLineas.Append;
 end;
 

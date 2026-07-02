@@ -348,6 +348,8 @@ begin
     else
       FieldByName('CODIGO_EMP_ALBC').AsString := '0';
     FieldByName('CODIGO_PRV_ALBC').AsString := '0';
+    if FindField('ESPIVOTE_HORIZONTAL_ALBC') <> nil then
+      FieldByName('ESPIVOTE_HORIZONTAL_ALBC').AsString := 'N';
     // Por defecto el albaran NO es deposito; se marca a mano en
     // cabecera. FindField: tolera BBDD sin la migracion aplicada
     // (albaran_compra_deposito.sql).
@@ -368,8 +370,21 @@ var
   fEstado: TField;
   sEstadoNuevo, sEstadoAnterior: string;
   qChk: TUniQuery;
+  i: Integer;
 begin
   inherited;
+  // Cinturon: los campos NOT NULL con default en BBDD (p. ej.
+  // ESPIVOTE_HORIZONTAL_ALBC) llegan como Required a UniDAC y bloquean
+  // el Post del alta manual con "must have a value". Mismo criterio
+  // que Inventarios / Pedidos de compra.
+  for i := 0 to DataSet.FieldCount - 1 do
+    DataSet.Fields[i].Required := False;
+  // En alta manual el pivote arranca vertical; se activa tras elegir
+  // una linea con sistema de tallas.
+  if (DataSet.FindField('ESPIVOTE_HORIZONTAL_ALBC') <> nil) and
+     (Trim(DataSet.FieldByName('ESPIVOTE_HORIZONTAL_ALBC').AsString) = '')
+  then
+    DataSet.FieldByName('ESPIVOTE_HORIZONTAL_ALBC').AsString := 'N';
   if (unqryTablaG.FieldByName('NUMERO_ALBC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_ALBC').AsString = '') then
     GetCodigoAutoAlbaranCompra;
@@ -612,6 +627,12 @@ begin
       end);
     Abort;
   end;
+  if (Trim(unqryAlbaranesCompraLineas.FieldByName(
+             'NUMERO_ALBC_ALBCLIN').AsString) = '') or
+     (Trim(unqryAlbaranesCompraLineas.FieldByName(
+             'NUMERO_ALBC_ALBCLIN').AsString) = '0') then
+    raise Exception.Create(
+      'Graba la cabecera del albaran antes de guardar lineas.');
   with unqryAlbaranesCompraLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
@@ -681,15 +702,18 @@ begin
 end;
 
 procedure TdmAlbaranesCompra.GetCodigoAutoAlbaranCompra;
+var
+  iNumero: Int64;
+  sNumero: string;
 begin
   with unstrdprcGetContadorAlbc do
   begin
     Params.Clear;
     Params.CreateParam(ftString, 'pserie',            ptInput);
     Params.CreateParam(ftString, 'ptipodoc',          ptInput);
-    Params.CreateParam(ftString, 'pcont',             ptOutput);
     Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
     Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
+    Params.CreateParam(ftString, 'pcont',             ptOutput);
     ParamByName('pserie').AsString :=
       unqryTablaG.FieldByName('SERIE_ALBC').AsString;
     ParamByName('ptipodoc').AsString := 'AB';
@@ -697,8 +721,16 @@ begin
     ParamByName('pEMPRESA_CONTADOR').AsString :=
       unqryTablaG.FieldByName('CODIGO_EMP_ALBC').AsString;
     ExecProc;
-    unqryTablaG.FieldByName('NUMERO_ALBC').AsString :=
-      ParamByName('pcont').AsString;
+    sNumero := Trim(ParamByName('pcont').AsString);
+    if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
+       (iNumero <= 0) then
+      raise Exception.Create(
+        'No se pudo obtener un numero de albaran de compra valido. ' +
+        'Revise el contador AB de la serie ' +
+        unqryTablaG.FieldByName('SERIE_ALBC').AsString +
+        ' y empresa ' +
+        unqryTablaG.FieldByName('CODIGO_EMP_ALBC').AsString + '.');
+    unqryTablaG.FieldByName('NUMERO_ALBC').AsString := sNumero;
   end;
 end;
 
