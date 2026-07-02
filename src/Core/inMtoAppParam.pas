@@ -139,7 +139,11 @@ end;
 function UsuarioPuedeEditarParametro(const ANombre: string): Boolean;
 begin
   Result := True;
-  if StartsText('appVerifactu', ANombre) then
+  // Verifactu y la restricción por empresa/almacén/caja solo los puede
+  // cambiar un administrador: si no, un usuario restringido podría
+  // desactivarse la restricción a sí mismo.
+  if StartsText('appVerifactu', ANombre) or
+     SameText(ANombre, 'appRestringirEmpAlmCaja') then
     Result := SameText(oRootGroup, 'S');
 end;
 
@@ -756,12 +760,12 @@ begin
           'Parámetros guardados para ' + sUsuarioGrupo + ': ' +
           IntToStr(GuardadosCount));
       if IgnoradosCount > 0 then
-        ShowMessage(Format('Se ignoraron %d parámetros Verifactu. ' +
+        ShowMessage(Format('Se ignoraron %d parámetros restringidos. ' +
                            'Solo un usuario administrador puede cambiarlos.',
                            [IgnoradosCount]));
     end
     else if IgnoradosCount > 0 then
-      ShowMessage(Format('No se guardaron %d parámetros Verifactu. ' +
+      ShowMessage(Format('No se guardaron %d parámetros restringidos. ' +
                          'Solo un usuario administrador puede cambiarlos.',
                          [IgnoradosCount]))
     else

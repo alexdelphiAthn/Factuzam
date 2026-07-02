@@ -247,6 +247,8 @@ type
   public
     dmmAlbaranesCompra: TdmAlbaranesCompra;
     procedure CrearTablaPrincipal; override;
+    // Restricción de la precarga a la empresa/almacén del usuario
+    function SqlRestriccionUsuario: string; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
@@ -259,6 +261,7 @@ implementation
 uses
   System.StrUtils,
   inLibGlobalVar,
+  inLibFiltroUsuario,
   inLibFotos,
   inLibLog,
   inLibtb,
@@ -804,6 +807,12 @@ begin
   FMostrarAtributos := False;
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
+end;
+
+function TfrmMtoAlbaranesCompra.SqlRestriccionUsuario: string;
+begin
+  // Documentos de compra: empresa y almacén (no llevan caja)
+  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_ALBC', 'CODIGO_ALM_ALBC', '');
 end;
 
 procedure TfrmMtoAlbaranesCompra.CrearTablaPrincipal;

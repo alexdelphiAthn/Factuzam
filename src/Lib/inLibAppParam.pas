@@ -242,6 +242,16 @@ begin
     'Temporada por defecto (ID de fza_propiedades_valores)',
     tpString, '');
 
+  // --- Seguridad ---
+  // Restringe las consultas de documentos y operaciones (facturas,
+  // albaranes, pedidos, compras, cajas...) a la empresa/almacén/caja por
+  // defecto del usuario (fza_usuarios). Lo consumen inLibFiltroUsuario y
+  // las precargas de los Mto; los administradores quedan exentos y solo
+  // ellos pueden editarlo (véase UsuarioPuedeEditarParametro).
+  RegistrarParametro('Seguridad', 'appRestringirEmpAlmCaja',
+    'Restringir consultas a la empresa/almacén/caja del usuario',
+    tpBoolean, 'False');
+
   // --- Arranque ---
   // Precarga de caches de login en paralelo (perfiles, informes-guias,
   // config-campos, permisos), cada una con su propia conexion del pool.

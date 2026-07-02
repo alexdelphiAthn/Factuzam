@@ -527,6 +527,8 @@ type
     procedure ActualizarComboSeries;
     procedure CambiarEstadoRecibo(sEstado:String);
     procedure CrearTablaPrincipal; override;
+    // Restricción de la precarga a la empresa/almacén/caja del usuario
+    function SqlRestriccionUsuario: string; override;
     procedure ResetForm; override;
     procedure CambiarIVA;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
@@ -629,6 +631,7 @@ implementation
 uses
   inLibWin,
   inLibMsg,
+  inLibFiltroUsuario,
   inLibGenBusq,
   inLibShowMto,
   inLibFacturas,
@@ -2020,6 +2023,17 @@ begin
   finally
     Qry.Free;
   end;
+end;
+
+function TfrmMtoFacturasBase.SqlRestriccionUsuario: string;
+begin
+  // Con appRestringirEmpAlmCaja activo, el usuario solo consulta las
+  // facturas de su empresa/almacén/caja (fza_usuarios). Aplica a las
+  // dos variantes; simplificadas además lo integra en su
+  // ConstruirWhereFacturas al recomponer la SQL con filtros propios.
+  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_FAC',
+                                'CODIGO_ALM_FAC',
+                                'CODIGO_CAJA_FAC');
 end;
 
 procedure TfrmMtoFacturasBase.CrearTablaPrincipal;

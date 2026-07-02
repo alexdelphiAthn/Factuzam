@@ -122,7 +122,8 @@ var
 implementation
 
 uses
-  inLibWin, inLibUser, inMtoPrincipal, inLibShowMto, inLibGridCantidad;
+  inLibWin, inLibUser, inMtoPrincipal, inLibShowMto, inLibGridCantidad,
+  inLibFiltroUsuario;
 
 {$R *.dfm}
 
@@ -248,10 +249,13 @@ begin
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := dmmMovimientosAlmacen.unqryTablaG.Connection;
+    // Con la restricción por usuario activa el combo solo ofrece su
+    // empresa/almacén (fza_almacenes lleva la empresa en CODIGO_EMP_ALM).
     qry.SQL.Text :=
       'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM ' +
       '  FROM fza_almacenes ' +
       ' WHERE ESACTIVO_ALM = ''S'' ' +
+      SqlFiltroEmpAlmCaja('CODIGO_EMP_ALM', 'CODIGO_ALM_ALM', '') +
       ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM';
     qry.Open;
     while not qry.Eof do
@@ -382,6 +386,10 @@ begin
     Result := Result + ' AND YEAR(m.FECHA_MOV) IN (' + sAnyos + ')';
   if sAlm <> '' then
     Result := Result + ' AND m.CODIGO_ALM_MOV IN (' + sAlm + ')';
+  // Restricción por usuario (appRestringirEmpAlmCaja): acota a su
+  // empresa/almacén por encima de lo marcado en los combos.
+  Result := Result + SqlFiltroEmpAlmCaja('m.CODIGO_EMP_MOV',
+                                         'm.CODIGO_ALM_MOV', '');
 end;
 
 function TfrmMtoMovimientosAlmacen.ConstruirSqlMovimientos: string;
