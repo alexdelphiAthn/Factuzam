@@ -211,9 +211,6 @@ begin
     'Clave X-API-Key del servidor de recuentos', tpString, '');
   RegistrarParametro('Recuentos', 'appRecuentoCarpetaCliente',
     'Carpeta de cliente en el servidor de recuentos', tpString, '');
-  // --- Ventas ---
-  RegistrarParametro('Ventas', 'appTarifaDefault',
-    'Tarifa por defecto', tpString, '');
   // --- Impresión ---
   RegistrarParametro('Impresión', 'appImpresoraInformes',
     'Impresora para informes', tpString, '');
@@ -235,9 +232,8 @@ begin
     tpBoolean, 'True');
 
   // --- Valores por defecto ---
-  RegistrarParametro('Valores por defecto', 'appTarifaDefecto',
-    'Tarifa por defecto del sistema (código de tarifa)',
-    tpString, 'PVP');
+  // NOTA: la tarifa por defecto ya NO se define aquí. La única definición
+  // es el parámetro de caja 'vgerDefTarifa' (inLibCajaParam.TarifaDefecto).
   RegistrarParametro('Valores por defecto', 'appTemporadaDefecto',
     'Temporada por defecto (ID de fza_propiedades_valores)',
     tpString, '');

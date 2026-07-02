@@ -76,7 +76,8 @@ implementation
 {$R *.dfm}
 
 uses
-  System.StrUtils, inLibAppParam, inMtoPreviewExcel, inLibBalanceTallasExcel,
+  System.StrUtils, inLibAppParam, inLibCajaParam, inMtoPreviewExcel,
+  inLibBalanceTallasExcel,
   dxSpreadSheet, inLibFotos;
 
 { TfrmPrintBalanceTallas }
@@ -246,8 +247,7 @@ begin
     ParamByName('pTMP').AsString := CSVTemporadas;
     // Filtro de artículos (CSV; vacío = todos), nuevo en la pestaña Artículos.
     ParamByName('pART').AsString := CSVArticulos;
-    ParamByName('pTAR').AsString :=
-      oAppParams.GetString('appTarifaDefecto', 'PVP');
+    ParamByName('pTAR').AsString := TarifaDefecto;
     if (FrgModo <> nil) and (FrgModo.ItemIndex = 0) and
        (FrgDetalle <> nil) and (FrgDetalle.ItemIndex = 1) then
       ParamByName('pDESG').AsString := 'S'

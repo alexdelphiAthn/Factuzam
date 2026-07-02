@@ -83,7 +83,7 @@ type
     ValorMultiploAjuste: Double;        // efectivo
     ValorMenosAjuste   : Double;        // efectivo
     EsImpIncl          : Boolean;       // ESIMP_INCL_TAR
-    EsTarifaDefault    : Boolean;       // appTarifaDefecto
+    EsTarifaDefault    : Boolean;       // vgerDefTarifa (inLibCajaParam)
     FechaDesde         : TDateTime;
     FechaHasta         : TDateTime;     // 0 si abierta
     Vigente            : Boolean;       // hay fila vigente en la fecha
@@ -150,7 +150,7 @@ type
     TipoVariacion       : string;
 
     PrecioPedido        : TArticuloPrecio;   // tarifa solicitada
-    PrecioTarifaDefault : TArticuloPrecio;   // tarifa de appTarifaDefecto
+    PrecioTarifaDefault : TArticuloPrecio;   // tarifa de vgerDefTarifa
     UltimoCoste         : TArticuloCoste;    // proveedor principal o el pedido
     PMP                 : TArticuloPMP;      // por almacén o ponderado
 
@@ -168,7 +168,7 @@ type
   public
     constructor Create(AConexion: TUniConnection);
 
-    // Pipeline completo. Si ACodigoTarifa es '', usa appTarifaDefecto.
+    // Pipeline completo. Si ACodigoTarifa es '', usa vgerDefTarifa.
     // Si ACodigoAlmacen es '', el PMP es ponderado entre todos los almacenes.
     function ResolverDatos(const ACodigoArt, ACodigoSku: string;
                            const ACodigoTarifa: string = '';
@@ -216,7 +216,7 @@ function DescuentoTarifaVigente(AConexion: TUniConnection;
 implementation
 
 uses
-  inLibAppParam;
+  inLibCajaParam;
 
 { Helpers de records ──────────────────────────────────────────────────────── }
 
@@ -362,7 +362,7 @@ end;
 
 function TArticulosResolver.TarifaDefault: string;
 begin
-  Result := oAppParams.GetString('appTarifaDefecto', 'PVP');
+  Result := TarifaDefecto;  // vgerDefTarifa (inLibCajaParam)
 end;
 
 function TArticulosResolver.ContarSkusActivos(const ACodigoArt: string;
@@ -411,7 +411,7 @@ begin
   P.ValorMenosAjuste := q.FieldByName('VALOR_MENOS_AJUSTE_EFECTIVO').AsFloat;
   P.EsImpIncl        := q.FieldByName('ESIMP_INCL_TAR').AsString = 'S';
   P.EsTarifaDefault  := SameText(q.FieldByName('CODIGO_TAR_ARTTAR').AsString,
-                                     oAppParams.GetString('appTarifaDefecto', 'PVP'));
+                                 TarifaDefault);
   if not q.FieldByName('FECHA_DESDE_ARTTAR').IsNull then
     P.FechaDesde     := q.FieldByName('FECHA_DESDE_ARTTAR').AsDateTime;
   if not q.FieldByName('FECHA_HASTA_ARTTAR').IsNull then

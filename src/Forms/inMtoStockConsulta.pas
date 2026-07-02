@@ -287,7 +287,7 @@ implementation
 
 uses
   System.StrUtils,
-  inLibGlobalVar, inLibAppParam, inLibAtributosPaleta,
+  inLibGlobalVar, inLibAppParam, inLibCajaParam, inLibAtributosPaleta,
   inLibGenBusq, inLibUser, UniDataPerfiles, inLibPermisos,
   inLibArticulosValidador;
 
@@ -2235,7 +2235,7 @@ begin
     begin
       sb.Add(Format('%s%s: %s',
         [IfThen(SameText(q.FieldByName('CODIGO_TAR_ARTTAR').AsString,
-                oAppParams.GetString('appTarifaDefecto', 'PVP')),
+                TarifaDefecto),
                 'Tarifa por defecto - ', ''),
          IfThen(Trim(q.FieldByName('NOMBRE_TAR_TAR').AsString) <> '',
                 q.FieldByName('NOMBRE_TAR_TAR').AsString,
@@ -2940,7 +2940,7 @@ begin
       '        AND IFNULL(t.CODIGO_UNIDAD_ARTTAR, '''') = '''''      + sLineBreak +
       '        AND t.ESACTIVO_ARTTAR = ''S'''                        + sLineBreak +
       '        AND tt.CODIGO_TAR_ARTTAR = ' +
-      QuotedStr(oAppParams.GetString('appTarifaDefecto', 'PVP'))  + sLineBreak +
+      QuotedStr(TarifaDefecto)                                    + sLineBreak +
       '      LIMIT 1)                 AS PRECIO_PVP'                 + sLineBreak +
       'FROM fza_articulos a'                                         + sLineBreak +
       'LEFT JOIN fza_articulos_familias f'                           + sLineBreak +

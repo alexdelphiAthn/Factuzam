@@ -193,6 +193,7 @@ uses
   inMtoFacturasBase,
   inLibGlobalVar,
   inLibAppParam,
+  inLibCajaParam,
   inLibtb,
   inLibLog,
   System.Diagnostics,
@@ -1690,7 +1691,7 @@ end;
 
 function TdmFacturas.TarifaDefault: string;
 begin
-  Result := oAppParams.GetString('appTarifaDefecto', 'PVP');
+  Result := TarifaDefecto;  // vgerDefTarifa (inLibCajaParam)
 end;
 
 procedure TdmFacturas.GuardarParametrosEDocFactura(ADataSet: TDataSet);
