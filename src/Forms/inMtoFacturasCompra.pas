@@ -42,7 +42,7 @@ uses
   inLibGridTallasInline,
   inLibGridPivoteCompra,
   UniDataFacturasCompra, cxBlobEdit, dxShellDialogs, System.Actions,
-  Vcl.ActnList;
+  Vcl.ActnList, cxSplitter;
 
 const
   CANT_TALLAS_MAX = 20;
@@ -52,6 +52,7 @@ const
 type
   TfrmMtoFacturasCompra = class(TfrmMtoGen)
     pnlTopFicha:         TPanel;
+    splSplitterFicha:    TcxSplitter;
     pcCab:               TcxPageControl;
     tsCabecera:          TcxTabSheet;
     pnlBotonesAcciones:  TPanel;

@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 02/07/2026 9:14:55
+-- Backup generado: 02/07/2026 16:14:15
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -4401,9 +4401,10 @@ INSERT INTO `fza_clientes` (`CODIGO_CLI_CLI`, `ESACTIVO_CLI`, `ORDEN_CLI`, `RAZO
   ('320', 'S', 29, 'TIENDAS MODA SPAIN SL', 'N5921112H', '911000000', 'compras@modaspain.es', 'GRAN VÍA, 48', '', 'MADRID', 'MADRID', '28013', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'BEATRIZ MORENO', '911000001', '911000000', NULL, NULL, NULL, 'N', 'S', NULL, NULL, 0, 'N', 'N', 'N', '60DIAS', NULL, 'VENTAMAYOR', NULL, NULL, '2026-06-25 07:55:58', '2026-01-19 09:00:00', 'DEMO', 'Administrador'),
   ('321', 'S', NULL, 'RODOLFO MARTÍNEZ GIL', '33789518B', '23923923932', '', 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', 'ES', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', 1000, 'S', 18.95, 'N', 'N', 'N', NULL, NULL, 'VENTAMAYOR', NULL, NULL, '2026-06-25 07:56:40', '2026-02-26 19:58:55', 'Administrador', 'Administrador'),
   ('328', 'S', 6, 'pepe el marismeño', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, NULL, 0, 'N', 'N', 'N', 'CONTADO', NULL, 'PVP', NULL, NULL, '2026-06-20 05:39:38', '2026-06-11 06:24:41', 'Administrador', 'Administrador'),
+  ('332', 'S', 7, 'PEPE EL MARISMEÑO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', 10000, 'S', NULL, 'N', 'N', 'N', 'CONTADO', NULL, 'PVP', NULL, NULL, '2026-07-02 16:05:05', '2026-07-02 16:05:05', 'Administrador', 'Administrador'),
   ('PUBLICO', 'S', 2, 'PUBLICO', 'NIF CLIENTE', 'TFNO CLIENTE', 'EMAIL DEL CLIENTE', 'DIRECCION DEL CLIENTE', '', 'POBLACION AGRICULTOR', 'PROVINCIA CLIENTE', 'POSCLI', 'ES', 'PAIS DEL CLIENTE', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ES2101822356985665446552', NULL, NULL, 'N', 'N', NULL, 'N', 0, 'N', 'N', 'N', 'CONTADO', NULL, 'PVP', NULL, NULL, '2026-06-20 05:39:38', '2022-11-02 20:28:28', 'Administrador', 'Administrador'),
   ('TIENDA', 'S', 1, 'TIENDA DE ROSA', '52288816H', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'S', 'S', NULL, NULL, 0, 'N', 'N', 'N', 'TRANSFERENCIA', NULL, 'VENTAMAYOR', '', '', '2026-06-25 07:50:29', '2022-11-02 16:13:41', 'Administrador', 'Administrador');
--- 27 registros exportados
+-- 28 registros exportados
 
 
 -- Tabla: fza_codigos_barras
@@ -5831,8 +5832,8 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('BC', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BD', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BE', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
-  ('CL', '-', '-', 332, 3, 'S', 'S', '2026-06-12 18:18:20', '2026-03-11 22:27:52', 'Administrador', 'Administrador'),
-  ('CO', '-', '-', 7, 3, 'S', 'S', '2026-06-11 06:24:41', '2023-05-15 12:54:31', 'Administrador', 'Administrador'),
+  ('CL', '-', '-', 333, 3, 'S', 'S', '2026-07-02 16:05:05', '2026-03-11 22:27:52', 'Administrador', 'Administrador'),
+  ('CO', '-', '-', 8, 3, 'S', 'S', '2026-07-02 16:05:05', '2023-05-15 12:54:31', 'Administrador', 'Administrador'),
   ('DC', '012', 'C1', 6, 6, 'S', 'N', '2026-06-23 07:03:51', '2026-06-22 19:14:30', 'Administrador', 'Administrador'),
   ('EB', '-', '-', 3, 4, 'S', 'S', '2026-06-25 07:38:56', '2026-06-19 08:27:53', 'SISTEMA', 'Administrador'),
   ('EM', '-', '-', 13, 3, 'S', 'S', '2024-02-12 09:38:07', '2026-03-11 22:27:52', 'Administrador', 'Administrador'),
@@ -5854,7 +5855,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 470, 3, 'S', 'S', '2026-07-01 19:04:40', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 473, 3, 'S', 'S', '2026-07-02 16:13:48', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 24, 2, 'S', 'S', '2026-06-13 09:58:34', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -7772,6 +7773,147 @@ CREATE TABLE `fza_familias_claves_info_defecto` (
 );
 
 
+-- Tabla: fza_filtros_guardados
+
+DROP TABLE IF EXISTS `fza_filtros_guardados`;
+CREATE TABLE `fza_filtros_guardados` (
+  `ID_FILT` bigint(20) NOT NULL AUTO_INCREMENT,
+  `MTO_FILT` varchar(100) NOT NULL,
+  `VISTA_FILT` varchar(100) NOT NULL,
+  `NOMBRE_FILT` varchar(100) NOT NULL,
+  `DESCRIPCION_FILT` varchar(255) NULL DEFAULT NULL,
+  `FILTRO_FILT` mediumtext NOT NULL,
+  `USUARIO_PROPIETARIO_FILT` varchar(100) NOT NULL,
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT 'SISTEMA',
+  `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT 'SISTEMA',
+  PRIMARY KEY (`ID_FILT`)
+);
+ALTER TABLE `fza_filtros_guardados` ADD INDEX `IDX_FILT_MTO_VISTA` (`MTO_FILT`, `VISTA_FILT`);
+ALTER TABLE `fza_filtros_guardados` ADD INDEX `IDX_FILT_PROPIETARIO` (`USUARIO_PROPIETARIO_FILT`);
+ALTER TABLE `fza_filtros_guardados` ADD UNIQUE INDEX `UQ_FILT_MTO_VISTA_NOMBRE_PROP` (`MTO_FILT`, `VISTA_FILT`, `NOMBRE_FILT`, `USUARIO_PROPIETARIO_FILT`);
+
+-- Datos de fza_filtros_guardados
+/*!40000 ALTER TABLE `fza_filtros_guardados` DISABLE KEYS */;
+INSERT INTO `fza_filtros_guardados` (`ID_FILT`, `MTO_FILT`, `VISTA_FILT`, `NOMBRE_FILT`, `DESCRIPCION_FILT`, `FILTRO_FILT`, `USUARIO_PROPIETARIO_FILT`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  (3, 'frmMtoArticulos', 'cxGrdDBTabPrin', 'zapato', 'zapato', 'VFBGMA5URmlsdGVyV3JhcHBlcgAORmlsdGVyLk9wdGlvbnMLEmZjb0Nhc2VJbnNlbnNpdGl2ZQAN
+RmlsdGVyLkFjdGl2ZQkPRmlsdGVyLkNyaXRlcmlhCv4EAAD7////AQkAAAAARFhVRk1UBggAAAAl
+AHoAYQBwAGEAdABvACUAAAAAACUAAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEA
+YgBQAHIAaQBuAEMATwBEAEkARwBPAF8AQQBSAFQASQBDAFUATABPABIIAAAAJQB6AGEAcABhAHQA
+bwAlAAAAAAAAAAAAAERYVUZNVAYIAAAAJQB6AGEAcABhAHQAbwAlAAEAAAAlAAAAYwB4AGcAcgBk
+AGIAYwBsAG0AbgBHAHIAZABEAEIAVABhAGIAUAByAGkAbgBBAEMAVABJAFYATwBfAEEAUgBUAEkA
+QwBVAEwATwASCAAAACUAegBhAHAAYQB0AG8AJQAAAAAAAAAAAABEWFVGTVQGCAAAACUAegBhAHAA
+YQB0AG8AJQACAAAAKgAAAGMAeABnAHIAZABiAGMAbABtAG4ARwByAGQARABCAFQAYQBiAFAAcgBp
+AG4ARABFAFMAQwBSAEkAUABDAEkATwBOAF8AQQBSAFQASQBDAFUATABPABIIAAAAJQB6AGEAcABh
+AHQAbwAlAAAAAAAAAAAAAERYVUZNVAYIAAAAJQB6AGEAcABhAHQAbwAlAAMAAAAtAAAAYwB4AGcA
+cgBkAGIAYwBsAG0AbgBHAHIAZABEAEIAVABhAGIAUAByAGkAbgBDAE8ARABJAEcATwBfAEYAQQBN
+AEkATABJAEEAXwBBAFIAVABJAEMAVQBMAE8AEggAAAAlAHoAYQBwAGEAdABvACUAAAAAAAAAAAAA
+RFhVRk1UBggAAAAlAHoAYQBwAGEAdABvACUABAAAACkAAABjAHgAZwByAGQAYgBjAGwAbQBuAEcA
+cgBkAEQAQgBUAGEAYgBQAHIAaQBuAEQARQBTAEMAUgBJAFAAQwBJAE8ATgBfAEYAQQBNAEkATABJ
+AEEAEggAAAAlAHoAYQBwAGEAdABvACUAAAAAAAAAAAAARFhVRk1UBggAAAAlAHoAYQBwAGEAdABv
+ACUABQAAACYAAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAFQA
+SQBQAE8ASQBWAEEAXwBBAFIAVABJAEMAVQBMAE8AEggAAAAlAHoAYQBwAGEAdABvACUAAAAAAAAA
+AAAARFhVRk1UBggAAAAlAHoAYQBwAGEAdABvACUABgAAACMAAABjAHgAZwByAGQAYgBjAGwAbQBu
+AEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAFIARQBGAF8AUABSAE8AVgBFAEUARABPAFIAEggAAAAl
+AHoAYQBwAGEAdABvACUAAAAAAAAAAAAARFhVRk1UBggAAAAlAHoAYQBwAGEAdABvACUABwAAACAA
+AABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAE4ATwBNAEIAUgBF
+AF8AUABSAFYAEggAAAAlAHoAYQBwAGEAdABvACUAAAAAAAAAAAAARFhVRk1UBggAAAAlAHoAYQBw
+AGEAdABvACUACAAAACMAAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIA
+aQBuAFQARQBNAFAATwBSAEEARABBAF8AQQBSAFQAEggAAAAlAHoAYQBwAGEAdABvACUAAAAAAAAA
+AAAAAA==', 'Administrador', '2026-07-02 09:27:56', '2026-07-02 09:27:56', 'Administrador', 'Administrador'),
+  (4, 'frmMtoArticulos', 'cxGrdDBTabPrin', 'paño', 'cosas de paño', 'VFBGMA5URmlsdGVyV3JhcHBlcgAORmlsdGVyLk9wdGlvbnMLEmZjb0Nhc2VJbnNlbnNpdGl2ZQAN
+RmlsdGVyLkFjdGl2ZQkPRmlsdGVyLkNyaXRlcmlhCrYEAAD7////AQkAAAAARFhVRk1UBgYAAAAl
+AHAAYQDxAG8AJQAAAAAAJQAAAGMAeABnAHIAZABiAGMAbABtAG4ARwByAGQARABCAFQAYQBiAFAA
+cgBpAG4AQwBPAEQASQBHAE8AXwBBAFIAVABJAEMAVQBMAE8AEgYAAAAlAHAAYQDxAG8AJQAAAAAA
+AAAAAABEWFVGTVQGBgAAACUAcABhAPEAbwAlAAEAAAAlAAAAYwB4AGcAcgBkAGIAYwBsAG0AbgBH
+AHIAZABEAEIAVABhAGIAUAByAGkAbgBBAEMAVABJAFYATwBfAEEAUgBUAEkAQwBVAEwATwASBgAA
+ACUAcABhAPEAbwAlAAAAAAAAAAAAAERYVUZNVAYGAAAAJQBwAGEA8QBvACUAAgAAACoAAABjAHgA
+ZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAEQARQBTAEMAUgBJAFAAQwBJ
+AE8ATgBfAEEAUgBUAEkAQwBVAEwATwASBgAAACUAcABhAPEAbwAlAAAAAAAAAAAAAERYVUZNVAYG
+AAAAJQBwAGEA8QBvACUAAwAAAC0AAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEA
+YgBQAHIAaQBuAEMATwBEAEkARwBPAF8ARgBBAE0ASQBMAEkAQQBfAEEAUgBUAEkAQwBVAEwATwAS
+BgAAACUAcABhAPEAbwAlAAAAAAAAAAAAAERYVUZNVAYGAAAAJQBwAGEA8QBvACUABAAAACkAAABj
+AHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAEQARQBTAEMAUgBJAFAA
+QwBJAE8ATgBfAEYAQQBNAEkATABJAEEAEgYAAAAlAHAAYQDxAG8AJQAAAAAAAAAAAABEWFVGTVQG
+BgAAACUAcABhAPEAbwAlAAUAAAAmAAAAYwB4AGcAcgBkAGIAYwBsAG0AbgBHAHIAZABEAEIAVABh
+AGIAUAByAGkAbgBUAEkAUABPAEkAVgBBAF8AQQBSAFQASQBDAFUATABPABIGAAAAJQBwAGEA8QBv
+ACUAAAAAAAAAAAAARFhVRk1UBgYAAAAlAHAAYQDxAG8AJQAGAAAAIwAAAGMAeABnAHIAZABiAGMA
+bABtAG4ARwByAGQARABCAFQAYQBiAFAAcgBpAG4AUgBFAEYAXwBQAFIATwBWAEUARQBEAE8AUgAS
+BgAAACUAcABhAPEAbwAlAAAAAAAAAAAAAERYVUZNVAYGAAAAJQBwAGEA8QBvACUABwAAACAAAABj
+AHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAE4ATwBNAEIAUgBFAF8A
+UABSAFYAEgYAAAAlAHAAYQDxAG8AJQAAAAAAAAAAAABEWFVGTVQGBgAAACUAcABhAPEAbwAlAAgA
+AAAjAAAAYwB4AGcAcgBkAGIAYwBsAG0AbgBHAHIAZABEAEIAVABhAGIAUAByAGkAbgBUAEUATQBQ
+AE8AUgBBAEQAQQBfAEEAUgBUABIGAAAAJQBwAGEA8QBvACUAAAAAAAAAAAAAAA==', 'Administrador', '2026-07-02 09:32:50', '2026-07-02 09:32:50', 'Administrador', 'Administrador'),
+  (5, 'frmMtoArticulos', 'cxGrdDBTabPrin', 'carteras', '', 'VFBGMA5URmlsdGVyV3JhcHBlcgAORmlsdGVyLk9wdGlvbnMLEmZjb0Nhc2VJbnNlbnNpdGl2ZQAN
+RmlsdGVyLkFjdGl2ZQkPRmlsdGVyLkNyaXRlcmlhCrYEAAD7////AQkAAAAARFhVRk1UBgYAAAAl
+AGMAYQByAHQAJQAAAAAAJQAAAGMAeABnAHIAZABiAGMAbABtAG4ARwByAGQARABCAFQAYQBiAFAA
+cgBpAG4AQwBPAEQASQBHAE8AXwBBAFIAVABJAEMAVQBMAE8AEgYAAAAlAGMAYQByAHQAJQAAAAAA
+AAAAAABEWFVGTVQGBgAAACUAYwBhAHIAdAAlAAEAAAAlAAAAYwB4AGcAcgBkAGIAYwBsAG0AbgBH
+AHIAZABEAEIAVABhAGIAUAByAGkAbgBBAEMAVABJAFYATwBfAEEAUgBUAEkAQwBVAEwATwASBgAA
+ACUAYwBhAHIAdAAlAAAAAAAAAAAAAERYVUZNVAYGAAAAJQBjAGEAcgB0ACUAAgAAACoAAABjAHgA
+ZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAEQARQBTAEMAUgBJAFAAQwBJ
+AE8ATgBfAEEAUgBUAEkAQwBVAEwATwASBgAAACUAYwBhAHIAdAAlAAAAAAAAAAAAAERYVUZNVAYG
+AAAAJQBjAGEAcgB0ACUAAwAAAC0AAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEA
+YgBQAHIAaQBuAEMATwBEAEkARwBPAF8ARgBBAE0ASQBMAEkAQQBfAEEAUgBUAEkAQwBVAEwATwAS
+BgAAACUAYwBhAHIAdAAlAAAAAAAAAAAAAERYVUZNVAYGAAAAJQBjAGEAcgB0ACUABAAAACkAAABj
+AHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAEQARQBTAEMAUgBJAFAA
+QwBJAE8ATgBfAEYAQQBNAEkATABJAEEAEgYAAAAlAGMAYQByAHQAJQAAAAAAAAAAAABEWFVGTVQG
+BgAAACUAYwBhAHIAdAAlAAUAAAAmAAAAYwB4AGcAcgBkAGIAYwBsAG0AbgBHAHIAZABEAEIAVABh
+AGIAUAByAGkAbgBUAEkAUABPAEkAVgBBAF8AQQBSAFQASQBDAFUATABPABIGAAAAJQBjAGEAcgB0
+ACUAAAAAAAAAAAAARFhVRk1UBgYAAAAlAGMAYQByAHQAJQAGAAAAIwAAAGMAeABnAHIAZABiAGMA
+bABtAG4ARwByAGQARABCAFQAYQBiAFAAcgBpAG4AUgBFAEYAXwBQAFIATwBWAEUARQBEAE8AUgAS
+BgAAACUAYwBhAHIAdAAlAAAAAAAAAAAAAERYVUZNVAYGAAAAJQBjAGEAcgB0ACUABwAAACAAAABj
+AHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAE4ATwBNAEIAUgBFAF8A
+UABSAFYAEgYAAAAlAGMAYQByAHQAJQAAAAAAAAAAAABEWFVGTVQGBgAAACUAYwBhAHIAdAAlAAgA
+AAAjAAAAYwB4AGcAcgBkAGIAYwBsAG0AbgBHAHIAZABEAEIAVABhAGIAUAByAGkAbgBUAEUATQBQ
+AE8AUgBBAEQAQQBfAEEAUgBUABIGAAAAJQBjAGEAcgB0ACUAAAAAAAAAAAAAAA==', 'Administrador', '2026-07-02 09:48:41', '2026-07-02 09:48:41', 'Administrador', 'Administrador'),
+  (6, 'frmMtoArticulos', 'cxGrdDBTabPrin', 'bolsos', '', 'VFBGMA5URmlsdGVyV3JhcHBlcgAORmlsdGVyLk9wdGlvbnMLEmZjb0Nhc2VJbnNlbnNpdGl2ZQAN
+RmlsdGVyLkFjdGl2ZQkPRmlsdGVyLkNyaXRlcmlhCpIEAAD7////AQkAAAAARFhVRk1UBgUAAAAl
+AGIAbwBsACUAAAAAACUAAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIA
+aQBuAEMATwBEAEkARwBPAF8AQQBSAFQASQBDAFUATABPABIFAAAAJQBiAG8AbAAlAAAAAAAAAAAA
+AERYVUZNVAYFAAAAJQBiAG8AbAAlAAEAAAAlAAAAYwB4AGcAcgBkAGIAYwBsAG0AbgBHAHIAZABE
+AEIAVABhAGIAUAByAGkAbgBBAEMAVABJAFYATwBfAEEAUgBUAEkAQwBVAEwATwASBQAAACUAYgBv
+AGwAJQAAAAAAAAAAAABEWFVGTVQGBQAAACUAYgBvAGwAJQACAAAAKgAAAGMAeABnAHIAZABiAGMA
+bABtAG4ARwByAGQARABCAFQAYQBiAFAAcgBpAG4ARABFAFMAQwBSAEkAUABDAEkATwBOAF8AQQBS
+AFQASQBDAFUATABPABIFAAAAJQBiAG8AbAAlAAAAAAAAAAAAAERYVUZNVAYFAAAAJQBiAG8AbAAl
+AAMAAAAtAAAAYwB4AGcAcgBkAGIAYwBsAG0AbgBHAHIAZABEAEIAVABhAGIAUAByAGkAbgBDAE8A
+RABJAEcATwBfAEYAQQBNAEkATABJAEEAXwBBAFIAVABJAEMAVQBMAE8AEgUAAAAlAGIAbwBsACUA
+AAAAAAAAAAAARFhVRk1UBgUAAAAlAGIAbwBsACUABAAAACkAAABjAHgAZwByAGQAYgBjAGwAbQBu
+AEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAEQARQBTAEMAUgBJAFAAQwBJAE8ATgBfAEYAQQBNAEkA
+TABJAEEAEgUAAAAlAGIAbwBsACUAAAAAAAAAAAAARFhVRk1UBgUAAAAlAGIAbwBsACUABQAAACYA
+AABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAFQASQBQAE8ASQBW
+AEEAXwBBAFIAVABJAEMAVQBMAE8AEgUAAAAlAGIAbwBsACUAAAAAAAAAAAAARFhVRk1UBgUAAAAl
+AGIAbwBsACUABgAAACMAAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIA
+aQBuAFIARQBGAF8AUABSAE8AVgBFAEUARABPAFIAEgUAAAAlAGIAbwBsACUAAAAAAAAAAAAARFhV
+Rk1UBgUAAAAlAGIAbwBsACUABwAAACAAAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBU
+AGEAYgBQAHIAaQBuAE4ATwBNAEIAUgBFAF8AUABSAFYAEgUAAAAlAGIAbwBsACUAAAAAAAAAAAAA
+RFhVRk1UBgUAAAAlAGIAbwBsACUACAAAACMAAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQA
+QgBUAGEAYgBQAHIAaQBuAFQARQBNAFAATwBSAEEARABBAF8AQQBSAFQAEgUAAAAlAGIAbwBsACUA
+AAAAAAAAAAAAAA==', 'Administrador', '2026-07-02 09:54:47', '2026-07-02 09:54:47', 'Administrador', 'Administrador');
+/*!40000 ALTER TABLE `fza_filtros_guardados` ENABLE KEYS */;
+-- 4 registros exportados
+
+
+-- Tabla: fza_filtros_guardados_compartidos
+
+DROP TABLE IF EXISTS `fza_filtros_guardados_compartidos`;
+CREATE TABLE `fza_filtros_guardados_compartidos` (
+  `ID_FILTC` bigint(20) NOT NULL AUTO_INCREMENT,
+  `ID_FILT_FILTC` bigint(20) NOT NULL,
+  `USUARIO_GRUPO_FILTC` varchar(200) NOT NULL DEFAULT '',
+  `TIPO_DESTINO_FILTC` varchar(20) NOT NULL DEFAULT 'USUARIO',
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT 'SISTEMA',
+  `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT 'SISTEMA',
+  PRIMARY KEY (`ID_FILTC`)
+);
+ALTER TABLE `fza_filtros_guardados_compartidos` ADD INDEX `IDX_FILTC_FILT` (`ID_FILT_FILTC`);
+ALTER TABLE `fza_filtros_guardados_compartidos` ADD INDEX `IDX_FILTC_TIPO_DESTINO_USUARIO_GRUPO` (`TIPO_DESTINO_FILTC`, `USUARIO_GRUPO_FILTC`);
+ALTER TABLE `fza_filtros_guardados_compartidos` ADD UNIQUE INDEX `UQ_FILTC_FILT_TIPO_DESTINO` (`ID_FILT_FILTC`, `TIPO_DESTINO_FILTC`, `USUARIO_GRUPO_FILTC`);
+
+
 -- Tabla: fza_formas_pago
 
 DROP TABLE IF EXISTS `fza_formas_pago`;
@@ -7818,6 +7960,234 @@ CREATE TABLE `fza_generadorprocesos` (
   `USUARIO_MODIF` varchar(100) NOT NULL,
   PRIMARY KEY (`CODIGO_GENERADOR_PROCESO_GP`)
 );
+
+-- Datos de fza_generadorprocesos
+INSERT INTO `fza_generadorprocesos` (`CODIGO_GENERADOR_PROCESO_GP`, `NOMBRE_GENERADOR_PROCESO_GP`, `PROCESO_GENERADOR_PROCESO_GP`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('470', 'filtros_guardados', '-- =============================================================================
+-- Filtros guardados de mantenimientos (derivados de inMtoGen)
+-- =============================================================================
+-- Permite guardar el filtro aplicado en la lista de un mantenimiento con un
+-- nombre propio, independiente del layout de columnas (que ya guarda su
+-- propio filtro incidental en fza_usuarios_perfiles). Los filtros guardados
+-- se listan desde un desplegable junto al icono de exportar a Excel y se
+-- pueden asignar a otros usuarios o grupos para que los reutilicen.
+-- No toca factuzam_original.sql. Idempotente: se puede ejecutar varias veces.
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS `fza_filtros_guardados` (
+  `ID_FILT` bigint(20) NOT NULL AUTO_INCREMENT,
+  -- Identifican el mantenimiento y el grid a los que pertenece el filtro.
+  -- MTO_FILT = Self.Name del TfrmMtoXxx (mismo valor que KEY_USUPER en el
+  -- layout). VISTA_FILT = Name de la TcxGridDBTableView (misma convencion
+  -- que <Vista>_Filtro en fza_usuarios_perfiles).
+  `MTO_FILT` varchar(100) NOT NULL,
+  `VISTA_FILT` varchar(100) NOT NULL,
+  `NOMBRE_FILT` varchar(100) NOT NULL,
+  `DESCRIPCION_FILT` varchar(255) DEFAULT NULL,
+  -- DataController.Filter.SaveToStream volcado a Base64 en texto, igual que
+  -- SUBKEY ''<Vista>_Filtro'' en fza_usuarios_perfiles (CollectSettingsColumn-
+  -- Profile en inLibDevExp.pas). StoreItemLinkNames por defecto en True:
+  -- identifica cada condicion por el NOMBRE del item, no por su posicion
+  -- visual, asi que sobrevive a que cada usuario tenga las columnas en un
+  -- orden distinto.
+  `FILTRO_FILT` mediumtext NOT NULL,
+  -- FK logica a fza_usuarios.USUARIO_USU. El propietario siempre puede
+  -- aplicar, renombrar y borrar su filtro aunque no este compartido.
+  `USUARIO_PROPIETARIO_FILT` varchar(100) NOT NULL,
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp()
+    ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  PRIMARY KEY (`ID_FILT`),
+  UNIQUE KEY `UQ_FILT_MTO_VISTA_NOMBRE_PROP`
+    (`MTO_FILT`, `VISTA_FILT`, `NOMBRE_FILT`, `USUARIO_PROPIETARIO_FILT`)
+);
+
+CREATE TABLE IF NOT EXISTS `fza_filtros_guardados_compartidos` (
+  `ID_FILTC` bigint(20) NOT NULL AUTO_INCREMENT,
+  -- FK logica a fza_filtros_guardados.ID_FILT.
+  `ID_FILT_FILTC` bigint(20) NOT NULL,
+  -- Usuario o grupo destino segun TIPO_DESTINO_FILTC. Vacio si el destino
+  -- es ''TODOS''. Mismo patron que fza_documentos_trabajo_compartidos.
+  `USUARIO_GRUPO_FILTC` varchar(200) NOT NULL DEFAULT '''',
+  -- ''USUARIO'' | ''GRUPO'' | ''TODOS''.
+  `TIPO_DESTINO_FILTC` varchar(20) NOT NULL DEFAULT ''USUARIO'',
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp()
+    ON UPDATE CURRENT_TIMESTAMP,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT ''0000-00-00 00:00:00'',
+  `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
+  PRIMARY KEY (`ID_FILTC`),
+  UNIQUE KEY `UQ_FILTC_FILT_TIPO_DESTINO`
+    (`ID_FILT_FILTC`, `TIPO_DESTINO_FILTC`, `USUARIO_GRUPO_FILTC`)
+);
+
+-- -----------------------------------------------------------------------------
+-- Indices
+-- -----------------------------------------------------------------------------
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_filtros_guardados''
+     AND INDEX_NAME = ''IDX_FILT_MTO_VISTA''
+);
+SET @sSql := IF(@sExisteIdx = 0,
+  ''CREATE INDEX IDX_FILT_MTO_VISTA ON fza_filtros_guardados (MTO_FILT, VISTA_FILT)'',
+  ''SELECT ''''IDX_FILT_MTO_VISTA ya existe, se omite'''' AS info'');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_filtros_guardados''
+     AND INDEX_NAME = ''IDX_FILT_PROPIETARIO''
+);
+SET @sSql := IF(@sExisteIdx = 0,
+  ''CREATE INDEX IDX_FILT_PROPIETARIO ON fza_filtros_guardados (USUARIO_PROPIETARIO_FILT)'',
+  ''SELECT ''''IDX_FILT_PROPIETARIO ya existe, se omite'''' AS info'');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_filtros_guardados_compartidos''
+     AND INDEX_NAME = ''IDX_FILTC_FILT''
+);
+SET @sSql := IF(@sExisteIdx = 0,
+  ''CREATE INDEX IDX_FILTC_FILT ON fza_filtros_guardados_compartidos (ID_FILT_FILTC)'',
+  ''SELECT ''''IDX_FILTC_FILT ya existe, se omite'''' AS info'');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_filtros_guardados_compartidos''
+     AND INDEX_NAME = ''IDX_FILTC_TIPO_DESTINO_USUARIO_GRUPO''
+);
+SET @sSql := IF(@sExisteIdx = 0,
+  ''CREATE INDEX IDX_FILTC_TIPO_DESTINO_USUARIO_GRUPO ON fza_filtros_guardados_compartidos (TIPO_DESTINO_FILTC, USUARIO_GRUPO_FILTC)'',
+  ''SELECT ''''IDX_FILTC_TIPO_DESTINO_USUARIO_GRUPO ya existe, se omite'''' AS info'');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+', '2026-07-02 09:17:07', '2026-07-02 09:17:07', 'Administrador', 'Administrador'),
+  ('471', 'quitar_tarifa_defecto_duplicada', '-- ==========================================================================
+-- Script: quitar_tarifa_defecto_duplicada.sql
+-- Fecha:  2026-07-02
+-- Desc:   Deja UNA sola definición de la tarifa por defecto del sistema:
+--         el parámetro de caja ''vgerDefTarifa'' (Parámetros de Caja >
+--         Configuración de Caja, formulario frmMtoCajaParam).
+--
+--         Elimina de fza_usuarios_perfiles los valores guardados de los
+--         parámetros de aplicación ya retirados del código:
+--           - appTarifaDefecto  (Valores por defecto, frmMtoAppParam)
+--           - appTarifaDefault  (Ventas, frmMtoAppParam; nunca se leía)
+--
+--         En código (inLibAppParam) ya no se registran, así que si no se
+--         borran aparecerían como huérfanos. Idempotente.
+--
+--         NOTA: el flag ESDEFAULT_TAR de fza_tarifas se elimina con el
+--         script anterior ''quitar_esdefault_tar.sql'' (2026-05-25).
+--         Ejecutarlo antes si la BBDD aún tiene esa columna.
+-- ==========================================================================
+
+-- 1. Borrar los valores guardados de los parámetros retirados
+--    (cualquier usuario/grupo)
+DELETE FROM fza_usuarios_perfiles
+ WHERE KEY_USUPER = ''frmMtoAppParam''
+   AND SUBKEY_USUPER IN (''appTarifaDefecto'', ''appTarifaDefault'');
+
+-- 2. Garantizar que exista el parámetro de caja para ''Todos'' con el valor
+--    que tuviera el antiguo appTarifaDefecto no es necesario: vgerDefTarifa
+--    ya existe (PVP por defecto en código). Si en alguna instalación la
+--    tarifa por defecto NO era PVP, fijarla manualmente en
+--    Parámetros de Caja o con:
+--
+--    INSERT INTO fza_usuarios_perfiles
+--      (USUARIO_GRUPO_USUPER, KEY_USUPER, SUBKEY_USUPER, VALUE_USUPER,
+--       INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)
+--    VALUES
+--      (''Todos'', ''frmMtoCajaParam'', ''vgerDefTarifa'', ''XXX'',
+--       NOW(), ''Administrador'', ''Administrador'')
+--    ON DUPLICATE KEY UPDATE VALUE_USUPER = VALUES(VALUE_USUPER);
+', '2026-07-02 09:24:45', '2026-07-02 09:24:45', 'Administrador', 'Administrador'),
+  ('472', 'proveedores_pais_combo', '-- ============================================================================
+-- Pais de proveedor como combo sobre fza_paises.
+-- ============================================================================
+-- Hasta ahora PAIS_PRV era texto libre. Se anade CODIGO_PAI_PRV (FK logica
+-- a fza_paises.COD_ALPHA2_PAI, igual que CODIGO_PAI_CLI en fza_clientes) para
+-- que el Mto de Proveedores pueda mostrar un combo en vez de texto libre.
+-- PAIS_PRV se conserva como nombre denormalizado (impresos, ActualizarIva-
+-- ExentoIntracomunitarioPorPais) y se refresca desde el combo.
+--
+-- Idempotente:
+--   - la columna se crea solo si falta;
+--   - el autorrelleno inicial (matching de PAIS_PRV contra fza_paises) solo
+--     se ejecuta la primera vez que se crea la columna;
+--   - las vistas se recrean para recoger los SELECT * congelados por MariaDB.
+-- ============================================================================
+
+SET @c_prv := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_proveedores''
+     AND COLUMN_NAME = ''CODIGO_PAI_PRV''
+);
+SET @s := IF(@c_prv = 0,
+  ''ALTER TABLE `fza_proveedores`
+     ADD COLUMN `CODIGO_PAI_PRV` varchar(3) NULL DEFAULT NULL
+     COMMENT ''''FK logica fza_paises.COD_ALPHA2_PAI (combo pais, ver vi_paises)''''
+     AFTER `PAIS_PRV`'',
+  ''SELECT 1'');
+PREPARE st FROM @s;
+EXECUTE st;
+DEALLOCATE PREPARE st;
+
+-- Autorrelleno unico: emparejamos el texto libre PAIS_PRV que ya hubiera
+-- contra fza_paises (codigo, alpha-2, alpha-3 o nombre ES/EN) y copiamos
+-- el alpha-2 al nuevo campo. Mismo criterio que ya usa
+-- ActualizarIvaExentoIntracomunitarioPorPais para no dejar huecos.
+SET @s := IF(@c_prv = 0,
+  ''UPDATE fza_proveedores p
+      JOIN fza_paises pai
+        ON UPPER(TRIM(p.PAIS_PRV)) IN
+           (UPPER(TRIM(pai.CODIGO_PAI_PAI)),
+            UPPER(TRIM(pai.COD_ALPHA2_PAI)),
+            UPPER(TRIM(pai.COD_ALPHA3_PAI)),
+            UPPER(TRIM(pai.NOMBRE_SPA_PAI)),
+            UPPER(TRIM(pai.NOMBRE_ENG_PAI)))
+       SET p.CODIGO_PAI_PRV = pai.COD_ALPHA2_PAI
+     WHERE NULLIF(TRIM(p.PAIS_PRV), '''''''') IS NOT NULL'',
+  ''SELECT 1'');
+PREPARE st FROM @s;
+EXECUTE st;
+DEALLOCATE PREPARE st;
+
+CREATE OR REPLACE VIEW `vi_proveedores` AS
+SELECT p.*
+  FROM `fza_proveedores` p
+ ORDER BY p.`ORDEN_PRV`;
+
+CREATE OR REPLACE VIEW `vi_proveedores_busquedas` AS
+SELECT p.*
+  FROM `fza_proveedores` p
+ WHERE p.`ESACTIVO_PRV` = ''S''
+ ORDER BY p.`ORDEN_PRV`;
+', '2026-07-02 16:13:48', '2026-07-02 16:13:48', 'Administrador', 'Administrador');
+-- 3 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -8644,61 +9014,63 @@ INSERT INTO `fza_metadatos` (`CODIGO_META_META`, `NOMBRE_META_META`, `PARENT_MET
   (82, 'fza_familias_atributos', '1'),
   (83, 'fza_familias_atributos_defecto', '1'),
   (84, 'fza_familias_claves_info_defecto', '1'),
-  (85, 'fza_formas_pago', '1'),
-  (86, 'fza_generadorprocesos', '1'),
-  (87, 'fza_informes_guias', '1'),
-  (88, 'fza_inventarios', '1'),
-  (89, 'fza_inventarios_lineas', '1'),
-  (90, 'fza_inventarios_recuentos', '1'),
-  (91, 'fza_ivas', '1'),
-  (92, 'fza_ivas_grupos', '1'),
-  (93, 'fza_ivas_tipos', '1'),
-  (94, 'fza_ivas_zonas', '1'),
-  (95, 'fza_metadatos', '1'),
-  (96, 'fza_movimientos_almacen', '1'),
-  (97, 'fza_paises', '1'),
-  (98, 'fza_pedidos', '1'),
-  (99, 'fza_pedidos_compra', '1'),
-  (100, 'fza_pedidos_compra_celdas', '1'),
-  (101, 'fza_pedidos_compra_lineas', '1'),
-  (102, 'fza_pedidos_lineas', '1'),
-  (103, 'fza_pedidos_mensajes', '1'),
-  (104, 'fza_permisos', '1'),
-  (105, 'fza_propiedades', '1'),
-  (106, 'fza_propiedades_valores', '1'),
-  (107, 'fza_proveedores', '1'),
-  (108, 'fza_proveedores_familias', '1'),
-  (109, 'fza_proveedores_familias_conjuntos', '1'),
-  (110, 'fza_proveedores_kits', '1'),
-  (111, 'fza_proveedores_kits_det', '1'),
-  (112, 'fza_recibos', '1'),
-  (113, 'fza_remesas_compra', '1'),
-  (114, 'fza_remesas_venta', '1'),
-  (115, 'fza_tarifas', '1'),
-  (116, 'fza_tarifas_cambios', '1'),
-  (117, 'fza_tarifas_cambios_lineas', '1'),
-  (118, 'fza_tipos_documentos', '1'),
-  (119, 'fza_tipos_efecto', '1'),
-  (120, 'fza_traspasos_solicitudes', '1'),
-  (121, 'fza_traspasos_solicitudes_lineas', '1'),
-  (122, 'fza_unidades_medida', '1'),
-  (123, 'fza_usuarios', '1'),
-  (124, 'fza_usuarios_empl_bak', '1'),
-  (125, 'fza_usuarios_grupos', '1'),
-  (126, 'fza_usuarios_perfiles', '1'),
-  (127, 'fza_valores_defecto', '1'),
-  (128, 'fza_variaciones', '1'),
-  (129, 'fza_variaciones_atributos', '1'),
-  (130, 'fza_verifactu_cadena', '1'),
-  (131, 'fza_verifactu_cola', '1'),
-  (132, 'fza_verifactu_eventos', '1'),
-  (133, 'fza_verifactu_operaciones', '1'),
-  (134, 'fza_winforms', '1'),
-  (135, 'inv_almacenes', '1'),
-  (136, 'inv_catalogo', '1'),
-  (137, 'inv_dispositivos', '1'),
-  (138, 'inv_eventos', '1'),
-  (139, 'inv_recuentos', '1'),
+  (85, 'fza_filtros_guardados', '1'),
+  (86, 'fza_filtros_guardados_compartidos', '1'),
+  (87, 'fza_formas_pago', '1'),
+  (88, 'fza_generadorprocesos', '1'),
+  (89, 'fza_informes_guias', '1'),
+  (90, 'fza_inventarios', '1'),
+  (91, 'fza_inventarios_lineas', '1'),
+  (92, 'fza_inventarios_recuentos', '1'),
+  (93, 'fza_ivas', '1'),
+  (94, 'fza_ivas_grupos', '1'),
+  (95, 'fza_ivas_tipos', '1'),
+  (96, 'fza_ivas_zonas', '1'),
+  (97, 'fza_metadatos', '1'),
+  (98, 'fza_movimientos_almacen', '1'),
+  (99, 'fza_paises', '1'),
+  (100, 'fza_pedidos', '1'),
+  (101, 'fza_pedidos_compra', '1'),
+  (102, 'fza_pedidos_compra_celdas', '1'),
+  (103, 'fza_pedidos_compra_lineas', '1'),
+  (104, 'fza_pedidos_lineas', '1'),
+  (105, 'fza_pedidos_mensajes', '1'),
+  (106, 'fza_permisos', '1'),
+  (107, 'fza_propiedades', '1'),
+  (108, 'fza_propiedades_valores', '1'),
+  (109, 'fza_proveedores', '1'),
+  (110, 'fza_proveedores_familias', '1'),
+  (111, 'fza_proveedores_familias_conjuntos', '1'),
+  (112, 'fza_proveedores_kits', '1'),
+  (113, 'fza_proveedores_kits_det', '1'),
+  (114, 'fza_recibos', '1'),
+  (115, 'fza_remesas_compra', '1'),
+  (116, 'fza_remesas_venta', '1'),
+  (117, 'fza_tarifas', '1'),
+  (118, 'fza_tarifas_cambios', '1'),
+  (119, 'fza_tarifas_cambios_lineas', '1'),
+  (120, 'fza_tipos_documentos', '1'),
+  (121, 'fza_tipos_efecto', '1'),
+  (122, 'fza_traspasos_solicitudes', '1'),
+  (123, 'fza_traspasos_solicitudes_lineas', '1'),
+  (124, 'fza_unidades_medida', '1'),
+  (125, 'fza_usuarios', '1'),
+  (126, 'fza_usuarios_empl_bak', '1'),
+  (127, 'fza_usuarios_grupos', '1'),
+  (128, 'fza_usuarios_perfiles', '1'),
+  (129, 'fza_valores_defecto', '1'),
+  (130, 'fza_variaciones', '1'),
+  (131, 'fza_variaciones_atributos', '1'),
+  (132, 'fza_verifactu_cadena', '1'),
+  (133, 'fza_verifactu_cola', '1'),
+  (134, 'fza_verifactu_eventos', '1'),
+  (135, 'fza_verifactu_operaciones', '1'),
+  (136, 'fza_winforms', '1'),
+  (137, 'inv_almacenes', '1'),
+  (138, 'inv_catalogo', '1'),
+  (139, 'inv_dispositivos', '1'),
+  (140, 'inv_eventos', '1'),
+  (141, 'inv_recuentos', '1'),
   (259, 'fza_caja_depositos_view', '2'),
   (260, 'viest_dia', '2'),
   (261, 'viest_movimientos_dia', '2'),
@@ -8760,39 +9132,42 @@ INSERT INTO `fza_metadatos` (`CODIGO_META_META`, `NOMBRE_META_META`, `PARENT_MET
   (317, 'vi_emp_busquedas', '2'),
   (318, 'vi_facturas', '2'),
   (319, 'vi_facturas_compra', '2'),
-  (320, 'vi_facturas_lineas', '2'),
-  (321, 'vi_facturas_lineas_print', '2'),
-  (322, 'vi_facturas_normales', '2'),
-  (323, 'vi_facturas_print', '2'),
-  (324, 'vi_facturas_simplificadas', '2'),
-  (325, 'vi_fac_busquedas', '2'),
-  (326, 'vi_fac_lin_busquedas', '2'),
-  (327, 'vi_formapago', '2'),
-  (328, 'vi_info_tpv_completa', '2'),
-  (329, 'vi_ivas', '2'),
-  (330, 'vi_ivas_empresa', '2'),
-  (331, 'vi_ivas_grupos', '2'),
-  (332, 'vi_ivas_zonas', '2'),
-  (333, 'vi_movimientos', '2'),
-  (334, 'vi_paises', '2'),
-  (335, 'vi_pedidos', '2'),
-  (336, 'vi_pedidos_compra', '2'),
-  (337, 'vi_pedidos_lineas', '2'),
-  (338, 'vi_proveedores', '2'),
-  (339, 'vi_proveedores_articulos', '2'),
-  (340, 'vi_proveedores_busquedas', '2'),
-  (341, 'vi_recibos', '2'),
-  (342, 'vi_remesas_compra', '2'),
-  (343, 'vi_remesas_venta', '2'),
-  (344, 'vi_ses_preview_skus', '2'),
-  (345, 'vi_ses_resumen', '2'),
-  (346, 'vi_ses_resumen_almacen', '2'),
-  (347, 'vi_tarifas', '2'),
-  (348, 'vi_usuarios', '2'),
-  (349, 'vi_usuarios_grupos', '2'),
-  (350, 'vi_usuarios_perfiles', '2'),
-  (351, 'vi_variaciones', '2'),
-  (352, 'v_articulos_stock_barras', '2'),
+  (320, 'vi_facturas_compra_cab_print', '2'),
+  (321, 'vi_facturas_compra_guias_print', '2'),
+  (322, 'vi_facturas_compra_lin_print', '2'),
+  (323, 'vi_facturas_lineas', '2'),
+  (324, 'vi_facturas_lineas_print', '2'),
+  (325, 'vi_facturas_normales', '2'),
+  (326, 'vi_facturas_print', '2'),
+  (327, 'vi_facturas_simplificadas', '2'),
+  (328, 'vi_fac_busquedas', '2'),
+  (329, 'vi_fac_lin_busquedas', '2'),
+  (330, 'vi_formapago', '2'),
+  (331, 'vi_info_tpv_completa', '2'),
+  (332, 'vi_ivas', '2'),
+  (333, 'vi_ivas_empresa', '2'),
+  (334, 'vi_ivas_grupos', '2'),
+  (335, 'vi_ivas_zonas', '2'),
+  (336, 'vi_movimientos', '2'),
+  (337, 'vi_paises', '2'),
+  (338, 'vi_pedidos', '2'),
+  (339, 'vi_pedidos_compra', '2'),
+  (340, 'vi_pedidos_lineas', '2'),
+  (341, 'vi_proveedores', '2'),
+  (342, 'vi_proveedores_articulos', '2'),
+  (343, 'vi_proveedores_busquedas', '2'),
+  (344, 'vi_recibos', '2'),
+  (345, 'vi_remesas_compra', '2'),
+  (346, 'vi_remesas_venta', '2'),
+  (347, 'vi_ses_preview_skus', '2'),
+  (348, 'vi_ses_resumen', '2'),
+  (349, 'vi_ses_resumen_almacen', '2'),
+  (350, 'vi_tarifas', '2'),
+  (351, 'vi_usuarios', '2'),
+  (352, 'vi_usuarios_grupos', '2'),
+  (353, 'vi_usuarios_perfiles', '2'),
+  (354, 'vi_variaciones', '2'),
+  (355, 'v_articulos_stock_barras', '2'),
   (386, 'fzaest_recalcular_rango', '3'),
   (387, 'PRC_ADD_INDEX_IF_NOT_EXISTS', '3'),
   (388, 'PRC_AGREGAR_VALOR_CONJUNTO', '3'),
@@ -8819,57 +9194,58 @@ INSERT INTO `fza_metadatos` (`CODIGO_META_META`, `NOMBRE_META_META`, `PARENT_MET
   (409, 'PRC_EFEC_GENERAR_DESDE_FACTURA', '3'),
   (410, 'PRC_EFV_CONCILIAR_COBRO', '3'),
   (411, 'PRC_EFV_GENERAR_DESDE_FACTURA', '3'),
-  (412, 'PRC_FACC_FACTURAR_ALBARAN', '3'),
-  (413, 'PRC_FACC_RECALCULAR_TOTALES', '3'),
-  (414, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3'),
-  (415, 'PRC_FNC_GET_NEXT_NRO_DOC', '3'),
-  (416, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3'),
-  (417, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
-  (418, 'PRC_FORMATO_DOCUMENTO', '3'),
-  (419, 'PRC_FZA_AJUSTAR_ACUMULADO_STK', '3'),
-  (420, 'PRC_FZA_DEPOSITOS_INSERT', '3'),
-  (421, 'PRC_FZA_DEPOSITOS_UPDATE', '3'),
-  (422, 'PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO', '3'),
-  (423, 'PRC_FZA_INVENTARIOS_APLICAR', '3'),
-  (424, 'PRC_FZA_INVENTARIOS_ELIMINAR_REGUL', '3'),
-  (425, 'PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE', '3'),
-  (426, 'PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC', '3'),
-  (427, 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', '3'),
-  (428, 'PRC_FZA_MOVIMIENTOS_ALMACEN_UPDATE', '3'),
-  (429, 'PRC_GENERAR_CODIGO_VALE', '3'),
-  (430, 'PRC_GETPERFILFORMULARIO', '3'),
-  (431, 'PRC_GET_BALANCE_ALMACEN_SIN_TALLAS', '3'),
-  (432, 'PRC_GET_BALANCE_ALMACEN_TALLAS', '3'),
-  (433, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
-  (434, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
-  (435, 'PRC_GET_CREAR_VALOR', '3'),
-  (436, 'PRC_GET_DATA_ARTICULO', '3'),
-  (437, 'PRC_GET_DATA_CLIENTE', '3'),
-  (438, 'PRC_GET_IVA_ZONA_FECHA', '3'),
-  (439, 'PRC_GET_MOV_VENTAS_ART', '3'),
-  (440, 'PRC_GET_NEXT_CONT', '3'),
-  (441, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
-  (442, 'PRC_GET_NEXT_OP_CAJA', '3'),
-  (443, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
-  (444, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
-  (445, 'PRC_PED_CREAR_ALBARAN_FIN', '3'),
-  (446, 'PRC_PED_CREAR_ALBARAN_INICIO', '3'),
-  (447, 'PRC_PED_CREAR_ALBARAN_LINEA', '3'),
-  (448, 'PRC_REALIZAR_TRASPASO', '3'),
-  (449, 'PRC_RECALCULAR_STOCK', '3'),
-  (450, 'PRC_REMC_ANYADIR_EFECTO', '3'),
-  (451, 'PRC_REMC_CREAR', '3'),
-  (452, 'PRC_REMC_RECALCULAR', '3'),
-  (453, 'PRC_REMV_ANYADIR_EFECTO', '3'),
-  (454, 'PRC_REMV_CREAR', '3'),
-  (455, 'PRC_REMV_RECALCULAR', '3'),
-  (456, 'PRC_SETPERFILFORMULARIO', '3'),
-  (457, 'PRC_TMP_LIMPIAR_MOV_FAC_DUP', '3'),
-  (458, 'SP_RECALCULAR_PMP_LOTE_ALMACEN', '3'),
-  (459, 'SP_RECALCULAR_PMP_SKU', '3'),
-  (460, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
+  (412, 'PRC_FACC_ACTUALIZAR_DTOS_ALBARANES', '3'),
+  (413, 'PRC_FACC_FACTURAR_ALBARAN', '3'),
+  (414, 'PRC_FACC_RECALCULAR_TOTALES', '3'),
+  (415, 'PRC_FNC_GET_NEXT_LINEA_FACTURA', '3'),
+  (416, 'PRC_FNC_GET_NEXT_NRO_DOC', '3'),
+  (417, 'PRC_FNC_GET_PRECIO_ARTICULO_FECHA', '3'),
+  (418, 'PRC_FNC_GET_SERIE_TIPODOC', '3'),
+  (419, 'PRC_FORMATO_DOCUMENTO', '3'),
+  (420, 'PRC_FZA_AJUSTAR_ACUMULADO_STK', '3'),
+  (421, 'PRC_FZA_DEPOSITOS_INSERT', '3'),
+  (422, 'PRC_FZA_DEPOSITOS_UPDATE', '3'),
+  (423, 'PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO', '3'),
+  (424, 'PRC_FZA_INVENTARIOS_APLICAR', '3'),
+  (425, 'PRC_FZA_INVENTARIOS_ELIMINAR_REGUL', '3'),
+  (426, 'PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE', '3'),
+  (427, 'PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC', '3'),
+  (428, 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT', '3'),
+  (429, 'PRC_FZA_MOVIMIENTOS_ALMACEN_UPDATE', '3'),
+  (430, 'PRC_GENERAR_CODIGO_VALE', '3'),
+  (431, 'PRC_GETPERFILFORMULARIO', '3'),
+  (432, 'PRC_GET_BALANCE_ALMACEN_SIN_TALLAS', '3'),
+  (433, 'PRC_GET_BALANCE_ALMACEN_TALLAS', '3'),
+  (434, 'PRC_GET_CAJA_STOCK_PIVOTADO', '3'),
+  (435, 'PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ', '3'),
+  (436, 'PRC_GET_CREAR_VALOR', '3'),
+  (437, 'PRC_GET_DATA_ARTICULO', '3'),
+  (438, 'PRC_GET_DATA_CLIENTE', '3'),
+  (439, 'PRC_GET_IVA_ZONA_FECHA', '3'),
+  (440, 'PRC_GET_MOV_VENTAS_ART', '3'),
+  (441, 'PRC_GET_NEXT_CONT', '3'),
+  (442, 'PRC_GET_NEXT_CONT_FACT_SERIE', '3'),
+  (443, 'PRC_GET_NEXT_OP_CAJA', '3'),
+  (444, 'PRC_GET_NUMEROS_A_LETRAS', '3'),
+  (445, 'PRC_GET_NUMERO_MENOR_MIL', '3'),
+  (446, 'PRC_PED_CREAR_ALBARAN_FIN', '3'),
+  (447, 'PRC_PED_CREAR_ALBARAN_INICIO', '3'),
+  (448, 'PRC_PED_CREAR_ALBARAN_LINEA', '3'),
+  (449, 'PRC_REALIZAR_TRASPASO', '3'),
+  (450, 'PRC_RECALCULAR_STOCK', '3'),
+  (451, 'PRC_REMC_ANYADIR_EFECTO', '3'),
+  (452, 'PRC_REMC_CREAR', '3'),
+  (453, 'PRC_REMC_RECALCULAR', '3'),
+  (454, 'PRC_REMV_ANYADIR_EFECTO', '3'),
+  (455, 'PRC_REMV_CREAR', '3'),
+  (456, 'PRC_REMV_RECALCULAR', '3'),
+  (457, 'PRC_SETPERFILFORMULARIO', '3'),
+  (458, 'PRC_TMP_LIMPIAR_MOV_FAC_DUP', '3'),
+  (459, 'SP_RECALCULAR_PMP_LOTE_ALMACEN', '3'),
+  (460, 'SP_RECALCULAR_PMP_SKU', '3'),
+  (461, 'SP_RECALCULAR_PMP_SKU_ALMACEN', '3');
 /*!40000 ALTER TABLE `fza_metadatos` ENABLE KEYS */;
--- 308 registros exportados
+-- 314 registros exportados
 
 
 -- Tabla: fza_movimientos_almacen
@@ -10683,6 +11059,7 @@ CREATE TABLE `fza_proveedores` (
   `PROVINCIA_PRV` varchar(200) NULL DEFAULT NULL,
   `CODIGO_POSTAL_PRV` varchar(15) NULL DEFAULT NULL,
   `PAIS_PRV` varchar(150) NULL DEFAULT NULL,
+  `CODIGO_PAI_PRV` varchar(3) NULL DEFAULT NULL COMMENT 'FK logica fza_paises.COD_ALPHA2_PAI (combo pais, ver vi_paises)',
   `OBSERVACIONES_PRV` text NULL DEFAULT NULL,
   `REFERENCIA_PRV` varchar(100) NULL DEFAULT NULL,
   `CONTACTO_PRV` varchar(100) NULL DEFAULT NULL,
@@ -10704,34 +11081,34 @@ CREATE TABLE `fza_proveedores` (
 ALTER TABLE `fza_proveedores` ADD INDEX `IDX_PROVEEDORES_LISTADO` (`CODIGO_PRV_PRV`, `RAZON_SOCIAL_PRV`);
 
 -- Datos de fza_proveedores
-INSERT INTO `fza_proveedores` (`CODIGO_PRV_PRV`, `ESACTIVO_PRV`, `ORDEN_PRV`, `RAZON_SOCIAL_PRV`, `NOMBRE_PRV`, `NIF_PRV`, `MOVIL_PRV`, `EMAIL_PRV`, `DIRECCION1_PRV`, `DIRECCION2_PRV`, `POBLACION_PRV`, `PROVINCIA_PRV`, `CODIGO_POSTAL_PRV`, `PAIS_PRV`, `OBSERVACIONES_PRV`, `REFERENCIA_PRV`, `CONTACTO_PRV`, `TELEFONO_CONTACTO_PRV`, `TELEFONO_PRV`, `IBAN_PRV`, `CODIGO_FP_PRV`, `CODIGO_EMPBAN_PRV`, `PORCENTAJE_MARGEN_PRV`, `ESVARIOS_TIPOS_IVA_PRV`, `ESIVA_EXENTO_INTRACOMUNITARIO_PRV`, `ID_AC_TALLAS_PRV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('000', 'S', NULL, 'ANTONIO BAZOS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 280, 'N', 'N', NULL, '2026-06-11 13:45:12', '2024-10-06 20:26:38', 'Administrador', 'Administrador'),
-  ('010', 'S', NULL, 'RODRIGO ANTON', NULL, NULL, '32332233', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2026-05-26 18:08:25', '2024-10-06 21:17:37', 'Administrador', 'Administrador'),
-  ('10', 'S', NULL, 'Gai pâturage', NULL, NULL, '38.76.98.06', NULL, 'Bat. B 3, rue des Alpes', NULL, 'Annecy', '', '74000', 'France', NULL, NULL, 'Eliane Noz', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-01 19:03:01', '2021-06-10 19:36:20', 'Administrador', 'Administrador'),
-  ('11', 'S', NULL, 'Escargots Nouveaux', NULL, NULL, '85.57.00.07', NULL, '22, rue H. Voiron', NULL, 'Montceau', '', '71300', 'France', NULL, NULL, 'Marie Delamare', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-01 19:03:01', '2021-06-10 19:36:25', 'Administrador', 'Administrador'),
-  ('12', 'S', NULL, 'Pasta Buttini s.r.l.', NULL, NULL, '(089) 6547665', NULL, 'Via dei Gelsomini, 153', NULL, 'Salerno', '', '84100', 'Italy', NULL, NULL, 'Giovanni Giudici', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-01 19:03:01', '2021-06-10 19:36:35', 'Administrador', 'Administrador'),
-  ('13', 'S', NULL, 'Ma Maison', NULL, NULL, '(514) 555-9022', NULL, '2960 Rue St. Laurent', NULL, 'Montréal', 'Québec', 'H1J 1C3', 'Canada', NULL, NULL, 'Jean-Guy Lauzon', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2021-06-10 19:36:46', '2021-06-10 19:36:46', 'Administrador', 'Administrador'),
-  ('14', 'S', NULL, 'Karkki Oy', NULL, NULL, '(953) 10956', NULL, 'Valtakatu 12', NULL, 'Lappeenranta', '', '53120', 'Finland', NULL, NULL, 'Anne Heikkonen', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-01 19:03:01', '2021-06-10 19:37:22', 'Administrador', 'Administrador'),
-  ('15', 'S', NULL, 'Leka Trading', NULL, NULL, '555-8787', NULL, '471 Serangoon Loop, Suite #402', NULL, 'Singapore', '', '0512', 'Singapore', NULL, NULL, 'Chandra Leka', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2021-06-10 19:37:28', '2021-06-10 19:37:28', 'Administrador', 'Administrador'),
-  ('16', 'S', NULL, 'Lyngbysild', NULL, NULL, '43844108', NULL, 'Lyngbysild Fiskebakken 10', NULL, 'Lyngby', '', '2800', 'Denmark', NULL, NULL, 'Niels Petersen', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-01 19:03:01', '2021-06-10 19:37:28', 'Administrador', 'Administrador'),
-  ('17', 'S', NULL, 'Zaanse Snoepfabriek', NULL, NULL, '(12345) 1212', NULL, 'Verkoop Rijnweg 22', NULL, 'Zaandam', '', '9999 ZZ', 'Netherlands', NULL, NULL, 'Dirk Luchte', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-01 19:03:01', '2021-06-10 19:37:28', 'Administrador', 'Administrador'),
-  ('18', 'S', NULL, 'Formaggi Fortini s.r.l.', NULL, NULL, '(0544) 60323', NULL, 'Viale Dante, 75', NULL, 'Ravenna', '', '48100', 'Italy', NULL, NULL, 'Elio Rossi', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-01 19:03:01', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
-  ('19', 'S', NULL, 'Norske Meierier', NULL, NULL, '(0)2-953010', NULL, 'Hatlevegen 5', NULL, 'Sandvika', '', '1320', 'Norway', NULL, NULL, 'Beate Vileid', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
-  ('20', 'S', NULL, 'Bigfoot Breweries', NULL, NULL, '(503) 555-9931', NULL, '3400 - 8th Avenue Suite 210', NULL, 'Bend', 'OR', '97101', 'USA', NULL, NULL, 'Cheryl Saylor', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2021-06-10 19:37:39', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
-  ('21', 'S', NULL, 'Svensk Sjöföda AB', NULL, NULL, '08-123 45 67', NULL, 'Brovallavägen 231', NULL, 'Stockholm', '', 'S-123 45', 'Sweden', NULL, NULL, 'Michael Björn', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-01 19:03:01', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
-  ('22', 'S', NULL, 'Aux joyeux ecclésiastiques', NULL, NULL, '(1) 03.83.00.68', NULL, '203, Rue des Francs-Bourgeois', NULL, 'Paris', '', '75004', 'France', NULL, NULL, 'Guylène Nodier', NULL, NULL, NULL, NULL, NULL, 280, 'N', 'S', NULL, '2026-07-01 19:03:01', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
-  ('23', 'S', NULL, 'New England Seafood Cannery', NULL, NULL, '(617) 555-3267', NULL, 'Order Processing Dept. 2100 Paul Revere Blvd.', NULL, 'Boston', 'MA', '02134', 'USA', NULL, NULL, 'Robb Merchant', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2021-06-15 19:40:07', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
-  ('3', 'S', NULL, 'Exotic Liquids', NULL, NULL, '(171) 555-2222', NULL, '49 Gilbert St.', NULL, 'London', '', 'EC1 4SD', 'UK', NULL, NULL, 'Charlotte Cooper', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2021-06-10 19:30:28', '2021-06-10 19:30:28', 'Administrador', 'Administrador'),
-  ('4', 'S', NULL, 'New Orleans Cajun Delights', NULL, NULL, '(100) 555-4822', NULL, 'P.O. Box 78934', NULL, 'New Orleans', 'LA', '70117', 'USA', NULL, NULL, 'Shelley Burke', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2021-06-10 19:30:28', '2021-06-10 19:30:28', 'Administrador', 'Administrador'),
-  ('5', 'S', NULL, 'Tokyo Traders', NULL, NULL, '(03) 3555-5011', NULL, '9-8 Sekimai Musashino-shi', NULL, 'Tokyo', '', '100', 'Japan', NULL, NULL, 'Yoshi Nagase', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2021-06-10 19:31:17', '2021-06-10 19:31:17', 'Administrador', 'Administrador'),
-  ('6', 'S', NULL, 'Mayumis', NULL, NULL, '(06) 431-7877', NULL, '92 Setsuko Chuo-ku', NULL, 'Osaka', '', '545', 'Japan', NULL, NULL, 'Mayumi Ohno', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2021-06-10 19:33:41', '2021-06-10 19:33:41', 'Administrador', 'Administrador'),
-  ('7', 'S', NULL, 'Pavlova, Ltd.', NULL, NULL, '(03) 444-2343', NULL, '74 Rose St. Moonie Ponds', NULL, 'Melbourne', 'Victoria', '3058', 'Australia', NULL, NULL, 'Ian Devling', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2021-06-10 19:33:48', '2021-06-10 19:33:48', 'Administrador', 'Administrador'),
-  ('8', 'S', NULL, 'Cooperativa de Quesos Las Cabras', NULL, NULL, '(98) 598 76 54', NULL, 'Calle del Rosal 4', NULL, 'Oviedo', 'Asturias', '33007', 'Spain', NULL, NULL, 'Antonio del Valle Saavedra', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2021-06-10 19:34:56', '2021-06-10 19:34:56', 'Administrador', 'Administrador'),
-  ('9', 'S', NULL, 'Forêts dérables', NULL, NULL, '(514) 555-2955', NULL, '148 rue Chasseur', NULL, 'Ste-Hyacinthe', 'Québec', 'J2S 7S8', 'Canada', NULL, NULL, 'Chantal Goulet', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2021-06-10 19:36:14', '2021-06-10 19:36:14', 'Administrador', 'Administrador'),
-  ('ANGEL', 'S', NULL, 'ANGEL MARTIN JULIÁN', 'MARCA BUENA', NULL, NULL, 'proveedor@marcabuena.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '30Y60', '0000', 250, 'N', 'N', NULL, '2026-06-25 08:06:37', '2025-04-17 09:34:57', 'Administrador', 'Administrador'),
-  ('FER', 'S', NULL, 'FERNANDO E HIJOS, SL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2024-10-02 20:21:28', '2024-10-02 20:21:30', 'Administrador', 'Administrador'),
-  ('LAIBENSE', 'S', NULL, 'LA IBENSE JUGUETERA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2025-09-19 11:23:01', '2024-10-06 20:36:59', 'Administrador', 'Administrador'),
-  ('PEPI', 'S', NULL, 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador');
+INSERT INTO `fza_proveedores` (`CODIGO_PRV_PRV`, `ESACTIVO_PRV`, `ORDEN_PRV`, `RAZON_SOCIAL_PRV`, `NOMBRE_PRV`, `NIF_PRV`, `MOVIL_PRV`, `EMAIL_PRV`, `DIRECCION1_PRV`, `DIRECCION2_PRV`, `POBLACION_PRV`, `PROVINCIA_PRV`, `CODIGO_POSTAL_PRV`, `PAIS_PRV`, `CODIGO_PAI_PRV`, `OBSERVACIONES_PRV`, `REFERENCIA_PRV`, `CONTACTO_PRV`, `TELEFONO_CONTACTO_PRV`, `TELEFONO_PRV`, `IBAN_PRV`, `CODIGO_FP_PRV`, `CODIGO_EMPBAN_PRV`, `PORCENTAJE_MARGEN_PRV`, `ESVARIOS_TIPOS_IVA_PRV`, `ESIVA_EXENTO_INTRACOMUNITARIO_PRV`, `ID_AC_TALLAS_PRV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('000', 'S', NULL, 'ANTONIO BAZOS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'España', 'GI', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 280, 'N', 'N', NULL, '2026-07-02 16:14:02', '2024-10-06 20:26:38', 'Administrador', 'Administrador'),
+  ('010', 'S', NULL, 'RODRIGO ANTON', NULL, NULL, '32332233', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2026-05-26 18:08:25', '2024-10-06 21:17:37', 'Administrador', 'Administrador'),
+  ('10', 'S', NULL, 'Gai pâturage', NULL, NULL, '38.76.98.06', NULL, 'Bat. B 3, rue des Alpes', NULL, 'Annecy', '', '74000', 'France', 'FR', NULL, NULL, 'Eliane Noz', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-02 16:13:48', '2021-06-10 19:36:20', 'Administrador', 'Administrador'),
+  ('11', 'S', NULL, 'Escargots Nouveaux', NULL, NULL, '85.57.00.07', NULL, '22, rue H. Voiron', NULL, 'Montceau', '', '71300', 'France', 'FR', NULL, NULL, 'Marie Delamare', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-02 16:13:48', '2021-06-10 19:36:25', 'Administrador', 'Administrador'),
+  ('12', 'S', NULL, 'Pasta Buttini s.r.l.', NULL, NULL, '(089) 6547665', NULL, 'Via dei Gelsomini, 153', NULL, 'Salerno', '', '84100', 'Italy', 'IT', NULL, NULL, 'Giovanni Giudici', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-02 16:13:48', '2021-06-10 19:36:35', 'Administrador', 'Administrador'),
+  ('13', 'S', NULL, 'Ma Maison', NULL, NULL, '(514) 555-9022', NULL, '2960 Rue St. Laurent', NULL, 'Montréal', 'Québec', 'H1J 1C3', 'Canada', 'CA', NULL, NULL, 'Jean-Guy Lauzon', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2026-07-02 16:13:48', '2021-06-10 19:36:46', 'Administrador', 'Administrador'),
+  ('14', 'S', NULL, 'Karkki Oy', NULL, NULL, '(953) 10956', NULL, 'Valtakatu 12', NULL, 'Lappeenranta', '', '53120', 'Finland', 'FI', NULL, NULL, 'Anne Heikkonen', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-02 16:13:48', '2021-06-10 19:37:22', 'Administrador', 'Administrador'),
+  ('15', 'S', NULL, 'Leka Trading', NULL, NULL, '555-8787', NULL, '471 Serangoon Loop, Suite #402', NULL, 'Singapore', '', '0512', 'Singapore', 'SG', NULL, NULL, 'Chandra Leka', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2026-07-02 16:13:48', '2021-06-10 19:37:28', 'Administrador', 'Administrador'),
+  ('16', 'S', NULL, 'Lyngbysild', NULL, NULL, '43844108', NULL, 'Lyngbysild Fiskebakken 10', NULL, 'Lyngby', '', '2800', 'Denmark', 'DK', NULL, NULL, 'Niels Petersen', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-02 16:13:48', '2021-06-10 19:37:28', 'Administrador', 'Administrador'),
+  ('17', 'S', NULL, 'Zaanse Snoepfabriek', NULL, NULL, '(12345) 1212', NULL, 'Verkoop Rijnweg 22', NULL, 'Zaandam', '', '9999 ZZ', 'Netherlands', 'NL', NULL, NULL, 'Dirk Luchte', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-02 16:13:48', '2021-06-10 19:37:28', 'Administrador', 'Administrador'),
+  ('18', 'S', NULL, 'Formaggi Fortini s.r.l.', NULL, NULL, '(0544) 60323', NULL, 'Viale Dante, 75', NULL, 'Ravenna', '', '48100', 'Italy', 'IT', NULL, NULL, 'Elio Rossi', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-02 16:13:48', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
+  ('19', 'S', NULL, 'Norske Meierier', NULL, NULL, '(0)2-953010', NULL, 'Hatlevegen 5', NULL, 'Sandvika', '', '1320', 'Norway', 'NO', NULL, NULL, 'Beate Vileid', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2026-07-02 16:13:48', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
+  ('20', 'S', NULL, 'Bigfoot Breweries', NULL, NULL, '(503) 555-9931', NULL, '3400 - 8th Avenue Suite 210', NULL, 'Bend', 'OR', '97101', 'USA', 'US', NULL, NULL, 'Cheryl Saylor', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2026-07-02 16:13:48', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
+  ('21', 'S', NULL, 'Svensk Sjöföda AB', NULL, NULL, '08-123 45 67', NULL, 'Brovallavägen 231', NULL, 'Stockholm', '', 'S-123 45', 'Sweden', 'SE', NULL, NULL, 'Michael Björn', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'S', NULL, '2026-07-02 16:13:48', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
+  ('22', 'S', NULL, 'Aux joyeux ecclésiastiques', NULL, NULL, '(1) 03.83.00.68', NULL, '203, Rue des Francs-Bourgeois', NULL, 'Paris', '', '75004', 'France', 'FR', NULL, NULL, 'Guylène Nodier', NULL, NULL, NULL, NULL, NULL, 280, 'N', 'S', NULL, '2026-07-02 16:13:48', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
+  ('23', 'S', NULL, 'New England Seafood Cannery', NULL, NULL, '(617) 555-3267', NULL, 'Order Processing Dept. 2100 Paul Revere Blvd.', NULL, 'Boston', 'MA', '02134', 'USA', 'US', NULL, NULL, 'Robb Merchant', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2026-07-02 16:13:48', '2021-06-10 19:37:39', 'Administrador', 'Administrador'),
+  ('3', 'S', NULL, 'Exotic Liquids', NULL, NULL, '(171) 555-2222', NULL, '49 Gilbert St.', NULL, 'London', '', 'EC1 4SD', 'UK', NULL, NULL, NULL, 'Charlotte Cooper', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2021-06-10 19:30:28', '2021-06-10 19:30:28', 'Administrador', 'Administrador'),
+  ('4', 'S', NULL, 'New Orleans Cajun Delights', NULL, NULL, '(100) 555-4822', NULL, 'P.O. Box 78934', NULL, 'New Orleans', 'LA', '70117', 'USA', 'US', NULL, NULL, 'Shelley Burke', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2026-07-02 16:13:48', '2021-06-10 19:30:28', 'Administrador', 'Administrador'),
+  ('5', 'S', NULL, 'Tokyo Traders', NULL, NULL, '(03) 3555-5011', NULL, '9-8 Sekimai Musashino-shi', NULL, 'Tokyo', '', '100', 'Japan', 'JP', NULL, NULL, 'Yoshi Nagase', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2026-07-02 16:13:48', '2021-06-10 19:31:17', 'Administrador', 'Administrador'),
+  ('6', 'S', NULL, 'Mayumis', NULL, NULL, '(06) 431-7877', NULL, '92 Setsuko Chuo-ku', NULL, 'Osaka', '', '545', 'Japan', 'JP', NULL, NULL, 'Mayumi Ohno', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2026-07-02 16:13:48', '2021-06-10 19:33:41', 'Administrador', 'Administrador'),
+  ('7', 'S', NULL, 'Pavlova, Ltd.', NULL, NULL, '(03) 444-2343', NULL, '74 Rose St. Moonie Ponds', NULL, 'Melbourne', 'Victoria', '3058', 'Australia', 'AU', NULL, NULL, 'Ian Devling', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2026-07-02 16:13:48', '2021-06-10 19:33:48', 'Administrador', 'Administrador'),
+  ('8', 'S', NULL, 'Cooperativa de Quesos Las Cabras', NULL, NULL, '(98) 598 76 54', NULL, 'Calle del Rosal 4', NULL, 'Oviedo', 'Asturias', '33007', 'Spain', 'ES', NULL, NULL, 'Antonio del Valle Saavedra', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2026-07-02 16:13:48', '2021-06-10 19:34:56', 'Administrador', 'Administrador'),
+  ('9', 'S', NULL, 'Forêts dérables', NULL, NULL, '(514) 555-2955', NULL, '148 rue Chasseur', NULL, 'Ste-Hyacinthe', 'Québec', 'J2S 7S8', 'Canada', 'CA', NULL, NULL, 'Chantal Goulet', NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2026-07-02 16:13:48', '2021-06-10 19:36:14', 'Administrador', 'Administrador'),
+  ('ANGEL', 'S', NULL, 'ANGEL MARTIN JULIÁN', 'MARCA BUENA', NULL, NULL, 'proveedor@marcabuena.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '30Y60', '0000', 250, 'N', 'N', NULL, '2026-06-25 08:06:37', '2025-04-17 09:34:57', 'Administrador', 'Administrador'),
+  ('FER', 'S', NULL, 'FERNANDO E HIJOS, SL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2024-10-02 20:21:28', '2024-10-02 20:21:30', 'Administrador', 'Administrador'),
+  ('LAIBENSE', 'S', NULL, 'LA IBENSE JUGUETERA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2025-09-19 11:23:01', '2024-10-06 20:36:59', 'Administrador', 'Administrador'),
+  ('PEPI', 'S', NULL, 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'N', 'N', NULL, '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador');
 -- 27 registros exportados
 
 
@@ -11299,7 +11676,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-02 09:14:43', '2026-07-02 09:14:43', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-02 16:13:19', '2026-07-02 16:13:19', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '56D744105F6BDAF0A908EA531E1C9964', 'Vendedores', 'S', '012', '2026-06-09 09:48:50', '2026-06-09 09:48:50', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
 -- 2 registros exportados
 
@@ -11858,6 +12235,1138 @@ FROM vi_tarifas
   ('Administrador', 'frmMtoAppParam', 'Top', '201', NULL, NULL, NULL, '2026-05-26 07:14:27', '2026-05-26 07:14:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoAppParam', 'Width', '956', NULL, NULL, NULL, '2026-05-26 07:14:27', '2026-05-26 07:14:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoAppParam', 'WindowState', '0', NULL, NULL, NULL, '2026-05-26 07:14:27', '2026-05-26 07:14:27', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin__oApplyWidth', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin__oCreateItems', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ART_ART_Caption', 'Código Artículo', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ART_ART_Index', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ART_ART_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ART_ART_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ART_ART_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_ART_ART_Width', '198', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_FAM_ART_Caption', 'Código Familia', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_FAM_ART_Index', '3', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_FAM_ART_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_FAM_ART_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_FAM_ART_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_CODIGO_FAM_ART_Width', '162', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_ART_Caption', 'Descripción', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_ART_Index', '2', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_ART_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_ART_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_ART_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_ART_Width', '290', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_FAM_Caption', 'Descripción Familia', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_FAM_Index', '4', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_FAM_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_FAM_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_FAM_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_DESCRIPCION_FAM_Width', '342', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_ESACTIVO_ART_Caption', 'Activo', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_ESACTIVO_ART_Index', '1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_ESACTIVO_ART_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_ESACTIVO_ART_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_ESACTIVO_ART_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_ESACTIVO_ART_Width', '67', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_Filtro', '', '', NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_PRV_Caption', 'Proveedor', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_PRV_Index', '7', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_PRV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_PRV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_PRV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_PRV_Width', '144', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_TIPO_IVA_IVATIP_Caption', 'Tipo IVA', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_TIPO_IVA_IVATIP_Index', '5', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_TIPO_IVA_IVATIP_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_TIPO_IVA_IVATIP_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_TIPO_IVA_IVATIP_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_NOMBRE_TIPO_IVA_IVATIP_Width', '87', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_REF_PROVEEDOR_Caption', 'Modelo Proveedor', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_REF_PROVEEDOR_Index', '6', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_REF_PROVEEDOR_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_REF_PROVEEDOR_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_REF_PROVEEDOR_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_REF_PROVEEDOR_Width', '175', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_TEMPORADA_ART_Caption', 'Temporada', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_TEMPORADA_ART_Index', '8', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_TEMPORADA_ART_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_TEMPORADA_ART_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_TEMPORADA_ART_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'cxGrdDBTabPrin_TEMPORADA_ART_Width', '225', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oApplyWidth', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oBusqGlobal', 'Grid', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oCreateItems', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oFiltroConStock', 'S', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oFiltroEstado', 'S', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oFiltroTemporadas', '', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oGetSQLFromDB', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoArticulos', 'oMostrarPerfil', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'oRenameComponents', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac__oApplyWidth', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac__oCreateItems', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CANTIDAD_FACLIN_Caption', 'Cantidad', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CANTIDAD_FACLIN_Index', '5', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CANTIDAD_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CANTIDAD_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CANTIDAD_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CANTIDAD_FACLIN_Width', '124', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_ART_FACLIN_Caption', 'CODIGO_ART_FACLIN', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_ART_FACLIN_Index', '13', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_ART_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_ART_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_ART_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_ART_FACLIN_Width', '246', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_CLI_FAC_Caption', 'CODIGO_CLI_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_CLI_FAC_Index', '49', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_CLI_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_CLI_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_CLI_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_CLI_FAC_Width', '246', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_CLIENTE_FACTURA_LINEA_Caption', 'CODIGO_CLIENTE_FACTURA_LINEA', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_CLIENTE_FACTURA_LINEA_Index', '24', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_CLIENTE_FACTURA_LINEA_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_CLIENTE_FACTURA_LINEA_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_CLIENTE_FACTURA_LINEA_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_CLIENTE_FACTURA_LINEA_Width', '246', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_EMP_FAC_Caption', 'CODIGO_EMP_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_EMP_FAC_Index', '35', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_EMP_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_EMP_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_EMP_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_EMP_FAC_Width', '102', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_EMP_FACLIN_Caption', 'CODIGO_EMP_FACLIN', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_EMP_FACLIN_Index', '25', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_EMP_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_EMP_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_EMP_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_EMP_FACLIN_Width', '102', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_FAM_FACLIN_Caption', 'CODIGO_FAM_FACLIN', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_FAM_FACLIN_Index', '14', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_FAM_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_FAM_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_FAM_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_FAM_FACLIN_Width', '246', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_IVA_FAC_Caption', 'CODIGO_IVA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_IVA_FAC_Index', '71', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_IVA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_IVA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_IVA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_IVA_FAC_Width', '246', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_POSTAL_CLIENTE_FAC_Caption', 'CODIGO_POSTAL_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_POSTAL_CLIENTE_FAC_Index', '58', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_POSTAL_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_POSTAL_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_POSTAL_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_POSTAL_CLIENTE_FAC_Width', '186', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_POSTAL_EMPRESA_FAC_Caption', 'CODIGO_POSTAL_EMPRESA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_POSTAL_EMPRESA_FAC_Index', '45', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_POSTAL_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_POSTAL_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_POSTAL_EMPRESA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_POSTAL_EMPRESA_FAC_Width', '186', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_TAR_FACLIN_Caption', 'CODIGO_TAR_FACLIN', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_TAR_FACLIN_Index', '19', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_TAR_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_TAR_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_TAR_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_CODIGO_TAR_FACLIN_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_ARTICULO_FACLIN_Caption', 'Descripción Linea', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_ARTICULO_FACLIN_Index', '6', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_ARTICULO_FACLIN_Width', '345', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_FORMA_PAGO_FP_Caption', 'DESCRIPCION_FORMA_PAGO_FP', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_FORMA_PAGO_FP_Index', '34', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_FORMA_PAGO_FP_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_FORMA_PAGO_FP_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_FORMA_PAGO_FP_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DESCRIPCION_FORMA_PAGO_FP_Width', '1206', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION1_CLIENTE_FAC_Caption', 'DIRECCION1_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION1_CLIENTE_FAC_Index', '54', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION1_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION1_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION1_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION1_CLIENTE_FAC_Width', '2406', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION1_EMPRESA_FAC_Caption', 'DIRECCION1_EMPRESA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION1_EMPRESA_FAC_Index', '40', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION1_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION1_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION1_EMPRESA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION1_EMPRESA_FAC_Width', '2406', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION2_CLIENTE_FAC_Caption', 'DIRECCION2_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION2_CLIENTE_FAC_Index', '55', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION2_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION2_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION2_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION2_CLIENTE_FAC_Width', '2406', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION2_EMPRESA_FAC_Caption', 'DIRECCION2_EMPRESA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION2_EMPRESA_FAC_Index', '41', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION2_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION2_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION2_EMPRESA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_DIRECCION2_EMPRESA_FAC_Width', '2406', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_EMAIL_CLIENTE_FAC_Caption', 'EMAIL_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_EMAIL_CLIENTE_FAC_Index', '53', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_EMAIL_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_EMAIL_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_EMAIL_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_EMAIL_CLIENTE_FAC_Width', '2406', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_EMAIL_EMPRESA_FAC_Caption', 'EMAIL_EMPRESA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_EMAIL_EMPRESA_FAC_Index', '39', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_EMAIL_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_EMAIL_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_EMAIL_EMPRESA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_EMAIL_EMPRESA_FAC_Width', '2406', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESAPLICA_RE_ZONA_IVA_FAC_Caption', 'ESAPLICA_RE_ZONA_IVA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESAPLICA_RE_ZONA_IVA_FAC_Index', '68', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESAPLICA_RE_ZONA_IVA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESAPLICA_RE_ZONA_IVA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESAPLICA_RE_ZONA_IVA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESAPLICA_RE_ZONA_IVA_FAC_Width', '25', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_CLIENTE_FAC_Caption', 'ESIMP_INCL_TARIFA_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_CLIENTE_FAC_Index', '65', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_CLIENTE_FAC_Width', '25', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_FACLIN_Caption', 'Precio Imp. Incl.', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_FACLIN_Index', '8', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIMP_INCL_TARIFA_FACLIN_Width', '171', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESINTRACOMUNITARIO_CLIENTE_FAC_Caption', 'ESINTRACOMUNITARIO_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESINTRACOMUNITARIO_CLIENTE_FAC_Index', '66', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESINTRACOMUNITARIO_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESINTRACOMUNITARIO_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESINTRACOMUNITARIO_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESINTRACOMUNITARIO_CLIENTE_FAC_Width', '25', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIRPF_IMP_INCL_ZONA_IVA_FAC_Caption', 'ESIRPF_IMP_INCL_ZONA_IVA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIRPF_IMP_INCL_ZONA_IVA_FAC_Index', '67', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIRPF_IMP_INCL_ZONA_IVA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIRPF_IMP_INCL_ZONA_IVA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIRPF_IMP_INCL_ZONA_IVA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIRPF_IMP_INCL_ZONA_IVA_FAC_Width', '25', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVA_EXENTO_CLIENTE_FAC_Caption', 'ESIVA_EXENTO_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVA_EXENTO_CLIENTE_FAC_Index', '61', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVA_EXENTO_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVA_EXENTO_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVA_EXENTO_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVA_EXENTO_CLIENTE_FAC_Width', '25', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVA_RECARGO_CLIENTE_FAC_Caption', 'ESIVA_RECARGO_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVA_RECARGO_CLIENTE_FAC_Index', '60', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVA_RECARGO_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVA_RECARGO_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVA_RECARGO_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVA_RECARGO_CLIENTE_FAC_Width', '25', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVAAGRICOLA_ZONA_IVA_FAC_Caption', 'ESIVAAGRICOLA_ZONA_IVA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVAAGRICOLA_ZONA_IVA_FAC_Index', '69', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVAAGRICOLA_ZONA_IVA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVAAGRICOLA_ZONA_IVA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVAAGRICOLA_ZONA_IVA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESIVAAGRICOLA_ZONA_IVA_FAC_Width', '25', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC_Caption', 'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC_Index', '62', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC_Width', '25', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC_Caption', 'ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC_Index', '48', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC_Width', '25', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESRETENCIONES_CLIENTE_FAC_Caption', 'ESRETENCIONES_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESRETENCIONES_CLIENTE_FAC_Index', '63', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESRETENCIONES_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESRETENCIONES_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESRETENCIONES_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESRETENCIONES_CLIENTE_FAC_Width', '25', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESRETENCIONES_EMPRESA_FAC_Caption', 'ESRETENCIONES_EMPRESA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESRETENCIONES_EMPRESA_FAC_Index', '46', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESRETENCIONES_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESRETENCIONES_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESRETENCIONES_EMPRESA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESRETENCIONES_EMPRESA_FAC_Width', '25', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESVENTA_ACTIVO_FIJO_FAC_Caption', 'ESVENTA_ACTIVO_FIJO_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESVENTA_ACTIVO_FIJO_FAC_Index', '72', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESVENTA_ACTIVO_FIJO_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESVENTA_ACTIVO_FIJO_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESVENTA_ACTIVO_FIJO_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_ESVENTA_ACTIVO_FIJO_FAC_Width', '25', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_ENTREGA_FACLIN_Caption', 'Fecha Entrega', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_ENTREGA_FACLIN_Index', '17', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_ENTREGA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_ENTREGA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_ENTREGA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_ENTREGA_FACLIN_Width', '170', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_FAC_Caption', 'Fecha', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_FAC_Index', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_FAC_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FECHA_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_Filtro', '', '', NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FORMA_PAGO_FAC_Caption', 'FORMA_PAGO_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FORMA_PAGO_FAC_Index', '33', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FORMA_PAGO_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FORMA_PAGO_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FORMA_PAGO_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_FORMA_PAGO_FAC_Width', '2406', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_GRUPO_ZONA_IVA_EMPRESA_FAC_Caption', 'GRUPO_ZONA_IVA_EMPRESA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_GRUPO_ZONA_IVA_EMPRESA_FAC_Index', '47', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_GRUPO_ZONA_IVA_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_GRUPO_ZONA_IVA_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_GRUPO_ZONA_IVA_EMPRESA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_GRUPO_ZONA_IVA_EMPRESA_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_LINEA_FACLIN_Caption', 'Nro Linea', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_LINEA_FACLIN_Index', '3', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_LINEA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_LINEA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_LINEA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_LINEA_FACLIN_Width', '136', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_MOVIL_CLIENTE_FAC_Caption', 'MOVIL_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_MOVIL_CLIENTE_FAC_Index', '52', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_MOVIL_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_MOVIL_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_MOVIL_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_MOVIL_CLIENTE_FAC_Width', '486', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_MOVIL_EMPRESA_FAC_Caption', 'MOVIL_EMPRESA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_MOVIL_EMPRESA_FAC_Index', '38', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_MOVIL_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_MOVIL_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_MOVIL_EMPRESA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_MOVIL_EMPRESA_FAC_Width', '486', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NIF_CLIENTE_FAC_Caption', 'NIF_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NIF_CLIENTE_FAC_Index', '51', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NIF_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NIF_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NIF_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NIF_CLIENTE_FAC_Width', '606', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NIF_EMPRESA_FAC_Caption', 'NIF_EMPRESA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NIF_EMPRESA_FAC_Index', '37', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NIF_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NIF_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NIF_EMPRESA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NIF_EMPRESA_FAC_Width', '606', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_FAM_FACLIN_Caption', 'NOMBRE_FAM_FACLIN', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_FAM_FACLIN_Index', '15', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_FAM_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_FAM_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_FAM_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_FAM_FACLIN_Width', '2406', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_PAI_CLIENTE_FAC_Caption', 'NOMBRE_PAI_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_PAI_CLIENTE_FAC_Index', '59', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_PAI_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_PAI_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_PAI_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_PAI_CLIENTE_FAC_Width', '1806', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_PAI_EMPRESA_FAC_Caption', 'NOMBRE_PAI_EMPRESA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_PAI_EMPRESA_FAC_Index', '44', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_PAI_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_PAI_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_PAI_EMPRESA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_PAI_EMPRESA_FAC_Width', '1806', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TAR_TAR_Caption', 'Tarifa Aplicada', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TAR_TAR_Index', '7', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TAR_TAR_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TAR_TAR_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TAR_TAR_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TAR_TAR_Width', '179', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TIPO_IVA_IVATIP_Caption', 'NOMBRE_TIPO_IVA_IVATIP', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TIPO_IVA_IVATIP_Index', '18', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TIPO_IVA_IVATIP_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TIPO_IVA_IVATIP_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TIPO_IVA_IVATIP_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NOMBRE_TIPO_IVA_IVATIP_Width', '246', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NUMERO_FAC_Caption', 'NUMERO_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NUMERO_FAC_FACLIN_Caption', 'Nro', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NUMERO_FAC_FACLIN_Index', '2', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NUMERO_FAC_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NUMERO_FAC_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NUMERO_FAC_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NUMERO_FAC_FACLIN_Width', '149', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NUMERO_FAC_Index', '26', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NUMERO_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NUMERO_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NUMERO_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_NUMERO_FAC_Width', '246', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PALABRA_REPORTS_ZONA_IVA_FAC_Caption', 'PALABRA_REPORTS_ZONA_IVA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PALABRA_REPORTS_ZONA_IVA_FAC_Index', '70', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PALABRA_REPORTS_ZONA_IVA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PALABRA_REPORTS_ZONA_IVA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PALABRA_REPORTS_ZONA_IVA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PALABRA_REPORTS_ZONA_IVA_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_POBLACION_CLIENTE_FAC_Caption', 'POBLACION_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_POBLACION_CLIENTE_FAC_Index', '56', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_POBLACION_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_POBLACION_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_POBLACION_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_POBLACION_CLIENTE_FAC_Width', '2406', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_POBLACION_EMPRESA_FAC_Caption', 'POBLACION_EMPRESA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_POBLACION_EMPRESA_FAC_Index', '42', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_POBLACION_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_POBLACION_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_POBLACION_EMPRESA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_POBLACION_EMPRESA_FAC_Width', '2406', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_DTO_FACLIN_Caption', 'PORCENTAJE_DTO_FACLIN', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_DTO_FACLIN_Index', '21', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_DTO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_DTO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_DTO_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_DTO_FACLIN_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVA_FACLIN_Caption', '% IVA', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVA_FACLIN_Index', '11', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVA_FACLIN_Width', '100', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAE_FAC_Caption', 'PORCENTAJE_IVAE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAE_FAC_Index', '88', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAE_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAN_FAC_Caption', 'PORCENTAJE_IVAN_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAN_FAC_Index', '73', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAN_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAN_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAN_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAN_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAR_FAC_Caption', 'PORCENTAJE_IVAR_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAR_FAC_Index', '78', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAR_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAR_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAR_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAR_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAS_FAC_Caption', 'PORCENTAJE_IVAS_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAS_FAC_Index', '83', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAS_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAS_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAS_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_IVAS_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_REE_FAC_Caption', 'PORCENTAJE_REE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_REE_FAC_Index', '90', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_REE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_REE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_REE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_REE_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_REN_FAC_Caption', 'PORCENTAJE_REN_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_REN_FAC_Index', '75', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_REN_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_REN_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_REN_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_REN_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RER_FAC_Caption', 'PORCENTAJE_RER_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RER_FAC_Index', '80', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RER_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RER_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RER_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RER_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RES_FAC_Caption', 'PORCENTAJE_RES_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RES_FAC_Index', '85', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RES_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RES_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RES_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RES_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RETENCION_FAC_Caption', 'PORCENTAJE_RETENCION_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RETENCION_FAC_Index', '29', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RETENCION_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RETENCION_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RETENCION_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PORCENTAJE_RETENCION_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_DTO_FACLIN_Caption', 'PRECIO_DTO_FACLIN', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_DTO_FACLIN_Index', '22', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_DTO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_DTO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_DTO_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_DTO_FACLIN_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_SALIDA_FACLIN_Caption', 'PRECIO_SALIDA_FACLIN', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_SALIDA_FACLIN_Index', '20', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_SALIDA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_SALIDA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_SALIDA_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_SALIDA_FACLIN_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Caption', 'Precio Con IVA', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Index', '12', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Width', '190', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Caption', 'Precio sin IVA', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Index', '9', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Width', '164', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PROVINCIA_CLIENTE_FAC_Caption', 'PROVINCIA_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PROVINCIA_CLIENTE_FAC_Index', '57', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PROVINCIA_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PROVINCIA_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PROVINCIA_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PROVINCIA_CLIENTE_FAC_Width', '2406', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PROVINCIA_EMPRESA_FAC_Caption', 'PROVINCIA_EMPRESA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PROVINCIA_EMPRESA_FAC_Index', '43', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PROVINCIA_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PROVINCIA_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PROVINCIA_EMPRESA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_PROVINCIA_EMPRESA_FAC_Width', '2406', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_RAZON_SOCIAL_CLIENTE_FAC_Caption', 'RAZON_SOCIAL_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_RAZON_SOCIAL_CLIENTE_FAC_Index', '50', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_RAZON_SOCIAL_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_RAZON_SOCIAL_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_RAZON_SOCIAL_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_RAZON_SOCIAL_CLIENTE_FAC_Width', '2406', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_RAZON_SOCIAL_EMPRESA_FAC_Caption', 'RAZON_SOCIAL_EMPRESA_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_RAZON_SOCIAL_EMPRESA_FAC_Index', '36', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_RAZON_SOCIAL_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_RAZON_SOCIAL_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_RAZON_SOCIAL_EMPRESA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_RAZON_SOCIAL_EMPRESA_FAC_Width', '2406', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FAC_Caption', 'SERIE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FAC_FACLIN_Caption', 'Serie', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FAC_FACLIN_Index', '1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FAC_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FAC_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FAC_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FAC_FACLIN_Width', '176', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FAC_Index', '27', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_SERIE_FAC_Width', '246', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TARIFA_ARTICULO_CLIENTE_FAC_Caption', 'TARIFA_ARTICULO_CLIENTE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TARIFA_ARTICULO_CLIENTE_FAC_Index', '64', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TARIFA_ARTICULO_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TARIFA_ARTICULO_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TARIFA_ARTICULO_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TARIFA_ARTICULO_CLIENTE_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_CANTIDAD_ARTICULO_FACLIN_Caption', 'Tipo Cantidad', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_CANTIDAD_ARTICULO_FACLIN_Index', '4', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_CANTIDAD_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_CANTIDAD_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_CANTIDAD_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_CANTIDAD_ARTICULO_FACLIN_Width', '168', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_IVA_ARTICULO_FACLIN_Caption', 'Tipo IVA', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_IVA_ARTICULO_FACLIN_Index', '10', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_IVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_IVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_IVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TIPO_IVA_ARTICULO_FACLIN_Width', '135', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAE_FAC_Caption', 'TOTAL_BASEI_IVAE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAE_FAC_Index', '92', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAE_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAN_FAC_Caption', 'TOTAL_BASEI_IVAN_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAN_FAC_Index', '77', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAN_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAN_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAN_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAN_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAR_FAC_Caption', 'TOTAL_BASEI_IVAR_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAR_FAC_Index', '82', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAR_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAR_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAR_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAR_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAS_FAC_Caption', 'TOTAL_BASEI_IVAS_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAS_FAC_Index', '87', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAS_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAS_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAS_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASEI_IVAS_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASES_FAC_Caption', 'TOTAL_BASES_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASES_FAC_Index', '32', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASES_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASES_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASES_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_BASES_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FAC_SIVA_FACLIN_Caption', 'TOTAL_FAC_SIVA_FACLIN', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FAC_SIVA_FACLIN_Index', '23', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FAC_SIVA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FAC_SIVA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FAC_SIVA_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FAC_SIVA_FACLIN_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FACLIN_Caption', 'Total Linea', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FACLIN_Index', '16', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_FACLIN_Width', '148', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IMPUESTOS_FAC_Caption', 'TOTAL_IMPUESTOS_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IMPUESTOS_FAC_Index', '31', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IMPUESTOS_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IMPUESTOS_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IMPUESTOS_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IMPUESTOS_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAE_FAC_Caption', 'TOTAL_IVAE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAE_FAC_Index', '89', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAE_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAN_FAC_Caption', 'TOTAL_IVAN_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAN_FAC_Index', '74', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAN_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAN_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAN_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAN_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAR_FAC_Caption', 'TOTAL_IVAR_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAR_FAC_Index', '79', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAR_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAR_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAR_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAR_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAS_FAC_Caption', 'TOTAL_IVAS_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAS_FAC_Index', '84', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAS_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAS_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAS_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_IVAS_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_LIQUIDO_FAC_Caption', 'TOTAL_LIQUIDO_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_LIQUIDO_FAC_Index', '28', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_LIQUIDO_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_LIQUIDO_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_LIQUIDO_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_LIQUIDO_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_REE_FAC_Caption', 'TOTAL_REE_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_REE_FAC_Index', '91', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_REE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_REE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_REE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_REE_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_REN_FAC_Caption', 'TOTAL_REN_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_REN_FAC_Index', '76', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_REN_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_REN_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_REN_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_REN_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RER_FAC_Caption', 'TOTAL_RER_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RER_FAC_Index', '81', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RER_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RER_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RER_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RER_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RES_FAC_Caption', 'TOTAL_RES_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RES_FAC_Index', '86', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RES_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RES_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RES_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RES_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RETENCION_FAC_Caption', 'TOTAL_RETENCION_FAC', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RETENCION_FAC_Index', '30', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RETENCION_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RETENCION_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RETENCION_FAC_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvLinFac_TOTAL_RETENCION_FAC_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos__oApplyWidth', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos__oCreateItems', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CANTIDAD_MOV_Caption', 'Ctd', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CANTIDAD_MOV_Index', '1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CANTIDAD_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CANTIDAD_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CANTIDAD_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CANTIDAD_MOV_Width', '63', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALM_CONTRA_MOV_Caption', 'Almacén Dest', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALM_CONTRA_MOV_Index', '16', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALM_CONTRA_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALM_CONTRA_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALM_CONTRA_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALM_CONTRA_MOV_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALM_MOV_Caption', 'Alm Origen', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALM_MOV_Index', '3', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALM_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALM_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALM_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ALM_MOV_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ART_MOV_Caption', 'Cód Art.', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ART_MOV_Index', '11', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ART_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ART_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ART_MOV_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_ART_MOV_Width', '143', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_CLI_MOV_Caption', 'Código Cliente', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_CLI_MOV_Index', '17', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_CLI_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_CLI_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_CLI_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_CLI_MOV_Width', '165', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_EMP_MOV_Caption', 'Cód Empresa', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_EMP_MOV_Index', '2', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_EMP_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_EMP_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_EMP_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_EMP_MOV_Width', '151', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_PRV_MOV_Caption', 'Código Prov', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_PRV_MOV_Index', '18', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_PRV_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_PRV_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_PRV_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_PRV_MOV_Width', '143', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_UNIDAD_MOV_Caption', 'Sku', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_UNIDAD_MOV_Index', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_UNIDAD_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_UNIDAD_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_UNIDAD_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_CODIGO_UNIDAD_MOV_Width', '285', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_ARTICULO_MOV_Caption', 'DESCRIPCION_ARTICULO_MOV', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_ARTICULO_MOV_Index', '12', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_ARTICULO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_ARTICULO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_ARTICULO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_ARTICULO_MOV_Width', '326', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_TIPO_DOCUMENTO_TD_Caption', 'DESCRIPCION_TIPO_DOCUMENTO_TD', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_TIPO_DOCUMENTO_TD_Index', '32', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_TIPO_DOCUMENTO_TD_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_TIPO_DOCUMENTO_TD_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_TIPO_DOCUMENTO_TD_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_DESCRIPCION_TIPO_DOCUMENTO_TD_Width', '348', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_ESACTIVO_MOV_Caption', 'Activo', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_ESACTIVO_MOV_Index', '19', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_ESACTIVO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_ESACTIVO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_ESACTIVO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_ESACTIVO_MOV_Width', '125', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_CADUCIDAD_MOV_Caption', 'FECHA_CADUCIDAD_MOV', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_CADUCIDAD_MOV_Index', '29', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_CADUCIDAD_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_CADUCIDAD_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_CADUCIDAD_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_CADUCIDAD_MOV_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_MOV_Caption', 'Fecha Hora', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_MOV_Index', '10', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_FECHA_MOV_Width', '222', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_Filtro', '', '', NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTE_ALTA_Caption', 'INSTANTE_ALTA', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTE_ALTA_Index', '21', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTE_ALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTE_ALTA_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTE_ALTA_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTE_ALTA_Width', '222', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTE_MODIF_Caption', 'INSTANTE_MODIF', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTE_MODIF_Index', '20', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTE_MODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTE_MODIF_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTE_MODIF_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_INSTANTE_MODIF_Width', '222', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_MOV_Caption', 'NroLinea', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_MOV_Index', '9', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_MOV_Width', '118', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_REF_MOV_Caption', 'LINEA_REF_MOV', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_REF_MOV_Index', '27', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_REF_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_REF_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_REF_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LINEA_REF_MOV_Width', '185', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LOTE_MOV_Caption', 'LOTE_MOV', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LOTE_MOV_Index', '28', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LOTE_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LOTE_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LOTE_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_LOTE_MOV_Width', '120', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_DESTINO_Caption', 'NOMBRE_ALMACEN_DESTINO', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_DESTINO_Index', '31', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_DESTINO_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_DESTINO_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_DESTINO_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_DESTINO_Width', '313', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_ORIGEN_Caption', 'NOMBRE_ALMACEN_ORIGEN', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_ORIGEN_Index', '30', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_ORIGEN_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_ORIGEN_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_ORIGEN_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NOMBRE_ALMACEN_ORIGEN_Width', '301', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_DOC_MOV_Caption', 'Nro Doc', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_DOC_MOV_Index', '8', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_DOC_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_DOC_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_DOC_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_DOC_MOV_Width', '104', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_DOC_REF_MOV_Caption', 'NUMERO_DOC_REF_MOV', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_DOC_REF_MOV_Index', '26', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_DOC_REF_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_DOC_REF_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_DOC_REF_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_DOC_REF_MOV_Width', '246', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_MOV_Caption', 'Nro. Mov', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_MOV_Index', '4', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_NUMERO_MOV_Width', '115', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_COSTE_UNITARIO_MOV_Caption', 'Coste Ud', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_COSTE_UNITARIO_MOV_Index', '13', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_COSTE_UNITARIO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_COSTE_UNITARIO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_COSTE_UNITARIO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_COSTE_UNITARIO_MOV_Width', '103', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_MEDIO_MOV_Caption', 'Precio MP', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_MEDIO_MOV_Index', '15', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_MEDIO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_MEDIO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_MEDIO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_PRECIO_MEDIO_MOV_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZON_SOCIAL_CLI_Caption', 'RAZON_SOCIAL_CLI', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZON_SOCIAL_CLI_Index', '33', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZON_SOCIAL_CLI_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZON_SOCIAL_CLI_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZON_SOCIAL_CLI_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZON_SOCIAL_CLI_Width', '279', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZON_SOCIAL_PRV_Caption', 'RAZON_SOCIAL_PRV', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZON_SOCIAL_PRV_Index', '34', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZON_SOCIAL_PRV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZON_SOCIAL_PRV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZON_SOCIAL_PRV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_RAZON_SOCIAL_PRV_Width', '289', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_MOV_Caption', 'Serie', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_MOV_Index', '7', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_MOV_Width', '68', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_REF_MOV_Caption', 'SERIE_DOC_REF_MOV', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_REF_MOV_Index', '25', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_REF_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_REF_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_REF_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_SERIE_DOC_REF_MOV_Width', '246', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_MOV_Caption', 'Tipo', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_MOV_Index', '5', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_MOV_Width', '55', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_REF_MOV_Caption', 'TIPO_DOC_REF_MOV', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_REF_MOV_Index', '24', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_REF_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_REF_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_REF_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_DOC_REF_MOV_Width', '229', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_MOV_Caption', 'E/S', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_MOV_Index', '6', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TIPO_MOV_Width', '48', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TOTAL_COSTE_MOV_Caption', 'Total Coste', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TOTAL_COSTE_MOV_Index', '14', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TOTAL_COSTE_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TOTAL_COSTE_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TOTAL_COSTE_MOV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_TOTAL_COSTE_MOV_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIO_ALTA_Caption', 'USUARIO_ALTA', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIO_ALTA_Index', '22', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIO_ALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIO_ALTA_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIO_ALTA_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIO_ALTA_Width', '1206', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIO_MODIF_Caption', 'USUARIO_MODIF', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIO_MODIF_Index', '23', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIO_MODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIO_MODIF_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIO_MODIF_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvMovimientos_USUARIO_MODIF_Width', '1206', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil__oApplyWidth', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvPerfil__oCreateItems', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores__oApplyWidth', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores__oCreateItems', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_ART_ART_Caption', 'CODIGO_ART_ART', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_ART_ART_Index', '4', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_ART_ART_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_ART_ART_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_ART_ART_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_ART_ART_Width', '246', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_PRV_PRV_Caption', 'Código Proveedor', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_PRV_PRV_Index', '2', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_PRV_PRV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_PRV_PRV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_PRV_PRV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_CODIGO_PRV_PRV_Width', '236', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_ESPROVEEDORPRINCIPAL_Caption', 'Principal', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_ESPROVEEDORPRINCIPAL_Index', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_ESPROVEEDORPRINCIPAL_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_ESPROVEEDORPRINCIPAL_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_ESPROVEEDORPRINCIPAL_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_ESPROVEEDORPRINCIPAL_Width', '111', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_FECHA_VALIDEZ_Caption', 'Fecha último Precio', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_FECHA_VALIDEZ_Index', '6', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_FECHA_VALIDEZ_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_FECHA_VALIDEZ_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_FECHA_VALIDEZ_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_FECHA_VALIDEZ_Width', '218', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_Filtro', '', '', NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTE_ALTA_Caption', 'INSTANTE_ALTA', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTE_ALTA_Index', '8', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTE_ALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTE_ALTA_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTE_ALTA_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTE_ALTA_Width', '222', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTE_MODIF_Caption', 'INSTANTE_MODIF', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTE_MODIF_Index', '7', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTE_MODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTE_MODIF_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTE_MODIF_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_INSTANTE_MODIF_Width', '222', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_PRECIO_ULT_COMPRA_Caption', 'Precio Última Compra', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_PRECIO_ULT_COMPRA_Index', '5', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_PRECIO_ULT_COMPRA_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_PRECIO_ULT_COMPRA_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_PRECIO_ULT_COMPRA_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_PRECIO_ULT_COMPRA_Width', '243', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_RAZON_SOCIAL_PRV_Caption', 'Razón Social Proveedor', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_RAZON_SOCIAL_PRV_Index', '3', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_RAZON_SOCIAL_PRV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_RAZON_SOCIAL_PRV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_RAZON_SOCIAL_PRV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_RAZON_SOCIAL_PRV_Width', '276', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_REF_PROVEEDOR_Caption', 'Modelo Proveedor', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_REF_PROVEEDOR_Index', '1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_REF_PROVEEDOR_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_REF_PROVEEDOR_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_REF_PROVEEDOR_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_REF_PROVEEDOR_Width', '226', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIO_ALTA_Caption', 'USUARIO_ALTA', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIO_ALTA_Index', '9', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIO_ALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIO_ALTA_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIO_ALTA_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIO_ALTA_Width', '1206', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIO_MODIF_Caption', 'USUARIO_MODIF', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIO_MODIF_Index', '10', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIO_MODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIO_MODIF_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIO_MODIF_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvProveedores_USUARIO_MODIF_Width', '1206', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos__oApplyWidth', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos__oCreateItems', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_DESCRIPCION_AAB_Caption', 'Descripción del color', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_DESCRIPCION_AAB_Index', '4', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_DESCRIPCION_AAB_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_DESCRIPCION_AAB_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_DESCRIPCION_AAB_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_DESCRIPCION_AAB_Width', '275', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ETIQUETA_BASICO_Caption', 'Equivalencia', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ETIQUETA_BASICO_Index', '9', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ETIQUETA_BASICO_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ETIQUETA_BASICO_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ETIQUETA_BASICO_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ETIQUETA_BASICO_Width', '200', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_Filtro', '', '', NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_FUENTE_ATB_Caption', 'Fuente', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_FUENTE_ATB_Index', '10', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_FUENTE_ATB_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_FUENTE_ATB_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_FUENTE_ATB_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_FUENTE_ATB_Width', '100', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_HEX_ATB_Caption', 'Paleta', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_HEX_ATB_Index', '6', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_HEX_ATB_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_HEX_ATB_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_HEX_ATB_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_HEX_ATB_Width', '125', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ID_ATB_AV_Caption', 'Color básico', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ID_ATB_AV_Index', '3', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ID_ATB_AV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ID_ATB_AV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ID_ATB_AV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ID_ATB_AV_Width', '238', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ID_VA_AV_Caption', 'Atributo', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ID_VA_AV_Index', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ID_VA_AV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ID_VA_AV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ID_VA_AV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_ID_VA_AV_Width', '131', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_NOMBRE_ATB_Caption', 'Nombre básico', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_NOMBRE_ATB_Index', '5', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_NOMBRE_ATB_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_NOMBRE_ATB_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_NOMBRE_ATB_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_NOMBRE_ATB_Width', '163', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_NOMBRE_ATRIBUTO_Caption', 'Nombre atributo', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_NOMBRE_ATRIBUTO_Index', '1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_NOMBRE_ATRIBUTO_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_NOMBRE_ATRIBUTO_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_NOMBRE_ATRIBUTO_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_NOMBRE_ATRIBUTO_Width', '211', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_UNIDAD_ATB_Caption', 'Unidad', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_UNIDAD_ATB_Index', '8', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_UNIDAD_ATB_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_UNIDAD_ATB_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_UNIDAD_ATB_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_UNIDAD_ATB_Width', '75', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_VALOR_AV_Caption', 'Color proveedor', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_VALOR_AV_Index', '2', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_VALOR_AV_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_VALOR_AV_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_VALOR_AV_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_VALOR_AV_Width', '175', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_VALOR_NUM_ATB_Caption', 'Valor básico', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_VALOR_NUM_ATB_Index', '7', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_VALOR_NUM_ATB_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_VALOR_NUM_ATB_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_VALOR_NUM_ATB_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuAtributosBasicos_VALOR_NUM_ATB_Width', '113', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto__oApplyWidth', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto__oCreateItems', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_ART_SKU_Caption', 'CODIGO_ART_SKU', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_ART_SKU_Index', '5', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_ART_SKU_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_ART_SKU_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_ART_SKU_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_ART_SKU_Width', '246', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_UNIDAD_SKU_Caption', 'Código SKU', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_UNIDAD_SKU_Index', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_UNIDAD_SKU_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_UNIDAD_SKU_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_UNIDAD_SKU_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_UNIDAD_SKU_Width', '438', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_VAR_SKU_Caption', 'Variación', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_VAR_SKU_Index', '1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_VAR_SKU_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_VAR_SKU_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_VAR_SKU_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_CODIGO_VAR_SKU_Width', '100', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_ESACTIVO_SKU_Caption', 'Activo', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_ESACTIVO_SKU_Index', '2', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_ESACTIVO_SKU_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_ESACTIVO_SKU_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_ESACTIVO_SKU_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_ESACTIVO_SKU_Width', '88', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_FECHA_ULT_COMPRA_SKUC_Caption', 'Fecha Últ Compra', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_FECHA_ULT_COMPRA_SKUC_Index', '4', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_FECHA_ULT_COMPRA_SKUC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_FECHA_ULT_COMPRA_SKUC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_FECHA_ULT_COMPRA_SKUC_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_FECHA_ULT_COMPRA_SKUC_Width', '181', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_Filtro', '', '', NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_PRECIO_ULT_COMPRA_SKUC_Caption', 'Precio Últ Compra', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_PRECIO_ULT_COMPRA_SKUC_Index', '3', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_PRECIO_ULT_COMPRA_SKUC_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_PRECIO_ULT_COMPRA_SKUC_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_PRECIO_ULT_COMPRA_SKUC_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkuMto_PRECIO_ULT_COMPRA_SKUC_Width', '206', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus__oApplyWidth', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus__oCreateItems', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_ART_SKU_Caption', 'CODIGO_ART_SKU', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_ART_SKU_Index', '1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_ART_SKU_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_ART_SKU_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_ART_SKU_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_ART_SKU_Width', '246', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_BARRAS_CB_Caption', 'Código de Barras', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_BARRAS_CB_Index', '7', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_BARRAS_CB_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_BARRAS_CB_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_BARRAS_CB_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_BARRAS_CB_Width', '243', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_UNIDAD_SKU_Caption', 'Código SKU', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_UNIDAD_SKU_Index', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_UNIDAD_SKU_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_UNIDAD_SKU_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_UNIDAD_SKU_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_CODIGO_UNIDAD_SKU_Width', '410', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESACTIVO_SKU_Caption', 'Activo', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESACTIVO_SKU_Index', '2', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESACTIVO_SKU_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESACTIVO_SKU_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESACTIVO_SKU_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESACTIVO_SKU_Width', '100', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESPRINCIPAL_CB_Caption', 'Etiqueta', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESPRINCIPAL_CB_Index', '9', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESPRINCIPAL_CB_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESPRINCIPAL_CB_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESPRINCIPAL_CB_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ESPRINCIPAL_CB_Width', '109', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_Filtro', '', '', NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ID_CB_Caption', 'ID_CB', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ID_CB_Index', '10', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ID_CB_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ID_CB_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ID_CB_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_ID_CB_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTE_ALTA_Caption', 'INSTANTE_ALTA', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTE_ALTA_Index', '4', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTE_ALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTE_ALTA_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTE_ALTA_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTE_ALTA_Width', '222', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTE_MODIF_Caption', 'INSTANTE_MODIF', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTE_MODIF_Index', '3', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTE_MODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTE_MODIF_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTE_MODIF_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_INSTANTE_MODIF_Width', '222', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_STOCK_TOTAL_Caption', 'Stock Total', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_STOCK_TOTAL_Index', '11', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_STOCK_TOTAL_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_STOCK_TOTAL_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_STOCK_TOTAL_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_STOCK_TOTAL_Width', '168', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_TIPO_CODIGO_CB_Caption', 'Tipo', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_TIPO_CODIGO_CB_Index', '8', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_TIPO_CODIGO_CB_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_TIPO_CODIGO_CB_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_TIPO_CODIGO_CB_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_TIPO_CODIGO_CB_Width', '125', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIO_ALTA_Caption', 'USUARIO_ALTA', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIO_ALTA_Index', '5', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIO_ALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIO_ALTA_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIO_ALTA_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIO_ALTA_Width', '1206', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIO_MODIF_Caption', 'USUARIO_MODIF', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIO_MODIF_Index', '6', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIO_MODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIO_MODIF_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIO_MODIF_Visible', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvSkus_USUARIO_MODIF_Width', '1206', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock__oApplyWidth', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock__oCreateItems', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_42_Caption', '42', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_42_Index', '2', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_42_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_42_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_42_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_42_Width', '75', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_43_Caption', '43', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_43_Index', '3', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_43_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_43_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_43_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_43_Width', '68', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Almacen_Caption', 'Almacen', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Almacen_Index', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Almacen_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Almacen_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Almacen_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Almacen_Width', '299', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Color_Caption', 'Color', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Color_Index', '1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Color_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Color_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Color_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Color_Width', '103', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Filtro', '', '', NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Total_Caption', 'Total', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Total_Index', '4', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Total_SortIndex', '-1', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Total_SortOrder', '0', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Total_Visible', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvStock_Total_Width', '126', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas__oApplyWidth', 'True', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos', 'tvTarifas__oCreateItems', 'False', NULL, NULL, NULL, '2026-07-02 09:29:41', '2026-07-02 09:29:41', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'cxGrdDBTabPrin__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'cxGrdDBTabPrin__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'cxGrdDBTabPrin_CODIGO_ART_ART_Caption', 'Código Artículo', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
@@ -11921,8 +13430,7 @@ FROM vi_tarifas
   ('Administrador', 'frmMtoArticulos_1', 'cxGrdDBTabPrin_INSTANTE_MODIF1_SortOrder', '0', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'cxGrdDBTabPrin_INSTANTE_MODIF1_Visible', 'False', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'cxGrdDBTabPrin_INSTANTE_MODIF1_Width', '222', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoArticulos_1', 'cxGrdDBTabPrin_NOMBRE_FOT_FOT_Caption', 'NOMBRE_FOT_FOT', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoArticulos_1', 'cxGrdDBTabPrin_NOMBRE_FOT_FOT_Caption', 'NOMBRE_FOT_FOT', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'cxGrdDBTabPrin_NOMBRE_FOT_FOT_Index', '11', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'cxGrdDBTabPrin_NOMBRE_FOT_FOT_SortIndex', '-1', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'cxGrdDBTabPrin_NOMBRE_FOT_FOT_SortOrder', '0', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
@@ -12293,7 +13801,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_PORCENTAJE_IVA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_PORCENTAJE_IVA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_PORCENTAJE_IVA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_PORCENTAJE_IVA_FACLIN_Width', '100', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_PORCENTAJE_IVA_FACLIN_Width', '100', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_PORCENTAJE_IVAE_FAC_Caption', 'PORCENTAJE_IVAE_FAC', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_PORCENTAJE_IVAE_FAC_Index', '88', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_PORCENTAJE_IVAE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
@@ -12422,8 +13931,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_TIPO_CANTIDAD_ARTICULO_FACLIN_Width', '168', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_TIPO_IVA_ARTICULO_FACLIN_Caption', 'Tipo IVA', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_TIPO_IVA_ARTICULO_FACLIN_Index', '10', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_TIPO_IVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_TIPO_IVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_TIPO_IVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_TIPO_IVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvLinFac_TIPO_IVA_ARTICULO_FACLIN_Width', '135', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
@@ -12794,7 +14302,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoArticulos_1', 'tvProveedores_PRECIO_ULT_COMPRA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvProveedores_PRECIO_ULT_COMPRA_SortOrder', '0', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvProveedores_PRECIO_ULT_COMPRA_Visible', 'True', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoArticulos_1', 'tvProveedores_PRECIO_ULT_COMPRA_Width', '243', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos_1', 'tvProveedores_PRECIO_ULT_COMPRA_Width', '243', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoArticulos_1', 'tvProveedores_RAZON_SOCIAL_PRV_Caption', 'Razón Social Proveedor', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvProveedores_RAZON_SOCIAL_PRV_Index', '3', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvProveedores_RAZON_SOCIAL_PRV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
@@ -12923,8 +14432,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoArticulos_1', 'tvSkuMto_PRECIO_ULT_COMPRA_SKUC_Width', '206', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvSkus__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvSkus__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoArticulos_1', 'tvSkus_CODIGO_ART_SKU_Caption', 'CODIGO_ART_SKU', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoArticulos_1', 'tvSkus_CODIGO_ART_SKU_Caption', 'CODIGO_ART_SKU', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvSkus_CODIGO_ART_SKU_Index', '1', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvSkus_CODIGO_ART_SKU_SortIndex', '-1', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_1', 'tvSkus_CODIGO_ART_SKU_SortOrder', '0', NULL, NULL, NULL, '2026-05-28 18:25:27', '2026-05-28 18:25:27', 'Administrador', 'Administrador'),
@@ -13298,7 +14806,8 @@ QQBSAFQASQBDAFUATABPABIGAAAAQgBPAEwAUwBPAFMAAAAAAAAAAAAAAA==', NULL, NULL, '2026
   ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_FECHA_ENTREGA_FACLIN_Caption', 'Fecha Entrega', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_FECHA_ENTREGA_FACLIN_Index', '17', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_FECHA_ENTREGA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_FECHA_ENTREGA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_FECHA_ENTREGA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_FECHA_ENTREGA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_FECHA_ENTREGA_FACLIN_Width', '170', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_FECHA_FAC_Caption', 'Fecha', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
@@ -13427,8 +14936,7 @@ QQBSAFQASQBDAFUATABPABIGAAAAQgBPAEwAUwBPAFMAAAAAAAAAAAAAAA==', NULL, NULL, '2026
   ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_PORCENTAJE_IVAE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_PORCENTAJE_IVAE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_PORCENTAJE_IVAE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_PORCENTAJE_IVAE_FAC_Width', '136', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_PORCENTAJE_IVAE_FAC_Width', '136', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_PORCENTAJE_IVAN_FAC_Caption', 'PORCENTAJE_IVAN_FAC', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_PORCENTAJE_IVAN_FAC_Index', '73', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvLinFac_PORCENTAJE_IVAN_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
@@ -13799,7 +15307,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoArticulos_2', 'tvMovimientos_NUMERO_DOC_REF_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvMovimientos_NUMERO_DOC_REF_MOV_Width', '786', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvMovimientos_NUMERO_MOV_Caption', 'Nro. Mov', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoArticulos_2', 'tvMovimientos_NUMERO_MOV_Index', '4', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoArticulos_2', 'tvMovimientos_NUMERO_MOV_Index', '4', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoArticulos_2', 'tvMovimientos_NUMERO_MOV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvMovimientos_NUMERO_MOV_SortOrder', '0', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvMovimientos_NUMERO_MOV_Visible', 'True', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
@@ -13928,8 +15437,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoArticulos_2', 'tvProveedores_RAZON_SOCIAL_PRV_SortIndex', '-1', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvProveedores_RAZON_SOCIAL_PRV_SortOrder', '0', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvProveedores_RAZON_SOCIAL_PRV_Visible', 'True', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoArticulos_2', 'tvProveedores_RAZON_SOCIAL_PRV_Width', '276', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoArticulos_2', 'tvProveedores_RAZON_SOCIAL_PRV_Width', '276', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvProveedores_REF_PROVEEDOR_Caption', 'Modelo Proveedor', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvProveedores_REF_PROVEEDOR_Index', '1', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoArticulos_2', 'tvProveedores_REF_PROVEEDOR_SortIndex', '-1', NULL, NULL, NULL, '2026-05-24 13:43:09', '2026-05-24 13:43:09', 'Administrador', 'Administrador'),
@@ -14300,7 +15808,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaCliente_PROVINCIA_CLI_SortOrder', '0', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaCliente_PROVINCIA_CLI_Visible', 'True', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaCliente_PROVINCIA_CLI_Width', '120', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaCliente_RAZON_SOCIAL_CLI_Caption', 'Razón social', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaCliente_RAZON_SOCIAL_CLI_Caption', 'Razón social', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaCliente_RAZON_SOCIAL_CLI_Index', '1', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaCliente_RAZON_SOCIAL_CLI_SortIndex', '-1', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaCliente_RAZON_SOCIAL_CLI_SortOrder', '0', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
@@ -14429,8 +15938,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaFacturaCab_CODIGO_CLI_FAC_Index', '4', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaFacturaCab_CODIGO_CLI_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaFacturaCab_CODIGO_CLI_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaFacturaCab_CODIGO_CLI_FAC_Visible', 'True', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaFacturaCab_CODIGO_CLI_FAC_Visible', 'True', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaFacturaCab_CODIGO_CLI_FAC_Width', '246', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaFacturaCab_FECHA_FAC_Caption', 'Fecha', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaFacturaCab_FECHA_FAC_Index', '2', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
@@ -14801,7 +16309,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaVales_Filtro', '', '', NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaVales_IMPORTE_NOMINAL_VL_Caption', 'Nominal', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaVales_IMPORTE_NOMINAL_VL_Index', '4', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaVales_IMPORTE_NOMINAL_VL_SortIndex', '-1', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaVales_IMPORTE_NOMINAL_VL_SortIndex', '-1', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaVales_IMPORTE_NOMINAL_VL_SortOrder', '0', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaVales_IMPORTE_NOMINAL_VL_Visible', 'True', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaOperacionesHist', 'tvHistCajaVales_IMPORTE_NOMINAL_VL_Width', '100', NULL, NULL, NULL, '2026-06-21 08:41:36', '2026-06-21 08:41:36', 'Administrador', 'Administrador'),
@@ -14930,8 +16439,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoCajaValesHist', 'cxGrdDBTabPrin_FECHA_CADUCIDAD_VL_Width', '117', NULL, NULL, NULL, '2026-05-09 20:50:35', '2026-05-09 20:50:35', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaValesHist', 'cxGrdDBTabPrin_FECHA_EMISION_VL_Caption', 'F. Emisión', NULL, NULL, NULL, '2026-05-09 20:50:35', '2026-05-09 20:50:35', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaValesHist', 'cxGrdDBTabPrin_FECHA_EMISION_VL_Index', '3', NULL, NULL, NULL, '2026-05-09 20:50:35', '2026-05-09 20:50:35', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoCajaValesHist', 'cxGrdDBTabPrin_FECHA_EMISION_VL_SortIndex', '-1', NULL, NULL, NULL, '2026-05-09 20:50:35', '2026-05-09 20:50:35', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoCajaValesHist', 'cxGrdDBTabPrin_FECHA_EMISION_VL_SortIndex', '-1', NULL, NULL, NULL, '2026-05-09 20:50:35', '2026-05-09 20:50:35', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaValesHist', 'cxGrdDBTabPrin_FECHA_EMISION_VL_SortOrder', '0', NULL, NULL, NULL, '2026-05-09 20:50:35', '2026-05-09 20:50:35', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaValesHist', 'cxGrdDBTabPrin_FECHA_EMISION_VL_Visible', 'True', NULL, NULL, NULL, '2026-05-09 20:50:35', '2026-05-09 20:50:35', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaValesHist', 'cxGrdDBTabPrin_FECHA_EMISION_VL_Width', '242', NULL, NULL, NULL, '2026-05-09 20:50:35', '2026-05-09 20:50:35', 'Administrador', 'Administrador'),
@@ -15302,7 +16810,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoDepositosCliente', 'cxGrdDBTabPrin_ESTADO_DEP_Caption', 'Estado', NULL, NULL, NULL, '2026-05-09 18:35:32', '2026-05-09 18:35:32', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoDepositosCliente', 'cxGrdDBTabPrin_ESTADO_DEP_Index', '7', NULL, NULL, NULL, '2026-05-09 18:35:32', '2026-05-09 18:35:32', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoDepositosCliente', 'cxGrdDBTabPrin_ESTADO_DEP_SortIndex', '-1', NULL, NULL, NULL, '2026-05-09 18:35:32', '2026-05-09 18:35:32', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoDepositosCliente', 'cxGrdDBTabPrin_ESTADO_DEP_SortOrder', '0', NULL, NULL, NULL, '2026-05-09 18:35:32', '2026-05-09 18:35:32', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoDepositosCliente', 'cxGrdDBTabPrin_ESTADO_DEP_SortOrder', '0', NULL, NULL, NULL, '2026-05-09 18:35:32', '2026-05-09 18:35:32', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoDepositosCliente', 'cxGrdDBTabPrin_ESTADO_DEP_Visible', 'True', NULL, NULL, NULL, '2026-05-09 18:35:32', '2026-05-09 18:35:32', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoDepositosCliente', 'cxGrdDBTabPrin_ESTADO_DEP_Width', '110', NULL, NULL, NULL, '2026-05-09 18:35:32', '2026-05-09 18:35:32', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoDepositosCliente', 'cxGrdDBTabPrin_FECHA_CREACION_DEP_Caption', 'F. Creación', NULL, NULL, NULL, '2026-05-09 18:35:32', '2026-05-09 18:35:32', 'Administrador', 'Administrador'),
@@ -15431,8 +16940,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESREGIMENESPECIALAGRICOLA_EMPRESA_Width', '86', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_Caption', 'Aplica Retenciones', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_Index', '14', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_Width', '170', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
@@ -15803,7 +17311,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RER_FACTURA_Index', '41', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RER_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RER_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RER_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RER_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RER_FACTURA_Width', '125', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RES_FACTURA_Caption', '% RE SúperReducido', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_PORCEN_RES_FACTURA_Index', '46', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
@@ -15932,8 +17441,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_REN_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_REN_FACTURA_Width', '91', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RER_FACTURA_Caption', 'RE Reducido', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RER_FACTURA_Index', '42', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RER_FACTURA_Index', '42', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RER_FACTURA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RER_FACTURA_SortOrder', '0', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas', 'tvFacturacion_TOTAL_RER_FACTURA_Visible', 'True', NULL, NULL, NULL, '2026-05-01 15:10:29', '2026-05-01 15:10:29', 'Administrador', 'Administrador'),
@@ -16304,7 +17812,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoEmpresas_1', 'oMostrarPerfil', 'False', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas_1', 'oRenameComponents', 'False', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas_1', 'tvFacturacion__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoEmpresas_1', 'tvFacturacion__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas_1', 'tvFacturacion__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoEmpresas_1', 'tvFacturacion_CODIGO_CLI_FAC_Caption', 'Código Cliente', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas_1', 'tvFacturacion_CODIGO_CLI_FAC_Index', '10', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas_1', 'tvFacturacion_CODIGO_CLI_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
@@ -16433,8 +17942,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoEmpresas_1', 'tvFacturacion_ESIVAAGRICOLA_ZONA_IVA_FAC_Width', '42', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas_1', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC_Caption', 'REAGP Cliente', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas_1', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC_Index', '23', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoEmpresas_1', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoEmpresas_1', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas_1', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas_1', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas_1', 'tvFacturacion_ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC_Width', '154', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
@@ -16805,7 +18313,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoEmpresas_1', 'tvLineasFacturacion_TOTAL_FACLIN_Width', '105', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas_1', 'tvPerfil__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas_1', 'tvPerfil__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoEmpresas_1', 'tvRetenciones__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoEmpresas_1', 'tvRetenciones__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoEmpresas_1', 'tvRetenciones__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas_1', 'tvSeries__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoEmpresas_1', 'tvSeries__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-27 19:36:58', '2026-05-27 19:36:58', 'Administrador', 'Administrador'),
@@ -16934,8 +18443,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_ESFECHADEENTREGA_FAC_Index', '83', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_ESFECHADEENTREGA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_ESFECHADEENTREGA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_ESFECHADEENTREGA_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_ESFECHADEENTREGA_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_ESFECHADEENTREGA_FAC_Width', '226', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_ESIMP_INCL_TARIFA_CLIENTE_FAC_Caption', 'Precios Tarifa con Impuestos', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_ESIMP_INCL_TARIFA_CLIENTE_FAC_Index', '77', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
@@ -17326,7 +18834,8 @@ AEwARwBBAEQATwAgAFMARQBSAFIAQQBOAE8AAAAAAAAAAAAAAA==', NULL, NULL, '2026-05-07 0
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RES_FAC_Width', '212', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RETENCION_FAC_Caption', 'Total Retención', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RETENCION_FAC_Index', '51', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RETENCION_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RETENCION_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RETENCION_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RETENCION_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'cxGrdDBTabPrin_TOTAL_RETENCION_FAC_Width', '147', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
@@ -17455,8 +18964,7 @@ AEwARwBBAEQATwAgAFMARQBSAFIAQQBOAE8AAAAAAAAAAAAAAA==', NULL, NULL, '2026-05-07 0
   ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Caption', '% IVA', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Caption', '% IVA', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Index', '17', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
@@ -17827,7 +19335,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_FAC_Width', '172', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESVENTA_ACTIVO_FIJO_FAC_Caption', 'Venta Activo Fijo REAGP', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESVENTA_ACTIVO_FIJO_FAC_Index', '80', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESVENTA_ACTIVO_FIJO_FAC_Index', '80', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESVENTA_ACTIVO_FIJO_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESVENTA_ACTIVO_FIJO_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESVENTA_ACTIVO_FIJO_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
@@ -17964,8 +19473,7 @@ YgBQAHIAaQBuAEYARQBDAEgAQQBfAEYAQQBDAFQAVQBSAEEAEQAAAABAheZAAAAAAAAAAAAAAA==', N
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_Caption', '% IVA SuperReducido', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_Index', '40', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_Width', '198', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_REE_FAC_Caption', '% RE Exento', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
@@ -18336,7 +19844,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FACLIN_Caption', 'Total con IVA', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FACLIN_Index', '19', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FACLIN_Width', '172', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvPerfil__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
@@ -18465,8 +19974,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_CODIGO_CLI_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_CODIGO_CLI_FAC_Width', '155', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_CODIGO_EMP_FAC_Caption', 'Código Empresa', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_CODIGO_EMP_FAC_Index', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_CODIGO_EMP_FAC_Index', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_CODIGO_EMP_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_CODIGO_EMP_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_CODIGO_EMP_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
@@ -18838,7 +20346,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_ABONO_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_ABONO_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_ABONO_FAC_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_ABONO_FAC_Width', '194', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_ABONO_FAC_Width', '194', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_Caption', 'Serie', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_Index', '2', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
@@ -18967,8 +20476,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_USUARIO_ALTA_Width', '1104', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_USUARIO_MODIF_Caption', 'USUARIO_MODIF', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_USUARIO_MODIF_Index', '59', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_USUARIO_MODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_USUARIO_MODIF_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_USUARIO_MODIF_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_USUARIO_MODIF_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_USUARIO_MODIF_Width', '146', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
@@ -19339,7 +20847,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_PROVINCIA_CLI_REC_Caption', 'Provincia Cliente', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_PROVINCIA_CLI_REC_Index', '16', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_PROVINCIA_CLI_REC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_PROVINCIA_CLI_REC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_PROVINCIA_CLI_REC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_PROVINCIA_CLI_REC_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_PROVINCIA_CLI_REC_Width', '242', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_RAZON_SOCIAL_CLI_REC_Caption', 'Razón Social Cliente', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
@@ -19468,8 +20977,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_ESCREARARTICULOS_FAC_Index', '81', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_ESCREARARTICULOS_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_ESCREARARTICULOS_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_ESCREARARTICULOS_FAC_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_ESCREARARTICULOS_FAC_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_ESCREARARTICULOS_FAC_Width', '142', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_ESDESCRIPCIONES_AMP_FAC_Caption', 'Tiene Descripciones Ampliadas', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_ESDESCRIPCIONES_AMP_FAC_Index', '82', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
@@ -19841,7 +21349,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_REN_FAC_Width', '139', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_RER_FAC_Caption', 'Total RE Reducido', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_RER_FAC_Index', '38', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_RER_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_RER_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_RER_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_RER_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_RER_FAC_Width', '172', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
@@ -19970,8 +21479,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Width', '79', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_DTO_FACLIN_Caption', 'Menos Dto', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_DTO_FACLIN_Caption', 'Menos Dto', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_DTO_FACLIN_Index', '15', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_DTO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_DTO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
@@ -20342,7 +21850,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_FECHA_VENCIMIENTO_EFEC_Visible', 'True', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_FECHA_VENCIMIENTO_EFEC_Width', '138', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_Filtro', '', '', NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_FocusedID', '-|000000|1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_FocusedID', '-|000000|1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_IMPORTE_EFEC_Caption', 'Importe', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_IMPORTE_EFEC_Index', '3', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_IMPORTE_EFEC_SortIndex', '-1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
@@ -20471,8 +21980,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_USUARIO_ALTA_Index', '4', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_USUARIO_ALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_USUARIO_ALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_USUARIO_ALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_USUARIO_ALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_USUARIO_ALTA_Width', '3606', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_USUARIO_MODIF_Caption', 'USUARIO_MODIF', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_USUARIO_MODIF_Index', '5', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
@@ -20843,7 +22351,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESACTIVO_ART_Caption', 'Activo', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESACTIVO_ART_Index', '2', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESACTIVO_ART_SortIndex', '-1', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESACTIVO_ART_SortOrder', '0', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESACTIVO_ART_SortOrder', '0', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESACTIVO_ART_Visible', 'True', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESACTIVO_ART_Width', '70', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESVARIACION_ART_Caption', 'Tiene Variaciones', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
@@ -20942,7 +22451,6 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administradores', 'frmMtoCajaParam', 'vgerVentasCredito', 'True', NULL, NULL, NULL, '2026-04-02 20:37:49', '2026-03-22 16:25:50', 'Administradores', 'Administradores'),
   ('Administradores', 'inLibtb', 'oSimbolosProhibidos', '+-%/?*€"'',', NULL, NULL, NULL, '2026-02-16 18:28:13', '2026-02-16 18:02:33', 'Administrador', 'Administrador'),
   ('Alfredo', 'frmMtoAppParam', 'appDirHistoricoCaja', '$(LOCALAPPDATA)\\factuzam\\tickets', NULL, NULL, NULL, '2026-06-02 21:00:11', '2026-06-02 21:00:11', 'Alfredo', 'Alfredo'),
-  ('Alfredo', 'frmMtoAppParam', 'appTarifaDefault', 'PVP', NULL, NULL, NULL, '2026-06-02 21:00:54', '2026-06-02 21:00:54', 'Alfredo', 'Alfredo'),
   ('Alfredo', 'frmMtoAppParam', 'appTema', 'McSkin', NULL, NULL, NULL, '2026-06-02 21:00:31', '2026-06-02 21:00:31', 'Alfredo', 'Alfredo'),
   ('Alfredo', 'frmMtoOpeCaja', 'FotoStockWidth', '361', NULL, NULL, NULL, '2026-06-02 20:16:20', '2026-06-02 20:16:20', 'Alfredo', 'Alfredo'),
   ('Alfredo', 'frmMtoOpeCaja', 'Lineas_Col_ATTR1_VALOR', '80', NULL, NULL, NULL, '2026-06-02 20:16:20', '2026-06-02 20:16:20', 'Alfredo', 'Alfredo'),
@@ -20972,8 +22480,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Todos', 'frmMtoArtProvSearch', 'btnGrabar_Caption', '&Grabar', '', NULL, NULL, '2023-05-25 13:01:17', '2023-05-25 13:01:17', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'btnSalir_Caption', '出来', '', NULL, NULL, '2023-08-28 14:49:51', '2023-05-25 13:01:17', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin__oApplyWidth', 'True', NULL, NULL, NULL, '2023-05-25 13:06:55', '2023-05-25 13:05:19', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_ACTIVO_PROVEEDOR_Caption', 'Activo', '', NULL, NULL, '2023-05-25 13:01:53', '2023-05-25 13:00:04', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_ACTIVO_PROVEEDOR_Caption', 'Activo', '', NULL, NULL, '2023-05-25 13:01:53', '2023-05-25 13:00:04', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_ACTIVO_PROVEEDOR_Index', '1', '', NULL, NULL, '2023-05-25 13:00:04', '2023-05-25 13:00:04', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_ACTIVO_PROVEEDOR_Visible', 'True', '', NULL, NULL, '2023-05-25 13:00:04', '2023-05-25 13:00:04', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'cxGrdDBTabPrin_ACTIVO_PROVEEDOR_Width', '175', '', NULL, NULL, '2023-05-25 13:00:04', '2023-05-25 13:00:04', 'Administrador', 'Administrador'),
@@ -21345,7 +22852,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Todos', 'frmMtoEmpFacSearch', 'oRenameComponents', 'False', '', NULL, NULL, '2023-12-14 17:32:06', '2023-12-14 17:32:06', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoEmpFacSearch', 'rbBBDD_Caption', 'Buscar BBDD', '', NULL, NULL, '2023-12-14 17:32:06', '2023-12-14 17:32:06', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoEmpFacSearch', 'rbGrid_Caption', 'Buscar Grid', '', NULL, NULL, '2023-12-14 17:32:06', '2023-12-14 17:32:06', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoEmpFacSearch', 'tsFicha_Caption', '&Ficha', '', NULL, NULL, '2022-10-26 16:29:05', '2022-10-26 16:29:05', 'Administrador', 'Administrador'),
+  ('Todos', 'frmMtoEmpFacSearch', 'tsFicha_Caption', '&Ficha', '', NULL, NULL, '2022-10-26 16:29:05', '2022-10-26 16:29:05', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Todos', 'frmMtoEmpFacSearch', 'tsLista_Caption', '&Lista', '', NULL, NULL, '2022-10-26 16:29:05', '2022-10-26 16:29:05', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoEmpFacSearch', 'tsPerfil_Caption', 'Perfil', '', NULL, NULL, '2022-10-26 16:29:05', '2022-10-26 16:29:05', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoEmpFacSearch', 'tvPerfil__oApplyWidth', 'False', '', NULL, NULL, '2023-12-14 17:32:07', '2023-12-14 17:32:07', 'Administrador', 'Administrador'),
@@ -21353,7 +22861,6 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Todos', 'frmMtoSolicitudesSearch', 'oApplyWidth', 'True', NULL, NULL, NULL, '2026-06-01 08:07:37', '2026-06-01 08:07:37', 'SISTEMA', 'SISTEMA'),
   ('Todos', 'inLibtb', 'oSimbolosProhibidos', ',"''+-€%*', NULL, NULL, NULL, '2023-04-26 11:50:56', '2023-04-26 11:50:48', 'Administrador', 'Administrador'),
   ('Vendedores', 'frmMtoAppParam', 'appImpresoraInformes', 'Microsoft Print to PDF', NULL, NULL, NULL, '2026-06-02 20:59:34', '2026-06-02 20:59:34', 'Vendedores', 'Vendedores'),
-  ('Vendedores', 'frmMtoAppParam', 'appTarifaDefault', 'PVP', NULL, NULL, NULL, '2026-06-02 20:59:34', '2026-06-02 20:59:34', 'Vendedores', 'Vendedores'),
   ('Vendedores', 'frmMtoAppParam', 'appTema', 'LondonLiquidSky', NULL, NULL, NULL, '2026-06-02 20:59:34', '2026-06-02 20:59:34', 'Vendedores', 'Vendedores'),
   ('Vendedores', 'frmMtoAppParam', 'appTemporadaDefecto', 'Primavera/Verano 2026', NULL, NULL, NULL, '2026-06-02 20:59:34', '2026-06-02 20:59:34', 'Vendedores', 'Vendedores'),
   ('Vendedores', 'frmMtoCajaParam', 'vgerAutoLoadDepositos', 'True', NULL, NULL, NULL, '2026-06-02 20:13:54', '2026-06-02 20:13:54', 'Vendedores', 'Vendedores'),
@@ -21379,7 +22886,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Vendedores', 'frmMtoOpeCaja', 'Lineas_Col_TOTAL_FACLIN', '171', NULL, NULL, NULL, '2026-06-02 20:16:12', '2026-06-02 20:16:12', 'Alfredo', 'Alfredo'),
   ('Vendedores', 'frmMtoOpeCaja', 'StockPanelHeight', '304', NULL, NULL, NULL, '2026-06-02 20:16:12', '2026-06-02 20:16:12', 'Alfredo', 'Alfredo'),
   ('Vendedores', 'frmMtoOpeCaja', 'WindowState', '2', NULL, NULL, NULL, '2026-06-02 20:16:12', '2026-06-02 20:16:12', 'Alfredo', 'Alfredo');
--- 9905 registros exportados
+-- 11032 registros exportados
 
 
 -- Tabla: fza_valores_defecto
@@ -22137,9 +23644,35 @@ INSERT INTO `fza_verifactu_eventos` (`ID_LOG`, `TIMESTAMP_LOG`, `TIPO_EVENTO_LOG
   (549, '2026-07-01 19:30:52', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, 'ED1810EE340E5730F200B1286D88AC4AE5B42EA15A74266D9B776F820F238FA1', 'EBC510478927691E4F4A89AD5BA914377E6E63F02C69FF6ACBEF5EFCF7BC1537', 'EBC510478927691E4F4A89AD5BA914377E6E63F02C69FF6ACBEF5EFCF7BC1537', '2026-07-01 19:30:52', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-01T19:30:52+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-01T19:29:12+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>ED1810EE340E5730F200B1286D88AC4AE5B42EA15A74266D9B776F820F238FA1</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>EBC510478927691E4F4A89AD5BA914377E6E63F02C69FF6ACBEF5EFCF7BC1537</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
   (550, '2026-07-02 09:10:27', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, 'EBC510478927691E4F4A89AD5BA914377E6E63F02C69FF6ACBEF5EFCF7BC1537', 'EDE9E991428529CFF61BF82F29B3F04FCB73F6D403895E7627C6893DBC356849', 'EDE9E991428529CFF61BF82F29B3F04FCB73F6D403895E7627C6893DBC356849', '2026-07-02 09:10:27', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:10:27+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-01T19:30:52+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>EBC510478927691E4F4A89AD5BA914377E6E63F02C69FF6ACBEF5EFCF7BC1537</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>EDE9E991428529CFF61BF82F29B3F04FCB73F6D403895E7627C6893DBC356849</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
   (551, '2026-07-02 09:13:26', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, 'EDE9E991428529CFF61BF82F29B3F04FCB73F6D403895E7627C6893DBC356849', '9C9F75218A17ECEA5C653EE80D287C134E8AD44C53B9474E9C1C86453D507F2D', '9C9F75218A17ECEA5C653EE80D287C134E8AD44C53B9474E9C1C86453D507F2D', '2026-07-02 09:13:26', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:13:26+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:10:27+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>EDE9E991428529CFF61BF82F29B3F04FCB73F6D403895E7627C6893DBC356849</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>9C9F75218A17ECEA5C653EE80D287C134E8AD44C53B9474E9C1C86453D507F2D</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
-  (552, '2026-07-02 09:14:44', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, '9C9F75218A17ECEA5C653EE80D287C134E8AD44C53B9474E9C1C86453D507F2D', '38E6A49CFECB1943BFC30A5F4D1ABC4688A8C74C49CE75AE6B38FD07E16735B3', '38E6A49CFECB1943BFC30A5F4D1ABC4688A8C74C49CE75AE6B38FD07E16735B3', '2026-07-02 09:14:44', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:14:44+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:13:26+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>9C9F75218A17ECEA5C653EE80D287C134E8AD44C53B9474E9C1C86453D507F2D</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>38E6A49CFECB1943BFC30A5F4D1ABC4688A8C74C49CE75AE6B38FD07E16735B3</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL);
+  (552, '2026-07-02 09:14:44', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, '9C9F75218A17ECEA5C653EE80D287C134E8AD44C53B9474E9C1C86453D507F2D', '38E6A49CFECB1943BFC30A5F4D1ABC4688A8C74C49CE75AE6B38FD07E16735B3', '38E6A49CFECB1943BFC30A5F4D1ABC4688A8C74C49CE75AE6B38FD07E16735B3', '2026-07-02 09:14:44', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:14:44+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:13:26+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>9C9F75218A17ECEA5C653EE80D287C134E8AD44C53B9474E9C1C86453D507F2D</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>38E6A49CFECB1943BFC30A5F4D1ABC4688A8C74C49CE75AE6B38FD07E16735B3</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (553, '2026-07-02 09:15:03', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, '38E6A49CFECB1943BFC30A5F4D1ABC4688A8C74C49CE75AE6B38FD07E16735B3', '64CD71A8FF2084303D0C020DFAE7B80E7E45EC8EBA475045840845E99C02519D', '64CD71A8FF2084303D0C020DFAE7B80E7E45EC8EBA475045840845E99C02519D', '2026-07-02 09:15:03', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:15:03+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:14:44+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>38E6A49CFECB1943BFC30A5F4D1ABC4688A8C74C49CE75AE6B38FD07E16735B3</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>64CD71A8FF2084303D0C020DFAE7B80E7E45EC8EBA475045840845E99C02519D</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (554, '2026-07-02 09:15:35', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, '64CD71A8FF2084303D0C020DFAE7B80E7E45EC8EBA475045840845E99C02519D', '3DEF8B4BC4A1677A3FEDFEB1476F097891E0722EB782E0773B9B578F9808E75A', '3DEF8B4BC4A1677A3FEDFEB1476F097891E0722EB782E0773B9B578F9808E75A', '2026-07-02 09:15:35', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:15:35+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:15:03+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>64CD71A8FF2084303D0C020DFAE7B80E7E45EC8EBA475045840845E99C02519D</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>3DEF8B4BC4A1677A3FEDFEB1476F097891E0722EB782E0773B9B578F9808E75A</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (555, '2026-07-02 09:15:54', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, '3DEF8B4BC4A1677A3FEDFEB1476F097891E0722EB782E0773B9B578F9808E75A', '4CE0D05EA0E28245969C22A91A8A729C0179D4AA4D076B590B23A5A18E5E363E', '4CE0D05EA0E28245969C22A91A8A729C0179D4AA4D076B590B23A5A18E5E363E', '2026-07-02 09:15:54', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:15:54+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:15:35+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>3DEF8B4BC4A1677A3FEDFEB1476F097891E0722EB782E0773B9B578F9808E75A</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>4CE0D05EA0E28245969C22A91A8A729C0179D4AA4D076B590B23A5A18E5E363E</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (556, '2026-07-02 09:16:38', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, '4CE0D05EA0E28245969C22A91A8A729C0179D4AA4D076B590B23A5A18E5E363E', 'AE8144582DE976ABA4CE73FEA8D73684E5F891BF4FC2597C851654B581A915CD', 'AE8144582DE976ABA4CE73FEA8D73684E5F891BF4FC2597C851654B581A915CD', '2026-07-02 09:16:38', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:16:38+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:15:54+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>4CE0D05EA0E28245969C22A91A8A729C0179D4AA4D076B590B23A5A18E5E363E</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>AE8144582DE976ABA4CE73FEA8D73684E5F891BF4FC2597C851654B581A915CD</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (557, '2026-07-02 09:21:03', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, 'AE8144582DE976ABA4CE73FEA8D73684E5F891BF4FC2597C851654B581A915CD', 'ED15D10FA6C599E5DEBF36C9F866D35E3E71B0BAA6B148C5BDF0CE952623E3F0', 'ED15D10FA6C599E5DEBF36C9F866D35E3E71B0BAA6B148C5BDF0CE952623E3F0', '2026-07-02 09:21:03', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:21:03+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:16:38+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>AE8144582DE976ABA4CE73FEA8D73684E5F891BF4FC2597C851654B581A915CD</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>ED15D10FA6C599E5DEBF36C9F866D35E3E71B0BAA6B148C5BDF0CE952623E3F0</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (558, '2026-07-02 09:24:27', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, 'ED15D10FA6C599E5DEBF36C9F866D35E3E71B0BAA6B148C5BDF0CE952623E3F0', '937FAC4690B7E0CF7A1B08885F3D13B77665547DF75EF7D5FB27E7CA569A17A7', '937FAC4690B7E0CF7A1B08885F3D13B77665547DF75EF7D5FB27E7CA569A17A7', '2026-07-02 09:24:27', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:24:27+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:21:03+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>ED15D10FA6C599E5DEBF36C9F866D35E3E71B0BAA6B148C5BDF0CE952623E3F0</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>937FAC4690B7E0CF7A1B08885F3D13B77665547DF75EF7D5FB27E7CA569A17A7</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (559, '2026-07-02 09:31:11', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, '937FAC4690B7E0CF7A1B08885F3D13B77665547DF75EF7D5FB27E7CA569A17A7', 'C1699222A73E5F420423AE18DD2311AB13523F35A84E273AECB59CD92318A9D5', 'C1699222A73E5F420423AE18DD2311AB13523F35A84E273AECB59CD92318A9D5', '2026-07-02 09:31:11', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:31:11+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:24:27+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>937FAC4690B7E0CF7A1B08885F3D13B77665547DF75EF7D5FB27E7CA569A17A7</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>C1699222A73E5F420423AE18DD2311AB13523F35A84E273AECB59CD92318A9D5</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (560, '2026-07-02 09:31:29', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, 'C1699222A73E5F420423AE18DD2311AB13523F35A84E273AECB59CD92318A9D5', 'A9D6A33460CB5A916E7F9E84A34508AC3CAB1B699C8566266E27D9E9C0E2AFF1', 'A9D6A33460CB5A916E7F9E84A34508AC3CAB1B699C8566266E27D9E9C0E2AFF1', '2026-07-02 09:31:29', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:31:29+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:31:11+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>C1699222A73E5F420423AE18DD2311AB13523F35A84E273AECB59CD92318A9D5</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>A9D6A33460CB5A916E7F9E84A34508AC3CAB1B699C8566266E27D9E9C0E2AFF1</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (561, '2026-07-02 09:43:03', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, 'A9D6A33460CB5A916E7F9E84A34508AC3CAB1B699C8566266E27D9E9C0E2AFF1', '0839783E3E276715EEB02F24CA22AEB2E1386C49EFDA2169839D519162D5650E', '0839783E3E276715EEB02F24CA22AEB2E1386C49EFDA2169839D519162D5650E', '2026-07-02 09:43:03', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:43:03+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:31:29+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>A9D6A33460CB5A916E7F9E84A34508AC3CAB1B699C8566266E27D9E9C0E2AFF1</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>0839783E3E276715EEB02F24CA22AEB2E1386C49EFDA2169839D519162D5650E</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (562, '2026-07-02 09:43:22', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, '0839783E3E276715EEB02F24CA22AEB2E1386C49EFDA2169839D519162D5650E', '527702EC5EA9D13646F2FB08837708621E3CD3B4AC973B2A6479A9E162AE99B3', '527702EC5EA9D13646F2FB08837708621E3CD3B4AC973B2A6479A9E162AE99B3', '2026-07-02 09:43:22', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:43:22+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:43:03+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>0839783E3E276715EEB02F24CA22AEB2E1386C49EFDA2169839D519162D5650E</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>527702EC5EA9D13646F2FB08837708621E3CD3B4AC973B2A6479A9E162AE99B3</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (563, '2026-07-02 09:48:09', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, '527702EC5EA9D13646F2FB08837708621E3CD3B4AC973B2A6479A9E162AE99B3', '3FF5D144818B1702C74AC4A04D2A2E7C8A505D5B5315636DF0E1FECC15D3A0B3', '3FF5D144818B1702C74AC4A04D2A2E7C8A505D5B5315636DF0E1FECC15D3A0B3', '2026-07-02 09:48:09', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:48:09+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:43:22+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>527702EC5EA9D13646F2FB08837708621E3CD3B4AC973B2A6479A9E162AE99B3</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>3FF5D144818B1702C74AC4A04D2A2E7C8A505D5B5315636DF0E1FECC15D3A0B3</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (564, '2026-07-02 09:48:23', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, '3FF5D144818B1702C74AC4A04D2A2E7C8A505D5B5315636DF0E1FECC15D3A0B3', 'CD88CA74334CB4C7F26ABDF4A98E982EBACE6E354EEA02B68F4773F7C1ECD3B3', 'CD88CA74334CB4C7F26ABDF4A98E982EBACE6E354EEA02B68F4773F7C1ECD3B3', '2026-07-02 09:48:23', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:48:23+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:48:09+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>3FF5D144818B1702C74AC4A04D2A2E7C8A505D5B5315636DF0E1FECC15D3A0B3</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>CD88CA74334CB4C7F26ABDF4A98E982EBACE6E354EEA02B68F4773F7C1ECD3B3</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (565, '2026-07-02 09:54:02', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, 'CD88CA74334CB4C7F26ABDF4A98E982EBACE6E354EEA02B68F4773F7C1ECD3B3', '9440C273BA5390C43654BDF208EF0C0EE4C8608EE176194C03A6B8F751554954', '9440C273BA5390C43654BDF208EF0C0EE4C8608EE176194C03A6B8F751554954', '2026-07-02 09:54:02', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:54:02+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:48:23+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>CD88CA74334CB4C7F26ABDF4A98E982EBACE6E354EEA02B68F4773F7C1ECD3B3</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>9440C273BA5390C43654BDF208EF0C0EE4C8608EE176194C03A6B8F751554954</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (566, '2026-07-02 09:54:32', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, '9440C273BA5390C43654BDF208EF0C0EE4C8608EE176194C03A6B8F751554954', '0A68C0B9563F1C43F851625A028A1081AF99A62235E08870D60D837B60A31213', '0A68C0B9563F1C43F851625A028A1081AF99A62235E08870D60D837B60A31213', '2026-07-02 09:54:32', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T09:54:32+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:54:02+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>9440C273BA5390C43654BDF208EF0C0EE4C8608EE176194C03A6B8F751554954</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>0A68C0B9563F1C43F851625A028A1081AF99A62235E08870D60D837B60A31213</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (567, '2026-07-02 10:02:49', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, '0A68C0B9563F1C43F851625A028A1081AF99A62235E08870D60D837B60A31213', '94D3F1B572C09BFAA71BEDD6E467D403EF54505DAC6D32CC275F534C8CADC377', '94D3F1B572C09BFAA71BEDD6E467D403EF54505DAC6D32CC275F534C8CADC377', '2026-07-02 10:02:49', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T10:02:49+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T09:54:32+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>0A68C0B9563F1C43F851625A028A1081AF99A62235E08870D60D837B60A31213</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>94D3F1B572C09BFAA71BEDD6E467D403EF54505DAC6D32CC275F534C8CADC377</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (568, '2026-07-02 10:03:01', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, '94D3F1B572C09BFAA71BEDD6E467D403EF54505DAC6D32CC275F534C8CADC377', 'F0FAC1234D44BA4A23AF84799A77161301F0EEB461A29898D9F842D1E2621FC2', 'F0FAC1234D44BA4A23AF84799A77161301F0EEB461A29898D9F842D1E2621FC2', '2026-07-02 10:03:01', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T10:03:01+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T10:02:49+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>94D3F1B572C09BFAA71BEDD6E467D403EF54505DAC6D32CC275F534C8CADC377</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>F0FAC1234D44BA4A23AF84799A77161301F0EEB461A29898D9F842D1E2621FC2</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (569, '2026-07-02 10:04:16', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, 'F0FAC1234D44BA4A23AF84799A77161301F0EEB461A29898D9F842D1E2621FC2', 'F3747C45DCDD102537FE711E6CDD9FEBF5520DB753BA2BA08BCEDCA7F1C15267', 'F3747C45DCDD102537FE711E6CDD9FEBF5520DB753BA2BA08BCEDCA7F1C15267', '2026-07-02 10:04:16', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T10:04:16+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T10:03:01+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>F0FAC1234D44BA4A23AF84799A77161301F0EEB461A29898D9F842D1E2621FC2</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>F3747C45DCDD102537FE711E6CDD9FEBF5520DB753BA2BA08BCEDCA7F1C15267</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (570, '2026-07-02 10:06:16', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, 'F3747C45DCDD102537FE711E6CDD9FEBF5520DB753BA2BA08BCEDCA7F1C15267', '017FEC70ACB59F372E06C0C895509E74E2DCF48F1FA4D06B7B8406AC50CA2E19', '017FEC70ACB59F372E06C0C895509E74E2DCF48F1FA4D06B7B8406AC50CA2E19', '2026-07-02 10:06:16', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T10:06:16+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T10:04:16+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>F3747C45DCDD102537FE711E6CDD9FEBF5520DB753BA2BA08BCEDCA7F1C15267</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>017FEC70ACB59F372E06C0C895509E74E2DCF48F1FA4D06B7B8406AC50CA2E19</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (571, '2026-07-02 10:08:51', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, '017FEC70ACB59F372E06C0C895509E74E2DCF48F1FA4D06B7B8406AC50CA2E19', 'D1E7234F061274B5AA4099CF8C64133BF34887AAF461335033AE75FB575E2913', 'D1E7234F061274B5AA4099CF8C64133BF34887AAF461335033AE75FB575E2913', '2026-07-02 10:08:51', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T10:08:51+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T10:06:16+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>017FEC70ACB59F372E06C0C895509E74E2DCF48F1FA4D06B7B8406AC50CA2E19</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>D1E7234F061274B5AA4099CF8C64133BF34887AAF461335033AE75FB575E2913</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (572, '2026-07-02 10:14:36', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, 'D1E7234F061274B5AA4099CF8C64133BF34887AAF461335033AE75FB575E2913', '35BF7D2233E34578E821B278230EBF7BF3897A02CA471ADF41E43B9F3C732AEF', '35BF7D2233E34578E821B278230EBF7BF3897A02CA471ADF41E43B9F3C732AEF', '2026-07-02 10:14:36', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T10:14:36+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T10:08:51+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>D1E7234F061274B5AA4099CF8C64133BF34887AAF461335033AE75FB575E2913</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>35BF7D2233E34578E821B278230EBF7BF3897A02CA471ADF41E43B9F3C732AEF</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (573, '2026-07-02 10:17:09', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, '35BF7D2233E34578E821B278230EBF7BF3897A02CA471ADF41E43B9F3C732AEF', '8BE857C8B4366CF4BDDD45CC683F1EB8B196516A028B3F9BB626FFCD5459EBF1', '8BE857C8B4366CF4BDDD45CC683F1EB8B196516A028B3F9BB626FFCD5459EBF1', '2026-07-02 10:17:09', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T10:17:09+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T10:14:36+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>35BF7D2233E34578E821B278230EBF7BF3897A02CA471ADF41E43B9F3C732AEF</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>8BE857C8B4366CF4BDDD45CC683F1EB8B196516A028B3F9BB626FFCD5459EBF1</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (574, '2026-07-02 10:18:54', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, '8BE857C8B4366CF4BDDD45CC683F1EB8B196516A028B3F9BB626FFCD5459EBF1', '4599A17C3C42C2428BB317EB2D6C9622775C3AA36D9D177E4CC40D14DE1690CB', '4599A17C3C42C2428BB317EB2D6C9622775C3AA36D9D177E4CC40D14DE1690CB', '2026-07-02 10:18:54', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T10:18:54+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T10:17:09+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>8BE857C8B4366CF4BDDD45CC683F1EB8B196516A028B3F9BB626FFCD5459EBF1</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>4599A17C3C42C2428BB317EB2D6C9622775C3AA36D9D177E4CC40D14DE1690CB</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (575, '2026-07-02 10:25:11', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, '4599A17C3C42C2428BB317EB2D6C9622775C3AA36D9D177E4CC40D14DE1690CB', 'E6607483B788570CB175B46841F6466704B897196F5C079880A061EDC0F55649', 'E6607483B788570CB175B46841F6466704B897196F5C079880A061EDC0F55649', '2026-07-02 10:25:11', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T10:25:11+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T10:18:54+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>4599A17C3C42C2428BB317EB2D6C9622775C3AA36D9D177E4CC40D14DE1690CB</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>E6607483B788570CB175B46841F6466704B897196F5C079880A061EDC0F55649</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (576, '2026-07-02 16:03:26', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, 'E6607483B788570CB175B46841F6466704B897196F5C079880A061EDC0F55649', '0D141C466D9B8755AAD8273FA433C475D1C0760EBAA5B06567794FCE7CAAEDE0', '0D141C466D9B8755AAD8273FA433C475D1C0760EBAA5B06567794FCE7CAAEDE0', '2026-07-02 16:03:26', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T16:03:26+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T10:25:11+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>E6607483B788570CB175B46841F6466704B897196F5C079880A061EDC0F55649</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>0D141C466D9B8755AAD8273FA433C475D1C0760EBAA5B06567794FCE7CAAEDE0</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (577, '2026-07-02 16:09:30', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, '0D141C466D9B8755AAD8273FA433C475D1C0760EBAA5B06567794FCE7CAAEDE0', '6D55E70BC378D73DF2A0D94B5BBD83E284809DFD1EA9E8AB5DFCA077110B57BA', '6D55E70BC378D73DF2A0D94B5BBD83E284809DFD1EA9E8AB5DFCA077110B57BA', '2026-07-02 16:09:30', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T16:09:30+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T16:03:26+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>0D141C466D9B8755AAD8273FA433C475D1C0760EBAA5B06567794FCE7CAAEDE0</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>6D55E70BC378D73DF2A0D94B5BBD83E284809DFD1EA9E8AB5DFCA077110B57BA</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (578, '2026-07-02 16:13:19', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, '6D55E70BC378D73DF2A0D94B5BBD83E284809DFD1EA9E8AB5DFCA077110B57BA', '8536B6A010B7C7C266233B84ABBEA9EC63CA82EC0A470F792D67B6F3EFA09B40', '8536B6A010B7C7C266233B84ABBEA9EC63CA82EC0A470F792D67B6F3EFA09B40', '2026-07-02 16:13:19', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T16:13:19+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T16:09:30+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>6D55E70BC378D73DF2A0D94B5BBD83E284809DFD1EA9E8AB5DFCA077110B57BA</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>8536B6A010B7C7C266233B84ABBEA9EC63CA82EC0A470F792D67B6F3EFA09B40</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL);
 /*!40000 ALTER TABLE `fza_verifactu_eventos` ENABLE KEYS */;
--- 552 registros exportados
+-- 578 registros exportados
 
 
 -- Tabla: fza_verifactu_operaciones
@@ -22693,13 +24226,13 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos_compra` AS select `p`.`NUMERO_PEDC`
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos_lineas` AS select `pl`.`NUMERO_PED_PEDLIN` AS `NUMERO_PED_PEDLIN`,`pl`.`SERIE_PED_PEDLIN` AS `SERIE_PED_PEDLIN`,`pl`.`LINEA_PEDLIN` AS `LINEA_PEDLIN`,`pl`.`IDLINEAPS_PEDLIN` AS `IDLINEAPS_PEDLIN`,`pl`.`IDPRODPS_PEDLIN` AS `IDPRODPS_PEDLIN`,`pl`.`CODIGOPRODPS_PEDLIN` AS `CODIGOPRODPS_PEDLIN`,`pl`.`IDATRIBPRODPS_PEDLIN` AS `IDATRIBPRODPS_PEDLIN`,`pl`.`CODBAR_ART_PEDLIN` AS `CODBAR_ART_PEDLIN`,`pl`.`CODIGO_ART_PEDLIN` AS `CODIGO_ART_PEDLIN`,`pl`.`CODIGO_FAM_PEDLIN` AS `CODIGO_FAM_PEDLIN`,`pl`.`NOMBRE_FAM_PEDLIN` AS `NOMBRE_FAM_PEDLIN`,`pl`.`FECHA_ENTREGA_PEDLIN` AS `FECHA_ENTREGA_PEDLIN`,`pl`.`TIPO_CANTIDAD_ARTICULO_PEDLIN` AS `TIPO_CANTIDAD_ARTICULO_PEDLIN`,`pl`.`ESIMP_INCL_TARIFA_PEDLIN` AS `ESIMP_INCL_TARIFA_PEDLIN`,`pl`.`TIPO_IVA_ARTICULO_PEDLIN` AS `TIPO_IVA_ARTICULO_PEDLIN`,`pl`.`DESCRIPCION_ARTICULO_PEDLIN` AS `DESCRIPCION_ARTICULO_PEDLIN`,`pl`.`CODIGO_TAR_PEDLIN` AS `CODIGO_TAR_PEDLIN`,`pl`.`CANTIDAD_PEDLIN` AS `CANTIDAD_PEDLIN`,`pl`.`CANTIDAD_ENTREGADA_PEDLIN` AS `CANTIDAD_ENTREGADA_PEDLIN`,`pl`.`CANTIDAD_PENDIENTE_PEDLIN` AS `CANTIDAD_PENDIENTE_PEDLIN`,`pl`.`ESENTREGADA_PEDLIN` AS `ESENTREGADA_PEDLIN`,`pl`.`CODIGO_ALMACEN_PEDLIN` AS `CODIGO_ALMACEN_PEDLIN`,`pl`.`PRECIO_VENTA_SIVA_ARTICULO_PEDLIN` AS `PRECIO_VENTA_SIVA_ARTICULO_PEDLIN`,`pl`.`PORCENTAJE_IVA_PEDLIN` AS `PORCENTAJE_IVA_PEDLIN`,`pl`.`PRECIO_VENTA_CIVA_ARTICULO_PEDLIN` AS `PRECIO_VENTA_CIVA_ARTICULO_PEDLIN`,`pl`.`TOTAL_PEDLIN` AS `TOTAL_PEDLIN`,`pl`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`pl`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`pl`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`pl`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`pl`.`CANTIDAD_PEDLIN` - ifnull(`pl`.`CANTIDAD_ENTREGADA_PEDLIN`,0) AS `CANTIDAD_PENDIENTE_CALC_PEDLIN` from `fza_pedidos_lineas` `pl`;
 
 -- Vista: vi_proveedores
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_proveedores` AS select `p`.`CODIGO_PRV_PRV` AS `CODIGO_PRV_PRV`,`p`.`ESACTIVO_PRV` AS `ESACTIVO_PRV`,`p`.`ORDEN_PRV` AS `ORDEN_PRV`,`p`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`p`.`NOMBRE_PRV` AS `NOMBRE_PRV`,`p`.`NIF_PRV` AS `NIF_PRV`,`p`.`MOVIL_PRV` AS `MOVIL_PRV`,`p`.`EMAIL_PRV` AS `EMAIL_PRV`,`p`.`DIRECCION1_PRV` AS `DIRECCION1_PRV`,`p`.`DIRECCION2_PRV` AS `DIRECCION2_PRV`,`p`.`POBLACION_PRV` AS `POBLACION_PRV`,`p`.`PROVINCIA_PRV` AS `PROVINCIA_PRV`,`p`.`CODIGO_POSTAL_PRV` AS `CODIGO_POSTAL_PRV`,`p`.`PAIS_PRV` AS `PAIS_PRV`,`p`.`OBSERVACIONES_PRV` AS `OBSERVACIONES_PRV`,`p`.`REFERENCIA_PRV` AS `REFERENCIA_PRV`,`p`.`CONTACTO_PRV` AS `CONTACTO_PRV`,`p`.`TELEFONO_CONTACTO_PRV` AS `TELEFONO_CONTACTO_PRV`,`p`.`TELEFONO_PRV` AS `TELEFONO_PRV`,`p`.`IBAN_PRV` AS `IBAN_PRV`,`p`.`CODIGO_FP_PRV` AS `CODIGO_FP_PRV`,`p`.`CODIGO_EMPBAN_PRV` AS `CODIGO_EMPBAN_PRV`,`p`.`PORCENTAJE_MARGEN_PRV` AS `PORCENTAJE_MARGEN_PRV`,`p`.`ESVARIOS_TIPOS_IVA_PRV` AS `ESVARIOS_TIPOS_IVA_PRV`,`p`.`ESIVA_EXENTO_INTRACOMUNITARIO_PRV` AS `ESIVA_EXENTO_INTRACOMUNITARIO_PRV`,`p`.`ID_AC_TALLAS_PRV` AS `ID_AC_TALLAS_PRV`,`p`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`p`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`p`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`p`.`USUARIO_MODIF` AS `USUARIO_MODIF` from `fza_proveedores` `p` order by `p`.`ORDEN_PRV`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_proveedores` AS select `p`.`CODIGO_PRV_PRV` AS `CODIGO_PRV_PRV`,`p`.`ESACTIVO_PRV` AS `ESACTIVO_PRV`,`p`.`ORDEN_PRV` AS `ORDEN_PRV`,`p`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`p`.`NOMBRE_PRV` AS `NOMBRE_PRV`,`p`.`NIF_PRV` AS `NIF_PRV`,`p`.`MOVIL_PRV` AS `MOVIL_PRV`,`p`.`EMAIL_PRV` AS `EMAIL_PRV`,`p`.`DIRECCION1_PRV` AS `DIRECCION1_PRV`,`p`.`DIRECCION2_PRV` AS `DIRECCION2_PRV`,`p`.`POBLACION_PRV` AS `POBLACION_PRV`,`p`.`PROVINCIA_PRV` AS `PROVINCIA_PRV`,`p`.`CODIGO_POSTAL_PRV` AS `CODIGO_POSTAL_PRV`,`p`.`PAIS_PRV` AS `PAIS_PRV`,`p`.`CODIGO_PAI_PRV` AS `CODIGO_PAI_PRV`,`p`.`OBSERVACIONES_PRV` AS `OBSERVACIONES_PRV`,`p`.`REFERENCIA_PRV` AS `REFERENCIA_PRV`,`p`.`CONTACTO_PRV` AS `CONTACTO_PRV`,`p`.`TELEFONO_CONTACTO_PRV` AS `TELEFONO_CONTACTO_PRV`,`p`.`TELEFONO_PRV` AS `TELEFONO_PRV`,`p`.`IBAN_PRV` AS `IBAN_PRV`,`p`.`CODIGO_FP_PRV` AS `CODIGO_FP_PRV`,`p`.`CODIGO_EMPBAN_PRV` AS `CODIGO_EMPBAN_PRV`,`p`.`PORCENTAJE_MARGEN_PRV` AS `PORCENTAJE_MARGEN_PRV`,`p`.`ESVARIOS_TIPOS_IVA_PRV` AS `ESVARIOS_TIPOS_IVA_PRV`,`p`.`ESIVA_EXENTO_INTRACOMUNITARIO_PRV` AS `ESIVA_EXENTO_INTRACOMUNITARIO_PRV`,`p`.`ID_AC_TALLAS_PRV` AS `ID_AC_TALLAS_PRV`,`p`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`p`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`p`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`p`.`USUARIO_MODIF` AS `USUARIO_MODIF` from `fza_proveedores` `p` order by `p`.`ORDEN_PRV`;
 
 -- Vista: vi_proveedores_articulos
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_proveedores_articulos` AS select `fza_articulos_proveedores`.`CODIGO_PRV_AP` AS `CODIGO_PRV_PRV`,`fza_articulos_proveedores`.`CODIGO_ART_AP` AS `CODIGO_ART_ART`,`vi_articulos`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`vi_articulos`.`CODIGO_FAM_ART` AS `CODIGO_FAM_FAM`,`vi_articulos`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,`vi_articulos`.`TIPO_CANTIDAD_ART` AS `TIPO_CANTIDAD_ARTICULO`,`vi_articulos`.`ESACTIVO_FIJO_ART` AS `ESACTIVO_FIJO_ART`,`fza_articulos_proveedores`.`PRECIO_ULT_COMPRA_AP` AS `PRECIO_ULT_COMPRA`,`fza_articulos_proveedores`.`FECHA_VALIDEZ_AP` AS `FECHA_VALIDEZ`,`fza_articulos_proveedores`.`ESPROVEEDORPRINCIPAL_AP` AS `ESPROVEEDORPRINCIPAL`,`fza_articulos_proveedores`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`fza_articulos_proveedores`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`fza_articulos_proveedores`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`fza_articulos_proveedores`.`USUARIO_MODIF` AS `USUARIO_MODIF` from (`fza_articulos_proveedores` left join `vi_articulos` on(`fza_articulos_proveedores`.`CODIGO_ART_AP` = `vi_articulos`.`CODIGO_ART_ART`));
 
 -- Vista: vi_proveedores_busquedas
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_proveedores_busquedas` AS select `p`.`CODIGO_PRV_PRV` AS `CODIGO_PRV_PRV`,`p`.`ESACTIVO_PRV` AS `ESACTIVO_PRV`,`p`.`ORDEN_PRV` AS `ORDEN_PRV`,`p`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`p`.`NOMBRE_PRV` AS `NOMBRE_PRV`,`p`.`NIF_PRV` AS `NIF_PRV`,`p`.`MOVIL_PRV` AS `MOVIL_PRV`,`p`.`EMAIL_PRV` AS `EMAIL_PRV`,`p`.`DIRECCION1_PRV` AS `DIRECCION1_PRV`,`p`.`DIRECCION2_PRV` AS `DIRECCION2_PRV`,`p`.`POBLACION_PRV` AS `POBLACION_PRV`,`p`.`PROVINCIA_PRV` AS `PROVINCIA_PRV`,`p`.`CODIGO_POSTAL_PRV` AS `CODIGO_POSTAL_PRV`,`p`.`PAIS_PRV` AS `PAIS_PRV`,`p`.`OBSERVACIONES_PRV` AS `OBSERVACIONES_PRV`,`p`.`REFERENCIA_PRV` AS `REFERENCIA_PRV`,`p`.`CONTACTO_PRV` AS `CONTACTO_PRV`,`p`.`TELEFONO_CONTACTO_PRV` AS `TELEFONO_CONTACTO_PRV`,`p`.`TELEFONO_PRV` AS `TELEFONO_PRV`,`p`.`IBAN_PRV` AS `IBAN_PRV`,`p`.`CODIGO_FP_PRV` AS `CODIGO_FP_PRV`,`p`.`CODIGO_EMPBAN_PRV` AS `CODIGO_EMPBAN_PRV`,`p`.`PORCENTAJE_MARGEN_PRV` AS `PORCENTAJE_MARGEN_PRV`,`p`.`ESVARIOS_TIPOS_IVA_PRV` AS `ESVARIOS_TIPOS_IVA_PRV`,`p`.`ESIVA_EXENTO_INTRACOMUNITARIO_PRV` AS `ESIVA_EXENTO_INTRACOMUNITARIO_PRV`,`p`.`ID_AC_TALLAS_PRV` AS `ID_AC_TALLAS_PRV`,`p`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`p`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`p`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`p`.`USUARIO_MODIF` AS `USUARIO_MODIF` from `fza_proveedores` `p` where `p`.`ESACTIVO_PRV` = 'S' order by `p`.`ORDEN_PRV`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_proveedores_busquedas` AS select `p`.`CODIGO_PRV_PRV` AS `CODIGO_PRV_PRV`,`p`.`ESACTIVO_PRV` AS `ESACTIVO_PRV`,`p`.`ORDEN_PRV` AS `ORDEN_PRV`,`p`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`p`.`NOMBRE_PRV` AS `NOMBRE_PRV`,`p`.`NIF_PRV` AS `NIF_PRV`,`p`.`MOVIL_PRV` AS `MOVIL_PRV`,`p`.`EMAIL_PRV` AS `EMAIL_PRV`,`p`.`DIRECCION1_PRV` AS `DIRECCION1_PRV`,`p`.`DIRECCION2_PRV` AS `DIRECCION2_PRV`,`p`.`POBLACION_PRV` AS `POBLACION_PRV`,`p`.`PROVINCIA_PRV` AS `PROVINCIA_PRV`,`p`.`CODIGO_POSTAL_PRV` AS `CODIGO_POSTAL_PRV`,`p`.`PAIS_PRV` AS `PAIS_PRV`,`p`.`CODIGO_PAI_PRV` AS `CODIGO_PAI_PRV`,`p`.`OBSERVACIONES_PRV` AS `OBSERVACIONES_PRV`,`p`.`REFERENCIA_PRV` AS `REFERENCIA_PRV`,`p`.`CONTACTO_PRV` AS `CONTACTO_PRV`,`p`.`TELEFONO_CONTACTO_PRV` AS `TELEFONO_CONTACTO_PRV`,`p`.`TELEFONO_PRV` AS `TELEFONO_PRV`,`p`.`IBAN_PRV` AS `IBAN_PRV`,`p`.`CODIGO_FP_PRV` AS `CODIGO_FP_PRV`,`p`.`CODIGO_EMPBAN_PRV` AS `CODIGO_EMPBAN_PRV`,`p`.`PORCENTAJE_MARGEN_PRV` AS `PORCENTAJE_MARGEN_PRV`,`p`.`ESVARIOS_TIPOS_IVA_PRV` AS `ESVARIOS_TIPOS_IVA_PRV`,`p`.`ESIVA_EXENTO_INTRACOMUNITARIO_PRV` AS `ESIVA_EXENTO_INTRACOMUNITARIO_PRV`,`p`.`ID_AC_TALLAS_PRV` AS `ID_AC_TALLAS_PRV`,`p`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`p`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`p`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`p`.`USUARIO_MODIF` AS `USUARIO_MODIF` from `fza_proveedores` `p` where `p`.`ESACTIVO_PRV` = 'S' order by `p`.`ORDEN_PRV`;
 
 -- Vista: vi_recibos
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_recibos` AS select `fza_recibos`.`NUMERO_FAC_REC` AS `NUMERO_FAC_REC`,`fza_recibos`.`SERIE_FAC_REC` AS `SERIE_FAC_REC`,`fza_recibos`.`NUMERO_PLAZO_REC` AS `NUMERO_PLAZO_REC`,`fza_recibos`.`FORMA_PAGO_ORIGEN_RECIBO_REC` AS `FORMA_PAGO_ORIGEN_RECIBO_REC`,`fza_recibos`.`FORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO_REC` AS `FORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO_REC`,`fza_recibos`.`EUROS_RECIBO_REC` AS `EUROS_RECIBO_REC`,`fza_recibos`.`ESTADO_RECIBO_REC` AS `ESTADO_RECIBO_REC`,`fza_recibos`.`FECHA_EXPEDICION_RECIBO_REC` AS `FECHA_EXPEDICION_RECIBO_REC`,`fza_recibos`.`FECHA_VENCIMIENTO_RECIBO_REC` AS `FECHA_VENCIMIENTO_RECIBO_REC`,`fza_recibos`.`IBAN_CLI_REC` AS `IBAN_CLI_REC`,`fza_recibos`.`FECHA_PAGO_RECIBO_REC` AS `FECHA_PAGO_RECIBO_REC`,`fza_recibos`.`LOCALIDAD_EXPEDICION_RECIBO_REC` AS `LOCALIDAD_EXPEDICION_RECIBO_REC`,`fza_recibos`.`CODIGO_CLI_REC` AS `CODIGO_CLI_REC`,`fza_recibos`.`RAZON_SOCIAL_CLI_REC` AS `RAZON_SOCIAL_CLI_REC`,`fza_recibos`.`DIRECCION1_CLIENTE_RECIBO_REC` AS `DIRECCION1_CLIENTE_RECIBO_REC`,`fza_recibos`.`POBLACION_CLI_REC` AS `POBLACION_CLI_REC`,`fza_recibos`.`PROVINCIA_CLI_REC` AS `PROVINCIA_CLI_REC`,`fza_recibos`.`CODIGO_POSTAL_CLI_REC` AS `CODIGO_POSTAL_CLI_REC`,`fza_recibos`.`IMPORTE_LETRA_RECIBO_REC` AS `IMPORTE_LETRA_RECIBO_REC`,`fza_recibos`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`fza_recibos`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`fza_recibos`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`fza_recibos`.`USUARIO_MODIF` AS `USUARIO_MODIF` from `fza_recibos` order by `fza_recibos`.`SERIE_FAC_REC`,`fza_recibos`.`NUMERO_FAC_REC`,`fza_recibos`.`NUMERO_PLAZO_REC`;
@@ -30288,4 +31821,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 02/07/2026 9:14:57
+-- Backup completado: 02/07/2026 16:14:17

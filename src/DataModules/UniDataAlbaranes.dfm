@@ -105,7 +105,6 @@
       ' ) '
       ' ORDER BY FECHA_FAC DESC, NUMERO_FAC DESC')
     MasterFields = 'NUMERO_ALB;SERIE_ALB'
-    DetailFields = 'NUMERO_ALB;SERIE_ALB'
     Left = 384
     Top = 200
     ParamData = <

@@ -59,6 +59,8 @@ var
   iNum : Integer;
   iForm: Integer;
   NewCaption: string;
+  bEncontrado: Boolean;
+  bBusquedaTemporal: Boolean;
 begin
   if not (AOwner is TfrmMtoPrincipal) then Exit;
   frmMain := TfrmMtoPrincipal(AOwner);
@@ -124,18 +126,26 @@ begin
         FormClass := TFormBaseClass(GetTypeData(lType.Handle)^.ClassType);
         TargetForm := FormClass.Create(frmMain);
         TargetForm.Hide;
+        bBusquedaTemporal := False;
         // Si es la instancia 1 (reservada para busquedas), marcar el flag
         // y recortar el layout antes de embeber: sin Lista, sin Busqueda,
         // sin Precarga, sin Exportar a Excel; navegador con solo Insert/
         // Delete/Edit/Post/Cancel. Asi el Show muestra ya la UI reducida.
-        if (TargetForm is TfrmMtoGen) and
-           (ofzaF.NumVentanas > 1) and
-           (NewCaption = ofzaF.Caption + ' 1') then
+        if (TargetForm is TfrmMtoGen) and (ABusq <> '') then
         begin
           TfrmMtoGen(TargetForm).EsInstanciaBusqueda := True;
-          TfrmMtoGen(TargetForm).AplicarLayoutInstanciaBusqueda;
+          if (ofzaF.NumVentanas > 1) and
+             (NewCaption = ofzaF.Caption + ' 1') then
+            TfrmMtoGen(TargetForm).AplicarLayoutInstanciaBusqueda
+          else
+            bBusquedaTemporal := True;
         end;
-        frmMain.FormManager.EmbedForm(TargetForm, NewCaption, True);
+        try
+          frmMain.FormManager.EmbedForm(TargetForm, NewCaption, True);
+        finally
+          if bBusquedaTemporal and (TargetForm is TfrmMtoGen) then
+            TfrmMtoGen(TargetForm).EsInstanciaBusqueda := False;
+        end;
         inLibLog.Log.LogInfo('Pantalla abierta: ' + ofzaF.Caption);
       end
       else
@@ -161,9 +171,10 @@ begin
   //   (mas abajo) necesita la query activa al volver.
   if TargetForm is TfrmMtoGen then
   begin
-    // Instancia 1 (reservada para búsquedas): forzar filtro "Todos"
-    if (ofzaF.NumVentanas > 1) and
-       (NewCaption = ofzaF.Caption + ' 1') then
+    // Busqueda externa: filtrar a la clave recibida antes del Open.
+    // Evita precargas completas y filtros de usuario/pantalla que oculten
+    // la factura localizada desde otra pantalla.
+    if ABusq <> '' then
       TfrmMtoGen(TargetForm).PrepararBusquedaExterna(ABusq);
     if ABusq <> '' then
       TfrmMtoGen(TargetForm).AbrirTablaPrincipalSincrono
@@ -177,9 +188,10 @@ begin
     begin
       dmDat := TdmBase(frmGen.tdmDataModule);
       sPkTab := frmGen.pkFieldName;
-      if not BuscarTabla(dmDat.unqryTablaG, sPkTab, ABusq) then
+      bEncontrado := BuscarTabla(dmDat.unqryTablaG, sPkTab, ABusq);
+      if not bEncontrado then
         ShowMessageFmt(SLocateNotFnd, [ABusq, ofzaF.Caption]);
-      if BuscarTabla(dmDat.unqryTablaG, sPkTab, ABusq) then
+      if bEncontrado then
       begin
         if (frmGen.tsFicha <> nil) and (frmGen.tsFicha.TabVisible) then
           frmGen.pcPantalla.ActivePage := frmGen.tsFicha;
@@ -301,7 +313,6 @@ begin
   end;
   if AQuery.Active then
   begin
-    AQuery.Refresh;
     if bIsonlyOne then
     begin
       if AQuery.Locate(AClavePrimaria, AValoresBusqueda, []) then

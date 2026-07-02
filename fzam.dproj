@@ -5,8 +5,8 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -116,7 +116,6 @@
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DCC_Define>FullDebugMode;LogMemoryLeakDetailToFile;$(DCC_Define)</DCC_Define>
-        <Debugger_RunParams>Herreras.ini</Debugger_RunParams>
         <Icon_MainIcon>logo_art\factuzam.ico</Icon_MainIcon>
         <UWP_DelphiLogo44>logo_art\icon-48.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>logo_art\icon-128.png</UWP_DelphiLogo150>

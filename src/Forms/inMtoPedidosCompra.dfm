@@ -445,6 +445,17 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
             end
           end
         end
+        object splSplitterFicha: TcxSplitter
+          Left = 0
+          Top = 177
+          Width = 937
+          Height = 8
+          Cursor = crSizeNS
+          HotZoneClassName = 'TcxMediaPlayer9Style'
+          HotZone.SizePercent = 50
+          AlignSplitter = salTop
+          Control = pnlTopFicha
+        end
         object pnlBotonesAcciones: TPanel
           Left = 0
           Top = 177

@@ -43,7 +43,8 @@ uses
   cxGridDBBandedTableView,
   inLibGridTallasInline,
   inLibGridPivoteCompra,
-  UniDataPedidosCompra, cxBlobEdit, System.Actions, Vcl.ActnList, dxShellDialogs;
+  UniDataPedidosCompra, cxBlobEdit, System.Actions, Vcl.ActnList,
+  dxShellDialogs, cxSplitter;
 
 const
   CANT_TALLAS_MAX = 20;
@@ -59,6 +60,7 @@ const
 type
   TfrmMtoPedidosCompra = class(TfrmMtoGen)
     pnlTopFicha:         TPanel;
+    splSplitterFicha:    TcxSplitter;
     pcCab:               TcxPageControl;
     tsCabecera:          TcxTabSheet;
     pnlBotonesAcciones:  TPanel;
