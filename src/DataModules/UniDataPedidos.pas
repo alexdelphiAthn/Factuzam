@@ -543,9 +543,8 @@ begin
       q.Open;
       if not q.IsEmpty then
       begin
+        // CopiarEmpresaaPedido ya repropone la serie de la empresa
         CopiarEmpresaaPedido(q);
-        // La serie acompana a la empresa emisora (fza_empresas_series)
-        ProponerSerieEmpresa(sCodigo);
         Result := True;
       end;
     finally
@@ -639,6 +638,9 @@ begin
                             DataSet.FindField(
                               'ESREGIMENESPECIALAGRICOLA_EMP').AsString;
   end;
+  // La serie acompana a la empresa emisora (fza_empresas_series).
+  // Cubre las dos rutas: codigo tecleado (BuscarEmpresa) y modal.
+  ProponerSerieEmpresa(DataSet.FindField('CODIGO_EMP_EMP').AsString);
   AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'PED');
 end;
 
@@ -1142,7 +1144,8 @@ begin
   // Reservar número usando el procedimiento de contadores
   unqryTablaG.Insert;
   try
-    unqryTablaG.FieldByName('SERIE_PED').AsString          := 'A1';
+    // La serie la propone el AfterInsert (fza_empresas_series tipo 'PE',
+    // fallback 'A1'); no se machaca aqui
     unqryTablaG.FieldByName('FECHA_PED').AsDateTime        := Date;
     if unqryTablaG.FindField('ESTADO_PED') <> nil then
       unqryTablaG.FieldByName('ESTADO_PED').AsString       := 'IMPORTADO';

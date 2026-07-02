@@ -256,6 +256,7 @@ type
                 AButtonIndex: Integer);
     procedure RefrescarAlmacenesCabecera;
     procedure AsegurarCabeceraPersistidaParaLineas;
+    function PuedeActivarTallasHorizontal(var AMensaje: string): Boolean;
     procedure DispararBusquedaArticuloConTecla(var Key: Word;
                 Shift: TShiftState);
     procedure TallaEditValueChangedHook(Sender: TObject);
@@ -1031,6 +1032,37 @@ var
   dsCab: TDataSet;
   dsLin: TDataSet;
   sNumero: string;
+
+  function ValorLinea(const ACampo: string): string;
+  var
+    Campo: TField;
+  begin
+    Result := '';
+    Campo := dsLin.FindField(ACampo);
+    if Campo <> nil then
+      Result := Trim(Campo.AsString);
+  end;
+
+  function LineaActualVacia: Boolean;
+  begin
+    Result := (ValorLinea('CODIGO_ART_DEVCLIN') = '') and
+              (ValorLinea('CODIGO_UNIDAD_DEVCLIN') = '');
+  end;
+
+  procedure SincronizarCabeceraEnLinea;
+  begin
+    if Assigned(dsLin) and dsLin.Active and
+       (dsLin.State in dsEditModes) then
+    begin
+      if dsLin.FindField('NUMERO_DEVC_DEVCLIN') <> nil then
+        dsLin.FieldByName('NUMERO_DEVC_DEVCLIN').AsString :=
+          dsCab.FieldByName('NUMERO_DEVC').AsString;
+      if dsLin.FindField('SERIE_DEVC_DEVCLIN') <> nil then
+        dsLin.FieldByName('SERIE_DEVC_DEVCLIN').AsString :=
+          dsCab.FieldByName('SERIE_DEVC').AsString;
+    end;
+  end;
+
 begin
   if not Assigned(dmmDevolucionesCompra) then
     Exit;
@@ -1049,27 +1081,134 @@ begin
       'Debe seleccionar el almacen de salida de la devolucion.');
   end;
   sNumero := Trim(dsCab.FieldByName('NUMERO_DEVC').AsString);
-  if Assigned(dsLin) and dsLin.Active and (dsLin.State = dsInsert) then
-  begin
-    if (sNumero = '') or (sNumero = '0') then
-      dsLin.Cancel
-    else if (Trim(dsLin.FieldByName('CODIGO_ART_DEVCLIN').AsString) = '') and
-            (Trim(dsLin.FieldByName('CODIGO_UNIDAD_DEVCLIN').AsString) = '') then
-      dsLin.Cancel;
-  end;
+  if Assigned(dsLin) and dsLin.Active and (dsLin.State = dsInsert) and
+     ((sNumero = '') or (sNumero = '0')) and LineaActualVacia then
+    dsLin.Cancel;
   if (dsCab.State in dsEditModes) or (sNumero = '') or (sNumero = '0') then
   begin
     if not (dsCab.State in dsEditModes) then
       dsCab.Edit;
     if (dsCab.FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil) and
        (Trim(dsCab.FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString) = '') then
-      dsCab.FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString := 'S';
+      dsCab.FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString := 'N';
     dsCab.Post;
   end;
+  SincronizarCabeceraEnLinea;
   if Assigned(dsLin) and dsLin.Active and (not (dsLin.State in dsEditModes)) then
   begin
     dsLin.Close;
     dsLin.Open;
+  end;
+end;
+
+function TfrmMtoDevolucionesCompra.PuedeActivarTallasHorizontal(
+  var AMensaje: string): Boolean;
+var
+  dsCab      : TDataSet;
+  dsLin      : TDataSet;
+  q          : TUniQuery;
+  incidencias: TStringList;
+  sSerie     : string;
+  sNumero    : string;
+
+  function ValorLinea(const ACampo: string): string;
+  var
+    Campo: TField;
+  begin
+    Result := '';
+    Campo := dsLin.FindField(ACampo);
+    if Campo <> nil then
+      Result := Trim(Campo.AsString);
+  end;
+
+  function LineaActualTieneArticulo: Boolean;
+  begin
+    Result := (ValorLinea('CODIGO_ART_DEVCLIN') <> '') or
+              (ValorLinea('CODIGO_UNIDAD_DEVCLIN') <> '');
+  end;
+
+  function LineaActualTieneSistemaTallas: Boolean;
+  var
+    Campo: TField;
+  begin
+    Result := False;
+    Campo := dsLin.FindField('ID_AC_PIVOT_DEVCLIN');
+    if Campo <> nil then
+      Result := (not Campo.IsNull) and (Campo.AsInteger > 0);
+  end;
+
+begin
+  Result := False;
+  AMensaje := '';
+  if (dmmDevolucionesCompra = nil) or (FPivote = nil) then
+    Result := True
+  else
+  begin
+    dsCab := dmmDevolucionesCompra.unqryTablaG;
+    dsLin := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
+    if (dsCab = nil) or (not dsCab.Active) or dsCab.IsEmpty then
+      AMensaje := 'Crea o selecciona una devolucion antes de activar tallas.'
+    else if Assigned(dsLin) and dsLin.Active and
+            (dsLin.State in dsEditModes) then
+    begin
+      if LineaActualTieneArticulo and
+         (not LineaActualTieneSistemaTallas) then
+        AMensaje :=
+          'El articulo en curso no tiene sistema de tallas asignado.'
+      else if LineaActualTieneArticulo then
+      begin
+        AsegurarCabeceraPersistidaParaLineas;
+        if dsLin.State in dsEditModes then
+          dsLin.Post;
+      end
+      else if dsCab.State = dsInsert then
+        AMensaje :=
+          'En alta, selecciona primero un articulo con sistema de tallas.';
+    end
+    else if dsCab.State = dsInsert then
+      AMensaje :=
+        'En alta, selecciona primero un articulo con sistema de tallas.';
+    if AMensaje = '' then
+    begin
+      sNumero := Trim(dsCab.FieldByName('NUMERO_DEVC').AsString);
+      if (sNumero = '') or (sNumero = '0') then
+        AsegurarCabeceraPersistidaParaLineas;
+      sSerie := Trim(dsCab.FieldByName('SERIE_DEVC').AsString);
+      sNumero := Trim(dsCab.FieldByName('NUMERO_DEVC').AsString);
+      incidencias := TStringList.Create;
+      q := TUniQuery.Create(nil);
+      try
+        q.Connection := dmmDevolucionesCompra.unqryTablaG.Connection;
+        q.SQL.Text :=
+          'SELECT DISTINCT L.CODIGO_ART_DEVCLIN AS ART ' +
+          '  FROM fza_devoluciones_compra_lineas L ' +
+          ' WHERE L.SERIE_DEVC_DEVCLIN = :serie ' +
+          '   AND L.NUMERO_DEVC_DEVCLIN = :numero ' +
+          '   AND COALESCE(TRIM(L.CODIGO_ART_DEVCLIN), '''') <> '''' ' +
+          '   AND (L.ID_AC_PIVOT_DEVCLIN IS NULL ' +
+          '        OR L.ID_AC_PIVOT_DEVCLIN = 0) ' +
+          ' ORDER BY ART';
+        q.ParamByName('serie').AsString := sSerie;
+        q.ParamByName('numero').AsString := sNumero;
+        q.Open;
+        while not q.Eof do
+        begin
+          incidencias.Add('- Articulo sin sistema de tallas: ' +
+                          q.FieldByName('ART').AsString);
+          q.Next;
+        end;
+        if incidencias.Count > 0 then
+          AMensaje := 'No se puede activar tallas en horizontal:' +
+                      sLineBreak + sLineBreak +
+                      incidencias.Text + sLineBreak +
+                      'Asigna un sistema de tallas o elimina la linea.'
+        else
+          Result := FPivote.ValidarPivotePosible(AMensaje);
+      finally
+        FreeAndNil(q);
+        FreeAndNil(incidencias);
+      end;
+    end;
   end;
 end;
 
@@ -1351,10 +1490,10 @@ begin
     // en cliente y lo gestiona la libreria.
     if not FPivote.Activo then
     begin
-      if not FPivote.ValidarPivotePosible(sMensaje) then
+      if not PuedeActivarTallasHorizontal(sMensaje) then
       begin
-        // Sender=nil => apertura automatica con la preferencia por
-        // defecto (horizontal). Si el documento no es pivotable dejamos
+        // Sender=nil => apertura automatica por preferencia guardada.
+        // Si el documento no es pivotable dejamos
         // la vista vertical en silencio; solo avisamos cuando el usuario
         // pulsa el boton expresamente (Sender<>nil).
         if Sender <> nil then
@@ -1509,18 +1648,20 @@ begin
   if ADebeEstarActivo and Assigned(FPivote) then
   begin
     dsCab := dsTablaG.DataSet;
-    if (dsCab <> nil) and dsCab.Active and (not dsCab.IsEmpty) and
-       (dsCab.FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil) then
-    begin
-      if not (dsCab.State in dsEditModes) then
-        dsCab.Edit;
-      dsCab.FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString := 'S';
-      dsCab.Post;
-    end;
     if not FPivote.Activo then
     begin
-      if FPivote.ValidarPivotePosible(sMensaje) then
-        FPivote.Activar
+      if PuedeActivarTallasHorizontal(sMensaje) then
+      begin
+        if (dsCab <> nil) and dsCab.Active and (not dsCab.IsEmpty) and
+           (dsCab.FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil) then
+        begin
+          if not (dsCab.State in dsEditModes) then
+            dsCab.Edit;
+          dsCab.FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString := 'S';
+          dsCab.Post;
+        end;
+        FPivote.Activar;
+      end
       else
         MessageDlg(sMensaje, mtWarning, [mbOk], 0);
     end;
@@ -1979,9 +2120,12 @@ begin
      (not dsTablaG.DataSet.IsEmpty) and
      (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil) then
   begin
-    // Por defecto la vista es horizontal: solo un 'N' explicito
-    // (excepcion que el usuario guardo a mano) la mantiene vertical.
-    // NULL / vacio / 'S' abren en horizontal.
+    if dsTablaG.DataSet.State = dsInsert then
+    begin
+      if FPivote.Activo then
+        btnTallasHorizontalClick(nil);
+      Exit;
+    end;
     bDeberiaEstarActivo :=
       dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString <> 'N';
     if bDeberiaEstarActivo and (not FPivote.Activo) then
@@ -2692,13 +2836,21 @@ begin
           if Datos.RequiereSku and (iAcPivot > 0) then
             PrepararColorPendienteArticuloDevolucion(Datos.CodigoArticulo,
                                                      iAcPivot);
-          if Assigned(FPivote) and
-             (CampoCabeceraString('ESPIVOTE_HORIZONTAL_DEVC') <> 'N') then
+          if Assigned(FPivote) then
           begin
-            if not FPivote.Activo then
-              btnTallasHorizontalClick(nil);
-            if FPivote.Activo then
-              FPivote.RecargarYRepublicar;
+            if iAcPivot <= 0 then
+            begin
+              if FPivote.Activo then
+                btnTallasHorizontalClick(nil);
+            end
+            else if CampoCabeceraString('ESPIVOTE_HORIZONTAL_DEVC') <> 'N'
+            then
+            begin
+              if not FPivote.Activo then
+                btnTallasHorizontalClick(nil);
+              if FPivote.Activo then
+                FPivote.RecargarYRepublicar;
+            end;
           end;
           if Datos.RequiereSku and (Datos.CodigoSku = '') and
              ((FPivote = nil) or (not FPivote.Activo)) then

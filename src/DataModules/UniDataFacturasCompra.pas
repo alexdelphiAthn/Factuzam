@@ -431,6 +431,8 @@ begin
     else
       FieldByName('CODIGO_EMP_FACC').AsString := '0';
     FieldByName('CODIGO_PRV_FACC').AsString := '0';
+    if FindField('ESPIVOTE_HORIZONTAL_FACC') <> nil then
+      FieldByName('ESPIVOTE_HORIZONTAL_FACC').AsString := 'N';
     if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_FACC') <> nil then
       FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_FACC').AsString := 'N';
     AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
@@ -448,6 +450,10 @@ var
   qChk: TUniQuery;
 begin
   inherited;
+  if (DataSet.FindField('ESPIVOTE_HORIZONTAL_FACC') <> nil) and
+     (Trim(DataSet.FieldByName('ESPIVOTE_HORIZONTAL_FACC').AsString) = '')
+  then
+    DataSet.FieldByName('ESPIVOTE_HORIZONTAL_FACC').AsString := 'N';
   if (unqryTablaG.FieldByName('NUMERO_FACC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_FACC').AsString = '') then
     GetCodigoAutoFacturaCompra;
@@ -693,6 +699,12 @@ begin
       end);
     Abort;
   end;
+  if (Trim(unqryFacturasCompraLineas.FieldByName(
+             'NUMERO_FACC_FACCLIN').AsString) = '') or
+     (Trim(unqryFacturasCompraLineas.FieldByName(
+             'NUMERO_FACC_FACCLIN').AsString) = '0') then
+    raise Exception.Create(
+      'Graba la cabecera de la factura antes de guardar lineas.');
   with unqryFacturasCompraLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
@@ -753,15 +765,18 @@ begin
 end;
 
 procedure TdmFacturasCompra.GetCodigoAutoFacturaCompra;
+var
+  iNumero: Int64;
+  sNumero: string;
 begin
   with unstrdprcGetContadorFacc do
   begin
     Params.Clear;
     Params.CreateParam(ftString, 'pserie',            ptInput);
     Params.CreateParam(ftString, 'ptipodoc',          ptInput);
-    Params.CreateParam(ftString, 'pcont',             ptOutput);
     Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
     Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
+    Params.CreateParam(ftString, 'pcont',             ptOutput);
     ParamByName('pserie').AsString :=
       unqryTablaG.FieldByName('SERIE_FACC').AsString;
     ParamByName('ptipodoc').AsString := 'FP';
@@ -769,8 +784,16 @@ begin
     ParamByName('pEMPRESA_CONTADOR').AsString :=
       unqryTablaG.FieldByName('CODIGO_EMP_FACC').AsString;
     ExecProc;
-    unqryTablaG.FieldByName('NUMERO_FACC').AsString :=
-      ParamByName('pcont').AsString;
+    sNumero := Trim(ParamByName('pcont').AsString);
+    if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
+       (iNumero <= 0) then
+      raise Exception.Create(
+        'No se pudo obtener un numero de factura de compra valido. ' +
+        'Revise el contador FP de la serie ' +
+        unqryTablaG.FieldByName('SERIE_FACC').AsString +
+        ' y empresa ' +
+        unqryTablaG.FieldByName('CODIGO_EMP_FACC').AsString + '.');
+    unqryTablaG.FieldByName('NUMERO_FACC').AsString := sNumero;
   end;
 end;
 

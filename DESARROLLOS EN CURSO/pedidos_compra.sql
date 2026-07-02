@@ -345,7 +345,7 @@ INSERT INTO `fza_contadores`
   (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
    `NUM_DIGITOS_CON`, `ESACTIVO_CON`, `DEFAULT_CON`,
    `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`)
-SELECT 'PC', '-', '-', 0, 6, 'S', 'S',
+SELECT 'PC', '-', '-', 1, 6, 'S', 'S',
        NOW(), 'SISTEMA', NOW(), 'SISTEMA'
  WHERE NOT EXISTS (
    SELECT 1 FROM `fza_contadores`

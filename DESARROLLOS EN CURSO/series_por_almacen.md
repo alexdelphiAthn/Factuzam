@@ -85,6 +85,28 @@ pestaña Series (la columna de almacén ya era editable).
 Ficheros: `inMtoComprasSesiones.pas/.dfm`, `inMtoPedidosCompra.pas/.dfm`,
 `inMtoAlbaranesCompra.pas/.dfm`, `inMtoEmpresas.pas/.dfm`.
 
+## Ampliación (julio 2026): serie por empresa en venta (AV / PE)
+
+Repaso de todos los tipos de documento: compras (`AB`, `PC`, `DC`,
+`FP`), sesiones (`SE`) e inventarios (`IN`) ya proponían la serie desde
+`fza_empresas_series`; venta mayor no (hardcode 'A1'). Cambios:
+
+- **Albaranes de venta** (`UniDataAlbaranes`): el AfterInsert propone
+  `ObtenerSerieDefecto(oEmpresa, 'AV')` con fallback 'A1', y
+  `CopiarEmpresaaAlbaran` repropone la serie de la empresa emisora al
+  cambiarla (rutas teclado y modal) vía `ProponerSerieEmpresa` — solo
+  en documentos nuevos sin numerar.
+- **Pedidos de venta** (`UniDataPedidos`): idéntico con tipo `PE`
+  (AfterInsert + `CopiarEmpresaaPedido`). El import de PrestaShop deja
+  de machacar la serie con 'A1' (la propone el AfterInsert).
+- **Facturas de venta** (`FC`): no se tocan; llevan su propio combo de
+  series sobre contadores y el flujo Verifactu.
+
+Esto cierra la limitación residual del bug B2 de
+`restriccion_usuario_emp_alm_caja_pruebas.md`: con series por empresa
+propuestas por defecto, dos empresas no comparten serie y la PK
+(NUMERO, SERIE) no colisiona.
+
 ## Fuera de alcance
 
 - Albaranes de venta desde pedidos de venta (`fza_albaranes` /

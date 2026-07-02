@@ -58,6 +58,9 @@ type
   private
     FCalculandoTotales: Boolean;
     procedure ConfigurarSqlCabecera;
+    // Construye el SQLInsert contra fza_pedidos_compra: la vista
+    // vi_pedidos_compra tiene columnas calculadas y no es insertable
+    procedure ConfigurarSqlInsertCabecera;
     function ObtenerAlmacenesSql(const AAlmacenesCsv: string): string;
     function ObtenerSkusPedidoCsv(const ASerie, ANumero,
                                   AAlmacenesCsv: string): string;
@@ -94,8 +97,70 @@ uses
 
 {$R *.dfm}
 
+procedure TdmPedidosCompra.ConfigurarSqlInsertCabecera;
+const
+  // Mismas columnas de fza_pedidos_compra que usa el SQLUpdate
+  CAMPOS: string =
+    'NUMERO_PEDC;SERIE_PEDC;FECHA_PEDC;FECHA_PREVISTA_PEDC;' +
+    'FECHA_TOPE_RECEPCION_PEDC;ESTADO_PEDC;CODIGO_EMP_PEDC;' +
+    'RAZON_SOCIAL_EMPRESA_PEDC;NIF_EMPRESA_PEDC;MOVIL_EMPRESA_PEDC;' +
+    'EMAIL_EMPRESA_PEDC;DIRECCION1_EMPRESA_PEDC;DIRECCION2_EMPRESA_PEDC;' +
+    'POBLACION_EMPRESA_PEDC;PROVINCIA_EMPRESA_PEDC;' +
+    'CODIGO_PAI_EMPRESA_PEDC;NOMBRE_PAI_EMPRESA_PEDC;' +
+    'CODIGO_POSTAL_EMPRESA_PEDC;CODIGO_PRV_PEDC;RAZON_SOCIAL_PRV_PEDC;' +
+    'NIF_PRV_PEDC;MOVIL_PRV_PEDC;EMAIL_PRV_PEDC;DIRECCION1_PRV_PEDC;' +
+    'DIRECCION2_PRV_PEDC;POBLACION_PRV_PEDC;PROVINCIA_PRV_PEDC;' +
+    'CODIGO_PAI_PRV_PEDC;NOMBRE_PAI_PRV_PEDC;CODIGO_POSTAL_PRV_PEDC;' +
+    'REF_PROVEEDOR_PEDC;CODIGO_ALM_PEDC;TRANSPORTISTA_PEDC;' +
+    'CODIGO_IVA_PEDC;ESIVA_RECARGO_COMPRAS_PEDC;' +
+    'ESIVA_EXENTO_INTRACOMUNITARIO_PEDC;PORCENTAJE_IVAN_PEDC;' +
+    'TOTAL_BASEI_IVAN_PEDC;TOTAL_IVAN_PEDC;PORCENTAJE_REN_PEDC;' +
+    'TOTAL_REN_PEDC;PORCENTAJE_IVAR_PEDC;TOTAL_BASEI_IVAR_PEDC;' +
+    'TOTAL_IVAR_PEDC;PORCENTAJE_RER_PEDC;TOTAL_RER_PEDC;' +
+    'PORCENTAJE_IVAS_PEDC;TOTAL_BASEI_IVAS_PEDC;TOTAL_IVAS_PEDC;' +
+    'PORCENTAJE_RES_PEDC;TOTAL_RES_PEDC;PORCENTAJE_IVAE_PEDC;' +
+    'TOTAL_BASEI_IVAE_PEDC;TOTAL_IVAE_PEDC;PORCENTAJE_REE_PEDC;' +
+    'TOTAL_REE_PEDC;TOTAL_BRUTO_PEDC;PORCENTAJE_DTO_COMERCIAL_PEDC;' +
+    'TOTAL_DTO_COMERCIAL_PEDC;PORCENTAJE_DTO_FINANCIERO_PEDC;' +
+    'TOTAL_DTO_FINANCIERO_PEDC;TOTAL_BASES_PEDC;TOTAL_IMPUESTOS_PEDC;' +
+    'PORCENTAJE_RETENCION_PEDC;TOTAL_RETENCION_PEDC;TOTAL_LIQUIDO_PEDC;' +
+    'FORMA_PAGO_PEDC;CONTADOR_LINEAS_PEDC;COMENTARIOS_PEDC;' +
+    'OBSERVACIONES_PEDC;ESPIVOTE_HORIZONTAL_PEDC;INSTANTE_MODIF;' +
+    'INSTANTE_ALTA;USUARIO_ALTA;USUARIO_MODIF;ID_PV_TEMPORADA_PEDC';
+var
+  lst: TStringList;
+  sCols: string;
+  sVals: string;
+  i: Integer;
+begin
+  lst := TStringList.Create;
+  try
+    lst.Delimiter := ';';
+    lst.StrictDelimiter := True;
+    lst.DelimitedText := CAMPOS;
+    sCols := '';
+    sVals := '';
+    for i := 0 to lst.Count - 1 do
+    begin
+      if sCols <> '' then
+      begin
+        sCols := sCols + ', ';
+        sVals := sVals + ', ';
+      end;
+      sCols := sCols + lst[i];
+      sVals := sVals + ':' + lst[i];
+    end;
+    unqryTablaG.SQLInsert.Text :=
+      'INSERT INTO fza_pedidos_compra (' + sCols + ') ' + sLineBreak +
+      'VALUES (' + sVals + ')';
+  finally
+    FreeAndNil(lst);
+  end;
+end;
+
 procedure TdmPedidosCompra.ConfigurarSqlCabecera;
 begin
+  ConfigurarSqlInsertCabecera;
   unqryTablaG.SQLDelete.Text :=
     'DELETE FROM fza_pedidos_compra ' + sLineBreak +
     'WHERE NUMERO_PEDC = :Old_NUMERO_PEDC ' + sLineBreak +
@@ -334,6 +399,8 @@ begin
     else
       FieldByName('CODIGO_EMP_PEDC').AsString := '0';
     FieldByName('CODIGO_PRV_PEDC').AsString := '0';
+    if FindField('ESPIVOTE_HORIZONTAL_PEDC') <> nil then
+      FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString := 'N';
     if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_PEDC') <> nil then
       FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_PEDC').AsString := 'N';
     AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
@@ -344,8 +411,22 @@ begin
 end;
 
 procedure TdmPedidosCompra.unqryTablaGBeforePost(DataSet: TDataSet);
+var
+  i: Integer;
 begin
   inherited;
+  // Los campos calculados de vi_pedidos_compra (CANTIDAD_PEDIDA_PEDC,
+  // TOTAL_LINEAS_PEDC...) llegan NOT NULL sin default y UniDAC los marca
+  // Required: en el alta manual bloquean el Post con "must have a value".
+  // No pertenecen a fza_pedidos_compra, asi que se apagan aqui (mismo
+  // cinturon que usa Inventarios en su BeforePost).
+  for i := 0 to DataSet.FieldCount - 1 do
+    DataSet.Fields[i].Required := False;
+  // En alta manual el pivote arranca vertical; se activa tras elegir
+  // una linea con sistema de tallas.
+  if (DataSet.FindField('ESPIVOTE_HORIZONTAL_PEDC') <> nil) and
+     (Trim(DataSet.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString) = '') then
+    DataSet.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString := 'N';
   if (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '') then
     GetCodigoAutoPedidoCompra;
@@ -489,6 +570,12 @@ begin
       end);
     Abort;
   end;
+  if (Trim(unqryPedidosCompraLineas.FieldByName(
+             'NUMERO_PEDC_PEDCLIN').AsString) = '') or
+     (Trim(unqryPedidosCompraLineas.FieldByName(
+             'NUMERO_PEDC_PEDCLIN').AsString) = '0') then
+    raise Exception.Create(
+      'Graba la cabecera del pedido antes de guardar lineas.');
   with unqryPedidosCompraLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
@@ -883,15 +970,18 @@ begin
 end;
 
 procedure TdmPedidosCompra.GetCodigoAutoPedidoCompra;
+var
+  iNumero: Int64;
+  sNumero: string;
 begin
   with unstrdprcGetContadorPedc do
   begin
     Params.Clear;
     Params.CreateParam(ftString, 'pserie',            ptInput);
     Params.CreateParam(ftString, 'ptipodoc',          ptInput);
-    Params.CreateParam(ftString, 'pcont',             ptOutput);
     Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
     Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
+    Params.CreateParam(ftString, 'pcont',             ptOutput);
     ParamByName('pserie').AsString :=
       unqryTablaG.FieldByName('SERIE_PEDC').AsString;
     ParamByName('ptipodoc').AsString := 'PC';
@@ -899,8 +989,16 @@ begin
     ParamByName('pEMPRESA_CONTADOR').AsString :=
       unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString;
     ExecProc;
-    unqryTablaG.FieldByName('NUMERO_PEDC').AsString :=
-      ParamByName('pcont').AsString;
+    sNumero := Trim(ParamByName('pcont').AsString);
+    if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
+       (iNumero <= 0) then
+      raise Exception.Create(
+        'No se pudo obtener un numero de pedido de compra valido. ' +
+        'Revise el contador PC de la serie ' +
+        unqryTablaG.FieldByName('SERIE_PEDC').AsString +
+        ' y empresa ' +
+        unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString + '.');
+    unqryTablaG.FieldByName('NUMERO_PEDC').AsString := sNumero;
   end;
 end;
 

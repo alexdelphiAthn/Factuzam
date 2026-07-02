@@ -239,6 +239,8 @@ type
     function  FiltroSQLDimension(ADimension: TDimensionFotos): string;
     procedure CargarInfoCabecera;
     procedure CrearLeyenda;
+    procedure SeleccionarEstadoLeyenda(AEstado: TEstadoStock);
+    procedure LeyendaEstadoClick(Sender: TObject);
     procedure CrearEstilosEstado;
     function  EstadoActual: TEstadoStock;
     function  AlmacenesSeleccionadosSQL: string;  // 'CODA','CODB' o NULL
@@ -580,10 +582,58 @@ begin
     lbl.Font.Color := ColorEstado(ESTADOS_LEYENDA[i]);
     lbl.Font.Style := [fsBold];
     lbl.Caption    := NombreEstadoCorto(ESTADOS_LEYENDA[i]);
+    lbl.Tag        := Ord(ESTADOS_LEYENDA[i]);
+    lbl.Cursor     := crHandPoint;
+    lbl.OnClick    := LeyendaEstadoClick;
     lbl.Top        := 5;
     lbl.Left       := x;
     x := x + lbl.Width + 14;
   end;
+end;
+
+procedure TfrmStockConsulta.SeleccionarEstadoLeyenda(
+  AEstado: TEstadoStock);
+var
+  i: Integer;
+  bModoCambiado: Boolean;
+begin
+  bModoCambiado := False;
+  if (AEstado in [esEntradas, esSalidas]) and FModoDesglosado then
+  begin
+    FModoDesglosado := False;
+    FrbSimplificado.Checked := True;
+    PoblarComboEstados;
+    GuardarModoUsuario;
+    bModoCambiado := True;
+  end
+  else if (AEstado in [esVentas, esRegularizadas, esPrestadas]) and
+          not FModoDesglosado then
+  begin
+    FModoDesglosado := True;
+    FrbDesglosado.Checked := True;
+    PoblarComboEstados;
+    GuardarModoUsuario;
+    bModoCambiado := True;
+  end;
+  i := 0;
+  while (FEstadosCombo <> nil) and (i < FEstadosCombo.Count) and
+        (FEstadosCombo[i] <> AEstado) do
+    Inc(i);
+  if (FEstadosCombo <> nil) and (i < FEstadosCombo.Count) then
+  begin
+    if cbbEstado.ItemIndex <> i then
+      cbbEstado.ItemIndex := i
+    else if bModoCambiado then
+      RecargarConsulta;
+  end
+  else if bModoCambiado then
+    RecargarConsulta;
+end;
+
+procedure TfrmStockConsulta.LeyendaEstadoClick(Sender: TObject);
+begin
+  if Sender is TLabel then
+    SeleccionarEstadoLeyenda(TEstadoStock(TLabel(Sender).Tag));
 end;
 
 procedure TfrmStockConsulta.FormDestroy(Sender: TObject);
