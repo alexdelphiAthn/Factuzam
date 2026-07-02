@@ -497,6 +497,9 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibCertificates.pas"/>
         <DCCReference Include="src\Modals\inMtoModalEmpCer.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalSeriesDocumentos.pas">
+            <Form>frmModalSeriesDocumentos</Form>
+        </DCCReference>
         <DCCReference Include="src\Caja\Forms\inMtoCajaMenu.pas">
             <Form>frmMtoMenuCaja</Form>
         </DCCReference>

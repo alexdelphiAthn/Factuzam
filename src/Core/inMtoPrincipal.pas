@@ -375,16 +375,51 @@ const
   URL_MANUAL_WEB = 'https://www.veryverifactu.com/manual/index.html';
   URL_FORO_SOPORTE = 'https://foro.veryverifactu.com/';
 
+function EsEventoNoVerifactuArranqueCierre(ATipoEvento: Integer): Boolean;
+begin
+  Result := (ATipoEvento = cEventoNoVerifactuInicio) or
+            (ATipoEvento = cEventoNoVerifactuFin);
+end;
+
+function PuedeRegistrarEventoFiscalSeguro(ATipoEvento: Integer;
+                                          const ADescripcion: string):
+                                          Boolean;
+var
+  sNifProductor: string;
+begin
+  Result := True;
+  if EsEventoNoVerifactuArranqueCierre(ATipoEvento) then
+  begin
+    if not NoVerifactuActivo then
+      Result := False
+    else
+    begin
+      sNifProductor := NormalizarNifVerifactu(
+        oAppParams.GetString('appVerifactuSifNif', ''));
+      if Length(sNifProductor) <> 9 then
+      begin
+        Result := False;
+        inLibLog.Log.LogWarning('No se registra evento fiscal "' +
+          ADescripcion + '": appVerifactuSifNif vacío o no válido para ' +
+          'el perfil actual.');
+      end;
+    end;
+  end;
+end;
+
 procedure RegistrarEventoFiscalSeguro(ATipoEvento: Integer;
                                       const ADescripcion: string);
 begin
-  try
-    if oConn <> nil then
-      RegistrarEventoVerifactu(oConn, ATipoEvento, ADescripcion);
-  except
-    on E: Exception do
-      inLibLog.Log.LogError('No se pudo registrar evento fiscal "' +
-        ADescripcion + '": ' + E.Message);
+  if PuedeRegistrarEventoFiscalSeguro(ATipoEvento, ADescripcion) then
+  begin
+    try
+      if oConn <> nil then
+        RegistrarEventoVerifactu(oConn, ATipoEvento, ADescripcion);
+    except
+      on E: Exception do
+        inLibLog.Log.LogError('No se pudo registrar evento fiscal "' +
+          ADescripcion + '": ' + E.Message);
+    end;
   end;
 end;
 

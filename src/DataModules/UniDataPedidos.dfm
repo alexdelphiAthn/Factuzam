@@ -455,13 +455,13 @@ inherited dmPedidos: TdmPedidos
     Top = 24
   end
   object unstrdprcGetContadorPedido: TUniStoredProc
-    StoredProcName = 'PRC_GET_CONTADOR_PEDIDO'
+    StoredProcName = 'PRC_GET_NEXT_CONT_FACT_SERIE'
     Connection = dmConn.conUni
     Left = 256
     Top = 80
   end
   object unstrdprcGetContador: TUniStoredProc
-    StoredProcName = 'PRC_GET_CONTADOR'
+    StoredProcName = 'PRC_GET_NEXT_CONT'
     Connection = dmConn.conUni
     Left = 256
     Top = 136

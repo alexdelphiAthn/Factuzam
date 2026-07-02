@@ -137,6 +137,8 @@ uses
   UniDataUnidadesMedida in 'src\DataModules\UniDataUnidadesMedida.pas' {dmUnidadesMedida: TDataModule},
   inLibCertificates in 'src\Lib\inLibCertificates.pas',
   inMtoModalEmpCer in 'src\Modals\inMtoModalEmpCer.pas',
+  inMtoModalSeriesDocumentos in
+    'src\Modals\inMtoModalSeriesDocumentos.pas' {frmModalSeriesDocumentos},
   inMtoCajaMenu in 'src\Caja\Forms\inMtoCajaMenu.pas' {frmMtoMenuCaja},
   inMtoCajaOpe in 'src\Caja\Forms\inMtoCajaOpe.pas' {frmMtoOpeCaja},
   UniDataCaja in 'src\Caja\DataModules\UniDataCaja.pas' {dmCajaOpe},

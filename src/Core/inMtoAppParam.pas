@@ -203,7 +203,9 @@ end;
 procedure TfrmMtoAppParam.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   inherited;
-  Action := caFree;
+  // Sin caFree: el form se muestra con ShowModal y lo libera el caller
+  // (FreeAndNil). caFree aqui provocaba Release + FreeAndNil dobles y
+  // el boton X no cerraba la ventana a la primera (bug M2).
 end;
 
 procedure TfrmMtoAppParam.LimpiarMemoria;

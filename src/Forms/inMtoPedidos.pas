@@ -63,7 +63,7 @@ type
     lblNroPedido: TcxLabel;
     txtNUMERO_PED: TcxDBTextEdit;
     lblSerie: TcxLabel;
-    txtSERIE_PED: TcxDBTextEdit;
+    cbbSERIE_PED: TcxDBComboBox;
     lblFecha: TcxLabel;
     dteFECHA_PED: TcxDBDateEdit;
     lblFechaEntrega: TcxLabel;
@@ -204,6 +204,7 @@ type
     procedure btnImportarPSClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
     procedure actIrDocumentoExecute(Sender: TObject);
+    procedure cbbSERIE_PEDPropertiesInitPopup(Sender: TObject);
     procedure btnCODIGO_EMPPropertiesButtonClick(Sender: TObject;
                                                 AButtonIndex: Integer);
     procedure btnCODIGO_CLIPropertiesButtonClick(Sender: TObject;
@@ -265,11 +266,39 @@ uses
   inMtoModalImportarPedidosPS, inLibFotos, inLibGridCantidad,
   inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibGenBusq,
   inLibShowMto, inLibGlobalVar, inLibFiltroUsuario, Uni, inLibArticulosResolver,
-  inLibArticulosValidador, inLibVentasImpuestos;
+  inLibArticulosValidador, inLibVentasImpuestos, inLibtb;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TfrmMtoPedidos.cbbSERIE_PEDPropertiesInitPopup(Sender: TObject);
+var
+  sEmpresa: string;
+begin
+  sEmpresa := '';
+  if (dmmPedidos <> nil) and dmmPedidos.unqryTablaG.Active then
+  begin
+    sEmpresa := Trim(dmmPedidos.unqryTablaG.
+                       FieldByName('CODIGO_EMP_PED').AsString);
+  end;
+  if (sEmpresa = '') or (sEmpresa = '0') then
+  begin
+    sEmpresa := Trim(inLibGlobalVar.oEmpresa);
+  end;
+  CargarSeriesEmpresa(sEmpresa, 'PE', cbbSERIE_PED.Properties.Items);
+  if cbbSERIE_PED.Properties.Items.Count = 0 then
+  begin
+    if MessageDlg('No hay series de pedidos de venta mayor (tipo PE) ' +
+                  'para la empresa "' + sEmpresa + '".' + sLineBreak +
+                  'Se dan de alta en Empresas -> Series. ' +
+                  '¿Abrir el mantenimiento de Empresas ahora?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    begin
+      ShowMto(Self.Owner, 'Empresas');
+    end;
+  end;
+end;
 
 // dsTablaG apunta a la cabecera de pedido. El articulo activo vive en
 // la fila del sub-grid tvPedidosLineas (CODIGO_ART_PEDLIN /

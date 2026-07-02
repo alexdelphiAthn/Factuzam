@@ -1,4 +1,4 @@
-inherited frmMtoAlbaranes: TfrmMtoAlbaranes
+﻿inherited frmMtoAlbaranes: TfrmMtoAlbaranes
   Caption = 'Mantenimiento de Albaranes'
   ClientHeight = 765
   ClientWidth = 1085
@@ -148,11 +148,13 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                 TabOrder = 10
                 Transparent = True
               end
-              object txtSERIE_ALB: TcxDBTextEdit
+              object cbbSERIE_ALB: TcxDBComboBox
                 Left = 116
                 Top = 32
                 DataBinding.DataField = 'SERIE_ALB'
                 DataBinding.DataSource = dsTablaG
+                Properties.MaxLength = 12
+                Properties.OnInitPopup = cbbSERIE_ALBPropertiesInitPopup
                 TabOrder = 1
                 Width = 80
               end

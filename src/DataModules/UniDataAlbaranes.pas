@@ -96,6 +96,9 @@ type
     FCalculandoTotales: Boolean;
     procedure BorrarMovimientosSalida;
     procedure SincronizarMovimientosSalida;
+    // Propone la serie AV de fza_empresas_series de la empresa emisora
+    // en documentos nuevos sin numerar (al cambiar la empresa en el alta)
+    procedure ProponerSerieEmpresa(const AEmpresa: string);
   end;
 
 implementation
@@ -194,13 +197,20 @@ begin
 end;
 
 procedure TdmAlbaranes.unqryTablaGAfterInsert(DataSet: TDataSet);
+var
+  sSerie: string;
 begin
   inherited;
   with unqryTablaG do
   begin
     FieldByName('NUMERO_ALB').AsString  := '0';
+    // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='AV'
+    // (mismo criterio que compras); fallback historico 'A1'
+    sSerie := ObtenerSerieDefecto(oEmpresa, 'AV');
+    if sSerie = '' then
+      sSerie := 'A1';
     if FindField('SERIE_ALB') <> nil then
-      FieldByName('SERIE_ALB').AsString := 'A1';
+      FieldByName('SERIE_ALB').AsString := sSerie;
     FieldByName('FECHA_ALB').AsDateTime := Date;
     if FindField('ESTADO_ALB') <> nil then
       FieldByName('ESTADO_ALB').AsString := 'ABIERTO';
@@ -477,10 +487,31 @@ begin
       if not q.IsEmpty then
       begin
         CopiarEmpresaaAlbaran(q);
+        // La serie acompana a la empresa emisora (fza_empresas_series)
+        ProponerSerieEmpresa(sCodigo);
         Result := True;
       end;
     finally
       FreeAndNil(q);
+    end;
+  end;
+end;
+
+procedure TdmAlbaranes.ProponerSerieEmpresa(const AEmpresa: string);
+var
+  sSerie: string;
+  sNumero: string;
+begin
+  if (unqryTablaG.State in [dsInsert, dsEdit]) then
+  begin
+    sNumero := Trim(unqryTablaG.FieldByName('NUMERO_ALB').AsString);
+    // Solo documentos nuevos sin numerar: un documento ya numerado
+    // conserva su serie aunque se retoque la empresa
+    if (sNumero = '') or (sNumero = '0') then
+    begin
+      sSerie := ObtenerSerieDefecto(AEmpresa, 'AV');
+      if sSerie <> '' then
+        unqryTablaG.FieldByName('SERIE_ALB').AsString := sSerie;
     end;
   end;
 end;

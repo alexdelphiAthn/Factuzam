@@ -54,6 +54,8 @@ type
     dmmEfectosCompra: TdmEfectosCompra;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    // Restricción de la precarga a la empresa del usuario
+    function SqlRestriccionUsuario: string; override;
   end;
 
 var
@@ -62,7 +64,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inMtoModalRegistrarPago;
+  inLibWin, inMtoPrincipal, inMtoModalRegistrarPago, inLibFiltroUsuario;
 
 {$R *.dfm}
 
@@ -78,6 +80,13 @@ end;
 procedure TfrmMtoEfectosCompra.ResetForm;
 begin
   inherited;
+end;
+
+function TfrmMtoEfectosCompra.SqlRestriccionUsuario: string;
+begin
+  // Los efectos de compra llevan la empresa de la factura origen en
+  // cabecera; sin almacén ni caja.
+  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_EFEC', '', '');
 end;
 
 procedure TfrmMtoEfectosCompra.btnRegistrarPagoClick(Sender: TObject);

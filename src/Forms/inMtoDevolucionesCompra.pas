@@ -73,7 +73,7 @@ type
     lblNroDevolucion:    TcxLabel;
     txtNUMERO_DEVC:   TcxDBTextEdit;
     lblSerieDevolucion:  TcxLabel;
-    txtSERIE_DEVC:    TcxDBTextEdit;
+    cbbSERIE_DEVC:    TcxDBComboBox;
     lblFechaDevolucion:  TcxLabel;
     dteFECHA_DEVC:    TcxDBDateEdit;
     lblEstadoDevolucion: TcxLabel;
@@ -182,6 +182,7 @@ type
     procedure cxgrdLineasDevolucionExit(Sender: TObject);
     procedure actArticulosExecute(Sender: TObject);
     procedure actIrProveedorExecute(Sender: TObject);
+    procedure cbbSERIE_DEVCPropertiesInitPopup(Sender: TObject);
     procedure btnCODIGO_EMP_DEVCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure btnCODIGO_EMP_DEVCKeyUp(Sender: TObject; var Key: Word;
@@ -288,11 +289,41 @@ uses
   inLibComprasImpuestos,
   inMtoModalImpDevCompra,
   inMtoModalImpDevCompraV,
-  inMtoModalEtiqDev, inLibShowMto, inLibGenBusq;
+  inMtoModalEtiqDev, inLibShowMto, inLibGenBusq, inLibtb;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TfrmMtoDevolucionesCompra.cbbSERIE_DEVCPropertiesInitPopup(
+  Sender: TObject);
+var
+  sEmpresa: string;
+begin
+  sEmpresa := '';
+  if (dmmDevolucionesCompra <> nil) and
+     dmmDevolucionesCompra.unqryTablaG.Active then
+  begin
+    sEmpresa := Trim(dmmDevolucionesCompra.unqryTablaG.
+                       FieldByName('CODIGO_EMP_DEVC').AsString);
+  end;
+  if (sEmpresa = '') or (sEmpresa = '0') then
+  begin
+    sEmpresa := Trim(inLibGlobalVar.oEmpresa);
+  end;
+  CargarSeriesEmpresa(sEmpresa, 'DC', cbbSERIE_DEVC.Properties.Items);
+  if cbbSERIE_DEVC.Properties.Items.Count = 0 then
+  begin
+    if MessageDlg('No hay series de devoluciones a proveedor (tipo DC) ' +
+                  'para la empresa "' + sEmpresa + '".' + sLineBreak +
+                  'Se dan de alta en Empresas -> Series. ' +
+                  '¿Abrir el mantenimiento de Empresas ahora?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    begin
+      ShowMto(Self.Owner, 'Empresas');
+    end;
+  end;
+end;
 
 // dsTablaG apunta a la cabecera del devolucion de compra. El articulo
 // activo vive en la fila del sub-grid tvLineasDevolucion
