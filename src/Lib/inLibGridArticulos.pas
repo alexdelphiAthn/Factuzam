@@ -360,6 +360,9 @@ begin
     Buttons.Clear;
     with Buttons.Add do
       Kind := bkEllipsis;
+    // Las lineas ya resueltas no se editan encima: se borra la linea o se usa
+    // el boton. Las lineas nuevas usan el combo editable por OnGetProperties.
+    ReadOnly := True;
     OnValidate := ArticuloValidate;
     // El boton (ellipsis) abre el buscador de SKU.
     OnButtonClick := ArticuloButtonClick;
@@ -457,6 +460,7 @@ begin
     with Buttons.Add do
       Kind := bkEllipsis;
     OnButtonClick := ArticuloButtonClick;
+    OnValidate := ArticuloValidate;
   end;
   // No se abre nada aqui ni al fijar el almacen: la consulta se lanza al
   // desplegar la busqueda (AbrirBusquedaFiltrada), acotada a 100 filas.
@@ -1140,11 +1144,24 @@ end;
 procedure TGridArticulosLineas.ArticuloValidate(Sender: TObject;
                                   var DisplayValue: Variant;
                                   var ErrorText: TCaption; var Error: Boolean);
+var
+  sEntrada: string;
 begin
   // Al resolver, dejamos en la celda el codigo de articulo (padre) resuelto,
   // para que el editor no vuelva a volcar lo tecleado (p.ej. un codigo barras).
-  if ResolverEntrada(VarToStr(DisplayValue)) then
-    DisplayValue := FCds.FieldByName(FCampos.CodigoArt).AsString;
+  Error := False;
+  ErrorText := '';
+  sEntrada := Trim(VarToStr(DisplayValue));
+  if sEntrada <> '' then
+  begin
+    if ResolverEntrada(sEntrada) then
+      DisplayValue := FCds.FieldByName(FCampos.CodigoArt).AsString
+    else
+    begin
+      Error := True;
+      ErrorText := 'Artículo/SKU no encontrado: ' + sEntrada;
+    end;
+  end;
 end;
 
 procedure TGridArticulosLineas.AplicarSkuYAvisar;

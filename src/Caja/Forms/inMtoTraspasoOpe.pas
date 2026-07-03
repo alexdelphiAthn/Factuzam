@@ -778,12 +778,47 @@ begin
 end;
 
 function TfrmMtoOpeTraspaso.DestinoSeleccionado: string;
+var
+  sTexto, sCodigo: string;
+  i, iSep: Integer;
 begin
   if (cboDestino.ItemIndex >= 0) and
      (cboDestino.ItemIndex < FComboCodigos.Count) then
     Result := FComboCodigos[cboDestino.ItemIndex]
   else
+  begin
     Result := '';
+    sTexto := Trim(cboDestino.Text);
+    i := 0;
+    while (i < cboDestino.Properties.Items.Count) and
+          (i < FComboCodigos.Count) and (Result = '') do
+    begin
+      if SameText(sTexto, Trim(cboDestino.Properties.Items[i])) then
+      begin
+        cboDestino.ItemIndex := i;
+        Result := FComboCodigos[i];
+      end;
+      Inc(i);
+    end;
+    if (Result = '') and (sTexto <> '') then
+    begin
+      iSep := Pos(' - ', sTexto);
+      if iSep > 0 then
+        sCodigo := Trim(Copy(sTexto, 1, iSep - 1))
+      else
+        sCodigo := sTexto;
+      i := 0;
+      while (i < FComboCodigos.Count) and (Result = '') do
+      begin
+        if SameText(sCodigo, FComboCodigos[i]) then
+        begin
+          cboDestino.ItemIndex := i;
+          Result := FComboCodigos[i];
+        end;
+        Inc(i);
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoOpeTraspaso.ActualizarTotal;

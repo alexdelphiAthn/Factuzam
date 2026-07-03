@@ -45,8 +45,8 @@ type
     procedure ConfigurarEstructuraLineas;
     procedure cdsLineasNewRecord(DataSet: TDataSet);
     function ObtenerEmpresaAlmacen(const AAlmacen: string): string;
-    // True si el SKU existe y esta activo en fza_articulos_skus (SKU completo).
-    function SkuExiste(const ASku: string): Boolean;
+    // Devuelve el articulo padre del SKU activo. Vacio si no existe.
+    function ObtenerArticuloSku(const ASku: string): string;
     // Recorre el cds antes de grabar/imprimir: descarta lineas en blanco
     // (sin articulo) y aborta con error si una linea tiene articulo pero el
     // SKU no esta cerrado (falta color/talla).
@@ -230,18 +230,21 @@ begin
   end;
 end;
 
-function TdmTraspaso.SkuExiste(const ASku: string): Boolean;
+function TdmTraspaso.ObtenerArticuloSku(const ASku: string): string;
 begin
   // Un SKU es valido solo si existe (activo) en fza_articulos_skus. Asi se
   // bloquea grabar un SKU incompleto tipo 'ART/COLOR' al que le falta la talla
   // (existe 'ART/COLOR/TALLA' pero no 'ART/COLOR').
   qryAux.SQL.Text :=
-    'SELECT 1 FROM fza_articulos_skus' +
+    'SELECT CODIGO_ART_SKU FROM fza_articulos_skus' +
     ' WHERE CODIGO_UNIDAD_SKU = :SKU AND ESACTIVO_SKU = ''S'' LIMIT 1';
   qryAux.ParamByName('SKU').AsString := ASku;
   qryAux.Open;
   try
-    Result := not qryAux.IsEmpty;
+    if qryAux.IsEmpty then
+      Result := ''
+    else
+      Result := qryAux.FieldByName('CODIGO_ART_SKU').AsString;
   finally
     qryAux.Close;
   end;
@@ -249,7 +252,7 @@ end;
 
 procedure TdmTraspaso.LimpiarLineasIncompletas;
 var
-  sArt, sSku: string;
+  sArt, sSku, sArtSku: string;
 begin
   if cdsLineas.State in [dsEdit, dsInsert] then
     cdsLineas.Post;
@@ -263,12 +266,25 @@ begin
       cdsLineas.Delete
     // Articulo tecleado pero SKU sin cerrar (falta color/talla): es un intento
     // real, no se graba a medias -> avisamos y abortamos.
-    else if (sSku = '') or (not SkuExiste(sSku)) then
+    else if sSku = '' then
       raise EValidacionTraspaso.CreateFmt(
         'El artículo "%s" no tiene el SKU completo (elige color/talla). ' +
         'SKU: "%s"', [sArt, sSku])
     else
-      cdsLineas.Next;
+    begin
+      sArtSku := ObtenerArticuloSku(sSku);
+      if sArtSku = '' then
+        raise EValidacionTraspaso.CreateFmt(
+          'El artículo "%s" no tiene el SKU completo (elige color/talla). ' +
+          'SKU: "%s"', [sArt, sSku])
+      else if not SameText(sArt, sArtSku) then
+        raise EValidacionTraspaso.CreateFmt(
+          'La línea del artículo "%s" no corresponde al SKU "%s" ' +
+          '(artículo real "%s"). Borra la línea y vuelve a introducirlo.',
+          [sArt, sSku, sArtSku])
+      else
+        cdsLineas.Next;
+    end;
   end;
 end;
 
