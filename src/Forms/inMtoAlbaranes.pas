@@ -78,6 +78,8 @@ type
     lblCodigoEmpresa: TcxLabel;
     btnCODIGO_EMP_ALB: TcxDBButtonEdit;
     cxdblblRAZON_SOCIAL_EMPRESA_ALB: TcxDBLabel;
+    lblCodigoAlmacen: TcxLabel;
+    cbbCODIGO_ALM_ALB: TcxDBLookupComboBox;
     lblCodigoCliente: TcxLabel;
     btnCODIGO_CLI_ALB: TcxDBButtonEdit;
     cxdblblRAZON_SOCIAL_CLIENTE_ALB: TcxDBLabel;
@@ -211,12 +213,14 @@ type
     // unqryLineasAfterPostHook / unqryLineasAfterDeleteHook.
     FOldLineasAfterPost: TDataSetNotifyEvent;
     FOldLineasAfterDelete: TDataSetNotifyEvent;
+    FOldLineasDataChange: TDataChangeEvent;
     function BuscarArticuloAlbaran: string;
     function BuscarSkuAlbaran(const ACodigoArt: string): string;
     function ArticuloLineaActivaAlbaran: string;
     procedure AplicarArticuloAlbaran(const ACodigoArt: string);
     procedure cxgrdcArtAlbSkuPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
+    procedure ActualizarColumnasOpcionalesLinea;
     // Pinta lblTotalPrendasAlb con el total de prendas (suma de
     // CANTIDAD_ALBLIN de todas las lineas). Calculado en Delphi, no
     // persiste en BBDD.
@@ -227,6 +231,7 @@ type
     // (Field=nil) hay que recalcular el total de prendas con las lineas
     // del albaran recien enfocado.
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
+    procedure dsLineasDataChangeHook(Sender: TObject; Field: TField);
   public
     dmmAlbaranes: TdmAlbaranes;
     procedure CrearTablaPrincipal; override;
@@ -446,6 +451,15 @@ var
       Campo.AsFloat := AValor;
   end;
 
+  procedure LimpiarCampo(const ACampo: string);
+  var
+    Campo: TField;
+  begin
+    Campo := ds.FindField(ACampo);
+    if Campo <> nil then
+      Campo.Clear;
+  end;
+
   function PorcentajeIva(const ATipoIva: string): Double;
   var
     sTipo: string;
@@ -532,6 +546,13 @@ begin
             PonerString('CODIGO_UNIDAD_ALBLIN', Datos.CodigoSku);
             PonerString('DESCRIPCION_VARIACION_ALBLIN',
                         Datos.DescripcionSku);
+            if not Datos.EsVariacion then
+              LimpiarCampo('DESCRIPCION_VARIACION_ALBLIN');
+            if not Datos.EsTrazable then
+            begin
+              LimpiarCampo('LOTE_ALBLIN');
+              LimpiarCampo('FECHA_CADUCIDAD_ALBLIN');
+            end;
             PonerString('CODIGO_FAM_ALBLIN', Datos.CodigoFamilia);
             PonerString('NOMBRE_FAM_ALBLIN', Datos.DescripcionFamilia);
             PonerString('DESCRIPCION_ARTICULO_ALBLIN',
@@ -550,6 +571,7 @@ begin
               PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', rPrecioSiva);
             PrepararLineaFiscalVenta(dmmAlbaranes.unqryTablaG.Connection,
               dmmAlbaranes.unqryTablaG, ds, 'ALB', 'ALBLIN', 'TOTAL_ALBLIN');
+            ActualizarColumnasOpcionalesLinea;
             if Datos.RequiereSku then
               EnfocarSku(True);
           end
@@ -569,8 +591,7 @@ end;
 
 function TfrmMtoAlbaranes.SqlRestriccionUsuario: string;
 begin
-  // Los albaranes de venta solo llevan empresa en cabecera
-  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_ALB', '', '');
+  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_ALB', 'CODIGO_ALM_ALB', '');
 end;
 
 procedure TfrmMtoAlbaranes.CrearTablaPrincipal;
@@ -592,6 +613,7 @@ begin
   tvFacturas.DataController.DataSource      := dmmAlbaranes.dsFacturas;
   tvMovimientos.DataController.DataSource   := dmmAlbaranes.dsMovimientosAlb;
   cbbTotalesFORMA_PAGO_ALB.Properties.ListSource := dmmAlbaranes.dsFormasPago;
+  cbbCODIGO_ALM_ALB.Properties.ListSource := dmmAlbaranes.dsAlmacenesAlb;
   // Master-detail: enganchar las queries de detalle a la cabecera (dsTablaG)
   // para que lineas, facturas y movimientos sigan al albaran seleccionado.
   dmmAlbaranes.unqryAlbaranesLineas.MasterSource := dsTablaG;
@@ -605,9 +627,12 @@ begin
   // originales (los que trae el DM) encadenandolos desde los hooks.
   FOldLineasAfterPost   := dmmAlbaranes.unqryAlbaranesLineas.AfterPost;
   FOldLineasAfterDelete := dmmAlbaranes.unqryAlbaranesLineas.AfterDelete;
+  FOldLineasDataChange  := dmmAlbaranes.dsAlbaranesLineas.OnDataChange;
   dmmAlbaranes.unqryAlbaranesLineas.AfterPost   := unqryLineasAfterPostHook;
   dmmAlbaranes.unqryAlbaranesLineas.AfterDelete := unqryLineasAfterDeleteHook;
+  dmmAlbaranes.dsAlbaranesLineas.OnDataChange := dsLineasDataChangeHook;
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+  ActualizarColumnasOpcionalesLinea;
   ActualizarLabelPrendas;
 end;
 
@@ -619,6 +644,70 @@ begin
       FormatFloat('#,##0', dmmAlbaranes.TotalPrendasAlbaran)
   else
     lblTotalPrendasAlb.Caption := '0';
+end;
+
+procedure TfrmMtoAlbaranes.ActualizarColumnasOpcionalesLinea;
+var
+  ds: TDataSet;
+  q: TUniQuery;
+  sArticulo: string;
+  bTrazable: Boolean;
+  bVariacion: Boolean;
+  iSkus: Integer;
+
+  procedure PonerVisibleCampo(const ACampo: string; AVisible: Boolean);
+  var
+    Col: TcxGridDBColumn;
+  begin
+    Col := tvLineasAlbaran.GetColumnByFieldName(ACampo);
+    if Col <> nil then
+      Col.Visible := AVisible;
+  end;
+
+begin
+  sArticulo := '';
+  bTrazable := False;
+  bVariacion := False;
+  iSkus := 0;
+  if (dmmAlbaranes <> nil) and
+     Assigned(dmmAlbaranes.unqryAlbaranesLineas) then
+  begin
+    ds := dmmAlbaranes.unqryAlbaranesLineas;
+    if ds.Active and (not ds.IsEmpty) and
+       (ds.FindField('CODIGO_ART_ALBLIN') <> nil) then
+      sArticulo := Trim(ds.FieldByName('CODIGO_ART_ALBLIN').AsString);
+  end;
+  if (sArticulo <> '') and Assigned(dmmAlbaranes) then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := dmmAlbaranes.unqryTablaG.Connection;
+      q.SQL.Text :=
+        'SELECT a.ESTRAZABLE_ART, a.ESVARIACION_ART, ' +
+        '       (SELECT COUNT(*) ' +
+        '          FROM fza_articulos_skus sk ' +
+        '         WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART ' +
+        '           AND COALESCE(sk.ESACTIVO_SKU, ''S'') = ''S'') AS NUM_SKUS ' +
+        '  FROM fza_articulos a ' +
+        ' WHERE a.CODIGO_ART_ART = :art';
+      q.ParamByName('art').AsString := sArticulo;
+      q.Open;
+      if not q.IsEmpty then
+      begin
+        bTrazable := q.FieldByName('ESTRAZABLE_ART').AsString = 'S';
+        bVariacion := q.FieldByName('ESVARIACION_ART').AsString = 'S';
+        iSkus := q.FieldByName('NUM_SKUS').AsInteger;
+      end;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+  PonerVisibleCampo('LOTE_ALBLIN', bTrazable);
+  PonerVisibleCampo('FECHA_CADUCIDAD_ALBLIN', bTrazable);
+  PonerVisibleCampo('CODIGO_UNIDAD_ALBLIN', bVariacion or (iSkus > 1));
+  PonerVisibleCampo('DESCRIPCION_VARIACION_ALBLIN',
+                    bVariacion or (iSkus > 1));
+  PonerVisibleCampo('CODIGO_ALMACEN_ALBLIN', False);
 end;
 
 procedure TfrmMtoAlbaranes.unqryLineasAfterPostHook(DataSet: TDataSet);
@@ -640,6 +729,16 @@ procedure TfrmMtoAlbaranes.dsTablaGDataChangeHook(Sender: TObject;
 begin
   if Field = nil then
     ActualizarLabelPrendas;
+end;
+
+procedure TfrmMtoAlbaranes.dsLineasDataChangeHook(Sender: TObject;
+                                                   Field: TField);
+begin
+  if Assigned(FOldLineasDataChange) then
+    FOldLineasDataChange(Sender, Field);
+  if (Field = nil) or SameText(Field.FieldName, 'CODIGO_ART_ALBLIN') or
+     SameText(Field.FieldName, 'CODIGO_UNIDAD_ALBLIN') then
+    ActualizarColumnasOpcionalesLinea;
 end;
 
 procedure TfrmMtoAlbaranes.FormCreate(Sender: TObject);
@@ -674,6 +773,7 @@ begin
     stFact.Color := $00C4E1FF;
     colFact.Styles.Content := stFact;
   end;
+  ActualizarColumnasOpcionalesLinea;
 end;
 
 procedure TfrmMtoAlbaranes.btnNuevoClick(Sender: TObject);
@@ -707,6 +807,9 @@ begin
            Self) then
       begin
         dmmAlbaranes.CopiarEmpresaaAlbaran(dmmAlbaranes.unqryEmpDataAlb);
+        dmmAlbaranes.RefrescarAlmacenes(
+          dmmAlbaranes.unqryEmpDataAlb.FieldByName(
+            'CODIGO_EMP_EMP').AsString);
       end;
     finally
       FBuscandoDatosCabecera := False;
@@ -754,6 +857,7 @@ begin
       FBuscandoDatosCabecera := True;
       try
         dmmAlbaranes.BuscarEmpresa(sCodigo);
+        dmmAlbaranes.RefrescarAlmacenes(sCodigo);
       finally
         FBuscandoDatosCabecera := False;
       end;

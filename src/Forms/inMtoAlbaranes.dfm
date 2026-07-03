@@ -288,6 +288,33 @@
                 Height = 21
                 Width = 380
               end
+              object lblCodigoAlmacen: TcxLabel
+                Left = 544
+                Top = 80
+                Caption = 'Almac'#233'n salida'
+                TabOrder = 22
+                Transparent = True
+              end
+              object cbbCODIGO_ALM_ALB: TcxDBLookupComboBox
+                Left = 544
+                Top = 100
+                DataBinding.DataField = 'CODIGO_ALM_ALB'
+                DataBinding.DataSource = dsTablaG
+                Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'C'#243'digo'
+                    Width = 60
+                    FieldName = 'CODIGO_ALM_ALM'
+                  end
+                  item
+                    Caption = 'Almac'#233'n'
+                    FieldName = 'NOMBRE_ALM_ALM'
+                  end>
+                Properties.ListOptions.ShowHeader = False
+                TabOrder = 23
+                Width = 240
+              end
               object lblCodigoCliente: TcxLabel
                 Left = 8
                 Top = 140
@@ -709,11 +736,13 @@
                   object cxgrdcSkuAlb: TcxGridDBColumn
                     Caption = 'SKU'
                     DataBinding.FieldName = 'CODIGO_UNIDAD_ALBLIN'
+                    Visible = False
                     Width = 150
                   end
                   object cxgrdcVarAlb: TcxGridDBColumn
                     Caption = 'Variaci'#243'n'
                     DataBinding.FieldName = 'DESCRIPCION_VARIACION_ALBLIN'
+                    Visible = False
                     Width = 160
                   end
                   object cxgrdcDescrAlb: TcxGridDBColumn
@@ -724,11 +753,13 @@
                   object cxgrdcLoteAlb: TcxGridDBColumn
                     Caption = 'Lote'
                     DataBinding.FieldName = 'LOTE_ALBLIN'
+                    Visible = False
                     Width = 90
                   end
                   object cxgrdcCadAlb: TcxGridDBColumn
                     Caption = 'Caducidad'
                     DataBinding.FieldName = 'FECHA_CADUCIDAD_ALBLIN'
+                    Visible = False
                     Width = 100
                   end
                   object cxgrdcCantAlb: TcxGridDBColumn
