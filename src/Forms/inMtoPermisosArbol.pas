@@ -22,7 +22,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.Generics.Collections,
+  System.Classes, System.Generics.Collections, System.UITypes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
   Vcl.Menus, Data.DB, DBAccess, Uni,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters, cxStyles,

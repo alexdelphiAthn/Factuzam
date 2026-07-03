@@ -40,7 +40,7 @@ function RecogerRecuento(const AEmp, AAlm, ASerie, ANumero, AUsuario: string;
 implementation
 
 uses
-  System.JSON, System.NetEncoding,
+  System.JSON, System.Generics.Collections, System.NetEncoding,
   System.Net.HttpClient, System.Net.URLClient,
   Data.DB, Uni,
   inLibGlobalVar, inLibAppParam;

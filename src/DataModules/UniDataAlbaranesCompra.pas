@@ -207,6 +207,8 @@ const
 var
   i: Integer;
   sSet: string;
+  sCols: string;
+  sVals: string;
 
   procedure AgregarCampoUpdate(const ACampo: string);
   begin
@@ -215,6 +217,20 @@ var
     else
       sSet := sSet + ',' + sLineBreak +
         '       ' + ACampo + ' = :' + ACampo;
+  end;
+
+  procedure AgregarCampoInsert(const ACampo: string);
+  begin
+    if sCols = '' then
+    begin
+      sCols := ACampo;
+      sVals := ':' + ACampo;
+    end
+    else
+    begin
+      sCols := sCols + ', ' + ACampo;
+      sVals := sVals + ', :' + ACampo;
+    end;
   end;
 
 begin
@@ -231,6 +247,16 @@ begin
     sSet + sLineBreak +
     ' WHERE NUMERO_ALBC = :Old_NUMERO_ALBC ' + sLineBreak +
     '   AND SERIE_ALBC = :Old_SERIE_ALBC';
+  // SQLInsert explicito contra la tabla base: vi_albaranes_compra tiene
+  // columnas calculadas y no es insertable-into (MySQL 1471). Mismo
+  // patron que el SQLInsert de pedidos de compra.
+  sCols := '';
+  sVals := '';
+  for i := Low(CAMPOS_ALBC) to High(CAMPOS_ALBC) do
+    AgregarCampoInsert(CAMPOS_ALBC[i]);
+  unqryTablaG.SQLInsert.Text :=
+    'INSERT INTO fza_albaranes_compra (' + sCols + ') ' + sLineBreak +
+    'VALUES (' + sVals + ')';
   unqryTablaG.SQLRefresh.Text :=
     'SELECT * ' + sLineBreak +
     '  FROM vi_albaranes_compra ' + sLineBreak +

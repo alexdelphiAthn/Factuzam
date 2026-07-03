@@ -1,5 +1,41 @@
 # Batería de pruebas multialmacén: traspasos y PMP por almacén
 
+> **Ejecución 02-03/07/2026 — resultado parcial.** P0 completada
+> (TESTPMP1 sin tallas PVP 25; TESTPMP2 tallas UNI/S+M PVP 12;
+> proveedor usado: ANGEL). Hallazgos y fixes durante P1:
+>
+> - Alta manual de pedido de compra estaba rota: Required de columnas
+>   calculadas de `vi_pedidos_compra` (fix: cinturón en BeforePost),
+>   vista no insertable [1471] (fix: SQLInsert explícito), y líneas
+>   posteadas con clave provisional '0' que quedaban huérfanas y
+>   rompían el siguiente alta con 1062 (fix del usuario: contador
+>   reforzado + la línea no se graba sin número real +
+>   `fix_contador_documentos_no_cero.sql`).
+> - Mismo [1471] en albaranes de compra (fix: SQLInsert explícito en
+>   `ConfigurarSqlCabecera` de `UniDataAlbaranesCompra`).
+> - `ESPIVOTE_HORIZONTAL_*` sin valor bloqueaba el Post (fix: default
+>   en BeforePost + rediseño del usuario para tallas horizontal).
+> - Añadido mininavegador al grid de líneas de pedidos de compra.
+>
+> **P1-A OK**: albarán compra 000004/C1 (20 uds TESTPMP1 a 10 €, GEN)
+> → stockactual GEN/TESTPMP1 = 20 / PMP 10,00 / valor 200 / EC 20 ✔.
+>
+> **P1-B KO — HALLAZGO PMP ABIERTO**: albarán compra 000005/C1
+> (10 uds a 16 €, GEN) grabó bien y su movimiento 'AC' E 10@16 existe
+> en `fza_movimientos_almacen`, pero `fza_articulos_stockactual` NO se
+> actualizó (sigue 20/10,00/200/EC=20; esperado 30/12,00/360/EC=30).
+> El SP `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT` instalado sí pondera
+> (tiene ON DUPLICATE y toca stockactual). Sospecha: el ciclo
+> Revertir/Generar de `SincronizarMovimientos` (AfterPost de
+> `TdmAlbaranesCompra` → `inLibAlbaranesCompraMovimientos`) aplica y
+> deshace de forma asimétrica en la segunda entrada del mismo SKU.
+> Depurar ahí antes de continuar P2-P4. Procesos de verificación
+> creados en el Generador: `verificar_stock_pmp_test` (stockactual) y
+> `ver_movs_test` (movimientos).
+>
+> Pendiente: P1-C (tallas), P2 (ventas GEN), P3 (traspaso GEN→BCN),
+> P4 (BCN y verificación final).
+
 Verifica que el stock y el Precio Medio Ponderado se llevan **por
 almacén** (`fza_articulos_stockactual`, PK `ALM+SKU+LOTE`, columnas
 `CANTIDAD_STK` / `PRECIO_MEDIO_STK` / `VALOR_TOTAL_STK`), que los

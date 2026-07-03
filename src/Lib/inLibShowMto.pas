@@ -22,7 +22,7 @@ uses
   Vcl.Dialogs, ShellAPI, System.Rtti, System.TypInfo, System.Variants,
   System.StrUtils, inLibUser, Vcl.Buttons, inlibGlobalVar, inMtoGen,
   system.math, System.IOUtils, inLibWin, cxPC, Types, Vcl.Consts,
-  inLibFormManager;
+  Data.DB, inLibFormManager;
 
 type
   TFormBaseClass = class of TForm;

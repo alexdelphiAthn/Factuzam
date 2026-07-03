@@ -20,7 +20,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.DateUtils, Vcl.Graphics,
+  System.Classes, System.DateUtils, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
   dxSkinsDefaultPainters, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,

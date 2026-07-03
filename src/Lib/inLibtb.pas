@@ -184,10 +184,10 @@ var
   begin
     Result := (p + 3 <= Length(sUp)) and (Copy(sUp, p, 4) = 'FROM');
     if Result and (p > 1) and
-       not (sUp[p - 1] in [' ', #9, #10, #13, '(', ')', ',']) then
+       not CharInSet(sUp[p - 1], [' ', #9, #10, #13, '(', ')', ',']) then
       Result := False;
     if Result and (p + 4 <= Length(sUp)) and
-       not (sUp[p + 4] in [' ', #9, #10, #13, '(']) then
+       not CharInSet(sUp[p + 4], [' ', #9, #10, #13, '(']) then
       Result := False;
   end;
 begin
@@ -219,11 +219,12 @@ begin
   if bEncontrado then
   begin
     // Saltar el hueco entre FROM y el nombre de la tabla.
-    while (iIni <= Length(sUp)) and (sUp[iIni] <= ' ') do
+    while (iIni <= Length(sUp)) and
+          CharInSet(sUp[iIni], [' ', #9, #10, #13]) do
       Inc(iIni);
     iEnd := iIni;
     while (iEnd <= Length(sUp)) and
-          not (sUp[iEnd] in [' ', #13, #10, #9, '(', ',', ';']) do
+          not CharInSet(sUp[iEnd], [' ', #13, #10, #9, '(', ',', ';']) do
       Inc(iEnd);
     Result := Trim(Copy(aSQL, iIni, iEnd - iIni));
     if (Length(Result) >= 2) and (Result[1] = '`') then

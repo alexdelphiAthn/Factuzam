@@ -1452,6 +1452,7 @@ begin
     Exit;
   pic := TfrxPictureView(Component);
   sName := LowerCase(pic.Name);
+  res := frPx300;
   bMatch := True;
   if      sName = 'foto300'  then res := frPx300
   else if sName = 'foto600'  then res := frPx600
@@ -1550,7 +1551,8 @@ begin
   if sSku <> '' then
   begin
     for i := 1 to Length(sSku) do
-      if not (sSku[i] in ['A'..'Z','a'..'z','0'..'9','-','_']) then
+      if not CharInSet(sSku[i], ['A'..'Z', 'a'..'z', '0'..'9',
+                                 '-', '_']) then
         sSku[i] := '_';
     Result := Result + '_' + sSku;
   end;

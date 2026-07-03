@@ -35,8 +35,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.ExtCtrls, Vcl.StdCtrls,
+  System.Classes, System.UITypes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
+  Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
   inMtoFrmBase,
   cxClasses, cxGraphics, cxLookAndFeels, cxLookAndFeelPainters,
   cxControls, cxButtons, cxContainer, cxEdit, cxLabel, cxTextEdit,
