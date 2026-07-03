@@ -21,9 +21,9 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, System.Actions, Vcl.ActnList,
-  Data.DB, MemDS, DBAccess, Uni,
+  System.Classes, System.UITypes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
+  Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, System.Actions,
+  Vcl.ActnList, Data.DB, MemDS, DBAccess, Uni,
   inMtoFrmBase, dxCore, dxSkinsForm, dxSkinsCore, dxSkinBlue,
   cxClasses, cxContainer, cxEdit, cxControls, cxLookAndFeels, cxLocalization,
   cxGraphics, cxLookAndFeelPainters, cxButtons, cxStyles, cxLabel, cxTextEdit,

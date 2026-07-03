@@ -250,6 +250,7 @@ begin
   q    := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
   try
+    dFechaPrev := 0;
     q.Connection    := AConn;
     qIns.Connection := AConn;
     q.SQL.Text :=

@@ -38,7 +38,7 @@ uses
   Vcl.PlatformDefaultStyleActnCtrls, Vcl.ActnMan, cxButtonEdit, cxSplitter,
   cxDBExtLookupComboBox, cxListView, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   cxDBLabel, dxShellDialogs, inLibArticulosVariaciones, inMtoModalAceptCancel,
-  cxCustomListBox, cxCheckListBox, System.UITypes;
+  cxCustomListBox, cxCheckListBox, System.UITypes, System.Types;
 
 type
   // Ambito que elige el usuario cuando hay que crear un atributo basico

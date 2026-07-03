@@ -127,7 +127,7 @@ implementation
 uses
   Vcl.Forms,
   dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetGraphics,
-  dxSpreadSheetTypes,
+  dxSpreadSheetTypes, dxSpreadSheetStyles, dxHashUtils,
   inMtoPreviewTicket, inLibDir, inLibFormatoDocumento, inLibVerifactu,
   inLibPermisos, inMtoPreviewExcel, inLibDevExcel;
 
