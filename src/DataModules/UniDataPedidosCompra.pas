@@ -57,6 +57,7 @@ type
     procedure unqryPedidosCompraLineasBeforeDelete(DataSet: TDataSet);
   private
     FCalculandoTotales: Boolean;
+    procedure AsignarNumeroLineaPedidoCompra(DataSet: TDataSet);
     procedure ConfigurarSqlCabecera;
     // Construye el SQLInsert contra fza_pedidos_compra: la vista
     // vi_pedidos_compra tiene columnas calculadas y no es insertable
@@ -492,44 +493,15 @@ end;
 
 procedure TdmPedidosCompra.unqryPedidosCompraLineasAfterInsert(
                                                        DataSet: TDataSet);
-var
-  iNuevaLinea : Integer;
-  sSerie      : string;
-  sNumero     : string;
 begin
   inherited;
-  // Asignacion de LINEA_PEDCLIN (clave secundaria, NOT NULL sin default).
-  // Sin esto, cxGrid disparaba Post al navegar fuera de la nueva fila y
-  // CheckRequiredFields lanzaba 'LINEA_PEDCLIN must have a value'. Mismo
-  // patron que albaranes / sesiones de compra: el helper hace un UPDATE
-  // atomico de CONTADOR_LINEAS_PEDC +10 sobre la cabecera y devuelve el
-  // nuevo valor, sin la condicion de carrera del MAX()+10 (dos altas en
-  // memoria sin Post intermedio repetian linea). La materializacion ya
-  // mantiene el contador, asi que ambos caminos quedan coherentes. Formato
-  // '0010','0020',... (4 digitos LPAD) para casar con las lineas
-  // materializadas y respetar el ORDER BY LINEA_PEDCLIN (texto).
-  sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
-  sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
-  iNuevaLinea := GetSiguienteLineaDoc(CONT_PEDIDOS_COMPRA, sSerie, sNumero);
-  if iNuevaLinea = 0 then
-  begin
-    // Cabecera aun no persistida (pedido nuevo sin NUMERO real): fallback
-    // al contador en memoria +10. StrToIntDef y no AsInteger: el contador
-    // es varchar NULL en alta y AsInteger sobre '' lanzaria EConvertError.
-    iNuevaLinea := StrToIntDef(
-      unqryTablaG.FieldByName('CONTADOR_LINEAS_PEDC').AsString, 0) + 10;
-    if not (unqryTablaG.State in [dsEdit, dsInsert]) then
-      unqryTablaG.Edit;
-    unqryTablaG.FieldByName('CONTADOR_LINEAS_PEDC').AsString :=
-      Format('%.8d', [iNuevaLinea]);
-  end;
   with unqryPedidosCompraLineas do
   begin
     FieldByName('NUMERO_PEDC_PEDCLIN').AsString :=
       unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
     FieldByName('SERIE_PEDC_PEDCLIN').AsString :=
       unqryTablaG.FieldByName('SERIE_PEDC').AsString;
-    FieldByName('LINEA_PEDCLIN').AsString := Format('%.4d', [iNuevaLinea]);
+    FieldByName('LINEA_PEDCLIN').AsString := '0000';
     FieldByName('CANTIDAD_PEDCLIN').AsFloat := 1;
     FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat := 0;
     // Por defecto la linea hereda el almacen de la cabecera; el usuario
@@ -570,12 +542,7 @@ begin
       end);
     Abort;
   end;
-  if (Trim(unqryPedidosCompraLineas.FieldByName(
-             'NUMERO_PEDC_PEDCLIN').AsString) = '') or
-     (Trim(unqryPedidosCompraLineas.FieldByName(
-             'NUMERO_PEDC_PEDCLIN').AsString) = '0') then
-    raise Exception.Create(
-      'Graba la cabecera del pedido antes de guardar lineas.');
+  AsignarNumeroLineaPedidoCompra(DataSet);
   with unqryPedidosCompraLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
@@ -620,6 +587,47 @@ begin
     end;
     PrepararLineaFiscalCompra(inLibGlobalVar.oConn, unqryTablaG,
       unqryPedidosCompraLineas, 'PEDC', 'PEDCLIN', 'TOTAL_PEDCLIN');
+  end;
+end;
+
+procedure TdmPedidosCompra.AsignarNumeroLineaPedidoCompra(DataSet: TDataSet);
+var
+  iNuevaLinea: Integer;
+  sLinea: string;
+  sNumero: string;
+  sSerie: string;
+begin
+  if DataSet.FindField('LINEA_PEDCLIN') <> nil then
+  begin
+    sLinea := Trim(DataSet.FieldByName('LINEA_PEDCLIN').AsString);
+    if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) then
+    begin
+      sNumero := Trim(unqryTablaG.FieldByName('NUMERO_PEDC').AsString);
+      sSerie  := Trim(unqryTablaG.FieldByName('SERIE_PEDC').AsString);
+      if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
+        raise Exception.Create(
+          'Graba la cabecera del pedido antes de guardar lineas.');
+      if DataSet.FindField('NUMERO_PEDC_PEDCLIN') <> nil then
+        DataSet.FieldByName('NUMERO_PEDC_PEDCLIN').AsString := sNumero;
+      if DataSet.FindField('SERIE_PEDC_PEDCLIN') <> nil then
+        DataSet.FieldByName('SERIE_PEDC_PEDCLIN').AsString := sSerie;
+      iNuevaLinea := GetSiguienteLineaDoc(CONT_PEDIDOS_COMPRA, sSerie,
+        sNumero);
+      if iNuevaLinea = 0 then
+      begin
+        iNuevaLinea := StrToIntDef(
+          unqryTablaG.FieldByName('CONTADOR_LINEAS_PEDC').AsString, 0) + 10;
+      end;
+      if unqryTablaG.FindField('CONTADOR_LINEAS_PEDC') <> nil then
+      begin
+        if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+          unqryTablaG.Edit;
+        unqryTablaG.FieldByName('CONTADOR_LINEAS_PEDC').AsString :=
+          Format('%.8d', [iNuevaLinea]);
+      end;
+      DataSet.FieldByName('LINEA_PEDCLIN').AsString :=
+        Format('%.4d', [iNuevaLinea]);
+    end;
   end;
 end;
 

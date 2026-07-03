@@ -20,15 +20,32 @@
 > **P1-A OK**: albarán compra 000004/C1 (20 uds TESTPMP1 a 10 €, GEN)
 > → stockactual GEN/TESTPMP1 = 20 / PMP 10,00 / valor 200 / EC 20 ✔.
 >
-> **P1-B KO — HALLAZGO PMP ABIERTO**: albarán compra 000005/C1
+> **P1-B RESUELTO — FALSO POSITIVO (03/07)**: tras
+> `CALL SP_RECALCULAR_PMP_SKU_ALMACEN('012','TESTPMP1','GEN')`
+> stockactual muestra 30 / PMP 12,00 / 360 / EC 30 — y como el
+> recálculo NO toca `CANTIDAD_ENT_COMPRA_STK`, el EC=30 demuestra que
+> el stock ya estaba bien: la lectura "20/10/200" era la **VistaDatos
+> del Generador de Procesos sirviendo caché** (no refresca el grid al
+> reejecutar el mismo SQL — mejora pendiente del Generador). El PMP
+> pondera correctamente. Diagnóstico original conservado debajo como
+> registro:
+>
+> ~~P1-B KO~~: albarán compra 000005/C1
 > (10 uds a 16 €, GEN) grabó bien y su movimiento 'AC' E 10@16 existe
 > en `fza_movimientos_almacen`, pero `fza_articulos_stockactual` NO se
 > actualizó (sigue 20/10,00/200/EC=20; esperado 30/12,00/360/EC=30).
 > El SP `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT` instalado sí pondera
-> (tiene ON DUPLICATE y toca stockactual). Sospecha: el ciclo
-> Revertir/Generar de `SincronizarMovimientos` (AfterPost de
-> `TdmAlbaranesCompra` → `inLibAlbaranesCompraMovimientos`) aplica y
-> deshace de forma asimétrica en la segunda entrada del mismo SKU.
+> (tiene ON DUPLICATE y toca stockactual). Sospecha afinada: tras el
+> CALL al SP (que deja stockactual bien), Generar/Revertir
+> (`inLibAlbaranesCompraMovimientos`) lanzan un recálculo set-based
+> (`RecalcularPmpAlmacen` → `SP_RECALCULAR_PMP_SKU_ALMACEN` sobre
+> `tmp_skus_recalc`) que RECONSTRUYE stockactual desde el histórico;
+> si no ve el movimiento recién insertado (misma tx, lote '' vs NULL,
+> o JOIN a líneas con recibida = 0) machaca el valor bueno y deja el
+> estado anterior — justo lo observado. **Test de 1 minuto**: CALL
+> `SP_RECALCULAR_PMP_SKU_ALMACEN` a mano para GEN/TESTPMP1: si deja
+> 30/12/360 el bug está en el filtro de tmp_skus_recalc o en la
+> transacción; si deja 20/10/200 está dentro del SP de recálculo.
 > Depurar ahí antes de continuar P2-P4. Procesos de verificación
 > creados en el Generador: `verificar_stock_pmp_test` (stockactual) y
 > `ver_movs_test` (movimientos).

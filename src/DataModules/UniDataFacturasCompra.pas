@@ -78,6 +78,7 @@ type
     // generamos/revertimos los movimientos. Valores: 'CERRAR' (mov.
     // salida nueva), 'ABRIR' (revertir mov. existentes) o ''.
     FTransicionEstadoFacc: string;
+    procedure AsignarNumeroLineaFacturaCompra(DataSet: TDataSet);
     function ObtenerSkusFacturaCsv(const ASerie, ANumero: string): string;
   public
     procedure GetCodigoAutoFacturaCompra;
@@ -623,44 +624,15 @@ end;
 
 procedure TdmFacturasCompra.unqryFacturasCompraLineasAfterInsert(
                                                        DataSet: TDataSet);
-var
-  iNuevaLinea : Integer;
-  sSerie      : string;
-  sNumero     : string;
 begin
   inherited;
-  // Asignacion de LINEA_FACCLIN (clave secundaria, NOT NULL sin default).
-  // Sin esto el Post fallaba con 'Field LINEA_FACCLIN must have a value',
-  // incluso en el alta involuntaria que dispara el grid al navegar con
-  // flechas (OptionsData.Appending). Mismo patron que Sesiones de compra:
-  // el helper hace un UPDATE atomico de CONTADOR_LINEAS_FACC +10 sobre la
-  // cabecera y devuelve el nuevo valor. Formato '0010','0020',... (4
-  // digitos LPAD) para casar con las lineas materializadas y respetar el
-  // ORDER BY LINEA_FACCLIN (comparacion de texto).
-  sSerie  := unqryTablaG.FieldByName('SERIE_FACC').AsString;
-  sNumero := unqryTablaG.FieldByName('NUMERO_FACC').AsString;
-  iNuevaLinea := GetSiguienteLineaDoc(CONT_FACTURAS_COMPRA, sSerie, sNumero);
-  if iNuevaLinea = 0 then
-  begin
-    // Cabecera aun no persistida (factura nuevo sin NUMERO real): fallback
-    // al contador en memoria +10. Lo dejamos sincronizado para que la
-    // siguiente linea incremente bien antes de grabar la cabecera.
-    // StrToIntDef y no AsInteger: el contador es varchar NULL en alta y
-    // AsInteger sobre '' lanzaria EConvertError.
-    iNuevaLinea := StrToIntDef(
-      unqryTablaG.FieldByName('CONTADOR_LINEAS_FACC').AsString, 0) + 10;
-    if not (unqryTablaG.State in [dsEdit, dsInsert]) then
-      unqryTablaG.Edit;
-    unqryTablaG.FieldByName('CONTADOR_LINEAS_FACC').AsString :=
-      Format('%.8d', [iNuevaLinea]);
-  end;
   with unqryFacturasCompraLineas do
   begin
     FieldByName('NUMERO_FACC_FACCLIN').AsString :=
       unqryTablaG.FieldByName('NUMERO_FACC').AsString;
     FieldByName('SERIE_FACC_FACCLIN').AsString :=
       unqryTablaG.FieldByName('SERIE_FACC').AsString;
-    FieldByName('LINEA_FACCLIN').AsString := Format('%.4d', [iNuevaLinea]);
+    FieldByName('LINEA_FACCLIN').AsString := '0000';
     FieldByName('CANTIDAD_FACCLIN').AsFloat := 1;
     if FindField('ESFACTURADA_FACCLIN') <> nil then
       FieldByName('ESFACTURADA_FACCLIN').AsString := 'N';
@@ -699,12 +671,7 @@ begin
       end);
     Abort;
   end;
-  if (Trim(unqryFacturasCompraLineas.FieldByName(
-             'NUMERO_FACC_FACCLIN').AsString) = '') or
-     (Trim(unqryFacturasCompraLineas.FieldByName(
-             'NUMERO_FACC_FACCLIN').AsString) = '0') then
-    raise Exception.Create(
-      'Graba la cabecera de la factura antes de guardar lineas.');
+  AsignarNumeroLineaFacturaCompra(DataSet);
   with unqryFacturasCompraLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
@@ -754,6 +721,48 @@ begin
     end;
     PrepararLineaFiscalCompra(inLibGlobalVar.oConn, unqryTablaG,
       unqryFacturasCompraLineas, 'FACC', 'FACCLIN', 'TOTAL_FACCLIN');
+  end;
+end;
+
+procedure TdmFacturasCompra.AsignarNumeroLineaFacturaCompra(
+                                                       DataSet: TDataSet);
+var
+  iNuevaLinea: Integer;
+  sLinea: string;
+  sNumero: string;
+  sSerie: string;
+begin
+  if DataSet.FindField('LINEA_FACCLIN') <> nil then
+  begin
+    sLinea := Trim(DataSet.FieldByName('LINEA_FACCLIN').AsString);
+    if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) then
+    begin
+      sNumero := Trim(unqryTablaG.FieldByName('NUMERO_FACC').AsString);
+      sSerie  := Trim(unqryTablaG.FieldByName('SERIE_FACC').AsString);
+      if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
+        raise Exception.Create(
+          'Graba la cabecera de la factura antes de guardar lineas.');
+      if DataSet.FindField('NUMERO_FACC_FACCLIN') <> nil then
+        DataSet.FieldByName('NUMERO_FACC_FACCLIN').AsString := sNumero;
+      if DataSet.FindField('SERIE_FACC_FACCLIN') <> nil then
+        DataSet.FieldByName('SERIE_FACC_FACCLIN').AsString := sSerie;
+      iNuevaLinea := GetSiguienteLineaDoc(CONT_FACTURAS_COMPRA, sSerie,
+        sNumero);
+      if iNuevaLinea = 0 then
+      begin
+        iNuevaLinea := StrToIntDef(
+          unqryTablaG.FieldByName('CONTADOR_LINEAS_FACC').AsString, 0) + 10;
+      end;
+      if unqryTablaG.FindField('CONTADOR_LINEAS_FACC') <> nil then
+      begin
+        if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+          unqryTablaG.Edit;
+        unqryTablaG.FieldByName('CONTADOR_LINEAS_FACC').AsString :=
+          Format('%.8d', [iNuevaLinea]);
+      end;
+      DataSet.FieldByName('LINEA_FACCLIN').AsString :=
+        Format('%.4d', [iNuevaLinea]);
+    end;
   end;
 end;
 

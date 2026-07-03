@@ -84,6 +84,29 @@
         Value = nil
       end>
   end
+  object unqryAlmacenesAlb: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM'
+      '  FROM fza_almacenes'
+      ' WHERE ESACTIVO_ALM = '#39'S'#39
+      '   AND (CODIGO_EMP_ALM = :EMPRESA OR :EMPRESA = '#39#39')'
+      ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM')
+    Left = 160
+    Top = 360
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'EMPRESA'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object dsAlmacenesAlb: TDataSource
+    DataSet = unqryAlmacenesAlb
+    Left = 160
+    Top = 424
+  end
   object unqryFacturas: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (

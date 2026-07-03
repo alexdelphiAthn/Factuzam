@@ -111,6 +111,7 @@ type
   private
     FProcsInstalados: Boolean;
     FCalculandoTotales: Boolean;
+    procedure AsignarNumeroLineaPedido(DataSet: TDataSet);
     // Propone la serie PE de fza_empresas_series de la empresa emisora
     // en documentos nuevos sin numerar (al cambiar la empresa en el alta)
     procedure ProponerSerieEmpresa(const AEmpresa: string);
@@ -127,7 +128,7 @@ implementation
 
 uses
   inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics, System.UITypes,
-  Vcl.Dialogs, inLibVentasImpuestos;
+  Vcl.Dialogs, inLibVentasImpuestos, inLibContadorLineas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -296,6 +297,7 @@ begin
   inherited;
   with unqryPedidosLineas do
   begin
+    FieldByName('LINEA_PEDLIN').AsString := '0000';
     FieldByName('NUMERO_PED_PEDLIN').AsString :=
                                  unqryTablaG.FieldByName('NUMERO_PED').AsString;
     FieldByName('SERIE_PED_PEDLIN').AsString :=
@@ -307,6 +309,14 @@ begin
       FieldByName('CANTIDAD_PENDIENTE_PEDLIN').AsFloat := 1;
     if FindField('ESENTREGADA_PEDLIN') <> nil then
       FieldByName('ESENTREGADA_PEDLIN').AsString := 'N';
+    if FindField('USUARIO_ALTA') <> nil then
+      FieldByName('USUARIO_ALTA').AsString := oUser;
+    if FindField('INSTANTE_ALTA') <> nil then
+      FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+    if FindField('USUARIO_MODIF') <> nil then
+      FieldByName('USUARIO_MODIF').AsString := oUser;
+    if FindField('INSTANTE_MODIF') <> nil then
+      FieldByName('INSTANTE_MODIF').AsDateTime := Now;
   end;
 end;
 
@@ -315,6 +325,7 @@ var
   fCantidad, fEntregada, fPendiente: Double;
 begin
   inherited;
+  AsignarNumeroLineaPedido(DataSet);
   NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn, unqryPedidosLineas,
     'CODIGO_ART_PEDLIN', 'CODIGOPRODPS_PEDLIN', 'CODBAR_ART_PEDLIN');
   RecalcularEntregasLinea;
@@ -338,6 +349,59 @@ begin
     end;
     PrepararLineaFiscalVenta(inLibGlobalVar.oConn, unqryTablaG,
       unqryPedidosLineas, 'PED', 'PEDLIN', 'TOTAL_PEDLIN');
+    if FindField('USUARIO_MODIF') <> nil then
+      FieldByName('USUARIO_MODIF').AsString := oUser;
+    if FindField('INSTANTE_MODIF') <> nil then
+      FieldByName('INSTANTE_MODIF').AsDateTime := Now;
+    if DataSet.State = dsInsert then
+    begin
+      if (FindField('USUARIO_ALTA') <> nil) and
+         (FieldByName('USUARIO_ALTA').AsString = '') then
+        FieldByName('USUARIO_ALTA').AsString := oUser;
+      if (FindField('INSTANTE_ALTA') <> nil) and
+         FieldByName('INSTANTE_ALTA').IsNull then
+        FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+    end;
+  end;
+end;
+
+procedure TdmPedidos.AsignarNumeroLineaPedido(DataSet: TDataSet);
+var
+  iNuevaLinea: Integer;
+  sLinea: string;
+  sNumero: string;
+  sSerie: string;
+begin
+  if DataSet.FindField('LINEA_PEDLIN') <> nil then
+  begin
+    sLinea := Trim(DataSet.FieldByName('LINEA_PEDLIN').AsString);
+    if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) then
+    begin
+      sNumero := Trim(unqryTablaG.FieldByName('NUMERO_PED').AsString);
+      sSerie  := Trim(unqryTablaG.FieldByName('SERIE_PED').AsString);
+      if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
+        raise Exception.Create(
+          'Graba la cabecera del pedido antes de guardar lineas.');
+      if DataSet.FindField('NUMERO_PED_PEDLIN') <> nil then
+        DataSet.FieldByName('NUMERO_PED_PEDLIN').AsString := sNumero;
+      if DataSet.FindField('SERIE_PED_PEDLIN') <> nil then
+        DataSet.FieldByName('SERIE_PED_PEDLIN').AsString := sSerie;
+      iNuevaLinea := GetSiguienteLineaDoc(CONT_PEDIDOS, sSerie, sNumero);
+      if iNuevaLinea = 0 then
+      begin
+        iNuevaLinea := StrToIntDef(
+          unqryTablaG.FieldByName('CONTADOR_LINEAS_PED').AsString, 0) + 10;
+      end;
+      if unqryTablaG.FindField('CONTADOR_LINEAS_PED') <> nil then
+      begin
+        if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+          unqryTablaG.Edit;
+        unqryTablaG.FieldByName('CONTADOR_LINEAS_PED').AsString :=
+          Format('%.8d', [iNuevaLinea]);
+      end;
+      DataSet.FieldByName('LINEA_PEDLIN').AsString :=
+        Format('%.4d', [iNuevaLinea]);
+    end;
   end;
 end;
 
@@ -766,8 +830,6 @@ var
   i: Integer;
   sNumeroPed, sSeriePed: string;
   par: TPair<string, Currency>;
-  qAlm: TUniQuery;
-  nMaxLineaPrev: Int64;
 begin
   Result := False;
   sNumeroAlb := ''; sSerieAlb := '';
@@ -810,27 +872,6 @@ begin
       sNumeroAlb, True);
   end;
 
-  // Mayor número de línea ya presente en el albarán destino. En un
-  // albarán nuevo es 0; al añadir a uno existente sirve para fijar el
-  // almacén sólo en las líneas que añadimos ahora (paso 2b).
-  nMaxLineaPrev := 0;
-  qAlm := TUniQuery.Create(nil);
-  try
-    qAlm.Connection := inLibGlobalVar.oConn;
-    qAlm.SQL.Text :=
-      'SELECT IFNULL(MAX(CAST(LINEA_ALBLIN AS UNSIGNED)), 0) AS MAXLIN ' +
-      '  FROM fza_albaranes_lineas ' +
-      ' WHERE NUMERO_ALB_ALBLIN = :n ' +
-      '   AND SERIE_ALB_ALBLIN  = :s';
-    qAlm.ParamByName('n').AsString := sNumeroAlb;
-    qAlm.ParamByName('s').AsString := sSerieAlb;
-    qAlm.Open;
-    nMaxLineaPrev := qAlm.FieldByName('MAXLIN').AsLargeInt;
-    qAlm.Close;
-  finally
-    FreeAndNil(qAlm);
-  end;
-
   // 2) Por cada línea con cantidad > 0 generamos línea de albarán
   for i := 0 to aLineas.Count - 1 do
   begin
@@ -845,6 +886,7 @@ begin
       Params.CreateParam(ftString,    'p_SERIE_PED',  ptInput);
       Params.CreateParam(ftString,    'p_LINEA_PED',  ptInput);
       Params.CreateParam(ftBCD,       'p_CANTIDAD',   ptInput);
+      Params.CreateParam(ftString,    'p_CODIGO_ALM', ptInput);
       Params.CreateParam(ftString,    'p_USUARIO',    ptInput);
       ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
       ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
@@ -852,38 +894,9 @@ begin
       ParamByName('p_SERIE_PED').AsString  := sSeriePed;
       ParamByName('p_LINEA_PED').AsString  := par.Key;
       ParamByName('p_CANTIDAD').AsCurrency := par.Value;
+      ParamByName('p_CODIGO_ALM').AsString := ACodigoAlmacen;
       ParamByName('p_USUARIO').AsString    := oUser;
       ExecProc;
-    end;
-  end;
-
-  // 2b) Fijar el almacén elegido en las líneas recién añadidas. La SP
-  //     PRC_PED_CREAR_ALBARAN_LINEA copia el almacén de cada línea del
-  //     pedido; aquí lo unificamos al almacén único escogido al emitir
-  //     (de ahí salen también los movimientos de salida). Sólo tocamos
-  //     las líneas nuevas (LINEA_ALBLIN > nMaxLineaPrev) para no alterar
-  //     el almacén de las que ya hubiera en un albarán existente.
-  if Trim(ACodigoAlmacen) <> '' then
-  begin
-    qAlm := TUniQuery.Create(nil);
-    try
-      qAlm.Connection := inLibGlobalVar.oConn;
-      qAlm.SQL.Text :=
-        'UPDATE fza_albaranes_lineas ' +
-        '   SET CODIGO_ALMACEN_ALBLIN = :alm, ' +
-        '       INSTANTE_MODIF        = NOW(), ' +
-        '       USUARIO_MODIF         = :u ' +
-        ' WHERE NUMERO_ALB_ALBLIN = :n ' +
-        '   AND SERIE_ALB_ALBLIN  = :s ' +
-        '   AND CAST(LINEA_ALBLIN AS UNSIGNED) > :maxlin';
-      qAlm.ParamByName('alm').AsString      := ACodigoAlmacen;
-      qAlm.ParamByName('u').AsString        := oUser;
-      qAlm.ParamByName('n').AsString        := sNumeroAlb;
-      qAlm.ParamByName('s').AsString        := sSerieAlb;
-      qAlm.ParamByName('maxlin').AsLargeInt := nMaxLineaPrev;
-      qAlm.ExecSQL;
-    finally
-      FreeAndNil(qAlm);
     end;
   end;
 

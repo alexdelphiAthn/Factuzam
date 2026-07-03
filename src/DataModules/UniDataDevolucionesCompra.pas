@@ -76,12 +76,11 @@ type
     // cierre, pero AfterPost sincroniza movimientos desde el documento
     // actual sin depender del estado final.
     FTransicionEstadoDevc: string;
+    procedure AsignarNumeroLineaDevolucionCompra(DataSet: TDataSet);
     function CampoVistaCabeceraPrintExiste(const ACampo: string): Boolean;
     function HayLineasMovimiento(const ASerie, ANumero: string): Boolean;
     procedure PrepararSQLCabeceraPrint;
     function ObtenerSkusDevolucionCsv(const ASerie, ANumero: string): string;
-    function SiguienteLineaDevolucionCompra(const ASerie,
-              ANumero: string): Integer;
     procedure RefrescarMovimientosProveedor;
     procedure ValidarAlmacenSalida;
   public
@@ -122,6 +121,7 @@ uses
   System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inMtoDevolucionesCompra,
   inLibDevolucionesCompraMovimientos,
+  inLibContadorLineas,
   inLibComprasImpuestos,
   inLibArticulosValidador;
 
@@ -443,59 +443,17 @@ begin
   end;
 end;
 
-function TdmDevolucionesCompra.SiguienteLineaDevolucionCompra(
-  const ASerie, ANumero: string): Integer;
-var
-  qry: TUniQuery;
-begin
-  Result := 10;
-  if (Trim(ASerie) <> '') and (Trim(ANumero) <> '') then
-  begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := inLibGlobalVar.oConn;
-      qry.SQL.Text :=
-        'SELECT COALESCE(MAX(CAST(NULLIF(LINEA_DEVCLIN, '''') ' +
-        '       AS UNSIGNED)), 0) + 10 AS NV ' +
-        '  FROM fza_devoluciones_compra_lineas ' +
-        ' WHERE SERIE_DEVC_DEVCLIN = :serie ' +
-        '   AND NUMERO_DEVC_DEVCLIN = :numero';
-      qry.ParamByName('serie').AsString := ASerie;
-      qry.ParamByName('numero').AsString := ANumero;
-      qry.Open;
-      if not qry.IsEmpty then
-        Result := qry.FieldByName('NV').AsInteger;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
-  if Result <= 0 then
-    Result := 10;
-end;
-
 procedure TdmDevolucionesCompra.unqryDevolucionesCompraLineasAfterInsert(
                                                        DataSet: TDataSet);
-var
-  iNuevaLinea : Integer;
-  sSerie      : string;
-  sNumero     : string;
 begin
   inherited;
-  // Asignacion de LINEA_DEVCLIN (clave secundaria, NOT NULL sin default).
-  // Sin esto el Post fallaba con 'Field LINEA_DEVCLIN must have a value',
-  // incluso en el alta involuntaria que dispara el grid al navegar con
-  // flechas (OptionsData.Appending). En devoluciones se toma el ultimo
-  // LINEA_DEVCLIN grabado del documento y se suma 10.
-  sSerie  := unqryTablaG.FieldByName('SERIE_DEVC').AsString;
-  sNumero := unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
-  iNuevaLinea := SiguienteLineaDevolucionCompra(sSerie, sNumero);
   with unqryDevolucionesCompraLineas do
   begin
     FieldByName('NUMERO_DEVC_DEVCLIN').AsString :=
       unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
     FieldByName('SERIE_DEVC_DEVCLIN').AsString :=
       unqryTablaG.FieldByName('SERIE_DEVC').AsString;
-    FieldByName('LINEA_DEVCLIN').AsString := Format('%.4d', [iNuevaLinea]);
+    FieldByName('LINEA_DEVCLIN').AsString := '0000';
     FieldByName('CANTIDAD_DEVCLIN').AsFloat := 1;
     if FindField('ESFACTURADA_DEVCLIN') <> nil then
       FieldByName('ESFACTURADA_DEVCLIN').AsString := 'N';
@@ -534,6 +492,7 @@ begin
       end);
     Abort;
   end;
+  AsignarNumeroLineaDevolucionCompra(DataSet);
   with unqryDevolucionesCompraLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
@@ -587,6 +546,48 @@ begin
     end;
     PrepararLineaFiscalCompra(inLibGlobalVar.oConn, unqryTablaG,
       unqryDevolucionesCompraLineas, 'DEVC', 'DEVCLIN', 'TOTAL_DEVCLIN');
+  end;
+end;
+
+procedure TdmDevolucionesCompra.AsignarNumeroLineaDevolucionCompra(
+                                                       DataSet: TDataSet);
+var
+  iNuevaLinea: Integer;
+  sLinea: string;
+  sNumero: string;
+  sSerie: string;
+begin
+  if DataSet.FindField('LINEA_DEVCLIN') <> nil then
+  begin
+    sLinea := Trim(DataSet.FieldByName('LINEA_DEVCLIN').AsString);
+    if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) then
+    begin
+      sNumero := Trim(unqryTablaG.FieldByName('NUMERO_DEVC').AsString);
+      sSerie  := Trim(unqryTablaG.FieldByName('SERIE_DEVC').AsString);
+      if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
+        raise Exception.Create(
+          'Graba la cabecera de la devolucion antes de guardar lineas.');
+      if DataSet.FindField('NUMERO_DEVC_DEVCLIN') <> nil then
+        DataSet.FieldByName('NUMERO_DEVC_DEVCLIN').AsString := sNumero;
+      if DataSet.FindField('SERIE_DEVC_DEVCLIN') <> nil then
+        DataSet.FieldByName('SERIE_DEVC_DEVCLIN').AsString := sSerie;
+      iNuevaLinea := GetSiguienteLineaDoc(CONT_DEVOLUCIONES_COMPRA, sSerie,
+        sNumero);
+      if iNuevaLinea = 0 then
+      begin
+        iNuevaLinea := StrToIntDef(
+          unqryTablaG.FieldByName('CONTADOR_LINEAS_DEVC').AsString, 0) + 10;
+      end;
+      if unqryTablaG.FindField('CONTADOR_LINEAS_DEVC') <> nil then
+      begin
+        if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+          unqryTablaG.Edit;
+        unqryTablaG.FieldByName('CONTADOR_LINEAS_DEVC').AsString :=
+          Format('%.8d', [iNuevaLinea]);
+      end;
+      DataSet.FieldByName('LINEA_DEVCLIN').AsString :=
+        Format('%.4d', [iNuevaLinea]);
+    end;
   end;
 end;
 

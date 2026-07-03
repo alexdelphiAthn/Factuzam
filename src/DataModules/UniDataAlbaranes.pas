@@ -37,6 +37,8 @@ type
     dsMovimientosAlb:     TDataSource;
     unqryFormasPago:      TUniQuery;
     dsFormasPago:         TDataSource;
+    unqryAlmacenesAlb:    TUniQuery;
+    dsAlmacenesAlb:       TDataSource;
     unstrdprcGetContadorAlbaran: TUniStoredProc;
     unstrdprcCrearFacturaInicio: TUniStoredProc;
     unstrdprcCrearFacturaLinea:  TUniStoredProc;
@@ -65,6 +67,7 @@ type
     function BuscarEmpresa(const ACodigo: string): Boolean;
     function BuscarCliente(const ACodigo: string): Boolean;
     procedure OpenTables;
+    procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
     // Override: abre las queries detalle del Mto de Albaranes tras
     // unqryTablaG. Invocada desde TfrmMtoGen.AbrirTablaPrincipalAsync
     // en el callback main thread. OpenTables delega aqui.
@@ -94,6 +97,8 @@ type
   private
     FProcsInstalados: Boolean;
     FCalculandoTotales: Boolean;
+    procedure AsignarNumeroLineaAlbaran(DataSet: TDataSet);
+    procedure NormalizarCamposOpcionalesLinea(DataSet: TDataSet);
     procedure BorrarMovimientosSalida;
     procedure SincronizarMovimientosSalida;
     // Propone la serie AV de fza_empresas_series de la empresa emisora
@@ -106,7 +111,7 @@ implementation
 uses
   inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics,
   System.UITypes, Vcl.Dialogs, inLibArticulosValidador,
-  inLibVentasImpuestos;
+  inLibVentasImpuestos, inLibContadorLineas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -129,6 +134,7 @@ begin
   unqryFacturas.Connection               := inLibGlobalVar.oConn;
   unqryMovimientosAlb.Connection         := inLibGlobalVar.oConn;
   unqryFormasPago.Connection             := inLibGlobalVar.oConn;
+  unqryAlmacenesAlb.Connection           := inLibGlobalVar.oConn;
   unstrdprcGetContadorAlbaran.Connection := inLibGlobalVar.oConn;
   unstrdprcCrearFacturaInicio.Connection := inLibGlobalVar.oConn;
   unstrdprcCrearFacturaLinea.Connection  := inLibGlobalVar.oConn;
@@ -146,6 +152,8 @@ begin
     unqryMovimientosAlb.Close;
   if Assigned(unqryFormasPago) and unqryFormasPago.Active then
     unqryFormasPago.Close;
+  if Assigned(unqryAlmacenesAlb) and unqryAlmacenesAlb.Active then
+    unqryAlmacenesAlb.Close;
   inherited;
 end;
 
@@ -189,11 +197,28 @@ begin
   // (idempotente y barato): así las nuevas columnas de seguimiento de
   // facturación están disponibles para el data-binding del formulario.
   InstalarProcedimientos;
+  RefrescarAlmacenes(oEmpresa);
   AbrirConTiempo(unqryAlbaranesLineas, 'unqryAlbaranesLineas');
   AbrirConTiempo(unqryFacturas,        'unqryFacturas');
   AbrirConTiempo(unqryMovimientosAlb,  'unqryMovimientosAlb');
   AbrirConTiempo(unqryFormasPago,      'unqryFormasPago');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+end;
+
+procedure TdmAlbaranes.RefrescarAlmacenes(const ACodigoEmpresa: string);
+var
+  sEmpresa: string;
+begin
+  sEmpresa := Trim(ACodigoEmpresa);
+  if sEmpresa = '' then
+    sEmpresa := Trim(oEmpresa);
+  if not (unqryAlmacenesAlb.Active and
+          (unqryAlmacenesAlb.ParamByName('EMPRESA').AsString = sEmpresa)) then
+  begin
+    unqryAlmacenesAlb.Close;
+    unqryAlmacenesAlb.ParamByName('EMPRESA').AsString := sEmpresa;
+    unqryAlmacenesAlb.Open;
+  end;
 end;
 
 procedure TdmAlbaranes.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -217,6 +242,8 @@ begin
     if FindField('ESCONSOLIDADO_ALB') <> nil then
       FieldByName('ESCONSOLIDADO_ALB').AsString := 'N';
     FieldByName('CODIGO_EMP_ALB').AsString := '0';
+    if FindField('CODIGO_ALM_ALB') <> nil then
+      FieldByName('CODIGO_ALM_ALB').AsString := oAlmacen;
     FieldByName('CODIGO_CLI_ALB').AsString := '0';
   end;
 end;
@@ -323,15 +350,83 @@ begin
   inherited;
   with unqryAlbaranesLineas do
   begin
+    FieldByName('LINEA_ALBLIN').AsString := '0000';
     FieldByName('NUMERO_ALB_ALBLIN').AsString :=
                                   unqryTablaG.FieldByName(
                                     'NUMERO_ALB').AsString;
     FieldByName('SERIE_ALB_ALBLIN').AsString  :=
                                   unqryTablaG.FieldByName('SERIE_ALB').AsString;
+    if (FindField('CODIGO_ALMACEN_ALBLIN') <> nil) and
+       (unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil) then
+      FieldByName('CODIGO_ALMACEN_ALBLIN').AsString :=
+        unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString;
     FieldByName('CANTIDAD_ALBLIN').AsFloat := 1;
     if FindField('ESFACTURADA_ALBLIN') <> nil then
       FieldByName('ESFACTURADA_ALBLIN').AsString := 'N';
+    if FindField('USUARIO_ALTA') <> nil then
+      FieldByName('USUARIO_ALTA').AsString := oUser;
+    if FindField('INSTANTE_ALTA') <> nil then
+      FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+    if FindField('USUARIO_MODIF') <> nil then
+      FieldByName('USUARIO_MODIF').AsString := oUser;
+    if FindField('INSTANTE_MODIF') <> nil then
+      FieldByName('INSTANTE_MODIF').AsDateTime := Now;
   end;
+end;
+
+procedure TdmAlbaranes.NormalizarCamposOpcionalesLinea(DataSet: TDataSet);
+var
+  q: TUniQuery;
+  sArticulo: string;
+  bTrazable: Boolean;
+  bVariacion: Boolean;
+  iSkus: Integer;
+begin
+  sArticulo := '';
+  bTrazable := False;
+  bVariacion := False;
+  iSkus := 0;
+  if (DataSet <> nil) and DataSet.Active and
+     (DataSet.FindField('CODIGO_ART_ALBLIN') <> nil) then
+    sArticulo := Trim(DataSet.FieldByName('CODIGO_ART_ALBLIN').AsString);
+  if sArticulo <> '' then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := unqryTablaG.Connection;
+      q.SQL.Text :=
+        'SELECT a.ESTRAZABLE_ART, a.ESVARIACION_ART, ' +
+        '       (SELECT COUNT(*) ' +
+        '          FROM fza_articulos_skus sk ' +
+        '         WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART ' +
+        '           AND COALESCE(sk.ESACTIVO_SKU, ''S'') = ''S'') AS NUM_SKUS ' +
+        '  FROM fza_articulos a ' +
+        ' WHERE a.CODIGO_ART_ART = :art';
+      q.ParamByName('art').AsString := sArticulo;
+      q.Open;
+      if not q.IsEmpty then
+      begin
+        bTrazable := q.FieldByName('ESTRAZABLE_ART').AsString = 'S';
+        bVariacion := q.FieldByName('ESVARIACION_ART').AsString = 'S';
+        iSkus := q.FieldByName('NUM_SKUS').AsInteger;
+      end;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+  if not bTrazable then
+  begin
+    if DataSet.FindField('LOTE_ALBLIN') <> nil then
+      DataSet.FieldByName('LOTE_ALBLIN').Clear;
+    if DataSet.FindField('FECHA_CADUCIDAD_ALBLIN') <> nil then
+      DataSet.FieldByName('FECHA_CADUCIDAD_ALBLIN').Clear;
+  end;
+  if (not bVariacion) and (iSkus <= 1) and
+     (DataSet.FindField('DESCRIPCION_VARIACION_ALBLIN') <> nil) then
+    DataSet.FieldByName('DESCRIPCION_VARIACION_ALBLIN').Clear;
+  if (iSkus = 0) and
+     (DataSet.FindField('CODIGO_UNIDAD_ALBLIN') <> nil) then
+    DataSet.FieldByName('CODIGO_UNIDAD_ALBLIN').Clear;
 end;
 
 procedure TdmAlbaranes.unqryAlbaranesLineasBeforePost(DataSet: TDataSet);
@@ -339,12 +434,14 @@ var
   sSku, sArt: string;
 begin
   inherited;
+  AsignarNumeroLineaAlbaran(DataSet);
   with unqryAlbaranesLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
     NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn,
       unqryAlbaranesLineas, 'CODIGO_ART_ALBLIN',
       'CODIGO_UNIDAD_ALBLIN');
+    NormalizarCamposOpcionalesLinea(DataSet);
     if (FindField('CANTIDAD_ALBLIN') <> nil) and
        (FindField('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN') <> nil) and
        (FindField('TOTAL_ALBLIN') <> nil) then
@@ -369,6 +466,59 @@ begin
                                     'CODIGO_ART_SKU').AsString;
         unqrySkusAlb.Close;
       end;
+    end;
+    if FindField('USUARIO_MODIF') <> nil then
+      FieldByName('USUARIO_MODIF').AsString := oUser;
+    if FindField('INSTANTE_MODIF') <> nil then
+      FieldByName('INSTANTE_MODIF').AsDateTime := Now;
+    if DataSet.State = dsInsert then
+    begin
+      if (FindField('USUARIO_ALTA') <> nil) and
+         (FieldByName('USUARIO_ALTA').AsString = '') then
+        FieldByName('USUARIO_ALTA').AsString := oUser;
+      if (FindField('INSTANTE_ALTA') <> nil) and
+         FieldByName('INSTANTE_ALTA').IsNull then
+        FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+    end;
+  end;
+end;
+
+procedure TdmAlbaranes.AsignarNumeroLineaAlbaran(DataSet: TDataSet);
+var
+  iNuevaLinea: Integer;
+  sLinea: string;
+  sNumero: string;
+  sSerie: string;
+begin
+  if DataSet.FindField('LINEA_ALBLIN') <> nil then
+  begin
+    sLinea := Trim(DataSet.FieldByName('LINEA_ALBLIN').AsString);
+    if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) then
+    begin
+      sNumero := Trim(unqryTablaG.FieldByName('NUMERO_ALB').AsString);
+      sSerie  := Trim(unqryTablaG.FieldByName('SERIE_ALB').AsString);
+      if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
+        raise Exception.Create(
+          'Graba la cabecera del albaran antes de guardar lineas.');
+      if DataSet.FindField('NUMERO_ALB_ALBLIN') <> nil then
+        DataSet.FieldByName('NUMERO_ALB_ALBLIN').AsString := sNumero;
+      if DataSet.FindField('SERIE_ALB_ALBLIN') <> nil then
+        DataSet.FieldByName('SERIE_ALB_ALBLIN').AsString := sSerie;
+      iNuevaLinea := GetSiguienteLineaDoc(CONT_ALBARANES, sSerie, sNumero);
+      if iNuevaLinea = 0 then
+      begin
+        iNuevaLinea := StrToIntDef(
+          unqryTablaG.FieldByName('CONTADOR_LINEAS_ALB').AsString, 0) + 10;
+      end;
+      if unqryTablaG.FindField('CONTADOR_LINEAS_ALB') <> nil then
+      begin
+        if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+          unqryTablaG.Edit;
+        unqryTablaG.FieldByName('CONTADOR_LINEAS_ALB').AsString :=
+          Format('%.8d', [iNuevaLinea]);
+      end;
+      DataSet.FieldByName('LINEA_ALBLIN').AsString :=
+        Format('%.4d', [iNuevaLinea]);
     end;
   end;
 end;
@@ -555,6 +705,8 @@ begin
 end;
 
 procedure TdmAlbaranes.CopiarEmpresaaAlbaran(DataSet: TDataSet);
+var
+  sAlmacen: string;
 begin
   with unqryTablaG do
   begin
@@ -586,6 +738,25 @@ begin
       DataSet.FindField('CODIGO_PAI_EMP').AsString;
     FindField('GRUPO_ZONA_IVA_EMPRESA_ALB').AsString :=
       DataSet.FindField('GRUPO_ZONA_IVA_EMP').AsString;
+    if FindField('CODIGO_ALM_ALB') <> nil then
+    begin
+      RefrescarAlmacenes(DataSet.FindField('CODIGO_EMP_EMP').AsString);
+      sAlmacen := Trim(FieldByName('CODIGO_ALM_ALB').AsString);
+      if (sAlmacen <> '') and
+         unqryAlmacenesAlb.Locate('CODIGO_ALM_ALM', sAlmacen, []) then
+        FieldByName('CODIGO_ALM_ALB').AsString := sAlmacen
+      else if (Trim(oAlmacen) <> '') and
+              unqryAlmacenesAlb.Locate('CODIGO_ALM_ALM', oAlmacen, []) then
+        FieldByName('CODIGO_ALM_ALB').AsString := oAlmacen
+      else if not unqryAlmacenesAlb.IsEmpty then
+      begin
+        unqryAlmacenesAlb.First;
+        FieldByName('CODIGO_ALM_ALB').AsString :=
+          unqryAlmacenesAlb.FieldByName('CODIGO_ALM_ALM').AsString;
+      end
+      else
+        FieldByName('CODIGO_ALM_ALB').Clear;
+    end;
   end;
   // La serie acompana a la empresa emisora (fza_empresas_series).
   // Cubre las dos rutas: codigo tecleado (BuscarEmpresa) y modal.
@@ -766,11 +937,16 @@ begin
       '  IF v_facturada = ''S'' THEN ' +
       '    LEAVE PRC; ' +
       '  END IF; ' +
-      '  SELECT LPAD(IFNULL(MAX(CAST(LINEA_FACLIN AS UNSIGNED)), 0) + 10, 4, ' +
-      '''0'') ' +
-      '    INTO v_linea_fac FROM fza_facturas_lineas ' +
-      '   WHERE NUMERO_FAC_FACLIN = p_NUMERO_FAC ' +
-      '     AND SERIE_FAC_FACLIN  = p_SERIE_FAC; ' +
+      '  UPDATE fza_facturas ' +
+      '     SET CONTADOR_LINEAS_FAC = ' +
+      '         LPAD(LAST_INSERT_ID(IFNULL(CAST(NULLIF(' +
+      'CONTADOR_LINEAS_FAC, '''') AS UNSIGNED), 0) + 10), 8, ''0'') ' +
+      '   WHERE NUMERO_FAC = p_NUMERO_FAC ' +
+      '     AND SERIE_FAC  = p_SERIE_FAC; ' +
+      '  IF ROW_COUNT() = 0 THEN ' +
+      '    LEAVE PRC; ' +
+      '  END IF; ' +
+      '  SET v_linea_fac = LPAD(LAST_INSERT_ID(), 4, ''0''); ' +
       '  INSERT INTO fza_facturas_lineas ( ' +
       '    NUMERO_FAC_FACLIN, SERIE_FAC_FACLIN, LINEA_FACLIN, ' +
       '    CODIGO_ART_FACLIN, CODIGO_UNIDAD_FACLIN, ' +

@@ -77,6 +77,7 @@ type
     // cierre, pero AfterPost sincroniza movimientos desde el documento
     // actual sin depender del estado final.
     FTransicionEstadoAlbc: string;
+    procedure AsignarNumeroLineaAlbaranCompra(DataSet: TDataSet);
     procedure ConfigurarSqlCabecera;
     function HayLineasMovimiento(const ASerie, ANumero: string): Boolean;
     function ObtenerSkusAlbaranCsv(const ASerie, ANumero: string): string;
@@ -577,44 +578,15 @@ end;
 
 procedure TdmAlbaranesCompra.unqryAlbaranesCompraLineasAfterInsert(
                                                        DataSet: TDataSet);
-var
-  iNuevaLinea : Integer;
-  sSerie      : string;
-  sNumero     : string;
 begin
   inherited;
-  // Asignacion de LINEA_ALBCLIN (clave secundaria, NOT NULL sin default).
-  // Sin esto el Post fallaba con 'Field LINEA_ALBCLIN must have a value',
-  // incluso en el alta involuntaria que dispara el grid al navegar con
-  // flechas (OptionsData.Appending). Mismo patron que Sesiones de compra:
-  // el helper hace un UPDATE atomico de CONTADOR_LINEAS_ALBC +10 sobre la
-  // cabecera y devuelve el nuevo valor. Formato '0010','0020',... (4
-  // digitos LPAD) para casar con las lineas materializadas y respetar el
-  // ORDER BY LINEA_ALBCLIN (comparacion de texto).
-  sSerie  := unqryTablaG.FieldByName('SERIE_ALBC').AsString;
-  sNumero := unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
-  iNuevaLinea := GetSiguienteLineaDoc(CONT_ALBARANES_COMPRA, sSerie, sNumero);
-  if iNuevaLinea = 0 then
-  begin
-    // Cabecera aun no persistida (albaran nuevo sin NUMERO real): fallback
-    // al contador en memoria +10. Lo dejamos sincronizado para que la
-    // siguiente linea incremente bien antes de grabar la cabecera.
-    // StrToIntDef y no AsInteger: el contador es varchar NULL en alta y
-    // AsInteger sobre '' lanzaria EConvertError.
-    iNuevaLinea := StrToIntDef(
-      unqryTablaG.FieldByName('CONTADOR_LINEAS_ALBC').AsString, 0) + 10;
-    if not (unqryTablaG.State in [dsEdit, dsInsert]) then
-      unqryTablaG.Edit;
-    unqryTablaG.FieldByName('CONTADOR_LINEAS_ALBC').AsString :=
-      Format('%.8d', [iNuevaLinea]);
-  end;
   with unqryAlbaranesCompraLineas do
   begin
     FieldByName('NUMERO_ALBC_ALBCLIN').AsString :=
       unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
     FieldByName('SERIE_ALBC_ALBCLIN').AsString :=
       unqryTablaG.FieldByName('SERIE_ALBC').AsString;
-    FieldByName('LINEA_ALBCLIN').AsString := Format('%.4d', [iNuevaLinea]);
+    FieldByName('LINEA_ALBCLIN').AsString := '0000';
     FieldByName('CANTIDAD_ALBCLIN').AsFloat := 1;
     if FindField('ESFACTURADA_ALBCLIN') <> nil then
       FieldByName('ESFACTURADA_ALBCLIN').AsString := 'N';
@@ -653,12 +625,7 @@ begin
       end);
     Abort;
   end;
-  if (Trim(unqryAlbaranesCompraLineas.FieldByName(
-             'NUMERO_ALBC_ALBCLIN').AsString) = '') or
-     (Trim(unqryAlbaranesCompraLineas.FieldByName(
-             'NUMERO_ALBC_ALBCLIN').AsString) = '0') then
-    raise Exception.Create(
-      'Graba la cabecera del albaran antes de guardar lineas.');
+  AsignarNumeroLineaAlbaranCompra(DataSet);
   with unqryAlbaranesCompraLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
@@ -708,6 +675,48 @@ begin
     end;
     PrepararLineaFiscalCompra(inLibGlobalVar.oConn, unqryTablaG,
       unqryAlbaranesCompraLineas, 'ALBC', 'ALBCLIN', 'TOTAL_ALBCLIN');
+  end;
+end;
+
+procedure TdmAlbaranesCompra.AsignarNumeroLineaAlbaranCompra(
+                                                       DataSet: TDataSet);
+var
+  iNuevaLinea: Integer;
+  sLinea: string;
+  sNumero: string;
+  sSerie: string;
+begin
+  if DataSet.FindField('LINEA_ALBCLIN') <> nil then
+  begin
+    sLinea := Trim(DataSet.FieldByName('LINEA_ALBCLIN').AsString);
+    if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) then
+    begin
+      sNumero := Trim(unqryTablaG.FieldByName('NUMERO_ALBC').AsString);
+      sSerie  := Trim(unqryTablaG.FieldByName('SERIE_ALBC').AsString);
+      if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
+        raise Exception.Create(
+          'Graba la cabecera del albaran antes de guardar lineas.');
+      if DataSet.FindField('NUMERO_ALBC_ALBCLIN') <> nil then
+        DataSet.FieldByName('NUMERO_ALBC_ALBCLIN').AsString := sNumero;
+      if DataSet.FindField('SERIE_ALBC_ALBCLIN') <> nil then
+        DataSet.FieldByName('SERIE_ALBC_ALBCLIN').AsString := sSerie;
+      iNuevaLinea := GetSiguienteLineaDoc(CONT_ALBARANES_COMPRA, sSerie,
+        sNumero);
+      if iNuevaLinea = 0 then
+      begin
+        iNuevaLinea := StrToIntDef(
+          unqryTablaG.FieldByName('CONTADOR_LINEAS_ALBC').AsString, 0) + 10;
+      end;
+      if unqryTablaG.FindField('CONTADOR_LINEAS_ALBC') <> nil then
+      begin
+        if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+          unqryTablaG.Edit;
+        unqryTablaG.FieldByName('CONTADOR_LINEAS_ALBC').AsString :=
+          Format('%.8d', [iNuevaLinea]);
+      end;
+      DataSet.FieldByName('LINEA_ALBCLIN').AsString :=
+        Format('%.4d', [iNuevaLinea]);
+    end;
   end;
 end;
 
