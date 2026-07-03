@@ -65,6 +65,7 @@ type
     procedure CopiarEmpresaaAlbaran(DataSet: TDataSet);
     procedure CopiarClienteaAlbaran(DataSet: TDataSet);
     function BuscarEmpresa(const ACodigo: string): Boolean;
+    function BuscarAlmacen(const ACodigo: string): Boolean;
     function BuscarCliente(const ACodigo: string): Boolean;
     procedure OpenTables;
     procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
@@ -99,6 +100,9 @@ type
     FCalculandoTotales: Boolean;
     procedure AsignarNumeroLineaAlbaran(DataSet: TDataSet);
     procedure NormalizarCamposOpcionalesLinea(DataSet: TDataSet);
+    procedure SincronizarAlmacenLinea(DataSet: TDataSet);
+    procedure SincronizarAlmacenLineasCabecera;
+    procedure ValidarAlmacenCabecera;
     procedure BorrarMovimientosSalida;
     procedure SincronizarMovimientosSalida;
     // Propone la serie AV de fza_empresas_series de la empresa emisora
@@ -245,12 +249,15 @@ begin
     if FindField('CODIGO_ALM_ALB') <> nil then
       FieldByName('CODIGO_ALM_ALB').AsString := oAlmacen;
     FieldByName('CODIGO_CLI_ALB').AsString := '0';
+    if Trim(oAlmacen) <> '' then
+      BuscarAlmacen(oAlmacen);
   end;
 end;
 
 procedure TdmAlbaranes.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
+  ValidarAlmacenCabecera;
   if (unqryTablaG.FieldByName('NUMERO_ALB').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_ALB').AsString = '') then
     GetCodigoAutoAlbaran;
@@ -261,6 +268,7 @@ end;
 procedure TdmAlbaranes.unqryTablaGAfterPost(DataSet: TDataSet);
 begin
   inherited;
+  SincronizarAlmacenLineasCabecera;
   SincronizarMovimientosSalida;
 end;
 
@@ -429,12 +437,81 @@ begin
     DataSet.FieldByName('CODIGO_UNIDAD_ALBLIN').Clear;
 end;
 
+procedure TdmAlbaranes.SincronizarAlmacenLinea(DataSet: TDataSet);
+var
+  sAlmacen: string;
+begin
+  if (DataSet <> nil) and (DataSet.FindField('CODIGO_ALMACEN_ALBLIN') <> nil) and
+     (unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil) then
+  begin
+    sAlmacen := Trim(unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString);
+    DataSet.FieldByName('CODIGO_ALMACEN_ALBLIN').AsString := sAlmacen;
+  end;
+end;
+
+procedure TdmAlbaranes.ValidarAlmacenCabecera;
+begin
+  if (unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil) and
+     (Trim(unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString) = '') then
+  begin
+    MessageDlg('Debe seleccionar el almacén de salida del albarán.',
+               mtWarning, [mbOk], 0);
+    Abort;
+  end;
+end;
+
+procedure TdmAlbaranes.SincronizarAlmacenLineasCabecera;
+var
+  q: TUniQuery;
+  sAlmacen: string;
+  sNumero: string;
+  sSerie: string;
+begin
+  if unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil then
+  begin
+    sAlmacen := Trim(unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString);
+    sNumero := Trim(unqryTablaG.FieldByName('NUMERO_ALB').AsString);
+    sSerie := Trim(unqryTablaG.FieldByName('SERIE_ALB').AsString);
+    if (sAlmacen <> '') and (sNumero <> '') and (sNumero <> '0') and
+       (sSerie <> '') then
+    begin
+      q := TUniQuery.Create(nil);
+      try
+        q.Connection := unqryTablaG.Connection;
+        q.SQL.Text :=
+          'UPDATE fza_albaranes_lineas ' +
+          '   SET CODIGO_ALMACEN_ALBLIN = :alm ' +
+          ' WHERE NUMERO_ALB_ALBLIN = :num ' +
+          '   AND SERIE_ALB_ALBLIN  = :ser ' +
+          '   AND COALESCE(CODIGO_ALMACEN_ALBLIN, '''') <> :alm';
+        q.ParamByName('alm').AsString := sAlmacen;
+        q.ParamByName('num').AsString := sNumero;
+        q.ParamByName('ser').AsString := sSerie;
+        q.ExecSQL;
+      finally
+        FreeAndNil(q);
+      end;
+      if unqryAlbaranesLineas.Active then
+      begin
+        if unqryAlbaranesLineas.State in dsEditModes then
+          SincronizarAlmacenLinea(unqryAlbaranesLineas)
+        else
+        begin
+          unqryAlbaranesLineas.Close;
+          unqryAlbaranesLineas.Open;
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure TdmAlbaranes.unqryAlbaranesLineasBeforePost(DataSet: TDataSet);
 var
   sSku, sArt: string;
 begin
   inherited;
   AsignarNumeroLineaAlbaran(DataSet);
+  SincronizarAlmacenLinea(DataSet);
   with unqryAlbaranesLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
@@ -653,6 +730,55 @@ begin
       end;
     finally
       FreeAndNil(q);
+    end;
+  end;
+end;
+
+function TdmAlbaranes.BuscarAlmacen(const ACodigo: string): Boolean;
+var
+  qAlm: TUniQuery;
+  qEmp: TUniQuery;
+  sCodigo: string;
+  sEmpresa: string;
+begin
+  Result := False;
+  sCodigo := Trim(ACodigo);
+  if sCodigo <> '' then
+  begin
+    qAlm := TUniQuery.Create(nil);
+    qEmp := TUniQuery.Create(nil);
+    try
+      qAlm.Connection := unqryTablaG.Connection;
+      qAlm.SQL.Text :=
+        'SELECT CODIGO_ALM_ALM, CODIGO_EMP_ALM ' +
+        '  FROM fza_almacenes ' +
+        ' WHERE CODIGO_ALM_ALM = :alm ' +
+        '   AND COALESCE(ESACTIVO_ALM, ''S'') = ''S''';
+      qAlm.ParamByName('alm').AsString := sCodigo;
+      qAlm.Open;
+      if not qAlm.IsEmpty then
+      begin
+        if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+          unqryTablaG.Edit;
+        if unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil then
+          unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString := sCodigo;
+        sEmpresa := qAlm.FieldByName('CODIGO_EMP_ALM').AsString;
+        qEmp.Connection := unqryTablaG.Connection;
+        qEmp.SQL.Text :=
+          'SELECT * ' +
+          '  FROM fza_empresas ' +
+          ' WHERE CODIGO_EMP_EMP = :empresa';
+        qEmp.ParamByName('empresa').AsString := sEmpresa;
+        qEmp.Open;
+        if not qEmp.IsEmpty then
+          CopiarEmpresaaAlbaran(qEmp);
+        if unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil then
+          unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString := sCodigo;
+        Result := True;
+      end;
+    finally
+      FreeAndNil(qEmp);
+      FreeAndNil(qAlm);
     end;
   end;
 end;

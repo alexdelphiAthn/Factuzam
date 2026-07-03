@@ -87,7 +87,7 @@
   object unqryAlmacenesAlb: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM'
+      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM, CODIGO_EMP_ALM'
       '  FROM fza_almacenes'
       ' WHERE ESACTIVO_ALM = '#39'S'#39
       '   AND (CODIGO_EMP_ALM = :EMPRESA OR :EMPRESA = '#39#39')'

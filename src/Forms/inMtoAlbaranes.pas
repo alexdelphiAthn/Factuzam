@@ -194,6 +194,7 @@ type
     procedure btnCODIGO_CLI_ALBPropertiesButtonClick(Sender: TObject;
                                                      AButtonIndex: Integer);
     procedure btnCODIGO_EMP_ALBPropertiesEditValueChanged(Sender: TObject);
+    procedure cbbCODIGO_ALM_ALBPropertiesEditValueChanged(Sender: TObject);
     procedure btnCODIGO_CLI_ALBPropertiesEditValueChanged(Sender: TObject);
     procedure btnCODIGO_EMP_ALBKeyUp(Sender: TObject; var Key: Word;
                                      Shift: TShiftState);
@@ -858,6 +859,32 @@ begin
       try
         dmmAlbaranes.BuscarEmpresa(sCodigo);
         dmmAlbaranes.RefrescarAlmacenes(sCodigo);
+      finally
+        FBuscandoDatosCabecera := False;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.cbbCODIGO_ALM_ALBPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  e: TcxCustomEdit;
+  sCodigo: string;
+begin
+  inherited;
+  if (not FBuscandoDatosCabecera) and Assigned(dmmAlbaranes) and
+     Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and
+     (dsTablaG.DataSet.State in dsEditModes) and
+     (Sender is TcxCustomEdit) then
+  begin
+    e := Sender as TcxCustomEdit;
+    sCodigo := Trim(VarToStr(e.EditingValue));
+    if sCodigo <> '' then
+    begin
+      FBuscandoDatosCabecera := True;
+      try
+        dmmAlbaranes.BuscarAlmacen(sCodigo);
       finally
         FBuscandoDatosCabecera := False;
       end;
