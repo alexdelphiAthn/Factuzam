@@ -50,8 +50,34 @@
 > creados en el Generador: `verificar_stock_pmp_test` (stockactual) y
 > `ver_movs_test` (movimientos).
 >
-> Pendiente: P1-C (tallas), P2 (ventas GEN), P3 (traspaso GEN→BCN),
-> P4 (BCN y verificación final).
+> **CIERRE 03/07/2026 — BATERÍA SUPERADA (P1-P4).** Resultado final
+> verificado por SQL (HeidiSQL, fza_articulos_stockactual):
+>
+> | ALM | CANT | PMP | VALOR | EC | SAV |
+> |-----|-----|-----|-------|----|-----|
+> | BCN | 16 | 15,00 | 240 | 8 | 0 |
+> | GEN | 18 | 12,00 | 216 | 30 | 4 |
+>
+> - P1: dos compras GEN (20@10 + 10@16) → PMP 12,00 ✔ (recalc cruzado
+>   idéntico).
+> - P2: venta albarán mayor 4 uds → GEN 26/12/312, SAV 4, mov 'AV'
+>   captura PMP 12 sin alterarlo ✔ (tras fixes: almacén salida en
+>   cabecera + numeración de líneas + resolución a SKU).
+> - P3: traspaso caja (F3) 8 uds GEN→BCN → doc TA, par S GEN 8@12 +
+>   E BCN 8@12: el PMP viaja con la mercancía, no el último coste ✔.
+> - P4: compra BCN 8@18 (albarán 000006) → BCN pondera a 15,00 y GEN
+>   queda en 12,00: divergencia por almacén correcta ✔. Cuadre: 38
+>   compradas − 4 vendidas = 34 = 18+16 ✔.
+>
+> Bugs corregidos durante la batería (usuario+Claude): Required de
+> columnas calculadas, SQLInsert vs vistas no insertables (PEDC y
+> ALBC), ESPIVOTE sin valor, huérfanas con clave provisional 0,
+> contador no acepta <1, numeración de líneas varchar(4), almacén de
+> salida en cabecera de albaranes venta, bucle infinito en albaranes
+> compra. Pendientes menores: acumulados ET/ST no suman con tipo doc
+> 'TA' (el SP acumula 'TR'/'AT' — mismatch de una letra), P1-C tallas
+> y venta TPV en BCN (opcionales, la mecánica ya está cubierta),
+> VistaDatos del Generador cachea al reejecutar.
 
 Verifica que el stock y el Precio Medio Ponderado se llevan **por
 almacén** (`fza_articulos_stockactual`, PK `ALM+SKU+LOTE`, columnas
