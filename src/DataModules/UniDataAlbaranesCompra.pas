@@ -707,13 +707,10 @@ begin
         iNuevaLinea := StrToIntDef(
           unqryTablaG.FieldByName('CONTADOR_LINEAS_ALBC').AsString, 0) + 10;
       end;
-      if unqryTablaG.FindField('CONTADOR_LINEAS_ALBC') <> nil then
-      begin
-        if not (unqryTablaG.State in [dsEdit, dsInsert]) then
-          unqryTablaG.Edit;
+      if (unqryTablaG.FindField('CONTADOR_LINEAS_ALBC') <> nil) and
+         (unqryTablaG.State in [dsEdit, dsInsert]) then
         unqryTablaG.FieldByName('CONTADOR_LINEAS_ALBC').AsString :=
           Format('%.8d', [iNuevaLinea]);
-      end;
       DataSet.FieldByName('LINEA_ALBCLIN').AsString :=
         Format('%.4d', [iNuevaLinea]);
     end;

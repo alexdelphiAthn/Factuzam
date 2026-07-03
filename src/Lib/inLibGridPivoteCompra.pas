@@ -2450,8 +2450,8 @@ begin
       if campo <> nil then
         rPrecio := campo.AsFloat;
       PonerFloatCampo(FCfg.FieldTotalLinea, ACantidad * rPrecio);
-      ALineaReal := FCfg.SourceLineas.FieldByName(FCfg.FieldLinea).AsString;
       FCfg.SourceLineas.Post;
+      ALineaReal := FCfg.SourceLineas.FieldByName(FCfg.FieldLinea).AsString;
     except
       if FCfg.SourceLineas.State in dsEditModes then
         FCfg.SourceLineas.Cancel;

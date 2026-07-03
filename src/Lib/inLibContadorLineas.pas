@@ -8,9 +8,8 @@ unit inLibContadorLineas;
   Patron unificado: la cabecera de cada documento tiene una columna
   CONTADOR_LINEAS_X (X = FAC, SES, PED, ALB) que actua como contador
   monotono. Cada nueva linea pide al helper el siguiente valor y este
-  hace un UPDATE atomico sobre la cabecera (CONTADOR_X += 10) usando el
-  truco de LAST_INSERT_ID() para devolver el nuevo valor sin riesgo de
-  carrera con otros clientes.
+  bloquea la cabecera, calcula CONTADOR_X + 10 y actualiza la cabecera
+  dentro de la transaccion activa.
 
   Equivalente generico al SP PRC_FNC_GET_NEXT_LINEA_FACTURA que ya existia
   solo para facturas; lo sustituye en sesiones desde inicio y queda
@@ -99,39 +98,62 @@ function GetSiguienteLineaDoc(
   const sSerie, sNumero: string
 ): Integer;
 var
-  q       : TUniQuery;
-  iFilas  : Integer;
+  q             : TUniQuery;
+  iFilas        : Integer;
+  bTransPropia  : Boolean;
 begin
   Result := 0;
   if (sSerie = '') or (sNumero = '') then Exit;
 
+  bTransPropia := not inLibGlobalVar.oConn.InTransaction;
+  if bTransPropia then
+    inLibGlobalVar.oConn.StartTransaction;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
-    // UPDATE atomico: CONTADOR_X = CAST(CONTADOR_X AS UNSIGNED) + 10. El
-    // truco LAST_INSERT_ID(expr) guarda 'expr' en la variable session-scoped
-    // LAST_INSERT_ID, que recuperamos justo despues en la misma conexion.
-    // Asi obtenemos el nuevo valor sin condiciones de carrera con otros
-    // clientes (cada conexion tiene su propio LAST_INSERT_ID).
-    q.SQL.Text :=
-      'UPDATE ' + Info.TablaHdr + ' ' +
-      '   SET ' + Info.ColContador + ' = LAST_INSERT_ID(' +
-      '             IFNULL(CAST(' + Info.ColContador + ' AS UNSIGNED), 0) + 10' +
-      '         ) ' +
-      ' WHERE ' + Info.ColSerieHdr  + ' = :pserie ' +
-      '   AND ' + Info.ColNumeroHdr + ' = :pnumero';
-    q.ParamByName('pserie').AsString  := sSerie;
-    q.ParamByName('pnumero').AsString := sNumero;
-    q.ExecSQL;
-    iFilas := q.RowsAffected;
-    if iFilas = 0 then Exit;
-
-    q.SQL.Text := 'SELECT LAST_INSERT_ID() AS NV';
-    q.Open;
     try
-      Result := q.FieldByName('NV').AsInteger;
-    finally
-      q.Close;
+      q.Connection := inLibGlobalVar.oConn;
+      // Bloqueo pesimista de la cabecera: el contador de lineas vive en el
+      // propio documento. Si el llamador ya abrio una transaccion, el
+      // bloqueo queda dentro de ella.
+      q.SQL.Text :=
+        'SELECT IFNULL(CAST(NULLIF(CAST(' + Info.ColContador +
+        ' AS CHAR), '''') AS UNSIGNED), 0) AS NV ' +
+        '  FROM ' + Info.TablaHdr + ' ' +
+        ' WHERE ' + Info.ColSerieHdr  + ' = :pserie ' +
+        '   AND ' + Info.ColNumeroHdr + ' = :pnumero ' +
+        ' FOR UPDATE';
+      q.ParamByName('pserie').AsString  := sSerie;
+      q.ParamByName('pnumero').AsString := sNumero;
+      q.Open;
+      try
+        if not q.Eof then
+          Result := q.FieldByName('NV').AsInteger + 10;
+      finally
+        q.Close;
+      end;
+
+      if Result > 0 then
+      begin
+        q.SQL.Text :=
+          'UPDATE ' + Info.TablaHdr + ' ' +
+          '   SET ' + Info.ColContador + ' = :pnuevo ' +
+          ' WHERE ' + Info.ColSerieHdr  + ' = :pserie ' +
+          '   AND ' + Info.ColNumeroHdr + ' = :pnumero';
+        q.ParamByName('pnuevo').AsString  := Format('%.8d', [Result]);
+        q.ParamByName('pserie').AsString  := sSerie;
+        q.ParamByName('pnumero').AsString := sNumero;
+        q.ExecSQL;
+        iFilas := q.RowsAffected;
+        if iFilas = 0 then
+          Result := 0;
+      end;
+
+      if bTransPropia and inLibGlobalVar.oConn.InTransaction then
+        inLibGlobalVar.oConn.Commit;
+    except
+      if bTransPropia and inLibGlobalVar.oConn.InTransaction then
+        inLibGlobalVar.oConn.Rollback;
+      raise;
     end;
   finally
     FreeAndNil(q);

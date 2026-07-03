@@ -1254,6 +1254,7 @@ begin
       '  IN  p_USUARIO    varchar(100)' +
       ') PRC: BEGIN ' +
       '  DECLARE v_linea_fac varchar(4); ' +
+      '  DECLARE v_contador_fac int DEFAULT 0; ' +
       '  DECLARE v_facturada varchar(1); ' +
       '  SELECT IFNULL(ESFACTURADA_ALBLIN, ''N'') INTO v_facturada ' +
       '    FROM fza_albaranes_lineas ' +
@@ -1263,16 +1264,24 @@ begin
       '  IF v_facturada = ''S'' THEN ' +
       '    LEAVE PRC; ' +
       '  END IF; ' +
+      '  SELECT IFNULL(CAST(NULLIF(CONTADOR_LINEAS_FAC, '''') ' +
+      '         AS UNSIGNED), 0) + 10 ' +
+      '    INTO v_contador_fac ' +
+      '    FROM fza_facturas ' +
+      '   WHERE NUMERO_FAC = p_NUMERO_FAC ' +
+      '     AND SERIE_FAC  = p_SERIE_FAC ' +
+      '   FOR UPDATE; ' +
+      '  IF v_contador_fac = 0 THEN ' +
+      '    LEAVE PRC; ' +
+      '  END IF; ' +
       '  UPDATE fza_facturas ' +
-      '     SET CONTADOR_LINEAS_FAC = ' +
-      '         LPAD(LAST_INSERT_ID(IFNULL(CAST(NULLIF(' +
-      'CONTADOR_LINEAS_FAC, '''') AS UNSIGNED), 0) + 10), 8, ''0'') ' +
+      '     SET CONTADOR_LINEAS_FAC = LPAD(v_contador_fac, 8, ''0'') ' +
       '   WHERE NUMERO_FAC = p_NUMERO_FAC ' +
       '     AND SERIE_FAC  = p_SERIE_FAC; ' +
       '  IF ROW_COUNT() = 0 THEN ' +
       '    LEAVE PRC; ' +
       '  END IF; ' +
-      '  SET v_linea_fac = LPAD(LAST_INSERT_ID(), 4, ''0''); ' +
+      '  SET v_linea_fac = LPAD(v_contador_fac, 4, ''0''); ' +
       '  INSERT INTO fza_facturas_lineas ( ' +
       '    NUMERO_FAC_FACLIN, SERIE_FAC_FACLIN, LINEA_FACLIN, ' +
       '    CODIGO_ART_FACLIN, CODIGO_UNIDAD_FACLIN, ' +
@@ -1385,6 +1394,7 @@ var
   sNumeroAlb, sSerieAlb, sLinea: string;
   ds: TDataSet;
   bUsarTodas: Boolean;
+  bTransPropia: Boolean;
 begin
   sNumeroFac := '';
   sSerieFac  := '';
@@ -1393,6 +1403,11 @@ begin
   sNumeroAlb := unqryTablaG.FieldByName('NUMERO_ALB').AsString;
   sSerieAlb  := unqryTablaG.FieldByName('SERIE_ALB').AsString;
   bUsarTodas := (aLineas = nil) or (aLineas.Count = 0);
+
+  bTransPropia := not inLibGlobalVar.oConn.InTransaction;
+  if bTransPropia then
+    inLibGlobalVar.oConn.StartTransaction;
+  try
 
   // 1) Cabecera de la factura
   with unstrdprcCrearFacturaInicio do
@@ -1491,6 +1506,14 @@ begin
     ExecProc;
   end;
 
+    if bTransPropia and inLibGlobalVar.oConn.InTransaction then
+      inLibGlobalVar.oConn.Commit;
+  except
+    if bTransPropia and inLibGlobalVar.oConn.InTransaction then
+      inLibGlobalVar.oConn.Rollback;
+    raise;
+  end;
+
   // 4) Refrescar la pantalla.
   unqryAlbaranesLineas.Close; unqryAlbaranesLineas.Open;
   if unqryFacturas.Active then
@@ -1510,6 +1533,7 @@ var
   sNumFac, sSerFac, sNumFacActual, sSerFacActual: string;
   qCli: TUniQuery;
   qLin: TUniQuery;
+  bTransPropia: Boolean;
 begin
   Result := 0;
   if (aListaAlbaranes = nil) or (aListaAlbaranes.Count = 0) then Exit;
@@ -1528,6 +1552,11 @@ begin
       ' WHERE NUMERO_ALB_ALBLIN = :pNUM AND SERIE_ALB_ALBLIN = :pSER ' +
       '   AND IFNULL(ESFACTURADA_ALBLIN, ''N'') <> ''S'' ' +
       ' ORDER BY LINEA_ALBLIN';
+
+    bTransPropia := not inLibGlobalVar.oConn.InTransaction;
+    if bTransPropia then
+      inLibGlobalVar.oConn.StartTransaction;
+    try
 
     sCliActual    := '';
     sNumFacActual := '';
@@ -1632,6 +1661,14 @@ begin
         ParamByName('p_USUARIO').AsString    := oUser;
         ExecProc;
       end;
+    end;
+
+      if bTransPropia and inLibGlobalVar.oConn.InTransaction then
+        inLibGlobalVar.oConn.Commit;
+    except
+      if bTransPropia and inLibGlobalVar.oConn.InTransaction then
+        inLibGlobalVar.oConn.Rollback;
+      raise;
     end;
   finally
     FreeAndNil(qCli);
