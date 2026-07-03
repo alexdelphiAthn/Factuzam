@@ -60,6 +60,11 @@
               DataBinding.FieldName = 'RAZON_SOCIAL_EMPRESA_ALB'
               Width = 220
             end
+            object dbcGrdAlbNOMBRE_ALM_ALB: TcxGridDBColumn
+              Caption = 'Almac'#233'n'
+              DataBinding.FieldName = 'NOMBRE_ALM_ALB'
+              Width = 160
+            end
             object dbcGrdAlbCODIGO_CLI_ALB: TcxGridDBColumn
               Caption = 'Cliente'
               DataBinding.FieldName = 'CODIGO_CLI_ALB'
@@ -312,6 +317,7 @@
                     FieldName = 'NOMBRE_ALM_ALM'
                   end>
                 Properties.ListOptions.ShowHeader = False
+                Properties.OnEditValueChanged = cbbCODIGO_ALM_ALBPropertiesEditValueChanged
                 TabOrder = 23
                 Width = 240
               end

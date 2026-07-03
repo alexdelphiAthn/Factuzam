@@ -25,8 +25,11 @@ SET @s := IF(@c = 0,
   'SELECT 1');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
--- MariaDB congela las columnas de una vista creada con a.*. Rehacerla
--- recoge CODIGO_ALM_ALB para que el mantenimiento pueda enlazar el combo.
+-- MariaDB congela las columnas de una vista creada con a.*. Rehacerla recoge
+-- CODIGO_ALM_ALB y el nombre del almacen para listado y cabecera.
 CREATE OR REPLACE VIEW `vi_albaranes` AS
-SELECT a.*
-  FROM fza_albaranes a;
+SELECT a.*,
+       alm.NOMBRE_ALM_ALM AS NOMBRE_ALM_ALB
+  FROM fza_albaranes a
+  LEFT JOIN fza_almacenes alm
+    ON alm.CODIGO_ALM_ALM = a.CODIGO_ALM_ALB;
