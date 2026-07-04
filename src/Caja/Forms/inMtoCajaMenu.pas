@@ -147,6 +147,7 @@ type
     FOriginalSalirColor: TColor;
     FOriginalF3Color: TColor;
     FOriginalTraspasosColor: TColor;
+    FUltimoTickReloj: TDateTime;
     // Navegación por teclado
     FMenuItems: array of TMenuItem;
     FSelectedIndex: Integer;
@@ -160,9 +161,11 @@ type
     procedure ExecuteSelectedItem;
     procedure AbrirSelectorCaja;
     procedure RecargarCalendario;
+    procedure clkHoraDblClick(Sender: TObject);
   public
     FFechaCaja: TDateTime;
     FEmpresa, FAlmacen, FCaja: string;
+    procedure ActualizarFechaCaja(AFechaCaja: TDateTime);
     property FechaCaja: TDateTime read FFechaCaja;
   end;
 
@@ -272,7 +275,8 @@ begin
   FOriginalArqueoColor := lblArqueo.Style.TextColor;
   FOriginalF3Color := lblF3.Style.TextColor;
   FOriginalTraspasosColor := lblTraspasos.Style.TextColor;
-  FFechaCaja := Now;
+  ActualizarFechaCaja(Now);
+  clkHora.OnDblClick := clkHoraDblClick;
   FOriginalESCColor := lblESC.Style.TextColor;
   FOriginalSalirColor := lblSalir.Style.TextColor;
 
@@ -323,9 +327,51 @@ begin
   end;
 end;
 
-procedure TfrmMtoMenuCaja.Timer1Timer(Sender: TObject);
+procedure TfrmMtoMenuCaja.ActualizarFechaCaja(AFechaCaja: TDateTime);
 begin
-  clkHora.Time := Now;
+  if AFechaCaja = 0 then
+    AFechaCaja := Now;
+  FFechaCaja := AFechaCaja;
+  FUltimoTickReloj := Now;
+  calMes.Date := DateOf(FFechaCaja);
+  lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', FFechaCaja);
+  clkHora.Time := FFechaCaja;
+end;
+
+procedure TfrmMtoMenuCaja.Timer1Timer(Sender: TObject);
+var
+  dtAhora: TDateTime;
+begin
+  dtAhora := Now;
+  if FUltimoTickReloj = 0 then
+    FUltimoTickReloj := dtAhora;
+  if FFechaCaja = 0 then
+    FFechaCaja := dtAhora;
+  FFechaCaja := FFechaCaja + (dtAhora - FUltimoTickReloj);
+  FUltimoTickReloj := dtAhora;
+  clkHora.Time := FFechaCaja;
+  lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', FFechaCaja);
+end;
+
+procedure TfrmMtoMenuCaja.clkHoraDblClick(Sender: TObject);
+var
+  sHora: string;
+  dtHora: TDateTime;
+  dtFechaBase: TDateTime;
+begin
+  dtFechaBase := FFechaCaja;
+  if dtFechaBase = 0 then
+    dtFechaBase := Now;
+  sHora := FormatDateTime('hh:nn', dtFechaBase);
+  if InputQuery('Hora de caja', 'Hora (HH:MM)', sHora) then
+  begin
+    if TryStrToTime(sHora, dtHora) then
+      ActualizarFechaCaja(DateOf(dtFechaBase) + Frac(dtHora))
+    else
+      ShowMessage('Hora no válida. Use HH:MM.');
+  end
+  else
+    ActualizarFechaCaja(Now);
 end;
 
 procedure TfrmMtoMenuCaja.AbrirBuscarModificar;
@@ -403,8 +449,7 @@ end;
 
 procedure TfrmMtoMenuCaja.JvMonthCalendar1Click(Sender: TObject);
 begin
-  FFechaCaja := calMes.Date;
-  lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', FFechaCaja);
+  ActualizarFechaCaja(DateOf(calMes.Date) + Frac(FFechaCaja));
   // Si quieres mostrar el resumen del día clickado, descomenta:
   // VentaDia := FVentasCal.GetVentasDia(FFechaCaja);
   // if Assigned(VentaDia) then
@@ -413,8 +458,7 @@ end;
 
 procedure TfrmMtoMenuCaja.JvMonthCalendar1DblClick(Sender: TObject);
 begin
-  lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', calMes.Date);
-  FFechaCaja := calMes.Date;
+  ActualizarFechaCaja(DateOf(calMes.Date) + Frac(FFechaCaja));
 end;
 
 procedure TfrmMtoMenuCaja.JvMonthCalendar1KeyDown(Sender: TObject;
@@ -644,7 +688,7 @@ end;
 procedure TfrmMtoMenuCaja.lblEntradaCambioClick(Sender: TObject);
 begin
   TfrmModalEntradaCambio.Ejecutar(Self, oConn,
-    FEmpresa, FAlmacen, FCaja);
+    FEmpresa, FAlmacen, FCaja, FFechaCaja);
 end;
 
 procedure TfrmMtoMenuCaja.lblEntradaCambioMouseEnter(Sender: TObject);
@@ -673,7 +717,7 @@ end;
 procedure TfrmMtoMenuCaja.lblGastosCajaClick(Sender: TObject);
 begin
   TfrmModalGastoCaja.Ejecutar(Self, oConn,
-    FEmpresa, FAlmacen, FCaja);
+    FEmpresa, FAlmacen, FCaja, FFechaCaja);
 end;
 
 procedure TfrmMtoMenuCaja.lblGastosCajaMouseEnter(Sender: TObject);

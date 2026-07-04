@@ -68,17 +68,19 @@ uses
 // llevan almacen propio).
 procedure LeerCabeceraAlbaran(AConn: TUniConnection;
                               const ASerieAlbc, ANumAlbc: string;
-                              out ACodigoEmp, ACodigoAlmCab: string);
+                              out ACodigoEmp, ACodigoAlmCab: string;
+                              out AFechaAlbc: TDateTime);
 var
   q: TUniQuery;
 begin
   ACodigoEmp    := '';
   ACodigoAlmCab := '';
+  AFechaAlbc    := Date;
   q := TUniQuery.Create(nil);
   try
     q.Connection := AConn;
     q.SQL.Text :=
-      'SELECT CODIGO_EMP_ALBC, CODIGO_ALM_ALBC ' +
+      'SELECT CODIGO_EMP_ALBC, CODIGO_ALM_ALBC, FECHA_ALBC ' +
       '  FROM fza_albaranes_compra ' +
       ' WHERE SERIE_ALBC = :s AND NUMERO_ALBC = :n';
     q.ParamByName('s').AsString := ASerieAlbc;
@@ -90,6 +92,8 @@ begin
         [ASerieAlbc, ANumAlbc]);
     ACodigoEmp    := q.FieldByName('CODIGO_EMP_ALBC').AsString;
     ACodigoAlmCab := q.FieldByName('CODIGO_ALM_ALBC').AsString;
+    if not q.FieldByName('FECHA_ALBC').IsNull then
+      AFechaAlbc := q.FieldByName('FECHA_ALBC').AsDateTime;
   finally
     FreeAndNil(q);
   end;
@@ -275,14 +279,16 @@ procedure GenerarMovimientosDesdeAlbaranCompra(AConn: TUniConnection;
                                                const ASerieAlbc, ANumAlbc,
                                                      AUsuario: string);
 var
-  qSrc, qChk: TUniQuery;
+  qSrc, qChk, qFechaMov: TUniQuery;
   spIns: TUniStoredProc;
   sCodigoEmp, sCodigoAlmCab, sCodigoAlm, sCodigoSku, sCodigoArt,
   sNumeroMov, sLinea: string;
+  dFechaAlbc: TDateTime;
   iCount: Integer;
   rCantidad, rPrecio, rTotal: Double;
 begin
-  LeerCabeceraAlbaran(AConn, ASerieAlbc, ANumAlbc, sCodigoEmp, sCodigoAlmCab);
+  LeerCabeceraAlbaran(AConn, ASerieAlbc, ANumAlbc, sCodigoEmp, sCodigoAlmCab,
+                      dFechaAlbc);
   // Defensa: si el albaran no tiene almacen ni en cabecera ni en
   // lineas/celdas, no podemos generar movimientos. Lo detectamos linea
   // a linea (mas abajo) para no abortar el resto.
@@ -308,6 +314,7 @@ begin
     FreeAndNil(qChk);
   end;
   qSrc := TUniQuery.Create(nil);
+  qFechaMov := TUniQuery.Create(nil);
   spIns := TUniStoredProc.Create(nil);
   try
     qSrc.Connection := AConn;
@@ -399,6 +406,11 @@ begin
     qSrc.ParamByName('n2').AsString      := ANumAlbc;
     qSrc.ParamByName('alm_cab2').AsString := sCodigoAlmCab;
     qSrc.Open;
+    qFechaMov.Connection := AConn;
+    qFechaMov.SQL.Text :=
+      'UPDATE fza_movimientos_almacen ' +
+      '   SET FECHA_MOV = :f ' +
+      ' WHERE NUMERO_MOV = :m';
     // Stored proc reutilizable: declaramos params una vez y reasignamos
     // los valores en cada vuelta para no crear/destruir N veces.
     spIns.Connection := AConn;
@@ -464,6 +476,9 @@ begin
       spIns.ParamByName('p_CODCLIENTE').AsString          := '';
       spIns.ParamByName('p_CODARTICULO').AsString         := sCodigoArt;
       spIns.ExecProc;
+      qFechaMov.ParamByName('f').AsDateTime := dFechaAlbc;
+      qFechaMov.ParamByName('m').AsString := sNumeroMov;
+      qFechaMov.ExecSQL;
       Inc(iCount);
       qSrc.Next;
     end;
@@ -477,6 +492,7 @@ begin
       AUsuario);
   finally
     FreeAndNil(qSrc);
+    FreeAndNil(qFechaMov);
     FreeAndNil(spIns);
   end;
 end;

@@ -71,10 +71,12 @@ type
                              const AAlmacenDoc: string = '';
                              const ANumOperacion: string = '';
                              const ACodCliente: string = '';
-                             const ACodArticulo: string = '');
+                             const ACodArticulo: string = '';
+                             AFechaMovimiento: TDateTime = 0);
     procedure InsertarOperacionCaja(QryTrx: TUniQuery;
                              const AEmpresa, AAlmacen, ACaja, ANumOperacion,
                              ATipoOp: string; AImporte: Currency;
+                             AFechaOperacion: TDateTime;
                              const AEmpleado, AConcepto, ASerieOrigen,
                              ANroOrigen, AEmpresaContra, AAlmContra,
                              AEsTraspaso, ANroDoc, ASerieDoc: string);
@@ -149,7 +151,7 @@ begin
     Add('CODIGO_EMPLEADO', ftString, 20);
     Add('NUMERO_SOL', ftString, 20);
     Add('SERIE_SOL', ftString, 20);
-    Add('FECHA', ftDate, 0);
+    Add('FECHA', ftDateTime, 0);
     Add('CONTADOR_LINEAS', ftInteger, 0);
     Add('TOTAL', ftCurrency, 0);
   end;
@@ -458,6 +460,14 @@ begin
   end;
 end;
 
+function FechaCajaConHora(AFechaCaja: TDateTime): TDateTime;
+begin
+  if AFechaCaja > 0 then
+    Result := AFechaCaja
+  else
+    Result := Now;
+end;
+
 procedure TdmTraspaso.InsertarMovimientoAlmacen(QryTrx: TUniQuery;
                           const ATipoDoc, ASerie, ANro, ALinea, AEmpresa,
                           AAlmacen, ACaja, AAlmacenContra, ATipoMov,
@@ -465,17 +475,20 @@ procedure TdmTraspaso.InsertarMovimientoAlmacen(QryTrx: TUniQuery;
                           const AUsuario: string; const AAlmacenDoc: string;
                           const ANumOperacion: string;
                           const ACodCliente: string;
-                          const ACodArticulo: string);
+                          const ACodArticulo: string;
+                          AFechaMovimiento: TDateTime);
 var
   uspMov: TUniStoredProc;
+  QryFecha: TUniQuery;
+  sNumeroMov: string;
 begin
+  sNumeroMov := inLibtb.ObtenerSiguienteContador('MV');
   uspMov := TUniStoredProc.Create(nil);
   try
     uspMov.Connection := QryTrx.Connection;
     uspMov.StoredProcName := 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT';
     uspMov.Prepare;
-    uspMov.ParamByName('p_NUMERO_MOV').AsString :=
-      inLibtb.ObtenerSiguienteContador('MV');
+    uspMov.ParamByName('p_NUMERO_MOV').AsString := sNumeroMov;
     uspMov.ParamByName('p_TIPO_DOC_MOV').AsString := ATipoDoc;
     uspMov.ParamByName('p_SERIE_DOC_MOV').AsString := ASerie;
     uspMov.ParamByName('p_NRO_DOC_MOV').AsString := ANro;
@@ -499,6 +512,23 @@ begin
     uspMov.ParamByName('p_CODCLIENTE').AsString := ACodCliente;
     uspMov.ParamByName('p_CODARTICULO').AsString := ACodArticulo;
     uspMov.Execute;
+    if AFechaMovimiento > 0 then
+    begin
+      QryFecha := TUniQuery.Create(nil);
+      try
+        QryFecha.Connection := QryTrx.Connection;
+        QryFecha.SQL.Text :=
+          'UPDATE fza_movimientos_almacen ' +
+          '   SET FECHA_MOV = :FECHA ' +
+          ' WHERE NUMERO_MOV = :NUMERO';
+        QryFecha.ParamByName('FECHA').AsDateTime :=
+          FechaCajaConHora(AFechaMovimiento);
+        QryFecha.ParamByName('NUMERO').AsString := sNumeroMov;
+        QryFecha.Execute;
+      finally
+        FreeAndNil(QryFecha);
+      end;
+    end;
   finally
     FreeAndNil(uspMov);
   end;
@@ -507,10 +537,14 @@ end;
 procedure TdmTraspaso.InsertarOperacionCaja(QryTrx: TUniQuery;
                           const AEmpresa, AAlmacen, ACaja, ANumOperacion,
                           ATipoOp: string; AImporte: Currency;
+                          AFechaOperacion: TDateTime;
                           const AEmpleado, AConcepto, ASerieOrigen,
                           ANroOrigen, AEmpresaContra, AAlmContra,
                           AEsTraspaso, ANroDoc, ASerieDoc: string);
+var
+  dtFechaOperacion: TDateTime;
 begin
+  dtFechaOperacion := FechaCajaConHora(AFechaOperacion);
   QryTrx.SQL.Text :=
     'INSERT INTO fza_caja_operaciones (' +
     '  CODIGO_EMP_OPCAJA, CODIGO_ALM_OPCAJA, CODIGO_CAJA_OPCAJA,' +
@@ -524,7 +558,7 @@ begin
     'VALUES (' +
     '  :EMP, :ALM, :CAJA,' +
     '  NULLIF(:NRODOC, ''''), NULLIF(:SERIEDOC, ''''),' +
-    '  :NUMOP, :TIPOOP, :IMPORTE, NOW(), CURRENT_DATE,' +
+    '  :NUMOP, :TIPOOP, :IMPORTE, :FECHAOP, :FECHADIA,' +
     '  :EMPLEADO, NULLIF(:CONCEPTO, ''''), NULLIF(:SERIEORIG, ''''),' +
     '  NULLIF(:NROORIG, ''''), NULLIF(:EMPCONTRA, ''''),' +
     '  NULLIF(:ALMCONTRA, ''''), :ESTRASPASO, ''N'',' +
@@ -535,6 +569,8 @@ begin
   QryTrx.ParamByName('NUMOP').AsString := ANumOperacion;
   QryTrx.ParamByName('TIPOOP').AsString := ATipoOp;
   QryTrx.ParamByName('IMPORTE').AsCurrency := AImporte;
+  QryTrx.ParamByName('FECHAOP').AsDateTime := dtFechaOperacion;
+  QryTrx.ParamByName('FECHADIA').AsDateTime := Trunc(dtFechaOperacion);
   QryTrx.ParamByName('EMPLEADO').AsString := AEmpleado;
   QryTrx.ParamByName('CONCEPTO').AsString := AConcepto;
   QryTrx.ParamByName('SERIEORIG').AsString := ASerieOrigen;
@@ -558,6 +594,7 @@ var
   sEmpresa, sAlmacenOrigen, sCaja, sUsuario, sEmpContra, sTipoDoc: string;
   sEmpDestino: string;
   sSku, sArticulo, sLinea, sSerieDoc, sNumeroDoc, sEmpleado: string;
+  dFechaOperacion: TDateTime;
   dCantidad: Double;
   cCoste, cTotal: Currency;
   iLinea: Integer;
@@ -574,6 +611,7 @@ begin
   sCaja := cdsCabecera.FieldByName('CODIGO_CAJA').AsString;
   sUsuario := inLibGlobalVar.oUser;
   sEmpleado := cdsCabecera.FieldByName('CODIGO_EMPLEADO').AsString;
+  dFechaOperacion := cdsCabecera.FieldByName('FECHA').AsDateTime;
   if SameText(sAlmacenOrigen, AAlmacenDestino) then
     raise EValidacionTraspaso.Create('Origen y destino no pueden ser el mismo almacén.');
   // No traspasar sin stock: aborta antes de mover nada si alguna linea se
@@ -622,12 +660,12 @@ begin
           InsertarMovimientoAlmacen(QryTrx, sTipoDoc, sSerieDoc, sNumeroDoc,
             sLinea, sEmpresa, sAlmacenOrigen, sCaja, AAlmacenDestino, 'S',
             sSku, dCantidad, cCoste, sUsuario, sAlmacenOrigen, ANumOperacion,
-            '', sArticulo);
+            '', sArticulo, dFechaOperacion);
           // Entrada en el destino desde el origen (en la empresa del destino).
           InsertarMovimientoAlmacen(QryTrx, sTipoDoc, sSerieDoc, sNumeroDoc,
             sLinea, sEmpDestino, AAlmacenDestino, sCaja, sAlmacenOrigen, 'E',
             sSku, dCantidad, cCoste, sUsuario, sAlmacenOrigen, ANumOperacion,
-            '', sArticulo);
+            '', sArticulo, dFechaOperacion);
           cTotal := cTotal + cCoste * dCantidad;
         end;
         cdsLineas.Next;
@@ -637,7 +675,7 @@ begin
       // Operación de caja del traspaso (cabecera del documento). Si atiende
       // una solicitud, se enlaza por SERIE/NUMERO_REF_ORIGEN.
       InsertarOperacionCaja(QryTrx, sEmpresa, sAlmacenOrigen, sCaja,
-        ANumOperacion, sTipoDoc, cTotal, sEmpleado,
+        ANumOperacion, sTipoDoc, cTotal, dFechaOperacion, sEmpleado,
         'Traspaso a ' + AAlmacenDestino, ASerieSolicitud, ANumSolicitud,
         sEmpContra, AAlmacenDestino, 'S', sNumeroDoc, sSerieDoc);
       if Trim(ANumSolicitud) <> '' then
