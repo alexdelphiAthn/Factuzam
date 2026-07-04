@@ -28,6 +28,12 @@ type
     ColSerieHdr  : string;
     ColNumeroHdr : string;
   end;
+  TInfoLineasDoc = record
+    TablaLin     : string;
+    ColSerieLin  : string;
+    ColNumeroLin : string;
+    ColLinea     : string;
+  end;
 
 const
   CONT_FACTURAS : TInfoContadorLineas = (
@@ -78,6 +84,48 @@ const
     ColSerieHdr  : 'SERIE_FACC';
     ColNumeroHdr : 'NUMERO_FACC'
   );
+  LIN_FACTURAS : TInfoLineasDoc = (
+    TablaLin     : 'fza_facturas_lineas';
+    ColSerieLin  : 'SERIE_FAC_FACLIN';
+    ColNumeroLin : 'NUMERO_FAC_FACLIN';
+    ColLinea     : 'LINEA_FACLIN'
+  );
+  LIN_PEDIDOS : TInfoLineasDoc = (
+    TablaLin     : 'fza_pedidos_lineas';
+    ColSerieLin  : 'SERIE_PED_PEDLIN';
+    ColNumeroLin : 'NUMERO_PED_PEDLIN';
+    ColLinea     : 'LINEA_PEDLIN'
+  );
+  LIN_ALBARANES : TInfoLineasDoc = (
+    TablaLin     : 'fza_albaranes_lineas';
+    ColSerieLin  : 'SERIE_ALB_ALBLIN';
+    ColNumeroLin : 'NUMERO_ALB_ALBLIN';
+    ColLinea     : 'LINEA_ALBLIN'
+  );
+  LIN_ALBARANES_COMPRA : TInfoLineasDoc = (
+    TablaLin     : 'fza_albaranes_compra_lineas';
+    ColSerieLin  : 'SERIE_ALBC_ALBCLIN';
+    ColNumeroLin : 'NUMERO_ALBC_ALBCLIN';
+    ColLinea     : 'LINEA_ALBCLIN'
+  );
+  LIN_PEDIDOS_COMPRA : TInfoLineasDoc = (
+    TablaLin     : 'fza_pedidos_compra_lineas';
+    ColSerieLin  : 'SERIE_PEDC_PEDCLIN';
+    ColNumeroLin : 'NUMERO_PEDC_PEDCLIN';
+    ColLinea     : 'LINEA_PEDCLIN'
+  );
+  LIN_DEVOLUCIONES_COMPRA : TInfoLineasDoc = (
+    TablaLin     : 'fza_devoluciones_compra_lineas';
+    ColSerieLin  : 'SERIE_DEVC_DEVCLIN';
+    ColNumeroLin : 'NUMERO_DEVC_DEVCLIN';
+    ColLinea     : 'LINEA_DEVCLIN'
+  );
+  LIN_FACTURAS_COMPRA : TInfoLineasDoc = (
+    TablaLin     : 'fza_facturas_compra_lineas';
+    ColSerieLin  : 'SERIE_FACC_FACCLIN';
+    ColNumeroLin : 'NUMERO_FACC_FACCLIN';
+    ColLinea     : 'LINEA_FACCLIN'
+  );
 
 // Devuelve la siguiente LINEA libre para el documento (sSerie, sNumero) y
 // actualiza CONTADOR_LINEAS_X en BD atomicamente al mismo valor devuelto.
@@ -86,6 +134,23 @@ function GetSiguienteLineaDoc(
   const Info: TInfoContadorLineas;
   const sSerie, sNumero: string
 ): Integer;
+
+function GetSiguienteLineaDocLibre(
+  const Info: TInfoContadorLineas;
+  const Lineas: TInfoLineasDoc;
+  const sSerie, sNumero: string
+): Integer;
+
+function GetSiguienteLineaDocLibreSiguiente(
+  const Info: TInfoContadorLineas;
+  const Lineas: TInfoLineasDoc;
+  const sSerie, sNumero: string
+): Integer;
+
+function LineaDocExiste(
+  const Lineas: TInfoLineasDoc;
+  const sSerie, sNumero, sLinea: string
+): Boolean;
 
 implementation
 
@@ -155,6 +220,203 @@ begin
         inLibGlobalVar.oConn.Rollback;
       raise;
     end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+function MaxLineaDoc(const Lineas: TInfoLineasDoc;
+                     const sSerie, sNumero: string): Integer;
+var
+  q: TUniQuery;
+begin
+  Result := 0;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT IFNULL(MAX(CAST(NULLIF(TRIM(' + Lineas.ColLinea +
+      '), '''') AS UNSIGNED)), 0) AS NV ' +
+      '  FROM ' + Lineas.TablaLin + ' ' +
+      ' WHERE ' + Lineas.ColSerieLin  + ' = :pserie ' +
+      '   AND ' + Lineas.ColNumeroLin + ' = :pnumero';
+    q.ParamByName('pserie').AsString  := sSerie;
+    q.ParamByName('pnumero').AsString := sNumero;
+    q.Open;
+    if not q.Eof then
+      Result := q.FieldByName('NV').AsInteger;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+function GetSiguienteLineaDocLibre(
+  const Info: TInfoContadorLineas;
+  const Lineas: TInfoLineasDoc;
+  const sSerie, sNumero: string
+): Integer;
+var
+  q             : TUniQuery;
+  iFilas        : Integer;
+  iMaxLineas    : Integer;
+  bTransPropia  : Boolean;
+begin
+  Result := 0;
+  if (sSerie = '') or (sNumero = '') then Exit;
+  bTransPropia := not inLibGlobalVar.oConn.InTransaction;
+  if bTransPropia then
+    inLibGlobalVar.oConn.StartTransaction;
+  q := TUniQuery.Create(nil);
+  try
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Text :=
+        'SELECT IFNULL(CAST(NULLIF(CAST(' + Info.ColContador +
+        ' AS CHAR), '''') AS UNSIGNED), 0) AS NV ' +
+        '  FROM ' + Info.TablaHdr + ' ' +
+        ' WHERE ' + Info.ColSerieHdr  + ' = :pserie ' +
+        '   AND ' + Info.ColNumeroHdr + ' = :pnumero ' +
+        ' FOR UPDATE';
+      q.ParamByName('pserie').AsString  := sSerie;
+      q.ParamByName('pnumero').AsString := sNumero;
+      q.Open;
+      try
+        if not q.Eof then
+          Result := q.FieldByName('NV').AsInteger;
+      finally
+        q.Close;
+      end;
+      iMaxLineas := MaxLineaDoc(Lineas, sSerie, sNumero);
+      if iMaxLineas > Result then
+        Result := iMaxLineas;
+      if Result > 0 then
+        Result := Result + 10
+      else if iMaxLineas = 0 then
+        Result := 10;
+      if Result > 0 then
+      begin
+        q.SQL.Text :=
+          'UPDATE ' + Info.TablaHdr + ' ' +
+          '   SET ' + Info.ColContador + ' = :pnuevo ' +
+          ' WHERE ' + Info.ColSerieHdr  + ' = :pserie ' +
+          '   AND ' + Info.ColNumeroHdr + ' = :pnumero';
+        q.ParamByName('pnuevo').AsString  := Format('%.8d', [Result]);
+        q.ParamByName('pserie').AsString  := sSerie;
+        q.ParamByName('pnumero').AsString := sNumero;
+        q.ExecSQL;
+        iFilas := q.RowsAffected;
+        if iFilas = 0 then
+          Result := 0;
+      end;
+      if bTransPropia and inLibGlobalVar.oConn.InTransaction then
+        inLibGlobalVar.oConn.Commit;
+    except
+      if bTransPropia and inLibGlobalVar.oConn.InTransaction then
+        inLibGlobalVar.oConn.Rollback;
+      raise;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+function GetSiguienteLineaDocLibreSiguiente(
+  const Info: TInfoContadorLineas;
+  const Lineas: TInfoLineasDoc;
+  const sSerie, sNumero: string
+): Integer;
+var
+  q             : TUniQuery;
+  iFilas        : Integer;
+  iMaxLineas    : Integer;
+  iContador     : Integer;
+  bTransPropia  : Boolean;
+begin
+  Result := 0;
+  if (sSerie = '') or (sNumero = '') then Exit;
+  bTransPropia := not inLibGlobalVar.oConn.InTransaction;
+  if bTransPropia then
+    inLibGlobalVar.oConn.StartTransaction;
+  q := TUniQuery.Create(nil);
+  try
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Text :=
+        'SELECT IFNULL(CAST(NULLIF(CAST(' + Info.ColContador +
+        ' AS CHAR), '''') AS UNSIGNED), 0) AS NV ' +
+        '  FROM ' + Info.TablaHdr + ' ' +
+        ' WHERE ' + Info.ColSerieHdr  + ' = :pserie ' +
+        '   AND ' + Info.ColNumeroHdr + ' = :pnumero ' +
+        ' FOR UPDATE';
+      q.ParamByName('pserie').AsString  := sSerie;
+      q.ParamByName('pnumero').AsString := sNumero;
+      q.Open;
+      try
+        if not q.Eof then
+          iContador := q.FieldByName('NV').AsInteger
+        else
+          iContador := 0;
+      finally
+        q.Close;
+      end;
+      iMaxLineas := MaxLineaDoc(Lineas, sSerie, sNumero);
+      if iContador <= 0 then
+        Result := 10
+      else
+        Result := iContador;
+      if Result <= iMaxLineas then
+        Result := iMaxLineas + 10;
+      if Result > 0 then
+      begin
+        q.SQL.Text :=
+          'UPDATE ' + Info.TablaHdr + ' ' +
+          '   SET ' + Info.ColContador + ' = :pnuevo ' +
+          ' WHERE ' + Info.ColSerieHdr  + ' = :pserie ' +
+          '   AND ' + Info.ColNumeroHdr + ' = :pnumero';
+        q.ParamByName('pnuevo').AsString  := Format('%.8d', [Result + 10]);
+        q.ParamByName('pserie').AsString  := sSerie;
+        q.ParamByName('pnumero').AsString := sNumero;
+        q.ExecSQL;
+        iFilas := q.RowsAffected;
+        if iFilas = 0 then
+          Result := 0;
+      end;
+      if bTransPropia and inLibGlobalVar.oConn.InTransaction then
+        inLibGlobalVar.oConn.Commit;
+    except
+      if bTransPropia and inLibGlobalVar.oConn.InTransaction then
+        inLibGlobalVar.oConn.Rollback;
+      raise;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+function LineaDocExiste(
+  const Lineas: TInfoLineasDoc;
+  const sSerie, sNumero, sLinea: string
+): Boolean;
+var
+  q: TUniQuery;
+begin
+  Result := False;
+  if (sSerie = '') or (sNumero = '') or (sLinea = '') then Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'SELECT 1 AS EXISTE ' +
+      '  FROM ' + Lineas.TablaLin + ' ' +
+      ' WHERE ' + Lineas.ColSerieLin  + ' = :pserie ' +
+      '   AND ' + Lineas.ColNumeroLin + ' = :pnumero ' +
+      '   AND ' + Lineas.ColLinea     + ' = :plinea ' +
+      ' LIMIT 1';
+    q.ParamByName('pserie').AsString  := sSerie;
+    q.ParamByName('pnumero').AsString := sNumero;
+    q.ParamByName('plinea').AsString  := sLinea;
+    q.Open;
+    Result := not q.Eof;
   finally
     FreeAndNil(q);
   end;

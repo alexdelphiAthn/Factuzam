@@ -700,10 +700,12 @@ begin
   if DataSet.FindField('LINEA_PEDCLIN') <> nil then
   begin
     sLinea := Trim(DataSet.FieldByName('LINEA_PEDCLIN').AsString);
-    if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) then
+    sNumero := Trim(unqryTablaG.FieldByName('NUMERO_PEDC').AsString);
+    sSerie  := Trim(unqryTablaG.FieldByName('SERIE_PEDC').AsString);
+    if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
+       ((DataSet.State = dsInsert) and
+        LineaDocExiste(LIN_PEDIDOS_COMPRA, sSerie, sNumero, sLinea)) then
     begin
-      sNumero := Trim(unqryTablaG.FieldByName('NUMERO_PEDC').AsString);
-      sSerie  := Trim(unqryTablaG.FieldByName('SERIE_PEDC').AsString);
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
         raise Exception.Create(
           'Graba la cabecera del pedido antes de guardar lineas.');
@@ -711,8 +713,8 @@ begin
         DataSet.FieldByName('NUMERO_PEDC_PEDCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_PEDC_PEDCLIN') <> nil then
         DataSet.FieldByName('SERIE_PEDC_PEDCLIN').AsString := sSerie;
-      iNuevaLinea := GetSiguienteLineaDoc(CONT_PEDIDOS_COMPRA, sSerie,
-        sNumero);
+      iNuevaLinea := GetSiguienteLineaDocLibre(CONT_PEDIDOS_COMPRA,
+        LIN_PEDIDOS_COMPRA, sSerie, sNumero);
       if iNuevaLinea = 0 then
       begin
         iNuevaLinea := StrToIntDef(

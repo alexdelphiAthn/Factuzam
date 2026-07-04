@@ -773,10 +773,12 @@ begin
   if DataSet.FindField('LINEA_ALBCLIN') <> nil then
   begin
     sLinea := Trim(DataSet.FieldByName('LINEA_ALBCLIN').AsString);
-    if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) then
+    sNumero := Trim(unqryTablaG.FieldByName('NUMERO_ALBC').AsString);
+    sSerie  := Trim(unqryTablaG.FieldByName('SERIE_ALBC').AsString);
+    if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
+       ((DataSet.State = dsInsert) and
+        LineaDocExiste(LIN_ALBARANES_COMPRA, sSerie, sNumero, sLinea)) then
     begin
-      sNumero := Trim(unqryTablaG.FieldByName('NUMERO_ALBC').AsString);
-      sSerie  := Trim(unqryTablaG.FieldByName('SERIE_ALBC').AsString);
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
         raise Exception.Create(
           'Graba la cabecera del albaran antes de guardar lineas.');
@@ -784,8 +786,8 @@ begin
         DataSet.FieldByName('NUMERO_ALBC_ALBCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_ALBC_ALBCLIN') <> nil then
         DataSet.FieldByName('SERIE_ALBC_ALBCLIN').AsString := sSerie;
-      iNuevaLinea := GetSiguienteLineaDoc(CONT_ALBARANES_COMPRA, sSerie,
-        sNumero);
+      iNuevaLinea := GetSiguienteLineaDocLibre(CONT_ALBARANES_COMPRA,
+        LIN_ALBARANES_COMPRA, sSerie, sNumero);
       if iNuevaLinea = 0 then
       begin
         iNuevaLinea := StrToIntDef(

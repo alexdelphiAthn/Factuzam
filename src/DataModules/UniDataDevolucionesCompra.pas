@@ -560,10 +560,13 @@ begin
   if DataSet.FindField('LINEA_DEVCLIN') <> nil then
   begin
     sLinea := Trim(DataSet.FieldByName('LINEA_DEVCLIN').AsString);
-    if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) then
+    sNumero := Trim(unqryTablaG.FieldByName('NUMERO_DEVC').AsString);
+    sSerie  := Trim(unqryTablaG.FieldByName('SERIE_DEVC').AsString);
+    if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
+       ((DataSet.State = dsInsert) and
+        LineaDocExiste(LIN_DEVOLUCIONES_COMPRA, sSerie, sNumero,
+          sLinea)) then
     begin
-      sNumero := Trim(unqryTablaG.FieldByName('NUMERO_DEVC').AsString);
-      sSerie  := Trim(unqryTablaG.FieldByName('SERIE_DEVC').AsString);
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
         raise Exception.Create(
           'Graba la cabecera de la devolucion antes de guardar lineas.');
@@ -571,8 +574,8 @@ begin
         DataSet.FieldByName('NUMERO_DEVC_DEVCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_DEVC_DEVCLIN') <> nil then
         DataSet.FieldByName('SERIE_DEVC_DEVCLIN').AsString := sSerie;
-      iNuevaLinea := GetSiguienteLineaDoc(CONT_DEVOLUCIONES_COMPRA, sSerie,
-        sNumero);
+      iNuevaLinea := GetSiguienteLineaDocLibre(CONT_DEVOLUCIONES_COMPRA,
+        LIN_DEVOLUCIONES_COMPRA, sSerie, sNumero);
       if iNuevaLinea = 0 then
       begin
         iNuevaLinea := StrToIntDef(
