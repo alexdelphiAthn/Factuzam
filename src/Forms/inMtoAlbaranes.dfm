@@ -1,4 +1,4 @@
-﻿inherited frmMtoAlbaranes: TfrmMtoAlbaranes
+inherited frmMtoAlbaranes: TfrmMtoAlbaranes
   Caption = 'Mantenimiento de Albaranes'
   ClientHeight = 765
   ClientWidth = 1085
@@ -200,6 +200,7 @@
                 Caption = 'Pedido origen (N'#250'mero / Serie)'
                 TabOrder = 13
                 Transparent = True
+                Visible = False
               end
               object txtNUMERO_PED_ALB: TcxDBTextEdit
                 Left = 440
@@ -208,6 +209,7 @@
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
                 TabOrder = 4
+                Visible = False
                 Width = 90
               end
               object txtSERIE_PED_ALB: TcxDBTextEdit
@@ -217,6 +219,7 @@
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
                 TabOrder = 5
+                Visible = False
                 Width = 80
               end
               object btnIrDocumento: TcxButton
@@ -226,6 +229,7 @@
                 Height = 23
                 Action = actIrDocumento
                 TabOrder = 18
+                Visible = False
               end
               object lblFacturaDestino: TcxLabel
                 Left = 640
@@ -233,6 +237,7 @@
                 Caption = 'Borrador (N'#250'mero / Serie)'
                 TabOrder = 14
                 Transparent = True
+                Visible = False
               end
               object txtNUMERO_FAC_ALB: TcxDBTextEdit
                 Left = 640
@@ -241,6 +246,7 @@
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
                 TabOrder = 6
+                Visible = False
                 Width = 90
               end
               object txtSERIE_FAC_ALB: TcxDBTextEdit
@@ -250,6 +256,7 @@
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
                 TabOrder = 7
+                Visible = False
                 Width = 80
               end
               object btnIrFacturaCreada: TcxButton
@@ -259,6 +266,7 @@
                 Height = 23
                 Action = actIrFacturaCreada
                 TabOrder = 21
+                Visible = False
               end
               object lblCodigoEmpresa: TcxLabel
                 Left = 8
@@ -709,14 +717,14 @@
             Height = 383
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsLineasAlbaran
+            Properties.ActivePage = tsObservaciones
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 379
             ClientRectLeft = 4
             ClientRectRight = 933
             ClientRectTop = 28
             object tsLineasAlbaran: TcxTabSheet
-              Caption = 'L'#237'neas Albar'#225'n'
+              Caption = '&1_L'#237'neas Albar'#225'n'
               object cxgrdLineasAlbaran: TcxGrid
                 Left = 0
                 Top = 0
@@ -1106,7 +1114,7 @@
               end
             end
             object tsFacturas: TcxTabSheet
-              Caption = 'Borradores'
+              Caption = '&3_Borradores'
               object cxGrdFacturas: TcxGrid
                 Left = 0
                 Top = 0
@@ -1115,6 +1123,7 @@
                 Align = alClient
                 TabOrder = 0
                 object tvFacturas: TcxGridDBTableView
+                  OptionsView.GroupByBox = False
                   object cxgrdcFacNum: TcxGridDBColumn
                     Caption = 'N'#250'mero'
                     DataBinding.FieldName = 'NUMERO_FAC'
@@ -1147,7 +1156,7 @@
               end
             end
             object tsMovimientos: TcxTabSheet
-              Caption = 'Movimientos'
+              Caption = '&4_Movimientos'
               object cxGrdMovimientos: TcxGrid
                 Left = 0
                 Top = 0
@@ -1157,6 +1166,7 @@
                 TabOrder = 0
                 object tvMovimientos: TcxGridDBTableView
                   OptionsData.Editing = False
+                  OptionsView.GroupByBox = False
                   object cxgrdcMovNum: TcxGridDBColumn
                     Caption = 'N'#250'mero Mov.'
                     DataBinding.FieldName = 'NUMERO_MOV'
@@ -1219,7 +1229,7 @@
               end
             end
             object tsObservaciones: TcxTabSheet
-              Caption = 'Observaciones'
+              Caption = '&5_Observaciones'
               object memObservaciones: TcxDBMemo
                 Left = 0
                 Top = 0
