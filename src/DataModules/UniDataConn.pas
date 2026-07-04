@@ -41,7 +41,7 @@ type
     procedure VolcarSQLPendiente(AOk: Boolean; const AError: string);
   public
     procedure CerrarSQLPendiente;
-    procedure ActualizarUserTimeModif(DataSet:TDataSet);
+    procedure ActualizarUserTimeModif(DataSet: TDataSet);
   end;
 
 var
@@ -263,18 +263,21 @@ begin
     oMemoSQL.Lines.Add(FormatDateTime('hh:nn:ss.zzz', Now) + ' - ' + Text);
 end;
 
-procedure TdmConn.ActualizarUserTimeModif(DataSet:TDataSet);
+procedure TdmConn.ActualizarUserTimeModif(DataSet: TDataSet);
 begin
-  if (DataSet.FindField('USUARIO_MODIF') <> nil) then
-    DataSet.FieldbyName('USUARIO_MODIF').AsString:= oUser;
-  if DataSet.State = dsInsert then
+  if Assigned(DataSet) and (DataSet.State in dsEditModes) then
   begin
-    if (DataSet.FindField('INSTANTE_ALTA') <> nil) then
-      DataSet.FieldbyName('INSTANTE_ALTA').AsDateTime := Now;
-    if (DataSet.FindField('USUARIO_ALTA') <> nil) then
-      DataSet.FieldbyName('USUARIO_ALTA').AsString := oUser;
-    if (DataSet.FindField('INSTANTE_MODIF') <> nil) then
-      DataSet.FieldbyName('INSTANTE_MODIF').AsDateTime := Now;
+    if DataSet.FindField('USUARIO_MODIF') <> nil then
+      DataSet.FieldByName('USUARIO_MODIF').AsString := oUser;
+    if DataSet.State = dsInsert then
+    begin
+      if DataSet.FindField('INSTANTE_ALTA') <> nil then
+        DataSet.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+      if DataSet.FindField('USUARIO_ALTA') <> nil then
+        DataSet.FieldByName('USUARIO_ALTA').AsString := oUser;
+      if DataSet.FindField('INSTANTE_MODIF') <> nil then
+        DataSet.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
+    end;
   end;
 end;
 

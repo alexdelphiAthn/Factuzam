@@ -202,7 +202,8 @@ uses
   inLibDocumentoFiscal,
   inLibArticulosValidador,
   inLibLicenciaAplicacion,
-  inLibVentasImpuestos;
+  inLibVentasImpuestos,
+  inLibContadorLineas;
 
 {$R *.dfm}
 
@@ -1815,6 +1816,10 @@ procedure TdmFacturas.unqryLinFacBeforePost(DataSet: TDataSet);
 var
   sNuevoNroLinea: string;
   iContadorBD: Integer;
+  iNuevaLinea: Integer;
+  sNumLin: string;
+  sNumero: string;
+  sSerie: string;
 begin
   inherited;
   with unqryLinFac do
@@ -1828,17 +1833,26 @@ begin
       DataSet.Cancel;
       Abort;
     end;
-    var sNumLin := FindField(fnrolin).AsString;
+    sNumLin := Trim(FindField(fnrolin).AsString);
+    sNumero := Trim(unqryTablaG.FieldByName(fnrofac).AsString);
+    sSerie  := Trim(unqryTablaG.FieldByName(fseriefac).AsString);
     if (sNumLin = '0') or
-       (sNumLin = '') then
+       (sNumLin = '') or
+       ((DataSet.State = dsInsert) and
+        LineaDocExiste(LIN_FACTURAS, sSerie, sNumero, sNumLin)) then
     begin
-      unstdGetContadorLinea.ParamByName('pnumfac').AsString :=
-                            unqryTablaG.FieldByName(fnrofac).AsString;
-      unstdGetContadorLinea.ParamByName('pserie').AsString :=
-                          unqryTablaG.FieldByName(fseriefac).AsString;
-      unstdGetContadorLinea.ExecProc;
-      sNuevoNroLinea :=
-                       unstdGetContadorLinea.ParamByName('presul').AsString;
+      iNuevaLinea := GetSiguienteLineaDocLibreSiguiente(CONT_FACTURAS,
+        LIN_FACTURAS, sSerie, sNumero);
+      if iNuevaLinea > 0 then
+        sNuevoNroLinea := Format('%.3d', [iNuevaLinea])
+      else
+      begin
+        unstdGetContadorLinea.ParamByName('pnumfac').AsString := sNumero;
+        unstdGetContadorLinea.ParamByName('pserie').AsString := sSerie;
+        unstdGetContadorLinea.ExecProc;
+        sNuevoNroLinea :=
+                         unstdGetContadorLinea.ParamByName('presul').AsString;
+      end;
       FindField(fnrolin).AsString := sNuevoNroLinea;
       // Sincronizar el contador en el dataset de cabecera para que un
       // Post posterior de la cabecera no sobreescriba el valor correcto

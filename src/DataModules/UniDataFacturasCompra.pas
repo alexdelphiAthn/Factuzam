@@ -735,10 +735,12 @@ begin
   if DataSet.FindField('LINEA_FACCLIN') <> nil then
   begin
     sLinea := Trim(DataSet.FieldByName('LINEA_FACCLIN').AsString);
-    if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) then
+    sNumero := Trim(unqryTablaG.FieldByName('NUMERO_FACC').AsString);
+    sSerie  := Trim(unqryTablaG.FieldByName('SERIE_FACC').AsString);
+    if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
+       ((DataSet.State = dsInsert) and
+        LineaDocExiste(LIN_FACTURAS_COMPRA, sSerie, sNumero, sLinea)) then
     begin
-      sNumero := Trim(unqryTablaG.FieldByName('NUMERO_FACC').AsString);
-      sSerie  := Trim(unqryTablaG.FieldByName('SERIE_FACC').AsString);
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
         raise Exception.Create(
           'Graba la cabecera de la factura antes de guardar lineas.');
@@ -746,8 +748,8 @@ begin
         DataSet.FieldByName('NUMERO_FACC_FACCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_FACC_FACCLIN') <> nil then
         DataSet.FieldByName('SERIE_FACC_FACCLIN').AsString := sSerie;
-      iNuevaLinea := GetSiguienteLineaDoc(CONT_FACTURAS_COMPRA, sSerie,
-        sNumero);
+      iNuevaLinea := GetSiguienteLineaDocLibre(CONT_FACTURAS_COMPRA,
+        LIN_FACTURAS_COMPRA, sSerie, sNumero);
       if iNuevaLinea = 0 then
       begin
         iNuevaLinea := StrToIntDef(
