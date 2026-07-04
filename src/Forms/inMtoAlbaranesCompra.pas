@@ -97,7 +97,7 @@ type
     lblRefProveedor:    TcxLabel;
     txtREF_PROVEEDOR_ALBC: TcxDBTextEdit;
     lblCodigoAlmacen:   TcxLabel;
-    txtCODIGO_ALM_ALBC: TcxDBTextEdit;
+    cbbCODIGO_ALM_ALBC: TcxDBLookupComboBox;
     // Check informativo: el albaran es mercancia en deposito.
     chkESDEPOSITO_ALBC: TcxDBCheckBox;
 
@@ -192,8 +192,10 @@ type
     procedure cbbSERIE_ALBCPropertiesInitPopup(Sender: TObject);
     procedure btnCODIGO_EMP_ALBCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
+    procedure btnCODIGO_EMP_ALBCPropertiesEditValueChanged(Sender: TObject);
     procedure cbbCODIGO_PRV_ALBCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
+    procedure cbbCODIGO_ALM_ALBCPropertiesEditValueChanged(Sender: TObject);
     procedure btnCODIGO_EMP_ALBCKeyUp(Sender: TObject; var Key: Word;
                                       Shift: TShiftState);
     procedure cbbCODIGO_PRV_ALBCKeyUp(Sender: TObject; var Key: Word;
@@ -241,6 +243,7 @@ type
     function ArticuloLineaActivaAlbaranCompra: string;
     procedure AplicarArticuloAlbaranCompra(const ACodigoArt: string);
     procedure AsegurarCabeceraPersistidaParaLineas;
+    procedure DesactivarEnterAsTabEnCombo(AComp: TcxDBLookupComboBox);
     function PuedeActivarTallasHorizontal(var AMensaje: string): Boolean;
     procedure colLineaAlbcCODIGO_UNIDADPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
@@ -1039,9 +1042,12 @@ begin
     dmmAlbaranesCompra.dsMovimientosProveedor;
   cbbTotalesFORMA_PAGO_ALBC.Properties.ListSource :=
     dmmAlbaranesCompra.dsFormasPago;
+  cbbCODIGO_ALM_ALBC.Properties.ListSource :=
+    dmmAlbaranesCompra.dsAlmacenesAlbc;
   // ListSource del combo de proveedor (busqueda incremental por codigo).
   // Reutiliza el lookup unqryPrvDataAlbc, ya cargado para el rotulo.
   cbbCODIGO_PRV_ALBC.Properties.ListSource := dmmAlbaranesCompra.dsPrvDataAlbc;
+  DesactivarEnterAsTabEnCombo(cbbCODIGO_ALM_ALBC);
   // MasterSource se enlaza en DataModuleCreate del DM, pero lo
   // re-aseguramos por idempotencia.
   dmmAlbaranesCompra.unqryAlbaranesCompraLineas.MasterSource := dsTablaG;
@@ -1673,6 +1679,16 @@ begin
   end;
 end;
 
+procedure TfrmMtoAlbaranesCompra.DesactivarEnterAsTabEnCombo(
+  AComp: TcxDBLookupComboBox);
+begin
+  AComp.OnEnter := DesactivarEnterAsTabTemporal;
+  AComp.OnExit  := RestaurarEnterAsTabTemporal;
+  AComp.Properties.OnInitPopup := DesactivarEnterAsTabTemporal;
+  AComp.Properties.OnCloseUp   := RestaurarEnterAsTabTemporal;
+  AComp.Properties.PostPopupValueOnTab := True;
+end;
+
 procedure TfrmMtoAlbaranesCompra.cbbCODIGO_PRV_ALBCPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
@@ -1701,6 +1717,44 @@ begin
         'CODIGO_PRV_ALBC', 'ESIVA_EXENTO_INTRACOMUNITARIO_ALBC');
       dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
       ActualizarLabelProveedor;
+    end;
+  end;
+end;
+
+procedure TfrmMtoAlbaranesCompra.btnCODIGO_EMP_ALBCPropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  inherited;
+  if Assigned(dmmAlbaranesCompra) then
+    dmmAlbaranesCompra.RefrescarAlmacenes('');
+end;
+
+procedure TfrmMtoAlbaranesCompra.cbbCODIGO_ALM_ALBCPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  e: TcxCustomEdit;
+  sAlmacen: string;
+  sEmpresa: string;
+  ds: TDataSet;
+begin
+  inherited;
+  if Assigned(dmmAlbaranesCompra) and Assigned(dsTablaG.DataSet) and
+     dsTablaG.DataSet.Active and (dsTablaG.DataSet.State in dsEditModes) and
+     (Sender is TcxCustomEdit) then
+  begin
+    e := Sender as TcxCustomEdit;
+    sAlmacen := Trim(VarToStr(e.EditingValue));
+    if (sAlmacen <> '') and
+       dmmAlbaranesCompra.unqryAlmacenesAlbc.Active and
+       dmmAlbaranesCompra.unqryAlmacenesAlbc.Locate(
+         'CODIGO_ALM_ALM', sAlmacen, []) then
+    begin
+      sEmpresa := Trim(dmmAlbaranesCompra.unqryAlmacenesAlbc.
+                         FieldByName('CODIGO_EMP_ALM').AsString);
+      ds := dsTablaG.DataSet;
+      if (sEmpresa <> '') and
+         (Trim(ds.FieldByName('CODIGO_EMP_ALBC').AsString) <> sEmpresa) then
+        ds.FieldByName('CODIGO_EMP_ALBC').AsString := sEmpresa;
     end;
   end;
 end;

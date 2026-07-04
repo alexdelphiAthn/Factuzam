@@ -171,4 +171,20 @@
     Left = 520
     Top = 200
   end
+  object unqryAlmacenesPedc: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM, CODIGO_EMP_ALM'
+      '  FROM fza_almacenes'
+      ' WHERE ESACTIVO_ALM = '#39'S'#39
+      ' ORDER BY CODIGO_EMP_ALM, ORDEN_ALM, CODIGO_ALM_ALM')
+    ReadOnly = True
+    Left = 520
+    Top = 264
+  end
+  object dsAlmacenesPedc: TDataSource
+    DataSet = unqryAlmacenesPedc
+    Left = 520
+    Top = 328
+  end
 end

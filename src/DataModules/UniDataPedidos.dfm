@@ -561,4 +561,20 @@ inherited dmPedidos: TdmPedidos
     Left = 512
     Top = 368
   end
+  object unqryAlmacenesPed: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM, CODIGO_EMP_ALM'
+      '  FROM fza_almacenes'
+      ' WHERE ESACTIVO_ALM = '#39'S'#39
+      ' ORDER BY CODIGO_EMP_ALM, ORDEN_ALM, CODIGO_ALM_ALM')
+    ReadOnly = True
+    Left = 600
+    Top = 312
+  end
+  object dsAlmacenesPed: TDataSource
+    DataSet = unqryAlmacenesPed
+    Left = 600
+    Top = 368
+  end
 end

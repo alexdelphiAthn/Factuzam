@@ -45,6 +45,8 @@ type
     dsAlbaranesPedc:          TDataSource;
     unqryFormasPago:          TUniQuery;
     dsFormasPago:             TDataSource;
+    unqryAlmacenesPedc:       TUniQuery;
+    dsAlmacenesPedc:          TDataSource;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -65,9 +67,11 @@ type
     function ObtenerAlmacenesSql(const AAlmacenesCsv: string): string;
     function ObtenerSkusPedidoCsv(const ASerie, ANumero,
                                   AAlmacenesCsv: string): string;
+    procedure ValidarAlmacenCabecera;
   public
     procedure GetCodigoAutoPedidoCompra;
     procedure CalcularTotalesPedidoCompra;
+    procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
     procedure CargarAlmacenesDelPedido(const ASerie, ANumero: string;
                                        ALV: TObject);
     procedure CrearDataSetEtiquetasPed(ADmArt: TObject;
@@ -290,6 +294,7 @@ begin
   unqryTemporadasPedc.Connection      := inLibGlobalVar.oConn;
   unqryTemporadasPedc.Open;
   unqryFormasPago.Connection          := inLibGlobalVar.oConn;
+  unqryAlmacenesPedc.Connection       := inLibGlobalVar.oConn;
   unqryPedidosCompraLineas.MasterSource :=
     (GetOwnerForm<TfrmMtoPedidosCompra>).dsTablaG;
   // Albaranes de compra creados desde este pedido (master-detail por
@@ -306,12 +311,21 @@ begin
     unqryPedidosCompraLineas.Close;
   if Assigned(unqryFormasPago) and unqryFormasPago.Active then
     unqryFormasPago.Close;
+  if Assigned(unqryAlmacenesPedc) and unqryAlmacenesPedc.Active then
+    unqryAlmacenesPedc.Close;
   inherited;
 end;
 
 procedure TdmPedidosCompra.OpenTables;
 begin
   AbrirDetalles;
+end;
+
+procedure TdmPedidosCompra.RefrescarAlmacenes(
+  const ACodigoEmpresa: string);
+begin
+  if not unqryAlmacenesPedc.Active then
+    unqryAlmacenesPedc.Open;
 end;
 
 procedure TdmPedidosCompra.AbrirDetalles;
@@ -373,6 +387,23 @@ begin
       end;
     end;
   end;
+  if not unqryAlmacenesPedc.Active then
+  begin
+    swQ := TStopwatch.StartNew;
+    try
+      unqryAlmacenesPedc.Open;
+      inLibLog.Log.LogPerf(TAG, 'unqryAlmacenesPedc OK',
+                            swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        inLibLog.Log.LogPerf(TAG,
+          'unqryAlmacenesPedc ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+        raise;
+      end;
+    end;
+  end;
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
@@ -399,6 +430,8 @@ begin
       FieldByName('CODIGO_EMP_PEDC').AsString := oEmpresa
     else
       FieldByName('CODIGO_EMP_PEDC').AsString := '0';
+    if FindField('CODIGO_ALM_PEDC') <> nil then
+      FieldByName('CODIGO_ALM_PEDC').AsString := oAlmacen;
     FieldByName('CODIGO_PRV_PEDC').AsString := '0';
     if FindField('ESPIVOTE_HORIZONTAL_PEDC') <> nil then
       FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString := 'N';
@@ -408,6 +441,17 @@ begin
       'CODIGO_EMP_PEDC', 'ESIVA_RECARGO_COMPRAS_PEDC');
     AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
       'PEDC');
+  end;
+end;
+
+procedure TdmPedidosCompra.ValidarAlmacenCabecera;
+begin
+  if (unqryTablaG.FindField('CODIGO_ALM_PEDC') <> nil) and
+     (Trim(unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString) = '') then
+  begin
+    MessageDlg('Debe seleccionar el almacén destino del pedido de compra.',
+               mtWarning, [mbOk], 0);
+    Abort;
   end;
 end;
 
@@ -428,6 +472,7 @@ begin
   if (DataSet.FindField('ESPIVOTE_HORIZONTAL_PEDC') <> nil) and
      (Trim(DataSet.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString) = '') then
     DataSet.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString := 'N';
+  ValidarAlmacenCabecera;
   if (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '') then
     GetCodigoAutoPedidoCompra;

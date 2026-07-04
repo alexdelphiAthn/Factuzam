@@ -106,7 +106,7 @@ type
     lblRefProveedor:    TcxLabel;
     txtREF_PROVEEDOR_PEDC: TcxDBTextEdit;
     lblCodigoAlmacen:   TcxLabel;
-    txtCODIGO_ALM_PEDC: TcxDBTextEdit;
+    cbbCODIGO_ALM_PEDC: TcxDBLookupComboBox;
     lblTemporada:       TcxLabel;
     cbbTemporadaPedc:   TcxDBLookupComboBox;
     lblCabCantidadPedidaPedc: TcxLabel;
@@ -217,8 +217,10 @@ type
     procedure btnRecibirTodoClick(Sender: TObject);
     procedure btnCODIGO_EMP_PEDCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
+    procedure btnCODIGO_EMP_PEDCPropertiesEditValueChanged(Sender: TObject);
     procedure cbbCODIGO_PRV_PEDCPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
+    procedure cbbCODIGO_ALM_PEDCPropertiesEditValueChanged(Sender: TObject);
     procedure btnCODIGO_EMP_PEDCKeyUp(Sender: TObject; var Key: Word;
                                       Shift: TShiftState);
     procedure cbbCODIGO_PRV_PEDCKeyUp(Sender: TObject; var Key: Word;
@@ -281,6 +283,7 @@ type
     function ArticuloLineaActivaPedidoCompra: string;
     procedure AplicarArticuloPedidoCompra(const ACodigoArt: string);
     procedure AsegurarCabeceraPersistidaParaLineas;
+    procedure DesactivarEnterAsTabEnCombo(AComp: TcxDBLookupComboBox);
     function PuedeActivarTallasHorizontal(var AMensaje: string): Boolean;
     procedure colLineaPedcCODIGO_UNIDADPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
@@ -1157,6 +1160,9 @@ begin
     dmmPedidosCompra.dsAlbaranesPedc;
   cbbTotalesFORMA_PAGO_PEDC.Properties.ListSource :=
     dmmPedidosCompra.dsFormasPago;
+  cbbCODIGO_ALM_PEDC.Properties.ListSource :=
+    dmmPedidosCompra.dsAlmacenesPedc;
+  DesactivarEnterAsTabEnCombo(cbbCODIGO_ALM_PEDC);
   dmmPedidosCompra.unqryAlbaranesPedc.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_PEDC;NUMERO_PEDC';
 end;
@@ -1812,6 +1818,16 @@ begin
   end;
 end;
 
+procedure TfrmMtoPedidosCompra.DesactivarEnterAsTabEnCombo(
+  AComp: TcxDBLookupComboBox);
+begin
+  AComp.OnEnter := DesactivarEnterAsTabTemporal;
+  AComp.OnExit  := RestaurarEnterAsTabTemporal;
+  AComp.Properties.OnInitPopup := DesactivarEnterAsTabTemporal;
+  AComp.Properties.OnCloseUp   := RestaurarEnterAsTabTemporal;
+  AComp.Properties.PostPopupValueOnTab := True;
+end;
+
 procedure TfrmMtoPedidosCompra.cbbCODIGO_PRV_PEDCPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
@@ -1840,6 +1856,44 @@ begin
         'CODIGO_PRV_PEDC', 'ESIVA_EXENTO_INTRACOMUNITARIO_PEDC');
       dmmPedidosCompra.CalcularTotalesPedidoCompra;
       ActualizarLabelProveedor;
+    end;
+  end;
+end;
+
+procedure TfrmMtoPedidosCompra.btnCODIGO_EMP_PEDCPropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  inherited;
+  if Assigned(dmmPedidosCompra) then
+    dmmPedidosCompra.RefrescarAlmacenes('');
+end;
+
+procedure TfrmMtoPedidosCompra.cbbCODIGO_ALM_PEDCPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  e: TcxCustomEdit;
+  sAlmacen: string;
+  sEmpresa: string;
+  ds: TDataSet;
+begin
+  inherited;
+  if Assigned(dmmPedidosCompra) and Assigned(dsTablaG.DataSet) and
+     dsTablaG.DataSet.Active and (dsTablaG.DataSet.State in dsEditModes) and
+     (Sender is TcxCustomEdit) then
+  begin
+    e := Sender as TcxCustomEdit;
+    sAlmacen := Trim(VarToStr(e.EditingValue));
+    if (sAlmacen <> '') and
+       dmmPedidosCompra.unqryAlmacenesPedc.Active and
+       dmmPedidosCompra.unqryAlmacenesPedc.Locate(
+         'CODIGO_ALM_ALM', sAlmacen, []) then
+    begin
+      sEmpresa := Trim(dmmPedidosCompra.unqryAlmacenesPedc.
+                         FieldByName('CODIGO_EMP_ALM').AsString);
+      ds := dsTablaG.DataSet;
+      if (sEmpresa <> '') and
+         (Trim(ds.FieldByName('CODIGO_EMP_PEDC').AsString) <> sEmpresa) then
+        ds.FieldByName('CODIGO_EMP_PEDC').AsString := sEmpresa;
     end;
   end;
 end;
