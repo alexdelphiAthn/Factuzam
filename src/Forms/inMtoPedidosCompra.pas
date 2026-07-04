@@ -1862,10 +1862,24 @@ end;
 
 procedure TfrmMtoPedidosCompra.btnCODIGO_EMP_PEDCPropertiesEditValueChanged(
   Sender: TObject);
+var
+  e: TcxCustomEdit;
+  sEmpresa: string;
 begin
   inherited;
   if Assigned(dmmPedidosCompra) then
+  begin
+    if Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and
+       (dsTablaG.DataSet.State in dsEditModes) and
+       (Sender is TcxCustomEdit) then
+    begin
+      e := Sender as TcxCustomEdit;
+      sEmpresa := Trim(VarToStr(e.EditingValue));
+      if sEmpresa <> '' then
+        dmmPedidosCompra.BuscarEmpresa(sEmpresa);
+    end;
     dmmPedidosCompra.RefrescarAlmacenes('');
+  end;
 end;
 
 procedure TfrmMtoPedidosCompra.cbbCODIGO_ALM_PEDCPropertiesEditValueChanged(
@@ -1893,7 +1907,7 @@ begin
       ds := dsTablaG.DataSet;
       if (sEmpresa <> '') and
          (Trim(ds.FieldByName('CODIGO_EMP_PEDC').AsString) <> sEmpresa) then
-        ds.FieldByName('CODIGO_EMP_PEDC').AsString := sEmpresa;
+        dmmPedidosCompra.BuscarEmpresa(sEmpresa);
     end;
   end;
 end;

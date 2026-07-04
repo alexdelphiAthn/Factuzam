@@ -67,10 +67,12 @@ type
     function ObtenerAlmacenesSql(const AAlmacenesCsv: string): string;
     function ObtenerSkusPedidoCsv(const ASerie, ANumero,
                                   AAlmacenesCsv: string): string;
+    procedure CopiarEmpresaaPedidoCompra(DataSet: TDataSet);
     procedure ValidarAlmacenCabecera;
   public
     procedure GetCodigoAutoPedidoCompra;
     procedure CalcularTotalesPedidoCompra;
+    function BuscarEmpresa(const ACodigo: string): Boolean;
     procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
     procedure CargarAlmacenesDelPedido(const ASerie, ANumero: string;
                                        ALV: TObject);
@@ -430,6 +432,8 @@ begin
       FieldByName('CODIGO_EMP_PEDC').AsString := oEmpresa
     else
       FieldByName('CODIGO_EMP_PEDC').AsString := '0';
+    if Trim(oEmpresa) <> '' then
+      BuscarEmpresa(oEmpresa);
     if FindField('CODIGO_ALM_PEDC') <> nil then
       FieldByName('CODIGO_ALM_PEDC').AsString := oAlmacen;
     FieldByName('CODIGO_PRV_PEDC').AsString := '0';
@@ -441,6 +445,57 @@ begin
       'CODIGO_EMP_PEDC', 'ESIVA_RECARGO_COMPRAS_PEDC');
     AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
       'PEDC');
+  end;
+end;
+
+function TdmPedidosCompra.BuscarEmpresa(const ACodigo: string): Boolean;
+var
+  sCodigo: string;
+begin
+  Result := False;
+  sCodigo := Trim(ACodigo);
+  if (sCodigo <> '') and (sCodigo <> '0') then
+  begin
+    if not unqryEmpDataPedc.Active then
+      unqryEmpDataPedc.Open;
+    if unqryEmpDataPedc.Locate('CODIGO_EMP_EMP', sCodigo, []) then
+    begin
+      CopiarEmpresaaPedidoCompra(unqryEmpDataPedc);
+      Result := True;
+    end;
+  end;
+end;
+
+procedure TdmPedidosCompra.CopiarEmpresaaPedidoCompra(DataSet: TDataSet);
+begin
+  with unqryTablaG do
+  begin
+    if (State <> dsEdit) and (State <> dsInsert) then
+      Edit;
+    FindField('CODIGO_EMP_PEDC').AsString :=
+      DataSet.FindField('CODIGO_EMP_EMP').AsString;
+    FindField('RAZON_SOCIAL_EMPRESA_PEDC').AsString :=
+      DataSet.FindField('RAZON_SOCIAL_EMP').AsString;
+    FindField('NIF_EMPRESA_PEDC').AsString :=
+      DataSet.FindField('NIF_EMP').AsString;
+    FindField('MOVIL_EMPRESA_PEDC').AsString :=
+      DataSet.FindField('MOVIL_EMP').AsString;
+    FindField('EMAIL_EMPRESA_PEDC').AsString :=
+      DataSet.FindField('EMAIL_EMP').AsString;
+    FindField('DIRECCION1_EMPRESA_PEDC').AsString :=
+      DataSet.FindField('DIRECCION1_EMP').AsString;
+    FindField('DIRECCION2_EMPRESA_PEDC').AsString :=
+      DataSet.FindField('DIRECCION2_EMP').AsString;
+    FindField('POBLACION_EMPRESA_PEDC').AsString :=
+      DataSet.FindField('POBLACION_EMP').AsString;
+    FindField('PROVINCIA_EMPRESA_PEDC').AsString :=
+      DataSet.FindField('PROVINCIA_EMP').AsString;
+    FindField('CODIGO_PAI_EMPRESA_PEDC').AsString :=
+      DataSet.FindField('CODIGO_PAI_EMP').AsString;
+    FindField('NOMBRE_PAI_EMPRESA_PEDC').AsString :=
+      DataSet.FindField('NOMBRE_PAI_EMP').AsString;
+    FindField('CODIGO_POSTAL_EMPRESA_PEDC').AsString :=
+      DataSet.FindField('CODIGO_POSTAL_EMP').AsString;
   end;
 end;
 

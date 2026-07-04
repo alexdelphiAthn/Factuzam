@@ -387,12 +387,12 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
                 Properties.ListColumns = <
                   item
-                    Caption = 'Código'
+                    Caption = 'C'#243'digo'
                     Width = 60
                     FieldName = 'CODIGO_ALM_ALM'
                   end
                   item
-                    Caption = 'Almacén'
+                    Caption = 'Almac'#233'n'
                     FieldName = 'NOMBRE_ALM_ALM'
                   end
                   item
@@ -1392,9 +1392,12 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
       OnClick = btnPegatinasClick
     end
   end
+  inherited pmFiltros: TPopupMenu
+    Left = 552
+  end
   object ActionList1: TActionList
-    Left = 528
-    Top = 368
+    Left = 656
+    Top = 440
     object actArticulos: TAction
       Caption = 'actArticulos'
       ShortCut = 16449

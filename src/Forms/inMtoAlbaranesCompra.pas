@@ -1723,10 +1723,24 @@ end;
 
 procedure TfrmMtoAlbaranesCompra.btnCODIGO_EMP_ALBCPropertiesEditValueChanged(
   Sender: TObject);
+var
+  e: TcxCustomEdit;
+  sEmpresa: string;
 begin
   inherited;
   if Assigned(dmmAlbaranesCompra) then
+  begin
+    if Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and
+       (dsTablaG.DataSet.State in dsEditModes) and
+       (Sender is TcxCustomEdit) then
+    begin
+      e := Sender as TcxCustomEdit;
+      sEmpresa := Trim(VarToStr(e.EditingValue));
+      if sEmpresa <> '' then
+        dmmAlbaranesCompra.BuscarEmpresa(sEmpresa);
+    end;
     dmmAlbaranesCompra.RefrescarAlmacenes('');
+  end;
 end;
 
 procedure TfrmMtoAlbaranesCompra.cbbCODIGO_ALM_ALBCPropertiesEditValueChanged(
@@ -1754,7 +1768,7 @@ begin
       ds := dsTablaG.DataSet;
       if (sEmpresa <> '') and
          (Trim(ds.FieldByName('CODIGO_EMP_ALBC').AsString) <> sEmpresa) then
-        ds.FieldByName('CODIGO_EMP_ALBC').AsString := sEmpresa;
+        dmmAlbaranesCompra.BuscarEmpresa(sEmpresa);
     end;
   end;
 end;

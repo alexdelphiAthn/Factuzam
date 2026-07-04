@@ -84,11 +84,13 @@ type
     function HayLineasMovimiento(const ASerie, ANumero: string): Boolean;
     function ObtenerSkusAlbaranCsv(const ASerie, ANumero: string): string;
     procedure RefrescarMovimientosProveedor;
+    procedure CopiarEmpresaaAlbaranCompra(DataSet: TDataSet);
     procedure ValidarAlmacenCabecera;
   public
     procedure GetCodigoAutoAlbaranCompra;
     procedure CalcularTotalesAlbaranCompra;
     procedure SincronizarMovimientos;
+    function BuscarEmpresa(const ACodigo: string): Boolean;
     procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
     // Abre unqryCabAlbcPrint y unqryLinAlbcPrint con los parametros
     // del albaran a imprimir. Mismo nombre/firma que en sesiones.
@@ -389,6 +391,8 @@ begin
       FieldByName('CODIGO_EMP_ALBC').AsString := oEmpresa
     else
       FieldByName('CODIGO_EMP_ALBC').AsString := '0';
+    if Trim(oEmpresa) <> '' then
+      BuscarEmpresa(oEmpresa);
     if FindField('CODIGO_ALM_ALBC') <> nil then
       FieldByName('CODIGO_ALM_ALBC').AsString := oAlmacen;
     FieldByName('CODIGO_PRV_ALBC').AsString := '0';
@@ -407,6 +411,57 @@ begin
       'ALBC');
   end;
   FTransicionEstadoAlbc := '';
+end;
+
+function TdmAlbaranesCompra.BuscarEmpresa(const ACodigo: string): Boolean;
+var
+  sCodigo: string;
+begin
+  Result := False;
+  sCodigo := Trim(ACodigo);
+  if (sCodigo <> '') and (sCodigo <> '0') then
+  begin
+    if not unqryEmpDataAlbc.Active then
+      unqryEmpDataAlbc.Open;
+    if unqryEmpDataAlbc.Locate('CODIGO_EMP_EMP', sCodigo, []) then
+    begin
+      CopiarEmpresaaAlbaranCompra(unqryEmpDataAlbc);
+      Result := True;
+    end;
+  end;
+end;
+
+procedure TdmAlbaranesCompra.CopiarEmpresaaAlbaranCompra(DataSet: TDataSet);
+begin
+  with unqryTablaG do
+  begin
+    if (State <> dsEdit) and (State <> dsInsert) then
+      Edit;
+    FindField('CODIGO_EMP_ALBC').AsString :=
+      DataSet.FindField('CODIGO_EMP_EMP').AsString;
+    FindField('RAZON_SOCIAL_EMPRESA_ALBC').AsString :=
+      DataSet.FindField('RAZON_SOCIAL_EMP').AsString;
+    FindField('NIF_EMPRESA_ALBC').AsString :=
+      DataSet.FindField('NIF_EMP').AsString;
+    FindField('MOVIL_EMPRESA_ALBC').AsString :=
+      DataSet.FindField('MOVIL_EMP').AsString;
+    FindField('EMAIL_EMPRESA_ALBC').AsString :=
+      DataSet.FindField('EMAIL_EMP').AsString;
+    FindField('DIRECCION1_EMPRESA_ALBC').AsString :=
+      DataSet.FindField('DIRECCION1_EMP').AsString;
+    FindField('DIRECCION2_EMPRESA_ALBC').AsString :=
+      DataSet.FindField('DIRECCION2_EMP').AsString;
+    FindField('POBLACION_EMPRESA_ALBC').AsString :=
+      DataSet.FindField('POBLACION_EMP').AsString;
+    FindField('PROVINCIA_EMPRESA_ALBC').AsString :=
+      DataSet.FindField('PROVINCIA_EMP').AsString;
+    FindField('CODIGO_PAI_EMPRESA_ALBC').AsString :=
+      DataSet.FindField('CODIGO_PAI_EMP').AsString;
+    FindField('NOMBRE_PAI_EMPRESA_ALBC').AsString :=
+      DataSet.FindField('NOMBRE_PAI_EMP').AsString;
+    FindField('CODIGO_POSTAL_EMPRESA_ALBC').AsString :=
+      DataSet.FindField('CODIGO_POSTAL_EMP').AsString;
+  end;
 end;
 
 procedure TdmAlbaranesCompra.ValidarAlmacenCabecera;
