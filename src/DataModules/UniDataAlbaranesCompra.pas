@@ -40,6 +40,8 @@ type
     dsMovimientosProveedor:     TDataSource;
     unqryFormasPago:            TUniQuery;
     dsFormasPago:               TDataSource;
+    unqryAlmacenesAlbc:         TUniQuery;
+    dsAlmacenesAlbc:            TDataSource;
     unstrdprcGetContadorAlbc:   TUniStoredProc;
     // Definicion de atributos del articulo padre (para columnas
     // dinamicas ATTR1..ATTR5 en modo "atributo por columna").
@@ -82,10 +84,12 @@ type
     function HayLineasMovimiento(const ASerie, ANumero: string): Boolean;
     function ObtenerSkusAlbaranCsv(const ASerie, ANumero: string): string;
     procedure RefrescarMovimientosProveedor;
+    procedure ValidarAlmacenCabecera;
   public
     procedure GetCodigoAutoAlbaranCompra;
     procedure CalcularTotalesAlbaranCompra;
     procedure SincronizarMovimientos;
+    procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
     // Abre unqryCabAlbcPrint y unqryLinAlbcPrint con los parametros
     // del albaran a imprimir. Mismo nombre/firma que en sesiones.
     procedure PrepararPrint(const ASerie, ANumero: string);
@@ -283,6 +287,7 @@ begin
   unqrySkusAlbc.Connection              := inLibGlobalVar.oConn;
   unqryMovimientosProveedor.Connection  := inLibGlobalVar.oConn;
   unqryFormasPago.Connection            := inLibGlobalVar.oConn;
+  unqryAlmacenesAlbc.Connection         := inLibGlobalVar.oConn;
   unstrdprcGetContadorAlbc.Connection   := inLibGlobalVar.oConn;
   unqryDefArticuloAlbc.Connection       := inLibGlobalVar.oConn;
   // Master-detail server-side: el WHERE del SQL toma los valores de
@@ -304,6 +309,8 @@ begin
     unqryMovimientosProveedor.Close;
   if Assigned(unqryFormasPago) and unqryFormasPago.Active then
     unqryFormasPago.Close;
+  if Assigned(unqryAlmacenesAlbc) and unqryAlmacenesAlbc.Active then
+    unqryAlmacenesAlbc.Close;
   inherited;
 end;
 
@@ -311,6 +318,13 @@ procedure TdmAlbaranesCompra.OpenTables;
 begin
   // Delegamos en AbrirDetalles para unificar logging y cronometro.
   AbrirDetalles;
+end;
+
+procedure TdmAlbaranesCompra.RefrescarAlmacenes(
+  const ACodigoEmpresa: string);
+begin
+  if not unqryAlmacenesAlbc.Active then
+    unqryAlmacenesAlbc.Open;
 end;
 
 procedure TdmAlbaranesCompra.AbrirDetalles;
@@ -342,6 +356,7 @@ var
 begin
   inherited;
   sw := TStopwatch.StartNew;
+  RefrescarAlmacenes(oEmpresa);
   AbrirConTiempo(unqryAlbaranesCompraLineas,
                  'unqryAlbaranesCompraLineas');
   AbrirConTiempo(unqryMovimientosProveedor,
@@ -374,6 +389,8 @@ begin
       FieldByName('CODIGO_EMP_ALBC').AsString := oEmpresa
     else
       FieldByName('CODIGO_EMP_ALBC').AsString := '0';
+    if FindField('CODIGO_ALM_ALBC') <> nil then
+      FieldByName('CODIGO_ALM_ALBC').AsString := oAlmacen;
     FieldByName('CODIGO_PRV_ALBC').AsString := '0';
     if FindField('ESPIVOTE_HORIZONTAL_ALBC') <> nil then
       FieldByName('ESPIVOTE_HORIZONTAL_ALBC').AsString := 'N';
@@ -390,6 +407,17 @@ begin
       'ALBC');
   end;
   FTransicionEstadoAlbc := '';
+end;
+
+procedure TdmAlbaranesCompra.ValidarAlmacenCabecera;
+begin
+  if (unqryTablaG.FindField('CODIGO_ALM_ALBC') <> nil) and
+     (Trim(unqryTablaG.FieldByName('CODIGO_ALM_ALBC').AsString) = '') then
+  begin
+    MessageDlg('Debe seleccionar el almacén destino del albarán de compra.',
+               mtWarning, [mbOk], 0);
+    Abort;
+  end;
 end;
 
 procedure TdmAlbaranesCompra.unqryTablaGBeforePost(DataSet: TDataSet);
@@ -412,6 +440,7 @@ begin
      (Trim(DataSet.FieldByName('ESPIVOTE_HORIZONTAL_ALBC').AsString) = '')
   then
     DataSet.FieldByName('ESPIVOTE_HORIZONTAL_ALBC').AsString := 'N';
+  ValidarAlmacenCabecera;
   if (unqryTablaG.FieldByName('NUMERO_ALBC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_ALBC').AsString = '') then
     GetCodigoAutoAlbaranCompra;

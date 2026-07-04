@@ -48,10 +48,13 @@ type
     dsMensajes:    TDataSource;
     unqryFormasPago: TUniQuery;
     dsFormasPago: TDataSource;
+    unqryAlmacenesPed: TUniQuery;
+    dsAlmacenesPed: TDataSource;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
+    procedure unqryTablaGAfterPost(DataSet: TDataSet);
     procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
     procedure unqryPedidosLineasAfterInsert(DataSet: TDataSet);
     procedure unqryPedidosLineasBeforePost(DataSet: TDataSet);
@@ -67,7 +70,9 @@ type
     procedure CopiarEmpresaaPedido(DataSet: TDataSet);
     procedure CopiarClienteaPedido(DataSet: TDataSet);
     function BuscarEmpresa(const ACodigo: string): Boolean;
+    function BuscarAlmacen(const ACodigo: string): Boolean;
     function BuscarCliente(const ACodigo: string): Boolean;
+    procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
 
     // Cantidades entregadas / pendientes
     procedure RecalcularEntregasLinea;
@@ -112,6 +117,8 @@ type
     FProcsInstalados: Boolean;
     FCalculandoTotales: Boolean;
     procedure AsignarNumeroLineaPedido(DataSet: TDataSet);
+    procedure PersistirAlmacenCabecera;
+    procedure ValidarAlmacenCabecera;
     // Propone la serie PE de fza_empresas_series de la empresa emisora
     // en documentos nuevos sin numerar (al cambiar la empresa en el alta)
     procedure ProponerSerieEmpresa(const AEmpresa: string);
@@ -143,6 +150,11 @@ begin
   inherited;
   unqryTablaG.Connection           := inLibGlobalVar.oConn;
   unqryTablaG.BeforeDelete         := unqryTablaGBeforeDelete;
+  unqryTablaG.AfterPost            := unqryTablaGAfterPost;
+  unqryTablaG.SQLRefresh.Text      :=
+    'SELECT * FROM vi_pedidos ' +
+    ' WHERE NUMERO_PED = :NUMERO_PED ' +
+    '   AND SERIE_PED = :SERIE_PED';
   unqryPedidosLineas.Connection    := inLibGlobalVar.oConn;
   unqryPedidosLineas.BeforeDelete  := unqryPedidosLineasBeforeDelete;
   unqryLinPedido.Connection        := inLibGlobalVar.oConn;
@@ -159,6 +171,7 @@ begin
   unqryAlbaranes.Connection        := inLibGlobalVar.oConn;
   unqryMensajes.Connection         := inLibGlobalVar.oConn;
   unqryFormasPago.Connection       := inLibGlobalVar.oConn;
+  unqryAlmacenesPed.Connection     := inLibGlobalVar.oConn;
 end;
 
 procedure TdmPedidos.DataModuleDestroy(Sender: TObject);
@@ -171,6 +184,8 @@ begin
     unqryMensajes.Close;
   if Assigned(unqryFormasPago) and unqryFormasPago.Active then
     unqryFormasPago.Close;
+  if Assigned(unqryAlmacenesPed) and unqryAlmacenesPed.Active then
+    unqryAlmacenesPed.Close;
   inherited;
 end;
 
@@ -179,6 +194,12 @@ begin
   // Delegar en AbrirDetalles para que el flujo (cronometro y logging)
   // sea unico independientemente de quien lo invoque.
   AbrirDetalles;
+end;
+
+procedure TdmPedidos.RefrescarAlmacenes(const ACodigoEmpresa: string);
+begin
+  if not unqryAlmacenesPed.Active then
+    unqryAlmacenesPed.Open;
 end;
 
 procedure TdmPedidos.AbrirDetalles;
@@ -214,6 +235,7 @@ begin
   AbrirConTiempo(unqryAlbaranes,     'unqryAlbaranes');
   AbrirConTiempo(unqryMensajes,      'unqryMensajes');
   AbrirConTiempo(unqryFormasPago,    'unqryFormasPago');
+  AbrirConTiempo(unqryAlmacenesPed,  'unqryAlmacenesPed');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
@@ -225,7 +247,10 @@ begin
   with unqryTablaG do
   begin
     FieldByName('FECHA_PED').AsDateTime := Date;
-    FieldByName('CODIGO_EMP_PED').AsString := '0';
+    if Trim(oEmpresa) <> '' then
+      FieldByName('CODIGO_EMP_PED').AsString := oEmpresa
+    else
+      FieldByName('CODIGO_EMP_PED').AsString := '0';
     FieldByName('CODIGO_CLI_PED').AsString := '0';
     FieldByName('NUMERO_PED').AsString     := '0';
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='PE'
@@ -239,12 +264,17 @@ begin
       FieldByName('ESTADO_PED').AsString   := 'ABIERTO';
     if FindField('ESCONSOLIDADO_PED') <> nil then
       FieldByName('ESCONSOLIDADO_PED').AsString := 'N';
+    if Trim(oEmpresa) <> '' then
+      BuscarEmpresa(oEmpresa);
+    if FindField('CODIGO_ALM_PED') <> nil then
+      FieldByName('CODIGO_ALM_PED').AsString := oAlmacen;
   end;
 end;
 
 procedure TdmPedidos.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
+  ValidarAlmacenCabecera;
   if (unqryTablaG.FieldByName('NUMERO_PED').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_PED').AsString = '') then
     GetCodigoAutoPedido;
@@ -252,6 +282,12 @@ begin
     GetCodigoAutoCliente;
   AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'PED');
   CalcularTotalesPedido;
+end;
+
+procedure TdmPedidos.unqryTablaGAfterPost(DataSet: TDataSet);
+begin
+  inherited;
+  PersistirAlmacenCabecera;
 end;
 
 procedure TdmPedidos.unqryTablaGBeforeDelete(DataSet: TDataSet);
@@ -309,6 +345,10 @@ begin
       FieldByName('CANTIDAD_PENDIENTE_PEDLIN').AsFloat := 1;
     if FindField('ESENTREGADA_PEDLIN') <> nil then
       FieldByName('ESENTREGADA_PEDLIN').AsString := 'N';
+    if (FindField('CODIGO_ALMACEN_PEDLIN') <> nil) and
+       (unqryTablaG.FindField('CODIGO_ALM_PED') <> nil) then
+      FieldByName('CODIGO_ALMACEN_PEDLIN').AsString :=
+        unqryTablaG.FieldByName('CODIGO_ALM_PED').AsString;
     if FindField('USUARIO_ALTA') <> nil then
       FieldByName('USUARIO_ALTA').AsString := oUser;
     if FindField('INSTANTE_ALTA') <> nil then
@@ -613,6 +653,87 @@ begin
       end;
     finally
       FreeAndNil(q);
+    end;
+  end;
+end;
+
+function TdmPedidos.BuscarAlmacen(const ACodigo: string): Boolean;
+var
+  qAlm: TUniQuery;
+  sCodigo: string;
+  sEmpresa: string;
+begin
+  Result := False;
+  sCodigo := Trim(ACodigo);
+  if sCodigo <> '' then
+  begin
+    qAlm := TUniQuery.Create(nil);
+    try
+      qAlm.Connection := unqryTablaG.Connection;
+      qAlm.SQL.Text :=
+        'SELECT CODIGO_ALM_ALM, CODIGO_EMP_ALM ' +
+        '  FROM fza_almacenes ' +
+        ' WHERE CODIGO_ALM_ALM = :alm ' +
+        '   AND COALESCE(ESACTIVO_ALM, ''S'') = ''S''';
+      qAlm.ParamByName('alm').AsString := sCodigo;
+      qAlm.Open;
+      if not qAlm.IsEmpty then
+      begin
+        sEmpresa := qAlm.FieldByName('CODIGO_EMP_ALM').AsString;
+        if sEmpresa <> '' then
+          BuscarEmpresa(sEmpresa);
+        if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+          unqryTablaG.Edit;
+        if unqryTablaG.FindField('CODIGO_ALM_PED') <> nil then
+          unqryTablaG.FieldByName('CODIGO_ALM_PED').AsString := sCodigo;
+        Result := True;
+      end;
+    finally
+      FreeAndNil(qAlm);
+    end;
+  end;
+end;
+
+procedure TdmPedidos.ValidarAlmacenCabecera;
+begin
+  if (unqryTablaG.FindField('CODIGO_ALM_PED') <> nil) and
+     (Trim(unqryTablaG.FieldByName('CODIGO_ALM_PED').AsString) = '') then
+  begin
+    MessageDlg('Debe seleccionar el almacén de salida del pedido.',
+               mtWarning, [mbOk], 0);
+    Abort;
+  end;
+end;
+
+procedure TdmPedidos.PersistirAlmacenCabecera;
+var
+  q: TUniQuery;
+  sAlmacen: string;
+  sNumero: string;
+  sSerie: string;
+begin
+  if unqryTablaG.FindField('CODIGO_ALM_PED') <> nil then
+  begin
+    sAlmacen := Trim(unqryTablaG.FieldByName('CODIGO_ALM_PED').AsString);
+    sNumero  := Trim(unqryTablaG.FieldByName('NUMERO_PED').AsString);
+    sSerie   := Trim(unqryTablaG.FieldByName('SERIE_PED').AsString);
+    if (sAlmacen <> '') and (sNumero <> '') and (sSerie <> '') then
+    begin
+      q := TUniQuery.Create(nil);
+      try
+        q.Connection := unqryTablaG.Connection;
+        q.SQL.Text :=
+          'UPDATE fza_pedidos ' +
+          '   SET CODIGO_ALM_PED = :alm ' +
+          ' WHERE NUMERO_PED = :num ' +
+          '   AND SERIE_PED = :ser';
+        q.ParamByName('alm').AsString := sAlmacen;
+        q.ParamByName('num').AsString := sNumero;
+        q.ParamByName('ser').AsString := sSerie;
+        q.ExecSQL;
+      finally
+        FreeAndNil(q);
+      end;
     end;
   end;
 end;
@@ -1144,6 +1265,7 @@ var
   qMsg: TUniQuery;
   i: Integer;
   sNumero, sSerie, sCodigoCli: string;
+  sEmpresa, sAlmacen: string;
   lp: TLineaPed;
   tm: TMensaje;
   bTxOwned: Boolean;
@@ -1153,6 +1275,16 @@ begin
   Result := False;
   if aOrder = nil then Exit;
   if ExistePedidoPrestaShop(aOrder.idPedido) then Exit;
+  sEmpresa := Trim(oEmpresa);
+  if sEmpresa = '' then
+    sEmpresa := '0';
+  sAlmacen := Trim(oAlmacen);
+  if sAlmacen = '' then
+  begin
+    MessageDlg('Debe seleccionar el almacén de salida del pedido.',
+               mtWarning, [mbOk], 0);
+    Abort;
+  end;
 
   // Reservar número usando el procedimiento de contadores
   unqryTablaG.Insert;
@@ -1162,7 +1294,9 @@ begin
     unqryTablaG.FieldByName('FECHA_PED').AsDateTime        := Date;
     if unqryTablaG.FindField('ESTADO_PED') <> nil then
       unqryTablaG.FieldByName('ESTADO_PED').AsString       := 'IMPORTADO';
-    unqryTablaG.FieldByName('CODIGO_EMP_PED').AsString     := '0';
+    unqryTablaG.FieldByName('CODIGO_EMP_PED').AsString     := sEmpresa;
+    if unqryTablaG.FindField('CODIGO_ALM_PED') <> nil then
+      unqryTablaG.FieldByName('CODIGO_ALM_PED').AsString   := sAlmacen;
     unqryTablaG.FieldByName('CODIGO_CLI_PED').AsString     := '0';
     GetCodigoAutoPedido;
     sNumero := unqryTablaG.FieldByName('NUMERO_PED').AsString;
@@ -1198,7 +1332,7 @@ begin
       qIns.SQL.Text :=
         'INSERT INTO fza_pedidos (NUMERO_PED, SERIE_PED, FECHA_PED, '
           +
-        'ESTADO_PED, CODIGO_CLI_PED, ' +
+        'ESTADO_PED, CODIGO_EMP_PED, CODIGO_ALM_PED, CODIGO_CLI_PED, ' +
         ' IDPS_PED, FECHAPS_PED, REFERENCIAPS_PED, ' +
         ' FORMAPAGOPS_PED, TRANSPORTISTAPS_PED, ESTADOPEDIDOPS_PED, ' +
         ' EMAIL_CLIENTE_PED, NIF_CLIENTE_PED, ' +
@@ -1212,7 +1346,8 @@ begin
         ' CODIGO_POSTAL_CLIENTE_FISCAL_PED, ' +
         ' TOTAL_LIQUIDO_PED, TOTAL_PAGADOREALPS_PED, ' +
         ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-        'VALUES (:NUMERO, :SERIE, :FECHA, :ESTADO, :CODCLI, ' +
+        'VALUES (:NUMERO, :SERIE, :FECHA, :ESTADO, :CODEMP, :CODALM, ' +
+        '        :CODCLI, ' +
         '        :IDPS, :FECHAPS, :REFPS, ' +
         '        :FORMAPAGO, :TRANSP, :ESTADOPS, ' +
         '        :EMAILCLI, :NIFCLI, ' +
@@ -1226,6 +1361,8 @@ begin
       qIns.ParamByName('SERIE').AsString   := sSerie;
       qIns.ParamByName('FECHA').AsDateTime := Date;
       qIns.ParamByName('ESTADO').AsString  := 'IMPORTADO';
+      qIns.ParamByName('CODEMP').AsString  := sEmpresa;
+      qIns.ParamByName('CODALM').AsString  := sAlmacen;
       qIns.ParamByName('CODCLI').AsString  := sCodigoCli;
       qIns.ParamByName('IDPS').AsString    := aOrder.idPedido;
       qIns.ParamByName('FECHAPS').AsString := aOrder.FechaCreacion;
@@ -1265,6 +1402,7 @@ begin
         'DESCRIPCION_ARTICULO_PEDLIN, ' +
         ' CANTIDAD_PEDLIN, CANTIDAD_ENTREGADA_PEDLIN, ' +
         'CANTIDAD_PENDIENTE_PEDLIN, ESENTREGADA_PEDLIN, ' +
+        ' CODIGO_ALMACEN_PEDLIN, ' +
         ' PRECIO_VENTA_SIVA_ARTICULO_PEDLIN, ' +
         'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN, TOTAL_PEDLIN, ' +
         ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
@@ -1272,6 +1410,7 @@ begin
         '        :IDLPS, :IDPPS, :REFPROD, :IDATRIB, ' +
         '        :CODART, :EAN13, :DESCR, ' +
         '        :CANT, 0, :CANT, ''N'', ' +
+        '        :CODALM, ' +
         '        :PSIVA, :PCIVA, :TOT, ' +
         '        NOW(), :USU, :USU)';
       for i := 0 to aOrder.LineasPedido.Count - 1 do
@@ -1288,6 +1427,7 @@ begin
         qLin.ParamByName('EAN13').AsString   := lp.sCodEAN13;
         qLin.ParamByName('DESCR').AsString   := lp.sDescripcion;
         qLin.ParamByName('CANT').AsFloat     := StrToFloatDef(lp.sCantidad, 1);
+        qLin.ParamByName('CODALM').AsString  := sAlmacen;
         qLin.ParamByName('PSIVA').AsCurrency := lp.cPrecioSIVA;
         qLin.ParamByName('PCIVA').AsCurrency := lp.cPrecioCIVA;
         qLin.ParamByName('TOT').AsCurrency   :=

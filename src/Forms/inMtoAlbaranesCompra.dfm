@@ -165,7 +165,6 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             ClientRectTop = 28
             object tsCabecera: TcxTabSheet
               Caption = 'Cabecera'
-              ExplicitHeight = 133
               object lblNroAlbaran: TcxLabel
                 Left = 8
                 Top = 12
@@ -234,8 +233,9 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Left = 440
                 Top = 12
                 Caption = 'Pedido origen (N'#250'mero / Serie)'
-                TabOrder = 17
+                TabOrder = 25
                 Transparent = True
+                Visible = False
               end
               object txtNUMERO_PED_ALBC: TcxDBTextEdit
                 Left = 440
@@ -244,6 +244,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
                 TabOrder = 18
+                Visible = False
                 Width = 90
               end
               object txtSERIE_PED_ALBC: TcxDBTextEdit
@@ -253,6 +254,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
                 TabOrder = 19
+                Visible = False
                 Width = 80
               end
               object btnIrDocumento: TcxButton
@@ -263,6 +265,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Action = actIrDocumento
                 Caption = 'Ir a pedido origen'
                 TabOrder = 20
+                Visible = False
               end
               object lblFacturaDestino: TcxLabel
                 Left = 640
@@ -270,6 +273,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Caption = 'Factura creada (N'#250'mero / Serie)'
                 TabOrder = 21
                 Transparent = True
+                Visible = False
               end
               object txtNUMERO_FAC_ALBC: TcxDBTextEdit
                 Left = 640
@@ -278,6 +282,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
                 TabOrder = 22
+                Visible = False
                 Width = 90
               end
               object txtSERIE_FAC_ALBC: TcxDBTextEdit
@@ -287,6 +292,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
                 TabOrder = 23
+                Visible = False
                 Width = 80
               end
               object btnIrFacturaCreada: TcxButton
@@ -295,8 +301,8 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Width = 190
                 Height = 23
                 Action = actIrFacturaCreada
-                Caption = 'Ir a factura creada'
                 TabOrder = 24
+                Visible = False
               end
               object lblCodigoEmpresa: TcxLabel
                 Left = 8
@@ -316,6 +322,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                     Kind = bkEllipsis
                   end>
                 Properties.OnButtonClick = btnCODIGO_EMP_ALBCPropertiesButtonClick
+                Properties.OnEditValueChanged = btnCODIGO_EMP_ALBCPropertiesEditValueChanged
                 TabOrder = 9
                 OnKeyUp = btnCODIGO_EMP_ALBCKeyUp
                 Width = 150
@@ -334,7 +341,6 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 DataBinding.DataSource = dsTablaG
                 Properties.DropDownListStyle = lsEditList
                 Properties.DropDownRows = 15
-                Properties.IncrementalFiltering = True
                 Properties.KeyFieldNames = 'CODIGO_PRV_PRV'
                 Properties.ListColumns = <
                   item
@@ -371,11 +377,30 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 TabOrder = 14
                 Transparent = True
               end
-              object txtCODIGO_ALM_ALBC: TcxDBTextEdit
+              object cbbCODIGO_ALM_ALBC: TcxDBLookupComboBox
                 Left = 520
                 Top = 100
                 DataBinding.DataField = 'CODIGO_ALM_ALBC'
                 DataBinding.DataSource = dsTablaG
+                Properties.DropDownListStyle = lsFixedList
+                Properties.DropDownRows = 15
+                Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'Código'
+                    Width = 60
+                    FieldName = 'CODIGO_ALM_ALM'
+                  end
+                  item
+                    Caption = 'Almacén'
+                    FieldName = 'NOMBRE_ALM_ALM'
+                  end
+                  item
+                    Caption = 'Empresa'
+                    Width = 60
+                    FieldName = 'CODIGO_EMP_ALM'
+                  end>
+                Properties.OnEditValueChanged = cbbCODIGO_ALM_ALBCPropertiesEditValueChanged
                 TabOrder = 15
                 Width = 120
               end
@@ -463,41 +488,36 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
         end
         object pnlBodyFicha: TPanel
           Left = 0
-          Top = 199
+          Top = 246
           Width = 937
-          Height = 418
+          Height = 371
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 2
-          ExplicitTop = 238
-          ExplicitHeight = 379
           object pcAlbaran: TcxPageControl
             Left = 0
             Top = 0
             Width = 937
-            Height = 418
+            Height = 371
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsLineasAlbaran
             Properties.CustomButtons.Buttons = <>
-            ExplicitHeight = 379
-            ClientRectBottom = 414
+            ClientRectBottom = 367
             ClientRectLeft = 4
             ClientRectRight = 933
             ClientRectTop = 28
             object tsLineasAlbaran: TcxTabSheet
               Caption = '&1_L'#237'neas '
-              ExplicitHeight = 347
               object cxgrdLineasAlbaran: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 929
-                Height = 386
+                Height = 339
                 Align = alClient
                 TabOrder = 0
                 OnEnter = cxgrdLineasAlbaranEnter
                 OnExit = cxgrdLineasAlbaranExit
-                ExplicitHeight = 347
                 object tvLineasAlbaran: TcxGridDBTableView
                   OnCustomDrawCell = tvLineasAlbaranCustomDrawCell
                   OnEditing = tvLineasAlbaranEditing
@@ -574,15 +594,13 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             end
             object tsProveedor: TcxTabSheet
               Caption = '&2_Movimientos '
-              ExplicitHeight = 347
               object cxgrdMovimientosProveedor: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 929
-                Height = 386
+                Height = 339
                 Align = alClient
                 TabOrder = 0
-                ExplicitHeight = 347
                 object tvMovimientosProveedor: TcxGridDBTableView
                   OptionsData.Editing = False
                   OptionsView.GroupByBox = False
@@ -650,17 +668,15 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             object tsTotales: TcxTabSheet
               Caption = '&3_Totales'
               ImageIndex = 2
-              ExplicitHeight = 347
               object scrTotales: TScrollBox
                 Left = 0
                 Top = 0
                 Width = 929
-                Height = 386
+                Height = 339
                 Align = alClient
                 BorderStyle = bsNone
                 ParentBackground = True
                 TabOrder = 0
-                ExplicitHeight = 347
                 object lblTotalesTotalBase: TcxLabel
                   Left = 38
                   Top = 39
@@ -1215,7 +1231,6 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             end
             object tsObservaciones: TcxTabSheet
               Caption = '&4_Observaciones'
-              ExplicitHeight = 347
               object memObservaciones: TcxDBMemo
                 Left = 0
                 Top = 0
@@ -1223,8 +1238,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 DataBinding.DataField = 'OBSERVACIONES_ALBC'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 0
-                ExplicitHeight = 347
-                Height = 386
+                Height = 339
                 Width = 929
               end
             end

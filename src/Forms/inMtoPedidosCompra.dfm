@@ -271,6 +271,7 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                     Kind = bkEllipsis
                   end>
                 Properties.OnButtonClick = btnCODIGO_EMP_PEDCPropertiesButtonClick
+                Properties.OnEditValueChanged = btnCODIGO_EMP_PEDCPropertiesEditValueChanged
                 TabOrder = 11
                 OnKeyUp = btnCODIGO_EMP_PEDCKeyUp
                 Width = 150
@@ -325,11 +326,30 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
                 TabOrder = 16
                 Transparent = True
               end
-              object txtCODIGO_ALM_PEDC: TcxDBTextEdit
+              object cbbCODIGO_ALM_PEDC: TcxDBLookupComboBox
                 Left = 520
                 Top = 92
                 DataBinding.DataField = 'CODIGO_ALM_PEDC'
                 DataBinding.DataSource = dsTablaG
+                Properties.DropDownListStyle = lsFixedList
+                Properties.DropDownRows = 15
+                Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'Código'
+                    Width = 60
+                    FieldName = 'CODIGO_ALM_ALM'
+                  end
+                  item
+                    Caption = 'Almacén'
+                    FieldName = 'NOMBRE_ALM_ALM'
+                  end
+                  item
+                    Caption = 'Empresa'
+                    Width = 60
+                    FieldName = 'CODIGO_EMP_ALM'
+                  end>
+                Properties.OnEditValueChanged = cbbCODIGO_ALM_PEDCPropertiesEditValueChanged
                 TabOrder = 17
                 Width = 120
               end

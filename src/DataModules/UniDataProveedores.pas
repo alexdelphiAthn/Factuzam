@@ -23,7 +23,6 @@ uses
 
 type
   TdmProveedores = class(TdmBase)
-    unstrdprcContador: TUniStoredProc;
     unqryArticulos: TUniQuery;
     dsArticulos: TDataSource;
     unqryLinFacturasArticulos: TUniQuery;
@@ -84,7 +83,7 @@ implementation
 
 uses
   inMtoProveedores, inLibGlobalVar, inLibLog, inLibDocumentoFiscal,
-  System.Diagnostics;
+  inLibtb, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -96,7 +95,6 @@ procedure TdmProveedores.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   // Solo Connection. Los .Open se han movido a AbrirDetalles.
-  unstrdprcContador.Connection := oConn;
   unqryArticulos.Connection := oConn;
   unqryLinFacturasArticulos.Connection := oConn;
   unqryConjuntosTallas.Connection := oConn;
@@ -378,36 +376,24 @@ begin
 end;
 
 procedure TdmProveedores.GetCodigoAutoProveedor;
+var
+  sContador: string;
 begin
   if unqryTablaG.FindField('CODIGO_PRV_PRV').AsString = '0' then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := oUser;
-      ParamByName('ptipodoc').AsString :=  'PV';
-      ExecProc;
-      unqryTablaG.FindField('CODIGO_PRV_PRV').AsString :=
-        ParamByName('pcont').AsString;
-    end;
+    sContador := ObtenerSiguienteContador('PV');
+    if Trim(sContador) = '' then
+      raise Exception.Create('No se pudo generar el código automático ' +
+        'del proveedor.');
+    unqryTablaG.FindField('CODIGO_PRV_PRV').AsString := sContador;
   end;
-    if unqryTablaG.FindField('ORDEN_PRV').AsString = '0' then
+  if unqryTablaG.FindField('ORDEN_PRV').AsString = '0' then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := oUser;
-      ParamByName('ptipodoc').AsString :=  'PO';
-      ExecProc;
-      unqryTablaG.FindField('ORDEN_PRV').AsString :=
-        ParamByName('pcont').AsString;
-    end;
+    sContador := ObtenerSiguienteContador('PO');
+    if Trim(sContador) = '' then
+      raise Exception.Create('No se pudo generar el orden automático ' +
+        'del proveedor.');
+    unqryTablaG.FindField('ORDEN_PRV').AsString := sContador;
   end;
 end;
 
@@ -474,6 +460,8 @@ begin
   inherited;
   unqryTablaG.FindField('CODIGO_PRV_PRV').AsString := '0';
   unqryTablaG.FindField('ORDEN_PRV').AsString := '0';
+  if unqryTablaG.FindField('ESACTIVO_PRV') <> nil then
+    unqryTablaG.FieldByName('ESACTIVO_PRV').AsString := 'S';
   if unqryTablaG.FindField('ESVARIOS_TIPOS_IVA_PRV') <> nil then
     unqryTablaG.FieldByName(
       'ESVARIOS_TIPOS_IVA_PRV').AsString := 'N';

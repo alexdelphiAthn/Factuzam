@@ -233,6 +233,7 @@ type
     // del albaran recien enfocado.
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure dsLineasDataChangeHook(Sender: TObject; Field: TField);
+    procedure DesactivarEnterAsTabEnCombo(AComp: TcxDBLookupComboBox);
   public
     dmmAlbaranes: TdmAlbaranes;
     procedure CrearTablaPrincipal; override;
@@ -615,6 +616,7 @@ begin
   tvMovimientos.DataController.DataSource   := dmmAlbaranes.dsMovimientosAlb;
   cbbTotalesFORMA_PAGO_ALB.Properties.ListSource := dmmAlbaranes.dsFormasPago;
   cbbCODIGO_ALM_ALB.Properties.ListSource := dmmAlbaranes.dsAlmacenesAlb;
+  DesactivarEnterAsTabEnCombo(cbbCODIGO_ALM_ALB);
   // Master-detail: enganchar las queries de detalle a la cabecera (dsTablaG)
   // para que lineas, facturas y movimientos sigan al albaran seleccionado.
   dmmAlbaranes.unqryAlbaranesLineas.MasterSource := dsTablaG;
@@ -864,6 +866,16 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TfrmMtoAlbaranes.DesactivarEnterAsTabEnCombo(
+  AComp: TcxDBLookupComboBox);
+begin
+  AComp.OnEnter := DesactivarEnterAsTabTemporal;
+  AComp.OnExit  := RestaurarEnterAsTabTemporal;
+  AComp.Properties.OnInitPopup := DesactivarEnterAsTabTemporal;
+  AComp.Properties.OnCloseUp   := RestaurarEnterAsTabTemporal;
+  AComp.Properties.PostPopupValueOnTab := True;
 end;
 
 procedure TfrmMtoAlbaranes.cbbCODIGO_ALM_ALBPropertiesEditValueChanged(

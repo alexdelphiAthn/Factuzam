@@ -78,6 +78,8 @@ type
     btnCODIGO_EMP: TcxDBButtonEdit;
     lblCodigoEmpresa: TcxLabel;
     cxdblblRAZON_SOCIAL_EMPRESA_PED: TcxDBLabel;
+    lblCodigoAlmacen: TcxLabel;
+    cbbCODIGO_ALM_PED: TcxDBLookupComboBox;
     btnCODIGO_CLI: TcxDBButtonEdit;
     lblCodigoCliente: TcxLabel;
     cxdblblRAZON_SOCIAL_CLIENTE_PED: TcxDBLabel;
@@ -210,6 +212,7 @@ type
     procedure btnCODIGO_CLIPropertiesButtonClick(Sender: TObject;
                                                 AButtonIndex: Integer);
     procedure btnCODIGO_EMPPropertiesEditValueChanged(Sender: TObject);
+    procedure cbbCODIGO_ALM_PEDPropertiesEditValueChanged(Sender: TObject);
     procedure btnCODIGO_CLIPropertiesEditValueChanged(Sender: TObject);
     procedure btnCODIGO_EMPKeyUp(Sender: TObject; var Key: Word;
                                  Shift: TShiftState);
@@ -237,6 +240,7 @@ type
     procedure cxgrdcPedLinSKUPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure RellenarLineasAlEntregarTodo;
+    procedure DesactivarEnterAsTabEnCombo(AComp: TcxDBLookupComboBox);
     // Pinta lblTotalPrendasPed con el total de prendas (suma de
     // CANTIDAD_PEDLIN de todas las lineas). Calculado en Delphi, no
     // persiste en BBDD.
@@ -635,8 +639,7 @@ end;
 
 function TfrmMtoPedidos.SqlRestriccionUsuario: string;
 begin
-  // Los pedidos de venta solo llevan empresa en cabecera
-  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_PED', '', '');
+  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_PED', 'CODIGO_ALM_PED', '');
 end;
 
 procedure TfrmMtoPedidos.CrearTablaPrincipal;
@@ -657,6 +660,8 @@ begin
   tvAlbaranes.DataController.DataSource := dmmPedidos.dsAlbaranes;
   tvMensajes.DataController.DataSource := dmmPedidos.dsMensajes;
   cbbTotalesFORMA_PAGO_PED.Properties.ListSource := dmmPedidos.dsFormasPago;
+  cbbCODIGO_ALM_PED.Properties.ListSource := dmmPedidos.dsAlmacenesPed;
+  DesactivarEnterAsTabEnCombo(cbbCODIGO_ALM_PED);
   dmmPedidos.unqryPedidosLineas.MasterSource := dsTablaG;
   dmmPedidos.unqryAlbaranes.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_PED;NUMERO_PED';
@@ -757,6 +762,16 @@ begin
   end;
 end;
 
+procedure TfrmMtoPedidos.DesactivarEnterAsTabEnCombo(
+  AComp: TcxDBLookupComboBox);
+begin
+  AComp.OnEnter := DesactivarEnterAsTabTemporal;
+  AComp.OnExit  := RestaurarEnterAsTabTemporal;
+  AComp.Properties.OnInitPopup := DesactivarEnterAsTabTemporal;
+  AComp.Properties.OnCloseUp   := RestaurarEnterAsTabTemporal;
+  AComp.Properties.PostPopupValueOnTab := True;
+end;
+
 procedure TfrmMtoPedidos.btnCODIGO_EMPPropertiesEditValueChanged(
   Sender: TObject);
 var
@@ -776,6 +791,33 @@ begin
       FBuscandoDatosCabecera := True;
       try
         dmmPedidos.BuscarEmpresa(sCodigo);
+        dmmPedidos.RefrescarAlmacenes('');
+      finally
+        FBuscandoDatosCabecera := False;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoPedidos.cbbCODIGO_ALM_PEDPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  e: TcxCustomEdit;
+  sCodigo: string;
+begin
+  inherited;
+  if (not FBuscandoDatosCabecera) and Assigned(dmmPedidos) and
+     Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and
+     (dsTablaG.DataSet.State in dsEditModes) and
+     (Sender is TcxCustomEdit) then
+  begin
+    e := Sender as TcxCustomEdit;
+    sCodigo := Trim(VarToStr(e.EditingValue));
+    if sCodigo <> '' then
+    begin
+      FBuscandoDatosCabecera := True;
+      try
+        dmmPedidos.BuscarAlmacen(sCodigo);
       finally
         FBuscandoDatosCabecera := False;
       end;

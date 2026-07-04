@@ -495,7 +495,7 @@ type
     FFiltroProvCsv: string;
     FFiltroFamCsv: string;
     // True cuando CrearTablaPrincipal detecta que la lista con los filtros
-    // por defecto (solo activos + solo stock) supera UMBRAL_PRECARGA y, en
+    // por defecto (solo activos) supera UMBRAL_PRECARGA y, en
     // vez de abrir el set completo, abre la lista vacia (LIMIT 0). Lo
     // consume TrasPrecargaAsync para lanzar el dialogo de filtrado y
     // reabrir ya acotado, sin congelar la apertura del Mto.
@@ -624,7 +624,7 @@ uses
 
 const
   // Tope de filas para la precarga de la lista de articulos. Si con los
-  // filtros por defecto (solo activos + solo stock) salen mas, no se carga
+  // filtros por defecto (solo activos) salen mas, no se carga
   // el set completo: aparece el dialogo de filtrado por temporada/
   // proveedor/familia para acotar antes de abrir la lista.
   UMBRAL_PRECARGA = 50000;
@@ -1028,6 +1028,7 @@ var
   frmSel: TfrmMtoModalAddPreciosTar;
   i, j: Integer;
   qryTodasTarifas: TUniQuery;
+  qrySkus: TUniQuery;
   ListaSkus, ListaTarifas: TStringList;
   SkusSel, TarifasSel: TStringList;
   // --- VARIABLES PARA CONTROL DE VIGENCIA ---
@@ -1039,6 +1040,7 @@ var
   Cond1, Cond2: Boolean;
   codArticulo: String;
   PrecioPadre: Double;
+  sSku: string;
 begin
   inherited;
   UserHasta := 0;
@@ -1059,21 +1061,25 @@ begin
   try
     // --- CARGA DE SKUs ---
     ListaSkus.Add('ARTÍCULO');
-    if not dmmArticulos.unqryVariacionesArticulos.Active then
-      dmmArticulos.unqryVariacionesArticulos.Open;
-    with dmmArticulos.unqryVariacionesArticulos do
-    begin
-      DisableControls;
-      try
-        First;
-        while not Eof do
-        begin
-          ListaSkus.Add(FieldByName('CODIGO_UNIDAD_SKU').AsString);
-          Next;
-        end;
-      finally
-        EnableControls;
+    qrySkus := TUniQuery.Create(nil);
+    try
+      qrySkus.Connection := dmmArticulos.unqryTablaG.Connection;
+      qrySkus.SQL.Text :=
+        'SELECT CODIGO_UNIDAD_SKU ' +
+        '  FROM fza_articulos_skus ' +
+        ' WHERE CODIGO_ART_SKU = :ART ' +
+        ' ORDER BY CODIGO_UNIDAD_SKU';
+      qrySkus.ParamByName('ART').AsString := CodArticulo;
+      qrySkus.Open;
+      while not qrySkus.Eof do
+      begin
+        sSku := Trim(qrySkus.FieldByName('CODIGO_UNIDAD_SKU').AsString);
+        if sSku <> '' then
+          ListaSkus.Add(sSku);
+        qrySkus.Next;
       end;
+    finally
+      FreeAndNil(qrySkus);
     end;
     frmSel.CargarSkus(ListaSkus);
 
@@ -1970,7 +1976,7 @@ begin
   FFiltroFamCsv  := '';
   FPrecargaPendiente := False;
   // Precarga: DE MOMENTO sin dialogo de acotado. Dejamos la lista CERRADA
-  // con el SQL filtrado (por defecto solo activos + solo stock) y que la
+  // con el SQL filtrado (por defecto solo activos) y que la
   // carga la haga AbrirTablaPrincipalAsync en segundo plano, mostrando el
   // overlay "Cargando datos..." con barra de progreso. Asi se cargan TODOS
   // los articulos del filtro sin congelar la apertura ni interrumpir con un
@@ -2023,12 +2029,11 @@ begin
   // abrir el Mto).
   FFiltrosArtCargando := True;
   try
-    // Precarga por defecto: solo activos ('S') y solo con stock ('S'). Con
-    // catalogos de 100.000+ articulos, cargar todo (o solo-activos) es
-    // demasiado pesado; el cliente arranca viendo solo lo vivo y con
-    // existencias. El usuario puede ampliar desde los filtros de carga.
+    // Precarga por defecto: solo activos ('S'), sin exigir stock ('N').
+    // Asi las altas nuevas aparecen en el listado aunque aun no tengan
+    // movimientos ni existencias.
     sEstado  := Trim(GetPerfilValueDef(oPerfilDic, 'oFiltroEstado',     'S'));
-    sStock   := Trim(GetPerfilValueDef(oPerfilDic, 'oFiltroConStock',   'S'));
+    sStock   := Trim(GetPerfilValueDef(oPerfilDic, 'oFiltroConStock',   'N'));
     sTempCsv := GetPerfilValueDef(oPerfilDic, 'oFiltroTemporadas', '');
 
     if SameText(sEstado, 'T') then
@@ -2347,10 +2352,12 @@ begin
   // ahora". DE MOMENTO sin dialogo: se recarga TODA la lista con el filtro
   // elegido, en segundo plano y con el overlay "Cargando datos..." + barra
   // de progreso (via la carga async).
-  if not Assigned(dmmArticulos) or (dmmArticulos.unqryTablaG = nil) then Exit;
-  dmmArticulos.unqryTablaG.Close;
-  dmmArticulos.unqryTablaG.SQL.Text := ConstruirSqlArticulos;
-  AbrirTablaPrincipalAsync;
+  if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG <> nil) then
+  begin
+    dmmArticulos.unqryTablaG.Close;
+    dmmArticulos.unqryTablaG.SQL.Text := ConstruirSqlArticulos;
+    AbrirTablaPrincipalAsync;
+  end;
 end;
 
 procedure TfrmMtoArticulos.TrasPrecargaAsync;

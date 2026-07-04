@@ -265,11 +265,45 @@
                 Height = 21
                 Width = 380
               end
+              object lblCodigoAlmacen: TcxLabel
+                Left = 544
+                Top = 120
+                Caption = 'Almac'#233'n salida'
+                TabOrder = 18
+                Transparent = True
+              end
+              object cbbCODIGO_ALM_PED: TcxDBLookupComboBox
+                Left = 544
+                Top = 140
+                DataBinding.DataField = 'CODIGO_ALM_PED'
+                DataBinding.DataSource = dsTablaG
+                Properties.DropDownListStyle = lsFixedList
+                Properties.DropDownRows = 15
+                Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'C'#243'digo'
+                    Width = 60
+                    FieldName = 'CODIGO_ALM_ALM'
+                  end
+                  item
+                    Caption = 'Almac'#233'n'
+                    FieldName = 'NOMBRE_ALM_ALM'
+                  end
+                  item
+                    Caption = 'Empresa'
+                    Width = 60
+                    FieldName = 'CODIGO_EMP_ALM'
+                  end>
+                Properties.OnEditValueChanged = cbbCODIGO_ALM_PEDPropertiesEditValueChanged
+                TabOrder = 8
+                Width = 240
+              end
               object lblCodigoCliente: TcxLabel
                 Left = 8
                 Top = 140
                 Caption = 'Cliente'
-                TabOrder = 18
+                TabOrder = 19
                 Transparent = True
               end
               object btnCODIGO_CLI: TcxDBButtonEdit
@@ -284,7 +318,7 @@
                   end>
                 Properties.OnButtonClick = btnCODIGO_CLIPropertiesButtonClick
                 Properties.OnEditValueChanged = btnCODIGO_CLIPropertiesEditValueChanged
-                TabOrder = 8
+                TabOrder = 9
                 OnKeyUp = btnCODIGO_CLIKeyUp
                 Width = 130
               end
@@ -293,7 +327,7 @@
                 Top = 160
                 DataBinding.DataField = 'RAZON_SOCIAL_CLIENTE_FISCAL_PED'
                 DataBinding.DataSource = dsTablaG
-                TabOrder = 19
+                TabOrder = 20
                 Transparent = True
                 Height = 21
                 Width = 380

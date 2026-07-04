@@ -26,6 +26,7 @@ inherited frmModalAceptCancel: TfrmModalAceptCancel
       Cancel = True
       Caption = '&Cancelar (ESC)'
       TabOrder = 0
+      OnClick = btnCancelarClick
     end
     object btnAceptar: TcxButton
       Left = 309

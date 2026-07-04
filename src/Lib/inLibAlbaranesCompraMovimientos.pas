@@ -95,6 +95,182 @@ begin
   end;
 end;
 
+procedure ActualizarArticulosProveedorDesdeAlbaranCompra(
+                                               AConn: TUniConnection;
+                                               const ASerieAlbc, ANumAlbc,
+                                                     AUsuario: string);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'INSERT INTO fza_articulos_proveedores ' +
+      '  (CODIGO_PRV_AP, CODIGO_ART_AP, REF_PROVEEDOR_AP, ' +
+      '   PRECIO_ULT_COMPRA_AP, FECHA_VALIDEZ_AP, ' +
+      '   ESPROVEEDORPRINCIPAL_AP, INSTANTE_ALTA, USUARIO_ALTA, ' +
+      '   INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'SELECT X.CODIGO_PRV, X.CODIGO_ART, NULLIF(X.REF_PRV, ''''), ' +
+      '       X.PRECIO, NOW(), ' +
+      '       CASE WHEN EXISTS ( ' +
+      '              SELECT 1 FROM fza_articulos_proveedores AP2 ' +
+      '               WHERE AP2.CODIGO_ART_AP = X.CODIGO_ART ' +
+      '                 AND AP2.CODIGO_PRV_AP <> X.CODIGO_PRV ' +
+      '                 AND AP2.ESPROVEEDORPRINCIPAL_AP = ''S'') ' +
+      '            THEN ''N'' ELSE ''S'' END, ' +
+      '       NOW(), :u1, NOW(), :u2 ' +
+      '  FROM ( ' +
+      '        SELECT A.CODIGO_PRV_ALBC AS CODIGO_PRV, ' +
+      '               L.CODIGO_ART_ALBCLIN AS CODIGO_ART, ' +
+      '               COALESCE(TRIM(L.REF_PRV_ALBCLIN), '''') AS REF_PRV, ' +
+      '               CASE WHEN IFNULL(A.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ''N'') <> ''S'' ' +
+      '                     AND IFNULL(A.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' ' +
+      '                    THEN L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN * ' +
+      '                      (1 + (IFNULL(L.PORCENTAJE_IVA_ALBCLIN, 0) + ' +
+      '                        CASE IFNULL(L.TIPO_IVA_ARTICULO_ALBCLIN, ''N'') ' +
+      '                          WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
+      '                          WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
+      '                          WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
+      '                          WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
+      '                          ELSE 0 END) / 100) ' +
+      '                    ELSE L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN END * ' +
+      '               CASE WHEN IFNULL(A.TOTAL_BRUTO_ALBC, 0) > 0 THEN ' +
+      '                      GREATEST(0, 1 - CASE ' +
+      '                        WHEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) <> 0 ' +
+      '                        THEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) / A.TOTAL_BRUTO_ALBC ' +
+      '                        ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100 END) ' +
+      '                    ELSE GREATEST(0, 1 - IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) ' +
+      '               END AS PRECIO ' +
+      '          FROM fza_albaranes_compra_lineas L ' +
+      '          JOIN fza_albaranes_compra A ' +
+      '            ON A.SERIE_ALBC  = L.SERIE_ALBC_ALBCLIN ' +
+      '           AND A.NUMERO_ALBC = L.NUMERO_ALBC_ALBCLIN ' +
+      '          LEFT JOIN fza_ivas V ON V.CODIGO_IVA = A.CODIGO_IVA_ALBC ' +
+      '         WHERE L.SERIE_ALBC_ALBCLIN  = :s ' +
+      '           AND L.NUMERO_ALBC_ALBCLIN = :n ' +
+      '           AND COALESCE(TRIM(A.CODIGO_PRV_ALBC), '''') <> '''' ' +
+      '           AND COALESCE(TRIM(A.CODIGO_PRV_ALBC), '''') <> ''0'' ' +
+      '           AND COALESCE(TRIM(L.CODIGO_ART_ALBCLIN), '''') <> '''' ' +
+      '           AND (IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
+      '                OR EXISTS ( ' +
+      '                   SELECT 1 FROM fza_albaranes_compra_celdas C ' +
+      '                    WHERE C.SERIE_ALBC_ALBCCEL  = L.SERIE_ALBC_ALBCLIN ' +
+      '                      AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
+      '                      AND C.LINEA_ALBC_ALBCCEL  = L.LINEA_ALBCLIN ' +
+      '                      AND C.CANTIDAD_ALBCCEL > 0)) ' +
+      '           AND NOT EXISTS ( ' +
+      '                 SELECT 1 FROM fza_albaranes_compra_lineas L2 ' +
+      '                  WHERE L2.SERIE_ALBC_ALBCLIN  = L.SERIE_ALBC_ALBCLIN ' +
+      '                    AND L2.NUMERO_ALBC_ALBCLIN = L.NUMERO_ALBC_ALBCLIN ' +
+      '                    AND L2.CODIGO_ART_ALBCLIN  = L.CODIGO_ART_ALBCLIN ' +
+      '                    AND (IFNULL(L2.CANTIDAD_ALBCLIN, 0) > 0 ' +
+      '                         OR EXISTS ( ' +
+      '                            SELECT 1 FROM fza_albaranes_compra_celdas C2 ' +
+      '                             WHERE C2.SERIE_ALBC_ALBCCEL  = L2.SERIE_ALBC_ALBCLIN ' +
+      '                               AND C2.NUMERO_ALBC_ALBCCEL = L2.NUMERO_ALBC_ALBCLIN ' +
+      '                               AND C2.LINEA_ALBC_ALBCCEL  = L2.LINEA_ALBCLIN ' +
+      '                               AND C2.CANTIDAD_ALBCCEL > 0)) ' +
+      '                    AND L2.LINEA_ALBCLIN > L.LINEA_ALBCLIN) ' +
+      '       ) X ' +
+      'ON DUPLICATE KEY UPDATE ' +
+      '  PRECIO_ULT_COMPRA_AP = VALUES(PRECIO_ULT_COMPRA_AP), ' +
+      '  FECHA_VALIDEZ_AP = VALUES(FECHA_VALIDEZ_AP), ' +
+      '  REF_PROVEEDOR_AP = COALESCE(VALUES(REF_PROVEEDOR_AP), ' +
+      '                              REF_PROVEEDOR_AP), ' +
+      '  INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u3';
+    q.ParamByName('s').AsString  := ASerieAlbc;
+    q.ParamByName('n').AsString  := ANumAlbc;
+    q.ParamByName('u1').AsString := AUsuario;
+    q.ParamByName('u2').AsString := AUsuario;
+    q.ParamByName('u3').AsString := AUsuario;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure ActualizarCostesSkuDesdeAlbaranCompra(AConn: TUniConnection;
+                                               const ASerieAlbc, ANumAlbc,
+                                                     AUsuario: string);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'INSERT INTO fza_articulos_skus_costes ' +
+      '  (CODIGO_UNIDAD_SKU_SKUC, PRECIO_ULT_COMPRA_SKUC, ' +
+      '   FECHA_ULT_COMPRA_SKUC, INSTANTE_ALTA, USUARIO_ALTA, ' +
+      '   INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'SELECT X.CODIGO_SKU, X.PRECIO, X.FECHA_ALBC, ' +
+      '       NOW(), :u1, NOW(), :u2 ' +
+      '  FROM ( ' +
+      '        SELECT L.CODIGO_UNIDAD_ALBCLIN AS CODIGO_SKU, ' +
+      '               COALESCE(A.FECHA_ALBC, CURRENT_DATE) AS FECHA_ALBC, ' +
+      '               CASE WHEN IFNULL(A.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ''N'') <> ''S'' ' +
+      '                     AND IFNULL(A.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' ' +
+      '                    THEN L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN * ' +
+      '                      (1 + (IFNULL(L.PORCENTAJE_IVA_ALBCLIN, 0) + ' +
+      '                        CASE IFNULL(L.TIPO_IVA_ARTICULO_ALBCLIN, ''N'') ' +
+      '                          WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
+      '                          WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
+      '                          WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
+      '                          WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
+      '                          ELSE 0 END) / 100) ' +
+      '                    ELSE L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN END * ' +
+      '               CASE WHEN IFNULL(A.TOTAL_BRUTO_ALBC, 0) > 0 THEN ' +
+      '                      GREATEST(0, 1 - CASE ' +
+      '                        WHEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) <> 0 ' +
+      '                        THEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) / A.TOTAL_BRUTO_ALBC ' +
+      '                        ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100 END) ' +
+      '                    ELSE GREATEST(0, 1 - IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) ' +
+      '               END AS PRECIO ' +
+      '          FROM fza_albaranes_compra_lineas L ' +
+      '          JOIN fza_albaranes_compra A ' +
+      '            ON A.SERIE_ALBC  = L.SERIE_ALBC_ALBCLIN ' +
+      '           AND A.NUMERO_ALBC = L.NUMERO_ALBC_ALBCLIN ' +
+      '          LEFT JOIN fza_ivas V ON V.CODIGO_IVA = A.CODIGO_IVA_ALBC ' +
+      '         WHERE L.SERIE_ALBC_ALBCLIN  = :s ' +
+      '           AND L.NUMERO_ALBC_ALBCLIN = :n ' +
+      '           AND COALESCE(TRIM(L.CODIGO_UNIDAD_ALBCLIN), '''') <> '''' ' +
+      '           AND (IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
+      '                OR EXISTS ( ' +
+      '                   SELECT 1 FROM fza_albaranes_compra_celdas C ' +
+      '                    WHERE C.SERIE_ALBC_ALBCCEL  = L.SERIE_ALBC_ALBCLIN ' +
+      '                      AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
+      '                      AND C.LINEA_ALBC_ALBCCEL  = L.LINEA_ALBCLIN ' +
+      '                      AND C.CANTIDAD_ALBCCEL > 0)) ' +
+      '           AND NOT EXISTS ( ' +
+      '                 SELECT 1 FROM fza_albaranes_compra_lineas L2 ' +
+      '                  WHERE L2.SERIE_ALBC_ALBCLIN  = L.SERIE_ALBC_ALBCLIN ' +
+      '                    AND L2.NUMERO_ALBC_ALBCLIN = L.NUMERO_ALBC_ALBCLIN ' +
+      '                    AND L2.CODIGO_UNIDAD_ALBCLIN = L.CODIGO_UNIDAD_ALBCLIN ' +
+      '                    AND (IFNULL(L2.CANTIDAD_ALBCLIN, 0) > 0 ' +
+      '                         OR EXISTS ( ' +
+      '                            SELECT 1 FROM fza_albaranes_compra_celdas C2 ' +
+      '                             WHERE C2.SERIE_ALBC_ALBCCEL  = L2.SERIE_ALBC_ALBCLIN ' +
+      '                               AND C2.NUMERO_ALBC_ALBCCEL = L2.NUMERO_ALBC_ALBCLIN ' +
+      '                               AND C2.LINEA_ALBC_ALBCCEL  = L2.LINEA_ALBCLIN ' +
+      '                               AND C2.CANTIDAD_ALBCCEL > 0)) ' +
+      '                    AND L2.LINEA_ALBCLIN > L.LINEA_ALBCLIN) ' +
+      '       ) X ' +
+      'ON DUPLICATE KEY UPDATE ' +
+      '  PRECIO_ULT_COMPRA_SKUC = VALUES(PRECIO_ULT_COMPRA_SKUC), ' +
+      '  FECHA_ULT_COMPRA_SKUC = VALUES(FECHA_ULT_COMPRA_SKUC), ' +
+      '  INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u3';
+    q.ParamByName('s').AsString  := ASerieAlbc;
+    q.ParamByName('n').AsString  := ANumAlbc;
+    q.ParamByName('u1').AsString := AUsuario;
+    q.ParamByName('u2').AsString := AUsuario;
+    q.ParamByName('u3').AsString := AUsuario;
+    q.ExecSQL;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
 procedure GenerarMovimientosDesdeAlbaranCompra(AConn: TUniConnection;
                                                const ASerieAlbc, ANumAlbc,
                                                      AUsuario: string);
@@ -295,6 +471,10 @@ begin
       raise Exception.CreateFmt(
         'El albaran %s/%s no tiene ninguna linea o celda con cantidad > 0 ' +
         'para generar movimientos.', [ASerieAlbc, ANumAlbc]);
+    ActualizarArticulosProveedorDesdeAlbaranCompra(AConn, ASerieAlbc,
+      ANumAlbc, AUsuario);
+    ActualizarCostesSkuDesdeAlbaranCompra(AConn, ASerieAlbc, ANumAlbc,
+      AUsuario);
   finally
     FreeAndNil(qSrc);
     FreeAndNil(spIns);

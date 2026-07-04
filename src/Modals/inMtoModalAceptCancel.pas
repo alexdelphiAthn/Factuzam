@@ -37,6 +37,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure Action1Execute(Sender: TObject);
     procedure btnAceptarClick(Sender: TObject);
+    procedure btnCancelarClick(Sender: TObject);
     procedure Action2Execute(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
@@ -67,6 +68,13 @@ procedure TfrmModalAceptCancel.btnAceptarClick(Sender: TObject);
 begin
   inherited;
   sFicha:= 'S';
+  PostMessage(Handle, WM_CLOSE, 0, 0);
+end;
+
+procedure TfrmModalAceptCancel.btnCancelarClick(Sender: TObject);
+begin
+  inherited;
+  sFicha := 'N';
   PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 

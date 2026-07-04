@@ -213,19 +213,9 @@ begin
 end;
 
 procedure TdmAlbaranes.RefrescarAlmacenes(const ACodigoEmpresa: string);
-var
-  sEmpresa: string;
 begin
-  sEmpresa := Trim(ACodigoEmpresa);
-  if sEmpresa = '' then
-    sEmpresa := Trim(oEmpresa);
-  if not (unqryAlmacenesAlb.Active and
-          (unqryAlmacenesAlb.ParamByName('EMPRESA').AsString = sEmpresa)) then
-  begin
-    unqryAlmacenesAlb.Close;
-    unqryAlmacenesAlb.ParamByName('EMPRESA').AsString := sEmpresa;
+  if not unqryAlmacenesAlb.Active then
     unqryAlmacenesAlb.Open;
-  end;
 end;
 
 procedure TdmAlbaranes.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -248,12 +238,17 @@ begin
       FieldByName('ESTADO_ALB').AsString := 'ABIERTO';
     if FindField('ESCONSOLIDADO_ALB') <> nil then
       FieldByName('ESCONSOLIDADO_ALB').AsString := 'N';
-    FieldByName('CODIGO_EMP_ALB').AsString := '0';
+    if Trim(oEmpresa) <> '' then
+      FieldByName('CODIGO_EMP_ALB').AsString := oEmpresa
+    else
+      FieldByName('CODIGO_EMP_ALB').AsString := '0';
     if FindField('CODIGO_ALM_ALB') <> nil then
       FieldByName('CODIGO_ALM_ALB').AsString := oAlmacen;
     FieldByName('CODIGO_CLI_ALB').AsString := '0';
-    if Trim(oAlmacen) <> '' then
-      BuscarAlmacen(oAlmacen);
+    if Trim(oEmpresa) <> '' then
+      BuscarEmpresa(oEmpresa);
+    if FindField('CODIGO_ALM_ALB') <> nil then
+      FieldByName('CODIGO_ALM_ALB').AsString := oAlmacen;
   end;
 end;
 
@@ -1074,12 +1069,6 @@ begin
       else if (Trim(oAlmacen) <> '') and
               unqryAlmacenesAlb.Locate('CODIGO_ALM_ALM', oAlmacen, []) then
         FieldByName('CODIGO_ALM_ALB').AsString := oAlmacen
-      else if not unqryAlmacenesAlb.IsEmpty then
-      begin
-        unqryAlmacenesAlb.First;
-        FieldByName('CODIGO_ALM_ALB').AsString :=
-          unqryAlmacenesAlb.FieldByName('CODIGO_ALM_ALM').AsString;
-      end
       else
         FieldByName('CODIGO_ALM_ALB').Clear;
     end;

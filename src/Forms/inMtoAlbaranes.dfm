@@ -305,6 +305,8 @@
                 Top = 100
                 DataBinding.DataField = 'CODIGO_ALM_ALB'
                 DataBinding.DataSource = dsTablaG
+                Properties.DropDownListStyle = lsFixedList
+                Properties.DropDownRows = 15
                 Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
                 Properties.ListColumns = <
                   item
@@ -315,6 +317,11 @@
                   item
                     Caption = 'Almac'#233'n'
                     FieldName = 'NOMBRE_ALM_ALM'
+                  end
+                  item
+                    Caption = 'Empresa'
+                    Width = 60
+                    FieldName = 'CODIGO_EMP_ALM'
                   end>
                 Properties.ListOptions.ShowHeader = False
                 Properties.OnEditValueChanged = cbbCODIGO_ALM_ALBPropertiesEditValueChanged
