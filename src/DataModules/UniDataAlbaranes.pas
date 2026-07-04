@@ -1685,9 +1685,11 @@ function TdmAlbaranes.GenerarMovimientosSalida: Integer;
 var
   qLineas: TUniQuery;
   qExiste: TUniQuery;
+  qFechaMov: TUniQuery;
   sNumeroAlb, sSerieAlb, sEmpresa, sCliente: string;
   sAlmacenCabecera: string;
-  sLinea, sSku, sAlmacen, sArticulo: string;
+  sLinea, sSku, sAlmacen, sArticulo, sNumeroMov: string;
+  dFechaAlb: TDateTime;
   fCantidad: Double;
 begin
   Result := 0;
@@ -1697,12 +1699,17 @@ begin
   if (sNumeroAlb = '') or (sNumeroAlb = '0') then Exit;
   sEmpresa := unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString;
   sCliente := unqryTablaG.FieldByName('CODIGO_CLI_ALB').AsString;
+  dFechaAlb := Date;
+  if unqryTablaG.FindField('FECHA_ALB') <> nil then
+    if not unqryTablaG.FieldByName('FECHA_ALB').IsNull then
+      dFechaAlb := unqryTablaG.FieldByName('FECHA_ALB').AsDateTime;
   sAlmacenCabecera := '';
   if unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil then
     sAlmacenCabecera := Trim(unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString);
 
   qLineas := TUniQuery.Create(nil);
   qExiste := TUniQuery.Create(nil);
+  qFechaMov := TUniQuery.Create(nil);
   try
     qLineas.Connection := unqryTablaG.Connection;
     qLineas.SQL.Text :=
@@ -1724,6 +1731,11 @@ begin
       '   AND SERIE_DOC_MOV  = :pSER ' +
       '   AND NUMERO_DOC_MOV = :pNUM ' +
       '   AND LINEA_MOV      = :pLIN';
+    qFechaMov.Connection := unqryTablaG.Connection;
+    qFechaMov.SQL.Text :=
+      'UPDATE fza_movimientos_almacen ' +
+      '   SET FECHA_MOV = :pFECHA ' +
+      ' WHERE NUMERO_MOV = :pNUMMOV';
 
     qLineas.First;
     while not qLineas.Eof do
@@ -1772,9 +1784,8 @@ begin
             Params.CreateParam(ftString, 'p_CODIGO_CAJA_DOC_MOV', ptInput);
             Params.CreateParam(ftString, 'p_CODCLIENTE',          ptInput);
             Params.CreateParam(ftString, 'p_CODARTICULO',         ptInput);
-            ParamByName('p_NUMERO_MOV').AsString          :=
-                                            inLibtb.ObtenerSiguienteContador(
-                                              'MV');
+            sNumeroMov := inLibtb.ObtenerSiguienteContador('MV');
+            ParamByName('p_NUMERO_MOV').AsString          := sNumeroMov;
             ParamByName('p_TIPO_DOC_MOV').AsString        := 'AV';
             ParamByName('p_SERIE_DOC_MOV').AsString       := sSerieAlb;
             ParamByName('p_NRO_DOC_MOV').AsString         := sNumeroAlb;
@@ -1795,6 +1806,9 @@ begin
             ParamByName('p_CODARTICULO').AsString         := sArticulo;
             ExecProc;
           end;
+          qFechaMov.ParamByName('pFECHA').AsDateTime := dFechaAlb;
+          qFechaMov.ParamByName('pNUMMOV').AsString := sNumeroMov;
+          qFechaMov.ExecSQL;
           Inc(Result);
         end;
         qExiste.Close;
@@ -1810,6 +1824,7 @@ begin
   finally
     FreeAndNil(qLineas);
     FreeAndNil(qExiste);
+    FreeAndNil(qFechaMov);
   end;
 
   // Refrescar el grid de movimientos si está abierto.

@@ -55,13 +55,15 @@ type
     FEmpresa: string;
     FAlmacen: string;
     FCaja: string;
+    FFechaOperacion: TDateTime;
     procedure BuscarEmpleados;
     procedure ValidarEmpleado;
     procedure Grabar;
   public
     class function Ejecutar(AOwner: TComponent;
                             AConn: TUniConnection;
-                            const AEmpresa, AAlmacen, ACaja: string
+                            const AEmpresa, AAlmacen, ACaja: string;
+                            AFechaOperacion: TDateTime = 0
                             ): Boolean;
   end;
 
@@ -78,7 +80,8 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 class function TfrmModalEntradaCambio.Ejecutar(
   AOwner: TComponent;
   AConn: TUniConnection;
-  const AEmpresa, AAlmacen, ACaja: string): Boolean;
+  const AEmpresa, AAlmacen, ACaja: string;
+  AFechaOperacion: TDateTime = 0): Boolean;
 var
   frm: TfrmModalEntradaCambio;
 begin
@@ -89,6 +92,7 @@ begin
     frm.FEmpresa := AEmpresa;
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
+    frm.FFechaOperacion := AFechaOperacion;
     frm.btnEmpleado.Text := oUser;
     frm.ValidarEmpleado;
     if frm.ShowModal = mrOk then
@@ -232,6 +236,7 @@ begin
           QryTrx,
           FEmpresa, FAlmacen, FCaja,
           sNumOp, 'EC', dImporte, sEmpleado,
+          FFechaOperacion,
           '', '', '', sConcepto);
         dm.InsertarPagoCaja(
           QryTrx,

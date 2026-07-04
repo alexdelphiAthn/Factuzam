@@ -2932,7 +2932,8 @@ begin
     txtCODIGO_ARTICULO.Properties.ReadOnly := True;
   end;
   if Assigned(FCbbTipoVariacion) then
-    FCbbTipoVariacion.Properties.ReadOnly := not (dsTablaG.State in [dsInsert]);
+    FCbbTipoVariacion.Properties.ReadOnly := not (dsTablaG.State in
+                                                  [dsInsert, dsEdit]);
 end;
 
 procedure TfrmMtoArticulos.FormDestroy(Sender: TObject);

@@ -214,9 +214,13 @@ type
     FSerieRectifica:  string;
     FNumeroRectifica: string;
     FCaptionPrevio:   string;
+    FUltimoTickReloj: TDateTime;
     procedure GuardarLayoutCaja;
     procedure RestaurarLayoutCaja;
     procedure CargarDepositosF2;
+    procedure ActualizarRelojCaja;
+    procedure SincronizarFechaCajaCabecera;
+    procedure lblFechaCajaDblClick(Sender: TObject);
     procedure AsegurarLineaNueva;
     procedure ActualizarFoco;
     function BuscarArticulo:String;
@@ -283,7 +287,7 @@ type
     FValidandoCliente: Boolean;
     FCodigoEmpresa:String;
     FCodigoAlmacen, FCodigoCaja:String;
-    FFecha:TDate;
+    FFecha:TDateTime;
     // CAMBIO 1: Variables de control para evitar re-entradas y bucles
     // Guarda el nº de atributos aunque el dataset haga Post
     FNumAtributosActual: Integer;
@@ -361,6 +365,75 @@ begin
   end;
 end;
 
+procedure TfrmMtoOpeCaja.ActualizarRelojCaja;
+var
+  dtAhora: TDateTime;
+begin
+  dtAhora := Now;
+  if FUltimoTickReloj = 0 then
+    FUltimoTickReloj := dtAhora;
+  if FFecha = 0 then
+    FFecha := dtAhora;
+  FFecha := FFecha + (dtAhora - FUltimoTickReloj);
+  FUltimoTickReloj := dtAhora;
+  lblFechaCaja.Caption := FormatDateTime('hh:nn:ss dddd d mmmm yyyy', FFecha);
+end;
+
+procedure TfrmMtoOpeCaja.SincronizarFechaCajaCabecera;
+var
+  bPost: Boolean;
+begin
+  bPost := False;
+  if Assigned(DatosCaja) and
+     DatosCaja.cdsCabecera.Active and
+     (not DatosCaja.cdsCabecera.IsEmpty) then
+  begin
+    if DatosCaja.cdsCabecera.State = dsBrowse then
+    begin
+      DatosCaja.cdsCabecera.Edit;
+      bPost := True;
+    end;
+    DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime := FFecha;
+    if bPost then
+      DatosCaja.cdsCabecera.Post;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.lblFechaCajaDblClick(Sender: TObject);
+var
+  sHora: string;
+  dtHora: TDateTime;
+  dtFechaBase: TDateTime;
+begin
+  dtFechaBase := FFecha;
+  if dtFechaBase = 0 then
+    dtFechaBase := Now;
+  sHora := FormatDateTime('hh:nn', dtFechaBase);
+  if InputQuery('Hora de caja', 'Hora (HH:MM)', sHora) then
+  begin
+    if TryStrToTime(sHora, dtHora) then
+    begin
+      FFecha := Trunc(dtFechaBase) + Frac(dtHora);
+      FUltimoTickReloj := Now;
+      ActualizarRelojCaja;
+      SincronizarFechaCajaCabecera;
+      if Assigned(frmMtoMenuCaja) then
+        frmMtoMenuCaja.ActualizarFechaCaja(FFecha);
+    end
+    else
+      ShowMessage('Hora no válida. Use HH:MM.');
+  end
+  else
+  begin
+    FFecha := Now;
+    FUltimoTickReloj := Now;
+    ActualizarRelojCaja;
+    SincronizarFechaCajaCabecera;
+    if Assigned(frmMtoMenuCaja) then
+      frmMtoMenuCaja.ActualizarFechaCaja(FFecha);
+  end;
+end;
+
 procedure TfrmMtoOpeCaja.WMSaltarAtributo(var Msg: TMessage);
 begin
   if (tvLineasOpe.Controller.EditingController <> nil) and
@@ -382,6 +455,7 @@ begin
   FCodigoAlmacen := AAlmacen;
   FCodigoCaja    := ACaja;
   FFecha         := AFecha;
+  FUltimoTickReloj := Now;
 
   if Assigned(DatosCaja) then
   begin
@@ -465,6 +539,7 @@ begin
   lblNombreCliente.Caption := 'VENTA CONTADO';
   btnCodigoCliente.Text := '';
   lblTotal.Caption := 'Total 0,00 €';
+  ActualizarRelojCaja;
   if Self.Visible then
     ActualizarFoco;
 end;
@@ -3173,6 +3248,8 @@ begin
       DatosCaja.cdsLineas.Post;
     end;
   end;
+  ActualizarRelojCaja;
+  SincronizarFechaCajaCabecera;
   frmFaseCobro := nil;
   try
     ObjTotales := TFacturaTotales.Create(DatosCaja.cdsCabecera,
@@ -3222,6 +3299,9 @@ begin
        if (frmFaseCobro.TipoImpresion <> tiFactura) and
           (FNumeroRectifica <> '') then
          sTipoFactura := 'RECTIFICATIVA';
+       ActualizarRelojCaja;
+       SincronizarFechaCajaCabecera;
+       frmFaseCobro.FFecha := FFecha;
        if DatosCaja.GrabarFacturaSimplificada(FCodigoEmpresa,
                                               FCodigoAlmacen,
                                               FCodigoCaja,
@@ -3295,7 +3375,7 @@ begin
            // CodigoValeGenerado);
          end;
          // 4. Limpiar la interfaz y los datasets para el siguiente cliente
-         PrepararValores(FCodigoEmpresa, FCodigoAlmacen, FCodigoCaja, Now);
+         PrepararValores(FCodigoEmpresa, FCodigoAlmacen, FCodigoCaja, FFecha);
        end;
     end;
   finally
@@ -3656,6 +3736,7 @@ begin
   DatosCaja.OnUpdateTotal := ActualizarLabelTotal;
   DatosCaja.OnRellenarArticulo  := RellenarDatosArticuloEnDataset;
   DatosCaja.OnRellenarAtributos := RellenarAtributosDesdeSku;
+  lblFechaCaja.OnDblClick := lblFechaCajaDblClick;
   tvEmpleado.Visible      := oCajaParams.GetBool('vgerShowEmpleadoLinea', True);
   var PermiteDescuentos := oCajaParams.GetBool('vgerDescuentos', True);
   tvDescuento.Options.Editing := PermiteDescuentos;
@@ -4147,7 +4228,7 @@ end;
 
 procedure TfrmMtoOpeCaja.Timer1Timer(Sender: TObject);
 begin
-  lblFechaCaja.Caption := FormatDateTime('hh:nn:ss dddd d mmmm yyyy', Now);
+  ActualizarRelojCaja;
 end;
 
 end.

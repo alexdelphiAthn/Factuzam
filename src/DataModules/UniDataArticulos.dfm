@@ -5,17 +5,19 @@ inherited dmArticulos: TdmArticulos
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO `fza_articulos`'
-      
-        '  (`CODIGO_ART_ART`, `ESACTIVO_ART`, `ORDEN_ART`, `DESCRIPCION_A' +
-        'RT`, `CODIGO_FAM_ART`, `TIPO_IVA_ART`, `ESACTIVO_FIJO_ART`, `TIP' +
-        'O_CANTIDAD_ART`, `ESVARIACION_ART`, `INSTANTE_MODIF`, `INSTANTE_' +
-        'ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`)'
+      '  (`CODIGO_ART_ART`, `ESACTIVO_ART`, `ORDEN_ART`,'
+      '   `DESCRIPCION_ART`, `CODIGO_FAM_ART`, `TIPO_IVA_ART`,'
+      '   `ESACTIVO_FIJO_ART`, `TIPO_CANTIDAD_ART`,'
+      '   `ESVARIACION_ART`, `ESTRAZABLE_ART`, `TIPO_VARIACION_ART`,'
+      '   `INSTANTE_MODIF`, `INSTANTE_ALTA`,'
+      '   `USUARIO_ALTA`, `USUARIO_MODIF`)'
       'VALUES'
-      
-        '  (:`CODIGO_ART_ART`, :`ESACTIVO_ART`, :`ORDEN_ART`, :`DESCRIPCI' +
-        'ON_ART`, :`CODIGO_FAM_ART`, :`TIPO_IVA_ART`, :`ESACTIVO_FIJO_ART' +
-        '`, :`TIPO_CANTIDAD_ART`, :`ESVARIACION_ART`, :`INSTANTE_MODIF`, ' +
-        ':`INSTANTE_ALTA`, :`USUARIO_ALTA`, :`USUARIO_MODIF`)')
+      '  (:`CODIGO_ART_ART`, :`ESACTIVO_ART`, :`ORDEN_ART`,'
+      '   :`DESCRIPCION_ART`, :`CODIGO_FAM_ART`, :`TIPO_IVA_ART`,'
+      '   :`ESACTIVO_FIJO_ART`, :`TIPO_CANTIDAD_ART`,'
+      '   :`ESVARIACION_ART`, :`ESTRAZABLE_ART`, :`TIPO_VARIACION_ART`,'
+      '   :`INSTANTE_MODIF`, :`INSTANTE_ALTA`,'
+      '   :`USUARIO_ALTA`, :`USUARIO_MODIF`)')
     SQLDelete.Strings = (
       'DELETE FROM `fza_articulos`'
       'WHERE'
@@ -23,15 +25,21 @@ inherited dmArticulos: TdmArticulos
     SQLUpdate.Strings = (
       'UPDATE `fza_articulos`'
       'SET'
-      
-        '  `CODIGO_ART_ART` = :`CODIGO_ART_ART`, `ESACTIVO_ART` = :`ESACT' +
-        'IVO_ART`, `ORDEN_ART` = :`ORDEN_ART`, `DESCRIPCION_ART` = :`DESC' +
-        'RIPCION_ART`, `CODIGO_FAM_ART` = :`CODIGO_FAM_ART`, `TIPO_IVA_AR' +
-        'T` = :`TIPO_IVA_ART`, `ESACTIVO_FIJO_ART` = :`ESACTIVO_FIJO_ART`' +
-        ', `TIPO_CANTIDAD_ART` = :`TIPO_CANTIDAD_ART`, `ESVARIACION_ART` ' +
-        '= :`ESVARIACION_ART`, `INSTANTE_MODIF` = :`INSTANTE_MODIF`, `INS' +
-        'TANTE_ALTA` = :`INSTANTE_ALTA`, `USUARIO_ALTA` = :`USUARIO_ALTA`' +
-        ', `USUARIO_MODIF` = :`USUARIO_MODIF`'
+      '  `CODIGO_ART_ART` = :`CODIGO_ART_ART`,'
+      '  `ESACTIVO_ART` = :`ESACTIVO_ART`,'
+      '  `ORDEN_ART` = :`ORDEN_ART`,'
+      '  `DESCRIPCION_ART` = :`DESCRIPCION_ART`,'
+      '  `CODIGO_FAM_ART` = :`CODIGO_FAM_ART`,'
+      '  `TIPO_IVA_ART` = :`TIPO_IVA_ART`,'
+      '  `ESACTIVO_FIJO_ART` = :`ESACTIVO_FIJO_ART`,'
+      '  `TIPO_CANTIDAD_ART` = :`TIPO_CANTIDAD_ART`,'
+      '  `ESVARIACION_ART` = :`ESVARIACION_ART`,'
+      '  `ESTRAZABLE_ART` = :`ESTRAZABLE_ART`,'
+      '  `TIPO_VARIACION_ART` = :`TIPO_VARIACION_ART`,'
+      '  `INSTANTE_MODIF` = :`INSTANTE_MODIF`,'
+      '  `INSTANTE_ALTA` = :`INSTANTE_ALTA`,'
+      '  `USUARIO_ALTA` = :`USUARIO_ALTA`,'
+      '  `USUARIO_MODIF` = :`USUARIO_MODIF`'
       'WHERE'
       '  `CODIGO_ART_ART` = :`Old_CODIGO_ART_ART`')
     SQLLock.Strings = (
@@ -40,11 +48,13 @@ inherited dmArticulos: TdmArticulos
       '  `CODIGO_ART_ART` = :`Old_CODIGO_ART_ART`'
       'FOR UPDATE')
     SQLRefresh.Strings = (
-      
-        'SELECT `CODIGO_ART_ART`, `ESACTIVO_ART`, `ORDEN_ART`, `DESCRIPCI' +
-        'ON_ART`, `CODIGO_FAM_ART`, `TIPO_IVA_ART`, `ESACTIVO_FIJO_ART`, ' +
-        '`TIPO_CANTIDAD_ART`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO' +
-        '_ALTA`, `USUARIO_MODIF` FROM `fza_articulos`'
+      'SELECT `CODIGO_ART_ART`, `ESACTIVO_ART`, `ORDEN_ART`,'
+      '       `DESCRIPCION_ART`, `CODIGO_FAM_ART`, `TIPO_IVA_ART`,'
+      '       `ESACTIVO_FIJO_ART`, `TIPO_CANTIDAD_ART`,'
+      '       `ESVARIACION_ART`, `ESTRAZABLE_ART`, `TIPO_VARIACION_ART`,'
+      '       `INSTANTE_MODIF`, `INSTANTE_ALTA`,'
+      '       `USUARIO_ALTA`, `USUARIO_MODIF`'
+      '  FROM `fza_articulos`'
       'WHERE'
       '  `CODIGO_ART_ART` = :`CODIGO_ART_ART`')
     SQLRecCount.Strings = (

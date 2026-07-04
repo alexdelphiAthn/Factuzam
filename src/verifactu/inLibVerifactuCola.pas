@@ -130,6 +130,26 @@ begin
   end;
 end;
 
+procedure BorrarMovimientosVentaAnulada(AQry: TUniQuery;
+                                        const ASerie, ANumero: string);
+begin
+  if (Trim(ASerie) <> '') and (Trim(ANumero) <> '') then
+  begin
+    AQry.SQL.Text :=
+      'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
+    AQry.ParamByName('t').AsString := 'VE';
+    AQry.ParamByName('s').AsString := ASerie;
+    AQry.ParamByName('n').AsString := ANumero;
+    AQry.ExecSQL;
+    AQry.SQL.Text :=
+      'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
+    AQry.ParamByName('t').AsString := 'FC';
+    AQry.ParamByName('s').AsString := ASerie;
+    AQry.ParamByName('n').AsString := ANumero;
+    AQry.ExecSQL;
+  end;
+end;
+
 procedure RegistrarIncidenciaNoVerifactuSeguro(AConn: TUniConnection;
                                                ATipoEvento: Integer;
                                                const ADescripcion,
@@ -286,6 +306,8 @@ begin
   AQry.ParamByName('SERIE').AsString := ASerie;
   AQry.ParamByName('NUMERO').AsString := ANumero;
   AQry.Execute;
+  if ATipoOperacion = 'ANULACION' then
+    BorrarMovimientosVentaAnulada(AQry, ASerie, ANumero);
 end;
 
 // ===========================================================================
@@ -317,6 +339,8 @@ begin
   AQryTrx.ParamByName('TIPOOP').AsString  := ATipoOperacion;
   AQryTrx.ParamByName('USUARIO').AsString := oUser;
   AQryTrx.Execute;
+  if ATipoOperacion = 'ANULACION' then
+    BorrarMovimientosVentaAnulada(AQryTrx, ASerie, ANumero);
   // El lanzamiento saca la factura de BORRADOR en el acto: el QR es
   // calculable en local (ConstruirUrlQR) y la petición al ws viaja
   // asíncrona en el hilo de la cola.
@@ -406,6 +430,8 @@ begin
   AQryTrx.ParamByName('SERIE').AsString := ASerie;
   AQryTrx.ParamByName('NUMERO').AsString := ANumero;
   AQryTrx.Execute;
+  if ATipoOperacion = 'ANULACION' then
+    BorrarMovimientosVentaAnulada(AQryTrx, ASerie, ANumero);
   Log.LogInfo('Factura ' + ASerie + '\' + ANumero +
     ' emitida en modo SIN VERIFACTU. Operación: ' + ATipoOperacion);
 end;
@@ -1011,6 +1037,8 @@ begin
     Qry.ParamByName('SERIE').AsString   := ASerie;
     Qry.ParamByName('NUMERO').AsString  := ANumero;
     Qry.Execute;
+    if ATipoOperacion = 'ANULACION' then
+      BorrarMovimientosVentaAnulada(Qry, ASerie, ANumero);
     // Cola: fila enviada. El mensaje informativo se conserva cuando la
     // AEAT acepta con errores.
     Qry.SQL.Text :=

@@ -174,7 +174,8 @@ type
                           const AAlmacenDoc: string = '';
                           const ANumOperacion: string = '';
                           const ACodCliente:string = '';
-                          const ACodArticulo:string='');
+                          const ACodArticulo:string='';
+                          AFechaMovimiento: TDateTime = 0);
     procedure InsertarLineaFactura(
                         QryTrx:              TUniQuery;
                         // — identificación —
@@ -230,6 +231,7 @@ type
                                         APorcIVA: Currency;
                                         AEsImpIncl: string;
                                         const ACaja, ANumOperacion: string;
+                                        AFechaOperacion: TDateTime;
                                         out IdGenerado:string);
     procedure CerrarDepositoCliente(QryTrx: TUniQuery;
                                     const ACliente, ASku, AUsuario: string;
@@ -361,6 +363,7 @@ type
                         const ATipoOp:   string;
                         AImporte:        Currency;
                         const AEmpleado: string;
+                        AFechaOperacion: TDateTime = 0;
                         const ANroFactura:       string = '';
                         const ASerieFactura:     string = '';
                         const ACliente:          string = '';
@@ -883,6 +886,13 @@ begin
   end;
 end;
 
+function FechaCajaConHora(AFechaCaja: TDateTime): TDateTime;
+begin
+  if AFechaCaja > 0 then
+    Result := AFechaCaja
+  else
+    Result := Now;
+end;
 
 procedure TdmCajaOpe.InsertarMovimientoAlmacen(
                           QryTrx:     TUniQuery;
@@ -902,17 +912,20 @@ procedure TdmCajaOpe.InsertarMovimientoAlmacen(
                           const AAlmacenDoc: string = '';
                           const ANumOperacion: string = '';
                           const ACodCliente:string = '';
-                          const ACodArticulo:string='');
+                          const ACodArticulo:string='';
+                          AFechaMovimiento: TDateTime = 0);
 var
   uspMov: TUniStoredProc;
+  QryFecha: TUniQuery;
+  sNumeroMov: string;
 begin
+  sNumeroMov := ObtenerSiguienteContador('MV');
   uspMov := TUniStoredProc.Create(nil);
   try
     uspMov.Connection := QryTrx.Connection;
     uspMov.StoredProcName := 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT';
     uspMov.Prepare;
-    uspMov.ParamByName('p_NUMERO_MOV').AsString              :=
-                                                 ObtenerSiguienteContador('MV');
+    uspMov.ParamByName('p_NUMERO_MOV').AsString              := sNumeroMov;
     uspMov.ParamByName('p_TIPO_DOC_MOV').AsString            := ATipoDoc;
     uspMov.ParamByName('p_SERIE_DOC_MOV').AsString           := ASerie;
     uspMov.ParamByName('p_NRO_DOC_MOV').AsString             := ANro;
@@ -934,9 +947,26 @@ begin
     uspMov.ParamByName('p_USUARIO').AsString                 := AUsuario;
     uspMov.ParamByName('p_ALMACEN_DOC').AsString             := AAlmacenDoc;
     uspMov.ParamByName('p_NUMOP_DOC').AsString               := ANumOperacion;
-    uspMov.ParamByName('p_CODCLIENTE').AsString             := ACodCliente;
-    uspMov.ParamByName('p_CODARTICULO').AsString               := ACodArticulo;
+    uspMov.ParamByName('p_CODCLIENTE').AsString              := ACodCliente;
+    uspMov.ParamByName('p_CODARTICULO').AsString             := ACodArticulo;
     uspMov.Execute;
+    if AFechaMovimiento > 0 then
+    begin
+      QryFecha := TUniQuery.Create(nil);
+      try
+        QryFecha.Connection := QryTrx.Connection;
+        QryFecha.SQL.Text :=
+          'UPDATE fza_movimientos_almacen ' +
+          '   SET FECHA_MOV = :FECHA ' +
+          ' WHERE NUMERO_MOV = :NUMERO';
+        QryFecha.ParamByName('FECHA').AsDateTime :=
+          FechaCajaConHora(AFechaMovimiento);
+        QryFecha.ParamByName('NUMERO').AsString := sNumeroMov;
+        QryFecha.Execute;
+      finally
+        FreeAndNil(QryFecha);
+      end;
+    end;
   finally
     FreeAndNil(uspMov);
   end;
@@ -983,6 +1013,7 @@ procedure TdmCajaOpe.CrearNuevoDepositoCliente(QryTrx: TUniQuery;
                                                AEsImpIncl:        string;
                                                const ACaja,
                                                ANumOperacion: string;
+                                               AFechaOperacion: TDateTime;
                                                out IdGenerado:string);
 var
   NuevoIdDep: string;
@@ -1005,7 +1036,8 @@ begin
                             AAlmacenOrigen,
                             ANumOperacion,
                             ACliente,
-                            AArticulo);
+                            AArticulo,
+                            AFechaOperacion);
   // 1b. Entrada al almacén depósito
   InsertarMovimientoAlmacen(QryTrx,
                             'TR',
@@ -1024,7 +1056,8 @@ begin
                             AAlmacenOrigen,
                             ANumOperacion,
                             ACliente,
-                            AArticulo);
+                            AArticulo,
+                            AFechaOperacion);
   // 2. Generar ID único para el depósito (lógica original)
   NuevoIdDep := 'DP' + FormatDateTime('yymmddhhnnsszzz', Now) +
                 RightStr(ASku, 3);  // máx 20 chars
@@ -1375,7 +1408,7 @@ begin
           if Abs(Lin.TotalCIva) > 0.001 then
             InsertarOperacionCaja(
               QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'CB',
-              Lin.TotalCIva, UsuarioCaja, NumFactura, SerieGenerada,
+              Lin.TotalCIva, UsuarioCaja, Cab.Fecha, NumFactura, SerieGenerada,
               Cab.CodigoCliente, 'Consumo de anticipo: ' + Lin.Descripcion,
               '', '', '', '', '', 'N', Lin.idDeposito);
           cdsLineas.Next;
@@ -1396,7 +1429,8 @@ begin
             if Lin.TotalCIva > 0 then
               InsertarOperacionCaja(
                 QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'CB',
-                Lin.TotalCIva, UsuarioCaja, NumFactura, SerieGenerada,
+                Lin.TotalCIva, UsuarioCaja, Cab.Fecha, NumFactura,
+                SerieGenerada,
                 Cab.CodigoCliente, 'Cobro a cuenta: ' + Lin.Descripcion,
                 '', '', '', '', '', 'N', lin.idDeposito);
           end
@@ -1409,10 +1443,11 @@ begin
               Lin.PrecioOriginalDep, Lin.TotalCIva, AAlmacen, AlmacenDeposito,
               Lin.Cantidad, Lin.TipoIva, Lin.PorcIva, Lin.EsImpIncl,
               ACaja,
-              sOpeCaja, IdDepGenerado);
+              sOpeCaja, Cab.Fecha, IdDepGenerado);
             InsertarOperacionCaja(
               QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DE', Lin.TotalCIva,
-              UsuarioCaja, NumFactura, SerieGenerada, Cab.CodigoCliente,
+              UsuarioCaja, Cab.Fecha, NumFactura, SerieGenerada,
+              Cab.CodigoCliente,
               'Depósito: ' + Lin.Descripcion,
               '', '', '', '', '', 'N',
               IdDepGenerado);
@@ -1437,12 +1472,13 @@ begin
           var ImporteCierreDE := Lin.PrecioOriginalDep;
           if ImporteCierreDE = 0 then ImporteCierreDE := Lin.TotalCIva;
           InsertarOperacionCaja(QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja,
-            'DE', -ImporteCierreDE, UsuarioCaja, NumFactura,
+            'DE', -ImporteCierreDE, UsuarioCaja, Cab.Fecha, NumFactura,
             SerieGenerada, Cab.CodigoCliente, 'Cierre depósito: ' +
             Lin.Descripcion, '', '', '', '', '', 'N', idDep);
           InsertarOperacionCaja(
             QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE', Lin.TotalCIva,
-            UsuarioCaja, NumFactura, SerieGenerada, Cab.CodigoCliente,
+            UsuarioCaja, Cab.Fecha, NumFactura, SerieGenerada,
+            Cab.CodigoCliente,
             'Venta depósito: ' + Lin.Descripcion,
             '', '', '', '', '', 'N', idDep);
         end
@@ -1476,7 +1512,7 @@ begin
             QryTrx, 'VE', SerieGenerada, NumFactura, Lin.Linea,
             AEmpresa, AlmacenOrigenSalida, ACaja, '', TipoMov, Lin.Sku,
             Lin.Cantidad, 0, UsuarioCaja, AAlmacen, NumOperacionVE,
-            Cab.CodigoCliente, Lin.Articulo);
+            Cab.CodigoCliente, Lin.Articulo, Cab.Fecha);
         cdsLineas.Next;
       end;
     finally
@@ -1510,12 +1546,14 @@ begin
       if TotalVentasNormales > 0 then
         InsertarOperacionCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE',
-          TotalVentasNormales, UsuarioCaja, NumFactura, SerieGenerada,
+          TotalVentasNormales, UsuarioCaja, Cab.Fecha, NumFactura,
+          SerieGenerada,
           Cab.CodigoCliente, 'Venta');
       if TotalDevolucionesNormales > 0 then
         InsertarOperacionCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DV',
-          -TotalDevolucionesNormales, UsuarioCaja, NumFactura, SerieGenerada,
+          -TotalDevolucionesNormales, UsuarioCaja, Cab.Fecha, NumFactura,
+          SerieGenerada,
           Cab.CodigoCliente, 'Devolución de Venta');
     end;
     // =======================================================================
@@ -1593,7 +1631,7 @@ begin
         InsertarOperacionCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VR',
           DatosCobro.ValesRecogidos[i].ImporteAplicado, UsuarioCaja,
-          NumFactura, SerieGenerada, Cab.CodigoCliente,
+          Cab.Fecha, NumFactura, SerieGenerada, Cab.CodigoCliente,
           'Vale canjeado: ' + DatosCobro.ValesRecogidos[i].CodigoVale);
         // Marcar el vale como redimido. La nueva firma recibe QryTrx para
         // unirse a la transaccion, ademas del importe y la empresa.
@@ -1818,6 +1856,7 @@ procedure TdmCajaOpe.InsertarOperacionCaja(
                         const ATipoOp:   string;
                         AImporte:        Currency; // negativo en VL y AT
                         const AEmpleado: string;
+                        AFechaOperacion: TDateTime = 0;
                         // — opcionales —
                         const ANroFactura:       string = '';
                         const ASerieFactura:     string = '';
@@ -1830,7 +1869,10 @@ procedure TdmCajaOpe.InsertarOperacionCaja(
                         const AAlmContra:        string = '';
                         const AEsTraspaso:       string = 'N';
                         const AIdDeposito:       string = '');
+var
+  dtFechaOperacion: TDateTime;
 begin
+  dtFechaOperacion := FechaCajaConHora(AFechaOperacion);
   QryTrx.SQL.Text :=
     'INSERT INTO fza_caja_operaciones (' +
     '  CODIGO_EMP_OPCAJA,' +
@@ -1862,8 +1904,8 @@ begin
     '  :NUMOP,' +
     '  :TIPOOP,' +
     '  :IMPORTE,' +
-    '  NOW(),' +
-    '  CURRENT_DATE,' +
+    '  :FECHAOP,' +
+    '  :FECHADIA,' +
     '  :EMPLEADO,' +
     '  NULLIF(:NROFAC,    ''''),' +
     '  NULLIF(:SERIEFAC,  ''''),' +
@@ -1884,6 +1926,8 @@ begin
   QryTrx.ParamByName('NUMOP').AsString    := ANumOperacion;
   QryTrx.ParamByName('TIPOOP').AsString   := ATipoOp;
   QryTrx.ParamByName('IMPORTE').AsCurrency:= AImporte;
+  QryTrx.ParamByName('FECHAOP').AsDateTime := dtFechaOperacion;
+  QryTrx.ParamByName('FECHADIA').AsDateTime := Trunc(dtFechaOperacion);
   QryTrx.ParamByName('EMPLEADO').AsString := AEmpleado;
   QryTrx.ParamByName('NROFAC').AsString   := ANroFactura;
   QryTrx.ParamByName('SERIEFAC').AsString := ASerieFactura;

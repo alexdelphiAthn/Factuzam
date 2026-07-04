@@ -215,6 +215,8 @@ type
     // Decide que dialogo mostrar al ejecutar actEliminarRegistro segun
     // NombreCampoESACTIVO y ContarHijosActivos.
     function PreguntarAccionBorrado: TAccionBorrado;
+    function FocoEnEditorTexto: Boolean;
+    function PuedeCambiarRegistroPorTecla: Boolean;
     // Mueve el foco del grid principal un bloque de filas (Ctrl+AvPag /
     // Ctrl+RePag). AAvanzar=True baja el bloque, False lo sube.
     procedure MoverFocoGridBloque(AAvanzar: Boolean);
@@ -2126,17 +2128,11 @@ begin
     SimulateTabKey;
     Exit;
   end;
-  // Ctrl+Inicio / Ctrl+Fin -> primer / ultimo registro del grid
-  // (excepto si el foco esta en un memo o SynEdit: ahi es ir al
-  // principio/fin del texto y dejamos el comportamiento nativo)
+  // Ctrl+Inicio / Ctrl+Fin -> primer / ultimo registro del grid.
+  // En editores de texto dejamos el comportamiento nativo del control.
   if (Key in [VK_HOME, VK_END]) and (ssCtrl in Shift) and
-     not (ssAlt in Shift) then
+     not (ssAlt in Shift) and PuedeCambiarRegistroPorTecla then
   begin
-    if Assigned(ActiveControl) and
-       ((ActiveControl is TCustomMemo) or
-        (Pos('Memo', ActiveControl.ClassName) > 0) or
-        (Pos('SynEdit', ActiveControl.ClassName) > 0)) then
-      Exit;
     // Usar DataController para respetar la ordenacion del grid
     if Key = VK_HOME then
       cxGrdDBTabPrin.DataController.FocusedRowIndex := 0
@@ -2177,6 +2173,35 @@ end;
 function TfrmMtoGen.PermitirNavegacionTeclas: Boolean;
 begin
   Result := True;
+end;
+
+function TfrmMtoGen.FocoEnEditorTexto: Boolean;
+var
+  sClase: string;
+begin
+  Result := False;
+  if Assigned(ActiveControl) then
+  begin
+    sClase := ActiveControl.ClassName;
+    Result := (ActiveControl is TCustomEdit) or
+              (Pos('TextEdit', sClase) > 0) or
+              (Pos('Memo', sClase) > 0) or
+              (Pos('SynEdit', sClase) > 0) or
+              (Pos('ComboBox', sClase) > 0) or
+              (Pos('LookupComboBox', sClase) > 0) or
+              (Pos('ButtonEdit', sClase) > 0) or
+              (Pos('DateEdit', sClase) > 0) or
+              (Pos('CurrencyEdit', sClase) > 0);
+  end;
+end;
+
+function TfrmMtoGen.PuedeCambiarRegistroPorTecla: Boolean;
+begin
+  Result := Assigned(dsTablaG.DataSet) and
+            dsTablaG.DataSet.Active and
+            (dsTablaG.State = dsBrowse) and
+            PermitirNavegacionTeclas and
+            not FocoEnEditorTexto;
 end;
 
 procedure TfrmMtoGen.actNavBrowseUpdate(Sender: TObject);
@@ -2283,12 +2308,14 @@ end;
 
 procedure TfrmMtoGen.actRegistroAnteriorExecute(Sender: TObject);
 begin
-  nvNavegador.Buttons.Prior.Click;
+  if PuedeCambiarRegistroPorTecla then
+    nvNavegador.Buttons.Prior.Click;
 end;
 
 procedure TfrmMtoGen.actRegistroSiguienteExecute(Sender: TObject);
 begin
-  nvNavegador.Buttons.Next.Click;
+  if PuedeCambiarRegistroPorTecla then
+    nvNavegador.Buttons.Next.Click;
 end;
 
 procedure TfrmMtoGen.actInsertarRegistroExecute(Sender: TObject);
@@ -2298,12 +2325,14 @@ end;
 
 procedure TfrmMtoGen.actPrimerRegistroExecute(Sender: TObject);
 begin
-  dsTablaG.DataSet.First;
+  if PuedeCambiarRegistroPorTecla then
+    dsTablaG.DataSet.First;
 end;
 
 procedure TfrmMtoGen.actUltimoRegistroExecute(Sender: TObject);
 begin
-  dsTablaG.DataSet.Last;
+  if PuedeCambiarRegistroPorTecla then
+    dsTablaG.DataSet.Last;
 end;
 
 // Ctrl+AvPag / Ctrl+RePag: salto de bloque en el grid principal. Las teclas
@@ -2312,12 +2341,14 @@ end;
 // SALTO_BLOQUE filas de una vez.
 procedure TfrmMtoGen.actAvanzarBloqueExecute(Sender: TObject);
 begin
-  MoverFocoGridBloque(True);
+  if PuedeCambiarRegistroPorTecla then
+    MoverFocoGridBloque(True);
 end;
 
 procedure TfrmMtoGen.actRetrocederBloqueExecute(Sender: TObject);
 begin
-  MoverFocoGridBloque(False);
+  if PuedeCambiarRegistroPorTecla then
+    MoverFocoGridBloque(False);
 end;
 
 // Mueve el foco del grid principal un bloque de filas respetando la
