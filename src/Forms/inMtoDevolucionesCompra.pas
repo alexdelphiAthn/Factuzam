@@ -196,6 +196,9 @@ type
     procedure colLineaDevcCODIGO_ARTPropertiesValidate(Sender: TObject;
                 var DisplayValue: Variant; var ErrorText: TCaption;
                 var Error: Boolean);
+    procedure colLineaDevcCODIGO_UNIDADPropertiesValidate(Sender: TObject;
+                var DisplayValue: Variant; var ErrorText: TCaption;
+                var Error: Boolean);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -254,6 +257,7 @@ type
     procedure AplicarArticuloDevolucion(const ACodigoArt: string);
     procedure colLineaDevcCODIGO_UNIDADPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
+    procedure AsegurarPrimeraLineaDevolucionCompra;
     procedure RefrescarAlmacenesCabecera;
     procedure AsegurarCabeceraPersistidaParaLineas;
     function PuedeActivarTallasHorizontal(var AMensaje: string): Boolean;
@@ -402,6 +406,7 @@ begin
       with Buttons.Add do
         Kind := bkEllipsis;
       OnButtonClick := colLineaDevcCODIGO_UNIDADPropertiesButtonClick;
+      OnValidate := colLineaDevcCODIGO_UNIDADPropertiesValidate;
     end;
   end;
   tvLineasDevolucion.OptionsData.Editing := True;
@@ -2294,6 +2299,7 @@ procedure TfrmMtoDevolucionesCompra.cxgrdLineasDevolucionEnter(Sender: TObject);
 begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, False);
+  AsegurarPrimeraLineaDevolucionCompra;
 end;
 
 procedure TfrmMtoDevolucionesCompra.cxgrdLineasDevolucionExit(Sender: TObject);
@@ -2908,6 +2914,53 @@ begin
   sSku := BuscarSkuDevolucion(sArt);
   if sSku <> '' then
     AplicarArticuloDevolucion(sSku);
+end;
+
+procedure TfrmMtoDevolucionesCompra.colLineaDevcCODIGO_UNIDADPropertiesValidate(
+  Sender: TObject; var DisplayValue: Variant; var ErrorText: TCaption;
+  var Error: Boolean);
+var
+  sCodigo: string;
+begin
+  inherited;
+  if not Error then
+  begin
+    sCodigo := Trim(VarToStr(DisplayValue));
+    if sCodigo <> '' then
+    begin
+      AplicarArticuloDevolucion(sCodigo);
+      if Assigned(dmmDevolucionesCompra) and
+         dmmDevolucionesCompra.unqryDevolucionesCompraLineas.Active and
+         (dmmDevolucionesCompra.unqryDevolucionesCompraLineas.
+            FindField('CODIGO_UNIDAD_DEVCLIN') <> nil) then
+        DisplayValue := dmmDevolucionesCompra.unqryDevolucionesCompraLineas.
+                          FieldByName('CODIGO_UNIDAD_DEVCLIN').AsString;
+    end;
+  end;
+end;
+
+procedure TfrmMtoDevolucionesCompra.AsegurarPrimeraLineaDevolucionCompra;
+var
+  dsCab: TDataSet;
+  dsLin: TDataSet;
+  sNumero: string;
+  sSerie: string;
+begin
+  if not Assigned(dmmDevolucionesCompra) then
+    Exit;
+  dsCab := dmmDevolucionesCompra.unqryTablaG;
+  dsLin := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
+  if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
+     dsCab.IsEmpty then
+    Exit;
+  sNumero := Trim(dsCab.FieldByName('NUMERO_DEVC').AsString);
+  sSerie  := Trim(dsCab.FieldByName('SERIE_DEVC').AsString);
+  if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
+    Exit;
+  if not dsLin.Active then
+    dsLin.Open;
+  if dsLin.IsEmpty and (not (dsLin.State in dsEditModes)) then
+    dsLin.Append;
 end;
 
 procedure TfrmMtoDevolucionesCompra.actArticulosExecute(Sender: TObject);

@@ -427,6 +427,24 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 TabOrder = 17
                 Transparent = True
               end
+              object lblTotalesTotalPrendas: TcxLabel
+                Left = 499
+                Top = 131
+                Caption = 'N'#186' de prendas'
+                TabOrder = 26
+                Transparent = True
+              end
+              object curTotalesTOTAL_PRENDAS_ALBC: TcxDBCurrencyEdit
+                Left = 611
+                Top = 131
+                DataBinding.DataField = 'TOTAL_PRENDAS_ALBC'
+                DataBinding.DataSource = dsTablaG
+                Properties.DecimalPlaces = 0
+                Properties.DisplayFormat = '#,##0'
+                Properties.ReadOnly = True
+                TabOrder = 27
+                Width = 133
+              end
             end
           end
         end
@@ -501,7 +519,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             Height = 371
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsLineasAlbaran
+            Properties.ActivePage = tsTotales
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 367
             ClientRectLeft = 4
@@ -673,20 +691,21 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 Top = 0
                 Width = 929
                 Height = 339
+                VertScrollBar.Position = 32
                 Align = alClient
                 BorderStyle = bsNone
                 ParentBackground = True
                 TabOrder = 0
                 object lblTotalesTotalBase: TcxLabel
                   Left = 38
-                  Top = 39
+                  Top = 7
                   Caption = 'Total Base Imponible'
                   TabOrder = 0
                   Transparent = True
                 end
                 object curTotalesTOTAL_BASES_ALBC: TcxDBCurrencyEdit
                   Left = 230
-                  Top = 35
+                  Top = 3
                   DataBinding.DataField = 'TOTAL_BASES_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.DecimalPlaces = 2
@@ -696,14 +715,14 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 end
                 object lblTotalesTotalImpuestos: TcxLabel
                   Left = 79
-                  Top = 77
+                  Top = 45
                   Caption = 'Total Impuestos'
                   TabOrder = 2
                   Transparent = True
                 end
                 object curTotalesTOTAL_IMPUESTOS_ALBC: TcxDBCurrencyEdit
                   Left = 230
-                  Top = 73
+                  Top = 41
                   DataBinding.DataField = 'TOTAL_IMPUESTOS_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.DecimalPlaces = 2
@@ -714,14 +733,14 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 end
                 object lblTotalesPorcRetencion: TcxLabel
                   Left = 80
-                  Top = 118
+                  Top = 86
                   Caption = '% Retenci'#243'n'
                   TabOrder = 4
                   Transparent = True
                 end
                 object spnTotalesPORCENTAJE_RETENCION_ALBC: TcxDBSpinEdit
                   Left = 230
-                  Top = 114
+                  Top = 82
                   DataBinding.DataField = 'PORCENTAJE_RETENCION_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.AssignedValues.MinValue = True
@@ -733,14 +752,14 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 end
                 object lblTotalesTotalRetencion: TcxLabel
                   Left = 70
-                  Top = 158
+                  Top = 126
                   Caption = 'Total Retenci'#243'n'
                   TabOrder = 6
                   Transparent = True
                 end
                 object curTotalesTOTAL_RETENCION_ALBC: TcxDBCurrencyEdit
                   Left = 230
-                  Top = 154
+                  Top = 122
                   DataBinding.DataField = 'TOTAL_RETENCION_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
@@ -749,14 +768,14 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 end
                 object lblTotalesTotalPagar: TcxLabel
                   Left = 105
-                  Top = 199
+                  Top = 167
                   Caption = 'Total a pagar'
                   TabOrder = 8
                   Transparent = True
                 end
                 object curTotalesTOTAL_LIQUIDO_ALBC: TcxDBCurrencyEdit
                   Left = 230
-                  Top = 195
+                  Top = 163
                   DataBinding.DataField = 'TOTAL_LIQUIDO_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
@@ -766,14 +785,14 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 end
                 object lblTotalesFormaPago: TcxLabel
                   Left = 90
-                  Top = 238
+                  Top = 206
                   Caption = 'Forma de Pago'
                   TabOrder = 10
                   Transparent = True
                 end
                 object cbbTotalesFORMA_PAGO_ALBC: TcxDBLookupComboBox
                   Left = 230
-                  Top = 234
+                  Top = 202
                   DataBinding.DataField = 'FORMA_PAGO_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.DropDownSizeable = True
@@ -797,7 +816,7 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 end
                 object chkTotalesESIVA_RECARGO_COMPRAS_ALBC: TcxDBCheckBox
                   Left = 56
-                  Top = 279
+                  Top = 247
                   Caption = 'Recargo equivalencia compras'
                   DataBinding.DataField = 'ESIVA_RECARGO_COMPRAS_ALBC'
                   DataBinding.DataSource = dsTablaG
@@ -809,14 +828,14 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 end
                 object lblTotalesDtoComercial: TcxLabel
                   Left = 60
-                  Top = 305
+                  Top = 273
                   Caption = 'Dto. comercial'
                   TabOrder = 13
                   Transparent = True
                 end
                 object spnTotalesPORCENTAJE_DTO_COMERCIAL_ALBC: TcxDBSpinEdit
-                  Left = 230
-                  Top = 301
+                  Left = 185
+                  Top = 269
                   DataBinding.DataField = 'PORCENTAJE_DTO_COMERCIAL_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.AssignedValues.MinValue = True
@@ -824,27 +843,27 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                   Properties.EditFormat = '0.00 %'
                   Properties.MaxValue = 100.000000000000000000
                   TabOrder = 14
-                  Width = 60
+                  Width = 86
                 end
                 object curTotalesTOTAL_DTO_COMERCIAL_ALBC: TcxDBCurrencyEdit
-                  Left = 296
-                  Top = 301
+                  Left = 272
+                  Top = 269
                   DataBinding.DataField = 'TOTAL_DTO_COMERCIAL_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 15
-                  Width = 67
+                  Width = 91
                 end
                 object lblTotalesDtoFinanciero: TcxLabel
                   Left = 59
-                  Top = 329
+                  Top = 297
                   Caption = 'Dto. financiero'
                   TabOrder = 16
                   Transparent = True
                 end
                 object spnTotalesPORCENTAJE_DTO_FINANCIERO_ALBC: TcxDBSpinEdit
-                  Left = 230
-                  Top = 325
+                  Left = 185
+                  Top = 293
                   DataBinding.DataField = 'PORCENTAJE_DTO_FINANCIERO_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.AssignedValues.MinValue = True
@@ -852,42 +871,24 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                   Properties.EditFormat = '0.00 %'
                   Properties.MaxValue = 100.000000000000000000
                   TabOrder = 17
-                  Width = 60
+                  Width = 86
                 end
                 object curTotalesTOTAL_DTO_FINANCIERO_ALBC: TcxDBCurrencyEdit
-                  Left = 296
-                  Top = 325
+                  Left = 272
+                  Top = 293
                   DataBinding.DataField = 'TOTAL_DTO_FINANCIERO_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 18
-                  Width = 67
-                end
-                object lblTotalesTotalPrendas: TcxLabel
-                  Left = 60
-                  Top = 365
-                  Caption = 'N'#186' de prendas'
-                  TabOrder = 19
-                  Transparent = True
-                end
-                object curTotalesTOTAL_PRENDAS_ALBC: TcxDBCurrencyEdit
-                  Left = 230
-                  Top = 361
-                  DataBinding.DataField = 'TOTAL_PRENDAS_ALBC'
-                  DataBinding.DataSource = dsTablaG
-                  Properties.DecimalPlaces = 0
-                  Properties.DisplayFormat = '#,##0'
-                  Properties.ReadOnly = True
-                  TabOrder = 20
-                  Width = 133
+                  Width = 91
                 end
                 object grpDesgloseImpuestos: TGroupBox
                   Left = 384
-                  Top = 11
+                  Top = -21
                   Width = 525
                   Height = 318
                   Caption = 'Desglose Impuestos'
-                  TabOrder = 21
+                  TabOrder = 19
                   object shpSeparador1: TShape
                     Left = 128
                     Top = 32

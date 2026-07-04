@@ -226,6 +226,7 @@ type
     procedure cxgrdcPedLinSKUPropertiesValidate(Sender: TObject;
                 var DisplayValue: Variant; var ErrorText: TCaption;
                 var Error: Boolean);
+    procedure cxGrdPedidosLineasEnter(Sender: TObject);
   private
     FBuscandoDatosCabecera: Boolean;
     FAplicandoArticulo: Boolean;
@@ -237,6 +238,7 @@ type
     function BuscarSkuPedido(const ACodigoArt: string): string;
     function ArticuloLineaActivaPedido: string;
     procedure AplicarArticuloPedido(const ACodigoArt: string);
+    procedure AsegurarPrimeraLineaPedido;
     procedure cxgrdcPedLinSKUPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure RellenarLineasAlEntregarTodo;
@@ -616,6 +618,7 @@ begin
       with Buttons.Add do
         Kind := bkEllipsis;
       OnButtonClick := cxgrdcPedLinSKUPropertiesButtonClick;
+      OnValidate := cxgrdcPedLinSKUPropertiesValidate;
     end;
   end;
 
@@ -657,6 +660,7 @@ begin
     tdmDataModule := dmmPedidos;
   end;
   tvPedidosLineas.DataController.DataSource := dmmPedidos.dsPedidosLineas;
+  cxGrdPedidosLineas.OnEnter := cxGrdPedidosLineasEnter;
   tvAlbaranes.DataController.DataSource := dmmPedidos.dsAlbaranes;
   tvMensajes.DataController.DataSource := dmmPedidos.dsMensajes;
   cbbTotalesFORMA_PAGO_PED.Properties.ListSource := dmmPedidos.dsFormasPago;
@@ -936,6 +940,36 @@ begin
   sSku := BuscarSkuPedido(sArt);
   if sSku <> '' then
     AplicarArticuloPedido(sSku);
+end;
+
+procedure TfrmMtoPedidos.AsegurarPrimeraLineaPedido;
+var
+  dsCab: TDataSet;
+  dsLin: TDataSet;
+  sNumero: string;
+  sSerie: string;
+begin
+  if not Assigned(dmmPedidos) then
+    Exit;
+  dsCab := dmmPedidos.unqryTablaG;
+  dsLin := dmmPedidos.unqryPedidosLineas;
+  if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
+     dsCab.IsEmpty then
+    Exit;
+  sNumero := Trim(dsCab.FieldByName('NUMERO_PED').AsString);
+  sSerie  := Trim(dsCab.FieldByName('SERIE_PED').AsString);
+  if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
+    Exit;
+  if not dsLin.Active then
+    dmmPedidos.AbrirDetalles;
+  if dsLin.Active and dsLin.IsEmpty and
+     (not (dsLin.State in dsEditModes)) then
+    dsLin.Append;
+end;
+
+procedure TfrmMtoPedidos.cxGrdPedidosLineasEnter(Sender: TObject);
+begin
+  AsegurarPrimeraLineaPedido;
 end;
 
 procedure TfrmMtoPedidos.btnAnadirLineaClick(Sender: TObject);

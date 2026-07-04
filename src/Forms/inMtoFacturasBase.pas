@@ -430,6 +430,7 @@ type
     procedure tvLineasFacturaKeyDown(Sender: TObject;
                                      var Key: Word;
                                      Shift: TShiftState);
+    procedure cxgrdLineasFacturaEnter(Sender: TObject);
     procedure tvLineasFacturaInitEdit(Sender: TcxCustomGridTableView;
                                       AItem: TcxCustomGridTableItem;
                                       AEdit: TcxCustomEdit);
@@ -579,6 +580,7 @@ type
     procedure ActivarSkuArticuloLinea(const ACodArt: string;
                                       bEnfocar: Boolean);
     procedure ConsolidarSkuLinea(Sender: TObject);
+    procedure AsegurarPrimeraLineaFacturaBorrador;
     procedure DesactivarEnterSku(Sender: TObject);
     procedure RestaurarEnterSku(Sender: TObject);
     procedure SalirEditorSku(Sender: TObject);
@@ -2050,6 +2052,7 @@ begin
   cbbCanalIVA.Properties.ListSource := dmmFacturas.dsIvas;
   cbbFORMAPAGO.Properties.ListSource := dmmFacturas.dsFormasPago;
   tvLineasFactura.DataController.DataSource := dmmFacturas.dsLinFac;
+  cxgrdLineasFactura.OnEnter := cxgrdLineasFacturaEnter;
   cbbTARIFA_ARTICULOS_CLIENTES.Properties.ListSource := dmmFacturas.dsTarifas;
   AplicarOrigenCobros;
   btnReciboEmitido.OnClick := btnReciboEmitidoClick;
@@ -3006,6 +3009,43 @@ begin
       // global AppException ya filtra y registra como warning.
       ;
   end;
+end;
+
+procedure TfrmMtoFacturasBase.AsegurarPrimeraLineaFacturaBorrador;
+var
+  dsCab: TDataSet;
+  dsLin: TDataSet;
+  sNumero: string;
+  sSerie: string;
+  sFase: string;
+begin
+  if not Assigned(dmmFacturas) then
+    Exit;
+  dsCab := dmmFacturas.unqryTablaG;
+  dsLin := dmmFacturas.unqryLinFac;
+  if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
+     dsCab.IsEmpty then
+    Exit;
+  sNumero := Trim(dsCab.FieldByName('NUMERO_FAC').AsString);
+  sSerie  := Trim(dsCab.FieldByName('SERIE_FAC').AsString);
+  if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
+    Exit;
+  sFase := '';
+  if dsCab.FindField('FASE_FAC') <> nil then
+    sFase := Trim(dsCab.FieldByName('FASE_FAC').AsString);
+  if (sFase <> '') and (not SameText(sFase, 'BORRADOR')) then
+    Exit;
+  if dsCab.State in dsEditModes then
+    Exit;
+  if not dsLin.Active then
+    dsLin.Open;
+  if dsLin.IsEmpty and (not (dsLin.State in dsEditModes)) then
+    dsLin.Append;
+end;
+
+procedure TfrmMtoFacturasBase.cxgrdLineasFacturaEnter(Sender: TObject);
+begin
+  AsegurarPrimeraLineaFacturaBorrador;
 end;
 
 procedure TfrmMtoFacturasBase.CambiarIVA;

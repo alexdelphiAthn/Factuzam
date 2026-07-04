@@ -87,6 +87,8 @@ type
                                    AOrden: Integer);
     procedure RecargarMaestro;
     procedure AsegurarFilasACA;
+    function CalcularSiguienteOrdenValor(const AIdAtributo: string;
+                                         AIdConjunto: Integer): Integer;
   public
     // Método para llamar a esta pantalla desde el formulario principal
     class function Ejecutar(const ACodigoArticulo,
@@ -321,22 +323,51 @@ begin
   PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
+function TfrmMtoModalGenerarSKUS.CalcularSiguienteOrdenValor(
+  const AIdAtributo: string; AIdConjunto: Integer): Integer;
+var
+  qTemp: TUniQuery;
+begin
+  Result := 10;
+  qTemp := TUniQuery.Create(nil);
+  try
+    qTemp.Connection := unqryMaestro.Connection;
+    if AIdConjunto > 0 then
+      qTemp.SQL.Text :=
+        'SELECT (FLOOR(COALESCE(MAX(ORDEN_ACD), 0) / 10) + 1) * 10 ' +
+        'AS SIGUIENTE_ORDEN ' +
+        'FROM fza_atributos_conjuntos_det ' +
+        'WHERE ID_AC_ACD = :IdConjunto'
+    else
+      qTemp.SQL.Text :=
+        'SELECT (FLOOR(COALESCE(MAX(ORDEN_AV), 0) / 10) + 1) * 10 ' +
+        'AS SIGUIENTE_ORDEN ' +
+        'FROM fza_atributos_valores ' +
+        'WHERE ID_VA_AV = :IdAtributo';
+    if AIdConjunto > 0 then
+      qTemp.ParamByName('IdConjunto').AsInteger := AIdConjunto
+    else
+      qTemp.ParamByName('IdAtributo').AsString := AIdAtributo;
+    qTemp.Open;
+    if not qTemp.IsEmpty then
+      Result := qTemp.FieldByName('SIGUIENTE_ORDEN').AsInteger;
+  finally
+    FreeAndNil(qTemp);
+  end;
+end;
+
 procedure TfrmMtoModalGenerarSKUS.btnAddValueClick(Sender: TObject);
 var
   NuevoNombre, IdAtrSel, OrdenStr, NombreConjunto: string;
-  IdConjuntoAsignado, IdNuevoValor, OrdenVal, Respuesta: Integer;
+  IdConjuntoAsignado, IdNuevoValor, OrdenVal, OrdenSugerido: Integer;
+  Respuesta: Integer;
   qTemp: TUniQuery;
 begin
   // 1. INPUTS DEL USUARIO
   NuevoNombre := Trim(InputBox('Añadir nuevo valor',
     'Introduce el nombre del nuevo atributo (Ej: XXL, Turquesa):', ''));
-  if NuevoNombre = '' then Exit;
-  OrdenStr := Trim(InputBox('Añadir nuevo valor',
-    'Introduce el ORDEN (Ej: 10, 20, 30...).' + sLineBreak + sLineBreak +
-    'ATENCIÓN: El orden asignado será global y afectará a todos los ' +
-    'artículos que usen este valor en el futuro.', '100'));
-  if OrdenStr = '' then Exit;
-  OrdenVal := StrToIntDef(OrdenStr, 100);
+  if NuevoNombre = '' then
+    Exit;
   // 2. DIMENSIÓN SELECCIONADA (Ej: 'CO' para Color)
   IdAtrSel := unqryMaestro.FieldByName('ID_ATB_VA').AsString;
   qTemp := TUniQuery.Create(nil);
@@ -365,6 +396,16 @@ begin
       IdConjuntoAsignado := qTemp.FieldByName('ID_AC_ACA').AsInteger;
       NombreConjunto     := qTemp.FieldByName('NOMBRE_AC').AsString;
     end;
+    OrdenSugerido := CalcularSiguienteOrdenValor(IdAtrSel,
+                                                  IdConjuntoAsignado);
+    OrdenStr := Trim(InputBox('Añadir nuevo valor',
+      'Introduce el ORDEN (Ej: 10, 20, 30...).' + sLineBreak + sLineBreak +
+      'ATENCIÓN: El orden asignado será global y afectará a todos los ' +
+      'artículos que usen este valor en el futuro.',
+      IntToStr(OrdenSugerido)));
+    if OrdenStr = '' then
+      Exit;
+    OrdenVal := StrToIntDef(OrdenStr, OrdenSugerido);
     // =========================================================================
     // FASE 2: ASEGURARNOS DE QUE EL VALOR EXISTE EN EL DICCIONARIO MAESTRO
     // =========================================================================
