@@ -124,8 +124,6 @@ type
     lblTotalesDtoFinanciero: TcxLabel;
     spnTotalesPORCENTAJE_DTO_FINANCIERO_ALBC: TcxDBSpinEdit;
     curTotalesTOTAL_DTO_FINANCIERO_ALBC: TcxDBCurrencyEdit;
-    lblTotalesTotalPrendas: TcxLabel;
-    curTotalesTOTAL_PRENDAS_ALBC: TcxDBCurrencyEdit;
     lblTotalesFormaPago: TcxLabel;
     cbbTotalesFORMA_PAGO_ALBC: TcxDBLookupComboBox;
     grpDesgloseImpuestos: TGroupBox;
@@ -155,6 +153,8 @@ type
     actIrFacturaCreada: TAction;
     actIrProveedor: TAction;
     btnIrFacturaCreada: TcxButton;
+    lblTotalesTotalPrendas: TcxLabel;
+    curTotalesTOTAL_PRENDAS_ALBC: TcxDBCurrencyEdit;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -205,6 +205,9 @@ type
     procedure colLineaAlbcCODIGO_ARTPropertiesValidate(Sender: TObject;
                 var DisplayValue: Variant; var ErrorText: TCaption;
                 var Error: Boolean);
+    procedure colLineaAlbcCODIGO_UNIDADPropertiesValidate(Sender: TObject;
+                var DisplayValue: Variant; var ErrorText: TCaption;
+                var Error: Boolean);
   private
     FGestorTallas    : TGestorGridTallas;
     FPivote          : TGridPivoteCompra;
@@ -243,6 +246,7 @@ type
     function ArticuloLineaActivaAlbaranCompra: string;
     procedure AplicarArticuloAlbaranCompra(const ACodigoArt: string);
     procedure AsegurarCabeceraPersistidaParaLineas;
+    procedure AsegurarPrimeraLineaAlbaranCompra;
     procedure DesactivarEnterAsTabEnCombo(AComp: TcxDBLookupComboBox);
     function PuedeActivarTallasHorizontal(var AMensaje: string): Boolean;
     procedure colLineaAlbcCODIGO_UNIDADPropertiesButtonClick(Sender: TObject;
@@ -981,6 +985,7 @@ begin
       with Buttons.Add do
         Kind := bkEllipsis;
       OnButtonClick := colLineaAlbcCODIGO_UNIDADPropertiesButtonClick;
+      OnValidate := colLineaAlbcCODIGO_UNIDADPropertiesValidate;
     end;
   end;
   InicializarGestorYPivote;
@@ -1598,6 +1603,7 @@ procedure TfrmMtoAlbaranesCompra.cxgrdLineasAlbaranEnter(Sender: TObject);
 begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, False);
+  AsegurarPrimeraLineaAlbaranCompra;
 end;
 
 procedure TfrmMtoAlbaranesCompra.cxgrdLineasAlbaranExit(Sender: TObject);
@@ -1839,6 +1845,53 @@ begin
   sSku := BuscarSkuAlbaranCompra(sArt);
   if sSku <> '' then
     AplicarArticuloAlbaranCompra(sSku);
+end;
+
+procedure TfrmMtoAlbaranesCompra.colLineaAlbcCODIGO_UNIDADPropertiesValidate(
+  Sender: TObject; var DisplayValue: Variant; var ErrorText: TCaption;
+  var Error: Boolean);
+var
+  sCodigo: string;
+begin
+  inherited;
+  if not Error then
+  begin
+    sCodigo := Trim(VarToStr(DisplayValue));
+    if sCodigo <> '' then
+    begin
+      AplicarArticuloAlbaranCompra(sCodigo);
+      if Assigned(dmmAlbaranesCompra) and
+         dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Active and
+         (dmmAlbaranesCompra.unqryAlbaranesCompraLineas.
+            FindField('CODIGO_UNIDAD_ALBCLIN') <> nil) then
+        DisplayValue := dmmAlbaranesCompra.unqryAlbaranesCompraLineas.
+                          FieldByName('CODIGO_UNIDAD_ALBCLIN').AsString;
+    end;
+  end;
+end;
+
+procedure TfrmMtoAlbaranesCompra.AsegurarPrimeraLineaAlbaranCompra;
+var
+  dsCab: TDataSet;
+  dsLin: TDataSet;
+  sNumero: string;
+  sSerie: string;
+begin
+  if not Assigned(dmmAlbaranesCompra) then
+    Exit;
+  dsCab := dmmAlbaranesCompra.unqryTablaG;
+  dsLin := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
+  if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
+     dsCab.IsEmpty then
+    Exit;
+  sNumero := Trim(dsCab.FieldByName('NUMERO_ALBC').AsString);
+  sSerie  := Trim(dsCab.FieldByName('SERIE_ALBC').AsString);
+  if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
+    Exit;
+  if not dsLin.Active then
+    dsLin.Open;
+  if dsLin.IsEmpty and (not (dsLin.State in dsEditModes)) then
+    dsLin.Append;
 end;
 
 procedure TfrmMtoAlbaranesCompra.colLinAlbcColorPivotButtonClick(

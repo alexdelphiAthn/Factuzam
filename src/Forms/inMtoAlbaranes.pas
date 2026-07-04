@@ -205,6 +205,10 @@ type
     procedure cxgrdcArtAlbPropertiesValidate(Sender: TObject;
                 var DisplayValue: Variant; var ErrorText: TCaption;
                 var Error: Boolean);
+    procedure cxgrdcArtAlbSkuPropertiesValidate(Sender: TObject;
+                var DisplayValue: Variant; var ErrorText: TCaption;
+                var Error: Boolean);
+    procedure cxgrdLineasAlbaranEnter(Sender: TObject);
   private
     FBuscandoDatosCabecera: Boolean;
     FAplicandoArticulo: Boolean;
@@ -219,6 +223,7 @@ type
     function BuscarSkuAlbaran(const ACodigoArt: string): string;
     function ArticuloLineaActivaAlbaran: string;
     procedure AplicarArticuloAlbaran(const ACodigoArt: string);
+    procedure AsegurarPrimeraLineaAlbaran;
     procedure cxgrdcArtAlbSkuPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure ActualizarColumnasOpcionalesLinea;
@@ -612,6 +617,7 @@ begin
     tdmDataModule := dmmAlbaranes;
   end;
   tvLineasAlbaran.DataController.DataSource := dmmAlbaranes.dsAlbaranesLineas;
+  cxgrdLineasAlbaran.OnEnter := cxgrdLineasAlbaranEnter;
   tvFacturas.DataController.DataSource      := dmmAlbaranes.dsFacturas;
   tvMovimientos.DataController.DataSource   := dmmAlbaranes.dsMovimientosAlb;
   cbbTotalesFORMA_PAGO_ALB.Properties.ListSource := dmmAlbaranes.dsFormasPago;
@@ -765,6 +771,7 @@ begin
       with Buttons.Add do
         Kind := bkEllipsis;
       OnButtonClick := cxgrdcArtAlbSkuPropertiesButtonClick;
+      OnValidate := cxgrdcArtAlbSkuPropertiesValidate;
     end;
   end;
   // Resaltar la columna ESFACTURADA_ALBLIN cuando exista (S/N).
@@ -995,6 +1002,56 @@ begin
   sSku := BuscarSkuAlbaran(sArt);
   if sSku <> '' then
     AplicarArticuloAlbaran(sSku);
+end;
+
+procedure TfrmMtoAlbaranes.cxgrdcArtAlbSkuPropertiesValidate(Sender: TObject;
+  var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
+var
+  sCodigo: string;
+begin
+  if not Error then
+  begin
+    sCodigo := Trim(VarToStr(DisplayValue));
+    if sCodigo <> '' then
+    begin
+      AplicarArticuloAlbaran(sCodigo);
+      if Assigned(dmmAlbaranes) and
+         dmmAlbaranes.unqryAlbaranesLineas.Active and
+         (dmmAlbaranes.unqryAlbaranesLineas.
+            FindField('CODIGO_UNIDAD_ALBLIN') <> nil) then
+        DisplayValue := dmmAlbaranes.unqryAlbaranesLineas.
+                          FieldByName('CODIGO_UNIDAD_ALBLIN').AsString;
+    end;
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.AsegurarPrimeraLineaAlbaran;
+var
+  dsCab: TDataSet;
+  dsLin: TDataSet;
+  sNumero: string;
+  sSerie: string;
+begin
+  if not Assigned(dmmAlbaranes) then
+    Exit;
+  dsCab := dmmAlbaranes.unqryTablaG;
+  dsLin := dmmAlbaranes.unqryAlbaranesLineas;
+  if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
+     dsCab.IsEmpty then
+    Exit;
+  sNumero := Trim(dsCab.FieldByName('NUMERO_ALB').AsString);
+  sSerie  := Trim(dsCab.FieldByName('SERIE_ALB').AsString);
+  if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
+    Exit;
+  if not dsLin.Active then
+    dsLin.Open;
+  if dsLin.IsEmpty and (not (dsLin.State in dsEditModes)) then
+    dsLin.Append;
+end;
+
+procedure TfrmMtoAlbaranes.cxgrdLineasAlbaranEnter(Sender: TObject);
+begin
+  AsegurarPrimeraLineaAlbaran;
 end;
 
 procedure TfrmMtoAlbaranes.btnAnadirLineaClick(Sender: TObject);

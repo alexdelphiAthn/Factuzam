@@ -230,6 +230,9 @@ type
     procedure colLineaPedcCODIGO_ARTPropertiesValidate(Sender: TObject;
                 var DisplayValue: Variant; var ErrorText: TCaption;
                 var Error: Boolean);
+    procedure colLineaPedcCODIGO_UNIDADPropertiesValidate(Sender: TObject;
+                var DisplayValue: Variant; var ErrorText: TCaption;
+                var Error: Boolean);
     procedure btnIraalbaranClick(Sender: TObject);
   private
     FGestorTallas    : TGestorGridTallas;
@@ -283,6 +286,7 @@ type
     function ArticuloLineaActivaPedidoCompra: string;
     procedure AplicarArticuloPedidoCompra(const ACodigoArt: string);
     procedure AsegurarCabeceraPersistidaParaLineas;
+    procedure AsegurarPrimeraLineaPedidoCompra;
     procedure DesactivarEnterAsTabEnCombo(AComp: TcxDBLookupComboBox);
     function PuedeActivarTallasHorizontal(var AMensaje: string): Boolean;
     procedure colLineaPedcCODIGO_UNIDADPropertiesButtonClick(Sender: TObject;
@@ -981,6 +985,7 @@ begin
       with Buttons.Add do
         Kind := bkEllipsis;
       OnButtonClick := colLineaPedcCODIGO_UNIDADPropertiesButtonClick;
+      OnValidate := colLineaPedcCODIGO_UNIDADPropertiesValidate;
     end;
   end;
   InicializarGestorYPivote;
@@ -1980,6 +1985,53 @@ begin
     AplicarArticuloPedidoCompra(sSku);
 end;
 
+procedure TfrmMtoPedidosCompra.colLineaPedcCODIGO_UNIDADPropertiesValidate(
+  Sender: TObject; var DisplayValue: Variant; var ErrorText: TCaption;
+  var Error: Boolean);
+var
+  sCodigo: string;
+begin
+  inherited;
+  if not Error then
+  begin
+    sCodigo := Trim(VarToStr(DisplayValue));
+    if sCodigo <> '' then
+    begin
+      AplicarArticuloPedidoCompra(sCodigo);
+      if Assigned(dmmPedidosCompra) and
+         dmmPedidosCompra.unqryPedidosCompraLineas.Active and
+         (dmmPedidosCompra.unqryPedidosCompraLineas.
+            FindField('CODIGO_UNIDAD_PEDCLIN') <> nil) then
+        DisplayValue := dmmPedidosCompra.unqryPedidosCompraLineas.
+                          FieldByName('CODIGO_UNIDAD_PEDCLIN').AsString;
+    end;
+  end;
+end;
+
+procedure TfrmMtoPedidosCompra.AsegurarPrimeraLineaPedidoCompra;
+var
+  dsCab: TDataSet;
+  dsLin: TDataSet;
+  sNumero: string;
+  sSerie: string;
+begin
+  if not Assigned(dmmPedidosCompra) then
+    Exit;
+  dsCab := dmmPedidosCompra.unqryTablaG;
+  dsLin := dmmPedidosCompra.unqryPedidosCompraLineas;
+  if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
+     dsCab.IsEmpty then
+    Exit;
+  sNumero := Trim(dsCab.FieldByName('NUMERO_PEDC').AsString);
+  sSerie  := Trim(dsCab.FieldByName('SERIE_PEDC').AsString);
+  if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
+    Exit;
+  if not dsLin.Active then
+    dsLin.Open;
+  if dsLin.IsEmpty and (not (dsLin.State in dsEditModes)) then
+    dsLin.Append;
+end;
+
 procedure TfrmMtoPedidosCompra.colLinPedcColorPivotButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
@@ -2143,6 +2195,7 @@ procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoEnter(Sender: TObject);
 begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, False);
+  AsegurarPrimeraLineaPedidoCompra;
 end;
 
 procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoExit(Sender: TObject);
