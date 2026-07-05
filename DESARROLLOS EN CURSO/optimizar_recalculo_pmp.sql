@@ -20,7 +20,8 @@
 --     2) UPDATE en lote con variables de sesion para el PMP acumulado
 --        (reset al cambiar de SKU),
 --     3) UPDATE...JOIN para volcar PRECIO_MEDIO_MOV / TOTAL_COSTE_MOV,
---     4) INSERT...ON DUPLICATE KEY UPDATE en fza_articulos_stockactual desde
+--     4) agregacion de acumulados por subtipo desde movimientos activos,
+--     5) INSERT...ON DUPLICATE KEY UPDATE en fza_articulos_stockactual desde
 --        el ultimo movimiento de cada SKU.
 --
 -- SP_RECALCULAR_PMP_SKU_ALMACEN se conserva con la misma firma como wrapper
@@ -66,6 +67,7 @@ BEGIN
     CREATE TEMPORARY TABLE tmp_movs_ord (
         RN                        BIGINT          NOT NULL AUTO_INCREMENT,
         NUMERO_MOV                VARCHAR(20)     NOT NULL,
+        TIPO_DOC_MOV              VARCHAR(20)     NOT NULL,
         CODIGO_UNIDAD_MOV         VARCHAR(50)     NOT NULL,
         TIPO_MOV                  VARCHAR(1)      NOT NULL,
         CANTIDAD_MOV              DECIMAL(19,6)   NOT NULL,
@@ -80,9 +82,10 @@ BEGIN
     ) ENGINE=InnoDB;
 
     INSERT INTO tmp_movs_ord
-        (NUMERO_MOV, CODIGO_UNIDAD_MOV, TIPO_MOV, CANTIDAD_MOV,
+        (NUMERO_MOV, TIPO_DOC_MOV, CODIGO_UNIDAD_MOV, TIPO_MOV, CANTIDAD_MOV,
          PRECIO_COSTE_UNITARIO_MOV)
     SELECT m.NUMERO_MOV,
+           m.TIPO_DOC_MOV,
            m.CODIGO_UNIDAD_MOV,
            m.TIPO_MOV,
            IFNULL(m.CANTIDAD_MOV, 0),
@@ -90,6 +93,7 @@ BEGIN
       FROM fza_movimientos_almacen m
       JOIN tmp_skus_recalc s ON s.sku = m.CODIGO_UNIDAD_MOV
      WHERE m.CODIGO_ALM_MOV = p_ALMACEN
+       AND m.ESACTIVO_MOV = 'S'
      ORDER BY m.CODIGO_UNIDAD_MOV, m.FECHA_MOV, m.INSTANTE_ALTA;
 
     /* 2. Calculo acumulado por SKU con variables de sesion. El ORDER BY RN
@@ -100,8 +104,8 @@ BEGIN
        calculado), luego STOCK_NUEVO (actualiza @stock), y al final SKU_PREV
        actualiza @sku_prev para la siguiente fila. */
     SET @sku_prev := '';
-    SET @stock    := 0;
-    SET @pmp      := 0;
+    SET @stock    := CAST(0 AS DECIMAL(19,6));
+    SET @pmp      := CAST(0 AS DECIMAL(19,6));
 
     UPDATE tmp_movs_ord
        SET PMP_NUEVO = (
@@ -142,17 +146,34 @@ BEGIN
        SET m.PRECIO_MEDIO_MOV = t.PMP_NUEVO,
            m.TOTAL_COSTE_MOV  = t.COSTE_NUEVO;
 
-    /* 4. Stock final por SKU: el ultimo mov (RN maximo) tiene el stock y
-       el PMP acumulados al final del historico. Volcamos a stockactual. */
+    /* 4. Stock final y acumulados por SKU: el ultimo mov (RN maximo)
+       tiene el stock y el PMP al final del historico. Volcamos tambien
+       los acumulados por subtipo a stockactual. */
     INSERT INTO fza_articulos_stockactual
         (CODIGO_ALM_STK, CODIGO_UNIDAD_STK,
-         CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTE_MODIF)
+         CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTE_MODIF,
+         CANTIDAD_ENT_COMPRA_STK,
+         CANTIDAD_ENT_TRASPASO_STK, CANTIDAD_SAL_TRASPASO_STK,
+         CANTIDAD_ENT_DEPOSITO_STK, CANTIDAD_SAL_DEPOSITO_STK,
+         CANTIDAD_SAL_VENTA_STK,
+         CANTIDAD_ENT_REGULAR_STK,
+         CANTIDAD_SAL_ALBVENTA_STK,
+         CANTIDAD_ENT_ALBENTRADA_STK)
     SELECT p_ALMACEN,
            t.CODIGO_UNIDAD_MOV,
            t.STOCK_NUEVO,
            IF(t.STOCK_NUEVO > 0, t.STOCK_NUEVO * t.PMP_NUEVO, 0),
            IF(t.STOCK_NUEVO > 0, t.PMP_NUEVO, 0),
-           NOW()
+           NOW(),
+           IFNULL(ac.CANTIDAD_ENT_COMPRA_STK, 0),
+           IFNULL(ac.CANTIDAD_ENT_TRASPASO_STK, 0),
+           IFNULL(ac.CANTIDAD_SAL_TRASPASO_STK, 0),
+           IFNULL(ac.CANTIDAD_ENT_DEPOSITO_STK, 0),
+           IFNULL(ac.CANTIDAD_SAL_DEPOSITO_STK, 0),
+           IFNULL(ac.CANTIDAD_SAL_VENTA_STK, 0),
+           IFNULL(ac.CANTIDAD_ENT_REGULAR_STK, 0),
+           IFNULL(ac.CANTIDAD_SAL_ALBVENTA_STK, 0),
+           IFNULL(ac.CANTIDAD_ENT_ALBENTRADA_STK, 0)
       FROM tmp_movs_ord t
       JOIN (
             SELECT CODIGO_UNIDAD_MOV, MAX(RN) AS RN_MAX
@@ -161,18 +182,61 @@ BEGIN
            ) ult
         ON ult.CODIGO_UNIDAD_MOV = t.CODIGO_UNIDAD_MOV
        AND ult.RN_MAX             = t.RN
+      LEFT JOIN (
+            SELECT CODIGO_UNIDAD_MOV,
+                   SUM(IF(TIPO_DOC_MOV = 'AC' AND TIPO_MOV = 'E',
+                          CANTIDAD_MOV, 0)) AS CANTIDAD_ENT_COMPRA_STK,
+                   SUM(IF(TIPO_DOC_MOV IN ('TR', 'AT', 'TA')
+                          AND TIPO_MOV = 'E',
+                          CANTIDAD_MOV, 0)) AS CANTIDAD_ENT_TRASPASO_STK,
+                   SUM(IF(TIPO_DOC_MOV IN ('TR', 'AT', 'TA')
+                          AND TIPO_MOV = 'S',
+                          CANTIDAD_MOV, 0)) AS CANTIDAD_SAL_TRASPASO_STK,
+                   SUM(IF(TIPO_DOC_MOV = 'DP' AND TIPO_MOV = 'E',
+                          CANTIDAD_MOV, 0)) AS CANTIDAD_ENT_DEPOSITO_STK,
+                   SUM(IF(TIPO_DOC_MOV = 'DP' AND TIPO_MOV = 'S',
+                          CANTIDAD_MOV, 0)) AS CANTIDAD_SAL_DEPOSITO_STK,
+                   SUM(IF(TIPO_DOC_MOV IN ('VE', 'FC') AND TIPO_MOV = 'S',
+                          CANTIDAD_MOV, 0)) AS CANTIDAD_SAL_VENTA_STK,
+                   SUM(IF(TIPO_DOC_MOV = 'IN' AND TIPO_MOV = 'E',
+                          CANTIDAD_MOV, 0)) AS CANTIDAD_ENT_REGULAR_STK,
+                   SUM(IF(TIPO_DOC_MOV = 'AV' AND TIPO_MOV = 'S',
+                          CANTIDAD_MOV, 0)) AS CANTIDAD_SAL_ALBVENTA_STK,
+                   SUM(IF(TIPO_DOC_MOV = 'AE' AND TIPO_MOV = 'E',
+                          CANTIDAD_MOV, 0)) AS CANTIDAD_ENT_ALBENTRADA_STK
+              FROM tmp_movs_ord
+             GROUP BY CODIGO_UNIDAD_MOV
+           ) ac
+        ON ac.CODIGO_UNIDAD_MOV = t.CODIGO_UNIDAD_MOV
      ON DUPLICATE KEY UPDATE
         CANTIDAD_STK     = VALUES(CANTIDAD_STK),
         VALOR_TOTAL_STK  = VALUES(VALOR_TOTAL_STK),
         PRECIO_MEDIO_STK = VALUES(PRECIO_MEDIO_STK),
-        INSTANTE_MODIF   = NOW();
+        INSTANTE_MODIF   = NOW(),
+        CANTIDAD_ENT_COMPRA_STK   = VALUES(CANTIDAD_ENT_COMPRA_STK),
+        CANTIDAD_ENT_TRASPASO_STK = VALUES(CANTIDAD_ENT_TRASPASO_STK),
+        CANTIDAD_SAL_TRASPASO_STK = VALUES(CANTIDAD_SAL_TRASPASO_STK),
+        CANTIDAD_ENT_DEPOSITO_STK = VALUES(CANTIDAD_ENT_DEPOSITO_STK),
+        CANTIDAD_SAL_DEPOSITO_STK = VALUES(CANTIDAD_SAL_DEPOSITO_STK),
+        CANTIDAD_SAL_VENTA_STK    = VALUES(CANTIDAD_SAL_VENTA_STK),
+        CANTIDAD_ENT_REGULAR_STK  = VALUES(CANTIDAD_ENT_REGULAR_STK),
+        CANTIDAD_SAL_ALBVENTA_STK = VALUES(CANTIDAD_SAL_ALBVENTA_STK),
+        CANTIDAD_ENT_ALBENTRADA_STK =
+            VALUES(CANTIDAD_ENT_ALBENTRADA_STK);
 
     /* 5. SKUs sin movs sobrevivientes (todos sus movs estaban en la
        regularizacion borrada): el stockactual queda a 0. */
     INSERT INTO fza_articulos_stockactual
         (CODIGO_ALM_STK, CODIGO_UNIDAD_STK,
-         CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTE_MODIF)
-    SELECT p_ALMACEN, s.sku, 0, 0, 0, NOW()
+         CANTIDAD_STK, VALOR_TOTAL_STK, PRECIO_MEDIO_STK, INSTANTE_MODIF,
+         CANTIDAD_ENT_COMPRA_STK,
+         CANTIDAD_ENT_TRASPASO_STK, CANTIDAD_SAL_TRASPASO_STK,
+         CANTIDAD_ENT_DEPOSITO_STK, CANTIDAD_SAL_DEPOSITO_STK,
+         CANTIDAD_SAL_VENTA_STK,
+         CANTIDAD_ENT_REGULAR_STK,
+         CANTIDAD_SAL_ALBVENTA_STK,
+         CANTIDAD_ENT_ALBENTRADA_STK)
+    SELECT p_ALMACEN, s.sku, 0, 0, 0, NOW(), 0, 0, 0, 0, 0, 0, 0, 0, 0
       FROM tmp_skus_recalc s
       LEFT JOIN tmp_movs_ord t ON t.CODIGO_UNIDAD_MOV = s.sku
      WHERE t.CODIGO_UNIDAD_MOV IS NULL
@@ -180,7 +244,16 @@ BEGIN
         CANTIDAD_STK     = 0,
         VALOR_TOTAL_STK  = 0,
         PRECIO_MEDIO_STK = 0,
-        INSTANTE_MODIF   = NOW();
+        INSTANTE_MODIF   = NOW(),
+        CANTIDAD_ENT_COMPRA_STK = 0,
+        CANTIDAD_ENT_TRASPASO_STK = 0,
+        CANTIDAD_SAL_TRASPASO_STK = 0,
+        CANTIDAD_ENT_DEPOSITO_STK = 0,
+        CANTIDAD_SAL_DEPOSITO_STK = 0,
+        CANTIDAD_SAL_VENTA_STK = 0,
+        CANTIDAD_ENT_REGULAR_STK = 0,
+        CANTIDAD_SAL_ALBVENTA_STK = 0,
+        CANTIDAD_ENT_ALBENTRADA_STK = 0;
 
     DROP TEMPORARY TABLE IF EXISTS tmp_movs_ord;
 END ;;

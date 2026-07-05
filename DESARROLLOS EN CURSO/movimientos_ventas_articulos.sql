@@ -32,9 +32,11 @@
 --   - Ventas: fza_facturas_lineas (líneas de factura/ticket) por fecha de
 --     factura. Uds = SUM(CANTIDAD_FACLIN); importe = SUM(TOTAL_FACLIN)
 --     (venta real, con descuento y con IVA).
---   - Coste de lo vendido: Uds Venta * coste medio ponderado (PMP) del
---     stock actual del artículo (respaldo: último precio de compra del
---     proveedor principal). Misma valoración que el balance de almacén.
+--   - Coste de lo vendido: SUM(TOTAL_COSTE_MOV) de los movimientos de salida
+--     VE/FC ligados a las facturas del periodo. Es el coste historico
+--     capturado en la venta por SKU. Si una factura antigua no tiene
+--     movimiento asociado, se conserva como respaldo el calculo anterior:
+--     Uds Venta * PMP actual del articulo.
 --
 -- Columnas y márgenes (una fila por artículo):
 --   UNI_ENT_TOT = unidades compradas         IMP_ENT_TOT = coste comprado
@@ -285,6 +287,34 @@ BEGIN
      GROUP BY sk.`CODIGO_ART_SKU`,
               IF(v_por_alm, COALESCE(fl.`CODIGO_ALM_FACLIN`, f.`CODIGO_ALM_FAC`), '');
 
+    -- Coste historico de las ventas del periodo: se toma del movimiento de
+    -- salida ya valorado en el momento de vender. Con SKUs de coste distinto
+    -- evita recalcular ventas antiguas con el PMP vivo del articulo.
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_coste_ven`;
+    CREATE TEMPORARY TABLE `tmp_mva_coste_ven` (
+        `CODIGO_ART` VARCHAR(20)   NOT NULL,
+        `CODIGO_ALM` VARCHAR(20)   NOT NULL DEFAULT '',
+        `COSTE_VEN`  DECIMAL(19,6) NOT NULL DEFAULT 0,
+        PRIMARY KEY (`CODIGO_ART`, `CODIGO_ALM`)
+    );
+    INSERT INTO `tmp_mva_coste_ven`
+    SELECT sk.`CODIGO_ART_SKU`,
+           IF(v_por_alm, m.`CODIGO_ALM_MOV`, ''),
+           SUM(m.`TOTAL_COSTE_MOV`)
+      FROM `fza_movimientos_almacen` m
+      JOIN `fza_facturas` f
+        ON f.`SERIE_FAC` = m.`SERIE_DOC_MOV`
+       AND f.`NUMERO_FAC` = m.`NUMERO_DOC_MOV`
+      JOIN `fza_articulos_skus` sk
+        ON sk.`CODIGO_UNIDAD_SKU` = m.`CODIGO_UNIDAD_MOV`
+     WHERE m.`ESACTIVO_MOV` = 'S'
+       AND m.`TIPO_MOV` = 'S'
+       AND m.`TIPO_DOC_MOV` IN ('VE', 'FC')
+       AND DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta
+       AND m.`CODIGO_ALM_MOV` IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
+       AND sk.`CODIGO_ART_SKU` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)
+     GROUP BY sk.`CODIGO_ART_SKU`, IF(v_por_alm, m.`CODIGO_ALM_MOV`, '');
+
     -- Universo final = tmp_mva_arts0 (familia/proveedor/temporada/lista) más
     -- el filtro Inicio compras (primera compra AC/AE >= v_ini_cmp).
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts`;
@@ -359,31 +389,41 @@ BEGIN
         ROUND(COALESCE(e.`IMP_ENT`, 0), 2)            AS `IMP_ENT_TOT`,
         ROUND(COALESCE(v.`UDS_VEN`, 0), 2)            AS `UDS_VENTA`,
         ROUND(COALESCE(v.`IMP_VEN`, 0), 2)            AS `IMP_VENTA`,
-        ROUND(COALESCE(v.`UDS_VEN`, 0)
-              * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0), 2)
+        ROUND(COALESCE(cv.`COSTE_VEN`,
+              COALESCE(v.`UDS_VEN`, 0)
+              * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0)), 2)
                                                       AS `IMP_COSTE`,
         ROUND(COALESCE(v.`IMP_VEN`, 0)
-              - COALESCE(v.`UDS_VEN`, 0)
-                * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0), 2)
+              - COALESCE(cv.`COSTE_VEN`,
+                COALESCE(v.`UDS_VEN`, 0)
+                * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0)), 2)
                                                       AS `BENEFICIO`,
         ROUND(COALESCE(v.`IMP_VEN`, 0) - COALESCE(e.`IMP_ENT`, 0), 2)
                                                       AS `VENTA_ENT`,
         -- Porcentajes / márgenes (no sumables; se recalculan en los totales).
-        ROUND(IF(COALESCE(v.`UDS_VEN`, 0)
-                 * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0) <> 0,
+        ROUND(IF(COALESCE(cv.`COSTE_VEN`,
+                 COALESCE(v.`UDS_VEN`, 0)
+                 * COALESCE(NULLIF(cst.`COSTE`, 0),
+                            prov.`COSTE_PRV`, 0)) <> 0,
                  (COALESCE(v.`IMP_VEN`, 0)
-                  - COALESCE(v.`UDS_VEN`, 0)
-                    * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0))
-                 / (COALESCE(v.`UDS_VEN`, 0)
-                    * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0))
+                  - COALESCE(cv.`COSTE_VEN`,
+                    COALESCE(v.`UDS_VEN`, 0)
+                    * COALESCE(NULLIF(cst.`COSTE`, 0),
+                               prov.`COSTE_PRV`, 0)))
+                 / COALESCE(cv.`COSTE_VEN`,
+                    COALESCE(v.`UDS_VEN`, 0)
+                    * COALESCE(NULLIF(cst.`COSTE`, 0),
+                               prov.`COSTE_PRV`, 0))
                  * 100, 0), 2)                        AS `PCT_BNFCO`,
         ROUND(IF(COALESCE(e.`IMP_ENT`, 0) <> 0,
                  (COALESCE(v.`IMP_VEN`, 0) - COALESCE(e.`IMP_ENT`, 0))
                  / COALESCE(e.`IMP_ENT`, 0) * 100, 0), 2) AS `VENT_ENT`,
         ROUND(IF(COALESCE(v.`IMP_VEN`, 0) <> 0,
                  (COALESCE(v.`IMP_VEN`, 0)
-                  - COALESCE(v.`UDS_VEN`, 0)
-                    * COALESCE(NULLIF(cst.`COSTE`, 0), prov.`COSTE_PRV`, 0))
+                  - COALESCE(cv.`COSTE_VEN`,
+                    COALESCE(v.`UDS_VEN`, 0)
+                    * COALESCE(NULLIF(cst.`COSTE`, 0),
+                               prov.`COSTE_PRV`, 0)))
                  / COALESCE(v.`IMP_VEN`, 0) * 100, 0), 2) AS `MARGEN1`,
         ROUND(IF(COALESCE(v.`IMP_VEN`, 0) <> 0,
                  (COALESCE(v.`IMP_VEN`, 0) - COALESCE(e.`IMP_ENT`, 0))
@@ -461,6 +501,8 @@ BEGIN
         ON e.`CODIGO_ART` = b.`CODIGO_ART` AND e.`CODIGO_ALM` = b.`CODIGO_ALM`
       LEFT JOIN `tmp_mva_ven` v
         ON v.`CODIGO_ART` = b.`CODIGO_ART` AND v.`CODIGO_ALM` = b.`CODIGO_ALM`
+      LEFT JOIN `tmp_mva_coste_ven` cv
+        ON cv.`CODIGO_ART` = b.`CODIGO_ART` AND cv.`CODIGO_ALM` = b.`CODIGO_ALM`
       LEFT JOIN `tmp_mva_coste` cst ON cst.`CODIGO_ART` = b.`CODIGO_ART`
       LEFT JOIN `fza_articulos_familias` fam
         ON fam.`CODIGO_FAM_FAM` = art.`CODIGO_FAM_ART`
@@ -526,6 +568,7 @@ BEGIN
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_coste`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_arts0`;
+    DROP TEMPORARY TABLE IF EXISTS `tmp_mva_coste_ven`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ven`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_primera`;
     DROP TEMPORARY TABLE IF EXISTS `tmp_mva_ent`;

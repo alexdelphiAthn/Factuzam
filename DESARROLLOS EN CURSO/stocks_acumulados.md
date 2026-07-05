@@ -16,7 +16,7 @@ acumulado correspondiente. La consulta queda en SELECT directo por PK.
 | Categoría    | Dirección | `TIPO_DOC_MOV` | Columnas                                                |
 |--------------|-----------|----------------|---------------------------------------------------------|
 | COMPRA       | ENT       | AC             | `CANTIDAD_ENT_COMPRA_STK`                               |
-| TRASPASO     | ENT + SAL | TR, AT         | `CANTIDAD_ENT_TRASPASO_STK`, `CANTIDAD_SAL_TRASPASO_STK`|
+| TRASPASO     | ENT + SAL | TR, AT, TA     | `CANTIDAD_ENT_TRASPASO_STK`, `CANTIDAD_SAL_TRASPASO_STK`|
 | DEPÓSITO     | ENT + SAL | DP             | `CANTIDAD_ENT_DEPOSITO_STK`, `CANTIDAD_SAL_DEPOSITO_STK`|
 | VENTA        | SAL       | VE             | `CANTIDAD_SAL_VENTA_STK`                                |
 | REGULARIZ.   | ENT       | IN             | `CANTIDAD_ENT_REGULAR_STK`                              |

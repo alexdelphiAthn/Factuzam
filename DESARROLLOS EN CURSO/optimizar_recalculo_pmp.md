@@ -65,7 +65,7 @@ Reescribir los tres SPs en `DESARROLLOS EN CURSO/optimizar_recalculo_pmp.sql`:
    de movimientos historicos), va anotando SKUs tocados en
    `tmp_skus_recalc`, y al cerrar el cursor llama una unica vez al lote.
 
-El cuerpo de `SP_RECALCULAR_PMP_LOTE_ALMACEN` son **cuatro statements**:
+El cuerpo de `SP_RECALCULAR_PMP_LOTE_ALMACEN` son **cinco bloques**:
 
 1. `CREATE TEMPORARY tmp_movs_ord` con `RN BIGINT AUTO_INCREMENT PRIMARY KEY`
    y volcado con `INSERT...SELECT...ORDER BY CODIGO_UNIDAD_MOV, FECHA_MOV,
@@ -80,7 +80,9 @@ El cuerpo de `SP_RECALCULAR_PMP_LOTE_ALMACEN` son **cuatro statements**:
    STOCK (actualiza `@stock`) -> SKU_PREV (actualiza `@sku_prev`).
 3. `UPDATE fza_movimientos_almacen JOIN tmp_movs_ord` para volcar
    `PRECIO_MEDIO_MOV` y `TOTAL_COSTE_MOV` en bloque.
-4. `INSERT...ON DUPLICATE KEY UPDATE` en `fza_articulos_stockactual` con
+4. Agregacion de acumulados por subtipo desde `tmp_movs_ord`:
+   compras, traspasos (`TR/AT/TA`), ventas, regularizaciones y albaranes.
+5. `INSERT...ON DUPLICATE KEY UPDATE` en `fza_articulos_stockactual` con
    el ultimo movimiento de cada SKU (`MAX(RN)` por `CODIGO_UNIDAD_MOV`).
    Un segundo `INSERT...ON DUPLICATE` cubre los SKUs cuyos movs se borraron
    por completo (stock final a 0).
@@ -93,20 +95,20 @@ Identico al original, palabra por palabra:
   `stock>0` => media ponderada con la formula clasica
   `((stock*pmp) + (cant*coste)) / (stock+cant)`; salida no toca el `pmp`.
 - `TOTAL_COSTE_MOV`: `cant*coste` en entradas, `cant*pmp` en salidas.
-- `fza_articulos_stockactual` con `CANTIDAD_STK`, `VALOR_TOTAL_STK` y
-  `PRECIO_MEDIO_STK` finales por SKU.
+- `fza_articulos_stockactual` con `CANTIDAD_STK`, `VALOR_TOTAL_STK`,
+  `PRECIO_MEDIO_STK` y acumulados por subtipo finales por SKU.
 
 ## Mejoras
 
 | Aspecto                                  | Antes               | Despues |
 |------------------------------------------|---------------------|---------|
 | Statements por SKU                       | O(movs historicos)  | O(1) compartido entre todos |
-| Total statements (50 SKUs x 200 movs)    | ~10.000             | 4       |
+| Total statements (50 SKUs x 200 movs)    | ~10.000             | 5 bloques |
 | Cursores                                 | 2 anidados          | 0 (en el recalculo) |
 | X-locks `FOR UPDATE` por movimiento      | Si                  | No (UPDATE en rango) |
 | Redundancia en `APLICAR` (mismo SKU en N lineas) | N recalculos completos | 1 recalculo |
 
-## Bug heredado corregido al paso
+## Bugs heredados corregidos al paso
 
 `PRC_FZA_INVENTARIOS_APLICAR` declaraba `v_LINEA VARCHAR(4)`, pero la
 columna `fza_inventarios_lineas.LINEA_INVLIN` ya es `VARCHAR(8)` (formato
@@ -114,6 +116,16 @@ columna `fza_inventarios_lineas.LINEA_INVLIN` ya es `VARCHAR(8)` (formato
 con `#22001 Data too long for column 'v_LINEA'` en cuanto el contador de
 linea pasaba de `9999`. La reescritura declara `v_LINEA VARCHAR(8)` para
 casar con la columna real.
+
+El lote inicializaba `@stock` y `@pmp` con `0`, quedando tipadas como
+enteros en MariaDB dentro del `UPDATE`. Con PMP fraccionario seguido de
+otra entrada, la variable arrastraba redondeo. Ahora se inicializan con
+`CAST(0 AS DECIMAL(19,6))`.
+
+El recálculo solo actualizaba cantidad/PMP/valor de `stockactual`. Ahora
+también reconstruye los acumulados `CANTIDAD_*_STK` desde movimientos
+activos, por lo que una anulación seguida de recálculo restaura también
+`CANTIDAD_SAL_VENTA_STK`.
 
 Nota: `fza_movimientos_almacen.LINEA_MOV` sigue declarado `VARCHAR(4)`
 (linea 5942 de `factuzam_original.sql`), y `PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT`
