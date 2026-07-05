@@ -144,6 +144,8 @@ type
 
     // === GESTIÓN DE LÍNEAS ===
     function GenerarSiguienteLinea: string;
+    function FechaRecuentoPorDefecto: TDateTime;
+    procedure AsegurarFechaRecuentoLinea;
     function ExisteLineaConSku(const ASku: string): Boolean;
     function GenerarSkuFinal(const AArticuloBase: string): string;
     procedure RellenarDatosArticulo(const ACodigoArticulo: string;
@@ -729,6 +731,31 @@ begin
   end;
 end;
 
+function TdmInventarios.FechaRecuentoPorDefecto: TDateTime;
+var
+  CampoFecha: TField;
+begin
+  Result := Now;
+  if (unqryTablaG <> nil) and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+  begin
+    CampoFecha := unqryTablaG.FindField('FECHA_INV');
+    if (CampoFecha <> nil) and (not CampoFecha.IsNull) then
+      Result := CampoFecha.AsDateTime;
+  end;
+end;
+
+procedure TdmInventarios.AsegurarFechaRecuentoLinea;
+var
+  CampoFecha: TField;
+begin
+  CampoFecha := nil;
+  if (cdsLineas <> nil) and cdsLineas.Active then
+    CampoFecha := cdsLineas.FindField('FECHA_RECUENTO_INVLIN');
+  if (CampoFecha <> nil) and CampoFecha.IsNull then
+    CampoFecha.AsDateTime := FechaRecuentoPorDefecto;
+end;
+
 function TdmInventarios.ExisteLineaConSku(const ASku: string): Boolean;
 var
   Bookmark: TBookmark;
@@ -868,6 +895,8 @@ begin
   DataSet.FieldByName('CANTIDAD_DIFERENCIA_INVLIN').AsCurrency := 0;
   DataSet.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency        := 0;
   DataSet.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency  := 0;
+  DataSet.FieldByName('FECHA_RECUENTO_INVLIN').AsDateTime      :=
+    FechaRecuentoPorDefecto;
   DataSet.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger        := 0;
   DataSet.FieldByName('USUARIO_ALTA').AsString := FUsuario;
   DataSet.FieldByName('USUARIO_MODIF').AsString := FUsuario;
@@ -933,6 +962,7 @@ begin
   end;
   inLibLog.Log.LogInfo('[cdsLineasBeforePost] state=' +
     IntToStr(Ord(DataSet.State)) + ' | ' + Snapshot);
+  AsegurarFechaRecuentoLinea;
 
   // Las 4 PK del inventario (empresa, almacen, serie, numero) son
   // varchar NOT NULL. DSBase / MidasLib trata el string vacio como
@@ -1264,7 +1294,6 @@ end;
 procedure TdmInventarios.CargarPorFamilia(const ACodigoFamilia: string);
 var
   qry: TUniQuery;
-  NumLinea: Integer;
 begin
   if GetEstadoInventario <> 'ABIERTO' then
     raise Exception.Create(
@@ -1291,7 +1320,6 @@ begin
     qry.ParamByName('FAMILIA').AsString := ACodigoFamilia;
     qry.Open;
 
-    NumLinea := StrToIntDef(GenerarSiguienteLinea, 1);
     cdsLineas.DisableControls;
     try
       while not qry.Eof do
@@ -1301,8 +1329,6 @@ begin
           'CODIGO_UNIDAD_SKU').AsString) then
         begin
           cdsLineas.Append;
-          cdsLineas.FieldByName('LINEA_INVLIN').AsString          :=
-            Format('%.4d', [NumLinea]);
           cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString :=
             qry.FieldByName('CODIGO_ART_SKU').AsString;
           cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString   :=
@@ -1320,7 +1346,6 @@ begin
           cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=
             qry.FieldByName('PMP').AsCurrency;
           cdsLineas.Post;
-          Inc(NumLinea);
         end;
         qry.Next;
       end;
@@ -1336,7 +1361,6 @@ end;
 procedure TdmInventarios.CargarPorProveedor(const ACodigoProveedor: string);
 var
   qry: TUniQuery;
-  NumLinea: Integer;
 begin
   if GetEstadoInventario <> 'ABIERTO' then
     raise Exception.Create(
@@ -1365,7 +1389,6 @@ begin
     qry.ParamByName('PROVEEDOR').AsString := ACodigoProveedor;
     qry.Open;
 
-    NumLinea := StrToIntDef(GenerarSiguienteLinea, 1);
     cdsLineas.DisableControls;
     try
       while not qry.Eof do
@@ -1374,8 +1397,6 @@ begin
           'CODIGO_UNIDAD_SKU').AsString) then
         begin
           cdsLineas.Append;
-          cdsLineas.FieldByName('LINEA_INVLIN').AsString          :=
-            Format('%.4d', [NumLinea]);
           cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString :=
             qry.FieldByName('CODIGO_ART_SKU').AsString;
           cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString   :=
@@ -1391,7 +1412,6 @@ begin
           cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=
             qry.FieldByName('PMP').AsCurrency;
           cdsLineas.Post;
-          Inc(NumLinea);
         end;
         qry.Next;
       end;
@@ -1407,7 +1427,6 @@ end;
 procedure TdmInventarios.CargarTodosArticulosConStock;
 var
   qry: TUniQuery;
-  NumLinea: Integer;
 begin
   if GetEstadoInventario <> 'ABIERTO' then
     raise Exception.Create(
@@ -1433,7 +1452,6 @@ begin
     qry.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
     qry.Open;
 
-    NumLinea := StrToIntDef(GenerarSiguienteLinea, 1);
     cdsLineas.DisableControls;
     try
       while not qry.Eof do
@@ -1442,8 +1460,6 @@ begin
           'CODIGO_UNIDAD_SKU').AsString) then
         begin
           cdsLineas.Append;
-          cdsLineas.FieldByName('LINEA_INVLIN').AsString          :=
-            Format('%.4d', [NumLinea]);
           cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString :=
             qry.FieldByName('CODIGO_ART_SKU').AsString;
           cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString   :=
@@ -1459,7 +1475,6 @@ begin
           cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=
             qry.FieldByName('PMP').AsCurrency;
           cdsLineas.Post;
-          Inc(NumLinea);
         end;
         qry.Next;
       end;
@@ -1475,7 +1490,6 @@ end;
 procedure TdmInventarios.CompletarUnidadesNoLeidas;
 var
   qry: TUniQuery;
-  NumLinea: Integer;
 begin
   // "Completar" significa: traer al inventario todos los SKUs con stock que NO
   // estén ya en el inventario actual, asignándoles cantidad física = 0
@@ -1513,14 +1527,11 @@ begin
     qry.ParamByName('NUMERO').AsString  := FNumero;
     qry.Open;
 
-    NumLinea := StrToIntDef(GenerarSiguienteLinea, 1);
     cdsLineas.DisableControls;
     try
       while not qry.Eof do
       begin
         cdsLineas.Append;
-        cdsLineas.FieldByName('LINEA_INVLIN').AsString          :=
-          Format('%.4d', [NumLinea]);
         cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString :=
           qry.FieldByName('CODIGO_ART_SKU').AsString;
         cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString   :=
@@ -1537,7 +1548,6 @@ begin
         cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=
           qry.FieldByName('PMP').AsCurrency;
         cdsLineas.Post;
-        Inc(NumLinea);
         qry.Next;
       end;
       cdsLineas.ApplyUpdates(0);
@@ -1553,7 +1563,6 @@ function TdmInventarios.CargarSkusConMovimientosArticulo(
   const ACodigoArticulo: string): Integer;
 var
   qry: TUniQuery;
-  NumLinea: Integer;
   Sku: string;
 begin
   // Inserta una línea de inventario por cada SKU distinto del artículo
@@ -1592,7 +1601,6 @@ begin
 
     if qry.IsEmpty then Exit;
 
-    NumLinea := StrToIntDef(GenerarSiguienteLinea, 1);
     cdsLineas.DisableControls;
     try
       while not qry.Eof do
@@ -1601,8 +1609,6 @@ begin
         if (Sku <> '') and (not ExisteLineaConSku(Sku)) then
         begin
           cdsLineas.Append;
-          cdsLineas.FieldByName('LINEA_INVLIN').AsString          :=
-            Format('%.4d', [NumLinea]);
           cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString     :=
             qry.FieldByName('CODIGO_ART_SKU').AsString;
           cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString  := Sku;
@@ -1620,7 +1626,6 @@ begin
           cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=
             qry.FieldByName('PMP').AsCurrency;
           cdsLineas.Post;
-          Inc(NumLinea);
           Inc(Result);
         end;
         qry.Next;
@@ -1780,7 +1785,7 @@ end;
 
 procedure TdmInventarios.CargarDesdeListaSkus(ALista: TStringList);
 var
-  i, NumLinea: Integer;
+  i: Integer;
   Sku, ArticuloPadre: string;
   CANTIDAD, PMP: Currency;
   qry: TUniQuery;
@@ -1800,7 +1805,6 @@ begin
       '  JOIN fza_articulos a ON a.CODIGO_ART_ART = s.CODIGO_ART_SKU ' +
       ' WHERE s.CODIGO_UNIDAD_SKU = :SKU';
 
-    NumLinea := StrToIntDef(GenerarSiguienteLinea, 1);
     cdsLineas.DisableControls;
     try
       for i := 0 to ALista.Count - 1 do
@@ -1842,8 +1846,6 @@ begin
         else
         begin
           cdsLineas.Append;
-          cdsLineas.FieldByName('LINEA_INVLIN').AsString          :=
-            Format('%.4d', [NumLinea]);
           cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString := ArticuloPadre;
           cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString   := Sku;
           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_INVLIN').AsString :=
@@ -1856,9 +1858,8 @@ begin
             unqryStockActual.FieldByName('PRECIO_MEDIO_STK').AsCurrency;
           cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=
             unqryStockActual.FieldByName('PRECIO_MEDIO_STK').AsCurrency;
-          cdsLineas.FieldByName('FECHA_RECUENTO_INVLIN').AsDateTime     := Now;
+          AsegurarFechaRecuentoLinea;
           cdsLineas.Post;
-          Inc(NumLinea);
         end;
       end;
       cdsLineas.ApplyUpdates(0);

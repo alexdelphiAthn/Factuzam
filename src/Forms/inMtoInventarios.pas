@@ -1411,8 +1411,7 @@ begin
       'PRECIO_MEDIO_INVLIN').AsCurrency      := PMPAct;
     dmmInventarios.cdsLineas.FieldByName(
       'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency:= PMPAct;
-    dmmInventarios.cdsLineas.FieldByName(
-      'FECHA_RECUENTO_INVLIN').AsDateTime    := Now;
+    dmmInventarios.AsegurarFechaRecuentoLinea;
   end;
 end;
 
@@ -1603,8 +1602,7 @@ begin
       'PRECIO_MEDIO_INVLIN').AsCurrency      := PMPAct;
     dmmInventarios.cdsLineas.FieldByName(
       'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency:= PMPAct;
-    dmmInventarios.cdsLineas.FieldByName(
-      'FECHA_RECUENTO_INVLIN').AsDateTime    := Now;
+    dmmInventarios.AsegurarFechaRecuentoLinea;
   end;
 end;
 
@@ -1968,8 +1966,7 @@ begin
       'PRECIO_MEDIO_INVLIN').AsCurrency      := PMPAct;
     dmmInventarios.cdsLineas.FieldByName(
       'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency:= PMPAct;
-    dmmInventarios.cdsLineas.FieldByName(
-      'FECHA_RECUENTO_INVLIN').AsDateTime    := Now;
+    dmmInventarios.AsegurarFechaRecuentoLinea;
     msSetFieldsImporte := swTramo.ElapsedMilliseconds;
 
     swTramo := TStopwatch.StartNew;
@@ -1998,8 +1995,7 @@ begin
       'PRECIO_MEDIO_INVLIN').AsCurrency      := PMPAct;
     dmmInventarios.cdsLineas.FieldByName(
       'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency:= PMPAct;
-    dmmInventarios.cdsLineas.FieldByName(
-      'FECHA_RECUENTO_INVLIN').AsDateTime    := Now;
+    dmmInventarios.AsegurarFechaRecuentoLinea;
     msSetFieldsImporte := swTramo.ElapsedMilliseconds;
   end
   else
@@ -2052,8 +2048,7 @@ begin
     'CANTIDAD_DIFERENCIA_INVLIN').AsCurrency := DifUds;
   dmmInventarios.cdsLineas.FieldByName(
     'TOTAL_COSTE_DIFERENCIA_INVLIN').AsCurrency           := DifCoste;
-  dmmInventarios.cdsLineas.FieldByName(
-    'FECHA_RECUENTO_INVLIN').AsDateTime         := Now;
+  dmmInventarios.AsegurarFechaRecuentoLinea;
 end;
 
 procedure TfrmMtoInventarios.tvLineasGetCellHint(Sender: TcxCustomGridTableView;
@@ -2613,8 +2608,7 @@ begin
             if Lineas[i].TienePmp then
               dmmInventarios.cdsLineas.FieldByName(
                 'PRECIO_MEDIO_NUEVO_INVLIN').AsFloat := Lineas[i].PmpNuevo;
-            dmmInventarios.cdsLineas.FieldByName(
-              'FECHA_RECUENTO_INVLIN').AsDateTime := Now;
+            dmmInventarios.AsegurarFechaRecuentoLinea;
             dmmInventarios.cdsLineas.Post;
             Inc(iActualizados);
           end
@@ -2640,8 +2634,7 @@ begin
             dmmInventarios.cdsLineas.FieldByName(
               'CANTIDAD_FISICA_INVLIN').AsFloat :=
               StrToFloatDef(Lista.ValueFromIndex[i], 1);
-            dmmInventarios.cdsLineas.FieldByName(
-              'FECHA_RECUENTO_INVLIN').AsDateTime := Now;
+            dmmInventarios.AsegurarFechaRecuentoLinea;
             dmmInventarios.cdsLineas.Post;
             Inc(iActualizados);
           end
