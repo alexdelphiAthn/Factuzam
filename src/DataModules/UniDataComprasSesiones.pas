@@ -166,6 +166,7 @@ type
                         // RecargarProveedorSesion lo resetea a 0 al navegar
                         // a otra sesion o proveedor.
     procedure ConfigurarSqlCabecera;
+    procedure AjustarCamposDerivadosCabecera;
     procedure CalcularTotalesLineaActual;
     procedure PersistirTotalesSesion;
   public
@@ -210,6 +211,34 @@ uses
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
+
+procedure TdmComprasSesiones.AjustarCamposDerivadosCabecera;
+const
+  CAMPOS_DERIVADOS: array[0..9] of string = (
+    'RAZON_SOCIAL_PRV_SES',
+    'NOMBRE_PRV_SES',
+    'TEMPORADA_SES',
+    'FECHA_REALIZACION_SES',
+    'FECHA_EFECTO_STOCK_SES',
+    'TOTAL_PRENDAS_SES',
+    'CANTIDAD_PEDIDA_SES',
+    'TOTAL_LINEAS_SES',
+    'CANTIDAD_RECIBIDA_SES',
+    'CANTIDAD_PENDIENTE_RECEPCION_SES');
+var
+  i      : Integer;
+  oCampo : TField;
+begin
+  for i := Low(CAMPOS_DERIVADOS) to High(CAMPOS_DERIVADOS) do
+  begin
+    oCampo := unqryTablaG.FindField(CAMPOS_DERIVADOS[i]);
+    if oCampo <> nil then
+    begin
+      oCampo.Required := False;
+      oCampo.ProviderFlags := [];
+    end;
+  end;
+end;
 
 procedure TdmComprasSesiones.ConfigurarSqlCabecera;
 const
@@ -600,6 +629,7 @@ var
   sSerie, sEmpresa, sNumero : string;
   oFldDist                  : TField;
 begin
+  AjustarCamposDerivadosCabecera;
   inherited;
   LogSes(Format('DM.unqryTablaGBeforePost: state=%d, SERIE=%s NUMERO=%s CONTADOR_LINEAS=%d',
                 [Ord(unqryTablaG.State),

@@ -242,6 +242,8 @@ type
     procedure ActualizarColumnasDinamicas(const ArticuloPadre: string);
     procedure RellenarAtributosDesdeSku(const Sku: string);
     function ObtenerColumnaSkuPorTag(NumColumn: Integer): TcxGridDBColumn;
+    function ObtenerNumAtributosArticulo(
+      const ACodigoArticulo: string): Integer;
     // Modo "atributos en columna": con el toggle activo, la columna unificada
     // SKU/Articulo cede el sitio a la columna Articulo (que pasa a ser la
     // entrada inteligente) seguida de las columnas de atributos; con el toggle
@@ -455,7 +457,13 @@ begin
   // con el toggle activo es la columna Articulo (codigo), si no la unificada
   // SKU/Articulo. Dejamos que el modo gobierne la visibilidad en vez de forzar
   // Articulo siempre oculta.
-  AplicarModoColumnasEntrada(FMostrarColumnasAtributos);
+  if FMostrarColumnasAtributos then
+    AplicarModoColumnasEntrada(True)
+  else
+  begin
+    FUltimoArticuloPadre := '__FORZAR__';
+    ActualizarColumnasDinamicas('');
+  end;
 end;
 
 procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
@@ -824,6 +832,23 @@ begin
   end;
 end;
 
+function TfrmMtoInventarios.ObtenerNumAtributosArticulo(
+  const ACodigoArticulo: string): Integer;
+begin
+  Result := 0;
+  if (dmmInventarios = nil) or (Trim(ACodigoArticulo) = '') then
+    Exit;
+  dmmInventarios.unqryDefinicionArticulo.Close;
+  dmmInventarios.unqryDefinicionArticulo.ParamByName('ARTICULO').AsString :=
+    ACodigoArticulo;
+  dmmInventarios.unqryDefinicionArticulo.Open;
+  while not dmmInventarios.unqryDefinicionArticulo.Eof do
+  begin
+    Inc(Result);
+    dmmInventarios.unqryDefinicionArticulo.Next;
+  end;
+end;
+
 procedure TfrmMtoInventarios.AplicarColumnasAtributosVista;
 var
   cds        : TDataSet;
@@ -934,13 +959,7 @@ end;
 procedure TfrmMtoInventarios.ActualizarColumnasDinamicas(
   const ArticuloPadre: string);
 var
-  i: Integer;
-  Col: TcxGridDBColumn;
-  NombresAtributos: TStringList;
-  Estado: string;
-  swTotal, swQry, swPaint: TStopwatch;
-  msQry, msPaint: Int64;
-  NumNombres: Integer;
+  swTotal: TStopwatch;
 
   procedure OcultarTodasLasColumnasSku;
   var
@@ -968,10 +987,16 @@ var
   end;
 
 begin
-  msQry   := 0;
-  msPaint := 0;
-  NumNombres := 0;
   swTotal := TStopwatch.StartNew;
+  // En modo SKU, el check apagado manda siempre. Esto corrige disposiciones
+  // guardadas del grid que puedan reactivar Color/Talla al abrir la ficha.
+  if not FMostrarColumnasAtributos then
+  begin
+    FNumAtributosActual := 0;
+    FUltimoArticuloPadre := ArticuloPadre;
+    OcultarTodasLasColumnasSku;
+    Exit;
+  end;
   // Optimización: si es el mismo padre, no repintamos
   if SameText(ArticuloPadre, FUltimoArticuloPadre) then
   begin
@@ -1006,106 +1031,6 @@ begin
     Exit;
   end;
 
-  // Toggle "Ver atributos en columnas". Si el usuario no lo ha activado,
-  // ocultamos las columnas y nos saltamos la SQL pesada de definicion de
-  // atributos. Es el corto-circuito principal: por defecto OFF, lo que
-  // hace que abrir un inventario sea rapido.
-  // Excepcion: si el cds esta en dsInsert o dsEdit, el usuario esta
-  // editando una linea concreta y necesita los selectores SKU1..5 aunque
-  // el toggle siga off. En ese caso construimos columnas pero sin lanzar
-  // el desempaquetado masivo (los ATTRn de las lineas previas se quedan
-  // sin rellenar; no se ven porque solo importa la fila editada).
-  if (not FMostrarColumnasAtributos) and
-     (not (dmmInventarios.cdsLineas.Active and
-           (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]))) then
-  begin
-    FNumAtributosActual := 0;
-    OcultarTodasLasColumnasSku;
-    Exit;
-  end;
-
-  // Si el inventario no esta ABIERTO no se puede editar, asi que las
-  // columnas dinamicas de atributos no aportan nada (CODIGO_UNIDAD_INVLIN
-  // ya muestra el SKU completo en su propia columna). Saltamos la consulta
-  // SQL pesada a fza_articulos_skus + fza_atributos_sku + vi_atributos_nombres
-  // y nos limitamos a esconderlas, que es lo que hace lenta la apertura.
-  Estado := dmmInventarios.GetEstadoInventario;
-  if (Estado <> '') and (Estado <> 'ABIERTO') then
-  begin
-    FNumAtributosActual := 0;
-    OcultarTodasLasColumnasSku;
-    Exit;
-  end;
-
-  NombresAtributos := TStringList.Create;
-  try
-    if (ArticuloPadre <> '') then
-    begin
-      // OJO: no reasignamos SQL.Text aqui. La consulta vive en la DFM
-      // (vi_atributos_nombres directo) y reasignar el Text obliga al
-      // driver a re-preparar la query en cada llamada. Solo cambiamos
-      // el parametro y reabrimos.
-      swQry := TStopwatch.StartNew;
-      dmmInventarios.unqryDefinicionArticulo.Close;
-      dmmInventarios.unqryDefinicionArticulo.ParamByName('ARTICULO').AsString :=
-        ArticuloPadre;
-      dmmInventarios.unqryDefinicionArticulo.Open;
-      while not dmmInventarios.unqryDefinicionArticulo.Eof do
-      begin
-        NombresAtributos.Add(dmmInventarios.unqryDefinicionArticulo.FieldByName(
-          'NOMBRE_ATRIBUTO').AsString);
-        dmmInventarios.unqryDefinicionArticulo.Next;
-      end;
-      msQry := swQry.ElapsedMilliseconds;
-    end;
-
-    FNumAtributosActual := NombresAtributos.Count;
-    NumNombres := NombresAtributos.Count;
-
-    if dmmInventarios.cdsLineas.Active and
-       (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
-      dmmInventarios.cdsLineas.FieldByName(
-        'NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger := NombresAtributos.Count;
-
-    swPaint := TStopwatch.StartNew;
-    tvLineas.BeginUpdate;
-    try
-      for i := 1 to 5 do
-      begin
-        Col := ObtenerColumnaSkuPorTag(i);
-        if Col <> nil then
-        begin
-          if i <= NombresAtributos.Count then
-          begin
-            Col.Caption := NombresAtributos[i - 1];
-            Col.Visible := True;
-            Col.Options.Editing := True;
-          end
-          else
-          begin
-            Col.Visible := False;
-            Col.Options.Editing := False;
-            Col.Caption := '-';
-          end;
-        end;
-      end;
-      // Si el toggle esta activo conmutamos a la columna Articulo como entrada;
-      // si llegamos aqui por edicion puntual con el toggle off, seguimos con la
-      // unificada SKU/Articulo.
-      AplicarModoColumnasEntrada(FMostrarColumnasAtributos);
-    finally
-      tvLineas.EndUpdate;
-    end;
-    msPaint := swPaint.ElapsedMilliseconds;
-  finally
-    FreeAndNil(NombresAtributos);
-  end;
-
-  inLibLog.Log.LogPerf('ActualizarColumnasDinamicas',
-    Format('articulo=%s nNombres=%d | qryDefinicionArticulo=%d ' +
-           'BeginUpdate/EndUpdate=%d',
-           [ArticuloPadre, NumNombres, msQry, msPaint]),
-    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TfrmMtoInventarios.AsegurarDesempaquetadoAtributos;
@@ -1919,6 +1844,20 @@ begin
                          [CodPadre, TipoArt]);
     Exit;
   end;
+  NumAtr := 0;
+  if (not FMostrarColumnasAtributos) and (CodSku = '') then
+  begin
+    NumAtr := ObtenerNumAtributosArticulo(CodPadre);
+    if NumAtr > 0 then
+    begin
+      AError := True;
+      AErrorText := Format(
+        'El artículo %s tiene atributos. En modo SKU introduce un SKU ' +
+        'completo o activa "Ver atributos en columnas".',
+        [CodPadre]);
+      Exit;
+    end;
+  end;
 
   if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
     dmmInventarios.cdsLineas.Edit;
@@ -1942,7 +1881,8 @@ begin
   swTramo := TStopwatch.StartNew;
   ActualizarColumnasDinamicas(CodPadre);
   msActColsDin := swTramo.ElapsedMilliseconds;
-  NumAtr := FNumAtributosActual;
+  if FMostrarColumnasAtributos then
+    NumAtr := FNumAtributosActual;
 
   if CodSku <> '' then
   begin
@@ -2194,13 +2134,13 @@ begin
       dmmInventarios.cdsLineas.Post;
   end;
 
-  // 2. Ahora es seguro activar las columnas dinamicas. Esto puede disparar
-  // el desempaquetado y recorrer el dataset sin colisionar con un Insert
-  // pendiente (que dejaria el tvLineas con FocusedRecordIndex invalido y
-  // haria saltar EcxInvalidDataControllerOperation 'RecordIndex out of
-  // range' en el siguiente Append).
-  if (not FMostrarColumnasAtributos) and Assigned(chkVerColumnasAtributos) then
-    chkVerColumnasAtributos.Checked := True;
+  // 2. Respetamos el modo elegido. En modo SKU las columnas de atributos
+  // permanecen ocultas; para editar por Color/Talla se activa el check.
+  if not FMostrarColumnasAtributos then
+  begin
+    FUltimoArticuloPadre := '__FORZAR__';
+    ActualizarColumnasDinamicas('');
+  end;
 
   // 3. Anadir la nueva linea
   dmmInventarios.cdsLineas.Append;
