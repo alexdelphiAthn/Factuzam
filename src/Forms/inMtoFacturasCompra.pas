@@ -234,6 +234,7 @@ type
     procedure colLinFaccColorPivotButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure AsegurarCabeceraPersistidaParaLineas;
+    procedure AsegurarPrimeraLineaFacturaCompra;
     function PuedeActivarTallasHorizontal(var AMensaje: string): Boolean;
     procedure PersistirPreferenciaPivote;
   public
@@ -1129,6 +1130,7 @@ procedure TfrmMtoFacturasCompra.cxgrdLineasFacturaEnter(Sender: TObject);
 begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, False);
+  AsegurarPrimeraLineaFacturaCompra;
 end;
 
 procedure TfrmMtoFacturasCompra.cxgrdLineasFacturaExit(Sender: TObject);
@@ -1201,7 +1203,8 @@ begin
   begin
     dsCab := dmmFacturasCompra.unqryTablaG;
     dsLin := dmmFacturasCompra.unqryFacturasCompraLineas;
-    if (dsCab = nil) or (not dsCab.Active) or dsCab.IsEmpty then
+    if (dsCab = nil) or (not dsCab.Active) or
+       (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
       raise Exception.Create(
         'Crea o selecciona una factura antes de añadir lineas.');
     sNumero := Trim(dsCab.FieldByName('NUMERO_FACC').AsString);
@@ -1226,6 +1229,31 @@ begin
       dsLin.Open;
     end;
   end;
+end;
+
+procedure TfrmMtoFacturasCompra.AsegurarPrimeraLineaFacturaCompra;
+var
+  dsCab: TDataSet;
+  dsLin: TDataSet;
+  sNumero: string;
+  sSerie: string;
+begin
+  if not Assigned(dmmFacturasCompra) then
+    Exit;
+  dsCab := dmmFacturasCompra.unqryTablaG;
+  dsLin := dmmFacturasCompra.unqryFacturasCompraLineas;
+  if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
+     (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
+    Exit;
+  AsegurarCabeceraPersistidaParaLineas;
+  sNumero := Trim(dsCab.FieldByName('NUMERO_FACC').AsString);
+  sSerie  := Trim(dsCab.FieldByName('SERIE_FACC').AsString);
+  if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
+    Exit;
+  if not dsLin.Active then
+    dsLin.Open;
+  if dsLin.IsEmpty and (not (dsLin.State in dsEditModes)) then
+    dsLin.Append;
 end;
 
 function TfrmMtoFacturasCompra.PuedeActivarTallasHorizontal(

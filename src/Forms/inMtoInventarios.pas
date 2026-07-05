@@ -160,6 +160,7 @@ type
     procedure btnAnadirSkusArtClick(Sender: TObject);
     procedure btnEliminarLineaClick(Sender: TObject);
     procedure btnRecalcularDetalleClick(Sender: TObject);
+    procedure cxgrdLineasEnter(Sender: TObject);
     procedure tvLineasArticuloPropertiesValidate(Sender: TObject;
       var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
     procedure tvLineasUnidadPropertiesValidate(Sender: TObject;
@@ -300,6 +301,8 @@ type
     function ComprobarRecuentoRemotoDisponible: Boolean;
     function EstadoActual: string;
     function PuedeEditar: Boolean;
+    function AsegurarCabeceraPersistidaParaLineas: Boolean;
+    procedure AsegurarPrimeraLineaInventario;
     procedure CargarLineasYRefrescar;
 
   public
@@ -476,6 +479,79 @@ procedure TfrmMtoInventarios.ResetForm;
 begin
   inherited;
   pcDetail.ActivePage := tsDetalle;
+end;
+
+function TfrmMtoInventarios.AsegurarCabeceraPersistidaParaLineas: Boolean;
+var
+  dsCab: TDataSet;
+begin
+  Result := False;
+  if Assigned(dmmInventarios) then
+  begin
+    dsCab := dmmInventarios.unqryTablaG;
+    if (dsCab <> nil) and dsCab.Active and
+       ((not dsCab.IsEmpty) or (dsCab.State in [dsInsert, dsEdit])) then
+    begin
+      Result := True;
+      if dsCab.State in [dsInsert, dsEdit] then
+      begin
+        try
+          dsCab.Post;
+          CargarLineasYRefrescar;
+        except
+          on E: Exception do
+          begin
+            Result := False;
+            ShowMessage(
+              'No se ha podido grabar automaticamente la cabecera del ' +
+              'inventario:' + #13#10 + E.Message + #13#10#13#10 +
+              'Completa los datos en la pestana Cabecera y vuelve a ' +
+              'intentar anadir la linea.');
+            pcDetail.ActivePage := tsCabecera;
+          end;
+        end;
+      end
+      else if not dmmInventarios.cdsLineas.Active then
+        CargarLineasYRefrescar;
+    end;
+  end;
+end;
+
+procedure TfrmMtoInventarios.AsegurarPrimeraLineaInventario;
+var
+  dsCab: TDataSet;
+  dsLin: TDataSet;
+  sNumero: string;
+  sSerie: string;
+begin
+  if Assigned(dmmInventarios) then
+  begin
+    dsCab := dmmInventarios.unqryTablaG;
+    dsLin := dmmInventarios.cdsLineas;
+    if (dsCab <> nil) and (dsLin <> nil) and dsCab.Active and
+       ((not dsCab.IsEmpty) or (dsCab.State in [dsInsert, dsEdit])) then
+    begin
+      if AsegurarCabeceraPersistidaParaLineas then
+      begin
+        sNumero := Trim(dsCab.FieldByName('NUMERO_INV').AsString);
+        sSerie  := Trim(dsCab.FieldByName('SERIE_INV').AsString);
+        if (sNumero <> '') and (sNumero <> '0') and (sSerie <> '') then
+        begin
+          if not dsLin.Active then
+            CargarLineasYRefrescar;
+          if dsLin.Active and dsLin.IsEmpty and PuedeEditar and
+             (not (dsLin.State in [dsEdit, dsInsert])) then
+            btnAnadirLineaClick(cxgrdLineas);
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoInventarios.cxgrdLineasEnter(Sender: TObject);
+begin
+  inherited;
+  AsegurarPrimeraLineaInventario;
 end;
 
 procedure TfrmMtoInventarios.pcDetailChange(Sender: TObject);

@@ -523,7 +523,8 @@ begin
   begin
     dsCab := dmmAlbaranesCompra.unqryTablaG;
     dsLin := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
-    if (dsCab = nil) or (not dsCab.Active) or dsCab.IsEmpty then
+    if (dsCab = nil) or (not dsCab.Active) or
+       (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
       raise Exception.Create(
         'Crea o selecciona un albaran antes de añadir lineas.');
     sNumero := Trim(dsCab.FieldByName('NUMERO_ALBC').AsString);
@@ -1882,8 +1883,9 @@ begin
   dsCab := dmmAlbaranesCompra.unqryTablaG;
   dsLin := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
   if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
-     dsCab.IsEmpty then
+     (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
     Exit;
+  AsegurarCabeceraPersistidaParaLineas;
   sNumero := Trim(dsCab.FieldByName('NUMERO_ALBC').AsString);
   sSerie  := Trim(dsCab.FieldByName('SERIE_ALBC').AsString);
   if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
