@@ -580,6 +580,7 @@ type
     procedure ActivarSkuArticuloLinea(const ACodArt: string;
                                       bEnfocar: Boolean);
     procedure ConsolidarSkuLinea(Sender: TObject);
+    function  AsegurarCabeceraPersistidaParaLineas: Boolean;
     procedure AsegurarPrimeraLineaFacturaBorrador;
     procedure DesactivarEnterSku(Sender: TObject);
     procedure RestaurarEnterSku(Sender: TObject);
@@ -3011,6 +3012,43 @@ begin
   end;
 end;
 
+function TfrmMtoFacturasBase.AsegurarCabeceraPersistidaParaLineas: Boolean;
+var
+  dsCab: TDataSet;
+  dsLin: TDataSet;
+begin
+  Result := False;
+  if Assigned(dmmFacturas) then
+  begin
+    dsCab := dmmFacturas.unqryTablaG;
+    dsLin := dmmFacturas.unqryLinFac;
+    if (dsCab <> nil) and dsCab.Active and
+       ((not dsCab.IsEmpty) or (dsCab.State in dsEditModes)) then
+    begin
+      Result := True;
+      if dsCab.State in dsEditModes then
+      begin
+        try
+          dsCab.Post;
+        except
+          on E: Exception do
+          begin
+            Result := False;
+            ShowMessage('Debe completar los datos del borrador: ' +
+                        E.Message);
+          end;
+        end;
+      end;
+      if Result and Assigned(dsLin) and dsLin.Active and
+         (not (dsLin.State in dsEditModes)) then
+      begin
+        dsLin.Close;
+        dsLin.Open;
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmMtoFacturasBase.AsegurarPrimeraLineaFacturaBorrador;
 var
   dsCab: TDataSet;
@@ -3024,7 +3062,9 @@ begin
   dsCab := dmmFacturas.unqryTablaG;
   dsLin := dmmFacturas.unqryLinFac;
   if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
-     dsCab.IsEmpty then
+     (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
+    Exit;
+  if not AsegurarCabeceraPersistidaParaLineas then
     Exit;
   sNumero := Trim(dsCab.FieldByName('NUMERO_FAC').AsString);
   sSerie  := Trim(dsCab.FieldByName('SERIE_FAC').AsString);

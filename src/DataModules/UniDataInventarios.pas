@@ -117,6 +117,7 @@ type
     FUsuario: string;
     FDesempaquetando: Boolean;
     FColumnasRecuentoRemoto: Boolean;
+    FColumnaContadorLineas: Boolean;
     // Flag idempotente: True cuando ATTR1..ATTR5_VALOR ya estan rellenos
     // a partir del SKU para las lineas actualmente cargadas en cdsLineas.
     // Se resetea a False cada vez que CargarLineasInventario reabre cds.
@@ -427,6 +428,7 @@ end;
 
 procedure TdmInventarios.PrepararSqlCabecera;
 begin
+  FColumnaContadorLineas := ExisteColumnaInventarios('CONTADOR_LINEAS_INV');
   FColumnasRecuentoRemoto :=
     ExisteColumnaInventarios('ESRECUENTO_REMOTO_INV') and
     ExisteColumnaInventarios('INSTANTE_ENVIO_RECUENTO_INV') and
@@ -448,6 +450,10 @@ begin
     unqryTablaG.SQL.Add('   OBSERVACIONES_INV,');
     unqryTablaG.SQL.Add('   TOTAL_UNIDADES_DIFERENCIA_INV,');
     unqryTablaG.SQL.Add('   TOTAL_EUROS_DIFERENCIA_INV,');
+    if not FColumnaContadorLineas then
+      Log.LogWarning('Inventarios: falta CONTADOR_LINEAS_INV. Ejecutar ' +
+        'DESARROLLOS EN CURSO\inventarios_contador_lineas.sql antes de ' +
+        'anadir lineas manuales.');
     if FColumnasRecuentoRemoto then
     begin
       unqryTablaG.SQL.Add('   ESRECUENTO_REMOTO_INV,');
@@ -651,34 +657,76 @@ end;
 
 function TdmInventarios.GenerarSiguienteLinea: string;
 var
-  Maximo: Integer;
-  Clone: TClientDataSet;
+  bTransPropia: Boolean;
+  iNuevaLinea: Integer;
+  qry: TUniQuery;
 begin
-  Maximo := 0;
-  if cdsLineas.Active and (cdsLineas.RecordCount > 0) then
-  begin
-    // Iteramos a través de un clon del cursor para no mover el cursor real
-    // de cdsLineas. Esto es crítico cuando GenerarSiguienteLinea se llama
-    // desde cdsLineasNewRecord (durante Append): mover el cursor con .First
-    // mientras el dataset está en dsInsert dispararía el Post automático
-    // del registro recién insertado, todavía con CODIGO_ART_INVLIN vacío,
-    // y haría saltar cdsLineasBeforePost con "(linea )" sin número.
-    Clone := TClientDataSet.Create(nil);
+  Result := '';
+  if not FColumnaContadorLineas then
+    raise Exception.Create(
+      'No se puede reservar la linea del inventario: falta la columna ' +
+      'fza_inventarios.CONTADOR_LINEAS_INV. Ejecuta el script ' +
+      'DESARROLLOS EN CURSO\inventarios_contador_lineas.sql.');
+  if (Trim(FCodigoEmpresa) = '') or (Trim(FCodigoAlmacen) = '') or
+     (Trim(FSerie) = '') or (Trim(FNumero) = '') or
+     (Trim(FNumero) = '0') then
+    raise Exception.Create(
+      'No se puede reservar la linea: graba primero la cabecera del ' +
+      'inventario para tener empresa, almacen, serie y numero definitivos.');
+  bTransPropia := not oConn.InTransaction;
+  if bTransPropia then
+    oConn.StartTransaction;
+  qry := TUniQuery.Create(nil);
+  try
     try
-      Clone.CloneCursor(cdsLineas, True);
-      Clone.First;
-      while not Clone.Eof do
-      begin
-        if StrToIntDef(Clone.FieldByName('LINEA_INVLIN').AsString,
-                       0) > Maximo then
-          Maximo := StrToIntDef(Clone.FieldByName('LINEA_INVLIN').AsString, 0);
-        Clone.Next;
-      end;
-    finally
-      FreeAndNil(Clone);
+      qry.Connection := oConn;
+      qry.SQL.Text :=
+        'SELECT IFNULL(CAST(NULLIF(CAST(CONTADOR_LINEAS_INV ' +
+        'AS CHAR), '''') AS UNSIGNED), 0) AS NV ' +
+        '  FROM fza_inventarios ' +
+        ' WHERE CODIGO_EMP_INV = :EMPRESA ' +
+        '   AND CODIGO_ALM_INV = :ALMACEN ' +
+        '   AND SERIE_INV = :SERIE ' +
+        '   AND NUMERO_INV = :NUMERO ' +
+        ' FOR UPDATE';
+      qry.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
+      qry.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
+      qry.ParamByName('SERIE').AsString := FSerie;
+      qry.ParamByName('NUMERO').AsString := FNumero;
+      qry.Open;
+      if qry.Eof then
+        raise Exception.Create(
+          'No se ha encontrado la cabecera del inventario para reservar ' +
+          'la siguiente linea.');
+      iNuevaLinea := qry.FieldByName('NV').AsInteger + 1;
+      qry.Close;
+      qry.SQL.Text :=
+        'UPDATE fza_inventarios ' +
+        '   SET CONTADOR_LINEAS_INV = :NUEVO ' +
+        ' WHERE CODIGO_EMP_INV = :EMPRESA ' +
+        '   AND CODIGO_ALM_INV = :ALMACEN ' +
+        '   AND SERIE_INV = :SERIE ' +
+        '   AND NUMERO_INV = :NUMERO';
+      qry.ParamByName('NUEVO').AsString := Format('%.8d', [iNuevaLinea]);
+      qry.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
+      qry.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
+      qry.ParamByName('SERIE').AsString := FSerie;
+      qry.ParamByName('NUMERO').AsString := FNumero;
+      qry.ExecSQL;
+      if qry.RowsAffected = 0 then
+        raise Exception.Create(
+          'No se ha podido actualizar el contador de lineas del inventario.');
+      if bTransPropia and oConn.InTransaction then
+        oConn.Commit;
+      Result := Format('%.4d', [iNuevaLinea]);
+    except
+      if bTransPropia and oConn.InTransaction then
+        oConn.Rollback;
+      raise;
     end;
+  finally
+    FreeAndNil(qry);
   end;
-  Result := Format('%.4d', [Maximo + 1]);
 end;
 
 function TdmInventarios.ExisteLineaConSku(const ASku: string): Boolean;
@@ -686,7 +734,10 @@ var
   Bookmark: TBookmark;
 begin
   Result := False;
-  if not cdsLineas.Active then Exit;
+  if not cdsLineas.Active then
+  begin
+    Exit;
+  end;
 
   Bookmark := cdsLineas.GetBookmark;
   cdsLineas.DisableControls;

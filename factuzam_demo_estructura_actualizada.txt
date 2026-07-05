@@ -1,19 +1,19 @@
 Estructura actualizada en factuzam_demo.sql
-Fecha: 2026-07-03 19:31:13
-Backup previo: factuzam_demo.sql.bak-antes-estructura-binaria-20260703-193113
+Fecha: 2026-07-05 06:48:32
+Backup previo vistas/procs: factuzam_demo.sql.bak-antes-vistas-procs-20260705-064832
 
 Tablas actualizadas:
-- fza_albaranes
-- fza_albaranes_compra
-- fza_devoluciones_compra
-- fza_facturas_compra
-- fza_pedidos_compra
-- fza_pedidos_lineas
-- fza_proveedores
-
-Validacion: todas las definiciones CREATE TABLE del demo coinciden con original.
+- Ninguna. Validacion: todas las definiciones CREATE TABLE del demo ya coincidian con original.
 
 Seccion VISTAS/PROCEDIMIENTOS reemplazada desde factuzam_original.sql.
-Fecha: 2026-07-03 19:32:28
-Backup previo vistas/procs: factuzam_demo.sql.bak-antes-vistas-procs-20260703-193228
-Validacion: INSERT del demo sin cambios; tablas, vistas y procedimientos alineados con original.
+Validacion pendiente de ejecucion sobre MariaDB: no hay cliente mysql/mariadb en PATH.
+
+comprobar_scripts_aplicados.sql actualizado para cubrir scripts recientes:
+- proveedores_pais_combo.sql
+- pedidos_compra.sql
+- albc_pivote_tarifa.sql
+- pivote_compras_default_vertical_alta.sql
+- fix_contador_documentos_no_cero.sql
+- lineas_documentos_varchar4_contador.sql
+- albaranes_venta_almacen_cabecera.sql
+- pedidos_venta_almacen_cabecera.sql

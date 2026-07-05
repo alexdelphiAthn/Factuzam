@@ -223,6 +223,7 @@ type
     function BuscarSkuAlbaran(const ACodigoArt: string): string;
     function ArticuloLineaActivaAlbaran: string;
     procedure AplicarArticuloAlbaran(const ACodigoArt: string);
+    procedure AsegurarCabeceraPersistidaParaLineas;
     procedure AsegurarPrimeraLineaAlbaran;
     procedure cxgrdcArtAlbSkuPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
@@ -1025,6 +1026,74 @@ begin
   end;
 end;
 
+procedure TfrmMtoAlbaranes.AsegurarCabeceraPersistidaParaLineas;
+var
+  dsCab: TDataSet;
+  dsLin: TDataSet;
+  sNumero: string;
+
+  function ValorLinea(const ACampo: string): string;
+  var
+    Campo: TField;
+  begin
+    Result := '';
+    Campo := dsLin.FindField(ACampo);
+    if Campo <> nil then
+      Result := Trim(Campo.AsString);
+  end;
+
+  function LineaActualVacia: Boolean;
+  begin
+    Result := (ValorLinea('CODIGO_ART_ALBLIN') = '') and
+              (ValorLinea('CODIGO_UNIDAD_ALBLIN') = '');
+  end;
+
+  procedure SincronizarCabeceraEnLinea;
+  begin
+    if Assigned(dsLin) and dsLin.Active and
+       (dsLin.State in dsEditModes) then
+    begin
+      if dsLin.FindField('NUMERO_ALB_ALBLIN') <> nil then
+        dsLin.FieldByName('NUMERO_ALB_ALBLIN').AsString :=
+          dsCab.FieldByName('NUMERO_ALB').AsString;
+      if dsLin.FindField('SERIE_ALB_ALBLIN') <> nil then
+        dsLin.FieldByName('SERIE_ALB_ALBLIN').AsString :=
+          dsCab.FieldByName('SERIE_ALB').AsString;
+    end;
+  end;
+
+begin
+  if not Assigned(dmmAlbaranes) then
+    raise Exception.Create('No esta inicializado el albaran.')
+  else
+  begin
+    dsCab := dmmAlbaranes.unqryTablaG;
+    dsLin := dmmAlbaranes.unqryAlbaranesLineas;
+    if (dsCab = nil) or (not dsCab.Active) or
+       (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
+      raise Exception.Create(
+        'Crea o selecciona un albaran antes de anadir lineas.');
+    sNumero := Trim(dsCab.FieldByName('NUMERO_ALB').AsString);
+    if Assigned(dsLin) and dsLin.Active and (dsLin.State = dsInsert) and
+       ((sNumero = '') or (sNumero = '0')) and LineaActualVacia then
+      dsLin.Cancel;
+    if (dsCab.State in dsEditModes) or (sNumero = '') or
+       (sNumero = '0') then
+    begin
+      if not (dsCab.State in dsEditModes) then
+        dsCab.Edit;
+      dsCab.Post;
+    end;
+    SincronizarCabeceraEnLinea;
+    if Assigned(dsLin) and dsLin.Active and
+       (not (dsLin.State in dsEditModes)) then
+    begin
+      dsLin.Close;
+      dsLin.Open;
+    end;
+  end;
+end;
+
 procedure TfrmMtoAlbaranes.AsegurarPrimeraLineaAlbaran;
 var
   dsCab: TDataSet;
@@ -1037,8 +1106,9 @@ begin
   dsCab := dmmAlbaranes.unqryTablaG;
   dsLin := dmmAlbaranes.unqryAlbaranesLineas;
   if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
-     dsCab.IsEmpty then
+     (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
     Exit;
+  AsegurarCabeceraPersistidaParaLineas;
   sNumero := Trim(dsCab.FieldByName('NUMERO_ALB').AsString);
   sSerie  := Trim(dsCab.FieldByName('SERIE_ALB').AsString);
   if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
@@ -1057,6 +1127,7 @@ end;
 procedure TfrmMtoAlbaranes.btnAnadirLineaClick(Sender: TObject);
 begin
   inherited;
+  AsegurarCabeceraPersistidaParaLineas;
   dmmAlbaranes.unqryAlbaranesLineas.Append;
 end;
 

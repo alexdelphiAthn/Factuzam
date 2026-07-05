@@ -624,6 +624,21 @@ SELECT t.orden AS orden_aplicacion,
                      AND TABLE_NAME = 'vi_art_busquedas'
                      AND COLUMN_NAME = 'REF_PROVEEDOR')
     UNION ALL
+    SELECT 445, 'proveedores_pais_combo.sql',
+           'fza_proveedores.CODIGO_PAI_PRV + vistas',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_proveedores'
+                     AND COLUMN_NAME = 'CODIGO_PAI_PRV')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_proveedores'
+                         AND COLUMN_NAME = 'CODIGO_PAI_PRV')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_proveedores_busquedas'
+                         AND COLUMN_NAME = 'CODIGO_PAI_PRV')
+    UNION ALL
     SELECT 450, 'filtros_guardados.sql',
            'tablas fza_filtros_guardados / compartidos',
            EXISTS(SELECT 1 FROM information_schema.TABLES
@@ -633,6 +648,146 @@ SELECT t.orden AS orden_aplicacion,
                        WHERE TABLE_SCHEMA = DATABASE()
                          AND TABLE_NAME =
                              'fza_filtros_guardados_compartidos')
+    UNION ALL
+    SELECT 460, 'pedidos_compra.sql',
+           'pedidos compra cab/lin/celdas + vista + menú',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_pedidos_compra')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_pedidos_compra_lineas')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_pedidos_compra_celdas')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_pedidos_compra_lineas'
+                         AND COLUMN_NAME = 'COLOR_TEXTO_PEDCLIN')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_pedidos_compra'
+                         AND COLUMN_NAME = 'NOMBRE_PRV_PEDC')
+           AND EXISTS(SELECT 1 FROM fza_winforms
+                       WHERE CALL_WINF = 'PedidosCompra')
+    UNION ALL
+    SELECT 470, 'albc_pivote_tarifa.sql',
+           'albarán compra con pivote horizontal y tarifa',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_albaranes_compra'
+                     AND COLUMN_NAME = 'ESPIVOTE_HORIZONTAL_ALBC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_albaranes_compra'
+                         AND COLUMN_NAME = 'CODIGO_TAR_ALBC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_albaranes_compra'
+                         AND COLUMN_NAME = 'CODIGO_TAR_ALBC')
+    UNION ALL
+    SELECT 480, 'pivote_compras_default_vertical_alta.sql',
+           'pivote compra con default vertical en altas',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_pedidos_compra'
+                     AND COLUMN_NAME = 'ESPIVOTE_HORIZONTAL_PEDC'
+                     AND COALESCE(COLUMN_DEFAULT, '') IN ('N', '''N'''))
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_albaranes_compra'
+                         AND COLUMN_NAME = 'ESPIVOTE_HORIZONTAL_ALBC'
+                         AND COALESCE(COLUMN_DEFAULT, '') IN ('N', '''N'''))
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_facturas_compra'
+                         AND COLUMN_NAME = 'ESPIVOTE_HORIZONTAL_FACC'
+                         AND COALESCE(COLUMN_DEFAULT, '') IN ('N', '''N'''))
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_devoluciones_compra'
+                         AND COLUMN_NAME = 'ESPIVOTE_HORIZONTAL_DEVC'
+                         AND COALESCE(COLUMN_DEFAULT, '') IN ('N', '''N'''))
+    UNION ALL
+    SELECT 490, 'fix_contador_documentos_no_cero.sql',
+           'PRC_GET_NEXT_CONT_FACT_SERIE blindado contra número 0',
+           EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                   WHERE ROUTINE_SCHEMA = DATABASE()
+                     AND ROUTINE_NAME = 'PRC_GET_NEXT_CONT_FACT_SERIE'
+                     AND ROUTINE_DEFINITION LIKE '%GREATEST(CON, 1)%'
+                     AND ROUTINE_DEFINITION LIKE
+                         '%El contador no puede devolver numero 0%')
+    UNION ALL
+    SELECT 500, 'lineas_documentos_varchar4_contador.sql',
+           'líneas documento varchar(4) + SP pedido a albarán',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_pedidos_lineas'
+                     AND COLUMN_NAME = 'LINEA_PEDLIN'
+                     AND CHARACTER_MAXIMUM_LENGTH >= 4)
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_albaranes_lineas'
+                         AND COLUMN_NAME = 'LINEA_ALBLIN'
+                         AND CHARACTER_MAXIMUM_LENGTH >= 4)
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_albaranes_lineas'
+                         AND COLUMN_NAME = 'LINEA_PED_ALBLIN'
+                         AND CHARACTER_MAXIMUM_LENGTH >= 4)
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_pedidos_compra_lineas'
+                         AND COLUMN_NAME = 'LINEA_PEDCLIN'
+                         AND CHARACTER_MAXIMUM_LENGTH >= 4)
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_albaranes_compra_lineas'
+                         AND COLUMN_NAME = 'LINEA_ALBCLIN'
+                         AND CHARACTER_MAXIMUM_LENGTH >= 4)
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_devoluciones_compra_lineas'
+                         AND COLUMN_NAME = 'LINEA_DEVCLIN'
+                         AND CHARACTER_MAXIMUM_LENGTH >= 4)
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_facturas_compra_lineas'
+                         AND COLUMN_NAME = 'LINEA_FACCLIN'
+                         AND CHARACTER_MAXIMUM_LENGTH >= 4)
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = 'PRC_PED_CREAR_ALBARAN_LINEA')
+    UNION ALL
+    SELECT 510, 'albaranes_venta_almacen_cabecera.sql',
+           'fza_albaranes.CODIGO_ALM_ALB + vista',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_albaranes'
+                     AND COLUMN_NAME = 'CODIGO_ALM_ALB')
+           AND EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_albaranes'
+                         AND INDEX_NAME = 'IDX_ALB_ALMACEN')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_albaranes'
+                         AND COLUMN_NAME = 'NOMBRE_ALM_ALB')
+    UNION ALL
+    SELECT 520, 'pedidos_venta_almacen_cabecera.sql',
+           'fza_pedidos.CODIGO_ALM_PED + vista',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_pedidos'
+                     AND COLUMN_NAME = 'CODIGO_ALM_PED')
+           AND EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_pedidos'
+                         AND INDEX_NAME = 'IDX_PED_ALMACEN')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_pedidos'
+                         AND COLUMN_NAME = 'NOMBRE_ALM_PED')
   ) t
  ORDER BY t.aplicado, t.orden;
 -- Scripts solo-datos, no detectables por esquema. Son idempotentes:
@@ -647,7 +802,9 @@ SELECT t.orden AS orden_aplicacion,
 --   tallas_alinear_skus_conjunto.sql
 --   depositos_netear_devoluciones.sql (reemplaza SP existente)
 --   pedidos_albaranes_compra_pivote_default_horizontal.sql
---   albc_pivote_tarifa.sql
 --   tarifas_limpiar_porcentaje_dto_basura.sql
 --   compras_sesiones_recalcular_totales.sql
 --   facturas_simplificadas_cabecera_empresa.sql
+--   quitar_tarifa_defecto_duplicada.sql
+--   articulos_precarga_sin_stock.sql
+--   movimientos_albaranes_fecha_documento.sql

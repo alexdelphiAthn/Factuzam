@@ -1,4 +1,4 @@
-inherited frmMtoInventarios: TfrmMtoInventarios
+﻿inherited frmMtoInventarios: TfrmMtoInventarios
   Caption = 'Mantenimiento de Inventarios'
   ClientHeight = 720
   ClientWidth = 1280
@@ -375,6 +375,7 @@ inherited frmMtoInventarios: TfrmMtoInventarios
                 Height = 352
                 Align = alClient
                 TabOrder = 1
+                OnEnter = cxgrdLineasEnter
                 object tvLineas: TcxGridDBTableView
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Buttons.PriorPage.Visible = False

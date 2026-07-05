@@ -238,6 +238,7 @@ type
     function BuscarSkuPedido(const ACodigoArt: string): string;
     function ArticuloLineaActivaPedido: string;
     procedure AplicarArticuloPedido(const ACodigoArt: string);
+    procedure AsegurarCabeceraPersistidaParaLineas;
     procedure AsegurarPrimeraLineaPedido;
     procedure cxgrdcPedLinSKUPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
@@ -942,6 +943,74 @@ begin
     AplicarArticuloPedido(sSku);
 end;
 
+procedure TfrmMtoPedidos.AsegurarCabeceraPersistidaParaLineas;
+var
+  dsCab: TDataSet;
+  dsLin: TDataSet;
+  sNumero: string;
+
+  function ValorLinea(const ACampo: string): string;
+  var
+    Campo: TField;
+  begin
+    Result := '';
+    Campo := dsLin.FindField(ACampo);
+    if Campo <> nil then
+      Result := Trim(Campo.AsString);
+  end;
+
+  function LineaActualVacia: Boolean;
+  begin
+    Result := (ValorLinea('CODIGO_ART_PEDLIN') = '') and
+              (ValorLinea('CODIGOPRODPS_PEDLIN') = '');
+  end;
+
+  procedure SincronizarCabeceraEnLinea;
+  begin
+    if Assigned(dsLin) and dsLin.Active and
+       (dsLin.State in dsEditModes) then
+    begin
+      if dsLin.FindField('NUMERO_PED_PEDLIN') <> nil then
+        dsLin.FieldByName('NUMERO_PED_PEDLIN').AsString :=
+          dsCab.FieldByName('NUMERO_PED').AsString;
+      if dsLin.FindField('SERIE_PED_PEDLIN') <> nil then
+        dsLin.FieldByName('SERIE_PED_PEDLIN').AsString :=
+          dsCab.FieldByName('SERIE_PED').AsString;
+    end;
+  end;
+
+begin
+  if not Assigned(dmmPedidos) then
+    raise Exception.Create('No esta inicializado el pedido.')
+  else
+  begin
+    dsCab := dmmPedidos.unqryTablaG;
+    dsLin := dmmPedidos.unqryPedidosLineas;
+    if (dsCab = nil) or (not dsCab.Active) or
+       (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
+      raise Exception.Create(
+        'Crea o selecciona un pedido antes de anadir lineas.');
+    sNumero := Trim(dsCab.FieldByName('NUMERO_PED').AsString);
+    if Assigned(dsLin) and dsLin.Active and (dsLin.State = dsInsert) and
+       ((sNumero = '') or (sNumero = '0')) and LineaActualVacia then
+      dsLin.Cancel;
+    if (dsCab.State in dsEditModes) or (sNumero = '') or
+       (sNumero = '0') then
+    begin
+      if not (dsCab.State in dsEditModes) then
+        dsCab.Edit;
+      dsCab.Post;
+    end;
+    SincronizarCabeceraEnLinea;
+    if Assigned(dsLin) and dsLin.Active and
+       (not (dsLin.State in dsEditModes)) then
+    begin
+      dsLin.Close;
+      dsLin.Open;
+    end;
+  end;
+end;
+
 procedure TfrmMtoPedidos.AsegurarPrimeraLineaPedido;
 var
   dsCab: TDataSet;
@@ -954,8 +1023,9 @@ begin
   dsCab := dmmPedidos.unqryTablaG;
   dsLin := dmmPedidos.unqryPedidosLineas;
   if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
-     dsCab.IsEmpty then
+     (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
     Exit;
+  AsegurarCabeceraPersistidaParaLineas;
   sNumero := Trim(dsCab.FieldByName('NUMERO_PED').AsString);
   sSerie  := Trim(dsCab.FieldByName('SERIE_PED').AsString);
   if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
@@ -975,6 +1045,7 @@ end;
 procedure TfrmMtoPedidos.btnAnadirLineaClick(Sender: TObject);
 begin
   inherited;
+  AsegurarCabeceraPersistidaParaLineas;
   if not dmmPedidos.unqryPedidosLineas.Active then
     dmmPedidos.AbrirDetalles;
   dmmPedidos.unqryPedidosLineas.Append;

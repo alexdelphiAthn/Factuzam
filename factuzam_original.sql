@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 04/07/2026 17:25:54
+-- Backup generado: 05/07/2026 6:54:14
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -288,6 +288,7 @@ ALTER TABLE `fza_albaranes_compra` ADD INDEX `IDX_ALBC_PROVEEDOR_FECHA` (`CODIGO
 
 -- Datos de fza_albaranes_compra
 INSERT INTO `fza_albaranes_compra` (`NUMERO_ALBC`, `SERIE_ALBC`, `FECHA_ALBC`, `ESTADO_ALBC`, `NUMERO_PED_ALBC`, `SERIE_PED_ALBC`, `NUMERO_FAC_ALBC`, `SERIE_FAC_ALBC`, `CODIGO_EMP_ALBC`, `RAZON_SOCIAL_EMPRESA_ALBC`, `NIF_EMPRESA_ALBC`, `MOVIL_EMPRESA_ALBC`, `EMAIL_EMPRESA_ALBC`, `DIRECCION1_EMPRESA_ALBC`, `DIRECCION2_EMPRESA_ALBC`, `POBLACION_EMPRESA_ALBC`, `PROVINCIA_EMPRESA_ALBC`, `CODIGO_PAI_EMPRESA_ALBC`, `NOMBRE_PAI_EMPRESA_ALBC`, `CODIGO_POSTAL_EMPRESA_ALBC`, `CODIGO_PRV_ALBC`, `RAZON_SOCIAL_PRV_ALBC`, `NIF_PRV_ALBC`, `MOVIL_PRV_ALBC`, `EMAIL_PRV_ALBC`, `DIRECCION1_PRV_ALBC`, `DIRECCION2_PRV_ALBC`, `POBLACION_PRV_ALBC`, `PROVINCIA_PRV_ALBC`, `CODIGO_PAI_PRV_ALBC`, `NOMBRE_PAI_PRV_ALBC`, `CODIGO_POSTAL_PRV_ALBC`, `REF_PROVEEDOR_ALBC`, `CODIGO_ALM_ALBC`, `TRANSPORTISTA_ALBC`, `CODIGO_IVA_ALBC`, `ESIVA_RECARGO_COMPRAS_ALBC`, `ESIVA_EXENTO_INTRACOMUNITARIO_ALBC`, `PORCENTAJE_IVAN_ALBC`, `TOTAL_BASEI_IVAN_ALBC`, `TOTAL_IVAN_ALBC`, `PORCENTAJE_REN_ALBC`, `TOTAL_REN_ALBC`, `PORCENTAJE_IVAR_ALBC`, `TOTAL_BASEI_IVAR_ALBC`, `TOTAL_IVAR_ALBC`, `PORCENTAJE_RER_ALBC`, `TOTAL_RER_ALBC`, `PORCENTAJE_IVAS_ALBC`, `TOTAL_BASEI_IVAS_ALBC`, `TOTAL_IVAS_ALBC`, `PORCENTAJE_RES_ALBC`, `TOTAL_RES_ALBC`, `PORCENTAJE_IVAE_ALBC`, `TOTAL_BASEI_IVAE_ALBC`, `TOTAL_IVAE_ALBC`, `PORCENTAJE_REE_ALBC`, `TOTAL_REE_ALBC`, `TOTAL_BASES_ALBC`, `TOTAL_IMPUESTOS_ALBC`, `PORCENTAJE_RETENCION_ALBC`, `TOTAL_RETENCION_ALBC`, `TOTAL_BRUTO_ALBC`, `PORCENTAJE_DTO_COMERCIAL_ALBC`, `TOTAL_DTO_COMERCIAL_ALBC`, `PORCENTAJE_DTO_FINANCIERO_ALBC`, `TOTAL_DTO_FINANCIERO_ALBC`, `TOTAL_LIQUIDO_ALBC`, `FORMA_PAGO_ALBC`, `CONTADOR_LINEAS_ALBC`, `COMENTARIOS_ALBC`, `OBSERVACIONES_ALBC`, `ESPIVOTE_HORIZONTAL_ALBC`, `CODIGO_TAR_ALBC`, `ESDEPOSITO_ALBC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('000001', 'C1', '2026-07-14 00:00:00', 'ABIERTO', NULL, NULL, NULL, NULL, '1', 'AGRICULTOR', 'NIF DEL AGRICULTOR', 'TFNO DEL AGRICULTOR', 'EMAIL DEL AGRICULTOR', 'DIRECCION DEL AGRICULTOR', '', 'POBLACION DEL AGRICULTOR', 'PROVINCIA DEL AGRICULTOR', 'ES', 'España', 'POSAGRI', 'PRVTEST', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'BCN', NULL, '1', 'N', 'N', 21, 85, 17.85, 5.2, 0, 10, 0, 0, 1.4, 0, 4, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 85, 17.85, NULL, 0, 85, NULL, 0, NULL, 0, 102.85, NULL, NULL, NULL, NULL, 'N', NULL, 'N', '2026-07-04 19:35:35', '2026-07-04 19:35:35', 'Administrador', 'Administrador'),
   ('000004', 'C1', '2026-07-03 00:00:00', 'ABIERTO', NULL, NULL, NULL, NULL, '012', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ANGEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GEN', NULL, '1', 'N', 'N', 21, 200, 42, 5.2, 0, 10, 0, 0, 1.4, 0, 4, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 200, 42, NULL, 0, 200, NULL, 0, NULL, 0, 242, NULL, '00000010', NULL, NULL, 'N', NULL, 'N', '2026-07-03 16:50:29', '2026-07-03 09:46:53', 'Administrador', 'Administrador'),
   ('000005', 'C1', '2026-07-03 00:00:00', 'ABIERTO', NULL, NULL, NULL, NULL, '012', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ANGEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'GEN', NULL, '1', 'N', 'N', 21, 160, 33.6, 5.2, 0, 10, 0, 0, 1.4, 0, 4, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 160, 33.6, NULL, 0, 160, NULL, 0, NULL, 0, 193.6, NULL, '00000010', NULL, NULL, 'N', NULL, 'N', '2026-07-03 16:50:29', '2026-07-03 09:49:34', 'Administrador', 'Administrador'),
   ('000006', 'C1', '2026-07-03 00:00:00', 'ABIERTO', NULL, NULL, NULL, NULL, '012', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ANGEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'BCN', NULL, '1', 'N', 'N', 21, 144, 30.24, 5.2, 0, 10, 0, 0, 1.4, 0, 4, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 144, 30.24, NULL, 0, 144, NULL, 0, NULL, 0, 174.24, NULL, '52130', NULL, NULL, 'N', NULL, 'N', '2026-07-03 19:19:48', '2026-07-03 19:04:35', 'Administrador', 'Administrador'),
@@ -319,7 +320,7 @@ INSERT INTO `fza_albaranes_compra` (`NUMERO_ALBC`, `SERIE_ALBC`, `FECHA_ALBC`, `
   ('036', 'A1', '2026-06-04 00:00:00', 'CERRADO', NULL, NULL, NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '22', 'Aux joyeux ecclésiastiques', NULL, '(1) 03.83.00.68', NULL, '203, Rue des Francs-Bourgeois', NULL, 'Paris', '', '724', 'Espana', '75004', '112211', 'GEN', NULL, '1', 'N', 'S', 21, 60, 12.6, 5.2, 0, 10, 0, 0, 1.4, 0, 4, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 60, 12.6, NULL, 0, 60, 0, 0, 0, 0, 72.6, NULL, '00000060', '', '', 'S', NULL, 'N', '2026-07-01 19:03:52', '2026-06-26 16:35:14', 'Administrador', 'Administrador'),
   ('037', 'A1', '2026-05-24 00:00:00', 'CERRADO', NULL, NULL, NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'FER', 'FERNANDO E HIJOS, SL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, '322323', 'GEN', NULL, '1', 'N', 'N', 21, 600, 126, 5.2, 0, 10, 0, 0, 1.4, 0, 4, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 600, 126, NULL, 0, 600, 0, 0, 0, 0, 726, 'TRANSFERENCIA', '00000480', '', '', 'S', NULL, 'S', '2026-07-01 19:03:52', '2026-06-26 19:37:44', 'Administrador', 'Administrador'),
   ('038', 'A1', '2026-06-26 00:00:00', 'CERRADO', '000001', 'A1', NULL, NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'PEPI', 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, '398383', 'GEN', NULL, '1', 'N', 'N', 21, 121, 25.41, 5.2, 0, 10, 0, 0, 1.4, 0, 4, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 121, 25.41, NULL, 0, 121, 0, 0, 0, 0, 146.41, NULL, '00000150', '', '', 'S', NULL, 'N', '2026-07-01 19:03:52', '2026-06-26 19:41:20', 'Administrador', 'Administrador');
--- 31 registros exportados
+-- 32 registros exportados
 
 
 -- Tabla: fza_albaranes_compra_celdas
@@ -386,6 +387,8 @@ ALTER TABLE `fza_albaranes_compra_lineas` ADD INDEX `IDX_ALBCLIN_PEDIDO` (`SERIE
 
 -- Datos de fza_albaranes_compra_lineas
 INSERT INTO `fza_albaranes_compra_lineas` (`NUMERO_ALBC_ALBCLIN`, `SERIE_ALBC_ALBCLIN`, `LINEA_ALBCLIN`, `NUMERO_PEDC_ALBCLIN`, `SERIE_PEDC_ALBCLIN`, `LINEA_PEDC_ALBCLIN`, `CODIGO_ART_ALBCLIN`, `CODIGO_UNIDAD_ALBCLIN`, `REF_PRV_ALBCLIN`, `ID_AC_PIVOT_ALBCLIN`, `CODIGO_FAM_ALBCLIN`, `NOMBRE_FAM_ALBCLIN`, `DESCRIPCION_ARTICULO_ALBCLIN`, `TIPO_CANTIDAD_ARTICULO_ALBCLIN`, `CANTIDAD_ALBCLIN`, `TOTAL_UNIDADES_ALBCLIN`, `TIPO_IVA_ARTICULO_ALBCLIN`, `PORCENTAJE_IVA_ALBCLIN`, `PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN`, `PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN`, `TOTAL_ALBCLIN`, `CODIGO_ALMACEN_ALBCLIN`, `LOTE_ALBCLIN`, `FECHA_CADUCIDAD_ALBCLIN`, `DESCRIPCION_VARIACION_ALBCLIN`, `ESFACTURADA_ALBCLIN`, `NUMERO_FAC_ALBCLIN`, `SERIE_FAC_ALBCLIN`, `LINEA_FAC_ALBCLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('000001', 'C1', '0010', NULL, NULL, NULL, 'TESTSKU01', 'TESTSKU01/NEGRO/S', '', 3, 'OTR', NULL, 'ARTICULO PRUEBAS PMP SKU', 'Uds', 4, 0, 'N', 21, 16, 19.36, 64, 'BCN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-07-04 19:38:16', '2026-07-04 19:35:35', 'Administrador', 'Administrador'),
+  ('000001', 'C1', '0020', NULL, NULL, NULL, 'TESTSKU01', 'TESTSKU01/NEGRO/M', '', 3, 'OTR', NULL, 'ARTICULO PRUEBAS PMP SKU', 'Uds', 3, 0, 'N', 21, 7, 8.47, 21, 'BCN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-07-05 06:22:02', '2026-07-05 06:20:40', 'Administrador', 'Administrador'),
   ('000004', 'C1', '0010', NULL, NULL, NULL, 'TESTPMP1', 'TESTPMP1', '', NULL, 'OTR', NULL, 'Test_PMP_1', 'Uds', 20, 0, 'N', 21, 10, 12.1, 200, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-07-03 09:47:58', '2026-07-03 09:46:53', 'Administrador', 'Administrador'),
   ('000005', 'C1', '0010', NULL, NULL, NULL, 'TESTPMP1', 'TESTPMP1', '', NULL, 'OTR', NULL, 'Test_PMP_1', 'Uds', 10, 0, 'N', 21, 16, 19.36, 160, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-07-03 09:49:45', '2026-07-03 09:49:35', 'Administrador', 'Administrador'),
   ('000006', 'C1', '5214', NULL, NULL, NULL, 'TESTPMP1', 'TESTPMP1', '', NULL, 'OTR', NULL, 'Test_PMP_1', 'Uds', 8, 0, 'N', 21, 18, 21.78, 144, 'BCN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-07-03 20:10:15', '2026-07-03 19:41:22', 'Administrador', 'Administrador'),
@@ -778,7 +781,7 @@ INSERT INTO `fza_albaranes_compra_lineas` (`NUMERO_ALBC_ALBCLIN`, `SERIE_ALBC_AL
   ('038', 'A1', '0130', '000001', 'A1', '0150', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/L', '222', 1, 'DEPORTIVO', '', 'mallitas', 'Uds', 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-26 19:41:20', '2026-06-26 19:41:20', 'Administrador', 'Administrador'),
   ('038', 'A1', '0140', '000001', 'A1', '0140', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/M', '222', 1, 'DEPORTIVO', '', 'mallitas', 'Uds', 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-26 19:41:20', '2026-06-26 19:41:20', 'Administrador', 'Administrador'),
   ('038', 'A1', '0150', '000001', 'A1', '0130', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/S', '222', 1, 'DEPORTIVO', '', 'mallitas', 'Uds', 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', NULL, NULL, NULL, 'N', NULL, NULL, NULL, '2026-06-26 19:41:20', '2026-06-26 19:41:20', 'Administrador', 'Administrador');
--- 392 registros exportados
+-- 394 registros exportados
 
 
 -- Tabla: fza_albaranes_lineas
@@ -971,7 +974,7 @@ INSERT INTO `fza_articulos` (`CODIGO_ART_ART`, `ESACTIVO_ART`, `TIPO_ART`, `DESC
   ('TESTPMP1', 'S', 'ESTANDAR', 'Test_PMP_1', 'OTR', 'N', 'N', 'Uds', 'N', 'N', 38, '2026-07-02 19:33:29', '2026-07-02 19:33:29', 'Administrador', 'Administrador', NULL),
   ('TESTPMP2', 'S', 'ESTANDAR', 'Test_PMP_2_tallas', 'OTR', 'N', 'N', 'Uds', 'S', 'N', 39, '2026-07-02 19:35:54', '2026-07-02 19:35:54', 'Administrador', 'Administrador', NULL),
   ('TESTSKU', 'S', 'ESTANDAR', 'TEST SKU', 'OTR', 'N', 'N', 'Uds', 'S', 'N', 41, '2026-07-04 07:40:03', '2026-07-04 07:40:03', 'Administrador', 'Administrador', NULL),
-  ('TESTSKU01', 'S', 'ESTANDAR', 'ARTICULO PRUEBAS PMP SKU', 'OTR', 'N', 'N', 'Uds', 'S', 'N', 40, '2026-07-04 07:28:46', '2026-07-04 07:28:46', 'Administrador', 'Administrador', NULL),
+  ('TESTSKU01', 'S', 'ESTANDAR', 'ARTICULO PRUEBAS PMP SKU', 'OTR', 'N', 'N', 'Uds', 'S', 'N', 40, '2026-07-04 17:36:10', '2026-07-04 07:28:46', 'Administrador', 'Administrador', 'TC'),
   ('VEST-FLOR', 'S', 'ESTANDAR', 'Vestido Estampado Verano', 'ROPA', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:31', '2026-03-11 22:27:51', 'DEMO', 'Administrador', 'TC'),
   ('ZAP-BOTA-MT', 'S', 'ESTANDAR', 'Bota Montaña Impermeable', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', 'TC'),
   ('ZAP-DEPOR', 'S', 'ESTANDAR', 'Zapatilla Deportiva Running', 'CALZADO', 'N', 'N', 'Uds', 'S', 'N', NULL, '2026-03-08 06:57:32', '2026-03-11 22:27:51', 'DEMO', 'DEMO', 'TC'),
@@ -1131,7 +1134,7 @@ INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ART_ACA`, `ID_AC_ACA`, `ID_
   ('TESTSKU', 0, 'CO', 1, 'S', '2026-07-04 07:40:03', '2026-07-04 07:40:03', 'SISTEMA', 'SISTEMA'),
   ('TESTSKU', 0, 'TAL', 2, 'S', '2026-07-04 07:40:03', '2026-07-04 07:40:03', 'SISTEMA', 'SISTEMA'),
   ('TESTSKU01', 0, 'CO', 1, 'S', '2026-07-04 07:28:47', '2026-07-04 07:28:47', 'SISTEMA', 'SISTEMA'),
-  ('TESTSKU01', 0, 'TAL', 2, 'S', '2026-07-04 07:28:47', '2026-07-04 07:28:47', 'SISTEMA', 'SISTEMA'),
+  ('TESTSKU01', 3, 'TAL', 0, 'S', '2026-07-04 17:38:37', '2026-07-04 17:38:37', 'Administrador', 'Administrador'),
   ('VEST-FLOR', 6, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('VEST-FLOR', 3, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('ZAP-BOTA-MT', 2, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
@@ -1539,7 +1542,7 @@ INSERT INTO `fza_articulos_proveedores` (`CODIGO_PRV_AP`, `CODIGO_ART_AP`, `REF_
   ('PEPI', 'DEPORTIVO006', '989', 9, '2026-05-28 19:52:48', 'S', '2026-05-28 19:52:48', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
   ('PEPI', 'DEPORTIVO009', '222', 2, '2026-05-28 19:52:48', 'S', '2026-05-28 19:52:48', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
   ('PEPI', 'PAPAFRITA', NULL, 0.2, NULL, '', '2025-04-17 09:03:32', '2025-04-17 09:03:32', 'Administrador', 'Administrador'),
-  ('PRVTEST', 'TESTSKU01', NULL, 9, '2026-07-04 17:19:03', 'S', '2026-07-04 17:19:03', '2026-07-04 16:07:25', 'Administrador', 'Administrador');
+  ('PRVTEST', 'TESTSKU01', NULL, 7, '2026-07-05 06:22:42', 'S', '2026-07-05 06:22:42', '2026-07-04 16:07:25', 'Administrador', 'Administrador');
 -- 57 registros exportados
 
 
@@ -2001,8 +2004,8 @@ INSERT INTO `fza_articulos_skus_costes` (`CODIGO_UNIDAD_SKU_SKUC`, `PRECIO_ULT_C
   ('TESTSKU/AZUL/L', NULL, NULL, '2026-07-04 07:41:00', '2026-07-04 07:41:00', 'Administrador', 'Administrador'),
   ('TESTSKU01/AZUL/M', NULL, NULL, '2026-07-04 07:36:19', '2026-07-04 07:36:19', 'Administrador', 'Administrador'),
   ('TESTSKU01/AZUL/S', 15, '2026-07-10 00:00:00', '2026-07-04 16:45:12', '2026-07-04 16:30:07', 'Administrador', 'Administrador'),
-  ('TESTSKU01/NEGRO/M', 9, '2026-07-11 00:00:00', '2026-07-04 17:19:03', '2026-07-04 16:27:27', 'Administrador', 'Administrador'),
-  ('TESTSKU01/NEGRO/S', 14, '2026-07-11 00:00:00', '2026-07-04 17:19:03', '2026-07-04 16:07:25', 'Administrador', 'Administrador'),
+  ('TESTSKU01/NEGRO/M', 7, '2026-07-14 00:00:00', '2026-07-05 06:22:42', '2026-07-04 16:27:27', 'Administrador', 'Administrador'),
+  ('TESTSKU01/NEGRO/S', 16, '2026-07-14 00:00:00', '2026-07-05 06:22:42', '2026-07-04 16:07:25', 'Administrador', 'Administrador'),
   ('VEST-FLOR/AMARILLO/XL', 10, '2026-05-01 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('VEST-FLOR/AMARILLO/XXL', 10, '2026-05-01 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
   ('VEST-FLOR/AZUL/L', 10, '2026-05-01 00:00:00', '2026-05-10 19:34:55', '2026-05-10 19:34:55', 'MIGRACION', 'MIGRACION'),
@@ -2176,6 +2179,8 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('BCN', 'CAMI-BASICA/ROJO/L', '', NULL, 1, '2026-06-21 08:37:34', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('BCN', 'LEGGING-SPORT/NEGRO/S', '', NULL, 10, '2026-06-21 08:37:34', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('BCN', 'TESTPMP1', '', NULL, 16, '2026-07-03 20:10:17', 240, 15, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('BCN', 'TESTSKU01/NEGRO/M', '', NULL, 6, '2026-07-05 06:22:42', 52.5, 8.75, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('BCN', 'TESTSKU01/NEGRO/S', '', NULL, 8, '2026-07-05 06:22:42', 104, 13, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0),
   ('BCN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 10, '2026-06-21 08:37:34', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('BCN', 'ZAP-DEPOR/NEGRO/44', '', NULL, 8, '2026-06-21 08:37:34', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('DEP_CL_GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 4, '2026-06-21 08:37:34', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -2430,9 +2435,9 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'SUDADERA-HOOD/GRIS/S', '', NULL, 0, '2026-06-21 08:37:34', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'SUDADERA-HOOD/NEGRO/L', '', NULL, 0, '2026-06-26 19:48:54', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'TESTPMP1', '', NULL, 18, '2026-07-03 20:10:41', 216, 12, 0, 0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 4, 0),
-  ('GEN', 'TESTSKU01/AZUL/S', '', NULL, 4, '2026-07-04 16:45:12', 60, 15, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0),
-  ('GEN', 'TESTSKU01/NEGRO/M', '', NULL, 12, '2026-07-04 17:19:03', 126, 10.5, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0),
-  ('GEN', 'TESTSKU01/NEGRO/S', '', NULL, 15, '2026-07-04 17:19:03', 150, 10, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'TESTSKU01/AZUL/S', '', NULL, 3, '2026-07-04 18:53:17', 45, 15, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1, 0, 0, 0),
+  ('GEN', 'TESTSKU01/NEGRO/M', '', NULL, 7, '2026-07-04 19:18:36', 73.5, 10.5, 0, 0, 0, 0, 12, 0, 0, 0, 0, 2, 0, 0, 0),
+  ('GEN', 'TESTSKU01/NEGRO/S', '', NULL, 8, '2026-07-04 19:18:36', 80, 10, 0, 0, 0, 0, 15, 0, 0, 0, 0, 3, 0, 0, 0),
   ('GEN', 'VEST-FLOR/AZUL/S', '', NULL, 7, '2026-06-26 19:48:54', 35, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0),
   ('GEN', 'VEST-FLOR/ROJO/M', '', NULL, 5, '2026-06-26 19:48:54', 25, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0),
   ('GEN', 'ZAP-BOTA-MT', '', NULL, 5, '2026-06-21 08:37:34', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -2443,7 +2448,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'ZAP-OXFORD/MARRON/43', '', NULL, 8, '2026-06-26 19:48:54', 40, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0),
   ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 9, '2026-06-26 19:48:54', 45, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0),
   ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-06-26 19:48:54', 25, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0);
--- 390 registros exportados
+-- 392 registros exportados
 
 
 -- Tabla: fza_articulos_tarifas
@@ -4155,9 +4160,11 @@ INSERT INTO `fza_caja_operaciones` (`ID_OPCAJA`, `CODIGO_EMP_OPCAJA`, `CODIGO_AL
   (189, '012', 'GEN', '1', '00000187', '000163', '2026.A1', '2026-06-25 18:00:10', '1', 'VE', 29.99, '0', 'N', 0, 'Venta', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-06-25 18:00:10', '2026-06-25 18:00:10', 'Administrador', 'Administrador', '', '2026-06-25 00:00:00'),
   (190, '012', 'GEN', '1', '00000188', '000164', '2026.A1', '2026-06-25 19:42:44', '1', 'VE', 14.95, '0', 'N', 0, 'Venta', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-06-25 19:42:44', '2026-06-25 19:42:44', 'Administrador', 'Administrador', '', '2026-06-25 00:00:00'),
   (191, '012', 'GEN', '1', '00000189', '000003', 'TA', '2026-06-25 19:44:42', '1', 'TA', 0, NULL, 'N', 0, 'Traspaso a BCN', NULL, NULL, NULL, '1', 'BCN', 'S', NULL, '2026-06-25 19:44:42', '2026-06-25 19:44:42', 'Administrador', 'Administrador', NULL, '2026-06-25 00:00:00'),
-  (192, '012', 'GEN', '1', '00000190', '000004', 'TA', '2026-07-03 18:49:47', '1', 'TA', 96, NULL, 'N', 0, 'Traspaso a BCN', NULL, NULL, NULL, '1', 'BCN', 'S', NULL, '2026-07-03 18:49:47', '2026-07-03 18:49:47', 'Administrador', 'Administrador', NULL, '2026-07-03 00:00:00');
+  (192, '012', 'GEN', '1', '00000190', '000004', 'TA', '2026-07-03 18:49:47', '1', 'TA', 96, NULL, 'N', 0, 'Traspaso a BCN', NULL, NULL, NULL, '1', 'BCN', 'S', NULL, '2026-07-03 18:49:47', '2026-07-03 18:49:47', 'Administrador', 'Administrador', NULL, '2026-07-03 00:00:00'),
+  (194, '012', 'GEN', '1', '00000192', '000166', '2026.A1', '2026-07-12 00:00:00', '1', 'VE', 170, '0', 'N', 0, 'Venta', NULL, NULL, NULL, NULL, NULL, 'N', NULL, '2026-07-04 18:53:17', '2026-07-04 18:53:17', 'Administrador', 'Administrador', '', '2026-07-12 00:00:00'),
+  (195, '012', 'GEN', '1', '00000193', '000005', 'TA', '2026-07-04 19:18:36', '1', 'TA', 71.5, NULL, 'N', 0, 'Traspaso a BCN', NULL, NULL, NULL, '1', 'BCN', 'S', NULL, '2026-07-04 19:18:36', '2026-07-04 19:18:36', 'Administrador', 'Administrador', NULL, '2026-07-04 00:00:00');
 /*!40000 ALTER TABLE `fza_caja_operaciones` ENABLE KEYS */;
--- 70 registros exportados
+-- 72 registros exportados
 
 
 -- Tabla: fza_caja_pagos
@@ -4345,8 +4352,9 @@ INSERT INTO `fza_caja_pagos` (`CODIGO_EMP_PAGO`, `CODIGO_ALM_PAGO`, `CODIGO_CAJA
   ('012', 'GEN', '1', '2026.A1', '00000185', 1, 'TARJ', 'EUR', NULL, 1, 0, 149.9499, 0, NULL, NULL, '2026-06-25 17:59:32', '2026-06-25 17:59:32', 'Administrador'),
   ('012', 'GEN', '1', '2026.A1', '00000186', 1, 'EFE', 'EUR', NULL, 1, 0, 29.99, 0, NULL, NULL, '2026-06-25 17:59:52', '2026-06-25 17:59:52', 'Administrador'),
   ('012', 'GEN', '1', '2026.A1', '00000187', 1, 'TARJ', 'EUR', NULL, 1, 0, 29.99, 0, NULL, NULL, '2026-06-25 18:00:10', '2026-06-25 18:00:10', 'Administrador'),
-  ('012', 'GEN', '1', '2026.A1', '00000188', 1, 'EFE', 'EUR', NULL, 1, 0, 14.95, 0, NULL, NULL, '2026-06-25 19:42:44', '2026-06-25 19:42:44', 'Administrador');
--- 158 registros exportados
+  ('012', 'GEN', '1', '2026.A1', '00000188', 1, 'EFE', 'EUR', NULL, 1, 0, 14.95, 0, NULL, NULL, '2026-06-25 19:42:44', '2026-06-25 19:42:44', 'Administrador'),
+  ('012', 'GEN', '1', '2026.A1', '00000192', 1, 'EFE', 'EUR', NULL, 1, 0, 170, 0, NULL, NULL, '2026-07-04 18:53:17', '2026-07-04 18:53:17', 'Administrador');
+-- 159 registros exportados
 
 
 -- Tabla: fza_caja_vales
@@ -5915,6 +5923,7 @@ CREATE TABLE `fza_contadores` (
 INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`, `NUM_DIGITOS_CON`, `ESACTIVO_CON`, `DEFAULT_CON`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('AB', '-', '-', 39, 3, 'S', 'S', '2026-06-26 19:41:20', '2026-05-23 00:03:07', 'Administrador', 'Administrador'),
   ('AB', '012', 'C1', 9, 6, 'S', 'N', '2026-07-04 17:12:56', '2026-07-02 20:27:47', 'Administrador', 'Administrador'),
+  ('AB', '1', 'C1', 2, 6, 'S', 'N', '2026-07-04 19:35:35', '2026-07-04 19:35:35', 'Administrador', 'Administrador'),
   ('AO', '-', '-', 42, 3, 'S', 'S', '2026-07-04 07:40:03', '2023-05-25 12:59:19', 'Administrador', 'Administrador'),
   ('AR', '-', '-', 17, 3, 'S', 'S', '2026-01-21 17:22:15', '2023-05-25 12:51:52', 'Administrador', 'Administrador'),
   ('AV', '012', 'A1', 4, 6, 'S', 'N', '2026-07-03 16:51:59', '2026-07-01 09:21:26', 'Administrador', 'Administrador'),
@@ -5935,7 +5944,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '008', 'ANA/2023', 1, 6, 'S', 'N', '2025-09-07 17:01:16', '2023-10-31 18:12:26', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1.2023', 6, 6, 'S', 'N', '2025-09-07 17:01:07', '2023-12-06 13:07:54', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1/1T/2024', 2, 6, 'S', 'N', '2025-09-07 17:01:09', '2024-02-12 09:40:18', 'Administrador', 'Administrador'),
-  ('FC', '012', '2026.A1', 165, 6, 'S', 'N', '2026-06-25 19:42:44', '2026-02-01 07:03:46', 'Administrador', '1'),
+  ('FC', '012', '2026.A1', 167, 6, 'S', 'N', '2026-07-04 18:53:17', '2026-02-01 07:03:46', 'Administrador', '1'),
   ('FC', '012', '2026.AN1', 2, 6, 'S', 'N', '2026-05-10 19:44:03', '2026-05-10 19:44:03', 'Administrador', 'Administrador'),
   ('FC', '012', 'A1', 2, 6, 'S', 'N', '2026-06-12 14:03:19', '2026-06-12 14:03:19', 'Administrador', 'Administrador'),
   ('FC', '012', 'TICKA1', 2, 6, 'S', 'N', '2026-03-27 17:33:04', '2026-03-27 17:33:04', 'Administrador', 'Administrador'),
@@ -5947,12 +5956,12 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 495, 3, 'S', 'S', '2026-07-04 16:58:58', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 499, 3, 'S', 'S', '2026-07-05 06:53:49', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
-  ('IN', '012', 'A1', 24, 2, 'S', 'S', '2026-06-13 09:58:34', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
+  ('IN', '012', 'A1', 26, 2, 'S', 'S', '2026-07-05 06:30:10', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
-  ('MV', '-', '-', 1104, 10, 'S', 'S', '2026-07-04 17:19:03', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
-  ('OV', '012', 'OV', 191, 8, 'S', 'S', '2026-07-03 18:49:46', '2026-04-02 20:05:59', '1', 'Administrador'),
+  ('MV', '-', '-', 1126, 10, 'S', 'S', '2026-07-05 06:22:42', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
+  ('OV', '012', 'OV', 194, 8, 'S', 'S', '2026-07-04 19:18:36', '2026-04-02 20:05:59', '1', 'Administrador'),
   ('PC', '-', '-', 5, 6, 'S', 'S', '2026-06-13 12:02:01', '2026-05-28 19:21:38', 'SISTEMA', 'Administrador'),
   ('PC', '012', 'C1', 3, 6, 'S', 'N', '2026-07-02 19:58:56', '2026-07-02 19:48:47', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
@@ -5966,10 +5975,10 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('RT', '-', '-', 6, 3, 'S', 'S', '2026-02-01 07:20:07', '2023-10-26 16:34:31', 'Administrador', 'Administrador'),
   ('SE', '-', '-', 0, 6, 'S', 'S', '2026-05-12 18:38:25', '2026-05-12 18:38:25', 'Administrador', 'Administrador'),
   ('SE', '012', 'A1', 15, 6, 'S', 'N', '2026-06-11 16:10:03', '2026-05-12 19:52:18', 'Administrador', 'Administrador'),
-  ('TA', '012', 'TA', 5, 6, 'S', 'N', '2026-07-03 18:49:46', '2026-06-02 07:19:14', 'Administrador', 'Administrador'),
+  ('TA', '012', 'TA', 6, 6, 'S', 'N', '2026-07-04 19:18:36', '2026-06-02 07:19:14', 'Administrador', 'Administrador'),
   ('TR', '012', 'TR', 2, 6, 'S', 'N', '2026-06-02 06:44:23', '2026-06-02 06:44:23', 'Administrador', 'Administrador'),
   ('TS', '-', '-', 2, 10, 'S', 'S', '2026-06-25 19:47:42', '2026-05-30 16:56:51', 'SISTEMA', 'Administrador');
--- 56 registros exportados
+-- 57 registros exportados
 
 
 -- Tabla: fza_depositos_cliente
@@ -7190,8 +7199,9 @@ INSERT INTO `fza_facturas` (`NUMERO_FAC`, `SERIE_FAC`, `FECHA_FAC`, `ESCONSOLIDA
   ('000161', '2026.A1', '2026-06-25 00:00:00', 'S', '2026-06-25 17:59:32', 'SIMPLIFICADA', 'N', 'SIN_VERIFACTU', '012', 'PEDRO REGULADO PÉREZ', '16196655D', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 26.02, 5.2, 0, 123.93, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 123.93, 26.02, NULL, 0, 0, 149.95, NULL, NULL, '', '', NULL, NULL, '020', 'N', 'N', 'N', NULL, '2026-06-25 17:59:32', '2026-06-25 17:59:32', '1', 'Administrador', '1', 'GEN', '1', '00000185'),
   ('000162', '2026.A1', '2026-06-25 00:00:00', 'S', '2026-06-25 17:59:52', 'SIMPLIFICADA', 'N', 'SIN_VERIFACTU', '012', 'PEDRO REGULADO PÉREZ', '16196655D', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 5.2, 5.2, 0, 24.79, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 24.79, 5.2, NULL, 0, 0, 29.99, NULL, NULL, '', '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-06-25 17:59:52', '2026-06-25 17:59:52', '1', 'Administrador', '1', 'GEN', '1', '00000186'),
   ('000163', '2026.A1', '2026-06-25 00:00:00', 'S', '2026-06-25 18:00:10', 'SIMPLIFICADA', 'N', 'SIN_VERIFACTU', '012', 'PEDRO REGULADO PÉREZ', '16196655D', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 5.2, 5.2, 0, 24.79, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 24.79, 5.2, NULL, 0, 0, 29.99, NULL, NULL, '', '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-06-25 18:00:10', '2026-06-25 18:00:10', '1', 'Administrador', '1', 'GEN', '1', '00000187'),
-  ('000164', '2026.A1', '2026-06-25 00:00:00', 'S', '2026-06-25 19:43:32', 'SIMPLIFICADA', 'N', 'VERIFACTU_OK', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 2.59, 5.2, 0, 12.36, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 12.36, 2.59, NULL, 0, 0, 14.95, NULL, NULL, '', '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-06-25 19:43:32', '2026-06-25 19:42:44', '1', 'Administrador', '1', 'GEN', '1', '00000188');
--- 165 registros exportados
+  ('000164', '2026.A1', '2026-06-25 00:00:00', 'S', '2026-06-25 19:43:32', 'SIMPLIFICADA', 'N', 'VERIFACTU_OK', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 2.59, 5.2, 0, 12.36, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 12.36, 2.59, NULL, 0, 0, 14.95, NULL, NULL, '', '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-06-25 19:43:32', '2026-06-25 19:42:44', '1', 'Administrador', '1', 'GEN', '1', '00000188'),
+  ('000166', '2026.A1', '2026-07-12 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'N', 'VERIFACTU_PENDIENTE', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 29.5, 5.2, 0, 140.5, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 140.5, 29.5, NULL, 0, 0, 170, NULL, NULL, '', '', NULL, NULL, '150', 'N', 'N', 'N', NULL, '2026-07-04 18:53:17', '2026-07-04 18:53:17', '1', 'Administrador', '1', 'GEN', '1', '00000192');
+-- 166 registros exportados
 
 
 -- Tabla: fza_facturas_compra
@@ -7506,8 +7516,13 @@ INSERT INTO `fza_facturas_consolidaciones` (`ID_FACCON`, `SERIE_FAC_FACCON`, `NU
 <env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
 <env:Header></env:Header>
 <env:Body Id="Body"><tikR:RespuestaRegFactuSistemaFacturacion xmlns:tikR="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/RespuestaSuministro.xsd" xmlns:tik="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd"><tikR:CSV>A-WZMGRWJE9SVFHX</tikR:CSV><tikR:DatosPresentacion><tik:NIFPresentador>45684134Q</tik:NIFPresentador><tik:TimestampPresentacion>2026-06-25T19:43:32+02:00</tik:TimestampPresentacion></tikR:DatosPresentacion><tikR:Cabecera><tik:ObligadoEmision><tik:NombreRazon>ALEJANDRO LAORDEN HIDALGO</tik:NombreRazon><tik:NIF>45684134Q</tik:NIF></tik:ObligadoEmision></tikR:Cabecera><tikR:TiempoEsperaEnvio>60</tikR:TiempoEsperaEnvio><tikR:EstadoEnvio>Correcto</tikR:EstadoEnvio><tikR:RespuestaLinea><tikR:IDFactura><tik:IDEmisorFactura>45684134Q</tik:IDEmisorFactura><tik:NumSerieFactura>2026.A1000164</tik:NumSerieFactura><tik:FechaExpedicionFactura>25-06-2026</tik:FechaExpedicionFactura></tikR:IDFactura><tikR:Operacion><tik:TipoOperacion>Alta</tik:TipoOperacion></tikR:Operacion><tikR:EstadoRegistro>Correcto</tikR:EstadoRegistro></tikR:RespuestaLinea></tikR:RespuestaRegFactuSistemaFacturacion>
-</env:Body></env:Envelope>', '<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sum="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd" xmlns:sum1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd"><soapenv:Header/><soapenv:Body><sum:RegFactuSistemaFacturacion><sum:Cabecera><sum1:ObligadoEmision><sum1:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF></sum1:ObligadoEmision></sum:Cabecera><sum:RegistroFactura><sum1:RegistroAlta><sum1:IDVersion>1.0</sum1:IDVersion><sum1:IDFactura><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000164</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>25-06-2026</sum1:FechaExpedicionFactura></sum1:IDFactura><sum1:NombreRazonEmisor>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazonEmisor><sum1:TipoFactura>F2</sum1:TipoFactura><sum1:DescripcionOperacion>Venta detalle al por menor</sum1:DescripcionOperacion><sum1:Desglose><sum1:DetalleDesglose><sum1:Impuesto>01</sum1:Impuesto><sum1:ClaveRegimen>01</sum1:ClaveRegimen><sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion><sum1:TipoImpositivo>21.00</sum1:TipoImpositivo><sum1:BaseImponibleOimporteNoSujeto>12.36</sum1:BaseImponibleOimporteNoSujeto><sum1:CuotaRepercutida>2.59</sum1:CuotaRepercutida></sum1:DetalleDesglose></sum1:Desglose><sum1:CuotaTotal>2.59</sum1:CuotaTotal><sum1:ImporteTotal>14.95</sum1:ImporteTotal><sum1:Encadenamiento><sum1:RegistroAnterior><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000153</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>13-06-2026</sum1:FechaExpedicionFactura><sum1:Huella>C6F200EC8EFEFE40F7E45994CC2AB320C145781F19F9614228D2525C60417D03</sum1:Huella></sum1:RegistroAnterior></sum1:Encadenamiento><sum1:SistemaInformatico><sum1:NombreRazon>Alejandro Laorden Hidalgo</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF><sum1:NombreSistemaInformatico>Factuzam</sum1:NombreSistemaInformatico><sum1:IdSistemaInformatico>FZ</sum1:IdSistemaInformatico><sum1:Version>1.0.15.202606250160.alpha</sum1:Version><sum1:NumeroInstalacion>1</sum1:NumeroInstalacion><sum1:TipoUsoPosibleSoloVerifactu>N</sum1:TipoUsoPosibleSoloVerifactu><sum1:TipoUsoPosibleMultiOT>S</sum1:TipoUsoPosibleMultiOT><sum1:IndicadorMultiplesOT>S</sum1:IndicadorMultiplesOT></sum1:SistemaInformatico><sum1:FechaHoraHusoGenRegistro>2026-06-25T19:43:31+02:00</sum1:FechaHoraHusoGenRegistro><sum1:TipoHuella>01</sum1:TipoHuella><sum1:Huella>61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5</sum1:Huella></sum1:RegistroAlta></sum:RegistroFactura></sum:RegFactuSistemaFacturacion></soapenv:Body></soapenv:Envelope>', '<?xml version="1.0" encoding="UTF-8"?><sum1:RegistroAlta xmlns:sum1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sum1:IDVersion>1.0</sum1:IDVersion><sum1:IDFactura><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000164</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>25-06-2026</sum1:FechaExpedicionFactura></sum1:IDFactura><sum1:NombreRazonEmisor>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazonEmisor><sum1:TipoFactura>F2</sum1:TipoFactura><sum1:DescripcionOperacion>Venta detalle al por menor</sum1:DescripcionOperacion><sum1:Desglose><sum1:DetalleDesglose><sum1:Impuesto>01</sum1:Impuesto><sum1:ClaveRegimen>01</sum1:ClaveRegimen><sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion><sum1:TipoImpositivo>21.00</sum1:TipoImpositivo><sum1:BaseImponibleOimporteNoSujeto>12.36</sum1:BaseImponibleOimporteNoSujeto><sum1:CuotaRepercutida>2.59</sum1:CuotaRepercutida></sum1:DetalleDesglose></sum1:Desglose><sum1:CuotaTotal>2.59</sum1:CuotaTotal><sum1:ImporteTotal>14.95</sum1:ImporteTotal><sum1:Encadenamiento><sum1:RegistroAnterior><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000153</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>13-06-2026</sum1:FechaExpedicionFactura><sum1:Huella>C6F200EC8EFEFE40F7E45994CC2AB320C145781F19F9614228D2525C60417D03</sum1:Huella></sum1:RegistroAnterior></sum1:Encadenamiento><sum1:SistemaInformatico><sum1:NombreRazon>Alejandro Laorden Hidalgo</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF><sum1:NombreSistemaInformatico>Factuzam</sum1:NombreSistemaInformatico><sum1:IdSistemaInformatico>FZ</sum1:IdSistemaInformatico><sum1:Version>1.0.15.202606250160.alpha</sum1:Version><sum1:NumeroInstalacion>1</sum1:NumeroInstalacion><sum1:TipoUsoPosibleSoloVerifactu>N</sum1:TipoUsoPosibleSoloVerifactu><sum1:TipoUsoPosibleMultiOT>S</sum1:TipoUsoPosibleMultiOT><sum1:IndicadorMultiplesOT>S</sum1:IndicadorMultiplesOT></sum1:SistemaInformatico><sum1:FechaHoraHusoGenRegistro>2026-06-25T19:43:31+02:00</sum1:FechaHoraHusoGenRegistro><sum1:TipoHuella>01</sum1:TipoHuella><sum1:Huella>61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5</sum1:Huella></sum1:RegistroAlta>', '61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5', '', '', '');
--- 11 registros exportados
+</env:Body></env:Envelope>', '<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sum="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd" xmlns:sum1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd"><soapenv:Header/><soapenv:Body><sum:RegFactuSistemaFacturacion><sum:Cabecera><sum1:ObligadoEmision><sum1:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF></sum1:ObligadoEmision></sum:Cabecera><sum:RegistroFactura><sum1:RegistroAlta><sum1:IDVersion>1.0</sum1:IDVersion><sum1:IDFactura><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000164</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>25-06-2026</sum1:FechaExpedicionFactura></sum1:IDFactura><sum1:NombreRazonEmisor>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazonEmisor><sum1:TipoFactura>F2</sum1:TipoFactura><sum1:DescripcionOperacion>Venta detalle al por menor</sum1:DescripcionOperacion><sum1:Desglose><sum1:DetalleDesglose><sum1:Impuesto>01</sum1:Impuesto><sum1:ClaveRegimen>01</sum1:ClaveRegimen><sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion><sum1:TipoImpositivo>21.00</sum1:TipoImpositivo><sum1:BaseImponibleOimporteNoSujeto>12.36</sum1:BaseImponibleOimporteNoSujeto><sum1:CuotaRepercutida>2.59</sum1:CuotaRepercutida></sum1:DetalleDesglose></sum1:Desglose><sum1:CuotaTotal>2.59</sum1:CuotaTotal><sum1:ImporteTotal>14.95</sum1:ImporteTotal><sum1:Encadenamiento><sum1:RegistroAnterior><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000153</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>13-06-2026</sum1:FechaExpedicionFactura><sum1:Huella>C6F200EC8EFEFE40F7E45994CC2AB320C145781F19F9614228D2525C60417D03</sum1:Huella></sum1:RegistroAnterior></sum1:Encadenamiento><sum1:SistemaInformatico><sum1:NombreRazon>Alejandro Laorden Hidalgo</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF><sum1:NombreSistemaInformatico>Factuzam</sum1:NombreSistemaInformatico><sum1:IdSistemaInformatico>FZ</sum1:IdSistemaInformatico><sum1:Version>1.0.15.202606250160.alpha</sum1:Version><sum1:NumeroInstalacion>1</sum1:NumeroInstalacion><sum1:TipoUsoPosibleSoloVerifactu>N</sum1:TipoUsoPosibleSoloVerifactu><sum1:TipoUsoPosibleMultiOT>S</sum1:TipoUsoPosibleMultiOT><sum1:IndicadorMultiplesOT>S</sum1:IndicadorMultiplesOT></sum1:SistemaInformatico><sum1:FechaHoraHusoGenRegistro>2026-06-25T19:43:31+02:00</sum1:FechaHoraHusoGenRegistro><sum1:TipoHuella>01</sum1:TipoHuella><sum1:Huella>61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5</sum1:Huella></sum1:RegistroAlta></sum:RegistroFactura></sum:RegFactuSistemaFacturacion></soapenv:Body></soapenv:Envelope>', '<?xml version="1.0" encoding="UTF-8"?><sum1:RegistroAlta xmlns:sum1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sum1:IDVersion>1.0</sum1:IDVersion><sum1:IDFactura><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000164</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>25-06-2026</sum1:FechaExpedicionFactura></sum1:IDFactura><sum1:NombreRazonEmisor>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazonEmisor><sum1:TipoFactura>F2</sum1:TipoFactura><sum1:DescripcionOperacion>Venta detalle al por menor</sum1:DescripcionOperacion><sum1:Desglose><sum1:DetalleDesglose><sum1:Impuesto>01</sum1:Impuesto><sum1:ClaveRegimen>01</sum1:ClaveRegimen><sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion><sum1:TipoImpositivo>21.00</sum1:TipoImpositivo><sum1:BaseImponibleOimporteNoSujeto>12.36</sum1:BaseImponibleOimporteNoSujeto><sum1:CuotaRepercutida>2.59</sum1:CuotaRepercutida></sum1:DetalleDesglose></sum1:Desglose><sum1:CuotaTotal>2.59</sum1:CuotaTotal><sum1:ImporteTotal>14.95</sum1:ImporteTotal><sum1:Encadenamiento><sum1:RegistroAnterior><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000153</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>13-06-2026</sum1:FechaExpedicionFactura><sum1:Huella>C6F200EC8EFEFE40F7E45994CC2AB320C145781F19F9614228D2525C60417D03</sum1:Huella></sum1:RegistroAnterior></sum1:Encadenamiento><sum1:SistemaInformatico><sum1:NombreRazon>Alejandro Laorden Hidalgo</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF><sum1:NombreSistemaInformatico>Factuzam</sum1:NombreSistemaInformatico><sum1:IdSistemaInformatico>FZ</sum1:IdSistemaInformatico><sum1:Version>1.0.15.202606250160.alpha</sum1:Version><sum1:NumeroInstalacion>1</sum1:NumeroInstalacion><sum1:TipoUsoPosibleSoloVerifactu>N</sum1:TipoUsoPosibleSoloVerifactu><sum1:TipoUsoPosibleMultiOT>S</sum1:TipoUsoPosibleMultiOT><sum1:IndicadorMultiplesOT>S</sum1:IndicadorMultiplesOT></sum1:SistemaInformatico><sum1:FechaHoraHusoGenRegistro>2026-06-25T19:43:31+02:00</sum1:FechaHoraHusoGenRegistro><sum1:TipoHuella>01</sum1:TipoHuella><sum1:Huella>61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5</sum1:Huella></sum1:RegistroAlta>', '61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5', '', '', ''),
+  (12, '2026.A1', '000165', 'A-HZ4BKZ9LYX63JY', 18, NULL, '45684134Q', '2026-07-04 17:58:42', '12', 'F764E83F0F9E83890C72C26B26BC8E610AAB2787D5E84A4C0C1956CE0EAC7E88', 'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR?nif=45684134Q&numserie=2026.A1000165&fecha=04-07-2026&importe=170.00', 'iVBORw0KGgoAAAANSUhEUgAAANQAAADUCAIAAABrvJpPAAAIhUlEQVR42u2dy47jMAwEN///0bOXOcSAJTVFtuhJqo6BHk26AtgeZff18/PzD6CDF/JBF8gHbSAftIF80AbyQRvIB20gH7SBfNAG8kEbyAdtIB+0gXzQBvJBG8gHbSAftBGW7/V6lYeoyjBa5338+5jR510ovY3mV2qvInwdkW8vgwPkK2iQPTTyyfmRrzo08sn5P1a+zAWLrnOy0e6LpOyV+ZJkehUlsw7y3YB8Osi3GIN8e2MUkG8xBvn2xig8Qr6qm2XHDbKjxioJouOVhy33F7XqoQ35NmtEvr0aLxmQb69G5Nur8ZIB+fZqRL69Gi8Z/qJ8yr7Ri5fJqewbJSOZY250HalG5MvnVPaNgnyLpiCfvm8U5Fs0Bfn0faMg36IpbvmUuaMx0fyjMVVEs1X1rWsdBeRbjKkC+W7qRb75mCqQ76Ze5JuPqQL5bup92sECx4OFY51MXcq+mQwKH3WwoCo08uUzKCDfzTrIl8+ggHw36yBfPoPCn5evCvfLZz6ff14F8vE58u2GfsLF+LbPq0A+Pv9c+dy4m1j1sjeaP7p+lRxPu76XPjwtHPLt1ZWptwvkW2TIzEW+Oci3yJCZi3xzjh4sGJF5Uew4lPCEm3GFqi9JVy3IV1xLtMYMyGcsBvnmIJ+xGOSb83XyOej6UdIoQ9X6J78kJ/tW9eMp5FvshXx72RSQb7EX8u1lU0C+xV7It5dNoexgQfSiOhpR9eCS4aSICu6DtI84TIp8+fxKT6Ig32aDkE/v4Qjk22wQ8uk9HPFR8g0XStwgR9d3HCzokjg692lyj9aUakc+PRvyzUG+zQYhXx7k22wQ8uV59AOH5UWl+UVutA/KXo6Hs6ox7oO6l3qRby8D8u317VIv8u1lQL69vl3qRb69DMi317dLvScvdgbHoYFozqoHDvdBzpMvk9v+woF8eoZonqqcylzkK9gX+ebrI98myJdf/6PkGxXmuFF1v4zN1KuMz9QepepAgPtABvIV1KuMz9QeBfkCIF8tyBcA+Wr5WPmi4d55wsNN1Utp90V1ZMh8MSwHb5FPXxP55vtGQb7Amsg33zcK8gXWRL75vlHsBwui60SLf8IFO/nFqHo4OzlmmBP59tZX9or2B/kChb2DfPn+IF+gsHeQL98f5ItMbnrxW7Wm+yWqklnB/ZK86g8HyBdYE/nyY0bjpT4gX22eaGYF5FsUhnx7mRWQbzPoyRtepSmOg5xVMil7jaiSLLpmBuQLgHx72YaZkU8H+fayDTMjnw7y7WUbZu46zFg1t+rl82hMNPOIsgvWdLjVISLyLcZEM49Avps1kW8+Jpp5BPLdrIl88zHRzCOQ72bNkwcCMlS9UI3WUsXJ/F39j4J8h0C+m/zIdwbku8mPfGdAvpv8jhvhkwchow1y5KnKP+Lkg5S7P5e5yHd+PPL9zkW+8+OR73cu8p0fj3y/c6sOkyqNeMLn0VoydSm4fxCU+TyaMwryLWrJ1KWAfLuTkW/6uQLy7U5GvunnCsgXmdD0QND1Qviv/GDn5ANfFci3yIl8PpBvkRP5fCDfIify+bDINxqfwfEDJUfOb8s/GqOAfMU5vy3/aIwC8hXn/Lb8ozEKyFec89vyj8YoHP3PnjPjo3PdByqrXvwq60czuF+8Z9a8rI98OsiXX/OyPvLpIF9+zcv6yKeDfPk1L+u7D5NmxleJqIyP5jx5IU8eAsh8gZFvMRf58vWOQL7FXOTL1zsC+RZzkS9f74ij8rlvSKsaVHUI1H0oVdnL8aATpew6It987midaE+UPMpeyLcoBvn0dZBvdzLyyT1R8ih7Id9mU0bjR4VVPcRUCTEar9TlmOt+yHO8uL7shXz58UpdjrnIV9CId5BvLyfybTbiHeTby/l18jl+5BKdm8lZdVOv4BBOWT/Dow8WIJ8O8t2sj3zz8cin50G+QE7km/M4+ap+/JI5UDnC8Qd1d0/cL8aVXlVdryjIF8js6AnyRSYgX2lPkC8yAflKe4J8kQmGoFWHKEd7VR3GrLoBr/oDv5LZvW80wyUP8u3ljO6lrJMB+RZFIp+ePwryLYpEPj1/lK+Wz/1H8UyGqpe0Dokzf7x3f3lGtB0mRb78msj3uxfy6RmQT++VAvIFMiCf3isFy2HSTFBHgxxfjMzhSvfLc8cDmeNwA/ItxiOf3k/kKx6PfHo/ka94PPLp/WyTT2lE5oGj6wXpyYebqp64X+Y/7oFDaRDy7e0V7QnybRasrOMA+fL5oyDfIgPy6etHsf+AKBr65M14VR73w1C0D5kaq74YCshXkAf59kC+gjzItwfyFeRBvj3aDpNWvaR13zg75FBw/1Ark79KROQL1JsB+W6yIZ9ebwbku8mGfHq9GZDvJpv7JXM4kPnls+PlbSZ/dN+/8uJaqhf59DWRr7he5NPXRL7iepFPXxP5iut1HFSMcvLB5eQDU6b2KCd/lPSIp90qkC8P8m2CfHmQbxPky/N18lUdSug62OhodNV49+fRnoz6kwH5Fmsi37w/GZBvsSbyzfuTAfkWayLfvD8ZHvcPBZ28Qc681I3Sddgzk9/9BwjkC8zNgHw3mZFPn5sB+W4yI58+NwPy3WT+K/JlMrgv8GiMkuFkLVV7VT38IV/BvqMxSgbki0xAPnmMkgH5IhOQTx6jZEC+yISD8kXnKpmjOG7wq+TueiBTalFAvkBmRx+UNaP7Il9xwcin74t8xQUjn77v18kX3tjQ6NHcKI4bf/e+7geX6FwF5LsB+fJzFZDvBuTLz1VAvhuQLz9X4XE/IDr5MKHkyezrqOvkg0gmjwLyLfJk9kW+RY3IN8+T2Rf5FjUi3zxPZl/kW9ToPjAIMAL5oA3kgzaQD9pAPmgD+aAN5IM2kA/aQD5oA/mgDeSDNpAP2kA+aAP5oA3kgzaQD9r4Dwpip+5LDAjqAAAAAElFTkSuQmCC', 0x89504E470D0A1A0A0000000D49484452000000D4000000D408020000006BBC9A4F000008854944415478DAED9DCB8EE3300C0437FFFFD1B39739C480253545B6E849AA8E811E4DBA02D81E65F7F5F3F3F30FA08317F24117C8076D201FB4817CD006F2411BC8076D201FB4817CD006F2411BC8076D201FB4817CD006F2411BC8076D201FB41196EFF57A9587A8CA305AE77DFCFB98D1E75D28BD8DE6576AAF227C1D916F2F8303E42B68903D34F2C9F991AF3A34F2C9F93F56BECC058BAE73B2D1EE8BA4EC95F992647A1525B30EF2DD807C3AC8B718837C7B6314906F3106F9F6C6283C42BEAA9B65C70DB2A3C62A09A2E395872DF717B5EAA10DF9366B44BEBD1A2F19906FAF46E4DBABF19201F9F66A44BEBD1A2F19FEA27CCABED18B97C9A9EC1B252399636E741DA946E4CBE754F68D827C8BA6209FBE6F14E45B3405F9F47DA320DFA2296EF994B9A331D1FCA3315544B355F5AD6B1D05E45B8CA902F96EEA45BEF9982A90EFA65EE49B8FA902F96EEA7DDAC102C78385639D4C5DCABE990C0A1F75B0A02A34F2E5332820DFCD3AC897CFA0807C37EB205F3E83C29F97AF0AF7CB673E9F7F5E05F2F139F2ED867EC2C5F8B6CFAB403E3EFF5CF9DCB89B58F5B2379A3FBA7E951C4FBBBE973E3C2D1CF2EDD595A9B70BE45B64C8CC45BE39C8B7C890998B7C738E1E2C18917951EC3894F0849B7185AA2F49572DC8575C4BB4C60CC8672C06F9E6209FB118E49BF375F239E8FA51D22843D5FA27BF2427FB56F5E329E45BEC857C7BD914906FB117F2ED655340BEC55EC8B7974DA1EC6041F4A23A1A51F5E092E1A4880AEE83B48F384C8A7CF9FC4A4FA220DF6683904FEFE108E4DB6C10F2E93D1CF151F20D174ADC2047D7771C2CE892383AF769728FD6946A473E3D1BF2CD41BECD06215F1EE4DB6C10F2E579F40387E545A5F9456EB40FCA5E8E87B3AA31EE83BA977A916F2F03F2EDF5ED522FF2ED6540BEBDBE5DEA45BEBD0CC8B7D7B74BBD272F7606C7A18168CEAA070EF741CE932F93DBFEC2817C7A86689EAA9CCA5CE42BD817F9E6EB23DF26C8975FFFA3E41B15E6B85175BF8CCDD4AB8CCFD41EA5EA4080FB4006F215D4AB8CCFD41E05F902205F2DC81700F96AF958F9A2E1DE79C2C34DD54B69F7457564C87C312C076F914F5F13F9E6FB4641BEC09AC837DF370AF205D644BEF9BE51EC070BA2EB448B7FC2053BF9C5A87A383B39669813F9F6D657F68AF607F90285BD837CF9FE205FA0B077902FDF1FE48B4C6E7AF15BB5A6FB25AA9259C1FD92BCEA0F07C8175813F9F26346E3A53E205F6D9E686605E45B14867C7B9915906F33E8C91B5EA5298E839C5532297B8DA8922CBA6606E40B807C7BD98699914F07F9F6B20D33239F0EF2ED651B66EE3ACC5835B7EAE5F3684C34F388B20BD674B8D52122F22DC644338F40BE9B35916F3E269A7904F2DDAC897CF331D1CC2390EF66CD9307023254BD508DD652C5C9FC5DFD8F827C8740BE9BFCC87706E4BBC98F7C6740BE9BFC8E1BE1930721A30D72E4A9CA3FE2E48394BB3F97B9C8777E3CF2FDCE45BEF3E391EF772EF29D1F8F7CBF73AB0E932A8D78C2E7D15A327529B87F1094F93C9A330AF22D6AC9D4A5807CBB93916FFAB902F2ED4E46BEE9E70AC81799D0F440D0F542F8AFFC60E7E4035F15C8B7C8897C3E906F9113F97C20DF2227F2F9B0C8371A9FC1F1032547CE6FCB3F1AA3807CC539BF2DFF688C02F215E7FCB6FCA3310AC8579CF3DBF28FC6281CFDCF9E33E3A373DD072AAB5EFC2AEB4733B85FBC67D6BCAC8F7C3AC8975FF3B23EF2E9205F7ECDCBFAC8A7837CF9352FEBBB0F9366C65789A88C8FE63C79214F1E02C87C81916F3117F9F2F58E40BEC55CE4CBD73B02F91673912F5FEF88A3F2B96F48AB1A547508D47D2855D9CBF1A013A5EC3A22DF7CEE689D684F943CCA5EC8B72806F9F475906F7732F2C93D51F2287B21DF665346E34785553DC45409311AAFD4E598EB7EC873BCB8BEEC857CF9F14A5D8EB9C857D08877906F2F27F26D36E21DE4DBCBF975F2397EE4129D9BC9597553AFE0104E593FC3A30F16209F0EF2DDAC8F7CF3F1C8A7E741BE404EE49BF338F9AA7EFC92395039C2F10775774FDC2FC6955E555DAF28C817C8ECE809F24526205F694F902F3201F94A7B827C910986A0558728477B551DC6ACBA01AFFA03BF92D9BD6F34C3250FF2EDE58CEEA5AC9301F91645229F9E3F0AF22D8A443E3D7F94AF96CFFD47F14C86AA97B40E89337FBC777F7946B41D2645BEFC9AC8F7BB17F2E919904FEF9502F20532209FDE2B05CB61D24C5047831C5F8CCCE14AF7CB73C70399E37003F22DC6239FDE4FE42B1E8F7C7A3F91AF783CF2E9FD6C934F6944E681A3EB05E9C9879BAA9EB85FE63FEE81436910F2EDED15ED09F26D16ACACE300F9F2F9A320DF2203F2E9EB47B1FF80281AFAE4CD78551EF7C350B40F991AABBE180AC8579007F9F640BE823CC8B707F215E441BE3DDA0E9356BDA475DF383BE45070FF502B93BF4A44E40BD49B01F96EB2219F5E6F06E4BBC9867C7ABD1990EF269BFB25733890F9E5B3E3E56D267F74DFBFF2E25AAA17F9F43591AFB85EE4D3D744BEE27A914F5F13F98AEB751C548C72F2C1E5E40353A6F628277F94F488A7DD2A902F0FF26D827C79906F13E4CBF375F2551D4AE83AD8E86874D578F7E7D19E8CFA9301F9166B22DFBC3F19906FB126F2CDFB9301F9166B22DFBC3F191EF70F059DBC41CEBCD48DD275D83393DFFD0708E40BCCCD807C3799914F9F9B01F96E32239F3E3703F2DD64FE2BF26532B82FF0688C92E1642D557B553DFC215FC1BEA3314A06E48B4C403E798C9201F92213904F1EA36440BEC88483F245E72A99A3386EF0ABE4EE7A20536A5140BE4066471F9435A3FB225F71C1C8A7EF8B7CC505239FBEEFD7C917DED8D0E8D1DC288E1B7FF7BEEE0797E85C05E4BB01F9F2731590EF06E4CBCF5540BE1B902F3F57E1713F203AF930A1E4C9ECEBA8EBE48348268F02F22DF264F645BE458DC837CF93D917F9163522DF3C4F665FE45BD4E83E30083002F9A00DE48336900FDA403E6803F9A00DE48336900FDA403E6803F9A00DE48336900FDA403E6803F9A00DE48336900FDAF80F0A62A7EE4B0C08EA0000000049454E44AE426082, '2026-07-04 17:58:42', 'VERIFACTU_PROCESADO', '<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><tikR:RespuestaRegFactuSistemaFacturacion xmlns:tikR="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/RespuestaSuministro.xsd" xmlns:tik="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd"><tikR:CSV>A-HZ4BKZ9LYX63JY</tikR:CSV><tikR:DatosPresentacion><tik:NIFPresentador>45684134Q</tik:NIFPresentador><tik:TimestampPresentacion>2026-07-04T17:58:42+02:00</tik:TimestampPresentacion></tikR:DatosPresentacion><tikR:Cabecera><tik:ObligadoEmision><tik:NombreRazon>ALEJANDRO LAORDEN HIDALGO</tik:NombreRazon><tik:NIF>45684134Q</tik:NIF></tik:ObligadoEmision></tikR:Cabecera><tikR:TiempoEsperaEnvio>60</tikR:TiempoEsperaEnvio><tikR:EstadoEnvio>Correcto</tikR:EstadoEnvio><tikR:RespuestaLinea><tikR:IDFactura><tik:IDEmisorFactura>45684134Q</tik:IDEmisorFactura><tik:NumSerieFactura>2026.A1000165</tik:NumSerieFactura><tik:FechaExpedicionFactura>04-07-2026</tik:FechaExpedicionFactura></tikR:IDFactura><tikR:Operacion><tik:TipoOperacion>Alta</tik:TipoOperacion></tikR:Operacion><tikR:EstadoRegistro>Correcto</tikR:EstadoRegistro></tikR:RespuestaLinea></tikR:RespuestaRegFactuSistemaFacturacion>
+</env:Body></env:Envelope>', '<?xml version="1.0" encoding="UTF-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sum="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd" xmlns:sum1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd"><soapenv:Header/><soapenv:Body><sum:RegFactuSistemaFacturacion><sum:Cabecera><sum1:ObligadoEmision><sum1:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF></sum1:ObligadoEmision></sum:Cabecera><sum:RegistroFactura><sum1:RegistroAlta><sum1:IDVersion>1.0</sum1:IDVersion><sum1:IDFactura><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000165</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>04-07-2026</sum1:FechaExpedicionFactura></sum1:IDFactura><sum1:NombreRazonEmisor>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazonEmisor><sum1:TipoFactura>F2</sum1:TipoFactura><sum1:DescripcionOperacion>Venta detalle al por menor</sum1:DescripcionOperacion><sum1:Desglose><sum1:DetalleDesglose><sum1:Impuesto>01</sum1:Impuesto><sum1:ClaveRegimen>01</sum1:ClaveRegimen><sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion><sum1:TipoImpositivo>21.00</sum1:TipoImpositivo><sum1:BaseImponibleOimporteNoSujeto>140.50</sum1:BaseImponibleOimporteNoSujeto><sum1:CuotaRepercutida>29.50</sum1:CuotaRepercutida></sum1:DetalleDesglose></sum1:Desglose><sum1:CuotaTotal>29.50</sum1:CuotaTotal><sum1:ImporteTotal>170.00</sum1:ImporteTotal><sum1:Encadenamiento><sum1:RegistroAnterior><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000164</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>25-06-2026</sum1:FechaExpedicionFactura><sum1:Huella>61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5</sum1:Huella></sum1:RegistroAnterior></sum1:Encadenamiento><sum1:SistemaInformatico><sum1:NombreRazon>Alejandro Laorden Hidalgo</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF><sum1:NombreSistemaInformatico>Factuzam</sum1:NombreSistemaInformatico><sum1:IdSistemaInformatico>FZ</sum1:IdSistemaInformatico><sum1:Version>1.0.15.202606260100.alpha</sum1:Version><sum1:NumeroInstalacion>FZ-20260627-402CE3A98F80</sum1:NumeroInstalacion><sum1:TipoUsoPosibleSoloVerifactu>N</sum1:TipoUsoPosibleSoloVerifactu><sum1:TipoUsoPosibleMultiOT>S</sum1:TipoUsoPosibleMultiOT><sum1:IndicadorMultiplesOT>S</sum1:IndicadorMultiplesOT></sum1:SistemaInformatico><sum1:FechaHoraHusoGenRegistro>2026-07-04T17:58:42+02:00</sum1:FechaHoraHusoGenRegistro><sum1:TipoHuella>01</sum1:TipoHuella><sum1:Huella>F764E83F0F9E83890C72C26B26BC8E610AAB2787D5E84A4C0C1956CE0EAC7E88</sum1:Huella></sum1:RegistroAlta></sum:RegistroFactura></sum:RegFactuSistemaFacturacion></soapenv:Body></soapenv:Envelope>', '<?xml version="1.0" encoding="UTF-8"?><sum1:RegistroAlta xmlns:sum1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sum1:IDVersion>1.0</sum1:IDVersion><sum1:IDFactura><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000165</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>04-07-2026</sum1:FechaExpedicionFactura></sum1:IDFactura><sum1:NombreRazonEmisor>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazonEmisor><sum1:TipoFactura>F2</sum1:TipoFactura><sum1:DescripcionOperacion>Venta detalle al por menor</sum1:DescripcionOperacion><sum1:Desglose><sum1:DetalleDesglose><sum1:Impuesto>01</sum1:Impuesto><sum1:ClaveRegimen>01</sum1:ClaveRegimen><sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion><sum1:TipoImpositivo>21.00</sum1:TipoImpositivo><sum1:BaseImponibleOimporteNoSujeto>140.50</sum1:BaseImponibleOimporteNoSujeto><sum1:CuotaRepercutida>29.50</sum1:CuotaRepercutida></sum1:DetalleDesglose></sum1:Desglose><sum1:CuotaTotal>29.50</sum1:CuotaTotal><sum1:ImporteTotal>170.00</sum1:ImporteTotal><sum1:Encadenamiento><sum1:RegistroAnterior><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000164</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>25-06-2026</sum1:FechaExpedicionFactura><sum1:Huella>61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5</sum1:Huella></sum1:RegistroAnterior></sum1:Encadenamiento><sum1:SistemaInformatico><sum1:NombreRazon>Alejandro Laorden Hidalgo</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF><sum1:NombreSistemaInformatico>Factuzam</sum1:NombreSistemaInformatico><sum1:IdSistemaInformatico>FZ</sum1:IdSistemaInformatico><sum1:Version>1.0.15.202606260100.alpha</sum1:Version><sum1:NumeroInstalacion>FZ-20260627-402CE3A98F80</sum1:NumeroInstalacion><sum1:TipoUsoPosibleSoloVerifactu>N</sum1:TipoUsoPosibleSoloVerifactu><sum1:TipoUsoPosibleMultiOT>S</sum1:TipoUsoPosibleMultiOT><sum1:IndicadorMultiplesOT>S</sum1:IndicadorMultiplesOT></sum1:SistemaInformatico><sum1:FechaHoraHusoGenRegistro>2026-07-04T17:58:42+02:00</sum1:FechaHoraHusoGenRegistro><sum1:TipoHuella>01</sum1:TipoHuella><sum1:Huella>F764E83F0F9E83890C72C26B26BC8E610AAB2787D5E84A4C0C1956CE0EAC7E88</sum1:Huella></sum1:RegistroAlta>', 'F764E83F0F9E83890C72C26B26BC8E610AAB2787D5E84A4C0C1956CE0EAC7E88', '', '', '');
+-- 12 registros exportados
 
 
 -- Tabla: fza_facturas_lineas
@@ -7773,8 +7788,11 @@ INSERT INTO `fza_facturas_lineas` (`NUMERO_FAC_FACLIN`, `SERIE_FAC_FACLIN`, `COD
   ('000161', '2026.A1', '012', '0020', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Camiseta de Algodón Básica', NULL, NULL, 'S', 164.95, 9.0937, 15.0001, 123.9255, 'N', 21, 149.9499, 149.9499, 123.9255, '1', '2026-06-25 17:59:32', '2026-06-25 17:59:32', '1', '1', 'GEN', '1', '00000185', '0000000824'),
   ('000162', '2026.A1', '012', '0010', 'COMPLEMENTOS002', 'COMPLEMENTOS002/AZUL/39', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Complementos Accesorios', NULL, NULL, 'S', 29.99, 0, 0, 24.7851, 'N', 21, 29.99, 29.99, 24.7851, '1', '2026-06-25 17:59:52', '2026-06-25 17:59:52', '1', '1', 'GEN', '1', '00000186', '0000000826'),
   ('000163', '2026.A1', '012', '0010', 'COMPLEMENTOS002', 'COMPLEMENTOS002/AZUL/43', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Complementos Accesorios', NULL, NULL, 'S', 29.99, 0, 0, 24.7851, 'N', 21, 29.99, 29.99, 24.7851, '1', '2026-06-25 18:00:10', '2026-06-25 18:00:10', '1', '1', 'GEN', '1', '00000187', '0000000828'),
-  ('000164', '2026.A1', '012', '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 14.95, 0, 0, 12.3554, 'N', 21, 14.95, 14.95, 12.3554, '1', '2026-06-25 19:42:44', '2026-06-25 19:42:44', '1', '1', 'GEN', '1', '00000188', '0000000830');
--- 209 registros exportados
+  ('000164', '2026.A1', '012', '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 14.95, 0, 0, 12.3554, 'N', 21, 14.95, 14.95, 12.3554, '1', '2026-06-25 19:42:44', '2026-06-25 19:42:44', '1', '1', 'GEN', '1', '00000188', '0000000830'),
+  ('000166', '2026.A1', '012', '0020', 'TESTSKU01', 'TESTSKU01/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 3, 'ARTICULO PRUEBAS PMP SKU', NULL, NULL, 'S', 25, 0, 0, 20.6612, 'N', 21, 25, 75, 61.9836, '1', '2026-07-04 18:53:17', '2026-07-04 18:53:17', '1', '1', 'GEN', '1', '00000192', '0000001110'),
+  ('000166', '2026.A1', '012', '0120', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 2, 'ARTICULO PRUEBAS PMP SKU', NULL, NULL, 'S', 30, 0, 0, 24.7934, 'N', 21, 30, 60, 49.5868, '1', '2026-07-04 18:53:17', '2026-07-04 18:53:17', '1', '1', 'GEN', '1', '00000192', '0000001112'),
+  ('000166', '2026.A1', '012', '0150', 'TESTSKU01', 'TESTSKU01/AZUL/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'ARTICULO PRUEBAS PMP SKU', NULL, NULL, 'S', 35, 0, 0, 28.9256, 'N', 21, 35, 35, 28.9256, '1', '2026-07-04 18:53:17', '2026-07-04 18:53:17', '1', '1', 'GEN', '1', '00000192', '0000001114');
+-- 212 registros exportados
 
 
 -- Tabla: fza_facturas_pagos
@@ -8109,126 +8127,14 @@ CREATE TABLE `fza_generadorprocesos` (
 
 -- Datos de fza_generadorprocesos
 INSERT INTO `fza_generadorprocesos` (`CODIGO_GENERADOR_PROCESO_GP`, `NOMBRE_GENERADOR_PROCESO_GP`, `PROCESO_GENERADOR_PROCESO_GP`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('470', 'filtros_guardados', '-- =============================================================================
--- Filtros guardados de mantenimientos (derivados de inMtoGen)
--- =============================================================================
--- Permite guardar el filtro aplicado en la lista de un mantenimiento con un
--- nombre propio, independiente del layout de columnas (que ya guarda su
--- propio filtro incidental en fza_usuarios_perfiles). Los filtros guardados
--- se listan desde un desplegable junto al icono de exportar a Excel y se
--- pueden asignar a otros usuarios o grupos para que los reutilicen.
--- No toca factuzam_original.sql. Idempotente: se puede ejecutar varias veces.
--- =============================================================================
-
-CREATE TABLE IF NOT EXISTS `fza_filtros_guardados` (
-  `ID_FILT` bigint(20) NOT NULL AUTO_INCREMENT,
-  -- Identifican el mantenimiento y el grid a los que pertenece el filtro.
-  -- MTO_FILT = Self.Name del TfrmMtoXxx (mismo valor que KEY_USUPER en el
-  -- layout). VISTA_FILT = Name de la TcxGridDBTableView (misma convencion
-  -- que <Vista>_Filtro en fza_usuarios_perfiles).
-  `MTO_FILT` varchar(100) NOT NULL,
-  `VISTA_FILT` varchar(100) NOT NULL,
-  `NOMBRE_FILT` varchar(100) NOT NULL,
-  `DESCRIPCION_FILT` varchar(255) DEFAULT NULL,
-  -- DataController.Filter.SaveToStream volcado a Base64 en texto, igual que
-  -- SUBKEY ''<Vista>_Filtro'' en fza_usuarios_perfiles (CollectSettingsColumn-
-  -- Profile en inLibDevExp.pas). StoreItemLinkNames por defecto en True:
-  -- identifica cada condicion por el NOMBRE del item, no por su posicion
-  -- visual, asi que sobrevive a que cada usuario tenga las columnas en un
-  -- orden distinto.
-  `FILTRO_FILT` mediumtext NOT NULL,
-  -- FK logica a fza_usuarios.USUARIO_USU. El propietario siempre puede
-  -- aplicar, renombrar y borrar su filtro aunque no este compartido.
-  `USUARIO_PROPIETARIO_FILT` varchar(100) NOT NULL,
-  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp()
-    ON UPDATE CURRENT_TIMESTAMP,
-  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT ''0000-00-00 00:00:00'',
-  `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
-  `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
-  PRIMARY KEY (`ID_FILT`),
-  UNIQUE KEY `UQ_FILT_MTO_VISTA_NOMBRE_PROP`
-    (`MTO_FILT`, `VISTA_FILT`, `NOMBRE_FILT`, `USUARIO_PROPIETARIO_FILT`)
-);
-
-CREATE TABLE IF NOT EXISTS `fza_filtros_guardados_compartidos` (
-  `ID_FILTC` bigint(20) NOT NULL AUTO_INCREMENT,
-  -- FK logica a fza_filtros_guardados.ID_FILT.
-  `ID_FILT_FILTC` bigint(20) NOT NULL,
-  -- Usuario o grupo destino segun TIPO_DESTINO_FILTC. Vacio si el destino
-  -- es ''TODOS''. Mismo patron que fza_documentos_trabajo_compartidos.
-  `USUARIO_GRUPO_FILTC` varchar(200) NOT NULL DEFAULT '''',
-  -- ''USUARIO'' | ''GRUPO'' | ''TODOS''.
-  `TIPO_DESTINO_FILTC` varchar(20) NOT NULL DEFAULT ''USUARIO'',
-  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp()
-    ON UPDATE CURRENT_TIMESTAMP,
-  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT ''0000-00-00 00:00:00'',
-  `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
-  `USUARIO_MODIF` varchar(100) NOT NULL DEFAULT ''SISTEMA'',
-  PRIMARY KEY (`ID_FILTC`),
-  UNIQUE KEY `UQ_FILTC_FILT_TIPO_DESTINO`
-    (`ID_FILT_FILTC`, `TIPO_DESTINO_FILTC`, `USUARIO_GRUPO_FILTC`)
-);
-
--- -----------------------------------------------------------------------------
--- Indices
--- -----------------------------------------------------------------------------
-
-SET @sExisteIdx := (
-  SELECT COUNT(*)
-    FROM INFORMATION_SCHEMA.STATISTICS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME = ''fza_filtros_guardados''
-     AND INDEX_NAME = ''IDX_FILT_MTO_VISTA''
-);
-SET @sSql := IF(@sExisteIdx = 0,
-  ''CREATE INDEX IDX_FILT_MTO_VISTA ON fza_filtros_guardados (MTO_FILT, VISTA_FILT)'',
-  ''SELECT ''''IDX_FILT_MTO_VISTA ya existe, se omite'''' AS info'');
-PREPARE stmt FROM @sSql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @sExisteIdx := (
-  SELECT COUNT(*)
-    FROM INFORMATION_SCHEMA.STATISTICS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME = ''fza_filtros_guardados''
-     AND INDEX_NAME = ''IDX_FILT_PROPIETARIO''
-);
-SET @sSql := IF(@sExisteIdx = 0,
-  ''CREATE INDEX IDX_FILT_PROPIETARIO ON fza_filtros_guardados (USUARIO_PROPIETARIO_FILT)'',
-  ''SELECT ''''IDX_FILT_PROPIETARIO ya existe, se omite'''' AS info'');
-PREPARE stmt FROM @sSql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @sExisteIdx := (
-  SELECT COUNT(*)
-    FROM INFORMATION_SCHEMA.STATISTICS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME = ''fza_filtros_guardados_compartidos''
-     AND INDEX_NAME = ''IDX_FILTC_FILT''
-);
-SET @sSql := IF(@sExisteIdx = 0,
-  ''CREATE INDEX IDX_FILTC_FILT ON fza_filtros_guardados_compartidos (ID_FILT_FILTC)'',
-  ''SELECT ''''IDX_FILTC_FILT ya existe, se omite'''' AS info'');
-PREPARE stmt FROM @sSql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @sExisteIdx := (
-  SELECT COUNT(*)
-    FROM INFORMATION_SCHEMA.STATISTICS
-   WHERE TABLE_SCHEMA = DATABASE()
-     AND TABLE_NAME = ''fza_filtros_guardados_compartidos''
-     AND INDEX_NAME = ''IDX_FILTC_TIPO_DESTINO_USUARIO_GRUPO''
-);
-SET @sSql := IF(@sExisteIdx = 0,
-  ''CREATE INDEX IDX_FILTC_TIPO_DESTINO_USUARIO_GRUPO ON fza_filtros_guardados_compartidos (TIPO_DESTINO_FILTC, USUARIO_GRUPO_FILTC)'',
-  ''SELECT ''''IDX_FILTC_TIPO_DESTINO_USUARIO_GRUPO ya existe, se omite'''' AS info'');
-PREPARE stmt FROM @sSql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-', '2026-07-02 09:17:07', '2026-07-02 09:17:07', 'Administrador', 'Administrador'),
+  ('470', 'filtros_guardados', 'UPDATE fza_movimientos_almacen SET FECHA_MOV=''2026-07-13''
+ WHERE TIPO_DOC_MOV=''TA'' AND CODIGO_UNIDAD_MOV LIKE ''TESTSKU01%'' AND DATE(FECHA_MOV)=''2026-07-04'';
+SELECT DATE(m.FECHA_MOV) AS FECHA, m.TIPO_DOC_MOV AS TD, m.TIPO_MOV AS TM,
+ m.CODIGO_ALM_MOV AS ALM, m.CODIGO_UNIDAD_MOV AS SKU, ROUND(m.CANTIDAD_MOV,2) AS CANT,
+ ROUND(m.TOTAL_COSTE_MOV,2) AS TOTAL
+ FROM fza_movimientos_almacen m
+ WHERE m.CODIGO_UNIDAD_MOV LIKE ''TESTSKU01%'' AND m.TIPO_DOC_MOV=''TA''
+ ORDER BY m.CODIGO_UNIDAD_MOV, m.TIPO_MOV;', '2026-07-04 19:28:08', '2026-07-02 09:17:07', 'Administrador', 'Administrador'),
   ('471', 'quitar_tarifa_defecto_duplicada', '-- ==========================================================================
 -- Script: quitar_tarifa_defecto_duplicada.sql
 -- Fecha:  2026-07-02
@@ -10829,12 +10735,1665 @@ SELECT a.*,
   ('494', 'movimientos_albaranes_fecha_documento', 'SELECT st.CODIGO_ALM_STK AS ALM, st.CODIGO_UNIDAD_STK AS SKU,
  ROUND(st.CANTIDAD_STK,2) AS CANT, ROUND(st.PRECIO_MEDIO_STK,2) AS PMP,
  ROUND(st.VALOR_TOTAL_STK,2) AS VALOR,
- skuc.PRECIO_ULT_COMPRA_SKUC AS ULT_COSTE_SKU, skuc.FECHA_ULT_COMPRA_SKUC AS F_ULT
+ skuc.PRECIO_ULT_COMPRA_SKUC AS ULT_COSTE, skuc.FECHA_ULT_COMPRA_SKUC AS F_ULT
  FROM fza_articulos_stockactual st
  LEFT JOIN fza_articulos_skus_costes skuc ON skuc.CODIGO_UNIDAD_SKU_SKUC = st.CODIGO_UNIDAD_STK
  WHERE st.CODIGO_UNIDAD_STK LIKE ''TESTSKU01%''
- ORDER BY st.CODIGO_ALM_STK, st.CODIGO_UNIDAD_STK;', '2026-07-04 17:19:08', '2026-07-04 16:58:58', 'Administrador', 'Administrador');
--- 24 registros exportados
+ ORDER BY st.CODIGO_ALM_STK, st.CODIGO_UNIDAD_STK;', '2026-07-05 06:22:47', '2026-07-04 16:58:58', 'Administrador', 'Administrador'),
+  ('495', 'comprobar_scripts_aplicados', '-- Batería de comprobación: ¿qué scripts de DESARROLLOS EN CURSO están
+-- aplicados en ESTA base de datos? Ejecutar conectado a la BBDD de
+-- trabajo (factuzam). Solo consulta INFORMATION_SCHEMA y catálogos:
+-- no modifica nada.
+--
+-- Salida: una fila por script, con ''>>> FALTA <<<'' arriba. Cada script
+-- de la lista es idempotente: el que falte se lanza tal cual, en el orden
+-- mostrado por orden_aplicacion.
+--
+-- Cubre los scripts de esquema detectables de las últimas tandas
+-- (jun/jul-2026). Los scripts solo-datos no se pueden detectar por
+-- esquema; ver la lista al final del fichero.
+SELECT t.orden AS orden_aplicacion,
+       t.script,
+       IF(t.aplicado = 1, ''OK'', ''>>> FALTA <<<'') AS estado,
+       t.objeto
+  FROM (
+    SELECT 10 AS orden, ''verifactu_relaciones.sql'' AS script,
+           ''tabla fza_facturas_relaciones'' AS objeto,
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_facturas_relaciones'')
+           AS aplicado
+    UNION ALL
+    SELECT 20, ''verifactu_rectificativas.sql'',
+           ''fza_facturas.SERIE_FAC_ABONO_FAC varchar(20)'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_facturas''
+                     AND COLUMN_NAME = ''SERIE_FAC_ABONO_FAC''
+                     AND CHARACTER_MAXIMUM_LENGTH >= 20)
+    UNION ALL
+    SELECT 30, ''verifactu_menu.sql'',
+           ''fza_winforms VerifactuCola + VerifactuLog'',
+           (SELECT COUNT(*) FROM fza_winforms
+             WHERE CALL_WINF IN (''VerifactuCola'', ''VerifactuLog'')) = 2
+    UNION ALL
+    SELECT 40, ''verifactu_cola.sql'',
+           ''tabla fza_verifactu_cola'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_verifactu_cola'')
+    UNION ALL
+    SELECT 50, ''verifactu_cadena.sql'',
+           ''tabla fza_verifactu_cadena'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_verifactu_cadena'')
+    UNION ALL
+    SELECT 60, ''vi_articulos_temporada_nivel_articulo.sql'',
+           ''vi_articulos.TEMPORADA_ART (vista relanzable)'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_articulos''
+                     AND COLUMN_NAME = ''TEMPORADA_ART'')
+    UNION ALL
+    SELECT 70, ''proveedores_compras_defectos.sql'',
+           ''fza_proveedores.PORCENTAJE_MARGEN_PRV + kits'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_proveedores''
+                     AND COLUMN_NAME = ''PORCENTAJE_MARGEN_PRV'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_proveedores_kits'')
+    UNION ALL
+    SELECT 80, ''facturas_compra.sql'',
+           ''tabla fza_facturas_compra'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_facturas_compra'')
+    UNION ALL
+    SELECT 85, ''facturas_compra_temporada.sql'',
+           ''fza_facturas_compra.ID_PV_TEMPORADA_FACC'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_facturas_compra''
+                     AND COLUMN_NAME = ''ID_PV_TEMPORADA_FACC'')
+    UNION ALL
+    SELECT 87, ''vi_facturas_compra_print.sql'',
+           ''vista vi_facturas_compra_cab_print'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_facturas_compra_cab_print'')
+    UNION ALL
+    SELECT 90, ''efectos_remesas_compra.sql'',
+           ''fza_efectos_compra + remesas + vistas actualizadas'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_efectos_compra'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_tipos_efecto'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_remesas_compra'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_efectos_compra''
+                         AND COLUMN_NAME = ''REFERENCIA_DOCUMENTO_EFEC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_efectos_compra''
+                         AND COLUMN_NAME = ''CODIGO_EMPBAN_EFEC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_efectos_compra''
+                         AND COLUMN_NAME = ''DESCRIPCION_TEFE_VIEW_EFEC'')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = ''PRC_EFEC_GENERAR_DESDE_FACTURA'')
+    UNION ALL
+    SELECT 91, ''efectos_remesas_venta.sql'',
+           ''fza_efectos_venta + remesas de cobro + vistas/SP'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_efectos_venta'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_remesas_venta'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_efectos_venta'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_remesas_venta'')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = ''PRC_EFV_GENERAR_DESDE_FACTURA'')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = ''PRC_REMV_CREAR'')
+    UNION ALL
+    SELECT 92, ''bancos_catalogo.sql'',
+           ''tabla fza_bancos'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_bancos'')
+    UNION ALL
+    SELECT 94, ''bancos_empresa.sql'',
+           ''fza_empresas_bancos + vi_empresas_bancos + columnas de banco'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empresas_bancos'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_empresas_bancos'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_efectos_compra''
+                         AND COLUMN_NAME = ''CODIGO_EMPBAN_EFEC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_efectos_compra''
+                         AND COLUMN_NAME = ''IBAN_EMP_EFEC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_recibos''
+                         AND COLUMN_NAME = ''CODIGO_EMPBAN_REC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_recibos''
+                         AND COLUMN_NAME = ''IBAN_EMP_REC'')
+    UNION ALL
+    SELECT 96, ''clientes_banco_cobro_defecto.sql'',
+           ''fza_clientes.CODIGO_EMPBAN_CLI'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_clientes''
+                     AND COLUMN_NAME = ''CODIGO_EMPBAN_CLI'')
+    UNION ALL
+    SELECT 98, ''proveedores_pagos_defecto.sql'',
+           ''fza_proveedores.CODIGO_FP_PRV / CODIGO_EMPBAN_PRV'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_proveedores''
+                     AND COLUMN_NAME = ''CODIGO_FP_PRV'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_proveedores''
+                         AND COLUMN_NAME = ''CODIGO_EMPBAN_PRV'')
+    UNION ALL
+    SELECT 100, ''albaran_compra_deposito.sql'',
+           ''fza_albaranes_compra.ESDEPOSITO_ALBC'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_albaranes_compra''
+                     AND COLUMN_NAME = ''ESDEPOSITO_ALBC'')
+    UNION ALL
+    SELECT 110, ''movimientos_ventas_articulos.sql'',
+           ''SP PRC_GET_MOV_VENTAS_ART'',
+           EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                   WHERE ROUTINE_SCHEMA = DATABASE()
+                     AND ROUTINE_NAME = ''PRC_GET_MOV_VENTAS_ART'')
+    UNION ALL
+    SELECT 120, ''indices_busqueda_skus.sql'',
+           ''índice fza_codigos_barras.IDX_BARRAS_CB'',
+           EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_codigos_barras''
+                     AND INDEX_NAME = ''IDX_BARRAS_CB'')
+    UNION ALL
+    SELECT 130, ''vi_devoluciones_compra_print.sql'',
+           ''vista vi_devoluciones_compra_cab_print'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_devoluciones_compra_cab_print'')
+    UNION ALL
+    SELECT 140, ''vi_articulos_nombre_proveedor.sql'',
+           ''vi_articulos.RAZON_SOCIAL_PRV (vista relanzable)'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_articulos''
+                     AND COLUMN_NAME = ''RAZON_SOCIAL_PRV'')
+    UNION ALL
+    SELECT 150, ''propiedades_por_unidad.sql'',
+           ''fza_articulos_propiedades.CODIGO_UNIDAD_ARTPROP'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_articulos_propiedades''
+                     AND COLUMN_NAME = ''CODIGO_UNIDAD_ARTPROP'')
+    UNION ALL
+    SELECT 160, ''devoluciones_compra.sql'',
+           ''tabla fza_devoluciones_compra'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_devoluciones_compra'')
+    UNION ALL
+    SELECT 170, ''balance_almacen_tallas.sql'',
+           ''SP PRC_GET_BALANCE_ALMACEN_TALLAS'',
+           EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                   WHERE ROUTINE_SCHEMA = DATABASE()
+                     AND ROUTINE_NAME = ''PRC_GET_BALANCE_ALMACEN_TALLAS'')
+    UNION ALL
+    SELECT 180, ''balance_almacen_sin_tallas.sql'',
+           ''SP PRC_GET_BALANCE_ALMACEN_SIN_TALLAS'',
+           EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                   WHERE ROUTINE_SCHEMA = DATABASE()
+                     AND ROUTINE_NAME =
+                         ''PRC_GET_BALANCE_ALMACEN_SIN_TALLAS'')
+    UNION ALL
+    SELECT 190, ''columnas_visibles_infgui.sql'',
+           ''fza_informes_guias.COLUMNAS_VISIBLES_INFGUI'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_informes_guias''
+                     AND COLUMN_NAME = ''COLUMNAS_VISIBLES_INFGUI'')
+    UNION ALL
+    SELECT 200, ''widen_codigo_infgui.sql'',
+           ''fza_informes_guias.CODIGO_INFGUI varchar(120)'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_informes_guias''
+                     AND COLUMN_NAME = ''CODIGO_INFGUI''
+                     AND CHARACTER_MAXIMUM_LENGTH >= 120)
+    UNION ALL
+    SELECT 210, ''fza_informes_guias_drop_idx_redundante.sql'',
+           ''sin índice IDX_INFGUI_INFORME (debe NO existir)'',
+           NOT EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_informes_guias''
+                         AND INDEX_NAME = ''IDX_INFGUI_INFORME'')
+    UNION ALL
+    SELECT 220, ''vistas_facturas_por_tipo.sql'',
+           ''vista vi_facturas_simplificadas'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_facturas_simplificadas'')
+    UNION ALL
+    SELECT 230, ''factura_mueve_stock.sql'',
+           ''fza_facturas.ESMUEVE_STOCK_FAC'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_facturas''
+                     AND COLUMN_NAME = ''ESMUEVE_STOCK_FAC'')
+    UNION ALL
+    SELECT 240, ''widen_codigo_cli.sql'',
+           ''fza_clientes.CODIGO_CLI_CLI varchar(20)'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_clientes''
+                     AND COLUMN_NAME = ''CODIGO_CLI_CLI''
+                     AND CHARACTER_MAXIMUM_LENGTH >= 20)
+    UNION ALL
+    SELECT 250, ''widen_linea_invlin.sql'',
+           ''fza_inventarios_lineas.LINEA_INVLIN varchar(8)'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_inventarios_lineas''
+                     AND COLUMN_NAME = ''LINEA_INVLIN''
+                     AND CHARACTER_MAXIMUM_LENGTH >= 8)
+    UNION ALL
+    SELECT 260, ''empleados.sql'',
+           ''tabla fza_empleados'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empleados'')
+    UNION ALL
+    SELECT 270, ''empleados_retirar_columnas_usuarios.sql'',
+           ''fza_usuarios sin CODIGO_EMPLEADO_USU (debe NO existir)'',
+           NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_usuarios''
+                         AND COLUMN_NAME = ''CODIGO_EMPLEADO_USU'')
+    UNION ALL
+    SELECT 275, ''empleados_ampliar_ocemp.sql'',
+           ''fza_empleados con datos legacy de ocemp'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empleados''
+                     AND COLUMN_NAME = ''BIC_EMPL'')
+    UNION ALL
+    SELECT 278, ''recuento_inventarios_factuzam.sql'',
+           ''fza_inventarios recuento remoto + tabla INVREC'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_inventarios_recuentos'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_inventarios''
+                         AND COLUMN_NAME = ''ESRECUENTO_REMOTO_INV'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_inventarios''
+                         AND COLUMN_NAME = ''INSTANTE_ENVIO_RECUENTO_INV'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_inventarios''
+                         AND COLUMN_NAME = ''INSTANTE_RECOGIDA_RECUENTO_INV'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_inventarios''
+                         AND COLUMN_NAME = ''ID_RECUENTO_REMOTO_INV'')
+    UNION ALL
+    SELECT 280, ''sku_descripcion_color.sql'',
+           ''fza_articulos_atributos_basicos.DESCRIPCION_AAB + vista'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_articulos_atributos_basicos''
+                     AND COLUMN_NAME = ''DESCRIPCION_AAB'')
+    UNION ALL
+    SELECT 290, ''documentos_trabajo.sql'',
+           ''tablas documentos de trabajo + menú'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_documentos_trabajo'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_documentos_trabajo_lineas'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME =
+                             ''fza_documentos_trabajo_compartidos'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_documentos_trabajo''
+                         AND COLUMN_NAME = ''TITULO_DTR'')
+           AND EXISTS(SELECT 1 FROM fza_winforms
+                       WHERE CALL_WINF = ''DocumentosTrabajo'')
+    UNION ALL
+    SELECT 300, ''compras_sesiones_totales_iva.sql'',
+           ''sesiones compra con desglose IVA y total líquido'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empresas''
+                     AND COLUMN_NAME = ''ESIVA_RECARGO_COMPRAS_EMP'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_proveedores''
+                         AND COLUMN_NAME = ''ESVARIOS_TIPOS_IVA_PRV'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_compras_sesiones''
+                         AND COLUMN_NAME = ''CODIGO_IVA_SES'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_compras_sesiones''
+                         AND COLUMN_NAME = ''ESIVA_RECARGO_COMPRAS_SES'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_compras_sesiones''
+                         AND COLUMN_NAME = ''TOTAL_LIQUIDO_SES'')
+    UNION ALL
+    SELECT 310, ''vi_compras_sesiones_cab_print_formato.sql'',
+           ''vi_compras_sesiones_cab_print.ESFORMATO_DISTRIBUIDO_SES'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_compras_sesiones_cab_print''
+                     AND COLUMN_NAME = ''ESFORMATO_DISTRIBUIDO_SES'')
+    UNION ALL
+    SELECT 320, ''vi_albaranes_compra_print.sql'',
+           ''vistas print albaranes compra cab/lin/guias'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_albaranes_compra_cab_print'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_albaranes_compra_lin_print'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_albaranes_compra_guias_print'')
+    UNION ALL
+    SELECT 330, ''vi_empresas_recargo_compras.sql'',
+           ''vi_empresas.ESIVA_RECARGO_COMPRAS_EMP'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empresas''
+                     AND COLUMN_NAME = ''ESIVA_RECARGO_COMPRAS_EMP'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_empresas''
+                         AND COLUMN_NAME = ''ESIVA_RECARGO_COMPRAS_EMP'')
+    UNION ALL
+    SELECT 340, ''formato_documentos_empresa.sql'',
+           ''FORMATO_DOCUMENTO_EMP + DOCUMENTO_FORMATO en prints'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empresas''
+                     AND COLUMN_NAME = ''FORMATO_DOCUMENTO_EMP'')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = ''PRC_FORMATO_DOCUMENTO'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_facturas_print''
+                         AND COLUMN_NAME = ''DOCUMENTO_FORMATO'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_compras_sesiones_cab_print''
+                         AND COLUMN_NAME = ''DOCUMENTO_FORMATO'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_albaranes_compra_cab_print''
+                         AND COLUMN_NAME = ''DOCUMENTO_FORMATO'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_devoluciones_compra_cab_print''
+                         AND COLUMN_NAME = ''DOCUMENTO_FORMATO'')
+    UNION ALL
+    SELECT 350, ''sepa_remesas_venta_datos.sql'',
+           ''datos SEPA en bancos, clientes y remesas venta'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empresas_bancos''
+                     AND COLUMN_NAME = ''CODIGO_ACREEDOR_SEPA_EMPBAN'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_clientes''
+                         AND COLUMN_NAME = ''ID_MANDATO_SEPA_CLI'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_clientes''
+                         AND COLUMN_NAME = ''FECHA_FIRMA_MANDATO_SEPA_CLI'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_remesas_venta''
+                         AND COLUMN_NAME = ''TIPO_SECUENCIA_SEPA_REMV'')
+    UNION ALL
+    SELECT 360, ''vi_caja_busqueda_unificada_colaciones.sql'',
+           ''vi_caja_busqueda_unificada con MODELO_PROV y colación fija'',
+           EXISTS(SELECT 1 FROM information_schema.VIEWS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_caja_busqueda_unificada''
+                     AND UPPER(VIEW_DEFINITION) LIKE ''%MODELO_PROV%''
+                     AND UPPER(VIEW_DEFINITION) LIKE ''%REF_PROVEEDOR_AP%''
+                     AND VIEW_DEFINITION LIKE ''%utf8mb4_spanish_ci%'')
+    UNION ALL
+    SELECT 370, ''verifactu_numero_instalacion_empresa.sql'',
+           ''datos instalación Verifactu en empresa'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empresas''
+                     AND COLUMN_NAME = ''NUMERO_INSTALACION_EMP'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_empresas''
+                         AND COLUMN_NAME = ''VERSION_INSTALACION_EMP'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_empresas''
+                         AND COLUMN_NAME = ''CODIGO_SIF_INSTALACION_EMP'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_empresas''
+                         AND COLUMN_NAME = ''INSTANTE_INSTALACION_EMP'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_empresas''
+                         AND COLUMN_NAME = ''NUMERO_INSTALACION_EMP'')
+    UNION ALL
+    SELECT 380, ''compras_sesiones_forma_pago.sql'',
+           ''fza_compras_sesiones.FORMA_PAGO_SES + vista'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_compras_sesiones''
+                     AND COLUMN_NAME = ''FORMA_PAGO_SES'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_compras_sesiones''
+                         AND COLUMN_NAME = ''FORMA_PAGO_SES'')
+    UNION ALL
+    SELECT 390, ''facturas_lineas_indice_movimiento.sql'',
+           ''índice fza_facturas_lineas.IDX_FACLIN_NUMMOV'',
+           EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_facturas_lineas''
+                     AND INDEX_NAME = ''IDX_FACLIN_NUMMOV'')
+    UNION ALL
+    SELECT 400, ''proveedores_iva_exento_intracomunitario.sql'',
+           ''IVA exento intracomunitario en compras'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_proveedores''
+                     AND COLUMN_NAME = ''ESIVA_EXENTO_INTRACOMUNITARIO_PRV'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_compras_sesiones''
+                         AND COLUMN_NAME =
+                             ''ESIVA_EXENTO_INTRACOMUNITARIO_SES'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_pedidos_compra''
+                         AND COLUMN_NAME =
+                             ''ESIVA_EXENTO_INTRACOMUNITARIO_PEDC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_albaranes_compra''
+                         AND COLUMN_NAME =
+                             ''ESIVA_EXENTO_INTRACOMUNITARIO_ALBC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_facturas_compra''
+                         AND COLUMN_NAME =
+                             ''ESIVA_EXENTO_INTRACOMUNITARIO_FACC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_devoluciones_compra''
+                         AND COLUMN_NAME =
+                             ''ESIVA_EXENTO_INTRACOMUNITARIO_DEVC'')
+    UNION ALL
+    SELECT 410, ''descuentos_globales_compra.sql'',
+           ''descuentos globales compra + SP factura compra'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_compras_sesiones''
+                     AND COLUMN_NAME = ''PORCENTAJE_DTO_COMERCIAL_SES'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_pedidos_compra''
+                         AND COLUMN_NAME = ''TOTAL_DTO_FINANCIERO_PEDC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_albaranes_compra''
+                         AND COLUMN_NAME = ''TOTAL_DTO_FINANCIERO_ALBC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_devoluciones_compra''
+                         AND COLUMN_NAME = ''TOTAL_DTO_FINANCIERO_DEVC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_facturas_compra''
+                         AND COLUMN_NAME = ''TOTAL_DTO_FINANCIERO_FACC'')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = ''PRC_FACC_RECALCULAR_TOTALES'')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME =
+                             ''PRC_FACC_ACTUALIZAR_DTOS_ALBARANES'')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = ''PRC_FACC_FACTURAR_ALBARAN'')
+    UNION ALL
+    SELECT 420, ''recepcion_tope_compras.sql'',
+           ''fecha tope recepción en sesiones/pedidos y vistas'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_compras_sesiones''
+                     AND COLUMN_NAME = ''FECHA_TOPE_RECEPCION_SES'')
+           AND EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_compras_sesiones''
+                         AND INDEX_NAME = ''IDX_SES_FECHA_TOPE_RECEPCION'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_pedidos_compra''
+                         AND COLUMN_NAME = ''FECHA_TOPE_RECEPCION_PEDC'')
+           AND EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_pedidos_compra''
+                         AND INDEX_NAME = ''IDX_PEDC_FECHA_TOPE_RECEPCION'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_pedidos_compra''
+                         AND COLUMN_NAME =
+                             ''CANTIDAD_PENDIENTE_RECEPCION_PEDC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_albaranes_compra''
+                         AND COLUMN_NAME = ''FECHA_TOPE_RECEPCION_ALBC'')
+    UNION ALL
+    SELECT 430, ''quitar_esdefault_tar.sql'',
+           ''fza_tarifas y vistas sin ESDEFAULT_TAR'',
+           NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_tarifas''
+                         AND COLUMN_NAME = ''ESDEFAULT_TAR'')
+           AND NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                           WHERE TABLE_SCHEMA = DATABASE()
+                             AND TABLE_NAME = ''vi_tarifas''
+                             AND COLUMN_NAME = ''ESDEFAULT_TAR'')
+           AND NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                           WHERE TABLE_SCHEMA = DATABASE()
+                             AND TABLE_NAME = ''vi_articulos_tarifas''
+                             AND COLUMN_NAME = ''ESDEFAULT_TAR'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_tarifas'')
+    UNION ALL
+    SELECT 440, ''vi_art_busquedas_ref_proveedor.sql'',
+           ''vi_art_busquedas.REF_PROVEEDOR'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_art_busquedas''
+                     AND COLUMN_NAME = ''REF_PROVEEDOR'')
+    UNION ALL
+    SELECT 450, ''filtros_guardados.sql'',
+           ''tablas fza_filtros_guardados / compartidos'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_filtros_guardados'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME =
+                             ''fza_filtros_guardados_compartidos'')
+  ) t
+ ORDER BY t.aplicado, t.orden;
+-- Scripts solo-datos, no detectables por esquema. Son idempotentes:
+-- si hay duda, relanzarlos no hace daño.
+--   reubicar_shortcuts_menu.sql
+--   reubicar_shortcuts_facturas.sql
+--   migracion_shortcuts_caja_ctrl_shift.sql
+--   propiedades_shortcut_ctrl_alt_y.sql
+--   familias_asignar_codigo_padre.sql
+--   empresas_series_venta.sql
+--   clientes_deuda_actual.sql
+--   tallas_alinear_skus_conjunto.sql
+--   depositos_netear_devoluciones.sql (reemplaza SP existente)
+--   pedidos_albaranes_compra_pivote_default_horizontal.sql
+--   albc_pivote_tarifa.sql
+--   tarifas_limpiar_porcentaje_dto_basura.sql
+--   compras_sesiones_recalcular_totales.sql
+--   facturas_simplificadas_cabecera_empresa.sql
+', '2026-07-05 06:42:28', '2026-07-05 06:42:28', 'Administrador', 'Administrador'),
+  ('496', 'recepcion_tope_compras', '-- ============================================================================
+-- Compras: fecha tope de recepcion y resumenes de lista
+--
+-- Anade fecha limite de recepcion en sesiones y pedidos de compra. Reexpone
+-- las vistas de pedidos y albaranes con temporada, fechas y totales agregados
+-- para que las listas puedan pintar vencidos pendientes de recibir.
+--
+-- Idempotente: cada DDL comprueba INFORMATION_SCHEMA antes de aplicar.
+-- ============================================================================
+
+SET @col_exists := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_compras_sesiones''
+     AND COLUMN_NAME = ''FECHA_TOPE_RECEPCION_SES''
+);
+
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_compras_sesiones`
+     ADD COLUMN `FECHA_TOPE_RECEPCION_SES` date NULL DEFAULT NULL
+       COMMENT ''''Fecha limite prevista para recibir la mercancia''''
+       AFTER `FECHA_SES`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_compras_sesiones''
+     AND INDEX_NAME = ''IDX_SES_FECHA_TOPE_RECEPCION''
+);
+
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_compras_sesiones`
+     ADD INDEX `IDX_SES_FECHA_TOPE_RECEPCION`
+       (`FECHA_TOPE_RECEPCION_SES`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_pedidos_compra''
+     AND COLUMN_NAME = ''FECHA_TOPE_RECEPCION_PEDC''
+);
+
+SET @ddl := IF(@col_exists = 0,
+  ''ALTER TABLE `fza_pedidos_compra`
+     ADD COLUMN `FECHA_TOPE_RECEPCION_PEDC` date NULL DEFAULT NULL
+       COMMENT ''''Fecha limite prevista para recibir la mercancia''''
+       AFTER `FECHA_PREVISTA_PEDC`'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_pedidos_compra''
+     AND INDEX_NAME = ''IDX_PEDC_FECHA_TOPE_RECEPCION''
+);
+
+SET @ddl := IF(@idx_exists = 0,
+  ''ALTER TABLE `fza_pedidos_compra`
+     ADD INDEX `IDX_PEDC_FECHA_TOPE_RECEPCION`
+       (`FECHA_TOPE_RECEPCION_PEDC`)'',
+  ''SELECT 1'');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_pedidos_compra` AS
+SELECT p.*,
+       prv.`NOMBRE_PRV` AS `NOMBRE_PRV_PEDC`,
+       emp.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMPRESA_VIEW_PEDC`,
+       t.`PV` AS `TEMPORADA_PEDC`,
+       p.`FECHA_PEDC` AS `FECHA_REALIZACION_PEDC`,
+       p.`FECHA_PREVISTA_PEDC` AS `FECHA_EFECTO_STOCK_PEDC`,
+       COALESCE(r.`CANTIDAD_PEDIDA_PEDC`, 0) AS `CANTIDAD_PEDIDA_PEDC`,
+       COALESCE(r.`CANTIDAD_PEDIDA_PEDC`, 0) AS `TOTAL_PRENDAS_PEDC`,
+       COALESCE(r.`CANTIDAD_RECIBIDA_PEDC`, 0) AS `CANTIDAD_RECIBIDA_PEDC`,
+       GREATEST(COALESCE(r.`CANTIDAD_PEDIDA_PEDC`, 0) -
+                COALESCE(r.`CANTIDAD_RECIBIDA_PEDC`, 0), 0)
+          AS `CANTIDAD_PENDIENTE_RECEPCION_PEDC`,
+       COALESCE(r.`TOTAL_LINEAS_PEDC`, 0) AS `TOTAL_LINEAS_PEDC`
+  FROM `fza_pedidos_compra` p
+  LEFT JOIN `fza_proveedores` prv
+    ON prv.`CODIGO_PRV_PRV` = p.`CODIGO_PRV_PEDC`
+  LEFT JOIN `fza_empresas` emp
+    ON emp.`CODIGO_EMP_EMP` = p.`CODIGO_EMP_PEDC`
+  LEFT JOIN `fza_propiedades_valores` t
+    ON t.`ID_PV_ARTPROP` = p.`ID_PV_TEMPORADA_PEDC`
+   AND t.`ID_PROP_PV` = ''TEMPORADA''
+  LEFT JOIN (
+    SELECT l.`SERIE_PEDC_PEDCLIN`,
+           l.`NUMERO_PEDC_PEDCLIN`,
+           COALESCE(SUM(l.`CANTIDAD_PEDCLIN`), 0)
+              AS `CANTIDAD_PEDIDA_PEDC`,
+           COALESCE(SUM(l.`CANTIDAD_RECIBIDA_PEDCLIN`), 0)
+              AS `CANTIDAD_RECIBIDA_PEDC`,
+           COALESCE(SUM(l.`TOTAL_PEDCLIN`), 0)
+              AS `TOTAL_LINEAS_PEDC`
+      FROM `fza_pedidos_compra_lineas` l
+     GROUP BY l.`SERIE_PEDC_PEDCLIN`, l.`NUMERO_PEDC_PEDCLIN`
+  ) r
+    ON r.`SERIE_PEDC_PEDCLIN` = p.`SERIE_PEDC`
+   AND r.`NUMERO_PEDC_PEDCLIN` = p.`NUMERO_PEDC`;
+
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_albaranes_compra` AS
+SELECT a.*,
+       prv.`NOMBRE_PRV` AS `NOMBRE_PRV_ALBC`,
+       emp.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMPRESA_VIEW_ALBC`,
+       tp.`PV` AS `TEMPORADA_ALBC`,
+       a.`FECHA_ALBC` AS `FECHA_REALIZACION_ALBC`,
+       a.`FECHA_ALBC` AS `FECHA_EFECTO_STOCK_ALBC`,
+       p.`FECHA_TOPE_RECEPCION_PEDC` AS `FECHA_TOPE_RECEPCION_ALBC`,
+       COALESCE(r.`TOTAL_PRENDAS_ALBC`, 0) AS `TOTAL_PRENDAS_ALBC`,
+       COALESCE(r.`TOTAL_LINEAS_ALBC`, 0) AS `TOTAL_LINEAS_ALBC`
+  FROM `fza_albaranes_compra` a
+  LEFT JOIN `fza_proveedores` prv
+    ON prv.`CODIGO_PRV_PRV` = a.`CODIGO_PRV_ALBC`
+  LEFT JOIN `fza_empresas` emp
+    ON emp.`CODIGO_EMP_EMP` = a.`CODIGO_EMP_ALBC`
+  LEFT JOIN `fza_pedidos_compra` p
+    ON p.`SERIE_PEDC` = a.`SERIE_PED_ALBC`
+   AND p.`NUMERO_PEDC` = a.`NUMERO_PED_ALBC`
+  LEFT JOIN `fza_propiedades_valores` tp
+    ON tp.`ID_PV_ARTPROP` = p.`ID_PV_TEMPORADA_PEDC`
+   AND tp.`ID_PROP_PV` = ''TEMPORADA''
+  LEFT JOIN (
+    SELECT l.`SERIE_ALBC_ALBCLIN`,
+           l.`NUMERO_ALBC_ALBCLIN`,
+           COALESCE(SUM(COALESCE(l.`TOTAL_UNIDADES_ALBCLIN`,
+                                 l.`CANTIDAD_ALBCLIN`, 0)), 0)
+              AS `TOTAL_PRENDAS_ALBC`,
+           COALESCE(SUM(l.`TOTAL_ALBCLIN`), 0)
+              AS `TOTAL_LINEAS_ALBC`
+      FROM `fza_albaranes_compra_lineas` l
+     GROUP BY l.`SERIE_ALBC_ALBCLIN`, l.`NUMERO_ALBC_ALBCLIN`
+  ) r
+    ON r.`SERIE_ALBC_ALBCLIN` = a.`SERIE_ALBC`
+   AND r.`NUMERO_ALBC_ALBCLIN` = a.`NUMERO_ALBC`;
+', '2026-07-05 06:42:42', '2026-07-05 06:42:42', 'Administrador', 'Administrador'),
+  ('497', 'comprobar_scripts_aplicados', '-- Batería de comprobación: ¿qué scripts de DESARROLLOS EN CURSO están
+-- aplicados en ESTA base de datos? Ejecutar conectado a la BBDD de
+-- trabajo (factuzam). Solo consulta INFORMATION_SCHEMA y catálogos:
+-- no modifica nada.
+--
+-- Salida: una fila por script, con ''>>> FALTA <<<'' arriba. Cada script
+-- de la lista es idempotente: el que falte se lanza tal cual, en el orden
+-- mostrado por orden_aplicacion.
+--
+-- Cubre los scripts de esquema detectables de las últimas tandas
+-- (jun/jul-2026). Los scripts solo-datos no se pueden detectar por
+-- esquema; ver la lista al final del fichero.
+SELECT t.orden AS orden_aplicacion,
+       t.script,
+       IF(t.aplicado = 1, ''OK'', ''>>> FALTA <<<'') AS estado,
+       t.objeto
+  FROM (
+    SELECT 10 AS orden, ''verifactu_relaciones.sql'' AS script,
+           ''tabla fza_facturas_relaciones'' AS objeto,
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_facturas_relaciones'')
+           AS aplicado
+    UNION ALL
+    SELECT 20, ''verifactu_rectificativas.sql'',
+           ''fza_facturas.SERIE_FAC_ABONO_FAC varchar(20)'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_facturas''
+                     AND COLUMN_NAME = ''SERIE_FAC_ABONO_FAC''
+                     AND CHARACTER_MAXIMUM_LENGTH >= 20)
+    UNION ALL
+    SELECT 30, ''verifactu_menu.sql'',
+           ''fza_winforms VerifactuCola + VerifactuLog'',
+           (SELECT COUNT(*) FROM fza_winforms
+             WHERE CALL_WINF IN (''VerifactuCola'', ''VerifactuLog'')) = 2
+    UNION ALL
+    SELECT 40, ''verifactu_cola.sql'',
+           ''tabla fza_verifactu_cola'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_verifactu_cola'')
+    UNION ALL
+    SELECT 50, ''verifactu_cadena.sql'',
+           ''tabla fza_verifactu_cadena'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_verifactu_cadena'')
+    UNION ALL
+    SELECT 60, ''vi_articulos_temporada_nivel_articulo.sql'',
+           ''vi_articulos.TEMPORADA_ART (vista relanzable)'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_articulos''
+                     AND COLUMN_NAME = ''TEMPORADA_ART'')
+    UNION ALL
+    SELECT 70, ''proveedores_compras_defectos.sql'',
+           ''fza_proveedores.PORCENTAJE_MARGEN_PRV + kits'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_proveedores''
+                     AND COLUMN_NAME = ''PORCENTAJE_MARGEN_PRV'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_proveedores_kits'')
+    UNION ALL
+    SELECT 80, ''facturas_compra.sql'',
+           ''tabla fza_facturas_compra'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_facturas_compra'')
+    UNION ALL
+    SELECT 85, ''facturas_compra_temporada.sql'',
+           ''fza_facturas_compra.ID_PV_TEMPORADA_FACC'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_facturas_compra''
+                     AND COLUMN_NAME = ''ID_PV_TEMPORADA_FACC'')
+    UNION ALL
+    SELECT 87, ''vi_facturas_compra_print.sql'',
+           ''vista vi_facturas_compra_cab_print'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_facturas_compra_cab_print'')
+    UNION ALL
+    SELECT 90, ''efectos_remesas_compra.sql'',
+           ''fza_efectos_compra + remesas + vistas actualizadas'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_efectos_compra'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_tipos_efecto'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_remesas_compra'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_efectos_compra''
+                         AND COLUMN_NAME = ''REFERENCIA_DOCUMENTO_EFEC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_efectos_compra''
+                         AND COLUMN_NAME = ''CODIGO_EMPBAN_EFEC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_efectos_compra''
+                         AND COLUMN_NAME = ''DESCRIPCION_TEFE_VIEW_EFEC'')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = ''PRC_EFEC_GENERAR_DESDE_FACTURA'')
+    UNION ALL
+    SELECT 91, ''efectos_remesas_venta.sql'',
+           ''fza_efectos_venta + remesas de cobro + vistas/SP'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_efectos_venta'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_remesas_venta'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_efectos_venta'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_remesas_venta'')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = ''PRC_EFV_GENERAR_DESDE_FACTURA'')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = ''PRC_REMV_CREAR'')
+    UNION ALL
+    SELECT 92, ''bancos_catalogo.sql'',
+           ''tabla fza_bancos'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_bancos'')
+    UNION ALL
+    SELECT 94, ''bancos_empresa.sql'',
+           ''fza_empresas_bancos + vi_empresas_bancos + columnas de banco'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empresas_bancos'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_empresas_bancos'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_efectos_compra''
+                         AND COLUMN_NAME = ''CODIGO_EMPBAN_EFEC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_efectos_compra''
+                         AND COLUMN_NAME = ''IBAN_EMP_EFEC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_recibos''
+                         AND COLUMN_NAME = ''CODIGO_EMPBAN_REC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_recibos''
+                         AND COLUMN_NAME = ''IBAN_EMP_REC'')
+    UNION ALL
+    SELECT 96, ''clientes_banco_cobro_defecto.sql'',
+           ''fza_clientes.CODIGO_EMPBAN_CLI'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_clientes''
+                     AND COLUMN_NAME = ''CODIGO_EMPBAN_CLI'')
+    UNION ALL
+    SELECT 98, ''proveedores_pagos_defecto.sql'',
+           ''fza_proveedores.CODIGO_FP_PRV / CODIGO_EMPBAN_PRV'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_proveedores''
+                     AND COLUMN_NAME = ''CODIGO_FP_PRV'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_proveedores''
+                         AND COLUMN_NAME = ''CODIGO_EMPBAN_PRV'')
+    UNION ALL
+    SELECT 100, ''albaran_compra_deposito.sql'',
+           ''fza_albaranes_compra.ESDEPOSITO_ALBC'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_albaranes_compra''
+                     AND COLUMN_NAME = ''ESDEPOSITO_ALBC'')
+    UNION ALL
+    SELECT 110, ''movimientos_ventas_articulos.sql'',
+           ''SP PRC_GET_MOV_VENTAS_ART'',
+           EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                   WHERE ROUTINE_SCHEMA = DATABASE()
+                     AND ROUTINE_NAME = ''PRC_GET_MOV_VENTAS_ART'')
+    UNION ALL
+    SELECT 120, ''indices_busqueda_skus.sql'',
+           ''índice fza_codigos_barras.IDX_BARRAS_CB'',
+           EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_codigos_barras''
+                     AND INDEX_NAME = ''IDX_BARRAS_CB'')
+    UNION ALL
+    SELECT 130, ''vi_devoluciones_compra_print.sql'',
+           ''vista vi_devoluciones_compra_cab_print'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_devoluciones_compra_cab_print'')
+    UNION ALL
+    SELECT 140, ''vi_articulos_nombre_proveedor.sql'',
+           ''vi_articulos.RAZON_SOCIAL_PRV (vista relanzable)'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_articulos''
+                     AND COLUMN_NAME = ''RAZON_SOCIAL_PRV'')
+    UNION ALL
+    SELECT 150, ''propiedades_por_unidad.sql'',
+           ''fza_articulos_propiedades.CODIGO_UNIDAD_ARTPROP'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_articulos_propiedades''
+                     AND COLUMN_NAME = ''CODIGO_UNIDAD_ARTPROP'')
+    UNION ALL
+    SELECT 160, ''devoluciones_compra.sql'',
+           ''tabla fza_devoluciones_compra'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_devoluciones_compra'')
+    UNION ALL
+    SELECT 170, ''balance_almacen_tallas.sql'',
+           ''SP PRC_GET_BALANCE_ALMACEN_TALLAS'',
+           EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                   WHERE ROUTINE_SCHEMA = DATABASE()
+                     AND ROUTINE_NAME = ''PRC_GET_BALANCE_ALMACEN_TALLAS'')
+    UNION ALL
+    SELECT 180, ''balance_almacen_sin_tallas.sql'',
+           ''SP PRC_GET_BALANCE_ALMACEN_SIN_TALLAS'',
+           EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                   WHERE ROUTINE_SCHEMA = DATABASE()
+                     AND ROUTINE_NAME =
+                         ''PRC_GET_BALANCE_ALMACEN_SIN_TALLAS'')
+    UNION ALL
+    SELECT 190, ''columnas_visibles_infgui.sql'',
+           ''fza_informes_guias.COLUMNAS_VISIBLES_INFGUI'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_informes_guias''
+                     AND COLUMN_NAME = ''COLUMNAS_VISIBLES_INFGUI'')
+    UNION ALL
+    SELECT 200, ''widen_codigo_infgui.sql'',
+           ''fza_informes_guias.CODIGO_INFGUI varchar(120)'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_informes_guias''
+                     AND COLUMN_NAME = ''CODIGO_INFGUI''
+                     AND CHARACTER_MAXIMUM_LENGTH >= 120)
+    UNION ALL
+    SELECT 210, ''fza_informes_guias_drop_idx_redundante.sql'',
+           ''sin índice IDX_INFGUI_INFORME (debe NO existir)'',
+           NOT EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_informes_guias''
+                         AND INDEX_NAME = ''IDX_INFGUI_INFORME'')
+    UNION ALL
+    SELECT 220, ''vistas_facturas_por_tipo.sql'',
+           ''vista vi_facturas_simplificadas'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_facturas_simplificadas'')
+    UNION ALL
+    SELECT 230, ''factura_mueve_stock.sql'',
+           ''fza_facturas.ESMUEVE_STOCK_FAC'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_facturas''
+                     AND COLUMN_NAME = ''ESMUEVE_STOCK_FAC'')
+    UNION ALL
+    SELECT 240, ''widen_codigo_cli.sql'',
+           ''fza_clientes.CODIGO_CLI_CLI varchar(20)'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_clientes''
+                     AND COLUMN_NAME = ''CODIGO_CLI_CLI''
+                     AND CHARACTER_MAXIMUM_LENGTH >= 20)
+    UNION ALL
+    SELECT 250, ''widen_linea_invlin.sql'',
+           ''fza_inventarios_lineas.LINEA_INVLIN varchar(8)'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_inventarios_lineas''
+                     AND COLUMN_NAME = ''LINEA_INVLIN''
+                     AND CHARACTER_MAXIMUM_LENGTH >= 8)
+    UNION ALL
+    SELECT 260, ''empleados.sql'',
+           ''tabla fza_empleados'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empleados'')
+    UNION ALL
+    SELECT 270, ''empleados_retirar_columnas_usuarios.sql'',
+           ''fza_usuarios sin CODIGO_EMPLEADO_USU (debe NO existir)'',
+           NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_usuarios''
+                         AND COLUMN_NAME = ''CODIGO_EMPLEADO_USU'')
+    UNION ALL
+    SELECT 275, ''empleados_ampliar_ocemp.sql'',
+           ''fza_empleados con datos legacy de ocemp'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empleados''
+                     AND COLUMN_NAME = ''BIC_EMPL'')
+    UNION ALL
+    SELECT 278, ''recuento_inventarios_factuzam.sql'',
+           ''fza_inventarios recuento remoto + tabla INVREC'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_inventarios_recuentos'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_inventarios''
+                         AND COLUMN_NAME = ''ESRECUENTO_REMOTO_INV'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_inventarios''
+                         AND COLUMN_NAME = ''INSTANTE_ENVIO_RECUENTO_INV'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_inventarios''
+                         AND COLUMN_NAME = ''INSTANTE_RECOGIDA_RECUENTO_INV'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_inventarios''
+                         AND COLUMN_NAME = ''ID_RECUENTO_REMOTO_INV'')
+    UNION ALL
+    SELECT 280, ''sku_descripcion_color.sql'',
+           ''fza_articulos_atributos_basicos.DESCRIPCION_AAB + vista'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_articulos_atributos_basicos''
+                     AND COLUMN_NAME = ''DESCRIPCION_AAB'')
+    UNION ALL
+    SELECT 290, ''documentos_trabajo.sql'',
+           ''tablas documentos de trabajo + menú'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_documentos_trabajo'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_documentos_trabajo_lineas'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME =
+                             ''fza_documentos_trabajo_compartidos'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_documentos_trabajo''
+                         AND COLUMN_NAME = ''TITULO_DTR'')
+           AND EXISTS(SELECT 1 FROM fza_winforms
+                       WHERE CALL_WINF = ''DocumentosTrabajo'')
+    UNION ALL
+    SELECT 300, ''compras_sesiones_totales_iva.sql'',
+           ''sesiones compra con desglose IVA y total líquido'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empresas''
+                     AND COLUMN_NAME = ''ESIVA_RECARGO_COMPRAS_EMP'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_proveedores''
+                         AND COLUMN_NAME = ''ESVARIOS_TIPOS_IVA_PRV'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_compras_sesiones''
+                         AND COLUMN_NAME = ''CODIGO_IVA_SES'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_compras_sesiones''
+                         AND COLUMN_NAME = ''ESIVA_RECARGO_COMPRAS_SES'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_compras_sesiones''
+                         AND COLUMN_NAME = ''TOTAL_LIQUIDO_SES'')
+    UNION ALL
+    SELECT 310, ''vi_compras_sesiones_cab_print_formato.sql'',
+           ''vi_compras_sesiones_cab_print.ESFORMATO_DISTRIBUIDO_SES'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_compras_sesiones_cab_print''
+                     AND COLUMN_NAME = ''ESFORMATO_DISTRIBUIDO_SES'')
+    UNION ALL
+    SELECT 320, ''vi_albaranes_compra_print.sql'',
+           ''vistas print albaranes compra cab/lin/guias'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_albaranes_compra_cab_print'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_albaranes_compra_lin_print'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_albaranes_compra_guias_print'')
+    UNION ALL
+    SELECT 330, ''vi_empresas_recargo_compras.sql'',
+           ''vi_empresas.ESIVA_RECARGO_COMPRAS_EMP'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empresas''
+                     AND COLUMN_NAME = ''ESIVA_RECARGO_COMPRAS_EMP'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_empresas''
+                         AND COLUMN_NAME = ''ESIVA_RECARGO_COMPRAS_EMP'')
+    UNION ALL
+    SELECT 340, ''formato_documentos_empresa.sql'',
+           ''FORMATO_DOCUMENTO_EMP + DOCUMENTO_FORMATO en prints'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empresas''
+                     AND COLUMN_NAME = ''FORMATO_DOCUMENTO_EMP'')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = ''PRC_FORMATO_DOCUMENTO'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_facturas_print''
+                         AND COLUMN_NAME = ''DOCUMENTO_FORMATO'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_compras_sesiones_cab_print''
+                         AND COLUMN_NAME = ''DOCUMENTO_FORMATO'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_albaranes_compra_cab_print''
+                         AND COLUMN_NAME = ''DOCUMENTO_FORMATO'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_devoluciones_compra_cab_print''
+                         AND COLUMN_NAME = ''DOCUMENTO_FORMATO'')
+    UNION ALL
+    SELECT 350, ''sepa_remesas_venta_datos.sql'',
+           ''datos SEPA en bancos, clientes y remesas venta'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empresas_bancos''
+                     AND COLUMN_NAME = ''CODIGO_ACREEDOR_SEPA_EMPBAN'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_clientes''
+                         AND COLUMN_NAME = ''ID_MANDATO_SEPA_CLI'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_clientes''
+                         AND COLUMN_NAME = ''FECHA_FIRMA_MANDATO_SEPA_CLI'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_remesas_venta''
+                         AND COLUMN_NAME = ''TIPO_SECUENCIA_SEPA_REMV'')
+    UNION ALL
+    SELECT 360, ''vi_caja_busqueda_unificada_colaciones.sql'',
+           ''vi_caja_busqueda_unificada con MODELO_PROV y colación fija'',
+           EXISTS(SELECT 1 FROM information_schema.VIEWS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_caja_busqueda_unificada''
+                     AND UPPER(VIEW_DEFINITION) LIKE ''%MODELO_PROV%''
+                     AND UPPER(VIEW_DEFINITION) LIKE ''%REF_PROVEEDOR_AP%''
+                     AND VIEW_DEFINITION LIKE ''%utf8mb4_spanish_ci%'')
+    UNION ALL
+    SELECT 370, ''verifactu_numero_instalacion_empresa.sql'',
+           ''datos instalación Verifactu en empresa'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_empresas''
+                     AND COLUMN_NAME = ''NUMERO_INSTALACION_EMP'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_empresas''
+                         AND COLUMN_NAME = ''VERSION_INSTALACION_EMP'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_empresas''
+                         AND COLUMN_NAME = ''CODIGO_SIF_INSTALACION_EMP'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_empresas''
+                         AND COLUMN_NAME = ''INSTANTE_INSTALACION_EMP'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_empresas''
+                         AND COLUMN_NAME = ''NUMERO_INSTALACION_EMP'')
+    UNION ALL
+    SELECT 380, ''compras_sesiones_forma_pago.sql'',
+           ''fza_compras_sesiones.FORMA_PAGO_SES + vista'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_compras_sesiones''
+                     AND COLUMN_NAME = ''FORMA_PAGO_SES'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_compras_sesiones''
+                         AND COLUMN_NAME = ''FORMA_PAGO_SES'')
+    UNION ALL
+    SELECT 390, ''facturas_lineas_indice_movimiento.sql'',
+           ''índice fza_facturas_lineas.IDX_FACLIN_NUMMOV'',
+           EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_facturas_lineas''
+                     AND INDEX_NAME = ''IDX_FACLIN_NUMMOV'')
+    UNION ALL
+    SELECT 400, ''proveedores_iva_exento_intracomunitario.sql'',
+           ''IVA exento intracomunitario en compras'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_proveedores''
+                     AND COLUMN_NAME = ''ESIVA_EXENTO_INTRACOMUNITARIO_PRV'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_compras_sesiones''
+                         AND COLUMN_NAME =
+                             ''ESIVA_EXENTO_INTRACOMUNITARIO_SES'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_pedidos_compra''
+                         AND COLUMN_NAME =
+                             ''ESIVA_EXENTO_INTRACOMUNITARIO_PEDC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_albaranes_compra''
+                         AND COLUMN_NAME =
+                             ''ESIVA_EXENTO_INTRACOMUNITARIO_ALBC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_facturas_compra''
+                         AND COLUMN_NAME =
+                             ''ESIVA_EXENTO_INTRACOMUNITARIO_FACC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_devoluciones_compra''
+                         AND COLUMN_NAME =
+                             ''ESIVA_EXENTO_INTRACOMUNITARIO_DEVC'')
+    UNION ALL
+    SELECT 410, ''descuentos_globales_compra.sql'',
+           ''descuentos globales compra + SP factura compra'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_compras_sesiones''
+                     AND COLUMN_NAME = ''PORCENTAJE_DTO_COMERCIAL_SES'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_pedidos_compra''
+                         AND COLUMN_NAME = ''TOTAL_DTO_FINANCIERO_PEDC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_albaranes_compra''
+                         AND COLUMN_NAME = ''TOTAL_DTO_FINANCIERO_ALBC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_devoluciones_compra''
+                         AND COLUMN_NAME = ''TOTAL_DTO_FINANCIERO_DEVC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_facturas_compra''
+                         AND COLUMN_NAME = ''TOTAL_DTO_FINANCIERO_FACC'')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = ''PRC_FACC_RECALCULAR_TOTALES'')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME =
+                             ''PRC_FACC_ACTUALIZAR_DTOS_ALBARANES'')
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = ''PRC_FACC_FACTURAR_ALBARAN'')
+    UNION ALL
+    SELECT 420, ''recepcion_tope_compras.sql'',
+           ''fecha tope recepción en sesiones/pedidos y vistas'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_compras_sesiones''
+                     AND COLUMN_NAME = ''FECHA_TOPE_RECEPCION_SES'')
+           AND EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_compras_sesiones''
+                         AND INDEX_NAME = ''IDX_SES_FECHA_TOPE_RECEPCION'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_pedidos_compra''
+                         AND COLUMN_NAME = ''FECHA_TOPE_RECEPCION_PEDC'')
+           AND EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_pedidos_compra''
+                         AND INDEX_NAME = ''IDX_PEDC_FECHA_TOPE_RECEPCION'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_pedidos_compra''
+                         AND COLUMN_NAME =
+                             ''CANTIDAD_PENDIENTE_RECEPCION_PEDC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_albaranes_compra''
+                         AND COLUMN_NAME = ''FECHA_TOPE_RECEPCION_ALBC'')
+    UNION ALL
+    SELECT 430, ''quitar_esdefault_tar.sql'',
+           ''fza_tarifas y vistas sin ESDEFAULT_TAR'',
+           NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_tarifas''
+                         AND COLUMN_NAME = ''ESDEFAULT_TAR'')
+           AND NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                           WHERE TABLE_SCHEMA = DATABASE()
+                             AND TABLE_NAME = ''vi_tarifas''
+                             AND COLUMN_NAME = ''ESDEFAULT_TAR'')
+           AND NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                           WHERE TABLE_SCHEMA = DATABASE()
+                             AND TABLE_NAME = ''vi_articulos_tarifas''
+                             AND COLUMN_NAME = ''ESDEFAULT_TAR'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_tarifas'')
+    UNION ALL
+    SELECT 440, ''vi_art_busquedas_ref_proveedor.sql'',
+           ''vi_art_busquedas.REF_PROVEEDOR'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''vi_art_busquedas''
+                     AND COLUMN_NAME = ''REF_PROVEEDOR'')
+    UNION ALL
+    SELECT 445, ''proveedores_pais_combo.sql'',
+           ''fza_proveedores.CODIGO_PAI_PRV + vistas'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_proveedores''
+                     AND COLUMN_NAME = ''CODIGO_PAI_PRV'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_proveedores''
+                         AND COLUMN_NAME = ''CODIGO_PAI_PRV'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_proveedores_busquedas''
+                         AND COLUMN_NAME = ''CODIGO_PAI_PRV'')
+    UNION ALL
+    SELECT 450, ''filtros_guardados.sql'',
+           ''tablas fza_filtros_guardados / compartidos'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_filtros_guardados'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME =
+                             ''fza_filtros_guardados_compartidos'')
+    UNION ALL
+    SELECT 460, ''pedidos_compra.sql'',
+           ''pedidos compra cab/lin/celdas + vista + menú'',
+           EXISTS(SELECT 1 FROM information_schema.TABLES
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_pedidos_compra'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_pedidos_compra_lineas'')
+           AND EXISTS(SELECT 1 FROM information_schema.TABLES
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_pedidos_compra_celdas'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_pedidos_compra_lineas''
+                         AND COLUMN_NAME = ''COLOR_TEXTO_PEDCLIN'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_pedidos_compra''
+                         AND COLUMN_NAME = ''NOMBRE_PRV_PEDC'')
+           AND EXISTS(SELECT 1 FROM fza_winforms
+                       WHERE CALL_WINF = ''PedidosCompra'')
+    UNION ALL
+    SELECT 470, ''albc_pivote_tarifa.sql'',
+           ''albarán compra con pivote horizontal y tarifa'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_albaranes_compra''
+                     AND COLUMN_NAME = ''ESPIVOTE_HORIZONTAL_ALBC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_albaranes_compra''
+                         AND COLUMN_NAME = ''CODIGO_TAR_ALBC'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_albaranes_compra''
+                         AND COLUMN_NAME = ''CODIGO_TAR_ALBC'')
+    UNION ALL
+    SELECT 480, ''pivote_compras_default_vertical_alta.sql'',
+           ''pivote compra con default vertical en altas'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_pedidos_compra''
+                     AND COLUMN_NAME = ''ESPIVOTE_HORIZONTAL_PEDC''
+                     AND COALESCE(COLUMN_DEFAULT, '''') IN (''N'', ''''''N''''''))
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_albaranes_compra''
+                         AND COLUMN_NAME = ''ESPIVOTE_HORIZONTAL_ALBC''
+                         AND COALESCE(COLUMN_DEFAULT, '''') IN (''N'', ''''''N''''''))
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_facturas_compra''
+                         AND COLUMN_NAME = ''ESPIVOTE_HORIZONTAL_FACC''
+                         AND COALESCE(COLUMN_DEFAULT, '''') IN (''N'', ''''''N''''''))
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_devoluciones_compra''
+                         AND COLUMN_NAME = ''ESPIVOTE_HORIZONTAL_DEVC''
+                         AND COALESCE(COLUMN_DEFAULT, '''') IN (''N'', ''''''N''''''))
+    UNION ALL
+    SELECT 490, ''fix_contador_documentos_no_cero.sql'',
+           ''PRC_GET_NEXT_CONT_FACT_SERIE blindado contra número 0'',
+           EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                   WHERE ROUTINE_SCHEMA = DATABASE()
+                     AND ROUTINE_NAME = ''PRC_GET_NEXT_CONT_FACT_SERIE''
+                     AND ROUTINE_DEFINITION LIKE ''%GREATEST(CON, 1)%''
+                     AND ROUTINE_DEFINITION LIKE
+                         ''%El contador no puede devolver numero 0%'')
+    UNION ALL
+    SELECT 500, ''lineas_documentos_varchar4_contador.sql'',
+           ''líneas documento varchar(4) + SP pedido a albarán'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_pedidos_lineas''
+                     AND COLUMN_NAME = ''LINEA_PEDLIN''
+                     AND CHARACTER_MAXIMUM_LENGTH >= 4)
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_albaranes_lineas''
+                         AND COLUMN_NAME = ''LINEA_ALBLIN''
+                         AND CHARACTER_MAXIMUM_LENGTH >= 4)
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_albaranes_lineas''
+                         AND COLUMN_NAME = ''LINEA_PED_ALBLIN''
+                         AND CHARACTER_MAXIMUM_LENGTH >= 4)
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_pedidos_compra_lineas''
+                         AND COLUMN_NAME = ''LINEA_PEDCLIN''
+                         AND CHARACTER_MAXIMUM_LENGTH >= 4)
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_albaranes_compra_lineas''
+                         AND COLUMN_NAME = ''LINEA_ALBCLIN''
+                         AND CHARACTER_MAXIMUM_LENGTH >= 4)
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_devoluciones_compra_lineas''
+                         AND COLUMN_NAME = ''LINEA_DEVCLIN''
+                         AND CHARACTER_MAXIMUM_LENGTH >= 4)
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_facturas_compra_lineas''
+                         AND COLUMN_NAME = ''LINEA_FACCLIN''
+                         AND CHARACTER_MAXIMUM_LENGTH >= 4)
+           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES
+                       WHERE ROUTINE_SCHEMA = DATABASE()
+                         AND ROUTINE_NAME = ''PRC_PED_CREAR_ALBARAN_LINEA'')
+    UNION ALL
+    SELECT 510, ''albaranes_venta_almacen_cabecera.sql'',
+           ''fza_albaranes.CODIGO_ALM_ALB + vista'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_albaranes''
+                     AND COLUMN_NAME = ''CODIGO_ALM_ALB'')
+           AND EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_albaranes''
+                         AND INDEX_NAME = ''IDX_ALB_ALMACEN'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_albaranes''
+                         AND COLUMN_NAME = ''NOMBRE_ALM_ALB'')
+    UNION ALL
+    SELECT 520, ''pedidos_venta_almacen_cabecera.sql'',
+           ''fza_pedidos.CODIGO_ALM_PED + vista'',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ''fza_pedidos''
+                     AND COLUMN_NAME = ''CODIGO_ALM_PED'')
+           AND EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''fza_pedidos''
+                         AND INDEX_NAME = ''IDX_PED_ALMACEN'')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = ''vi_pedidos''
+                         AND COLUMN_NAME = ''NOMBRE_ALM_PED'')
+  ) t
+ ORDER BY t.aplicado, t.orden;
+-- Scripts solo-datos, no detectables por esquema. Son idempotentes:
+-- si hay duda, relanzarlos no hace daño.
+--   reubicar_shortcuts_menu.sql
+--   reubicar_shortcuts_facturas.sql
+--   migracion_shortcuts_caja_ctrl_shift.sql
+--   propiedades_shortcut_ctrl_alt_y.sql
+--   familias_asignar_codigo_padre.sql
+--   empresas_series_venta.sql
+--   clientes_deuda_actual.sql
+--   tallas_alinear_skus_conjunto.sql
+--   depositos_netear_devoluciones.sql (reemplaza SP existente)
+--   pedidos_albaranes_compra_pivote_default_horizontal.sql
+--   tarifas_limpiar_porcentaje_dto_basura.sql
+--   compras_sesiones_recalcular_totales.sql
+--   facturas_simplificadas_cabecera_empresa.sql
+--   quitar_tarifa_defecto_duplicada.sql
+--   articulos_precarga_sin_stock.sql
+--   movimientos_albaranes_fecha_documento.sql
+', '2026-07-05 06:53:35', '2026-07-05 06:53:35', 'Administrador', 'Administrador'),
+  ('498', 'pedidos_venta_almacen_cabecera', '-- ============================================================================
+-- Anyade el almacen de salida a la cabecera del pedido de venta mayor.
+-- Idempotente: no toca factuzam_original.sql.
+-- ============================================================================
+
+SET @c := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME   = ''fza_pedidos''
+              AND COLUMN_NAME  = ''CODIGO_ALM_PED'');
+SET @s := IF(@c = 0,
+  ''ALTER TABLE `fza_pedidos`
+     ADD COLUMN `CODIGO_ALM_PED` varchar(10) NULL DEFAULT NULL
+     COMMENT ''''Almacen de salida por defecto del pedido''''
+     AFTER `CODIGO_EMP_PED`'',
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME   = ''fza_pedidos''
+              AND INDEX_NAME   = ''IDX_PED_ALMACEN'');
+SET @s := IF(@c = 0,
+  ''ALTER TABLE `fza_pedidos`
+     ADD INDEX `IDX_PED_ALMACEN` (`CODIGO_ALM_PED`)'',
+  ''SELECT 1'');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+
+-- MariaDB congela las columnas de una vista creada con p.*. Rehacerla recoge
+-- CODIGO_ALM_PED y el nombre del almacen para listado y cabecera.
+CREATE OR REPLACE VIEW `vi_pedidos` AS
+SELECT p.*,
+       alm.NOMBRE_ALM_ALM AS NOMBRE_ALM_PED
+  FROM fza_pedidos p
+  LEFT JOIN fza_almacenes alm
+    ON alm.CODIGO_ALM_ALM = p.CODIGO_ALM_PED;
+', '2026-07-05 06:53:49', '2026-07-05 06:53:49', 'Administrador', 'Administrador');
+-- 28 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -10908,9 +12467,11 @@ INSERT INTO `fza_inventarios` (`CODIGO_EMP_INV`, `CODIGO_ALM_INV`, `SERIE_INV`, 
   ('012', 'GEN', 'A1', '20', 'IN', '2026-05-18 07:50:13', 'APLICADO', NULL, NULL, 6, 84, '2026-05-19 07:47:45', '2026-05-23 21:49:27', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL),
   ('012', 'GEN', 'A1', '21', 'IN', '2026-05-26 08:44:56', 'ABIERTO', NULL, NULL, -203, -2530, '2026-06-13 09:26:04', '2026-05-27 19:11:17', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL),
   ('012', 'GEN', 'A1', '22', 'IN', '2026-06-13 09:05:01', 'ABIERTO', NULL, NULL, -517, -7759, '2026-06-13 09:38:23', NULL, 'Administrador', 'Administrador', 'N', NULL, NULL, NULL),
+  ('012', 'GEN', 'A1', '24', 'IN', '2026-07-15 06:27:19', 'ABIERTO', NULL, NULL, 0, 0, '2026-07-05 06:27:29', NULL, 'Administrador', 'Administrador', 'N', NULL, NULL, NULL),
+  ('012', 'GEN', 'A1', '25', 'IN', '2026-07-15 00:00:00', 'ABIERTO', NULL, NULL, 0, 0, '2026-07-05 06:30:10', NULL, 'Administrador', 'Administrador', 'N', NULL, NULL, NULL),
   ('012', 'GEN', 'A1', '3', 'IN', '2026-05-06 00:00:00', 'APLICADO', 'kk', NULL, -2, -20, '2026-05-06 08:15:17', '2026-05-09 07:14:58', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL),
   ('012', 'GEN', 'A1', '4', 'IN', '2026-05-07 00:00:00', 'APLICADO', NULL, NULL, 2, 5, '2026-05-08 07:13:42', '2026-05-09 07:14:58', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL);
--- 19 registros exportados
+-- 21 registros exportados
 
 
 -- Tabla: fza_inventarios_lineas
@@ -11423,11 +12984,12 @@ INSERT INTO `fza_inventarios_lineas` (`CODIGO_EMP_INVLIN`, `CODIGO_ALM_INVLIN`, 
   ('012', 'GEN', 'A1', '22', '0323', 'BLUS-SEDA', 'BLUS-SEDA/NEGRO/S', '', NULL, 'Blusa de Seda Cuello V', 0, 0, 0, 0, 0, 0, '2026-06-12 23:59:59', '2026-06-13 09:38:23', '2026-06-13 09:38:18', 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '22', '0324', 'BLUS-SEDA', 'BLUS-SEDA/ROSA/M', '', NULL, 'Blusa de Seda Cuello V', 0, 0, 0, 0, 0, 0, '2026-06-12 23:59:59', '2026-06-13 09:38:23', '2026-06-13 09:38:18', 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '22', '0325', 'DEMO-PRO', 'DEMO-PRO', '', NULL, 'Cinturón Piel Demo', 0, 0, 0, 0, 0, 0, '2026-06-12 23:59:59', '2026-06-13 09:38:23', '2026-06-13 09:38:18', 'Administrador', 'Administrador'),
+  ('012', 'GEN', 'A1', '25', '0001', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, NULL, 'ARTICULO PRUEBAS PMP SKU', 7, 5, 0, 10.5, 10.5, NULL, '2026-07-05 06:33:05', '2026-07-05 06:34:01', '2026-07-05 06:30:42', 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '3', '0001', 'CARTERA-PIEL', 'CARTERA-PIEL', '', NULL, 'Cartera Piel Caballero', 3, 4, 1, 5, 5, 5, '2026-05-05 23:59:59', '2026-05-06 08:15:17', '2026-05-06 08:00:16', 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '3', '0002', 'CINTURON-PIEL', 'CINTURON-PIEL', '', NULL, 'Cinturón Piel Reversible', 7, 5, -2, 5, 5, -10, '2026-05-05 23:59:59', '2026-05-06 08:15:17', '2026-05-06 08:00:16', 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '3', '0003', 'SOMBRERO-PJM', 'SOMBRERO-PJM', '', NULL, 'Sombrero Panamá Verano', 7, 6, -1, 15, 15, -15, '2026-05-05 23:59:59', '2026-05-06 08:15:17', '2026-05-06 08:00:16', 'Administrador', 'Administrador'),
   ('012', 'GEN', 'A1', '4', '0001', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, NULL, 'Zapatilla Deportiva Running', -1, 1, 2, 0, 5, 5, '2026-05-08 07:13:25', '2026-05-08 07:13:42', '2026-05-09 07:14:58', 'Administrador', 'Administrador');
--- 482 registros exportados
+-- 483 registros exportados
 
 
 -- Tabla: fza_inventarios_recuentos
@@ -12565,8 +14127,17 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('0000001093', 'AC', 'C1', '000007', '0010', '012', 'GEN', '2026-07-10 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/S', NULL, 'E', 10, 8, 80, 8, NULL, '', NULL, 'S', '2026-07-04 16:58:58', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
   ('0000001094', 'AC', 'C1', '000007', '0020', '012', 'GEN', '2026-07-10 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, 'E', 6, 12, 72, 12, NULL, '', NULL, 'S', '2026-07-04 16:58:58', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
   ('0000001095', 'AC', 'C1', '000007', '0030', '012', 'GEN', '2026-07-10 00:00:00', 'TESTSKU01', 'TESTSKU01/AZUL/S', NULL, 'E', 4, 15, 60, 15, NULL, '', NULL, 'S', '2026-07-04 16:58:58', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
-  ('0000001102', 'AC', 'C1', '000008', '0010', '012', 'GEN', '2026-07-11 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/S', NULL, 'E', 5, 14, 70, 14, NULL, '', NULL, 'S', '2026-07-04 17:19:03', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
-  ('0000001103', 'AC', 'C1', '000008', '0020', '012', 'GEN', '2026-07-11 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, 'E', 6, 9, 54, 9, NULL, '', NULL, 'S', '2026-07-04 17:19:03', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000001102', 'AC', 'C1', '000008', '0010', '012', 'GEN', '2026-07-11 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/S', NULL, 'E', 5, 14, 70, 10, NULL, '', NULL, 'S', '2026-07-04 18:11:27', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000001103', 'AC', 'C1', '000008', '0020', '012', 'GEN', '2026-07-11 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, 'E', 6, 9, 54, 10.5, NULL, '', NULL, 'S', '2026-07-04 18:11:27', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000001111', 'VE', '2026.A1', '000166', '0020', '012', 'GEN', '2026-07-12 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/S', NULL, 'S', 3, 10, 30, 10, NULL, '0', NULL, 'S', '2026-07-04 18:53:17', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000192', '1'),
+  ('0000001113', 'VE', '2026.A1', '000166', '0120', '012', 'GEN', '2026-07-12 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, 'S', 2, 10.5, 21, 10.5, NULL, '0', NULL, 'S', '2026-07-04 18:53:17', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000192', '1'),
+  ('0000001115', 'VE', '2026.A1', '000166', '0150', '012', 'GEN', '2026-07-12 00:00:00', 'TESTSKU01', 'TESTSKU01/AZUL/S', NULL, 'S', 1, 15, 15, 15, NULL, '0', NULL, 'S', '2026-07-04 18:53:17', NULL, '1', '1', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000192', '1'),
+  ('0000001116', 'TA', 'TA', '000005', '0010', '012', 'GEN', '2026-07-13 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/S', NULL, 'S', 4, 10, 40, 10, 'BCN', '', NULL, 'S', '2026-07-04 19:28:08', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000193', '1'),
+  ('0000001117', 'TA', 'TA', '000005', '0010', '1', 'BCN', '2026-07-13 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/S', NULL, 'E', 4, 10, 40, 10, 'GEN', '', NULL, 'S', '2026-07-04 19:28:08', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000193', '1'),
+  ('0000001118', 'TA', 'TA', '000005', '0020', '012', 'GEN', '2026-07-13 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, 'S', 3, 10.5, 31.5, 10.5, 'BCN', '', NULL, 'S', '2026-07-04 19:28:08', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000193', '1'),
+  ('0000001119', 'TA', 'TA', '000005', '0020', '1', 'BCN', '2026-07-13 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, 'E', 3, 10.5, 31.5, 10.5, 'GEN', '', NULL, 'S', '2026-07-04 19:28:08', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000193', '1'),
+  ('0000001124', 'AC', 'C1', '000001', '0010', '1', 'BCN', '2026-07-14 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/S', NULL, 'E', 4, 16, 64, 16, NULL, '', NULL, 'S', '2026-07-05 06:22:42', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'BCN', '', ''),
+  ('0000001125', 'AC', 'C1', '000001', '0020', '1', 'BCN', '2026-07-14 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, 'E', 3, 7, 21, 7, NULL, '', NULL, 'S', '2026-07-05 06:22:42', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'BCN', '', ''),
   ('1', 'IN', 'A1', '2026001', '002', '1', 'GEN', '2026-01-04 22:13:10', 'ZAP-OXFORD', 'ZAP-OXFORD/MARRON/43', 'Zapato Oxford Piel 43 Marrón', 'E', 8, 40, 320, 40, NULL, NULL, NULL, 'S', '2026-05-26 07:51:58', '2026-03-11 22:27:53', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('100', 'IN', 'A1', '2026001', '100', '1', 'GEN', '2026-01-10 08:00:00', 'CAMI-POLO', 'CAMI-POLO/BLANCO/S', 'Polo Blanco S', 'E', 15, 12, 180, 12, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('101', 'IN', 'A1', '2026001', '101', '1', 'GEN', '2026-01-10 08:00:00', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', 'Polo Blanco M', 'E', 20, 12, 240, 12, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
@@ -12754,7 +14325,7 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('IV-3-0003S', 'IN', 'A1', '3', '0003', '012', 'GEN', '2026-05-05 23:59:58', 'SOMBRERO-PJM', 'SOMBRERO-PJM', NULL, 'S', 7, 0, 90, 15, NULL, NULL, NULL, 'S', '2026-05-06 08:15:17', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-4-0001E', 'IN', 'A1', '4', '0001', '012', 'GEN', '2026-05-08 07:13:25', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, 'E', 1, 5, 5, 5, NULL, NULL, NULL, 'S', '2026-05-08 07:13:42', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-4-0001S', 'IN', 'A1', '4', '0001', '012', 'GEN', '2026-05-08 07:13:24', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, 'E', 1, 0, 5, 5, NULL, NULL, NULL, 'S', '2026-05-08 07:13:42', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL);
--- 809 registros exportados
+-- 818 registros exportados
 
 
 -- Tabla: fza_paises
@@ -13023,6 +14594,7 @@ CREATE TABLE `fza_pedidos` (
   `ESTADO_PED` varchar(20) NULL DEFAULT 'ABIERTO' COMMENT 'ABIERTO, PARCIAL, ENTREGADO, CANCELADO, IMPORTADO',
   `FECHA_ENTREGA_PED` date NULL DEFAULT NULL COMMENT 'Fecha prevista de entrega del pedido',
   `CODIGO_EMP_PED` varchar(8) NULL DEFAULT NULL,
+  `CODIGO_ALM_PED` varchar(10) NULL DEFAULT NULL COMMENT 'Almacen de salida por defecto del pedido',
   `RAZON_SOCIAL_EMPRESA_PED` varchar(200) NULL DEFAULT NULL,
   `NIF_EMPRESA_PED` varchar(50) NULL DEFAULT NULL,
   `MOVIL_EMPRESA_PED` varchar(40) NULL DEFAULT NULL,
@@ -13124,18 +14696,19 @@ CREATE TABLE `fza_pedidos` (
   `USUARIO_MODIF` varchar(100) NOT NULL,
   PRIMARY KEY (`NUMERO_PED`,`SERIE_PED`)
 );
+ALTER TABLE `fza_pedidos` ADD INDEX `IDX_PED_ALMACEN` (`CODIGO_ALM_PED`);
 ALTER TABLE `fza_pedidos` ADD INDEX `IDX_PED_CLIENTE_FECHA` (`CODIGO_CLI_PED`, `FECHA_PED`);
 ALTER TABLE `fza_pedidos` ADD INDEX `IDX_PED_EMPRESA` (`CODIGO_EMP_PED`);
 ALTER TABLE `fza_pedidos` ADD INDEX `IDX_PED_ESTADO` (`ESTADO_PED`);
 ALTER TABLE `fza_pedidos` ADD INDEX `IDX_PED_IDPS` (`IDPS_PED`);
 
 -- Datos de fza_pedidos
-INSERT INTO `fza_pedidos` (`NUMERO_PED`, `SERIE_PED`, `FECHA_PED`, `ESCONSOLIDADO_PED`, `ESTADO_PED`, `FECHA_ENTREGA_PED`, `CODIGO_EMP_PED`, `RAZON_SOCIAL_EMPRESA_PED`, `NIF_EMPRESA_PED`, `MOVIL_EMPRESA_PED`, `EMAIL_EMPRESA_PED`, `DIRECCION1_EMPRESA_PED`, `DIRECCION2_EMPRESA_PED`, `POBLACION_EMPRESA_PED`, `PROVINCIA_EMPRESA_PED`, `CODIGO_PAI_EMPRESA_PED`, `NOMBRE_PAI_EMPRESA_PED`, `CODIGO_POSTAL_EMPRESA_PED`, `ESRETENCIONES_EMPRESA_PED`, `GRUPO_ZONA_IVA_EMPRESA_PED`, `ESREGIMENESPECIALAGRICOLA_EMPRESA_PED`, `CODIGO_CLI_PED`, `NIF_CLIENTE_PED`, `EMAIL_CLIENTE_PED`, `REFERENCIAPS_PED`, `IDPS_PED`, `FECHAPS_PED`, `FORMAPAGOPS_PED`, `TRANSPORTISTAPS_PED`, `ESTADOPEDIDOPS_PED`, `ESTADOMENSAJEPS_PED`, `IDHILOPS_MENSAJES_PED`, `NOMBRE_CLI_ENVIO_PED`, `MOVIL_CLIENTE_ENVIO_PED`, `DIRECCION1_CLIENTE_ENVIO_PED`, `DIRECCION2_CLIENTE_ENVIO_PED`, `POBLACION_CLIENTE_ENVIO_PED`, `PROVINCIA_CLIENTE_ENVIO_PED`, `CODIGO_POSTAL_CLIENTE_ENVIO_PED`, `CODIGO_PAI_CLIENTE_ENVIO_PED`, `NOMBRE_PAI_CLIENTE_ENVIO_PED`, `RAZON_SOCIAL_CLIENTE_FISCAL_PED`, `MOVIL_CLIENTE_FISCAL_PED`, `EMAIL_CLIENTE_FISCAL_PED`, `DIRECCION1_CLIENTE_FISCAL_PED`, `DIRECCION2_CLIENTE_FISCAL_PED`, `POBLACION_CLIENTE_FISCAL_PED`, `PROVINCIA_CLIENTE_FISCAL_PED`, `CODIGO_POSTAL_CLIENTE_FISCAL_PED`, `CODIGO_PAI_CLIENTE_FISCAL_PED`, `NOMBRE_PAI_CLIENTE_FISCAL_PED`, `ESIVA_RECARGO_CLIENTE_PED`, `ESIVA_EXENTO_CLIENTE_PED`, `ESREGIMENESPECIALAGRICOLA_CLIENTE_PED`, `ESRETENCIONES_CLIENTE_PED`, `TARIFA_ARTICULO_CLIENTE_PED`, `ESIMP_INCL_TARIFA_CLIENTE_PED`, `ESINTRACOMUNITARIO_CLIENTE_PED`, `ESIRPF_IMP_INCL_ZONA_IVA_PED`, `ESAPLICA_RE_ZONA_IVA_PED`, `ESIVAAGRICOLA_ZONA_IVA_PED`, `PALABRA_REPORTS_ZONA_IVA_PED`, `CODIGO_IVA_PED`, `ESVENTA_ACTIVO_FIJO_PED`, `PORCENTAJE_IVAN_PED`, `TOTAL_IVAN_PED`, `PORCENTAJE_REN_PED`, `TOTAL_REN_PED`, `TOTAL_BASEI_IVAN_PED`, `PORCENTAJE_IVAR_PED`, `TOTAL_IVAR_PED`, `PORCENTAJE_RER_PED`, `TOTAL_RER_PED`, `TOTAL_BASEI_IVAR_PED`, `PORCENTAJE_IVAS_PED`, `TOTAL_IVAS_PED`, `PORCENTAJE_RES_PED`, `TOTAL_RES_PED`, `TOTAL_BASEI_IVAS_PED`, `PORCENTAJE_IVAE_PED`, `TOTAL_IVAE_PED`, `PORCENTAJE_REE_PED`, `TOTAL_REE_PED`, `TOTAL_BASEI_IVAE_PED`, `TOTAL_BASES_PED`, `TOTAL_IMPUESTOS_PED`, `FORMA_PAGO_PED`, `PORCENTAJE_RETENCION_PED`, `TOTAL_RETENCION_PED`, `TOTAL_LIQUIDO_PED`, `TOTAL_PAGADOREALPS_PED`, `NUMERO_PED_ABONO_PED`, `SERIE_PED_ABONO_PED`, `TEXTO_LEGAL_CLIENTE_PED`, `TEXTO_LEGAL_EMPRESA_PED`, `DOCUMENTO_PED`, `COMENTARIOS_PED`, `OBSERVACIONES_PED`, `CONTADOR_LINEAS_PED`, `ESCREARARTICULOS_PED`, `ESDESCRIPCIONES_AMP_PED`, `ESFECHADEENTREGA_PED`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('000001', 'A1', '2026-07-02 00:00:00', 'N', 'ABIERTO', NULL, '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '313', 'B11223344', 'gerencia@texnordeste.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'TEXTILES NORDESTE SL', '937333333', NULL, 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, '60DIAS', 15, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-02 18:31:43', '2026-07-02 18:31:43', 'Alfredo', 'Alfredo'),
-  ('000001', 'AG1', '2026-07-02 00:00:00', 'N', 'ABIERTO', NULL, '1', 'AGRICULTOR', 'NIF DEL AGRICULTOR', 'TFNO DEL AGRICULTOR', 'EMAIL DEL AGRICULTOR', 'DIRECCION DEL AGRICULTOR', '', 'POBLACION DEL AGRICULTOR', 'PROVINCIA DEL AGRICULTOR', 'ES', 'España', 'POSAGRI', 'S', '2', 'S', '302', '23456789B', 'carlos.herrero@hotmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CARLOS HERRERO SANTOS', '666202020', NULL, 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', 'N', 'N', 'N', 'S', 'PVP', NULL, 'N', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, 0, 0, 'CONTADO', 2.5, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-02 19:16:15', '2026-07-02 19:16:15', 'Administrador', 'Administrador'),
-  ('000001', 'PED', '2026-02-12 00:00:00', 'N', 'ABIERTO', NULL, '1', 'MODA EJEMPLO SL', 'B11111111', NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, 'N', NULL, 'N', '317', 'B99887766', 'admin@importamoda.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'IMPORTACIONES LA MODA SL', NULL, 'C/ ARTESANOS, 20 NAVE 3', NULL, 'ALCOBENDAS', 'MADRID', '28108', '724', 'España', 'IMPORTACIONES LA MODA SL', NULL, NULL, 'C/ ARTESANOS, 20 NAVE 3', NULL, 'ALCOBENDAS', 'MADRID', '28108', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'S', 'N', 'N', 'S', 'N', 'IVA', NULL, 'N', 21, 147, NULL, 0, 700, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, 700, 147, '30DIAS', NULL, 0, 847, NULL, NULL, NULL, '', '', NULL, 'Pedido urgente - Reposición colección primavera', '', '00000030', NULL, 'S', NULL, '2026-07-03 16:50:29', '2026-02-12 10:00:00', 'DEMO', 'Administrador'),
-  ('000002', 'PED', '2026-02-13 00:00:00', 'N', 'ABIERTO', NULL, '1', 'MODA EJEMPLO SL', 'B11111111', NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, 'N', NULL, 'N', '320', 'B55443322', 'compras@modaspain.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'TIENDAS MODA SPAIN SL', NULL, 'GRAN VÍA, 48', NULL, 'MADRID', 'MADRID', '28013', '724', 'España', 'TIENDAS MODA SPAIN SL', NULL, NULL, 'GRAN VÍA, 48', NULL, 'MADRID', 'MADRID', '28013', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'S', 'N', 'N', 'S', 'N', 'IVA', NULL, 'N', 21, 176.4, NULL, NULL, 840, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 840, 176.4, '60DIAS', NULL, NULL, 1016.4, NULL, NULL, NULL, '', '', NULL, 'Colección verano 2026 - 1ª entrega', '', '00000040', NULL, 'S', NULL, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO'),
-  ('000003', 'PED', '2026-02-14 00:00:00', 'N', 'ABIERTO', NULL, '1', 'MODA EJEMPLO SL', 'B11111111', NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, 'N', NULL, 'N', '304', '45678901D', 'juan.martin@empresa.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'JUAN MARTÍN PÉREZ', NULL, 'C/ ALCALÁ, 100', NULL, 'MADRID', 'MADRID', '28009', '724', 'España', 'JUAN MARTÍN PÉREZ', NULL, NULL, 'C/ ALCALÁ, 100', NULL, 'MADRID', 'MADRID', '28009', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'S', 'N', 'N', 'S', 'N', 'IVA', NULL, 'N', 21, 42, NULL, NULL, 200, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 200, 42, '60DIAS', NULL, NULL, 242, NULL, NULL, NULL, '', '', NULL, '', '', '00000020', NULL, 'S', NULL, '2026-07-03 16:50:29', '2026-02-14 11:00:00', 'DEMO', 'DEMO');
+INSERT INTO `fza_pedidos` (`NUMERO_PED`, `SERIE_PED`, `FECHA_PED`, `ESCONSOLIDADO_PED`, `ESTADO_PED`, `FECHA_ENTREGA_PED`, `CODIGO_EMP_PED`, `CODIGO_ALM_PED`, `RAZON_SOCIAL_EMPRESA_PED`, `NIF_EMPRESA_PED`, `MOVIL_EMPRESA_PED`, `EMAIL_EMPRESA_PED`, `DIRECCION1_EMPRESA_PED`, `DIRECCION2_EMPRESA_PED`, `POBLACION_EMPRESA_PED`, `PROVINCIA_EMPRESA_PED`, `CODIGO_PAI_EMPRESA_PED`, `NOMBRE_PAI_EMPRESA_PED`, `CODIGO_POSTAL_EMPRESA_PED`, `ESRETENCIONES_EMPRESA_PED`, `GRUPO_ZONA_IVA_EMPRESA_PED`, `ESREGIMENESPECIALAGRICOLA_EMPRESA_PED`, `CODIGO_CLI_PED`, `NIF_CLIENTE_PED`, `EMAIL_CLIENTE_PED`, `REFERENCIAPS_PED`, `IDPS_PED`, `FECHAPS_PED`, `FORMAPAGOPS_PED`, `TRANSPORTISTAPS_PED`, `ESTADOPEDIDOPS_PED`, `ESTADOMENSAJEPS_PED`, `IDHILOPS_MENSAJES_PED`, `NOMBRE_CLI_ENVIO_PED`, `MOVIL_CLIENTE_ENVIO_PED`, `DIRECCION1_CLIENTE_ENVIO_PED`, `DIRECCION2_CLIENTE_ENVIO_PED`, `POBLACION_CLIENTE_ENVIO_PED`, `PROVINCIA_CLIENTE_ENVIO_PED`, `CODIGO_POSTAL_CLIENTE_ENVIO_PED`, `CODIGO_PAI_CLIENTE_ENVIO_PED`, `NOMBRE_PAI_CLIENTE_ENVIO_PED`, `RAZON_SOCIAL_CLIENTE_FISCAL_PED`, `MOVIL_CLIENTE_FISCAL_PED`, `EMAIL_CLIENTE_FISCAL_PED`, `DIRECCION1_CLIENTE_FISCAL_PED`, `DIRECCION2_CLIENTE_FISCAL_PED`, `POBLACION_CLIENTE_FISCAL_PED`, `PROVINCIA_CLIENTE_FISCAL_PED`, `CODIGO_POSTAL_CLIENTE_FISCAL_PED`, `CODIGO_PAI_CLIENTE_FISCAL_PED`, `NOMBRE_PAI_CLIENTE_FISCAL_PED`, `ESIVA_RECARGO_CLIENTE_PED`, `ESIVA_EXENTO_CLIENTE_PED`, `ESREGIMENESPECIALAGRICOLA_CLIENTE_PED`, `ESRETENCIONES_CLIENTE_PED`, `TARIFA_ARTICULO_CLIENTE_PED`, `ESIMP_INCL_TARIFA_CLIENTE_PED`, `ESINTRACOMUNITARIO_CLIENTE_PED`, `ESIRPF_IMP_INCL_ZONA_IVA_PED`, `ESAPLICA_RE_ZONA_IVA_PED`, `ESIVAAGRICOLA_ZONA_IVA_PED`, `PALABRA_REPORTS_ZONA_IVA_PED`, `CODIGO_IVA_PED`, `ESVENTA_ACTIVO_FIJO_PED`, `PORCENTAJE_IVAN_PED`, `TOTAL_IVAN_PED`, `PORCENTAJE_REN_PED`, `TOTAL_REN_PED`, `TOTAL_BASEI_IVAN_PED`, `PORCENTAJE_IVAR_PED`, `TOTAL_IVAR_PED`, `PORCENTAJE_RER_PED`, `TOTAL_RER_PED`, `TOTAL_BASEI_IVAR_PED`, `PORCENTAJE_IVAS_PED`, `TOTAL_IVAS_PED`, `PORCENTAJE_RES_PED`, `TOTAL_RES_PED`, `TOTAL_BASEI_IVAS_PED`, `PORCENTAJE_IVAE_PED`, `TOTAL_IVAE_PED`, `PORCENTAJE_REE_PED`, `TOTAL_REE_PED`, `TOTAL_BASEI_IVAE_PED`, `TOTAL_BASES_PED`, `TOTAL_IMPUESTOS_PED`, `FORMA_PAGO_PED`, `PORCENTAJE_RETENCION_PED`, `TOTAL_RETENCION_PED`, `TOTAL_LIQUIDO_PED`, `TOTAL_PAGADOREALPS_PED`, `NUMERO_PED_ABONO_PED`, `SERIE_PED_ABONO_PED`, `TEXTO_LEGAL_CLIENTE_PED`, `TEXTO_LEGAL_EMPRESA_PED`, `DOCUMENTO_PED`, `COMENTARIOS_PED`, `OBSERVACIONES_PED`, `CONTADOR_LINEAS_PED`, `ESCREARARTICULOS_PED`, `ESDESCRIPCIONES_AMP_PED`, `ESFECHADEENTREGA_PED`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('000001', 'A1', '2026-07-02 00:00:00', 'N', 'ABIERTO', NULL, '012', NULL, 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '313', 'B11223344', 'gerencia@texnordeste.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'TEXTILES NORDESTE SL', '937333333', NULL, 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, '60DIAS', 15, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-02 18:31:43', '2026-07-02 18:31:43', 'Alfredo', 'Alfredo'),
+  ('000001', 'AG1', '2026-07-02 00:00:00', 'N', 'ABIERTO', NULL, '1', NULL, 'AGRICULTOR', 'NIF DEL AGRICULTOR', 'TFNO DEL AGRICULTOR', 'EMAIL DEL AGRICULTOR', 'DIRECCION DEL AGRICULTOR', '', 'POBLACION DEL AGRICULTOR', 'PROVINCIA DEL AGRICULTOR', 'ES', 'España', 'POSAGRI', 'S', '2', 'S', '302', '23456789B', 'carlos.herrero@hotmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CARLOS HERRERO SANTOS', '666202020', NULL, 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', 'N', 'N', 'N', 'S', 'PVP', NULL, 'N', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, 0, 0, 'CONTADO', 2.5, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-02 19:16:15', '2026-07-02 19:16:15', 'Administrador', 'Administrador'),
+  ('000001', 'PED', '2026-02-12 00:00:00', 'N', 'ABIERTO', NULL, '1', NULL, 'MODA EJEMPLO SL', 'B11111111', NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, 'N', NULL, 'N', '317', 'B99887766', 'admin@importamoda.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'IMPORTACIONES LA MODA SL', NULL, 'C/ ARTESANOS, 20 NAVE 3', NULL, 'ALCOBENDAS', 'MADRID', '28108', '724', 'España', 'IMPORTACIONES LA MODA SL', NULL, NULL, 'C/ ARTESANOS, 20 NAVE 3', NULL, 'ALCOBENDAS', 'MADRID', '28108', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'S', 'N', 'N', 'S', 'N', 'IVA', NULL, 'N', 21, 147, NULL, 0, 700, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, 700, 147, '30DIAS', NULL, 0, 847, NULL, NULL, NULL, '', '', NULL, 'Pedido urgente - Reposición colección primavera', '', '00000030', NULL, 'S', NULL, '2026-07-03 16:50:29', '2026-02-12 10:00:00', 'DEMO', 'Administrador'),
+  ('000002', 'PED', '2026-02-13 00:00:00', 'N', 'ABIERTO', NULL, '1', NULL, 'MODA EJEMPLO SL', 'B11111111', NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, 'N', NULL, 'N', '320', 'B55443322', 'compras@modaspain.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'TIENDAS MODA SPAIN SL', NULL, 'GRAN VÍA, 48', NULL, 'MADRID', 'MADRID', '28013', '724', 'España', 'TIENDAS MODA SPAIN SL', NULL, NULL, 'GRAN VÍA, 48', NULL, 'MADRID', 'MADRID', '28013', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'S', 'N', 'N', 'S', 'N', 'IVA', NULL, 'N', 21, 176.4, NULL, NULL, 840, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 840, 176.4, '60DIAS', NULL, NULL, 1016.4, NULL, NULL, NULL, '', '', NULL, 'Colección verano 2026 - 1ª entrega', '', '00000040', NULL, 'S', NULL, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO'),
+  ('000003', 'PED', '2026-02-14 00:00:00', 'N', 'ABIERTO', NULL, '1', NULL, 'MODA EJEMPLO SL', 'B11111111', NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, 'N', NULL, 'N', '304', '45678901D', 'juan.martin@empresa.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'JUAN MARTÍN PÉREZ', NULL, 'C/ ALCALÁ, 100', NULL, 'MADRID', 'MADRID', '28009', '724', 'España', 'JUAN MARTÍN PÉREZ', NULL, NULL, 'C/ ALCALÁ, 100', NULL, 'MADRID', 'MADRID', '28009', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'S', 'N', 'N', 'S', 'N', 'IVA', NULL, 'N', 21, 42, NULL, NULL, 200, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 200, 42, '60DIAS', NULL, NULL, 242, NULL, NULL, NULL, '', '', NULL, '', '', '00000020', NULL, 'S', NULL, '2026-07-03 16:50:29', '2026-02-14 11:00:00', 'DEMO', 'DEMO');
 -- 5 registros exportados
 
 
@@ -14709,7 +16282,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-04 17:16:02', '2026-07-04 17:16:02', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-05 06:53:22', '2026-07-05 06:53:22', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Vendedores', 'S', '012', '2026-07-02 18:49:30', '2026-07-02 18:49:30', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
 -- 2 registros exportados
 
@@ -26055,7 +27628,7 @@ CREATE TABLE `fza_verifactu_cadena` (
 
 -- Datos de fza_verifactu_cadena
 INSERT INTO `fza_verifactu_cadena` (`NIF_VFCAD`, `CONTADOR_VFCAD`, `SERIE_FAC_VFCAD`, `NUMERO_FAC_VFCAD`, `FECHA_FAC_VFCAD`, `HUELLA_VFCAD`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES
-  ('45684134Q', 11, '2026.A1', '000164', '2026-06-25 00:00:00', '61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5', '2026-06-12 07:31:31', 'Administrador', '2026-06-25 19:43:32', 'Administrador');
+  ('45684134Q', 12, '2026.A1', '000165', '2026-07-04 00:00:00', 'F764E83F0F9E83890C72C26B26BC8E610AAB2787D5E84A4C0C1956CE0EAC7E88', '2026-06-12 07:31:31', 'Administrador', '2026-07-04 17:58:42', 'Administrador');
 -- 1 registros exportados
 
 
@@ -26096,9 +27669,11 @@ INSERT INTO `fza_verifactu_cola` (`ID_VFCOLA`, `SERIE_FAC_VFCOLA`, `NUMERO_FAC_V
   (11, '2026.A1', '000005', 'ALTA', 'ENVIADA', 0, NULL, '2026-06-13 10:12:44', NULL, '2026-06-13 09:53:03', 'Administrador', '2026-06-13 10:12:44', 'Administrador'),
   (14, '2026.A1', '000152', 'ALTA', 'ENVIADA', 0, NULL, '2026-06-13 11:28:29', NULL, '2026-06-13 11:27:46', 'Administrador', '2026-06-13 11:28:29', 'Administrador'),
   (15, '2026.A1', '000153', 'ALTA', 'ENVIADA', 0, NULL, '2026-06-13 12:15:30', NULL, '2026-06-13 12:15:19', 'Administrador', '2026-06-13 12:15:30', 'Administrador'),
-  (17, '2026.A1', '000164', 'ALTA', 'ENVIADA', 0, NULL, '2026-06-25 19:43:32', NULL, '2026-06-25 19:42:44', 'Administrador', '2026-06-25 19:43:32', 'Administrador');
+  (17, '2026.A1', '000164', 'ALTA', 'ENVIADA', 0, NULL, '2026-06-25 19:43:32', NULL, '2026-06-25 19:42:44', 'Administrador', '2026-06-25 19:43:32', 'Administrador'),
+  (18, '2026.A1', '000165', 'ALTA', 'ENVIADA', 0, NULL, '2026-07-04 17:58:42', NULL, '2026-07-04 17:58:00', 'Administrador', '2026-07-04 17:58:42', 'Administrador'),
+  (19, '2026.A1', '000166', 'ALTA', 'PENDIENTE', 8, '2026-07-05 07:24:22', NULL, 'AEAT [1112] El campo FechaExpedicionFactura es superior a la fecha actual.', '2026-07-04 18:53:17', 'Administrador', '2026-07-05 06:52:22', 'Administrador');
 /*!40000 ALTER TABLE `fza_verifactu_cola` ENABLE KEYS */;
--- 13 registros exportados
+-- 15 registros exportados
 
 
 -- Tabla: fza_verifactu_eventos
@@ -26737,9 +28312,18 @@ INSERT INTO `fza_verifactu_eventos` (`ID_LOG`, `TIMESTAMP_LOG`, `TIPO_EVENTO_LOG
   (601, '2026-07-02 18:50:29', 101, 'Administrador', '1.0.15.202606260100.alpha', 'Inicio del sistema', NULL, '4E2BCDA4028EAD9D4B7D5B24360C960791255397C7F85F9A6DDDDDB1802B2229', '1650883F8E59F6A5F3BD1D6A7ABD11624CA526D8EAD8E5EA5E1D77733C7019AF', '1650883F8E59F6A5F3BD1D6A7ABD11624CA526D8EAD8E5EA5E1D77733C7019AF', '2026-07-02 18:50:29', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T18:50:29+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>01</sf:TipoEvento><sf:OtrosDatosEvento>Inicio del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T18:27:05+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>4E2BCDA4028EAD9D4B7D5B24360C960791255397C7F85F9A6DDDDDB1802B2229</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>1650883F8E59F6A5F3BD1D6A7ABD11624CA526D8EAD8E5EA5E1D77733C7019AF</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
   (602, '2026-07-02 19:11:46', 102, 'Administrador', '1.0.15.202606260100.alpha', 'Cierre del sistema', NULL, '1650883F8E59F6A5F3BD1D6A7ABD11624CA526D8EAD8E5EA5E1D77733C7019AF', '6B3FD0DAF22BBA73AA5C6BC1A579E13909896BC13CBDAD2A4C1A08931E59963A', '6B3FD0DAF22BBA73AA5C6BC1A579E13909896BC13CBDAD2A4C1A08931E59963A', '2026-07-02 19:11:46', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T19:11:46+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>02</sf:TipoEvento><sf:OtrosDatosEvento>Cierre del sistema</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>01</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T18:50:29+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>1650883F8E59F6A5F3BD1D6A7ABD11624CA526D8EAD8E5EA5E1D77733C7019AF</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>6B3FD0DAF22BBA73AA5C6BC1A579E13909896BC13CBDAD2A4C1A08931E59963A</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
   (603, '2026-07-02 19:22:21', 103, 'Administrador', '1.0.15.202606260100.alpha', 'Cambio de configuración Verifactu', 'Parámetros guardados para Vendedores: 3', '6B3FD0DAF22BBA73AA5C6BC1A579E13909896BC13CBDAD2A4C1A08931E59963A', '0108B80125EC26A53C7CA493A593E9E409479E572C738D3A9E7295145DEADFB9', '0108B80125EC26A53C7CA493A593E9E409479E572C738D3A9E7295145DEADFB9', '2026-07-02 19:22:21', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T19:22:21+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>90</sf:TipoEvento><sf:OtrosDatosEvento>Cambio de configuración Verifactu Parámetros guardados para Vendedores: 3</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>02</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T19:11:46+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>6B3FD0DAF22BBA73AA5C6BC1A579E13909896BC13CBDAD2A4C1A08931E59963A</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>0108B80125EC26A53C7CA493A593E9E409479E572C738D3A9E7295145DEADFB9</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
-  (604, '2026-07-02 19:22:48', 103, 'Administrador', '1.0.15.202606260100.alpha', 'Cambio de configuración Verifactu', 'Parámetros guardados para Todos: 3', '0108B80125EC26A53C7CA493A593E9E409479E572C738D3A9E7295145DEADFB9', '703F6639E882A5C228E196CC73498647292B6966FF2A0D81C4C3EEC64FF7C05C', '703F6639E882A5C228E196CC73498647292B6966FF2A0D81C4C3EEC64FF7C05C', '2026-07-02 19:22:48', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T19:22:48+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>90</sf:TipoEvento><sf:OtrosDatosEvento>Cambio de configuración Verifactu Parámetros guardados para Todos: 3</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>90</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T19:22:21+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>0108B80125EC26A53C7CA493A593E9E409479E572C738D3A9E7295145DEADFB9</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>703F6639E882A5C228E196CC73498647292B6966FF2A0D81C4C3EEC64FF7C05C</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL);
+  (604, '2026-07-02 19:22:48', 103, 'Administrador', '1.0.15.202606260100.alpha', 'Cambio de configuración Verifactu', 'Parámetros guardados para Todos: 3', '0108B80125EC26A53C7CA493A593E9E409479E572C738D3A9E7295145DEADFB9', '703F6639E882A5C228E196CC73498647292B6966FF2A0D81C4C3EEC64FF7C05C', '703F6639E882A5C228E196CC73498647292B6966FF2A0D81C4C3EEC64FF7C05C', '2026-07-02 19:22:48', NULL, NULL, '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-02T19:22:48+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>90</sf:TipoEvento><sf:OtrosDatosEvento>Cambio de configuración Verifactu Parámetros guardados para Todos: 3</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>90</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T19:22:21+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>0108B80125EC26A53C7CA493A593E9E409479E572C738D3A9E7295145DEADFB9</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>703F6639E882A5C228E196CC73498647292B6966FF2A0D81C4C3EEC64FF7C05C</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (605, '2026-07-04 17:58:42', 3, 'Administrador', '1.0.15.202606260100.alpha', 'Registro de facturación (ALTA) aceptado por la AEAT (Correcto)', 'CSV: A-HZ4BKZ9LYX63JY', '703F6639E882A5C228E196CC73498647292B6966FF2A0D81C4C3EEC64FF7C05C', '577ED7A7DD32039314AB0E121CD11BC89FC09CF0C3FE57CB52917BB9DD6DF1EC', '577ED7A7DD32039314AB0E121CD11BC89FC09CF0C3FE57CB52917BB9DD6DF1EC', '2026-07-04 17:58:42', '000165', '2026.A1', '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-04T17:58:42+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>90</sf:TipoEvento><sf:OtrosDatosEvento>Registro de facturación (ALTA) aceptado por la AEAT (Correcto) CSV: A-HZ4BKZ9LYX63JY</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>90</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-02T19:22:48+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>703F6639E882A5C228E196CC73498647292B6966FF2A0D81C4C3EEC64FF7C05C</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>577ED7A7DD32039314AB0E121CD11BC89FC09CF0C3FE57CB52917BB9DD6DF1EC</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (606, '2026-07-04 18:55:16', 4, 'Administrador', '1.0.15.202606260100.alpha', 'Error de envío Verifactu (intento 1): AEAT [1112] El campo FechaExpedicionFactura es superior a la fecha actual.', NULL, '577ED7A7DD32039314AB0E121CD11BC89FC09CF0C3FE57CB52917BB9DD6DF1EC', 'BBA660602999A507ECE6A86D230C29C5D6C3E666805472E6ED0DEC8AAD00F11B', 'BBA660602999A507ECE6A86D230C29C5D6C3E666805472E6ED0DEC8AAD00F11B', '2026-07-04 18:55:16', '000166', '2026.A1', '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-04T18:55:16+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>90</sf:TipoEvento><sf:OtrosDatosEvento>Error de envío Verifactu (intento 1): AEAT [1112] El campo FechaExpedicionFactura es superior a la f</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>90</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-04T17:58:42+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>577ED7A7DD32039314AB0E121CD11BC89FC09CF0C3FE57CB52917BB9DD6DF1EC</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>BBA660602999A507ECE6A86D230C29C5D6C3E666805472E6ED0DEC8AAD00F11B</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (607, '2026-07-04 18:56:41', 4, 'Administrador', '1.0.15.202606260100.alpha', 'Error de envío Verifactu (intento 2): Error sending data: (12002) Se superó el tiempo de espera para la operación', NULL, 'BBA660602999A507ECE6A86D230C29C5D6C3E666805472E6ED0DEC8AAD00F11B', '830363B6C47CE4DE2B3444C4478C17C8B45924945DE887304009A5EF391C3F50', '830363B6C47CE4DE2B3444C4478C17C8B45924945DE887304009A5EF391C3F50', '2026-07-04 18:56:41', '000166', '2026.A1', '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-04T18:56:41+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>90</sf:TipoEvento><sf:OtrosDatosEvento>Error de envío Verifactu (intento 2): Error sending data: (12002) Se superó el tiempo de espera para</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>90</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-04T18:55:16+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>BBA660602999A507ECE6A86D230C29C5D6C3E666805472E6ED0DEC8AAD00F11B</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>830363B6C47CE4DE2B3444C4478C17C8B45924945DE887304009A5EF391C3F50</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (608, '2026-07-04 18:59:17', 4, 'Administrador', '1.0.15.202606260100.alpha', 'Error de envío Verifactu (intento 3): AEAT [1112] El campo FechaExpedicionFactura es superior a la fecha actual.', NULL, '830363B6C47CE4DE2B3444C4478C17C8B45924945DE887304009A5EF391C3F50', 'BA041DF7F6D16ED38BC48E64A77B03E098D78C72F7C5C1639DBCF993A4CE521D', 'BA041DF7F6D16ED38BC48E64A77B03E098D78C72F7C5C1639DBCF993A4CE521D', '2026-07-04 18:59:17', '000166', '2026.A1', '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-04T18:59:17+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>90</sf:TipoEvento><sf:OtrosDatosEvento>Error de envío Verifactu (intento 3): AEAT [1112] El campo FechaExpedicionFactura es superior a la f</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>90</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-04T18:56:41+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>830363B6C47CE4DE2B3444C4478C17C8B45924945DE887304009A5EF391C3F50</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>BA041DF7F6D16ED38BC48E64A77B03E098D78C72F7C5C1639DBCF993A4CE521D</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (609, '2026-07-04 19:03:46', 4, 'Administrador', '1.0.15.202606260100.alpha', 'Error de envío Verifactu (intento 4): Error sending data: (12007) No se pudo resolver el nombre de servidor o su dirección', NULL, 'BA041DF7F6D16ED38BC48E64A77B03E098D78C72F7C5C1639DBCF993A4CE521D', '938B64887218A3104771621DE3703826D473EA8D023BA865EB157F7E50D12859', '938B64887218A3104771621DE3703826D473EA8D023BA865EB157F7E50D12859', '2026-07-04 19:03:46', '000166', '2026.A1', '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-04T19:03:46+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>90</sf:TipoEvento><sf:OtrosDatosEvento>Error de envío Verifactu (intento 4): Error sending data: (12007) No se pudo resolver el nombre de s</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>90</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-04T18:59:17+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>BA041DF7F6D16ED38BC48E64A77B03E098D78C72F7C5C1639DBCF993A4CE521D</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>938B64887218A3104771621DE3703826D473EA8D023BA865EB157F7E50D12859</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (610, '2026-07-04 19:12:40', 4, 'Administrador', '1.0.15.202606260100.alpha', 'Error de envío Verifactu (intento 5): AEAT [1112] El campo FechaExpedicionFactura es superior a la fecha actual.', NULL, '938B64887218A3104771621DE3703826D473EA8D023BA865EB157F7E50D12859', '13B1C30AD20C97A347F5F688B287AC422798E85C800D750F608F506400B4F4D4', '13B1C30AD20C97A347F5F688B287AC422798E85C800D750F608F506400B4F4D4', '2026-07-04 19:12:40', '000166', '2026.A1', '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-04T19:12:40+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>90</sf:TipoEvento><sf:OtrosDatosEvento>Error de envío Verifactu (intento 5): AEAT [1112] El campo FechaExpedicionFactura es superior a la f</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>90</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-04T19:03:46+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>938B64887218A3104771621DE3703826D473EA8D023BA865EB157F7E50D12859</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>13B1C30AD20C97A347F5F688B287AC422798E85C800D750F608F506400B4F4D4</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (611, '2026-07-04 19:28:55', 4, 'Administrador', '1.0.15.202606260100.alpha', 'Error de envío Verifactu (intento 6): AEAT [1112] El campo FechaExpedicionFactura es superior a la fecha actual.', NULL, '13B1C30AD20C97A347F5F688B287AC422798E85C800D750F608F506400B4F4D4', 'A6D188AA70F2414A778392A46D09C2524072D776E9132AFF98C1759CF815914F', 'A6D188AA70F2414A778392A46D09C2524072D776E9132AFF98C1759CF815914F', '2026-07-04 19:28:55', '000166', '2026.A1', '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-04T19:28:55+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>90</sf:TipoEvento><sf:OtrosDatosEvento>Error de envío Verifactu (intento 6): AEAT [1112] El campo FechaExpedicionFactura es superior a la f</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>90</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-04T19:12:40+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>13B1C30AD20C97A347F5F688B287AC422798E85C800D750F608F506400B4F4D4</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>A6D188AA70F2414A778392A46D09C2524072D776E9132AFF98C1759CF815914F</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (612, '2026-07-05 06:20:14', 4, 'Administrador', '1.0.15.202606260100.alpha', 'Error de envío Verifactu (intento 7): AEAT [1112] El campo FechaExpedicionFactura es superior a la fecha actual.', NULL, 'A6D188AA70F2414A778392A46D09C2524072D776E9132AFF98C1759CF815914F', '193E271231C18304B6862F00C440CFD3889B77F12EA7FE2BCB4F7F11E3DD2952', '193E271231C18304B6862F00C440CFD3889B77F12EA7FE2BCB4F7F11E3DD2952', '2026-07-05 06:20:14', '000166', '2026.A1', '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-05T06:20:14+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>90</sf:TipoEvento><sf:OtrosDatosEvento>Error de envío Verifactu (intento 7): AEAT [1112] El campo FechaExpedicionFactura es superior a la f</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>90</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-04T19:28:55+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>A6D188AA70F2414A778392A46D09C2524072D776E9132AFF98C1759CF815914F</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>193E271231C18304B6862F00C440CFD3889B77F12EA7FE2BCB4F7F11E3DD2952</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL),
+  (613, '2026-07-05 06:52:22', 4, 'Administrador', '1.0.15.202606260100.alpha', 'Error de envío Verifactu (intento 8): AEAT [1112] El campo FechaExpedicionFactura es superior a la fecha actual.', NULL, '193E271231C18304B6862F00C440CFD3889B77F12EA7FE2BCB4F7F11E3DD2952', '5A01EA5D7219CB4208681E31FA84C82D6A95A3BAABE135401E058BD24B362CCD', '5A01EA5D7219CB4208681E31FA84C82D6A95A3BAABE135401E058BD24B362CCD', '2026-07-05 06:52:22', '000166', '2026.A1', '<?xml version="1.0" encoding="UTF-8"?><sf:RegistroEvento xmlns:sf="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-05T06:52:22+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>90</sf:TipoEvento><sf:OtrosDatosEvento>Error de envío Verifactu (intento 8): AEAT [1112] El campo FechaExpedicionFactura es superior a la f</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>90</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-05T06:20:14+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>193E271231C18304B6862F00C440CFD3889B77F12EA7FE2BCB4F7F11E3DD2952</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>5A01EA5D7219CB4208681E31FA84C82D6A95A3BAABE135401E058BD24B362CCD</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>', NULL, NULL, NULL, NULL);
 /*!40000 ALTER TABLE `fza_verifactu_eventos` ENABLE KEYS */;
--- 604 registros exportados
+-- 613 registros exportados
 
 
 -- Tabla: fza_verifactu_operaciones
@@ -27068,7 +28652,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `v_articulos_stock_barras` AS select coalesce(`
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_albaranes` AS select `a`.`NUMERO_ALB` AS `NUMERO_ALB`,`a`.`SERIE_ALB` AS `SERIE_ALB`,`a`.`FECHA_ALB` AS `FECHA_ALB`,`a`.`ESCONSOLIDADO_ALB` AS `ESCONSOLIDADO_ALB`,`a`.`ESTADO_ALB` AS `ESTADO_ALB`,`a`.`NUMERO_PED_ALB` AS `NUMERO_PED_ALB`,`a`.`SERIE_PED_ALB` AS `SERIE_PED_ALB`,`a`.`NUMERO_FAC_ALB` AS `NUMERO_FAC_ALB`,`a`.`SERIE_FAC_ALB` AS `SERIE_FAC_ALB`,`a`.`CODIGO_EMP_ALB` AS `CODIGO_EMP_ALB`,`a`.`CODIGO_ALM_ALB` AS `CODIGO_ALM_ALB`,`a`.`RAZON_SOCIAL_EMPRESA_ALB` AS `RAZON_SOCIAL_EMPRESA_ALB`,`a`.`NIF_EMPRESA_ALB` AS `NIF_EMPRESA_ALB`,`a`.`MOVIL_EMPRESA_ALB` AS `MOVIL_EMPRESA_ALB`,`a`.`EMAIL_EMPRESA_ALB` AS `EMAIL_EMPRESA_ALB`,`a`.`DIRECCION1_EMPRESA_ALB` AS `DIRECCION1_EMPRESA_ALB`,`a`.`DIRECCION2_EMPRESA_ALB` AS `DIRECCION2_EMPRESA_ALB`,`a`.`POBLACION_EMPRESA_ALB` AS `POBLACION_EMPRESA_ALB`,`a`.`PROVINCIA_EMPRESA_ALB` AS `PROVINCIA_EMPRESA_ALB`,`a`.`CODIGO_PAI_EMPRESA_ALB` AS `CODIGO_PAI_EMPRESA_ALB`,`a`.`NOMBRE_PAI_EMPRESA_ALB` AS `NOMBRE_PAI_EMPRESA_ALB`,`a`.`CODIGO_POSTAL_EMPRESA_ALB` AS `CODIGO_POSTAL_EMPRESA_ALB`,`a`.`GRUPO_ZONA_IVA_EMPRESA_ALB` AS `GRUPO_ZONA_IVA_EMPRESA_ALB`,`a`.`CODIGO_CLI_ALB` AS `CODIGO_CLI_ALB`,`a`.`RAZON_SOCIAL_CLIENTE_ALB` AS `RAZON_SOCIAL_CLIENTE_ALB`,`a`.`NIF_CLIENTE_ALB` AS `NIF_CLIENTE_ALB`,`a`.`MOVIL_CLIENTE_ALB` AS `MOVIL_CLIENTE_ALB`,`a`.`EMAIL_CLIENTE_ALB` AS `EMAIL_CLIENTE_ALB`,`a`.`DIRECCION1_CLIENTE_ALB` AS `DIRECCION1_CLIENTE_ALB`,`a`.`DIRECCION2_CLIENTE_ALB` AS `DIRECCION2_CLIENTE_ALB`,`a`.`POBLACION_CLIENTE_ALB` AS `POBLACION_CLIENTE_ALB`,`a`.`PROVINCIA_CLIENTE_ALB` AS `PROVINCIA_CLIENTE_ALB`,`a`.`CODIGO_POSTAL_CLIENTE_ALB` AS `CODIGO_POSTAL_CLIENTE_ALB`,`a`.`CODIGO_PAI_CLIENTE_ALB` AS `CODIGO_PAI_CLIENTE_ALB`,`a`.`NOMBRE_PAI_CLIENTE_ALB` AS `NOMBRE_PAI_CLIENTE_ALB`,`a`.`NOMBRE_CLI_ENVIO_ALB` AS `NOMBRE_CLI_ENVIO_ALB`,`a`.`MOVIL_CLIENTE_ENVIO_ALB` AS `MOVIL_CLIENTE_ENVIO_ALB`,`a`.`DIRECCION1_CLIENTE_ENVIO_ALB` AS `DIRECCION1_CLIENTE_ENVIO_ALB`,`a`.`DIRECCION2_CLIENTE_ENVIO_ALB` AS `DIRECCION2_CLIENTE_ENVIO_ALB`,`a`.`POBLACION_CLIENTE_ENVIO_ALB` AS `POBLACION_CLIENTE_ENVIO_ALB`,`a`.`PROVINCIA_CLIENTE_ENVIO_ALB` AS `PROVINCIA_CLIENTE_ENVIO_ALB`,`a`.`CODIGO_POSTAL_CLIENTE_ENVIO_ALB` AS `CODIGO_POSTAL_CLIENTE_ENVIO_ALB`,`a`.`CODIGO_PAI_CLIENTE_ENVIO_ALB` AS `CODIGO_PAI_CLIENTE_ENVIO_ALB`,`a`.`NOMBRE_PAI_CLIENTE_ENVIO_ALB` AS `NOMBRE_PAI_CLIENTE_ENVIO_ALB`,`a`.`TRANSPORTISTA_ALB` AS `TRANSPORTISTA_ALB`,`a`.`CODIGO_IVA_ALB` AS `CODIGO_IVA_ALB`,`a`.`ESIVA_RECARGO_CLIENTE_ALB` AS `ESIVA_RECARGO_CLIENTE_ALB`,`a`.`ESIVA_EXENTO_CLIENTE_ALB` AS `ESIVA_EXENTO_CLIENTE_ALB`,`a`.`ESINTRACOMUNITARIO_CLIENTE_ALB` AS `ESINTRACOMUNITARIO_CLIENTE_ALB`,`a`.`TARIFA_ARTICULO_CLIENTE_ALB` AS `TARIFA_ARTICULO_CLIENTE_ALB`,`a`.`ESIMP_INCL_TARIFA_CLIENTE_ALB` AS `ESIMP_INCL_TARIFA_CLIENTE_ALB`,`a`.`PORCENTAJE_IVAN_ALB` AS `PORCENTAJE_IVAN_ALB`,`a`.`TOTAL_IVAN_ALB` AS `TOTAL_IVAN_ALB`,`a`.`PORCENTAJE_IVAR_ALB` AS `PORCENTAJE_IVAR_ALB`,`a`.`TOTAL_IVAR_ALB` AS `TOTAL_IVAR_ALB`,`a`.`PORCENTAJE_IVAS_ALB` AS `PORCENTAJE_IVAS_ALB`,`a`.`TOTAL_IVAS_ALB` AS `TOTAL_IVAS_ALB`,`a`.`PORCENTAJE_IVAE_ALB` AS `PORCENTAJE_IVAE_ALB`,`a`.`TOTAL_IVAE_ALB` AS `TOTAL_IVAE_ALB`,`a`.`TOTAL_BASES_ALB` AS `TOTAL_BASES_ALB`,`a`.`TOTAL_IMPUESTOS_ALB` AS `TOTAL_IMPUESTOS_ALB`,`a`.`TOTAL_LIQUIDO_ALB` AS `TOTAL_LIQUIDO_ALB`,`a`.`FORMA_PAGO_ALB` AS `FORMA_PAGO_ALB`,`a`.`CONTADOR_LINEAS_ALB` AS `CONTADOR_LINEAS_ALB`,`a`.`COMENTARIOS_ALB` AS `COMENTARIOS_ALB`,`a`.`OBSERVACIONES_ALB` AS `OBSERVACIONES_ALB`,`a`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`a`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`a`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`a`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`alm`.`NOMBRE_ALM_ALM` AS `NOMBRE_ALM_ALB` from (`fza_albaranes` `a` left join `fza_almacenes` `alm` on(`alm`.`CODIGO_ALM_ALM` = `a`.`CODIGO_ALM_ALB`));
 
 -- Vista: vi_albaranes_compra
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_albaranes_compra` AS select `a`.`NUMERO_ALBC` AS `NUMERO_ALBC`,`a`.`SERIE_ALBC` AS `SERIE_ALBC`,`a`.`FECHA_ALBC` AS `FECHA_ALBC`,`a`.`ESTADO_ALBC` AS `ESTADO_ALBC`,`a`.`NUMERO_PED_ALBC` AS `NUMERO_PED_ALBC`,`a`.`SERIE_PED_ALBC` AS `SERIE_PED_ALBC`,`a`.`NUMERO_FAC_ALBC` AS `NUMERO_FAC_ALBC`,`a`.`SERIE_FAC_ALBC` AS `SERIE_FAC_ALBC`,`a`.`CODIGO_EMP_ALBC` AS `CODIGO_EMP_ALBC`,`a`.`RAZON_SOCIAL_EMPRESA_ALBC` AS `RAZON_SOCIAL_EMPRESA_ALBC`,`a`.`NIF_EMPRESA_ALBC` AS `NIF_EMPRESA_ALBC`,`a`.`MOVIL_EMPRESA_ALBC` AS `MOVIL_EMPRESA_ALBC`,`a`.`EMAIL_EMPRESA_ALBC` AS `EMAIL_EMPRESA_ALBC`,`a`.`DIRECCION1_EMPRESA_ALBC` AS `DIRECCION1_EMPRESA_ALBC`,`a`.`DIRECCION2_EMPRESA_ALBC` AS `DIRECCION2_EMPRESA_ALBC`,`a`.`POBLACION_EMPRESA_ALBC` AS `POBLACION_EMPRESA_ALBC`,`a`.`PROVINCIA_EMPRESA_ALBC` AS `PROVINCIA_EMPRESA_ALBC`,`a`.`CODIGO_PAI_EMPRESA_ALBC` AS `CODIGO_PAI_EMPRESA_ALBC`,`a`.`NOMBRE_PAI_EMPRESA_ALBC` AS `NOMBRE_PAI_EMPRESA_ALBC`,`a`.`CODIGO_POSTAL_EMPRESA_ALBC` AS `CODIGO_POSTAL_EMPRESA_ALBC`,`a`.`CODIGO_PRV_ALBC` AS `CODIGO_PRV_ALBC`,`a`.`RAZON_SOCIAL_PRV_ALBC` AS `RAZON_SOCIAL_PRV_ALBC`,`a`.`NIF_PRV_ALBC` AS `NIF_PRV_ALBC`,`a`.`MOVIL_PRV_ALBC` AS `MOVIL_PRV_ALBC`,`a`.`EMAIL_PRV_ALBC` AS `EMAIL_PRV_ALBC`,`a`.`DIRECCION1_PRV_ALBC` AS `DIRECCION1_PRV_ALBC`,`a`.`DIRECCION2_PRV_ALBC` AS `DIRECCION2_PRV_ALBC`,`a`.`POBLACION_PRV_ALBC` AS `POBLACION_PRV_ALBC`,`a`.`PROVINCIA_PRV_ALBC` AS `PROVINCIA_PRV_ALBC`,`a`.`CODIGO_PAI_PRV_ALBC` AS `CODIGO_PAI_PRV_ALBC`,`a`.`NOMBRE_PAI_PRV_ALBC` AS `NOMBRE_PAI_PRV_ALBC`,`a`.`CODIGO_POSTAL_PRV_ALBC` AS `CODIGO_POSTAL_PRV_ALBC`,`a`.`REF_PROVEEDOR_ALBC` AS `REF_PROVEEDOR_ALBC`,`a`.`CODIGO_ALM_ALBC` AS `CODIGO_ALM_ALBC`,`a`.`TRANSPORTISTA_ALBC` AS `TRANSPORTISTA_ALBC`,`a`.`CODIGO_IVA_ALBC` AS `CODIGO_IVA_ALBC`,`a`.`ESIVA_RECARGO_COMPRAS_ALBC` AS `ESIVA_RECARGO_COMPRAS_ALBC`,`a`.`ESIVA_EXENTO_INTRACOMUNITARIO_ALBC` AS `ESIVA_EXENTO_INTRACOMUNITARIO_ALBC`,`a`.`PORCENTAJE_IVAN_ALBC` AS `PORCENTAJE_IVAN_ALBC`,`a`.`TOTAL_BASEI_IVAN_ALBC` AS `TOTAL_BASEI_IVAN_ALBC`,`a`.`TOTAL_IVAN_ALBC` AS `TOTAL_IVAN_ALBC`,`a`.`PORCENTAJE_REN_ALBC` AS `PORCENTAJE_REN_ALBC`,`a`.`TOTAL_REN_ALBC` AS `TOTAL_REN_ALBC`,`a`.`PORCENTAJE_IVAR_ALBC` AS `PORCENTAJE_IVAR_ALBC`,`a`.`TOTAL_BASEI_IVAR_ALBC` AS `TOTAL_BASEI_IVAR_ALBC`,`a`.`TOTAL_IVAR_ALBC` AS `TOTAL_IVAR_ALBC`,`a`.`PORCENTAJE_RER_ALBC` AS `PORCENTAJE_RER_ALBC`,`a`.`TOTAL_RER_ALBC` AS `TOTAL_RER_ALBC`,`a`.`PORCENTAJE_IVAS_ALBC` AS `PORCENTAJE_IVAS_ALBC`,`a`.`TOTAL_BASEI_IVAS_ALBC` AS `TOTAL_BASEI_IVAS_ALBC`,`a`.`TOTAL_IVAS_ALBC` AS `TOTAL_IVAS_ALBC`,`a`.`PORCENTAJE_RES_ALBC` AS `PORCENTAJE_RES_ALBC`,`a`.`TOTAL_RES_ALBC` AS `TOTAL_RES_ALBC`,`a`.`PORCENTAJE_IVAE_ALBC` AS `PORCENTAJE_IVAE_ALBC`,`a`.`TOTAL_BASEI_IVAE_ALBC` AS `TOTAL_BASEI_IVAE_ALBC`,`a`.`TOTAL_IVAE_ALBC` AS `TOTAL_IVAE_ALBC`,`a`.`PORCENTAJE_REE_ALBC` AS `PORCENTAJE_REE_ALBC`,`a`.`TOTAL_REE_ALBC` AS `TOTAL_REE_ALBC`,`a`.`TOTAL_BASES_ALBC` AS `TOTAL_BASES_ALBC`,`a`.`TOTAL_IMPUESTOS_ALBC` AS `TOTAL_IMPUESTOS_ALBC`,`a`.`PORCENTAJE_RETENCION_ALBC` AS `PORCENTAJE_RETENCION_ALBC`,`a`.`TOTAL_RETENCION_ALBC` AS `TOTAL_RETENCION_ALBC`,`a`.`TOTAL_BRUTO_ALBC` AS `TOTAL_BRUTO_ALBC`,`a`.`PORCENTAJE_DTO_COMERCIAL_ALBC` AS `PORCENTAJE_DTO_COMERCIAL_ALBC`,`a`.`TOTAL_DTO_COMERCIAL_ALBC` AS `TOTAL_DTO_COMERCIAL_ALBC`,`a`.`PORCENTAJE_DTO_FINANCIERO_ALBC` AS `PORCENTAJE_DTO_FINANCIERO_ALBC`,`a`.`TOTAL_DTO_FINANCIERO_ALBC` AS `TOTAL_DTO_FINANCIERO_ALBC`,`a`.`TOTAL_LIQUIDO_ALBC` AS `TOTAL_LIQUIDO_ALBC`,`a`.`FORMA_PAGO_ALBC` AS `FORMA_PAGO_ALBC`,`a`.`CONTADOR_LINEAS_ALBC` AS `CONTADOR_LINEAS_ALBC`,`a`.`COMENTARIOS_ALBC` AS `COMENTARIOS_ALBC`,`a`.`OBSERVACIONES_ALBC` AS `OBSERVACIONES_ALBC`,`a`.`ESPIVOTE_HORIZONTAL_ALBC` AS `ESPIVOTE_HORIZONTAL_ALBC`,`a`.`CODIGO_TAR_ALBC` AS `CODIGO_TAR_ALBC`,`a`.`ESDEPOSITO_ALBC` AS `ESDEPOSITO_ALBC`,`a`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`a`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`a`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`a`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`prv`.`NOMBRE_PRV` AS `NOMBRE_PRV_ALBC`,`emp`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMPRESA_VIEW_ALBC` from ((`fza_albaranes_compra` `a` left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `a`.`CODIGO_PRV_ALBC`)) left join `fza_empresas` `emp` on(`emp`.`CODIGO_EMP_EMP` = `a`.`CODIGO_EMP_ALBC`));
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_albaranes_compra` AS select `a`.`NUMERO_ALBC` AS `NUMERO_ALBC`,`a`.`SERIE_ALBC` AS `SERIE_ALBC`,`a`.`FECHA_ALBC` AS `FECHA_ALBC`,`a`.`ESTADO_ALBC` AS `ESTADO_ALBC`,`a`.`NUMERO_PED_ALBC` AS `NUMERO_PED_ALBC`,`a`.`SERIE_PED_ALBC` AS `SERIE_PED_ALBC`,`a`.`NUMERO_FAC_ALBC` AS `NUMERO_FAC_ALBC`,`a`.`SERIE_FAC_ALBC` AS `SERIE_FAC_ALBC`,`a`.`CODIGO_EMP_ALBC` AS `CODIGO_EMP_ALBC`,`a`.`RAZON_SOCIAL_EMPRESA_ALBC` AS `RAZON_SOCIAL_EMPRESA_ALBC`,`a`.`NIF_EMPRESA_ALBC` AS `NIF_EMPRESA_ALBC`,`a`.`MOVIL_EMPRESA_ALBC` AS `MOVIL_EMPRESA_ALBC`,`a`.`EMAIL_EMPRESA_ALBC` AS `EMAIL_EMPRESA_ALBC`,`a`.`DIRECCION1_EMPRESA_ALBC` AS `DIRECCION1_EMPRESA_ALBC`,`a`.`DIRECCION2_EMPRESA_ALBC` AS `DIRECCION2_EMPRESA_ALBC`,`a`.`POBLACION_EMPRESA_ALBC` AS `POBLACION_EMPRESA_ALBC`,`a`.`PROVINCIA_EMPRESA_ALBC` AS `PROVINCIA_EMPRESA_ALBC`,`a`.`CODIGO_PAI_EMPRESA_ALBC` AS `CODIGO_PAI_EMPRESA_ALBC`,`a`.`NOMBRE_PAI_EMPRESA_ALBC` AS `NOMBRE_PAI_EMPRESA_ALBC`,`a`.`CODIGO_POSTAL_EMPRESA_ALBC` AS `CODIGO_POSTAL_EMPRESA_ALBC`,`a`.`CODIGO_PRV_ALBC` AS `CODIGO_PRV_ALBC`,`a`.`RAZON_SOCIAL_PRV_ALBC` AS `RAZON_SOCIAL_PRV_ALBC`,`a`.`NIF_PRV_ALBC` AS `NIF_PRV_ALBC`,`a`.`MOVIL_PRV_ALBC` AS `MOVIL_PRV_ALBC`,`a`.`EMAIL_PRV_ALBC` AS `EMAIL_PRV_ALBC`,`a`.`DIRECCION1_PRV_ALBC` AS `DIRECCION1_PRV_ALBC`,`a`.`DIRECCION2_PRV_ALBC` AS `DIRECCION2_PRV_ALBC`,`a`.`POBLACION_PRV_ALBC` AS `POBLACION_PRV_ALBC`,`a`.`PROVINCIA_PRV_ALBC` AS `PROVINCIA_PRV_ALBC`,`a`.`CODIGO_PAI_PRV_ALBC` AS `CODIGO_PAI_PRV_ALBC`,`a`.`NOMBRE_PAI_PRV_ALBC` AS `NOMBRE_PAI_PRV_ALBC`,`a`.`CODIGO_POSTAL_PRV_ALBC` AS `CODIGO_POSTAL_PRV_ALBC`,`a`.`REF_PROVEEDOR_ALBC` AS `REF_PROVEEDOR_ALBC`,`a`.`CODIGO_ALM_ALBC` AS `CODIGO_ALM_ALBC`,`a`.`TRANSPORTISTA_ALBC` AS `TRANSPORTISTA_ALBC`,`a`.`CODIGO_IVA_ALBC` AS `CODIGO_IVA_ALBC`,`a`.`ESIVA_RECARGO_COMPRAS_ALBC` AS `ESIVA_RECARGO_COMPRAS_ALBC`,`a`.`ESIVA_EXENTO_INTRACOMUNITARIO_ALBC` AS `ESIVA_EXENTO_INTRACOMUNITARIO_ALBC`,`a`.`PORCENTAJE_IVAN_ALBC` AS `PORCENTAJE_IVAN_ALBC`,`a`.`TOTAL_BASEI_IVAN_ALBC` AS `TOTAL_BASEI_IVAN_ALBC`,`a`.`TOTAL_IVAN_ALBC` AS `TOTAL_IVAN_ALBC`,`a`.`PORCENTAJE_REN_ALBC` AS `PORCENTAJE_REN_ALBC`,`a`.`TOTAL_REN_ALBC` AS `TOTAL_REN_ALBC`,`a`.`PORCENTAJE_IVAR_ALBC` AS `PORCENTAJE_IVAR_ALBC`,`a`.`TOTAL_BASEI_IVAR_ALBC` AS `TOTAL_BASEI_IVAR_ALBC`,`a`.`TOTAL_IVAR_ALBC` AS `TOTAL_IVAR_ALBC`,`a`.`PORCENTAJE_RER_ALBC` AS `PORCENTAJE_RER_ALBC`,`a`.`TOTAL_RER_ALBC` AS `TOTAL_RER_ALBC`,`a`.`PORCENTAJE_IVAS_ALBC` AS `PORCENTAJE_IVAS_ALBC`,`a`.`TOTAL_BASEI_IVAS_ALBC` AS `TOTAL_BASEI_IVAS_ALBC`,`a`.`TOTAL_IVAS_ALBC` AS `TOTAL_IVAS_ALBC`,`a`.`PORCENTAJE_RES_ALBC` AS `PORCENTAJE_RES_ALBC`,`a`.`TOTAL_RES_ALBC` AS `TOTAL_RES_ALBC`,`a`.`PORCENTAJE_IVAE_ALBC` AS `PORCENTAJE_IVAE_ALBC`,`a`.`TOTAL_BASEI_IVAE_ALBC` AS `TOTAL_BASEI_IVAE_ALBC`,`a`.`TOTAL_IVAE_ALBC` AS `TOTAL_IVAE_ALBC`,`a`.`PORCENTAJE_REE_ALBC` AS `PORCENTAJE_REE_ALBC`,`a`.`TOTAL_REE_ALBC` AS `TOTAL_REE_ALBC`,`a`.`TOTAL_BASES_ALBC` AS `TOTAL_BASES_ALBC`,`a`.`TOTAL_IMPUESTOS_ALBC` AS `TOTAL_IMPUESTOS_ALBC`,`a`.`PORCENTAJE_RETENCION_ALBC` AS `PORCENTAJE_RETENCION_ALBC`,`a`.`TOTAL_RETENCION_ALBC` AS `TOTAL_RETENCION_ALBC`,`a`.`TOTAL_BRUTO_ALBC` AS `TOTAL_BRUTO_ALBC`,`a`.`PORCENTAJE_DTO_COMERCIAL_ALBC` AS `PORCENTAJE_DTO_COMERCIAL_ALBC`,`a`.`TOTAL_DTO_COMERCIAL_ALBC` AS `TOTAL_DTO_COMERCIAL_ALBC`,`a`.`PORCENTAJE_DTO_FINANCIERO_ALBC` AS `PORCENTAJE_DTO_FINANCIERO_ALBC`,`a`.`TOTAL_DTO_FINANCIERO_ALBC` AS `TOTAL_DTO_FINANCIERO_ALBC`,`a`.`TOTAL_LIQUIDO_ALBC` AS `TOTAL_LIQUIDO_ALBC`,`a`.`FORMA_PAGO_ALBC` AS `FORMA_PAGO_ALBC`,`a`.`CONTADOR_LINEAS_ALBC` AS `CONTADOR_LINEAS_ALBC`,`a`.`COMENTARIOS_ALBC` AS `COMENTARIOS_ALBC`,`a`.`OBSERVACIONES_ALBC` AS `OBSERVACIONES_ALBC`,`a`.`ESPIVOTE_HORIZONTAL_ALBC` AS `ESPIVOTE_HORIZONTAL_ALBC`,`a`.`CODIGO_TAR_ALBC` AS `CODIGO_TAR_ALBC`,`a`.`ESDEPOSITO_ALBC` AS `ESDEPOSITO_ALBC`,`a`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`a`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`a`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`a`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`prv`.`NOMBRE_PRV` AS `NOMBRE_PRV_ALBC`,`emp`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMPRESA_VIEW_ALBC`,`tp`.`PV` AS `TEMPORADA_ALBC`,`a`.`FECHA_ALBC` AS `FECHA_REALIZACION_ALBC`,`a`.`FECHA_ALBC` AS `FECHA_EFECTO_STOCK_ALBC`,`p`.`FECHA_TOPE_RECEPCION_PEDC` AS `FECHA_TOPE_RECEPCION_ALBC`,coalesce(`r`.`TOTAL_PRENDAS_ALBC`,0) AS `TOTAL_PRENDAS_ALBC`,coalesce(`r`.`TOTAL_LINEAS_ALBC`,0) AS `TOTAL_LINEAS_ALBC` from (((((`fza_albaranes_compra` `a` left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `a`.`CODIGO_PRV_ALBC`)) left join `fza_empresas` `emp` on(`emp`.`CODIGO_EMP_EMP` = `a`.`CODIGO_EMP_ALBC`)) left join `fza_pedidos_compra` `p` on(`p`.`SERIE_PEDC` = `a`.`SERIE_PED_ALBC` and `p`.`NUMERO_PEDC` = `a`.`NUMERO_PED_ALBC`)) left join `fza_propiedades_valores` `tp` on(`tp`.`ID_PV_ARTPROP` = `p`.`ID_PV_TEMPORADA_PEDC` and `tp`.`ID_PROP_PV` = 'TEMPORADA')) left join (select `l`.`SERIE_ALBC_ALBCLIN` AS `SERIE_ALBC_ALBCLIN`,`l`.`NUMERO_ALBC_ALBCLIN` AS `NUMERO_ALBC_ALBCLIN`,coalesce(sum(coalesce(`l`.`TOTAL_UNIDADES_ALBCLIN`,`l`.`CANTIDAD_ALBCLIN`,0)),0) AS `TOTAL_PRENDAS_ALBC`,coalesce(sum(`l`.`TOTAL_ALBCLIN`),0) AS `TOTAL_LINEAS_ALBC` from `fza_albaranes_compra_lineas` `l` group by `l`.`SERIE_ALBC_ALBCLIN`,`l`.`NUMERO_ALBC_ALBCLIN`) `r` on(`r`.`SERIE_ALBC_ALBCLIN` = `a`.`SERIE_ALBC` and `r`.`NUMERO_ALBC_ALBCLIN` = `a`.`NUMERO_ALBC`));
 
 -- Vista: vi_albaranes_compra_cab_print
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_albaranes_compra_cab_print` AS select `alb`.`SERIE_ALBC` AS `SERIE_ALBC`,`alb`.`NUMERO_ALBC` AS `NUMERO_ALBC`,`alb`.`FECHA_ALBC` AS `FECHA_ALBC`,`alb`.`ESTADO_ALBC` AS `ESTADO_ALBC`,`alb`.`REF_PROVEEDOR_ALBC` AS `REF_PROVEEDOR_ALBC`,`alb`.`COMENTARIOS_ALBC` AS `COMENTARIOS_ALBC`,`alb`.`OBSERVACIONES_ALBC` AS `OBSERVACIONES_ALBC`,`alb`.`CODIGO_EMP_ALBC` AS `CODIGO_EMP_ALBC`,`emp`.`FORMATO_DOCUMENTO_EMP` AS `FORMATO_DOCUMENTO_EMP`,case when trim(coalesce(`alb`.`SERIE_ALBC`,'')) = '' then trim(coalesce(`alb`.`NUMERO_ALBC`,'')) when trim(coalesce(`alb`.`NUMERO_ALBC`,'')) = '' then trim(coalesce(`alb`.`SERIE_ALBC`,'')) when locate('serie',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrodocumento',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('numerodocumento',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('númerodocumento',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrofactura',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('nrodoc',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('numero',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 and locate('número',lcase(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'))) <= 0 then concat(trim(coalesce(`alb`.`SERIE_ALBC`,'')),'.',trim(coalesce(`alb`.`NUMERO_ALBC`,''))) else replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(coalesce(nullif(trim(coalesce(`emp`.`FORMATO_DOCUMENTO_EMP`,'')),''),'Serie.NroDocumento'),'NroDocumento',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'nrodocumento',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NRODOCUMENTO',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NumeroDocumento',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'numerodocumento',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NUMERODOCUMENTO',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NúmeroDocumento',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'númerodocumento',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NÚMERODOCUMENTO',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NroFactura',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'nrofactura',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NROFACTURA',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NroDoc',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'nrodoc',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NRODOC',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'Numero',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'numero',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NUMERO',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'Número',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'número',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'NÚMERO',trim(coalesce(`alb`.`NUMERO_ALBC`,''))),'Serie',trim(coalesce(`alb`.`SERIE_ALBC`,''))),'serie',trim(coalesce(`alb`.`SERIE_ALBC`,''))),'SERIE',trim(coalesce(`alb`.`SERIE_ALBC`,''))) end AS `DOCUMENTO_FORMATO`,`emp`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMP`,`emp`.`DIRECCION1_EMP` AS `DIRECCION1_EMP`,`emp`.`CODIGO_POSTAL_EMP` AS `CODIGO_POSTAL_EMP`,`emp`.`POBLACION_EMP` AS `POBLACION_EMP`,`emp`.`PROVINCIA_EMP` AS `PROVINCIA_EMP`,`emp`.`NIF_EMP` AS `CIF_EMP`,`emp`.`MOVIL_EMP` AS `TELEFONO1_EMP`,`alb`.`CODIGO_PRV_ALBC` AS `CODIGO_PRV_ALBC`,`prv`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`prv`.`DIRECCION1_PRV` AS `DIRECCION1_PRV`,`prv`.`CODIGO_POSTAL_PRV` AS `CODIGO_POSTAL_PRV`,`prv`.`POBLACION_PRV` AS `POBLACION_PRV`,`prv`.`PROVINCIA_PRV` AS `PROVINCIA_PRV`,`prv`.`NIF_PRV` AS `CIF_PRV`,coalesce(`prv`.`TELEFONO_PRV`,`prv`.`MOVIL_PRV`) AS `TELEFONO1_PRV`,`alb`.`CODIGO_ALM_ALBC` AS `CODIGO_ALM_ALBC`,`alm`.`NOMBRE_ALM_ALM` AS `NOMBRE_ALM_ALBC`,`alm`.`DIRECCION_ALM` AS `DIRECCION_ALM_ALBC`,`alm`.`CODIGO_POSTAL_ALM` AS `CODIGO_POSTAL_ALM_ALBC`,`alm`.`POBLACION_ALM` AS `POBLACION_ALM_ALBC`,`alm`.`PROVINCIA_ALM` AS `PROVINCIA_ALM_ALBC`,`alm`.`TELEFONO_ALM` AS `TELEFONO_ALM_ALBC`,`alm`.`EMAIL_ALM` AS `EMAIL_ALM_ALBC`,`alb`.`CODIGO_IVA_ALBC` AS `CODIGO_IVA_ALBC`,`alb`.`ESIVA_RECARGO_COMPRAS_ALBC` AS `ESIVA_RECARGO_COMPRAS_ALBC`,`alb`.`PORCENTAJE_IVAN_ALBC` AS `PORCENTAJE_IVAN_ALBC`,`alb`.`TOTAL_BASEI_IVAN_ALBC` AS `TOTAL_BASEI_IVAN_ALBC`,`alb`.`TOTAL_IVAN_ALBC` AS `TOTAL_IVAN_ALBC`,`alb`.`PORCENTAJE_REN_ALBC` AS `PORCENTAJE_REN_ALBC`,`alb`.`TOTAL_REN_ALBC` AS `TOTAL_REN_ALBC`,`alb`.`PORCENTAJE_IVAR_ALBC` AS `PORCENTAJE_IVAR_ALBC`,`alb`.`TOTAL_BASEI_IVAR_ALBC` AS `TOTAL_BASEI_IVAR_ALBC`,`alb`.`TOTAL_IVAR_ALBC` AS `TOTAL_IVAR_ALBC`,`alb`.`PORCENTAJE_RER_ALBC` AS `PORCENTAJE_RER_ALBC`,`alb`.`TOTAL_RER_ALBC` AS `TOTAL_RER_ALBC`,`alb`.`PORCENTAJE_IVAS_ALBC` AS `PORCENTAJE_IVAS_ALBC`,`alb`.`TOTAL_BASEI_IVAS_ALBC` AS `TOTAL_BASEI_IVAS_ALBC`,`alb`.`TOTAL_IVAS_ALBC` AS `TOTAL_IVAS_ALBC`,`alb`.`PORCENTAJE_RES_ALBC` AS `PORCENTAJE_RES_ALBC`,`alb`.`TOTAL_RES_ALBC` AS `TOTAL_RES_ALBC`,`alb`.`PORCENTAJE_IVAE_ALBC` AS `PORCENTAJE_IVAE_ALBC`,`alb`.`TOTAL_BASEI_IVAE_ALBC` AS `TOTAL_BASEI_IVAE_ALBC`,`alb`.`TOTAL_IVAE_ALBC` AS `TOTAL_IVAE_ALBC`,`alb`.`PORCENTAJE_REE_ALBC` AS `PORCENTAJE_REE_ALBC`,`alb`.`TOTAL_REE_ALBC` AS `TOTAL_REE_ALBC`,`alb`.`PORCENTAJE_RETENCION_ALBC` AS `PORCENTAJE_RETENCION_ALBC`,`alb`.`TOTAL_RETENCION_ALBC` AS `TOTAL_RETENCION_ALBC`,`alb`.`TOTAL_BASES_ALBC` AS `TOTAL_BASES_ALBC`,`alb`.`TOTAL_IMPUESTOS_ALBC` AS `TOTAL_IMPUESTOS_ALBC`,`alb`.`TOTAL_LIQUIDO_ALBC` AS `TOTAL_LIQUIDO_ALBC`,`alb`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`alb`.`USUARIO_ALTA` AS `USUARIO_ALTA`,(select coalesce(sum(`lin`.`CANTIDAD_ALBCLIN`),0) from `fza_albaranes_compra_lineas` `lin` where `lin`.`SERIE_ALBC_ALBCLIN` = `alb`.`SERIE_ALBC` and `lin`.`NUMERO_ALBC_ALBCLIN` = `alb`.`NUMERO_ALBC`) AS `TOTAL_UNIDADES_SES`,(select coalesce(sum(`lin`.`TOTAL_ALBCLIN`),0) from `fza_albaranes_compra_lineas` `lin` where `lin`.`SERIE_ALBC_ALBCLIN` = `alb`.`SERIE_ALBC` and `lin`.`NUMERO_ALBC_ALBCLIN` = `alb`.`NUMERO_ALBC`) AS `TOTAL_LINEAS_SES`,(select count(0) from `fza_albaranes_compra_lineas` `lin` where `lin`.`SERIE_ALBC_ALBCLIN` = `alb`.`SERIE_ALBC` and `lin`.`NUMERO_ALBC_ALBCLIN` = `alb`.`NUMERO_ALBC`) AS `NUM_LINEAS_SES` from (((`fza_albaranes_compra` `alb` left join `fza_empresas` `emp` on(`emp`.`CODIGO_EMP_EMP` = `alb`.`CODIGO_EMP_ALBC`)) left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `alb`.`CODIGO_PRV_ALBC`)) left join `fza_almacenes` `alm` on(`alm`.`CODIGO_ALM_ALM` = `alb`.`CODIGO_ALM_ALBC`));
@@ -27284,10 +28868,10 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_movimientos` AS select `m`.`NUMERO_MOV` AS 
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_paises` AS select `fza_paises`.`COD_ALPHA2_PAI` AS `CODIGO`,`fza_paises`.`NOMBRE_SPA_PAI` AS `NOMBRE` from `fza_paises` order by `fza_paises`.`ORDEN_PAI`,`fza_paises`.`NOMBRE_SPA_PAI`;
 
 -- Vista: vi_pedidos
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos` AS select `fza_pedidos`.`NUMERO_PED` AS `NUMERO_PED`,`fza_pedidos`.`SERIE_PED` AS `SERIE_PED`,`fza_pedidos`.`FECHA_PED` AS `FECHA_PED`,`fza_pedidos`.`ESCONSOLIDADO_PED` AS `ESCONSOLIDADO_PED`,`fza_pedidos`.`ESTADO_PED` AS `ESTADO_PED`,`fza_pedidos`.`FECHA_ENTREGA_PED` AS `FECHA_ENTREGA_PED`,`fza_pedidos`.`CODIGO_EMP_PED` AS `CODIGO_EMP_PED`,`fza_pedidos`.`RAZON_SOCIAL_EMPRESA_PED` AS `RAZON_SOCIAL_EMPRESA_PED`,`fza_pedidos`.`NIF_EMPRESA_PED` AS `NIF_EMPRESA_PED`,`fza_pedidos`.`MOVIL_EMPRESA_PED` AS `MOVIL_EMPRESA_PED`,`fza_pedidos`.`EMAIL_EMPRESA_PED` AS `EMAIL_EMPRESA_PED`,`fza_pedidos`.`DIRECCION1_EMPRESA_PED` AS `DIRECCION1_EMPRESA_PED`,`fza_pedidos`.`DIRECCION2_EMPRESA_PED` AS `DIRECCION2_EMPRESA_PED`,`fza_pedidos`.`POBLACION_EMPRESA_PED` AS `POBLACION_EMPRESA_PED`,`fza_pedidos`.`PROVINCIA_EMPRESA_PED` AS `PROVINCIA_EMPRESA_PED`,`fza_pedidos`.`CODIGO_PAI_EMPRESA_PED` AS `CODIGO_PAI_EMPRESA_PED`,`fza_pedidos`.`NOMBRE_PAI_EMPRESA_PED` AS `NOMBRE_PAI_EMPRESA_PED`,`fza_pedidos`.`CODIGO_POSTAL_EMPRESA_PED` AS `CODIGO_POSTAL_EMPRESA_PED`,`fza_pedidos`.`ESRETENCIONES_EMPRESA_PED` AS `ESRETENCIONES_EMPRESA_PED`,`fza_pedidos`.`GRUPO_ZONA_IVA_EMPRESA_PED` AS `GRUPO_ZONA_IVA_EMPRESA_PED`,`fza_pedidos`.`ESREGIMENESPECIALAGRICOLA_EMPRESA_PED` AS `ESREGIMENESPECIALAGRICOLA_EMPRESA_PED`,`fza_pedidos`.`CODIGO_CLI_PED` AS `CODIGO_CLI_PED`,`fza_pedidos`.`NIF_CLIENTE_PED` AS `NIF_CLIENTE_PED`,`fza_pedidos`.`EMAIL_CLIENTE_PED` AS `EMAIL_CLIENTE_PED`,`fza_pedidos`.`REFERENCIAPS_PED` AS `REFERENCIAPS_PED`,`fza_pedidos`.`IDPS_PED` AS `IDPS_PED`,`fza_pedidos`.`FECHAPS_PED` AS `FECHAPS_PED`,`fza_pedidos`.`FORMAPAGOPS_PED` AS `FORMAPAGOPS_PED`,`fza_pedidos`.`TRANSPORTISTAPS_PED` AS `TRANSPORTISTAPS_PED`,`fza_pedidos`.`ESTADOPEDIDOPS_PED` AS `ESTADOPEDIDOPS_PED`,`fza_pedidos`.`ESTADOMENSAJEPS_PED` AS `ESTADOMENSAJEPS_PED`,`fza_pedidos`.`IDHILOPS_MENSAJES_PED` AS `IDHILOPS_MENSAJES_PED`,`fza_pedidos`.`NOMBRE_CLI_ENVIO_PED` AS `NOMBRE_CLI_ENVIO_PED`,`fza_pedidos`.`MOVIL_CLIENTE_ENVIO_PED` AS `MOVIL_CLIENTE_ENVIO_PED`,`fza_pedidos`.`DIRECCION1_CLIENTE_ENVIO_PED` AS `DIRECCION1_CLIENTE_ENVIO_PED`,`fza_pedidos`.`DIRECCION2_CLIENTE_ENVIO_PED` AS `DIRECCION2_CLIENTE_ENVIO_PED`,`fza_pedidos`.`POBLACION_CLIENTE_ENVIO_PED` AS `POBLACION_CLIENTE_ENVIO_PED`,`fza_pedidos`.`PROVINCIA_CLIENTE_ENVIO_PED` AS `PROVINCIA_CLIENTE_ENVIO_PED`,`fza_pedidos`.`CODIGO_POSTAL_CLIENTE_ENVIO_PED` AS `CODIGO_POSTAL_CLIENTE_ENVIO_PED`,`fza_pedidos`.`CODIGO_PAI_CLIENTE_ENVIO_PED` AS `CODIGO_PAI_CLIENTE_ENVIO_PED`,`fza_pedidos`.`NOMBRE_PAI_CLIENTE_ENVIO_PED` AS `NOMBRE_PAI_CLIENTE_ENVIO_PED`,`fza_pedidos`.`RAZON_SOCIAL_CLIENTE_FISCAL_PED` AS `RAZON_SOCIAL_CLIENTE_FISCAL_PED`,`fza_pedidos`.`MOVIL_CLIENTE_FISCAL_PED` AS `MOVIL_CLIENTE_FISCAL_PED`,`fza_pedidos`.`EMAIL_CLIENTE_FISCAL_PED` AS `EMAIL_CLIENTE_FISCAL_PED`,`fza_pedidos`.`DIRECCION1_CLIENTE_FISCAL_PED` AS `DIRECCION1_CLIENTE_FISCAL_PED`,`fza_pedidos`.`DIRECCION2_CLIENTE_FISCAL_PED` AS `DIRECCION2_CLIENTE_FISCAL_PED`,`fza_pedidos`.`POBLACION_CLIENTE_FISCAL_PED` AS `POBLACION_CLIENTE_FISCAL_PED`,`fza_pedidos`.`PROVINCIA_CLIENTE_FISCAL_PED` AS `PROVINCIA_CLIENTE_FISCAL_PED`,`fza_pedidos`.`CODIGO_POSTAL_CLIENTE_FISCAL_PED` AS `CODIGO_POSTAL_CLIENTE_FISCAL_PED`,`fza_pedidos`.`CODIGO_PAI_CLIENTE_FISCAL_PED` AS `CODIGO_PAI_CLIENTE_FISCAL_PED`,`fza_pedidos`.`NOMBRE_PAI_CLIENTE_FISCAL_PED` AS `NOMBRE_PAI_CLIENTE_FISCAL_PED`,`fza_pedidos`.`ESIVA_RECARGO_CLIENTE_PED` AS `ESIVA_RECARGO_CLIENTE_PED`,`fza_pedidos`.`ESIVA_EXENTO_CLIENTE_PED` AS `ESIVA_EXENTO_CLIENTE_PED`,`fza_pedidos`.`ESREGIMENESPECIALAGRICOLA_CLIENTE_PED` AS `ESREGIMENESPECIALAGRICOLA_CLIENTE_PED`,`fza_pedidos`.`ESRETENCIONES_CLIENTE_PED` AS `ESRETENCIONES_CLIENTE_PED`,`fza_pedidos`.`TARIFA_ARTICULO_CLIENTE_PED` AS `TARIFA_ARTICULO_CLIENTE_PED`,`fza_pedidos`.`ESIMP_INCL_TARIFA_CLIENTE_PED` AS `ESIMP_INCL_TARIFA_CLIENTE_PED`,`fza_pedidos`.`ESINTRACOMUNITARIO_CLIENTE_PED` AS `ESINTRACOMUNITARIO_CLIENTE_PED`,`fza_pedidos`.`ESIRPF_IMP_INCL_ZONA_IVA_PED` AS `ESIRPF_IMP_INCL_ZONA_IVA_PED`,`fza_pedidos`.`ESAPLICA_RE_ZONA_IVA_PED` AS `ESAPLICA_RE_ZONA_IVA_PED`,`fza_pedidos`.`ESIVAAGRICOLA_ZONA_IVA_PED` AS `ESIVAAGRICOLA_ZONA_IVA_PED`,`fza_pedidos`.`PALABRA_REPORTS_ZONA_IVA_PED` AS `PALABRA_REPORTS_ZONA_IVA_PED`,`fza_pedidos`.`CODIGO_IVA_PED` AS `CODIGO_IVA_PED`,`fza_pedidos`.`ESVENTA_ACTIVO_FIJO_PED` AS `ESVENTA_ACTIVO_FIJO_PED`,`fza_pedidos`.`PORCENTAJE_IVAN_PED` AS `PORCENTAJE_IVAN_PED`,`fza_pedidos`.`TOTAL_IVAN_PED` AS `TOTAL_IVAN_PED`,`fza_pedidos`.`PORCENTAJE_REN_PED` AS `PORCENTAJE_REN_PED`,`fza_pedidos`.`TOTAL_REN_PED` AS `TOTAL_REN_PED`,`fza_pedidos`.`TOTAL_BASEI_IVAN_PED` AS `TOTAL_BASEI_IVAN_PED`,`fza_pedidos`.`PORCENTAJE_IVAR_PED` AS `PORCENTAJE_IVAR_PED`,`fza_pedidos`.`TOTAL_IVAR_PED` AS `TOTAL_IVAR_PED`,`fza_pedidos`.`PORCENTAJE_RER_PED` AS `PORCENTAJE_RER_PED`,`fza_pedidos`.`TOTAL_RER_PED` AS `TOTAL_RER_PED`,`fza_pedidos`.`TOTAL_BASEI_IVAR_PED` AS `TOTAL_BASEI_IVAR_PED`,`fza_pedidos`.`PORCENTAJE_IVAS_PED` AS `PORCENTAJE_IVAS_PED`,`fza_pedidos`.`TOTAL_IVAS_PED` AS `TOTAL_IVAS_PED`,`fza_pedidos`.`PORCENTAJE_RES_PED` AS `PORCENTAJE_RES_PED`,`fza_pedidos`.`TOTAL_RES_PED` AS `TOTAL_RES_PED`,`fza_pedidos`.`TOTAL_BASEI_IVAS_PED` AS `TOTAL_BASEI_IVAS_PED`,`fza_pedidos`.`PORCENTAJE_IVAE_PED` AS `PORCENTAJE_IVAE_PED`,`fza_pedidos`.`TOTAL_IVAE_PED` AS `TOTAL_IVAE_PED`,`fza_pedidos`.`PORCENTAJE_REE_PED` AS `PORCENTAJE_REE_PED`,`fza_pedidos`.`TOTAL_REE_PED` AS `TOTAL_REE_PED`,`fza_pedidos`.`TOTAL_BASEI_IVAE_PED` AS `TOTAL_BASEI_IVAE_PED`,`fza_pedidos`.`TOTAL_BASES_PED` AS `TOTAL_BASES_PED`,`fza_pedidos`.`TOTAL_IMPUESTOS_PED` AS `TOTAL_IMPUESTOS_PED`,`fza_pedidos`.`FORMA_PAGO_PED` AS `FORMA_PAGO_PED`,`fza_pedidos`.`PORCENTAJE_RETENCION_PED` AS `PORCENTAJE_RETENCION_PED`,`fza_pedidos`.`TOTAL_RETENCION_PED` AS `TOTAL_RETENCION_PED`,`fza_pedidos`.`TOTAL_LIQUIDO_PED` AS `TOTAL_LIQUIDO_PED`,`fza_pedidos`.`TOTAL_PAGADOREALPS_PED` AS `TOTAL_PAGADOREALPS_PED`,`fza_pedidos`.`NUMERO_PED_ABONO_PED` AS `NUMERO_PED_ABONO_PED`,`fza_pedidos`.`SERIE_PED_ABONO_PED` AS `SERIE_PED_ABONO_PED`,`fza_pedidos`.`TEXTO_LEGAL_CLIENTE_PED` AS `TEXTO_LEGAL_CLIENTE_PED`,`fza_pedidos`.`TEXTO_LEGAL_EMPRESA_PED` AS `TEXTO_LEGAL_EMPRESA_PED`,`fza_pedidos`.`DOCUMENTO_PED` AS `DOCUMENTO_PED`,`fza_pedidos`.`COMENTARIOS_PED` AS `COMENTARIOS_PED`,`fza_pedidos`.`OBSERVACIONES_PED` AS `OBSERVACIONES_PED`,`fza_pedidos`.`CONTADOR_LINEAS_PED` AS `CONTADOR_LINEAS_PED`,`fza_pedidos`.`ESCREARARTICULOS_PED` AS `ESCREARARTICULOS_PED`,`fza_pedidos`.`ESDESCRIPCIONES_AMP_PED` AS `ESDESCRIPCIONES_AMP_PED`,`fza_pedidos`.`ESFECHADEENTREGA_PED` AS `ESFECHADEENTREGA_PED`,`fza_pedidos`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`fza_pedidos`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`fza_pedidos`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`fza_pedidos`.`USUARIO_MODIF` AS `USUARIO_MODIF` from `fza_pedidos`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos` AS select `p`.`NUMERO_PED` AS `NUMERO_PED`,`p`.`SERIE_PED` AS `SERIE_PED`,`p`.`FECHA_PED` AS `FECHA_PED`,`p`.`ESCONSOLIDADO_PED` AS `ESCONSOLIDADO_PED`,`p`.`ESTADO_PED` AS `ESTADO_PED`,`p`.`FECHA_ENTREGA_PED` AS `FECHA_ENTREGA_PED`,`p`.`CODIGO_EMP_PED` AS `CODIGO_EMP_PED`,`p`.`CODIGO_ALM_PED` AS `CODIGO_ALM_PED`,`p`.`RAZON_SOCIAL_EMPRESA_PED` AS `RAZON_SOCIAL_EMPRESA_PED`,`p`.`NIF_EMPRESA_PED` AS `NIF_EMPRESA_PED`,`p`.`MOVIL_EMPRESA_PED` AS `MOVIL_EMPRESA_PED`,`p`.`EMAIL_EMPRESA_PED` AS `EMAIL_EMPRESA_PED`,`p`.`DIRECCION1_EMPRESA_PED` AS `DIRECCION1_EMPRESA_PED`,`p`.`DIRECCION2_EMPRESA_PED` AS `DIRECCION2_EMPRESA_PED`,`p`.`POBLACION_EMPRESA_PED` AS `POBLACION_EMPRESA_PED`,`p`.`PROVINCIA_EMPRESA_PED` AS `PROVINCIA_EMPRESA_PED`,`p`.`CODIGO_PAI_EMPRESA_PED` AS `CODIGO_PAI_EMPRESA_PED`,`p`.`NOMBRE_PAI_EMPRESA_PED` AS `NOMBRE_PAI_EMPRESA_PED`,`p`.`CODIGO_POSTAL_EMPRESA_PED` AS `CODIGO_POSTAL_EMPRESA_PED`,`p`.`ESRETENCIONES_EMPRESA_PED` AS `ESRETENCIONES_EMPRESA_PED`,`p`.`GRUPO_ZONA_IVA_EMPRESA_PED` AS `GRUPO_ZONA_IVA_EMPRESA_PED`,`p`.`ESREGIMENESPECIALAGRICOLA_EMPRESA_PED` AS `ESREGIMENESPECIALAGRICOLA_EMPRESA_PED`,`p`.`CODIGO_CLI_PED` AS `CODIGO_CLI_PED`,`p`.`NIF_CLIENTE_PED` AS `NIF_CLIENTE_PED`,`p`.`EMAIL_CLIENTE_PED` AS `EMAIL_CLIENTE_PED`,`p`.`REFERENCIAPS_PED` AS `REFERENCIAPS_PED`,`p`.`IDPS_PED` AS `IDPS_PED`,`p`.`FECHAPS_PED` AS `FECHAPS_PED`,`p`.`FORMAPAGOPS_PED` AS `FORMAPAGOPS_PED`,`p`.`TRANSPORTISTAPS_PED` AS `TRANSPORTISTAPS_PED`,`p`.`ESTADOPEDIDOPS_PED` AS `ESTADOPEDIDOPS_PED`,`p`.`ESTADOMENSAJEPS_PED` AS `ESTADOMENSAJEPS_PED`,`p`.`IDHILOPS_MENSAJES_PED` AS `IDHILOPS_MENSAJES_PED`,`p`.`NOMBRE_CLI_ENVIO_PED` AS `NOMBRE_CLI_ENVIO_PED`,`p`.`MOVIL_CLIENTE_ENVIO_PED` AS `MOVIL_CLIENTE_ENVIO_PED`,`p`.`DIRECCION1_CLIENTE_ENVIO_PED` AS `DIRECCION1_CLIENTE_ENVIO_PED`,`p`.`DIRECCION2_CLIENTE_ENVIO_PED` AS `DIRECCION2_CLIENTE_ENVIO_PED`,`p`.`POBLACION_CLIENTE_ENVIO_PED` AS `POBLACION_CLIENTE_ENVIO_PED`,`p`.`PROVINCIA_CLIENTE_ENVIO_PED` AS `PROVINCIA_CLIENTE_ENVIO_PED`,`p`.`CODIGO_POSTAL_CLIENTE_ENVIO_PED` AS `CODIGO_POSTAL_CLIENTE_ENVIO_PED`,`p`.`CODIGO_PAI_CLIENTE_ENVIO_PED` AS `CODIGO_PAI_CLIENTE_ENVIO_PED`,`p`.`NOMBRE_PAI_CLIENTE_ENVIO_PED` AS `NOMBRE_PAI_CLIENTE_ENVIO_PED`,`p`.`RAZON_SOCIAL_CLIENTE_FISCAL_PED` AS `RAZON_SOCIAL_CLIENTE_FISCAL_PED`,`p`.`MOVIL_CLIENTE_FISCAL_PED` AS `MOVIL_CLIENTE_FISCAL_PED`,`p`.`EMAIL_CLIENTE_FISCAL_PED` AS `EMAIL_CLIENTE_FISCAL_PED`,`p`.`DIRECCION1_CLIENTE_FISCAL_PED` AS `DIRECCION1_CLIENTE_FISCAL_PED`,`p`.`DIRECCION2_CLIENTE_FISCAL_PED` AS `DIRECCION2_CLIENTE_FISCAL_PED`,`p`.`POBLACION_CLIENTE_FISCAL_PED` AS `POBLACION_CLIENTE_FISCAL_PED`,`p`.`PROVINCIA_CLIENTE_FISCAL_PED` AS `PROVINCIA_CLIENTE_FISCAL_PED`,`p`.`CODIGO_POSTAL_CLIENTE_FISCAL_PED` AS `CODIGO_POSTAL_CLIENTE_FISCAL_PED`,`p`.`CODIGO_PAI_CLIENTE_FISCAL_PED` AS `CODIGO_PAI_CLIENTE_FISCAL_PED`,`p`.`NOMBRE_PAI_CLIENTE_FISCAL_PED` AS `NOMBRE_PAI_CLIENTE_FISCAL_PED`,`p`.`ESIVA_RECARGO_CLIENTE_PED` AS `ESIVA_RECARGO_CLIENTE_PED`,`p`.`ESIVA_EXENTO_CLIENTE_PED` AS `ESIVA_EXENTO_CLIENTE_PED`,`p`.`ESREGIMENESPECIALAGRICOLA_CLIENTE_PED` AS `ESREGIMENESPECIALAGRICOLA_CLIENTE_PED`,`p`.`ESRETENCIONES_CLIENTE_PED` AS `ESRETENCIONES_CLIENTE_PED`,`p`.`TARIFA_ARTICULO_CLIENTE_PED` AS `TARIFA_ARTICULO_CLIENTE_PED`,`p`.`ESIMP_INCL_TARIFA_CLIENTE_PED` AS `ESIMP_INCL_TARIFA_CLIENTE_PED`,`p`.`ESINTRACOMUNITARIO_CLIENTE_PED` AS `ESINTRACOMUNITARIO_CLIENTE_PED`,`p`.`ESIRPF_IMP_INCL_ZONA_IVA_PED` AS `ESIRPF_IMP_INCL_ZONA_IVA_PED`,`p`.`ESAPLICA_RE_ZONA_IVA_PED` AS `ESAPLICA_RE_ZONA_IVA_PED`,`p`.`ESIVAAGRICOLA_ZONA_IVA_PED` AS `ESIVAAGRICOLA_ZONA_IVA_PED`,`p`.`PALABRA_REPORTS_ZONA_IVA_PED` AS `PALABRA_REPORTS_ZONA_IVA_PED`,`p`.`CODIGO_IVA_PED` AS `CODIGO_IVA_PED`,`p`.`ESVENTA_ACTIVO_FIJO_PED` AS `ESVENTA_ACTIVO_FIJO_PED`,`p`.`PORCENTAJE_IVAN_PED` AS `PORCENTAJE_IVAN_PED`,`p`.`TOTAL_IVAN_PED` AS `TOTAL_IVAN_PED`,`p`.`PORCENTAJE_REN_PED` AS `PORCENTAJE_REN_PED`,`p`.`TOTAL_REN_PED` AS `TOTAL_REN_PED`,`p`.`TOTAL_BASEI_IVAN_PED` AS `TOTAL_BASEI_IVAN_PED`,`p`.`PORCENTAJE_IVAR_PED` AS `PORCENTAJE_IVAR_PED`,`p`.`TOTAL_IVAR_PED` AS `TOTAL_IVAR_PED`,`p`.`PORCENTAJE_RER_PED` AS `PORCENTAJE_RER_PED`,`p`.`TOTAL_RER_PED` AS `TOTAL_RER_PED`,`p`.`TOTAL_BASEI_IVAR_PED` AS `TOTAL_BASEI_IVAR_PED`,`p`.`PORCENTAJE_IVAS_PED` AS `PORCENTAJE_IVAS_PED`,`p`.`TOTAL_IVAS_PED` AS `TOTAL_IVAS_PED`,`p`.`PORCENTAJE_RES_PED` AS `PORCENTAJE_RES_PED`,`p`.`TOTAL_RES_PED` AS `TOTAL_RES_PED`,`p`.`TOTAL_BASEI_IVAS_PED` AS `TOTAL_BASEI_IVAS_PED`,`p`.`PORCENTAJE_IVAE_PED` AS `PORCENTAJE_IVAE_PED`,`p`.`TOTAL_IVAE_PED` AS `TOTAL_IVAE_PED`,`p`.`PORCENTAJE_REE_PED` AS `PORCENTAJE_REE_PED`,`p`.`TOTAL_REE_PED` AS `TOTAL_REE_PED`,`p`.`TOTAL_BASEI_IVAE_PED` AS `TOTAL_BASEI_IVAE_PED`,`p`.`TOTAL_BASES_PED` AS `TOTAL_BASES_PED`,`p`.`TOTAL_IMPUESTOS_PED` AS `TOTAL_IMPUESTOS_PED`,`p`.`FORMA_PAGO_PED` AS `FORMA_PAGO_PED`,`p`.`PORCENTAJE_RETENCION_PED` AS `PORCENTAJE_RETENCION_PED`,`p`.`TOTAL_RETENCION_PED` AS `TOTAL_RETENCION_PED`,`p`.`TOTAL_LIQUIDO_PED` AS `TOTAL_LIQUIDO_PED`,`p`.`TOTAL_PAGADOREALPS_PED` AS `TOTAL_PAGADOREALPS_PED`,`p`.`NUMERO_PED_ABONO_PED` AS `NUMERO_PED_ABONO_PED`,`p`.`SERIE_PED_ABONO_PED` AS `SERIE_PED_ABONO_PED`,`p`.`TEXTO_LEGAL_CLIENTE_PED` AS `TEXTO_LEGAL_CLIENTE_PED`,`p`.`TEXTO_LEGAL_EMPRESA_PED` AS `TEXTO_LEGAL_EMPRESA_PED`,`p`.`DOCUMENTO_PED` AS `DOCUMENTO_PED`,`p`.`COMENTARIOS_PED` AS `COMENTARIOS_PED`,`p`.`OBSERVACIONES_PED` AS `OBSERVACIONES_PED`,`p`.`CONTADOR_LINEAS_PED` AS `CONTADOR_LINEAS_PED`,`p`.`ESCREARARTICULOS_PED` AS `ESCREARARTICULOS_PED`,`p`.`ESDESCRIPCIONES_AMP_PED` AS `ESDESCRIPCIONES_AMP_PED`,`p`.`ESFECHADEENTREGA_PED` AS `ESFECHADEENTREGA_PED`,`p`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`p`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`p`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`p`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`alm`.`NOMBRE_ALM_ALM` AS `NOMBRE_ALM_PED` from (`fza_pedidos` `p` left join `fza_almacenes` `alm` on(`alm`.`CODIGO_ALM_ALM` = `p`.`CODIGO_ALM_PED`));
 
 -- Vista: vi_pedidos_compra
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos_compra` AS select `p`.`NUMERO_PEDC` AS `NUMERO_PEDC`,`p`.`SERIE_PEDC` AS `SERIE_PEDC`,`p`.`FECHA_PEDC` AS `FECHA_PEDC`,`p`.`FECHA_PREVISTA_PEDC` AS `FECHA_PREVISTA_PEDC`,`p`.`FECHA_TOPE_RECEPCION_PEDC` AS `FECHA_TOPE_RECEPCION_PEDC`,`p`.`ESTADO_PEDC` AS `ESTADO_PEDC`,`p`.`CODIGO_EMP_PEDC` AS `CODIGO_EMP_PEDC`,`p`.`RAZON_SOCIAL_EMPRESA_PEDC` AS `RAZON_SOCIAL_EMPRESA_PEDC`,`p`.`NIF_EMPRESA_PEDC` AS `NIF_EMPRESA_PEDC`,`p`.`MOVIL_EMPRESA_PEDC` AS `MOVIL_EMPRESA_PEDC`,`p`.`EMAIL_EMPRESA_PEDC` AS `EMAIL_EMPRESA_PEDC`,`p`.`DIRECCION1_EMPRESA_PEDC` AS `DIRECCION1_EMPRESA_PEDC`,`p`.`DIRECCION2_EMPRESA_PEDC` AS `DIRECCION2_EMPRESA_PEDC`,`p`.`POBLACION_EMPRESA_PEDC` AS `POBLACION_EMPRESA_PEDC`,`p`.`PROVINCIA_EMPRESA_PEDC` AS `PROVINCIA_EMPRESA_PEDC`,`p`.`CODIGO_PAI_EMPRESA_PEDC` AS `CODIGO_PAI_EMPRESA_PEDC`,`p`.`NOMBRE_PAI_EMPRESA_PEDC` AS `NOMBRE_PAI_EMPRESA_PEDC`,`p`.`CODIGO_POSTAL_EMPRESA_PEDC` AS `CODIGO_POSTAL_EMPRESA_PEDC`,`p`.`CODIGO_PRV_PEDC` AS `CODIGO_PRV_PEDC`,`p`.`RAZON_SOCIAL_PRV_PEDC` AS `RAZON_SOCIAL_PRV_PEDC`,`p`.`NIF_PRV_PEDC` AS `NIF_PRV_PEDC`,`p`.`MOVIL_PRV_PEDC` AS `MOVIL_PRV_PEDC`,`p`.`EMAIL_PRV_PEDC` AS `EMAIL_PRV_PEDC`,`p`.`DIRECCION1_PRV_PEDC` AS `DIRECCION1_PRV_PEDC`,`p`.`DIRECCION2_PRV_PEDC` AS `DIRECCION2_PRV_PEDC`,`p`.`POBLACION_PRV_PEDC` AS `POBLACION_PRV_PEDC`,`p`.`PROVINCIA_PRV_PEDC` AS `PROVINCIA_PRV_PEDC`,`p`.`CODIGO_PAI_PRV_PEDC` AS `CODIGO_PAI_PRV_PEDC`,`p`.`NOMBRE_PAI_PRV_PEDC` AS `NOMBRE_PAI_PRV_PEDC`,`p`.`CODIGO_POSTAL_PRV_PEDC` AS `CODIGO_POSTAL_PRV_PEDC`,`p`.`REF_PROVEEDOR_PEDC` AS `REF_PROVEEDOR_PEDC`,`p`.`CODIGO_ALM_PEDC` AS `CODIGO_ALM_PEDC`,`p`.`TRANSPORTISTA_PEDC` AS `TRANSPORTISTA_PEDC`,`p`.`CODIGO_IVA_PEDC` AS `CODIGO_IVA_PEDC`,`p`.`ESIVA_RECARGO_COMPRAS_PEDC` AS `ESIVA_RECARGO_COMPRAS_PEDC`,`p`.`ESIVA_EXENTO_INTRACOMUNITARIO_PEDC` AS `ESIVA_EXENTO_INTRACOMUNITARIO_PEDC`,`p`.`PORCENTAJE_IVAN_PEDC` AS `PORCENTAJE_IVAN_PEDC`,`p`.`TOTAL_BASEI_IVAN_PEDC` AS `TOTAL_BASEI_IVAN_PEDC`,`p`.`TOTAL_IVAN_PEDC` AS `TOTAL_IVAN_PEDC`,`p`.`PORCENTAJE_REN_PEDC` AS `PORCENTAJE_REN_PEDC`,`p`.`TOTAL_REN_PEDC` AS `TOTAL_REN_PEDC`,`p`.`PORCENTAJE_IVAR_PEDC` AS `PORCENTAJE_IVAR_PEDC`,`p`.`TOTAL_BASEI_IVAR_PEDC` AS `TOTAL_BASEI_IVAR_PEDC`,`p`.`TOTAL_IVAR_PEDC` AS `TOTAL_IVAR_PEDC`,`p`.`PORCENTAJE_RER_PEDC` AS `PORCENTAJE_RER_PEDC`,`p`.`TOTAL_RER_PEDC` AS `TOTAL_RER_PEDC`,`p`.`PORCENTAJE_IVAS_PEDC` AS `PORCENTAJE_IVAS_PEDC`,`p`.`TOTAL_BASEI_IVAS_PEDC` AS `TOTAL_BASEI_IVAS_PEDC`,`p`.`TOTAL_IVAS_PEDC` AS `TOTAL_IVAS_PEDC`,`p`.`PORCENTAJE_RES_PEDC` AS `PORCENTAJE_RES_PEDC`,`p`.`TOTAL_RES_PEDC` AS `TOTAL_RES_PEDC`,`p`.`PORCENTAJE_IVAE_PEDC` AS `PORCENTAJE_IVAE_PEDC`,`p`.`TOTAL_BASEI_IVAE_PEDC` AS `TOTAL_BASEI_IVAE_PEDC`,`p`.`TOTAL_IVAE_PEDC` AS `TOTAL_IVAE_PEDC`,`p`.`PORCENTAJE_REE_PEDC` AS `PORCENTAJE_REE_PEDC`,`p`.`TOTAL_REE_PEDC` AS `TOTAL_REE_PEDC`,`p`.`TOTAL_BASES_PEDC` AS `TOTAL_BASES_PEDC`,`p`.`TOTAL_IMPUESTOS_PEDC` AS `TOTAL_IMPUESTOS_PEDC`,`p`.`PORCENTAJE_RETENCION_PEDC` AS `PORCENTAJE_RETENCION_PEDC`,`p`.`TOTAL_RETENCION_PEDC` AS `TOTAL_RETENCION_PEDC`,`p`.`TOTAL_BRUTO_PEDC` AS `TOTAL_BRUTO_PEDC`,`p`.`PORCENTAJE_DTO_COMERCIAL_PEDC` AS `PORCENTAJE_DTO_COMERCIAL_PEDC`,`p`.`TOTAL_DTO_COMERCIAL_PEDC` AS `TOTAL_DTO_COMERCIAL_PEDC`,`p`.`PORCENTAJE_DTO_FINANCIERO_PEDC` AS `PORCENTAJE_DTO_FINANCIERO_PEDC`,`p`.`TOTAL_DTO_FINANCIERO_PEDC` AS `TOTAL_DTO_FINANCIERO_PEDC`,`p`.`TOTAL_LIQUIDO_PEDC` AS `TOTAL_LIQUIDO_PEDC`,`p`.`FORMA_PAGO_PEDC` AS `FORMA_PAGO_PEDC`,`p`.`CONTADOR_LINEAS_PEDC` AS `CONTADOR_LINEAS_PEDC`,`p`.`COMENTARIOS_PEDC` AS `COMENTARIOS_PEDC`,`p`.`OBSERVACIONES_PEDC` AS `OBSERVACIONES_PEDC`,`p`.`ESPIVOTE_HORIZONTAL_PEDC` AS `ESPIVOTE_HORIZONTAL_PEDC`,`p`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`p`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`p`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`p`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`p`.`ID_PV_TEMPORADA_PEDC` AS `ID_PV_TEMPORADA_PEDC`,`prv`.`NOMBRE_PRV` AS `NOMBRE_PRV_PEDC`,`emp`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMPRESA_VIEW_PEDC` from ((`fza_pedidos_compra` `p` left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `p`.`CODIGO_PRV_PEDC`)) left join `fza_empresas` `emp` on(`emp`.`CODIGO_EMP_EMP` = `p`.`CODIGO_EMP_PEDC`));
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos_compra` AS select `p`.`NUMERO_PEDC` AS `NUMERO_PEDC`,`p`.`SERIE_PEDC` AS `SERIE_PEDC`,`p`.`FECHA_PEDC` AS `FECHA_PEDC`,`p`.`FECHA_PREVISTA_PEDC` AS `FECHA_PREVISTA_PEDC`,`p`.`FECHA_TOPE_RECEPCION_PEDC` AS `FECHA_TOPE_RECEPCION_PEDC`,`p`.`ESTADO_PEDC` AS `ESTADO_PEDC`,`p`.`CODIGO_EMP_PEDC` AS `CODIGO_EMP_PEDC`,`p`.`RAZON_SOCIAL_EMPRESA_PEDC` AS `RAZON_SOCIAL_EMPRESA_PEDC`,`p`.`NIF_EMPRESA_PEDC` AS `NIF_EMPRESA_PEDC`,`p`.`MOVIL_EMPRESA_PEDC` AS `MOVIL_EMPRESA_PEDC`,`p`.`EMAIL_EMPRESA_PEDC` AS `EMAIL_EMPRESA_PEDC`,`p`.`DIRECCION1_EMPRESA_PEDC` AS `DIRECCION1_EMPRESA_PEDC`,`p`.`DIRECCION2_EMPRESA_PEDC` AS `DIRECCION2_EMPRESA_PEDC`,`p`.`POBLACION_EMPRESA_PEDC` AS `POBLACION_EMPRESA_PEDC`,`p`.`PROVINCIA_EMPRESA_PEDC` AS `PROVINCIA_EMPRESA_PEDC`,`p`.`CODIGO_PAI_EMPRESA_PEDC` AS `CODIGO_PAI_EMPRESA_PEDC`,`p`.`NOMBRE_PAI_EMPRESA_PEDC` AS `NOMBRE_PAI_EMPRESA_PEDC`,`p`.`CODIGO_POSTAL_EMPRESA_PEDC` AS `CODIGO_POSTAL_EMPRESA_PEDC`,`p`.`CODIGO_PRV_PEDC` AS `CODIGO_PRV_PEDC`,`p`.`RAZON_SOCIAL_PRV_PEDC` AS `RAZON_SOCIAL_PRV_PEDC`,`p`.`NIF_PRV_PEDC` AS `NIF_PRV_PEDC`,`p`.`MOVIL_PRV_PEDC` AS `MOVIL_PRV_PEDC`,`p`.`EMAIL_PRV_PEDC` AS `EMAIL_PRV_PEDC`,`p`.`DIRECCION1_PRV_PEDC` AS `DIRECCION1_PRV_PEDC`,`p`.`DIRECCION2_PRV_PEDC` AS `DIRECCION2_PRV_PEDC`,`p`.`POBLACION_PRV_PEDC` AS `POBLACION_PRV_PEDC`,`p`.`PROVINCIA_PRV_PEDC` AS `PROVINCIA_PRV_PEDC`,`p`.`CODIGO_PAI_PRV_PEDC` AS `CODIGO_PAI_PRV_PEDC`,`p`.`NOMBRE_PAI_PRV_PEDC` AS `NOMBRE_PAI_PRV_PEDC`,`p`.`CODIGO_POSTAL_PRV_PEDC` AS `CODIGO_POSTAL_PRV_PEDC`,`p`.`REF_PROVEEDOR_PEDC` AS `REF_PROVEEDOR_PEDC`,`p`.`CODIGO_ALM_PEDC` AS `CODIGO_ALM_PEDC`,`p`.`TRANSPORTISTA_PEDC` AS `TRANSPORTISTA_PEDC`,`p`.`CODIGO_IVA_PEDC` AS `CODIGO_IVA_PEDC`,`p`.`ESIVA_RECARGO_COMPRAS_PEDC` AS `ESIVA_RECARGO_COMPRAS_PEDC`,`p`.`ESIVA_EXENTO_INTRACOMUNITARIO_PEDC` AS `ESIVA_EXENTO_INTRACOMUNITARIO_PEDC`,`p`.`PORCENTAJE_IVAN_PEDC` AS `PORCENTAJE_IVAN_PEDC`,`p`.`TOTAL_BASEI_IVAN_PEDC` AS `TOTAL_BASEI_IVAN_PEDC`,`p`.`TOTAL_IVAN_PEDC` AS `TOTAL_IVAN_PEDC`,`p`.`PORCENTAJE_REN_PEDC` AS `PORCENTAJE_REN_PEDC`,`p`.`TOTAL_REN_PEDC` AS `TOTAL_REN_PEDC`,`p`.`PORCENTAJE_IVAR_PEDC` AS `PORCENTAJE_IVAR_PEDC`,`p`.`TOTAL_BASEI_IVAR_PEDC` AS `TOTAL_BASEI_IVAR_PEDC`,`p`.`TOTAL_IVAR_PEDC` AS `TOTAL_IVAR_PEDC`,`p`.`PORCENTAJE_RER_PEDC` AS `PORCENTAJE_RER_PEDC`,`p`.`TOTAL_RER_PEDC` AS `TOTAL_RER_PEDC`,`p`.`PORCENTAJE_IVAS_PEDC` AS `PORCENTAJE_IVAS_PEDC`,`p`.`TOTAL_BASEI_IVAS_PEDC` AS `TOTAL_BASEI_IVAS_PEDC`,`p`.`TOTAL_IVAS_PEDC` AS `TOTAL_IVAS_PEDC`,`p`.`PORCENTAJE_RES_PEDC` AS `PORCENTAJE_RES_PEDC`,`p`.`TOTAL_RES_PEDC` AS `TOTAL_RES_PEDC`,`p`.`PORCENTAJE_IVAE_PEDC` AS `PORCENTAJE_IVAE_PEDC`,`p`.`TOTAL_BASEI_IVAE_PEDC` AS `TOTAL_BASEI_IVAE_PEDC`,`p`.`TOTAL_IVAE_PEDC` AS `TOTAL_IVAE_PEDC`,`p`.`PORCENTAJE_REE_PEDC` AS `PORCENTAJE_REE_PEDC`,`p`.`TOTAL_REE_PEDC` AS `TOTAL_REE_PEDC`,`p`.`TOTAL_BASES_PEDC` AS `TOTAL_BASES_PEDC`,`p`.`TOTAL_IMPUESTOS_PEDC` AS `TOTAL_IMPUESTOS_PEDC`,`p`.`PORCENTAJE_RETENCION_PEDC` AS `PORCENTAJE_RETENCION_PEDC`,`p`.`TOTAL_RETENCION_PEDC` AS `TOTAL_RETENCION_PEDC`,`p`.`TOTAL_BRUTO_PEDC` AS `TOTAL_BRUTO_PEDC`,`p`.`PORCENTAJE_DTO_COMERCIAL_PEDC` AS `PORCENTAJE_DTO_COMERCIAL_PEDC`,`p`.`TOTAL_DTO_COMERCIAL_PEDC` AS `TOTAL_DTO_COMERCIAL_PEDC`,`p`.`PORCENTAJE_DTO_FINANCIERO_PEDC` AS `PORCENTAJE_DTO_FINANCIERO_PEDC`,`p`.`TOTAL_DTO_FINANCIERO_PEDC` AS `TOTAL_DTO_FINANCIERO_PEDC`,`p`.`TOTAL_LIQUIDO_PEDC` AS `TOTAL_LIQUIDO_PEDC`,`p`.`FORMA_PAGO_PEDC` AS `FORMA_PAGO_PEDC`,`p`.`CONTADOR_LINEAS_PEDC` AS `CONTADOR_LINEAS_PEDC`,`p`.`COMENTARIOS_PEDC` AS `COMENTARIOS_PEDC`,`p`.`OBSERVACIONES_PEDC` AS `OBSERVACIONES_PEDC`,`p`.`ESPIVOTE_HORIZONTAL_PEDC` AS `ESPIVOTE_HORIZONTAL_PEDC`,`p`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`p`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`p`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`p`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`p`.`ID_PV_TEMPORADA_PEDC` AS `ID_PV_TEMPORADA_PEDC`,`prv`.`NOMBRE_PRV` AS `NOMBRE_PRV_PEDC`,`emp`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMPRESA_VIEW_PEDC`,`t`.`PV` AS `TEMPORADA_PEDC`,`p`.`FECHA_PEDC` AS `FECHA_REALIZACION_PEDC`,`p`.`FECHA_PREVISTA_PEDC` AS `FECHA_EFECTO_STOCK_PEDC`,coalesce(`r`.`CANTIDAD_PEDIDA_PEDC`,0) AS `CANTIDAD_PEDIDA_PEDC`,coalesce(`r`.`CANTIDAD_PEDIDA_PEDC`,0) AS `TOTAL_PRENDAS_PEDC`,coalesce(`r`.`CANTIDAD_RECIBIDA_PEDC`,0) AS `CANTIDAD_RECIBIDA_PEDC`,greatest(coalesce(`r`.`CANTIDAD_PEDIDA_PEDC`,0) - coalesce(`r`.`CANTIDAD_RECIBIDA_PEDC`,0),0) AS `CANTIDAD_PENDIENTE_RECEPCION_PEDC`,coalesce(`r`.`TOTAL_LINEAS_PEDC`,0) AS `TOTAL_LINEAS_PEDC` from ((((`fza_pedidos_compra` `p` left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `p`.`CODIGO_PRV_PEDC`)) left join `fza_empresas` `emp` on(`emp`.`CODIGO_EMP_EMP` = `p`.`CODIGO_EMP_PEDC`)) left join `fza_propiedades_valores` `t` on(`t`.`ID_PV_ARTPROP` = `p`.`ID_PV_TEMPORADA_PEDC` and `t`.`ID_PROP_PV` = 'TEMPORADA')) left join (select `l`.`SERIE_PEDC_PEDCLIN` AS `SERIE_PEDC_PEDCLIN`,`l`.`NUMERO_PEDC_PEDCLIN` AS `NUMERO_PEDC_PEDCLIN`,coalesce(sum(`l`.`CANTIDAD_PEDCLIN`),0) AS `CANTIDAD_PEDIDA_PEDC`,coalesce(sum(`l`.`CANTIDAD_RECIBIDA_PEDCLIN`),0) AS `CANTIDAD_RECIBIDA_PEDC`,coalesce(sum(`l`.`TOTAL_PEDCLIN`),0) AS `TOTAL_LINEAS_PEDC` from `fza_pedidos_compra_lineas` `l` group by `l`.`SERIE_PEDC_PEDCLIN`,`l`.`NUMERO_PEDC_PEDCLIN`) `r` on(`r`.`SERIE_PEDC_PEDCLIN` = `p`.`SERIE_PEDC` and `r`.`NUMERO_PEDC_PEDCLIN` = `p`.`NUMERO_PEDC`));
 
 -- Vista: vi_pedidos_lineas
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos_lineas` AS select `pl`.`NUMERO_PED_PEDLIN` AS `NUMERO_PED_PEDLIN`,`pl`.`SERIE_PED_PEDLIN` AS `SERIE_PED_PEDLIN`,`pl`.`LINEA_PEDLIN` AS `LINEA_PEDLIN`,`pl`.`IDLINEAPS_PEDLIN` AS `IDLINEAPS_PEDLIN`,`pl`.`IDPRODPS_PEDLIN` AS `IDPRODPS_PEDLIN`,`pl`.`CODIGOPRODPS_PEDLIN` AS `CODIGOPRODPS_PEDLIN`,`pl`.`IDATRIBPRODPS_PEDLIN` AS `IDATRIBPRODPS_PEDLIN`,`pl`.`CODBAR_ART_PEDLIN` AS `CODBAR_ART_PEDLIN`,`pl`.`CODIGO_ART_PEDLIN` AS `CODIGO_ART_PEDLIN`,`pl`.`CODIGO_FAM_PEDLIN` AS `CODIGO_FAM_PEDLIN`,`pl`.`NOMBRE_FAM_PEDLIN` AS `NOMBRE_FAM_PEDLIN`,`pl`.`FECHA_ENTREGA_PEDLIN` AS `FECHA_ENTREGA_PEDLIN`,`pl`.`TIPO_CANTIDAD_ARTICULO_PEDLIN` AS `TIPO_CANTIDAD_ARTICULO_PEDLIN`,`pl`.`ESIMP_INCL_TARIFA_PEDLIN` AS `ESIMP_INCL_TARIFA_PEDLIN`,`pl`.`TIPO_IVA_ARTICULO_PEDLIN` AS `TIPO_IVA_ARTICULO_PEDLIN`,`pl`.`DESCRIPCION_ARTICULO_PEDLIN` AS `DESCRIPCION_ARTICULO_PEDLIN`,`pl`.`CODIGO_TAR_PEDLIN` AS `CODIGO_TAR_PEDLIN`,`pl`.`CANTIDAD_PEDLIN` AS `CANTIDAD_PEDLIN`,`pl`.`CANTIDAD_ENTREGADA_PEDLIN` AS `CANTIDAD_ENTREGADA_PEDLIN`,`pl`.`CANTIDAD_PENDIENTE_PEDLIN` AS `CANTIDAD_PENDIENTE_PEDLIN`,`pl`.`ESENTREGADA_PEDLIN` AS `ESENTREGADA_PEDLIN`,`pl`.`CODIGO_ALMACEN_PEDLIN` AS `CODIGO_ALMACEN_PEDLIN`,`pl`.`PRECIO_VENTA_SIVA_ARTICULO_PEDLIN` AS `PRECIO_VENTA_SIVA_ARTICULO_PEDLIN`,`pl`.`PORCENTAJE_IVA_PEDLIN` AS `PORCENTAJE_IVA_PEDLIN`,`pl`.`PRECIO_VENTA_CIVA_ARTICULO_PEDLIN` AS `PRECIO_VENTA_CIVA_ARTICULO_PEDLIN`,`pl`.`TOTAL_PEDLIN` AS `TOTAL_PEDLIN`,`pl`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`pl`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`pl`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`pl`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`pl`.`CANTIDAD_PEDLIN` - ifnull(`pl`.`CANTIDAD_ENTREGADA_PEDLIN`,0) AS `CANTIDAD_PENDIENTE_CALC_PEDLIN` from `fza_pedidos_lineas` `pl`;
@@ -34802,4 +36386,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 04/07/2026 17:25:56
+-- Backup completado: 05/07/2026 6:54:16
