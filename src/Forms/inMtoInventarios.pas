@@ -290,6 +290,7 @@ type
                                          var AError: Boolean;
                                          var AErrorText: TCaption);
     function BuscarArticuloDialog: string;
+    function BuscarSkuDialog: string;
 
     // === ACTUALIZACIÓN UI SEGÚN ESTADO ===
     procedure ActualizarEstadoUI;
@@ -966,23 +967,83 @@ var
     j: Integer;
     C: TcxGridDBColumn;
   begin
-    if not Assigned(tvLineas) then Exit;
-    tvLineas.BeginUpdate;
-    try
-      for j := 1 to 5 do
-      begin
-        C := ObtenerColumnaSkuPorTag(j);
-        if C <> nil then
+    if Assigned(tvLineas) then
+    begin
+      tvLineas.BeginUpdate;
+      try
+        for j := 1 to 5 do
         begin
-          C.Visible := False;
-          C.Options.Editing := False;
-          C.Caption := '-';
+          C := ObtenerColumnaSkuPorTag(j);
+          if C <> nil then
+          begin
+            C.Visible := False;
+            C.Options.Editing := False;
+            C.Caption := '-';
+          end;
+        end;
+        // En modo normal la entrada es la columna unificada SKU/Articulo.
+        AplicarModoColumnasEntrada(False);
+      finally
+        tvLineas.EndUpdate;
+      end;
+    end;
+  end;
+
+  procedure AplicarColumnasArticulo(const ACodigoArticulo: string);
+  var
+    i: Integer;
+    Col: TcxGridDBColumn;
+    NombresAtributos: TStringList;
+  begin
+    NombresAtributos := TStringList.Create;
+    try
+      if Trim(ACodigoArticulo) <> '' then
+      begin
+        dmmInventarios.unqryDefinicionArticulo.Close;
+        dmmInventarios.unqryDefinicionArticulo.ParamByName(
+          'ARTICULO').AsString := ACodigoArticulo;
+        dmmInventarios.unqryDefinicionArticulo.Open;
+        while not dmmInventarios.unqryDefinicionArticulo.Eof do
+        begin
+          NombresAtributos.Add(
+            dmmInventarios.unqryDefinicionArticulo.FieldByName(
+              'NOMBRE_ATRIBUTO').AsString);
+          dmmInventarios.unqryDefinicionArticulo.Next;
         end;
       end;
-      // En modo normal la entrada es la columna unificada SKU/Articulo.
-      AplicarModoColumnasEntrada(False);
+      FNumAtributosActual := NombresAtributos.Count;
+      if dmmInventarios.cdsLineas.Active and
+         (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
+        dmmInventarios.cdsLineas.FieldByName(
+          'NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger :=
+          FNumAtributosActual;
+      tvLineas.BeginUpdate;
+      try
+        for i := 1 to 5 do
+        begin
+          Col := ObtenerColumnaSkuPorTag(i);
+          if Col <> nil then
+          begin
+            if i <= NombresAtributos.Count then
+            begin
+              Col.Caption := NombresAtributos[i - 1];
+              Col.Visible := True;
+              Col.Options.Editing := True;
+            end
+            else
+            begin
+              Col.Visible := False;
+              Col.Options.Editing := False;
+              Col.Caption := '-';
+            end;
+          end;
+        end;
+        AplicarModoColumnasEntrada(True);
+      finally
+        tvLineas.EndUpdate;
+      end;
     finally
-      tvLineas.EndUpdate;
+      FreeAndNil(NombresAtributos);
     end;
   end;
 
@@ -997,6 +1058,18 @@ begin
     OcultarTodasLasColumnasSku;
     Exit;
   end;
+  if dmmInventarios = nil then
+  begin
+    OcultarTodasLasColumnasSku;
+    Exit;
+  end;
+  if dmmInventarios.cdsLineas.Active and
+     (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
+  begin
+    FUltimoArticuloPadre := ArticuloPadre;
+    AplicarColumnasArticulo(ArticuloPadre);
+    Exit;
+  end;
   // Optimización: si es el mismo padre, no repintamos
   if SameText(ArticuloPadre, FUltimoArticuloPadre) then
   begin
@@ -1007,19 +1080,6 @@ begin
   end;
   FUltimoArticuloPadre := ArticuloPadre;
 
-  // Guard: durante FormCreate puede llamarse antes de que dmmInventarios
-  // esté asignado, o tras FormDestroy. En ese caso solo ocultamos columnas.
-  if dmmInventarios = nil then
-  begin
-    OcultarTodasLasColumnasSku;
-    Exit;
-  end;
-
-  // Modo "atributos en columna" (toggle ON): las columnas de atributo se
-  // calculan a nivel de inventario y son estables al navegar, en lugar de
-  // depender del articulo de la fila enfocada (que podria no tener
-  // variaciones). Se computan una sola vez por inventario; en la navegacion
-  // posterior solo reaplicamos el modo de columna de entrada (barato).
   if FMostrarColumnasAtributos then
   begin
     if not FAtributosVistaAplicados then
@@ -1627,7 +1687,10 @@ begin
   swTotal := TStopwatch.StartNew;
 
   swDialog := TStopwatch.StartNew;
-  Codigo := BuscarArticuloDialog;
+  if FMostrarColumnasAtributos then
+    Codigo := BuscarArticuloDialog
+  else
+    Codigo := BuscarSkuDialog;
   msDialog := swDialog.ElapsedMilliseconds;
   if Codigo = '' then
   begin
@@ -1756,6 +1819,96 @@ begin
   end;
 end;
 
+function TfrmMtoInventarios.BuscarSkuDialog: string;
+  procedure ConfigCampo(F: TField; const ALabel, AFormat: string);
+  begin
+    if F = nil then
+      Exit;
+    F.DisplayLabel := ALabel;
+    if AFormat = '' then
+      Exit;
+    if F is TFloatField then
+      TFloatField(F).DisplayFormat := AFormat
+    else if F is TBCDField then
+      TBCDField(F).DisplayFormat := AFormat
+    else if F is TSQLTimeStampField then
+      TSQLTimeStampField(F).DisplayFormat := AFormat;
+  end;
+var
+  unqryBusq: TUniQuery;
+begin
+  Result := '';
+  unqryBusq := TUniQuery.Create(nil);
+  try
+    unqryBusq.Connection := inLibGlobalVar.oConn;
+    unqryBusq.SQL.Text :=
+      'SELECT SK.CODIGO_UNIDAD_SKU,'                         + sLineBreak +
+      '       SK.CODIGO_ART_SKU,'                            + sLineBreak +
+      '       A.DESCRIPCION_ART,'                            + sLineBreak +
+      '       GROUP_CONCAT(AV.AV ORDER BY COALESCE(VA.ORDEN_VA, 999), ' +
+      '                    AV.ORDEN_AV SEPARATOR '' / '') AS ATRIBUTOS,' +
+                                                               sLineBreak +
+      '       IFNULL(STK.CANTIDAD_STK, 0) AS CANTIDAD_STK,'  + sLineBreak +
+      '       IFNULL(STK.PRECIO_MEDIO_STK, 0) AS PRECIO_MEDIO_STK ' +
+                                                               sLineBreak +
+      '  FROM fza_articulos_skus SK'                         + sLineBreak +
+      '  JOIN fza_articulos A'                               + sLineBreak +
+      '    ON A.CODIGO_ART_ART = SK.CODIGO_ART_SKU'          + sLineBreak +
+      '  LEFT JOIN ('                                        + sLineBreak +
+      '       SELECT CODIGO_UNIDAD_STK,'                     + sLineBreak +
+      '              SUM(CANTIDAD_STK) AS CANTIDAD_STK,'     + sLineBreak +
+      '              CASE WHEN SUM(CANTIDAD_STK) <> 0'       + sLineBreak +
+      '                   THEN SUM(VALOR_TOTAL_STK) / SUM(CANTIDAD_STK)' +
+                                                               sLineBreak +
+      '                   ELSE MAX(PRECIO_MEDIO_STK)'        + sLineBreak +
+      '              END AS PRECIO_MEDIO_STK'                + sLineBreak +
+      '         FROM fza_articulos_stockactual'              + sLineBreak +
+      '        WHERE CODIGO_ALM_STK = :ALMACEN'              + sLineBreak +
+      '        GROUP BY CODIGO_UNIDAD_STK'                   + sLineBreak +
+      '       ) STK'                                         + sLineBreak +
+      '    ON STK.CODIGO_UNIDAD_STK = SK.CODIGO_UNIDAD_SKU'  + sLineBreak +
+      '  LEFT JOIN fza_atributos_sku SA'                     + sLineBreak +
+      '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU' + sLineBreak +
+      '  LEFT JOIN fza_atributos_valores AV'                 + sLineBreak +
+      '    ON AV.ID_AV = SA.ID_AV_SA'                        + sLineBreak +
+      '  LEFT JOIN fza_variaciones_atributos VA'             + sLineBreak +
+      '    ON VA.ID_VAR_VA = SK.CODIGO_VAR_SKU'              + sLineBreak +
+      '   AND VA.ID_ATB_VA = AV.ID_VA_AV'                    + sLineBreak +
+      ' WHERE COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'''      + sLineBreak +
+      '   AND A.TIPO_ART = ''ESTANDAR'''                     + sLineBreak +
+      ' GROUP BY SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU,'   + sLineBreak +
+      '          A.DESCRIPCION_ART, STK.CANTIDAD_STK,'       + sLineBreak +
+      '          STK.PRECIO_MEDIO_STK'                       + sLineBreak +
+      ' ORDER BY SK.CODIGO_UNIDAD_SKU';
+    if dmmInventarios <> nil then
+      unqryBusq.ParamByName('ALMACEN').AsString :=
+        dmmInventarios.CodigoAlmacen
+    else
+      unqryBusq.ParamByName('ALMACEN').AsString := '';
+    unqryBusq.Open;
+    ConfigCampo(unqryBusq.FindField('CODIGO_UNIDAD_SKU'),
+                'SKU',                   '');
+    ConfigCampo(unqryBusq.FindField('CODIGO_ART_SKU'),
+                'Artículo',              '');
+    ConfigCampo(unqryBusq.FindField('DESCRIPCION_ART'),
+                'Descripción',           '');
+    ConfigCampo(unqryBusq.FindField('ATRIBUTOS'),
+                'Atributos',             '');
+    ConfigCampo(unqryBusq.FindField('CANTIDAD_STK'),
+                'Stock',                 '#,##0.00');
+    ConfigCampo(unqryBusq.FindField('PRECIO_MEDIO_STK'),
+                'PMP',                   '#,##0.0000');
+    if TBusquedaUtils.EjecutarBusqueda(
+         'Búsqueda de SKUs',
+         unqryBusq,
+         'frmMtoInvSkuSearch',
+         Self) then
+      Result := unqryBusq.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+  finally
+    FreeAndNil(unqryBusq);
+  end;
+end;
+
 procedure TfrmMtoInventarios.ResolverInputArticulo(const AInput: string;
                                                   out ACodigoPadre: string;
                                                   out ACodigoSku: string;
@@ -1800,6 +1953,27 @@ var
   msResolver, msSetFieldsCabecera, msActColsDin,
   msSetFieldsSku, msRellenarDatosSku, msSetFieldsImporte,
   msRellenarAtributos: Int64;
+
+  function AsegurarEdicionLinea: Boolean;
+  begin
+    Result := False;
+    if (dmmInventarios = nil) or
+       (not dmmInventarios.cdsLineas.Active) then
+    begin
+      AError := True;
+      AErrorText := 'No hay líneas de inventario abiertas.';
+      Exit;
+    end;
+    if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
+      dmmInventarios.cdsLineas.Edit;
+    if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
+    begin
+      AError := True;
+      AErrorText := 'No se ha podido poner la línea en edición.';
+      Exit;
+    end;
+    Result := True;
+  end;
 begin
   AError := False;
   AErrorText := '';
@@ -1859,8 +2033,8 @@ begin
     end;
   end;
 
-  if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
-    dmmInventarios.cdsLineas.Edit;
+  if not AsegurarEdicionLinea then
+    Exit;
 
   // Resolver ya nos dio Desc y TipoArt: NO volvemos a llamar a
   // RellenarDatosArticulo (que abria unqryArticulo + unqryDefinicionArticulo)
@@ -1883,6 +2057,8 @@ begin
   msActColsDin := swTramo.ElapsedMilliseconds;
   if FMostrarColumnasAtributos then
     NumAtr := FNumAtributosActual;
+  if not AsegurarEdicionLinea then
+    Exit;
 
   if CodSku <> '' then
   begin
