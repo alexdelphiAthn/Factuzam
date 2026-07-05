@@ -76,9 +76,10 @@ Decisiones confirmadas con el usuario:
 - **Ventas**: `fza_facturas_lineas` por fecha de factura. Uds =
   `SUM(CANTIDAD_FACLIN)`; importe = `SUM(TOTAL_FACLIN)` (venta real, con
   descuento y con IVA).
-- **Coste de lo vendido**: `UDS_VENTA · PMP` (coste medio ponderado del
-  stock actual; respaldo: último precio de compra del proveedor principal).
-  Misma valoración que el balance de almacén.
+- **Coste de lo vendido**: `SUM(TOTAL_COSTE_MOV)` de los movimientos de
+  salida `VE/FC` ligados a las facturas del periodo. Es el coste historico
+  capturado al vender cada SKU. Si una factura antigua no tiene movimiento,
+  se usa como respaldo `UDS_VENTA · PMP`.
 
 ### Columnas (una fila por artículo)
 
@@ -88,7 +89,7 @@ Decisiones confirmadas con el usuario:
 | `IMP_ENT_TOT` | coste comprado (`SUM(TOTAL_COSTE_MOV)`)                     |
 | `UDS_VENTA`   | unidades vendidas en el periodo                            |
 | `IMP_VENTA`   | venta real (con dto, con IVA)                              |
-| `IMP_COSTE`   | `UDS_VENTA · PMP` (coste de lo vendido)                    |
+| `IMP_COSTE`   | coste vendido desde movimientos `VE/FC`                    |
 | `BENEFICIO`   | `IMP_VENTA − IMP_COSTE`                                    |
 | `PCT_BNFCO`   | `BENEFICIO / IMP_COSTE · 100` (beneficio **sobre coste**)  |
 | `VENTA_ENT`   | `IMP_VENTA − IMP_ENT_TOT` (venta menos lo comprado)       |

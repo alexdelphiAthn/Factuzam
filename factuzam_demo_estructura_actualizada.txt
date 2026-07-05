@@ -1,11 +1,13 @@
 Estructura actualizada en factuzam_demo.sql
-Fecha: 2026-07-05 06:48:32
-Backup previo vistas/procs: factuzam_demo.sql.bak-antes-vistas-procs-20260705-064832
+Fecha: 2026-07-05 16:47:22
+Backup previo: factuzam_demo.sql.bak-antes-ajuste-20260705-164722
 
 Tablas actualizadas:
-- Ninguna. Validacion: todas las definiciones CREATE TABLE del demo ya coincidian con original.
+- fza_pedidos
 
 Seccion VISTAS/PROCEDIMIENTOS reemplazada desde factuzam_original.sql.
+Validacion: todas las definiciones CREATE TABLE del demo coinciden con original.
+Validacion: vistas y procedimientos coinciden con original.
 Validacion pendiente de ejecucion sobre MariaDB: no hay cliente mysql/mariadb en PATH.
 
 comprobar_scripts_aplicados.sql actualizado para cubrir scripts recientes:

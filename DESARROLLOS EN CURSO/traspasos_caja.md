@@ -193,10 +193,9 @@ Al grabar, **todo en una transacción** (espejo de
 4. `Commit` (o `Rollback` ante cualquier excepción).
 
 Los acumulados `CANTIDAD_ENT_TRASPASO_STK` / `CANTIDAD_SAL_TRASPASO_STK` los
-mantiene `PRC_FZA_AJUSTAR_ACUMULADO_STK`. Para `TR` (misma empresa) **no hay
-que tocar SQL**. Para `TA` (entre empresas) ese SP y
-`PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT` filtran hoy `IN ('TR','AT')`: hay que
-añadir `'TA'` para que sumen a los acumulados de traspaso (ver §13).
+mantiene `PRC_FZA_AJUSTAR_ACUMULADO_STK`. Los scripts de acumulados ya
+reconocen `TR/AT/TA`, de modo que los traspasos entre empresas suman a los
+acumulados de traspaso.
 
 ### 5.1 Editar / anular un traspaso ya grabado — Buscar/Modificar (F10)
 
@@ -448,7 +447,6 @@ Reutiliza directamente, sin tocar: `InsertarMovimientoAlmacen`,
 - Edición / anulación desde Buscar/Modificar F10 (§5.1).
 - Parámetros `vgerTraspaso*` y permisos.
 - Tránsito (§8) y SP unificador (§9), opcionales.
-- Alinear `TA` (traspaso entre empresas): añadir `'TA'` a
-  `fza_tipos_documentos` y a los SP de acumulados de stock (hoy
-  `IN ('TR','AT')`), para que los traspasos entre empresas sumen a
-  `…_TRASPASO_STK`.
+- Alinear `TA` (traspaso entre empresas) en `fza_tipos_documentos` si falta
+  en alguna BBDD existente. Los SP de acumulados de stock ya contemplan
+  `TR/AT/TA`.

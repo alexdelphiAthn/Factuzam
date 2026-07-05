@@ -342,7 +342,7 @@ BEGIN
                                IF(m.`TIPO_DOC_MOV` = 'AE' AND m.`TIPO_MOV` = 'E'
                                   AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
                                   m.`CANTIDAD_MOV`, 0),
-                               IF(m.`TIPO_DOC_MOV` IN ('TR', 'AT') AND m.`TIPO_MOV` = 'E'
+                               IF(m.`TIPO_DOC_MOV` IN ('TR', 'AT', 'TA') AND m.`TIPO_MOV` = 'E'
                                   AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
                                   m.`CANTIDAD_MOV`, 0),
                                IF(m.`TIPO_DOC_MOV` = 'DP' AND m.`TIPO_MOV` = 'E'
@@ -351,7 +351,7 @@ BEGIN
                                IF(m.`TIPO_DOC_MOV` = 'IN' AND m.`TIPO_MOV` = 'E'
                                   AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
                                   m.`CANTIDAD_MOV`, 0),
-                               IF(m.`TIPO_DOC_MOV` IN ('TR', 'AT') AND m.`TIPO_MOV` = 'S'
+                               IF(m.`TIPO_DOC_MOV` IN ('TR', 'AT', 'TA') AND m.`TIPO_MOV` = 'S'
                                   AND DATE(m.`FECHA_MOV`) BETWEEN v_desde AND v_hasta,
                                   m.`CANTIDAD_MOV`, 0),
                                IF(m.`TIPO_DOC_MOV` = 'DP' AND m.`TIPO_MOV` = 'S'

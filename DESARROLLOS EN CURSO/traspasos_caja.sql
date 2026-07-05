@@ -9,7 +9,7 @@
 -- y siembra el contador global 'TS' para numerar las solicitudes.
 --
 -- El TRASPASO EJECUTADO no necesita tablas nuevas: se graba en
--- fza_caja_operaciones (TIPO_OPERACION_OPCAJA TR/AT) + fza_movimientos_almacen
+-- fza_caja_operaciones (TIPO_OPERACION_OPCAJA TR/TA) + fza_movimientos_almacen
 -- (par S+E). Estas tablas solo guardan la PETICION pendiente y su estado.
 --
 -- Idempotente: pasa por INFORMATION_SCHEMA (TABLES / STATISTICS) antes de crear

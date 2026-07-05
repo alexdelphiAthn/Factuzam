@@ -2,7 +2,7 @@
 -- Acumular en fza_articulos_stockactual los movimientos por subtipo.
 -- Modelo simplificado:
 --   COMPRA       → solo ENT      (AC)
---   TRASPASO     → ENT + SAL     (TR/AT)
+--   TRASPASO     → ENT + SAL     (TR/AT/TA)
 --   DEPOSITO     → ENT + SAL     (DP, incluye préstamos)
 --   VENTA        → solo SAL      (VE caja POS, FC facturas)
 --   REGULAR      → solo ENT      (IN)
@@ -97,7 +97,7 @@ BEGIN
     -- Delta de acumulado según TIPO_DOC_MOV
     IF p_TIPO_DOC_MOV = 'AC' AND p_TIPO_MOVIMIENTO_MOV = 'E' THEN
         SET v_dEntCompra = p_CANTIDAD_MOV;
-    ELSEIF p_TIPO_DOC_MOV IN ('TR','AT') THEN
+    ELSEIF p_TIPO_DOC_MOV IN ('TR','AT','TA') THEN
         IF p_TIPO_MOVIMIENTO_MOV = 'E' THEN SET v_dEntTraspaso = p_CANTIDAD_MOV;
         ELSE SET v_dSalTraspaso = p_CANTIDAD_MOV; END IF;
     ELSEIF p_TIPO_DOC_MOV = 'DP' THEN
@@ -194,8 +194,8 @@ UPDATE fza_articulos_stockactual s
       CODIGO_ALM_MOV     AS alm,
       CODIGO_UNIDAD_MOV  AS uni,
       SUM(IF(TIPO_DOC_MOV='AC' AND TIPO_MOV='E', CANTIDAD_MOV, 0))         AS ent_compra,
-      SUM(IF(TIPO_DOC_MOV IN ('TR','AT') AND TIPO_MOV='E', CANTIDAD_MOV, 0)) AS ent_traspaso,
-      SUM(IF(TIPO_DOC_MOV IN ('TR','AT') AND TIPO_MOV='S', CANTIDAD_MOV, 0)) AS sal_traspaso,
+      SUM(IF(TIPO_DOC_MOV IN ('TR','AT','TA') AND TIPO_MOV='E', CANTIDAD_MOV, 0)) AS ent_traspaso,
+      SUM(IF(TIPO_DOC_MOV IN ('TR','AT','TA') AND TIPO_MOV='S', CANTIDAD_MOV, 0)) AS sal_traspaso,
       SUM(IF(TIPO_DOC_MOV='DP' AND TIPO_MOV='E', CANTIDAD_MOV, 0))         AS ent_deposito,
       SUM(IF(TIPO_DOC_MOV='DP' AND TIPO_MOV='S', CANTIDAD_MOV, 0))         AS sal_deposito,
       SUM(IF(TIPO_DOC_MOV IN ('VE','FC') AND TIPO_MOV='S', CANTIDAD_MOV, 0)) AS sal_venta,
