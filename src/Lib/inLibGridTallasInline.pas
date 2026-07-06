@@ -536,8 +536,13 @@ begin
         '   AND ' + FCfg.FieldNumeroCel  + ' = :n ' +
         '   AND ' + FCfg.FieldLineaCel   + ' = :l ' +
         '   AND ' + FCfg.FieldFilaCel    + ' = :f ' +
-        '   AND ' + FCfg.FieldAvPivotCel + ' = :p ' +
-        '   AND ' + FCfg.FieldAlmacenCel + ' = :a';
+        '   AND ' + FCfg.FieldAvPivotCel + ' = :p';
+      // Almacen por celda solo si el documento lo usa: el record
+      // documenta FieldAlmacenCel "(puede ser '')" pero el SQL lo
+      // metia siempre y con vacio generaba sintaxis invalida (#42000).
+      if FCfg.FieldAlmacenCel <> '' then
+        q.SQL.Text := q.SQL.Text +
+          '   AND ' + FCfg.FieldAlmacenCel + ' = :a';
     end
     else
     begin
@@ -547,20 +552,38 @@ begin
       // ON DUPLICATE KEY UPDATE solo refresca las MODIF, las ALTA se
       // conservan. Antes solo rellenabamos MODIF y MariaDB rechazaba
       // el insert por 'Field USUARIO_ALTA doesnt have a default value'.
-      q.SQL.Text :=
-        'INSERT INTO ' + FCfg.TablaCeldas + ' (' +
-        FCfg.FieldSerieCel   + ', ' +
-        FCfg.FieldNumeroCel  + ', ' +
-        FCfg.FieldLineaCel   + ', ' +
-        FCfg.FieldFilaCel    + ', ' +
-        FCfg.FieldAvPivotCel + ', ' +
-        FCfg.FieldAlmacenCel + ', ' +
-        FCfg.FieldCantidadCel +
-        ', INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-        'VALUES (:s, :n, :l, :f, :p, :a, :c, NOW(), :u, NOW(), :u) ' +
-        'ON DUPLICATE KEY UPDATE ' +
-        FCfg.FieldCantidadCel + ' = :c, ' +
-        'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
+      // Columna de almacen solo si el documento la usa (ver DELETE).
+      if FCfg.FieldAlmacenCel <> '' then
+        q.SQL.Text :=
+          'INSERT INTO ' + FCfg.TablaCeldas + ' (' +
+          FCfg.FieldSerieCel   + ', ' +
+          FCfg.FieldNumeroCel  + ', ' +
+          FCfg.FieldLineaCel   + ', ' +
+          FCfg.FieldFilaCel    + ', ' +
+          FCfg.FieldAvPivotCel + ', ' +
+          FCfg.FieldAlmacenCel + ', ' +
+          FCfg.FieldCantidadCel +
+          ', INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
+          ' USUARIO_MODIF) ' +
+          'VALUES (:s, :n, :l, :f, :p, :a, :c, NOW(), :u, NOW(), :u) ' +
+          'ON DUPLICATE KEY UPDATE ' +
+          FCfg.FieldCantidadCel + ' = :c, ' +
+          'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u'
+      else
+        q.SQL.Text :=
+          'INSERT INTO ' + FCfg.TablaCeldas + ' (' +
+          FCfg.FieldSerieCel   + ', ' +
+          FCfg.FieldNumeroCel  + ', ' +
+          FCfg.FieldLineaCel   + ', ' +
+          FCfg.FieldFilaCel    + ', ' +
+          FCfg.FieldAvPivotCel + ', ' +
+          FCfg.FieldCantidadCel +
+          ', INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
+          ' USUARIO_MODIF) ' +
+          'VALUES (:s, :n, :l, :f, :p, :c, NOW(), :u, NOW(), :u) ' +
+          'ON DUPLICATE KEY UPDATE ' +
+          FCfg.FieldCantidadCel + ' = :c, ' +
+          'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
       q.ParamByName('c').AsFloat  := ACantidad;
       q.ParamByName('u').AsString := FCfg.Usuario;
     end;
@@ -569,7 +592,8 @@ begin
     q.ParamByName('l').AsInteger := ALinea;
     q.ParamByName('f').AsInteger := FCfg.IdFilaFijo;
     q.ParamByName('p').AsInteger := AIdAv;
-    q.ParamByName('a').AsString  := '';
+    if FCfg.FieldAlmacenCel <> '' then
+      q.ParamByName('a').AsString := '';
     q.ExecSQL;
   finally
     FreeAndNil(q);

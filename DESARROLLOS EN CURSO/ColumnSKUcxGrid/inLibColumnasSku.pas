@@ -27,7 +27,7 @@ interface
 
 uses
   System.SysUtils, Data.DB, Uni,
-  inLibColumnasSkuIntf;
+  inLibColumnasSkuIntf, inLibGridTallasInline;
 
 // Modo efectivo a partir de la configuracion (resuelve mcsAuto).
 function DetectarModoColumnasSku(const AConfig: TConfigColumnasSku)
@@ -35,6 +35,13 @@ function DetectarModoColumnasSku(const AConfig: TConfigColumnasSku)
 
 // Crea el modo de entrada adecuado ya construible sobre el View.
 function CrearModoEntradaGrid(const AConfig: TConfigColumnasSku)
+                                                     : IModoEntradaGrid;
+
+// Modo tallas en horizontal (pivote de compras): necesita ademas la
+// TGridTallasConfig del documento (tabla de celdas, campos de pivote).
+// El adaptador completa Conexion, Grid y ColumnasTallas.
+function CrearModoEntradaGridTallas(const AConfig: TConfigColumnasSku;
+                                    const ACfgTallas: TGridTallasConfig)
                                                      : IModoEntradaGrid;
 
 // Proveedor de valores disponibles (colores / tallas) de un articulo.
@@ -45,7 +52,9 @@ implementation
 
 uses
   inLibArticulosAtributosLookup,
-  inLibColumnasSkuModoSku, inLibColumnasSkuModoDesglose;
+  inLibColumnasSkuModoSku,
+  inLibColumnasSkuModoDesglose,
+  inLibColumnasSkuModoTallas;
 
 type
   TProveedorValoresSku = class(TInterfacedObject, IProveedorValoresSku)
@@ -119,10 +128,25 @@ var
 begin
   Cfg := AConfig;
   Cfg.Modo := DetectarModoColumnasSku(AConfig);
+  if Cfg.Modo = mcsTallasInline then
+    // Este modo necesita la TGridTallasConfig del documento.
+    raise Exception.Create(
+      'mcsTallasInline requiere CrearModoEntradaGridTallas');
   if Cfg.Modo = mcsDesglose then
     Result := TModoEntradaDesglose.Create(Cfg)
   else
     Result := TModoEntradaSku.Create(Cfg);
+end;
+
+function CrearModoEntradaGridTallas(const AConfig: TConfigColumnasSku;
+                                    const ACfgTallas: TGridTallasConfig)
+                                                     : IModoEntradaGrid;
+var
+  Cfg: TConfigColumnasSku;
+begin
+  Cfg := AConfig;
+  Cfg.Modo := mcsTallasInline;
+  Result := TModoEntradaTallas.Create(Cfg, ACfgTallas);
 end;
 
 function CrearProveedorValoresSku(AConexion: TUniConnection)
