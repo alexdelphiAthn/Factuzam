@@ -27,14 +27,17 @@ unit inLibColumnasSkuIntf;
 interface
 
 uses
-  Data.DB, Uni, cxGridDBTableView;
+  System.Classes, Data.DB, Uni, cxGridDBTableView;
 
 type
   // Modo de entrada de articulos en el grid del documento.
   TModoColumnasSku = (
-    mcsAuto,      // decidir segun los campos disponibles en el cds
-    mcsSku,       // articulo/color/talla en UNA columna (SKU completo)
-    mcsDesglose   // columna articulo + columnas color / talla
+    mcsAuto,        // decidir segun los campos disponibles en el cds
+    mcsSku,         // articulo/color/talla en UNA columna (SKU completo)
+    mcsDesglose,    // columna articulo + columnas color / talla
+    mcsTallasInline // articulo + N columnas de talla en horizontal
+                    // (pivote estilo compras; requiere tabla de celdas
+                    // y factoria propia: CrearModoEntradaGridTallas)
   );
 
   // Nombres de los campos del cds del documento. Cada documento rellena
@@ -46,6 +49,10 @@ type
     CodigoUnidad: string;
     Descripcion: string;
     Cantidad: string;
+    // Almacen de la LINEA (modelo de compras: una fila horizontal por
+    // articulo+color+almacen; la distribucion por almacen va por
+    // lineas, no por celdas). Vacio si el documento no lo usa.
+    Almacen: string;
     NumAtributos: string;
     AttrValor: array[1..5] of string;
     AttrNombre: array[1..5] of string;
@@ -86,11 +93,21 @@ type
     function GetModo: TModoColumnasSku;
     function GetOnResuelto: TSkuResueltoEvent;
     procedure SetOnResuelto(const AValue: TSkuResueltoEvent);
+    function GetOnEntrarEdicion: TNotifyEvent;
+    procedure SetOnEntrarEdicion(const AValue: TNotifyEvent);
+    function GetOnSalirEdicion: TNotifyEvent;
+    procedure SetOnSalirEdicion(const AValue: TNotifyEvent);
     // Cambia el almacen del stock del buscador (invalida el desplegable).
     procedure SetAlmacenStock(const AValue: string);
     // Crea sus columnas sobre el View. El documento anade las suyas
     // (cantidad, precio, ...) DESPUES sobre el mismo View.
     procedure Construir;
+    // Prepara el abandono del modo ANTES de reconstruir en otro. El
+    // modo tallas des-pivota: expande cada celda con cantidad en una
+    // linea por SKU (cantidad plana) y limpia su tabla de celdas, para
+    // que SKU/Desglose muestren las mismas unidades. El resto de modos
+    // no hace nada.
+    procedure Desmontar;
     // Deja el editor de entrada abierto, listo para teclear o escanear.
     procedure MostrarEditor;
     // Resuelve una entrada (SKU, articulo, barras, ref proveedor) y
@@ -100,6 +117,15 @@ type
     property Modo: TModoColumnasSku read GetModo;
     property OnResuelto: TSkuResueltoEvent read GetOnResuelto
                                            write SetOnResuelto;
+    // Entrada/salida de los editores in-place del modo (celda de SKU,
+    // combos de atributo, desplegable incremental). Pensados para que un
+    // host TfrmBase enganche DesactivarEnterAsTabTemporal /
+    // RestaurarEnterAsTabTemporal y el Enter llegue a la celda en vez de
+    // convertirse en Tab (TJvEnterAsTab de inMtoFrmBase).
+    property OnEntrarEdicion: TNotifyEvent read GetOnEntrarEdicion
+                                           write SetOnEntrarEdicion;
+    property OnSalirEdicion: TNotifyEvent read GetOnSalirEdicion
+                                          write SetOnSalirEdicion;
   end;
 
 implementation

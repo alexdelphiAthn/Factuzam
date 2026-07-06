@@ -23,7 +23,7 @@ unit inLibColumnasSkuModoDesglose;
 interface
 
 uses
-  System.SysUtils,
+  System.SysUtils, System.Classes,
   inLibColumnasSkuIntf, inLibGridArticulos;
 
 type
@@ -35,6 +35,10 @@ type
     function GetModo: TModoColumnasSku;
     function GetOnResuelto: TSkuResueltoEvent;
     procedure SetOnResuelto(const AValue: TSkuResueltoEvent);
+    function GetOnEntrarEdicion: TNotifyEvent;
+    procedure SetOnEntrarEdicion(const AValue: TNotifyEvent);
+    function GetOnSalirEdicion: TNotifyEvent;
+    procedure SetOnSalirEdicion(const AValue: TNotifyEvent);
     procedure SetAlmacenStock(const AValue: string);
     // Reenvia el aviso de TGridArticulosLineas al documento.
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
@@ -43,6 +47,7 @@ type
     constructor Create(const AConfig: TConfigColumnasSku);
     destructor Destroy; override;
     procedure Construir;
+    procedure Desmontar;
     procedure MostrarEditor;
     function ResolverEntrada(const AEntrada: string): Boolean;
   end;
@@ -95,6 +100,28 @@ begin
   FOnResuelto := AValue;
 end;
 
+function TModoEntradaDesglose.GetOnEntrarEdicion: TNotifyEvent;
+begin
+  Result := FGrid.OnEntrarEdicion;
+end;
+
+procedure TModoEntradaDesglose.SetOnEntrarEdicion(
+  const AValue: TNotifyEvent);
+begin
+  FGrid.OnEntrarEdicion := AValue;
+end;
+
+function TModoEntradaDesglose.GetOnSalirEdicion: TNotifyEvent;
+begin
+  Result := FGrid.OnSalirEdicion;
+end;
+
+procedure TModoEntradaDesglose.SetOnSalirEdicion(
+  const AValue: TNotifyEvent);
+begin
+  FGrid.OnSalirEdicion := AValue;
+end;
+
 procedure TModoEntradaDesglose.SetAlmacenStock(const AValue: string);
 begin
   FGrid.AlmacenStock := AValue;
@@ -110,6 +137,12 @@ end;
 procedure TModoEntradaDesglose.Construir;
 begin
   FGrid.Construir;
+end;
+
+procedure TModoEntradaDesglose.Desmontar;
+begin
+  // Sin estado externo que convertir: las lineas del cds YA llevan su
+  // SKU y su cantidad.
 end;
 
 procedure TModoEntradaDesglose.MostrarEditor;

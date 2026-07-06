@@ -43,6 +43,8 @@ type
     FColSku: TcxGridDBColumn;
     FLookup: TArticulosAtributosLookup;
     FOnResuelto: TSkuResueltoEvent;
+    FOnEntrarEdicion: TNotifyEvent;
+    FOnSalirEdicion: TNotifyEvent;
     FAlmacenStock: string;
     // Desplegable de busqueda incremental por CODIGO_UNIDAD_SKU: query +
     // datasource + view en su repositorio + item de edicion combo. Todo en
@@ -63,7 +65,14 @@ type
     function GetModo: TModoColumnasSku;
     function GetOnResuelto: TSkuResueltoEvent;
     procedure SetOnResuelto(const AValue: TSkuResueltoEvent);
+    function GetOnEntrarEdicion: TNotifyEvent;
+    procedure SetOnEntrarEdicion(const AValue: TNotifyEvent);
+    function GetOnSalirEdicion: TNotifyEvent;
+    procedure SetOnSalirEdicion(const AValue: TNotifyEvent);
     procedure SetAlmacenStock(const AValue: string);
+    // OnExit del editor in-place de la celda de SKU: avisa al host para
+    // restaurar el EnterAsTab que desactivo al entrar.
+    procedure EditorSalir(Sender: TObject);
     procedure CrearLookupBusqueda;
     // Consulta en servidor el top-100 de SKUs cuyo CODIGO_UNIDAD_SKU
     // empieza por ATexto ('' = primeros 100 por codigo).
@@ -73,6 +82,13 @@ type
     procedure SkuChange(Sender: TObject);
     procedure TimerBusqTimer(Sender: TObject);
     procedure TimerResolveTimer(Sender: TObject);
+    // Editor por registro (mismo patron que el desglose): el combo de
+    // busqueda incremental SOLO en la celda vacia y enfocada; con SKU
+    // ya resuelto, texto plano — un ExtLookup pintaria VACIO cualquier
+    // valor que no este en su lista top-100.
+    procedure SkuGetProperties(Sender: TcxCustomGridTableItem;
+                               ARecord: TcxCustomGridRecord;
+                             var AProperties: TcxCustomEditProperties);
     procedure ViewInitEdit(Sender: TcxCustomGridTableView;
                            AItem: TcxCustomGridTableItem;
                            AEdit: TcxCustomEdit);
@@ -95,11 +111,17 @@ type
     constructor Create(const AConfig: TConfigColumnasSku);
     destructor Destroy; override;
     procedure Construir;
+    procedure Desmontar;
     procedure MostrarEditor;
     function ResolverEntrada(const AEntrada: string): Boolean;
   end;
 
 implementation
+
+type
+  // Acceso a OnEnter/OnExit (protegidos en TWinControl) de los editores
+  // in-place, sin depender de que cada clase cx los re-publique.
+  THackWinControl = class(TWinControl);
 
 constructor TModoEntradaSku.Create(const AConfig: TConfigColumnasSku);
 begin
@@ -144,6 +166,32 @@ begin
   FOnResuelto := AValue;
 end;
 
+function TModoEntradaSku.GetOnEntrarEdicion: TNotifyEvent;
+begin
+  Result := FOnEntrarEdicion;
+end;
+
+procedure TModoEntradaSku.SetOnEntrarEdicion(const AValue: TNotifyEvent);
+begin
+  FOnEntrarEdicion := AValue;
+end;
+
+function TModoEntradaSku.GetOnSalirEdicion: TNotifyEvent;
+begin
+  Result := FOnSalirEdicion;
+end;
+
+procedure TModoEntradaSku.SetOnSalirEdicion(const AValue: TNotifyEvent);
+begin
+  FOnSalirEdicion := AValue;
+end;
+
+procedure TModoEntradaSku.EditorSalir(Sender: TObject);
+begin
+  if Assigned(FOnSalirEdicion) then
+    FOnSalirEdicion(Sender);
+end;
+
 procedure TModoEntradaSku.SetAlmacenStock(const AValue: string);
 begin
   // El stock del desplegable depende del almacen: invalida el dataset y
@@ -154,6 +202,12 @@ begin
     if (FBusqQry <> nil) and FBusqQry.Active then
       FBusqQry.Close;
   end;
+end;
+
+procedure TModoEntradaSku.Desmontar;
+begin
+  // Sin estado externo que convertir: las lineas del cds YA son la
+  // representacion por SKU.
 end;
 
 procedure TModoEntradaSku.Construir;
@@ -167,7 +221,7 @@ begin
     FColSku.Caption := 'SKU (Art/Color/Talla)';
     FColSku.DataBinding.FieldName := FConfig.Campos.CodigoUnidad;
     FColSku.Width := 260;
-    FColSku.RepositoryItem := FRepCombo;
+    FColSku.OnGetProperties := SkuGetProperties;
     // Swatch del color en la celda (ultimo segmento tras '/'), mismo
     // helper que caja e inventarios.
     FColSku.OnCustomDrawCell := SkuCustomDrawCell;
@@ -293,6 +347,9 @@ begin
   sTexto := '';
   if Sender is TcxExtLookupComboBox then
     sTexto := Trim(VarToStr(TcxExtLookupComboBox(Sender).EditingValue));
+  // Con el desplegable abierto el Enter debe llegar al combo, no ser Tab.
+  if Assigned(FOnEntrarEdicion) then
+    FOnEntrarEdicion(Sender);
   AbrirBusquedaFiltrada(sTexto);
 end;
 
@@ -300,6 +357,8 @@ end;
 // diferida (timer 1ms) para no tocar el cds mientras el editor se cierra.
 procedure TModoEntradaSku.ComboBusqCloseUp(Sender: TObject);
 begin
+  if Assigned(FOnSalirEdicion) then
+    FOnSalirEdicion(Sender);
   if Sender is TcxCustomEdit then
     DispararResolucion(VarToStr(TcxCustomEdit(Sender).EditValue));
 end;
@@ -338,12 +397,39 @@ begin
   end;
 end;
 
+procedure TModoEntradaSku.SkuGetProperties(
+  Sender: TcxCustomGridTableItem; ARecord: TcxCustomGridRecord;
+  var AProperties: TcxCustomEditProperties);
+var
+  vVal: Variant;
+  bVacia, bEnfocada: Boolean;
+begin
+  if (ARecord <> nil) and (FRepCombo <> nil) then
+  begin
+    vVal := ARecord.Values[Sender.Index];
+    bVacia := VarIsNull(vVal) or (Trim(VarToStr(vVal)) = '');
+    bEnfocada :=
+      (FConfig.View.Controller.FocusedRecord = ARecord) and
+      (FConfig.View.Controller.FocusedItem = Sender);
+    if bVacia and bEnfocada then
+      AProperties := FRepCombo.Properties;
+  end;
+end;
+
 procedure TModoEntradaSku.ViewInitEdit(Sender: TcxCustomGridTableView;
   AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
 begin
-  // Sugerencias en vivo al teclear en la celda de SKU (debounce).
-  if (AItem = FColSku) and (AEdit is TcxCustomTextEdit) then
-    TcxCustomTextEdit(AEdit).Properties.OnChange := SkuChange;
+  if AItem = FColSku then
+  begin
+    // Sugerencias en vivo al teclear en la celda de SKU (debounce).
+    if AEdit is TcxCustomTextEdit then
+      TcxCustomTextEdit(AEdit).Properties.OnChange := SkuChange;
+    // EnterAsTab fuera mientras se edita la celda: el host engancha
+    // Desactivar/Restaurar en OnEntrarEdicion / OnSalirEdicion.
+    if Assigned(FOnEntrarEdicion) then
+      FOnEntrarEdicion(AEdit);
+    THackWinControl(AEdit).OnExit := EditorSalir;
+  end;
 end;
 
 procedure TModoEntradaSku.ViewEditKeyDown(Sender: TcxCustomGridTableView;
@@ -352,7 +438,15 @@ procedure TModoEntradaSku.ViewEditKeyDown(Sender: TcxCustomGridTableView;
 var
   sEntrada: string;
 begin
-  if (AItem = FColSku) and (Key = VK_RETURN) then
+  // F3 en la celda de SKU: despliega la busqueda incremental filtrada
+  // por lo tecleado (mismo gesto de lookup que el resto de Factuzam).
+  if (AItem = FColSku) and (Key = VK_F3) then
+  begin
+    Key := 0;
+    if AEdit is TcxCustomDropDownEdit then
+      TcxCustomDropDownEdit(AEdit).DroppedDown := True;
+  end
+  else if (AItem = FColSku) and (Key = VK_RETURN) then
   begin
     // Si el desplegable esta abierto lo cerramos (selecciona la fila)
     // para que el Enter no quede consumido en el dropdown.

@@ -2588,9 +2588,25 @@ begin
 end;
 
 procedure TfrmMtoGen.btnCancelarClick(Sender: TObject);
+var
+  i: Integer;
 begin
   inherited;
-  CancelarGrids(Owner);
+  // Flujo normal dentro de fzam: cancela el Mto activo del principal.
+  if Owner is TfrmMtoPrincipal then
+    CancelarGrids(Owner)
+  else
+    // Fuera de fzam (pruebas standalone, DESARROLLOS EN CURSO) Owner no
+    // es el principal y el cast de CancelarGrids lanzaria EInvalidCast:
+    // se cancelan los datasets en edicion de los grids de ESTE form.
+    for i := 0 to ComponentCount - 1 do
+      if Components[i] is TcxGridDBTableView then
+        with TcxGridDBTableView(Components[i]).DataController do
+        begin
+          if (DataSource <> nil) and (DataSet <> nil) and
+             (DataSet.State in [dsEdit, dsInsert]) then
+            DataSet.Cancel;
+        end;
 end;
 
 procedure TfrmMtoGen.sbExportExcelClick(Sender: TObject);

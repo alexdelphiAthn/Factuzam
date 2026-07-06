@@ -66,6 +66,12 @@ type
     FColAtributo: array[1..5] of TcxGridDBColumn;
     FLookup: TArticulosAtributosLookup;
     FOnResuelto: TArtResueltoEvent;
+    // Aviso al host al entrar/salir de un editor in-place del grid.
+    // Pensados para Desactivar/RestaurarEnterAsTabTemporal (TfrmBase):
+    // sin esto el TJvEnterAsTab convierte el Enter en Tab y no llega ni
+    // a la celda de articulo ni a los combos de atributo.
+    FOnEntrarEdicion: TNotifyEvent;
+    FOnSalirEdicion: TNotifyEvent;
     // Timer single-shot para abrir la paleta al entrar en una celda de
     // atributo vacia (listbox incrustado, como la caja). Diferimos la
     // apertura fuera del OnEnter: el editor in-place del cxGrid aun no ha
@@ -104,6 +110,8 @@ type
     FTimerBusq: TTimer;
     // Ultimo texto consultado en el desplegable (evita reabrir igual).
     FUltimoFiltro: string;
+    // OnExit de los editores in-place: reenvia a FOnSalirEdicion.
+    procedure EditorSalir(Sender: TObject);
     procedure CrearLookupBusqueda;
     procedure RecargarBusqueda;
     procedure AbrirBusquedaFiltrada(const ATexto: string);
@@ -178,6 +186,11 @@ type
     // de proveedor) y rellena la linea. Devuelve False si no se encontro.
     function ResolverEntrada(const AEntrada: string): Boolean;
     property OnResuelto: TArtResueltoEvent read FOnResuelto write FOnResuelto;
+    // Entrada/salida de edicion in-place (ver comentario de los campos).
+    property OnEntrarEdicion: TNotifyEvent read FOnEntrarEdicion
+                                           write FOnEntrarEdicion;
+    property OnSalirEdicion: TNotifyEvent read FOnSalirEdicion
+                                          write FOnSalirEdicion;
     // Almacen para la columna de stock del buscador de SKU (origen). Al
     // cambiarlo se recarga el desplegable de busqueda incremental.
     property AlmacenStock: string read FAlmacenStock write SetAlmacenStock;
@@ -187,6 +200,11 @@ implementation
 
 uses
   inLibGlobalVar, inLibGenBusq;
+
+type
+  // Acceso a OnExit (protegido en TWinControl) de los editores in-place
+  // sin depender de que cada clase cx lo re-publique.
+  THackWinCtrl = class(TWinControl);
 
 constructor TGridArticulosLineas.Create(AConn: TUniConnection;
                                         AView: TcxGridDBTableView;
@@ -230,6 +248,12 @@ end;
 function TGridArticulosLineas.CdsEditando: Boolean;
 begin
   Result := FCds.Active and (FCds.State in [dsEdit, dsInsert]);
+end;
+
+procedure TGridArticulosLineas.EditorSalir(Sender: TObject);
+begin
+  if Assigned(FOnSalirEdicion) then
+    FOnSalirEdicion(Sender);
 end;
 
 procedure TGridArticulosLineas.Construir;
@@ -295,6 +319,16 @@ procedure TGridArticulosLineas.ViewInitEdit(
 var
   BE: TcxButtonEdit;
 begin
+  // Al abrir un editor de las columnas de esta controladora (articulo o
+  // atributo), avisa al host para que desactive su EnterAsTab; se
+  // restaura via OnExit del editor (EditorSalir).
+  if (AItem = FColArticulo) or
+     ((AItem <> nil) and (AItem.Tag >= 1) and (AItem.Tag <= 5)) then
+  begin
+    if Assigned(FOnEntrarEdicion) then
+      FOnEntrarEdicion(AEdit);
+    THackWinCtrl(AEdit).OnExit := EditorSalir;
+  end;
   // Celda de articulo: enganchamos OnKeyPress para capturar el lector de
   // codigo de barras (STX...ETX) y resolver al recibir ETX.
   if (AItem = FColArticulo) and (AEdit is TcxCustomTextEdit) then
@@ -581,6 +615,10 @@ procedure TGridArticulosLineas.ComboBusqInitPopup(Sender: TObject);
 var
   sTexto: string;
 begin
+  // Con el desplegable abierto el Enter debe llegar al combo (elegir
+  // fila), no convertirse en Tab.
+  if Assigned(FOnEntrarEdicion) then
+    FOnEntrarEdicion(Sender);
   sTexto := '';
   if Sender is TcxExtLookupComboBox then
     sTexto := Trim(VarToStr(TcxExtLookupComboBox(Sender).EditingValue));
@@ -711,10 +749,26 @@ procedure TGridArticulosLineas.ViewEditKeyDown(
 var
   s: string;
 begin
+  // F3 = gesto de lookup: en la celda de articulo abre el buscador de
+  // ARTICULOS (busqueda por articulo; el desplegable incremental sigue
+  // disponible tecleando o con F4); en una celda de atributo, su paleta.
+  if Key = VK_F3 then
+  begin
+    if AItem = FColArticulo then
+    begin
+      Key := 0;
+      ArticuloButtonClick(AEdit, 0);
+    end
+    else if (AItem <> nil) and (AItem.Tag >= 1) and (AItem.Tag <= 5) then
+    begin
+      Key := 0;
+      AbrirPaletaOrden(AItem.Tag);
+    end;
+  end
   // Ctrl+Enter en una celda con boton "...": equivale a pulsarlo. En la
   // celda de articulo abre el buscador completo; en una celda de atributo,
   // su paleta de valores (mismos handlers que el boton).
-  if (Key = VK_RETURN) and (ssCtrl in Shift) then
+  else if (Key = VK_RETURN) and (ssCtrl in Shift) then
   begin
     Key := 0;
     if AItem = FColArticulo then
@@ -750,6 +804,8 @@ end;
 // tocar el cds mientras el editor se cierra.
 procedure TGridArticulosLineas.ComboBusqCloseUp(Sender: TObject);
 begin
+  if Assigned(FOnSalirEdicion) then
+    FOnSalirEdicion(Sender);
   if not (Sender is TcxCustomEdit) then
     Exit;
   FSkuPend := VarToStr(TcxCustomEdit(Sender).EditValue);
