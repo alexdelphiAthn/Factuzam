@@ -599,9 +599,10 @@ end;
 
 procedure TModoEntradaTallas.MigrarCeldasAlmacen;
 var
-  Qry: TUniQuery;
+  Qry, QIns: TUniQuery;
   dsM: TDataSet;
-  sAlmDef: string;
+  sAlmDef, sSerie, sNumero: string;
+  iMigradas: Integer;
 begin
   if FCfgTallas.FieldAlmacenCel <> '' then
   begin
@@ -614,105 +615,112 @@ begin
     else
     begin
       dsM := FCfgTallas.SourceMaster.DataSet;
+      sSerie := dsM.FieldByName(FCfgTallas.FieldSerieMaster).AsString;
+      sNumero :=
+        dsM.FieldByName(FCfgTallas.FieldNumeroMaster).AsString;
       Qry := TUniQuery.Create(nil);
+      QIns := TUniQuery.Create(nil);
       try
         Qry.Connection := FConfig.Conexion;
+        QIns.Connection := FConfig.Conexion;
+        // Celdas ORIGEN a migrar. Nota: nada de INSERT..SELECT sobre
+        // la misma tabla — el ON DUPLICATE sobre la columna cantidad
+        // resulta ambiguo en MariaDB (#23000). Se leen las celdas y
+        // se upsertea fila a fila con parametros, como el gestor.
         if FConfig.Distribuido then
-        begin
-          // Celdas tecleadas en modo normal (almacen '') pasan al
-          // almacen por defecto, sumando sobre lo que ya hubiera.
+          // Tecleadas en modo normal: almacen '' -> almacen defecto.
           Qry.SQL.Text :=
-            'INSERT INTO ' + FCfgTallas.TablaCeldas + ' (' +
-            FCfgTallas.FieldSerieCel + ', ' +
-            FCfgTallas.FieldNumeroCel + ', ' +
-            FCfgTallas.FieldLineaCel + ', ' +
-            FCfgTallas.FieldFilaCel + ', ' +
-            FCfgTallas.FieldAlmacenCel + ', ' +
-            FCfgTallas.FieldAvPivotCel + ', ' +
-            FCfgTallas.FieldCantidadCel + ',' +
-            ' INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
-            ' USUARIO_MODIF)' +
-            ' SELECT ' + FCfgTallas.FieldSerieCel + ', ' +
-            FCfgTallas.FieldNumeroCel + ', ' +
-            FCfgTallas.FieldLineaCel + ', ' +
-            FCfgTallas.FieldFilaCel + ', :alm, ' +
-            FCfgTallas.FieldAvPivotCel + ', ' +
-            FCfgTallas.FieldCantidadCel +
-            ', NOW(), :u, NOW(), :u' +
+            'SELECT ' + FCfgTallas.FieldLineaCel + ' AS LIN, ' +
+            FCfgTallas.FieldFilaCel + ' AS FILA, ' +
+            FCfgTallas.FieldAvPivotCel + ' AS IDAV, ' +
+            FCfgTallas.FieldCantidadCel + ' AS CANT' +
             ' FROM ' + FCfgTallas.TablaCeldas +
             ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
             ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
-            ' AND ' + FCfgTallas.FieldAlmacenCel + ' = ''''' +
-            ' ON DUPLICATE KEY UPDATE ' +
-            FCfgTallas.FieldCantidadCel + ' = ' +
-            FCfgTallas.FieldCantidadCel + ' + VALUES(' +
-            FCfgTallas.FieldCantidadCel + '),' +
-            ' INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
-          Qry.ParamByName('alm').AsString := sAlmDef;
-        end
+            ' AND ' + FCfgTallas.FieldAlmacenCel + ' = '''''
         else
-          // Vuelta a formato normal: colapsar todos los almacenes en
-          // almacen '' (una unica celda por talla).
+          // Vuelta a formato normal: colapsar almacenes en ''.
           Qry.SQL.Text :=
-            'INSERT INTO ' + FCfgTallas.TablaCeldas + ' (' +
-            FCfgTallas.FieldSerieCel + ', ' +
-            FCfgTallas.FieldNumeroCel + ', ' +
-            FCfgTallas.FieldLineaCel + ', ' +
-            FCfgTallas.FieldFilaCel + ', ' +
-            FCfgTallas.FieldAlmacenCel + ', ' +
-            FCfgTallas.FieldAvPivotCel + ', ' +
-            FCfgTallas.FieldCantidadCel + ',' +
-            ' INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
-            ' USUARIO_MODIF)' +
-            ' SELECT ' + FCfgTallas.FieldSerieCel + ', ' +
-            FCfgTallas.FieldNumeroCel + ', ' +
-            FCfgTallas.FieldLineaCel + ', ' +
-            FCfgTallas.FieldFilaCel + ', '''', ' +
-            FCfgTallas.FieldAvPivotCel + ', ' +
-            'SUM(' + FCfgTallas.FieldCantidadCel + ')' +
-            ', NOW(), :u, NOW(), :u' +
+            'SELECT ' + FCfgTallas.FieldLineaCel + ' AS LIN, ' +
+            FCfgTallas.FieldFilaCel + ' AS FILA, ' +
+            FCfgTallas.FieldAvPivotCel + ' AS IDAV, ' +
+            'SUM(' + FCfgTallas.FieldCantidadCel + ') AS CANT' +
             ' FROM ' + FCfgTallas.TablaCeldas +
             ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
             ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
             ' AND ' + FCfgTallas.FieldAlmacenCel + ' <> ''''' +
             ' GROUP BY ' + FCfgTallas.FieldLineaCel + ', ' +
             FCfgTallas.FieldFilaCel + ', ' +
-            FCfgTallas.FieldAvPivotCel +
-            ' ON DUPLICATE KEY UPDATE ' +
-            FCfgTallas.FieldCantidadCel + ' = ' +
-            FCfgTallas.FieldCantidadCel + ' + VALUES(' +
-            FCfgTallas.FieldCantidadCel + '),' +
-            ' INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
-        Qry.ParamByName('u').AsString := FCfgTallas.Usuario;
-        Qry.ParamByName('s').AsString :=
-          dsM.FieldByName(FCfgTallas.FieldSerieMaster).AsString;
-        Qry.ParamByName('n').AsString :=
-          dsM.FieldByName(FCfgTallas.FieldNumeroMaster).AsString;
-        Qry.ExecSQL;
-        if Qry.RowsAffected > 0 then
+            FCfgTallas.FieldAvPivotCel;
+        Qry.ParamByName('s').AsString := sSerie;
+        Qry.ParamByName('n').AsString := sNumero;
+        Qry.Open;
+        // Upsert por parametros: cantidad destino = existente + origen.
+        QIns.SQL.Text :=
+          'INSERT INTO ' + FCfgTallas.TablaCeldas + ' (' +
+          FCfgTallas.FieldSerieCel + ', ' +
+          FCfgTallas.FieldNumeroCel + ', ' +
+          FCfgTallas.FieldLineaCel + ', ' +
+          FCfgTallas.FieldFilaCel + ', ' +
+          FCfgTallas.FieldAlmacenCel + ', ' +
+          FCfgTallas.FieldAvPivotCel + ', ' +
+          FCfgTallas.FieldCantidadCel + ',' +
+          ' INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
+          ' USUARIO_MODIF)' +
+          ' VALUES (:s, :n, :l, :f, :a, :p, :c,' +
+          ' NOW(), :u, NOW(), :u)' +
+          ' ON DUPLICATE KEY UPDATE ' +
+          FCfgTallas.FieldCantidadCel + ' = ' +
+          FCfgTallas.FieldCantidadCel + ' + :c,' +
+          ' INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
+        iMigradas := 0;
+        while not Qry.Eof do
+        begin
+          QIns.ParamByName('s').AsString := sSerie;
+          QIns.ParamByName('n').AsString := sNumero;
+          QIns.ParamByName('l').AsInteger :=
+            Qry.FieldByName('LIN').AsInteger;
+          QIns.ParamByName('f').AsInteger :=
+            Qry.FieldByName('FILA').AsInteger;
+          if FConfig.Distribuido then
+            QIns.ParamByName('a').AsString := sAlmDef
+          else
+            QIns.ParamByName('a').AsString := '';
+          QIns.ParamByName('p').AsInteger :=
+            Qry.FieldByName('IDAV').AsInteger;
+          QIns.ParamByName('c').AsFloat :=
+            Qry.FieldByName('CANT').AsFloat;
+          QIns.ParamByName('u').AsString := FCfgTallas.Usuario;
+          QIns.ExecSQL;
+          Inc(iMigradas);
+          Qry.Next;
+        end;
+        Qry.Close;
+        if iMigradas > 0 then
+        begin
           LogSes(Format('ModoTallas.MigrarCeldas: %d celdas ' +
                         'unificadas (distribuido=%s)',
-                        [Qry.RowsAffected,
+                        [iMigradas,
                          BoolToStr(FConfig.Distribuido, True)]));
-        // Origen migrado: fuera las celdas del formato anterior.
-        if FConfig.Distribuido then
-          Qry.SQL.Text :=
-            'DELETE FROM ' + FCfgTallas.TablaCeldas +
-            ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
-            ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
-            ' AND ' + FCfgTallas.FieldAlmacenCel + ' = '''''
-        else
-          Qry.SQL.Text :=
-            'DELETE FROM ' + FCfgTallas.TablaCeldas +
-            ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
-            ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
-            ' AND ' + FCfgTallas.FieldAlmacenCel + ' <> ''''';
-        Qry.ParamByName('s').AsString :=
-          dsM.FieldByName(FCfgTallas.FieldSerieMaster).AsString;
-        Qry.ParamByName('n').AsString :=
-          dsM.FieldByName(FCfgTallas.FieldNumeroMaster).AsString;
-        Qry.ExecSQL;
+          // Origen migrado: fuera las celdas del formato anterior.
+          if FConfig.Distribuido then
+            QIns.SQL.Text :=
+              'DELETE FROM ' + FCfgTallas.TablaCeldas +
+              ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
+              ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
+              ' AND ' + FCfgTallas.FieldAlmacenCel + ' = '''''
+          else
+            QIns.SQL.Text :=
+              'DELETE FROM ' + FCfgTallas.TablaCeldas +
+              ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
+              ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
+              ' AND ' + FCfgTallas.FieldAlmacenCel + ' <> ''''';
+          QIns.ParamByName('s').AsString := sSerie;
+          QIns.ParamByName('n').AsString := sNumero;
+          QIns.ExecSQL;
+        end;
       finally
+        FreeAndNil(QIns);
         FreeAndNil(Qry);
       end;
     end;
