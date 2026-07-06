@@ -67,6 +67,11 @@ type
     Modo: TModoColumnasSku;
     // Almacen cuyo stock se muestra en el buscador (vacio = sin stock).
     AlmacenStock: string;
+    // Formato distribuido (solo modo tallas, como ESFORMATO_
+    // DISTRIBUIDO_SES de sesiones): las cantidades se reparten por
+    // almacen con el modal distribuidor; la edicion inline de celdas
+    // de talla queda bloqueada y el grid muestra la SUMA por talla.
+    Distribuido: Boolean;
   end;
 
   // Aviso al documento al resolver una entrada. ACompleto = SKU cerrado

@@ -65,9 +65,16 @@ inherited frmMtoPruebaColumnasSku: TfrmMtoPruebaColumnasSku
           TabOrder = 4
           OnClick = btnAddLineaClick
         end
+        object chkDistribuido: TcxCheckBox
+          Left = 508
+          Top = 2
+          Caption = 'Almacenes distribuidos'
+          TabOrder = 5
+          Width = 160
+        end
         object lblEstado: TcxLabel
           Left = 512
-          Top = 24
+          Top = 26
           Caption = '-'
         end
       end

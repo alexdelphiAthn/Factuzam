@@ -219,6 +219,21 @@ fusión (rederivar) incluyen el almacén. En la prueba: columna
 stock" (fallback de cabecera, como en compras) y cambiarlo antes de
 leer manda esa lectura a otra línea/almacén.
 
+## Formato distribuido (check "Almacenes distribuidos")
+
+Equivalente al `ESFORMATO_DISTRIBUIDO_SES` de sesiones: la edición
+inline de celdas de talla se bloquea y las cantidades se reparten por
+almacén con el modal `TfrmModalDistribuidor` (ahora parametrizable en
+tabla de celdas vía `ConfigurarCeldas`, con defaults de sesiones — su
+comportamiento allí no cambia). El grid muestra la SUMA por talla.
+Reglas: en distribuido el almacén por defecto es OBLIGATORIO (si el
+documento no lo trae se asume el primer almacén activo estándar,
+avisando; sin almacenes definidos → excepción); al cambiar de formato
+las celdas MIGRAN (sin almacén → almacén por defecto al activar;
+colapso de almacenes → '' al desactivar), fusionando cantidades. Las
+líneas sin almacén asumen el del documento (fallback de cabecera,
+como albaranes) tanto al resolver como en la clave de fusión.
+
 ## Cierre del banco de pruebas (06/07/2026)
 
 Ciclo completo VALIDADO en vivo por el usuario: alta de SKUs en

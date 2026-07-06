@@ -34,7 +34,7 @@ uses
   Vcl.ExtCtrls, Data.DB, Datasnap.DBClient, Uni,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxLabel, cxTextEdit, cxMemo, cxRadioGroup,
-  cxButtons,
+  cxCheckBox, cxButtons,
   cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, cxDBData,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxClasses, cxNavigator, dxDateRanges,
@@ -50,6 +50,7 @@ type
     rgModo: TcxRadioGroup;
     btnConstruir: TcxButton;
     btnAddLinea: TcxButton;
+    chkDistribuido: TcxCheckBox;
     lblEstado: TcxLabel;
     cxgrdLineas: TcxGrid;
     tvLineas: TcxGridDBTableView;
@@ -329,6 +330,9 @@ begin
   Cfg.View := tvLineas;
   Cfg.Cds := FCds;
   Cfg.AlmacenStock := Trim(txtAlmacen.Text);
+  // Formato distribuido (solo lo usa el modo tallas), como el check
+  // ESFORMATO_DISTRIBUIDO_SES de sesiones de compra.
+  Cfg.Distribuido := chkDistribuido.Checked;
   // 0=Auto, 1=SKU, 2=Desglose (mismo orden que el enumerado).
   Cfg.Modo := TModoColumnasSku(rgModo.ItemIndex);
   Cfg.Campos.CodigoArt := 'CODIGO_ART';
@@ -357,35 +361,33 @@ begin
   // de prueba fza_prueba_skucel; ver prueba_columnas_sku.sql).
   if Cfg.Modo = mcsTallasInline then
   begin
-    // Tabla de celdas de la prueba: se autocrea si falta (idempotente,
-    // mismo DDL que prueba_columnas_sku.sql; tabla desechable).
-    oConn.ExecSQL(
-      'CREATE TABLE IF NOT EXISTS fza_prueba_skucel (' +
-      ' SERIE_PSC VARCHAR(10) NOT NULL,' +
-      ' NUMERO_PSC INT NOT NULL,' +
-      ' LINEA_PSC INT NOT NULL,' +
-      ' ID_FILA_PSC INT NOT NULL DEFAULT 1,' +
-      ' ID_AV_PIVOT_PSC INT NOT NULL,' +
-      ' CANTIDAD_PSC DOUBLE NOT NULL DEFAULT 0,' +
-      ' INSTANTE_ALTA DATETIME NULL,' +
-      ' INSTANTE_MODIF DATETIME NULL,' +
-      ' USUARIO_ALTA VARCHAR(50) NULL,' +
-      ' USUARIO_MODIF VARCHAR(50) NULL,' +
-      ' PRIMARY KEY (SERIE_PSC, NUMERO_PSC, LINEA_PSC, ID_FILA_PSC,' +
-      '              ID_AV_PIVOT_PSC)' +
-      ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4' +
-      ' COLLATE=utf8mb4_spanish_ci');
     if not FCeldasLimpiadas then
     begin
-      // El documento de prueba PRU/1 es compartido entre sesiones: se
-      // limpia al primer Construir de la sesion para no acumular
-      // cantidades de pruebas anteriores (idAv=227 sumaba sobre celdas
-      // de ayer). DENTRO de la sesion las celdas se conservan.
+      // Tabla de celdas de la prueba, RECREADA al primer Construir de
+      // cada sesion (desechable): asi no acumula cantidades de pruebas
+      // anteriores y siempre lleva el DDL vigente — ahora con almacen
+      // por celda para el formato distribuido (clave con almacen; las
+      // celdas no distribuidas usan almacen '').
+      oConn.ExecSQL('DROP TABLE IF EXISTS fza_prueba_skucel');
       oConn.ExecSQL(
-        'DELETE FROM fza_prueba_skucel' +
-        ' WHERE SERIE_PSC = ''PRU'' AND NUMERO_PSC = 1');
+        'CREATE TABLE fza_prueba_skucel (' +
+        ' SERIE_PSC VARCHAR(10) NOT NULL,' +
+        ' NUMERO_PSC INT NOT NULL,' +
+        ' LINEA_PSC INT NOT NULL,' +
+        ' ID_FILA_PSC INT NOT NULL DEFAULT 1,' +
+        ' CODIGO_ALM_PSC VARCHAR(10) NOT NULL DEFAULT '''',' +
+        ' ID_AV_PIVOT_PSC INT NOT NULL,' +
+        ' CANTIDAD_PSC DOUBLE NOT NULL DEFAULT 0,' +
+        ' INSTANTE_ALTA DATETIME NULL,' +
+        ' INSTANTE_MODIF DATETIME NULL,' +
+        ' USUARIO_ALTA VARCHAR(50) NULL,' +
+        ' USUARIO_MODIF VARCHAR(50) NULL,' +
+        ' PRIMARY KEY (SERIE_PSC, NUMERO_PSC, LINEA_PSC, ID_FILA_PSC,' +
+        '              CODIGO_ALM_PSC, ID_AV_PIVOT_PSC)' +
+        ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4' +
+        ' COLLATE=utf8mb4_spanish_ci');
       FCeldasLimpiadas := True;
-      LogMsg('Celdas del documento PRU/1 limpiadas (inicio de sesion)');
+      LogMsg('Tabla de celdas PRU/1 recreada (inicio de sesion)');
     end;
     CfgTallas.Usuario := oUser;
     CfgTallas.SourceMaster := FDsMaster;
@@ -404,7 +406,9 @@ begin
     CfgTallas.FieldFilaCel := 'ID_FILA_PSC';
     CfgTallas.FieldAvPivotCel := 'ID_AV_PIVOT_PSC';
     CfgTallas.FieldCantidadCel := 'CANTIDAD_PSC';
-    CfgTallas.FieldAlmacenCel := '';
+    // Almacen por celda: '' en tecleo/lecturas normales; el modal
+    // distribuidor escribe almacenes concretos (formato distribuido).
+    CfgTallas.FieldAlmacenCel := 'CODIGO_ALM_PSC';
     CfgTallas.IdFilaFijo := 1;
     // Tope acordado: 20 tallas. Sistemas mayores -> aviso del gestor y
     // la linea se queda sin pasar a horizontal.

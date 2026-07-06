@@ -11,11 +11,16 @@
 -- Tabla desechable: cuando la prueba muera, DROP TABLE fza_prueba_skucel.
 -- ============================================================================
 
+-- NOTA: el banco de pruebas RECREA esta tabla (DROP+CREATE) al primer
+-- Construir de cada sesion; este script queda como referencia del DDL.
+-- CODIGO_ALM_PSC: almacen por celda para el formato distribuido ('' en
+-- celdas no distribuidas), como CODIGO_ALM_SESCEL en sesiones.
 CREATE TABLE IF NOT EXISTS fza_prueba_skucel (
   SERIE_PSC       VARCHAR(10)  NOT NULL,
   NUMERO_PSC      INT          NOT NULL,
   LINEA_PSC       INT          NOT NULL,
   ID_FILA_PSC     INT          NOT NULL DEFAULT 1,
+  CODIGO_ALM_PSC  VARCHAR(10)  NOT NULL DEFAULT '',
   ID_AV_PIVOT_PSC INT          NOT NULL,
   CANTIDAD_PSC    DOUBLE       NOT NULL DEFAULT 0,
   INSTANTE_ALTA   DATETIME     NULL,
@@ -23,7 +28,7 @@ CREATE TABLE IF NOT EXISTS fza_prueba_skucel (
   USUARIO_ALTA    VARCHAR(50)  NULL,
   USUARIO_MODIF   VARCHAR(50)  NULL,
   PRIMARY KEY (SERIE_PSC, NUMERO_PSC, LINEA_PSC, ID_FILA_PSC,
-               ID_AV_PIVOT_PSC)
+               CODIGO_ALM_PSC, ID_AV_PIVOT_PSC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- Limpieza opcional de datos de la prueba (documento PRU/1):
