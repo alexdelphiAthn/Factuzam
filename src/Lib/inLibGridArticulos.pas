@@ -92,6 +92,11 @@ type
     FBusqRepo: TcxGridViewRepository;
     FBusqView: TcxGridDBTableView;
     FBusqColSku: TcxGridDBColumn;
+    // Columna OCULTA duplicada del SKU que actua de ListFieldItem del
+    // combo, con todo el buscado/filtrado desactivado: el lookup no
+    // tiene donde morder y no autocompleta ni deja la lista "pegada"
+    // (patron inMtoCajaOpe: dbtvBusqINPUT_BUSQUEDA).
+    FBusqColInput: TcxGridDBColumn;
     FEditRepo: TcxEditRepository;
     FRepCombo: TcxEditRepositoryExtLookupComboBoxItem;
     // Resolucion diferida al elegir del desplegable (timer 1ms): evita tocar
@@ -112,9 +117,20 @@ type
     FUltimoFiltro: string;
     // OnExit de los editores in-place: reenvia a FOnSalirEdicion.
     procedure EditorSalir(Sender: TObject);
+    // Restaura el EnterAsTab al SALIR de las columnas de la
+    // controladora: el OnExit del editor in-place no es fiable con
+    // AlwaysShowEditor (el host del banco de pruebas lo usa).
+    procedure ViewFocusedItemChanged(Sender: TcxCustomGridTableView;
+                                     APrevFocusedItem,
+                                  AFocusedItem: TcxCustomGridTableItem);
     procedure CrearLookupBusqueda;
     procedure RecargarBusqueda;
     procedure AbrirBusquedaFiltrada(const ATexto: string);
+    // Limpia el filtro interno del desplegable (IncSearching + Filter
+    // del DataController): sin esto la lista se queda "pegada" a la
+    // fila autocompletada aunque la query traiga mas filas. Mismo
+    // mecanismo que inMtoCajaOpe.tmrBusqTimer.
+    procedure LimpiarFiltroDesplegable;
     procedure ComboBusqInitPopup(Sender: TObject);
     procedure DispararResolucionScan(const ACodigo: string);
     procedure ArticuloGetProperties(Sender: TcxCustomGridTableItem;
@@ -256,6 +272,20 @@ begin
     FOnSalirEdicion(Sender);
 end;
 
+procedure TGridArticulosLineas.ViewFocusedItemChanged(
+  Sender: TcxCustomGridTableView; APrevFocusedItem,
+  AFocusedItem: TcxCustomGridTableItem);
+begin
+  // El EnterAsTab solo permanece desactivado mientras el foco esta en
+  // una columna de la controladora (articulo o atributos).
+  if (APrevFocusedItem <> nil) and
+     ((APrevFocusedItem = FColArticulo) or
+      ((APrevFocusedItem.Tag >= 1) and
+       (APrevFocusedItem.Tag <= 5))) and
+     Assigned(FOnSalirEdicion) then
+    FOnSalirEdicion(Sender);
+end;
+
 procedure TGridArticulosLineas.Construir;
 begin
   // El desplegable de busqueda incremental debe existir antes de crear la
@@ -275,6 +305,8 @@ begin
   // OnEditKeyDown del grid: resuelve el codigo en la celda al pulsar Enter
   // (lector Codigo+CR o tecleo manual). Es el evento fiable para la celda.
   FView.OnEditKeyDown := ViewEditKeyDown;
+  // Restauracion del EnterAsTab al abandonar las columnas propias.
+  FView.OnFocusedItemChanged := ViewFocusedItemChanged;
   // Flujo tipo Excel: Enter pasa a la siguiente celda y al llegar al final
   // de la fila salta a la siguiente. NO usamos NewItemRow: la linea nueva se
   // anyade sola al completar un SKU (lo hace el host en OnResuelto).
@@ -333,6 +365,7 @@ begin
   // codigo de barras (STX...ETX) y resolver al recibir ETX.
   if (AItem = FColArticulo) and (AEdit is TcxCustomTextEdit) then
   begin
+    LogSes('GridArt.InitEdit articulo: editor=' + AEdit.ClassName);
     TcxCustomTextEdit(AEdit).OnKeyPress := ArticuloKeyPress;
     // Sugerencias en vivo: al teclear se rearma el debounce que abre el
     // desplegable filtrado (igual que inMtoCajaOpe). El lector (STX/ETX)
@@ -432,6 +465,9 @@ begin
   // GridMode: el view trae las filas bajo demanda (no materializa todo el
   // dataset al abrir), mas agil con muchos SKU.
   FBusqView.DataController.DataModeController.GridMode := True;
+  // Sin sincronizar el cursor del dataset con la fila enfocada del
+  // desplegable (como dbtvBusq de caja).
+  FBusqView.DataController.DataModeController.SyncMode := False;
   FBusqView.OptionsView.GroupByBox := False;
   FBusqView.OptionsSelection.CellSelect := False;
   FBusqView.OptionsBehavior.IncSearch := False;
@@ -439,6 +475,16 @@ begin
   FBusqColSku.Caption := 'SKU';
   FBusqColSku.DataBinding.FieldName := 'SKU';
   FBusqColSku.Width := 200;
+  FBusqColInput := FBusqView.CreateColumn;
+  FBusqColInput.DataBinding.FieldName := 'INPUT_BUSQUEDA';
+  FBusqColInput.PropertiesClass := TcxTextEditProperties;
+  TcxTextEditProperties(FBusqColInput.Properties).IncrementalSearch :=
+    False;
+  FBusqColInput.Visible := False;
+  FBusqColInput.Options.Filtering := False;
+  FBusqColInput.Options.FilteringPopup := False;
+  FBusqColInput.Options.IncSearch := False;
+  FBusqColInput.Options.Grouping := False;
   with FBusqView.CreateColumn do
   begin
     Caption := 'Descripción';
@@ -471,8 +517,9 @@ begin
   begin
     View := FBusqView;
     KeyFieldNames := 'SKU';
-    ListFieldItem := FBusqColSku;
+    ListFieldItem := FBusqColInput;
     DropDownListStyle := lsEditList;
+    AutoSearchOnPopup := False;
     // El filtrado es en servidor (AbrirBusquedaFiltrada): el dataset ya
     // contiene solo coincidencias. El filtro incremental cliente se
     // desactiva porque filtra por la columna SKU y ocultaria filas
@@ -489,6 +536,11 @@ begin
     // boton del combo), filtrado en servidor por lo tecleado.
     OnInitPopup := ComboBusqInitPopup;
     OnCloseUp := ComboBusqCloseUp;
+    // OnChange EN EL REPOSITORIO (no solo por editor en InitEdit): con
+    // AlwaysShowEditor el grid re-clona las properties al activar la
+    // edicion y un hook por instancia se queda en un clon muerto; los
+    // clones SI heredan los eventos del item del repositorio.
+    OnChange := ArticuloChange;
     // Boton para el buscador completo (mismo que el ButtonEdit).
     Buttons.Clear;
     with Buttons.Add do
@@ -521,6 +573,7 @@ procedure TGridArticulosLineas.AbrirBusquedaFiltrada(const ATexto: string);
 const
   SQL_CABECERA =
     'SELECT x.SKU,' +
+    '       x.SKU AS INPUT_BUSQUEDA,' +
     '       x.DESCRIPCION,' +
     '       COALESCE((SELECT GROUP_CONCAT(DISTINCT cb.CODIGO_BARRAS_CB' +
     '                                     SEPARATOR '' '')' +
@@ -583,28 +636,60 @@ const
     ' ) x';
   SQL_ORDEN = ' ORDER BY STOCK DESC, x.SKU LIMIT 100';
 begin
-  // Reabre solo si cambia el texto o el dataset esta invalidado (cambio
-  // de almacen / primera vez).
-  if (FBusqQry <> nil) and
-     not (FBusqQry.Active and (FUltimoFiltro = ATexto)) then
+  if FBusqQry <> nil then
   begin
-    Screen.Cursor := crHourGlass;
-    try
-      if FBusqQry.Active then
-        FBusqQry.Close;
-      if ATexto = '' then
-        FBusqQry.SQL.Text := SQL_CABECERA + SQL_SIN_FILTRO + SQL_ORDEN
-      else
-      begin
-        FBusqQry.SQL.Text := SQL_CABECERA + SQL_CON_FILTRO + SQL_ORDEN;
-        FBusqQry.ParamByName('TPREF').AsString := ATexto + '%';
-        FBusqQry.ParamByName('TDESC').AsString := '%' + ATexto + '%';
+    // Siempre: aunque la query ya este abierta con el mismo filtro,
+    // el desplegable puede tener filtro interno pegado (autocompletado).
+    LimpiarFiltroDesplegable;
+    // Reabre solo si cambia el texto o el dataset esta invalidado
+    // (cambio de almacen / primera vez).
+    if not (FBusqQry.Active and (FUltimoFiltro = ATexto)) then
+    begin
+      Screen.Cursor := crHourGlass;
+      FBusqView.BeginUpdate;
+      try
+        // Desenganchar la vista mientras se recambia la query evita
+        // que reaplique su filtro sobre el dataset a medio abrir.
+        FBusqView.DataController.DataSource := nil;
+        if FBusqQry.Active then
+          FBusqQry.Close;
+        if ATexto = '' then
+          FBusqQry.SQL.Text := SQL_CABECERA + SQL_SIN_FILTRO + SQL_ORDEN
+        else
+        begin
+          FBusqQry.SQL.Text := SQL_CABECERA + SQL_CON_FILTRO + SQL_ORDEN;
+          FBusqQry.ParamByName('TPREF').AsString := ATexto + '%';
+          FBusqQry.ParamByName('TDESC').AsString := '%' + ATexto + '%';
+        end;
+        FBusqQry.ParamByName('ALM').AsString := FAlmacenStock;
+        FBusqQry.Open;
+        FUltimoFiltro := ATexto;
+        FBusqView.DataController.DataSource := FBusqDs;
+        FBusqView.DataController.Refresh;
+      finally
+        FBusqView.EndUpdate;
+        Screen.Cursor := crDefault;
       end;
-      FBusqQry.ParamByName('ALM').AsString := FAlmacenStock;
-      FBusqQry.Open;
-      FUltimoFiltro := ATexto;
+    end;
+  end;
+end;
+
+procedure TGridArticulosLineas.LimpiarFiltroDesplegable;
+begin
+  if FBusqView <> nil then
+  begin
+    FBusqView.BeginUpdate;
+    try
+      FBusqView.Controller.IncSearchingText := '';
+      FBusqView.DataController.Filter.Clear;
+      FBusqView.DataController.Filter.Active := False;
+      FBusqView.DataController.Filter.AutoDataSetFilter := False;
+      // RESET imprescindible: sin Refresh la vista sigue mostrando el
+      // conjunto filtrado viejo aunque el filtro ya este vacio (caja
+      // lo hace en repComboBoxPropertiesInitPopup).
+      FBusqView.DataController.Refresh;
     finally
-      Screen.Cursor := crDefault;
+      FBusqView.EndUpdate;
     end;
   end;
 end;
@@ -621,7 +706,13 @@ begin
     FOnEntrarEdicion(Sender);
   sTexto := '';
   if Sender is TcxExtLookupComboBox then
-    sTexto := Trim(VarToStr(TcxExtLookupComboBox(Sender).EditingValue));
+  begin
+    // Si el combo autocompleto, lo tecleado es lo previo a la seleccion.
+    sTexto := TcxExtLookupComboBox(Sender).Text;
+    if TcxExtLookupComboBox(Sender).SelLength > 0 then
+      sTexto := Copy(sTexto, 1, TcxExtLookupComboBox(Sender).SelStart);
+    sTexto := Trim(sTexto);
+  end;
   AbrirBusquedaFiltrada(sTexto);
 end;
 
@@ -709,6 +800,7 @@ end;
 // sugerencias se abren al teclear a mano, no al escanear.
 procedure TGridArticulosLineas.ArticuloChange(Sender: TObject);
 begin
+  LogSes('GridArt.Change: scanner=' + BoolToStr(FEnScanner, True));
   if not FEnScanner then
   begin
     FTimerBusq.Enabled := False;
@@ -726,16 +818,32 @@ var
   sTexto: string;
 begin
   FTimerBusq.Enabled := False;
-  if FView.Controller.EditingController.IsEditing then
+  if not FView.Controller.EditingController.IsEditing then
+    LogSes('GridArt.Busq: sin editor activo')
+  else
   begin
     Edit := FView.Controller.EditingController.Edit;
-    if Edit is TcxExtLookupComboBox then
+    if not (Edit is TcxExtLookupComboBox) then
+      LogSes('GridArt.Busq: editor no es combo (' +
+             Edit.ClassName + ')')
+    else
     begin
       Combo := TcxExtLookupComboBox(Edit);
-      sTexto := Trim(VarToStr(Combo.EditingValue));
+      // Text, no EditingValue: el texto libre tecleado que aun no
+      // casa con una fila de la lista no llega a EditingValue. Y si
+      // el combo AUTOCOMPLETO con una coincidencia (resto en video
+      // inverso), lo tecleado es solo la parte previa a la seleccion.
+      sTexto := Combo.Text;
+      if Combo.SelLength > 0 then
+        sTexto := Copy(sTexto, 1, Combo.SelStart);
+      sTexto := Trim(sTexto);
+      LogSes('GridArt.Busq: texto="' + sTexto + '"');
       if Length(sTexto) >= 3 then
       begin
         AbrirBusquedaFiltrada(sTexto);
+        LogSes(Format('GridArt.Busq: %d filas query, %d en vista',
+                      [FBusqQry.RecordCount,
+                       FBusqView.DataController.RecordCount]));
         if not Combo.DroppedDown then
           Combo.DroppedDown := True;
       end;
@@ -776,6 +884,18 @@ begin
     else if (AItem.Tag >= 1) and (AItem.Tag <= 5) then
       AbrirPaletaOrden(AItem.Tag);
   end
+  // Teclas de texto en la celda de articulo: rearman el debounce de la
+  // busqueda incremental. El OnChange del lookup NO es fiable (deja de
+  // disparar tras el primer autocompletado); el KeyDown del grid llega
+  // SIEMPRE, tecla a tecla.
+  else if (AItem = FColArticulo) and (not FEnScanner) and
+          ((Key = VK_BACK) or (Key = VK_DELETE) or
+           ((Key >= Ord('0')) and
+            not ((Key >= VK_F1) and (Key <= VK_F24)))) then
+  begin
+    FTimerBusq.Enabled := False;
+    FTimerBusq.Enabled := True;
+  end
   // Igual que caja (cxGrid1DBTableView1EditKeyDown): el Enter del lector
   // (Codigo+CR) o del usuario en la celda de articulo resuelve el codigo que
   // hay en el editor. Este evento del grid SI recibe el Enter aunque el editor
@@ -804,6 +924,7 @@ end;
 // tocar el cds mientras el editor se cierra.
 procedure TGridArticulosLineas.ComboBusqCloseUp(Sender: TObject);
 begin
+  LimpiarFiltroDesplegable;
   if Assigned(FOnSalirEdicion) then
     FOnSalirEdicion(Sender);
   if not (Sender is TcxCustomEdit) then
@@ -836,6 +957,10 @@ begin
         on E: EInvalidOperation do
           ;
       end;
+    // Resuelto: restaura el EnterAsTab del host (si el foco cae en
+    // otra celda de la controladora, su InitEdit lo desactiva).
+    if Assigned(FOnSalirEdicion) then
+      FOnSalirEdicion(nil);
     // Igual que la caja: si el articulo necesita color/talla, saltamos a la
     // primera columna de atributo y abrimos su paleta; si el SKU ya quedo
     // cerrado, dejamos el editor de articulo listo para encadenar lecturas sin

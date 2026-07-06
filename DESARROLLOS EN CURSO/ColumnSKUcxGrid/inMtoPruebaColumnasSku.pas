@@ -92,6 +92,8 @@ type
                            ACompleto: Boolean);
     // Chivato de LogSes (gestor de tallas y adaptadores) al memo.
     procedure LogMsg(const S: string);
+    // Salida del grid: restaura EnterAsTab y deja traza de su estado.
+    procedure GridSalir(Sender: TObject);
   protected
     // Sin data module: la "tabla principal" del Mto es el cds en
     // memoria. NO llama a inherited: el por defecto hace
@@ -100,6 +102,10 @@ type
     // Sin modo busqueda: la prueba abre siempre en la Ficha (edicion)
     // y se construye sola en el primer Show.
     procedure ResetForm; override;
+    // KeyPreview de TfrmBase: F1 alterna el modo de columnas y Enter
+    // en el grupo de radios salta al siguiente control (el radio se
+    // traga el Enter y el JvEnterAsTab de la base no llega a verlo).
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   end;
 
 var
@@ -122,6 +128,10 @@ begin
   // (mismo patron que la pestanya Log de inMtoComprasSesiones).
   inLibGlobalVar.oLogSesion := LogMsg;
   txtAlmacen.OnExit := txtAlmacenSalir;
+  // Red de seguridad del EnterAsTab: al salir del GRID hacia
+  // cualquier otro control se restaura siempre (los modos solo cubren
+  // los movimientos de foco dentro del grid).
+  cxgrdLineas.OnExit := GridSalir;
   lblEstado.Caption := 'Elige modo y pulsa Construir (pestaña Ficha)';
 end;
 
@@ -154,6 +164,38 @@ begin
   end;
 end;
 
+procedure TfrmMtoPruebaColumnasSku.KeyDown(var Key: Word;
+  Shift: TShiftState);
+begin
+  // F1: alterna el modo de columnas (Auto -> SKU -> Desglose -> Tallas
+  // horizontal -> Auto) y reconstruye. El DISTRIBUIDO no entra en el
+  // ciclo: se activa desde la cabecera del documento (chkDistribuido).
+  if (Key = VK_F1) and (Shift = []) then
+  begin
+    Key := 0;
+    if rgModo.ItemIndex >= rgModo.Properties.Items.Count - 1 then
+      rgModo.ItemIndex := 0
+    else
+      rgModo.ItemIndex := rgModo.ItemIndex + 1;
+    btnConstruirClick(nil);
+  end
+  // Enter con el foco en el grupo de radios: el TcxRadioGroup consume
+  // la tecla y el EnterAsTab nunca actua; lo convertimos en Tab.
+  else if (Key = VK_RETURN) and rgModo.Focused then
+  begin
+    Key := 0;
+    SelectNext(rgModo, True, True);
+  end;
+  inherited;
+end;
+
+procedure TfrmMtoPruebaColumnasSku.GridSalir(Sender: TObject);
+begin
+  RestaurarEnterAsTabTemporal(Sender);
+  LogMsg('Grid.OnExit: EnterAsTab=' +
+         BoolToStr(jvntrstb1.EnterAsTab, True));
+end;
+
 procedure TfrmMtoPruebaColumnasSku.LogMsg(const S: string);
 begin
   if mLog <> nil then
@@ -168,6 +210,9 @@ begin
   inLibGlobalVar.oLogSesion := nil;
   tvLineas.OnInitEdit := nil;
   tvLineas.OnEditKeyDown := nil;
+  tvLineas.OnEditing := nil;
+  tvLineas.OnFocusedRecordChanged := nil;
+  tvLineas.OnFocusedItemChanged := nil;
   tvLineas.ClearItems;
   FModo := nil;
   dsTablaG.DataSet := nil;
@@ -297,15 +342,19 @@ end;
 procedure TfrmMtoPruebaColumnasSku.NormalizarLineaEnBlanco;
 var
   EvBorrado: TDataSetNotifyEvent;
+  iPos: Integer;
 begin
   // Borrado programatico: sin el guardian de confirmacion que TfrmMtoGen
   // engancha en BeforeDelete del dataset principal.
   EvBorrado := FCds.BeforeDelete;
   FCds.BeforeDelete := nil;
   try
-    FCds.First;
-    while not FCds.Eof do
+    // Recorrido por RecNo: al borrar el ULTIMO registro el cursor cae
+    // en el anterior (no en Eof) y un while-not-Eof reprocesaria filas.
+    iPos := 1;
+    while iPos <= FCds.RecordCount do
     begin
+      FCds.RecNo := iPos;
       if Trim(FCds.FieldByName('CODIGO_ART').AsString) = '' then
       begin
         LogMsg(Format('Normalizar: borra linea %d (articulo vacio)',
@@ -313,7 +362,7 @@ begin
         FCds.Delete;
       end
       else
-        FCds.Next;
+        Inc(iPos);
     end;
   finally
     FCds.BeforeDelete := EvBorrado;
@@ -359,8 +408,13 @@ begin
     // El modo saliente convierte su estado al comun (tallas expande
     // celdas en lineas por SKU); en SKU/desglose no hace nada.
     FModo.Desmontar;
+    // TODOS los eventos del View que los modos pueden enganchar: un
+    // puntero a un modo destruido revienta con AV al primer foco.
     tvLineas.OnInitEdit := nil;
     tvLineas.OnEditKeyDown := nil;
+    tvLineas.OnEditing := nil;
+    tvLineas.OnFocusedRecordChanged := nil;
+    tvLineas.OnFocusedItemChanged := nil;
     tvLineas.ClearItems;
     FModo := nil;
   end;
@@ -371,8 +425,16 @@ begin
   // Formato distribuido (solo lo usa el modo tallas), como el check
   // ESFORMATO_DISTRIBUIDO_SES de sesiones de compra.
   Cfg.Distribuido := chkDistribuido.Checked;
-  // 0=Auto, 1=SKU, 2=Desglose (mismo orden que el enumerado).
-  Cfg.Modo := TModoColumnasSku(rgModo.ItemIndex);
+  // Radios: 0=Auto, 1=SKU, 2=Tallas horizontal. El DESGLOSE no es
+  // seleccionable: es el modo EFECTIVO al que resuelve Auto cuando el
+  // documento tiene columnas de atributo (elegirlo a mano era
+  // redundante). mcsDesglose sigue en el contrato como resultado.
+  case rgModo.ItemIndex of
+    1: Cfg.Modo := mcsSku;
+    2: Cfg.Modo := mcsTallasInline;
+  else
+    Cfg.Modo := mcsAuto;
+  end;
   Cfg.Campos.CodigoArt := 'CODIGO_ART';
   Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD';
   Cfg.Campos.Descripcion := 'DESCRIPCION';
