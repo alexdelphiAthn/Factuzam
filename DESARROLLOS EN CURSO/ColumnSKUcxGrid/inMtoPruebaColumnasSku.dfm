@@ -37,9 +37,6 @@ inherited frmMtoPruebaColumnasSku: TfrmMtoPruebaColumnasSku
               Caption = 'SKU'
             end
             item
-              Caption = 'Desglose'
-            end
-            item
               Caption = 'Tallas horizontal'
             end>
           ItemIndex = 0
