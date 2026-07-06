@@ -234,6 +234,21 @@ colapso de almacenes → '' al desactivar), fusionando cantidades. Las
 líneas sin almacén asumen el del documento (fallback de cabecera,
 como albaranes) tanto al resolver como en la clave de fusión.
 
+La distribución PERSISTE al salir del modo tallas: `Desmontar`
+expande por talla Y almacén (una línea por SKU+almacén con su columna
+Almacén rellena) y el re-pivote devuelve cada reparto a la celda de
+su almacén (`SumarEnCelda` con upsert atómico por almacén). Ciclo
+distribuido ↔ Desglose/SKU validado en vivo (11 celdas → líneas por
+partida con ALE/BCN/GEN correctos).
+
+Validado en vivo (06/07/2026): distribuidor por línea con su sistema,
+migración al activar/desactivar el check, almacén por defecto
+garantizado y navegación entre líneas sin perder el pintado de
+celdas. Lección adicional: los Values[] no-bound también se pierden
+con el Post implícito y el scroll — la recarga va SIEMPRE diferida un
+tick (timer) armada desde AfterPost/AfterScroll, nunca dentro del
+propio evento.
+
 ## Cierre del banco de pruebas (06/07/2026)
 
 Ciclo completo VALIDADO en vivo por el usuario: alta de SKUs en
