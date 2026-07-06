@@ -66,6 +66,9 @@ type
     // True si la ultima entrada traia talla (lectura de SKU/barras):
     // el foco vuelve al articulo para encadenar lecturas.
     FUltimaConTalla: Boolean;
+    // Guardia de reentrada del modal distribuidor (OnEditing puede
+    // dispararse varias veces mientras el modal se abre).
+    FDistribAbierto: Boolean;
     function GetModo: TModoColumnasSku;
     function GetOnResuelto: TSkuResueltoEvent;
     procedure SetOnResuelto(const AValue: TSkuResueltoEvent);
@@ -128,6 +131,22 @@ type
     // todos los AVs de talla del articulo. 0 si ninguno cubre.
     function BuscarConjuntoParaAvs(
       const AAvs: TArray<TArticuloAtributoValor>): Integer;
+    // Formato distribuido: bloquea la edicion inline de las celdas de
+    // talla y abre el distribuidor (mismo patron que sesiones).
+    procedure ViewEditing(Sender: TcxCustomGridTableView;
+                          AItem: TcxCustomGridTableItem;
+                          var AAllow: Boolean);
+    procedure AbrirDistribuidorLinea;
+    // En distribuido SIEMPRE hay almacen por defecto: si el documento
+    // no lo trae, se toma el primer almacen activo estandar de
+    // fza_almacenes (avisando); sin almacenes definidos -> excepcion.
+    procedure AsegurarAlmacenDefecto;
+    // Al construir, unifica el origen de las cantidades segun el
+    // formato: con distribuido, las celdas SIN almacen (tecleadas en
+    // modo normal) migran al almacen por defecto del documento; sin
+    // distribuido, las celdas por almacen se colapsan a almacen ''.
+    // Siempre fusionando cantidades si la celda destino ya existe.
+    procedure MigrarCeldasAlmacen;
     procedure CeldaTallaCambiada(Sender: TObject);
     procedure FocoLineaCambiado(Sender: TcxCustomGridTableView;
                                 APrevFocusedRecord,
@@ -157,7 +176,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar;
+  inLibGlobalVar, inMtoModalDistribuidor;
 
 type
   // Acceso a OnExit (protegido en TWinControl) de los editores in-place.
@@ -316,6 +335,15 @@ begin
   FConfig.View.OnInitEdit := ViewInitEdit;
   FConfig.View.OnEditKeyDown := ViewEditKeyDown;
   FConfig.View.OnFocusedRecordChanged := FocoLineaCambiado;
+  // Formato distribuido: la edicion inline de celdas de talla se
+  // bloquea y las cantidades entran por el modal distribuidor. El
+  // almacen por defecto es OBLIGATORIO en este formato (si el
+  // documento no lo trae, se resuelve o se aborta con excepcion).
+  if FConfig.Distribuido then
+  begin
+    AsegurarAlmacenDefecto;
+    FConfig.View.OnEditing := ViewEditing;
+  end;
   FConfig.View.OptionsBehavior.GoToNextCellOnEnter := True;
   // El Tab (y el Enter convertido por EnterAsTab) avanza ENTRE CELDAS
   // del grid, no al siguiente control del form.
@@ -328,6 +356,9 @@ begin
   // Lineas heredadas de otros modos / documento reabierto: derivar
   // pivote y atributos, volcar cantidades y fusionar duplicadas.
   RederivarLineasExistentes;
+  // Unificar celdas segun el formato (las heredadas se vuelcan a
+  // almacen '', por eso la migracion va DESPUES del rederivar).
+  MigrarCeldasAlmacen;
   // La carga visual (columnas visibles, cantidades y rotulos) se
   // DIFIERE un tick: el host anyade sus columnas tras Construir y eso
   // resetea los Values[] no-bound del DataController.
@@ -533,6 +564,228 @@ begin
         else
           EnfocarColumnaPorCampo(FConfig.Campos.Cantidad);
       end;
+    end;
+  end;
+end;
+
+procedure TModoEntradaTallas.AsegurarAlmacenDefecto;
+var
+  Qry: TUniQuery;
+begin
+  if Trim(FConfig.AlmacenStock) = '' then
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := FConfig.Conexion;
+      // Mismo criterio de almacenes que el distribuidor.
+      Qry.SQL.Text :=
+        'SELECT CODIGO_ALM_ALM FROM fza_almacenes' +
+        ' WHERE ESACTIVO_ALM = ''S''' +
+        '   AND TIPO_USO_ALM IN (''ESTANDAR'', ''ESTANDARD'')' +
+        ' ORDER BY CODIGO_ALM_ALM LIMIT 1';
+      Qry.Open;
+      if Qry.Eof then
+        raise Exception.Create(
+          'Formato distribuido: se necesita un almacén por defecto ' +
+          'y no hay almacenes activos definidos.');
+      FConfig.AlmacenStock := Qry.Fields[0].AsString;
+      LogSes('ModoTallas: sin almacen por defecto; se asume "' +
+             FConfig.AlmacenStock + '" (primer almacen activo)');
+    finally
+      FreeAndNil(Qry);
+    end;
+  end;
+end;
+
+procedure TModoEntradaTallas.MigrarCeldasAlmacen;
+var
+  Qry: TUniQuery;
+  dsM: TDataSet;
+  sAlmDef: string;
+begin
+  if FCfgTallas.FieldAlmacenCel <> '' then
+  begin
+    sAlmDef := Trim(FConfig.AlmacenStock);
+    if FConfig.Distribuido and (sAlmDef = '') then
+      // No deberia ocurrir (AsegurarAlmacenDefecto corre antes); se
+      // deja tal cual y el grid seguira mostrando la suma correcta.
+      LogSes('ModoTallas.MigrarCeldas: sin almacen por defecto; las ' +
+             'celdas sin almacen no se migran')
+    else
+    begin
+      dsM := FCfgTallas.SourceMaster.DataSet;
+      Qry := TUniQuery.Create(nil);
+      try
+        Qry.Connection := FConfig.Conexion;
+        if FConfig.Distribuido then
+        begin
+          // Celdas tecleadas en modo normal (almacen '') pasan al
+          // almacen por defecto, sumando sobre lo que ya hubiera.
+          Qry.SQL.Text :=
+            'INSERT INTO ' + FCfgTallas.TablaCeldas + ' (' +
+            FCfgTallas.FieldSerieCel + ', ' +
+            FCfgTallas.FieldNumeroCel + ', ' +
+            FCfgTallas.FieldLineaCel + ', ' +
+            FCfgTallas.FieldFilaCel + ', ' +
+            FCfgTallas.FieldAlmacenCel + ', ' +
+            FCfgTallas.FieldAvPivotCel + ', ' +
+            FCfgTallas.FieldCantidadCel + ',' +
+            ' INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
+            ' USUARIO_MODIF)' +
+            ' SELECT ' + FCfgTallas.FieldSerieCel + ', ' +
+            FCfgTallas.FieldNumeroCel + ', ' +
+            FCfgTallas.FieldLineaCel + ', ' +
+            FCfgTallas.FieldFilaCel + ', :alm, ' +
+            FCfgTallas.FieldAvPivotCel + ', ' +
+            FCfgTallas.FieldCantidadCel +
+            ', NOW(), :u, NOW(), :u' +
+            ' FROM ' + FCfgTallas.TablaCeldas +
+            ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
+            ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
+            ' AND ' + FCfgTallas.FieldAlmacenCel + ' = ''''' +
+            ' ON DUPLICATE KEY UPDATE ' +
+            FCfgTallas.FieldCantidadCel + ' = ' +
+            FCfgTallas.FieldCantidadCel + ' + VALUES(' +
+            FCfgTallas.FieldCantidadCel + '),' +
+            ' INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
+          Qry.ParamByName('alm').AsString := sAlmDef;
+        end
+        else
+          // Vuelta a formato normal: colapsar todos los almacenes en
+          // almacen '' (una unica celda por talla).
+          Qry.SQL.Text :=
+            'INSERT INTO ' + FCfgTallas.TablaCeldas + ' (' +
+            FCfgTallas.FieldSerieCel + ', ' +
+            FCfgTallas.FieldNumeroCel + ', ' +
+            FCfgTallas.FieldLineaCel + ', ' +
+            FCfgTallas.FieldFilaCel + ', ' +
+            FCfgTallas.FieldAlmacenCel + ', ' +
+            FCfgTallas.FieldAvPivotCel + ', ' +
+            FCfgTallas.FieldCantidadCel + ',' +
+            ' INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
+            ' USUARIO_MODIF)' +
+            ' SELECT ' + FCfgTallas.FieldSerieCel + ', ' +
+            FCfgTallas.FieldNumeroCel + ', ' +
+            FCfgTallas.FieldLineaCel + ', ' +
+            FCfgTallas.FieldFilaCel + ', '''', ' +
+            FCfgTallas.FieldAvPivotCel + ', ' +
+            'SUM(' + FCfgTallas.FieldCantidadCel + ')' +
+            ', NOW(), :u, NOW(), :u' +
+            ' FROM ' + FCfgTallas.TablaCeldas +
+            ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
+            ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
+            ' AND ' + FCfgTallas.FieldAlmacenCel + ' <> ''''' +
+            ' GROUP BY ' + FCfgTallas.FieldLineaCel + ', ' +
+            FCfgTallas.FieldFilaCel + ', ' +
+            FCfgTallas.FieldAvPivotCel +
+            ' ON DUPLICATE KEY UPDATE ' +
+            FCfgTallas.FieldCantidadCel + ' = ' +
+            FCfgTallas.FieldCantidadCel + ' + VALUES(' +
+            FCfgTallas.FieldCantidadCel + '),' +
+            ' INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
+        Qry.ParamByName('u').AsString := FCfgTallas.Usuario;
+        Qry.ParamByName('s').AsString :=
+          dsM.FieldByName(FCfgTallas.FieldSerieMaster).AsString;
+        Qry.ParamByName('n').AsString :=
+          dsM.FieldByName(FCfgTallas.FieldNumeroMaster).AsString;
+        Qry.ExecSQL;
+        if Qry.RowsAffected > 0 then
+          LogSes(Format('ModoTallas.MigrarCeldas: %d celdas ' +
+                        'unificadas (distribuido=%s)',
+                        [Qry.RowsAffected,
+                         BoolToStr(FConfig.Distribuido, True)]));
+        // Origen migrado: fuera las celdas del formato anterior.
+        if FConfig.Distribuido then
+          Qry.SQL.Text :=
+            'DELETE FROM ' + FCfgTallas.TablaCeldas +
+            ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
+            ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
+            ' AND ' + FCfgTallas.FieldAlmacenCel + ' = '''''
+        else
+          Qry.SQL.Text :=
+            'DELETE FROM ' + FCfgTallas.TablaCeldas +
+            ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
+            ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
+            ' AND ' + FCfgTallas.FieldAlmacenCel + ' <> ''''';
+        Qry.ParamByName('s').AsString :=
+          dsM.FieldByName(FCfgTallas.FieldSerieMaster).AsString;
+        Qry.ParamByName('n').AsString :=
+          dsM.FieldByName(FCfgTallas.FieldNumeroMaster).AsString;
+        Qry.ExecSQL;
+      finally
+        FreeAndNil(Qry);
+      end;
+    end;
+  end;
+end;
+
+procedure TModoEntradaTallas.ViewEditing(
+  Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
+  var AAllow: Boolean);
+begin
+  // Celdas de talla en distribuido: sin edicion inline; el reparto por
+  // almacen entra por el distribuidor. El grid muestra la SUMA (la
+  // carga del gestor agrupa por talla sin filtrar almacen).
+  if (AItem <> nil) and (AItem.Tag >= 1) and
+     (AItem.Tag <= FCfgTallas.MaxColumnas) then
+  begin
+    AAllow := False;
+    if not FDistribAbierto then
+      AbrirDistribuidorLinea;
+  end;
+end;
+
+procedure TModoEntradaTallas.AbrirDistribuidorLinea;
+var
+  Modal: TfrmModalDistribuidor;
+  dsM: TDataSet;
+  iLinea, iAc, idxRec: Integer;
+begin
+  iLinea :=
+    FConfig.Cds.FieldByName(FCfgTallas.FieldLinea).AsInteger;
+  iAc :=
+    FConfig.Cds.FieldByName(FCfgTallas.FieldConjuntoPivot).AsInteger;
+  if (iLinea > 0) and (iAc > 0) and (FGestor <> nil) then
+  begin
+    if FConfig.Cds.State in [dsEdit, dsInsert] then
+      FConfig.Cds.Post;
+    dsM := FCfgTallas.SourceMaster.DataSet;
+    FDistribAbierto := True;
+    Modal := TfrmModalDistribuidor.Create(Application);
+    // Sin el caFree heredado: liberamos a mano en el finally.
+    Modal.OnClose := nil;
+    try
+      // El distribuidor de sesiones, redirigido a la tabla de celdas
+      // de ESTE documento (parametrizacion nueva del modal).
+      Modal.ConfigurarCeldas(FCfgTallas.TablaCeldas,
+                             FCfgTallas.FieldSerieCel,
+                             FCfgTallas.FieldNumeroCel,
+                             FCfgTallas.FieldLineaCel,
+                             FCfgTallas.FieldFilaCel,
+                             FCfgTallas.FieldAlmacenCel,
+                             FCfgTallas.FieldAvPivotCel,
+                             FCfgTallas.FieldCantidadCel);
+      Modal.Preparar(FConfig.Conexion, FCfgTallas.Usuario,
+                     dsM.FieldByName(
+                       FCfgTallas.FieldSerieMaster).AsString,
+                     dsM.FieldByName(
+                       FCfgTallas.FieldNumeroMaster).AsString,
+                     iLinea, iAc);
+      Modal.ShowModal;
+      if Modal.Confirmado then
+      begin
+        // Mismo orden que PersistirCeldaActiva: totales de la linea y
+        // recarga de sus celdas, con la carga como ultimo toque.
+        FGestor.RefrescarTotalesLineaActual;
+        idxRec := FCfgTallas.Grid.Controller.FocusedRecordIndex;
+        if idxRec >= 0 then
+          FGestor.CargarCantidadesUnaLinea(idxRec, iLinea);
+        if Assigned(FCfgTallas.Grid.Site) then
+          FCfgTallas.Grid.Site.Invalidate;
+      end;
+    finally
+      FreeAndNil(Modal);
+      FDistribAbierto := False;
     end;
   end;
 end;
@@ -1078,7 +1331,7 @@ var
   Dict: TDictionary<string, Integer>;
   Val, Nom: TValoresAttrTallas;
   Partes: TArray<string>;
-  sArt, sSku, sTallaVal, sClave: string;
+  sArt, sSku, sTallaVal, sClave, sAlmLin: string;
   iAc, iOrdT, idAv, iLinea, iLineaMaster, i: Integer;
   rCant: Double;
   CampoCant: TField;
@@ -1113,12 +1366,19 @@ begin
           CampoCant := ds.FindField(FConfig.Campos.Cantidad);
           if CampoCant <> nil then
             rCant := CampoCant.AsFloat;
-          sClave := sArt;
-          // El almacen de la linea forma parte de la clave de fusion.
+          // Almacen EFECTIVO de la linea (fallback de cabecera, como
+          // albaranes): las lineas sin almacen asumen el del documento
+          // y asi fusionan con las que ya lo llevan puesto.
+          sAlmLin := '';
           if (FConfig.Campos.Almacen <> '') and
              (ds.FindField(FConfig.Campos.Almacen) <> nil) then
-            sClave := sClave + '|' + UpperCase(Trim(
-              ds.FieldByName(FConfig.Campos.Almacen).AsString));
+          begin
+            sAlmLin := Trim(
+              ds.FieldByName(FConfig.Campos.Almacen).AsString);
+            if sAlmLin = '' then
+              sAlmLin := Trim(FConfig.AlmacenStock);
+          end;
+          sClave := sArt + '|' + UpperCase(sAlmLin);
           for i := 1 to 5 do
             sClave := sClave + '|' + UpperCase(Val[i]);
           if Dict.TryGetValue(sClave, iLineaMaster) then
@@ -1148,6 +1408,9 @@ begin
             Dict.Add(sClave, iLinea);
             if not (ds.State in [dsEdit, dsInsert]) then
               ds.Edit;
+            // Persistir el almacen efectivo en la linea (el fallback
+            // de cabecera deja de ser implicito).
+            PonerCampo(FConfig.Campos.Almacen, sAlmLin);
             EscribirAtributosLinea(Val, Nom, iAc);
             // La cantidad del SKU con talla pasa a su celda; la
             // columna Cantidad queda para lineas sin tallas.
@@ -1225,8 +1488,14 @@ begin
       sAlm := '';
       if (FConfig.Campos.Almacen <> '') and
          (FConfig.Cds.FindField(FConfig.Campos.Almacen) <> nil) then
+      begin
         sAlm := Trim(FConfig.Cds.FieldByName(
                   FConfig.Campos.Almacen).AsString);
+        // Fallback de cabecera (como albaranes de compra): la linea
+        // sin almacen asume el almacen por defecto del documento.
+        if sAlm = '' then
+          sAlm := Trim(FConfig.AlmacenStock);
+      end;
       // CONSOLIDACION: una linea por articulo+almacen+atributos no
       // talla. La fila donde se tecleo (normalmente la vacia) se
       // descarta si ya existe linea para esa combinacion.
@@ -1249,15 +1518,23 @@ begin
       if FConfig.Cds.State in [dsEdit, dsInsert] then
         FConfig.Cds.Post;
       // Lectura con talla: +1 en la celda de esa talla (como caja).
+      // En formato distribuido NO se suma en linea: el reparto por
+      // almacen entra por el distribuidor (como sesiones).
       if sTallaVal <> '' then
       begin
-        idAv := IdAvDeTalla(R.CodigoArticulo, iOrdT, sTallaVal);
-        iLinea :=
-          FConfig.Cds.FieldByName(FCfgTallas.FieldLinea).AsInteger;
-        if idAv > 0 then
+        if FConfig.Distribuido then
+          LogSes('ModoTallas.Resolver: distribuido, cantidades via ' +
+                 'distribuidor')
+        else
         begin
-          SumarEnCelda(iLinea, idAv, 1, True);
-          FUltimaConTalla := True;
+          idAv := IdAvDeTalla(R.CodigoArticulo, iOrdT, sTallaVal);
+          iLinea :=
+            FConfig.Cds.FieldByName(FCfgTallas.FieldLinea).AsInteger;
+          if idAv > 0 then
+          begin
+            SumarEnCelda(iLinea, idAv, 1, True);
+            FUltimaConTalla := True;
+          end;
         end;
       end;
       // Tope de tallas (20): si el sistema excede MaxColumnas el

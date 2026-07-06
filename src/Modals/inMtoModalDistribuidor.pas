@@ -91,6 +91,18 @@ type
     FCodigoPrvKit : string;
     FCodigoKit    : string;
     FKitPorPos    : TDictionary<Integer, Double>;
+    // Tabla/campos de celdas PARAMETRIZABLES (defaults de sesiones en
+    // FormCreate). ConfigurarCeldas permite reutilizar el distribuidor
+    // desde otros documentos (PEDCEL / ALBCEL / tabla de pruebas) sin
+    // tocar el comportamiento de sesiones.
+    FTablaCel     : string;
+    FSerieCelFld  : string;
+    FNumeroCelFld : string;
+    FLineaCelFld  : string;
+    FFilaCelFld   : string;
+    FAlmCelFld    : string;
+    FAvCelFld     : string;
+    FCantCelFld   : string;
     procedure PrepararEstructura;
     procedure PoblarFilasYCantidades;
     procedure PersistirCambios;
@@ -119,6 +131,10 @@ type
                        ALinea, AIdAcPivot: Integer;
                        const ACodigoPrvKit: string = '';
                        const ACodigoKit: string = '');
+    // Redirige el distribuidor a OTRA tabla de celdas (llamar ANTES de
+    // Preparar). Sin llamarlo, opera sobre las celdas de sesiones.
+    procedure ConfigurarCeldas(const ATabla, ASerie, ANumero, ALinea,
+                               AFila, AAlm, AAv, ACant: string);
   end;
 
 implementation
@@ -133,6 +149,28 @@ begin
   inherited;
   FSnapshot  := TDictionary<string, Double>.Create;
   FKitPorPos := TDictionary<Integer, Double>.Create;
+  // Defaults: celdas de SESIONES (comportamiento historico).
+  FTablaCel     := 'fza_compras_sesiones_celdas';
+  FSerieCelFld  := 'SERIE_SES_SESCEL';
+  FNumeroCelFld := 'NUMERO_SES_SESCEL';
+  FLineaCelFld  := 'LINEA_SES_SESCEL';
+  FFilaCelFld   := 'ID_FILA_SES_SESCEL';
+  FAlmCelFld    := 'CODIGO_ALM_SESCEL';
+  FAvCelFld     := 'ID_AV_PIVOT_SESCEL';
+  FCantCelFld   := 'CANTIDAD_SESCEL';
+end;
+
+procedure TfrmModalDistribuidor.ConfigurarCeldas(const ATabla, ASerie,
+  ANumero, ALinea, AFila, AAlm, AAv, ACant: string);
+begin
+  FTablaCel     := ATabla;
+  FSerieCelFld  := ASerie;
+  FNumeroCelFld := ANumero;
+  FLineaCelFld  := ALinea;
+  FFilaCelFld   := AFila;
+  FAlmCelFld    := AAlm;
+  FAvCelFld     := AAv;
+  FCantCelFld   := ACant;
 end;
 
 procedure TfrmModalDistribuidor.FormDestroy(Sender: TObject);
@@ -348,20 +386,22 @@ begin
       try
         oQry.Connection := FConn;
         oQry.SQL.Text :=
-          'SELECT CODIGO_ALM_SESCEL, ID_AV_PIVOT_SESCEL, CANTIDAD_SESCEL ' +
-          '  FROM fza_compras_sesiones_celdas ' +
-          ' WHERE SERIE_SES_SESCEL  = :s ' +
-          '   AND NUMERO_SES_SESCEL = :n ' +
-          '   AND LINEA_SES_SESCEL  = :l';
+          'SELECT ' + FAlmCelFld + ' AS CODIGO_ALM_CEL, ' +
+          FAvCelFld + ' AS ID_AV_CEL, ' +
+          FCantCelFld + ' AS CANTIDAD_CEL ' +
+          '  FROM ' + FTablaCel + ' ' +
+          ' WHERE ' + FSerieCelFld + '  = :s ' +
+          '   AND ' + FNumeroCelFld + ' = :n ' +
+          '   AND ' + FLineaCelFld + '  = :l';
         oQry.ParamByName('s').AsString  := SerieSes;
         oQry.ParamByName('n').AsString  := NumeroSes;
         oQry.ParamByName('l').AsInteger := LineaSes;
         oQry.Open;
         while not oQry.Eof do
         begin
-          sCod  := oQry.FieldByName('CODIGO_ALM_SESCEL').AsString;
-          iIdAv := oQry.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
-          rCant := oQry.FieldByName('CANTIDAD_SESCEL').AsFloat;
+          sCod  := oQry.FieldByName('CODIGO_ALM_CEL').AsString;
+          iIdAv := oQry.FieldByName('ID_AV_CEL').AsInteger;
+          rCant := oQry.FieldByName('CANTIDAD_CEL').AsFloat;
           if (sCod = '') or (not oPos.ContainsKey(iIdAv)) then
           begin
             oQry.Next;
@@ -598,13 +638,13 @@ begin
         if rCantN > 0 then
         begin
           oQry.SQL.Text :=
-            'INSERT INTO fza_compras_sesiones_celdas ' +
-            '  (SERIE_SES_SESCEL, NUMERO_SES_SESCEL, LINEA_SES_SESCEL, ' +
-            '   ID_FILA_SES_SESCEL, ' +
-            '   CODIGO_ALM_SESCEL, ID_AV_PIVOT_SESCEL, CANTIDAD_SESCEL, ' +
+            'INSERT INTO ' + FTablaCel + ' ' +
+            '  (' + FSerieCelFld + ', ' + FNumeroCelFld + ', ' +
+            FLineaCelFld + ', ' + FFilaCelFld + ', ' +
+            FAlmCelFld + ', ' + FAvCelFld + ', ' + FCantCelFld + ', ' +
             '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
             'VALUES (:s, :n, :l, 1, :a, :p, :c, NOW(), :u, NOW(), :u) ' +
-            'ON DUPLICATE KEY UPDATE CANTIDAD_SESCEL = :c, ' +
+            'ON DUPLICATE KEY UPDATE ' + FCantCelFld + ' = :c, ' +
             '                        INSTANTE_MODIF  = NOW(), ' +
             '                        USUARIO_MODIF   = :u';
           oQry.ParamByName('c').AsFloat := rCantN;
@@ -613,10 +653,12 @@ begin
         else
         begin
           oQry.SQL.Text :=
-            'DELETE FROM fza_compras_sesiones_celdas ' +
-            ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
-            '   AND LINEA_SES_SESCEL = :l AND CODIGO_ALM_SESCEL = :a ' +
-            '   AND ID_AV_PIVOT_SESCEL = :p';
+            'DELETE FROM ' + FTablaCel + ' ' +
+            ' WHERE ' + FSerieCelFld + ' = :s AND ' +
+            FNumeroCelFld + ' = :n ' +
+            '   AND ' + FLineaCelFld + ' = :l AND ' +
+            FAlmCelFld + ' = :a ' +
+            '   AND ' + FAvCelFld + ' = :p';
         end;
         oQry.ParamByName('s').AsString  := SerieSes;
         oQry.ParamByName('n').AsString  := NumeroSes;
