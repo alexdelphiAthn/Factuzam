@@ -455,17 +455,17 @@ begin
     Options.Editing := False;
     Width := 240;
   end;
+  // Almacen de la linea, EDITABLE y visible en TODOS los modos: cada
+  // partida muestra a que almacen pertenece (el des-pivote de tallas
+  // distribuidas genera una linea por SKU y almacen).
+  with tvLineas.CreateColumn as TcxGridDBColumn do
+  begin
+    Caption := 'Almacén';
+    DataBinding.FieldName := 'ALMACEN';
+    Width := 70;
+  end;
   if FModo.Modo = mcsTallasInline then
   begin
-    // Almacen de la linea, EDITABLE: cambiarlo en la linea en blanco
-    // antes de leer manda esa lectura a otro almacen (una linea por
-    // articulo+color+almacen, como albaranes de compra).
-    with tvLineas.CreateColumn as TcxGridDBColumn do
-    begin
-      Caption := 'Almacén';
-      DataBinding.FieldName := 'ALMACEN';
-      Width := 70;
-    end;
     // Cantidad editable para lineas SIN sistema de tallas (servicios,
     // gastos...): sus celdas de talla no admiten cantidades.
     with tvLineas.CreateColumn as TcxGridDBColumn do

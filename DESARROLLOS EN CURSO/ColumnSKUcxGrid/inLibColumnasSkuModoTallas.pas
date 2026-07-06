@@ -69,6 +69,18 @@ type
     // Guardia de reentrada del modal distribuidor (OnEditing puede
     // dispararse varias veces mientras el modal se abre).
     FDistribAbierto: Boolean;
+    // Hook AfterPost del cds (patron de inMtoComprasSesiones): el Post
+    // implicito al cambiar de fila re-renderiza el grid y limpia los
+    // Values[] no-bound; el hook recarga las celdas. FEnProceso lo
+    // silencia durante las conversiones internas (rederivar, desmontar,
+    // totales), que postean muchas veces.
+    FAfterPostOrig: TDataSetNotifyEvent;
+    FAfterScrollOrig: TDataSetNotifyEvent;
+    FEnProceso: Boolean;
+    // Recarga de celdas DIFERIDA (1ms): post y scroll repintan el grid
+    // DESPUES de sus eventos; recargando en el siguiente tick, la
+    // recarga siempre es lo ultimo y no la pisa ningun repintado.
+    FTimerRecarga: TTimer;
     function GetModo: TModoColumnasSku;
     function GetOnResuelto: TSkuResueltoEvent;
     procedure SetOnResuelto(const AValue: TSkuResueltoEvent);
@@ -118,12 +130,12 @@ type
     // ID_AV de la talla AValor del articulo (0 si no existe).
     function IdAvDeTalla(const ACodArt: string; AOrdenTalla: Integer;
                          const AValor: string): Integer;
-    // Cantidad actual de la celda (linea, AV) en la tabla de celdas.
-    function CantidadCelda(ALinea, AIdAv: Integer): Double;
-    // Suma ACant a la celda (linea, AV). ARefrescar: recarga la fila
-    // enfocada y sus totales (False durante la conversion masiva).
+    // Suma ACant a la celda (linea, almacen, AV) con upsert atomico.
+    // AAlm: almacen de la celda ('' fuera del formato distribuido).
+    // ARefrescar: recarga la fila enfocada y sus totales (False
+    // durante las conversiones masivas).
     procedure SumarEnCelda(ALinea, AIdAv: Integer; ACant: Double;
-                           ARefrescar: Boolean);
+                           const AAlm: string; ARefrescar: Boolean);
     // Lineas heredadas de otros modos: deriva pivote/atributos, vuelca
     // CANTIDAD del SKU con talla a su celda y fusiona duplicadas.
     procedure RederivarLineasExistentes;
@@ -152,6 +164,13 @@ type
                                 APrevFocusedRecord,
                                 AFocusedRecord: TcxCustomGridRecord;
                                 ANewItemRecordFocusingChanged: Boolean);
+    procedure CdsAfterPost(DataSet: TDataSet);
+    procedure CdsAfterScroll(DataSet: TDataSet);
+    procedure ArmarRecarga;
+    procedure TimerRecargaTimer(Sender: TObject);
+    // El gestor rotula las columnas sobrantes con el generico
+    // 'Talla N': aqui se dejan con un punto — solo se pinta la talla.
+    procedure LimpiarCaptionsGenericas;
     procedure PonerCampo(const ANombre, AValor: string);
     // Lectura defensiva de un campo del cds ('' si no definido).
     function LeerCampo(const ANombre: string): string;
@@ -183,9 +202,11 @@ type
   THackWinControl = class(TWinControl);
 
   // Celda con cantidad pendiente de expandir a linea propia al salir
-  // del modo tallas (Desmontar).
+  // del modo tallas (Desmontar). Alm: almacen de la celda (formato
+  // distribuido); '' en celdas sin almacen.
   TCeldaExpansion = record
     Linea: Integer;
+    Alm: string;
     ValorTalla: string;
     Cant: Double;
   end;
@@ -205,10 +226,21 @@ begin
   FTimerCarga.Enabled := False;
   FTimerCarga.Interval := 1;
   FTimerCarga.OnTimer := TimerCargaTimer;
+  FTimerRecarga := TTimer.Create(nil);
+  FTimerRecarga.Enabled := False;
+  FTimerRecarga.Interval := 1;
+  FTimerRecarga.OnTimer := TimerRecargaTimer;
 end;
 
 destructor TModoEntradaTallas.Destroy;
 begin
+  // Devolver los hooks del cds a su duenyo (solo si los enganchamos).
+  if FGestor <> nil then
+  begin
+    FConfig.Cds.AfterPost := FAfterPostOrig;
+    FConfig.Cds.AfterScroll := FAfterScrollOrig;
+  end;
+  FreeAndNil(FTimerRecarga);
   FreeAndNil(FTimerCarga);
   FreeAndNil(FTimerResolve);
   FreeAndNil(FGestor);
@@ -353,6 +385,14 @@ begin
   FCfgTallas.Grid := FConfig.View;
   // El gestor antes de la conversion: la conversion persiste celdas.
   FGestor := TGestorGridTallas.Create(FCfgTallas);
+  // Hook AfterPost (como sesiones): recarga celdas tras el Post
+  // implicito de cambiar de fila. Silenciado hasta acabar la carga
+  // diferida (FEnProceso) para no recargar N veces en la conversion.
+  FEnProceso := True;
+  FAfterPostOrig := FConfig.Cds.AfterPost;
+  FConfig.Cds.AfterPost := CdsAfterPost;
+  FAfterScrollOrig := FConfig.Cds.AfterScroll;
+  FConfig.Cds.AfterScroll := CdsAfterScroll;
   // Lineas heredadas de otros modos / documento reabierto: derivar
   // pivote y atributos, volcar cantidades y fusionar duplicadas.
   RederivarLineasExistentes;
@@ -462,6 +502,10 @@ begin
     // La carga de celdas, SIEMPRE lo ultimo que toca el grid.
     FGestor.CargarCantidadesTodasLineas;
     FGestor.ActualizarCaptionsLineaActiva;
+    LimpiarCaptionsGenericas;
+    // Conversion terminada: a partir de aqui el hook AfterPost recarga
+    // las celdas tras cada Post del usuario.
+    FEnProceso := False;
   end;
 end;
 
@@ -810,7 +854,62 @@ procedure TModoEntradaTallas.FocoLineaCambiado(
   ANewItemRecordFocusingChanged: Boolean);
 begin
   if FGestor <> nil then
+  begin
     FGestor.ActualizarCaptionsLineaActiva;
+    LimpiarCaptionsGenericas;
+  end;
+end;
+
+procedure TModoEntradaTallas.LimpiarCaptionsGenericas;
+var
+  i: Integer;
+begin
+  // Solo se pinta la TALLA en el caption: las columnas que exceden el
+  // conjunto de la linea activa (el gestor las rotula 'Talla N')
+  // quedan con un punto neutro.
+  for i := 0 to High(FCfgTallas.ColumnasTallas) do
+  begin
+    if (FCfgTallas.ColumnasTallas[i] <> nil) and
+       StartsText('Talla ', FCfgTallas.ColumnasTallas[i].Caption) then
+      FCfgTallas.ColumnasTallas[i].Caption := '·';
+  end;
+end;
+
+procedure TModoEntradaTallas.CdsAfterPost(DataSet: TDataSet);
+begin
+  if Assigned(FAfterPostOrig) then
+    FAfterPostOrig(DataSet);
+  // Post (implicito al cambiar de fila o del usuario): el re-render
+  // posterior limpia los Values[] no-bound. Recarga diferida.
+  ArmarRecarga;
+end;
+
+procedure TModoEntradaTallas.CdsAfterScroll(DataSet: TDataSet);
+begin
+  if Assigned(FAfterScrollOrig) then
+    FAfterScrollOrig(DataSet);
+  // La navegacion tambien puede repintar y limpiar los Values[].
+  ArmarRecarga;
+end;
+
+procedure TModoEntradaTallas.ArmarRecarga;
+begin
+  if (FGestor <> nil) and (not FEnProceso) then
+  begin
+    FTimerRecarga.Enabled := False;
+    FTimerRecarga.Enabled := True;
+  end;
+end;
+
+procedure TModoEntradaTallas.TimerRecargaTimer(Sender: TObject);
+begin
+  FTimerRecarga.Enabled := False;
+  if (FGestor <> nil) and (not FEnProceso) then
+  begin
+    FGestor.CargarCantidadesTodasLineas;
+    FGestor.ActualizarCaptionsLineaActiva;
+    LimpiarCaptionsGenericas;
+  end;
 end;
 
 function TModoEntradaTallas.LeerCampo(const ANombre: string): string;
@@ -845,6 +944,7 @@ end;
 procedure TModoEntradaTallas.Desmontar;
 var
   ds: TDataSet;
+  EnProcesoPrevio: Boolean;
   Qry: TUniQuery;
   Celdas: TList<TCeldaExpansion>;
   Cel: TCeldaExpansion;
@@ -852,13 +952,18 @@ var
   NomPorArt: TDictionary<string, string>;
   Atribs: TArray<TArticuloAtributo>;
   Vals, Noms: TValoresAttrTallas;
-  sArt, sDesc, sAlm, sSku, sNomTalla: string;
+  sArt, sDesc, sAlm, sAlmCel, sSku, sNomTalla: string;
+  rPrecio: Double;
   i, idx, iMaxLinea, iOrdT, iLineaAct, iAtrs: Integer;
   bPrimera, bLineaOk: Boolean;
 begin
   ds := FConfig.Cds;
   if (ds <> nil) and ds.Active then
   begin
+    // La expansion postea muchas filas: silenciar el hook AfterPost
+    // mientras dura (se restaura al final).
+    EnProcesoPrevio := FEnProceso;
+    FEnProceso := True;
     Celdas := TList<TCeldaExpansion>.Create;
     OrdPorArt := TDictionary<string, Integer>.Create;
     NomPorArt := TDictionary<string, string>.Create;
@@ -868,18 +973,40 @@ begin
       Qry := TUniQuery.Create(nil);
       try
         Qry.Connection := FConfig.Conexion;
-        Qry.SQL.Text :=
-          'SELECT c.' + FCfgTallas.FieldLineaCel + ' AS LIN,' +
-          ' AV.AV AS VALOR,' +
-          ' SUM(c.' + FCfgTallas.FieldCantidadCel + ') AS CANT' +
-          ' FROM ' + FCfgTallas.TablaCeldas + ' c' +
-          ' JOIN fza_atributos_valores AV' +
-          '   ON AV.ID_AV = c.' + FCfgTallas.FieldAvPivotCel +
-          ' WHERE c.' + FCfgTallas.FieldSerieCel + ' = :s' +
-          '   AND c.' + FCfgTallas.FieldNumeroCel + ' = :n' +
-          ' GROUP BY c.' + FCfgTallas.FieldLineaCel + ', AV.AV' +
-          ' HAVING SUM(c.' + FCfgTallas.FieldCantidadCel + ') > 0' +
-          ' ORDER BY LIN, VALOR';
+        // Con almacen por celda, el desglose es por talla Y almacen:
+        // la distribucion PERSISTE al salir del modo (una linea por
+        // SKU y almacen). Sin campo de almacen, solo por talla.
+        if FCfgTallas.FieldAlmacenCel <> '' then
+          Qry.SQL.Text :=
+            'SELECT c.' + FCfgTallas.FieldLineaCel + ' AS LIN,' +
+            ' c.' + FCfgTallas.FieldAlmacenCel + ' AS ALMC,' +
+            ' AV.AV AS VALOR,' +
+            ' SUM(c.' + FCfgTallas.FieldCantidadCel + ') AS CANT' +
+            ' FROM ' + FCfgTallas.TablaCeldas + ' c' +
+            ' JOIN fza_atributos_valores AV' +
+            '   ON AV.ID_AV = c.' + FCfgTallas.FieldAvPivotCel +
+            ' WHERE c.' + FCfgTallas.FieldSerieCel + ' = :s' +
+            '   AND c.' + FCfgTallas.FieldNumeroCel + ' = :n' +
+            ' GROUP BY c.' + FCfgTallas.FieldLineaCel + ', c.' +
+            FCfgTallas.FieldAlmacenCel + ', AV.AV' +
+            ' HAVING SUM(c.' + FCfgTallas.FieldCantidadCel +
+            ') > 0' +
+            ' ORDER BY LIN, ALMC, VALOR'
+        else
+          Qry.SQL.Text :=
+            'SELECT c.' + FCfgTallas.FieldLineaCel + ' AS LIN,' +
+            ' '''' AS ALMC,' +
+            ' AV.AV AS VALOR,' +
+            ' SUM(c.' + FCfgTallas.FieldCantidadCel + ') AS CANT' +
+            ' FROM ' + FCfgTallas.TablaCeldas + ' c' +
+            ' JOIN fza_atributos_valores AV' +
+            '   ON AV.ID_AV = c.' + FCfgTallas.FieldAvPivotCel +
+            ' WHERE c.' + FCfgTallas.FieldSerieCel + ' = :s' +
+            '   AND c.' + FCfgTallas.FieldNumeroCel + ' = :n' +
+            ' GROUP BY c.' + FCfgTallas.FieldLineaCel + ', AV.AV' +
+            ' HAVING SUM(c.' + FCfgTallas.FieldCantidadCel +
+            ') > 0' +
+            ' ORDER BY LIN, VALOR';
         Qry.ParamByName('s').AsString :=
           FCfgTallas.SourceMaster.DataSet.FieldByName(
             FCfgTallas.FieldSerieMaster).AsString;
@@ -890,6 +1017,7 @@ begin
         while not Qry.Eof do
         begin
           Cel.Linea := Qry.FieldByName('LIN').AsInteger;
+          Cel.Alm := Trim(Qry.FieldByName('ALMC').AsString);
           Cel.ValorTalla := Trim(Qry.FieldByName('VALOR').AsString);
           Cel.Cant := Qry.FieldByName('CANT').AsFloat;
           Celdas.Add(Cel);
@@ -933,6 +1061,14 @@ begin
                         FConfig.Campos.CodigoArt).AsString);
               sDesc := LeerCampo(FConfig.Campos.Descripcion);
               sAlm := LeerCampo(FConfig.Campos.Almacen);
+              // Precio base de la linea origen: las lineas nuevas de
+              // la expansion lo heredan (sin el, Total linea = 0).
+              rPrecio := 0;
+              if (FCfgTallas.FieldPrecioBase <> '') and
+                 (ds.FindField(FCfgTallas.FieldPrecioBase) <> nil)
+              then
+                rPrecio := ds.FieldByName(
+                  FCfgTallas.FieldPrecioBase).AsFloat;
               for i := 1 to 5 do
               begin
                 Vals[i] := LeerCampo(FConfig.Campos.AttrValor[i]);
@@ -960,6 +1096,13 @@ begin
           begin
             sSku := ComponerSkuLinea(sArt, Vals, iOrdT,
                                      Cel.ValorTalla);
+            // Almacen de la PARTIDA: el de su celda (formato
+            // distribuido); fallback al de la linea origen. Asi la
+            // distribucion por almacen PERSISTE al salir del modo.
+            if Cel.Alm <> '' then
+              sAlmCel := Cel.Alm
+            else
+              sAlmCel := sAlm;
             if bPrimera then
             begin
               // La propia linea pasa a ser el primer SKU. La talla se
@@ -968,6 +1111,7 @@ begin
               if not (ds.State in [dsEdit, dsInsert]) then
                 ds.Edit;
               PonerCampo(FConfig.Campos.CodigoUnidad, sSku);
+              PonerCampo(FConfig.Campos.Almacen, sAlmCel);
               if (iOrdT >= 0) and (iOrdT < 5) then
               begin
                 PonerCampo(FConfig.Campos.AttrValor[iOrdT + 1],
@@ -1000,8 +1144,13 @@ begin
                 FCfgTallas.FieldLinea).AsInteger := iMaxLinea;
               PonerCampo(FConfig.Campos.CodigoArt, sArt);
               PonerCampo(FConfig.Campos.Descripcion, sDesc);
-              PonerCampo(FConfig.Campos.Almacen, sAlm);
+              PonerCampo(FConfig.Campos.Almacen, sAlmCel);
               PonerCampo(FConfig.Campos.CodigoUnidad, sSku);
+              if (FCfgTallas.FieldPrecioBase <> '') and
+                 (ds.FindField(FCfgTallas.FieldPrecioBase) <> nil)
+              then
+                ds.FieldByName(
+                  FCfgTallas.FieldPrecioBase).AsFloat := rPrecio;
               iAtrs := 0;
               for i := 1 to 5 do
               begin
@@ -1055,6 +1204,7 @@ begin
           [Celdas.Count]));
       end;
     finally
+      FEnProceso := EnProcesoPrevio;
       FreeAndNil(NomPorArt);
       FreeAndNil(OrdPorArt);
       FreeAndNil(Celdas);
@@ -1281,48 +1431,74 @@ begin
   end;
 end;
 
-function TModoEntradaTallas.CantidadCelda(ALinea,
-                                          AIdAv: Integer): Double;
+procedure TModoEntradaTallas.SumarEnCelda(ALinea, AIdAv: Integer;
+  ACant: Double; const AAlm: string; ARefrescar: Boolean);
 var
   Qry: TUniQuery;
   dsM: TDataSet;
-begin
-  Result := 0;
-  dsM := FCfgTallas.SourceMaster.DataSet;
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := FConfig.Conexion;
-    Qry.SQL.Text :=
-      'SELECT COALESCE(SUM(' + FCfgTallas.FieldCantidadCel + '), 0)' +
-      '  FROM ' + FCfgTallas.TablaCeldas +
-      ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
-      '   AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
-      '   AND ' + FCfgTallas.FieldLineaCel + ' = :l' +
-      '   AND ' + FCfgTallas.FieldAvPivotCel + ' = :a';
-    Qry.ParamByName('s').AsString :=
-      dsM.FieldByName(FCfgTallas.FieldSerieMaster).AsString;
-    Qry.ParamByName('n').AsString :=
-      dsM.FieldByName(FCfgTallas.FieldNumeroMaster).AsString;
-    Qry.ParamByName('l').AsInteger := ALinea;
-    Qry.ParamByName('a').AsInteger := AIdAv;
-    Qry.Open;
-    Result := Qry.Fields[0].AsFloat;
-  finally
-    FreeAndNil(Qry);
-  end;
-end;
-
-procedure TModoEntradaTallas.SumarEnCelda(ALinea, AIdAv: Integer;
-  ACant: Double; ARefrescar: Boolean);
-var
   idxRec: Integer;
 begin
-  LogSes(Format('ModoTallas.SumarEnCelda: linea=%d idAv=%d +%g',
-                [ALinea, AIdAv, ACant]));
+  LogSes(Format('ModoTallas.SumarEnCelda: linea=%d idAv=%d alm="%s" +%g',
+                [ALinea, AIdAv, AAlm, ACant]));
   if (ALinea > 0) and (AIdAv > 0) and (FGestor <> nil) then
   begin
-    FGestor.PersistirCantidad(ALinea, AIdAv,
-                              CantidadCelda(ALinea, AIdAv) + ACant);
+    // Upsert ATOMICO (cantidad = cantidad + :c), respetando el almacen
+    // de la celda cuando el documento lo usa (formato distribuido).
+    dsM := FCfgTallas.SourceMaster.DataSet;
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := FConfig.Conexion;
+      if FCfgTallas.FieldAlmacenCel <> '' then
+      begin
+        Qry.SQL.Text :=
+          'INSERT INTO ' + FCfgTallas.TablaCeldas + ' (' +
+          FCfgTallas.FieldSerieCel + ', ' +
+          FCfgTallas.FieldNumeroCel + ', ' +
+          FCfgTallas.FieldLineaCel + ', ' +
+          FCfgTallas.FieldFilaCel + ', ' +
+          FCfgTallas.FieldAlmacenCel + ', ' +
+          FCfgTallas.FieldAvPivotCel + ', ' +
+          FCfgTallas.FieldCantidadCel + ',' +
+          ' INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
+          ' USUARIO_MODIF)' +
+          ' VALUES (:s, :n, :l, :f, :a, :p, :c,' +
+          ' NOW(), :u, NOW(), :u)' +
+          ' ON DUPLICATE KEY UPDATE ' +
+          FCfgTallas.FieldCantidadCel + ' = ' +
+          FCfgTallas.FieldCantidadCel + ' + :c,' +
+          ' INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
+        Qry.ParamByName('a').AsString := AAlm;
+      end
+      else
+        Qry.SQL.Text :=
+          'INSERT INTO ' + FCfgTallas.TablaCeldas + ' (' +
+          FCfgTallas.FieldSerieCel + ', ' +
+          FCfgTallas.FieldNumeroCel + ', ' +
+          FCfgTallas.FieldLineaCel + ', ' +
+          FCfgTallas.FieldFilaCel + ', ' +
+          FCfgTallas.FieldAvPivotCel + ', ' +
+          FCfgTallas.FieldCantidadCel + ',' +
+          ' INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
+          ' USUARIO_MODIF)' +
+          ' VALUES (:s, :n, :l, :f, :p, :c,' +
+          ' NOW(), :u, NOW(), :u)' +
+          ' ON DUPLICATE KEY UPDATE ' +
+          FCfgTallas.FieldCantidadCel + ' = ' +
+          FCfgTallas.FieldCantidadCel + ' + :c,' +
+          ' INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
+      Qry.ParamByName('s').AsString :=
+        dsM.FieldByName(FCfgTallas.FieldSerieMaster).AsString;
+      Qry.ParamByName('n').AsString :=
+        dsM.FieldByName(FCfgTallas.FieldNumeroMaster).AsString;
+      Qry.ParamByName('l').AsInteger := ALinea;
+      Qry.ParamByName('f').AsInteger := FCfgTallas.IdFilaFijo;
+      Qry.ParamByName('p').AsInteger := AIdAv;
+      Qry.ParamByName('c').AsFloat := ACant;
+      Qry.ParamByName('u').AsString := FCfgTallas.Usuario;
+      Qry.ExecSQL;
+    finally
+      FreeAndNil(Qry);
+    end;
     if ARefrescar then
     begin
       idxRec := FCfgTallas.Grid.Controller.FocusedRecordIndex;
@@ -1339,7 +1515,7 @@ var
   Dict: TDictionary<string, Integer>;
   Val, Nom: TValoresAttrTallas;
   Partes: TArray<string>;
-  sArt, sSku, sTallaVal, sClave, sAlmLin: string;
+  sArt, sSku, sTallaVal, sClave, sAlmLin, sAlmCel: string;
   iAc, iOrdT, idAv, iLinea, iLineaMaster, i: Integer;
   rCant: Double;
   CampoCant: TField;
@@ -1389,12 +1565,19 @@ begin
           sClave := sArt + '|' + UpperCase(sAlmLin);
           for i := 1 to 5 do
             sClave := sClave + '|' + UpperCase(Val[i]);
+          // Destino de las cantidades heredadas: en distribuido, el
+          // almacen efectivo de la linea; si no, celda sin almacen.
+          if FConfig.Distribuido then
+            sAlmCel := sAlmLin
+          else
+            sAlmCel := '';
           if Dict.TryGetValue(sClave, iLineaMaster) then
           begin
             // Duplicada (mismo articulo+color): su cantidad se vuelca
             // a la celda de talla de la linea maestra y se elimina.
             if (idAv > 0) and (rCant > 0) then
-              SumarEnCelda(iLineaMaster, idAv, rCant, False);
+              SumarEnCelda(iLineaMaster, idAv, rCant, sAlmCel,
+                           False);
             LogSes('ModoTallas.Rederivar: fusionando linea duplicada');
             // Borrado PROGRAMATICO de la fusion: sin el guardian de
             // confirmacion que TfrmMtoGen engancha en BeforeDelete del
@@ -1426,7 +1609,7 @@ begin
               CampoCant.AsFloat := 0;
             ds.Post;
             if (idAv > 0) and (rCant > 0) then
-              SumarEnCelda(iLinea, idAv, rCant, False);
+              SumarEnCelda(iLinea, idAv, rCant, sAlmCel, False);
           end;
         end;
         if not bBorrada then
@@ -1540,7 +1723,7 @@ begin
             FConfig.Cds.FieldByName(FCfgTallas.FieldLinea).AsInteger;
           if idAv > 0 then
           begin
-            SumarEnCelda(iLinea, idAv, 1, True);
+            SumarEnCelda(iLinea, idAv, 1, '', True);
             FUltimaConTalla := True;
           end;
         end;
