@@ -1387,11 +1387,13 @@ var
   i, n: Integer;
 begin
   // Clave de consolidacion: articulo + almacen de la linea + valores
-  // de atributos no talla (modelo de compras: la distribucion por
-  // almacen se hace con una linea por almacen).
+  // de atributos no talla. En DISTRIBUIDO el almacen NO forma parte
+  // de la clave: la linea es unica por articulo+color y el reparto
+  // por almacen vive en las celdas (modelo sesiones).
   sCampos := FConfig.Campos.CodigoArt;
   n := 1;
-  if FConfig.Campos.Almacen <> '' then
+  if (FConfig.Campos.Almacen <> '') and
+     (not FConfig.Distribuido) then
     Inc(n);
   for i := 1 to 5 do
     if FConfig.Campos.AttrValor[i] <> '' then
@@ -1399,7 +1401,8 @@ begin
   vVals := VarArrayCreate([0, n - 1], varVariant);
   vVals[0] := ACodArt;
   n := 1;
-  if FConfig.Campos.Almacen <> '' then
+  if (FConfig.Campos.Almacen <> '') and
+     (not FConfig.Distribuido) then
   begin
     sCampos := sCampos + ';' + FConfig.Campos.Almacen;
     vVals[n] := AAlm;
@@ -1562,7 +1565,15 @@ begin
             if sAlmLin = '' then
               sAlmLin := Trim(FConfig.AlmacenStock);
           end;
-          sClave := sArt + '|' + UpperCase(sAlmLin);
+          // En DISTRIBUIDO el almacen vive en las CELDAS (modelo
+          // sesiones): la linea es unica por articulo+color y las
+          // lineas por almacen FUSIONAN, yendo cada cantidad a la
+          // celda de su almacen. Sin distribuido, una linea por
+          // almacen (modelo albaranes).
+          if FConfig.Distribuido then
+            sClave := sArt + '|'
+          else
+            sClave := sArt + '|' + UpperCase(sAlmLin);
           for i := 1 to 5 do
             sClave := sClave + '|' + UpperCase(Val[i]);
           // Destino de las cantidades heredadas: en distribuido, el
@@ -1578,7 +1589,10 @@ begin
             if (idAv > 0) and (rCant > 0) then
               SumarEnCelda(iLineaMaster, idAv, rCant, sAlmCel,
                            False);
-            LogSes('ModoTallas.Rederivar: fusionando linea duplicada');
+            LogSes(Format('ModoTallas.Rederivar: BORRA linea=%d ' +
+                   '(dup de %d) art=%s clave=%s',
+                   [ds.FieldByName(FCfgTallas.FieldLinea).AsInteger,
+                    iLineaMaster, sArt, sClave]));
             // Borrado PROGRAMATICO de la fusion: sin el guardian de
             // confirmacion que TfrmMtoGen engancha en BeforeDelete del
             // dataset principal (preguntaria al usuario por cada
@@ -1597,11 +1611,18 @@ begin
             iLinea :=
               ds.FieldByName(FCfgTallas.FieldLinea).AsInteger;
             Dict.Add(sClave, iLinea);
+            LogSes(Format('ModoTallas.Rederivar: MASTER linea=%d ' +
+                   'art=%s clave=%s', [iLinea, sArt, sClave]));
             if not (ds.State in [dsEdit, dsInsert]) then
               ds.Edit;
             // Persistir el almacen efectivo en la linea (el fallback
-            // de cabecera deja de ser implicito).
-            PonerCampo(FConfig.Campos.Almacen, sAlmLin);
+            // de cabecera deja de ser implicito). En distribuido la
+            // linea es multi-almacen: queda el del documento.
+            if FConfig.Distribuido then
+              PonerCampo(FConfig.Campos.Almacen,
+                         Trim(FConfig.AlmacenStock))
+            else
+              PonerCampo(FConfig.Campos.Almacen, sAlmLin);
             EscribirAtributosLinea(Val, Nom, iAc);
             // La cantidad del SKU con talla pasa a su celda; la
             // columna Cantidad queda para lineas sin tallas.

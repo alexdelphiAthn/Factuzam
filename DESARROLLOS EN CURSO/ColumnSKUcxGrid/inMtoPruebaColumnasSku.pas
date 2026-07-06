@@ -77,6 +77,10 @@ type
     // Deja UNA linea en blanco y siempre al final (el des-pivote
     // anyade lineas por detras y la vieja quedaba emparedada).
     procedure NormalizarLineaEnBlanco;
+    // Al cambiar el almacen del documento, las lineas SIN almacen
+    // (la de entrada en blanco incluida) adoptan el nuevo valor: la
+    // linea en blanco nace antes de teclearlo y quedaba vacia.
+    procedure txtAlmacenSalir(Sender: TObject);
     // Columnas propias del documento (Descripcion, Cantidad) sobre el
     // mismo View, DESPUES de que el modo cree las suyas.
     procedure AnadirColumnasHost;
@@ -117,7 +121,37 @@ begin
   // Cualquier LogSes de la libreria de tallas vuelca al memo inferior
   // (mismo patron que la pestanya Log de inMtoComprasSesiones).
   inLibGlobalVar.oLogSesion := LogMsg;
+  txtAlmacen.OnExit := txtAlmacenSalir;
   lblEstado.Caption := 'Elige modo y pulsa Construir (pestaña Ficha)';
+end;
+
+procedure TfrmMtoPruebaColumnasSku.txtAlmacenSalir(Sender: TObject);
+var
+  bk: TBookmark;
+begin
+  if (FCds <> nil) and FCds.Active and (not FCds.IsEmpty) and
+     (Trim(txtAlmacen.Text) <> '') then
+  begin
+    bk := FCds.GetBookmark;
+    try
+      FCds.First;
+      while not FCds.Eof do
+      begin
+        if Trim(FCds.FieldByName('ALMACEN').AsString) = '' then
+        begin
+          FCds.Edit;
+          FCds.FieldByName('ALMACEN').AsString :=
+            Trim(txtAlmacen.Text);
+          FCds.Post;
+        end;
+        FCds.Next;
+      end;
+      if FCds.BookmarkValid(bk) then
+        FCds.GotoBookmark(bk);
+    finally
+      FCds.FreeBookmark(bk);
+    end;
+  end;
 end;
 
 procedure TfrmMtoPruebaColumnasSku.LogMsg(const S: string);
@@ -273,7 +307,11 @@ begin
     while not FCds.Eof do
     begin
       if Trim(FCds.FieldByName('CODIGO_ART').AsString) = '' then
-        FCds.Delete
+      begin
+        LogMsg(Format('Normalizar: borra linea %d (articulo vacio)',
+                      [FCds.FieldByName('LINEA').AsInteger]));
+        FCds.Delete;
+      end
       else
         FCds.Next;
     end;
