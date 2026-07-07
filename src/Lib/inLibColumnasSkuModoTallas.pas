@@ -176,6 +176,12 @@ type
     // Localiza la linea existente con mismo articulo, mismo almacen y
     // mismos atributos no talla (consolidacion). Mueve el cursor.
     function LocalizarLineaExistente(const ACodArt, AAlm: string;
+                                 const AVal: TValoresAttrTallas;
+                                 APrecio: Double;
+                                 ATienePrecio: Boolean): Boolean;
+    // Consolidacion clasica (sin precio): Locate por articulo +
+    // almacen + atributos no talla.
+    function LocalizarSinPrecio(const ACodArt, AAlm: string;
                                  const AVal: TValoresAttrTallas): Boolean;
     // ID_AV de la talla AValor del articulo (0 si no existe).
     function IdAvDeTalla(const ACodArt: string; AOrdenTalla: Integer;
@@ -1498,6 +1504,40 @@ var
   rPrecio: Double;
   i, idx, iMaxLinea, iOrdT, iLineaAct, iAtrs: Integer;
   bPrimera, bLineaOk: Boolean;
+  // LINEA puede ser int (sesiones) o varchar con relleno (pedidos:
+  // '0010'). El Locate directo con el entero de la celda falla contra
+  // el varchar ('10' <> '0010') y la talla se perdia al des-pivotar
+  // (ademas el paso 4 borraba las celdas igualmente). Se localiza
+  // comparando el valor numerico.
+  function LocalizarLinea(ALinea: Integer): Boolean;
+  begin
+    Result := ds.Locate(FCfgTallas.FieldLinea, ALinea, []);
+    if not Result then
+    begin
+      ds.First;
+      while (not ds.Eof) and (not Result) do
+      begin
+        if ds.FieldByName(FCfgTallas.FieldLinea).AsInteger = ALinea then
+          Result := True
+        else
+          ds.Next;
+      end;
+    end;
+  end;
+  // Escribe la LINEA de una fila nueva respetando el tipo del campo:
+  // con varchar se rellena a la anchura del campo, que es la
+  // convencion de cada documento (LINEA_PEDLIN '0010', LINEA_DTL
+  // '00000010'); con int se asigna tal cual (sesiones).
+  procedure PonerLineaNueva(ALinea: Integer);
+  var
+    Campo: TField;
+  begin
+    Campo := ds.FieldByName(FCfgTallas.FieldLinea);
+    if Campo is TStringField then
+      Campo.AsString := Format('%.*d', [Campo.Size, ALinea])
+    else
+      Campo.AsInteger := ALinea;
+  end;
 begin
   ds := FConfig.Cds;
   if (ds <> nil) and ds.Active then
@@ -1596,8 +1636,7 @@ begin
           begin
             iLineaAct := Cel.Linea;
             bPrimera := True;
-            bLineaOk :=
-              ds.Locate(FCfgTallas.FieldLinea, Cel.Linea, []);
+            bLineaOk := LocalizarLinea(Cel.Linea);
             if bLineaOk then
             begin
               sArt := Trim(ds.FieldByName(
@@ -1683,8 +1722,7 @@ begin
               // Linea nueva para cada talla adicional con cantidad.
               Inc(iMaxLinea);
               ds.Append;
-              ds.FieldByName(
-                FCfgTallas.FieldLinea).AsInteger := iMaxLinea;
+              PonerLineaNueva(iMaxLinea);
               PonerCampo(FConfig.Campos.CodigoArt, sArt);
               PonerCampo(FConfig.Campos.Descripcion, sDesc);
               PonerCampo(FConfig.Campos.Almacen, sAlmCel);
@@ -1931,6 +1969,50 @@ begin
 end;
 
 function TModoEntradaTallas.LocalizarLineaExistente(const ACodArt,
+  AAlm: string; const AVal: TValoresAttrTallas; APrecio: Double;
+  ATienePrecio: Boolean): Boolean;
+  // Coincidencia manual de la fila actual con la clave completa,
+  // PRECIO incluido (Locate no compara floats con tolerancia y debe
+  // encontrarse la linea del MISMO precio aunque exista otra igual
+  // con precio distinto).
+  function FilaCoincide: Boolean;
+  var
+    j: Integer;
+  begin
+    Result := SameText(Trim(FConfig.Cds.FieldByName(
+                FConfig.Campos.CodigoArt).AsString), Trim(ACodArt));
+    if Result and (FConfig.Campos.Almacen <> '') and
+       (not FConfig.Distribuido) then
+      Result := SameText(Trim(FConfig.Cds.FieldByName(
+                  FConfig.Campos.Almacen).AsString), Trim(AAlm));
+    for j := 1 to 5 do
+      if Result and (FConfig.Campos.AttrValor[j] <> '') then
+        Result := SameText(Trim(FConfig.Cds.FieldByName(
+                    FConfig.Campos.AttrValor[j]).AsString),
+                    Trim(AVal[j]));
+    if Result then
+      Result := Abs(FConfig.Cds.FieldByName(
+                  FCfgTallas.FieldPrecioBase).AsFloat - APrecio) < 0.005;
+  end;
+begin
+  if ATienePrecio and (FCfgTallas.FieldPrecioBase <> '') and
+     (FConfig.Cds.FindField(FCfgTallas.FieldPrecioBase) <> nil) then
+  begin
+    Result := False;
+    FConfig.Cds.First;
+    while (not FConfig.Cds.Eof) and (not Result) do
+    begin
+      if FilaCoincide then
+        Result := True
+      else
+        FConfig.Cds.Next;
+    end;
+  end
+  else
+    Result := LocalizarSinPrecio(ACodArt, AAlm, AVal);
+end;
+
+function TModoEntradaTallas.LocalizarSinPrecio(const ACodArt,
   AAlm: string; const AVal: TValoresAttrTallas): Boolean;
 var
   sCampos: string;
@@ -2137,6 +2219,15 @@ begin
             sClave := sArt + '|' + UpperCase(sAlmLin);
           for i := 1 to 5 do
             sClave := sClave + '|' + UpperCase(Val[i]);
+          // El PRECIO forma parte de la clave: dos lineas del mismo
+          // articulo+color con precio distinto NO fusionan (queda una
+          // fila pivotada por precio y el des-pivote conserva el
+          // precio de cada una). Sin esto un precio machacaba al otro.
+          if (FCfgTallas.FieldPrecioBase <> '') and
+             (ds.FindField(FCfgTallas.FieldPrecioBase) <> nil) then
+            sClave := sClave + '|' + FloatToStrF(
+              ds.FieldByName(FCfgTallas.FieldPrecioBase).AsFloat,
+              ffGeneral, 15, 4);
           // Destino de las cantidades heredadas: en distribuido, el
           // almacen efectivo de la linea; si no, celda sin almacen.
           if FConfig.Distribuido then
@@ -2229,6 +2320,8 @@ var
   Partes: TArray<string>;
   sTallaVal, sAlm: string;
   iAcTalla, iOrdT, idAv, iLinea: Integer;
+  rPrecioSku: Double;
+  bConPrecio: Boolean;
 begin
   Result := False;
   FUltimaConTalla := False;
@@ -2271,23 +2364,42 @@ begin
           sAlm := Trim(FConfig.AlmacenStock);
       end;
       // CONSOLIDACION: una linea por articulo+almacen+atributos no
-      // talla. La fila donde se tecleo (normalmente la vacia) se
-      // descarta si ya existe linea para esa combinacion.
+      // talla Y PRECIO (si el documento expone ObtenerPrecioSku). La
+      // fila donde se tecleo (normalmente la vacia) se descarta si ya
+      // existe linea para esa combinacion.
+      rPrecioSku := 0;
+      bConPrecio := False;
+      if Assigned(FConfig.ObtenerPrecioSku) then
+      begin
+        rPrecioSku := FConfig.ObtenerPrecioSku(R.CodigoArticulo,
+                                               R.CodigoSku);
+        bConPrecio := True;
+      end;
       if FConfig.Cds.State in [dsEdit, dsInsert] then
         FConfig.Cds.Cancel;
-      if LocalizarLineaExistente(R.CodigoArticulo, sAlm, Vals) then
+      if LocalizarLineaExistente(R.CodigoArticulo, sAlm, Vals,
+                                 rPrecioSku, bConPrecio) then
         LogSes(Format('ModoTallas.Resolver: consolidada en linea %d ' +
-               'alm="%s"',
+               'alm="%s" precio=%g',
                [FConfig.Cds.FieldByName(
-                  FCfgTallas.FieldLinea).AsInteger, sAlm]))
+                  FCfgTallas.FieldLinea).AsInteger, sAlm, rPrecioSku]))
       else
       begin
-        LogSes('ModoTallas.Resolver: linea nueva alm="' + sAlm + '"');
+        LogSes(Format('ModoTallas.Resolver: linea nueva alm="%s" ' +
+               'precio=%g', [sAlm, rPrecioSku]));
         FConfig.Cds.Edit;
         PonerCampo(FConfig.Campos.CodigoArt, R.CodigoArticulo);
         PonerCampo(FConfig.Campos.Descripcion, R.DescripcionArticulo);
         PonerCampo(FConfig.Campos.Almacen, sAlm);
         EscribirAtributosLinea(Vals, Noms, iAcTalla);
+        // El precio se fija YA en la linea nueva: su clave de
+        // consolidacion vale desde el primer momento (el host lo
+        // re-aplicara igual via OnResuelto).
+        if bConPrecio and (FCfgTallas.FieldPrecioBase <> '') and
+           (FConfig.Cds.FindField(FCfgTallas.FieldPrecioBase) <> nil)
+        then
+          FConfig.Cds.FieldByName(FCfgTallas.FieldPrecioBase).AsFloat :=
+            rPrecioSku;
       end;
       if FConfig.Cds.State in [dsEdit, dsInsert] then
         FConfig.Cds.Post;

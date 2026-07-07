@@ -227,6 +227,11 @@ begin
   tvLineasDTR.OnEditing := nil;
   tvLineasDTR.OnFocusedRecordChanged := nil;
   tvLineasDTR.OnFocusedItemChanged := nil;
+  // Las columnas del modo saliente guardan handlers (OnGetProperties,
+  // OnCustomDrawCell...) del objeto que se libera en la linea de abajo:
+  // se eliminan ANTES de soltarlo para que ningun repintado llame a un
+  // modo muerto (mismo AV que pedidos, 07/07/2026).
+  tvLineasDTR.ClearItems;
   FModoEntrada := nil;
   // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
   // (columnas reales _DTL; idempotente por linea).

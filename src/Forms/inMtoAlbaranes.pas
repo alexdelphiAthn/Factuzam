@@ -32,7 +32,8 @@ uses
   cxDBNavigator, Vcl.Buttons, System.UITypes, cxMemo, cxCheckBox, cxGroupBox,
   cxDBLabel, cxButtonEdit, System.Generics.Collections,
   cxGridBandedTableView, cxGridDBBandedTableView, UniDataAlbaranes,
-  System.Actions, Vcl.ActnList;
+  System.Actions, Vcl.ActnList,
+  inLibColumnasSkuIntf, inLibGridTallasInline;
 
 type
   TfrmMtoAlbaranes = class(TfrmMtoGen)
@@ -219,6 +220,14 @@ type
     FOldLineasAfterPost: TDataSetNotifyEvent;
     FOldLineasAfterDelete: TDataSetNotifyEvent;
     FOldLineasDataChange: TDataChangeEvent;
+    // === CONTRATO DE ENTRADA ColumnSKUcxGrid (patron pedidos) ===
+    // Modo seleccionado por el usuario (F1 cicla Auto/SKU/Tallas) y
+    // modo montado sobre tvLineasAlbaran. FColsModoConstruido marca
+    // que las columnas del dfm murieron en el ClearItems del contrato
+    // y las rutas legacy no deben tocarlas.
+    FModoEntradaSel: TModoColumnasSku;
+    FModoEntrada: IModoEntradaGrid;
+    FColsModoConstruido: Boolean;
     function BuscarArticuloAlbaran: string;
     function BuscarSkuAlbaran(const ACodigoArt: string): string;
     function ArticuloLineaActivaAlbaran: string;
@@ -234,12 +243,33 @@ type
     procedure ActualizarLabelPrendas;
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
     procedure unqryLineasAfterDeleteHook(DataSet: TDataSet);
+    // Contrato ColumnSKUcxGrid: construccion del modo de entrada y
+    // columnas propias del albaran tras el ClearItems del contrato.
+    procedure ConstruirModoEntrada;
+    procedure CrearColumnasHostAlbaran;
+    procedure MostrarColumnasAtributoGlobalesAlb;
+    procedure ModoEntradaResuelto(const ACodArt, ASku,
+                ADescripcion: string; ACompleto: Boolean);
+    // Porcentaje de IVA de la cabecera para un tipo (N/R/S/E).
+    function PorcentajeIvaAlbaran(const ATipoIva: string): Double;
+    // Contrato ObtenerPrecioSku del modo tallas: PVP C/IVA del SKU con
+    // la tarifa del cliente y la fecha del albaran.
+    function PrecioSkuTallasAlb(const ACodigoArticulo,
+                                ACodigoSku: string): Double;
+    // Al salir del grid se cancela la linea vacia auto-anadida: si
+    // quedara en dsInsert, cualquier Edit de la cabecera la postearia
+    // via master-detail (leccion de pedidos).
+    procedure cxgrdLineasAlbaranExit(Sender: TObject);
     // Hook OnDataChange de dsTablaG: al navegar entre albaranes
     // (Field=nil) hay que recalcular el total de prendas con las lineas
     // del albaran recien enfocado.
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure dsLineasDataChangeHook(Sender: TObject; Field: TField);
     procedure DesactivarEnterAsTabEnCombo(AComp: TcxDBLookupComboBox);
+  protected
+    // F1 alterna Auto (desglose) -> SKU -> Tallas horizontal con las
+    // lineas del albaran a la vista.
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     dmmAlbaranes: TdmAlbaranes;
     procedure CrearTablaPrincipal; override;
@@ -258,7 +288,7 @@ uses
   inMtoModalFacturarAlbaranesFechas, inLibFotos, inLibGridCantidad,
   inLibGenBusq, inLibShowMto, inLibGlobalVar, inLibFiltroUsuario, Uni,
   inLibArticulosResolver, inLibArticulosValidador, inLibVentasImpuestos,
-  inLibtb;
+  inLibtb, inLibUser, inLibColumnasSku;
 
 {$R *.dfm}
 
@@ -597,6 +627,305 @@ begin
   end;
 end;
 
+procedure TfrmMtoAlbaranes.ModoEntradaResuelto(const ACodArt, ASku,
+  ADescripcion: string; ACompleto: Boolean);
+begin
+  // El flujo fiscal clasico del albaran (tarifa del cliente, IVA,
+  // precios, total) se reaprovecha tal cual: AplicarArticuloAlbaran
+  // acepta articulo o SKU.
+  if ACompleto and (ASku <> '') then
+    AplicarArticuloAlbaran(ASku);
+end;
+
+function TfrmMtoAlbaranes.PorcentajeIvaAlbaran(
+  const ATipoIva: string): Double;
+var
+  sTipo: string;
+begin
+  sTipo := UpperCase(Trim(ATipoIva));
+  if sTipo = 'R' then
+    Result := dmmAlbaranes.unqryTablaG.
+                FieldByName('PORCENTAJE_IVAR_ALB').AsFloat
+  else if sTipo = 'S' then
+    Result := dmmAlbaranes.unqryTablaG.
+                FieldByName('PORCENTAJE_IVAS_ALB').AsFloat
+  else if sTipo = 'E' then
+    Result := dmmAlbaranes.unqryTablaG.
+                FieldByName('PORCENTAJE_IVAE_ALB').AsFloat
+  else
+    Result := dmmAlbaranes.unqryTablaG.
+                FieldByName('PORCENTAJE_IVAN_ALB').AsFloat;
+end;
+
+function TfrmMtoAlbaranes.PrecioSkuTallasAlb(const ACodigoArticulo,
+  ACodigoSku: string): Double;
+var
+  Resolver: TArticulosResolver;
+  Datos: TArticuloDatos;
+  Precio: TArticuloPrecio;
+  sTarifa: string;
+  dFecha: TDateTime;
+  rPorIva: Double;
+begin
+  Result := 0;
+  if Assigned(dmmAlbaranes) and dmmAlbaranes.unqryTablaG.Active then
+  begin
+    sTarifa := dmmAlbaranes.unqryTablaG.
+                 FieldByName('TARIFA_ARTICULO_CLIENTE_ALB').AsString;
+    dFecha := Date;
+    if not dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').IsNull then
+      dFecha := dmmAlbaranes.unqryTablaG.
+                  FieldByName('FECHA_ALB').AsDateTime;
+    Resolver := TArticulosResolver.Create(
+                  dmmAlbaranes.unqryTablaG.Connection);
+    try
+      Datos := Resolver.ResolverDatos(ACodigoArticulo, ACodigoSku,
+                                      sTarifa, dFecha);
+      if Datos.Encontrado then
+      begin
+        Precio := Datos.PrecioPedido;
+        rPorIva := PorcentajeIvaAlbaran(Datos.TipoIVA);
+        // FieldPrecioBase del albaran es el PVP C/IVA de la linea.
+        if Precio.EsImpIncl then
+          Result := Precio.PrecioFinal
+        else
+          Result := Precio.PrecioFinal * (1 + rPorIva / 100);
+      end;
+    finally
+      FreeAndNil(Resolver);
+    end;
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  // F1: alterna Auto (desglose) -> SKU -> Tallas horizontal con las
+  // lineas del albaran a la vista.
+  if (Key = VK_F1) and (Shift = []) and
+     (pcAlbaran.ActivePage = tsLineasAlbaran) then
+  begin
+    Key := 0;
+    case FModoEntradaSel of
+      mcsAuto: FModoEntradaSel := mcsSku;
+      mcsSku: FModoEntradaSel := mcsTallasInline;
+    else
+      FModoEntradaSel := mcsAuto;
+    end;
+    ConstruirModoEntrada;
+  end;
+  inherited;
+end;
+
+procedure TfrmMtoAlbaranes.ConstruirModoEntrada;
+var
+  Cfg: TConfigColumnasSku;
+  CfgT: TGridTallasConfig;
+  i: Integer;
+  ds: TDataSet;
+begin
+  if (dmmAlbaranes = nil) or (csDestroying in ComponentState) then
+    Exit;
+  ds := dmmAlbaranes.unqryAlbaranesLineas;
+  if not ds.Active then
+    Exit;
+  // Teardown del modo anterior (patron pedidos).
+  if tvLineasAlbaran.Controller.EditingController.IsEditing then
+    try
+      tvLineasAlbaran.Controller.EditingController.HideEdit(False);
+    except
+      on E: EInvalidOperation do
+        ;
+    end;
+  if ds.State in dsEditModes then
+    ds.Cancel;
+  if FModoEntrada <> nil then
+    FModoEntrada.Desmontar;
+  tvLineasAlbaran.OnInitEdit := nil;
+  tvLineasAlbaran.OnEditKeyDown := nil;
+  tvLineasAlbaran.OnEditing := nil;
+  tvLineasAlbaran.OnFocusedRecordChanged := nil;
+  tvLineasAlbaran.OnFocusedItemChanged := nil;
+  // Las columnas del modo saliente guardan handlers del objeto que se
+  // libera abajo: se eliminan ANTES para que ningun repintado llame a
+  // un modo muerto (leccion de pedidos, AV 07/07/2026).
+  tvLineasAlbaran.ClearItems;
+  FModoEntrada := nil;
+  // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
+  // (columnas reales _ALBLIN; idempotente por comparacion).
+  if FModoEntradaSel <> mcsSku then
+    dmmAlbaranes.DesempaquetarAtributosLineas;
+  Cfg := Default(TConfigColumnasSku);
+  Cfg.Conexion := dmmAlbaranes.unqryTablaG.Connection;
+  Cfg.View := tvLineasAlbaran;
+  Cfg.Cds := ds;
+  Cfg.Modo := FModoEntradaSel;
+  Cfg.AlmacenStock :=
+    dmmAlbaranes.unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString;
+  Cfg.Distribuido := False;
+  Cfg.Campos.CodigoArt := 'CODIGO_ART_ALBLIN';
+  Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_ALBLIN';
+  Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_ALBLIN';
+  Cfg.Campos.Cantidad := 'CANTIDAD_ALBLIN';
+  Cfg.Campos.Almacen := 'CODIGO_ALMACEN_ALBLIN';
+  Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_ALBLIN';
+  for i := 1 to 5 do
+  begin
+    Cfg.Campos.AttrValor[i] := 'ATTR' + IntToStr(i) + '_VALOR_ALBLIN';
+    Cfg.Campos.AttrNombre[i] :=
+      'ATTR' + IntToStr(i) + '_NOMBRE_ALBLIN';
+  end;
+  // Precio por SKU para la consolidacion del modo tallas: lineas con
+  // precio distinto no fusionan.
+  Cfg.ObtenerPrecioSku := PrecioSkuTallasAlb;
+  if FModoEntradaSel = mcsTallasInline then
+  begin
+    CfgT := Default(TGridTallasConfig);
+    CfgT.Usuario := oUser;
+    CfgT.Grid := tvLineasAlbaran;
+    CfgT.SourceMaster := dsTablaG;
+    CfgT.SourceLineas := dmmAlbaranes.dsAlbaranesLineas;
+    CfgT.FieldSerieMaster := 'SERIE_ALB';
+    CfgT.FieldNumeroMaster := 'NUMERO_ALB';
+    CfgT.FieldLinea := 'LINEA_ALBLIN';
+    CfgT.FieldConjuntoPivot := 'ID_AC_PIVOT_ALBLIN';
+    CfgT.FieldPrecioBase := 'PRECIO_VENTA_CIVA_ARTICULO_ALBLIN';
+    CfgT.FieldTotalUds := 'CANTIDAD_ALBLIN';
+    CfgT.FieldTotalLinea := 'TOTAL_ALBLIN';
+    CfgT.TablaCeldas := 'fza_albaranes_celdas';
+    CfgT.FieldSerieCel := 'SERIE_ALB_ALBCEL';
+    CfgT.FieldNumeroCel := 'NUMERO_ALB_ALBCEL';
+    CfgT.FieldLineaCel := 'LINEA_ALBCEL';
+    CfgT.FieldFilaCel := 'ID_FILA_ALBCEL';
+    CfgT.FieldAvPivotCel := 'ID_AV_PIVOT_ALBCEL';
+    CfgT.FieldCantidadCel := 'CANTIDAD_ALBCEL';
+    CfgT.FieldAlmacenCel := '';
+    CfgT.IdFilaFijo := 1;
+    CfgT.MaxColumnas := 20;
+    FModoEntrada := CrearModoEntradaGridTallas(Cfg, CfgT);
+  end
+  else
+    FModoEntrada := CrearModoEntradaGrid(Cfg);
+  FModoEntrada.OnResuelto := ModoEntradaResuelto;
+  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
+  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
+  // El flag ANTES del Construir: si aborta a medias, nadie debe tocar
+  // las columnas del dfm, muertas en el ClearItems.
+  FColsModoConstruido := True;
+  FModoEntrada.Construir;
+  CrearColumnasHostAlbaran;
+  case DetectarModoColumnasSku(Cfg) of
+    mcsSku: tsLineasAlbaran.Caption := 'Líneas [SKU]';
+    mcsTallasInline:
+      tsLineasAlbaran.Caption := 'Líneas [Tallas horiz.]';
+  else
+    begin
+      tsLineasAlbaran.Caption := 'Líneas [Desglose]';
+      MostrarColumnasAtributoGlobalesAlb;
+    end;
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.CrearColumnasHostAlbaran;
+  function Col(const ACaption, ACampo: string; AAncho: Integer;
+               AEditable: Boolean): TcxGridDBColumn;
+  begin
+    Result := tvLineasAlbaran.CreateColumn as TcxGridDBColumn;
+    Result.Caption := ACaption;
+    Result.DataBinding.FieldName := ACampo;
+    Result.Width := AAncho;
+    Result.Options.Editing := AEditable;
+  end;
+var
+  ColCant, ColTipo: TcxGridDBColumn;
+begin
+  // Columnas propias del albaran tras el ClearItems del contrato.
+  Col('Línea', 'LINEA_ALBLIN', 60, False);
+  Col('Descripción', 'DESCRIPCION_ARTICULO_ALBLIN', 220, False);
+  ColCant := Col('Cantidad', 'CANTIDAD_ALBLIN', 80,
+                 FModoEntradaSel <> mcsTallasInline);
+  ColTipo := Col('', 'TIPO_CANTIDAD_ARTICULO_ALBLIN', 20, False);
+  ColTipo.Visible := False;
+  ColTipo.VisibleForCustomization := False;
+  // Decimales de la cantidad segun la unidad de la linea (metros...).
+  VincularCantidadGrid(ColCant, ColTipo);
+  Col('PVP S/IVA', 'PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', 90, True);
+  Col('PVP C/IVA', 'PRECIO_VENTA_CIVA_ARTICULO_ALBLIN', 90, True);
+  Col('Total', 'TOTAL_ALBLIN', 95, False);
+  Col('Almacén', 'CODIGO_ALMACEN_ALBLIN', 75, True);
+  Col('Lote', 'LOTE_ALBLIN', 80, True);
+  Col('F. Caducidad', 'FECHA_CADUCIDAD_ALBLIN', 90, True);
+  Col('Facturada', 'ESFACTURADA_ALBLIN', 60, False);
+end;
+
+procedure TfrmMtoAlbaranes.MostrarColumnasAtributoGlobalesAlb;
+var
+  Qry: TUniQuery;
+  i, iOrden: Integer;
+  Col: TcxGridColumn;
+begin
+  // Nombres globales de atributos para ver Color/Talla desde el
+  // principio (mismo helper que pedidos / inventarios).
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := dmmAlbaranes.unqryTablaG.Connection;
+    Qry.SQL.Text :=
+      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
+      '       MIN(ORDEN_VA) AS ORDEN' +
+      '  FROM fza_variaciones_atributos' +
+      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
+      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
+    Qry.Open;
+    iOrden := 1;
+    while (not Qry.Eof) and (iOrden <= 5) do
+    begin
+      for i := 0 to tvLineasAlbaran.ColumnCount - 1 do
+      begin
+        Col := tvLineasAlbaran.Columns[i];
+        if Col.Tag = iOrden then
+        begin
+          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
+          Col.Visible := True;
+        end;
+      end;
+      Inc(iOrden);
+      Qry.Next;
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.cxgrdLineasAlbaranExit(Sender: TObject);
+var
+  ds: TDataSet;
+  bVacia: Boolean;
+  function CampoVacio(const ANombre: string): Boolean;
+  var
+    Campo: TField;
+  begin
+    Result := True;
+    Campo := ds.FindField(ANombre);
+    if Campo <> nil then
+      Result := Trim(Campo.AsString) = '';
+  end;
+begin
+  // Al salir del grid hacia la cabecera, la linea vacia auto-anadida
+  // (AsegurarPrimeraLineaAlbaran) se cancela: si quedara en dsInsert,
+  // cualquier Edit de la cabecera la postearia via CheckBrowseMode del
+  // master-detail y chocaria con la guarda de linea sin articulo.
+  if Assigned(dmmAlbaranes) then
+  begin
+    ds := dmmAlbaranes.unqryAlbaranesLineas;
+    if Assigned(ds) and ds.Active and (ds.State = dsInsert) then
+    begin
+      bVacia := CampoVacio('CODIGO_ART_ALBLIN') and
+                CampoVacio('CODIGO_UNIDAD_ALBLIN');
+      if bVacia then
+        ds.Cancel;
+    end;
+  end;
+end;
+
 function TfrmMtoAlbaranes.SqlRestriccionUsuario: string;
 begin
   Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_ALB', 'CODIGO_ALM_ALB', '');
@@ -619,6 +948,7 @@ begin
   end;
   tvLineasAlbaran.DataController.DataSource := dmmAlbaranes.dsAlbaranesLineas;
   cxgrdLineasAlbaran.OnEnter := cxgrdLineasAlbaranEnter;
+  cxgrdLineasAlbaran.OnExit := cxgrdLineasAlbaranExit;
   tvFacturas.DataController.DataSource      := dmmAlbaranes.dsFacturas;
   tvMovimientos.DataController.DataSource   := dmmAlbaranes.dsMovimientosAlb;
   cbbTotalesFORMA_PAGO_ALB.Properties.ListSource := dmmAlbaranes.dsFormasPago;
@@ -675,6 +1005,10 @@ var
   end;
 
 begin
+  // Con el contrato construido, las columnas del dfm que esta rutina
+  // muestra/oculta han muerto en el ClearItems: las gestiona el modo.
+  if FColsModoConstruido then
+    Exit;
   sArticulo := '';
   bTrazable := False;
   bVariacion := False;
@@ -757,6 +1091,10 @@ var
   stFact: TcxStyle;
 begin
   inherited;
+  // Contrato de entrada ColumnSKUcxGrid: Auto por defecto (resuelve a
+  // desglose); F1 cicla los modos con las lineas a la vista.
+  FModoEntradaSel := mcsAuto;
+  FColsModoConstruido := False;
   // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
   VincularCantidadGrid(
     tvLineasAlbaran.GetColumnByFieldName('CANTIDAD_ALBLIN'),
@@ -1074,8 +1412,12 @@ begin
       raise Exception.Create(
         'Crea o selecciona un albaran antes de anadir lineas.');
     sNumero := Trim(dsCab.FieldByName('NUMERO_ALB').AsString);
+    // Linea vacia en insercion (la auto-anadida al entrar al grid):
+    // se cancela SIEMPRE antes de seguir. Si sobreviviera, cualquier
+    // Post de cabecera o un nuevo Append la postearia via
+    // CheckBrowseMode y chocaria con la guarda de linea sin articulo.
     if Assigned(dsLin) and dsLin.Active and (dsLin.State = dsInsert) and
-       ((sNumero = '') or (sNumero = '0')) and LineaActualVacia then
+       LineaActualVacia then
       dsLin.Cancel;
     if (dsCab.State in dsEditModes) or (sNumero = '') or
        (sNumero = '0') then
@@ -1122,6 +1464,12 @@ end;
 procedure TfrmMtoAlbaranes.cxgrdLineasAlbaranEnter(Sender: TObject);
 begin
   AsegurarPrimeraLineaAlbaran;
+  // Contrato de entrada: primera construccion al entrar en el grid
+  // (las lineas ya estan abiertas como detail del albaran).
+  if FModoEntrada = nil then
+    ConstruirModoEntrada;
+  if FModoEntrada <> nil then
+    FModoEntrada.MostrarEditor;
 end;
 
 procedure TfrmMtoAlbaranes.btnAnadirLineaClick(Sender: TObject);

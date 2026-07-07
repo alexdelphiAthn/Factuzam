@@ -58,6 +58,13 @@ type
     AttrNombre: array[1..5] of string;
   end;
 
+  // Precio unitario que el documento aplicara al SKU (su tarifa, su
+  // fecha). Lo usa el modo tallas para que la consolidacion del escaneo
+  // NO fusione en una linea de precio distinto: una fila pivotada por
+  // precio. Sin asignar, la consolidacion ignora el precio.
+  TObtenerPrecioSkuEvent = function(const ACodigoArticulo,
+                                    ACodigoSku: string): Double of object;
+
   // Todo lo que necesita un modo para montarse sobre el grid del documento.
   TConfigColumnasSku = record
     Conexion: TUniConnection;
@@ -72,6 +79,8 @@ type
     // almacen con el modal distribuidor; la edicion inline de celdas
     // de talla queda bloqueada y el grid muestra la SUMA por talla.
     Distribuido: Boolean;
+    // Precio del SKU segun el documento (ver TObtenerPrecioSkuEvent).
+    ObtenerPrecioSku: TObtenerPrecioSkuEvent;
   end;
 
   // Aviso al documento al resolver una entrada. ACompleto = SKU cerrado
