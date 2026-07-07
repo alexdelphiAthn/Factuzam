@@ -836,10 +836,13 @@ procedure TfrmMtoAlbaranes.CrearColumnasHostAlbaran;
     Result.Options.Editing := AEditable;
   end;
 var
-  ColCant, ColTipo: TcxGridDBColumn;
+  ColCant, ColTipo, ColLinea, ColLote, ColCad: TcxGridDBColumn;
+  bHayTrazables: Boolean;
+  ds: TDataSet;
+  Bm: TBookmark;
 begin
   // Columnas propias del albaran tras el ClearItems del contrato.
-  Col('Línea', 'LINEA_ALBLIN', 60, False);
+  ColLinea := Col('Línea', 'LINEA_ALBLIN', 60, False);
   Col('Descripción', 'DESCRIPCION_ARTICULO_ALBLIN', 220, False);
   ColCant := Col('Cantidad', 'CANTIDAD_ALBLIN', 80,
                  FModoEntradaSel <> mcsTallasInline);
@@ -852,9 +855,40 @@ begin
   Col('PVP C/IVA', 'PRECIO_VENTA_CIVA_ARTICULO_ALBLIN', 90, True);
   Col('Total', 'TOTAL_ALBLIN', 95, False);
   Col('Almacén', 'CODIGO_ALMACEN_ALBLIN', 75, True);
-  Col('Lote', 'LOTE_ALBLIN', 80, True);
-  Col('F. Caducidad', 'FECHA_CADUCIDAD_ALBLIN', 90, True);
+  ColLote := Col('Lote', 'LOTE_ALBLIN', 80, True);
+  ColCad := Col('F. Caducidad', 'FECHA_CADUCIDAD_ALBLIN', 90, True);
   Col('Facturada', 'ESFACTURADA_ALBLIN', 60, False);
+  // Lote / caducidad solo aplican a articulos trazables y el DM los
+  // limpia en el resto: se muestran unicamente si alguna linea del
+  // albaran trae valor (siguen disponibles en la personalizacion).
+  bHayTrazables := False;
+  ds := dmmAlbaranes.unqryAlbaranesLineas;
+  if ds.Active and (not ds.IsEmpty) and
+     (ds.FindField('LOTE_ALBLIN') <> nil) then
+  begin
+    Bm := ds.GetBookmark;
+    ds.DisableControls;
+    try
+      ds.First;
+      while (not ds.Eof) and (not bHayTrazables) do
+      begin
+        if (Trim(ds.FieldByName('LOTE_ALBLIN').AsString) <> '') or
+           (not ds.FieldByName('FECHA_CADUCIDAD_ALBLIN').IsNull) then
+          bHayTrazables := True;
+        ds.Next;
+      end;
+      if ds.BookmarkValid(Bm) then
+        ds.GotoBookmark(Bm);
+    finally
+      ds.EnableControls;
+      ds.FreeBookmark(Bm);
+    end;
+  end;
+  ColLote.Visible := bHayTrazables;
+  ColCad.Visible := bHayTrazables;
+  // Orden normal del documento: la LINEA delante del bloque de
+  // articulo que creo el modo (las columnas del host nacen detras).
+  ColLinea.Index := 0;
 end;
 
 procedure TfrmMtoAlbaranes.MostrarColumnasAtributoGlobalesAlb;
@@ -1369,6 +1403,7 @@ var
   dsCab: TDataSet;
   dsLin: TDataSet;
   sNumero: string;
+  bReAppend: Boolean;
 
   function ValorLinea(const ACampo: string): string;
   var
@@ -1412,16 +1447,21 @@ begin
       raise Exception.Create(
         'Crea o selecciona un albaran antes de anadir lineas.');
     sNumero := Trim(dsCab.FieldByName('NUMERO_ALB').AsString);
-    // Linea vacia en insercion (la auto-anadida al entrar al grid):
-    // se cancela SIEMPRE antes de seguir. Si sobreviviera, cualquier
-    // Post de cabecera o un nuevo Append la postearia via
-    // CheckBrowseMode y chocaria con la guarda de linea sin articulo.
-    if Assigned(dsLin) and dsLin.Active and (dsLin.State = dsInsert) and
-       LineaActualVacia then
-      dsLin.Cancel;
+    // La linea vacia en insercion (auto-anadida al entrar al grid) se
+    // cancela SOLO si hay que postear la cabecera: ese Post arrastra
+    // el suyo via CheckBrowseMode y choca con la guarda de linea sin
+    // articulo. Se RECREA al final para que al usuario no le
+    // "desaparezca" la linea que acababa de anadir.
+    bReAppend := False;
     if (dsCab.State in dsEditModes) or (sNumero = '') or
        (sNumero = '0') then
     begin
+      if Assigned(dsLin) and dsLin.Active and
+         (dsLin.State = dsInsert) and LineaActualVacia then
+      begin
+        dsLin.Cancel;
+        bReAppend := True;
+      end;
       if not (dsCab.State in dsEditModes) then
         dsCab.Edit;
       dsCab.Post;
@@ -1433,6 +1473,9 @@ begin
       dsLin.Close;
       dsLin.Open;
     end;
+    if bReAppend and Assigned(dsLin) and dsLin.Active and
+       (not (dsLin.State in dsEditModes)) then
+      dsLin.Append;
   end;
 end;
 
@@ -1473,10 +1516,24 @@ begin
 end;
 
 procedure TfrmMtoAlbaranes.btnAnadirLineaClick(Sender: TObject);
+var
+  ds: TDataSet;
+  bVaciaEnInsercion: Boolean;
 begin
   inherited;
   AsegurarCabeceraPersistidaParaLineas;
-  dmmAlbaranes.unqryAlbaranesLineas.Append;
+  ds := dmmAlbaranes.unqryAlbaranesLineas;
+  // Si ya hay una linea vacia en insercion (la auto-anadida al entrar
+  // al grid o la recreada por AsegurarCabecera), se REUTILIZA: otro
+  // Append postearia la vacia via CheckBrowseMode contra la guarda de
+  // linea sin articulo.
+  bVaciaEnInsercion := ds.Active and (ds.State = dsInsert) and
+    (Trim(ds.FieldByName('CODIGO_ART_ALBLIN').AsString) = '') and
+    (Trim(ds.FieldByName('CODIGO_UNIDAD_ALBLIN').AsString) = '');
+  if not bVaciaEnInsercion then
+    ds.Append;
+  if FModoEntrada <> nil then
+    FModoEntrada.MostrarEditor;
 end;
 
 procedure TfrmMtoAlbaranes.btnBorrarLineaClick(Sender: TObject);

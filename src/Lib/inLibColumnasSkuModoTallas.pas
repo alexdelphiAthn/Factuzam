@@ -1009,8 +1009,9 @@ end;
 procedure TModoEntradaTallas.ComboBusqCloseUp(Sender: TObject);
 begin
   LimpiarFiltroDesplegable;
-  if Assigned(FOnSalirEdicion) then
-    FOnSalirEdicion(Sender);
+  // NO se restaura aqui el EnterAsTab: el foco sigue en la celda y el
+  // siguiente Enter debe llegar al grid (mismo arreglo que
+  // inLibGridArticulos). Restauran EditorSalir / FocoItemCambiado.
   // Resolver el SKU elegido de forma diferida (mismo timer que el
   // Enter): consolida la linea y suma la talla en su celda.
   if Sender is TcxCustomEdit then

@@ -27,7 +27,7 @@ interface
 
 uses
   System.SysUtils, Data.DB, Uni,
-  inLibColumnasSkuIntf, inLibGridTallasInline;
+  inLibColumnasSkuIntf, inLibGridTallasInline, inLibGridPivoteVenta;
 
 // Modo efectivo a partir de la configuracion (resuelve mcsAuto).
 function DetectarModoColumnasSku(const AConfig: TConfigColumnasSku)
@@ -43,6 +43,11 @@ function CrearModoEntradaGrid(const AConfig: TConfigColumnasSku)
 function CrearModoEntradaGridTallas(const AConfig: TConfigColumnasSku;
                                     const ACfgTallas: TGridTallasConfig)
                                                      : IModoEntradaGrid;
+
+// Modo tallas horizontal de pedidos de venta: no usa tabla de celdas.
+function CrearModoEntradaGridPivoteVenta(
+  const AConfig: TConfigColumnasSku;
+  const ACfgPivote: TGridPivoteVentaConfig): IModoEntradaGrid;
 
 // Proveedor de valores disponibles (colores / tallas) de un articulo.
 function CrearProveedorValoresSku(AConexion: TUniConnection)
@@ -128,10 +133,10 @@ var
 begin
   Cfg := AConfig;
   Cfg.Modo := DetectarModoColumnasSku(AConfig);
-  if Cfg.Modo = mcsTallasInline then
-    // Este modo necesita la TGridTallasConfig del documento.
+  if Cfg.Modo in [mcsTallasInline, mcsTallasHorPed] then
+    // Estos modos necesitan configuracion propia del documento.
     raise Exception.Create(
-      'mcsTallasInline requiere CrearModoEntradaGridTallas');
+      'El modo de tallas horizontal requiere su factoria especifica');
   if Cfg.Modo = mcsDesglose then
     Result := TModoEntradaDesglose.Create(Cfg)
   else
@@ -147,6 +152,18 @@ begin
   Cfg := AConfig;
   Cfg.Modo := mcsTallasInline;
   Result := TModoEntradaTallas.Create(Cfg, ACfgTallas);
+end;
+
+function CrearModoEntradaGridPivoteVenta(
+  const AConfig: TConfigColumnasSku;
+  const ACfgPivote: TGridPivoteVentaConfig): IModoEntradaGrid;
+var
+  Cfg: TConfigColumnasSku;
+begin
+  Cfg := AConfig;
+  Cfg.Modo := mcsTallasHorPed;
+  Result := inLibGridPivoteVenta.CrearModoEntradaGridPivoteVenta(
+    Cfg, ACfgPivote);
 end;
 
 function CrearProveedorValoresSku(AConexion: TUniConnection)

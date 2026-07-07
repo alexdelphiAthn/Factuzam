@@ -1,6 +1,6 @@
 # tallashorped — Grid especial "Tallas en horizontal" para PEDIDOS DE VENTA
 
-Estado: DISEÑO (pendiente de arrancar). 07/07/2026.
+Estado: IMPLEMENTACIÓN BASE COMPILADA. 07/07/2026.
 
 ## 1. Objetivo
 
@@ -122,3 +122,58 @@ producción; si al terminar ambas convergen, se estudia unificar):
 - Tope de columnas de talla: heredamos MaxColumnas=20 del gestor.
 - Rendimiento con pedidos grandes (cache por artículo+color+precio:
   mismo enfoque que compras, que ya rinde bien).
+
+## 9. Implementado el 07/07/2026
+
+- Añadida `src/Lib/inLibGridPivoteVenta.pas`: modo de entrada
+  `IModoEntradaGrid` para pedidos de venta con columnas de talla
+  no-bound, filtrado visual por línea representante y persistencia sobre
+  líneas reales de `fza_pedidos_lineas`.
+- Añadido `mcsTallasHorPed` a `TModoColumnasSku` y factoría
+  `CrearModoEntradaGridPivoteVenta(Cfg, CfgPV)`.
+- Integrado en `inMtoPedidos`: F1 cicla `Auto -> SKU -> TallasHorPed ->
+  Auto`; se elimina el uso de `mcsTallasInline` en pedidos de venta.
+- La creación de una línea desde celda reutiliza `AplicarArticuloPedido`,
+  por lo que mantiene el flujo fiscal/precios ya existente del
+  formulario.
+- La banda visible alterna entre pedida y entregada con `Ctrl+F2`; el
+  caption de la pestaña indica la banda activa.
+- Añadida la unit al `fzam.dpr` y al `fzam.dproj`.
+- El cache resuelve el SKU efectivo de cada línea con fallback:
+  `CODIGO_UNIDAD_PEDLIN`, código de barras (`CODBAR_ART_PEDLIN`),
+  `CODIGOPRODPS_PEDLIN` y SKU único del artículo. Esto evita que líneas
+  importadas desde PrestaShop caigan como "sin talla" y muestren solo la
+  columna `Cantidad`.
+- En modo `Tallas horiz. pedida` se ocultan las columnas clásicas
+  `Pedida`, `Entregada` y `Pendiente`: las tres cantidades se pintan
+  dentro de cada celda de talla.
+- `Marcar todo entregado` recorre las líneas reales sin el filtro visual
+  del pivote, para que rellene todas las tallas y no solo la línea
+  representante visible.
+- `Crear albarán` también recorre las líneas reales sin el filtro visual
+  del pivote, para que albaranee todas las tallas marcadas y no solo la
+  línea representante.
+- Normalizados los procedimientos `PRC_PED_CREAR_ALBARAN_*`:
+  usan `INSTANTE_MODIF` / `USUARIO_MODIF`, calculan la cantidad real a
+  albaranar contra lo ya albaranado y quedan respaldados en
+  `DESARROLLOS EN CURSO/pedidos_albaran_procs.sql`.
+- El modo `SKU` muestra `ART/COLOR/TALLA` reconstruido desde los
+  `ATTR*_VALOR_PEDLIN` cuando el campo de SKU guardado viene incompleto.
+- La celda triple de tallas aumenta altura de fila, ancho de columna,
+  tamaño/peso de fuente y grosor de separadores internos para leer mejor
+  pedida, entregada y pendiente.
+- Verificación: `MSBuild fzam.dproj /t:Build /p:Config=Debug
+  /p:Platform=Win64` y `MSBuild fzam.dproj /t:Build /p:Config=Release
+  /p:Platform=Win64` compilan correctamente. Solo quedan warnings/hints
+  preexistentes del proyecto.
+
+## 10. Pendiente
+
+- Validación funcional manual con pedido real: alta de SKU nuevo desde
+  celda, edición de pedida/entregada, borrado a cero y creación de
+  albarán desde pedido.
+- Migración controlada de pedidos antiguos con `ID_AC_PIVOT_PEDLIN > 0`
+  o filas en `fza_pedidos_celdas`; la implementación actual no ejecuta
+  todavía la migración automática del §6.4.
+- Decidir si la celda debe mostrar algún indicador cuando hay entregada
+  > 0 estando visible la banda pedida.

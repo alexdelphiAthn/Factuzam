@@ -30,7 +30,8 @@ interface
 uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
   System.Types, System.Generics.Collections, Data.DB, Uni, Vcl.Controls,
-  Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Forms, cxGraphics, cxEdit, cxTextEdit,
+  Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Forms, Vcl.Graphics, cxGraphics, cxEdit,
+  cxTextEdit,
   cxDropDownEdit, cxEditRepositoryItems, cxDBExtLookupComboBox, cxGrid,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   inLibColumnasSkuIntf, inLibArticulosValidador,
@@ -120,6 +121,9 @@ type
                                 ACanvas: TcxCanvas;
                                 AViewInfo: TcxGridTableDataCellViewInfo;
                                 var ADone: Boolean);
+    function ValorRecord(ARecord: TcxCustomGridRecord;
+                         const ACampo: string): string;
+    function SkuTextoRecord(ARecord: TcxCustomGridRecord): string;
     // Pide color/talla con la paleta de swatches y compone ART/VAL1/VAL2.
     // Devuelve '' si el usuario cancela o no hay valores.
     function ElegirSkuConPaleta(const ACodArt: string): string;
@@ -252,6 +256,21 @@ begin
 end;
 
 procedure TModoEntradaSku.Construir;
+var
+  i: Integer;
+  procedure CrearColumnaOculta(const ACampo: string);
+  var
+    Col: TcxGridDBColumn;
+  begin
+    if (ACampo <> '') and (FConfig.Cds <> nil) and
+       (FConfig.Cds.FindField(ACampo) <> nil) then
+    begin
+      Col := FConfig.View.CreateColumn;
+      Col.DataBinding.FieldName := ACampo;
+      Col.Visible := False;
+      Col.VisibleForCustomization := False;
+    end;
+  end;
 begin
   // El desplegable debe existir antes de crear la columna que lo usa.
   CrearLookupBusqueda;
@@ -266,6 +285,9 @@ begin
     // Swatch del color en la celda (ultimo segmento tras '/'), mismo
     // helper que caja e inventarios.
     FColSku.OnCustomDrawCell := SkuCustomDrawCell;
+    CrearColumnaOculta(FConfig.Campos.CodigoArt);
+    for i := 1 to 5 do
+      CrearColumnaOculta(FConfig.Campos.AttrValor[i]);
   finally
     FConfig.View.EndUpdate;
   end;
@@ -458,8 +480,9 @@ end;
 procedure TModoEntradaSku.ComboBusqCloseUp(Sender: TObject);
 begin
   LimpiarFiltroDesplegable;
-  if Assigned(FOnSalirEdicion) then
-    FOnSalirEdicion(Sender);
+  // NO se restaura aqui el EnterAsTab: el foco sigue en la celda de
+  // SKU y el siguiente Enter debe llegar al grid (mismo arreglo que
+  // inLibGridArticulos). Restauran EditorSalir / FocoItemCambiado.
   if Sender is TcxCustomEdit then
     DispararResolucion(VarToStr(TcxCustomEdit(Sender).EditValue));
 end;
@@ -590,9 +613,92 @@ end;
 procedure TModoEntradaSku.SkuCustomDrawCell(Sender: TcxCustomGridTableView;
   ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
   var ADone: Boolean);
+var
+  Info: TInfoBasico;
+  R: TRect;
+  sTexto: string;
 begin
-  if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+  sTexto := SkuTextoRecord(AViewInfo.GridRecord);
+  if sTexto = '' then
+    sTexto := AViewInfo.Text;
+  if BuscarInfoBasicoEnArticulo(sTexto, ObtenerMapaAtributosGlobal, Info) and
+     PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto) then
     ADone := True;
+  if (not ADone) and (sTexto <> '') and (sTexto <> AViewInfo.Text) then
+  begin
+    ACanvas.Brush.Color := AViewInfo.Params.Color;
+    ACanvas.FillRect(AViewInfo.Bounds);
+    ACanvas.Font.Assign(AViewInfo.Params.Font);
+    ACanvas.Font.Color := AViewInfo.Params.TextColor;
+    R := AViewInfo.Bounds;
+    Inc(R.Left, 4);
+    ACanvas.Brush.Style := bsClear;
+    ACanvas.DrawText(sTexto, R,
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_END_ELLIPSIS);
+    ACanvas.Brush.Style := bsSolid;
+    ADone := True;
+  end;
+end;
+
+function TModoEntradaSku.ValorRecord(ARecord: TcxCustomGridRecord;
+  const ACampo: string): string;
+var
+  Col: TcxGridColumn;
+  vValor: Variant;
+begin
+  Result := '';
+  if (ARecord <> nil) and (FConfig.View <> nil) and (ACampo <> '') then
+  begin
+    try
+      Col := FConfig.View.GetColumnByFieldName(ACampo);
+    except
+      Col := nil;
+    end;
+    if Col <> nil then
+    begin
+      try
+        vValor := ARecord.Values[Col.Index];
+        if not (VarIsNull(vValor) or VarIsEmpty(vValor) or
+                VarIsClear(vValor)) then
+          Result := Trim(VarToStr(vValor));
+      except
+        Result := '';
+      end;
+    end;
+  end;
+end;
+
+function TModoEntradaSku.SkuTextoRecord(
+  ARecord: TcxCustomGridRecord): string;
+var
+  i: Integer;
+  sArt, sUnidad, sValor: string;
+  bTieneAtributos: Boolean;
+begin
+  sUnidad := ValorRecord(ARecord, FConfig.Campos.CodigoUnidad);
+  Result := sUnidad;
+  if Pos('/', Result) <= 0 then
+  begin
+    sArt := ValorRecord(ARecord, FConfig.Campos.CodigoArt);
+    if sArt = '' then
+      sArt := sUnidad;
+    bTieneAtributos := False;
+    if sArt <> '' then
+    begin
+      Result := sArt;
+      for i := 1 to 5 do
+      begin
+        sValor := ValorRecord(ARecord, FConfig.Campos.AttrValor[i]);
+        if sValor <> '' then
+        begin
+          Result := Result + '/' + sValor;
+          bTieneAtributos := True;
+        end;
+      end;
+      if not bTieneAtributos then
+        Result := sUnidad;
+    end;
+  end;
 end;
 
 procedure TModoEntradaSku.DispararResolucion(const AEntrada: string);
