@@ -112,6 +112,18 @@ inherited frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo
               Height = 32
               Width = 160
             end
+            object btnEnviarADTR: TcxButton
+              Left = 283
+              Top = 0
+              Width = 180
+              Height = 32
+              Align = alRight
+              Caption = 'Enviar a...'
+              DropDownMenu = pmEnviarDTR
+              Kind = cxbkDropDownButton
+              TabOrder = 4
+              OnClick = btnEnviarADTRClick
+            end
             object btnCargarFiltrosDTR: TcxButton
               Left = 463
               Top = 0
@@ -285,6 +297,26 @@ inherited frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo
       inherited tsFicha: TcxTabSheet
         TabVisible = False
       end
+    end
+  end
+  object pmEnviarDTR: TPopupMenu
+    Left = 48
+    Top = 200
+    object miEnviarAlbaranDTR: TMenuItem
+      Caption = 'Albarán de venta (mayor)...'
+      OnClick = miEnviarAlbaranDTRClick
+    end
+    object miEnviarTpvDTR: TMenuItem
+      Caption = 'Venta TPV'
+      OnClick = miEnviarTpvDTRClick
+    end
+    object miEnviarInventarioDTR: TMenuItem
+      Caption = 'Inventario...'
+      OnClick = miEnviarInventarioDTRClick
+    end
+    object miEnviarTarifasDTR: TMenuItem
+      Caption = 'Sesión de cambio de tarifas'
+      OnClick = miEnviarTarifasDTRClick
     end
   end
 end
