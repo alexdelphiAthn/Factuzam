@@ -131,6 +131,13 @@ type
     function ColsInsertDocExtra: string;
     function ValsInsertDocExtra: string;
     procedure ParamsDocExtra(AQuery: TUniQuery);
+    // Par NUMERO opcional ('' = clave simple, p.ej. ID_DTR): mismos
+    // helpers que el gestor para los SQL propios del modo.
+    function WhereNumero(const APrefijo: string): string;
+    function ColsInsertNumero: string;
+    function ValsInsertNumero: string;
+    procedure ParamNumero(AQuery: TUniQuery);
+    function NumeroDocTallas: string;
     procedure ComboBusqInitPopup(Sender: TObject);
     procedure ComboBusqCloseUp(Sender: TObject);
     // Combo de busqueda SOLO en celda de articulo vacia y enfocada;
@@ -510,15 +517,13 @@ begin
         ' AS TOTAL' +
         ' FROM ' + FCfgTallas.TablaCeldas +
         ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
-        ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
+        WhereNumero('') +
         WhereDocExtra +
         ' GROUP BY ' + FCfgTallas.FieldLineaCel;
       Qry.ParamByName('s').AsString :=
         FCfgTallas.SourceMaster.DataSet.FieldByName(
           FCfgTallas.FieldSerieMaster).AsString;
-      Qry.ParamByName('n').AsString :=
-        FCfgTallas.SourceMaster.DataSet.FieldByName(
-          FCfgTallas.FieldNumeroMaster).AsString;
+      ParamNumero(Qry);
       ParamsDocExtra(Qry);
       Qry.Open;
       while not Qry.Eof do
@@ -876,6 +881,42 @@ begin
   end;
 end;
 
+function TModoEntradaTallas.NumeroDocTallas: string;
+begin
+  Result := '';
+  if FCfgTallas.FieldNumeroMaster <> '' then
+    Result := FCfgTallas.SourceMaster.DataSet.FieldByName(
+      FCfgTallas.FieldNumeroMaster).AsString;
+end;
+
+function TModoEntradaTallas.WhereNumero(const APrefijo: string): string;
+begin
+  // APrefijo: alias de la tabla de celdas ('c.' en el des-pivote).
+  Result := '';
+  if FCfgTallas.FieldNumeroCel <> '' then
+    Result := ' AND ' + APrefijo + FCfgTallas.FieldNumeroCel + ' = :n';
+end;
+
+function TModoEntradaTallas.ColsInsertNumero: string;
+begin
+  Result := '';
+  if FCfgTallas.FieldNumeroCel <> '' then
+    Result := FCfgTallas.FieldNumeroCel + ', ';
+end;
+
+function TModoEntradaTallas.ValsInsertNumero: string;
+begin
+  Result := '';
+  if FCfgTallas.FieldNumeroCel <> '' then
+    Result := ':n, ';
+end;
+
+procedure TModoEntradaTallas.ParamNumero(AQuery: TUniQuery);
+begin
+  if FCfgTallas.FieldNumeroCel <> '' then
+    AQuery.ParamByName('n').AsString := NumeroDocTallas;
+end;
+
 function TModoEntradaTallas.WhereDocExtra: string;
 var
   i: Integer;
@@ -1141,8 +1182,7 @@ begin
     begin
       dsM := FCfgTallas.SourceMaster.DataSet;
       sSerie := dsM.FieldByName(FCfgTallas.FieldSerieMaster).AsString;
-      sNumero :=
-        dsM.FieldByName(FCfgTallas.FieldNumeroMaster).AsString;
+      sNumero := NumeroDocTallas;
       Qry := TUniQuery.Create(nil);
       QIns := TUniQuery.Create(nil);
       try
@@ -1161,7 +1201,7 @@ begin
             FCfgTallas.FieldCantidadCel + ' AS CANT' +
             ' FROM ' + FCfgTallas.TablaCeldas +
             ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
-            ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
+            WhereNumero('') +
             ' AND ' + FCfgTallas.FieldAlmacenCel + ' = ''''' +
             WhereDocExtra
         else
@@ -1173,21 +1213,21 @@ begin
             'SUM(' + FCfgTallas.FieldCantidadCel + ') AS CANT' +
             ' FROM ' + FCfgTallas.TablaCeldas +
             ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
-            ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
+            WhereNumero('') +
             ' AND ' + FCfgTallas.FieldAlmacenCel + ' <> ''''' +
             WhereDocExtra +
             ' GROUP BY ' + FCfgTallas.FieldLineaCel + ', ' +
             FCfgTallas.FieldFilaCel + ', ' +
             FCfgTallas.FieldAvPivotCel;
         Qry.ParamByName('s').AsString := sSerie;
-        Qry.ParamByName('n').AsString := sNumero;
+        ParamNumero(Qry);
         ParamsDocExtra(Qry);
         Qry.Open;
         // Upsert por parametros: cantidad destino = existente + origen.
         QIns.SQL.Text :=
           'INSERT INTO ' + FCfgTallas.TablaCeldas + ' (' +
           FCfgTallas.FieldSerieCel + ', ' +
-          FCfgTallas.FieldNumeroCel + ', ' +
+          ColsInsertNumero +
           ColsInsertDocExtra +
           FCfgTallas.FieldLineaCel + ', ' +
           FCfgTallas.FieldFilaCel + ', ' +
@@ -1196,7 +1236,8 @@ begin
           FCfgTallas.FieldCantidadCel + ',' +
           ' INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
           ' USUARIO_MODIF)' +
-          ' VALUES (:s, :n, ' + ValsInsertDocExtra + ':l, :f, :a, :p, :c,' +
+          ' VALUES (:s, ' + ValsInsertNumero + ValsInsertDocExtra +
+          ':l, :f, :a, :p, :c,' +
           ' NOW(), :u, NOW(), :u)' +
           ' ON DUPLICATE KEY UPDATE ' +
           FCfgTallas.FieldCantidadCel + ' = ' +
@@ -1206,7 +1247,7 @@ begin
         while not Qry.Eof do
         begin
           QIns.ParamByName('s').AsString := sSerie;
-          QIns.ParamByName('n').AsString := sNumero;
+          ParamNumero(QIns);
           ParamsDocExtra(QIns);
           QIns.ParamByName('l').AsInteger :=
             Qry.FieldByName('LIN').AsInteger;
@@ -1237,18 +1278,18 @@ begin
             QIns.SQL.Text :=
               'DELETE FROM ' + FCfgTallas.TablaCeldas +
               ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
-              ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
+              WhereNumero('') +
               ' AND ' + FCfgTallas.FieldAlmacenCel + ' = ''''' +
               WhereDocExtra
           else
             QIns.SQL.Text :=
               'DELETE FROM ' + FCfgTallas.TablaCeldas +
               ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
-              ' AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
+              WhereNumero('') +
               ' AND ' + FCfgTallas.FieldAlmacenCel + ' <> ''''' +
               WhereDocExtra;
           QIns.ParamByName('s').AsString := sSerie;
-          QIns.ParamByName('n').AsString := sNumero;
+          ParamNumero(QIns);
           ParamsDocExtra(QIns);
           QIns.ExecSQL;
         end;
@@ -1487,7 +1528,7 @@ begin
             ' JOIN fza_atributos_valores AV' +
             '   ON AV.ID_AV = c.' + FCfgTallas.FieldAvPivotCel +
             ' WHERE c.' + FCfgTallas.FieldSerieCel + ' = :s' +
-            '   AND c.' + FCfgTallas.FieldNumeroCel + ' = :n' +
+            WhereNumero('c.') +
             WhereDocExtra +
             ' GROUP BY c.' + FCfgTallas.FieldLineaCel + ', c.' +
             FCfgTallas.FieldAlmacenCel + ', AV.AV' +
@@ -1504,7 +1545,7 @@ begin
             ' JOIN fza_atributos_valores AV' +
             '   ON AV.ID_AV = c.' + FCfgTallas.FieldAvPivotCel +
             ' WHERE c.' + FCfgTallas.FieldSerieCel + ' = :s' +
-            '   AND c.' + FCfgTallas.FieldNumeroCel + ' = :n' +
+            WhereNumero('c.') +
             WhereDocExtra +
             ' GROUP BY c.' + FCfgTallas.FieldLineaCel + ', AV.AV' +
             ' HAVING SUM(c.' + FCfgTallas.FieldCantidadCel +
@@ -1513,9 +1554,7 @@ begin
         Qry.ParamByName('s').AsString :=
           FCfgTallas.SourceMaster.DataSet.FieldByName(
             FCfgTallas.FieldSerieMaster).AsString;
-        Qry.ParamByName('n').AsString :=
-          FCfgTallas.SourceMaster.DataSet.FieldByName(
-            FCfgTallas.FieldNumeroMaster).AsString;
+        ParamNumero(Qry);
         ParamsDocExtra(Qry);
         Qry.Open;
         while not Qry.Eof do
@@ -1692,14 +1731,12 @@ begin
           Qry.SQL.Text :=
             'DELETE FROM ' + FCfgTallas.TablaCeldas +
             ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
-            '   AND ' + FCfgTallas.FieldNumeroCel + ' = :n' +
+            WhereNumero('') +
             WhereDocExtra;
           Qry.ParamByName('s').AsString :=
             FCfgTallas.SourceMaster.DataSet.FieldByName(
               FCfgTallas.FieldSerieMaster).AsString;
-          Qry.ParamByName('n').AsString :=
-            FCfgTallas.SourceMaster.DataSet.FieldByName(
-              FCfgTallas.FieldNumeroMaster).AsString;
+          ParamNumero(Qry);
           ParamsDocExtra(Qry);
           Qry.ExecSQL;
         finally
@@ -1970,7 +2007,7 @@ begin
         Qry.SQL.Text :=
           'INSERT INTO ' + FCfgTallas.TablaCeldas + ' (' +
           FCfgTallas.FieldSerieCel + ', ' +
-          FCfgTallas.FieldNumeroCel + ', ' +
+          ColsInsertNumero +
           ColsInsertDocExtra +
           FCfgTallas.FieldLineaCel + ', ' +
           FCfgTallas.FieldFilaCel + ', ' +
@@ -1979,7 +2016,8 @@ begin
           FCfgTallas.FieldCantidadCel + ',' +
           ' INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
           ' USUARIO_MODIF)' +
-          ' VALUES (:s, :n, ' + ValsInsertDocExtra + ':l, :f, :a, :p, :c,' +
+          ' VALUES (:s, ' + ValsInsertNumero + ValsInsertDocExtra +
+          ':l, :f, :a, :p, :c,' +
           ' NOW(), :u, NOW(), :u)' +
           ' ON DUPLICATE KEY UPDATE ' +
           FCfgTallas.FieldCantidadCel + ' = ' +
@@ -1991,7 +2029,7 @@ begin
         Qry.SQL.Text :=
           'INSERT INTO ' + FCfgTallas.TablaCeldas + ' (' +
           FCfgTallas.FieldSerieCel + ', ' +
-          FCfgTallas.FieldNumeroCel + ', ' +
+          ColsInsertNumero +
           ColsInsertDocExtra +
           FCfgTallas.FieldLineaCel + ', ' +
           FCfgTallas.FieldFilaCel + ', ' +
@@ -1999,7 +2037,8 @@ begin
           FCfgTallas.FieldCantidadCel + ',' +
           ' INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
           ' USUARIO_MODIF)' +
-          ' VALUES (:s, :n, ' + ValsInsertDocExtra + ':l, :f, :p, :c,' +
+          ' VALUES (:s, ' + ValsInsertNumero + ValsInsertDocExtra +
+          ':l, :f, :p, :c,' +
           ' NOW(), :u, NOW(), :u)' +
           ' ON DUPLICATE KEY UPDATE ' +
           FCfgTallas.FieldCantidadCel + ' = ' +
@@ -2007,8 +2046,7 @@ begin
           ' INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
       Qry.ParamByName('s').AsString :=
         dsM.FieldByName(FCfgTallas.FieldSerieMaster).AsString;
-      Qry.ParamByName('n').AsString :=
-        dsM.FieldByName(FCfgTallas.FieldNumeroMaster).AsString;
+      ParamNumero(Qry);
       Qry.ParamByName('l').AsInteger := ALinea;
       Qry.ParamByName('f').AsInteger := FCfgTallas.IdFilaFijo;
       Qry.ParamByName('p').AsInteger := AIdAv;

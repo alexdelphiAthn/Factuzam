@@ -311,6 +311,7 @@ uses
   inMtoModalAddBlockInventario in 'src\Modals\inMtoModalAddBlockInventario.pas' {frmModalAddBlockInventario},
   inMtoModalAddBlockTarifa in 'src\Modals\inMtoModalAddBlockTarifa.pas' {frmModalAddBlockTarifa},
   inMtoModalAddBlockDocumentoTrabajo in 'src\Modals\inMtoModalAddBlockDocumentoTrabajo.pas' {frmModalAddBlockDocumentoTrabajo},
+  inMtoModalEnviarDestino in 'src\Modals\inMtoModalEnviarDestino.pas' {frmModalEnviarDestino},
   inLibDBStructure in 'src\Lib\inLibDBStructure.pas',
   inLibBackupWorker in 'src\Lib\inLibBackupWorker.pas',
   UniDataComprasSesiones in 'src\DataModules\UniDataComprasSesiones.pas' {dmComprasSesiones: TdmComprasSesiones},

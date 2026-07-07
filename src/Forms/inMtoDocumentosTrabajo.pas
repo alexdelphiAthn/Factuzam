@@ -28,7 +28,9 @@ uses
   cxSplitter, cxCurrencyEdit, cxCalendar, cxBlobEdit,
   dxScrollbarAnnotations, dxCore, cxRadioGroup, cxListView, cxMaskEdit,
   cxDropDownEdit, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs, UniDataDocumentosTrabajo;
+  dxShellDialogs, UniDataDocumentosTrabajo,
+  // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
+  inLibColumnasSkuIntf, inLibGridTallasInline;
 
 type
   TfrmMtoDocumentosTrabajo = class(TfrmMtoGen)
@@ -73,18 +75,49 @@ type
     colDtcPermiso: TcxGridDBColumn;
     colDtcAlta: TcxGridDBColumn;
     glCompartidosDTR: TcxGridLevel;
+    btnEnviarADTR: TcxButton;
+    pmEnviarDTR: TPopupMenu;
+    miEnviarAlbaranDTR: TMenuItem;
+    miEnviarTpvDTR: TMenuItem;
+    miEnviarInventarioDTR: TMenuItem;
+    miEnviarTarifasDTR: TMenuItem;
+    procedure btnEnviarADTRClick(Sender: TObject);
+    procedure miEnviarAlbaranDTRClick(Sender: TObject);
+    procedure miEnviarTpvDTRClick(Sender: TObject);
+    procedure miEnviarInventarioDTRClick(Sender: TObject);
+    procedure miEnviarTarifasDTRClick(Sender: TObject);
     procedure btnCargarFiltrosDTRClick(Sender: TObject);
     procedure btnCompartirDTRClick(Sender: TObject);
     procedure btnImprimirEtiquetasDTRClick(Sender: TObject);
     procedure pcAmbitoDTRChange(Sender: TObject);
   private
     FIdEtiquetasDTR: Int64;
+    // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
+    // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal. El
+    // Construir hace ClearItems: las columnas del dfm mueren y las
+    // propias se recrean en runtime (patron de inMtoInventarios).
+    FModoEntrada: IModoEntradaGrid;
+    FModoEntradaSel: TModoColumnasSku;
+    FColsModoConstruido: Boolean;
+    procedure ConstruirModoEntrada;
+    procedure CrearColumnasHostDTR;
+    procedure MostrarColumnasAtributoGlobalesDTR;
+    procedure ModoEntradaResuelto(const ACodArt, ASku,
+                                  ADescripcion: string;
+                                  ACompleto: Boolean);
+    procedure GridLineasEnterDTR(Sender: TObject);
+    // "Enviar a...": comprueba documento grabado con lineas y deja los
+    // posts hechos; devuelve el ID_DTR o 0 si no procede.
+    function PrepararEnvio: Int64;
     procedure AplicarEstadoAmbito;
     procedure CargarAlmacenesEtiquetasDTR(ALV: TcxListView);
     procedure CrearDataSetEtiquetasDTR(ADmArt: TObject;
                                        const ACodTarifa,
                                              AAlmacenesCsv: string;
                                        AFecha: TDateTime);
+  protected
+    // F1 = alternar modo de entrada (KeyPreview de TfrmBase).
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     dmmDocumentosTrabajo: TdmDocumentosTrabajo;
     procedure CrearTablaPrincipal; override;
@@ -100,7 +133,11 @@ implementation
 
 uses
   Uni, UniDataArticulos, inLibFotos, inLibGenBusq, inMtoModalEtiqArt,
-  inMtoModalAddBlockDocumentoTrabajo;
+  inMtoModalAddBlockDocumentoTrabajo,
+  // Factoria del contrato + oUser para el gestor de tallas.
+  inLibColumnasSku, inLibGlobalVar,
+  // Modal de destino (almacen/serie/numero) del "Enviar a...".
+  inMtoModalEnviarDestino;
 
 {$R *.dfm}
 
@@ -121,6 +158,222 @@ begin
     AplicarEstadoAmbito;
   end;
   pkFieldName := 'ID_DTR';
+  // Contrato de entrada: Auto por defecto; se construye al entrar en
+  // el grid de lineas (las lineas abren en detail del master).
+  FModoEntradaSel := mcsAuto;
+  FColsModoConstruido := False;
+  cxgrdLineasDTR.OnEnter := GridLineasEnterDTR;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.GridLineasEnterDTR(Sender: TObject);
+begin
+  if FModoEntrada = nil then
+    ConstruirModoEntrada;
+  if (FModoEntrada <> nil) and
+     (dmmDocumentosTrabajo <> nil) and
+     (dmmDocumentosTrabajo.Ambito = dtaPropios) then
+    FModoEntrada.MostrarEditor;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.KeyDown(var Key: Word;
+  Shift: TShiftState);
+begin
+  // F1: alterna Auto (desglose) -> SKU -> Tallas horizontal con las
+  // lineas a la vista.
+  if (Key = VK_F1) and (Shift = []) and
+     (pcDetalleDTR.ActivePage = tsLineasDTR) then
+  begin
+    Key := 0;
+    case FModoEntradaSel of
+      mcsAuto: FModoEntradaSel := mcsSku;
+      mcsSku: FModoEntradaSel := mcsTallasInline;
+    else
+      FModoEntradaSel := mcsAuto;
+    end;
+    ConstruirModoEntrada;
+  end;
+  inherited;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.ConstruirModoEntrada;
+var
+  Cfg: TConfigColumnasSku;
+  CfgT: TGridTallasConfig;
+  i: Integer;
+  ds: TDataSet;
+begin
+  if (dmmDocumentosTrabajo = nil) or
+     (csDestroying in ComponentState) then
+    Exit;
+  ds := dmmDocumentosTrabajo.unqryLineas;
+  if not ds.Active then
+    Exit;
+  // Teardown del modo anterior (patron inventarios).
+  if tvLineasDTR.Controller.EditingController.IsEditing then
+    try
+      tvLineasDTR.Controller.EditingController.HideEdit(False);
+    except
+      on E: EInvalidOperation do
+        ;
+    end;
+  if ds.State in [dsEdit, dsInsert] then
+    ds.Cancel;
+  if FModoEntrada <> nil then
+    FModoEntrada.Desmontar;
+  tvLineasDTR.OnInitEdit := nil;
+  tvLineasDTR.OnEditKeyDown := nil;
+  tvLineasDTR.OnEditing := nil;
+  tvLineasDTR.OnFocusedRecordChanged := nil;
+  tvLineasDTR.OnFocusedItemChanged := nil;
+  FModoEntrada := nil;
+  // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
+  // (columnas reales _DTL; idempotente por linea).
+  if FModoEntradaSel <> mcsSku then
+    dmmDocumentosTrabajo.DesempaquetarAtributosLineas;
+  Cfg := Default(TConfigColumnasSku);
+  Cfg.Conexion := dmmDocumentosTrabajo.unqryTablaG.Connection;
+  Cfg.View := tvLineasDTR;
+  Cfg.Cds := ds;
+  Cfg.Modo := FModoEntradaSel;
+  Cfg.AlmacenStock :=
+    dsTablaG.DataSet.FieldByName('CODIGO_ALM_DTR').AsString;
+  Cfg.Distribuido := False;
+  Cfg.Campos.CodigoArt := 'CODIGO_ART_DTL';
+  Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_DTL';
+  Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_DTL';
+  Cfg.Campos.Cantidad := 'CANTIDAD_DTL';
+  Cfg.Campos.Almacen := 'CODIGO_ALM_DTL';
+  Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_DTL';
+  for i := 1 to 5 do
+  begin
+    Cfg.Campos.AttrValor[i] := 'ATTR' + IntToStr(i) + '_VALOR_DTL';
+    Cfg.Campos.AttrNombre[i] := 'ATTR' + IntToStr(i) + '_NOMBRE_DTL';
+  end;
+  if FModoEntradaSel = mcsTallasInline then
+  begin
+    CfgT := Default(TGridTallasConfig);
+    CfgT.Usuario := oUser;
+    CfgT.Grid := tvLineasDTR;
+    CfgT.SourceMaster := dsTablaG;
+    CfgT.SourceLineas := dmmDocumentosTrabajo.dsLineas;
+    // Clave SIMPLE del documento: ID_DTR hace de "serie" y el par
+    // NUMERO queda vacio (soporte de numero opcional del gestor).
+    CfgT.FieldSerieMaster := 'ID_DTR';
+    CfgT.FieldNumeroMaster := '';
+    CfgT.FieldLinea := 'LINEA_DTL';
+    CfgT.FieldConjuntoPivot := 'ID_AC_PIVOT_DTL';
+    // Sin precio por linea: solo total de unidades (CANTIDAD_DTL).
+    CfgT.FieldPrecioBase := '';
+    CfgT.FieldTotalUds := 'CANTIDAD_DTL';
+    CfgT.FieldTotalLinea := '';
+    CfgT.TablaCeldas := 'fza_documentos_trabajo_celdas';
+    CfgT.FieldSerieCel := 'ID_DTR_DTRCEL';
+    CfgT.FieldNumeroCel := '';
+    CfgT.FieldLineaCel := 'LINEA_DTRCEL';
+    CfgT.FieldFilaCel := 'ID_FILA_DTRCEL';
+    CfgT.FieldAvPivotCel := 'ID_AV_PIVOT_DTRCEL';
+    CfgT.FieldCantidadCel := 'CANTIDAD_DTRCEL';
+    CfgT.FieldAlmacenCel := '';
+    CfgT.IdFilaFijo := 1;
+    CfgT.MaxColumnas := 20;
+    FModoEntrada := CrearModoEntradaGridTallas(Cfg, CfgT);
+  end
+  else
+    FModoEntrada := CrearModoEntradaGrid(Cfg);
+  FModoEntrada.OnResuelto := ModoEntradaResuelto;
+  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
+  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
+  // El flag ANTES del Construir: si aborta a medias, nadie debe tocar
+  // las columnas del dfm, muertas en el ClearItems.
+  FColsModoConstruido := True;
+  FModoEntrada.Construir;
+  CrearColumnasHostDTR;
+  case DetectarModoColumnasSku(Cfg) of
+    mcsSku: tsLineasDTR.Caption := 'Líneas [SKU]';
+    mcsTallasInline: tsLineasDTR.Caption := 'Líneas [Tallas horiz.]';
+  else
+    begin
+      tsLineasDTR.Caption := 'Líneas [Desglose]';
+      MostrarColumnasAtributoGlobalesDTR;
+    end;
+  end;
+  // El guardian de ambito (solo propietario edita) se conserva.
+  AplicarEstadoAmbito;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.CrearColumnasHostDTR;
+  function Col(const ACaption, ACampo: string; AAncho: Integer;
+               AEditable: Boolean): TcxGridDBColumn;
+  begin
+    Result := tvLineasDTR.CreateColumn as TcxGridDBColumn;
+    Result.Caption := ACaption;
+    Result.DataBinding.FieldName := ACampo;
+    Result.Width := AAncho;
+    Result.Options.Editing := AEditable;
+  end;
+begin
+  // Columnas propias del documento tras el ClearItems del contrato.
+  Col('Almacén', 'CODIGO_ALM_DTL', 70, True);
+  Col('Descripción', 'DESCRIPCION_ARTICULO_DTL', 200, False);
+  with Col('Stock', 'CANTIDAD_STOCK_DTL', 80, False) do
+    HeaderAlignmentHorz := taRightJustify;
+  with Col('Cantidad', 'CANTIDAD_DTL', 80,
+           FModoEntradaSel <> mcsTallasInline) do
+    HeaderAlignmentHorz := taRightJustify;
+  Col('Origen', 'ORIGEN_DTL', 80, False);
+  Col('Instante stock', 'INSTANTE_STOCK_DTL', 120, False);
+end;
+
+procedure TfrmMtoDocumentosTrabajo.MostrarColumnasAtributoGlobalesDTR;
+var
+  Qry: TUniQuery;
+  i, iOrden: Integer;
+  Col: TcxGridColumn;
+begin
+  // Nombres globales de atributos para ver Color/Talla desde el
+  // principio (mismo helper que inventarios / banco de pruebas).
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := dmmDocumentosTrabajo.unqryTablaG.Connection;
+    Qry.SQL.Text :=
+      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
+      '       MIN(ORDEN_VA) AS ORDEN' +
+      '  FROM fza_variaciones_atributos' +
+      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
+      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
+    Qry.Open;
+    iOrden := 1;
+    while (not Qry.Eof) and (iOrden <= 5) do
+    begin
+      for i := 0 to tvLineasDTR.ColumnCount - 1 do
+      begin
+        Col := tvLineasDTR.Columns[i];
+        if Col.Tag = iOrden then
+        begin
+          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
+          Col.Visible := True;
+        end;
+      end;
+      Inc(iOrden);
+      Qry.Next;
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.ModoEntradaResuelto(const ACodArt,
+  ASku, ADescripcion: string; ACompleto: Boolean);
+begin
+  // El BeforePost del data module rellena LINEA e INSTANTE_STOCK; la
+  // cantidad por defecto de una lectura es 1 si venia a 0.
+  if ACompleto and
+     (dmmDocumentosTrabajo.unqryLineas.State in [dsEdit, dsInsert]) and
+     (dmmDocumentosTrabajo.unqryLineas.FieldByName(
+        'CANTIDAD_DTL').AsFloat = 0) and
+     (FModoEntradaSel <> mcsTallasInline) then
+    dmmDocumentosTrabajo.unqryLineas.FieldByName(
+      'CANTIDAD_DTL').AsFloat := 1;
 end;
 
 procedure TfrmMtoDocumentosTrabajo.AplicarEstadoAmbito;
@@ -328,6 +581,233 @@ begin
       ShowMessage(
         'Seleccione un Documento de Trabajo antes de imprimir etiquetas.');
     end;
+  end;
+end;
+
+function TfrmMtoDocumentosTrabajo.PrepararEnvio: Int64;
+var
+  ds: TDataSet;
+begin
+  Result := 0;
+  if dmmDocumentosTrabajo <> nil then
+  begin
+    ds := dmmDocumentosTrabajo.unqryTablaG;
+    if (not ds.Active) or ds.IsEmpty then
+      ShowMessage('Seleccione un Documento de Trabajo antes de enviar.')
+    else
+    begin
+      if dmmDocumentosTrabajo.unqryLineas.State in dsEditModes then
+        dmmDocumentosTrabajo.unqryLineas.Post;
+      if ds.State in dsEditModes then
+        ds.Post;
+      if ds.FieldByName('ID_DTR').IsNull then
+        ShowMessage('Grabe el Documento de Trabajo antes de enviar.')
+      else if dmmDocumentosTrabajo.unqryLineas.IsEmpty then
+        ShowMessage('El Documento de Trabajo no tiene lineas que enviar.')
+      else
+        Result := ds.FieldByName('ID_DTR').AsLargeInt;
+    end;
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.btnEnviarADTRClick(Sender: TObject);
+var
+  pt: TPoint;
+begin
+  // El area principal del boton tambien despliega el menu.
+  pt := btnEnviarADTR.ClientToScreen(Point(0, btnEnviarADTR.Height));
+  pmEnviarDTR.Popup(pt.X, pt.Y);
+end;
+
+procedure TfrmMtoDocumentosTrabajo.miEnviarAlbaranDTRClick(
+  Sender: TObject);
+begin
+  // Pendiente de la siguiente tanda: requiere el flujo de creacion de
+  // albaranes de venta (cabecera + contadores + lineas).
+  ShowMessage('Enviar a albarán de venta: pendiente de implementar ' +
+              'en la siguiente tanda.');
+end;
+
+procedure TfrmMtoDocumentosTrabajo.miEnviarTpvDTRClick(Sender: TObject);
+begin
+  // Pendiente de la siguiente tanda: requiere la caja abierta (o
+  // abrir el Mto de ventas TPV) y volcar via su resolutor de SKUs.
+  ShowMessage('Enviar a venta TPV: pendiente de implementar en la ' +
+              'siguiente tanda.');
+end;
+
+procedure TfrmMtoDocumentosTrabajo.miEnviarInventarioDTRClick(
+  Sender: TObject);
+var
+  idDtr: Int64;
+  q: TUniQuery;
+  sp: TUniStoredProc;
+  ds: TDataSet;
+  sEmp, sAlm, sSerie, sNumero: string;
+begin
+  idDtr := PrepararEnvio;
+  if idDtr <= 0 then
+    Exit;
+  ds := dmmDocumentosTrabajo.unqryTablaG;
+  sEmp := ds.FieldByName('CODIGO_EMP_DTR').AsString;
+  sAlm := ds.FieldByName('CODIGO_ALM_DTR').AsString;
+  sSerie := '';
+  // '0' = numero pendiente: el contador del Mto de inventarios asigna
+  // el definitivo al grabar la cabecera.
+  sNumero := '0';
+  if not TfrmModalEnviarDestino.Ejecutar(Self,
+           dmmDocumentosTrabajo.unqryTablaG.Connection,
+           'Enviar a inventario', sEmp, 'IN',
+           sAlm, sSerie, sNumero) then
+    Exit;
+  // Numero '0' = pedirlo al contador oficial (mismo SP que usa el Mto
+  // de inventarios al grabar: PRC_GET_NEXT_CONT_FACT_SERIE).
+  if sNumero = '0' then
+  begin
+    sp := TUniStoredProc.Create(nil);
+    try
+      sp.Connection := dmmDocumentosTrabajo.unqryTablaG.Connection;
+      sp.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
+      sp.Params.Clear;
+      sp.Params.CreateParam(ftString, 'pserie', ptInput);
+      sp.Params.CreateParam(ftString, 'ptipodoc', ptInput);
+      sp.Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
+      sp.Params.CreateParam(ftString, 'pUSUARIOMODIF', ptInput);
+      sp.Params.CreateParam(ftString, 'pcont', ptOutput);
+      sp.ParamByName('pserie').AsString := sSerie;
+      sp.ParamByName('ptipodoc').AsString := 'IN';
+      sp.ParamByName('pEMPRESA_CONTADOR').AsString := sEmp;
+      sp.ParamByName('pUSUARIOMODIF').AsString := oUser;
+      sp.ExecProc;
+      sNumero := sp.ParamByName('pcont').AsString;
+    finally
+      FreeAndNil(sp);
+    end;
+    if (sNumero = '') or (sNumero = '0') then
+    begin
+      ShowMessage('El contador de inventarios no ha devuelto numero ' +
+                  'para la serie ' + sSerie + '.');
+      Exit;
+    end;
+  end;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := dmmDocumentosTrabajo.unqryTablaG.Connection;
+    // Cabecera del inventario, ABIERTO, con los datos del documento.
+    q.SQL.Text :=
+      'INSERT INTO fza_inventarios ' +
+      ' (CODIGO_EMP_INV, CODIGO_ALM_INV, SERIE_INV, NUMERO_INV, ' +
+      '  TIPO_DOC_INV, FECHA_INV, ESTADO_INV, DESCRIPCION_INV, ' +
+      '  CONTADOR_LINEAS_INV, INSTANTE_ALTA, INSTANTE_MODIF, ' +
+      '  USUARIO_ALTA, USUARIO_MODIF) ' +
+      'SELECT :EMP, :ALM, :SERIE, :NUMERO, ''IN'', NOW(), ''ABIERTO'', ' +
+      '       CONCAT(''Desde doc. trabajo '', :ID), ' +
+      '       LPAD(COUNT(*), 8, ''0''), NOW(), NOW(), :USU, :USU ' +
+      '  FROM fza_documentos_trabajo_lineas ' +
+      ' WHERE ID_DTR_DTL = :ID';
+    q.ParamByName('EMP').AsString := sEmp;
+    q.ParamByName('ALM').AsString := sAlm;
+    q.ParamByName('SERIE').AsString := sSerie;
+    q.ParamByName('NUMERO').AsString := sNumero;
+    q.ParamByName('ID').AsLargeInt := idDtr;
+    q.ParamByName('USU').AsString := oUser;
+    q.ExecSQL;
+    // Lineas: fisica = cantidad del documento; teorica = snapshot de
+    // stock. El boton "Recalcular teorico/PMP" del Mto de inventarios
+    // deja despues los teoricos y PMPs oficiales.
+    q.SQL.Text :=
+      'INSERT INTO fza_inventarios_lineas ' +
+      ' (CODIGO_EMP_INVLIN, CODIGO_ALM_INVLIN, SERIE_INV_INVLIN, ' +
+      '  NUMERO_INV_INVLIN, LINEA_INVLIN, CODIGO_ART_INVLIN, ' +
+      '  CODIGO_UNIDAD_INVLIN, LOTE_INVLIN, ' +
+      '  DESCRIPCION_ARTICULO_INVLIN, CANTIDAD_TEORICA_INVLIN, ' +
+      '  CANTIDAD_FISICA_INVLIN, CANTIDAD_DIFERENCIA_INVLIN, ' +
+      '  PRECIO_MEDIO_INVLIN, PRECIO_MEDIO_NUEVO_INVLIN, ' +
+      '  TOTAL_COSTE_DIFERENCIA_INVLIN, FECHA_RECUENTO_INVLIN, ' +
+      '  INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+      // LINEA_DTL ya es unica y ordenada dentro del documento: se
+      // reutiliza tal cual como numero de linea del inventario (sin
+      // ROW_NUMBER, que exige MariaDB >= 10.2).
+      'SELECT :EMP, :ALM, :SERIE, :NUMERO, LINEA_DTL, ' +
+      '       CODIGO_ART_DTL, CODIGO_UNIDAD_DTL, COALESCE(LOTE_DTL, ''''), ' +
+      '       DESCRIPCION_ARTICULO_DTL, CANTIDAD_STOCK_DTL, ' +
+      '       CANTIDAD_DTL, CANTIDAD_DTL - CANTIDAD_STOCK_DTL, ' +
+      '       0, 0, 0, NOW(), NOW(), :USU, :USU ' +
+      '  FROM fza_documentos_trabajo_lineas ' +
+      ' WHERE ID_DTR_DTL = :ID';
+    q.ParamByName('EMP').AsString := sEmp;
+    q.ParamByName('ALM').AsString := sAlm;
+    q.ParamByName('SERIE').AsString := sSerie;
+    q.ParamByName('NUMERO').AsString := sNumero;
+    q.ParamByName('ID').AsLargeInt := idDtr;
+    q.ParamByName('USU').AsString := oUser;
+    q.ExecSQL;
+    ShowMessage(Format(
+      'Inventario %s/%s creado en almacén %s con %d líneas del ' +
+      'documento.%sAbre Inventarios y usa "Recalcular teórico/PMP" ' +
+      'para fijar teóricos y costes.',
+      [sSerie, sNumero, sAlm, q.RowsAffected, sLineBreak]));
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.miEnviarTarifasDTRClick(
+  Sender: TObject);
+var
+  idDtr, idTarc: Int64;
+  q: TUniQuery;
+begin
+  idDtr := PrepararEnvio;
+  if idDtr <= 0 then
+    Exit;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := dmmDocumentosTrabajo.unqryTablaG.Connection;
+    // Sesion de cambios de tarifa en BORRADOR sobre la tarifa por
+    // defecto (la primera); origen/destino y regla se retocan en el
+    // propio Mto de sesiones de tarifas.
+    q.SQL.Text :=
+      'INSERT INTO fza_tarifas_cambios ' +
+      ' (NOMBRE_TARC, FECHA_TARC, ESTADO_TARC, ' +
+      '  CODIGO_TAR_ORIGEN_TARC, CODIGO_TAR_DESTINO_TARC, ' +
+      '  INSTANTE_ALTA, USUARIO_ALTA) ' +
+      'SELECT CONCAT(''Desde doc. trabajo '', :ID), CURDATE(), ' +
+      '       ''BORRADOR'', T.COD, T.COD, NOW(), :USU ' +
+      '  FROM (SELECT MIN(CODIGO_TAR_TAR) AS COD ' +
+      '          FROM fza_tarifas) T';
+    q.ParamByName('ID').AsLargeInt := idDtr;
+    q.ParamByName('USU').AsString := oUser;
+    q.ExecSQL;
+    q.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
+    q.Open;
+    idTarc := q.FieldByName('ID').AsLargeInt;
+    q.Close;
+    // Una linea por ARTICULO distinto del documento (el Mto de
+    // sesiones rellena precios actuales y nuevos al preparar).
+    q.SQL.Text :=
+      'INSERT INTO fza_tarifas_cambios_lineas ' +
+      ' (CODIGO_TARC_TARCLIN, CODIGO_ART_TARCLIN, ' +
+      '  CODIGO_UNIDAD_SKU_TARCLIN, CODIGO_TAR_ORIGEN_TARCLIN, ' +
+      '  CODIGO_TAR_DESTINO_TARCLIN, ESAPLICAR_TARCLIN, ' +
+      '  ESTADO_TARCLIN, INSTANTE_ALTA, USUARIO_ALTA) ' +
+      'SELECT DISTINCT :TARC, L.CODIGO_ART_DTL, '''', ' +
+      '       C.CODIGO_TAR_ORIGEN_TARC, C.CODIGO_TAR_DESTINO_TARC, ' +
+      '       ''S'', ''PENDIENTE'', NOW(), :USU ' +
+      '  FROM fza_documentos_trabajo_lineas L ' +
+      '  JOIN fza_tarifas_cambios C ON C.CODIGO_TARC = :TARC ' +
+      ' WHERE L.ID_DTR_DTL = :ID';
+    q.ParamByName('TARC').AsLargeInt := idTarc;
+    q.ParamByName('ID').AsLargeInt := idDtr;
+    q.ParamByName('USU').AsString := oUser;
+    q.ExecSQL;
+    ShowMessage(Format(
+      'Sesión de cambio de tarifas %d creada en BORRADOR con los ' +
+      'artículos del documento.%sAbre "Cambios de tarifa" para ' +
+      'elegir tarifas, regla de cálculo y aplicar.',
+      [idTarc, sLineBreak]));
+  finally
+    FreeAndNil(q);
   end;
 end;
 

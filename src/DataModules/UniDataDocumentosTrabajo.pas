@@ -64,6 +64,11 @@ type
                                        const ACodTarifa,
                                              AAlmacenesCsv: string;
                                        AFecha: TDateTime);
+    // Contrato ColumnSKUcxGrid: rellena ATTR1..5_VALOR_DTL y
+    // NUM_ATRIBUTOS_DTL troceando el SKU de cada linea que aun los
+    // tenga vacios (idempotente por linea; columnas reales, el Post
+    // actualiza BD).
+    procedure DesempaquetarAtributosLineas;
   end;
 
 var
@@ -193,20 +198,36 @@ begin
   begin
     unqryLineas.MasterSource := frm.dsTablaG;
   end;
+  // ATTR1..5 / NUM_ATRIBUTOS / ID_AC_PIVOT: columnas del contrato
+  // ColumnSKUcxGrid (documentos_trabajo_columnas_sku.sql).
   unqryLineas.SQLInsert.Text :=
     'INSERT INTO fza_documentos_trabajo_lineas ' +
     '  (ID_DTR_DTL, LINEA_DTL, CODIGO_ART_DTL, CODIGO_UNIDAD_DTL, ' +
     '   CODIGO_ALM_DTL, LOTE_DTL, FECHA_CADUCIDAD_DTL, ' +
     '   DESCRIPCION_ARTICULO_DTL, DESCRIPCION_UNIDAD_DTL, ' +
     '   CANTIDAD_STOCK_DTL, CANTIDAD_DTL, INSTANTE_STOCK_DTL, ' +
-    '   ORIGEN_DTL, OBSERVACIONES_DTL, INSTANTE_ALTA, USUARIO_ALTA, ' +
+    '   ORIGEN_DTL, OBSERVACIONES_DTL, ' +
+    '   ATTR1_VALOR_DTL, ATTR1_NOMBRE_DTL, ' +
+    '   ATTR2_VALOR_DTL, ATTR2_NOMBRE_DTL, ' +
+    '   ATTR3_VALOR_DTL, ATTR3_NOMBRE_DTL, ' +
+    '   ATTR4_VALOR_DTL, ATTR4_NOMBRE_DTL, ' +
+    '   ATTR5_VALOR_DTL, ATTR5_NOMBRE_DTL, ' +
+    '   NUM_ATRIBUTOS_DTL, ID_AC_PIVOT_DTL, ' +
+    '   INSTANTE_ALTA, USUARIO_ALTA, ' +
     '   USUARIO_MODIF) ' +
     'VALUES ' +
     '  (:ID_DTR_DTL, :LINEA_DTL, :CODIGO_ART_DTL, :CODIGO_UNIDAD_DTL, ' +
     '   :CODIGO_ALM_DTL, :LOTE_DTL, :FECHA_CADUCIDAD_DTL, ' +
     '   :DESCRIPCION_ARTICULO_DTL, :DESCRIPCION_UNIDAD_DTL, ' +
     '   :CANTIDAD_STOCK_DTL, :CANTIDAD_DTL, :INSTANTE_STOCK_DTL, ' +
-    '   :ORIGEN_DTL, :OBSERVACIONES_DTL, :INSTANTE_ALTA, ' +
+    '   :ORIGEN_DTL, :OBSERVACIONES_DTL, ' +
+    '   :ATTR1_VALOR_DTL, :ATTR1_NOMBRE_DTL, ' +
+    '   :ATTR2_VALOR_DTL, :ATTR2_NOMBRE_DTL, ' +
+    '   :ATTR3_VALOR_DTL, :ATTR3_NOMBRE_DTL, ' +
+    '   :ATTR4_VALOR_DTL, :ATTR4_NOMBRE_DTL, ' +
+    '   :ATTR5_VALOR_DTL, :ATTR5_NOMBRE_DTL, ' +
+    '   :NUM_ATRIBUTOS_DTL, :ID_AC_PIVOT_DTL, ' +
+    '   :INSTANTE_ALTA, ' +
     '   :USUARIO_ALTA, :USUARIO_MODIF)';
   unqryLineas.SQLUpdate.Text :=
     'UPDATE fza_documentos_trabajo_lineas SET ' +
@@ -224,6 +245,18 @@ begin
     '  INSTANTE_STOCK_DTL = :INSTANTE_STOCK_DTL, ' +
     '  ORIGEN_DTL = :ORIGEN_DTL, ' +
     '  OBSERVACIONES_DTL = :OBSERVACIONES_DTL, ' +
+    '  ATTR1_VALOR_DTL = :ATTR1_VALOR_DTL, ' +
+    '  ATTR1_NOMBRE_DTL = :ATTR1_NOMBRE_DTL, ' +
+    '  ATTR2_VALOR_DTL = :ATTR2_VALOR_DTL, ' +
+    '  ATTR2_NOMBRE_DTL = :ATTR2_NOMBRE_DTL, ' +
+    '  ATTR3_VALOR_DTL = :ATTR3_VALOR_DTL, ' +
+    '  ATTR3_NOMBRE_DTL = :ATTR3_NOMBRE_DTL, ' +
+    '  ATTR4_VALOR_DTL = :ATTR4_VALOR_DTL, ' +
+    '  ATTR4_NOMBRE_DTL = :ATTR4_NOMBRE_DTL, ' +
+    '  ATTR5_VALOR_DTL = :ATTR5_VALOR_DTL, ' +
+    '  ATTR5_NOMBRE_DTL = :ATTR5_NOMBRE_DTL, ' +
+    '  NUM_ATRIBUTOS_DTL = :NUM_ATRIBUTOS_DTL, ' +
+    '  ID_AC_PIVOT_DTL = :ID_AC_PIVOT_DTL, ' +
     '  USUARIO_MODIF = :USUARIO_MODIF ' +
     'WHERE ID_DTL = :Old_ID_DTL';
   unqryLineas.SQLDelete.Text :=
@@ -862,6 +895,53 @@ begin
     DataSet.FieldByName('INSTANTE_STOCK_DTL').AsDateTime := Now;
   end;
   odmConn.ActualizarUserTimeModif(DataSet);
+end;
+
+procedure TdmDocumentosTrabajo.DesempaquetarAtributosLineas;
+var
+  Partes: TArray<string>;
+  Sku: string;
+  i: Integer;
+  Bm: TBookmark;
+begin
+  if unqryLineas.Active and (not unqryLineas.IsEmpty) and
+     PuedeEditarDocumentoActual then
+  begin
+    Bm := unqryLineas.GetBookmark;
+    unqryLineas.DisableControls;
+    try
+      unqryLineas.First;
+      while not unqryLineas.Eof do
+      begin
+        Sku := unqryLineas.FieldByName('CODIGO_UNIDAD_DTL').AsString;
+        Partes := Sku.Split(['/']);
+        if (Length(Partes) > 1) and
+           (Trim(unqryLineas.FieldByName(
+              'ATTR1_VALOR_DTL').AsString) = '') then
+        begin
+          unqryLineas.Edit;
+          unqryLineas.FieldByName('NUM_ATRIBUTOS_DTL').AsInteger :=
+            Length(Partes) - 1;
+          for i := 1 to 5 do
+          begin
+            if i < Length(Partes) then
+              unqryLineas.FieldByName('ATTR' + IntToStr(i) +
+                '_VALOR_DTL').AsString := Partes[i]
+            else
+              unqryLineas.FieldByName('ATTR' + IntToStr(i) +
+                '_VALOR_DTL').AsString := '';
+          end;
+          unqryLineas.Post;
+        end;
+        unqryLineas.Next;
+      end;
+      if unqryLineas.BookmarkValid(Bm) then
+        unqryLineas.GotoBookmark(Bm);
+    finally
+      unqryLineas.EnableControls;
+      unqryLineas.FreeBookmark(Bm);
+    end;
+  end;
 end;
 
 procedure TdmDocumentosTrabajo.unqryCompartidosAfterInsert(DataSet: TDataSet);

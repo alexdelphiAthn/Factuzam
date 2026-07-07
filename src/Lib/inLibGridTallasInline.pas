@@ -98,7 +98,10 @@ type
 
     // -- campos del master (cabecera) --
     FieldSerieMaster  : string;   // 'SERIE_SES'
-    FieldNumeroMaster : string;   // 'NUMERO_SES'
+    // NUMERO es OPCIONAL ('' = documento de clave simple, p.ej.
+    // fza_documentos_trabajo con ID_DTR): la "serie" lleva la clave
+    // completa y el par numero desaparece de los SQL de celdas.
+    FieldNumeroMaster : string;   // 'NUMERO_SES' (puede ser '')
 
     // -- campos del detail (lineas) --
     FieldLinea        : string;   // 'LINEA_SESLIN'
@@ -145,6 +148,12 @@ type
     function  ColsInsertDocExtra: string;
     function  ValsInsertDocExtra: string;
     procedure ParamsDocExtra(AQuery: TUniQuery);
+    // Par NUMERO opcional (FieldNumeroCel = '' en documentos de clave
+    // simple): clausula/columna/valor/parametro solo si esta definido.
+    function  WhereNumero: string;
+    function  ColsInsertNumero: string;
+    function  ValsInsertNumero: string;
+    procedure ParamNumero(AQuery: TUniQuery);
   public
     constructor Create(const ACfg: TGridTallasConfig);
     destructor  Destroy; override;
@@ -283,8 +292,36 @@ var
 begin
   Result := '';
   ds := Master;
-  if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
+  if (FCfg.FieldNumeroMaster <> '') and
+     (ds <> nil) and ds.Active and (not ds.IsEmpty) then
     Result := ds.FieldByName(FCfg.FieldNumeroMaster).AsString;
+end;
+
+function TGestorGridTallas.WhereNumero: string;
+begin
+  Result := '';
+  if FCfg.FieldNumeroCel <> '' then
+    Result := '   AND ' + FCfg.FieldNumeroCel + ' = :n ';
+end;
+
+function TGestorGridTallas.ColsInsertNumero: string;
+begin
+  Result := '';
+  if FCfg.FieldNumeroCel <> '' then
+    Result := FCfg.FieldNumeroCel + ', ';
+end;
+
+function TGestorGridTallas.ValsInsertNumero: string;
+begin
+  Result := '';
+  if FCfg.FieldNumeroCel <> '' then
+    Result := ':n, ';
+end;
+
+procedure TGestorGridTallas.ParamNumero(AQuery: TUniQuery);
+begin
+  if FCfg.FieldNumeroCel <> '' then
+    AQuery.ParamByName('n').AsString := NumeroDoc;
 end;
 
 function TGestorGridTallas.WhereDocExtra: string;
@@ -534,12 +571,12 @@ begin
       '       SUM(' + FCfg.FieldCantidadCel + ') AS TOTAL ' +
       '  FROM ' + FCfg.TablaCeldas + ' ' +
       ' WHERE ' + FCfg.FieldSerieCel  + ' = :s ' +
-      '   AND ' + FCfg.FieldNumeroCel + ' = :n ' +
+      WhereNumero +
       '   AND ' + FCfg.FieldLineaCel  + ' = :l ' +
       WhereDocExtra +
       ' GROUP BY ' + FCfg.FieldAvPivotCel;
     q.ParamByName('s').AsString  := SerieDoc;
-    q.ParamByName('n').AsString  := NumeroDoc;
+    ParamNumero(q);
     q.ParamByName('l').AsInteger := ALinea;
     ParamsDocExtra(q);
     q.Open;
@@ -591,7 +628,7 @@ begin
       q.SQL.Text :=
         'DELETE FROM ' + FCfg.TablaCeldas + ' ' +
         ' WHERE ' + FCfg.FieldSerieCel   + ' = :s ' +
-        '   AND ' + FCfg.FieldNumeroCel  + ' = :n ' +
+        WhereNumero +
         '   AND ' + FCfg.FieldLineaCel   + ' = :l ' +
         '   AND ' + FCfg.FieldFilaCel    + ' = :f ' +
         '   AND ' + FCfg.FieldAvPivotCel + ' = :p';
@@ -616,7 +653,7 @@ begin
         q.SQL.Text :=
           'INSERT INTO ' + FCfg.TablaCeldas + ' (' +
           FCfg.FieldSerieCel   + ', ' +
-          FCfg.FieldNumeroCel  + ', ' +
+          ColsInsertNumero +
           ColsInsertDocExtra +
           FCfg.FieldLineaCel   + ', ' +
           FCfg.FieldFilaCel    + ', ' +
@@ -625,7 +662,7 @@ begin
           FCfg.FieldCantidadCel +
           ', INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
           ' USUARIO_MODIF) ' +
-          'VALUES (:s, :n, ' + ValsInsertDocExtra +
+          'VALUES (:s, ' + ValsInsertNumero + ValsInsertDocExtra +
           ':l, :f, :p, :a, :c, NOW(), :u, NOW(), :u) ' +
           'ON DUPLICATE KEY UPDATE ' +
           FCfg.FieldCantidadCel + ' = :c, ' +
@@ -634,7 +671,7 @@ begin
         q.SQL.Text :=
           'INSERT INTO ' + FCfg.TablaCeldas + ' (' +
           FCfg.FieldSerieCel   + ', ' +
-          FCfg.FieldNumeroCel  + ', ' +
+          ColsInsertNumero +
           ColsInsertDocExtra +
           FCfg.FieldLineaCel   + ', ' +
           FCfg.FieldFilaCel    + ', ' +
@@ -642,7 +679,7 @@ begin
           FCfg.FieldCantidadCel +
           ', INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
           ' USUARIO_MODIF) ' +
-          'VALUES (:s, :n, ' + ValsInsertDocExtra +
+          'VALUES (:s, ' + ValsInsertNumero + ValsInsertDocExtra +
           ':l, :f, :p, :c, NOW(), :u, NOW(), :u) ' +
           'ON DUPLICATE KEY UPDATE ' +
           FCfg.FieldCantidadCel + ' = :c, ' +
@@ -651,7 +688,7 @@ begin
       q.ParamByName('u').AsString := FCfg.Usuario;
     end;
     q.ParamByName('s').AsString  := SerieDoc;
-    q.ParamByName('n').AsString  := NumeroDoc;
+    ParamNumero(q);
     q.ParamByName('l').AsInteger := ALinea;
     q.ParamByName('f').AsInteger := FCfg.IdFilaFijo;
     q.ParamByName('p').AsInteger := AIdAv;
@@ -688,11 +725,11 @@ begin
       'SELECT COALESCE(SUM(' + FCfg.FieldCantidadCel + '), 0) AS TOTAL ' +
       '  FROM ' + FCfg.TablaCeldas + ' ' +
       ' WHERE ' + FCfg.FieldSerieCel  + ' = :s ' +
-      '   AND ' + FCfg.FieldNumeroCel + ' = :n ' +
+      WhereNumero +
       '   AND ' + FCfg.FieldLineaCel  + ' = :l' +
       WhereDocExtra;
     q.ParamByName('s').AsString  := SerieDoc;
-    q.ParamByName('n').AsString  := NumeroDoc;
+    ParamNumero(q);
     q.ParamByName('l').AsInteger := iLinea;
     ParamsDocExtra(q);
     q.Open;
@@ -700,7 +737,12 @@ begin
   finally
     FreeAndNil(q);
   end;
-  rPr := ds.FieldByName(FCfg.FieldPrecioBase).AsFloat;
+  // Campos OPCIONALES: documentos sin precio por linea (documentos de
+  // trabajo) dejan FieldPrecioBase/FieldTotalLinea en ''.
+  rPr := 0;
+  if (FCfg.FieldPrecioBase <> '') and
+     (ds.FindField(FCfg.FieldPrecioBase) <> nil) then
+    rPr := ds.FieldByName(FCfg.FieldPrecioBase).AsFloat;
   // BeginUpdate/EndUpdate del DataController para que el cxGrid no
   // re-renderice la fila tras el ds.Edit y las asignaciones de campos
   // bound — el re-render limpia los Values[] no-bound de TODAS las
@@ -710,8 +752,12 @@ begin
   FCfg.Grid.DataController.BeginUpdate;
   try
     if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
-    ds.FieldByName(FCfg.FieldTotalUds).AsFloat   := rTot;
-    ds.FieldByName(FCfg.FieldTotalLinea).AsFloat := rTot * rPr;
+    if (FCfg.FieldTotalUds <> '') and
+       (ds.FindField(FCfg.FieldTotalUds) <> nil) then
+      ds.FieldByName(FCfg.FieldTotalUds).AsFloat := rTot;
+    if (FCfg.FieldTotalLinea <> '') and
+       (ds.FindField(FCfg.FieldTotalLinea) <> nil) then
+      ds.FieldByName(FCfg.FieldTotalLinea).AsFloat := rTot * rPr;
   finally
     FCfg.Grid.DataController.EndUpdate;
   end;
