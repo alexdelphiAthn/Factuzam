@@ -137,7 +137,9 @@ uses
   // Factoria del contrato + oUser para el gestor de tallas.
   inLibColumnasSku, inLibGlobalVar,
   // Modal de destino (almacen/serie/numero) del "Enviar a...".
-  inMtoModalEnviarDestino;
+  inMtoModalEnviarDestino,
+  // Venta TPV abierta (frmMtoOpeCaja) para el volcado de SKUs.
+  inMtoCajaOpe;
 
 {$R *.dfm}
 
@@ -621,19 +623,160 @@ end;
 
 procedure TfrmMtoDocumentosTrabajo.miEnviarAlbaranDTRClick(
   Sender: TObject);
+var
+  idDtr: Int64;
+  q: TUniQuery;
+  sp: TUniStoredProc;
+  ds: TDataSet;
+  sEmp, sAlm, sSerie, sNumero: string;
 begin
-  // Pendiente de la siguiente tanda: requiere el flujo de creacion de
-  // albaranes de venta (cabecera + contadores + lineas).
-  ShowMessage('Enviar a albarán de venta: pendiente de implementar ' +
-              'en la siguiente tanda.');
+  idDtr := PrepararEnvio;
+  if idDtr <= 0 then
+    Exit;
+  ds := dmmDocumentosTrabajo.unqryTablaG;
+  sEmp := ds.FieldByName('CODIGO_EMP_DTR').AsString;
+  sAlm := ds.FieldByName('CODIGO_ALM_DTR').AsString;
+  sSerie := '';
+  sNumero := '0';
+  if not TfrmModalEnviarDestino.Ejecutar(Self,
+           dmmDocumentosTrabajo.unqryTablaG.Connection,
+           'Enviar a albarán de venta', sEmp, 'AV',
+           sAlm, sSerie, sNumero) then
+    Exit;
+  // Numero '0' = contador oficial de albaranes de venta (tipo 'AV').
+  if sNumero = '0' then
+  begin
+    sp := TUniStoredProc.Create(nil);
+    try
+      sp.Connection := dmmDocumentosTrabajo.unqryTablaG.Connection;
+      sp.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
+      sp.Params.Clear;
+      sp.Params.CreateParam(ftString, 'pserie', ptInput);
+      sp.Params.CreateParam(ftString, 'ptipodoc', ptInput);
+      sp.Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
+      sp.Params.CreateParam(ftString, 'pUSUARIOMODIF', ptInput);
+      sp.Params.CreateParam(ftString, 'pcont', ptOutput);
+      sp.ParamByName('pserie').AsString := sSerie;
+      sp.ParamByName('ptipodoc').AsString := 'AV';
+      sp.ParamByName('pEMPRESA_CONTADOR').AsString := sEmp;
+      sp.ParamByName('pUSUARIOMODIF').AsString := oUser;
+      sp.ExecProc;
+      sNumero := sp.ParamByName('pcont').AsString;
+    finally
+      FreeAndNil(sp);
+    end;
+    if (sNumero = '') or (sNumero = '0') then
+    begin
+      ShowMessage('El contador de albaranes no ha devuelto numero ' +
+                  'para la serie ' + sSerie + '.');
+      Exit;
+    end;
+  end;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := dmmDocumentosTrabajo.unqryTablaG.Connection;
+    // Cabecera minima ABIERTA: cliente, fiscalidad y precios se
+    // completan en el Mto de albaranes.
+    q.SQL.Text :=
+      'INSERT INTO fza_albaranes ' +
+      ' (NUMERO_ALB, SERIE_ALB, FECHA_ALB, ESTADO_ALB, ' +
+      '  CODIGO_EMP_ALB, CODIGO_ALM_ALB, CONTADOR_LINEAS_ALB, ' +
+      '  INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+      'SELECT :NUMERO, :SERIE, CURDATE(), ''ABIERTO'', :EMP, :ALM, ' +
+      '       LPAD(COUNT(*) * 10, 8, ''0''), NOW(), NOW(), :USU, :USU ' +
+      '  FROM fza_documentos_trabajo_lineas ' +
+      ' WHERE ID_DTR_DTL = :ID';
+    q.ParamByName('NUMERO').AsString := sNumero;
+    q.ParamByName('SERIE').AsString := sSerie;
+    q.ParamByName('EMP').AsString := sEmp;
+    q.ParamByName('ALM').AsString := sAlm;
+    q.ParamByName('ID').AsLargeInt := idDtr;
+    q.ParamByName('USU').AsString := oUser;
+    q.ExecSQL;
+    // Lineas numeradas a paso 10 (convencion de albaranes) con
+    // cantidad del documento; precios a 0 para revisar en el Mto.
+    q.SQL.Text :=
+      'INSERT INTO fza_albaranes_lineas ' +
+      ' (NUMERO_ALB_ALBLIN, SERIE_ALB_ALBLIN, LINEA_ALBLIN, ' +
+      '  CODIGO_ART_ALBLIN, DESCRIPCION_ARTICULO_ALBLIN, ' +
+      '  CANTIDAD_ALBLIN, CODIGO_ALMACEN_ALBLIN, ' +
+      '  CODIGO_UNIDAD_ALBLIN, LOTE_ALBLIN, FECHA_CADUCIDAD_ALBLIN, ' +
+      '  DESCRIPCION_VARIACION_ALBLIN, ' +
+      '  INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+      'SELECT :NUMERO, :SERIE, ' +
+      '       LPAD(CAST(LINEA_DTL AS UNSIGNED) * 10, 4, ''0''), ' +
+      '       CODIGO_ART_DTL, LEFT(DESCRIPCION_ARTICULO_DTL, 100), ' +
+      '       CANTIDAD_DTL, :ALM, ' +
+      '       CODIGO_UNIDAD_DTL, COALESCE(LOTE_DTL, ''''), ' +
+      '       FECHA_CADUCIDAD_DTL, DESCRIPCION_UNIDAD_DTL, ' +
+      '       NOW(), :USU, :USU ' +
+      '  FROM fza_documentos_trabajo_lineas ' +
+      ' WHERE ID_DTR_DTL = :ID';
+    q.ParamByName('NUMERO').AsString := sNumero;
+    q.ParamByName('SERIE').AsString := sSerie;
+    q.ParamByName('ALM').AsString := sAlm;
+    q.ParamByName('ID').AsLargeInt := idDtr;
+    q.ParamByName('USU').AsString := oUser;
+    q.ExecSQL;
+    ShowMessage(Format(
+      'Albarán de venta %s/%s creado ABIERTO con %d líneas.%s' +
+      'Asigna cliente, tarifa y precios en el Mto de albaranes.',
+      [sSerie, sNumero, q.RowsAffected, sLineBreak]));
+  finally
+    FreeAndNil(q);
+  end;
 end;
 
 procedure TfrmMtoDocumentosTrabajo.miEnviarTpvDTRClick(Sender: TObject);
+var
+  idDtr: Int64;
+  ds: TDataSet;
+  Bm: TBookmark;
+  iOk, iMal: Integer;
 begin
-  // Pendiente de la siguiente tanda: requiere la caja abierta (o
-  // abrir el Mto de ventas TPV) y volcar via su resolutor de SKUs.
-  ShowMessage('Enviar a venta TPV: pendiente de implementar en la ' +
-              'siguiente tanda.');
+  idDtr := PrepararEnvio;
+  if idDtr <= 0 then
+    Exit;
+  // La venta TPV debe estar ABIERTA: el volcado usa su propio flujo
+  // de resolucion (precios/tarifa/IVA de la operacion en curso).
+  if (frmMtoOpeCaja = nil) or (not frmMtoOpeCaja.Visible) then
+  begin
+    ShowMessage('La venta TPV no está abierta.' + sLineBreak +
+                'Abre Caja > Ventas y repite "Enviar a... > Venta ' +
+                'TPV" para volcar los SKUs en la operación en curso.');
+    Exit;
+  end;
+  ds := dmmDocumentosTrabajo.unqryLineas;
+  iOk := 0;
+  iMal := 0;
+  Bm := ds.GetBookmark;
+  ds.DisableControls;
+  try
+    ds.First;
+    while not ds.Eof do
+    begin
+      if frmMtoOpeCaja.CargarSkuExterno(
+           ds.FieldByName('CODIGO_UNIDAD_DTL').AsString,
+           ds.FieldByName('CANTIDAD_DTL').AsFloat) then
+        Inc(iOk)
+      else
+        Inc(iMal);
+      ds.Next;
+    end;
+    if ds.BookmarkValid(Bm) then
+      ds.GotoBookmark(Bm);
+  finally
+    ds.EnableControls;
+    ds.FreeBookmark(Bm);
+  end;
+  frmMtoOpeCaja.BringToFront;
+  if iMal = 0 then
+    ShowMessage(Format('%d líneas volcadas a la venta TPV.', [iOk]))
+  else
+    ShowMessage(Format(
+      '%d líneas volcadas a la venta TPV; %d no se han podido ' +
+      'resolver (artículo inexistente o descatalogado).',
+      [iOk, iMal]));
 end;
 
 procedure TfrmMtoDocumentosTrabajo.miEnviarInventarioDTRClick(
