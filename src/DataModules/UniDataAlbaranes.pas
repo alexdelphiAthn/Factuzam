@@ -129,6 +129,82 @@ uses
 
 {$R *.dfm}
 
+const
+  // Columnas REALES de fza_albaranes. La cabecera se lee de
+  // vi_albaranes (que anade NOMBRE_ALM_ALB por join y NO es
+  // insertable): los DML se generan contra la tabla, como hace
+  // pedidos con fza_pedidos en su dfm.
+  COLUMNAS_ALBARAN: array[0..69] of string = (
+    'NUMERO_ALB', 'SERIE_ALB', 'FECHA_ALB', 'ESCONSOLIDADO_ALB',
+    'ESTADO_ALB', 'NUMERO_PED_ALB', 'SERIE_PED_ALB', 'NUMERO_FAC_ALB',
+    'SERIE_FAC_ALB', 'CODIGO_EMP_ALB', 'CODIGO_ALM_ALB',
+    'RAZON_SOCIAL_EMPRESA_ALB', 'NIF_EMPRESA_ALB', 'MOVIL_EMPRESA_ALB',
+    'EMAIL_EMPRESA_ALB', 'DIRECCION1_EMPRESA_ALB',
+    'DIRECCION2_EMPRESA_ALB', 'POBLACION_EMPRESA_ALB',
+    'PROVINCIA_EMPRESA_ALB', 'CODIGO_PAI_EMPRESA_ALB',
+    'NOMBRE_PAI_EMPRESA_ALB', 'CODIGO_POSTAL_EMPRESA_ALB',
+    'GRUPO_ZONA_IVA_EMPRESA_ALB', 'CODIGO_CLI_ALB',
+    'RAZON_SOCIAL_CLIENTE_ALB', 'NIF_CLIENTE_ALB', 'MOVIL_CLIENTE_ALB',
+    'EMAIL_CLIENTE_ALB', 'DIRECCION1_CLIENTE_ALB',
+    'DIRECCION2_CLIENTE_ALB', 'POBLACION_CLIENTE_ALB',
+    'PROVINCIA_CLIENTE_ALB', 'CODIGO_POSTAL_CLIENTE_ALB',
+    'CODIGO_PAI_CLIENTE_ALB', 'NOMBRE_PAI_CLIENTE_ALB',
+    'NOMBRE_CLI_ENVIO_ALB', 'MOVIL_CLIENTE_ENVIO_ALB',
+    'DIRECCION1_CLIENTE_ENVIO_ALB', 'DIRECCION2_CLIENTE_ENVIO_ALB',
+    'POBLACION_CLIENTE_ENVIO_ALB', 'PROVINCIA_CLIENTE_ENVIO_ALB',
+    'CODIGO_POSTAL_CLIENTE_ENVIO_ALB', 'CODIGO_PAI_CLIENTE_ENVIO_ALB',
+    'NOMBRE_PAI_CLIENTE_ENVIO_ALB', 'TRANSPORTISTA_ALB',
+    'CODIGO_IVA_ALB', 'ESIVA_RECARGO_CLIENTE_ALB',
+    'ESIVA_EXENTO_CLIENTE_ALB', 'ESINTRACOMUNITARIO_CLIENTE_ALB',
+    'TARIFA_ARTICULO_CLIENTE_ALB', 'ESIMP_INCL_TARIFA_CLIENTE_ALB',
+    'PORCENTAJE_IVAN_ALB', 'TOTAL_IVAN_ALB', 'PORCENTAJE_IVAR_ALB',
+    'TOTAL_IVAR_ALB', 'PORCENTAJE_IVAS_ALB', 'TOTAL_IVAS_ALB',
+    'PORCENTAJE_IVAE_ALB', 'TOTAL_IVAE_ALB', 'TOTAL_BASES_ALB',
+    'TOTAL_IMPUESTOS_ALB', 'TOTAL_LIQUIDO_ALB', 'FORMA_PAGO_ALB',
+    'CONTADOR_LINEAS_ALB', 'COMENTARIOS_ALB', 'OBSERVACIONES_ALB',
+    'INSTANTE_MODIF', 'INSTANTE_ALTA', 'USUARIO_ALTA', 'USUARIO_MODIF'
+  );
+
+// INSERT INTO fza_albaranes con todas las columnas de la tabla.
+function SqlInsertAlbaran: string;
+var
+  i: Integer;
+  sCols, sVals: string;
+begin
+  sCols := '';
+  sVals := '';
+  for i := Low(COLUMNAS_ALBARAN) to High(COLUMNAS_ALBARAN) do
+  begin
+    if i > Low(COLUMNAS_ALBARAN) then
+    begin
+      sCols := sCols + ', ';
+      sVals := sVals + ', ';
+    end;
+    sCols := sCols + COLUMNAS_ALBARAN[i];
+    sVals := sVals + ':' + COLUMNAS_ALBARAN[i];
+  end;
+  Result := 'INSERT INTO fza_albaranes (' + sCols + ') VALUES (' +
+            sVals + ')';
+end;
+
+// UPDATE de fza_albaranes por clave primaria (NUMERO+SERIE).
+function SqlUpdateAlbaran: string;
+var
+  i: Integer;
+  sSet: string;
+begin
+  sSet := '';
+  for i := Low(COLUMNAS_ALBARAN) to High(COLUMNAS_ALBARAN) do
+  begin
+    if i > Low(COLUMNAS_ALBARAN) then
+      sSet := sSet + ', ';
+    sSet := sSet + COLUMNAS_ALBARAN[i] + ' = :' + COLUMNAS_ALBARAN[i];
+  end;
+  Result := 'UPDATE fza_albaranes SET ' + sSet +
+            ' WHERE NUMERO_ALB = :Old_NUMERO_ALB' +
+            '   AND SERIE_ALB = :Old_SERIE_ALB';
+end;
+
 procedure TdmAlbaranes.DataModuleCreate(Sender: TObject);
 begin
   inherited;
@@ -138,6 +214,16 @@ begin
     'DELETE FROM fza_albaranes ' + sLineBreak +
     'WHERE NUMERO_ALB = :Old_NUMERO_ALB ' + sLineBreak +
     '  AND SERIE_ALB = :Old_SERIE_ALB';
+  // La cabecera se lee de vi_albaranes (join a almacenes): la vista NO
+  // es insertable y los DML generados por UniDAC contra ella fallan
+  // ('target table vi_albaranes ... not insertable-into') al crear un
+  // albaran nuevo desde el form. Se escriben contra la tabla real.
+  unqryTablaG.SQLInsert.Text             := SqlInsertAlbaran;
+  unqryTablaG.SQLUpdate.Text             := SqlUpdateAlbaran;
+  unqryTablaG.SQLRefresh.Text            :=
+    'SELECT * FROM vi_albaranes ' +
+    ' WHERE NUMERO_ALB = :NUMERO_ALB ' +
+    '   AND SERIE_ALB = :SERIE_ALB';
   unqryAlbaranesLineas.Connection        := inLibGlobalVar.oConn;
   unqryEmpDataAlb.Connection             := inLibGlobalVar.oConn;
   unqryCliDataAlb.Connection             := inLibGlobalVar.oConn;

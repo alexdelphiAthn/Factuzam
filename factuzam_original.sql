@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 07/07/2026 16:10:36
+-- Backup generado: 07/07/2026 19:55:24
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -191,9 +191,40 @@ ALTER TABLE `fza_albaranes` ADD INDEX `IDX_ALB_PEDIDO` (`SERIE_PED_ALB`, `NUMERO
 -- Datos de fza_albaranes
 INSERT INTO `fza_albaranes` (`NUMERO_ALB`, `SERIE_ALB`, `FECHA_ALB`, `ESCONSOLIDADO_ALB`, `ESTADO_ALB`, `NUMERO_PED_ALB`, `SERIE_PED_ALB`, `NUMERO_FAC_ALB`, `SERIE_FAC_ALB`, `CODIGO_EMP_ALB`, `CODIGO_ALM_ALB`, `RAZON_SOCIAL_EMPRESA_ALB`, `NIF_EMPRESA_ALB`, `MOVIL_EMPRESA_ALB`, `EMAIL_EMPRESA_ALB`, `DIRECCION1_EMPRESA_ALB`, `DIRECCION2_EMPRESA_ALB`, `POBLACION_EMPRESA_ALB`, `PROVINCIA_EMPRESA_ALB`, `CODIGO_PAI_EMPRESA_ALB`, `NOMBRE_PAI_EMPRESA_ALB`, `CODIGO_POSTAL_EMPRESA_ALB`, `GRUPO_ZONA_IVA_EMPRESA_ALB`, `CODIGO_CLI_ALB`, `RAZON_SOCIAL_CLIENTE_ALB`, `NIF_CLIENTE_ALB`, `MOVIL_CLIENTE_ALB`, `EMAIL_CLIENTE_ALB`, `DIRECCION1_CLIENTE_ALB`, `DIRECCION2_CLIENTE_ALB`, `POBLACION_CLIENTE_ALB`, `PROVINCIA_CLIENTE_ALB`, `CODIGO_POSTAL_CLIENTE_ALB`, `CODIGO_PAI_CLIENTE_ALB`, `NOMBRE_PAI_CLIENTE_ALB`, `NOMBRE_CLI_ENVIO_ALB`, `MOVIL_CLIENTE_ENVIO_ALB`, `DIRECCION1_CLIENTE_ENVIO_ALB`, `DIRECCION2_CLIENTE_ENVIO_ALB`, `POBLACION_CLIENTE_ENVIO_ALB`, `PROVINCIA_CLIENTE_ENVIO_ALB`, `CODIGO_POSTAL_CLIENTE_ENVIO_ALB`, `CODIGO_PAI_CLIENTE_ENVIO_ALB`, `NOMBRE_PAI_CLIENTE_ENVIO_ALB`, `TRANSPORTISTA_ALB`, `CODIGO_IVA_ALB`, `ESIVA_RECARGO_CLIENTE_ALB`, `ESIVA_EXENTO_CLIENTE_ALB`, `ESINTRACOMUNITARIO_CLIENTE_ALB`, `TARIFA_ARTICULO_CLIENTE_ALB`, `ESIMP_INCL_TARIFA_CLIENTE_ALB`, `PORCENTAJE_IVAN_ALB`, `TOTAL_IVAN_ALB`, `PORCENTAJE_IVAR_ALB`, `TOTAL_IVAR_ALB`, `PORCENTAJE_IVAS_ALB`, `TOTAL_IVAS_ALB`, `PORCENTAJE_IVAE_ALB`, `TOTAL_IVAE_ALB`, `TOTAL_BASES_ALB`, `TOTAL_IMPUESTOS_ALB`, `TOTAL_LIQUIDO_ALB`, `FORMA_PAGO_ALB`, `CONTADOR_LINEAS_ALB`, `COMENTARIOS_ALB`, `OBSERVACIONES_ALB`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('000001', 'A1', '2026-07-01 00:00:00', 'N', 'ABIERTO', NULL, NULL, NULL, NULL, '012', NULL, 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '302', 'CARLOS HERRERO SANTOS', '23456789B', '666202020', 'carlos.herrero@hotmail.com', 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, '1', 'N', 'N', 'N', 'PVP', 'S', 21, 0, 10, 0, 4, 0, 0, 0, 0, 0, 0, NULL, NULL, '', '', '2026-07-01 09:21:26', '2026-07-01 09:21:26', 'Administrador', 'Administrador'),
-  ('000001', 'AG1', '2026-07-02 00:00:00', 'N', 'ABIERTO', NULL, NULL, NULL, NULL, '1', NULL, 'AGRICULTOR', 'NIF DEL AGRICULTOR', 'TFNO DEL AGRICULTOR', 'EMAIL DEL AGRICULTOR', 'DIRECCION DEL AGRICULTOR', '', 'POBLACION DEL AGRICULTOR', 'PROVINCIA DEL AGRICULTOR', 'ES', 'España', 'POSAGRI', '2', '302', 'CARLOS HERRERO SANTOS', '23456789B', '666202020', 'carlos.herrero@hotmail.com', 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, NULL, 'N', 'N', 'N', 'PVP', 'S', NULL, 0, NULL, 0, NULL, 0, NULL, 0, 0, 0, 0, NULL, NULL, '', '', '2026-07-02 18:55:16', '2026-07-02 18:55:16', 'Administrador', 'Administrador'),
-  ('000003', 'A1', '2026-07-03 00:00:00', 'N', 'ABIERTO', NULL, NULL, NULL, NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '313', 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, '1', 'N', 'N', 'N', 'VENTAMAYOR', 'S', 21, 21, 10, 0, 4, 0, 0, 0, 100, 21, 121, NULL, '00000010', '', '', '2026-07-03 20:10:41', '2026-07-03 16:51:59', 'Administrador', 'Administrador');
--- 3 registros exportados
+  ('000001', 'AG1', '2026-07-02 00:00:00', 'N', 'ABIERTO', NULL, NULL, NULL, NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '302', 'CARLOS HERRERO SANTOS', '23456789B', '666202020', 'carlos.herrero@hotmail.com', 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, '1', 'N', 'N', 'N', 'PVP', 'S', 21, 0, 10, 0, 4, 0, 0, 0, 0, 0, 0, NULL, '00000010', '', '', '2026-07-07 18:39:04', '2026-07-02 18:55:16', 'Administrador', 'Administrador'),
+  ('000003', 'A1', '2026-07-03 00:00:00', 'N', 'ABIERTO', NULL, NULL, NULL, NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '313', 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, '1', 'N', 'N', 'N', 'VENTAMAYOR', 'S', 21, 68.46, 10, 0, 4, 0, 0, 0, 326, 68.46, 394.46, '30Y60', '00000010', '', '', '2026-07-03 20:10:41', '2026-07-03 16:51:59', 'Administrador', 'Administrador'),
+  ('000005', 'A1', '2026-07-07 00:00:00', 'N', 'ABIERTO', NULL, NULL, NULL, NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', NULL, NULL, NULL, NULL, NULL, 21, 0, 10, 0, 4, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-07-07 19:22:14', '2026-07-07 19:22:14', 'Administrador', 'Administrador'),
+  ('000006', 'A1', '2026-07-07 00:00:00', 'N', 'ABIERTO', '000001', 'A1', NULL, NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '313', 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'VENTAMAYOR', NULL, 21, 25.2, 10, 0, 4, 0, 0, 0, 120, 25.2, 145.2, '60DIAS', '0', '', '', '2026-07-07 19:40:06', '2026-07-07 19:40:06', 'Administrador', 'Administrador');
+-- 5 registros exportados
+
+
+-- Tabla: fza_albaranes_celdas
+
+DROP TABLE IF EXISTS `fza_albaranes_celdas`;
+CREATE TABLE `fza_albaranes_celdas` (
+  `SERIE_ALB_ALBCEL` varchar(20) NOT NULL,
+  `NUMERO_ALB_ALBCEL` varchar(20) NOT NULL,
+  `LINEA_ALBCEL` int(11) NOT NULL,
+  `ID_FILA_ALBCEL` int(11) NOT NULL,
+  `ID_AV_PIVOT_ALBCEL` int(11) NOT NULL COMMENT 'FK logica fza_atributos_valores del eje pivot (TALLA)',
+  `CODIGO_ALM_ALBCEL` varchar(10) NOT NULL DEFAULT '',
+  `CANTIDAD_ALBCEL` decimal(19,6) NOT NULL,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT '',
+  `INSTANTE_MODIF` datetime NULL DEFAULT NULL,
+  `USUARIO_MODIF` varchar(100) NULL DEFAULT NULL,
+  PRIMARY KEY (`SERIE_ALB_ALBCEL`,`NUMERO_ALB_ALBCEL`,`LINEA_ALBCEL`,`ID_FILA_ALBCEL`,`ID_AV_PIVOT_ALBCEL`,`CODIGO_ALM_ALBCEL`)
+);
+ALTER TABLE `fza_albaranes_celdas` ADD INDEX `IDX_ALBCEL_AV_PIVOT` (`ID_AV_PIVOT_ALBCEL`);
+
+-- Datos de fza_albaranes_celdas
+INSERT INTO `fza_albaranes_celdas` (`SERIE_ALB_ALBCEL`, `NUMERO_ALB_ALBCEL`, `LINEA_ALBCEL`, `ID_FILA_ALBCEL`, `ID_AV_PIVOT_ALBCEL`, `CODIGO_ALM_ALBCEL`, `CANTIDAD_ALBCEL`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES
+  ('A1', '000003', 10, 1, 9103, '', 1, '2026-07-07 19:29:00', 'Administrador', '2026-07-07 19:29:00', 'Administrador'),
+  ('A1', '000003', 10, 1, 9210, '', 1, '2026-07-07 19:30:01', 'Administrador', '2026-07-07 19:30:01', 'Administrador'),
+  ('A1', '000003', 20, 1, 9103, '', 1, '2026-07-07 19:29:01', 'Administrador', '2026-07-07 19:29:01', 'Administrador'),
+  ('A1', '000003', 30, 1, 126, '', 1, '2026-07-07 19:29:01', 'Administrador', '2026-07-07 19:29:01', 'Administrador'),
+  ('A1', '000006', 10, 1, 9101, '', 1, '2026-07-07 19:51:49', 'Administrador', '2026-07-07 19:51:49', 'Administrador');
+-- 5 registros exportados
 
 
 -- Tabla: fza_albaranes_compra
@@ -820,16 +851,33 @@ CREATE TABLE `fza_albaranes_lineas` (
   `LOTE_ALBLIN` varchar(50) NULL DEFAULT NULL,
   `FECHA_CADUCIDAD_ALBLIN` date NULL DEFAULT NULL,
   `DESCRIPCION_VARIACION_ALBLIN` varchar(200) NULL DEFAULT NULL,
+  `ATTR1_VALOR_ALBLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR1_NOMBRE_ALBLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR2_VALOR_ALBLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR2_NOMBRE_ALBLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR3_VALOR_ALBLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR3_NOMBRE_ALBLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR4_VALOR_ALBLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR4_NOMBRE_ALBLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR5_VALOR_ALBLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR5_NOMBRE_ALBLIN` varchar(100) NOT NULL DEFAULT '',
+  `NUM_ATRIBUTOS_ALBLIN` int(11) NOT NULL DEFAULT '0' COMMENT 'Atributos requeridos del articulo',
+  `ID_AC_PIVOT_ALBLIN` int(11) NOT NULL DEFAULT '0' COMMENT 'Conjunto pivotado en tallas horizontal (0 = sin pivote)',
   PRIMARY KEY (`NUMERO_ALB_ALBLIN`,`SERIE_ALB_ALBLIN`,`LINEA_ALBLIN`)
 );
 ALTER TABLE `fza_albaranes_lineas` ADD INDEX `IDX_ALBLIN_ARTICULO` (`CODIGO_ART_ALBLIN`);
 ALTER TABLE `fza_albaranes_lineas` ADD INDEX `IDX_ALBLIN_FAC` (`SERIE_FAC_ALBLIN`, `NUMERO_FAC_ALBLIN`);
 ALTER TABLE `fza_albaranes_lineas` ADD INDEX `IDX_ALBLIN_PEDIDO` (`SERIE_PED_ALBLIN`, `NUMERO_PED_ALBLIN`, `LINEA_PED_ALBLIN`);
+ALTER TABLE `fza_albaranes_lineas` ADD INDEX `IDX_ALBLIN_UNIDAD` (`CODIGO_UNIDAD_ALBLIN`);
 
 -- Datos de fza_albaranes_lineas
-INSERT INTO `fza_albaranes_lineas` (`NUMERO_ALB_ALBLIN`, `SERIE_ALB_ALBLIN`, `LINEA_ALBLIN`, `NUMERO_PED_ALBLIN`, `SERIE_PED_ALBLIN`, `LINEA_PED_ALBLIN`, `CODIGO_ART_ALBLIN`, `CODIGO_FAM_ALBLIN`, `NOMBRE_FAM_ALBLIN`, `DESCRIPCION_ARTICULO_ALBLIN`, `TIPO_CANTIDAD_ARTICULO_ALBLIN`, `CANTIDAD_ALBLIN`, `CODIGO_TAR_ALBLIN`, `ESIMP_INCL_TARIFA_ALBLIN`, `TIPO_IVA_ARTICULO_ALBLIN`, `PORCENTAJE_IVA_ALBLIN`, `PRECIO_VENTA_SIVA_ARTICULO_ALBLIN`, `PRECIO_VENTA_CIVA_ARTICULO_ALBLIN`, `TOTAL_ALBLIN`, `CODIGO_ALMACEN_ALBLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ESFACTURADA_ALBLIN`, `NUMERO_FAC_ALBLIN`, `SERIE_FAC_ALBLIN`, `LINEA_FAC_ALBLIN`, `CODIGO_UNIDAD_ALBLIN`, `LOTE_ALBLIN`, `FECHA_CADUCIDAD_ALBLIN`, `DESCRIPCION_VARIACION_ALBLIN`) VALUES
-  ('000003', 'A1', '0010', NULL, NULL, NULL, 'TESTPMP1', 'OTR', 'Otros articulos agrícolas', 'Test_PMP_1', 'Uds', 4, 'VENTAMAYOR', 'N', 'N', 21, 25, 30.25, 100, 'GEN', '2026-07-03 20:10:40', '2026-07-03 16:51:20', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'TESTPMP1', NULL, NULL, NULL);
--- 1 registros exportados
+INSERT INTO `fza_albaranes_lineas` (`NUMERO_ALB_ALBLIN`, `SERIE_ALB_ALBLIN`, `LINEA_ALBLIN`, `NUMERO_PED_ALBLIN`, `SERIE_PED_ALBLIN`, `LINEA_PED_ALBLIN`, `CODIGO_ART_ALBLIN`, `CODIGO_FAM_ALBLIN`, `NOMBRE_FAM_ALBLIN`, `DESCRIPCION_ARTICULO_ALBLIN`, `TIPO_CANTIDAD_ARTICULO_ALBLIN`, `CANTIDAD_ALBLIN`, `CODIGO_TAR_ALBLIN`, `ESIMP_INCL_TARIFA_ALBLIN`, `TIPO_IVA_ARTICULO_ALBLIN`, `PORCENTAJE_IVA_ALBLIN`, `PRECIO_VENTA_SIVA_ARTICULO_ALBLIN`, `PRECIO_VENTA_CIVA_ARTICULO_ALBLIN`, `TOTAL_ALBLIN`, `CODIGO_ALMACEN_ALBLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ESFACTURADA_ALBLIN`, `NUMERO_FAC_ALBLIN`, `SERIE_FAC_ALBLIN`, `LINEA_FAC_ALBLIN`, `CODIGO_UNIDAD_ALBLIN`, `LOTE_ALBLIN`, `FECHA_CADUCIDAD_ALBLIN`, `DESCRIPCION_VARIACION_ALBLIN`, `ATTR1_VALOR_ALBLIN`, `ATTR1_NOMBRE_ALBLIN`, `ATTR2_VALOR_ALBLIN`, `ATTR2_NOMBRE_ALBLIN`, `ATTR3_VALOR_ALBLIN`, `ATTR3_NOMBRE_ALBLIN`, `ATTR4_VALOR_ALBLIN`, `ATTR4_NOMBRE_ALBLIN`, `ATTR5_VALOR_ALBLIN`, `ATTR5_NOMBRE_ALBLIN`, `NUM_ATRIBUTOS_ALBLIN`, `ID_AC_PIVOT_ALBLIN`) VALUES
+  ('000001', 'AG1', '0010', NULL, NULL, NULL, 'ABRIGO-PAÑO', 'ROPA', 'Ropa de Vestir a la moda', 'Abrigo de Paño Caballero', 'Uds', 0, 'PVP', 'S', 'N', 21, 163.595041, 197.95, 0, 'GEN', '2026-07-07 18:36:16', '2026-07-07 18:30:59', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'ABRIGO-PAÑO/NEGRO/XL', NULL, NULL, 'NEGRO / XL', 'NEGRO', 'Color', 'XL', '', '', '', '', '', '', '', 2, 1),
+  ('000003', 'A1', '0010', NULL, NULL, NULL, 'CHAQ-CUERO', 'ROPA', 'Ropa de Vestir a la moda', 'Chaqueta Biker Cuero', 'Uds', 2, 'VENTAMAYOR', 'N', 'N', 21, 78, 94.38, 156, 'GEN', '2026-07-07 19:30:04', '2026-07-03 16:51:20', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'CHAQ-CUERO/MARRON/L', NULL, NULL, 'MARRON / L', 'MARRON', 'Color', '', '', '', '', '', '', '', '', 2, 1),
+  ('000003', 'A1', '0020', NULL, NULL, NULL, 'DEPORTIVO009', 'DEPORTIVO', 'Ropa y calzado deportivo', 'mallitas', 'Uds', 1, 'VENTAMAYOR', 'N', 'N', 21, 112, 135.52, 112, 'GEN', '2026-07-07 19:29:01', '2026-07-07 18:57:10', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'DEPORTIVO009/NEGRO/L', NULL, NULL, 'NEGRO / L', 'NEGRO', 'Color', '', '', '', '', '', '', '', '', 2, 1),
+  ('000003', 'A1', '0030', NULL, NULL, NULL, 'ZAP-OXFORD', 'CALZADO', 'Calzado Todo tiempo', 'Zapato Oxford Piel Hombre', 'Uds', 1, 'VENTAMAYOR', 'N', 'N', 21, 58, 70.18, 58, 'GEN', '2026-07-07 19:29:01', '2026-07-07 19:10:23', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'ZAP-OXFORD/NEGRO/42', NULL, NULL, '42 / NEGRO', 'NEGRO', 'Color', '', '', '', '', '', '', '', '', 2, 4),
+  ('000006', 'A1', '0010', NULL, NULL, NULL, 'ABRIGO-PAÑO', 'ROPA', 'Ropa de Vestir a la moda', 'Abrigo de Paño Caballero', 'Uds', 1, 'VENTAMAYOR', 'N', 'N', 21, 120, 145.2, 120, 'GEN', '2026-07-07 19:51:50', '2026-07-07 19:42:35', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'ABRIGO-PAÑO/CAMEL/S', NULL, NULL, 'CAMEL / S', 'CAMEL', 'Color', '', '', '', '', '', '', '', '', 2, 1);
+-- 5 registros exportados
 
 
 -- Tabla: fza_almacenes
@@ -2201,9 +2249,9 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('DEP_CL_GEN', 'JERSEY-LANA/GRIS/L', '', NULL, 1, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0),
   ('DEP_CL_GEN', 'MOCHILA-SPORT', '', NULL, 0, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0),
   ('GEN', 'ABRIGO-PAÑO/CAMEL/L', '', NULL, 3, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 3, 10, 0, 0, 17, 10, 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/CAMEL/S', '', NULL, -1, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/CAMEL/S', '', NULL, -2, '2026-07-07 19:52:13', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0),
   ('GEN', 'ABRIGO-PAÑO/NEGRO/L', '', NULL, 3, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 3, 6, 0, 0),
-  ('GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 3, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 4, 0, 0),
+  ('GEN', 'ABRIGO-PAÑO/NEGRO/XL', '', NULL, 3, '2026-07-07 18:31:11', 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 4, 0, 0),
   ('GEN', 'BLUS-SEDA/BLANCO/L', '', NULL, 0, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 3, 0, 0, 0),
   ('GEN', 'BLUS-SEDA/BLANCO/M', '', NULL, -1, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0),
   ('GEN', 'BLUS-SEDA/BLANCO/S', '', NULL, -3, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0),
@@ -2241,7 +2289,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'BOTIN-ANIT/MARRON/40', '', NULL, 10, '2026-07-05 17:04:55', 50, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0),
   ('GEN', 'BOTIN-ANIT/NEGRO/37', '', NULL, 10, '2026-07-05 17:04:55', 100, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 12, 0, 0),
   ('GEN', 'BOTIN-ANIT/NEGRO/38', '', NULL, 6, '2026-07-05 17:04:55', 60, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/40', '', NULL, 4, '2026-07-05 17:04:55', 40, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/40', '', NULL, 4, '2026-07-07 19:01:41', 40, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0),
   ('GEN', 'CALV00001/3838/39', '', NULL, 0, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0),
   ('GEN', 'CALV00001/3838/40', '', NULL, 2, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'CALV00001/3838/41', '', NULL, 2, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -2305,7 +2353,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'CAMI-POLO/BLANCO/M', '', NULL, 7, '2026-07-05 17:04:55', 70, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 30, 0, 0),
   ('GEN', 'CAMI-POLO/BLANCO/S', '', NULL, 15, '2026-07-05 17:04:55', 150, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 0, 0),
   ('GEN', 'CARTERA-PIEL', '', NULL, 4, '2026-07-05 17:04:55', 20, 5, 0, 0, 0, 0, 0, 1, 4, 0, 0, 2, 15, 0, 0),
-  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 5, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 1, 5, 0, 0, 9, 18, 0, 0),
+  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 3, '2026-07-07 19:30:04', 0, 0, 0, 0, 0, 0, 0, 1, 5, 0, 0, 9, 18, 2, 0),
   ('GEN', 'CHAQ-CUERO/MARRON/S', '', NULL, 2, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0),
   ('GEN', 'CHAQ-CUERO/MARRON/XL', '', NULL, 4, '2026-07-05 17:04:55', 20, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 12, 0, 0),
   ('GEN', 'CHAQ-CUERO/NEGRO/L', '', NULL, 5, '2026-07-05 17:04:55', 25, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 10, 0, 0),
@@ -2414,7 +2462,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'DEPORTIVO006/AZUL/S', '', NULL, 2, '2026-07-05 17:04:55', 9, 4.5, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'DEPORTIVO006/AZUL/XL', '', NULL, 2, '2026-07-05 17:04:55', 9, 4.5, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'DEPORTIVO006/AZUL/XXL', '', NULL, 2, '2026-07-05 17:04:55', 9, 4.5, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
-  ('GEN', 'DEPORTIVO009/NEGRO/L', '', NULL, 2, '2026-07-05 17:04:55', 2, 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO009/NEGRO/L', '', NULL, 1, '2026-07-07 19:30:04', 1, 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1, 0),
   ('GEN', 'DEPORTIVO009/NEGRO/M', '', NULL, 2, '2026-07-05 17:04:55', 2, 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'DEPORTIVO009/NEGRO/S', '', NULL, 2, '2026-07-05 17:04:55', 2, 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'DEPORTIVO009/NEGRO/XL', '', NULL, 4, '2026-07-05 17:04:55', 4, 1, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -2437,7 +2485,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'SUDADERA-HOOD/GRIS/M', '', NULL, 0, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 15, 0, 0),
   ('GEN', 'SUDADERA-HOOD/GRIS/S', '', NULL, 0, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 12, 0, 0),
   ('GEN', 'SUDADERA-HOOD/NEGRO/L', '', NULL, 0, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0),
-  ('GEN', 'TESTPMP1', '', NULL, 18, '2026-07-05 17:04:55', 216, 12, 0, 0, 0, 0, 30, 0, 8, 0, 0, 0, 0, 4, 0),
+  ('GEN', 'TESTPMP1', '', NULL, 22, '2026-07-07 19:11:07', 264, 12, 0, 0, 0, 0, 30, 0, 8, 0, 0, 0, 0, 0, 0),
   ('GEN', 'TESTSKU01/AZUL/S', '', NULL, 3, '2026-07-05 17:04:55', 45, 15, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1, 0, 0, 0),
   ('GEN', 'TESTSKU01/NEGRO/M', '', NULL, 5, '2026-07-05 17:04:55', 52.5, 10.5, 0, 0, 0, 0, 12, 0, 3, 0, 0, 2, 0, 0, 0),
   ('GEN', 'TESTSKU01/NEGRO/S', '', NULL, 9, '2026-07-05 17:04:55', 99, 11, 0, 0, 0, 0, 15, 0, 4, 0, 0, 3, 1, 0, 0),
@@ -2449,7 +2497,7 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'ZAP-BOTA-MT/NEGRO/42', '', NULL, 5, '2026-07-05 17:04:55', 25, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 24, 0, 0),
   ('GEN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 1, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0),
   ('GEN', 'ZAP-OXFORD/MARRON/43', '', NULL, 8, '2026-07-05 17:04:55', 40, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0),
-  ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 9, '2026-07-05 17:04:55', 45, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 19, 0, 0),
+  ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 8, '2026-07-07 19:30:04', 40, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 19, 1, 0),
   ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-07-05 17:04:55', 25, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0);
 -- 392 registros exportados
 
@@ -5930,14 +5978,14 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('AB', '1', 'C1', 2, 6, 'S', 'N', '2026-07-04 19:35:35', '2026-07-04 19:35:35', 'Administrador', 'Administrador'),
   ('AO', '-', '-', 42, 3, 'S', 'S', '2026-07-04 07:40:03', '2023-05-25 12:59:19', 'Administrador', 'Administrador'),
   ('AR', '-', '-', 17, 3, 'S', 'S', '2026-01-21 17:22:15', '2023-05-25 12:51:52', 'Administrador', 'Administrador'),
-  ('AV', '012', 'A1', 4, 6, 'S', 'N', '2026-07-03 16:51:59', '2026-07-01 09:21:26', 'Administrador', 'Administrador'),
+  ('AV', '012', 'A1', 6, 6, 'S', 'N', '2026-07-07 19:22:14', '2026-07-01 09:21:26', 'Administrador', 'Administrador'),
   ('AV', '1', 'A1', 2, 6, 'S', 'N', '2026-07-02 17:44:24', '2026-07-02 17:44:24', 'Administrador', 'Administrador'),
   ('AV', '1', 'AG1', 2, 6, 'S', 'N', '2026-07-02 18:55:16', '2026-07-02 18:55:16', 'Administrador', 'Administrador'),
   ('BA', '-', '-', 79, 10, 'S', 'S', '2026-05-22 20:56:22', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BC', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BD', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BE', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
-  ('CL', '-', '-', 334, 3, 'S', 'S', '2026-07-02 16:29:30', '2026-03-11 22:27:52', 'Administrador', 'Administrador'),
+  ('CL', '-', '-', 335, 3, 'S', 'S', '2026-07-07 19:19:56', '2026-03-11 22:27:52', 'Administrador', 'Administrador'),
   ('CO', '-', '-', 8, 3, 'S', 'S', '2026-07-02 16:05:05', '2023-05-15 12:54:31', 'Administrador', 'Administrador'),
   ('DC', '012', 'C1', 6, 6, 'S', 'N', '2026-06-23 07:03:51', '2026-06-22 19:14:30', 'Administrador', 'Administrador'),
   ('EB', '-', '-', 3, 4, 'S', 'S', '2026-06-25 07:38:56', '2026-06-19 08:27:53', 'SISTEMA', 'Administrador'),
@@ -5960,16 +6008,16 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 514, 3, 'S', 'S', '2026-07-07 07:54:50', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 522, 3, 'S', 'S', '2026-07-07 19:55:07', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 28, 2, 'S', 'S', '2026-07-07 08:17:26', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
-  ('MV', '-', '-', 1126, 10, 'S', 'S', '2026-07-05 06:22:42', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
+  ('MV', '-', '-', 1183, 10, 'S', 'S', '2026-07-07 19:52:13', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
   ('OV', '012', 'OV', 194, 8, 'S', 'S', '2026-07-04 19:18:36', '2026-04-02 20:05:59', '1', 'Administrador'),
   ('PC', '-', '-', 5, 6, 'S', 'S', '2026-06-13 12:02:01', '2026-05-28 19:21:38', 'SISTEMA', 'Administrador'),
   ('PC', '012', 'C1', 3, 6, 'S', 'N', '2026-07-02 19:58:56', '2026-07-02 19:48:47', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
-  ('PE', '012', 'A1', 2, 6, 'S', 'N', '2026-07-02 18:31:43', '2026-07-02 18:31:43', 'Alfredo', 'Alfredo'),
+  ('PE', '012', 'A1', 5, 6, 'S', 'N', '2026-07-07 19:19:56', '2026-07-02 18:31:43', 'Alfredo', 'Administrador'),
   ('PE', '1', 'AG1', 2, 6, 'S', 'N', '2026-07-02 19:16:15', '2026-07-02 19:16:15', 'Administrador', 'Administrador'),
   ('PG', '-', '-', 3, 3, 'S', 'S', '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
   ('PO', '-', '-', 3, 3, 'S', 'S', '2026-07-04 07:26:46', '2026-07-04 07:25:00', 'Administrador', 'Administrador'),
@@ -16303,8 +16351,649 @@ SET @sSql := IF(@sExisteIdx = 0,
 PREPARE stmt FROM @sSql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
-', '2026-07-07 07:54:49', '2026-07-07 07:54:49', 'Administrador', 'Administrador');
--- 43 registros exportados
+', '2026-07-07 07:54:49', '2026-07-07 07:54:49', 'Administrador', 'Administrador'),
+  ('514', 'pedidos_columnas_sku', '-- =============================================================================
+-- Contrato ColumnSKUcxGrid en PEDIDOS DE VENTA (mayor)
+-- =============================================================================
+-- 1. fza_pedidos_lineas no guardaba el SKU (solo articulo y la
+--    variacion como texto en la descripcion): se anade
+--    CODIGO_UNIDAD_PEDLIN + atributos desglosados (columnas reales,
+--    como en documentos de trabajo) + conjunto pivotado del modo
+--    tallas en horizontal.
+--
+-- 2. fza_pedidos_celdas: cantidades por celda de talla del modo
+--    tallas. Clave estandar SERIE+NUMERO del gestor (sin clave extra).
+--
+-- Sufijos: _PEDLIN en lineas; tabla nueva con sufijo PEDCEL.
+-- Idempotente.
+-- =============================================================================
+
+-- 1. Columnas nuevas en las lineas ----------------------------------------
+
+DROP PROCEDURE IF EXISTS prc_tmp_add_col_pedlin;
+
+DELIMITER //
+CREATE PROCEDURE prc_tmp_add_col_pedlin(
+  IN pCol VARCHAR(64), IN pDef VARCHAR(200))
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = ''fza_pedidos_lineas''
+                    AND COLUMN_NAME = pCol) THEN
+    SET @s := CONCAT(''ALTER TABLE fza_pedidos_lineas '',
+                     ''ADD COLUMN '', pCol, '' '', pDef);
+    PREPARE stmt FROM @s;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+  END IF;
+END//
+DELIMITER ;
+
+CALL prc_tmp_add_col_pedlin(''CODIGO_UNIDAD_PEDLIN'',
+  ''varchar(50) NOT NULL DEFAULT '''''''' COMMENT ''''SKU concreto de la linea (ColumnSKUcxGrid)'''''');
+CALL prc_tmp_add_col_pedlin(''ATTR1_VALOR_PEDLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedlin(''ATTR1_NOMBRE_PEDLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedlin(''ATTR2_VALOR_PEDLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedlin(''ATTR2_NOMBRE_PEDLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedlin(''ATTR3_VALOR_PEDLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedlin(''ATTR3_NOMBRE_PEDLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedlin(''ATTR4_VALOR_PEDLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedlin(''ATTR4_NOMBRE_PEDLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedlin(''ATTR5_VALOR_PEDLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedlin(''ATTR5_NOMBRE_PEDLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedlin(''NUM_ATRIBUTOS_PEDLIN'',
+  ''int(11) NOT NULL DEFAULT 0 COMMENT ''''Atributos requeridos del articulo'''''');
+CALL prc_tmp_add_col_pedlin(''ID_AC_PIVOT_PEDLIN'',
+  ''int(11) NOT NULL DEFAULT 0 COMMENT ''''Conjunto pivotado en tallas horizontal (0 = sin pivote)'''''');
+
+DROP PROCEDURE IF EXISTS prc_tmp_add_col_pedlin;
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_pedidos_lineas''
+     AND INDEX_NAME   = ''IDX_PEDLIN_UNIDAD''
+);
+
+SET @sSql := IF(@sExisteIdx = 0,
+  ''ALTER TABLE fza_pedidos_lineas
+     ADD INDEX IDX_PEDLIN_UNIDAD (CODIGO_UNIDAD_PEDLIN)'',
+  ''SELECT ''''IDX_PEDLIN_UNIDAD ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 2. Tabla de celdas -------------------------------------------------------
+
+SET @sExisteTabla := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_pedidos_celdas''
+);
+
+SET @sSql := IF(@sExisteTabla = 0,
+  ''CREATE TABLE fza_pedidos_celdas (
+     SERIE_PED_PEDCEL    varchar(12)   NOT NULL,
+     NUMERO_PED_PEDCEL   varchar(12)   NOT NULL,
+     LINEA_PEDCEL        int(11)       NOT NULL,
+     ID_FILA_PEDCEL      int(11)       NOT NULL,
+     ID_AV_PIVOT_PEDCEL  int(11)       NOT NULL
+       COMMENT ''''FK logica fza_atributos_valores del eje pivot (TALLA)'''',
+     CODIGO_ALM_PEDCEL   varchar(10)   NOT NULL DEFAULT '''''''',
+     CANTIDAD_PEDCEL     decimal(19,6) NOT NULL,
+     INSTANTE_ALTA       timestamp     NOT NULL DEFAULT ''''0000-00-00 00:00:00'''',
+     USUARIO_ALTA        varchar(100)  NOT NULL DEFAULT '''''''',
+     INSTANTE_MODIF      datetime      NULL DEFAULT NULL,
+     USUARIO_MODIF       varchar(100)  NULL DEFAULT NULL,
+     PRIMARY KEY (SERIE_PED_PEDCEL, NUMERO_PED_PEDCEL, LINEA_PEDCEL,
+                  ID_FILA_PEDCEL, ID_AV_PIVOT_PEDCEL, CODIGO_ALM_PEDCEL)
+   )'',
+  ''SELECT ''''fza_pedidos_celdas ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_pedidos_celdas''
+     AND INDEX_NAME   = ''IDX_PEDCEL_AV_PIVOT''
+);
+
+SET @sSql := IF(@sExisteIdx = 0,
+  ''ALTER TABLE fza_pedidos_celdas
+     ADD INDEX IDX_PEDCEL_AV_PIVOT (ID_AV_PIVOT_PEDCEL)'',
+  ''SELECT ''''IDX_PEDCEL_AV_PIVOT ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+', '2026-07-07 17:02:01', '2026-07-07 17:02:01', 'Administrador', 'Administrador'),
+  ('515', NULL, 'UPDATE fza_pedidos SET CONTADOR_LINEAS_PED = ''''
+ WHERE SERIE_PED = ''A1'' AND NUMERO_PED = ''000001'';', '2026-07-07 17:28:14', '2026-07-07 17:28:14', 'Administrador', 'Administrador'),
+  ('516', NULL, 'CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW vi_pedidos_lineas AS
+SELECT pl.*,
+       pl.CANTIDAD_PEDLIN - IFNULL(pl.CANTIDAD_ENTREGADA_PEDLIN, 0)
+         AS CANTIDAD_PENDIENTE_CALC_PEDLIN
+  FROM fza_pedidos_lineas pl;', '2026-07-07 17:38:51', '2026-07-07 17:38:51', 'Administrador', 'Administrador'),
+  ('517', NULL, 'UPDATE fza_pedidos_lineas
+   SET CODIGO_UNIDAD_PEDLIN = ''CALV00001/3838/41''
+ WHERE SERIE_PED_PEDLIN = ''AG1'' AND NUMERO_PED_PEDLIN = ''000001''
+   AND LINEA_PEDLIN = ''0010'';', '2026-07-07 17:51:07', '2026-07-07 17:51:07', 'Administrador', 'Administrador'),
+  ('518', 'albaranes_columnas_sku', '-- =============================================================================
+-- Contrato ColumnSKUcxGrid en ALBARANES DE VENTA (mayor)
+-- =============================================================================
+-- 1. fza_albaranes_lineas ya guarda el SKU (CODIGO_UNIDAD_ALBLIN);
+--    se anaden los atributos desglosados (columnas reales, como en
+--    pedidos) + conjunto pivotado del modo tallas en horizontal.
+--
+-- 2. fza_albaranes_celdas: cantidades por celda de talla del modo
+--    tallas. Clave estandar SERIE+NUMERO del gestor (sin clave extra).
+--
+-- Sufijos: _ALBLIN en lineas; tabla nueva con sufijo ALBCEL.
+-- El Mto lee de la TABLA (no hay vista que regenerar, a diferencia
+-- de vi_pedidos_lineas en pedidos).
+-- Idempotente.
+-- =============================================================================
+
+-- 1. Columnas nuevas en las lineas ----------------------------------------
+
+DROP PROCEDURE IF EXISTS prc_tmp_add_col_alblin;
+
+DELIMITER //
+CREATE PROCEDURE prc_tmp_add_col_alblin(
+  IN pCol VARCHAR(64), IN pDef VARCHAR(200))
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = ''fza_albaranes_lineas''
+                    AND COLUMN_NAME = pCol) THEN
+    SET @s := CONCAT(''ALTER TABLE fza_albaranes_lineas '',
+                     ''ADD COLUMN '', pCol, '' '', pDef);
+    PREPARE stmt FROM @s;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+  END IF;
+END//
+DELIMITER ;
+
+CALL prc_tmp_add_col_alblin(''ATTR1_VALOR_ALBLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR1_NOMBRE_ALBLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR2_VALOR_ALBLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR2_NOMBRE_ALBLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR3_VALOR_ALBLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR3_NOMBRE_ALBLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR4_VALOR_ALBLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR4_NOMBRE_ALBLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR5_VALOR_ALBLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR5_NOMBRE_ALBLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''NUM_ATRIBUTOS_ALBLIN'',
+  ''int(11) NOT NULL DEFAULT 0 COMMENT ''''Atributos requeridos del articulo'''''');
+CALL prc_tmp_add_col_alblin(''ID_AC_PIVOT_ALBLIN'',
+  ''int(11) NOT NULL DEFAULT 0 COMMENT ''''Conjunto pivotado en tallas horizontal (0 = sin pivote)'''''');
+
+DROP PROCEDURE IF EXISTS prc_tmp_add_col_alblin;
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_lineas''
+     AND INDEX_NAME   = ''IDX_ALBLIN_UNIDAD''
+);
+
+SET @sSql := IF(@sExisteIdx = 0,
+  ''ALTER TABLE fza_albaranes_lineas
+     ADD INDEX IDX_ALBLIN_UNIDAD (CODIGO_UNIDAD_ALBLIN)'',
+  ''SELECT ''''IDX_ALBLIN_UNIDAD ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 2. Tabla de celdas -------------------------------------------------------
+
+SET @sExisteTabla := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_celdas''
+);
+
+SET @sSql := IF(@sExisteTabla = 0,
+  ''CREATE TABLE fza_albaranes_celdas (
+     SERIE_ALB_ALBCEL    varchar(20)   NOT NULL,
+     NUMERO_ALB_ALBCEL   varchar(20)   NOT NULL,
+     LINEA_ALBCEL        int(11)       NOT NULL,
+     ID_FILA_ALBCEL      int(11)       NOT NULL,
+     ID_AV_PIVOT_ALBCEL  int(11)       NOT NULL
+       COMMENT ''''FK logica fza_atributos_valores del eje pivot (TALLA)'''',
+     CODIGO_ALM_ALBCEL   varchar(10)   NOT NULL DEFAULT '''''''',
+     CANTIDAD_ALBCEL     decimal(19,6) NOT NULL,
+     INSTANTE_ALTA       timestamp     NOT NULL DEFAULT ''''0000-00-00 00:00:00'''',
+     USUARIO_ALTA        varchar(100)  NOT NULL DEFAULT '''''''',
+     INSTANTE_MODIF      datetime      NULL DEFAULT NULL,
+     USUARIO_MODIF       varchar(100)  NULL DEFAULT NULL,
+     PRIMARY KEY (SERIE_ALB_ALBCEL, NUMERO_ALB_ALBCEL, LINEA_ALBCEL,
+                  ID_FILA_ALBCEL, ID_AV_PIVOT_ALBCEL, CODIGO_ALM_ALBCEL)
+   )'',
+  ''SELECT ''''fza_albaranes_celdas ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_celdas''
+     AND INDEX_NAME   = ''IDX_ALBCEL_AV_PIVOT''
+);
+
+SET @sSql := IF(@sExisteIdx = 0,
+  ''ALTER TABLE fza_albaranes_celdas
+     ADD INDEX IDX_ALBCEL_AV_PIVOT (ID_AV_PIVOT_ALBCEL)'',
+  ''SELECT ''''IDX_ALBCEL_AV_PIVOT ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+', '2026-07-07 18:32:38', '2026-07-07 18:32:38', 'Administrador', 'Administrador'),
+  ('519', 'albaranes_columnas_sku', '-- =============================================================================
+-- Contrato ColumnSKUcxGrid en ALBARANES DE VENTA (mayor)
+-- =============================================================================
+-- 1. fza_albaranes_lineas ya guarda el SKU (CODIGO_UNIDAD_ALBLIN);
+--    se anaden los atributos desglosados (columnas reales, como en
+--    pedidos) + conjunto pivotado del modo tallas en horizontal.
+--
+-- 2. fza_albaranes_celdas: cantidades por celda de talla del modo
+--    tallas. Clave estandar SERIE+NUMERO del gestor (sin clave extra).
+--
+-- Sufijos: _ALBLIN en lineas; tabla nueva con sufijo ALBCEL.
+-- El Mto lee de la TABLA (no hay vista que regenerar, a diferencia
+-- de vi_pedidos_lineas en pedidos).
+-- Idempotente.
+-- =============================================================================
+
+-- 1. Columnas nuevas en las lineas ----------------------------------------
+
+DROP PROCEDURE IF EXISTS prc_tmp_add_col_alblin;
+
+DELIMITER //
+CREATE PROCEDURE prc_tmp_add_col_alblin(
+  IN pCol VARCHAR(64), IN pDef VARCHAR(200))
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = ''fza_albaranes_lineas''
+                    AND COLUMN_NAME = pCol) THEN
+    SET @s := CONCAT(''ALTER TABLE fza_albaranes_lineas '',
+                     ''ADD COLUMN '', pCol, '' '', pDef);
+    PREPARE stmt FROM @s;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+  END IF;
+END//
+DELIMITER ;
+
+CALL prc_tmp_add_col_alblin(''ATTR1_VALOR_ALBLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR1_NOMBRE_ALBLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR2_VALOR_ALBLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR2_NOMBRE_ALBLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR3_VALOR_ALBLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR3_NOMBRE_ALBLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR4_VALOR_ALBLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR4_NOMBRE_ALBLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR5_VALOR_ALBLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''ATTR5_NOMBRE_ALBLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_alblin(''NUM_ATRIBUTOS_ALBLIN'',
+  ''int(11) NOT NULL DEFAULT 0 COMMENT ''''Atributos requeridos del articulo'''''');
+CALL prc_tmp_add_col_alblin(''ID_AC_PIVOT_ALBLIN'',
+  ''int(11) NOT NULL DEFAULT 0 COMMENT ''''Conjunto pivotado en tallas horizontal (0 = sin pivote)'''''');
+
+DROP PROCEDURE IF EXISTS prc_tmp_add_col_alblin;
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_lineas''
+     AND INDEX_NAME   = ''IDX_ALBLIN_UNIDAD''
+);
+
+SET @sSql := IF(@sExisteIdx = 0,
+  ''ALTER TABLE fza_albaranes_lineas
+     ADD INDEX IDX_ALBLIN_UNIDAD (CODIGO_UNIDAD_ALBLIN)'',
+  ''SELECT ''''IDX_ALBLIN_UNIDAD ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 2. Tabla de celdas -------------------------------------------------------
+
+SET @sExisteTabla := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_celdas''
+);
+
+SET @sSql := IF(@sExisteTabla = 0,
+  ''CREATE TABLE fza_albaranes_celdas (
+     SERIE_ALB_ALBCEL    varchar(20)   NOT NULL,
+     NUMERO_ALB_ALBCEL   varchar(20)   NOT NULL,
+     LINEA_ALBCEL        int(11)       NOT NULL,
+     ID_FILA_ALBCEL      int(11)       NOT NULL,
+     ID_AV_PIVOT_ALBCEL  int(11)       NOT NULL
+       COMMENT ''''FK logica fza_atributos_valores del eje pivot (TALLA)'''',
+     CODIGO_ALM_ALBCEL   varchar(10)   NOT NULL DEFAULT '''''''',
+     CANTIDAD_ALBCEL     decimal(19,6) NOT NULL,
+     INSTANTE_ALTA       timestamp     NOT NULL DEFAULT ''''0000-00-00 00:00:00'''',
+     USUARIO_ALTA        varchar(100)  NOT NULL DEFAULT '''''''',
+     INSTANTE_MODIF      datetime      NULL DEFAULT NULL,
+     USUARIO_MODIF       varchar(100)  NULL DEFAULT NULL,
+     PRIMARY KEY (SERIE_ALB_ALBCEL, NUMERO_ALB_ALBCEL, LINEA_ALBCEL,
+                  ID_FILA_ALBCEL, ID_AV_PIVOT_ALBCEL, CODIGO_ALM_ALBCEL)
+   )'',
+  ''SELECT ''''fza_albaranes_celdas ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_albaranes_celdas''
+     AND INDEX_NAME   = ''IDX_ALBCEL_AV_PIVOT''
+);
+
+SET @sSql := IF(@sExisteIdx = 0,
+  ''ALTER TABLE fza_albaranes_celdas
+     ADD INDEX IDX_ALBCEL_AV_PIVOT (ID_AV_PIVOT_ALBCEL)'',
+  ''SELECT ''''IDX_ALBCEL_AV_PIVOT ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+', '2026-07-07 18:38:50', '2026-07-07 18:38:50', 'Administrador', 'Administrador'),
+  ('520', NULL, '-- ¿Existe la tabla de celdas?
+SELECT COUNT(*) AS EXISTE
+  FROM INFORMATION_SCHEMA.TABLES
+ WHERE TABLE_SCHEMA = DATABASE()
+   AND TABLE_NAME = ''fza_albaranes_celdas'';
+
+-- Si existe, ¿se grabó la cantidad al pivotar?
+SELECT * FROM fza_albaranes_celdas
+ WHERE SERIE_ALB_ALBCEL = ''AG1'' AND NUMERO_ALB_ALBCEL = ''000001'';', '2026-07-07 18:48:11', '2026-07-07 18:48:11', 'Administrador', 'Administrador'),
+  ('521', 'pedidos_albaran_procs', 'DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_FIN;
+
+DELIMITER //
+
+CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_FIN(
+  IN p_NUMERO_ALB varchar(20),
+  IN p_SERIE_ALB varchar(20),
+  IN p_NUMERO_PED varchar(20),
+  IN p_SERIE_PED varchar(20),
+  IN p_USUARIO varchar(100))
+BEGIN
+  DECLARE v_total_base decimal(18,6) DEFAULT 0;
+  DECLARE v_total_iva decimal(18,6) DEFAULT 0;
+  DECLARE v_pendientes int DEFAULT 0;
+  SELECT IFNULL(SUM(CANTIDAD_ALBLIN *
+                    PRECIO_VENTA_SIVA_ARTICULO_ALBLIN), 0),
+         IFNULL(SUM(CANTIDAD_ALBLIN *
+              (PRECIO_VENTA_CIVA_ARTICULO_ALBLIN -
+               PRECIO_VENTA_SIVA_ARTICULO_ALBLIN)), 0)
+    INTO v_total_base, v_total_iva
+    FROM fza_albaranes_lineas
+   WHERE NUMERO_ALB_ALBLIN = p_NUMERO_ALB
+     AND SERIE_ALB_ALBLIN = p_SERIE_ALB;
+  UPDATE fza_albaranes
+     SET TOTAL_BASES_ALB = v_total_base,
+         TOTAL_IMPUESTOS_ALB = v_total_iva,
+         TOTAL_LIQUIDO_ALB = v_total_base + v_total_iva,
+         INSTANTE_MODIF = NOW(),
+         USUARIO_MODIF = p_USUARIO
+   WHERE NUMERO_ALB = p_NUMERO_ALB
+     AND SERIE_ALB = p_SERIE_ALB;
+  SELECT COUNT(*)
+    INTO v_pendientes
+    FROM fza_pedidos_lineas
+   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
+     AND SERIE_PED_PEDLIN = p_SERIE_PED
+     AND IFNULL(ESENTREGADA_PEDLIN, ''N'') <> ''S'';
+  IF v_pendientes = 0 THEN
+    UPDATE fza_pedidos
+       SET ESTADO_PED = ''ENTREGADO'',
+           INSTANTE_MODIF = NOW(),
+           USUARIO_MODIF = p_USUARIO
+     WHERE NUMERO_PED = p_NUMERO_PED
+       AND SERIE_PED = p_SERIE_PED;
+  ELSE
+    UPDATE fza_pedidos
+       SET ESTADO_PED = ''PARCIAL'',
+           INSTANTE_MODIF = NOW(),
+           USUARIO_MODIF = p_USUARIO
+     WHERE NUMERO_PED = p_NUMERO_PED
+       AND SERIE_PED = p_SERIE_PED;
+  END IF;
+END//
+
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_INICIO;
+
+DELIMITER //
+
+CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_INICIO(
+  IN p_NUMERO_PED varchar(20),
+  IN p_SERIE_PED varchar(20),
+  IN p_USUARIO varchar(100),
+  OUT p_NUMERO_ALB varchar(20),
+  OUT p_SERIE_ALB varchar(20))
+BEGIN
+  DECLARE v_serie varchar(20);
+  DECLARE v_numero varchar(20);
+  SELECT SERIE_PED
+    INTO v_serie
+    FROM fza_pedidos
+   WHERE NUMERO_PED = p_NUMERO_PED
+     AND SERIE_PED = p_SERIE_PED;
+  SELECT LPAD(IFNULL(MAX(CAST(NUMERO_ALB AS UNSIGNED)), 0) + 1, 6, ''0'')
+    INTO v_numero
+    FROM fza_albaranes
+   WHERE SERIE_ALB = v_serie;
+  INSERT INTO fza_albaranes (
+    NUMERO_ALB, SERIE_ALB, FECHA_ALB, ESTADO_ALB,
+    NUMERO_PED_ALB, SERIE_PED_ALB,
+    CODIGO_EMP_ALB, CODIGO_ALM_ALB,
+    RAZON_SOCIAL_EMPRESA_ALB, NIF_EMPRESA_ALB,
+    MOVIL_EMPRESA_ALB, EMAIL_EMPRESA_ALB,
+    DIRECCION1_EMPRESA_ALB, DIRECCION2_EMPRESA_ALB,
+    POBLACION_EMPRESA_ALB, PROVINCIA_EMPRESA_ALB,
+    CODIGO_PAI_EMPRESA_ALB, NOMBRE_PAI_EMPRESA_ALB,
+    CODIGO_POSTAL_EMPRESA_ALB, GRUPO_ZONA_IVA_EMPRESA_ALB,
+    CODIGO_CLI_ALB, RAZON_SOCIAL_CLIENTE_ALB,
+    NIF_CLIENTE_ALB, MOVIL_CLIENTE_ALB, EMAIL_CLIENTE_ALB,
+    DIRECCION1_CLIENTE_ALB, DIRECCION2_CLIENTE_ALB,
+    POBLACION_CLIENTE_ALB, PROVINCIA_CLIENTE_ALB,
+    CODIGO_POSTAL_CLIENTE_ALB, CODIGO_PAI_CLIENTE_ALB,
+    NOMBRE_PAI_CLIENTE_ALB, NOMBRE_CLI_ENVIO_ALB,
+    MOVIL_CLIENTE_ENVIO_ALB, DIRECCION1_CLIENTE_ENVIO_ALB,
+    DIRECCION2_CLIENTE_ENVIO_ALB, POBLACION_CLIENTE_ENVIO_ALB,
+    PROVINCIA_CLIENTE_ENVIO_ALB, CODIGO_POSTAL_CLIENTE_ENVIO_ALB,
+    CODIGO_PAI_CLIENTE_ENVIO_ALB, NOMBRE_PAI_CLIENTE_ENVIO_ALB,
+    TRANSPORTISTA_ALB, CODIGO_IVA_ALB,
+    ESIVA_RECARGO_CLIENTE_ALB, ESIVA_EXENTO_CLIENTE_ALB,
+    ESINTRACOMUNITARIO_CLIENTE_ALB, TARIFA_ARTICULO_CLIENTE_ALB,
+    ESIMP_INCL_TARIFA_CLIENTE_ALB, PORCENTAJE_IVAN_ALB,
+    PORCENTAJE_IVAR_ALB, PORCENTAJE_IVAS_ALB, PORCENTAJE_IVAE_ALB,
+    FORMA_PAGO_ALB, CONTADOR_LINEAS_ALB,
+    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)
+  SELECT v_numero, v_serie, CURRENT_DATE(), ''ABIERTO'',
+         p_NUMERO_PED, p_SERIE_PED,
+         P.CODIGO_EMP_PED, P.CODIGO_ALM_PED,
+         P.RAZON_SOCIAL_EMPRESA_PED, P.NIF_EMPRESA_PED,
+         P.MOVIL_EMPRESA_PED, P.EMAIL_EMPRESA_PED,
+         P.DIRECCION1_EMPRESA_PED, P.DIRECCION2_EMPRESA_PED,
+         P.POBLACION_EMPRESA_PED, P.PROVINCIA_EMPRESA_PED,
+         P.CODIGO_PAI_EMPRESA_PED, P.NOMBRE_PAI_EMPRESA_PED,
+         P.CODIGO_POSTAL_EMPRESA_PED, P.GRUPO_ZONA_IVA_EMPRESA_PED,
+         P.CODIGO_CLI_PED, P.RAZON_SOCIAL_CLIENTE_FISCAL_PED,
+         P.NIF_CLIENTE_PED, P.MOVIL_CLIENTE_FISCAL_PED,
+         P.EMAIL_CLIENTE_PED, P.DIRECCION1_CLIENTE_FISCAL_PED,
+         P.DIRECCION2_CLIENTE_FISCAL_PED,
+         P.POBLACION_CLIENTE_FISCAL_PED,
+         P.PROVINCIA_CLIENTE_FISCAL_PED,
+         P.CODIGO_POSTAL_CLIENTE_FISCAL_PED,
+         P.CODIGO_PAI_CLIENTE_FISCAL_PED,
+         P.NOMBRE_PAI_CLIENTE_FISCAL_PED,
+         P.NOMBRE_CLI_ENVIO_PED, P.MOVIL_CLIENTE_ENVIO_PED,
+         P.DIRECCION1_CLIENTE_ENVIO_PED,
+         P.DIRECCION2_CLIENTE_ENVIO_PED,
+         P.POBLACION_CLIENTE_ENVIO_PED,
+         P.PROVINCIA_CLIENTE_ENVIO_PED,
+         P.CODIGO_POSTAL_CLIENTE_ENVIO_PED,
+         P.CODIGO_PAI_CLIENTE_ENVIO_PED,
+         P.NOMBRE_PAI_CLIENTE_ENVIO_PED,
+         P.TRANSPORTISTAPS_PED, P.CODIGO_IVA_PED,
+         P.ESIVA_RECARGO_CLIENTE_PED, P.ESIVA_EXENTO_CLIENTE_PED,
+         P.ESINTRACOMUNITARIO_CLIENTE_PED,
+         P.TARIFA_ARTICULO_CLIENTE_PED,
+         P.ESIMP_INCL_TARIFA_CLIENTE_PED, P.PORCENTAJE_IVAN_PED,
+         P.PORCENTAJE_IVAR_PED, P.PORCENTAJE_IVAS_PED,
+         P.PORCENTAJE_IVAE_PED, P.FORMA_PAGO_PED, ''0'',
+         NOW(), p_USUARIO, p_USUARIO
+    FROM fza_pedidos P
+   WHERE P.NUMERO_PED = p_NUMERO_PED
+     AND P.SERIE_PED = p_SERIE_PED;
+  SET p_NUMERO_ALB = v_numero;
+  SET p_SERIE_ALB = v_serie;
+END//
+
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_LINEA;
+
+DELIMITER //
+
+CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_LINEA(
+  IN p_NUMERO_ALB varchar(20),
+  IN p_SERIE_ALB varchar(20),
+  IN p_NUMERO_PED varchar(20),
+  IN p_SERIE_PED varchar(20),
+  IN p_LINEA_PED varchar(4),
+  IN p_CANTIDAD decimal(19,6),
+  IN p_CODIGO_ALM varchar(10),
+  IN p_USUARIO varchar(100))
+PRC: BEGIN
+  DECLARE v_linea varchar(4);
+  DECLARE v_pedida decimal(19,6) DEFAULT 0;
+  DECLARE v_albaranada decimal(19,6) DEFAULT 0;
+  DECLARE v_objetivo decimal(19,6) DEFAULT 0;
+  DECLARE v_pendiente decimal(19,6) DEFAULT 0;
+  DECLARE v_cantidad decimal(19,6) DEFAULT 0;
+  SELECT IFNULL(CANTIDAD_PEDLIN, 0)
+    INTO v_pedida
+    FROM fza_pedidos_lineas
+   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
+     AND SERIE_PED_PEDLIN = p_SERIE_PED
+     AND LINEA_PEDLIN = p_LINEA_PED;
+  SELECT IFNULL(SUM(CANTIDAD_ALBLIN), 0)
+    INTO v_albaranada
+    FROM fza_albaranes_lineas
+   WHERE NUMERO_PED_ALBLIN = p_NUMERO_PED
+     AND SERIE_PED_ALBLIN = p_SERIE_PED
+     AND LINEA_PED_ALBLIN = p_LINEA_PED;
+  SET v_objetivo = LEAST(IFNULL(p_CANTIDAD, 0), v_pedida);
+  SET v_pendiente = v_pedida - v_albaranada;
+  SET v_cantidad = v_objetivo - v_albaranada;
+  IF v_pedida <= 0 OR v_pendiente <= 0 OR v_cantidad <= 0 THEN
+    LEAVE PRC;
+  END IF;
+  IF v_cantidad > v_pendiente THEN
+    SET v_cantidad = v_pendiente;
+  END IF;
+  UPDATE fza_albaranes
+     SET CONTADOR_LINEAS_ALB = LPAD(LAST_INSERT_ID(
+           IFNULL(CAST(NULLIF(CONTADOR_LINEAS_ALB, '''')
+           AS UNSIGNED), 0) + 10), 8, ''0'')
+   WHERE NUMERO_ALB = p_NUMERO_ALB
+     AND SERIE_ALB = p_SERIE_ALB;
+  IF ROW_COUNT() = 0 THEN
+    LEAVE PRC;
+  END IF;
+  SET v_linea = LPAD(LAST_INSERT_ID(), 4, ''0'');
+  INSERT INTO fza_albaranes_lineas (
+    NUMERO_ALB_ALBLIN, SERIE_ALB_ALBLIN, LINEA_ALBLIN,
+    NUMERO_PED_ALBLIN, SERIE_PED_ALBLIN, LINEA_PED_ALBLIN,
+    CODIGO_ART_ALBLIN, CODIGO_UNIDAD_ALBLIN,
+    CODIGO_FAM_ALBLIN, NOMBRE_FAM_ALBLIN,
+    DESCRIPCION_ARTICULO_ALBLIN, TIPO_CANTIDAD_ARTICULO_ALBLIN,
+    CANTIDAD_ALBLIN, CODIGO_TAR_ALBLIN, ESIMP_INCL_TARIFA_ALBLIN,
+    TIPO_IVA_ARTICULO_ALBLIN, PORCENTAJE_IVA_ALBLIN,
+    PRECIO_VENTA_SIVA_ARTICULO_ALBLIN,
+    PRECIO_VENTA_CIVA_ARTICULO_ALBLIN, TOTAL_ALBLIN,
+    CODIGO_ALMACEN_ALBLIN, INSTANTE_ALTA, USUARIO_ALTA,
+    USUARIO_MODIF)
+  SELECT p_NUMERO_ALB, p_SERIE_ALB, v_linea,
+         p_NUMERO_PED, p_SERIE_PED, p_LINEA_PED,
+         PL.CODIGO_ART_PEDLIN,
+         COALESCE(NULLIF(PL.CODIGOPRODPS_PEDLIN, ''''),
+                  NULLIF(PL.CODIGO_UNIDAD_PEDLIN, ''''),
+                  PL.CODIGO_ART_PEDLIN),
+         PL.CODIGO_FAM_PEDLIN, PL.NOMBRE_FAM_PEDLIN,
+         PL.DESCRIPCION_ARTICULO_PEDLIN,
+         PL.TIPO_CANTIDAD_ARTICULO_PEDLIN,
+         v_cantidad, PL.CODIGO_TAR_PEDLIN,
+         PL.ESIMP_INCL_TARIFA_PEDLIN,
+         PL.TIPO_IVA_ARTICULO_PEDLIN, PL.PORCENTAJE_IVA_PEDLIN,
+         PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN,
+         PL.PRECIO_VENTA_CIVA_ARTICULO_PEDLIN,
+         v_cantidad * PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN,
+         COALESCE(NULLIF(p_CODIGO_ALM, ''''),
+                  PL.CODIGO_ALMACEN_PEDLIN),
+         NOW(), p_USUARIO, p_USUARIO
+    FROM fza_pedidos_lineas PL
+   WHERE PL.NUMERO_PED_PEDLIN = p_NUMERO_PED
+     AND PL.SERIE_PED_PEDLIN = p_SERIE_PED
+     AND PL.LINEA_PEDLIN = p_LINEA_PED;
+  UPDATE fza_pedidos_lineas
+     SET CANTIDAD_ENTREGADA_PEDLIN = v_albaranada + v_cantidad,
+         CANTIDAD_PENDIENTE_PEDLIN =
+           GREATEST(CANTIDAD_PEDLIN -
+                    (v_albaranada + v_cantidad), 0),
+         ESENTREGADA_PEDLIN = CASE
+           WHEN CANTIDAD_PEDLIN <= v_albaranada + v_cantidad
+           THEN ''S'' ELSE ''N'' END,
+         INSTANTE_MODIF = NOW(),
+         USUARIO_MODIF = p_USUARIO
+   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
+     AND SERIE_PED_PEDLIN = p_SERIE_PED
+     AND LINEA_PEDLIN = p_LINEA_PED;
+END//
+
+DELIMITER ;
+', '2026-07-07 19:55:07', '2026-07-07 19:55:07', 'Administrador', 'Administrador');
+-- 51 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -17813,7 +18502,6 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('0000001060', 'TA', 'TA', '000004', '0010', '012', 'GEN', '2026-07-03 18:49:47', 'TESTPMP1', 'TESTPMP1', NULL, 'S', 8, 12, 96, 12, 'BCN', '', NULL, 'S', '2026-07-03 18:49:47', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000190', '1'),
   ('0000001061', 'TA', 'TA', '000004', '0010', '1', 'BCN', '2026-07-03 18:49:47', 'TESTPMP1', 'TESTPMP1', NULL, 'E', 8, 12, 96, 12, 'GEN', '', NULL, 'S', '2026-07-03 18:49:47', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000190', '1'),
   ('0000001067', 'AC', 'C1', '000006', '5214', '012', 'BCN', '2026-07-03 20:10:17', 'TESTPMP1', 'TESTPMP1', NULL, 'E', 8, 18, 144, 18, NULL, '', NULL, 'S', '2026-07-03 20:10:17', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'BCN', '', ''),
-  ('0000001071', 'AV', 'A1', '000003', '0010', '012', 'GEN', '2026-07-03 20:10:41', 'TESTPMP1', 'TESTPMP1', NULL, 'S', 4, 12, 48, 12, NULL, '313', NULL, 'S', '2026-07-03 20:10:41', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
   ('0000001093', 'AC', 'C1', '000007', '0010', '012', 'GEN', '2026-07-10 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/S', NULL, 'E', 10, 8, 80, 8, NULL, '', NULL, 'S', '2026-07-05 16:08:49', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
   ('0000001094', 'AC', 'C1', '000007', '0020', '012', 'GEN', '2026-07-10 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, 'E', 6, 12, 72, 12, NULL, '', NULL, 'S', '2026-07-05 16:08:49', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
   ('0000001095', 'AC', 'C1', '000007', '0030', '012', 'GEN', '2026-07-10 00:00:00', 'TESTSKU01', 'TESTSKU01/AZUL/S', NULL, 'E', 4, 15, 60, 15, NULL, '', NULL, 'S', '2026-07-04 16:58:58', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
@@ -17828,6 +18516,10 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('0000001119', 'TA', 'TA', '000005', '0020', '1', 'BCN', '2026-07-13 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, 'E', 3, 10.5, 31.5, 10.5, 'GEN', '', NULL, 'S', '2026-07-04 19:28:08', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000193', '1'),
   ('0000001124', 'AC', 'C1', '000001', '0010', '1', 'BCN', '2026-07-14 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/S', NULL, 'E', 4, 16, 64, 13, NULL, '', NULL, 'S', '2026-07-05 16:16:28', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'BCN', '', ''),
   ('0000001125', 'AC', 'C1', '000001', '0020', '1', 'BCN', '2026-07-14 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, 'E', 3, 7, 21, 8.75, NULL, '', NULL, 'S', '2026-07-05 16:40:31', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'BCN', '', ''),
+  ('0000001175', 'AV', 'A1', '000003', '0010', '012', 'GEN', '2026-07-03 00:00:00', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, 'S', 2, 0, 0, 0, NULL, '313', NULL, 'S', '2026-07-07 19:30:04', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000001176', 'AV', 'A1', '000003', '0020', '012', 'GEN', '2026-07-03 00:00:00', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/L', NULL, 'S', 1, 1, 1, 1, NULL, '313', NULL, 'S', '2026-07-07 19:30:04', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000001177', 'AV', 'A1', '000003', '0030', '012', 'GEN', '2026-07-03 00:00:00', 'ZAP-OXFORD', 'ZAP-OXFORD/NEGRO/42', NULL, 'S', 1, 5, 5, 5, NULL, '313', NULL, 'S', '2026-07-07 19:30:04', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000001182', 'AV', 'A1', '000006', '0010', '012', 'GEN', '2026-07-07 00:00:00', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/S', NULL, 'S', 1, 0, 0, 0, NULL, '313', NULL, 'S', '2026-07-07 19:52:13', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
   ('1', 'IN', 'A1', '2026001', '002', '1', 'GEN', '2026-01-04 22:13:10', 'ZAP-OXFORD', 'ZAP-OXFORD/MARRON/43', 'Zapato Oxford Piel 43 Marrón', 'E', 8, 40, 320, 40, NULL, NULL, NULL, 'S', '2026-05-26 07:51:58', '2026-03-11 22:27:53', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('100', 'IN', 'A1', '2026001', '100', '1', 'GEN', '2026-01-10 08:00:00', 'CAMI-POLO', 'CAMI-POLO/BLANCO/S', 'Polo Blanco S', 'E', 15, 12, 180, 12, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('101', 'IN', 'A1', '2026001', '101', '1', 'GEN', '2026-01-10 08:00:00', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', 'Polo Blanco M', 'E', 20, 12, 240, 12, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
@@ -18017,7 +18709,7 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('IV-3-0003S', 'IN', 'A1', '3', '0003', '012', 'GEN', '2026-05-05 23:59:58', 'SOMBRERO-PJM', 'SOMBRERO-PJM', NULL, 'S', 7, 0, 90, 15, NULL, NULL, NULL, 'S', '2026-05-06 08:15:17', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-4-0001E', 'IN', 'A1', '4', '0001', '012', 'GEN', '2026-05-08 07:13:25', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, 'E', 1, 5, 5, 5, NULL, NULL, NULL, 'S', '2026-05-08 07:13:42', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-4-0001S', 'IN', 'A1', '4', '0001', '012', 'GEN', '2026-05-08 07:13:24', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, 'E', 1, 0, 5, 5, NULL, NULL, NULL, 'S', '2026-05-08 07:13:42', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL);
--- 820 registros exportados
+-- 823 registros exportados
 
 
 -- Tabla: fza_paises
@@ -18396,12 +19088,42 @@ ALTER TABLE `fza_pedidos` ADD INDEX `IDX_PED_IDPS` (`IDPS_PED`);
 
 -- Datos de fza_pedidos
 INSERT INTO `fza_pedidos` (`NUMERO_PED`, `SERIE_PED`, `FECHA_PED`, `ESCONSOLIDADO_PED`, `ESTADO_PED`, `FECHA_ENTREGA_PED`, `CODIGO_EMP_PED`, `CODIGO_ALM_PED`, `RAZON_SOCIAL_EMPRESA_PED`, `NIF_EMPRESA_PED`, `MOVIL_EMPRESA_PED`, `EMAIL_EMPRESA_PED`, `DIRECCION1_EMPRESA_PED`, `DIRECCION2_EMPRESA_PED`, `POBLACION_EMPRESA_PED`, `PROVINCIA_EMPRESA_PED`, `CODIGO_PAI_EMPRESA_PED`, `NOMBRE_PAI_EMPRESA_PED`, `CODIGO_POSTAL_EMPRESA_PED`, `ESRETENCIONES_EMPRESA_PED`, `GRUPO_ZONA_IVA_EMPRESA_PED`, `ESREGIMENESPECIALAGRICOLA_EMPRESA_PED`, `CODIGO_CLI_PED`, `NIF_CLIENTE_PED`, `EMAIL_CLIENTE_PED`, `REFERENCIAPS_PED`, `IDPS_PED`, `FECHAPS_PED`, `FORMAPAGOPS_PED`, `TRANSPORTISTAPS_PED`, `ESTADOPEDIDOPS_PED`, `ESTADOMENSAJEPS_PED`, `IDHILOPS_MENSAJES_PED`, `NOMBRE_CLI_ENVIO_PED`, `MOVIL_CLIENTE_ENVIO_PED`, `DIRECCION1_CLIENTE_ENVIO_PED`, `DIRECCION2_CLIENTE_ENVIO_PED`, `POBLACION_CLIENTE_ENVIO_PED`, `PROVINCIA_CLIENTE_ENVIO_PED`, `CODIGO_POSTAL_CLIENTE_ENVIO_PED`, `CODIGO_PAI_CLIENTE_ENVIO_PED`, `NOMBRE_PAI_CLIENTE_ENVIO_PED`, `RAZON_SOCIAL_CLIENTE_FISCAL_PED`, `MOVIL_CLIENTE_FISCAL_PED`, `EMAIL_CLIENTE_FISCAL_PED`, `DIRECCION1_CLIENTE_FISCAL_PED`, `DIRECCION2_CLIENTE_FISCAL_PED`, `POBLACION_CLIENTE_FISCAL_PED`, `PROVINCIA_CLIENTE_FISCAL_PED`, `CODIGO_POSTAL_CLIENTE_FISCAL_PED`, `CODIGO_PAI_CLIENTE_FISCAL_PED`, `NOMBRE_PAI_CLIENTE_FISCAL_PED`, `ESIVA_RECARGO_CLIENTE_PED`, `ESIVA_EXENTO_CLIENTE_PED`, `ESREGIMENESPECIALAGRICOLA_CLIENTE_PED`, `ESRETENCIONES_CLIENTE_PED`, `TARIFA_ARTICULO_CLIENTE_PED`, `ESIMP_INCL_TARIFA_CLIENTE_PED`, `ESINTRACOMUNITARIO_CLIENTE_PED`, `ESIRPF_IMP_INCL_ZONA_IVA_PED`, `ESAPLICA_RE_ZONA_IVA_PED`, `ESIVAAGRICOLA_ZONA_IVA_PED`, `PALABRA_REPORTS_ZONA_IVA_PED`, `CODIGO_IVA_PED`, `ESVENTA_ACTIVO_FIJO_PED`, `PORCENTAJE_IVAN_PED`, `TOTAL_IVAN_PED`, `PORCENTAJE_REN_PED`, `TOTAL_REN_PED`, `TOTAL_BASEI_IVAN_PED`, `PORCENTAJE_IVAR_PED`, `TOTAL_IVAR_PED`, `PORCENTAJE_RER_PED`, `TOTAL_RER_PED`, `TOTAL_BASEI_IVAR_PED`, `PORCENTAJE_IVAS_PED`, `TOTAL_IVAS_PED`, `PORCENTAJE_RES_PED`, `TOTAL_RES_PED`, `TOTAL_BASEI_IVAS_PED`, `PORCENTAJE_IVAE_PED`, `TOTAL_IVAE_PED`, `PORCENTAJE_REE_PED`, `TOTAL_REE_PED`, `TOTAL_BASEI_IVAE_PED`, `TOTAL_BASES_PED`, `TOTAL_IMPUESTOS_PED`, `FORMA_PAGO_PED`, `PORCENTAJE_RETENCION_PED`, `TOTAL_RETENCION_PED`, `TOTAL_LIQUIDO_PED`, `TOTAL_PAGADOREALPS_PED`, `NUMERO_PED_ABONO_PED`, `SERIE_PED_ABONO_PED`, `TEXTO_LEGAL_CLIENTE_PED`, `TEXTO_LEGAL_EMPRESA_PED`, `DOCUMENTO_PED`, `COMENTARIOS_PED`, `OBSERVACIONES_PED`, `CONTADOR_LINEAS_PED`, `ESCREARARTICULOS_PED`, `ESDESCRIPCIONES_AMP_PED`, `ESFECHADEENTREGA_PED`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('000001', 'A1', '2026-07-02 00:00:00', 'N', 'ABIERTO', NULL, '012', NULL, 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '313', 'B11223344', 'gerencia@texnordeste.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'TEXTILES NORDESTE SL', '937333333', NULL, 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, '60DIAS', 15, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-02 18:31:43', '2026-07-02 18:31:43', 'Alfredo', 'Alfredo'),
-  ('000001', 'AG1', '2026-07-02 00:00:00', 'N', 'ABIERTO', NULL, '1', NULL, 'AGRICULTOR', 'NIF DEL AGRICULTOR', 'TFNO DEL AGRICULTOR', 'EMAIL DEL AGRICULTOR', 'DIRECCION DEL AGRICULTOR', '', 'POBLACION DEL AGRICULTOR', 'PROVINCIA DEL AGRICULTOR', 'ES', 'España', 'POSAGRI', 'S', '2', 'S', '302', '23456789B', 'carlos.herrero@hotmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CARLOS HERRERO SANTOS', '666202020', NULL, 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', 'N', 'N', 'N', 'S', 'PVP', NULL, 'N', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, 0, 0, 'CONTADO', 2.5, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-02 19:16:15', '2026-07-02 19:16:15', 'Administrador', 'Administrador'),
-  ('000001', 'PED', '2026-02-12 00:00:00', 'N', 'ABIERTO', NULL, '1', NULL, 'MODA EJEMPLO SL', 'B11111111', NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, 'N', NULL, 'N', '317', 'B99887766', 'admin@importamoda.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'IMPORTACIONES LA MODA SL', NULL, 'C/ ARTESANOS, 20 NAVE 3', NULL, 'ALCOBENDAS', 'MADRID', '28108', '724', 'España', 'IMPORTACIONES LA MODA SL', NULL, NULL, 'C/ ARTESANOS, 20 NAVE 3', NULL, 'ALCOBENDAS', 'MADRID', '28108', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'S', 'N', 'N', 'S', 'N', 'IVA', NULL, 'N', 21, 147, NULL, 0, 700, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, NULL, 0, NULL, 0, 0, 700, 147, '30DIAS', NULL, 0, 847, NULL, NULL, NULL, '', '', NULL, 'Pedido urgente - Reposición colección primavera', '', '00000030', NULL, 'S', NULL, '2026-07-03 16:50:29', '2026-02-12 10:00:00', 'DEMO', 'Administrador'),
+  ('000001', 'A1', '2026-07-02 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '313', 'B11223344', 'gerencia@texnordeste.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'TEXTILES NORDESTE SL', '937333333', NULL, 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 54.6, 5.2, 0, 260, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 260, 54.6, '60DIAS', 15, 39, 275.6, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '00000020', NULL, NULL, NULL, '2026-07-07 17:51:54', '2026-07-02 18:31:43', 'Alfredo', 'Administrador'),
+  ('000001', 'AG1', '2026-07-02 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '302', '23456789B', 'carlos.herrero@hotmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CARLOS HERRERO SANTOS', '666202020', NULL, 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', 'N', 'N', 'N', 'S', 'PVP', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 34.6395, 5.2, 0, 164.95, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 164.95, 34.6395, 'CONTADO', 2.5, 4.12375, 195.46575, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-07 17:44:11', '2026-07-02 19:16:15', 'Administrador', 'Administrador'),
+  ('000001', 'PED', '2026-02-12 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '317', 'B99887766', 'admin@importamoda.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'IMPORTACIONES LA MODA SL', NULL, 'C/ ARTESANOS, 20 NAVE 3', NULL, 'ALCOBENDAS', 'MADRID', '28108', '724', 'España', 'IMPORTACIONES LA MODA SL', NULL, NULL, 'C/ ARTESANOS, 20 NAVE 3', NULL, 'ALCOBENDAS', 'MADRID', '28108', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'S', 'N', 'N', 'S', 'N', 'IVA', '1', 'N', 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, '30DIAS', 15, 0, 0, NULL, NULL, NULL, '', '', NULL, 'Pedido urgente - Reposición colección primavera', '', '00000030', NULL, 'S', NULL, '2026-07-03 16:50:29', '2026-02-12 10:00:00', 'DEMO', 'Administrador'),
+  ('000002', 'A1', '2026-07-07 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '303', '34567890C', 'marta.ruiz@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'MARTA RUIZ LÓPEZ', '677303030', NULL, 'C/ CERVANTES, 8', '', 'VALENCIA', 'VALENCIA', '46001', '724', 'España', 'N', 'N', 'N', 'S', 'PVP', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'TRANSFERENCIA', 15, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-07 17:35:32', '2026-07-07 17:35:32', 'Administrador', 'Administrador'),
   ('000002', 'PED', '2026-02-13 00:00:00', 'N', 'ABIERTO', NULL, '1', NULL, 'MODA EJEMPLO SL', 'B11111111', NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, 'N', NULL, 'N', '320', 'B55443322', 'compras@modaspain.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'TIENDAS MODA SPAIN SL', NULL, 'GRAN VÍA, 48', NULL, 'MADRID', 'MADRID', '28013', '724', 'España', 'TIENDAS MODA SPAIN SL', NULL, NULL, 'GRAN VÍA, 48', NULL, 'MADRID', 'MADRID', '28013', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'S', 'N', 'N', 'S', 'N', 'IVA', NULL, 'N', 21, 176.4, NULL, NULL, 840, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 840, 176.4, '60DIAS', NULL, NULL, 1016.4, NULL, NULL, NULL, '', '', NULL, 'Colección verano 2026 - 1ª entrega', '', '00000040', NULL, 'S', NULL, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO'),
-  ('000003', 'PED', '2026-02-14 00:00:00', 'N', 'ABIERTO', NULL, '1', NULL, 'MODA EJEMPLO SL', 'B11111111', NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, 'N', NULL, 'N', '304', '45678901D', 'juan.martin@empresa.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'JUAN MARTÍN PÉREZ', NULL, 'C/ ALCALÁ, 100', NULL, 'MADRID', 'MADRID', '28009', '724', 'España', 'JUAN MARTÍN PÉREZ', NULL, NULL, 'C/ ALCALÁ, 100', NULL, 'MADRID', 'MADRID', '28009', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'S', 'N', 'N', 'S', 'N', 'IVA', NULL, 'N', 21, 42, NULL, NULL, 200, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 200, 42, '60DIAS', NULL, NULL, 242, NULL, NULL, NULL, '', '', NULL, '', '', '00000020', NULL, 'S', NULL, '2026-07-03 16:50:29', '2026-02-14 11:00:00', 'DEMO', 'DEMO');
--- 5 registros exportados
+  ('000003', 'A1', '2026-07-07 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '304', '45678901D', 'juan.martin@empresa.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'JUAN MARTÍN PÉREZ', '688404040', NULL, 'C/ ALCALÁ, 100', '', 'MADRID', 'MADRID', '28009', '724', 'España', 'S', 'N', 'N', 'S', 'VENTAMAYOR', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 9.66, 5.2, 2.392, 46, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 46, 12.052, '60DIAS', 15, 6.9, 51.152, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-07 17:54:01', '2026-07-07 17:54:01', 'Administrador', 'Administrador'),
+  ('000003', 'PED', '2026-02-14 00:00:00', 'N', 'ABIERTO', NULL, '1', NULL, 'MODA EJEMPLO SL', 'B11111111', NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, 'N', NULL, 'N', '304', '45678901D', 'juan.martin@empresa.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'JUAN MARTÍN PÉREZ', NULL, 'C/ ALCALÁ, 100', NULL, 'MADRID', 'MADRID', '28009', '724', 'España', 'JUAN MARTÍN PÉREZ', NULL, NULL, 'C/ ALCALÁ, 100', NULL, 'MADRID', 'MADRID', '28009', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'S', 'N', 'N', 'S', 'N', 'IVA', NULL, 'N', 21, 42, NULL, NULL, 200, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 200, 42, '60DIAS', NULL, NULL, 242, NULL, NULL, NULL, '', '', NULL, '', '', '00000020', NULL, 'S', NULL, '2026-07-03 16:50:29', '2026-02-14 11:00:00', 'DEMO', 'DEMO'),
+  ('000004', 'A1', '2026-07-07 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '334', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', NULL, 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-07 19:19:56', '2026-07-07 19:19:56', 'Administrador', 'Administrador');
+-- 8 registros exportados
+
+
+-- Tabla: fza_pedidos_celdas
+
+DROP TABLE IF EXISTS `fza_pedidos_celdas`;
+CREATE TABLE `fza_pedidos_celdas` (
+  `SERIE_PED_PEDCEL` varchar(12) NOT NULL,
+  `NUMERO_PED_PEDCEL` varchar(12) NOT NULL,
+  `LINEA_PEDCEL` int(11) NOT NULL,
+  `ID_FILA_PEDCEL` int(11) NOT NULL,
+  `ID_AV_PIVOT_PEDCEL` int(11) NOT NULL COMMENT 'FK logica fza_atributos_valores del eje pivot (TALLA)',
+  `CODIGO_ALM_PEDCEL` varchar(10) NOT NULL DEFAULT '',
+  `CANTIDAD_PEDCEL` decimal(19,6) NOT NULL,
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `USUARIO_ALTA` varchar(100) NOT NULL DEFAULT '',
+  `INSTANTE_MODIF` datetime NULL DEFAULT NULL,
+  `USUARIO_MODIF` varchar(100) NULL DEFAULT NULL,
+  PRIMARY KEY (`SERIE_PED_PEDCEL`,`NUMERO_PED_PEDCEL`,`LINEA_PEDCEL`,`ID_FILA_PEDCEL`,`ID_AV_PIVOT_PEDCEL`,`CODIGO_ALM_PEDCEL`)
+);
+ALTER TABLE `fza_pedidos_celdas` ADD INDEX `IDX_PEDCEL_AV_PIVOT` (`ID_AV_PIVOT_PEDCEL`);
+
+-- Datos de fza_pedidos_celdas
+INSERT INTO `fza_pedidos_celdas` (`SERIE_PED_PEDCEL`, `NUMERO_PED_PEDCEL`, `LINEA_PEDCEL`, `ID_FILA_PEDCEL`, `ID_AV_PIVOT_PEDCEL`, `CODIGO_ALM_PEDCEL`, `CANTIDAD_PEDCEL`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES
+  ('A1', '000003', 10, 1, 9102, '', 1, '2026-07-07 17:55:30', 'Administrador', '2026-07-07 17:55:30', 'Administrador'),
+  ('A1', '000003', 20, 1, 9103, '', 1, '2026-07-07 17:55:31', 'Administrador', '2026-07-07 17:55:31', 'Administrador'),
+  ('A1', '000003', 30, 1, 126, '', 1, '2026-07-07 17:55:31', 'Administrador', '2026-07-07 17:55:31', 'Administrador');
+-- 3 registros exportados
 
 
 -- Tabla: fza_pedidos_compra
@@ -18656,23 +19378,44 @@ CREATE TABLE `fza_pedidos_lineas` (
   `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIO_ALTA` varchar(100) NOT NULL,
   `USUARIO_MODIF` varchar(100) NOT NULL,
+  `CODIGO_UNIDAD_PEDLIN` varchar(50) NOT NULL DEFAULT '' COMMENT 'SKU concreto de la linea (ColumnSKUcxGrid)',
+  `ATTR1_VALOR_PEDLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR1_NOMBRE_PEDLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR2_VALOR_PEDLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR2_NOMBRE_PEDLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR3_VALOR_PEDLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR3_NOMBRE_PEDLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR4_VALOR_PEDLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR4_NOMBRE_PEDLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR5_VALOR_PEDLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR5_NOMBRE_PEDLIN` varchar(100) NOT NULL DEFAULT '',
+  `NUM_ATRIBUTOS_PEDLIN` int(11) NOT NULL DEFAULT '0' COMMENT 'Atributos requeridos del articulo',
+  `ID_AC_PIVOT_PEDLIN` int(11) NOT NULL DEFAULT '0' COMMENT 'Conjunto pivotado en tallas horizontal (0 = sin pivote)',
   PRIMARY KEY (`NUMERO_PED_PEDLIN`,`SERIE_PED_PEDLIN`,`LINEA_PEDLIN`)
 );
 ALTER TABLE `fza_pedidos_lineas` ADD INDEX `IDX_PEDLIN_ARTICULO` (`CODIGO_ART_PEDLIN`);
 ALTER TABLE `fza_pedidos_lineas` ADD INDEX `IDX_PEDLIN_PENDIENTE` (`ESENTREGADA_PEDLIN`);
+ALTER TABLE `fza_pedidos_lineas` ADD INDEX `IDX_PEDLIN_UNIDAD` (`CODIGO_UNIDAD_PEDLIN`);
 
 -- Datos de fza_pedidos_lineas
-INSERT INTO `fza_pedidos_lineas` (`NUMERO_PED_PEDLIN`, `SERIE_PED_PEDLIN`, `LINEA_PEDLIN`, `IDLINEAPS_PEDLIN`, `IDPRODPS_PEDLIN`, `CODIGOPRODPS_PEDLIN`, `IDATRIBPRODPS_PEDLIN`, `CODBAR_ART_PEDLIN`, `CODIGO_ART_PEDLIN`, `CODIGO_FAM_PEDLIN`, `NOMBRE_FAM_PEDLIN`, `FECHA_ENTREGA_PEDLIN`, `TIPO_CANTIDAD_ARTICULO_PEDLIN`, `ESIMP_INCL_TARIFA_PEDLIN`, `TIPO_IVA_ARTICULO_PEDLIN`, `DESCRIPCION_ARTICULO_PEDLIN`, `CODIGO_TAR_PEDLIN`, `CANTIDAD_PEDLIN`, `CANTIDAD_ENTREGADA_PEDLIN`, `CANTIDAD_PENDIENTE_PEDLIN`, `ESENTREGADA_PEDLIN`, `CODIGO_ALMACEN_PEDLIN`, `PRECIO_VENTA_SIVA_ARTICULO_PEDLIN`, `PORCENTAJE_IVA_PEDLIN`, `PRECIO_VENTA_CIVA_ARTICULO_PEDLIN`, `TOTAL_PEDLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('000001', 'PED', '0010', NULL, NULL, NULL, NULL, NULL, 'SUDADERA-HOOD', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Sudadera con Capucha Negro L', NULL, 10, 0, 10, 'N', NULL, 28, 21, 33.88, 280, '2026-07-03 16:50:29', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
-  ('000001', 'PED', '0020', NULL, NULL, NULL, NULL, NULL, 'LEGGING-SPORT', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Legging Deportivo Negro M', NULL, 20, 0, 0, 'N', NULL, 12, 21, 0, 240, '2026-07-03 16:50:29', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
-  ('000001', 'PED', '0030', NULL, NULL, NULL, NULL, NULL, 'CAMI-POLO', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Polo Manga Corta Blanco S', NULL, 10, 0, 0, 'N', NULL, 18, 21, 0, 180, '2026-07-03 16:50:29', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
-  ('000002', 'PED', '0010', NULL, NULL, NULL, NULL, NULL, 'VEST-FLOR', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Vestido Estampado Verano Azul S', NULL, 15, 0, 0, 'N', NULL, 12, 21, 0, 180, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO'),
-  ('000002', 'PED', '0020', NULL, NULL, NULL, NULL, NULL, 'VEST-FLOR', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Vestido Estampado Verano Rojo M', NULL, 15, 0, 0, 'N', NULL, 12, 21, 0, 180, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO'),
-  ('000002', 'PED', '0030', NULL, NULL, NULL, NULL, NULL, 'BLUS-SEDA', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Blusa de Seda Cuello V', NULL, 10, 0, 0, 'N', NULL, 22, 21, 0, 220, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO'),
-  ('000002', 'PED', '0040', NULL, NULL, NULL, NULL, NULL, 'FALD-PLIS', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Falda Larga Plisada Blanco M', NULL, 10, 0, 0, 'N', NULL, 18, 21, 0, 180, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO'),
-  ('000003', 'PED', '0010', NULL, NULL, NULL, NULL, NULL, 'ABRIGO-PAÑO', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Abrigo de Paño Negro XL', NULL, 1, 0, 0, 'N', NULL, 120, 21, 0, 120, '2026-07-03 16:50:29', '2026-02-14 11:00:00', 'DEMO', 'DEMO'),
-  ('000003', 'PED', '0020', NULL, NULL, NULL, NULL, NULL, 'ZAP-BOTA-MT', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Bota Montaña Marrón 43', NULL, 1, 0, 0, 'N', NULL, 60, 21, 0, 60, '2026-07-03 16:50:29', '2026-02-14 11:00:00', 'DEMO', 'DEMO');
--- 9 registros exportados
+INSERT INTO `fza_pedidos_lineas` (`NUMERO_PED_PEDLIN`, `SERIE_PED_PEDLIN`, `LINEA_PEDLIN`, `IDLINEAPS_PEDLIN`, `IDPRODPS_PEDLIN`, `CODIGOPRODPS_PEDLIN`, `IDATRIBPRODPS_PEDLIN`, `CODBAR_ART_PEDLIN`, `CODIGO_ART_PEDLIN`, `CODIGO_FAM_PEDLIN`, `NOMBRE_FAM_PEDLIN`, `FECHA_ENTREGA_PEDLIN`, `TIPO_CANTIDAD_ARTICULO_PEDLIN`, `ESIMP_INCL_TARIFA_PEDLIN`, `TIPO_IVA_ARTICULO_PEDLIN`, `DESCRIPCION_ARTICULO_PEDLIN`, `CODIGO_TAR_PEDLIN`, `CANTIDAD_PEDLIN`, `CANTIDAD_ENTREGADA_PEDLIN`, `CANTIDAD_PENDIENTE_PEDLIN`, `ESENTREGADA_PEDLIN`, `CODIGO_ALMACEN_PEDLIN`, `PRECIO_VENTA_SIVA_ARTICULO_PEDLIN`, `PORCENTAJE_IVA_PEDLIN`, `PRECIO_VENTA_CIVA_ARTICULO_PEDLIN`, `TOTAL_PEDLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `CODIGO_UNIDAD_PEDLIN`, `ATTR1_VALOR_PEDLIN`, `ATTR1_NOMBRE_PEDLIN`, `ATTR2_VALOR_PEDLIN`, `ATTR2_NOMBRE_PEDLIN`, `ATTR3_VALOR_PEDLIN`, `ATTR3_NOMBRE_PEDLIN`, `ATTR4_VALOR_PEDLIN`, `ATTR4_NOMBRE_PEDLIN`, `ATTR5_VALOR_PEDLIN`, `ATTR5_NOMBRE_PEDLIN`, `NUM_ATRIBUTOS_PEDLIN`, `ID_AC_PIVOT_PEDLIN`) VALUES
+  ('000001', 'A1', '0020', NULL, NULL, 'BOTIN-ANIT/NEGRO/39', NULL, NULL, 'BOTIN-ANIT', 'CALZADO', 'Calzado Todo tiempo', NULL, 'Uds', 'N', 'N', 'Botín Ante Mujer', 'VENTAMAYOR', 1, 1, 0, 'S', 'GEN', 52, 21, 62.92, 52, '2026-07-07 19:27:25', '2026-07-07 17:41:27', 'Administrador', 'Administrador', 'BOTIN-ANIT/NEGRO/39', 'NEGRO', 'Color', '39', 'Talla', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0030', NULL, NULL, 'BOTIN-ANIT/NEGRO/40', NULL, NULL, 'BOTIN-ANIT', 'CALZADO', 'Calzado Todo tiempo', NULL, 'Uds', 'N', 'N', 'Botín Ante Mujer', 'VENTAMAYOR', 2, 2, 0, 'S', 'GEN', 52, 21, 62.92, 104, '2026-07-07 19:39:59', '2026-07-07 19:08:26', 'Administrador', 'Administrador', 'BOTIN-ANIT', 'NEGRO', '', '40', '', '', '', '', '', '', '', 0, 0),
+  ('000001', 'A1', '0040', NULL, NULL, 'BOTIN-ANIT/NEGRO/41', NULL, NULL, 'BOTIN-ANIT', 'CALZADO', 'Calzado Todo tiempo', NULL, 'Uds', 'N', 'N', 'Botín Ante Mujer', 'VENTAMAYOR', 2, 2, 0, 'S', 'GEN', 52, 21, 62.92, 104, '2026-07-07 19:39:59', '2026-07-07 19:08:47', 'Administrador', 'Administrador', 'BOTIN-ANIT', 'NEGRO', '', '41', '', '', '', '', '', '', '', 0, 0),
+  ('000001', 'AG1', '0010', NULL, NULL, 'CALV00001/3838/41', NULL, NULL, 'CALV00001', 'CALV', '', NULL, 'Uds', 'S', 'N', 'CALZADO VESTIR', 'PVP', 1, 0, 1, 'N', 'GEN', 164.95, 21, 199.5895, 164.95, '2026-07-07 17:52:01', '2026-07-07 17:43:48', 'Administrador', 'Administrador', 'CALV00001/3838/41', '3838', 'Color', '41', '', '', '', '', '', '', '', 2, 4),
+  ('000001', 'PED', '0010', NULL, NULL, NULL, NULL, NULL, 'SUDADERA-HOOD', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Sudadera con Capucha Negro L', NULL, 0, 0, 0, 'S', 'GEN', 28, 21, 33.88, 0, '2026-07-07 17:53:44', '2026-02-12 10:00:00', 'DEMO', 'Administrador', 'SUDADERA-HOOD', '', 'Color', '', '', '', '', '', '', '', '', 0, 1),
+  ('000001', 'PED', '0020', NULL, NULL, NULL, NULL, NULL, 'LEGGING-SPORT', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Legging Deportivo Negro M', NULL, 0, 0, 0, 'S', 'GEN', 12, 21, 14.52, 0, '2026-07-07 17:53:44', '2026-02-12 10:00:00', 'DEMO', 'Administrador', 'LEGGING-SPORT', '', 'Color', '', '', '', '', '', '', '', '', 0, 3),
+  ('000001', 'PED', '0030', NULL, NULL, NULL, NULL, NULL, 'CAMI-POLO', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Polo Manga Corta Blanco S', NULL, 0, 0, 0, 'S', 'GEN', 18, 21, 21.78, 0, '2026-07-07 17:53:44', '2026-02-12 10:00:00', 'DEMO', 'Administrador', 'CAMI-POLO', '', 'Color', '', '', '', '', '', '', '', '', 0, 1),
+  ('000002', 'PED', '0010', NULL, NULL, NULL, NULL, NULL, 'VEST-FLOR', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Vestido Estampado Verano Azul S', NULL, 15, 0, 0, 'N', NULL, 12, 21, 0, 180, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000002', 'PED', '0020', NULL, NULL, NULL, NULL, NULL, 'VEST-FLOR', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Vestido Estampado Verano Rojo M', NULL, 15, 0, 0, 'N', NULL, 12, 21, 0, 180, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000002', 'PED', '0030', NULL, NULL, NULL, NULL, NULL, 'BLUS-SEDA', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Blusa de Seda Cuello V', NULL, 10, 0, 0, 'N', NULL, 22, 21, 0, 220, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000002', 'PED', '0040', NULL, NULL, NULL, NULL, NULL, 'FALD-PLIS', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Falda Larga Plisada Blanco M', NULL, 10, 0, 0, 'N', NULL, 18, 21, 0, 180, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000003', 'A1', '0010', NULL, NULL, 'SUDADERA-HOOD/GRIS/M', NULL, NULL, 'SUDADERA-HOOD', 'DEPORTIVO', 'Ropa y calzado deportivo', NULL, 'Uds', 'N', 'N', 'Sudadera con Capucha Unisex', 'VENTAMAYOR', 1, 0, 1, 'N', 'GEN', 28, 21, 33.88, 28, '2026-07-07 17:55:31', '2026-07-07 17:54:09', 'Administrador', 'Administrador', 'SUDADERA-HOOD/GRIS/M', 'GRIS', 'Color', 'M', '', '', '', '', '', '', '', 2, 1),
+  ('000003', 'A1', '0020', NULL, NULL, 'CAMI-POLO/AZUL/L', NULL, NULL, 'CAMI-POLO', 'ROPA', 'Ropa de Vestir a la moda', NULL, 'Uds', 'N', 'N', 'Polo Manga Corta Hombre', 'VENTAMAYOR', 1, 0, 1, 'N', 'GEN', 18, 21, 21.78, 18, '2026-07-07 17:56:40', '2026-07-07 17:54:15', 'Administrador', 'Administrador', 'CAMI-POLO/AZUL/L', 'AZUL', 'Color', 'L', '', '', '', '', '', '', '', 2, 1),
+  ('000003', 'A1', '0030', NULL, NULL, 'BOLSOS00005/AZUL_CIELO/42', NULL, NULL, 'BOLSOS00005', 'BOLSOS', 'Bolsos, bolsas y mochilas de señora', NULL, 'Uds', 'N', 'N', 'Bolsos y Mochilas', 'VENTAMAYOR', 1, 0, 1, 'N', 'GEN', 0, 21, 0, 0, '2026-07-07 17:56:40', '2026-07-07 17:54:46', 'Administrador', 'Administrador', 'BOLSOS00005/AZUL_CIELO/42', 'AZUL_CIELO', 'Color', '42', '', '', '', '', '', '', '', 2, 4),
+  ('000003', 'PED', '0010', NULL, NULL, NULL, NULL, NULL, 'ABRIGO-PAÑO', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Abrigo de Paño Negro XL', NULL, 1, 0, 0, 'N', NULL, 120, 21, 0, 120, '2026-07-03 16:50:29', '2026-02-14 11:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000003', 'PED', '0020', NULL, NULL, NULL, NULL, NULL, 'ZAP-BOTA-MT', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Bota Montaña Marrón 43', NULL, 1, 0, 0, 'N', NULL, 60, 21, 0, 60, '2026-07-03 16:50:29', '2026-02-14 11:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0);
+-- 16 registros exportados
 
 
 -- Tabla: fza_pedidos_mensajes
@@ -19994,7 +20737,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-07 16:10:12', '2026-07-07 16:10:12', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-07 19:54:17', '2026-07-07 19:54:17', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Vendedores', 'S', '012', '2026-07-02 18:49:30', '2026-07-02 18:49:30', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
 -- 2 registros exportados
 
@@ -32588,7 +33331,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos` AS select `p`.`NUMERO_PED` AS `NUM
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos_compra` AS select `p`.`NUMERO_PEDC` AS `NUMERO_PEDC`,`p`.`SERIE_PEDC` AS `SERIE_PEDC`,`p`.`FECHA_PEDC` AS `FECHA_PEDC`,`p`.`FECHA_PREVISTA_PEDC` AS `FECHA_PREVISTA_PEDC`,`p`.`FECHA_TOPE_RECEPCION_PEDC` AS `FECHA_TOPE_RECEPCION_PEDC`,`p`.`ESTADO_PEDC` AS `ESTADO_PEDC`,`p`.`CODIGO_EMP_PEDC` AS `CODIGO_EMP_PEDC`,`p`.`RAZON_SOCIAL_EMPRESA_PEDC` AS `RAZON_SOCIAL_EMPRESA_PEDC`,`p`.`NIF_EMPRESA_PEDC` AS `NIF_EMPRESA_PEDC`,`p`.`MOVIL_EMPRESA_PEDC` AS `MOVIL_EMPRESA_PEDC`,`p`.`EMAIL_EMPRESA_PEDC` AS `EMAIL_EMPRESA_PEDC`,`p`.`DIRECCION1_EMPRESA_PEDC` AS `DIRECCION1_EMPRESA_PEDC`,`p`.`DIRECCION2_EMPRESA_PEDC` AS `DIRECCION2_EMPRESA_PEDC`,`p`.`POBLACION_EMPRESA_PEDC` AS `POBLACION_EMPRESA_PEDC`,`p`.`PROVINCIA_EMPRESA_PEDC` AS `PROVINCIA_EMPRESA_PEDC`,`p`.`CODIGO_PAI_EMPRESA_PEDC` AS `CODIGO_PAI_EMPRESA_PEDC`,`p`.`NOMBRE_PAI_EMPRESA_PEDC` AS `NOMBRE_PAI_EMPRESA_PEDC`,`p`.`CODIGO_POSTAL_EMPRESA_PEDC` AS `CODIGO_POSTAL_EMPRESA_PEDC`,`p`.`CODIGO_PRV_PEDC` AS `CODIGO_PRV_PEDC`,`p`.`RAZON_SOCIAL_PRV_PEDC` AS `RAZON_SOCIAL_PRV_PEDC`,`p`.`NIF_PRV_PEDC` AS `NIF_PRV_PEDC`,`p`.`MOVIL_PRV_PEDC` AS `MOVIL_PRV_PEDC`,`p`.`EMAIL_PRV_PEDC` AS `EMAIL_PRV_PEDC`,`p`.`DIRECCION1_PRV_PEDC` AS `DIRECCION1_PRV_PEDC`,`p`.`DIRECCION2_PRV_PEDC` AS `DIRECCION2_PRV_PEDC`,`p`.`POBLACION_PRV_PEDC` AS `POBLACION_PRV_PEDC`,`p`.`PROVINCIA_PRV_PEDC` AS `PROVINCIA_PRV_PEDC`,`p`.`CODIGO_PAI_PRV_PEDC` AS `CODIGO_PAI_PRV_PEDC`,`p`.`NOMBRE_PAI_PRV_PEDC` AS `NOMBRE_PAI_PRV_PEDC`,`p`.`CODIGO_POSTAL_PRV_PEDC` AS `CODIGO_POSTAL_PRV_PEDC`,`p`.`REF_PROVEEDOR_PEDC` AS `REF_PROVEEDOR_PEDC`,`p`.`CODIGO_ALM_PEDC` AS `CODIGO_ALM_PEDC`,`p`.`TRANSPORTISTA_PEDC` AS `TRANSPORTISTA_PEDC`,`p`.`CODIGO_IVA_PEDC` AS `CODIGO_IVA_PEDC`,`p`.`ESIVA_RECARGO_COMPRAS_PEDC` AS `ESIVA_RECARGO_COMPRAS_PEDC`,`p`.`ESIVA_EXENTO_INTRACOMUNITARIO_PEDC` AS `ESIVA_EXENTO_INTRACOMUNITARIO_PEDC`,`p`.`PORCENTAJE_IVAN_PEDC` AS `PORCENTAJE_IVAN_PEDC`,`p`.`TOTAL_BASEI_IVAN_PEDC` AS `TOTAL_BASEI_IVAN_PEDC`,`p`.`TOTAL_IVAN_PEDC` AS `TOTAL_IVAN_PEDC`,`p`.`PORCENTAJE_REN_PEDC` AS `PORCENTAJE_REN_PEDC`,`p`.`TOTAL_REN_PEDC` AS `TOTAL_REN_PEDC`,`p`.`PORCENTAJE_IVAR_PEDC` AS `PORCENTAJE_IVAR_PEDC`,`p`.`TOTAL_BASEI_IVAR_PEDC` AS `TOTAL_BASEI_IVAR_PEDC`,`p`.`TOTAL_IVAR_PEDC` AS `TOTAL_IVAR_PEDC`,`p`.`PORCENTAJE_RER_PEDC` AS `PORCENTAJE_RER_PEDC`,`p`.`TOTAL_RER_PEDC` AS `TOTAL_RER_PEDC`,`p`.`PORCENTAJE_IVAS_PEDC` AS `PORCENTAJE_IVAS_PEDC`,`p`.`TOTAL_BASEI_IVAS_PEDC` AS `TOTAL_BASEI_IVAS_PEDC`,`p`.`TOTAL_IVAS_PEDC` AS `TOTAL_IVAS_PEDC`,`p`.`PORCENTAJE_RES_PEDC` AS `PORCENTAJE_RES_PEDC`,`p`.`TOTAL_RES_PEDC` AS `TOTAL_RES_PEDC`,`p`.`PORCENTAJE_IVAE_PEDC` AS `PORCENTAJE_IVAE_PEDC`,`p`.`TOTAL_BASEI_IVAE_PEDC` AS `TOTAL_BASEI_IVAE_PEDC`,`p`.`TOTAL_IVAE_PEDC` AS `TOTAL_IVAE_PEDC`,`p`.`PORCENTAJE_REE_PEDC` AS `PORCENTAJE_REE_PEDC`,`p`.`TOTAL_REE_PEDC` AS `TOTAL_REE_PEDC`,`p`.`TOTAL_BASES_PEDC` AS `TOTAL_BASES_PEDC`,`p`.`TOTAL_IMPUESTOS_PEDC` AS `TOTAL_IMPUESTOS_PEDC`,`p`.`PORCENTAJE_RETENCION_PEDC` AS `PORCENTAJE_RETENCION_PEDC`,`p`.`TOTAL_RETENCION_PEDC` AS `TOTAL_RETENCION_PEDC`,`p`.`TOTAL_BRUTO_PEDC` AS `TOTAL_BRUTO_PEDC`,`p`.`PORCENTAJE_DTO_COMERCIAL_PEDC` AS `PORCENTAJE_DTO_COMERCIAL_PEDC`,`p`.`TOTAL_DTO_COMERCIAL_PEDC` AS `TOTAL_DTO_COMERCIAL_PEDC`,`p`.`PORCENTAJE_DTO_FINANCIERO_PEDC` AS `PORCENTAJE_DTO_FINANCIERO_PEDC`,`p`.`TOTAL_DTO_FINANCIERO_PEDC` AS `TOTAL_DTO_FINANCIERO_PEDC`,`p`.`TOTAL_LIQUIDO_PEDC` AS `TOTAL_LIQUIDO_PEDC`,`p`.`FORMA_PAGO_PEDC` AS `FORMA_PAGO_PEDC`,`p`.`CONTADOR_LINEAS_PEDC` AS `CONTADOR_LINEAS_PEDC`,`p`.`COMENTARIOS_PEDC` AS `COMENTARIOS_PEDC`,`p`.`OBSERVACIONES_PEDC` AS `OBSERVACIONES_PEDC`,`p`.`ESPIVOTE_HORIZONTAL_PEDC` AS `ESPIVOTE_HORIZONTAL_PEDC`,`p`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`p`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`p`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`p`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`p`.`ID_PV_TEMPORADA_PEDC` AS `ID_PV_TEMPORADA_PEDC`,`prv`.`NOMBRE_PRV` AS `NOMBRE_PRV_PEDC`,`emp`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMPRESA_VIEW_PEDC`,`t`.`PV` AS `TEMPORADA_PEDC`,`p`.`FECHA_PEDC` AS `FECHA_REALIZACION_PEDC`,`p`.`FECHA_PREVISTA_PEDC` AS `FECHA_EFECTO_STOCK_PEDC`,coalesce(`r`.`CANTIDAD_PEDIDA_PEDC`,0) AS `CANTIDAD_PEDIDA_PEDC`,coalesce(`r`.`CANTIDAD_PEDIDA_PEDC`,0) AS `TOTAL_PRENDAS_PEDC`,coalesce(`r`.`CANTIDAD_RECIBIDA_PEDC`,0) AS `CANTIDAD_RECIBIDA_PEDC`,greatest(coalesce(`r`.`CANTIDAD_PEDIDA_PEDC`,0) - coalesce(`r`.`CANTIDAD_RECIBIDA_PEDC`,0),0) AS `CANTIDAD_PENDIENTE_RECEPCION_PEDC`,coalesce(`r`.`TOTAL_LINEAS_PEDC`,0) AS `TOTAL_LINEAS_PEDC` from ((((`fza_pedidos_compra` `p` left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `p`.`CODIGO_PRV_PEDC`)) left join `fza_empresas` `emp` on(`emp`.`CODIGO_EMP_EMP` = `p`.`CODIGO_EMP_PEDC`)) left join `fza_propiedades_valores` `t` on(`t`.`ID_PV_ARTPROP` = `p`.`ID_PV_TEMPORADA_PEDC` and `t`.`ID_PROP_PV` = 'TEMPORADA')) left join (select `l`.`SERIE_PEDC_PEDCLIN` AS `SERIE_PEDC_PEDCLIN`,`l`.`NUMERO_PEDC_PEDCLIN` AS `NUMERO_PEDC_PEDCLIN`,coalesce(sum(`l`.`CANTIDAD_PEDCLIN`),0) AS `CANTIDAD_PEDIDA_PEDC`,coalesce(sum(`l`.`CANTIDAD_RECIBIDA_PEDCLIN`),0) AS `CANTIDAD_RECIBIDA_PEDC`,coalesce(sum(`l`.`TOTAL_PEDCLIN`),0) AS `TOTAL_LINEAS_PEDC` from `fza_pedidos_compra_lineas` `l` group by `l`.`SERIE_PEDC_PEDCLIN`,`l`.`NUMERO_PEDC_PEDCLIN`) `r` on(`r`.`SERIE_PEDC_PEDCLIN` = `p`.`SERIE_PEDC` and `r`.`NUMERO_PEDC_PEDCLIN` = `p`.`NUMERO_PEDC`));
 
 -- Vista: vi_pedidos_lineas
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos_lineas` AS select `pl`.`NUMERO_PED_PEDLIN` AS `NUMERO_PED_PEDLIN`,`pl`.`SERIE_PED_PEDLIN` AS `SERIE_PED_PEDLIN`,`pl`.`LINEA_PEDLIN` AS `LINEA_PEDLIN`,`pl`.`IDLINEAPS_PEDLIN` AS `IDLINEAPS_PEDLIN`,`pl`.`IDPRODPS_PEDLIN` AS `IDPRODPS_PEDLIN`,`pl`.`CODIGOPRODPS_PEDLIN` AS `CODIGOPRODPS_PEDLIN`,`pl`.`IDATRIBPRODPS_PEDLIN` AS `IDATRIBPRODPS_PEDLIN`,`pl`.`CODBAR_ART_PEDLIN` AS `CODBAR_ART_PEDLIN`,`pl`.`CODIGO_ART_PEDLIN` AS `CODIGO_ART_PEDLIN`,`pl`.`CODIGO_FAM_PEDLIN` AS `CODIGO_FAM_PEDLIN`,`pl`.`NOMBRE_FAM_PEDLIN` AS `NOMBRE_FAM_PEDLIN`,`pl`.`FECHA_ENTREGA_PEDLIN` AS `FECHA_ENTREGA_PEDLIN`,`pl`.`TIPO_CANTIDAD_ARTICULO_PEDLIN` AS `TIPO_CANTIDAD_ARTICULO_PEDLIN`,`pl`.`ESIMP_INCL_TARIFA_PEDLIN` AS `ESIMP_INCL_TARIFA_PEDLIN`,`pl`.`TIPO_IVA_ARTICULO_PEDLIN` AS `TIPO_IVA_ARTICULO_PEDLIN`,`pl`.`DESCRIPCION_ARTICULO_PEDLIN` AS `DESCRIPCION_ARTICULO_PEDLIN`,`pl`.`CODIGO_TAR_PEDLIN` AS `CODIGO_TAR_PEDLIN`,`pl`.`CANTIDAD_PEDLIN` AS `CANTIDAD_PEDLIN`,`pl`.`CANTIDAD_ENTREGADA_PEDLIN` AS `CANTIDAD_ENTREGADA_PEDLIN`,`pl`.`CANTIDAD_PENDIENTE_PEDLIN` AS `CANTIDAD_PENDIENTE_PEDLIN`,`pl`.`ESENTREGADA_PEDLIN` AS `ESENTREGADA_PEDLIN`,`pl`.`CODIGO_ALMACEN_PEDLIN` AS `CODIGO_ALMACEN_PEDLIN`,`pl`.`PRECIO_VENTA_SIVA_ARTICULO_PEDLIN` AS `PRECIO_VENTA_SIVA_ARTICULO_PEDLIN`,`pl`.`PORCENTAJE_IVA_PEDLIN` AS `PORCENTAJE_IVA_PEDLIN`,`pl`.`PRECIO_VENTA_CIVA_ARTICULO_PEDLIN` AS `PRECIO_VENTA_CIVA_ARTICULO_PEDLIN`,`pl`.`TOTAL_PEDLIN` AS `TOTAL_PEDLIN`,`pl`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`pl`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`pl`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`pl`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`pl`.`CANTIDAD_PEDLIN` - ifnull(`pl`.`CANTIDAD_ENTREGADA_PEDLIN`,0) AS `CANTIDAD_PENDIENTE_CALC_PEDLIN` from `fza_pedidos_lineas` `pl`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos_lineas` AS select `pl`.`NUMERO_PED_PEDLIN` AS `NUMERO_PED_PEDLIN`,`pl`.`SERIE_PED_PEDLIN` AS `SERIE_PED_PEDLIN`,`pl`.`LINEA_PEDLIN` AS `LINEA_PEDLIN`,`pl`.`IDLINEAPS_PEDLIN` AS `IDLINEAPS_PEDLIN`,`pl`.`IDPRODPS_PEDLIN` AS `IDPRODPS_PEDLIN`,`pl`.`CODIGOPRODPS_PEDLIN` AS `CODIGOPRODPS_PEDLIN`,`pl`.`IDATRIBPRODPS_PEDLIN` AS `IDATRIBPRODPS_PEDLIN`,`pl`.`CODBAR_ART_PEDLIN` AS `CODBAR_ART_PEDLIN`,`pl`.`CODIGO_ART_PEDLIN` AS `CODIGO_ART_PEDLIN`,`pl`.`CODIGO_FAM_PEDLIN` AS `CODIGO_FAM_PEDLIN`,`pl`.`NOMBRE_FAM_PEDLIN` AS `NOMBRE_FAM_PEDLIN`,`pl`.`FECHA_ENTREGA_PEDLIN` AS `FECHA_ENTREGA_PEDLIN`,`pl`.`TIPO_CANTIDAD_ARTICULO_PEDLIN` AS `TIPO_CANTIDAD_ARTICULO_PEDLIN`,`pl`.`ESIMP_INCL_TARIFA_PEDLIN` AS `ESIMP_INCL_TARIFA_PEDLIN`,`pl`.`TIPO_IVA_ARTICULO_PEDLIN` AS `TIPO_IVA_ARTICULO_PEDLIN`,`pl`.`DESCRIPCION_ARTICULO_PEDLIN` AS `DESCRIPCION_ARTICULO_PEDLIN`,`pl`.`CODIGO_TAR_PEDLIN` AS `CODIGO_TAR_PEDLIN`,`pl`.`CANTIDAD_PEDLIN` AS `CANTIDAD_PEDLIN`,`pl`.`CANTIDAD_ENTREGADA_PEDLIN` AS `CANTIDAD_ENTREGADA_PEDLIN`,`pl`.`CANTIDAD_PENDIENTE_PEDLIN` AS `CANTIDAD_PENDIENTE_PEDLIN`,`pl`.`ESENTREGADA_PEDLIN` AS `ESENTREGADA_PEDLIN`,`pl`.`CODIGO_ALMACEN_PEDLIN` AS `CODIGO_ALMACEN_PEDLIN`,`pl`.`PRECIO_VENTA_SIVA_ARTICULO_PEDLIN` AS `PRECIO_VENTA_SIVA_ARTICULO_PEDLIN`,`pl`.`PORCENTAJE_IVA_PEDLIN` AS `PORCENTAJE_IVA_PEDLIN`,`pl`.`PRECIO_VENTA_CIVA_ARTICULO_PEDLIN` AS `PRECIO_VENTA_CIVA_ARTICULO_PEDLIN`,`pl`.`TOTAL_PEDLIN` AS `TOTAL_PEDLIN`,`pl`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`pl`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`pl`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`pl`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`pl`.`CODIGO_UNIDAD_PEDLIN` AS `CODIGO_UNIDAD_PEDLIN`,`pl`.`ATTR1_VALOR_PEDLIN` AS `ATTR1_VALOR_PEDLIN`,`pl`.`ATTR1_NOMBRE_PEDLIN` AS `ATTR1_NOMBRE_PEDLIN`,`pl`.`ATTR2_VALOR_PEDLIN` AS `ATTR2_VALOR_PEDLIN`,`pl`.`ATTR2_NOMBRE_PEDLIN` AS `ATTR2_NOMBRE_PEDLIN`,`pl`.`ATTR3_VALOR_PEDLIN` AS `ATTR3_VALOR_PEDLIN`,`pl`.`ATTR3_NOMBRE_PEDLIN` AS `ATTR3_NOMBRE_PEDLIN`,`pl`.`ATTR4_VALOR_PEDLIN` AS `ATTR4_VALOR_PEDLIN`,`pl`.`ATTR4_NOMBRE_PEDLIN` AS `ATTR4_NOMBRE_PEDLIN`,`pl`.`ATTR5_VALOR_PEDLIN` AS `ATTR5_VALOR_PEDLIN`,`pl`.`ATTR5_NOMBRE_PEDLIN` AS `ATTR5_NOMBRE_PEDLIN`,`pl`.`NUM_ATRIBUTOS_PEDLIN` AS `NUM_ATRIBUTOS_PEDLIN`,`pl`.`ID_AC_PIVOT_PEDLIN` AS `ID_AC_PIVOT_PEDLIN`,`pl`.`CANTIDAD_PEDLIN` - ifnull(`pl`.`CANTIDAD_ENTREGADA_PEDLIN`,0) AS `CANTIDAD_PENDIENTE_CALC_PEDLIN` from `fza_pedidos_lineas` `pl`;
 
 -- Vista: vi_proveedores
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_proveedores` AS select `p`.`CODIGO_PRV_PRV` AS `CODIGO_PRV_PRV`,`p`.`ESACTIVO_PRV` AS `ESACTIVO_PRV`,`p`.`ORDEN_PRV` AS `ORDEN_PRV`,`p`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`p`.`NOMBRE_PRV` AS `NOMBRE_PRV`,`p`.`NIF_PRV` AS `NIF_PRV`,`p`.`MOVIL_PRV` AS `MOVIL_PRV`,`p`.`EMAIL_PRV` AS `EMAIL_PRV`,`p`.`DIRECCION1_PRV` AS `DIRECCION1_PRV`,`p`.`DIRECCION2_PRV` AS `DIRECCION2_PRV`,`p`.`POBLACION_PRV` AS `POBLACION_PRV`,`p`.`PROVINCIA_PRV` AS `PROVINCIA_PRV`,`p`.`CODIGO_POSTAL_PRV` AS `CODIGO_POSTAL_PRV`,`p`.`PAIS_PRV` AS `PAIS_PRV`,`p`.`CODIGO_PAI_PRV` AS `CODIGO_PAI_PRV`,`p`.`OBSERVACIONES_PRV` AS `OBSERVACIONES_PRV`,`p`.`REFERENCIA_PRV` AS `REFERENCIA_PRV`,`p`.`CONTACTO_PRV` AS `CONTACTO_PRV`,`p`.`TELEFONO_CONTACTO_PRV` AS `TELEFONO_CONTACTO_PRV`,`p`.`TELEFONO_PRV` AS `TELEFONO_PRV`,`p`.`IBAN_PRV` AS `IBAN_PRV`,`p`.`CODIGO_FP_PRV` AS `CODIGO_FP_PRV`,`p`.`CODIGO_EMPBAN_PRV` AS `CODIGO_EMPBAN_PRV`,`p`.`PORCENTAJE_MARGEN_PRV` AS `PORCENTAJE_MARGEN_PRV`,`p`.`ESVARIOS_TIPOS_IVA_PRV` AS `ESVARIOS_TIPOS_IVA_PRV`,`p`.`ESIVA_EXENTO_INTRACOMUNITARIO_PRV` AS `ESIVA_EXENTO_INTRACOMUNITARIO_PRV`,`p`.`ID_AC_TALLAS_PRV` AS `ID_AC_TALLAS_PRV`,`p`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`p`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`p`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`p`.`USUARIO_MODIF` AS `USUARIO_MODIF` from `fza_proveedores` `p` order by `p`.`ORDEN_PRV`;
@@ -39278,54 +40021,51 @@ DROP PROCEDURE IF EXISTS `PRC_PED_CREAR_ALBARAN_FIN`;
 DELIMITER ;;
 CREATE  PROCEDURE `PRC_PED_CREAR_ALBARAN_FIN`(
   IN p_NUMERO_ALB varchar(20),
-  IN p_SERIE_ALB  varchar(20),
+  IN p_SERIE_ALB varchar(20),
   IN p_NUMERO_PED varchar(20),
-  IN p_SERIE_PED  varchar(20),
-  IN p_USUARIO    varchar(100)
-)
+  IN p_SERIE_PED varchar(20),
+  IN p_USUARIO varchar(100))
 BEGIN
-  DECLARE v_total_base    decimal(18,6) DEFAULT 0;
-  DECLARE v_total_iva     decimal(18,6) DEFAULT 0;
-  DECLARE v_pendientes    int DEFAULT 0;
-
-  SELECT
-    IFNULL(SUM(`CANTIDAD_ALBLIN` * `PRECIO_VENTA_SIVA_ARTICULO_ALBLIN`), 0),
-    IFNULL(SUM(`CANTIDAD_ALBLIN` * (`PRECIO_VENTA_CIVA_ARTICULO_ALBLIN` -
-                                    `PRECIO_VENTA_SIVA_ARTICULO_ALBLIN`)), 0)
+  DECLARE v_total_base decimal(18,6) DEFAULT 0;
+  DECLARE v_total_iva decimal(18,6) DEFAULT 0;
+  DECLARE v_pendientes int DEFAULT 0;
+  SELECT IFNULL(SUM(CANTIDAD_ALBLIN *
+                    PRECIO_VENTA_SIVA_ARTICULO_ALBLIN), 0),
+         IFNULL(SUM(CANTIDAD_ALBLIN *
+              (PRECIO_VENTA_CIVA_ARTICULO_ALBLIN -
+               PRECIO_VENTA_SIVA_ARTICULO_ALBLIN)), 0)
     INTO v_total_base, v_total_iva
-    FROM `fza_albaranes_lineas`
-   WHERE `NUMERO_ALB_ALBLIN` = p_NUMERO_ALB
-     AND `SERIE_ALB_ALBLIN`  = p_SERIE_ALB;
-
-  UPDATE `fza_albaranes`
-     SET `TOTAL_BASES_ALB`     = v_total_base,
-         `TOTAL_IMPUESTOS_ALB` = v_total_iva,
-         `TOTAL_LIQUIDO_ALB`   = v_total_base + v_total_iva,
-         `INSTANTE_MODIF`      = NOW(),
-         `USUARIO_MODIF`       = p_USUARIO
-   WHERE `NUMERO_ALB` = p_NUMERO_ALB
-     AND `SERIE_ALB`  = p_SERIE_ALB;
-
-  SELECT COUNT(*) INTO v_pendientes
-    FROM `fza_pedidos_lineas`
-   WHERE `NUMERO_PED_PEDLIN` = p_NUMERO_PED
-     AND `SERIE_PED_PEDLIN`  = p_SERIE_PED
-     AND IFNULL(`ESENTREGADA_PEDLIN`, 'N') <> 'S';
-
+    FROM fza_albaranes_lineas
+   WHERE NUMERO_ALB_ALBLIN = p_NUMERO_ALB
+     AND SERIE_ALB_ALBLIN = p_SERIE_ALB;
+  UPDATE fza_albaranes
+     SET TOTAL_BASES_ALB = v_total_base,
+         TOTAL_IMPUESTOS_ALB = v_total_iva,
+         TOTAL_LIQUIDO_ALB = v_total_base + v_total_iva,
+         INSTANTE_MODIF = NOW(),
+         USUARIO_MODIF = p_USUARIO
+   WHERE NUMERO_ALB = p_NUMERO_ALB
+     AND SERIE_ALB = p_SERIE_ALB;
+  SELECT COUNT(*)
+    INTO v_pendientes
+    FROM fza_pedidos_lineas
+   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
+     AND SERIE_PED_PEDLIN = p_SERIE_PED
+     AND IFNULL(ESENTREGADA_PEDLIN, 'N') <> 'S';
   IF v_pendientes = 0 THEN
-    UPDATE `fza_pedidos`
-       SET `ESTADO_PED`    = 'ENTREGADO',
-           `INSTANTEMODIF` = NOW(),
-           `USUARIOMODIF`  = p_USUARIO
-     WHERE `NUMERO_PED` = p_NUMERO_PED
-       AND `SERIE_PED`  = p_SERIE_PED;
+    UPDATE fza_pedidos
+       SET ESTADO_PED = 'ENTREGADO',
+           INSTANTE_MODIF = NOW(),
+           USUARIO_MODIF = p_USUARIO
+     WHERE NUMERO_PED = p_NUMERO_PED
+       AND SERIE_PED = p_SERIE_PED;
   ELSE
-    UPDATE `fza_pedidos`
-       SET `ESTADO_PED`    = 'PARCIAL',
-           `INSTANTEMODIF` = NOW(),
-           `USUARIOMODIF`  = p_USUARIO
-     WHERE `NUMERO_PED` = p_NUMERO_PED
-       AND `SERIE_PED`  = p_SERIE_PED;
+    UPDATE fza_pedidos
+       SET ESTADO_PED = 'PARCIAL',
+           INSTANTE_MODIF = NOW(),
+           USUARIO_MODIF = p_USUARIO
+     WHERE NUMERO_PED = p_NUMERO_PED
+       AND SERIE_PED = p_SERIE_PED;
   END IF;
 END ;;
 DELIMITER ;
@@ -39334,92 +40074,89 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS `PRC_PED_CREAR_ALBARAN_INICIO`;
 DELIMITER ;;
 CREATE  PROCEDURE `PRC_PED_CREAR_ALBARAN_INICIO`(
-  IN  p_NUMERO_PED varchar(20),
-  IN  p_SERIE_PED  varchar(20),
-  IN  p_USUARIO    varchar(100),
+  IN p_NUMERO_PED varchar(20),
+  IN p_SERIE_PED varchar(20),
+  IN p_USUARIO varchar(100),
   OUT p_NUMERO_ALB varchar(20),
-  OUT p_SERIE_ALB  varchar(20)
-)
+  OUT p_SERIE_ALB varchar(20))
 BEGIN
-  DECLARE v_serie  varchar(20);
+  DECLARE v_serie varchar(20);
   DECLARE v_numero varchar(20);
-
-  /* Reusamos la serie del pedido para mantener consistencia */
-  SELECT `SERIE_PED` INTO v_serie
-    FROM `fza_pedidos`
-   WHERE `NUMERO_PED` = p_NUMERO_PED
-     AND `SERIE_PED`  = p_SERIE_PED;
-
-  /* Próximo número en esa serie */
-  SELECT LPAD(IFNULL(MAX(CAST(`NUMERO_ALB` AS UNSIGNED)), 0) + 1, 6, '0')
+  SELECT SERIE_PED
+    INTO v_serie
+    FROM fza_pedidos
+   WHERE NUMERO_PED = p_NUMERO_PED
+     AND SERIE_PED = p_SERIE_PED;
+  SELECT LPAD(IFNULL(MAX(CAST(NUMERO_ALB AS UNSIGNED)), 0) + 1, 6, '0')
     INTO v_numero
-    FROM `fza_albaranes`
-   WHERE `SERIE_ALB` = v_serie;
-
-  INSERT INTO `fza_albaranes` (
-    `NUMERO_ALB`, `SERIE_ALB`, `FECHA_ALB`, `ESTADO_ALB`,
-    `NUMERO_PED_ALB`, `SERIE_PED_ALB`,
-    `CODIGO_EMP_ALB`, `RAZON_SOCIAL_EMPRESA_ALB`, `NIF_EMPRESA_ALB`,
-    `MOVIL_EMPRESA_ALB`, `EMAIL_EMPRESA_ALB`,
-    `DIRECCION1_EMPRESA_ALB`, `DIRECCION2_EMPRESA_ALB`,
-    `POBLACION_EMPRESA_ALB`, `PROVINCIA_EMPRESA_ALB`,
-    `CODIGO_PAI_EMPRESA_ALB`, `NOMBRE_PAI_EMPRESA_ALB`,
-    `CODIGO_POSTAL_EMPRESA_ALB`, `GRUPO_ZONA_IVA_EMPRESA_ALB`,
-    `CODIGO_CLI_ALB`, `RAZON_SOCIAL_CLIENTE_ALB`, `NIF_CLIENTE_ALB`,
-    `MOVIL_CLIENTE_ALB`, `EMAIL_CLIENTE_ALB`,
-    `DIRECCION1_CLIENTE_ALB`, `DIRECCION2_CLIENTE_ALB`,
-    `POBLACION_CLIENTE_ALB`, `PROVINCIA_CLIENTE_ALB`,
-    `CODIGO_POSTAL_CLIENTE_ALB`,
-    `CODIGO_PAI_CLIENTE_ALB`, `NOMBRE_PAI_CLIENTE_ALB`,
-    `NOMBRE_CLI_ENVIO_ALB`, `MOVIL_CLIENTE_ENVIO_ALB`,
-    `DIRECCION1_CLIENTE_ENVIO_ALB`, `DIRECCION2_CLIENTE_ENVIO_ALB`,
-    `POBLACION_CLIENTE_ENVIO_ALB`, `PROVINCIA_CLIENTE_ENVIO_ALB`,
-    `CODIGO_POSTAL_CLIENTE_ENVIO_ALB`,
-    `CODIGO_PAI_CLIENTE_ENVIO_ALB`, `NOMBRE_PAI_CLIENTE_ENVIO_ALB`,
-    `TRANSPORTISTA_ALB`, `CODIGO_IVA_ALB`,
-    `ESIVA_RECARGO_CLIENTE_ALB`, `ESIVA_EXENTO_CLIENTE_ALB`,
-    `ESINTRACOMUNITARIO_CLIENTE_ALB`,
-    `TARIFA_ARTICULO_CLIENTE_ALB`, `ESIMP_INCL_TARIFA_CLIENTE_ALB`,
-    `PORCENTAJE_IVAN_ALB`, `PORCENTAJE_IVAR_ALB`,
-    `PORCENTAJE_IVAS_ALB`, `PORCENTAJE_IVAE_ALB`,
-    `FORMA_PAGO_ALB`, `CONTADOR_LINEAS_ALB`,
-    `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`
-  )
-  SELECT
-    v_numero, v_serie, CURRENT_DATE(), 'ABIERTO',
-    p_NUMERO_PED, p_SERIE_PED,
-    P.`CODIGO_EMP_PED`, P.`RAZON_SOCIAL_EMPRESA_PED`, P.`NIF_EMPRESA_PED`,
-    P.`MOVIL_EMPRESA_PED`, P.`EMAIL_EMPRESA_PED`,
-    P.`DIRECCION1_EMPRESA_PED`, P.`DIRECCION2_EMPRESA_PED`,
-    P.`POBLACION_EMPRESA_PED`, P.`PROVINCIA_EMPRESA_PED`,
-    P.`CODIGO_PAI_EMPRESA_PED`, P.`NOMBRE_PAI_EMPRESA_PED`,
-    P.`CODIGO_POSTAL_EMPRESA_PED`, P.`GRUPO_ZONA_IVA_EMPRESA_PED`,
-    P.`CODIGO_CLI_PED`, P.`RAZON_SOCIAL_CLIENTE_FISCAL_PED`,
-    P.`NIF_CLIENTE_PED`, P.`MOVIL_CLIENTE_FISCAL_PED`,
-    P.`EMAIL_CLIENTE_PED`,
-    P.`DIRECCION1_CLIENTE_FISCAL_PED`, P.`DIRECCION2_CLIENTE_FISCAL_PED`,
-    P.`POBLACION_CLIENTE_FISCAL_PED`, P.`PROVINCIA_CLIENTE_FISCAL_PED`,
-    P.`CODIGO_POSTAL_CLIENTE_FISCAL_PED`,
-    P.`CODIGO_PAI_CLIENTE_FISCAL_PED`, P.`NOMBRE_PAI_CLIENTE_FISCAL_PED`,
-    P.`NOMBRE_CLI_ENVIO_PED`, P.`MOVIL_CLIENTE_ENVIO_PED`,
-    P.`DIRECCION1_CLIENTE_ENVIO_PED`, P.`DIRECCION2_CLIENTE_ENVIO_PED`,
-    P.`POBLACION_CLIENTE_ENVIO_PED`, P.`PROVINCIA_CLIENTE_ENVIO_PED`,
-    P.`CODIGO_POSTAL_CLIENTE_ENVIO_PED`,
-    P.`CODIGO_PAI_CLIENTE_ENVIO_PED`, P.`NOMBRE_PAI_CLIENTE_ENVIO_PED`,
-    P.`TRANSPORTISTAPS_PED`, P.`CODIGO_IVA_PED`,
-    P.`ESIVA_RECARGO_CLIENTE_PED`, P.`ESIVA_EXENTO_CLIENTE_PED`,
-    P.`ESINTRACOMUNITARIO_CLIENTE_PED`,
-    P.`TARIFA_ARTICULO_CLIENTE_PED`, P.`ESIMP_INCL_TARIFA_CLIENTE_PED`,
-    P.`PORCENTAJE_IVAN_PED`, P.`PORCENTAJE_IVAR_PED`,
-    P.`PORCENTAJE_IVAS_PED`, P.`PORCENTAJE_IVAE_PED`,
-    P.`FORMA_PAGO_PED`, '0',
-    NOW(), p_USUARIO, p_USUARIO
-  FROM `fza_pedidos` P
-  WHERE P.`NUMERO_PED` = p_NUMERO_PED
-    AND P.`SERIE_PED`  = p_SERIE_PED;
-
+    FROM fza_albaranes
+   WHERE SERIE_ALB = v_serie;
+  INSERT INTO fza_albaranes (
+    NUMERO_ALB, SERIE_ALB, FECHA_ALB, ESTADO_ALB,
+    NUMERO_PED_ALB, SERIE_PED_ALB,
+    CODIGO_EMP_ALB, CODIGO_ALM_ALB,
+    RAZON_SOCIAL_EMPRESA_ALB, NIF_EMPRESA_ALB,
+    MOVIL_EMPRESA_ALB, EMAIL_EMPRESA_ALB,
+    DIRECCION1_EMPRESA_ALB, DIRECCION2_EMPRESA_ALB,
+    POBLACION_EMPRESA_ALB, PROVINCIA_EMPRESA_ALB,
+    CODIGO_PAI_EMPRESA_ALB, NOMBRE_PAI_EMPRESA_ALB,
+    CODIGO_POSTAL_EMPRESA_ALB, GRUPO_ZONA_IVA_EMPRESA_ALB,
+    CODIGO_CLI_ALB, RAZON_SOCIAL_CLIENTE_ALB,
+    NIF_CLIENTE_ALB, MOVIL_CLIENTE_ALB, EMAIL_CLIENTE_ALB,
+    DIRECCION1_CLIENTE_ALB, DIRECCION2_CLIENTE_ALB,
+    POBLACION_CLIENTE_ALB, PROVINCIA_CLIENTE_ALB,
+    CODIGO_POSTAL_CLIENTE_ALB, CODIGO_PAI_CLIENTE_ALB,
+    NOMBRE_PAI_CLIENTE_ALB, NOMBRE_CLI_ENVIO_ALB,
+    MOVIL_CLIENTE_ENVIO_ALB, DIRECCION1_CLIENTE_ENVIO_ALB,
+    DIRECCION2_CLIENTE_ENVIO_ALB, POBLACION_CLIENTE_ENVIO_ALB,
+    PROVINCIA_CLIENTE_ENVIO_ALB, CODIGO_POSTAL_CLIENTE_ENVIO_ALB,
+    CODIGO_PAI_CLIENTE_ENVIO_ALB, NOMBRE_PAI_CLIENTE_ENVIO_ALB,
+    TRANSPORTISTA_ALB, CODIGO_IVA_ALB,
+    ESIVA_RECARGO_CLIENTE_ALB, ESIVA_EXENTO_CLIENTE_ALB,
+    ESINTRACOMUNITARIO_CLIENTE_ALB, TARIFA_ARTICULO_CLIENTE_ALB,
+    ESIMP_INCL_TARIFA_CLIENTE_ALB, PORCENTAJE_IVAN_ALB,
+    PORCENTAJE_IVAR_ALB, PORCENTAJE_IVAS_ALB, PORCENTAJE_IVAE_ALB,
+    FORMA_PAGO_ALB, CONTADOR_LINEAS_ALB,
+    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)
+  SELECT v_numero, v_serie, CURRENT_DATE(), 'ABIERTO',
+         p_NUMERO_PED, p_SERIE_PED,
+         P.CODIGO_EMP_PED, P.CODIGO_ALM_PED,
+         P.RAZON_SOCIAL_EMPRESA_PED, P.NIF_EMPRESA_PED,
+         P.MOVIL_EMPRESA_PED, P.EMAIL_EMPRESA_PED,
+         P.DIRECCION1_EMPRESA_PED, P.DIRECCION2_EMPRESA_PED,
+         P.POBLACION_EMPRESA_PED, P.PROVINCIA_EMPRESA_PED,
+         P.CODIGO_PAI_EMPRESA_PED, P.NOMBRE_PAI_EMPRESA_PED,
+         P.CODIGO_POSTAL_EMPRESA_PED, P.GRUPO_ZONA_IVA_EMPRESA_PED,
+         P.CODIGO_CLI_PED, P.RAZON_SOCIAL_CLIENTE_FISCAL_PED,
+         P.NIF_CLIENTE_PED, P.MOVIL_CLIENTE_FISCAL_PED,
+         P.EMAIL_CLIENTE_PED, P.DIRECCION1_CLIENTE_FISCAL_PED,
+         P.DIRECCION2_CLIENTE_FISCAL_PED,
+         P.POBLACION_CLIENTE_FISCAL_PED,
+         P.PROVINCIA_CLIENTE_FISCAL_PED,
+         P.CODIGO_POSTAL_CLIENTE_FISCAL_PED,
+         P.CODIGO_PAI_CLIENTE_FISCAL_PED,
+         P.NOMBRE_PAI_CLIENTE_FISCAL_PED,
+         P.NOMBRE_CLI_ENVIO_PED, P.MOVIL_CLIENTE_ENVIO_PED,
+         P.DIRECCION1_CLIENTE_ENVIO_PED,
+         P.DIRECCION2_CLIENTE_ENVIO_PED,
+         P.POBLACION_CLIENTE_ENVIO_PED,
+         P.PROVINCIA_CLIENTE_ENVIO_PED,
+         P.CODIGO_POSTAL_CLIENTE_ENVIO_PED,
+         P.CODIGO_PAI_CLIENTE_ENVIO_PED,
+         P.NOMBRE_PAI_CLIENTE_ENVIO_PED,
+         P.TRANSPORTISTAPS_PED, P.CODIGO_IVA_PED,
+         P.ESIVA_RECARGO_CLIENTE_PED, P.ESIVA_EXENTO_CLIENTE_PED,
+         P.ESINTRACOMUNITARIO_CLIENTE_PED,
+         P.TARIFA_ARTICULO_CLIENTE_PED,
+         P.ESIMP_INCL_TARIFA_CLIENTE_PED, P.PORCENTAJE_IVAN_PED,
+         P.PORCENTAJE_IVAR_PED, P.PORCENTAJE_IVAS_PED,
+         P.PORCENTAJE_IVAE_PED, P.FORMA_PAGO_PED, '0',
+         NOW(), p_USUARIO, p_USUARIO
+    FROM fza_pedidos P
+   WHERE P.NUMERO_PED = p_NUMERO_PED
+     AND P.SERIE_PED = p_SERIE_PED;
   SET p_NUMERO_ALB = v_numero;
-  SET p_SERIE_ALB  = v_serie;
+  SET p_SERIE_ALB = v_serie;
 END ;;
 DELIMITER ;
 
@@ -39434,31 +40171,39 @@ CREATE  PROCEDURE `PRC_PED_CREAR_ALBARAN_LINEA`(
   IN p_LINEA_PED varchar(4),
   IN p_CANTIDAD decimal(19,6),
   IN p_CODIGO_ALM varchar(10),
-  IN p_USUARIO varchar(100)
-)
+  IN p_USUARIO varchar(100))
 PRC: BEGIN
   DECLARE v_linea varchar(4);
-  DECLARE v_pendiente decimal(19,6);
-  DECLARE v_cantidad decimal(19,6);
-  SELECT (CANTIDAD_PEDLIN - IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0))
-    INTO v_pendiente
+  DECLARE v_pedida decimal(19,6) DEFAULT 0;
+  DECLARE v_albaranada decimal(19,6) DEFAULT 0;
+  DECLARE v_objetivo decimal(19,6) DEFAULT 0;
+  DECLARE v_pendiente decimal(19,6) DEFAULT 0;
+  DECLARE v_cantidad decimal(19,6) DEFAULT 0;
+  SELECT IFNULL(CANTIDAD_PEDLIN, 0)
+    INTO v_pedida
     FROM fza_pedidos_lineas
    WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
      AND SERIE_PED_PEDLIN = p_SERIE_PED
      AND LINEA_PEDLIN = p_LINEA_PED;
-  IF v_pendiente IS NULL OR v_pendiente <= 0 THEN
+  SELECT IFNULL(SUM(CANTIDAD_ALBLIN), 0)
+    INTO v_albaranada
+    FROM fza_albaranes_lineas
+   WHERE NUMERO_PED_ALBLIN = p_NUMERO_PED
+     AND SERIE_PED_ALBLIN = p_SERIE_PED
+     AND LINEA_PED_ALBLIN = p_LINEA_PED;
+  SET v_objetivo = LEAST(IFNULL(p_CANTIDAD, 0), v_pedida);
+  SET v_pendiente = v_pedida - v_albaranada;
+  SET v_cantidad = v_objetivo - v_albaranada;
+  IF v_pedida <= 0 OR v_pendiente <= 0 OR v_cantidad <= 0 THEN
     LEAVE PRC;
   END IF;
-  IF p_CANTIDAD > v_pendiente THEN
+  IF v_cantidad > v_pendiente THEN
     SET v_cantidad = v_pendiente;
-  ELSE
-    SET v_cantidad = p_CANTIDAD;
   END IF;
   UPDATE fza_albaranes
-     SET CONTADOR_LINEAS_ALB =
-         LPAD(LAST_INSERT_ID(
-           IFNULL(CAST(NULLIF(CONTADOR_LINEAS_ALB, '') AS UNSIGNED), 0) + 10
-         ), 8, '0')
+     SET CONTADOR_LINEAS_ALB = LPAD(LAST_INSERT_ID(
+           IFNULL(CAST(NULLIF(CONTADOR_LINEAS_ALB, '')
+           AS UNSIGNED), 0) + 10), 8, '0')
    WHERE NUMERO_ALB = p_NUMERO_ALB
      AND SERIE_ALB = p_SERIE_ALB;
   IF ROW_COUNT() = 0 THEN
@@ -39468,44 +40213,45 @@ PRC: BEGIN
   INSERT INTO fza_albaranes_lineas (
     NUMERO_ALB_ALBLIN, SERIE_ALB_ALBLIN, LINEA_ALBLIN,
     NUMERO_PED_ALBLIN, SERIE_PED_ALBLIN, LINEA_PED_ALBLIN,
-    CODIGO_ART_ALBLIN, CODIGO_FAM_ALBLIN, NOMBRE_FAM_ALBLIN,
+    CODIGO_ART_ALBLIN, CODIGO_UNIDAD_ALBLIN,
+    CODIGO_FAM_ALBLIN, NOMBRE_FAM_ALBLIN,
     DESCRIPCION_ARTICULO_ALBLIN, TIPO_CANTIDAD_ARTICULO_ALBLIN,
     CANTIDAD_ALBLIN, CODIGO_TAR_ALBLIN, ESIMP_INCL_TARIFA_ALBLIN,
     TIPO_IVA_ARTICULO_ALBLIN, PORCENTAJE_IVA_ALBLIN,
     PRECIO_VENTA_SIVA_ARTICULO_ALBLIN,
-    PRECIO_VENTA_CIVA_ARTICULO_ALBLIN,
-    TOTAL_ALBLIN, CODIGO_ALMACEN_ALBLIN,
-    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF
-  )
-  SELECT
-    p_NUMERO_ALB, p_SERIE_ALB, v_linea,
-    p_NUMERO_PED, p_SERIE_PED, p_LINEA_PED,
-    PL.CODIGO_ART_PEDLIN, PL.CODIGO_FAM_PEDLIN, PL.NOMBRE_FAM_PEDLIN,
-    PL.DESCRIPCION_ARTICULO_PEDLIN, PL.TIPO_CANTIDAD_ARTICULO_PEDLIN,
-    v_cantidad, PL.CODIGO_TAR_PEDLIN, PL.ESIMP_INCL_TARIFA_PEDLIN,
-    PL.TIPO_IVA_ARTICULO_PEDLIN, PL.PORCENTAJE_IVA_PEDLIN,
-    PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN,
-    PL.PRECIO_VENTA_CIVA_ARTICULO_PEDLIN,
-    (v_cantidad * PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN),
-    COALESCE(NULLIF(p_CODIGO_ALM, ''), PL.CODIGO_ALMACEN_PEDLIN),
-    NOW(), p_USUARIO, p_USUARIO
-  FROM fza_pedidos_lineas AS PL
-  WHERE PL.NUMERO_PED_PEDLIN = p_NUMERO_PED
-    AND PL.SERIE_PED_PEDLIN = p_SERIE_PED
-    AND PL.LINEA_PEDLIN = p_LINEA_PED;
+    PRECIO_VENTA_CIVA_ARTICULO_ALBLIN, TOTAL_ALBLIN,
+    CODIGO_ALMACEN_ALBLIN, INSTANTE_ALTA, USUARIO_ALTA,
+    USUARIO_MODIF)
+  SELECT p_NUMERO_ALB, p_SERIE_ALB, v_linea,
+         p_NUMERO_PED, p_SERIE_PED, p_LINEA_PED,
+         PL.CODIGO_ART_PEDLIN,
+         COALESCE(NULLIF(PL.CODIGOPRODPS_PEDLIN, ''),
+                  NULLIF(PL.CODIGO_UNIDAD_PEDLIN, ''),
+                  PL.CODIGO_ART_PEDLIN),
+         PL.CODIGO_FAM_PEDLIN, PL.NOMBRE_FAM_PEDLIN,
+         PL.DESCRIPCION_ARTICULO_PEDLIN,
+         PL.TIPO_CANTIDAD_ARTICULO_PEDLIN,
+         v_cantidad, PL.CODIGO_TAR_PEDLIN,
+         PL.ESIMP_INCL_TARIFA_PEDLIN,
+         PL.TIPO_IVA_ARTICULO_PEDLIN, PL.PORCENTAJE_IVA_PEDLIN,
+         PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN,
+         PL.PRECIO_VENTA_CIVA_ARTICULO_PEDLIN,
+         v_cantidad * PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN,
+         COALESCE(NULLIF(p_CODIGO_ALM, ''),
+                  PL.CODIGO_ALMACEN_PEDLIN),
+         NOW(), p_USUARIO, p_USUARIO
+    FROM fza_pedidos_lineas PL
+   WHERE PL.NUMERO_PED_PEDLIN = p_NUMERO_PED
+     AND PL.SERIE_PED_PEDLIN = p_SERIE_PED
+     AND PL.LINEA_PEDLIN = p_LINEA_PED;
   UPDATE fza_pedidos_lineas
-     SET CANTIDAD_ENTREGADA_PEDLIN =
-           IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0) + v_cantidad,
+     SET CANTIDAD_ENTREGADA_PEDLIN = v_albaranada + v_cantidad,
          CANTIDAD_PENDIENTE_PEDLIN =
-           CANTIDAD_PEDLIN -
-           (IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0) + v_cantidad),
-         ESENTREGADA_PEDLIN =
-           CASE
-             WHEN CANTIDAD_PEDLIN <=
-                  IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0) + v_cantidad
-             THEN 'S'
-             ELSE 'N'
-           END,
+           GREATEST(CANTIDAD_PEDLIN -
+                    (v_albaranada + v_cantidad), 0),
+         ESENTREGADA_PEDLIN = CASE
+           WHEN CANTIDAD_PEDLIN <= v_albaranada + v_cantidad
+           THEN 'S' ELSE 'N' END,
          INSTANTE_MODIF = NOW(),
          USUARIO_MODIF = p_USUARIO
    WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
@@ -40215,4 +40961,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 07/07/2026 16:10:41
+-- Backup completado: 07/07/2026 19:55:28

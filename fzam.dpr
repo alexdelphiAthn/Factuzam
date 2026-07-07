@@ -298,6 +298,7 @@ uses
   inMtoModalSelAlmacenAlbaran in 'src\Modals\inMtoModalSelAlmacenAlbaran.pas' {frmModalSelAlmacenAlbaran},
   inLibPedidosCompra in 'src\Lib\inLibPedidosCompra.pas',
   inLibGridPivoteCompra in 'src\Lib\inLibGridPivoteCompra.pas',
+  inLibGridPivoteVenta in 'src\Lib\inLibGridPivoteVenta.pas',
   inMtoModalFacturarAlbaranesFechas in 'src\Modals\inMtoModalFacturarAlbaranesFechas.pas' {frmModalFacturarAlbaranesFechas},
   inMtoCajaOperacionesHist in 'src\Caja\Forms\inMtoCajaOperacionesHist.pas' {frmMtoCajaOperacionesHist},
   UniDataCajaOperacionesHist in 'src\Caja\DataModules\UniDataCajaOperacionesHist.pas' {dmCajaOperacionesHist: TDataModule},

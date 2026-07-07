@@ -34,10 +34,12 @@ type
   TModoColumnasSku = (
     mcsAuto,        // decidir segun los campos disponibles en el cds
     mcsSku,         // articulo/color/talla en UNA columna (SKU completo)
-    mcsDesglose,    // columna articulo + columnas color / talla
-    mcsTallasInline // articulo + N columnas de talla en horizontal
-                    // (pivote estilo compras; requiere tabla de celdas
-                    // y factoria propia: CrearModoEntradaGridTallas)
+    mcsDesglose,     // columna articulo + columnas color / talla
+    mcsTallasInline, // articulo + N columnas de talla en horizontal
+                     // (pivote estilo compras; requiere tabla de celdas
+                     // y factoria propia: CrearModoEntradaGridTallas)
+    mcsTallasHorPed  // pedidos de venta: pivot visual sobre lineas SKU
+                     // reales, sin tabla de celdas
   );
 
   // Nombres de los campos del cds del documento. Cada documento rellena

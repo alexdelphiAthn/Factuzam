@@ -836,6 +836,7 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibPedidosCompra.pas"/>
         <DCCReference Include="src\Lib\inLibGridPivoteCompra.pas"/>
+        <DCCReference Include="src\Lib\inLibGridPivoteVenta.pas"/>
         <DCCReference Include="src\Modals\inMtoModalFacturarAlbaranesFechas.pas">
             <Form>frmModalFacturarAlbaranesFechas</Form>
         </DCCReference>

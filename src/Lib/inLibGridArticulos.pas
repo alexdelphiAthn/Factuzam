@@ -959,8 +959,11 @@ end;
 procedure TGridArticulosLineas.ComboBusqCloseUp(Sender: TObject);
 begin
   LimpiarFiltroDesplegable;
-  if Assigned(FOnSalirEdicion) then
-    FOnSalirEdicion(Sender);
+  // OJO: aqui NO se restaura el EnterAsTab. El foco sigue en la celda
+  // de articulo y el siguiente Enter debe llegar al grid (resolver),
+  // no convertirse en Tab y escaparse a los totales. La restauracion
+  // la hacen EditorSalir (OnExit) y ViewFocusedItemChanged al
+  // abandonar las columnas de la controladora.
   if not (Sender is TcxCustomEdit) then
     Exit;
   FSkuPend := VarToStr(TcxCustomEdit(Sender).EditValue);
@@ -1549,8 +1552,14 @@ begin
     if Trim(FCds.FieldByName(FCampos.AttrValor[i]).AsString) = '' then
     begin
       Col := ColumnaPorTag(i);
-      if (Col <> nil) and Col.Visible then
+      if Col <> nil then
       begin
+        // La columna nace oculta y puede seguir asi si el host aun no
+        // la re-rotulo: si el articulo la necesita, se fuerza visible.
+        // Sin esto no habia salto ni paleta y el Enter (con EnterAsTab
+        // ya restaurado) se escapaba del grid hacia los totales.
+        if not Col.Visible then
+          Col.Visible := True;
         FView.Controller.FocusedColumn := Col;
         // Diferimos abrir la paleta (timer 1ms): la modal anterior aun se
         // esta cerrando y el editor de la nueva celda no esta parentado.
