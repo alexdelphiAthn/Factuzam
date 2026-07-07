@@ -22,11 +22,15 @@ program ColumnSKUcxGridTest;
 
 uses
   Vcl.Forms,
-  inLibColumnasSkuIntf in 'inLibColumnasSkuIntf.pas',
-  inLibColumnasSkuModoSku in 'inLibColumnasSkuModoSku.pas',
-  inLibColumnasSkuModoDesglose in 'inLibColumnasSkuModoDesglose.pas',
-  inLibColumnasSkuModoTallas in 'inLibColumnasSkuModoTallas.pas',
-  inLibColumnasSku in 'inLibColumnasSku.pas',
+  // Las units del contrato viven ya en src\Lib (promocionadas tras la
+  // integracion en inventarios); el banco las compila de alli.
+  inLibColumnasSkuIntf in '..\..\src\Lib\inLibColumnasSkuIntf.pas',
+  inLibColumnasSkuModoSku in '..\..\src\Lib\inLibColumnasSkuModoSku.pas',
+  inLibColumnasSkuModoDesglose
+    in '..\..\src\Lib\inLibColumnasSkuModoDesglose.pas',
+  inLibColumnasSkuModoTallas
+    in '..\..\src\Lib\inLibColumnasSkuModoTallas.pas',
+  inLibColumnasSku in '..\..\src\Lib\inLibColumnasSku.pas',
   inMtoPruebaColumnasSkuLogon in 'inMtoPruebaColumnasSkuLogon.pas'
     {frmMtoPruebaColumnasSkuLogon},
   inMtoPruebaColumnasSku in 'inMtoPruebaColumnasSku.pas'

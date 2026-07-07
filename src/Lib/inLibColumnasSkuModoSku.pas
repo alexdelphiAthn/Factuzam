@@ -92,6 +92,11 @@ type
     // fila autocompletada aunque la query traiga mas filas. Mismo
     // mecanismo que inMtoCajaOpe.tmrBusqTimer.
     procedure LimpiarFiltroDesplegable;
+    // Si el documento YA tiene una linea con ese SKU, suma 1 a su
+    // cantidad y devuelve True (la lectura queda consumida sin crear
+    // otra linea igual).
+    function AcumularLineaExistente(const ACodArt, ASku,
+                                    ADesc: string): Boolean;
     procedure ComboBusqInitPopup(Sender: TObject);
     procedure ComboBusqCloseUp(Sender: TObject);
     procedure SkuChange(Sender: TObject);
@@ -156,6 +161,16 @@ end;
 
 destructor TModoEntradaSku.Destroy;
 begin
+  // Desenganchar los eventos del REPOSITORIO antes de liberar nada:
+  // liberar FBusqRepo dispara SetView(nil) en las properties del
+  // combo, el editor cacheado del grid sincroniza su texto, salta su
+  // Change y SkuChange tocaria FTimerBusq ya liberado (AV nil+$50).
+  if FRepCombo <> nil then
+  begin
+    FRepCombo.Properties.OnChange := nil;
+    FRepCombo.Properties.OnInitPopup := nil;
+    FRepCombo.Properties.OnCloseUp := nil;
+  end;
   FreeAndNil(FTimerResolve);
   FreeAndNil(FTimerBusq);
   FreeAndNil(FEditRepo);
@@ -453,8 +468,12 @@ end;
 // desplegable filtrado por lo tecleado.
 procedure TModoEntradaSku.SkuChange(Sender: TObject);
 begin
-  FTimerBusq.Enabled := False;
-  FTimerBusq.Enabled := True;
+  // Guarda: el Change puede saltar en plena destruccion del modo.
+  if FTimerBusq <> nil then
+  begin
+    FTimerBusq.Enabled := False;
+    FTimerBusq.Enabled := True;
+  end;
 end;
 
 // Al saltar el debounce consulta lo tecleado y abre el desplegable. Minimo
@@ -751,12 +770,48 @@ begin
         sSku := R.CodigoArticulo;
       if sSku <> '' then
       begin
-        EscribirLinea(R.CodigoArticulo, sSku, R.DescripcionArticulo);
-        if Assigned(FOnResuelto) then
-          FOnResuelto(R.CodigoArticulo, sSku, R.DescripcionArticulo,
-                      True);
-        Result := True;
+        // SKU repetido (p.ej. segunda lectura de pistola): acumular
+        // cantidad en la linea que ya lo tiene, no duplicar linea.
+        if AcumularLineaExistente(R.CodigoArticulo, sSku,
+                                  R.DescripcionArticulo) then
+          Result := True
+        else
+        begin
+          EscribirLinea(R.CodigoArticulo, sSku, R.DescripcionArticulo);
+          if Assigned(FOnResuelto) then
+            FOnResuelto(R.CodigoArticulo, sSku, R.DescripcionArticulo,
+                        True);
+          Result := True;
+        end;
       end;
+    end;
+  end;
+end;
+
+function TModoEntradaSku.AcumularLineaExistente(const ACodArt, ASku,
+  ADesc: string): Boolean;
+var
+  ds: TDataSet;
+begin
+  Result := False;
+  ds := FConfig.Cds;
+  if (FConfig.Campos.Cantidad <> '') and
+     (ds.FindField(FConfig.Campos.Cantidad) <> nil) then
+  begin
+    // Soltar la edicion de la linea actual (en blanco o a medias)
+    // antes de mover el cursor a la linea destino.
+    if ds.State in [dsEdit, dsInsert] then
+      ds.Cancel;
+    if ds.Locate(FConfig.Campos.CodigoUnidad, ASku,
+                 [loCaseInsensitive]) then
+    begin
+      ds.Edit;
+      ds.FieldByName(FConfig.Campos.Cantidad).AsFloat :=
+        ds.FieldByName(FConfig.Campos.Cantidad).AsFloat + 1;
+      ds.Post;
+      if Assigned(FOnResuelto) then
+        FOnResuelto(ACodArt, ASku, ADesc, True);
+      Result := True;
     end;
   end;
 end;

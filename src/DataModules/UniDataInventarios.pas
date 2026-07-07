@@ -50,6 +50,9 @@ type
     cdsLineasPRECIO_MEDIO_NUEVO_INVENTARIO_LINEA: TFloatField;
     cdsLineasTOTAL_COSTE_DIFERENCIA_LINEA: TFloatField;
     cdsLineasFECHA_RECUENTO_INVENTARIO_LINEA: TDateTimeField;
+    // Conjunto pivotado en tallas horizontal (0 = sin pivote); columna
+    // nueva de inventarios_tallas_horizontal.sql (ColumnSKUcxGrid).
+    cdsLineasID_AC_PIVOT_INV_LINEA: TIntegerField;
 
     // === Campos in-memory para SKUs dinámicos (1 a 5 atributos) ===
     cdsLineasNUM_ATRIBUTOS_REQ_INV_LINEA: TIntegerField;
@@ -122,6 +125,17 @@ type
     // a partir del SKU para las lineas actualmente cargadas en cdsLineas.
     // Se resetea a False cada vez que CargarLineasInventario reabre cds.
     FLineasDesempaquetadas: Boolean;
+    // True mientras el modo TALLAS EN HORIZONTAL (ColumnSKUcxGrid)
+    // esta activo o convirtiendo lineas (pivote/des-pivote): el
+    // backstop de atributos y la validacion de SKU de BeforePost no
+    // aplican a sus Posts intermedios.
+    FModoPivoteActivo: Boolean;
+    // True cuando el modo de entrada del contrato ensenya atributos
+    // (desglose): CADA recarga de lineas desempaqueta SKU->ATTR aqui
+    // mismo. Las recargas llegan por varios caminos (AfterScroll de
+    // cabecera, cargas masivas...) y si alguna se salta el form, los
+    // ATTR in-memory quedaban en blanco hasta reconstruir a mano.
+    FDesempaquetarAlCargar: Boolean;
     function ObtenerSeriePorDefecto(const AEmpresa,
                                           ATipoDoc: string): string;
     function ExisteColumnaInventarios(const ACampo: string): Boolean;
@@ -137,6 +151,14 @@ type
                                AAlmacen,
                                ASerie,
                                ANumero: string);
+    // Ver FModoPivoteActivo: lo gobierna inMtoInventarios al
+    // construir/desmontar el modo de tallas en horizontal.
+    property ModoPivoteActivo: Boolean read FModoPivoteActivo
+                                       write FModoPivoteActivo;
+    // Ver FDesempaquetarAlCargar: lo gobierna inMtoInventarios segun
+    // el modo de entrada activo (True en desglose).
+    property DesempaquetarAlCargar: Boolean
+      read FDesempaquetarAlCargar write FDesempaquetarAlCargar;
 
     // === CARGA DE LÍNEAS ===
     procedure CargarLineasInventario;
@@ -260,6 +282,10 @@ begin
   // el usuario activa "Ver atributos en columnas") para no comerse N
   // Edit/Post en cada apertura.
   FLineasDesempaquetadas := False;
+  // Contrato de entrada en desglose: los ATTR se rellenan AQUI, en la
+  // misma recarga, venga de donde venga (ver FDesempaquetarAlCargar).
+  if FDesempaquetarAlCargar then
+    DesempaquetarAtributosDesdeSku;
 end;
 
 procedure TdmInventarios.DesempaquetarAtributosDesdeSku;
@@ -360,6 +386,7 @@ begin
     '  TOTAL_COSTE_DIFERENCIA_INVLIN  = :TOTAL_COSTE_DIFERENCIA_INVLIN,'
       + sLineBreak +
     '  FECHA_RECUENTO_INVLIN          = :FECHA_RECUENTO_INVLIN,' + sLineBreak +
+    '  ID_AC_PIVOT_INVLIN             = :ID_AC_PIVOT_INVLIN,' + sLineBreak +
     '  USUARIO_MODIF                  = :USUARIO_MODIF ' + sLineBreak +
     'WHERE CODIGO_EMP_INVLIN          = :OLD_CODIGO_EMP_INVLIN ' + sLineBreak +
     '  AND CODIGO_ALM_INVLIN          = :OLD_CODIGO_ALM_INVLIN ' + sLineBreak +
@@ -1011,6 +1038,18 @@ begin
       DataSet.FieldByName('CODIGO_ART_INVLIN').AsString;
 
   CodArticulo := DataSet.FieldByName('CODIGO_ART_INVLIN').AsString;
+
+  // LINEA PIVOTADA o MODO TALLAS ACTIVO (prueba ColumnSKUcxGrid): la
+  // talla vive en las CELDAS (fza_inventarios_celdas) y la linea
+  // consolida articulo+color, asi que ni tiene SKU cerrado ni debe
+  // reconstruirse aqui. El flag cubre ademas los Posts intermedios de
+  // la conversion (lineas con unidad=padre y pivote aun 0, p.ej.
+  // DEMO-CAMISA sin SKU). El des-pivote regenera lineas por SKU
+  // completo, que si pasan las validaciones cuando el modo se apaga.
+  if FModoPivoteActivo or
+     ((DataSet.FindField('ID_AC_PIVOT_INVLIN') <> nil) and
+      (DataSet.FieldByName('ID_AC_PIVOT_INVLIN').AsInteger > 0)) then
+    Exit;
 
   // BACKSTOP: si el artículo tiene atributos requeridos, reconstruimos el SKU
   // a partir de ATTRn_VALOR aquí mismo. Así, aunque OnAtributoChanged falle

@@ -150,6 +150,12 @@ type
     // ETX(#3) sufijo (y a veces CR/LF). Se quitan para no ensuciar la
     // resolucion ni el filtrado incremental.
     function LimpiarEntradaScan(const AEntrada: string): string;
+    // Si el documento YA tiene una linea con ese SKU cerrado, suma 1
+    // a su cantidad y devuelve True (la lectura queda consumida sin
+    // crear otra linea igual). La linea en blanco no casa porque su
+    // CODIGO_UNIDAD esta vacio.
+    function AcumularLineaExistente(const ACodArt, ASku,
+                                    ADesc: string): Boolean;
     procedure CrearColumnaArticulo;
     procedure CrearColumnasAtributo;
     procedure ArticuloValidate(Sender: TObject; var DisplayValue: Variant;
@@ -250,6 +256,19 @@ end;
 
 destructor TGridArticulosLineas.Destroy;
 begin
+  // Desenganchar los eventos del REPOSITORIO antes de liberar nada:
+  // liberar FBusqRepo dispara SetView(nil) en las properties del
+  // combo, el editor cacheado del grid sincroniza su texto, salta su
+  // Change y ArticuloChange tocaria FTimerBusq ya liberado (AV
+  // nil+$50; visto en call stack real al cambiar de modo).
+  if FRepCombo <> nil then
+  begin
+    FRepCombo.Properties.OnChange := nil;
+    FRepCombo.Properties.OnInitPopup := nil;
+    FRepCombo.Properties.OnCloseUp := nil;
+    FRepCombo.Properties.OnValidate := nil;
+    FRepCombo.Properties.OnButtonClick := nil;
+  end;
   FreeAndNil(FTimerBusq);
   FreeAndNil(FTimerResolve);
   FreeAndNil(FTimerPopup);
@@ -495,7 +514,9 @@ begin
   begin
     Caption := 'Cód. barras';
     DataBinding.FieldName := 'CODBARRAS';
-    Width := 110;
+    // 130: un EAN13 completo; con DropDownAutoWidth el reparto podia
+    // dejar la columna corta y el codigo parecia truncado.
+    Width := 130;
   end;
   with FBusqView.CreateColumn do
   begin
@@ -575,17 +596,22 @@ const
     'SELECT x.SKU,' +
     '       x.SKU AS INPUT_BUSQUEDA,' +
     '       x.DESCRIPCION,' +
-    '       COALESCE((SELECT GROUP_CONCAT(DISTINCT cb.CODIGO_BARRAS_CB' +
+    // CAST explicito: sin el, el metadato de longitud que MariaDB
+    // declara para el subquery GROUP_CONCAT se queda corto y UniDAC
+    // trunca los codigos (EAN13 recortados a 11 caracteres).
+    '       CAST(COALESCE((SELECT GROUP_CONCAT(' +
+    '                             DISTINCT cb.CODIGO_BARRAS_CB' +
     '                                     SEPARATOR '' '')' +
     '                   FROM fza_codigos_barras cb' +
     '                  WHERE cb.CODIGO_UNIDAD_CB = x.SKU), '''')' +
-    '         AS CODBARRAS,' +
-    '       COALESCE((SELECT GROUP_CONCAT(DISTINCT ap.REF_PROVEEDOR_AP' +
+    '            AS CHAR(120)) AS CODBARRAS,' +
+    '       CAST(COALESCE((SELECT GROUP_CONCAT(' +
+    '                             DISTINCT ap.REF_PROVEEDOR_AP' +
     '                                     SEPARATOR '' '')' +
     '                   FROM fza_articulos_proveedores ap' +
     '                  WHERE ap.CODIGO_ART_AP = x.ART' +
     '                    AND ap.REF_PROVEEDOR_AP IS NOT NULL), '''')' +
-    '         AS REFPRV,' +
+    '            AS CHAR(120)) AS REFPRV,' +
     '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
     '                   FROM fza_articulos_stockactual st' +
     '                  WHERE st.CODIGO_UNIDAD_STK = x.SKU' +
@@ -801,7 +827,8 @@ end;
 procedure TGridArticulosLineas.ArticuloChange(Sender: TObject);
 begin
   LogSes('GridArt.Change: scanner=' + BoolToStr(FEnScanner, True));
-  if not FEnScanner then
+  // Guarda de timer: el Change puede saltar en plena destruccion.
+  if (not FEnScanner) and (FTimerBusq <> nil) then
   begin
     FTimerBusq.Enabled := False;
     FTimerBusq.Enabled := True;
@@ -844,6 +871,13 @@ begin
         LogSes(Format('GridArt.Busq: %d filas query, %d en vista',
                       [FBusqQry.RecordCount,
                        FBusqView.DataController.RecordCount]));
+        // Diagnostico truncado EAN13: Size del campo y valor crudo de
+        // la primera fila (campo corto = metadato SQL; valor completo
+        // = solo recorte visual por ancho de columna).
+        if not FBusqQry.IsEmpty then
+          LogSes(Format('GridArt.Busq: CODBARRAS size=%d val="%s"',
+                        [FBusqQry.FieldByName('CODBARRAS').Size,
+                         FBusqQry.FieldByName('CODBARRAS').AsString]));
         if not Combo.DroppedDown then
           Combo.DroppedDown := True;
       end;
@@ -1291,35 +1325,66 @@ begin
   sDesc := R.DescripcionArticulo;
   // Completo = la entrada ya trajo un SKU cerrado (no requiere elegir talla).
   bCompleto := (sSku <> '') and (not R.RequiereSku);
-  if not CdsEditando then
-    FCds.Edit;
-  // Si la linea tenia OTRO articulo, sus valores de talla/color no valen
-  // para el nuevo: se limpian para no heredar atributos (generarian un SKU
-  // cruzado tipo ART_NUEVO/COLOR_VIEJO, que existe pero sin stock).
-  if not SameText(Trim(FCds.FieldByName(FCampos.CodigoArt).AsString),
-                  sCodArt) then
-  begin
-    for i := 1 to 5 do
-      FCds.FieldByName(FCampos.AttrValor[i]).AsString := '';
-  end;
-  FCds.FieldByName(FCampos.CodigoArt).AsString := sCodArt;
-  FCds.FieldByName(FCampos.Descripcion).AsString := sDesc;
-  // Muestra SIEMPRE las columnas de talla/color del articulo (aunque el SKU
-  // venga ya cerrado, para que el usuario vea color/talla).
-  ActualizarColumnasAtributo(sCodArt);
-  if bCompleto then
-  begin
-    FCds.FieldByName(FCampos.CodigoUnidad).AsString := sSku;
-    RellenarAtributosDesdeSku(sCodArt, sSku);
-    if Assigned(FOnResuelto) then
-      FOnResuelto(sCodArt, sSku, sDesc, True);
-  end
+  // SKU cerrado repetido (p.ej. segunda lectura de pistola): acumular
+  // cantidad en la linea que ya lo tiene, en vez de duplicar linea.
+  if bCompleto and AcumularLineaExistente(sCodArt, sSku, sDesc) then
+    Result := True
   else
   begin
-    FCds.FieldByName(FCampos.CodigoUnidad).AsString := sCodArt;
-    AutoCompletarAtributosUnicos(sCodArt);
+    if not CdsEditando then
+      FCds.Edit;
+    // Si la linea tenia OTRO articulo, sus valores de talla/color no valen
+    // para el nuevo: se limpian para no heredar atributos (generarian un SKU
+    // cruzado tipo ART_NUEVO/COLOR_VIEJO, que existe pero sin stock).
+    if not SameText(Trim(FCds.FieldByName(FCampos.CodigoArt).AsString),
+                    sCodArt) then
+    begin
+      for i := 1 to 5 do
+        FCds.FieldByName(FCampos.AttrValor[i]).AsString := '';
+    end;
+    FCds.FieldByName(FCampos.CodigoArt).AsString := sCodArt;
+    FCds.FieldByName(FCampos.Descripcion).AsString := sDesc;
+    // Muestra SIEMPRE las columnas de talla/color del articulo (aunque el SKU
+    // venga ya cerrado, para que el usuario vea color/talla).
+    ActualizarColumnasAtributo(sCodArt);
+    if bCompleto then
+    begin
+      FCds.FieldByName(FCampos.CodigoUnidad).AsString := sSku;
+      RellenarAtributosDesdeSku(sCodArt, sSku);
+      if Assigned(FOnResuelto) then
+        FOnResuelto(sCodArt, sSku, sDesc, True);
+    end
+    else
+    begin
+      FCds.FieldByName(FCampos.CodigoUnidad).AsString := sCodArt;
+      AutoCompletarAtributosUnicos(sCodArt);
+    end;
+    Result := True;
   end;
-  Result := True;
+end;
+
+function TGridArticulosLineas.AcumularLineaExistente(const ACodArt,
+  ASku, ADesc: string): Boolean;
+begin
+  Result := False;
+  if (FCampos.Cantidad <> '') and
+     (FCds.FindField(FCampos.Cantidad) <> nil) then
+  begin
+    // Soltar la edicion de la linea actual (en blanco o a medias)
+    // antes de mover el cursor a la linea destino.
+    if CdsEditando then
+      FCds.Cancel;
+    if FCds.Locate(FCampos.CodigoUnidad, ASku, [loCaseInsensitive]) then
+    begin
+      FCds.Edit;
+      FCds.FieldByName(FCampos.Cantidad).AsFloat :=
+        FCds.FieldByName(FCampos.Cantidad).AsFloat + 1;
+      FCds.Post;
+      if Assigned(FOnResuelto) then
+        FOnResuelto(ACodArt, ASku, ADesc, True);
+      Result := True;
+    end;
+  end;
 end;
 
 procedure TGridArticulosLineas.ArticuloValidate(Sender: TObject;
