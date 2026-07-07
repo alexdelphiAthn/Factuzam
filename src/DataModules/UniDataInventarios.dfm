@@ -157,6 +157,9 @@ inherited dmInventarios: TdmInventarios
       FieldName = 'FECHA_RECUENTO_INVLIN'
       DisplayFormat = 'dd/mm/yyyy hh:nn'
     end
+    object cdsLineasID_AC_PIVOT_INV_LINEA: TIntegerField
+      FieldName = 'ID_AC_PIVOT_INVLIN'
+    end
     object cdsLineasNUM_ATRIBUTOS_REQ_INV_LINEA: TIntegerField
       FieldKind = fkInternalCalc
       FieldName = 'NUM_ATRIBUTOS_REQ_INV_LINEA'

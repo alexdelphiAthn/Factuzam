@@ -33,7 +33,9 @@ uses
   cxGroupBox, JvComponentBase, JvEnterTab, dxShellDialogs, system.UITypes,
   dxCoreGraphics, strUtils, cxCalc, Vcl.PlatformDefaultStyleActnCtrls,
   Vcl.ActnMan, System.Generics.Collections, System.Types,
-  dxSpreadSheet, dxSpreadSheetCore;
+  dxSpreadSheet, dxSpreadSheetCore,
+  // Contrato de entrada de articulos (ColumnSKUcxGrid, en src\Lib).
+  inLibColumnasSkuIntf;
 
 type
   TfrmMtoInventarios = class(TfrmMtoGen)
@@ -238,6 +240,17 @@ type
     // el color del AV actual; si no hay color, el boton vuelve a bkEllipsis.
     FBmpSwatchBoton: TBitmap;
 
+    // === CONTRATO DE ENTRADA ColumnSKUcxGrid (prueba en Mto real) ===
+    // F1 cicla Auto -> SKU -> Tallas horizontal. Auto resuelve a
+    // desglose (el cds define ATTR1..5). El Construir del contrato
+    // hace ClearItems: las columnas del dfm mueren en la primera
+    // construccion y las numericas se recrean en runtime; las rutas
+    // legacy de columnas quedan cortocircuitadas con
+    // FColsModoConstruido.
+    FModoEntrada: IModoEntradaGrid;
+    FModoEntradaSel: TModoColumnasSku;
+    FColsModoConstruido: Boolean;
+
     // === LÓGICA DINÁMICA SKUs (mismo patrón que inMtoCajaOpe) ===
     procedure ActualizarColumnasDinamicas(const ArticuloPadre: string);
     procedure RellenarAtributosDesdeSku(const Sku: string);
@@ -307,6 +320,20 @@ type
     function AsegurarCabeceraPersistidaParaLineas: Boolean;
     procedure AsegurarPrimeraLineaInventario;
     procedure CargarLineasYRefrescar;
+    // === CONTRATO DE ENTRADA: construccion y enganches ===
+    procedure ConstruirModoEntrada;
+    procedure CrearColumnasHostInventario;
+    // Las columnas de atributo del contrato nacen ocultas hasta que
+    // se resuelve un articulo: precargarlas con los nombres globales
+    // (mismo helper que el banco de pruebas) para verlas al entrar.
+    procedure MostrarColumnasAtributoGlobales;
+    procedure ModoEntradaResuelto(const ACodArt, ASku,
+                                  ADescripcion: string;
+                                  ACompleto: Boolean);
+
+  protected
+    // F1 = alternar modo de entrada (KeyPreview de TfrmBase).
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
 
   public
     dmmInventarios: TdmInventarios;
@@ -341,7 +368,9 @@ uses
   inLibInventarioNube,
   inMtoPreviewExcel,
   System.Diagnostics,
-  inMtoPrincipal, inMtoModalAddBlockInventario;
+  inMtoPrincipal, inMtoModalAddBlockInventario,
+  // Factoria del contrato de entrada (prueba ColumnSKUcxGrid).
+  inLibColumnasSku;
 
 {$R *.dfm}
 
@@ -438,6 +467,12 @@ begin
   // sobre cada linea que rellena ATTR1..5_VALOR. El usuario lo activa con
   // chkVerColumnasAtributos cuando va a editar.
   FMostrarColumnasAtributos := False;
+  // Contrato de entrada (prueba ColumnSKUcxGrid): Auto por defecto
+  // (resuelve a desglose) y F1 cicla Auto -> SKU -> Tallas. El toggle
+  // clasico queda oculto: el modo lo gobierna el contrato.
+  FModoEntradaSel := mcsAuto;
+  FColsModoConstruido := False;
+  chkVerColumnasAtributos.Visible := False;
   // 150 lineas es el umbral empirico: por debajo el desempaquetado va
   // imperceptible aunque haga un Edit/Post por linea (DisableControls
   // suprime el repintado del grid). Por encima, el usuario nota la
@@ -469,6 +504,20 @@ end;
 
 procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
 begin
+  // Contrato de entrada: soltar eventos del view y liberar el modo
+  // ANTES de que muera el form (evita punteros colgantes en el grid).
+  if FModoEntrada <> nil then
+  begin
+    if Assigned(tvLineas) then
+    begin
+      tvLineas.OnInitEdit := nil;
+      tvLineas.OnEditKeyDown := nil;
+      tvLineas.OnEditing := nil;
+      tvLineas.OnFocusedRecordChanged := nil;
+      tvLineas.OnFocusedItemChanged := nil;
+    end;
+    FModoEntrada := nil;
+  end;
   inherited;
   FreeAndNil(FBmpSwatchBoton);
   if Assigned(cbbCODIGO_EMPRESA_INVENTARIO) then
@@ -561,6 +610,19 @@ procedure TfrmMtoInventarios.cxgrdLineasEnter(Sender: TObject);
 begin
   inherited;
   AsegurarPrimeraLineaInventario;
+  // Red de seguridad: si el modo se construyo con el cds aun vacio
+  // (la carga de lineas del data module no pasa por el form), las
+  // lineas estan sin desempaquetar y los atributos se ven en blanco.
+  // Reconstruir aqui, con las lineas ya cargadas, lo endereza.
+  if (FModoEntrada <> nil) and (FModoEntradaSel <> mcsSku) and
+     (dmmInventarios <> nil) and dmmInventarios.cdsLineas.Active and
+     (not dmmInventarios.cdsLineas.IsEmpty) and
+     (not dmmInventarios.LineasDesempaquetadas) then
+    ConstruirModoEntrada;
+  // Contrato activo: al entrar en el grid, editor en la celda de
+  // entrada del modo (sustituye al despliegue de la columna clasica).
+  if (FModoEntrada <> nil) and PuedeEditar then
+    FModoEntrada.MostrarEditor;
 end;
 
 procedure TfrmMtoInventarios.pcDetailChange(Sender: TObject);
@@ -753,6 +815,286 @@ begin
   // entrar. Forzamos el refresco del grid para que aparezcan al momento.
   if Assigned(tvLineas) then
     tvLineas.DataController.Refresh;
+  // Contrato de entrada (ColumnSKUcxGrid): reconstruye sus columnas
+  // sobre las lineas recien cargadas (modo elegido con F1).
+  ConstruirModoEntrada;
+end;
+
+procedure TfrmMtoInventarios.ConstruirModoEntrada;
+var
+  Cfg: TConfigColumnasSku;
+  i: Integer;
+begin
+  if (dmmInventarios = nil) or
+     (not dmmInventarios.cdsLineas.Active) or
+     (csDestroying in ComponentState) then
+    Exit;
+  // Diagnostico temporal de la prueba: con que estado del cds se
+  // construye cada vez (persigue el "atributos vacios al entrar").
+  inLibLog.Log.LogInfo(Format(
+    '[ConstruirModoEntrada] modo=%d filas=%d desempaquetadas=%s ' +
+    'estado=%d attr1_fila1="%s"',
+    [Ord(FModoEntradaSel), dmmInventarios.cdsLineas.RecordCount,
+     BoolToStr(dmmInventarios.LineasDesempaquetadas, True),
+     Ord(dmmInventarios.cdsLineas.State),
+     dmmInventarios.cdsLineas.FieldByName('ATTR1_VALOR').AsString]));
+  // Conversion en marcha: BeforePost no debe exigir SKU cerrado a los
+  // Posts intermedios del pivote/des-pivote (lineas consolidadas o
+  // con unidad=padre). Al final del metodo queda True solo en tallas.
+  dmmInventarios.ModoPivoteActivo := True;
+  // Teardown del modo anterior (patron del banco de pruebas): cerrar
+  // el editor, soltar la edicion, des-pivotar si venimos de tallas y
+  // anular TODOS los eventos del view que los modos enganchan.
+  if tvLineas.Controller.EditingController.IsEditing then
+    try
+      tvLineas.Controller.EditingController.HideEdit(False);
+    except
+      on E: EInvalidOperation do
+        ;
+    end;
+  if dmmInventarios.cdsLineas.State in [dsEdit, dsInsert] then
+    dmmInventarios.cdsLineas.Cancel;
+  if FModoEntrada <> nil then
+    FModoEntrada.Desmontar;
+  tvLineas.OnInitEdit := nil;
+  tvLineas.OnEditKeyDown := nil;
+  tvLineas.OnEditing := nil;
+  tvLineas.OnFocusedRecordChanged := nil;
+  tvLineas.OnFocusedItemChanged := nil;
+  FModoEntrada := nil;
+  // Desglose ensenya atributos: desempaquetar SKU->ATTR ahora Y en
+  // cada recarga de lineas (DesempaquetarAlCargar: las recargas del
+  // data module que no pasan por el form barrian los ATTR in-memory
+  // y los atributos se veian en blanco hasta reconstruir).
+  if FModoEntradaSel = mcsSku then
+  begin
+    FMostrarColumnasAtributos := False;
+    dmmInventarios.DesempaquetarAlCargar := False;
+  end
+  else
+  begin
+    FMostrarColumnasAtributos := True;
+    dmmInventarios.DesempaquetarAlCargar := True;
+    AsegurarDesempaquetadoAtributos;
+  end;
+  Cfg := Default(TConfigColumnasSku);
+  Cfg.Conexion := oConn;
+  Cfg.View := tvLineas;
+  Cfg.Cds := dmmInventarios.cdsLineas;
+  Cfg.Modo := FModoEntradaSel;
+  Cfg.AlmacenStock :=
+    dsTablaG.DataSet.FieldByName('CODIGO_ALM_INV').AsString;
+  Cfg.Distribuido := False;
+  Cfg.Campos.CodigoArt := 'CODIGO_ART_INVLIN';
+  Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_INVLIN';
+  Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_INVLIN';
+  Cfg.Campos.Cantidad := 'CANTIDAD_FISICA_INVLIN';
+  // El almacen es de CABECERA en inventario: sin columna de linea.
+  Cfg.Campos.Almacen := '';
+  Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_REQ_INV_LINEA';
+  for i := 1 to 5 do
+  begin
+    Cfg.Campos.AttrValor[i] := 'ATTR' + IntToStr(i) + '_VALOR';
+    Cfg.Campos.AttrNombre[i] := 'ATTR' + IntToStr(i) + '_NOMBRE';
+  end;
+  // NOTA: el modo tallas en horizontal quedo DESCARTADO en
+  // inventarios: cada linea lleva DOS cantidades (teorica y recuento)
+  // y una celda de pivote solo puede representar una. Se probo y se
+  // retiro (queda la infraestructura de celdas por si se retoma).
+  FModoEntrada := CrearModoEntradaGrid(Cfg);
+  FModoEntrada.OnResuelto := ModoEntradaResuelto;
+  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
+  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
+  // Construir hace ClearItems: mueren las columnas del dfm (primera
+  // vez) y nacen las del contrato; despues remontamos las numericas.
+  // El flag va ANTES: si Construir aborta a medias (validaciones de
+  // BeforePost, SQL...), las rutas legacy ya no deben tocar las
+  // columnas del dfm, que han muerto en el ClearItems.
+  FColsModoConstruido := True;
+  FModoEntrada.Construir;
+  CrearColumnasHostInventario;
+  // En desglose, las columnas de atributo del contrato nacen ocultas
+  // (cada articulo re-rotula las suyas al resolver): precargar los
+  // nombres globales para que Color/Talla se vean desde el principio.
+  if DetectarModoColumnasSku(Cfg) = mcsDesglose then
+    MostrarColumnasAtributoGlobales;
+  // El guardian de estado (PuedeEditar) se conserva: los modos no
+  // enganchan OnEditing salvo tallas distribuido (aqui no aplica).
+  tvLineas.OnEditing := tvLineasEditing;
+  // Mantener el acelerador del caption original ('&1. Detalle...').
+  if DetectarModoColumnasSku(Cfg) = mcsSku then
+    tsDetalle.Caption := '&1. Detalle del inventario [SKU]'
+  else
+    tsDetalle.Caption := '&1. Detalle del inventario [Desglose]';
+  // Conversion terminada: el guardian de BeforePost vuelve a aplicar.
+  dmmInventarios.ModoPivoteActivo := False;
+  // Diagnostico temporal: estado al terminar de construir.
+  inLibLog.Log.LogInfo(Format(
+    '[ConstruirModoEntrada] FIN filas=%d desempaquetadas=%s ' +
+    'attr1_fila_activa="%s"',
+    [dmmInventarios.cdsLineas.RecordCount,
+     BoolToStr(dmmInventarios.LineasDesempaquetadas, True),
+     dmmInventarios.cdsLineas.FieldByName('ATTR1_VALOR').AsString]));
+  if PuedeEditar then
+    FModoEntrada.MostrarEditor;
+end;
+
+procedure TfrmMtoInventarios.CrearColumnasHostInventario;
+  function Col(const ACaption, ACampo: string; AAncho: Integer;
+               AEditable: Boolean): TcxGridDBColumn;
+  begin
+    Result := tvLineas.CreateColumn as TcxGridDBColumn;
+    Result.Caption := ACaption;
+    Result.DataBinding.FieldName := ACampo;
+    Result.Width := AAncho;
+    Result.Options.Editing := AEditable;
+    Result.HeaderAlignmentHorz := taRightJustify;
+  end;
+var
+  ColRec: TcxGridDBColumn;
+begin
+  // Columnas propias del documento tras el ClearItems del contrato
+  // (equivalente runtime de las del dfm; LOTE/CADUCIDAD/USUARIO, que
+  // iban ocultas, quedan fuera de la prueba).
+  with Col('Descripción', 'DESCRIPCION_ARTICULO_INVLIN', 200, False) do
+    HeaderAlignmentHorz := taLeftJustify;
+  Col('Uds. teóricas', 'CANTIDAD_TEORICA_INVLIN', 90, False);
+  ColRec := Col('Recuento', 'CANTIDAD_FISICA_INVLIN', 90, True);
+  ColRec.PropertiesClass := TcxTextEditProperties;
+  TcxTextEditProperties(ColRec.Properties).OnValidate :=
+    tvLineasUdsFisicasPropertiesValidate;
+  Col('PMP actual', 'PRECIO_MEDIO_INVLIN', 85, False);
+  Col('PMP nuevo', 'PRECIO_MEDIO_NUEVO_INVLIN', 85, True);
+  Col('Dif. uds.', 'CANTIDAD_DIFERENCIA_INVLIN', 80, False);
+  Col('Dif. coste', 'TOTAL_COSTE_DIFERENCIA_INVLIN', 90, False);
+  Col('Uds. regul.', 'UDS_REGULARIZADAS', 80, False);
+  Col('Hora recuento', 'FECHA_RECUENTO_INVLIN', 120, False);
+end;
+
+procedure TfrmMtoInventarios.MostrarColumnasAtributoGlobales;
+var
+  Qry: TUniQuery;
+  i, j, iAncho: Integer;
+  iOrden: Integer;
+  Col: TcxGridColumn;
+  cds: TDataSet;
+  Bm: TBookmark;
+  AnchoMax: array[1..5] of Integer;
+begin
+  // Nombres globales de atributos (mismo origen que el mapa de la
+  // paleta), ordenados. Al resolver un articulo, la controladora
+  // re-rotula/oculta segun SUS atributos. Copiado del banco de
+  // pruebas ColumnSKUcxGrid.
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := oConn;
+    Qry.SQL.Text :=
+      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
+      '       MIN(ORDEN_VA) AS ORDEN' +
+      '  FROM fza_variaciones_atributos' +
+      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
+      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
+    Qry.Open;
+    iOrden := 1;
+    while (not Qry.Eof) and (iOrden <= 5) do
+    begin
+      for i := 0 to tvLineas.ColumnCount - 1 do
+      begin
+        Col := tvLineas.Columns[i];
+        if Col.Tag = iOrden then
+        begin
+          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
+          Col.Visible := True;
+        end;
+      end;
+      Inc(iOrden);
+      Qry.Next;
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
+  // Ancho segun el VALOR mas largo cargado + margen del swatch (44 =
+  // cuadrado 18 + separacion 6 + margenes 10 + aire 10): AZUL_CIELO
+  // quedaba ilegible con el ancho por defecto. Solo crece, como en el
+  // modo tallas, para no pisar anchos tocados a mano.
+  cds := dmmInventarios.cdsLineas;
+  if cds.Active and (not cds.IsEmpty) then
+  begin
+    for i := 1 to 5 do
+      AnchoMax[i] := 0;
+    Bm := cds.GetBookmark;
+    cds.DisableControls;
+    try
+      cds.First;
+      while not cds.Eof do
+      begin
+        for i := 1 to 5 do
+        begin
+          iAncho := cxTextWidth(cxgrdLineas.Font,
+            Trim(cds.FieldByName(
+              'ATTR' + IntToStr(i) + '_VALOR').AsString));
+          if iAncho > AnchoMax[i] then
+            AnchoMax[i] := iAncho;
+        end;
+        cds.Next;
+      end;
+      if cds.BookmarkValid(Bm) then
+        cds.GotoBookmark(Bm);
+    finally
+      cds.EnableControls;
+      cds.FreeBookmark(Bm);
+    end;
+    for j := 0 to tvLineas.ColumnCount - 1 do
+    begin
+      Col := tvLineas.Columns[j];
+      if (Col.Tag >= 1) and (Col.Tag <= 5) and Col.Visible and
+         (Col.Width < AnchoMax[Col.Tag] + 44) then
+        Col.Width := AnchoMax[Col.Tag] + 44;
+    end;
+  end;
+end;
+
+procedure TfrmMtoInventarios.ModoEntradaResuelto(const ACodArt, ASku,
+  ADescripcion: string; ACompleto: Boolean);
+var
+  CantTeo, PMPAct: Currency;
+begin
+  // Rama CodSku<>'' del flujo clasico (RellenarLineaDesdeBusqueda):
+  // teorico y PMP de la unidad resuelta.
+  if ACompleto and (ASku <> '') then
+  begin
+    if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
+      dmmInventarios.cdsLineas.Edit;
+    dmmInventarios.RellenarDatosSku(ASku, CantTeo, PMPAct);
+    dmmInventarios.cdsLineas.FieldByName(
+      'CANTIDAD_TEORICA_INVLIN').AsCurrency := CantTeo;
+    dmmInventarios.cdsLineas.FieldByName(
+      'CANTIDAD_FISICA_INVLIN').AsCurrency := CantTeo;
+    dmmInventarios.cdsLineas.FieldByName(
+      'PRECIO_MEDIO_INVLIN').AsCurrency := PMPAct;
+    dmmInventarios.cdsLineas.FieldByName(
+      'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency := PMPAct;
+    dmmInventarios.AsegurarFechaRecuentoLinea;
+  end;
+end;
+
+procedure TfrmMtoInventarios.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  // F1: alterna el modo de entrada (Auto -> SKU -> Tallas horizontal)
+  // y reconstruye las columnas, solo con el detalle a la vista.
+  if (Key = VK_F1) and (Shift = []) and
+     (pcDetail.ActivePage = tsDetalle) then
+  begin
+    Key := 0;
+    // Solo Auto (desglose) <-> SKU: el modo tallas en horizontal no
+    // tiene sentido en inventarios (dos cantidades por linea).
+    if FModoEntradaSel = mcsSku then
+      FModoEntradaSel := mcsAuto
+    else
+      FModoEntradaSel := mcsSku;
+    ConstruirModoEntrada;
+  end;
+  inherited;
 end;
 
 procedure TfrmMtoInventarios.
@@ -808,6 +1150,9 @@ end;
 
 procedure TfrmMtoInventarios.AplicarModoColumnasEntrada(AModoAtributos: Boolean);
 begin
+  // Contrato activo: la entrada es del contrato; columnas dfm muertas.
+  if FColsModoConstruido then
+    Exit;
   if Assigned(tvLineasARTICULO) and Assigned(tvLineasUNIDAD) then
   begin
     tvLineas.BeginUpdate;
@@ -859,6 +1204,9 @@ var
   Nombres    : TStringList;
   Col        : TcxGridDBColumn;
 begin
+  // Contrato activo: sus columnas de atributo, no las del dfm.
+  if FColsModoConstruido then
+    Exit;
   if dmmInventarios = nil then Exit;
   cds := dmmInventarios.cdsLineas;
   if not cds.Active then Exit;
@@ -1048,6 +1396,10 @@ var
   end;
 
 begin
+  // Contrato de entrada activo: las columnas de atributo son SUYAS
+  // (las del dfm ya no existen tras el ClearItems del Construir).
+  if FColsModoConstruido then
+    Exit;
   swTotal := TStopwatch.StartNew;
   // En modo SKU, el check apagado manda siempre. Esto corrige disposiciones
   // guardadas del grid que puedan reactivar Color/Talla al abrir la ficha.
@@ -1132,6 +1484,9 @@ begin
   // (con barra de progreso si hay mas de FUmbralProgresoDesempaquetado
   // lineas). Si se desactiva, ocultamos sin tocar la BBDD.
   if csLoading in ComponentState then Exit;
+  // Contrato activo: el modo lo gobierna F1; el check queda oculto y
+  // sin efecto (se conserva por si se desactiva la prueba).
+  if FColsModoConstruido then Exit;
   FMostrarColumnasAtributos := chkVerColumnasAtributos.Checked;
   // Conmuta ya la columna de entrada (Articulo <-> SKU/Articulo) aunque el
   // inventario este vacio: ActualizarColumnasDinamicas puede cortocircuitar

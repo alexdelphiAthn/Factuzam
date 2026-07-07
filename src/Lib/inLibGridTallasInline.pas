@@ -116,6 +116,12 @@ type
     FieldAvPivotCel  : string;    // 'ID_AV_PIVOT_SESCEL'
     FieldCantidadCel : string;    // 'CANTIDAD_SESCEL'
     FieldAlmacenCel  : string;    // 'CODIGO_ALM_SESCEL' (puede ser '')
+    // Clave de documento EXTRA (opcional): pares campo del MASTER ->
+    // campo de la tabla de CELDAS, para documentos cuya clave excede
+    // SERIE+NUMERO (inventarios: empresa y almacen del documento).
+    // Arrays paralelos; vacios = comportamiento actual (sesiones).
+    CamposDocExtraMaster : TArray<string>;
+    CamposDocExtraCel    : TArray<string>;
     IdFilaFijo       : Integer;   // 1 — la prueba/Mtos por ahora usan una
                                   // fila logica por linea
 
@@ -131,6 +137,14 @@ type
     function  Lineas: TDataSet;
     function  SerieDoc: string;
     function  NumeroDoc: string;
+    // Clave de documento extra (CamposDocExtra*): clausulas ' AND
+    // campo = :xN', columnas/valores para INSERT y relleno de los
+    // parametros :xN desde el master. Con los arrays vacios devuelven
+    // '' y no cambian nada (sesiones).
+    function  WhereDocExtra: string;
+    function  ColsInsertDocExtra: string;
+    function  ValsInsertDocExtra: string;
+    procedure ParamsDocExtra(AQuery: TUniQuery);
   public
     constructor Create(const ACfg: TGridTallasConfig);
     destructor  Destroy; override;
@@ -271,6 +285,48 @@ begin
   ds := Master;
   if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
     Result := ds.FieldByName(FCfg.FieldNumeroMaster).AsString;
+end;
+
+function TGestorGridTallas.WhereDocExtra: string;
+var
+  i : Integer;
+begin
+  Result := '';
+  for i := 0 to High(FCfg.CamposDocExtraCel) do
+    Result := Result + ' AND ' + FCfg.CamposDocExtraCel[i] +
+              ' = :x' + IntToStr(i) + ' ';
+end;
+
+function TGestorGridTallas.ColsInsertDocExtra: string;
+var
+  i : Integer;
+begin
+  // Devuelve 'CAMPO, ' por cada clave extra, para intercalar en la
+  // lista de columnas del INSERT (tras SERIE y NUMERO).
+  Result := '';
+  for i := 0 to High(FCfg.CamposDocExtraCel) do
+    Result := Result + FCfg.CamposDocExtraCel[i] + ', ';
+end;
+
+function TGestorGridTallas.ValsInsertDocExtra: string;
+var
+  i : Integer;
+begin
+  Result := '';
+  for i := 0 to High(FCfg.CamposDocExtraCel) do
+    Result := Result + ':x' + IntToStr(i) + ', ';
+end;
+
+procedure TGestorGridTallas.ParamsDocExtra(AQuery: TUniQuery);
+var
+  ds : TDataSet;
+  i  : Integer;
+begin
+  ds := Master;
+  if ds <> nil then
+    for i := 0 to High(FCfg.CamposDocExtraMaster) do
+      AQuery.ParamByName('x' + IntToStr(i)).AsString :=
+        ds.FieldByName(FCfg.CamposDocExtraMaster[i]).AsString;
 end;
 
 procedure TGestorGridTallas.InvalidarCache;
@@ -480,10 +536,12 @@ begin
       ' WHERE ' + FCfg.FieldSerieCel  + ' = :s ' +
       '   AND ' + FCfg.FieldNumeroCel + ' = :n ' +
       '   AND ' + FCfg.FieldLineaCel  + ' = :l ' +
+      WhereDocExtra +
       ' GROUP BY ' + FCfg.FieldAvPivotCel;
     q.ParamByName('s').AsString  := SerieDoc;
     q.ParamByName('n').AsString  := NumeroDoc;
     q.ParamByName('l').AsInteger := ALinea;
+    ParamsDocExtra(q);
     q.Open;
     while not q.Eof do
     begin
@@ -543,6 +601,7 @@ begin
       if FCfg.FieldAlmacenCel <> '' then
         q.SQL.Text := q.SQL.Text +
           '   AND ' + FCfg.FieldAlmacenCel + ' = :a';
+      q.SQL.Text := q.SQL.Text + WhereDocExtra;
     end
     else
     begin
@@ -558,6 +617,7 @@ begin
           'INSERT INTO ' + FCfg.TablaCeldas + ' (' +
           FCfg.FieldSerieCel   + ', ' +
           FCfg.FieldNumeroCel  + ', ' +
+          ColsInsertDocExtra +
           FCfg.FieldLineaCel   + ', ' +
           FCfg.FieldFilaCel    + ', ' +
           FCfg.FieldAvPivotCel + ', ' +
@@ -565,7 +625,8 @@ begin
           FCfg.FieldCantidadCel +
           ', INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
           ' USUARIO_MODIF) ' +
-          'VALUES (:s, :n, :l, :f, :p, :a, :c, NOW(), :u, NOW(), :u) ' +
+          'VALUES (:s, :n, ' + ValsInsertDocExtra +
+          ':l, :f, :p, :a, :c, NOW(), :u, NOW(), :u) ' +
           'ON DUPLICATE KEY UPDATE ' +
           FCfg.FieldCantidadCel + ' = :c, ' +
           'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u'
@@ -574,13 +635,15 @@ begin
           'INSERT INTO ' + FCfg.TablaCeldas + ' (' +
           FCfg.FieldSerieCel   + ', ' +
           FCfg.FieldNumeroCel  + ', ' +
+          ColsInsertDocExtra +
           FCfg.FieldLineaCel   + ', ' +
           FCfg.FieldFilaCel    + ', ' +
           FCfg.FieldAvPivotCel + ', ' +
           FCfg.FieldCantidadCel +
           ', INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
           ' USUARIO_MODIF) ' +
-          'VALUES (:s, :n, :l, :f, :p, :c, NOW(), :u, NOW(), :u) ' +
+          'VALUES (:s, :n, ' + ValsInsertDocExtra +
+          ':l, :f, :p, :c, NOW(), :u, NOW(), :u) ' +
           'ON DUPLICATE KEY UPDATE ' +
           FCfg.FieldCantidadCel + ' = :c, ' +
           'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
@@ -594,6 +657,9 @@ begin
     q.ParamByName('p').AsInteger := AIdAv;
     if FCfg.FieldAlmacenCel <> '' then
       q.ParamByName('a').AsString := '';
+    // Clave de documento extra (vacia en sesiones): en el DELETE va en
+    // el WHERE y en el INSERT en columnas/VALUES; mismos :xN.
+    ParamsDocExtra(q);
     q.ExecSQL;
   finally
     FreeAndNil(q);
@@ -623,10 +689,12 @@ begin
       '  FROM ' + FCfg.TablaCeldas + ' ' +
       ' WHERE ' + FCfg.FieldSerieCel  + ' = :s ' +
       '   AND ' + FCfg.FieldNumeroCel + ' = :n ' +
-      '   AND ' + FCfg.FieldLineaCel  + ' = :l';
+      '   AND ' + FCfg.FieldLineaCel  + ' = :l' +
+      WhereDocExtra;
     q.ParamByName('s').AsString  := SerieDoc;
     q.ParamByName('n').AsString  := NumeroDoc;
     q.ParamByName('l').AsInteger := iLinea;
+    ParamsDocExtra(q);
     q.Open;
     rTot := q.FieldByName('TOTAL').AsFloat;
   finally

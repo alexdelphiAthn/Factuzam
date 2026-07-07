@@ -18,20 +18,43 @@ propósito como prueba de concepto.
 
 ## Ficheros
 
+**(07/07/2026) Units PROMOCIONADAS a `src/Lib/`** tras validar la
+integración en Inventarios: `inLibColumnasSkuIntf`, `inLibColumnasSku`
+y los tres modos compilan ya dentro de `fzam.dpr` (sin search path
+extra). En esta carpeta quedan el banco de pruebas
+(`ColumnSKUcxGridTest` + `inMtoPrueba*`), los SQL y este documento.
+
 | Fichero | Contenido |
 |---|---|
 | `inLibColumnasSkuIntf.pas` | Contratos: `IModoEntradaGrid`, `IProveedorValoresSku`, records `TConfigColumnasSku` / `TCamposColumnasSku`, enum `TModoColumnasSku`, evento `TSkuResueltoEvent`. |
 | `inLibColumnasSkuModoSku.pas` | `TModoEntradaSku`: una columna SKU con búsqueda incremental en servidor + paleta para elegir color/talla. |
 | `inLibColumnasSkuModoDesglose.pas` | `TModoEntradaDesglose`: adaptador fino sobre `TGridArticulosLineas` (no duplica nada). |
+| `inLibColumnasSkuModoTallas.pas` | `TModoEntradaTallas`: tallas en horizontal (pivote) sobre `TGestorGridTallas`, con distribuido por almacén y des-pivote (`Desmontar`). |
 | `inLibColumnasSku.pas` | Factoría `CrearModoEntradaGrid` + detección `mcsAuto` + `CrearProveedorValoresSku`. |
-| `inMtoPruebaColumnasSku.pas/.dfm` | Formulario de prueba: radio Auto/SKU/Desglose, almacén, grid con `TClientDataSet` en memoria. |
+| `inMtoPruebaColumnasSku.pas/.dfm` | Formulario de prueba: radio Auto/SKU/Tallas, almacén, check distribuido, grid con `TClientDataSet` en memoria, memo de log. |
+| `prueba_columnas_sku.sql` | DDL de referencia de la tabla de celdas desechable `fza_prueba_skucel` (el banco la recrea por sesión). |
 | `ColumnSKUcxGridTest.dpr/.dproj` | Proyecto independiente (no toca `fzam.dproj`): logon → banco de pruebas. |
 | `inMtoPruebaColumnasSkuLogon.pas/.dfm` | Logon mínimo: conecta a MariaDB (UniDAC/MySQL) y asigna `inLibGlobalVar.oConn`. Recuerda los datos en `ColumnSKUcxGridTest.ini` junto al exe (contraseña en claro: no distribuir). |
 
-No hay script SQL: **no toca esquema**. Solo consulta tablas ya
-existentes (`fza_articulos_skus`, `fza_articulos`,
+No hay script SQL de esquema productivo: **no toca esquema**. Solo
+consulta tablas ya existentes (`fza_articulos_skus`, `fza_articulos`,
 `fza_articulos_stockactual`) y reutiliza los índices de
-`indices_busqueda_skus.sql`.
+`indices_busqueda_skus.sql` (la tabla `fza_prueba_skucel` es
+desechable y solo del banco de pruebas).
+
+Ficheros de PRODUCCIÓN tocados durante la prueba (revisar antes de
+commitear):
+
+- `src/Lib/inLibGridArticulos.pas`: búsqueda incremental (UNION +
+  INPUT_BUSQUEDA + limpieza de filtro + debounce por KeyDown + CAST),
+  eventos `OnEntrarEdicion`/`OnSalirEdicion`, acumulación de
+  cantidad, desenganche de eventos del repo en el destructor.
+- `src/Lib/inLibGridTallasInline.pas`: `PersistirCantidad` soporta
+  `FieldAlmacenCel` vacío.
+- `src/Modals/inMtoModalDistribuidor.pas`: tabla de celdas
+  parametrizable (`ConfigurarCeldas`, defaults de sesiones).
+- `src/Forms/inMtoGen.pas`: `btnCancelarClick` con guarda de Owner
+  (fuera de fzam era EInvalidCast).
 
 ## Uso desde un documento
 
@@ -56,6 +79,14 @@ end;
 
 Con `mcsAuto` la factoría decide: si `Campos.AttrValor[1]` está
 definido y existe en el cds → desglose; si no → SKU.
+
+**UI de tres modos (07/07/2026):** el banco de pruebas ofrece solo
+Auto / SKU / Tallas horizontal. El desglose NO es seleccionable a
+mano: es el modo EFECTIVO al que resuelve Auto cuando el documento
+tiene columnas de atributo (elegirlo explícitamente era redundante).
+`mcsDesglose` sigue en el contrato como resultado y los documentos
+pueden pedirlo por código. F1 cicla los tres modos y reconstruye; el
+formato distribuido queda fuera del ciclo (se activa en cabecera).
 
 ## Modo SKU — detalle
 
@@ -155,9 +186,9 @@ documento: tabla de celdas (estilo `fza_compras_sesiones_celdas`),
 campo de pivote en las líneas (`ID_AC_PIVOT_...`) y master/líneas
 abiertos antes de `Construir`. Por eso tiene factoría propia
 (`CrearModoEntradaGridTallas(Config, CfgTallas)`); la factoría normal
-lanza excepción si se le pide `mcsTallasInline`. **No se puede probar
-en el banco standalone** (cds en memoria, sin tabla de celdas): se
-probará al integrarlo en un documento real.
+lanza excepción si se le pide `mcsTallasInline`. En el banco
+standalone se prueba con la tabla de celdas desechable
+`fza_prueba_skucel` (recreada al primer Construir de cada sesión).
 
 ## Evaluación de integración por documento (05/07/2026)
 
@@ -265,6 +296,114 @@ y hasta un ds.First los resetean); EnterAsTab activo en celdas de
 talla y desactivado solo donde el Enter resuelve; el guardián de
 BeforeDelete de TfrmMtoGen se puentea en borrados programáticos.
 
+## Búsqueda incremental en la celda de artículo (07/07/2026)
+
+Los tres modos abren un desplegable de sugerencias a los ~350 ms de
+teclear (≥ 3 letras) en la celda de artículo/SKU, filtrado EN
+SERVIDOR con una UNION por prefijo de SKU, código de barras y
+referencia/modelo de proveedor, y por contenido en la descripción
+(cada rama ataca su índice; barras/referencias/stock se calculan solo
+para las ≤100 filas devueltas, orden stock DESC).
+
+Lecciones del `TcxExtLookupComboBox` (todas con sangre, patrón final
+calcado de `inMtoCajaOpe`):
+
+- **Eventos en el ITEM del repositorio, no en el editor**: con
+  `AlwaysShowEditor` el grid re-clona las properties y un hook por
+  instancia muere en un clon; los clones sí heredan los eventos del
+  repositorio.
+- **`OnChange` del lookup NO es fiable**: deja de disparar tras el
+  primer autocompletado. El debounce se rearma desde el
+  `OnEditKeyDown` del VIEW (teclas de texto + Back/Delete), que llega
+  siempre. El `OnChange` queda de refuerzo.
+- **El texto tecleado no es `EditingValue` ni `Text` a secas**: el
+  texto libre no llega a `EditingValue`, y si el combo autocompletó,
+  lo tecleado es solo la parte ANTERIOR a la selección
+  (`Copy(Text, 1, SelStart)` si `SelLength > 0`).
+- **La lista se queda "pegada" al autocompletado** si el lookup puede
+  filtrar: se neutraliza con la infraestructura de caja — columna
+  OCULTA `INPUT_BUSQUEDA` (duplicado del SKU en el SQL) como
+  `ListFieldItem`, con `IncrementalSearch`/`Options.Filtering`/
+  `IncSearch` a False; `IncrementalFiltering := False` y
+  `AutoSearchOnPopup := False` en las properties;
+  `SyncMode := False` en el DataController del view del desplegable;
+  y limpieza de `IncSearchingText` + `DataController.Filter`
+  TERMINADA EN `Refresh` antes de cada recarga y en el `CloseUp`
+  (sin el Refresh la vista sigue mostrando el conjunto filtrado
+  viejo). Durante la recarga, el view se desengancha del DataSource.
+- **`GROUP_CONCAT` en subquery trunca**: el metadato de longitud que
+  declara MariaDB se queda corto y UniDAC dimensiona el campo con él
+  (EAN13 recortados a 11 caracteres). Siempre
+  `CAST(... AS CHAR(120))` explícito.
+
+## Robustez y ergonomía (07/07/2026)
+
+- **Borrado en bucle SIEMPRE por `RecNo`**, nunca `while not Eof` con
+  `Delete`: al borrar el ÚLTIMO registro el cursor cae en el anterior
+  (no en Eof) y el bucle reprocesa filas ya vistas — en el rederivar
+  de tallas cada línea "casaba consigo misma" en el diccionario y se
+  borraba el documento entero. Aplicado en rederivar y en la
+  normalización de línea en blanco.
+- **Destructor de los modos: desenganchar los eventos del
+  repositorio ANTES del primer `FreeAndNil`**. Liberar el view del
+  desplegable dispara `SetView(nil)` → `PropertiesChanged` en el
+  editor cacheado del grid → `Change` → handler del modo en plena
+  destrucción tocando un timer ya liberado (AV nil+$50, cazado con
+  call stack real al cambiar de modo). Guarda `FTimerBusq <> nil` en
+  los Change como cinturón.
+- **Acumulación de cantidad**: leer dos veces el mismo SKU cerrado
+  suma +1 en la línea que ya lo tiene (Locate por `CODIGO_UNIDAD`)
+  en desglose y SKU; tallas ya lo hacía en su celda. Sin líneas
+  duplicadas al escanear.
+- **EnterAsTab**: el host restaura al salir del grid
+  (`cxgrdLineas.OnExit`); el `TcxRadioGroup` consume el Enter y no
+  llega al JvEnterAsTab — se convierte en Tab desde el `KeyDown` del
+  form (KeyPreview de TfrmBase). F1 = toggle de modo.
+- **Ancho de columnas de atributo (tallas)**: `ApplyBestFit` NO vale
+  (mide sin el swatch del custom draw y con el grid a medio pintar
+  encoge). Ancho SOLO creciente medido con `cxTextWidth` sobre el
+  valor real + 44 px (swatch + márgenes) en cada escritura de
+  atributos.
+
+## Integración en INVENTARIOS (07/07/2026)
+
+Primera integración del contrato en un Mto real (sustitución
+completa). Estado: SKU y Desglose FUNCIONANDO en vivo; el modo tallas
+en horizontal se probó y se DESCARTÓ para inventarios — cada línea
+lleva DOS cantidades (teórica y recuento) y una celda de pivote solo
+puede representar una. La infraestructura queda hecha para el
+siguiente candidato (albaranes/pedidos, una cantidad por línea):
+
+- `inventarios_tallas_horizontal.sql`: tabla `fza_inventarios_celdas`
+  + `ID_AC_PIVOT_INVLIN` en líneas (aplicado en BBDD de pruebas).
+- `TGridTallasConfig.CamposDocExtraMaster/Cel`: clave de documento
+  extra opcional (inventarios: EMP+ALM además de SERIE+NUMERO) que
+  gestor y modo anexan a todos sus SQL de celdas. Vacía en sesiones.
+- `UniDataInventarios`: campo persistente `ID_AC_PIVOT_INVLIN`
+  (pas+dfm+SQLUpdate) y `ModoPivoteActivo` — exención del backstop de
+  atributos/SKU de `cdsLineasBeforePost` para líneas pivotadas o
+  conversiones en curso (hoy inerte).
+
+Detalles del encaje en `inMtoInventarios` (patrón para el resto):
+
+- `FModoEntrada: IModoEntradaGrid` + F1 alternando Auto (desglose) ↔
+  SKU; Auto por defecto; caption de la pestaña = modo efectivo; el
+  check "Ver atributos en columnas" queda oculto (era la misma
+  elección).
+- `ConstruirModoEntrada` tras cada `CargarLineasYRefrescar`: teardown
+  estilo banco + desempaquetado SKU→ATTR cuando el modo enseña
+  atributos + `CrearColumnasHostInventario` (las columnas del dfm
+  mueren en el ClearItems del Construir y las numéricas se recrean en
+  runtime, reusando el Validate de recuento).
+- Rutas legacy de columnas cortocircuitadas con `FColsModoConstruido`
+  (activado ANTES del Construir: si algo aborta a medias, nadie toca
+  columnas muertas).
+- `OnResuelto` → `RellenarDatosSku` (teórica/física/PMPs + fecha de
+  recuento), la misma rama del flujo clásico.
+- Lección: los guardianes de BeforePost del documento SON parte de la
+  integración — el de inventarios abortaba el Construir de tallas a
+  mitad y dejaba el grid a medio montar.
+
 ## Pendiente / siguientes pasos
 
 - ~~Totales no se refrescan tras Construir~~ → RESUELTO
@@ -280,10 +419,18 @@ BeforeDelete de TfrmMtoGen se puentea en borrados programáticos.
 
 - Captura de trama STX/ETX del lector también en modo SKU (hoy solo
   Código+CR; el desglose ya la tiene vía `TGridArticulosLineas`).
+- Retirar las trazas de diagnóstico (`GridArt.*`, `ModoTallas.*`,
+  `Rederivar MASTER/BORRA`, `Normalizar`, `Grid.OnExit`,
+  `CODBARRAS size`) cuando el usuario dé por cerrada la validación.
 - Decidir si `IModoEntradaGrid` debe exponer también el buscador
   completo (`TfrmMtoSearch`) del botón «…».
-- Si la prueba convence, mover las units a `src/Lib/` e integrar en
-  un Mto real (candidato: pedidos de venta).
+- ~~Si la prueba convence, mover las units a `src/Lib/` e integrar en
+  un Mto real~~ → HECHO (07/07/2026): units en `src/Lib/`, dentro de
+  `fzam.dpr`, e Inventarios integrado y validado. Siguiente Mto
+  candidato: pedidos de venta.
+- Las trazas de diagnostico (GridArt.*, ModoTallas.*,
+  [ConstruirModoEntrada]...) se CONSERVAN a proposito durante la fase
+  de integracion; retirarlas cuando el contrato ruede en produccion.
 - Valorar extender el patrón de interfaces al resto de
   controladoras de grid (criterio nuevo respecto al libro de estilo;
   documentarlo en `LIBRO_DE_ESTILO_DELPHI.md` si se adopta).
