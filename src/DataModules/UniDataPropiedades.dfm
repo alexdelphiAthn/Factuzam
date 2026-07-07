@@ -97,7 +97,14 @@ inherited dmPropiedades: TdmPropiedades
     SQLUpdate.Strings = (
       'UPDATE `fza_propiedades_valores`'
       'SET'
-      '  `ID_PROP_PV` = :`ID_PROP_PV`, `PV` = :`PV`, `DESCRIPCION_PV` = :`DESCRIPCION_PV`, `ESACTIVO_PV` = :`ESACTIVO_PV`, `INSTANTE_MODIF` = :`INSTANTE_MODIF`, `INSTANTE_ALTA` = :`INSTANTE_ALTA`, `USUARIO_ALTA` = :`USUARIO_ALTA`, `USUARIO_MODIF` = :`USUARIO_MODIF`'
+      '  `ID_PROP_PV` = :`ID_PROP_PV`,'
+      '  `PV` = :`PV`,'
+      '  `DESCRIPCION_PV` = :`DESCRIPCION_PV`,'
+      '  `ESACTIVO_PV` = :`ESACTIVO_PV`,'
+      '  `INSTANTE_MODIF` = :`INSTANTE_MODIF`,'
+      '  `INSTANTE_ALTA` = :`INSTANTE_ALTA`,'
+      '  `USUARIO_ALTA` = :`USUARIO_ALTA`,'
+      '  `USUARIO_MODIF` = :`USUARIO_MODIF`'
       'WHERE'
       '  `ID_PV_ARTPROP` = :`Old_ID_PV_ARTPROP`')
     SQLRefresh.Strings = (
