@@ -61,6 +61,10 @@ type
     procedure unqryPedidosLineasAfterPost(DataSet: TDataSet);
     procedure unqryPedidosLineasBeforeDelete(DataSet: TDataSet);
   public
+    // Contrato ColumnSKUcxGrid: rellena ATTR1..5_VALOR_PEDLIN y
+    // NUM_ATRIBUTOS_PEDLIN troceando el SKU (CODIGO_UNIDAD_PEDLIN) de
+    // cada linea que aun los tenga vacios (idempotente por linea).
+    procedure DesempaquetarAtributosLineas;
     procedure GetCodigoAutoPedido;
     procedure GetCodigoAutoCliente;
     procedure CalcularTotalesPedido;
@@ -135,7 +139,7 @@ implementation
 
 uses
   inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics, System.UITypes,
-  Vcl.Dialogs, inLibVentasImpuestos, inLibContadorLineas;
+  Vcl.Dialogs, inLibVentasImpuestos, inLibContadorLineas, JclDebug;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -157,6 +161,101 @@ begin
     '   AND SERIE_PED = :SERIE_PED';
   unqryPedidosLineas.Connection    := inLibGlobalVar.oConn;
   unqryPedidosLineas.BeforeDelete  := unqryPedidosLineasBeforeDelete;
+  // Contrato ColumnSKUcxGrid (pedidos_columnas_sku.sql): los SQL del
+  // dfm no conocen las columnas nuevas (SKU + ATTR1..5 + pivote); se
+  // reescriben aqui COMPLETOS para no editar el dfm cableado.
+  unqryPedidosLineas.SQLInsert.Text :=
+    'INSERT INTO fza_pedidos_lineas ' +
+    ' (NUMERO_PED_PEDLIN, SERIE_PED_PEDLIN, LINEA_PEDLIN, ' +
+    '  IDLINEAPS_PEDLIN, IDPRODPS_PEDLIN, CODIGOPRODPS_PEDLIN, ' +
+    '  IDATRIBPRODPS_PEDLIN, CODBAR_ART_PEDLIN, CODIGO_ART_PEDLIN, ' +
+    '  CODIGO_FAM_PEDLIN, NOMBRE_FAM_PEDLIN, FECHA_ENTREGA_PEDLIN, ' +
+    '  TIPO_CANTIDAD_ARTICULO_PEDLIN, ESIMP_INCL_TARIFA_PEDLIN, ' +
+    '  TIPO_IVA_ARTICULO_PEDLIN, DESCRIPCION_ARTICULO_PEDLIN, ' +
+    '  CODIGO_TAR_PEDLIN, CANTIDAD_PEDLIN, CANTIDAD_ENTREGADA_PEDLIN, ' +
+    '  CANTIDAD_PENDIENTE_PEDLIN, ESENTREGADA_PEDLIN, ' +
+    '  CODIGO_ALMACEN_PEDLIN, PRECIO_VENTA_SIVA_ARTICULO_PEDLIN, ' +
+    '  PORCENTAJE_IVA_PEDLIN, PRECIO_VENTA_CIVA_ARTICULO_PEDLIN, ' +
+    '  TOTAL_PEDLIN, ' +
+    '  CODIGO_UNIDAD_PEDLIN, ' +
+    '  ATTR1_VALOR_PEDLIN, ATTR1_NOMBRE_PEDLIN, ' +
+    '  ATTR2_VALOR_PEDLIN, ATTR2_NOMBRE_PEDLIN, ' +
+    '  ATTR3_VALOR_PEDLIN, ATTR3_NOMBRE_PEDLIN, ' +
+    '  ATTR4_VALOR_PEDLIN, ATTR4_NOMBRE_PEDLIN, ' +
+    '  ATTR5_VALOR_PEDLIN, ATTR5_NOMBRE_PEDLIN, ' +
+    '  NUM_ATRIBUTOS_PEDLIN, ID_AC_PIVOT_PEDLIN, ' +
+    '  INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+    'VALUES ' +
+    ' (:NUMERO_PED_PEDLIN, :SERIE_PED_PEDLIN, :LINEA_PEDLIN, ' +
+    '  :IDLINEAPS_PEDLIN, :IDPRODPS_PEDLIN, :CODIGOPRODPS_PEDLIN, ' +
+    '  :IDATRIBPRODPS_PEDLIN, :CODBAR_ART_PEDLIN, :CODIGO_ART_PEDLIN, ' +
+    '  :CODIGO_FAM_PEDLIN, :NOMBRE_FAM_PEDLIN, :FECHA_ENTREGA_PEDLIN, ' +
+    '  :TIPO_CANTIDAD_ARTICULO_PEDLIN, :ESIMP_INCL_TARIFA_PEDLIN, ' +
+    '  :TIPO_IVA_ARTICULO_PEDLIN, :DESCRIPCION_ARTICULO_PEDLIN, ' +
+    '  :CODIGO_TAR_PEDLIN, :CANTIDAD_PEDLIN, ' +
+    '  :CANTIDAD_ENTREGADA_PEDLIN, :CANTIDAD_PENDIENTE_PEDLIN, ' +
+    '  :ESENTREGADA_PEDLIN, :CODIGO_ALMACEN_PEDLIN, ' +
+    '  :PRECIO_VENTA_SIVA_ARTICULO_PEDLIN, :PORCENTAJE_IVA_PEDLIN, ' +
+    '  :PRECIO_VENTA_CIVA_ARTICULO_PEDLIN, :TOTAL_PEDLIN, ' +
+    '  :CODIGO_UNIDAD_PEDLIN, ' +
+    '  :ATTR1_VALOR_PEDLIN, :ATTR1_NOMBRE_PEDLIN, ' +
+    '  :ATTR2_VALOR_PEDLIN, :ATTR2_NOMBRE_PEDLIN, ' +
+    '  :ATTR3_VALOR_PEDLIN, :ATTR3_NOMBRE_PEDLIN, ' +
+    '  :ATTR4_VALOR_PEDLIN, :ATTR4_NOMBRE_PEDLIN, ' +
+    '  :ATTR5_VALOR_PEDLIN, :ATTR5_NOMBRE_PEDLIN, ' +
+    '  :NUM_ATRIBUTOS_PEDLIN, :ID_AC_PIVOT_PEDLIN, ' +
+    '  :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, ' +
+    '  :USUARIO_MODIF)';
+  unqryPedidosLineas.SQLUpdate.Text :=
+    'UPDATE fza_pedidos_lineas SET ' +
+    '  NUMERO_PED_PEDLIN = :NUMERO_PED_PEDLIN, ' +
+    '  SERIE_PED_PEDLIN = :SERIE_PED_PEDLIN, ' +
+    '  LINEA_PEDLIN = :LINEA_PEDLIN, ' +
+    '  IDLINEAPS_PEDLIN = :IDLINEAPS_PEDLIN, ' +
+    '  IDPRODPS_PEDLIN = :IDPRODPS_PEDLIN, ' +
+    '  CODIGOPRODPS_PEDLIN = :CODIGOPRODPS_PEDLIN, ' +
+    '  IDATRIBPRODPS_PEDLIN = :IDATRIBPRODPS_PEDLIN, ' +
+    '  CODBAR_ART_PEDLIN = :CODBAR_ART_PEDLIN, ' +
+    '  CODIGO_ART_PEDLIN = :CODIGO_ART_PEDLIN, ' +
+    '  CODIGO_FAM_PEDLIN = :CODIGO_FAM_PEDLIN, ' +
+    '  NOMBRE_FAM_PEDLIN = :NOMBRE_FAM_PEDLIN, ' +
+    '  FECHA_ENTREGA_PEDLIN = :FECHA_ENTREGA_PEDLIN, ' +
+    '  TIPO_CANTIDAD_ARTICULO_PEDLIN = :TIPO_CANTIDAD_ARTICULO_PEDLIN, ' +
+    '  ESIMP_INCL_TARIFA_PEDLIN = :ESIMP_INCL_TARIFA_PEDLIN, ' +
+    '  TIPO_IVA_ARTICULO_PEDLIN = :TIPO_IVA_ARTICULO_PEDLIN, ' +
+    '  DESCRIPCION_ARTICULO_PEDLIN = :DESCRIPCION_ARTICULO_PEDLIN, ' +
+    '  CODIGO_TAR_PEDLIN = :CODIGO_TAR_PEDLIN, ' +
+    '  CANTIDAD_PEDLIN = :CANTIDAD_PEDLIN, ' +
+    '  CANTIDAD_ENTREGADA_PEDLIN = :CANTIDAD_ENTREGADA_PEDLIN, ' +
+    '  CANTIDAD_PENDIENTE_PEDLIN = :CANTIDAD_PENDIENTE_PEDLIN, ' +
+    '  ESENTREGADA_PEDLIN = :ESENTREGADA_PEDLIN, ' +
+    '  CODIGO_ALMACEN_PEDLIN = :CODIGO_ALMACEN_PEDLIN, ' +
+    '  PRECIO_VENTA_SIVA_ARTICULO_PEDLIN = ' +
+    '    :PRECIO_VENTA_SIVA_ARTICULO_PEDLIN, ' +
+    '  PORCENTAJE_IVA_PEDLIN = :PORCENTAJE_IVA_PEDLIN, ' +
+    '  PRECIO_VENTA_CIVA_ARTICULO_PEDLIN = ' +
+    '    :PRECIO_VENTA_CIVA_ARTICULO_PEDLIN, ' +
+    '  TOTAL_PEDLIN = :TOTAL_PEDLIN, ' +
+    '  CODIGO_UNIDAD_PEDLIN = :CODIGO_UNIDAD_PEDLIN, ' +
+    '  ATTR1_VALOR_PEDLIN = :ATTR1_VALOR_PEDLIN, ' +
+    '  ATTR1_NOMBRE_PEDLIN = :ATTR1_NOMBRE_PEDLIN, ' +
+    '  ATTR2_VALOR_PEDLIN = :ATTR2_VALOR_PEDLIN, ' +
+    '  ATTR2_NOMBRE_PEDLIN = :ATTR2_NOMBRE_PEDLIN, ' +
+    '  ATTR3_VALOR_PEDLIN = :ATTR3_VALOR_PEDLIN, ' +
+    '  ATTR3_NOMBRE_PEDLIN = :ATTR3_NOMBRE_PEDLIN, ' +
+    '  ATTR4_VALOR_PEDLIN = :ATTR4_VALOR_PEDLIN, ' +
+    '  ATTR4_NOMBRE_PEDLIN = :ATTR4_NOMBRE_PEDLIN, ' +
+    '  ATTR5_VALOR_PEDLIN = :ATTR5_VALOR_PEDLIN, ' +
+    '  ATTR5_NOMBRE_PEDLIN = :ATTR5_NOMBRE_PEDLIN, ' +
+    '  NUM_ATRIBUTOS_PEDLIN = :NUM_ATRIBUTOS_PEDLIN, ' +
+    '  ID_AC_PIVOT_PEDLIN = :ID_AC_PIVOT_PEDLIN, ' +
+    '  INSTANTE_MODIF = :INSTANTE_MODIF, ' +
+    '  INSTANTE_ALTA = :INSTANTE_ALTA, ' +
+    '  USUARIO_ALTA = :USUARIO_ALTA, ' +
+    '  USUARIO_MODIF = :USUARIO_MODIF ' +
+    'WHERE NUMERO_PED_PEDLIN = :Old_NUMERO_PED_PEDLIN ' +
+    '  AND SERIE_PED_PEDLIN = :Old_SERIE_PED_PEDLIN ' +
+    '  AND LINEA_PEDLIN = :Old_LINEA_PEDLIN';
   unqryLinPedido.Connection        := inLibGlobalVar.oConn;
   unqryEmpDataPedido.Connection    := inLibGlobalVar.oConn;
   unqryCliDataPedido.Connection    := inLibGlobalVar.oConn;
@@ -172,6 +271,72 @@ begin
   unqryMensajes.Connection         := inLibGlobalVar.oConn;
   unqryFormasPago.Connection       := inLibGlobalVar.oConn;
   unqryAlmacenesPed.Connection     := inLibGlobalVar.oConn;
+end;
+
+procedure TdmPedidos.DesempaquetarAtributosLineas;
+var
+  Partes: TArray<string>;
+  Sku, sEsperado: string;
+  i: Integer;
+  Bm: TBookmark;
+  bCambia: Boolean;
+begin
+  if unqryPedidosLineas.Active and
+     (not unqryPedidosLineas.IsEmpty) then
+  begin
+    Bm := unqryPedidosLineas.GetBookmark;
+    unqryPedidosLineas.DisableControls;
+    try
+      unqryPedidosLineas.First;
+      while not unqryPedidosLineas.Eof do
+      begin
+        Sku := unqryPedidosLineas.FieldByName(
+          'CODIGO_UNIDAD_PEDLIN').AsString;
+        Partes := Sku.Split(['/']);
+        if Length(Partes) > 1 then
+        begin
+          // Idempotente POR COMPARACION: se edita solo si algun ATTR
+          // no coincide con el troceo del SKU. El criterio anterior
+          // (saltar si ATTR1 relleno) dejaba lineas a medias (color
+          // sin talla) sin resincronizar jamas.
+          bCambia := unqryPedidosLineas.FieldByName(
+            'NUM_ATRIBUTOS_PEDLIN').AsInteger <> Length(Partes) - 1;
+          for i := 1 to 5 do
+          begin
+            if i < Length(Partes) then
+              sEsperado := Partes[i]
+            else
+              sEsperado := '';
+            if Trim(unqryPedidosLineas.FieldByName('ATTR' + IntToStr(i) +
+                 '_VALOR_PEDLIN').AsString) <> sEsperado then
+              bCambia := True;
+          end;
+          if bCambia then
+          begin
+            unqryPedidosLineas.Edit;
+            unqryPedidosLineas.FieldByName(
+              'NUM_ATRIBUTOS_PEDLIN').AsInteger := Length(Partes) - 1;
+            for i := 1 to 5 do
+            begin
+              if i < Length(Partes) then
+                unqryPedidosLineas.FieldByName('ATTR' + IntToStr(i) +
+                  '_VALOR_PEDLIN').AsString := Partes[i]
+              else
+                unqryPedidosLineas.FieldByName('ATTR' + IntToStr(i) +
+                  '_VALOR_PEDLIN').AsString := '';
+            end;
+            unqryPedidosLineas.Post;
+          end;
+        end;
+        unqryPedidosLineas.Next;
+      end;
+      if unqryPedidosLineas.BookmarkValid(Bm) then
+        unqryPedidosLineas.GotoBookmark(Bm);
+    finally
+      unqryPedidosLineas.EnableControls;
+      unqryPedidosLineas.FreeBookmark(Bm);
+    end;
+  end;
 end;
 
 procedure TdmPedidos.DataModuleDestroy(Sender: TObject);
@@ -329,11 +494,29 @@ begin
 end;
 
 procedure TdmPedidos.unqryPedidosLineasAfterInsert(DataSet: TDataSet);
+var
+  i: Integer;
 begin
   inherited;
   with unqryPedidosLineas do
   begin
     FieldByName('LINEA_PEDLIN').AsString := '0000';
+    // Columnas del contrato ColumnSKUcxGrid: NOT NULL en BBDD con
+    // DEFAULT de servidor que UniDAC no conoce (llegan via vista).
+    // Sin inicializarlas aqui el Post lanza "must have a value".
+    if FindField('CODIGO_UNIDAD_PEDLIN') <> nil then
+      FieldByName('CODIGO_UNIDAD_PEDLIN').AsString := '';
+    if FindField('NUM_ATRIBUTOS_PEDLIN') <> nil then
+      FieldByName('NUM_ATRIBUTOS_PEDLIN').AsInteger := 0;
+    if FindField('ID_AC_PIVOT_PEDLIN') <> nil then
+      FieldByName('ID_AC_PIVOT_PEDLIN').AsInteger := 0;
+    for i := 1 to 5 do
+    begin
+      if FindField('ATTR' + IntToStr(i) + '_VALOR_PEDLIN') <> nil then
+        FieldByName('ATTR' + IntToStr(i) + '_VALOR_PEDLIN').AsString := '';
+      if FindField('ATTR' + IntToStr(i) + '_NOMBRE_PEDLIN') <> nil then
+        FieldByName('ATTR' + IntToStr(i) + '_NOMBRE_PEDLIN').AsString := '';
+    end;
     FieldByName('NUMERO_PED_PEDLIN').AsString :=
                                  unqryTablaG.FieldByName('NUMERO_PED').AsString;
     FieldByName('SERIE_PED_PEDLIN').AsString :=
@@ -360,11 +543,80 @@ begin
   end;
 end;
 
+var
+  // Instrumentacion temporal (bucle contador 07/07/2026): numero de
+  // volcados de pila ya escritos en el log, para no inundarlo.
+  iVolcadosPilaLineaVacia: Integer = 0;
+
+// Linea sin identificar el articulo por ninguna via: ni codigo de
+// articulo, ni SKU, ni codigo PrestaShop, ni codigo de barras.
+function LineaPedidoVacia(ADataSet: TDataSet): Boolean;
+  function CampoVacio(const ANombre: string): Boolean;
+  var
+    Campo: TField;
+  begin
+    Result := True;
+    Campo := ADataSet.FindField(ANombre);
+    if Campo <> nil then
+      Result := Trim(Campo.AsString) = '';
+  end;
+begin
+  Result := CampoVacio('CODIGO_ART_PEDLIN') and
+            CampoVacio('CODIGO_UNIDAD_PEDLIN') and
+            CampoVacio('CODIGOPRODPS_PEDLIN') and
+            CampoVacio('CODBAR_ART_PEDLIN');
+end;
+
+// Instrumentacion TEMPORAL: vuelca la pila de llamadas al log para
+// identificar QUIEN esta posteando lineas vacias en bucle (el sintoma
+// del 07/07/2026: trio de contador repetido ~13 veces/segundo sin
+// ningun INSERT y sin excepcion visible). Maximo 3 volcados por sesion.
+procedure VolcarPilaPostLineaVacia;
+var
+  Pila: TJclStackInfoList;
+  Lineas: TStringList;
+begin
+  if (iVolcadosPilaLineaVacia < 3) and Assigned(Log) then
+  begin
+    Inc(iVolcadosPilaLineaVacia);
+    Lineas := TStringList.Create;
+    try
+      try
+        Pila := JclCreateStackList(True, 0, nil);
+        try
+          Pila.AddToStrings(Lineas, True, True, True, True);
+        finally
+          FreeAndNil(Pila);
+        end;
+      except
+        // La pila es diagnostico: si JclDebug falla, el aviso sale igual.
+        on E: Exception do
+          Lineas.Add('(no se pudo capturar la pila: ' + E.Message + ')');
+      end;
+      Log.LogWarning(
+        'Post de linea de pedido VACIA rechazado. Pila del llamador:' +
+        sLineBreak + Lineas.Text);
+    finally
+      FreeAndNil(Lineas);
+    end;
+  end;
+end;
+
 procedure TdmPedidos.unqryPedidosLineasBeforePost(DataSet: TDataSet);
 var
   fCantidad, fEntregada, fPendiente: Double;
 begin
   inherited;
+  // Guarda ColumnSKUcxGrid (bucle 07/07/2026): un Post de linea sin
+  // articulo no debe llegar a BBDD. Antes de esta guarda, cada intento
+  // consumia contador en GetSiguienteLineaDocLibre y el reintento del
+  // grid quemaba CONTADOR_LINEAS_PED en bucle (log 17:03 y 17:16).
+  if LineaPedidoVacia(DataSet) then
+  begin
+    VolcarPilaPostLineaVacia;
+    raise Exception.Create(
+      'La línea del pedido no tiene artículo; no se puede guardar.');
+  end;
   AsignarNumeroLineaPedido(DataSet);
   NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn, unqryPedidosLineas,
     'CODIGO_ART_PEDLIN', 'CODIGOPRODPS_PEDLIN', 'CODBAR_ART_PEDLIN');
@@ -430,18 +682,16 @@ begin
         DataSet.FieldByName('SERIE_PED_PEDLIN').AsString := sSerie;
       iNuevaLinea := GetSiguienteLineaDocLibre(CONT_PEDIDOS,
         LIN_PEDIDOS, sSerie, sNumero);
+      // El helper ya persiste CONTADOR_LINEAS_PED en BBDD dentro de su
+      // propia transaccion. NO se toca unqryTablaG: el Edit anterior
+      // dejaba la cabecera en edicion sin postear, y eso disparaba el
+      // re-Post de cabecera + recarga del detalle en cada linea. Si la
+      // copia en memoria queda desfasada no pasa nada: el helper toma
+      // siempre MAX(LINEA_PEDLIN) como suelo.
       if iNuevaLinea = 0 then
-      begin
-        iNuevaLinea := StrToIntDef(
-          unqryTablaG.FieldByName('CONTADOR_LINEAS_PED').AsString, 0) + 10;
-      end;
-      if unqryTablaG.FindField('CONTADOR_LINEAS_PED') <> nil then
-      begin
-        if not (unqryTablaG.State in [dsEdit, dsInsert]) then
-          unqryTablaG.Edit;
-        unqryTablaG.FieldByName('CONTADOR_LINEAS_PED').AsString :=
-          Format('%.8d', [iNuevaLinea]);
-      end;
+        raise Exception.Create(
+          'No se pudo asignar número de línea: la cabecera ' + sSerie +
+          '/' + sNumero + ' no existe en la base de datos.');
       DataSet.FieldByName('LINEA_PEDLIN').AsString :=
         Format('%.4d', [iNuevaLinea]);
     end;

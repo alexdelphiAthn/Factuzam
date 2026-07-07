@@ -57,6 +57,11 @@ type
     procedure unqryAlbaranesLineasAfterPost(DataSet: TDataSet);
     procedure unqryAlbaranesLineasAfterDelete(DataSet: TDataSet);
   public
+    // Contrato ColumnSKUcxGrid: rellena ATTR1..5_VALOR_ALBLIN y
+    // NUM_ATRIBUTOS_ALBLIN troceando el SKU (CODIGO_UNIDAD_ALBLIN) de
+    // cada linea. Idempotente POR COMPARACION: solo edita las lineas
+    // cuyos ATTR no coinciden con el troceo (leccion de pedidos).
+    procedure DesempaquetarAtributosLineas;
     procedure GetCodigoAutoAlbaran;
     procedure CalcularTotalesAlbaran;
     // Numero total de prendas (suma CANTIDAD_ALBLIN de todas las lineas).
@@ -351,6 +356,45 @@ begin
   end;
 end;
 
+// Defaults de las columnas del contrato ColumnSKUcxGrid en una linea
+// recien insertada (ver comentario en AfterInsert).
+procedure InicializarColumnasSkuLinea(ADataSet: TDataSet);
+var
+  i: Integer;
+begin
+  if ADataSet.FindField('NUM_ATRIBUTOS_ALBLIN') <> nil then
+    ADataSet.FieldByName('NUM_ATRIBUTOS_ALBLIN').AsInteger := 0;
+  if ADataSet.FindField('ID_AC_PIVOT_ALBLIN') <> nil then
+    ADataSet.FieldByName('ID_AC_PIVOT_ALBLIN').AsInteger := 0;
+  for i := 1 to 5 do
+  begin
+    if ADataSet.FindField('ATTR' + IntToStr(i) + '_VALOR_ALBLIN') <> nil
+    then
+      ADataSet.FieldByName(
+        'ATTR' + IntToStr(i) + '_VALOR_ALBLIN').AsString := '';
+    if ADataSet.FindField('ATTR' + IntToStr(i) + '_NOMBRE_ALBLIN') <> nil
+    then
+      ADataSet.FieldByName(
+        'ATTR' + IntToStr(i) + '_NOMBRE_ALBLIN').AsString := '';
+  end;
+end;
+
+// Linea sin identificar el articulo: ni codigo ni SKU.
+function LineaAlbaranVacia(ADataSet: TDataSet): Boolean;
+  function CampoVacio(const ANombre: string): Boolean;
+  var
+    Campo: TField;
+  begin
+    Result := True;
+    Campo := ADataSet.FindField(ANombre);
+    if Campo <> nil then
+      Result := Trim(Campo.AsString) = '';
+  end;
+begin
+  Result := CampoVacio('CODIGO_ART_ALBLIN') and
+            CampoVacio('CODIGO_UNIDAD_ALBLIN');
+end;
+
 procedure TdmAlbaranes.unqryAlbaranesLineasAfterInsert(DataSet: TDataSet);
 begin
   inherited;
@@ -369,6 +413,10 @@ begin
     FieldByName('CANTIDAD_ALBLIN').AsFloat := 1;
     if FindField('ESFACTURADA_ALBLIN') <> nil then
       FieldByName('ESFACTURADA_ALBLIN').AsString := 'N';
+    // Columnas del contrato ColumnSKUcxGrid: NOT NULL en BBDD con
+    // DEFAULT de servidor que el cliente no conoce; sin inicializarlas
+    // el Post lanza "must have a value" (leccion de pedidos).
+    InicializarColumnasSkuLinea(unqryAlbaranesLineas);
     if FindField('USUARIO_ALTA') <> nil then
       FieldByName('USUARIO_ALTA').AsString := oUser;
     if FindField('INSTANTE_ALTA') <> nil then
@@ -508,6 +556,12 @@ var
   sSku, sArt: string;
 begin
   inherited;
+  // Guarda ColumnSKUcxGrid (leccion de pedidos, bucle 07/07/2026): un
+  // Post de linea sin articulo ni SKU no debe llegar a BBDD ni
+  // consumir contador de lineas.
+  if LineaAlbaranVacia(DataSet) then
+    raise Exception.Create(
+      'La línea del albarán no tiene artículo; no se puede guardar.');
   AsignarNumeroLineaAlbaran(DataSet);
   SincronizarAlmacenLinea(DataSet);
   with unqryAlbaranesLineas do
@@ -583,20 +637,82 @@ begin
         DataSet.FieldByName('SERIE_ALB_ALBLIN').AsString := sSerie;
       iNuevaLinea := GetSiguienteLineaDocLibre(CONT_ALBARANES,
         LIN_ALBARANES, sSerie, sNumero);
+      // El helper ya persiste CONTADOR_LINEAS_ALB en BBDD dentro de su
+      // propia transaccion. NO se toca unqryTablaG (leccion de
+      // pedidos: el Edit dejaba la cabecera en edicion sin postear y
+      // encadenaba re-Posts de cabecera + recargas del detalle). La
+      // copia en memoria desfasada es inocua: el helper toma siempre
+      // MAX(LINEA_ALBLIN) como suelo.
       if iNuevaLinea = 0 then
-      begin
-        iNuevaLinea := StrToIntDef(
-          unqryTablaG.FieldByName('CONTADOR_LINEAS_ALB').AsString, 0) + 10;
-      end;
-      if unqryTablaG.FindField('CONTADOR_LINEAS_ALB') <> nil then
-      begin
-        if not (unqryTablaG.State in [dsEdit, dsInsert]) then
-          unqryTablaG.Edit;
-        unqryTablaG.FieldByName('CONTADOR_LINEAS_ALB').AsString :=
-          Format('%.8d', [iNuevaLinea]);
-      end;
+        raise Exception.Create(
+          'No se pudo asignar número de línea: la cabecera ' + sSerie +
+          '/' + sNumero + ' no existe en la base de datos.');
       DataSet.FieldByName('LINEA_ALBLIN').AsString :=
         Format('%.4d', [iNuevaLinea]);
+    end;
+  end;
+end;
+
+procedure TdmAlbaranes.DesempaquetarAtributosLineas;
+var
+  Partes: TArray<string>;
+  Sku, sEsperado: string;
+  i: Integer;
+  Bm: TBookmark;
+  bCambia: Boolean;
+begin
+  if unqryAlbaranesLineas.Active and
+     (not unqryAlbaranesLineas.IsEmpty) and
+     (unqryAlbaranesLineas.FindField('ATTR1_VALOR_ALBLIN') <> nil) then
+  begin
+    Bm := unqryAlbaranesLineas.GetBookmark;
+    unqryAlbaranesLineas.DisableControls;
+    try
+      unqryAlbaranesLineas.First;
+      while not unqryAlbaranesLineas.Eof do
+      begin
+        Sku := unqryAlbaranesLineas.FieldByName(
+          'CODIGO_UNIDAD_ALBLIN').AsString;
+        Partes := Sku.Split(['/']);
+        if Length(Partes) > 1 then
+        begin
+          bCambia := unqryAlbaranesLineas.FieldByName(
+            'NUM_ATRIBUTOS_ALBLIN').AsInteger <> Length(Partes) - 1;
+          for i := 1 to 5 do
+          begin
+            if i < Length(Partes) then
+              sEsperado := Partes[i]
+            else
+              sEsperado := '';
+            if Trim(unqryAlbaranesLineas.FieldByName('ATTR' +
+                 IntToStr(i) + '_VALOR_ALBLIN').AsString) <> sEsperado
+            then
+              bCambia := True;
+          end;
+          if bCambia then
+          begin
+            unqryAlbaranesLineas.Edit;
+            unqryAlbaranesLineas.FieldByName(
+              'NUM_ATRIBUTOS_ALBLIN').AsInteger := Length(Partes) - 1;
+            for i := 1 to 5 do
+            begin
+              if i < Length(Partes) then
+                unqryAlbaranesLineas.FieldByName('ATTR' + IntToStr(i) +
+                  '_VALOR_ALBLIN').AsString := Partes[i]
+              else
+                unqryAlbaranesLineas.FieldByName('ATTR' + IntToStr(i) +
+                  '_VALOR_ALBLIN').AsString := '';
+            end;
+            unqryAlbaranesLineas.Post;
+          end;
+        end;
+        unqryAlbaranesLineas.Next;
+      end;
+      if unqryAlbaranesLineas.BookmarkValid(Bm) then
+        unqryAlbaranesLineas.GotoBookmark(Bm);
+    finally
+      unqryAlbaranesLineas.EnableControls;
+      unqryAlbaranesLineas.FreeBookmark(Bm);
     end;
   end;
 end;

@@ -32,7 +32,9 @@ uses
   cxDBNavigator, Vcl.Buttons, System.UITypes, cxMemo, cxCheckBox, cxGroupBox,
   cxDBLabel, cxButtonEdit, System.Generics.Collections,
   cxGridBandedTableView, cxGridDBBandedTableView,
-  System.Actions, Vcl.ActnList;
+  System.Actions, Vcl.ActnList,
+  // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
+  inLibColumnasSkuIntf, inLibGridTallasInline;
 
 type
   TfrmMtoPedidos = class(TfrmMtoGen)
@@ -227,6 +229,7 @@ type
                 var DisplayValue: Variant; var ErrorText: TCaption;
                 var Error: Boolean);
     procedure cxGrdPedidosLineasEnter(Sender: TObject);
+    procedure cxGrdPedidosLineasExit(Sender: TObject);
   private
     FBuscandoDatosCabecera: Boolean;
     FAplicandoArticulo: Boolean;
@@ -234,10 +237,31 @@ type
     // guardado para no perder su logica al encadenar el refresco del label
     // de prendas. Ver unqryLineasAfterPostHook.
     FOldLineasAfterPost: TDataSetNotifyEvent;
+    // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
+    // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal; Auto por
+    // defecto. El Construir hace ClearItems: las columnas del dfm
+    // mueren y las propias se recrean en runtime (patron de DTR e
+    // inventarios).
+    FModoEntrada: IModoEntradaGrid;
+    FModoEntradaSel: TModoColumnasSku;
+    FColsModoConstruido: Boolean;
+    procedure ConstruirModoEntrada;
+    procedure CrearColumnasHostPedido;
+    procedure MostrarColumnasAtributoGlobalesPed;
+    procedure ModoEntradaResuelto(const ACodArt, ASku,
+                                  ADescripcion: string;
+                                  ACompleto: Boolean);
     function BuscarArticuloPedido: string;
     function BuscarSkuPedido(const ACodigoArt: string): string;
     function ArticuloLineaActivaPedido: string;
     procedure AplicarArticuloPedido(const ACodigoArt: string);
+    // Porcentaje de IVA de la cabecera para un tipo (N/R/S/E).
+    function PorcentajeIvaPedido(const ATipoIva: string): Double;
+    // Contrato ObtenerPrecioSku del modo tallas: PVP C/IVA que el
+    // pedido aplicaria al SKU (tarifa del cliente, fecha del pedido),
+    // para que la consolidacion del escaneo separe lineas por precio.
+    function PrecioSkuTallas(const ACodigoArticulo,
+                             ACodigoSku: string): Double;
     procedure AsegurarCabeceraPersistidaParaLineas;
     procedure AsegurarPrimeraLineaPedido;
     procedure cxgrdcPedLinSKUPropertiesButtonClick(Sender: TObject;
@@ -255,6 +279,9 @@ type
     // hay que recalcular el total de prendas con las lineas del pedido
     // recien enfocado.
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
+  protected
+    // F1 = alternar modo de entrada (KeyPreview de TfrmBase).
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     dmmPedidos: TdmPedidos;
     procedure CrearTablaPrincipal; override;
@@ -273,7 +300,9 @@ uses
   inMtoModalImportarPedidosPS, inLibFotos, inLibGridCantidad,
   inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibGenBusq,
   inLibShowMto, inLibGlobalVar, inLibFiltroUsuario, Uni, inLibArticulosResolver,
-  inLibArticulosValidador, inLibVentasImpuestos, inLibtb;
+  inLibArticulosValidador, inLibVentasImpuestos, inLibtb,
+  // Factoria del contrato de entrada ColumnSKUcxGrid.
+  inLibColumnasSku;
 
 {$R *.dfm}
 
@@ -594,12 +623,76 @@ begin
   end;
 end;
 
+function TfrmMtoPedidos.PorcentajeIvaPedido(const ATipoIva: string): Double;
+var
+  sTipo: string;
+begin
+  sTipo := UpperCase(Trim(ATipoIva));
+  if sTipo = 'R' then
+    Result := dmmPedidos.unqryTablaG.
+                FieldByName('PORCENTAJE_IVAR_PED').AsFloat
+  else if sTipo = 'S' then
+    Result := dmmPedidos.unqryTablaG.
+                FieldByName('PORCENTAJE_IVAS_PED').AsFloat
+  else if sTipo = 'E' then
+    Result := dmmPedidos.unqryTablaG.
+                FieldByName('PORCENTAJE_IVAE_PED').AsFloat
+  else
+    Result := dmmPedidos.unqryTablaG.
+                FieldByName('PORCENTAJE_IVAN_PED').AsFloat;
+end;
+
+function TfrmMtoPedidos.PrecioSkuTallas(const ACodigoArticulo,
+  ACodigoSku: string): Double;
+var
+  Resolver: TArticulosResolver;
+  Datos: TArticuloDatos;
+  Precio: TArticuloPrecio;
+  sTarifa: string;
+  dFecha: TDateTime;
+  rPorIva: Double;
+begin
+  Result := 0;
+  if Assigned(dmmPedidos) and dmmPedidos.unqryTablaG.Active then
+  begin
+    sTarifa := dmmPedidos.unqryTablaG.
+                 FieldByName('TARIFA_ARTICULO_CLIENTE_PED').AsString;
+    dFecha := Date;
+    if not dmmPedidos.unqryTablaG.FieldByName('FECHA_PED').IsNull then
+      dFecha := dmmPedidos.unqryTablaG.
+                  FieldByName('FECHA_PED').AsDateTime;
+    Resolver := TArticulosResolver.Create(
+                  dmmPedidos.unqryTablaG.Connection);
+    try
+      Datos := Resolver.ResolverDatos(ACodigoArticulo, ACodigoSku,
+                                      sTarifa, dFecha);
+      if Datos.Encontrado then
+      begin
+        Precio := Datos.PrecioPedido;
+        rPorIva := PorcentajeIvaPedido(Datos.TipoIVA);
+        // FieldPrecioBase del pedido es el PVP C/IVA de la linea:
+        // misma conversion que AplicarArticuloPedido pero a la inversa.
+        if Precio.EsImpIncl then
+          Result := Precio.PrecioFinal
+        else
+          Result := Precio.PrecioFinal * (1 + rPorIva / 100);
+      end;
+    finally
+      FreeAndNil(Resolver);
+    end;
+  end;
+end;
+
 procedure TfrmMtoPedidos.FormCreate(Sender: TObject);
 var
   colEnt, colPend, colSku: TcxGridDBColumn;
   stEnt, stPend: TcxStyle;
 begin
   inherited;
+  // Contrato de entrada ColumnSKUcxGrid: Auto por defecto (resuelve a
+  // desglose); F1 cicla los modos con las lineas a la vista.
+  FModoEntradaSel := mcsAuto;
+  FColsModoConstruido := False;
   tsTotales.TabVisible := True;
   tsTotales.Enabled := True;
   if Trim(tsTotales.Caption) = '' then
@@ -662,6 +755,7 @@ begin
   end;
   tvPedidosLineas.DataController.DataSource := dmmPedidos.dsPedidosLineas;
   cxGrdPedidosLineas.OnEnter := cxGrdPedidosLineasEnter;
+  cxGrdPedidosLineas.OnExit := cxGrdPedidosLineasExit;
   tvAlbaranes.DataController.DataSource := dmmPedidos.dsAlbaranes;
   tvMensajes.DataController.DataSource := dmmPedidos.dsMensajes;
   cbbTotalesFORMA_PAGO_PED.Properties.ListSource := dmmPedidos.dsFormasPago;
@@ -705,7 +799,15 @@ procedure TfrmMtoPedidos.dsTablaGDataChangeHook(Sender: TObject;
                                                 Field: TField);
 begin
   if Field = nil then
+  begin
     ActualizarLabelPrendas;
+    // Contrato de entrada: al navegar de pedido, las lineas llegan
+    // recargadas por el master-detail SIN atributos desempaquetados
+    // (misma leccion que inventarios: si no, Color/Talla en blanco).
+    if FColsModoConstruido and (FModoEntradaSel <> mcsSku) and
+       (dmmPedidos <> nil) then
+      dmmPedidos.DesempaquetarAtributosLineas;
+  end;
 end;
 
 procedure TfrmMtoPedidos.btnNuevoClick(Sender: TObject);
@@ -991,8 +1093,12 @@ begin
       raise Exception.Create(
         'Crea o selecciona un pedido antes de anadir lineas.');
     sNumero := Trim(dsCab.FieldByName('NUMERO_PED').AsString);
+    // Linea vacia en insercion (la auto-anadida al entrar al grid):
+    // se cancela SIEMPRE antes de seguir. Si sobreviviera, cualquier
+    // Post de cabecera o un nuevo Append la postearia via
+    // CheckBrowseMode y chocaria con la guarda de linea sin articulo.
     if Assigned(dsLin) and dsLin.Active and (dsLin.State = dsInsert) and
-       ((sNumero = '') or (sNumero = '0')) and LineaActualVacia then
+       LineaActualVacia then
       dsLin.Cancel;
     if (dsCab.State in dsEditModes) or (sNumero = '') or
        (sNumero = '0') then
@@ -1040,6 +1146,254 @@ end;
 procedure TfrmMtoPedidos.cxGrdPedidosLineasEnter(Sender: TObject);
 begin
   AsegurarPrimeraLineaPedido;
+  // Contrato de entrada: primera construccion al entrar en el grid
+  // (las lineas ya estan abiertas como detail del pedido).
+  if FModoEntrada = nil then
+    ConstruirModoEntrada;
+  if FModoEntrada <> nil then
+    FModoEntrada.MostrarEditor;
+end;
+
+procedure TfrmMtoPedidos.cxGrdPedidosLineasExit(Sender: TObject);
+var
+  ds: TDataSet;
+  bVacia: Boolean;
+  function CampoVacio(const ANombre: string): Boolean;
+  var
+    Campo: TField;
+  begin
+    Result := True;
+    Campo := ds.FindField(ANombre);
+    if Campo <> nil then
+      Result := Trim(Campo.AsString) = '';
+  end;
+begin
+  // Al salir del grid hacia la cabecera, la linea vacia auto-anadida
+  // (AsegurarPrimeraLineaPedido) se cancela. Si quedara en dsInsert,
+  // cualquier Edit de la cabecera (p.ej. elegir almacen) fuerza su Post
+  // via CheckBrowseMode del master-detail y choca con la guarda de
+  // linea sin articulo (bucle contador del 07/07/2026).
+  if Assigned(dmmPedidos) then
+  begin
+    ds := dmmPedidos.unqryPedidosLineas;
+    if Assigned(ds) and ds.Active and (ds.State = dsInsert) then
+    begin
+      bVacia := CampoVacio('CODIGO_ART_PEDLIN') and
+                CampoVacio('CODIGO_UNIDAD_PEDLIN') and
+                CampoVacio('CODIGOPRODPS_PEDLIN') and
+                CampoVacio('CODBAR_ART_PEDLIN');
+      if bVacia then
+        ds.Cancel;
+    end;
+  end;
+end;
+
+procedure TfrmMtoPedidos.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  // F1: alterna Auto (desglose) -> SKU -> Tallas horizontal con las
+  // lineas del pedido a la vista.
+  if (Key = VK_F1) and (Shift = []) and
+     (pcPedido.ActivePage = tsLineasPedido) then
+  begin
+    Key := 0;
+    case FModoEntradaSel of
+      mcsAuto: FModoEntradaSel := mcsSku;
+      mcsSku: FModoEntradaSel := mcsTallasInline;
+    else
+      FModoEntradaSel := mcsAuto;
+    end;
+    ConstruirModoEntrada;
+  end;
+  inherited;
+end;
+
+procedure TfrmMtoPedidos.ConstruirModoEntrada;
+var
+  Cfg: TConfigColumnasSku;
+  CfgT: TGridTallasConfig;
+  i: Integer;
+  ds: TDataSet;
+begin
+  if (dmmPedidos = nil) or (csDestroying in ComponentState) then
+    Exit;
+  ds := dmmPedidos.unqryPedidosLineas;
+  if not ds.Active then
+    Exit;
+  // Teardown del modo anterior (patron DTR/inventarios).
+  if tvPedidosLineas.Controller.EditingController.IsEditing then
+    try
+      tvPedidosLineas.Controller.EditingController.HideEdit(False);
+    except
+      on E: EInvalidOperation do
+        ;
+    end;
+  if ds.State in dsEditModes then
+    ds.Cancel;
+  if FModoEntrada <> nil then
+    FModoEntrada.Desmontar;
+  tvPedidosLineas.OnInitEdit := nil;
+  tvPedidosLineas.OnEditKeyDown := nil;
+  tvPedidosLineas.OnEditing := nil;
+  tvPedidosLineas.OnFocusedRecordChanged := nil;
+  tvPedidosLineas.OnFocusedItemChanged := nil;
+  // Las columnas del modo saliente guardan handlers (OnGetProperties,
+  // OnCustomDrawCell...) del objeto que se libera en la linea de abajo.
+  // Se eliminan ANTES: el repintado que provoca DesempaquetarAtributos-
+  // Lineas llamaria a un modo muerto (AV en ArtGetProperties 07/07/26).
+  tvPedidosLineas.ClearItems;
+  FModoEntrada := nil;
+  // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
+  // (columnas reales _PEDLIN; idempotente por linea).
+  if FModoEntradaSel <> mcsSku then
+    dmmPedidos.DesempaquetarAtributosLineas;
+  Cfg := Default(TConfigColumnasSku);
+  Cfg.Conexion := dmmPedidos.unqryTablaG.Connection;
+  Cfg.View := tvPedidosLineas;
+  Cfg.Cds := ds;
+  Cfg.Modo := FModoEntradaSel;
+  Cfg.AlmacenStock :=
+    dmmPedidos.unqryTablaG.FieldByName('CODIGO_ALM_PED').AsString;
+  Cfg.Distribuido := False;
+  Cfg.Campos.CodigoArt := 'CODIGO_ART_PEDLIN';
+  Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_PEDLIN';
+  Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_PEDLIN';
+  Cfg.Campos.Cantidad := 'CANTIDAD_PEDLIN';
+  Cfg.Campos.Almacen := 'CODIGO_ALMACEN_PEDLIN';
+  Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_PEDLIN';
+  for i := 1 to 5 do
+  begin
+    Cfg.Campos.AttrValor[i] := 'ATTR' + IntToStr(i) + '_VALOR_PEDLIN';
+    Cfg.Campos.AttrNombre[i] :=
+      'ATTR' + IntToStr(i) + '_NOMBRE_PEDLIN';
+  end;
+  // Precio por SKU para la consolidacion del modo tallas: lineas con
+  // precio distinto no fusionan.
+  Cfg.ObtenerPrecioSku := PrecioSkuTallas;
+  if FModoEntradaSel = mcsTallasInline then
+  begin
+    CfgT := Default(TGridTallasConfig);
+    CfgT.Usuario := oUser;
+    CfgT.Grid := tvPedidosLineas;
+    CfgT.SourceMaster := dsTablaG;
+    CfgT.SourceLineas := dmmPedidos.dsPedidosLineas;
+    CfgT.FieldSerieMaster := 'SERIE_PED';
+    CfgT.FieldNumeroMaster := 'NUMERO_PED';
+    CfgT.FieldLinea := 'LINEA_PEDLIN';
+    CfgT.FieldConjuntoPivot := 'ID_AC_PIVOT_PEDLIN';
+    CfgT.FieldPrecioBase := 'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN';
+    CfgT.FieldTotalUds := 'CANTIDAD_PEDLIN';
+    CfgT.FieldTotalLinea := 'TOTAL_PEDLIN';
+    CfgT.TablaCeldas := 'fza_pedidos_celdas';
+    CfgT.FieldSerieCel := 'SERIE_PED_PEDCEL';
+    CfgT.FieldNumeroCel := 'NUMERO_PED_PEDCEL';
+    CfgT.FieldLineaCel := 'LINEA_PEDCEL';
+    CfgT.FieldFilaCel := 'ID_FILA_PEDCEL';
+    CfgT.FieldAvPivotCel := 'ID_AV_PIVOT_PEDCEL';
+    CfgT.FieldCantidadCel := 'CANTIDAD_PEDCEL';
+    CfgT.FieldAlmacenCel := '';
+    CfgT.IdFilaFijo := 1;
+    CfgT.MaxColumnas := 20;
+    FModoEntrada := CrearModoEntradaGridTallas(Cfg, CfgT);
+  end
+  else
+    FModoEntrada := CrearModoEntradaGrid(Cfg);
+  FModoEntrada.OnResuelto := ModoEntradaResuelto;
+  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
+  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
+  // El flag ANTES del Construir: si aborta a medias, nadie debe tocar
+  // las columnas del dfm, muertas en el ClearItems.
+  FColsModoConstruido := True;
+  FModoEntrada.Construir;
+  CrearColumnasHostPedido;
+  case DetectarModoColumnasSku(Cfg) of
+    mcsSku: tsLineasPedido.Caption := '&1_Líneas [SKU]';
+    mcsTallasInline:
+      tsLineasPedido.Caption := '&1_Líneas [Tallas horiz.]';
+  else
+    begin
+      tsLineasPedido.Caption := '&1_Líneas [Desglose]';
+      MostrarColumnasAtributoGlobalesPed;
+    end;
+  end;
+end;
+
+procedure TfrmMtoPedidos.CrearColumnasHostPedido;
+  function Col(const ACaption, ACampo: string; AAncho: Integer;
+               AEditable: Boolean): TcxGridDBColumn;
+  begin
+    Result := tvPedidosLineas.CreateColumn as TcxGridDBColumn;
+    Result.Caption := ACaption;
+    Result.DataBinding.FieldName := ACampo;
+    Result.Width := AAncho;
+    Result.Options.Editing := AEditable;
+  end;
+var
+  ColCant, ColTipo: TcxGridDBColumn;
+begin
+  // Columnas propias del pedido tras el ClearItems del contrato.
+  Col('Línea', 'LINEA_PEDLIN', 60, False);
+  Col('Descripción', 'DESCRIPCION_ARTICULO_PEDLIN', 220, False);
+  ColCant := Col('Pedida', 'CANTIDAD_PEDLIN', 80,
+                 FModoEntradaSel <> mcsTallasInline);
+  ColTipo := Col('', 'TIPO_CANTIDAD_ARTICULO_PEDLIN', 20, False);
+  ColTipo.Visible := False;
+  ColTipo.VisibleForCustomization := False;
+  // Decimales de la cantidad segun la unidad de la linea (metros...).
+  VincularCantidadGrid(ColCant, ColTipo);
+  Col('Entregada', 'CANTIDAD_ENTREGADA_PEDLIN', 90, False);
+  Col('Pendiente', 'CANTIDAD_PENDIENTE_PEDLIN', 90, False);
+  Col('PVP S/IVA', 'PRECIO_VENTA_SIVA_ARTICULO_PEDLIN', 90, True);
+  Col('PVP C/IVA', 'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN', 90, True);
+  Col('Total', 'TOTAL_PEDLIN', 95, False);
+  Col('Almacén', 'CODIGO_ALMACEN_PEDLIN', 75, True);
+end;
+
+procedure TfrmMtoPedidos.MostrarColumnasAtributoGlobalesPed;
+var
+  Qry: TUniQuery;
+  i, iOrden: Integer;
+  Col: TcxGridColumn;
+begin
+  // Nombres globales de atributos para ver Color/Talla desde el
+  // principio (mismo helper que inventarios / DTR).
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := dmmPedidos.unqryTablaG.Connection;
+    Qry.SQL.Text :=
+      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
+      '       MIN(ORDEN_VA) AS ORDEN' +
+      '  FROM fza_variaciones_atributos' +
+      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
+      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
+    Qry.Open;
+    iOrden := 1;
+    while (not Qry.Eof) and (iOrden <= 5) do
+    begin
+      for i := 0 to tvPedidosLineas.ColumnCount - 1 do
+      begin
+        Col := tvPedidosLineas.Columns[i];
+        if Col.Tag = iOrden then
+        begin
+          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
+          Col.Visible := True;
+        end;
+      end;
+      Inc(iOrden);
+      Qry.Next;
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+procedure TfrmMtoPedidos.ModoEntradaResuelto(const ACodArt, ASku,
+  ADescripcion: string; ACompleto: Boolean);
+begin
+  // El flujo fiscal clasico del pedido (tarifa del cliente, IVA,
+  // precios, total y CODIGOPRODPS para el albaraneado) se reaprovecha
+  // tal cual: AplicarArticuloPedido acepta articulo o SKU.
+  if ACompleto and (ASku <> '') then
+    AplicarArticuloPedido(ASku);
 end;
 
 procedure TfrmMtoPedidos.btnAnadirLineaClick(Sender: TObject);
