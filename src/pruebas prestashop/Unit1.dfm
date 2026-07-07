@@ -122,7 +122,12 @@
               Width = 3
             end>
           Highlighter = SynXMLSyn1
-          Options = [eoAltSetsColumnMode, eoAutoIndent, eoDisableScrollArrows, eoDragDropEditing, eoDropFiles, eoEnhanceHomeKey, eoEnhanceEndKey, eoGroupUndo, eoHideShowScrollbars, eoKeepCaretX, eoShowScrollHint, eoSmartTabDelete, eoSmartTabs, eoTabIndent, eoTabsToSpaces, eoShowLigatures]
+          Options = [eoAltSetsColumnMode, eoAutoIndent,
+            eoDisableScrollArrows, eoDragDropEditing, eoDropFiles,
+            eoEnhanceHomeKey, eoEnhanceEndKey, eoGroupUndo,
+            eoHideShowScrollbars, eoKeepCaretX, eoShowScrollHint,
+            eoSmartTabDelete, eoSmartTabs, eoTabIndent, eoTabsToSpaces,
+            eoShowLigatures]
           ReadOnly = True
           SelectedColor.Background = clAqua
           SelectedColor.Foreground = clSilver
