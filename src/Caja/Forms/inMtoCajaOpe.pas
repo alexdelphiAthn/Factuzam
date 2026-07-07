@@ -314,6 +314,12 @@ type
     FswArtAPopup: TStopwatch;
     const MAX_CAJAS = 5;
   public
+    // Carga EXTERNA ("Enviar a..." de Documentos de Trabajo): anade
+    // una linea con el SKU y cantidad indicados usando el mismo flujo
+    // que el lector (RellenarDatosArticuloEnDataset). False si el
+    // articulo/SKU no existe o esta descatalogado.
+    function CargarSkuExterno(const ASku: string;
+                              ACant: Double): Boolean;
     procedure PrepararValores(AEmpresa, AAlmacen, ACaja: string;
                               AFecha: TDateTime);
     function IntentarCerrar:Boolean;
@@ -442,6 +448,29 @@ begin
     PostMessage(tvLineasOpe.Controller.EditingController.Edit.Handle,
                 WM_KEYDOWN,
                 VK_RETURN, 0);
+  end;
+end;
+
+function TfrmMtoOpeCaja.CargarSkuExterno(const ASku: string;
+  ACant: Double): Boolean;
+begin
+  // Fila en blanco lista y en edicion, como tras una lectura.
+  AsegurarLineaNueva;
+  if not (DatosCaja.cdsLineas.State in dsEditModes) then
+    DatosCaja.cdsLineas.Edit;
+  Result := RellenarDatosArticuloEnDataset(ASku);
+  if Result then
+  begin
+    DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat := ACant;
+    DatosCaja.cdsLineas.Post;
+    GridRecalc(nil, tvLineasOpe, DatosCaja.cdsLineas,
+               DatosCaja.cdsCabecera, ActualizarLabelTotal);
+    AsegurarLineaNueva;
+  end
+  else
+  begin
+    if DatosCaja.cdsLineas.State in dsEditModes then
+      DatosCaja.cdsLineas.Cancel;
   end;
 end;
 
