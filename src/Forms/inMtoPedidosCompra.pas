@@ -1619,8 +1619,10 @@ begin
     case FModoEntradaSel of
       mcsSku:
         tsLineasPedido.Caption := 'Líneas [SKU]';
-      mcsTallasHorPed:
+      mcsTallasInline:
         tsLineasPedido.Caption := 'Líneas [Tallas horiz.]';
+      mcsTallasHorPed:
+        tsLineasPedido.Caption := 'Líneas [Tallas horiz. bandas]';
     else
       tsLineasPedido.Caption := 'Líneas [Desglose]';
     end;
@@ -1637,7 +1639,8 @@ begin
     Key := 0;
     case FModoEntradaSel of
       mcsAuto: FModoEntradaSel := mcsSku;
-      mcsSku: FModoEntradaSel := mcsTallasHorPed;
+      mcsSku: FModoEntradaSel := mcsTallasInline;
+      mcsTallasInline: FModoEntradaSel := mcsTallasHorPed;
     else
       FModoEntradaSel := mcsAuto;
     end;
@@ -2877,6 +2880,7 @@ procedure TfrmMtoPedidosCompra.ConstruirModoEntrada;
 var
   Cfg: TConfigColumnasSku;
   CfgPV: TGridPivoteVentaConfig;
+  CfgT: TGridTallasConfig;
   i: Integer;
   ds: TDataSet;
 begin
@@ -2971,6 +2975,35 @@ begin
     CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
     FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
   end
+  else if FModoEntradaSel = mcsTallasInline then
+  begin
+    // Tallas horizontal INLINE (estilo albaranes/sesiones): lineas
+    // consolidadas por articulo+color y cantidades por celda de talla
+    // en fza_pedidos_compra_celdas.
+    CfgT := Default(TGridTallasConfig);
+    CfgT.Usuario := oUser;
+    CfgT.Grid := tvLineasPedido;
+    CfgT.SourceMaster := dsTablaG;
+    CfgT.SourceLineas := dmmPedidosCompra.dsPedidosCompraLineas;
+    CfgT.FieldSerieMaster := 'SERIE_PEDC';
+    CfgT.FieldNumeroMaster := 'NUMERO_PEDC';
+    CfgT.FieldLinea := 'LINEA_PEDCLIN';
+    CfgT.FieldConjuntoPivot := 'ID_AC_PIVOT_PEDCLIN';
+    CfgT.FieldPrecioBase := 'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN';
+    CfgT.FieldTotalUds := 'CANTIDAD_PEDCLIN';
+    CfgT.FieldTotalLinea := 'TOTAL_PEDCLIN';
+    CfgT.TablaCeldas := 'fza_pedidos_compra_celdas';
+    CfgT.FieldSerieCel := 'SERIE_PEDC_PEDCCEL';
+    CfgT.FieldNumeroCel := 'NUMERO_PEDC_PEDCCEL';
+    CfgT.FieldLineaCel := 'LINEA_PEDCCEL';
+    CfgT.FieldFilaCel := 'ID_FILA_PEDCCEL';
+    CfgT.FieldAvPivotCel := 'ID_AV_PIVOT_PEDCCEL';
+    CfgT.FieldCantidadCel := 'CANTIDAD_PEDCCEL';
+    CfgT.FieldAlmacenCel := '';
+    CfgT.IdFilaFijo := 1;
+    CfgT.MaxColumnas := CANT_TALLAS_MAX;
+    FModoEntrada := CrearModoEntradaGridTallas(Cfg, CfgT);
+  end
   else
     FModoEntrada := CrearModoEntradaGrid(Cfg);
   FModoEntrada.OnResuelto := ModoEntradaResuelto;
@@ -2987,8 +3020,10 @@ begin
   case DetectarModoColumnasSku(Cfg) of
     mcsSku:
       tsLineasPedido.Caption := 'Líneas [SKU]';
-    mcsTallasHorPed:
+    mcsTallasInline:
       tsLineasPedido.Caption := 'Líneas [Tallas horiz.]';
+    mcsTallasHorPed:
+      tsLineasPedido.Caption := 'Líneas [Tallas horiz. bandas]';
   else
     begin
       tsLineasPedido.Caption := 'Líneas [Desglose]';
@@ -3059,7 +3094,11 @@ begin
   Col('Descripción', 'DESCRIPCION_ARTICULO_PEDCLIN', 200, False);
   if FModoEntradaSel <> mcsTallasHorPed then
   begin
-    Col('Pedida', 'CANTIDAD_PEDCLIN', 70, True);
+    // En el inline la cantidad PEDIDA se teclea por celda de talla y
+    // CANTIDAD_PEDCLIN pasa a ser el TOTAL de la linea consolidada:
+    // solo lectura en ese modo.
+    Col('Pedida', 'CANTIDAD_PEDCLIN', 70,
+        FModoEntradaSel <> mcsTallasInline);
     Col('Recibida', 'CANTIDAD_RECIBIDA_PEDCLIN', 75, False);
     ColARecibir := Col('A recibir', 'CANTIDAD_A_RECIBIR_PEDCLIN',
                        80, True);

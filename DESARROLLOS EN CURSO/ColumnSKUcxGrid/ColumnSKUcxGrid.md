@@ -452,12 +452,15 @@ modos, edición de celdas de talla, totales fiscales y Verifactu).
 (Sustituye al plan intermedio de "ciclo F1 sobre los toggles":
 el usuario pidió el MISMO tallashorped de ventas.)
 
-`inMtoPedidosCompra` adopta el contrato entero: F1 cicla Auto
-(desglose) → SKU → **Tallas horizontal = `inLibGridPivoteVenta`**
-(mcsTallasHorPed) con las bandas **Pedido / A recibir / Pendiente**
-mapeadas a `CANTIDAD_PEDCLIN` / `CANTIDAD_A_RECIBIR_PEDCLIN` (nueva) /
-`CANTIDAD_RECIBIDA_PEDCLIN`. Rótulo de banda configurable en la lib
-(`TextoBandaAAlbaranar`, aquí 'A recibir').
+`inMtoPedidosCompra` adopta el contrato entero con CUATRO modos
+(10/07/2026): F1 cicla Auto (desglose) → SKU → **Tallas horiz.**
+(mcsTallasInline: líneas consolidadas por artículo+color, cantidades
+PEDIDAS por celda en `fza_pedidos_compra_celdas`, sufijo PEDCCEL) →
+**Tallas horiz. bandas = `inLibGridPivoteVenta`** (mcsTallasHorPed,
+bandas **Pedido / A recibir / Pendiente** mapeadas a
+`CANTIDAD_PEDCLIN` / `CANTIDAD_A_RECIBIR_PEDCLIN` (nueva) /
+`CANTIDAD_RECIBIDA_PEDCLIN`; rótulo de banda configurable en la lib,
+`TextoBandaAAlbaranar` = 'A recibir').
 
 - **SQL**: `pedidos_compra_columnas_sku.sql` — ATTR1..5 +
   NUM_ATRIBUTOS + CANTIDAD_A_RECIBIR en `fza_pedidos_compra_lineas`.

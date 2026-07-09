@@ -276,6 +276,9 @@ type
     procedure PivoteVentaBandaCambiada(ABanda: TBandaPivoteVenta);
     // Rotulo de modo en la pestania de lineas, como en ventas.
     procedure ActualizarCaptionModoLineas;
+    // Color/Talla visibles con nombres globales en desglose,
+    // mismo paso que pedidos de compra.
+    procedure MostrarColumnasAtributoGlobalesAlbc;
   protected
     // F1 = ciclar el modo de entrada (KeyPreview de TfrmBase),
     // mismo atajo que pedidos/facturas de venta y pedidos de compra.
@@ -1796,7 +1799,60 @@ begin
   FColsModoConstruido := True;
   FModoEntrada.Construir;
   CrearColumnasHostAlbaranCompra;
-  ActualizarCaptionModoLineas;
+  // Rotulo por modo EFECTIVO (Auto puede degradar a SKU si faltan las
+  // columnas ATTR en la BBDD) y, en desglose, mostrar Color/Talla con
+  // los nombres globales desde el principio (patron pedidos de compra).
+  case DetectarModoColumnasSku(Cfg) of
+    mcsSku:
+      tsLineasAlbaran.Caption := '&1_Líneas [SKU]';
+    mcsTallasHorPed:
+      tsLineasAlbaran.Caption := '&1_Líneas [Tallas horiz.]';
+  else
+    begin
+      tsLineasAlbaran.Caption := '&1_Líneas [Desglose]';
+      MostrarColumnasAtributoGlobalesAlbc;
+    end;
+  end;
+end;
+
+procedure TfrmMtoAlbaranesCompra.MostrarColumnasAtributoGlobalesAlbc;
+var
+  Qry: TUniQuery;
+  i, iOrden: Integer;
+  Col: TcxGridColumn;
+begin
+  // Nombres globales de atributos para ver Color/Talla desde el
+  // principio (mismo helper que pedidos/facturas de venta).
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := dmmAlbaranesCompra.unqryTablaG.Connection;
+    Qry.SQL.Text :=
+      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
+      '       MIN(ORDEN_VA) AS ORDEN' +
+      '  FROM fza_variaciones_atributos' +
+      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
+      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
+    Qry.Open;
+    iOrden := 1;
+    while (not Qry.Eof) and (iOrden <= 5) do
+    begin
+      // Solo las columnas del contrato (Tag positivo 1..5); las
+      // FAtribColumns propias llevan Tag negativo y no chocan.
+      for i := 0 to tvLineasAlbaran.ColumnCount - 1 do
+      begin
+        Col := tvLineasAlbaran.Columns[i];
+        if Col.Tag = iOrden then
+        begin
+          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
+          Col.Visible := True;
+        end;
+      end;
+      Inc(iOrden);
+      Qry.Next;
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
 end;
 
 procedure TfrmMtoAlbaranesCompra.CrearColumnasHostAlbaranCompra;
