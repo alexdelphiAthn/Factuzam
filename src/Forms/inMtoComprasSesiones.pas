@@ -143,6 +143,7 @@ type
     btnAddLinea: TcxButton;
     btnDelLinea: TcxButton;
     btnNuevoColor: TcxButton;
+    btnOtroPrecio: TcxButton;
     btnFoto: TcxButton;
     btnArbolFamilias: TcxButton;
     btnDescargarFotos: TcxButton;
@@ -322,6 +323,7 @@ type
     procedure btnAddLineaClick(Sender: TObject);
     procedure btnDelLineaClick(Sender: TObject);
     procedure btnNuevoColorClick(Sender: TObject);
+    procedure btnOtroPrecioClick(Sender: TObject);
     procedure btnFotoClick(Sender: TObject);
     procedure btnArbolFamiliasClick(Sender: TObject);
     procedure btnCrearClick(Sender: TObject);
@@ -432,6 +434,18 @@ type
     FMenuKits           : TPopupMenu;
     FMenuKitsCodigos    : TArray<string>;
     FEstiloRecepcionVencida: TcxStyle;
+    // --- Copia de linea al repetir modelo tecleado (modal) ---
+    // Al detectar que el modelo tecleado ya esta en otra linea de la
+    // sesion, se pregunta en un modal si copiar la linea completa (otro
+    // color / otro rango de precios). El modal no puede abrirse dentro
+    // del editor in-place del grid: se difiere con FDupTimerModal (mismo
+    // patron que FModeloTimerResolve). FDupLineaOrigen > 0 = pendiente.
+    FDupTimerModal      : TTimer;
+    FDupLineaOrigen     : Integer;
+    FDupModelo          : string;
+    FDupColorTexto      : string;
+    FDupColorBasico     : string;
+    FDupMargen          : Double;
     procedure CargarBasicosColor;
     procedure CargarConjuntosTallas;
     procedure BuscarProveedor;
@@ -483,6 +497,16 @@ type
     procedure ModeloComboCloseUp(Sender: TObject);
     procedure ModeloTimerBusqTimer(Sender: TObject);
     procedure ModeloTimerResolveTimer(Sender: TObject);
+    // Copia de lineas repetidas: nucleo compartido por los botones
+    // "Otro color" / "Otro precio" (duplican la fila seleccionada) y por
+    // el modal que salta al teclear un modelo repetido (rellena la fila
+    // actual copiando la linea origen). AModo: 'C' = otro color (color
+    // vacio), 'P' = otro rango de precios (coste y PVP vacios).
+    procedure DuplicarLineaActiva(const AModo: string);
+    procedure AplicarCopiaEnLineaActual(const AModo: string);
+    procedure CopiarCantidadesEntreLineas(ALineaOrigen,
+                                           ALineaDestino: Integer);
+    procedure DupModalTimerTimer(Sender: TObject);
   protected
     // Interceptamos a nivel de form (KeyPreview heredado = True) para
     // que Ctrl+Enter abra el selector de la columna editbutton enfocada
@@ -520,6 +544,7 @@ uses
   inMtoModalSelFamilia,
   inMtoModalImpSesion,
   inMtoModalIncidencias,
+  inMtoModalRepetirModelo,
   inLibFotosNube,
   inLibComprasImpuestos;
 
@@ -1248,6 +1273,7 @@ begin
   FreeAndNil(FBmpSwatch);
   // Objetos runtime del desplegable "Modelo prov." (orden inverso a su
   // creacion en CrearLookupModelo).
+  FreeAndNil(FDupTimerModal);
   FreeAndNil(FModeloTimerResolve);
   FreeAndNil(FModeloTimerBusq);
   FreeAndNil(FModeloEditRepo);
@@ -1868,6 +1894,11 @@ begin
     // No abrir el desplegable en cada tecla: lo abre el debounce ya filtrado.
     ImmediateDropDownWhenKeyPressed := False;
     OnCloseUp := ModeloComboCloseUp;
+    // Modelo tecleado a mano y confirmado con Tab/Enter sin pasar por el
+    // desplegable (p. ej. un modelo que solo existe en lineas de ESTA
+    // sesion, aun sin materializar: el desplegable no lo lista). Sin este
+    // hook ese camino no resolvia nada y la linea repetida quedaba vacia.
+    OnEditValueChanged := dbcLinRefPrvPropertiesEditValueChanged;
   end;
   // 4. La columna "Modelo prov." usa el desplegable solo en celda vacia y
   //    enfocada; con valor escrito usa el editor de texto del dfm (que
@@ -1883,6 +1914,12 @@ begin
   FModeloTimerResolve.Enabled := False;
   FModeloTimerResolve.Interval := 1;
   FModeloTimerResolve.OnTimer := ModeloTimerResolveTimer;
+  // Modal "modelo repetido" diferido (no puede abrirse dentro del editor
+  // in-place del grid; lo arma AplicarDuplicadoDeSesion).
+  FDupTimerModal := TTimer.Create(nil);
+  FDupTimerModal.Enabled := False;
+  FDupTimerModal.Interval := 1;
+  FDupTimerModal.OnTimer := DupModalTimerTimer;
   // Sentinela que no casa con ningun proveedor real: fuerza la 1a carga.
   FModeloPrvCargado := #1;
 end;
@@ -2004,6 +2041,21 @@ begin
   begin
     FGestorTallas.RecalcularMaxColumnas;
     FGestorTallas.ActualizarCaptionsLineaActiva;
+  end;
+  // Copia completa opcional (otro color / otro rango de precios): la
+  // decide el usuario en un modal que no puede abrirse aqui (seguimos
+  // dentro del editor in-place) — se difiere con el timer. Si los dos
+  // caminos de resolucion disparan seguidos (combo + editor de texto),
+  // el rearme solo deja un modal.
+  if rDup.LineaOrigen > 0 then
+  begin
+    FDupLineaOrigen := rDup.LineaOrigen;
+    FDupModelo      := AModelo;
+    FDupColorTexto  := rDup.ColorTexto;
+    FDupColorBasico := rDup.CodigoAtbColor;
+    FDupMargen      := rDup.MargenPorcentaje;
+    FDupTimerModal.Enabled := False;
+    FDupTimerModal.Enabled := True;
   end;
   Result := True;
 end;
@@ -2502,10 +2554,24 @@ begin
 end;
 
 procedure TfrmMtoComprasSesiones.btnNuevoColorClick(Sender: TObject);
+begin
+  inherited;
+  DuplicarLineaActiva('C');
+end;
+
+procedure TfrmMtoComprasSesiones.btnOtroPrecioClick(Sender: TObject);
+begin
+  inherited;
+  DuplicarLineaActiva('P');
+end;
+
+procedure TfrmMtoComprasSesiones.DuplicarLineaActiva(const AModo: string);
 var
   ds                 : TDataSet;
   sFam, sCodArt      : string;
   sRefPrv, sDescr    : string;
+  sColorTexto        : string;
+  sColorBasico       : string;
   rPrCompra, rPrVenta: Double;
   iAcPivot           : Integer;
   rMargen            : Double;
@@ -2517,12 +2583,15 @@ var
   v                  : Variant;
   q                  : TUniQuery;
 begin
-  inherited;
   // Duplica la linea activa con todos los datos comerciales (codigo,
-  // familia, modelo prov., descripcion, precios, sistema de tallas) y
-  // sus cantidades por talla, dejando vacios COLOR_TEXTO_SESLIN y
-  // CODIGO_ATB_COLOR_SESLIN. Util cuando el cliente compra el mismo
-  // articulo en varios colores: clic, cambias color, terminas.
+  // familia, modelo prov., descripcion, sistema de tallas) y sus
+  // cantidades por talla. Segun AModo:
+  //   'C' (otro color): precios copiados, COLOR_TEXTO_SESLIN y
+  //       CODIGO_ATB_COLOR_SESLIN vacios. Mismo articulo en varios
+  //       colores: clic, cambias color, terminas.
+  //   'P' (otro rango de precios): color copiado, PRECIO_COMPRA_SESLIN
+  //       y PRECIO_VENTA_SESLIN vacios. Mismo articulo con otras tallas
+  //       a otro precio: clic, tecleas coste y PVP, terminas.
   if FGestorTallas = nil then Exit;
   ds := Dmm.unqrySesionLin;
   if (ds = nil) or ds.IsEmpty then Exit;
@@ -2541,6 +2610,8 @@ begin
   iAcPivot   := ds.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
   rMargen    := ds.FieldByName('PORCENTAJE_MARGEN_SESLIN').AsFloat;
   sTipoIva   := ds.FieldByName('TIPO_IVA_SESLIN').AsString;
+  sColorTexto  := ds.FieldByName('COLOR_TEXTO_SESLIN').AsString;
+  sColorBasico := ds.FieldByName('CODIGO_ATB_COLOR_SESLIN').AsString;
 
   // 1b. Buscar la siguiente linea (LINEA_SESLIN minimo > origen). Si
   //     existe y hay hueco (>1), la nueva linea ira con el LINEA
@@ -2587,23 +2658,39 @@ begin
   if ds.State in [dsEdit, dsInsert] then ds.Post;
   Dmm.unqryTablaG.Edit;
 
-  // 4. Insert + asignacion de campos copiados (excepto color).
+  // 4. Insert + asignacion de campos copiados (color y precios segun modo).
   ds.Insert;
   ds.FieldByName('CODIGO_FAM_SESLIN').AsString          := sFam;
   ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sCodArt;
   ds.FieldByName('REF_PRV_SESLIN').AsString             := sRefPrv;
   ds.FieldByName('DESCRIPCION_SESLIN').AsString         := sDescr;
-  ds.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat        := rPrCompra;
-  ds.FieldByName('PRECIO_VENTA_SESLIN').AsFloat         := rPrVenta;
   if iAcPivot > 0 then
     ds.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger := iAcPivot;
   if rMargen > 0 then
     ds.FieldByName('PORCENTAJE_MARGEN_SESLIN').AsFloat := rMargen;
   if sTipoIva <> '' then
     ds.FieldByName('TIPO_IVA_SESLIN').AsString := sTipoIva;
-  // Color y color basico se quedan vacios — los rellena el usuario.
-  ds.FieldByName('COLOR_TEXTO_SESLIN').Clear;
-  ds.FieldByName('CODIGO_ATB_COLOR_SESLIN').Clear;
+  if AModo = 'P' then
+  begin
+    // Otro rango de precios: color repetido; coste y PVP quedan vacios
+    // para teclear el nuevo rango.
+    ds.FieldByName('COLOR_TEXTO_SESLIN').AsString := sColorTexto;
+    if sColorBasico <> '' then
+      ds.FieldByName('CODIGO_ATB_COLOR_SESLIN').AsString := sColorBasico
+    else
+      ds.FieldByName('CODIGO_ATB_COLOR_SESLIN').Clear;
+    ds.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat := 0;
+    ds.FieldByName('PRECIO_VENTA_SESLIN').AsFloat  := 0;
+  end
+  else
+  begin
+    // Otro color: precios copiados; color y color basico se quedan
+    // vacios — los rellena el usuario.
+    ds.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat := rPrCompra;
+    ds.FieldByName('PRECIO_VENTA_SESLIN').AsFloat  := rPrVenta;
+    ds.FieldByName('COLOR_TEXTO_SESLIN').Clear;
+    ds.FieldByName('CODIGO_ATB_COLOR_SESLIN').Clear;
+  end;
   // Marcar como duplicado intra-sesion para que la materializacion no
   // intente INSERT del articulo dos veces (la linea origen crea
   // CODIGO_ART_ART; esta variante - mismo codigo, distinto color/SKU -
@@ -2655,12 +2742,166 @@ begin
   FGestorTallas.RecalcularMaxColumnas;
   FGestorTallas.CargarCantidadesTodasLineas;
 
-  // 7. Foco en la celda Color de la nueva linea.
+  // 7. Foco en la celda que toca completar segun el modo.
   if ds.Locate('LINEA_SESLIN', iNewLinea, []) then
     tvLineas.Controller.FocusedRecordIndex := ds.RecNo - 1;
-  tvLineas.Controller.FocusedColumn := dbcLinColor;
+  if AModo = 'P' then
+    tvLineas.Controller.FocusedColumn := dbcLinPrecioCompra
+  else
+    tvLineas.Controller.FocusedColumn := dbcLinColor;
   if tvLineas.Controller.EditingController <> nil then
     tvLineas.Controller.EditingController.ShowEdit;
+end;
+
+procedure TfrmMtoComprasSesiones.CopiarCantidadesEntreLineas(ALineaOrigen,
+  ALineaDestino: Integer);
+var
+  q : TUniQuery;
+begin
+  // Limpia las celdas del destino y replica las del origen. En formato
+  // distribuido se copia celda a celda preservando almacen (helper con
+  // update de totales); en formato clasico se agrega por talla y se
+  // persiste via gestor con almacen vacio, igual que las ediciones
+  // manuales (mezclar ambos caminos duplicaria filas por talla y las
+  // cantidades se sumarian al recargar).
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := inLibGlobalVar.oConn;
+    q.SQL.Text :=
+      'DELETE FROM fza_compras_sesiones_celdas ' +
+      ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
+      '   AND LINEA_SES_SESCEL = :l';
+    q.ParamByName('s').AsString :=
+      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    q.ParamByName('n').AsString :=
+      Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    q.ParamByName('l').AsInteger := ALineaDestino;
+    q.ExecSQL;
+    if Dmm.unqryTablaG.FieldByName(
+         'ESFORMATO_DISTRIBUIDO_SES').AsString = 'S' then
+      CopiarCeldasDistribuidasOtroColor(ALineaOrigen, ALineaDestino)
+    else
+    begin
+      q.SQL.Text :=
+        'SELECT ID_AV_PIVOT_SESCEL, SUM(CANTIDAD_SESCEL) AS TOTAL ' +
+        '  FROM fza_compras_sesiones_celdas ' +
+        ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
+        '   AND LINEA_SES_SESCEL = :l ' +
+        ' GROUP BY ID_AV_PIVOT_SESCEL';
+      q.ParamByName('s').AsString :=
+        Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+      q.ParamByName('n').AsString :=
+        Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+      q.ParamByName('l').AsInteger := ALineaOrigen;
+      q.Open;
+      while not q.Eof do
+      begin
+        if (q.FieldByName('TOTAL').AsFloat > 0) and
+           Assigned(FGestorTallas) then
+          FGestorTallas.PersistirCantidad(ALineaDestino,
+            q.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger,
+            q.FieldByName('TOTAL').AsFloat);
+        q.Next;
+      end;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.AplicarCopiaEnLineaActual(
+  const AModo: string);
+var
+  ds       : TDataSet;
+  iDestino : Integer;
+begin
+  // Completa la linea ACTUAL (donde se acaba de teclear el modelo
+  // repetido) como copia de la linea origen FDupLineaOrigen. Los campos
+  // comerciales ya llegaron via AplicarDuplicadoEnLinea (REUSAR); aqui
+  // se anaden margen, cantidades por talla y color / precios segun modo
+  // ('C' = otro color, 'P' = otro rango de precios).
+  ds := Dmm.unqrySesionLin;
+  if not (ds.State in [dsEdit, dsInsert]) then
+    ds.Edit;
+  if FDupMargen > 0 then
+    ds.FieldByName('PORCENTAJE_MARGEN_SESLIN').AsFloat := FDupMargen;
+  if AModo = 'P' then
+  begin
+    // Otro rango de precios: color repetido; coste y PVP vacios.
+    ds.FieldByName('COLOR_TEXTO_SESLIN').AsString := FDupColorTexto;
+    if FDupColorBasico <> '' then
+      ds.FieldByName('CODIGO_ATB_COLOR_SESLIN').AsString := FDupColorBasico
+    else
+      ds.FieldByName('CODIGO_ATB_COLOR_SESLIN').Clear;
+    ds.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat := 0;
+    ds.FieldByName('PRECIO_VENTA_SESLIN').AsFloat  := 0;
+  end
+  else
+  begin
+    // Otro color: el color queda vacio; los precios ya vienen copiados
+    // de la linea origen por AplicarDuplicadoEnLinea.
+    ds.FieldByName('COLOR_TEXTO_SESLIN').Clear;
+    ds.FieldByName('CODIGO_ATB_COLOR_SESLIN').Clear;
+  end;
+  ds.Post;
+  iDestino := ds.FieldByName('LINEA_SESLIN').AsInteger;
+  CopiarCantidadesEntreLineas(FDupLineaOrigen, iDestino);
+  // El copiado de celdas y sus totales viven fuera del dataset:
+  // refrescar y recolocarse (mismo orden critico que AbrirDistribuidor:
+  // CargarCantidadesTodasLineas SIEMPRE despues del Refresh).
+  ds.Refresh;
+  ds.Locate('LINEA_SESLIN', iDestino, []);
+  if Assigned(FGestorTallas) then
+  begin
+    FGestorTallas.RecalcularMaxColumnas;
+    FGestorTallas.CargarCantidadesTodasLineas;
+    FGestorTallas.RefrescarTotalesLineaActual;
+  end;
+  if Assigned(Dmm) then
+    Dmm.RefrescarTotalesSesion;
+  // Foco en la celda que toca completar segun el modo.
+  if ds.Locate('LINEA_SESLIN', iDestino, []) then
+    tvLineas.Controller.FocusedRecordIndex := ds.RecNo - 1;
+  if AModo = 'P' then
+    tvLineas.Controller.FocusedColumn := dbcLinPrecioCompra
+  else
+    tvLineas.Controller.FocusedColumn := dbcLinColor;
+  if tvLineas.Controller.EditingController <> nil then
+    tvLineas.Controller.EditingController.ShowEdit;
+end;
+
+procedure TfrmMtoComprasSesiones.DupModalTimerTimer(Sender: TObject);
+var
+  frm     : TfrmModalRepetirModelo;
+  sOpcion : string;
+begin
+  // Pregunta diferida (el modal no puede abrirse dentro del editor
+  // in-place): repetir la linea origen en otro color, en otro rango de
+  // precios, o dejar la herencia REUSAR tal cual (cancelar).
+  FDupTimerModal.Enabled := False;
+  if (FDupLineaOrigen > 0) and (not Dmm.unqrySesionLin.IsEmpty) then
+  begin
+    if tvLineas.Controller.EditingController.IsEditing then
+      try
+        tvLineas.Controller.EditingController.HideEdit(True);
+      except
+        on E: EInvalidOperation do
+          ;
+      end;
+    sOpcion := 'N';
+    frm := TfrmModalRepetirModelo.Create(Self);
+    try
+      frm.PrepararMensaje(FDupModelo, FDupLineaOrigen);
+      frm.ShowModal;
+      sOpcion := frm.sOpcion;
+    finally
+      FreeAndNil(frm);
+    end;
+    if (sOpcion = 'C') or (sOpcion = 'P') then
+      AplicarCopiaEnLineaActual(sOpcion);
+  end;
+  FDupLineaOrigen := 0;
+  FDupModelo := '';
 end;
 
 // 1. Declaramos la clase cracker para acceder al popup interno
