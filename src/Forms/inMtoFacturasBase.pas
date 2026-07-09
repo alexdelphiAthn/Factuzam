@@ -3063,7 +3063,20 @@ begin
 end;
 
 procedure TfrmMtoFacturasBase.sbGrabarClick(Sender: TObject);
+var
+  sLineasSinSku: string;
 begin
+  // Aviso: lineas con articulo con variaciones y sin SKU asignado
+  // (no mueven stock).
+  sLineasSinSku := LineasSinSkuRequerido(
+    dmmFacturas.unqryTablaG.Connection,
+    dmmFacturas.unqryLinFac, 'FACLIN');
+  if (sLineasSinSku <> '') and
+     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
+                 'con variaciones sin SKU asignado. ' +
+                 '¿Grabar de todas formas?',
+                 mtWarning, [mbYes, mbNo], 0) <> mrYes) then
+    Exit;
   with dmmFacturas do
   begin
     if ((unqryTablaG.State = dsInsert) or

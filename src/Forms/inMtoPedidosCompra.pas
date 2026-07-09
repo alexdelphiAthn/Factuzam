@@ -1084,11 +1084,12 @@ begin
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
   RefrescarCantidadAAlbaranar;
-  // Contrato de entrada ColumnSKUcxGrid: Auto (desglose) por defecto;
-  // F1 cicla los modos. El pivote de compras antiguo queda RETIRADO de
-  // esta pantalla: se ocultan sus botones y nunca se activa (la
-  // preferencia ESPIVOTE de la cabecera se ignora).
-  FModoEntradaSel := mcsAuto;
+  // Contrato de entrada ColumnSKUcxGrid: Tallas horizontal inline
+  // (celdas) por defecto; si su construccion falla, ConstruirModoEntrada
+  // degrada a SKU. F1 cicla los modos. El pivote de compras antiguo
+  // queda RETIRADO de esta pantalla: se ocultan sus botones y nunca se
+  // activa (la preferencia ESPIVOTE de la cabecera se ignora).
+  FModoEntradaSel := mcsTallasInline;
   FColsModoConstruido := False;
   btnTallasHorizontal.Visible := False;
   // "Expandir recibidos" se conserva: ahora salta directamente al
@@ -1728,9 +1729,22 @@ begin
 end;
 
 procedure TfrmMtoPedidosCompra.btnGrabarClick(Sender: TObject);
+var
+  sLineasSinSku: string;
 begin
   if inLibLog.Log <> nil then
     inLibLog.Log.LogInfo('PedidosCompra.btnGrabarClick: INICIO');
+  // Aviso: lineas con articulo con variaciones y sin SKU asignado
+  // (no mueven stock).
+  sLineasSinSku := LineasSinSkuRequerido(
+    dmmPedidosCompra.unqryTablaG.Connection,
+    dmmPedidosCompra.unqryPedidosCompraLineas, 'PEDCLIN');
+  if (sLineasSinSku <> '') and
+     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
+                 'con variaciones sin SKU asignado. ' +
+                 '¿Grabar de todas formas?',
+                 mtWarning, [mbYes, mbNo], 0) <> mrYes) then
+    Exit;
   if Assigned(FPivote) and FPivote.Activo and
      (not FPivote.Expandido) then
     FPivote.PersistirCantidadesPendientes;
@@ -2883,6 +2897,7 @@ var
   CfgT: TGridTallasConfig;
   i: Integer;
   ds: TDataSet;
+  bDegradarASku: Boolean;
 begin
   if (dmmPedidosCompra = nil) or (csDestroying in ComponentState) or
      FConstruyendoModo then
@@ -2891,6 +2906,7 @@ begin
   if not ds.Active then
     Exit;
   FConstruyendoModo := True;
+  bDegradarASku := False;
   try
   // Teardown del modo anterior (patron pedidos de venta).
   if tvLineasPedido.Controller.EditingController.IsEditing then
@@ -3012,28 +3028,55 @@ begin
   // El flag ANTES del Construir: si algo aborta a medias, nadie debe
   // tocar las columnas del dfm, muertas en el ClearItems.
   FColsModoConstruido := True;
-  FModoEntrada.Construir;
-  CrearColumnasHostPedidoCompra;
-  // Rotulo por modo EFECTIVO (Auto puede degradar a SKU si faltan las
-  // columnas ATTR) y, en desglose, mostrar Color/Talla con los nombres
-  // globales desde el principio (mismo paso que pedidos de venta).
-  case DetectarModoColumnasSku(Cfg) of
-    mcsSku:
-      tsLineasPedido.Caption := 'Líneas [SKU]';
-    mcsTallasInline:
-      tsLineasPedido.Caption := 'Líneas [Tallas horiz.]';
-    mcsTallasHorPed:
-      tsLineasPedido.Caption := 'Líneas [Tallas horiz. bandas]';
-  else
-    begin
-      tsLineasPedido.Caption := 'Líneas [Desglose]';
-      MostrarColumnasAtributoGlobalesPedc;
+  try
+    FModoEntrada.Construir;
+  except
+    // Fallo montando un modo de tallas (inline o bandas): degradar a
+    // SKU. En cualquier otro modo la excepcion sigue su curso.
+    on E: Exception do
+      if FModoEntradaSel in [mcsTallasInline, mcsTallasHorPed] then
+      begin
+        if inLibLog.Log <> nil then
+          inLibLog.Log.LogError(
+            'PedidosCompra: fallo construyendo tallas horizontal, ' +
+            'se degrada a SKU: ' + E.Message);
+        bDegradarASku := True;
+      end
+      else
+        raise;
+  end;
+  if not bDegradarASku then
+  begin
+    CrearColumnasHostPedidoCompra;
+    // Rotulo por modo EFECTIVO (Auto puede degradar a SKU si faltan
+    // las columnas ATTR) y, en desglose, mostrar Color/Talla con los
+    // nombres globales desde el principio (paso de pedidos de venta).
+    case DetectarModoColumnasSku(Cfg) of
+      mcsSku:
+        tsLineasPedido.Caption := 'Líneas [SKU]';
+      mcsTallasInline:
+        tsLineasPedido.Caption := 'Líneas [Tallas horiz.]';
+      mcsTallasHorPed:
+        tsLineasPedido.Caption := 'Líneas [Tallas horiz. bandas]';
+    else
+      begin
+        tsLineasPedido.Caption := 'Líneas [Desglose]';
+        MostrarColumnasAtributoGlobalesPedc;
+      end;
     end;
   end;
   finally
     FConstruyendoModo := False;
   end;
-  RefrescarCantidadAAlbaranar;
+  // Reconstruccion completa en SKU FUERA del guard de reentrada
+  // (dentro, la llamada recursiva saldria sin hacer nada). Maximo una.
+  if bDegradarASku then
+  begin
+    FModoEntradaSel := mcsSku;
+    ConstruirModoEntrada;
+  end
+  else
+    RefrescarCantidadAAlbaranar;
 end;
 
 procedure TfrmMtoPedidosCompra.MostrarColumnasAtributoGlobalesPedc;

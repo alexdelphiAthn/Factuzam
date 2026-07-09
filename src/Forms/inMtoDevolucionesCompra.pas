@@ -2073,6 +2073,8 @@ begin
 end;
 
 procedure TfrmMtoDevolucionesCompra.btnGrabarClick(Sender: TObject);
+var
+  sLineasSinSku: string;
 begin
   if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
      (dsTablaG.DataSet.FindField('CODIGO_ALM_DEVC') <> nil) and
@@ -2084,6 +2086,17 @@ begin
     raise Exception.Create(
       'Debe seleccionar el almacen de salida de la devolucion.');
   end;
+  // Aviso: lineas con articulo con variaciones y sin SKU asignado
+  // (no mueven stock).
+  sLineasSinSku := LineasSinSkuRequerido(
+    dmmDevolucionesCompra.unqryTablaG.Connection,
+    dmmDevolucionesCompra.unqryDevolucionesCompraLineas, 'DEVCLIN');
+  if (sLineasSinSku <> '') and
+     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
+                 'con variaciones sin SKU asignado. ' +
+                 '¿Grabar de todas formas?',
+                 mtWarning, [mbYes, mbNo], 0) <> mrYes) then
+    Exit;
   if Assigned(FPivote) and FPivote.Activo and
      (not FPivote.Expandido) then
     FPivote.PersistirCantidadesPendientes;

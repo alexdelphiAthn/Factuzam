@@ -130,6 +130,14 @@ procedure NormalizarArticuloSkuEnDataSet(AConexion: TUniConnection;
   ADataSet: TDataSet; const ACampoArticulo, ACampoSku: string;
   const ACampoCodigoBarras: string = '');
 
+// Recorre el dataset de lineas de un documento (campos por convencion
+// CODIGO_ART_ / CODIGO_UNIDAD_ / LINEA_ + sufijo de tabla) y devuelve
+// los numeros de linea con articulo que exige SKU (tiene algun SKU
+// activo, misma politica que RequiereSku) y sin SKU asignado, separados
+// por comas. Cadena vacia si el documento esta completo.
+function LineasSinSkuRequerido(AConexion: TUniConnection;
+  ALineas: TDataSet; const ASufijo: string): string;
+
 implementation
 
 const
@@ -609,6 +617,75 @@ var R: TArtResolucionEntrada;
 begin
   R := Resolver(AEntrada);
   Result := R.Encontrado and (not R.RequiereSku);
+end;
+
+function LineasSinSkuRequerido(AConexion: TUniConnection;
+  ALineas: TDataSet; const ASufijo: string): string;
+var
+  qry: TUniQuery;
+  slCache: TStringList;
+  Bm: TBookmark;
+  sArt, sTiene: string;
+  fldArt, fldSku, fldLinea: TField;
+begin
+  Result := '';
+  if (AConexion <> nil) and (ALineas <> nil) and ALineas.Active then
+  begin
+    fldArt   := ALineas.FindField('CODIGO_ART_' + ASufijo);
+    fldSku   := ALineas.FindField('CODIGO_UNIDAD_' + ASufijo);
+    fldLinea := ALineas.FindField('LINEA_' + ASufijo);
+    if (fldArt <> nil) and (fldSku <> nil) and (fldLinea <> nil) and
+       (not ALineas.IsEmpty) then
+    begin
+      qry := TUniQuery.Create(nil);
+      slCache := TStringList.Create;
+      Bm := ALineas.GetBookmark;
+      ALineas.DisableControls;
+      try
+        qry.Connection := AConexion;
+        qry.SQL.Text :=
+          'SELECT 1 FROM fza_articulos_skus ' +
+          ' WHERE CODIGO_ART_SKU = :art ' +
+          '   AND COALESCE(ESACTIVO_SKU, ''S'') = ''S'' LIMIT 1';
+        ALineas.First;
+        while not ALineas.Eof do
+        begin
+          sArt := Trim(fldArt.AsString);
+          if (sArt <> '') and (Trim(fldSku.AsString) = '') then
+          begin
+            // Cache por articulo: las lineas repiten articulo y evita
+            // una consulta por linea.
+            sTiene := slCache.Values[sArt];
+            if sTiene = '' then
+            begin
+              qry.Close;
+              qry.ParamByName('art').AsString := sArt;
+              qry.Open;
+              if qry.IsEmpty then
+                sTiene := 'N'
+              else
+                sTiene := 'S';
+              slCache.Values[sArt] := sTiene;
+            end;
+            if sTiene = 'S' then
+            begin
+              if Result <> '' then
+                Result := Result + ', ';
+              Result := Result + fldLinea.AsString;
+            end;
+          end;
+          ALineas.Next;
+        end;
+        if ALineas.BookmarkValid(Bm) then
+          ALineas.GotoBookmark(Bm);
+      finally
+        ALineas.EnableControls;
+        ALineas.FreeBookmark(Bm);
+        FreeAndNil(slCache);
+        FreeAndNil(qry);
+      end;
+    end;
+  end;
 end;
 
 end.

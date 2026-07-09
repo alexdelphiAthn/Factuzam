@@ -1167,12 +1167,26 @@ begin
 end;
 
 procedure TfrmMtoAlbaranes.btnGrabarClick(Sender: TObject);
+var
+  sLineasSinSku: string;
 begin
-  inherited;
-  if dsTablaG.State in dsEditModes then
+  // Aviso: lineas con articulo con variaciones y sin SKU asignado
+  // (no mueven stock).
+  sLineasSinSku := LineasSinSkuRequerido(
+    dmmAlbaranes.unqryTablaG.Connection,
+    dmmAlbaranes.unqryAlbaranesLineas, 'ALBLIN');
+  if (sLineasSinSku = '') or
+     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
+                 'con variaciones sin SKU asignado. ' +
+                 '¿Grabar de todas formas?',
+                 mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
-    dmmAlbaranes.CalcularTotalesAlbaran;
-    dsTablaG.DataSet.Post;
+    inherited;
+    if dsTablaG.State in dsEditModes then
+    begin
+      dmmAlbaranes.CalcularTotalesAlbaran;
+      dsTablaG.DataSet.Post;
+    end;
   end;
 end;
 

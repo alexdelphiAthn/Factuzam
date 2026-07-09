@@ -880,12 +880,26 @@ begin
 end;
 
 procedure TfrmMtoPedidos.btnGrabarClick(Sender: TObject);
+var
+  sLineasSinSku: string;
 begin
-  inherited;
-  if dsTablaG.State in dsEditModes then
+  // Aviso: lineas con articulo con variaciones y sin SKU asignado
+  // (quedan sin precio y no moveran stock al albaranar).
+  sLineasSinSku := LineasSinSkuRequerido(
+    dmmPedidos.unqryTablaG.Connection,
+    dmmPedidos.unqryPedidosLineas, 'PEDLIN');
+  if (sLineasSinSku = '') or
+     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
+                 'con variaciones sin SKU asignado. ' +
+                 '¿Grabar de todas formas?',
+                 mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
-    dmmPedidos.CalcularTotalesPedido;
-    dsTablaG.DataSet.Post;
+    inherited;
+    if dsTablaG.State in dsEditModes then
+    begin
+      dmmPedidos.CalcularTotalesPedido;
+      dsTablaG.DataSet.Post;
+    end;
   end;
 end;
 
@@ -1690,6 +1704,7 @@ var
   bFiltrado, bOk: Boolean;
   bUsaPivoteAlbaranar: Boolean;
   sLineaFoco: string;
+  sLineasSinSku: string;
 begin
   inherited;
   // Antes de crear, asegurar que el pedido esté guardado
@@ -1701,6 +1716,16 @@ begin
     ShowMessage('El pedido no tiene líneas');
     Exit;
   end;
+  // Aviso: lineas con articulo con variaciones y sin SKU asignado no
+  // pueden mover stock (los movimientos las saltan).
+  sLineasSinSku := LineasSinSkuRequerido(
+    dmmPedidos.unqryTablaG.Connection, ds, 'PEDLIN');
+  if (sLineasSinSku <> '') and
+     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
+                 'con variaciones sin SKU asignado y no moverán stock. ' +
+                 '¿Crear el albarán de todas formas?',
+                 mtWarning, [mbYes, mbNo], 0) <> mrYes) then
+    Exit;
   lst := TList<TPair<string, Currency>>.Create;
   try
     // Mientras recogemos las líneas a entregar, vamos comprobando si
