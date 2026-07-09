@@ -121,6 +121,11 @@ private
     procedure ValidarCabeceraBeforePost(DataSet: TDataSet);
     procedure GuardarParametrosEDocFactura(ADataSet: TDataSet);
     function FacturaPermiteRecalcularLineas: Boolean;
+    // True si facturas_columnas_sku.sql esta aplicado (ATTR1..5 +
+    // NUM_ATRIBUTOS en fza_facturas_lineas). Sin la migracion, los
+    // SQL de lineas se quedan como en el dfm: incluir los parametros
+    // ATTR* sin campo daba 'Not found field corresponding parameter'.
+    function ColumnasSkuLineasAplicadas: Boolean;
     procedure PrepararCabeceraSinCamposComplejos;
     procedure QuitarCampoComplejoCabecera(ALista: TStrings;
                                           const ACampo: string);
@@ -129,6 +134,12 @@ public
     // Numero total de prendas (suma CANTIDAD_FACLIN de todas las lineas).
     // Se muestra en la pestana Totales; no se persiste en BBDD.
     function TotalPrendasFactura: Double;
+    // Contrato ColumnSKUcxGrid: trocea CODIGO_UNIDAD_FACLIN en las
+    // columnas reales ATTR1..5_VALOR_FACLIN + NUM_ATRIBUTOS_FACLIN para
+    // que el modo Desglose/Tallas pinte Color/Talla. Idempotente por
+    // comparacion (mismo criterio que TdmPedidos). No hace nada si la
+    // migracion facturas_columnas_sku.sql no esta aplicada.
+    procedure DesempaquetarAtributosLineas;
     procedure GetCodigoAutoCliente;
     procedure GetCodigoAutoEmpresa;
     procedure CrearCliente;
@@ -1008,6 +1019,116 @@ begin
     '  AND SERIE_FAC = :Old_SERIE_FAC';
   PrepararCabeceraSinCamposComplejos;
   unqryLinFac.Connection := inLibGlobalVar.oConn;
+  // Contrato ColumnSKUcxGrid (facturas_columnas_sku.sql): los SQL del
+  // dfm no conocen las columnas nuevas (ATTR1..5 + NUM_ATRIBUTOS); se
+  // reescriben aqui COMPLETOS para no editar el dfm cableado (mismo
+  // criterio que TdmPedidos con fza_pedidos_lineas). SOLO si la
+  // migracion esta aplicada: sin los campos, los parametros ATTR*
+  // rompen el INSERT ('Not found field corresponding parameter').
+  if ColumnasSkuLineasAplicadas then
+  begin
+  unqryLinFac.SQLInsert.Text :=
+    'INSERT INTO fza_facturas_lineas ' +
+    ' (NUMERO_FAC_FACLIN, SERIE_FAC_FACLIN, LINEA_FACLIN, ' +
+    '  CODIGO_ART_FACLIN, CODIGO_UNIDAD_FACLIN, CODIGO_FAM_FACLIN, ' +
+    '  NOMBRE_FAM_FACLIN, PRECIO_ULT_COMPRA_FACLIN, CODIGO_PRV_FACLIN, ' +
+    '  RAZON_SOCIAL_PROVEEDOR_FACLIN, ESPROVEEDORPRINCIPAL_FACLIN, ' +
+    '  FECHA_ENTREGA_FACLIN, TIPO_CANTIDAD_ARTICULO_FACLIN, ' +
+    '  ESIMP_INCL_TARIFA_FACLIN, TIPO_IVA_ARTICULO_FACLIN, ' +
+    '  DESCRIPCION_ARTICULO_FACLIN, DESCRIPCION_VARIACION_FACLIN, ' +
+    '  CODIGO_TAR_FACLIN, CANTIDAD_FACLIN, PRECIO_SALIDA_FACLIN, ' +
+    '  PORCENTAJE_DTO_FACLIN, PRECIO_DTO_FACLIN, ' +
+    '  PRECIO_VENTA_SIVA_ARTICULO_FACLIN, PORCENTAJE_IVA_FACLIN, ' +
+    '  PRECIO_VENTA_CIVA_ARTICULO_FACLIN, TOTAL_FACLIN, ' +
+    '  TOTAL_FAC_SIVA_FACLIN, ' +
+    '  ATTR1_VALOR_FACLIN, ATTR1_NOMBRE_FACLIN, ' +
+    '  ATTR2_VALOR_FACLIN, ATTR2_NOMBRE_FACLIN, ' +
+    '  ATTR3_VALOR_FACLIN, ATTR3_NOMBRE_FACLIN, ' +
+    '  ATTR4_VALOR_FACLIN, ATTR4_NOMBRE_FACLIN, ' +
+    '  ATTR5_VALOR_FACLIN, ATTR5_NOMBRE_FACLIN, ' +
+    '  NUM_ATRIBUTOS_FACLIN, ' +
+    '  INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+    'VALUES ' +
+    ' (:NUMERO_FAC_FACLIN, :SERIE_FAC_FACLIN, :LINEA_FACLIN, ' +
+    '  :CODIGO_ART_FACLIN, :CODIGO_UNIDAD_FACLIN, :CODIGO_FAM_FACLIN, ' +
+    '  :NOMBRE_FAM_FACLIN, :PRECIO_ULT_COMPRA_FACLIN, ' +
+    '  :CODIGO_PRV_FACLIN, :RAZON_SOCIAL_PROVEEDOR_FACLIN, ' +
+    '  :ESPROVEEDORPRINCIPAL_FACLIN, :FECHA_ENTREGA_FACLIN, ' +
+    '  :TIPO_CANTIDAD_ARTICULO_FACLIN, :ESIMP_INCL_TARIFA_FACLIN, ' +
+    '  :TIPO_IVA_ARTICULO_FACLIN, :DESCRIPCION_ARTICULO_FACLIN, ' +
+    '  :DESCRIPCION_VARIACION_FACLIN, :CODIGO_TAR_FACLIN, ' +
+    '  :CANTIDAD_FACLIN, :PRECIO_SALIDA_FACLIN, :PORCENTAJE_DTO_FACLIN, ' +
+    '  :PRECIO_DTO_FACLIN, :PRECIO_VENTA_SIVA_ARTICULO_FACLIN, ' +
+    '  :PORCENTAJE_IVA_FACLIN, :PRECIO_VENTA_CIVA_ARTICULO_FACLIN, ' +
+    '  :TOTAL_FACLIN, :TOTAL_FAC_SIVA_FACLIN, ' +
+    '  :ATTR1_VALOR_FACLIN, :ATTR1_NOMBRE_FACLIN, ' +
+    '  :ATTR2_VALOR_FACLIN, :ATTR2_NOMBRE_FACLIN, ' +
+    '  :ATTR3_VALOR_FACLIN, :ATTR3_NOMBRE_FACLIN, ' +
+    '  :ATTR4_VALOR_FACLIN, :ATTR4_NOMBRE_FACLIN, ' +
+    '  :ATTR5_VALOR_FACLIN, :ATTR5_NOMBRE_FACLIN, ' +
+    '  :NUM_ATRIBUTOS_FACLIN, ' +
+    '  :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODIF)';
+  unqryLinFac.SQLUpdate.Text :=
+    'UPDATE fza_facturas_lineas SET ' +
+    '  NUMERO_FAC_FACLIN = :NUMERO_FAC_FACLIN, ' +
+    '  SERIE_FAC_FACLIN = :SERIE_FAC_FACLIN, ' +
+    '  LINEA_FACLIN = :LINEA_FACLIN, ' +
+    '  CODIGO_ART_FACLIN = :CODIGO_ART_FACLIN, ' +
+    '  CODIGO_UNIDAD_FACLIN = :CODIGO_UNIDAD_FACLIN, ' +
+    '  CODIGO_FAM_FACLIN = :CODIGO_FAM_FACLIN, ' +
+    '  NOMBRE_FAM_FACLIN = :NOMBRE_FAM_FACLIN, ' +
+    '  PRECIO_ULT_COMPRA_FACLIN = :PRECIO_ULT_COMPRA_FACLIN, ' +
+    '  CODIGO_PRV_FACLIN = :CODIGO_PRV_FACLIN, ' +
+    '  RAZON_SOCIAL_PROVEEDOR_FACLIN = :RAZON_SOCIAL_PROVEEDOR_FACLIN, ' +
+    '  ESPROVEEDORPRINCIPAL_FACLIN = :ESPROVEEDORPRINCIPAL_FACLIN, ' +
+    '  FECHA_ENTREGA_FACLIN = :FECHA_ENTREGA_FACLIN, ' +
+    '  TIPO_CANTIDAD_ARTICULO_FACLIN = :TIPO_CANTIDAD_ARTICULO_FACLIN, ' +
+    '  ESIMP_INCL_TARIFA_FACLIN = :ESIMP_INCL_TARIFA_FACLIN, ' +
+    '  TIPO_IVA_ARTICULO_FACLIN = :TIPO_IVA_ARTICULO_FACLIN, ' +
+    '  DESCRIPCION_ARTICULO_FACLIN = :DESCRIPCION_ARTICULO_FACLIN, ' +
+    '  DESCRIPCION_VARIACION_FACLIN = :DESCRIPCION_VARIACION_FACLIN, ' +
+    '  CODIGO_TAR_FACLIN = :CODIGO_TAR_FACLIN, ' +
+    '  CANTIDAD_FACLIN = :CANTIDAD_FACLIN, ' +
+    '  PRECIO_SALIDA_FACLIN = :PRECIO_SALIDA_FACLIN, ' +
+    '  PORCENTAJE_DTO_FACLIN = :PORCENTAJE_DTO_FACLIN, ' +
+    '  PRECIO_DTO_FACLIN = :PRECIO_DTO_FACLIN, ' +
+    '  PRECIO_VENTA_SIVA_ARTICULO_FACLIN = ' +
+    '    :PRECIO_VENTA_SIVA_ARTICULO_FACLIN, ' +
+    '  PORCENTAJE_IVA_FACLIN = :PORCENTAJE_IVA_FACLIN, ' +
+    '  PRECIO_VENTA_CIVA_ARTICULO_FACLIN = ' +
+    '    :PRECIO_VENTA_CIVA_ARTICULO_FACLIN, ' +
+    '  TOTAL_FACLIN = :TOTAL_FACLIN, ' +
+    '  TOTAL_FAC_SIVA_FACLIN = :TOTAL_FAC_SIVA_FACLIN, ' +
+    '  ATTR1_VALOR_FACLIN = :ATTR1_VALOR_FACLIN, ' +
+    '  ATTR1_NOMBRE_FACLIN = :ATTR1_NOMBRE_FACLIN, ' +
+    '  ATTR2_VALOR_FACLIN = :ATTR2_VALOR_FACLIN, ' +
+    '  ATTR2_NOMBRE_FACLIN = :ATTR2_NOMBRE_FACLIN, ' +
+    '  ATTR3_VALOR_FACLIN = :ATTR3_VALOR_FACLIN, ' +
+    '  ATTR3_NOMBRE_FACLIN = :ATTR3_NOMBRE_FACLIN, ' +
+    '  ATTR4_VALOR_FACLIN = :ATTR4_VALOR_FACLIN, ' +
+    '  ATTR4_NOMBRE_FACLIN = :ATTR4_NOMBRE_FACLIN, ' +
+    '  ATTR5_VALOR_FACLIN = :ATTR5_VALOR_FACLIN, ' +
+    '  ATTR5_NOMBRE_FACLIN = :ATTR5_NOMBRE_FACLIN, ' +
+    '  NUM_ATRIBUTOS_FACLIN = :NUM_ATRIBUTOS_FACLIN, ' +
+    '  INSTANTE_MODIF = :INSTANTE_MODIF, ' +
+    '  INSTANTE_ALTA = :INSTANTE_ALTA, ' +
+    '  USUARIO_ALTA = :USUARIO_ALTA, ' +
+    '  USUARIO_MODIF = :USUARIO_MODIF ' +
+    'WHERE NUMERO_FAC_FACLIN = :Old_NUMERO_FAC_FACLIN ' +
+    '  AND SERIE_FAC_FACLIN = :Old_SERIE_FAC_FACLIN ' +
+    '  AND LINEA_FACLIN = :Old_LINEA_FACLIN';
+  unqryLinFac.SQLRefresh.Text :=
+    'SELECT * FROM fza_facturas_lineas ' +
+    ' WHERE NUMERO_FAC_FACLIN = :NUMERO_FAC_FACLIN ' +
+    '   AND SERIE_FAC_FACLIN = :SERIE_FAC_FACLIN ' +
+    '   AND LINEA_FACLIN = :LINEA_FACLIN';
+  unqryLinFac.SQLLock.Text :=
+    'SELECT * FROM fza_facturas_lineas ' +
+    ' WHERE NUMERO_FAC_FACLIN = :Old_NUMERO_FAC_FACLIN ' +
+    '   AND SERIE_FAC_FACLIN = :Old_SERIE_FAC_FACLIN ' +
+    '   AND LINEA_FACLIN = :Old_LINEA_FACLIN ' +
+    ' FOR UPDATE';
+  end;
   unqrySeries.Connection := inLibGlobalVar.oConn;
   unqryIvas.Connection := inLibGlobalVar.oConn;
   unqryRecibos.Connection := inLibGlobalVar.oConn;
@@ -1088,6 +1209,37 @@ begin
     Result := (sFase = '') or SameText(sFase, 'BORRADOR') or
               (SinVerifactuActivo and
                SameText(sFase, cFaseFacturaSinVerifactu));
+  end;
+end;
+
+function TdmFacturas.ColumnasSkuLineasAplicadas: Boolean;
+var
+  qCol: TUniQuery;
+begin
+  Result := False;
+  if inLibGlobalVar.oConn <> nil then
+  begin
+    qCol := TUniQuery.Create(nil);
+    try
+      try
+        qCol.Connection := inLibGlobalVar.oConn;
+        qCol.SQL.Text :=
+          'SELECT COUNT(*) AS N ' +
+          '  FROM INFORMATION_SCHEMA.COLUMNS ' +
+          ' WHERE TABLE_SCHEMA = DATABASE() ' +
+          '   AND TABLE_NAME = ''fza_facturas_lineas'' ' +
+          '   AND COLUMN_NAME IN (''ATTR1_VALOR_FACLIN'', ' +
+          '                       ''NUM_ATRIBUTOS_FACLIN'')';
+        qCol.Open;
+        Result := qCol.FieldByName('N').AsInteger = 2;
+      except
+        // Ante cualquier fallo se asume SIN migrar: los SQL del dfm
+        // siguen funcionando y solo se pierde el desglose de atributos.
+        Result := False;
+      end;
+    finally
+      FreeAndNil(qCol);
+    end;
   end;
 end;
 
@@ -1668,6 +1820,74 @@ function TdmFacturas.TotalPrendasFactura: Double;
 begin
   Result := TotalPrendasLineasVenta(unqryLinFac,
     'TIPO_IVA_ARTICULO_FACLIN');
+end;
+
+procedure TdmFacturas.DesempaquetarAtributosLineas;
+var
+  Partes: TArray<string>;
+  Sku, sEsperado: string;
+  i: Integer;
+  Bm: TBookmark;
+  bCambia: Boolean;
+begin
+  if unqryLinFac.Active and (not unqryLinFac.IsEmpty) and
+     (unqryLinFac.FindField('ATTR1_VALOR_FACLIN') <> nil) and
+     (unqryLinFac.FindField('NUM_ATRIBUTOS_FACLIN') <> nil) and
+     (not unqryLinFac.ReadOnly) then
+  begin
+    Bm := unqryLinFac.GetBookmark;
+    unqryLinFac.DisableControls;
+    try
+      unqryLinFac.First;
+      while not unqryLinFac.Eof do
+      begin
+        Sku := unqryLinFac.FieldByName(
+          'CODIGO_UNIDAD_FACLIN').AsString;
+        Partes := Sku.Split(['/']);
+        if Length(Partes) > 1 then
+        begin
+          // Idempotente POR COMPARACION: se edita solo si algun ATTR
+          // no coincide con el troceo del SKU (mismo criterio que
+          // TdmPedidos: el "saltar si ATTR1 relleno" dejaba lineas a
+          // medias sin resincronizar).
+          bCambia := unqryLinFac.FieldByName(
+            'NUM_ATRIBUTOS_FACLIN').AsInteger <> Length(Partes) - 1;
+          for i := 1 to 5 do
+          begin
+            if i < Length(Partes) then
+              sEsperado := Partes[i]
+            else
+              sEsperado := '';
+            if Trim(unqryLinFac.FieldByName('ATTR' + IntToStr(i) +
+                 '_VALOR_FACLIN').AsString) <> sEsperado then
+              bCambia := True;
+          end;
+          if bCambia then
+          begin
+            unqryLinFac.Edit;
+            unqryLinFac.FieldByName(
+              'NUM_ATRIBUTOS_FACLIN').AsInteger := Length(Partes) - 1;
+            for i := 1 to 5 do
+            begin
+              if i < Length(Partes) then
+                unqryLinFac.FieldByName('ATTR' + IntToStr(i) +
+                  '_VALOR_FACLIN').AsString := Partes[i]
+              else
+                unqryLinFac.FieldByName('ATTR' + IntToStr(i) +
+                  '_VALOR_FACLIN').AsString := '';
+            end;
+            unqryLinFac.Post;
+          end;
+        end;
+        unqryLinFac.Next;
+      end;
+      if unqryLinFac.BookmarkValid(Bm) then
+        unqryLinFac.GotoBookmark(Bm);
+    finally
+      unqryLinFac.EnableControls;
+      unqryLinFac.FreeBookmark(Bm);
+    end;
+  end;
 end;
 
 procedure TdmFacturas.GetCodigoAutoCliente;

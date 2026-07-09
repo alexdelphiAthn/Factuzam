@@ -53,7 +53,9 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier,
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
-  dxSkinWhiteprint, dxSkinXmas2008Blue;
+  dxSkinWhiteprint, dxSkinXmas2008Blue,
+  // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
+  inLibColumnasSkuIntf, inLibGridPivoteVenta;
 
 type
   TfrmMtoFacturasBase = class(TfrmMtoGen)
@@ -559,6 +561,10 @@ type
     FConsolidandoSku: Boolean;
     FReaplicandoVisibilidadDetalle: Boolean;
     FActualizandoLabelPrendas: Boolean;
+    FModoEntrada: IModoEntradaGrid;
+    FModoEntradaSel: TModoColumnasSku;
+    FColsModoConstruido: Boolean;
+    FConstruyendoModo: Boolean;
     function  EsVentaMayorNormal: Boolean;
     function  TextoCobroPlural: string;
     function  PrefijoExportCobros: string;
@@ -623,6 +629,41 @@ type
     // de celda; mismo patron defensivo que en inMtoCajaOpe.
     procedure RecalcLineaFacturaSegura(Sender: TObject);
     procedure GuardarPendienteAntesDeImprimir;
+    // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
+    // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal con las
+    // lineas de la factura a la vista. El Construir hace ClearItems:
+    // las columnas del dfm mueren y las propias se recrean en runtime
+    // reasignando las referencias ctb* para que la logica existente
+    // (visibilidad, ImpIncl, recalculo) siga funcionando (patron de
+    // pedidos/inventarios). El modo tallas es inLibGridPivoteVenta con
+    // BandaUnica: pivot SOLO visual, las lineas fiscales no se tocan.
+    // Con el modo "Crear/Act Articulo" activo se reconstruye la
+    // presentacion CLASICA (articulo + SKU con sus handlers legacy):
+    // el contrato no cubre el alta de articulos inline.
+
+    function  ModoCreacionSolicitado: Boolean;
+    procedure ConstruirModoEntrada;
+    procedure CrearColumnasHostFactura(bClasico: Boolean);
+    procedure MostrarColumnasAtributoGlobalesFac;
+    procedure ModoEntradaResuelto(const ACodArt, ASku,
+                                  ADescripcion: string;
+                                  ACompleto: Boolean);
+    // Aplica articulo/SKU a la linea activa con el flujo fiscal clasico
+    // (tarifa del cliente, IVA, dtos, precios y recalculo de totales).
+    // Es el nucleo compartido de ConsolidarSkuLinea y del OnResuelto.
+    procedure AplicarArticuloFactura(const AEntrada: string);
+    // Porcentaje de IVA de la cabecera para un tipo (N/R/S/E).
+    function  PorcentajeIvaFactura(const ATipoIva: string): Double;
+    // Contrato ObtenerPrecioSku del modo tallas: PVP C/IVA que la
+    // factura aplicaria al SKU, para que la consolidacion visual separe
+    // filas por precio.
+    function  PrecioSkuTallas(const ACodigoArticulo,
+                              ACodigoSku: string): Double;
+    procedure PivoteVentaCrearLineaSku(const ACodigoSku: string);
+    procedure PivoteVentaBandaCambiada(ABanda: TBandaPivoteVenta);
+  protected
+    // F1 = alternar modo de entrada (KeyPreview de TfrmBase).
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     dmmFacturas : TdmFacturas;
   end;
@@ -661,7 +702,9 @@ uses
   inMtoClientes,
   inLibGlobalVar,
   inLibLog,
-  inLibtb;
+  inLibtb,
+  // Factoria del contrato de entrada ColumnSKUcxGrid.
+  inLibColumnasSku;
 
 {$R *.dfm}
 
@@ -717,6 +760,20 @@ end;
 
 destructor TfrmMtoFacturasBase.Destroy;
 begin
+  // El modo del contrato se libera ANTES del inherited: su teardown
+  // (Desmontar/destructor) toca el view y el dataset de lineas, que
+  // deben seguir vivos. Si se dejara a la finalizacion de la interfaz,
+  // correria con el DM ya destruido.
+  if FModoEntrada <> nil then
+  begin
+    try
+      FModoEntrada.Desmontar;
+    except
+      // Teardown defensivo en cierre: nada que hacer si el grid ya
+      // esta a medio destruir.
+    end;
+    FModoEntrada := nil;
+  end;
   RestaurarEnterSku(Self);
   FreeAndNil(FArtMostrarSku);
   inherited;
@@ -1463,6 +1520,10 @@ procedure TfrmMtoFacturasBase.ActivarSkuArticuloLinea(const ACodArt: string;
 var
   oCampoSku: TField;
 begin
+  // Con un modo del contrato construido, la columna SKU es del modo
+  // (o no existe): la eleccion de color/talla la resuelve su paleta.
+  if FModoEntrada <> nil then
+    Exit;
   if MostrarSkuArticulo(ACodArt) then
   begin
     ctbCODIGO_UNIDAD_FACTURA_LINEA.Visible := True;
@@ -2054,6 +2115,12 @@ begin
   cbbFORMAPAGO.Properties.ListSource := dmmFacturas.dsFormasPago;
   tvLineasFactura.DataController.DataSource := dmmFacturas.dsLinFac;
   cxgrdLineasFactura.OnEnter := cxgrdLineasFacturaEnter;
+  // Contrato de entrada ColumnSKUcxGrid: Auto (desglose) por defecto;
+  // F1 cicla los modos. La primera construccion se hace al entrar en el
+  // grid de lineas (las columnas del dfm siguen vivas hasta entonces).
+  FModoEntradaSel := mcsAuto;
+  FColsModoConstruido := False;
+  FConstruyendoModo := False;
   cbbTARIFA_ARTICULOS_CLIENTES.Properties.ListSource := dmmFacturas.dsTarifas;
   AplicarOrigenCobros;
   btnReciboEmitido.OnClick := btnReciboEmitidoClick;
@@ -2487,6 +2554,9 @@ var
   dc       : TcxCustomDataController;
   bMostrar : Boolean;
 begin
+  // Con un modo del contrato construido, la columna SKU es del modo.
+  if FModoEntrada <> nil then
+    Exit;
   // La columna SKU solo aparece si alguna linea la necesita (articulo con
   // variacion / varios SKUs / nuevo) o si la cabecera esta en modo creacion.
   bMostrar := ModoCreacionActivo;
@@ -2507,6 +2577,10 @@ end;
 
 procedure TfrmMtoFacturasBase.ReaplicarVisibilidadDetalle;
 begin
+  // Durante la reconstruccion del modo las columnas ctb* estan muertas
+  // (ClearItems) hasta que CrearColumnasHostFactura las reasigna.
+  if FConstruyendoModo then
+    Exit;
   if not FReaplicandoVisibilidadDetalle then
   begin
     FReaplicandoVisibilidadDetalle := True;
@@ -2562,14 +2636,29 @@ begin
   if Field = nil then
   begin
     ReaplicarVisibilidadDetalle;
-    // Alta/baja/edicion de linea cambia el total de prendas.
-    ActualizarLabelPrendas;
+    // Alta/baja/edicion de linea cambia el total de prendas. Con la
+    // linea a medio insertar/editar no se recalcula (el recorrido esta
+    // ademas vetado en TotalPrendasLineasVenta): se refresca en el
+    // DataChange del Post.
+    if (dmmFacturas = nil) or
+       (not (dmmFacturas.unqryLinFac.State in dsEditModes)) then
+      ActualizarLabelPrendas;
   end;
 end;
 
 procedure TfrmMtoFacturasBase.chkCrearArticulosPropertiesChange(Sender: TObject);
 begin
   inherited;
+  if FConstruyendoModo then
+    Exit;
+  // Con la presentacion reconstruida, alternar el modo creacion cambia
+  // entre la presentacion CLASICA (alta de articulos inline) y el
+  // contrato: se reconstruye entera.
+  if FColsModoConstruido then
+  begin
+    ConstruirModoEntrada;
+    Exit;
+  end;
   AplicarVisibilidadColumnasCreacion(chkCrearArticulos.Checked);
   // En modo creacion el SKU hace falta para los articulos nuevos: lo
   // mostramos ya. Al desactivarlo, recalculamos por si alguna linea con
@@ -2677,6 +2766,9 @@ end;
 
 procedure TfrmMtoFacturasBase.dsTablaGDataChange(Sender: TObject;
                                                  Field: TField);
+var
+  bClasicoNecesario: Boolean;
+  bClasicoConstruido: Boolean;
 begin
   // Field = nil: cambio de registro (scroll) o refresco completo
   if Field = nil then
@@ -2687,6 +2779,24 @@ begin
     // Al navegar entre facturas hay que recalcular el total de prendas:
     // las lineas cargadas son las de la factura recien enfocada.
     ActualizarLabelPrendas;
+    // Contrato de entrada: al navegar de factura, las lineas llegan
+    // recargadas por el master-detail. Se reconstruye si cambia la
+    // necesidad de presentacion clasica (modo creacion por cabecera) o
+    // si el modo tallas debe re-pivotar su cache; en desglose basta
+    // desempaquetar SKU->ATTR (leccion de inventarios/pedidos).
+    if FColsModoConstruido and (not FConstruyendoModo) and
+       Assigned(dmmFacturas) and dmmFacturas.unqryLinFac.Active and
+       (not (dsTablaG.State in dsEditModes)) then
+    begin
+      bClasicoNecesario := ModoCreacionSolicitado;
+      bClasicoConstruido := FModoEntrada = nil;
+      if (bClasicoNecesario <> bClasicoConstruido) or
+         ((not bClasicoNecesario) and
+          (FModoEntradaSel = mcsTallasHorPed)) then
+        ConstruirModoEntrada
+      else if (FModoEntrada <> nil) and (FModoEntradaSel <> mcsSku) then
+        dmmFacturas.DesempaquetarAtributosLineas;
+    end;
   end;
 end;
 
@@ -3086,6 +3196,16 @@ end;
 procedure TfrmMtoFacturasBase.cxgrdLineasFacturaEnter(Sender: TObject);
 begin
   AsegurarPrimeraLineaFacturaBorrador;
+  // Contrato de entrada: primera construccion al entrar en el grid (las
+  // lineas ya estan abiertas como detail de la factura). El teardown
+  // cancela la linea vacia auto-anadida: se recrea despues.
+  if not FColsModoConstruido then
+  begin
+    ConstruirModoEntrada;
+    AsegurarPrimeraLineaFacturaBorrador;
+  end;
+  if FModoEntrada <> nil then
+    FModoEntrada.MostrarEditor;
 end;
 
 procedure TfrmMtoFacturasBase.CambiarIVA;
@@ -3234,6 +3354,680 @@ end;
 -REVISAR EL DATASET EN UNIDATAFACTURAS
 -REVISAR LOS PROCEDIMIENTOS ABONAR Y DUPLICAR
 -REVISAR EL AFTERINSERT PARA PONER UN VALOR POR DEFECTO*)
+
+// ===========================================================================
+// CONTRATO DE ENTRADA ColumnSKUcxGrid (Auto / SKU / Tallas horizontal + F1)
+// ===========================================================================
+
+function TfrmMtoFacturasBase.ModoCreacionSolicitado: Boolean;
+begin
+  // El alta de articulos inline (Crear/Act Articulo) necesita la
+  // presentacion clasica: el contrato rechaza articulos inexistentes.
+  Result := ModoCreacionActivo or
+            (Assigned(chkCrearArticulos) and chkCrearArticulos.Checked);
+end;
+
+procedure TfrmMtoFacturasBase.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  // F1: alterna Auto (desglose) -> SKU -> Tallas horizontal con las
+  // lineas de la factura a la vista. Con el modo creacion de articulos
+  // activo la presentacion es la clasica y F1 queda inerte.
+  if (Key = VK_F1) and (Shift = []) and
+     (pcPantalla.ActivePage = tsFicha) and
+     (pcDetail.ActivePage = tsLineasFactura) and
+     (not ModoCreacionSolicitado) then
+  begin
+    Key := 0;
+    case FModoEntradaSel of
+      mcsAuto: FModoEntradaSel := mcsSku;
+      mcsSku: FModoEntradaSel := mcsTallasHorPed;
+    else
+      FModoEntradaSel := mcsAuto;
+    end;
+    ConstruirModoEntrada;
+  end;
+  inherited;
+end;
+
+procedure TfrmMtoFacturasBase.ConstruirModoEntrada;
+var
+  Cfg: TConfigColumnasSku;
+  CfgPV: TGridPivoteVentaConfig;
+  i: Integer;
+  ds: TDataSet;
+  bClasico: Boolean;
+begin
+  if (dmmFacturas = nil) or (csDestroying in ComponentState) then
+    Exit;
+  ds := dmmFacturas.unqryLinFac;
+  if not ds.Active then
+    Exit;
+  bClasico := ModoCreacionSolicitado;
+  FConstruyendoModo := True;
+  // dsLinFacStateChange (DM) y dsLinFacDataChange tocan columnas ctb*
+  // que mueren en el ClearItems: se desenganchan durante el rebuild.
+  dmmFacturas.dsLinFac.OnStateChange := nil;
+  dmmFacturas.dsLinFac.OnDataChange := nil;
+  try
+    // Teardown del modo anterior (patron pedidos/inventarios).
+    if tvLineasFactura.Controller.EditingController.IsEditing then
+      try
+        tvLineasFactura.Controller.EditingController.HideEdit(False);
+      except
+        on E: EInvalidOperation do
+          ;
+      end;
+    if ds.State in dsEditModes then
+      ds.Cancel;
+    if FModoEntrada <> nil then
+      FModoEntrada.Desmontar;
+    tvLineasFactura.OnInitEdit := nil;
+    tvLineasFactura.OnEditKeyDown := nil;
+    tvLineasFactura.OnEditing := nil;
+    tvLineasFactura.OnFocusedRecordChanged := nil;
+    tvLineasFactura.OnFocusedItemChanged := nil;
+    tvLineasFactura.OnCustomDrawCell := nil;
+    // Las columnas del modo saliente guardan handlers del objeto que se
+    // libera abajo: se eliminan ANTES (leccion del AV en repintados
+    // diferidos de pedidos, 07/07/26).
+    tvLineasFactura.ClearItems;
+    FModoEntrada := nil;
+    // El flag ANTES del Construir: si algo aborta a medias, nadie debe
+    // tocar las columnas del dfm, muertas en el ClearItems.
+    FColsModoConstruido := True;
+    if bClasico then
+    begin
+      // Presentacion CLASICA (modo creacion de articulos): articulo +
+      // SKU con sus handlers legacy + columnas propias del documento.
+      CrearColumnasHostFactura(True);
+      tvLineasFactura.OnInitEdit := tvLineasFacturaInitEdit;
+      tvLineasFactura.OnEditKeyDown := tvLineasFacturaEditKeyDown;
+      tvLineasFactura.OnEditing := tvLineasFacturaEditing;
+      tsLineasFactura.Caption := '&1_Lineas de Borrador [Clásico]';
+    end
+    else
+    begin
+      // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
+      // (columnas reales _FACLIN; idempotente por linea).
+      if FModoEntradaSel <> mcsSku then
+        dmmFacturas.DesempaquetarAtributosLineas;
+      Cfg := Default(TConfigColumnasSku);
+      Cfg.Conexion := dmmFacturas.unqryTablaG.Connection;
+      Cfg.View := tvLineasFactura;
+      Cfg.Cds := ds;
+      Cfg.Modo := FModoEntradaSel;
+      if dmmFacturas.unqryTablaG.FindField('CODIGO_ALM_FAC') <> nil then
+        Cfg.AlmacenStock := Trim(dmmFacturas.unqryTablaG.
+          FieldByName('CODIGO_ALM_FAC').AsString);
+      Cfg.Distribuido := False;
+      Cfg.Campos.CodigoArt := 'CODIGO_ART_FACLIN';
+      Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_FACLIN';
+      Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_FACLIN';
+      Cfg.Campos.Cantidad := 'CANTIDAD_FACLIN';
+      Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_FACLIN';
+      for i := 1 to 5 do
+      begin
+        Cfg.Campos.AttrValor[i] :=
+          'ATTR' + IntToStr(i) + '_VALOR_FACLIN';
+        Cfg.Campos.AttrNombre[i] :=
+          'ATTR' + IntToStr(i) + '_NOMBRE_FACLIN';
+      end;
+      // Precio por SKU para la consolidacion VISUAL del modo tallas:
+      // filas con precio distinto no fusionan.
+      Cfg.ObtenerPrecioSku := PrecioSkuTallas;
+      if FModoEntradaSel = mcsTallasHorPed then
+      begin
+        CfgPV := Default(TGridPivoteVentaConfig);
+        CfgPV.Conexion := dmmFacturas.unqryTablaG.Connection;
+        CfgPV.Usuario := oUser;
+        CfgPV.SourceMaster := dsTablaG;
+        CfgPV.SourceLineas := dmmFacturas.dsLinFac;
+        CfgPV.FieldSerieMaster := 'SERIE_FAC';
+        CfgPV.FieldNumeroMaster := 'NUMERO_FAC';
+        CfgPV.FieldLinea := 'LINEA_FACLIN';
+        CfgPV.FieldArt := 'CODIGO_ART_FACLIN';
+        CfgPV.FieldSku := 'CODIGO_UNIDAD_FACLIN';
+        CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_FACLIN';
+        // Factura: UNA sola cantidad por linea -> banda unica.
+        CfgPV.FieldCantidadPedida := 'CANTIDAD_FACLIN';
+        CfgPV.FieldCantidadEntregada := '';
+        CfgPV.FieldCantidadAAlbaranar := '';
+        CfgPV.FieldPrecioBase := 'PRECIO_VENTA_CIVA_ARTICULO_FACLIN';
+        CfgPV.FieldAlmacen := '';
+        CfgPV.FieldAlmacenMaster := '';
+        CfgPV.MaxColumnas := 20;
+        CfgPV.BandaUnica := True;
+        CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
+        CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
+        FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
+      end
+      else
+        FModoEntrada := CrearModoEntradaGrid(Cfg);
+      FModoEntrada.OnResuelto := ModoEntradaResuelto;
+      FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
+      FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
+      // SIEMPRE primero el bloque del modo (articulo/color/tallas o
+      // SKU) y detras las columnas del documento: queda Nro | Articulo
+      // | Color | Cantidad/tallas | Descripcion | precios | totales.
+      // El pivote publica sus Values[] no-bound en diferido, asi que
+      // crear las columnas del host despues no los pisa.
+      FModoEntrada.Construir;
+      CrearColumnasHostFactura(False);
+      case DetectarModoColumnasSku(Cfg) of
+        mcsSku:
+          tsLineasFactura.Caption := '&1_Lineas de Borrador [SKU]';
+        mcsTallasHorPed:
+          PivoteVentaBandaCambiada(bpvPedida);
+      else
+        begin
+          tsLineasFactura.Caption := '&1_Lineas de Borrador [Desglose]';
+          MostrarColumnasAtributoGlobalesFac;
+        end;
+      end;
+    end;
+  finally
+    FConstruyendoModo := False;
+    dmmFacturas.dsLinFac.OnDataChange := dsLinFacDataChange;
+    dmmFacturas.dsLinFac.OnStateChange := dmmFacturas.dsLinFacStateChange;
+  end;
+  // Reglas de visibilidad e ImpIncl sobre las columnas recreadas.
+  ReaplicarVisibilidadDetalle;
+  dmmFacturas.dsLinFacStateChange(dmmFacturas.dsLinFac);
+end;
+
+procedure TfrmMtoFacturasBase.CrearColumnasHostFactura(bClasico: Boolean);
+  function Col(const ACaption, ACampo: string; AAncho: Integer;
+               AEditable: Boolean): TcxGridDBColumn;
+  begin
+    Result := tvLineasFactura.CreateColumn as TcxGridDBColumn;
+    Result.Caption := ACaption;
+    Result.DataBinding.FieldName := ACampo;
+    Result.Width := AAncho;
+    Result.Options.Editing := AEditable;
+  end;
+var
+  bTallas: Boolean;
+begin
+  // Columnas propias del documento tras el ClearItems del contrato. Se
+  // REASIGNAN las referencias ctb* del dfm para que la logica existente
+  // (dsLinFacStateChange, visibilidad de creacion, toggles de cabecera)
+  // siga funcionando sobre las columnas recreadas.
+  bTallas := (not bClasico) and (FModoEntradaSel = mcsTallasHorPed);
+  ctbLINEA_FACTURA_LINEA := Col('Nro Linea', 'LINEA_FACLIN', 60, False);
+  if bClasico then
+  begin
+    // Articulo + SKU clasicos con sus handlers de siempre (alta de
+    // articulos inline, busqueda [...] y combo de SKUs por articulo).
+    ctbCODIGO_ARTICULO_FACTURA_LINEA :=
+      Col('Código Artículo', 'CODIGO_ART_FACLIN', 152, True);
+    ctbCODIGO_ARTICULO_FACTURA_LINEA.PropertiesClass :=
+      TcxButtonEditProperties;
+    with TcxButtonEditProperties(
+           ctbCODIGO_ARTICULO_FACTURA_LINEA.Properties) do
+    begin
+      Buttons.Clear;
+      with Buttons.Add do
+      begin
+        Default := True;
+        Kind := bkEllipsis;
+      end;
+      OnButtonClick :=
+        cxgrdbclmntv1CODIGO_ARTICULO_FACTURA_LINEAPropertiesButtonClick;
+      OnEditValueChanged :=
+        cxgrdbclmntv1CODIGO_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged;
+    end;
+    ctbCODIGO_UNIDAD_FACTURA_LINEA :=
+      Col('SKU', 'CODIGO_UNIDAD_FACLIN', 180, True);
+    ctbCODIGO_UNIDAD_FACTURA_LINEA.Visible := False;
+    ctbCODIGO_UNIDAD_FACTURA_LINEA.PropertiesClass :=
+      TcxComboBoxProperties;
+    with TcxComboBoxProperties(
+           ctbCODIGO_UNIDAD_FACTURA_LINEA.Properties) do
+    begin
+      ImmediatePost := True;
+      PostPopupValueOnTab := True;
+      OnInitPopup := ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup;
+      OnCloseUp := ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesCloseUp;
+      OnEditValueChanged :=
+        ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged;
+    end;
+    ctbCODIGO_UNIDAD_FACTURA_LINEA.OnGetDataText :=
+      ctbCODIGO_UNIDAD_FACTURA_LINEAGetDataText;
+  end
+  else
+  begin
+    // Las columnas de articulo/SKU son del modo: referencias fuera.
+    ctbCODIGO_ARTICULO_FACTURA_LINEA := nil;
+    ctbCODIGO_UNIDAD_FACTURA_LINEA := nil;
+  end;
+  var ctbDESCRIPCION_VARIACION_FACTURA_LINEA :=
+    Col('Variación', 'DESCRIPCION_VARIACION_FACLIN', 140, False);
+  ctbDESCRIPCION_VARIACION_FACTURA_LINEA.Visible := False;
+  // Columnas de creacion de articulos (solo visibles en modo creacion).
+  ctbCODIGO_FAMILIA_FACTURA_LINEA :=
+    Col('Código Familia', 'CODIGO_FAM_FACLIN', 153, True);
+  ctbNOMBRE_FAMILIA_FACTURA_LINEA :=
+    Col('Nombre Familia', 'NOMBRE_FAM_FACLIN', 245, True);
+  ctbESPROVEEDORPRINCIPAL_FACTURA_LINEA :=
+    Col('Proveedor Principal', 'ESPROVEEDORPRINCIPAL_FACLIN', 172, True);
+  ctbESPROVEEDORPRINCIPAL_FACTURA_LINEA.PropertiesClass :=
+    TcxCheckBoxProperties;
+  ctbCODIGO_PROVEEDOR_FACTURA_LINEA :=
+    Col('Código Proveedor', 'CODIGO_PRV_FACLIN', 163, True);
+  ctbRAZONSOCIAL_PROVEEDOR_FACTURA_LINEA :=
+    Col('Razón Social Proveedor', 'RAZON_SOCIAL_PROVEEDOR_FACLIN',
+        200, True);
+  ctbPRECIO_ULT_COMPRA_FACTURA_LINEA :=
+    Col('Precio Coste', 'PRECIO_ULT_COMPRA_FACLIN', 100, True);
+  ctbPRECIO_ULT_COMPRA_FACTURA_LINEA.PropertiesClass :=
+    TcxCurrencyEditProperties;
+  AplicarVisibilidadColumnasCreacion(bClasico and ModoCreacionSolicitado);
+  // Descripcion (memo si la cabecera pide descripciones ampliadas).
+  ctbDESCRIPCION_ARTICULO_FACTURA_LINEA :=
+    Col('Descripción', 'DESCRIPCION_ARTICULO_FACLIN', 300, True);
+  if chkDescripcion_ampliada.Checked then
+  begin
+    ctbDESCRIPCION_ARTICULO_FACTURA_LINEA.PropertiesClassName :=
+      'TcxMemoProperties';
+    with TcxMemoProperties(
+           ctbDESCRIPCION_ARTICULO_FACTURA_LINEA.Properties) do
+    begin
+      VisibleLineCount := 3;
+      MaxLength := 1000;
+      ScrollBars := ssBoth;
+    end;
+  end;
+  // Cantidad y tipo de cantidad: fuera del modo tallas (alli las
+  // cantidades viven en las celdas de talla del pivote).
+  if not bTallas then
+  begin
+    ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA :=
+      Col('', 'TIPO_CANTIDAD_ARTICULO_FACLIN', 20, False);
+    ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA.Visible := False;
+    ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA.VisibleForCustomization :=
+      False;
+    ctbCANTIDAD_FACTURA_LINEA := Col('Cantidad', 'CANTIDAD_FACLIN',
+                                     90, True);
+    ctbCANTIDAD_FACTURA_LINEA.PropertiesClass := TcxSpinEditProperties;
+    TcxSpinEditProperties(ctbCANTIDAD_FACTURA_LINEA.Properties).
+      OnEditValueChanged :=
+        cxgrdbclmntv1CANTIDAD_FACTURA_LINEAPropertiesEditValueChanged;
+    // Decimales de la cantidad segun la unidad de la linea (metros...).
+    VincularCantidadGrid(ctbCANTIDAD_FACTURA_LINEA,
+                         ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA);
+  end
+  else
+  begin
+    ctbCANTIDAD_FACTURA_LINEA := nil;
+    ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA := nil;
+  end;
+  ctbPRECIOSALIDA_FACTURA_LINEA :=
+    Col('Precio Salida', 'PRECIO_SALIDA_FACLIN', 100, True);
+  ctbPRECIOSALIDA_FACTURA_LINEA.PropertiesClass :=
+    TcxCurrencyEditProperties;
+  TcxCurrencyEditProperties(ctbPRECIOSALIDA_FACTURA_LINEA.Properties).
+    OnEditValueChanged :=
+      tvLineasFacturaPRECIOSALIDA_FACTURA_LINEAPropertiesEditValueChanged;
+  ctbPORCEN_DTO_FACTURA_LINEA :=
+    Col('% Dto', 'PORCENTAJE_DTO_FACLIN', 80, True);
+  ctbPORCEN_DTO_FACTURA_LINEA.PropertiesClass := TcxSpinEditProperties;
+  with TcxSpinEditProperties(ctbPORCEN_DTO_FACTURA_LINEA.Properties) do
+  begin
+    DisplayFormat := '0.00 %';
+    EditFormat := '0.00 %';
+    MaxValue := 100;
+    OnEditValueChanged :=
+      tvLineasFacturaPORCEN_DTO_FACTURA_LINEAPropertiesEditValueChanged;
+  end;
+  ctbPRECIO_DTO_FACTURA_LINEA :=
+    Col('Menos Dto', 'PRECIO_DTO_FACLIN', 90, True);
+  ctbPRECIO_DTO_FACTURA_LINEA.PropertiesClass :=
+    TcxCurrencyEditProperties;
+  TcxCurrencyEditProperties(ctbPRECIO_DTO_FACTURA_LINEA.Properties).
+    OnEditValueChanged :=
+      tvLineasFacturaPRECIO_DTO_FACTURA_LINEAPropertiesEditValueChanged;
+  ctbPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA :=
+    Col('Precio Ud. sin IVA', 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN',
+        120, True);
+  ctbPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA.PropertiesClass :=
+    TcxCurrencyEditProperties;
+  TcxCurrencyEditProperties(
+    ctbPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA.Properties).
+      OnEditValueChanged :=
+ cxgrdbclmntv1PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged;
+  ctbIMP_INCL_TARIFA_FACTURA_LINEA :=
+    Col('ImpIncl', 'ESIMP_INCL_TARIFA_FACLIN', 79, True);
+  ctbIMP_INCL_TARIFA_FACTURA_LINEA.Visible := False;
+  ctbIMP_INCL_TARIFA_FACTURA_LINEA.PropertiesClass :=
+    TcxCheckBoxProperties;
+  with TcxCheckBoxProperties(
+         ctbIMP_INCL_TARIFA_FACTURA_LINEA.Properties) do
+  begin
+    ReadOnly := True;
+    ValueChecked := 'S';
+    ValueUnchecked := 'N';
+  end;
+  ctbTIPOIVA_ARTICULO_FACTURA_LINEA :=
+    Col('Tipo de IVA', 'TIPO_IVA_ARTICULO_FACLIN', 109, True);
+  ctbTIPOIVA_ARTICULO_FACTURA_LINEA.PropertiesClass :=
+    TcxLookupComboBoxProperties;
+  with TcxLookupComboBoxProperties(
+         ctbTIPOIVA_ARTICULO_FACTURA_LINEA.Properties) do
+  begin
+    DropDownListStyle := lsFixedList;
+    KeyFieldNames := 'CODIGO_ABREVIATURA_IVA_IVATIP';
+    with ListColumns.Add do
+    begin
+      Caption := 'Tipo de IVA';
+      FieldName := 'NOMBRE_TIPO_IVA_IVATIP';
+    end;
+    ListOptions.ShowHeader := False;
+    ListSource := dmmFacturas.dsIvasTipos;
+    OnChange :=
+      cxgrdbclmntv1TIPOIVA_ARTICULO_FACTURA_LINEAPropertiesChange;
+  end;
+  ctbPORCEN_IVA_FACTURA_LINEA :=
+    Col('% IVA', 'PORCENTAJE_IVA_FACLIN', 79, True);
+  ctbPORCEN_IVA_FACTURA_LINEA.PropertiesClass := TcxSpinEditProperties;
+  with TcxSpinEditProperties(ctbPORCEN_IVA_FACTURA_LINEA.Properties) do
+  begin
+    DisplayFormat := '0.00 %';
+    EditFormat := '0.00 %';
+  end;
+  ctbPRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA :=
+    Col('Precio Ud. con IVA', 'PRECIO_VENTA_CIVA_ARTICULO_FACLIN',
+        120, True);
+  ctbPRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA.PropertiesClass :=
+    TcxCurrencyEditProperties;
+  TcxCurrencyEditProperties(
+    ctbPRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA.Properties).
+      OnEditValueChanged :=
+ cxgrdbclmntv1PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged;
+  ctbTOTAL_FACTURA_LINEA :=
+    Col('Total con IVA', 'TOTAL_FACLIN', 120, False);
+  ctbTOTAL_FACTURA_LINEA.PropertiesClass := TcxCurrencyEditProperties;
+  ctbTOTAL_FACTURASIVA_LINEA :=
+    Col('Total Sin IVA', 'TOTAL_FAC_SIVA_FACLIN', 125, True);
+  ctbTOTAL_FACTURASIVA_LINEA.PropertiesClass := TcxCurrencyEditProperties;
+  TcxCurrencyEditProperties(ctbTOTAL_FACTURASIVA_LINEA.Properties).
+    OnEditValueChanged :=
+      ctbTOTAL_FACTURASIVA_LINEAPropertiesEditValueChanged;
+  ctbFECHA_ENTREGA_FACTURA_LINEA :=
+    Col('Fecha Entrega', 'FECHA_ENTREGA_FACLIN', 100, True);
+  ctbFECHA_ENTREGA_FACTURA_LINEA.PropertiesClass := TcxDateEditProperties;
+  with TcxDateEditProperties(
+         ctbFECHA_ENTREGA_FACTURA_LINEA.Properties) do
+  begin
+    DateButtons := [btnClear, btnToday];
+    DisplayFormat := 'dd/mm/yyyy';
+    EditFormat := 'dd/mm/yyyy';
+  end;
+  ctbFECHA_ENTREGA_FACTURA_LINEA.Visible := chkFechaEntrega.Checked;
+  // Sumas de pie (el ClearItems se llevo las del dfm).
+  with tvLineasFactura.DataController.Summary do
+  begin
+    BeginUpdate;
+    try
+      FooterSummaryItems.Clear;
+      with TcxGridDBTableSummaryItem(FooterSummaryItems.Add) do
+      begin
+        Kind := skSum;
+        Format := '##,##.00 ' + #8364;
+        Column := ctbTOTAL_FACTURA_LINEA;
+      end;
+      if ctbCANTIDAD_FACTURA_LINEA <> nil then
+        with TcxGridDBTableSummaryItem(FooterSummaryItems.Add) do
+        begin
+          Kind := skSum;
+          Format := '#,##.00';
+          Column := ctbCANTIDAD_FACTURA_LINEA;
+        end;
+      with TcxGridDBTableSummaryItem(FooterSummaryItems.Add) do
+      begin
+        Kind := skSum;
+        Format := '##,##.00 ' + #8364;
+        Column := ctbTOTAL_FACTURASIVA_LINEA;
+      end;
+    finally
+      EndUpdate;
+    end;
+  end;
+  // Orden normal del documento: la LINEA delante del bloque de articulo
+  // que creo el modo (las columnas del host nacen detras).
+  ctbLINEA_FACTURA_LINEA.Index := 0;
+end;
+
+procedure TfrmMtoFacturasBase.MostrarColumnasAtributoGlobalesFac;
+var
+  Qry: TUniQuery;
+  i, iOrden: Integer;
+  Col: TcxGridColumn;
+begin
+  // Nombres globales de atributos para ver Color/Talla desde el
+  // principio (mismo helper que pedidos / inventarios / DTR).
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := dmmFacturas.unqryTablaG.Connection;
+    Qry.SQL.Text :=
+      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
+      '       MIN(ORDEN_VA) AS ORDEN' +
+      '  FROM fza_variaciones_atributos' +
+      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
+      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
+    Qry.Open;
+    iOrden := 1;
+    while (not Qry.Eof) and (iOrden <= 5) do
+    begin
+      for i := 0 to tvLineasFactura.ColumnCount - 1 do
+      begin
+        Col := tvLineasFactura.Columns[i];
+        if Col.Tag = iOrden then
+        begin
+          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
+          Col.Visible := True;
+        end;
+      end;
+      Inc(iOrden);
+      Qry.Next;
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.ModoEntradaResuelto(const ACodArt, ASku,
+  ADescripcion: string; ACompleto: Boolean);
+begin
+  // El flujo fiscal clasico de la factura (tarifa del cliente, IVA,
+  // dtos, precios y totales) se reaprovecha tal cual:
+  // AplicarArticuloFactura acepta articulo o SKU.
+  if ACompleto and (ASku <> '') then
+    AplicarArticuloFactura(ASku);
+end;
+
+procedure TfrmMtoFacturasBase.AplicarArticuloFactura(
+  const AEntrada: string);
+var
+  Lin: TDataSet;
+  Validador: TArticulosValidador;
+  Resolver: TArticulosResolver;
+  Resolucion: TArtResolucionEntrada;
+  Datos: TArticuloDatos;
+  Precio: TArticuloPrecio;
+  CodTarifa: string;
+  FechaFac: TDateTime;
+  fPorcen: Currency;
+begin
+  if FConsolidandoSku or (Trim(AEntrada) = '') or
+     (not Assigned(dmmFacturas)) then
+    Exit;
+  Lin := dmmFacturas.unqryLinFac;
+  if (Lin = nil) or (not Lin.Active) then
+    Exit;
+  if not (Lin.State in [dsInsert, dsEdit]) then
+    if Lin.CanModify then
+      Lin.Edit;
+  if not (Lin.State in [dsInsert, dsEdit]) then
+    Exit;
+  FConsolidandoSku := True;
+  Validador := nil;
+  Resolver := nil;
+  try
+    CodTarifa := dmmFacturas.unqryTablaG.FindField(
+                   'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+    FechaFac := Date;
+    if not dmmFacturas.unqryTablaG.FindField('FECHA_FAC').IsNull then
+      FechaFac := dmmFacturas.unqryTablaG.
+                    FindField('FECHA_FAC').AsDateTime;
+    Validador := TArticulosValidador.Create(inLibGlobalVar.oConn);
+    Resolver := TArticulosResolver.Create(inLibGlobalVar.oConn);
+    Resolucion := Validador.Resolver(Trim(AEntrada));
+    if not Resolucion.Encontrado then
+      Exit;
+    Datos := Resolver.ResolverDatos(Resolucion.CodigoArticulo,
+                                    Resolucion.CodigoSku,
+                                    CodTarifa, FechaFac);
+    if not Datos.Encontrado then
+      Exit;
+    if Assigned(FArtMostrarSku) then
+      FArtMostrarSku.AddOrSetValue(Datos.CodigoArticulo,
+                                   Datos.EsVariacion or Datos.RequiereSku);
+    Lin.FindField('CODIGO_ART_FACLIN').AsString := Datos.CodigoArticulo;
+    if Assigned(Lin.FindField('CODIGO_UNIDAD_FACLIN')) then
+      Lin.FieldByName('CODIGO_UNIDAD_FACLIN').AsString :=
+        Datos.CodigoSku;
+    if Assigned(Lin.FindField('DESCRIPCION_VARIACION_FACLIN')) then
+      Lin.FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString :=
+        Datos.DescripcionSku;
+    Lin.FindField('DESCRIPCION_ARTICULO_FACLIN').AsString :=
+      Datos.DescripcionArticulo;
+    if Assigned(Lin.FindField('TIPO_ARTICULO_FACLIN')) then
+      Lin.FindField('TIPO_ARTICULO_FACLIN').AsString :=
+        Datos.TipoArticulo;
+    Lin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString :=
+      Datos.TipoCantidad;
+    Lin.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString := Datos.TipoIVA;
+    Lin.FindField('CODIGO_FAM_FACLIN').AsString := Datos.CodigoFamilia;
+    Lin.FindField('NOMBRE_FAM_FACLIN').AsString :=
+      Datos.DescripcionFamilia;
+    Lin.FindField('CODIGO_TAR_FACLIN').AsString := CodTarifa;
+    if Datos.UltimoCoste.Encontrado then
+    begin
+      Lin.FindField('ESPROVEEDORPRINCIPAL_FACLIN').AsString :=
+        IfThen(Datos.UltimoCoste.EsProveedorPrincipal, 'S', 'N');
+      Lin.FindField('CODIGO_PRV_FACLIN').AsString :=
+        Datos.UltimoCoste.CodigoProveedor;
+      Lin.FindField('RAZON_SOCIAL_PROVEEDOR_FACLIN').AsString :=
+        Datos.UltimoCoste.RazonSocialProveedor;
+      Lin.FindField('PRECIO_ULT_COMPRA_FACLIN').AsFloat :=
+        Datos.UltimoCoste.PrecioUltCompra;
+    end;
+    Precio := Datos.PrecioPedido;
+    Lin.FindField('ESIMP_INCL_TARIFA_FACLIN').AsString :=
+      IfThen(Precio.EsImpIncl, 'S', 'N');
+    Lin.FindField('PORCENTAJE_DTO_FACLIN').AsFloat :=
+      Precio.PorcentajeDto;
+    Lin.FindField('PRECIO_DTO_FACLIN').AsFloat := Precio.PrecioDto;
+    Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat := Precio.PrecioSalida;
+    fPorcen := PorcentajeIvaFactura(Datos.TipoIVA) / 100;
+    if Precio.EsImpIncl then
+    begin
+      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
+        Precio.PrecioFinal;
+      if (1 + fPorcen) <> 0 then
+        Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
+          Precio.PrecioFinal / (1 + fPorcen);
+    end
+    else
+    begin
+      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
+        Precio.PrecioFinal;
+      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
+        Precio.PrecioFinal * (1 + fPorcen);
+    end;
+    // Recalculo de la linea y de los totales fiscales de la cabecera
+    // (sin esto TOTAL_FACLIN y TOTAL_FAC_SIVA_FACLIN quedaban a 0 en el
+    // INSERT si el usuario abandonaba la fila sin tocar otros campos).
+    ActualizarLineaFacturaGen(Lin, dmmFacturas.unqryTablaG,
+      'PRECIO_SALIDA_FACLIN',
+      Lin.FieldByName('PRECIO_SALIDA_FACLIN').Value);
+  finally
+    FreeAndNil(Resolver);
+    FreeAndNil(Validador);
+    FConsolidandoSku := False;
+  end;
+end;
+
+function TfrmMtoFacturasBase.PorcentajeIvaFactura(
+  const ATipoIva: string): Double;
+var
+  Cab: TDataSet;
+begin
+  Result := 0;
+  if (dmmFacturas <> nil) and dmmFacturas.unqryTablaG.Active then
+  begin
+    Cab := dmmFacturas.unqryTablaG;
+    case IndexStr(ATipoIva, ['N', 'R', 'S', 'E']) of
+      0: Result := Cab.FieldByName('PORCENTAJE_IVAN_FAC').AsFloat;
+      1: Result := Cab.FieldByName('PORCENTAJE_IVAR_FAC').AsFloat;
+      2: Result := Cab.FieldByName('PORCENTAJE_IVAS_FAC').AsFloat;
+      3: Result := Cab.FieldByName('PORCENTAJE_IVAE_FAC').AsFloat;
+    end;
+  end;
+end;
+
+function TfrmMtoFacturasBase.PrecioSkuTallas(const ACodigoArticulo,
+  ACodigoSku: string): Double;
+var
+  Resolver: TArticulosResolver;
+  Datos: TArticuloDatos;
+  Precio: TArticuloPrecio;
+  sTarifa: string;
+  dFecha: TDateTime;
+  rPorIva: Double;
+begin
+  Result := 0;
+  if (dmmFacturas <> nil) and dmmFacturas.unqryTablaG.Active then
+  begin
+    sTarifa := dmmFacturas.unqryTablaG.
+                 FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+    dFecha := Date;
+    if not dmmFacturas.unqryTablaG.FieldByName('FECHA_FAC').IsNull then
+      dFecha := dmmFacturas.unqryTablaG.
+                  FieldByName('FECHA_FAC').AsDateTime;
+    Resolver := TArticulosResolver.Create(
+                  dmmFacturas.unqryTablaG.Connection);
+    try
+      Datos := Resolver.ResolverDatos(ACodigoArticulo, ACodigoSku,
+                                      sTarifa, dFecha);
+      if Datos.Encontrado then
+      begin
+        Precio := Datos.PrecioPedido;
+        rPorIva := PorcentajeIvaFactura(Datos.TipoIVA);
+        // FieldPrecioBase de la factura es el PVP C/IVA de la linea:
+        // misma conversion que AplicarArticuloFactura pero a la inversa.
+        if Precio.EsImpIncl then
+          Result := Precio.PrecioFinal
+        else
+          Result := Precio.PrecioFinal * (1 + rPorIva / 100);
+      end;
+    finally
+      FreeAndNil(Resolver);
+    end;
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.PivoteVentaCrearLineaSku(
+  const ACodigoSku: string);
+begin
+  AplicarArticuloFactura(ACodigoSku);
+end;
+
+procedure TfrmMtoFacturasBase.PivoteVentaBandaCambiada(
+  ABanda: TBandaPivoteVenta);
+begin
+  tsLineasFactura.Caption := '&1_Lineas de Borrador [Tallas horiz.]';
+end;
 
 procedure TfrmMtoFacturasBase.PcDetailChange(Sender: TObject);
 begin

@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 07/07/2026 19:55:24
+-- Backup generado: 09/07/2026 7:47:35
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -192,10 +192,13 @@ ALTER TABLE `fza_albaranes` ADD INDEX `IDX_ALB_PEDIDO` (`SERIE_PED_ALB`, `NUMERO
 INSERT INTO `fza_albaranes` (`NUMERO_ALB`, `SERIE_ALB`, `FECHA_ALB`, `ESCONSOLIDADO_ALB`, `ESTADO_ALB`, `NUMERO_PED_ALB`, `SERIE_PED_ALB`, `NUMERO_FAC_ALB`, `SERIE_FAC_ALB`, `CODIGO_EMP_ALB`, `CODIGO_ALM_ALB`, `RAZON_SOCIAL_EMPRESA_ALB`, `NIF_EMPRESA_ALB`, `MOVIL_EMPRESA_ALB`, `EMAIL_EMPRESA_ALB`, `DIRECCION1_EMPRESA_ALB`, `DIRECCION2_EMPRESA_ALB`, `POBLACION_EMPRESA_ALB`, `PROVINCIA_EMPRESA_ALB`, `CODIGO_PAI_EMPRESA_ALB`, `NOMBRE_PAI_EMPRESA_ALB`, `CODIGO_POSTAL_EMPRESA_ALB`, `GRUPO_ZONA_IVA_EMPRESA_ALB`, `CODIGO_CLI_ALB`, `RAZON_SOCIAL_CLIENTE_ALB`, `NIF_CLIENTE_ALB`, `MOVIL_CLIENTE_ALB`, `EMAIL_CLIENTE_ALB`, `DIRECCION1_CLIENTE_ALB`, `DIRECCION2_CLIENTE_ALB`, `POBLACION_CLIENTE_ALB`, `PROVINCIA_CLIENTE_ALB`, `CODIGO_POSTAL_CLIENTE_ALB`, `CODIGO_PAI_CLIENTE_ALB`, `NOMBRE_PAI_CLIENTE_ALB`, `NOMBRE_CLI_ENVIO_ALB`, `MOVIL_CLIENTE_ENVIO_ALB`, `DIRECCION1_CLIENTE_ENVIO_ALB`, `DIRECCION2_CLIENTE_ENVIO_ALB`, `POBLACION_CLIENTE_ENVIO_ALB`, `PROVINCIA_CLIENTE_ENVIO_ALB`, `CODIGO_POSTAL_CLIENTE_ENVIO_ALB`, `CODIGO_PAI_CLIENTE_ENVIO_ALB`, `NOMBRE_PAI_CLIENTE_ENVIO_ALB`, `TRANSPORTISTA_ALB`, `CODIGO_IVA_ALB`, `ESIVA_RECARGO_CLIENTE_ALB`, `ESIVA_EXENTO_CLIENTE_ALB`, `ESINTRACOMUNITARIO_CLIENTE_ALB`, `TARIFA_ARTICULO_CLIENTE_ALB`, `ESIMP_INCL_TARIFA_CLIENTE_ALB`, `PORCENTAJE_IVAN_ALB`, `TOTAL_IVAN_ALB`, `PORCENTAJE_IVAR_ALB`, `TOTAL_IVAR_ALB`, `PORCENTAJE_IVAS_ALB`, `TOTAL_IVAS_ALB`, `PORCENTAJE_IVAE_ALB`, `TOTAL_IVAE_ALB`, `TOTAL_BASES_ALB`, `TOTAL_IMPUESTOS_ALB`, `TOTAL_LIQUIDO_ALB`, `FORMA_PAGO_ALB`, `CONTADOR_LINEAS_ALB`, `COMENTARIOS_ALB`, `OBSERVACIONES_ALB`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('000001', 'A1', '2026-07-01 00:00:00', 'N', 'ABIERTO', NULL, NULL, NULL, NULL, '012', NULL, 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '302', 'CARLOS HERRERO SANTOS', '23456789B', '666202020', 'carlos.herrero@hotmail.com', 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, '1', 'N', 'N', 'N', 'PVP', 'S', 21, 0, 10, 0, 4, 0, 0, 0, 0, 0, 0, NULL, NULL, '', '', '2026-07-01 09:21:26', '2026-07-01 09:21:26', 'Administrador', 'Administrador'),
   ('000001', 'AG1', '2026-07-02 00:00:00', 'N', 'ABIERTO', NULL, NULL, NULL, NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '302', 'CARLOS HERRERO SANTOS', '23456789B', '666202020', 'carlos.herrero@hotmail.com', 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, '1', 'N', 'N', 'N', 'PVP', 'S', 21, 0, 10, 0, 4, 0, 0, 0, 0, 0, 0, NULL, '00000010', '', '', '2026-07-07 18:39:04', '2026-07-02 18:55:16', 'Administrador', 'Administrador'),
-  ('000003', 'A1', '2026-07-03 00:00:00', 'N', 'ABIERTO', NULL, NULL, NULL, NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '313', 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, '1', 'N', 'N', 'N', 'VENTAMAYOR', 'S', 21, 68.46, 10, 0, 4, 0, 0, 0, 326, 68.46, 394.46, '30Y60', '00000010', '', '', '2026-07-03 20:10:41', '2026-07-03 16:51:59', 'Administrador', 'Administrador'),
+  ('000003', 'A1', '2026-07-03 00:00:00', 'N', 'ABIERTO', NULL, NULL, NULL, NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '313', 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, '1', 'N', 'N', 'N', 'VENTAMAYOR', 'S', 21, 139.44, 10, 0, 4, 0, 0, 0, 664, 139.44, 803.44, '30Y60', '00000010', '', '', '2026-07-03 20:10:41', '2026-07-03 16:51:59', 'Administrador', 'Administrador'),
   ('000005', 'A1', '2026-07-07 00:00:00', 'N', 'ABIERTO', NULL, NULL, NULL, NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', NULL, NULL, NULL, NULL, NULL, 21, 0, 10, 0, 4, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-07-07 19:22:14', '2026-07-07 19:22:14', 'Administrador', 'Administrador'),
-  ('000006', 'A1', '2026-07-07 00:00:00', 'N', 'ABIERTO', '000001', 'A1', NULL, NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '313', 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'VENTAMAYOR', NULL, 21, 25.2, 10, 0, 4, 0, 0, 0, 120, 25.2, 145.2, '60DIAS', '0', '', '', '2026-07-07 19:40:06', '2026-07-07 19:40:06', 'Administrador', 'Administrador');
--- 5 registros exportados
+  ('000006', 'A1', '2026-07-07 00:00:00', 'N', 'ABIERTO', '000001', 'A1', NULL, NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '313', 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'VENTAMAYOR', NULL, 21, 25.2, 10, 0, 4, 0, 0, 0, 120, 25.2, 145.2, '60DIAS', '0', '', '', '2026-07-07 19:40:06', '2026-07-07 19:40:06', 'Administrador', 'Administrador'),
+  ('000007', 'A1', '2026-07-08 00:00:00', 'N', 'ABIERTO', '000001', 'A1', NULL, NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '313', 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'VENTAMAYOR', NULL, 21, NULL, 10, NULL, 4, NULL, 0, NULL, 260, 54.6, 314.6, '60DIAS', '00000030', '', '', '2026-07-08 07:09:58', '2026-07-08 07:09:58', 'Administrador', 'Administrador'),
+  ('000008', 'A1', '2026-07-08 00:00:00', 'N', 'ABIERTO', '000009', 'A1', NULL, NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '302', 'CARLOS HERRERO SANTOS', '23456789B', '666202020', 'carlos.herrero@hotmail.com', 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'PVP', NULL, 21, 7.14, 10, 0, 4, 0, 0, 0, 34, 7.14, 41.14, 'CONTADO', '00000020', '', '', '2026-07-08 08:19:14', '2026-07-08 08:19:14', 'Administrador', 'Administrador'),
+  ('000009', 'A1', '2026-07-09 00:00:00', 'N', 'ABIERTO', '000001', 'A1', NULL, NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '1', '313', 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'VENTAMAYOR', NULL, 21, NULL, 10, NULL, 4, NULL, 0, NULL, 0, 0, 0, '60DIAS', '00000010', '', '', '2026-07-09 06:33:27', '2026-07-09 06:33:27', 'Administrador', 'Administrador');
+-- 8 registros exportados
 
 
 -- Tabla: fza_albaranes_celdas
@@ -219,12 +222,17 @@ ALTER TABLE `fza_albaranes_celdas` ADD INDEX `IDX_ALBCEL_AV_PIVOT` (`ID_AV_PIVOT
 
 -- Datos de fza_albaranes_celdas
 INSERT INTO `fza_albaranes_celdas` (`SERIE_ALB_ALBCEL`, `NUMERO_ALB_ALBCEL`, `LINEA_ALBCEL`, `ID_FILA_ALBCEL`, `ID_AV_PIVOT_ALBCEL`, `CODIGO_ALM_ALBCEL`, `CANTIDAD_ALBCEL`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES
-  ('A1', '000003', 10, 1, 9103, '', 1, '2026-07-07 19:29:00', 'Administrador', '2026-07-07 19:29:00', 'Administrador'),
-  ('A1', '000003', 10, 1, 9210, '', 1, '2026-07-07 19:30:01', 'Administrador', '2026-07-07 19:30:01', 'Administrador'),
-  ('A1', '000003', 20, 1, 9103, '', 1, '2026-07-07 19:29:01', 'Administrador', '2026-07-07 19:29:01', 'Administrador'),
-  ('A1', '000003', 30, 1, 126, '', 1, '2026-07-07 19:29:01', 'Administrador', '2026-07-07 19:29:01', 'Administrador'),
-  ('A1', '000006', 10, 1, 9101, '', 1, '2026-07-07 19:51:49', 'Administrador', '2026-07-07 19:51:49', 'Administrador');
--- 5 registros exportados
+  ('A1', '000003', 10, 1, 9103, '', 3, '2026-07-09 07:08:29', 'Administrador', '2026-07-09 07:08:29', 'Administrador'),
+  ('A1', '000003', 20, 1, 9103, '', 2, '2026-07-09 07:08:29', 'Administrador', '2026-07-09 07:08:29', 'Administrador'),
+  ('A1', '000003', 30, 1, 126, '', 2, '2026-07-09 07:08:29', 'Administrador', '2026-07-09 07:08:29', 'Administrador'),
+  ('A1', '000003', 31, 1, 9102, '', 1, '2026-07-09 07:08:41', 'Administrador', '2026-07-09 07:08:41', 'Administrador'),
+  ('A1', '000006', 10, 1, 9101, '', 1, '2026-07-07 19:51:49', 'Administrador', '2026-07-07 19:51:49', 'Administrador'),
+  ('A1', '000007', 10, 1, 224, '', 1, '2026-07-08 07:10:12', 'Administrador', '2026-07-08 07:10:12', 'Administrador'),
+  ('A1', '000007', 10, 1, 225, '', 2, '2026-07-08 07:10:12', 'Administrador', '2026-07-08 07:10:12', 'Administrador'),
+  ('A1', '000007', 10, 1, 227, '', 2, '2026-07-08 07:10:12', 'Administrador', '2026-07-08 07:10:12', 'Administrador'),
+  ('A1', '000008', 10, 1, 9102, '', 2, '2026-07-09 06:08:56', 'Administrador', '2026-07-09 06:08:56', 'Administrador'),
+  ('A1', '000008', 20, 1, 126, '', 2, '2026-07-09 06:08:56', 'Administrador', '2026-07-09 06:08:56', 'Administrador');
+-- 10 registros exportados
 
 
 -- Tabla: fza_albaranes_compra
@@ -873,11 +881,16 @@ ALTER TABLE `fza_albaranes_lineas` ADD INDEX `IDX_ALBLIN_UNIDAD` (`CODIGO_UNIDAD
 -- Datos de fza_albaranes_lineas
 INSERT INTO `fza_albaranes_lineas` (`NUMERO_ALB_ALBLIN`, `SERIE_ALB_ALBLIN`, `LINEA_ALBLIN`, `NUMERO_PED_ALBLIN`, `SERIE_PED_ALBLIN`, `LINEA_PED_ALBLIN`, `CODIGO_ART_ALBLIN`, `CODIGO_FAM_ALBLIN`, `NOMBRE_FAM_ALBLIN`, `DESCRIPCION_ARTICULO_ALBLIN`, `TIPO_CANTIDAD_ARTICULO_ALBLIN`, `CANTIDAD_ALBLIN`, `CODIGO_TAR_ALBLIN`, `ESIMP_INCL_TARIFA_ALBLIN`, `TIPO_IVA_ARTICULO_ALBLIN`, `PORCENTAJE_IVA_ALBLIN`, `PRECIO_VENTA_SIVA_ARTICULO_ALBLIN`, `PRECIO_VENTA_CIVA_ARTICULO_ALBLIN`, `TOTAL_ALBLIN`, `CODIGO_ALMACEN_ALBLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ESFACTURADA_ALBLIN`, `NUMERO_FAC_ALBLIN`, `SERIE_FAC_ALBLIN`, `LINEA_FAC_ALBLIN`, `CODIGO_UNIDAD_ALBLIN`, `LOTE_ALBLIN`, `FECHA_CADUCIDAD_ALBLIN`, `DESCRIPCION_VARIACION_ALBLIN`, `ATTR1_VALOR_ALBLIN`, `ATTR1_NOMBRE_ALBLIN`, `ATTR2_VALOR_ALBLIN`, `ATTR2_NOMBRE_ALBLIN`, `ATTR3_VALOR_ALBLIN`, `ATTR3_NOMBRE_ALBLIN`, `ATTR4_VALOR_ALBLIN`, `ATTR4_NOMBRE_ALBLIN`, `ATTR5_VALOR_ALBLIN`, `ATTR5_NOMBRE_ALBLIN`, `NUM_ATRIBUTOS_ALBLIN`, `ID_AC_PIVOT_ALBLIN`) VALUES
   ('000001', 'AG1', '0010', NULL, NULL, NULL, 'ABRIGO-PAÑO', 'ROPA', 'Ropa de Vestir a la moda', 'Abrigo de Paño Caballero', 'Uds', 0, 'PVP', 'S', 'N', 21, 163.595041, 197.95, 0, 'GEN', '2026-07-07 18:36:16', '2026-07-07 18:30:59', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'ABRIGO-PAÑO/NEGRO/XL', NULL, NULL, 'NEGRO / XL', 'NEGRO', 'Color', 'XL', '', '', '', '', '', '', '', 2, 1),
-  ('000003', 'A1', '0010', NULL, NULL, NULL, 'CHAQ-CUERO', 'ROPA', 'Ropa de Vestir a la moda', 'Chaqueta Biker Cuero', 'Uds', 2, 'VENTAMAYOR', 'N', 'N', 21, 78, 94.38, 156, 'GEN', '2026-07-07 19:30:04', '2026-07-03 16:51:20', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'CHAQ-CUERO/MARRON/L', NULL, NULL, 'MARRON / L', 'MARRON', 'Color', '', '', '', '', '', '', '', '', 2, 1),
-  ('000003', 'A1', '0020', NULL, NULL, NULL, 'DEPORTIVO009', 'DEPORTIVO', 'Ropa y calzado deportivo', 'mallitas', 'Uds', 1, 'VENTAMAYOR', 'N', 'N', 21, 112, 135.52, 112, 'GEN', '2026-07-07 19:29:01', '2026-07-07 18:57:10', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'DEPORTIVO009/NEGRO/L', NULL, NULL, 'NEGRO / L', 'NEGRO', 'Color', '', '', '', '', '', '', '', '', 2, 1),
-  ('000003', 'A1', '0030', NULL, NULL, NULL, 'ZAP-OXFORD', 'CALZADO', 'Calzado Todo tiempo', 'Zapato Oxford Piel Hombre', 'Uds', 1, 'VENTAMAYOR', 'N', 'N', 21, 58, 70.18, 58, 'GEN', '2026-07-07 19:29:01', '2026-07-07 19:10:23', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'ZAP-OXFORD/NEGRO/42', NULL, NULL, '42 / NEGRO', 'NEGRO', 'Color', '', '', '', '', '', '', '', '', 2, 4),
-  ('000006', 'A1', '0010', NULL, NULL, NULL, 'ABRIGO-PAÑO', 'ROPA', 'Ropa de Vestir a la moda', 'Abrigo de Paño Caballero', 'Uds', 1, 'VENTAMAYOR', 'N', 'N', 21, 120, 145.2, 120, 'GEN', '2026-07-07 19:51:50', '2026-07-07 19:42:35', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'ABRIGO-PAÑO/CAMEL/S', NULL, NULL, 'CAMEL / S', 'CAMEL', 'Color', '', '', '', '', '', '', '', '', 2, 1);
--- 5 registros exportados
+  ('000003', 'A1', '0010', NULL, NULL, NULL, 'CHAQ-CUERO', 'ROPA', 'Ropa de Vestir a la moda', 'Chaqueta Biker Cuero', 'Uds', 3, 'VENTAMAYOR', 'N', 'N', 21, 78, 94.38, 234, 'GEN', '2026-07-09 07:08:30', '2026-07-03 16:51:20', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'CHAQ-CUERO/MARRON/L', NULL, NULL, 'MARRON / L', 'MARRON', 'Color', '', '', '', '', '', '', '', '', 2, 1),
+  ('000003', 'A1', '0020', NULL, NULL, NULL, 'DEPORTIVO009', 'DEPORTIVO', 'Ropa y calzado deportivo', 'mallitas', 'Uds', 2, 'VENTAMAYOR', 'N', 'N', 21, 112, 135.52, 224, 'GEN', '2026-07-09 07:08:30', '2026-07-07 18:57:10', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'DEPORTIVO009/NEGRO/L', NULL, NULL, 'NEGRO / L', 'NEGRO', 'Color', '', '', '', '', '', '', '', '', 2, 1),
+  ('000003', 'A1', '0030', NULL, NULL, NULL, 'ZAP-OXFORD', 'CALZADO', 'Calzado Todo tiempo', 'Zapato Oxford Piel Hombre', 'Uds', 2, 'VENTAMAYOR', 'N', 'N', 21, 58, 70.18, 116, 'GEN', '2026-07-09 07:08:30', '2026-07-07 19:10:23', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'ZAP-OXFORD/NEGRO/42', NULL, NULL, '42 / NEGRO', 'NEGRO', 'Color', '', '', '', '', '', '', '', '', 2, 4),
+  ('000003', 'A1', '0031', NULL, NULL, NULL, 'CHAQ-CUERO', NULL, NULL, 'Chaqueta Biker Cuero', 'Uds', 1, NULL, 'S', 'N', 21, 90, 108.9, 90, 'GEN', '2026-07-09 07:08:48', '2026-07-09 07:08:22', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'CHAQ-CUERO/MARRON/XXL', NULL, NULL, NULL, 'MARRON', 'Color', '', '', '', '', '', '', '', '', 2, 1),
+  ('000006', 'A1', '0010', NULL, NULL, NULL, 'ABRIGO-PAÑO', 'ROPA', 'Ropa de Vestir a la moda', 'Abrigo de Paño Caballero', 'Uds', 1, 'VENTAMAYOR', 'N', 'N', 21, 120, 145.2, 120, 'GEN', '2026-07-07 19:51:50', '2026-07-07 19:42:35', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'ABRIGO-PAÑO/CAMEL/S', NULL, NULL, 'CAMEL / S', 'CAMEL', 'Color', '', '', '', '', '', '', '', '', 2, 1),
+  ('000007', 'A1', '0010', '000001', 'A1', '0040', 'BOTIN-ANIT', 'CALZADO', 'Calzado Todo tiempo', 'Botín Ante Mujer', 'Uds', 5, 'VENTAMAYOR', 'N', 'N', 21, 52, 62.92, 260, 'GEN', '2026-07-08 07:10:12', '2026-07-08 07:09:58', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'BOTIN-ANIT/NEGRO/41', NULL, NULL, NULL, 'NEGRO', 'Color', '', '', '', '', '', '', '', '', 2, 5),
+  ('000008', 'A1', '0010', '000009', 'A1', '0020', 'DEPORTIVO009', 'DEPORTIVO', 'Ropa y calzado deportivo', 'mallitas', 'Uds', 2, 'PVP', 'S', 'N', 21, 12, 14.52, 24, 'GEN', '2026-07-09 06:08:56', '2026-07-08 08:19:14', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'DEPORTIVO009/NEGRO/M', NULL, NULL, NULL, 'NEGRO', 'Color', '', '', '', '', '', '', '', '', 2, 1),
+  ('000008', 'A1', '0020', '000009', 'A1', '0010', 'PANT-CHIN', 'ROPA', 'Ropa de Vestir a la moda', 'Pantalón Chino Slim', 'Uds', 2, 'PVP', 'S', 'N', 21, 5, 6.05, 10, 'GEN', '2026-07-09 06:08:56', '2026-07-08 08:19:14', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'PANT-CHIN/BEIGE/42', NULL, NULL, NULL, 'BEIGE', 'Color', '', '', '', '', '', '', '', '', 2, 7),
+  ('000009', 'A1', '0010', '000001', 'A1', '0060', 'ZAP-OXFORD', 'CALZADO', 'Calzado Todo tiempo', 'Zapato Oxford Piel Hombre', 'Uds', 1, 'VENTAMAYOR', 'N', 'N', 21, 0, 0, 0, 'GEN', '2026-07-09 06:33:27', '2026-07-09 06:33:27', 'Administrador', 'Administrador', 'N', NULL, NULL, NULL, 'ZAP-OXFORD', NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0, 0);
+-- 10 registros exportados
 
 
 -- Tabla: fza_almacenes
@@ -1173,7 +1186,7 @@ INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ART_ACA`, `ID_AC_ACA`, `ID_
   ('LEGGING-SPORT', 2, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('LEGGING-SPORT', 3, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('PANT-CHIN', 2, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  ('PANT-CHIN', 1, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  ('PANT-CHIN', 7, 'TAL', 0, 'S', '2026-07-09 06:06:50', '2026-05-12 07:13:38', 'DEMO', 'Administrador'),
   ('ROPA', 3, 'TAL', 0, 'S', '2026-06-13 11:45:59', '2026-06-13 11:45:59', 'Administrador', 'Administrador'),
   ('SUDADERA-HOOD', 6, 'CO', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   ('SUDADERA-HOOD', 1, 'TAL', 0, 'S', '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
@@ -1307,18 +1320,18 @@ ALTER TABLE `fza_articulos_pdte_recibir` ADD INDEX `IDX_PDR_SKU_ALM` (`CODIGO_UN
 
 -- Datos de fza_articulos_pdte_recibir
 INSERT INTO `fza_articulos_pdte_recibir` (`CODIGO_UNIDAD_PDR`, `CODIGO_ALM_PDR`, `SERIE_DOC_PDR`, `NUMERO_DOC_PDR`, `LINEA_PDR`, `CODIGO_ART_PDR`, `CODIGO_PRV_PDR`, `CODIGO_EMP_PDR`, `CANTIDAD_PDR`, `PRECIO_COMPRA_PDR`, `FECHA_PEDIDO_PDR`, `FECHA_PREVISTA_PDR`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('DEPORTIVO007/VERDE/L', 'GEN', 'A1', '000002', 30, 'DEPORTIVO007', '18', '012', 2, 10, '2026-05-26 00:00:00', NULL, '2026-06-22 08:22:16', '2026-06-22 08:22:16', 'Administrador', 'Administrador'),
-  ('DEPORTIVO007/VERDE/M', 'GEN', 'A1', '000002', 20, 'DEPORTIVO007', '18', '012', 2, 10, '2026-05-26 00:00:00', NULL, '2026-06-22 08:22:16', '2026-06-22 08:22:16', 'Administrador', 'Administrador'),
-  ('DEPORTIVO007/VERDE/S', 'GEN', 'A1', '000002', 10, 'DEPORTIVO007', '18', '012', 1, 10, '2026-05-26 00:00:00', NULL, '2026-06-22 08:22:16', '2026-06-22 08:22:16', 'Administrador', 'Administrador'),
-  ('DEPORTIVO007/VERDE/XL', 'GEN', 'A1', '000002', 40, 'DEPORTIVO007', '18', '012', 2, 10, '2026-05-26 00:00:00', NULL, '2026-06-22 08:22:16', '2026-06-22 08:22:16', 'Administrador', 'Administrador'),
-  ('DEPORTIVO007/VERDE/XXL', 'GEN', 'A1', '000002', 50, 'DEPORTIVO007', '18', '012', 1, 10, '2026-05-26 00:00:00', NULL, '2026-06-22 08:22:16', '2026-06-22 08:22:16', 'Administrador', 'Administrador'),
-  ('DEPORTIVO007/VERDE/XXXL', 'GEN', 'A1', '000002', 60, 'DEPORTIVO007', '18', '012', 9, 10, '2026-05-26 00:00:00', NULL, '2026-06-22 08:22:16', '2026-06-22 08:22:16', 'Administrador', 'Administrador'),
-  ('DEPORTIVO008/BEIGE/37', 'GEN', 'A1', '000002', 70, 'DEPORTIVO008', '18', '012', 11, 12, '2026-05-26 00:00:00', NULL, '2026-06-22 08:22:16', '2026-06-22 08:22:16', 'Administrador', 'Administrador'),
-  ('DEPORTIVO008/BEIGE/38', 'GEN', 'A1', '000002', 80, 'DEPORTIVO008', '18', '012', 1, 12, '2026-05-26 00:00:00', NULL, '2026-06-22 08:22:16', '2026-06-22 08:22:16', 'Administrador', 'Administrador'),
-  ('DEPORTIVO008/BEIGE/39', 'GEN', 'A1', '000002', 120, 'DEPORTIVO008', '18', '012', 1, 12, '2026-05-26 00:00:00', NULL, '2026-06-22 08:22:16', '2026-06-22 08:22:16', 'Administrador', 'Administrador'),
-  ('DEPORTIVO008/BEIGE/40', 'GEN', 'A1', '000002', 110, 'DEPORTIVO008', '18', '012', 1, 12, '2026-05-26 00:00:00', NULL, '2026-06-22 08:22:16', '2026-06-22 08:22:16', 'Administrador', 'Administrador'),
-  ('DEPORTIVO008/BEIGE/41', 'GEN', 'A1', '000002', 100, 'DEPORTIVO008', '18', '012', 1, 12, '2026-05-26 00:00:00', NULL, '2026-06-22 08:22:16', '2026-06-22 08:22:16', 'Administrador', 'Administrador'),
-  ('DEPORTIVO008/BEIGE/42', 'GEN', 'A1', '000002', 90, 'DEPORTIVO008', '18', '012', 1, 12, '2026-05-26 00:00:00', NULL, '2026-06-22 08:22:16', '2026-06-22 08:22:16', 'Administrador', 'Administrador');
+  ('DEPORTIVO007/VERDE/L', 'GEN', 'A1', '000002', 30, 'DEPORTIVO007', '18', '012', 2, 10, '2026-05-26 00:00:00', NULL, '2026-07-09 07:46:24', '2026-07-09 07:46:24', 'Administrador', 'Administrador'),
+  ('DEPORTIVO007/VERDE/M', 'GEN', 'A1', '000002', 20, 'DEPORTIVO007', '18', '012', 2, 10, '2026-05-26 00:00:00', NULL, '2026-07-09 07:46:24', '2026-07-09 07:46:24', 'Administrador', 'Administrador'),
+  ('DEPORTIVO007/VERDE/S', 'GEN', 'A1', '000002', 10, 'DEPORTIVO007', '18', '012', 1, 10, '2026-05-26 00:00:00', NULL, '2026-07-09 07:46:24', '2026-07-09 07:46:24', 'Administrador', 'Administrador'),
+  ('DEPORTIVO007/VERDE/XL', 'GEN', 'A1', '000002', 40, 'DEPORTIVO007', '18', '012', 2, 10, '2026-05-26 00:00:00', NULL, '2026-07-09 07:46:24', '2026-07-09 07:46:24', 'Administrador', 'Administrador'),
+  ('DEPORTIVO007/VERDE/XXL', 'GEN', 'A1', '000002', 50, 'DEPORTIVO007', '18', '012', 1, 10, '2026-05-26 00:00:00', NULL, '2026-07-09 07:46:24', '2026-07-09 07:46:24', 'Administrador', 'Administrador'),
+  ('DEPORTIVO007/VERDE/XXXL', 'GEN', 'A1', '000002', 60, 'DEPORTIVO007', '18', '012', 9, 10, '2026-05-26 00:00:00', NULL, '2026-07-09 07:46:24', '2026-07-09 07:46:24', 'Administrador', 'Administrador'),
+  ('DEPORTIVO008/BEIGE/37', 'GEN', 'A1', '000002', 70, 'DEPORTIVO008', '18', '012', 11, 12, '2026-05-26 00:00:00', NULL, '2026-07-09 07:46:24', '2026-07-09 07:46:24', 'Administrador', 'Administrador'),
+  ('DEPORTIVO008/BEIGE/38', 'GEN', 'A1', '000002', 80, 'DEPORTIVO008', '18', '012', 1, 12, '2026-05-26 00:00:00', NULL, '2026-07-09 07:46:24', '2026-07-09 07:46:24', 'Administrador', 'Administrador'),
+  ('DEPORTIVO008/BEIGE/39', 'GEN', 'A1', '000002', 120, 'DEPORTIVO008', '18', '012', 1, 12, '2026-05-26 00:00:00', NULL, '2026-07-09 07:46:24', '2026-07-09 07:46:24', 'Administrador', 'Administrador'),
+  ('DEPORTIVO008/BEIGE/40', 'GEN', 'A1', '000002', 110, 'DEPORTIVO008', '18', '012', 1, 12, '2026-05-26 00:00:00', NULL, '2026-07-09 07:46:24', '2026-07-09 07:46:24', 'Administrador', 'Administrador'),
+  ('DEPORTIVO008/BEIGE/41', 'GEN', 'A1', '000002', 100, 'DEPORTIVO008', '18', '012', 1, 12, '2026-05-26 00:00:00', NULL, '2026-07-09 07:46:24', '2026-07-09 07:46:24', 'Administrador', 'Administrador'),
+  ('DEPORTIVO008/BEIGE/42', 'GEN', 'A1', '000002', 90, 'DEPORTIVO008', '18', '012', 1, 12, '2026-05-26 00:00:00', NULL, '2026-07-09 07:46:24', '2026-07-09 07:46:24', 'Administrador', 'Administrador');
 -- 12 registros exportados
 
 
@@ -1929,6 +1942,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('MOCHILA-SPORT', 'MOCHILA-SPORT', '-', 'S', '2026-05-08 19:15:54', '2026-05-08 19:15:54', 'Administrador', 'Administrador'),
   ('PANT-CHIN/BEIGE/38', 'PANT-CHIN', 'TC', 'S', '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('PANT-CHIN/BEIGE/40', 'PANT-CHIN', 'TC', 'S', '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
+  ('PANT-CHIN/BEIGE/41', 'PANT-CHIN', 'TC', 'S', '2026-07-08 07:39:45', '2026-07-08 07:39:45', 'Administrador', 'Administrador'),
   ('PANT-CHIN/BEIGE/42', 'PANT-CHIN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('PANT-CHIN/BEIGE/44', 'PANT-CHIN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('PANT-CHIN/GRIS/40', 'PANT-CHIN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
@@ -1995,7 +2009,7 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
   ('ZAP-TACÓN/NEGRO/40', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO'),
   ('ZAP-TACÓN/ROJO/37', 'ZAP-TACÓN', 'TC', 'S', '2026-01-08 18:35:43', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 'ZAP-TACÓN', 'TC', 'S', '2026-02-22 06:13:04', '2026-02-22 06:13:04', 'SCRIPT_DEMO', 'SCRIPT_DEMO');
--- 382 registros exportados
+-- 383 registros exportados
 
 
 -- Tabla: fza_articulos_skus_costes
@@ -2289,7 +2303,9 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'BOTIN-ANIT/MARRON/40', '', NULL, 10, '2026-07-05 17:04:55', 50, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0),
   ('GEN', 'BOTIN-ANIT/NEGRO/37', '', NULL, 10, '2026-07-05 17:04:55', 100, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 12, 0, 0),
   ('GEN', 'BOTIN-ANIT/NEGRO/38', '', NULL, 6, '2026-07-05 17:04:55', 60, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0),
-  ('GEN', 'BOTIN-ANIT/NEGRO/40', '', NULL, 4, '2026-07-07 19:01:41', 40, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/39', '', NULL, 0, '2026-07-08 07:10:12', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/40', '', NULL, 4, '2026-07-08 07:10:12', 40, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0),
+  ('GEN', 'BOTIN-ANIT/NEGRO/41', '', NULL, -5, '2026-07-08 07:10:12', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0),
   ('GEN', 'CALV00001/3838/39', '', NULL, 0, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0),
   ('GEN', 'CALV00001/3838/40', '', NULL, 2, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'CALV00001/3838/41', '', NULL, 2, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -2353,9 +2369,10 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'CAMI-POLO/BLANCO/M', '', NULL, 7, '2026-07-05 17:04:55', 70, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 30, 0, 0),
   ('GEN', 'CAMI-POLO/BLANCO/S', '', NULL, 15, '2026-07-05 17:04:55', 150, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 0, 0),
   ('GEN', 'CARTERA-PIEL', '', NULL, 4, '2026-07-05 17:04:55', 20, 5, 0, 0, 0, 0, 0, 1, 4, 0, 0, 2, 15, 0, 0),
-  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 3, '2026-07-07 19:30:04', 0, 0, 0, 0, 0, 0, 0, 1, 5, 0, 0, 9, 18, 2, 0),
+  ('GEN', 'CHAQ-CUERO/MARRON/L', '', NULL, 2, '2026-07-09 07:08:48', 0, 0, 0, 0, 0, 0, 0, 1, 5, 0, 0, 9, 18, 3, 0),
   ('GEN', 'CHAQ-CUERO/MARRON/S', '', NULL, 2, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0),
   ('GEN', 'CHAQ-CUERO/MARRON/XL', '', NULL, 4, '2026-07-05 17:04:55', 20, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 12, 0, 0),
+  ('GEN', 'CHAQ-CUERO/MARRON/XXL', '', NULL, -1, '2026-07-09 07:08:48', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0),
   ('GEN', 'CHAQ-CUERO/NEGRO/L', '', NULL, 5, '2026-07-05 17:04:55', 25, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 10, 0, 0),
   ('GEN', 'CHAQ-CUERO/NEGRO/M', '', NULL, 2, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0),
   ('GEN', 'CHAQ-CUERO/NEGRO/S', '', NULL, -7, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 1, 0, 0),
@@ -2462,8 +2479,8 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'DEPORTIVO006/AZUL/S', '', NULL, 2, '2026-07-05 17:04:55', 9, 4.5, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'DEPORTIVO006/AZUL/XL', '', NULL, 2, '2026-07-05 17:04:55', 9, 4.5, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'DEPORTIVO006/AZUL/XXL', '', NULL, 2, '2026-07-05 17:04:55', 9, 4.5, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
-  ('GEN', 'DEPORTIVO009/NEGRO/L', '', NULL, 1, '2026-07-07 19:30:04', 1, 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1, 0),
-  ('GEN', 'DEPORTIVO009/NEGRO/M', '', NULL, 2, '2026-07-05 17:04:55', 2, 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
+  ('GEN', 'DEPORTIVO009/NEGRO/L', '', NULL, 0, '2026-07-09 07:08:48', 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0),
+  ('GEN', 'DEPORTIVO009/NEGRO/M', '', NULL, 0, '2026-07-09 06:09:06', 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0),
   ('GEN', 'DEPORTIVO009/NEGRO/S', '', NULL, 2, '2026-07-05 17:04:55', 2, 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'DEPORTIVO009/NEGRO/XL', '', NULL, 4, '2026-07-05 17:04:55', 4, 1, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0),
   ('GEN', 'DEPORTIVO009/NEGRO/XXL', '', NULL, 4, '2026-07-05 17:04:55', 4, 1, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -2480,7 +2497,8 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'LEGGING-SPORT/ROSA/S', '', NULL, 0, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 15, 0, 0),
   ('GEN', 'MOCHILA-SPORT', '', NULL, 2, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 10, 14, 0, 0),
   ('GEN', 'PANT-CHIN/BEIGE/38', '', NULL, 10, '2026-07-05 17:04:55', 100, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 22, 0, 0),
-  ('GEN', 'PANT-CHIN/BEIGE/40', '', NULL, 10, '2026-07-05 17:04:55', 100, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0, 0),
+  ('GEN', 'PANT-CHIN/BEIGE/40', '', NULL, 10, '2026-07-08 07:40:42', 100, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0, 0),
+  ('GEN', 'PANT-CHIN/BEIGE/42', '', NULL, -2, '2026-07-09 06:09:06', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0),
   ('GEN', 'SOMBRERO-PJM', '', NULL, 6, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 14, 0, 0),
   ('GEN', 'SUDADERA-HOOD/GRIS/M', '', NULL, 0, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 15, 0, 0),
   ('GEN', 'SUDADERA-HOOD/GRIS/S', '', NULL, 0, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 12, 0, 0),
@@ -2497,9 +2515,9 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
   ('GEN', 'ZAP-BOTA-MT/NEGRO/42', '', NULL, 5, '2026-07-05 17:04:55', 25, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 24, 0, 0),
   ('GEN', 'ZAP-DEPOR/BLANCO/43', '', NULL, 1, '2026-07-05 17:04:55', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0),
   ('GEN', 'ZAP-OXFORD/MARRON/43', '', NULL, 8, '2026-07-05 17:04:55', 40, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0),
-  ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 8, '2026-07-07 19:30:04', 40, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 19, 1, 0),
+  ('GEN', 'ZAP-OXFORD/NEGRO/42', '', NULL, 7, '2026-07-09 07:08:48', 35, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 19, 2, 0),
   ('GEN', 'ZAP-TACÓN/ROJO/37', '', NULL, 5, '2026-07-05 17:04:55', 25, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0);
--- 392 registros exportados
+-- 396 registros exportados
 
 
 -- Tabla: fza_articulos_tarifas
@@ -2767,9 +2785,10 @@ INSERT INTO `fza_atributos_conjuntos` (`ID_AC`, `NOMBRE_AC`, `NOMBRE_CORTO_AC`, 
   (3, 'Tallas Ropa Mujer (S-XL)', 'SRA', 'TC', 'TAL', 'S', '2026-05-19 07:34:11', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   (4, 'Tallas Calzado Hombre EU 39-44', 'EUR-H', 'TC', 'TAL', 'S', '2026-05-19 07:34:11', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   (5, 'Tallas Calzado Mujer EU 37-42', 'EUR-M', 'TC', 'TAL', 'S', '2026-05-19 07:34:11', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (6, 'Colores Vivos', 'COL', 'TC', 'CO', 'S', '2026-05-19 07:34:11', '2026-05-12 07:13:38', 'DEMO', 'DEMO');
+  (6, 'Colores Vivos', 'COL', 'TC', 'CO', 'S', '2026-05-19 07:34:11', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (7, 'Tallas Pantalón EU 38-44', 'PANT', 'TC', 'TAL', 'S', '2026-07-09 06:06:50', '2026-07-09 06:06:50', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_atributos_conjuntos` ENABLE KEYS */;
--- 6 registros exportados
+-- 7 registros exportados
 
 
 -- Tabla: fza_atributos_conjuntos_det
@@ -2824,8 +2843,15 @@ INSERT INTO `fza_atributos_conjuntos_det` (`ID_AC_ACD`, `ID_AV_ACD`, `ORDEN_ACD`
   (6, 222, 60, 13, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   (6, 9208, 10, 14, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
   (6, 9209, 20, 15, '2026-05-14 20:29:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
-  (6, 9211, 30, NULL, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO');
--- 34 registros exportados
+  (6, 9211, 30, NULL, '2026-05-12 07:13:38', '2026-05-12 07:13:38', 'DEMO', 'DEMO'),
+  (7, 122, 10, NULL, '2026-07-09 06:06:50', '2026-07-09 06:06:50', 'Administrador', 'Administrador'),
+  (7, 126, 50, NULL, '2026-07-09 06:06:50', '2026-07-09 06:06:50', 'Administrador', 'Administrador'),
+  (7, 127, 60, NULL, '2026-07-09 06:06:50', '2026-07-09 06:06:50', 'Administrador', 'Administrador'),
+  (7, 224, 40, NULL, '2026-07-09 06:06:50', '2026-07-09 06:06:50', 'Administrador', 'Administrador'),
+  (7, 225, 30, NULL, '2026-07-09 06:06:50', '2026-07-09 06:06:50', 'Administrador', 'Administrador'),
+  (7, 226, 70, NULL, '2026-07-09 06:06:50', '2026-07-09 06:06:50', 'Administrador', 'Administrador'),
+  (7, 227, 20, NULL, '2026-07-09 06:06:50', '2026-07-09 06:06:50', 'Administrador', 'Administrador');
+-- 41 registros exportados
 
 
 -- Tabla: fza_atributos_sku
@@ -3475,6 +3501,8 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('PANT-CHIN/BEIGE/38', 220, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('PANT-CHIN/BEIGE/40', 220, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('PANT-CHIN/BEIGE/40', 225, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
+  ('PANT-CHIN/BEIGE/41', 220, '2026-07-08 07:39:45', '2026-07-08 07:39:45', 'Administrador', 'Administrador'),
+  ('PANT-CHIN/BEIGE/41', 224, '2026-07-08 07:39:45', '2026-07-08 07:39:45', 'Administrador', 'Administrador'),
   ('PANT-CHIN/BEIGE/42', 126, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('PANT-CHIN/BEIGE/42', 220, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('PANT-CHIN/BEIGE/44', 220, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
@@ -3599,7 +3627,7 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
   ('ZAP-TACÓN/ROJO/37', 121, '2026-01-08 18:56:58', '2026-01-04 22:06:12', 'DEMO', 'DEMO'),
   ('ZAP-TACÓN/ROJO/38', 1, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK'),
   ('ZAP-TACÓN/ROJO/38', 122, '2026-03-07 08:00:00', '2026-03-07 08:00:00', 'FIX_SKU_STOCK', 'FIX_SKU_STOCK');
--- 751 registros exportados
+-- 753 registros exportados
 
 
 -- Tabla: fza_atributos_valores
@@ -5997,7 +6025,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FC', '011', 'A1.2023', 6, 6, 'S', 'N', '2025-09-07 17:01:07', '2023-12-06 13:07:54', 'Administrador', 'Administrador'),
   ('FC', '011', 'A1/1T/2024', 2, 6, 'S', 'N', '2025-09-07 17:01:09', '2024-02-12 09:40:18', 'Administrador', 'Administrador'),
   ('FC', '012', '2026.A1', 167, 6, 'S', 'N', '2026-07-04 18:53:17', '2026-02-01 07:03:46', 'Administrador', '1'),
-  ('FC', '012', '2026.AN1', 2, 6, 'S', 'N', '2026-05-10 19:44:03', '2026-05-10 19:44:03', 'Administrador', 'Administrador'),
+  ('FC', '012', '2026.AN1', 3, 6, 'S', 'N', '2026-07-09 06:46:00', '2026-05-10 19:44:03', 'Administrador', 'Administrador'),
   ('FC', '012', 'A1', 2, 6, 'S', 'N', '2026-06-12 14:03:19', '2026-06-12 14:03:19', 'Administrador', 'Administrador'),
   ('FC', '012', 'TICKA1', 2, 6, 'S', 'N', '2026-03-27 17:33:04', '2026-03-27 17:33:04', 'Administrador', 'Administrador'),
   ('FC', '1', 'A3', 0, 8, 'S', 'N', '2025-09-07 17:01:11', '2023-05-12 12:24:25', 'Administrador', 'Administrador'),
@@ -6008,16 +6036,16 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 522, 3, 'S', 'S', '2026-07-07 19:55:07', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 530, 3, 'S', 'S', '2026-07-09 07:42:57', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 28, 2, 'S', 'S', '2026-07-07 08:17:26', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
-  ('MV', '-', '-', 1183, 10, 'S', 'S', '2026-07-07 19:52:13', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
+  ('MV', '-', '-', 1295, 10, 'S', 'S', '2026-07-09 07:08:48', '2026-04-02 20:16:49', 'Administrador', 'Administrador'),
   ('OV', '012', 'OV', 194, 8, 'S', 'S', '2026-07-04 19:18:36', '2026-04-02 20:05:59', '1', 'Administrador'),
   ('PC', '-', '-', 5, 6, 'S', 'S', '2026-06-13 12:02:01', '2026-05-28 19:21:38', 'SISTEMA', 'Administrador'),
   ('PC', '012', 'C1', 3, 6, 'S', 'N', '2026-07-02 19:58:56', '2026-07-02 19:48:47', 'Administrador', 'Administrador'),
   ('PD', '1', 'PED', 3, 3, 'S', 'S', '2026-02-17 06:21:32', '2026-02-12 10:00:00', 'DEMO', 'DEMO'),
-  ('PE', '012', 'A1', 5, 6, 'S', 'N', '2026-07-07 19:19:56', '2026-07-02 18:31:43', 'Alfredo', 'Administrador'),
+  ('PE', '012', 'A1', 10, 6, 'S', 'N', '2026-07-08 08:17:25', '2026-07-02 18:31:43', 'Alfredo', 'Administrador'),
   ('PE', '1', 'AG1', 2, 6, 'S', 'N', '2026-07-02 19:16:15', '2026-07-02 19:16:15', 'Administrador', 'Administrador'),
   ('PG', '-', '-', 3, 3, 'S', 'S', '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
   ('PO', '-', '-', 3, 3, 'S', 'S', '2026-07-04 07:26:46', '2026-07-04 07:25:00', 'Administrador', 'Administrador'),
@@ -6923,6 +6951,7 @@ INSERT INTO `fza_facturas` (`NUMERO_FAC`, `SERIE_FAC`, `FECHA_FAC`, `ESCONSOLIDA
   ('000001', '2026.AN1', '2026-05-10 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'N', 'BORRADOR', '012', 'PEDRO REGULADO PÉREZ', '16196655D', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', 'PUBLICO', 'PUBLICO', 'NIF CLIENTE', 'TFNO CLIENTE', 'EMAIL DEL CLIENTE', 'DIRECCION DEL CLIENTE', '', 'POBLACION AGRICULTOR', 'PROVINCIA CLIENTE', 'POSCLI', 'ES', 'PAIS DEL CLIENTE', NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'N', 'PVP', 'S', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, NULL, 5.2, NULL, NULL, 10, NULL, 1.4, NULL, NULL, 4, NULL, 0.5, NULL, NULL, 0, NULL, 0, NULL, NULL, 0, 0, 'CONTADO', 0, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-06-25 08:03:35', '2026-05-10 19:44:03', 'Administrador', 'SCRIPT', NULL, NULL, NULL, NULL),
   ('000001', 'A1', '2026-06-12 00:00:00', 'N', NULL, 'NORMAL', 'N', 'ERROR', '012', 'PEDRO REGULADO PÉREZ', '16196655D', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '313', 'TEXTILES NORDESTE SL', 'B11223344', '937333333', 'gerencia@texnordeste.com', 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', '', '', '', '', '', '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, '60DIAS', 15, 0, 0, NULL, NULL, '', '', NULL, 'ESTA FACTURA SE EMITE EN SUSTITUCIÓN DE LA FACTURA SIMPLIFICADA 2026.A1\\000145', '040', 'N', 'N', 'N', NULL, '2026-06-25 07:40:38', '2026-06-12 14:03:19', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000002', '2026.A1', '2026-02-01 00:00:00', 'N', NULL, 'NORMAL', 'N', 'BORRADOR', '012', 'PEDRO REGULADO PÉREZ', '16196655D', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', 'TIENDA', 'TIENDA DE ROSA', '52288816H', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '', '', '', '', '', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 9.45, 5.2, 0, 45, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 45, 9.45, 'CONTADO', 15, 6.75, 47.7, NULL, NULL, NULL, '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-05-16 21:24:23', '2026-02-01 14:09:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
+  ('000002', '2026.AN1', '2026-07-09 00:00:00', 'N', NULL, 'NORMAL', 'N', 'BORRADOR', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '311', 'DAVID NAVARRO IBÁÑEZ', '45684462E', '644111111', 'd.navarro@gmail.com', 'C/ COLÓN, 18', '3ºC', 'ALICANTE', 'ALICANTE', '03001', '724', 'España', '', '', '', '', '', '1', 'N', 'N', 'N', 'S', 'PVP', 'S', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 14.75, 5.2, 0, 70.25, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 70.25, 14.75, 'CONTADO', 15, 10.5375, 74.4625, NULL, NULL, NULL, '', NULL, NULL, '030', 'N', 'N', 'N', NULL, '2026-07-09 06:46:07', '2026-07-09 06:46:00', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000003', '2026.A1', '2026-02-01 00:00:00', 'S', '2026-02-23 06:23:26', 'NORMAL', 'N', 'BORRADOR', '012', 'PEDRO REGULADO PÉREZ', '16196655D', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', 'TIENDA', 'TIENDA DE ROSA', '52288816H', '658963325', 'EMAIL', 'CALLE MAYOR, 2', '', 'MORALES DEL VINO', 'ZAMORA', '49190', 'ES', 'España', '', '', '', '', '', '1', 'S', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 37.8, 5.2, 0, 180, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 180, 37.8, 'TRANSFERENCIA', 15, 27, 190.8, NULL, NULL, NULL, '', NULL, NULL, '040', 'N', 'N', 'N', NULL, '2026-05-16 21:24:23', '2026-02-01 14:36:26', '፳į', 'Administrador', NULL, NULL, NULL, NULL),
   ('000004', '2026.A1', '2026-02-26 00:00:00', 'N', NULL, 'NORMAL', 'N', 'BORRADOR', '012', 'PEDRO REGULADO PÉREZ', '16196655D', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '320', 'TIENDAS MODA SPAIN SL', 'N5921112H', '911000000', 'compras@modaspain.es', 'GRAN VÍA, 48', '', 'MADRID', 'MADRID', '28013', '724', 'España', '', '', '', '', '', '1', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'N', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 16.38, 5.2, 0, 78, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 78, 16.38, '60DIAS', 15, 11.7, 82.68, NULL, NULL, NULL, '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-05-16 21:24:23', '2026-02-26 19:56:20', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
   ('000005', '2026.A1', '2026-02-26 00:00:00', 'S', '2026-06-13 10:12:44', 'NORMAL', 'N', 'ONLINE', '012', 'PEDRO REGULADO PÉREZ', '16196655D', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '321', 'RODOLFO MARTÍNEZ GIL', '33789518B', '23923923932', '', 'alsdkjfalsdkjf', 'asldkjadslkfj', 'alskdfjadsklñjf', 'alsdkfjasdkñlfj', '21323', 'ES', '', '', '', '', '', '', '1', 'N', 'N', 'N', 'N', 'VENTAMAYOR', 'N', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 36.54, 5.2, 0, 174, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 174, 36.54, 'CONTADO', 15, 0, 210.54, NULL, NULL, NULL, '', NULL, NULL, '040', 'N', 'N', 'N', '<?xml version="1.0" encoding="UTF-8"?>
@@ -7289,7 +7318,7 @@ INSERT INTO `fza_facturas` (`NUMERO_FAC`, `SERIE_FAC`, `FECHA_FAC`, `ESCONSOLIDA
   ('000163', '2026.A1', '2026-06-25 00:00:00', 'S', '2026-06-25 18:00:10', 'SIMPLIFICADA', 'N', 'SIN_VERIFACTU', '012', 'PEDRO REGULADO PÉREZ', '16196655D', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 5.2, 5.2, 0, 24.79, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 24.79, 5.2, NULL, 0, 0, 29.99, NULL, NULL, '', '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-06-25 18:00:10', '2026-06-25 18:00:10', '1', 'Administrador', '1', 'GEN', '1', '00000187'),
   ('000164', '2026.A1', '2026-06-25 00:00:00', 'S', '2026-06-25 19:43:32', 'SIMPLIFICADA', 'N', 'VERIFACTU_OK', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 2.59, 5.2, 0, 12.36, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 12.36, 2.59, NULL, 0, 0, 14.95, NULL, NULL, '', '', NULL, NULL, '010', 'N', 'N', 'N', NULL, '2026-06-25 19:43:32', '2026-06-25 19:42:44', '1', 'Administrador', '1', 'GEN', '1', '00000188'),
   ('000166', '2026.A1', '2026-07-12 00:00:00', 'N', NULL, 'SIMPLIFICADA', 'N', 'VERIFACTU_ERROR', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', NULL, 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '1', 'N', 'N', 'N', 'S', 'PVP', '', 'N', NULL, 'N', 'S', 'N', 'IVA', 'N', 21, 29.5, 5.2, 0, 140.5, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 140.5, 29.5, NULL, 0, 0, 170, NULL, NULL, '', '', NULL, NULL, '150', 'N', 'N', 'N', NULL, '2026-07-05 16:08:26', '2026-07-04 18:53:17', '1', 'Administrador', '1', 'GEN', '1', '00000192');
--- 166 registros exportados
+-- 167 registros exportados
 
 
 -- Tabla: fza_facturas_compra
@@ -7657,6 +7686,17 @@ CREATE TABLE `fza_facturas_lineas` (
   `CODIGO_CAJA_FACLIN` varchar(10) NULL DEFAULT NULL,
   `NUMERO_OPERACION_FACLIN` varchar(20) NULL DEFAULT NULL,
   `NUMERO_MOV_FACLIN` varchar(20) NULL DEFAULT NULL,
+  `ATTR1_VALOR_FACLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR1_NOMBRE_FACLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR2_VALOR_FACLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR2_NOMBRE_FACLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR3_VALOR_FACLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR3_NOMBRE_FACLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR4_VALOR_FACLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR4_NOMBRE_FACLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR5_VALOR_FACLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR5_NOMBRE_FACLIN` varchar(100) NOT NULL DEFAULT '',
+  `NUM_ATRIBUTOS_FACLIN` int(11) NOT NULL DEFAULT '0' COMMENT 'Atributos requeridos del articulo',
   PRIMARY KEY (`NUMERO_FAC_FACLIN`,`SERIE_FAC_FACLIN`,`LINEA_FACLIN`)
 );
 ALTER TABLE `fza_facturas_lineas` ADD INDEX `FT_FACLIN_DESC` (`DESCRIPCION_ARTICULO_FACLIN`);
@@ -7667,220 +7707,221 @@ ALTER TABLE `fza_facturas_lineas` ADD INDEX `IDX_FAC_LIN_ARTICULO` (`CODIGO_ART_
 ALTER TABLE `fza_facturas_lineas` ADD INDEX `IDX_FAC_LIN_FAMILIA` (`CODIGO_FAM_FACLIN`);
 
 -- Datos de fza_facturas_lineas
-INSERT INTO `fza_facturas_lineas` (`NUMERO_FAC_FACLIN`, `SERIE_FAC_FACLIN`, `CODIGO_EMP_FACLIN`, `LINEA_FACLIN`, `CODIGO_ART_FACLIN`, `CODIGO_UNIDAD_FACLIN`, `LOTE_FACLIN`, `FECHA_CADUCIDAD_FACLIN`, `CODIGO_FAM_FACLIN`, `NOMBRE_FAM_FACLIN`, `PRECIO_ULT_COMPRA_FACLIN`, `CODIGO_PRV_FACLIN`, `RAZON_SOCIAL_PROVEEDOR_FACLIN`, `ESPROVEEDORPRINCIPAL_FACLIN`, `FECHA_ENTREGA_FACLIN`, `TIPO_ARTICULO_FACLIN`, `TIPO_CANTIDAD_ARTICULO_FACLIN`, `CANTIDAD_FACLIN`, `DESCRIPCION_ARTICULO_FACLIN`, `DESCRIPCION_VARIACION_FACLIN`, `CODIGO_TAR_FACLIN`, `ESIMP_INCL_TARIFA_FACLIN`, `PRECIO_SALIDA_FACLIN`, `PORCENTAJE_DTO_FACLIN`, `PRECIO_DTO_FACLIN`, `PRECIO_VENTA_SIVA_ARTICULO_FACLIN`, `TIPO_IVA_ARTICULO_FACLIN`, `PORCENTAJE_IVA_FACLIN`, `PRECIO_VENTA_CIVA_ARTICULO_FACLIN`, `TOTAL_FACLIN`, `TOTAL_FAC_SIVA_FACLIN`, `CODIGO_VENDEDOR_FACLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `CODIGO_ALM_FACLIN`, `CODIGO_CAJA_FACLIN`, `NUMERO_OPERACION_FACLIN`, `NUMERO_MOV_FACLIN`) VALUES
-  ('00000069', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Chaqueta Biker Cuero', NULL, NULL, 'S', 80.1653, 0, 0, 80.1653, 'N', 21, 97, 97, 80.1653, '1', '2026-04-06 19:33:37', '2026-04-06 19:33:37', '1', '1', 'GEN', '1', '00000069', NULL),
-  ('00000069', '2026.A1', NULL, '0050', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Abrigo de Paño Caballero', NULL, NULL, 'S', 23.1405, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-04-06 19:33:37', '2026-04-06 19:33:37', '1', '1', 'GEN', '1', '00000069', NULL),
-  ('00000070', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Abrigo de Paño Caballero', NULL, NULL, 'S', 30.5785, 0, 0, 30.5785, 'N', 21, 37, 37, 30.5785, '1', '2026-04-06 19:44:30', '2026-04-06 19:44:30', '1', '1', 'GEN', '1', '00000070', NULL),
-  ('00000071', '2026.A1', NULL, '0030', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Camiseta de Algodón Básica', NULL, NULL, 'S', 30.5785, 0, 0, 30.5785, 'N', 21, 37, 37, 30.5785, '1', '2026-04-06 20:00:01', '2026-04-06 20:00:01', '1', '1', 'GEN', '1', '00000071', NULL),
-  ('00000072', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Abrigo de Paño Caballero', NULL, NULL, 'S', 84.2975, 0, 0, 84.2975, 'N', 21, 102, 102, 84.2975, '1', '2026-04-06 20:35:59', '2026-04-06 20:35:59', '1', '1', 'GEN', '1', '00000072', NULL),
-  ('00000077', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Abrigo de Paño Caballero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-07 08:00:02', '2026-04-07 08:00:02', '1', '1', 'GEN', '1', '00000077', NULL),
-  ('00000079', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Abrigo de Paño Caballero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-07 08:04:38', '2026-04-07 08:04:38', '1', '1', 'GEN', '1', '00000079', NULL),
-  ('00000080', '2026.A1', NULL, '0030', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Cinturón Piel Reversible', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-07 08:07:01', '2026-04-07 08:07:01', '1', '1', 'GEN', '1', '00000080', NULL),
-  ('00000083', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-07 17:34:33', '2026-04-07 17:34:33', '1', '1', 'GEN', '1', '00000083', NULL),
-  ('00000084', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-07 18:33:11', '2026-04-07 18:33:11', '1', '1', 'GEN', '1', '00000084', NULL),
-  ('00000085', '2026.A1', NULL, '0030', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Cinturón Piel Reversible', NULL, NULL, 'S', 16.5289, 0, 0, 16.5289, 'N', 21, 20, 20, 16.5289, '1', '2026-04-07 18:33:56', '2026-04-07 18:33:56', '1', '1', 'GEN', '1', '00000085', NULL),
-  ('00000088', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-07 19:00:17', '2026-04-07 19:00:17', '1', '1', 'GEN', '1', '00000088', NULL),
-  ('00000089', '2026.A1', NULL, '0040', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Cinturón Piel Reversible', NULL, NULL, 'S', 16.5289, 0, 0, 16.5289, 'N', 21, 20, 20, 16.5289, '1', '2026-04-07 19:01:56', '2026-04-07 19:01:56', '1', '1', 'GEN', '1', '00000089', NULL),
-  ('00000090', '2026.A1', NULL, '0040', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Cartera Piel Caballero', NULL, NULL, 'S', 39.6694, 0, 0, 39.6694, 'N', 21, 48, 48, 39.6694, '1', '2026-04-07 19:14:29', '2026-04-07 19:14:29', '1', '1', 'GEN', '1', '00000090', NULL),
-  ('00000093', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-07 19:23:17', '2026-04-07 19:23:17', '1', '1', 'GEN', '1', '00000093', NULL),
-  ('00000094', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-07 19:23:50', '2026-04-07 19:23:50', '1', '1', 'GEN', '1', '00000094', NULL),
-  ('00000095', '2026.A1', NULL, '0030', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Cinturón Piel Reversible', NULL, NULL, 'S', 16.5289, 0, 0, 16.5289, 'N', 21, 20, 20, 16.5289, '1', '2026-04-07 19:24:17', '2026-04-07 19:24:17', '1', '1', 'GEN', '1', '00000095', NULL),
-  ('000001', 'A1', NULL, '0040', 'CAMI-POLO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Polo Manga Corta Hombre', NULL, NULL, 'S', NULL, NULL, NULL, 23.1405, 'N', 21, 28, 28, NULL, NULL, '2026-06-12 14:03:19', '2026-06-12 14:03:19', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000002', '2026.A1', '012', '010', 'PETADA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'PETADA BILLI', NULL, NULL, 'N', 50, 10, 5, 45, 'N', 21, 54.45, 54.45, 45, NULL, '2026-04-23 10:36:41', '2026-02-01 14:38:48', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000003', '2026.A1', '012', '010', 'pato', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'pato aparato', NULL, NULL, 'N', 5, 0, 0, 5, 'N', 21, 6.05, 6.05, 5, NULL, '2026-04-23 10:36:41', '2026-02-01 14:36:39', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000003', '2026.A1', '012', '020', 'ZAP-TACÓN', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Zapato Tacón Alto Señora', NULL, 'VENTAMAYOR', 'N', 42, 0, 0, 42, 'N', 21, 50.82, 50.82, 42, NULL, '2026-04-23 10:36:41', '2026-02-23 06:21:01', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000003', '2026.A1', '012', '030', 'BOLSO-PIEL', NULL, NULL, NULL, 'BOLSOS', 'Bolsos, bolsas y mochilas de señora', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Bolso de Piel Mujer Grande', NULL, 'VENTAMAYOR', 'N', 55, 0, 0, 55, 'N', 21, 66.55, 66.55, 55, NULL, '2026-04-23 10:36:41', '2026-02-23 06:22:50', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000003', '2026.A1', '012', '040', 'CHAQ-CUERO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Chaqueta Biker Cuero', NULL, 'VENTAMAYOR', 'N', 78, 0, 0, 78, 'N', 21, 94.38, 94.38, 78, NULL, '2026-04-23 10:36:41', '2026-02-23 06:23:01', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000004', '2026.A1', '012', '010', 'CHAQ-CUERO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Chaqueta Biker Cuero', NULL, 'VENTAMAYOR', 'N', 78, 0, 0, 78, 'N', 21, 94.38, 94.38, 78, NULL, '2026-04-23 10:36:41', '2026-02-26 19:56:25', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000005', '2026.A1', '012', '010', 'ZAP-TACÓN', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 2, 'Zapato Tacón Alto Señor<<a', NULL, 'VENTAMAYOR', 'N', 40, 0, 0, 40, 'N', 21, 48.4, 96.8, 80, NULL, '2026-04-23 10:36:41', '2026-02-26 19:59:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000005', '2026.A1', '012', '020', 'ZAP-BOTA-MT', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Bota Montaña Impermeable', NULL, 'VENTAMAYOR', 'N', 62, 0, 0, 62, 'N', 21, 75.02, 75.02, 62, NULL, '2026-04-23 10:36:41', '2026-02-26 20:11:53', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000005', '2026.A1', '012', '030', 'BLUS-SEDA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Blusa de Seda Cuello V', NULL, 'VENTAMAYOR', 'N', 32, 0, 0, 32, 'N', 21, 38.72, 38.72, 32, NULL, '2026-04-23 10:36:41', '2026-02-26 20:32:10', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000006', '2026.A1', '012', '010', 'CAMI-POLO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Polo Manga Corta Hombre', NULL, 'PVP', 'S', 28, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, NULL, '2026-04-23 10:36:41', '2026-03-19 23:21:21', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000009', '2026.A1', '012', '010', 'CAMI-POLO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Polo Manga Corta Hombre', NULL, NULL, 'S', 0, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, NULL, '2026-04-23 10:36:41', '2026-03-27 17:32:45', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000018', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 05:35:53', '2026-04-03 05:35:53', '1', '1', 'GEN', '1', '00000007', '0000000004'),
-  ('000019', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 05:38:59', '2026-04-03 05:38:59', '1', '1', 'GEN', '1', '00000008', '0000000006'),
-  ('000020', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 05:40:39', '2026-04-03 05:40:39', '1', '1', 'GEN', '1', '00000009', '0000000008'),
-  ('000021', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 05:42:47', '2026-04-03 05:42:47', '1', '1', 'GEN', '1', '00000010', '0000000010'),
-  ('000022', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 05:44:54', '2026-04-03 05:44:54', '1', '1', 'GEN', '1', '00000011', '0000000012'),
-  ('000023', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-03 20:34:37', '2026-04-03 20:34:37', '1', '1', 'GEN', '1', '00000012', '0000000014'),
-  ('000024', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 150, 0, 0, 123.9669, 'N', 21, 150, 150, 123.9669, '1', '2026-04-03 20:39:29', '2026-04-03 20:39:29', '1', '1', 'GEN', '1', '00000013', '0000000016'),
-  ('000025', '2026.A1', NULL, '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 49.95, 0, 0, 41.281, 'N', 21, 49.95, 49.95, 41.281, '1', '2026-04-03 21:04:17', '2026-04-03 21:04:17', '1', '1', 'GEN', '1', '00000014', '0000000018'),
-  ('000026', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 21:05:54', '2026-04-03 21:05:54', '1', '1', 'GEN', '1', '00000015', '0000000020'),
-  ('000026', 'A1', '1', '010', 'JERSEY-LANA', 'JERSEY-LANA/GRIS/M', NULL, NULL, 'ROPA', 'Ropa de Vestir', 25, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Jersey de Lana Cuello Redondo', NULL, 'PVP', 'N', 55, 0, 0, 55, 'N', 21, 66.55, 133.1, 110, NULL, '2026-04-23 10:36:41', '2026-01-20 10:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL),
-  ('000026', 'A1', '1', '020', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, 'COMPLEMENTOS', 'Complementos Accesorios', 9, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Cinturón Piel Reversible', NULL, 'PVP', 'N', 22, 10, 2.2, 19.8, 'N', 21, 23.958, 47.916, 39.6, NULL, '2026-04-23 10:36:41', '2026-01-20 10:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL),
-  ('000027', '2026.A1', NULL, '0010', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Camiseta de Algodón Básica', NULL, NULL, 'S', 150, 10, 15, 111.5702, 'N', 21, 135, 135, 111.5702, '1', '2026-04-03 21:09:59', '2026-04-03 21:09:59', '1', '1', 'GEN', '1', '00000016', '0000000022'),
-  ('000027', 'A1', '1', '010', 'ZAP-OXFORD', 'ZAP-OXFORD/NEGRO/42', NULL, NULL, 'CALZADO', 'Calzado Elegante', 40, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Zapato Oxford Piel Hombre', NULL, 'PVP', 'N', 89.9, 0, 0, 89.9, 'N', 21, 108.779, 108.779, 89.9, NULL, '2026-04-23 10:36:41', '2026-01-21 11:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000027', 'A1', '1', '020', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, 'COMPLEMENTOS', 'Complementos Accesorios', 9, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Cinturón Piel Reversible', NULL, 'PVP', 'N', 22, 0, 0, 22, 'N', 21, 26.62, 26.62, 22, NULL, '2026-04-23 10:36:41', '2026-01-21 11:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000027', 'A1', '1', '030', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, NULL, 'COMPLEMENTOS', 'Complementos Accesorios', 20, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Cartera Piel Caballero', NULL, 'PVP', 'N', 50, 0, 0, 50, 'N', 21, 60.5, 60.5, 50, NULL, '2026-04-23 10:36:41', '2026-01-21 11:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000028', '2026.A1', NULL, '0010', 'DEMO-BASICO', 'DEMO-BASICO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Camiseta Algodón Demo', NULL, NULL, 'S', 30, 0, 0, 24.7934, 'N', 21, 30, 30, 24.7934, '1', '2026-04-03 21:23:51', '2026-04-03 21:23:51', '1', '1', 'GEN', '1', '00000017', '0000000024'),
-  ('000028', 'A1', '1', '010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 80, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 3, 'Abrigo de Paño Caballero - Negro L', NULL, 'VENTAMAYOR', 'N', 120, 0, 0, 120, 'N', 21, 145.2, 435.6, 360, NULL, '2026-04-23 10:36:41', '2026-01-23 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000028', 'A1', '1', '020', 'SUDADERA-HOOD', 'SUDADERA-HOOD/GRIS/M', NULL, NULL, 'DEPORTIVO', 'Ropa Deportiva', 20, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 6, 'Sudadera con Capucha Gris M', NULL, 'VENTAMAYOR', 'N', 28, 0, 0, 28, 'N', 21, 33.88, 203.28, 168, NULL, '2026-04-23 10:36:41', '2026-01-23 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000028', 'A1', '1', '030', 'BOLSO-PIEL', 'BOLSO-PIEL', NULL, NULL, 'BOLSOS', 'Bolsos y Mochilas', 45, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Bolso de Piel Mujer Grande', NULL, 'VENTAMAYOR', 'N', 55, 0, 0, 55, 'N', 21, 66.55, 66.55, 55, NULL, '2026-04-23 10:36:41', '2026-01-23 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000028', 'A1', '1', '040', 'JERSEY-LANA', 'JERSEY-LANA/BEIGE/M', NULL, NULL, 'ROPA', 'Ropa de Vestir', 25, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 5, 'Jersey de Lana Beige M', NULL, 'VENTAMAYOR', 'N', 35, 0, 0, 35, 'N', 21, 42.35, 211.75, 175, NULL, '2026-04-23 10:36:41', '2026-01-23 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000029', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-03 21:28:55', '2026-04-03 21:28:55', '1', '1', 'GEN', '1', '00000018', '0000000026'),
-  ('000029', 'A1', '1', '010', 'LEGGING-SPORT', 'LEGGING-SPORT/NEGRO/S', NULL, NULL, 'DEPORTIVO', 'Ropa Deportiva', 8, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Legging Deportivo Mujer - Negro S', NULL, 'PVP', 'N', 19.95, 0, 0, 19.95, 'N', 21, 24.1395, 48.279, 39.9, NULL, '2026-04-23 10:36:41', '2026-01-25 12:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000029', 'A1', '1', '020', 'SOMBRERO-PJM', 'SOMBRERO-PJM', NULL, NULL, 'COMPLEMENTOS', 'Complementos Accesorios', 15, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Sombrero Panamá Verano', NULL, 'PVP', 'N', 35, 15, 5.25, 29.75, 'N', 21, 35.9975, 35.9975, 29.75, NULL, '2026-04-23 10:36:41', '2026-01-25 12:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000030', '2026.A1', NULL, '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 49.95, 0, 0, 41.281, 'N', 21, 49.95, 49.95, 41.281, '1', '2026-04-03 21:32:08', '2026-04-03 21:32:08', '1', '1', 'GEN', '1', '00000019', '0000000028'),
-  ('000030', 'A1', '1', '010', 'SUDADERA-HOOD', 'SUDADERA-HOOD/GRIS/S', NULL, NULL, 'DEPORTIVO', 'Ropa Deportiva', 20, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 12, 'Sudadera con Capucha Gris S', NULL, 'VENTAMAYOR', 'N', 28, 0, 0, 28, 'N', 21, 33.88, 406.56, 336, NULL, '2026-04-23 10:36:41', '2026-01-28 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000030', 'A1', '1', '020', 'LEGGING-SPORT', 'LEGGING-SPORT/ROSA/S', NULL, NULL, 'DEPORTIVO', 'Ropa Deportiva', 8, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 15, 'Legging Deportivo Mujer - Rosa S', NULL, 'VENTAMAYOR', 'N', 12, 0, 0, 12, 'N', 21, 14.52, 217.8, 180, NULL, '2026-04-23 10:36:41', '2026-01-28 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000030', 'A1', '1', '030', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, NULL, 'ROPA', 'Ropa de Vestir', 12, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 10, 'Polo Manga Corta - Blanco M', NULL, 'VENTAMAYOR', 'N', 18, 0, 0, 18, 'N', 21, 21.78, 217.8, 180, NULL, '2026-04-23 10:36:41', '2026-01-28 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000030', 'A1', '1', '040', 'MOCHILA-SPORT', 'MOCHILA-SPORT', NULL, NULL, 'BOLSOS', 'Bolsos y Mochilas', 18, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 8, 'Mochila Deportiva 30L', NULL, 'VENTAMAYOR', 'N', 24, 0, 0, 24, 'N', 21, 29.04, 232.32, 192, NULL, '2026-04-23 10:36:41', '2026-01-28 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000030', 'A1', NULL, '050', 'ZAP-BOTA-MT', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Bota Montaña Impermeable', NULL, 'VENTAMAYOR', 'N', 62, 0, 0, 62, 'N', 21, 75.02, 75.02, 62, NULL, '2026-05-27 21:36:35', '2026-05-27 21:36:35', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000030', 'A1', NULL, '060', 'ABRIGO-PAÑO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 10, '20', 'Bigfoot Breweries', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Abrigo de Paño Caballero', NULL, 'VENTAMAYOR', 'N', 120, 0, 0, 120, 'N', 21, 145.2, 145.2, 120, NULL, '2026-05-27 21:37:20', '2026-05-27 21:37:20', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000030', 'A1', NULL, '070', 'BLUS-SEDA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 6, '21', 'Svensk Sjöföda AB', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Blusa de Seda Cuello V', NULL, 'VENTAMAYOR', 'N', 32, 0, 0, 32, 'N', 21, 38.72, 38.72, 32, NULL, '2026-05-27 21:37:32', '2026-05-27 21:37:32', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000030', 'A1', NULL, '080', 'CHAQ-CUERO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '17', 'Zaanse Snoepfabriek', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Chaqueta Biker Cuero', NULL, 'VENTAMAYOR', 'N', 78, 0, 0, 78, 'N', 21, 94.38, 94.38, 78, NULL, '2026-05-27 21:43:15', '2026-05-27 21:43:15', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000030', 'A1', NULL, '090', 'BLUS-SEDA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 6, '21', 'Svensk Sjöföda AB', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Blusa de Seda Cuello V', NULL, 'VENTAMAYOR', 'N', 32, 0, 0, 32, 'N', 21, 38.72, 38.72, 32, NULL, '2026-05-28 07:45:58', '2026-05-28 07:45:58', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000030', 'A1', NULL, '100', 'CHAQ-CUERO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '17', 'Zaanse Snoepfabriek', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Chaqueta Biker Cuero', NULL, 'VENTAMAYOR', 'N', 78, 0, 0, 78, 'N', 21, 94.38, 94.38, 78, NULL, '2026-05-28 07:49:36', '2026-05-28 07:49:36', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000030', 'A1', NULL, '110', 'JERSEY-LANA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 5, '21', 'Svensk Sjöföda AB', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Jersey de Lana Cuello Redondo', NULL, 'VENTAMAYOR', 'N', 35, 0, 0, 35, 'N', 21, 42.35, 0, 0, NULL, '2026-05-28 16:30:06', '2026-05-28 16:30:06', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000030', 'A1', NULL, '120', 'MOCHILA-SPORT', NULL, NULL, NULL, 'BOLSOS', 'Bolsos, bolsas y mochilas de señora', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Mochila Deportiva 30L', NULL, 'VENTAMAYOR', 'N', 25, 0, 0, 25, 'N', 21, 30.25, 0, 0, NULL, '2026-05-28 17:30:27', '2026-05-28 17:30:27', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000031', '2026.A1', NULL, '0010', 'BOLSO-PIEL', 'BOLSO-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Bolso de Piel Mujer Grande', NULL, NULL, 'S', 85, 0, 0, 70.2479, 'N', 21, 85, 85, 70.2479, '1', '2026-04-03 21:40:39', '2026-04-03 21:40:39', '1', '1', 'GEN', '1', '00000020', '0000000030'),
-  ('000031', 'A1', '1', '010', 'VEST-FLOR', 'VEST-FLOR/AZUL/S', NULL, NULL, 'ROPA', 'Ropa de Vestir', 10, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Vestido Estampado Verano - Azul S', NULL, 'PVP', 'N', 20, 0, 0, 20, 'N', 21, 24.2, 24.2, 20, NULL, '2026-04-23 10:36:41', '2026-02-03 11:30:00', 'DEMO', 'DEMO', 'GEN', '1', '001', NULL),
-  ('000031', 'A1', '1', '020', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, 'COMPLEMENTOS', 'Complementos Accesorios', 9, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Cinturón Piel Reversible', NULL, 'PVP', 'N', 22, 25, 5.5, 16.5, 'N', 21, 19.965, 19.965, 16.5, NULL, '2026-04-23 10:36:41', '2026-02-03 11:30:00', 'DEMO', 'DEMO', 'GEN', '1', '001', NULL),
-  ('000032', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-03 21:45:58', '2026-04-03 21:45:58', '1', '1', 'GEN', '1', '00000021', '0000000032'),
-  ('000032', 'A1', '1', '010', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/NEGRO/42', NULL, NULL, 'CALZADO', 'Calzado Elegante', 42, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Bota Montaña Impermeable Negro 42', NULL, 'PVP', 'N', 95, 0, 0, 95, 'N', 21, 114.95, 114.95, 95, NULL, '2026-04-23 10:36:41', '2026-02-05 16:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000032', 'A1', '1', '020', 'MOCHILA-SPORT', 'MOCHILA-SPORT', NULL, NULL, 'BOLSOS', 'Bolsos y Mochilas', 18, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Mochila Deportiva 30L', NULL, 'PVP', 'N', 39.95, 25, 9.9875, 29.9625, 'N', 21, 36.2546, 36.2546, 29.9625, NULL, '2026-04-23 10:36:41', '2026-02-05 16:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000033', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 21:53:29', '2026-04-03 21:53:29', '1', '1', 'GEN', '1', '00000022', '0000000034'),
-  ('000033', 'A1', '1', '010', 'VEST-FLOR', 'VEST-FLOR/ROJO/M', NULL, NULL, 'ROPA', 'Ropa de Vestir', 10, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 3, 'Vestido Estampado Verano - Rojo M', NULL, 'PVP', 'N', 20, 0, 0, 20, 'N', 21, 24.2, 72.6, 60, NULL, '2026-04-23 10:36:41', '2026-02-07 18:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL),
-  ('000033', 'A1', '1', '020', 'SRV-ENVIO', 'SRV-ENVIO', NULL, NULL, 'OTR', 'Otros', 0, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Gastos de Envío - Burgos', NULL, 'PVP', 'N', 5.95, 0, 0, 5.95, 'N', 21, 7.1995, 7.1995, 5.95, NULL, '2026-04-23 10:36:41', '2026-02-07 18:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL),
-  ('000034', '2026.A1', NULL, '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 49.95, 0, 0, 41.281, 'N', 21, 49.95, 49.95, 41.281, '1', '2026-04-03 22:08:46', '2026-04-03 22:08:46', '1', '1', 'GEN', '1', '00000023', '0000000036'),
-  ('000034', 'A1', '1', '010', 'CAMI-POLO', 'CAMI-POLO/AZUL/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 12, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Polo Manga Corta Azul L', NULL, 'PVP', 'N', 28, 0, 0, 28, 'N', 21, 33.88, 33.88, 28, NULL, '2026-04-23 10:36:41', '2026-02-08 10:15:00', 'DEMO', 'DEMO', 'GEN', '1', '002', NULL),
-  ('000034', 'A1', '1', '020', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, NULL, 'CALZADO', 'Calzado Elegante', 30, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Zapatilla Deportiva Running B43', NULL, 'PVP', 'N', 55, 25, 13.75, 41.25, 'N', 21, 49.9125, 49.9125, 41.25, NULL, '2026-04-23 10:36:41', '2026-02-08 10:15:00', 'DEMO', 'DEMO', 'GEN', '1', '002', NULL),
-  ('000035', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-03 22:19:49', '2026-04-03 22:19:49', '1', '1', 'GEN', '1', '00000024', '0000000038'),
-  ('000035', 'A1', '1', '010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 80, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Abrigo de Paño Caballero Camel L', NULL, 'VENTAMAYOR', 'N', 120, 0, 0, 120, 'N', 21, 145.2, 290.4, 240, NULL, '2026-04-23 10:36:41', '2026-02-10 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000035', 'A1', '1', '020', 'JERSEY-LANA', 'JERSEY-LANA/GRIS/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 25, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 4, 'Jersey de Lana Gris L', NULL, 'VENTAMAYOR', 'N', 35, 0, 0, 35, 'N', 21, 42.35, 169.4, 140, NULL, '2026-04-23 10:36:41', '2026-02-10 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000035', 'A1', '1', '030', 'BOLSO-PIEL', 'BOLSO-PIEL', NULL, NULL, 'BOLSOS', 'Bolsos y Mochilas', 45, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Bolso de Piel Mujer Grande', NULL, 'VENTAMAYOR', 'N', 55, 0, 0, 55, 'N', 21, 66.55, 133.1, 110, NULL, '2026-04-23 10:36:41', '2026-02-10 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL),
-  ('000036', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-03 22:26:43', '2026-04-03 22:26:43', '1', '1', 'GEN', '1', '00000025', '0000000040'),
-  ('000037', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 22:28:10', '2026-04-03 22:28:10', '1', '1', 'GEN', '1', '00000026', '0000000042'),
-  ('000038', '2026.A1', NULL, '0010', 'FALD-PLIS', 'FALD-PLIS/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Falda Larga Plisada', NULL, NULL, 'S', 29.95, 0, 0, 24.7521, 'N', 21, 29.95, 29.95, 24.7521, '1', '2026-04-04 00:01:52', '2026-04-04 00:01:52', '1', '1', 'GEN', '1', '00000027', '0000000044'),
-  ('000039', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-04 00:06:17', '2026-04-04 00:06:17', '1', '1', 'GEN', '1', '00000028', '0000000046'),
-  ('000040', '2026.A1', NULL, '0010', 'JERSEY-LANA', 'JERSEY-LANA/BEIGE/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Jersey de Lana Cuello Redondo', NULL, NULL, 'S', 200, 0, 0, 165.2893, 'N', 21, 200, 200, 165.2893, '1', '2026-04-04 00:07:42', '2026-04-04 00:07:42', '1', '1', 'GEN', '1', '00000029', '0000000048'),
-  ('000041', '2026.A1', NULL, '0010', 'LEGGING-SPORT', 'LEGGING-SPORT/NEGRO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Legging Deportivo Mujer', NULL, NULL, 'S', 19.95, 0, 0, 16.4876, 'N', 21, 19.95, 19.95, 16.4876, '1', '2026-04-04 00:10:16', '2026-04-04 00:10:16', '1', '1', 'GEN', '1', '00000030', '0000000050'),
-  ('000042', '2026.A1', NULL, '0010', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-04 00:18:03', '2026-04-04 00:18:03', '1', '1', 'GEN', '1', '00000031', '0000000052'),
-  ('000043', '2026.A1', NULL, '0010', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cartera Piel Caballero', NULL, NULL, 'S', 50, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-04 00:23:27', '2026-04-04 00:23:27', '1', '1', 'GEN', '1', '00000032', '0000000054'),
-  ('000044', '2026.A1', NULL, '0010', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Camiseta de Algodón Básica', NULL, NULL, 'S', 150, 10, 15, 111.5702, 'N', 21, 135, 135, 111.5702, '1', '2026-04-04 00:30:38', '2026-04-04 00:30:38', '1', '1', 'GEN', '1', '00000033', '0000000056'),
-  ('000045', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-04 06:59:13', '2026-04-04 06:59:13', '1', '1', 'GEN', '1', '00000034', '0000000058'),
-  ('000047', '2026.A1', NULL, '0010', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Camiseta de Algodón Básica', NULL, NULL, 'S', 150, 10, 15, 111.5702, 'N', 21, 135, 135, 111.5702, '1', '2026-04-04 07:18:33', '2026-04-04 07:18:33', '1', '1', 'GEN', '1', '00000036', '0000000060'),
-  ('000048', '2026.A1', NULL, '0010', 'FALD-JEAN', 'FALD-JEAN/VAQUERO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Minifalda Vaquera', NULL, NULL, 'S', 225, 0, 0, 185.9504, 'N', 21, 225, 225, 185.9504, '1', '2026-04-04 07:24:24', '2026-04-04 07:24:24', '1', '1', 'GEN', '1', '00000037', '0000000062'),
-  ('000049', '2026.A1', NULL, '0010', 'MOCHILA-SPORT', 'MOCHILA-SPORT', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Mochila Deportiva 30L', NULL, NULL, 'S', 139.95, 0, 0, 115.6612, 'N', 21, 139.95, 139.95, 115.6612, '1', '2026-04-04 07:31:01', '2026-04-04 07:31:01', '1', '1', 'GEN', '1', '00000038', '0000000064'),
-  ('000050', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-04 07:35:13', '2026-04-04 07:35:13', '1', '1', 'GEN', '1', '00000039', '0000000066'),
-  ('000051', '2026.A1', NULL, '0010', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-04 07:40:38', '2026-04-04 07:40:38', '1', '1', 'GEN', '1', '00000040', '0000000068'),
-  ('000052', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-04 07:43:57', '2026-04-04 07:43:57', '1', '1', 'GEN', '1', '00000041', '0000000070'),
-  ('000053', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-04 07:58:35', '2026-04-04 07:58:35', '1', '1', 'GEN', '1', '00000042', '0000000072'),
-  ('000054', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-06 05:59:44', '2026-04-06 05:59:44', '1', '1', 'GEN', '1', '00000043', '0000000074'),
-  ('000056', '2026.A1', NULL, '0030', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', -1, 'Devolución anticipo Abrigo de Paño Caballero', NULL, NULL, 'S', 0, 0, 0, 0, 'N', 21, 0, 0, 0, '1', '2026-04-06 17:50:57', '2026-04-06 17:50:57', '1', '1', 'GEN', '1', '00000060', NULL),
-  ('000056', '2026.A1', NULL, '0040', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono anticipo ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 10, 0, 0, 8.2645, 'N', 21, 10, -10, -8.2645, '1', '2026-04-06 17:51:28', '2026-04-06 17:51:28', '1', '1', 'GEN', '1', '00000060', NULL),
-  ('000058', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Anticipo Chaqueta Biker Cuero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-06 18:11:42', '2026-04-06 18:11:42', '1', '1', 'GEN', '1', '00000062', NULL),
-  ('000059', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Anticipo Chaqueta Biker Cuero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-06 18:16:41', '2026-04-06 18:16:41', '1', '1', 'GEN', '1', '00000063', NULL),
-  ('000061', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-06 18:34:31', '2026-04-06 18:34:31', '1', '1', 'GEN', '1', '00000065', '0000000107'),
-  ('000061', '2026.A1', NULL, '0020', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono anticipo CHAQ-CUERO/NEGRO/XL', NULL, NULL, 'S', 30, 0, 0, 24.7934, 'N', 21, 30, -30, -24.7934, '1', '2026-04-06 18:34:44', '2026-04-06 18:34:44', '1', '1', 'GEN', '1', '00000065', NULL),
-  ('000062', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Anticipo Chaqueta Biker Cuero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-06 18:50:27', '2026-04-06 18:50:27', '1', '1', 'GEN', '1', '00000067', NULL),
-  ('000063', '2026.A1', NULL, '0010', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-06 19:14:01', '2026-04-06 19:14:01', '1', '1', 'GEN', '1', '00000068', '0000000111'),
-  ('000063', '2026.A1', NULL, '0020', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Anticipo Camiseta de Algodón Básica', NULL, NULL, 'S', 23.1405, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-04-06 19:14:01', '2026-04-06 19:14:01', '1', '1', 'GEN', '1', '00000068', NULL),
-  ('000068', '2026.A1', NULL, '0020', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta ABRIGO-PAÑO/NEGRO/L', NULL, NULL, 'S', 102, 0, 0, 84.2975, 'N', 21, 102, -102, -84.2975, '1', '2026-04-07 07:52:42', '2026-04-07 07:52:42', '1', '1', 'GEN', '1', '00000074', NULL),
-  ('000071', '2026.A1', NULL, '0020', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 10, 0, 0, 8.2645, 'N', 21, 10, -10, -8.2645, '1', '2026-04-07 08:07:01', '2026-04-07 08:07:01', '1', '1', 'GEN', '1', '00000080', NULL),
-  ('000074', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-07 18:33:55', '2026-04-07 18:33:55', '1', '1', 'GEN', '1', '00000085', '0000000151'),
-  ('000074', '2026.A1', NULL, '0020', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 100, 0, 0, 82.6446, 'N', 21, 100, -100, -82.6446, '1', '2026-04-07 18:33:56', '2026-04-07 18:33:56', '1', '1', 'GEN', '1', '00000085', NULL),
-  ('000076', '2026.A1', NULL, '0020', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-07 19:01:56', '2026-04-07 19:01:56', '1', '1', 'GEN', '1', '00000089', '0000000157'),
-  ('000076', '2026.A1', NULL, '0030', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 50, 0, 0, 41.3223, 'N', 21, 50, -50, -41.3223, '1', '2026-04-07 19:01:56', '2026-04-07 19:01:56', '1', '1', 'GEN', '1', '00000089', NULL),
-  ('000077', '2026.A1', NULL, '0010', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-07 19:14:29', '2026-04-07 19:14:29', '1', '1', 'GEN', '1', '00000090', '0000000159'),
-  ('000077', '2026.A1', NULL, '0020', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta CINTURON-PIEL', NULL, NULL, 'S', 20, 0, 0, 16.5289, 'N', 21, 20, -20, -16.5289, '1', '2026-04-07 19:14:29', '2026-04-07 19:14:29', '1', '1', 'GEN', '1', '00000090', NULL),
-  ('000078', '2026.A1', NULL, '0010', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cartera Piel Caballero', NULL, NULL, 'S', 50, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-07 19:20:17', '2026-04-07 19:20:17', '1', '1', 'GEN', '1', '00000091', '0000000163'),
-  ('000078', '2026.A1', NULL, '0020', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta CARTERA-PIEL', NULL, NULL, 'S', 48, 0, 0, 39.6694, 'N', 21, 48, -48, -39.6694, '1', '2026-04-07 19:20:17', '2026-04-07 19:20:17', '1', '1', 'GEN', '1', '00000091', NULL),
-  ('000081', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-07 19:24:17', '2026-04-07 19:24:17', '1', '1', 'GEN', '1', '00000095', '0000000169'),
-  ('000081', '2026.A1', NULL, '0020', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 100, 0, 0, 82.6446, 'N', 21, 100, -100, -82.6446, '1', '2026-04-07 19:24:17', '2026-04-07 19:24:17', '1', '1', 'GEN', '1', '00000095', NULL),
-  ('000082', '2026.A1', NULL, '0010', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-07 19:25:05', '2026-04-07 19:25:05', '1', '1', 'GEN', '1', '00000096', '0000000171'),
-  ('000082', '2026.A1', NULL, '0020', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta CINTURON-PIEL', NULL, NULL, 'S', 20, 0, 0, 16.5289, 'N', 21, 20, -20, -16.5289, '1', '2026-04-07 19:25:05', '2026-04-07 19:25:05', '1', '1', 'GEN', '1', '00000096', NULL),
-  ('000084', '2026.A1', NULL, '0140', 'BOTIN-ANIT', 'BOTIN-ANIT/MARRON/38', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Botín Ante Mujer', NULL, NULL, 'S', 79.9, 0, 0, 66.0331, 'N', 21, 79.9, 79.9, 66.0331, '1', '2026-04-09 08:21:38', '2026-04-09 08:21:38', '1', '1', 'GEN', '1', '00000099', '0000000177'),
-  ('000085', '2026.A1', NULL, '0040', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', -1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, -180, -148.7603, '1', '2026-04-10 08:20:04', '2026-04-10 08:20:04', '1', '1', 'GEN', '1', '00000108', '0000000187'),
-  ('000085', '2026.A1', NULL, '040', 'SOMBRERO-PJM', NULL, NULL, NULL, 'COMPLEMENTOS', 'Complementos para el buen vestir', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Sombrero Panamá Verano', NULL, 'PVP', 'S', 35, NULL, NULL, 28.92562, 'N', 21, 35, 0, 0, NULL, '2026-05-16 21:26:33', '2026-05-16 21:26:33', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000087', '2026.A1', NULL, '0070', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-11 21:50:58', '2026-04-11 21:50:58', '1', '1', 'GEN', '1', '00000110', NULL),
-  ('000088', '2026.A1', NULL, '0080', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 16.5289, 0, 0, 16.5289, 'N', 21, 20, 20, 16.5289, '1', '2026-04-11 22:01:48', '2026-04-11 22:01:48', '1', '1', 'GEN', '1', '00000111', NULL),
-  ('000089', '2026.A1', NULL, '0080', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-21 08:18:03', '2026-04-21 08:18:03', '1', '1', 'GEN', '1', '00000112', NULL),
-  ('000090', '2026.A1', NULL, '0060', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-21 08:37:29', '2026-04-21 08:37:29', '1', '1', 'GEN', '1', '00000113', NULL),
-  ('000091', '2026.A1', NULL, '0070', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-21 08:42:52', '2026-04-21 08:42:52', '1', '1', 'GEN', '1', '00000114', NULL),
-  ('000091', '2026.A1', NULL, '0080', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', -1, 'Abono a cuenta ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 50, 0, 0, 41.3223, 'N', 21, 50, -50, -41.3223, '1', '2026-04-21 08:42:52', '2026-04-21 08:42:52', '1', '1', 'GEN', '1', '00000114', NULL),
-  ('000092', '2026.A1', NULL, '0050', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-21 08:49:32', '2026-04-21 08:49:32', '1', '1', 'GEN', '1', '00000115', NULL),
-  ('000093', '2026.A1', NULL, '0040', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Cartera Piel Caballero', NULL, NULL, 'S', 20.6612, 0, 0, 20.6612, 'N', 21, 25, 25, 20.6612, '1', '2026-04-21 20:22:14', '2026-04-21 20:22:14', '1', '1', 'GEN', '1', '00000116', NULL),
-  ('000094', '2026.A1', NULL, '0050', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Cartera Piel Caballero', NULL, NULL, 'S', 50, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-21 20:22:55', '2026-04-21 20:22:55', '1', '1', 'GEN', '1', '00000117', NULL),
-  ('000094', '2026.A1', NULL, '0060', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', -1, 'Abono a cuenta CARTERA-PIEL', NULL, NULL, 'S', 25, 0, 0, 20.6612, 'N', 21, 25, -25, -20.6612, '1', '2026-04-21 20:22:55', '2026-04-21 20:22:55', '1', '1', 'GEN', '1', '00000117', NULL),
-  ('000100', '2026.A1', NULL, '0050', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-23 18:52:42', '2026-04-23 18:52:42', '1', '1', 'GEN', '1', '00000123', '0000000198'),
-  ('000101', '2026.A1', NULL, '0040', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', '', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-25 07:18:19', '2026-04-25 07:18:19', '1', '1', 'GEN', '1', '00000124', '0000000200'),
-  ('000102', '2026.A1', NULL, '0010', 'PANT-CHIN', 'PANT-CHIN/BEIGE/38', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Pantalón Chino Slim', NULL, NULL, 'S', 140, 0, 0, 115.7025, 'N', 21, 140, 140, 115.7025, '1', '2026-04-26 19:34:02', '2026-04-26 19:34:02', '1', 'Administrador', 'GEN', '1', '00000125', '0000000202'),
-  ('000103', '2026.A1', NULL, '0010', 'JERSEY-LANA', 'JERSEY-LANA/BEIGE/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Jersey de Lana Cuello Redondo', NULL, NULL, 'S', 55, 0, 0, 45.4545, 'N', 21, 55, 55, 45.4545, '1', '2026-04-26 19:34:22', '2026-04-26 19:34:22', '1', '1', 'GEN', '1', '00000126', '0000000204'),
-  ('000104', '2026.A1', '012', '0010', 'PANT-CHIN', 'PANT-CHIN/BEIGE/38', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Pantalón Chino Slim', NULL, NULL, 'S', 140, 0, 0, 115.7025, 'N', 21, 140, 140, 115.7025, '1', '2026-04-26 19:46:22', '2026-04-26 19:46:22', '1', '1', 'GEN', '1', '00000127', '0000000206'),
-  ('000105', '2026.A1', '012', '0010', 'JERSEY-LANA', 'JERSEY-LANA/BEIGE/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Jersey de Lana Cuello Redondo', NULL, NULL, 'S', 55, 0, 0, 45.4545, 'N', 21, 55, 55, 45.4545, '1', '2026-04-26 19:46:57', '2026-04-26 19:46:57', '1', '1', 'GEN', '1', '00000128', '0000000208'),
-  ('000106', '2026.A1', '012', '0130', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Chaqueta Biker Cuero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-27 07:00:01', '2026-04-27 07:00:01', '1', '1', 'GEN', '1', '00000130', NULL),
-  ('000107', '2026.A1', '012', '0060', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-27 07:09:29', '2026-04-27 07:09:29', '1', '1', 'GEN', '1', '00000132', NULL),
-  ('000107', '2026.A1', '012', '0080', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Chaqueta Biker Cuero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-27 07:09:29', '2026-04-27 07:09:29', '1', '1', 'GEN', '1', '00000132', NULL),
-  ('000108', '2026.A1', '012', '0040', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-27 07:44:33', '2026-04-27 07:44:33', '1', '1', 'GEN', '1', '00000134', NULL),
-  ('000109', '2026.A1', '012', '0050', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-27 20:10:43', '2026-04-27 20:10:43', '1', '1', 'GEN', '1', '00000135', NULL),
-  ('000109', '2026.A1', '012', '0060', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', -1, 'Abono a cuenta ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 10, 0, 0, 8.2645, 'N', 21, 10, -10, -8.2645, '1', '2026-04-27 20:10:43', '2026-04-27 20:10:43', '1', '1', 'GEN', '1', '00000135', NULL),
-  ('000110', '2026.A1', '012', '0050', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Cartera Piel Caballero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-27 20:12:09', '2026-04-27 20:12:09', '1', '1', 'GEN', '1', '00000137', NULL),
-  ('000111', '2026.A1', '012', '0170', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Cartera Piel Caballero', NULL, NULL, 'S', 50, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-27 20:14:19', '2026-04-27 20:14:19', '1', '1', 'GEN', '1', '00000138', NULL),
-  ('000111', '2026.A1', '012', '0180', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', -1, 'Abono a cuenta CARTERA-PIEL', NULL, NULL, 'S', 10, 0, 0, 8.2645, 'N', 21, 10, -10, -8.2645, '1', '2026-04-27 20:14:19', '2026-04-27 20:14:19', '1', '1', 'GEN', '1', '00000138', NULL),
-  ('000112', '2026.A1', '012', '0040', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', '', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-28 17:25:14', '2026-04-28 17:25:14', '1', 'Administrador', 'GEN', '1', '00000139', '0000000218'),
-  ('000113', '2026.A1', '012', '0040', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', '', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-28 17:26:15', '2026-04-28 17:26:15', '1', '1', 'GEN', '1', '00000140', '0000000220'),
-  ('000114', '2026.A1', '012', '0060', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Chaqueta Biker Cuero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-28 17:31:55', '2026-04-28 17:31:55', '1', '1', 'GEN', '1', '00000142', NULL),
-  ('000115', '2026.A1', '012', '0050', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Chaqueta Biker Cuero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-28 17:32:57', '2026-04-28 17:32:57', '1', '1', 'GEN', '1', '00000143', NULL),
-  ('000116', '2026.A1', '012', '0060', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-28 17:33:43', '2026-04-28 17:33:43', '1', '1', 'GEN', '1', '00000144', NULL),
-  ('000116', '2026.A1', '012', '0070', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', -1, 'Abono a cuenta CHAQ-CUERO/MARRON/L', NULL, NULL, 'S', 60, 0, 0, 49.5868, 'N', 21, 60, -60, -49.5868, '1', '2026-04-28 17:33:43', '2026-04-28 17:33:43', '1', '1', 'GEN', '1', '00000144', NULL),
-  ('000117', '2026.A1', '012', '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero feo', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-05-05 09:20:45', '2026-05-05 09:20:45', '1', 'Administrador', 'GEN', '1', '00000145', '0000000224'),
-  ('000118', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-05 16:57:32', '2026-05-05 16:57:32', '1', '1', 'GEN', '1', '00000146', '0000000226'),
-  ('000119', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-07 17:29:10', '2026-05-07 17:29:10', '1', '1', 'GEN', '1', '00000147', '0000000228'),
-  ('000120', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-07 17:58:22', '2026-05-07 17:58:22', '1', '1', 'GEN', '1', '00000148', '0000000230'),
-  ('000121', '2026.A1', NULL, '010', 'JERSEY-LANA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 5, '21', 'Svensk Sjöföda AB', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Jersey de Lana Cuello Redondo', NULL, 'PVP', 'S', 12.95, -324.7104, -42.05, 45.4545, 'N', 21, 55, 55, 45.4545, NULL, '2026-05-10 18:09:59', '2026-05-10 18:09:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000122', '2026.A1', NULL, '010', 'CINTURON-PIEL', NULL, NULL, NULL, 'COMPLEMENTOS', 'Complementos para el buen vestir', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Cinturón Piel Reversible', NULL, 'PVP', 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, NULL, '2026-05-10 19:10:28', '2026-05-10 19:10:28', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000123', '2026.A1', NULL, '010', 'SRV-ARREGLOS', NULL, NULL, NULL, 'OTR', 'Otros articulos agrícolas', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Arreglos y Modificaciones', NULL, 'PVP', 'S', 10, -20, -2, 9.9174, 'N', 21, 12, 12, 9.9174, NULL, '2026-05-16 20:50:47', '2026-05-16 20:50:47', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000124', '2026.A1', NULL, '010', 'VEST-FLOR', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 10, '14', 'Karkki Oy', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Vestido Estampado Verano', NULL, 'PVP', 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, NULL, '2026-05-16 21:04:15', '2026-05-16 21:04:15', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000125', '2026.A1', '012', '0020', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Camisa Lino Demo', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-05-17 16:26:45', '2026-05-17 16:26:45', '1', '1', 'GEN', '1', '00000149', NULL),
-  ('000126', '2026.A1', NULL, '010', 'ZAP-OXFORD', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '16', 'Lyngbysild', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Zapato Oxford Piel Hombre', NULL, 'PVP', 'S', 89.9, 0, 0, 74.2975, 'N', 21, 89.9, 89.9, 74.2975, NULL, '2026-05-17 17:14:40', '2026-05-17 17:14:40', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000127', '2026.A1', '012', '0010', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/37', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Botín Ante Mujer', NULL, NULL, 'S', 79.9, 0, 0, 66.0331, 'N', 21, 79.9, 79.9, 66.0331, '1', '2026-05-24 08:24:51', '2026-05-24 08:24:51', '1', '1', 'GEN', '1', '00000150', '0000000489'),
-  ('000128', '2026.A1', '012', '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 12.95, 0, 0, 10.7025, 'N', 21, 12.95, 12.95, 10.7025, '1', '2026-05-24 13:40:46', '2026-05-24 13:40:46', '1', '1', 'GEN', '1', '00000151', '0000000491'),
-  ('000129', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-24 13:41:19', '2026-05-24 13:41:19', '1', '1', 'GEN', '1', '00000152', '0000000493'),
-  ('000130', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-24 13:41:55', '2026-05-24 13:41:55', '1', '1', 'GEN', '1', '00000153', '0000000495'),
-  ('000131', '2026.A1', '012', '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-05-24 16:41:08', '2026-05-24 16:41:08', '1', '1', 'GEN', '1', '00000154', '0000000497'),
-  ('000132', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-24 17:00:19', '2026-05-24 17:00:19', '1', '1', 'GEN', '1', '00000155', '0000000499'),
-  ('000133', '2026.A1', '012', '0040', 'DEMO-CAMISA', 'DEMO-CAMISA/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Camisa Lino Demo', NULL, NULL, 'S', 28.95, 0, 0, 23.9256, 'N', 21, 28.95, 28.95, 23.9256, '1', '2026-05-24 17:00:50', '2026-05-24 17:00:50', '1', '1', 'GEN', '1', '00000156', '0000000501'),
-  ('000134', '2026.A1', '012', '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 12.95, 0, 0, 10.7025, 'N', 21, 12.95, 12.95, 10.7025, '1', '2026-05-24 17:04:58', '2026-05-24 17:04:58', '1', '1', 'GEN', '1', '00000157', '0000000503'),
-  ('000135', '2026.A1', '012', '0010', 'BOLSO-PIEL', 'BOLSO-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Bolso de Piel Mujer Grande', NULL, NULL, 'S', 85, 0, 0, 70.2479, 'N', 21, 85, 85, 70.2479, '1', '2026-05-24 17:05:53', '2026-05-24 17:05:53', '1', '1', 'GEN', '1', '00000158', '0000000505'),
-  ('000135', '2026.A1', '012', '0020', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, -0.1, -0.022, 18.2, 'N', 21, 22.022, 22.022, 18.2, '1', '2026-05-24 17:05:53', '2026-05-24 17:05:53', '1', '1', 'GEN', '1', '00000158', '0000000507'),
-  ('000135', '2026.A1', '012', '0030', 'DEPORTIVO003', 'DEPORTIVO003/COLORADITO/39', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Ropa Deportiva', NULL, NULL, 'S', 29.99, 0, 0, 24.7851, 'N', 21, 29.99, 29.99, 24.7851, '1', '2026-05-24 17:05:53', '2026-05-24 17:05:53', '1', '1', 'GEN', '1', '00000158', '0000000509'),
-  ('000135', '2026.A1', '012', '0050', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Polo Manga Corta Hombre', NULL, NULL, 'S', 28, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-05-24 17:05:53', '2026-05-24 17:05:53', '1', '1', 'GEN', '1', '00000158', '0000000511'),
-  ('000136', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-24 19:46:24', '2026-05-24 19:46:24', '1', '1', 'GEN', '1', '00000159', '0000000669'),
-  ('000137', '2026.A1', '012', '0030', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 12.95, 0, 0, 10.7025, 'N', 21, 12.95, 12.95, 10.7025, '1', '2026-05-27 06:11:27', '2026-05-27 06:11:27', '1', '1', 'GEN', '1', '00000164', '0000000719'),
-  ('000138', '2026.A1', NULL, '010', 'DEMO-CAMISA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 8, '010', 'RODRIGO ANTON', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Camisa Lino Demo', NULL, 'PVP', 'S', 28.95, 0, 0, 23.9256, 'N', 21, 28.95, 28.95, 23.9256, NULL, '2026-05-27 20:03:38', '2026-05-27 20:03:38', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000140', '2026.A1', NULL, '010', 'ABRIGO-PAÑO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 10, '20', 'Bigfoot Breweries', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Abrigo de Paño Caballero', NULL, 'PVP', 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, NULL, '2026-05-27 20:26:45', '2026-05-27 20:26:45', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000142', '2026.A1', '012', '0010', 'BOLSOS00005', 'BOLSOS00005/AZUL_CIELO/39', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Bolsos y Mochilas', NULL, NULL, 'S', 35.01, 0, 0, 28.9339, 'N', 21, 35.01, 35.01, 28.9339, '1', '2026-06-04 20:38:15', '2026-06-04 20:38:15', '1', '1', 'GEN', '1', '00000168', '0000000734'),
-  ('000143', '2026.A1', '012', '0010', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/37', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Botín Ante Mujer', NULL, NULL, 'S', 79.9, 0, 0, 66.0331, 'N', 21, 79.9, 79.9, 66.0331, '1', '2026-06-06 06:00:19', '2026-06-06 06:00:19', '1', '1', 'GEN', '1', '00000169', '0000000736'),
-  ('000144', '2026.A1', NULL, '010', 'MOCHILA-SPORT', NULL, NULL, NULL, 'BOLSOS', 'Bolsos, bolsas y mochilas de señora', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Mochila Deportiva 30L', NULL, 'VENTAMAYOR', 'N', 25, 0, 0, 25, 'N', 21, 30.25, 30.25, 25, NULL, '2026-06-12 05:34:49', '2026-06-12 05:34:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000144', '2026.A1', NULL, '020', 'BOTIN-ANIT', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '15', 'Leka Trading', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Botín Ante Mujer', NULL, 'VENTAMAYOR', 'N', 52, 0, 0, 52, 'N', 21, 62.92, 62.92, 52, NULL, '2026-06-12 05:35:22', '2026-06-12 05:35:22', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000144', '2026.A1', NULL, '030', 'VEST-FLOR', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 10, '14', 'Karkki Oy', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Vestido Estampado Verano', NULL, 'VENTAMAYOR', 'N', 12, 0, 0, 12, 'N', 21, 14.52, 14.52, 12, NULL, '2026-06-12 05:35:42', '2026-06-12 05:35:42', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000145', '2026.A1', '012', '0040', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Polo Manga Corta Hombre', NULL, NULL, 'S', 28, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-06-12 06:20:21', '2026-06-12 06:20:21', '1', 'Administrador', 'GEN', '1', '00000170', '0000000774'),
-  ('000146', '2026.A1', '012', '0020', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Polo Manga Corta Hombre', NULL, NULL, 'S', 28, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-06-12 06:22:03', '2026-06-12 06:22:03', '1', 'Administrador', 'GEN', '1', '00000171', '0000000776'),
-  ('000147', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-06-12 07:00:11', '2026-06-12 07:00:11', '1', '1', 'GEN', '1', '00000172', '0000000778'),
-  ('000148', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 112, 0, 0, 92.562, 'N', 21, 112, 112, 92.562, '1', '2026-06-12 07:07:52', '2026-06-12 07:07:52', '1', '1', 'GEN', '1', '00000173', '0000000782'),
-  ('000149', '2026.A1', '012', '0010', 'FALD-PLIS', 'FALD-PLIS/VERDE/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Falda Larga Plisada', NULL, NULL, 'S', 29.95, 0, 0, 24.7521, 'N', 21, 29.95, 29.95, 24.7521, '1', '2026-06-12 07:19:06', '2026-06-12 07:19:06', '1', '1', 'GEN', '1', '00000174', '0000000784'),
-  ('000150', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-06-12 07:24:29', '2026-06-12 07:24:29', '1', '1', 'GEN', '1', '00000175', '0000000786'),
-  ('000151', '2026.A1', '012', '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-06-12 07:31:45', '2026-06-12 07:31:45', '1', '1', 'GEN', '1', '00000176', '0000000788'),
-  ('000152', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-06-13 11:27:46', '2026-06-13 11:27:46', '1', '1', 'GEN', '1', '00000177', '0000000791'),
-  ('000153', '2026.A1', '012', '0030', 'CALV00002', 'CALV00002/BLANCO/39', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'CALZADO VESTIR', NULL, NULL, 'S', 33.6, 0, 0, 27.7686, 'N', 21, 33.6, 33.6, 27.7686, '1', '2026-06-13 12:15:19', '2026-06-13 12:15:19', '1', '1', 'GEN', '1', '00000178', '0000000814'),
-  ('000154', '2026.A1', NULL, '010', 'DEMO-CAMISA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 8, '010', 'RODRIGO ANTON', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Camisa Lino Demo', NULL, 'VENTAMAYOR', 'N', 10, 0, 0, 10, 'N', 21, 12.1, 12.1, 10, NULL, '2026-06-25 08:10:30', '2026-06-25 08:10:30', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000155', '2026.A1', NULL, '010', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/NEGRO/41', NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Bota Montaña Impermeable', '41 / NEGRO', 'PVP', 'S', 104.95, 0, 0, 86.7355, 'N', 21, 104.95, 104.95, 86.7355, NULL, '2026-06-25 08:16:22', '2026-06-25 08:16:22', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000155', '2026.A1', NULL, '020', 'ZAP-TACÓN', 'ZAP-TACÓN/ROJO/37', NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Zapato Tacón Alto Señora', '37 / ROJO', 'PVP', 'S', 72.95, 0, 0, 60.2893, 'N', 21, 72.95, 72.95, 60.2893, NULL, '2026-06-25 08:32:43', '2026-06-25 08:32:43', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000156', '2026.A1', NULL, '010', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/38', NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '15', 'Leka Trading', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Botín Ante Mujer', '38 / NEGRO', 'PVP', 'S', 87.95, 0, 0, 72.686, 'N', 21, 87.95, 87.95, 72.686, NULL, '2026-06-25 16:47:27', '2026-06-25 16:47:27', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000156', '2026.A1', NULL, '020', 'CALZADO00001', 'CALZADO00001/ROSA/S', NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', 13, '000', 'ANTONIO BAZOS', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Calzado Elegante', 'ROSA / S', 'PVP', 'S', 36.95, 0, 0, 30.5372, 'N', 21, 36.95, 36.95, 30.5372, NULL, '2026-06-25 16:47:40', '2026-06-25 16:47:40', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL),
-  ('000157', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 131.95, 0, 0, 109.0496, 'N', 21, 131.95, 131.95, 109.0496, '1', '2026-06-25 17:57:51', '2026-06-25 17:57:51', '1', '1', 'GEN', '1', '00000181', '0000000816'),
-  ('000158', '2026.A1', '012', '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 197.95, 0, 0, 163.595, 'N', 21, 197.95, 197.95, 163.595, '1', '2026-06-25 17:58:31', '2026-06-25 17:58:31', '1', '1', 'GEN', '1', '00000182', '0000000818'),
-  ('000159', '2026.A1', '012', '0010', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-06-25 17:58:46', '2026-06-25 17:58:46', '1', '1', 'GEN', '1', '00000183', '0000000820'),
-  ('000160', '2026.A1', '012', '0010', 'CALV00001', 'CALV00001/3838/39', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'CALZADO VESTIR', NULL, NULL, 'S', 164.95, 0, 0, 136.3223, 'N', 21, 164.95, 164.95, 136.3223, '1', '2026-06-25 17:59:08', '2026-06-25 17:59:08', '1', '1', 'GEN', '1', '00000184', '0000000822'),
-  ('000161', '2026.A1', '012', '0020', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Camiseta de Algodón Básica', NULL, NULL, 'S', 164.95, 9.0937, 15.0001, 123.9255, 'N', 21, 149.9499, 149.9499, 123.9255, '1', '2026-06-25 17:59:32', '2026-06-25 17:59:32', '1', '1', 'GEN', '1', '00000185', '0000000824'),
-  ('000162', '2026.A1', '012', '0010', 'COMPLEMENTOS002', 'COMPLEMENTOS002/AZUL/39', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Complementos Accesorios', NULL, NULL, 'S', 29.99, 0, 0, 24.7851, 'N', 21, 29.99, 29.99, 24.7851, '1', '2026-06-25 17:59:52', '2026-06-25 17:59:52', '1', '1', 'GEN', '1', '00000186', '0000000826'),
-  ('000163', '2026.A1', '012', '0010', 'COMPLEMENTOS002', 'COMPLEMENTOS002/AZUL/43', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Complementos Accesorios', NULL, NULL, 'S', 29.99, 0, 0, 24.7851, 'N', 21, 29.99, 29.99, 24.7851, '1', '2026-06-25 18:00:10', '2026-06-25 18:00:10', '1', '1', 'GEN', '1', '00000187', '0000000828'),
-  ('000164', '2026.A1', '012', '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 14.95, 0, 0, 12.3554, 'N', 21, 14.95, 14.95, 12.3554, '1', '2026-06-25 19:42:44', '2026-06-25 19:42:44', '1', '1', 'GEN', '1', '00000188', '0000000830'),
-  ('000166', '2026.A1', '012', '0020', 'TESTSKU01', 'TESTSKU01/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 3, 'ARTICULO PRUEBAS PMP SKU', NULL, NULL, 'S', 25, 0, 0, 20.6612, 'N', 21, 25, 75, 61.9836, '1', '2026-07-04 18:53:17', '2026-07-04 18:53:17', '1', '1', 'GEN', '1', '00000192', '0000001110'),
-  ('000166', '2026.A1', '012', '0120', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 2, 'ARTICULO PRUEBAS PMP SKU', NULL, NULL, 'S', 30, 0, 0, 24.7934, 'N', 21, 30, 60, 49.5868, '1', '2026-07-04 18:53:17', '2026-07-04 18:53:17', '1', '1', 'GEN', '1', '00000192', '0000001112'),
-  ('000166', '2026.A1', '012', '0150', 'TESTSKU01', 'TESTSKU01/AZUL/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'ARTICULO PRUEBAS PMP SKU', NULL, NULL, 'S', 35, 0, 0, 28.9256, 'N', 21, 35, 35, 28.9256, '1', '2026-07-04 18:53:17', '2026-07-04 18:53:17', '1', '1', 'GEN', '1', '00000192', '0000001114');
--- 212 registros exportados
+INSERT INTO `fza_facturas_lineas` (`NUMERO_FAC_FACLIN`, `SERIE_FAC_FACLIN`, `CODIGO_EMP_FACLIN`, `LINEA_FACLIN`, `CODIGO_ART_FACLIN`, `CODIGO_UNIDAD_FACLIN`, `LOTE_FACLIN`, `FECHA_CADUCIDAD_FACLIN`, `CODIGO_FAM_FACLIN`, `NOMBRE_FAM_FACLIN`, `PRECIO_ULT_COMPRA_FACLIN`, `CODIGO_PRV_FACLIN`, `RAZON_SOCIAL_PROVEEDOR_FACLIN`, `ESPROVEEDORPRINCIPAL_FACLIN`, `FECHA_ENTREGA_FACLIN`, `TIPO_ARTICULO_FACLIN`, `TIPO_CANTIDAD_ARTICULO_FACLIN`, `CANTIDAD_FACLIN`, `DESCRIPCION_ARTICULO_FACLIN`, `DESCRIPCION_VARIACION_FACLIN`, `CODIGO_TAR_FACLIN`, `ESIMP_INCL_TARIFA_FACLIN`, `PRECIO_SALIDA_FACLIN`, `PORCENTAJE_DTO_FACLIN`, `PRECIO_DTO_FACLIN`, `PRECIO_VENTA_SIVA_ARTICULO_FACLIN`, `TIPO_IVA_ARTICULO_FACLIN`, `PORCENTAJE_IVA_FACLIN`, `PRECIO_VENTA_CIVA_ARTICULO_FACLIN`, `TOTAL_FACLIN`, `TOTAL_FAC_SIVA_FACLIN`, `CODIGO_VENDEDOR_FACLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `CODIGO_ALM_FACLIN`, `CODIGO_CAJA_FACLIN`, `NUMERO_OPERACION_FACLIN`, `NUMERO_MOV_FACLIN`, `ATTR1_VALOR_FACLIN`, `ATTR1_NOMBRE_FACLIN`, `ATTR2_VALOR_FACLIN`, `ATTR2_NOMBRE_FACLIN`, `ATTR3_VALOR_FACLIN`, `ATTR3_NOMBRE_FACLIN`, `ATTR4_VALOR_FACLIN`, `ATTR4_NOMBRE_FACLIN`, `ATTR5_VALOR_FACLIN`, `ATTR5_NOMBRE_FACLIN`, `NUM_ATRIBUTOS_FACLIN`) VALUES
+  ('00000069', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Chaqueta Biker Cuero', NULL, NULL, 'S', 80.1653, 0, 0, 80.1653, 'N', 21, 97, 97, 80.1653, '1', '2026-04-06 19:33:37', '2026-04-06 19:33:37', '1', '1', 'GEN', '1', '00000069', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000069', '2026.A1', NULL, '0050', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Abrigo de Paño Caballero', NULL, NULL, 'S', 23.1405, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-04-06 19:33:37', '2026-04-06 19:33:37', '1', '1', 'GEN', '1', '00000069', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000070', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Abrigo de Paño Caballero', NULL, NULL, 'S', 30.5785, 0, 0, 30.5785, 'N', 21, 37, 37, 30.5785, '1', '2026-04-06 19:44:30', '2026-04-06 19:44:30', '1', '1', 'GEN', '1', '00000070', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000071', '2026.A1', NULL, '0030', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Camiseta de Algodón Básica', NULL, NULL, 'S', 30.5785, 0, 0, 30.5785, 'N', 21, 37, 37, 30.5785, '1', '2026-04-06 20:00:01', '2026-04-06 20:00:01', '1', '1', 'GEN', '1', '00000071', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000072', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Abrigo de Paño Caballero', NULL, NULL, 'S', 84.2975, 0, 0, 84.2975, 'N', 21, 102, 102, 84.2975, '1', '2026-04-06 20:35:59', '2026-04-06 20:35:59', '1', '1', 'GEN', '1', '00000072', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000077', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Abrigo de Paño Caballero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-07 08:00:02', '2026-04-07 08:00:02', '1', '1', 'GEN', '1', '00000077', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000079', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Abrigo de Paño Caballero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-07 08:04:38', '2026-04-07 08:04:38', '1', '1', 'GEN', '1', '00000079', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000080', '2026.A1', NULL, '0030', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Adelanto Cinturón Piel Reversible', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-07 08:07:01', '2026-04-07 08:07:01', '1', '1', 'GEN', '1', '00000080', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000083', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-07 17:34:33', '2026-04-07 17:34:33', '1', '1', 'GEN', '1', '00000083', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000084', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-07 18:33:11', '2026-04-07 18:33:11', '1', '1', 'GEN', '1', '00000084', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000085', '2026.A1', NULL, '0030', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Cinturón Piel Reversible', NULL, NULL, 'S', 16.5289, 0, 0, 16.5289, 'N', 21, 20, 20, 16.5289, '1', '2026-04-07 18:33:56', '2026-04-07 18:33:56', '1', '1', 'GEN', '1', '00000085', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000088', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-07 19:00:17', '2026-04-07 19:00:17', '1', '1', 'GEN', '1', '00000088', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000089', '2026.A1', NULL, '0040', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Cinturón Piel Reversible', NULL, NULL, 'S', 16.5289, 0, 0, 16.5289, 'N', 21, 20, 20, 16.5289, '1', '2026-04-07 19:01:56', '2026-04-07 19:01:56', '1', '1', 'GEN', '1', '00000089', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000090', '2026.A1', NULL, '0040', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Cartera Piel Caballero', NULL, NULL, 'S', 39.6694, 0, 0, 39.6694, 'N', 21, 48, 48, 39.6694, '1', '2026-04-07 19:14:29', '2026-04-07 19:14:29', '1', '1', 'GEN', '1', '00000090', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000093', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-07 19:23:17', '2026-04-07 19:23:17', '1', '1', 'GEN', '1', '00000093', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000094', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-07 19:23:50', '2026-04-07 19:23:50', '1', '1', 'GEN', '1', '00000094', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('00000095', '2026.A1', NULL, '0030', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Cinturón Piel Reversible', NULL, NULL, 'S', 16.5289, 0, 0, 16.5289, 'N', 21, 20, 20, 16.5289, '1', '2026-04-07 19:24:17', '2026-04-07 19:24:17', '1', '1', 'GEN', '1', '00000095', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000001', 'A1', NULL, '0040', 'CAMI-POLO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Polo Manga Corta Hombre', NULL, NULL, 'S', NULL, NULL, NULL, 23.1405, 'N', 21, 28, 28, NULL, NULL, '2026-06-12 14:03:19', '2026-06-12 14:03:19', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000002', '2026.A1', '012', '010', 'PETADA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'PETADA BILLI', NULL, NULL, 'N', 50, 10, 5, 45, 'N', 21, 54.45, 54.45, 45, NULL, '2026-04-23 10:36:41', '2026-02-01 14:38:48', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000002', '2026.AN1', NULL, '020', 'BOLSO-PIEL', 'BOLSO-PIEL', NULL, NULL, 'BOLSOS', 'Bolsos, bolsas y mochilas de señora', 0, '15', 'Leka Trading', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Bolso de Piel Mujer Grande', '', 'PVP', 'S', 85, 0, 0, 70.2479, 'N', 21, 85, 85, 70.2479, NULL, '2026-07-09 06:50:13', '2026-07-09 06:50:13', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000003', '2026.A1', '012', '010', 'pato', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'pato aparato', NULL, NULL, 'N', 5, 0, 0, 5, 'N', 21, 6.05, 6.05, 5, NULL, '2026-04-23 10:36:41', '2026-02-01 14:36:39', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000003', '2026.A1', '012', '020', 'ZAP-TACÓN', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Zapato Tacón Alto Señora', NULL, 'VENTAMAYOR', 'N', 42, 0, 0, 42, 'N', 21, 50.82, 50.82, 42, NULL, '2026-04-23 10:36:41', '2026-02-23 06:21:01', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000003', '2026.A1', '012', '030', 'BOLSO-PIEL', NULL, NULL, NULL, 'BOLSOS', 'Bolsos, bolsas y mochilas de señora', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Bolso de Piel Mujer Grande', NULL, 'VENTAMAYOR', 'N', 55, 0, 0, 55, 'N', 21, 66.55, 66.55, 55, NULL, '2026-04-23 10:36:41', '2026-02-23 06:22:50', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000003', '2026.A1', '012', '040', 'CHAQ-CUERO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Chaqueta Biker Cuero', NULL, 'VENTAMAYOR', 'N', 78, 0, 0, 78, 'N', 21, 94.38, 94.38, 78, NULL, '2026-04-23 10:36:41', '2026-02-23 06:23:01', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000004', '2026.A1', '012', '010', 'CHAQ-CUERO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Chaqueta Biker Cuero', NULL, 'VENTAMAYOR', 'N', 78, 0, 0, 78, 'N', 21, 94.38, 94.38, 78, NULL, '2026-04-23 10:36:41', '2026-02-26 19:56:25', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000005', '2026.A1', '012', '010', 'ZAP-TACÓN', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 2, 'Zapato Tacón Alto Señor<<a', NULL, 'VENTAMAYOR', 'N', 40, 0, 0, 40, 'N', 21, 48.4, 96.8, 80, NULL, '2026-04-23 10:36:41', '2026-02-26 19:59:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000005', '2026.A1', '012', '020', 'ZAP-BOTA-MT', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Bota Montaña Impermeable', NULL, 'VENTAMAYOR', 'N', 62, 0, 0, 62, 'N', 21, 75.02, 75.02, 62, NULL, '2026-04-23 10:36:41', '2026-02-26 20:11:53', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000005', '2026.A1', '012', '030', 'BLUS-SEDA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Blusa de Seda Cuello V', NULL, 'VENTAMAYOR', 'N', 32, 0, 0, 32, 'N', 21, 38.72, 38.72, 32, NULL, '2026-04-23 10:36:41', '2026-02-26 20:32:10', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000006', '2026.A1', '012', '010', 'CAMI-POLO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Polo Manga Corta Hombre', NULL, 'PVP', 'S', 28, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, NULL, '2026-04-23 10:36:41', '2026-03-19 23:21:21', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000009', '2026.A1', '012', '010', 'CAMI-POLO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Polo Manga Corta Hombre', NULL, NULL, 'S', 0, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, NULL, '2026-04-23 10:36:41', '2026-03-27 17:32:45', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000018', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 05:35:53', '2026-04-03 05:35:53', '1', '1', 'GEN', '1', '00000007', '0000000004', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000019', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 05:38:59', '2026-04-03 05:38:59', '1', '1', 'GEN', '1', '00000008', '0000000006', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000020', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 05:40:39', '2026-04-03 05:40:39', '1', '1', 'GEN', '1', '00000009', '0000000008', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000021', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 05:42:47', '2026-04-03 05:42:47', '1', '1', 'GEN', '1', '00000010', '0000000010', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000022', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 05:44:54', '2026-04-03 05:44:54', '1', '1', 'GEN', '1', '00000011', '0000000012', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000023', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-03 20:34:37', '2026-04-03 20:34:37', '1', '1', 'GEN', '1', '00000012', '0000000014', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000024', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 150, 0, 0, 123.9669, 'N', 21, 150, 150, 123.9669, '1', '2026-04-03 20:39:29', '2026-04-03 20:39:29', '1', '1', 'GEN', '1', '00000013', '0000000016', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000025', '2026.A1', NULL, '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 49.95, 0, 0, 41.281, 'N', 21, 49.95, 49.95, 41.281, '1', '2026-04-03 21:04:17', '2026-04-03 21:04:17', '1', '1', 'GEN', '1', '00000014', '0000000018', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000026', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 21:05:54', '2026-04-03 21:05:54', '1', '1', 'GEN', '1', '00000015', '0000000020', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000026', 'A1', '1', '010', 'JERSEY-LANA', 'JERSEY-LANA/GRIS/M', NULL, NULL, 'ROPA', 'Ropa de Vestir', 25, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Jersey de Lana Cuello Redondo', NULL, 'PVP', 'N', 55, 0, 0, 55, 'N', 21, 66.55, 133.1, 110, NULL, '2026-04-23 10:36:41', '2026-01-20 10:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000026', 'A1', '1', '020', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, 'COMPLEMENTOS', 'Complementos Accesorios', 9, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Cinturón Piel Reversible', NULL, 'PVP', 'N', 22, 10, 2.2, 19.8, 'N', 21, 23.958, 47.916, 39.6, NULL, '2026-04-23 10:36:41', '2026-01-20 10:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000027', '2026.A1', NULL, '0010', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Camiseta de Algodón Básica', NULL, NULL, 'S', 150, 10, 15, 111.5702, 'N', 21, 135, 135, 111.5702, '1', '2026-04-03 21:09:59', '2026-04-03 21:09:59', '1', '1', 'GEN', '1', '00000016', '0000000022', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000027', 'A1', '1', '010', 'ZAP-OXFORD', 'ZAP-OXFORD/NEGRO/42', NULL, NULL, 'CALZADO', 'Calzado Elegante', 40, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Zapato Oxford Piel Hombre', NULL, 'PVP', 'N', 89.9, 0, 0, 89.9, 'N', 21, 108.779, 108.779, 89.9, NULL, '2026-04-23 10:36:41', '2026-01-21 11:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000027', 'A1', '1', '020', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, 'COMPLEMENTOS', 'Complementos Accesorios', 9, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Cinturón Piel Reversible', NULL, 'PVP', 'N', 22, 0, 0, 22, 'N', 21, 26.62, 26.62, 22, NULL, '2026-04-23 10:36:41', '2026-01-21 11:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000027', 'A1', '1', '030', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, NULL, 'COMPLEMENTOS', 'Complementos Accesorios', 20, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Cartera Piel Caballero', NULL, 'PVP', 'N', 50, 0, 0, 50, 'N', 21, 60.5, 60.5, 50, NULL, '2026-04-23 10:36:41', '2026-01-21 11:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000028', '2026.A1', NULL, '0010', 'DEMO-BASICO', 'DEMO-BASICO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Camiseta Algodón Demo', NULL, NULL, 'S', 30, 0, 0, 24.7934, 'N', 21, 30, 30, 24.7934, '1', '2026-04-03 21:23:51', '2026-04-03 21:23:51', '1', '1', 'GEN', '1', '00000017', '0000000024', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000028', 'A1', '1', '010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/NEGRO/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 80, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 3, 'Abrigo de Paño Caballero - Negro L', NULL, 'VENTAMAYOR', 'N', 120, 0, 0, 120, 'N', 21, 145.2, 435.6, 360, NULL, '2026-04-23 10:36:41', '2026-01-23 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000028', 'A1', '1', '020', 'SUDADERA-HOOD', 'SUDADERA-HOOD/GRIS/M', NULL, NULL, 'DEPORTIVO', 'Ropa Deportiva', 20, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 6, 'Sudadera con Capucha Gris M', NULL, 'VENTAMAYOR', 'N', 28, 0, 0, 28, 'N', 21, 33.88, 203.28, 168, NULL, '2026-04-23 10:36:41', '2026-01-23 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000028', 'A1', '1', '030', 'BOLSO-PIEL', 'BOLSO-PIEL', NULL, NULL, 'BOLSOS', 'Bolsos y Mochilas', 45, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Bolso de Piel Mujer Grande', NULL, 'VENTAMAYOR', 'N', 55, 0, 0, 55, 'N', 21, 66.55, 66.55, 55, NULL, '2026-04-23 10:36:41', '2026-01-23 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000028', 'A1', '1', '040', 'JERSEY-LANA', 'JERSEY-LANA/BEIGE/M', NULL, NULL, 'ROPA', 'Ropa de Vestir', 25, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 5, 'Jersey de Lana Beige M', NULL, 'VENTAMAYOR', 'N', 35, 0, 0, 35, 'N', 21, 42.35, 211.75, 175, NULL, '2026-04-23 10:36:41', '2026-01-23 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000029', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-03 21:28:55', '2026-04-03 21:28:55', '1', '1', 'GEN', '1', '00000018', '0000000026', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000029', 'A1', '1', '010', 'LEGGING-SPORT', 'LEGGING-SPORT/NEGRO/S', NULL, NULL, 'DEPORTIVO', 'Ropa Deportiva', 8, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Legging Deportivo Mujer - Negro S', NULL, 'PVP', 'N', 19.95, 0, 0, 19.95, 'N', 21, 24.1395, 48.279, 39.9, NULL, '2026-04-23 10:36:41', '2026-01-25 12:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000029', 'A1', '1', '020', 'SOMBRERO-PJM', 'SOMBRERO-PJM', NULL, NULL, 'COMPLEMENTOS', 'Complementos Accesorios', 15, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Sombrero Panamá Verano', NULL, 'PVP', 'N', 35, 15, 5.25, 29.75, 'N', 21, 35.9975, 35.9975, 29.75, NULL, '2026-04-23 10:36:41', '2026-01-25 12:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000030', '2026.A1', NULL, '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 49.95, 0, 0, 41.281, 'N', 21, 49.95, 49.95, 41.281, '1', '2026-04-03 21:32:08', '2026-04-03 21:32:08', '1', '1', 'GEN', '1', '00000019', '0000000028', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000030', 'A1', '1', '010', 'SUDADERA-HOOD', 'SUDADERA-HOOD/GRIS/S', NULL, NULL, 'DEPORTIVO', 'Ropa Deportiva', 20, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 12, 'Sudadera con Capucha Gris S', NULL, 'VENTAMAYOR', 'N', 28, 0, 0, 28, 'N', 21, 33.88, 406.56, 336, NULL, '2026-04-23 10:36:41', '2026-01-28 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000030', 'A1', '1', '020', 'LEGGING-SPORT', 'LEGGING-SPORT/ROSA/S', NULL, NULL, 'DEPORTIVO', 'Ropa Deportiva', 8, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 15, 'Legging Deportivo Mujer - Rosa S', NULL, 'VENTAMAYOR', 'N', 12, 0, 0, 12, 'N', 21, 14.52, 217.8, 180, NULL, '2026-04-23 10:36:41', '2026-01-28 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000030', 'A1', '1', '030', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, NULL, 'ROPA', 'Ropa de Vestir', 12, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 10, 'Polo Manga Corta - Blanco M', NULL, 'VENTAMAYOR', 'N', 18, 0, 0, 18, 'N', 21, 21.78, 217.8, 180, NULL, '2026-04-23 10:36:41', '2026-01-28 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000030', 'A1', '1', '040', 'MOCHILA-SPORT', 'MOCHILA-SPORT', NULL, NULL, 'BOLSOS', 'Bolsos y Mochilas', 18, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 8, 'Mochila Deportiva 30L', NULL, 'VENTAMAYOR', 'N', 24, 0, 0, 24, 'N', 21, 29.04, 232.32, 192, NULL, '2026-04-23 10:36:41', '2026-01-28 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000030', 'A1', NULL, '050', 'ZAP-BOTA-MT', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Bota Montaña Impermeable', NULL, 'VENTAMAYOR', 'N', 62, 0, 0, 62, 'N', 21, 75.02, 75.02, 62, NULL, '2026-05-27 21:36:35', '2026-05-27 21:36:35', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000030', 'A1', NULL, '060', 'ABRIGO-PAÑO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 10, '20', 'Bigfoot Breweries', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Abrigo de Paño Caballero', NULL, 'VENTAMAYOR', 'N', 120, 0, 0, 120, 'N', 21, 145.2, 145.2, 120, NULL, '2026-05-27 21:37:20', '2026-05-27 21:37:20', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000030', 'A1', NULL, '070', 'BLUS-SEDA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 6, '21', 'Svensk Sjöföda AB', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Blusa de Seda Cuello V', NULL, 'VENTAMAYOR', 'N', 32, 0, 0, 32, 'N', 21, 38.72, 38.72, 32, NULL, '2026-05-27 21:37:32', '2026-05-27 21:37:32', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000030', 'A1', NULL, '080', 'CHAQ-CUERO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '17', 'Zaanse Snoepfabriek', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Chaqueta Biker Cuero', NULL, 'VENTAMAYOR', 'N', 78, 0, 0, 78, 'N', 21, 94.38, 94.38, 78, NULL, '2026-05-27 21:43:15', '2026-05-27 21:43:15', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000030', 'A1', NULL, '090', 'BLUS-SEDA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 6, '21', 'Svensk Sjöföda AB', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Blusa de Seda Cuello V', NULL, 'VENTAMAYOR', 'N', 32, 0, 0, 32, 'N', 21, 38.72, 38.72, 32, NULL, '2026-05-28 07:45:58', '2026-05-28 07:45:58', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000030', 'A1', NULL, '100', 'CHAQ-CUERO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', NULL, '17', 'Zaanse Snoepfabriek', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Chaqueta Biker Cuero', NULL, 'VENTAMAYOR', 'N', 78, 0, 0, 78, 'N', 21, 94.38, 94.38, 78, NULL, '2026-05-28 07:49:36', '2026-05-28 07:49:36', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000030', 'A1', NULL, '110', 'JERSEY-LANA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 5, '21', 'Svensk Sjöföda AB', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Jersey de Lana Cuello Redondo', NULL, 'VENTAMAYOR', 'N', 35, 0, 0, 35, 'N', 21, 42.35, 0, 0, NULL, '2026-05-28 16:30:06', '2026-05-28 16:30:06', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000030', 'A1', NULL, '120', 'MOCHILA-SPORT', NULL, NULL, NULL, 'BOLSOS', 'Bolsos, bolsas y mochilas de señora', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Mochila Deportiva 30L', NULL, 'VENTAMAYOR', 'N', 25, 0, 0, 25, 'N', 21, 30.25, 0, 0, NULL, '2026-05-28 17:30:27', '2026-05-28 17:30:27', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000031', '2026.A1', NULL, '0010', 'BOLSO-PIEL', 'BOLSO-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Bolso de Piel Mujer Grande', NULL, NULL, 'S', 85, 0, 0, 70.2479, 'N', 21, 85, 85, 70.2479, '1', '2026-04-03 21:40:39', '2026-04-03 21:40:39', '1', '1', 'GEN', '1', '00000020', '0000000030', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000031', 'A1', '1', '010', 'VEST-FLOR', 'VEST-FLOR/AZUL/S', NULL, NULL, 'ROPA', 'Ropa de Vestir', 10, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Vestido Estampado Verano - Azul S', NULL, 'PVP', 'N', 20, 0, 0, 20, 'N', 21, 24.2, 24.2, 20, NULL, '2026-04-23 10:36:41', '2026-02-03 11:30:00', 'DEMO', 'DEMO', 'GEN', '1', '001', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000031', 'A1', '1', '020', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, 'COMPLEMENTOS', 'Complementos Accesorios', 9, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Cinturón Piel Reversible', NULL, 'PVP', 'N', 22, 25, 5.5, 16.5, 'N', 21, 19.965, 19.965, 16.5, NULL, '2026-04-23 10:36:41', '2026-02-03 11:30:00', 'DEMO', 'DEMO', 'GEN', '1', '001', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000032', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-03 21:45:58', '2026-04-03 21:45:58', '1', '1', 'GEN', '1', '00000021', '0000000032', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000032', 'A1', '1', '010', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/NEGRO/42', NULL, NULL, 'CALZADO', 'Calzado Elegante', 42, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Bota Montaña Impermeable Negro 42', NULL, 'PVP', 'N', 95, 0, 0, 95, 'N', 21, 114.95, 114.95, 95, NULL, '2026-04-23 10:36:41', '2026-02-05 16:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000032', 'A1', '1', '020', 'MOCHILA-SPORT', 'MOCHILA-SPORT', NULL, NULL, 'BOLSOS', 'Bolsos y Mochilas', 18, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Mochila Deportiva 30L', NULL, 'PVP', 'N', 39.95, 25, 9.9875, 29.9625, 'N', 21, 36.2546, 36.2546, 29.9625, NULL, '2026-04-23 10:36:41', '2026-02-05 16:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000033', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 21:53:29', '2026-04-03 21:53:29', '1', '1', 'GEN', '1', '00000022', '0000000034', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000033', 'A1', '1', '010', 'VEST-FLOR', 'VEST-FLOR/ROJO/M', NULL, NULL, 'ROPA', 'Ropa de Vestir', 10, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 3, 'Vestido Estampado Verano - Rojo M', NULL, 'PVP', 'N', 20, 0, 0, 20, 'N', 21, 24.2, 72.6, 60, NULL, '2026-04-23 10:36:41', '2026-02-07 18:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000033', 'A1', '1', '020', 'SRV-ENVIO', 'SRV-ENVIO', NULL, NULL, 'OTR', 'Otros', 0, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Gastos de Envío - Burgos', NULL, 'PVP', 'N', 5.95, 0, 0, 5.95, 'N', 21, 7.1995, 7.1995, 5.95, NULL, '2026-04-23 10:36:41', '2026-02-07 18:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000034', '2026.A1', NULL, '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 49.95, 0, 0, 41.281, 'N', 21, 49.95, 49.95, 41.281, '1', '2026-04-03 22:08:46', '2026-04-03 22:08:46', '1', '1', 'GEN', '1', '00000023', '0000000036', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000034', 'A1', '1', '010', 'CAMI-POLO', 'CAMI-POLO/AZUL/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 12, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Polo Manga Corta Azul L', NULL, 'PVP', 'N', 28, 0, 0, 28, 'N', 21, 33.88, 33.88, 28, NULL, '2026-04-23 10:36:41', '2026-02-08 10:15:00', 'DEMO', 'DEMO', 'GEN', '1', '002', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000034', 'A1', '1', '020', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, NULL, 'CALZADO', 'Calzado Elegante', 30, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Zapatilla Deportiva Running B43', NULL, 'PVP', 'N', 55, 25, 13.75, 41.25, 'N', 21, 49.9125, 49.9125, 41.25, NULL, '2026-04-23 10:36:41', '2026-02-08 10:15:00', 'DEMO', 'DEMO', 'GEN', '1', '002', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000035', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-03 22:19:49', '2026-04-03 22:19:49', '1', '1', 'GEN', '1', '00000024', '0000000038', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000035', 'A1', '1', '010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 80, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Abrigo de Paño Caballero Camel L', NULL, 'VENTAMAYOR', 'N', 120, 0, 0, 120, 'N', 21, 145.2, 290.4, 240, NULL, '2026-04-23 10:36:41', '2026-02-10 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000035', 'A1', '1', '020', 'JERSEY-LANA', 'JERSEY-LANA/GRIS/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 25, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 4, 'Jersey de Lana Gris L', NULL, 'VENTAMAYOR', 'N', 35, 0, 0, 35, 'N', 21, 42.35, 169.4, 140, NULL, '2026-04-23 10:36:41', '2026-02-10 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000035', 'A1', '1', '030', 'BOLSO-PIEL', 'BOLSO-PIEL', NULL, NULL, 'BOLSOS', 'Bolsos y Mochilas', 45, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Bolso de Piel Mujer Grande', NULL, 'VENTAMAYOR', 'N', 55, 0, 0, 55, 'N', 21, 66.55, 133.1, 110, NULL, '2026-04-23 10:36:41', '2026-02-10 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000036', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-03 22:26:43', '2026-04-03 22:26:43', '1', '1', 'GEN', '1', '00000025', '0000000040', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000037', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 22:28:10', '2026-04-03 22:28:10', '1', '1', 'GEN', '1', '00000026', '0000000042', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000038', '2026.A1', NULL, '0010', 'FALD-PLIS', 'FALD-PLIS/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Falda Larga Plisada', NULL, NULL, 'S', 29.95, 0, 0, 24.7521, 'N', 21, 29.95, 29.95, 24.7521, '1', '2026-04-04 00:01:52', '2026-04-04 00:01:52', '1', '1', 'GEN', '1', '00000027', '0000000044', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000039', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-04 00:06:17', '2026-04-04 00:06:17', '1', '1', 'GEN', '1', '00000028', '0000000046', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000040', '2026.A1', NULL, '0010', 'JERSEY-LANA', 'JERSEY-LANA/BEIGE/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Jersey de Lana Cuello Redondo', NULL, NULL, 'S', 200, 0, 0, 165.2893, 'N', 21, 200, 200, 165.2893, '1', '2026-04-04 00:07:42', '2026-04-04 00:07:42', '1', '1', 'GEN', '1', '00000029', '0000000048', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000041', '2026.A1', NULL, '0010', 'LEGGING-SPORT', 'LEGGING-SPORT/NEGRO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Legging Deportivo Mujer', NULL, NULL, 'S', 19.95, 0, 0, 16.4876, 'N', 21, 19.95, 19.95, 16.4876, '1', '2026-04-04 00:10:16', '2026-04-04 00:10:16', '1', '1', 'GEN', '1', '00000030', '0000000050', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000042', '2026.A1', NULL, '0010', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-04 00:18:03', '2026-04-04 00:18:03', '1', '1', 'GEN', '1', '00000031', '0000000052', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000043', '2026.A1', NULL, '0010', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cartera Piel Caballero', NULL, NULL, 'S', 50, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-04 00:23:27', '2026-04-04 00:23:27', '1', '1', 'GEN', '1', '00000032', '0000000054', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000044', '2026.A1', NULL, '0010', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Camiseta de Algodón Básica', NULL, NULL, 'S', 150, 10, 15, 111.5702, 'N', 21, 135, 135, 111.5702, '1', '2026-04-04 00:30:38', '2026-04-04 00:30:38', '1', '1', 'GEN', '1', '00000033', '0000000056', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000045', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-04 06:59:13', '2026-04-04 06:59:13', '1', '1', 'GEN', '1', '00000034', '0000000058', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000047', '2026.A1', NULL, '0010', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Camiseta de Algodón Básica', NULL, NULL, 'S', 150, 10, 15, 111.5702, 'N', 21, 135, 135, 111.5702, '1', '2026-04-04 07:18:33', '2026-04-04 07:18:33', '1', '1', 'GEN', '1', '00000036', '0000000060', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000048', '2026.A1', NULL, '0010', 'FALD-JEAN', 'FALD-JEAN/VAQUERO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Minifalda Vaquera', NULL, NULL, 'S', 225, 0, 0, 185.9504, 'N', 21, 225, 225, 185.9504, '1', '2026-04-04 07:24:24', '2026-04-04 07:24:24', '1', '1', 'GEN', '1', '00000037', '0000000062', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000049', '2026.A1', NULL, '0010', 'MOCHILA-SPORT', 'MOCHILA-SPORT', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Mochila Deportiva 30L', NULL, NULL, 'S', 139.95, 0, 0, 115.6612, 'N', 21, 139.95, 139.95, 115.6612, '1', '2026-04-04 07:31:01', '2026-04-04 07:31:01', '1', '1', 'GEN', '1', '00000038', '0000000064', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000050', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-04 07:35:13', '2026-04-04 07:35:13', '1', '1', 'GEN', '1', '00000039', '0000000066', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000051', '2026.A1', NULL, '0010', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-04 07:40:38', '2026-04-04 07:40:38', '1', '1', 'GEN', '1', '00000040', '0000000068', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000052', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-04 07:43:57', '2026-04-04 07:43:57', '1', '1', 'GEN', '1', '00000041', '0000000070', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000053', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-04 07:58:35', '2026-04-04 07:58:35', '1', '1', 'GEN', '1', '00000042', '0000000072', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000054', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-06 05:59:44', '2026-04-06 05:59:44', '1', '1', 'GEN', '1', '00000043', '0000000074', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000056', '2026.A1', NULL, '0030', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', -1, 'Devolución anticipo Abrigo de Paño Caballero', NULL, NULL, 'S', 0, 0, 0, 0, 'N', 21, 0, 0, 0, '1', '2026-04-06 17:50:57', '2026-04-06 17:50:57', '1', '1', 'GEN', '1', '00000060', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000056', '2026.A1', NULL, '0040', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono anticipo ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 10, 0, 0, 8.2645, 'N', 21, 10, -10, -8.2645, '1', '2026-04-06 17:51:28', '2026-04-06 17:51:28', '1', '1', 'GEN', '1', '00000060', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000058', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Anticipo Chaqueta Biker Cuero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-06 18:11:42', '2026-04-06 18:11:42', '1', '1', 'GEN', '1', '00000062', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000059', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Anticipo Chaqueta Biker Cuero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-06 18:16:41', '2026-04-06 18:16:41', '1', '1', 'GEN', '1', '00000063', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000061', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-06 18:34:31', '2026-04-06 18:34:31', '1', '1', 'GEN', '1', '00000065', '0000000107', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000061', '2026.A1', NULL, '0020', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono anticipo CHAQ-CUERO/NEGRO/XL', NULL, NULL, 'S', 30, 0, 0, 24.7934, 'N', 21, 30, -30, -24.7934, '1', '2026-04-06 18:34:44', '2026-04-06 18:34:44', '1', '1', 'GEN', '1', '00000065', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000062', '2026.A1', NULL, '0010', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Anticipo Chaqueta Biker Cuero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-06 18:50:27', '2026-04-06 18:50:27', '1', '1', 'GEN', '1', '00000067', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000063', '2026.A1', NULL, '0010', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-06 19:14:01', '2026-04-06 19:14:01', '1', '1', 'GEN', '1', '00000068', '0000000111', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000063', '2026.A1', NULL, '0020', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Anticipo Camiseta de Algodón Básica', NULL, NULL, 'S', 23.1405, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-04-06 19:14:01', '2026-04-06 19:14:01', '1', '1', 'GEN', '1', '00000068', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000068', '2026.A1', NULL, '0020', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta ABRIGO-PAÑO/NEGRO/L', NULL, NULL, 'S', 102, 0, 0, 84.2975, 'N', 21, 102, -102, -84.2975, '1', '2026-04-07 07:52:42', '2026-04-07 07:52:42', '1', '1', 'GEN', '1', '00000074', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000071', '2026.A1', NULL, '0020', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 10, 0, 0, 8.2645, 'N', 21, 10, -10, -8.2645, '1', '2026-04-07 08:07:01', '2026-04-07 08:07:01', '1', '1', 'GEN', '1', '00000080', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000074', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-07 18:33:55', '2026-04-07 18:33:55', '1', '1', 'GEN', '1', '00000085', '0000000151', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000074', '2026.A1', NULL, '0020', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 100, 0, 0, 82.6446, 'N', 21, 100, -100, -82.6446, '1', '2026-04-07 18:33:56', '2026-04-07 18:33:56', '1', '1', 'GEN', '1', '00000085', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000076', '2026.A1', NULL, '0020', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-07 19:01:56', '2026-04-07 19:01:56', '1', '1', 'GEN', '1', '00000089', '0000000157', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000076', '2026.A1', NULL, '0030', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 50, 0, 0, 41.3223, 'N', 21, 50, -50, -41.3223, '1', '2026-04-07 19:01:56', '2026-04-07 19:01:56', '1', '1', 'GEN', '1', '00000089', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000077', '2026.A1', NULL, '0010', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-07 19:14:29', '2026-04-07 19:14:29', '1', '1', 'GEN', '1', '00000090', '0000000159', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000077', '2026.A1', NULL, '0020', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta CINTURON-PIEL', NULL, NULL, 'S', 20, 0, 0, 16.5289, 'N', 21, 20, -20, -16.5289, '1', '2026-04-07 19:14:29', '2026-04-07 19:14:29', '1', '1', 'GEN', '1', '00000090', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000078', '2026.A1', NULL, '0010', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cartera Piel Caballero', NULL, NULL, 'S', 50, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-07 19:20:17', '2026-04-07 19:20:17', '1', '1', 'GEN', '1', '00000091', '0000000163', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000078', '2026.A1', NULL, '0020', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta CARTERA-PIEL', NULL, NULL, 'S', 48, 0, 0, 39.6694, 'N', 21, 48, -48, -39.6694, '1', '2026-04-07 19:20:17', '2026-04-07 19:20:17', '1', '1', 'GEN', '1', '00000091', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000081', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-07 19:24:17', '2026-04-07 19:24:17', '1', '1', 'GEN', '1', '00000095', '0000000169', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000081', '2026.A1', NULL, '0020', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 100, 0, 0, 82.6446, 'N', 21, 100, -100, -82.6446, '1', '2026-04-07 19:24:17', '2026-04-07 19:24:17', '1', '1', 'GEN', '1', '00000095', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000082', '2026.A1', NULL, '0010', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-07 19:25:05', '2026-04-07 19:25:05', '1', '1', 'GEN', '1', '00000096', '0000000171', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000082', '2026.A1', NULL, '0020', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', 'Uds.', -1, 'Abono a cuenta CINTURON-PIEL', NULL, NULL, 'S', 20, 0, 0, 16.5289, 'N', 21, 20, -20, -16.5289, '1', '2026-04-07 19:25:05', '2026-04-07 19:25:05', '1', '1', 'GEN', '1', '00000096', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000084', '2026.A1', NULL, '0140', 'BOTIN-ANIT', 'BOTIN-ANIT/MARRON/38', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Botín Ante Mujer', NULL, NULL, 'S', 79.9, 0, 0, 66.0331, 'N', 21, 79.9, 79.9, 66.0331, '1', '2026-04-09 08:21:38', '2026-04-09 08:21:38', '1', '1', 'GEN', '1', '00000099', '0000000177', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000085', '2026.A1', NULL, '0040', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', -1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, -180, -148.7603, '1', '2026-04-10 08:20:04', '2026-04-10 08:20:04', '1', '1', 'GEN', '1', '00000108', '0000000187', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000085', '2026.A1', NULL, '040', 'SOMBRERO-PJM', NULL, NULL, NULL, 'COMPLEMENTOS', 'Complementos para el buen vestir', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Sombrero Panamá Verano', NULL, 'PVP', 'S', 35, NULL, NULL, 28.92562, 'N', 21, 35, 0, 0, NULL, '2026-05-16 21:26:33', '2026-05-16 21:26:33', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000087', '2026.A1', NULL, '0070', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-11 21:50:58', '2026-04-11 21:50:58', '1', '1', 'GEN', '1', '00000110', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000088', '2026.A1', NULL, '0080', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 16.5289, 0, 0, 16.5289, 'N', 21, 20, 20, 16.5289, '1', '2026-04-11 22:01:48', '2026-04-11 22:01:48', '1', '1', 'GEN', '1', '00000111', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000089', '2026.A1', NULL, '0080', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-21 08:18:03', '2026-04-21 08:18:03', '1', '1', 'GEN', '1', '00000112', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000090', '2026.A1', NULL, '0060', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-21 08:37:29', '2026-04-21 08:37:29', '1', '1', 'GEN', '1', '00000113', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000091', '2026.A1', NULL, '0070', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-21 08:42:52', '2026-04-21 08:42:52', '1', '1', 'GEN', '1', '00000114', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000091', '2026.A1', NULL, '0080', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', -1, 'Abono a cuenta ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 50, 0, 0, 41.3223, 'N', 21, 50, -50, -41.3223, '1', '2026-04-21 08:42:52', '2026-04-21 08:42:52', '1', '1', 'GEN', '1', '00000114', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000092', '2026.A1', NULL, '0050', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-04-21 08:49:32', '2026-04-21 08:49:32', '1', '1', 'GEN', '1', '00000115', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000093', '2026.A1', NULL, '0040', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Cartera Piel Caballero', NULL, NULL, 'S', 20.6612, 0, 0, 20.6612, 'N', 21, 25, 25, 20.6612, '1', '2026-04-21 20:22:14', '2026-04-21 20:22:14', '1', '1', 'GEN', '1', '00000116', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000094', '2026.A1', NULL, '0050', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Cartera Piel Caballero', NULL, NULL, 'S', 50, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-21 20:22:55', '2026-04-21 20:22:55', '1', '1', 'GEN', '1', '00000117', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000094', '2026.A1', NULL, '0060', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', -1, 'Abono a cuenta CARTERA-PIEL', NULL, NULL, 'S', 25, 0, 0, 20.6612, 'N', 21, 25, -25, -20.6612, '1', '2026-04-21 20:22:55', '2026-04-21 20:22:55', '1', '1', 'GEN', '1', '00000117', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000100', '2026.A1', NULL, '0050', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-23 18:52:42', '2026-04-23 18:52:42', '1', '1', 'GEN', '1', '00000123', '0000000198', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000101', '2026.A1', NULL, '0040', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', '', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-25 07:18:19', '2026-04-25 07:18:19', '1', '1', 'GEN', '1', '00000124', '0000000200', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000102', '2026.A1', NULL, '0010', 'PANT-CHIN', 'PANT-CHIN/BEIGE/38', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Pantalón Chino Slim', NULL, NULL, 'S', 140, 0, 0, 115.7025, 'N', 21, 140, 140, 115.7025, '1', '2026-04-26 19:34:02', '2026-04-26 19:34:02', '1', 'Administrador', 'GEN', '1', '00000125', '0000000202', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000103', '2026.A1', NULL, '0010', 'JERSEY-LANA', 'JERSEY-LANA/BEIGE/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Jersey de Lana Cuello Redondo', NULL, NULL, 'S', 55, 0, 0, 45.4545, 'N', 21, 55, 55, 45.4545, '1', '2026-04-26 19:34:22', '2026-04-26 19:34:22', '1', '1', 'GEN', '1', '00000126', '0000000204', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000104', '2026.A1', '012', '0010', 'PANT-CHIN', 'PANT-CHIN/BEIGE/38', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Pantalón Chino Slim', NULL, NULL, 'S', 140, 0, 0, 115.7025, 'N', 21, 140, 140, 115.7025, '1', '2026-04-26 19:46:22', '2026-04-26 19:46:22', '1', '1', 'GEN', '1', '00000127', '0000000206', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000105', '2026.A1', '012', '0010', 'JERSEY-LANA', 'JERSEY-LANA/BEIGE/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Jersey de Lana Cuello Redondo', NULL, NULL, 'S', 55, 0, 0, 45.4545, 'N', 21, 55, 55, 45.4545, '1', '2026-04-26 19:46:57', '2026-04-26 19:46:57', '1', '1', 'GEN', '1', '00000128', '0000000208', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000106', '2026.A1', '012', '0130', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Chaqueta Biker Cuero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-27 07:00:01', '2026-04-27 07:00:01', '1', '1', 'GEN', '1', '00000130', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000107', '2026.A1', '012', '0060', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-27 07:09:29', '2026-04-27 07:09:29', '1', '1', 'GEN', '1', '00000132', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000107', '2026.A1', '012', '0080', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Chaqueta Biker Cuero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-27 07:09:29', '2026-04-27 07:09:29', '1', '1', 'GEN', '1', '00000132', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000108', '2026.A1', '012', '0040', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Abrigo de Paño Caballero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-27 07:44:33', '2026-04-27 07:44:33', '1', '1', 'GEN', '1', '00000134', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000109', '2026.A1', '012', '0050', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-27 20:10:43', '2026-04-27 20:10:43', '1', '1', 'GEN', '1', '00000135', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000109', '2026.A1', '012', '0060', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', -1, 'Abono a cuenta ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'S', 10, 0, 0, 8.2645, 'N', 21, 10, -10, -8.2645, '1', '2026-04-27 20:10:43', '2026-04-27 20:10:43', '1', '1', 'GEN', '1', '00000135', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000110', '2026.A1', '012', '0050', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Cartera Piel Caballero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-27 20:12:09', '2026-04-27 20:12:09', '1', '1', 'GEN', '1', '00000137', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000111', '2026.A1', '012', '0170', 'CARTERA-PIEL', 'CARTERA-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Cartera Piel Caballero', NULL, NULL, 'S', 50, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-27 20:14:19', '2026-04-27 20:14:19', '1', '1', 'GEN', '1', '00000138', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000111', '2026.A1', '012', '0180', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', -1, 'Abono a cuenta CARTERA-PIEL', NULL, NULL, 'S', 10, 0, 0, 8.2645, 'N', 21, 10, -10, -8.2645, '1', '2026-04-27 20:14:19', '2026-04-27 20:14:19', '1', '1', 'GEN', '1', '00000138', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000112', '2026.A1', '012', '0040', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', '', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-28 17:25:14', '2026-04-28 17:25:14', '1', 'Administrador', 'GEN', '1', '00000139', '0000000218', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000113', '2026.A1', '012', '0040', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', '', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-28 17:26:15', '2026-04-28 17:26:15', '1', '1', 'GEN', '1', '00000140', '0000000220', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000114', '2026.A1', '012', '0060', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Chaqueta Biker Cuero', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-04-28 17:31:55', '2026-04-28 17:31:55', '1', '1', 'GEN', '1', '00000142', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000115', '2026.A1', '012', '0050', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Chaqueta Biker Cuero', NULL, NULL, 'S', 41.3223, 0, 0, 41.3223, 'N', 21, 50, 50, 41.3223, '1', '2026-04-28 17:32:57', '2026-04-28 17:32:57', '1', '1', 'GEN', '1', '00000143', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000116', '2026.A1', '012', '0060', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-04-28 17:33:43', '2026-04-28 17:33:43', '1', '1', 'GEN', '1', '00000144', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000116', '2026.A1', '012', '0070', 'ACUENTA', 'ACUENTA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', -1, 'Abono a cuenta CHAQ-CUERO/MARRON/L', NULL, NULL, 'S', 60, 0, 0, 49.5868, 'N', 21, 60, -60, -49.5868, '1', '2026-04-28 17:33:43', '2026-04-28 17:33:43', '1', '1', 'GEN', '1', '00000144', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000117', '2026.A1', '012', '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero feo', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-05-05 09:20:45', '2026-05-05 09:20:45', '1', 'Administrador', 'GEN', '1', '00000145', '0000000224', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000118', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-05 16:57:32', '2026-05-05 16:57:32', '1', '1', 'GEN', '1', '00000146', '0000000226', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000119', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-07 17:29:10', '2026-05-07 17:29:10', '1', '1', 'GEN', '1', '00000147', '0000000228', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000120', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-07 17:58:22', '2026-05-07 17:58:22', '1', '1', 'GEN', '1', '00000148', '0000000230', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000121', '2026.A1', NULL, '010', 'JERSEY-LANA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 5, '21', 'Svensk Sjöföda AB', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Jersey de Lana Cuello Redondo', NULL, 'PVP', 'S', 12.95, -324.7104, -42.05, 45.4545, 'N', 21, 55, 55, 45.4545, NULL, '2026-05-10 18:09:59', '2026-05-10 18:09:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000122', '2026.A1', NULL, '010', 'CINTURON-PIEL', NULL, NULL, NULL, 'COMPLEMENTOS', 'Complementos para el buen vestir', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Cinturón Piel Reversible', NULL, 'PVP', 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, NULL, '2026-05-10 19:10:28', '2026-05-10 19:10:28', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000123', '2026.A1', NULL, '010', 'SRV-ARREGLOS', NULL, NULL, NULL, 'OTR', 'Otros articulos agrícolas', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Arreglos y Modificaciones', NULL, 'PVP', 'S', 10, -20, -2, 9.9174, 'N', 21, 12, 12, 9.9174, NULL, '2026-05-16 20:50:47', '2026-05-16 20:50:47', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000124', '2026.A1', NULL, '010', 'VEST-FLOR', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 10, '14', 'Karkki Oy', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Vestido Estampado Verano', NULL, 'PVP', 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, NULL, '2026-05-16 21:04:15', '2026-05-16 21:04:15', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000125', '2026.A1', '012', '0020', 'ANTICIPO', 'ANTICIPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Abono a cuenta Camisa Lino Demo', NULL, NULL, 'S', 8.2645, 0, 0, 8.2645, 'N', 21, 10, 10, 8.2645, '1', '2026-05-17 16:26:45', '2026-05-17 16:26:45', '1', '1', 'GEN', '1', '00000149', NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000126', '2026.A1', NULL, '010', 'ZAP-OXFORD', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '16', 'Lyngbysild', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Zapato Oxford Piel Hombre', NULL, 'PVP', 'S', 89.9, 0, 0, 74.2975, 'N', 21, 89.9, 89.9, 74.2975, NULL, '2026-05-17 17:14:40', '2026-05-17 17:14:40', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000127', '2026.A1', '012', '0010', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/37', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Botín Ante Mujer', NULL, NULL, 'S', 79.9, 0, 0, 66.0331, 'N', 21, 79.9, 79.9, 66.0331, '1', '2026-05-24 08:24:51', '2026-05-24 08:24:51', '1', '1', 'GEN', '1', '00000150', '0000000489', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000128', '2026.A1', '012', '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 12.95, 0, 0, 10.7025, 'N', 21, 12.95, 12.95, 10.7025, '1', '2026-05-24 13:40:46', '2026-05-24 13:40:46', '1', '1', 'GEN', '1', '00000151', '0000000491', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000129', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-24 13:41:19', '2026-05-24 13:41:19', '1', '1', 'GEN', '1', '00000152', '0000000493', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000130', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-24 13:41:55', '2026-05-24 13:41:55', '1', '1', 'GEN', '1', '00000153', '0000000495', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000131', '2026.A1', '012', '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-05-24 16:41:08', '2026-05-24 16:41:08', '1', '1', 'GEN', '1', '00000154', '0000000497', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000132', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-24 17:00:19', '2026-05-24 17:00:19', '1', '1', 'GEN', '1', '00000155', '0000000499', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000133', '2026.A1', '012', '0040', 'DEMO-CAMISA', 'DEMO-CAMISA/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Camisa Lino Demo', NULL, NULL, 'S', 28.95, 0, 0, 23.9256, 'N', 21, 28.95, 28.95, 23.9256, '1', '2026-05-24 17:00:50', '2026-05-24 17:00:50', '1', '1', 'GEN', '1', '00000156', '0000000501', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000134', '2026.A1', '012', '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 12.95, 0, 0, 10.7025, 'N', 21, 12.95, 12.95, 10.7025, '1', '2026-05-24 17:04:58', '2026-05-24 17:04:58', '1', '1', 'GEN', '1', '00000157', '0000000503', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000135', '2026.A1', '012', '0010', 'BOLSO-PIEL', 'BOLSO-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Bolso de Piel Mujer Grande', NULL, NULL, 'S', 85, 0, 0, 70.2479, 'N', 21, 85, 85, 70.2479, '1', '2026-05-24 17:05:53', '2026-05-24 17:05:53', '1', '1', 'GEN', '1', '00000158', '0000000505', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000135', '2026.A1', '012', '0020', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, -0.1, -0.022, 18.2, 'N', 21, 22.022, 22.022, 18.2, '1', '2026-05-24 17:05:53', '2026-05-24 17:05:53', '1', '1', 'GEN', '1', '00000158', '0000000507', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000135', '2026.A1', '012', '0030', 'DEPORTIVO003', 'DEPORTIVO003/COLORADITO/39', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Ropa Deportiva', NULL, NULL, 'S', 29.99, 0, 0, 24.7851, 'N', 21, 29.99, 29.99, 24.7851, '1', '2026-05-24 17:05:53', '2026-05-24 17:05:53', '1', '1', 'GEN', '1', '00000158', '0000000509', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000135', '2026.A1', '012', '0050', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Polo Manga Corta Hombre', NULL, NULL, 'S', 28, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-05-24 17:05:53', '2026-05-24 17:05:53', '1', '1', 'GEN', '1', '00000158', '0000000511', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000136', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-05-24 19:46:24', '2026-05-24 19:46:24', '1', '1', 'GEN', '1', '00000159', '0000000669', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000137', '2026.A1', '012', '0030', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 12.95, 0, 0, 10.7025, 'N', 21, 12.95, 12.95, 10.7025, '1', '2026-05-27 06:11:27', '2026-05-27 06:11:27', '1', '1', 'GEN', '1', '00000164', '0000000719', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000138', '2026.A1', NULL, '010', 'DEMO-CAMISA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 8, '010', 'RODRIGO ANTON', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Camisa Lino Demo', NULL, 'PVP', 'S', 28.95, 0, 0, 23.9256, 'N', 21, 28.95, 28.95, 23.9256, NULL, '2026-05-27 20:03:38', '2026-05-27 20:03:38', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000140', '2026.A1', NULL, '010', 'ABRIGO-PAÑO', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 10, '20', 'Bigfoot Breweries', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Abrigo de Paño Caballero', NULL, 'PVP', 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, NULL, '2026-05-27 20:26:45', '2026-05-27 20:26:45', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000142', '2026.A1', '012', '0010', 'BOLSOS00005', 'BOLSOS00005/AZUL_CIELO/39', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Bolsos y Mochilas', NULL, NULL, 'S', 35.01, 0, 0, 28.9339, 'N', 21, 35.01, 35.01, 28.9339, '1', '2026-06-04 20:38:15', '2026-06-04 20:38:15', '1', '1', 'GEN', '1', '00000168', '0000000734', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000143', '2026.A1', '012', '0010', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/37', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Botín Ante Mujer', NULL, NULL, 'S', 79.9, 0, 0, 66.0331, 'N', 21, 79.9, 79.9, 66.0331, '1', '2026-06-06 06:00:19', '2026-06-06 06:00:19', '1', '1', 'GEN', '1', '00000169', '0000000736', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000144', '2026.A1', NULL, '010', 'MOCHILA-SPORT', NULL, NULL, NULL, 'BOLSOS', 'Bolsos, bolsas y mochilas de señora', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Mochila Deportiva 30L', NULL, 'VENTAMAYOR', 'N', 25, 0, 0, 25, 'N', 21, 30.25, 30.25, 25, NULL, '2026-06-12 05:34:49', '2026-06-12 05:34:49', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000144', '2026.A1', NULL, '020', 'BOTIN-ANIT', NULL, NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '15', 'Leka Trading', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Botín Ante Mujer', NULL, 'VENTAMAYOR', 'N', 52, 0, 0, 52, 'N', 21, 62.92, 62.92, 52, NULL, '2026-06-12 05:35:22', '2026-06-12 05:35:22', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000144', '2026.A1', NULL, '030', 'VEST-FLOR', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 10, '14', 'Karkki Oy', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Vestido Estampado Verano', NULL, 'VENTAMAYOR', 'N', 12, 0, 0, 12, 'N', 21, 14.52, 14.52, 12, NULL, '2026-06-12 05:35:42', '2026-06-12 05:35:42', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000145', '2026.A1', '012', '0040', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Polo Manga Corta Hombre', NULL, NULL, 'S', 28, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-06-12 06:20:21', '2026-06-12 06:20:21', '1', 'Administrador', 'GEN', '1', '00000170', '0000000774', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000146', '2026.A1', '012', '0020', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Polo Manga Corta Hombre', NULL, NULL, 'S', 28, 0, 0, 23.1405, 'N', 21, 28, 28, 23.1405, '1', '2026-06-12 06:22:03', '2026-06-12 06:22:03', '1', 'Administrador', 'GEN', '1', '00000171', '0000000776', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000147', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-06-12 07:00:11', '2026-06-12 07:00:11', '1', '1', 'GEN', '1', '00000172', '0000000778', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000148', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 112, 0, 0, 92.562, 'N', 21, 112, 112, 92.562, '1', '2026-06-12 07:07:52', '2026-06-12 07:07:52', '1', '1', 'GEN', '1', '00000173', '0000000782', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000149', '2026.A1', '012', '0010', 'FALD-PLIS', 'FALD-PLIS/VERDE/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Falda Larga Plisada', NULL, NULL, 'S', 29.95, 0, 0, 24.7521, 'N', 21, 29.95, 29.95, 24.7521, '1', '2026-06-12 07:19:06', '2026-06-12 07:19:06', '1', '1', 'GEN', '1', '00000174', '0000000784', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000150', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-06-12 07:24:29', '2026-06-12 07:24:29', '1', '1', 'GEN', '1', '00000175', '0000000786', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000151', '2026.A1', '012', '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-06-12 07:31:45', '2026-06-12 07:31:45', '1', '1', 'GEN', '1', '00000176', '0000000788', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000152', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 120, 0, 0, 99.1736, 'N', 21, 120, 120, 99.1736, '1', '2026-06-13 11:27:46', '2026-06-13 11:27:46', '1', '1', 'GEN', '1', '00000177', '0000000791', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000153', '2026.A1', '012', '0030', 'CALV00002', 'CALV00002/BLANCO/39', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'CALZADO VESTIR', NULL, NULL, 'S', 33.6, 0, 0, 27.7686, 'N', 21, 33.6, 33.6, 27.7686, '1', '2026-06-13 12:15:19', '2026-06-13 12:15:19', '1', '1', 'GEN', '1', '00000178', '0000000814', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000154', '2026.A1', NULL, '010', 'DEMO-CAMISA', NULL, NULL, NULL, 'ROPA', 'Ropa de Vestir a la moda', 8, '010', 'RODRIGO ANTON', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Camisa Lino Demo', NULL, 'VENTAMAYOR', 'N', 10, 0, 0, 10, 'N', 21, 12.1, 12.1, 10, NULL, '2026-06-25 08:10:30', '2026-06-25 08:10:30', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000155', '2026.A1', NULL, '010', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/NEGRO/41', NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Bota Montaña Impermeable', '41 / NEGRO', 'PVP', 'S', 104.95, 0, 0, 86.7355, 'N', 21, 104.95, 104.95, 86.7355, NULL, '2026-06-25 08:16:22', '2026-06-25 08:16:22', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000155', '2026.A1', NULL, '020', 'ZAP-TACÓN', 'ZAP-TACÓN/ROJO/37', NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '', '', '', NULL, 'ESTANDAR', 'Uds', 1, 'Zapato Tacón Alto Señora', '37 / ROJO', 'PVP', 'S', 72.95, 0, 0, 60.2893, 'N', 21, 72.95, 72.95, 60.2893, NULL, '2026-06-25 08:32:43', '2026-06-25 08:32:43', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000156', '2026.A1', NULL, '010', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/38', NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', NULL, '15', 'Leka Trading', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Botín Ante Mujer', '38 / NEGRO', 'PVP', 'S', 87.95, 0, 0, 72.686, 'N', 21, 87.95, 87.95, 72.686, NULL, '2026-06-25 16:47:27', '2026-06-25 16:47:27', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000156', '2026.A1', NULL, '020', 'CALZADO00001', 'CALZADO00001/ROSA/S', NULL, NULL, 'CALZADO', 'Calzado Todo tiempo', 13, '000', 'ANTONIO BAZOS', 'S', NULL, 'ESTANDAR', 'Uds', 1, 'Calzado Elegante', 'ROSA / S', 'PVP', 'S', 36.95, 0, 0, 30.5372, 'N', 21, 36.95, 36.95, 30.5372, NULL, '2026-06-25 16:47:40', '2026-06-25 16:47:40', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000157', '2026.A1', '012', '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 131.95, 0, 0, 109.0496, 'N', 21, 131.95, 131.95, 109.0496, '1', '2026-06-25 17:57:51', '2026-06-25 17:57:51', '1', '1', 'GEN', '1', '00000181', '0000000816', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000158', '2026.A1', '012', '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 197.95, 0, 0, 163.595, 'N', 21, 197.95, 197.95, 163.595, '1', '2026-06-25 17:58:31', '2026-06-25 17:58:31', '1', '1', 'GEN', '1', '00000182', '0000000818', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000159', '2026.A1', '012', '0010', 'CINTURON-PIEL', 'CINTURON-PIEL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Cinturón Piel Reversible', NULL, NULL, 'S', 22, 0, 0, 18.1818, 'N', 21, 22, 22, 18.1818, '1', '2026-06-25 17:58:46', '2026-06-25 17:58:46', '1', '1', 'GEN', '1', '00000183', '0000000820', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000160', '2026.A1', '012', '0010', 'CALV00001', 'CALV00001/3838/39', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'CALZADO VESTIR', NULL, NULL, 'S', 164.95, 0, 0, 136.3223, 'N', 21, 164.95, 164.95, 136.3223, '1', '2026-06-25 17:59:08', '2026-06-25 17:59:08', '1', '1', 'GEN', '1', '00000184', '0000000822', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000161', '2026.A1', '012', '0020', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Camiseta de Algodón Básica', NULL, NULL, 'S', 164.95, 9.0937, 15.0001, 123.9255, 'N', 21, 149.9499, 149.9499, 123.9255, '1', '2026-06-25 17:59:32', '2026-06-25 17:59:32', '1', '1', 'GEN', '1', '00000185', '0000000824', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000162', '2026.A1', '012', '0010', 'COMPLEMENTOS002', 'COMPLEMENTOS002/AZUL/39', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Complementos Accesorios', NULL, NULL, 'S', 29.99, 0, 0, 24.7851, 'N', 21, 29.99, 29.99, 24.7851, '1', '2026-06-25 17:59:52', '2026-06-25 17:59:52', '1', '1', 'GEN', '1', '00000186', '0000000826', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000163', '2026.A1', '012', '0010', 'COMPLEMENTOS002', 'COMPLEMENTOS002/AZUL/43', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Complementos Accesorios', NULL, NULL, 'S', 29.99, 0, 0, 24.7851, 'N', 21, 29.99, 29.99, 24.7851, '1', '2026-06-25 18:00:10', '2026-06-25 18:00:10', '1', '1', 'GEN', '1', '00000187', '0000000828', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000164', '2026.A1', '012', '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 14.95, 0, 0, 12.3554, 'N', 21, 14.95, 14.95, 12.3554, '1', '2026-06-25 19:42:44', '2026-06-25 19:42:44', '1', '1', 'GEN', '1', '00000188', '0000000830', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000166', '2026.A1', '012', '0020', 'TESTSKU01', 'TESTSKU01/NEGRO/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 3, 'ARTICULO PRUEBAS PMP SKU', NULL, NULL, 'S', 25, 0, 0, 20.6612, 'N', 21, 25, 75, 61.9836, '1', '2026-07-04 18:53:17', '2026-07-04 18:53:17', '1', '1', 'GEN', '1', '00000192', '0000001110', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000166', '2026.A1', '012', '0120', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 2, 'ARTICULO PRUEBAS PMP SKU', NULL, NULL, 'S', 30, 0, 0, 24.7934, 'N', 21, 30, 60, 49.5868, '1', '2026-07-04 18:53:17', '2026-07-04 18:53:17', '1', '1', 'GEN', '1', '00000192', '0000001112', '', '', '', '', '', '', '', '', '', '', 0),
+  ('000166', '2026.A1', '012', '0150', 'TESTSKU01', 'TESTSKU01/AZUL/S', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'ARTICULO PRUEBAS PMP SKU', NULL, NULL, 'S', 35, 0, 0, 28.9256, 'N', 21, 35, 35, 28.9256, '1', '2026-07-04 18:53:17', '2026-07-04 18:53:17', '1', '1', 'GEN', '1', '00000192', '0000001114', '', '', '', '', '', '', '', '', '', '', 0);
+-- 213 registros exportados
 
 
 -- Tabla: fza_facturas_pagos
@@ -16992,8 +17033,705 @@ PRC: BEGIN
 END//
 
 DELIMITER ;
-', '2026-07-07 19:55:07', '2026-07-07 19:55:07', 'Administrador', 'Administrador');
--- 51 registros exportados
+', '2026-07-07 19:55:07', '2026-07-07 19:55:07', 'Administrador', 'Administrador'),
+  ('522', 'pedidos_venta_a_albaranar', '-- =============================================================================
+-- Pedidos de venta: cantidad pendiente de albaranar por linea
+-- =============================================================================
+-- CANTIDAD_ENTREGADA_PEDLIN representa lo ya albaranado/entregado real.
+-- El grid de pedidos necesita guardar una preparacion pendiente aunque el
+-- albaran no se emita todavia. Para no mezclar ambos conceptos se anade
+-- CANTIDAD_A_ALBARANAR_PEDLIN como borrador persistente por linea.
+--
+-- Idempotente: se puede ejecutar varias veces.
+-- =============================================================================
+
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME   = ''fza_pedidos_lineas''
+     AND COLUMN_NAME  = ''CANTIDAD_A_ALBARANAR_PEDLIN''
+);
+
+SET @sSql := IF(@sExisteCol = 0,
+  ''ALTER TABLE fza_pedidos_lineas
+     ADD COLUMN CANTIDAD_A_ALBARANAR_PEDLIN decimal(19,6) NULL DEFAULT 0
+     AFTER CANTIDAD_ENTREGADA_PEDLIN'',
+  ''SELECT ''''CANTIDAD_A_ALBARANAR_PEDLIN ya existe, se omite'''' AS info''
+);
+
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW vi_pedidos_lineas AS
+SELECT pl.*,
+       pl.CANTIDAD_PEDLIN - IFNULL(pl.CANTIDAD_ENTREGADA_PEDLIN, 0)
+         AS CANTIDAD_PENDIENTE_CALC_PEDLIN
+  FROM fza_pedidos_lineas pl;
+', '2026-07-08 07:39:00', '2026-07-08 07:39:00', 'Administrador', 'Administrador'),
+  ('523', 'pedidos_albaran_procs', 'DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_FIN;
+
+DELIMITER //
+
+CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_FIN(
+  IN p_NUMERO_ALB varchar(20),
+  IN p_SERIE_ALB varchar(20),
+  IN p_NUMERO_PED varchar(20),
+  IN p_SERIE_PED varchar(20),
+  IN p_USUARIO varchar(100))
+BEGIN
+  DECLARE v_total_base decimal(18,6) DEFAULT 0;
+  DECLARE v_total_iva decimal(18,6) DEFAULT 0;
+  DECLARE v_pendientes int DEFAULT 0;
+  SELECT IFNULL(SUM(CANTIDAD_ALBLIN *
+                    PRECIO_VENTA_SIVA_ARTICULO_ALBLIN), 0),
+         IFNULL(SUM(CANTIDAD_ALBLIN *
+              (PRECIO_VENTA_CIVA_ARTICULO_ALBLIN -
+               PRECIO_VENTA_SIVA_ARTICULO_ALBLIN)), 0)
+    INTO v_total_base, v_total_iva
+    FROM fza_albaranes_lineas
+   WHERE NUMERO_ALB_ALBLIN = p_NUMERO_ALB
+     AND SERIE_ALB_ALBLIN = p_SERIE_ALB;
+  UPDATE fza_albaranes
+     SET TOTAL_BASES_ALB = v_total_base,
+         TOTAL_IMPUESTOS_ALB = v_total_iva,
+         TOTAL_LIQUIDO_ALB = v_total_base + v_total_iva,
+         INSTANTE_MODIF = NOW(),
+         USUARIO_MODIF = p_USUARIO
+   WHERE NUMERO_ALB = p_NUMERO_ALB
+     AND SERIE_ALB = p_SERIE_ALB;
+  SELECT COUNT(*)
+    INTO v_pendientes
+    FROM fza_pedidos_lineas
+   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
+     AND SERIE_PED_PEDLIN = p_SERIE_PED
+     AND IFNULL(ESENTREGADA_PEDLIN, ''N'') <> ''S'';
+  IF v_pendientes = 0 THEN
+    UPDATE fza_pedidos
+       SET ESTADO_PED = ''ENTREGADO'',
+           INSTANTE_MODIF = NOW(),
+           USUARIO_MODIF = p_USUARIO
+     WHERE NUMERO_PED = p_NUMERO_PED
+       AND SERIE_PED = p_SERIE_PED;
+  ELSE
+    UPDATE fza_pedidos
+       SET ESTADO_PED = ''PARCIAL'',
+           INSTANTE_MODIF = NOW(),
+           USUARIO_MODIF = p_USUARIO
+     WHERE NUMERO_PED = p_NUMERO_PED
+       AND SERIE_PED = p_SERIE_PED;
+  END IF;
+END//
+
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_INICIO;
+
+DELIMITER //
+
+CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_INICIO(
+  IN p_NUMERO_PED varchar(20),
+  IN p_SERIE_PED varchar(20),
+  IN p_USUARIO varchar(100),
+  OUT p_NUMERO_ALB varchar(20),
+  OUT p_SERIE_ALB varchar(20))
+BEGIN
+  DECLARE v_serie varchar(20);
+  DECLARE v_numero varchar(20);
+  SELECT SERIE_PED
+    INTO v_serie
+    FROM fza_pedidos
+   WHERE NUMERO_PED = p_NUMERO_PED
+     AND SERIE_PED = p_SERIE_PED;
+  SELECT LPAD(IFNULL(MAX(CAST(NUMERO_ALB AS UNSIGNED)), 0) + 1, 6, ''0'')
+    INTO v_numero
+    FROM fza_albaranes
+   WHERE SERIE_ALB = v_serie;
+  INSERT INTO fza_albaranes (
+    NUMERO_ALB, SERIE_ALB, FECHA_ALB, ESTADO_ALB,
+    NUMERO_PED_ALB, SERIE_PED_ALB,
+    CODIGO_EMP_ALB, CODIGO_ALM_ALB,
+    RAZON_SOCIAL_EMPRESA_ALB, NIF_EMPRESA_ALB,
+    MOVIL_EMPRESA_ALB, EMAIL_EMPRESA_ALB,
+    DIRECCION1_EMPRESA_ALB, DIRECCION2_EMPRESA_ALB,
+    POBLACION_EMPRESA_ALB, PROVINCIA_EMPRESA_ALB,
+    CODIGO_PAI_EMPRESA_ALB, NOMBRE_PAI_EMPRESA_ALB,
+    CODIGO_POSTAL_EMPRESA_ALB, GRUPO_ZONA_IVA_EMPRESA_ALB,
+    CODIGO_CLI_ALB, RAZON_SOCIAL_CLIENTE_ALB,
+    NIF_CLIENTE_ALB, MOVIL_CLIENTE_ALB, EMAIL_CLIENTE_ALB,
+    DIRECCION1_CLIENTE_ALB, DIRECCION2_CLIENTE_ALB,
+    POBLACION_CLIENTE_ALB, PROVINCIA_CLIENTE_ALB,
+    CODIGO_POSTAL_CLIENTE_ALB, CODIGO_PAI_CLIENTE_ALB,
+    NOMBRE_PAI_CLIENTE_ALB, NOMBRE_CLI_ENVIO_ALB,
+    MOVIL_CLIENTE_ENVIO_ALB, DIRECCION1_CLIENTE_ENVIO_ALB,
+    DIRECCION2_CLIENTE_ENVIO_ALB, POBLACION_CLIENTE_ENVIO_ALB,
+    PROVINCIA_CLIENTE_ENVIO_ALB, CODIGO_POSTAL_CLIENTE_ENVIO_ALB,
+    CODIGO_PAI_CLIENTE_ENVIO_ALB, NOMBRE_PAI_CLIENTE_ENVIO_ALB,
+    TRANSPORTISTA_ALB, CODIGO_IVA_ALB,
+    ESIVA_RECARGO_CLIENTE_ALB, ESIVA_EXENTO_CLIENTE_ALB,
+    ESINTRACOMUNITARIO_CLIENTE_ALB, TARIFA_ARTICULO_CLIENTE_ALB,
+    ESIMP_INCL_TARIFA_CLIENTE_ALB, PORCENTAJE_IVAN_ALB,
+    PORCENTAJE_IVAR_ALB, PORCENTAJE_IVAS_ALB, PORCENTAJE_IVAE_ALB,
+    FORMA_PAGO_ALB, CONTADOR_LINEAS_ALB,
+    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)
+  SELECT v_numero, v_serie, CURRENT_DATE(), ''ABIERTO'',
+         p_NUMERO_PED, p_SERIE_PED,
+         P.CODIGO_EMP_PED, P.CODIGO_ALM_PED,
+         P.RAZON_SOCIAL_EMPRESA_PED, P.NIF_EMPRESA_PED,
+         P.MOVIL_EMPRESA_PED, P.EMAIL_EMPRESA_PED,
+         P.DIRECCION1_EMPRESA_PED, P.DIRECCION2_EMPRESA_PED,
+         P.POBLACION_EMPRESA_PED, P.PROVINCIA_EMPRESA_PED,
+         P.CODIGO_PAI_EMPRESA_PED, P.NOMBRE_PAI_EMPRESA_PED,
+         P.CODIGO_POSTAL_EMPRESA_PED, P.GRUPO_ZONA_IVA_EMPRESA_PED,
+         P.CODIGO_CLI_PED, P.RAZON_SOCIAL_CLIENTE_FISCAL_PED,
+         P.NIF_CLIENTE_PED, P.MOVIL_CLIENTE_FISCAL_PED,
+         P.EMAIL_CLIENTE_PED, P.DIRECCION1_CLIENTE_FISCAL_PED,
+         P.DIRECCION2_CLIENTE_FISCAL_PED,
+         P.POBLACION_CLIENTE_FISCAL_PED,
+         P.PROVINCIA_CLIENTE_FISCAL_PED,
+         P.CODIGO_POSTAL_CLIENTE_FISCAL_PED,
+         P.CODIGO_PAI_CLIENTE_FISCAL_PED,
+         P.NOMBRE_PAI_CLIENTE_FISCAL_PED,
+         P.NOMBRE_CLI_ENVIO_PED, P.MOVIL_CLIENTE_ENVIO_PED,
+         P.DIRECCION1_CLIENTE_ENVIO_PED,
+         P.DIRECCION2_CLIENTE_ENVIO_PED,
+         P.POBLACION_CLIENTE_ENVIO_PED,
+         P.PROVINCIA_CLIENTE_ENVIO_PED,
+         P.CODIGO_POSTAL_CLIENTE_ENVIO_PED,
+         P.CODIGO_PAI_CLIENTE_ENVIO_PED,
+         P.NOMBRE_PAI_CLIENTE_ENVIO_PED,
+         P.TRANSPORTISTAPS_PED, P.CODIGO_IVA_PED,
+         P.ESIVA_RECARGO_CLIENTE_PED, P.ESIVA_EXENTO_CLIENTE_PED,
+         P.ESINTRACOMUNITARIO_CLIENTE_PED,
+         P.TARIFA_ARTICULO_CLIENTE_PED,
+         P.ESIMP_INCL_TARIFA_CLIENTE_PED, P.PORCENTAJE_IVAN_PED,
+         P.PORCENTAJE_IVAR_PED, P.PORCENTAJE_IVAS_PED,
+         P.PORCENTAJE_IVAE_PED, P.FORMA_PAGO_PED, ''0'',
+         NOW(), p_USUARIO, p_USUARIO
+    FROM fza_pedidos P
+   WHERE P.NUMERO_PED = p_NUMERO_PED
+     AND P.SERIE_PED = p_SERIE_PED;
+  SET p_NUMERO_ALB = v_numero;
+  SET p_SERIE_ALB = v_serie;
+END//
+
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_LINEA;
+
+DELIMITER //
+
+CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_LINEA(
+  IN p_NUMERO_ALB varchar(20),
+  IN p_SERIE_ALB varchar(20),
+  IN p_NUMERO_PED varchar(20),
+  IN p_SERIE_PED varchar(20),
+  IN p_LINEA_PED varchar(4),
+  IN p_CANTIDAD decimal(19,6),
+  IN p_CODIGO_ALM varchar(10),
+  IN p_USUARIO varchar(100))
+PRC: BEGIN
+  DECLARE v_linea varchar(4);
+  DECLARE v_pedida decimal(19,6) DEFAULT 0;
+  DECLARE v_albaranada decimal(19,6) DEFAULT 0;
+  DECLARE v_objetivo decimal(19,6) DEFAULT 0;
+  DECLARE v_pendiente decimal(19,6) DEFAULT 0;
+  DECLARE v_cantidad decimal(19,6) DEFAULT 0;
+  SELECT IFNULL(CANTIDAD_PEDLIN, 0)
+    INTO v_pedida
+    FROM fza_pedidos_lineas
+   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
+     AND SERIE_PED_PEDLIN = p_SERIE_PED
+     AND LINEA_PEDLIN = p_LINEA_PED;
+  SELECT IFNULL(SUM(CANTIDAD_ALBLIN), 0)
+    INTO v_albaranada
+    FROM fza_albaranes_lineas
+   WHERE NUMERO_PED_ALBLIN = p_NUMERO_PED
+     AND SERIE_PED_ALBLIN = p_SERIE_PED
+     AND LINEA_PED_ALBLIN = p_LINEA_PED;
+  SET v_objetivo = LEAST(IFNULL(p_CANTIDAD, 0), v_pedida);
+  SET v_pendiente = v_pedida - v_albaranada;
+  SET v_cantidad = v_objetivo - v_albaranada;
+  IF v_pedida <= 0 OR v_pendiente <= 0 OR v_cantidad <= 0 THEN
+    LEAVE PRC;
+  END IF;
+  IF v_cantidad > v_pendiente THEN
+    SET v_cantidad = v_pendiente;
+  END IF;
+  UPDATE fza_albaranes
+     SET CONTADOR_LINEAS_ALB = LPAD(LAST_INSERT_ID(
+           IFNULL(CAST(NULLIF(CONTADOR_LINEAS_ALB, '''')
+           AS UNSIGNED), 0) + 10), 8, ''0'')
+   WHERE NUMERO_ALB = p_NUMERO_ALB
+     AND SERIE_ALB = p_SERIE_ALB;
+  IF ROW_COUNT() = 0 THEN
+    LEAVE PRC;
+  END IF;
+  SET v_linea = LPAD(LAST_INSERT_ID(), 4, ''0'');
+  INSERT INTO fza_albaranes_lineas (
+    NUMERO_ALB_ALBLIN, SERIE_ALB_ALBLIN, LINEA_ALBLIN,
+    NUMERO_PED_ALBLIN, SERIE_PED_ALBLIN, LINEA_PED_ALBLIN,
+    CODIGO_ART_ALBLIN, CODIGO_UNIDAD_ALBLIN,
+    CODIGO_FAM_ALBLIN, NOMBRE_FAM_ALBLIN,
+    DESCRIPCION_ARTICULO_ALBLIN, TIPO_CANTIDAD_ARTICULO_ALBLIN,
+    CANTIDAD_ALBLIN, CODIGO_TAR_ALBLIN, ESIMP_INCL_TARIFA_ALBLIN,
+    TIPO_IVA_ARTICULO_ALBLIN, PORCENTAJE_IVA_ALBLIN,
+    PRECIO_VENTA_SIVA_ARTICULO_ALBLIN,
+    PRECIO_VENTA_CIVA_ARTICULO_ALBLIN, TOTAL_ALBLIN,
+    CODIGO_ALMACEN_ALBLIN, INSTANTE_ALTA, USUARIO_ALTA,
+    USUARIO_MODIF)
+  SELECT p_NUMERO_ALB, p_SERIE_ALB, v_linea,
+         p_NUMERO_PED, p_SERIE_PED, p_LINEA_PED,
+         PL.CODIGO_ART_PEDLIN,
+         COALESCE(NULLIF(PL.CODIGOPRODPS_PEDLIN, ''''),
+                  NULLIF(PL.CODIGO_UNIDAD_PEDLIN, ''''),
+                  PL.CODIGO_ART_PEDLIN),
+         PL.CODIGO_FAM_PEDLIN, PL.NOMBRE_FAM_PEDLIN,
+         PL.DESCRIPCION_ARTICULO_PEDLIN,
+         PL.TIPO_CANTIDAD_ARTICULO_PEDLIN,
+         v_cantidad, PL.CODIGO_TAR_PEDLIN,
+         PL.ESIMP_INCL_TARIFA_PEDLIN,
+         PL.TIPO_IVA_ARTICULO_PEDLIN, PL.PORCENTAJE_IVA_PEDLIN,
+         PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN,
+         PL.PRECIO_VENTA_CIVA_ARTICULO_PEDLIN,
+         v_cantidad * PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN,
+         COALESCE(NULLIF(p_CODIGO_ALM, ''''),
+                  PL.CODIGO_ALMACEN_PEDLIN),
+         NOW(), p_USUARIO, p_USUARIO
+    FROM fza_pedidos_lineas PL
+   WHERE PL.NUMERO_PED_PEDLIN = p_NUMERO_PED
+     AND PL.SERIE_PED_PEDLIN = p_SERIE_PED
+     AND PL.LINEA_PEDLIN = p_LINEA_PED;
+  UPDATE fza_pedidos_lineas
+     SET CANTIDAD_ENTREGADA_PEDLIN = v_albaranada + v_cantidad,
+         CANTIDAD_PENDIENTE_PEDLIN =
+           GREATEST(CANTIDAD_PEDLIN -
+                    (v_albaranada + v_cantidad), 0),
+         CANTIDAD_A_ALBARANAR_PEDLIN = 0,
+         ESENTREGADA_PEDLIN = CASE
+           WHEN CANTIDAD_PEDLIN <= v_albaranada + v_cantidad
+           THEN ''S'' ELSE ''N'' END,
+         INSTANTE_MODIF = NOW(),
+         USUARIO_MODIF = p_USUARIO
+   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
+     AND SERIE_PED_PEDLIN = p_SERIE_PED
+     AND LINEA_PEDLIN = p_LINEA_PED;
+END//
+
+DELIMITER ;
+', '2026-07-08 07:39:07', '2026-07-08 07:39:07', 'Administrador', 'Administrador'),
+  ('524', 'pedidos_albaran_procs', 'DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_FIN;
+
+DELIMITER //
+
+CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_FIN(
+  IN p_NUMERO_ALB varchar(20),
+  IN p_SERIE_ALB varchar(20),
+  IN p_NUMERO_PED varchar(20),
+  IN p_SERIE_PED varchar(20),
+  IN p_USUARIO varchar(100))
+BEGIN
+  DECLARE v_total_base decimal(18,6) DEFAULT 0;
+  DECLARE v_total_iva decimal(18,6) DEFAULT 0;
+  DECLARE v_pendientes int DEFAULT 0;
+  SELECT IFNULL(SUM(CANTIDAD_ALBLIN *
+                    PRECIO_VENTA_SIVA_ARTICULO_ALBLIN), 0),
+         IFNULL(SUM(CANTIDAD_ALBLIN *
+              (PRECIO_VENTA_CIVA_ARTICULO_ALBLIN -
+               PRECIO_VENTA_SIVA_ARTICULO_ALBLIN)), 0)
+    INTO v_total_base, v_total_iva
+    FROM fza_albaranes_lineas
+   WHERE NUMERO_ALB_ALBLIN = p_NUMERO_ALB
+     AND SERIE_ALB_ALBLIN = p_SERIE_ALB;
+  UPDATE fza_albaranes
+     SET TOTAL_BASES_ALB = v_total_base,
+         TOTAL_IMPUESTOS_ALB = v_total_iva,
+         TOTAL_LIQUIDO_ALB = v_total_base + v_total_iva,
+         INSTANTE_MODIF = NOW(),
+         USUARIO_MODIF = p_USUARIO
+   WHERE NUMERO_ALB = p_NUMERO_ALB
+     AND SERIE_ALB = p_SERIE_ALB;
+  SELECT COUNT(*)
+    INTO v_pendientes
+    FROM fza_pedidos_lineas
+   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
+     AND SERIE_PED_PEDLIN = p_SERIE_PED
+     AND IFNULL(CANTIDAD_PEDLIN, 0) >
+         IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0);
+  IF v_pendientes = 0 THEN
+    UPDATE fza_pedidos
+       SET ESTADO_PED = ''ENTREGADO'',
+           INSTANTE_MODIF = NOW(),
+           USUARIO_MODIF = p_USUARIO
+     WHERE NUMERO_PED = p_NUMERO_PED
+       AND SERIE_PED = p_SERIE_PED;
+  ELSE
+    UPDATE fza_pedidos
+       SET ESTADO_PED = ''PARCIAL'',
+           INSTANTE_MODIF = NOW(),
+           USUARIO_MODIF = p_USUARIO
+     WHERE NUMERO_PED = p_NUMERO_PED
+       AND SERIE_PED = p_SERIE_PED;
+  END IF;
+END//
+
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_INICIO;
+
+DELIMITER //
+
+CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_INICIO(
+  IN p_NUMERO_PED varchar(20),
+  IN p_SERIE_PED varchar(20),
+  IN p_USUARIO varchar(100),
+  OUT p_NUMERO_ALB varchar(20),
+  OUT p_SERIE_ALB varchar(20))
+BEGIN
+  DECLARE v_serie varchar(20);
+  DECLARE v_numero varchar(20);
+  SELECT SERIE_PED
+    INTO v_serie
+    FROM fza_pedidos
+   WHERE NUMERO_PED = p_NUMERO_PED
+     AND SERIE_PED = p_SERIE_PED;
+  SELECT LPAD(IFNULL(MAX(CAST(NUMERO_ALB AS UNSIGNED)), 0) + 1, 6, ''0'')
+    INTO v_numero
+    FROM fza_albaranes
+   WHERE SERIE_ALB = v_serie;
+  INSERT INTO fza_albaranes (
+    NUMERO_ALB, SERIE_ALB, FECHA_ALB, ESTADO_ALB,
+    NUMERO_PED_ALB, SERIE_PED_ALB,
+    CODIGO_EMP_ALB, CODIGO_ALM_ALB,
+    RAZON_SOCIAL_EMPRESA_ALB, NIF_EMPRESA_ALB,
+    MOVIL_EMPRESA_ALB, EMAIL_EMPRESA_ALB,
+    DIRECCION1_EMPRESA_ALB, DIRECCION2_EMPRESA_ALB,
+    POBLACION_EMPRESA_ALB, PROVINCIA_EMPRESA_ALB,
+    CODIGO_PAI_EMPRESA_ALB, NOMBRE_PAI_EMPRESA_ALB,
+    CODIGO_POSTAL_EMPRESA_ALB, GRUPO_ZONA_IVA_EMPRESA_ALB,
+    CODIGO_CLI_ALB, RAZON_SOCIAL_CLIENTE_ALB,
+    NIF_CLIENTE_ALB, MOVIL_CLIENTE_ALB, EMAIL_CLIENTE_ALB,
+    DIRECCION1_CLIENTE_ALB, DIRECCION2_CLIENTE_ALB,
+    POBLACION_CLIENTE_ALB, PROVINCIA_CLIENTE_ALB,
+    CODIGO_POSTAL_CLIENTE_ALB, CODIGO_PAI_CLIENTE_ALB,
+    NOMBRE_PAI_CLIENTE_ALB, NOMBRE_CLI_ENVIO_ALB,
+    MOVIL_CLIENTE_ENVIO_ALB, DIRECCION1_CLIENTE_ENVIO_ALB,
+    DIRECCION2_CLIENTE_ENVIO_ALB, POBLACION_CLIENTE_ENVIO_ALB,
+    PROVINCIA_CLIENTE_ENVIO_ALB, CODIGO_POSTAL_CLIENTE_ENVIO_ALB,
+    CODIGO_PAI_CLIENTE_ENVIO_ALB, NOMBRE_PAI_CLIENTE_ENVIO_ALB,
+    TRANSPORTISTA_ALB, CODIGO_IVA_ALB,
+    ESIVA_RECARGO_CLIENTE_ALB, ESIVA_EXENTO_CLIENTE_ALB,
+    ESINTRACOMUNITARIO_CLIENTE_ALB, TARIFA_ARTICULO_CLIENTE_ALB,
+    ESIMP_INCL_TARIFA_CLIENTE_ALB, PORCENTAJE_IVAN_ALB,
+    PORCENTAJE_IVAR_ALB, PORCENTAJE_IVAS_ALB, PORCENTAJE_IVAE_ALB,
+    FORMA_PAGO_ALB, CONTADOR_LINEAS_ALB,
+    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)
+  SELECT v_numero, v_serie, CURRENT_DATE(), ''ABIERTO'',
+         p_NUMERO_PED, p_SERIE_PED,
+         P.CODIGO_EMP_PED, P.CODIGO_ALM_PED,
+         P.RAZON_SOCIAL_EMPRESA_PED, P.NIF_EMPRESA_PED,
+         P.MOVIL_EMPRESA_PED, P.EMAIL_EMPRESA_PED,
+         P.DIRECCION1_EMPRESA_PED, P.DIRECCION2_EMPRESA_PED,
+         P.POBLACION_EMPRESA_PED, P.PROVINCIA_EMPRESA_PED,
+         P.CODIGO_PAI_EMPRESA_PED, P.NOMBRE_PAI_EMPRESA_PED,
+         P.CODIGO_POSTAL_EMPRESA_PED, P.GRUPO_ZONA_IVA_EMPRESA_PED,
+         P.CODIGO_CLI_PED, P.RAZON_SOCIAL_CLIENTE_FISCAL_PED,
+         P.NIF_CLIENTE_PED, P.MOVIL_CLIENTE_FISCAL_PED,
+         P.EMAIL_CLIENTE_PED, P.DIRECCION1_CLIENTE_FISCAL_PED,
+         P.DIRECCION2_CLIENTE_FISCAL_PED,
+         P.POBLACION_CLIENTE_FISCAL_PED,
+         P.PROVINCIA_CLIENTE_FISCAL_PED,
+         P.CODIGO_POSTAL_CLIENTE_FISCAL_PED,
+         P.CODIGO_PAI_CLIENTE_FISCAL_PED,
+         P.NOMBRE_PAI_CLIENTE_FISCAL_PED,
+         P.NOMBRE_CLI_ENVIO_PED, P.MOVIL_CLIENTE_ENVIO_PED,
+         P.DIRECCION1_CLIENTE_ENVIO_PED,
+         P.DIRECCION2_CLIENTE_ENVIO_PED,
+         P.POBLACION_CLIENTE_ENVIO_PED,
+         P.PROVINCIA_CLIENTE_ENVIO_PED,
+         P.CODIGO_POSTAL_CLIENTE_ENVIO_PED,
+         P.CODIGO_PAI_CLIENTE_ENVIO_PED,
+         P.NOMBRE_PAI_CLIENTE_ENVIO_PED,
+         P.TRANSPORTISTAPS_PED, P.CODIGO_IVA_PED,
+         P.ESIVA_RECARGO_CLIENTE_PED, P.ESIVA_EXENTO_CLIENTE_PED,
+         P.ESINTRACOMUNITARIO_CLIENTE_PED,
+         P.TARIFA_ARTICULO_CLIENTE_PED,
+         P.ESIMP_INCL_TARIFA_CLIENTE_PED, P.PORCENTAJE_IVAN_PED,
+         P.PORCENTAJE_IVAR_PED, P.PORCENTAJE_IVAS_PED,
+         P.PORCENTAJE_IVAE_PED, P.FORMA_PAGO_PED, ''0'',
+         NOW(), p_USUARIO, p_USUARIO
+    FROM fza_pedidos P
+   WHERE P.NUMERO_PED = p_NUMERO_PED
+     AND P.SERIE_PED = p_SERIE_PED;
+  SET p_NUMERO_ALB = v_numero;
+  SET p_SERIE_ALB = v_serie;
+END//
+
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_LINEA;
+
+DELIMITER //
+
+CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_LINEA(
+  IN p_NUMERO_ALB varchar(20),
+  IN p_SERIE_ALB varchar(20),
+  IN p_NUMERO_PED varchar(20),
+  IN p_SERIE_PED varchar(20),
+  IN p_LINEA_PED varchar(4),
+  IN p_CANTIDAD decimal(19,6),
+  IN p_CODIGO_ALM varchar(10),
+  IN p_USUARIO varchar(100))
+PRC: BEGIN
+  DECLARE v_linea varchar(4);
+  DECLARE v_pedida decimal(19,6) DEFAULT 0;
+  DECLARE v_albaranada decimal(19,6) DEFAULT 0;
+  DECLARE v_objetivo decimal(19,6) DEFAULT 0;
+  DECLARE v_pendiente decimal(19,6) DEFAULT 0;
+  DECLARE v_cantidad decimal(19,6) DEFAULT 0;
+  SELECT IFNULL(CANTIDAD_PEDLIN, 0)
+    INTO v_pedida
+    FROM fza_pedidos_lineas
+   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
+     AND SERIE_PED_PEDLIN = p_SERIE_PED
+     AND LINEA_PEDLIN = p_LINEA_PED;
+  SELECT IFNULL(SUM(CANTIDAD_ALBLIN), 0)
+    INTO v_albaranada
+    FROM fza_albaranes_lineas
+   WHERE NUMERO_PED_ALBLIN = p_NUMERO_PED
+     AND SERIE_PED_ALBLIN = p_SERIE_PED
+     AND LINEA_PED_ALBLIN = p_LINEA_PED;
+  SET v_objetivo = LEAST(IFNULL(p_CANTIDAD, 0), v_pedida);
+  SET v_pendiente = v_pedida - v_albaranada;
+  SET v_cantidad = v_objetivo - v_albaranada;
+  IF v_pedida <= 0 OR v_pendiente <= 0 OR v_cantidad <= 0 THEN
+    LEAVE PRC;
+  END IF;
+  IF v_cantidad > v_pendiente THEN
+    SET v_cantidad = v_pendiente;
+  END IF;
+  UPDATE fza_albaranes
+     SET CONTADOR_LINEAS_ALB = LPAD(LAST_INSERT_ID(
+           IFNULL(CAST(NULLIF(CONTADOR_LINEAS_ALB, '''')
+           AS UNSIGNED), 0) + 10), 8, ''0'')
+   WHERE NUMERO_ALB = p_NUMERO_ALB
+     AND SERIE_ALB = p_SERIE_ALB;
+  IF ROW_COUNT() = 0 THEN
+    LEAVE PRC;
+  END IF;
+  SET v_linea = LPAD(LAST_INSERT_ID(), 4, ''0'');
+  INSERT INTO fza_albaranes_lineas (
+    NUMERO_ALB_ALBLIN, SERIE_ALB_ALBLIN, LINEA_ALBLIN,
+    NUMERO_PED_ALBLIN, SERIE_PED_ALBLIN, LINEA_PED_ALBLIN,
+    CODIGO_ART_ALBLIN, CODIGO_UNIDAD_ALBLIN,
+    CODIGO_FAM_ALBLIN, NOMBRE_FAM_ALBLIN,
+    DESCRIPCION_ARTICULO_ALBLIN, TIPO_CANTIDAD_ARTICULO_ALBLIN,
+    CANTIDAD_ALBLIN, CODIGO_TAR_ALBLIN, ESIMP_INCL_TARIFA_ALBLIN,
+    TIPO_IVA_ARTICULO_ALBLIN, PORCENTAJE_IVA_ALBLIN,
+    PRECIO_VENTA_SIVA_ARTICULO_ALBLIN,
+    PRECIO_VENTA_CIVA_ARTICULO_ALBLIN, TOTAL_ALBLIN,
+    CODIGO_ALMACEN_ALBLIN, INSTANTE_ALTA, USUARIO_ALTA,
+    USUARIO_MODIF)
+  SELECT p_NUMERO_ALB, p_SERIE_ALB, v_linea,
+         p_NUMERO_PED, p_SERIE_PED, p_LINEA_PED,
+         PL.CODIGO_ART_PEDLIN,
+         COALESCE(NULLIF(PL.CODIGOPRODPS_PEDLIN, ''''),
+                  NULLIF(PL.CODIGO_UNIDAD_PEDLIN, ''''),
+                  PL.CODIGO_ART_PEDLIN),
+         PL.CODIGO_FAM_PEDLIN, PL.NOMBRE_FAM_PEDLIN,
+         PL.DESCRIPCION_ARTICULO_PEDLIN,
+         PL.TIPO_CANTIDAD_ARTICULO_PEDLIN,
+         v_cantidad, PL.CODIGO_TAR_PEDLIN,
+         PL.ESIMP_INCL_TARIFA_PEDLIN,
+         PL.TIPO_IVA_ARTICULO_PEDLIN, PL.PORCENTAJE_IVA_PEDLIN,
+         PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN,
+         PL.PRECIO_VENTA_CIVA_ARTICULO_PEDLIN,
+         v_cantidad * PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN,
+         COALESCE(NULLIF(p_CODIGO_ALM, ''''),
+                  PL.CODIGO_ALMACEN_PEDLIN),
+         NOW(), p_USUARIO, p_USUARIO
+    FROM fza_pedidos_lineas PL
+   WHERE PL.NUMERO_PED_PEDLIN = p_NUMERO_PED
+     AND PL.SERIE_PED_PEDLIN = p_SERIE_PED
+     AND PL.LINEA_PEDLIN = p_LINEA_PED;
+  UPDATE fza_pedidos_lineas
+     SET CANTIDAD_ENTREGADA_PEDLIN = v_albaranada + v_cantidad,
+         CANTIDAD_PENDIENTE_PEDLIN =
+           GREATEST(CANTIDAD_PEDLIN -
+                    (v_albaranada + v_cantidad), 0),
+         CANTIDAD_A_ALBARANAR_PEDLIN = 0,
+         ESENTREGADA_PEDLIN = CASE
+           WHEN CANTIDAD_PEDLIN <= v_albaranada + v_cantidad
+           THEN ''S'' ELSE ''N'' END,
+         INSTANTE_MODIF = NOW(),
+         USUARIO_MODIF = p_USUARIO
+   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
+     AND SERIE_PED_PEDLIN = p_SERIE_PED
+     AND LINEA_PEDLIN = p_LINEA_PED;
+END//
+
+DELIMITER ;
+', '2026-07-08 08:09:51', '2026-07-08 08:09:51', 'Administrador', 'Administrador'),
+  ('525', NULL, '-- tallas reales en los SKUs del artículo
+SELECT s.CODIGO_UNIDAD_SKU, sa.ID_AV_SA, av.AV
+  FROM fza_articulos_skus s
+  JOIN fza_atributos_sku sa ON sa.CODIGO_UNIDAD_SKU_SA = s.CODIGO_UNIDAD_SKU
+  JOIN fza_atributos_valores av ON av.ID_AV = sa.ID_AV_SA
+ WHERE s.CODIGO_ART_SKU = ''PANT-CHIN'';
+
+-- asignación actual del artículo
+SELECT * FROM fza_articulos_conjuntos_asign WHERE CODIGO_ART_ACA = ''PANT-CHIN'';', '2026-07-09 06:02:29', '2026-07-09 06:02:29', 'Administrador', 'Administrador'),
+  ('526', NULL, '-- 1. Conjunto de tallas de pantalón EU 38-44 (si no existe)
+INSERT INTO fza_atributos_conjuntos
+  (NOMBRE_AC, NOMBRE_CORTO_AC, ID_VAR_AC, ID_VA_AC, ESACTIVO_AC,
+   INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)
+SELECT ''Tallas Pantalón EU 38-44'', ''PANT'', ''TC'', ''TAL'', ''S'',
+       NOW(), NOW(), ''Administrador'', ''Administrador''
+ WHERE NOT EXISTS (SELECT 1 FROM fza_atributos_conjuntos
+                    WHERE NOMBRE_AC = ''Tallas Pantalón EU 38-44'');
+
+SET @iAc := (SELECT ID_AC FROM fza_atributos_conjuntos
+              WHERE NOMBRE_AC = ''Tallas Pantalón EU 38-44'');
+
+-- 2. Detalle 38..44 (AVs ya existentes)
+INSERT IGNORE INTO fza_atributos_conjuntos_det
+  (ID_AC_ACD, ID_AV_ACD, ORDEN_ACD, INSTANTE_MODIF, INSTANTE_ALTA,
+   USUARIO_ALTA, USUARIO_MODIF) VALUES
+  (@iAc, 122, 10, NOW(), NOW(), ''Administrador'', ''Administrador''), -- 38
+  (@iAc, 227, 20, NOW(), NOW(), ''Administrador'', ''Administrador''), -- 39
+  (@iAc, 225, 30, NOW(), NOW(), ''Administrador'', ''Administrador''), -- 40
+  (@iAc, 224, 40, NOW(), NOW(), ''Administrador'', ''Administrador''), -- 41
+  (@iAc, 126, 50, NOW(), NOW(), ''Administrador'', ''Administrador''), -- 42
+  (@iAc, 127, 60, NOW(), NOW(), ''Administrador'', ''Administrador''), -- 43
+  (@iAc, 226, 70, NOW(), NOW(), ''Administrador'', ''Administrador''); -- 44
+
+-- 3. Reasignar el pivote de talla del artículo
+UPDATE fza_articulos_conjuntos_asign
+   SET ID_AC_ACA = @iAc,
+       INSTANTE_MODIF = NOW(), USUARIO_MODIF = ''Administrador''
+ WHERE CODIGO_ART_ACA = ''PANT-CHIN''
+   AND ID_VA_ACA = ''TAL'';', '2026-07-09 06:06:49', '2026-07-09 06:06:49', 'Administrador', 'Administrador'),
+  ('527', NULL, 'DELETE FROM fza_usuarios_perfiles
+ WHERE SUBKEY_USUPER LIKE ''tvLineasFactura\\_%'';', '2026-07-09 06:37:24', '2026-07-09 06:37:24', 'Administrador', 'Administrador'),
+  ('528', 'facturas_columnas_sku', '-- =============================================================================
+-- Contrato ColumnSKUcxGrid en FACTURAS DE VENTA (mayor y simplificadas)
+-- =============================================================================
+-- 1. fza_facturas_lineas ya guarda el SKU (CODIGO_UNIDAD_FACLIN, con
+--    indice IDX_FACLIN_UNIDAD); se anaden los atributos desglosados
+--    (columnas reales, como en pedidos/albaranes).
+--
+-- 2. SIN tabla de celdas y SIN ID_AC_PIVOT: el modo "Tallas en
+--    horizontal" de facturas es inLibGridPivoteVenta (mcsTallasHorPed,
+--    pivot SOLO visual sobre lineas SKU reales) con BandaUnica: las
+--    lineas fiscales no se consolidan ni se transforman.
+--
+-- 3. vi_facturas_lineas listaba las columnas UNA a UNA y no conoce las
+--    nuevas: se regenera con fl.* para que arrastre estas columnas y
+--    cualquier futura (mismo criterio que vi_pedidos_lineas).
+--    vi_facturas_lineas_print NO se toca (impresion).
+--
+-- Sufijo: _FACLIN. Idempotente.
+-- =============================================================================
+
+-- 1. Columnas nuevas en las lineas ----------------------------------------
+
+DROP PROCEDURE IF EXISTS prc_tmp_add_col_faclin;
+
+DELIMITER //
+CREATE PROCEDURE prc_tmp_add_col_faclin(
+  IN pCol VARCHAR(64), IN pDef VARCHAR(200))
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = ''fza_facturas_lineas''
+                    AND COLUMN_NAME = pCol) THEN
+    SET @s := CONCAT(''ALTER TABLE fza_facturas_lineas '',
+                     ''ADD COLUMN '', pCol, '' '', pDef);
+    PREPARE stmt FROM @s;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+  END IF;
+END//
+DELIMITER ;
+
+CALL prc_tmp_add_col_faclin(''ATTR1_VALOR_FACLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_faclin(''ATTR1_NOMBRE_FACLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_faclin(''ATTR2_VALOR_FACLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_faclin(''ATTR2_NOMBRE_FACLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_faclin(''ATTR3_VALOR_FACLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_faclin(''ATTR3_NOMBRE_FACLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_faclin(''ATTR4_VALOR_FACLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_faclin(''ATTR4_NOMBRE_FACLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_faclin(''ATTR5_VALOR_FACLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_faclin(''ATTR5_NOMBRE_FACLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_faclin(''NUM_ATRIBUTOS_FACLIN'',
+  ''int(11) NOT NULL DEFAULT 0 COMMENT ''''Atributos requeridos del articulo'''''');
+
+DROP PROCEDURE IF EXISTS prc_tmp_add_col_faclin;
+
+-- 2. Vista de lineas -------------------------------------------------------
+-- El Mto lee de vi_facturas_lineas; sin las ATTR en el dataset el modo
+-- Auto degradaria a SKU y el desglose no podria pintar Color/Talla.
+-- CREATE OR REPLACE es idempotente.
+
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW vi_facturas_lineas AS
+SELECT fl.*
+  FROM fza_facturas_lineas fl;
+', '2026-07-09 06:49:17', '2026-07-09 06:49:17', 'Administrador', 'Administrador'),
+  ('529', 'pedidos_compra_columnas_sku', '-- =============================================================================
+-- Contrato ColumnSKUcxGrid en PEDIDOS DE COMPRA
+-- =============================================================================
+-- 1. fza_pedidos_compra_lineas ya guarda SKU (CODIGO_UNIDAD_PEDCLIN)
+--    e ID_AC_PIVOT_PEDCLIN; se anaden los atributos desglosados
+--    (columnas reales, como en ventas) y CANTIDAD_A_RECIBIR_PEDCLIN,
+--    la banda "A recibir" del pivote tallashorped (equivalente a
+--    CANTIDAD_A_ALBARANAR_PEDLIN en pedidos de venta).
+--
+-- 2. SIN tabla de celdas: el modo "Tallas en horizontal" pasa a ser
+--    inLibGridPivoteVenta (mcsTallasHorPed, pivot SOLO visual sobre
+--    lineas SKU reales) con las bandas Pedido / A recibir / Pendiente.
+--
+-- Sufijo: _PEDCLIN. Idempotente.
+-- =============================================================================
+
+DROP PROCEDURE IF EXISTS prc_tmp_add_col_pedclin;
+
+DELIMITER //
+CREATE PROCEDURE prc_tmp_add_col_pedclin(
+  IN pCol VARCHAR(64), IN pDef VARCHAR(200))
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = ''fza_pedidos_compra_lineas''
+                    AND COLUMN_NAME = pCol) THEN
+    SET @s := CONCAT(''ALTER TABLE fza_pedidos_compra_lineas '',
+                     ''ADD COLUMN '', pCol, '' '', pDef);
+    PREPARE stmt FROM @s;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+  END IF;
+END//
+DELIMITER ;
+
+CALL prc_tmp_add_col_pedclin(''ATTR1_VALOR_PEDCLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedclin(''ATTR1_NOMBRE_PEDCLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedclin(''ATTR2_VALOR_PEDCLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedclin(''ATTR2_NOMBRE_PEDCLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedclin(''ATTR3_VALOR_PEDCLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedclin(''ATTR3_NOMBRE_PEDCLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedclin(''ATTR4_VALOR_PEDCLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedclin(''ATTR4_NOMBRE_PEDCLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedclin(''ATTR5_VALOR_PEDCLIN'',  ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedclin(''ATTR5_NOMBRE_PEDCLIN'', ''varchar(100) NOT NULL DEFAULT '''''''''');
+CALL prc_tmp_add_col_pedclin(''NUM_ATRIBUTOS_PEDCLIN'',
+  ''int(11) NOT NULL DEFAULT 0 COMMENT ''''Atributos requeridos del articulo'''''');
+CALL prc_tmp_add_col_pedclin(''CANTIDAD_A_RECIBIR_PEDCLIN'',
+  ''decimal(19,6) NOT NULL DEFAULT 0 COMMENT ''''Marcada para recibir en el proximo albaran (banda A recibir del pivote)'''''');
+
+DROP PROCEDURE IF EXISTS prc_tmp_add_col_pedclin;
+', '2026-07-09 07:42:57', '2026-07-09 07:42:57', 'Administrador', 'Administrador');
+-- 59 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -18516,10 +19254,14 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('0000001119', 'TA', 'TA', '000005', '0020', '1', 'BCN', '2026-07-13 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, 'E', 3, 10.5, 31.5, 10.5, 'GEN', '', NULL, 'S', '2026-07-04 19:28:08', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '00000193', '1'),
   ('0000001124', 'AC', 'C1', '000001', '0010', '1', 'BCN', '2026-07-14 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/S', NULL, 'E', 4, 16, 64, 13, NULL, '', NULL, 'S', '2026-07-05 16:16:28', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'BCN', '', ''),
   ('0000001125', 'AC', 'C1', '000001', '0020', '1', 'BCN', '2026-07-14 00:00:00', 'TESTSKU01', 'TESTSKU01/NEGRO/M', NULL, 'E', 3, 7, 21, 8.75, NULL, '', NULL, 'S', '2026-07-05 16:40:31', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'BCN', '', ''),
-  ('0000001175', 'AV', 'A1', '000003', '0010', '012', 'GEN', '2026-07-03 00:00:00', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, 'S', 2, 0, 0, 0, NULL, '313', NULL, 'S', '2026-07-07 19:30:04', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
-  ('0000001176', 'AV', 'A1', '000003', '0020', '012', 'GEN', '2026-07-03 00:00:00', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/L', NULL, 'S', 1, 1, 1, 1, NULL, '313', NULL, 'S', '2026-07-07 19:30:04', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
-  ('0000001177', 'AV', 'A1', '000003', '0030', '012', 'GEN', '2026-07-03 00:00:00', 'ZAP-OXFORD', 'ZAP-OXFORD/NEGRO/42', NULL, 'S', 1, 5, 5, 5, NULL, '313', NULL, 'S', '2026-07-07 19:30:04', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
   ('0000001182', 'AV', 'A1', '000006', '0010', '012', 'GEN', '2026-07-07 00:00:00', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/S', NULL, 'S', 1, 0, 0, 0, NULL, '313', NULL, 'S', '2026-07-07 19:52:13', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000001195', 'AV', 'A1', '000007', '0010', '012', 'GEN', '2026-07-08 00:00:00', 'BOTIN-ANIT', 'BOTIN-ANIT/NEGRO/41', NULL, 'S', 5, 0, 0, 0, NULL, '313', NULL, 'S', '2026-07-08 07:10:12', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000001230', 'AV', 'A1', '000008', '0010', '012', 'GEN', '2026-07-08 00:00:00', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/M', NULL, 'S', 2, 1, 2, 1, NULL, '302', NULL, 'S', '2026-07-09 06:09:06', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000001231', 'AV', 'A1', '000008', '0020', '012', 'GEN', '2026-07-08 00:00:00', 'PANT-CHIN', 'PANT-CHIN/BEIGE/42', NULL, 'S', 2, 0, 0, 0, NULL, '302', NULL, 'S', '2026-07-09 06:09:06', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000001291', 'AV', 'A1', '000003', '0010', '012', 'GEN', '2026-07-03 00:00:00', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', NULL, 'S', 3, 0, 0, 0, NULL, '313', NULL, 'S', '2026-07-09 07:08:48', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000001292', 'AV', 'A1', '000003', '0020', '012', 'GEN', '2026-07-03 00:00:00', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/L', NULL, 'S', 2, 1, 2, 1, NULL, '313', NULL, 'S', '2026-07-09 07:08:48', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000001293', 'AV', 'A1', '000003', '0030', '012', 'GEN', '2026-07-03 00:00:00', 'ZAP-OXFORD', 'ZAP-OXFORD/NEGRO/42', NULL, 'S', 2, 5, 10, 5, NULL, '313', NULL, 'S', '2026-07-09 07:08:48', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
+  ('0000001294', 'AV', 'A1', '000003', '0031', '012', 'GEN', '2026-07-03 00:00:00', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/XXL', NULL, 'S', 1, 0, 0, 0, NULL, '313', NULL, 'S', '2026-07-09 07:08:48', NULL, 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', '', ''),
   ('1', 'IN', 'A1', '2026001', '002', '1', 'GEN', '2026-01-04 22:13:10', 'ZAP-OXFORD', 'ZAP-OXFORD/MARRON/43', 'Zapato Oxford Piel 43 Marrón', 'E', 8, 40, 320, 40, NULL, NULL, NULL, 'S', '2026-05-26 07:51:58', '2026-03-11 22:27:53', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('100', 'IN', 'A1', '2026001', '100', '1', 'GEN', '2026-01-10 08:00:00', 'CAMI-POLO', 'CAMI-POLO/BLANCO/S', 'Polo Blanco S', 'E', 15, 12, 180, 12, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
   ('101', 'IN', 'A1', '2026001', '101', '1', 'GEN', '2026-01-10 08:00:00', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', 'Polo Blanco M', 'E', 20, 12, 240, 12, NULL, NULL, NULL, 'S', '2026-02-17 06:21:32', '2026-01-10 08:00:00', 'DEMO', 'DEMO', NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL),
@@ -18709,7 +19451,7 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
   ('IV-3-0003S', 'IN', 'A1', '3', '0003', '012', 'GEN', '2026-05-05 23:59:58', 'SOMBRERO-PJM', 'SOMBRERO-PJM', NULL, 'S', 7, 0, 90, 15, NULL, NULL, NULL, 'S', '2026-05-06 08:15:17', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-4-0001E', 'IN', 'A1', '4', '0001', '012', 'GEN', '2026-05-08 07:13:25', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, 'E', 1, 5, 5, 5, NULL, NULL, NULL, 'S', '2026-05-08 07:13:42', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL),
   ('IV-4-0001S', 'IN', 'A1', '4', '0001', '012', 'GEN', '2026-05-08 07:13:24', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, 'E', 1, 0, 5, 5, NULL, NULL, NULL, 'S', '2026-05-08 07:13:42', '2026-05-09 07:14:59', 'Administrador', 'Administrador', NULL, NULL, NULL, NULL, '', NULL, 'GEN', NULL, NULL);
--- 823 registros exportados
+-- 827 registros exportados
 
 
 -- Tabla: fza_paises
@@ -19088,15 +19830,19 @@ ALTER TABLE `fza_pedidos` ADD INDEX `IDX_PED_IDPS` (`IDPS_PED`);
 
 -- Datos de fza_pedidos
 INSERT INTO `fza_pedidos` (`NUMERO_PED`, `SERIE_PED`, `FECHA_PED`, `ESCONSOLIDADO_PED`, `ESTADO_PED`, `FECHA_ENTREGA_PED`, `CODIGO_EMP_PED`, `CODIGO_ALM_PED`, `RAZON_SOCIAL_EMPRESA_PED`, `NIF_EMPRESA_PED`, `MOVIL_EMPRESA_PED`, `EMAIL_EMPRESA_PED`, `DIRECCION1_EMPRESA_PED`, `DIRECCION2_EMPRESA_PED`, `POBLACION_EMPRESA_PED`, `PROVINCIA_EMPRESA_PED`, `CODIGO_PAI_EMPRESA_PED`, `NOMBRE_PAI_EMPRESA_PED`, `CODIGO_POSTAL_EMPRESA_PED`, `ESRETENCIONES_EMPRESA_PED`, `GRUPO_ZONA_IVA_EMPRESA_PED`, `ESREGIMENESPECIALAGRICOLA_EMPRESA_PED`, `CODIGO_CLI_PED`, `NIF_CLIENTE_PED`, `EMAIL_CLIENTE_PED`, `REFERENCIAPS_PED`, `IDPS_PED`, `FECHAPS_PED`, `FORMAPAGOPS_PED`, `TRANSPORTISTAPS_PED`, `ESTADOPEDIDOPS_PED`, `ESTADOMENSAJEPS_PED`, `IDHILOPS_MENSAJES_PED`, `NOMBRE_CLI_ENVIO_PED`, `MOVIL_CLIENTE_ENVIO_PED`, `DIRECCION1_CLIENTE_ENVIO_PED`, `DIRECCION2_CLIENTE_ENVIO_PED`, `POBLACION_CLIENTE_ENVIO_PED`, `PROVINCIA_CLIENTE_ENVIO_PED`, `CODIGO_POSTAL_CLIENTE_ENVIO_PED`, `CODIGO_PAI_CLIENTE_ENVIO_PED`, `NOMBRE_PAI_CLIENTE_ENVIO_PED`, `RAZON_SOCIAL_CLIENTE_FISCAL_PED`, `MOVIL_CLIENTE_FISCAL_PED`, `EMAIL_CLIENTE_FISCAL_PED`, `DIRECCION1_CLIENTE_FISCAL_PED`, `DIRECCION2_CLIENTE_FISCAL_PED`, `POBLACION_CLIENTE_FISCAL_PED`, `PROVINCIA_CLIENTE_FISCAL_PED`, `CODIGO_POSTAL_CLIENTE_FISCAL_PED`, `CODIGO_PAI_CLIENTE_FISCAL_PED`, `NOMBRE_PAI_CLIENTE_FISCAL_PED`, `ESIVA_RECARGO_CLIENTE_PED`, `ESIVA_EXENTO_CLIENTE_PED`, `ESREGIMENESPECIALAGRICOLA_CLIENTE_PED`, `ESRETENCIONES_CLIENTE_PED`, `TARIFA_ARTICULO_CLIENTE_PED`, `ESIMP_INCL_TARIFA_CLIENTE_PED`, `ESINTRACOMUNITARIO_CLIENTE_PED`, `ESIRPF_IMP_INCL_ZONA_IVA_PED`, `ESAPLICA_RE_ZONA_IVA_PED`, `ESIVAAGRICOLA_ZONA_IVA_PED`, `PALABRA_REPORTS_ZONA_IVA_PED`, `CODIGO_IVA_PED`, `ESVENTA_ACTIVO_FIJO_PED`, `PORCENTAJE_IVAN_PED`, `TOTAL_IVAN_PED`, `PORCENTAJE_REN_PED`, `TOTAL_REN_PED`, `TOTAL_BASEI_IVAN_PED`, `PORCENTAJE_IVAR_PED`, `TOTAL_IVAR_PED`, `PORCENTAJE_RER_PED`, `TOTAL_RER_PED`, `TOTAL_BASEI_IVAR_PED`, `PORCENTAJE_IVAS_PED`, `TOTAL_IVAS_PED`, `PORCENTAJE_RES_PED`, `TOTAL_RES_PED`, `TOTAL_BASEI_IVAS_PED`, `PORCENTAJE_IVAE_PED`, `TOTAL_IVAE_PED`, `PORCENTAJE_REE_PED`, `TOTAL_REE_PED`, `TOTAL_BASEI_IVAE_PED`, `TOTAL_BASES_PED`, `TOTAL_IMPUESTOS_PED`, `FORMA_PAGO_PED`, `PORCENTAJE_RETENCION_PED`, `TOTAL_RETENCION_PED`, `TOTAL_LIQUIDO_PED`, `TOTAL_PAGADOREALPS_PED`, `NUMERO_PED_ABONO_PED`, `SERIE_PED_ABONO_PED`, `TEXTO_LEGAL_CLIENTE_PED`, `TEXTO_LEGAL_EMPRESA_PED`, `DOCUMENTO_PED`, `COMENTARIOS_PED`, `OBSERVACIONES_PED`, `CONTADOR_LINEAS_PED`, `ESCREARARTICULOS_PED`, `ESDESCRIPCIONES_AMP_PED`, `ESFECHADEENTREGA_PED`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('000001', 'A1', '2026-07-02 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '313', 'B11223344', 'gerencia@texnordeste.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'TEXTILES NORDESTE SL', '937333333', NULL, 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 54.6, 5.2, 0, 260, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 260, 54.6, '60DIAS', 15, 39, 275.6, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '00000020', NULL, NULL, NULL, '2026-07-07 17:51:54', '2026-07-02 18:31:43', 'Alfredo', 'Administrador'),
+  ('000001', 'A1', '2026-07-02 00:00:00', 'N', 'PARCIAL', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '313', 'B11223344', 'gerencia@texnordeste.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'TEXTILES NORDESTE SL', '937333333', NULL, 'C/ ARGENTINA, 55', 'POL. PRAT', 'EL PRAT LLOBREGAT', 'BARCELONA', '08820', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 98.28, 5.2, 0, 468, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 468, 98.28, '60DIAS', 15, 70.2, 496.08, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '00000060', NULL, NULL, NULL, '2026-07-09 06:33:27', '2026-07-02 18:31:43', 'Alfredo', 'Administrador'),
   ('000001', 'AG1', '2026-07-02 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '302', '23456789B', 'carlos.herrero@hotmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CARLOS HERRERO SANTOS', '666202020', NULL, 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', 'N', 'N', 'N', 'S', 'PVP', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 34.6395, 5.2, 0, 164.95, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 164.95, 34.6395, 'CONTADO', 2.5, 4.12375, 195.46575, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-07 17:44:11', '2026-07-02 19:16:15', 'Administrador', 'Administrador'),
   ('000001', 'PED', '2026-02-12 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '317', 'B99887766', 'admin@importamoda.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'IMPORTACIONES LA MODA SL', NULL, 'C/ ARTESANOS, 20 NAVE 3', NULL, 'ALCOBENDAS', 'MADRID', '28108', '724', 'España', 'IMPORTACIONES LA MODA SL', NULL, NULL, 'C/ ARTESANOS, 20 NAVE 3', NULL, 'ALCOBENDAS', 'MADRID', '28108', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'S', 'N', 'N', 'S', 'N', 'IVA', '1', 'N', 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, '30DIAS', 15, 0, 0, NULL, NULL, NULL, '', '', NULL, 'Pedido urgente - Reposición colección primavera', '', '00000030', NULL, 'S', NULL, '2026-07-03 16:50:29', '2026-02-12 10:00:00', 'DEMO', 'Administrador'),
   ('000002', 'A1', '2026-07-07 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '303', '34567890C', 'marta.ruiz@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'MARTA RUIZ LÓPEZ', '677303030', NULL, 'C/ CERVANTES, 8', '', 'VALENCIA', 'VALENCIA', '46001', '724', 'España', 'N', 'N', 'N', 'S', 'PVP', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'TRANSFERENCIA', 15, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-07 17:35:32', '2026-07-07 17:35:32', 'Administrador', 'Administrador'),
   ('000002', 'PED', '2026-02-13 00:00:00', 'N', 'ABIERTO', NULL, '1', NULL, 'MODA EJEMPLO SL', 'B11111111', NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, 'N', NULL, 'N', '320', 'B55443322', 'compras@modaspain.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'TIENDAS MODA SPAIN SL', NULL, 'GRAN VÍA, 48', NULL, 'MADRID', 'MADRID', '28013', '724', 'España', 'TIENDAS MODA SPAIN SL', NULL, NULL, 'GRAN VÍA, 48', NULL, 'MADRID', 'MADRID', '28013', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'S', 'N', 'N', 'S', 'N', 'IVA', NULL, 'N', 21, 176.4, NULL, NULL, 840, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 840, 176.4, '60DIAS', NULL, NULL, 1016.4, NULL, NULL, NULL, '', '', NULL, 'Colección verano 2026 - 1ª entrega', '', '00000040', NULL, 'S', NULL, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO'),
   ('000003', 'A1', '2026-07-07 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '304', '45678901D', 'juan.martin@empresa.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'JUAN MARTÍN PÉREZ', '688404040', NULL, 'C/ ALCALÁ, 100', '', 'MADRID', 'MADRID', '28009', '724', 'España', 'S', 'N', 'N', 'S', 'VENTAMAYOR', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 9.66, 5.2, 2.392, 46, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 46, 12.052, '60DIAS', 15, 6.9, 51.152, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-07 17:54:01', '2026-07-07 17:54:01', 'Administrador', 'Administrador'),
   ('000003', 'PED', '2026-02-14 00:00:00', 'N', 'ABIERTO', NULL, '1', NULL, 'MODA EJEMPLO SL', 'B11111111', NULL, NULL, NULL, NULL, NULL, NULL, '724', 'España', NULL, 'N', NULL, 'N', '304', '45678901D', 'juan.martin@empresa.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'JUAN MARTÍN PÉREZ', NULL, 'C/ ALCALÁ, 100', NULL, 'MADRID', 'MADRID', '28009', '724', 'España', 'JUAN MARTÍN PÉREZ', NULL, NULL, 'C/ ALCALÁ, 100', NULL, 'MADRID', 'MADRID', '28009', '724', 'España', 'N', 'N', 'N', 'S', 'VENTAMAYOR', 'S', 'N', 'N', 'S', 'N', 'IVA', NULL, 'N', 21, 42, NULL, NULL, 200, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 200, 42, '60DIAS', NULL, NULL, 242, NULL, NULL, NULL, '', '', NULL, '', '', '00000020', NULL, 'S', NULL, '2026-07-03 16:50:29', '2026-02-14 11:00:00', 'DEMO', 'DEMO'),
-  ('000004', 'A1', '2026-07-07 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '334', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', NULL, 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-07 19:19:56', '2026-07-07 19:19:56', 'Administrador', 'Administrador');
--- 8 registros exportados
+  ('000004', 'A1', '2026-07-07 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '334', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', NULL, 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-07 19:19:56', '2026-07-07 19:19:56', 'Administrador', 'Administrador'),
+  ('000006', 'A1', '2026-07-08 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '305', '56789012E', 'ana.garcia@yahoo.es', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ANA GARCÍA MORENO', '699505050', NULL, 'PLAZA ESPAÑA, 3', '1º B', 'SEVILLA', 'SEVILLA', '41001', '724', 'España', 'N', 'N', 'N', 'S', 'PVP', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 26.02438, 5.2, 0, 123.92562, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 123.92562, 26.02438, 'CONTADO', 15, 18.588843, 131.361157, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-08 07:40:56', '2026-07-08 07:40:56', 'Administrador', 'Administrador'),
+  ('000007', 'A1', '2026-07-08 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '309', '89012345H', 'paula.sanchez@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'PAULA SÁNCHEZ ROMERO', '633909090', NULL, 'C/ EL PILAR, 7', 'Bajo A', 'BILBAO', 'VIZCAYA', '48001', '724', 'España', 'N', 'N', 'N', 'S', 'PVP', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'TRANSFERENCIA', 15, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-08 08:08:54', '2026-07-08 08:08:54', 'Administrador', 'Administrador'),
+  ('000008', 'A1', '2026-07-08 00:00:00', 'N', 'ABIERTO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '302', '23456789B', 'carlos.herrero@hotmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CARLOS HERRERO SANTOS', '666202020', NULL, 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', 'N', 'N', 'N', 'S', 'PVP', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 0, 5.2, 0, 0, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'CONTADO', 15, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-08 08:13:43', '2026-07-08 08:13:43', 'Administrador', 'Administrador'),
+  ('000009', 'A1', '2026-07-08 00:00:00', 'N', 'ENTREGADO', NULL, '012', 'GEN', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'S', '1', 'N', '302', '23456789B', 'carlos.herrero@hotmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CARLOS HERRERO SANTOS', '666202020', NULL, 'AVDA. LIBERTAD, 22', '2º A', 'BARCELONA', 'BARCELONA', '08001', '724', 'España', 'N', 'N', 'N', 'S', 'PVP', NULL, 'N', NULL, NULL, NULL, NULL, '1', NULL, 21, 3.57, 5.2, 0, 17, 10, 0, 1.4, 0, 0, 4, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 17, 3.57, 'CONTADO', 15, 2.55, 18.02, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, NULL, '2026-07-08 08:19:14', '2026-07-08 08:17:25', 'Administrador', 'Administrador');
+-- 12 registros exportados
 
 
 -- Tabla: fza_pedidos_celdas
@@ -19217,7 +19963,7 @@ ALTER TABLE `fza_pedidos_compra` ADD INDEX `IDX_PEDC_TEMPORADA` (`ID_PV_TEMPORAD
 -- Datos de fza_pedidos_compra
 INSERT INTO `fza_pedidos_compra` (`NUMERO_PEDC`, `SERIE_PEDC`, `FECHA_PEDC`, `FECHA_PREVISTA_PEDC`, `FECHA_TOPE_RECEPCION_PEDC`, `ESTADO_PEDC`, `CODIGO_EMP_PEDC`, `RAZON_SOCIAL_EMPRESA_PEDC`, `NIF_EMPRESA_PEDC`, `MOVIL_EMPRESA_PEDC`, `EMAIL_EMPRESA_PEDC`, `DIRECCION1_EMPRESA_PEDC`, `DIRECCION2_EMPRESA_PEDC`, `POBLACION_EMPRESA_PEDC`, `PROVINCIA_EMPRESA_PEDC`, `CODIGO_PAI_EMPRESA_PEDC`, `NOMBRE_PAI_EMPRESA_PEDC`, `CODIGO_POSTAL_EMPRESA_PEDC`, `CODIGO_PRV_PEDC`, `RAZON_SOCIAL_PRV_PEDC`, `NIF_PRV_PEDC`, `MOVIL_PRV_PEDC`, `EMAIL_PRV_PEDC`, `DIRECCION1_PRV_PEDC`, `DIRECCION2_PRV_PEDC`, `POBLACION_PRV_PEDC`, `PROVINCIA_PRV_PEDC`, `CODIGO_PAI_PRV_PEDC`, `NOMBRE_PAI_PRV_PEDC`, `CODIGO_POSTAL_PRV_PEDC`, `REF_PROVEEDOR_PEDC`, `CODIGO_ALM_PEDC`, `TRANSPORTISTA_PEDC`, `CODIGO_IVA_PEDC`, `ESIVA_RECARGO_COMPRAS_PEDC`, `ESIVA_EXENTO_INTRACOMUNITARIO_PEDC`, `PORCENTAJE_IVAN_PEDC`, `TOTAL_BASEI_IVAN_PEDC`, `TOTAL_IVAN_PEDC`, `PORCENTAJE_REN_PEDC`, `TOTAL_REN_PEDC`, `PORCENTAJE_IVAR_PEDC`, `TOTAL_BASEI_IVAR_PEDC`, `TOTAL_IVAR_PEDC`, `PORCENTAJE_RER_PEDC`, `TOTAL_RER_PEDC`, `PORCENTAJE_IVAS_PEDC`, `TOTAL_BASEI_IVAS_PEDC`, `TOTAL_IVAS_PEDC`, `PORCENTAJE_RES_PEDC`, `TOTAL_RES_PEDC`, `PORCENTAJE_IVAE_PEDC`, `TOTAL_BASEI_IVAE_PEDC`, `TOTAL_IVAE_PEDC`, `PORCENTAJE_REE_PEDC`, `TOTAL_REE_PEDC`, `TOTAL_BASES_PEDC`, `TOTAL_IMPUESTOS_PEDC`, `PORCENTAJE_RETENCION_PEDC`, `TOTAL_RETENCION_PEDC`, `TOTAL_BRUTO_PEDC`, `PORCENTAJE_DTO_COMERCIAL_PEDC`, `TOTAL_DTO_COMERCIAL_PEDC`, `PORCENTAJE_DTO_FINANCIERO_PEDC`, `TOTAL_DTO_FINANCIERO_PEDC`, `TOTAL_LIQUIDO_PEDC`, `FORMA_PAGO_PEDC`, `CONTADOR_LINEAS_PEDC`, `COMENTARIOS_PEDC`, `OBSERVACIONES_PEDC`, `ESPIVOTE_HORIZONTAL_PEDC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ID_PV_TEMPORADA_PEDC`) VALUES
   ('000001', 'A1', '2026-05-26 00:00:00', '2026-06-26 00:00:00', NULL, 'RECIBIDO', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', 'PEPI', 'PEPINO RODRÍGUEZ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, '398383', 'GEN', NULL, '1', 'N', 'N', 21, 246, 51.66, 5.2, 0, 10, 0, 0, 1.4, 0, 4, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 246, 51.66, NULL, 0, 246, 0, 0, 0, 0, 297.66, NULL, '230', '', '', 'S', '2026-07-01 19:03:52', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 10),
-  ('000002', 'A1', '2026-05-26 00:00:00', NULL, NULL, 'ABIERTO', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '18', 'Formaggi Fortini s.r.l.', NULL, '(0544) 60323', NULL, 'Viale Dante, 75', NULL, 'Ravenna', '', '724', 'Espana', '48100', '32323', 'GEN', NULL, '1', 'N', 'S', 21, 362, 76.02, 5.2, 0, 10, 0, 0, 1.4, 0, 4, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 362, 76.02, NULL, 0, 362, 0, 0, 0, 0, 438.02, '30DIAS', '140', '', '', 'S', '2026-07-01 19:03:52', '2026-05-28 19:54:41', 'Administrador', 'Administrador', 11),
+  ('000002', 'A1', '2026-05-26 00:00:00', NULL, NULL, 'ABIERTO', '012', 'ALEJANDRO LAORDEN HIDALGO', '4587545EQ', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '18', 'Formaggi Fortini s.r.l.', NULL, '(0544) 60323', NULL, 'Viale Dante, 75', NULL, 'Ravenna', '', '724', 'Espana', '48100', '32323', 'GEN', NULL, '1', 'N', 'S', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 362, 0, 0, 0, 362, 0, NULL, 0, 362, 0, 0, 0, 0, 362, '30DIAS', '140', '', '', 'S', '2026-07-01 19:03:52', '2026-05-28 19:54:41', 'Administrador', 'Administrador', 11),
   ('000004', 'A1', '2026-06-11 00:00:00', NULL, NULL, 'RECIBIDO', '012', 'ALEJANDRO LAORDEN HIDALGO', '45684134Q', '65869556', 'miemail@gmail.com', 'CALLE POZO BLANCO, 2', '', 'SANTOVENIA', 'ZAMORA', 'ES', 'España', '49750', '000', 'ANTONIO BAZOS', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '724', 'Espana', NULL, '1236', 'GEN', NULL, '1', 'N', 'N', 21, 227, 47.67, 5.2, 0, 10, 0, 0, 1.4, 0, 4, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 227, 47.67, NULL, 0, 227, 0, 0, 0, 0, 274.67, NULL, '00000120', '', '', 'S', '2026-07-03 16:50:29', '2026-06-13 12:02:01', 'Administrador', 'Administrador', 11);
 -- 3 registros exportados
 
@@ -19287,60 +20033,72 @@ CREATE TABLE `fza_pedidos_compra_lineas` (
   `INSTANTE_ALTA` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `USUARIO_ALTA` varchar(100) NOT NULL,
   `USUARIO_MODIF` varchar(100) NOT NULL,
+  `ATTR1_VALOR_PEDCLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR1_NOMBRE_PEDCLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR2_VALOR_PEDCLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR2_NOMBRE_PEDCLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR3_VALOR_PEDCLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR3_NOMBRE_PEDCLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR4_VALOR_PEDCLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR4_NOMBRE_PEDCLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR5_VALOR_PEDCLIN` varchar(100) NOT NULL DEFAULT '',
+  `ATTR5_NOMBRE_PEDCLIN` varchar(100) NOT NULL DEFAULT '',
+  `NUM_ATRIBUTOS_PEDCLIN` int(11) NOT NULL DEFAULT '0' COMMENT 'Atributos requeridos del articulo',
+  `CANTIDAD_A_RECIBIR_PEDCLIN` decimal(19,6) NOT NULL DEFAULT '0.000000' COMMENT 'Marcada para recibir en el proximo albaran (banda A recibir del pivote)',
   PRIMARY KEY (`NUMERO_PEDC_PEDCLIN`,`SERIE_PEDC_PEDCLIN`,`LINEA_PEDCLIN`)
 );
 ALTER TABLE `fza_pedidos_compra_lineas` ADD INDEX `IDX_PEDCLIN_ALMACEN` (`CODIGO_ALMACEN_PEDCLIN`);
 ALTER TABLE `fza_pedidos_compra_lineas` ADD INDEX `IDX_PEDCLIN_ARTICULO` (`CODIGO_ART_PEDCLIN`);
 
 -- Datos de fza_pedidos_compra_lineas
-INSERT INTO `fza_pedidos_compra_lineas` (`NUMERO_PEDC_PEDCLIN`, `SERIE_PEDC_PEDCLIN`, `LINEA_PEDCLIN`, `CODIGO_ART_PEDCLIN`, `CODIGO_UNIDAD_PEDCLIN`, `ID_AC_PIVOT_PEDCLIN`, `CODIGO_FAM_PEDCLIN`, `NOMBRE_FAM_PEDCLIN`, `COLOR_TEXTO_PEDCLIN`, `DESCRIPCION_ARTICULO_PEDCLIN`, `TIPO_CANTIDAD_ARTICULO_PEDCLIN`, `CANTIDAD_PEDCLIN`, `CANTIDAD_RECIBIDA_PEDCLIN`, `TOTAL_UNIDADES_PEDCLIN`, `TIPO_IVA_ARTICULO_PEDCLIN`, `PORCENTAJE_IVA_PEDCLIN`, `PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN`, `PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN`, `TOTAL_PEDCLIN`, `CODIGO_ALMACEN_PEDCLIN`, `REF_PRV_PEDCLIN`, `DESCRIPCION_VARIACION_PEDCLIN`, `FECHA_ENTREGA_PEDCLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('0', 'C1', '0010', 'TESTPMP1', 'TESTPMP1', NULL, 'OTR', NULL, NULL, 'Test_PMP_1', 'Uds', 1, 0, 0, 'N', 21, 0, 0, 0, 'GEN', '', NULL, NULL, '2026-07-02 20:15:38', '2026-07-02 20:10:44', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0010', 'BOLSOS00011', 'BOLSOS00011/VERDE/S', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 1, 1, 0, 'N', 21, 10, 12.1, 10, 'GEN', '923', NULL, NULL, '2026-06-11 18:19:04', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0020', 'BOLSOS00011', 'BOLSOS00011/VERDE/M', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 1, 1, 0, 'N', 21, 10, 12.1, 10, 'GEN', '923', NULL, NULL, '2026-06-11 18:19:04', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0030', 'BOLSOS00011', 'BOLSOS00011/VERDE/L', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 2, 2, 0, 'N', 21, 10, 12.1, 20, 'GEN', '923', NULL, NULL, '2026-06-11 18:19:04', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0040', 'BOLSOS00011', 'BOLSOS00011/VERDE/XL', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 2, 2, 0, 'N', 21, 10, 12.1, 20, 'GEN', '923', NULL, NULL, '2026-06-11 18:19:04', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0050', 'BOLSOS00011', 'BOLSOS00011/VERDE/XXL', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 3, 3, 0, 'N', 21, 10, 12.1, 30, 'GEN', '923', NULL, NULL, '2026-06-11 18:19:04', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0060', 'BOLSOS00011', 'BOLSOS00011/VERDE/XXXL', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 3, 3, 0, 'N', 21, 10, 12.1, 30, 'GEN', '923', NULL, NULL, '2026-06-11 18:19:04', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0070', 'COMPLEMENTOS003', 'COMPLEMENTOS003/MARRON/S', 3, 'COMPLEMENTOS', '', '33', 'VCartera de lujo', 'Uds', 1, 1, 0, 'N', 21, 5, 6.05, 5, 'GEN', '877', NULL, NULL, '2026-06-22 07:51:50', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0080', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/S', 1, 'DEPORTIVO', '', '011', 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 9, 10.89, 9, 'GEN', '989', NULL, NULL, '2026-06-26 19:41:20', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0090', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/M', 1, 'DEPORTIVO', '', '011', 'Ropa Deportiva', 'Uds', 2, 2, 0, 'N', 21, 9, 10.89, 18, 'GEN', '989', NULL, NULL, '2026-06-26 19:41:20', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0100', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/L', 1, 'DEPORTIVO', '', '011', 'Ropa Deportiva', 'Uds', 2, 2, 0, 'N', 21, 9, 10.89, 18, 'GEN', '989', NULL, NULL, '2026-06-26 19:41:20', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0110', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/XL', 1, 'DEPORTIVO', '', '011', 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 9, 10.89, 9, 'GEN', '989', NULL, NULL, '2026-06-26 19:41:20', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0120', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/XXL', 1, 'DEPORTIVO', '', '011', 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 9, 10.89, 9, 'GEN', '989', NULL, NULL, '2026-06-26 19:41:20', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0130', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/S', 1, 'DEPORTIVO', '', '22', 'mallitas', 'Uds', 1, 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', '222', NULL, NULL, '2026-06-26 19:41:20', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0140', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/M', 1, 'DEPORTIVO', '', '22', 'mallitas', 'Uds', 1, 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', '222', NULL, NULL, '2026-06-26 19:41:20', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0150', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/L', 1, 'DEPORTIVO', '', '22', 'mallitas', 'Uds', 1, 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', '222', NULL, NULL, '2026-06-26 19:41:20', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0160', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XL', 1, 'DEPORTIVO', '', '22', 'mallitas', 'Uds', 2, 2, 0, 'N', 21, 2, 2.42, 4, 'GEN', '222', NULL, NULL, '2026-06-26 19:41:20', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0170', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XXL', 1, 'DEPORTIVO', '', '22', 'mallitas', 'Uds', 2, 2, 0, 'N', 21, 2, 2.42, 4, 'GEN', '222', NULL, NULL, '2026-06-26 19:41:20', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0180', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XXXL', 1, 'DEPORTIVO', '', '22', 'mallitas', 'Uds', 2, 2, 0, 'N', 21, 2, 2.42, 4, 'GEN', '222', NULL, NULL, '2026-06-26 19:41:20', '2026-05-28 19:52:48', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0190', 'COMPLEMENTOS003', 'COMPLEMENTOS003/MARRON/M', 3, 'COMPLEMENTOS', '', '33', 'VCartera de lujo', 'Uds', 2, 2, 2, 'N', 21, 5, 6.05, 10, 'GEN', '877', NULL, NULL, '2026-06-26 19:41:20', '2026-06-22 08:15:02', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0200', 'COMPLEMENTOS003', 'COMPLEMENTOS003/MARRON/XL', 3, 'COMPLEMENTOS', '', '33', 'VCartera de lujo', 'Uds', 2, 2, 2, 'N', 21, 5, 6.05, 10, 'GEN', '877', NULL, NULL, '2026-06-26 19:41:20', '2026-06-22 08:15:02', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0210', 'COMPLEMENTOS003', 'COMPLEMENTOS003/MARRON/L', 3, 'COMPLEMENTOS', '', '33', 'VCartera de lujo', 'Uds', 2, 2, 2, 'N', 21, 5, 6.05, 10, 'GEN', '877', NULL, NULL, '2026-06-26 19:41:20', '2026-06-22 08:15:02', 'Administrador', 'Administrador'),
-  ('000001', 'A1', '0220', 'COMPLEMENTOS003', 'COMPLEMENTOS003/MARRON/XXXL', 3, 'COMPLEMENTOS', '', '33', 'VCartera de lujo', 'Uds', 2, 2, 2, 'N', 21, 5, 6.05, 10, 'GEN', '877', NULL, NULL, '2026-06-26 19:41:20', '2026-06-22 08:19:28', 'Administrador', 'Administrador'),
-  ('000002', 'A1', '0010', 'DEPORTIVO007', 'DEPORTIVO007/VERDE/S', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 1, 0, 0, 'N', 21, 10, 12.1, 10, 'GEN', '0988', NULL, NULL, '2026-05-28 19:54:41', '2026-05-28 19:54:41', 'Administrador', 'Administrador'),
-  ('000002', 'A1', '0020', 'DEPORTIVO007', 'DEPORTIVO007/VERDE/M', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 2, 0, 0, 'N', 21, 10, 12.1, 20, 'GEN', '0988', NULL, NULL, '2026-05-28 19:54:41', '2026-05-28 19:54:41', 'Administrador', 'Administrador'),
-  ('000002', 'A1', '0030', 'DEPORTIVO007', 'DEPORTIVO007/VERDE/L', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 2, 0, 0, 'N', 21, 10, 12.1, 20, 'GEN', '0988', NULL, NULL, '2026-05-28 19:54:41', '2026-05-28 19:54:41', 'Administrador', 'Administrador'),
-  ('000002', 'A1', '0040', 'DEPORTIVO007', 'DEPORTIVO007/VERDE/XL', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 2, 0, 0, 'N', 21, 10, 12.1, 20, 'GEN', '0988', NULL, NULL, '2026-05-28 19:54:41', '2026-05-28 19:54:41', 'Administrador', 'Administrador'),
-  ('000002', 'A1', '0050', 'DEPORTIVO007', 'DEPORTIVO007/VERDE/XXL', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 1, 0, 0, 'N', 21, 10, 12.1, 10, 'GEN', '0988', NULL, NULL, '2026-05-28 19:54:41', '2026-05-28 19:54:41', 'Administrador', 'Administrador'),
-  ('000002', 'A1', '0060', 'DEPORTIVO007', 'DEPORTIVO007/VERDE/XXXL', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 9, 0, 9, 'N', 21, 10, 12.1, 90, 'GEN', '0988', NULL, NULL, '2026-06-22 08:22:16', '2026-05-28 19:54:41', 'Administrador', 'Administrador'),
-  ('000002', 'A1', '0070', 'DEPORTIVO008', 'DEPORTIVO008/BEIGE/37', 5, 'DEPORTIVO', '', NULL, 'Top pechines', 'Uds', 11, 0, 11, 'N', 21, 12, 14.52, 132, 'GEN', '3332', NULL, NULL, '2026-06-22 08:21:41', '2026-05-28 19:54:41', 'Administrador', 'Administrador'),
-  ('000002', 'A1', '0080', 'DEPORTIVO008', 'DEPORTIVO008/BEIGE/38', 5, 'DEPORTIVO', '', NULL, 'Top pechines', 'Uds', 1, 0, 0, 'N', 21, 12, 14.52, 12, 'GEN', '3332', NULL, NULL, '2026-05-28 19:54:41', '2026-05-28 19:54:41', 'Administrador', 'Administrador'),
-  ('000002', 'A1', '0090', 'DEPORTIVO008', 'DEPORTIVO008/BEIGE/42', 5, 'DEPORTIVO', '', NULL, 'Top pechines', 'Uds', 1, 0, 1, 'N', 21, 12, 14.52, 12, 'GEN', '3332', NULL, NULL, '2026-06-22 08:21:47', '2026-05-28 19:54:41', 'Administrador', 'Administrador'),
-  ('000002', 'A1', '0100', 'DEPORTIVO008', 'DEPORTIVO008/BEIGE/41', 5, 'DEPORTIVO', '', NULL, 'Top pechines', 'Uds', 1, 0, 1, 'N', 21, 12, 14.52, 12, 'GEN', '3332', NULL, NULL, '2026-06-22 08:21:45', '2026-05-28 19:54:41', 'Administrador', 'Administrador'),
-  ('000002', 'A1', '0110', 'DEPORTIVO008', 'DEPORTIVO008/BEIGE/40', 5, 'DEPORTIVO', '', NULL, 'Top pechines', 'Uds', 1, 0, 1, 'N', 21, 12, 14.52, 12, 'GEN', '3332', NULL, NULL, '2026-06-22 08:21:44', '2026-05-28 19:54:41', 'Administrador', 'Administrador'),
-  ('000002', 'A1', '0120', 'DEPORTIVO008', 'DEPORTIVO008/BEIGE/39', 5, 'DEPORTIVO', '', NULL, 'Top pechines', 'Uds', 1, 0, 1, 'N', 21, 12, 14.52, 12, 'GEN', '3332', NULL, NULL, '2026-06-22 08:21:43', '2026-05-28 19:54:41', 'Administrador', 'Administrador'),
-  ('000004', 'A1', '0010', 'CALV00002', 'CALV00002/BLANCO/37', 5, 'CALV', '', 'BLANCO', 'CALZADO VESTIR', 'Uds', 1, 1, 0, 'N', 21, 12, 14.52, 12, 'GEN', '2058', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador'),
-  ('000004', 'A1', '0020', 'CALV00002', 'CALV00002/BLANCO/38', 5, 'CALV', '', 'BLANCO', 'CALZADO VESTIR', 'Uds', 1, 1, 0, 'N', 21, 12, 14.52, 12, 'GEN', '2058', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador'),
-  ('000004', 'A1', '0030', 'CALV00002', 'CALV00002/BLANCO/41', 5, 'CALV', '', 'BLANCO', 'CALZADO VESTIR', 'Uds', 1, 1, 0, 'N', 21, 12, 14.52, 12, 'GEN', '2058', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador'),
-  ('000004', 'A1', '0040', 'CALV00002', 'CALV00002/BLANCO/40', 5, 'CALV', '', 'BLANCO', 'CALZADO VESTIR', 'Uds', 1, 1, 0, 'N', 21, 12, 14.52, 12, 'GEN', '2058', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador'),
-  ('000004', 'A1', '0050', 'CALV00002', 'CALV00002/BLANCO/39', 5, 'CALV', '', 'BLANCO', 'CALZADO VESTIR', 'Uds', 1, 1, 0, 'N', 21, 12, 14.52, 12, 'GEN', '2058', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador'),
-  ('000004', 'A1', '0060', 'DEPORTIVO004', 'DEPORTIVO004/0908/42', 4, 'DEPORTIVO', '', '0908', 'Ropa Deportiva', 'Uds', 2, 2, 0, 'N', 21, 13, 15.73, 26, 'GEN', '32122', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador'),
-  ('000004', 'A1', '0070', 'DEPORTIVO004', 'DEPORTIVO004/0908/43', 4, 'DEPORTIVO', '', '0908', 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 13, 15.73, 13, 'GEN', '32122', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador'),
-  ('000004', 'A1', '0080', 'DEPORTIVO004', 'DEPORTIVO004/0908/41', 4, 'DEPORTIVO', '', '0908', 'Ropa Deportiva', 'Uds', 2, 2, 0, 'N', 21, 13, 15.73, 26, 'GEN', '32122', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador'),
-  ('000004', 'A1', '0090', 'DEPORTIVO004', 'DEPORTIVO004/0908/40', 4, 'DEPORTIVO', '', '0908', 'Ropa Deportiva', 'Uds', 2, 2, 0, 'N', 21, 13, 15.73, 26, 'GEN', '32122', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador'),
-  ('000004', 'A1', '0100', 'DEPORTIVO004', 'DEPORTIVO004/0908/44', 4, 'DEPORTIVO', '', '0908', 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 13, 15.73, 13, 'GEN', '32122', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador'),
-  ('000004', 'A1', '0110', 'DEPORTIVO004', 'DEPORTIVO004/0908/39', 4, 'DEPORTIVO', '', '0908', 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 13, 15.73, 13, 'GEN', '32122', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador'),
-  ('000004', 'A1', '0120', 'SUDADERA-HOOD', '', 1, 'DEPORTIVO', NULL, NULL, 'Sudadera con Capucha Unisex', 'Uds', 5, 0, 0, 'N', 21, 10, 12.1, 50, 'GEN', '', NULL, NULL, '2026-07-01 10:05:19', '2026-07-01 10:05:01', 'Administrador', 'Administrador');
+INSERT INTO `fza_pedidos_compra_lineas` (`NUMERO_PEDC_PEDCLIN`, `SERIE_PEDC_PEDCLIN`, `LINEA_PEDCLIN`, `CODIGO_ART_PEDCLIN`, `CODIGO_UNIDAD_PEDCLIN`, `ID_AC_PIVOT_PEDCLIN`, `CODIGO_FAM_PEDCLIN`, `NOMBRE_FAM_PEDCLIN`, `COLOR_TEXTO_PEDCLIN`, `DESCRIPCION_ARTICULO_PEDCLIN`, `TIPO_CANTIDAD_ARTICULO_PEDCLIN`, `CANTIDAD_PEDCLIN`, `CANTIDAD_RECIBIDA_PEDCLIN`, `TOTAL_UNIDADES_PEDCLIN`, `TIPO_IVA_ARTICULO_PEDCLIN`, `PORCENTAJE_IVA_PEDCLIN`, `PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN`, `PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN`, `TOTAL_PEDCLIN`, `CODIGO_ALMACEN_PEDCLIN`, `REF_PRV_PEDCLIN`, `DESCRIPCION_VARIACION_PEDCLIN`, `FECHA_ENTREGA_PEDCLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ATTR1_VALOR_PEDCLIN`, `ATTR1_NOMBRE_PEDCLIN`, `ATTR2_VALOR_PEDCLIN`, `ATTR2_NOMBRE_PEDCLIN`, `ATTR3_VALOR_PEDCLIN`, `ATTR3_NOMBRE_PEDCLIN`, `ATTR4_VALOR_PEDCLIN`, `ATTR4_NOMBRE_PEDCLIN`, `ATTR5_VALOR_PEDCLIN`, `ATTR5_NOMBRE_PEDCLIN`, `NUM_ATRIBUTOS_PEDCLIN`, `CANTIDAD_A_RECIBIR_PEDCLIN`) VALUES
+  ('0', 'C1', '0010', 'TESTPMP1', 'TESTPMP1', NULL, 'OTR', NULL, NULL, 'Test_PMP_1', 'Uds', 1, 0, 0, 'N', 21, 0, 0, 0, 'GEN', '', NULL, NULL, '2026-07-02 20:15:38', '2026-07-02 20:10:44', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000001', 'A1', '0010', 'BOLSOS00011', 'BOLSOS00011/VERDE/S', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 1, 1, 0, 'N', 21, 10, 12.1, 10, 'GEN', '923', NULL, NULL, '2026-07-09 07:46:09', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'VERDE', '', 'S', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0020', 'BOLSOS00011', 'BOLSOS00011/VERDE/M', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 1, 1, 0, 'N', 21, 10, 12.1, 10, 'GEN', '923', NULL, NULL, '2026-07-09 07:46:09', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'VERDE', '', 'M', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0030', 'BOLSOS00011', 'BOLSOS00011/VERDE/L', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 2, 2, 0, 'N', 21, 10, 12.1, 20, 'GEN', '923', NULL, NULL, '2026-07-09 07:46:09', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'VERDE', '', 'L', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0040', 'BOLSOS00011', 'BOLSOS00011/VERDE/XL', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 2, 2, 0, 'N', 21, 10, 12.1, 20, 'GEN', '923', NULL, NULL, '2026-07-09 07:46:09', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'VERDE', '', 'XL', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0050', 'BOLSOS00011', 'BOLSOS00011/VERDE/XXL', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 3, 3, 0, 'N', 21, 10, 12.1, 30, 'GEN', '923', NULL, NULL, '2026-07-09 07:46:09', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'VERDE', '', 'XXL', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0060', 'BOLSOS00011', 'BOLSOS00011/VERDE/XXXL', 1, 'BOLSOS', '', '99', 'Bolsos y Mochilas', 'Uds', 3, 3, 0, 'N', 21, 10, 12.1, 30, 'GEN', '923', NULL, NULL, '2026-07-09 07:46:09', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'VERDE', '', 'XXXL', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0070', 'COMPLEMENTOS003', 'COMPLEMENTOS003/MARRON/S', 3, 'COMPLEMENTOS', '', '33', 'VCartera de lujo', 'Uds', 1, 1, 0, 'N', 21, 5, 6.05, 5, 'GEN', '877', NULL, NULL, '2026-07-09 07:46:09', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'MARRON', '', 'S', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0080', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/S', 1, 'DEPORTIVO', '', '011', 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 9, 10.89, 9, 'GEN', '989', NULL, NULL, '2026-07-09 07:46:09', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'AZUL', '', 'S', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0090', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/M', 1, 'DEPORTIVO', '', '011', 'Ropa Deportiva', 'Uds', 2, 2, 0, 'N', 21, 9, 10.89, 18, 'GEN', '989', NULL, NULL, '2026-07-09 07:46:09', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'AZUL', '', 'M', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0100', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/L', 1, 'DEPORTIVO', '', '011', 'Ropa Deportiva', 'Uds', 2, 2, 0, 'N', 21, 9, 10.89, 18, 'GEN', '989', NULL, NULL, '2026-07-09 07:46:09', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'AZUL', '', 'L', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0110', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/XL', 1, 'DEPORTIVO', '', '011', 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 9, 10.89, 9, 'GEN', '989', NULL, NULL, '2026-07-09 07:46:09', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'AZUL', '', 'XL', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0120', 'DEPORTIVO006', 'DEPORTIVO006/AZUL/XXL', 1, 'DEPORTIVO', '', '011', 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 9, 10.89, 9, 'GEN', '989', NULL, NULL, '2026-07-09 07:46:09', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'AZUL', '', 'XXL', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0130', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/S', 1, 'DEPORTIVO', '', '22', 'mallitas', 'Uds', 1, 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', '222', NULL, NULL, '2026-07-09 07:46:09', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'NEGRO', '', 'S', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0140', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/M', 1, 'DEPORTIVO', '', '22', 'mallitas', 'Uds', 1, 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', '222', NULL, NULL, '2026-07-09 07:46:09', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'NEGRO', '', 'M', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0150', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/L', 1, 'DEPORTIVO', '', '22', 'mallitas', 'Uds', 1, 1, 0, 'N', 21, 2, 2.42, 2, 'GEN', '222', NULL, NULL, '2026-07-09 07:46:10', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'NEGRO', '', 'L', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0160', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XL', 1, 'DEPORTIVO', '', '22', 'mallitas', 'Uds', 2, 2, 0, 'N', 21, 2, 2.42, 4, 'GEN', '222', NULL, NULL, '2026-07-09 07:46:10', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'NEGRO', '', 'XL', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0170', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XXL', 1, 'DEPORTIVO', '', '22', 'mallitas', 'Uds', 2, 2, 0, 'N', 21, 2, 2.42, 4, 'GEN', '222', NULL, NULL, '2026-07-09 07:46:10', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'NEGRO', '', 'XXL', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0180', 'DEPORTIVO009', 'DEPORTIVO009/NEGRO/XXXL', 1, 'DEPORTIVO', '', '22', 'mallitas', 'Uds', 2, 2, 0, 'N', 21, 2, 2.42, 4, 'GEN', '222', NULL, NULL, '2026-07-09 07:46:10', '2026-05-28 19:52:48', 'Administrador', 'Administrador', 'NEGRO', '', 'XXXL', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0190', 'COMPLEMENTOS003', 'COMPLEMENTOS003/MARRON/M', 3, 'COMPLEMENTOS', '', '33', 'VCartera de lujo', 'Uds', 2, 2, 2, 'N', 21, 5, 6.05, 10, 'GEN', '877', NULL, NULL, '2026-07-09 07:46:10', '2026-06-22 08:15:02', 'Administrador', 'Administrador', 'MARRON', '', 'M', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0200', 'COMPLEMENTOS003', 'COMPLEMENTOS003/MARRON/XL', 3, 'COMPLEMENTOS', '', '33', 'VCartera de lujo', 'Uds', 2, 2, 2, 'N', 21, 5, 6.05, 10, 'GEN', '877', NULL, NULL, '2026-07-09 07:46:10', '2026-06-22 08:15:02', 'Administrador', 'Administrador', 'MARRON', '', 'XL', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0210', 'COMPLEMENTOS003', 'COMPLEMENTOS003/MARRON/L', 3, 'COMPLEMENTOS', '', '33', 'VCartera de lujo', 'Uds', 2, 2, 2, 'N', 21, 5, 6.05, 10, 'GEN', '877', NULL, NULL, '2026-07-09 07:46:10', '2026-06-22 08:15:02', 'Administrador', 'Administrador', 'MARRON', '', 'L', '', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0220', 'COMPLEMENTOS003', 'COMPLEMENTOS003/MARRON/XXXL', 3, 'COMPLEMENTOS', '', '33', 'VCartera de lujo', 'Uds', 2, 2, 2, 'N', 21, 5, 6.05, 10, 'GEN', '877', NULL, NULL, '2026-07-09 07:46:10', '2026-06-22 08:19:28', 'Administrador', 'Administrador', 'MARRON', '', 'XXXL', '', '', '', '', '', '', '', 2, 0),
+  ('000002', 'A1', '0010', 'DEPORTIVO007', 'DEPORTIVO007/VERDE/S', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 1, 0, 0, 'E', 0, 10, 10, 10, 'GEN', '0988', NULL, NULL, '2026-07-09 07:46:24', '2026-05-28 19:54:41', 'Administrador', 'Administrador', 'VERDE', '', 'S', '', '', '', '', '', '', '', 2, 0),
+  ('000002', 'A1', '0020', 'DEPORTIVO007', 'DEPORTIVO007/VERDE/M', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 2, 0, 0, 'E', 0, 10, 10, 20, 'GEN', '0988', NULL, NULL, '2026-07-09 07:46:24', '2026-05-28 19:54:41', 'Administrador', 'Administrador', 'VERDE', '', 'M', '', '', '', '', '', '', '', 2, 0),
+  ('000002', 'A1', '0030', 'DEPORTIVO007', 'DEPORTIVO007/VERDE/L', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 2, 0, 0, 'E', 0, 10, 10, 20, 'GEN', '0988', NULL, NULL, '2026-07-09 07:46:24', '2026-05-28 19:54:41', 'Administrador', 'Administrador', 'VERDE', '', 'L', '', '', '', '', '', '', '', 2, 0),
+  ('000002', 'A1', '0040', 'DEPORTIVO007', 'DEPORTIVO007/VERDE/XL', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 2, 0, 0, 'E', 0, 10, 10, 20, 'GEN', '0988', NULL, NULL, '2026-07-09 07:46:24', '2026-05-28 19:54:41', 'Administrador', 'Administrador', 'VERDE', '', 'XL', '', '', '', '', '', '', '', 2, 0),
+  ('000002', 'A1', '0050', 'DEPORTIVO007', 'DEPORTIVO007/VERDE/XXL', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 1, 0, 0, 'E', 0, 10, 10, 10, 'GEN', '0988', NULL, NULL, '2026-07-09 07:46:24', '2026-05-28 19:54:41', 'Administrador', 'Administrador', 'VERDE', '', 'XXL', '', '', '', '', '', '', '', 2, 0),
+  ('000002', 'A1', '0060', 'DEPORTIVO007', 'DEPORTIVO007/VERDE/XXXL', 1, 'DEPORTIVO', '', NULL, 'Ropa Deportiva', 'Uds', 9, 0, 9, 'E', 0, 10, 10, 90, 'GEN', '0988', NULL, NULL, '2026-07-09 07:46:24', '2026-05-28 19:54:41', 'Administrador', 'Administrador', 'VERDE', '', 'XXXL', '', '', '', '', '', '', '', 2, 0),
+  ('000002', 'A1', '0070', 'DEPORTIVO008', 'DEPORTIVO008/BEIGE/37', 5, 'DEPORTIVO', '', NULL, 'Top pechines', 'Uds', 11, 0, 11, 'E', 0, 12, 12, 132, 'GEN', '3332', NULL, NULL, '2026-07-09 07:46:24', '2026-05-28 19:54:41', 'Administrador', 'Administrador', 'BEIGE', '', '37', '', '', '', '', '', '', '', 2, 0),
+  ('000002', 'A1', '0080', 'DEPORTIVO008', 'DEPORTIVO008/BEIGE/38', 5, 'DEPORTIVO', '', NULL, 'Top pechines', 'Uds', 1, 0, 0, 'E', 0, 12, 12, 12, 'GEN', '3332', NULL, NULL, '2026-07-09 07:46:24', '2026-05-28 19:54:41', 'Administrador', 'Administrador', 'BEIGE', '', '38', '', '', '', '', '', '', '', 2, 0),
+  ('000002', 'A1', '0090', 'DEPORTIVO008', 'DEPORTIVO008/BEIGE/42', 5, 'DEPORTIVO', '', NULL, 'Top pechines', 'Uds', 1, 0, 1, 'E', 0, 12, 12, 12, 'GEN', '3332', NULL, NULL, '2026-07-09 07:46:24', '2026-05-28 19:54:41', 'Administrador', 'Administrador', 'BEIGE', '', '42', '', '', '', '', '', '', '', 2, 0),
+  ('000002', 'A1', '0100', 'DEPORTIVO008', 'DEPORTIVO008/BEIGE/41', 5, 'DEPORTIVO', '', NULL, 'Top pechines', 'Uds', 1, 0, 1, 'E', 0, 12, 12, 12, 'GEN', '3332', NULL, NULL, '2026-07-09 07:46:24', '2026-05-28 19:54:41', 'Administrador', 'Administrador', 'BEIGE', '', '41', '', '', '', '', '', '', '', 2, 0),
+  ('000002', 'A1', '0110', 'DEPORTIVO008', 'DEPORTIVO008/BEIGE/40', 5, 'DEPORTIVO', '', NULL, 'Top pechines', 'Uds', 1, 0, 1, 'E', 0, 12, 12, 12, 'GEN', '3332', NULL, NULL, '2026-07-09 07:46:24', '2026-05-28 19:54:41', 'Administrador', 'Administrador', 'BEIGE', '', '40', '', '', '', '', '', '', '', 2, 0),
+  ('000002', 'A1', '0120', 'DEPORTIVO008', 'DEPORTIVO008/BEIGE/39', 5, 'DEPORTIVO', '', NULL, 'Top pechines', 'Uds', 1, 0, 1, 'E', 0, 12, 12, 12, 'GEN', '3332', NULL, NULL, '2026-07-09 07:46:24', '2026-05-28 19:54:41', 'Administrador', 'Administrador', 'BEIGE', '', '39', '', '', '', '', '', '', '', 2, 0),
+  ('000004', 'A1', '0010', 'CALV00002', 'CALV00002/BLANCO/37', 5, 'CALV', '', 'BLANCO', 'CALZADO VESTIR', 'Uds', 1, 1, 0, 'N', 21, 12, 14.52, 12, 'GEN', '2058', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000004', 'A1', '0020', 'CALV00002', 'CALV00002/BLANCO/38', 5, 'CALV', '', 'BLANCO', 'CALZADO VESTIR', 'Uds', 1, 1, 0, 'N', 21, 12, 14.52, 12, 'GEN', '2058', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000004', 'A1', '0030', 'CALV00002', 'CALV00002/BLANCO/41', 5, 'CALV', '', 'BLANCO', 'CALZADO VESTIR', 'Uds', 1, 1, 0, 'N', 21, 12, 14.52, 12, 'GEN', '2058', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000004', 'A1', '0040', 'CALV00002', 'CALV00002/BLANCO/40', 5, 'CALV', '', 'BLANCO', 'CALZADO VESTIR', 'Uds', 1, 1, 0, 'N', 21, 12, 14.52, 12, 'GEN', '2058', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000004', 'A1', '0050', 'CALV00002', 'CALV00002/BLANCO/39', 5, 'CALV', '', 'BLANCO', 'CALZADO VESTIR', 'Uds', 1, 1, 0, 'N', 21, 12, 14.52, 12, 'GEN', '2058', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000004', 'A1', '0060', 'DEPORTIVO004', 'DEPORTIVO004/0908/42', 4, 'DEPORTIVO', '', '0908', 'Ropa Deportiva', 'Uds', 2, 2, 0, 'N', 21, 13, 15.73, 26, 'GEN', '32122', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000004', 'A1', '0070', 'DEPORTIVO004', 'DEPORTIVO004/0908/43', 4, 'DEPORTIVO', '', '0908', 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 13, 15.73, 13, 'GEN', '32122', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000004', 'A1', '0080', 'DEPORTIVO004', 'DEPORTIVO004/0908/41', 4, 'DEPORTIVO', '', '0908', 'Ropa Deportiva', 'Uds', 2, 2, 0, 'N', 21, 13, 15.73, 26, 'GEN', '32122', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000004', 'A1', '0090', 'DEPORTIVO004', 'DEPORTIVO004/0908/40', 4, 'DEPORTIVO', '', '0908', 'Ropa Deportiva', 'Uds', 2, 2, 0, 'N', 21, 13, 15.73, 26, 'GEN', '32122', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000004', 'A1', '0100', 'DEPORTIVO004', 'DEPORTIVO004/0908/44', 4, 'DEPORTIVO', '', '0908', 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 13, 15.73, 13, 'GEN', '32122', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000004', 'A1', '0110', 'DEPORTIVO004', 'DEPORTIVO004/0908/39', 4, 'DEPORTIVO', '', '0908', 'Ropa Deportiva', 'Uds', 1, 1, 0, 'N', 21, 13, 15.73, 13, 'GEN', '32122', NULL, NULL, '2026-06-13 12:04:17', '2026-06-13 12:02:01', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000004', 'A1', '0120', 'SUDADERA-HOOD', '', 1, 'DEPORTIVO', NULL, NULL, 'Sudadera con Capucha Unisex', 'Uds', 5, 0, 0, 'N', 21, 10, 12.1, 50, 'GEN', '', NULL, NULL, '2026-07-01 10:05:19', '2026-07-01 10:05:01', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0);
 -- 47 registros exportados
 
 
@@ -19367,6 +20125,7 @@ CREATE TABLE `fza_pedidos_lineas` (
   `CODIGO_TAR_PEDLIN` varchar(10) NULL DEFAULT NULL,
   `CANTIDAD_PEDLIN` decimal(19,6) NULL DEFAULT '1.000000',
   `CANTIDAD_ENTREGADA_PEDLIN` decimal(19,6) NULL DEFAULT '0.000000' COMMENT 'Total entregado acumulado de la línea',
+  `CANTIDAD_A_ALBARANAR_PEDLIN` decimal(19,6) NULL DEFAULT '0.000000',
   `CANTIDAD_PENDIENTE_PEDLIN` decimal(19,6) NULL DEFAULT '0.000000' COMMENT 'Cantidad - entregada (campo calculado para reportes)',
   `ESENTREGADA_PEDLIN` varchar(1) NULL DEFAULT 'N' COMMENT 'S si pendiente=0',
   `CODIGO_ALMACEN_PEDLIN` varchar(10) NULL DEFAULT NULL,
@@ -19398,24 +20157,29 @@ ALTER TABLE `fza_pedidos_lineas` ADD INDEX `IDX_PEDLIN_PENDIENTE` (`ESENTREGADA_
 ALTER TABLE `fza_pedidos_lineas` ADD INDEX `IDX_PEDLIN_UNIDAD` (`CODIGO_UNIDAD_PEDLIN`);
 
 -- Datos de fza_pedidos_lineas
-INSERT INTO `fza_pedidos_lineas` (`NUMERO_PED_PEDLIN`, `SERIE_PED_PEDLIN`, `LINEA_PEDLIN`, `IDLINEAPS_PEDLIN`, `IDPRODPS_PEDLIN`, `CODIGOPRODPS_PEDLIN`, `IDATRIBPRODPS_PEDLIN`, `CODBAR_ART_PEDLIN`, `CODIGO_ART_PEDLIN`, `CODIGO_FAM_PEDLIN`, `NOMBRE_FAM_PEDLIN`, `FECHA_ENTREGA_PEDLIN`, `TIPO_CANTIDAD_ARTICULO_PEDLIN`, `ESIMP_INCL_TARIFA_PEDLIN`, `TIPO_IVA_ARTICULO_PEDLIN`, `DESCRIPCION_ARTICULO_PEDLIN`, `CODIGO_TAR_PEDLIN`, `CANTIDAD_PEDLIN`, `CANTIDAD_ENTREGADA_PEDLIN`, `CANTIDAD_PENDIENTE_PEDLIN`, `ESENTREGADA_PEDLIN`, `CODIGO_ALMACEN_PEDLIN`, `PRECIO_VENTA_SIVA_ARTICULO_PEDLIN`, `PORCENTAJE_IVA_PEDLIN`, `PRECIO_VENTA_CIVA_ARTICULO_PEDLIN`, `TOTAL_PEDLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `CODIGO_UNIDAD_PEDLIN`, `ATTR1_VALOR_PEDLIN`, `ATTR1_NOMBRE_PEDLIN`, `ATTR2_VALOR_PEDLIN`, `ATTR2_NOMBRE_PEDLIN`, `ATTR3_VALOR_PEDLIN`, `ATTR3_NOMBRE_PEDLIN`, `ATTR4_VALOR_PEDLIN`, `ATTR4_NOMBRE_PEDLIN`, `ATTR5_VALOR_PEDLIN`, `ATTR5_NOMBRE_PEDLIN`, `NUM_ATRIBUTOS_PEDLIN`, `ID_AC_PIVOT_PEDLIN`) VALUES
-  ('000001', 'A1', '0020', NULL, NULL, 'BOTIN-ANIT/NEGRO/39', NULL, NULL, 'BOTIN-ANIT', 'CALZADO', 'Calzado Todo tiempo', NULL, 'Uds', 'N', 'N', 'Botín Ante Mujer', 'VENTAMAYOR', 1, 1, 0, 'S', 'GEN', 52, 21, 62.92, 52, '2026-07-07 19:27:25', '2026-07-07 17:41:27', 'Administrador', 'Administrador', 'BOTIN-ANIT/NEGRO/39', 'NEGRO', 'Color', '39', 'Talla', '', '', '', '', '', '', 2, 0),
-  ('000001', 'A1', '0030', NULL, NULL, 'BOTIN-ANIT/NEGRO/40', NULL, NULL, 'BOTIN-ANIT', 'CALZADO', 'Calzado Todo tiempo', NULL, 'Uds', 'N', 'N', 'Botín Ante Mujer', 'VENTAMAYOR', 2, 2, 0, 'S', 'GEN', 52, 21, 62.92, 104, '2026-07-07 19:39:59', '2026-07-07 19:08:26', 'Administrador', 'Administrador', 'BOTIN-ANIT', 'NEGRO', '', '40', '', '', '', '', '', '', '', 0, 0),
-  ('000001', 'A1', '0040', NULL, NULL, 'BOTIN-ANIT/NEGRO/41', NULL, NULL, 'BOTIN-ANIT', 'CALZADO', 'Calzado Todo tiempo', NULL, 'Uds', 'N', 'N', 'Botín Ante Mujer', 'VENTAMAYOR', 2, 2, 0, 'S', 'GEN', 52, 21, 62.92, 104, '2026-07-07 19:39:59', '2026-07-07 19:08:47', 'Administrador', 'Administrador', 'BOTIN-ANIT', 'NEGRO', '', '41', '', '', '', '', '', '', '', 0, 0),
-  ('000001', 'AG1', '0010', NULL, NULL, 'CALV00001/3838/41', NULL, NULL, 'CALV00001', 'CALV', '', NULL, 'Uds', 'S', 'N', 'CALZADO VESTIR', 'PVP', 1, 0, 1, 'N', 'GEN', 164.95, 21, 199.5895, 164.95, '2026-07-07 17:52:01', '2026-07-07 17:43:48', 'Administrador', 'Administrador', 'CALV00001/3838/41', '3838', 'Color', '41', '', '', '', '', '', '', '', 2, 4),
-  ('000001', 'PED', '0010', NULL, NULL, NULL, NULL, NULL, 'SUDADERA-HOOD', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Sudadera con Capucha Negro L', NULL, 0, 0, 0, 'S', 'GEN', 28, 21, 33.88, 0, '2026-07-07 17:53:44', '2026-02-12 10:00:00', 'DEMO', 'Administrador', 'SUDADERA-HOOD', '', 'Color', '', '', '', '', '', '', '', '', 0, 1),
-  ('000001', 'PED', '0020', NULL, NULL, NULL, NULL, NULL, 'LEGGING-SPORT', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Legging Deportivo Negro M', NULL, 0, 0, 0, 'S', 'GEN', 12, 21, 14.52, 0, '2026-07-07 17:53:44', '2026-02-12 10:00:00', 'DEMO', 'Administrador', 'LEGGING-SPORT', '', 'Color', '', '', '', '', '', '', '', '', 0, 3),
-  ('000001', 'PED', '0030', NULL, NULL, NULL, NULL, NULL, 'CAMI-POLO', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Polo Manga Corta Blanco S', NULL, 0, 0, 0, 'S', 'GEN', 18, 21, 21.78, 0, '2026-07-07 17:53:44', '2026-02-12 10:00:00', 'DEMO', 'Administrador', 'CAMI-POLO', '', 'Color', '', '', '', '', '', '', '', '', 0, 1),
-  ('000002', 'PED', '0010', NULL, NULL, NULL, NULL, NULL, 'VEST-FLOR', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Vestido Estampado Verano Azul S', NULL, 15, 0, 0, 'N', NULL, 12, 21, 0, 180, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
-  ('000002', 'PED', '0020', NULL, NULL, NULL, NULL, NULL, 'VEST-FLOR', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Vestido Estampado Verano Rojo M', NULL, 15, 0, 0, 'N', NULL, 12, 21, 0, 180, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
-  ('000002', 'PED', '0030', NULL, NULL, NULL, NULL, NULL, 'BLUS-SEDA', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Blusa de Seda Cuello V', NULL, 10, 0, 0, 'N', NULL, 22, 21, 0, 220, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
-  ('000002', 'PED', '0040', NULL, NULL, NULL, NULL, NULL, 'FALD-PLIS', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Falda Larga Plisada Blanco M', NULL, 10, 0, 0, 'N', NULL, 18, 21, 0, 180, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
-  ('000003', 'A1', '0010', NULL, NULL, 'SUDADERA-HOOD/GRIS/M', NULL, NULL, 'SUDADERA-HOOD', 'DEPORTIVO', 'Ropa y calzado deportivo', NULL, 'Uds', 'N', 'N', 'Sudadera con Capucha Unisex', 'VENTAMAYOR', 1, 0, 1, 'N', 'GEN', 28, 21, 33.88, 28, '2026-07-07 17:55:31', '2026-07-07 17:54:09', 'Administrador', 'Administrador', 'SUDADERA-HOOD/GRIS/M', 'GRIS', 'Color', 'M', '', '', '', '', '', '', '', 2, 1),
-  ('000003', 'A1', '0020', NULL, NULL, 'CAMI-POLO/AZUL/L', NULL, NULL, 'CAMI-POLO', 'ROPA', 'Ropa de Vestir a la moda', NULL, 'Uds', 'N', 'N', 'Polo Manga Corta Hombre', 'VENTAMAYOR', 1, 0, 1, 'N', 'GEN', 18, 21, 21.78, 18, '2026-07-07 17:56:40', '2026-07-07 17:54:15', 'Administrador', 'Administrador', 'CAMI-POLO/AZUL/L', 'AZUL', 'Color', 'L', '', '', '', '', '', '', '', 2, 1),
-  ('000003', 'A1', '0030', NULL, NULL, 'BOLSOS00005/AZUL_CIELO/42', NULL, NULL, 'BOLSOS00005', 'BOLSOS', 'Bolsos, bolsas y mochilas de señora', NULL, 'Uds', 'N', 'N', 'Bolsos y Mochilas', 'VENTAMAYOR', 1, 0, 1, 'N', 'GEN', 0, 21, 0, 0, '2026-07-07 17:56:40', '2026-07-07 17:54:46', 'Administrador', 'Administrador', 'BOLSOS00005/AZUL_CIELO/42', 'AZUL_CIELO', 'Color', '42', '', '', '', '', '', '', '', 2, 4),
-  ('000003', 'PED', '0010', NULL, NULL, NULL, NULL, NULL, 'ABRIGO-PAÑO', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Abrigo de Paño Negro XL', NULL, 1, 0, 0, 'N', NULL, 120, 21, 0, 120, '2026-07-03 16:50:29', '2026-02-14 11:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
-  ('000003', 'PED', '0020', NULL, NULL, NULL, NULL, NULL, 'ZAP-BOTA-MT', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Bota Montaña Marrón 43', NULL, 1, 0, 0, 'N', NULL, 60, 21, 0, 60, '2026-07-03 16:50:29', '2026-02-14 11:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0);
--- 16 registros exportados
+INSERT INTO `fza_pedidos_lineas` (`NUMERO_PED_PEDLIN`, `SERIE_PED_PEDLIN`, `LINEA_PEDLIN`, `IDLINEAPS_PEDLIN`, `IDPRODPS_PEDLIN`, `CODIGOPRODPS_PEDLIN`, `IDATRIBPRODPS_PEDLIN`, `CODBAR_ART_PEDLIN`, `CODIGO_ART_PEDLIN`, `CODIGO_FAM_PEDLIN`, `NOMBRE_FAM_PEDLIN`, `FECHA_ENTREGA_PEDLIN`, `TIPO_CANTIDAD_ARTICULO_PEDLIN`, `ESIMP_INCL_TARIFA_PEDLIN`, `TIPO_IVA_ARTICULO_PEDLIN`, `DESCRIPCION_ARTICULO_PEDLIN`, `CODIGO_TAR_PEDLIN`, `CANTIDAD_PEDLIN`, `CANTIDAD_ENTREGADA_PEDLIN`, `CANTIDAD_A_ALBARANAR_PEDLIN`, `CANTIDAD_PENDIENTE_PEDLIN`, `ESENTREGADA_PEDLIN`, `CODIGO_ALMACEN_PEDLIN`, `PRECIO_VENTA_SIVA_ARTICULO_PEDLIN`, `PORCENTAJE_IVA_PEDLIN`, `PRECIO_VENTA_CIVA_ARTICULO_PEDLIN`, `TOTAL_PEDLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `CODIGO_UNIDAD_PEDLIN`, `ATTR1_VALOR_PEDLIN`, `ATTR1_NOMBRE_PEDLIN`, `ATTR2_VALOR_PEDLIN`, `ATTR2_NOMBRE_PEDLIN`, `ATTR3_VALOR_PEDLIN`, `ATTR3_NOMBRE_PEDLIN`, `ATTR4_VALOR_PEDLIN`, `ATTR4_NOMBRE_PEDLIN`, `ATTR5_VALOR_PEDLIN`, `ATTR5_NOMBRE_PEDLIN`, `NUM_ATRIBUTOS_PEDLIN`, `ID_AC_PIVOT_PEDLIN`) VALUES
+  ('000001', 'A1', '0020', NULL, NULL, 'BOTIN-ANIT/NEGRO/39', NULL, NULL, 'BOTIN-ANIT', 'CALZADO', 'Calzado Todo tiempo', NULL, 'Uds', 'N', 'N', 'Botín Ante Mujer', 'VENTAMAYOR', 3, 3, 0, 0, 'S', 'GEN', 52, 21, 62.92, 156, '2026-07-09 06:30:40', '2026-07-07 17:41:27', 'Administrador', 'Administrador', 'BOTIN-ANIT/NEGRO/39', 'NEGRO', 'Color', '39', 'Talla', '', '', '', '', '', '', 2, 0),
+  ('000001', 'A1', '0030', NULL, NULL, 'BOTIN-ANIT/NEGRO/40', NULL, NULL, 'BOTIN-ANIT', 'CALZADO', 'Calzado Todo tiempo', NULL, 'Uds', 'N', 'N', 'Botín Ante Mujer', 'VENTAMAYOR', 3, 3, 0, 0, 'S', 'GEN', 52, 21, 62.92, 156, '2026-07-09 06:30:42', '2026-07-07 19:08:26', 'Administrador', 'Administrador', 'BOTIN-ANIT', 'NEGRO', '', '40', '', '', '', '', '', '', '', 0, 0),
+  ('000001', 'A1', '0040', NULL, NULL, 'BOTIN-ANIT/NEGRO/41', NULL, NULL, 'BOTIN-ANIT', 'CALZADO', 'Calzado Todo tiempo', NULL, 'Uds', 'N', 'N', 'Botín Ante Mujer', 'VENTAMAYOR', 3, 3, 0, 0, 'S', 'GEN', 52, 21, 62.92, 156, '2026-07-09 06:30:45', '2026-07-07 19:08:47', 'Administrador', 'Administrador', 'BOTIN-ANIT', 'NEGRO', '', '41', '', '', '', '', '', '', '', 0, 0),
+  ('000001', 'A1', '0050', NULL, NULL, '', NULL, NULL, 'DEPORTIVO004', 'DEPORTIVO', 'Ropa y calzado deportivo', NULL, 'Uds', 'N', 'N', 'Ropa Deportiva', 'VENTAMAYOR', 1, 0, 0, 1, 'N', 'GEN', 0, 21, 0, 0, '2026-07-09 06:31:10', '2026-07-09 06:31:10', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000001', 'A1', '0060', NULL, NULL, '', NULL, NULL, 'ZAP-OXFORD', 'CALZADO', 'Calzado Todo tiempo', NULL, 'Uds', 'N', 'N', 'Zapato Oxford Piel Hombre', 'VENTAMAYOR', 1, 1, 0, 0, 'S', 'GEN', 0, 21, 0, 0, '2026-07-09 06:33:27', '2026-07-09 06:31:24', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000001', 'AG1', '0010', NULL, NULL, 'CALV00001/3838/41', NULL, NULL, 'CALV00001', 'CALV', '', NULL, 'Uds', 'S', 'N', 'CALZADO VESTIR', 'PVP', 1, 0, 0, 1, 'N', 'GEN', 164.95, 21, 199.5895, 164.95, '2026-07-07 17:52:01', '2026-07-07 17:43:48', 'Administrador', 'Administrador', 'CALV00001/3838/41', '3838', 'Color', '41', '', '', '', '', '', '', '', 2, 4),
+  ('000001', 'PED', '0010', NULL, NULL, NULL, NULL, NULL, 'SUDADERA-HOOD', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Sudadera con Capucha Negro L', NULL, 0, 0, 0, 0, 'S', 'GEN', 28, 21, 33.88, 0, '2026-07-07 17:53:44', '2026-02-12 10:00:00', 'DEMO', 'Administrador', 'SUDADERA-HOOD', '', 'Color', '', '', '', '', '', '', '', '', 0, 1),
+  ('000001', 'PED', '0020', NULL, NULL, NULL, NULL, NULL, 'LEGGING-SPORT', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Legging Deportivo Negro M', NULL, 0, 0, 0, 0, 'S', 'GEN', 12, 21, 14.52, 0, '2026-07-07 17:53:44', '2026-02-12 10:00:00', 'DEMO', 'Administrador', 'LEGGING-SPORT', '', 'Color', '', '', '', '', '', '', '', '', 0, 3),
+  ('000001', 'PED', '0030', NULL, NULL, NULL, NULL, NULL, 'CAMI-POLO', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Polo Manga Corta Blanco S', NULL, 0, 0, 0, 0, 'S', 'GEN', 18, 21, 21.78, 0, '2026-07-07 17:53:44', '2026-02-12 10:00:00', 'DEMO', 'Administrador', 'CAMI-POLO', '', 'Color', '', '', '', '', '', '', '', '', 0, 1),
+  ('000002', 'PED', '0010', NULL, NULL, NULL, NULL, NULL, 'VEST-FLOR', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Vestido Estampado Verano Azul S', NULL, 15, 0, 0, 0, 'N', NULL, 12, 21, 0, 180, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000002', 'PED', '0020', NULL, NULL, NULL, NULL, NULL, 'VEST-FLOR', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Vestido Estampado Verano Rojo M', NULL, 15, 0, 0, 0, 'N', NULL, 12, 21, 0, 180, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000002', 'PED', '0030', NULL, NULL, NULL, NULL, NULL, 'BLUS-SEDA', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Blusa de Seda Cuello V', NULL, 10, 0, 0, 0, 'N', NULL, 22, 21, 0, 220, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000002', 'PED', '0040', NULL, NULL, NULL, NULL, NULL, 'FALD-PLIS', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Falda Larga Plisada Blanco M', NULL, 10, 0, 0, 0, 'N', NULL, 18, 21, 0, 180, '2026-07-03 16:50:29', '2026-02-13 09:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000003', 'A1', '0010', NULL, NULL, 'SUDADERA-HOOD/GRIS/M', NULL, NULL, 'SUDADERA-HOOD', 'DEPORTIVO', 'Ropa y calzado deportivo', NULL, 'Uds', 'N', 'N', 'Sudadera con Capucha Unisex', 'VENTAMAYOR', 1, 0, 0, 1, 'N', 'GEN', 28, 21, 33.88, 28, '2026-07-07 17:55:31', '2026-07-07 17:54:09', 'Administrador', 'Administrador', 'SUDADERA-HOOD/GRIS/M', 'GRIS', 'Color', 'M', '', '', '', '', '', '', '', 2, 1),
+  ('000003', 'A1', '0020', NULL, NULL, 'CAMI-POLO/AZUL/L', NULL, NULL, 'CAMI-POLO', 'ROPA', 'Ropa de Vestir a la moda', NULL, 'Uds', 'N', 'N', 'Polo Manga Corta Hombre', 'VENTAMAYOR', 1, 0, 0, 1, 'N', 'GEN', 18, 21, 21.78, 18, '2026-07-07 17:56:40', '2026-07-07 17:54:15', 'Administrador', 'Administrador', 'CAMI-POLO/AZUL/L', 'AZUL', 'Color', 'L', '', '', '', '', '', '', '', 2, 1),
+  ('000003', 'A1', '0030', NULL, NULL, 'BOLSOS00005/AZUL_CIELO/42', NULL, NULL, 'BOLSOS00005', 'BOLSOS', 'Bolsos, bolsas y mochilas de señora', NULL, 'Uds', 'N', 'N', 'Bolsos y Mochilas', 'VENTAMAYOR', 1, 0, 0, 1, 'N', 'GEN', 0, 21, 0, 0, '2026-07-07 17:56:40', '2026-07-07 17:54:46', 'Administrador', 'Administrador', 'BOLSOS00005/AZUL_CIELO/42', 'AZUL_CIELO', 'Color', '42', '', '', '', '', '', '', '', 2, 4),
+  ('000003', 'PED', '0010', NULL, NULL, NULL, NULL, NULL, 'ABRIGO-PAÑO', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Abrigo de Paño Negro XL', NULL, 1, 0, 0, 0, 'N', NULL, 120, 21, 0, 120, '2026-07-03 16:50:29', '2026-02-14 11:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000003', 'PED', '0020', NULL, NULL, NULL, NULL, NULL, 'ZAP-BOTA-MT', NULL, NULL, NULL, 'Uds', 'S', 'N', 'Bota Montaña Marrón 43', NULL, 1, 0, 0, 0, 'N', NULL, 60, 21, 0, 60, '2026-07-03 16:50:29', '2026-02-14 11:00:00', 'DEMO', 'DEMO', '', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  ('000006', 'A1', '0010', NULL, NULL, 'CAMI-BASICA/BLANCO/M', NULL, NULL, 'CAMI-BASICA', 'ROPA', 'Ropa de Vestir a la moda', NULL, 'Uds', 'S', 'N', 'Camiseta de Algodón Básica', 'PVP', 1, 0, 0, 1, 'N', 'GEN', 123.92562, 21, 149.95, 123.92562, '2026-07-08 07:42:36', '2026-07-08 07:42:16', 'Administrador', 'Administrador', 'CAMI-BASICA/BLANCO/M', 'BLANCO', 'Color', 'M', 'Talla', '', '', '', '', '', '', 2, 0),
+  ('000009', 'A1', '0010', NULL, NULL, 'PANT-CHIN/BEIGE/42', NULL, NULL, 'PANT-CHIN', 'ROPA', 'Ropa de Vestir a la moda', NULL, 'Uds', 'S', 'N', 'Pantalón Chino Slim', 'PVP', 1, 1, 0, 0, 'S', 'GEN', 5, 21, 6.05, 5, '2026-07-08 08:19:14', '2026-07-08 08:18:02', 'Administrador', 'Administrador', 'PANT-CHIN/BEIGE/42', 'BEIGE', 'Color', '42', 'Talla', '', '', '', '', '', '', 2, 0),
+  ('000009', 'A1', '0020', NULL, NULL, 'DEPORTIVO009/NEGRO/M', NULL, NULL, 'DEPORTIVO009', 'DEPORTIVO', 'Ropa y calzado deportivo', NULL, 'Uds', 'S', 'N', 'mallitas', 'PVP', 1, 1, 0, 0, 'S', 'GEN', 12, 21, 14.52, 12, '2026-07-08 08:19:14', '2026-07-08 08:18:16', 'Administrador', 'Administrador', 'DEPORTIVO009/NEGRO/M', 'NEGRO', 'Color', 'M', 'Talla', '', '', '', '', '', '', 2, 0);
+-- 21 registros exportados
 
 
 -- Tabla: fza_pedidos_mensajes
@@ -20737,7 +21501,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-07 19:54:17', '2026-07-07 19:54:17', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-09 07:45:56', '2026-07-09 07:45:56', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Vendedores', 'S', '012', '2026-07-02 18:49:30', '2026-07-02 18:49:30', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
 -- 2 registros exportados
 
@@ -27957,140 +28721,6 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_1', 'oMostrarPerfil', 'False', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'oRenameComponents', 'False', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'tv2__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CANTIDAD_FACLIN_Caption', 'Cantidad', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CANTIDAD_FACLIN_Index', '10', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CANTIDAD_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CANTIDAD_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CANTIDAD_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CANTIDAD_FACLIN_Width', '90', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_ART_FACLIN_Caption', 'Código Artículo', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_ART_FACLIN_Index', '1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_ART_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_ART_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_ART_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_ART_FACLIN_Width', '152', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_FAM_FACLIN_Caption', 'Código Familia', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_FAM_FACLIN_Index', '2', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_FAM_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_FAM_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_FAM_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_FAM_FACLIN_Width', '153', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_PRV_FACLIN_Caption', 'Código Proveedor', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_PRV_FACLIN_Index', '5', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_PRV_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_PRV_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_PRV_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_CODIGO_PRV_FACLIN_Width', '163', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Caption', 'Descripción', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Index', '8', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Width', '300', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Caption', 'ImpIncl', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Index', '15', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Width', '79', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Caption', 'Proveedor Principal', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Index', '4', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Width', '172', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Caption', 'Fecha Entrega', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Index', '21', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Width', '202', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_Filtro', '', '', NULL, NULL, '2026-05-07 09:21:16', '2026-05-07 09:21:16', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_LINEA_FACLIN_Caption', 'Nro Linea', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_LINEA_FACLIN_Index', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_LINEA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_LINEA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_LINEA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_LINEA_FACLIN_Width', '104', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Caption', 'Nombre Familia', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Index', '3', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_NOMBRE_FAM_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_NOMBRE_FAM_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Width', '245', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Caption', '% Dto', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Index', '12', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Caption', '% IVA', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Index', '17', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Width', '79', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_DTO_FACLIN_Caption', 'Menos Dto', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_DTO_FACLIN_Index', '13', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_DTO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_DTO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_DTO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_DTO_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Caption', 'Precio Salida', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Index', '11', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Caption', 'Precio Coste', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Index', '7', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Caption', 'Precio Ud. con IVA', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Index', '18', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Width', '166', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Caption', 'Precio Ud. sin IVA', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Index', '14', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Width', '162', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Caption', 'Razón Social Proveedor', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Index', '6', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Width', '200', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Caption', 'Tipo Cantidad', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Index', '9', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Width', '136', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Caption', 'Tipo de IVA', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Index', '16', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Width', '109', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Caption', 'Total Sin IVA', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Index', '20', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Width', '125', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TOTAL_FACLIN_Caption', 'Total con IVA', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TOTAL_FACLIN_Index', '19', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TOTAL_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TOTAL_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TOTAL_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_1', 'tvLineasFactura_TOTAL_FACLIN_Width', '172', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'tvPerfil__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'tvRecibos__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_1', 'tvRecibos_CODIGO_CLI_REC_Caption', 'Código Cliente', NULL, NULL, NULL, '2026-05-07 09:21:17', '2026-05-07 09:21:17', 'Administrador', 'Administrador'),
@@ -28396,8 +29026,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESRETENCIONES_EMPRESA_FAC_Width', '172', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESVENTA_ACTIVO_FIJO_FAC_Caption', 'Venta Activo Fijo REAGP', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESVENTA_ACTIVO_FIJO_FAC_Index', '80', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESVENTA_ACTIVO_FIJO_FAC_Index', '80', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESVENTA_ACTIVO_FIJO_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESVENTA_ACTIVO_FIJO_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_ESVENTA_ACTIVO_FIJO_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
@@ -28539,7 +29168,8 @@ YgBQAHIAaQBuAEYARQBDAEgAQQBfAEYAQQBDAFQAVQBSAEEAEQAAAABAheZAAAAAAAAAAAAAAA==', N
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_IVAS_FAC_Width', '198', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_REE_FAC_Caption', '% RE Exento', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_REE_FAC_Index', '47', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_REE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_REE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_REE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_REE_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'cxGrdDBTabPrin_PORCENTAJE_REE_FAC_Width', '109', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
@@ -28774,141 +29404,6 @@ YgBQAHIAaQBuAEYARQBDAEgAQQBfAEYAQQBDAFQAVQBSAEEAEQAAAABAheZAAAAAAAAAAAAAAA==', N
   ('Administrador', 'frmMtoFacturas_2', 'oMostrarPerfil', 'False', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'oRenameComponents', 'False', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tv2__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CANTIDAD_FACLIN_Caption', 'Cantidad', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CANTIDAD_FACLIN_Index', '10', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CANTIDAD_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CANTIDAD_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CANTIDAD_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CANTIDAD_FACLIN_Width', '90', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_ART_FACLIN_Caption', 'Código Artículo', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_ART_FACLIN_Index', '1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_ART_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_ART_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_ART_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_ART_FACLIN_Width', '152', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_FAM_FACLIN_Caption', 'Código Familia', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_FAM_FACLIN_Index', '2', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_FAM_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_FAM_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_FAM_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_FAM_FACLIN_Width', '153', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_PRV_FACLIN_Caption', 'Código Proveedor', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_PRV_FACLIN_Index', '5', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_PRV_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_PRV_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_PRV_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_CODIGO_PRV_FACLIN_Width', '163', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Caption', 'Descripción', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Index', '8', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Width', '300', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Caption', 'ImpIncl', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Index', '15', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Width', '79', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Caption', 'Proveedor Principal', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Index', '4', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Width', '172', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Caption', 'Fecha Entrega', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Index', '21', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Width', '202', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_Filtro', '', '', NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_LINEA_FACLIN_Caption', 'Nro Linea', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_LINEA_FACLIN_Index', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_LINEA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_LINEA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_LINEA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_LINEA_FACLIN_Width', '104', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Caption', 'Nombre Familia', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Index', '3', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAM_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAM_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Width', '245', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Caption', '% Dto', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Index', '12', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Caption', '% IVA', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Index', '17', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Width', '79', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_DTO_FACLIN_Caption', 'Menos Dto', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_DTO_FACLIN_Index', '13', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_DTO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_DTO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_DTO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_DTO_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Caption', 'Precio Salida', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Index', '11', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Caption', 'Precio Coste', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Index', '7', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Caption', 'Precio Ud. con IVA', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Index', '18', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Width', '166', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Caption', 'Precio Ud. sin IVA', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Index', '14', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Width', '162', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Caption', 'Razón Social Proveedor', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Index', '6', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Width', '200', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Caption', 'Tipo Cantidad', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Index', '9', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Width', '136', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Caption', 'Tipo de IVA', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Index', '16', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Width', '109', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Caption', 'Total Sin IVA', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Index', '20', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Width', '125', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FACLIN_Caption', 'Total con IVA', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FACLIN_Index', '19', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_2', 'tvLineasFactura_TOTAL_FACLIN_Width', '172', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvPerfil__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvRecibos__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_2', 'tvRecibos_CODIGO_CLI_REC_Caption', 'Código Cliente', NULL, NULL, NULL, '2026-05-07 09:21:08', '2026-05-07 09:21:08', 'Administrador', 'Administrador'),
@@ -29174,7 +29669,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_ESIRPF_IMP_INCL_ZONA_IVA_FAC_Width', '20', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_ESIVA_EXENTO_CLIENTE_FAC_Caption', 'Factura Exenta IVA', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_ESIVA_EXENTO_CLIENTE_FAC_Index', '61', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_ESIVA_EXENTO_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_ESIVA_EXENTO_CLIENTE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_ESIVA_EXENTO_CLIENTE_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_ESIVA_EXENTO_CLIENTE_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_ESIVA_EXENTO_CLIENTE_FAC_Width', '163', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
@@ -29407,8 +29903,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_ABONO_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_ABONO_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_ABONO_FAC_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_ABONO_FAC_Width', '194', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_ABONO_FAC_Width', '194', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_Caption', 'Serie', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_Index', '2', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'cxGrdDBTabPrin_SERIE_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
@@ -29555,153 +30050,6 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_3', 'oRenameComponents', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tv2__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tv2__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CANTIDAD_FACLIN_Caption', 'Cantidad', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CANTIDAD_FACLIN_Index', '12', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CANTIDAD_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CANTIDAD_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CANTIDAD_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CANTIDAD_FACLIN_Width', '90', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_ART_FACLIN_Caption', 'Código Artículo', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_ART_FACLIN_Index', '1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_ART_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_ART_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_ART_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_ART_FACLIN_Width', '152', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_FAM_FACLIN_Caption', 'Código Familia', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_FAM_FACLIN_Index', '4', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_FAM_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_FAM_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_FAM_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_FAM_FACLIN_Width', '153', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_PRV_FACLIN_Caption', 'Código Proveedor', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_PRV_FACLIN_Index', '7', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_PRV_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_PRV_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_PRV_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_PRV_FACLIN_Width', '163', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_UNIDAD_FACLIN_Caption', 'SKU', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_UNIDAD_FACLIN_Index', '2', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_UNIDAD_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_UNIDAD_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_UNIDAD_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_CODIGO_UNIDAD_FACLIN_Width', '180', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Caption', 'Descripción', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Index', '10', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Width', '300', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_DESCRIPCION_VARIACION_FACLIN_Caption', 'Variación', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_DESCRIPCION_VARIACION_FACLIN_Index', '3', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_DESCRIPCION_VARIACION_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_DESCRIPCION_VARIACION_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_DESCRIPCION_VARIACION_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_DESCRIPCION_VARIACION_FACLIN_Width', '140', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Caption', 'ImpIncl', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Index', '17', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Width', '79', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Caption', 'Proveedor Principal', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Index', '6', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Width', '172', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Caption', 'Fecha Entrega', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Index', '23', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Width', '202', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_Filtro', '', '', NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_LINEA_FACLIN_Caption', 'Nro Linea', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_LINEA_FACLIN_Index', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_LINEA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_LINEA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_LINEA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_LINEA_FACLIN_Width', '104', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Caption', 'Nombre Familia', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Index', '5', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_NOMBRE_FAM_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_NOMBRE_FAM_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Width', '245', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Caption', '% Dto', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Index', '14', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Caption', '% IVA', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Index', '19', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Width', '79', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_DTO_FACLIN_Caption', 'Menos Dto', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_DTO_FACLIN_Index', '15', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_DTO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_DTO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_DTO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_DTO_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Caption', 'Precio Salida', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Index', '13', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Caption', 'Precio Coste', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Index', '9', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Caption', 'Precio Ud. con IVA', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Index', '20', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Width', '166', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Caption', 'Precio Ud. sin IVA', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Index', '16', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Width', '162', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Caption', 'Razón Social Proveedor', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Index', '8', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Width', '200', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Caption', 'Tipo Cantidad', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Index', '11', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Width', '136', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Caption', 'Tipo de IVA', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Index', '18', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Width', '109', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Caption', 'Total Sin IVA', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Index', '22', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Width', '125', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TOTAL_FACLIN_Caption', 'Total con IVA', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TOTAL_FACLIN_Index', '21', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TOTAL_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TOTAL_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TOTAL_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvLineasFactura_TOTAL_FACLIN_Width', '172', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvLogVerifactu__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvLogVerifactu__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvLogVerifactu_DATOS_ADICIONALES_LOG_Caption', 'Datos adicionales', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
@@ -29823,7 +30171,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_DIRECCION1_CLIENTE_RECIBO_REC_Caption', 'Dirección Cliente', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_DIRECCION1_CLIENTE_RECIBO_REC_Index', '14', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_DIRECCION1_CLIENTE_RECIBO_REC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_DIRECCION1_CLIENTE_RECIBO_REC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_DIRECCION1_CLIENTE_RECIBO_REC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_DIRECCION1_CLIENTE_RECIBO_REC_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_DIRECCION1_CLIENTE_RECIBO_REC_Width', '256', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_ESTADO_RECIBO_REC_Caption', 'Estado Recibo', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
@@ -29908,8 +30257,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_PROVINCIA_CLI_REC_Caption', 'Provincia Cliente', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_PROVINCIA_CLI_REC_Index', '16', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_PROVINCIA_CLI_REC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_PROVINCIA_CLI_REC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_PROVINCIA_CLI_REC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_PROVINCIA_CLI_REC_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_PROVINCIA_CLI_REC_Width', '242', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_3', 'tvRecibos_RAZON_SOCIAL_CLI_REC_Caption', 'Razón Social Cliente', NULL, NULL, NULL, '2026-05-16 20:17:52', '2026-05-16 20:17:52', 'Administrador', 'Administrador'),
@@ -30325,7 +30673,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TEXTO_LEGAL_CLIENTE_FAC_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TEXTO_LEGAL_CLIENTE_FAC_Width', '376', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TEXTO_LEGAL_EMPRESA_FAC_Caption', 'Texto Legal Empresa', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TEXTO_LEGAL_EMPRESA_FAC_Index', '56', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TEXTO_LEGAL_EMPRESA_FAC_Index', '56', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TEXTO_LEGAL_EMPRESA_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TEXTO_LEGAL_EMPRESA_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TEXTO_LEGAL_EMPRESA_FAC_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
@@ -30410,8 +30759,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_REN_FAC_Width', '139', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_RER_FAC_Caption', 'Total RE Reducido', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_RER_FAC_Index', '38', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_RER_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_RER_FAC_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_RER_FAC_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_RER_FAC_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'cxGrdDBTabPrin_TOTAL_RER_FAC_Width', '172', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
@@ -30453,153 +30801,6 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturas_4', 'oRenameComponents', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'tv2__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'tv2__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CANTIDAD_FACLIN_Caption', 'Cantidad', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CANTIDAD_FACLIN_Index', '12', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CANTIDAD_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CANTIDAD_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CANTIDAD_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CANTIDAD_FACLIN_Width', '90', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_ART_FACLIN_Caption', 'Código Artículo', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_ART_FACLIN_Index', '1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_ART_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_ART_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_ART_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_ART_FACLIN_Width', '152', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_FAM_FACLIN_Caption', 'Código Familia', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_FAM_FACLIN_Index', '4', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_FAM_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_FAM_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_FAM_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_FAM_FACLIN_Width', '153', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_PRV_FACLIN_Caption', 'Código Proveedor', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_PRV_FACLIN_Index', '7', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_PRV_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_PRV_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_PRV_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_PRV_FACLIN_Width', '163', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_UNIDAD_FACLIN_Caption', 'SKU', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_UNIDAD_FACLIN_Index', '2', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_UNIDAD_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_UNIDAD_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_UNIDAD_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_CODIGO_UNIDAD_FACLIN_Width', '180', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Caption', 'Descripción', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Index', '10', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACLIN_Width', '300', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_DESCRIPCION_VARIACION_FACLIN_Caption', 'Variación', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_DESCRIPCION_VARIACION_FACLIN_Index', '3', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_DESCRIPCION_VARIACION_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_DESCRIPCION_VARIACION_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_DESCRIPCION_VARIACION_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_DESCRIPCION_VARIACION_FACLIN_Width', '140', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Caption', 'ImpIncl', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Index', '17', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_ESIMP_INCL_TARIFA_FACLIN_Width', '79', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Caption', 'Proveedor Principal', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Index', '6', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_ESPROVEEDORPRINCIPAL_FACLIN_Width', '172', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Caption', 'Fecha Entrega', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Index', '23', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_FECHA_ENTREGA_FACLIN_Width', '202', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_Filtro', '', '', NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_LINEA_FACLIN_Caption', 'Nro Linea', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_LINEA_FACLIN_Index', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_LINEA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_LINEA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_LINEA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_LINEA_FACLIN_Width', '104', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Caption', 'Nombre Familia', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Index', '5', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_NOMBRE_FAM_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_NOMBRE_FAM_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_NOMBRE_FAM_FACLIN_Width', '245', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Caption', '% Dto', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Index', '14', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_DTO_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Caption', '% IVA', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Index', '19', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PORCENTAJE_IVA_FACLIN_Width', '79', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_DTO_FACLIN_Caption', 'Menos Dto', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_DTO_FACLIN_Index', '15', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_DTO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_DTO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_DTO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_DTO_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Caption', 'Precio Salida', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Index', '13', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_SALIDA_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Caption', 'Precio Coste', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Index', '9', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_ULT_COMPRA_FACLIN_Width', '114', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Caption', 'Precio Ud. con IVA', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Index', '20', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_VENTA_CIVA_ARTICULO_FACLIN_Width', '166', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Caption', 'Precio Ud. sin IVA', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Index', '16', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_PRECIO_VENTA_SIVA_ARTICULO_FACLIN_Width', '162', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Caption', 'Razón Social Proveedor', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Index', '8', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_RAZON_SOCIAL_PROVEEDOR_FACLIN_Width', '200', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Caption', 'Tipo Cantidad', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Index', '11', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TIPO_CANTIDAD_ARTICULO_FACLIN_Width', '136', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Caption', 'Tipo de IVA', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Index', '18', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TIPO_IVA_ARTICULO_FACLIN_Width', '109', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Caption', 'Total Sin IVA', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Index', '22', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Visible', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TOTAL_FAC_SIVA_FACLIN_Width', '125', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TOTAL_FACLIN_Caption', 'Total con IVA', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TOTAL_FACLIN_Index', '21', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TOTAL_FACLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TOTAL_FACLIN_SortOrder', '0', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TOTAL_FACLIN_Visible', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturas_4', 'tvLineasFactura_TOTAL_FACLIN_Width', '172', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'tvLogVerifactu__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'tvLogVerifactu__oCreateItems', 'False', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturas_4', 'tvLogVerifactu_DATOS_ADICIONALES_LOG_Caption', 'Datos adicionales', NULL, NULL, NULL, '2026-05-16 20:17:40', '2026-05-16 20:17:40', 'Administrador', 'Administrador'),
@@ -30911,8 +31112,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_FECHA_VENCIMIENTO_EFEC_Visible', 'True', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_FECHA_VENCIMIENTO_EFEC_Width', '138', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_Filtro', '', '', NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_FocusedID', '-|000000|1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_FocusedID', '-|000000|1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_IMPORTE_EFEC_Caption', 'Importe', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_IMPORTE_EFEC_Index', '3', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_IMPORTE_EFEC_SortIndex', '-1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
@@ -30943,70 +31143,6 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_REFERENCIA_DOCUMENTO_EFEC_SortOrder', '0', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_REFERENCIA_DOCUMENTO_EFEC_Visible', 'True', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasCompra', 'tvEfectos_REFERENCIA_DOCUMENTO_EFEC_Width', '163', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura__oApplyWidth', 'True', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura__oCreateItems', 'False', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CANTIDAD_FACCLIN_Caption', 'Cantidad', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CANTIDAD_FACCLIN_Index', '5', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CANTIDAD_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CANTIDAD_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CANTIDAD_FACCLIN_Visible', 'False', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CANTIDAD_FACCLIN_Width', '100', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ALMACEN_FACCLIN_Caption', 'Almacén', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ALMACEN_FACCLIN_Index', '30', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ALMACEN_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ALMACEN_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ALMACEN_FACCLIN_Visible', 'True', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ALMACEN_FACCLIN_Width', '113', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ART_FACCLIN_Caption', 'Artículo', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ART_FACCLIN_Index', '1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ART_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ART_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ART_FACCLIN_Visible', 'True', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_ART_FACCLIN_Width', '125', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_UNIDAD_FACCLIN_Caption', 'SKU', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_UNIDAD_FACCLIN_Index', '2', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_UNIDAD_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_UNIDAD_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_UNIDAD_FACCLIN_Visible', 'False', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_CODIGO_UNIDAD_FACCLIN_Width', '150', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACCLIN_Caption', 'Descripción', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACCLIN_Index', '4', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACCLIN_Visible', 'True', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_DESCRIPCION_ARTICULO_FACCLIN_Width', '300', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_Filtro', '', '', NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_FocusedID', '000000|-|0010', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_LINEA_FACCLIN_Caption', 'Línea', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_LINEA_FACCLIN_Index', '0', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_LINEA_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_LINEA_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_LINEA_FACCLIN_Visible', 'True', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_LINEA_FACCLIN_Width', '75', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PORCENTAJE_IVA_FACCLIN_Caption', '% IVA', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PORCENTAJE_IVA_FACCLIN_Index', '7', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PORCENTAJE_IVA_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PORCENTAJE_IVA_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PORCENTAJE_IVA_FACCLIN_Visible', 'True', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PORCENTAJE_IVA_FACCLIN_Width', '88', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN_Caption', 'Precio compra', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN_Index', '6', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN_Visible', 'True', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN_Width', '138', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_REF_PRV_FACCLIN_Caption', 'Ref. prov.', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_REF_PRV_FACCLIN_Index', '3', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_REF_PRV_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_REF_PRV_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_REF_PRV_FACCLIN_Visible', 'True', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_REF_PRV_FACCLIN_Width', '125', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_TOTAL_FACCLIN_Caption', 'Total', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_TOTAL_FACCLIN_Index', '8', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_TOTAL_FACCLIN_SortIndex', '-1', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_TOTAL_FACCLIN_SortOrder', '0', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_TOTAL_FACCLIN_Visible', 'False', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoFacturasCompra', 'tvLineasFactura_TOTAL_FACCLIN_Width', '125', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasCompra', 'tvPerfil__oApplyWidth', 'True', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoFacturasCompra', 'tvPerfil__oCreateItems', 'False', NULL, NULL, NULL, '2026-06-26 16:47:31', '2026-06-26 16:47:31', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin__oApplyWidth', 'True', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
@@ -31038,7 +31174,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_NOMBRE_GENERADOR_PROCESO_GP_Visible', 'True', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_NOMBRE_GENERADOR_PROCESO_GP_Width', '397', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_USUARIO_ALTA_Caption', 'USUARIO_ALTA', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_USUARIO_ALTA_Index', '4', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_USUARIO_ALTA_Index', '4', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_USUARIO_ALTA_SortIndex', '-1', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_USUARIO_ALTA_SortOrder', '0', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoGeneradorProcesos', 'cxGrdDBTabPrin_USUARIO_ALTA_Visible', 'False', NULL, NULL, NULL, '2026-05-28 19:12:54', '2026-05-28 19:12:54', 'Administrador', 'Administrador'),
@@ -31412,8 +31549,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESACTIVO_ART_Caption', 'Activo', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESACTIVO_ART_Index', '2', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESACTIVO_ART_SortIndex', '-1', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESACTIVO_ART_SortOrder', '0', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESACTIVO_ART_SortOrder', '0', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESACTIVO_ART_Visible', 'True', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESACTIVO_ART_Width', '70', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoVariaciones', 'tvArticulos_ESVARIACION_ART_Caption', 'Tiene Variaciones', NULL, NULL, NULL, '2026-05-10 07:06:43', '2026-05-10 07:06:43', 'Administrador', 'Administrador'),
@@ -31539,7 +31675,8 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Todos', 'frmMtoArtFacSerach', 'cxGrdDBTabPrin_PRECIOFINAL_PropertiesClass', 'TcxCurrencyEditProperties', NULL, NULL, NULL, '2022-10-26 20:39:55', '2022-10-26 20:37:01', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'btnAceptar_Caption', '&Aceptar', '', NULL, NULL, '2023-05-25 13:01:17', '2023-05-25 13:01:17', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'btnCancelar_Caption', '&Cancelar', '', NULL, NULL, '2023-05-25 13:01:17', '2023-05-25 13:01:17', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoArtProvSearch', 'btnCancelar1_Caption', '&Cancelar', '', NULL, NULL, '2023-05-25 13:01:17', '2023-05-25 13:01:17', 'Administrador', 'Administrador'),
+  ('Todos', 'frmMtoArtProvSearch', 'btnCancelar1_Caption', '&Cancelar', '', NULL, NULL, '2023-05-25 13:01:17', '2023-05-25 13:01:17', 'Administrador', 'Administrador');
+INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Todos', 'frmMtoArtProvSearch', 'btnCargarCaptions_Caption', '&Cargar captions', '', NULL, NULL, '2023-05-25 13:01:17', '2023-05-25 13:01:17', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'btnCargarColumnas_Caption', '&Cargar columnas', '', NULL, NULL, '2023-05-25 13:01:17', '2023-05-25 13:01:17', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoArtProvSearch', 'btnCargarVblesGlob_Caption', '&Cargar Vbles Globales', '', NULL, NULL, '2023-05-25 13:01:17', '2023-05-25 13:01:17', 'Administrador', 'Administrador'),
@@ -31913,8 +32050,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Todos', 'frmMtoEmpFacSearch', 'oApplyWidth', 'True', '', NULL, NULL, '2023-12-14 17:36:43', '2022-10-26 16:29:04', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoEmpFacSearch', 'oBusqGlobal', 'Grid', '', NULL, NULL, '2023-12-14 17:32:06', '2022-10-26 16:29:04', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoEmpFacSearch', 'oCreateItems', 'False', '', NULL, NULL, '2023-12-14 17:32:06', '2022-10-26 16:29:04', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoEmpFacSearch', 'oGetSQLFromDB', 'False', '', NULL, NULL, '2023-12-14 17:32:06', '2023-12-14 17:32:06', 'Administrador', 'Administrador');
-INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Todos', 'frmMtoEmpFacSearch', 'oGetSQLFromDB', 'False', '', NULL, NULL, '2023-12-14 17:32:06', '2023-12-14 17:32:06', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoEmpFacSearch', 'oMostrarPerfil', 'False', '', NULL, NULL, '2023-12-14 17:32:06', '2023-12-14 17:32:06', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoEmpFacSearch', 'oRenameComponents', 'False', '', NULL, NULL, '2023-12-14 17:32:06', '2023-12-14 17:32:06', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoEmpFacSearch', 'rbBBDD_Caption', 'Buscar BBDD', '', NULL, NULL, '2023-12-14 17:32:06', '2023-12-14 17:32:06', 'Administrador', 'Administrador'),
@@ -31955,7 +32091,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Vendedores', 'frmMtoOpeCaja', 'Lineas_Col_TOTAL_FACLIN', '171', NULL, NULL, NULL, '2026-06-02 20:16:12', '2026-06-02 20:16:12', 'Alfredo', 'Alfredo'),
   ('Vendedores', 'frmMtoOpeCaja', 'StockPanelHeight', '304', NULL, NULL, NULL, '2026-06-02 20:16:12', '2026-06-02 20:16:12', 'Alfredo', 'Alfredo'),
   ('Vendedores', 'frmMtoOpeCaja', 'WindowState', '2', NULL, NULL, NULL, '2026-06-02 20:16:12', '2026-06-02 20:16:12', 'Alfredo', 'Alfredo');
--- 11040 registros exportados
+-- 10414 registros exportados
 
 
 -- Tabla: fza_valores_defecto
@@ -33286,7 +33422,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_facturas_compra_guias_print` AS with pos_ac
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_facturas_compra_lin_print` AS with pos_acd as (select `fza_atributos_conjuntos_det`.`ID_AC_ACD` AS `ID_AC`,`fza_atributos_conjuntos_det`.`ID_AV_ACD` AS `ID_AV`,row_number() over ( partition by `fza_atributos_conjuntos_det`.`ID_AC_ACD` order by `fza_atributos_conjuntos_det`.`ORDEN_ACD`,`fza_atributos_conjuntos_det`.`ID_AV_ACD`) AS `POSICION` from `fza_atributos_conjuntos_det`), sku_talla as (select `sa`.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD`,`sa`.`ID_AV_SA` AS `ID_AV_TALLA` from (`fza_atributos_sku` `sa` join `fza_atributos_valores` `av` on(`av`.`ID_AV` = `sa`.`ID_AV_SA` and `av`.`ID_VA_AV` = 'TAL'))), sku_color as (select `sa`.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD`,`atb`.`CODIGO_ATB` AS `CODIGO_ATB_COLOR`,`atb`.`NOMBRE_ATB` AS `NOMBRE_COLOR` from ((`fza_atributos_sku` `sa` join `fza_atributos_valores` `av` on(`av`.`ID_AV` = `sa`.`ID_AV_SA` and `av`.`ID_VA_AV` = 'CO')) left join `fza_atributos_basicos` `atb` on(`atb`.`ID_ATB` = `av`.`ID_ATB_AV`)))select `l`.`SERIE_FACC_FACCLIN` AS `SERIE_FACC`,`l`.`NUMERO_FACC_FACCLIN` AS `NUMERO_FACC`,min(`l`.`LINEA_FACCLIN`) AS `LINEA_FACC`,`l`.`CODIGO_ART_FACCLIN` AS `CODIGO_ART`,coalesce(min(`l`.`REF_PRV_FACCLIN`),'') AS `REF_PRV`,min(`l`.`DESCRIPCION_ARTICULO_FACCLIN`) AS `DESCRIPCION`,coalesce(min(`sc`.`NOMBRE_COLOR`),substring_index(substring_index(min(`l`.`CODIGO_UNIDAD_FACCLIN`),'/',2),'/',-1),'') AS `COLOR_TEXTO`,coalesce(min(`sc`.`CODIGO_ATB_COLOR`),'') AS `CODIGO_ATB_COLOR`,avg(`l`.`PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN`) AS `PRECIO_COMPRA`,0 AS `PRECIO_VENTA`,`l`.`ID_AC_PIVOT_FACCLIN` AS `ID_AC_PIVOT`,`ac`.`NOMBRE_AC` AS `NOMBRE_AC`,coalesce(`ac`.`NOMBRE_CORTO_AC`,ucase(left(`ac`.`NOMBRE_AC`,8))) AS `NOMBRE_CORTO_AC`,`l`.`CODIGO_ALMACEN_FACCLIN` AS `CODIGO_ALM_FACCLIN`,min(`alm`.`CODIGO_EMP_ALM`) AS `CODIGO_EMP_ALM_FACCLIN`,min(`alm`.`NOMBRE_ALM_ALM`) AS `NOMBRE_ALM_FACCLIN`,min(`alm`.`DIRECCION_ALM`) AS `DIRECCION_ALM_FACCLIN`,min(`alm`.`CODIGO_POSTAL_ALM`) AS `CODIGO_POSTAL_ALM_FACCLIN`,min(`alm`.`POBLACION_ALM`) AS `POBLACION_ALM_FACCLIN`,min(`alm`.`PROVINCIA_ALM`) AS `PROVINCIA_ALM_FACCLIN`,min(`alm`.`TELEFONO_ALM`) AS `TELEFONO_ALM_FACCLIN`,min(`alm`.`EMAIL_ALM`) AS `EMAIL_ALM_FACCLIN`,sum(`l`.`CANTIDAD_FACCLIN`) AS `TOTAL_UNIDADES`,sum(`l`.`TOTAL_FACCLIN`) AS `TOTAL_LINEA`,coalesce(sum(case when `p`.`POSICION` = 1 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T01`,coalesce(sum(case when `p`.`POSICION` = 2 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T02`,coalesce(sum(case when `p`.`POSICION` = 3 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T03`,coalesce(sum(case when `p`.`POSICION` = 4 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T04`,coalesce(sum(case when `p`.`POSICION` = 5 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T05`,coalesce(sum(case when `p`.`POSICION` = 6 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T06`,coalesce(sum(case when `p`.`POSICION` = 7 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T07`,coalesce(sum(case when `p`.`POSICION` = 8 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T08`,coalesce(sum(case when `p`.`POSICION` = 9 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T09`,coalesce(sum(case when `p`.`POSICION` = 10 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T10`,coalesce(sum(case when `p`.`POSICION` = 11 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T11`,coalesce(sum(case when `p`.`POSICION` = 12 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T12`,coalesce(sum(case when `p`.`POSICION` = 13 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T13`,coalesce(sum(case when `p`.`POSICION` = 14 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T14`,coalesce(sum(case when `p`.`POSICION` = 15 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T15`,coalesce(sum(case when `p`.`POSICION` = 16 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T16`,coalesce(sum(case when `p`.`POSICION` = 17 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T17`,coalesce(sum(case when `p`.`POSICION` = 18 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T18`,coalesce(sum(case when `p`.`POSICION` = 19 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T19`,coalesce(sum(case when `p`.`POSICION` = 20 then `l`.`CANTIDAD_FACCLIN` end),0) AS `T20` from (((((`fza_facturas_compra_lineas` `l` left join `fza_atributos_conjuntos` `ac` on(`ac`.`ID_AC` = `l`.`ID_AC_PIVOT_FACCLIN`)) left join `sku_talla` `st` on(`st`.`CODIGO_UNIDAD` = `l`.`CODIGO_UNIDAD_FACCLIN`)) left join `pos_acd` `p` on(`p`.`ID_AC` = `l`.`ID_AC_PIVOT_FACCLIN` and `p`.`ID_AV` = `st`.`ID_AV_TALLA`)) left join `sku_color` `sc` on(`sc`.`CODIGO_UNIDAD` = `l`.`CODIGO_UNIDAD_FACCLIN`)) left join `fza_almacenes` `alm` on(`alm`.`CODIGO_ALM_ALM` = `l`.`CODIGO_ALMACEN_FACCLIN`)) group by `l`.`SERIE_FACC_FACCLIN`,`l`.`NUMERO_FACC_FACCLIN`,`l`.`CODIGO_ART_FACCLIN`,`l`.`ID_AC_PIVOT_FACCLIN`,`ac`.`NOMBRE_AC`,`ac`.`NOMBRE_CORTO_AC`,`sc`.`CODIGO_ATB_COLOR`,`sc`.`NOMBRE_COLOR`,substring_index(substring_index(`l`.`CODIGO_UNIDAD_FACCLIN`,'/',2),'/',-1),`l`.`CODIGO_ALMACEN_FACCLIN`;
 
 -- Vista: vi_facturas_lineas
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_facturas_lineas` AS select `fza_facturas_lineas`.`NUMERO_FAC_FACLIN` AS `NUMERO_FAC_FACLIN`,`fza_facturas_lineas`.`SERIE_FAC_FACLIN` AS `SERIE_FAC_FACLIN`,`fza_facturas_lineas`.`LINEA_FACLIN` AS `LINEA_FACLIN`,`fza_facturas_lineas`.`CODIGO_ART_FACLIN` AS `CODIGO_ART_FACLIN`,`fza_facturas_lineas`.`CODIGO_UNIDAD_FACLIN` AS `CODIGO_UNIDAD_FACLIN`,`fza_facturas_lineas`.`DESCRIPCION_VARIACION_FACLIN` AS `DESCRIPCION_VARIACION_FACLIN`,`fza_facturas_lineas`.`CODIGO_FAM_FACLIN` AS `CODIGO_FAM_FACLIN`,`fza_facturas_lineas`.`NOMBRE_FAM_FACLIN` AS `NOMBRE_FAM_FACLIN`,`fza_facturas_lineas`.`ESPROVEEDORPRINCIPAL_FACLIN` AS `ESPROVEEDORPRINCIPAL_FACLIN`,`fza_facturas_lineas`.`CODIGO_PRV_FACLIN` AS `CODIGO_PRV_FACLIN`,`fza_facturas_lineas`.`RAZON_SOCIAL_PROVEEDOR_FACLIN` AS `RAZON_SOCIAL_PROVEEDOR_FACLIN`,`fza_facturas_lineas`.`PRECIO_ULT_COMPRA_FACLIN` AS `PRECIO_ULT_COMPRA_FACLIN`,`fza_facturas_lineas`.`FECHA_ENTREGA_FACLIN` AS `FECHA_ENTREGA_FACLIN`,`fza_facturas_lineas`.`TIPO_CANTIDAD_ARTICULO_FACLIN` AS `TIPO_CANTIDAD_ARTICULO_FACLIN`,`fza_facturas_lineas`.`ESIMP_INCL_TARIFA_FACLIN` AS `ESIMP_INCL_TARIFA_FACLIN`,`fza_facturas_lineas`.`TIPO_IVA_ARTICULO_FACLIN` AS `TIPO_IVA_ARTICULO_FACLIN`,`fza_facturas_lineas`.`DESCRIPCION_ARTICULO_FACLIN` AS `DESCRIPCION_ARTICULO_FACLIN`,`fza_facturas_lineas`.`CODIGO_TAR_FACLIN` AS `CODIGO_TAR_FACLIN`,`fza_facturas_lineas`.`CANTIDAD_FACLIN` AS `CANTIDAD_FACLIN`,`fza_facturas_lineas`.`PRECIO_SALIDA_FACLIN` AS `PRECIO_SALIDA_FACLIN`,`fza_facturas_lineas`.`PORCENTAJE_DTO_FACLIN` AS `PORCENTAJE_DTO_FACLIN`,`fza_facturas_lineas`.`PRECIO_DTO_FACLIN` AS `PRECIO_DTO_FACLIN`,`fza_facturas_lineas`.`PRECIO_VENTA_SIVA_ARTICULO_FACLIN` AS `PRECIO_VENTA_SIVA_ARTICULO_FACLIN`,`fza_facturas_lineas`.`PORCENTAJE_IVA_FACLIN` AS `PORCENTAJE_IVA_FACLIN`,`fza_facturas_lineas`.`PRECIO_VENTA_CIVA_ARTICULO_FACLIN` AS `PRECIO_VENTA_CIVA_ARTICULO_FACLIN`,`fza_facturas_lineas`.`TOTAL_FACLIN` AS `TOTAL_FACLIN`,`fza_facturas_lineas`.`TOTAL_FAC_SIVA_FACLIN` AS `TOTAL_FAC_SIVA_FACLIN`,`fza_facturas_lineas`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`fza_facturas_lineas`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`fza_facturas_lineas`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`fza_facturas_lineas`.`USUARIO_MODIF` AS `USUARIO_MODIF` from `fza_facturas_lineas`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_facturas_lineas` AS select `fl`.`NUMERO_FAC_FACLIN` AS `NUMERO_FAC_FACLIN`,`fl`.`SERIE_FAC_FACLIN` AS `SERIE_FAC_FACLIN`,`fl`.`CODIGO_EMP_FACLIN` AS `CODIGO_EMP_FACLIN`,`fl`.`LINEA_FACLIN` AS `LINEA_FACLIN`,`fl`.`CODIGO_ART_FACLIN` AS `CODIGO_ART_FACLIN`,`fl`.`CODIGO_UNIDAD_FACLIN` AS `CODIGO_UNIDAD_FACLIN`,`fl`.`LOTE_FACLIN` AS `LOTE_FACLIN`,`fl`.`FECHA_CADUCIDAD_FACLIN` AS `FECHA_CADUCIDAD_FACLIN`,`fl`.`CODIGO_FAM_FACLIN` AS `CODIGO_FAM_FACLIN`,`fl`.`NOMBRE_FAM_FACLIN` AS `NOMBRE_FAM_FACLIN`,`fl`.`PRECIO_ULT_COMPRA_FACLIN` AS `PRECIO_ULT_COMPRA_FACLIN`,`fl`.`CODIGO_PRV_FACLIN` AS `CODIGO_PRV_FACLIN`,`fl`.`RAZON_SOCIAL_PROVEEDOR_FACLIN` AS `RAZON_SOCIAL_PROVEEDOR_FACLIN`,`fl`.`ESPROVEEDORPRINCIPAL_FACLIN` AS `ESPROVEEDORPRINCIPAL_FACLIN`,`fl`.`FECHA_ENTREGA_FACLIN` AS `FECHA_ENTREGA_FACLIN`,`fl`.`TIPO_ARTICULO_FACLIN` AS `TIPO_ARTICULO_FACLIN`,`fl`.`TIPO_CANTIDAD_ARTICULO_FACLIN` AS `TIPO_CANTIDAD_ARTICULO_FACLIN`,`fl`.`CANTIDAD_FACLIN` AS `CANTIDAD_FACLIN`,`fl`.`DESCRIPCION_ARTICULO_FACLIN` AS `DESCRIPCION_ARTICULO_FACLIN`,`fl`.`DESCRIPCION_VARIACION_FACLIN` AS `DESCRIPCION_VARIACION_FACLIN`,`fl`.`CODIGO_TAR_FACLIN` AS `CODIGO_TAR_FACLIN`,`fl`.`ESIMP_INCL_TARIFA_FACLIN` AS `ESIMP_INCL_TARIFA_FACLIN`,`fl`.`PRECIO_SALIDA_FACLIN` AS `PRECIO_SALIDA_FACLIN`,`fl`.`PORCENTAJE_DTO_FACLIN` AS `PORCENTAJE_DTO_FACLIN`,`fl`.`PRECIO_DTO_FACLIN` AS `PRECIO_DTO_FACLIN`,`fl`.`PRECIO_VENTA_SIVA_ARTICULO_FACLIN` AS `PRECIO_VENTA_SIVA_ARTICULO_FACLIN`,`fl`.`TIPO_IVA_ARTICULO_FACLIN` AS `TIPO_IVA_ARTICULO_FACLIN`,`fl`.`PORCENTAJE_IVA_FACLIN` AS `PORCENTAJE_IVA_FACLIN`,`fl`.`PRECIO_VENTA_CIVA_ARTICULO_FACLIN` AS `PRECIO_VENTA_CIVA_ARTICULO_FACLIN`,`fl`.`TOTAL_FACLIN` AS `TOTAL_FACLIN`,`fl`.`TOTAL_FAC_SIVA_FACLIN` AS `TOTAL_FAC_SIVA_FACLIN`,`fl`.`CODIGO_VENDEDOR_FACLIN` AS `CODIGO_VENDEDOR_FACLIN`,`fl`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`fl`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`fl`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`fl`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`fl`.`CODIGO_ALM_FACLIN` AS `CODIGO_ALM_FACLIN`,`fl`.`CODIGO_CAJA_FACLIN` AS `CODIGO_CAJA_FACLIN`,`fl`.`NUMERO_OPERACION_FACLIN` AS `NUMERO_OPERACION_FACLIN`,`fl`.`NUMERO_MOV_FACLIN` AS `NUMERO_MOV_FACLIN`,`fl`.`ATTR1_VALOR_FACLIN` AS `ATTR1_VALOR_FACLIN`,`fl`.`ATTR1_NOMBRE_FACLIN` AS `ATTR1_NOMBRE_FACLIN`,`fl`.`ATTR2_VALOR_FACLIN` AS `ATTR2_VALOR_FACLIN`,`fl`.`ATTR2_NOMBRE_FACLIN` AS `ATTR2_NOMBRE_FACLIN`,`fl`.`ATTR3_VALOR_FACLIN` AS `ATTR3_VALOR_FACLIN`,`fl`.`ATTR3_NOMBRE_FACLIN` AS `ATTR3_NOMBRE_FACLIN`,`fl`.`ATTR4_VALOR_FACLIN` AS `ATTR4_VALOR_FACLIN`,`fl`.`ATTR4_NOMBRE_FACLIN` AS `ATTR4_NOMBRE_FACLIN`,`fl`.`ATTR5_VALOR_FACLIN` AS `ATTR5_VALOR_FACLIN`,`fl`.`ATTR5_NOMBRE_FACLIN` AS `ATTR5_NOMBRE_FACLIN`,`fl`.`NUM_ATRIBUTOS_FACLIN` AS `NUM_ATRIBUTOS_FACLIN` from `fza_facturas_lineas` `fl`;
 
 -- Vista: vi_facturas_lineas_print
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_facturas_lineas_print` AS select `fza_facturas_lineas`.`NUMERO_FAC_FACLIN` AS `NUMERO_FAC_FACLIN`,`fza_facturas_lineas`.`SERIE_FAC_FACLIN` AS `SERIE_FAC_FACLIN`,`fza_facturas_lineas`.`LINEA_FACLIN` AS `LINEA_FACLIN`,`fza_facturas_lineas`.`CODIGO_ART_FACLIN` AS `CODIGO_ART_FACLIN`,`fza_facturas_lineas`.`CODIGO_FAM_FACLIN` AS `CODIGO_FAM_FACLIN`,`fza_facturas_lineas`.`NOMBRE_FAM_FACLIN` AS `NOMBRE_FAM_FACLIN`,`fza_facturas_lineas`.`FECHA_ENTREGA_FACLIN` AS `FECHA_ENTREGA_FACLIN`,`fza_facturas_lineas`.`TIPO_CANTIDAD_ARTICULO_FACLIN` AS `TIPO_CANTIDAD_ARTICULO_FACLIN`,`fza_facturas_lineas`.`ESIMP_INCL_TARIFA_FACLIN` AS `ESIMP_INCL_TARIFA_FACLIN`,`fza_facturas_lineas`.`TIPO_IVA_ARTICULO_FACLIN` AS `TIPO_IVA_ARTICULO_FACLIN`,`fza_facturas_lineas`.`DESCRIPCION_ARTICULO_FACLIN` AS `DESCRIPCION_ARTICULO_FACLIN`,`fza_facturas_lineas`.`CODIGO_TAR_FACLIN` AS `CODIGO_TAR_FACLIN`,`fza_facturas_lineas`.`CANTIDAD_FACLIN` AS `CANTIDAD_FACLIN`,`fza_facturas_lineas`.`PRECIO_SALIDA_FACLIN` AS `PRECIO_SALIDA_FACLIN`,`fza_facturas_lineas`.`PORCENTAJE_DTO_FACLIN` AS `PORCENTAJE_DTO_FACLIN`,`fza_facturas_lineas`.`PRECIO_DTO_FACLIN` AS `PRECIO_DTO_FACLIN`,`fza_facturas_lineas`.`PRECIO_VENTA_SIVA_ARTICULO_FACLIN` AS `PRECIO_VENTA_SIVA_ARTICULO_FACLIN`,`fza_facturas_lineas`.`PORCENTAJE_IVA_FACLIN` AS `PORCENTAJE_IVA_FACLIN`,`fza_facturas_lineas`.`PRECIO_VENTA_CIVA_ARTICULO_FACLIN` AS `PRECIO_VENTA_CIVA_ARTICULO_FACLIN`,`fza_facturas_lineas`.`TOTAL_FACLIN` AS `TOTAL_FACLIN`,`fza_facturas_lineas`.`TOTAL_FAC_SIVA_FACLIN` AS `TOTAL_FAC_SIVA_FACLIN`,`fza_facturas_lineas`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`fza_facturas_lineas`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`fza_facturas_lineas`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`fza_facturas_lineas`.`USUARIO_MODIF` AS `USUARIO_MODIF` from `fza_facturas_lineas`;
@@ -33331,7 +33467,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos` AS select `p`.`NUMERO_PED` AS `NUM
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos_compra` AS select `p`.`NUMERO_PEDC` AS `NUMERO_PEDC`,`p`.`SERIE_PEDC` AS `SERIE_PEDC`,`p`.`FECHA_PEDC` AS `FECHA_PEDC`,`p`.`FECHA_PREVISTA_PEDC` AS `FECHA_PREVISTA_PEDC`,`p`.`FECHA_TOPE_RECEPCION_PEDC` AS `FECHA_TOPE_RECEPCION_PEDC`,`p`.`ESTADO_PEDC` AS `ESTADO_PEDC`,`p`.`CODIGO_EMP_PEDC` AS `CODIGO_EMP_PEDC`,`p`.`RAZON_SOCIAL_EMPRESA_PEDC` AS `RAZON_SOCIAL_EMPRESA_PEDC`,`p`.`NIF_EMPRESA_PEDC` AS `NIF_EMPRESA_PEDC`,`p`.`MOVIL_EMPRESA_PEDC` AS `MOVIL_EMPRESA_PEDC`,`p`.`EMAIL_EMPRESA_PEDC` AS `EMAIL_EMPRESA_PEDC`,`p`.`DIRECCION1_EMPRESA_PEDC` AS `DIRECCION1_EMPRESA_PEDC`,`p`.`DIRECCION2_EMPRESA_PEDC` AS `DIRECCION2_EMPRESA_PEDC`,`p`.`POBLACION_EMPRESA_PEDC` AS `POBLACION_EMPRESA_PEDC`,`p`.`PROVINCIA_EMPRESA_PEDC` AS `PROVINCIA_EMPRESA_PEDC`,`p`.`CODIGO_PAI_EMPRESA_PEDC` AS `CODIGO_PAI_EMPRESA_PEDC`,`p`.`NOMBRE_PAI_EMPRESA_PEDC` AS `NOMBRE_PAI_EMPRESA_PEDC`,`p`.`CODIGO_POSTAL_EMPRESA_PEDC` AS `CODIGO_POSTAL_EMPRESA_PEDC`,`p`.`CODIGO_PRV_PEDC` AS `CODIGO_PRV_PEDC`,`p`.`RAZON_SOCIAL_PRV_PEDC` AS `RAZON_SOCIAL_PRV_PEDC`,`p`.`NIF_PRV_PEDC` AS `NIF_PRV_PEDC`,`p`.`MOVIL_PRV_PEDC` AS `MOVIL_PRV_PEDC`,`p`.`EMAIL_PRV_PEDC` AS `EMAIL_PRV_PEDC`,`p`.`DIRECCION1_PRV_PEDC` AS `DIRECCION1_PRV_PEDC`,`p`.`DIRECCION2_PRV_PEDC` AS `DIRECCION2_PRV_PEDC`,`p`.`POBLACION_PRV_PEDC` AS `POBLACION_PRV_PEDC`,`p`.`PROVINCIA_PRV_PEDC` AS `PROVINCIA_PRV_PEDC`,`p`.`CODIGO_PAI_PRV_PEDC` AS `CODIGO_PAI_PRV_PEDC`,`p`.`NOMBRE_PAI_PRV_PEDC` AS `NOMBRE_PAI_PRV_PEDC`,`p`.`CODIGO_POSTAL_PRV_PEDC` AS `CODIGO_POSTAL_PRV_PEDC`,`p`.`REF_PROVEEDOR_PEDC` AS `REF_PROVEEDOR_PEDC`,`p`.`CODIGO_ALM_PEDC` AS `CODIGO_ALM_PEDC`,`p`.`TRANSPORTISTA_PEDC` AS `TRANSPORTISTA_PEDC`,`p`.`CODIGO_IVA_PEDC` AS `CODIGO_IVA_PEDC`,`p`.`ESIVA_RECARGO_COMPRAS_PEDC` AS `ESIVA_RECARGO_COMPRAS_PEDC`,`p`.`ESIVA_EXENTO_INTRACOMUNITARIO_PEDC` AS `ESIVA_EXENTO_INTRACOMUNITARIO_PEDC`,`p`.`PORCENTAJE_IVAN_PEDC` AS `PORCENTAJE_IVAN_PEDC`,`p`.`TOTAL_BASEI_IVAN_PEDC` AS `TOTAL_BASEI_IVAN_PEDC`,`p`.`TOTAL_IVAN_PEDC` AS `TOTAL_IVAN_PEDC`,`p`.`PORCENTAJE_REN_PEDC` AS `PORCENTAJE_REN_PEDC`,`p`.`TOTAL_REN_PEDC` AS `TOTAL_REN_PEDC`,`p`.`PORCENTAJE_IVAR_PEDC` AS `PORCENTAJE_IVAR_PEDC`,`p`.`TOTAL_BASEI_IVAR_PEDC` AS `TOTAL_BASEI_IVAR_PEDC`,`p`.`TOTAL_IVAR_PEDC` AS `TOTAL_IVAR_PEDC`,`p`.`PORCENTAJE_RER_PEDC` AS `PORCENTAJE_RER_PEDC`,`p`.`TOTAL_RER_PEDC` AS `TOTAL_RER_PEDC`,`p`.`PORCENTAJE_IVAS_PEDC` AS `PORCENTAJE_IVAS_PEDC`,`p`.`TOTAL_BASEI_IVAS_PEDC` AS `TOTAL_BASEI_IVAS_PEDC`,`p`.`TOTAL_IVAS_PEDC` AS `TOTAL_IVAS_PEDC`,`p`.`PORCENTAJE_RES_PEDC` AS `PORCENTAJE_RES_PEDC`,`p`.`TOTAL_RES_PEDC` AS `TOTAL_RES_PEDC`,`p`.`PORCENTAJE_IVAE_PEDC` AS `PORCENTAJE_IVAE_PEDC`,`p`.`TOTAL_BASEI_IVAE_PEDC` AS `TOTAL_BASEI_IVAE_PEDC`,`p`.`TOTAL_IVAE_PEDC` AS `TOTAL_IVAE_PEDC`,`p`.`PORCENTAJE_REE_PEDC` AS `PORCENTAJE_REE_PEDC`,`p`.`TOTAL_REE_PEDC` AS `TOTAL_REE_PEDC`,`p`.`TOTAL_BASES_PEDC` AS `TOTAL_BASES_PEDC`,`p`.`TOTAL_IMPUESTOS_PEDC` AS `TOTAL_IMPUESTOS_PEDC`,`p`.`PORCENTAJE_RETENCION_PEDC` AS `PORCENTAJE_RETENCION_PEDC`,`p`.`TOTAL_RETENCION_PEDC` AS `TOTAL_RETENCION_PEDC`,`p`.`TOTAL_BRUTO_PEDC` AS `TOTAL_BRUTO_PEDC`,`p`.`PORCENTAJE_DTO_COMERCIAL_PEDC` AS `PORCENTAJE_DTO_COMERCIAL_PEDC`,`p`.`TOTAL_DTO_COMERCIAL_PEDC` AS `TOTAL_DTO_COMERCIAL_PEDC`,`p`.`PORCENTAJE_DTO_FINANCIERO_PEDC` AS `PORCENTAJE_DTO_FINANCIERO_PEDC`,`p`.`TOTAL_DTO_FINANCIERO_PEDC` AS `TOTAL_DTO_FINANCIERO_PEDC`,`p`.`TOTAL_LIQUIDO_PEDC` AS `TOTAL_LIQUIDO_PEDC`,`p`.`FORMA_PAGO_PEDC` AS `FORMA_PAGO_PEDC`,`p`.`CONTADOR_LINEAS_PEDC` AS `CONTADOR_LINEAS_PEDC`,`p`.`COMENTARIOS_PEDC` AS `COMENTARIOS_PEDC`,`p`.`OBSERVACIONES_PEDC` AS `OBSERVACIONES_PEDC`,`p`.`ESPIVOTE_HORIZONTAL_PEDC` AS `ESPIVOTE_HORIZONTAL_PEDC`,`p`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`p`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`p`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`p`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`p`.`ID_PV_TEMPORADA_PEDC` AS `ID_PV_TEMPORADA_PEDC`,`prv`.`NOMBRE_PRV` AS `NOMBRE_PRV_PEDC`,`emp`.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMPRESA_VIEW_PEDC`,`t`.`PV` AS `TEMPORADA_PEDC`,`p`.`FECHA_PEDC` AS `FECHA_REALIZACION_PEDC`,`p`.`FECHA_PREVISTA_PEDC` AS `FECHA_EFECTO_STOCK_PEDC`,coalesce(`r`.`CANTIDAD_PEDIDA_PEDC`,0) AS `CANTIDAD_PEDIDA_PEDC`,coalesce(`r`.`CANTIDAD_PEDIDA_PEDC`,0) AS `TOTAL_PRENDAS_PEDC`,coalesce(`r`.`CANTIDAD_RECIBIDA_PEDC`,0) AS `CANTIDAD_RECIBIDA_PEDC`,greatest(coalesce(`r`.`CANTIDAD_PEDIDA_PEDC`,0) - coalesce(`r`.`CANTIDAD_RECIBIDA_PEDC`,0),0) AS `CANTIDAD_PENDIENTE_RECEPCION_PEDC`,coalesce(`r`.`TOTAL_LINEAS_PEDC`,0) AS `TOTAL_LINEAS_PEDC` from ((((`fza_pedidos_compra` `p` left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `p`.`CODIGO_PRV_PEDC`)) left join `fza_empresas` `emp` on(`emp`.`CODIGO_EMP_EMP` = `p`.`CODIGO_EMP_PEDC`)) left join `fza_propiedades_valores` `t` on(`t`.`ID_PV_ARTPROP` = `p`.`ID_PV_TEMPORADA_PEDC` and `t`.`ID_PROP_PV` = 'TEMPORADA')) left join (select `l`.`SERIE_PEDC_PEDCLIN` AS `SERIE_PEDC_PEDCLIN`,`l`.`NUMERO_PEDC_PEDCLIN` AS `NUMERO_PEDC_PEDCLIN`,coalesce(sum(`l`.`CANTIDAD_PEDCLIN`),0) AS `CANTIDAD_PEDIDA_PEDC`,coalesce(sum(`l`.`CANTIDAD_RECIBIDA_PEDCLIN`),0) AS `CANTIDAD_RECIBIDA_PEDC`,coalesce(sum(`l`.`TOTAL_PEDCLIN`),0) AS `TOTAL_LINEAS_PEDC` from `fza_pedidos_compra_lineas` `l` group by `l`.`SERIE_PEDC_PEDCLIN`,`l`.`NUMERO_PEDC_PEDCLIN`) `r` on(`r`.`SERIE_PEDC_PEDCLIN` = `p`.`SERIE_PEDC` and `r`.`NUMERO_PEDC_PEDCLIN` = `p`.`NUMERO_PEDC`));
 
 -- Vista: vi_pedidos_lineas
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos_lineas` AS select `pl`.`NUMERO_PED_PEDLIN` AS `NUMERO_PED_PEDLIN`,`pl`.`SERIE_PED_PEDLIN` AS `SERIE_PED_PEDLIN`,`pl`.`LINEA_PEDLIN` AS `LINEA_PEDLIN`,`pl`.`IDLINEAPS_PEDLIN` AS `IDLINEAPS_PEDLIN`,`pl`.`IDPRODPS_PEDLIN` AS `IDPRODPS_PEDLIN`,`pl`.`CODIGOPRODPS_PEDLIN` AS `CODIGOPRODPS_PEDLIN`,`pl`.`IDATRIBPRODPS_PEDLIN` AS `IDATRIBPRODPS_PEDLIN`,`pl`.`CODBAR_ART_PEDLIN` AS `CODBAR_ART_PEDLIN`,`pl`.`CODIGO_ART_PEDLIN` AS `CODIGO_ART_PEDLIN`,`pl`.`CODIGO_FAM_PEDLIN` AS `CODIGO_FAM_PEDLIN`,`pl`.`NOMBRE_FAM_PEDLIN` AS `NOMBRE_FAM_PEDLIN`,`pl`.`FECHA_ENTREGA_PEDLIN` AS `FECHA_ENTREGA_PEDLIN`,`pl`.`TIPO_CANTIDAD_ARTICULO_PEDLIN` AS `TIPO_CANTIDAD_ARTICULO_PEDLIN`,`pl`.`ESIMP_INCL_TARIFA_PEDLIN` AS `ESIMP_INCL_TARIFA_PEDLIN`,`pl`.`TIPO_IVA_ARTICULO_PEDLIN` AS `TIPO_IVA_ARTICULO_PEDLIN`,`pl`.`DESCRIPCION_ARTICULO_PEDLIN` AS `DESCRIPCION_ARTICULO_PEDLIN`,`pl`.`CODIGO_TAR_PEDLIN` AS `CODIGO_TAR_PEDLIN`,`pl`.`CANTIDAD_PEDLIN` AS `CANTIDAD_PEDLIN`,`pl`.`CANTIDAD_ENTREGADA_PEDLIN` AS `CANTIDAD_ENTREGADA_PEDLIN`,`pl`.`CANTIDAD_PENDIENTE_PEDLIN` AS `CANTIDAD_PENDIENTE_PEDLIN`,`pl`.`ESENTREGADA_PEDLIN` AS `ESENTREGADA_PEDLIN`,`pl`.`CODIGO_ALMACEN_PEDLIN` AS `CODIGO_ALMACEN_PEDLIN`,`pl`.`PRECIO_VENTA_SIVA_ARTICULO_PEDLIN` AS `PRECIO_VENTA_SIVA_ARTICULO_PEDLIN`,`pl`.`PORCENTAJE_IVA_PEDLIN` AS `PORCENTAJE_IVA_PEDLIN`,`pl`.`PRECIO_VENTA_CIVA_ARTICULO_PEDLIN` AS `PRECIO_VENTA_CIVA_ARTICULO_PEDLIN`,`pl`.`TOTAL_PEDLIN` AS `TOTAL_PEDLIN`,`pl`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`pl`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`pl`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`pl`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`pl`.`CODIGO_UNIDAD_PEDLIN` AS `CODIGO_UNIDAD_PEDLIN`,`pl`.`ATTR1_VALOR_PEDLIN` AS `ATTR1_VALOR_PEDLIN`,`pl`.`ATTR1_NOMBRE_PEDLIN` AS `ATTR1_NOMBRE_PEDLIN`,`pl`.`ATTR2_VALOR_PEDLIN` AS `ATTR2_VALOR_PEDLIN`,`pl`.`ATTR2_NOMBRE_PEDLIN` AS `ATTR2_NOMBRE_PEDLIN`,`pl`.`ATTR3_VALOR_PEDLIN` AS `ATTR3_VALOR_PEDLIN`,`pl`.`ATTR3_NOMBRE_PEDLIN` AS `ATTR3_NOMBRE_PEDLIN`,`pl`.`ATTR4_VALOR_PEDLIN` AS `ATTR4_VALOR_PEDLIN`,`pl`.`ATTR4_NOMBRE_PEDLIN` AS `ATTR4_NOMBRE_PEDLIN`,`pl`.`ATTR5_VALOR_PEDLIN` AS `ATTR5_VALOR_PEDLIN`,`pl`.`ATTR5_NOMBRE_PEDLIN` AS `ATTR5_NOMBRE_PEDLIN`,`pl`.`NUM_ATRIBUTOS_PEDLIN` AS `NUM_ATRIBUTOS_PEDLIN`,`pl`.`ID_AC_PIVOT_PEDLIN` AS `ID_AC_PIVOT_PEDLIN`,`pl`.`CANTIDAD_PEDLIN` - ifnull(`pl`.`CANTIDAD_ENTREGADA_PEDLIN`,0) AS `CANTIDAD_PENDIENTE_CALC_PEDLIN` from `fza_pedidos_lineas` `pl`;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_pedidos_lineas` AS select `pl`.`NUMERO_PED_PEDLIN` AS `NUMERO_PED_PEDLIN`,`pl`.`SERIE_PED_PEDLIN` AS `SERIE_PED_PEDLIN`,`pl`.`LINEA_PEDLIN` AS `LINEA_PEDLIN`,`pl`.`IDLINEAPS_PEDLIN` AS `IDLINEAPS_PEDLIN`,`pl`.`IDPRODPS_PEDLIN` AS `IDPRODPS_PEDLIN`,`pl`.`CODIGOPRODPS_PEDLIN` AS `CODIGOPRODPS_PEDLIN`,`pl`.`IDATRIBPRODPS_PEDLIN` AS `IDATRIBPRODPS_PEDLIN`,`pl`.`CODBAR_ART_PEDLIN` AS `CODBAR_ART_PEDLIN`,`pl`.`CODIGO_ART_PEDLIN` AS `CODIGO_ART_PEDLIN`,`pl`.`CODIGO_FAM_PEDLIN` AS `CODIGO_FAM_PEDLIN`,`pl`.`NOMBRE_FAM_PEDLIN` AS `NOMBRE_FAM_PEDLIN`,`pl`.`FECHA_ENTREGA_PEDLIN` AS `FECHA_ENTREGA_PEDLIN`,`pl`.`TIPO_CANTIDAD_ARTICULO_PEDLIN` AS `TIPO_CANTIDAD_ARTICULO_PEDLIN`,`pl`.`ESIMP_INCL_TARIFA_PEDLIN` AS `ESIMP_INCL_TARIFA_PEDLIN`,`pl`.`TIPO_IVA_ARTICULO_PEDLIN` AS `TIPO_IVA_ARTICULO_PEDLIN`,`pl`.`DESCRIPCION_ARTICULO_PEDLIN` AS `DESCRIPCION_ARTICULO_PEDLIN`,`pl`.`CODIGO_TAR_PEDLIN` AS `CODIGO_TAR_PEDLIN`,`pl`.`CANTIDAD_PEDLIN` AS `CANTIDAD_PEDLIN`,`pl`.`CANTIDAD_ENTREGADA_PEDLIN` AS `CANTIDAD_ENTREGADA_PEDLIN`,`pl`.`CANTIDAD_A_ALBARANAR_PEDLIN` AS `CANTIDAD_A_ALBARANAR_PEDLIN`,`pl`.`CANTIDAD_PENDIENTE_PEDLIN` AS `CANTIDAD_PENDIENTE_PEDLIN`,`pl`.`ESENTREGADA_PEDLIN` AS `ESENTREGADA_PEDLIN`,`pl`.`CODIGO_ALMACEN_PEDLIN` AS `CODIGO_ALMACEN_PEDLIN`,`pl`.`PRECIO_VENTA_SIVA_ARTICULO_PEDLIN` AS `PRECIO_VENTA_SIVA_ARTICULO_PEDLIN`,`pl`.`PORCENTAJE_IVA_PEDLIN` AS `PORCENTAJE_IVA_PEDLIN`,`pl`.`PRECIO_VENTA_CIVA_ARTICULO_PEDLIN` AS `PRECIO_VENTA_CIVA_ARTICULO_PEDLIN`,`pl`.`TOTAL_PEDLIN` AS `TOTAL_PEDLIN`,`pl`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`pl`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`pl`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`pl`.`USUARIO_MODIF` AS `USUARIO_MODIF`,`pl`.`CODIGO_UNIDAD_PEDLIN` AS `CODIGO_UNIDAD_PEDLIN`,`pl`.`ATTR1_VALOR_PEDLIN` AS `ATTR1_VALOR_PEDLIN`,`pl`.`ATTR1_NOMBRE_PEDLIN` AS `ATTR1_NOMBRE_PEDLIN`,`pl`.`ATTR2_VALOR_PEDLIN` AS `ATTR2_VALOR_PEDLIN`,`pl`.`ATTR2_NOMBRE_PEDLIN` AS `ATTR2_NOMBRE_PEDLIN`,`pl`.`ATTR3_VALOR_PEDLIN` AS `ATTR3_VALOR_PEDLIN`,`pl`.`ATTR3_NOMBRE_PEDLIN` AS `ATTR3_NOMBRE_PEDLIN`,`pl`.`ATTR4_VALOR_PEDLIN` AS `ATTR4_VALOR_PEDLIN`,`pl`.`ATTR4_NOMBRE_PEDLIN` AS `ATTR4_NOMBRE_PEDLIN`,`pl`.`ATTR5_VALOR_PEDLIN` AS `ATTR5_VALOR_PEDLIN`,`pl`.`ATTR5_NOMBRE_PEDLIN` AS `ATTR5_NOMBRE_PEDLIN`,`pl`.`NUM_ATRIBUTOS_PEDLIN` AS `NUM_ATRIBUTOS_PEDLIN`,`pl`.`ID_AC_PIVOT_PEDLIN` AS `ID_AC_PIVOT_PEDLIN`,`pl`.`CANTIDAD_PEDLIN` - ifnull(`pl`.`CANTIDAD_ENTREGADA_PEDLIN`,0) AS `CANTIDAD_PENDIENTE_CALC_PEDLIN` from `fza_pedidos_lineas` `pl`;
 
 -- Vista: vi_proveedores
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_proveedores` AS select `p`.`CODIGO_PRV_PRV` AS `CODIGO_PRV_PRV`,`p`.`ESACTIVO_PRV` AS `ESACTIVO_PRV`,`p`.`ORDEN_PRV` AS `ORDEN_PRV`,`p`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`p`.`NOMBRE_PRV` AS `NOMBRE_PRV`,`p`.`NIF_PRV` AS `NIF_PRV`,`p`.`MOVIL_PRV` AS `MOVIL_PRV`,`p`.`EMAIL_PRV` AS `EMAIL_PRV`,`p`.`DIRECCION1_PRV` AS `DIRECCION1_PRV`,`p`.`DIRECCION2_PRV` AS `DIRECCION2_PRV`,`p`.`POBLACION_PRV` AS `POBLACION_PRV`,`p`.`PROVINCIA_PRV` AS `PROVINCIA_PRV`,`p`.`CODIGO_POSTAL_PRV` AS `CODIGO_POSTAL_PRV`,`p`.`PAIS_PRV` AS `PAIS_PRV`,`p`.`CODIGO_PAI_PRV` AS `CODIGO_PAI_PRV`,`p`.`OBSERVACIONES_PRV` AS `OBSERVACIONES_PRV`,`p`.`REFERENCIA_PRV` AS `REFERENCIA_PRV`,`p`.`CONTACTO_PRV` AS `CONTACTO_PRV`,`p`.`TELEFONO_CONTACTO_PRV` AS `TELEFONO_CONTACTO_PRV`,`p`.`TELEFONO_PRV` AS `TELEFONO_PRV`,`p`.`IBAN_PRV` AS `IBAN_PRV`,`p`.`CODIGO_FP_PRV` AS `CODIGO_FP_PRV`,`p`.`CODIGO_EMPBAN_PRV` AS `CODIGO_EMPBAN_PRV`,`p`.`PORCENTAJE_MARGEN_PRV` AS `PORCENTAJE_MARGEN_PRV`,`p`.`ESVARIOS_TIPOS_IVA_PRV` AS `ESVARIOS_TIPOS_IVA_PRV`,`p`.`ESIVA_EXENTO_INTRACOMUNITARIO_PRV` AS `ESIVA_EXENTO_INTRACOMUNITARIO_PRV`,`p`.`ID_AC_TALLAS_PRV` AS `ID_AC_TALLAS_PRV`,`p`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`p`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`p`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`p`.`USUARIO_MODIF` AS `USUARIO_MODIF` from `fza_proveedores` `p` order by `p`.`ORDEN_PRV`;
@@ -40019,245 +40155,22 @@ DELIMITER ;
 -- Procedimiento: PRC_PED_CREAR_ALBARAN_FIN
 DROP PROCEDURE IF EXISTS `PRC_PED_CREAR_ALBARAN_FIN`;
 DELIMITER ;;
-CREATE  PROCEDURE `PRC_PED_CREAR_ALBARAN_FIN`(
-  IN p_NUMERO_ALB varchar(20),
-  IN p_SERIE_ALB varchar(20),
-  IN p_NUMERO_PED varchar(20),
-  IN p_SERIE_PED varchar(20),
-  IN p_USUARIO varchar(100))
-BEGIN
-  DECLARE v_total_base decimal(18,6) DEFAULT 0;
-  DECLARE v_total_iva decimal(18,6) DEFAULT 0;
-  DECLARE v_pendientes int DEFAULT 0;
-  SELECT IFNULL(SUM(CANTIDAD_ALBLIN *
-                    PRECIO_VENTA_SIVA_ARTICULO_ALBLIN), 0),
-         IFNULL(SUM(CANTIDAD_ALBLIN *
-              (PRECIO_VENTA_CIVA_ARTICULO_ALBLIN -
-               PRECIO_VENTA_SIVA_ARTICULO_ALBLIN)), 0)
-    INTO v_total_base, v_total_iva
-    FROM fza_albaranes_lineas
-   WHERE NUMERO_ALB_ALBLIN = p_NUMERO_ALB
-     AND SERIE_ALB_ALBLIN = p_SERIE_ALB;
-  UPDATE fza_albaranes
-     SET TOTAL_BASES_ALB = v_total_base,
-         TOTAL_IMPUESTOS_ALB = v_total_iva,
-         TOTAL_LIQUIDO_ALB = v_total_base + v_total_iva,
-         INSTANTE_MODIF = NOW(),
-         USUARIO_MODIF = p_USUARIO
-   WHERE NUMERO_ALB = p_NUMERO_ALB
-     AND SERIE_ALB = p_SERIE_ALB;
-  SELECT COUNT(*)
-    INTO v_pendientes
-    FROM fza_pedidos_lineas
-   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
-     AND SERIE_PED_PEDLIN = p_SERIE_PED
-     AND IFNULL(ESENTREGADA_PEDLIN, 'N') <> 'S';
-  IF v_pendientes = 0 THEN
-    UPDATE fza_pedidos
-       SET ESTADO_PED = 'ENTREGADO',
-           INSTANTE_MODIF = NOW(),
-           USUARIO_MODIF = p_USUARIO
-     WHERE NUMERO_PED = p_NUMERO_PED
-       AND SERIE_PED = p_SERIE_PED;
-  ELSE
-    UPDATE fza_pedidos
-       SET ESTADO_PED = 'PARCIAL',
-           INSTANTE_MODIF = NOW(),
-           USUARIO_MODIF = p_USUARIO
-     WHERE NUMERO_PED = p_NUMERO_PED
-       AND SERIE_PED = p_SERIE_PED;
-  END IF;
-END ;;
+CREATE  PROCEDURE `PRC_PED_CREAR_ALBARAN_FIN`(  IN p_NUMERO_ALB varchar(20),   IN p_SERIE_ALB varchar(20),   IN p_NUMERO_PED varchar(20),   IN p_SERIE_PED varchar(20),   IN p_USUARIO varchar(100))
+BEGIN   DECLARE v_total_base decimal(18,6) DEFAULT 0;   DECLARE v_total_iva decimal(18,6) DEFAULT 0;   DECLARE v_pendientes int DEFAULT 0;   SELECT IFNULL(SUM(CANTIDAD_ALBLIN *                     PRECIO_VENTA_SIVA_ARTICULO_ALBLIN), 0),          IFNULL(SUM(CANTIDAD_ALBLIN *               (PRECIO_VENTA_CIVA_ARTICULO_ALBLIN -                PRECIO_VENTA_SIVA_ARTICULO_ALBLIN)), 0)     INTO v_total_base, v_total_iva     FROM fza_albaranes_lineas    WHERE NUMERO_ALB_ALBLIN = p_NUMERO_ALB      AND SERIE_ALB_ALBLIN = p_SERIE_ALB;   UPDATE fza_albaranes      SET TOTAL_BASES_ALB = v_total_base,          TOTAL_IMPUESTOS_ALB = v_total_iva,          TOTAL_LIQUIDO_ALB = v_total_base + v_total_iva,          INSTANTE_MODIF = NOW(),          USUARIO_MODIF = p_USUARIO    WHERE NUMERO_ALB = p_NUMERO_ALB      AND SERIE_ALB = p_SERIE_ALB;   SELECT COUNT(*) INTO v_pendientes     FROM fza_pedidos_lineas    WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED      AND SERIE_PED_PEDLIN = p_SERIE_PED      AND IFNULL(CANTIDAD_PEDLIN, 0) >          IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0);   IF v_pendientes = 0 THEN     UPDATE fza_pedidos        SET ESTADO_PED = 'ENTREGADO',            INSTANTE_MODIF = NOW(),            USUARIO_MODIF = p_USUARIO      WHERE NUMERO_PED = p_NUMERO_PED        AND SERIE_PED = p_SERIE_PED;   ELSE     UPDATE fza_pedidos        SET ESTADO_PED = 'PARCIAL',            INSTANTE_MODIF = NOW(),            USUARIO_MODIF = p_USUARIO      WHERE NUMERO_PED = p_NUMERO_PED        AND SERIE_PED = p_SERIE_PED;   END IF; END ;;
 DELIMITER ;
 
 -- Procedimiento: PRC_PED_CREAR_ALBARAN_INICIO
 DROP PROCEDURE IF EXISTS `PRC_PED_CREAR_ALBARAN_INICIO`;
 DELIMITER ;;
-CREATE  PROCEDURE `PRC_PED_CREAR_ALBARAN_INICIO`(
-  IN p_NUMERO_PED varchar(20),
-  IN p_SERIE_PED varchar(20),
-  IN p_USUARIO varchar(100),
-  OUT p_NUMERO_ALB varchar(20),
-  OUT p_SERIE_ALB varchar(20))
-BEGIN
-  DECLARE v_serie varchar(20);
-  DECLARE v_numero varchar(20);
-  SELECT SERIE_PED
-    INTO v_serie
-    FROM fza_pedidos
-   WHERE NUMERO_PED = p_NUMERO_PED
-     AND SERIE_PED = p_SERIE_PED;
-  SELECT LPAD(IFNULL(MAX(CAST(NUMERO_ALB AS UNSIGNED)), 0) + 1, 6, '0')
-    INTO v_numero
-    FROM fza_albaranes
-   WHERE SERIE_ALB = v_serie;
-  INSERT INTO fza_albaranes (
-    NUMERO_ALB, SERIE_ALB, FECHA_ALB, ESTADO_ALB,
-    NUMERO_PED_ALB, SERIE_PED_ALB,
-    CODIGO_EMP_ALB, CODIGO_ALM_ALB,
-    RAZON_SOCIAL_EMPRESA_ALB, NIF_EMPRESA_ALB,
-    MOVIL_EMPRESA_ALB, EMAIL_EMPRESA_ALB,
-    DIRECCION1_EMPRESA_ALB, DIRECCION2_EMPRESA_ALB,
-    POBLACION_EMPRESA_ALB, PROVINCIA_EMPRESA_ALB,
-    CODIGO_PAI_EMPRESA_ALB, NOMBRE_PAI_EMPRESA_ALB,
-    CODIGO_POSTAL_EMPRESA_ALB, GRUPO_ZONA_IVA_EMPRESA_ALB,
-    CODIGO_CLI_ALB, RAZON_SOCIAL_CLIENTE_ALB,
-    NIF_CLIENTE_ALB, MOVIL_CLIENTE_ALB, EMAIL_CLIENTE_ALB,
-    DIRECCION1_CLIENTE_ALB, DIRECCION2_CLIENTE_ALB,
-    POBLACION_CLIENTE_ALB, PROVINCIA_CLIENTE_ALB,
-    CODIGO_POSTAL_CLIENTE_ALB, CODIGO_PAI_CLIENTE_ALB,
-    NOMBRE_PAI_CLIENTE_ALB, NOMBRE_CLI_ENVIO_ALB,
-    MOVIL_CLIENTE_ENVIO_ALB, DIRECCION1_CLIENTE_ENVIO_ALB,
-    DIRECCION2_CLIENTE_ENVIO_ALB, POBLACION_CLIENTE_ENVIO_ALB,
-    PROVINCIA_CLIENTE_ENVIO_ALB, CODIGO_POSTAL_CLIENTE_ENVIO_ALB,
-    CODIGO_PAI_CLIENTE_ENVIO_ALB, NOMBRE_PAI_CLIENTE_ENVIO_ALB,
-    TRANSPORTISTA_ALB, CODIGO_IVA_ALB,
-    ESIVA_RECARGO_CLIENTE_ALB, ESIVA_EXENTO_CLIENTE_ALB,
-    ESINTRACOMUNITARIO_CLIENTE_ALB, TARIFA_ARTICULO_CLIENTE_ALB,
-    ESIMP_INCL_TARIFA_CLIENTE_ALB, PORCENTAJE_IVAN_ALB,
-    PORCENTAJE_IVAR_ALB, PORCENTAJE_IVAS_ALB, PORCENTAJE_IVAE_ALB,
-    FORMA_PAGO_ALB, CONTADOR_LINEAS_ALB,
-    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)
-  SELECT v_numero, v_serie, CURRENT_DATE(), 'ABIERTO',
-         p_NUMERO_PED, p_SERIE_PED,
-         P.CODIGO_EMP_PED, P.CODIGO_ALM_PED,
-         P.RAZON_SOCIAL_EMPRESA_PED, P.NIF_EMPRESA_PED,
-         P.MOVIL_EMPRESA_PED, P.EMAIL_EMPRESA_PED,
-         P.DIRECCION1_EMPRESA_PED, P.DIRECCION2_EMPRESA_PED,
-         P.POBLACION_EMPRESA_PED, P.PROVINCIA_EMPRESA_PED,
-         P.CODIGO_PAI_EMPRESA_PED, P.NOMBRE_PAI_EMPRESA_PED,
-         P.CODIGO_POSTAL_EMPRESA_PED, P.GRUPO_ZONA_IVA_EMPRESA_PED,
-         P.CODIGO_CLI_PED, P.RAZON_SOCIAL_CLIENTE_FISCAL_PED,
-         P.NIF_CLIENTE_PED, P.MOVIL_CLIENTE_FISCAL_PED,
-         P.EMAIL_CLIENTE_PED, P.DIRECCION1_CLIENTE_FISCAL_PED,
-         P.DIRECCION2_CLIENTE_FISCAL_PED,
-         P.POBLACION_CLIENTE_FISCAL_PED,
-         P.PROVINCIA_CLIENTE_FISCAL_PED,
-         P.CODIGO_POSTAL_CLIENTE_FISCAL_PED,
-         P.CODIGO_PAI_CLIENTE_FISCAL_PED,
-         P.NOMBRE_PAI_CLIENTE_FISCAL_PED,
-         P.NOMBRE_CLI_ENVIO_PED, P.MOVIL_CLIENTE_ENVIO_PED,
-         P.DIRECCION1_CLIENTE_ENVIO_PED,
-         P.DIRECCION2_CLIENTE_ENVIO_PED,
-         P.POBLACION_CLIENTE_ENVIO_PED,
-         P.PROVINCIA_CLIENTE_ENVIO_PED,
-         P.CODIGO_POSTAL_CLIENTE_ENVIO_PED,
-         P.CODIGO_PAI_CLIENTE_ENVIO_PED,
-         P.NOMBRE_PAI_CLIENTE_ENVIO_PED,
-         P.TRANSPORTISTAPS_PED, P.CODIGO_IVA_PED,
-         P.ESIVA_RECARGO_CLIENTE_PED, P.ESIVA_EXENTO_CLIENTE_PED,
-         P.ESINTRACOMUNITARIO_CLIENTE_PED,
-         P.TARIFA_ARTICULO_CLIENTE_PED,
-         P.ESIMP_INCL_TARIFA_CLIENTE_PED, P.PORCENTAJE_IVAN_PED,
-         P.PORCENTAJE_IVAR_PED, P.PORCENTAJE_IVAS_PED,
-         P.PORCENTAJE_IVAE_PED, P.FORMA_PAGO_PED, '0',
-         NOW(), p_USUARIO, p_USUARIO
-    FROM fza_pedidos P
-   WHERE P.NUMERO_PED = p_NUMERO_PED
-     AND P.SERIE_PED = p_SERIE_PED;
-  SET p_NUMERO_ALB = v_numero;
-  SET p_SERIE_ALB = v_serie;
-END ;;
+CREATE  PROCEDURE `PRC_PED_CREAR_ALBARAN_INICIO`(  IN p_NUMERO_PED varchar(20),   IN p_SERIE_PED varchar(20),   IN p_USUARIO varchar(100),   OUT p_NUMERO_ALB varchar(20),   OUT p_SERIE_ALB varchar(20))
+BEGIN   DECLARE v_serie varchar(20);   DECLARE v_numero varchar(20);   SELECT SERIE_PED INTO v_serie     FROM fza_pedidos    WHERE NUMERO_PED = p_NUMERO_PED      AND SERIE_PED = p_SERIE_PED;   SELECT LPAD(IFNULL(MAX(CAST(NUMERO_ALB AS UNSIGNED)), 0)               + 1, 6, '0')     INTO v_numero     FROM fza_albaranes    WHERE SERIE_ALB = v_serie;   INSERT INTO fza_albaranes (    NUMERO_ALB, SERIE_ALB, FECHA_ALB, ESTADO_ALB,     NUMERO_PED_ALB, SERIE_PED_ALB,     CODIGO_EMP_ALB, CODIGO_ALM_ALB,     RAZON_SOCIAL_EMPRESA_ALB, NIF_EMPRESA_ALB,     MOVIL_EMPRESA_ALB, EMAIL_EMPRESA_ALB,     DIRECCION1_EMPRESA_ALB, DIRECCION2_EMPRESA_ALB,     POBLACION_EMPRESA_ALB, PROVINCIA_EMPRESA_ALB,     CODIGO_PAI_EMPRESA_ALB, NOMBRE_PAI_EMPRESA_ALB,     CODIGO_POSTAL_EMPRESA_ALB, GRUPO_ZONA_IVA_EMPRESA_ALB,     CODIGO_CLI_ALB, RAZON_SOCIAL_CLIENTE_ALB,     NIF_CLIENTE_ALB, MOVIL_CLIENTE_ALB, EMAIL_CLIENTE_ALB,     DIRECCION1_CLIENTE_ALB, DIRECCION2_CLIENTE_ALB,     POBLACION_CLIENTE_ALB, PROVINCIA_CLIENTE_ALB,     CODIGO_POSTAL_CLIENTE_ALB, CODIGO_PAI_CLIENTE_ALB,     NOMBRE_PAI_CLIENTE_ALB, NOMBRE_CLI_ENVIO_ALB,     MOVIL_CLIENTE_ENVIO_ALB, DIRECCION1_CLIENTE_ENVIO_ALB,     DIRECCION2_CLIENTE_ENVIO_ALB, POBLACION_CLIENTE_ENVIO_ALB,     PROVINCIA_CLIENTE_ENVIO_ALB, CODIGO_POSTAL_CLIENTE_ENVIO_ALB,     CODIGO_PAI_CLIENTE_ENVIO_ALB, NOMBRE_PAI_CLIENTE_ENVIO_ALB,     TRANSPORTISTA_ALB, CODIGO_IVA_ALB,     ESIVA_RECARGO_CLIENTE_ALB, ESIVA_EXENTO_CLIENTE_ALB,     ESINTRACOMUNITARIO_CLIENTE_ALB, TARIFA_ARTICULO_CLIENTE_ALB,     ESIMP_INCL_TARIFA_CLIENTE_ALB, PORCENTAJE_IVAN_ALB,     PORCENTAJE_IVAR_ALB, PORCENTAJE_IVAS_ALB, PORCENTAJE_IVAE_ALB,     FORMA_PAGO_ALB, CONTADOR_LINEAS_ALB,     INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)   SELECT v_numero, v_serie, CURRENT_DATE(), 'ABIERTO',          p_NUMERO_PED, p_SERIE_PED,          P.CODIGO_EMP_PED, P.CODIGO_ALM_PED,          P.RAZON_SOCIAL_EMPRESA_PED, P.NIF_EMPRESA_PED,          P.MOVIL_EMPRESA_PED, P.EMAIL_EMPRESA_PED,          P.DIRECCION1_EMPRESA_PED, P.DIRECCION2_EMPRESA_PED,          P.POBLACION_EMPRESA_PED, P.PROVINCIA_EMPRESA_PED,          P.CODIGO_PAI_EMPRESA_PED, P.NOMBRE_PAI_EMPRESA_PED,          P.CODIGO_POSTAL_EMPRESA_PED, P.GRUPO_ZONA_IVA_EMPRESA_PED,          P.CODIGO_CLI_PED, P.RAZON_SOCIAL_CLIENTE_FISCAL_PED,          P.NIF_CLIENTE_PED, P.MOVIL_CLIENTE_FISCAL_PED,          P.EMAIL_CLIENTE_PED, P.DIRECCION1_CLIENTE_FISCAL_PED,          P.DIRECCION2_CLIENTE_FISCAL_PED,          P.POBLACION_CLIENTE_FISCAL_PED,          P.PROVINCIA_CLIENTE_FISCAL_PED,          P.CODIGO_POSTAL_CLIENTE_FISCAL_PED,          P.CODIGO_PAI_CLIENTE_FISCAL_PED,          P.NOMBRE_PAI_CLIENTE_FISCAL_PED,          P.NOMBRE_CLI_ENVIO_PED, P.MOVIL_CLIENTE_ENVIO_PED,          P.DIRECCION1_CLIENTE_ENVIO_PED,          P.DIRECCION2_CLIENTE_ENVIO_PED,          P.POBLACION_CLIENTE_ENVIO_PED,          P.PROVINCIA_CLIENTE_ENVIO_PED,          P.CODIGO_POSTAL_CLIENTE_ENVIO_PED,          P.CODIGO_PAI_CLIENTE_ENVIO_PED,          P.NOMBRE_PAI_CLIENTE_ENVIO_PED,          P.TRANSPORTISTAPS_PED, P.CODIGO_IVA_PED,          P.ESIVA_RECARGO_CLIENTE_PED, P.ESIVA_EXENTO_CLIENTE_PED,          P.ESINTRACOMUNITARIO_CLIENTE_PED,          P.TARIFA_ARTICULO_CLIENTE_PED,          P.ESIMP_INCL_TARIFA_CLIENTE_PED, P.PORCENTAJE_IVAN_PED,          P.PORCENTAJE_IVAR_PED, P.PORCENTAJE_IVAS_PED,          P.PORCENTAJE_IVAE_PED, P.FORMA_PAGO_PED, '0',          NOW(), p_USUARIO, p_USUARIO     FROM fza_pedidos P    WHERE P.NUMERO_PED = p_NUMERO_PED      AND P.SERIE_PED = p_SERIE_PED;   SET p_NUMERO_ALB = v_numero;   SET p_SERIE_ALB = v_serie; END ;;
 DELIMITER ;
 
 -- Procedimiento: PRC_PED_CREAR_ALBARAN_LINEA
 DROP PROCEDURE IF EXISTS `PRC_PED_CREAR_ALBARAN_LINEA`;
 DELIMITER ;;
-CREATE  PROCEDURE `PRC_PED_CREAR_ALBARAN_LINEA`(
-  IN p_NUMERO_ALB varchar(20),
-  IN p_SERIE_ALB varchar(20),
-  IN p_NUMERO_PED varchar(20),
-  IN p_SERIE_PED varchar(20),
-  IN p_LINEA_PED varchar(4),
-  IN p_CANTIDAD decimal(19,6),
-  IN p_CODIGO_ALM varchar(10),
-  IN p_USUARIO varchar(100))
-PRC: BEGIN
-  DECLARE v_linea varchar(4);
-  DECLARE v_pedida decimal(19,6) DEFAULT 0;
-  DECLARE v_albaranada decimal(19,6) DEFAULT 0;
-  DECLARE v_objetivo decimal(19,6) DEFAULT 0;
-  DECLARE v_pendiente decimal(19,6) DEFAULT 0;
-  DECLARE v_cantidad decimal(19,6) DEFAULT 0;
-  SELECT IFNULL(CANTIDAD_PEDLIN, 0)
-    INTO v_pedida
-    FROM fza_pedidos_lineas
-   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
-     AND SERIE_PED_PEDLIN = p_SERIE_PED
-     AND LINEA_PEDLIN = p_LINEA_PED;
-  SELECT IFNULL(SUM(CANTIDAD_ALBLIN), 0)
-    INTO v_albaranada
-    FROM fza_albaranes_lineas
-   WHERE NUMERO_PED_ALBLIN = p_NUMERO_PED
-     AND SERIE_PED_ALBLIN = p_SERIE_PED
-     AND LINEA_PED_ALBLIN = p_LINEA_PED;
-  SET v_objetivo = LEAST(IFNULL(p_CANTIDAD, 0), v_pedida);
-  SET v_pendiente = v_pedida - v_albaranada;
-  SET v_cantidad = v_objetivo - v_albaranada;
-  IF v_pedida <= 0 OR v_pendiente <= 0 OR v_cantidad <= 0 THEN
-    LEAVE PRC;
-  END IF;
-  IF v_cantidad > v_pendiente THEN
-    SET v_cantidad = v_pendiente;
-  END IF;
-  UPDATE fza_albaranes
-     SET CONTADOR_LINEAS_ALB = LPAD(LAST_INSERT_ID(
-           IFNULL(CAST(NULLIF(CONTADOR_LINEAS_ALB, '')
-           AS UNSIGNED), 0) + 10), 8, '0')
-   WHERE NUMERO_ALB = p_NUMERO_ALB
-     AND SERIE_ALB = p_SERIE_ALB;
-  IF ROW_COUNT() = 0 THEN
-    LEAVE PRC;
-  END IF;
-  SET v_linea = LPAD(LAST_INSERT_ID(), 4, '0');
-  INSERT INTO fza_albaranes_lineas (
-    NUMERO_ALB_ALBLIN, SERIE_ALB_ALBLIN, LINEA_ALBLIN,
-    NUMERO_PED_ALBLIN, SERIE_PED_ALBLIN, LINEA_PED_ALBLIN,
-    CODIGO_ART_ALBLIN, CODIGO_UNIDAD_ALBLIN,
-    CODIGO_FAM_ALBLIN, NOMBRE_FAM_ALBLIN,
-    DESCRIPCION_ARTICULO_ALBLIN, TIPO_CANTIDAD_ARTICULO_ALBLIN,
-    CANTIDAD_ALBLIN, CODIGO_TAR_ALBLIN, ESIMP_INCL_TARIFA_ALBLIN,
-    TIPO_IVA_ARTICULO_ALBLIN, PORCENTAJE_IVA_ALBLIN,
-    PRECIO_VENTA_SIVA_ARTICULO_ALBLIN,
-    PRECIO_VENTA_CIVA_ARTICULO_ALBLIN, TOTAL_ALBLIN,
-    CODIGO_ALMACEN_ALBLIN, INSTANTE_ALTA, USUARIO_ALTA,
-    USUARIO_MODIF)
-  SELECT p_NUMERO_ALB, p_SERIE_ALB, v_linea,
-         p_NUMERO_PED, p_SERIE_PED, p_LINEA_PED,
-         PL.CODIGO_ART_PEDLIN,
-         COALESCE(NULLIF(PL.CODIGOPRODPS_PEDLIN, ''),
-                  NULLIF(PL.CODIGO_UNIDAD_PEDLIN, ''),
-                  PL.CODIGO_ART_PEDLIN),
-         PL.CODIGO_FAM_PEDLIN, PL.NOMBRE_FAM_PEDLIN,
-         PL.DESCRIPCION_ARTICULO_PEDLIN,
-         PL.TIPO_CANTIDAD_ARTICULO_PEDLIN,
-         v_cantidad, PL.CODIGO_TAR_PEDLIN,
-         PL.ESIMP_INCL_TARIFA_PEDLIN,
-         PL.TIPO_IVA_ARTICULO_PEDLIN, PL.PORCENTAJE_IVA_PEDLIN,
-         PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN,
-         PL.PRECIO_VENTA_CIVA_ARTICULO_PEDLIN,
-         v_cantidad * PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN,
-         COALESCE(NULLIF(p_CODIGO_ALM, ''),
-                  PL.CODIGO_ALMACEN_PEDLIN),
-         NOW(), p_USUARIO, p_USUARIO
-    FROM fza_pedidos_lineas PL
-   WHERE PL.NUMERO_PED_PEDLIN = p_NUMERO_PED
-     AND PL.SERIE_PED_PEDLIN = p_SERIE_PED
-     AND PL.LINEA_PEDLIN = p_LINEA_PED;
-  UPDATE fza_pedidos_lineas
-     SET CANTIDAD_ENTREGADA_PEDLIN = v_albaranada + v_cantidad,
-         CANTIDAD_PENDIENTE_PEDLIN =
-           GREATEST(CANTIDAD_PEDLIN -
-                    (v_albaranada + v_cantidad), 0),
-         ESENTREGADA_PEDLIN = CASE
-           WHEN CANTIDAD_PEDLIN <= v_albaranada + v_cantidad
-           THEN 'S' ELSE 'N' END,
-         INSTANTE_MODIF = NOW(),
-         USUARIO_MODIF = p_USUARIO
-   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
-     AND SERIE_PED_PEDLIN = p_SERIE_PED
-     AND LINEA_PEDLIN = p_LINEA_PED;
-END ;;
+CREATE  PROCEDURE `PRC_PED_CREAR_ALBARAN_LINEA`(  IN p_NUMERO_ALB varchar(20),   IN p_SERIE_ALB varchar(20),   IN p_NUMERO_PED varchar(20),   IN p_SERIE_PED varchar(20),   IN p_LINEA_PED varchar(4),   IN p_CANTIDAD decimal(19,6),   IN p_CODIGO_ALM varchar(10),   IN p_USUARIO varchar(100))
+PRC: BEGIN   DECLARE v_linea varchar(4);   DECLARE v_pedida decimal(19,6) DEFAULT 0;   DECLARE v_albaranada decimal(19,6) DEFAULT 0;   DECLARE v_objetivo decimal(19,6) DEFAULT 0;   DECLARE v_pendiente decimal(19,6) DEFAULT 0;   DECLARE v_cantidad decimal(19,6) DEFAULT 0;   SELECT IFNULL(CANTIDAD_PEDLIN, 0) INTO v_pedida     FROM fza_pedidos_lineas    WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED      AND SERIE_PED_PEDLIN = p_SERIE_PED      AND LINEA_PEDLIN = p_LINEA_PED;   SELECT IFNULL(SUM(CANTIDAD_ALBLIN), 0) INTO v_albaranada     FROM fza_albaranes_lineas    WHERE NUMERO_PED_ALBLIN = p_NUMERO_PED      AND SERIE_PED_ALBLIN = p_SERIE_PED      AND LINEA_PED_ALBLIN = p_LINEA_PED;   SET v_objetivo = LEAST(IFNULL(p_CANTIDAD, 0), v_pedida);   SET v_pendiente = v_pedida - v_albaranada;   SET v_cantidad = v_objetivo - v_albaranada;   IF v_pedida <= 0 OR v_pendiente <= 0 OR v_cantidad <= 0 THEN     LEAVE PRC;   END IF;   IF v_cantidad > v_pendiente THEN     SET v_cantidad = v_pendiente;   END IF;   UPDATE fza_albaranes      SET CONTADOR_LINEAS_ALB = LPAD(LAST_INSERT_ID(           IFNULL(CAST(NULLIF(CONTADOR_LINEAS_ALB, '')            AS UNSIGNED), 0) + 10), 8, '0')    WHERE NUMERO_ALB = p_NUMERO_ALB      AND SERIE_ALB = p_SERIE_ALB;   IF ROW_COUNT() = 0 THEN     LEAVE PRC;   END IF;   SET v_linea = LPAD(LAST_INSERT_ID(), 4, '0');   INSERT INTO fza_albaranes_lineas (    NUMERO_ALB_ALBLIN, SERIE_ALB_ALBLIN, LINEA_ALBLIN,     NUMERO_PED_ALBLIN, SERIE_PED_ALBLIN, LINEA_PED_ALBLIN,     CODIGO_ART_ALBLIN, CODIGO_UNIDAD_ALBLIN,     CODIGO_FAM_ALBLIN, NOMBRE_FAM_ALBLIN,     DESCRIPCION_ARTICULO_ALBLIN, TIPO_CANTIDAD_ARTICULO_ALBLIN,     CANTIDAD_ALBLIN, CODIGO_TAR_ALBLIN, ESIMP_INCL_TARIFA_ALBLIN,     TIPO_IVA_ARTICULO_ALBLIN, PORCENTAJE_IVA_ALBLIN,     PRECIO_VENTA_SIVA_ARTICULO_ALBLIN,     PRECIO_VENTA_CIVA_ARTICULO_ALBLIN, TOTAL_ALBLIN,     CODIGO_ALMACEN_ALBLIN, INSTANTE_ALTA, USUARIO_ALTA,     USUARIO_MODIF)   SELECT p_NUMERO_ALB, p_SERIE_ALB, v_linea,          p_NUMERO_PED, p_SERIE_PED, p_LINEA_PED,          PL.CODIGO_ART_PEDLIN,          COALESCE(NULLIF(PL.CODIGOPRODPS_PEDLIN, ''),                   NULLIF(PL.CODIGO_UNIDAD_PEDLIN, ''),                   PL.CODIGO_ART_PEDLIN),          PL.CODIGO_FAM_PEDLIN, PL.NOMBRE_FAM_PEDLIN,          PL.DESCRIPCION_ARTICULO_PEDLIN,          PL.TIPO_CANTIDAD_ARTICULO_PEDLIN,          v_cantidad, PL.CODIGO_TAR_PEDLIN,          PL.ESIMP_INCL_TARIFA_PEDLIN,          PL.TIPO_IVA_ARTICULO_PEDLIN, PL.PORCENTAJE_IVA_PEDLIN,          PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN,          PL.PRECIO_VENTA_CIVA_ARTICULO_PEDLIN,          (v_cantidad * PL.PRECIO_VENTA_SIVA_ARTICULO_PEDLIN),          COALESCE(NULLIF(p_CODIGO_ALM, ''),                   PL.CODIGO_ALMACEN_PEDLIN),          NOW(), p_USUARIO, p_USUARIO     FROM fza_pedidos_lineas PL    WHERE PL.NUMERO_PED_PEDLIN = p_NUMERO_PED      AND PL.SERIE_PED_PEDLIN = p_SERIE_PED      AND PL.LINEA_PEDLIN = p_LINEA_PED;   UPDATE fza_pedidos_lineas      SET CANTIDAD_ENTREGADA_PEDLIN = v_albaranada + v_cantidad,          CANTIDAD_PENDIENTE_PEDLIN =            GREATEST(CANTIDAD_PEDLIN -                     (v_albaranada + v_cantidad), 0),          CANTIDAD_A_ALBARANAR_PEDLIN = 0,          ESENTREGADA_PEDLIN = CASE            WHEN CANTIDAD_PEDLIN <= v_albaranada + v_cantidad            THEN 'S' ELSE 'N' END,          INSTANTE_MODIF = NOW(),          USUARIO_MODIF = p_USUARIO    WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED      AND SERIE_PED_PEDLIN = p_SERIE_PED      AND LINEA_PEDLIN = p_LINEA_PED; END ;;
 DELIMITER ;
 
 -- Procedimiento: PRC_REALIZAR_TRASPASO
@@ -40961,4 +40874,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 07/07/2026 19:55:28
+-- Backup completado: 09/07/2026 7:47:41

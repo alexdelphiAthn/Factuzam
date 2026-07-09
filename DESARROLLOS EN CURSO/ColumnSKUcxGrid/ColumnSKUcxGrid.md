@@ -404,6 +404,76 @@ Detalles del encaje en `inMtoInventarios` (patrón para el resto):
   integración — el de inventarios abortaba el Construir de tallas a
   mitad y dejaba el grid a medio montar.
 
+## Integración en FACTURAS DE VENTA (08/07/2026)
+
+Aplicado el contrato a `inMtoFacturasBase` (cubre **venta mayor
+normal** y **simplificadas**, que solo cambian vista/TIPO_FAC). F1
+cicla `Auto (desglose) -> SKU -> Tallas horizontal`; Auto por defecto.
+
+- **SQL**: `facturas_columnas_sku.sql` — ATTR1..5 + NUM_ATRIBUTOS en
+  `fza_facturas_lineas` y regeneración de `vi_facturas_lineas` con
+  `fl.*`. Sin tabla de celdas y sin ID_AC_PIVOT. **Obligatorio
+  aplicarlo antes de desplegar**: los SQLInsert/Update de `unqryLinFac`
+  se reescriben en `TdmFacturas.DataModuleCreate` con las columnas
+  nuevas (mismo criterio que pedidos).
+- **Modo tallas** = `inLibGridPivoteVenta` (mcsTallasHorPed) con el
+  flag nuevo **`BandaUnica`**: una factura tiene UNA cantidad por
+  línea, así que cada grupo artículo+color+precio pinta UNA fila
+  (banda pedida rotulada `Cantidad`) en vez de las 3 bandas de
+  pedidos. El pivot sigue siendo SOLO visual: las líneas fiscales no
+  se consolidan ni se transforman (Verifactu intacto).
+- `TdmFacturas.DesempaquetarAtributosLineas` (clon del de pedidos
+  sobre `_FACLIN`, defensivo si la migración no está aplicada).
+- `ConstruirModoEntrada` en la base: teardown estilo pedidos +
+  `CrearColumnasHostFactura`, que recrea las columnas del documento y
+  **reasigna las referencias `ctb*` del dfm** para que la lógica
+  existente (dsLinFacStateChange/ImpIncl, visibilidad de creación,
+  toggles de cabecera, recalculo fiscal) siga funcionando. Durante el
+  rebuild se desenganchan `dsLinFac.OnStateChange/OnDataChange` (tocan
+  columnas muertas en el ClearItems).
+- `AplicarArticuloFactura(entrada)`: núcleo compartido del flujo
+  fiscal clásico (validador + resolver + tarifa + IVA inc/exc +
+  `ActualizarLineaFacturaGen`); lo usan `OnResuelto` del contrato y
+  `OnCrearLineaSku` del pivote.
+- **Modo creación de artículos** (`ESCREARARTICULOS_FAC='S'`): el
+  contrato no cubre el alta inline, así que se reconstruye una
+  presentación **[Clásico]** (artículo botón […] + combo SKU con sus
+  handlers legacy). F1 queda inerte con creación activa; al alternar
+  el check o navegar a una factura con creación se reconstruye.
+- Navegación entre facturas: se desempaqueta SKU->ATTR (desglose), se
+  re-pivota (tallas) o se alterna clásico<->contrato según la
+  cabecera, desde `dsTablaGDataChange`.
+
+Pendiente de validación funcional en vivo (alta de líneas en los tres
+modos, edición de celdas de talla, totales fiscales y Verifactu).
+
+## Contrato COMPLETO en PEDIDOS DE COMPRA (09/07/2026)
+
+(Sustituye al plan intermedio de "ciclo F1 sobre los toggles":
+el usuario pidió el MISMO tallashorped de ventas.)
+
+`inMtoPedidosCompra` adopta el contrato entero: F1 cicla Auto
+(desglose) → SKU → **Tallas horizontal = `inLibGridPivoteVenta`**
+(mcsTallasHorPed) con las bandas **Pedido / A recibir / Pendiente**
+mapeadas a `CANTIDAD_PEDCLIN` / `CANTIDAD_A_RECIBIR_PEDCLIN` (nueva) /
+`CANTIDAD_RECIBIDA_PEDCLIN`. Rótulo de banda configurable en la lib
+(`TextoBandaAAlbaranar`, aquí 'A recibir').
+
+- **SQL**: `pedidos_compra_columnas_sku.sql` — ATTR1..5 +
+  NUM_ATRIBUTOS + CANTIDAD_A_RECIBIR en `fza_pedidos_compra_lineas`.
+  Obligatorio antes de usar (el DM lee `SELECT *`, sin vistas).
+- **El pivote de compras (`inLibGridPivoteCompra`) queda RETIRADO de
+  esta pantalla** (sigue en albaranes de compra): botones Tallas en
+  horizontal / Expandir recibidos / Recibir fila entera ocultos y la
+  preferencia `ESPIVOTE_HORIZONTAL_PEDC` se ignora (decisión
+  09/07/26).
+- "A recibir" pasa de columna no-bound a CAMPO: columna editable con
+  clamp en SKU/Desglose, banda en tallas. `Recibir todo`, el total de
+  cabecera y `Crear albarán` (recogida y limpieza por almacén) leen y
+  escriben el campo; los flujos antiguos se conservan solo para el
+  estado pre-contrato (dfm intacto hasta el primer Construir).
+- `TdmPedidosCompra.DesempaquetarAtributosLineas` (clon defensivo).
+
 ## Pendiente / siguientes pasos
 
 - ~~Totales no se refrescan tras Construir~~ → RESUELTO

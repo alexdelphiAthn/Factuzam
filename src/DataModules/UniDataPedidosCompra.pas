@@ -72,6 +72,11 @@ type
   public
     procedure GetCodigoAutoPedidoCompra;
     procedure CalcularTotalesPedidoCompra;
+    // Contrato ColumnSKUcxGrid: trocea CODIGO_UNIDAD_PEDCLIN en las
+    // columnas reales ATTR1..5_VALOR_PEDCLIN + NUM_ATRIBUTOS_PEDCLIN
+    // para el modo Desglose/Tallas. Idempotente por comparacion. No
+    // hace nada si pedidos_compra_columnas_sku.sql no esta aplicado.
+    procedure DesempaquetarAtributosLineas;
     function BuscarEmpresa(const ACodigo: string): Boolean;
     procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
     procedure CargarAlmacenesDelPedido(const ASerie, ANumero: string;
@@ -1109,6 +1114,73 @@ begin
         ' y empresa ' +
         unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString + '.');
     unqryTablaG.FieldByName('NUMERO_PEDC').AsString := sNumero;
+  end;
+end;
+
+procedure TdmPedidosCompra.DesempaquetarAtributosLineas;
+var
+  Partes: TArray<string>;
+  Sku, sEsperado: string;
+  i: Integer;
+  Bm: TBookmark;
+  bCambia: Boolean;
+begin
+  if unqryPedidosCompraLineas.Active and
+     (not unqryPedidosCompraLineas.IsEmpty) and
+     (unqryPedidosCompraLineas.FindField('ATTR1_VALOR_PEDCLIN') <> nil) and
+     (unqryPedidosCompraLineas.FindField('NUM_ATRIBUTOS_PEDCLIN') <> nil) and
+     (not unqryPedidosCompraLineas.ReadOnly) then
+  begin
+    Bm := unqryPedidosCompraLineas.GetBookmark;
+    unqryPedidosCompraLineas.DisableControls;
+    try
+      unqryPedidosCompraLineas.First;
+      while not unqryPedidosCompraLineas.Eof do
+      begin
+        Sku := unqryPedidosCompraLineas.FieldByName(
+          'CODIGO_UNIDAD_PEDCLIN').AsString;
+        Partes := Sku.Split(['/']);
+        if Length(Partes) > 1 then
+        begin
+          // Idempotente POR COMPARACION (mismo criterio que ventas).
+          bCambia := unqryPedidosCompraLineas.FieldByName(
+            'NUM_ATRIBUTOS_PEDCLIN').AsInteger <> Length(Partes) - 1;
+          for i := 1 to 5 do
+          begin
+            if i < Length(Partes) then
+              sEsperado := Partes[i]
+            else
+              sEsperado := '';
+            if Trim(unqryPedidosCompraLineas.FieldByName('ATTR' +
+                 IntToStr(i) + '_VALOR_PEDCLIN').AsString) <>
+               sEsperado then
+              bCambia := True;
+          end;
+          if bCambia then
+          begin
+            unqryPedidosCompraLineas.Edit;
+            unqryPedidosCompraLineas.FieldByName(
+              'NUM_ATRIBUTOS_PEDCLIN').AsInteger := Length(Partes) - 1;
+            for i := 1 to 5 do
+            begin
+              if i < Length(Partes) then
+                unqryPedidosCompraLineas.FieldByName('ATTR' +
+                  IntToStr(i) + '_VALOR_PEDCLIN').AsString := Partes[i]
+              else
+                unqryPedidosCompraLineas.FieldByName('ATTR' +
+                  IntToStr(i) + '_VALOR_PEDCLIN').AsString := '';
+            end;
+            unqryPedidosCompraLineas.Post;
+          end;
+        end;
+        unqryPedidosCompraLineas.Next;
+      end;
+      if unqryPedidosCompraLineas.BookmarkValid(Bm) then
+        unqryPedidosCompraLineas.GotoBookmark(Bm);
+    finally
+      unqryPedidosCompraLineas.EnableControls;
+      unqryPedidosCompraLineas.FreeBookmark(Bm);
+    end;
   end;
 end;
 

@@ -199,6 +199,12 @@ type
     // todos los AVs de talla del articulo. 0 si ninguno cubre.
     function BuscarConjuntoParaAvs(
       const AAvs: TArray<TArticuloAtributoValor>): Integer;
+    // True si el conjunto AIdAc contiene TODOS los AVs indicados.
+    // Detecta asignaciones desfasadas (conjunto de letras asignado a
+    // un articulo cuyos SKUs llevan tallas numericas): con un pivote
+    // que no contiene sus AVs, las celdas serian invisibles.
+    function ConjuntoCubreAvs(AIdAc: Integer;
+      const AAvs: TArray<TArticuloAtributoValor>): Boolean;
     // Formato distribuido: bloquea la edicion inline de las celdas de
     // talla y abre el distribuidor (mismo patron que sesiones).
     procedure ViewEditing(Sender: TcxCustomGridTableView;
@@ -1871,6 +1877,40 @@ begin
   end;
 end;
 
+function TModoEntradaTallas.ConjuntoCubreAvs(AIdAc: Integer;
+  const AAvs: TArray<TArticuloAtributoValor>): Boolean;
+var
+  Qry: TUniQuery;
+  sIds: string;
+  i: Integer;
+begin
+  Result := True;
+  if (AIdAc > 0) and (Length(AAvs) > 0) then
+  begin
+    // Lista IN de enteros construida en memoria (IdValor es Integer).
+    sIds := '';
+    for i := 0 to High(AAvs) do
+    begin
+      if sIds <> '' then
+        sIds := sIds + ',';
+      sIds := sIds + IntToStr(AAvs[i].IdValor);
+    end;
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := FConfig.Conexion;
+      Qry.SQL.Text :=
+        'SELECT COUNT(DISTINCT d.ID_AV_ACD) AS N' +
+        '  FROM fza_atributos_conjuntos_det d' +
+        ' WHERE d.ID_AC_ACD = ' + IntToStr(AIdAc) +
+        '   AND d.ID_AV_ACD IN (' + sIds + ')';
+      Qry.Open;
+      Result := Qry.Fields[0].AsInteger = Length(AAvs);
+    finally
+      FreeAndNil(Qry);
+    end;
+  end;
+end;
+
 procedure TModoEntradaTallas.CalcularAtributosLinea(const ACodArt: string;
   const APartes: TArray<string>; ASilencioso: Boolean;
   out AVal, ANom: TValoresAttrTallas; out AAcTalla, AOrdenTalla: Integer);
@@ -1880,7 +1920,7 @@ var
   AvsStr: TArray<string>;
   Mapa: TDictionary<string, string>;
   sIdVa, sAvNuevo: string;
-  i, j: Integer;
+  i, j, iAcAlt: Integer;
 begin
   for i := 1 to 5 do
   begin
@@ -1898,11 +1938,25 @@ begin
       // Pivote = conjunto asignado al articulo; fallback: el conjunto
       // global mas pequenyo que cubre las tallas de sus SKUs.
       AAcTalla := Atribs[i].IdConjunto;
-      if AAcTalla = 0 then
+      Avs := FLookup.ObtenerAvsEnSkus(ACodArt, i + 1);
+      // Asignacion desfasada (p.ej. conjunto de LETRAS asignado y SKUs
+      // con tallas NUMERICAS): las celdas no mapearian a ninguna
+      // columna del pivote y las cantidades quedarian invisibles. Si
+      // el asignado no cubre las tallas reales, se busca el que si;
+      // si ninguno las cubre todas, se conserva el asignado (mejor un
+      // pivote parcial que perderlo).
+      if (AAcTalla > 0) and (Length(Avs) > 0) and
+         (not ConjuntoCubreAvs(AAcTalla, Avs)) then
       begin
-        Avs := FLookup.ObtenerAvsEnSkus(ACodArt, i + 1);
-        AAcTalla := BuscarConjuntoParaAvs(Avs);
+        iAcAlt := BuscarConjuntoParaAvs(Avs);
+        LogSes(Format('ModoTallas.CalcularAtributos: conjunto ' +
+               'asignado %d NO cubre las tallas de %s; fallback=%d',
+               [AAcTalla, ACodArt, iAcAlt]));
+        if iAcAlt > 0 then
+          AAcTalla := iAcAlt;
       end;
+      if AAcTalla = 0 then
+        AAcTalla := BuscarConjuntoParaAvs(Avs);
     end
     else
     begin

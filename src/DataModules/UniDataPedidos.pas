@@ -173,7 +173,8 @@ begin
     '  TIPO_CANTIDAD_ARTICULO_PEDLIN, ESIMP_INCL_TARIFA_PEDLIN, ' +
     '  TIPO_IVA_ARTICULO_PEDLIN, DESCRIPCION_ARTICULO_PEDLIN, ' +
     '  CODIGO_TAR_PEDLIN, CANTIDAD_PEDLIN, CANTIDAD_ENTREGADA_PEDLIN, ' +
-    '  CANTIDAD_PENDIENTE_PEDLIN, ESENTREGADA_PEDLIN, ' +
+    '  CANTIDAD_A_ALBARANAR_PEDLIN, CANTIDAD_PENDIENTE_PEDLIN, ' +
+    '  ESENTREGADA_PEDLIN, ' +
     '  CODIGO_ALMACEN_PEDLIN, PRECIO_VENTA_SIVA_ARTICULO_PEDLIN, ' +
     '  PORCENTAJE_IVA_PEDLIN, PRECIO_VENTA_CIVA_ARTICULO_PEDLIN, ' +
     '  TOTAL_PEDLIN, ' +
@@ -193,8 +194,9 @@ begin
     '  :TIPO_CANTIDAD_ARTICULO_PEDLIN, :ESIMP_INCL_TARIFA_PEDLIN, ' +
     '  :TIPO_IVA_ARTICULO_PEDLIN, :DESCRIPCION_ARTICULO_PEDLIN, ' +
     '  :CODIGO_TAR_PEDLIN, :CANTIDAD_PEDLIN, ' +
-    '  :CANTIDAD_ENTREGADA_PEDLIN, :CANTIDAD_PENDIENTE_PEDLIN, ' +
-    '  :ESENTREGADA_PEDLIN, :CODIGO_ALMACEN_PEDLIN, ' +
+    '  :CANTIDAD_ENTREGADA_PEDLIN, :CANTIDAD_A_ALBARANAR_PEDLIN, ' +
+    '  :CANTIDAD_PENDIENTE_PEDLIN, :ESENTREGADA_PEDLIN, ' +
+    '  :CODIGO_ALMACEN_PEDLIN, ' +
     '  :PRECIO_VENTA_SIVA_ARTICULO_PEDLIN, :PORCENTAJE_IVA_PEDLIN, ' +
     '  :PRECIO_VENTA_CIVA_ARTICULO_PEDLIN, :TOTAL_PEDLIN, ' +
     '  :CODIGO_UNIDAD_PEDLIN, ' +
@@ -227,6 +229,7 @@ begin
     '  CODIGO_TAR_PEDLIN = :CODIGO_TAR_PEDLIN, ' +
     '  CANTIDAD_PEDLIN = :CANTIDAD_PEDLIN, ' +
     '  CANTIDAD_ENTREGADA_PEDLIN = :CANTIDAD_ENTREGADA_PEDLIN, ' +
+    '  CANTIDAD_A_ALBARANAR_PEDLIN = :CANTIDAD_A_ALBARANAR_PEDLIN, ' +
     '  CANTIDAD_PENDIENTE_PEDLIN = :CANTIDAD_PENDIENTE_PEDLIN, ' +
     '  ESENTREGADA_PEDLIN = :ESENTREGADA_PEDLIN, ' +
     '  CODIGO_ALMACEN_PEDLIN = :CODIGO_ALMACEN_PEDLIN, ' +
@@ -256,6 +259,17 @@ begin
     'WHERE NUMERO_PED_PEDLIN = :Old_NUMERO_PED_PEDLIN ' +
     '  AND SERIE_PED_PEDLIN = :Old_SERIE_PED_PEDLIN ' +
     '  AND LINEA_PEDLIN = :Old_LINEA_PEDLIN';
+  unqryPedidosLineas.SQLRefresh.Text :=
+    'SELECT * FROM vi_pedidos_lineas ' +
+    ' WHERE NUMERO_PED_PEDLIN = :NUMERO_PED_PEDLIN ' +
+    '   AND SERIE_PED_PEDLIN = :SERIE_PED_PEDLIN ' +
+    '   AND LINEA_PEDLIN = :LINEA_PEDLIN';
+  unqryPedidosLineas.SQLLock.Text :=
+    'SELECT * FROM fza_pedidos_lineas ' +
+    ' WHERE NUMERO_PED_PEDLIN = :Old_NUMERO_PED_PEDLIN ' +
+    '   AND SERIE_PED_PEDLIN = :Old_SERIE_PED_PEDLIN ' +
+    '   AND LINEA_PEDLIN = :Old_LINEA_PEDLIN ' +
+    ' FOR UPDATE';
   unqryLinPedido.Connection        := inLibGlobalVar.oConn;
   unqryEmpDataPedido.Connection    := inLibGlobalVar.oConn;
   unqryCliDataPedido.Connection    := inLibGlobalVar.oConn;
@@ -524,6 +538,8 @@ begin
     FieldByName('CANTIDAD_PEDLIN').AsFloat := 1;
     if FindField('CANTIDAD_ENTREGADA_PEDLIN') <> nil then
       FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat := 0;
+    if FindField('CANTIDAD_A_ALBARANAR_PEDLIN') <> nil then
+      FieldByName('CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat := 0;
     if FindField('CANTIDAD_PENDIENTE_PEDLIN') <> nil then
       FieldByName('CANTIDAD_PENDIENTE_PEDLIN').AsFloat := 1;
     if FindField('ESENTREGADA_PEDLIN') <> nil then
@@ -604,7 +620,7 @@ end;
 
 procedure TdmPedidos.unqryPedidosLineasBeforePost(DataSet: TDataSet);
 var
-  fCantidad, fEntregada, fPendiente: Double;
+  fCantidad, fEntregada, fPendiente, fAAlbaranar: Double;
 begin
   inherited;
   // Guarda ColumnSKUcxGrid (bucle 07/07/2026): un Post de linea sin
@@ -630,6 +646,17 @@ begin
     else
       fEntregada := 0;
     fPendiente := fCantidad - fEntregada;
+    if fPendiente < 0 then
+      fPendiente := 0;
+    if FindField('CANTIDAD_A_ALBARANAR_PEDLIN') <> nil then
+    begin
+      fAAlbaranar := FieldByName('CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat;
+      if fAAlbaranar < 0 then
+        fAAlbaranar := 0;
+      if fAAlbaranar > fPendiente then
+        fAAlbaranar := fPendiente;
+      FieldByName('CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat := fAAlbaranar;
+    end;
     if FindField('CANTIDAD_PENDIENTE_PEDLIN') <> nil then
       FieldByName('CANTIDAD_PENDIENTE_PEDLIN').AsFloat := fPendiente;
     if FindField('ESENTREGADA_PEDLIN') <> nil then
@@ -800,23 +827,40 @@ end;
 
 procedure TdmPedidos.RecalcularEntregasLinea;
 var
-  fCant, fEntr: Double;
+  fCant, fEntr, fPend, fAAlbaranar: Double;
 begin
   with unqryPedidosLineas do
   begin
     fCant := FieldByName('CANTIDAD_PEDLIN').AsFloat;
-    if FindField('CANTIDAD_ENTREGADA_PEDLIN') = nil then Exit;
-    fEntr := FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat;
-    if fEntr > fCant then
-      FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat := fCant;
-    if FindField('CANTIDAD_PENDIENTE_PEDLIN') <> nil then
-      FieldByName('CANTIDAD_PENDIENTE_PEDLIN').AsFloat := fCant - fEntr;
-    if FindField('ESENTREGADA_PEDLIN') <> nil then
+    if FindField('CANTIDAD_ENTREGADA_PEDLIN') <> nil then
     begin
-      if (fCant - fEntr) <= 0 then
-        FieldByName('ESENTREGADA_PEDLIN').AsString := 'S'
-      else
-        FieldByName('ESENTREGADA_PEDLIN').AsString := 'N';
+      fEntr := FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat;
+      if fEntr > fCant then
+      begin
+        FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat := fCant;
+        fEntr := fCant;
+      end;
+      fPend := fCant - fEntr;
+      if fPend < 0 then
+        fPend := 0;
+      if FindField('CANTIDAD_A_ALBARANAR_PEDLIN') <> nil then
+      begin
+        fAAlbaranar := FieldByName('CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat;
+        if fAAlbaranar < 0 then
+          fAAlbaranar := 0;
+        if fAAlbaranar > fPend then
+          fAAlbaranar := fPend;
+        FieldByName('CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat := fAAlbaranar;
+      end;
+      if FindField('CANTIDAD_PENDIENTE_PEDLIN') <> nil then
+        FieldByName('CANTIDAD_PENDIENTE_PEDLIN').AsFloat := fPend;
+      if FindField('ESENTREGADA_PEDLIN') <> nil then
+      begin
+        if fPend <= 0 then
+          FieldByName('ESENTREGADA_PEDLIN').AsString := 'S'
+        else
+          FieldByName('ESENTREGADA_PEDLIN').AsString := 'N';
+      end;
     end;
   end;
 end;
@@ -1221,7 +1265,8 @@ begin
         '    FROM fza_pedidos_lineas ' +
         '   WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED ' +
         '     AND SERIE_PED_PEDLIN = p_SERIE_PED ' +
-        '     AND IFNULL(ESENTREGADA_PEDLIN, ''N'') <> ''S''; ' +
+        '     AND IFNULL(CANTIDAD_PEDLIN, 0) > ' +
+        '         IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0); ' +
         '  IF v_pendientes = 0 THEN ' +
         '    UPDATE fza_pedidos ' +
         '       SET ESTADO_PED = ''ENTREGADO'', ' +
@@ -1411,6 +1456,7 @@ begin
         '         CANTIDAD_PENDIENTE_PEDLIN = ' +
         '           GREATEST(CANTIDAD_PEDLIN - ' +
         '                    (v_albaranada + v_cantidad), 0), ' +
+        '         CANTIDAD_A_ALBARANAR_PEDLIN = 0, ' +
         '         ESENTREGADA_PEDLIN = CASE ' +
         '           WHEN CANTIDAD_PEDLIN <= v_albaranada + v_cantidad ' +
         '           THEN ''S'' ELSE ''N'' END, ' +
@@ -1888,7 +1934,8 @@ begin
         ' CODIGO_ART_PEDLIN, CODBAR_ART_PEDLIN, ' +
         'DESCRIPCION_ARTICULO_PEDLIN, ' +
         ' CANTIDAD_PEDLIN, CANTIDAD_ENTREGADA_PEDLIN, ' +
-        'CANTIDAD_PENDIENTE_PEDLIN, ESENTREGADA_PEDLIN, ' +
+        'CANTIDAD_A_ALBARANAR_PEDLIN, CANTIDAD_PENDIENTE_PEDLIN, ' +
+        'ESENTREGADA_PEDLIN, ' +
         ' CODIGO_ALMACEN_PEDLIN, ' +
         ' PRECIO_VENTA_SIVA_ARTICULO_PEDLIN, ' +
         'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN, TOTAL_PEDLIN, ' +
@@ -1896,7 +1943,7 @@ begin
         'VALUES (:NUMERO, :SERIE, :LIN, ' +
         '        :IDLPS, :IDPPS, :REFPROD, :IDATRIB, ' +
         '        :CODART, :EAN13, :DESCR, ' +
-        '        :CANT, 0, :CANT, ''N'', ' +
+        '        :CANT, 0, 0, :CANT, ''N'', ' +
         '        :CODALM, ' +
         '        :PSIVA, :PCIVA, :TOT, ' +
         '        NOW(), :USU, :USU)';
