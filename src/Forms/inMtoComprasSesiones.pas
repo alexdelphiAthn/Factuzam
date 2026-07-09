@@ -495,6 +495,9 @@ type
                 var AProperties: TcxCustomEditProperties);
     procedure ModeloComboChange(Sender: TObject);
     procedure ModeloComboCloseUp(Sender: TObject);
+    procedure ModeloComboValidate(Sender: TObject;
+                var DisplayValue: Variant; var ErrorText: TCaption;
+                var Error: Boolean);
     procedure ModeloTimerBusqTimer(Sender: TObject);
     procedure ModeloTimerResolveTimer(Sender: TObject);
     // Copia de lineas repetidas: nucleo compartido por los botones
@@ -601,6 +604,15 @@ begin
   // las cantidades desde la tabla de celdas para que las celdas
   // talla vuelvan a mostrar lo que el usuario tecleo.
   if Assigned(FGestorTallas) then FGestorTallas.CargarCantidadesTodasLineas;
+  // La recarga inmediata puede perder contra notificaciones tardias del
+  // DataController (se veia al grabar: las cantidades desaparecian).
+  // Repintado diferido — mismo patron que unqrySesionLinRecargarTallasHook.
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      if Assigned(FGestorTallas) then
+        FGestorTallas.CargarCantidadesTodasLineas;
+    end);
 end;
 
 // ===========================================================================
@@ -848,6 +860,17 @@ begin
   // lo deja en una sola pasada.
   if Assigned(FGestorTallas) then
     FGestorTallas.CargarCantidadesTodasLineas;
+  // La notificacion del DataController que repinta la fila abandonada
+  // puede llegar DESPUES de este hook y volver a borrar los Values[]
+  // recien cargados (se veia al cambiar de fila: las cantidades
+  // desaparecian). Repintado diferido con ForceQueue — mismo patron que
+  // unqrySesionLinRecargarTallasHook — para tener la ultima palabra.
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      if Assigned(FGestorTallas) then
+        FGestorTallas.CargarCantidadesTodasLineas;
+    end);
 end;
 
 procedure TfrmMtoComprasSesiones.unqrySesionLinRecargarTallasHook(
@@ -1896,9 +1919,11 @@ begin
     OnCloseUp := ModeloComboCloseUp;
     // Modelo tecleado a mano y confirmado con Tab/Enter sin pasar por el
     // desplegable (p. ej. un modelo que solo existe en lineas de ESTA
-    // sesion, aun sin materializar: el desplegable no lo lista). Sin este
-    // hook ese camino no resolvia nada y la linea repetida quedaba vacia.
-    OnEditValueChanged := dbcLinRefPrvPropertiesEditValueChanged;
+    // sesion, aun sin materializar: el desplegable no lo lista). Validate
+    // es el unico evento fiable en ese camino — el texto libre no llega
+    // a EditingValue (ver inLibGridArticulos) — y sin el la linea
+    // repetida quedaba vacia.
+    OnValidate := ModeloComboValidate;
   end;
   // 4. La columna "Modelo prov." usa el desplegable solo en celda vacia y
   //    enfocada; con valor escrito usa el editor de texto del dfm (que
@@ -2005,6 +2030,32 @@ begin
   end;
   if Trim(FModeloRefPend) <> '' then
   begin
+    FModeloTimerResolve.Enabled := False;
+    FModeloTimerResolve.Enabled := True;
+  end;
+end;
+
+// Confirmacion del valor del combo (Tab/Enter/click fuera). Cubre el
+// modelo tecleado a mano que no paso por el desplegable — texto libre
+// que no llega a EditingValue ni dispara CloseUp — p. ej. un modelo que
+// solo existe en lineas de ESTA sesion, aun sin materializar. No se
+// toca el dataset dentro del Validate (el post del editor esta en
+// curso): se difiere al timer de resolucion. Si CloseUp ya armo la
+// resolucion para este mismo texto, se respeta (lleva el codigo de
+// articulo preferido del desplegable, que aqui no conocemos).
+procedure TfrmMtoComprasSesiones.ModeloComboValidate(Sender: TObject;
+  var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
+var
+  sTexto: string;
+begin
+  Error := False;
+  ErrorText := '';
+  sTexto := Trim(VarToStr(DisplayValue));
+  if (sTexto <> '') and
+     ((not FModeloTimerResolve.Enabled) or (FModeloRefPend <> sTexto)) then
+  begin
+    FModeloRefPend := sTexto;
+    FModeloCodArtPend := '';
     FModeloTimerResolve.Enabled := False;
     FModeloTimerResolve.Enabled := True;
   end;
@@ -2584,14 +2635,14 @@ var
   q                  : TUniQuery;
 begin
   // Duplica la linea activa con todos los datos comerciales (codigo,
-  // familia, modelo prov., descripcion, sistema de tallas) y sus
-  // cantidades por talla. Segun AModo:
-  //   'C' (otro color): precios copiados, COLOR_TEXTO_SESLIN y
-  //       CODIGO_ATB_COLOR_SESLIN vacios. Mismo articulo en varios
-  //       colores: clic, cambias color, terminas.
-  //   'P' (otro rango de precios): color copiado, PRECIO_COMPRA_SESLIN
-  //       y PRECIO_VENTA_SESLIN vacios. Mismo articulo con otras tallas
-  //       a otro precio: clic, tecleas coste y PVP, terminas.
+  // familia, modelo prov., descripcion, sistema de tallas). Segun AModo:
+  //   'C' (otro color): precios y cantidades por talla copiados;
+  //       COLOR_TEXTO_SESLIN y CODIGO_ATB_COLOR_SESLIN vacios. Mismo
+  //       articulo en varios colores: clic, cambias color, terminas.
+  //   'P' (otro rango de precios): color copiado; PRECIO_COMPRA_SESLIN
+  //       y PRECIO_VENTA_SESLIN vacios y SIN cantidades — es otro rango
+  //       de precios porque son OTRAS tallas, las del rango anterior no
+  //       aplican: clic, tecleas coste, PVP y cantidades, terminas.
   if FGestorTallas = nil then Exit;
   ds := Dmm.unqrySesionLin;
   if (ds = nil) or ds.IsEmpty then Exit;
@@ -2711,27 +2762,34 @@ begin
   iNewLinea := ds.FieldByName('LINEA_SESLIN').AsInteger;
 
   // 5. Persistir cantidades para la nueva linea (mismo conjunto pivot).
-  //    En modo distribuido copiamos celda a celda preservando
-  //    CODIGO_ALM_SESCEL — el cuadrante almacen x talla del proveedor
-  //    se conserva. En modo clasico usamos los Values[] del grid
-  //    (que YA llevan el agregado correcto, una sola celda con
-  //    almacen vacio = el de cabecera).
-  if Dmm.unqryTablaG.FieldByName('ESFORMATO_DISTRIBUIDO_SES').AsString = 'S' then
+  //    SOLO en modo otro color: en otro rango de precios la linea es
+  //    para otras tallas y las cantidades del rango anterior no aplican
+  //    (las teclea el usuario). En modo distribuido copiamos celda a
+  //    celda preservando CODIGO_ALM_SESCEL — el cuadrante almacen x
+  //    talla del proveedor se conserva. En modo clasico usamos los
+  //    Values[] del grid (que YA llevan el agregado correcto, una sola
+  //    celda con almacen vacio = el de cabecera).
+  if AModo = 'C' then
   begin
-    CopiarCeldasDistribuidasOtroColor(iSrcLinea, iNewLinea);
-    // El INSERT-SELECT y el UPDATE de totales viven fuera del cds —
-    // refrescamos para que el grid principal vea los TOTAL_UNIDADES /
-    // TOTAL_LINEA actualizados de la nueva linea (sin refresh, el cds
-    // mantiene los valores de su Insert + Post iniciales, ambos 0).
-    ds.Refresh;
-    ds.Locate('LINEA_SESLIN', iNewLinea, []);
-  end
-  else if iAcPivot > 0 then
-  begin
-    arr := FGestorTallas.GetPosicionesConjunto(iAcPivot);
-    for i := 0 to High(arr) do
-      if (i <= High(cantidades)) and (cantidades[i] > 0) then
-        FGestorTallas.PersistirCantidad(iNewLinea, arr[i].IdAv, cantidades[i]);
+    if Dmm.unqryTablaG.FieldByName(
+         'ESFORMATO_DISTRIBUIDO_SES').AsString = 'S' then
+    begin
+      CopiarCeldasDistribuidasOtroColor(iSrcLinea, iNewLinea);
+      // El INSERT-SELECT y el UPDATE de totales viven fuera del cds —
+      // refrescamos para que el grid principal vea los TOTAL_UNIDADES /
+      // TOTAL_LINEA actualizados de la nueva linea (sin refresh, el cds
+      // mantiene los valores de su Insert + Post iniciales, ambos 0).
+      ds.Refresh;
+      ds.Locate('LINEA_SESLIN', iNewLinea, []);
+    end
+    else if iAcPivot > 0 then
+    begin
+      arr := FGestorTallas.GetPosicionesConjunto(iAcPivot);
+      for i := 0 to High(arr) do
+        if (i <= High(cantidades)) and (cantidades[i] > 0) then
+          FGestorTallas.PersistirCantidad(iNewLinea, arr[i].IdAv,
+                                          cantidades[i]);
+    end;
   end;
   if Assigned(FGestorTallas) then
     FGestorTallas.RefrescarTotalesLineaActual;
@@ -2751,6 +2809,16 @@ begin
     tvLineas.Controller.FocusedColumn := dbcLinColor;
   if tvLineas.Controller.EditingController <> nil then
     tvLineas.Controller.EditingController.ShowEdit;
+  // 8. Los Posts / Locate / ShowEdit de arriba dejan notificaciones
+  //    pendientes del DataController que borran los Values[] de tallas
+  //    tras el CargarCantidadesTodasLineas del paso 6. Repintado
+  //    diferido para que las cantidades del pivotaje queden visibles.
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      if Assigned(FGestorTallas) then
+        FGestorTallas.CargarCantidadesTodasLineas;
+    end);
 end;
 
 procedure TfrmMtoComprasSesiones.CopiarCantidadesEntreLineas(ALineaOrigen,
@@ -2818,8 +2886,10 @@ begin
   // Completa la linea ACTUAL (donde se acaba de teclear el modelo
   // repetido) como copia de la linea origen FDupLineaOrigen. Los campos
   // comerciales ya llegaron via AplicarDuplicadoEnLinea (REUSAR); aqui
-  // se anaden margen, cantidades por talla y color / precios segun modo
-  // ('C' = otro color, 'P' = otro rango de precios).
+  // se anaden margen y, segun modo, color / precios / cantidades:
+  //   'C' (otro color): cantidades por talla copiadas, color vacio.
+  //   'P' (otro rango de precios): color copiado, coste y PVP vacios y
+  //       SIN cantidades — son otras tallas, las teclea el usuario.
   ds := Dmm.unqrySesionLin;
   if not (ds.State in [dsEdit, dsInsert]) then
     ds.Edit;
@@ -2845,7 +2915,8 @@ begin
   end;
   ds.Post;
   iDestino := ds.FieldByName('LINEA_SESLIN').AsInteger;
-  CopiarCantidadesEntreLineas(FDupLineaOrigen, iDestino);
+  if AModo = 'C' then
+    CopiarCantidadesEntreLineas(FDupLineaOrigen, iDestino);
   // El copiado de celdas y sus totales viven fuera del dataset:
   // refrescar y recolocarse (mismo orden critico que AbrirDistribuidor:
   // CargarCantidadesTodasLineas SIEMPRE despues del Refresh).
@@ -2868,6 +2939,15 @@ begin
     tvLineas.Controller.FocusedColumn := dbcLinColor;
   if tvLineas.Controller.EditingController <> nil then
     tvLineas.Controller.EditingController.ShowEdit;
+  // Post / Refresh / ShowEdit dejan notificaciones pendientes del
+  // DataController que borran los Values[] de tallas ya cargados:
+  // repintado diferido (ultima palabra) para el pivotaje.
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      if Assigned(FGestorTallas) then
+        FGestorTallas.CargarCantidadesTodasLineas;
+    end);
 end;
 
 procedure TfrmMtoComprasSesiones.DupModalTimerTimer(Sender: TObject);

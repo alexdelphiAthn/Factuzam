@@ -71,8 +71,8 @@ inherited frmModalRepetirModelo: TfrmModalRepetirModelo
       Left = 24
       Top = 94
       Caption =
-        '- Otro rango de precios: copia la l'#237'nea repitiendo el color y de' +
-        'ja vac'#237'os coste y PVP.'
+        '- Otro rango de precios: copia la l'#237'nea con su color, sin cantid' +
+        'ades; coste y PVP vac'#237'os (otras tallas).'
       Transparent = True
       TabOrder = 2
     end
