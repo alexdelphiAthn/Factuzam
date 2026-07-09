@@ -40,6 +40,8 @@ uses
   cxGridDBBandedTableView, System.Generics.Collections,
   inLibGridTallasInline,
   inLibGridPivoteCompra,
+  inLibColumnasSkuIntf,
+  inLibGridPivoteVenta,
   UniDataDevolucionesCompra, cxBlobEdit, dxShellDialogs, System.Actions,
   Vcl.ActnList, cxSplitter;
 
@@ -214,6 +216,17 @@ type
     FInToggleClick   : Boolean;
     FActualizandoColorPivot: Boolean;
     FColorPivotCodigos: TDictionary<string, string>;
+    // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
+    // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal, con el
+    // MISMO pivote tallashorped de venta (BANDA UNICA: Cantidad) sobre
+    // lineas SKU reales, sin tabla de celdas. El Construir hace
+    // ClearItems: las columnas del dfm y las del pivote de compras
+    // antiguo mueren y las del documento se recrean en runtime. El
+    // pivote de compras (FPivote/ESPIVOTE) queda RETIRADO de esta
+    // pantalla (mismo criterio que albaranes/pedidos de compra).
+    FModoEntrada: IModoEntradaGrid;
+    FModoEntradaSel: TModoColumnasSku;
+    FColsModoConstruido: Boolean;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure InicializarGestorYPivote;
@@ -268,6 +281,22 @@ type
                 var DisplayValue: Variant; var ErrorText: TCaption;
                 var Error: Boolean);
     procedure PersistirPreferenciaPivote;
+    procedure ConstruirModoEntrada;
+    procedure CrearColumnasHostDevolucionCompra;
+    procedure ModoEntradaResuelto(const ACodArt, ASku,
+                                  ADescripcion: string;
+                                  ACompleto: Boolean);
+    procedure PivoteVentaCrearLineaSku(const ACodigoSku: string);
+    procedure PivoteVentaBandaCambiada(ABanda: TBandaPivoteVenta);
+    // Rotulo de modo en la pestania de lineas, como en ventas.
+    procedure ActualizarCaptionModoLineas;
+    // Color/Talla visibles con nombres globales en desglose,
+    // mismo paso que albaranes/pedidos de compra.
+    procedure MostrarColumnasAtributoGlobalesDevc;
+  protected
+    // F1 = ciclar el modo de entrada (KeyPreview de TfrmBase),
+    // mismo atajo que albaranes y pedidos de compra.
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     dmmDevolucionesCompra: TdmDevolucionesCompra;
     procedure CrearTablaPrincipal; override;
@@ -287,6 +316,7 @@ uses
   inLibGlobalVar,
   inLibFiltroUsuario,
   inLibFotos,
+  inLibLog,
   inLibArticulosResolver,
   inLibArticulosValidador,
   inLibAtributosPaleta,
@@ -294,7 +324,9 @@ uses
   inLibComprasImpuestos,
   inMtoModalImpDevCompra,
   inMtoModalImpDevCompraV,
-  inMtoModalEtiqDev, inLibShowMto, inLibGenBusq, inLibtb;
+  inMtoModalEtiqDev, inLibShowMto, inLibGenBusq, inLibtb,
+  // Factoria del contrato de entrada ColumnSKUcxGrid.
+  inLibColumnasSku;
 
 {$R *.dfm}
 
@@ -450,6 +482,16 @@ begin
   FActualizandoColorPivot := False;
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
+  // Contrato de entrada ColumnSKUcxGrid: Tallas horizontal por defecto;
+  // si su construccion falla, ConstruirModoEntrada degrada a SKU. F1
+  // cicla los modos. El pivote de compras antiguo queda RETIRADO de
+  // esta pantalla: se ocultan sus botones y nunca se activa (la
+  // preferencia ESPIVOTE de la cabecera se ignora).
+  FModoEntradaSel := mcsTallasHorPed;
+  FColsModoConstruido := False;
+  btnTallasHorizontal.Visible := False;
+  btnAtributosColumna.Visible := False;
+  ActualizarCaptionModoLineas;
 end;
 
 function TfrmMtoDevolucionesCompra.CodigoEmpresaActiva: string;
@@ -1271,6 +1313,18 @@ end;
 
 procedure TfrmMtoDevolucionesCompra.FormDestroy(Sender: TObject);
 begin
+  // El modo del contrato se libera ANTES del inherited: su teardown
+  // toca el view y el dataset de lineas, que deben seguir vivos (misma
+  // leccion que pedidos/facturas de venta, AV al cerrar 08/07/26).
+  if FModoEntrada <> nil then
+  begin
+    try
+      FModoEntrada.Desmontar;
+    except
+      // Teardown defensivo en cierre.
+    end;
+    FModoEntrada := nil;
+  end;
   FreeAndNil(FPivote);
   FreeAndNil(FGestorTallas);
   FreeAndNil(FColorPivotCodigos);
@@ -2118,8 +2172,6 @@ end;
 // recarga del controlador de pivote.
 procedure TfrmMtoDevolucionesCompra.dsTablaGDataChangeHook(Sender: TObject;
                                                        Field: TField);
-var
-  bDeberiaEstarActivo: Boolean;
 begin
   if (Field = nil) or SameText(Field.FieldName, 'CODIGO_EMP_DEVC') then
     RefrescarAlmacenesCabecera;
@@ -2133,31 +2185,20 @@ begin
     ActualizarLabelPrendas;
   if Field <> nil then
     Exit;
-  if FPivote = nil then
-    Exit;
-  if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
-     (not dsTablaG.DataSet.IsEmpty) and
-     (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil) then
+  // Contrato de entrada: al navegar de devolucion, las lineas llegan
+  // recargadas por el master-detail. En desglose basta desempaquetar
+  // SKU->ATTR; el modo tallas re-pivota su cache reconstruyendo. La
+  // preferencia ESPIVOTE del pivote de compras antiguo se IGNORA
+  // (pivote retirado de esta pantalla).
+  if FColsModoConstruido and Assigned(dmmDevolucionesCompra) and
+     dmmDevolucionesCompra.unqryDevolucionesCompraLineas.Active and
+     (not (dsTablaG.State in dsEditModes)) then
   begin
-    if dsTablaG.DataSet.State = dsInsert then
-    begin
-      if FPivote.Activo then
-        btnTallasHorizontalClick(nil);
-      Exit;
-    end;
-    bDeberiaEstarActivo :=
-      dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString <> 'N';
-    if bDeberiaEstarActivo and (not FPivote.Activo) then
-      btnTallasHorizontalClick(nil)
-    else if (not bDeberiaEstarActivo) and FPivote.Activo then
-      btnTallasHorizontalClick(nil);
+    if FModoEntradaSel = mcsTallasHorPed then
+      ConstruirModoEntrada
+    else if FModoEntradaSel <> mcsSku then
+      dmmDevolucionesCompra.DesempaquetarAtributosLineas;
   end;
-  if not FPivote.Activo then Exit;
-  // RecargarYRepublicar ya hace RecalcularMaxColumnas + Captions
-  // ANTES de publicar. Llamar a RefrescarVisibilidadTallas aqui haria
-  // un segundo RecalcularMax tras publicar y limpiaria los Values[]
-  // recien puestos.
-  FPivote.RecargarYRepublicar;
 end;
 
 procedure TfrmMtoDevolucionesCompra.ActualizarLabelProveedor;
@@ -2314,12 +2355,294 @@ begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, False);
   AsegurarPrimeraLineaDevolucionCompra;
+  // Contrato de entrada: primera construccion al entrar en el grid.
+  // El teardown cancela la linea vacia auto-anadida: se recrea.
+  if not FColsModoConstruido then
+  begin
+    ConstruirModoEntrada;
+    AsegurarPrimeraLineaDevolucionCompra;
+  end;
+  if FModoEntrada <> nil then
+    FModoEntrada.MostrarEditor;
 end;
 
 procedure TfrmMtoDevolucionesCompra.cxgrdLineasDevolucionExit(Sender: TObject);
 begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, True);
+end;
+
+procedure TfrmMtoDevolucionesCompra.ActualizarCaptionModoLineas;
+begin
+  if not FColsModoConstruido then
+    tsLineasDevolucion.Caption := '&1_Líneas '
+  else
+    case FModoEntradaSel of
+      mcsSku:
+        tsLineasDevolucion.Caption := '&1_Líneas [SKU]';
+      mcsTallasHorPed:
+        tsLineasDevolucion.Caption := '&1_Líneas [Tallas horiz.]';
+    else
+      tsLineasDevolucion.Caption := '&1_Líneas [Desglose]';
+    end;
+end;
+
+procedure TfrmMtoDevolucionesCompra.KeyDown(var Key: Word;
+  Shift: TShiftState);
+begin
+  // F1: alterna Auto (desglose) -> SKU -> Tallas horizontal con las
+  // lineas de la devolucion a la vista, igual que albaranes de compra.
+  if (Key = VK_F1) and (Shift = []) and
+     (pcDevolucion.ActivePage = tsLineasDevolucion) and
+     (dmmDevolucionesCompra <> nil) then
+  begin
+    Key := 0;
+    case FModoEntradaSel of
+      mcsAuto: FModoEntradaSel := mcsSku;
+      mcsSku: FModoEntradaSel := mcsTallasHorPed;
+    else
+      FModoEntradaSel := mcsAuto;
+    end;
+    ConstruirModoEntrada;
+  end;
+  inherited;
+end;
+
+procedure TfrmMtoDevolucionesCompra.ConstruirModoEntrada;
+var
+  Cfg: TConfigColumnasSku;
+  CfgPV: TGridPivoteVentaConfig;
+  i: Integer;
+  ds: TDataSet;
+  bDegradarASku: Boolean;
+begin
+  if (dmmDevolucionesCompra = nil) or (csDestroying in ComponentState) then
+    Exit;
+  ds := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
+  if not ds.Active then
+    Exit;
+  // Teardown del modo anterior (patron albaranes de compra).
+  if tvLineasDevolucion.Controller.EditingController.IsEditing then
+    try
+      tvLineasDevolucion.Controller.EditingController.HideEdit(False);
+    except
+      on E: EInvalidOperation do
+        ;
+    end;
+  if ds.State in dsEditModes then
+    ds.Cancel;
+  if FModoEntrada <> nil then
+    FModoEntrada.Desmontar;
+  tvLineasDevolucion.OnInitEdit := nil;
+  tvLineasDevolucion.OnEditKeyDown := nil;
+  tvLineasDevolucion.OnEditing := nil;
+  tvLineasDevolucion.OnFocusedRecordChanged := nil;
+  tvLineasDevolucion.OnFocusedItemChanged := nil;
+  tvLineasDevolucion.OnCustomDrawCell := nil;
+  // El ClearItems mata TODAS las columnas: las del dfm y las del
+  // pivote de compras retirado. Fuera las referencias ANTES de que
+  // ningun repintado o refresco las toque.
+  tvLineasDevolucion.ClearItems;
+  FModoEntrada := nil;
+  for i := 0 to CANT_TALLAS_MAX - 1 do
+    FTallaColumns[i] := nil;
+  for i := 0 to CANT_ATRIB_MAX - 1 do
+    FAtribColumns[i] := nil;
+  FColColorPivot := nil;
+  // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
+  // (columnas reales _DEVCLIN; idempotente por linea).
+  if FModoEntradaSel <> mcsSku then
+    dmmDevolucionesCompra.DesempaquetarAtributosLineas;
+  Cfg := Default(TConfigColumnasSku);
+  Cfg.Conexion := dmmDevolucionesCompra.unqryTablaG.Connection;
+  Cfg.View := tvLineasDevolucion;
+  Cfg.Cds := ds;
+  Cfg.Modo := FModoEntradaSel;
+  Cfg.AlmacenStock := Trim(dmmDevolucionesCompra.unqryTablaG.
+    FieldByName('CODIGO_ALM_DEVC').AsString);
+  Cfg.Distribuido := False;
+  Cfg.Campos.CodigoArt := 'CODIGO_ART_DEVCLIN';
+  Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_DEVCLIN';
+  Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_DEVCLIN';
+  Cfg.Campos.Cantidad := 'CANTIDAD_DEVCLIN';
+  Cfg.Campos.Almacen := 'CODIGO_ALMACEN_DEVCLIN';
+  Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_DEVCLIN';
+  for i := 1 to 5 do
+  begin
+    Cfg.Campos.AttrValor[i] :=
+      'ATTR' + IntToStr(i) + '_VALOR_DEVCLIN';
+    Cfg.Campos.AttrNombre[i] :=
+      'ATTR' + IntToStr(i) + '_NOMBRE_DEVCLIN';
+  end;
+  if FModoEntradaSel = mcsTallasHorPed then
+  begin
+    CfgPV := Default(TGridPivoteVentaConfig);
+    CfgPV.Conexion := dmmDevolucionesCompra.unqryTablaG.Connection;
+    CfgPV.Usuario := oUser;
+    CfgPV.SourceMaster := dsTablaG;
+    CfgPV.SourceLineas := dmmDevolucionesCompra.dsDevolucionesCompraLineas;
+    CfgPV.FieldSerieMaster := 'SERIE_DEVC';
+    CfgPV.FieldNumeroMaster := 'NUMERO_DEVC';
+    CfgPV.FieldLinea := 'LINEA_DEVCLIN';
+    CfgPV.FieldArt := 'CODIGO_ART_DEVCLIN';
+    CfgPV.FieldSku := 'CODIGO_UNIDAD_DEVCLIN';
+    CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_DEVCLIN';
+    // Devolucion de compra: UNA sola cantidad por linea -> banda unica.
+    CfgPV.FieldCantidadPedida := 'CANTIDAD_DEVCLIN';
+    CfgPV.FieldCantidadEntregada := '';
+    CfgPV.FieldCantidadAAlbaranar := '';
+    CfgPV.FieldPrecioBase := 'PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN';
+    CfgPV.FieldAlmacen := 'CODIGO_ALMACEN_DEVCLIN';
+    CfgPV.FieldAlmacenMaster := 'CODIGO_ALM_DEVC';
+    CfgPV.MaxColumnas := CANT_TALLAS_MAX;
+    CfgPV.BandaUnica := True;
+    CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
+    CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
+    FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
+  end
+  else
+    FModoEntrada := CrearModoEntradaGrid(Cfg);
+  FModoEntrada.OnResuelto := ModoEntradaResuelto;
+  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
+  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
+  // El flag ANTES del Construir: si algo aborta a medias, nadie debe
+  // tocar las columnas del dfm, muertas en el ClearItems.
+  FColsModoConstruido := True;
+  bDegradarASku := False;
+  try
+    FModoEntrada.Construir;
+  except
+    // Fallo montando tallas horizontal (modo por defecto): degradar a
+    // SKU. En cualquier otro modo la excepcion sigue su curso.
+    on E: Exception do
+      if FModoEntradaSel = mcsTallasHorPed then
+      begin
+        if inLibLog.Log <> nil then
+          inLibLog.Log.LogError(
+            'DevolucionesCompra: fallo construyendo tallas horizontal, ' +
+            'se degrada a SKU: ' + E.Message);
+        bDegradarASku := True;
+      end
+      else
+        raise;
+  end;
+  if bDegradarASku then
+  begin
+    // Reconstruccion completa en SKU: el teardown de la reentrada
+    // limpia lo que el pivote dejara a medias. Maximo una reentrada.
+    FModoEntradaSel := mcsSku;
+    ConstruirModoEntrada;
+  end
+  else
+  begin
+    CrearColumnasHostDevolucionCompra;
+    // Rotulo por modo EFECTIVO (Auto puede degradar a SKU si faltan
+    // las columnas ATTR en la BBDD) y, en desglose, mostrar Color y
+    // Talla con nombres globales desde el principio (patron albaranes
+    // de compra).
+    case DetectarModoColumnasSku(Cfg) of
+      mcsSku:
+        tsLineasDevolucion.Caption := '&1_Líneas [SKU]';
+      mcsTallasHorPed:
+        tsLineasDevolucion.Caption := '&1_Líneas [Tallas horiz.]';
+    else
+      begin
+        tsLineasDevolucion.Caption := '&1_Líneas [Desglose]';
+        MostrarColumnasAtributoGlobalesDevc;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoDevolucionesCompra.MostrarColumnasAtributoGlobalesDevc;
+var
+  Qry: TUniQuery;
+  i, iOrden: Integer;
+  Col: TcxGridColumn;
+begin
+  // Nombres globales de atributos para ver Color/Talla desde el
+  // principio (mismo helper que pedidos/facturas de venta).
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := dmmDevolucionesCompra.unqryTablaG.Connection;
+    Qry.SQL.Text :=
+      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
+      '       MIN(ORDEN_VA) AS ORDEN' +
+      '  FROM fza_variaciones_atributos' +
+      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
+      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
+    Qry.Open;
+    iOrden := 1;
+    while (not Qry.Eof) and (iOrden <= 5) do
+    begin
+      // Solo las columnas del contrato (Tag positivo 1..5); las
+      // FAtribColumns propias llevan Tag negativo y no chocan.
+      for i := 0 to tvLineasDevolucion.ColumnCount - 1 do
+      begin
+        Col := tvLineasDevolucion.Columns[i];
+        if Col.Tag = iOrden then
+        begin
+          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
+          Col.Visible := True;
+        end;
+      end;
+      Inc(iOrden);
+      Qry.Next;
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+procedure TfrmMtoDevolucionesCompra.CrearColumnasHostDevolucionCompra;
+  function Col(const ACaption, ACampo: string; AAncho: Integer;
+               AEditable: Boolean): TcxGridDBColumn;
+  begin
+    Result := tvLineasDevolucion.CreateColumn as TcxGridDBColumn;
+    Result.Caption := ACaption;
+    Result.DataBinding.FieldName := ACampo;
+    Result.Width := AAncho;
+    Result.Options.Editing := AEditable;
+  end;
+var
+  ColLinea: TcxGridDBColumn;
+begin
+  // Columnas propias de la devolucion de compra tras el ClearItems del
+  // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
+  ColLinea := Col('Línea', 'LINEA_DEVCLIN', 60, False);
+  Col('Modelo prov.', 'REF_PRV_DEVCLIN', 100, True);
+  Col('Descripción', 'DESCRIPCION_ARTICULO_DEVCLIN', 240, False);
+  if FModoEntradaSel <> mcsTallasHorPed then
+    Col('Cantidad', 'CANTIDAD_DEVCLIN', 80, True);
+  Col('Precio compra', 'PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN', 110, True);
+  Col('% IVA', 'PORCENTAJE_IVA_DEVCLIN', 70, True);
+  Col('Total', 'TOTAL_DEVCLIN', 100, False);
+  Col('Almacén', 'CODIGO_ALMACEN_DEVCLIN', 90, True);
+  // Orden normal del documento: la LINEA delante del bloque de
+  // articulo que creo el modo (las columnas del host nacen detras).
+  ColLinea.Index := 0;
+end;
+
+procedure TfrmMtoDevolucionesCompra.ModoEntradaResuelto(const ACodArt, ASku,
+  ADescripcion: string; ACompleto: Boolean);
+begin
+  // El flujo clasico de la devolucion de compra (precio de compra del
+  // proveedor, IVA, modelo proveedor...) se reaprovecha tal cual:
+  // AplicarArticuloDevolucion acepta articulo o SKU.
+  if ACompleto and (ASku <> '') then
+    AplicarArticuloDevolucion(ASku);
+end;
+
+procedure TfrmMtoDevolucionesCompra.PivoteVentaCrearLineaSku(
+  const ACodigoSku: string);
+begin
+  AplicarArticuloDevolucion(ACodigoSku);
+end;
+
+procedure TfrmMtoDevolucionesCompra.PivoteVentaBandaCambiada(
+  ABanda: TBandaPivoteVenta);
+begin
+  ActualizarCaptionModoLineas;
 end;
 
 procedure TfrmMtoDevolucionesCompra.TallaEditValueChangedHook(Sender: TObject);
@@ -2856,22 +3179,10 @@ begin
           if Datos.RequiereSku and (iAcPivot > 0) then
             PrepararColorPendienteArticuloDevolucion(Datos.CodigoArticulo,
                                                      iAcPivot);
-          if Assigned(FPivote) then
-          begin
-            if iAcPivot <= 0 then
-            begin
-              if FPivote.Activo then
-                btnTallasHorizontalClick(nil);
-            end
-            else if CampoCabeceraString('ESPIVOTE_HORIZONTAL_DEVC') <> 'N'
-            then
-            begin
-              if not FPivote.Activo then
-                btnTallasHorizontalClick(nil);
-              if FPivote.Activo then
-                FPivote.RecargarYRepublicar;
-            end;
-          end;
+          // Pivote de compras antiguo RETIRADO: sin auto-activacion
+          // por preferencia ESPIVOTE. El modo de entrada (tallas
+          // horizontal / SKU / desglose) lo gobierna el contrato
+          // ColumnSKUcxGrid via F1.
           if Datos.RequiereSku and (Datos.CodigoSku = '') and
              ((FPivote = nil) or (not FPivote.Activo)) then
             EnfocarSku(True);

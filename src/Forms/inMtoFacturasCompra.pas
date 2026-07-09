@@ -657,6 +657,18 @@ end;
 
 procedure TfrmMtoFacturasCompra.FormDestroy(Sender: TObject);
 begin
+  // El modo del contrato se libera ANTES del inherited: su teardown
+  // toca el view y el dataset de lineas, que deben seguir vivos (misma
+  // leccion que pedidos/facturas de venta, AV al cerrar 08/07/26).
+  if FModoEntrada <> nil then
+  begin
+    try
+      FModoEntrada.Desmontar;
+    except
+      // Teardown defensivo en cierre.
+    end;
+    FModoEntrada := nil;
+  end;
   FreeAndNil(FPivote);
   FreeAndNil(FGestorTallas);
   inherited;
@@ -1044,8 +1056,6 @@ end;
 // recarga del controlador de pivote.
 procedure TfrmMtoFacturasCompra.dsTablaGDataChangeHook(Sender: TObject;
                                                        Field: TField);
-var
-  bDeberiaEstarActivo: Boolean;
 begin
   // Refrescar el rotulo del proveedor al navegar entre facturas (Field=nil)
   // o al cambiar CODIGO_PRV_FACC tecleado directamente en el ButtonEdit.
@@ -1056,30 +1066,20 @@ begin
   if Field = nil then
     ActualizarLabelPrendas;
   if Field <> nil then Exit;
-  if FPivote = nil then Exit;
-  if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
-     (not dsTablaG.DataSet.IsEmpty) and
-     (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_FACC') <> nil) then
+  // Contrato de entrada: al navegar de factura, las lineas llegan
+  // recargadas por el master-detail. En desglose basta desempaquetar
+  // SKU->ATTR; el modo tallas re-pivota su cache reconstruyendo. La
+  // preferencia ESPIVOTE del pivote de compras antiguo se IGNORA
+  // (pivote retirado de esta pantalla).
+  if FColsModoConstruido and Assigned(dmmFacturasCompra) and
+     dmmFacturasCompra.unqryFacturasCompraLineas.Active and
+     (not (dsTablaG.State in dsEditModes)) then
   begin
-    if dsTablaG.DataSet.State = dsInsert then
-    begin
-      if FPivote.Activo then
-        btnTallasHorizontalClick(nil);
-      Exit;
-    end;
-    bDeberiaEstarActivo :=
-      dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_FACC').AsString <> 'N';
-    if bDeberiaEstarActivo and (not FPivote.Activo) then
-      btnTallasHorizontalClick(nil)
-    else if (not bDeberiaEstarActivo) and FPivote.Activo then
-      btnTallasHorizontalClick(nil);
+    if FModoEntradaSel = mcsTallasHorPed then
+      ConstruirModoEntrada
+    else if FModoEntradaSel <> mcsSku then
+      dmmFacturasCompra.DesempaquetarAtributosLineas;
   end;
-  if not FPivote.Activo then Exit;
-  // RecargarYRepublicar ya hace RecalcularMaxColumnas + Captions
-  // ANTES de publicar. Llamar a RefrescarVisibilidadTallas aqui haria
-  // un segundo RecalcularMax tras publicar y limpiaria los Values[]
-  // recien puestos.
-  FPivote.RecargarYRepublicar;
 end;
 
 procedure TfrmMtoFacturasCompra.ActualizarLabelProveedor;
@@ -1186,12 +1186,294 @@ begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, False);
   AsegurarPrimeraLineaFacturaCompra;
+  // Contrato de entrada: primera construccion al entrar en el grid.
+  // El teardown cancela la linea vacia auto-anadida: se recrea.
+  if not FColsModoConstruido then
+  begin
+    ConstruirModoEntrada;
+    AsegurarPrimeraLineaFacturaCompra;
+  end;
+  if FModoEntrada <> nil then
+    FModoEntrada.MostrarEditor;
 end;
 
 procedure TfrmMtoFacturasCompra.cxgrdLineasFacturaExit(Sender: TObject);
 begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, True);
+end;
+
+procedure TfrmMtoFacturasCompra.ActualizarCaptionModoLineas;
+begin
+  if not FColsModoConstruido then
+    tsLineasFactura.Caption := 'Líneas '
+  else
+    case FModoEntradaSel of
+      mcsSku:
+        tsLineasFactura.Caption := 'Líneas [SKU]';
+      mcsTallasHorPed:
+        tsLineasFactura.Caption := 'Líneas [Tallas horiz.]';
+    else
+      tsLineasFactura.Caption := 'Líneas [Desglose]';
+    end;
+end;
+
+procedure TfrmMtoFacturasCompra.KeyDown(var Key: Word;
+  Shift: TShiftState);
+begin
+  // F1: alterna Auto (desglose) -> SKU -> Tallas horizontal con las
+  // lineas de la factura a la vista, igual que albaranes de compra.
+  if (Key = VK_F1) and (Shift = []) and
+     (pcFactura.ActivePage = tsLineasFactura) and
+     (dmmFacturasCompra <> nil) then
+  begin
+    Key := 0;
+    case FModoEntradaSel of
+      mcsAuto: FModoEntradaSel := mcsSku;
+      mcsSku: FModoEntradaSel := mcsTallasHorPed;
+    else
+      FModoEntradaSel := mcsAuto;
+    end;
+    ConstruirModoEntrada;
+  end;
+  inherited;
+end;
+
+procedure TfrmMtoFacturasCompra.ConstruirModoEntrada;
+var
+  Cfg: TConfigColumnasSku;
+  CfgPV: TGridPivoteVentaConfig;
+  i: Integer;
+  ds: TDataSet;
+  bDegradarASku: Boolean;
+begin
+  if (dmmFacturasCompra = nil) or (csDestroying in ComponentState) then
+    Exit;
+  ds := dmmFacturasCompra.unqryFacturasCompraLineas;
+  if not ds.Active then
+    Exit;
+  // Teardown del modo anterior (patron albaranes de compra).
+  if tvLineasFactura.Controller.EditingController.IsEditing then
+    try
+      tvLineasFactura.Controller.EditingController.HideEdit(False);
+    except
+      on E: EInvalidOperation do
+        ;
+    end;
+  if ds.State in dsEditModes then
+    ds.Cancel;
+  if FModoEntrada <> nil then
+    FModoEntrada.Desmontar;
+  tvLineasFactura.OnInitEdit := nil;
+  tvLineasFactura.OnEditKeyDown := nil;
+  tvLineasFactura.OnEditing := nil;
+  tvLineasFactura.OnFocusedRecordChanged := nil;
+  tvLineasFactura.OnFocusedItemChanged := nil;
+  tvLineasFactura.OnCustomDrawCell := nil;
+  // El ClearItems mata TODAS las columnas: las del dfm y las del
+  // pivote de compras retirado. Fuera las referencias ANTES de que
+  // ningun repintado o refresco las toque.
+  tvLineasFactura.ClearItems;
+  FModoEntrada := nil;
+  for i := 0 to CANT_TALLAS_MAX - 1 do
+    FTallaColumns[i] := nil;
+  for i := 0 to CANT_ATRIB_MAX - 1 do
+    FAtribColumns[i] := nil;
+  FColColorPivot := nil;
+  // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
+  // (columnas reales _FACCLIN; idempotente por linea).
+  if FModoEntradaSel <> mcsSku then
+    dmmFacturasCompra.DesempaquetarAtributosLineas;
+  Cfg := Default(TConfigColumnasSku);
+  Cfg.Conexion := dmmFacturasCompra.unqryTablaG.Connection;
+  Cfg.View := tvLineasFactura;
+  Cfg.Cds := ds;
+  Cfg.Modo := FModoEntradaSel;
+  Cfg.AlmacenStock := Trim(dmmFacturasCompra.unqryTablaG.
+    FieldByName('CODIGO_ALM_FACC').AsString);
+  Cfg.Distribuido := False;
+  Cfg.Campos.CodigoArt := 'CODIGO_ART_FACCLIN';
+  Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_FACCLIN';
+  Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_FACCLIN';
+  Cfg.Campos.Cantidad := 'CANTIDAD_FACCLIN';
+  Cfg.Campos.Almacen := 'CODIGO_ALMACEN_FACCLIN';
+  Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_FACCLIN';
+  for i := 1 to 5 do
+  begin
+    Cfg.Campos.AttrValor[i] :=
+      'ATTR' + IntToStr(i) + '_VALOR_FACCLIN';
+    Cfg.Campos.AttrNombre[i] :=
+      'ATTR' + IntToStr(i) + '_NOMBRE_FACCLIN';
+  end;
+  if FModoEntradaSel = mcsTallasHorPed then
+  begin
+    CfgPV := Default(TGridPivoteVentaConfig);
+    CfgPV.Conexion := dmmFacturasCompra.unqryTablaG.Connection;
+    CfgPV.Usuario := oUser;
+    CfgPV.SourceMaster := dsTablaG;
+    CfgPV.SourceLineas := dmmFacturasCompra.dsFacturasCompraLineas;
+    CfgPV.FieldSerieMaster := 'SERIE_FACC';
+    CfgPV.FieldNumeroMaster := 'NUMERO_FACC';
+    CfgPV.FieldLinea := 'LINEA_FACCLIN';
+    CfgPV.FieldArt := 'CODIGO_ART_FACCLIN';
+    CfgPV.FieldSku := 'CODIGO_UNIDAD_FACCLIN';
+    CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_FACCLIN';
+    // Factura de compra: UNA sola cantidad por linea -> banda unica.
+    CfgPV.FieldCantidadPedida := 'CANTIDAD_FACCLIN';
+    CfgPV.FieldCantidadEntregada := '';
+    CfgPV.FieldCantidadAAlbaranar := '';
+    CfgPV.FieldPrecioBase := 'PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN';
+    CfgPV.FieldAlmacen := 'CODIGO_ALMACEN_FACCLIN';
+    CfgPV.FieldAlmacenMaster := 'CODIGO_ALM_FACC';
+    CfgPV.MaxColumnas := CANT_TALLAS_MAX;
+    CfgPV.BandaUnica := True;
+    CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
+    CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
+    FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
+  end
+  else
+    FModoEntrada := CrearModoEntradaGrid(Cfg);
+  FModoEntrada.OnResuelto := ModoEntradaResuelto;
+  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
+  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
+  // El flag ANTES del Construir: si algo aborta a medias, nadie debe
+  // tocar las columnas del dfm, muertas en el ClearItems.
+  FColsModoConstruido := True;
+  bDegradarASku := False;
+  try
+    FModoEntrada.Construir;
+  except
+    // Fallo montando tallas horizontal (modo por defecto): degradar a
+    // SKU. En cualquier otro modo la excepcion sigue su curso.
+    on E: Exception do
+      if FModoEntradaSel = mcsTallasHorPed then
+      begin
+        if inLibLog.Log <> nil then
+          inLibLog.Log.LogError(
+            'FacturasCompra: fallo construyendo tallas horizontal, ' +
+            'se degrada a SKU: ' + E.Message);
+        bDegradarASku := True;
+      end
+      else
+        raise;
+  end;
+  if bDegradarASku then
+  begin
+    // Reconstruccion completa en SKU: el teardown de la reentrada
+    // limpia lo que el pivote dejara a medias. Maximo una reentrada.
+    FModoEntradaSel := mcsSku;
+    ConstruirModoEntrada;
+  end
+  else
+  begin
+    CrearColumnasHostFacturaCompra;
+    // Rotulo por modo EFECTIVO (Auto puede degradar a SKU si faltan
+    // las columnas ATTR en la BBDD) y, en desglose, mostrar Color y
+    // Talla con nombres globales desde el principio (patron albaranes
+    // de compra).
+    case DetectarModoColumnasSku(Cfg) of
+      mcsSku:
+        tsLineasFactura.Caption := 'Líneas [SKU]';
+      mcsTallasHorPed:
+        tsLineasFactura.Caption := 'Líneas [Tallas horiz.]';
+    else
+      begin
+        tsLineasFactura.Caption := 'Líneas [Desglose]';
+        MostrarColumnasAtributoGlobalesFacc;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoFacturasCompra.MostrarColumnasAtributoGlobalesFacc;
+var
+  Qry: TUniQuery;
+  i, iOrden: Integer;
+  Col: TcxGridColumn;
+begin
+  // Nombres globales de atributos para ver Color/Talla desde el
+  // principio (mismo helper que pedidos/facturas de venta).
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := dmmFacturasCompra.unqryTablaG.Connection;
+    Qry.SQL.Text :=
+      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
+      '       MIN(ORDEN_VA) AS ORDEN' +
+      '  FROM fza_variaciones_atributos' +
+      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
+      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
+    Qry.Open;
+    iOrden := 1;
+    while (not Qry.Eof) and (iOrden <= 5) do
+    begin
+      // Solo las columnas del contrato (Tag positivo 1..5); las
+      // FAtribColumns propias llevan Tag negativo y no chocan.
+      for i := 0 to tvLineasFactura.ColumnCount - 1 do
+      begin
+        Col := tvLineasFactura.Columns[i];
+        if Col.Tag = iOrden then
+        begin
+          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
+          Col.Visible := True;
+        end;
+      end;
+      Inc(iOrden);
+      Qry.Next;
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+procedure TfrmMtoFacturasCompra.CrearColumnasHostFacturaCompra;
+  function Col(const ACaption, ACampo: string; AAncho: Integer;
+               AEditable: Boolean): TcxGridDBColumn;
+  begin
+    Result := tvLineasFactura.CreateColumn as TcxGridDBColumn;
+    Result.Caption := ACaption;
+    Result.DataBinding.FieldName := ACampo;
+    Result.Width := AAncho;
+    Result.Options.Editing := AEditable;
+  end;
+var
+  ColLinea: TcxGridDBColumn;
+begin
+  // Columnas propias de la factura de compra tras el ClearItems del
+  // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
+  ColLinea := Col('Línea', 'LINEA_FACCLIN', 60, False);
+  Col('Modelo prov.', 'REF_PRV_FACCLIN', 100, True);
+  Col('Descripción', 'DESCRIPCION_ARTICULO_FACCLIN', 240, False);
+  if FModoEntradaSel <> mcsTallasHorPed then
+    Col('Cantidad', 'CANTIDAD_FACCLIN', 80, True);
+  Col('Precio compra', 'PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN', 110, True);
+  Col('% IVA', 'PORCENTAJE_IVA_FACCLIN', 70, True);
+  Col('Total', 'TOTAL_FACCLIN', 100, False);
+  Col('Almacén', 'CODIGO_ALMACEN_FACCLIN', 90, True);
+  // Orden normal del documento: la LINEA delante del bloque de
+  // articulo que creo el modo (las columnas del host nacen detras).
+  ColLinea.Index := 0;
+end;
+
+procedure TfrmMtoFacturasCompra.ModoEntradaResuelto(const ACodArt, ASku,
+  ADescripcion: string; ACompleto: Boolean);
+begin
+  // El flujo clasico de la factura de compra (precio de compra del
+  // proveedor, IVA, modelo proveedor...) se reaprovecha tal cual:
+  // AplicarArticuloFacturaCompra acepta articulo o SKU.
+  if ACompleto and (ASku <> '') then
+    AplicarArticuloFacturaCompra(ASku);
+end;
+
+procedure TfrmMtoFacturasCompra.PivoteVentaCrearLineaSku(
+  const ACodigoSku: string);
+begin
+  AplicarArticuloFacturaCompra(ACodigoSku);
+end;
+
+procedure TfrmMtoFacturasCompra.PivoteVentaBandaCambiada(
+  ABanda: TBandaPivoteVenta);
+begin
+  ActualizarCaptionModoLineas;
 end;
 
 procedure TfrmMtoFacturasCompra.TallaEditValueChangedHook(Sender: TObject);
@@ -1647,26 +1929,10 @@ begin
               dmmFacturasCompra.unqryTablaG.Connection,
               dmmFacturasCompra.unqryTablaG, ds, 'FACC', 'FACCLIN',
               'TOTAL_FACCLIN');
-            if Assigned(FPivote) then
-            begin
-              if iAcPivot <= 0 then
-              begin
-                if FPivote.Activo then
-                  btnTallasHorizontalClick(nil);
-              end
-              else if CampoCabeceraString('ESPIVOTE_HORIZONTAL_FACC') <> 'N'
-              then
-              begin
-                if not FPivote.Activo then
-                  btnTallasHorizontalClick(nil);
-                if FPivote.Activo then
-                begin
-                  if ds.State in dsEditModes then
-                    ds.Post;
-                  FPivote.RecargarYRepublicar;
-                end;
-              end;
-            end;
+            // Pivote de compras antiguo RETIRADO: sin auto-activacion
+            // por preferencia ESPIVOTE. El modo de entrada (tallas
+            // horizontal / SKU / desglose) lo gobierna el contrato
+            // ColumnSKUcxGrid via F1.
             if Datos.RequiereSku and (Datos.CodigoSku = '') and
                ((FPivote = nil) or (not FPivote.Activo)) then
               EnfocarSku(True);

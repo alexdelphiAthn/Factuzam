@@ -916,26 +916,8 @@ begin
               dmmAlbaranesCompra.unqryTablaG.Connection,
               dmmAlbaranesCompra.unqryTablaG, ds, 'ALBC', 'ALBCLIN',
               'TOTAL_ALBCLIN');
-            if Assigned(FPivote) then
-            begin
-              if iAcPivot <= 0 then
-              begin
-                if FPivote.Activo then
-                  btnTallasHorizontalClick(nil);
-              end
-              else if CampoCabeceraString('ESPIVOTE_HORIZONTAL_ALBC') <> 'N'
-              then
-              begin
-                if not FPivote.Activo then
-                  btnTallasHorizontalClick(nil);
-                if FPivote.Activo then
-                begin
-                  if ds.State in dsEditModes then
-                    ds.Post;
-                  FPivote.RecargarYRepublicar;
-                end;
-              end;
-            end;
+            // Pivote antiguo RETIRADO: el modo tallas del contrato
+            // (mcsTallasHorPed) sustituye su activacion automatica.
             if Datos.RequiereSku and (Datos.CodigoSku = '') and
                ((FPivote = nil) or (not FPivote.Activo)) then
               EnfocarSku(True);
