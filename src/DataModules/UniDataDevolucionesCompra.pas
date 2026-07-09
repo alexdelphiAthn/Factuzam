@@ -89,6 +89,10 @@ type
     // Numero total de prendas (suma CANTIDAD_DEVCLIN de todas las lineas).
     // Se muestra en la pestana Totales; no se persiste en BBDD.
     function TotalPrendasDevolucion: Double;
+    // Contrato ColumnSKUcxGrid: desglosa el SKU ART/COLOR/TALLA en las
+    // columnas reales ATTR1..5_VALOR_DEVCLIN + NUM_ATRIBUTOS_DEVCLIN
+    // (idempotente por comparacion, mismo criterio que albaranes compra).
+    procedure DesempaquetarAtributosLineas;
     procedure SincronizarMovimientos;
     // Abre unqryCabDevcPrint y unqryLinDevcPrint con los parametros
     // del devolucion a imprimir. Mismo nombre/firma que en sesiones.
@@ -899,6 +903,80 @@ begin
   unqryLinDevcSkuPrint.ParamByName('SERIE_DEVC').AsString  := ASerie;
   unqryLinDevcSkuPrint.ParamByName('NUMERO_DEVC').AsString := ANumero;
   unqryLinDevcSkuPrint.Open;
+end;
+
+// Contrato ColumnSKUcxGrid: desglosa el SKU (ART/COLOR/TALLA) en las
+// columnas reales ATTR1..5_VALOR_DEVCLIN + NUM_ATRIBUTOS_DEVCLIN.
+// Idempotente POR COMPARACION (mismo criterio que albaranes de compra):
+// solo edita la linea si algun ATTR o el numero de atributos difiere.
+// Si la BBDD aun no tiene las columnas ATTR (script en DESARROLLOS EN
+// CURSO/ColumnSKUcxGrid), el FindField las detecta y no hace nada.
+procedure TdmDevolucionesCompra.DesempaquetarAtributosLineas;
+var
+  Partes: TArray<string>;
+  Sku, sEsperado: string;
+  i: Integer;
+  Bm: TBookmark;
+  bCambia: Boolean;
+begin
+  if unqryDevolucionesCompraLineas.Active and
+     (not unqryDevolucionesCompraLineas.IsEmpty) and
+     (unqryDevolucionesCompraLineas.FindField(
+        'ATTR1_VALOR_DEVCLIN') <> nil) and
+     (unqryDevolucionesCompraLineas.FindField(
+        'NUM_ATRIBUTOS_DEVCLIN') <> nil) and
+     (not unqryDevolucionesCompraLineas.ReadOnly) then
+  begin
+    Bm := unqryDevolucionesCompraLineas.GetBookmark;
+    unqryDevolucionesCompraLineas.DisableControls;
+    try
+      unqryDevolucionesCompraLineas.First;
+      while not unqryDevolucionesCompraLineas.Eof do
+      begin
+        Sku := unqryDevolucionesCompraLineas.FieldByName(
+          'CODIGO_UNIDAD_DEVCLIN').AsString;
+        Partes := Sku.Split(['/']);
+        if Length(Partes) > 1 then
+        begin
+          bCambia := unqryDevolucionesCompraLineas.FieldByName(
+            'NUM_ATRIBUTOS_DEVCLIN').AsInteger <> Length(Partes) - 1;
+          for i := 1 to 5 do
+          begin
+            if i < Length(Partes) then
+              sEsperado := Partes[i]
+            else
+              sEsperado := '';
+            if Trim(unqryDevolucionesCompraLineas.FieldByName('ATTR' +
+                 IntToStr(i) + '_VALOR_DEVCLIN').AsString) <>
+               sEsperado then
+              bCambia := True;
+          end;
+          if bCambia then
+          begin
+            unqryDevolucionesCompraLineas.Edit;
+            unqryDevolucionesCompraLineas.FieldByName(
+              'NUM_ATRIBUTOS_DEVCLIN').AsInteger := Length(Partes) - 1;
+            for i := 1 to 5 do
+            begin
+              if i < Length(Partes) then
+                unqryDevolucionesCompraLineas.FieldByName('ATTR' +
+                  IntToStr(i) + '_VALOR_DEVCLIN').AsString := Partes[i]
+              else
+                unqryDevolucionesCompraLineas.FieldByName('ATTR' +
+                  IntToStr(i) + '_VALOR_DEVCLIN').AsString := '';
+            end;
+            unqryDevolucionesCompraLineas.Post;
+          end;
+        end;
+        unqryDevolucionesCompraLineas.Next;
+      end;
+      if unqryDevolucionesCompraLineas.BookmarkValid(Bm) then
+        unqryDevolucionesCompraLineas.GotoBookmark(Bm);
+    finally
+      unqryDevolucionesCompraLineas.EnableControls;
+      unqryDevolucionesCompraLineas.FreeBookmark(Bm);
+    end;
+  end;
 end;
 
 end.

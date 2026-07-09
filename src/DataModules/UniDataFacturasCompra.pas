@@ -86,6 +86,10 @@ type
     // Numero total de prendas (suma CANTIDAD_FACCLIN de todas las lineas).
     // Se muestra en la pestana Totales; no se persiste en BBDD.
     function TotalPrendasFactura: Double;
+    // Contrato ColumnSKUcxGrid: desglosa el SKU ART/COLOR/TALLA en las
+    // columnas reales ATTR1..5_VALOR_FACCLIN + NUM_ATRIBUTOS_FACCLIN
+    // (idempotente por comparacion, mismo criterio que albaranes compra).
+    procedure DesempaquetarAtributosLineas;
     // Genera los efectos de pago de la factura activa segun su forma de pago
     // (PRC_EFEC_GENERAR_DESDE_FACTURA) y refresca la rejilla. Devuelve nº de
     // efectos generados, 0 si nada, -1 sin factura activa / error. Si se pasa
@@ -942,6 +946,77 @@ begin
   unqryLinFaccSkuPrint.ParamByName('SERIE_FACC').AsString  := ASerie;
   unqryLinFaccSkuPrint.ParamByName('NUMERO_FACC').AsString := ANumero;
   unqryLinFaccSkuPrint.Open;
+end;
+
+// Contrato ColumnSKUcxGrid: desglosa el SKU (ART/COLOR/TALLA) en las
+// columnas reales ATTR1..5_VALOR_FACCLIN + NUM_ATRIBUTOS_FACCLIN.
+// Idempotente POR COMPARACION (mismo criterio que albaranes de compra):
+// solo edita la linea si algun ATTR o el numero de atributos difiere.
+procedure TdmFacturasCompra.DesempaquetarAtributosLineas;
+var
+  Partes: TArray<string>;
+  Sku, sEsperado: string;
+  i: Integer;
+  Bm: TBookmark;
+  bCambia: Boolean;
+begin
+  if unqryFacturasCompraLineas.Active and
+     (not unqryFacturasCompraLineas.IsEmpty) and
+     (unqryFacturasCompraLineas.FindField('ATTR1_VALOR_FACCLIN') <> nil) and
+     (unqryFacturasCompraLineas.FindField(
+        'NUM_ATRIBUTOS_FACCLIN') <> nil) and
+     (not unqryFacturasCompraLineas.ReadOnly) then
+  begin
+    Bm := unqryFacturasCompraLineas.GetBookmark;
+    unqryFacturasCompraLineas.DisableControls;
+    try
+      unqryFacturasCompraLineas.First;
+      while not unqryFacturasCompraLineas.Eof do
+      begin
+        Sku := unqryFacturasCompraLineas.FieldByName(
+          'CODIGO_UNIDAD_FACCLIN').AsString;
+        Partes := Sku.Split(['/']);
+        if Length(Partes) > 1 then
+        begin
+          bCambia := unqryFacturasCompraLineas.FieldByName(
+            'NUM_ATRIBUTOS_FACCLIN').AsInteger <> Length(Partes) - 1;
+          for i := 1 to 5 do
+          begin
+            if i < Length(Partes) then
+              sEsperado := Partes[i]
+            else
+              sEsperado := '';
+            if Trim(unqryFacturasCompraLineas.FieldByName('ATTR' +
+                 IntToStr(i) + '_VALOR_FACCLIN').AsString) <>
+               sEsperado then
+              bCambia := True;
+          end;
+          if bCambia then
+          begin
+            unqryFacturasCompraLineas.Edit;
+            unqryFacturasCompraLineas.FieldByName(
+              'NUM_ATRIBUTOS_FACCLIN').AsInteger := Length(Partes) - 1;
+            for i := 1 to 5 do
+            begin
+              if i < Length(Partes) then
+                unqryFacturasCompraLineas.FieldByName('ATTR' +
+                  IntToStr(i) + '_VALOR_FACCLIN').AsString := Partes[i]
+              else
+                unqryFacturasCompraLineas.FieldByName('ATTR' +
+                  IntToStr(i) + '_VALOR_FACCLIN').AsString := '';
+            end;
+            unqryFacturasCompraLineas.Post;
+          end;
+        end;
+        unqryFacturasCompraLineas.Next;
+      end;
+      if unqryFacturasCompraLineas.BookmarkValid(Bm) then
+        unqryFacturasCompraLineas.GotoBookmark(Bm);
+    finally
+      unqryFacturasCompraLineas.EnableControls;
+      unqryFacturasCompraLineas.FreeBookmark(Bm);
+    end;
+  end;
 end;
 
 end.
