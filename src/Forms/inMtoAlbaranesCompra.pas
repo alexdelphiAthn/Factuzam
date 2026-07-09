@@ -1041,11 +1041,12 @@ begin
   FMostrarAtributos := False;
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
-  // Contrato de entrada ColumnSKUcxGrid: Auto (desglose) por defecto;
-  // F1 cicla los modos. El pivote de compras antiguo queda RETIRADO de
+  // Contrato de entrada ColumnSKUcxGrid: Tallas horizontal por defecto;
+  // si su construccion falla, ConstruirModoEntrada degrada a SKU. F1
+  // cicla los modos. El pivote de compras antiguo queda RETIRADO de
   // esta pantalla: se ocultan sus botones y nunca se activa (la
   // preferencia ESPIVOTE de la cabecera se ignora).
-  FModoEntradaSel := mcsAuto;
+  FModoEntradaSel := mcsTallasHorPed;
   FColsModoConstruido := False;
   btnTallasHorizontal.Visible := False;
   btnAtributosColumna.Visible := False;
@@ -1496,9 +1497,22 @@ begin
 end;
 
 procedure TfrmMtoAlbaranesCompra.btnGrabarClick(Sender: TObject);
+var
+  sLineasSinSku: string;
 begin
   if inLibLog.Log <> nil then
     inLibLog.Log.LogInfo('AlbaranesCompra.btnGrabarClick: INICIO');
+  // Aviso: lineas con articulo con variaciones y sin SKU asignado
+  // (no mueven stock).
+  sLineasSinSku := LineasSinSkuRequerido(
+    dmmAlbaranesCompra.unqryTablaG.Connection,
+    dmmAlbaranesCompra.unqryAlbaranesCompraLineas, 'ALBCLIN');
+  if (sLineasSinSku <> '') and
+     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
+                 'con variaciones sin SKU asignado. ' +
+                 '¿Grabar de todas formas?',
+                 mtWarning, [mbYes, mbNo], 0) <> mrYes) then
+    Exit;
   if Assigned(FPivote) and FPivote.Activo and
      (not FPivote.Expandido) then
     FPivote.PersistirCantidadesPendientes;
@@ -1704,6 +1718,7 @@ var
   CfgPV: TGridPivoteVentaConfig;
   i: Integer;
   ds: TDataSet;
+  bDegradarASku: Boolean;
 begin
   if (dmmAlbaranesCompra = nil) or (csDestroying in ComponentState) then
     Exit;
@@ -1797,20 +1812,48 @@ begin
   // El flag ANTES del Construir: si algo aborta a medias, nadie debe
   // tocar las columnas del dfm, muertas en el ClearItems.
   FColsModoConstruido := True;
-  FModoEntrada.Construir;
-  CrearColumnasHostAlbaranCompra;
-  // Rotulo por modo EFECTIVO (Auto puede degradar a SKU si faltan las
-  // columnas ATTR en la BBDD) y, en desglose, mostrar Color/Talla con
-  // los nombres globales desde el principio (patron pedidos de compra).
-  case DetectarModoColumnasSku(Cfg) of
-    mcsSku:
-      tsLineasAlbaran.Caption := '&1_Líneas [SKU]';
-    mcsTallasHorPed:
-      tsLineasAlbaran.Caption := '&1_Líneas [Tallas horiz.]';
+  bDegradarASku := False;
+  try
+    FModoEntrada.Construir;
+  except
+    // Fallo montando tallas horizontal (modo por defecto): degradar a
+    // SKU. En cualquier otro modo la excepcion sigue su curso.
+    on E: Exception do
+      if FModoEntradaSel = mcsTallasHorPed then
+      begin
+        if inLibLog.Log <> nil then
+          inLibLog.Log.LogError(
+            'AlbaranesCompra: fallo construyendo tallas horizontal, ' +
+            'se degrada a SKU: ' + E.Message);
+        bDegradarASku := True;
+      end
+      else
+        raise;
+  end;
+  if bDegradarASku then
+  begin
+    // Reconstruccion completa en SKU: el teardown de la reentrada
+    // limpia lo que el pivote dejara a medias. Maximo una reentrada.
+    FModoEntradaSel := mcsSku;
+    ConstruirModoEntrada;
+  end
   else
-    begin
-      tsLineasAlbaran.Caption := '&1_Líneas [Desglose]';
-      MostrarColumnasAtributoGlobalesAlbc;
+  begin
+    CrearColumnasHostAlbaranCompra;
+    // Rotulo por modo EFECTIVO (Auto puede degradar a SKU si faltan
+    // las columnas ATTR en la BBDD) y, en desglose, mostrar Color y
+    // Talla con nombres globales desde el principio (patron pedidos
+    // de compra).
+    case DetectarModoColumnasSku(Cfg) of
+      mcsSku:
+        tsLineasAlbaran.Caption := '&1_Líneas [SKU]';
+      mcsTallasHorPed:
+        tsLineasAlbaran.Caption := '&1_Líneas [Tallas horiz.]';
+    else
+      begin
+        tsLineasAlbaran.Caption := '&1_Líneas [Desglose]';
+        MostrarColumnasAtributoGlobalesAlbc;
+      end;
     end;
   end;
 end;

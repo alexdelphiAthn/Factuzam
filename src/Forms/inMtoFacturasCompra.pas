@@ -967,7 +967,20 @@ begin
 end;
 
 procedure TfrmMtoFacturasCompra.btnGrabarClick(Sender: TObject);
+var
+  sLineasSinSku: string;
 begin
+  // Aviso: lineas con articulo con variaciones y sin SKU asignado
+  // (no mueven stock).
+  sLineasSinSku := LineasSinSkuRequerido(
+    dmmFacturasCompra.unqryTablaG.Connection,
+    dmmFacturasCompra.unqryFacturasCompraLineas, 'FACCLIN');
+  if (sLineasSinSku <> '') and
+     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
+                 'con variaciones sin SKU asignado. ' +
+                 '¿Grabar de todas formas?',
+                 mtWarning, [mbYes, mbNo], 0) <> mrYes) then
+    Exit;
   if Assigned(FPivote) and FPivote.Activo and
      (not FPivote.Expandido) then
     FPivote.PersistirCantidadesPendientes;

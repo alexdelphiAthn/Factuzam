@@ -675,18 +675,19 @@ begin
     Exit;
   end;
   if MessageDlg(Format(
-       'Se van a BORRAR del destino "%s" todas las filas demo del'#13#10 +
-       'seed factuzam_original.sql en 56 tablas (articulos, SKUs,'#13#10 +
-       'tarifas, codigos_barras, atributos, propiedades, clientes,'#13#10 +
-       'proveedores, almacenes, empresas, inventarios, facturas,'#13#10 +
-       'pedidos, albaranes, compras, arqueos, caja, movimientos...).'#13#10 +
+       'Se van a BORRAR del destino "%s" todas las tablas de negocio'#13#10 +
+       'del seed factuzam_original.sql: documentos, facturas y lineas,'#13#10 +
+       'pedidos, albaranes, compras, caja, stock, Verifactu, articulos,'#13#10 +
+       'SKUs, tarifas, atributos, propiedades, clientes, proveedores,'#13#10 +
+       'almacenes, empresas, empleados y movimientos.'#13#10 +
        #13#10 +
-       'Filtro: USUARIO_ALTA IN (DEMO, Administrador, Sistema,'#13#10 +
-       'SISTEMA, Admin, ADMIN, SCRIPT_DEMO, SCRIPT_FIX,'#13#10 +
-       'FIX_SKU_STOCK, MIGRACION).'#13#10 +
+       'No se filtra por USUARIO_ALTA: el dump trae lineas con usuario'#13#10 +
+       '"1" y algun valor historico corrupto, y por eso quedaban restos.'#13#10 +
        #13#10 +
        'NO se tocan tablas de SISTEMA (paises, ivas*, winforms,'#13#10 +
-       'usuarios*, metadatos, contadores, tipos_documentos...).'#13#10 +
+       'usuarios*, perfiles, permisos, parametros, filtros_guardados,'#13#10 +
+       'metadatos, contadores, tipos_documentos, unidades_medida,'#13#10 +
+       'bancos, valores_defecto...).'#13#10 +
        #13#10 +
        'Util tras cargar factuzam_original.sql, ANTES de migrar.'#13#10 +
        '¿Continuar?', [edDstBase.Text]),
