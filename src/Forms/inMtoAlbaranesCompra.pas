@@ -40,6 +40,8 @@ uses
   cxGridDBBandedTableView,
   inLibGridTallasInline,
   inLibGridPivoteCompra,
+  inLibColumnasSkuIntf,
+  inLibGridPivoteVenta,
   UniDataAlbaranesCompra, cxBlobEdit, dxShellDialogs, System.Actions,
   Vcl.ActnList, cxSplitter;
 
@@ -223,6 +225,17 @@ type
     // veria discrepancia con Activo).
     FInToggleClick   : Boolean;
     FAfterOpenLineasOriginal: TDataSetNotifyEvent;
+    // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
+    // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal, con el
+    // MISMO pivote tallashorped de venta (BANDA UNICA: Cantidad) sobre
+    // lineas SKU reales, sin tabla de celdas. El Construir hace
+    // ClearItems: las columnas del dfm y las del pivote de compras
+    // antiguo mueren y las del documento se recrean en runtime. El
+    // pivote de compras (FPivote/ESPIVOTE) queda RETIRADO de esta
+    // pantalla (decision 09/07/26, mismo criterio que pedidos compra).
+    FModoEntrada: IModoEntradaGrid;
+    FModoEntradaSel: TModoColumnasSku;
+    FColsModoConstruido: Boolean;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure CargarBasicosColorArticulo(const ACodigoArt: string);
@@ -254,6 +267,19 @@ type
     procedure colLinAlbcColorPivotButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure PersistirPreferenciaPivote;
+    procedure ConstruirModoEntrada;
+    procedure CrearColumnasHostAlbaranCompra;
+    procedure ModoEntradaResuelto(const ACodArt, ASku,
+                                  ADescripcion: string;
+                                  ACompleto: Boolean);
+    procedure PivoteVentaCrearLineaSku(const ACodigoSku: string);
+    procedure PivoteVentaBandaCambiada(ABanda: TBandaPivoteVenta);
+    // Rotulo de modo en la pestania de lineas, como en ventas.
+    procedure ActualizarCaptionModoLineas;
+  protected
+    // F1 = ciclar el modo de entrada (KeyPreview de TfrmBase),
+    // mismo atajo que pedidos/facturas de venta y pedidos de compra.
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     dmmAlbaranesCompra: TdmAlbaranesCompra;
     procedure CrearTablaPrincipal; override;
@@ -282,7 +308,9 @@ uses
   UniDataArticulos,
   inMtoModalImpAlbCompra,
   inMtoModalImpAlbCompraV,
-  inMtoModalEtiqAlb, inLibShowMto, inLibGenBusq;
+  inMtoModalEtiqAlb, inLibShowMto, inLibGenBusq,
+  // Factoria del contrato de entrada ColumnSKUcxGrid.
+  inLibColumnasSku;
 
 {$R *.dfm}
 
@@ -1010,6 +1038,15 @@ begin
   FMostrarAtributos := False;
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
+  // Contrato de entrada ColumnSKUcxGrid: Auto (desglose) por defecto;
+  // F1 cicla los modos. El pivote de compras antiguo queda RETIRADO de
+  // esta pantalla: se ocultan sus botones y nunca se activa (la
+  // preferencia ESPIVOTE de la cabecera se ignora).
+  FModoEntradaSel := mcsAuto;
+  FColsModoConstruido := False;
+  btnTallasHorizontal.Visible := False;
+  btnAtributosColumna.Visible := False;
+  ActualizarCaptionModoLineas;
 end;
 
 function TfrmMtoAlbaranesCompra.SqlRestriccionUsuario: string;
@@ -1063,6 +1100,18 @@ end;
 
 procedure TfrmMtoAlbaranesCompra.FormDestroy(Sender: TObject);
 begin
+  // El modo del contrato se libera ANTES del inherited: su teardown
+  // toca el view y el dataset de lineas, que deben seguir vivos (misma
+  // leccion que pedidos/facturas de venta, AV al cerrar 08/07/26).
+  if FModoEntrada <> nil then
+  begin
+    try
+      FModoEntrada.Desmontar;
+    except
+      // Teardown defensivo en cierre.
+    end;
+    FModoEntrada := nil;
+  end;
   FreeAndNil(FPivote);
   FreeAndNil(FGestorTallas);
   inherited;
@@ -1468,38 +1517,26 @@ end;
 // recarga del controlador de pivote.
 procedure TfrmMtoAlbaranesCompra.dsTablaGDataChangeHook(Sender: TObject;
                                                        Field: TField);
-var
-  bDeberiaEstarActivo: Boolean;
 begin
   // Refrescar el rotulo del proveedor al navegar entre albaranes (Field=nil)
   // o al cambiar CODIGO_PRV_ALBC tecleado directamente en el ButtonEdit.
   if (Field = nil) or SameText(Field.FieldName, 'CODIGO_PRV_ALBC') then
     ActualizarLabelProveedor;
   if Field <> nil then Exit;
-  if FPivote = nil then Exit;
-  if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
-     (not dsTablaG.DataSet.IsEmpty) and
-     (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_ALBC') <> nil) then
+  // Contrato de entrada: al navegar de albaran, las lineas llegan
+  // recargadas por el master-detail. En desglose basta desempaquetar
+  // SKU->ATTR; el modo tallas re-pivota su cache reconstruyendo. La
+  // preferencia ESPIVOTE del pivote de compras antiguo se IGNORA
+  // (pivote retirado de esta pantalla).
+  if FColsModoConstruido and Assigned(dmmAlbaranesCompra) and
+     dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Active and
+     (not (dsTablaG.State in dsEditModes)) then
   begin
-    if dsTablaG.DataSet.State = dsInsert then
-    begin
-      if FPivote.Activo then
-        btnTallasHorizontalClick(nil);
-      Exit;
-    end;
-    bDeberiaEstarActivo :=
-      dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_ALBC').AsString <> 'N';
-    if bDeberiaEstarActivo and (not FPivote.Activo) then
-      btnTallasHorizontalClick(nil)
-    else if (not bDeberiaEstarActivo) and FPivote.Activo then
-      btnTallasHorizontalClick(nil);
+    if FModoEntradaSel = mcsTallasHorPed then
+      ConstruirModoEntrada
+    else if FModoEntradaSel <> mcsSku then
+      dmmAlbaranesCompra.DesempaquetarAtributosLineas;
   end;
-  if not FPivote.Activo then Exit;
-  // RecargarYRepublicar ya hace RecalcularMaxColumnas + Captions
-  // ANTES de publicar. Llamar a RefrescarVisibilidadTallas aqui haria
-  // un segundo RecalcularMax tras publicar y limpiaria los Values[]
-  // recien puestos.
-  FPivote.RecargarYRepublicar;
 end;
 
 procedure TfrmMtoAlbaranesCompra.ActualizarLabelProveedor;
@@ -1605,12 +1642,212 @@ begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, False);
   AsegurarPrimeraLineaAlbaranCompra;
+  // Contrato de entrada: primera construccion al entrar en el grid.
+  // El teardown cancela la linea vacia auto-anadida: se recrea.
+  if not FColsModoConstruido then
+  begin
+    ConstruirModoEntrada;
+    AsegurarPrimeraLineaAlbaranCompra;
+  end;
+  if FModoEntrada <> nil then
+    FModoEntrada.MostrarEditor;
 end;
 
 procedure TfrmMtoAlbaranesCompra.cxgrdLineasAlbaranExit(Sender: TObject);
 begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, True);
+end;
+
+procedure TfrmMtoAlbaranesCompra.ActualizarCaptionModoLineas;
+begin
+  if not FColsModoConstruido then
+    tsLineasAlbaran.Caption := '&1_Líneas '
+  else
+    case FModoEntradaSel of
+      mcsSku:
+        tsLineasAlbaran.Caption := '&1_Líneas [SKU]';
+      mcsTallasHorPed:
+        tsLineasAlbaran.Caption := '&1_Líneas [Tallas horiz.]';
+    else
+      tsLineasAlbaran.Caption := '&1_Líneas [Desglose]';
+    end;
+end;
+
+procedure TfrmMtoAlbaranesCompra.KeyDown(var Key: Word;
+  Shift: TShiftState);
+begin
+  // F1: alterna Auto (desglose) -> SKU -> Tallas horizontal con las
+  // lineas del albaran a la vista, igual que pedidos de compra.
+  if (Key = VK_F1) and (Shift = []) and
+     (pcAlbaran.ActivePage = tsLineasAlbaran) and
+     (dmmAlbaranesCompra <> nil) then
+  begin
+    Key := 0;
+    case FModoEntradaSel of
+      mcsAuto: FModoEntradaSel := mcsSku;
+      mcsSku: FModoEntradaSel := mcsTallasHorPed;
+    else
+      FModoEntradaSel := mcsAuto;
+    end;
+    ConstruirModoEntrada;
+  end;
+  inherited;
+end;
+
+procedure TfrmMtoAlbaranesCompra.ConstruirModoEntrada;
+var
+  Cfg: TConfigColumnasSku;
+  CfgPV: TGridPivoteVentaConfig;
+  i: Integer;
+  ds: TDataSet;
+begin
+  if (dmmAlbaranesCompra = nil) or (csDestroying in ComponentState) then
+    Exit;
+  ds := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
+  if not ds.Active then
+    Exit;
+  // Teardown del modo anterior (patron pedidos de compra).
+  if tvLineasAlbaran.Controller.EditingController.IsEditing then
+    try
+      tvLineasAlbaran.Controller.EditingController.HideEdit(False);
+    except
+      on E: EInvalidOperation do
+        ;
+    end;
+  if ds.State in dsEditModes then
+    ds.Cancel;
+  if FModoEntrada <> nil then
+    FModoEntrada.Desmontar;
+  tvLineasAlbaran.OnInitEdit := nil;
+  tvLineasAlbaran.OnEditKeyDown := nil;
+  tvLineasAlbaran.OnEditing := nil;
+  tvLineasAlbaran.OnFocusedRecordChanged := nil;
+  tvLineasAlbaran.OnFocusedItemChanged := nil;
+  tvLineasAlbaran.OnCustomDrawCell := nil;
+  // El ClearItems mata TODAS las columnas: las del dfm y las del
+  // pivote de compras retirado. Fuera las referencias ANTES de que
+  // ningun repintado o refresco las toque.
+  tvLineasAlbaran.ClearItems;
+  FModoEntrada := nil;
+  for i := 0 to CANT_TALLAS_MAX - 1 do
+    FTallaColumns[i] := nil;
+  for i := 0 to CANT_ATRIB_MAX - 1 do
+    FAtribColumns[i] := nil;
+  FColColorPivot := nil;
+  // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
+  // (columnas reales _ALBCLIN; idempotente por linea).
+  if FModoEntradaSel <> mcsSku then
+    dmmAlbaranesCompra.DesempaquetarAtributosLineas;
+  Cfg := Default(TConfigColumnasSku);
+  Cfg.Conexion := dmmAlbaranesCompra.unqryTablaG.Connection;
+  Cfg.View := tvLineasAlbaran;
+  Cfg.Cds := ds;
+  Cfg.Modo := FModoEntradaSel;
+  Cfg.AlmacenStock := Trim(dmmAlbaranesCompra.unqryTablaG.
+    FieldByName('CODIGO_ALM_ALBC').AsString);
+  Cfg.Distribuido := False;
+  Cfg.Campos.CodigoArt := 'CODIGO_ART_ALBCLIN';
+  Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_ALBCLIN';
+  Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_ALBCLIN';
+  Cfg.Campos.Cantidad := 'CANTIDAD_ALBCLIN';
+  Cfg.Campos.Almacen := 'CODIGO_ALMACEN_ALBCLIN';
+  Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_ALBCLIN';
+  for i := 1 to 5 do
+  begin
+    Cfg.Campos.AttrValor[i] :=
+      'ATTR' + IntToStr(i) + '_VALOR_ALBCLIN';
+    Cfg.Campos.AttrNombre[i] :=
+      'ATTR' + IntToStr(i) + '_NOMBRE_ALBCLIN';
+  end;
+  if FModoEntradaSel = mcsTallasHorPed then
+  begin
+    CfgPV := Default(TGridPivoteVentaConfig);
+    CfgPV.Conexion := dmmAlbaranesCompra.unqryTablaG.Connection;
+    CfgPV.Usuario := oUser;
+    CfgPV.SourceMaster := dsTablaG;
+    CfgPV.SourceLineas := dmmAlbaranesCompra.dsAlbaranesCompraLineas;
+    CfgPV.FieldSerieMaster := 'SERIE_ALBC';
+    CfgPV.FieldNumeroMaster := 'NUMERO_ALBC';
+    CfgPV.FieldLinea := 'LINEA_ALBCLIN';
+    CfgPV.FieldArt := 'CODIGO_ART_ALBCLIN';
+    CfgPV.FieldSku := 'CODIGO_UNIDAD_ALBCLIN';
+    CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_ALBCLIN';
+    // Albaran de compra: UNA sola cantidad por linea -> banda unica.
+    CfgPV.FieldCantidadPedida := 'CANTIDAD_ALBCLIN';
+    CfgPV.FieldCantidadEntregada := '';
+    CfgPV.FieldCantidadAAlbaranar := '';
+    CfgPV.FieldPrecioBase := 'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN';
+    CfgPV.FieldAlmacen := 'CODIGO_ALMACEN_ALBCLIN';
+    CfgPV.FieldAlmacenMaster := 'CODIGO_ALM_ALBC';
+    CfgPV.MaxColumnas := CANT_TALLAS_MAX;
+    CfgPV.BandaUnica := True;
+    CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
+    CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
+    FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
+  end
+  else
+    FModoEntrada := CrearModoEntradaGrid(Cfg);
+  FModoEntrada.OnResuelto := ModoEntradaResuelto;
+  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
+  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
+  // El flag ANTES del Construir: si algo aborta a medias, nadie debe
+  // tocar las columnas del dfm, muertas en el ClearItems.
+  FColsModoConstruido := True;
+  FModoEntrada.Construir;
+  CrearColumnasHostAlbaranCompra;
+  ActualizarCaptionModoLineas;
+end;
+
+procedure TfrmMtoAlbaranesCompra.CrearColumnasHostAlbaranCompra;
+  function Col(const ACaption, ACampo: string; AAncho: Integer;
+               AEditable: Boolean): TcxGridDBColumn;
+  begin
+    Result := tvLineasAlbaran.CreateColumn as TcxGridDBColumn;
+    Result.Caption := ACaption;
+    Result.DataBinding.FieldName := ACampo;
+    Result.Width := AAncho;
+    Result.Options.Editing := AEditable;
+  end;
+var
+  ColLinea: TcxGridDBColumn;
+begin
+  // Columnas propias del albaran de compra tras el ClearItems del
+  // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
+  ColLinea := Col('Línea', 'LINEA_ALBCLIN', 60, False);
+  Col('Modelo prov.', 'REF_PRV_ALBCLIN', 100, True);
+  Col('Descripción', 'DESCRIPCION_ARTICULO_ALBCLIN', 240, False);
+  if FModoEntradaSel <> mcsTallasHorPed then
+    Col('Cantidad', 'CANTIDAD_ALBCLIN', 80, True);
+  Col('Precio compra', 'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN', 110, True);
+  Col('% IVA', 'PORCENTAJE_IVA_ALBCLIN', 70, True);
+  Col('Total', 'TOTAL_ALBCLIN', 100, False);
+  Col('Almacén', 'CODIGO_ALMACEN_ALBCLIN', 90, True);
+  // Orden normal del documento: la LINEA delante del bloque de
+  // articulo que creo el modo (las columnas del host nacen detras).
+  ColLinea.Index := 0;
+end;
+
+procedure TfrmMtoAlbaranesCompra.ModoEntradaResuelto(const ACodArt, ASku,
+  ADescripcion: string; ACompleto: Boolean);
+begin
+  // El flujo clasico del albaran de compra (precio de compra del
+  // proveedor, IVA, modelo proveedor...) se reaprovecha tal cual:
+  // AplicarArticuloAlbaranCompra acepta articulo o SKU.
+  if ACompleto and (ASku <> '') then
+    AplicarArticuloAlbaranCompra(ASku);
+end;
+
+procedure TfrmMtoAlbaranesCompra.PivoteVentaCrearLineaSku(
+  const ACodigoSku: string);
+begin
+  AplicarArticuloAlbaranCompra(ACodigoSku);
+end;
+
+procedure TfrmMtoAlbaranesCompra.PivoteVentaBandaCambiada(
+  ABanda: TBandaPivoteVenta);
+begin
+  ActualizarCaptionModoLineas;
 end;
 
 procedure TfrmMtoAlbaranesCompra.TallaEditValueChangedHook(Sender: TObject);
