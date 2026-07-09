@@ -94,7 +94,7 @@ implementation
 
 uses
   inLibArticulosAtributosLookup, inLibArticulosValidador,
-  inLibAtributosPaleta, inLibGenBusq, inLibGlobalVar;
+  inLibAtributosPaleta, inLibGenBusq, inLibGlobalVar, inLibLog;
 
 const
   ID_AV_SIN_TALLA = 0;
@@ -160,6 +160,11 @@ type
     FActualizandoGrid    : Boolean;
     FGuardandoCantidad   : Boolean;
     FEnRecarga           : Boolean;
+    // Tras cada Construir, la PRIMERA publicacion posiciona el grid al
+    // principio: el scroll heredado de la presentacion anterior dejaba
+    // las primeras filas pivotadas fuera del viewport y parecian
+    // "desaparecidas" (pedidos de compra, 09/07/26).
+    FScrollInicialPendiente: Boolean;
     // True cuando el usuario CANCELA la paleta de color/talla al meter un
     // articulo con variaciones: ResolverEntrada devuelve False pero el
     // validador no debe rotular "no encontrado".
@@ -780,8 +785,22 @@ begin
             // sin probar todos, las lineas no se copiaban a la vista
             // temporal y "desaparecian" (facturas '010', 09/07/26).
             bAnadida := LocalizarLineaReal(Ds, iLineaBase);
+            // Traza de diagnostico (fase de integracion).
+            if Log <> nil then
+              Log.LogInfo(Format(
+                'PivVenta.Vista: vista=%d base=%d encontrada=%s',
+                [iLineaVista, iLineaBase, BoolToStr(bAnadida, True)]));
             if bAnadida then
-              CopiarLineaVista(Ds, iLineaVista);
+              CopiarLineaVista(Ds, iLineaVista)
+            else if Log <> nil then
+              // Error DOCUMENTADO: una fila del pivote se pierde. Sin
+              // este aviso la linea "desaparecia" en silencio.
+              Log.LogWarning(Format(
+                'PivVenta.Vista: linea base %d NO localizada en el ' +
+                'dataset (formatos probados: %.4d / %.3d / %d); la ' +
+                'fila pivotada %d se OMITE de la vista temporal',
+                [iLineaBase, iLineaBase, iLineaBase, iLineaBase,
+                 iLineaVista]));
           end;
           if FCdsVista.IsEmpty and (not Ds.IsEmpty) then
             CopiarLineaVista(Ds, 0);
@@ -802,6 +821,7 @@ end;
 
 procedure TGridPivoteVenta.Construir;
 begin
+  FScrollInicialPendiente := True;
   CrearColumnas;
   CrearGestor;
   PrepararVistaTemporal;
@@ -1146,6 +1166,11 @@ begin
           begin
             iLineaRepr := iLinea;
             DictRepr.Add(sKey, iLineaRepr);
+            // Traza de diagnostico (fase de integracion).
+            if Log <> nil then
+              Log.LogInfo(Format(
+                'PivVenta.Cache: repr=%d art=%s tallaAv=%d sku=%s',
+                [iLineaRepr, sArt, Info.TallaAv, sSku]));
             FPivotArticulo.AddOrSetValue(iLineaRepr, sArt);
             FPivotColorAv.AddOrSetValue(iLineaRepr, Info.ColorAv);
             FPivotColorTexto.AddOrSetValue(iLineaRepr, Info.ColorTexto);
@@ -1218,7 +1243,20 @@ begin
       begin
         iAc := BuscarConjuntoParaIds(ParTallas.Value);
         if iAc > 0 then
-          FPivotIdAc.AddOrSetValue(ParTallas.Key, iAc);
+          FPivotIdAc.AddOrSetValue(ParTallas.Key, iAc)
+        else if (ParTallas.Value.Count > 0) and (Log <> nil) then
+        begin
+          // Error DOCUMENTADO: sin conjunto que cubra las tallas del
+          // grupo, sus celdas no tienen columna donde pintarse.
+          sArt := '';
+          FPivotArticulo.TryGetValue(ParTallas.Key, sArt);
+          Log.LogWarning(Format(
+            'PivVenta.Cache: NINGUN conjunto global cubre las %d ' +
+            'tallas del grupo repr=%d (art=%s); sus cantidades no se ' +
+            'pintaran en columnas de talla. Revisar ' +
+            'fza_atributos_conjuntos / fza_atributos_sku del articulo.',
+            [ParTallas.Value.Count, ParTallas.Key, sArt]));
+        end;
       end;
       if Ds.BookmarkValid(Bm) then
         Ds.GotoBookmark(Bm);
@@ -1616,6 +1654,25 @@ begin
     AplicarVisibilidadTallas;
     ColocarBloqueColumnas;
     PublicarCantidadesPivot;
+    // Traza de diagnostico (fase de integracion): si el CDS de la
+    // vista tiene mas filas de las que el grid publica, hay un filtro
+    // o una sincronizacion comiendose filas a nivel de view.
+    if Log <> nil then
+      Log.LogInfo(Format(
+        'PivVenta.Publicar: filasVista=%d filasGrid=%d filtroView="%s"',
+        [FCdsVista.RecordCount,
+         FConfig.View.DataController.RecordCount,
+         FConfig.View.DataController.Filter.FilterText]));
+    // Primera publicacion tras Construir: arrancar viendo el grid
+    // desde la primera fila (el scroll heredado ocultaba las primeras
+    // filas pivotadas y parecian perdidas).
+    if FScrollInicialPendiente and
+       (FConfig.View.DataController.RecordCount > 0) then
+    begin
+      FScrollInicialPendiente := False;
+      FConfig.View.DataController.FocusedRecordIndex := 0;
+      FConfig.View.Controller.TopRecordIndex := 0;
+    end;
   end;
 end;
 

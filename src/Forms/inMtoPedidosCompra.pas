@@ -342,6 +342,11 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
+    // Guarda de reentrada del rebuild: el Desempaquetar/Post de la
+    // construccion recalcula totales de cabecera y dispara
+    // dsTablaGDataChangeHook, que sin esta guarda relanzaba
+    // ConstruirModoEntrada en mitad de la construccion.
+    FConstruyendoModo: Boolean;
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostPedidoCompra;
     procedure MostrarColumnasAtributoGlobalesPedc;
@@ -1762,7 +1767,8 @@ begin
   // SKU->ATTR; el modo tallas re-pivota su cache reconstruyendo
   // (mismo criterio que facturas). La preferencia ESPIVOTE del pivote
   // de compras antiguo se IGNORA (pivote retirado de esta pantalla).
-  if FColsModoConstruido and Assigned(dmmPedidosCompra) and
+  if FColsModoConstruido and (not FConstruyendoModo) and
+     Assigned(dmmPedidosCompra) and
      dmmPedidosCompra.unqryPedidosCompraLineas.Active and
      (not (dsTablaG.State in dsEditModes)) then
   begin
@@ -2874,11 +2880,14 @@ var
   i: Integer;
   ds: TDataSet;
 begin
-  if (dmmPedidosCompra = nil) or (csDestroying in ComponentState) then
+  if (dmmPedidosCompra = nil) or (csDestroying in ComponentState) or
+     FConstruyendoModo then
     Exit;
   ds := dmmPedidosCompra.unqryPedidosCompraLineas;
   if not ds.Active then
     Exit;
+  FConstruyendoModo := True;
+  try
   // Teardown del modo anterior (patron pedidos de venta).
   if tvLineasPedido.Controller.EditingController.IsEditing then
     try
@@ -2985,6 +2994,9 @@ begin
       tsLineasPedido.Caption := 'Líneas [Desglose]';
       MostrarColumnasAtributoGlobalesPedc;
     end;
+  end;
+  finally
+    FConstruyendoModo := False;
   end;
   RefrescarCantidadAAlbaranar;
 end;
