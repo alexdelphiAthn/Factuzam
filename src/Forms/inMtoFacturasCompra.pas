@@ -41,6 +41,8 @@ uses
   cxGridDBBandedTableView,
   inLibGridTallasInline,
   inLibGridPivoteCompra,
+  inLibColumnasSkuIntf,
+  inLibGridPivoteVenta,
   UniDataFacturasCompra, cxBlobEdit, dxShellDialogs, System.Actions,
   Vcl.ActnList, cxSplitter;
 
@@ -199,6 +201,17 @@ type
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
     // veria discrepancia con Activo).
     FInToggleClick   : Boolean;
+    // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
+    // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal, con el
+    // MISMO pivote tallashorped de venta (BANDA UNICA: Cantidad) sobre
+    // lineas SKU reales, sin tabla de celdas. El Construir hace
+    // ClearItems: las columnas del dfm y las del pivote de compras
+    // antiguo mueren y las del documento se recrean en runtime. El
+    // pivote de compras (FPivote/ESPIVOTE) queda RETIRADO de esta
+    // pantalla (mismo criterio que albaranes/pedidos de compra).
+    FModoEntrada: IModoEntradaGrid;
+    FModoEntradaSel: TModoColumnasSku;
+    FColsModoConstruido: Boolean;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure CargarBasicosColorArticulo(const ACodigoArt: string);
@@ -237,6 +250,22 @@ type
     procedure AsegurarPrimeraLineaFacturaCompra;
     function PuedeActivarTallasHorizontal(var AMensaje: string): Boolean;
     procedure PersistirPreferenciaPivote;
+    procedure ConstruirModoEntrada;
+    procedure CrearColumnasHostFacturaCompra;
+    procedure ModoEntradaResuelto(const ACodArt, ASku,
+                                  ADescripcion: string;
+                                  ACompleto: Boolean);
+    procedure PivoteVentaCrearLineaSku(const ACodigoSku: string);
+    procedure PivoteVentaBandaCambiada(ABanda: TBandaPivoteVenta);
+    // Rotulo de modo en la pestania de lineas, como en ventas.
+    procedure ActualizarCaptionModoLineas;
+    // Color/Talla visibles con nombres globales en desglose,
+    // mismo paso que albaranes/pedidos de compra.
+    procedure MostrarColumnasAtributoGlobalesFacc;
+  protected
+    // F1 = ciclar el modo de entrada (KeyPreview de TfrmBase),
+    // mismo atajo que albaranes y pedidos de compra.
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     dmmFacturasCompra: TdmFacturasCompra;
     procedure CrearTablaPrincipal; override;
@@ -256,6 +285,7 @@ uses
   inLibGlobalVar,
   inLibFiltroUsuario,
   inLibFotos,
+  inLibLog,
   inLibArticulosResolver,
   inLibArticulosValidador,
   inLibComprasImpuestos,
@@ -264,7 +294,9 @@ uses
   inMtoModalImpFacCompra,
   inMtoModalImpFacCompraV,
   inLibShowMto, inMtoModalRegistrarPago,
-  inMtoModalSeleccionarBanco, inLibGenBusq, inLibtb;
+  inMtoModalSeleccionarBanco, inLibGenBusq, inLibtb,
+  // Factoria del contrato de entrada ColumnSKUcxGrid.
+  inLibColumnasSku;
 
 {$R *.dfm}
 
@@ -564,6 +596,16 @@ begin
   FMostrarAtributos := False;
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
+  // Contrato de entrada ColumnSKUcxGrid: Tallas horizontal por defecto;
+  // si su construccion falla, ConstruirModoEntrada degrada a SKU. F1
+  // cicla los modos. El pivote de compras antiguo queda RETIRADO de
+  // esta pantalla: se ocultan sus botones y nunca se activa (la
+  // preferencia ESPIVOTE de la cabecera se ignora).
+  FModoEntradaSel := mcsTallasHorPed;
+  FColsModoConstruido := False;
+  btnTallasHorizontal.Visible := False;
+  btnAtributosColumna.Visible := False;
+  ActualizarCaptionModoLineas;
 end;
 
 function TfrmMtoFacturasCompra.SqlRestriccionUsuario: string;

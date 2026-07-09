@@ -17,6 +17,7 @@
 
 # Scripts y documentacion del proyecto.
 *.sql text eol=crlf
+"DESARROLLOS EN CURSO/migracion/*.sql" -text -diff -merge !eol
 *.md text eol=crlf
 *.txt text eol=crlf
 *.bat text eol=crlf
