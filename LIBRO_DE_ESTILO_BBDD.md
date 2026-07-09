@@ -15,6 +15,7 @@ Manual práctico para añadir tablas, columnas, índices, vistas y procedimiento
 7. **Todas las tablas** tienen ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci.
 8. **No hay funciones ni triggers** en la bbdd sólo hay procedimientos, se evita el uso de funciones y triggers. Se sustituirán por procedimientos almacenados.
 9. **No hay FOREIGN KEYS** en la bbdd. Sólo hay índices para conectar dos tablas unidas por el mismo campo.
+10.**El prefijo para las tablas es fza_nombre_tabla** para diferenciar de pruebas u otras integraciones.
 ---
 
 ## 2. Catálogo de sufijos por tabla
