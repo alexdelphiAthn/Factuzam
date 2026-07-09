@@ -14,6 +14,7 @@ Manual práctico para añadir tablas, columnas, índices, vistas y procedimiento
 6. **Los índices** se llaman `IDX_<SUFIJO_TABLA>_<columnas>` o `UQ_<SUFIJO_TABLA>_<columnas>` para únicos.
 7. **Todas las tablas** tienen ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci.
 8. **No hay funciones ni triggers** en la bbdd sólo hay procedimientos, se evita el uso de funciones y triggers. Se sustituirán por procedimientos almacenados.
+9. **No hay FOREIGN KEYS** en la bbdd. Sólo hay índices para conectar dos tablas unidas por el mismo campo.
 ---
 
 ## 2. Catálogo de sufijos por tabla
