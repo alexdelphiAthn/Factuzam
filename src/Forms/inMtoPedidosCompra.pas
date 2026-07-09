@@ -344,6 +344,7 @@ type
     FColsModoConstruido: Boolean;
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostPedidoCompra;
+    procedure MostrarColumnasAtributoGlobalesPedc;
     procedure ModoEntradaResuelto(const ACodArt, ASku,
                                   ADescripcion: string;
                                   ACompleto: Boolean);
@@ -2971,8 +2972,59 @@ begin
   FColsModoConstruido := True;
   FModoEntrada.Construir;
   CrearColumnasHostPedidoCompra;
-  ActualizarCaptionModoLineas;
+  // Rotulo por modo EFECTIVO (Auto puede degradar a SKU si faltan las
+  // columnas ATTR) y, en desglose, mostrar Color/Talla con los nombres
+  // globales desde el principio (mismo paso que pedidos de venta).
+  case DetectarModoColumnasSku(Cfg) of
+    mcsSku:
+      tsLineasPedido.Caption := 'Líneas [SKU]';
+    mcsTallasHorPed:
+      tsLineasPedido.Caption := 'Líneas [Tallas horiz.]';
+  else
+    begin
+      tsLineasPedido.Caption := 'Líneas [Desglose]';
+      MostrarColumnasAtributoGlobalesPedc;
+    end;
+  end;
   RefrescarCantidadAAlbaranar;
+end;
+
+procedure TfrmMtoPedidosCompra.MostrarColumnasAtributoGlobalesPedc;
+var
+  Qry: TUniQuery;
+  i, iOrden: Integer;
+  Col: TcxGridColumn;
+begin
+  // Nombres globales de atributos para ver Color/Talla desde el
+  // principio (mismo helper que pedidos/facturas de venta).
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := dmmPedidosCompra.unqryTablaG.Connection;
+    Qry.SQL.Text :=
+      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
+      '       MIN(ORDEN_VA) AS ORDEN' +
+      '  FROM fza_variaciones_atributos' +
+      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
+      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
+    Qry.Open;
+    iOrden := 1;
+    while (not Qry.Eof) and (iOrden <= 5) do
+    begin
+      for i := 0 to tvLineasPedido.ColumnCount - 1 do
+      begin
+        Col := tvLineasPedido.Columns[i];
+        if Col.Tag = iOrden then
+        begin
+          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
+          Col.Visible := True;
+        end;
+      end;
+      Inc(iOrden);
+      Qry.Next;
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
 end;
 
 procedure TfrmMtoPedidosCompra.CrearColumnasHostPedidoCompra;
