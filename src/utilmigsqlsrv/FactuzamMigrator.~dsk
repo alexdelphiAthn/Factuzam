@@ -14,24 +14,24 @@ File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalImp
 File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasBase.pas',0,1,680,1,694,0,0,,
 
 [Modules]
-Module0=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigConn.pas
+Module0=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dproj
 Module1=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigrator.pas
-Module2=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dproj
+Module2=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigConn.pas
 Count=3
 EditWindowCount=1
-
-[C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigConn.pas]
-ModuleType=TSourceModule
-
-[C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigrator.pas]
-ModuleType=TSourceModule
 
 [C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dproj]
 ModuleType=TBaseProject
 
+[C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigrator.pas]
+ModuleType=TSourceModule
+
+[C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigConn.pas]
+ModuleType=TSourceModule
+
 [EditWindow0]
 ViewCount=4
-CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigConn.pas
+CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dpr
 View0=0
 View1=1
 View2=2
@@ -76,8 +76,8 @@ OTAEditViewType=WelcomePage.MainPage
 [View1]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dpr
-CursorX=39
-CursorY=41
+CursorX=49
+CursorY=35
 TopLine=29
 LeftCol=1
 Elisions=
@@ -87,9 +87,9 @@ EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator
 [View2]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\UMigrator.pas
-CursorX=21
-CursorY=776
-TopLine=764
+CursorX=11
+CursorY=32
+TopLine=20
 LeftCol=1
 Elisions=
 Bookmarks=
@@ -252,11 +252,6 @@ LRDockWidth=1526
 Dockable=1
 StayOnTop=0
 SplitPos=135
-
-[PropInspDesignerSelection]
-ArrangeBy=Name
-SelectedItem=Name,
-ExpandedItems=DefaultTransaction=0,"LiveBindings Designer=0",Options=0
 
 [frmDesignPreview]
 PercentageSizes=1
