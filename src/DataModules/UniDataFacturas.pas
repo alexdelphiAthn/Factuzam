@@ -100,6 +100,10 @@ private
     // bombean el bucle de mensajes y el grid maestro puede relanzar el
     // Post (CheckBrowseMode) mientras la validacion sigue en curso.
     FValidandoPost: Boolean;
+    // True mientras DesempaquetarAtributosLineas postea lineas: cambio
+    // puramente descriptivo que NO debe disparar numeracion, creacion
+    // de articulos ni recalculos (cascada por linea al navegar).
+    FDesempaquetandoAtributos: Boolean;
     // Copia a los parámetros de la query los valores de los campos del
     // maestro (MasterSource) que se llamen igual. UniDAC solo rellena
     // los parámetros al hacer scroll del maestro con el detail ya
@@ -1837,6 +1841,9 @@ begin
   begin
     Bm := unqryLinFac.GetBookmark;
     unqryLinFac.DisableControls;
+    // Posts descriptivos: silencia numeracion, creacion de articulos
+    // y recalculos en BeforePost / AfterPost.
+    FDesempaquetandoAtributos := True;
     try
       unqryLinFac.First;
       while not unqryLinFac.Eof do
@@ -1884,6 +1891,7 @@ begin
       if unqryLinFac.BookmarkValid(Bm) then
         unqryLinFac.GotoBookmark(Bm);
     finally
+      FDesempaquetandoAtributos := False;
       unqryLinFac.EnableControls;
       unqryLinFac.FreeBookmark(Bm);
     end;
@@ -2042,6 +2050,10 @@ var
   sSerie: string;
 begin
   inherited;
+  // Desempaquetado ATTR en curso: post descriptivo, sin logica de
+  // numeracion ni fiscal.
+  if FDesempaquetandoAtributos then
+    Exit;
   with unqryLinFac do
   begin
     // Salvaguarda si la linea llega con un SKU/codigo de barras sin pasar
@@ -2290,6 +2302,10 @@ end;
 procedure TdmFacturas.unqryLinFacAfterPost(DataSet: TDataSet);
 begin
   inherited;
+  // Los posts del desempaquetado ATTR no crean articulos ni alteran
+  // importes: salir sin efectos de negocio.
+  if FDesempaquetandoAtributos then
+    Exit;
   if (SameText(unqryTablaG.FieldByName(fcreart).AsString, 'S')) then
   begin
     with  unstdCrearArticuloLin do

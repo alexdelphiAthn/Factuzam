@@ -79,6 +79,10 @@ type
     // cierre, pero AfterPost sincroniza movimientos desde el documento
     // actual sin depender del estado final.
     FTransicionEstadoAlbc: string;
+    // True mientras DesempaquetarAtributosLineas postea lineas: cambio
+    // puramente descriptivo que NO debe disparar la logica fiscal ni
+    // la sincronizacion de movimientos (cascada por linea al navegar).
+    FDesempaquetandoAtributos: Boolean;
     procedure AsignarNumeroLineaAlbaranCompra(DataSet: TDataSet);
     procedure ConfigurarSqlCabecera;
     function HayLineasMovimiento(const ASerie, ANumero: string): Boolean;
@@ -694,6 +698,9 @@ var
   sSku, sArt: string;
 begin
   inherited;
+  // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
+  if FDesempaquetandoAtributos then
+    Exit;
   // Linea vacia (sin articulo ni SKU): cancelar silenciosamente. El cxGrid
   // hace Post automatico al navegar con flechas (OptionsData.Appending); si
   // la linea es un placeholder vacio que el usuario creo sin querer, el Post
@@ -858,6 +865,10 @@ end;
 
 procedure TdmAlbaranesCompra.CalcularTotalesAlbaranCompra;
 begin
+  // Los posts del desempaquetado ATTR no alteran importes: saltar el
+  // recalculo por linea (cascada de consultas de IVA al navegar).
+  if FDesempaquetandoAtributos then
+    Exit;
   CalcularTotalesDocumentoCompra(unqryTablaG.Connection, unqryTablaG,
     unqryAlbaranesCompraLineas, 'ALBC', 'TOTAL_ALBCLIN',
     'TIPO_IVA_ARTICULO_ALBCLIN', 'PORCENTAJE_IVA_ALBCLIN');
@@ -900,6 +911,10 @@ var
   sNumero: string;
   sSerie: string;
 begin
+  // Los posts del desempaquetado ATTR no tocan cantidades ni SKUs:
+  // saltar el borrado/recreacion de movimientos y recalculo de PMP.
+  if FDesempaquetandoAtributos then
+    Exit;
   if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
   begin
     sSerie := Trim(unqryTablaG.FieldByName('SERIE_ALBC').AsString);
@@ -1059,6 +1074,9 @@ begin
   begin
     Bm := unqryAlbaranesCompraLineas.GetBookmark;
     unqryAlbaranesCompraLineas.DisableControls;
+    // Posts descriptivos: silencia la logica fiscal y de movimientos
+    // en BeforePost / CalcularTotales / SincronizarMovimientos.
+    FDesempaquetandoAtributos := True;
     try
       unqryAlbaranesCompraLineas.First;
       while not unqryAlbaranesCompraLineas.Eof do
@@ -1103,6 +1121,7 @@ begin
       if unqryAlbaranesCompraLineas.BookmarkValid(Bm) then
         unqryAlbaranesCompraLineas.GotoBookmark(Bm);
     finally
+      FDesempaquetandoAtributos := False;
       unqryAlbaranesCompraLineas.EnableControls;
       unqryAlbaranesCompraLineas.FreeBookmark(Bm);
     end;

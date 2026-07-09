@@ -1099,6 +1099,11 @@ begin
   btnRecibirFilaEntera.Visible := False;
   lblContextoTalla.Visible := False;
   ActualizarCaptionModoLineas;
+  // Primera construccion al abrir la pantalla: sin ella, hasta entrar
+  // en el grid se veian las columnas del dfm (ningun modo).
+  if Assigned(dmmPedidosCompra) and
+     dmmPedidosCompra.unqryPedidosCompraLineas.Active then
+    ConstruirModoEntrada;
 end;
 
 procedure TfrmMtoPedidosCompra.FormDestroy(Sender: TObject);
@@ -1784,14 +1789,17 @@ begin
   // SKU->ATTR; el modo tallas re-pivota su cache reconstruyendo
   // (mismo criterio que facturas). La preferencia ESPIVOTE del pivote
   // de compras antiguo se IGNORA (pivote retirado de esta pantalla).
-  if FColsModoConstruido and (not FConstruyendoModo) and
+  if (not FConstruyendoModo) and
      Assigned(dmmPedidosCompra) and
      dmmPedidosCompra.unqryPedidosCompraLineas.Active and
      (not (dsTablaG.State in dsEditModes)) then
   begin
-    if FModoEntradaSel = mcsTallasHorPed then
+    // Sin modo construido (llegar navegando sin pisar el grid) se
+    // veian las columnas del dfm: construir tambien en ese caso.
+    if (not FColsModoConstruido) or
+       (FModoEntradaSel = mcsTallasHorPed) then
       ConstruirModoEntrada
-    else if FModoEntradaSel <> mcsSku then
+    else if FModoEntradaSel = mcsAuto then
       dmmPedidosCompra.DesempaquetarAtributosLineas;
   end;
   RefrescarCantidadAAlbaranar;
@@ -2938,9 +2946,10 @@ begin
   FColColorPivot := nil;
   FColColorProveedorPivot := nil;
   colLineaPedcARecibir := nil;
-  // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
-  // (columnas reales _PEDCLIN; idempotente por linea).
-  if FModoEntradaSel <> mcsSku then
+  // Solo el DESGLOSE liga columnas a ATTRn: desempaquetar SKU->ATTR
+  // (columnas reales _PEDCLIN; idempotente por linea). SKU y tallas
+  // derivan del propio SKU: sin posts al navegar.
+  if FModoEntradaSel = mcsAuto then
     dmmPedidosCompra.DesempaquetarAtributosLineas;
   Cfg := Default(TConfigColumnasSku);
   Cfg.Conexion := dmmPedidosCompra.unqryTablaG.Connection;
@@ -3011,8 +3020,9 @@ begin
     CfgT.TablaCeldas := 'fza_pedidos_compra_celdas';
     CfgT.FieldSerieCel := 'SERIE_PEDC_PEDCCEL';
     CfgT.FieldNumeroCel := 'NUMERO_PEDC_PEDCCEL';
-    CfgT.FieldLineaCel := 'LINEA_PEDCCEL';
-    CfgT.FieldFilaCel := 'ID_FILA_PEDCCEL';
+    // Con infijo PEDC, como en la tabla real (patron ALBC_ALBCCEL).
+    CfgT.FieldLineaCel := 'LINEA_PEDC_PEDCCEL';
+    CfgT.FieldFilaCel := 'ID_FILA_PEDC_PEDCCEL';
     CfgT.FieldAvPivotCel := 'ID_AV_PIVOT_PEDCCEL';
     CfgT.FieldCantidadCel := 'CANTIDAD_PEDCCEL';
     CfgT.FieldAlmacenCel := '';

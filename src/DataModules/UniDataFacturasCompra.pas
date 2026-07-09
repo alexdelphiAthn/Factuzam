@@ -78,6 +78,10 @@ type
     // generamos/revertimos los movimientos. Valores: 'CERRAR' (mov.
     // salida nueva), 'ABRIR' (revertir mov. existentes) o ''.
     FTransicionEstadoFacc: string;
+    // True mientras DesempaquetarAtributosLineas postea lineas: cambio
+    // puramente descriptivo que NO debe disparar la logica fiscal ni
+    // la sincronizacion de movimientos (cascada por linea al navegar).
+    FDesempaquetandoAtributos: Boolean;
     procedure AsignarNumeroLineaFacturaCompra(DataSet: TDataSet);
     function ObtenerSkusFacturaCsv(const ASerie, ANumero: string): string;
   public
@@ -656,6 +660,9 @@ var
   sSku, sArt: string;
 begin
   inherited;
+  // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
+  if FDesempaquetandoAtributos then
+    Exit;
   // Linea vacia (sin articulo ni SKU): cancelar silenciosamente. El cxGrid
   // hace Post automatico al navegar con flechas (OptionsData.Appending); si
   // la linea es un placeholder vacio que el usuario creo sin querer, el Post
@@ -814,6 +821,10 @@ end;
 
 procedure TdmFacturasCompra.CalcularTotalesFacturaCompra;
 begin
+  // Los posts del desempaquetado ATTR no alteran importes: saltar el
+  // recalculo por linea (cascada de consultas de IVA al navegar).
+  if FDesempaquetandoAtributos then
+    Exit;
   CalcularTotalesDocumentoCompra(inLibGlobalVar.oConn, unqryTablaG,
     unqryFacturasCompraLineas, 'FACC', 'TOTAL_FACCLIN',
     'TIPO_IVA_ARTICULO_FACCLIN', 'PORCENTAJE_IVA_FACCLIN');
@@ -969,6 +980,8 @@ begin
   begin
     Bm := unqryFacturasCompraLineas.GetBookmark;
     unqryFacturasCompraLineas.DisableControls;
+    // Posts descriptivos: silencia la logica fiscal y de movimientos.
+    FDesempaquetandoAtributos := True;
     try
       unqryFacturasCompraLineas.First;
       while not unqryFacturasCompraLineas.Eof do
@@ -1013,6 +1026,7 @@ begin
       if unqryFacturasCompraLineas.BookmarkValid(Bm) then
         unqryFacturasCompraLineas.GotoBookmark(Bm);
     finally
+      FDesempaquetandoAtributos := False;
       unqryFacturasCompraLineas.EnableControls;
       unqryFacturasCompraLineas.FreeBookmark(Bm);
     end;
