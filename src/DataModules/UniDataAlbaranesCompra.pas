@@ -701,6 +701,15 @@ begin
   // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
   if FDesempaquetandoAtributos then
     Exit;
+  // Modelo contrato (una linea por SKU): TOTAL_UNIDADES acompana a
+  // CANTIDAD. La vista de cabecera lo prefiere al contar prendas y se
+  // quedaba con el valor antiguo al editar cantidades en el pivote.
+  if (DataSet.FindField('TOTAL_UNIDADES_ALBCLIN') <> nil) and
+     (DataSet.FindField('CANTIDAD_ALBCLIN') <> nil) and
+     (Trim(DataSet.FieldByName('CODIGO_UNIDAD_ALBCLIN').AsString) <> '')
+  then
+    DataSet.FieldByName('TOTAL_UNIDADES_ALBCLIN').AsFloat :=
+      DataSet.FieldByName('CANTIDAD_ALBCLIN').AsFloat;
   // Linea vacia (sin articulo ni SKU): cancelar silenciosamente. El cxGrid
   // hace Post automatico al navegar con flechas (OptionsData.Appending); si
   // la linea es un placeholder vacio que el usuario creo sin querer, el Post

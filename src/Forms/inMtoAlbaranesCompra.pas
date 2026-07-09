@@ -1037,6 +1037,8 @@ begin
   // en el grid se veian las columnas del dfm (ningun modo).
   if dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Active then
     ConstruirModoEntrada;
+  // El dfm guarda Totales como pagina activa: al abrir, la primera.
+  pcAlbaran.ActivePage := tsLineasAlbaran;
 end;
 
 function TfrmMtoAlbaranesCompra.SqlRestriccionUsuario: string;
