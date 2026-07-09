@@ -34,7 +34,8 @@ BEGIN
     FROM fza_pedidos_lineas
    WHERE NUMERO_PED_PEDLIN = p_NUMERO_PED
      AND SERIE_PED_PEDLIN = p_SERIE_PED
-     AND IFNULL(ESENTREGADA_PEDLIN, 'N') <> 'S';
+     AND IFNULL(CANTIDAD_PEDLIN, 0) >
+         IFNULL(CANTIDAD_ENTREGADA_PEDLIN, 0);
   IF v_pendientes = 0 THEN
     UPDATE fza_pedidos
        SET ESTADO_PED = 'ENTREGADO',
@@ -236,6 +237,7 @@ PRC: BEGIN
          CANTIDAD_PENDIENTE_PEDLIN =
            GREATEST(CANTIDAD_PEDLIN -
                     (v_albaranada + v_cantidad), 0),
+         CANTIDAD_A_ALBARANAR_PEDLIN = 0,
          ESENTREGADA_PEDLIN = CASE
            WHEN CANTIDAD_PEDLIN <= v_albaranada + v_cantidad
            THEN 'S' ELSE 'N' END,

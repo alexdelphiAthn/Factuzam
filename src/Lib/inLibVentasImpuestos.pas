@@ -688,6 +688,13 @@ begin
   Result := 0;
   if not (Assigned(ALineas) and ALineas.Active) then
     Exit;
+  // Con una linea en insercion/edicion NO se recorre: el First haria
+  // CheckBrowseMode y cancelaria la linea a medio insertar, dejando
+  // que el AfterInsert siguiera con el dataset ya en browse ('Dataset
+  // not in edit or insert mode' al anadir linea, 09/07/26). El total
+  // se refresca en el siguiente AfterPost.
+  if ALineas.State in dsEditModes then
+    Exit;
   sSufijoLinea := SufijoLineaFiscalDesdeCampo(ACampoTipoIvaLinea);
   if sSufijoLinea = '' then
     Exit;

@@ -20,17 +20,41 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
-  System.StrUtils, System.UITypes, System.Generics.Collections, Data.DB, Uni,
-  Vcl.Controls, Vcl.Graphics, Vcl.Dialogs, Vcl.ExtCtrls, cxGraphics, cxEdit,
-  cxTextEdit, cxCurrencyEdit, cxDataStorage, cxGridCustomTableView,
-  cxGridTableView, cxGridDBTableView,
+  System.StrUtils, System.UITypes, System.Generics.Collections, Data.DB,
+  Datasnap.DBClient, Uni, Vcl.Controls, Vcl.Graphics, Vcl.Dialogs,
+  Vcl.ExtCtrls, cxGraphics, cxEdit, cxTextEdit, cxButtonEdit,
+  cxCurrencyEdit,
+  cxDataStorage, cxGridCustomView,
+  cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   inLibColumnasSkuIntf, inLibGridTallasInline;
 
 type
-  TBandaPivoteVenta = (bpvPedida, bpvEntregada);
+  TBandaPivoteVenta = (bpvPedida, bpvEntregada, bpvPendiente);
 
   TCrearLineaPivoteVentaEvent = procedure(const ACodigoSku: string) of object;
   TBandaPivoteVentaEvent = procedure(ABanda: TBandaPivoteVenta) of object;
+
+  IPivoteVentaAlbaranar = interface
+    ['{8CB98D4C-21BC-47F3-8D83-8E39E876F873}']
+    function MarcarTodoAAlbaranar: Integer;
+    function VolcarAAlbaranar(ALineas: TList<TPair<string, Currency>>;
+                              out AAlmacenComun: string;
+                              out AAlmacenUnico: Boolean): Integer;
+    procedure LimpiarAAlbaranar;
+  end;
+
+  // Borrado del grupo activo del pivote. Una fila del grid en modo tallas
+  // horizontales representa un GRUPO articulo+color+precio con varias
+  // lineas SKU reales (una por talla): el host debe invocar esto desde su
+  // boton "Borrar linea" cuando el modo esta activo, porque un Delete
+  // simple sobre el dataset solo elimina la linea representante y el
+  // grupo "reaparece" al recargar el pivote con las tallas restantes.
+  IPivoteVentaBorrarGrupo = interface
+    ['{B3D1C0AA-4F5E-4C2B-9A77-0E61D8A3C512}']
+    // Borra TODAS las lineas reales del grupo con foco. Devuelve el
+    // numero de lineas borradas (0 si no hay grupo bajo el foco).
+    function BorrarGrupoActual: Integer;
+  end;
 
   TGridPivoteVentaConfig = record
     Conexion              : TUniConnection;
@@ -45,10 +69,19 @@ type
     FieldDescripcion      : string;
     FieldCantidadPedida   : string;
     FieldCantidadEntregada: string;
+    FieldCantidadAAlbaranar: string;
     FieldPrecioBase       : string;
     FieldAlmacen          : string;
     FieldAlmacenMaster    : string;
     MaxColumnas           : Integer;
+    // Documento con UNA sola cantidad por linea (facturas de venta):
+    // cada grupo articulo+color+precio pinta UNA fila (banda pedida,
+    // rotulada 'Cantidad') en vez de las tres bandas Pedido /
+    // A albaranar / Pendiente de pedidos.
+    BandaUnica            : Boolean;
+    // Rotulo de la banda de servicio ('A albaranar' por defecto;
+    // pedidos de compra la rotulan 'A recibir').
+    TextoBandaAAlbaranar  : string;
     OnCrearLineaSku       : TCrearLineaPivoteVentaEvent;
     OnBandaCambiada       : TBandaPivoteVentaEvent;
   end;
@@ -60,14 +93,13 @@ function CrearModoEntradaGridPivoteVenta(
 implementation
 
 uses
-  inLibArticulosValidador, inLibAtributosPaleta, inLibGlobalVar;
+  inLibArticulosAtributosLookup, inLibArticulosValidador,
+  inLibAtributosPaleta, inLibGenBusq, inLibGlobalVar;
 
 const
   ID_AV_SIN_TALLA = 0;
-  ALTURA_FILA_TRES_CANT = 63;
+  CAMPO_LINEA_VISTA = '__LINEA_VISTA_PV';
   ANCHO_COLUMNA_TALLA_TRES_CANT = 62;
-  ALTO_FUENTE_TALLA_TRES_CANT = -12;
-  GROSOR_LINEA_TRES_CANT = 2;
 
 type
   THackWinControl = class(TWinControl);
@@ -80,17 +112,23 @@ type
     VarSku     : string;
   end;
 
-  TGridPivoteVenta = class(TInterfacedObject, IModoEntradaGrid)
+  TGridPivoteVenta = class(TInterfacedObject, IModoEntradaGrid,
+                           IPivoteVentaAlbaranar, IPivoteVentaBorrarGrupo)
   private
     FConfig              : TConfigColumnasSku;
     FCfg                 : TGridPivoteVentaConfig;
     FGestor              : TGestorGridTallas;
+    FColLineaVista       : TcxGridDBColumn;
     FColArticulo         : TcxGridDBColumn;
     FColColor            : TcxGridDBColumn;
+    FColTipoCantidad     : TcxGridDBColumn;
     FColumnasTallas      : TArray<TcxGridDBColumn>;
     FPivotLineasRepr     : TList<Integer>;
+    FLineaBasePivot      : TDictionary<Integer, Integer>;
+    FLineaBanda          : TDictionary<Integer, TBandaPivoteVenta>;
     FPivotCantPedida     : TDictionary<Int64, Double>;
     FPivotCantEntregada  : TDictionary<Int64, Double>;
+    FPivotCantAAlbaranar : TDictionary<Int64, Double>;
     FPivotIdAc           : TDictionary<Integer, Integer>;
     FPivotSinTalla       : TDictionary<Integer, Boolean>;
     FPivotArticulo       : TDictionary<Integer, string>;
@@ -101,7 +139,16 @@ type
     FPivotVarSku         : TDictionary<Integer, string>;
     FCeldaSku            : TDictionary<Int64, string>;
     FCeldaLinea          : TDictionary<Int64, string>;
+    FCeldaAlmacen        : TDictionary<Int64, string>;
     FSkuInfo             : TDictionary<string, TSkuPivoteVentaInfo>;
+    FCdsVista            : TClientDataSet;
+    FDsVista             : TDataSource;
+    FDataSourceOrig      : TDataSource;
+    // True mientras el View del host apunta a FDsVista. Sin este flag,
+    // el destructor tocaba View.DataController con el grid YA destruido
+    // (liberacion de la interfaz en CleanupInstance al cerrar el Mto:
+    // AV en GetProvider, 08/07/26).
+    FVistaDesviada       : Boolean;
     FOnResuelto          : TSkuResueltoEvent;
     FOnEntrarEdicion     : TNotifyEvent;
     FOnSalirEdicion      : TNotifyEvent;
@@ -113,10 +160,11 @@ type
     FActualizandoGrid    : Boolean;
     FGuardandoCantidad   : Boolean;
     FEnRecarga           : Boolean;
-    FBanda               : TBandaPivoteVenta;
+    // True cuando el usuario CANCELA la paleta de color/talla al meter un
+    // articulo con variaciones: ResolverEntrada devuelve False pero el
+    // validador no debe rotular "no encontrado".
+    FEntradaCancelada    : Boolean;
     FTimerRecarga        : TTimer;
-    FAlturaFilaOriginal  : Integer;
-    FAlturaFilaAplicada  : Boolean;
     function GetModo: TModoColumnasSku;
     function GetOnResuelto: TSkuResueltoEvent;
     procedure SetOnResuelto(const AValue: TSkuResueltoEvent);
@@ -126,21 +174,31 @@ type
     procedure SetOnSalirEdicion(const AValue: TNotifyEvent);
     procedure SetAlmacenStock(const AValue: string);
     function CdsLineas: TDataSet;
+    // Posiciona el cursor de ADs en la linea real ALinea probando los
+    // formatos de numeracion segun documento: 4 digitos (pedidos
+    // '0010'), 3 digitos (facturas '010') y el entero pelado.
+    function LocalizarLineaReal(ADs: TDataSet; ALinea: Integer): Boolean;
     function CampoTexto(ADs: TDataSet; const ACampo: string): string;
     function CampoFloat(ADs: TDataSet; const ACampo: string): Double;
     procedure PonerFloat(ADs: TDataSet; const ACampo: string;
                          AValor: Double);
-    procedure FilterRecord(DataSet: TDataSet; var Accept: Boolean);
     procedure CdsAfterPost(DataSet: TDataSet);
     procedure CdsAfterScroll(DataSet: TDataSet);
+    procedure VistaBeforeDelete(DataSet: TDataSet);
+    // Borra las lineas SKU reales del grupo ALineaBase (sin recargar el
+    // pivote). Devuelve el numero de lineas borradas.
+    function BorrarLineasGrupo(ALineaBase: Integer): Integer;
     procedure ArmarRecarga;
     procedure TimerRecargaTimer(Sender: TObject);
     procedure InstalarEventosDataSet;
     procedure RestaurarEventosDataSet;
-    procedure AplicarAlturaFila;
-    procedure RestaurarAlturaFila;
     procedure CrearColumnas;
     procedure CrearGestor;
+    function EsInsercionVacia(ADs: TDataSet): Boolean;
+    procedure PrepararVistaTemporal;
+    procedure RestaurarVistaTemporal;
+    procedure ReconstruirVistaTemporal;
+    procedure CopiarLineaVista(AOrigen: TDataSet; ALineaVista: Integer);
     procedure RecargarYPublicar;
     procedure CargarCachePivot;
     function ObtenerInfoLinea(ADs: TDataSet; out ASku: string;
@@ -152,8 +210,24 @@ type
     function ResolverSkuUnicoArticulo(const ACodigoArticulo: string): string;
     function BuscarConjuntoParaIds(AIds: TList<Integer>): Integer;
     procedure AplicarVisibilidadTallas;
+    procedure ColocarBloqueColumnas;
     procedure ActualizarCaptionsLineaActiva;
     procedure PublicarCantidadesPivot;
+    function PendienteCelda(AKey: Int64): Double;
+    function PendienteBaseCelda(AKey: Int64): Double;
+    procedure AjustarAAlbaranarCache;
+    function AAlbaranarCelda(AKey: Int64): Double;
+    function LineaVistaBanda(ALineaBase: Integer;
+                             ABanda: TBandaPivoteVenta): Integer;
+    function ObtenerLineaBase(ALinea: Integer): Integer;
+    function BandaDesdeLinea(ALinea: Integer): TBandaPivoteVenta;
+    function TextoBanda(ABanda: TBandaPivoteVenta): string;
+    function ValorCantidadBanda(AKey: Int64;
+                                ABanda: TBandaPivoteVenta): Double;
+    function BuscarColumnaTallaDesde(ALineaBase, AIndiceInicial: Integer;
+                                     out ACol: TcxGridColumn): Boolean;
+    function BuscarRecordPorLineaVista(ALineaVista: Integer;
+                                       out ARecordIndex: Integer): Boolean;
     function LineaDesdeRecord(ARecord: TcxCustomGridRecord): Integer;
     function TallaAvDesdeColumna(ALinea: Integer; ACol: TcxGridColumn;
                                  out AIdAv: Integer): Boolean;
@@ -170,6 +244,8 @@ type
                               AItem: TcxCustomGridTableItem;
                               AEdit: TcxCustomEdit; var Key: Word;
                               Shift: TShiftState);
+    function GestionarEnterAAlbaranar(Sender: TcxCustomGridTableView;
+                                      AItem: TcxCustomGridTableItem): Boolean;
     procedure ViewFocusedRecordChanged(Sender: TcxCustomGridTableView;
                 APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
                 ANewItemRecordFocusingChanged: Boolean);
@@ -177,23 +253,31 @@ type
                 ACanvas: TcxCanvas;
                 AViewInfo: TcxGridTableDataCellViewInfo;
                 var ADone: Boolean);
-    procedure PintarCeldaTalla3Cantidades(ACanvas: TcxCanvas;
-                AViewInfo: TcxGridTableDataCellViewInfo;
-                APedida, AEntregada: Double);
-    procedure DibujarBordeFocused(ACanvas: TcxCanvas; const ARect: TRect);
-    procedure CeldaTallaCambiada(Sender: TObject);
+    procedure PintarCeldaTallaCantidad(ACanvas: TcxCanvas;
+                AViewInfo: TcxGridTableDataCellViewInfo; AValor: Double;
+                ABanda: TBandaPivoteVenta; AMostrarCero: Boolean);
+    procedure PintarCeldaTipoCantidad(ACanvas: TcxCanvas;
+                AViewInfo: TcxGridTableDataCellViewInfo);
+    procedure ArticuloButtonClick(Sender: TObject; AButtonIndex: Integer);
+    procedure ArticuloValidate(Sender: TObject; var DisplayValue: Variant;
+                               var ErrorText: TCaption;
+                               var Error: Boolean);
     procedure CeldaTallaValidate(Sender: TObject; var DisplayValue: Variant;
                                  var ErrorText: TCaption;
                                  var Error: Boolean);
-    procedure AlternarBanda;
     function LocalizarLineaSku(const ASku: string; APrecio: Double;
                                ATienePrecio: Boolean;
                                out ALinea: string): Boolean;
     function ResolverSkuCelda(AKey: Int64; out ASku: string): Boolean;
     function PrefijoSkuTalla(const ASku: string): string;
     function CrearLineaDesdeCelda(AKey: Int64; ACantidad: Double;
-                                  out ALineaReal: string): Boolean;
-    procedure PersistirCantidadCelda(AKey: Int64; AValor: Double);
+                                   out ALineaReal: string): Boolean;
+    procedure PersistirCantidadCelda(AKey: Int64; AValor: Double;
+                                     ABanda: TBandaPivoteVenta);
+    // Pide color/talla con la paleta de swatches (mismo selector que el
+    // modo SKU vertical) y compone el SKU completo ART/COLOR/TALLA.
+    // Devuelve '' si el usuario cancela.
+    function ElegirSkuConPaleta(const ACodArt: string): string;
   public
     constructor Create(const AConfig: TConfigColumnasSku;
                        const ACfgPivote: TGridPivoteVentaConfig);
@@ -201,6 +285,12 @@ type
     procedure Construir;
     procedure Desmontar;
     procedure MostrarEditor;
+    function MarcarTodoAAlbaranar: Integer;
+    function VolcarAAlbaranar(ALineas: TList<TPair<string, Currency>>;
+                              out AAlmacenComun: string;
+                              out AAlmacenUnico: Boolean): Integer;
+    procedure LimpiarAAlbaranar;
+    function BorrarGrupoActual: Integer;
     function ResolverEntrada(const AEntrada: string): Boolean;
   end;
 
@@ -220,10 +310,12 @@ begin
   FCfg := ACfgPivote;
   if FCfg.MaxColumnas <= 0 then
     FCfg.MaxColumnas := 20;
-  FBanda := bpvPedida;
   FPivotLineasRepr    := TList<Integer>.Create;
+  FLineaBasePivot     := TDictionary<Integer, Integer>.Create;
+  FLineaBanda         := TDictionary<Integer, TBandaPivoteVenta>.Create;
   FPivotCantPedida    := TDictionary<Int64, Double>.Create;
   FPivotCantEntregada := TDictionary<Int64, Double>.Create;
+  FPivotCantAAlbaranar := TDictionary<Int64, Double>.Create;
   FPivotIdAc          := TDictionary<Integer, Integer>.Create;
   FPivotSinTalla      := TDictionary<Integer, Boolean>.Create;
   FPivotArticulo      := TDictionary<Integer, string>.Create;
@@ -234,7 +326,11 @@ begin
   FPivotVarSku        := TDictionary<Integer, string>.Create;
   FCeldaSku           := TDictionary<Int64, string>.Create;
   FCeldaLinea         := TDictionary<Int64, string>.Create;
+  FCeldaAlmacen       := TDictionary<Int64, string>.Create;
   FSkuInfo            := TDictionary<string, TSkuPivoteVentaInfo>.Create;
+  FCdsVista           := TClientDataSet.Create(nil);
+  FDsVista            := TDataSource.Create(nil);
+  FDsVista.DataSet    := FCdsVista;
   FTimerRecarga := TTimer.Create(nil);
   FTimerRecarga.Enabled := False;
   FTimerRecarga.Interval := 1;
@@ -243,10 +339,16 @@ end;
 
 destructor TGridPivoteVenta.Destroy;
 begin
+  // Mismo orden que Desmontar: primero los eventos del dataset, luego
+  // la vista (el cambio de DataSource dispara First/AfterScroll).
   RestaurarEventosDataSet;
+  RestaurarVistaTemporal;
   FreeAndNil(FTimerRecarga);
+  FreeAndNil(FDsVista);
+  FreeAndNil(FCdsVista);
   FreeAndNil(FGestor);
   FreeAndNil(FSkuInfo);
+  FreeAndNil(FCeldaAlmacen);
   FreeAndNil(FCeldaLinea);
   FreeAndNil(FCeldaSku);
   FreeAndNil(FPivotVarSku);
@@ -257,8 +359,11 @@ begin
   FreeAndNil(FPivotArticulo);
   FreeAndNil(FPivotSinTalla);
   FreeAndNil(FPivotIdAc);
+  FreeAndNil(FPivotCantAAlbaranar);
   FreeAndNil(FPivotCantEntregada);
   FreeAndNil(FPivotCantPedida);
+  FreeAndNil(FLineaBanda);
+  FreeAndNil(FLineaBasePivot);
   FreeAndNil(FPivotLineasRepr);
   inherited;
 end;
@@ -312,6 +417,20 @@ begin
     Result := FConfig.Cds;
 end;
 
+function TGridPivoteVenta.LocalizarLineaReal(ADs: TDataSet;
+  ALinea: Integer): Boolean;
+begin
+  Result := False;
+  if (ADs <> nil) and ADs.Active and (ALinea > 0) then
+  begin
+    Result := ADs.Locate(FCfg.FieldLinea, Format('%.4d', [ALinea]), []);
+    if not Result then
+      Result := ADs.Locate(FCfg.FieldLinea, Format('%.3d', [ALinea]), []);
+    if not Result then
+      Result := ADs.Locate(FCfg.FieldLinea, IntToStr(ALinea), []);
+  end;
+end;
+
 function TGridPivoteVenta.CampoTexto(ADs: TDataSet;
   const ACampo: string): string;
 var
@@ -353,21 +472,6 @@ begin
   end;
 end;
 
-procedure TGridPivoteVenta.FilterRecord(DataSet: TDataSet;
-  var Accept: Boolean);
-var
-  iLinea: Integer;
-begin
-  Accept := True;
-  if Assigned(FOnFilterOrig) then
-    FOnFilterOrig(DataSet, Accept);
-  if Accept and (FPivotLineasRepr <> nil) then
-  begin
-    iLinea := StrToIntDef(CampoTexto(DataSet, FCfg.FieldLinea), 0);
-    Accept := FPivotLineasRepr.Contains(iLinea);
-  end;
-end;
-
 procedure TGridPivoteVenta.CdsAfterPost(DataSet: TDataSet);
 begin
   if Assigned(FAfterPostOrig) then
@@ -381,6 +485,32 @@ begin
   if Assigned(FAfterScrollOrig) then
     FAfterScrollOrig(DataSet);
   ActualizarCaptionsLineaActiva;
+end;
+
+procedure TGridPivoteVenta.VistaBeforeDelete(DataSet: TDataSet);
+var
+  iLineaBase: Integer;
+begin
+  // Delete contra la VISTA temporal (Ctrl+Supr del cxGrid, navigator...):
+  // la vista es una copia en memoria, borrar su fila no toca las lineas
+  // reales y el grupo "reaparecia" al recargar el pivote. Se redirige al
+  // borrado real del grupo completo y se aborta el delete de la copia; la
+  // recarga diferida (timer) reconstruye la vista ya sin el grupo.
+  iLineaBase := 0;
+  if DataSet.FindField(CAMPO_LINEA_VISTA) <> nil then
+    iLineaBase := ObtenerLineaBase(
+      DataSet.FieldByName(CAMPO_LINEA_VISTA).AsInteger);
+  if iLineaBase > 0 then
+  begin
+    if MessageDlg('¿Está seguro de que desea eliminar esta línea ' +
+                  '(todas sus tallas)?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    begin
+      if BorrarLineasGrupo(iLineaBase) > 0 then
+        ArmarRecarga;
+    end;
+  end;
+  Abort;
 end;
 
 procedure TGridPivoteVenta.ArmarRecarga;
@@ -409,7 +539,6 @@ begin
     FFilteredOrig  := Ds.Filtered;
     FAfterPostOrig := Ds.AfterPost;
     FAfterScrollOrig := Ds.AfterScroll;
-    Ds.OnFilterRecord := FilterRecord;
     Ds.AfterPost := CdsAfterPost;
     Ds.AfterScroll := CdsAfterScroll;
     FEventosInstalados := True;
@@ -423,30 +552,14 @@ begin
   Ds := CdsLineas;
   if (Ds <> nil) and FEventosInstalados then
   begin
-    Ds.Filtered := FFilteredOrig;
+    // Primero desenganchar los hooks y LUEGO restaurar Filtered: el
+    // cambio de filtro refresca el dataset y dispara AfterScroll, que
+    // no debe caer ya en los handlers del pivote.
     Ds.OnFilterRecord := FOnFilterOrig;
     Ds.AfterPost := FAfterPostOrig;
     Ds.AfterScroll := FAfterScrollOrig;
     FEventosInstalados := False;
-  end;
-end;
-
-procedure TGridPivoteVenta.AplicarAlturaFila;
-begin
-  if (FConfig.View <> nil) and (not FAlturaFilaAplicada) then
-  begin
-    FAlturaFilaOriginal := FConfig.View.OptionsView.DataRowHeight;
-    FConfig.View.OptionsView.DataRowHeight := ALTURA_FILA_TRES_CANT;
-    FAlturaFilaAplicada := True;
-  end;
-end;
-
-procedure TGridPivoteVenta.RestaurarAlturaFila;
-begin
-  if (FConfig.View <> nil) and FAlturaFilaAplicada then
-  begin
-    FConfig.View.OptionsView.DataRowHeight := FAlturaFilaOriginal;
-    FAlturaFilaAplicada := False;
+    Ds.Filtered := FFilteredOrig;
   end;
 end;
 
@@ -457,16 +570,34 @@ var
 begin
   FConfig.View.BeginUpdate;
   try
+    FColLineaVista := FConfig.View.CreateColumn;
+    FColLineaVista.DataBinding.FieldName := CAMPO_LINEA_VISTA;
+    FColLineaVista.Visible := False;
+    FColLineaVista.VisibleForCustomization := False;
     FColArticulo := FConfig.View.CreateColumn;
     FColArticulo.Caption := 'Artículo';
     FColArticulo.DataBinding.FieldName := FConfig.Campos.CodigoArt;
     FColArticulo.Width := 130;
     FColArticulo.Options.Editing := True;
+    FColArticulo.PropertiesClass := TcxButtonEditProperties;
+    with TcxButtonEditProperties(FColArticulo.Properties) do
+    begin
+      Buttons.Clear;
+      with Buttons.Add do
+        Kind := bkEllipsis;
+      OnButtonClick := ArticuloButtonClick;
+      OnValidate := ArticuloValidate;
+    end;
     FColColor := FConfig.View.CreateColumn;
     FColColor.Caption := 'Color';
     FColColor.Width := 95;
     FColColor.Options.Editing := False;
     FColColor.DataBinding.ValueTypeClass := TcxStringValueType;
+    FColTipoCantidad := FConfig.View.CreateColumn;
+    FColTipoCantidad.Caption := 'Tipo';
+    FColTipoCantidad.Width := 105;
+    FColTipoCantidad.Options.Editing := False;
+    FColTipoCantidad.DataBinding.ValueTypeClass := TcxStringValueType;
     SetLength(FColumnasTallas, FCfg.MaxColumnas);
     for i := 1 to FCfg.MaxColumnas do
     begin
@@ -480,8 +611,6 @@ begin
       TcxCurrencyEditProperties(Col.Properties).DisplayFormat := '#,##0.##';
       TcxCurrencyEditProperties(Col.Properties).
         UseDisplayFormatWhenEditing := True;
-      TcxCurrencyEditProperties(Col.Properties).OnEditValueChanged :=
-        CeldaTallaCambiada;
       TcxCurrencyEditProperties(Col.Properties).OnValidate :=
         CeldaTallaValidate;
       FColumnasTallas[i - 1] := Col;
@@ -511,11 +640,171 @@ begin
   FGestor := TGestorGridTallas.Create(CfgT);
 end;
 
+function TGridPivoteVenta.EsInsercionVacia(ADs: TDataSet): Boolean;
+begin
+  Result := (ADs <> nil) and (ADs.State = dsInsert) and
+            (CampoTexto(ADs, FCfg.FieldArt) = '') and
+            (CampoTexto(ADs, FCfg.FieldSku) = '') and
+            (CampoTexto(ADs, 'CODIGOPRODPS_PEDLIN') = '');
+end;
+
+procedure TGridPivoteVenta.PrepararVistaTemporal;
+var
+  Ds: TDataSet;
+  Campo: TField;
+  Def: TFieldDef;
+  i: Integer;
+begin
+  Ds := CdsLineas;
+  if (Ds <> nil) and (FCdsVista <> nil) then
+  begin
+    if FCdsVista.Active then
+      FCdsVista.Close;
+    FCdsVista.FieldDefs.Clear;
+    for i := 0 to Ds.Fields.Count - 1 do
+    begin
+      Campo := Ds.Fields[i];
+      if Campo.FieldKind = fkData then
+      begin
+        Def := FCdsVista.FieldDefs.AddFieldDef;
+        Def.Name := Campo.FieldName;
+        Def.DataType := Campo.DataType;
+        Def.Size := Campo.Size;
+        Def.Required := False;
+      end;
+    end;
+    Def := FCdsVista.FieldDefs.AddFieldDef;
+    Def.Name := CAMPO_LINEA_VISTA;
+    Def.DataType := ftInteger;
+    Def.Required := False;
+    FCdsVista.CreateDataSet;
+    // Intercepta Ctrl+Supr / navigator sobre la vista: redirige al
+    // borrado real del grupo (todas las tallas) y aborta el delete de
+    // la copia en memoria.
+    FCdsVista.BeforeDelete := VistaBeforeDelete;
+    if (FConfig.View <> nil) and
+       (FConfig.View.DataController.DataSource <> FDsVista) then
+    begin
+      FDataSourceOrig := FConfig.View.DataController.DataSource;
+      FConfig.View.DataController.DataSource := FDsVista;
+    end;
+    FVistaDesviada := FConfig.View <> nil;
+  end;
+end;
+
+procedure TGridPivoteVenta.RestaurarVistaTemporal;
+begin
+  // Solo se toca el View si la vista temporal sigue montada: tras un
+  // Desmontar del host no queda nada que restaurar y el destructor no
+  // debe dereferenciar un grid posiblemente destruido.
+  if FVistaDesviada then
+  begin
+    try
+      if (FConfig.View <> nil) and
+         (not (csDestroying in FConfig.View.ComponentState)) then
+        FConfig.View.DataController.DataSource := FDataSourceOrig;
+    except
+      // Cierre defensivo: si DevExpress ya ha destruido el provider,
+      // no hay nada que restaurar y no debemos impedir cerrar la ficha.
+    end;
+    FVistaDesviada := False;
+  end;
+  FDataSourceOrig := nil;
+end;
+
+procedure TGridPivoteVenta.CopiarLineaVista(AOrigen: TDataSet;
+  ALineaVista: Integer);
+var
+  CampoOri, CampoDst: TField;
+  i: Integer;
+begin
+  if (AOrigen <> nil) and (FCdsVista <> nil) and FCdsVista.Active then
+  begin
+    FCdsVista.Append;
+    for i := 0 to AOrigen.Fields.Count - 1 do
+    begin
+      CampoOri := AOrigen.Fields[i];
+      CampoDst := FCdsVista.FindField(CampoOri.FieldName);
+      if (CampoOri.FieldKind = fkData) and (CampoDst <> nil) and
+         (not (CampoOri.DataType in [ftBlob, ftGraphic, ftMemo,
+                                    ftFmtMemo, ftBytes, ftVarBytes,
+                                    ftWideMemo])) then
+        CampoDst.Value := CampoOri.Value;
+    end;
+    CampoDst := FCdsVista.FindField(CAMPO_LINEA_VISTA);
+    if CampoDst <> nil then
+      CampoDst.AsInteger := ALineaVista;
+    // El numero de linea visible ya viene copiado de la linea BASE
+    // real (el Locate previo posiciono en ella): se conserva su
+    // formato original en vez de imponer 4 digitos.
+    FCdsVista.Post;
+  end;
+end;
+
+procedure TGridPivoteVenta.ReconstruirVistaTemporal;
+var
+  Ds: TDataSet;
+  Bm: TBookmark;
+  iLineaVista, iLineaBase: Integer;
+  bFiltrado, bAnadida: Boolean;
+begin
+  Ds := CdsLineas;
+  if (Ds <> nil) and Ds.Active and (FCdsVista <> nil) and
+     FCdsVista.Active then
+  begin
+    FCdsVista.DisableControls;
+    try
+      FCdsVista.EmptyDataSet;
+      if EsInsercionVacia(Ds) or Ds.IsEmpty then
+      begin
+        FCdsVista.Append;
+        if FCdsVista.FindField(CAMPO_LINEA_VISTA) <> nil then
+          FCdsVista.FieldByName(CAMPO_LINEA_VISTA).AsInteger := 0;
+        if FCdsVista.FindField(FCfg.FieldLinea) <> nil then
+          FCdsVista.FieldByName(FCfg.FieldLinea).AsString := '0000';
+        FCdsVista.Post;
+      end
+      else
+      begin
+        Ds.DisableControls;
+        Bm := nil;
+        bFiltrado := Ds.Filtered;
+        try
+          if not Ds.IsEmpty then
+            Bm := Ds.GetBookmark;
+          Ds.Filtered := False;
+          for iLineaVista in FPivotLineasRepr do
+          begin
+            iLineaBase := ObtenerLineaBase(iLineaVista);
+            // El formato del numero de linea depende del documento:
+            // sin probar todos, las lineas no se copiaban a la vista
+            // temporal y "desaparecian" (facturas '010', 09/07/26).
+            bAnadida := LocalizarLineaReal(Ds, iLineaBase);
+            if bAnadida then
+              CopiarLineaVista(Ds, iLineaVista);
+          end;
+          if FCdsVista.IsEmpty and (not Ds.IsEmpty) then
+            CopiarLineaVista(Ds, 0);
+          if (Bm <> nil) and Ds.BookmarkValid(Bm) then
+            Ds.GotoBookmark(Bm);
+        finally
+          Ds.Filtered := bFiltrado;
+          Ds.EnableControls;
+          if Bm <> nil then
+            Ds.FreeBookmark(Bm);
+        end;
+      end;
+    finally
+      FCdsVista.EnableControls;
+    end;
+  end;
+end;
+
 procedure TGridPivoteVenta.Construir;
 begin
   CrearColumnas;
   CrearGestor;
-  AplicarAlturaFila;
+  PrepararVistaTemporal;
   FConfig.View.OnEditing := ViewEditing;
   FConfig.View.OnInitEdit := ViewInitEdit;
   FConfig.View.OnEditKeyDown := ViewEditKeyDown;
@@ -527,7 +816,6 @@ end;
 
 procedure TGridPivoteVenta.Desmontar;
 begin
-  RestaurarAlturaFila;
   if FConfig.View <> nil then
   begin
     FConfig.View.OnEditing := nil;
@@ -536,20 +824,34 @@ begin
     FConfig.View.OnFocusedRecordChanged := nil;
     FConfig.View.OnCustomDrawCell := nil;
   end;
+  // Eventos del dataset ANTES de restaurar la vista: el cambio de
+  // DataSource recarga el grid (LoadStorage -> First -> AfterScroll) y
+  // con CdsAfterScroll aun enganchado se leia un grid a medio cargar
+  // (EListError en LineaDesdeRecord al pasar a otro modo, 08/07/26).
   RestaurarEventosDataSet;
+  RestaurarVistaTemporal;
 end;
 
 procedure TGridPivoteVenta.MostrarEditor;
 begin
   if (FConfig.View <> nil) and (FColArticulo <> nil) then
   begin
+    RecargarYPublicar;
+    if (FConfig.View.DataController <> nil) and
+       (FConfig.View.DataController.RecordCount > 0) then
+      FConfig.View.DataController.FocusedRecordIndex := 0;
+    if Assigned(FConfig.View.Site) and FConfig.View.Site.CanFocus then
+      FConfig.View.Site.SetFocus;
     FColArticulo.Focused := True;
+    FConfig.View.Controller.FocusedItem := FColArticulo;
     try
       FConfig.View.Controller.EditingController.ShowEdit;
     except
       on E: EInvalidOperation do
         ;
     end;
+    if not FConfig.View.Controller.EditingController.IsEditing then
+      ArticuloButtonClick(nil, 0);
   end;
 end;
 
@@ -782,14 +1084,17 @@ var
   ParTallas: TPair<Integer, TList<Integer>>;
   Info: TSkuPivoteVentaInfo;
   sArt, sSku, sKey, sLinea, sPrefijo, sVarSku: string;
-  iLinea, iLineaRepr, iAc: Integer;
-  rPedida, rEntregada, rPrecio: Double;
+  iLinea, iLineaRepr, iAc, iMaxBandas: Integer;
+  rPedida, rEntregada, rAAlbaranar, rPrecio: Double;
   iKeyPivot: Int64;
   bFiltrado: Boolean;
 begin
   FPivotLineasRepr.Clear;
+  FLineaBasePivot.Clear;
+  FLineaBanda.Clear;
   FPivotCantPedida.Clear;
   FPivotCantEntregada.Clear;
+  FPivotCantAAlbaranar.Clear;
   FPivotIdAc.Clear;
   FPivotSinTalla.Clear;
   FPivotArticulo.Clear;
@@ -800,8 +1105,15 @@ begin
   FPivotVarSku.Clear;
   FCeldaSku.Clear;
   FCeldaLinea.Clear;
+  FCeldaAlmacen.Clear;
+  // Bandas visuales por grupo: 3 en pedidos (Pedido / A albaranar /
+  // Pendiente), 1 en documentos de cantidad unica (BandaUnica).
+  iMaxBandas := 3;
+  if FCfg.BandaUnica then
+    iMaxBandas := 1;
   Ds := CdsLineas;
-  if (Ds <> nil) and Ds.Active and (not Ds.IsEmpty) then
+  if (Ds <> nil) and Ds.Active and (not Ds.IsEmpty) and
+     (not EsInsercionVacia(Ds)) then
   begin
     DictRepr := TDictionary<string, Integer>.Create;
     DictTallas := TObjectDictionary<Integer, TList<Integer>>.Create(
@@ -824,11 +1136,16 @@ begin
           ObtenerInfoLinea(Ds, sSku, Info);
           sKey := sArt + '|' + IntToStr(Info.ColorAv) + '|' +
             FloatToStrF(rPrecio, ffGeneral, 15, 4);
+          // Linea SIN talla resoluble: fila propia. Si fusionaran por
+          // articulo+color+precio, varias lineas sin SKU del mismo
+          // articulo se machacarian entre si en la celda 'Cantidad'
+          // (solo se veia la ultima, pedidos de compra 09/07/26).
+          if Info.TallaAv <= 0 then
+            sKey := sKey + '|L' + sLinea;
           if not DictRepr.TryGetValue(sKey, iLineaRepr) then
           begin
             iLineaRepr := iLinea;
             DictRepr.Add(sKey, iLineaRepr);
-            FPivotLineasRepr.Add(iLineaRepr);
             FPivotArticulo.AddOrSetValue(iLineaRepr, sArt);
             FPivotColorAv.AddOrSetValue(iLineaRepr, Info.ColorAv);
             FPivotColorTexto.AddOrSetValue(iLineaRepr, Info.ColorTexto);
@@ -842,9 +1159,33 @@ begin
               sVarSku := 'TC';
             FPivotVarSku.AddOrSetValue(iLineaRepr, sVarSku);
             DictTallas.Add(iLineaRepr, TList<Integer>.Create);
+            FPivotLineasRepr.Add(LineaVistaBanda(iLineaRepr, bpvPedida));
+            FLineaBasePivot.AddOrSetValue(
+              LineaVistaBanda(iLineaRepr, bpvPedida), iLineaRepr);
+            FLineaBanda.AddOrSetValue(
+              LineaVistaBanda(iLineaRepr, bpvPedida), bpvPedida);
+            if iMaxBandas >= 2 then
+            begin
+              FPivotLineasRepr.Add(
+                LineaVistaBanda(iLineaRepr, bpvEntregada));
+              FLineaBasePivot.AddOrSetValue(
+                LineaVistaBanda(iLineaRepr, bpvEntregada), iLineaRepr);
+              FLineaBanda.AddOrSetValue(
+                LineaVistaBanda(iLineaRepr, bpvEntregada), bpvEntregada);
+            end;
+            if iMaxBandas >= 3 then
+            begin
+              FPivotLineasRepr.Add(
+                LineaVistaBanda(iLineaRepr, bpvPendiente));
+              FLineaBasePivot.AddOrSetValue(
+                LineaVistaBanda(iLineaRepr, bpvPendiente), iLineaRepr);
+              FLineaBanda.AddOrSetValue(
+                LineaVistaBanda(iLineaRepr, bpvPendiente), bpvPendiente);
+            end;
           end;
           rPedida := CampoFloat(Ds, FCfg.FieldCantidadPedida);
           rEntregada := CampoFloat(Ds, FCfg.FieldCantidadEntregada);
+          rAAlbaranar := CampoFloat(Ds, FCfg.FieldCantidadAAlbaranar);
           if Info.TallaAv > 0 then
           begin
             if not DictTallas[iLineaRepr].Contains(Info.TallaAv) then
@@ -852,8 +1193,11 @@ begin
             iKeyPivot := Int64(iLineaRepr) * 100000 + Info.TallaAv;
             FPivotCantPedida.AddOrSetValue(iKeyPivot, rPedida);
             FPivotCantEntregada.AddOrSetValue(iKeyPivot, rEntregada);
+            FPivotCantAAlbaranar.AddOrSetValue(iKeyPivot, rAAlbaranar);
             FCeldaSku.AddOrSetValue(iKeyPivot, sSku);
             FCeldaLinea.AddOrSetValue(iKeyPivot, sLinea);
+            FCeldaAlmacen.AddOrSetValue(iKeyPivot,
+              CampoTexto(Ds, FCfg.FieldAlmacen));
           end
           else
           begin
@@ -861,8 +1205,11 @@ begin
             iKeyPivot := Int64(iLineaRepr) * 100000 + ID_AV_SIN_TALLA;
             FPivotCantPedida.AddOrSetValue(iKeyPivot, rPedida);
             FPivotCantEntregada.AddOrSetValue(iKeyPivot, rEntregada);
+            FPivotCantAAlbaranar.AddOrSetValue(iKeyPivot, rAAlbaranar);
             FCeldaSku.AddOrSetValue(iKeyPivot, sSku);
             FCeldaLinea.AddOrSetValue(iKeyPivot, sLinea);
+            FCeldaAlmacen.AddOrSetValue(iKeyPivot,
+              CampoTexto(Ds, FCfg.FieldAlmacen));
           end;
         end;
         Ds.Next;
@@ -883,6 +1230,7 @@ begin
       FreeAndNil(DictTallas);
       FreeAndNil(DictRepr);
     end;
+    AjustarAAlbaranarCache;
   end;
 end;
 
@@ -916,16 +1264,74 @@ begin
   ActualizarCaptionsLineaActiva;
 end;
 
+procedure TGridPivoteVenta.ColocarBloqueColumnas;
+var
+  i, iBase, iDestino: Integer;
+  bColocado: Boolean;
+begin
+  // El bloque de entrada del pivote (LineaVista oculta, Articulo, Color,
+  // Tipo y tallas) va SIEMPRE delante de las columnas del documento,
+  // justo detras del Nro de linea del host (Index 0). Se reaplica en
+  // cada recarga: es idempotente y corrige cualquier recolocacion
+  // externa (perfiles de usuario, reconstrucciones del host, 09/07/26).
+  if (FConfig.View <> nil) and (FColLineaVista <> nil) and
+     (FColArticulo <> nil) and (FColColor <> nil) and
+     (FColTipoCantidad <> nil) then
+  begin
+    iBase := 1;
+    if FConfig.View.ColumnCount <= 1 then
+      iBase := 0;
+    bColocado := (FColLineaVista.Index = iBase) and
+                 (FColArticulo.Index = iBase + 1) and
+                 (FColColor.Index = iBase + 2) and
+                 (FColTipoCantidad.Index = iBase + 3);
+    if bColocado then
+    begin
+      for i := 0 to High(FColumnasTallas) do
+        if (FColumnasTallas[i] <> nil) and
+           (FColumnasTallas[i].Index <> iBase + 4 + i) then
+          bColocado := False;
+    end;
+    if not bColocado then
+    begin
+      FConfig.View.BeginUpdate;
+      try
+        // Asignacion en orden de destino ascendente: cada Index inserta
+        // la columna en su posicion final y desplaza el resto.
+        iDestino := iBase;
+        FColLineaVista.Index := iDestino;
+        Inc(iDestino);
+        FColArticulo.Index := iDestino;
+        Inc(iDestino);
+        FColColor.Index := iDestino;
+        Inc(iDestino);
+        FColTipoCantidad.Index := iDestino;
+        Inc(iDestino);
+        for i := 0 to High(FColumnasTallas) do
+        begin
+          if FColumnasTallas[i] <> nil then
+          begin
+            FColumnasTallas[i].Index := iDestino;
+            Inc(iDestino);
+          end;
+        end;
+      finally
+        FConfig.View.EndUpdate;
+      end;
+    end;
+  end;
+end;
+
 procedure TGridPivoteVenta.ActualizarCaptionsLineaActiva;
 var
-  Ds: TDataSet;
-  iLinea, iAc, i: Integer;
+  iLinea, iLineaVista, iAc, i: Integer;
   Arr: TArrPosConjunto;
 begin
   iLinea := 0;
-  Ds := CdsLineas;
-  if (Ds <> nil) and Ds.Active and (not Ds.IsEmpty) then
-    iLinea := StrToIntDef(CampoTexto(Ds, FCfg.FieldLinea), 0);
+  iLineaVista := 0;
+  if (FConfig.View <> nil) and (FConfig.View.Controller <> nil) then
+    iLineaVista := LineaDesdeRecord(FConfig.View.Controller.FocusedRecord);
+  iLinea := ObtenerLineaBase(iLineaVista);
   iAc := 0;
   if iLinea > 0 then
     FPivotIdAc.TryGetValue(iLinea, iAc);
@@ -947,18 +1353,193 @@ begin
   end;
 end;
 
+function TGridPivoteVenta.PendienteBaseCelda(AKey: Int64): Double;
+var
+  rPedida, rEntregada: Double;
+begin
+  rPedida := 0;
+  rEntregada := 0;
+  FPivotCantPedida.TryGetValue(AKey, rPedida);
+  FPivotCantEntregada.TryGetValue(AKey, rEntregada);
+  Result := rPedida - rEntregada;
+  if Result < 0 then
+    Result := 0;
+end;
+
+function TGridPivoteVenta.PendienteCelda(AKey: Int64): Double;
+begin
+  Result := PendienteBaseCelda(AKey) - AAlbaranarCelda(AKey);
+  if Result < 0 then
+    Result := 0;
+end;
+
+function TGridPivoteVenta.AAlbaranarCelda(AKey: Int64): Double;
+begin
+  Result := 0;
+  FPivotCantAAlbaranar.TryGetValue(AKey, Result);
+end;
+
+function TGridPivoteVenta.LineaVistaBanda(ALineaBase: Integer;
+  ABanda: TBandaPivoteVenta): Integer;
+begin
+  Result := (ALineaBase * 10) + Ord(ABanda);
+end;
+
+procedure TGridPivoteVenta.AjustarAAlbaranarCache;
+var
+  Borrar: TList<Int64>;
+  Cambiar: TDictionary<Int64, Double>;
+  Par: TPair<Int64, Double>;
+  iKey: Int64;
+  rMax, rValor: Double;
+begin
+  Borrar := TList<Int64>.Create;
+  Cambiar := TDictionary<Int64, Double>.Create;
+  try
+    for Par in FPivotCantAAlbaranar do
+    begin
+      if not FCeldaLinea.ContainsKey(Par.Key) then
+        Borrar.Add(Par.Key)
+      else
+      begin
+        rMax := PendienteBaseCelda(Par.Key);
+        rValor := Par.Value;
+        if rValor > rMax then
+          rValor := rMax;
+        if rValor <= 0 then
+          Borrar.Add(Par.Key)
+        else if Abs(rValor - Par.Value) > 0.000001 then
+          Cambiar.AddOrSetValue(Par.Key, rValor);
+      end;
+    end;
+    for iKey in Borrar do
+      FPivotCantAAlbaranar.Remove(iKey);
+    for Par in Cambiar do
+      FPivotCantAAlbaranar.AddOrSetValue(Par.Key, Par.Value);
+  finally
+    FreeAndNil(Cambiar);
+    FreeAndNil(Borrar);
+  end;
+end;
+
+function TGridPivoteVenta.ObtenerLineaBase(ALinea: Integer): Integer;
+begin
+  if not FLineaBasePivot.TryGetValue(ALinea, Result) then
+    Result := ALinea;
+end;
+
+function TGridPivoteVenta.BandaDesdeLinea(
+  ALinea: Integer): TBandaPivoteVenta;
+begin
+  if not FLineaBanda.TryGetValue(ALinea, Result) then
+    Result := bpvPedida;
+end;
+
+function TGridPivoteVenta.TextoBanda(
+  ABanda: TBandaPivoteVenta): string;
+begin
+  if FCfg.BandaUnica then
+    Result := 'Cantidad'
+  else
+    case ABanda of
+      bpvPedida:
+        Result := 'Pedido';
+      bpvEntregada:
+        begin
+          Result := FCfg.TextoBandaAAlbaranar;
+          if Result = '' then
+            Result := 'A albaranar';
+        end;
+    else
+      Result := 'Pendiente';
+    end;
+end;
+
+function TGridPivoteVenta.ValorCantidadBanda(AKey: Int64;
+  ABanda: TBandaPivoteVenta): Double;
+begin
+  Result := 0;
+  case ABanda of
+    bpvPedida:
+      FPivotCantPedida.TryGetValue(AKey, Result);
+    bpvEntregada:
+      Result := AAlbaranarCelda(AKey);
+  else
+    Result := PendienteCelda(AKey);
+  end;
+end;
+
+function TGridPivoteVenta.BuscarColumnaTallaDesde(ALineaBase,
+  AIndiceInicial: Integer; out ACol: TcxGridColumn): Boolean;
+var
+  i, iIdAv: Integer;
+begin
+  Result := False;
+  ACol := nil;
+  i := AIndiceInicial;
+  if i < 0 then
+    i := 0;
+  while (not Result) and (i <= High(FColumnasTallas)) do
+  begin
+    if (FColumnasTallas[i] <> nil) and FColumnasTallas[i].Visible and
+       TallaAvDesdeColumna(ALineaBase, FColumnasTallas[i], iIdAv) then
+    begin
+      ACol := FColumnasTallas[i];
+      Result := True;
+    end;
+    Inc(i);
+  end;
+end;
+
+function TGridPivoteVenta.BuscarRecordPorLineaVista(ALineaVista: Integer;
+  out ARecordIndex: Integer): Boolean;
+var
+  ColLinea: TcxGridColumn;
+  i, iLinea: Integer;
+  vLinea: Variant;
+begin
+  Result := False;
+  ARecordIndex := -1;
+  ColLinea := nil;
+  if FConfig.View <> nil then
+  begin
+    ColLinea := FConfig.View.GetColumnByFieldName(CAMPO_LINEA_VISTA);
+    if ColLinea = nil then
+      ColLinea := FConfig.View.GetColumnByFieldName(FCfg.FieldLinea);
+  end;
+  if ColLinea <> nil then
+  begin
+    i := 0;
+    while (not Result) and
+          (i < FConfig.View.DataController.RecordCount) do
+    begin
+      vLinea := FConfig.View.DataController.Values[i, ColLinea.Index];
+      iLinea := StrToIntDef(VarToStr(vLinea), 0);
+      if iLinea = ALineaVista then
+      begin
+        ARecordIndex := i;
+        Result := True;
+      end;
+      Inc(i);
+    end;
+  end;
+end;
+
 procedure TGridPivoteVenta.PublicarCantidadesPivot;
 var
   ColLinea: TcxGridColumn;
   vLinea: Variant;
-  iLinea, iAc, recIdx, i, iKey: Integer;
+  iLinea, iLineaVista, iAc, recIdx, i, iKey: Integer;
   iKeyPivot: Int64;
   rCant: Double;
   Arr: TArrPosConjunto;
+  Banda: TBandaPivoteVenta;
 begin
   if (FConfig.View <> nil) and (not FActualizandoGrid) then
   begin
-    ColLinea := FConfig.View.GetColumnByFieldName(FCfg.FieldLinea);
+    ColLinea := FConfig.View.GetColumnByFieldName(CAMPO_LINEA_VISTA);
+    if ColLinea = nil then
+      ColLinea := FConfig.View.GetColumnByFieldName(FCfg.FieldLinea);
     if ColLinea <> nil then
     begin
       FActualizandoGrid := True;
@@ -968,20 +1549,26 @@ begin
         begin
           vLinea := FConfig.View.DataController.Values[recIdx,
                                                        ColLinea.Index];
-          iLinea := StrToIntDef(VarToStr(vLinea), 0);
+          iLineaVista := StrToIntDef(VarToStr(vLinea), 0);
+          iLinea := ObtenerLineaBase(iLineaVista);
           if iLinea > 0 then
           begin
+            Banda := BandaDesdeLinea(iLineaVista);
+            FConfig.View.DataController.Values[recIdx,
+              FColTipoCantidad.Index] := TextoBanda(Banda);
+            for i := 0 to High(FColumnasTallas) do
+            begin
+              if FColumnasTallas[i].Visible then
+                FConfig.View.DataController.Values[recIdx,
+                  FColumnasTallas[i].Index] := Null;
+            end;
             if FPivotColorTexto.ContainsKey(iLinea) then
               FConfig.View.DataController.Values[recIdx, FColColor.Index] :=
                 FPivotColorTexto[iLinea];
             if FPivotSinTalla.ContainsKey(iLinea) then
             begin
               iKeyPivot := Int64(iLinea) * 100000 + ID_AV_SIN_TALLA;
-              rCant := 0;
-              if FBanda = bpvPedida then
-                FPivotCantPedida.TryGetValue(iKeyPivot, rCant)
-              else
-                FPivotCantEntregada.TryGetValue(iKeyPivot, rCant);
+              rCant := ValorCantidadBanda(iKeyPivot, Banda);
               if rCant <> 0 then
                 FConfig.View.DataController.Values[recIdx,
                   FColumnasTallas[0].Index] := rCant
@@ -998,11 +1585,7 @@ begin
                   Break;
                 iKey := Arr[i].IdAv;
                 iKeyPivot := Int64(iLinea) * 100000 + iKey;
-                rCant := 0;
-                if FBanda = bpvPedida then
-                  FPivotCantPedida.TryGetValue(iKeyPivot, rCant)
-                else
-                  FPivotCantEntregada.TryGetValue(iKeyPivot, rCant);
+                rCant := ValorCantidadBanda(iKeyPivot, Banda);
                 if rCant <> 0 then
                   FConfig.View.DataController.Values[recIdx,
                     FColumnasTallas[i].Index] := rCant
@@ -1029,8 +1612,9 @@ begin
   if (Ds <> nil) and Ds.Active then
   begin
     CargarCachePivot;
-    Ds.Filtered := True;
+    ReconstruirVistaTemporal;
     AplicarVisibilidadTallas;
+    ColocarBloqueColumnas;
     PublicarCantidadesPivot;
   end;
 end;
@@ -1045,7 +1629,9 @@ begin
   if (ARecord <> nil) and (FConfig.View <> nil) then
   begin
     try
-      ColLinea := FConfig.View.GetColumnByFieldName(FCfg.FieldLinea);
+      ColLinea := FConfig.View.GetColumnByFieldName(CAMPO_LINEA_VISTA);
+      if ColLinea = nil then
+        ColLinea := FConfig.View.GetColumnByFieldName(FCfg.FieldLinea);
     except
       ColLinea := nil;
     end;
@@ -1072,20 +1658,21 @@ end;
 function TGridPivoteVenta.TallaAvDesdeColumna(ALinea: Integer;
   ACol: TcxGridColumn; out AIdAv: Integer): Boolean;
 var
-  iAc: Integer;
+  iAc, iLineaBase: Integer;
   Arr: TArrPosConjunto;
 begin
   Result := False;
   AIdAv := 0;
-  if (ALinea > 0) and (ACol <> nil) and EsColumnaTalla(ACol) then
+  iLineaBase := ObtenerLineaBase(ALinea);
+  if (iLineaBase > 0) and (ACol <> nil) and EsColumnaTalla(ACol) then
   begin
-    if FPivotSinTalla.ContainsKey(ALinea) then
+    if FPivotSinTalla.ContainsKey(iLineaBase) then
     begin
       Result := ACol.Tag = 1;
       if Result then
         AIdAv := ID_AV_SIN_TALLA;
     end
-    else if FPivotIdAc.TryGetValue(ALinea, iAc) then
+    else if FPivotIdAc.TryGetValue(iLineaBase, iAc) then
     begin
       Arr := FGestor.GetPosicionesConjunto(iAc);
       Result := ACol.Tag <= Length(Arr);
@@ -1126,6 +1713,11 @@ begin
   begin
     iLinea := LineaDesdeRecord(Sender.Controller.FocusedRecord);
     AAllow := TallaAvDesdeColumna(iLinea, TcxGridColumn(AItem), iIdAv);
+  end
+  else if AItem = FColArticulo then
+  begin
+    iLinea := LineaDesdeRecord(Sender.Controller.FocusedRecord);
+    AAllow := (iLinea = 0) or (BandaDesdeLinea(iLinea) = bpvPedida);
   end;
 end;
 
@@ -1137,9 +1729,31 @@ end;
 
 procedure TGridPivoteVenta.ViewInitEdit(Sender: TcxCustomGridTableView;
   AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
+var
+  Rec: TcxCustomGridRecord;
+  iLinea, iLineaBase, iIdAv: Integer;
+  iKey: Int64;
+  Banda: TBandaPivoteVenta;
+  rValor: Double;
 begin
   if Assigned(FOnEntrarEdicion) then
     FOnEntrarEdicion(AEdit);
+  if EsColumnaTalla(AItem) and (Sender <> nil) and (AEdit <> nil) then
+  begin
+    Rec := Sender.Controller.FocusedRecord;
+    iLinea := LineaDesdeRecord(Rec);
+    iLineaBase := ObtenerLineaBase(iLinea);
+    Banda := BandaDesdeLinea(iLinea);
+    if TallaAvDesdeColumna(iLineaBase, TcxGridColumn(AItem), iIdAv) then
+    begin
+      iKey := Int64(iLineaBase) * 100000 + iIdAv;
+      rValor := ValorCantidadBanda(iKey, Banda);
+      if Abs(rValor) > 0.000001 then
+        AEdit.EditValue := rValor
+      else
+        AEdit.EditValue := Null;
+    end;
+  end;
   if AEdit is TWinControl then
     THackWinControl(AEdit).OnExit := EditorSalir;
   if AEdit is TcxCustomTextEdit then
@@ -1152,20 +1766,98 @@ procedure TGridPivoteVenta.ViewEditKeyDown(Sender: TcxCustomGridTableView;
 var
   sEntrada: string;
 begin
-  if (Key = VK_F2) and (ssCtrl in Shift) then
+  if (AItem = FColArticulo) and
+     ((Key = VK_F3) or ((Key = VK_RETURN) and (ssCtrl in Shift))) then
   begin
-    AlternarBanda;
     Key := 0;
+    ArticuloButtonClick(AEdit, 0);
   end
+  else if (Key = VK_RETURN) and GestionarEnterAAlbaranar(Sender, AItem) then
+    Key := 0
   else if (Key = VK_RETURN) and (AItem = FColArticulo) then
   begin
     sEntrada := Trim(VarToStr(AEdit.EditingValue));
-    if sEntrada = '' then
-      sEntrada := Trim(VarToStr(AEdit.EditValue));
     if sEntrada <> '' then
+      Sender.Controller.EditingController.HideEdit(True);
+    Key := 0;
+  end;
+end;
+
+function TGridPivoteVenta.GestionarEnterAAlbaranar(
+  Sender: TcxCustomGridTableView;
+  AItem: TcxCustomGridTableItem): Boolean;
+var
+  ColDest: TcxGridColumn;
+  ColLinea: TcxGridColumn;
+  Rec: TcxCustomGridRecord;
+  iLinea, iLineaBase, iLineaVistaDest, iTagDest: Integer;
+  iRecAct, iRecDest, iRec, iLineaVista, iLineaBaseDest: Integer;
+  vLinea: Variant;
+  bHayDestino: Boolean;
+begin
+  Result := False;
+  bHayDestino := False;
+  iLineaVistaDest := 0;
+  iTagDest := 0;
+  if (Sender <> nil) and EsColumnaTalla(AItem) then
+  begin
+    Rec := Sender.Controller.FocusedRecord;
+    iLinea := LineaDesdeRecord(Rec);
+    iLineaBase := ObtenerLineaBase(iLinea);
+    if (iLineaBase > 0) and (BandaDesdeLinea(iLinea) = bpvEntregada) then
     begin
-      ResolverEntrada(sEntrada);
-      Key := 0;
+      Result := True;
+      if BuscarColumnaTallaDesde(iLineaBase,
+         TcxGridColumn(AItem).Tag, ColDest) then
+      begin
+        iLineaVistaDest := iLinea;
+        iTagDest := ColDest.Tag;
+        bHayDestino := True;
+      end
+      else
+      begin
+        ColLinea := FConfig.View.GetColumnByFieldName(CAMPO_LINEA_VISTA);
+        if ColLinea = nil then
+          ColLinea := FConfig.View.GetColumnByFieldName(FCfg.FieldLinea);
+        if ColLinea <> nil then
+        begin
+          iRecAct := Sender.DataController.FocusedRecordIndex;
+          iRec := iRecAct + 1;
+          while (not bHayDestino) and
+                (iRec < Sender.DataController.RecordCount) do
+          begin
+            vLinea := Sender.DataController.Values[iRec, ColLinea.Index];
+            iLineaVista := StrToIntDef(VarToStr(vLinea), 0);
+            iLineaBaseDest := ObtenerLineaBase(iLineaVista);
+            if (iLineaBaseDest > 0) and
+               (BandaDesdeLinea(iLineaVista) = bpvEntregada) and
+               BuscarColumnaTallaDesde(iLineaBaseDest, 0, ColDest) then
+            begin
+              iLineaVistaDest := iLineaVista;
+              iTagDest := ColDest.Tag;
+              bHayDestino := True;
+            end;
+            Inc(iRec);
+          end;
+        end;
+      end;
+      if Sender.Controller.EditingController.IsEditing then
+        Sender.Controller.EditingController.HideEdit(True);
+      if bHayDestino and
+         BuscarRecordPorLineaVista(iLineaVistaDest, iRecDest) then
+      begin
+        Sender.DataController.FocusedRecordIndex := iRecDest;
+        if (iTagDest > 0) and (iTagDest <= Length(FColumnasTallas)) then
+        begin
+          Sender.Controller.FocusedItem := FColumnasTallas[iTagDest - 1];
+          try
+            Sender.Controller.EditingController.ShowEdit;
+          except
+            on E: EInvalidOperation do
+              ;
+          end;
+        end;
+      end;
     end;
   end;
 end;
@@ -1174,7 +1866,17 @@ procedure TGridPivoteVenta.ViewFocusedRecordChanged(
   Sender: TcxCustomGridTableView; APrevFocusedRecord,
   AFocusedRecord: TcxCustomGridRecord;
   ANewItemRecordFocusingChanged: Boolean);
+var
+  Ds: TDataSet;
+  iLineaVista, iLineaBase: Integer;
 begin
+  if not FActualizandoGrid then
+  begin
+    iLineaVista := LineaDesdeRecord(AFocusedRecord);
+    iLineaBase := ObtenerLineaBase(iLineaVista);
+    Ds := CdsLineas;
+    LocalizarLineaReal(Ds, iLineaBase);
+  end;
   ActualizarCaptionsLineaActiva;
 end;
 
@@ -1183,9 +1885,10 @@ procedure TGridPivoteVenta.CustomDrawCell(Sender: TcxCustomGridTableView;
   var ADone: Boolean);
 var
   Col: TcxGridColumn;
-  iLinea, iIdAv: Integer;
+  iLinea, iLineaBase, iIdAv: Integer;
   iKey: Int64;
-  rPedida, rEntregada: Double;
+  rValor, rPedida: Double;
+  Banda: TBandaPivoteVenta;
   Info: TInfoBasico;
   sColorCodigo, sColorTexto: string;
 begin
@@ -1195,12 +1898,18 @@ begin
   begin
     Col := TcxGridColumn(AViewInfo.Item);
     iLinea := LineaDesdeRecord(AViewInfo.GridRecord);
-    if Col = FColColor then
+    iLineaBase := ObtenerLineaBase(iLinea);
+    if Col = FColTipoCantidad then
+    begin
+      PintarCeldaTipoCantidad(ACanvas, AViewInfo);
+      ADone := True;
+    end
+    else if Col = FColColor then
     begin
       sColorCodigo := '';
       sColorTexto := '';
-      FPivotColorCodigo.TryGetValue(iLinea, sColorCodigo);
-      FPivotColorTexto.TryGetValue(iLinea, sColorTexto);
+      FPivotColorCodigo.TryGetValue(iLineaBase, sColorCodigo);
+      FPivotColorTexto.TryGetValue(iLineaBase, sColorTexto);
       if (sColorCodigo <> '') and
          ObtenerInfoBasico('CO', sColorCodigo, Info) and
          PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info,
@@ -1209,150 +1918,192 @@ begin
     end
     else if EsColumnaTalla(Col) then
     begin
-      if TallaAvDesdeColumna(iLinea, Col, iIdAv) then
+      if TallaAvDesdeColumna(iLineaBase, Col, iIdAv) then
       begin
-        iKey := Int64(iLinea) * 100000 + iIdAv;
+        Banda := BandaDesdeLinea(iLinea);
+        iKey := Int64(iLineaBase) * 100000 + iIdAv;
+        rValor := ValorCantidadBanda(iKey, Banda);
         rPedida := 0;
-        rEntregada := 0;
         FPivotCantPedida.TryGetValue(iKey, rPedida);
-        FPivotCantEntregada.TryGetValue(iKey, rEntregada);
-        PintarCeldaTalla3Cantidades(ACanvas, AViewInfo,
-                                    rPedida, rEntregada);
+        PintarCeldaTallaCantidad(ACanvas, AViewInfo, rValor, Banda,
+                                 rPedida > 0);
+        ADone := True;
       end
       else
       begin
         ACanvas.Brush.Color := $00E8E8E8;
         ACanvas.FillRect(AViewInfo.Bounds);
+        ADone := True;
       end;
-      ADone := True;
     end;
   end;
 end;
 
-procedure TGridPivoteVenta.PintarCeldaTalla3Cantidades(ACanvas: TcxCanvas;
-  AViewInfo: TcxGridTableDataCellViewInfo; APedida,
-  AEntregada: Double);
+procedure TGridPivoteVenta.PintarCeldaTallaCantidad(ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo; AValor: Double;
+  ABanda: TBandaPivoteVenta; AMostrarCero: Boolean);
+var
+  RectTexto: TRect;
+  sTexto: string;
+begin
+  if Abs(AValor) > 0.000001 then
+    sTexto := FormatFloat('#,##0.##', AValor)
+  else if (ABanda <> bpvPedida) and AMostrarCero then
+    sTexto := '0'
+  else
+    sTexto := '';
+  ACanvas.Brush.Color := AViewInfo.Params.Color;
+  ACanvas.FillRect(AViewInfo.Bounds);
+  ACanvas.Font.Assign(AViewInfo.Params.Font);
+  if AViewInfo.GridRecord.Selected then
+    ACanvas.Font.Color := AViewInfo.Params.TextColor
+  else
+  begin
+    case ABanda of
+      bpvEntregada:
+        ACanvas.Font.Color := clGreen;
+      bpvPendiente:
+        ACanvas.Font.Color := clBlue;
+    else
+      ACanvas.Font.Color := clWindowText;
+    end;
+  end;
+  if ABanda <> bpvPedida then
+    ACanvas.Font.Style := [fsBold];
+  RectTexto := AViewInfo.Bounds;
+  InflateRect(RectTexto, -4, 0);
+  ACanvas.Brush.Style := bsClear;
+  DrawText(ACanvas.Handle, PChar(sTexto), Length(sTexto), RectTexto,
+           DT_RIGHT or DT_VCENTER or DT_SINGLELINE);
+  ACanvas.Brush.Style := bsSolid;
+end;
+
+procedure TGridPivoteVenta.PintarCeldaTipoCantidad(ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo);
 var
   b: TRect;
-  hSeg, top2, top3: Integer;
-  rect1, rect2, rect3: TRect;
+  rectTexto: TRect;
   iFontHeight: Integer;
   cFontColor: TColor;
   fsFontStyle: TFontStyles;
-  cPenColor: TColor;
-  psPenStyle: TPenStyle;
-  iPenWidth: Integer;
-  rPendiente: Double;
-  sPedida, sEntregada, sPendiente: string;
+  iLinea: Integer;
+  Banda: TBandaPivoteVenta;
+  sTexto: string;
 begin
-  rPendiente := APedida - AEntregada;
-  if rPendiente < 0 then
-    rPendiente := 0;
-  if (APedida <> 0) or (AEntregada <> 0) or (rPendiente <> 0) then
-  begin
-    sPedida := IntToStr(Round(APedida));
-    sEntregada := IntToStr(Round(AEntregada));
-    sPendiente := IntToStr(Round(rPendiente));
-  end
+  iLinea := LineaDesdeRecord(AViewInfo.GridRecord);
+  Banda := BandaDesdeLinea(iLinea);
+  sTexto := TextoBanda(Banda);
+  case Banda of
+    bpvEntregada:
+      ACanvas.Brush.Color := $00E0FFE0;
+    bpvPendiente:
+      ACanvas.Brush.Color := $00C4E1FF;
   else
-  begin
-    sPedida := '';
-    sEntregada := '';
-    sPendiente := '';
+    ACanvas.Brush.Color := $00F6F1E8;
   end;
-  ACanvas.Brush.Color := clWindow;
   ACanvas.FillRect(AViewInfo.Bounds);
   b := AViewInfo.Bounds;
-  hSeg := (b.Bottom - b.Top) div 3;
-  top2 := b.Top + hSeg;
-  top3 := b.Top + 2 * hSeg;
-  rect1 := Rect(b.Left, b.Top, b.Right, top2);
-  rect2 := Rect(b.Left, top2, b.Right, top3);
-  rect3 := Rect(b.Left, top3, b.Right, b.Bottom);
-  InflateRect(rect1, -1, -1);
-  InflateRect(rect2, -1, -1);
-  InflateRect(rect3, -1, -1);
+  rectTexto := Rect(b.Left + 4, b.Top, b.Right - 2, b.Bottom);
+  InflateRect(rectTexto, 0, -1);
   iFontHeight := ACanvas.Font.Height;
   cFontColor := ACanvas.Font.Color;
   fsFontStyle := ACanvas.Font.Style;
   try
     ACanvas.Brush.Style := bsClear;
-    ACanvas.Font.Height := ALTO_FUENTE_TALLA_TRES_CANT;
     ACanvas.Font.Style := [fsBold];
-    ACanvas.Font.Color := clWindowText;
-    DrawText(ACanvas.Handle, PChar(sPedida), Length(sPedida), rect1,
-             DT_CENTER or DT_VCENTER or DT_SINGLELINE);
-    ACanvas.Font.Color := clGreen;
-    ACanvas.Font.Style := [fsBold];
-    DrawText(ACanvas.Handle, PChar(sEntregada), Length(sEntregada), rect2,
-             DT_CENTER or DT_VCENTER or DT_SINGLELINE);
-    ACanvas.Font.Color := clBlue;
-    ACanvas.Font.Style := [fsBold];
-    DrawText(ACanvas.Handle, PChar(sPendiente), Length(sPendiente), rect3,
-             DT_CENTER or DT_VCENTER or DT_SINGLELINE);
+    case Banda of
+      bpvEntregada:
+        ACanvas.Font.Color := clGreen;
+      bpvPendiente:
+        ACanvas.Font.Color := clBlue;
+    else
+      ACanvas.Font.Color := clWindowText;
+    end;
+    DrawText(ACanvas.Handle, PChar(sTexto), Length(sTexto), rectTexto,
+             DT_LEFT or DT_VCENTER or DT_SINGLELINE);
   finally
     ACanvas.Font.Height := iFontHeight;
     ACanvas.Font.Color := cFontColor;
     ACanvas.Font.Style := fsFontStyle;
   end;
-  cPenColor := ACanvas.Pen.Color;
-  psPenStyle := ACanvas.Pen.Style;
-  iPenWidth := ACanvas.Pen.Width;
-  ACanvas.Pen.Color := clSilver;
-  ACanvas.Pen.Style := psSolid;
-  ACanvas.Pen.Width := GROSOR_LINEA_TRES_CANT;
-  try
-    ACanvas.MoveTo(b.Left, top2);
-    ACanvas.LineTo(b.Right, top2);
-    ACanvas.MoveTo(b.Left, top3);
-    ACanvas.LineTo(b.Right, top3);
-  finally
-    ACanvas.Pen.Color := cPenColor;
-    ACanvas.Pen.Style := psPenStyle;
-    ACanvas.Pen.Width := iPenWidth;
-  end;
-  ACanvas.Brush.Style := bsSolid;
-  if (FConfig.View <> nil) and
-     (FConfig.View.Controller.FocusedRecord = AViewInfo.GridRecord) and
-     (FConfig.View.Controller.FocusedItem = AViewInfo.Item) then
-    DibujarBordeFocused(ACanvas, AViewInfo.Bounds);
-end;
-
-procedure TGridPivoteVenta.DibujarBordeFocused(ACanvas: TcxCanvas;
-  const ARect: TRect);
-begin
-  ACanvas.Brush.Style := bsClear;
-  ACanvas.Pen.Color := clNavy;
-  ACanvas.Pen.Width := 2;
-  ACanvas.Pen.Style := psSolid;
-  ACanvas.Rectangle(ARect.Left + 1, ARect.Top + 1,
-                    ARect.Right - 1, ARect.Bottom - 1);
-  ACanvas.Pen.Width := 1;
   ACanvas.Brush.Style := bsSolid;
 end;
 
-procedure TGridPivoteVenta.CeldaTallaCambiada(Sender: TObject);
+procedure TGridPivoteVenta.ArticuloButtonClick(Sender: TObject;
+  AButtonIndex: Integer);
 var
-  Rec: TcxCustomGridRecord;
-  Col: TcxGridColumn;
-  iLinea, iIdAv: Integer;
-  iKey: Int64;
-  rValor: Double;
+  Q: TUniQuery;
+  sArt: string;
 begin
-  if not (FActualizandoGrid or FGuardandoCantidad) then
+  if FCfg.Conexion <> nil then
   begin
-    Rec := FConfig.View.Controller.FocusedRecord;
-    Col := FConfig.View.Controller.FocusedColumn;
-    iLinea := LineaDesdeRecord(Rec);
-    if TallaAvDesdeColumna(iLinea, Col, iIdAv) then
-    begin
-      iKey := Int64(iLinea) * 100000 + iIdAv;
-      rValor := ValorEditor(Sender, Null);
-      if FBanda = bpvPedida then
-        FPivotCantPedida.AddOrSetValue(iKey, rValor)
-      else
-        FPivotCantEntregada.AddOrSetValue(iKey, rValor);
+    Q := TUniQuery.Create(nil);
+    try
+      Q.Connection := FCfg.Conexion;
+      Q.SQL.Text :=
+        'SELECT a.CODIGO_ART_ART AS ARTICULO,' +
+        '       a.DESCRIPCION_ART AS DESCRIPCION,' +
+        '       COALESCE((SELECT GROUP_CONCAT(DISTINCT ap.REF_PROVEEDOR_AP' +
+        '                                     SEPARATOR '' '')' +
+        '                   FROM fza_articulos_proveedores ap' +
+        '                  WHERE ap.CODIGO_ART_AP = a.CODIGO_ART_ART' +
+        '                    AND ap.REF_PROVEEDOR_AP IS NOT NULL), '''')' +
+        '         AS REFPRV,' +
+        '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
+        '                   FROM fza_articulos_stockactual st' +
+        '                   JOIN fza_articulos_skus sk' +
+        '                     ON sk.CODIGO_UNIDAD_SKU = ' +
+        '                        st.CODIGO_UNIDAD_STK' +
+        '                  WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART' +
+        '                    AND st.CODIGO_ALM_STK = :ALM), 0) AS STOCK' +
+        '  FROM fza_articulos a' +
+        ' WHERE a.ESACTIVO_ART = ''S''' +
+        '   AND a.TIPO_ART = ''ESTANDAR''' +
+        ' ORDER BY STOCK DESC, a.CODIGO_ART_ART';
+      Q.ParamByName('ALM').AsString := FConfig.AlmacenStock;
+      Q.Open;
+      if TBusquedaUtils.EjecutarBusqueda('Búsqueda de artículos', Q,
+                                         'frmMtoArtTraspasoSearch') then
+      begin
+        sArt := Q.FieldByName('ARTICULO').AsString;
+        if ResolverEntrada(sArt) and
+           FConfig.View.Controller.EditingController.IsEditing then
+          try
+            FConfig.View.Controller.EditingController.HideEdit(False);
+          except
+            on E: EInvalidOperation do
+              ;
+          end;
+      end;
+    finally
+      FreeAndNil(Q);
     end;
+  end;
+end;
+
+procedure TGridPivoteVenta.ArticuloValidate(Sender: TObject;
+  var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
+var
+  sEntrada: string;
+begin
+  if not (Error or FActualizandoGrid or FGuardandoCantidad) then
+  begin
+    sEntrada := Trim(VarToStr(DisplayValue));
+    if sEntrada <> '' then
+    begin
+      Error := not ResolverEntrada(sEntrada);
+      if Error and FEntradaCancelada then
+      begin
+        // Paleta de color/talla cancelada por el usuario: descartar la
+        // entrada sin rotular "no encontrado".
+        Error := False;
+        DisplayValue := CampoTexto(CdsLineas, FCfg.FieldArt);
+      end
+      else if not Error then
+        DisplayValue := CampoTexto(CdsLineas, FCfg.FieldArt);
+    end;
+    if Error then
+      ErrorText := 'Artículo/SKU no encontrado.';
   end;
 end;
 
@@ -1361,31 +2112,27 @@ procedure TGridPivoteVenta.CeldaTallaValidate(Sender: TObject;
 var
   Rec: TcxCustomGridRecord;
   Col: TcxGridColumn;
-  iLinea, iIdAv: Integer;
+  iLinea, iLineaBase, iIdAv: Integer;
   iKey: Int64;
+  Banda: TBandaPivoteVenta;
 begin
   if not (Error or FActualizandoGrid or FGuardandoCantidad) then
   begin
     Rec := FConfig.View.Controller.FocusedRecord;
-    Col := FConfig.View.Controller.FocusedColumn;
+    if FConfig.View.Controller.FocusedItem is TcxGridColumn then
+      Col := TcxGridColumn(FConfig.View.Controller.FocusedItem)
+    else
+      Col := nil;
     iLinea := LineaDesdeRecord(Rec);
-    if TallaAvDesdeColumna(iLinea, Col, iIdAv) then
+    iLineaBase := ObtenerLineaBase(iLinea);
+    Banda := BandaDesdeLinea(iLinea);
+    if (Col <> nil) and TallaAvDesdeColumna(iLineaBase, Col, iIdAv) then
     begin
-      iKey := Int64(iLinea) * 100000 + iIdAv;
-      PersistirCantidadCelda(iKey, ValorEditor(Sender, DisplayValue));
+      iKey := Int64(iLineaBase) * 100000 + iIdAv;
+      PersistirCantidadCelda(iKey, ValorEditor(Sender, DisplayValue),
+                             Banda);
     end;
   end;
-end;
-
-procedure TGridPivoteVenta.AlternarBanda;
-begin
-  if FBanda = bpvPedida then
-    FBanda := bpvEntregada
-  else
-    FBanda := bpvPedida;
-  if Assigned(FCfg.OnBandaCambiada) then
-    FCfg.OnBandaCambiada(FBanda);
-  PublicarCantidadesPivot;
 end;
 
 function TGridPivoteVenta.LocalizarLineaSku(const ASku: string;
@@ -1575,6 +2322,7 @@ begin
           Ds.Edit;
         PonerFloat(Ds, FCfg.FieldCantidadPedida, ACantidad);
         PonerFloat(Ds, FCfg.FieldCantidadEntregada, 0);
+        PonerFloat(Ds, FCfg.FieldCantidadAAlbaranar, 0);
         Ds.Post;
         ALineaReal := CampoTexto(Ds, FCfg.FieldLinea);
         Result := ALineaReal <> '';
@@ -1592,18 +2340,18 @@ begin
 end;
 
 procedure TGridPivoteVenta.PersistirCantidadCelda(AKey: Int64;
-  AValor: Double);
+  AValor: Double; ABanda: TBandaPivoteVenta);
 var
   Ds: TDataSet;
   sLineaReal: string;
-  sLineaFoco: string;
-  rPedida, rEntregada: Double;
+  iLineaFoco: Integer;
+  rPedida, rEntregada, rPendBase: Double;
   bFiltrado, bBorrar: Boolean;
 begin
   if not FGuardandoCantidad then
   begin
     Ds := CdsLineas;
-    sLineaFoco := Format('%.4d', [Integer(AKey div 100000)]);
+    iLineaFoco := Integer(AKey div 100000);
     FGuardandoCantidad := True;
     try
       if FCeldaLinea.TryGetValue(AKey, sLineaReal) then
@@ -1616,7 +2364,7 @@ begin
           begin
             rPedida := CampoFloat(Ds, FCfg.FieldCantidadPedida);
             rEntregada := CampoFloat(Ds, FCfg.FieldCantidadEntregada);
-            if FBanda = bpvPedida then
+            if ABanda = bpvPedida then
             begin
               bBorrar := (AValor <= 0) and (rEntregada <= 0);
               if bBorrar then
@@ -1635,27 +2383,49 @@ begin
                 Ds.Post;
               end;
             end
-            else
+            else if ABanda = bpvEntregada then
             begin
-              if AValor > rPedida then
+              if AValor < 0 then
+                AValor := 0;
+              rPendBase := rPedida - rEntregada;
+              if rPendBase < 0 then
+                rPendBase := 0;
+              if AValor > rPendBase then
               begin
                 MessageBeep(MB_ICONWARNING);
-                AValor := rPedida;
+                AValor := rPendBase;
               end;
               if not (Ds.State in dsEditModes) then
                 Ds.Edit;
-              PonerFloat(Ds, FCfg.FieldCantidadEntregada, AValor);
+              PonerFloat(Ds, FCfg.FieldCantidadAAlbaranar, AValor);
+              Ds.Post;
+            end
+            else
+            begin
+              if AValor < 0 then
+                AValor := 0;
+              rPendBase := rPedida - rEntregada;
+              if rPendBase < 0 then
+                rPendBase := 0;
+              if AValor > rPendBase then
+              begin
+                MessageBeep(MB_ICONWARNING);
+                AValor := rPendBase;
+              end;
+              if not (Ds.State in dsEditModes) then
+                Ds.Edit;
+              PonerFloat(Ds, FCfg.FieldCantidadAAlbaranar,
+                         rPendBase - AValor);
               Ds.Post;
             end;
           end;
           Ds.Filtered := bFiltrado;
-          if sLineaFoco <> '' then
-            Ds.Locate(FCfg.FieldLinea, sLineaFoco, []);
+          LocalizarLineaReal(Ds, iLineaFoco);
         finally
           Ds.EnableControls;
         end;
       end
-      else if FBanda = bpvPedida then
+      else if ABanda = bpvPedida then
         CrearLineaDesdeCelda(AKey, AValor, sLineaReal)
       else
         MessageDlg('No existe línea de pedido para esa talla.',
@@ -1667,6 +2437,269 @@ begin
   end;
 end;
 
+function TGridPivoteVenta.BorrarLineasGrupo(ALineaBase: Integer): Integer;
+var
+  Ds: TDataSet;
+  Par: TPair<Int64, string>;
+  Lineas: TList<string>;
+  sLinea: string;
+  bFiltrado: Boolean;
+begin
+  Result := 0;
+  Ds := CdsLineas;
+  if (Ds = nil) or (not Ds.Active) or (ALineaBase <= 0) then
+    Exit;
+  // Lineas reales del grupo: una por talla (o la unica "sin talla").
+  Lineas := TList<string>.Create;
+  try
+    for Par in FCeldaLinea do
+      if Integer(Par.Key div 100000) = ALineaBase then
+        if not Lineas.Contains(Par.Value) then
+          Lineas.Add(Par.Value);
+    if Lineas.Count = 0 then
+      Exit;
+    // Soltar la insercion vacia auto-anadida (o cualquier edicion a
+    // medias) antes de mover el cursor por el dataset real.
+    if Ds.State in dsEditModes then
+      Ds.Cancel;
+    bFiltrado := Ds.Filtered;
+    Ds.DisableControls;
+    FGuardandoCantidad := True;
+    try
+      Ds.Filtered := False;
+      for sLinea in Lineas do
+        if Ds.Locate(FCfg.FieldLinea, sLinea, []) then
+        begin
+          // Delete linea a linea (NO SQL directo): el BeforeDelete del
+          // data module ajusta el stock pendiente de servir por linea.
+          Ds.Delete;
+          Inc(Result);
+        end;
+      Ds.Filtered := bFiltrado;
+    finally
+      FGuardandoCantidad := False;
+      Ds.EnableControls;
+    end;
+  finally
+    FreeAndNil(Lineas);
+  end;
+end;
+
+function TGridPivoteVenta.BorrarGrupoActual: Integer;
+begin
+  Result := BorrarLineasGrupo(ObtenerLineaBase(
+    LineaDesdeRecord(FConfig.View.Controller.FocusedRecord)));
+  if Result > 0 then
+    RecargarYPublicar;
+end;
+
+function TGridPivoteVenta.MarcarTodoAAlbaranar: Integer;
+var
+  Ds: TDataSet;
+  Par: TPair<Int64, Double>;
+  rPend, rPedida, rEntregada: Double;
+  bFiltrado: Boolean;
+  sLineaFoco: string;
+begin
+  Result := 0;
+  Ds := CdsLineas;
+  if (Ds <> nil) and Ds.Active and
+     (Ds.FindField(FCfg.FieldCantidadAAlbaranar) <> nil) then
+  begin
+    if Ds.State in dsEditModes then
+      Ds.Post;
+    bFiltrado := Ds.Filtered;
+    sLineaFoco := CampoTexto(Ds, FCfg.FieldLinea);
+    Ds.DisableControls;
+    try
+      Ds.Filtered := False;
+      Ds.First;
+      while not Ds.Eof do
+      begin
+        rPedida := CampoFloat(Ds, FCfg.FieldCantidadPedida);
+        rEntregada := CampoFloat(Ds, FCfg.FieldCantidadEntregada);
+        rPend := rPedida - rEntregada;
+        if rPend < 0 then
+          rPend := 0;
+        if not (Ds.State in dsEditModes) then
+          Ds.Edit;
+        PonerFloat(Ds, FCfg.FieldCantidadAAlbaranar, rPend);
+        Ds.Post;
+        if rPend > 0 then
+          Inc(Result);
+        Ds.Next;
+      end;
+      Ds.Filtered := bFiltrado;
+      if sLineaFoco <> '' then
+        Ds.Locate(FCfg.FieldLinea, sLineaFoco, []);
+    finally
+      Ds.EnableControls;
+    end;
+    RecargarYPublicar;
+  end
+  else
+  begin
+    for Par in FPivotCantPedida do
+    begin
+      rPend := PendienteBaseCelda(Par.Key);
+      if rPend > 0 then
+      begin
+        FPivotCantAAlbaranar.AddOrSetValue(Par.Key, rPend);
+        Inc(Result);
+      end;
+    end;
+    PublicarCantidadesPivot;
+  end;
+  if (FConfig.View <> nil) and Assigned(FConfig.View.Site) then
+    FConfig.View.Site.Invalidate;
+end;
+
+function TGridPivoteVenta.VolcarAAlbaranar(
+  ALineas: TList<TPair<string, Currency>>;
+  out AAlmacenComun: string; out AAlmacenUnico: Boolean): Integer;
+var
+  Par: TPair<Int64, Double>;
+  Lin: TPair<string, Currency>;
+  sLinea, sAlm: string;
+  rAAlbaranar, rEntregada: Double;
+  bAlmInit: Boolean;
+begin
+  Result := 0;
+  AAlmacenComun := '';
+  AAlmacenUnico := True;
+  bAlmInit := False;
+  if ALineas <> nil then
+  begin
+    for Par in FPivotCantPedida do
+    begin
+      rAAlbaranar := AAlbaranarCelda(Par.Key);
+      if (rAAlbaranar > 0) and FCeldaLinea.TryGetValue(Par.Key, sLinea) then
+      begin
+        rEntregada := 0;
+        FPivotCantEntregada.TryGetValue(Par.Key, rEntregada);
+        Lin.Key := sLinea;
+        Lin.Value := rEntregada + rAAlbaranar;
+        ALineas.Add(Lin);
+        sAlm := '';
+        FCeldaAlmacen.TryGetValue(Par.Key, sAlm);
+        if not bAlmInit then
+        begin
+          AAlmacenComun := sAlm;
+          bAlmInit := True;
+        end
+        else if sAlm <> AAlmacenComun then
+          AAlmacenUnico := False;
+        Inc(Result);
+      end;
+    end;
+  end;
+end;
+
+procedure TGridPivoteVenta.LimpiarAAlbaranar;
+var
+  Ds: TDataSet;
+  bFiltrado: Boolean;
+  sLineaFoco: string;
+begin
+  FPivotCantAAlbaranar.Clear;
+  Ds := CdsLineas;
+  if (Ds <> nil) and Ds.Active and
+     (Ds.FindField(FCfg.FieldCantidadAAlbaranar) <> nil) then
+  begin
+    if Ds.State in dsEditModes then
+      Ds.Post;
+    bFiltrado := Ds.Filtered;
+    sLineaFoco := CampoTexto(Ds, FCfg.FieldLinea);
+    Ds.DisableControls;
+    try
+      Ds.Filtered := False;
+      Ds.First;
+      while not Ds.Eof do
+      begin
+        if CampoFloat(Ds, FCfg.FieldCantidadAAlbaranar) <> 0 then
+        begin
+          if not (Ds.State in dsEditModes) then
+            Ds.Edit;
+          PonerFloat(Ds, FCfg.FieldCantidadAAlbaranar, 0);
+          Ds.Post;
+        end;
+        Ds.Next;
+      end;
+      Ds.Filtered := bFiltrado;
+      if sLineaFoco <> '' then
+        Ds.Locate(FCfg.FieldLinea, sLineaFoco, []);
+    finally
+      Ds.EnableControls;
+    end;
+    RecargarYPublicar;
+  end
+  else
+    PublicarCantidadesPivot;
+  if (FConfig.View <> nil) and Assigned(FConfig.View.Site) then
+    FConfig.View.Site.Invalidate;
+end;
+
+function TGridPivoteVenta.ElegirSkuConPaleta(const ACodArt: string): string;
+var
+  Lookup: TArticulosAtributosLookup;
+  Atribs: TArray<TArticuloAtributo>;
+  Avs: TArray<TArticuloAtributoValor>;
+  AvsStr: TArray<string>;
+  Mapa: TDictionary<string, string>;
+  sIdVa, sAvNuevo: string;
+  i, j: Integer;
+  bCancelado: Boolean;
+begin
+  // Mismo flujo que TModoEntradaSku.ElegirSkuConPaleta (modo vertical):
+  // un selector por atributo (Color, Talla, ...); si el articulo solo
+  // referencia un AV en sus SKUs, se fija solo sin preguntar.
+  Result := '';
+  Lookup := TArticulosAtributosLookup.Create(FCfg.Conexion);
+  try
+    Atribs := Lookup.ObtenerAtributos(ACodArt);
+    if Length(Atribs) = 0 then
+      ShowMessage('El artículo no tiene atributos definidos: ' + ACodArt)
+    else
+    begin
+      Result := ACodArt;
+      bCancelado := False;
+      i := 0;
+      while (i < Length(Atribs)) and (not bCancelado) do
+      begin
+        // Solo AVs presentes en SKUs del articulo (no todo el conjunto).
+        Avs := Lookup.ObtenerAvsEnSkus(ACodArt, i + 1);
+        if Length(Avs) = 0 then
+          bCancelado := True
+        else if Length(Avs) = 1 then
+          Result := Result + '/' + Avs[0].Valor
+        else
+        begin
+          SetLength(AvsStr, Length(Avs));
+          for j := 0 to High(Avs) do
+            AvsStr[j] := Avs[j].Valor;
+          sIdVa := '';
+          Mapa := ObtenerMapaAtributosGlobal;
+          if Mapa <> nil then
+            Mapa.TryGetValue(UpperCase(Trim(Atribs[i].NombreAtributo)),
+                             sIdVa);
+          // Paleta de swatches auto-centrada (-1,-1), como caja e
+          // inventarios.
+          if SeleccionarAvConPaleta(sIdVa, AvsStr, '', sAvNuevo,
+                                    -1, -1, 160) then
+            Result := Result + '/' + sAvNuevo
+          else
+            bCancelado := True;
+        end;
+        Inc(i);
+      end;
+      if bCancelado then
+        Result := '';
+    end;
+  finally
+    FreeAndNil(Lookup);
+  end;
+end;
+
 function TGridPivoteVenta.ResolverEntrada(const AEntrada: string): Boolean;
 var
   Validador: TArticulosValidador;
@@ -1675,8 +2708,10 @@ var
   rPrecio: Double;
   bPrecio: Boolean;
   Ds: TDataSet;
+  bLineaVacia: Boolean;
 begin
   Result := False;
+  FEntradaCancelada := False;
   if Trim(AEntrada) <> '' then
   begin
     Validador := TArticulosValidador.Create(FCfg.Conexion);
@@ -1688,6 +2723,18 @@ begin
     if Res.Encontrado then
     begin
       sSku := Res.CodigoSku;
+      if (sSku = '') and Res.RequiereSku then
+      begin
+        // Coincidio el articulo padre y tiene variaciones: pedir COLOR
+        // (y talla) con la paleta y componer el SKU completo. Antes se
+        // seguia con el codigo pelado y la linea nacia sin color.
+        sSku := ElegirSkuConPaleta(Res.CodigoArticulo);
+        if sSku = '' then
+        begin
+          FEntradaCancelada := True;
+          Exit;
+        end;
+      end;
       if sSku = '' then
         sSku := Res.CodigoArticulo;
       rPrecio := 0;
@@ -1713,7 +2760,11 @@ begin
         begin
           if Ds.Filtered then
             Ds.Filtered := False;
-          Ds.Append;
+          bLineaVacia := (Ds.State = dsInsert) and
+            (CampoTexto(Ds, FCfg.FieldArt) = '') and
+            (CampoTexto(Ds, FCfg.FieldSku) = '');
+          if not bLineaVacia then
+            Ds.Append;
           FCfg.OnCrearLineaSku(sSku);
           if Ds.State in dsEditModes then
             Ds.Post;

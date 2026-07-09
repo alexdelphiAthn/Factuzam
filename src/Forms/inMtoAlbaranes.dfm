@@ -717,7 +717,7 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
             Height = 383
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsObservaciones
+            Properties.ActivePage = tsLineasAlbaran
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 379
             ClientRectLeft = 4

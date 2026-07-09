@@ -8,7 +8,7 @@ El modo tallas actual (`mcsTallasInline`, `inLibColumnasSkuModoTallas`)
 CONSOLIDA líneas en una fila por artículo+color y guarda cantidades en
 `fza_pedidos_celdas`. En pedidos de venta no encaja:
 
-- Cada línea maneja TRES cantidades (pedida / entregada / pendiente) y
+- Cada línea maneja TRES cantidades (pedida / a albaranar / pendiente) y
   una celda de pivote solo representa una.
 - El precio es por SKU/línea; la consolidación pierde o machaca precios
   (mitigado con `ObtenerPrecioSku`, pero el modelo sigue siendo hostil).
@@ -24,7 +24,7 @@ presentación/edición encima del grid.
 
 1. Formato: igual que compras→pedidos (fila por artículo+color,
    columnas de talla no-bound).
-2. Edición en celdas: **pedida Y entregada**.
+2. Edición en celdas: **pedida Y a albaranar**.
 3. Sustituye al modo `mcsTallasInline` en pedidos de venta (F1 pasa a
    ciclar Desglose → SKU → tallashorped). `fza_pedidos_celdas` deja de
    usarse en ventas (la tabla se conserva; la usan otros documentos).
@@ -33,12 +33,15 @@ presentación/edición encima del grid.
 
 - **Sin tabla de celdas**: la verdad vive en `fza_pedidos_lineas`, una
   línea por SKU con `CANTIDAD_PEDLIN`, `CANTIDAD_ENTREGADA_PEDLIN`,
-  `CANTIDAD_PENDIENTE_PEDLIN`, precio propio y vínculo con albaranes.
+  `CANTIDAD_A_ALBARANAR_PEDLIN`, `CANTIDAD_PENDIENTE_PEDLIN`, precio
+  propio y vínculo con albaranes.
 - Reutiliza las columnas ya añadidas por `pedidos_columnas_sku.sql`
   (`CODIGO_UNIDAD_PEDLIN`, `ATTR1..5`, `NUM_ATRIBUTOS_PEDLIN`).
 - `ID_AC_PIVOT_PEDLIN` queda sin uso en este modo (se mantiene por
   compatibilidad con datos ya pivotados; ver §6 migración).
-- **No requiere script SQL nuevo.**
+- Requiere `DESARROLLOS EN CURSO/pedidos_venta_a_albaranar.sql` para
+  separar el borrador de albarán (`CANTIDAD_A_ALBARANAR_PEDLIN`) de la
+  entregada real (`CANTIDAD_ENTREGADA_PEDLIN`).
 
 ## 4. Arquitectura
 
@@ -49,7 +52,8 @@ producción; si al terminar ambas convergen, se estudia unificar):
 - `TGridPivoteVentaConfig` (record): View, SourceMaster, SourceLineas,
   Gestor (`TGestorGridTallas`, se reutiliza tal cual), columnas
   no-bound, nombres de campos PEDLIN, y **dos campos de cantidad**:
-  `FieldCantidadPedida` y `FieldCantidadEntregada`.
+  `FieldCantidadPedida`, `FieldCantidadEntregada` y
+  `FieldCantidadAAlbaranar`.
 - `TGridPivoteVenta` (clase): cache de líneas representantes por
   clave artículo+color+**precio** (una fila visual por combinación),
   filtrado en cliente, publicación de cantidades en columnas no-bound,
@@ -59,13 +63,12 @@ producción; si al terminar ambas convergen, se estudia unificar):
     `CANTIDAD_PEDLIN`; si no existe → la crea (validador + precio de
     tarifa, mismo flujo fiscal que `AplicarArticuloPedido`); si queda a
     0 y sin entregas → pregunta y borra la línea.
-  - Editar **entregada**: actualiza `CANTIDAD_ENTREGADA_PEDLIN` con
-    tope en la pedida; recalcula `CANTIDAD_PENDIENTE_PEDLIN` y
-    `ESENTREGADA_PEDLIN` (la lógica ya vive en el BeforePost del DM).
-- Alternancia de banda visible **Pedida / Entregada** (botón o tecla)
-  al estilo del intercambio Color↔Almacén de compras; la banda activa
-  se indica en el caption de la pestaña. La celda muestra la cantidad
-  de la banda activa; tooltip/status con las tres cantidades.
+  - Editar **a albaranar**: actualiza `CANTIDAD_A_ALBARANAR_PEDLIN` con
+    tope en lo pendiente real (`CANTIDAD_PEDLIN` menos
+    `CANTIDAD_ENTREGADA_PEDLIN`). La entregada real solo la cambia el
+    procedimiento de albarán.
+- La vista principal muestra tres filas por grupo: **Pedido**,
+  **A albaranar** y **Pendiente**.
 - Se integra como CUARTO implementador de `IModoEntradaGrid`
   (`GetModo` devuelve un nuevo `mcsTallasHorPed` del enum
   `TModoColumnasSku`) para encajar en `ConstruirModoEntrada` sin

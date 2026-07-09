@@ -5,8 +5,8 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -106,7 +106,7 @@
         <DCC_Optimize>false</DCC_Optimize>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
-        <DCC_RemoteDebug>true</DCC_RemoteDebug>
+        <DCC_RemoteDebug>false</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
@@ -124,6 +124,7 @@
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>3082</VerInfo_Locale>
+        <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <Icon_MainIcon>logo_art\factuzam.ico</Icon_MainIcon>
         <UWP_DelphiLogo44>logo_art\icon-48.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>logo_art\icon-128.png</UWP_DelphiLogo150>
@@ -518,6 +519,11 @@
         </DCCReference>
         <DCCReference Include="src\Caja\Lib\inLibTraspasoTicket.pas"/>
         <DCCReference Include="src\Lib\inLibGridArticulos.pas"/>
+        <DCCReference Include="src\Lib\inLibColumnasSkuIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibColumnasSku.pas"/>
+        <DCCReference Include="src\Lib\inLibColumnasSkuModoSku.pas"/>
+        <DCCReference Include="src\Lib\inLibColumnasSkuModoDesglose.pas"/>
+        <DCCReference Include="src\Lib\inLibColumnasSkuModoTallas.pas"/>
         <DCCReference Include="src\Lib\inLibLectorScanner.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoCajaFaseCobro.pas">
             <Form>frmMtoCajaFaseCobro</Form>
@@ -879,6 +885,9 @@
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalAddBlockDocumentoTrabajo.pas">
             <Form>frmModalAddBlockDocumentoTrabajo</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalEnviarDestino.pas">
+            <Form>frmModalEnviarDestino</Form>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibDBStructure.pas"/>
         <DCCReference Include="src\Lib\inLibBackupWorker.pas"/>

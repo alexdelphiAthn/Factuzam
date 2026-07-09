@@ -43,6 +43,8 @@ uses
   cxGridDBBandedTableView,
   inLibGridTallasInline,
   inLibGridPivoteCompra,
+  // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
+  inLibColumnasSkuIntf, inLibGridPivoteVenta,
   UniDataPedidosCompra, cxBlobEdit, System.Actions, Vcl.ActnList,
   dxShellDialogs, cxSplitter;
 
@@ -163,6 +165,7 @@ type
     // El usuario teclea aqui "A recibir" por linea SKU. Se oculta
     // cuando entra en modo pivote.
     colLineaPedcARecibir: TcxGridDBColumn;
+    colLineaPedcCODIGO_UNIDAD: TcxGridDBColumn;
     btnCrearAlbaran: TcxButton;
     btnPegatinas: TcxButton;
     lblContextoTalla: TcxLabel;
@@ -259,6 +262,11 @@ type
     FInToggleClick   : Boolean;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
+    // Valores de las columnas de atributo del modo Desglose, derivados
+    // AL VUELO del SKU de la fila (segmentos tras el articulo). Sin
+    // estado: no hay Values[] no-bound que se reseteen con el grid.
+    procedure AtribGetDataText(Sender: TcxCustomGridTableItem;
+                               ARecordIndex: Integer; var AText: string);
     procedure CargarBasicosColorArticulo(const ACodigoArt: string);
     procedure InicializarGestorYPivote;
     procedure RefrescarVisibilidadTallas;
@@ -320,6 +328,40 @@ type
     // ApplyBestFit + ensanche para la columna Color (el cuadradito de
     // color que pinta FColColorPivot ocupa ~20 px que BestFit no mide).
     procedure BestFitConSwatch;
+    // Rotulo de modo en la pestania de lineas, como en ventas.
+    procedure ActualizarCaptionModoLineas;
+  private
+    // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
+    // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal, con el
+    // MISMO pivote tallashorped de pedidos de venta (bandas Pedido /
+    // A recibir / Pendiente sobre lineas SKU reales, sin tabla de
+    // celdas). El Construir hace ClearItems: las columnas del dfm y
+    // las del pivote de compras antiguo mueren y las del documento se
+    // recrean en runtime. El pivote de compras (FPivote/ESPIVOTE)
+    // queda RETIRADO de esta pantalla (decision 09/07/26).
+    FModoEntrada: IModoEntradaGrid;
+    FModoEntradaSel: TModoColumnasSku;
+    FColsModoConstruido: Boolean;
+    procedure ConstruirModoEntrada;
+    procedure CrearColumnasHostPedidoCompra;
+    procedure ModoEntradaResuelto(const ACodArt, ASku,
+                                  ADescripcion: string;
+                                  ACompleto: Boolean);
+    procedure PivoteVentaCrearLineaSku(const ACodigoSku: string);
+    procedure PivoteVentaBandaCambiada(ABanda: TBandaPivoteVenta);
+    // "A recibir" como CAMPO (CANTIDAD_A_RECIBIR_PEDCLIN): clamp al
+    // pendiente y recogida/limpieza por almacen para Crear albaran.
+    procedure ARecibirCampoEditValueChanged(Sender: TObject);
+    function  RecogerCeldasARecibirCampo(
+                const ACodigoAlm: string): TArray<TCeldaARecibir>;
+    procedure LimpiarARecibirCampoAlmacen(const ACodigoAlm: string);
+    function  TotalARecibirCampo: Double;
+    function  PrimerAlmacenARecibirCampo: string;
+    function  RellenarARecibirCampoTodo: Integer;
+  protected
+    // F1 = ciclar el modo de entrada (KeyPreview de TfrmBase),
+    // mismo atajo que pedidos/facturas de venta.
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     dmmPedidosCompra: TdmPedidosCompra;
     procedure CrearTablaPrincipal; override;
@@ -347,7 +389,9 @@ uses
   inLibArticulosValidador,
   inLibComprasImpuestos,
   inMtoModalSelAlmacenPedido, inMtoModalDocsCreados, inMtoModalEtiqPed,
-  inLibShowMto, inLibGenBusq, UniDataArticulos;
+  inLibShowMto, inLibGenBusq, UniDataArticulos,
+  // Factoria del contrato de entrada ColumnSKUcxGrid.
+  inLibColumnasSku;
 
 {$R *.dfm}
 
@@ -1034,10 +1078,36 @@ begin
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
   RefrescarCantidadAAlbaranar;
+  // Contrato de entrada ColumnSKUcxGrid: Auto (desglose) por defecto;
+  // F1 cicla los modos. El pivote de compras antiguo queda RETIRADO de
+  // esta pantalla: se ocultan sus botones y nunca se activa (la
+  // preferencia ESPIVOTE de la cabecera se ignora).
+  FModoEntradaSel := mcsAuto;
+  FColsModoConstruido := False;
+  btnTallasHorizontal.Visible := False;
+  // "Expandir recibidos" se conserva: ahora salta directamente al
+  // modo Tallas horizontal (tallashorped), cuyas bandas Pedido /
+  // A recibir / Pendiente son el "expandido" del pivote antiguo.
+  btnExpandirRecibidos.Visible := True;
+  btnRecibirFilaEntera.Visible := False;
+  lblContextoTalla.Visible := False;
+  ActualizarCaptionModoLineas;
 end;
 
 procedure TfrmMtoPedidosCompra.FormDestroy(Sender: TObject);
 begin
+  // El modo del contrato se libera ANTES del inherited: su teardown
+  // toca el view y el dataset de lineas, que deben seguir vivos (misma
+  // leccion que pedidos/facturas de venta, AV al cerrar 08/07/26).
+  if FModoEntrada <> nil then
+  begin
+    try
+      FModoEntrada.Desmontar;
+    except
+      // Teardown defensivo en cierre.
+    end;
+    FModoEntrada := nil;
+  end;
   FreeAndNil(FPivote);
   FreeAndNil(FGestorTallas);
   inherited;
@@ -1128,7 +1198,12 @@ end;
 function TfrmMtoPedidosCompra.TotalAAlbaranar: Double;
 begin
   Result := 0;
-  if Assigned(FPivote) and FPivote.Activo then
+  if FColsModoConstruido then
+    // Contrato construido: "A recibir" vive en el campo
+    // CANTIDAD_A_RECIBIR_PEDCLIN (columna en SKU/Desglose, banda en
+    // tallas horizontal).
+    Result := TotalARecibirCampo
+  else if Assigned(FPivote) and FPivote.Activo then
   begin
     if FPivote.Expandido then
       Result := FPivote.TotalARecibir;
@@ -1209,7 +1284,31 @@ begin
     col.Tag     := -(i + 1);  // tag negativo para no chocar con tallas
     col.Visible := False;
     col.Options.Editing := False;
+    // El valor se deriva del SKU de la fila al pintar (modo Desglose).
+    col.OnGetDataText := AtribGetDataText;
     FAtribColumns[i] := col;
+  end;
+end;
+
+procedure TfrmMtoPedidosCompra.AtribGetDataText(
+  Sender: TcxCustomGridTableItem; ARecordIndex: Integer;
+  var AText: string);
+var
+  colSku: TcxGridDBColumn;
+  Partes: TArray<string>;
+  iOrden: Integer;
+begin
+  AText := '';
+  // Tag negativo -(1..5): posicion del atributo en el SKU
+  // ART/VAL1/VAL2... (Partes[0] es el articulo).
+  iOrden := -Sender.Tag;
+  colSku := tvLineasPedido.GetColumnByFieldName('CODIGO_UNIDAD_PEDCLIN');
+  if (colSku <> nil) and (iOrden >= 1) and (ARecordIndex >= 0) then
+  begin
+    Partes := VarToStr(tvLineasPedido.DataController.GetValue(
+                ARecordIndex, colSku.Index)).Split(['/']);
+    if iOrden <= High(Partes) then
+      AText := Partes[iOrden];
   end;
 end;
 
@@ -1368,8 +1467,28 @@ end;
 
 procedure TfrmMtoPedidosCompra.RefrescarVisibilidadAtributos;
 var
-  i: Integer;
+  i, iIdx: Integer;
 begin
+  // Desglose vs SKU, como en ventas: en Desglose los atributos van
+  // PEGADOS al articulo y la columna SKU se oculta (color/talla ya se
+  // ven desglosados); en SKU, al reves. En pivote no se toca nada.
+  if (FPivote = nil) or (not FPivote.Activo) then
+  begin
+    if Assigned(colLineaPedcCODIGO_UNIDAD) then
+      colLineaPedcCODIGO_UNIDAD.Visible := not FMostrarAtributos;
+    if FMostrarAtributos and Assigned(colLineaPedcCODIGO_UNIDAD) then
+    begin
+      // Recolocar los atributos justo detras del hueco del SKU (las
+      // columnas nacieron al final del view en CrearColumnasAtributos).
+      iIdx := colLineaPedcCODIGO_UNIDAD.Index + 1;
+      for i := 0 to CANT_ATRIB_MAX - 1 do
+        if FAtribColumns[i] <> nil then
+        begin
+          FAtribColumns[i].Index := iIdx;
+          Inc(iIdx);
+        end;
+    end;
+  end;
   for i := 0 to CANT_ATRIB_MAX - 1 do
     if FAtribColumns[i] <> nil then
       FAtribColumns[i].Visible := FMostrarAtributos;
@@ -1463,6 +1582,7 @@ begin
     // aparte).
     if Assigned(colLineaPedcARecibir) then
       colLineaPedcARecibir.Visible := not FPivote.Activo;
+    ActualizarCaptionModoLineas;
     // BestFit tras togglear: ajustamos automaticamente el ancho de
     // todas las columnas al contenido. Sin esto algunas (Color con
     // textos largos como "Verde botella", articulo, descripcion...)
@@ -1482,45 +1602,57 @@ begin
   inherited;
   FMostrarAtributos := not FMostrarAtributos;
   RefrescarVisibilidadAtributos;
+  ActualizarCaptionModoLineas;
 end;
 
-// Toggle del modo "Expandir recibidos": solo aplica con el pivote
-// activo. Si no esta, lo activamos primero. Pivote inactivo -> activar
-// pivote primero y luego expandir.
+procedure TfrmMtoPedidosCompra.ActualizarCaptionModoLineas;
+begin
+  if not FColsModoConstruido then
+    tsLineasPedido.Caption := 'Líneas'
+  else
+    case FModoEntradaSel of
+      mcsSku:
+        tsLineasPedido.Caption := 'Líneas [SKU]';
+      mcsTallasHorPed:
+        tsLineasPedido.Caption := 'Líneas [Tallas horiz.]';
+    else
+      tsLineasPedido.Caption := 'Líneas [Desglose]';
+    end;
+end;
+
+procedure TfrmMtoPedidosCompra.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  // F1: alterna Auto (desglose) -> SKU -> Tallas horizontal con las
+  // lineas del pedido a la vista, igual que pedidos de venta.
+  if (Key = VK_F1) and (Shift = []) and
+     (pcPedido.ActivePage = tsLineasPedido) and
+     (dmmPedidosCompra <> nil) then
+  begin
+    Key := 0;
+    case FModoEntradaSel of
+      mcsAuto: FModoEntradaSel := mcsSku;
+      mcsSku: FModoEntradaSel := mcsTallasHorPed;
+    else
+      FModoEntradaSel := mcsAuto;
+    end;
+    ConstruirModoEntrada;
+  end;
+  inherited;
+end;
+
+// "Expandir recibidos": salta directamente al modo Tallas horizontal
+// del contrato (tallashorped). Sus bandas Pedido / A recibir /
+// Pendiente equivalen al pivote expandido antiguo.
 procedure TfrmMtoPedidosCompra.btnExpandirRecibidosClick(Sender: TObject);
-var
-  sMensaje: string;
 begin
   inherited;
-  if (dmmPedidosCompra = nil) or (FPivote = nil) then Exit;
-  if not FPivote.PuedeExpandir then
-  begin
-    ShowMessage('El pedido no soporta expandir recibidos.');
+  if dmmPedidosCompra = nil then
     Exit;
-  end;
-  if FPivote.Expandido then
-    FPivote.Contraer
-  else
+  if FModoEntradaSel <> mcsTallasHorPed then
   begin
-    // Si el pivote no esta activo, lo activamos primero.
-    if not FPivote.Activo then
-    begin
-      if not PuedeActivarTallasHorizontal(sMensaje) then
-      begin
-        MessageDlg(sMensaje, mtWarning, [mbOk], 0);
-        Exit;
-      end;
-      FPivote.Activar;
-      PersistirPreferenciaPivote;
-      // BestFit tras activar el pivote.
-      BestFitConSwatch;
-    end;
-    FPivote.Expandir;
+    FModoEntradaSel := mcsTallasHorPed;
+    ConstruirModoEntrada;
   end;
-  // BestFit tras toggle de Expandir/Contraer: con la altura nueva las
-  // columnas a veces se rompen si el grid recalcula widths antes que
-  // heights. Forzamos el ajuste final aqui.
-  BestFitConSwatch;
 end;
 
 // Rellena el sub-segmento 'A recibir' con el pendiente (Pedido -
@@ -1554,10 +1686,14 @@ var
   iRellenadas: Integer;
 begin
   inherited;
-  if (dmmPedidosCompra = nil) or (FPivote = nil) then
+  if dmmPedidosCompra = nil then
     Exit;
   iRellenadas := 0;
-  if FPivote.Activo then
+  if FColsModoConstruido then
+    // Contrato construido: volcar el pendiente de cada linea al campo
+    // "A recibir" (los Post rearman la recarga del pivote de tallas).
+    iRellenadas := RellenarARecibirCampoTodo
+  else if Assigned(FPivote) and FPivote.Activo then
   begin
     // En pivote la entrada de "A recibir" vive en las celdas talla, que
     // solo se pintan y editan en modo expandido. Si esta plano, expandimos.
@@ -1614,47 +1750,26 @@ end;
 // libreria; aqui solo orquestamos el toggle desde la cabecera.
 procedure TfrmMtoPedidosCompra.dsTablaGDataChangeHook(Sender: TObject;
                                                      Field: TField);
-var
-  bDeberiaEstarActivo: Boolean;
 begin
   // Refrescar el rotulo del proveedor al navegar entre pedidos (Field=nil)
   // o al cambiar CODIGO_PRV_PEDC tecleado directamente en el ButtonEdit.
   if (Field = nil) or SameText(Field.FieldName, 'CODIGO_PRV_PEDC') then
     ActualizarLabelProveedor;
   if Field <> nil then Exit;
-  if FPivote = nil then
+  // Contrato de entrada: al navegar de pedido, las lineas llegan
+  // recargadas por el master-detail. En desglose basta desempaquetar
+  // SKU->ATTR; el modo tallas re-pivota su cache reconstruyendo
+  // (mismo criterio que facturas). La preferencia ESPIVOTE del pivote
+  // de compras antiguo se IGNORA (pivote retirado de esta pantalla).
+  if FColsModoConstruido and Assigned(dmmPedidosCompra) and
+     dmmPedidosCompra.unqryPedidosCompraLineas.Active and
+     (not (dsTablaG.State in dsEditModes)) then
   begin
-    RefrescarCantidadAAlbaranar;
-    Exit;
+    if FModoEntradaSel = mcsTallasHorPed then
+      ConstruirModoEntrada
+    else if FModoEntradaSel <> mcsSku then
+      dmmPedidosCompra.DesempaquetarAtributosLineas;
   end;
-  if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
-     (not dsTablaG.DataSet.IsEmpty) and
-     (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_PEDC') <> nil) then
-  begin
-    if dsTablaG.DataSet.State = dsInsert then
-    begin
-      if FPivote.Activo then
-        btnTallasHorizontalClick(nil);
-      RefrescarCantidadAAlbaranar;
-      Exit;
-    end;
-    bDeberiaEstarActivo :=
-      dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString <> 'N';
-    if bDeberiaEstarActivo and (not FPivote.Activo) then
-      btnTallasHorizontalClick(nil)
-    else if (not bDeberiaEstarActivo) and FPivote.Activo then
-      btnTallasHorizontalClick(nil);
-  end;
-  if not FPivote.Activo then
-  begin
-    RefrescarCantidadAAlbaranar;
-    Exit;
-  end;
-  // RecargarYRepublicar ya hace RecalcularMaxColumnas + Captions
-  // ANTES de publicar. Llamar a RefrescarVisibilidadTallas aqui haria
-  // un segundo RecalcularMax tras publicar y limpiaria los Values[]
-  // recien puestos.
-  FPivote.RecargarYRepublicar;
   RefrescarCantidadAAlbaranar;
 end;
 
@@ -1731,6 +1846,10 @@ var
   i: Integer;
 begin
   if tvLineasPedido = nil then Exit;
+  // Con el contrato construido los anchos los fijan el modo y
+  // CrearColumnasHostPedidoCompra; ApplyBestFit encogeria las columnas
+  // de talla del pivote (mide sin el custom-draw).
+  if FColsModoConstruido then Exit;
   tvLineasPedido.ApplyBestFit;
   if Assigned(FColColorPivot) and FColColorPivot.Visible then
     FColColorPivot.Width := FColColorPivot.Width + ANCHO_SWATCH_PX;
@@ -2198,6 +2317,15 @@ begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, False);
   AsegurarPrimeraLineaPedidoCompra;
+  // Contrato de entrada: primera construccion al entrar en el grid.
+  // El teardown cancela la linea vacia auto-anadida: se recrea.
+  if not FColsModoConstruido then
+  begin
+    ConstruirModoEntrada;
+    AsegurarPrimeraLineaPedidoCompra;
+  end;
+  if FModoEntrada <> nil then
+    FModoEntrada.MostrarEditor;
 end;
 
 procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoExit(Sender: TObject);
@@ -2593,7 +2721,9 @@ begin
     // cantidad 'A recibir' > 0 (sea en pivote expandido o en modo
     // vertical). Si el usuario no ha tecleado nada todavia, caemos al
     // almacen efectivo de la primera linea del pedido como fallback.
-    if Assigned(FPivote) and FPivote.Activo and FPivote.Expandido then
+    if FColsModoConstruido then
+      form.CodigoAlmacenDefecto := PrimerAlmacenARecibirCampo
+    else if Assigned(FPivote) and FPivote.Activo and FPivote.Expandido then
       form.CodigoAlmacenDefecto := FPivote.PrimerAlmacenARecibir
     else
       form.CodigoAlmacenDefecto := PrimerAlmacenARecibirVertical;
@@ -2607,7 +2737,12 @@ begin
     // si no, miramos la columna "A recibir" del modo vertical. Si no
     // hay tecleos en ninguno, caemos al flujo clasico (pendientes
     // totales del almacen).
-    if Assigned(FPivote) and FPivote.Activo and FPivote.Expandido then
+    if FColsModoConstruido then
+      // Contrato construido: "A recibir" vive en el campo
+      // CANTIDAD_A_RECIBIR_PEDCLIN, tecleado como columna en
+      // SKU/Desglose o como banda en tallas horizontal.
+      arrCeldas := RecogerCeldasARecibirCampo(form.CodigoAlmacen)
+    else if Assigned(FPivote) and FPivote.Activo and FPivote.Expandido then
       arrCeldas := FPivote.IterarARecibirPorAlmacen(form.CodigoAlmacen)
     else
       arrCeldas := RecogerCeldasARecibirVertical(form.CodigoAlmacen);
@@ -2651,7 +2786,9 @@ begin
         // Limpiar las celdas "A recibir" tecleadas para el almacen
         // procesado, para que el usuario pueda seguir con otro almacen
         // sin tener que borrar manualmente.
-        if Assigned(FPivote) and FPivote.Activo and FPivote.Expandido then
+        if FColsModoConstruido then
+          LimpiarARecibirCampoAlmacen(form.CodigoAlmacen)
+        else if Assigned(FPivote) and FPivote.Activo and FPivote.Expandido then
           FPivote.LimpiarARecibirParaAlmacen(form.CodigoAlmacen)
         else if Assigned(colLineaPedcARecibir) then
         begin
@@ -2722,6 +2859,434 @@ begin
     end;
   finally
     FreeAndNil(form);
+  end;
+end;
+
+// ===========================================================================
+// CONTRATO DE ENTRADA ColumnSKUcxGrid (Auto / SKU / Tallas horizontal + F1)
+// ===========================================================================
+
+procedure TfrmMtoPedidosCompra.ConstruirModoEntrada;
+var
+  Cfg: TConfigColumnasSku;
+  CfgPV: TGridPivoteVentaConfig;
+  i: Integer;
+  ds: TDataSet;
+begin
+  if (dmmPedidosCompra = nil) or (csDestroying in ComponentState) then
+    Exit;
+  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+  if not ds.Active then
+    Exit;
+  // Teardown del modo anterior (patron pedidos de venta).
+  if tvLineasPedido.Controller.EditingController.IsEditing then
+    try
+      tvLineasPedido.Controller.EditingController.HideEdit(False);
+    except
+      on E: EInvalidOperation do
+        ;
+    end;
+  if ds.State in dsEditModes then
+    ds.Cancel;
+  if FModoEntrada <> nil then
+    FModoEntrada.Desmontar;
+  tvLineasPedido.OnInitEdit := nil;
+  tvLineasPedido.OnEditKeyDown := nil;
+  tvLineasPedido.OnEditing := nil;
+  tvLineasPedido.OnFocusedRecordChanged := nil;
+  tvLineasPedido.OnFocusedItemChanged := nil;
+  tvLineasPedido.OnCustomDrawCell := nil;
+  // El ClearItems mata TODAS las columnas: las del dfm y las del
+  // pivote de compras retirado. Fuera las referencias ANTES de que
+  // ningun repintado o refresco las toque.
+  tvLineasPedido.ClearItems;
+  FModoEntrada := nil;
+  for i := 0 to CANT_TALLAS_MAX - 1 do
+    FTallaColumns[i] := nil;
+  for i := 0 to CANT_ATRIB_MAX - 1 do
+    FAtribColumns[i] := nil;
+  FColColorPivot := nil;
+  FColColorProveedorPivot := nil;
+  colLineaPedcARecibir := nil;
+  // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
+  // (columnas reales _PEDCLIN; idempotente por linea).
+  if FModoEntradaSel <> mcsSku then
+    dmmPedidosCompra.DesempaquetarAtributosLineas;
+  Cfg := Default(TConfigColumnasSku);
+  Cfg.Conexion := dmmPedidosCompra.unqryTablaG.Connection;
+  Cfg.View := tvLineasPedido;
+  Cfg.Cds := ds;
+  Cfg.Modo := FModoEntradaSel;
+  Cfg.AlmacenStock := Trim(dmmPedidosCompra.unqryTablaG.
+    FieldByName('CODIGO_ALM_PEDC').AsString);
+  Cfg.Distribuido := False;
+  Cfg.Campos.CodigoArt := 'CODIGO_ART_PEDCLIN';
+  Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_PEDCLIN';
+  Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_PEDCLIN';
+  Cfg.Campos.Cantidad := 'CANTIDAD_PEDCLIN';
+  Cfg.Campos.Almacen := 'CODIGO_ALMACEN_PEDCLIN';
+  Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_PEDCLIN';
+  for i := 1 to 5 do
+  begin
+    Cfg.Campos.AttrValor[i] :=
+      'ATTR' + IntToStr(i) + '_VALOR_PEDCLIN';
+    Cfg.Campos.AttrNombre[i] :=
+      'ATTR' + IntToStr(i) + '_NOMBRE_PEDCLIN';
+  end;
+  if FModoEntradaSel = mcsTallasHorPed then
+  begin
+    CfgPV := Default(TGridPivoteVentaConfig);
+    CfgPV.Conexion := dmmPedidosCompra.unqryTablaG.Connection;
+    CfgPV.Usuario := oUser;
+    CfgPV.SourceMaster := dsTablaG;
+    CfgPV.SourceLineas := dmmPedidosCompra.dsPedidosCompraLineas;
+    CfgPV.FieldSerieMaster := 'SERIE_PEDC';
+    CfgPV.FieldNumeroMaster := 'NUMERO_PEDC';
+    CfgPV.FieldLinea := 'LINEA_PEDCLIN';
+    CfgPV.FieldArt := 'CODIGO_ART_PEDCLIN';
+    CfgPV.FieldSku := 'CODIGO_UNIDAD_PEDCLIN';
+    CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_PEDCLIN';
+    // Compra sobre las bandas del pivote de venta: Pedido /
+    // A recibir (banda de servicio) / Pendiente.
+    CfgPV.FieldCantidadPedida := 'CANTIDAD_PEDCLIN';
+    CfgPV.FieldCantidadEntregada := 'CANTIDAD_RECIBIDA_PEDCLIN';
+    CfgPV.FieldCantidadAAlbaranar := 'CANTIDAD_A_RECIBIR_PEDCLIN';
+    CfgPV.FieldPrecioBase := 'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN';
+    CfgPV.FieldAlmacen := 'CODIGO_ALMACEN_PEDCLIN';
+    CfgPV.FieldAlmacenMaster := 'CODIGO_ALM_PEDC';
+    CfgPV.MaxColumnas := CANT_TALLAS_MAX;
+    CfgPV.BandaUnica := False;
+    CfgPV.TextoBandaAAlbaranar := 'A recibir';
+    CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
+    CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
+    FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
+  end
+  else
+    FModoEntrada := CrearModoEntradaGrid(Cfg);
+  FModoEntrada.OnResuelto := ModoEntradaResuelto;
+  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
+  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
+  // El flag ANTES del Construir: si algo aborta a medias, nadie debe
+  // tocar las columnas del dfm, muertas en el ClearItems.
+  FColsModoConstruido := True;
+  FModoEntrada.Construir;
+  CrearColumnasHostPedidoCompra;
+  ActualizarCaptionModoLineas;
+  RefrescarCantidadAAlbaranar;
+end;
+
+procedure TfrmMtoPedidosCompra.CrearColumnasHostPedidoCompra;
+  function Col(const ACaption, ACampo: string; AAncho: Integer;
+               AEditable: Boolean): TcxGridDBColumn;
+  begin
+    Result := tvLineasPedido.CreateColumn as TcxGridDBColumn;
+    Result.Caption := ACaption;
+    Result.DataBinding.FieldName := ACampo;
+    Result.Width := AAncho;
+    Result.Options.Editing := AEditable;
+  end;
+var
+  ColLinea, ColARecibir: TcxGridDBColumn;
+begin
+  // Columnas propias del pedido de compra tras el ClearItems del
+  // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
+  ColLinea := Col('Línea', 'LINEA_PEDCLIN', 55, False);
+  Col('Modelo prov.', 'REF_PRV_PEDCLIN', 85, True);
+  Col('Descripción', 'DESCRIPCION_ARTICULO_PEDCLIN', 200, False);
+  if FModoEntradaSel <> mcsTallasHorPed then
+  begin
+    Col('Pedida', 'CANTIDAD_PEDCLIN', 70, True);
+    Col('Recibida', 'CANTIDAD_RECIBIDA_PEDCLIN', 75, False);
+    ColARecibir := Col('A recibir', 'CANTIDAD_A_RECIBIR_PEDCLIN',
+                       80, True);
+    ColARecibir.PropertiesClass := TcxCurrencyEditProperties;
+    TcxCurrencyEditProperties(ColARecibir.Properties).
+      OnEditValueChanged := ARecibirCampoEditValueChanged;
+  end;
+  Col('Precio compra', 'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN', 90, True);
+  Col('% IVA', 'PORCENTAJE_IVA_PEDCLIN', 60, True);
+  Col('Total', 'TOTAL_PEDCLIN', 85, False);
+  Col('Almacén', 'CODIGO_ALMACEN_PEDCLIN', 70, True);
+  // Orden normal del documento: la LINEA delante del bloque de
+  // articulo que creo el modo (las columnas del host nacen detras).
+  ColLinea.Index := 0;
+end;
+
+procedure TfrmMtoPedidosCompra.ModoEntradaResuelto(const ACodArt, ASku,
+  ADescripcion: string; ACompleto: Boolean);
+begin
+  // El flujo clasico del pedido de compra (precio de compra del
+  // proveedor, IVA, modelo proveedor, pivote del articulo...) se
+  // reaprovecha tal cual: AplicarArticuloPedidoCompra acepta articulo
+  // o SKU.
+  if ACompleto and (ASku <> '') then
+    AplicarArticuloPedidoCompra(ASku);
+end;
+
+procedure TfrmMtoPedidosCompra.PivoteVentaCrearLineaSku(
+  const ACodigoSku: string);
+begin
+  AplicarArticuloPedidoCompra(ACodigoSku);
+end;
+
+procedure TfrmMtoPedidosCompra.PivoteVentaBandaCambiada(
+  ABanda: TBandaPivoteVenta);
+begin
+  ActualizarCaptionModoLineas;
+end;
+
+// Clamp del "A recibir" (campo CANTIDAD_A_RECIBIR_PEDCLIN) en los
+// modos SKU/Desglose: el maximo es el pendiente de la linea. En el
+// modo tallas el clamp lo hace el propio pivote sobre su banda.
+procedure TfrmMtoPedidosCompra.ARecibirCampoEditValueChanged(
+  Sender: TObject);
+var
+  ed     : TcxCustomEdit;
+  ds     : TUniQuery;
+  vEdit  : Variant;
+  rValor : Double;
+  rPdte  : Double;
+begin
+  if (Sender is TcxCustomEdit) and (dmmPedidosCompra <> nil) then
+  begin
+    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
+    begin
+      ed    := TcxCustomEdit(Sender);
+      vEdit := ed.EditValue;
+      rValor := 0;
+      if not (VarIsNull(vEdit) or VarIsEmpty(vEdit)) then
+      begin
+        if VarIsNumeric(vEdit) then
+          rValor := vEdit
+        else
+          rValor := StrToFloatDef(VarToStr(vEdit), 0);
+      end;
+      rPdte := ds.FieldByName('CANTIDAD_PEDCLIN').AsFloat -
+               ds.FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat;
+      if rPdte < 0 then
+        rPdte := 0;
+      if rValor > rPdte then
+      begin
+        MessageBeep(MB_ICONWARNING);
+        ed.EditValue := rPdte;
+      end;
+    end;
+  end;
+  RefrescarCantidadAAlbaranar;
+end;
+
+function TfrmMtoPedidosCompra.RecogerCeldasARecibirCampo(
+  const ACodigoAlm: string): TArray<TCeldaARecibir>;
+var
+  ds: TUniQuery;
+  res: TList<TCeldaARecibir>;
+  bk: TBookmark;
+  rARec: Double;
+  c: TCeldaARecibir;
+  sAlmLin, sAlmCab, sAlmEfe: string;
+begin
+  Result := nil;
+  if dmmPedidosCompra = nil then
+    Exit;
+  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty or
+     (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') = nil) then
+    Exit;
+  sAlmCab :=
+    dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
+  res := TList<TCeldaARecibir>.Create;
+  bk := ds.GetBookmark;
+  ds.DisableControls;
+  try
+    ds.First;
+    while not ds.Eof do
+    begin
+      rARec := ds.FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat;
+      if rARec > 0 then
+      begin
+        sAlmLin := ds.FieldByName('CODIGO_ALMACEN_PEDCLIN').AsString;
+        if Trim(sAlmLin) <> '' then
+          sAlmEfe := sAlmLin
+        else
+          sAlmEfe := sAlmCab;
+        if SameText(sAlmEfe, ACodigoAlm) then
+        begin
+          c.LineaPedido   := ds.FieldByName('LINEA_PEDCLIN').AsString;
+          c.CodigoSku     :=
+            ds.FieldByName('CODIGO_UNIDAD_PEDCLIN').AsString;
+          c.CodigoAlmacen := sAlmEfe;
+          c.Cantidad      := rARec;
+          res.Add(c);
+        end;
+      end;
+      ds.Next;
+    end;
+    Result := res.ToArray;
+  finally
+    if ds.BookmarkValid(bk) then
+      ds.GotoBookmark(bk);
+    ds.FreeBookmark(bk);
+    ds.EnableControls;
+    FreeAndNil(res);
+  end;
+end;
+
+procedure TfrmMtoPedidosCompra.LimpiarARecibirCampoAlmacen(
+  const ACodigoAlm: string);
+var
+  ds: TUniQuery;
+  bk: TBookmark;
+  sAlmLin, sAlmCab, sAlmEfe: string;
+begin
+  if dmmPedidosCompra = nil then
+    Exit;
+  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty or
+     (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') = nil) then
+    Exit;
+  sAlmCab :=
+    dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
+  bk := ds.GetBookmark;
+  ds.DisableControls;
+  try
+    ds.First;
+    while not ds.Eof do
+    begin
+      if ds.FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat > 0 then
+      begin
+        sAlmLin := ds.FieldByName('CODIGO_ALMACEN_PEDCLIN').AsString;
+        if Trim(sAlmLin) <> '' then
+          sAlmEfe := sAlmLin
+        else
+          sAlmEfe := sAlmCab;
+        if SameText(sAlmEfe, ACodigoAlm) then
+        begin
+          ds.Edit;
+          ds.FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat := 0;
+          ds.Post;
+        end;
+      end;
+      ds.Next;
+    end;
+  finally
+    if ds.BookmarkValid(bk) then
+      ds.GotoBookmark(bk);
+    ds.FreeBookmark(bk);
+    ds.EnableControls;
+  end;
+end;
+
+function TfrmMtoPedidosCompra.TotalARecibirCampo: Double;
+var
+  ds: TUniQuery;
+  bk: TBookmark;
+begin
+  Result := 0;
+  if dmmPedidosCompra = nil then
+    Exit;
+  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty or
+     (ds.State in dsEditModes) or
+     (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') = nil) then
+    Exit;
+  bk := ds.GetBookmark;
+  ds.DisableControls;
+  try
+    ds.First;
+    while not ds.Eof do
+    begin
+      Result := Result +
+        ds.FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat;
+      ds.Next;
+    end;
+  finally
+    if ds.BookmarkValid(bk) then
+      ds.GotoBookmark(bk);
+    ds.FreeBookmark(bk);
+    ds.EnableControls;
+  end;
+end;
+
+function TfrmMtoPedidosCompra.PrimerAlmacenARecibirCampo: string;
+var
+  ds: TUniQuery;
+  bk: TBookmark;
+  sAlmCab: string;
+begin
+  Result := '';
+  if dmmPedidosCompra = nil then
+    Exit;
+  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty or
+     (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') = nil) then
+    Exit;
+  sAlmCab :=
+    dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
+  bk := ds.GetBookmark;
+  ds.DisableControls;
+  try
+    ds.First;
+    while (Result = '') and (not ds.Eof) do
+    begin
+      if ds.FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat > 0 then
+      begin
+        Result :=
+          Trim(ds.FieldByName('CODIGO_ALMACEN_PEDCLIN').AsString);
+        if Result = '' then
+          Result := sAlmCab;
+      end;
+      ds.Next;
+    end;
+  finally
+    if ds.BookmarkValid(bk) then
+      ds.GotoBookmark(bk);
+    ds.FreeBookmark(bk);
+    ds.EnableControls;
+  end;
+end;
+
+function TfrmMtoPedidosCompra.RellenarARecibirCampoTodo: Integer;
+var
+  ds: TUniQuery;
+  bk: TBookmark;
+  rPdte: Double;
+begin
+  Result := 0;
+  if dmmPedidosCompra = nil then
+    Exit;
+  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+  if (ds = nil) or (not ds.Active) or ds.IsEmpty or
+     (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') = nil) then
+    Exit;
+  if ds.State in dsEditModes then
+    ds.Post;
+  bk := ds.GetBookmark;
+  ds.DisableControls;
+  try
+    ds.First;
+    while not ds.Eof do
+    begin
+      rPdte := ds.FieldByName('CANTIDAD_PEDCLIN').AsFloat -
+               ds.FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat;
+      if rPdte < 0 then
+        rPdte := 0;
+      if ds.FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat <>
+         rPdte then
+      begin
+        ds.Edit;
+        ds.FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat := rPdte;
+        ds.Post;
+      end;
+      if rPdte > 0 then
+        Inc(Result);
+      ds.Next;
+    end;
+  finally
+    if ds.BookmarkValid(bk) then
+      ds.GotoBookmark(bk);
+    ds.FreeBookmark(bk);
+    ds.EnableControls;
   end;
 end;
 

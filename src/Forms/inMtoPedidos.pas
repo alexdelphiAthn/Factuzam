@@ -233,18 +233,19 @@ type
   private
     FBuscandoDatosCabecera: Boolean;
     FAplicandoArticulo: Boolean;
-    // Handler original de unqryPedidosLineas.AfterPost (el que traia el DM)
-    // guardado para no perder su logica al encadenar el refresco del label
-    // de prendas. Ver unqryLineasAfterPostHook.
+    // Handlers originales de unqryPedidosLineas guardados para no perder
+    // la logica del DM al encadenar montaje de columnas y totales.
+    FOldLineasAfterOpen: TDataSetNotifyEvent;
     FOldLineasAfterPost: TDataSetNotifyEvent;
     // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
-    // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal; Auto por
-    // defecto. El Construir hace ClearItems: las columnas del dfm
-    // mueren y las propias se recrean en runtime (patron de DTR e
-    // inventarios).
+    // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal. Para alta de
+    // lineas Auto es el modo operativo para buscar articulo/SKU.
+    // El Construir hace ClearItems: las columnas del dfm mueren y las
+    // propias se recrean en runtime (patron de DTR e inventarios).
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
+    procedure AsegurarModoEntradaLineas(AMostrarEditor: Boolean);
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostPedido;
     procedure MostrarColumnasAtributoGlobalesPed;
@@ -266,6 +267,7 @@ type
     procedure PivoteVentaBandaCambiada(ABanda: TBandaPivoteVenta);
     procedure AsegurarCabeceraPersistidaParaLineas;
     procedure AsegurarPrimeraLineaPedido;
+    procedure PrepararModoAltaLineas;
     procedure cxgrdcPedLinSKUPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure RellenarLineasAlEntregarTodo;
@@ -276,6 +278,7 @@ type
     procedure ActualizarLabelPrendas;
     // Hook AfterPost de las lineas: conserva el calculo de totales que
     // hacia el DM (CalcularTotalesPedido) y anade el refresco del label.
+    procedure unqryLineasAfterOpenHook(DataSet: TDataSet);
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
     // Hook OnDataChange de dsTablaG: al navegar entre pedidos (Field=nil)
     // hay que recalcular el total de prendas con las lineas del pedido
@@ -286,6 +289,7 @@ type
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     dmmPedidos: TdmPedidos;
+    destructor Destroy; override;
     procedure CrearTablaPrincipal; override;
     // Restricción de la precarga a la empresa del usuario
     function SqlRestriccionUsuario: string; override;
@@ -309,6 +313,26 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+destructor TfrmMtoPedidos.Destroy;
+begin
+  // El modo del contrato se libera ANTES del inherited: su teardown
+  // (Desmontar/destructor) toca el view y el dataset de lineas, que
+  // deben seguir vivos. Dejarlo a la finalizacion de la interfaz en
+  // CleanupInstance corria con el grid ya destruido (AV en GetProvider
+  // al cerrar la pestania, 08/07/26).
+  if FModoEntrada <> nil then
+  begin
+    try
+      FModoEntrada.Desmontar;
+    except
+      // Teardown defensivo en cierre: nada que hacer si el grid ya
+      // esta a medio destruir.
+    end;
+    FModoEntrada := nil;
+  end;
+  inherited;
+end;
 
 procedure TfrmMtoPedidos.cbbSERIE_PEDPropertiesInitPopup(Sender: TObject);
 var
@@ -693,10 +717,7 @@ end;
 procedure TfrmMtoPedidos.PivoteVentaBandaCambiada(
   ABanda: TBandaPivoteVenta);
 begin
-  if ABanda = bpvEntregada then
-    tsLineasPedido.Caption := '&1_Líneas [Tallas horiz. entregada]'
-  else
-    tsLineasPedido.Caption := '&1_Líneas [Tallas horiz. pedida]';
+  tsLineasPedido.Caption := '&1_Líneas [Tallas horiz. 3 filas]';
 end;
 
 procedure TfrmMtoPedidos.FormCreate(Sender: TObject);
@@ -705,8 +726,8 @@ var
   stEnt, stPend: TcxStyle;
 begin
   inherited;
-  // Contrato de entrada ColumnSKUcxGrid: Auto por defecto (resuelve a
-  // desglose); F1 cicla los modos con las lineas a la vista.
+  // Contrato de entrada ColumnSKUcxGrid: Auto por defecto; F1 permite
+  // pasar a SKU o a tallas horizontales cuando el pedido ya esta en SKU.
   FModoEntradaSel := mcsAuto;
   FColsModoConstruido := False;
   tsTotales.TabVisible := True;
@@ -780,10 +801,11 @@ begin
   dmmPedidos.unqryPedidosLineas.MasterSource := dsTablaG;
   dmmPedidos.unqryAlbaranes.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_PED;NUMERO_PED';
-  // Total de prendas (pestana Totales): se recalcula tras cada Post de
-  // linea y al navegar entre pedidos. Se conserva el handler original
-  // (el que trae el DM) encadenandolo desde unqryLineasAfterPostHook.
+  // Total de prendas y columnas: se encadenan los handlers originales
+  // del DM para no perder su logica propia.
+  FOldLineasAfterOpen := dmmPedidos.unqryPedidosLineas.AfterOpen;
   FOldLineasAfterPost := dmmPedidos.unqryPedidosLineas.AfterPost;
+  dmmPedidos.unqryPedidosLineas.AfterOpen := unqryLineasAfterOpenHook;
   dmmPedidos.unqryPedidosLineas.AfterPost := unqryLineasAfterPostHook;
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
   ActualizarLabelPrendas;
@@ -797,6 +819,26 @@ begin
       FormatFloat('#,##0', dmmPedidos.TotalPrendasPedido)
   else
     lblTotalPrendasPed.Caption := '0';
+end;
+
+procedure TfrmMtoPedidos.AsegurarModoEntradaLineas(
+  AMostrarEditor: Boolean);
+begin
+  if (dmmPedidos <> nil) and dmmPedidos.unqryPedidosLineas.Active then
+  begin
+    if FModoEntrada = nil then
+      ConstruirModoEntrada;
+    if AMostrarEditor and (FModoEntrada <> nil) then
+      FModoEntrada.MostrarEditor;
+  end;
+end;
+
+procedure TfrmMtoPedidos.unqryLineasAfterOpenHook(DataSet: TDataSet);
+begin
+  if Assigned(FOldLineasAfterOpen) then
+    FOldLineasAfterOpen(DataSet);
+  AsegurarModoEntradaLineas(False);
+  ActualizarLabelPrendas;
 end;
 
 // Hook AfterPost de unqryPedidosLineas: encadena el handler original del
@@ -820,9 +862,13 @@ begin
     // Contrato de entrada: al navegar de pedido, las lineas llegan
     // recargadas por el master-detail SIN atributos desempaquetados
     // (misma leccion que inventarios: si no, Color/Talla en blanco).
-    if FColsModoConstruido and (FModoEntradaSel <> mcsSku) and
-       (dmmPedidos <> nil) then
-      dmmPedidos.DesempaquetarAtributosLineas;
+    if dmmPedidos <> nil then
+    begin
+      if FModoEntrada = nil then
+        AsegurarModoEntradaLineas(False)
+      else if FColsModoConstruido and (FModoEntradaSel <> mcsSku) then
+        dmmPedidos.DesempaquetarAtributosLineas;
+    end;
   end;
 end;
 
@@ -1165,18 +1211,54 @@ begin
     dmmPedidos.AbrirDetalles;
   if dsLin.Active and dsLin.IsEmpty and
      (not (dsLin.State in dsEditModes)) then
+  begin
+    PrepararModoAltaLineas;
     dsLin.Append;
+  end;
+end;
+
+procedure TfrmMtoPedidos.PrepararModoAltaLineas;
+var
+  ds: TDataSet;
+  function CampoVacio(const ACampo: string): Boolean;
+  begin
+    Result := Trim(ds.FieldByName(ACampo).AsString) = '';
+  end;
+  function LineaActualVacia: Boolean;
+  begin
+    Result := True;
+    if (ds <> nil) and ds.Active then
+      Result := CampoVacio('CODIGO_ART_PEDLIN') and
+                CampoVacio('CODIGO_UNIDAD_PEDLIN') and
+                CampoVacio('CODIGOPRODPS_PEDLIN');
+  end;
+begin
+  ds := nil;
+  if Assigned(dmmPedidos) then
+    ds := dmmPedidos.unqryPedidosLineas;
+  if (ds <> nil) and ds.Active and (ds.State = dsEdit) then
+    ds.Post
+  else if (ds <> nil) and ds.Active and (ds.State = dsInsert) and
+          (not LineaActualVacia) then
+    ds.Post;
+  if FModoEntradaSel <> mcsAuto then
+  begin
+    FModoEntradaSel := mcsAuto;
+    if FModoEntrada <> nil then
+    begin
+      ConstruirModoEntrada;
+    end;
+  end
+  else if FModoEntrada = nil then
+  begin
+    ConstruirModoEntrada;
+  end;
 end;
 
 procedure TfrmMtoPedidos.cxGrdPedidosLineasEnter(Sender: TObject);
 begin
   AsegurarPrimeraLineaPedido;
-  // Contrato de entrada: primera construccion al entrar en el grid
-  // (las lineas ya estan abiertas como detail del pedido).
-  if FModoEntrada = nil then
-    ConstruirModoEntrada;
-  if FModoEntrada <> nil then
-    FModoEntrada.MostrarEditor;
+  AsegurarModoEntradaLineas(True);
 end;
 
 procedure TfrmMtoPedidos.cxGrdPedidosLineasExit(Sender: TObject);
@@ -1215,7 +1297,7 @@ end;
 
 procedure TfrmMtoPedidos.KeyDown(var Key: Word; Shift: TShiftState);
 begin
-  // F1: alterna Auto (desglose) -> SKU -> Tallas horizontal con las
+  // F1: alterna Tallas horizontal -> Auto (desglose) -> SKU con las
   // lineas del pedido a la vista.
   if (Key = VK_F1) and (Shift = []) and
      (pcPedido.ActivePage = tsLineasPedido) then
@@ -1245,29 +1327,58 @@ begin
   if not ds.Active then
     Exit;
   // Teardown del modo anterior (patron DTR/inventarios).
-  if tvPedidosLineas.Controller.EditingController.IsEditing then
+  tvPedidosLineas.BeginUpdate;
+  try
+    if tvPedidosLineas.Controller.EditingController.IsEditing then
+      try
+        tvPedidosLineas.Controller.EditingController.HideEdit(False);
+      except
+        on E: Exception do
+          ;
+      end;
     try
-      tvPedidosLineas.Controller.EditingController.HideEdit(False);
+      tvPedidosLineas.Controller.FocusedItem := nil;
     except
-      on E: EInvalidOperation do
+      on E: Exception do
         ;
     end;
-  if ds.State in dsEditModes then
-    ds.Cancel;
-  if FModoEntrada <> nil then
-    FModoEntrada.Desmontar;
-  tvPedidosLineas.OnInitEdit := nil;
-  tvPedidosLineas.OnEditKeyDown := nil;
-  tvPedidosLineas.OnEditing := nil;
-  tvPedidosLineas.OnFocusedRecordChanged := nil;
-  tvPedidosLineas.OnFocusedItemChanged := nil;
-  tvPedidosLineas.OnCustomDrawCell := nil;
-  // Las columnas del modo saliente guardan handlers (OnGetProperties,
-  // OnCustomDrawCell...) del objeto que se libera en la linea de abajo.
-  // Se eliminan ANTES: el repintado que provoca DesempaquetarAtributos-
-  // Lineas llamaria a un modo muerto (AV en ArtGetProperties 07/07/26).
-  tvPedidosLineas.ClearItems;
-  FModoEntrada := nil;
+    if FModoEntrada <> nil then
+      try
+        FModoEntrada.Desmontar;
+      except
+        on E: Exception do
+          ;
+      end;
+    try
+      tvPedidosLineas.DataController.DataSource := nil;
+    except
+      on E: Exception do
+        ;
+    end;
+    if ds.State in dsEditModes then
+      ds.Cancel;
+    tvPedidosLineas.OnInitEdit := nil;
+    tvPedidosLineas.OnEditKeyDown := nil;
+    tvPedidosLineas.OnEditing := nil;
+    tvPedidosLineas.OnFocusedRecordChanged := nil;
+    tvPedidosLineas.OnFocusedItemChanged := nil;
+    tvPedidosLineas.OnCustomDrawCell := nil;
+    // Las columnas del modo saliente guardan handlers (OnGetProperties,
+    // OnCustomDrawCell...) del objeto que se libera en la linea de abajo.
+    // Se eliminan ANTES: el repintado que provoca DesempaquetarAtributos-
+    // Lineas llamaria a un modo muerto (AV en ArtGetProperties 07/07/26).
+    tvPedidosLineas.ClearItems;
+    FModoEntrada := nil;
+  finally
+    try
+      tvPedidosLineas.DataController.DataSource :=
+        dmmPedidos.dsPedidosLineas;
+    except
+      on E: Exception do
+        ;
+    end;
+    tvPedidosLineas.EndUpdate;
+  end;
   // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
   // (columnas reales _PEDLIN; idempotente por linea).
   if FModoEntradaSel <> mcsSku then
@@ -1310,6 +1421,7 @@ begin
     CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_PEDLIN';
     CfgPV.FieldCantidadPedida := 'CANTIDAD_PEDLIN';
     CfgPV.FieldCantidadEntregada := 'CANTIDAD_ENTREGADA_PEDLIN';
+    CfgPV.FieldCantidadAAlbaranar := 'CANTIDAD_A_ALBARANAR_PEDLIN';
     CfgPV.FieldPrecioBase := 'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN';
     CfgPV.FieldAlmacen := 'CODIGO_ALMACEN_PEDLIN';
     CfgPV.FieldAlmacenMaster := 'CODIGO_ALM_PED';
@@ -1358,8 +1470,17 @@ procedure TfrmMtoPedidos.CrearColumnasHostPedido;
     Result.Width := AAncho;
     Result.Options.Editing := AEditable;
   end;
+  procedure FormatearMoneda(ACol: TcxGridDBColumn);
+  begin
+    ACol.PropertiesClass := TcxCurrencyEditProperties;
+    with TcxCurrencyEditProperties(ACol.Properties) do
+    begin
+      DisplayFormat := '0.00 ' + #8364;
+      UseDisplayFormatWhenEditing := True;
+    end;
+  end;
 var
-  ColCant, ColTipo, ColLinea: TcxGridDBColumn;
+  ColCant, ColTipo, ColLinea, ColAAlbaranar: TcxGridDBColumn;
 begin
   // Columnas propias del pedido tras el ClearItems del contrato.
   ColLinea := Col('Línea', 'LINEA_PEDLIN', 60, False);
@@ -1372,12 +1493,16 @@ begin
     ColTipo.VisibleForCustomization := False;
     // Decimales de la cantidad segun la unidad de la linea (metros...).
     VincularCantidadGrid(ColCant, ColTipo);
-    Col('Entregada', 'CANTIDAD_ENTREGADA_PEDLIN', 90, False);
-    Col('Pendiente', 'CANTIDAD_PENDIENTE_PEDLIN', 90, False);
+    ColAAlbaranar := Col('A albaranar', 'CANTIDAD_A_ALBARANAR_PEDLIN',
+                         95, True);
+    VincularCantidadGrid(ColAAlbaranar, ColTipo);
+    Col('Pendiente', 'CANTIDAD_PENDIENTE_A_ALBARANAR_PEDLIN', 90, False);
   end;
-  Col('PVP S/IVA', 'PRECIO_VENTA_SIVA_ARTICULO_PEDLIN', 90, True);
-  Col('PVP C/IVA', 'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN', 90, True);
-  Col('Total', 'TOTAL_PEDLIN', 95, False);
+  FormatearMoneda(Col('PVP S/IVA',
+                      'PRECIO_VENTA_SIVA_ARTICULO_PEDLIN', 90, True));
+  FormatearMoneda(Col('PVP C/IVA',
+                      'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN', 90, True));
+  FormatearMoneda(Col('Total', 'TOTAL_PEDLIN', 95, False));
   Col('Almacén', 'CODIGO_ALMACEN_PEDLIN', 75, True);
   // Orden normal del documento: la LINEA delante del bloque de
   // articulo que creo el modo (las columnas del host nacen detras).
@@ -1442,6 +1567,7 @@ begin
   if not dmmPedidos.unqryPedidosLineas.Active then
     dmmPedidos.AbrirDetalles;
   ds := dmmPedidos.unqryPedidosLineas;
+  PrepararModoAltaLineas;
   // Si ya hay una linea vacia en insercion (la auto-anadida al entrar
   // al grid o la recreada por AsegurarCabecera), se REUTILIZA: otro
   // Append postearia la vacia via CheckBrowseMode contra la guarda de
@@ -1457,9 +1583,23 @@ begin
 end;
 
 procedure TfrmMtoPedidos.btnBorrarLineaClick(Sender: TObject);
+var
+  BorradorGrupo: IPivoteVentaBorrarGrupo;
 begin
   inherited;
-  if MessageDlg('¿Está seguro de que desea eliminar esta línea?',
+  // En modo tallas horizontales la fila del grid es un GRUPO
+  // (articulo+color+precio) con una linea SKU real por talla: hay que
+  // borrarlas TODAS via el pivote. Borrar solo el registro actual del
+  // dataset dejaba vivas las demas tallas y la linea "reaparecia" al
+  // refrescar (bug 09/07/26).
+  if Supports(FModoEntrada, IPivoteVentaBorrarGrupo, BorradorGrupo) then
+  begin
+    if MessageDlg('¿Está seguro de que desea eliminar esta línea ' +
+                  '(todas sus tallas)?',
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      BorradorGrupo.BorrarGrupoActual;
+  end
+  else if MessageDlg('¿Está seguro de que desea eliminar esta línea?',
                 mtConfirmation,
                 [mbYes, mbNo],
                 0) = mrYes then
@@ -1469,50 +1609,60 @@ end;
 procedure TfrmMtoPedidos.RellenarLineasAlEntregarTodo;
 var
   ds: TDataSet;
-  fCant, fEntr: Double;
+  ModoAlbaranar: IPivoteVentaAlbaranar;
+  fCant, fEntr, fAAlbaranar: Double;
   bFiltrado: Boolean;
   sLineaFoco: string;
 begin
-  ds := dmmPedidos.unqryPedidosLineas;
-  if not ds.Active then
-    dmmPedidos.AbrirDetalles;
-  if ds.Active then
+  if Supports(FModoEntrada, IPivoteVentaAlbaranar, ModoAlbaranar) then
+    ModoAlbaranar.MarcarTodoAAlbaranar
+  else
   begin
-    if ds.State in dsEditModes then
-      ds.Post;
-    bFiltrado := ds.Filtered;
-    sLineaFoco := '';
-    if (not ds.IsEmpty) and (ds.FindField('LINEA_PEDLIN') <> nil) then
-      sLineaFoco := ds.FieldByName('LINEA_PEDLIN').AsString;
-    ds.DisableControls;
-    try
+    ds := dmmPedidos.unqryPedidosLineas;
+    if not ds.Active then
+      dmmPedidos.AbrirDetalles;
+    if ds.Active then
+    begin
+      if ds.State in dsEditModes then
+        ds.Post;
+      bFiltrado := ds.Filtered;
+      sLineaFoco := '';
+      if (not ds.IsEmpty) and (ds.FindField('LINEA_PEDLIN') <> nil) then
+        sLineaFoco := ds.FieldByName('LINEA_PEDLIN').AsString;
+      ds.DisableControls;
       try
-        ds.Filtered := False;
-        ds.First;
-        while not ds.Eof do
-        begin
-          fCant := ds.FieldByName('CANTIDAD_PEDLIN').AsFloat;
-          fEntr := ds.FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat;
-          if fEntr < fCant then
+        try
+          ds.Filtered := False;
+          ds.First;
+          while not ds.Eof do
           begin
-            ds.Edit;
-            ds.FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat := fCant;
-            ds.Post;
+            fCant := ds.FieldByName('CANTIDAD_PEDLIN').AsFloat;
+            fEntr := ds.FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat;
+            fAAlbaranar := fCant - fEntr;
+            if fAAlbaranar < 0 then
+              fAAlbaranar := 0;
+            if ds.FindField('CANTIDAD_A_ALBARANAR_PEDLIN') <> nil then
+            begin
+              ds.Edit;
+              ds.FieldByName('CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat :=
+                fAAlbaranar;
+              ds.Post;
+            end;
+            ds.Next;
           end;
-          ds.Next;
+        finally
+          ds.Filtered := bFiltrado;
+          if sLineaFoco <> '' then
+            ds.Locate('LINEA_PEDLIN', sLineaFoco, []);
         end;
       finally
-        ds.Filtered := bFiltrado;
-        if sLineaFoco <> '' then
-          ds.Locate('LINEA_PEDLIN', sLineaFoco, []);
+        ds.EnableControls;
       end;
-    finally
-      ds.EnableControls;
-    end;
-    if Assigned(dmmPedidos) then
-    begin
-      dmmPedidos.CalcularTotalesPedido;
-      ActualizarLabelPrendas;
+      if Assigned(dmmPedidos) then
+      begin
+        dmmPedidos.CalcularTotalesPedido;
+        ActualizarLabelPrendas;
+      end;
     end;
   end;
 end;
@@ -1520,7 +1670,7 @@ end;
 procedure TfrmMtoPedidos.btnEntregarTodoClick(Sender: TObject);
 begin
   inherited;
-  if MessageDlg('Marcar todas las líneas como entregadas en su totalidad?',
+  if MessageDlg('Marcar todas las líneas pendientes para albaranar?',
                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     RellenarLineasAlEntregarTodo;
 end;
@@ -1530,13 +1680,15 @@ var
   ds: TDataSet;
   lst: TList<TPair<string, Currency>>;
   par: TPair<string, Currency>;
-  fEntrPend: Double;
+  ModoAlbaranar: IPivoteVentaAlbaranar;
+  fEntrPend, fEntregadaReal: Double;
   sNumeroAlb, sSerieAlb: string;
   sEmpresa, sSerie, sNumero, sAlm, sAlmComun, sAlmDefecto: string;
   EsAlmacenUnico, bAlmInit: Boolean;
   res: TSelAlmacenAlbaranResult;
   frmDocs: TfrmModalDocsCreados;
   bFiltrado, bOk: Boolean;
+  bUsaPivoteAlbaranar: Boolean;
   sLineaFoco: string;
 begin
   inherited;
@@ -1556,47 +1708,60 @@ begin
     EsAlmacenUnico := True;
     bAlmInit       := False;
     sAlmComun      := '';
-    bFiltrado := ds.Filtered;
-    sLineaFoco := '';
-    if (not ds.IsEmpty) and (ds.FindField('LINEA_PEDLIN') <> nil) then
-      sLineaFoco := ds.FieldByName('LINEA_PEDLIN').AsString;
-    ds.DisableControls;
-    try
+    bUsaPivoteAlbaranar :=
+      Supports(FModoEntrada, IPivoteVentaAlbaranar, ModoAlbaranar);
+    if bUsaPivoteAlbaranar then
+      ModoAlbaranar.VolcarAAlbaranar(lst, sAlmComun, EsAlmacenUnico)
+    else
+    begin
+      bFiltrado := ds.Filtered;
+      sLineaFoco := '';
+      if (not ds.IsEmpty) and (ds.FindField('LINEA_PEDLIN') <> nil) then
+        sLineaFoco := ds.FieldByName('LINEA_PEDLIN').AsString;
+      ds.DisableControls;
       try
-        ds.Filtered := False;
-        ds.First;
-        while not ds.Eof do
-        begin
-          // Cantidad marcada para servir desde la pantalla. El proc
-          // calcula la diferencia real frente a lo ya albaranado.
-          fEntrPend := ds.FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat;
-          if fEntrPend > 0 then
+        try
+          ds.Filtered := False;
+          ds.First;
+          while not ds.Eof do
           begin
-            par.Key   := ds.FieldByName('LINEA_PEDLIN').AsString;
-            par.Value := fEntrPend;
-            lst.Add(par);
-            sAlm := Trim(ds.FieldByName('CODIGO_ALMACEN_PEDLIN').AsString);
-            if not bAlmInit then
+            // Cantidad marcada para servir desde la pantalla. El proc
+            // calcula la diferencia real frente a lo ya albaranado.
+            if ds.FindField('CANTIDAD_A_ALBARANAR_PEDLIN') <> nil then
+              fEntrPend := ds.FieldByName(
+                'CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat
+            else
+              fEntrPend := 0;
+            if fEntrPend > 0 then
             begin
-              sAlmComun := sAlm;
-              bAlmInit  := True;
-            end
-            else if sAlm <> sAlmComun then
-              EsAlmacenUnico := False;
+              fEntregadaReal :=
+                ds.FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat;
+              par.Key   := ds.FieldByName('LINEA_PEDLIN').AsString;
+              par.Value := fEntregadaReal + fEntrPend;
+              lst.Add(par);
+              sAlm := Trim(ds.FieldByName('CODIGO_ALMACEN_PEDLIN').AsString);
+              if not bAlmInit then
+              begin
+                sAlmComun := sAlm;
+                bAlmInit  := True;
+              end
+              else if sAlm <> sAlmComun then
+                EsAlmacenUnico := False;
+            end;
+            ds.Next;
           end;
-          ds.Next;
+        finally
+          ds.Filtered := bFiltrado;
+          if sLineaFoco <> '' then
+            ds.Locate('LINEA_PEDLIN', sLineaFoco, []);
         end;
       finally
-        ds.Filtered := bFiltrado;
-        if sLineaFoco <> '' then
-          ds.Locate('LINEA_PEDLIN', sLineaFoco, []);
+        ds.EnableControls;
       end;
-    finally
-      ds.EnableControls;
     end;
     if lst.Count = 0 then
       ShowMessage(
-        'No hay líneas con cantidad entregada para crear el albarán.')
+        'No hay líneas con cantidad a albaranar para crear el albarán.')
     else
     begin
       sSerie  := dmmPedidos.unqryTablaG.FieldByName('SERIE_PED').AsString;
@@ -1625,6 +1790,37 @@ begin
                                                     lst, res.CodigoAlmacen);
         if bOk then
         begin
+          if bUsaPivoteAlbaranar then
+            ModoAlbaranar.LimpiarAAlbaranar
+          else if ds.FindField('CANTIDAD_A_ALBARANAR_PEDLIN') <> nil then
+          begin
+            bFiltrado := ds.Filtered;
+            sLineaFoco := '';
+            if (not ds.IsEmpty) and
+               (ds.FindField('LINEA_PEDLIN') <> nil) then
+              sLineaFoco := ds.FieldByName('LINEA_PEDLIN').AsString;
+            ds.DisableControls;
+            try
+              ds.Filtered := False;
+              ds.First;
+              while not ds.Eof do
+              begin
+                if ds.FieldByName('CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat <>
+                   0 then
+                begin
+                  ds.Edit;
+                  ds.FieldByName('CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat := 0;
+                  ds.Post;
+                end;
+                ds.Next;
+              end;
+              ds.Filtered := bFiltrado;
+              if sLineaFoco <> '' then
+                ds.Locate('LINEA_PEDLIN', sLineaFoco, []);
+            finally
+              ds.EnableControls;
+            end;
+          end;
           // Mostrar el albaran creado / ampliado en un modal estilo
           // Sesiones, con boton "Ir a documento" para abrir su ficha.
           frmDocs := TfrmModalDocsCreados.Create(Self);
