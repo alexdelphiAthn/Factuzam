@@ -76,6 +76,10 @@ type
     // cierre, pero AfterPost sincroniza movimientos desde el documento
     // actual sin depender del estado final.
     FTransicionEstadoDevc: string;
+    // True mientras DesempaquetarAtributosLineas postea lineas: cambio
+    // puramente descriptivo que NO debe disparar la logica fiscal ni
+    // la sincronizacion de movimientos (cascada por linea al navegar).
+    FDesempaquetandoAtributos: Boolean;
     procedure AsignarNumeroLineaDevolucionCompra(DataSet: TDataSet);
     function CampoVistaCabeceraPrintExiste(const ACampo: string): Boolean;
     function HayLineasMovimiento(const ASerie, ANumero: string): Boolean;
@@ -477,6 +481,9 @@ var
   sSku, sArt: string;
 begin
   inherited;
+  // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
+  if FDesempaquetandoAtributos then
+    Exit;
   // Linea vacia (sin articulo ni SKU): cancelar silenciosamente. El cxGrid
   // hace Post automatico al navegar con flechas (OptionsData.Appending); si
   // la linea es un placeholder vacio que el usuario creo sin querer, el Post
@@ -649,6 +656,10 @@ end;
 
 procedure TdmDevolucionesCompra.CalcularTotalesDevolucionCompra;
 begin
+  // Los posts del desempaquetado ATTR no alteran importes: saltar el
+  // recalculo por linea (cascada de consultas de IVA al navegar).
+  if FDesempaquetandoAtributos then
+    Exit;
   CalcularTotalesDocumentoCompra(unqryTablaG.Connection, unqryTablaG,
     unqryDevolucionesCompraLineas, 'DEVC', 'TOTAL_DEVCLIN',
     'TIPO_IVA_ARTICULO_DEVCLIN', 'PORCENTAJE_IVA_DEVCLIN');
@@ -697,6 +708,10 @@ var
   sNumero: string;
   sSerie: string;
 begin
+  // Los posts del desempaquetado ATTR no tocan cantidades ni SKUs:
+  // saltar el borrado/recreacion de movimientos y recalculo de PMP.
+  if FDesempaquetandoAtributos then
+    Exit;
   if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
   begin
     sSerie := Trim(unqryTablaG.FieldByName('SERIE_DEVC').AsString);
@@ -929,6 +944,8 @@ begin
   begin
     Bm := unqryDevolucionesCompraLineas.GetBookmark;
     unqryDevolucionesCompraLineas.DisableControls;
+    // Posts descriptivos: silencia la logica fiscal y de movimientos.
+    FDesempaquetandoAtributos := True;
     try
       unqryDevolucionesCompraLineas.First;
       while not unqryDevolucionesCompraLineas.Eof do
@@ -973,6 +990,7 @@ begin
       if unqryDevolucionesCompraLineas.BookmarkValid(Bm) then
         unqryDevolucionesCompraLineas.GotoBookmark(Bm);
     finally
+      FDesempaquetandoAtributos := False;
       unqryDevolucionesCompraLineas.EnableControls;
       unqryDevolucionesCompraLineas.FreeBookmark(Bm);
     end;

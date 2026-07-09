@@ -2116,11 +2116,14 @@ begin
   tvLineasFactura.DataController.DataSource := dmmFacturas.dsLinFac;
   cxgrdLineasFactura.OnEnter := cxgrdLineasFacturaEnter;
   // Contrato de entrada ColumnSKUcxGrid: Auto (desglose) por defecto;
-  // F1 cicla los modos. La primera construccion se hace al entrar en el
-  // grid de lineas (las columnas del dfm siguen vivas hasta entonces).
+  // F1 cicla los modos. La primera construccion se hace al abrir la
+  // pantalla (antes era al entrar en el grid y hasta entonces se veian
+  // las columnas del dfm).
   FModoEntradaSel := mcsAuto;
   FColsModoConstruido := False;
   FConstruyendoModo := False;
+  if Assigned(dmmFacturas) and dmmFacturas.unqryLinFac.Active then
+    ConstruirModoEntrada;
   cbbTARIFA_ARTICULOS_CLIENTES.Properties.ListSource := dmmFacturas.dsTarifas;
   AplicarOrigenCobros;
   btnReciboEmitido.OnClick := btnReciboEmitidoClick;

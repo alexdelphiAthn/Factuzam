@@ -59,6 +59,10 @@ type
     procedure unqryPedidosCompraLineasBeforeDelete(DataSet: TDataSet);
   private
     FCalculandoTotales: Boolean;
+    // True mientras DesempaquetarAtributosLineas postea lineas: cambio
+    // puramente descriptivo que NO debe disparar la logica fiscal
+    // (cascada por linea al navegar).
+    FDesempaquetandoAtributos: Boolean;
     procedure AsignarNumeroLineaPedidoCompra(DataSet: TDataSet);
     procedure ConfigurarSqlCabecera;
     // Construye el SQLInsert contra fza_pedidos_compra: la vista
@@ -627,6 +631,9 @@ var
   sSku, sArt: string;
 begin
   inherited;
+  // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
+  if FDesempaquetandoAtributos then
+    Exit;
   // Linea vacia (sin articulo ni SKU): cancelar silenciosamente. El cxGrid
   // hace Post automatico al navegar con flechas (OptionsData.Appending); si
   // la linea es un placeholder vacio que el usuario creo sin querer, se
@@ -1133,6 +1140,9 @@ begin
   begin
     Bm := unqryPedidosCompraLineas.GetBookmark;
     unqryPedidosCompraLineas.DisableControls;
+    // Posts descriptivos: silencia la logica fiscal en BeforePost y
+    // CalcularTotales.
+    FDesempaquetandoAtributos := True;
     try
       unqryPedidosCompraLineas.First;
       while not unqryPedidosCompraLineas.Eof do
@@ -1178,6 +1188,7 @@ begin
       if unqryPedidosCompraLineas.BookmarkValid(Bm) then
         unqryPedidosCompraLineas.GotoBookmark(Bm);
     finally
+      FDesempaquetandoAtributos := False;
       unqryPedidosCompraLineas.EnableControls;
       unqryPedidosCompraLineas.FreeBookmark(Bm);
     end;
@@ -1186,6 +1197,10 @@ end;
 
 procedure TdmPedidosCompra.CalcularTotalesPedidoCompra;
 begin
+  // Los posts del desempaquetado ATTR no alteran importes: saltar el
+  // recalculo por linea (cascada de consultas de IVA al navegar).
+  if FDesempaquetandoAtributos then
+    Exit;
   if not FCalculandoTotales then
   begin
     FCalculandoTotales := True;

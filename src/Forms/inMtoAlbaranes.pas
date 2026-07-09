@@ -1008,6 +1008,10 @@ begin
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
   ActualizarColumnasOpcionalesLinea;
   ActualizarLabelPrendas;
+  // Primera construccion del contrato al abrir la pantalla: sin ella,
+  // hasta entrar en el grid se veian las columnas del dfm.
+  if dmmAlbaranes.unqryAlbaranesLineas.Active then
+    ConstruirModoEntrada;
 end;
 
 procedure TfrmMtoAlbaranes.ActualizarLabelPrendas;
@@ -1107,6 +1111,13 @@ procedure TfrmMtoAlbaranes.dsTablaGDataChangeHook(Sender: TObject;
 begin
   if Field = nil then
     ActualizarLabelPrendas;
+  // Red de seguridad: si la construccion inicial no pudo hacerse (el
+  // detail aun no estaba abierto), la primera navegacion la hace.
+  if (Field = nil) and (not FColsModoConstruido) and
+     Assigned(dmmAlbaranes) and
+     dmmAlbaranes.unqryAlbaranesLineas.Active and
+     (not (dsTablaG.State in dsEditModes)) then
+    ConstruirModoEntrada;
 end;
 
 procedure TfrmMtoAlbaranes.dsLineasDataChangeHook(Sender: TObject;

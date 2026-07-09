@@ -103,6 +103,10 @@ type
   private
     FProcsInstalados: Boolean;
     FCalculandoTotales: Boolean;
+    // True mientras DesempaquetarAtributosLineas postea lineas: cambio
+    // puramente descriptivo que NO debe disparar la logica fiscal ni
+    // la sincronizacion de movimientos (cascada por linea al navegar).
+    FDesempaquetandoAtributos: Boolean;
     procedure AsignarNumeroLineaAlbaran(DataSet: TDataSet);
     procedure NormalizarCamposOpcionalesLinea(DataSet: TDataSet);
     function ResolverSkuMovimientoSalida(const ACodigoArticulo: string): string;
@@ -642,6 +646,9 @@ var
   sSku, sArt: string;
 begin
   inherited;
+  // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
+  if FDesempaquetandoAtributos then
+    Exit;
   // Guarda ColumnSKUcxGrid (leccion de pedidos, bucle 07/07/2026): un
   // Post de linea sin articulo ni SKU no debe llegar a BBDD ni
   // consumir contador de lineas.
@@ -753,6 +760,9 @@ begin
   begin
     Bm := unqryAlbaranesLineas.GetBookmark;
     unqryAlbaranesLineas.DisableControls;
+    // Posts descriptivos: silencia la logica fiscal y de movimientos
+    // en BeforePost / AfterPost.
+    FDesempaquetandoAtributos := True;
     try
       unqryAlbaranesLineas.First;
       while not unqryAlbaranesLineas.Eof do
@@ -797,6 +807,7 @@ begin
       if unqryAlbaranesLineas.BookmarkValid(Bm) then
         unqryAlbaranesLineas.GotoBookmark(Bm);
     finally
+      FDesempaquetandoAtributos := False;
       unqryAlbaranesLineas.EnableControls;
       unqryAlbaranesLineas.FreeBookmark(Bm);
     end;
@@ -806,6 +817,10 @@ end;
 procedure TdmAlbaranes.unqryAlbaranesLineasAfterPost(DataSet: TDataSet);
 begin
   inherited;
+  // Los posts del desempaquetado ATTR no alteran importes ni stock:
+  // saltar totales y sincronizacion de movimientos.
+  if FDesempaquetandoAtributos then
+    Exit;
   CalcularTotalesAlbaran;
   SincronizarMovimientosSalida;
 end;

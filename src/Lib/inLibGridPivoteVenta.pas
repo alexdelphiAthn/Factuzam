@@ -82,6 +82,11 @@ type
     // Rotulo de la banda de servicio ('A albaranar' por defecto;
     // pedidos de compra la rotulan 'A recibir').
     TextoBandaAAlbaranar  : string;
+    // Campo de la COPIA VISUAL que recibe la suma de UNIDADES del
+    // grupo. Solo aplica con BandaUnica: el importe de la linea
+    // representante descuadraba con la suma de las celdas (el importe
+    // del documento ya vive en el pie de totales).
+    FieldTotalUdsGrupo    : string;
     OnCrearLineaSku       : TCrearLineaPivoteVentaEvent;
     OnBandaCambiada       : TBandaPivoteVentaEvent;
   end;
@@ -129,6 +134,7 @@ type
     FPivotCantPedida     : TDictionary<Int64, Double>;
     FPivotCantEntregada  : TDictionary<Int64, Double>;
     FPivotCantAAlbaranar : TDictionary<Int64, Double>;
+    FPivotUdsGrupo       : TDictionary<Integer, Double>;
     FPivotIdAc           : TDictionary<Integer, Integer>;
     FPivotSinTalla       : TDictionary<Integer, Boolean>;
     FPivotArticulo       : TDictionary<Integer, string>;
@@ -321,6 +327,7 @@ begin
   FPivotCantPedida    := TDictionary<Int64, Double>.Create;
   FPivotCantEntregada := TDictionary<Int64, Double>.Create;
   FPivotCantAAlbaranar := TDictionary<Int64, Double>.Create;
+  FPivotUdsGrupo      := TDictionary<Integer, Double>.Create;
   FPivotIdAc          := TDictionary<Integer, Integer>.Create;
   FPivotSinTalla      := TDictionary<Integer, Boolean>.Create;
   FPivotArticulo      := TDictionary<Integer, string>.Create;
@@ -364,6 +371,7 @@ begin
   FreeAndNil(FPivotArticulo);
   FreeAndNil(FPivotSinTalla);
   FreeAndNil(FPivotIdAc);
+  FreeAndNil(FPivotUdsGrupo);
   FreeAndNil(FPivotCantAAlbaranar);
   FreeAndNil(FPivotCantEntregada);
   FreeAndNil(FPivotCantPedida);
@@ -721,7 +729,8 @@ procedure TGridPivoteVenta.CopiarLineaVista(AOrigen: TDataSet;
   ALineaVista: Integer);
 var
   CampoOri, CampoDst: TField;
-  i: Integer;
+  i, iBase: Integer;
+  rUds: Double;
 begin
   if (AOrigen <> nil) and (FCdsVista <> nil) and FCdsVista.Active then
   begin
@@ -739,6 +748,21 @@ begin
     CampoDst := FCdsVista.FindField(CAMPO_LINEA_VISTA);
     if CampoDst <> nil then
       CampoDst.AsInteger := ALineaVista;
+    // En banda unica, la columna Total del host pasa a UNIDADES del
+    // grupo: el importe de la linea representante descuadraba con la
+    // suma de las celdas (el importe del documento vive en el pie).
+    if FCfg.BandaUnica and (FCfg.FieldTotalUdsGrupo <> '') then
+    begin
+      CampoDst := FCdsVista.FindField(FCfg.FieldTotalUdsGrupo);
+      if CampoDst <> nil then
+      begin
+        if FLineaBasePivot.TryGetValue(ALineaVista, iBase) and
+           FPivotUdsGrupo.TryGetValue(iBase, rUds) then
+          CampoDst.AsFloat := rUds
+        else
+          CampoDst.Clear;
+      end;
+    end;
     // El numero de linea visible ya viene copiado de la linea BASE
     // real (el Locate previo posiciono en ella): se conserva su
     // formato original en vez de imponer 4 digitos.
@@ -1105,7 +1129,7 @@ var
   Info: TSkuPivoteVentaInfo;
   sArt, sSku, sKey, sLinea, sPrefijo, sVarSku: string;
   iLinea, iLineaRepr, iAc, iMaxBandas: Integer;
-  rPedida, rEntregada, rAAlbaranar, rPrecio: Double;
+  rPedida, rEntregada, rAAlbaranar, rPrecio, rUds: Double;
   iKeyPivot: Int64;
   bFiltrado: Boolean;
 begin
@@ -1115,6 +1139,7 @@ begin
   FPivotCantPedida.Clear;
   FPivotCantEntregada.Clear;
   FPivotCantAAlbaranar.Clear;
+  FPivotUdsGrupo.Clear;
   FPivotIdAc.Clear;
   FPivotSinTalla.Clear;
   FPivotArticulo.Clear;
@@ -1211,6 +1236,11 @@ begin
           rPedida := CampoFloat(Ds, FCfg.FieldCantidadPedida);
           rEntregada := CampoFloat(Ds, FCfg.FieldCantidadEntregada);
           rAAlbaranar := CampoFloat(Ds, FCfg.FieldCantidadAAlbaranar);
+          // Suma de unidades del grupo para la columna Total de la
+          // vista en documentos de banda unica.
+          if not FPivotUdsGrupo.TryGetValue(iLineaRepr, rUds) then
+            rUds := 0;
+          FPivotUdsGrupo.AddOrSetValue(iLineaRepr, rUds + rPedida);
           if Info.TallaAv > 0 then
           begin
             if not DictTallas[iLineaRepr].Contains(Info.TallaAv) then

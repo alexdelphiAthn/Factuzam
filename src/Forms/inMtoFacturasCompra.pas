@@ -606,6 +606,11 @@ begin
   btnTallasHorizontal.Visible := False;
   btnAtributosColumna.Visible := False;
   ActualizarCaptionModoLineas;
+  // Primera construccion al abrir la pantalla: sin ella, hasta entrar
+  // en el grid se veian las columnas del dfm (ningun modo).
+  if Assigned(dmmFacturasCompra) and
+     dmmFacturasCompra.unqryFacturasCompraLineas.Active then
+    ConstruirModoEntrada;
 end;
 
 function TfrmMtoFacturasCompra.SqlRestriccionUsuario: string;
@@ -1071,13 +1076,16 @@ begin
   // SKU->ATTR; el modo tallas re-pivota su cache reconstruyendo. La
   // preferencia ESPIVOTE del pivote de compras antiguo se IGNORA
   // (pivote retirado de esta pantalla).
-  if FColsModoConstruido and Assigned(dmmFacturasCompra) and
+  if Assigned(dmmFacturasCompra) and
      dmmFacturasCompra.unqryFacturasCompraLineas.Active and
      (not (dsTablaG.State in dsEditModes)) then
   begin
-    if FModoEntradaSel = mcsTallasHorPed then
+    // Sin modo construido (llegar navegando sin pisar el grid) se
+    // veian las columnas del dfm: construir tambien en ese caso.
+    if (not FColsModoConstruido) or
+       (FModoEntradaSel = mcsTallasHorPed) then
       ConstruirModoEntrada
-    else if FModoEntradaSel <> mcsSku then
+    else if FModoEntradaSel = mcsAuto then
       dmmFacturasCompra.DesempaquetarAtributosLineas;
   end;
 end;
@@ -1280,9 +1288,10 @@ begin
   for i := 0 to CANT_ATRIB_MAX - 1 do
     FAtribColumns[i] := nil;
   FColColorPivot := nil;
-  // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
-  // (columnas reales _FACCLIN; idempotente por linea).
-  if FModoEntradaSel <> mcsSku then
+  // Solo el DESGLOSE liga columnas a ATTRn: desempaquetar SKU->ATTR
+  // (columnas reales _FACCLIN; idempotente por linea). SKU y tallas
+  // horizontal derivan del propio SKU: sin posts al navegar.
+  if FModoEntradaSel = mcsAuto then
     dmmFacturasCompra.DesempaquetarAtributosLineas;
   Cfg := Default(TConfigColumnasSku);
   Cfg.Conexion := dmmFacturasCompra.unqryTablaG.Connection;
@@ -1327,6 +1336,8 @@ begin
     CfgPV.FieldAlmacenMaster := 'CODIGO_ALM_FACC';
     CfgPV.MaxColumnas := CANT_TALLAS_MAX;
     CfgPV.BandaUnica := True;
+    // La columna Total del host pasa a UNIDADES del grupo en pivote.
+    CfgPV.FieldTotalUdsGrupo := 'TOTAL_FACCLIN';
     CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
     CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
     FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
@@ -1447,7 +1458,12 @@ begin
     Col('Cantidad', 'CANTIDAD_FACCLIN', 80, True);
   Col('Precio compra', 'PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN', 110, True);
   Col('% IVA', 'PORCENTAJE_IVA_FACCLIN', 70, True);
-  Col('Total', 'TOTAL_FACCLIN', 100, False);
+  // En pivote la vista vuelca aqui las UNIDADES del grupo (la libreria
+  // machaca TOTAL en la copia visual); en el resto de modos, importe.
+  if FModoEntradaSel = mcsTallasHorPed then
+    Col('Total uds.', 'TOTAL_FACCLIN', 100, False)
+  else
+    Col('Total', 'TOTAL_FACCLIN', 100, False);
   Col('Almacén', 'CODIGO_ALMACEN_FACCLIN', 90, True);
   // Orden normal del documento: la LINEA delante del bloque de
   // articulo que creo el modo (las columnas del host nacen detras).
