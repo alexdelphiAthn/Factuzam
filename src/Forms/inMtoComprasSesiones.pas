@@ -913,8 +913,16 @@ begin
   LogSes('AfterDelete: RefrescarTotalesSesion + RecalcularMaxColumnas');
   Dmm.RefrescarTotalesSesion;
   RefrescarVisibilidadTipoIva;
+  // Tras el delete el grid se repinta y borra los Values[] no ligados:
+  // ademas de recalcular columnas hay que recargar cantidades y
+  // captions de las lineas que quedan (las tallas "desaparecian").
   if Assigned(FGestorTallas) then
+  begin
+    FGestorTallas.InvalidarCache;
     FGestorTallas.RecalcularMaxColumnas;
+    FGestorTallas.CargarCantidadesTodasLineas;
+    FGestorTallas.ActualizarCaptionsLineaActiva;
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.ResetForm;
@@ -1746,6 +1754,10 @@ begin
     FGestorTallas.PersistirCeldaActiva(Sender);
     if Assigned(Dmm) then
       Dmm.RefrescarTotalesSesion;
+    // El refresco de totales postea cabecera y repinta el grid: el
+    // cxGrid borra los Values[] no ligados de las columnas talla y
+    // las cantidades recien tecleadas "desaparecian". Recargarlas.
+    FGestorTallas.CargarCantidadesTodasLineas;
   end;
 end;
 
