@@ -1,37 +1,33 @@
 ﻿[Closed Files]
-File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibShowMto.pas',0,1,171,1,179,0,0,,
-File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoPedidos.pas',0,1,1585,1,1593,0,0,,
-File_2=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressDataController\Sources\cxDataStorage.pas',0,1,2469,36,2480,0,0,,
-File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoDocumentosTrabajo.pas',0,1,602,17,614,0,0,,
-File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataInventarios.pas',0,1,1,1,1,0,0,,
-File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoInventarios.pas',0,1,1667,1,1,0,0,,
-File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas',0,1,937,64,958,0,0,,
-File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoAlbaranesCompra.pas',0,1,1,1,1,0,0,,
-File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoAlbaranes.pas',0,1,1,1,1,0,0,,
-File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoArticulos.pas',0,1,1352,1,1358,0,0,,
-File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactu.pas',0,1,1093,36,1110,0,0,,
-File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoPedidosCompra.pas',0,1,769,39,784,0,0,,
-File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoComprasSesiones.pas',0,1,1,1,1,0,0,,
-File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataDevolucionesCompra.pas',0,1,383,7,395,0,0,,
+File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoAlbaranesCompra.pas',0,1,258,1,270,0,0,,
+File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoPedidosCompra.pas',0,1,149,48,166,0,0,,
+File_2=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressDataController\Sources\cxDataStorage.pas',0,1,2889,79,2896,0,0,,
+File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibColumnasSkuIntf.pas',0,1,8,26,55,0,0,,
+File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoFacturasBase.pas',0,1,272,1,284,0,0,,
+File_5=TSourceModule,'C:\Program Files (x86)\DevExpress\VCL\ExpressPageControl\Sources\cxPC.pas',0,1,8007,48,8020,0,0,,
+File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGridPivoteVenta.pas',0,1,553,32,565,0,0,,
+File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibShowMto.pas',0,1,171,1,179,0,0,,
+File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoPedidos.pas',0,1,1585,1,1593,0,0,,
+File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoDocumentosTrabajo.pas',0,1,602,17,614,0,0,,
+File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataInventarios.pas',0,1,1,1,1,0,0,,
+File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoInventarios.pas',0,1,1667,1,1,0,0,,
+File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOpe.pas',0,1,937,64,958,0,0,,
+File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoAlbaranes.pas',0,1,1,1,1,0,0,,
+File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoArticulos.pas',0,1,1352,1,1358,0,0,,
 
 [Modules]
-Module0=C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGridPivoteVenta.pas
-Module1=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
-Count=2
+Module0=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
+Count=1
 EditWindowCount=1
-
-[C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGridPivoteVenta.pas]
-ModuleType=TSourceModule
 
 [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 ModuleType=TBaseProject
 
 [EditWindow0]
-ViewCount=3
-CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGridPivoteVenta.pas
+ViewCount=2
+CurrentView=1
 View0=0
 View1=1
-View2=2
 PercentageSizes=1
 Create=1
 Visible=1
@@ -79,17 +75,6 @@ EditViewName=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
 [View1]
 CustomEditViewType=TOTACustomEditView
 OTAEditViewType=WelcomePage.MainPage
-
-[View2]
-CustomEditViewType=TEditView
-Module=C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGridPivoteVenta.pas
-CursorX=54
-CursorY=1371
-TopLine=1359
-LeftCol=1
-Elisions=
-Bookmarks=
-EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGridPivoteVenta.pas
 
 [Watches]
 Count=0

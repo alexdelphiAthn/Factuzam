@@ -13,8 +13,8 @@
 {    de proveedor que ya existe en otra linea de la MISMA sesion:              }
 {      - Repetir en otro color: copia completa (cantidades por talla           }
 {        incluidas) dejando vacio el color.                                    }
-{      - Otro rango de precios: copia completa repitiendo el color pero        }
-{        dejando vacios el coste y el precio de venta.                         }
+{      - Otro rango de precios: copia repitiendo el color pero SIN             }
+{        cantidades (son otras tallas) y dejando vacios coste y PVP.           }
 {      - Cancelar: la linea solo hereda los datos del modelo (REUSAR),         }
 {        sin cantidades ni color, como hasta ahora.                            }
 {    El caller lee sOpcion tras el ShowModal y libera el form (sin caFree).    }
