@@ -354,39 +354,52 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   TabOrder = 2
                   OnClick = btnNuevoColorClick
                 end
-                object btnFoto: TcxButton
+                object btnOtroPrecio: TcxButton
                   Left = 374
+                  Top = 5
+                  Width = 110
+                  Height = 28
+                  Caption = 'Otro precio'
+                  Colors.Default = 14346982
+                  Colors.Normal = 14346982
+                  LookAndFeel.Kind = lfFlat
+                  LookAndFeel.NativeStyle = False
+                  TabOrder = 3
+                  OnClick = btnOtroPrecioClick
+                end
+                object btnFoto: TcxButton
+                  Left = 490
                   Top = 5
                   Width = 90
                   Height = 28
                   Caption = '+ Foto'
                   LookAndFeel.Kind = lfFlat
                   LookAndFeel.NativeStyle = False
-                  TabOrder = 3
+                  TabOrder = 4
                   OnClick = btnFotoClick
                 end
                 object btnArbolFamilias: TcxButton
-                  Left = 470
+                  Left = 586
                   Top = 5
                   Width = 150
                   Height = 28
                   Caption = #193'rbol familias (F3)'
-                  TabOrder = 4
+                  TabOrder = 5
                   OnClick = btnArbolFamiliasClick
                 end
                 object btnDescargarFotos: TcxButton
-                  Left = 626
+                  Left = 742
                   Top = 5
                   Width = 100
                   Height = 28
                   Caption = 'Bajar fotos'
                   LookAndFeel.Kind = lfFlat
                   LookAndFeel.NativeStyle = False
-                  TabOrder = 5
+                  TabOrder = 6
                   OnClick = btnDescargarFotosClick
                 end
                 object btnAplicarKit: TcxButton
-                  Left = 732
+                  Left = 848
                   Top = 5
                   Width = 130
                   Height = 28
@@ -395,14 +408,14 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                   Colors.Normal = 12579775
                   LookAndFeel.Kind = lfFlat
                   LookAndFeel.NativeStyle = False
-                  TabOrder = 6
+                  TabOrder = 7
                   OnClick = btnAplicarKitClick
                 end
                 object lblHint: TcxLabel
-                  Left = 870
+                  Left = 986
                   Top = 7
                   Caption = 'F3 = familias. PVP se propone al teclear el coste.'
-                  TabOrder = 7
+                  TabOrder = 8
                   Transparent = True
                 end
               end

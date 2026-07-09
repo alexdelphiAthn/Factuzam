@@ -319,6 +319,7 @@ uses
   inMtoComprasPlantillas in 'src\Forms\inMtoComprasPlantillas.pas' {frmMtoComprasPlantillas},
   inMtoModalSesionMaterializar in 'src\Modals\inMtoModalSesionMaterializar.pas' {frmModalSesionMaterializar},
   inMtoModalSesionDuplicado in 'src\Modals\inMtoModalSesionDuplicado.pas' {frmModalSesionDuplicado},
+  inMtoModalRepetirModelo in 'src\Modals\inMtoModalRepetirModelo.pas' {frmModalRepetirModelo},
   inMtoModalIncidencias in 'src\Modals\inMtoModalIncidencias.pas' {frmModalIncidencias},
   inMtoModalCrearAlbaranSesion in 'src\Modals\inMtoModalCrearAlbaranSesion.pas' {frmModalCrearAlbaranSesion},
   inLibComprasSesiones in 'src\Lib\inLibComprasSesiones.pas',

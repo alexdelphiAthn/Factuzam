@@ -228,6 +228,13 @@ type
     UltimoCoste         : Double;
     PrecioVenta         : Double;
     RefProveedor        : string;
+    // Solo rellenos con Origen = 'SES' (match contra otra linea de la
+    // misma sesion): permiten ofrecer la copia completa de esa linea
+    // (repetir en otro color / otro rango de precios).
+    LineaOrigen         : Integer;
+    ColorTexto          : string;
+    CodigoAtbColor      : string;
+    MargenPorcentaje    : Double;
   end;
 
 // Busca un articulo existente que case con lo que el usuario teclea, por
@@ -1840,7 +1847,9 @@ begin
       '       L.ID_VA_PIVOT_SESLIN, L.ID_AC_PIVOT_SESLIN, ' +
       '       L.ID_VA_FILA_SESLIN, L.ID_AC_FILA_SESLIN, ' +
       '       L.PRECIO_COMPRA_SESLIN, L.PRECIO_VENTA_SESLIN, ' +
-      '       L.REF_PRV_SESLIN ' +
+      '       L.REF_PRV_SESLIN, L.LINEA_SESLIN, ' +
+      '       L.COLOR_TEXTO_SESLIN, L.CODIGO_ATB_COLOR_SESLIN, ' +
+      '       L.PORCENTAJE_MARGEN_SESLIN ' +
       '  FROM fza_compras_sesiones_lineas L ' +
       ' WHERE L.SERIE_SES_SESLIN = :serie ' +
       '   AND L.NUMERO_SES_SESLIN = :numero ' +
@@ -1885,6 +1894,13 @@ begin
     Result.UltimoCoste := q.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
     Result.PrecioVenta := q.FieldByName('PRECIO_VENTA_SESLIN').AsFloat;
     Result.RefProveedor := q.FieldByName('REF_PRV_SESLIN').AsString;
+    // Datos extra de la linea origen para la copia completa opcional.
+    Result.LineaOrigen := q.FieldByName('LINEA_SESLIN').AsInteger;
+    Result.ColorTexto := q.FieldByName('COLOR_TEXTO_SESLIN').AsString;
+    Result.CodigoAtbColor :=
+      q.FieldByName('CODIGO_ATB_COLOR_SESLIN').AsString;
+    Result.MargenPorcentaje :=
+      q.FieldByName('PORCENTAJE_MARGEN_SESLIN').AsFloat;
   finally
     FreeAndNil(q);
   end;
