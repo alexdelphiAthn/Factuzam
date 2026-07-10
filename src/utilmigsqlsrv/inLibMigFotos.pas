@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inLibMigFotos                                                 }
 {    Tipo:       Librería de migración (sin formulario)                        }
-{ Versión:       1.1.0                                                         }
+{ Versión:       1.2.0                                                         }
 {                                                                              }
 {  Descripción:                                                                }
 {    Importa las fotos legacy de `dbo.ocartcol.ArchivoFoto` al sistema de      }
@@ -35,6 +35,13 @@
 {    concurrente) las drena hacia el TBulkInsert y lleva el progreso.          }
 {    Las claves que comparten fichero se agrupan: el primer éxito genera       }
 {    el trío y el resto lo copia.                                              }
+{                                                                              }
+{    Memoria: el original decodificado se vuelca UNA sola vez a un             }
+{    bitmap base del que salen los tres PNG y se libera antes de               }
+{    encodificar (las fotos de móvil de 12+ MP en varios hilos a la vez        }
+{    agotaban el espacio de direcciones del proceso de 32 bits). Si aun        }
+{    así una conversión falla por falta de memoria o de recursos GDI,          }
+{    se reintenta una vez en serie antes de contarla como error.               }
 {                                                                              }
 {    Idempotente: si la pareja (CODIGO_ART_FOT, CODIGO_UNIDAD_FOT) ya          }
 {    existe en destino se salta sin tocar ficheros. Las filas cuyo             }
@@ -104,6 +111,7 @@ type
     FUserSQL:    string;
     FPendientes: TStringList;
     FLock:       TCriticalSection;
+    FLockRecursos: TCriticalSection;
     FSiguiente:  Integer;
     FGeneradas:  Integer;
     FSaltadas:   Integer;
@@ -112,6 +120,8 @@ type
     FParar:      Integer;
     function  Parado: Boolean;
     procedure ProcesarGrupo(AGrupo: TFotoGrupo);
+    procedure GenerarTrioClave(const AFichero: string;
+                               const AClave: TFotoClave);
     procedure EncolarFila(const AClave: TFotoClave);
   public
     constructor Create(Eng: TMigEngine;
@@ -247,80 +257,56 @@ begin
   end;
 end;
 
-// Guarda el grafico en su resolucion original como PNG (la copia
-// "real" del trio). Para PNG de origen es directo; para el resto se
-// pasa por TBitmap pf32bit.
-procedure GuardarComoPng(const AOriginal: TGraphic;
-                         const ARutaPng: string);
+// Guarda el bitmap base (pf32bit) como PNG. El Assign duplica los
+// pixeles del bitmap: es la unica copia extra viva en ese momento.
+procedure GuardarBitmapComoPng(ABase: TBitmap; const ARutaPng: string);
 var
-  oBitmap: TBitmap;
-  oPng:    TPngImage;
+  oPng: TPngImage;
 begin
-  if (AOriginal = nil) or
-     (AOriginal.Width = 0) or (AOriginal.Height = 0) then
-    raise Exception.Create('Imagen vacia o no valida.');
-  if AOriginal is TPngImage then
-    TPngImage(AOriginal).SaveToFile(ARutaPng)
-  else
-  begin
-    oBitmap := TBitmap.Create;
-    try
-      VolcarEnBitmap(AOriginal, oBitmap);
-      oPng := TPngImage.Create;
-      try
-        oPng.Assign(oBitmap);
-        oPng.SaveToFile(ARutaPng);
-      finally
-        FreeAndNil(oPng);
-      end;
-    finally
-      FreeAndNil(oBitmap);
-    end;
+  oPng := TPngImage.Create;
+  try
+    oPng.Assign(ABase);
+    oPng.SaveToFile(ARutaPng);
+  finally
+    FreeAndNil(oPng);
   end;
 end;
 
-// Redimensiona manteniendo proporciones (lado mayor = ALadoMayor) y
-// guarda como PNG. El reescalado lo hace GDI+ con interpolacion
-// bicubica de alta calidad, igual que inLibFotos.
-procedure GuardarRedimensionado(const AOriginal: TGraphic;
-                                const ARutaPng: string;
+// Redimensiona el bitmap base manteniendo proporciones (lado mayor =
+// ALadoMayor) y guarda como PNG. El reescalado lo hace GDI+ con
+// interpolacion bicubica de alta calidad, igual que inLibFotos.
+procedure GuardarRedimensionado(ABase: TBitmap; const ARutaPng: string;
                                 ALadoMayor: Integer);
 var
   iAncho, iAlto: Integer;
   dEscala:       Double;
-  oSrc, oDst:    TBitmap;
-  oPng:          TPngImage;
+  oDst:          TBitmap;
   gpSrc:         TGPBitmap;
   gpGfx:         TGPGraphics;
 begin
-  if (AOriginal = nil) or
-     (AOriginal.Width = 0) or (AOriginal.Height = 0) then
-    raise Exception.Create('Imagen vacia o no valida.');
-  if AOriginal.Width >= AOriginal.Height then
+  if ABase.Width >= ABase.Height then
   begin
-    dEscala := ALadoMayor / AOriginal.Width;
+    dEscala := ALadoMayor / ABase.Width;
     iAncho  := ALadoMayor;
-    iAlto   := Round(AOriginal.Height * dEscala);
+    iAlto   := Round(ABase.Height * dEscala);
   end
   else
   begin
-    dEscala := ALadoMayor / AOriginal.Height;
+    dEscala := ALadoMayor / ABase.Height;
     iAlto   := ALadoMayor;
-    iAncho  := Round(AOriginal.Width * dEscala);
+    iAncho  := Round(ABase.Width * dEscala);
   end;
   if iAncho < 1 then
     iAncho := 1;
   if iAlto < 1 then
     iAlto := 1;
-  oSrc := TBitmap.Create;
   oDst := TBitmap.Create;
   try
-    VolcarEnBitmap(AOriginal, oSrc);
     oDst.PixelFormat := pf32bit;
     oDst.SetSize(iAncho, iAlto);
     oDst.Canvas.Lock;
     try
-      gpSrc := TGPBitmap.Create(oSrc.Handle, 0);
+      gpSrc := TGPBitmap.Create(ABase.Handle, 0);
       try
         gpGfx := TGPGraphics.Create(oDst.Canvas.Handle);
         try
@@ -334,36 +320,59 @@ begin
       finally
         gpSrc.Free;
       end;
-      oPng := TPngImage.Create;
-      try
-        oPng.Assign(oDst);
-        oPng.SaveToFile(ARutaPng);
-      finally
-        FreeAndNil(oPng);
-      end;
+      GuardarBitmapComoPng(oDst, ARutaPng);
     finally
       oDst.Canvas.Unlock;
     end;
   finally
     FreeAndNil(oDst);
-    FreeAndNil(oSrc);
   end;
 end;
 
 // Genera el trio completo (real + 300 + 600) desde el fichero origen.
+// El original decodificado se vuelca UNA sola vez a un bitmap base y
+// se libera antes de encodificar; los tres PNG salen de ese bitmap.
+// Asi el pico de memoria por foto es ~1 copia en vez de ~3 (critico
+// con fotos de movil de 12+ MP y varios hilos en un exe de 32 bits).
 procedure GenerarTrioPng(const AFicheroOrigen, ARuta300, ARuta600,
                          ARutaReal: string);
 var
-  oGraphic: TGraphic;
+  oGraphic:    TGraphic;
+  oBase:       TBitmap;
+  bPngDirecto: Boolean;
 begin
-  oGraphic := CargarGrafico(AFicheroOrigen);
+  oBase := TBitmap.Create;
   try
-    GuardarComoPng(oGraphic, ARutaReal);
-    GuardarRedimensionado(oGraphic, ARuta300, cLado300);
-    GuardarRedimensionado(oGraphic, ARuta600, cLado600);
+    oGraphic := CargarGrafico(AFicheroOrigen);
+    try
+      if (oGraphic.Width = 0) or (oGraphic.Height = 0) then
+        raise Exception.Create('Imagen vacia o no valida.');
+      // La copia "real" de un PNG de origen se guarda tal cual,
+      // sin re-encodificar (mismo criterio que la version 1.1).
+      bPngDirecto := oGraphic is TPngImage;
+      if bPngDirecto then
+        TPngImage(oGraphic).SaveToFile(ARutaReal);
+      VolcarEnBitmap(oGraphic, oBase);
+    finally
+      FreeAndNil(oGraphic);
+    end;
+    if not bPngDirecto then
+      GuardarBitmapComoPng(oBase, ARutaReal);
+    GuardarRedimensionado(oBase, ARuta300, cLado300);
+    GuardarRedimensionado(oBase, ARuta600, cLado600);
   finally
-    FreeAndNil(oGraphic);
+    FreeAndNil(oBase);
   end;
+end;
+
+// Errores por agotamiento de memoria o de recursos GDI: EOutOfResources
+// ("out of resources") hereda de EOutOfMemory y los fallos de la API
+// Win32 ("no hay suficientes recursos de memoria...") llegan como
+// EOSError. Son transitorios cuando varios hilos convierten fotos
+// grandes a la vez, asi que merecen reintento en serie.
+function EsErrorDeRecursos(E: Exception): Boolean;
+begin
+  Result := (E is EOutOfMemory) or (E is EOSError);
 end;
 
 // Copia el trio ya generado de otra clave del MISMO grupo (mismo
@@ -435,11 +444,13 @@ begin
   FUserSQL    := AUserSQL;
   FPendientes := TStringList.Create;
   FLock       := TCriticalSection.Create;
+  FLockRecursos := TCriticalSection.Create;
   FSiguiente  := -1;
 end;
 
 destructor TImportadorFotos.Destroy;
 begin
+  FreeAndNil(FLockRecursos);
   FreeAndNil(FLock);
   FreeAndNil(FPendientes);
   inherited Destroy;
@@ -515,6 +526,36 @@ begin
   Result := TInterlocked.CompareExchange(FProcesadas, 0, 0);
 end;
 
+// Genera el trio PNG de una clave. Si falla por falta de memoria o de
+// recursos GDI (punta transitoria con varios hilos convirtiendo fotos
+// grandes a la vez) se reintenta UNA vez en serie bajo FLockRecursos,
+// para que la foto no quede sin migrar por una punta puntual.
+procedure TImportadorFotos.GenerarTrioClave(const AFichero: string;
+                                            const AClave: TFotoClave);
+begin
+  try
+    GenerarTrioPng(AFichero,
+                   FDir300  + AClave.Nombre + '.png',
+                   FDir600  + AClave.Nombre + '.png',
+                   FDirReal + AClave.Nombre + '.png');
+  except
+    on E: Exception do
+    begin
+      if not EsErrorDeRecursos(E) then
+        raise;
+      FLockRecursos.Enter;
+      try
+        GenerarTrioPng(AFichero,
+                       FDir300  + AClave.Nombre + '.png',
+                       FDir600  + AClave.Nombre + '.png',
+                       FDirReal + AClave.Nombre + '.png');
+      finally
+        FLockRecursos.Leave;
+      end;
+    end;
+  end;
+end;
+
 procedure TImportadorFotos.ProcesarGrupo(AGrupo: TFotoGrupo);
 var
   k:          Integer;
@@ -545,10 +586,7 @@ begin
       try
         if sNombreGen = '' then
         begin
-          GenerarTrioPng(AGrupo.Fichero,
-                         FDir300  + oClave.Nombre + '.png',
-                         FDir600  + oClave.Nombre + '.png',
-                         FDirReal + oClave.Nombre + '.png');
+          GenerarTrioClave(AGrupo.Fichero, oClave);
           sNombreGen := oClave.Nombre;
         end
         else
