@@ -230,6 +230,17 @@ type
     // distribuido, las celdas por almacen se colapsan a almacen ''.
     // Siempre fusionando cantidades si la celda destino ya existe.
     procedure MigrarCeldasAlmacen;
+    // Unidades totales del documento con formula estable en ambos
+    // formatos: SUM(celdas) + CANTIDAD de las lineas SIN celdas. Las
+    // lineas pivotadas no aportan su CANTIDAD (es un total derivado).
+    // Es el invariante que toda conversion debe conservar.
+    function UnidadesDocumento: Double;
+    // Compara unidades antes/despues de una conversion y lanza
+    // excepcion si no cuadran: el try/except del llamador hace
+    // rollback y el documento queda intacto (cantidades desorbitadas
+    // de pedidos de compra, 10/07/26).
+    procedure ComprobarInvarianteUnidades(const AContexto: string;
+                                          AAntes, ADespues: Double);
     procedure CeldaTallaCambiada(Sender: TObject);
     procedure FocoLineaCambiado(Sender: TcxCustomGridTableView;
                                 APrevFocusedRecord,
@@ -404,6 +415,7 @@ var
   i: Integer;
   Col: TcxGridDBColumn;
   bTxPropia: Boolean;
+  rUdsAntes: Double;
 begin
   // El desplegable de busqueda debe existir antes que su columna.
   CrearLookupBusqueda;
@@ -512,12 +524,18 @@ begin
   if bTxPropia then
     FConfig.Conexion.StartTransaction;
   try
+    rUdsAntes := UnidadesDocumento;
     // Lineas heredadas de otros modos / documento reabierto: derivar
     // pivote y atributos, volcar cantidades y fusionar duplicadas.
     RederivarLineasExistentes;
     // Unificar celdas segun el formato (las heredadas se vuelcan a
     // almacen '', por eso la migracion va DESPUES del rederivar).
     MigrarCeldasAlmacen;
+    // La fusion no puede perder ni duplicar unidades: si no cuadra,
+    // excepcion y rollback (el host degrada a modo SKU con los datos
+    // intactos).
+    ComprobarInvarianteUnidades('Construir', rUdsAntes,
+                                UnidadesDocumento);
     if bTxPropia then
       FConfig.Conexion.Commit;
   except
@@ -532,6 +550,94 @@ begin
   FTimerCarga.Enabled := True;
 end;
 
+// Unidades totales del documento: SUM(celdas) + CANTIDAD de las lineas
+// sin celdas. Las lineas pivotadas NO aportan su CANTIDAD (total
+// derivado que podria venir desincronizado): asi la medida no da
+// falsos positivos con documentos ya tocados y detecta perdidas o
+// duplicados reales de la conversion.
+function TModoEntradaTallas.UnidadesDocumento: Double;
+var
+  Qry: TUniQuery;
+  ds: TDataSet;
+  ConCeldas: TDictionary<Integer, Boolean>;
+  bk: TBookmark;
+begin
+  Result := 0;
+  ds := FConfig.Cds;
+  if (ds <> nil) and ds.Active then
+  begin
+    ConCeldas := TDictionary<Integer, Boolean>.Create;
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := FConfig.Conexion;
+      Qry.SQL.Text :=
+        'SELECT ' + FCfgTallas.FieldLineaCel + ' AS LIN,' +
+        ' COALESCE(SUM(' + FCfgTallas.FieldCantidadCel + '), 0)' +
+        ' AS TOTAL' +
+        ' FROM ' + FCfgTallas.TablaCeldas +
+        ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
+        WhereNumero('') +
+        WhereDocExtra +
+        ' GROUP BY ' + FCfgTallas.FieldLineaCel;
+      Qry.ParamByName('s').AsString :=
+        FCfgTallas.SourceMaster.DataSet.FieldByName(
+          FCfgTallas.FieldSerieMaster).AsString;
+      ParamNumero(Qry);
+      ParamsDocExtra(Qry);
+      Qry.Open;
+      while not Qry.Eof do
+      begin
+        ConCeldas.AddOrSetValue(
+          Qry.FieldByName('LIN').AsInteger, True);
+        Result := Result + Qry.FieldByName('TOTAL').AsFloat;
+        Qry.Next;
+      end;
+      // Lineas sin celdas (escalares o sin fusionar): su cantidad
+      // vive en la propia linea.
+      if (not ds.IsEmpty) and
+         (ds.FindField(FConfig.Campos.Cantidad) <> nil) then
+      begin
+        bk := ds.GetBookmark;
+        ds.DisableControls;
+        try
+          ds.First;
+          while not ds.Eof do
+          begin
+            if not ConCeldas.ContainsKey(
+                 ds.FieldByName(FCfgTallas.FieldLinea).AsInteger) then
+              Result := Result +
+                ds.FieldByName(FConfig.Campos.Cantidad).AsFloat;
+            ds.Next;
+          end;
+          if ds.BookmarkValid(bk) then
+            ds.GotoBookmark(bk);
+        finally
+          ds.FreeBookmark(bk);
+          ds.EnableControls;
+        end;
+      end;
+    finally
+      FreeAndNil(Qry);
+      FreeAndNil(ConCeldas);
+    end;
+  end;
+end;
+
+procedure TModoEntradaTallas.ComprobarInvarianteUnidades(
+  const AContexto: string; AAntes, ADespues: Double);
+begin
+  if Abs(AAntes - ADespues) > 0.001 then
+  begin
+    LogSes(Format('ModoTallas.%s: INVARIANTE ROTO unidades ' +
+                  'antes=%.4f despues=%.4f; se deshace la conversion',
+                  [AContexto, AAntes, ADespues]));
+    raise Exception.CreateFmt(
+      'La conversión de tallas alteraría las unidades del documento ' +
+      '(%s: antes %.2f, después %.2f). Se deshacen los cambios.',
+      [AContexto, AAntes, ADespues]);
+  end;
+end;
+
 procedure TModoEntradaTallas.RefrescarTotalesTodasLineas;
 var
   Qry: TUniQuery;
@@ -540,6 +646,7 @@ var
   bk: TBookmark;
   iLinea: Integer;
   rTot, rPr: Double;
+  bPivotada: Boolean;
 begin
   ds := FConfig.Cds;
   if (ds <> nil) and ds.Active and (not ds.IsEmpty) and
@@ -577,10 +684,23 @@ begin
         while not ds.Eof do
         begin
           iLinea := ds.FieldByName(FCfgTallas.FieldLinea).AsInteger;
+          // Solo lineas PIVOTADAS: una linea sin conjunto pivote no
+          // deberia tener celdas; si las hay a su numero son residuo
+          // de una conversion rota y volcar su suma aqui machacaba la
+          // cantidad real con basura (cantidades desorbitadas,
+          // 10/07/26).
+          bPivotada := (FCfgTallas.FieldConjuntoPivot = '') or
+            (ds.FindField(FCfgTallas.FieldConjuntoPivot) = nil) or
+            (ds.FieldByName(
+               FCfgTallas.FieldConjuntoPivot).AsInteger > 0);
+          if (not bPivotada) and Tot.ContainsKey(iLinea) then
+            LogSes(Format('ModoTallas.RefrescarTotales: linea %d sin ' +
+                   'pivote con celdas a su numero; se IGNORAN ' +
+                   '(residuo de conversion rota)', [iLinea]));
           // Solo lineas CON celdas: las escalares (sin tallaje) llevan
           // su cantidad en la propia linea y este refresco las dejaba
           // a 0 (la clave no estaba en Tot y se posteaba el 0).
-          if Tot.TryGetValue(iLinea, rTot) then
+          if bPivotada and Tot.TryGetValue(iLinea, rTot) then
           begin
             rPr := 0;
             if ds.FindField(FCfgTallas.FieldPrecioBase) <> nil then
@@ -1566,9 +1686,9 @@ var
   Atribs: TArray<TArticuloAtributo>;
   Vals, Noms: TValoresAttrTallas;
   sArt, sDesc, sAlm, sAlmCel, sSku, sNomTalla: string;
-  rPrecio: Double;
+  rPrecio, rUdsAntes: Double;
   i, idx, iMaxLinea, iOrdT, iLineaAct, iAtrs: Integer;
-  bPrimera, bLineaOk: Boolean;
+  bPrimera, bLineaOk, bExpandio: Boolean;
   // LINEA puede ser int (sesiones) o varchar con relleno (pedidos:
   // '0010'). El Locate directo con el entero de la celda falla contra
   // el varchar ('10' <> '0010') y la talla se perdia al des-pivotar
@@ -1618,11 +1738,14 @@ begin
     // las celdas por SQL directo (paso 4); interrumpida a medias
     // dejaba celdas sin borrar junto a lineas ya creadas y cada
     // reentrada re-sumaba las celdas (cantidades duplicadas).
+    bExpandio := False;
+    rUdsAntes := 0;
     bTxPropia := not FConfig.Conexion.InTransaction;
     if bTxPropia then
       FConfig.Conexion.StartTransaction;
     try
     try
+      rUdsAntes := UnidadesDocumento;
       // 1. Celdas con cantidad del documento, con el VALOR de la talla
       //    resuelto (JOIN a fza_atributos_valores).
       Qry := TUniQuery.Create(nil);
@@ -1856,6 +1979,7 @@ begin
         LogSes(Format(
           'ModoTallas.Desmontar: %d celdas expandidas a lineas',
           [Celdas.Count]));
+        bExpandio := True;
       end;
     finally
       FEnProceso := EnProcesoPrevio;
@@ -1863,6 +1987,13 @@ begin
       FreeAndNil(OrdPorArt);
       FreeAndNil(Celdas);
     end;
+    // El des-pivote no puede perder ni duplicar unidades. Vectores
+    // reales: celdas cuyo ID_AV ya no existe (el JOIN del paso 1 las
+    // omite) o celdas de una linea inexistente — el paso 4 las
+    // borraria igualmente y sus unidades se esfumaban en silencio.
+    if bExpandio then
+      ComprobarInvarianteUnidades('Desmontar', rUdsAntes,
+                                  UnidadesDocumento);
     if bTxPropia then
       FConfig.Conexion.Commit;
     except
