@@ -23,8 +23,8 @@
 {      n → IntToStr(n)   (resto se queda con su numero como texto)            }
 {                                                                              }
 {    CODIGO_UNIDAD_ARTTAR:                                                     }
-{      Color vacio o INDEFINIDO → ''  (precio del articulo entero)            }
-{      Color real               → "ARTICULO/COLOR_NORMALIZADO"                }
+{      Color vacio → ''  (precio del articulo entero)                         }
+{      Color real  → "ARTICULO/CODIGO_COLOR_PROVEEDOR"                        }
 {                                                                              }
 {    Idempotente: bulk INSERT IGNORE pero la PK destino es auto-increment,   }
 {    asi que en realidad NO ignora duplicados de mismo                        }
@@ -47,10 +47,8 @@ uses
   Data.DB, Uni;
 
 function EsColorVacio(const s: string): Boolean;
-var u: string;
 begin
-  u := UpperCase(Trim(s));
-  Result := (u = '') or (u = '0') or (u = 'INDEFINIDO') or (u = '00');
+  Result := Trim(s) = '';
 end;
 
 // Mapa global Tarifa(int) -> CODIGO_TAR_ARTTAR(texto). Se rellena en
@@ -199,9 +197,7 @@ const
   //
   // ColorNormalizado: misma convencion que inLibMigArticulosSkus
   // (slot de color del CODIGO_UNIDAD_SKU). Asi el sufijo coincide
-  // con el SKU si existiera. El '0' es un color real (legacy),
-  // pero los placeholders 'INDEFINIDO'/'00'/'' tambien se mapean
-  // a '0' (igual que en SKUs).
+  // con el SKU si existiera. El '0' y '00' son colores reales en legacy.
   // Separamos el WITH (cCTE) del cuerpo (cBody) porque SQL Server NO
   // admite un CTE dentro de un subquery — la query del cursor usa
   // cCTE + cBody + cOrden, pero la del COUNT necesita poner el WITH
@@ -213,17 +209,15 @@ const
     '         ISNULL(t.PrecioRebaja, 0) AS PrecioRebaja, ' +
     '         ISNULL(t.PorDtoRebaja, 0) AS PorDtoRebaja, ' +
     '         ISNULL(t.Margen, 0)       AS Margen, ' +
-    // En legacy '0' y '00' son colores REALES distintos. La ocgolor
-    // pone Descripcion = 'INDEFINIDO' para el codigo '0' (y a veces
-    // para '00'); en ese caso usamos el codigo legacy como suffix.
-    // Si Descripcion existe y no es 'INDEFINIDO', se usa como suffix.
+    // Usa el codigo interno de ocartcol.Color como suffix. El color de
+    // tarifa solo queda como respaldo si no existe ficha de color.
     '         CASE ' +
+    '           WHEN ac.Color IS NOT NULL ' +
+    '             AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
+    '             THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
     '           WHEN t.Color IS NOT NULL ' +
     '             AND LTRIM(RTRIM(t.Color)) <> '''' ' +
     '             THEN UPPER(LTRIM(RTRIM(t.Color))) ' +
-    '           WHEN c.Descripcion IS NOT NULL ' +
-    '             AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
-    '             THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
     '           ELSE ''0'' ' +
     '         END AS ColorNorm ' +
     '  FROM dbo.ocarttap t WITH (NOLOCK) ' +

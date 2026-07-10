@@ -457,12 +457,14 @@ SELECT t.orden AS orden_aplicacion,
                          AND COLUMN_NAME = 'TIPO_SECUENCIA_SEPA_REMV')
     UNION ALL
     SELECT 360, 'vi_caja_busqueda_unificada_colaciones.sql',
-           'vi_caja_busqueda_unificada con MODELO_PROV y colación fija',
+           'vi_caja_busqueda_unificada con conversion utf8mb4 y MODELO_PROV',
            EXISTS(SELECT 1 FROM information_schema.VIEWS
                    WHERE TABLE_SCHEMA = DATABASE()
                      AND TABLE_NAME = 'vi_caja_busqueda_unificada'
                      AND UPPER(VIEW_DEFINITION) LIKE '%MODELO_PROV%'
                      AND UPPER(VIEW_DEFINITION) LIKE '%REF_PROVEEDOR_AP%'
+                     AND UPPER(VIEW_DEFINITION) LIKE '%CONVERT%'
+                     AND UPPER(VIEW_DEFINITION) LIKE '%USING UTF8MB4%'
                      AND VIEW_DEFINITION LIKE '%utf8mb4_spanish_ci%')
     UNION ALL
     SELECT 370, 'verifactu_numero_instalacion_empresa.sql',

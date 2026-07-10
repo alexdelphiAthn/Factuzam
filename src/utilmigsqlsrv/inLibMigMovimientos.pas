@@ -331,9 +331,9 @@ end;
 
 procedure MigrarMovimientos(Eng: TMigEngine; var Stats: TMigStats);
 const
-  // Resolvemos el slot de color (Descripcion canónica o código legacy) con
-  // el mismo CASE que SKUs/Inventarios, y la abreviatura de almacén origen
-  // y contra-almacén (destino del traspaso). Importamos TODOS los
+  // Resolvemos el slot de color con el codigo interno de ocartcol, igual
+  // que SKUs/Inventarios, y la abreviatura de almacén origen y
+  // contra-almacén (destino del traspaso). Importamos TODOS los
   // movimientos, incluidos los anulados (Invalido='S'): el legacy a veces
   // anula una pata del traspaso y excluirla descuadraba el stock.
   cSelectSrc =
@@ -390,12 +390,12 @@ const
     '       ISNULL(m.Cliente, '''') AS Cliente, ' +
     '       ISNULL(m.NroCaja, 0) AS NroCaja, opc.Operacion AS OpeCaja, ' +
     '       CASE ' +
+    '         WHEN ac.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
     '         WHEN m.Color IS NOT NULL ' +
     '           AND LTRIM(RTRIM(m.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(m.Color))) ' +
-    '         WHEN c.Descripcion IS NOT NULL ' +
-    '           AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
-    '           THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
     '         ELSE ''0'' ' +
     '       END AS DescColor, ' +
     '       ISNULL(alb.Precio, 0)      AS PrecioAlbaranLinea, ' +

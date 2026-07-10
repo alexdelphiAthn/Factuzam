@@ -510,8 +510,8 @@ const
     '       ISNULL(l.PrecioSIva, 0) AS PrecioSIva, ISNULL(l.PrecioCIva, 0) AS PrecioCIva, ' +
     '       ISNULL(l.PorDto, 0) AS PorDto, ISNULL(l.ImpNetoSIva, 0) AS ImpNetoSIva, ' +
     '       ISNULL(l.PorIva, 0) AS PorIva, CASE ' +
+    '         WHEN ac.Color IS NOT NULL AND LTRIM(RTRIM(ac.Color)) <> '''' THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
     '         WHEN l.Color IS NOT NULL AND LTRIM(RTRIM(l.Color)) <> '''' THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
-    '         WHEN co.Descripcion IS NOT NULL AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
     '         ELSE ''0'' END AS DescColor ' +
     'FROM dbo.ocpedcliart l ' +
     'LEFT JOIN dbo.ocalm alml ON alml.Empresa = l.Empresa ' +
@@ -768,8 +768,8 @@ const
     '                  AND pl.Id = l.IdPed), ISNULL(l.IdPed, 0)) AS OrdenPedido, ' +
     '       l.EjercicioFactura, ' +
     '       ISNULL(l.SerieFactura, '''') AS SerieFactura, ISNULL(l.NroFactura, 0) AS NroFactura, ' +
-    '       CASE WHEN l.Color IS NOT NULL AND LTRIM(RTRIM(l.Color)) <> '''' THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
-    '            WHEN co.Descripcion IS NOT NULL AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
+    '       CASE WHEN ac.Color IS NOT NULL AND LTRIM(RTRIM(ac.Color)) <> '''' THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
+    '            WHEN l.Color IS NOT NULL AND LTRIM(RTRIM(l.Color)) <> '''' THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
     '            ELSE ''0'' END AS DescColor ' +
     'FROM dbo.ocalbcliart l ' +
     'LEFT JOIN dbo.ocalm alml ON alml.Empresa = l.Empresa ' +
@@ -1062,8 +1062,8 @@ const
     '       ISNULL(l.PorDto, 0) AS PorDto, ISNULL(l.ImpNetoCIva, 0) AS ImpNetoCIva, ' +
     '       ISNULL(l.ImpNetoSIva, 0) AS ImpNetoSIva, ISNULL(l.PorIVA, 0) AS PorIVA, ' +
     '       ISNULL(l.NumeroMovArt, 0) AS NumeroMovArt, CASE ' +
+    '         WHEN ac.Color IS NOT NULL AND LTRIM(RTRIM(ac.Color)) <> '''' THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
     '         WHEN l.Color IS NOT NULL AND LTRIM(RTRIM(l.Color)) <> '''' THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
-    '         WHEN co.Descripcion IS NOT NULL AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
     '         ELSE ''0'' END AS DescColor ' +
     'FROM dbo.ocfaccliart l ' +
     'LEFT JOIN dbo.ocalm alml ON alml.Empresa = l.Empresa ' +

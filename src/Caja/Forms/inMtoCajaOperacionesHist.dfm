@@ -126,6 +126,7 @@
             object ccbFiltroAnyo: TcxCheckComboBox
               Left = 80
               Top = 5
+              Properties.EditValueFormat = cvfStatesString
               Properties.EmptySelectionText = 'Todos'
               Properties.Items = <>
               Properties.OnCloseUp = ccbFiltroAnyoPropertiesCloseUp
@@ -142,6 +143,7 @@
             object ccbFiltroAlmacen: TcxCheckComboBox
               Left = 416
               Top = 5
+              Properties.EditValueFormat = cvfStatesString
               Properties.EmptySelectionText = 'Todos'
               Properties.Items = <>
               Properties.OnCloseUp = ccbFiltroAlmacenPropertiesCloseUp
