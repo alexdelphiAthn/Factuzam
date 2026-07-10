@@ -97,6 +97,9 @@ type
     FAfterPostOrig: TDataSetNotifyEvent;
     FAfterScrollOrig: TDataSetNotifyEvent;
     FEnProceso: Boolean;
+    // Posts silenciados durante una conversion interna: al cerrarla se
+    // encadena el AfterPost del host UNA sola vez (totales, stock...).
+    FPostsSilenciados: Integer;
     // Recarga de celdas DIFERIDA (1ms): post y scroll repintan el grid
     // DESPUES de sus eventos; recargando en el siguiente tick, la
     // recarga siempre es lo ultimo y no la pisa ningun repintado.
@@ -192,6 +195,12 @@ type
     // durante las conversiones masivas).
     procedure SumarEnCelda(ALinea, AIdAv: Integer; ACant: Double;
                            const AAlm: string; ARefrescar: Boolean);
+    // True si la linea ya tiene celdas en BBDD (convertida en una
+    // entrada anterior al modo tallas).
+    function LineaTieneCeldas(ALinea: Integer): Boolean;
+    // Mueve las celdas de una linea duplicada a la maestra (upsert
+    // sumando por talla/almacen) y las borra del origen.
+    procedure MoverCeldasALinea(AOrigen, ADestino: Integer);
     // Lineas heredadas de otros modos: deriva pivote/atributos, vuelca
     // CANTIDAD del SKU con talla a su celda y fusiona duplicadas.
     procedure RederivarLineasExistentes;
@@ -234,6 +243,7 @@ type
     procedure CdsAfterPost(DataSet: TDataSet);
     procedure CdsAfterScroll(DataSet: TDataSet);
     procedure ArmarRecarga;
+    procedure NotificarPostsSilenciados;
     procedure TimerRecargaTimer(Sender: TObject);
     // El gestor rotula las columnas sobrantes con el generico
     // 'Talla N': aqui se dejan con un punto — solo se pinta la talla.
@@ -393,6 +403,7 @@ procedure TModoEntradaTallas.Construir;
 var
   i: Integer;
   Col: TcxGridDBColumn;
+  bTxPropia: Boolean;
 begin
   // El desplegable de busqueda debe existir antes que su columna.
   CrearLookupBusqueda;
@@ -493,12 +504,27 @@ begin
   FConfig.Cds.AfterPost := CdsAfterPost;
   FAfterScrollOrig := FConfig.Cds.AfterScroll;
   FConfig.Cds.AfterScroll := CdsAfterScroll;
-  // Lineas heredadas de otros modos / documento reabierto: derivar
-  // pivote y atributos, volcar cantidades y fusionar duplicadas.
-  RederivarLineasExistentes;
-  // Unificar celdas segun el formato (las heredadas se vuelcan a
-  // almacen '', por eso la migracion va DESPUES del rederivar).
-  MigrarCeldasAlmacen;
+  // Conversion ATOMICA: la fusion mezcla posts de dataset y SQL
+  // directo (SumarEnCelda); interrumpida a medias dejaba celdas ya
+  // sumadas con lineas sin fusionar y cada reentrada volvia a sumar
+  // (cantidades duplicadas y pedida disparada).
+  bTxPropia := not FConfig.Conexion.InTransaction;
+  if bTxPropia then
+    FConfig.Conexion.StartTransaction;
+  try
+    // Lineas heredadas de otros modos / documento reabierto: derivar
+    // pivote y atributos, volcar cantidades y fusionar duplicadas.
+    RederivarLineasExistentes;
+    // Unificar celdas segun el formato (las heredadas se vuelcan a
+    // almacen '', por eso la migracion va DESPUES del rederivar).
+    MigrarCeldasAlmacen;
+    if bTxPropia then
+      FConfig.Conexion.Commit;
+  except
+    if bTxPropia then
+      FConfig.Conexion.Rollback;
+    raise;
+  end;
   // La carga visual (columnas visibles, cantidades y rotulos) se
   // DIFIERE un tick: el host anyade sus columnas tras Construir y eso
   // resetea los Values[] no-bound del DataController.
@@ -551,22 +577,26 @@ begin
         while not ds.Eof do
         begin
           iLinea := ds.FieldByName(FCfgTallas.FieldLinea).AsInteger;
-          rTot := 0;
-          Tot.TryGetValue(iLinea, rTot);
-          rPr := 0;
-          if ds.FindField(FCfgTallas.FieldPrecioBase) <> nil then
-            rPr :=
-              ds.FieldByName(FCfgTallas.FieldPrecioBase).AsFloat;
-          if ds.FieldByName(
-               FCfgTallas.FieldTotalUds).AsFloat <> rTot then
+          // Solo lineas CON celdas: las escalares (sin tallaje) llevan
+          // su cantidad en la propia linea y este refresco las dejaba
+          // a 0 (la clave no estaba en Tot y se posteaba el 0).
+          if Tot.TryGetValue(iLinea, rTot) then
           begin
-            if not (ds.State in [dsEdit, dsInsert]) then
-              ds.Edit;
-            ds.FieldByName(FCfgTallas.FieldTotalUds).AsFloat := rTot;
-            if ds.FindField(FCfgTallas.FieldTotalLinea) <> nil then
-              ds.FieldByName(FCfgTallas.FieldTotalLinea).AsFloat :=
-                rTot * rPr;
-            ds.Post;
+            rPr := 0;
+            if ds.FindField(FCfgTallas.FieldPrecioBase) <> nil then
+              rPr :=
+                ds.FieldByName(FCfgTallas.FieldPrecioBase).AsFloat;
+            if ds.FieldByName(
+                 FCfgTallas.FieldTotalUds).AsFloat <> rTot then
+            begin
+              if not (ds.State in [dsEdit, dsInsert]) then
+                ds.Edit;
+              ds.FieldByName(FCfgTallas.FieldTotalUds).AsFloat := rTot;
+              if ds.FindField(FCfgTallas.FieldTotalLinea) <> nil then
+                ds.FieldByName(FCfgTallas.FieldTotalLinea).AsFloat :=
+                  rTot * rPr;
+              ds.Post;
+            end;
           end;
           ds.Next;
         end;
@@ -606,6 +636,7 @@ begin
     // Conversion terminada: a partir de aqui el hook AfterPost recarga
     // las celdas tras cada Post del usuario.
     FEnProceso := False;
+    NotificarPostsSilenciados;
   end;
 end;
 
@@ -1432,11 +1463,21 @@ end;
 
 procedure TModoEntradaTallas.CdsAfterPost(DataSet: TDataSet);
 begin
-  if Assigned(FAfterPostOrig) then
-    FAfterPostOrig(DataSet);
-  // Post (implicito al cambiar de fila o del usuario): el re-render
-  // posterior limpia los Values[] no-bound. Recarga diferida.
-  ArmarRecarga;
+  // Conversion interna en curso (rederivar, totales, expansion): los
+  // posts son masivos y encadenar el AfterPost del host en cada uno
+  // dispara totales/movimientos en cascada; ademas sus repintados
+  // borran los Values[] no-bound recien cargados. Se cuenta y se
+  // notifica UNA sola vez al cerrar (NotificarPostsSilenciados).
+  if FEnProceso then
+    Inc(FPostsSilenciados)
+  else
+  begin
+    if Assigned(FAfterPostOrig) then
+      FAfterPostOrig(DataSet);
+    // Post (implicito al cambiar de fila o del usuario): el re-render
+    // posterior limpia los Values[] no-bound. Recarga diferida.
+    ArmarRecarga;
+  end;
 end;
 
 procedure TModoEntradaTallas.CdsAfterScroll(DataSet: TDataSet);
@@ -1464,6 +1505,22 @@ begin
     FGestor.CargarCantidadesTodasLineas;
     FGestor.ActualizarCaptionsLineaActiva;
     LimpiarCaptionsGenericas;
+  end;
+end;
+
+// Cierre de una conversion interna: si se silenciaron posts, encadena
+// UNA sola vez el AfterPost del host (totales, movimientos, pendientes
+// de recibir...) y rearma la recarga de celdas para que lo ultimo que
+// toque el grid sea la republicacion de los Values[] no-bound.
+procedure TModoEntradaTallas.NotificarPostsSilenciados;
+begin
+  if (FPostsSilenciados > 0) and (not FEnProceso) then
+  begin
+    FPostsSilenciados := 0;
+    if Assigned(FAfterPostOrig) and (FConfig.Cds <> nil) and
+       FConfig.Cds.Active then
+      FAfterPostOrig(FConfig.Cds);
+    ArmarRecarga;
   end;
 end;
 
@@ -1500,6 +1557,7 @@ procedure TModoEntradaTallas.Desmontar;
 var
   ds: TDataSet;
   EnProcesoPrevio: Boolean;
+  bTxPropia: Boolean;
   Qry: TUniQuery;
   Celdas: TList<TCeldaExpansion>;
   Cel: TCeldaExpansion;
@@ -1556,6 +1614,14 @@ begin
     Celdas := TList<TCeldaExpansion>.Create;
     OrdPorArt := TDictionary<string, Integer>.Create;
     NomPorArt := TDictionary<string, string>.Create;
+    // Conversion ATOMICA: la expansion postea lineas nuevas y borra
+    // las celdas por SQL directo (paso 4); interrumpida a medias
+    // dejaba celdas sin borrar junto a lineas ya creadas y cada
+    // reentrada re-sumaba las celdas (cantidades duplicadas).
+    bTxPropia := not FConfig.Conexion.InTransaction;
+    if bTxPropia then
+      FConfig.Conexion.StartTransaction;
+    try
     try
       // 1. Celdas con cantidad del documento, con el VALOR de la talla
       //    resuelto (JOIN a fza_atributos_valores).
@@ -1797,6 +1863,15 @@ begin
       FreeAndNil(OrdPorArt);
       FreeAndNil(Celdas);
     end;
+    if bTxPropia then
+      FConfig.Conexion.Commit;
+    except
+      if bTxPropia then
+        FConfig.Conexion.Rollback;
+      raise;
+    end;
+    // Cierre de la expansion: notificar al host los posts silenciados.
+    NotificarPostsSilenciados;
   end;
 end;
 
@@ -2122,6 +2197,114 @@ begin
   end;
 end;
 
+// True si la linea ya tiene celdas de talla en BBDD: fue convertida en
+// una entrada anterior al modo tallas y su cantidad vive en celdas.
+function TModoEntradaTallas.LineaTieneCeldas(ALinea: Integer): Boolean;
+var
+  Qry: TUniQuery;
+begin
+  Result := False;
+  if ALinea > 0 then
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := FConfig.Conexion;
+      Qry.SQL.Text :=
+        'SELECT 1 FROM ' + FCfgTallas.TablaCeldas +
+        ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
+        WhereNumero('') +
+        WhereDocExtra +
+        ' AND ' + FCfgTallas.FieldLineaCel + ' = :l' +
+        ' LIMIT 1';
+      Qry.ParamByName('s').AsString :=
+        FCfgTallas.SourceMaster.DataSet.FieldByName(
+          FCfgTallas.FieldSerieMaster).AsString;
+      ParamNumero(Qry);
+      ParamsDocExtra(Qry);
+      Qry.ParamByName('l').AsInteger := ALinea;
+      Qry.Open;
+      Result := not Qry.Eof;
+    finally
+      FreeAndNil(Qry);
+    end;
+  end;
+end;
+
+// Fusion de una duplicada que YA tiene celdas: mueve sus celdas a la
+// linea maestra (upsert sumando por talla y almacen) y las borra del
+// origen. Mover su CANTIDAD en su lugar duplicaria: es el total que
+// mantiene RefrescarTotalesTodasLineas, no una cantidad por talla.
+procedure TModoEntradaTallas.MoverCeldasALinea(AOrigen,
+  ADestino: Integer);
+var
+  Qry: TUniQuery;
+  sSerie: string;
+begin
+  if (AOrigen > 0) and (ADestino > 0) and (AOrigen <> ADestino) then
+  begin
+    sSerie := FCfgTallas.SourceMaster.DataSet.FieldByName(
+      FCfgTallas.FieldSerieMaster).AsString;
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := FConfig.Conexion;
+      if FCfgTallas.FieldAlmacenCel <> '' then
+        Qry.SQL.Text :=
+          'SELECT ' + FCfgTallas.FieldAvPivotCel + ' AS IDAV,' +
+          ' ' + FCfgTallas.FieldAlmacenCel + ' AS ALMC,' +
+          ' SUM(' + FCfgTallas.FieldCantidadCel + ') AS CANT' +
+          ' FROM ' + FCfgTallas.TablaCeldas +
+          ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
+          WhereNumero('') +
+          WhereDocExtra +
+          ' AND ' + FCfgTallas.FieldLineaCel + ' = :l' +
+          ' GROUP BY ' + FCfgTallas.FieldAvPivotCel + ', ' +
+          FCfgTallas.FieldAlmacenCel
+      else
+        Qry.SQL.Text :=
+          'SELECT ' + FCfgTallas.FieldAvPivotCel + ' AS IDAV,' +
+          ' '''' AS ALMC,' +
+          ' SUM(' + FCfgTallas.FieldCantidadCel + ') AS CANT' +
+          ' FROM ' + FCfgTallas.TablaCeldas +
+          ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
+          WhereNumero('') +
+          WhereDocExtra +
+          ' AND ' + FCfgTallas.FieldLineaCel + ' = :l' +
+          ' GROUP BY ' + FCfgTallas.FieldAvPivotCel;
+      Qry.ParamByName('s').AsString := sSerie;
+      ParamNumero(Qry);
+      ParamsDocExtra(Qry);
+      Qry.ParamByName('l').AsInteger := AOrigen;
+      Qry.Open;
+      while not Qry.Eof do
+      begin
+        SumarEnCelda(ADestino,
+                     Qry.FieldByName('IDAV').AsInteger,
+                     Qry.FieldByName('CANT').AsFloat,
+                     Qry.FieldByName('ALMC').AsString,
+                     False);
+        Qry.Next;
+      end;
+      Qry.Close;
+      // Origen fusionado: fuera sus celdas.
+      Qry.SQL.Text :=
+        'DELETE FROM ' + FCfgTallas.TablaCeldas +
+        ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
+        WhereNumero('') +
+        WhereDocExtra +
+        ' AND ' + FCfgTallas.FieldLineaCel + ' = :l';
+      Qry.ParamByName('s').AsString := sSerie;
+      ParamNumero(Qry);
+      ParamsDocExtra(Qry);
+      Qry.ParamByName('l').AsInteger := AOrigen;
+      Qry.ExecSQL;
+    finally
+      FreeAndNil(Qry);
+    end;
+    LogSes(Format('ModoTallas.MoverCeldas: linea %d -> %d',
+                  [AOrigen, ADestino]));
+  end;
+end;
+
 procedure TModoEntradaTallas.SumarEnCelda(ALinea, AIdAv: Integer;
   ACant: Double; const AAlm: string; ARefrescar: Boolean);
 var
@@ -2216,6 +2399,7 @@ var
   CampoCant: TField;
   EvBorrado: TDataSetNotifyEvent;
   bBorrada: Boolean;
+  bYaConvertida: Boolean;
 begin
   ds := FConfig.Cds;
   if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
@@ -2293,7 +2477,15 @@ begin
           begin
             // Duplicada (mismo articulo+color): su cantidad se vuelca
             // a la celda de talla de la linea maestra y se elimina.
-            if (idAv > 0) and (rCant > 0) then
+            // Si la duplicada YA tiene celdas (era otro master), se
+            // mueven SUS celdas: su CANTIDAD es el total mantenido
+            // por RefrescarTotalesTodasLineas y sumarla duplicaria.
+            if LineaTieneCeldas(
+                 ds.FieldByName(FCfgTallas.FieldLinea).AsInteger) then
+              MoverCeldasALinea(
+                ds.FieldByName(FCfgTallas.FieldLinea).AsInteger,
+                iLineaMaster)
+            else if (idAv > 0) and (rCant > 0) then
               SumarEnCelda(iLineaMaster, idAv, rCant, sAlmCel,
                            False);
             LogSes(Format('ModoTallas.Rederivar: BORRA linea=%d ' +
@@ -2331,12 +2523,18 @@ begin
             else
               PonerCampo(FConfig.Campos.Almacen, sAlmLin);
             EscribirAtributosLinea(Val, Nom, iAc);
+            // Master YA convertido (tiene celdas): su CANTIDAD es el
+            // total que mantiene RefrescarTotalesTodasLineas; volver
+            // a volcarla DUPLICABA las celdas en cada reentrada al
+            // modo (cantidades dobladas sin tocar nada).
+            bYaConvertida := LineaTieneCeldas(iLinea);
             // La cantidad del SKU con talla pasa a su celda; la
             // columna Cantidad queda para lineas sin tallas.
-            if (idAv > 0) and (rCant > 0) and (CampoCant <> nil) then
+            if (not bYaConvertida) and (idAv > 0) and (rCant > 0) and
+               (CampoCant <> nil) then
               CampoCant.AsFloat := 0;
             ds.Post;
-            if (idAv > 0) and (rCant > 0) then
+            if (not bYaConvertida) and (idAv > 0) and (rCant > 0) then
               SumarEnCelda(iLinea, idAv, rCant, sAlmCel, False);
           end;
         end;

@@ -1796,8 +1796,10 @@ begin
   begin
     // Sin modo construido (llegar navegando sin pisar el grid) se
     // veian las columnas del dfm: construir tambien en ese caso.
+    // Tallas INLINE tambien reconstruye al navegar: sin ello el
+    // pedido llegaba sin fusionar y con las tallas en blanco.
     if (not FColsModoConstruido) or
-       (FModoEntradaSel = mcsTallasHorPed) then
+       (FModoEntradaSel in [mcsTallasInline, mcsTallasHorPed]) then
       ConstruirModoEntrada
     else if FModoEntradaSel = mcsAuto then
       dmmPedidosCompra.DesempaquetarAtributosLineas;
@@ -1852,9 +1854,15 @@ begin
     FAfterPostLineasOriginal(DataSet)
   else if Assigned(dmmPedidosCompra) then
     dmmPedidosCompra.CalcularTotalesPedidoCompra;
-  if Assigned(FPivote) and FPivote.Activo then
-    FPivote.RecargarYRepublicar;
-  RefrescarCantidadAAlbaranar;
+  // En reorganizacion del modo de entrada la lib republica al final:
+  // refrescar por cada linea repite consultas sin efecto visual.
+  if (dmmPedidosCompra = nil) or
+     (not dmmPedidosCompra.EnReorganizacionLineas) then
+  begin
+    if Assigned(FPivote) and FPivote.Activo then
+      FPivote.RecargarYRepublicar;
+    RefrescarCantidadAAlbaranar;
+  end;
 end;
 
 // Hook AfterOpen del detail: cada vez que se abre el cursor (entrar al
@@ -2915,6 +2923,10 @@ begin
     Exit;
   FConstruyendoModo := True;
   bDegradarASku := False;
+  // Expansion/consolidacion en bloque (una linea por SKU): totales y
+  // pendientes de recibir se recalculan UNA vez al finalizar en vez de
+  // por cada post de linea (segundos de cascada al entrar al modo).
+  dmmPedidosCompra.IniciarReorganizacionLineas;
   try
   // Teardown del modo anterior (patron pedidos de venta).
   if tvLineasPedido.Controller.EditingController.IsEditing then
@@ -3076,6 +3088,7 @@ begin
     end;
   end;
   finally
+    dmmPedidosCompra.FinalizarReorganizacionLineas;
     FConstruyendoModo := False;
   end;
   // Reconstruccion completa en SKU FUERA del guard de reentrada

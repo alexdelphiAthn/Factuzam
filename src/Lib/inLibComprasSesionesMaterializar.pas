@@ -1034,7 +1034,8 @@ begin
       '   ID_AC_PIVOT_ALBCLIN, ' +
       '   CODIGO_FAM_ALBCLIN, NOMBRE_FAM_ALBCLIN, ' +
       '   DESCRIPCION_ARTICULO_ALBCLIN, TIPO_CANTIDAD_ARTICULO_ALBCLIN, ' +
-      '   CANTIDAD_ALBCLIN, TIPO_IVA_ARTICULO_ALBCLIN, ' +
+      '   CANTIDAD_ALBCLIN, TOTAL_UNIDADES_ALBCLIN, ' +
+      '   TIPO_IVA_ARTICULO_ALBCLIN, ' +
       '   PORCENTAJE_IVA_ALBCLIN, ' +
       '   PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN, ' +
       '   PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN, ' +
@@ -1043,7 +1044,8 @@ begin
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
       'VALUES (:n, :s, :l, :art, :sku, :refprv, :acpivot, ' +
       '        :fam, :nomfam, :desc, ''Uds'', ' +
-      '        :cant, :tiva, :piva, :pre, :preciva, :tot, :alm, ''N'', ' +
+      '        :cant, :cant, :tiva, :piva, :pre, :preciva, :tot, :alm, ' +
+      '        ''N'', ' +
       '        NOW(), :u, NOW(), :u)';
     q.ParamByName('n').AsString    := ANumAlbc;
     q.ParamByName('s').AsString    := ASerieAlbc;

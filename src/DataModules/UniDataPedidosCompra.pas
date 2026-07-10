@@ -63,6 +63,11 @@ type
     // puramente descriptivo que NO debe disparar la logica fiscal
     // (cascada por linea al navegar).
     FDesempaquetandoAtributos: Boolean;
+    // >0 mientras el modo de entrada expande/consolida lineas en bloque
+    // (una linea por SKU): totales y pendientes de recibir se posponen
+    // a FinalizarReorganizacionLineas para no regenerarlos por linea.
+    FReorganizandoLineas: Integer;
+    FReorganizacionPendiente: Boolean;
     procedure AsignarNumeroLineaPedidoCompra(DataSet: TDataSet);
     procedure ConfigurarSqlCabecera;
     // Construye el SQLInsert contra fza_pedidos_compra: la vista
@@ -76,6 +81,13 @@ type
   public
     procedure GetCodigoAutoPedidoCompra;
     procedure CalcularTotalesPedidoCompra;
+    // Bracket de reorganizacion masiva de lineas (construccion del modo
+    // de entrada): entre Iniciar y Finalizar los posts de linea no
+    // recalculan totales ni regeneran fza_articulos_pdte_recibir; se
+    // hace UNA vez al Finalizar si hubo posts.
+    procedure IniciarReorganizacionLineas;
+    procedure FinalizarReorganizacionLineas;
+    function EnReorganizacionLineas: Boolean;
     // Contrato ColumnSKUcxGrid: trocea CODIGO_UNIDAD_PEDCLIN en las
     // columnas reales ATTR1..5_VALOR_PEDCLIN + NUM_ATRIBUTOS_PEDCLIN
     // para el modo Desglose/Tallas. Idempotente por comparacion. No
@@ -557,8 +569,12 @@ begin
   sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
   sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
   if (sSerie = '') or (sNumero = '') then Exit;
-  inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-    inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+  // Reorganizacion en bloque en curso: se pospone al Finalizar.
+  if FReorganizandoLineas > 0 then
+    FReorganizacionPendiente := True
+  else
+    inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
+      inLibGlobalVar.oConn, sSerie, sNumero, oUser);
 end;
 
 procedure TdmPedidosCompra.unqryTablaGBeforeDelete(DataSet: TDataSet);
@@ -613,6 +629,12 @@ begin
     FieldByName('LINEA_PEDCLIN').AsString := '0000';
     FieldByName('CANTIDAD_PEDCLIN').AsFloat := 1;
     FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat := 0;
+    // NOT NULL DEFAULT 0 en BBDD pero UniDAC la marca Required: sin
+    // inicializarla, el Post de una linea nueva casca con "Field
+    // CANTIDAD_A_RECIBIR_PEDCLIN must have a value" (p.ej. el post
+    // forzado del detalle al grabar la cabecera al salir).
+    if FindField('CANTIDAD_A_RECIBIR_PEDCLIN') <> nil then
+      FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat := 0;
     // Por defecto la linea hereda el almacen de la cabecera; el usuario
     // puede sobreescribirlo si quiere mezclar lineas de varios almacenes.
     if FindField('CODIGO_ALMACEN_PEDCLIN') <> nil then
@@ -753,12 +775,17 @@ begin
   inherited;
   CalcularTotalesPedidoCompra;
   // Tras editar una linea, resincronizamos las pendientes de recibir
-  // (cantidad de la linea puede haber cambiado).
+  // (cantidad de la linea puede haber cambiado). Durante la
+  // reorganizacion del modo de entrada se pospone al Finalizar:
+  // regenerar TODO el pedido por cada linea multiplica el coste.
   sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
   sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
   if (sSerie = '') or (sNumero = '') then Exit;
-  inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-    inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+  if FReorganizandoLineas > 0 then
+    FReorganizacionPendiente := True
+  else
+    inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
+      inLibGlobalVar.oConn, sSerie, sNumero, oUser);
 end;
 
 procedure TdmPedidosCompra.unqryPedidosCompraLineasBeforeDelete(
@@ -1196,11 +1223,22 @@ begin
 end;
 
 procedure TdmPedidosCompra.CalcularTotalesPedidoCompra;
+var
+  oCampoPrendas: TField;
+  rPrendas: Double;
 begin
   // Los posts del desempaquetado ATTR no alteran importes: saltar el
   // recalculo por linea (cascada de consultas de IVA al navegar).
   if FDesempaquetandoAtributos then
     Exit;
+  // Reorganizacion en bloque en curso: un unico recalculo al Finalizar
+  // (cada pasada consulta el IVA articulo a articulo y edita la
+  // cabecera, forzando posts encadenados del master-detail).
+  if FReorganizandoLineas > 0 then
+  begin
+    FReorganizacionPendiente := True;
+    Exit;
+  end;
   if not FCalculandoTotales then
   begin
     FCalculandoTotales := True;
@@ -1208,10 +1246,70 @@ begin
       CalcularTotalesDocumentoCompra(inLibGlobalVar.oConn, unqryTablaG,
         unqryPedidosCompraLineas, 'PEDC', 'TOTAL_PEDCLIN',
         'TIPO_IVA_ARTICULO_PEDCLIN', 'PORCENTAJE_IVA_PEDCLIN');
+      // Nº de prendas: TOTAL_PRENDAS_PEDC es columna calculada de la
+      // vista (SUM de CANTIDAD_PEDCLIN) y solo se lee al abrir la
+      // cabecera. Se replica aqui en cliente para refrescarla al
+      // momento. No esta en el SQLUpdate explicito de la cabecera,
+      // asi que nunca viaja a BBDD.
+      oCampoPrendas := unqryTablaG.FindField('TOTAL_PRENDAS_PEDC');
+      if oCampoPrendas <> nil then
+      begin
+        rPrendas := TotalPrendasLineasCompra(unqryPedidosCompraLineas,
+          'TIPO_IVA_ARTICULO_PEDCLIN');
+        if oCampoPrendas.IsNull or
+           (Abs(oCampoPrendas.AsFloat - rPrendas) > 0.000001) then
+        begin
+          if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+            unqryTablaG.Edit;
+          oCampoPrendas.AsFloat := rPrendas;
+        end;
+      end;
     finally
       FCalculandoTotales := False;
     end;
   end;
+end;
+
+procedure TdmPedidosCompra.IniciarReorganizacionLineas;
+begin
+  Inc(FReorganizandoLineas);
+end;
+
+procedure TdmPedidosCompra.FinalizarReorganizacionLineas;
+var
+  sSerie, sNumero: string;
+begin
+  if FReorganizandoLineas > 0 then
+    Dec(FReorganizandoLineas);
+  if FReorganizandoLineas = 0 then
+  begin
+    // La reorganizacion escribe lineas y celdas por SQL directo: sin
+    // reabrir el detalle, el grid y el pivote publican datos rancios
+    // (tallas vacias hasta reconstruir el modo con F1). Antes lo
+    // "arreglaban" las reaperturas en cascada del master-detail.
+    if unqryPedidosCompraLineas.Active then
+    begin
+      unqryPedidosCompraLineas.Close;
+      unqryPedidosCompraLineas.Open;
+    end;
+    // Si hubo posts pospuestos, recalcular totales y regenerar los
+    // pendientes de recibir UNA sola vez (ya con datos frescos).
+    if FReorganizacionPendiente then
+    begin
+      FReorganizacionPendiente := False;
+      CalcularTotalesPedidoCompra;
+      sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
+      sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
+      if (sSerie <> '') and (sNumero <> '') then
+        inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
+          inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+    end;
+  end;
+end;
+
+function TdmPedidosCompra.EnReorganizacionLineas: Boolean;
+begin
+  Result := FReorganizandoLineas > 0;
 end;
 
 end.
