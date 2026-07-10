@@ -162,6 +162,14 @@ type
     function GetPosicionesConjunto(AIdAc: Integer): TArrPosConjunto;
     procedure InvalidarCache;
 
+    // Siembra un conjunto VIRTUAL (id negativo) en la cache de
+    // posiciones. Lo usa el pivote de tallas como fallback cuando
+    // ningun conjunto real de fza_atributos_conjuntos cubre las tallas
+    // de un articulo: el id negativo nunca llega a SQL, solo vive en
+    // la cache y GetPosicionesConjunto lo resuelve desde ella.
+    procedure RegistrarConjuntoVirtual(AIdAc: Integer;
+                                       const APosiciones: TArrPosConjunto);
+
     // Maximo de valores entre los conjuntos referenciados por
     // alguna linea de la sesion (capado a Cfg.MaxColumnas).
     function MaxLongConjuntos: Integer;
@@ -371,6 +379,15 @@ begin
   if FConjuntoPos <> nil then FConjuntoPos.Clear;
 end;
 
+procedure TGestorGridTallas.RegistrarConjuntoVirtual(AIdAc: Integer;
+  const APosiciones: TArrPosConjunto);
+begin
+  // AddOrSetValue: el llamante re-registra en cada recarga porque las
+  // tallas del articulo pueden crecer (alta de SKU desde una celda).
+  if (FConjuntoPos <> nil) and (AIdAc < 0) then
+    FConjuntoPos.AddOrSetValue(AIdAc, APosiciones);
+end;
+
 function TGestorGridTallas.GetPosicionesConjunto(AIdAc: Integer)
                                                 : TArrPosConjunto;
 var
@@ -383,9 +400,11 @@ begin
   // indicado. Cacheado en FConjuntoPos para no re-consultar por cada
   // refresco / edicion.
   Result := nil;
-  if AIdAc <= 0 then Exit;
   if FConjuntoPos = nil then Exit;
   if FConjuntoPos.TryGetValue(AIdAc, Result) then Exit;
+  // Ids negativos = conjuntos VIRTUALES (RegistrarConjuntoVirtual):
+  // solo existen en cache, no hay fila en BBDD que consultar.
+  if AIdAc <= 0 then Exit;
 
   q := TUniQuery.Create(nil);
   try
