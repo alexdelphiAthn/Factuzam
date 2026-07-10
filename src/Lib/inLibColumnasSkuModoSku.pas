@@ -121,6 +121,9 @@ type
                                 ACanvas: TcxCanvas;
                                 AViewInfo: TcxGridTableDataCellViewInfo;
                                 var ADone: Boolean);
+    procedure SkuGetDisplayText(Sender: TcxCustomGridTableItem;
+                                ARecord: TcxCustomGridRecord;
+                                var AText: string);
     function ValorRecord(ARecord: TcxCustomGridRecord;
                          const ACampo: string): string;
     function SkuTextoRecord(ARecord: TcxCustomGridRecord): string;
@@ -285,6 +288,8 @@ begin
     // Swatch del color en la celda (ultimo segmento tras '/'), mismo
     // helper que caja e inventarios.
     FColSku.OnCustomDrawCell := SkuCustomDrawCell;
+    // Articulos sin variaciones no tienen SKU: fallback al articulo.
+    FColSku.OnGetDisplayText := SkuGetDisplayText;
     CrearColumnaOculta(FConfig.Campos.CodigoArt);
     for i := 1 to 5 do
       CrearColumnaOculta(FConfig.Campos.AttrValor[i]);
@@ -608,6 +613,17 @@ begin
       DispararResolucion(sEntrada);
     end;
   end;
+end;
+
+// Articulo sin variaciones: no tiene SKU (CODIGO_UNIDAD vacio) y la
+// celda quedaba en blanco, dejando la linea sin identificar en el modo
+// SKU. Se muestra el codigo de articulo como texto de la celda.
+procedure TModoEntradaSku.SkuGetDisplayText(
+  Sender: TcxCustomGridTableItem; ARecord: TcxCustomGridRecord;
+  var AText: string);
+begin
+  if (Trim(AText) = '') and (ARecord <> nil) then
+    AText := ValorRecord(ARecord, FConfig.Campos.CodigoArt);
 end;
 
 procedure TModoEntradaSku.SkuCustomDrawCell(Sender: TcxCustomGridTableView;

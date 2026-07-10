@@ -640,7 +640,8 @@ begin
         '   CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, REF_PRV_ALBCLIN, ' +
         '   ID_AC_PIVOT_ALBCLIN, CODIGO_FAM_ALBCLIN, NOMBRE_FAM_ALBCLIN, ' +
         '   DESCRIPCION_ARTICULO_ALBCLIN, TIPO_CANTIDAD_ARTICULO_ALBCLIN, ' +
-        '   CANTIDAD_ALBCLIN, TIPO_IVA_ARTICULO_ALBCLIN, ' +
+        '   CANTIDAD_ALBCLIN, TOTAL_UNIDADES_ALBCLIN, ' +
+        '   TIPO_IVA_ARTICULO_ALBCLIN, ' +
         '   PORCENTAJE_IVA_ALBCLIN, ' +
         '   PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN, ' +
         '   PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN, ' +
@@ -649,7 +650,7 @@ begin
         'VALUES (:nalbc, :salbc, :lalbc, :npedc, :spedc, :lpedc, ' +
         '        :art, :sku, :refprv, :acpivot, :fam, :nfam, ' +
         '        :desc, :tipcant, ' +
-        '        :cant, :tiva, :piva, :pre, :preciva, ' +
+        '        :cant, :cant, :tiva, :piva, :pre, :preciva, ' +
         '        :cant * :pre, :alm, ''N'', ' +
         '        NOW(), :u, NOW(), :u)';
       qIns.ParamByName('nalbc').AsString  := ANumAlbc;
@@ -985,7 +986,8 @@ begin
         '   CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, REF_PRV_ALBCLIN, ' +
         '   ID_AC_PIVOT_ALBCLIN, CODIGO_FAM_ALBCLIN, NOMBRE_FAM_ALBCLIN, ' +
         '   DESCRIPCION_ARTICULO_ALBCLIN, TIPO_CANTIDAD_ARTICULO_ALBCLIN, ' +
-        '   CANTIDAD_ALBCLIN, TIPO_IVA_ARTICULO_ALBCLIN, ' +
+        '   CANTIDAD_ALBCLIN, TOTAL_UNIDADES_ALBCLIN, ' +
+        '   TIPO_IVA_ARTICULO_ALBCLIN, ' +
         '   PORCENTAJE_IVA_ALBCLIN, ' +
         '   PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN, ' +
         '   PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN, ' +
@@ -994,7 +996,7 @@ begin
         'VALUES (:nalbc, :salbc, :lalbc, :npedc, :spedc, :lpedc, ' +
         '        :art, :sku, :refprv, :acpivot, :fam, :nfam, ' +
         '        :desc, :tipcant, ' +
-        '        :cant, :tiva, :piva, :pre, :preciva, ' +
+        '        :cant, :cant, :tiva, :piva, :pre, :preciva, ' +
         '        :cant * :pre, :alm, ''N'', ' +
         '        NOW(), :u, NOW(), :u)';
       qIns.ParamByName('nalbc').AsString  := ANumAlbc;
@@ -1357,7 +1359,8 @@ begin
         '   CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, REF_PRV_ALBCLIN, ' +
         '   ID_AC_PIVOT_ALBCLIN, CODIGO_FAM_ALBCLIN, NOMBRE_FAM_ALBCLIN, ' +
         '   DESCRIPCION_ARTICULO_ALBCLIN, TIPO_CANTIDAD_ARTICULO_ALBCLIN, ' +
-        '   CANTIDAD_ALBCLIN, TIPO_IVA_ARTICULO_ALBCLIN, ' +
+        '   CANTIDAD_ALBCLIN, TOTAL_UNIDADES_ALBCLIN, ' +
+        '   TIPO_IVA_ARTICULO_ALBCLIN, ' +
         '   PORCENTAJE_IVA_ALBCLIN, ' +
         '   PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN, ' +
         '   PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN, ' +
@@ -1366,7 +1369,7 @@ begin
         'VALUES (:nalbc, :salbc, :lalbc, :npedc, :spedc, :lpedc, ' +
         '        :art, :sku, :refprv, :acpivot, :fam, :nfam, ' +
         '        :desc, :tipcant, ' +
-        '        :cant, :tiva, :piva, :pre, :preciva, ' +
+        '        :cant, :cant, :tiva, :piva, :pre, :preciva, ' +
         '        :cant * :pre, :alm, ''N'', ' +
         '        NOW(), :u, NOW(), :u)';
       qIns.ParamByName('nalbc').AsString  := ANumAlbcDestino;
@@ -1549,7 +1552,8 @@ begin
         '   CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, REF_PRV_ALBCLIN, ' +
         '   ID_AC_PIVOT_ALBCLIN, CODIGO_FAM_ALBCLIN, NOMBRE_FAM_ALBCLIN, ' +
         '   DESCRIPCION_ARTICULO_ALBCLIN, TIPO_CANTIDAD_ARTICULO_ALBCLIN, ' +
-        '   CANTIDAD_ALBCLIN, TIPO_IVA_ARTICULO_ALBCLIN, ' +
+        '   CANTIDAD_ALBCLIN, TOTAL_UNIDADES_ALBCLIN, ' +
+        '   TIPO_IVA_ARTICULO_ALBCLIN, ' +
         '   PORCENTAJE_IVA_ALBCLIN, ' +
         '   PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN, ' +
         '   PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN, ' +
@@ -1558,7 +1562,7 @@ begin
         'VALUES (:nalbc, :salbc, :lalbc, :npedc, :spedc, :lpedc, ' +
         '        :art, :sku, :refprv, :acpivot, :fam, :nfam, ' +
         '        :desc, :tipcant, ' +
-        '        :cant, :tiva, :piva, :pre, :preciva, ' +
+        '        :cant, :cant, :tiva, :piva, :pre, :preciva, ' +
         '        :cant * :pre, :alm, ''N'', ' +
         '        NOW(), :u, NOW(), :u)';
       qIns.ParamByName('nalbc').AsString  := ANumAlbcDestino;

@@ -1595,7 +1595,11 @@ begin
     dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
     dmmAlbaranesCompra.SincronizarMovimientos;
   end;
-  if Assigned(FPivote) and FPivote.Activo then
+  // En reorganizacion del modo de entrada la lib republica al final:
+  // republicar por cada linea repite trabajo sin efecto visual.
+  if ((dmmAlbaranesCompra = nil) or
+      (not dmmAlbaranesCompra.EnReorganizacionLineas)) and
+     Assigned(FPivote) and FPivote.Activo then
     FPivote.RecargarYRepublicar;
 end;
 
@@ -1716,6 +1720,11 @@ begin
   ds := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
   if not ds.Active then
     Exit;
+  // Expansion/consolidacion en bloque (una linea por SKU): totales y
+  // movimientos se recalculan UNA vez al finalizar en vez de por cada
+  // post de linea (cascada de segundos al entrar al modo).
+  dmmAlbaranesCompra.IniciarReorganizacionLineas;
+  try
   // Teardown del modo anterior (patron pedidos de compra).
   if tvLineasAlbaran.Controller.EditingController.IsEditing then
     try
@@ -1849,6 +1858,9 @@ begin
         MostrarColumnasAtributoGlobalesAlbc;
       end;
     end;
+  end;
+  finally
+    dmmAlbaranesCompra.FinalizarReorganizacionLineas;
   end;
 end;
 

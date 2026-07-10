@@ -48,10 +48,14 @@ procedure CalcularTotalesDocumentoCompra(AConn: TUniConnection;
 
 // Numero total de prendas del documento: suma CANTIDAD_<sufijo linea> de
 // todas las lineas reales (ignora el filtro visual del pivote de tallas).
+// Si se indica ACampoTotalUnidades, la linea aporta ese campo cuando no
+// es NULL (misma regla COALESCE que las vistas de cabecera: respeta el
+// agregado de las lineas consolidadas del pivote antiguo).
 // No requiere que exista un campo TOTAL_PRENDAS_xxx en la cabecera; el
 // formulario lo muestra directamente en un label de la pestana Totales.
 function TotalPrendasLineasCompra(ALineas: TDataSet;
-  const ACampoTipoIvaLinea: string): Double;
+  const ACampoTipoIvaLinea: string;
+  const ACampoTotalUnidades: string = ''): Double;
 
 implementation
 
@@ -809,9 +813,12 @@ begin
 end;
 
 function TotalPrendasLineasCompra(ALineas: TDataSet;
-  const ACampoTipoIvaLinea: string): Double;
+  const ACampoTipoIvaLinea: string;
+  const ACampoTotalUnidades: string): Double;
 var
   bk: TBookmark;
+  oCampoUds: TField;
+  rCantidadLinea: Double;
   sSufijoLinea: string;
   bFiltroActivo: Boolean;
 begin
@@ -832,7 +839,15 @@ begin
     ALineas.First;
     while not ALineas.Eof do
     begin
-      Result := Result + CampoFloat(ALineas, 'CANTIDAD_' + sSufijoLinea);
+      rCantidadLinea := CampoFloat(ALineas, 'CANTIDAD_' + sSufijoLinea);
+      // Regla COALESCE de la vista: TOTAL_UNIDADES manda si no es NULL.
+      if ACampoTotalUnidades <> '' then
+      begin
+        oCampoUds := ALineas.FindField(ACampoTotalUnidades);
+        if (oCampoUds <> nil) and (not oCampoUds.IsNull) then
+          rCantidadLinea := oCampoUds.AsFloat;
+      end;
+      Result := Result + rCantidadLinea;
       ALineas.Next;
     end;
   finally

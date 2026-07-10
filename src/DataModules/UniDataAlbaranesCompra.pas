@@ -83,9 +83,15 @@ type
     // puramente descriptivo que NO debe disparar la logica fiscal ni
     // la sincronizacion de movimientos (cascada por linea al navegar).
     FDesempaquetandoAtributos: Boolean;
+    // >0 mientras el modo de entrada expande/consolida lineas en bloque
+    // (una linea por SKU): totales y movimientos se posponen a
+    // FinalizarReorganizacionLineas para no regenerarlos por linea.
+    FReorganizandoLineas: Integer;
+    FReorganizacionPendiente: Boolean;
     procedure AsignarNumeroLineaAlbaranCompra(DataSet: TDataSet);
     procedure ConfigurarSqlCabecera;
     function HayLineasMovimiento(const ASerie, ANumero: string): Boolean;
+    function LineaTieneCeldasPivote(DataSet: TDataSet): Boolean;
     function ObtenerSkusAlbaranCsv(const ASerie, ANumero: string): string;
     procedure RefrescarMovimientosProveedor;
     procedure CopiarEmpresaaAlbaranCompra(DataSet: TDataSet);
@@ -94,6 +100,13 @@ type
     procedure GetCodigoAutoAlbaranCompra;
     procedure CalcularTotalesAlbaranCompra;
     procedure SincronizarMovimientos;
+    // Bracket de reorganizacion masiva de lineas (construccion del modo
+    // de entrada): entre Iniciar y Finalizar los posts de linea no
+    // recalculan totales ni revierten/regeneran movimientos; se hace
+    // UNA vez al Finalizar si hubo posts.
+    procedure IniciarReorganizacionLineas;
+    procedure FinalizarReorganizacionLineas;
+    function EnReorganizacionLineas: Boolean;
     // Contrato ColumnSKUcxGrid: desglosa el SKU ART/COLOR/TALLA en las
     // columnas reales ATTR1..5_VALOR_ALBCLIN + NUM_ATRIBUTOS_ALBCLIN
     // (idempotente por comparacion, mismo criterio que pedidos compra).
@@ -692,6 +705,38 @@ begin
   end;
 end;
 
+// True si la linea tiene celdas del pivote antiguo (linea consolidada):
+// su TOTAL_UNIDADES guarda el agregado por tallas y no debe machacarse
+// con CANTIDAD. Las lineas del modelo contrato no tienen celdas.
+function TdmAlbaranesCompra.LineaTieneCeldasPivote(
+                                             DataSet: TDataSet): Boolean;
+var
+  q: TUniQuery;
+begin
+  Result := False;
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := unqryTablaG.Connection;
+    q.SQL.Text :=
+      'SELECT 1 ' +
+      '  FROM fza_albaranes_compra_celdas ' +
+      ' WHERE SERIE_ALBC_ALBCCEL  = :s ' +
+      '   AND NUMERO_ALBC_ALBCCEL = :n ' +
+      '   AND LINEA_ALBC_ALBCCEL  = :l ' +
+      ' LIMIT 1';
+    q.ParamByName('s').AsString :=
+      DataSet.FieldByName('SERIE_ALBC_ALBCLIN').AsString;
+    q.ParamByName('n').AsString :=
+      DataSet.FieldByName('NUMERO_ALBC_ALBCLIN').AsString;
+    q.ParamByName('l').AsString :=
+      DataSet.FieldByName('LINEA_ALBCLIN').AsString;
+    q.Open;
+    Result := not q.Eof;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
 procedure TdmAlbaranesCompra.unqryAlbaranesCompraLineasBeforePost(
                                                        DataSet: TDataSet);
 var
@@ -704,12 +749,16 @@ begin
   // Modelo contrato (una linea por SKU): TOTAL_UNIDADES acompana a
   // CANTIDAD. La vista de cabecera lo prefiere al contar prendas y se
   // quedaba con el valor antiguo al editar cantidades en el pivote.
+  // Tambien aplica a lineas sin SKU (escalares); solo se respeta el
+  // agregado de las consolidadas del pivote antiguo (con celdas).
   if (DataSet.FindField('TOTAL_UNIDADES_ALBCLIN') <> nil) and
-     (DataSet.FindField('CANTIDAD_ALBCLIN') <> nil) and
-     (Trim(DataSet.FieldByName('CODIGO_UNIDAD_ALBCLIN').AsString) <> '')
-  then
-    DataSet.FieldByName('TOTAL_UNIDADES_ALBCLIN').AsFloat :=
-      DataSet.FieldByName('CANTIDAD_ALBCLIN').AsFloat;
+     (DataSet.FindField('CANTIDAD_ALBCLIN') <> nil) then
+  begin
+    if (Trim(DataSet.FieldByName('CODIGO_UNIDAD_ALBCLIN').AsString) <> '')
+       or (not LineaTieneCeldasPivote(DataSet)) then
+      DataSet.FieldByName('TOTAL_UNIDADES_ALBCLIN').AsFloat :=
+        DataSet.FieldByName('CANTIDAD_ALBCLIN').AsFloat;
+  end;
   // Linea vacia (sin articulo ni SKU): cancelar silenciosamente. El cxGrid
   // hace Post automatico al navegar con flechas (OptionsData.Appending); si
   // la linea es un placeholder vacio que el usuario creo sin querer, el Post
@@ -873,14 +922,42 @@ begin
 end;
 
 procedure TdmAlbaranesCompra.CalcularTotalesAlbaranCompra;
+var
+  oCampoPrendas: TField;
+  rPrendas: Double;
 begin
   // Los posts del desempaquetado ATTR no alteran importes: saltar el
   // recalculo por linea (cascada de consultas de IVA al navegar).
   if FDesempaquetandoAtributos then
     Exit;
+  // Reorganizacion en bloque en curso: un unico recalculo al Finalizar
+  // (cada pasada consulta el IVA articulo a articulo y edita la
+  // cabecera, forzando posts encadenados del master-detail).
+  if FReorganizandoLineas > 0 then
+  begin
+    FReorganizacionPendiente := True;
+    Exit;
+  end;
   CalcularTotalesDocumentoCompra(unqryTablaG.Connection, unqryTablaG,
     unqryAlbaranesCompraLineas, 'ALBC', 'TOTAL_ALBCLIN',
     'TIPO_IVA_ARTICULO_ALBCLIN', 'PORCENTAJE_IVA_ALBCLIN');
+  // Nº de prendas: TOTAL_PRENDAS_ALBC es columna calculada de la vista
+  // y solo se lee al abrir la cabecera. Se replica aqui en cliente con
+  // la misma regla COALESCE para refrescarla al momento. No esta en
+  // CAMPOS_ALBC, asi que SQLUpdate/SQLInsert nunca la envian a BBDD.
+  oCampoPrendas := unqryTablaG.FindField('TOTAL_PRENDAS_ALBC');
+  if oCampoPrendas <> nil then
+  begin
+    rPrendas := TotalPrendasLineasCompra(unqryAlbaranesCompraLineas,
+      'TIPO_IVA_ARTICULO_ALBCLIN', 'TOTAL_UNIDADES_ALBCLIN');
+    if oCampoPrendas.IsNull or
+       (Abs(oCampoPrendas.AsFloat - rPrendas) > 0.000001) then
+    begin
+      if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+        unqryTablaG.Edit;
+      oCampoPrendas.AsFloat := rPrendas;
+    end;
+  end;
 end;
 
 function TdmAlbaranesCompra.HayLineasMovimiento(const ASerie,
@@ -924,6 +1001,14 @@ begin
   // saltar el borrado/recreacion de movimientos y recalculo de PMP.
   if FDesempaquetandoAtributos then
     Exit;
+  // Reorganizacion en bloque en curso: revertir y regenerar TODOS los
+  // movimientos (con PMP) por cada linea multiplica el coste; se
+  // pospone a FinalizarReorganizacionLineas.
+  if FReorganizandoLineas > 0 then
+  begin
+    FReorganizacionPendiente := True;
+    Exit;
+  end;
   if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
   begin
     sSerie := Trim(unqryTablaG.FieldByName('SERIE_ALBC').AsString);
@@ -938,6 +1023,42 @@ begin
       RefrescarMovimientosProveedor;
     end;
   end;
+end;
+
+procedure TdmAlbaranesCompra.IniciarReorganizacionLineas;
+begin
+  Inc(FReorganizandoLineas);
+end;
+
+procedure TdmAlbaranesCompra.FinalizarReorganizacionLineas;
+begin
+  if FReorganizandoLineas > 0 then
+    Dec(FReorganizandoLineas);
+  if FReorganizandoLineas = 0 then
+  begin
+    // La reorganizacion escribe lineas y celdas por SQL directo: sin
+    // reabrir el detalle, el grid y el pivote publican datos rancios
+    // (tallas vacias hasta reconstruir el modo con F1). Antes lo
+    // "arreglaban" las reaperturas en cascada del master-detail.
+    if unqryAlbaranesCompraLineas.Active then
+    begin
+      unqryAlbaranesCompraLineas.Close;
+      unqryAlbaranesCompraLineas.Open;
+    end;
+    // Si hubo posts pospuestos, recalcular totales y movimientos UNA
+    // sola vez (ya con datos frescos).
+    if FReorganizacionPendiente then
+    begin
+      FReorganizacionPendiente := False;
+      CalcularTotalesAlbaranCompra;
+      SincronizarMovimientos;
+    end;
+  end;
+end;
+
+function TdmAlbaranesCompra.EnReorganizacionLineas: Boolean;
+begin
+  Result := FReorganizandoLineas > 0;
 end;
 
 procedure TdmAlbaranesCompra.PrepararPrint(const ASerie, ANumero: string);
