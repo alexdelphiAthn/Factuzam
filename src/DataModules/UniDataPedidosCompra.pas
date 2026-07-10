@@ -877,10 +877,15 @@ begin
         '          JOIN fza_pedidos_compra P ' +
         '            ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
         '           AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+        // LINEA de celda sin relleno ('10') vs LINEA de linea rellena
+        // ('0010'): el cruce varchar-varchar fallaba como texto, el
+        // valor se compara en numerico (cantidades desorbitadas,
+        // 10/07/26).
         '          LEFT JOIN fza_pedidos_compra_celdas C ' +
         '            ON C.SERIE_PEDC_PEDCCEL = L.SERIE_PEDC_PEDCLIN ' +
         '           AND C.NUMERO_PEDC_PEDCCEL = L.NUMERO_PEDC_PEDCLIN ' +
-        '           AND C.LINEA_PEDC_PEDCCEL = L.LINEA_PEDCLIN ' +
+        '           AND CAST(C.LINEA_PEDC_PEDCCEL AS UNSIGNED) = ' +
+        '               CAST(L.LINEA_PEDCLIN AS UNSIGNED) ' +
         '         WHERE L.SERIE_PEDC_PEDCLIN = :s ' +
         '           AND L.NUMERO_PEDC_PEDCLIN = :n ' +
         '       ) X ' +
@@ -929,10 +934,12 @@ begin
       '  JOIN fza_pedidos_compra P ' +
       '    ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
       '   AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+      // Cruce de LINEA en numerico: celda '10' vs linea '0010'.
       '  LEFT JOIN fza_pedidos_compra_celdas C ' +
       '    ON C.SERIE_PEDC_PEDCCEL = L.SERIE_PEDC_PEDCLIN ' +
       '   AND C.NUMERO_PEDC_PEDCCEL = L.NUMERO_PEDC_PEDCLIN ' +
-      '   AND C.LINEA_PEDC_PEDCCEL = L.LINEA_PEDCLIN ' +
+      '   AND CAST(C.LINEA_PEDC_PEDCCEL AS UNSIGNED) = ' +
+      '       CAST(L.LINEA_PEDCLIN AS UNSIGNED) ' +
       ' WHERE L.SERIE_PEDC_PEDCLIN = :s ' +
       '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
       '   AND COALESCE(L.CODIGO_UNIDAD_PEDCLIN, '''') <> ''''';
@@ -992,10 +999,12 @@ begin
           '          JOIN fza_pedidos_compra P ' +
           '            ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
           '           AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+          // Cruce de LINEA en numerico: celda '10' vs linea '0010'.
           '          JOIN fza_pedidos_compra_celdas C ' +
           '            ON C.SERIE_PEDC_PEDCCEL = L.SERIE_PEDC_PEDCLIN ' +
           '           AND C.NUMERO_PEDC_PEDCCEL = L.NUMERO_PEDC_PEDCLIN ' +
-          '           AND C.LINEA_PEDC_PEDCCEL = L.LINEA_PEDCLIN ' +
+          '           AND CAST(C.LINEA_PEDC_PEDCCEL AS UNSIGNED) = ' +
+          '               CAST(L.LINEA_PEDCLIN AS UNSIGNED) ' +
           '         WHERE L.SERIE_PEDC_PEDCLIN = :s ' +
           '           AND L.NUMERO_PEDC_PEDCLIN = :n ' +
           '           AND COALESCE(L.CODIGO_UNIDAD_PEDCLIN, '''') <> '''' ' +
@@ -1022,7 +1031,8 @@ begin
           '                    L.SERIE_PEDC_PEDCLIN ' +
           '                AND C0.NUMERO_PEDC_PEDCCEL = ' +
           '                    L.NUMERO_PEDC_PEDCLIN ' +
-          '                AND C0.LINEA_PEDC_PEDCCEL = L.LINEA_PEDCLIN ' +
+          '                AND CAST(C0.LINEA_PEDC_PEDCCEL AS UNSIGNED) ' +
+          '                    = CAST(L.LINEA_PEDCLIN AS UNSIGNED) ' +
           '           ) ');
         if sAlmacenes <> '' then
           oQry.SQL.Add('           AND ' + cAlmacenLin +
@@ -1355,20 +1365,31 @@ begin
     q := TUniQuery.Create(nil);
     try
       q.Connection := inLibGlobalVar.oConn;
+      // El cruce de LINEA va en NUMERICO: la celda guarda '10' (el
+      // parametro entra como entero) y la linea '0010'; como texto
+      // nunca casaban, TODA linea con SKU contaba como sin pivotar y
+      // cada entrada al grid reconstruia el documento entero
+      // (expansion + fusion: tormenta de SQL por click, 10/07/26).
+      // Solo cuentan articulos CON variacion: uno sin tallas jamas
+      // tendra celdas y forzaria la reconstruccion eterna.
       q.SQL.Text :=
         'SELECT 1 ' +
         '  FROM fza_pedidos_compra_lineas L ' +
+        '  JOIN fza_articulos A ' +
+        '    ON A.CODIGO_ART_ART = L.CODIGO_ART_PEDCLIN ' +
         ' WHERE L.SERIE_PEDC_PEDCLIN  = :s ' +
         '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
         '   AND COALESCE(L.CODIGO_UNIDAD_PEDCLIN, '''') <> '''' ' +
+        '   AND IFNULL(A.ESVARIACION_ART, ''N'') = ''S'' ' +
         '   AND NOT EXISTS (SELECT 1 ' +
         '                     FROM fza_pedidos_compra_celdas C ' +
         '                    WHERE C.SERIE_PEDC_PEDCCEL  = ' +
         '                          L.SERIE_PEDC_PEDCLIN ' +
         '                      AND C.NUMERO_PEDC_PEDCCEL = ' +
         '                          L.NUMERO_PEDC_PEDCLIN ' +
-        '                      AND C.LINEA_PEDC_PEDCCEL  = ' +
-        '                          L.LINEA_PEDCLIN) ' +
+        '                      AND CAST(C.LINEA_PEDC_PEDCCEL ' +
+        '                               AS UNSIGNED) = ' +
+        '                          CAST(L.LINEA_PEDCLIN AS UNSIGNED)) ' +
         ' LIMIT 1';
       q.ParamByName('s').AsString :=
         unqryTablaG.FieldByName('SERIE_PEDC').AsString;
