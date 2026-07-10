@@ -147,6 +147,11 @@ type
     FCeldaLinea          : TDictionary<Int64, string>;
     FCeldaAlmacen        : TDictionary<Int64, string>;
     FSkuInfo             : TDictionary<string, TSkuPivoteVentaInfo>;
+    // Conjuntos VIRTUALES (id negativo) por lista de tallas: fallback
+    // cuando ningun conjunto real de fza_atributos_conjuntos cubre las
+    // tallas de un grupo (articulo dado de alta sin conjunto asignado).
+    FConjuntoVirtualIds  : TDictionary<string, Integer>;
+    FProxConjuntoVirtual : Integer;
     FCdsVista            : TClientDataSet;
     FDsVista             : TDataSource;
     FDataSourceOrig      : TDataSource;
@@ -220,6 +225,12 @@ type
       const ACodigoBarras: string): string;
     function ResolverSkuUnicoArticulo(const ACodigoArticulo: string): string;
     function BuscarConjuntoParaIds(AIds: TList<Integer>): Integer;
+    // Fallback de BuscarConjuntoParaIds: fabrica un conjunto VIRTUAL
+    // (id negativo, solo en cache del gestor) con las tallas de los
+    // SKUs del articulo del grupo — o, si no las hay, con las tallas
+    // ATallas del propio grupo — ordenadas por ORDEN_AV.
+    function ConjuntoVirtualParaGrupo(ALineaRepr: Integer;
+                                      ATallas: TList<Integer>): Integer;
     procedure AplicarVisibilidadTallas;
     procedure ColocarBloqueColumnas;
     procedure ActualizarCaptionsLineaActiva;
@@ -340,6 +351,8 @@ begin
   FCeldaLinea         := TDictionary<Int64, string>.Create;
   FCeldaAlmacen       := TDictionary<Int64, string>.Create;
   FSkuInfo            := TDictionary<string, TSkuPivoteVentaInfo>.Create;
+  FConjuntoVirtualIds := TDictionary<string, Integer>.Create;
+  FProxConjuntoVirtual := -1;
   FCdsVista           := TClientDataSet.Create(nil);
   FDsVista            := TDataSource.Create(nil);
   FDsVista.DataSet    := FCdsVista;
@@ -359,6 +372,7 @@ begin
   FreeAndNil(FDsVista);
   FreeAndNil(FCdsVista);
   FreeAndNil(FGestor);
+  FreeAndNil(FConjuntoVirtualIds);
   FreeAndNil(FSkuInfo);
   FreeAndNil(FCeldaAlmacen);
   FreeAndNil(FCeldaLinea);
@@ -1119,6 +1133,129 @@ begin
   end;
 end;
 
+function TGridPivoteVenta.ConjuntoVirtualParaGrupo(ALineaRepr: Integer;
+  ATallas: TList<Integer>): Integer;
+var
+  Qry: TUniQuery;
+  Arr: TArrPosConjunto;
+  sArt, sKey, sIds: string;
+  i: Integer;
+  function TallaEnArr(const AArr: TArrPosConjunto;
+                      AIdAv: Integer): Boolean;
+  var
+    j: Integer;
+  begin
+    Result := False;
+    for j := 0 to High(AArr) do
+    begin
+      if AArr[j].IdAv = AIdAv then
+        Result := True;
+    end;
+  end;
+begin
+  // Articulos con tallas sueltas en sus SKUs pero SIN conjunto real que
+  // las cubra: sin este fallback las columnas de talla no se pintaban
+  // nunca (albaranes de compra, 10/07/26). Se fabrica un conjunto
+  // VIRTUAL con las tallas de los SKUs del articulo ordenadas por
+  // ORDEN_AV y se siembra en la cache del gestor con id negativo: el
+  // id jamas llega a SQL y el resto del pivote lo consume tal cual.
+  Result := 0;
+  Arr := nil;
+  sArt := '';
+  FPivotArticulo.TryGetValue(ALineaRepr, sArt);
+  if (FCfg.Conexion <> nil) and (FGestor <> nil) then
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      if sArt <> '' then
+      begin
+        Qry.Connection := FCfg.Conexion;
+        Qry.SQL.Text :=
+          'SELECT DISTINCT AV.ID_AV, AV.AV, AV.ORDEN_AV ' +
+          '  FROM fza_articulos_skus SK ' +
+          '  JOIN fza_atributos_sku SA ' +
+          '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
+          '  JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
+          ' WHERE SK.CODIGO_ART_SKU = :art ' +
+          '   AND AV.ID_VA_AV = ''TAL'' ' +
+          ' ORDER BY AV.ORDEN_AV, AV.AV';
+        Qry.ParamByName('art').AsString := sArt;
+        Qry.Open;
+        SetLength(Arr, Qry.RecordCount);
+        i := 0;
+        while not Qry.Eof do
+        begin
+          Arr[i].IdAv := Qry.FieldByName('ID_AV').AsInteger;
+          Arr[i].Valor := Qry.FieldByName('AV').AsString;
+          Inc(i);
+          Qry.Next;
+        end;
+        Qry.Close;
+      end;
+      // Red de seguridad: tallas del grupo que no salieron por el
+      // articulo (articulo de la linea sin SKUs propios, o SKU colgado
+      // de otro padre) se anexan al final para que su celda tenga
+      // columna donde pintarse.
+      if ATallas <> nil then
+      begin
+        sIds := '';
+        for i := 0 to ATallas.Count - 1 do
+        begin
+          if not TallaEnArr(Arr, ATallas[i]) then
+          begin
+            if sIds <> '' then
+              sIds := sIds + ',';
+            sIds := sIds + IntToStr(ATallas[i]);
+          end;
+        end;
+        if sIds <> '' then
+        begin
+          Qry.Connection := FCfg.Conexion;
+          Qry.SQL.Text :=
+            'SELECT ID_AV, AV, ORDEN_AV ' +
+            '  FROM fza_atributos_valores ' +
+            ' WHERE ID_AV IN (' + sIds + ') ' +
+            ' ORDER BY ORDEN_AV, AV';
+          Qry.Open;
+          i := Length(Arr);
+          SetLength(Arr, i + Qry.RecordCount);
+          while not Qry.Eof do
+          begin
+            Arr[i].IdAv := Qry.FieldByName('ID_AV').AsInteger;
+            Arr[i].Valor := Qry.FieldByName('AV').AsString;
+            Inc(i);
+            Qry.Next;
+          end;
+        end;
+      end;
+    finally
+      FreeAndNil(Qry);
+    end;
+    if Length(Arr) > 0 then
+    begin
+      // Un id virtual por LISTA de tallas (clave = ids ordenados): dos
+      // grupos con las mismas tallas comparten conjunto y captions.
+      sKey := '';
+      for i := 0 to High(Arr) do
+        sKey := sKey + IntToStr(Arr[i].IdAv) + ',';
+      if not FConjuntoVirtualIds.TryGetValue(sKey, Result) then
+      begin
+        Result := FProxConjuntoVirtual;
+        Dec(FProxConjuntoVirtual);
+        FConjuntoVirtualIds.Add(sKey, Result);
+      end;
+      // Re-registrar SIEMPRE: CrearGestor recrea el gestor con la
+      // cache vacia en cada Construir del modo.
+      FGestor.RegistrarConjuntoVirtual(Result, Arr);
+      if Log <> nil then
+        Log.LogInfo(Format(
+          'PivVenta.Cache: conjunto VIRTUAL %d (%d tallas) para ' +
+          'art=%s sin conjunto global que las cubra.',
+          [Result, Length(Arr), sArt]));
+    end;
+  end;
+end;
+
 procedure TGridPivoteVenta.CargarCachePivot;
 var
   Ds: TDataSet;
@@ -1272,12 +1409,19 @@ begin
       for ParTallas in DictTallas do
       begin
         iAc := BuscarConjuntoParaIds(ParTallas.Value);
-        if iAc > 0 then
+        // Sin conjunto real que cubra las tallas del grupo (articulo
+        // sin conjunto asignado): conjunto VIRTUAL con las tallas de
+        // los SKUs del articulo. Sin el, las columnas de talla no se
+        // pintaban nunca (albaranes de compra, 10/07/26).
+        if (iAc = 0) and (ParTallas.Value.Count > 0) then
+          iAc := ConjuntoVirtualParaGrupo(ParTallas.Key, ParTallas.Value);
+        if iAc <> 0 then
           FPivotIdAc.AddOrSetValue(ParTallas.Key, iAc)
         else if (ParTallas.Value.Count > 0) and (Log <> nil) then
         begin
-          // Error DOCUMENTADO: sin conjunto que cubra las tallas del
-          // grupo, sus celdas no tienen columna donde pintarse.
+          // Error DOCUMENTADO: sin conjunto (ni real ni virtual) que
+          // cubra las tallas del grupo, sus celdas no tienen columna
+          // donde pintarse.
           sArt := '';
           FPivotArticulo.TryGetValue(ParTallas.Key, sArt);
           Log.LogWarning(Format(
