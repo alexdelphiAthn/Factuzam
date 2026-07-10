@@ -114,6 +114,7 @@ type
     procedure RestaurarLayout;
     procedure AjustarVisibilidadPestanas;
     procedure AplicarAnchosPestanasHijas;
+    procedure AjustarAPantalla;
     procedure OnMaestroDataChange(Sender: TObject; Field: TField);
     procedure OnFacturaLinDataChange(Sender: TObject; Field: TField);
     procedure RefrescarFotoConsulta;
@@ -219,6 +220,7 @@ begin
                     [FEmpresa, FAlmacen, FCaja]);
   RecargarMaestro;
   RestaurarLayout;
+  AjustarAPantalla;
   if edtBuscar.CanFocus then
     edtBuscar.SetFocus;
   Log.LogInfo('frmConsultaOpe.FormShow: FIN');
@@ -586,6 +588,33 @@ begin
   FLayout.RestaurarGrid('Maestro', cxViewMaestro);
   AplicarAnchosPestanasHijas;
   Log.LogInfo('RestaurarLayout: FIN');
+end;
+
+// Encaja el formulario en el area de trabajo del monitor actual. En
+// resoluciones pequenas (1366x768, 1280x720...) el tamano de diseno deja la
+// botonera inferior fuera de pantalla; aqui se recorta la ventana y se
+// recoloca para que se vea entera. Se invoca tras RestaurarLayout porque el
+// perfil guardado puede traer una geometria mayor que la pantalla del puesto.
+procedure TfrmConsultaOpe.AjustarAPantalla;
+var
+  rArea: TRect;
+begin
+  if WindowState = wsNormal then
+  begin
+    rArea := Monitor.WorkareaRect;
+    if Width > rArea.Width then
+      Width := rArea.Width;
+    if Height > rArea.Height then
+      Height := rArea.Height;
+    if Left + Width > rArea.Right then
+      Left := rArea.Right - Width;
+    if Top + Height > rArea.Bottom then
+      Top := rArea.Bottom - Height;
+    if Left < rArea.Left then
+      Left := rArea.Left;
+    if Top < rArea.Top then
+      Top := rArea.Top;
+  end;
 end;
 
 procedure TfrmConsultaOpe.AplicarAnchosPestanasHijas;
