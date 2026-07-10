@@ -37,6 +37,40 @@ Además, las líneas residuo de expansiones rotas quedaron con precio 0
 y el precio forma parte de la clave de fusión: nunca vuelven a
 fusionar con la línea original y se perpetúan como duplicadas.
 
+### Causa raíz transversal: cruce de LINEA como texto
+
+`LINEA_PEDC_PEDCCEL` es `varchar(4)` pero la aplicación la escribe con
+parámetro entero: en la tabla queda `'10'` sin relleno, mientras que
+`LINEA_PEDCLIN` va rellena (`'0010'`). Todo SQL que cruce ambas
+columnas **como texto** (`C.LINEA... = L.LINEA...`) falla en silencio
+para líneas < 1000; solo funcionan las comparaciones contra parámetro
+entero (coerción numérica de MariaDB). Consecuencias detectadas:
+
+- `HayLineasSinPivotar` devolvía True SIEMPRE que hubiera líneas con
+  SKU → cada entrada al grid reconstruía el documento entero
+  (expansión + fusión): los ~400 KB de log SQL por click incluso tras
+  arreglar el hook de DataChange.
+- Almacenes del pedido, SKUs para etiquetas y expansión de etiquetas
+  ignoraban el desglose por celdas.
+- En **albaranes de compra** (mismo esquema varchar), los movimientos
+  de almacén, el último precio de compra y los costes por SKU
+  cruzaban celdas con el mismo fallo: los movimientos salían por la
+  cantidad plana de la línea en vez del desglose por talla/almacén.
+- En **devoluciones de compra**, ídem (movimientos y borrados por
+  grupo).
+- Compras por sesiones NO está afectada (`LINEA_SESLIN` y
+  `LINEA_SES_SESCEL` son `int`).
+
+Arreglo: todos esos cruces comparan ahora
+`CAST(... AS UNSIGNED) = CAST(... AS UNSIGNED)`. Pendiente de decidir
+por el usuario: el script histórico 539
+(`albaranes_compra_total_unidades`, guardado en
+`fza_generador_procesos` dentro de `factuzam_original.sql`) contiene
+el mismo `NOT EXISTS` textual; al ejecutarse actualizó
+`TOTAL_UNIDADES` también en líneas con celdas (impacto menor: para
+las consolidadas `CANTIDAD` ya es su total). `factuzam_original.sql`
+no se toca desde esta sesión.
+
 ## Arreglo en código
 
 - `inMtoPedidosCompra.pas`: el hook solo reconstruye el modo bandas si

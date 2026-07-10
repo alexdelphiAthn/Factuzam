@@ -161,7 +161,8 @@ begin
       '                   SELECT 1 FROM fza_albaranes_compra_celdas C ' +
       '                    WHERE C.SERIE_ALBC_ALBCCEL  = L.SERIE_ALBC_ALBCLIN ' +
       '                      AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
-      '                      AND C.LINEA_ALBC_ALBCCEL  = L.LINEA_ALBCLIN ' +
+      '                      AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
+      '                          = CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
       '                      AND C.CANTIDAD_ALBCCEL > 0)) ' +
       '           AND NOT EXISTS ( ' +
       '                 SELECT 1 FROM fza_albaranes_compra_lineas L2 ' +
@@ -173,7 +174,8 @@ begin
       '                            SELECT 1 FROM fza_albaranes_compra_celdas C2 ' +
       '                             WHERE C2.SERIE_ALBC_ALBCCEL  = L2.SERIE_ALBC_ALBCLIN ' +
       '                               AND C2.NUMERO_ALBC_ALBCCEL = L2.NUMERO_ALBC_ALBCLIN ' +
-      '                               AND C2.LINEA_ALBC_ALBCCEL  = L2.LINEA_ALBCLIN ' +
+      '                               AND CAST(C2.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
+      '                                   = CAST(L2.LINEA_ALBCLIN AS UNSIGNED) ' +
       '                               AND C2.CANTIDAD_ALBCCEL > 0)) ' +
       '                    AND L2.LINEA_ALBCLIN > L.LINEA_ALBCLIN) ' +
       '       ) X ' +
@@ -244,7 +246,8 @@ begin
       '                   SELECT 1 FROM fza_albaranes_compra_celdas C ' +
       '                    WHERE C.SERIE_ALBC_ALBCCEL  = L.SERIE_ALBC_ALBCLIN ' +
       '                      AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
-      '                      AND C.LINEA_ALBC_ALBCCEL  = L.LINEA_ALBCLIN ' +
+      '                      AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
+      '                          = CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
       '                      AND C.CANTIDAD_ALBCCEL > 0)) ' +
       '           AND NOT EXISTS ( ' +
       '                 SELECT 1 FROM fza_albaranes_compra_lineas L2 ' +
@@ -256,7 +259,8 @@ begin
       '                            SELECT 1 FROM fza_albaranes_compra_celdas C2 ' +
       '                             WHERE C2.SERIE_ALBC_ALBCCEL  = L2.SERIE_ALBC_ALBCLIN ' +
       '                               AND C2.NUMERO_ALBC_ALBCCEL = L2.NUMERO_ALBC_ALBCLIN ' +
-      '                               AND C2.LINEA_ALBC_ALBCCEL  = L2.LINEA_ALBCLIN ' +
+      '                               AND CAST(C2.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
+      '                                   = CAST(L2.LINEA_ALBCLIN AS UNSIGNED) ' +
       '                               AND C2.CANTIDAD_ALBCCEL > 0)) ' +
       '                    AND L2.LINEA_ALBCLIN > L.LINEA_ALBCLIN) ' +
       '       ) X ' +
@@ -359,7 +363,8 @@ begin
       '         SELECT 1 FROM fza_albaranes_compra_celdas C ' +
       '          WHERE C.SERIE_ALBC_ALBCCEL  = L.SERIE_ALBC_ALBCLIN ' +
       '            AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
-      '            AND C.LINEA_ALBC_ALBCCEL  = L.LINEA_ALBCLIN ' +
+      '            AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
+      '                = CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
       '            AND C.CANTIDAD_ALBCCEL    > 0) ' +
       'UNION ALL ' +
       'SELECT L.LINEA_ALBCLIN                     AS LINEA, ' +
@@ -394,7 +399,8 @@ begin
       '  JOIN fza_albaranes_compra_celdas C ' +
       '    ON C.SERIE_ALBC_ALBCCEL  = L.SERIE_ALBC_ALBCLIN ' +
       '   AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
-      '   AND C.LINEA_ALBC_ALBCCEL  = L.LINEA_ALBCLIN ' +
+      '   AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
+      '       = CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
       ' WHERE L.SERIE_ALBC_ALBCLIN  = :s2 ' +
       '   AND L.NUMERO_ALBC_ALBCLIN = :n2 ' +
       '   AND C.CANTIDAD_ALBCCEL    > 0 ' +
@@ -591,7 +597,8 @@ begin
         '  JOIN fza_albaranes_compra_celdas C ' +
         '    ON C.SERIE_ALBC_ALBCCEL  = L.SERIE_ALBC_ALBCLIN ' +
         '   AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
-        '   AND C.LINEA_ALBC_ALBCCEL  = L.LINEA_ALBCLIN ' +
+        '   AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
+        '       = CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
         ' WHERE L.SERIE_ALBC_ALBCLIN  = :s2 ' +
         '   AND L.NUMERO_ALBC_ALBCLIN = :n2 ' +
         '   AND IFNULL(NULLIF(C.CODIGO_ALM_ALBCCEL, ''''), ' +

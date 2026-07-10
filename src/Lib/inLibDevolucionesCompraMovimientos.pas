@@ -168,7 +168,8 @@ begin
       '         SELECT 1 FROM fza_devoluciones_compra_celdas C ' +
       '          WHERE C.SERIE_DEVC_DEVCCEL  = L.SERIE_DEVC_DEVCLIN ' +
       '            AND C.NUMERO_DEVC_DEVCCEL = L.NUMERO_DEVC_DEVCLIN ' +
-      '            AND C.LINEA_DEVC_DEVCCEL  = L.LINEA_DEVCLIN ' +
+      '            AND CAST(C.LINEA_DEVC_DEVCCEL AS UNSIGNED) ' +
+      '                = CAST(L.LINEA_DEVCLIN AS UNSIGNED) ' +
       '            AND C.CANTIDAD_DEVCCEL    > 0) ' +
       'UNION ALL ' +
       'SELECT L.LINEA_DEVCLIN                     AS LINEA, ' +
@@ -192,7 +193,8 @@ begin
       '  JOIN fza_devoluciones_compra_celdas C ' +
       '    ON C.SERIE_DEVC_DEVCCEL  = L.SERIE_DEVC_DEVCLIN ' +
       '   AND C.NUMERO_DEVC_DEVCCEL = L.NUMERO_DEVC_DEVCLIN ' +
-      '   AND C.LINEA_DEVC_DEVCCEL  = L.LINEA_DEVCLIN ' +
+      '   AND CAST(C.LINEA_DEVC_DEVCCEL AS UNSIGNED) ' +
+      '       = CAST(L.LINEA_DEVCLIN AS UNSIGNED) ' +
       ' WHERE L.SERIE_DEVC_DEVCLIN  = :s2 ' +
       '   AND L.NUMERO_DEVC_DEVCLIN = :n2 ' +
       '   AND C.CANTIDAD_DEVCCEL    > 0 ' +
@@ -376,7 +378,8 @@ begin
         '  JOIN fza_devoluciones_compra_celdas C ' +
         '    ON C.SERIE_DEVC_DEVCCEL  = L.SERIE_DEVC_DEVCLIN ' +
         '   AND C.NUMERO_DEVC_DEVCCEL = L.NUMERO_DEVC_DEVCLIN ' +
-        '   AND C.LINEA_DEVC_DEVCCEL  = L.LINEA_DEVCLIN ' +
+        '   AND CAST(C.LINEA_DEVC_DEVCCEL AS UNSIGNED) ' +
+      '       = CAST(L.LINEA_DEVCLIN AS UNSIGNED) ' +
         ' WHERE L.SERIE_DEVC_DEVCLIN  = :s2 ' +
         '   AND L.NUMERO_DEVC_DEVCLIN = :n2 ' +
         '   AND IFNULL(NULLIF(C.CODIGO_ALM_DEVCCEL, ''''), ' +
