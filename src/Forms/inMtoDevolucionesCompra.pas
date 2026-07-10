@@ -1031,7 +1031,8 @@ begin
                   '  JOIN fza_devoluciones_compra_lineas L ' +
                   '    ON C.SERIE_DEVC_DEVCCEL = L.SERIE_DEVC_DEVCLIN ' +
                   '   AND C.NUMERO_DEVC_DEVCCEL = L.NUMERO_DEVC_DEVCLIN ' +
-                  '   AND C.LINEA_DEVC_DEVCCEL = L.LINEA_DEVCLIN ' +
+                  '   AND CAST(C.LINEA_DEVC_DEVCCEL AS UNSIGNED) ' +
+                  '       = CAST(L.LINEA_DEVCLIN AS UNSIGNED) ' +
                   SQLJoinColorLinea +
                   SQLCondicionGrupo;
                 ParametrosGrupo(qry);
@@ -1841,7 +1842,8 @@ var
       '  JOIN fza_devoluciones_compra_lineas L ' +
       '    ON C.SERIE_DEVC_DEVCCEL = L.SERIE_DEVC_DEVCLIN ' +
       '   AND C.NUMERO_DEVC_DEVCCEL = L.NUMERO_DEVC_DEVCLIN ' +
-      '   AND C.LINEA_DEVC_DEVCCEL = L.LINEA_DEVCLIN ' +
+      '   AND CAST(C.LINEA_DEVC_DEVCCEL AS UNSIGNED) ' +
+      '       = CAST(L.LINEA_DEVCLIN AS UNSIGNED) ' +
       SQLJoinColorLinea +
       SQLCondicionGrupo;
     ParametrosGrupo;
