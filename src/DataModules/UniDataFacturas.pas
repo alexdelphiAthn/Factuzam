@@ -1833,17 +1833,24 @@ var
   i: Integer;
   Bm: TBookmark;
   bCambia: Boolean;
+  bReadOnlyLineas: Boolean;
 begin
   if unqryLinFac.Active and (not unqryLinFac.IsEmpty) and
      (unqryLinFac.FindField('ATTR1_VALOR_FACLIN') <> nil) and
-     (unqryLinFac.FindField('NUM_ATRIBUTOS_FACLIN') <> nil) and
-     (not unqryLinFac.ReadOnly) then
+     (unqryLinFac.FindField('NUM_ATRIBUTOS_FACLIN') <> nil) then
   begin
     Bm := unqryLinFac.GetBookmark;
     unqryLinFac.DisableControls;
     // Posts descriptivos: silencia numeracion, creacion de articulos
     // y recalculos en BeforePost / AfterPost.
     FDesempaquetandoAtributos := True;
+    // Borradores cerrados (simplificadas fase ONLINE) llegan ReadOnly
+    // por ActualizarBloqueoEdicion; el troceo SKU->ATTR es descriptivo
+    // y debe correr igual. Mismo patron que CalcularFactura: levantar
+    // y restaurar.
+    bReadOnlyLineas := unqryLinFac.ReadOnly;
+    if bReadOnlyLineas then
+      unqryLinFac.ReadOnly := False;
     try
       unqryLinFac.First;
       while not unqryLinFac.Eof do
@@ -1891,6 +1898,7 @@ begin
       if unqryLinFac.BookmarkValid(Bm) then
         unqryLinFac.GotoBookmark(Bm);
     finally
+      unqryLinFac.ReadOnly := bReadOnlyLineas;
       FDesempaquetandoAtributos := False;
       unqryLinFac.EnableControls;
       unqryLinFac.FreeBookmark(Bm);
