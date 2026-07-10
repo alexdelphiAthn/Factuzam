@@ -1547,7 +1547,10 @@ begin
   iAc := 0;
   if iLinea > 0 then
     FPivotIdAc.TryGetValue(iLinea, iAc);
-  if iAc > 0 then
+  // <> 0 y no > 0: los conjuntos VIRTUALES llevan id negativo y sus
+  // captions se resuelven desde la cache del gestor igual que los
+  // reales (sin esto, las columnas salian visibles pero rotuladas '·').
+  if iAc <> 0 then
     Arr := FGestor.GetPosicionesConjunto(iAc)
   else
     Arr := nil;
