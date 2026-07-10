@@ -1111,13 +1111,21 @@ procedure TfrmMtoAlbaranes.dsTablaGDataChangeHook(Sender: TObject;
 begin
   if Field = nil then
     ActualizarLabelPrendas;
-  // Red de seguridad: si la construccion inicial no pudo hacerse (el
-  // detail aun no estaba abierto), la primera navegacion la hace.
-  if (Field = nil) and (not FColsModoConstruido) and
+  // Al navegar de albaran: si la construccion inicial no pudo hacerse
+  // (el detail aun no estaba abierto), se construye aqui. En desglose
+  // ademas se desempaqueta SKU->ATTR: Color y Talla llegaban vacios en
+  // lineas creadas en modo SKU, que no persiste los ATTR (es
+  // idempotente por comparacion: sin cambios no postea nada).
+  if (Field = nil) and
      Assigned(dmmAlbaranes) and
      dmmAlbaranes.unqryAlbaranesLineas.Active and
      (not (dsTablaG.State in dsEditModes)) then
-    ConstruirModoEntrada;
+  begin
+    if not FColsModoConstruido then
+      ConstruirModoEntrada
+    else if FModoEntradaSel = mcsAuto then
+      dmmAlbaranes.DesempaquetarAtributosLineas;
+  end;
 end;
 
 procedure TfrmMtoAlbaranes.dsLineasDataChangeHook(Sender: TObject;

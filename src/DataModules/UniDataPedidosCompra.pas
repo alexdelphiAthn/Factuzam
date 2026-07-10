@@ -88,6 +88,17 @@ type
     procedure IniciarReorganizacionLineas;
     procedure FinalizarReorganizacionLineas;
     function EnReorganizacionLineas: Boolean;
+    // True si el pedido enfocado tiene lineas con SKU sin celdas de
+    // pivote: necesitan la primera fusion del modo tallas inline.
+    function HayLineasSinPivotar: Boolean;
+    // Cierra el bracket SIN recalculos ni reapertura del detalle (para
+    // el teardown de FormDestroy, con el form muriendo). Devuelve True
+    // si quedaron posts pospuestos (la expansion cambio lineas).
+    function AbortarReorganizacionLineas: Boolean;
+    // Regenera fza_articulos_pdte_recibir del pedido enfocado (borra y
+    // reinserta): la expansion del teardown cambia la composicion de
+    // lineas y los pendientes deben reflejarla.
+    procedure SincronizarPdteRecibir;
     // Contrato ColumnSKUcxGrid: trocea CODIGO_UNIDAD_PEDCLIN en las
     // columnas reales ATTR1..5_VALOR_PEDCLIN + NUM_ATRIBUTOS_PEDCLIN
     // para el modo Desglose/Tallas. Idempotente por comparacion. No
@@ -1310,6 +1321,65 @@ end;
 function TdmPedidosCompra.EnReorganizacionLineas: Boolean;
 begin
   Result := FReorganizandoLineas > 0;
+end;
+
+function TdmPedidosCompra.AbortarReorganizacionLineas: Boolean;
+begin
+  if FReorganizandoLineas > 0 then
+    Dec(FReorganizandoLineas);
+  Result := FReorganizacionPendiente;
+  FReorganizacionPendiente := False;
+end;
+
+procedure TdmPedidosCompra.SincronizarPdteRecibir;
+var
+  sSerie, sNumero: string;
+begin
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+  begin
+    sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
+    sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
+    if (sSerie <> '') and (sNumero <> '') then
+      inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
+        inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+  end;
+end;
+
+function TdmPedidosCompra.HayLineasSinPivotar: Boolean;
+var
+  q: TUniQuery;
+begin
+  Result := False;
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := inLibGlobalVar.oConn;
+      q.SQL.Text :=
+        'SELECT 1 ' +
+        '  FROM fza_pedidos_compra_lineas L ' +
+        ' WHERE L.SERIE_PEDC_PEDCLIN  = :s ' +
+        '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
+        '   AND COALESCE(L.CODIGO_UNIDAD_PEDCLIN, '''') <> '''' ' +
+        '   AND NOT EXISTS (SELECT 1 ' +
+        '                     FROM fza_pedidos_compra_celdas C ' +
+        '                    WHERE C.SERIE_PEDC_PEDCCEL  = ' +
+        '                          L.SERIE_PEDC_PEDCLIN ' +
+        '                      AND C.NUMERO_PEDC_PEDCCEL = ' +
+        '                          L.NUMERO_PEDC_PEDCLIN ' +
+        '                      AND C.LINEA_PEDC_PEDCCEL  = ' +
+        '                          L.LINEA_PEDCLIN) ' +
+        ' LIMIT 1';
+      q.ParamByName('s').AsString :=
+        unqryTablaG.FieldByName('SERIE_PEDC').AsString;
+      q.ParamByName('n').AsString :=
+        unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
+      q.Open;
+      Result := not q.Eof;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
 end;
 
 end.

@@ -2787,18 +2787,28 @@ begin
     // necesidad de presentacion clasica (modo creacion por cabecera) o
     // si el modo tallas debe re-pivotar su cache; en desglose basta
     // desempaquetar SKU->ATTR (leccion de inventarios/pedidos).
-    if FColsModoConstruido and (not FConstruyendoModo) and
+    if (not FConstruyendoModo) and
        Assigned(dmmFacturas) and dmmFacturas.unqryLinFac.Active and
        (not (dsTablaG.State in dsEditModes)) then
     begin
-      bClasicoNecesario := ModoCreacionSolicitado;
-      bClasicoConstruido := FModoEntrada = nil;
-      if (bClasicoNecesario <> bClasicoConstruido) or
-         ((not bClasicoNecesario) and
-          (FModoEntradaSel = mcsTallasHorPed)) then
+      // Red de seguridad: con la apertura asincrona el detail aun no
+      // estaba abierto en el FormCreate y la construccion inicial se
+      // saltaba; el desglose por defecto (mcsAuto) no aparecia hasta
+      // pisar el grid o pulsar F1. La primera navegacion construye.
+      if not FColsModoConstruido then
         ConstruirModoEntrada
-      else if (FModoEntrada <> nil) and (FModoEntradaSel <> mcsSku) then
-        dmmFacturas.DesempaquetarAtributosLineas;
+      else
+      begin
+        bClasicoNecesario := ModoCreacionSolicitado;
+        bClasicoConstruido := FModoEntrada = nil;
+        if (bClasicoNecesario <> bClasicoConstruido) or
+           ((not bClasicoNecesario) and
+            (FModoEntradaSel = mcsTallasHorPed)) then
+          ConstruirModoEntrada
+        else if (FModoEntrada <> nil) and (FModoEntradaSel <> mcsSku)
+        then
+          dmmFacturas.DesempaquetarAtributosLineas;
+      end;
     end;
   end;
 end;

@@ -1107,17 +1107,33 @@ begin
 end;
 
 procedure TfrmMtoPedidosCompra.FormDestroy(Sender: TObject);
+var
+  bHuboCambios: Boolean;
 begin
   // El modo del contrato se libera ANTES del inherited: su teardown
   // toca el view y el dataset de lineas, que deben seguir vivos (misma
   // leccion que pedidos/facturas de venta, AV al cerrar 08/07/26).
   if FModoEntrada <> nil then
   begin
+    // Teardown SILENCIOSO: la expansion del modo tallas postea lineas
+    // y sin bracket cada post recalculaba totales (IVA linea a linea)
+    // y regeneraba pendientes; con el form muriendo solo importa dejar
+    // los datos consistentes y sincronizar pendientes UNA vez.
+    bHuboCambios := False;
+    if Assigned(dmmPedidosCompra) then
+      dmmPedidosCompra.IniciarReorganizacionLineas;
     try
-      FModoEntrada.Desmontar;
-    except
-      // Teardown defensivo en cierre.
+      try
+        FModoEntrada.Desmontar;
+      except
+        // Teardown defensivo en cierre.
+      end;
+    finally
+      if Assigned(dmmPedidosCompra) then
+        bHuboCambios := dmmPedidosCompra.AbortarReorganizacionLineas;
     end;
+    if bHuboCambios then
+      dmmPedidosCompra.SincronizarPdteRecibir;
     FModoEntrada := nil;
   end;
   FreeAndNil(FPivote);
@@ -1796,10 +1812,13 @@ begin
   begin
     // Sin modo construido (llegar navegando sin pisar el grid) se
     // veian las columnas del dfm: construir tambien en ese caso.
-    // Tallas INLINE tambien reconstruye al navegar: sin ello el
-    // pedido llegaba sin fusionar y con las tallas en blanco.
+    // Tallas INLINE no convierte al navegar: mirar un pedido no debe
+    // escribirlo (con cientos de pedidos seria una tormenta). La
+    // fusion se hace al ENTRAR AL GRID de lineas (cxgrdLineasPedido
+    // Enter) o con F1; hasta entonces el pedido sin fusionar se ve
+    // linea a linea por SKU.
     if (not FColsModoConstruido) or
-       (FModoEntradaSel in [mcsTallasInline, mcsTallasHorPed]) then
+       (FModoEntradaSel = mcsTallasHorPed) then
       ConstruirModoEntrada
     else if FModoEntradaSel = mcsAuto then
       dmmPedidosCompra.DesempaquetarAtributosLineas;
@@ -2360,6 +2379,16 @@ begin
   // Contrato de entrada: primera construccion al entrar en el grid.
   // El teardown cancela la linea vacia auto-anadida: se recrea.
   if not FColsModoConstruido then
+  begin
+    ConstruirModoEntrada;
+    AsegurarPrimeraLineaPedidoCompra;
+  end
+  // Tallas INLINE: el pedido se fusiona al entrar al grid (intencion
+  // clara de trabajar sus lineas), nunca al navegar. Solo si trae
+  // lineas SKU sin pivotar; ya fusionado, entrar no cuesta nada.
+  else if (FModoEntradaSel = mcsTallasInline) and
+          Assigned(dmmPedidosCompra) and
+          dmmPedidosCompra.HayLineasSinPivotar then
   begin
     ConstruirModoEntrada;
     AsegurarPrimeraLineaPedidoCompra;
