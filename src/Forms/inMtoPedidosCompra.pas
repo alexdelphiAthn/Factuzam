@@ -347,7 +347,14 @@ type
     // dsTablaGDataChangeHook, que sin esta guarda relanzaba
     // ConstruirModoEntrada en mitad de la construccion.
     FConstruyendoModo: Boolean;
+    // Pedido (serie|numero) para el que se construyo el modo: el hook
+    // de DataChange solo reconstruye el modo bandas si esta clave
+    // cambia. Un Post de la MISMA cabecera (totales, INSTANTE_MODIF)
+    // tambien dispara DataChange y reconstruir ahi encadenaba una
+    // tormenta de SQL por cada click (10/07/26).
+    FPedidoModoActual: string;
     procedure ConstruirModoEntrada;
+    function  PedidoClaveActual: string;
     procedure CrearColumnasHostPedidoCompra;
     procedure MostrarColumnasAtributoGlobalesPedc;
     procedure ModoEntradaResuelto(const ACodArt, ASku,
@@ -1817,13 +1824,29 @@ begin
     // fusion se hace al ENTRAR AL GRID de lineas (cxgrdLineasPedido
     // Enter) o con F1; hasta entonces el pedido sin fusionar se ve
     // linea a linea por SKU.
+    // Tallas HORIZONTAL bandas: SOLO si el pedido cambio de verdad.
+    // El Post de la misma cabecera tambien pasa por aqui con Field=nil
+    // y reconstruir en ese caso encadenaba rebuild -> recalculo ->
+    // Post -> rebuild (tormenta de SQL por cada click).
     if (not FColsModoConstruido) or
-       (FModoEntradaSel = mcsTallasHorPed) then
+       ((FModoEntradaSel = mcsTallasHorPed) and
+        (PedidoClaveActual <> FPedidoModoActual)) then
       ConstruirModoEntrada
     else if FModoEntradaSel = mcsAuto then
       dmmPedidosCompra.DesempaquetarAtributosLineas;
   end;
   RefrescarCantidadAAlbaranar;
+end;
+
+// Clave serie|numero de la cabecera activa: identifica el pedido para
+// el que esta construido el modo de entrada.
+function TfrmMtoPedidosCompra.PedidoClaveActual: string;
+begin
+  Result := '';
+  if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active then
+    Result :=
+      Trim(dsTablaG.DataSet.FieldByName('SERIE_PEDC').AsString) + '|' +
+      Trim(dsTablaG.DataSet.FieldByName('NUMERO_PEDC').AsString);
 end;
 
 procedure TfrmMtoPedidosCompra.ActualizarLabelProveedor;
@@ -2951,6 +2974,9 @@ begin
   if not ds.Active then
     Exit;
   FConstruyendoModo := True;
+  // Registrar para que pedido se construye: el hook de DataChange solo
+  // reconstruye el modo bandas cuando esta clave cambia.
+  FPedidoModoActual := PedidoClaveActual;
   bDegradarASku := False;
   // Expansion/consolidacion en bloque (una linea por SKU): totales y
   // pendientes de recibir se recalculan UNA vez al finalizar en vez de
