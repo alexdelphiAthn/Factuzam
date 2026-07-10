@@ -962,51 +962,52 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object btnReimprimir: TButton
       Left = 12
       Top = 6
-      Width = 160
+      Width = 120
       Height = 28
       Caption = 'Reimprimir'
       TabOrder = 0
       OnClick = btnReimprimirClick
     end
     object btnCerrar: TButton
-      Left = 981
+      Left = 1043
       Top = 6
       Width = 108
       Height = 28
+      Anchors = [akTop, akRight]
       Caption = 'Cerrar (ESC)'
       TabOrder = 1
       OnClick = btnCerrarClick
     end
     object btnDevolverAbonar: TButton
-      Left = 188
+      Left = 142
       Top = 6
-      Width = 226
+      Width = 200
       Height = 28
       Caption = 'Devolver Abonar Operaci'#243'n'
       TabOrder = 2
     end
     object btnRectificar: TButton
-      Left = 436
+      Left = 352
       Top = 6
-      Width = 110
+      Width = 100
       Height = 28
       Caption = 'Rectificar'
       TabOrder = 3
       OnClick = btnRectificarClick
     end
     object btnAnularVerifactu: TButton
-      Left = 570
+      Left = 462
       Top = 6
-      Width = 200
+      Width = 170
       Height = 28
       Caption = 'Anular registro fiscal'
       TabOrder = 4
       OnClick = btnAnularVerifactuClick
     end
     object btnFacturarTicket: TButton
-      Left = 786
+      Left = 642
       Top = 6
-      Width = 180
+      Width = 160
       Height = 28
       Caption = 'Convertir en normal'
       TabOrder = 5
