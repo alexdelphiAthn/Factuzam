@@ -65,6 +65,14 @@ usan las fotos descargadas del servidor de fotos_nube.
   un aviso `- SALTO` en el log con la ruta que se buscó.
 - **Imagen corrupta / formato sin codec**: error contabilizado y log
   `! ERROR`; la migración continúa con la siguiente foto.
+- **Fotos grandes / memoria**: el original decodificado se vuelca UNA
+  sola vez a un bitmap base del que salen los tres PNG y se libera
+  antes de encodificar (las fotos de móvil de 12+ MP en varios hilos a
+  la vez agotaban el espacio de direcciones del exe de 32 bits: errores
+  "out of resources" en el log). Si aun así una conversión falla por
+  falta de memoria o de recursos GDI, se reintenta una vez **en serie**
+  (un solo hilo convirtiendo) antes de contarla como error. Las fotos
+  que aun así fallen no se insertan, así que otra corrida las reintenta.
 - **Fotos compartidas**: en el legacy es frecuente que varios colores de
   un artículo apunten al mismo fichero. Las claves se **agrupan por
   fichero**: el primer éxito del grupo genera el trío PNG y el resto lo
