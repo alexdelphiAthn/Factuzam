@@ -35,6 +35,7 @@ object frmModalTiraCaja: TfrmModalTiraCaja
   object ccbSerie: TcxCheckComboBox
     Left = 20
     Top = 72
+    Properties.EditValueFormat = cvfStatesString
     Properties.EmptySelectionText = '(todas las series)'
     TabOrder = 0
     Width = 430

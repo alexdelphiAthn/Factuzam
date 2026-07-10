@@ -196,16 +196,12 @@ procedure AsignarTemporadasPorColor(Eng: TMigEngine;
                                     var Stats: TMigStats);
 const
   // ColorSlot identico a inLibMigArticulosSkus / MigrarArticulosColores:
-  // prefiere el Color del legacy, cae a la Descripcion del color basico
-  // (occolor) y, si nada, '0'.
+  // codigo interno de ocartcol.Color.
   cColorSlot =
     'CASE ' +
     '  WHEN ac.Color IS NOT NULL ' +
     '    AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
     '    THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
-    '  WHEN c.Descripcion IS NOT NULL ' +
-    '    AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
-    '    THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
     '  ELSE ''0'' ' +
     'END';
   // Temporada legible del color y del articulo, para comparar overrides.

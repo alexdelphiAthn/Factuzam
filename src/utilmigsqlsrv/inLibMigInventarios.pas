@@ -65,7 +65,6 @@ uses
 // =========================================================================
 
 // '0' y '00' son colores REALES en el legacy (no placeholders).
-// 'INDEFINIDO' es Descripcion del color '0', se trata en la SQL.
 function EsColorVacio(const s: string): Boolean;
 begin
   Result := Trim(s) = '';
@@ -188,25 +187,23 @@ end;
 
 procedure MigrarInventarios(Eng: TMigEngine; var Stats: TMigStats);
 const
-  // Resolvemos la descripcion canonica del color via JOIN. Filtramos
-  // las filas con stock 0 para mantener el inventario reducido — si
-  // el cliente quiere preservar SKUs con stock 0 puede quitar el
-  // WHERE UnidadesStock <> 0.
+  // Resolvemos el codigo interno de color via ocartcol. Filtramos las
+  // filas con stock 0 para mantener el inventario reducido; los SKUs con
+  // stock 0 ya los cubre el dominio de SKUs desde ocartacp.
   cSelectSrc =
     'SELECT acp.Empresa, acp.Almacen, ' +
     '       ISNULL(alm.Abreviatura, '''') AS AbreviaturaAlm, ' +
     '       acp.Articulo, acp.Color, acp.Talla, ' +
     '       acp.UnidadesStock, ' +
     '       ISNULL(acp.PrecioMedio, 0) AS PrecioMedio, ' +
-    // Mismo criterio que SKUs: si Descripcion es 'INDEFINIDO'/vacia,
-    // usar el codigo legacy ('0', '00'...) como slot de color.
+    // Mismo criterio que SKUs: codigo interno de ocartcol.Color.
     '       CASE ' +
+    '         WHEN ac.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
     '         WHEN acp.Color IS NOT NULL ' +
     '           AND LTRIM(RTRIM(acp.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(acp.Color))) ' +
-    '         WHEN c.Descripcion IS NOT NULL ' +
-    '           AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
-    '           THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
     '         ELSE ''0'' ' +
     '       END AS DescColor, ' +
     '       ISNULL(art.DescripcionLarga, ' +
@@ -508,12 +505,12 @@ const
     '       ISNULL(arp.Precio, 0)          AS Precio, ' +
     '       ISNULL(arp.PrecioNuevo, 0)     AS PrecioNuevo, ' +
     '       CASE ' +
+    '         WHEN ac.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
     '         WHEN arp.Color IS NOT NULL ' +
     '           AND LTRIM(RTRIM(arp.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(arp.Color))) ' +
-    '         WHEN c.Descripcion IS NOT NULL ' +
-    '           AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
-    '           THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
     '         ELSE ''0'' ' +
     '       END AS DescColor, ' +
     '       ISNULL(art.DescripcionLarga, ' +

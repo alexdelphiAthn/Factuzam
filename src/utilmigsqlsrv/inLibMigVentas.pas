@@ -335,12 +335,12 @@ const
     '       ISNULL(l.PrecioCIva, 0) AS PrecioCIva, ' +
     '       ISNULL(l.Cantidad, 0) AS Cantidad, ' +
     '       CASE ' +
+    '         WHEN ac.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
     '         WHEN l.Color IS NOT NULL ' +
     '           AND LTRIM(RTRIM(l.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
-    '         WHEN co.Descripcion IS NOT NULL ' +
-    '           AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' ' +
-    '           THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
     '         ELSE ''0'' ' +
     '       END AS DescColor ' +
     'FROM dbo.occajarp l ' +

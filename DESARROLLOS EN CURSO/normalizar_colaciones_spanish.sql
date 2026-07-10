@@ -2,9 +2,10 @@
 -- Normalizar colaciones a utf8mb4_spanish_ci (fix error 1267 en Arqueos)
 -- =============================================================================
 -- MariaDB >= 11.2 asigna a utf8mb4 la colacion por defecto
--- utf8mb4_uca1400_ai_ci (variable character_set_collations). Los CREATE
--- TABLE con "DEFAULT CHARSET=utf8mb4" sin COLLATE explicito crearon estas
--- tablas con esa colacion, mientras el resto de la BBDD es
+-- utf8mb4_uca1400_ai_ci (variable character_set_collations). Ademas, algunas
+-- copias antiguas o imports ejecutados sin charset explicito pueden dejar
+-- tablas en utf8/utf8mb3. Los CREATE TABLE sin COLLATE explicito crearon
+-- tablas con otra colacion, mientras el resto de la BBDD es
 -- utf8mb4_spanish_ci:
 --
 --   fza_empleados, fza_caja_arqueos, fza_caja_arqueos_recuento,
@@ -23,14 +24,16 @@
 -- Que hace:
 --   1. Fija el default de la propia BBDD a utf8mb4_spanish_ci (los CREATE
 --      TABLE futuros sin charset heredaran la colacion correcta).
---   2. Recorre INFORMATION_SCHEMA.TABLES y convierte toda tabla base
---      utf8mb4 cuya colacion no sea utf8mb4_spanish_ci. CONVERT TO
---      actualiza tambien la colacion de todas las columnas de texto.
+--   2. Recorre INFORMATION_SCHEMA.TABLES/COLUMNS y convierte toda tabla base
+--      cuyo default o columnas de texto no esten en utf8mb4_spanish_ci.
+--      CONVERT TO actualiza tambien el charset y la colacion de todas las
+--      columnas de texto.
 --   3. Verificacion final: debe devolver 0 filas.
 --
 -- Idempotente: re-ejecutar no encuentra tablas que convertir.
--- Duracion: segundos. Las tablas afectadas son pequenas y el resto de la
--- BBDD ya esta en spanish_ci, asi que no se reconstruye.
+-- Duracion: normalmente segundos si solo quedan tablas WIP pequenas. Si una
+-- copia antigua dejo muchas tablas en utf8/utf8mb3, MariaDB reconstruira esas
+-- tablas y puede tardar mas.
 -- Los scripts que crearon estas tablas quedan corregidos con COLLATE
 -- explicito para instalaciones nuevas (ver normalizar_colaciones_spanish.md).
 -- =============================================================================
@@ -51,17 +54,29 @@ DROP PROCEDURE IF EXISTS `PRC_NORMALIZAR_COLACIONES`;
 DELIMITER ;;
 CREATE PROCEDURE `PRC_NORMALIZAR_COLACIONES`()
 BEGIN
-    /* Convierte a utf8mb4_spanish_ci toda tabla base utf8mb4 del esquema
-       actual que tenga otra colacion. Idempotente y seguro de re-ejecutar. */
+    /* Convierte a utf8mb4_spanish_ci toda tabla base del esquema actual cuyo
+       default o columnas de texto tengan otra colacion. */
     DECLARE bFin   INT DEFAULT 0;
     DECLARE sTabla VARCHAR(64);
     DECLARE curTablas CURSOR FOR
-        SELECT TABLE_NAME
-          FROM INFORMATION_SCHEMA.TABLES
-         WHERE TABLE_SCHEMA     = DATABASE()
-           AND TABLE_TYPE       = 'BASE TABLE'
-           AND TABLE_COLLATION LIKE 'utf8mb4%'
-           AND TABLE_COLLATION <> 'utf8mb4_spanish_ci';
+        SELECT DISTINCT T.TABLE_NAME
+          FROM INFORMATION_SCHEMA.TABLES T
+         WHERE T.TABLE_SCHEMA = DATABASE()
+           AND T.TABLE_TYPE = 'BASE TABLE'
+           AND (
+                 (T.TABLE_COLLATION IS NOT NULL
+                  AND T.TABLE_COLLATION <> 'utf8mb4_spanish_ci')
+                 OR EXISTS (
+                    SELECT 1
+                      FROM INFORMATION_SCHEMA.COLUMNS C
+                     WHERE C.TABLE_SCHEMA = T.TABLE_SCHEMA
+                       AND C.TABLE_NAME = T.TABLE_NAME
+                       AND C.CHARACTER_SET_NAME IS NOT NULL
+                       AND (C.CHARACTER_SET_NAME <> 'utf8mb4'
+                            OR C.COLLATION_NAME <>
+                               'utf8mb4_spanish_ci')
+                 )
+               );
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET bFin = 1;
     OPEN curTablas;
     bucle: LOOP
@@ -86,9 +101,20 @@ DROP PROCEDURE IF EXISTS `PRC_NORMALIZAR_COLACIONES`;
 -- -----------------------------------------------------------------------------
 -- 3. Verificacion: debe devolver 0 filas
 -- -----------------------------------------------------------------------------
-SELECT TABLE_NAME, TABLE_COLLATION
-  FROM INFORMATION_SCHEMA.TABLES
- WHERE TABLE_SCHEMA     = DATABASE()
-   AND TABLE_TYPE       = 'BASE TABLE'
-   AND TABLE_COLLATION LIKE 'utf8mb4%'
-   AND TABLE_COLLATION <> 'utf8mb4_spanish_ci';
+SELECT DISTINCT T.TABLE_NAME, T.TABLE_COLLATION
+  FROM INFORMATION_SCHEMA.TABLES T
+ WHERE T.TABLE_SCHEMA = DATABASE()
+   AND T.TABLE_TYPE = 'BASE TABLE'
+   AND (
+         (T.TABLE_COLLATION IS NOT NULL
+          AND T.TABLE_COLLATION <> 'utf8mb4_spanish_ci')
+         OR EXISTS (
+            SELECT 1
+              FROM INFORMATION_SCHEMA.COLUMNS C
+             WHERE C.TABLE_SCHEMA = T.TABLE_SCHEMA
+               AND C.TABLE_NAME = T.TABLE_NAME
+               AND C.CHARACTER_SET_NAME IS NOT NULL
+               AND (C.CHARACTER_SET_NAME <> 'utf8mb4'
+                    OR C.COLLATION_NAME <> 'utf8mb4_spanish_ci')
+         )
+       );

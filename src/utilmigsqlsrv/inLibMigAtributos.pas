@@ -292,11 +292,9 @@ begin
   end;
 
   // Segunda pasada: el color que usan SKUs/movimientos/tarifas/etc. es el
-  // TEXTO del proveedor (ac.Color, ver el CASE de slot), asi que TODO color
-  // de ocartcol debe existir como valor de atributo — no solo los que el JOIN
-  // a occolor deja fuera. Tomamos ac.Color en crudo (DISTINCT, mayusculas),
-  // que es justo lo que produce el slot cuando ac.Color no es vacio. Sin
-  // esto, articulos_colores/skus fallan con
+  // codigo interno del proveedor (ac.Color), asi que TODO color de ocartcol
+  // debe existir como valor de atributo. Sin esto, articulos_colores/skus
+  // fallan con
   //   "color X no esta en fza_atributos_valores".
   // Solo ocartcol (no ocartbap): los colores de los barcodes son un
   // SUBCONJUNTO de los de ocartcol, asi que basta y es mucho mas ligero.
@@ -304,7 +302,7 @@ begin
   // e insertamos los nuevos en LOTE. Antes se hacia un SELECT de comprobacion
   // por cada color (miles): tardaba minutos y, con la transaccion abierta,
   // bloqueaba el resto de la migracion (Lock wait timeout en tallas).
-  Eng.Log('  segunda pasada: colores del proveedor (ac.Color) de ocartcol...');
+  Eng.Log('  segunda pasada: codigos de color proveedor (ac.Color) de ocartcol...');
   oColExist := TDictionary<string, Boolean>.Create;
   qExist    := TUniQuery.Create(nil);
   bulkCol   := TBulkInsert.Create(Eng.ConDst, 'fza_atributos_valores',
