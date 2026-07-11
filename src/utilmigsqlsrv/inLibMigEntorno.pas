@@ -10,7 +10,7 @@
 {    Cuatro piezas, cada una un dominio independiente del migrador:            }
 {                                                                              }
 {      1. Cajas de almacén   dbo.occajas   → fza_almacenes_cajas              }
-{      2. Series por empresa  dbo.ocseract  → fza_empresas_series             }
+{      2. Series actuales por empresa → fza_empresas_series                  }
 {      3. Contadores          dbo.occtador  → fza_contadores                  }
 {      4. Contador por familia dbo.ocnivnro → fza_articulos_familias          }
 {                                            (CONTADOR_ART_FAM)                 }
@@ -116,84 +116,214 @@ begin
 end;
 
 // =========================================================================
-//  2. Series por empresa  (dbo.ocseract → fza_empresas_series)
+//  2. Series actuales por empresa
 // =========================================================================
 
 procedure MigrarEntornoSeries(Eng: TMigEngine; var Stats: TMigStats);
 const
-  // ocseract asigna a CADA tipo de documento la misma serie por tienda
-  // (almacén 11→A1, 21→E1, 44→K1, 51→G1...). Con DISTINCT colapsamos a una
-  // sola serie por (empresa, almacén). Son las series de VENTA (factura
-  // simplificada / ticket de caja): se fija TIPO_DOC='FC',
-  // SUBTIPO='SIMPLIFICADA', CAJA='1' (la serie es por empresa/almacen/caja y
-  // la caja suele ser la 1) y FECHA_DESDE fija temprana (2000-01-01) para que
-  // la serie cubra TODO el historico migrado (la app/Verifactu busca la serie
-  // por empresa+tipo_doc+fecha; con la de hoy las facturas antiguas fallarian).
-  cSelect =
-    'SELECT DISTINCT sr.Empresa, sr.Almacen, ' +
-    '       LTRIM(RTRIM(sr.SerieCIva)) AS Serie, ' +
-    '       ISNULL(alm.Abreviatura, '''') AS AbrevAlm ' +
-    'FROM dbo.ocseract sr ' +
-    'LEFT JOIN dbo.ocalm alm ON alm.Empresa = sr.Empresa ' +
-    '                       AND alm.Almacen = sr.Almacen ' +
-    'WHERE LTRIM(RTRIM(sr.SerieCIva)) <> ''''';
+  // La serie vigente se deduce de los contadores del ultimo ejercicio. Si
+  // hubiera varias, se toma la usada por mas tipos documentales. ocseract no
+  // interviene porque describe configuracion legacy por almacen, no las
+  // series operativas que necesita actualmente Factuzam.
+  cSelectActual =
+    'WITH Series AS (' +
+    ' SELECT Empresa, Ejercicio, LTRIM(RTRIM(Serie)) AS Serie, ' +
+    '        ROW_NUMBER() OVER (PARTITION BY Empresa ' +
+    '          ORDER BY Ejercicio DESC, COUNT(*) DESC, ' +
+    '                   LTRIM(RTRIM(Serie))) AS Posicion ' +
+    ' FROM dbo.occtador ' +
+    ' WHERE Ejercicio > 0 AND LTRIM(RTRIM(ISNULL(Serie, ''''))) <> '''' ' +
+    ' GROUP BY Empresa, Ejercicio, LTRIM(RTRIM(Serie))' +
+    ') SELECT Empresa, Ejercicio, Serie FROM Series WHERE Posicion = 1 ' +
+    'ORDER BY Empresa';
+  cSelectTipos =
+    'SELECT DISTINCT TIPO_DOC FROM (' +
+    ' SELECT CODIGO_TIPO_DOCUMENTO_TD AS TIPO_DOC ' +
+    ' FROM fza_tipos_documentos ' +
+    ' WHERE TRIM(COALESCE(CODIGO_TIPO_DOCUMENTO_TD, '''')) <> '''' ' +
+    ' UNION SELECT TIPO_DOC_CON FROM fza_contadores ' +
+    ' WHERE TRIM(COALESCE(TIPO_DOC_CON, '''')) <> '''' ' +
+    ' UNION SELECT TIPO_DOC_EMPSER FROM fza_empresas_series ' +
+    ' WHERE TRIM(COALESCE(TIPO_DOC_EMPSER, '''')) <> '''' ' +
+    ') Tipos ORDER BY TIPO_DOC';
+  cSelectExiste =
+    'SELECT 1 FROM fza_empresas_series ' +
+    'WHERE CODIGO_EMP_EMPSER = :emp AND TIPO_DOC_EMPSER = :tipo ' +
+    '  AND EMPSER = :serie ' +
+    '  AND IFNULL(CODIGO_ALM_EMPSER, '''') = '''' ' +
+    '  AND IFNULL(CODIGO_CAJA_EMPSER, '''') = '''' ' +
+    '  AND IFNULL(SUBTIPO_EMPSER, '''') = :subtipo ' +
+    '  AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= :hasta) ' +
+    '  AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= :desde) ' +
+    'LIMIT 1';
   cInsert =
-    'INSERT IGNORE INTO fza_empresas_series ' +
+    'INSERT INTO fza_empresas_series ' +
     '  (CODIGO_SERIE_EMPSER, CODIGO_EMP_EMPSER, CODIGO_ALM_EMPSER, ' +
     '   CODIGO_CAJA_EMPSER, EMPSER, TIPO_DOC_EMPSER, SUBTIPO_EMPSER, ' +
-    '   FECHA_DESDE_EMPSER, ' +
+    '   FECHA_DESDE_EMPSER, FECHA_HASTA_EMPSER, ' +
     '   INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
-    'VALUES (:cod, :emp, :alm, ''1'', :ser, ''FC'', ''SIMPLIFICADA'', ' +
-    '        ''2000-01-01'', ' +
+    'VALUES (:cod, :emp, NULL, NULL, :serie, :tipo, ' +
+    '        NULLIF(:subtipo, ''''), :desde, :hasta, ' +
     '        :INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
 var
-  qSrc, qIns:    TUniQuery;
-  sSerie, sEmp, sAlm: string;
+  qSrc, qTipos, qExiste, qIns, qContador: TUniQuery;
+  oTipos: TStringList;
+  sSerieBase, sSerie, sEmp, sTipo, sSubtipo, sCodigo: string;
+  dtDesde, dtHasta: TDateTime;
+  iEjercicio, iTipo, iTotalEmpresa, iDigitos: Integer;
+  iSiguienteCodigo: Int64;
+
+  procedure PrepararContadorSeries;
+  begin
+    qContador.SQL.Text :=
+      'SELECT CON, NUM_DIGITOS_CON FROM fza_contadores ' +
+      'WHERE TIPO_DOC_CON = ''ES'' AND EMPRESA_CON = ''-'' ' +
+      '  AND DEFAULT_CON = ''S'' LIMIT 1 FOR UPDATE';
+    qContador.Open;
+    if qContador.IsEmpty then
+    begin
+      qContador.Close;
+      qContador.SQL.Text :=
+        'INSERT INTO fza_contadores ' +
+        '(TIPO_DOC_CON, EMPRESA_CON, SERIE_CON, CON, NUM_DIGITOS_CON, ' +
+        ' ESACTIVO_CON, DEFAULT_CON, INSTANTE_ALTA, INSTANTE_MODIF, ' +
+        ' USUARIO_ALTA, USUARIO_MODIF) ' +
+        'VALUES (''ES'', ''-'', ''-'', 1, 3, ''S'', ''S'', NOW(), NOW(), ' +
+        '        :usuario, :usuario)';
+      qContador.ParamByName('usuario').AsString := Eng.Usuario;
+      qContador.ExecSQL;
+      iSiguienteCodigo := 1;
+      iDigitos := 3;
+    end
+    else
+    begin
+      iSiguienteCodigo := qContador.FieldByName('CON').AsLargeInt;
+      iDigitos := qContador.FieldByName('NUM_DIGITOS_CON').AsInteger;
+      qContador.Close;
+    end;
+    qContador.SQL.Text :=
+      'SELECT COALESCE(MAX(CASE ' +
+      ' WHEN CODIGO_SERIE_EMPSER REGEXP ''^[0-9]+$'' ' +
+      ' THEN CAST(CODIGO_SERIE_EMPSER AS UNSIGNED) END), 0) + 1 AS SIG ' +
+      'FROM fza_empresas_series';
+    qContador.Open;
+    if qContador.FieldByName('SIG').AsLargeInt > iSiguienteCodigo then
+      iSiguienteCodigo := qContador.FieldByName('SIG').AsLargeInt;
+    qContador.Close;
+    if iDigitos < 3 then
+      iDigitos := 3;
+  end;
+
+  procedure GuardarContadorSeries;
+  begin
+    qContador.SQL.Text :=
+      'UPDATE fza_contadores SET CON = :contador, USUARIO_MODIF = :usuario ' +
+      'WHERE TIPO_DOC_CON = ''ES'' AND EMPRESA_CON = ''-'' ' +
+      '  AND DEFAULT_CON = ''S''';
+    qContador.ParamByName('contador').AsLargeInt := iSiguienteCodigo;
+    qContador.ParamByName('usuario').AsString := Eng.Usuario;
+    qContador.ExecSQL;
+  end;
+
+  function ObtenerCodigoSerie: string;
+  begin
+    Result := Format('%.*d', [iDigitos, iSiguienteCodigo]);
+    Inc(iSiguienteCodigo);
+  end;
+
+  procedure CrearSerieActual;
+  begin
+    Inc(Stats.Leidas);
+    Eng.IncRow;
+    qExiste.Close;
+    qExiste.ParamByName('emp').AsString := sEmp;
+    qExiste.ParamByName('tipo').AsString := sTipo;
+    qExiste.ParamByName('serie').AsString := sSerie;
+    qExiste.ParamByName('subtipo').AsString := sSubtipo;
+    qExiste.ParamByName('desde').AsDateTime := dtDesde;
+    qExiste.ParamByName('hasta').AsDateTime := dtHasta;
+    qExiste.Open;
+    if not qExiste.IsEmpty then
+      Inc(Stats.Saltadas)
+    else
+    begin
+      sCodigo := ObtenerCodigoSerie;
+      qIns.ParamByName('cod').AsString := Copy(sCodigo, 1, 10);
+      qIns.ParamByName('emp').AsString := Copy(sEmp, 1, 10);
+      qIns.ParamByName('serie').AsString := Copy(sSerie, 1, 12);
+      qIns.ParamByName('tipo').AsString := Copy(sTipo, 1, 2);
+      qIns.ParamByName('subtipo').AsString := Copy(sSubtipo, 1, 20);
+      qIns.ParamByName('desde').AsDateTime := dtDesde;
+      qIns.ParamByName('hasta').AsDateTime := dtHasta;
+      RellenarAuditoria(qIns, Eng.Usuario);
+      qIns.ExecSQL;
+      Inc(Stats.Insertadas);
+    end;
+    qExiste.Close;
+  end;
 begin
-  qSrc := NuevoQOrigen(Eng, cSelect);
+  qSrc := NuevoQOrigen(Eng, cSelectActual);
+  qTipos := TUniQuery.Create(nil);
+  qExiste := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
+  qContador := TUniQuery.Create(nil);
+  oTipos := TStringList.Create;
   try
+    qTipos.Connection := Eng.ConDst;
+    qTipos.SQL.Text := cSelectTipos;
+    qExiste.Connection := Eng.ConDst;
+    qExiste.SQL.Text := cSelectExiste;
     qIns.Connection := Eng.ConDst;
-    qIns.SQL.Text   := cInsert;
-    // Re-ejecutable: borramos las series migradas previas (INSERT IGNORE NO
-    // refresca filas ya existentes), asi al re-correr se vuelven a crear con
-    // los valores correctos (CAJA, TIPO_DOC, SUBTIPO, FECHA_DESDE).
-    EjecutarSQL(Eng, 'DELETE FROM fza_empresas_series ' +
-      'WHERE USUARIO_ALTA = ' + ValorOrNull(Eng.Usuario));
-    Eng.SetTotal(Eng.ContarOrigen(
-      'SELECT COUNT(*) FROM (SELECT DISTINCT Empresa, Almacen, SerieCIva ' +
-      'FROM dbo.ocseract WHERE LTRIM(RTRIM(SerieCIva)) <> '''') t'));
+    qIns.SQL.Text := cInsert;
+    qContador.Connection := Eng.ConDst;
+    qTipos.Open;
+    while not qTipos.Eof do
+    begin
+      oTipos.Add(Trim(qTipos.FieldByName('TIPO_DOC').AsString));
+      qTipos.Next;
+    end;
+    qTipos.Close;
     qSrc.Open;
+    qSrc.Last;
+    iTotalEmpresa := qSrc.RecordCount;
+    qSrc.First;
+    Eng.SetTotal(iTotalEmpresa * (oTipos.Count + 3));
+    PrepararContadorSeries;
     while not qSrc.Eof do
     begin
-      Inc(Stats.Leidas);
-      Eng.IncRow;
-      sSerie := Trim(qSrc.FieldByName('Serie').AsString);
-      sEmp   := IntToStr(qSrc.FieldByName('Empresa').AsInteger);
-      sAlm   := UpperCase(Trim(qSrc.FieldByName('AbrevAlm').AsString));
-      if sAlm = '' then
-        sAlm := IntToStr(qSrc.FieldByName('Almacen').AsInteger);
-      // CODIGO_SERIE_EMPSER (PK, varchar 10) = la serie; EMPSER = la serie
-      // (varchar 12). En este legacy la serie es única por tienda.
-      qIns.ParamByName('cod').AsString := Copy(sSerie, 1, 10);
-      qIns.ParamByName('emp').AsString := Copy(sEmp, 1, 10);
-      qIns.ParamByName('alm').AsString := Copy(sAlm, 1, 10);
-      qIns.ParamByName('ser').AsString := Copy(sSerie, 1, 12);
-      RellenarAuditoria(qIns, Eng.Usuario);
-      try
-        qIns.ExecSQL;
-        Inc(Stats.Insertadas);
-      except
-        on E: Exception do
+      sEmp := IntToStr(qSrc.FieldByName('Empresa').AsInteger);
+      iEjercicio := qSrc.FieldByName('Ejercicio').AsInteger;
+      sSerieBase := Trim(qSrc.FieldByName('Serie').AsString);
+      dtDesde := EncodeDate(iEjercicio, 1, 1);
+      dtHasta := EncodeDate(iEjercicio, 12, 31);
+      for iTipo := 0 to oTipos.Count - 1 do
+      begin
+        sTipo := oTipos[iTipo];
+        sSubtipo := '';
+        sSerie := Format('%d.%s', [iEjercicio, sSerieBase]);
+        CrearSerieActual;
+        if sTipo = 'FC' then
         begin
-          Inc(Stats.Errores);
-          Eng.LogError('serie', sSerie, E.Message, 'emp=' + sEmp, '');
+          sSubtipo := 'NORMAL';
+          sSerie := Format('%d.%sN', [iEjercicio, sSerieBase]);
+          CrearSerieActual;
+          sSubtipo := 'SIMPLIFICADA';
+          sSerie := Format('%d.%s', [iEjercicio, sSerieBase]);
+          CrearSerieActual;
+          sSubtipo := 'RECTIFICATIVA';
+          sSerie := Format('%d.%sR', [iEjercicio, sSerieBase]);
+          CrearSerieActual;
         end;
       end;
       qSrc.Next;
     end;
+    GuardarContadorSeries;
   finally
+    oTipos.Free;
+    qContador.Free;
     qIns.Free;
+    qExiste.Free;
+    qTipos.Free;
     qSrc.Free;
   end;
 end;

@@ -8,7 +8,7 @@ cambios de esquema: las cuatro tablas destino ya existen.
 | Origen (SQL Server) | Destino (Factuzam) | Dominio |
 |---|---|---|
 | `dbo.occajas` | `fza_almacenes_cajas` | `entorno_cajas` |
-| `dbo.ocseract` | `fza_empresas_series` | `entorno_series` |
+| `dbo.occtador` + catálogo Factuzam | `fza_empresas_series` | `entorno_series` |
 | `dbo.occtador` | `fza_contadores` | `entorno_contadores` |
 | `dbo.ocnivnro` | `fza_articulos_familias.CONTADOR_ART_FAM` | `entorno_contadores_familia` |
 
@@ -23,19 +23,29 @@ Una fila por caja física (incluida la caja `99` central/virtual).
 La tabla destino **no tiene columnas de auditoría**: idempotente por
 `INSERT IGNORE` (PK almacén+caja). Requiere **Almacenes** migrados.
 
-## 2. Series (`ocseract` → `fza_empresas_series`)
+## 2. Series actuales (`occtador` + catálogo → `fza_empresas_series`)
 
-`ocseract` asigna a **cada** tipo de documento la misma serie por tienda
-(11→`A1`, 12→`A2`, … 19→`A9`, 20→`AZ`, 90→`90`, 21→`E1`, 22→`P1`, 31→`X1`,
-41→`S1`, 42→`Q1`, 43→`C1`, 44→`K1`, 51→`G1`). Como la serie es **única por
-tienda**, se colapsa con `DISTINCT (Empresa, Almacén, SerieCIva)` a una serie
-por tienda:
-- `CODIGO_SERIE_EMPSER` (PK) = `EMPSER` = la serie (`A1`, `K1`, …).
-- `CODIGO_EMP_EMPSER` = empresa; `CODIGO_ALM_EMPSER` = abreviatura almacén.
-- `TIPO_DOC_EMPSER` = NULL (la serie vale para cualquier tipo).
+No se migra `ocseract`. La configuración por almacén del legacy no representa
+las filas por tipo documental que necesita Factuzam.
 
-`INSERT IGNORE` (PK serie). Se migra la `SerieCIva` principal; `SerieSIva`
-(serie de ticket sin IVA, p.ej. `T1`) **no** se migra en esta versión.
+Para cada empresa se toma de `occtador` el ejercicio más reciente y su serie
+principal. Si hay varias series en ese ejercicio, gana la utilizada por más
+tipos documentales. En LosChicos el resultado es empresa `1`, ejercicio `2026`
+y serie base `A1`.
+
+Se crea una fila distinta para cada tipo presente en `fza_tipos_documentos`,
+`fza_contadores` o `fza_empresas_series`:
+
+- Serie general: `<Ejercicio>.<SerieBase>`; en este caso `2026.A1`.
+- Factura normal: `2026.A1N` (`SUBTIPO_EMPSER='NORMAL'`).
+- Factura simplificada: `2026.A1` (`SUBTIPO_EMPSER='SIMPLIFICADA'`).
+- Factura rectificativa: `2026.A1R` (`SUBTIPO_EMPSER='RECTIFICATIVA'`).
+- Vigencia: primer y último día del ejercicio.
+- Empresa: la empresa propietaria del contador actual; almacén y caja quedan
+  vacíos para que la serie sea general de empresa.
+
+Los códigos internos se reservan con el contador global `ES`. Es re-ejecutable:
+si ya existe la misma empresa, tipo, subtipo, serie y vigencia, se conserva.
 
 ## 3. Contadores (`occtador` → `fza_contadores`)
 
@@ -90,9 +100,6 @@ código de familia (p.ej. `9 - 5 = 4`). Si no hay códigos numéricos, usa 4.
 
 ## Pendiente / a revisar
 
-- `SerieSIva` (series de ticket sin IVA): hoy no se migra.
 - Tipos de contador fuera del catálogo (`OV` orden de venta, etc.): hoy se
   omiten. Si se quiere conservar su numeración, añadir el código a
   `MapearTipoContador` (y, si procede, a `fza_tipos_documentos`).
-- `fza_empresas_series` se crea con `TIPO_DOC` y fechas a NULL; afinar si la
-  app necesita una serie por tipo de documento o por rango de fechas.
