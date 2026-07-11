@@ -325,7 +325,7 @@ const
   // Cubre TODO lo que escribe el migrador bajo USUARIO_ALTA: documentos
   // (facturas, compras), caja, movimientos, articulos y maestros. Solo
   // tablas con columna USUARIO_ALTA (el DELETE filtra por ella).
-  aTablas: array[0..51] of string = (
+  aTablas: array[0..52] of string = (
     // Documentos comerciales, caja y movimientos (hojas primero)
     'fza_efectos_compra',
     'fza_remesas_compra',
@@ -377,6 +377,7 @@ const
     'fza_contadores',
     'fza_clientes',
     'fza_proveedores',
+    'fza_empleados',
     'fza_empresas_bancos',
     'fza_almacenes',
     'fza_empresas',

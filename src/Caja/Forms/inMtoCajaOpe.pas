@@ -35,8 +35,8 @@ uses
   inLibLectorScanner;
 
 const
-  WM_CANCELAR_LINEA = WM_USER + 100;
-  WM_SALTAR_ATRIBUTO = WM_USER + 101;
+  WM_CANCELAR_LINEA = WM_APP + 100;
+  WM_SALTAR_ATRIBUTO = WM_APP + 101;
   // Diferimos FinalizarUltimoAtributo / avance de columna fuera del
   // OnButtonClick del TcxButtonEdit. Si los ejecutamos en linea, cxGrid
   // sigue manteniendo referencia al editor inplace que acaba de procesar
@@ -45,8 +45,8 @@ const
   // el editor inplace se desparenta y salta EInvalidOperation. Con
   // PostMessage el click handler retorna, cxGrid limpia su estado y
   // luego procesamos.
-  WM_FINALIZAR_ATRIB_CAJA = WM_USER + 102;
-  WM_AVANZAR_ATRIB_CAJA   = WM_USER + 103;
+  WM_FINALIZAR_ATRIB_CAJA = WM_APP + 102;
+  WM_AVANZAR_ATRIB_CAJA   = WM_APP + 103;
   // Diferimos tambien la apertura del popup desde el OnEnter del
   // TcxButtonEdit. Cuando WMAvanzarAtribCaja salta de Color a Talla,
   // ShowEdit -> InitEdit -> OnEnter ocurren en cadena en el mismo
@@ -54,7 +54,7 @@ const
   // colocado y ClientToScreen pide Handle -> Parent -> EInvalidOperation.
   // Con PostMessage, OnEnter retorna, cxGrid termina de parentar, y solo
   // entonces abrimos el popup.
-  WM_ABRIR_POPUP_AV       = WM_USER + 104;
+  WM_ABRIR_POPUP_AV       = WM_APP + 104;
 type
   TfrmMtoOpeCaja = class(TfrmBase)
     pnlUp: TPanel;
@@ -302,6 +302,9 @@ type
     // validador de caja para dar un mensaje exacto en vez del genérico
     // "no encontrado o descatalogado".
     FMotivoRechazoArticulo: string;
+    // Conserva el padre canonico resuelto por OnValidate. El lookup puede
+    // dejar temporalmente vacio CODIGO_ART_FACLIN durante PostEditValue.
+    FArticuloResueltoEdicion: string;
   private
     FNumeroCajaActual: Integer;
     // Bitmap reusable para pintar el cuadradito del color actual en el boton
@@ -644,11 +647,34 @@ end;
 procedure TfrmMtoOpeCaja.tvLineasOpeCustomDrawCell(
   Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+var
+  Info: TInfoBasico;
+  Mapa: TDictionary<string, string>;
+  sArticulo: string;
+  sIdVa: string;
+  sTexto: string;
 begin
   // Pinta el cuadradito de la paleta basica al lado del valor de atributo
   // (Color = MALVA, Talla = 48, ...) en las celdas de las lineas de venta.
-  // Mismo helper que usa inMtoInventarios.
-  if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+  // La asignacion por articulo gana porque los codigos de proveedor pueden
+  // representar colores basicos distintos segun el articulo.
+  if (AViewInfo <> nil) and (AViewInfo.Item <> nil) and
+     (AViewInfo.GridRecord <> nil) and
+     (AViewInfo.Item.Tag >= 1) and (AViewInfo.Item.Tag <= 5) then
+  begin
+    sArticulo := VarToStr(
+      AViewInfo.GridRecord.Values[tvArticulo.Index]);
+    sTexto := AViewInfo.Text;
+    Mapa := ObtenerMapaAtributosGlobal;
+    sIdVa := '';
+    if (Mapa <> nil) and (AViewInfo.Item is TcxGridColumn) then
+      Mapa.TryGetValue(UpperCase(Trim(
+        TcxGridColumn(AViewInfo.Item).Caption)), sIdVa);
+    if ObtenerInfoBasicoArticulo(sArticulo, sIdVa, sTexto, Info) then
+      ADone := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
+  end;
+  if (not ADone) and
+     PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
     ADone := True;
 end;
 
@@ -1278,12 +1304,14 @@ begin
   msRellenar := 0; msConsolidar := 0; msBusq := 0;
   msColumnas := 0; msAtribs := 0;
   CodigoInput := VarToStr(DisplayValue);
+  FArticuloResueltoEdicion := '';
   swStep := TStopwatch.StartNew;
   if RellenarDatosArticuloEnDataset(CodigoInput) then
   begin
     msRellenar := swStep.ElapsedMilliseconds;
     CodigoPadre  := DatosCaja.cdsLineas.FieldByName(
                                       'CODIGO_ART_FACLIN').AsString;
+    FArticuloResueltoEdicion := CodigoPadre;
     SkuDetectado := DatosCaja.cdsLineas.FieldByName(
                                         'CODIGO_UNIDAD_FACLIN').AsString;
     NumAtributos := DatosCaja.cdsLineas.FieldByName(
@@ -2149,11 +2177,19 @@ begin
         Exit;
       end;
     end;
+    FArticuloResueltoEdicion := '';
     AEdit.PostEditValue;
     if DatosCaja.cdsLineas.State = dsBrowse then
       DatosCaja.cdsLineas.Edit;
     var CodArticuloActual := DatosCaja.cdsLineas.FieldByName(
                                       'CODIGO_ART_FACLIN').AsString;
+    if (Trim(CodArticuloActual) = '') and
+       (Trim(FArticuloResueltoEdicion) <> '') then
+    begin
+      CodArticuloActual := FArticuloResueltoEdicion;
+      DatosCaja.cdsLineas.FieldByName(
+        'CODIGO_ART_FACLIN').AsString := CodArticuloActual;
+    end;
     ActualizarColumnasDinamicas(CodArticuloActual);
     // CAMBIO 3: Usar FNumAtributosActual en lugar de leer del dataset
     NumAtributos := FNumAtributosActual;
@@ -4120,7 +4156,7 @@ begin
   end;
 
   if not SeleccionarAvConPaleta(IdVa, Avs, AvActual, AvNuevo,
-                                 ScrPt.X, ScrPt.Y, WidHint) then
+                                 ScrPt.X, ScrPt.Y, WidHint, ArtPadre) then
     Exit;
 
   RegistrarValorAtributo(Orden, AvNuevo);
@@ -4168,10 +4204,38 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.WMFinalizarAtribCaja(var Msg: TMessage);
+var
+  sArticulo: string;
+  sSku: string;
+  i: Integer;
+  iNumAtributos: Integer;
+  iNumSeparadores: Integer;
+  bSkuCompleto: Boolean;
 begin
   // Ejecuta FinalizarUltimoAtributo fuera del callstack del OnButtonClick
   // del TcxButtonEdit. Ver tvLineasOpeAvButtonClick para el motivo.
-  FinalizarUltimoAtributo;
+  // El mensaje solo es valido cuando ya se han elegido todos los atributos.
+  // Asi un mensaje ajeno o atrasado nunca valida el articulo padre como SKU.
+  bSkuCompleto := False;
+  if DatosCaja.cdsLineas.Active and not DatosCaja.cdsLineas.IsEmpty then
+  begin
+    sArticulo := Trim(DatosCaja.cdsLineas.FieldByName(
+      'CODIGO_ART_FACLIN').AsString);
+    sSku := Trim(DatosCaja.cdsLineas.FieldByName(
+      'CODIGO_UNIDAD_FACLIN').AsString);
+    iNumAtributos := DatosCaja.cdsLineas.FieldByName(
+      'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+    iNumSeparadores := 0;
+    for i := 1 to Length(sSku) do
+    begin
+      if sSku[i] = '/' then
+        Inc(iNumSeparadores);
+    end;
+    bSkuCompleto := (sArticulo <> '') and (sSku <> sArticulo) and
+      (iNumAtributos > 0) and (iNumSeparadores = iNumAtributos);
+  end;
+  if bSkuCompleto then
+    FinalizarUltimoAtributo;
 end;
 
 procedure TfrmMtoOpeCaja.WMAvanzarAtribCaja(var Msg: TMessage);

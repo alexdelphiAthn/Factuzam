@@ -19,7 +19,7 @@ src/utilmigsqlsrv/
 ├── UMigEngine.pas                 Motor: registro, log, transacciones
 ├── UMigrator.pas / .dfm           Formulario principal (UI)
 ├── inLibMigEmpresas.pas           dbo.ocemp      → fza_empresas
-├── inLibMigEmpleados.pas          dbo.ocemp      → fza_empleados
+├── inLibMigEmpleados.pas          dbo.ocven      → fza_empleados
 ├── inLibMigAlmacenes.pas          dbo.ocalm      → fza_almacenes
 ├── inLibMigClientes.pas           dbo.occli      → fza_clientes
 ├── inLibMigProveedores.pas        dbo.ocpro      → fza_proveedores
@@ -49,7 +49,7 @@ src/utilmigsqlsrv/
 │                                                  + _det
 ├── inLibMigArticulosTallajes.pas  ocartp.NroTallaje →
 │                                                fza_articulos_conjuntos_asign
-├── inLibMigEntorno.pas            occajas/ocseract/occtador/ocnivnro →
+├── inLibMigEntorno.pas            occajas/occtador/ocnivnro →
 │                                                fza_almacenes_cajas +
 │                                                fza_empresas_series +
 │                                                fza_contadores +
@@ -168,10 +168,6 @@ columnas saldrán incluidas en el esqueleto:
 | Devoluciones compra | `DESARROLLOS EN CURSO/devoluciones_compra.sql` |
 |              | (crea `fza_devoluciones_compra` y sus líneas para |
 |              | importar `ocreppro` / `ocrepproart`) |
-| Empleados    | `DESARROLLOS EN CURSO/empleados_ampliar_ocemp.sql` |
-|              | (añade datos de contacto/identificación de         |
-|              | `dbo.ocemp` a `fza_empleados`, sin tocar usuarios).|
-
 ## Fotos legacy (dominio `fotos`)
 
 `dbo.ocartcol.ArchivoFoto` guarda la ruta de la foto de cada

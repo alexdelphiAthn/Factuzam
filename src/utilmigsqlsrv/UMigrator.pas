@@ -305,8 +305,8 @@ begin
   FEngine.Registrar('empresas', 'Empresas',
     'dbo.ocemp → fza_empresas',
     MigrarEmpresas);
-  FEngine.Registrar('empleados', 'Empleados / vendedores',
-    'dbo.ocemp → fza_empleados (requiere empleados_ampliar_ocemp.sql)',
+  FEngine.Registrar('empleados', 'Empleados / vendedores (ocven)',
+    'dbo.ocven → fza_empleados (Abreviatura → diminutivo de caja)',
     MigrarEmpleados);
   FEngine.Registrar('almacenes', 'Almacenes',
     'dbo.ocalm → fza_almacenes (requiere empresas)',
@@ -416,8 +416,9 @@ begin
   FEngine.Registrar('entorno_cajas', 'Cajas de almacén (occajas)',
     'dbo.occajas → fza_almacenes_cajas',
     MigrarEntornoCajas);
-  FEngine.Registrar('entorno_series', 'Series por empresa (ocseract)',
-    'dbo.ocseract → fza_empresas_series',
+  FEngine.Registrar('entorno_series', 'Series actuales por empresa',
+    'occtador (ejercicio/serie actual) + tipos Factuzam → ' +
+    'fza_empresas_series',
     MigrarEntornoSeries);
   FEngine.Registrar('bancos_empresa',
     'Bancos de cargo por empresa (ocbanrem)',

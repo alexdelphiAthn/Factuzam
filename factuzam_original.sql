@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 10/07/2026 19:24:32
+-- Backup generado: 11/07/2026 6:00:24
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -6149,7 +6149,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 543, 3, 'S', 'S', '2026-07-10 19:24:11', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 545, 3, 'S', 'S', '2026-07-11 06:00:13', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 28, 2, 'S', 'S', '2026-07-07 08:17:26', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -19049,8 +19049,236 @@ SELECT TABLE_NAME, COLUMN_NAME, CHARACTER_SET_NAME, COLLATION_NAME
  WHERE TABLE_SCHEMA = DATABASE()
    AND TABLE_NAME = ''vi_caja_busqueda_unificada''
  ORDER BY ORDINAL_POSITION;
-', '2026-07-10 19:24:11', '2026-07-10 19:24:11', 'Administrador', 'Administrador');
--- 72 registros exportados
+', '2026-07-10 19:24:11', '2026-07-10 19:24:11', 'Administrador', 'Administrador'),
+  ('543', 'reparar_factuzam_colaciones', '-- =============================================================================
+-- Reparacion de colaciones para factuzam
+-- =============================================================================
+-- Caso cubierto:
+--   - La BBDD tiene default utf8mb4_spanish_ci, pero la sesion de MariaDB 12.x
+--     queda en utf8mb4_uca1400_ai_ci o alguna vista/literal queda como utf8mb3.
+--   - Al recrear vi_caja_busqueda_unificada falla:
+--       COLLATION ''utf8mb4_spanish_ci'' is not valid for CHARACTER SET ''utf8mb3''
+--
+-- Ejecutar conectado al servidor destino. El script falla si no existe la BBDD
+-- factuzam, para evitar reparar otra BBDD por accidente. Esta BBDD puede venir
+-- importada desde el dump factuzam_oficial.sql.
+--
+-- Idempotente: puede re-ejecutarse.
+-- =============================================================================
+
+USE `factuzam`;
+SET NAMES utf8mb4 COLLATE utf8mb4_spanish_ci;
+
+-- -----------------------------------------------------------------------------
+-- 1. Default de la BBDD
+-- -----------------------------------------------------------------------------
+ALTER DATABASE `factuzam`
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci;
+
+-- -----------------------------------------------------------------------------
+-- 2. Convertir tablas base con default o columnas de texto desviadas
+-- -----------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS `PRC_REPARAR_COLACIONES_FACTUZAM`;
+DELIMITER ;;
+CREATE PROCEDURE `PRC_REPARAR_COLACIONES_FACTUZAM`()
+BEGIN
+    DECLARE bFin   INT DEFAULT 0;
+    DECLARE sTabla VARCHAR(64);
+    DECLARE curTablas CURSOR FOR
+        SELECT DISTINCT T.TABLE_NAME
+          FROM INFORMATION_SCHEMA.TABLES T
+         WHERE T.TABLE_SCHEMA = DATABASE()
+           AND T.TABLE_TYPE = ''BASE TABLE''
+           AND (
+                 (T.TABLE_COLLATION IS NOT NULL
+                  AND T.TABLE_COLLATION <> ''utf8mb4_spanish_ci'')
+                 OR EXISTS (
+                    SELECT 1
+                      FROM INFORMATION_SCHEMA.COLUMNS C
+                     WHERE C.TABLE_SCHEMA = T.TABLE_SCHEMA
+                       AND C.TABLE_NAME = T.TABLE_NAME
+                       AND C.CHARACTER_SET_NAME IS NOT NULL
+                       AND (C.CHARACTER_SET_NAME <> ''utf8mb4''
+                            OR C.COLLATION_NAME <>
+                               ''utf8mb4_spanish_ci'')
+                 )
+               )
+         ORDER BY T.TABLE_NAME;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET bFin = 1;
+    OPEN curTablas;
+    bucle: LOOP
+        FETCH curTablas INTO sTabla;
+        IF bFin = 1 THEN
+            LEAVE bucle;
+        END IF;
+        SET @sDdl = CONCAT(''ALTER TABLE `'', REPLACE(sTabla, ''`'', ''``''),
+                           ''` CONVERT TO CHARACTER SET utf8mb4'',
+                           '' COLLATE utf8mb4_spanish_ci'');
+        PREPARE stmt FROM @sDdl;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END LOOP;
+    CLOSE curTablas;
+END ;;
+DELIMITER ;
+
+CALL PRC_REPARAR_COLACIONES_FACTUZAM();
+DROP PROCEDURE IF EXISTS `PRC_REPARAR_COLACIONES_FACTUZAM`;
+
+-- -----------------------------------------------------------------------------
+-- 3. Recrear vi_caja_busqueda_unificada conservando los indices
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_caja_busqueda_unificada` AS
+SELECT `a`.`CODIGO_ART_ART` AS `INPUT_BUSQUEDA`,
+       _utf8mb4''CODIGO'' COLLATE utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,
+       `a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,
+       CAST(NULL AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_spanish_ci
+       AS `CODIGO_SKU`,
+       `a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,
+       `a`.`TIPO_ART` AS `TIPO_ART`
+  FROM `fza_articulos` `a`
+ WHERE `a`.`ESACTIVO_ART` = ''S''
+UNION ALL
+SELECT `sku`.`CODIGO_UNIDAD_SKU` AS `INPUT_BUSQUEDA`,
+       _utf8mb4''SKU'' COLLATE utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,
+       `a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,
+       `sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_SKU`,
+       `a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,
+       `a`.`TIPO_ART` AS `TIPO_ART`
+  FROM `fza_articulos_skus` `sku`
+  JOIN `fza_articulos` `a`
+    ON `sku`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`
+ WHERE `sku`.`ESACTIVO_SKU` = ''S''
+UNION ALL
+SELECT `cb`.`CODIGO_BARRAS_CB` AS `INPUT_BUSQUEDA`,
+       _utf8mb4''EAN'' COLLATE utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,
+       `a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,
+       `sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_SKU`,
+       `a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,
+       `a`.`TIPO_ART` AS `TIPO_ART`
+  FROM `fza_codigos_barras` `cb`
+  JOIN `fza_articulos_skus` `sku`
+    ON `cb`.`CODIGO_UNIDAD_CB` = `sku`.`CODIGO_UNIDAD_SKU`
+  JOIN `fza_articulos` `a`
+    ON `sku`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`
+UNION ALL
+SELECT `ap`.`REF_PROVEEDOR_AP` AS `INPUT_BUSQUEDA`,
+       _utf8mb4''MODELO_PROV'' COLLATE utf8mb4_spanish_ci
+       AS `TIPO_COINCIDENCIA`,
+       `a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,
+       CAST(NULL AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_spanish_ci
+       AS `CODIGO_SKU`,
+       `a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,
+       `a`.`TIPO_ART` AS `TIPO_ART`
+  FROM `fza_articulos_proveedores` `ap`
+  JOIN `fza_articulos` `a`
+    ON `ap`.`CODIGO_ART_AP` = `a`.`CODIGO_ART_ART`
+ WHERE `a`.`ESACTIVO_ART` = ''S''
+   AND `ap`.`REF_PROVEEDOR_AP` IS NOT NULL
+   AND `ap`.`REF_PROVEEDOR_AP` <> '''';
+
+-- -----------------------------------------------------------------------------
+-- 4. Verificacion
+-- -----------------------------------------------------------------------------
+SELECT ''TABLAS_O_COLUMNAS_DESVIADAS'' AS comprobacion,
+       COUNT(*) AS pendientes
+  FROM INFORMATION_SCHEMA.TABLES T
+ WHERE T.TABLE_SCHEMA = DATABASE()
+   AND T.TABLE_TYPE = ''BASE TABLE''
+   AND (
+         (T.TABLE_COLLATION IS NOT NULL
+          AND T.TABLE_COLLATION <> ''utf8mb4_spanish_ci'')
+         OR EXISTS (
+            SELECT 1
+              FROM INFORMATION_SCHEMA.COLUMNS C
+             WHERE C.TABLE_SCHEMA = T.TABLE_SCHEMA
+               AND C.TABLE_NAME = T.TABLE_NAME
+               AND C.CHARACTER_SET_NAME IS NOT NULL
+               AND (C.CHARACTER_SET_NAME <> ''utf8mb4''
+                    OR C.COLLATION_NAME <> ''utf8mb4_spanish_ci'')
+         )
+       );
+
+SELECT TABLE_NAME, COLUMN_NAME, CHARACTER_SET_NAME, COLLATION_NAME
+  FROM INFORMATION_SCHEMA.COLUMNS
+ WHERE TABLE_SCHEMA = DATABASE()
+   AND TABLE_NAME = ''vi_caja_busqueda_unificada''
+ ORDER BY ORDINAL_POSITION;
+
+SELECT T.TABLE_NAME, C.COLUMN_NAME, C.CHARACTER_SET_NAME, C.COLLATION_NAME
+  FROM INFORMATION_SCHEMA.COLUMNS C
+  JOIN INFORMATION_SCHEMA.TABLES T
+    ON T.TABLE_SCHEMA = C.TABLE_SCHEMA
+   AND T.TABLE_NAME = C.TABLE_NAME
+ WHERE C.TABLE_SCHEMA = DATABASE()
+   AND T.TABLE_TYPE = ''VIEW''
+   AND C.CHARACTER_SET_NAME IS NOT NULL
+   AND (C.CHARACTER_SET_NAME <> ''utf8mb4''
+        OR C.COLLATION_NAME <> ''utf8mb4_spanish_ci'')
+ ORDER BY T.TABLE_NAME, C.ORDINAL_POSITION;
+', '2026-07-11 06:00:06', '2026-07-11 06:00:06', 'Administrador', 'Administrador'),
+  ('544', 'vi_caja_busqueda_unificada_colaciones', '-- =============================================================================
+-- Recrea vi_caja_busqueda_unificada sin anular los indices
+-- =============================================================================
+-- Requisito: las tablas base deben usar utf8mb4_spanish_ci. Ejecutar antes
+-- normalizar_colaciones_spanish.sql si la verificacion de ese script devuelve
+-- tablas pendientes.
+--
+-- No aplicar CONVERT ni COLLATE a las columnas de filtros o JOIN. Esas
+-- funciones impiden usar los indices y llegan a bloquear la caja con el
+-- catalogo real. Idempotente: CREATE OR REPLACE puede repetirse.
+-- =============================================================================
+SET NAMES utf8mb4 COLLATE utf8mb4_spanish_ci;
+CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_caja_busqueda_unificada` AS
+SELECT `a`.`CODIGO_ART_ART` AS `INPUT_BUSQUEDA`,
+       _utf8mb4''CODIGO'' COLLATE utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,
+       `a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,
+       CAST(NULL AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_spanish_ci
+       AS `CODIGO_SKU`,
+       `a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,
+       `a`.`TIPO_ART` AS `TIPO_ART`
+  FROM `fza_articulos` `a`
+ WHERE `a`.`ESACTIVO_ART` = ''S''
+UNION ALL
+SELECT `sku`.`CODIGO_UNIDAD_SKU` AS `INPUT_BUSQUEDA`,
+       _utf8mb4''SKU'' COLLATE utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,
+       `a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,
+       `sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_SKU`,
+       `a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,
+       `a`.`TIPO_ART` AS `TIPO_ART`
+  FROM `fza_articulos_skus` `sku`
+  JOIN `fza_articulos` `a`
+    ON `sku`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`
+ WHERE `sku`.`ESACTIVO_SKU` = ''S''
+UNION ALL
+SELECT `cb`.`CODIGO_BARRAS_CB` AS `INPUT_BUSQUEDA`,
+       _utf8mb4''EAN'' COLLATE utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,
+       `a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,
+       `sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_SKU`,
+       `a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,
+       `a`.`TIPO_ART` AS `TIPO_ART`
+  FROM `fza_codigos_barras` `cb`
+  JOIN `fza_articulos_skus` `sku`
+    ON `cb`.`CODIGO_UNIDAD_CB` = `sku`.`CODIGO_UNIDAD_SKU`
+  JOIN `fza_articulos` `a`
+    ON `sku`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`
+UNION ALL
+SELECT `ap`.`REF_PROVEEDOR_AP` AS `INPUT_BUSQUEDA`,
+       _utf8mb4''MODELO_PROV'' COLLATE utf8mb4_spanish_ci
+       AS `TIPO_COINCIDENCIA`,
+       `a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,
+       CAST(NULL AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_spanish_ci
+       AS `CODIGO_SKU`,
+       `a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,
+       `a`.`TIPO_ART` AS `TIPO_ART`
+  FROM `fza_articulos_proveedores` `ap`
+  JOIN `fza_articulos` `a`
+    ON `ap`.`CODIGO_ART_AP` = `a`.`CODIGO_ART_ART`
+ WHERE `a`.`ESACTIVO_ART` = ''S''
+   AND `ap`.`REF_PROVEEDOR_AP` IS NOT NULL
+   AND `ap`.`REF_PROVEEDOR_AP` <> '''';
+', '2026-07-11 06:00:13', '2026-07-11 06:00:13', 'Administrador', 'Administrador');
+-- 74 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -22776,7 +23004,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-10 19:23:44', '2026-07-10 19:23:44', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-11 05:59:37', '2026-07-11 05:59:37', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Vendedores', 'S', '012', '2026-07-02 18:49:30', '2026-07-02 18:49:30', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
 -- 2 registros exportados
 
@@ -34592,7 +34820,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_atributos_nombres` AS select `ask`.`CODIGO_
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_atributos_sku_basico` AS select `sku`.`CODIGO_ART_SKU` AS `CODIGO_ART_SKU`,`sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,`sku`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,`val`.`ID_AV` AS `ID_AV`,`val`.`ID_VA_AV` AS `ID_VA_AV`,`va`.`NOMBRE_VA` AS `NOMBRE_ATRIBUTO`,`va`.`ORDEN_VA` AS `ORDEN_ATRIBUTO`,`val`.`AV` AS `VALOR_AV`,`val`.`DESCRIPCION_AV` AS `DESCRIPCION_AV`,`aca`.`ID_AC_ACA` AS `ID_AC`,`aab`.`ID_ATB_AAB` AS `ID_ATB_OVERRIDE`,`acd`.`ID_ATB_ACD` AS `ID_ATB_CONJUNTO`,`val`.`ID_ATB_AV` AS `ID_ATB_GLOBAL`,case when `aab`.`CODIGO_ART_AAB` is not null then `aab`.`ID_ATB_AAB` when `acd`.`ID_ATB_ACD` is not null then `acd`.`ID_ATB_ACD` else `val`.`ID_ATB_AV` end AS `ID_ATB_AV`,case when `aab`.`CODIGO_ART_AAB` is not null then 'A' when `acd`.`ID_ATB_ACD` is not null then 'C' when `val`.`ID_ATB_AV` is not null then 'G' else NULL end AS `FUENTE_ATB`,`atb`.`CODIGO_ATB` AS `CODIGO_ATB`,`atb`.`NOMBRE_ATB` AS `NOMBRE_ATB`,`atb`.`DESCRIPCION_ATB` AS `DESCRIPCION_ATB`,`atb`.`HEX_ATB` AS `HEX_ATB`,`atb`.`VALOR_NUM_ATB` AS `VALOR_NUM_ATB`,`atb`.`UNIDAD_ATB` AS `UNIDAD_ATB`,case when `atb`.`VALOR_NUM_ATB` is not null then concat(trim(trailing '0' from trim(trailing '.' from cast(`atb`.`VALOR_NUM_ATB` as char charset utf8mb4))),coalesce(concat(' ',`atb`.`UNIDAD_ATB`),'')) when `atb`.`HEX_ATB` is not null then concat(`atb`.`NOMBRE_ATB`,' ',`atb`.`HEX_ATB`) else `atb`.`NOMBRE_ATB` end AS `ETIQUETA_BASICO`,`aab`.`DESCRIPCION_AAB` AS `DESCRIPCION_AAB` from (((((((`fza_articulos_skus` `sku` join `fza_atributos_sku` `sa` on(`sa`.`CODIGO_UNIDAD_SKU_SA` = `sku`.`CODIGO_UNIDAD_SKU`)) join `fza_atributos_valores` `val` on(`val`.`ID_AV` = `sa`.`ID_AV_SA`)) left join `fza_variaciones_atributos` `va` on(`va`.`ID_VAR_VA` = `sku`.`CODIGO_VAR_SKU` and `va`.`ID_ATB_VA` = `val`.`ID_VA_AV`)) left join `fza_articulos_atributos_basicos` `aab` on(`aab`.`CODIGO_ART_AAB` = `sku`.`CODIGO_ART_SKU` and `aab`.`ID_AV_AAB` = `val`.`ID_AV`)) left join `fza_articulos_conjuntos_asign` `aca` on(`aca`.`CODIGO_ART_ACA` = `sku`.`CODIGO_ART_SKU` and `aca`.`ID_VA_ACA` = `val`.`ID_VA_AV`)) left join `fza_atributos_conjuntos_det` `acd` on(`acd`.`ID_AC_ACD` = `aca`.`ID_AC_ACA` and `acd`.`ID_AV_ACD` = `val`.`ID_AV`)) left join `fza_atributos_basicos` `atb` on(`atb`.`ID_ATB` = case when `aab`.`CODIGO_ART_AAB` is not null then `aab`.`ID_ATB_AAB` when `acd`.`ID_ATB_ACD` is not null then `acd`.`ID_ATB_ACD` else `val`.`ID_ATB_AV` end)) union all select `sku`.`CODIGO_ART_SKU` AS `CODIGO_ART_SKU`,`sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,`sku`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,NULL AS `ID_AV`,`va`.`ID_ATB_VA` AS `ID_VA_AV`,`va`.`NOMBRE_VA` AS `NOMBRE_ATRIBUTO`,`va`.`ORDEN_VA` AS `ORDEN_ATRIBUTO`,substring_index(substring_index(substr(`sku`.`CODIGO_UNIDAD_SKU`,char_length(`sku`.`CODIGO_ART_SKU`) + 2),'/',`va`.`ORDEN_VA`),'/',-1) AS `VALOR_AV`,NULL AS `DESCRIPCION_AV`,NULL AS `ID_AC`,NULL AS `ID_ATB_OVERRIDE`,NULL AS `ID_ATB_CONJUNTO`,NULL AS `ID_ATB_GLOBAL`,NULL AS `ID_ATB_AV`,NULL AS `FUENTE_ATB`,NULL AS `CODIGO_ATB`,NULL AS `NOMBRE_ATB`,NULL AS `DESCRIPCION_ATB`,NULL AS `HEX_ATB`,NULL AS `VALOR_NUM_ATB`,NULL AS `UNIDAD_ATB`,NULL AS `ETIQUETA_BASICO`,NULL AS `DESCRIPCION_AAB` from (`fza_articulos_skus` `sku` join `fza_variaciones_atributos` `va` on(`va`.`ID_VAR_VA` = `sku`.`CODIGO_VAR_SKU`)) where `sku`.`CODIGO_UNIDAD_SKU` like concat(`sku`.`CODIGO_ART_SKU`,'/%') and !exists(select 1 from (`fza_atributos_sku` `sa` join `fza_atributos_valores` `v` on(`v`.`ID_AV` = `sa`.`ID_AV_SA`)) where `sa`.`CODIGO_UNIDAD_SKU_SA` = `sku`.`CODIGO_UNIDAD_SKU` and `v`.`ID_VA_AV` = `va`.`ID_ATB_VA` limit 1);
 
 -- Vista: vi_caja_busqueda_unificada
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_caja_busqueda_unificada` AS select convert(`a`.`CODIGO_ART_ART` using utf8mb4) collate utf8mb4_spanish_ci AS `INPUT_BUSQUEDA`,_utf8mb4'CODIGO' collate utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,convert(`a`.`CODIGO_ART_ART` using utf8mb4) collate utf8mb4_spanish_ci AS `CODIGO_PADRE`,cast(NULL as char charset utf8mb4) collate utf8mb4_spanish_ci AS `CODIGO_SKU`,convert(`a`.`DESCRIPCION_ART` using utf8mb4) collate utf8mb4_spanish_ci AS `DESCRIPCION_ART`,convert(`a`.`TIPO_ART` using utf8mb4) collate utf8mb4_spanish_ci AS `TIPO_ART` from `fza_articulos` `a` where convert(`a`.`ESACTIVO_ART` using utf8mb4) collate utf8mb4_spanish_ci = _utf8mb4'S' collate utf8mb4_spanish_ci union all select convert(`sku`.`CODIGO_UNIDAD_SKU` using utf8mb4) collate utf8mb4_spanish_ci AS `INPUT_BUSQUEDA`,_utf8mb4'SKU' collate utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,convert(`a`.`CODIGO_ART_ART` using utf8mb4) collate utf8mb4_spanish_ci AS `CODIGO_PADRE`,convert(`sku`.`CODIGO_UNIDAD_SKU` using utf8mb4) collate utf8mb4_spanish_ci AS `CODIGO_SKU`,convert(`a`.`DESCRIPCION_ART` using utf8mb4) collate utf8mb4_spanish_ci AS `DESCRIPCION_ART`,convert(`a`.`TIPO_ART` using utf8mb4) collate utf8mb4_spanish_ci AS `TIPO_ART` from (`fza_articulos_skus` `sku` join `fza_articulos` `a` on(convert(`sku`.`CODIGO_ART_SKU` using utf8mb4) collate utf8mb4_spanish_ci = convert(`a`.`CODIGO_ART_ART` using utf8mb4) collate utf8mb4_spanish_ci)) where convert(`sku`.`ESACTIVO_SKU` using utf8mb4) collate utf8mb4_spanish_ci = _utf8mb4'S' collate utf8mb4_spanish_ci union all select convert(`cb`.`CODIGO_BARRAS_CB` using utf8mb4) collate utf8mb4_spanish_ci AS `INPUT_BUSQUEDA`,_utf8mb4'EAN' collate utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,convert(`a`.`CODIGO_ART_ART` using utf8mb4) collate utf8mb4_spanish_ci AS `CODIGO_PADRE`,convert(`sku`.`CODIGO_UNIDAD_SKU` using utf8mb4) collate utf8mb4_spanish_ci AS `CODIGO_SKU`,convert(`a`.`DESCRIPCION_ART` using utf8mb4) collate utf8mb4_spanish_ci AS `DESCRIPCION_ART`,convert(`a`.`TIPO_ART` using utf8mb4) collate utf8mb4_spanish_ci AS `TIPO_ART` from ((`fza_codigos_barras` `cb` join `fza_articulos_skus` `sku` on(convert(`cb`.`CODIGO_UNIDAD_CB` using utf8mb4) collate utf8mb4_spanish_ci = convert(`sku`.`CODIGO_UNIDAD_SKU` using utf8mb4) collate utf8mb4_spanish_ci)) join `fza_articulos` `a` on(convert(`sku`.`CODIGO_ART_SKU` using utf8mb4) collate utf8mb4_spanish_ci = convert(`a`.`CODIGO_ART_ART` using utf8mb4) collate utf8mb4_spanish_ci)) union all select convert(`ap`.`REF_PROVEEDOR_AP` using utf8mb4) collate utf8mb4_spanish_ci AS `INPUT_BUSQUEDA`,_utf8mb4'MODELO_PROV' collate utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,convert(`a`.`CODIGO_ART_ART` using utf8mb4) collate utf8mb4_spanish_ci AS `CODIGO_PADRE`,cast(NULL as char charset utf8mb4) collate utf8mb4_spanish_ci AS `CODIGO_SKU`,convert(`a`.`DESCRIPCION_ART` using utf8mb4) collate utf8mb4_spanish_ci AS `DESCRIPCION_ART`,convert(`a`.`TIPO_ART` using utf8mb4) collate utf8mb4_spanish_ci AS `TIPO_ART` from (`fza_articulos_proveedores` `ap` join `fza_articulos` `a` on(convert(`ap`.`CODIGO_ART_AP` using utf8mb4) collate utf8mb4_spanish_ci = convert(`a`.`CODIGO_ART_ART` using utf8mb4) collate utf8mb4_spanish_ci)) where convert(`a`.`ESACTIVO_ART` using utf8mb4) collate utf8mb4_spanish_ci = _utf8mb4'S' collate utf8mb4_spanish_ci and `ap`.`REF_PROVEEDOR_AP` is not null and convert(`ap`.`REF_PROVEEDOR_AP` using utf8mb4) collate utf8mb4_spanish_ci <> _utf8mb4'' collate utf8mb4_spanish_ci;
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_caja_busqueda_unificada` AS select `a`.`CODIGO_ART_ART` AS `INPUT_BUSQUEDA`,_utf8mb4'CODIGO' collate utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,`a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,cast(NULL as char charset utf8mb4) collate utf8mb4_spanish_ci AS `CODIGO_SKU`,`a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`a`.`TIPO_ART` AS `TIPO_ART` from `fza_articulos` `a` where `a`.`ESACTIVO_ART` = 'S' union all select `sku`.`CODIGO_UNIDAD_SKU` AS `INPUT_BUSQUEDA`,_utf8mb4'SKU' collate utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,`a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,`sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_SKU`,`a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`a`.`TIPO_ART` AS `TIPO_ART` from (`fza_articulos_skus` `sku` join `fza_articulos` `a` on(`sku`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`)) where `sku`.`ESACTIVO_SKU` = 'S' union all select `cb`.`CODIGO_BARRAS_CB` AS `INPUT_BUSQUEDA`,_utf8mb4'EAN' collate utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,`a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,`sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_SKU`,`a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`a`.`TIPO_ART` AS `TIPO_ART` from ((`fza_codigos_barras` `cb` join `fza_articulos_skus` `sku` on(`cb`.`CODIGO_UNIDAD_CB` = `sku`.`CODIGO_UNIDAD_SKU`)) join `fza_articulos` `a` on(`sku`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`)) union all select `ap`.`REF_PROVEEDOR_AP` AS `INPUT_BUSQUEDA`,_utf8mb4'MODELO_PROV' collate utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,`a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,cast(NULL as char charset utf8mb4) collate utf8mb4_spanish_ci AS `CODIGO_SKU`,`a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`a`.`TIPO_ART` AS `TIPO_ART` from (`fza_articulos_proveedores` `ap` join `fza_articulos` `a` on(`ap`.`CODIGO_ART_AP` = `a`.`CODIGO_ART_ART`)) where `a`.`ESACTIVO_ART` = 'S' and `ap`.`REF_PROVEEDOR_AP` is not null and `ap`.`REF_PROVEEDOR_AP` <> '';
 
 -- Vista: vi_caja_pagos
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_caja_pagos` AS select `p`.`CODIGO_EMP_PAGO` AS `CODIGO_EMP_PAGO`,`p`.`CODIGO_ALM_PAGO` AS `CODIGO_ALM_PAGO`,`p`.`CODIGO_CAJA_PAGO` AS `CODIGO_CAJA_PAGO`,`p`.`SERIE_OPERACION_PAGO` AS `SERIE_OPERACION_PAGO`,`p`.`NUMERO_OPERACION_PAGO` AS `NUMERO_OPERACION_PAGO`,`p`.`NUMERO_LINEA_PAGO` AS `NUMERO_LINEA_PAGO`,`p`.`CODIGO_FP_CFP` AS `CODIGO_FP_CFP`,`p`.`CODIGO_DIVISA_PAGO` AS `CODIGO_DIVISA_PAGO`,`p`.`RED_BLOCKCHAIN_PAGO` AS `RED_BLOCKCHAIN_PAGO`,`p`.`FACTOR_CAMBIO_PAGO` AS `FACTOR_CAMBIO_PAGO`,`p`.`IMPORTE_DIVISA_PAGO` AS `IMPORTE_DIVISA_PAGO`,`p`.`IMPORTE_ENTREGADO_PAGO` AS `IMPORTE_ENTREGADO_PAGO`,`p`.`IMPORTE_CAMBIO_PAGO` AS `IMPORTE_CAMBIO_PAGO`,`p`.`REFERENCIA_FACPAG` AS `REFERENCIA_FACPAG`,`p`.`OBSERVACIONES_PAGO` AS `OBSERVACIONES_PAGO`,`p`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`p`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`p`.`USUARIO_ALTA` AS `USUARIO_ALTA`,coalesce(`o`.`FECHA_OP`,`p`.`INSTANTE_ALTA`) AS `FECHA_PAGO`,`o`.`NUM_FAC` AS `NUMERO_FAC_PAGO`,`o`.`SERIE_FAC` AS `SERIE_FAC_PAGO` from (`fza_caja_pagos` `p` left join (select `fza_caja_operaciones`.`CODIGO_EMP_OPCAJA` AS `CODIGO_EMP_OPCAJA`,`fza_caja_operaciones`.`CODIGO_ALM_OPCAJA` AS `CODIGO_ALM_OPCAJA`,`fza_caja_operaciones`.`CODIGO_CAJA_OPCAJA` AS `CODIGO_CAJA_OPCAJA`,`fza_caja_operaciones`.`NUMERO_OPERACION_OPCAJA` AS `NUMERO_OPERACION_OPCAJA`,min(`fza_caja_operaciones`.`FECHA_OPERACION_OPCAJA`) AS `FECHA_OP`,max(`fza_caja_operaciones`.`NUMERO_FAC_OPCAJA`) AS `NUM_FAC`,max(`fza_caja_operaciones`.`SERIE_FAC_OPCAJA`) AS `SERIE_FAC` from `fza_caja_operaciones` group by `fza_caja_operaciones`.`CODIGO_EMP_OPCAJA`,`fza_caja_operaciones`.`CODIGO_ALM_OPCAJA`,`fza_caja_operaciones`.`CODIGO_CAJA_OPCAJA`,`fza_caja_operaciones`.`NUMERO_OPERACION_OPCAJA`) `o` on(`o`.`CODIGO_EMP_OPCAJA` = `p`.`CODIGO_EMP_PAGO` and `o`.`CODIGO_ALM_OPCAJA` = `p`.`CODIGO_ALM_PAGO` and `o`.`CODIGO_CAJA_OPCAJA` = `p`.`CODIGO_CAJA_PAGO` and `o`.`NUMERO_OPERACION_OPCAJA` = `p`.`NUMERO_OPERACION_PAGO`));
@@ -42149,4 +42377,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 10/07/2026 19:24:37
+-- Backup completado: 11/07/2026 6:00:27

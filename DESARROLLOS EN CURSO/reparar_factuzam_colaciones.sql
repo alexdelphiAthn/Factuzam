@@ -74,97 +74,56 @@ CALL PRC_REPARAR_COLACIONES_FACTUZAM();
 DROP PROCEDURE IF EXISTS `PRC_REPARAR_COLACIONES_FACTUZAM`;
 
 -- -----------------------------------------------------------------------------
--- 3. Recrear vi_caja_busqueda_unificada tolerando columnas/literales utf8mb3
+-- 3. Recrear vi_caja_busqueda_unificada conservando los indices
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_caja_busqueda_unificada` AS
-SELECT CONVERT(`a`.`CODIGO_ART_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `INPUT_BUSQUEDA`,
+SELECT `a`.`CODIGO_ART_ART` AS `INPUT_BUSQUEDA`,
        _utf8mb4'CODIGO' COLLATE utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,
-       CONVERT(`a`.`CODIGO_ART_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `CODIGO_PADRE`,
+       `a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,
        CAST(NULL AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_spanish_ci
        AS `CODIGO_SKU`,
-       CONVERT(`a`.`DESCRIPCION_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `DESCRIPCION_ART`,
-       CONVERT(`a`.`TIPO_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `TIPO_ART`
+       `a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,
+       `a`.`TIPO_ART` AS `TIPO_ART`
   FROM `fza_articulos` `a`
- WHERE CONVERT(`a`.`ESACTIVO_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci =
-       _utf8mb4'S' COLLATE utf8mb4_spanish_ci
+ WHERE `a`.`ESACTIVO_ART` = 'S'
 UNION ALL
-SELECT CONVERT(`sku`.`CODIGO_UNIDAD_SKU` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci
-       AS `INPUT_BUSQUEDA`,
+SELECT `sku`.`CODIGO_UNIDAD_SKU` AS `INPUT_BUSQUEDA`,
        _utf8mb4'SKU' COLLATE utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,
-       CONVERT(`a`.`CODIGO_ART_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `CODIGO_PADRE`,
-       CONVERT(`sku`.`CODIGO_UNIDAD_SKU` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `CODIGO_SKU`,
-       CONVERT(`a`.`DESCRIPCION_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `DESCRIPCION_ART`,
-       CONVERT(`a`.`TIPO_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `TIPO_ART`
+       `a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,
+       `sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_SKU`,
+       `a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,
+       `a`.`TIPO_ART` AS `TIPO_ART`
   FROM `fza_articulos_skus` `sku`
   JOIN `fza_articulos` `a`
-    ON CONVERT(`sku`.`CODIGO_ART_SKU` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci =
-       CONVERT(`a`.`CODIGO_ART_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci
- WHERE CONVERT(`sku`.`ESACTIVO_SKU` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci =
-       _utf8mb4'S' COLLATE utf8mb4_spanish_ci
+    ON `sku`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`
+ WHERE `sku`.`ESACTIVO_SKU` = 'S'
 UNION ALL
-SELECT CONVERT(`cb`.`CODIGO_BARRAS_CB` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci
-       AS `INPUT_BUSQUEDA`,
+SELECT `cb`.`CODIGO_BARRAS_CB` AS `INPUT_BUSQUEDA`,
        _utf8mb4'EAN' COLLATE utf8mb4_spanish_ci AS `TIPO_COINCIDENCIA`,
-       CONVERT(`a`.`CODIGO_ART_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `CODIGO_PADRE`,
-       CONVERT(`sku`.`CODIGO_UNIDAD_SKU` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `CODIGO_SKU`,
-       CONVERT(`a`.`DESCRIPCION_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `DESCRIPCION_ART`,
-       CONVERT(`a`.`TIPO_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `TIPO_ART`
+       `a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,
+       `sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_SKU`,
+       `a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,
+       `a`.`TIPO_ART` AS `TIPO_ART`
   FROM `fza_codigos_barras` `cb`
   JOIN `fza_articulos_skus` `sku`
-    ON CONVERT(`cb`.`CODIGO_UNIDAD_CB` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci =
-       CONVERT(`sku`.`CODIGO_UNIDAD_SKU` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci
+    ON `cb`.`CODIGO_UNIDAD_CB` = `sku`.`CODIGO_UNIDAD_SKU`
   JOIN `fza_articulos` `a`
-    ON CONVERT(`sku`.`CODIGO_ART_SKU` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci =
-       CONVERT(`a`.`CODIGO_ART_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci
+    ON `sku`.`CODIGO_ART_SKU` = `a`.`CODIGO_ART_ART`
 UNION ALL
-SELECT CONVERT(`ap`.`REF_PROVEEDOR_AP` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci
-       AS `INPUT_BUSQUEDA`,
+SELECT `ap`.`REF_PROVEEDOR_AP` AS `INPUT_BUSQUEDA`,
        _utf8mb4'MODELO_PROV' COLLATE utf8mb4_spanish_ci
        AS `TIPO_COINCIDENCIA`,
-       CONVERT(`a`.`CODIGO_ART_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `CODIGO_PADRE`,
+       `a`.`CODIGO_ART_ART` AS `CODIGO_PADRE`,
        CAST(NULL AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_spanish_ci
        AS `CODIGO_SKU`,
-       CONVERT(`a`.`DESCRIPCION_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `DESCRIPCION_ART`,
-       CONVERT(`a`.`TIPO_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci AS `TIPO_ART`
+       `a`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,
+       `a`.`TIPO_ART` AS `TIPO_ART`
   FROM `fza_articulos_proveedores` `ap`
   JOIN `fza_articulos` `a`
-    ON CONVERT(`ap`.`CODIGO_ART_AP` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci =
-       CONVERT(`a`.`CODIGO_ART_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci
- WHERE CONVERT(`a`.`ESACTIVO_ART` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci =
-       _utf8mb4'S' COLLATE utf8mb4_spanish_ci
+    ON `ap`.`CODIGO_ART_AP` = `a`.`CODIGO_ART_ART`
+ WHERE `a`.`ESACTIVO_ART` = 'S'
    AND `ap`.`REF_PROVEEDOR_AP` IS NOT NULL
-   AND CONVERT(`ap`.`REF_PROVEEDOR_AP` USING utf8mb4)
-       COLLATE utf8mb4_spanish_ci <>
-       _utf8mb4'' COLLATE utf8mb4_spanish_ci;
+   AND `ap`.`REF_PROVEEDOR_AP` <> '';
 
 -- -----------------------------------------------------------------------------
 -- 4. Verificacion

@@ -68,10 +68,10 @@ DIMINUTIVO_TICKET_USU`, `ESACTIVO_EMPL := ESACTIVO_USU`. `NOMBRE_EMPL` se
 siembra provisionalmente con `USUARIO_USU` para que la fila no quede sin nombre;
 se edita después en la pantalla. `INSERT IGNORE` → idempotente.
 
-La migración legacy SQL Server → MariaDB rellena vendedores desde `dbo.ocemp`
-directamente en `fza_empleados` mediante el dominio `empleados` del migrador.
-Antes hay que ejecutar `empleados_ampliar_ocemp.sql`, que añade los campos de
-contacto/identificación necesarios. Esta ruta no escribe en `fza_usuarios`.
+El dominio `Empleados / vendedores (ocven)` migra `dbo.ocven` a
+`fza_empleados`. Usa `Vendedor` como código, `Nombre` como nombre y
+`Abreviatura` como diminutivo de caja. `dbo.ocemp` no interviene porque es el
+maestro de empresas. Las filas creadas manualmente en Factuzam se conservan.
 
 ## Fase 1 — tabla y pantalla (este script)
 
@@ -111,4 +111,3 @@ y editarlas.
 
 1. `empleados.sql` (fase 1, si no se aplicó aún).
 2. `empleados_retirar_columnas_usuarios.sql` (fase 2).
-3. `empleados_ampliar_ocemp.sql` (campos legacy para migración de vendedores).
