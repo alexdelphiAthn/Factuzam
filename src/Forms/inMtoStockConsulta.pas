@@ -136,6 +136,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormResize(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnArtPropertiesButtonClick(Sender: TObject; AButtonIndex: Integer);
     procedure btnArtPropertiesEditValueChanged(Sender: TObject);
@@ -211,6 +212,7 @@ type
     procedure CargarColores;
     procedure CargarPropsPorColor;
     procedure ActualizarLetreroColor;
+    procedure AjustarFotoCabecera;
     procedure CargarFoto(const ACodUnidad: string);
     procedure CrearBotonesHistorial;
     procedure HistorialAnteriorClick(Sender: TObject);
@@ -381,6 +383,7 @@ begin
   Self.KeyPreview := True;
   Self.OnKeyDown := FormKeyDown;
   Self.OnKeyPress := FormKeyPress;
+  Self.OnResize := FormResize;
   // Detector del lector. Modo "consumir": las teclas de la rafaga no llegan a
   // btnArt (evita disparar SetArticuloSku en cada tecla del escaneo).
   FLector := TLectorScanner.Create;
@@ -459,6 +462,7 @@ begin
   CrearEstilosEstado;
   CrearLeyenda;
   CargarAlmacenes;
+  AjustarFotoCabecera;
 end;
 
 procedure TfrmStockConsulta.PoblarComboEstados;
@@ -656,6 +660,11 @@ end;
 procedure TfrmStockConsulta.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := caHide;
+end;
+
+procedure TfrmStockConsulta.FormResize(Sender: TObject);
+begin
+  AjustarFotoCabecera;
 end;
 
 // ESC oculta la ventana flotante. KeyPreview=True (FormCreate) garantiza que
@@ -1482,6 +1491,7 @@ begin
     lblLetreroTemp.Caption := '';
     lblLetreroTemp.Visible := False;
   end;
+  AjustarFotoCabecera;
 end;
 
 function TfrmStockConsulta.ColoresSeleccionadosLista: TArray<string>;
@@ -1580,10 +1590,36 @@ begin
   // El letrero arranca oculto: solo "canta" cuando el usuario pincha un color.
   lblLetreroTemp.Caption := '';
   lblLetreroTemp.Visible := False;
+  AjustarFotoCabecera;
   if bArticuloEncontrado then
     RegistrarArticuloHistorial(ACodArt);
   ActualizarBotonesHistorial;
   RecargarConsulta;
+end;
+
+procedure TfrmStockConsulta.AjustarFotoCabecera;
+const
+  MARGEN_FOTO       = 8;
+  PORCENTAJE_INICIO = 55;
+  ANCHO_TEXTO_MIN   = 480;
+  ANCHO_FOTO_MIN    = 180;
+var
+  iIzquierda : Integer;
+  iAlto      : Integer;
+begin
+  iIzquierda := pnlCabecera.ClientWidth * PORCENTAJE_INICIO div 100;
+  if iIzquierda < ANCHO_TEXTO_MIN then
+    iIzquierda := ANCHO_TEXTO_MIN;
+  if iIzquierda > pnlCabecera.ClientWidth - ANCHO_FOTO_MIN then
+    iIzquierda := pnlCabecera.ClientWidth - ANCHO_FOTO_MIN;
+  iAlto := pnlCabecera.ClientHeight - (MARGEN_FOTO * 2);
+  if lblLetreroTemp.Visible then
+    iAlto := iAlto - lblLetreroTemp.Height;
+  imgFoto.SetBounds(iIzquierda,
+                    MARGEN_FOTO,
+                    pnlCabecera.ClientWidth - iIzquierda - MARGEN_FOTO,
+                    iAlto);
+  lblInfo.Width := iIzquierda - lblInfo.Left - MARGEN_FOTO;
 end;
 
 procedure TfrmStockConsulta.CargarFoto(const ACodUnidad: string);
@@ -1595,7 +1631,9 @@ begin
   imgFoto.Picture.Assign(nil);
   if Trim(FCodArt) = '' then Exit;
   info := inLibFotos.oFotos.Resolver(FCodArt, ACodUnidad);
-  ruta := inLibFotos.oFotos.RutaFoto(info, frPx300);
+  // En la consulta de stock la foto dispone de una zona amplia: cargar
+  // siempre la copia a resolucion real y ajustarla proporcionalmente.
+  ruta := inLibFotos.oFotos.RutaFoto(info, frReal);
   if ruta = '' then Exit;
   png := TPngImage.Create;
   try

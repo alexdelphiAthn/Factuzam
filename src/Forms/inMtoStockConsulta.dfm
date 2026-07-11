@@ -28,15 +28,14 @@ object frmStockConsulta: TfrmStockConsulta
       898
       256)
     object imgFoto: TImage
-      Left = 738
-      Top = 12
-      Width = 138
-      Height = 133
-      Anchors = [akTop, akRight]
+      Left = 493
+      Top = 8
+      Width = 397
+      Height = 240
+      Anchors = [akTop, akRight, akBottom]
       Center = True
       Proportional = True
       Stretch = True
-      ExplicitLeft = 744
     end
     object lblArt: TcxLabel
       Left = 16
@@ -71,8 +70,8 @@ object frmStockConsulta: TfrmStockConsulta
       Properties.WordWrap = True
       TabOrder = 3
       Transparent = True
-      ExplicitWidth = 730
-      Width = 732
+      ExplicitWidth = 459
+      Width = 461
     end
     object lblLetreroTemp: TcxLabel
       Left = 0
