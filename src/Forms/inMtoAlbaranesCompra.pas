@@ -81,8 +81,8 @@ type
     cbbSERIE_ALBC:    TcxDBComboBox;
     lblFechaAlbaran:  TcxLabel;
     dteFECHA_ALBC:    TcxDBDateEdit;
-    lblEstadoAlbaran: TcxLabel;
-    txtESTADO_ALBC:   TcxDBTextEdit;
+    lblTemporadaAlbaran: TcxLabel;
+    txtTEMPORADA_ALBC: TcxDBTextEdit;
     lblPedidoOrigen:  TcxLabel;
     txtNUMERO_PED_ALBC: TcxDBTextEdit;
     txtSERIE_PED_ALBC:  TcxDBTextEdit;
@@ -306,6 +306,7 @@ uses
   inLibtb,
   inLibArticulosResolver,
   inLibArticulosValidador,
+  inLibGridCantidad,
   inLibComprasImpuestos,
   inLibAtributosPaleta,
   UniDataArticulos,
@@ -1792,6 +1793,7 @@ begin
     CfgPV.FieldArt := 'CODIGO_ART_ALBCLIN';
     CfgPV.FieldSku := 'CODIGO_UNIDAD_ALBCLIN';
     CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_ALBCLIN';
+    CfgPV.FieldTipoCantidad := 'TIPO_CANTIDAD_ARTICULO_ALBCLIN';
     // Albaran de compra: UNA sola cantidad por linea -> banda unica.
     CfgPV.FieldCantidadPedida := 'CANTIDAD_ALBCLIN';
     CfgPV.FieldCantidadEntregada := '';
@@ -1915,7 +1917,7 @@ procedure TfrmMtoAlbaranesCompra.CrearColumnasHostAlbaranCompra;
     Result.Options.Editing := AEditable;
   end;
 var
-  ColLinea: TcxGridDBColumn;
+  ColLinea, ColCantidad, ColTipoCantidad: TcxGridDBColumn;
 begin
   // Columnas propias del albaran de compra tras el ClearItems del
   // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
@@ -1923,7 +1925,12 @@ begin
   Col('Modelo prov.', 'REF_PRV_ALBCLIN', 130, True);
   Col('Descripción', 'DESCRIPCION_ARTICULO_ALBCLIN', 260, False);
   if FModoEntradaSel <> mcsTallasHorPed then
-    Col('Cantidad', 'CANTIDAD_ALBCLIN', 80, True);
+  begin
+    ColCantidad := Col('Cantidad', 'CANTIDAD_ALBCLIN', 80, True);
+    ColTipoCantidad := Col('', 'TIPO_CANTIDAD_ARTICULO_ALBCLIN',
+                           90, False);
+    VincularCantidadGrid(ColCantidad, ColTipoCantidad);
+  end;
   Col('Precio compra', 'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN', 130, True);
   Col('% IVA', 'PORCENTAJE_IVA_ALBCLIN', 70, True);
   // En pivote la vista vuelca aqui las UNIDADES del grupo (la libreria

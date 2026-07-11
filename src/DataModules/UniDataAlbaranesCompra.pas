@@ -75,10 +75,6 @@ type
     procedure unqryAlbaranesCompraLineasAfterPost(DataSet: TDataSet);
     procedure unqryAlbaranesCompraLineasAfterDelete(DataSet: TDataSet);
   private
-    // Transicion detectada en BeforePost. Se conserva para validar el
-    // cierre, pero AfterPost sincroniza movimientos desde el documento
-    // actual sin depender del estado final.
-    FTransicionEstadoAlbc: string;
     // True mientras DesempaquetarAtributosLineas postea lineas: cambio
     // puramente descriptivo que NO debe disparar la logica fiscal ni
     // la sincronizacion de movimientos (cascada por linea al navegar).
@@ -431,7 +427,6 @@ begin
     AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
       'ALBC');
   end;
-  FTransicionEstadoAlbc := '';
 end;
 
 function TdmAlbaranesCompra.BuscarEmpresa(const ACodigo: string): Boolean;
@@ -498,9 +493,6 @@ end;
 
 procedure TdmAlbaranesCompra.unqryTablaGBeforePost(DataSet: TDataSet);
 var
-  fEstado: TField;
-  sEstadoNuevo, sEstadoAnterior: string;
-  qChk: TUniQuery;
   i: Integer;
 begin
   inherited;
@@ -523,50 +515,6 @@ begin
   AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
     'ALBC');
   CalcularTotalesAlbaranCompra;
-  // Deteccion de transicion de ESTADO_ALBC. Solo aplica en modo Edit.
-  // Se usa para prevalidar cierres vacios; los movimientos se
-  // sincronizan siempre tras persistir la cabecera.
-  FTransicionEstadoAlbc := '';
-  if unqryTablaG.State <> dsEdit then
-    Exit;
-  fEstado := unqryTablaG.FindField('ESTADO_ALBC');
-  if fEstado = nil then
-    Exit;
-  sEstadoNuevo    := UpperCase(Trim(fEstado.AsString));
-  sEstadoAnterior := UpperCase(Trim(VarToStr(fEstado.OldValue)));
-  if sEstadoNuevo = sEstadoAnterior then
-    Exit;
-  if (sEstadoAnterior = 'ABIERTO') and (sEstadoNuevo = 'CERRADO') then
-    FTransicionEstadoAlbc := 'CERRAR'
-  else if (sEstadoAnterior = 'CERRADO') and (sEstadoNuevo = 'ABIERTO') then
-    FTransicionEstadoAlbc := 'ABRIR';
-  // Pre-validacion del cierre: si vamos a cerrar y no hay lineas con
-  // cantidad > 0, abortamos el Post para no dejar el albaran CERRADO
-  // sin movimientos. Mejor abortar aqui que en AfterPost (donde la
-  // cabecera ya estaria persistida con el estado nuevo).
-  if FTransicionEstadoAlbc = 'CERRAR' then
-  begin
-    qChk := TUniQuery.Create(nil);
-    try
-      qChk.Connection := inLibGlobalVar.oConn;
-      qChk.SQL.Text :=
-        'SELECT COUNT(*) AS N FROM fza_albaranes_compra_lineas ' +
-        ' WHERE SERIE_ALBC_ALBCLIN  = :s ' +
-        '   AND NUMERO_ALBC_ALBCLIN = :n ' +
-        '   AND IFNULL(CANTIDAD_ALBCLIN, 0) > 0';
-      qChk.ParamByName('s').AsString :=
-        unqryTablaG.FieldByName('SERIE_ALBC').AsString;
-      qChk.ParamByName('n').AsString :=
-        unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
-      qChk.Open;
-      if qChk.FieldByName('N').AsInteger = 0 then
-        raise Exception.Create(
-          'No se puede cerrar el albaran: no tiene lineas con cantidad ' +
-          'mayor que 0. Añade lineas antes de cerrar.');
-    finally
-      FreeAndNil(qChk);
-    end;
-  end;
 end;
 
 // Tras persistir la cabecera, reconstruimos los movimientos AC desde el
@@ -575,11 +523,7 @@ end;
 procedure TdmAlbaranesCompra.unqryTablaGAfterPost(DataSet: TDataSet);
 begin
   inherited;
-  try
-    SincronizarMovimientos;
-  finally
-    FTransicionEstadoAlbc := '';
-  end;
+  SincronizarMovimientos;
 end;
 
 procedure TdmAlbaranesCompra.unqryTablaGBeforeDelete(DataSet: TDataSet);
@@ -612,8 +556,7 @@ begin
       ' WHERE SERIE_ALBC  = :s ' +
       '   AND NUMERO_ALBC = :n ' +
       '   AND (COALESCE(NUMERO_FAC_ALBC, '''') <> '''' ' +
-      '    OR COALESCE(SERIE_FAC_ALBC, '''') <> '''' ' +
-      '    OR COALESCE(ESTADO_ALBC, '''') = ''FACTURADO'')';
+      '    OR COALESCE(SERIE_FAC_ALBC, '''') <> '''')';
     AsignarDocumento;
     q.Open;
     iBloqueos := q.FieldByName('N').AsInteger;

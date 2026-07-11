@@ -347,7 +347,7 @@ function TfrmMtoFacturasSimplif.ConstruirSqlFacturas: string;
 begin
   Result := 'SELECT * FROM ' + NombreVistaListado +
             ConstruirWhereFacturas +
-            ' ORDER BY FECHA_FAC DESC';
+            ' ORDER BY FECHA_FAC DESC, NUMERO_FAC DESC';
 end;
 
 function TfrmMtoFacturasSimplif.ContarFacturas: Integer;

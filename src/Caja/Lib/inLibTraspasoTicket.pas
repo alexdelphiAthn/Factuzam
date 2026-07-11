@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibTraspasoTicket                                           }
 {    Tipo:       Libreria                                                      }
@@ -92,7 +92,6 @@ class procedure TTraspasoTicket.ImprimirSolicitud(AConn: TUniConnection;
                                      const ANombreImpresora: string);
 var
   Ticket: TTicketTermico;
-  Preview: TFormVisualizador;
   Q: TUniQuery;
   ComandosESC, RutaPDF, sImpresora: string;
   sOrigen, sDestino, sEmpleado, sEstado: string;
@@ -203,19 +202,8 @@ begin
         ComandosESC := Ticket.ObtenerComandos;
         RutaPDF := GetUserFolderTickets + 'SolTraspaso_' + ASerie + '_' +
                    ANumero + '.pdf';
-        Preview := TFormVisualizador.Create(nil);
-        try
-          Preview.Hide;
-          Preview.FRutaPDFReal := RutaPDF;
-          Preview.CargarYMostrar(ComandosESC);
-          Preview.ExportarAPDF(ComandosESC, RutaPDF);
-          if UpperCase(sImpresora) = 'DEBUG' then
-            Preview.ShowModal
-          else
-            Ticket.Imprimir;
-        finally
-          FreeAndNil(Preview);
-        end;
+        ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaPDF,
+                                     sImpresora);
       finally
         FreeAndNil(Ticket);
       end;
@@ -231,7 +219,6 @@ class procedure TTraspasoTicket.ImprimirTraspaso(AConn: TUniConnection;
                                    const ANombreImpresora: string);
 var
   Ticket: TTicketTermico;
-  Preview: TFormVisualizador;
   QStk: TUniQuery;
   ComandosESC, RutaPDF, sImpresora, sRefArch, sSku: string;
   dPed, dOrg, dDes: Double;
@@ -317,19 +304,8 @@ begin
       sRefArch := StringReplace(ADocRef, '/', '_', [rfReplaceAll]);
       sRefArch := StringReplace(sRefArch, '\', '_', [rfReplaceAll]);
       RutaPDF := GetUserFolderTickets + 'Traspaso_' + sRefArch + '.pdf';
-      Preview := TFormVisualizador.Create(nil);
-      try
-        Preview.Hide;
-        Preview.FRutaPDFReal := RutaPDF;
-        Preview.CargarYMostrar(ComandosESC);
-        Preview.ExportarAPDF(ComandosESC, RutaPDF);
-        if UpperCase(sImpresora) = 'DEBUG' then
-          Preview.ShowModal
-        else
-          Ticket.Imprimir;
-      finally
-        FreeAndNil(Preview);
-      end;
+      ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaPDF,
+                                   sImpresora);
     finally
       FreeAndNil(Ticket);
     end;
@@ -344,7 +320,6 @@ class procedure TTraspasoTicket.ImprimirTraspasoDesdeBD(AConn: TUniConnection;
                                    const ANombreImpresora: string);
 var
   Ticket: TTicketTermico;
-  Preview: TFormVisualizador;
   Q, QStk: TUniQuery;
   ComandosESC, RutaPDF, sImpresora, sRefArch: string;
   sSerie, sNumDoc, sOrigen, sDestino, sEmpleado, sDocRef, sSku: string;
@@ -470,19 +445,8 @@ begin
         sRefArch := StringReplace(sDocRef, '/', '_', [rfReplaceAll]);
         sRefArch := StringReplace(sRefArch, '\', '_', [rfReplaceAll]);
         RutaPDF := GetUserFolderTickets + 'Traspaso_' + sRefArch + '.pdf';
-        Preview := TFormVisualizador.Create(nil);
-        try
-          Preview.Hide;
-          Preview.FRutaPDFReal := RutaPDF;
-          Preview.CargarYMostrar(ComandosESC);
-          Preview.ExportarAPDF(ComandosESC, RutaPDF);
-          if UpperCase(sImpresora) = 'DEBUG' then
-            Preview.ShowModal
-          else
-            Ticket.Imprimir;
-        finally
-          FreeAndNil(Preview);
-        end;
+        ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaPDF,
+                                     sImpresora);
       finally
         FreeAndNil(Ticket);
       end;

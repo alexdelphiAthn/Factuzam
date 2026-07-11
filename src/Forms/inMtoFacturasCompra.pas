@@ -288,6 +288,7 @@ uses
   inLibLog,
   inLibArticulosResolver,
   inLibArticulosValidador,
+  inLibGridCantidad,
   inLibComprasImpuestos,
   inLibAtributosPaleta,
   UniDataArticulos,
@@ -1327,6 +1328,7 @@ begin
     CfgPV.FieldArt := 'CODIGO_ART_FACCLIN';
     CfgPV.FieldSku := 'CODIGO_UNIDAD_FACCLIN';
     CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_FACCLIN';
+    CfgPV.FieldTipoCantidad := 'TIPO_CANTIDAD_ARTICULO_FACCLIN';
     // Factura de compra: UNA sola cantidad por linea -> banda unica.
     CfgPV.FieldCantidadPedida := 'CANTIDAD_FACCLIN';
     CfgPV.FieldCantidadEntregada := '';
@@ -1447,7 +1449,7 @@ procedure TfrmMtoFacturasCompra.CrearColumnasHostFacturaCompra;
     Result.Options.Editing := AEditable;
   end;
 var
-  ColLinea: TcxGridDBColumn;
+  ColLinea, ColCantidad, ColTipoCantidad: TcxGridDBColumn;
 begin
   // Columnas propias de la factura de compra tras el ClearItems del
   // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
@@ -1455,7 +1457,12 @@ begin
   Col('Modelo prov.', 'REF_PRV_FACCLIN', 130, True);
   Col('Descripción', 'DESCRIPCION_ARTICULO_FACCLIN', 260, False);
   if FModoEntradaSel <> mcsTallasHorPed then
-    Col('Cantidad', 'CANTIDAD_FACCLIN', 80, True);
+  begin
+    ColCantidad := Col('Cantidad', 'CANTIDAD_FACCLIN', 80, True);
+    ColTipoCantidad := Col('', 'TIPO_CANTIDAD_ARTICULO_FACCLIN',
+                           90, False);
+    VincularCantidadGrid(ColCantidad, ColTipoCantidad);
+  end;
   Col('Precio compra', 'PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN', 130, True);
   Col('% IVA', 'PORCENTAJE_IVA_FACCLIN', 70, True);
   // En pivote la vista vuelca aqui las UNIDADES del grupo (la libreria

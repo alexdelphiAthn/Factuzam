@@ -11,7 +11,7 @@
       '  AND SERIE_ALBC = :Old_SERIE_ALBC')
     SQL.Strings = (
       'SELECT * FROM vi_albaranes_compra'
-      ' ORDER BY INSTANTE_ALTA DESC, NUMERO_ALBC DESC')
+      ' ORDER BY FECHA_ALBC DESC, NUMERO_ALBC DESC')
     AfterInsert = unqryTablaGAfterInsert
     BeforePost = unqryTablaGBeforePost
     AfterPost = unqryTablaGAfterPost

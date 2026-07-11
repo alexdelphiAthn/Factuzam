@@ -1,4 +1,4 @@
-inherited dmPedidos: TdmPedidos
+﻿inherited dmPedidos: TdmPedidos
   Height = 480
   Width = 632
   PixelsPerInch = 120
@@ -256,7 +256,8 @@ inherited dmPedidos: TdmPedidos
       'SELECT COUNT(*) FROM fza_pedidos')
     Connection = dmConn.conUni
     SQL.Strings = (
-      'select * from vi_pedidos')
+      'select * from vi_pedidos'
+      ' ORDER BY FECHA_PED DESC, NUMERO_PED DESC')
     AfterInsert = unqryTablaGAfterInsert
     BeforeDelete = unqryTablaGBeforeDelete
     Left = 48

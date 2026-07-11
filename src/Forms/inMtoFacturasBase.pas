@@ -2205,11 +2205,13 @@ begin
           '           AND c.NUMERO_FAC_VFCOLA = v.NUMERO_FAC ' +
           '         ORDER BY c.ID_VFCOLA DESC ' +
           '         LIMIT 1) AS ESTADO_VFCOLA ' +
-          ' FROM ' + sVista + ' v'
+          ' FROM ' + sVista + ' v ' +
+          ' ORDER BY v.FECHA_FAC DESC, v.NUMERO_FAC DESC'
       else
         SQL.Text :=
           'SELECT v.*, '''' AS ESTADO_VFCOLA ' +
-          ' FROM ' + sVista + ' v';
+          ' FROM ' + sVista + ' v ' +
+          ' ORDER BY v.FECHA_FAC DESC, v.NUMERO_FAC DESC';
       // Los descendientes que precargan con filtros propios devuelven
       // False y abren ellos la lista (filtrada, con progreso) en
       // ResetForm; asi evitamos el SELECT completo de la vista. La
@@ -3514,6 +3516,7 @@ begin
         CfgPV.FieldArt := 'CODIGO_ART_FACLIN';
         CfgPV.FieldSku := 'CODIGO_UNIDAD_FACLIN';
         CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_FACLIN';
+        CfgPV.FieldTipoCantidad := 'TIPO_CANTIDAD_ARTICULO_FACLIN';
         // Factura: UNA sola cantidad por linea -> banda unica.
         CfgPV.FieldCantidadPedida := 'CANTIDAD_FACLIN';
         CfgPV.FieldCantidadEntregada := '';

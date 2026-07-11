@@ -78,8 +78,8 @@ type
     cbbSERIE_DEVC:    TcxDBComboBox;
     lblFechaDevolucion:  TcxLabel;
     dteFECHA_DEVC:    TcxDBDateEdit;
-    lblEstadoDevolucion: TcxLabel;
-    txtESTADO_DEVC:   TcxDBTextEdit;
+    lblCabTotalPrendas: TcxLabel;
+    lblCabTotalPrendasValor: TcxLabel;
     lblCodigoEmpresa: TcxLabel;
     btnCODIGO_EMP_DEVC: TcxDBButtonEdit;
     lblCodigoProveedor: TcxLabel;
@@ -115,8 +115,6 @@ type
     lblTotalesDtoFinanciero: TcxLabel;
     spnTotalesPORCENTAJE_DTO_FINANCIERO_DEVC: TcxDBSpinEdit;
     curTotalesTOTAL_DTO_FINANCIERO_DEVC: TcxDBCurrencyEdit;
-    lblTotalesTotalPrendas: TcxLabel;
-    lblTotalPrendasDevc: TcxLabel;
     grpDesgloseImpuestos: TGroupBox;
     shpSeparador1: TShape;
     shpSeparador2: TShape;
@@ -238,7 +236,7 @@ type
     // (razon social entre parentesis si difiere). Ver UniDataDevolucionesCompra
     // .unqryPrvDataDevc (lookup completo de fza_proveedores).
     procedure ActualizarLabelProveedor;
-    // Pinta lblTotalPrendasDevc con el total de prendas (suma de
+    // Pinta lblCabTotalPrendasValor con el total de prendas (suma de
     // CANTIDAD_DEVCLIN de todas las lineas). Calculado en Delphi, no
     // persiste en BBDD.
     procedure ActualizarLabelPrendas;
@@ -319,6 +317,7 @@ uses
   inLibLog,
   inLibArticulosResolver,
   inLibArticulosValidador,
+  inLibGridCantidad,
   inLibAtributosPaleta,
   UniDataArticulos,
   inLibComprasImpuestos,
@@ -1747,7 +1746,6 @@ var
   sArt        : string;
   sPrv        : string;
   sAlm        : string;
-  sEstado     : string;
   rIvaN       : Double;
   rIvaR       : Double;
   rIvaS       : Double;
@@ -2027,7 +2025,6 @@ begin
       sNumero := CampoCabeceraString('NUMERO_DEVC');
       sPrv := CampoCabeceraString('CODIGO_PRV_DEVC');
       sAlm := CampoCabeceraString('CODIGO_ALM_DEVC');
-      sEstado := UpperCase(CampoCabeceraString('ESTADO_DEVC'));
       bPivotActivo := Assigned(FPivote) and FPivote.Activo;
       if dsLin.Active and (dsLin.State in dsEditModes) then
         dsLin.Post;
@@ -2038,10 +2035,7 @@ begin
       rIvaR := CampoCabeceraFloat('PORCENTAJE_IVAR_DEVC');
       rIvaS := CampoCabeceraFloat('PORCENTAJE_IVAS_DEVC');
       rIvaE := CampoCabeceraFloat('PORCENTAJE_IVAE_DEVC');
-      if sEstado <> 'ABIERTO' then
-        MessageDlg('Solo se puede devolver la fila en devoluciones abiertas.',
-                   mtWarning, [mbOk], 0)
-      else if (sPrv = '') or (sPrv = '0') then
+      if (sPrv = '') or (sPrv = '0') then
         MessageDlg('Selecciona un proveedor antes de devolver la fila.',
                    mtWarning, [mbOk], 0)
       else if sAlm = '' then
@@ -2257,10 +2251,10 @@ begin
      Assigned(dmmDevolucionesCompra.unqryTablaG) and
      dmmDevolucionesCompra.unqryTablaG.Active and
      (not dmmDevolucionesCompra.unqryTablaG.IsEmpty) then
-    lblTotalPrendasDevc.Caption :=
+    lblCabTotalPrendasValor.Caption :=
       FormatFloat('#,##0', dmmDevolucionesCompra.TotalPrendasDevolucion)
   else
-    lblTotalPrendasDevc.Caption := '0';
+    lblCabTotalPrendasValor.Caption := '0';
 end;
 
 // Hook AfterPost del detail: encadena la logica original del DM
@@ -2498,6 +2492,7 @@ begin
     CfgPV.FieldArt := 'CODIGO_ART_DEVCLIN';
     CfgPV.FieldSku := 'CODIGO_UNIDAD_DEVCLIN';
     CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_DEVCLIN';
+    CfgPV.FieldTipoCantidad := 'TIPO_CANTIDAD_ARTICULO_DEVCLIN';
     // Devolucion de compra: UNA sola cantidad por linea -> banda unica.
     CfgPV.FieldCantidadPedida := 'CANTIDAD_DEVCLIN';
     CfgPV.FieldCantidadEntregada := '';
@@ -2618,7 +2613,7 @@ procedure TfrmMtoDevolucionesCompra.CrearColumnasHostDevolucionCompra;
     Result.Options.Editing := AEditable;
   end;
 var
-  ColLinea: TcxGridDBColumn;
+  ColLinea, ColCantidad, ColTipoCantidad: TcxGridDBColumn;
 begin
   // Columnas propias de la devolucion de compra tras el ClearItems del
   // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
@@ -2626,7 +2621,12 @@ begin
   Col('Modelo prov.', 'REF_PRV_DEVCLIN', 130, True);
   Col('Descripción', 'DESCRIPCION_ARTICULO_DEVCLIN', 260, False);
   if FModoEntradaSel <> mcsTallasHorPed then
-    Col('Cantidad', 'CANTIDAD_DEVCLIN', 80, True);
+  begin
+    ColCantidad := Col('Cantidad', 'CANTIDAD_DEVCLIN', 80, True);
+    ColTipoCantidad := Col('', 'TIPO_CANTIDAD_ARTICULO_DEVCLIN',
+                           90, False);
+    VincularCantidadGrid(ColCantidad, ColTipoCantidad);
+  end;
   Col('Precio compra', 'PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN', 130, True);
   Col('% IVA', 'PORCENTAJE_IVA_DEVCLIN', 70, True);
   // En pivote la vista vuelca aqui las UNIDADES del grupo (la libreria

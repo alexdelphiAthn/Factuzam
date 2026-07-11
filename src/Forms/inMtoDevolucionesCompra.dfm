@@ -47,11 +47,6 @@
               DataBinding.FieldName = 'FECHA_DEVC'
               Width = 100
             end
-            object dbcGrdDevcESTADO_DEVC: TcxGridDBColumn
-              Caption = 'Estado'
-              DataBinding.FieldName = 'ESTADO_DEVC'
-              Width = 110
-            end
             object dbcGrdDevcCODIGO_EMP_DEVC: TcxGridDBColumn
               Caption = 'Empresa'
               DataBinding.FieldName = 'CODIGO_EMP_DEVC'
@@ -75,6 +70,12 @@
             object dbcGrdDevcCODIGO_ALM_DEVC: TcxGridDBColumn
               Caption = 'Almac'#233'n'
               DataBinding.FieldName = 'CODIGO_ALM_DEVC'
+              Width = 100
+            end
+            object dbcGrdDevcTOTAL_PRENDAS_DEVC: TcxGridDBColumn
+              Caption = 'N'#186' de prendas'
+              DataBinding.FieldName = 'TOTAL_PRENDAS_DEVC'
+              Options.Editing = False
               Width = 100
             end
             object dbcGrdDevcTOTAL_LIQUIDO_DEVC: TcxGridDBColumn
@@ -161,20 +162,21 @@
                 TabOrder = 5
                 Width = 110
               end
-              object lblEstadoDevolucion: TcxLabel
+              object lblCabTotalPrendas: TcxLabel
                 Left = 320
                 Top = 12
-                Caption = 'Estado'
+                Caption = 'N'#186' de prendas'
                 TabOrder = 6
                 Transparent = True
               end
-              object txtESTADO_DEVC: TcxDBTextEdit
+              object lblCabTotalPrendasValor: TcxLabel
                 Left = 320
                 Top = 32
-                DataBinding.DataField = 'ESTADO_DEVC'
-                DataBinding.DataSource = dsTablaG
-                Properties.ReadOnly = True
+                AutoSize = False
+                Caption = '0'
                 TabOrder = 7
+                Transparent = True
+                Height = 24
                 Width = 110
               end
               object lblCodigoEmpresa: TcxLabel
@@ -640,23 +642,6 @@
                   Properties.ReadOnly = True
                   TabOrder = 18
                   Width = 67
-                end
-                object lblTotalesTotalPrendas: TcxLabel
-                  Left = 60
-                  Top = 365
-                  Caption = 'N'#186' de prendas'
-                  TabOrder = 19
-                  Transparent = True
-                end
-                object lblTotalPrendasDevc: TcxLabel
-                  Left = 230
-                  Top = 365
-                  AutoSize = False
-                  Caption = '0'
-                  TabOrder = 20
-                  Transparent = True
-                  Height = 20
-                  Width = 133
                 end
                 object grpDesgloseImpuestos: TGroupBox
                   Left = 384
