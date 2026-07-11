@@ -79,6 +79,8 @@
             object dbcGrdFaccTOTAL_LIQUIDO_FACC: TcxGridDBColumn
               Caption = 'Total l'#237'quido'
               DataBinding.FieldName = 'TOTAL_LIQUIDO_FACC'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 120
             end
           end
