@@ -409,6 +409,10 @@ begin
   FEngine.Registrar('entorno_contadores', 'Contadores (occtador)',
     'dbo.occtador → fza_contadores (numeración de documentos y globales)',
     MigrarEntornoContadores);
+  FEngine.Registrar('ajuste_contadores',
+    'Ajustar contadores desde datos importados',
+    'tablas MariaDB importadas → fza_contadores (MAX + 1)',
+    MigrarAjusteContadores);
   FEngine.Registrar('entorno_contadores_familia',
     'Contador por familia (ocnivnro)',
     'dbo.ocnivnro → fza_articulos_familias.CONTADOR_ART_FAM',
@@ -1097,6 +1101,9 @@ begin
       sWaveCsv:                    string;
       semSlots:                    TSemaphore;
       oTaskFotos:                  IOmniTaskControl;
+      LocalSrvAjuste:              TUniConnection;
+      LocalDstAjuste:              TUniConnection;
+      LocalEngAjuste:              TMigEngine;
     begin
       iTotL := 0; iTotI := 0; iTotS := 0; iTotE := 0;
       iMaxHilos := task.Param['MaxHilos'].AsInteger;
@@ -1297,6 +1304,47 @@ begin
       // final (suele ser el ultimo en acabar si hay muchas imagenes).
       if Assigned(oTaskFotos) then
         oTaskFotos.WaitFor(INFINITE);
+
+      // Los contadores se ajustan al final, cuando todos los documentos
+      // seleccionados ya estan confirmados en la base de datos destino.
+      if not task.CancellationToken.IsSignalled then
+      begin
+        FEngine.Log('=== Ajuste final de contadores desde datos importados ===');
+        LocalSrvAjuste := nil;
+        LocalDstAjuste := nil;
+        LocalEngAjuste := nil;
+        try
+          LocalSrvAjuste := dmMig.ClonarConexionOrigen;
+          LocalDstAjuste := dmMig.ClonarConexionDestino;
+          LocalDstAjuste.Open;
+          LocalEngAjuste := TMigEngine.CreateClone(LocalSrvAjuste,
+            LocalDstAjuste, FEngine);
+          LocalDstAjuste.StartTransaction;
+          try
+            AjustarContadoresDestino(LocalEngAjuste);
+            LocalDstAjuste.Commit;
+          except
+            LocalDstAjuste.Rollback;
+            raise;
+          end;
+        except
+          on E: Exception do
+          begin
+            TInterlocked.Increment(iTotE);
+            FEngine.Log('FALLO al ajustar contadores: ' + E.Message);
+          end;
+        end;
+        if Assigned(LocalEngAjuste) then
+          LocalEngAjuste.Free;
+        if Assigned(LocalDstAjuste) then
+        begin
+          if LocalDstAjuste.Connected then
+            LocalDstAjuste.Close;
+          LocalDstAjuste.Free;
+        end;
+        if Assigned(LocalSrvAjuste) then
+          LocalSrvAjuste.Free;
+      end;
 
       FEngine.Log('');
       FEngine.Log(Format(
