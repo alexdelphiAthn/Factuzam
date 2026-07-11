@@ -1217,7 +1217,7 @@ begin
   end;
   if not HayNovedad then
   begin
-    ImprimirRecordatorio(Cab.CodigoCliente, 'DEBUG');
+    ImprimirRecordatorio(Cab.CodigoCliente, oNomImpresoraCaja);
     Result := True;
     Exit;
   end;
@@ -1670,8 +1670,8 @@ begin
                                 AAlmacen,
                                 ACaja,
                                 sOpeCaja,
-                                'DEBUG');
-      ImprimirRecordatorio(Cab.CodigoCliente, 'DEBUG');
+                                oNomImpresoraCaja);
+      ImprimirRecordatorio(Cab.CodigoCliente, oNomImpresoraCaja);
     end;
     try
       cdsLineas.DisableControls;

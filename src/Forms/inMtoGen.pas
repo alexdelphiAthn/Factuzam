@@ -2955,9 +2955,13 @@ var
   res: TGestionFiltrosResult;
 begin
   res := TfrmModalGestionFiltros.Ejecutar(Self, Self.Name,
-                                          cxGrdDBTabPrin.Name);
+                                          cxGrdDBTabPrin.Name,
+                                          cxGrdDBTabPrin,
+                                          FFiltroMenuBase64);
   if res.Aplicado then
-    AplicarFiltroDesdeBase64(odmFiltros.CargarFiltroBase64(res.IdFiltro));
+  begin
+    AplicarFiltroDesdeBase64(res.FiltroBase64);
+  end;
 end;
 
 initialization

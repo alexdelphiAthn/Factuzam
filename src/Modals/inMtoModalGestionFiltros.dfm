@@ -1,11 +1,11 @@
-object frmModalGestionFiltros: TfrmModalGestionFiltros
+﻿object frmModalGestionFiltros: TfrmModalGestionFiltros
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'Filtros guardados'
-  ClientHeight = 448
-  ClientWidth = 760
+  ClientHeight = 585
+  ClientWidth = 1000
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,16 +20,16 @@ object frmModalGestionFiltros: TfrmModalGestionFiltros
   TextHeight = 17
   object lblCompartidoCon: TcxLabel
     Left = 8
-    Top = 236
+    Top = 406
     Caption = 'Compartido con'
-    TabOrder = 1
+    TabOrder = 3
     Transparent = True
   end
   object cxgrdFiltros: TcxGrid
     Left = 8
     Top = 8
-    Width = 744
-    Height = 220
+    Width = 984
+    Height = 170
     TabOrder = 0
     object tvFiltros: TcxGridDBTableView
       OnDblClick = tvFiltrosDblClick
@@ -41,108 +41,151 @@ object frmModalGestionFiltros: TfrmModalGestionFiltros
       OptionsData.Editing = False
       OptionsData.Inserting = False
       OptionsData.Deleting = False
+      OptionsView.GroupByBox = False
       object tvFiltrosNOMBRE_FILT: TcxGridDBColumn
         Caption = 'Nombre'
         DataBinding.FieldName = 'NOMBRE_FILT'
         Options.Editing = False
-        Width = 200
+        Width = 250
       end
       object tvFiltrosDESCRIPCION_FILT: TcxGridDBColumn
-        Caption = 'Descripcion'
+        Caption = 'Descripción'
         DataBinding.FieldName = 'DESCRIPCION_FILT'
         Options.Editing = False
-        Width = 340
+        Width = 500
       end
       object tvFiltrosUSUARIO_PROPIETARIO_FILT: TcxGridDBColumn
         Caption = 'Propietario'
         DataBinding.FieldName = 'USUARIO_PROPIETARIO_FILT'
         Options.Editing = False
-        Width = 180
+        Width = 210
       end
     end
     object lvlFiltros: TcxGridLevel
       GridView = tvFiltros
     end
   end
+  object lblCondiciones: TcxLabel
+    Left = 8
+    Top = 186
+    Caption = 'Condiciones del filtro seleccionado (puede editarlas):'
+    TabOrder = 1
+    Transparent = True
+  end
+  object pnlEditorFiltro: TPanel
+    Left = 8
+    Top = 208
+    Width = 984
+    Height = 190
+    BevelOuter = bvNone
+    TabOrder = 2
+  end
   object lbCompartidoCon: TcxListBox
     Left = 8
-    Top = 254
-    Width = 744
-    Height = 100
-    TabOrder = 2
+    Top = 426
+    Width = 984
+    Height = 70
+    TabOrder = 4
   end
   object btnCompartirUsuario: TcxButton
     Left = 8
-    Top = 364
-    Width = 170
+    Top = 504
+    Width = 220
     Height = 25
     Caption = 'Compartir con &usuario...'
-    TabOrder = 3
+    TabOrder = 5
     OnClick = btnCompartirUsuarioClick
   end
   object btnCompartirGrupo: TcxButton
-    Left = 186
-    Top = 364
-    Width = 170
+    Left = 236
+    Top = 504
+    Width = 220
     Height = 25
     Caption = 'Compartir con &grupo...'
-    TabOrder = 4
+    TabOrder = 6
     OnClick = btnCompartirGrupoClick
   end
   object btnCompartirTodos: TcxButton
-    Left = 364
-    Top = 364
-    Width = 170
+    Left = 464
+    Top = 504
+    Width = 220
     Height = 25
     Caption = 'Compartir con &todos'
-    TabOrder = 5
+    TabOrder = 7
     OnClick = btnCompartirTodosClick
   end
   object btnQuitarCompartido: TcxButton
-    Left = 542
-    Top = 364
-    Width = 210
+    Left = 692
+    Top = 504
+    Width = 300
     Height = 25
     Caption = '&Quitar destino seleccionado'
-    TabOrder = 6
+    TabOrder = 8
     OnClick = btnQuitarCompartidoClick
   end
   object btnAplicar: TcxButton
     Left = 8
-    Top = 404
-    Width = 120
-    Height = 28
+    Top = 545
+    Width = 110
+    Height = 30
     Caption = '&Aplicar'
     Default = True
-    TabOrder = 7
+    TabOrder = 9
     OnClick = btnAplicarClick
   end
+  object btnGuardarCambios: TcxButton
+    Left = 126
+    Top = 545
+    Width = 155
+    Height = 30
+    Caption = '&Guardar cambios'
+    TabOrder = 10
+    OnClick = btnGuardarCambiosClick
+  end
+  object btnReemplazarActual: TcxButton
+    Left = 289
+    Top = 545
+    Width = 195
+    Height = 30
+    Caption = 'Reemplazar por el &actual'
+    TabOrder = 11
+    OnClick = btnReemplazarActualClick
+  end
+  object btnGuardarCopia: TcxButton
+    Left = 492
+    Top = 545
+    Width = 150
+    Height = 30
+    Caption = 'Guardar &copia...'
+    TabOrder = 12
+    OnClick = btnGuardarCopiaClick
+  end
   object btnRenombrar: TcxButton
-    Left = 136
-    Top = 404
-    Width = 120
-    Height = 28
-    Caption = '&Renombrar...'
-    TabOrder = 8
+    Left = 650
+    Top = 545
+    Width = 130
+    Height = 30
+    Caption = 'Editar &datos...'
+    TabOrder = 13
     OnClick = btnRenombrarClick
   end
   object btnBorrar: TcxButton
-    Left = 264
-    Top = 404
-    Width = 120
-    Height = 28
+    Left = 788
+    Top = 545
+    Width = 96
+    Height = 30
     Caption = 'Bo&rrar'
-    TabOrder = 9
+    TabOrder = 14
     OnClick = btnBorrarClick
   end
   object btnCerrar: TcxButton
-    Left = 632
-    Top = 404
-    Width = 120
-    Height = 28
+    Left = 892
+    Top = 545
+    Width = 100
+    Height = 30
     Cancel = True
     Caption = '&Cerrar'
-    TabOrder = 10
+    TabOrder = 15
     OnClick = btnCerrarClick
   end
 end

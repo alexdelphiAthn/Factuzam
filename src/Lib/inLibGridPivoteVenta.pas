@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibGridPivoteVenta                                          }
 {    Tipo:       Libreria                                                      }
@@ -67,6 +67,7 @@ type
     FieldArt              : string;
     FieldSku              : string;
     FieldDescripcion      : string;
+    FieldTipoCantidad     : string;
     FieldCantidadPedida   : string;
     FieldCantidadEntregada: string;
     FieldCantidadAAlbaranar: string;
@@ -138,6 +139,7 @@ type
     FPivotIdAc           : TDictionary<Integer, Integer>;
     FPivotSinTalla       : TDictionary<Integer, Boolean>;
     FPivotArticulo       : TDictionary<Integer, string>;
+    FPivotTipoCantidad   : TDictionary<Integer, string>;
     FPivotColorAv        : TDictionary<Integer, Integer>;
     FPivotColorTexto     : TDictionary<Integer, string>;
     FPivotColorCodigo    : TDictionary<Integer, string>;
@@ -180,6 +182,7 @@ type
     // articulo con variaciones: ResolverEntrada devuelve False pero el
     // validador no debe rotular "no encontrado".
     FEntradaCancelada    : Boolean;
+    FHayTipoCantidadEspecial: Boolean;
     FTimerRecarga        : TTimer;
     function GetModo: TModoColumnasSku;
     function GetOnResuelto: TSkuResueltoEvent;
@@ -232,6 +235,7 @@ type
     function ConjuntoVirtualParaGrupo(ALineaRepr: Integer;
                                       ATallas: TList<Integer>): Integer;
     procedure AplicarVisibilidadTallas;
+    procedure AplicarVisibilidadTipoCantidad;
     procedure ColocarBloqueColumnas;
     procedure ActualizarCaptionsLineaActiva;
     procedure PublicarCantidadesPivot;
@@ -244,6 +248,9 @@ type
     function ObtenerLineaBase(ALinea: Integer): Integer;
     function BandaDesdeLinea(ALinea: Integer): TBandaPivoteVenta;
     function TextoBanda(ABanda: TBandaPivoteVenta): string;
+    function EsTipoCantidadPredeterminado(const AValor: string): Boolean;
+    function TextoTipoCantidad(ALineaBase: Integer;
+                               ABanda: TBandaPivoteVenta): string;
     function ValorCantidadBanda(AKey: Int64;
                                 ABanda: TBandaPivoteVenta): Double;
     function BuscarColumnaTallaDesde(ALineaBase, AIndiceInicial: Integer;
@@ -342,6 +349,7 @@ begin
   FPivotIdAc          := TDictionary<Integer, Integer>.Create;
   FPivotSinTalla      := TDictionary<Integer, Boolean>.Create;
   FPivotArticulo      := TDictionary<Integer, string>.Create;
+  FPivotTipoCantidad  := TDictionary<Integer, string>.Create;
   FPivotColorAv       := TDictionary<Integer, Integer>.Create;
   FPivotColorTexto    := TDictionary<Integer, string>.Create;
   FPivotColorCodigo   := TDictionary<Integer, string>.Create;
@@ -382,6 +390,7 @@ begin
   FreeAndNil(FPivotColorCodigo);
   FreeAndNil(FPivotColorTexto);
   FreeAndNil(FPivotColorAv);
+  FreeAndNil(FPivotTipoCantidad);
   FreeAndNil(FPivotArticulo);
   FreeAndNil(FPivotSinTalla);
   FreeAndNil(FPivotIdAc);
@@ -1264,7 +1273,7 @@ var
   DictTallas: TObjectDictionary<Integer, TList<Integer>>;
   ParTallas: TPair<Integer, TList<Integer>>;
   Info: TSkuPivoteVentaInfo;
-  sArt, sSku, sKey, sLinea, sPrefijo, sVarSku: string;
+  sArt, sSku, sKey, sLinea, sPrefijo, sVarSku, sTipoCantidad: string;
   iLinea, iLineaRepr, iAc, iMaxBandas: Integer;
   rPedida, rEntregada, rAAlbaranar, rPrecio, rUds: Double;
   iKeyPivot: Int64;
@@ -1280,6 +1289,7 @@ begin
   FPivotIdAc.Clear;
   FPivotSinTalla.Clear;
   FPivotArticulo.Clear;
+  FPivotTipoCantidad.Clear;
   FPivotColorAv.Clear;
   FPivotColorTexto.Clear;
   FPivotColorCodigo.Clear;
@@ -1288,6 +1298,7 @@ begin
   FCeldaSku.Clear;
   FCeldaLinea.Clear;
   FCeldaAlmacen.Clear;
+  FHayTipoCantidadEspecial := False;
   // Bandas visuales por grupo: 3 en pedidos (Pedido / A albaranar /
   // Pendiente), 1 en documentos de cantidad unica (BandaUnica).
   iMaxBandas := 3;
@@ -1316,6 +1327,11 @@ begin
         if (sArt <> '') and (iLinea > 0) then
         begin
           ObtenerInfoLinea(Ds, sSku, Info);
+          sTipoCantidad := CampoTexto(Ds, FCfg.FieldTipoCantidad);
+          if sTipoCantidad = '' then
+            sTipoCantidad := 'Uds';
+          if not EsTipoCantidadPredeterminado(sTipoCantidad) then
+            FHayTipoCantidadEspecial := True;
           sKey := sArt + '|' + IntToStr(Info.ColorAv) + '|' +
             FloatToStrF(rPrecio, ffGeneral, 15, 4);
           // Linea SIN talla resoluble: fila propia. Si fusionaran por
@@ -1334,6 +1350,7 @@ begin
                 'PivVenta.Cache: repr=%d art=%s tallaAv=%d sku=%s',
                 [iLineaRepr, sArt, Info.TallaAv, sSku]));
             FPivotArticulo.AddOrSetValue(iLineaRepr, sArt);
+            FPivotTipoCantidad.AddOrSetValue(iLineaRepr, sTipoCantidad);
             FPivotColorAv.AddOrSetValue(iLineaRepr, Info.ColorAv);
             FPivotColorTexto.AddOrSetValue(iLineaRepr, Info.ColorTexto);
             FPivotColorCodigo.AddOrSetValue(iLineaRepr, Info.ColorCodigo);
@@ -1370,6 +1387,8 @@ begin
                 LineaVistaBanda(iLineaRepr, bpvPendiente), bpvPendiente);
             end;
           end;
+          if not EsTipoCantidadPredeterminado(sTipoCantidad) then
+            FPivotTipoCantidad.AddOrSetValue(iLineaRepr, sTipoCantidad);
           rPedida := CampoFloat(Ds, FCfg.FieldCantidadPedida);
           rEntregada := CampoFloat(Ds, FCfg.FieldCantidadEntregada);
           rAAlbaranar := CampoFloat(Ds, FCfg.FieldCantidadAAlbaranar);
@@ -1443,6 +1462,19 @@ begin
       FreeAndNil(DictRepr);
     end;
     AjustarAAlbaranarCache;
+  end;
+end;
+
+procedure TGridPivoteVenta.AplicarVisibilidadTipoCantidad;
+begin
+  if FColTipoCantidad <> nil then
+  begin
+    if FCfg.BandaUnica then
+      FColTipoCantidad.Visible := FHayTipoCantidadEspecial
+    else
+      FColTipoCantidad.Visible := True;
+    FColTipoCantidad.VisibleForCustomization :=
+      FColTipoCantidad.Visible;
   end;
 end;
 
@@ -1670,6 +1702,34 @@ begin
     end;
 end;
 
+function TGridPivoteVenta.EsTipoCantidadPredeterminado(
+  const AValor: string): Boolean;
+var
+  sValor: string;
+begin
+  sValor := Trim(AValor);
+  Result := (sValor = '') or SameText(sValor, 'Uds') or
+            SameText(sValor, 'Ud') or SameText(sValor, 'Unidad') or
+            SameText(sValor, 'Unidades') or SameText(sValor, 'Cantidad');
+end;
+
+function TGridPivoteVenta.TextoTipoCantidad(ALineaBase: Integer;
+  ABanda: TBandaPivoteVenta): string;
+var
+  sTipoCantidad: string;
+begin
+  if not FPivotTipoCantidad.TryGetValue(ALineaBase, sTipoCantidad) then
+    sTipoCantidad := 'Uds';
+  if FCfg.BandaUnica then
+    Result := sTipoCantidad
+  else
+  begin
+    Result := TextoBanda(ABanda);
+    if not EsTipoCantidadPredeterminado(sTipoCantidad) then
+      Result := Result + ' - ' + sTipoCantidad;
+  end;
+end;
+
 function TGridPivoteVenta.ValorCantidadBanda(AKey: Int64;
   ABanda: TBandaPivoteVenta): Double;
 begin
@@ -1770,7 +1830,7 @@ begin
           begin
             Banda := BandaDesdeLinea(iLineaVista);
             FConfig.View.DataController.Values[recIdx,
-              FColTipoCantidad.Index] := TextoBanda(Banda);
+              FColTipoCantidad.Index] := TextoTipoCantidad(iLinea, Banda);
             for i := 0 to High(FColumnasTallas) do
             begin
               if FColumnasTallas[i].Visible then
@@ -1828,6 +1888,7 @@ begin
   begin
     CargarCachePivot;
     ReconstruirVistaTemporal;
+    AplicarVisibilidadTipoCantidad;
     AplicarVisibilidadTallas;
     ColocarBloqueColumnas;
     PublicarCantidadesPivot;
@@ -2228,7 +2289,7 @@ var
 begin
   iLinea := LineaDesdeRecord(AViewInfo.GridRecord);
   Banda := BandaDesdeLinea(iLinea);
-  sTexto := TextoBanda(Banda);
+  sTexto := TextoTipoCantidad(ObtenerLineaBase(iLinea), Banda);
   case Banda of
     bpvEntregada:
       ACanvas.Brush.Color := $00E0FFE0;

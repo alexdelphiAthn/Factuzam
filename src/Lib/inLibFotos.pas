@@ -40,7 +40,8 @@ unit inLibFotos;
       1. Si hay foto del SKU, esa.
       2. Si no, fotos por prefijos del SKU separados por '/'.
       3. Si no, foto del articulo padre.
-      4. Si no, vacio.
+      4. Sin SKU, si no hay foto general, primera foto por color.
+      5. Si no, vacio.
 
   Constantes para nombres de columna SQL: vease seccion `const` mas abajo.
 }
@@ -135,14 +136,15 @@ type
                       AResolucion: TFotoResolucion): string;
 
     /// Resuelve la foto aplicable a (articulo, sku) con fallback al padre.
-    /// Si ACodSku = '' busca solo a nivel articulo.
+    /// Si ACodSku = '', busca la foto de articulo y, si no existe, la
+    /// primera foto disponible por color.
     function Resolver(const ACodArt, ACodSku: string): TFotoInfo;
 
     /// Resuelve en UNA sola consulta la foto a nivel articulo de una lista
     /// de articulos (evita el N+1 de llamar a Resolver por cada uno). El
     /// diccionario resultante lo libera el llamador. Aplica el mismo criterio
     /// que Resolver(art, '') sin SKU: foto de articulo (CODIGO_UNIDAD_FOT='')
-    /// y, si no la hay, la unica foto del articulo.
+    /// y, si no la hay, la primera foto disponible por color.
     function ResolverArticulosLote(
       const ACodigos: TArray<string>): TDictionary<string, TFotoInfo>;
 
@@ -430,8 +432,6 @@ var
   i        : Integer;
   sInList  : string;
   sClave   : string;
-  sNombre  : string;
-  sExt     : string;
 begin
   Result.Clear;
   Result.CodigoArt := ACodArt;
@@ -502,36 +502,26 @@ begin
       Result.ExtensionOrigen := q.FieldByName(fextfot).AsString;
     end;
 
-    // 3. Compatibilidad: si no hubo match exacto (SKU/prefijo) ni foto de
-    //    articulo, pero existe UNA sola foto del articulo (p.ej. una unica
-    //    foto por color descargada del servidor), la mostramos igualmente.
-    //    Si hay varias, no adivinamos y se mantiene "sin foto".
-    if not Result.Encontrada then
+    // 3. Si no hay foto general, mostramos la primera foto por color.
+    //    El orden explicito mantiene el mismo resultado entre llamadas.
+    if (ACodSku = '') and not Result.Encontrada then
     begin
       q.Close;
       q.SQL.Text :=
         ' SELECT * FROM fza_articulos_fotos ' +
         '  WHERE CODIGO_ART_FOT = :CODIGO_ART ' +
-        '  LIMIT 2';
+        '    AND CODIGO_UNIDAD_FOT <> '''' ' +
+        '  ORDER BY CODIGO_UNIDAD_FOT, NOMBRE_FOT_FOT ' +
+        '  LIMIT 1';
       q.ParamByName('CODIGO_ART').AsString := ACodArt;
       q.Open;
       if not q.Eof then
       begin
-        sClave  := q.FieldByName(fcodunidadfot).AsString;
-        sNombre := q.FieldByName(fnomfot).AsString;
-        sExt    := q.FieldByName(fextfot).AsString;
-        q.Next;
-        if q.Eof then
-        begin
-          Result.Encontrada      := True;
-          if sClave = '' then
-            Result.Origen := foArticulo
-          else
-            Result.Origen := foSkuPrefijo;
-          Result.ClaveResuelta   := sClave;
-          Result.NombreBase      := sNombre;
-          Result.ExtensionOrigen := sExt;
-        end;
+        Result.Encontrada      := True;
+        Result.Origen          := foSkuPrefijo;
+        Result.ClaveResuelta   := q.FieldByName(fcodunidadfot).AsString;
+        Result.NombreBase      := q.FieldByName(fnomfot).AsString;
+        Result.ExtensionOrigen := q.FieldByName(fextfot).AsString;
       end;
     end;
   finally
@@ -549,8 +539,8 @@ var
   artNom, artExt, uniClave, uniNom, uniExt: string;
   dict: TDictionary<string, TFotoInfo>;
 
-  // Cierra el artículo en curso: decide su foto (artículo o única) y la
-  // mete en el diccionario. Usa los acumuladores del bucle.
+  // Cierra el artículo en curso: elige la foto general o, si no existe,
+  // la primera foto por color. Usa los acumuladores del bucle.
   procedure Finalizar(const APrevArt: string);
   var
     info: TFotoInfo;
@@ -567,7 +557,7 @@ var
         info.NombreBase      := artNom;
         info.ExtensionOrigen := artExt;
       end
-      else if cnt = 1 then
+      else if cnt > 0 then
       begin
         info.Encontrada    := True;
         if uniClave = '' then
@@ -603,7 +593,8 @@ begin
                      fnomfot + ', ' + fextfot +
         '   FROM fza_articulos_fotos ' +
         '  WHERE ' + fcodartfot + ' IN (' + sIn + ') ' +
-        '  ORDER BY ' + fcodartfot;
+        '  ORDER BY ' + fcodartfot + ', ' + fcodunidadfot + ', ' +
+                       fnomfot;
       for i := 0 to High(ACodigos) do
         q.ParamByName('A' + IntToStr(i)).AsString := ACodigos[i];
       q.Open;

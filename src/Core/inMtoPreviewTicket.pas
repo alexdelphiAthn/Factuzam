@@ -76,6 +76,9 @@ type
   end;
 
 procedure VisualizarTicket(const Comandos: string);
+procedure ImprimirOPrevisualizarTicket(ATicket: TTicketTermico;
+                                       const AComandos, ARutaPDF,
+                                             ANombreImpresora: string);
 
 var
   FormVisualizador:TFormVisualizador;
@@ -85,7 +88,8 @@ implementation
 {$R *.dfm}
 
 uses
-  SynPdf, inLibDir, Vcl.Imaging.PngImage, Vcl.Printers, System.IOUtils;
+  SynPdf, inLibDir, Vcl.Imaging.PngImage, Vcl.Printers, System.IOUtils,
+  System.UITypes;
 
 const
   ANCHO_PAPEL_MM = 80;
@@ -280,6 +284,52 @@ begin
     Form.ShowModal;
   finally
     FreeAndNil(Form);
+  end;
+end;
+
+procedure ImprimirOPrevisualizarTicket(ATicket: TTicketTermico;
+                                       const AComandos, ARutaPDF,
+                                             ANombreImpresora: string);
+var
+  oPreview: TFormVisualizador;
+  sErrorImpresion: string;
+  EsMostrarPreview: Boolean;
+begin
+  sErrorImpresion := '';
+  EsMostrarPreview := SameText(Trim(ANombreImpresora), 'DEBUG') or
+                      (Trim(ANombreImpresora) = '');
+  if not EsMostrarPreview then
+  begin
+    try
+      ATicket.Imprimir;
+    except
+      on E: Exception do
+      begin
+        sErrorImpresion := E.Message;
+        EsMostrarPreview := True;
+      end;
+    end;
+  end;
+  oPreview := TFormVisualizador.Create(nil);
+  try
+    oPreview.Hide;
+    oPreview.FRutaPDFReal := ARutaPDF;
+    oPreview.CargarYMostrar(AComandos);
+    oPreview.ExportarAPDF(AComandos, ARutaPDF);
+    if EsMostrarPreview then
+    begin
+      if sErrorImpresion <> '' then
+      begin
+        MessageDlg('No se pudo enviar el ticket a la impresora "' +
+                   ANombreImpresora + '".' + sLineBreak +
+                   sErrorImpresion + sLineBreak +
+                   'Se abrirá la vista previa.',
+                   mtWarning, [mbOk], 0);
+      end;
+      oPreview.ShowModal;
+    end;
+  finally
+    FreeAndNil(oPreview);
   end;
 end;
 

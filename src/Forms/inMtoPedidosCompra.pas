@@ -400,6 +400,7 @@ uses
   inLibtb,
   inLibArticulosResolver,
   inLibArticulosValidador,
+  inLibGridCantidad,
   inLibComprasImpuestos,
   inMtoModalSelAlmacenPedido, inMtoModalDocsCreados, inMtoModalEtiqPed,
   inLibShowMto, inLibGenBusq, UniDataArticulos,
@@ -3052,6 +3053,7 @@ begin
     CfgPV.FieldArt := 'CODIGO_ART_PEDCLIN';
     CfgPV.FieldSku := 'CODIGO_UNIDAD_PEDCLIN';
     CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_PEDCLIN';
+    CfgPV.FieldTipoCantidad := 'TIPO_CANTIDAD_ARTICULO_PEDCLIN';
     // Compra sobre las bandas del pivote de venta: Pedido /
     // A recibir (banda de servicio) / Pendiente.
     CfgPV.FieldCantidadPedida := 'CANTIDAD_PEDCLIN';
@@ -3206,7 +3208,8 @@ procedure TfrmMtoPedidosCompra.CrearColumnasHostPedidoCompra;
     Result.Options.Editing := AEditable;
   end;
 var
-  ColLinea, ColARecibir: TcxGridDBColumn;
+  ColLinea, ColPedida, ColRecibida, ColARecibir,
+  ColTipoCantidad: TcxGridDBColumn;
 begin
   // Columnas propias del pedido de compra tras el ClearItems del
   // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
@@ -3218,14 +3221,20 @@ begin
     // En el inline la cantidad PEDIDA se teclea por celda de talla y
     // CANTIDAD_PEDCLIN pasa a ser el TOTAL de la linea consolidada:
     // solo lectura en ese modo.
-    Col('Pedida', 'CANTIDAD_PEDCLIN', 70,
-        FModoEntradaSel <> mcsTallasInline);
-    Col('Recibida', 'CANTIDAD_RECIBIDA_PEDCLIN', 75, False);
+    ColPedida := Col('Pedida', 'CANTIDAD_PEDCLIN', 70,
+                     FModoEntradaSel <> mcsTallasInline);
+    ColRecibida := Col('Recibida', 'CANTIDAD_RECIBIDA_PEDCLIN', 75,
+                       False);
     ColARecibir := Col('A recibir', 'CANTIDAD_A_RECIBIR_PEDCLIN',
                        80, True);
     ColARecibir.PropertiesClass := TcxCurrencyEditProperties;
     TcxCurrencyEditProperties(ColARecibir.Properties).
       OnEditValueChanged := ARecibirCampoEditValueChanged;
+    ColTipoCantidad := Col('', 'TIPO_CANTIDAD_ARTICULO_PEDCLIN',
+                           90, False);
+    VincularCantidadGrid(ColPedida, ColTipoCantidad);
+    VincularCantidadGrid(ColRecibida, ColTipoCantidad);
+    VincularCantidadGrid(ColARecibir, ColTipoCantidad);
   end;
   Col('Precio compra', 'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN', 130, True);
   Col('% IVA', 'PORCENTAJE_IVA_PEDCLIN', 70, True);

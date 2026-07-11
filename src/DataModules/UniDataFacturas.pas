@@ -1277,7 +1277,9 @@ begin
       FreeAndNil(qCampos);
     end;
     if sCampos <> '' then
-      unqryTablaG.SQL.Text := 'SELECT ' + sCampos + ' FROM vi_facturas';
+      unqryTablaG.SQL.Text :=
+        'SELECT ' + sCampos + ' FROM vi_facturas ' +
+        ' ORDER BY FECHA_FAC DESC, NUMERO_FAC DESC';
   end;
   QuitarCampoComplejoCabecera(unqryTablaG.SQLInsert, 'DOCUMENTO_FAC');
   QuitarCampoComplejoCabecera(unqryTablaG.SQLInsert, 'XML_FAC');

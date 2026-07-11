@@ -47,7 +47,6 @@ procedure ImprimirTicketOperacionCaja(
 var
   Qry: TUniQuery;
   Ticket: TTicketTermico;
-  FormPreview: TFormVisualizador;
   ComandosESC, RutaFicheroPDF: string;
   sTipo, sConcepto, sEmpleado, sFecha: string;
   dImporte: Currency;
@@ -125,23 +124,10 @@ begin
     Ticket.CortarPapel;
     { Imprimir o previsualizar }
     ComandosESC := Ticket.ObtenerComandos;
-    if UpperCase(ANombreImpresora) = 'DEBUG' then
-    begin
-      RutaFicheroPDF := GetUserFolderTickets + 'ticket_caja_' +
-        ANumOperacion + '.pdf';
-      FormPreview := TFormVisualizador.Create(nil);
-      try
-        FormPreview.Hide;
-        FormPreview.FRutaPDFReal := RutaFicheroPDF;
-        FormPreview.CargarYMostrar(ComandosESC);
-        FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
-        FormPreview.ShowModal;
-      finally
-        FreeAndNil(FormPreview);
-      end;
-    end
-    else
-      Ticket.Imprimir;
+    RutaFicheroPDF := GetUserFolderTickets + 'ticket_caja_' +
+      ANumOperacion + '.pdf';
+    ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
+                                 ANombreImpresora);
   finally
     FreeAndNil(Ticket);
   end;

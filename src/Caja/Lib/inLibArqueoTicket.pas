@@ -561,7 +561,6 @@ class procedure TArqueoTicket.Imprimir(AConn: TUniConnection;
 var
   Arqueo: TArqueoCaja;
   Ticket: TTicketTermico;
-  Preview: TFormVisualizador;
   ComandosESC, RutaPDF: string;
 begin
   if (AConn = nil) or (not AConn.Connected) then Exit;
@@ -623,19 +622,8 @@ begin
     ComandosESC := Ticket.ObtenerComandos;
     RutaPDF := GetUserFolderTickets + 'Arqueo_' +
                FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-    Preview := TFormVisualizador.Create(nil);
-    try
-      Preview.Hide;
-      Preview.FRutaPDFReal := RutaPDF;
-      Preview.CargarYMostrar(ComandosESC);
-      Preview.ExportarAPDF(ComandosESC, RutaPDF);
-      if UpperCase(ANombreImpresora) = 'DEBUG' then
-        Preview.ShowModal
-      else
-        Ticket.Imprimir;
-    finally
-      FreeAndNil(Preview);
-    end;
+    ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaPDF,
+                                 ANombreImpresora);
   finally
     FreeAndNil(Ticket);
   end;
@@ -662,7 +650,6 @@ class procedure TArqueoTicket.ImprimirCierre(
   ADuplicado: Boolean = False);
 var
   Ticket: TTicketTermico;
-  Preview: TFormVisualizador;
   ComandosESC, RutaPDF: string;
   i: Integer;
   slBilletes: TStringList;
@@ -806,19 +793,8 @@ begin
     ComandosESC := Ticket.ObtenerComandos;
     RutaPDF := GetUserFolderTickets + 'Recuento_' +
                FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-    Preview := TFormVisualizador.Create(nil);
-    try
-      Preview.Hide;
-      Preview.FRutaPDFReal := RutaPDF;
-      Preview.CargarYMostrar(ComandosESC);
-      Preview.ExportarAPDF(ComandosESC, RutaPDF);
-      if UpperCase(ANombreImpresora) = 'DEBUG' then
-        Preview.ShowModal
-      else
-        Ticket.Imprimir;
-    finally
-      FreeAndNil(Preview);
-    end;
+    ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaPDF,
+                                 ANombreImpresora);
   finally
     FreeAndNil(Ticket);
   end;

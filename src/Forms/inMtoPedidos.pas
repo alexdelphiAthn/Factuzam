@@ -1433,6 +1433,7 @@ begin
     CfgPV.FieldArt := 'CODIGO_ART_PEDLIN';
     CfgPV.FieldSku := 'CODIGO_UNIDAD_PEDLIN';
     CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_PEDLIN';
+    CfgPV.FieldTipoCantidad := 'TIPO_CANTIDAD_ARTICULO_PEDLIN';
     CfgPV.FieldCantidadPedida := 'CANTIDAD_PEDLIN';
     CfgPV.FieldCantidadEntregada := 'CANTIDAD_ENTREGADA_PEDLIN';
     CfgPV.FieldCantidadAAlbaranar := 'CANTIDAD_A_ALBARANAR_PEDLIN';

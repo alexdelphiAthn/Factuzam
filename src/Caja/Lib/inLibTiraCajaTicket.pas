@@ -725,7 +725,6 @@ class procedure TTiraCajaTicket.Imprimir(AConn: TUniConnection;
 var
   Ope: TUniQuery;
   Ticket: TTicketTermico;
-  Preview: TFormVisualizador;
   ComandosESC, RutaPDF, sSerieTxt: string;
   sGrupo, sPrevGrupo: string;
   i: Integer;
@@ -978,19 +977,8 @@ begin
     ComandosESC := Ticket.ObtenerComandos;
     RutaPDF := GetUserFolderTickets + 'TiraCaja_' +
                FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-    Preview := TFormVisualizador.Create(nil);
-    try
-      Preview.Hide;
-      Preview.FRutaPDFReal := RutaPDF;
-      Preview.CargarYMostrar(ComandosESC);
-      Preview.ExportarAPDF(ComandosESC, RutaPDF);
-      if UpperCase(ANombreImpresora) = 'DEBUG' then
-        Preview.ShowModal
-      else
-        Ticket.Imprimir;
-    finally
-      FreeAndNil(Preview);
-    end;
+    ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaPDF,
+                                 ANombreImpresora);
   finally
     FreeAndNil(Ticket);
   end;

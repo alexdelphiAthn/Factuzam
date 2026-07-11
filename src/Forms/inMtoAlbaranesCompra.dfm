@@ -1,4 +1,4 @@
-inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
+﻿inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
   Caption = 'Mantenimiento de Albaranes de Compra'
   ClientHeight = 765
   ClientWidth = 1085
@@ -31,19 +31,29 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
           ExplicitWidth = 937
           ExplicitHeight = 693
           inherited cxGrdDBTabPrin: TcxGridDBTableView
-            object dbcGrdAlbcNUMERO_ALBC: TcxGridDBColumn
-              Caption = 'N'#250'mero'
-              DataBinding.FieldName = 'NUMERO_ALBC'
-              Width = 90
+            object dbcGrdAlbcCODIGO_EMP_ALBC: TcxGridDBColumn
+              Caption = 'Empresa'
+              DataBinding.FieldName = 'CODIGO_EMP_ALBC'
+              Width = 100
             end
             object dbcGrdAlbcSERIE_ALBC: TcxGridDBColumn
               Caption = 'Serie'
               DataBinding.FieldName = 'SERIE_ALBC'
               Width = 80
             end
+            object dbcGrdAlbcNUMERO_ALBC: TcxGridDBColumn
+              Caption = 'N'#250'mero'
+              DataBinding.FieldName = 'NUMERO_ALBC'
+              Width = 90
+            end
             object dbcGrdAlbcFECHA_ALBC: TcxGridDBColumn
               Caption = 'Fecha'
               DataBinding.FieldName = 'FECHA_ALBC'
+              Width = 100
+            end
+            object dbcGrdAlbcCODIGO_ALM_ALBC: TcxGridDBColumn
+              Caption = 'Almac'#233'n'
+              DataBinding.FieldName = 'CODIGO_ALM_ALBC'
               Width = 100
             end
             object dbcGrdAlbcTEMPORADA_ALBC: TcxGridDBColumn
@@ -51,15 +61,20 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
               DataBinding.FieldName = 'TEMPORADA_ALBC'
               Width = 120
             end
-            object dbcGrdAlbcFECHA_EFECTO_STOCK_ALBC: TcxGridDBColumn
-              Caption = 'F.stock'
-              DataBinding.FieldName = 'FECHA_EFECTO_STOCK_ALBC'
+            object dbcGrdAlbcREF_PROVEEDOR_ALBC: TcxGridDBColumn
+              Caption = 'Ref. proveedor'
+              DataBinding.FieldName = 'REF_PROVEEDOR_ALBC'
+              Width = 130
+            end
+            object dbcGrdAlbcCODIGO_PRV_ALBC: TcxGridDBColumn
+              Caption = 'Proveedor'
+              DataBinding.FieldName = 'CODIGO_PRV_ALBC'
               Width = 100
             end
-            object dbcGrdAlbcFECHA_TOPE_RECEPCION_ALBC: TcxGridDBColumn
-              Caption = 'F.tope recep.'
-              DataBinding.FieldName = 'FECHA_TOPE_RECEPCION_ALBC'
-              Width = 110
+            object dbcGrdAlbcRSPRV_ALBC: TcxGridDBColumn
+              Caption = 'Raz'#243'n Social Proveedor'
+              DataBinding.FieldName = 'RAZON_SOCIAL_PRV_ALBC'
+              Width = 220
             end
             object dbcGrdAlbcTOTAL_PRENDAS_ALBC: TcxGridDBColumn
               Caption = 'Prendas'
@@ -69,12 +84,16 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
             object dbcGrdAlbcTOTAL_LINEAS_ALBC: TcxGridDBColumn
               Caption = 'Neto lineas'
               DataBinding.FieldName = 'TOTAL_LINEAS_ALBC'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 110
             end
-            object dbcGrdAlbcESTADO_ALBC: TcxGridDBColumn
-              Caption = 'Estado'
-              DataBinding.FieldName = 'ESTADO_ALBC'
-              Width = 110
+            object dbcGrdAlbcTOTAL_LIQUIDO_ALBC: TcxGridDBColumn
+              Caption = 'Total l'#237'quido'
+              DataBinding.FieldName = 'TOTAL_LIQUIDO_ALBC'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
+              Width = 120
             end
             object dbcGrdAlbcNUMERO_PED_ALBC: TcxGridDBColumn
               Caption = 'Pedido origen'
@@ -95,36 +114,6 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
               Caption = 'Serie factura'
               DataBinding.FieldName = 'SERIE_FAC_ALBC'
               Width = 90
-            end
-            object dbcGrdAlbcCODIGO_EMP_ALBC: TcxGridDBColumn
-              Caption = 'Empresa'
-              DataBinding.FieldName = 'CODIGO_EMP_ALBC'
-              Width = 100
-            end
-            object dbcGrdAlbcCODIGO_PRV_ALBC: TcxGridDBColumn
-              Caption = 'Proveedor'
-              DataBinding.FieldName = 'CODIGO_PRV_ALBC'
-              Width = 100
-            end
-            object dbcGrdAlbcRSPRV_ALBC: TcxGridDBColumn
-              Caption = 'Raz'#243'n Social Proveedor'
-              DataBinding.FieldName = 'RAZON_SOCIAL_PRV_ALBC'
-              Width = 220
-            end
-            object dbcGrdAlbcREF_PROVEEDOR_ALBC: TcxGridDBColumn
-              Caption = 'Ref. proveedor'
-              DataBinding.FieldName = 'REF_PROVEEDOR_ALBC'
-              Width = 130
-            end
-            object dbcGrdAlbcCODIGO_ALM_ALBC: TcxGridDBColumn
-              Caption = 'Almac'#233'n'
-              DataBinding.FieldName = 'CODIGO_ALM_ALBC'
-              Width = 100
-            end
-            object dbcGrdAlbcTOTAL_LIQUIDO_ALBC: TcxGridDBColumn
-              Caption = 'Total l'#237'quido'
-              DataBinding.FieldName = 'TOTAL_LIQUIDO_ALBC'
-              Width = 120
             end
             object dbcGrdAlbcESDEPOSITO_ALBC: TcxGridDBColumn
               Caption = 'Dep'#243'sito'
@@ -213,21 +202,21 @@ inherited frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra
                 TabOrder = 5
                 Width = 110
               end
-              object lblEstadoAlbaran: TcxLabel
+              object lblTemporadaAlbaran: TcxLabel
                 Left = 320
                 Top = 12
-                Caption = 'Estado'
+                Caption = 'Temporada'
                 TabOrder = 6
                 Transparent = True
               end
-              object txtESTADO_ALBC: TcxDBTextEdit
+              object txtTEMPORADA_ALBC: TcxDBTextEdit
                 Left = 320
                 Top = 32
-                DataBinding.DataField = 'ESTADO_ALBC'
+                DataBinding.DataField = 'TEMPORADA_ALBC'
                 DataBinding.DataSource = dsTablaG
                 Properties.ReadOnly = True
                 TabOrder = 7
-                Width = 110
+                Width = 140
               end
               object lblPedidoOrigen: TcxLabel
                 Left = 440

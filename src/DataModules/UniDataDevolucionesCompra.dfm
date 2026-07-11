@@ -4,8 +4,22 @@
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
+    UpdatingTable = 'fza_devoluciones_compra'
+    KeyFields = 'NUMERO_DEVC;SERIE_DEVC'
     SQL.Strings = (
-      'SELECT * FROM fza_devoluciones_compra')
+      'SELECT D.*,'
+      '       COALESCE(R.TOTAL_PRENDAS_DEVC, 0) AS TOTAL_PRENDAS_DEVC'
+      '  FROM fza_devoluciones_compra D'
+      '  LEFT JOIN ('
+      '    SELECT L.SERIE_DEVC_DEVCLIN, L.NUMERO_DEVC_DEVCLIN,'
+      '           SUM(COALESCE(L.TOTAL_UNIDADES_DEVCLIN,'
+      '                        L.CANTIDAD_DEVCLIN, 0)) AS TOTAL_PRENDAS_DEVC'
+      '      FROM fza_devoluciones_compra_lineas L'
+      '     GROUP BY L.SERIE_DEVC_DEVCLIN, L.NUMERO_DEVC_DEVCLIN'
+      '  ) R'
+      '    ON R.SERIE_DEVC_DEVCLIN = D.SERIE_DEVC'
+      '   AND R.NUMERO_DEVC_DEVCLIN = D.NUMERO_DEVC'
+      ' ORDER BY D.FECHA_DEVC DESC, D.NUMERO_DEVC DESC')
     AfterInsert = unqryTablaGAfterInsert
     BeforePost = unqryTablaGBeforePost
     AfterPost = unqryTablaGAfterPost
