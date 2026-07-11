@@ -1450,6 +1450,7 @@ procedure TfrmMtoFacturasCompra.CrearColumnasHostFacturaCompra;
   end;
 var
   ColLinea, ColCantidad, ColTipoCantidad: TcxGridDBColumn;
+  ColPrecioCompra: TcxGridDBColumn;
 begin
   // Columnas propias de la factura de compra tras el ClearItems del
   // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
@@ -1463,7 +1464,11 @@ begin
                            90, False);
     VincularCantidadGrid(ColCantidad, ColTipoCantidad);
   end;
-  Col('Precio compra', 'PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN', 130, True);
+  ColPrecioCompra := Col('Precio compra',
+    'PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN', 130, True);
+  ColPrecioCompra.PropertiesClass := TcxCurrencyEditProperties;
+  TcxCurrencyEditProperties(ColPrecioCompra.Properties).DisplayFormat :=
+    '#,##0.00 €';
   Col('% IVA', 'PORCENTAJE_IVA_FACCLIN', 70, True);
   // En pivote la vista vuelca aqui las UNIDADES del grupo (la libreria
   // machaca TOTAL en la copia visual); en el resto de modos, importe.
