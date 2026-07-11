@@ -211,7 +211,7 @@ type
     procedure CargarColores;
     procedure CargarPropsPorColor;
     procedure ActualizarLetreroColor;
-    procedure CargarFoto;
+    procedure CargarFoto(const ACodUnidad: string);
     procedure CrearBotonesHistorial;
     procedure HistorialAnteriorClick(Sender: TObject);
     procedure HistorialSiguienteClick(Sender: TObject);
@@ -1460,8 +1460,8 @@ end;
 // Recompone el letrero para el color sobre el que se acaba de pinchar (item
 // con foco en la lista): si ese color tiene propiedades propias (nivel
 // color/SKU) distintas a las del articulo, las "canta"; si no, oculta el
-// letrero. Se llama al pinchar un color (OnClick) y al marcar/desmarcar
-// (OnClick, que ademas actualiza la consulta).
+// letrero. Se llama al cambiar la seleccion (OnClick), que ademas actualiza
+// la consulta.
 procedure TfrmStockConsulta.ActualizarLetreroColor;
 var
   iSel   : Integer;
@@ -1569,7 +1569,7 @@ begin
 
   // Errores de carga (foto / cabecera / colores) por encima de la ventana.
   try
-    CargarFoto;
+    CargarFoto(FCodSku);
     CargarInfoCabecera;
     CargarColores;
     CargarPropsPorColor;
@@ -1586,7 +1586,7 @@ begin
   RecargarConsulta;
 end;
 
-procedure TfrmStockConsulta.CargarFoto;
+procedure TfrmStockConsulta.CargarFoto(const ACodUnidad: string);
 var
   info: TFotoInfo;
   ruta: string;
@@ -1594,7 +1594,7 @@ var
 begin
   imgFoto.Picture.Assign(nil);
   if Trim(FCodArt) = '' then Exit;
-  info := inLibFotos.oFotos.Resolver(FCodArt, FCodSku);
+  info := inLibFotos.oFotos.Resolver(FCodArt, ACodUnidad);
   ruta := inLibFotos.oFotos.RutaFoto(info, frPx300);
   if ruta = '' then Exit;
   png := TPngImage.Create;
@@ -2507,7 +2507,7 @@ end;
 // "no activa" se
 // aplica como filtro adicional sobre B:
 //   * Por Color  -> almacenes se filtran ya en EstadoBaseSelect.
-//   * Por Almacen-> los colores marcados se filtran en el JOIN ON B.COLOR_AV.
+//   * Por Almacen-> los colores seleccionados se filtran en el JOIN ON.
 // HEX viaja en la columna de filas para que el custom-draw del cuadradito
 // pinte el swatch en modo Por Color; en Por Almacen queda vacio.
 function TfrmStockConsulta.ConstruirSQLPivot(
@@ -2584,7 +2584,7 @@ begin
   end
   else
   begin
-    // Filas = almacenes marcados. Filtro de colores se aplica al
+    // Filas = almacenes seleccionados. Filtro de colores se aplica al
     // subselect B via JOIN ON.
     alms := AlmacenesSeleccionadosLista;
     if Length(alms) = 0 then
@@ -3101,8 +3101,26 @@ begin
 end;
 
 procedure TfrmStockConsulta.lstColoresClick(Sender: TObject);
+var
+  iColor     : Integer;
+  sCodUnidad : string;
 begin
   ActualizarLetreroColor;
+  sCodUnidad := FCodSku;
+  iColor := lstColores.ItemIndex;
+  if (iColor >= 0) and (iColor < lstColores.Items.Count) and
+     lstColores.Selected[iColor] then
+  begin
+    // La clave ARTICULO/COLOR permite resolver primero la foto propia del
+    // color y recurrir a la foto general del articulo cuando no exista.
+    sCodUnidad := FCodArt + '/' + lstColores.Items[iColor];
+  end;
+  try
+    CargarFoto(sCodUnidad);
+  except
+    on E: Exception do
+      MostrarError(E.Message);
+  end;
   RecargarConsulta;
 end;
 
