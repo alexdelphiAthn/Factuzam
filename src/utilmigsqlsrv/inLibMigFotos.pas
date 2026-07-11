@@ -634,9 +634,8 @@ end;
 
 procedure MigrarFotos(Eng: TMigEngine; var Stats: TMigStats);
 const
-  // ColorSlot identico al de inLibMigArticulosSkus: codigo legacy del
-  // color si viene relleno; descripcion del basico (occolor) si es
-  // significativa; '0' en ultimo caso. Asi CODIGO_UNIDAD_FOT casa como
+  // ColorSlot identico al de inLibMigArticulosSkus: codigo interno de
+  // ocartcol.Color. Asi CODIGO_UNIDAD_FOT casa como
   // prefijo exacto del CODIGO_UNIDAD_SKU migrado (ART/COLOR/TALLA).
   cSelectSrc =
     'SELECT col.Articulo, col.Color, col.ArchivoFoto, ' +
@@ -644,13 +643,9 @@ const
     '         WHEN col.Color IS NOT NULL ' +
     '           AND LTRIM(RTRIM(col.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(col.Color))) ' +
-    '         WHEN c.Descripcion IS NOT NULL ' +
-    '           AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
-    '           THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
     '         ELSE ''0'' ' +
     '       END AS ColorSlot ' +
     'FROM dbo.ocartcol col ' +
-    'LEFT JOIN dbo.occolor c ON c.ColorBasico = col.ColorBasico ' +
     'WHERE col.Articulo IS NOT NULL ' +
     '  AND LTRIM(RTRIM(col.Articulo)) <> '''' ' +
     '  AND col.ArchivoFoto IS NOT NULL ' +

@@ -613,7 +613,10 @@ begin
     '          o.CODIGO_ALM_OPCAJA, ' +
     '          o.CODIGO_CAJA_OPCAJA, ' +
     '          o.NUMERO_OPERACION_OPCAJA ' +
-    ' ORDER BY FECHA_OP DESC';
+    // Ultima operacion arriba: ante empate de FECHA_OP desempatamos por
+    // numero de operacion en numerico, no como texto.
+    ' ORDER BY FECHA_OP DESC, ' +
+    '          CAST(o.NUMERO_OPERACION_OPCAJA AS UNSIGNED) DESC';
 end;
 
 function TfrmMtoCajaOperacionesHist.ContarOperaciones: Integer;

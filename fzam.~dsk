@@ -16,13 +16,18 @@ File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoAlbaranes
 File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoArticulos.pas',0,1,1352,1,1358,0,0,,
 
 [Modules]
-Count=0
+Module0=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
+Count=1
 EditWindowCount=1
 
+[C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+ModuleType=TBaseProject
+
 [EditWindow0]
-ViewCount=1
-CurrentView=0
+ViewCount=2
+CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
 View0=0
+View1=1
 PercentageSizes=1
 Create=1
 Visible=1
@@ -59,6 +64,17 @@ BottomMiddelPanelData=0000080001020200000009000000446F636B5369746530100000004772
 [View0]
 CustomEditViewType=TOTACustomEditView
 OTAEditViewType=WelcomePage.MainPage
+
+[View1]
+CustomEditViewType=TEditView
+Module=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
+CursorX=38
+CursorY=18
+TopLine=1
+LeftCol=1
+Elisions=
+Bookmarks=
+EditViewName=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
 
 [Watches]
 Count=0

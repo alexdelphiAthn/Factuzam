@@ -10,8 +10,10 @@
 {    estos colores y/o estas tallas" en `fza_articulos_atributos_basicos`.    }
 {                                                                              }
 {    Mapeo:                                                                    }
-{      dbo.ocartcol (Articulo, Color)  → fza_articulos_atributos_basicos       }
-{                                       (CODIGO_ART_AAB, ID_AV_AAB)            }
+{      dbo.ocartcol                    → fza_articulos_atributos_basicos       }
+{        Color                         → valor proveedor / SKU                 }
+{        Descripcion                   → DESCRIPCION_AAB                       }
+{        ColorBasico → occolor         → ID_ATB_AAB                            }
 {                                       enlazando con fza_atributos_valores    }
 {                                       (ID_VA_AV='CO', AV=UPPER(color))      }
 {                                                                              }
@@ -184,48 +186,60 @@ end;
 
 procedure MigrarArticulosColores(Eng: TMigEngine; var Stats: TMigStats);
 const
-  // Mismo criterio que SKUs/tarifas: si Descripcion es 'INDEFINIDO'
-  // o vacia, usar el codigo legacy (Color, p.ej. '0', '00').
+  // El valor del SKU es el codigo interno de ocartcol.Color. La descripcion
+  // y el color basico son especificos de cada articulo: un mismo codigo de
+  // proveedor puede representar colores distintos en articulos diferentes.
   cSelectSrc =
     'SELECT ac.Articulo, ' +
     '       CASE ' +
     '         WHEN ac.Color IS NOT NULL ' +
     '           AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
-    '         WHEN c.Descripcion IS NOT NULL ' +
-    '           AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
-    '           THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
     '         ELSE ''0'' ' +
-    '       END AS DescColor ' +
+    '       END AS ValorColor, ' +
+    '       LTRIM(RTRIM(ISNULL(ac.Descripcion, ''''))) AS DescripcionColor, ' +
+    '       CASE ' +
+    '         WHEN c.Descripcion IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(c.Descripcion)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
+    '         WHEN ac.ColorBasico IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(ac.ColorBasico)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(ac.ColorBasico))) ' +
+    '         ELSE '''' ' +
+    '       END AS ColorBasico ' +
     'FROM dbo.ocartcol ac ' +
     'LEFT JOIN dbo.occolor c ON c.ColorBasico = ac.ColorBasico ' +
     'WHERE LTRIM(RTRIM(ac.Articulo)) <> '''' ' +
     'ORDER BY ac.Articulo, ac.Color';
   cCols =
-    'CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, ' +
+    'CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, DESCRIPCION_AAB, ' +
     'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
+  cUpsert =
+    'ON DUPLICATE KEY UPDATE ' +
+    'ID_ATB_AAB = VALUES(ID_ATB_AAB), ' +
+    'DESCRIPCION_AAB = VALUES(DESCRIPCION_AAB), ' +
+    'INSTANTE_MODIF = VALUES(INSTANTE_MODIF), ' +
+    'USUARIO_MODIF = VALUES(USUARIO_MODIF)';
 var
   qSrc:                            TUniQuery;
   bulk:                            TBulkInsert;
   oAvMap, oAtbMap:                 TDictionary<string, Integer>;
-  oAsigVistas:                     TDictionary<string, Boolean>;
-  sArt, sDescColor, sAV, sCodAtb:  string;
+  sArt, sValorColor, sAV:          string;
+  sColorBasico, sDescripcionColor: string;
+  sCodAtb:                         string;
   sFila, sAhora, sIdAtb, sUser:    string;
-  sKey:                            string;
   iIdAv, iIdAtb:                   Integer;
 begin
   Eng.Log('  cargando caches en memoria...');
   oAvMap      := TDictionary<string, Integer>.Create;
   oAtbMap     := TDictionary<string, Integer>.Create;
-  oAsigVistas := TDictionary<string, Boolean>.Create;
   qSrc        := nil;
   bulk        := nil;
   try
     CargarMapaAV (Eng, 'CO', oAvMap);
     CargarMapaATB(Eng, 'CO', oAtbMap);
-    CargarAsignacionesVistas(Eng, oAsigVistas);
-    Eng.Log('  cache: %d colores AV, %d basicos, %d asignaciones',
-            [oAvMap.Count, oAtbMap.Count, oAsigVistas.Count]);
+    Eng.Log('  cache: %d colores AV y %d basicos',
+            [oAvMap.Count, oAtbMap.Count]);
 
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
@@ -236,7 +250,7 @@ begin
     qSrc.UniDirectional := True;
     bulk   := TBulkInsert.Create(Eng.ConDst,
                                   'fza_articulos_atributos_basicos',
-                                  cCols, BATCH_SIZE);
+                                  cCols, BATCH_SIZE, cUpsert);
     Eng.SetTotal(Eng.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocartcol ' +
       'WHERE LTRIM(RTRIM(Articulo)) <> '''''));
@@ -250,16 +264,18 @@ begin
       end;
       Inc(Stats.Leidas);
       Eng.IncRow;
-      sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
-      sDescColor := Trim(qSrc.FieldByName('DescColor').AsString);
-      if (sArt = '') or (sDescColor = '') then
+      sArt              := Trim(qSrc.FieldByName('Articulo').AsString);
+      sValorColor       := Trim(qSrc.FieldByName('ValorColor').AsString);
+      sDescripcionColor := Trim(qSrc.FieldByName('DescripcionColor').AsString);
+      sColorBasico      := Trim(qSrc.FieldByName('ColorBasico').AsString);
+      if (sArt = '') or (sValorColor = '') then
       begin
         Inc(Stats.Saltadas);
         qSrc.Next;
         Continue;
       end;
 
-      sAV := UpperCase(sDescColor);
+      sAV := UpperCase(sValorColor);
       if not oAvMap.TryGetValue(sAV, iIdAv) then
       begin
         Inc(Stats.Errores);
@@ -269,27 +285,20 @@ begin
         Continue;
       end;
 
-      sCodAtb := NormalizarCodigoAtb(sDescColor);
-      if oAtbMap.TryGetValue(sCodAtb, iIdAtb) then
-        sIdAtb := IntToStr(iIdAtb)
-      else
-        sIdAtb := 'NULL';
-
-      // Idempotencia: misma (CODIGO_ART, ID_AV) ya esta?
-      sKey := sArt + '|' + IntToStr(iIdAv);
-      if oAsigVistas.ContainsKey(sKey) then
+      sIdAtb := 'NULL';
+      if sColorBasico <> '' then
       begin
-        Inc(Stats.Saltadas);
-        qSrc.Next;
-        Continue;
+        sCodAtb := NormalizarCodigoAtb(sColorBasico);
+        if oAtbMap.TryGetValue(sCodAtb, iIdAtb) then
+          sIdAtb := IntToStr(iIdAtb);
       end;
 
-      sFila := Format('%s, %d, %s, %s, %s, %s, %s',
+      sFila := Format('%s, %d, %s, %s, %s, %s, %s, %s',
         [ValorOrNull(sArt), iIdAv, sIdAtb,
+         ValorOrNull(sDescripcionColor),
          sAhora, sAhora, sUser, sUser]);
       try
         bulk.Add(sFila);
-        oAsigVistas.AddOrSetValue(sKey, True);
         Inc(Stats.Insertadas);
       except
         on E: Exception do
@@ -306,7 +315,6 @@ begin
   finally
     bulk.Free;
     qSrc.Free;
-    oAsigVistas.Free;
     oAtbMap.Free;
     oAvMap.Free;
   end;

@@ -114,6 +114,8 @@ begin
   FWriter.AddComment('Base de datos: ' + FProvider.GetDatabaseName);
   FWriter.AddComment('========================================');
   FWriter.AddCommand('');
+  FWriter.AddCommand('SET NAMES utf8mb4 COLLATE utf8mb4_spanish_ci;');
+  FWriter.AddCommand('');
   
   if FOptions.UseTransactions then
   begin

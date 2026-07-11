@@ -283,7 +283,9 @@ begin
     if PKList.Count > 0 then
       Result :=
         Result + '  PRIMARY KEY (' + PKList.CommaText + ')' + sLineBreak;
-    Result := Result + ');';
+    Result := Result +
+      ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ' +
+      'COLLATE=utf8mb4_spanish_ci;';
   finally
     PKList.Free;
   end;

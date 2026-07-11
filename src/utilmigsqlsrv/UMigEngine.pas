@@ -158,13 +158,15 @@ type
     FCon:      TUniConnection;
     FTabla:    string;
     FColumnas: string;       // "col1, col2, col3"
+    FSufijoSQL: string;      // ON DUPLICATE KEY UPDATE opcional
     FFilas:    TStringList;  // cada entrada = "(val1, val2, val3)"
     FBatchMax: Integer;      // tamano de batch (default 1000)
     FTotalIns: Integer;
     procedure Flush;
   public
     constructor Create(Con: TUniConnection; const sTabla,
-                       sColumnas: string; iBatchMax: Integer = 5000);
+                       sColumnas: string; iBatchMax: Integer = 5000;
+                       const sSufijoSQL: string = '');
     destructor  Destroy; override;
 
     // Anade una fila ya formateada (sin parentesis). Ej:
@@ -494,12 +496,14 @@ begin
 end;
 
 constructor TBulkInsert.Create(Con: TUniConnection; const sTabla,
-                                sColumnas: string; iBatchMax: Integer);
+                                sColumnas: string; iBatchMax: Integer;
+                                const sSufijoSQL: string);
 begin
   inherited Create;
   FCon      := Con;
   FTabla    := sTabla;
   FColumnas := sColumnas;
+  FSufijoSQL := Trim(sSufijoSQL);
   FFilas    := TStringList.Create;
   if iBatchMax <= 0 then iBatchMax := 5000;
   FBatchMax := iBatchMax;
@@ -545,7 +549,10 @@ begin
   // 1000 filas pueden ser miles de chars).
   sb := TStringBuilder.Create(64 * FFilas.Count);
   try
-    sb.Append('INSERT IGNORE INTO `');
+    if FSufijoSQL = '' then
+      sb.Append('INSERT IGNORE INTO `')
+    else
+      sb.Append('INSERT INTO `');
     sb.Append(FTabla);
     sb.Append('` (');
     sb.Append(FColumnas);
@@ -554,6 +561,11 @@ begin
     begin
       if i > 0 then sb.Append(', ');
       sb.Append(FFilas[i]);
+    end;
+    if FSufijoSQL <> '' then
+    begin
+      sb.Append(' ');
+      sb.Append(FSufijoSQL);
     end;
     sSql := sb.ToString;
   finally

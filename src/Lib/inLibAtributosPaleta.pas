@@ -50,6 +50,11 @@ function ObtenerInfoBasico(const AIdVA: string;
                            const ACodigoATB: string;
                            out AInfo: TInfoBasico): Boolean;
 
+// Resuelve el basico asignado a un valor dentro de un articulo concreto.
+// Es necesario para codigos de proveedor ambiguos como PALO.
+function ObtenerInfoBasicoArticulo(const ACodArt, AIdVA, AValor: string;
+                                   out AInfo: TInfoBasico): Boolean;
+
 // Convierte '#RRGGBB' o '#RGB' a TColor. Devuelve clNone si no parseable.
 function HexToColor(const AHex: string): TColor;
 
@@ -114,12 +119,27 @@ function PintarCeldaSwatchSiAplica(ACanvas: TcxCanvas;
                                    AViewInfo: TcxGridTableDataCellViewInfo;
                                    ADict: TDictionary<string, string>): Boolean;
 
+// Variante contextual para documentos de articulos. Resuelve primero la
+// asignacion especifica del articulo (color proveedor -> color basico) y usa
+// la paleta global solo como fallback. ATexto puede ser un valor o un SKU.
+function PintarCeldaSwatchArticuloSiAplica(
+  ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+  const ACodArt, ATexto: string;
+  ADict: TDictionary<string, string>): Boolean;
+
 // Busca un basico para `ATexto` probando cada ID_VA presente en `ADict`. Si
 // el texto contiene '/', tambien prueba con el ultimo segmento tras la barra.
 // Devuelve True en el primer match valido.
 function BuscarInfoBasicoEnArticulo(const ATexto: string;
                                     ADict: TDictionary<string, string>;
                                     out AInfo: TInfoBasico): Boolean;
+
+// Igual que BuscarInfoBasicoEnArticulo, dando prioridad a las asignaciones
+// particulares del articulo antes de consultar el basico global del AV.
+function BuscarInfoBasicoEnArticuloContextual(
+  const ACodArt, ATexto: string;
+  ADict: TDictionary<string, string>;
+  out AInfo: TInfoBasico): Boolean;
 
 // Recorre los valores de AColumn buscando textos que casen con la paleta
 // basica del articulo (via `ADict`). Si encuentra al menos uno, ensancha la
@@ -157,7 +177,8 @@ function SeleccionarAvConPaleta(const AIdVa: string;
                                 out AValor: string;
                                 AScreenLeft: Integer = -1;
                                 AScreenTop: Integer = -1;
-                                AWidthHint: Integer = 120): Boolean;
+                                AWidthHint: Integer = 120;
+                                const ACodArt: string = ''): Boolean;
 
 implementation
 
@@ -177,6 +198,8 @@ type
     FIdVa     : string;
     FAvs      : TArray<string>;
     FShown    : Boolean;
+    FInfoArticulo: TDictionary<string, TInfoBasico>;
+    procedure CargarPaletaArticulo(const ACodArt, AIdVa: string);
     procedure ListBoxDrawItem(Control: TWinControl; Index: Integer;
                               ARect: TRect; State: TOwnerDrawState);
     procedure ListBoxMouseDown(Sender: TObject; Button: TMouseButton;
@@ -190,11 +213,14 @@ type
     constructor CreateConOpciones(const AIdVa: string;
                                   const AAvs: array of string;
                                   const AValorActual: string;
-                                  AScreenLeft, AScreenTop, AWidthHint: Integer);
+                                  AScreenLeft, AScreenTop, AWidthHint: Integer;
+                                  const ACodArt: string);
+    destructor Destroy; override;
   end;
 
 var
   GCache        : TDictionary<string, TInfoBasico>;
+  GCacheArticulo: TDictionary<string, TInfoBasico>;
   GCacheCargado : Boolean;
   // Mapa NOMBRE_VA -> ID_ATB_VA global (todas las variaciones del sistema),
   // cacheado para los grids que no tienen un articulo padre concreto
@@ -205,6 +231,12 @@ var
 function ClaveCache(const AIdVA, ACodigoATB: string): string;
 begin
   Result := UpperCase(Trim(AIdVA)) + '|' + UpperCase(Trim(ACodigoATB));
+end;
+
+function ClaveCacheArticulo(const ACodArt, AIdVA, AValor: string): string;
+begin
+  Result := UpperCase(Trim(ACodArt)) + '|' + UpperCase(Trim(AIdVA)) + '|' +
+    UpperCase(Trim(AValor));
 end;
 
 function HexToColor(const AHex: string): TColor;
@@ -292,6 +324,8 @@ procedure InvalidarCachePaleta;
 begin
   if GCache <> nil then
     GCache.Clear;
+  if GCacheArticulo <> nil then
+    GCacheArticulo.Clear;
   GCacheCargado := False;
 end;
 
@@ -512,6 +546,29 @@ begin
   Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
 end;
 
+function PintarCeldaSwatchArticuloSiAplica(
+  ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+  const ACodArt, ATexto: string;
+  ADict: TDictionary<string, string>): Boolean;
+var
+  Dict: TDictionary<string, string>;
+  Info: TInfoBasico;
+  sTexto: string;
+begin
+  Result := False;
+  sTexto := ATexto;
+  if (sTexto = '') and (AViewInfo <> nil) then
+    sTexto := AViewInfo.Text;
+  if ADict <> nil then
+    Dict := ADict
+  else
+    Dict := ObtenerMapaAtributosGlobal;
+  if (ACanvas <> nil) and (AViewInfo <> nil) and
+     (Dict <> nil) and (Dict.Count > 0) and
+     BuscarInfoBasicoEnArticuloContextual(ACodArt, sTexto, Dict, Info) then
+    Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
+end;
+
 function BuscarInfoBasicoEnArticulo(const ATexto: string;
                                     ADict: TDictionary<string, string>;
                                     out AInfo: TInfoBasico): Boolean;
@@ -649,11 +706,148 @@ end;
 
 { TfrmSelPalAvAux }
 
+procedure TfrmSelPalAvAux.CargarPaletaArticulo(const ACodArt,
+  AIdVa: string);
+var
+  q: TUniQuery;
+  Info: TInfoBasico;
+  sAv: string;
+begin
+  if Trim(ACodArt) <> '' then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := oConn;
+      q.SQL.Text :=
+        'SELECT av.AV, b.NOMBRE_ATB, b.HEX_ATB ' +
+        '  FROM fza_articulos_atributos_basicos aab ' +
+        '  JOIN fza_atributos_valores av ON av.ID_AV = aab.ID_AV_AAB ' +
+        '  JOIN fza_atributos_basicos b ON b.ID_ATB = aab.ID_ATB_AAB ' +
+        ' WHERE aab.CODIGO_ART_AAB = :art ' +
+        '   AND (:idva = '''' OR av.ID_VA_AV = :idva) ' +
+        '   AND b.ESACTIVO_ATB = ''S'' ' +
+        '   AND b.HEX_ATB IS NOT NULL ' +
+        '   AND b.HEX_ATB <> ''''';
+      q.ParamByName('art').AsString := ACodArt;
+      q.ParamByName('idva').AsString := AIdVa;
+      q.Open;
+      while not q.Eof do
+      begin
+        Info := Default(TInfoBasico);
+        Info.HexColor := q.FieldByName('HEX_ATB').AsString;
+        Info.Color := HexToColor(Info.HexColor);
+        Info.Nombre := q.FieldByName('NOMBRE_ATB').AsString;
+        Info.EsValido := Info.Color <> clNone;
+        sAv := UpperCase(Trim(q.FieldByName('AV').AsString));
+        if Info.EsValido and (sAv <> '') then
+          FInfoArticulo.AddOrSetValue(sAv, Info);
+        q.Next;
+      end;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+end;
+
+function BuscarInfoBasicoEnArticuloContextual(
+  const ACodArt, ATexto: string;
+  ADict: TDictionary<string, string>;
+  out AInfo: TInfoBasico): Boolean;
+var
+  Texto, Segmento: string;
+  Segmentos: TArray<string>;
+  i: Integer;
+
+  function ProbarValorArticulo(const AValor: string): Boolean;
+  var
+    IdVa: string;
+  begin
+    Result := False;
+    if (Trim(ACodArt) <> '') and (Trim(AValor) <> '') then
+      for IdVa in ADict.Values do
+        if not Result then
+          Result := ObtenerInfoBasicoArticulo(ACodArt, IdVa, AValor, AInfo);
+  end;
+
+begin
+  AInfo := Default(TInfoBasico);
+  Result := False;
+  Texto := Trim(ATexto);
+  if (ADict <> nil) and (Texto <> '') then
+  begin
+    Result := ProbarValorArticulo(Texto);
+    if (not Result) and (Pos('/', Texto) > 0) then
+    begin
+      Segmentos := Texto.Split(['/']);
+      i := High(Segmentos);
+      while (i >= 0) and (not Result) do
+      begin
+        Segmento := Trim(Segmentos[i]);
+        Result := ProbarValorArticulo(Segmento);
+        Dec(i);
+      end;
+    end;
+    if not Result then
+      Result := BuscarInfoBasicoEnArticulo(Texto, ADict, AInfo);
+  end;
+end;
+
+function ObtenerInfoBasicoArticulo(const ACodArt, AIdVA, AValor: string;
+  out AInfo: TInfoBasico): Boolean;
+var
+  q: TUniQuery;
+  sClave: string;
+begin
+  AInfo := Default(TInfoBasico);
+  Result := False;
+  sClave := ClaveCacheArticulo(ACodArt, AIdVA, AValor);
+  if (Trim(ACodArt) <> '') and (Trim(AValor) <> '') then
+  begin
+    if GCacheArticulo.TryGetValue(sClave, AInfo) then
+      Result := AInfo.EsValido
+    else
+    begin
+      q := TUniQuery.Create(nil);
+      try
+        q.Connection := oConn;
+        q.SQL.Text :=
+          'SELECT b.NOMBRE_ATB, b.HEX_ATB ' +
+          '  FROM fza_articulos_atributos_basicos aab ' +
+          '  JOIN fza_atributos_valores av ON av.ID_AV = aab.ID_AV_AAB ' +
+          '  JOIN fza_atributos_basicos b ON b.ID_ATB = aab.ID_ATB_AAB ' +
+          ' WHERE aab.CODIGO_ART_AAB = :art ' +
+          '   AND av.AV = :av ' +
+          '   AND (:idva = '''' OR av.ID_VA_AV = :idva) ' +
+          '   AND b.ESACTIVO_ATB = ''S'' ' +
+          '   AND b.HEX_ATB IS NOT NULL ' +
+          '   AND b.HEX_ATB <> '''' ' +
+          ' LIMIT 1';
+        q.ParamByName('art').AsString := ACodArt;
+        q.ParamByName('av').AsString := AValor;
+        q.ParamByName('idva').AsString := AIdVA;
+        q.Open;
+        if not q.IsEmpty then
+        begin
+          AInfo.HexColor := q.FieldByName('HEX_ATB').AsString;
+          AInfo.Color := HexToColor(AInfo.HexColor);
+          AInfo.Nombre := q.FieldByName('NOMBRE_ATB').AsString;
+          AInfo.EsValido := AInfo.Color <> clNone;
+        end;
+        GCacheArticulo.AddOrSetValue(sClave, AInfo);
+        Result := AInfo.EsValido;
+      finally
+        FreeAndNil(q);
+      end;
+    end;
+  end;
+end;
+
 constructor TfrmSelPalAvAux.CreateConOpciones(const AIdVa: string;
                                               const AAvs: array of string;
                                               const AValorActual: string;
                                               AScreenLeft, AScreenTop,
-                                              AWidthHint: Integer);
+                                              AWidthHint: Integer;
+                                              const ACodArt: string);
 const
   ALTO_FILA   = 22;
   ANCHO_MIN   = 80;
@@ -695,6 +889,8 @@ begin
   OnKeyDown    := FormKeyDown;
 
   FIdVa := AIdVa;
+  FInfoArticulo := TDictionary<string, TInfoBasico>.Create;
+  CargarPaletaArticulo(ACodArt, AIdVa);
   SetLength(FAvs, Length(AAvs));
   for i := 0 to High(AAvs) do
     FAvs[i] := AAvs[i];
@@ -754,6 +950,12 @@ begin
     Position := poScreenCenter;
 end;
 
+destructor TfrmSelPalAvAux.Destroy;
+begin
+  FreeAndNil(FInfoArticulo);
+  inherited Destroy;
+end;
+
 procedure TfrmSelPalAvAux.ListBoxDrawItem(Control: TWinControl; Index: Integer;
                                           ARect: TRect; State: TOwnerDrawState);
 const
@@ -781,9 +983,11 @@ begin
   LB.Canvas.FillRect(ARect);
 
   HayColor := False;
+  if FInfoArticulo <> nil then
+    HayColor := FInfoArticulo.TryGetValue(UpperCase(Trim(Av)), Info);
   // Si FIdVa esta vacio o no casa, probamos contra el mapa global (mismo
   // fallback que usa el browse via BuscarInfoBasicoEnArticulo).
-  if Trim(FIdVa) <> '' then
+  if (not HayColor) and (Trim(FIdVa) <> '') then
     HayColor := ObtenerInfoBasico(FIdVa, Av, Info);
   if not HayColor then
     HayColor := BuscarInfoBasicoEnArticulo(Av,
@@ -880,7 +1084,8 @@ function SeleccionarAvConPaleta(const AIdVa: string;
                                 const AValorActual: string;
                                 out AValor: string;
                                 AScreenLeft, AScreenTop,
-                                AWidthHint: Integer): Boolean;
+                                AWidthHint: Integer;
+                                const ACodArt: string): Boolean;
 var
   F : TfrmSelPalAvAux;
 begin
@@ -888,7 +1093,7 @@ begin
   Result := False;
   if Length(AAvs) = 0 then Exit;
   F := TfrmSelPalAvAux.CreateConOpciones(AIdVa, AAvs, AValorActual,
-                                          AScreenLeft, AScreenTop, AWidthHint);
+    AScreenLeft, AScreenTop, AWidthHint, ACodArt);
   try
     if F.ShowModal = mrOk then
     begin
@@ -906,12 +1111,14 @@ end;
 
 initialization
   GCache             := TDictionary<string, TInfoBasico>.Create;
+  GCacheArticulo     := TDictionary<string, TInfoBasico>.Create;
   GCacheCargado      := False;
   GMapaGlobal        := nil;
   GMapaGlobalCargado := False;
 
 finalization
   FreeAndNil(GCache);
+  FreeAndNil(GCacheArticulo);
   FreeAndNil(GMapaGlobal);
 
 end.
