@@ -72,10 +72,6 @@ type
     procedure unqryDevolucionesCompraLineasAfterPost(DataSet: TDataSet);
     procedure unqryDevolucionesCompraLineasAfterDelete(DataSet: TDataSet);
   private
-    // Transicion detectada en BeforePost. Se conserva para validar el
-    // cierre, pero AfterPost sincroniza movimientos desde el documento
-    // actual sin depender del estado final.
-    FTransicionEstadoDevc: string;
     // True mientras DesempaquetarAtributosLineas postea lineas: cambio
     // puramente descriptivo que NO debe disparar la logica fiscal ni
     // la sincronizacion de movimientos (cascada por linea al navegar).
@@ -283,14 +279,9 @@ begin
     AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
       'DEVC');
   end;
-  FTransicionEstadoDevc := '';
 end;
 
 procedure TdmDevolucionesCompra.unqryTablaGBeforePost(DataSet: TDataSet);
-var
-  fEstado: TField;
-  sEstadoNuevo, sEstadoAnterior: string;
-  qChk: TUniQuery;
 begin
   inherited;
   ValidarAlmacenSalida;
@@ -304,50 +295,6 @@ begin
   AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
     'DEVC');
   CalcularTotalesDevolucionCompra;
-  // Deteccion de transicion de ESTADO_DEVC. Solo aplica en modo Edit.
-  // Se usa para prevalidar cierres vacios; los movimientos se
-  // sincronizan siempre tras persistir la cabecera.
-  FTransicionEstadoDevc := '';
-  if unqryTablaG.State <> dsEdit then
-    Exit;
-  fEstado := unqryTablaG.FindField('ESTADO_DEVC');
-  if fEstado = nil then
-    Exit;
-  sEstadoNuevo    := UpperCase(Trim(fEstado.AsString));
-  sEstadoAnterior := UpperCase(Trim(VarToStr(fEstado.OldValue)));
-  if sEstadoNuevo = sEstadoAnterior then
-    Exit;
-  if (sEstadoAnterior = 'ABIERTO') and (sEstadoNuevo = 'CERRADO') then
-    FTransicionEstadoDevc := 'CERRAR'
-  else if (sEstadoAnterior = 'CERRADO') and (sEstadoNuevo = 'ABIERTO') then
-    FTransicionEstadoDevc := 'ABRIR';
-  // Pre-validacion del cierre: si vamos a cerrar y no hay lineas con
-  // cantidad > 0, abortamos el Post para no dejar la devolucion CERRADA
-  // sin movimientos. Mejor abortar aqui que en AfterPost (donde la
-  // cabecera ya estaria persistida con el estado nuevo).
-  if FTransicionEstadoDevc = 'CERRAR' then
-  begin
-    qChk := TUniQuery.Create(nil);
-    try
-      qChk.Connection := inLibGlobalVar.oConn;
-      qChk.SQL.Text :=
-        'SELECT COUNT(*) AS N FROM fza_devoluciones_compra_lineas ' +
-        ' WHERE SERIE_DEVC_DEVCLIN  = :s ' +
-        '   AND NUMERO_DEVC_DEVCLIN = :n ' +
-        '   AND IFNULL(CANTIDAD_DEVCLIN, 0) > 0';
-      qChk.ParamByName('s').AsString :=
-        unqryTablaG.FieldByName('SERIE_DEVC').AsString;
-      qChk.ParamByName('n').AsString :=
-        unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
-      qChk.Open;
-      if qChk.FieldByName('N').AsInteger = 0 then
-        raise Exception.Create(
-          'No se puede cerrar la devolucion: no tiene lineas con cantidad ' +
-          'mayor que 0. Añade lineas antes de cerrar.');
-    finally
-      FreeAndNil(qChk);
-    end;
-  end;
 end;
 
 // Tras persistir la cabecera, reconstruimos los movimientos DC desde el
@@ -356,11 +303,7 @@ end;
 procedure TdmDevolucionesCompra.unqryTablaGAfterPost(DataSet: TDataSet);
 begin
   inherited;
-  try
-    SincronizarMovimientos;
-  finally
-    FTransicionEstadoDevc := '';
-  end;
+  SincronizarMovimientos;
 end;
 
 procedure TdmDevolucionesCompra.unqryTablaGBeforeDelete(DataSet: TDataSet);
@@ -393,8 +336,7 @@ begin
       ' WHERE SERIE_DEVC  = :s ' +
       '   AND NUMERO_DEVC = :n ' +
       '   AND (COALESCE(NUMERO_FAC_DEVC, '''') <> '''' ' +
-      '    OR COALESCE(SERIE_FAC_DEVC, '''') <> '''' ' +
-      '    OR COALESCE(ESTADO_DEVC, '''') = ''FACTURADO'')';
+      '    OR COALESCE(SERIE_FAC_DEVC, '''') <> '''')';
     AsignarDocumento;
     q.Open;
     iBloqueos := q.FieldByName('N').AsInteger;
@@ -668,7 +610,7 @@ end;
 function TdmDevolucionesCompra.TotalPrendasDevolucion: Double;
 begin
   Result := TotalPrendasLineasCompra(unqryDevolucionesCompraLineas,
-    'TIPO_IVA_ARTICULO_DEVCLIN');
+    'TIPO_IVA_ARTICULO_DEVCLIN', 'TOTAL_UNIDADES_DEVCLIN');
 end;
 
 function TdmDevolucionesCompra.HayLineasMovimiento(const ASerie,

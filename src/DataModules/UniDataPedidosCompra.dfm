@@ -10,7 +10,8 @@
       '  NUMERO_PEDC = :Old_NUMERO_PEDC'
       '  AND SERIE_PEDC = :Old_SERIE_PEDC')
     SQL.Strings = (
-      'SELECT * FROM vi_pedidos_compra')
+      'SELECT * FROM vi_pedidos_compra'
+      ' ORDER BY FECHA_PEDC DESC, NUMERO_PEDC DESC')
     AfterInsert = unqryTablaGAfterInsert
     BeforePost = unqryTablaGBeforePost
     AfterPost = unqryTablaGAfterPost

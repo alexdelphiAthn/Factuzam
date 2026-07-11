@@ -1,4 +1,4 @@
-inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
+﻿inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
   Caption = 'Mantenimiento de Pedidos de Compra'
   ClientHeight = 765
   ClientWidth = 1085
@@ -31,24 +31,54 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
           ExplicitWidth = 937
           ExplicitHeight = 693
           inherited cxGrdDBTabPrin: TcxGridDBTableView
-            object dbcGrdPedcNUMERO_PEDC: TcxGridDBColumn
-              Caption = 'N'#250'mero'
-              DataBinding.FieldName = 'NUMERO_PEDC'
-              Width = 90
+            object dbcGrdPedcCODIGO_ALM_PEDC: TcxGridDBColumn
+              Caption = 'Almac'#233'n'
+              DataBinding.FieldName = 'CODIGO_ALM_PEDC'
+              Width = 100
             end
             object dbcGrdPedcSERIE_PEDC: TcxGridDBColumn
               Caption = 'Serie'
               DataBinding.FieldName = 'SERIE_PEDC'
               Width = 80
             end
+            object dbcGrdPedcNUMERO_PEDC: TcxGridDBColumn
+              Caption = 'N'#250'mero'
+              DataBinding.FieldName = 'NUMERO_PEDC'
+              Width = 90
+            end
+            object dbcGrdPedcESTADO_PEDC: TcxGridDBColumn
+              Caption = 'Estado'
+              DataBinding.FieldName = 'ESTADO_PEDC'
+              Width = 110
+            end
             object dbcGrdPedcFECHA_PEDC: TcxGridDBColumn
               Caption = 'Fecha'
               DataBinding.FieldName = 'FECHA_PEDC'
               Width = 100
             end
-            object dbcGrdPedcFECHA_PREVISTA_PEDC: TcxGridDBColumn
-              Caption = 'F.prevista'
-              DataBinding.FieldName = 'FECHA_PREVISTA_PEDC'
+            object dbcGrdPedcCODIGO_PRV_PEDC: TcxGridDBColumn
+              Caption = 'Proveedor'
+              DataBinding.FieldName = 'CODIGO_PRV_PEDC'
+              Width = 100
+            end
+            object dbcGrdPedcRSPRV_PEDC: TcxGridDBColumn
+              Caption = 'Raz'#243'n Social Proveedor'
+              DataBinding.FieldName = 'RAZON_SOCIAL_PRV_PEDC'
+              Width = 220
+            end
+            object dbcGrdPedcTEMPORADA_PEDC: TcxGridDBColumn
+              Caption = 'Temporada'
+              DataBinding.FieldName = 'TEMPORADA_PEDC'
+              Width = 120
+            end
+            object dbcGrdPedcREF_PROVEEDOR_PEDC: TcxGridDBColumn
+              Caption = 'Ref. proveedor'
+              DataBinding.FieldName = 'REF_PROVEEDOR_PEDC'
+              Width = 130
+            end
+            object dbcGrdPedcFECHA_EFECTO_STOCK_PEDC: TcxGridDBColumn
+              Caption = 'F.stock'
+              DataBinding.FieldName = 'FECHA_EFECTO_STOCK_PEDC'
               Width = 100
             end
             object dbcGrdPedcFECHA_TOPE_RECEPCION_PEDC: TcxGridDBColumn
@@ -56,25 +86,29 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
               DataBinding.FieldName = 'FECHA_TOPE_RECEPCION_PEDC'
               Width = 110
             end
-            object dbcGrdPedcTEMPORADA_PEDC: TcxGridDBColumn
-              Caption = 'Temporada'
-              DataBinding.FieldName = 'TEMPORADA_PEDC'
-              Width = 120
-            end
-            object dbcGrdPedcFECHA_EFECTO_STOCK_PEDC: TcxGridDBColumn
-              Caption = 'F.stock'
-              DataBinding.FieldName = 'FECHA_EFECTO_STOCK_PEDC'
+            object dbcGrdPedcFECHA_PREVISTA_PEDC: TcxGridDBColumn
+              Caption = 'F.prevista'
+              DataBinding.FieldName = 'FECHA_PREVISTA_PEDC'
               Width = 100
+            end
+            object dbcGrdPedcTOTAL_LINEAS_PEDC: TcxGridDBColumn
+              Caption = 'Neto lineas'
+              DataBinding.FieldName = 'TOTAL_LINEAS_PEDC'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
+              Width = 110
+            end
+            object dbcGrdPedcTOTAL_LIQUIDO_PEDC: TcxGridDBColumn
+              Caption = 'Total l'#237'quido'
+              DataBinding.FieldName = 'TOTAL_LIQUIDO_PEDC'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
+              Width = 120
             end
             object dbcGrdPedcTOTAL_PRENDAS_PEDC: TcxGridDBColumn
               Caption = 'Prendas'
               DataBinding.FieldName = 'TOTAL_PRENDAS_PEDC'
               Width = 90
-            end
-            object dbcGrdPedcTOTAL_LINEAS_PEDC: TcxGridDBColumn
-              Caption = 'Neto lineas'
-              DataBinding.FieldName = 'TOTAL_LINEAS_PEDC'
-              Width = 110
             end
             object dbcGrdPedcCANTIDAD_PEDIDA_PEDC: TcxGridDBColumn
               Caption = 'Pedidas'
@@ -91,40 +125,10 @@ inherited frmMtoPedidosCompra: TfrmMtoPedidosCompra
               DataBinding.FieldName = 'CANTIDAD_PENDIENTE_RECEPCION_PEDC'
               Width = 95
             end
-            object dbcGrdPedcESTADO_PEDC: TcxGridDBColumn
-              Caption = 'Estado'
-              DataBinding.FieldName = 'ESTADO_PEDC'
-              Width = 110
-            end
             object dbcGrdPedcCODIGO_EMP_PEDC: TcxGridDBColumn
               Caption = 'Empresa'
               DataBinding.FieldName = 'CODIGO_EMP_PEDC'
               Width = 100
-            end
-            object dbcGrdPedcCODIGO_PRV_PEDC: TcxGridDBColumn
-              Caption = 'Proveedor'
-              DataBinding.FieldName = 'CODIGO_PRV_PEDC'
-              Width = 100
-            end
-            object dbcGrdPedcRSPRV_PEDC: TcxGridDBColumn
-              Caption = 'Raz'#243'n Social Proveedor'
-              DataBinding.FieldName = 'RAZON_SOCIAL_PRV_PEDC'
-              Width = 220
-            end
-            object dbcGrdPedcREF_PROVEEDOR_PEDC: TcxGridDBColumn
-              Caption = 'Ref. proveedor'
-              DataBinding.FieldName = 'REF_PROVEEDOR_PEDC'
-              Width = 130
-            end
-            object dbcGrdPedcCODIGO_ALM_PEDC: TcxGridDBColumn
-              Caption = 'Almac'#233'n'
-              DataBinding.FieldName = 'CODIGO_ALM_PEDC'
-              Width = 100
-            end
-            object dbcGrdPedcTOTAL_LIQUIDO_PEDC: TcxGridDBColumn
-              Caption = 'Total l'#237'quido'
-              DataBinding.FieldName = 'TOTAL_LIQUIDO_PEDC'
-              Width = 120
             end
           end
         end
