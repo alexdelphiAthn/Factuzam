@@ -5,7 +5,8 @@
 { Versión:       2.0.0                                                         }
 {                                                                              }
 {  Descripción:                                                                }
-{    Migra `dbo.ocartbap` (codigos de barras del legacy) a:                    }
+{    Migra `dbo.ocartbap` (codigos de barras del legacy) y `dbo.ocartacp`      }
+{    (SKUs con stock sin barcode) a:                                           }
 {      - fza_articulos_skus   (un registro por art/color/talla)                }
 {      - fza_atributos_sku    (link SKU ↔ valor color + SKU ↔ valor talla)    }
 {      - fza_codigos_barras   (el barcode con CODIGO_UNIDAD_CB = SKU)         }
@@ -56,9 +57,7 @@ const
 
 // En el legacy '0' y '00' son colores REALES distintos (la BBDD legacy
 // no tiene articulos sin color). Solo la cadena vacia se considera
-// ausencia de color. La descripcion 'INDEFINIDO' se filtra en la
-// construccion del slot (no aqui): si la Descripcion es 'INDEFINIDO',
-// se usa el Color CODE como suffix (que sera '0', '00', etc.).
+// ausencia de color.
 function EsColorVacio(const s: string): Boolean;
 begin
   Result := Trim(s) = '';
@@ -181,21 +180,19 @@ const
   // Cuando un (art, color, talla) aparece en ambas tablas, se elige
   // la de ocartbap (que trae barcode). El UNION ALL las pone ambas
   // ordenadas por CodigoBarras vacio al final.
-  // ColorSlot: si Descripcion es NULL/vacia/'INDEFINIDO', usar el
-  // codigo legacy del color (que en este ERP es '0', '00', etc. — son
-  // colores REALES, no placeholders). Si Descripcion es significativa
-  // ('ROJO', 'NEGRO'...) se usa como suffix del CODIGO_UNIDAD_SKU.
+  // ColorSlot: codigo interno de color del proveedor. La fuente canonica es
+  // ocartcol.Color; el color de la tabla origen solo se usa como respaldo.
   cSelectSrc =
     'SELECT * FROM (' +
     '  SELECT bap.Articulo, bap.Color, bap.Talla, bap.Cantidad, ' +
     '         bap.CodigoBarras, ' +
     '         CASE ' +
+    '           WHEN ac.Color IS NOT NULL ' +
+    '             AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
+    '             THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
     '           WHEN bap.Color IS NOT NULL ' +
     '             AND LTRIM(RTRIM(bap.Color)) <> '''' ' +
     '             THEN UPPER(LTRIM(RTRIM(bap.Color))) ' +
-    '           WHEN c.Descripcion IS NOT NULL ' +
-    '             AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
-    '             THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
     '           ELSE ''0'' ' +
     '         END AS ColorSlot, ' +
     '         1 AS FuentePrior ' +
@@ -211,12 +208,12 @@ const
     '         1 AS Cantidad, ' +
     '         '''' AS CodigoBarras, ' +
     '         CASE ' +
+    '           WHEN ac.Color IS NOT NULL ' +
+    '             AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
+    '             THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
     '           WHEN acp.Color IS NOT NULL ' +
     '             AND LTRIM(RTRIM(acp.Color)) <> '''' ' +
     '             THEN UPPER(LTRIM(RTRIM(acp.Color))) ' +
-    '           WHEN c.Descripcion IS NOT NULL ' +
-    '             AND UPPER(LTRIM(RTRIM(c.Descripcion))) <> ''INDEFINIDO'' ' +
-    '             THEN UPPER(LTRIM(RTRIM(c.Descripcion))) ' +
     '           ELSE ''0'' ' +
     '         END AS ColorSlot, ' +
     '         2 AS FuentePrior ' +
@@ -327,13 +324,13 @@ begin
       sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
       sColorRaw  := Trim(qSrc.FieldByName('Color').AsString);
       sTalla     := Trim(qSrc.FieldByName('Talla').AsString);
-      // ColorSlot ya viene normalizado desde SQL: Descripcion si es
-      // significativa, codigo legacy en otro caso.
+      // ColorSlot ya viene normalizado desde SQL con el codigo interno
+      // de color del proveedor.
       sDescColor := Trim(qSrc.FieldByName('ColorSlot').AsString);
       sBarcode   := Trim(qSrc.FieldByName('CodigoBarras').AsString);
       fCantidad  := qSrc.FieldByName('Cantidad').AsFloat;
 
-      if (sArt = '') or (sBarcode = '') then
+      if sArt = '' then
       begin
         Inc(Stats.Saltadas);
         qSrc.Next;
@@ -349,14 +346,6 @@ begin
       // 1. SKU en fza_articulos_skus (si no existe ya)
       if not oSkusVistos.ContainsKey(sCodUnidad) then
       begin
-        sFila := Format('%s, %s, %s, ''S'', %s, %s, %s, %s',
-          [ValorOrNull(sCodUnidad),
-           ValorOrNull(sArt),
-           ValorOrNull(sCodVar),
-           sAhora, sAhora, sUser, sUser, '']);
-        // El Format anterior tiene 8 %s pero solo 7 valores reales;
-        // la ultima vacia es para que el numero de args case. Mejor
-        // recomponemos con 7 placeholders + literal 'S':
         sFila := Format('%s, %s, %s, ''S'', %s, %s, %s, %s',
           [ValorOrNull(sCodUnidad),
            ValorOrNull(sArt),
@@ -402,17 +391,23 @@ begin
 
       // 3. Barcode (si no existe ya). Tipo deducido por longitud:
       // EAN8, EAN13, UPC, ITF14 segun corresponda.
-      if not oBarcodesVistos.ContainsKey(sBarcode) then
+      if sBarcode <> '' then
       begin
-        if fCantidad <= 1 then sPrincipal := 'S' else sPrincipal := 'N';
-        sFila := Format('%s, %s, %s, %s, %s, %s, %s, %s',
-          [ValorOrNull(sBarcode),
-           ValorOrNull(sCodUnidad),
-           ValorOrNull(DeducirTipoBarcode(sBarcode)),
-           '''' + sPrincipal + '''',
-           sAhora, sAhora, sUser, sUser]);
-        bulkCB.Add(sFila);
-        oBarcodesVistos.AddOrSetValue(sBarcode, True);
+        if not oBarcodesVistos.ContainsKey(sBarcode) then
+        begin
+          if fCantidad <= 1 then
+            sPrincipal := 'S'
+          else
+            sPrincipal := 'N';
+          sFila := Format('%s, %s, %s, %s, %s, %s, %s, %s',
+            [ValorOrNull(sBarcode),
+             ValorOrNull(sCodUnidad),
+             ValorOrNull(DeducirTipoBarcode(sBarcode)),
+             '''' + sPrincipal + '''',
+             sAhora, sAhora, sUser, sUser]);
+          bulkCB.Add(sFila);
+          oBarcodesVistos.AddOrSetValue(sBarcode, True);
+        end;
       end;
 
       qSrc.Next;

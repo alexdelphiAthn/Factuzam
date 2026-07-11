@@ -508,12 +508,12 @@ const
     '       ISNULL(l.ImpNetoSIva, 0) AS ImpNetoSIva, ' +
     '       ISNULL(l.PorIva, 0) AS PorIva, ' +
     '       CASE ' +
+    '         WHEN ac.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
     '         WHEN l.Color IS NOT NULL ' +
     '           AND LTRIM(RTRIM(l.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
-    '         WHEN co.Descripcion IS NOT NULL ' +
-    '           AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' ' +
-    '           THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
     '         ELSE ''0'' ' +
     '       END AS DescColor, ' +
     '       (SELECT TOP 1 ISNULL(ap.Modelo, '''') FROM dbo.ocartp ap ' +
@@ -544,7 +544,8 @@ const
     'NUMERO_PEDC_PEDCLIN, SERIE_PEDC_PEDCLIN, LINEA_PEDCLIN, CODIGO_ART_PEDCLIN, ' +
     'CODIGO_UNIDAD_PEDCLIN, ID_AC_PIVOT_PEDCLIN, COLOR_TEXTO_PEDCLIN, ' +
     'DESCRIPCION_ARTICULO_PEDCLIN, ' +
-    'CANTIDAD_PEDCLIN, CANTIDAD_RECIBIDA_PEDCLIN, TIPO_IVA_ARTICULO_PEDCLIN, ' +
+    'CANTIDAD_PEDCLIN, CANTIDAD_RECIBIDA_PEDCLIN, TOTAL_UNIDADES_PEDCLIN, ' +
+    'TIPO_IVA_ARTICULO_PEDCLIN, ' +
     'PORCENTAJE_IVA_PEDCLIN, PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN, ' +
     'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN, TOTAL_PEDCLIN, CODIGO_ALMACEN_PEDCLIN, ' +
     'REF_PRV_PEDCLIN, ' +
@@ -670,7 +671,7 @@ begin
       try
         bLin.Add(Format(
           '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
-          '%s, %s, %s, %s',
+          '%s, %s, %s, %s, %s',
           [ValorOrNull(sNum), ValorOrNull(sSerie),
            ValorOrNull(Format('%.4d', [qLin.FieldByName('Orden').AsInteger])),
            ValorOrNull(sArt), ValorOrNull(sUni),
@@ -679,6 +680,7 @@ begin
            ValorOrNull(Copy(Trim(qLin.FieldByName('Descripcion').AsString), 1, 100)),
            F(qLin.FieldByName('CantidadPedida').AsFloat),
            F(qLin.FieldByName('CantidadRecibida').AsFloat),
+           F(qLin.FieldByName('CantidadPedida').AsFloat),
            ValorOrNull(TipoIvaArticuloCompra(qLin.FieldByName('PorIva').AsFloat)),
            F(qLin.FieldByName('PorIva').AsFloat),
            F(qLin.FieldByName('PrecioSIva').AsFloat),
@@ -767,12 +769,12 @@ const
     '       l.EjercicioFactura, ISNULL(l.SerieFactura, '''') AS SerieFactura, ' +
     '       ISNULL(l.NroFactura, 0) AS NroFactura, ' +
     '       CASE ' +
+    '         WHEN ac.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
     '         WHEN l.Color IS NOT NULL ' +
     '           AND LTRIM(RTRIM(l.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
-    '         WHEN co.Descripcion IS NOT NULL ' +
-    '           AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' ' +
-    '           THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
     '         ELSE ''0'' ' +
     '       END AS DescColor, ' +
     '       (SELECT TOP 1 ISNULL(ap.Modelo, '''') FROM dbo.ocartp ap ' +
@@ -802,7 +804,8 @@ const
     'NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN, LINEA_ALBCLIN, NUMERO_PEDC_ALBCLIN, ' +
     'SERIE_PEDC_ALBCLIN, CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, ' +
     'ID_AC_PIVOT_ALBCLIN, ' +
-    'DESCRIPCION_ARTICULO_ALBCLIN, CANTIDAD_ALBCLIN, TIPO_IVA_ARTICULO_ALBCLIN, ' +
+    'DESCRIPCION_ARTICULO_ALBCLIN, CANTIDAD_ALBCLIN, TOTAL_UNIDADES_ALBCLIN, ' +
+    'TIPO_IVA_ARTICULO_ALBCLIN, ' +
     'PORCENTAJE_IVA_ALBCLIN, PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN, ' +
     'PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN, TOTAL_ALBCLIN, CODIGO_ALMACEN_ALBCLIN, ' +
     'REF_PRV_ALBCLIN, ESFACTURADA_ALBCLIN, NUMERO_FAC_ALBCLIN, ' +
@@ -985,6 +988,7 @@ begin
            AcPivotToken(oMapTal, sArt),
            ValorOrNull(Copy(Trim(qLin.FieldByName('Descripcion').AsString), 1, 100)),
            F(qLin.FieldByName('Cantidad').AsFloat),
+           F(qLin.FieldByName('Cantidad').AsFloat),
            ValorOrNull(TipoIvaArticuloCompra(qLin.FieldByName('PorIVA').AsFloat)),
            F(qLin.FieldByName('PorIVA').AsFloat),
            F(qLin.FieldByName('PrecioSIva').AsFloat),
@@ -1095,12 +1099,12 @@ const
     '       ISNULL(h.SerieFra, '''') AS SerieFactura, ' +
     '       ISNULL(h.NroFactura, 0) AS NroFactura, ' +
     '       CASE ' +
+    '         WHEN ac.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
     '         WHEN l.Color IS NOT NULL ' +
     '           AND LTRIM(RTRIM(l.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
-    '         WHEN co.Descripcion IS NOT NULL ' +
-    '           AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' ' +
-    '           THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
     '         ELSE ''0'' ' +
     '       END AS DescColor, ' +
     '       (SELECT TOP 1 ISNULL(ap.Modelo, '''') FROM dbo.ocartp ap ' +
@@ -1516,12 +1520,12 @@ const
     '       ISNULL(l.NroAlbaran, 0) AS NroAlbaran, ' +
     '       COALESCE(NULLIF(l.IdAlb, 0), l.Orden, 0) AS LineaAlbaran, ' +
     '       CASE ' +
+    '         WHEN ac.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
     '         WHEN l.Color IS NOT NULL ' +
     '           AND LTRIM(RTRIM(l.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
-    '         WHEN co.Descripcion IS NOT NULL ' +
-    '           AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' ' +
-    '           THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
     '         ELSE ''0'' ' +
     '       END AS DescColor, ' +
     '       (SELECT TOP 1 ISNULL(ap.Modelo, '''') FROM dbo.ocartp ap ' +

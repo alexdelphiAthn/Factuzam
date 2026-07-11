@@ -86,14 +86,17 @@ type
     FPosicion: Integer;
     FTotal: Integer;
     FSentenciasEjecutadas: Integer;
+    FColacionesNormalizadas: Boolean;
     FProgresoEtapa: string;
     FPrimerError: string;
     FOnProgreso: TWorkerProgresoEvent;
     FOnFinalizar: TWorkerFinalizarEvent;
     procedure ActualizarProgresoFichero(AFichero: TFileStream);
     procedure EjecutarSQLStreaming(AConn: TUniConnection);
+    procedure NormalizarColacionesRestauracion(AConn: TUniConnection);
     procedure ValidarEstructuraRestaurada(AConn: TUniConnection);
     function NombreBBDDSQL(const ANombre: string): string;
+    function EsCreacionVista(const ASQL: string): Boolean;
     procedure ScriptBeforeExecute(Sender: TObject;
                                    var SQL: string;
                                    var Omit: Boolean);
@@ -171,6 +174,7 @@ begin
       Conn.SpecificOptions.Values['MySQL.Charset'] := 'utf8mb4';
       Conn.LoginPrompt := False;
       Conn.Connected := True;
+      Conn.ExecSQL('SET NAMES utf8mb4 COLLATE utf8mb4_spanish_ci');
       Options.WithData := True;
       Options.WithTriggers := True;
       Options.WithProcedures := True;
@@ -320,6 +324,7 @@ begin
   FPosicion := 0;
   FTotal := 0;
   FSentenciasEjecutadas := 0;
+  FColacionesNormalizadas := False;
   FProgresoEtapa := 'Restaurando';
   FPrimerError := '';
   FLogBuffer := TStringList.Create;
@@ -331,10 +336,90 @@ begin
     raise EAbort.Create(SOperacionCancelada);
 end;
 
+function TRestoreWorker.EsCreacionVista(const ASQL: string): Boolean;
+var
+  sSQLNorm: string;
+begin
+  sSQLNorm := UpperCase(ASQL);
+  sSQLNorm := StringReplace(sSQLNorm, #13, ' ', [rfReplaceAll]);
+  sSQLNorm := StringReplace(sSQLNorm, #10, ' ', [rfReplaceAll]);
+  Result := (Pos('CREATE ', sSQLNorm) > 0) and
+            (Pos(' VIEW ', sSQLNorm) > 0);
+end;
+
+procedure TRestoreWorker.NormalizarColacionesRestauracion(
+  AConn: TUniConnection);
+var
+  Q: TUniQuery;
+  Tablas: TStringList;
+  i: Integer;
+begin
+  if not FColacionesNormalizadas then
+  begin
+    FLogBuffer.Add(' -- Normalizando colaciones antes de crear vistas');
+    AConn.ExecSQL(Format(
+      'ALTER DATABASE %s CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci',
+      [NombreBBDDSQL(FDatabase)]));
+    Tablas := TStringList.Create;
+    try
+      Q := TUniQuery.Create(nil);
+      try
+        Q.Connection := AConn;
+        Q.SQL.Text :=
+          'SELECT DISTINCT T.TABLE_NAME ' +
+          '  FROM INFORMATION_SCHEMA.TABLES T ' +
+          ' WHERE T.TABLE_SCHEMA = DATABASE() ' +
+          '   AND T.TABLE_TYPE = ''BASE TABLE'' ' +
+          '   AND ( ' +
+          '       (T.TABLE_COLLATION IS NOT NULL ' +
+          '        AND T.TABLE_COLLATION <> ''utf8mb4_spanish_ci'') ' +
+          '        OR EXISTS ( ' +
+          '          SELECT 1 ' +
+          '            FROM INFORMATION_SCHEMA.COLUMNS C ' +
+          '           WHERE C.TABLE_SCHEMA = T.TABLE_SCHEMA ' +
+          '             AND C.TABLE_NAME = T.TABLE_NAME ' +
+          '             AND C.CHARACTER_SET_NAME IS NOT NULL ' +
+          '             AND (C.CHARACTER_SET_NAME <> ''utf8mb4'' ' +
+          '                  OR C.COLLATION_NAME <> ' +
+          '                     ''utf8mb4_spanish_ci'') ' +
+          '        ) ' +
+          '       ) ' +
+          ' ORDER BY T.TABLE_NAME';
+        Q.Open;
+        while not Q.Eof do
+        begin
+          Tablas.Add(Q.FieldByName('TABLE_NAME').AsString);
+          Q.Next;
+        end;
+      finally
+        FreeAndNil(Q);
+      end;
+      for i := 0 to Tablas.Count - 1 do
+      begin
+        ComprobarCancelacion;
+        AConn.ExecSQL(
+          'ALTER TABLE ' + NombreBBDDSQL(Tablas[i]) +
+          ' CONVERT TO CHARACTER SET utf8mb4 ' +
+          'COLLATE utf8mb4_spanish_ci');
+      end;
+      if Tablas.Count > 0 then
+      begin
+        FLogBuffer.Add(Format(' -- Tablas normalizadas: %d',
+                              [Tablas.Count]));
+      end;
+    finally
+      FreeAndNil(Tablas);
+    end;
+    FColacionesNormalizadas := True;
+  end;
+end;
+
 procedure TRestoreWorker.ScriptBeforeExecute(Sender: TObject;
   var SQL: string; var Omit: Boolean);
 begin
   ComprobarCancelacion;
+  if EsCreacionVista(SQL) then
+    NormalizarColacionesRestauracion((Sender as TUniScript).Connection);
   FLogBuffer.Add(' -- Ejecutando (' +
                   FormatDateTime('hh:nn:ss.zzz', Now) + '): ');
   FLogBuffer.Add(SQL);
@@ -468,6 +553,8 @@ var
       FSentenciasEjecutadas := iSentencia;
       Reloj := TStopwatch.StartNew;
       try
+        if EsCreacionVista(sSQL) then
+          NormalizarColacionesRestauracion(AConn);
         AConn.ExecSQL(sSQL);
         Reloj.Stop;
         if (iSentencia mod 250) = 0 then
@@ -724,10 +811,15 @@ begin
         Conn.SpecificOptions.Values['MySQL.Charset'] := 'utf8mb4';
         Conn.LoginPrompt := False;
         Conn.Connected := True;
+        Conn.ExecSQL('SET NAMES utf8mb4 COLLATE utf8mb4_spanish_ci');
         FLogBuffer.Add(' -- Preparando BBDD destino: ' + FDatabase);
         Conn.ExecSQL(Format(
           'CREATE DATABASE IF NOT EXISTS %s ' +
           'CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci',
+          [NombreBBDDSQL(FDatabase)]));
+        Conn.ExecSQL(Format(
+          'ALTER DATABASE %s CHARACTER SET utf8mb4 ' +
+          'COLLATE utf8mb4_spanish_ci',
           [NombreBBDDSQL(FDatabase)]));
         Conn.ExecSQL('USE ' + NombreBBDDSQL(FDatabase));
         Conn.Database := FDatabase;

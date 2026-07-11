@@ -630,15 +630,16 @@ procedure TModoEntradaSku.SkuCustomDrawCell(Sender: TcxCustomGridTableView;
   ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
   var ADone: Boolean);
 var
-  Info: TInfoBasico;
   R: TRect;
-  sTexto: string;
+  sArticulo, sTexto: string;
 begin
   sTexto := SkuTextoRecord(AViewInfo.GridRecord);
   if sTexto = '' then
     sTexto := AViewInfo.Text;
-  if BuscarInfoBasicoEnArticulo(sTexto, ObtenerMapaAtributosGlobal, Info) and
-     PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto) then
+  sArticulo := ValorRecord(AViewInfo.GridRecord,
+                           FConfig.Campos.CodigoArt);
+  if PintarCeldaSwatchArticuloSiAplica(
+       ACanvas, AViewInfo, sArticulo, sTexto, nil) then
     ADone := True;
   if (not ADone) and (sTexto <> '') and (sTexto <> AViewInfo.Text) then
   begin

@@ -160,6 +160,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
             object ccbFiltroTemporadaArt: TcxCheckComboBox
               Left = 605
               Top = 4
+              Properties.EditValueFormat = cvfStatesString
               Properties.EmptySelectionText = 'Ninguna seleccionada'
               Properties.Items = <>
               Properties.OnCloseUp = ccbFiltroTemporadaArtPropertiesCloseUp

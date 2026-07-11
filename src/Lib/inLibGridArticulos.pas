@@ -1158,8 +1158,22 @@ end;
 procedure TGridArticulosLineas.AtributoCustomDrawCell(
   Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+var
+  ColArticulo: TcxGridDBColumn;
+  sArticulo, sTexto: string;
 begin
-  if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+  sArticulo := '';
+  sTexto := '';
+  if (AViewInfo <> nil) and (AViewInfo.GridRecord <> nil) then
+  begin
+    ColArticulo := FView.GetColumnByFieldName(FCampos.CodigoArt);
+    if ColArticulo <> nil then
+      sArticulo := VarToStr(
+        AViewInfo.GridRecord.Values[ColArticulo.Index]);
+    sTexto := AViewInfo.Text;
+  end;
+  if PintarCeldaSwatchArticuloSiAplica(
+       ACanvas, AViewInfo, sArticulo, sTexto, nil) then
     ADone := True;
 end;
 

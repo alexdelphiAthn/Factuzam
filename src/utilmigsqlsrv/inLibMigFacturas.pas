@@ -356,12 +356,12 @@ const
     '       ISNULL(l.NumeroMovArt, 0) AS NumeroMovArt, ' +
     '       ISNULL(l.Descripcion, '''') AS Descripcion, ' +
     '       CASE ' +
+    '         WHEN ac.Color IS NOT NULL ' +
+    '           AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
     '         WHEN l.Color IS NOT NULL ' +
     '           AND LTRIM(RTRIM(l.Color)) <> '''' ' +
     '           THEN UPPER(LTRIM(RTRIM(l.Color))) ' +
-    '         WHEN co.Descripcion IS NOT NULL ' +
-    '           AND UPPER(LTRIM(RTRIM(co.Descripcion))) <> ''INDEFINIDO'' ' +
-    '           THEN UPPER(LTRIM(RTRIM(co.Descripcion))) ' +
     '         ELSE ''0'' ' +
     '       END AS DescColor ' +
     'FROM dbo.occajarp l ' +

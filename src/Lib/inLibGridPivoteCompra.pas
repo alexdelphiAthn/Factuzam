@@ -2864,7 +2864,7 @@ var
   recIdx   : Integer;
   sCodigo  : string;
   sTexto   : string;
-  Info     : TInfoBasico;
+  sArticulo: string;
 begin
   ADone := False;
   if FPivotColorCodigo = nil then Exit;
@@ -2878,12 +2878,14 @@ begin
   if iLinea <= 0 then Exit;
   sCodigo := '';
   sTexto  := '';
+  sArticulo := '';
   FPivotColorCodigo.TryGetValue(iLinea, sCodigo);
   FPivotColorTexto.TryGetValue(iLinea, sTexto);
-  if (sCodigo = '') then Exit;
-  Info := Default(TInfoBasico);
-  if not ObtenerInfoBasico('CO', sCodigo, Info) then Exit;
-  if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto) then
+  FPivotArticulo.TryGetValue(iLinea, sArticulo);
+  if sTexto = '' then
+    sTexto := sCodigo;
+  if PintarCeldaSwatchArticuloSiAplica(
+       ACanvas, AViewInfo, sArticulo, sTexto, nil) then
     ADone := True;
 end;
 

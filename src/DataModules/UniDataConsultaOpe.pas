@@ -162,10 +162,19 @@ begin
     '       MAX(o.USUARIO_ALTA)                       AS EMPLEADO '        +
     '  FROM fza_caja_operaciones o '                                      +
     '  LEFT JOIN fza_facturas f '                                         +
-    '    ON f.CODIGO_EMP_FAC   = o.CODIGO_EMP_OPCAJA '        +
-    '   AND f.CODIGO_ALM_FAC   = o.CODIGO_ALM_OPCAJA '        +
-    '   AND f.CODIGO_CAJA_FAC      = o.CODIGO_CAJA_OPCAJA '           +
-    '   AND f.NUMERO_OPERACION_FAC = o.NUMERO_OPERACION_OPCAJA '      +
+    '    ON f.CODIGO_EMP_FAC = o.CODIGO_EMP_OPCAJA '                     +
+    '   AND ( '                                                            +
+    '        (TRIM(COALESCE(o.SERIE_FAC_OPCAJA, '''')) <> '''' '         +
+    '         AND TRIM(COALESCE(o.NUMERO_FAC_OPCAJA, '''')) <> '''' '     +
+    '         AND f.SERIE_FAC = o.SERIE_FAC_OPCAJA '                      +
+    '         AND f.NUMERO_FAC = o.NUMERO_FAC_OPCAJA) '                   +
+    '        OR '                                                          +
+    '        ((TRIM(COALESCE(o.SERIE_FAC_OPCAJA, '''')) = '''' '          +
+    '          OR TRIM(COALESCE(o.NUMERO_FAC_OPCAJA, '''')) = '''') '     +
+    '         AND f.CODIGO_ALM_FAC = o.CODIGO_ALM_OPCAJA '                +
+    '         AND f.CODIGO_CAJA_FAC = o.CODIGO_CAJA_OPCAJA '              +
+    '         AND f.NUMERO_OPERACION_FAC = o.NUMERO_OPERACION_OPCAJA) '   +
+    '       ) '                                                            +
     '  LEFT JOIN fza_clientes cli '                                       +
     '    ON cli.CODIGO_CLI_CLI = COALESCE(f.CODIGO_CLI_FAC, '     +
     '                                     o.CODIGO_CLI_OPCAJA) '      +
@@ -199,7 +208,10 @@ begin
     '          o.CODIGO_ALM_OPCAJA, '                                 +
     '          o.CODIGO_CAJA_OPCAJA, '                                    +
     '          o.NUMERO_OPERACION_OPCAJA '                                +
-    ' ORDER BY FECHA_OP DESC ';
+    // Ultima operacion arriba: si varias comparten FECHA_OP (empate),
+    // desempatamos por numero de operacion en numerico, no como texto.
+    ' ORDER BY FECHA_OP DESC, '                                            +
+    '          CAST(o.NUMERO_OPERACION_OPCAJA AS UNSIGNED) DESC ';
 
   // ------------------------------------------------------------------
   //  Pestaña OPERACION: filas crudas de fza_caja_operaciones.
@@ -389,10 +401,19 @@ begin
     '       f.TOTAL_IMPUESTOS_FAC, '                                  +
     '       f.TOTAL_LIQUIDO_FAC '                                     +
     '  FROM fza_facturas f '                                              +
-    ' WHERE f.CODIGO_EMP_FAC   = :PEMP '                          +
-    '   AND f.CODIGO_ALM_FAC   = :PALM '                          +
-    '   AND f.CODIGO_CAJA_FAC      = :PCAJA '                         +
-    '   AND f.NUMERO_OPERACION_FAC = :PNUMOP ';
+    ' WHERE f.CODIGO_EMP_FAC = :PEMP '                                +
+    '   AND ( '                                                        +
+    '        (TRIM(COALESCE(:PSERIE, '''')) <> '''' '                 +
+    '         AND TRIM(COALESCE(:PNROFAC, '''')) <> '''' '            +
+    '         AND f.SERIE_FAC = :PSERIE '                             +
+    '         AND f.NUMERO_FAC = :PNROFAC) '                          +
+    '        OR '                                                      +
+    '        ((TRIM(COALESCE(:PSERIE, '''')) = '''' '                 +
+    '          OR TRIM(COALESCE(:PNROFAC, '''')) = '''') '            +
+    '         AND f.CODIGO_ALM_FAC = :PALM '                          +
+    '         AND f.CODIGO_CAJA_FAC = :PCAJA '                        +
+    '         AND f.NUMERO_OPERACION_FAC = :PNUMOP) '                 +
+    '       ) ';
 
   // ------------------------------------------------------------------
   //  Pestaña FACTURA (lineas).
@@ -505,6 +526,8 @@ begin
   qryFactura.ParamByName('PALM').AsString    := AAlm;
   qryFactura.ParamByName('PCAJA').AsString   := ACaja;
   qryFactura.ParamByName('PNUMOP').AsString  := ANumOp;
+  qryFactura.ParamByName('PSERIE').AsString  := ASerie;
+  qryFactura.ParamByName('PNROFAC').AsString := ANroFac;
   AbrirSeguro(qryFactura, 'Facturas');
   if (not qryFactura.IsEmpty) and (Trim(ASerie) <> '')
      and (Trim(ANroFac) <> '') then

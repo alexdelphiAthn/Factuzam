@@ -19,7 +19,9 @@ MariaDB ≥ 11.2 mapea el charset `utf8mb4` a la colación
 `utf8mb4_uca1400_ai_ci` (variable `character_set_collations`). Todo
 `CREATE TABLE … DEFAULT CHARSET=utf8mb4` **sin `COLLATE` explícito**
 crea la tabla con esa colación, mientras el resto de la BBDD usa
-`utf8mb4_spanish_ci`. Tablas afectadas (todas de scripts de
+`utf8mb4_spanish_ci`. También puede aparecer `utf8`/`utf8mb3` si una
+copia antigua se importó sin charset/collation explícitos. Tablas
+afectadas detectadas inicialmente (todas de scripts de
 `DESARROLLOS EN CURSO/`):
 
 | Tabla | Script que la creó |
@@ -47,10 +49,12 @@ y derivadas (CTE/UNION), pero no la colación **física** de las columnas.
 1. **`normalizar_colaciones_spanish.sql`** (nuevo, idempotente): fija el
    default de la BBDD a `utf8mb4_spanish_ci` y convierte con
    `ALTER TABLE … CONVERT TO CHARACTER SET utf8mb4 COLLATE
-   utf8mb4_spanish_ci` toda tabla base utf8mb4 del esquema con otra
-   colación (cursor sobre `INFORMATION_SCHEMA.TABLES`, mismo patrón de
-   procedimiento que `indices_busqueda_skus.sql`). Tarda segundos: solo
-   reconstruye las 7 tablas pequeñas de arriba. Termina con un SELECT de
+   utf8mb4_spanish_ci` toda tabla base del esquema con otra colación,
+   incluidas tablas `utf8`/`utf8mb3` (cursor sobre
+   `INFORMATION_SCHEMA.TABLES`, mismo patrón de procedimiento que
+   `indices_busqueda_skus.sql`). Normalmente tarda segundos si solo
+   reconstruye las 7 tablas pequeñas de arriba; en copias antiguas con
+   muchas tablas `utf8mb3` puede tardar más. Termina con un SELECT de
    verificación que debe devolver 0 filas.
 
 2. **Scripts corregidos** añadiendo `COLLATE=utf8mb4_spanish_ci` al
