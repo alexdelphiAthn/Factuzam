@@ -119,12 +119,27 @@ function PintarCeldaSwatchSiAplica(ACanvas: TcxCanvas;
                                    AViewInfo: TcxGridTableDataCellViewInfo;
                                    ADict: TDictionary<string, string>): Boolean;
 
+// Variante contextual para documentos de articulos. Resuelve primero la
+// asignacion especifica del articulo (color proveedor -> color basico) y usa
+// la paleta global solo como fallback. ATexto puede ser un valor o un SKU.
+function PintarCeldaSwatchArticuloSiAplica(
+  ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+  const ACodArt, ATexto: string;
+  ADict: TDictionary<string, string>): Boolean;
+
 // Busca un basico para `ATexto` probando cada ID_VA presente en `ADict`. Si
 // el texto contiene '/', tambien prueba con el ultimo segmento tras la barra.
 // Devuelve True en el primer match valido.
 function BuscarInfoBasicoEnArticulo(const ATexto: string;
                                     ADict: TDictionary<string, string>;
                                     out AInfo: TInfoBasico): Boolean;
+
+// Igual que BuscarInfoBasicoEnArticulo, dando prioridad a las asignaciones
+// particulares del articulo antes de consultar el basico global del AV.
+function BuscarInfoBasicoEnArticuloContextual(
+  const ACodArt, ATexto: string;
+  ADict: TDictionary<string, string>;
+  out AInfo: TInfoBasico): Boolean;
 
 // Recorre los valores de AColumn buscando textos que casen con la paleta
 // basica del articulo (via `ADict`). Si encuentra al menos uno, ensancha la
@@ -531,6 +546,29 @@ begin
   Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
 end;
 
+function PintarCeldaSwatchArticuloSiAplica(
+  ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+  const ACodArt, ATexto: string;
+  ADict: TDictionary<string, string>): Boolean;
+var
+  Dict: TDictionary<string, string>;
+  Info: TInfoBasico;
+  sTexto: string;
+begin
+  Result := False;
+  sTexto := ATexto;
+  if (sTexto = '') and (AViewInfo <> nil) then
+    sTexto := AViewInfo.Text;
+  if ADict <> nil then
+    Dict := ADict
+  else
+    Dict := ObtenerMapaAtributosGlobal;
+  if (ACanvas <> nil) and (AViewInfo <> nil) and
+     (Dict <> nil) and (Dict.Count > 0) and
+     BuscarInfoBasicoEnArticuloContextual(ACodArt, sTexto, Dict, Info) then
+    Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
+end;
+
 function BuscarInfoBasicoEnArticulo(const ATexto: string;
                                     ADict: TDictionary<string, string>;
                                     out AInfo: TInfoBasico): Boolean;
@@ -708,6 +746,49 @@ begin
     finally
       FreeAndNil(q);
     end;
+  end;
+end;
+
+function BuscarInfoBasicoEnArticuloContextual(
+  const ACodArt, ATexto: string;
+  ADict: TDictionary<string, string>;
+  out AInfo: TInfoBasico): Boolean;
+var
+  Texto, Segmento: string;
+  Segmentos: TArray<string>;
+  i: Integer;
+
+  function ProbarValorArticulo(const AValor: string): Boolean;
+  var
+    IdVa: string;
+  begin
+    Result := False;
+    if (Trim(ACodArt) <> '') and (Trim(AValor) <> '') then
+      for IdVa in ADict.Values do
+        if not Result then
+          Result := ObtenerInfoBasicoArticulo(ACodArt, IdVa, AValor, AInfo);
+  end;
+
+begin
+  AInfo := Default(TInfoBasico);
+  Result := False;
+  Texto := Trim(ATexto);
+  if (ADict <> nil) and (Texto <> '') then
+  begin
+    Result := ProbarValorArticulo(Texto);
+    if (not Result) and (Pos('/', Texto) > 0) then
+    begin
+      Segmentos := Texto.Split(['/']);
+      i := High(Segmentos);
+      while (i >= 0) and (not Result) do
+      begin
+        Segmento := Trim(Segmentos[i]);
+        Result := ProbarValorArticulo(Segmento);
+        Dec(i);
+      end;
+    end;
+    if not Result then
+      Result := BuscarInfoBasicoEnArticulo(Texto, ADict, AInfo);
   end;
 end;
 
