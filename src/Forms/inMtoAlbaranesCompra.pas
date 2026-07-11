@@ -1920,11 +1920,11 @@ begin
   // Columnas propias del albaran de compra tras el ClearItems del
   // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
   ColLinea := Col('Línea', 'LINEA_ALBCLIN', 60, False);
-  Col('Modelo prov.', 'REF_PRV_ALBCLIN', 100, True);
-  Col('Descripción', 'DESCRIPCION_ARTICULO_ALBCLIN', 240, False);
+  Col('Modelo prov.', 'REF_PRV_ALBCLIN', 130, True);
+  Col('Descripción', 'DESCRIPCION_ARTICULO_ALBCLIN', 260, False);
   if FModoEntradaSel <> mcsTallasHorPed then
     Col('Cantidad', 'CANTIDAD_ALBCLIN', 80, True);
-  Col('Precio compra', 'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN', 110, True);
+  Col('Precio compra', 'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN', 130, True);
   Col('% IVA', 'PORCENTAJE_IVA_ALBCLIN', 70, True);
   // En pivote la vista vuelca aqui las UNIDADES del grupo (la libreria
   // machaca TOTAL en la copia visual); en el resto de modos, importe.

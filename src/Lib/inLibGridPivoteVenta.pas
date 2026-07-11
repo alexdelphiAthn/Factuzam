@@ -604,7 +604,7 @@ begin
     FColArticulo := FConfig.View.CreateColumn;
     FColArticulo.Caption := 'Artículo';
     FColArticulo.DataBinding.FieldName := FConfig.Campos.CodigoArt;
-    FColArticulo.Width := 130;
+    FColArticulo.Width := 160;
     FColArticulo.Options.Editing := True;
     FColArticulo.PropertiesClass := TcxButtonEditProperties;
     with TcxButtonEditProperties(FColArticulo.Properties) do
@@ -617,7 +617,7 @@ begin
     end;
     FColColor := FConfig.View.CreateColumn;
     FColColor.Caption := 'Color';
-    FColColor.Width := 95;
+    FColColor.Width := 125;
     FColColor.Options.Editing := False;
     FColColor.DataBinding.ValueTypeClass := TcxStringValueType;
     FColTipoCantidad := FConfig.View.CreateColumn;
@@ -2123,8 +2123,7 @@ var
   iKey: Int64;
   rValor, rPedida: Double;
   Banda: TBandaPivoteVenta;
-  Info: TInfoBasico;
-  sColorCodigo, sColorTexto: string;
+  sArt, sColorCodigo, sColorTexto, sValorColor: string;
 begin
   ADone := False;
   if (AViewInfo.Item is TcxGridColumn) and
@@ -2142,12 +2141,15 @@ begin
     begin
       sColorCodigo := '';
       sColorTexto := '';
+      sArt := '';
+      FPivotArticulo.TryGetValue(iLineaBase, sArt);
       FPivotColorCodigo.TryGetValue(iLineaBase, sColorCodigo);
       FPivotColorTexto.TryGetValue(iLineaBase, sColorTexto);
-      if (sColorCodigo <> '') and
-         ObtenerInfoBasico('CO', sColorCodigo, Info) and
-         PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info,
-                                     sColorTexto) then
+      sValorColor := sColorTexto;
+      if sValorColor = '' then
+        sValorColor := sColorCodigo;
+      if PintarCeldaSwatchArticuloSiAplica(
+           ACanvas, AViewInfo, sArt, sValorColor, nil) then
         ADone := True;
     end
     else if EsColumnaTalla(Col) then

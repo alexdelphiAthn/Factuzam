@@ -3211,8 +3211,8 @@ begin
   // Columnas propias del pedido de compra tras el ClearItems del
   // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
   ColLinea := Col('Línea', 'LINEA_PEDCLIN', 55, False);
-  Col('Modelo prov.', 'REF_PRV_PEDCLIN', 85, True);
-  Col('Descripción', 'DESCRIPCION_ARTICULO_PEDCLIN', 200, False);
+  Col('Modelo prov.', 'REF_PRV_PEDCLIN', 130, True);
+  Col('Descripción', 'DESCRIPCION_ARTICULO_PEDCLIN', 240, False);
   if FModoEntradaSel <> mcsTallasHorPed then
   begin
     // En el inline la cantidad PEDIDA se teclea por celda de talla y
@@ -3227,10 +3227,10 @@ begin
     TcxCurrencyEditProperties(ColARecibir.Properties).
       OnEditValueChanged := ARecibirCampoEditValueChanged;
   end;
-  Col('Precio compra', 'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN', 90, True);
-  Col('% IVA', 'PORCENTAJE_IVA_PEDCLIN', 60, True);
-  Col('Total', 'TOTAL_PEDCLIN', 85, False);
-  Col('Almacén', 'CODIGO_ALMACEN_PEDCLIN', 70, True);
+  Col('Precio compra', 'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN', 130, True);
+  Col('% IVA', 'PORCENTAJE_IVA_PEDCLIN', 70, True);
+  Col('Total', 'TOTAL_PEDCLIN', 95, False);
+  Col('Almacén', 'CODIGO_ALMACEN_PEDCLIN', 80, True);
   // Orden normal del documento: la LINEA delante del bloque de
   // articulo que creo el modo (las columnas del host nacen detras).
   ColLinea.Index := 0;
