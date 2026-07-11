@@ -75,7 +75,6 @@ procedure ImprimirResguardoDeposito(const ACodigoEmpresa,
 var
   QrySec, QryEmp: TUniQuery;
   Ticket: TTicketTermico;
-  FormPreview: TFormVisualizador;
   ComandosESC, RutaFicheroPDF: string;
   TotalNuevos,
   TotalEntregas,
@@ -392,19 +391,8 @@ begin
       ComandosESC := Ticket.ObtenerComandos;
       RutaFicheroPDF := GetUserFolderTickets + 'ResguardoDep_' +
                             FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-      FormPreview := TFormVisualizador.Create(nil);
-      try
-        FormPreview.Hide;
-        FormPreview.FRutaPDFReal := RutaFicheroPDF;
-        FormPreview.CargarYMostrar(ComandosESC);
-        FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
-        if UpperCase(ANombreImpresora) = 'DEBUG' then
-          FormPreview.ShowModal
-        else
-          Ticket.Imprimir;
-      finally
-        FreeAndNil(FormPreview);
-      end;
+      ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
+                                   ANombreImpresora);
     finally
       FreeAndNil(Ticket);
     end;
@@ -422,7 +410,6 @@ procedure ImprimirTicketDesdeBD(const ACodigoEmpresa,
 var
   QryCab, QryLin, QryPagos: TUniQuery;
   Ticket: TTicketTermico;
-  FormPreview: TFormVisualizador;
   ComandosESC, RutaFicheroPDF: string;
   QRTexto: string;
   DocumentoFac, SerieFac, NroFac: string;
@@ -661,19 +648,8 @@ begin
       ComandosESC := Ticket.ObtenerComandos;
       RutaFicheroPDF := GetUserFolderTickets + 'TicketBD_' +
                             FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-      FormPreview := TFormVisualizador.Create(nil);
-      try
-        FormPreview.Hide;
-        FormPreview.FRutaPDFReal := RutaFicheroPDF;
-        FormPreview.CargarYMostrar(ComandosESC);
-        FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
-        if UpperCase(ANombreImpresora) = 'DEBUG' then
-          FormPreview.ShowModal
-        else
-          Ticket.Imprimir;
-      finally
-        FreeAndNil(FormPreview);
-      end;
+      ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
+                                   ANombreImpresora);
     finally
       FreeAndNil(Ticket);
     end;
@@ -688,7 +664,6 @@ procedure ImprimirRecordatorio(CodigoCliente:   string;
                                NombreImpresora: string = 'DEBUG');
 var
   Ticket: TTicketTermico;
-  FormPreview: TFormVisualizador;
   TotalPendienteCliente: Currency;
   CodEmp, RazonEmp: string;
   HayDatos: boolean;
@@ -882,19 +857,8 @@ begin
     var ComandosESC    := Ticket.ObtenerComandos;
     var RutaFicheroPDF := GetUserFolderTickets + 'Recordatorio_' +
                           FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-    FormPreview := TFormVisualizador.Create(nil);
-    try
-      FormPreview.Hide;
-      FormPreview.FRutaPDFReal := RutaFicheroPDF;
-      FormPreview.CargarYMostrar(ComandosESC);
-      FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
-      if UpperCase(NombreImpresora) = 'DEBUG' then
-        FormPreview.ShowModal
-      else
-        Ticket.Imprimir;
-    finally
-      FreeAndNil(FormPreview);
-    end;
+    ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
+                                 NombreImpresora);
   finally
     FreeAndNil(Ticket);
   end;

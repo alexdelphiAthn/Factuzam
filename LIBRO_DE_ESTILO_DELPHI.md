@@ -975,11 +975,15 @@ más específico a más general:
    - intenta `BLUS-SEDA/BLANCO` (prefijo)
    - se para porque `BLUS-SEDA` ya no tiene `/`
 3. **Match a nivel artículo** — fila con `CODIGO_UNIDAD_FOT = ''`.
-4. Nada — `Encontrada = False`.
+4. **Primera foto por color** — cuando no se proporciona SKU y no existe
+   foto general, primera fila ordenada por `CODIGO_UNIDAD_FOT`.
+5. Nada — `Encontrada = False`.
 
 La consulta SQL hace los pasos 1 y 2 con un solo `WHERE CODIGO_UNIDAD_FOT
 IN (...)` ordenado por `LENGTH(CODIGO_UNIDAD_FOT) DESC LIMIT 1`. El paso
-3 es una segunda consulta.
+3 es una segunda consulta. El paso 4 permite que el mantenimiento de
+artículos muestre una foto representativa aunque todas las disponibles sean
+por color.
 
 `TFotoInfo.Origen` deja constancia:
 - `foSku`        : fila exacta del SKU completo

@@ -10,7 +10,8 @@
       '  NUMERO_FACC = :Old_NUMERO_FACC'
       '  AND SERIE_FACC = :Old_SERIE_FACC')
     SQL.Strings = (
-      'SELECT * FROM vi_facturas_compra')
+      'SELECT * FROM vi_facturas_compra'
+      ' ORDER BY FECHA_FACC DESC, NUMERO_FACC DESC')
     AfterInsert = unqryTablaGAfterInsert
     BeforePost = unqryTablaGBeforePost
     AfterPost = unqryTablaGAfterPost

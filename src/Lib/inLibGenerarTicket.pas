@@ -168,7 +168,6 @@ var
   dLin: TDataSet;
   QRTexto: string;
   ComandosESC, RutaFicheroPDF: string;
-  FormPreview: TFormVisualizador;
   sDocumento: string;
 
   function LPAD(const AValue: string;
@@ -376,23 +375,8 @@ begin
     RutaFicheroPDF := GetUserFolderTickets + 'Ticket_' +
                         FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) +
                         sSufijoPDF + '.pdf';
-    FormPreview := TFormVisualizador.Create(nil);
-    FormPreview.Hide;
-    try
-      FormPreview.FRutaPDFReal := RutaFicheroPDF;
-      FormPreview.CargarYMostrar(ComandosESC);
-      FormPreview.ExportarAPDF(ComandosESC, RutaFicheroPDF);
-      if UpperCase(NombreImpresora) = 'DEBUG' then
-      begin
-        FormPreview.ShowModal;
-      end
-      else
-      begin
-        Ticket.Imprimir;
-      end;
-    finally
-      FreeAndNil(FormPreview);
-    end;
+    ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
+                                 NombreImpresora);
   finally
     FreeAndNil(Ticket);
   end;

@@ -1,4 +1,4 @@
-inherited dmFacturas: TdmFacturas
+﻿inherited dmFacturas: TdmFacturas
   Height = 590
   Width = 1241
   PixelsPerInch = 120
@@ -244,7 +244,8 @@ inherited dmFacturas: TdmFacturas
       'SELECT COUNT(*) FROM fza_facturas')
     Connection = dmConn.conUni
     SQL.Strings = (
-      'select * from vi_facturas')
+      'select * from vi_facturas'
+      ' ORDER BY FECHA_FAC DESC, NUMERO_FAC DESC')
     BeforeInsert = nil
     AfterInsert = unqryTablaGAfterInsert
     BeforePost = unqryFacBeforePost

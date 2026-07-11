@@ -45,34 +45,22 @@ const
     ' :INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
   cUpdate =
     'UPDATE fza_empleados SET ' +
-    ' NOMBRE_EMPL = IF(TRIM(COALESCE(NOMBRE_EMPL, '''')) = '''', ' +
-    '   :nombre, NOMBRE_EMPL), ' +
-    ' NIF_EMPL = IF(TRIM(COALESCE(NIF_EMPL, '''')) = '''', :nif, NIF_EMPL), ' +
-    ' DIRECCION_EMPL = IF(TRIM(COALESCE(DIRECCION_EMPL, '''')) = '''', ' +
-    '   :direccion, DIRECCION_EMPL), ' +
-    ' DIRECCION2_EMPL = IF(TRIM(COALESCE(DIRECCION2_EMPL, '''')) = '''', ' +
-    '   :direccion2, DIRECCION2_EMPL), ' +
-    ' CODIGO_POSTAL_EMPL = IF(' +
-    '   TRIM(COALESCE(CODIGO_POSTAL_EMPL, '''')) = '''', ' +
-    '   :cp, CODIGO_POSTAL_EMPL), ' +
-    ' POBLACION_EMPL = IF(TRIM(COALESCE(POBLACION_EMPL, '''')) = '''', ' +
-    '   :poblacion, POBLACION_EMPL), ' +
-    ' PROVINCIA_EMPL = IF(TRIM(COALESCE(PROVINCIA_EMPL, '''')) = '''', ' +
-    '   :provincia, PROVINCIA_EMPL), ' +
-    ' TELEFONO_EMPL = IF(TRIM(COALESCE(TELEFONO_EMPL, '''')) = '''', ' +
-    '   :telefono, TELEFONO_EMPL), ' +
-    ' TELEFONO2_EMPL = IF(TRIM(COALESCE(TELEFONO2_EMPL, '''')) = '''', ' +
-    '   :telefono2, TELEFONO2_EMPL), ' +
-    ' FAX_EMPL = IF(TRIM(COALESCE(FAX_EMPL, '''')) = '''', :fax, FAX_EMPL), ' +
-    ' EMAIL_EMPL = IF(TRIM(COALESCE(EMAIL_EMPL, '''')) = '''', ' +
-    '   :email, EMAIL_EMPL), ' +
-    ' IBAN_EMPL = IF(TRIM(COALESCE(IBAN_EMPL, '''')) = '''', ' +
-    '   :iban, IBAN_EMPL), ' +
-    ' DIMINUTIVO_TICKET_EMPL = IF(' +
-    '   TRIM(COALESCE(DIMINUTIVO_TICKET_EMPL, '''')) = '''', ' +
-    '   :diminutivo, DIMINUTIVO_TICKET_EMPL), ' +
-    ' ESACTIVO_EMPL = IF(TRIM(COALESCE(ESACTIVO_EMPL, '''')) = '''', ' +
-    '   :activo, ESACTIVO_EMPL) ' +
+    ' NOMBRE_EMPL = :nombre, ' +
+    ' RAZON_SOCIAL_EMPL = NULL, ' +
+    ' NIF_EMPL = NULLIF(:nif, ''''), ' +
+    ' DIRECCION_EMPL = NULLIF(:direccion, ''''), ' +
+    ' DIRECCION2_EMPL = NULLIF(:direccion2, ''''), ' +
+    ' CODIGO_POSTAL_EMPL = NULLIF(:cp, ''''), ' +
+    ' POBLACION_EMPL = NULLIF(:poblacion, ''''), ' +
+    ' PROVINCIA_EMPL = NULLIF(:provincia, ''''), ' +
+    ' TELEFONO_EMPL = NULLIF(:telefono, ''''), ' +
+    ' TELEFONO2_EMPL = NULLIF(:telefono2, ''''), ' +
+    ' FAX_EMPL = NULLIF(:fax, ''''), ' +
+    ' EMAIL_EMPL = NULLIF(:email, ''''), ' +
+    ' IBAN_EMPL = NULLIF(:iban, ''''), ' +
+    ' DIMINUTIVO_TICKET_EMPL = :diminutivo, ' +
+    ' ESACTIVO_EMPL = :activo, ' +
+    ' INSTANTE_MODIF = NOW(), USUARIO_MODIF = :usuario_modif ' +
     'WHERE CODIGO_EMPL = :codigo';
 
 function Limitar(const sTexto: string; iMaximo: Integer): string;
@@ -177,6 +165,7 @@ begin
       else
       begin
         AsignarParametros(qActualizar, qOrigen, sCodigo);
+        qActualizar.ParamByName('usuario_modif').AsString := Eng.Usuario;
         qActualizar.ExecSQL;
         Inc(Stats.Saltadas);
       end;
