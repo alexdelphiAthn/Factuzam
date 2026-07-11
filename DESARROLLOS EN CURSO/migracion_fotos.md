@@ -90,8 +90,8 @@ usan las fotos descargadas del servidor de fotos_nube.
   dominio las drena al `TBulkInsert` (la conexión UniDAC no admite uso
   concurrente) y lleva la barra de progreso.
 - No se crean fotos a nivel artículo (`CODIGO_UNIDAD_FOT = ''`): el
-  legacy solo tiene foto por color. Si un artículo tiene una única foto,
-  el fallback nº 3 del resolutor ya la muestra también a nivel artículo.
+  legacy solo tiene foto por color. Sin un SKU activo, el resolutor muestra
+  la primera foto del artículo ordenada por `CODIGO_UNIDAD_FOT`.
 
 ## Requisitos
 
