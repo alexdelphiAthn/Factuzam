@@ -19,14 +19,14 @@
 {      - Filtros (pnlFiltros): combo "Estado del stock".                       }
 {      - Cuerpo (pnlBody): split horizontal con un TSplitter.                  }
 {        * pnlIzq (alLeft, 280px): pcFiltros con dos pestanas                  }
-{            "1 Colores"   -> clbColores (checklist de AVs de color)           }
-{            "2 Almacenes" -> clbAlmacenes (checklist de almacenes activos)    }
+{            "1 Colores"   -> lstColores (seleccion multiple de colores)       }
+{            "2 Almacenes" -> lstAlmacenes (seleccion multiple de almacenes)   }
 {        * pnlDer (alClient): pcVistas (alTop, 30px) con dos pestanas          }
 {            "3 Por almacenes" -> grid con almacenes como filas                }
 {            "4 Por colores"   -> grid con colores como filas                  }
 {          y el TcxGrid (alClient) compartido. La pestana activa de pcVistas   }
 {          determina el modo de pivote y se aplica como filtro cruzado el      }
-{          checklist opuesto.                                                  }
+{          seleccion opuesta.                                                  }
 {                                                                              }
 {    v0.6: "letrero" de propiedades por color — al PINCHAR un color, si ese    }
 {    color tiene propiedades fijadas a nivel COLOR o SKU distintas a las del   }
@@ -59,7 +59,7 @@ uses
   Data.DB, DBAccess, Uni,
   cxClasses, cxLookAndFeels, cxLookAndFeelPainters, cxContainer,
   cxEdit, cxLabel, cxTextEdit, cxButtonEdit, cxButtons, cxMaskEdit,
-  cxDropDownEdit, cxCheckBox, cxCheckListBox, cxCustomData, cxStyles,
+  cxDropDownEdit, cxCheckBox, cxListBox, cxCustomData, cxStyles,
   cxCurrencyEdit,
   cxFilter, cxData, cxDataStorage, cxNavigator, cxDBData, cxGridLevel,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
@@ -120,10 +120,10 @@ type
     pcFiltros     : TcxPageControl;
     tsColores     : TcxTabSheet;
     lblColores    : TcxLabel;
-    clbColores    : TcxCheckListBox;
+    lstColores    : TcxListBox;
     tsAlmacenes   : TcxTabSheet;
     lblAlmacenes  : TcxLabel;
-    clbAlmacenes  : TcxCheckListBox;
+    lstAlmacenes  : TcxListBox;
     splVert       : TSplitter;
     pnlDer        : TPanel;
     pcVistas      : TcxPageControl;
@@ -140,11 +140,8 @@ type
     procedure btnArtPropertiesButtonClick(Sender: TObject; AButtonIndex: Integer);
     procedure btnArtPropertiesEditValueChanged(Sender: TObject);
     procedure cbbEstadoPropertiesEditValueChanged(Sender: TObject);
-    procedure clbAlmacenesClickCheck(Sender: TObject; AIndex: Integer;
-              APrevState, ANewState: TcxCheckBoxState);
-    procedure clbColoresClickCheck(Sender: TObject; AIndex: Integer;
-              APrevState, ANewState: TcxCheckBoxState);
-    procedure clbColoresClick(Sender: TObject);
+    procedure lstAlmacenesClick(Sender: TObject);
+    procedure lstColoresClick(Sender: TObject);
     procedure pcVistasChange(Sender: TObject);
     procedure tvStockCustomDrawCell(Sender: TcxCustomGridTableView;
               ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
@@ -360,7 +357,7 @@ begin
     frmStockConsulta := TfrmStockConsulta.Create(Application);
   frmStockConsulta.SetArticuloSku(ACodArt, ACodSku);
   if frmStockConsulta.WindowState = wsMinimized then
-    frmStockConsulta.WindowState := wsNormal;
+    frmStockConsulta.WindowState := wsMaximized;
   // Mostrar CON foco para que ESC cierre la ventana sin tener que pinchar
   // antes. Antes se mostraba con SW_SHOWNOACTIVATE y devolvia el foco a la
   // ventana anterior, lo que dejaba la consulta imposible de cerrar con ESC.
@@ -376,6 +373,7 @@ procedure TfrmStockConsulta.FormCreate(Sender: TObject);
 begin
   Self.Position := poDesigned;
   Self.FormStyle := fsStayOnTop;
+  Self.WindowState := wsMaximized;
   // ESC cierra la ventana; KeyPreview para capturarlo aunque el foco este
   // en el grid o el combo. Tambien sirve al hook del lector de codigo de
   // barras (FormKeyPress / FormKeyDown), que captura la lectura venga de
@@ -1187,7 +1185,7 @@ begin
       begin
         sColor := colores[0];
       end
-      else if (Length(colores) = 0) and (clbColores.Items.Count = 0) then
+      else if (Length(colores) = 0) and (lstColores.Items.Count = 0) then
       begin
         sColor := '';
       end
@@ -1234,15 +1232,15 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-//  Almacenes (check-list)
+//  Almacenes (lista de seleccion multiple)
 // ---------------------------------------------------------------------------
 procedure TfrmStockConsulta.CargarAlmacenes;
 var
-  q   : TUniQuery;
-  item: TcxCheckListBoxItem;
-  bStd: Boolean;
+  q    : TUniQuery;
+  iItem: Integer;
+  bStd : Boolean;
 begin
-  clbAlmacenes.Items.Clear;
+  lstAlmacenes.Items.Clear;
   q := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
@@ -1254,12 +1252,12 @@ begin
     q.Open;
     while not q.Eof do
     begin
-      item := clbAlmacenes.Items.Add;
-      item.Text := q.FieldByName('CODIGO_ALM_ALM').AsString + ' - ' +
-                   q.FieldByName('NOMBRE_ALM_ALM').AsString;
+      iItem := lstAlmacenes.Items.Add(
+        q.FieldByName('CODIGO_ALM_ALM').AsString + ' - ' +
+        q.FieldByName('NOMBRE_ALM_ALM').AsString);
       bStd := (q.FieldByName('TIPO_USO_ALM').AsString = 'ESTANDAR') or
               (q.FieldByName('TIPO_USO_ALM').AsString = 'ESTANDARD');
-      if bStd then item.State := cbsChecked else item.State := cbsUnchecked;
+      lstAlmacenes.Selected[iItem] := bStd;
       q.Next;
     end;
   finally
@@ -1273,10 +1271,10 @@ var
   s, sCod: string;
 begin
   SetLength(Result, 0);
-  for i := 0 to clbAlmacenes.Items.Count - 1 do
-    if clbAlmacenes.Items[i].State = cbsChecked then
+  for i := 0 to lstAlmacenes.Items.Count - 1 do
+    if lstAlmacenes.Selected[i] then
     begin
-      s := clbAlmacenes.Items[i].Text;
+      s := lstAlmacenes.Items[i];
       p := Pos(' - ', s);
       if p > 0 then sCod := Copy(s, 1, p - 1) else sCod := s;
       SetLength(Result, Length(Result) + 1);
@@ -1304,18 +1302,18 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-//  Colores del articulo (check-list de la pestana "Por Color")
+//  Colores del articulo (lista de seleccion multiple)
 // ---------------------------------------------------------------------------
 // Carga los AVs distintos de color (ID_VA_AV='CO') que aparecen en los SKUs
-// activos del articulo. Por defecto todos marcados; el usuario puede
-// desmarcar para filtrar las filas (modo Por Color) o las cantidades
-// agregadas (modo Por Almacen).
+// activos del articulo. Por defecto todos seleccionados; el usuario puede
+// seleccionar uno o varios para filtrar las filas (modo Por Color) o las
+// cantidades agregadas (modo Por Almacen).
 procedure TfrmStockConsulta.CargarColores;
 var
-  q   : TUniQuery;
-  item: TcxCheckListBoxItem;
+  q    : TUniQuery;
+  iItem: Integer;
 begin
-  clbColores.Items.Clear;
+  lstColores.Items.Clear;
   if Trim(FCodArt) = '' then Exit;
   q := TUniQuery.Create(nil);
   try
@@ -1338,9 +1336,8 @@ begin
     q.Open;
     while not q.Eof do
     begin
-      item := clbColores.Items.Add;
-      item.Text  := q.FieldByName('AV').AsString;
-      item.State := cbsChecked;
+      iItem := lstColores.Items.Add(q.FieldByName('AV').AsString);
+      lstColores.Selected[iItem] := True;
       q.Next;
     end;
   finally
@@ -1461,10 +1458,10 @@ begin
 end;
 
 // Recompone el letrero para el color sobre el que se acaba de pinchar (item
-// con foco en el checklist): si ese color tiene propiedades propias (nivel
+// con foco en la lista): si ese color tiene propiedades propias (nivel
 // color/SKU) distintas a las del articulo, las "canta"; si no, oculta el
 // letrero. Se llama al pinchar un color (OnClick) y al marcar/desmarcar
-// (OnClickCheck, que ademas enfoca el item).
+// (OnClick, que ademas actualiza la consulta).
 procedure TfrmStockConsulta.ActualizarLetreroColor;
 var
   iSel   : Integer;
@@ -1472,11 +1469,11 @@ var
   sProps : string;
 begin
   if (FPropsPorColor = nil) or (lblLetreroTemp = nil) then Exit;
-  iSel := clbColores.ItemIndex;
-  if (iSel >= 0) and (iSel < clbColores.Items.Count) and
-     FPropsPorColor.TryGetValue(clbColores.Items[iSel].Text, sProps) then
+  iSel := lstColores.ItemIndex;
+  if (iSel >= 0) and (iSel < lstColores.Items.Count) and
+     FPropsPorColor.TryGetValue(lstColores.Items[iSel], sProps) then
   begin
-    sColor := clbColores.Items[iSel].Text;
+    sColor := lstColores.Items[iSel];
     lblLetreroTemp.Caption := Format('  %s →   %s', [sColor, sProps]);
     lblLetreroTemp.Visible := True;
   end
@@ -1492,11 +1489,11 @@ var
   i: Integer;
 begin
   SetLength(Result, 0);
-  for i := 0 to clbColores.Items.Count - 1 do
-    if clbColores.Items[i].State = cbsChecked then
+  for i := 0 to lstColores.Items.Count - 1 do
+    if lstColores.Selected[i] then
     begin
       SetLength(Result, Length(Result) + 1);
-      Result[High(Result)] := clbColores.Items[i].Text;
+      Result[High(Result)] := lstColores.Items[i];
     end;
 end;
 
@@ -2505,8 +2502,9 @@ end;
 //  Build SQL pivote: rows=almacenes o colores, cols=tallas
 // ---------------------------------------------------------------------------
 // Las TALLAS van SIEMPRE como columnas dinamicas (T0..Tn-1). Las filas son
-// almacenes marcados en clbAlmacenes (modo Por Almacen) o colores marcados
-// en clbColores (modo Por Color). El filtro de la dimension "no activa" se
+// almacenes seleccionados en lstAlmacenes (modo Por Almacen) o colores
+// seleccionados en lstColores (modo Por Color). El filtro de la dimension
+// "no activa" se
 // aplica como filtro adicional sobre B:
 //   * Por Color  -> almacenes se filtran ya en EstadoBaseSelect.
 //   * Por Almacen-> los colores marcados se filtran en el JOIN ON B.COLOR_AV.
@@ -2556,7 +2554,7 @@ begin
 
   if AEsColor then
   begin
-    // Filas = colores marcados en clbColores. Dedupe por AV.AV (varios
+    // Filas = colores seleccionados. Dedupe por AV.AV (varios
     // ID_AV pueden compartir el mismo nombre de color).
     sOuter :=
       '(SELECT AV.AV, MIN(AV.ORDEN_AV) AS ORDEN_AV, ' +
@@ -2622,9 +2620,10 @@ end;
 // ---------------------------------------------------------------------------
 function TfrmStockConsulta.TallasArticulo: TArray<TInfoColumna>;
 var
-  q: TUniQuery;
-  inf: TInfoColumna;
-  iAcPivot: Integer;
+  q           : TUniQuery;
+  inf         : TInfoColumna;
+  iAcPivot    : Integer;
+  bTieneColor : Boolean;
 begin
   SetLength(Result, 0);
   if Trim(FCodArt) = '' then Exit;
@@ -2646,8 +2645,51 @@ begin
     iAcPivot := 0;
     if not q.IsEmpty then iAcPivot := q.FieldByName('ID_AC_ACA').AsInteger;
     q.Close;
-
-    if iAcPivot > 0 then
+    bTieneColor := lstColores.Items.Count > 0;
+    if bTieneColor and (iAcPivot > 0) then
+    begin
+      // Solo tallas con SKU en los colores seleccionados. Al seleccionar
+      // varios colores se muestra la union de sus tallas, respetando el
+      // orden definido por el conjunto pivot del articulo.
+      q.SQL.Text :=
+        'SELECT DISTINCT AVT.AV, ACD.ORDEN_ACD, AVT.ORDEN_AV ' +
+        '  FROM fza_articulos_skus SKU ' +
+        '  JOIN fza_atributos_sku SAT ' +
+        '    ON SAT.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '  JOIN fza_atributos_valores AVT ON AVT.ID_AV = SAT.ID_AV_SA ' +
+        '  JOIN fza_atributos_conjuntos_det ACD ' +
+        '    ON ACD.ID_AV_ACD = AVT.ID_AV AND ACD.ID_AC_ACD = :ac ' +
+        '  JOIN fza_atributos_sku SAC ' +
+        '    ON SAC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '  JOIN fza_atributos_valores AVC ' +
+        '    ON AVC.ID_AV = SAC.ID_AV_SA AND AVC.ID_VA_AV = ''CO'' ' +
+        ' WHERE SKU.CODIGO_ART_SKU = :art ' +
+        '   AND AVC.AV IN (' + ColoresSeleccionadosSQL + ') ' +
+        ' ORDER BY ACD.ORDEN_ACD, AVT.ORDEN_AV, AVT.AV';
+      q.ParamByName('ac').AsInteger := iAcPivot;
+      q.ParamByName('art').AsString := FCodArt;
+    end
+    else if bTieneColor then
+    begin
+      // Fallback sin conjunto pivot: tallas reales de los SKU que pertenecen
+      // a cualquiera de los colores seleccionados.
+      q.SQL.Text :=
+        'SELECT DISTINCT AVT.AV, AVT.ORDEN_AV ' +
+        '  FROM fza_articulos_skus SKU ' +
+        '  JOIN fza_atributos_sku SAT ' +
+        '    ON SAT.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '  JOIN fza_atributos_valores AVT ' +
+        '    ON AVT.ID_AV = SAT.ID_AV_SA AND AVT.ID_VA_AV <> ''CO'' ' +
+        '  JOIN fza_atributos_sku SAC ' +
+        '    ON SAC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+        '  JOIN fza_atributos_valores AVC ' +
+        '    ON AVC.ID_AV = SAC.ID_AV_SA AND AVC.ID_VA_AV = ''CO'' ' +
+        ' WHERE SKU.CODIGO_ART_SKU = :art ' +
+        '   AND AVC.AV IN (' + ColoresSeleccionadosSQL + ') ' +
+        ' ORDER BY AVT.ORDEN_AV, AVT.AV';
+      q.ParamByName('art').AsString := FCodArt;
+    end
+    else if iAcPivot > 0 then
     begin
       // 1b. Todas las tallas del conjunto, en orden. Salen TODAS aunque
       //     algunas no tengan SKUs/stock — el pivote las muestra a 0.
@@ -3053,24 +3095,15 @@ begin
   RecargarConsulta;
 end;
 
-procedure TfrmStockConsulta.clbAlmacenesClickCheck(Sender: TObject;
-  AIndex: Integer; APrevState, ANewState: TcxCheckBoxState);
+procedure TfrmStockConsulta.lstAlmacenesClick(Sender: TObject);
 begin
   RecargarConsulta;
 end;
 
-procedure TfrmStockConsulta.clbColoresClickCheck(Sender: TObject;
-  AIndex: Integer; APrevState, ANewState: TcxCheckBoxState);
+procedure TfrmStockConsulta.lstColoresClick(Sender: TObject);
 begin
   ActualizarLetreroColor;
   RecargarConsulta;
-end;
-
-// Al pinchar un color (sin tocar el check) se "cantan" sus propiedades propias
-// (nivel color/SKU) si difieren de las del articulo.
-procedure TfrmStockConsulta.clbColoresClick(Sender: TObject);
-begin
-  ActualizarLetreroColor;
 end;
 
 procedure TfrmStockConsulta.pcVistasChange(Sender: TObject);

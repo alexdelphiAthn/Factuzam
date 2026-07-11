@@ -168,16 +168,15 @@ object frmStockConsulta: TfrmStockConsulta
             TabOrder = 1
             Transparent = True
           end
-          object clbColores: TcxCheckListBox
+          object lstColores: TcxListBox
             Left = 8
             Top = 32
             Width = 252
             Height = 269
             Anchors = [akLeft, akTop, akRight, akBottom]
-            Items = <>
+            MultiSelect = True
             TabOrder = 0
-            OnClick = clbColoresClick
-            OnClickCheck = clbColoresClickCheck
+            OnClick = lstColoresClick
             ExplicitHeight = 261
           end
         end
@@ -198,15 +197,15 @@ object frmStockConsulta: TfrmStockConsulta
             TabOrder = 1
             Transparent = True
           end
-          object clbAlmacenes: TcxCheckListBox
+          object lstAlmacenes: TcxListBox
             Left = 8
             Top = 32
             Width = 252
             Height = 269
             Anchors = [akLeft, akTop, akRight, akBottom]
-            Items = <>
+            MultiSelect = True
             TabOrder = 0
-            OnClickCheck = clbAlmacenesClickCheck
+            OnClick = lstAlmacenesClick
           end
         end
       end
