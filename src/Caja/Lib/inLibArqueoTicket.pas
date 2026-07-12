@@ -334,6 +334,10 @@ var
   Q: TUniQuery;
   dTotal: Currency;
   dPorc: Currency;
+  sFamilia: string;
+  sImporte: string;
+  sPorc: string;
+  iAnchoFamilia: Integer;
 begin
   if AArqueo.Neto = 0 then Exit;
   dTotal := AArqueo.Neto;
@@ -359,9 +363,19 @@ begin
         dPorc := (Q.FieldByName('NETO').AsCurrency / dTotal) * 100
       else
         dPorc := 0;
-      ATicket.TextoColumnas(
-        Q.FieldByName('FAMILIA').AsString + ' ' + FmtPorc(dPorc),
-        FmtImp(Q.FieldByName('NETO').AsCurrency));
+      sFamilia := Q.FieldByName('FAMILIA').AsString;
+      sPorc := FmtPorc(dPorc);
+      sImporte := FmtImp(Q.FieldByName('NETO').AsCurrency);
+      // Reserva un espacio antes del porcentaje y dos antes del importe.
+      iAnchoFamilia := N_CHAR_LIN - Length(sPorc) - Length(sImporte) - 3;
+      if Length(sFamilia) > iAnchoFamilia then
+      begin
+        if iAnchoFamilia > 3 then
+          sFamilia := Copy(sFamilia, 1, iAnchoFamilia - 3) + '...'
+        else
+          sFamilia := Copy(sFamilia, 1, iAnchoFamilia);
+      end;
+      ATicket.TextoColumnas(sFamilia + ' ' + sPorc, sImporte);
       Q.Next;
     end;
   finally
