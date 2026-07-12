@@ -1,4 +1,4 @@
-inherited frmConsultaOpe: TfrmConsultaOpe
+﻿inherited frmConsultaOpe: TfrmConsultaOpe
   Caption = 'Buscar operaciones'
   ClientHeight = 720
   ClientWidth = 1163
@@ -975,11 +975,11 @@ inherited frmConsultaOpe: TfrmConsultaOpe
       Height = 28
       Anchors = [akTop, akRight]
       Caption = 'Cerrar (ESC)'
-      TabOrder = 1
+      TabOrder = 6
       OnClick = btnCerrarClick
     end
     object btnDevolverAbonar: TButton
-      Left = 142
+      Left = 292
       Top = 6
       Width = 200
       Height = 28
@@ -987,7 +987,7 @@ inherited frmConsultaOpe: TfrmConsultaOpe
       TabOrder = 2
     end
     object btnRectificar: TButton
-      Left = 352
+      Left = 502
       Top = 6
       Width = 100
       Height = 28
@@ -996,7 +996,7 @@ inherited frmConsultaOpe: TfrmConsultaOpe
       OnClick = btnRectificarClick
     end
     object btnAnularVerifactu: TButton
-      Left = 462
+      Left = 612
       Top = 6
       Width = 170
       Height = 28
@@ -1005,13 +1005,22 @@ inherited frmConsultaOpe: TfrmConsultaOpe
       OnClick = btnAnularVerifactuClick
     end
     object btnFacturarTicket: TButton
-      Left = 642
+      Left = 792
       Top = 6
       Width = 160
       Height = 28
       Caption = 'Convertir en normal'
       TabOrder = 5
       OnClick = btnFacturarTicketClick
+    end
+    object btnReimprimirOtros: TcxButton
+      Left = 142
+      Top = 6
+      Width = 140
+      Height = 28
+      Caption = 'Reimprimir otros'
+      TabOrder = 1
+      OnClick = btnReimprimirOtrosClick
     end
   end
   object tmrBusqueda: TTimer
