@@ -1,0 +1,24 @@
+<?php
+declare(strict_types=1);
+
+const CFG_DB_DSN =
+    'mysql:host=mysql.ejemplo.com;dbname=nombre_bbdd;charset=utf8mb4';
+const CFG_DB_USUARIO = 'usuario_bbdd';
+const CFG_DB_PASSWORD = 'password_bbdd';
+const CFG_CLAVES_EMISORAS = [
+    'id_clave_delphi' => 'clave_publica_base64url'
+];
+const CFG_AMBITOS_PERMITIDOS = [
+    'prueba:leer',
+    'ventas:leer',
+    'ventas:escribir',
+    'fotos:leer',
+    'fotos:escribir',
+    'sif:instalacion',
+    'recuentos:leer',
+    'recuentos:escribir'
+];
+const CFG_DESFASE_MAXIMO_SEGUNDOS = 300;
+const CFG_PREFIJO_TOKEN = 'fza_';
+const CFG_FOTOS_DIRECTORIO = __DIR__ . '/datos/fotos';
+const CFG_FOTOS_MAX_BYTES = 20971520;
