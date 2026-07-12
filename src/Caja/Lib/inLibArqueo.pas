@@ -122,11 +122,10 @@ type
     // como una fila con su subtotal; FAMILIA ya viene indentada por nivel.
     // Parámetros esperados: :pEMPRESA, :pALMACEN, :pCAJA, :pFDESDE, :pFHASTA.
     class function SQLResumenSeccion(ANiveles: Integer): string;
-    // SQL del "Resumen por propiedad": una fila por (propiedad, valor) de las
-    // propiedades marcadas ESARQUEO_PROP='S'. Resuelve el valor EFECTIVO por
-    // SKU (vi_articulos_propiedades_efectivas), de modo que la temporada de
-    // color sale en su valor de color. Mismos parámetros :pEMPRESA…:pFHASTA.
-    class function SQLResumenPropiedad: string;
+    // SQL del "Resumen por temporada": una fila por temporada efectiva del
+    // SKU vendido. La temporada de color prevalece sobre la del artículo.
+    // Mismos parámetros :pEMPRESA, :pALMACEN, :pCAJA, :pFDESDE y :pFHASTA.
+    class function SQLResumenTemporada: string;
   end;
 
 implementation
@@ -249,37 +248,33 @@ begin
     '  ORDER BY x.CLAVE                                            ';
 end;
 
-class function TArqueoCalculadora.SQLResumenPropiedad: string;
+class function TArqueoCalculadora.SQLResumenTemporada: string;
 begin
-  // Valor EFECTIVO por SKU (vi_articulos_propiedades_efectivas): la
-  // temporada de color sale en su valor de color, cayendo a la de artículo
-  // si el color no la fija. Solo propiedades marcadas ESARQUEO_PROP='S'.
-  // Une por el SKU vendido (CODIGO_UNIDAD_FACLIN) -> sin duplicar líneas.
+  // La vista efectiva resuelve SKU -> color -> artículo. El LEFT JOIN deja
+  // visibles también las ventas cuyo artículo no tenga temporada asignada.
   Result :=
-    ' SELECT v.CODIGO_PROP_ARTPROP                  AS PROP,       ' +
-    '        COALESCE(v.VALOR_PV, v.VALOR_LIBRE_ARTPROP, ''?'')    ' +
-    '                                               AS VALOR,      ' +
-    '        COUNT(*)                               AS UDS,        ' +
-    '        COALESCE(SUM(l.TOTAL_FACLIN), 0)       AS NETO        ' +
+    ' SELECT COALESCE(NULLIF(COALESCE(v.VALOR_PV,                  ' +
+    '                   v.VALOR_LIBRE_ARTPROP), ''''),             ' +
+    '                   ''(sin temporada)'')       AS TEMPORADA,  ' +
+    '        COALESCE(SUM(l.CANTIDAD_FACLIN), 0)   AS UDS,        ' +
+    '        COALESCE(SUM(l.TOTAL_FACLIN), 0)      AS NETO        ' +
     '   FROM fza_caja_operaciones o                                ' +
     '   JOIN fza_facturas_lineas  l                                ' +
     '     ON l.CODIGO_EMP_FACLIN        = o.CODIGO_EMP_OPCAJA      ' +
     '    AND l.CODIGO_ALM_FACLIN        = o.CODIGO_ALM_OPCAJA      ' +
     '    AND l.CODIGO_CAJA_FACLIN       = o.CODIGO_CAJA_OPCAJA     ' +
     '    AND l.NUMERO_OPERACION_FACLIN  = o.NUMERO_OPERACION_OPCAJA' +
-    '   JOIN vi_articulos_propiedades_efectivas v                 ' +
+    '   LEFT JOIN vi_articulos_propiedades_efectivas v            ' +
     '     ON v.CODIGO_UNIDAD_SKU = l.CODIGO_UNIDAD_FACLIN          ' +
-    '   JOIN fza_propiedades pr                                    ' +
-    '     ON pr.CODIGO_PROP_ARTPROP = v.CODIGO_PROP_ARTPROP        ' +
-    '    AND pr.ESARQUEO_PROP = ''S''                              ' +
+    '    AND v.CODIGO_PROP_ARTPROP = ''TEMPORADA''                  ' +
     '  WHERE o.TIPO_OPERACION_OPCAJA   = ''VE''                    ' +
     '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                 ' +
     '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                 ' +
     '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                    ' +
     '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                  ' +
     '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                  ' +
-    '  GROUP BY v.CODIGO_PROP_ARTPROP, VALOR                       ' +
-    '  ORDER BY v.CODIGO_PROP_ARTPROP, VALOR                       ';
+    '  GROUP BY TEMPORADA                                          ' +
+    '  ORDER BY TEMPORADA                                          ';
 end;
 
 // =============================================================================

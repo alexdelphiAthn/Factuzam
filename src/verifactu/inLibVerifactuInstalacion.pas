@@ -56,8 +56,8 @@ uses
   inLibGlobalVar, inLibAppParam;
 
 const
-  cUrlInstalacionSif =
-    'https://veryverifactu.com/api/instalacion.php';
+  cUrlServicios = 'https://webservice.veryverifactu.com/api/v1/';
+  cRutaInstalacionSif = 'sif/instalacion.php';
 
 function NifSoloDigitos(const AValor: string): Boolean;
 var
@@ -109,10 +109,13 @@ end;
 
 function UrlServicioInstalacionSif: string;
 begin
-  Result := Trim(oAppParams.GetString('appVerifactuInstalacionUrl',
-                                      cUrlInstalacionSif));
+  Result := Trim(oAppParams.GetString('appFotosUrlDescarga',
+                                      cUrlServicios));
   if Result = '' then
-    Result := cUrlInstalacionSif;
+    Result := cUrlServicios;
+  if not Result.EndsWith('/') then
+    Result := Result + '/';
+  Result := Result + cRutaInstalacionSif;
 end;
 
 function JsonString(AObj: TJSONObject; const AClave: string): string;
@@ -130,6 +133,7 @@ function MensajeErrorServicio(const ACuerpo: string;
 var
   oJson:  TJSONValue;
   oValor: TJSONValue;
+  oError: TJSONValue;
 begin
   Result := '';
   oJson := TJSONObject.ParseJSONValue(ACuerpo);
@@ -141,9 +145,13 @@ begin
         Result := Trim(oValor.Value);
       if Result = '' then
       begin
-        oValor := TJSONObject(oJson).GetValue('error');
-        if oValor <> nil then
-          Result := Trim(oValor.Value);
+        oError := TJSONObject(oJson).GetValue('error');
+        if oError <> nil then
+        begin
+          oValor := oError.FindValue('mensaje');
+          if oValor <> nil then
+            Result := Trim(oValor.Value);
+        end;
       end;
     end;
   finally
@@ -159,9 +167,12 @@ var
   oHttp:     THTTPClient;
   oReqJson:  TJSONObject;
   oRespJson: TJSONValue;
+  oDatos:    TJSONValue;
   oCuerpo:   TStringStream;
   oResp:     IHTTPResponse;
   sRespuesta:string;
+  sReferencia:string;
+  sToken:    string;
 begin
   Result := '';
   oHttp := THTTPClient.Create;
@@ -171,10 +182,18 @@ begin
     oReqJson.AddPair('razon_social', ARazonSocial);
     oReqJson.AddPair('nif', ANif);
     oReqJson.AddPair('sif', ACodigoSif);
+    sReferencia := Trim(oAppParams.GetString('appFotosCarpetaCliente'));
+    sToken := Trim(oAppParams.GetString('appFotosApiKey'));
+    if sReferencia = '' then
+      raise Exception.Create('Falta la referencia global de la instalación.');
+    if sToken = '' then
+      raise Exception.Create('Falta la API key de la instalación.');
+    oReqJson.AddPair('referencia', sReferencia);
     oCuerpo := TStringStream.Create(oReqJson.ToString, TEncoding.UTF8);
     try
       oHttp.ConnectionTimeout := 15000;
       oHttp.ResponseTimeout := 30000;
+      oHttp.CustomHeaders['X-API-Key'] := sToken;
       oResp := oHttp.Post(UrlServicioInstalacionSif, oCuerpo, nil,
         [TNetHeader.Create('Content-Type', 'application/json; charset=utf-8')]);
       sRespuesta := oResp.ContentAsString(TEncoding.UTF8);
@@ -185,7 +204,11 @@ begin
       try
         if not (oRespJson is TJSONObject) then
           raise Exception.Create('El servicio no devolvió JSON válido.');
-        Result := JsonString(TJSONObject(oRespJson), 'numero_instalacion');
+        oDatos := TJSONObject(oRespJson).GetValue('datos');
+        if oDatos is TJSONObject then
+          Result := JsonString(TJSONObject(oDatos), 'numero_instalacion');
+        if Result = '' then
+          Result := JsonString(TJSONObject(oRespJson), 'numero_instalacion');
         if Result = '' then
           Result := JsonString(TJSONObject(oRespJson), 'numeroInstalacion');
         if Result = '' then
@@ -225,9 +248,8 @@ begin
   else if not SameText(Trim(AEstado.CodigoSif), cCodigoSifFactuzam) then
     AEstado.Mensaje := 'El SIF guardado no coincide con FZ.'
   else if not SameText(Trim(AEstado.Version), oVersion) then
-    AEstado.Mensaje := 'El número corresponde a la versión ' +
-                       Trim(AEstado.Version) +
-                       ' y debe regenerarse para ' + oVersion + '.'
+    AEstado.Mensaje := 'Pendiente de registrar la versión ' + oVersion +
+                       ' en la instalación SIF.'
   else
   begin
     AEstado.EsValido := True;
