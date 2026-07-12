@@ -9,14 +9,14 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Descarga de fotos de artículo desde el servidor web (download_foto.php).  }
+{    Descarga de fotos de artículo desde el servicio web general.              }
 {    Pide el ZIP con las fotos del artículo, lo descomprime en appDirFotos     }
 {    dejando los PNG sueltos y borra el ZIP temporal. La integración en el     }
 {    sistema de fotos (oFotos.Guardar / GuardarSesion) la hace el formulario   }
 {    que invoca, según su contexto (sesión de compras o ficha de fotos).       }
 {                                                                              }
-{    Contrato de download_foto.php (idéntico a ver_foto.php / upload_foto):    }
-{      GET  ?carpeta_cliente=..&articulo=..&resolucion=real                    }
+{    Contrato de /fotos/descargar.php:                                         }
+{      GET  ?referencia=..&articulo=..&resolucion=real                         }
 {      Header X-API-Key con la clave.                                          }
 {      200 application/zip con los PNG; 4xx application/json [message].        }
 {******************************************************************************}
@@ -27,8 +27,8 @@ interface
 uses
   System.SysUtils, System.Classes;
 
-// Comprueba que los parámetros necesarios (URL del PHP, clave X-API-Key,
-// carpeta de cliente y carpeta de fotos) están configurados. Si falta
+// Comprueba que los parámetros necesarios (URL general, clave X-API-Key,
+// referencia de instalación y carpeta de fotos) están configurados. Si falta
 // alguno devuelve False y deja en AMensaje la lista de lo que falta.
 function FotosNubeConfigurado(out AMensaje: string): Boolean;
 
@@ -74,8 +74,17 @@ uses
 const
   cParUrl      = 'appFotosUrlDescarga';
   cParApiKey   = 'appFotosApiKey';
-  cParCarpeta  = 'appFotosCarpetaCliente';
+  cParReferencia = 'appFotosCarpetaCliente';
   cParDirFotos = 'appDirFotos';
+  cRutaDescarga = 'fotos/descargar.php';
+
+function ComponerUrlServicio(const AUrlBase, ARuta: string): string;
+begin
+  Result := Trim(AUrlBase);
+  if not Result.EndsWith('/') then
+    Result := Result + '/';
+  Result := Result + ARuta;
+end;
 
 function FotosNubeConfigurado(out AMensaje: string): Boolean;
 var
@@ -85,11 +94,12 @@ begin
   faltan := TStringList.Create;
   try
     if Trim(oAppParams.GetString(cParUrl)) = '' then
-      faltan.Add('  - URL del script download_foto.php (appFotosUrlDescarga)');
+      faltan.Add('  - URL general del servicio web (appFotosUrlDescarga)');
     if Trim(oAppParams.GetString(cParApiKey)) = '' then
       faltan.Add('  - Clave X-API-Key (appFotosApiKey)');
-    if Trim(oAppParams.GetString(cParCarpeta)) = '' then
-      faltan.Add('  - Carpeta de cliente (appFotosCarpetaCliente)');
+    if Trim(oAppParams.GetString(cParReferencia)) = '' then
+      faltan.Add('  - Referencia global de instalación ' +
+                 '(appFotosCarpetaCliente)');
     if Trim(oAppParams.GetPath(cParDirFotos)) = '' then
       faltan.Add('  - Carpeta de fotos (appDirFotos)');
     Result := faltan.Count = 0;
@@ -123,6 +133,7 @@ end;
 function MensajeErrorServidor(AStream: TStream; AStatus: Integer): string;
 var
   texto: TStringStream;
+  jerror: TJSONValue;
   jval : TJSONValue;
   jmsg : TJSONValue;
 begin
@@ -139,6 +150,16 @@ begin
         jmsg := jval.FindValue('message');
         if jmsg <> nil then
           Result := jmsg.Value;
+        if Result = '' then
+        begin
+          jerror := jval.FindValue('error');
+          if jerror <> nil then
+          begin
+            jmsg := jerror.FindValue('mensaje');
+            if jmsg <> nil then
+              Result := jmsg.Value;
+          end;
+        end;
       end;
     finally
       FreeAndNil(jval);
@@ -154,7 +175,7 @@ function DescargarFotosArticulo(const ACodArt: string;
                                 out AArchivos: TArray<string>;
                                 out AMensaje: string): Boolean;
 var
-  sUrl, sKey, sCarpeta, sDir, sUrlFull, sZipTmp, sTs: string;
+  sUrl, sKey, sReferencia, sDir, sUrlFull, sZipTmp, sTs: string;
   http   : THTTPClient;
   resp   : IHTTPResponse;
   cuerpo : TMemoryStream;
@@ -167,13 +188,13 @@ begin
   AArchivos := nil;
   if FotosNubeConfigurado(AMensaje) then
   begin
-    sUrl     := Trim(oAppParams.GetString(cParUrl));
-    sKey     := Trim(oAppParams.GetString(cParApiKey));
-    sCarpeta := Trim(oAppParams.GetString(cParCarpeta));
+    sUrl        := Trim(oAppParams.GetString(cParUrl));
+    sKey        := Trim(oAppParams.GetString(cParApiKey));
+    sReferencia := Trim(oAppParams.GetString(cParReferencia));
     // Pedimos resolución 'real' (calidad original): el sistema de fotos
     // ya genera 300/600 al integrar la foto representativa.
-    sUrlFull := sUrl +
-      '?carpeta_cliente=' + TNetEncoding.URL.Encode(sCarpeta) +
+    sUrlFull := ComponerUrlServicio(sUrl, cRutaDescarga) +
+      '?referencia=' + TNetEncoding.URL.Encode(sReferencia) +
       '&articulo=' + TNetEncoding.URL.Encode(ACodArt) +
       '&resolucion=real';
     http   := THTTPClient.Create;
