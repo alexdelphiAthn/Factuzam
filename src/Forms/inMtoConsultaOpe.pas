@@ -25,7 +25,7 @@ uses
   cxDBData, cxGridLevel, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, cxCalendar, cxTextEdit,
   cxMaskEdit, cxDropDownEdit, cxButtonEdit, cxContainer, cxLabel,
-  cxSplitter, Vcl.Imaging.PngImage,
+  cxSplitter, cxButtons, Vcl.Imaging.PngImage,
   inMtoFrmBase, inLibVentasCalendario, inLibLayoutForm,
   UniDataConsultaOpe, dxCore, cxDateUtils, dxCoreGraphics, cxCurrencyEdit,
   cxClasses, cxGridCustomView, JvComponentBase, JvEnterTab, cxLocalization;
@@ -80,6 +80,7 @@ type
     imgFotoConsulta:  TImage;
     pnlPie:           TPanel;
     btnReimprimir:    TButton;
+    btnReimprimirOtros: TcxButton;
     btnCerrar:        TButton;
     tmrBusqueda:      TTimer;
     btnDevolverAbonar: TButton;
@@ -93,6 +94,7 @@ type
     procedure edtBuscarPropertiesChange(Sender: TObject);
     procedure tmrBusquedaTimer(Sender: TObject);
     procedure btnReimprimirClick(Sender: TObject);
+    procedure btnReimprimirOtrosClick(Sender: TObject);
     procedure btnCerrarClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure dtpFechaPropertiesGetDayState(Sender: TObject; ADate: TDateTime;
@@ -115,6 +117,7 @@ type
     procedure AjustarVisibilidadPestanas;
     procedure AplicarAnchosPestanasHijas;
     procedure AjustarAPantalla;
+    procedure ReimprimirOperacion(const ANombreImpresora: string);
     procedure OnMaestroDataChange(Sender: TObject; Field: TField);
     procedure OnFacturaLinDataChange(Sender: TObject; Field: TField);
     procedure RefrescarFotoConsulta;
@@ -711,6 +714,7 @@ begin
     or FdmConsulta.TieneDepositos
     or FdmConsulta.EsOperacionCaja
     or FdmConsulta.EsTraspaso;
+  btnReimprimirOtros.Enabled := btnReimprimir.Enabled;
 end;
 
 // -----------------------------------------------------------------------------
@@ -751,36 +755,53 @@ begin
 end;
 
 procedure TfrmConsultaOpe.btnReimprimirClick(Sender: TObject);
+begin
+  ReimprimirOperacion(oNomImpresoraCaja);
+end;
+
+procedure TfrmConsultaOpe.btnReimprimirOtrosClick(Sender: TObject);
+begin
+  ReimprimirOperacion('DEBUG');
+end;
+
+procedure TfrmConsultaOpe.ReimprimirOperacion(
+  const ANombreImpresora: string);
 var
   sEmp, sAlm, sCaja, sNumOp, sCliente: string;
 begin
-  if FdmConsulta.qryMaestro.IsEmpty then
-    Exit;
-  sEmp     := FdmConsulta.qryMaestro.FieldByName('CODIGO_EMP_OPCAJA').AsString;
-  sAlm     := FdmConsulta.qryMaestro.FieldByName('CODIGO_ALM_OPCAJA').AsString;
-  sCaja    := FdmConsulta.qryMaestro.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
-  sNumOp   :=
-    FdmConsulta.qryMaestro.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
-  sCliente := FdmConsulta.qryMaestro.FieldByName('CLIENTE').AsString;
-  // Traspaso (TR misma empresa / TA entre empresas): ticket especifico con
-  // stock origen/destino, no el ticket generico de operacion de caja.
-  if FdmConsulta.EsTraspaso then
-    TTraspasoTicket.ImprimirTraspasoDesdeBD(oConn, sEmp, sAlm, sCaja, sNumOp,
-                                            oNomImpresoraCaja)
-  else
+  if not FdmConsulta.qryMaestro.IsEmpty then
   begin
-    if FdmConsulta.TieneFactura then
-      ImprimirTicketDesdeBD(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);
-    if FdmConsulta.TieneDepositos then
-      ImprimirResguardoDeposito(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);
-    if FdmConsulta.EsOperacionCaja then
-      ImprimirTicketOperacionCaja(sEmp, sAlm, sCaja, sNumOp, oNomImpresoraCaja);
-    if (not FdmConsulta.TieneFactura)
-       and (not FdmConsulta.TieneDepositos)
-       and (not FdmConsulta.EsOperacionCaja) then
-      ShowMessage('Esta operación no tiene ticket asociado.')
-    else if Trim(sCliente) <> '' then
-      ImprimirRecordatorio(sCliente, oNomImpresoraCaja);
+    sEmp :=
+      FdmConsulta.qryMaestro.FieldByName('CODIGO_EMP_OPCAJA').AsString;
+    sAlm :=
+      FdmConsulta.qryMaestro.FieldByName('CODIGO_ALM_OPCAJA').AsString;
+    sCaja :=
+      FdmConsulta.qryMaestro.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
+    sNumOp := FdmConsulta.qryMaestro.
+      FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
+    sCliente := FdmConsulta.qryMaestro.FieldByName('CLIENTE').AsString;
+    // Los traspasos usan su ticket específico con stock origen/destino.
+    if FdmConsulta.EsTraspaso then
+      TTraspasoTicket.ImprimirTraspasoDesdeBD(oConn, sEmp, sAlm, sCaja,
+                                              sNumOp, ANombreImpresora)
+    else
+    begin
+      if FdmConsulta.TieneFactura then
+        ImprimirTicketDesdeBD(sEmp, sAlm, sCaja, sNumOp,
+                              ANombreImpresora);
+      if FdmConsulta.TieneDepositos then
+        ImprimirResguardoDeposito(sEmp, sAlm, sCaja, sNumOp,
+                                  ANombreImpresora);
+      if FdmConsulta.EsOperacionCaja then
+        ImprimirTicketOperacionCaja(sEmp, sAlm, sCaja, sNumOp,
+                                    ANombreImpresora);
+      if (not FdmConsulta.TieneFactura)
+         and (not FdmConsulta.TieneDepositos)
+         and (not FdmConsulta.EsOperacionCaja) then
+        ShowMessage('Esta operación no tiene ticket asociado.')
+      else if Trim(sCliente) <> '' then
+        ImprimirRecordatorio(sCliente, ANombreImpresora);
+    end;
   end;
 end;
 
