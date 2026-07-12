@@ -1,8 +1,7 @@
 # Migración y unificación de los servicios web PHP
 
-> Estado: propuesta inicial para revisión. Este documento define el punto de
-> partida, la arquitectura objetivo y el orden de migración. No aplica cambios
-> al servidor ni a las BBDD.
+> Estado: migración iniciada. El núcleo de autenticación, la obtención del
+> número SIF y la primera API de fotos están implementados en `certapiweb`.
 
 ## 1. Objetivo
 
@@ -52,9 +51,10 @@ Fuera de alcance:
 | Persistencia | Ficheros JSON y log fuera de `web/`. |
 | Datos | Versión, razón social, NIF, código SIF, IP y agente de usuario. |
 
-La clave lógica actual incluye la versión de Factuzam. Antes de migrar debe
-confirmarse si actualizar la versión debe reutilizar la misma instalación o
-crear otra. La decisión afecta a la identidad central de instalaciones.
+La clave lógica antigua incluía la versión de Factuzam. Se ha corregido el
+diseño para conservar el mismo número de instalación al actualizar la versión.
+La identidad global es la referencia asociada a la API; la versión queda como
+metadato actualizado de esa instalación.
 
 ### 3.2 Fotos
 
@@ -159,7 +159,7 @@ son pruebas o si están retirados.
 URL lógica propuesta:
 
 ```text
-https://<host-elegido>/api/v1/
+https://webservice.veryverifactu.com/api/v1/
 ├── instalaciones/
 ├── auth/
 ├── ventas/
@@ -204,6 +204,7 @@ Ejemplos de ámbitos:
 ```text
 fotos:leer
 fotos:escribir
+sif:instalacion
 recuentos:leer
 recuentos:escribir
 ventas:escribir

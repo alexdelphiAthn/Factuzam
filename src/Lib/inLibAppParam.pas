@@ -142,7 +142,8 @@ begin
       // de instalación SIF se guarda por empresa en fza_empresas.
       if not MatchText(KeyDB, ['WindowState', 'Left', 'Top', 'Width',
                                'Height', 'Divider',
-                               'appVerifactuIdInstalacion']) then
+                               'appVerifactuIdInstalacion',
+                               'appVerifactuInstalacionUrl']) then
       begin
         if FParams.TryGetValue(KeyDB, ParamObj) then
           ParamObj.ValorActual := ValueDB
@@ -191,16 +192,16 @@ begin
   RegistrarParametro('Fotos', 'appNumAtributosFoto',
     'Atributos del SKU que componen la clave de foto (0 = solo artículo)',
     tpInteger, '1');
-  // Descarga de fotos desde el servidor web (download_foto.php). La
-  // carpeta local de destino es appDirFotos (ya definida arriba). Estos
-  // tres parametros los consume inLibFotosNube; vease Compras Sesiones
-  // (Ctrl+F) y la ficha de fotos del articulo.
+  // Acceso al servicio web general. La carpeta local de destino es
+  // appDirFotos (ya definida arriba). Se conservan las claves internas
+  // historicas para no perder los valores guardados en las instalaciones.
   RegistrarParametro('Fotos', 'appFotosUrlDescarga',
-    'URL del script download_foto.php del servidor de fotos', tpString, '');
+    'URL general del servicio web', tpString,
+    'https://webservice.veryverifactu.com/api/v1/');
   RegistrarParametro('Fotos', 'appFotosApiKey',
-    'Clave X-API-Key del servidor de fotos', tpString, '');
+    'API key de la instalación', tpString, '');
   RegistrarParametro('Fotos', 'appFotosCarpetaCliente',
-    'Carpeta de cliente en el servidor (parámetro carpeta_cliente)',
+    'Referencia global de la instalación',
     tpString, '');
   // --- Recuentos (app de recuento de inventarios) ---
   // Los consume inLibInventarioNube (enviar/recoger recuentos). Mismo estilo
@@ -326,9 +327,6 @@ begin
     'Lugar de suscripción de la declaración responsable', tpString, '');
   RegistrarParametro('Verifactu', 'appVerifactuDeclaracionFecha',
     'Fecha de suscripción de la declaración responsable', tpString, '');
-  RegistrarParametro('Verifactu', 'appVerifactuInstalacionUrl',
-    'URL del servicio de número de instalación del SIF', tpString,
-    'https://veryverifactu.com/api/instalacion.php');
   RegistrarParametro('Verifactu', 'appVerifactuDescripcionOpe',
     'Texto de DescripcionOperacion del registro de alta', tpString,
     'Venta');
