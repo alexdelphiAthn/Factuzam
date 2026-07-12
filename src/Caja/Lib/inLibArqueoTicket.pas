@@ -52,6 +52,9 @@ type
     class procedure EscribirResumenSeccion(ATicket: TTicketTermico;
                                            AConn: TUniConnection;
                                            const AArqueo: TArqueoCaja);
+    class procedure EscribirResumenTemporada(ATicket: TTicketTermico;
+                                             AConn: TUniConnection;
+                                             const AArqueo: TArqueoCaja);
     class procedure EscribirResumenEmpleado(ATicket: TTicketTermico;
                                             AConn: TUniConnection;
                                             const AArqueo: TArqueoCaja);
@@ -366,6 +369,44 @@ begin
   end;
 end;
 
+class procedure TArqueoTicket.EscribirResumenTemporada(
+  ATicket: TTicketTermico;
+  AConn: TUniConnection;
+  const AArqueo: TArqueoCaja);
+var
+  Q: TUniQuery;
+begin
+  Q := TUniQuery.Create(nil);
+  try
+    Q.Connection := AConn;
+    Q.SQL.Text := TArqueoCalculadora.SQLResumenTemporada;
+    Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
+    Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
+    Q.ParamByName('pCAJA').AsString := AArqueo.Caja;
+    Q.ParamByName('pFDESDE').AsDateTime := AArqueo.FechaDesde;
+    Q.ParamByName('pFHASTA').AsDateTime := AArqueo.FechaHasta;
+    Q.Open;
+    if not Q.IsEmpty then
+    begin
+      ATicket.SaltarLineas(1);
+      ATicket.Negrita(True);
+      ATicket.EscribirLinea('RESUMEN VENTAS POR TEMPORADA');
+      ATicket.Negrita(False);
+      while not Q.Eof do
+      begin
+        ATicket.TextoColumnas(
+          Format('%-20s %s uds',
+                 [Copy(Q.FieldByName('TEMPORADA').AsString, 1, 20),
+                  FormatFloat('0.##', Q.FieldByName('UDS').AsFloat)]),
+          FmtImp(Q.FieldByName('NETO').AsCurrency));
+        Q.Next;
+      end;
+    end;
+  finally
+    FreeAndNil(Q);
+  end;
+end;
+
 class procedure TArqueoTicket.EscribirResumenEmpleado(ATicket: TTicketTermico;
                                                      AConn: TUniConnection;
                                                      const AArqueo: TArqueoCaja);
@@ -606,6 +647,7 @@ begin
 
     // Resúmenes
     EscribirResumenSeccion(Ticket, AConn, Arqueo);
+    EscribirResumenTemporada(Ticket, AConn, Arqueo);
     EscribirResumenEmpleado(Ticket, AConn, Arqueo);
     EscribirResumenFormaPago(Ticket, AConn, Arqueo);
     EscribirResumenSerie(Ticket, AConn, Arqueo);
