@@ -45,6 +45,8 @@ function ObtenerEmpresaInstalacionSifDefecto(AConn: TUniConnection;
 function GenerarInstalacionSifEmpresa(AConn: TUniConnection;
                                       const ACodigoEmpresa: string):
                                       TEstadoInstalacionSif;
+procedure SincronizarVersionInstalacionesSif(AConn: TUniConnection);
+function DescargarDeclaracionResponsableSif(const AVersion: string): string;
 procedure ValidarInstalacionSif(const ANumero, AVersion, ACodigoSif,
                                 ANombreEmpresa, ANifEmpresa: string);
 
@@ -58,6 +60,7 @@ uses
 const
   cUrlServicios = 'https://webservice.veryverifactu.com/api/v1/';
   cRutaInstalacionSif = 'sif/instalacion.php';
+  cRutaDeclaracionSif = 'sif/declaracion.php';
 
 function NifSoloDigitos(const AValor: string): Boolean;
 var
@@ -107,7 +110,7 @@ begin
   end;
 end;
 
-function UrlServicioInstalacionSif: string;
+function UrlServicioSif(const ARuta: string): string;
 begin
   Result := Trim(oAppParams.GetString('appFotosUrlDescarga',
                                       cUrlServicios));
@@ -115,7 +118,17 @@ begin
     Result := cUrlServicios;
   if not Result.EndsWith('/') then
     Result := Result + '/';
-  Result := Result + cRutaInstalacionSif;
+  Result := Result + ARuta;
+end;
+
+function UrlServicioInstalacionSif: string;
+begin
+  Result := UrlServicioSif(cRutaInstalacionSif);
+end;
+
+function UrlServicioDeclaracionSif: string;
+begin
+  Result := UrlServicioSif(cRutaDeclaracionSif);
 end;
 
 function JsonString(AObj: TJSONObject; const AClave: string): string;
@@ -215,6 +228,76 @@ begin
           Result := JsonString(TJSONObject(oRespJson), 'NumeroInstalacion');
         if Result = '' then
           raise Exception.Create('El servicio no devolvió NumeroInstalacion.');
+      finally
+        FreeAndNil(oRespJson);
+      end;
+    finally
+      FreeAndNil(oCuerpo);
+    end;
+  finally
+    FreeAndNil(oReqJson);
+    FreeAndNil(oHttp);
+  end;
+end;
+
+function DescargarDeclaracionResponsableSif(const AVersion: string): string;
+var
+  oHttp:       THTTPClient;
+  oReqJson:    TJSONObject;
+  oRespJson:   TJSONValue;
+  oDatos:      TJSONValue;
+  oCuerpo:     TStringStream;
+  oResp:       IHTTPResponse;
+  sCodigoSif:  string;
+  sReferencia: string;
+  sRespuesta:  string;
+  sToken:      string;
+  sVersion:    string;
+begin
+  Result := '';
+  sReferencia := Trim(oAppParams.GetString('appFotosCarpetaCliente'));
+  sToken := Trim(oAppParams.GetString('appFotosApiKey'));
+  if sReferencia = '' then
+    raise Exception.Create('Falta la referencia global de la instalación.');
+  if sToken = '' then
+    raise Exception.Create('Falta la API key de la instalación.');
+  oHttp := THTTPClient.Create;
+  oReqJson := TJSONObject.Create;
+  try
+    oReqJson.AddPair('version', AVersion);
+    oReqJson.AddPair('sif', cCodigoSifFactuzam);
+    oReqJson.AddPair('referencia', sReferencia);
+    oCuerpo := TStringStream.Create(oReqJson.ToString, TEncoding.UTF8);
+    try
+      oHttp.ConnectionTimeout := 15000;
+      oHttp.ResponseTimeout := 30000;
+      oHttp.CustomHeaders['X-API-Key'] := sToken;
+      oResp := oHttp.Post(UrlServicioDeclaracionSif, oCuerpo, nil,
+        [TNetHeader.Create('Content-Type',
+                           'application/json; charset=utf-8')]);
+      sRespuesta := oResp.ContentAsString(TEncoding.UTF8);
+      if oResp.StatusCode <> 200 then
+        raise Exception.Create(MensajeErrorServicio(sRespuesta,
+                              oResp.StatusCode));
+      oRespJson := TJSONObject.ParseJSONValue(sRespuesta);
+      try
+        if not (oRespJson is TJSONObject) then
+          raise Exception.Create('El servicio no devolvió JSON válido.');
+        oDatos := TJSONObject(oRespJson).GetValue('datos');
+        if not (oDatos is TJSONObject) then
+          raise Exception.Create('El servicio no devolvió los datos de la ' +
+                                 'declaración responsable.');
+        sVersion := JsonString(TJSONObject(oDatos), 'version');
+        sCodigoSif := JsonString(TJSONObject(oDatos), 'sif');
+        if not SameText(sVersion, AVersion) then
+          raise Exception.Create('La declaración recibida no corresponde ' +
+                                 'a la versión solicitada.');
+        if not SameText(sCodigoSif, cCodigoSifFactuzam) then
+          raise Exception.Create('La declaración recibida no corresponde ' +
+                                 'al SIF FZ.');
+        Result := JsonString(TJSONObject(oDatos), 'contenido_html');
+        if Trim(Result) = '' then
+          raise Exception.Create('La declaración descargada está vacía.');
       finally
         FreeAndNil(oRespJson);
       end;
@@ -365,6 +448,36 @@ begin
       FreeAndNil(Qry);
     end;
     ObtenerEmpresaInstalacionSif(AConn, Result.CodigoEmpresa, Result);
+  end;
+end;
+
+procedure SincronizarVersionInstalacionesSif(AConn: TUniConnection);
+var
+  oEstado: TEstadoInstalacionSif;
+  Qry:     TUniQuery;
+begin
+  oEstado := GenerarInstalacionSifEmpresa(AConn, '');
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := AConn;
+    Qry.SQL.Text :=
+      ' UPDATE fza_empresas ' +
+      '    SET NUMERO_INSTALACION_EMP = :NUMERO, ' +
+      '        VERSION_INSTALACION_EMP = :VERSION, ' +
+      '        CODIGO_SIF_INSTALACION_EMP = :CODIGO_SIF, ' +
+      '        INSTANTE_INSTALACION_EMP = NOW(), ' +
+      '        INSTANTE_MODIF = NOW(), ' +
+      '        USUARIO_MODIF = :USUARIO ' +
+      '  WHERE COALESCE(NUMERO_INSTALACION_EMP, '''') <> :NUMERO ' +
+      '     OR COALESCE(VERSION_INSTALACION_EMP, '''') <> :VERSION ' +
+      '     OR COALESCE(CODIGO_SIF_INSTALACION_EMP, '''') <> :CODIGO_SIF';
+    Qry.ParamByName('NUMERO').AsString := oEstado.Numero;
+    Qry.ParamByName('VERSION').AsString := oVersion;
+    Qry.ParamByName('CODIGO_SIF').AsString := cCodigoSifFactuzam;
+    Qry.ParamByName('USUARIO').AsString := oUser;
+    Qry.Execute;
+  finally
+    FreeAndNil(Qry);
   end;
 end;
 
