@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require dirname(__DIR__, 4) . '/privado/autenticacion.php';
+require dirname(__DIR__, 4) . '/privado/declaraciones_sif.php';
 
 function texto_sif(array $datos, string $nombre, int $maximo): string
 {
@@ -62,6 +62,7 @@ $codigoSif = strtoupper(texto_sif($datos, 'sif', 20));
 if ($codigoSif !== 'FZ') {
     responder_error('SIF_NO_RECONOCIDO', 'El SIF no está autorizado.', 422);
 }
+$declaracion = leer_declaracion_sif($codigoSif, $version);
 $pdo = db_api();
 try {
     $pdo->beginTransaction();
@@ -119,6 +120,8 @@ responder_ok([
     'numero_instalacion' => $numero,
     'referencia' => $referencia,
     'version' => $version,
+    'codigo_declaracion' => $declaracion['codigo'],
+    'version_declaracion_desde' => $declaracion['version_desde'],
     'sif' => $codigoSif,
     'creada' => $creada
 ]);
