@@ -53,7 +53,9 @@ type
     class procedure ImprimirTraspasoDesdeBD(AConn: TUniConnection;
                                      const AEmpresa, AAlmacen, ACaja,
                                      ANumOperacion: string;
-                                     const ANombreImpresora: string = 'DEBUG');
+                                     const ANombreImpresora: string = 'DEBUG';
+                                     ARutasPDF: TStrings = nil;
+                                     ASoloPDF: Boolean = False);
   end;
 
 implementation
@@ -317,7 +319,9 @@ end;
 class procedure TTraspasoTicket.ImprimirTraspasoDesdeBD(AConn: TUniConnection;
                                    const AEmpresa, AAlmacen, ACaja,
                                    ANumOperacion: string;
-                                   const ANombreImpresora: string);
+                                   const ANombreImpresora: string;
+                                   ARutasPDF: TStrings;
+                                   ASoloPDF: Boolean);
 var
   Ticket: TTicketTermico;
   Q, QStk: TUniQuery;
@@ -446,7 +450,9 @@ begin
         sRefArch := StringReplace(sRefArch, '\', '_', [rfReplaceAll]);
         RutaPDF := GetUserFolderTickets + 'Traspaso_' + sRefArch + '.pdf';
         ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaPDF,
-                                     sImpresora);
+                                     sImpresora, ASoloPDF);
+        if Assigned(ARutasPDF) and FileExists(RutaPDF) then
+          ARutasPDF.Add(RutaPDF);
       finally
         FreeAndNil(Ticket);
       end;

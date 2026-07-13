@@ -52,6 +52,9 @@ database.cfg
 *.key
 *.lic
 herreras.sql
+src/certapiweb/servidor/privado/correos_config.php
+src/certapiweb/servidor/privado/vendor/
+src/certapiweb/servidor/privado/logs/
 
 # Archivos temporales o de backup de Delphi
 *.~**.dsv

@@ -22,7 +22,9 @@ uses
 
 procedure ImprimirTicketOperacionCaja(
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
-  const ANombreImpresora: string = 'DEBUG');
+  const ANombreImpresora: string = 'DEBUG';
+  ARutasPDF: TStrings = nil;
+  ASoloPDF: Boolean = False);
 
 // Apertura manual del cajon portamonedas sin venta asociada (tecla F9
 // global en cualquier ventana del programa). Comprueba el permiso
@@ -43,7 +45,9 @@ uses
 
 procedure ImprimirTicketOperacionCaja(
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
-  const ANombreImpresora: string = 'DEBUG');
+  const ANombreImpresora: string;
+  ARutasPDF: TStrings;
+  ASoloPDF: Boolean);
 var
   Qry: TUniQuery;
   Ticket: TTicketTermico;
@@ -127,7 +131,9 @@ begin
     RutaFicheroPDF := GetUserFolderTickets + 'ticket_caja_' +
       ANumOperacion + '.pdf';
     ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
-                                 ANombreImpresora);
+                                 ANombreImpresora, ASoloPDF);
+    if Assigned(ARutasPDF) and FileExists(RutaFicheroPDF) then
+      ARutasPDF.Add(RutaFicheroPDF);
   finally
     FreeAndNil(Ticket);
   end;

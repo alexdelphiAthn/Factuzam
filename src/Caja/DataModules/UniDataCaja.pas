@@ -335,6 +335,7 @@ type
                                      const ATipoFactura: string =
                                                           'SIMPLIFICADA';
                                      AFechaFactura: TDateTime = 0;
+                                     AFechaOperacion: TDateTime = 0;
                                      const ANumeroManual: string = ''): Boolean;
     property OnUpdateTotal: TOnUpdateTotalEvent read FOnUpdateTotal
                                                 write FOnUpdateTotal;
@@ -1131,6 +1132,7 @@ function TdmCajaOpe.GrabarFacturaSimplificada(
                           out ValeGenerado:    string;
                           const ATipoFactura: string = 'SIMPLIFICADA';
                           AFechaFactura: TDateTime = 0;
+                          AFechaOperacion: TDateTime = 0;
                           const ANumeroManual: string = ''): Boolean;
 var
   QryTrx:              TUniQuery;
@@ -1151,6 +1153,7 @@ var
   RequiereFactura:     Boolean;
   TieneDepositosPendientes:boolean;
   TotalVentasNormales, TotalDevolucionesNormales: Currency;
+  FechaOperacion: TDateTime;
   // ---------------------------------------------------------------------------
   // Inserta línea fiscal de anticipo (Solo si hay factura)
   // ---------------------------------------------------------------------------
@@ -1180,6 +1183,7 @@ begin
   FUltSerieFacGrabada  := '';
   FUltNumeroFacGrabada := '';
   ValeGenerado   := '';
+  FechaOperacion := FechaCajaConHora(AFechaOperacion);
   UsuarioCaja     := cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString;
   // Generamos el número global de caja que agrupará toda la operación
   AlmacenDeposito := ObtenerAlmacenDepositoEmpresa(AEmpresa);
@@ -1408,7 +1412,8 @@ begin
           if Abs(Lin.TotalCIva) > 0.001 then
             InsertarOperacionCaja(
               QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'CB',
-              Lin.TotalCIva, UsuarioCaja, Cab.Fecha, NumFactura, SerieGenerada,
+              Lin.TotalCIva, UsuarioCaja, FechaOperacion, NumFactura,
+              SerieGenerada,
               Cab.CodigoCliente, 'Consumo de anticipo: ' + Lin.Descripcion,
               '', '', '', '', '', 'N', Lin.idDeposito);
           cdsLineas.Next;
@@ -1429,7 +1434,7 @@ begin
             if Lin.TotalCIva > 0 then
               InsertarOperacionCaja(
                 QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'CB',
-                Lin.TotalCIva, UsuarioCaja, Cab.Fecha, NumFactura,
+                Lin.TotalCIva, UsuarioCaja, FechaOperacion, NumFactura,
                 SerieGenerada,
                 Cab.CodigoCliente, 'Cobro a cuenta: ' + Lin.Descripcion,
                 '', '', '', '', '', 'N', lin.idDeposito);
@@ -1443,10 +1448,10 @@ begin
               Lin.PrecioOriginalDep, Lin.TotalCIva, AAlmacen, AlmacenDeposito,
               Lin.Cantidad, Lin.TipoIva, Lin.PorcIva, Lin.EsImpIncl,
               ACaja,
-              sOpeCaja, Cab.Fecha, IdDepGenerado);
+              sOpeCaja, FechaOperacion, IdDepGenerado);
             InsertarOperacionCaja(
               QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DE', Lin.TotalCIva,
-              UsuarioCaja, Cab.Fecha, NumFactura, SerieGenerada,
+              UsuarioCaja, FechaOperacion, NumFactura, SerieGenerada,
               Cab.CodigoCliente,
               'Depósito: ' + Lin.Descripcion,
               '', '', '', '', '', 'N',
@@ -1472,12 +1477,12 @@ begin
           var ImporteCierreDE := Lin.PrecioOriginalDep;
           if ImporteCierreDE = 0 then ImporteCierreDE := Lin.TotalCIva;
           InsertarOperacionCaja(QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja,
-            'DE', -ImporteCierreDE, UsuarioCaja, Cab.Fecha, NumFactura,
+            'DE', -ImporteCierreDE, UsuarioCaja, FechaOperacion, NumFactura,
             SerieGenerada, Cab.CodigoCliente, 'Cierre depósito: ' +
             Lin.Descripcion, '', '', '', '', '', 'N', idDep);
           InsertarOperacionCaja(
             QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE', Lin.TotalCIva,
-            UsuarioCaja, Cab.Fecha, NumFactura, SerieGenerada,
+            UsuarioCaja, FechaOperacion, NumFactura, SerieGenerada,
             Cab.CodigoCliente,
             'Venta depósito: ' + Lin.Descripcion,
             '', '', '', '', '', 'N', idDep);
@@ -1512,7 +1517,7 @@ begin
             QryTrx, 'VE', SerieGenerada, NumFactura, Lin.Linea,
             AEmpresa, AlmacenOrigenSalida, ACaja, '', TipoMov, Lin.Sku,
             Lin.Cantidad, 0, UsuarioCaja, AAlmacen, NumOperacionVE,
-            Cab.CodigoCliente, Lin.Articulo, Cab.Fecha);
+            Cab.CodigoCliente, Lin.Articulo, FechaOperacion);
         cdsLineas.Next;
       end;
     finally
@@ -1546,13 +1551,13 @@ begin
       if TotalVentasNormales > 0 then
         InsertarOperacionCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE',
-          TotalVentasNormales, UsuarioCaja, Cab.Fecha, NumFactura,
+          TotalVentasNormales, UsuarioCaja, FechaOperacion, NumFactura,
           SerieGenerada,
           Cab.CodigoCliente, 'Venta');
       if TotalDevolucionesNormales > 0 then
         InsertarOperacionCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DV',
-          -TotalDevolucionesNormales, UsuarioCaja, Cab.Fecha, NumFactura,
+          -TotalDevolucionesNormales, UsuarioCaja, FechaOperacion, NumFactura,
           SerieGenerada,
           Cab.CodigoCliente, 'Devolución de Venta');
     end;
@@ -1631,7 +1636,7 @@ begin
         InsertarOperacionCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VR',
           DatosCobro.ValesRecogidos[i].ImporteAplicado, UsuarioCaja,
-          Cab.Fecha, NumFactura, SerieGenerada, Cab.CodigoCliente,
+          FechaOperacion, NumFactura, SerieGenerada, Cab.CodigoCliente,
           'Vale canjeado: ' + DatosCobro.ValesRecogidos[i].CodigoVale);
         // Marcar el vale como redimido. La nueva firma recibe QryTrx para
         // unirse a la transaccion, ademas del importe y la empresa.

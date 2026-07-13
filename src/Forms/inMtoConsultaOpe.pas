@@ -87,6 +87,7 @@ type
     btnAnularVerifactu: TButton;
     btnFacturarTicket: TButton;
     btnRectificar: TButton;
+    btnEnviarEmail: TcxButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -104,6 +105,7 @@ type
     procedure btnAnularVerifactuClick(Sender: TObject);
     procedure btnFacturarTicketClick(Sender: TObject);
     procedure btnRectificarClick(Sender: TObject);
+    procedure btnEnviarEmailClick(Sender: TObject);
   private
     FdmConsulta: TdmConsultaOpe;
     FEmpresa:    string;
@@ -154,7 +156,7 @@ uses inLibtb, inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibGlobalVar, inLibLog, inLibFotos, inMtoFotoArticulo,
      inLibTraspasoTicket, inLibShowMto, inMtoPrincipal, Uni,
      inLibVerifactu, inLibVerifactuCola, inMtoModalFacturarTicket,
-     inMtoCajaOpe;
+     inMtoCajaOpe, inLibCorreoTickets;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -715,6 +717,7 @@ begin
     or FdmConsulta.EsOperacionCaja
     or FdmConsulta.EsTraspaso;
   btnReimprimirOtros.Enabled := btnReimprimir.Enabled;
+  btnEnviarEmail.Enabled := btnReimprimir.Enabled;
 end;
 
 // -----------------------------------------------------------------------------
@@ -762,6 +765,58 @@ end;
 procedure TfrmConsultaOpe.btnReimprimirOtrosClick(Sender: TObject);
 begin
   ReimprimirOperacion('DEBUG');
+end;
+
+procedure TfrmConsultaOpe.btnEnviarEmailClick(Sender: TObject);
+var
+  Datos: TDatosCorreoOperacion;
+  sEmp, sAlm, sCaja, sNumOp, sEmail, sMensaje: string;
+  bContinuar: Boolean;
+begin
+  if not FdmConsulta.qryMaestro.IsEmpty then
+  begin
+    bContinuar := CorreoTicketsConfigurado(sMensaje);
+    if not bContinuar then
+      ShowMessage(sMensaje)
+    else
+    begin
+      sEmp := FdmConsulta.qryMaestro.
+        FieldByName('CODIGO_EMP_OPCAJA').AsString;
+      sAlm := FdmConsulta.qryMaestro.
+        FieldByName('CODIGO_ALM_OPCAJA').AsString;
+      sCaja := FdmConsulta.qryMaestro.
+        FieldByName('CODIGO_CAJA_OPCAJA').AsString;
+      sNumOp := FdmConsulta.qryMaestro.
+        FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
+      Datos := ObtenerDatosCorreoOperacion(sEmp, sAlm, sCaja, sNumOp);
+      sEmail := Datos.EmailCliente;
+      bContinuar := Datos.Encontrada;
+      if not bContinuar then
+        ShowMessage('No se ha encontrado la operación seleccionada.')
+      else if sEmail = '' then
+        bContinuar := InputQuery('Enviar documentación',
+          'Correo electrónico:', sEmail);
+      if bContinuar and (Trim(sEmail) = '') then
+      begin
+        ShowMessage('Indique una dirección de correo electrónico.');
+        bContinuar := False;
+      end;
+      if bContinuar then
+      begin
+        Screen.Cursor := crHourGlass;
+        try
+          if EnviarDocumentacionOperacion(sEmp, sAlm, sCaja, sNumOp,
+            sEmail, sMensaje) then
+            ShowMessage(sMensaje)
+          else
+            ShowMessage('No se ha podido enviar el correo.' + sLineBreak +
+              sMensaje);
+        finally
+          Screen.Cursor := crDefault;
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmConsultaOpe.ReimprimirOperacion(

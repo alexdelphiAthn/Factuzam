@@ -359,6 +359,7 @@ uses
   inLibAtributosPaleta,
   inLibShowMto, inMtoPrincipal,
   inMtoStockConsulta,
+  inLibCorreoTickets,
   System.StrUtils;
 
 procedure TfrmMtoOpeCaja.ActualizarFoco;
@@ -3293,6 +3294,7 @@ var
   ObjTotales: TFacturaTotales;
   NumeroGenerado: string;
   CodigoValeGenerado: string;
+  sMensajeCorreo: string;
 begin
   if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
   begin
@@ -3329,6 +3331,8 @@ begin
     frmFaseCobro.FFecha := FFecha;
     frmFaseCobro.FCodigoCliente :=
            DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString;
+    frmFaseCobro.FEmailCliente :=
+           DatosCaja.cdsCabecera.FieldByName('EMAIL_CLIENTE_FAC').AsString;
     frmFaseCobro.FNifCliente :=
            DatosCaja.cdsCabecera.FieldByName('NIF_CLIENTE_FAC').AsString;
     frmFaseCobro.FCodigoPaisCliente :=
@@ -3377,6 +3381,7 @@ begin
                                               CodigoValeGenerado,
                                               sTipoFactura,
                                               dtFechaFactura,
+                                              FFecha,
                                               frmFaseCobro.FNumeroManual) then
        begin
          case frmFaseCobro.TipoImpresion of
@@ -3385,7 +3390,9 @@ begin
                                   FCodigoCaja,
                                   NumeroGenerado,
                                   frmFaseCobro.DatosCobro,
-                                  oNomImpresoraCaja);
+                                  oNomImpresoraCaja,
+                                  False,
+                                  FFecha);
            tiFactura:
              // Sin ticket térmico: vista previa A4 en FastReport para
              // imprimir/exportar
@@ -3402,13 +3409,16 @@ begin
                          NumeroGenerado,
                          frmFaseCobro.DatosCobro,
                          oNomImpresoraCaja,
-                         True);
+                         True,
+                         FFecha);
                ImprimirT(FCodigoEmpresa,
                          FCodigoAlmacen,
                          FCodigoCaja,
                          NumeroGenerado,
                          frmFaseCobro.DatosCobro,
-                         oNomImpresoraCaja);
+                         oNomImpresoraCaja,
+                         False,
+                         FFecha);
              end;
            tiSinTicket:
              // F11: no imprime ticket pero abre la cajonera
@@ -3438,6 +3448,22 @@ begin
            // frmFaseCobro.DatosCobro.ImporteValeEmitido);
            // ShowMessage('Entregue el vale generado al cliente: ' +
            // CodigoValeGenerado);
+         end;
+         if frmFaseCobro.EnviarEmail then
+         begin
+           Screen.Cursor := crHourGlass;
+           try
+             if EnviarDocumentacionOperacion(FCodigoEmpresa,
+               FCodigoAlmacen, FCodigoCaja, NumeroGenerado,
+               frmFaseCobro.EmailEnvio, sMensajeCorreo) then
+               ShowMessage(sMensajeCorreo)
+             else
+               ShowMessage('La operación se ha guardado correctamente, ' +
+                 'pero no se ha podido enviar el correo.' + sLineBreak +
+                 sMensajeCorreo);
+           finally
+             Screen.Cursor := crDefault;
+           end;
          end;
          // 4. Limpiar la interfaz y los datasets para el siguiente cliente
          PrepararValores(FCodigoEmpresa, FCodigoAlmacen, FCodigoCaja, FFecha);
