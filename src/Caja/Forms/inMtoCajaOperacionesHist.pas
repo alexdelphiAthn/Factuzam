@@ -34,7 +34,7 @@ uses
   dxScrollbarAnnotations, dxCore, cxRadioGroup, Vcl.AppEvnts, JvComponentBase,
   JvEnterTab, dxShellDialogs, System.Actions, Vcl.ActnList, cxCalendar,
   UniDataConsultaOpe, dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes,
-  dxSpreadSheetStyles, dxHashUtils;
+  dxSpreadSheetStyles, dxHashUtils, cxMaskEdit, cxDropDownEdit;
 
 type
   TfrmMtoCajaOperacionesHist = class(TfrmMtoGen)
