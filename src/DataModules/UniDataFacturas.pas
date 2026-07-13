@@ -78,6 +78,8 @@ type
     unqryErrores: TUniQuery;
     unqryMovimientosFac: TUniQuery;
     dsMovimientosFac:    TDataSource;
+    unqryAlmacenesFac:   TUniQuery;
+    dsAlmacenesFac:      TDataSource;
     unqryEfectosVenta:   TUniQuery;
     dsEfectosVenta:      TDataSource;
     unstrdprcInsertarMovFac: TUniStoredProc;
@@ -160,6 +162,7 @@ public
     function GetCodigoGrupoIVAAGricola:String;
     function GetUserEmpresaDef:String;
     procedure CalcularFactura;
+    procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
     function GetTipoIVA(sTipoIVA:string):Currency;
     function ExisteSerieEmpresa(sSerie,
                                 sEmpresa,
@@ -213,6 +216,7 @@ uses
   inLibLog,
   System.Diagnostics,
   inLibFacturas,
+  inLibData,
   inLibVerifactu,
   inLibDocumentoFiscal,
   inLibArticulosValidador,
@@ -1157,6 +1161,7 @@ begin
   unqryConsolidacion.Connection := inLibGlobalVar.oConn;
   unqryErrores.Connection := inLibGlobalVar.oConn;
   unqryMovimientosFac.Connection := inLibGlobalVar.oConn;
+  unqryAlmacenesFac.Connection := inLibGlobalVar.oConn;
   unstrdprcInsertarMovFac.Connection := inLibGlobalVar.oConn;
   unqryEfectosVenta := TUniQuery.Create(Self);
   unqryEfectosVenta.Connection := inLibGlobalVar.oConn;
@@ -1331,6 +1336,7 @@ begin
   // Consolidacion, Errores, MovimientosFac) se abren al activar su
   // sub-pestaña via AsegurarXxxAbierta.
   AbrirConTiempo(unqryIvasTipos,      'unqryIvasTipos');
+  RefrescarAlmacenes('');
   AbrirConTiempo(unqryLinFac,         'unqryLinFac');
   AbrirConTiempo(unqrySeries,         'unqrySeries');
   AbrirConTiempo(unqryIvas,           'unqryIvas');
@@ -1340,6 +1346,30 @@ begin
   AbrirConTiempo(unqryPaisesCli,      'unqryPaisesCli');
   AbrirConTiempo(unqryPaisesEmp,      'unqryPaisesEmp');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+end;
+
+procedure TdmFacturas.RefrescarAlmacenes(const ACodigoEmpresa: string);
+var
+  sEmpresa: string;
+begin
+  sEmpresa := Trim(ACodigoEmpresa);
+  if (sEmpresa = '') and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+    sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString);
+  if sEmpresa = '' then
+    sEmpresa := Trim(oEmpresa);
+  if (not unqryAlmacenesFac.Active) or
+     (not SameText(unqryAlmacenesFac.ParamByName('EMPRESA').AsString,
+                   sEmpresa)) then
+  begin
+    unqryAlmacenesFac.Close;
+    unqryAlmacenesFac.ParamByName('EMPRESA').AsString := sEmpresa;
+    unqryAlmacenesFac.Open;
+  end;
+  if unqryTablaG.Active and
+     (unqryTablaG.State in [dsInsert, dsEdit]) then
+    AjustarEmpresaAlmacenDataSet(unqryTablaG.Connection, unqryTablaG,
+      'CODIGO_EMP_FAC', 'CODIGO_ALM_FAC');
 end;
 
 procedure TdmFacturas.RellenarParamsDesdeMaestro(AQry: TUniQuery);
@@ -1675,6 +1705,8 @@ begin
   unqryErrores.Close;
   if Assigned(unqryMovimientosFac) and unqryMovimientosFac.Active then
     unqryMovimientosFac.Close;
+  if Assigned(unqryAlmacenesFac) and unqryAlmacenesFac.Active then
+    unqryAlmacenesFac.Close;
   FreeAndNil(dsEfectosVenta);
   FreeAndNil(unqryEfectosVenta);
   //unqrySeriesEditCombo.Close;
@@ -2263,6 +2295,7 @@ begin
     FieldByName('TIPO_FAC').AsString :=
       (GetOwnerForm<TfrmMtoFacturasBase>).TipoFacturaFiltro;
     (GetOwnerForm<TfrmMtoFacturasBase>).sbNuevaFacturaClick(Self.Owner);
+    RefrescarAlmacenes(FieldByName('CODIGO_EMP_FAC').AsString);
   end;
 end;
 

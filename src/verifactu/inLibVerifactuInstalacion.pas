@@ -46,21 +46,25 @@ function GenerarInstalacionSifEmpresa(AConn: TUniConnection;
                                       const ACodigoEmpresa: string):
                                       TEstadoInstalacionSif;
 procedure SincronizarVersionInstalacionesSif(AConn: TUniConnection);
-function DescargarDeclaracionResponsableSif(const AVersion: string): string;
+function ObtenerDeclaracionResponsableSif(const AVersion: string): string;
+procedure AsegurarDeclaracionResponsableSif(const AVersion: string);
 procedure ValidarInstalacionSif(const ANumero, AVersion, ACodigoSif,
                                 ANombreEmpresa, ANifEmpresa: string);
 
 implementation
 
 uses
-  System.Classes, System.JSON, System.Net.HttpClient, System.Net.URLClient,
+  System.Classes, System.IOUtils, System.JSON, System.Net.HttpClient,
+  System.Net.URLClient,
   Data.DB,
-  inLibGlobalVar, inLibAppParam;
+  inLibGlobalVar, inLibAppParam, inLibLog;
 
 const
   cUrlServicios = 'https://webservice.veryverifactu.com/api/v1/';
   cRutaInstalacionSif = 'sif/instalacion.php';
   cRutaDeclaracionSif = 'sif/declaracion.php';
+  cUrlDeclaracionPublica =
+    'https://www.veryverifactu.com/declaracion.html';
 
 function NifSoloDigitos(const AValor: string): Boolean;
 var
@@ -308,6 +312,211 @@ begin
     FreeAndNil(oReqJson);
     FreeAndNil(oHttp);
   end;
+end;
+
+function NombreArchivoDeclaracionSif(const AVersion: string): string;
+var
+  c: Char;
+  i: Integer;
+  sVersion: string;
+begin
+  sVersion := '';
+  for i := 1 to Length(AVersion) do
+  begin
+    c := AVersion[i];
+    if CharInSet(c, ['0'..'9', 'A'..'Z', 'a'..'z']) then
+      sVersion := sVersion + c
+    else
+      sVersion := sVersion + '_';
+  end;
+  Result := 'declaracion_' + sVersion + '.html';
+end;
+
+function CarpetaCacheDeclaracionesSif: string;
+var
+  sBase: string;
+begin
+  sBase := Trim(GetEnvironmentVariable('LOCALAPPDATA'));
+  if sBase = '' then
+    sBase := TPath.GetHomePath;
+  Result := TPath.Combine(sBase, 'Factuzam');
+  Result := TPath.Combine(Result, 'declaraciones_sif');
+  Result := TPath.Combine(Result, cCodigoSifFactuzam);
+end;
+
+function RutaCacheDeclaracionSif(const AVersion: string): string;
+begin
+  Result := TPath.Combine(CarpetaCacheDeclaracionesSif,
+                          NombreArchivoDeclaracionSif(AVersion));
+end;
+
+function RutaEstadoDeclaracionSif(const AVersion: string): string;
+begin
+  Result := TPath.Combine(CarpetaCacheDeclaracionesSif,
+    ChangeFileExt(NombreArchivoDeclaracionSif(AVersion), '.estado.json'));
+end;
+
+function DeclaracionCoincideSifVersion(const AHtml,
+                                             AVersion: string): Boolean;
+var
+  sHtml: string;
+  sMetaSif: string;
+  sMetaVersion: string;
+begin
+  sHtml := LowerCase(AHtml);
+  sMetaSif := LowerCase('<meta name="sif-code" content="' +
+                         cCodigoSifFactuzam + '">');
+  sMetaVersion := LowerCase('<meta name="sif-version" content="' +
+                             AVersion + '">');
+  Result := (Pos(sMetaSif, sHtml) > 0) and
+            (Pos(sMetaVersion, sHtml) > 0);
+end;
+
+procedure RegistrarEstadoDeclaracionSif(const AVersion,
+                                              AOrigen: string);
+var
+  oEstado: TJSONObject;
+  sCarpeta: string;
+begin
+  oEstado := TJSONObject.Create;
+  try
+    sCarpeta := CarpetaCacheDeclaracionesSif;
+    TDirectory.CreateDirectory(sCarpeta);
+    oEstado.AddPair('sif', cCodigoSifFactuzam);
+    oEstado.AddPair('version', AVersion);
+    oEstado.AddPair('estado', 'LOCAL');
+    oEstado.AddPair('archivo', NombreArchivoDeclaracionSif(AVersion));
+    oEstado.AddPair('origen_ultima_consulta', AOrigen);
+    oEstado.AddPair('instante_ultima_consulta',
+      FormatDateTime('yyyy-mm-dd"T"hh:nn:ss', Now));
+    TFile.WriteAllText(RutaEstadoDeclaracionSif(AVersion),
+                       oEstado.ToJSON, TEncoding.UTF8);
+  except
+    on E: Exception do
+      Log.LogWarning('No se pudo registrar el estado local de la ' +
+                     'declaración responsable: ' + E.Message);
+  end;
+  FreeAndNil(oEstado);
+end;
+
+function CargarDeclaracionCacheSif(const AVersion: string): string;
+var
+  sRuta: string;
+begin
+  Result := '';
+  sRuta := RutaCacheDeclaracionSif(AVersion);
+  if TFile.Exists(sRuta) then
+  begin
+    Result := TFile.ReadAllText(sRuta, TEncoding.UTF8);
+    if not DeclaracionCoincideSifVersion(Result, AVersion) then
+      Result := ''
+    else
+      RegistrarEstadoDeclaracionSif(AVersion, 'cache_local');
+  end;
+end;
+
+procedure GuardarDeclaracionCacheSif(const AVersion, AHtml,
+                                           AOrigen: string);
+var
+  sCarpeta: string;
+begin
+  try
+    sCarpeta := CarpetaCacheDeclaracionesSif;
+    TDirectory.CreateDirectory(sCarpeta);
+    TFile.WriteAllText(RutaCacheDeclaracionSif(AVersion), AHtml,
+                       TEncoding.UTF8);
+    RegistrarEstadoDeclaracionSif(AVersion, AOrigen);
+  except
+    on E: Exception do
+      Log.LogWarning('No se pudo guardar la declaración responsable en ' +
+                     'la caché local: ' + E.Message);
+  end;
+end;
+
+function DescargarDeclaracionPublicaSif: string;
+var
+  oHttp: THTTPClient;
+  oResp: IHTTPResponse;
+begin
+  Result := '';
+  oHttp := THTTPClient.Create;
+  try
+    oHttp.ConnectionTimeout := 10000;
+    oHttp.ResponseTimeout := 20000;
+    oResp := oHttp.Get(cUrlDeclaracionPublica);
+    if oResp.StatusCode <> 200 then
+      raise Exception.CreateFmt('La página pública respondió con HTTP %d.',
+                                [oResp.StatusCode]);
+    Result := oResp.ContentAsString(TEncoding.UTF8);
+  finally
+    FreeAndNil(oHttp);
+  end;
+end;
+
+function ObtenerDeclaracionResponsableSif(const AVersion: string): string;
+var
+  sErrorCache: string;
+  sErrorPublica: string;
+  sErrorServicio: string;
+begin
+  Result := '';
+  sErrorCache := '';
+  sErrorPublica := '';
+  sErrorServicio := '';
+  try
+    Result := DescargarDeclaracionResponsableSif(AVersion);
+    if not DeclaracionCoincideSifVersion(Result, AVersion) then
+      raise Exception.Create('El webservice devolvió una declaración de ' +
+                             'otra versión.');
+    GuardarDeclaracionCacheSif(AVersion, Result, 'webservice');
+  except
+    on E: Exception do
+    begin
+      sErrorServicio := E.Message;
+      Result := '';
+    end;
+  end;
+  if Result = '' then
+  begin
+    try
+      Result := CargarDeclaracionCacheSif(AVersion);
+    except
+      on E: Exception do
+      begin
+        sErrorCache := E.Message;
+        Result := '';
+      end;
+    end;
+  end;
+  if Result = '' then
+  begin
+    try
+      Result := DescargarDeclaracionPublicaSif;
+      if not DeclaracionCoincideSifVersion(Result, AVersion) then
+        raise Exception.Create('La página pública corresponde a otra ' +
+                               'versión.');
+      GuardarDeclaracionCacheSif(AVersion, Result, 'pagina_publica');
+    except
+      on E: Exception do
+      begin
+        sErrorPublica := E.Message;
+        Result := '';
+      end;
+    end;
+  end;
+  if Result = '' then
+    raise Exception.Create('No hay una declaración responsable disponible ' +
+      'para la versión ' + AVersion + '. Webservice: ' + sErrorServicio +
+      '. Caché: ' + sErrorCache + '. Página pública: ' + sErrorPublica);
+end;
+
+procedure AsegurarDeclaracionResponsableSif(const AVersion: string);
+var
+  sHtml: string;
+begin
+  sHtml := CargarDeclaracionCacheSif(AVersion);
+  if sHtml = '' then
+    sHtml := ObtenerDeclaracionResponsableSif(AVersion);
 end;
 
 procedure VaciarEstado(var AEstado: TEstadoInstalacionSif);

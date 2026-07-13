@@ -131,7 +131,7 @@ implementation
 uses
   inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics,
   System.UITypes, Vcl.Dialogs, inLibArticulosValidador,
-  inLibVentasImpuestos, inLibContadorLineas, inLibCajaParam;
+  inLibVentasImpuestos, inLibContadorLineas, inLibCajaParam, inLibData;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -316,9 +316,27 @@ begin
 end;
 
 procedure TdmAlbaranes.RefrescarAlmacenes(const ACodigoEmpresa: string);
+var
+  sEmpresa: string;
 begin
-  if not unqryAlmacenesAlb.Active then
+  sEmpresa := Trim(ACodigoEmpresa);
+  if (sEmpresa = '') and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+    sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString);
+  if sEmpresa = '' then
+    sEmpresa := Trim(oEmpresa);
+  if (not unqryAlmacenesAlb.Active) or
+     (not SameText(unqryAlmacenesAlb.ParamByName('EMPRESA').AsString,
+                   sEmpresa)) then
+  begin
+    unqryAlmacenesAlb.Close;
+    unqryAlmacenesAlb.ParamByName('EMPRESA').AsString := sEmpresa;
     unqryAlmacenesAlb.Open;
+  end;
+  if unqryTablaG.Active and
+     (unqryTablaG.State in [dsInsert, dsEdit]) then
+    AjustarEmpresaAlmacenDataSet(unqryTablaG.Connection, unqryTablaG,
+      'CODIGO_EMP_ALB', 'CODIGO_ALM_ALB');
 end;
 
 procedure TdmAlbaranes.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -355,6 +373,8 @@ begin
     if FindField('CODIGO_ALM_ALB') <> nil then
       FieldByName('CODIGO_ALM_ALB').AsString := oAlmacen;
   end;
+  RefrescarAlmacenes(
+    DataSet.FieldByName('CODIGO_EMP_ALB').AsString);
 end;
 
 procedure TdmAlbaranes.unqryTablaGBeforePost(DataSet: TDataSet);

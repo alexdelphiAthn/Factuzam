@@ -88,7 +88,7 @@ type
     lblRefProveedor:    TcxLabel;
     txtREF_PROVEEDOR_FACC: TcxDBTextEdit;
     lblCodigoAlmacen:   TcxLabel;
-    txtCODIGO_ALM_FACC: TcxDBTextEdit;
+    cbbCODIGO_ALM_FACC: TcxDBLookupComboBox;
     lblFormaPago: TcxLabel;
     cbbFORMA_PAGO_FACC: TcxDBLookupComboBox;
     tsEfectos: TcxTabSheet;
@@ -657,6 +657,8 @@ begin
   // ListSource del combo de proveedor (busqueda incremental por codigo).
   // Reutiliza el lookup unqryPrvDataFacc, ya cargado para el rotulo.
   cbbCODIGO_PRV_FACC.Properties.ListSource := dmmFacturasCompra.dsPrvDataFacc;
+  cbbCODIGO_ALM_FACC.Properties.ListSource :=
+    dmmFacturasCompra.dsAlmacenesFacc;
   dmmFacturasCompra.unqryEfectos.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_FACC;NUMERO_FACC';
 end;
@@ -1063,6 +1065,13 @@ end;
 procedure TfrmMtoFacturasCompra.dsTablaGDataChangeHook(Sender: TObject;
                                                        Field: TField);
 begin
+  if ((Field = nil) or SameText(Field.FieldName, 'CODIGO_EMP_FACC')) and
+     Assigned(dmmFacturasCompra) and
+     dmmFacturasCompra.unqryTablaG.Active and
+     (not dmmFacturasCompra.unqryTablaG.IsEmpty) then
+    dmmFacturasCompra.RefrescarAlmacenes(
+      dmmFacturasCompra.unqryTablaG.FieldByName(
+        'CODIGO_EMP_FACC').AsString);
   // Refrescar el rotulo del proveedor al navegar entre facturas (Field=nil)
   // o al cambiar CODIGO_PRV_FACC tecleado directamente en el ButtonEdit.
   if (Field = nil) or SameText(Field.FieldName, 'CODIGO_PRV_FACC') then

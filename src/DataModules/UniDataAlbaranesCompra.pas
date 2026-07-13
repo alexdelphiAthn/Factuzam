@@ -140,6 +140,7 @@ uses
   inMtoAlbaranesCompra,
   inLibAlbaranesCompraMovimientos,
   inLibComprasImpuestos,
+  inLibData,
   inLibArticulosValidador;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -341,9 +342,27 @@ end;
 
 procedure TdmAlbaranesCompra.RefrescarAlmacenes(
   const ACodigoEmpresa: string);
+var
+  sEmpresa: string;
 begin
-  if not unqryAlmacenesAlbc.Active then
+  sEmpresa := Trim(ACodigoEmpresa);
+  if (sEmpresa = '') and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+    sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_ALBC').AsString);
+  if sEmpresa = '' then
+    sEmpresa := Trim(oEmpresa);
+  if (not unqryAlmacenesAlbc.Active) or
+     (not SameText(unqryAlmacenesAlbc.ParamByName('EMPRESA').AsString,
+                   sEmpresa)) then
+  begin
+    unqryAlmacenesAlbc.Close;
+    unqryAlmacenesAlbc.ParamByName('EMPRESA').AsString := sEmpresa;
     unqryAlmacenesAlbc.Open;
+  end;
+  if unqryTablaG.Active and
+     (unqryTablaG.State in [dsInsert, dsEdit]) then
+    AjustarEmpresaAlmacenDataSet(unqryTablaG.Connection, unqryTablaG,
+      'CODIGO_EMP_ALBC', 'CODIGO_ALM_ALBC');
 end;
 
 procedure TdmAlbaranesCompra.AbrirDetalles;
@@ -427,6 +446,8 @@ begin
     AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
       'ALBC');
   end;
+  RefrescarAlmacenes(
+    DataSet.FieldByName('CODIGO_EMP_ALBC').AsString);
 end;
 
 function TdmAlbaranesCompra.BuscarEmpresa(const ACodigo: string): Boolean;

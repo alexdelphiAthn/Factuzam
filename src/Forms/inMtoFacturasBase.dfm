@@ -2918,6 +2918,35 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
                   TabOrder = 19
                   Transparent = True
                 end
+                object lblAlmacenFactura: TcxLabel
+                  Left = 720
+                  Top = 62
+                  Caption = 'Almac'#233'n'
+                  TabOrder = 21
+                  Transparent = True
+                end
+                object cbbAlmacenFactura: TcxDBLookupComboBox
+                  Left = 790
+                  Top = 58
+                  DataBinding.DataField = 'CODIGO_ALM_FAC'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.DropDownListStyle = lsFixedList
+                  Properties.DropDownRows = 15
+                  Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+                  Properties.ListColumns = <
+                    item
+                      Caption = 'C'#243'digo'
+                      Width = 60
+                      FieldName = 'CODIGO_ALM_ALM'
+                    end
+                    item
+                      Caption = 'Almac'#233'n'
+                      FieldName = 'NOMBRE_ALM_ALM'
+                    end>
+                  Properties.ListOptions.ShowHeader = False
+                  TabOrder = 22
+                  Width = 250
+                end
               end
               object tsEmpresa: TcxTabSheet
                 Caption = 'Datos E&mpresa Emisora -'

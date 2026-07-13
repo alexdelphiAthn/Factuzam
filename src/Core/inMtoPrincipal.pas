@@ -667,6 +667,13 @@ begin
       inLibLog.Log.LogWarning('No se pudo sincronizar la versión SIF: ' +
                               E.Message);
   end;
+  try
+    AsegurarDeclaracionResponsableSif(oVersion);
+  except
+    on E: Exception do
+      inLibLog.Log.LogWarning('No se pudo disponer de la declaración ' +
+                              'responsable de esta versión: ' + E.Message);
+  end;
   if oAppParams.GetBool('appArranqueEnParalelo', False) then
     PrecargarCachesParalelo
   else

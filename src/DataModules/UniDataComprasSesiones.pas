@@ -174,6 +174,7 @@ type
                                             write FTallajeDefectoActual;
     procedure GetCodigoAutoSesion;
     procedure AsegurarSerieEnEmpresasSeries(const AEmpresa, ASerie: string);
+    procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
     procedure ChequearDuplicado(const ACodigoArt: string;
                                  out AExiste: Boolean;
                                  out ADescripcion: string);
@@ -206,7 +207,8 @@ uses
   inLibComprasSesiones,
   inLibComprasSesionesMaterializar,
   inLibContadorLineas,
-  inLibComprasImpuestos;
+  inLibComprasImpuestos,
+  inLibData;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -551,11 +553,36 @@ begin
   unqryPropiedades.Open;
   unqryPropiedadesValores.Open;
   unqryIvas.Open;
-  unqryAlmacenes.Open;
+  RefrescarAlmacenes(oEmpresa);
   unqryTarifas.Open;
   unqryEmpresas.Open;
   unqryFormasPago.Open;
   unqryTemporadas.Open;
+end;
+
+procedure TdmComprasSesiones.RefrescarAlmacenes(
+  const ACodigoEmpresa: string);
+var
+  sEmpresa: string;
+begin
+  sEmpresa := Trim(ACodigoEmpresa);
+  if (sEmpresa = '') and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+    sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
+  if sEmpresa = '' then
+    sEmpresa := Trim(oEmpresa);
+  if (not unqryAlmacenes.Active) or
+     (not SameText(unqryAlmacenes.ParamByName('EMPRESA').AsString,
+                   sEmpresa)) then
+  begin
+    unqryAlmacenes.Close;
+    unqryAlmacenes.ParamByName('EMPRESA').AsString := sEmpresa;
+    unqryAlmacenes.Open;
+  end;
+  if unqryTablaG.Active and
+     (unqryTablaG.State in [dsInsert, dsEdit]) then
+    AjustarEmpresaAlmacenDataSet(unqryTablaG.Connection, unqryTablaG,
+      'CODIGO_EMP_SES', 'CODIGO_ALM_SES');
 end;
 
 procedure TdmComprasSesiones.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -622,6 +649,8 @@ begin
     FieldByName('USUARIO_ALTA').AsString := oUser;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
   end;
+  RefrescarAlmacenes(
+    DataSet.FieldByName('CODIGO_EMP_SES').AsString);
 end;
 
 procedure TdmComprasSesiones.unqryTablaGBeforePost(DataSet: TDataSet);

@@ -145,7 +145,7 @@ implementation
 uses
   inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics, System.UITypes,
   Vcl.Dialogs, inLibVentasImpuestos, inLibContadorLineas, JclDebug,
-  inLibCajaParam;
+  inLibCajaParam, inLibData;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -385,9 +385,27 @@ begin
 end;
 
 procedure TdmPedidos.RefrescarAlmacenes(const ACodigoEmpresa: string);
+var
+  sEmpresa: string;
 begin
-  if not unqryAlmacenesPed.Active then
+  sEmpresa := Trim(ACodigoEmpresa);
+  if (sEmpresa = '') and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+    sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_PED').AsString);
+  if sEmpresa = '' then
+    sEmpresa := Trim(oEmpresa);
+  if (not unqryAlmacenesPed.Active) or
+     (not SameText(unqryAlmacenesPed.ParamByName('EMPRESA').AsString,
+                   sEmpresa)) then
+  begin
+    unqryAlmacenesPed.Close;
+    unqryAlmacenesPed.ParamByName('EMPRESA').AsString := sEmpresa;
     unqryAlmacenesPed.Open;
+  end;
+  if unqryTablaG.Active and
+     (unqryTablaG.State in [dsInsert, dsEdit]) then
+    AjustarEmpresaAlmacenDataSet(unqryTablaG.Connection, unqryTablaG,
+      'CODIGO_EMP_PED', 'CODIGO_ALM_PED');
 end;
 
 procedure TdmPedidos.AbrirDetalles;
@@ -460,6 +478,8 @@ begin
     if FindField('CODIGO_ALM_PED') <> nil then
       FieldByName('CODIGO_ALM_PED').AsString := oAlmacen;
   end;
+  RefrescarAlmacenes(
+    DataSet.FieldByName('CODIGO_EMP_PED').AsString);
 end;
 
 procedure TdmPedidos.unqryTablaGBeforePost(DataSet: TDataSet);
