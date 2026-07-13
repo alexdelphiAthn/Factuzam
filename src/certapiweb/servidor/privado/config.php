@@ -20,7 +20,8 @@ const CFG_AMBITOS_PERMITIDOS = [
     'fotos:escribir',
     'sif:instalacion',
     'recuentos:leer',
-    'recuentos:escribir'
+    'recuentos:escribir',
+    'correo:enviar'
 ];
 
 const CFG_DESFASE_MAXIMO_SEGUNDOS = 300;

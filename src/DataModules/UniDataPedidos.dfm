@@ -578,4 +578,19 @@
     Left = 600
     Top = 368
   end
+  object unqryTarifas: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_TAR_ARTTAR, NOMBRE_TAR_TAR, ESIMP_INCL_TAR'
+      '  FROM vi_tarifas'
+      ' ORDER BY NOMBRE_TAR_TAR, CODIGO_TAR_ARTTAR')
+    ReadOnly = True
+    Left = 688
+    Top = 312
+  end
+  object dsTarifas: TDataSource
+    DataSet = unqryTarifas
+    Left = 688
+    Top = 368
+  end
 end

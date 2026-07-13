@@ -952,9 +952,9 @@
   end
   object pnlPie: TPanel [4]
     Left = 0
-    Top = 681
+    Top = 647
     Width = 1163
-    Height = 39
+    Height = 73
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 3
@@ -1021,6 +1021,15 @@
       Caption = 'Reimprimir otros'
       TabOrder = 1
       OnClick = btnReimprimirOtrosClick
+    end
+    object btnEnviarEmail: TcxButton
+      Left = 12
+      Top = 40
+      Width = 270
+      Height = 28
+      Caption = 'Enviar documentación por e-mail'
+      TabOrder = 7
+      OnClick = btnEnviarEmailClick
     end
   end
   object tmrBusqueda: TTimer

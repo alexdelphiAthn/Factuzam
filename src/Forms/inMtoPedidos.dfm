@@ -332,6 +332,45 @@
                 Height = 21
                 Width = 380
               end
+              object lblTarifaPedido: TcxLabel
+                Left = 792
+                Top = 120
+                Caption = 'Tarifa'
+                TabOrder = 21
+                Transparent = True
+              end
+              object cbbTarifaPedido: TcxDBLookupComboBox
+                Left = 792
+                Top = 140
+                DataBinding.DataField = 'TARIFA_ARTICULO_CLIENTE_PED'
+                DataBinding.DataSource = dsTablaG
+                Properties.DropDownListStyle = lsFixedList
+                Properties.KeyFieldNames = 'CODIGO_TAR_ARTTAR'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'Tarifa'
+                    FieldName = 'NOMBRE_TAR_TAR'
+                  end
+                  item
+                    Caption = 'Imp. incl.'
+                    FieldName = 'ESIMP_INCL_TAR'
+                  end>
+                Properties.OnChange = cbbTarifaPedidoPropertiesChange
+                TabOrder = 22
+                Width = 132
+              end
+              object chkTarifaImpuestosIncluidosPedido: TcxDBCheckBox
+                Left = 792
+                Top = 169
+                Caption = 'Imp. incl.'
+                DataBinding.DataField = 'ESIMP_INCL_TARIFA_CLIENTE_PED'
+                DataBinding.DataSource = dsTablaG
+                Properties.ReadOnly = True
+                Properties.ValueChecked = 'S'
+                Properties.ValueUnchecked = 'N'
+                TabOrder = 23
+                Transparent = True
+              end
             end
             object tsEmpresa: TcxTabSheet
               Caption = 'Empresa'
@@ -663,6 +702,15 @@
             Caption = 'Importar de PrestaShop'
             TabOrder = 4
             OnClick = btnImportarPSClick
+          end
+          object btnExpandirFilas: TcxButton
+            Left = 749
+            Top = 6
+            Width = 160
+            Height = 28
+            Caption = 'Expandir Filas'
+            TabOrder = 5
+            OnClick = btnExpandirFilasClick
           end
         end
         object pnlBodyFicha: TPanel

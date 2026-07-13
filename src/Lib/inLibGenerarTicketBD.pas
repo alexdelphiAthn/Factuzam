@@ -36,7 +36,9 @@ uses
                                             ACodigoAlmacen,
                                             ACodigoCaja,
                                             AOperacion: string;
-                                      const ANombreImpresora: string = 'DEBUG');
+                                      const ANombreImpresora: string = 'DEBUG';
+                                      ARutasPDF: TStrings = nil;
+                                      ASoloPDF: Boolean = False);
   /// <summary>
   /// Genera e imprime un ticket recuperando todos los datos
   /// directamente de la Base de Datos.
@@ -45,9 +47,13 @@ uses
                                         ACodigoAlmacen,
                                         ACodigoCaja,
                                         ANumeroOperacion: string;
-                                  const ANombreImpresora: string = 'DEBUG');
+                                  const ANombreImpresora: string = 'DEBUG';
+                                  ARutasPDF: TStrings = nil;
+                                  ASoloPDF: Boolean = False);
   procedure ImprimirRecordatorio(CodigoCliente:string;
-                                 NombreImpresora:string='DEBUG');
+                                 NombreImpresora:string='DEBUG';
+                                 ARutasPDF: TStrings = nil;
+                                 ASoloPDF: Boolean = False);
 implementation
 
 uses
@@ -71,7 +77,9 @@ procedure ImprimirResguardoDeposito(const ACodigoEmpresa,
                                           ACodigoAlmacen,
                                           ACodigoCaja,
                                           AOperacion: string;
-                                    const ANombreImpresora: string = 'DEBUG');
+                                    const ANombreImpresora: string = 'DEBUG';
+                                    ARutasPDF: TStrings = nil;
+                                    ASoloPDF: Boolean = False);
 var
   QrySec, QryEmp: TUniQuery;
   Ticket: TTicketTermico;
@@ -392,7 +400,9 @@ begin
       RutaFicheroPDF := GetUserFolderTickets + 'ResguardoDep_' +
                             FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
       ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
-                                   ANombreImpresora);
+                                   ANombreImpresora, ASoloPDF);
+      if (ARutasPDF <> nil) and FileExists(RutaFicheroPDF) then
+        ARutasPDF.Add(RutaFicheroPDF);
     finally
       FreeAndNil(Ticket);
     end;
@@ -406,13 +416,16 @@ procedure ImprimirTicketDesdeBD(const ACodigoEmpresa,
                                       ACodigoAlmacen,
                                       ACodigoCaja,
                                       ANumeroOperacion: string;
-                                const ANombreImpresora: string = 'DEBUG');
+                                const ANombreImpresora: string = 'DEBUG';
+                                ARutasPDF: TStrings = nil;
+                                ASoloPDF: Boolean = False);
 var
   QryCab, QryLin, QryPagos: TUniQuery;
   Ticket: TTicketTermico;
   ComandosESC, RutaFicheroPDF: string;
   QRTexto: string;
   DocumentoFac, SerieFac, NroFac: string;
+  FechaOperacion: TDateTime;
 begin
   QryCab   := TUniQuery.Create(nil);
   QryLin   := TUniQuery.Create(nil);
@@ -427,6 +440,7 @@ begin
     QryCab.SQL.Text :=
       'SELECT o.TIPO_OPERACION_OPCAJA, ' +
       '       o.FECHA_OPERACION_OPCAJA, ' +
+      '       o.INSTANTE_ALTA AS INSTANTE_ALTA_OPCAJA, ' +
       '       o.CODIGO_EMPLEADO_OPCAJA, ' +
       '       o.CODIGO_CLI_OPCAJA, ' +
       '       o.CONCEPTO_GASTO_INGRESO_OPCAJA, ' +
@@ -448,6 +462,12 @@ begin
     if QryCab.IsEmpty then
       raise Exception.Create('No se ha encontrado la operación en la caja ' +
                              'especificada.');
+    FechaOperacion :=
+      QryCab.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime;
+    if (Frac(FechaOperacion) = 0) and
+       (not QryCab.FieldByName('INSTANTE_ALTA_OPCAJA').IsNull) then
+      FechaOperacion := Trunc(FechaOperacion) + Frac(
+        QryCab.FieldByName('INSTANTE_ALTA_OPCAJA').AsDateTime);
     SerieFac := QryCab.FieldByName('SERIE_FAC').AsString;
     NroFac   := QryCab.FieldByName('NUMERO_FAC').AsString;
     DocumentoFac := FormatearDocumentoEmpresa(ACodigoEmpresa,
@@ -518,7 +538,7 @@ begin
       Ticket.TextoColumnas('OPERACIÓN NRO.', ANumeroOperacion);
       Ticket.SaltarLineas(1);
       Ticket.TextoColumnas(FormatDateTime('dd/mm/yyyy hh:nn',
-                       QryCab.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime),
+                       FechaOperacion),
                                              LPAD(ACodigoEmpresa, 3) + ' Tda.' +
                           LPAD(ACodigoAlmacen, 3) + '-' + LPAD(ACodigoCaja, 2));
 
@@ -649,7 +669,9 @@ begin
       RutaFicheroPDF := GetUserFolderTickets + 'TicketBD_' +
                             FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
       ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
-                                   ANombreImpresora);
+                                   ANombreImpresora, ASoloPDF);
+      if (ARutasPDF <> nil) and FileExists(RutaFicheroPDF) then
+        ARutasPDF.Add(RutaFicheroPDF);
     finally
       FreeAndNil(Ticket);
     end;
@@ -661,7 +683,9 @@ begin
 end;
 
 procedure ImprimirRecordatorio(CodigoCliente:   string;
-                               NombreImpresora: string = 'DEBUG');
+                               NombreImpresora: string = 'DEBUG';
+                               ARutasPDF: TStrings = nil;
+                               ASoloPDF: Boolean = False);
 var
   Ticket: TTicketTermico;
   TotalPendienteCliente: Currency;
@@ -858,7 +882,9 @@ begin
     var RutaFicheroPDF := GetUserFolderTickets + 'Recordatorio_' +
                           FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
     ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
-                                 NombreImpresora);
+                                 NombreImpresora, ASoloPDF);
+    if (ARutasPDF <> nil) and FileExists(RutaFicheroPDF) then
+      ARutasPDF.Add(RutaFicheroPDF);
   finally
     FreeAndNil(Ticket);
   end;
