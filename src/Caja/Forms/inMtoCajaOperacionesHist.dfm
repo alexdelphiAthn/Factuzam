@@ -1,19 +1,23 @@
-﻿inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
+inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
   Caption = 'Hist'#243'rico de Operaciones de Caja'
+  StyleElements = [seFont, seClient, seBorder]
   OnDestroy = FormDestroy
-  TextHeight = 19
+  TextHeight = 17
   inherited pButtonPage: TPanel
+    StyleElements = [seFont, seClient, seBorder]
     inherited pcPantalla: TcxPageControl
       Properties.ActivePage = tsLista
       inherited tsLista: TcxTabSheet
         ExplicitLeft = 4
-        ExplicitTop = 30
+        ExplicitTop = 28
         ExplicitWidth = 943
-        ExplicitHeight = 484
+        ExplicitHeight = 486
         inherited cxGrdPrincipal: TcxGrid
+          Top = 60
+          Width = 943
+          Height = 426
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             OptionsData.Deleting = False
-            OptionsData.Editing = False
             OptionsData.Inserting = False
             object cxGrdDBTabPrinCODIGO_EMPRESA_OPCAJA: TcxGridDBColumn
               Caption = 'Empresa'
@@ -126,8 +130,8 @@
             object ccbFiltroAnyo: TcxCheckComboBox
               Left = 80
               Top = 5
-              Properties.EditValueFormat = cvfStatesString
               Properties.EmptySelectionText = 'Todos'
+              Properties.EditValueFormat = cvfStatesString
               Properties.Items = <>
               Properties.OnCloseUp = ccbFiltroAnyoPropertiesCloseUp
               TabOrder = 0
@@ -143,8 +147,8 @@
             object ccbFiltroAlmacen: TcxCheckComboBox
               Left = 416
               Top = 5
-              Properties.EditValueFormat = cvfStatesString
               Properties.EmptySelectionText = 'Todos'
+              Properties.EditValueFormat = cvfStatesString
               Properties.Items = <>
               Properties.OnCloseUp = ccbFiltroAlmacenPropertiesCloseUp
               TabOrder = 1
@@ -169,17 +173,28 @@
         ExplicitHeight = 484
       end
       inherited tsPerfil: TcxTabSheet
+        ExplicitLeft = 4
+        ExplicitTop = 28
+        ExplicitWidth = 943
+        ExplicitHeight = 486
         inherited pnlPerfilTop: TPanel
+          StyleElements = [seFont, seClient, seBorder]
+          ExplicitWidth = 943
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27
           end
         end
+        inherited pnlPerfilDetail: TPanel
+          StyleElements = [seFont, seClient, seBorder]
+        end
       end
     end
     inherited pnlTopPage: TPanel
+      StyleElements = [seFont, seClient, seBorder]
       inherited pnlTopGrid: TPanel
+        StyleElements = [seFont, seClient, seBorder]
         inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 27
+          ExplicitHeight = 25
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 240
@@ -191,9 +206,24 @@
           Width = 150
           Height = 30
           Caption = 'Imprimir Informe A4'
-          TabOrder = 6
+          TabOrder = 5
           OnClick = btnImprimirInformeClick
         end
+      end
+    end
+  end
+  inherited pButtonRightBar: TPanel
+    StyleElements = [seFont, seClient, seBorder]
+    inherited pButtonGen: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+    end
+    inherited pButtonBDStat: TPanel
+      StyleElements = [seFont, seClient, seBorder]
+      inherited pnStateDataSet: TPanel
+        StyleElements = [seFont, seClient, seBorder]
+      end
+      inherited pnlDataSetName: TPanel
+        StyleElements = [seFont, seClient, seBorder]
       end
     end
   end

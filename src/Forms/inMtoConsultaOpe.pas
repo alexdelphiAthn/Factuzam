@@ -28,7 +28,8 @@ uses
   cxSplitter, cxButtons, Vcl.Imaging.PngImage,
   inMtoFrmBase, inLibVentasCalendario, inLibLayoutForm,
   UniDataConsultaOpe, dxCore, cxDateUtils, dxCoreGraphics, cxCurrencyEdit,
-  cxClasses, cxGridCustomView, JvComponentBase, JvEnterTab, cxLocalization;
+  cxClasses, cxGridCustomView, JvComponentBase, JvEnterTab, cxLocalization,
+  Vcl.Menus;
 
 type
   TfrmConsultaOpe = class(TfrmBase)
