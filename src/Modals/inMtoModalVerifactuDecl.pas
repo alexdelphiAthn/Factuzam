@@ -80,7 +80,7 @@ end;
 
 function DescargarHtmlDeclaracion: string;
 begin
-  Result := DescargarDeclaracionResponsableSif(oVersion);
+  Result := ObtenerDeclaracionResponsableSif(oVersion);
 end;
 
 function GuardarHtmlTemporal(const AHtml: string): string;

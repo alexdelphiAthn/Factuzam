@@ -75,7 +75,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses  inLibGlobalVar, inMtoPrincipal, inMtoGen;
+uses  inLibGlobalVar, inMtoPrincipal, inMtoGen, inLibData;
 
 {$R *.dfm}
 
@@ -234,6 +234,7 @@ end;
 
 procedure TdmBase.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
+  AjustarEmpresasAlmacenesDocumento(unqryTablaG.Connection, DataSet);
   oDmConn.ActualizarUserTimeModif(DataSet);
   if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
     Log.LogEvento(Self.UnitName, DataSet.Name, 'BeforePost',

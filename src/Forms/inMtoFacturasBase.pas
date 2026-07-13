@@ -143,6 +143,8 @@ type
     lbldbRAZONSOCIAL_CLIENTE_FACTURA: TcxDBLabel;
     btnCODIGO_EMPRESA_FACTURA: TcxDBButtonEdit;
     lblCodigoEmpresa: TcxLabel;
+    lblAlmacenFactura: TcxLabel;
+    cbbAlmacenFactura: TcxDBLookupComboBox;
     btnUpdateEmpresa: TcxButton;
     cxgrdbclmnGrdDBTabPrinCODIGO_EMPRESA_FACTURA: TcxGridDBColumn;
     cxgrdbclmnGrdDBTabPrinRAZONSOCIAL_EMPRESA_FACTURA: TcxGridDBColumn;
@@ -742,6 +744,7 @@ begin
         //MessageDlg('Empresa: #' + VarToStr(e.EditingValue) + '# no existe')
       else
         dmmFacturas.CopiarEmpresaaFactura(unqrySol);
+      dmmFacturas.RefrescarAlmacenes(sCodigo);
       unqrySol.Close;
       FreeAndNil(unqrySol);
     end;
@@ -2125,6 +2128,7 @@ begin
   if Assigned(dmmFacturas) and dmmFacturas.unqryLinFac.Active then
     ConstruirModoEntrada;
   cbbTARIFA_ARTICULOS_CLIENTES.Properties.ListSource := dmmFacturas.dsTarifas;
+  cbbAlmacenFactura.Properties.ListSource := dmmFacturas.dsAlmacenesFac;
   AplicarOrigenCobros;
   btnReciboEmitido.OnClick := btnReciboEmitidoClick;
   btnReciboDevuelto.OnClick := btnReciboDevueltoClick;
@@ -2775,6 +2779,11 @@ var
   bClasicoNecesario: Boolean;
   bClasicoConstruido: Boolean;
 begin
+  if ((Field = nil) or SameText(Field.FieldName, 'CODIGO_EMP_FAC')) and
+     Assigned(dmmFacturas) and dmmFacturas.unqryTablaG.Active and
+     (not dmmFacturas.unqryTablaG.IsEmpty) then
+    dmmFacturas.RefrescarAlmacenes(
+      dmmFacturas.unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString);
   // Field = nil: cambio de registro (scroll) o refresco completo
   if Field = nil then
   begin

@@ -129,6 +129,7 @@ uses
   inMtoPedidosCompra,
   inLibPedidosCompra,
   inLibComprasImpuestos,
+  inLibData,
   inLibArticulosValidador,
   UniDataArticulos;
 
@@ -357,9 +358,27 @@ end;
 
 procedure TdmPedidosCompra.RefrescarAlmacenes(
   const ACodigoEmpresa: string);
+var
+  sEmpresa: string;
 begin
-  if not unqryAlmacenesPedc.Active then
+  sEmpresa := Trim(ACodigoEmpresa);
+  if (sEmpresa = '') and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+    sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString);
+  if sEmpresa = '' then
+    sEmpresa := Trim(oEmpresa);
+  if (not unqryAlmacenesPedc.Active) or
+     (not SameText(unqryAlmacenesPedc.ParamByName('EMPRESA').AsString,
+                   sEmpresa)) then
+  begin
+    unqryAlmacenesPedc.Close;
+    unqryAlmacenesPedc.ParamByName('EMPRESA').AsString := sEmpresa;
     unqryAlmacenesPedc.Open;
+  end;
+  if unqryTablaG.Active and
+     (unqryTablaG.State in [dsInsert, dsEdit]) then
+    AjustarEmpresaAlmacenDataSet(unqryTablaG.Connection, unqryTablaG,
+      'CODIGO_EMP_PEDC', 'CODIGO_ALM_PEDC');
 end;
 
 procedure TdmPedidosCompra.AbrirDetalles;
@@ -478,6 +497,8 @@ begin
     AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
       'PEDC');
   end;
+  RefrescarAlmacenes(
+    DataSet.FieldByName('CODIGO_EMP_PEDC').AsString);
 end;
 
 function TdmPedidosCompra.BuscarEmpresa(const ACodigo: string): Boolean;

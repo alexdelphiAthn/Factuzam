@@ -235,6 +235,7 @@ uses
   inLibUser,            // Usuario logueado
   inLibLog,             // Log.LogInfo para metricas
   inLibGlobalVar,
+  inLibData,
   UniDataConn;      // oConn
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -560,6 +561,8 @@ begin
   if Trim(oEmpresa) <> '' then
     DataSet.FieldByName('SERIE_INV').AsString  :=
                                        ObtenerSeriePorDefecto(oEmpresa, 'IN');
+  CargarAlmacenesPorEmpresa(
+    DataSet.FieldByName('CODIGO_EMP_INV').AsString);
 end;
 
 procedure TdmInventarios.unqryTablaGBeforeDelete(DataSet: TDataSet);
@@ -571,6 +574,7 @@ procedure TdmInventarios.unqryTablaGBeforePost(DataSet: TDataSet);
 var
   campoRecuento: TField;
 begin
+  inherited;
   // ESRECUENTO_REMOTO_INV es char(1) NOT NULL en BBDD (default 'N'). Al
   // anadirse al SELECT de la cabecera es un campo Required del dataset, asi
   // que una cabecera nueva (que no se ha enviado a recuento) llegaria al Post
@@ -1805,6 +1809,10 @@ begin
     unqryAlmacenes.ParamByName('EMPRESA').AsString := ACodigoEmpresa;
     unqryAlmacenes.Open;
   end;
+  if unqryTablaG.Active and
+     (unqryTablaG.State in [dsInsert, dsEdit]) then
+    AjustarEmpresaAlmacenDataSet(unqryTablaG.Connection, unqryTablaG,
+      'CODIGO_EMP_INV', 'CODIGO_ALM_INV');
 end;
 
 procedure TdmInventarios.CargarSeriesPorEmpresa(const ACodigoEmpresa: string);

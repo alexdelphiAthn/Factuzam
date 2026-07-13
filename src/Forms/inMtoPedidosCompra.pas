@@ -1807,6 +1807,12 @@ begin
   // o al cambiar CODIGO_PRV_PEDC tecleado directamente en el ButtonEdit.
   if (Field = nil) or SameText(Field.FieldName, 'CODIGO_PRV_PEDC') then
     ActualizarLabelProveedor;
+  if (Field = nil) and Assigned(dmmPedidosCompra) and
+     dmmPedidosCompra.unqryTablaG.Active and
+     (not dmmPedidosCompra.unqryTablaG.IsEmpty) then
+    dmmPedidosCompra.RefrescarAlmacenes(
+      dmmPedidosCompra.unqryTablaG.FieldByName(
+        'CODIGO_EMP_PEDC').AsString);
   if Field <> nil then Exit;
   // Contrato de entrada: al navegar de pedido, las lineas llegan
   // recargadas por el master-detail. En desglose basta desempaquetar

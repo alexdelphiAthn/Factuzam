@@ -1102,6 +1102,11 @@ end;
 procedure TfrmMtoAlbaranes.dsTablaGDataChangeHook(Sender: TObject;
                                                    Field: TField);
 begin
+  if (Field = nil) and Assigned(dmmAlbaranes) and
+     dmmAlbaranes.unqryTablaG.Active and
+     (not dmmAlbaranes.unqryTablaG.IsEmpty) then
+    dmmAlbaranes.RefrescarAlmacenes(
+      dmmAlbaranes.unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString);
   if Field = nil then
     ActualizarLabelPrendas;
   // Al navegar de albaran: si la construccion inicial no pudo hacerse

@@ -90,9 +90,17 @@
       'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM, CODIGO_EMP_ALM'
       '  FROM fza_almacenes'
       ' WHERE ESACTIVO_ALM = '#39'S'#39
-      ' ORDER BY CODIGO_EMP_ALM, ORDEN_ALM, CODIGO_ALM_ALM')
+      '   AND CODIGO_EMP_ALM = :EMPRESA'
+      ' ORDER BY COALESCE(ORDEN_ALM, 2147483647), CODIGO_ALM_ALM')
     Left = 160
     Top = 360
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'EMPRESA'
+        ParamType = ptInput
+        Value = nil
+      end>
   end
   object dsAlmacenesAlb: TDataSource
     DataSet = unqryAlmacenesAlb

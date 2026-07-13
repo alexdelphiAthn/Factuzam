@@ -844,6 +844,10 @@ procedure TfrmMtoPedidos.dsTablaGDataChangeHook(Sender: TObject;
 begin
   if Field = nil then
   begin
+    if Assigned(dmmPedidos) and dmmPedidos.unqryTablaG.Active and
+       (not dmmPedidos.unqryTablaG.IsEmpty) then
+      dmmPedidos.RefrescarAlmacenes(dmmPedidos.unqryTablaG.FieldByName(
+        'CODIGO_EMP_PED').AsString);
     ActualizarLabelPrendas;
     // Contrato de entrada: al navegar de pedido, las lineas llegan
     // recargadas por el master-detail SIN atributos desempaquetados
