@@ -41,6 +41,8 @@ type
     unqrySkusFacc:              TUniQuery;
     unqryFormasPago:            TUniQuery;
     dsFormasPago:               TDataSource;
+    unqryAlmacenesFacc:         TUniQuery;
+    dsAlmacenesFacc:            TDataSource;
     unstrdprcGetContadorFacc:   TUniStoredProc;
     // Definicion de atributos del articulo padre (para columnas
     // dinamicas ATTR1..ATTR5 en modo "atributo por columna").
@@ -87,6 +89,7 @@ type
   public
     procedure GetCodigoAutoFacturaCompra;
     procedure CalcularTotalesFacturaCompra;
+    procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
     // Numero total de prendas (suma CANTIDAD_FACCLIN de todas las lineas).
     // Se muestra en la pestana Totales; no se persiste en BBDD.
     function TotalPrendasFactura: Double;
@@ -142,6 +145,7 @@ uses
   System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inMtoFacturasCompra,
   inLibComprasImpuestos,
+  inLibData,
   inLibArticulosValidador;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -169,6 +173,7 @@ begin
   unqryArtDataLinFacc.Connection        := inLibGlobalVar.oConn;
   unqrySkusFacc.Connection              := inLibGlobalVar.oConn;
   unqryFormasPago.Connection            := inLibGlobalVar.oConn;
+  unqryAlmacenesFacc.Connection         := inLibGlobalVar.oConn;
   unstrdprcGetContadorFacc.Connection   := inLibGlobalVar.oConn;
   unqryDefArticuloFacc.Connection       := inLibGlobalVar.oConn;
   // Master-detail server-side: el WHERE del SQL toma los valores de
@@ -188,6 +193,8 @@ begin
     unqryFacturasCompraLineas.Close;
   if Assigned(unqryFormasPago) and unqryFormasPago.Active then
     unqryFormasPago.Close;
+  if Assigned(unqryAlmacenesFacc) and unqryAlmacenesFacc.Active then
+    unqryAlmacenesFacc.Close;
   inherited;
 end;
 
@@ -226,11 +233,37 @@ var
 begin
   inherited;
   sw := TStopwatch.StartNew;
+  RefrescarAlmacenes('');
   AbrirConTiempo(unqryFacturasCompraLineas,
                  'unqryFacturasCompraLineas');
   AbrirConTiempo(unqryEfectos, 'unqryEfectos');
   AbrirConTiempo(unqryFormasPago, 'unqryFormasPago');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+end;
+
+procedure TdmFacturasCompra.RefrescarAlmacenes(
+  const ACodigoEmpresa: string);
+var
+  sEmpresa: string;
+begin
+  sEmpresa := Trim(ACodigoEmpresa);
+  if (sEmpresa = '') and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+    sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_FACC').AsString);
+  if sEmpresa = '' then
+    sEmpresa := Trim(oEmpresa);
+  if (not unqryAlmacenesFacc.Active) or
+     (not SameText(unqryAlmacenesFacc.ParamByName('EMPRESA').AsString,
+                   sEmpresa)) then
+  begin
+    unqryAlmacenesFacc.Close;
+    unqryAlmacenesFacc.ParamByName('EMPRESA').AsString := sEmpresa;
+    unqryAlmacenesFacc.Open;
+  end;
+  if unqryTablaG.Active and
+     (unqryTablaG.State in [dsInsert, dsEdit]) then
+    AjustarEmpresaAlmacenDataSet(unqryTablaG.Connection, unqryTablaG,
+      'CODIGO_EMP_FACC', 'CODIGO_ALM_FACC');
 end;
 
 function TdmFacturasCompra.GenerarEfectos(const ACodEmpban: string = '';
@@ -448,6 +481,7 @@ begin
       'CODIGO_EMP_FACC', 'ESIVA_RECARGO_COMPRAS_FACC');
     AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
       'FACC');
+    RefrescarAlmacenes(FieldByName('CODIGO_EMP_FACC').AsString);
   end;
   FTransicionEstadoFacc := '';
 end;

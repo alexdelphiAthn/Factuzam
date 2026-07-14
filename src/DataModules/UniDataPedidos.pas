@@ -50,6 +50,8 @@ type
     dsFormasPago: TDataSource;
     unqryAlmacenesPed: TUniQuery;
     dsAlmacenesPed: TDataSource;
+    unqryTarifas: TUniQuery;
+    dsTarifas: TDataSource;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -66,7 +68,6 @@ type
     // cada linea que aun los tenga vacios (idempotente por linea).
     procedure DesempaquetarAtributosLineas;
     procedure GetCodigoAutoPedido;
-    procedure GetCodigoAutoCliente;
     procedure CalcularTotalesPedido;
     // Numero total de prendas (suma CANTIDAD_PEDLIN de todas las lineas).
     // Se muestra en la pestana Totales; no se persiste en BBDD.
@@ -75,8 +76,11 @@ type
     procedure CopiarClienteaPedido(DataSet: TDataSet);
     function BuscarEmpresa(const ACodigo: string): Boolean;
     function BuscarAlmacen(const ACodigo: string): Boolean;
+    function ClienteExiste(const ACodigo: string): Boolean;
     function BuscarCliente(const ACodigo: string): Boolean;
     procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
+    procedure ActualizarImpuestosTarifaCabecera(
+      const ACodigoTarifa: string);
 
     // Cantidades entregadas / pendientes
     procedure RecalcularEntregasLinea;
@@ -123,6 +127,7 @@ type
     procedure AsignarNumeroLineaPedido(DataSet: TDataSet);
     procedure PersistirAlmacenCabecera;
     procedure ValidarAlmacenCabecera;
+    procedure ValidarClienteCabecera;
     // Propone la serie PE de fza_empresas_series de la empresa emisora
     // en documentos nuevos sin numerar (al cambiar la empresa en el alta)
     procedure ProponerSerieEmpresa(const AEmpresa: string);
@@ -139,7 +144,8 @@ implementation
 
 uses
   inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics, System.UITypes,
-  Vcl.Dialogs, inLibVentasImpuestos, inLibContadorLineas, JclDebug;
+  Vcl.Dialogs, inLibVentasImpuestos, inLibContadorLineas, JclDebug,
+  inLibCajaParam, inLibData;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -285,6 +291,7 @@ begin
   unqryMensajes.Connection         := inLibGlobalVar.oConn;
   unqryFormasPago.Connection       := inLibGlobalVar.oConn;
   unqryAlmacenesPed.Connection     := inLibGlobalVar.oConn;
+  unqryTarifas.Connection          := inLibGlobalVar.oConn;
 end;
 
 procedure TdmPedidos.DesempaquetarAtributosLineas;
@@ -365,6 +372,8 @@ begin
     unqryFormasPago.Close;
   if Assigned(unqryAlmacenesPed) and unqryAlmacenesPed.Active then
     unqryAlmacenesPed.Close;
+  if Assigned(unqryTarifas) and unqryTarifas.Active then
+    unqryTarifas.Close;
   inherited;
 end;
 
@@ -376,9 +385,27 @@ begin
 end;
 
 procedure TdmPedidos.RefrescarAlmacenes(const ACodigoEmpresa: string);
+var
+  sEmpresa: string;
 begin
-  if not unqryAlmacenesPed.Active then
+  sEmpresa := Trim(ACodigoEmpresa);
+  if (sEmpresa = '') and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+    sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_PED').AsString);
+  if sEmpresa = '' then
+    sEmpresa := Trim(oEmpresa);
+  if (not unqryAlmacenesPed.Active) or
+     (not SameText(unqryAlmacenesPed.ParamByName('EMPRESA').AsString,
+                   sEmpresa)) then
+  begin
+    unqryAlmacenesPed.Close;
+    unqryAlmacenesPed.ParamByName('EMPRESA').AsString := sEmpresa;
     unqryAlmacenesPed.Open;
+  end;
+  if unqryTablaG.Active and
+     (unqryTablaG.State in [dsInsert, dsEdit]) then
+    AjustarEmpresaAlmacenDataSet(unqryTablaG.Connection, unqryTablaG,
+      'CODIGO_EMP_PED', 'CODIGO_ALM_PED');
 end;
 
 procedure TdmPedidos.AbrirDetalles;
@@ -415,6 +442,7 @@ begin
   AbrirConTiempo(unqryMensajes,      'unqryMensajes');
   AbrirConTiempo(unqryFormasPago,    'unqryFormasPago');
   AbrirConTiempo(unqryAlmacenesPed,  'unqryAlmacenesPed');
+  AbrirConTiempo(unqryTarifas,       'unqryTarifas');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
@@ -430,7 +458,9 @@ begin
       FieldByName('CODIGO_EMP_PED').AsString := oEmpresa
     else
       FieldByName('CODIGO_EMP_PED').AsString := '0';
-    FieldByName('CODIGO_CLI_PED').AsString := '0';
+    FieldByName('CODIGO_CLI_PED').Clear;
+    FieldByName('TARIFA_ARTICULO_CLIENTE_PED').Clear;
+    FieldByName('ESIMP_INCL_TARIFA_CLIENTE_PED').Clear;
     FieldByName('NUMERO_PED').AsString     := '0';
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='PE'
     // (mismo criterio que compras); fallback historico 'A1'
@@ -448,17 +478,18 @@ begin
     if FindField('CODIGO_ALM_PED') <> nil then
       FieldByName('CODIGO_ALM_PED').AsString := oAlmacen;
   end;
+  RefrescarAlmacenes(
+    DataSet.FieldByName('CODIGO_EMP_PED').AsString);
 end;
 
 procedure TdmPedidos.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
   ValidarAlmacenCabecera;
+  ValidarClienteCabecera;
   if (unqryTablaG.FieldByName('NUMERO_PED').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_PED').AsString = '') then
     GetCodigoAutoPedido;
-  if (unqryTablaG.FieldByName('CODIGO_CLI_PED').AsString = '0') then
-    GetCodigoAutoCliente;
   AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'PED');
   CalcularTotalesPedido;
 end;
@@ -544,6 +575,14 @@ begin
       FieldByName('CANTIDAD_PENDIENTE_PEDLIN').AsFloat := 1;
     if FindField('ESENTREGADA_PEDLIN') <> nil then
       FieldByName('ESENTREGADA_PEDLIN').AsString := 'N';
+    if FindField('CODIGO_TAR_PEDLIN') <> nil then
+      FieldByName('CODIGO_TAR_PEDLIN').AsString :=
+        unqryTablaG.FieldByName(
+          'TARIFA_ARTICULO_CLIENTE_PED').AsString;
+    if FindField('ESIMP_INCL_TARIFA_PEDLIN') <> nil then
+      FieldByName('ESIMP_INCL_TARIFA_PEDLIN').AsString :=
+        unqryTablaG.FieldByName(
+          'ESIMP_INCL_TARIFA_CLIENTE_PED').AsString;
     if (FindField('CODIGO_ALMACEN_PEDLIN') <> nil) and
        (unqryTablaG.FindField('CODIGO_ALM_PED') <> nil) then
       FieldByName('CODIGO_ALMACEN_PEDLIN').AsString :=
@@ -888,22 +927,6 @@ begin
   end;
 end;
 
-procedure TdmPedidos.GetCodigoAutoCliente;
-begin
-  with unstrdprcGetContador do
-  begin
-    Params.Clear;
-    Params.CreateParam(ftString, 'ptipodoc',       ptInput);
-    Params.CreateParam(ftString, 'pcont',          ptOutput);
-    Params.CreateParam(ftString, 'pUSUARIO_MODIF', ptInput);
-    ParamByName('ptipodoc').AsString := 'CL';
-    ParamByName('pUSUARIO_MODIF').AsString := oUser;
-    ExecProc;
-    unqryTablaG.FieldByName('CODIGO_CLI_PED').AsString :=
-                            ParamByName('pcont').AsString;
-  end;
-end;
-
 procedure TdmPedidos.CalcularTotalesPedido;
 begin
   if not FCalculandoTotales then
@@ -1002,6 +1025,28 @@ begin
   end;
 end;
 
+procedure TdmPedidos.ValidarClienteCabecera;
+var
+  sCliente: string;
+begin
+  sCliente := '';
+  if unqryTablaG.FindField('CODIGO_CLI_PED') <> nil then
+    sCliente := Trim(unqryTablaG.FieldByName('CODIGO_CLI_PED').AsString);
+  if (sCliente = '') or (sCliente = '0') then
+  begin
+    MessageDlg('Debe seleccionar un cliente antes de guardar el pedido.',
+               mtWarning, [mbOk], 0);
+    Abort;
+  end;
+  if not ClienteExiste(sCliente) then
+  begin
+    MessageDlg('El cliente ' + sCliente + ' no existe. Seleccione un ' +
+               'cliente válido antes de guardar el pedido.',
+               mtWarning, [mbOk], 0);
+    Abort;
+  end;
+end;
+
 procedure TdmPedidos.PersistirAlmacenCabecera;
 var
   q: TUniQuery;
@@ -1082,6 +1127,32 @@ begin
   end;
 end;
 
+function TdmPedidos.ClienteExiste(const ACodigo: string): Boolean;
+var
+  q: TUniQuery;
+  sCodigo: string;
+begin
+  Result := False;
+  sCodigo := Trim(ACodigo);
+  if (sCodigo <> '') and (sCodigo <> '0') then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := unqryTablaG.Connection;
+      q.SQL.Text :=
+        'SELECT 1 ' +
+        '  FROM fza_clientes ' +
+        ' WHERE CODIGO_CLI_CLI = :cliente ' +
+        ' LIMIT 1';
+      q.ParamByName('cliente').AsString := sCodigo;
+      q.Open;
+      Result := not q.IsEmpty;
+    finally
+      FreeAndNil(q);
+    end;
+  end;
+end;
+
 procedure TdmPedidos.CopiarEmpresaaPedido(DataSet: TDataSet);
 begin
   with unqryTablaG do
@@ -1126,7 +1197,35 @@ begin
   AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'PED');
 end;
 
+procedure TdmPedidos.ActualizarImpuestosTarifaCabecera(
+  const ACodigoTarifa: string);
+var
+  sTarifa: string;
+begin
+  sTarifa := Trim(ACodigoTarifa);
+  if unqryTablaG.Active and (unqryTablaG.State in dsEditModes) then
+  begin
+    if sTarifa = '' then
+      unqryTablaG.FieldByName(
+        'ESIMP_INCL_TARIFA_CLIENTE_PED').Clear
+    else
+    begin
+      if not unqryTarifas.Active then
+        unqryTarifas.Open;
+      if unqryTarifas.Locate('CODIGO_TAR_ARTTAR', sTarifa, []) then
+        unqryTablaG.FieldByName(
+          'ESIMP_INCL_TARIFA_CLIENTE_PED').AsString :=
+          unqryTarifas.FieldByName('ESIMP_INCL_TAR').AsString
+      else
+        unqryTablaG.FieldByName(
+          'ESIMP_INCL_TARIFA_CLIENTE_PED').Clear;
+    end;
+  end;
+end;
+
 procedure TdmPedidos.CopiarClienteaPedido(DataSet: TDataSet);
+var
+  sTarifa: string;
 begin
   with unqryTablaG do
   begin
@@ -1167,8 +1266,11 @@ begin
       DataSet.FindField('ESRETENCIONES_CLI').AsString;
     FindField('ESINTRACOMUNITARIO_CLIENTE_PED').AsString  :=
       DataSet.FindField('ESINTRACOMUNITARIO_CLI').AsString;
-    FindField('TARIFA_ARTICULO_CLIENTE_PED').AsString     :=
-      DataSet.FindField('TARIFA_ARTICULO_CLI').AsString;
+    sTarifa := Trim(DataSet.FindField('TARIFA_ARTICULO_CLI').AsString);
+    if sTarifa = '' then
+      sTarifa := TarifaDefecto;
+    FindField('TARIFA_ARTICULO_CLIENTE_PED').AsString := sTarifa;
+    ActualizarImpuestosTarifaCabecera(sTarifa);
     if (FindField('FORMA_PAGO_PED') <> nil) and
        (DataSet.FindField('CODIGO_FP_CLI') <> nil) and
        (Trim(DataSet.FindField('CODIGO_FP_CLI').AsString) <> '') then

@@ -320,4 +320,28 @@
     Left = 648
     Top = 216
   end
+  object unqryAlmacenesFacc: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM, CODIGO_EMP_ALM'
+      '  FROM fza_almacenes'
+      ' WHERE ESACTIVO_ALM = '#39'S'#39
+      '   AND CODIGO_EMP_ALM = :EMPRESA'
+      ' ORDER BY COALESCE(ORDEN_ALM, 2147483647), CODIGO_ALM_ALM')
+    ReadOnly = True
+    Left = 744
+    Top = 160
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'EMPRESA'
+        ParamType = ptInput
+        Value = nil
+      end>
+  end
+  object dsAlmacenesFacc: TDataSource
+    DataSet = unqryAlmacenesFacc
+    Left = 744
+    Top = 216
+  end
 end

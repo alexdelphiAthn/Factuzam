@@ -85,6 +85,9 @@ type
     btnCODIGO_CLI: TcxDBButtonEdit;
     lblCodigoCliente: TcxLabel;
     cxdblblRAZON_SOCIAL_CLIENTE_PED: TcxDBLabel;
+    lblTarifaPedido: TcxLabel;
+    cbbTarifaPedido: TcxDBLookupComboBox;
+    chkTarifaImpuestosIncluidosPedido: TcxDBCheckBox;
 
     // Empresa
     grpEmpresa: TcxGroupBox;
@@ -189,6 +192,7 @@ type
     btnEntregarTodo: TcxButton;
     btnCrearAlbaran: TcxButton;
     btnImportarPS: TcxButton;
+    btnExpandirFilas: TcxButton;
 
     // Observaciones
     memObservaciones: TcxDBMemo;
@@ -206,6 +210,7 @@ type
     procedure btnEntregarTodoClick(Sender: TObject);
     procedure btnCrearAlbaranClick(Sender: TObject);
     procedure btnImportarPSClick(Sender: TObject);
+    procedure btnExpandirFilasClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
     procedure actIrDocumentoExecute(Sender: TObject);
     procedure cbbSERIE_PEDPropertiesInitPopup(Sender: TObject);
@@ -215,6 +220,7 @@ type
                                                 AButtonIndex: Integer);
     procedure btnCODIGO_EMPPropertiesEditValueChanged(Sender: TObject);
     procedure cbbCODIGO_ALM_PEDPropertiesEditValueChanged(Sender: TObject);
+    procedure cbbTarifaPedidoPropertiesChange(Sender: TObject);
     procedure btnCODIGO_CLIPropertiesEditValueChanged(Sender: TObject);
     procedure btnCODIGO_EMPKeyUp(Sender: TObject; var Key: Word;
                                  Shift: TShiftState);
@@ -259,7 +265,7 @@ type
     // Porcentaje de IVA de la cabecera para un tipo (N/R/S/E).
     function PorcentajeIvaPedido(const ATipoIva: string): Double;
     // Contrato ObtenerPrecioSku del modo tallas: PVP C/IVA que el
-    // pedido aplicaria al SKU (tarifa del cliente, fecha del pedido),
+    // pedido aplicaria al SKU (tarifa de cabecera, fecha del pedido),
     // para que la consolidacion del escaneo separe lineas por precio.
     function PrecioSkuTallas(const ACodigoArticulo,
                              ACodigoSku: string): Double;
@@ -307,6 +313,7 @@ uses
   inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibGenBusq,
   inLibShowMto, inLibGlobalVar, inLibFiltroUsuario, Uni, inLibArticulosResolver,
   inLibArticulosValidador, inLibVentasImpuestos, inLibtb,
+  inLibGridTallasInline,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku;
 
@@ -507,8 +514,6 @@ var
   sInput     : string;
   sTarifa    : string;
   dFecha     : TDateTime;
-  rPrecioSiva: Double;
-  rPorIva    : Double;
 
   procedure PonerString(const ACampo, AValor: string);
   var
@@ -526,25 +531,6 @@ var
     Campo := ds.FindField(ACampo);
     if Campo <> nil then
       Campo.AsFloat := AValor;
-  end;
-
-  function PorcentajeIva(const ATipoIva: string): Double;
-  var
-    sTipo: string;
-  begin
-    sTipo := UpperCase(Trim(ATipoIva));
-    if sTipo = 'R' then
-      Result := dmmPedidos.unqryTablaG.
-                  FieldByName('PORCENTAJE_IVAR_PED').AsFloat
-    else if sTipo = 'S' then
-      Result := dmmPedidos.unqryTablaG.
-                  FieldByName('PORCENTAJE_IVAS_PED').AsFloat
-    else if sTipo = 'E' then
-      Result := dmmPedidos.unqryTablaG.
-                  FieldByName('PORCENTAJE_IVAE_PED').AsFloat
-    else
-      Result := dmmPedidos.unqryTablaG.
-                  FieldByName('PORCENTAJE_IVAN_PED').AsFloat;
   end;
 
   procedure EnfocarSku(AAbrirBusqueda: Boolean);
@@ -606,10 +592,6 @@ begin
                                                 sTarifa, dFecha)
             else
               Precio := Datos.PrecioPedido;
-            rPorIva := PorcentajeIva(Datos.TipoIVA);
-            rPrecioSiva := Precio.PrecioFinal;
-            if Precio.EsImpIncl and ((1 + rPorIva / 100) <> 0) then
-              rPrecioSiva := Precio.PrecioFinal / (1 + rPorIva / 100);
             PonerString('CODIGO_ART_PEDLIN', Datos.CodigoArticulo);
             PonerString('CODIGOPRODPS_PEDLIN', Datos.CodigoSku);
             if Resolucion.CodigoBarrasMatch <> '' then
@@ -627,9 +609,23 @@ begin
             else
               PonerString('ESIMP_INCL_TARIFA_PEDLIN', 'N');
             if Datos.RequiereSku then
-              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_PEDLIN', 0)
+            begin
+              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_PEDLIN', 0);
+              PonerFloat('PRECIO_VENTA_CIVA_ARTICULO_PEDLIN', 0);
+            end
+            else if Precio.EsImpIncl then
+            begin
+              // La rutina fiscal toma este PVP bruto como precio maestro.
+              PonerFloat('PRECIO_VENTA_CIVA_ARTICULO_PEDLIN',
+                         Precio.PrecioFinal);
+              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_PEDLIN', 0);
+            end
             else
-              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_PEDLIN', rPrecioSiva);
+            begin
+              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_PEDLIN',
+                         Precio.PrecioFinal);
+              PonerFloat('PRECIO_VENTA_CIVA_ARTICULO_PEDLIN', 0);
+            end;
             PrepararLineaFiscalVenta(dmmPedidos.unqryTablaG.Connection,
               dmmPedidos.unqryTablaG, ds, 'PED', 'PEDLIN', 'TOTAL_PEDLIN');
             if Datos.RequiereSku then
@@ -650,22 +646,10 @@ begin
 end;
 
 function TfrmMtoPedidos.PorcentajeIvaPedido(const ATipoIva: string): Double;
-var
-  sTipo: string;
 begin
-  sTipo := UpperCase(Trim(ATipoIva));
-  if sTipo = 'R' then
-    Result := dmmPedidos.unqryTablaG.
-                FieldByName('PORCENTAJE_IVAR_PED').AsFloat
-  else if sTipo = 'S' then
-    Result := dmmPedidos.unqryTablaG.
-                FieldByName('PORCENTAJE_IVAS_PED').AsFloat
-  else if sTipo = 'E' then
-    Result := dmmPedidos.unqryTablaG.
-                FieldByName('PORCENTAJE_IVAE_PED').AsFloat
-  else
-    Result := dmmPedidos.unqryTablaG.
-                FieldByName('PORCENTAJE_IVAN_PED').AsFloat;
+  Result := PorcentajeIvaDocumentoVenta(
+    dmmPedidos.unqryTablaG.Connection, dmmPedidos.unqryTablaG,
+    'PED', ATipoIva);
 end;
 
 function TfrmMtoPedidos.PrecioSkuTallas(const ACodigoArticulo,
@@ -797,7 +781,9 @@ begin
   tvMensajes.DataController.DataSource := dmmPedidos.dsMensajes;
   cbbTotalesFORMA_PAGO_PED.Properties.ListSource := dmmPedidos.dsFormasPago;
   cbbCODIGO_ALM_PED.Properties.ListSource := dmmPedidos.dsAlmacenesPed;
+  cbbTarifaPedido.Properties.ListSource := dmmPedidos.dsTarifas;
   DesactivarEnterAsTabEnCombo(cbbCODIGO_ALM_PED);
+  DesactivarEnterAsTabEnCombo(cbbTarifaPedido);
   dmmPedidos.unqryPedidosLineas.MasterSource := dsTablaG;
   dmmPedidos.unqryAlbaranes.MasterSource := dsTablaG;
   pkFieldName := 'SERIE_PED;NUMERO_PED';
@@ -858,6 +844,10 @@ procedure TfrmMtoPedidos.dsTablaGDataChangeHook(Sender: TObject;
 begin
   if Field = nil then
   begin
+    if Assigned(dmmPedidos) and dmmPedidos.unqryTablaG.Active and
+       (not dmmPedidos.unqryTablaG.IsEmpty) then
+      dmmPedidos.RefrescarAlmacenes(dmmPedidos.unqryTablaG.FieldByName(
+        'CODIGO_EMP_PED').AsString);
     ActualizarLabelPrendas;
     // Contrato de entrada: al navegar de pedido, las lineas llegan
     // recargadas por el master-detail SIN atributos desempaquetados
@@ -1008,6 +998,22 @@ begin
   end;
 end;
 
+procedure TfrmMtoPedidos.cbbTarifaPedidoPropertiesChange(Sender: TObject);
+var
+  Editor: TcxCustomEdit;
+  sTarifa: string;
+begin
+  inherited;
+  if Assigned(dmmPedidos) and Assigned(dsTablaG.DataSet) and
+     dsTablaG.DataSet.Active and
+     (dsTablaG.DataSet.State in dsEditModes) then
+  begin
+    Editor := Sender as TcxCustomEdit;
+    sTarifa := Trim(VarToStr(Editor.EditingValue));
+    dmmPedidos.ActualizarImpuestosTarifaCabecera(sTarifa);
+  end;
+end;
+
 procedure TfrmMtoPedidos.btnCODIGO_CLIPropertiesEditValueChanged(
   Sender: TObject);
 var
@@ -1125,6 +1131,7 @@ procedure TfrmMtoPedidos.AsegurarCabeceraPersistidaParaLineas;
 var
   dsCab: TDataSet;
   dsLin: TDataSet;
+  sCliente: string;
   sNumero: string;
   bReAppend: Boolean;
 
@@ -1169,6 +1176,21 @@ begin
        (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
       raise Exception.Create(
         'Crea o selecciona un pedido antes de anadir lineas.');
+    sCliente := Trim(dsCab.FieldByName('CODIGO_CLI_PED').AsString);
+    if not dmmPedidos.ClienteExiste(sCliente) then
+    begin
+      if (sCliente = '') or (sCliente = '0') then
+        MessageDlg('Debe seleccionar un cliente antes de añadir líneas.',
+                   mtWarning, [mbOk], 0)
+      else
+        MessageDlg('El cliente ' + sCliente + ' no existe. Seleccione un ' +
+                   'cliente válido antes de añadir líneas.',
+                   mtWarning, [mbOk], 0);
+      pcCab.ActivePage := tsCabecera;
+      if btnCODIGO_CLI.CanFocus then
+        btnCODIGO_CLI.SetFocus;
+      Abort;
+    end;
     sNumero := Trim(dsCab.FieldByName('NUMERO_PED').AsString);
     // La linea vacia en insercion (auto-anadida al entrar al grid) se
     // cancela SOLO si hay que postear la cabecera: ese Post arrastra
@@ -1271,6 +1293,8 @@ end;
 
 procedure TfrmMtoPedidos.cxGrdPedidosLineasEnter(Sender: TObject);
 begin
+  inherited;
+  inLibGridTallasInline.ActivarEnterComoTab(Self, False);
   AsegurarPrimeraLineaPedido;
   AsegurarModoEntradaLineas(True);
 end;
@@ -1289,6 +1313,7 @@ var
       Result := Trim(Campo.AsString) = '';
   end;
 begin
+  inherited;
   // Al salir del grid hacia la cabecera, la linea vacia auto-anadida
   // (AsegurarPrimeraLineaPedido) se cancela. Si quedara en dsInsert,
   // cualquier Edit de la cabecera (p.ej. elegir almacen) fuerza su Post
@@ -1307,6 +1332,7 @@ begin
         ds.Cancel;
     end;
   end;
+  inLibGridTallasInline.ActivarEnterComoTab(Self, True);
 end;
 
 procedure TfrmMtoPedidos.KeyDown(var Key: Word; Shift: TShiftState);
@@ -1326,6 +1352,18 @@ begin
     ConstruirModoEntrada;
   end;
   inherited;
+end;
+
+// "Expandir Filas" activa la vista de tres bandas por artículo:
+// Pedido / A albaranar / Pendiente.
+procedure TfrmMtoPedidos.btnExpandirFilasClick(Sender: TObject);
+begin
+  inherited;
+  if (dmmPedidos <> nil) and (FModoEntradaSel <> mcsTallasHorPed) then
+  begin
+    FModoEntradaSel := mcsTallasHorPed;
+    ConstruirModoEntrada;
+  end;
 end;
 
 procedure TfrmMtoPedidos.ConstruirModoEntrada;
@@ -1463,6 +1501,10 @@ begin
     FModoEntrada.Construir;
     CrearColumnasHostPedido;
   end;
+  // Navegación tipo Excel en todos los modos de presentación.
+  tvPedidosLineas.OptionsBehavior.GoToNextCellOnEnter := True;
+  tvPedidosLineas.OptionsBehavior.FocusCellOnTab := True;
+  tvPedidosLineas.OptionsBehavior.FocusCellOnCycle := True;
   case DetectarModoColumnasSku(Cfg) of
     mcsSku: tsLineasPedido.Caption := '&1_Líneas [SKU]';
     mcsTallasHorPed:
@@ -1495,7 +1537,7 @@ procedure TfrmMtoPedidos.CrearColumnasHostPedido;
     end;
   end;
 var
-  ColCant, ColTipo, ColLinea, ColAAlbaranar: TcxGridDBColumn;
+  ColCant, ColTipo, ColLinea, ColAAlbaranar, ColImpIncl: TcxGridDBColumn;
 begin
   // Columnas propias del pedido tras el ClearItems del contrato.
   ColLinea := Col('Línea', 'LINEA_PEDLIN', 60, False);
@@ -1517,6 +1559,15 @@ begin
                       'PRECIO_VENTA_SIVA_ARTICULO_PEDLIN', 90, True));
   FormatearMoneda(Col('PVP C/IVA',
                       'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN', 90, True));
+  Col('Tarifa', 'CODIGO_TAR_PEDLIN', 70, False);
+  ColImpIncl := Col('Imp. incl.', 'ESIMP_INCL_TARIFA_PEDLIN', 75, False);
+  ColImpIncl.PropertiesClass := TcxCheckBoxProperties;
+  with TcxCheckBoxProperties(ColImpIncl.Properties) do
+  begin
+    ReadOnly := True;
+    ValueChecked := 'S';
+    ValueUnchecked := 'N';
+  end;
   FormatearMoneda(Col('Total', 'TOTAL_PEDLIN', 95, False));
   Col('Almacén', 'CODIGO_ALMACEN_PEDLIN', 75, True);
   // Orden normal del documento: la LINEA delante del bloque de
@@ -1565,7 +1616,7 @@ end;
 procedure TfrmMtoPedidos.ModoEntradaResuelto(const ACodArt, ASku,
   ADescripcion: string; ACompleto: Boolean);
 begin
-  // El flujo fiscal clasico del pedido (tarifa del cliente, IVA,
+  // El flujo fiscal clasico del pedido (tarifa de cabecera, IVA,
   // precios, total y CODIGOPRODPS para el albaraneado) se reaprovecha
   // tal cual: AplicarArticuloPedido acepta articulo o SKU.
   if ACompleto and (ASku <> '') then

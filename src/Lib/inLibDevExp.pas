@@ -915,6 +915,7 @@ end;
 procedure BusqAllGrid(var AdbTvGen: TcxGridDBTableView; AsDatoBusq: String);
 var
   i: Integer;
+  oListaBusqueda: TcxFilterCriteriaItemList;
 begin
   if AsDatoBusq <> ''
   then
@@ -925,7 +926,8 @@ begin
       Options := Options + [fcoCaseInsensitive];
       try
         Root.Clear;
-        Root.BoolOperatorKind := fboOr;
+        Root.BoolOperatorKind := fboAnd;
+        oListaBusqueda := Root.AddItemList(fboOr);
         for i := 0 to AdbTvGen.ColumnCount - 1 do
         begin
           if AdbTvGen.Columns[i].DataBinding.Field <> nil then
@@ -945,7 +947,7 @@ begin
                                                                  ftWideMemo]
           then
           begin
-            Root.AddItem((AdbTvGen.Columns[i] as TObject),
+            oListaBusqueda.AddItem((AdbTvGen.Columns[i] as TObject),
               foLike,
               '%' + AsDatoBusq + '%',
               '%' + AsDatoBusq + '%');
@@ -958,7 +960,10 @@ begin
     end;
   end
   else
+  begin
     AdbTvGen.DataController.Filter.Root.Clear;
+    AdbTvGen.DataController.Filter.Root.BoolOperatorKind := fboAnd;
+  end;
 end;
 
 procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
@@ -968,10 +973,12 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
     bModoTemporal: Boolean; // Unifica Fecha y Hora
     sTextoBuscar: String;
     FieldType: TFieldType;
+    oListaBusqueda: TcxFilterCriteriaItemList;
   begin
     if AsDatoBusq = '' then
     begin
       AView.DataController.Filter.Root.Clear;
+      AView.DataController.Filter.Root.BoolOperatorKind := fboAnd;
       AView.DataController.Filter.Active := False;
       Exit;
     end;
@@ -1004,7 +1011,8 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
       try
         Options := Options + [fcoCaseInsensitive];
         Root.Clear;
-        Root.BoolOperatorKind := fboOr;
+        Root.BoolOperatorKind := fboAnd;
+        oListaBusqueda := Root.AddItemList(fboOr);
         for i := 0 to AView.ColumnCount - 1 do
         begin
           if (AView.Columns[i].DataBinding.Field <> nil) then
@@ -1015,7 +1023,7 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
               // MODO TEMPORAL: Busca en Fechas, Horas y FechaHoras
               if FieldType in [ftDate, ftTime, ftDateTime, ftTimeStamp] then
               begin
-                 Root.AddItem((AView.Columns[i] as TObject),
+                 oListaBusqueda.AddItem((AView.Columns[i] as TObject),
                     foLike,
                     '%' + sTextoBuscar + '%',
                     '%' + sTextoBuscar + '%');
@@ -1029,7 +1037,7 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
                  ftFMTBcd, ftLongWord, ftShortint, ftString, ftWideString,
                  ftMemo, ftFmtMemo, ftWideMemo] then
               begin
-                Root.AddItem((AView.Columns[i] as TObject),
+                oListaBusqueda.AddItem((AView.Columns[i] as TObject),
                   foLike,
                   '%' + sTextoBuscar + '%',
                   '%' + sTextoBuscar + '%');

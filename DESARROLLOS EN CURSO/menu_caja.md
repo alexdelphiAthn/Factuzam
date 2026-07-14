@@ -428,9 +428,12 @@ Caja/Fecha vía `PrepararValores:173`.
 - `AjustarVisibilidadPestanas:276` enciende/apaga pestañas según haya datos
   (`TienePagos`, `TieneVales`, etc.).
 
-### 7.3 Reimprimir (`btnReimprimir`)
+### 7.3 Reimprimir (`btnReimprimir` y `btnReimprimirOtros`)
 
-`btnReimprimirClick:333`:
+Ambos botones reutilizan `ReimprimirOperacion`:
+- `btnReimprimir` usa la impresora de tickets configurada en parámetros.
+- `btnReimprimirOtros` abre la previsualización, que permite seleccionar otra
+  impresora.
 - Si hay factura → `ImprimirTicketDesdeBD(...)` (de
   `inLibGenerarTicketBD`).
 - Si hay depósito → `ImprimirResguardoDeposito(...)`.

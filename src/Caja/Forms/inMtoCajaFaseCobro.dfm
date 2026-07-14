@@ -650,7 +650,6 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Colors.Hot = clBtnFace
           LookAndFeel.Kind = lfUltraFlat
           LookAndFeel.NativeStyle = False
-          OnClick = btnFacturaClick
           TabOrder = 8
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
@@ -658,6 +657,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold, fsUnderline]
           ParentFont = False
+          OnClick = btnFacturaClick
         end
         object btnFactura: TcxButton
           Left = 89
@@ -670,7 +670,6 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Colors.Hot = clSilver
           LookAndFeel.Kind = lfUltraFlat
           LookAndFeel.NativeStyle = False
-          OnClick = btnFacturaClick
           OptionsImage.Margin = 10
           TabOrder = 9
           Font.Charset = DEFAULT_CHARSET
@@ -679,6 +678,7 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Font.Name = 'Lucida Sans'
           Font.Style = [fsBold]
           ParentFont = False
+          OnClick = btnFacturaClick
         end
         object btnF6: TcxButton
           Left = 18
@@ -859,6 +859,14 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
         ParentBackground = False
         TabOrder = 1
         ExplicitTop = 476
+        object imgEnviarEmail: TImage
+          Left = 31
+          Top = 153
+          Width = 24
+          Height = 18
+          Center = True
+          Transparent = True
+        end
         object lblNumDoc: TcxLabel
           Left = 30
           Top = 6
@@ -905,6 +913,21 @@ object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           TabOrder = 2
           Text = 'cbbSERIE_FAC'
           Width = 209
+        end
+        object chkEnviarEmail: TcxCheckBox
+          Left = 61
+          Top = 145
+          Caption = 'Enviar por e-mail'
+          ParentFont = False
+          Properties.OnEditValueChanged = chkEnviarEmailPropertiesEditValueChanged
+          Style.Font.Charset = ANSI_CHARSET
+          Style.Font.Color = clNavy
+          Style.Font.Height = -17
+          Style.Font.Name = 'Lucida Sans'
+          Style.Font.Style = []
+          Style.IsFontAssigned = True
+          TabOrder = 3
+          Transparent = True
         end
       end
     end

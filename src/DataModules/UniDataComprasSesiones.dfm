@@ -747,11 +747,20 @@ inherited dmComprasSesiones: TdmComprasSesiones
   end
   object unqryAlmacenes: TUniQuery
     SQL.Strings = (
-      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM FROM fza_almacenes'
-      'WHERE ESACTIVO_ALM = '#39'S'#39
-      'ORDER BY NOMBRE_ALM_ALM')
+      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM, CODIGO_EMP_ALM'
+      '  FROM fza_almacenes'
+      ' WHERE ESACTIVO_ALM = '#39'S'#39
+      '   AND CODIGO_EMP_ALM = :EMPRESA'
+      ' ORDER BY COALESCE(ORDEN_ALM, 2147483647), CODIGO_ALM_ALM')
     Left = 40
     Top = 392
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'EMPRESA'
+        ParamType = ptInput
+        Value = nil
+      end>
   end
   object dsAlmacenes: TDataSource
     DataSet = unqryAlmacenes

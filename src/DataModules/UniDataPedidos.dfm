@@ -568,14 +568,37 @@
       'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM, CODIGO_EMP_ALM'
       '  FROM fza_almacenes'
       ' WHERE ESACTIVO_ALM = '#39'S'#39
-      ' ORDER BY CODIGO_EMP_ALM, ORDEN_ALM, CODIGO_ALM_ALM')
+      '   AND CODIGO_EMP_ALM = :EMPRESA'
+      ' ORDER BY COALESCE(ORDEN_ALM, 2147483647), CODIGO_ALM_ALM')
     ReadOnly = True
     Left = 600
     Top = 312
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'EMPRESA'
+        ParamType = ptInput
+        Value = nil
+      end>
   end
   object dsAlmacenesPed: TDataSource
     DataSet = unqryAlmacenesPed
     Left = 600
+    Top = 368
+  end
+  object unqryTarifas: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_TAR_ARTTAR, NOMBRE_TAR_TAR, ESIMP_INCL_TAR'
+      '  FROM vi_tarifas'
+      ' ORDER BY NOMBRE_TAR_TAR, CODIGO_TAR_ARTTAR')
+    ReadOnly = True
+    Left = 688
+    Top = 312
+  end
+  object dsTarifas: TDataSource
+    DataSet = unqryTarifas
+    Left = 688
     Top = 368
   end
 end

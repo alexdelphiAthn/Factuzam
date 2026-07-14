@@ -1528,6 +1528,12 @@ begin
   // o al cambiar CODIGO_PRV_ALBC tecleado directamente en el ButtonEdit.
   if (Field = nil) or SameText(Field.FieldName, 'CODIGO_PRV_ALBC') then
     ActualizarLabelProveedor;
+  if (Field = nil) and Assigned(dmmAlbaranesCompra) and
+     dmmAlbaranesCompra.unqryTablaG.Active and
+     (not dmmAlbaranesCompra.unqryTablaG.IsEmpty) then
+    dmmAlbaranesCompra.RefrescarAlmacenes(
+      dmmAlbaranesCompra.unqryTablaG.FieldByName(
+        'CODIGO_EMP_ALBC').AsString);
   if Field <> nil then Exit;
   // Contrato de entrada: al navegar de albaran, las lineas llegan
   // recargadas por el master-detail. En desglose basta desempaquetar

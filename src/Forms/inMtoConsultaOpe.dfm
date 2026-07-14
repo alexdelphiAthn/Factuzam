@@ -9,8 +9,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
-  ExplicitLeft = 3
-  ExplicitTop = -31
   ExplicitWidth = 1179
   ExplicitHeight = 759
   TextHeight = 17
@@ -31,7 +29,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 1200
     object lblFecha: TcxLabel
       Left = 12
       Top = 18
@@ -72,7 +69,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 1200
     object cxGridMaestro: TcxGrid
       Left = 0
       Top = 0
@@ -80,7 +76,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
       Height = 260
       Align = alClient
       TabOrder = 0
-      ExplicitWidth = 1200
       object cxViewMaestro: TcxGridDBTableView
         OptionsBehavior.FocusCellOnCycle = True
         OptionsData.Deleting = False
@@ -154,28 +149,25 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     Left = 0
     Top = 321
     Width = 1163
-    Height = 360
+    Height = 326
     Align = alClient
     TabOrder = 2
     Properties.ActivePage = tsOperacion
     Properties.CustomButtons.Buttons = <>
-    ExplicitWidth = 1200
-    ClientRectBottom = 356
+    ClientRectBottom = 322
     ClientRectLeft = 4
     ClientRectRight = 1159
     ClientRectTop = 28
     object tsOperacion: TcxTabSheet
       Caption = 'Operaci'#243'n '
       ImageIndex = 0
-      ExplicitWidth = 1192
       object cxGridOpe: TcxGrid
         Left = 0
         Top = 0
         Width = 1155
-        Height = 328
+        Height = 294
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 1192
         object cxViewOpe: TcxGridDBTableView
           OptionsData.Deleting = False
           OptionsData.Editing = False
@@ -240,15 +232,13 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object tsPagos: TcxTabSheet
       Caption = 'Pagos'
       ImageIndex = 1
-      ExplicitWidth = 1192
       object cxGridPagos: TcxGrid
         Left = 0
         Top = 0
         Width = 1155
-        Height = 328
+        Height = 294
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 1192
         object cxViewPagos: TcxGridDBTableView
           DataController.Summary.FooterSummaryItems = <
             item
@@ -333,15 +323,13 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object tsVales: TcxTabSheet
       Caption = 'Vales'
       ImageIndex = 2
-      ExplicitWidth = 1192
       object cxGridVales: TcxGrid
         Left = 0
         Top = 0
         Width = 1155
-        Height = 328
+        Height = 294
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 1192
         object cxViewVales: TcxGridDBTableView
           DataController.Summary.FooterSummaryItems = <
             item
@@ -435,15 +423,13 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object tsMovimientos: TcxTabSheet
       Caption = 'Movimientos '
       ImageIndex = 1
-      ExplicitWidth = 1192
       object cxGridMov: TcxGrid
         Left = 0
         Top = 0
         Width = 1155
-        Height = 328
+        Height = 294
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 1192
         object cxViewMov: TcxGridDBTableView
           OptionsData.Deleting = False
           OptionsData.Editing = False
@@ -524,15 +510,13 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object tsCliente: TcxTabSheet
       Caption = 'Cliente '
       ImageIndex = 2
-      ExplicitWidth = 1192
       object cxGridCli: TcxGrid
         Left = 0
         Top = 0
         Width = 1155
-        Height = 328
+        Height = 294
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 1192
         object cxViewCli: TcxGridDBTableView
           OptionsData.Deleting = False
           OptionsData.Editing = False
@@ -599,15 +583,13 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object tsDepositos: TcxTabSheet
       Caption = 'Dep'#243'sitos'
       ImageIndex = 3
-      ExplicitWidth = 1192
       object cxGridDep: TcxGrid
         Left = 0
         Top = 0
         Width = 1155
-        Height = 328
+        Height = 294
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 1192
         object cxViewDep: TcxGridDBTableView
           DataController.Summary.FooterSummaryItems = <
             item
@@ -744,7 +726,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     object tsFactura: TcxTabSheet
       Caption = 'Borrador '
       ImageIndex = 4
-      ExplicitWidth = 1192
       object pnlFacCabecera: TPanel
         Left = 0
         Top = 0
@@ -753,7 +734,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
         Align = alTop
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitWidth = 1192
         object cxGridFacCab: TcxGrid
           Left = 0
           Top = 0
@@ -761,7 +741,6 @@ inherited frmConsultaOpe: TfrmConsultaOpe
           Height = 70
           Align = alClient
           TabOrder = 0
-          ExplicitWidth = 1192
           object cxViewFacCab: TcxGridDBTableView
             OptionsData.Deleting = False
             OptionsData.Editing = False
@@ -830,10 +809,9 @@ inherited frmConsultaOpe: TfrmConsultaOpe
         Left = 0
         Top = 70
         Width = 947
-        Height = 258
+        Height = 224
         Align = alClient
         TabOrder = 1
-        ExplicitWidth = 984
         object cxViewFacLin: TcxGridDBTableView
           OptionsData.Deleting = False
           OptionsData.Editing = False
@@ -922,25 +900,23 @@ inherited frmConsultaOpe: TfrmConsultaOpe
         Left = 947
         Top = 70
         Width = 8
-        Height = 258
+        Height = 224
         AlignSplitter = salRight
         Control = pnlFotoConsulta
-        ExplicitLeft = 984
       end
       object pnlFotoConsulta: TPanel
         Left = 955
         Top = 70
         Width = 200
-        Height = 258
+        Height = 224
         Align = alRight
         BevelOuter = bvLowered
         TabOrder = 2
-        ExplicitLeft = 992
         object imgFotoConsulta: TImage
           Left = 1
           Top = 1
           Width = 198
-          Height = 256
+          Height = 222
           Align = alClient
           Center = True
           Proportional = True
@@ -952,13 +928,15 @@ inherited frmConsultaOpe: TfrmConsultaOpe
   end
   object pnlPie: TPanel [4]
     Left = 0
-    Top = 681
+    Top = 647
     Width = 1163
-    Height = 39
+    Height = 73
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 3
-    ExplicitWidth = 1200
+    DesignSize = (
+      1163
+      73)
     object btnReimprimir: TButton
       Left = 12
       Top = 6
@@ -969,17 +947,17 @@ inherited frmConsultaOpe: TfrmConsultaOpe
       OnClick = btnReimprimirClick
     end
     object btnCerrar: TButton
-      Left = 1043
+      Left = 1041
       Top = 6
       Width = 108
       Height = 28
       Anchors = [akTop, akRight]
       Caption = 'Cerrar (ESC)'
-      TabOrder = 1
+      TabOrder = 6
       OnClick = btnCerrarClick
     end
     object btnDevolverAbonar: TButton
-      Left = 142
+      Left = 321
       Top = 6
       Width = 200
       Height = 28
@@ -987,7 +965,7 @@ inherited frmConsultaOpe: TfrmConsultaOpe
       TabOrder = 2
     end
     object btnRectificar: TButton
-      Left = 352
+      Left = 531
       Top = 6
       Width = 100
       Height = 28
@@ -996,7 +974,7 @@ inherited frmConsultaOpe: TfrmConsultaOpe
       OnClick = btnRectificarClick
     end
     object btnAnularVerifactu: TButton
-      Left = 462
+      Left = 639
       Top = 6
       Width = 170
       Height = 28
@@ -1005,13 +983,31 @@ inherited frmConsultaOpe: TfrmConsultaOpe
       OnClick = btnAnularVerifactuClick
     end
     object btnFacturarTicket: TButton
-      Left = 642
+      Left = 819
       Top = 6
       Width = 160
       Height = 28
       Caption = 'Convertir en normal'
       TabOrder = 5
       OnClick = btnFacturarTicketClick
+    end
+    object btnReimprimirOtros: TcxButton
+      Left = 142
+      Top = 6
+      Width = 108
+      Height = 28
+      Caption = 'Previsualizar'
+      TabOrder = 1
+      OnClick = btnReimprimirOtrosClick
+    end
+    object btnEnviarEmail: TcxButton
+      Left = 256
+      Top = 6
+      Width = 59
+      Height = 28
+      Caption = 'e-mail'
+      TabOrder = 7
+      OnClick = btnEnviarEmailClick
     end
   end
   object tmrBusqueda: TTimer
