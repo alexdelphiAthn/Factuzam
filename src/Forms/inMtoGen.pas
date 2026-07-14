@@ -1569,8 +1569,12 @@ begin
     inliblog.Log.LogWarning('Tareas de fondo aun vivas al destruir "' +
                             Self.Name + '": se dejan sin liberar su ' +
                             'data module y su conexion.');
-    if (tdmDataModule <> nil) and (tdmDataModule.Owner = Self) then
-      RemoveComponent(tdmDataModule);
+    // tdmDataModule esta declarado como TObject: cast a TComponent para
+    // consultar el Owner y soltarlo del form (en runtime siempre es un
+    // TDataModule creado por CrearDataModule).
+    if (tdmDataModule is TComponent) and
+       (TComponent(tdmDataModule).Owner = Self) then
+      RemoveComponent(TComponent(tdmDataModule));
     tdmDataModule := nil;
     if Assigned(FConn) then
     begin
