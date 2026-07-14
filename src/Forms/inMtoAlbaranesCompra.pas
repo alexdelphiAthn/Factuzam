@@ -82,7 +82,7 @@ type
     lblFechaAlbaran:  TcxLabel;
     dteFECHA_ALBC:    TcxDBDateEdit;
     lblTemporadaAlbaran: TcxLabel;
-    txtTEMPORADA_ALBC: TcxDBTextEdit;
+    cbbTemporadaAlbc: TcxDBLookupComboBox;
     lblPedidoOrigen:  TcxLabel;
     txtNUMERO_PED_ALBC: TcxDBTextEdit;
     txtSERIE_PED_ALBC:  TcxDBTextEdit;
@@ -1080,6 +1080,9 @@ begin
     dmmAlbaranesCompra.dsFormasPago;
   cbbCODIGO_ALM_ALBC.Properties.ListSource :=
     dmmAlbaranesCompra.dsAlmacenesAlbc;
+  cbbTemporadaAlbc.Properties.ListSource :=
+    dmmAlbaranesCompra.dsTemporadasAlbc;
+  cbbTemporadaAlbc.Properties.ListFieldNames := 'PV';
   // ListSource del combo de proveedor (busqueda incremental por codigo).
   // Reutiliza el lookup unqryPrvDataAlbc, ya cargado para el rotulo.
   cbbCODIGO_PRV_ALBC.Properties.ListSource := dmmAlbaranesCompra.dsPrvDataAlbc;

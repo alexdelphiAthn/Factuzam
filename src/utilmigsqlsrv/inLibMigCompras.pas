@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibMigCompras                                               }
 {    Tipo:       Librería de migración (sin formulario)                        }
@@ -361,6 +361,28 @@ begin
     Result := IntToStr(iId)
   else
     Result := 'NULL';
+end;
+
+procedure AsegurarEsquemaAlbaranesCompra(Eng: TMigEngine);
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.ConDst;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.COLUMNS ' +
+      'WHERE TABLE_SCHEMA = DATABASE() ' +
+      'AND TABLE_NAME = ''fza_albaranes_compra'' ' +
+      'AND COLUMN_NAME = ''ID_PV_TEMPORADA_ALBC''';
+    q.Open;
+    if q.FieldByName('N').AsInteger = 0 then
+      raise Exception.Create(
+        'Falta ejecutar DESARROLLOS EN CURSO/' +
+        'albaranes_compra_temporada.sql');
+  finally
+    FreeAndNil(q);
+  end;
 end;
 
 procedure AsegurarEsquemaFacturasCompra(Eng: TMigEngine);
@@ -749,10 +771,13 @@ const
     '       ISNULL(a.PorIVA4, 0) AS PorIVA4, ISNULL(a.CuotaIVA4, 0) AS CuotaIVA4, ' +
     '       ISNULL(a.ImpBaseImp, 0) AS ImpBaseImp, ' +
     '       ISNULL(a.TotalIVA, 0) AS TotalIVA, ' +
-    '       ISNULL(a.ImpAlbaran, 0) AS ImpAlbaran ' +
+    '       ISNULL(a.ImpAlbaran, 0) AS ImpAlbaran, ' +
+    '       ISNULL(NULLIF(LTRIM(RTRIM(te.Nombre)), ''''), ' +
+    '              ISNULL(a.Temporada, '''')) AS TemporadaNombre ' +
     'FROM dbo.ocalbpro a ' +
     'LEFT JOIN dbo.ocalm alm ON alm.Empresa = a.Empresa ' +
     '                       AND alm.Almacen = a.Almacen ' +
+    'LEFT JOIN dbo.octem te ON te.Temporada = a.Temporada ' +
     cWhere;
   cSelLin =
     'SELECT l.Empresa, l.Ejercicio, ISNULL(l.Serie, '''') AS Serie, ' +
@@ -798,8 +823,9 @@ const
     'PROVINCIA_PRV_ALBC, CODIGO_POSTAL_PRV_ALBC, REF_PROVEEDOR_ALBC, ' +
     'CODIGO_ALM_ALBC, PORCENTAJE_IVAN_ALBC, TOTAL_IVAN_ALBC, PORCENTAJE_IVAR_ALBC, ' +
     'TOTAL_IVAR_ALBC, PORCENTAJE_IVAS_ALBC, TOTAL_IVAS_ALBC, PORCENTAJE_IVAE_ALBC, ' +
-    'TOTAL_IVAE_ALBC, TOTAL_BASES_ALBC, TOTAL_IMPUESTOS_ALBC, TOTAL_LIQUIDO_ALBC, ' +
-    'FORMA_PAGO_ALBC, INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
+    'TOTAL_IVAE_ALBC, TOTAL_BASES_ALBC, TOTAL_IMPUESTOS_ALBC, ' +
+    'TOTAL_LIQUIDO_ALBC, FORMA_PAGO_ALBC, ID_PV_TEMPORADA_ALBC, ' +
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
   cColsLin =
     'NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN, LINEA_ALBCLIN, NUMERO_PEDC_ALBCLIN, ' +
     'SERIE_PEDC_ALBCLIN, CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, ' +
@@ -814,12 +840,13 @@ const
 var
   qCab, qLin:       TUniQuery;
   bCab, bLin:       TBulkInsert;
-  oMapTal:          TDictionary<string, Integer>;
+  oMapTal, oMapTemp: TDictionary<string, Integer>;
   sAhora, sUser:    string;
   sNum, sSerie, sAlm, sArt, sUni, sEstado, sNumPed, sSeriePed: string;
   sNumFac, sSerieFac, sEsFacturada: string;
   iva:              TIvaCompra;
 begin
+  AsegurarEsquemaAlbaranesCompra(Eng);
   BorrarPorUsuario(Eng, 'fza_albaranes_compra_lineas');
   BorrarPorUsuario(Eng, 'fza_albaranes_compra');
   sAhora := DateTimeASQL(Now);
@@ -828,7 +855,9 @@ begin
   bCab := TBulkInsert.Create(Eng.ConDst, 'fza_albaranes_compra', cColsCab, BATCH);
   qCab := NuevoQOrigen(Eng, cSelCab);
   qCab.UniDirectional := True;
+  oMapTemp := TDictionary<string, Integer>.Create;
   try
+    CargarMapaTemporada(Eng, oMapTemp);
     Eng.Log('  compras albaran 1/2: cabeceras (ocalbpro)...');
     Eng.SetTotal(Eng.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocalbpro a ' + cWhere));
@@ -900,6 +929,8 @@ begin
            F(qCab.FieldByName('TotalIVA').AsFloat),
            F(qCab.FieldByName('ImpAlbaran').AsFloat),
            ValorOrNull(CodigoFormaPagoCompra(qCab)),
+           TempPvToken(oMapTemp,
+                       qCab.FieldByName('TemporadaNombre').AsString),
            sAhora, sAhora, sUser, sUser]));
         Inc(Stats.Insertadas);
       except
@@ -916,6 +947,7 @@ begin
   finally
     bCab.Free;
     qCab.Free;
+    FreeAndNil(oMapTemp);
   end;
   // --- PASO 2: líneas (ocalbproarp) ---
   oMapTal := TDictionary<string, Integer>.Create;

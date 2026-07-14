@@ -153,6 +153,22 @@
         Value = nil
       end>
   end
+  object unqryTemporadasAlbc: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT ID_PV_ARTPROP, PV'
+      '  FROM fza_propiedades_valores'
+      ' WHERE ID_PROP_PV = '#39'TEMPORADA'#39
+      '   AND ESACTIVO_PV = '#39'S'#39
+      ' ORDER BY PV')
+    Left = 256
+    Top = 160
+  end
+  object dsTemporadasAlbc: TDataSource
+    DataSet = unqryTemporadasAlbc
+    Left = 256
+    Top = 216
+  end
   object unqryCabAlbcPrint: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (

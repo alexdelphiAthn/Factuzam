@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibPedidosCompra                                            }
 {    Tipo:       Libreria (sin formulario)                                     }
@@ -532,7 +532,8 @@ begin
       '   DIRECCION1_PRV_ALBC, DIRECCION2_PRV_ALBC, ' +
       '   POBLACION_PRV_ALBC, PROVINCIA_PRV_ALBC, ' +
       '   CODIGO_POSTAL_PRV_ALBC, ' +
-      '   REF_PROVEEDOR_ALBC, FORMA_PAGO_ALBC, CODIGO_ALM_ALBC, ' +
+      '   REF_PROVEEDOR_ALBC, FORMA_PAGO_ALBC, ' +
+      '   ID_PV_TEMPORADA_ALBC, CODIGO_ALM_ALBC, ' +
       '   TOTAL_BRUTO_ALBC, PORCENTAJE_DTO_COMERCIAL_ALBC, ' +
       '   TOTAL_DTO_COMERCIAL_ALBC, PORCENTAJE_DTO_FINANCIERO_ALBC, ' +
       '   TOTAL_DTO_FINANCIERO_ALBC, TOTAL_BASES_ALBC, ' +
@@ -565,7 +566,7 @@ begin
       '       P.POBLACION_PRV_PEDC, P.PROVINCIA_PRV_PEDC, ' +
       '       P.CODIGO_POSTAL_PRV_PEDC, ' +
       '       IFNULL(NULLIF(:rprv,''''), P.REF_PROVEEDOR_PEDC), ' +
-      '       NULLIF(P.FORMA_PAGO_PEDC, ''''), :alm, ' +
+      '       NULLIF(P.FORMA_PAGO_PEDC, ''''), NULLIF(:pv, 0), :alm, ' +
       '       0, IFNULL(P.PORCENTAJE_DTO_COMERCIAL_PEDC, 0), ' +
       '       0, IFNULL(P.PORCENTAJE_DTO_FINANCIERO_PEDC, 0), ' +
       '       0, 0, 0, 0, ''0'', ' +
@@ -576,6 +577,7 @@ begin
     qIns.ParamByName('salbc').AsString := ASerieAlbc;
     qIns.ParamByName('alm').AsString   := ACodigoAlm;
     qIns.ParamByName('rprv').AsString  := ARefPrv;
+    qIns.ParamByName('pv').AsInteger   := AIdPvTemporada;
     if AFechaRecepcion > 0 then
     begin
       qIns.ParamByName('usar_fecha').AsString  := 'S';
@@ -862,7 +864,8 @@ begin
       '   DIRECCION1_PRV_ALBC, DIRECCION2_PRV_ALBC, ' +
       '   POBLACION_PRV_ALBC, PROVINCIA_PRV_ALBC, ' +
       '   CODIGO_POSTAL_PRV_ALBC, ' +
-      '   REF_PROVEEDOR_ALBC, FORMA_PAGO_ALBC, CODIGO_ALM_ALBC, ' +
+      '   REF_PROVEEDOR_ALBC, FORMA_PAGO_ALBC, ' +
+      '   ID_PV_TEMPORADA_ALBC, CODIGO_ALM_ALBC, ' +
       '   TOTAL_BRUTO_ALBC, PORCENTAJE_DTO_COMERCIAL_ALBC, ' +
       '   TOTAL_DTO_COMERCIAL_ALBC, PORCENTAJE_DTO_FINANCIERO_ALBC, ' +
       '   TOTAL_DTO_FINANCIERO_ALBC, TOTAL_BASES_ALBC, ' +
@@ -893,7 +896,7 @@ begin
       '       P.POBLACION_PRV_PEDC, P.PROVINCIA_PRV_PEDC, ' +
       '       P.CODIGO_POSTAL_PRV_PEDC, ' +
       '       IFNULL(NULLIF(:rprv,''''), P.REF_PROVEEDOR_PEDC), ' +
-      '       NULLIF(P.FORMA_PAGO_PEDC, ''''), :alm, ' +
+      '       NULLIF(P.FORMA_PAGO_PEDC, ''''), NULLIF(:pv, 0), :alm, ' +
       '       0, IFNULL(P.PORCENTAJE_DTO_COMERCIAL_PEDC, 0), ' +
       '       0, IFNULL(P.PORCENTAJE_DTO_FINANCIERO_PEDC, 0), ' +
       '       0, 0, 0, 0, ''0'', ' +
@@ -904,6 +907,7 @@ begin
     qIns.ParamByName('salbc').AsString := ASerieAlbc;
     qIns.ParamByName('alm').AsString   := ACodigoAlm;
     qIns.ParamByName('rprv').AsString  := ARefPrv;
+    qIns.ParamByName('pv').AsInteger   := AIdPvTemporada;
     if AFechaRecepcion > 0 then
     begin
       qIns.ParamByName('usar_fecha').AsString  := 'S';
@@ -1234,6 +1238,20 @@ begin
   // 5. Temporada explicita del modal (si la hay).
   if AIdPvTemporada > 0 then
   begin
+    qIns := TUniQuery.Create(nil);
+    try
+      qIns.Connection := AConn;
+      qIns.SQL.Text :=
+        'UPDATE fza_albaranes_compra ' +
+        '   SET ID_PV_TEMPORADA_ALBC = :pv ' +
+        ' WHERE SERIE_ALBC = :s AND NUMERO_ALBC = :n';
+      qIns.ParamByName('pv').AsInteger := AIdPvTemporada;
+      qIns.ParamByName('s').AsString := ASerieAlbc;
+      qIns.ParamByName('n').AsString := ANumAlbc;
+      qIns.ExecSQL;
+    finally
+      FreeAndNil(qIns);
+    end;
     qIns := TUniQuery.Create(nil);
     try
       qIns.Connection := AConn;
