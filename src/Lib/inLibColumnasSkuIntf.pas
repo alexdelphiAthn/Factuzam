@@ -81,6 +81,12 @@ type
     // almacen con el modal distribuidor; la edicion inline de celdas
     // de talla queda bloqueada y el grid muestra la SUMA por talla.
     Distribuido: Boolean;
+    // El documento admite lineas de articulos fuera del catalogo: una
+    // entrada no encontrada se acepta como codigo libre en la linea
+    // (sin SKU: no mueve stock) en vez de descartarse. OnResuelto llega
+    // con ASku='' y ACompleto=True para que el documento complete la
+    // fiscalidad. Lo activan las facturas de venta mayor.
+    AceptarNoCatalogo: Boolean;
     // Precio del SKU segun el documento (ver TObtenerPrecioSkuEvent).
     ObtenerPrecioSku: TObtenerPrecioSkuEvent;
   end;
