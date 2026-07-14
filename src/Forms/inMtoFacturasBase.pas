@@ -2238,12 +2238,17 @@ end;
 procedure TfrmMtoFacturasBase.EncolarOperacionVerifactu(
   const ATipoOperacion, AAccion: string);
 var
-  Qry:     TUniQuery;
-  sSerie:  string;
-  sNumero: string;
+  Qry:                  TUniQuery;
+  sSerie:               string;
+  sNumero:              string;
+  bBorrarMovimientos:   Boolean;
+  EsFacturaSimplificada: Boolean;
 begin
   sSerie  := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
   sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
+  bBorrarMovimientos := True;
+  EsFacturaSimplificada := SameText(
+    dsTablaG.DataSet.FieldByName(ftipofac).AsString, 'SIMPLIFICADA');
   if Trim(sNumero) = '' then
     ShowMessage('Seleccione un borrador en la lista.')
   else if dsTablaG.DataSet.FieldByName(
@@ -2255,19 +2260,31 @@ begin
                      sSerie + '\' + sNumero + '?', mtConfirmation,
                      [mbYes, mbNo], 0) = mrYes then
   begin
-      Qry := TUniQuery.Create(nil);
-      try
-        Qry.Connection := inLibGlobalVar.oConn;
+    if SameText(ATipoOperacion, 'ANULACION') and
+       EsFacturaSimplificada then
+    begin
+      bBorrarMovimientos := MessageDlg(
+        '¿Desea borrar también los movimientos de almacén asociados ' +
+        'al ticket ' + sSerie + '\' + sNumero + '?' + sLineBreak +
+        'Se revertirá el stock de sus líneas.', mtConfirmation,
+        [mbYes, mbNo], 0) = mrYes;
+    end;
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := inLibGlobalVar.oConn;
       case ModoVerifactu of
         mvVerifactu:
           TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero,
-                                        ATipoOperacion);
+                                        ATipoOperacion,
+                                        bBorrarMovimientos);
         mvNoVerifactu:
           TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, sSerie, sNumero,
-                                                     ATipoOperacion);
+                                                     ATipoOperacion,
+                                                     bBorrarMovimientos);
       else
         TVerifactuCola.MarcarFacturaSinVerifactu(Qry, sSerie, sNumero,
-                                                 ATipoOperacion);
+                                                 ATipoOperacion,
+                                                 bBorrarMovimientos);
       end;
     finally
       FreeAndNil(Qry);

@@ -111,6 +111,8 @@ type
     // puramente descriptivo que NO debe disparar la logica fiscal ni
     // la sincronizacion de movimientos (cascada por linea al navegar).
     FDesempaquetandoAtributos: Boolean;
+    procedure NegarMovimientosFacturaDesdeAlbaran(const ASerie,
+                                                  ANumero: string);
     procedure AsignarNumeroLineaAlbaran(DataSet: TDataSet);
     procedure NormalizarCamposOpcionalesLinea(DataSet: TDataSet);
     function ResolverSkuMovimientoSalida(const ACodigoArticulo: string): string;
@@ -1411,6 +1413,30 @@ begin
   AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'ALB');
 end;
 
+procedure TdmAlbaranes.NegarMovimientosFacturaDesdeAlbaran(
+  const ASerie, ANumero: string);
+var
+  qryFactura: TUniQuery;
+begin
+  qryFactura := TUniQuery.Create(nil);
+  try
+    qryFactura.Connection := inLibGlobalVar.oConn;
+    qryFactura.SQL.Text :=
+      'UPDATE fza_facturas ' +
+      '   SET ESMUEVE_STOCK_FAC = ''N'', ' +
+      '       INSTANTE_MODIF = NOW(), ' +
+      '       USUARIO_MODIF = :pUSUARIO ' +
+      ' WHERE SERIE_FAC = :pSERIE ' +
+      '   AND NUMERO_FAC = :pNUMERO';
+    qryFactura.ParamByName('pUSUARIO').AsString := oUser;
+    qryFactura.ParamByName('pSERIE').AsString := ASerie;
+    qryFactura.ParamByName('pNUMERO').AsString := ANumero;
+    qryFactura.ExecSQL;
+  finally
+    FreeAndNil(qryFactura);
+  end;
+end;
+
 procedure TdmAlbaranes.InstalarProcedimientos;
 var
   q: TUniSQL;
@@ -1703,6 +1729,7 @@ begin
     sNumeroFac := ParamByName('p_NUMERO_FAC').AsString;
     sSerieFac  := ParamByName('p_SERIE_FAC').AsString;
   end;
+  NegarMovimientosFacturaDesdeAlbaran(sSerieFac, sNumeroFac);
 
   // 2) Líneas: las indicadas, o todas las pendientes si no se pasa lista.
   if bUsarTodas then
@@ -1882,6 +1909,7 @@ begin
           sNumFac := ParamByName('p_NUMERO_FAC').AsString;
           sSerFac := ParamByName('p_SERIE_FAC').AsString;
         end;
+        NegarMovimientosFacturaDesdeAlbaran(sSerFac, sNumFac);
         sNumFacActual := sNumFac;
         sSerFacActual := sSerFac;
         sCliActual    := sCliAlb;
