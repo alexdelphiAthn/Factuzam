@@ -907,6 +907,16 @@ begin
           Result := True;
         end;
       end;
+    end
+    else if FConfig.AceptarNoCatalogo then
+    begin
+      // Codigo fuera de catalogo: el documento lo admite como linea
+      // libre (sin SKU: no mueve stock). El host completa fiscalidad,
+      // descripcion y precios en su OnResuelto.
+      EscribirLinea(sEntrada, '', '');
+      if Assigned(FOnResuelto) then
+        FOnResuelto(sEntrada, '', '', True);
+      Result := True;
     end;
   end;
 end;
