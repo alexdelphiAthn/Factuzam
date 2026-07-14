@@ -78,7 +78,8 @@ type
 procedure VisualizarTicket(const Comandos: string);
 procedure ImprimirOPrevisualizarTicket(ATicket: TTicketTermico;
                                        const AComandos, ARutaPDF,
-                                             ANombreImpresora: string);
+                                             ANombreImpresora: string;
+                                       ASoloPDF: Boolean = False);
 
 var
   FormVisualizador:TFormVisualizador;
@@ -289,16 +290,18 @@ end;
 
 procedure ImprimirOPrevisualizarTicket(ATicket: TTicketTermico;
                                        const AComandos, ARutaPDF,
-                                             ANombreImpresora: string);
+                                             ANombreImpresora: string;
+                                       ASoloPDF: Boolean);
 var
   oPreview: TFormVisualizador;
   sErrorImpresion: string;
   EsMostrarPreview: Boolean;
 begin
   sErrorImpresion := '';
-  EsMostrarPreview := SameText(Trim(ANombreImpresora), 'DEBUG') or
-                      (Trim(ANombreImpresora) = '');
-  if not EsMostrarPreview then
+  EsMostrarPreview := (not ASoloPDF) and
+                      (SameText(Trim(ANombreImpresora), 'DEBUG') or
+                       (Trim(ANombreImpresora) = ''));
+  if (not ASoloPDF) and (not EsMostrarPreview) then
   begin
     try
       ATicket.Imprimir;

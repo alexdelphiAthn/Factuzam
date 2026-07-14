@@ -250,13 +250,27 @@
                 TabOrder = 14
                 Transparent = True
               end
-              object txtCODIGO_ALM_FACC: TcxDBTextEdit
+              object cbbCODIGO_ALM_FACC: TcxDBLookupComboBox
                 Left = 520
                 Top = 92
                 DataBinding.DataField = 'CODIGO_ALM_FACC'
                 DataBinding.DataSource = dsTablaG
+                Properties.DropDownListStyle = lsFixedList
+                Properties.DropDownRows = 15
+                Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'C'#243'digo'
+                    Width = 60
+                    FieldName = 'CODIGO_ALM_ALM'
+                  end
+                  item
+                    Caption = 'Almac'#233'n'
+                    FieldName = 'NOMBRE_ALM_ALM'
+                  end>
+                Properties.ListOptions.ShowHeader = False
                 TabOrder = 15
-                Width = 120
+                Width = 150
               end
               object lblFormaPago: TcxLabel
                 Left = 680

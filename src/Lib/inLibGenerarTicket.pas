@@ -28,7 +28,8 @@ uses
                             ANumeroGenerado: string;
                             DatosCobro: TDatosFaseCobro;
                             NombreImpresora:string = 'DEBUG';
-                            ASinPrecios: Boolean = False);
+                            ASinPrecios: Boolean = False;
+                            AFechaOperacion: TDateTime = 0);
 
   // Diminutivo de ticket del empleado (fza_empleados) a partir de su
   // codigo. Si no se resuelve, devuelve el propio codigo recibido.
@@ -161,7 +162,8 @@ procedure ImprimirT(const ACodigoEmpresa,
                           ANumeroGenerado: string;
                           DatosCobro: TDatosFaseCobro;
                           NombreImpresora:string = 'DEBUG';
-                          ASinPrecios: Boolean = False);
+                          ASinPrecios: Boolean = False;
+                          AFechaOperacion: TDateTime = 0);
 var
   Ticket: TTicketTermico;
   Cab: TDatosCabeceraFactura;
@@ -169,6 +171,7 @@ var
   QRTexto: string;
   ComandosESC, RutaFicheroPDF: string;
   sDocumento: string;
+  dtFechaOperacion: TDateTime;
 
   function LPAD(const AValue: string;
                 ALength: Integer;
@@ -188,6 +191,9 @@ begin
     Exit;
 //  NombreImpresora := 'DEBUG';
   Cab := leerCabecera(DatosCobro.TotalesFactura.Cabecera);
+  dtFechaOperacion := AFechaOperacion;
+  if dtFechaOperacion = 0 then
+    dtFechaOperacion := Now;
   dLin := DatosCobro.TotalesFactura.Lineas;
   sDocumento := FormatearDocumentoDataSet(DatosCobro.TotalesFactura.Cabecera,
     'SERIE_FAC', 'NUMERO_FAC');
@@ -242,8 +248,8 @@ begin
     Ticket.Alinear(alIzquierda);
     Ticket.TextoColumnas('OPERACIÓN NRO.', ANumeroGenerado);
     Ticket.SaltarLineas(1);
-    Ticket.TextoColumnas(FormatDateTime('dd/mm/yyyy', Cab.Fecha) +
-                         ' ' + FormatDateTime('hh:nn', Now),
+    Ticket.TextoColumnas(FormatDateTime('dd/mm/yyyy hh:nn',
+                         dtFechaOperacion),
                          LPAD(ACodigoEmpresa, 3) + ' Tda.' +
                          LPAD(ACodigoAlmacen, 3) + '-' + LPAD(ACodigoCaja, 2));
     // === ARTÍCULOS ===

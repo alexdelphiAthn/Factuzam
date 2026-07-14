@@ -84,6 +84,9 @@ type
     lblCodigoCliente: TcxLabel;
     btnCODIGO_CLI_ALB: TcxDBButtonEdit;
     cxdblblRAZON_SOCIAL_CLIENTE_ALB: TcxDBLabel;
+    lblTarifaAlbaran: TcxLabel;
+    cbbTarifaAlbaran: TcxDBLookupComboBox;
+    chkTarifaImpuestosIncluidosAlbaran: TcxDBCheckBox;
 
     // Empresa
     grpEmpresa: TcxGroupBox;
@@ -196,6 +199,7 @@ type
                                                      AButtonIndex: Integer);
     procedure btnCODIGO_EMP_ALBPropertiesEditValueChanged(Sender: TObject);
     procedure cbbCODIGO_ALM_ALBPropertiesEditValueChanged(Sender: TObject);
+    procedure cbbTarifaAlbaranPropertiesChange(Sender: TObject);
     procedure btnCODIGO_CLI_ALBPropertiesEditValueChanged(Sender: TObject);
     procedure btnCODIGO_EMP_ALBKeyUp(Sender: TObject; var Key: Word;
                                      Shift: TShiftState);
@@ -253,7 +257,7 @@ type
     // Porcentaje de IVA de la cabecera para un tipo (N/R/S/E).
     function PorcentajeIvaAlbaran(const ATipoIva: string): Double;
     // Contrato ObtenerPrecioSku del modo tallas: PVP C/IVA del SKU con
-    // la tarifa del cliente y la fecha del albaran.
+    // la tarifa de cabecera y la fecha del albaran.
     function PrecioSkuTallasAlb(const ACodigoArticulo,
                                 ACodigoSku: string): Double;
     // Al salir del grid se cancela la linea vacia auto-anadida: si
@@ -468,8 +472,6 @@ var
   sInput     : string;
   sTarifa    : string;
   dFecha     : TDateTime;
-  rPrecioSiva: Double;
-  rPorIva    : Double;
 
   procedure PonerString(const ACampo, AValor: string);
   var
@@ -496,25 +498,6 @@ var
     Campo := ds.FindField(ACampo);
     if Campo <> nil then
       Campo.Clear;
-  end;
-
-  function PorcentajeIva(const ATipoIva: string): Double;
-  var
-    sTipo: string;
-  begin
-    sTipo := UpperCase(Trim(ATipoIva));
-    if sTipo = 'R' then
-      Result := dmmAlbaranes.unqryTablaG.
-                  FieldByName('PORCENTAJE_IVAR_ALB').AsFloat
-    else if sTipo = 'S' then
-      Result := dmmAlbaranes.unqryTablaG.
-                  FieldByName('PORCENTAJE_IVAS_ALB').AsFloat
-    else if sTipo = 'E' then
-      Result := dmmAlbaranes.unqryTablaG.
-                  FieldByName('PORCENTAJE_IVAE_ALB').AsFloat
-    else
-      Result := dmmAlbaranes.unqryTablaG.
-                  FieldByName('PORCENTAJE_IVAN_ALB').AsFloat;
   end;
 
   procedure EnfocarSku(AAbrirBusqueda: Boolean);
@@ -576,10 +559,6 @@ begin
                                                 sTarifa, dFecha)
             else
               Precio := Datos.PrecioPedido;
-            rPorIva := PorcentajeIva(Datos.TipoIVA);
-            rPrecioSiva := Precio.PrecioFinal;
-            if Precio.EsImpIncl and ((1 + rPorIva / 100) <> 0) then
-              rPrecioSiva := Precio.PrecioFinal / (1 + rPorIva / 100);
             PonerString('CODIGO_ART_ALBLIN', Datos.CodigoArticulo);
             PonerString('CODIGO_UNIDAD_ALBLIN', Datos.CodigoSku);
             PonerString('DESCRIPCION_VARIACION_ALBLIN',
@@ -604,9 +583,23 @@ begin
             else
               PonerString('ESIMP_INCL_TARIFA_ALBLIN', 'N');
             if Datos.RequiereSku then
-              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', 0)
+            begin
+              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', 0);
+              PonerFloat('PRECIO_VENTA_CIVA_ARTICULO_ALBLIN', 0);
+            end
+            else if Precio.EsImpIncl then
+            begin
+              // La rutina fiscal toma este PVP bruto como precio maestro.
+              PonerFloat('PRECIO_VENTA_CIVA_ARTICULO_ALBLIN',
+                         Precio.PrecioFinal);
+              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', 0);
+            end
             else
-              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', rPrecioSiva);
+            begin
+              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN',
+                         Precio.PrecioFinal);
+              PonerFloat('PRECIO_VENTA_CIVA_ARTICULO_ALBLIN', 0);
+            end;
             PrepararLineaFiscalVenta(dmmAlbaranes.unqryTablaG.Connection,
               dmmAlbaranes.unqryTablaG, ds, 'ALB', 'ALBLIN', 'TOTAL_ALBLIN');
             ActualizarColumnasOpcionalesLinea;
@@ -630,7 +623,7 @@ end;
 procedure TfrmMtoAlbaranes.ModoEntradaResuelto(const ACodArt, ASku,
   ADescripcion: string; ACompleto: Boolean);
 begin
-  // El flujo fiscal clasico del albaran (tarifa del cliente, IVA,
+  // El flujo fiscal clasico del albaran (tarifa de cabecera, IVA,
   // precios, total) se reaprovecha tal cual: AplicarArticuloAlbaran
   // acepta articulo o SKU.
   if ACompleto and (ASku <> '') then
@@ -639,22 +632,10 @@ end;
 
 function TfrmMtoAlbaranes.PorcentajeIvaAlbaran(
   const ATipoIva: string): Double;
-var
-  sTipo: string;
 begin
-  sTipo := UpperCase(Trim(ATipoIva));
-  if sTipo = 'R' then
-    Result := dmmAlbaranes.unqryTablaG.
-                FieldByName('PORCENTAJE_IVAR_ALB').AsFloat
-  else if sTipo = 'S' then
-    Result := dmmAlbaranes.unqryTablaG.
-                FieldByName('PORCENTAJE_IVAS_ALB').AsFloat
-  else if sTipo = 'E' then
-    Result := dmmAlbaranes.unqryTablaG.
-                FieldByName('PORCENTAJE_IVAE_ALB').AsFloat
-  else
-    Result := dmmAlbaranes.unqryTablaG.
-                FieldByName('PORCENTAJE_IVAN_ALB').AsFloat;
+  Result := PorcentajeIvaDocumentoVenta(
+    dmmAlbaranes.unqryTablaG.Connection, dmmAlbaranes.unqryTablaG,
+    'ALB', ATipoIva);
 end;
 
 function TfrmMtoAlbaranes.PrecioSkuTallasAlb(const ACodigoArticulo,
@@ -837,6 +818,7 @@ procedure TfrmMtoAlbaranes.CrearColumnasHostAlbaran;
   end;
 var
   ColCant, ColTipo, ColLinea, ColLote, ColCad: TcxGridDBColumn;
+  ColImpIncl: TcxGridDBColumn;
   bHayTrazables: Boolean;
   ds: TDataSet;
   Bm: TBookmark;
@@ -853,6 +835,15 @@ begin
   VincularCantidadGrid(ColCant, ColTipo);
   Col('PVP S/IVA', 'PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', 90, True);
   Col('PVP C/IVA', 'PRECIO_VENTA_CIVA_ARTICULO_ALBLIN', 90, True);
+  Col('Tarifa', 'CODIGO_TAR_ALBLIN', 70, False);
+  ColImpIncl := Col('Imp. incl.', 'ESIMP_INCL_TARIFA_ALBLIN', 75, False);
+  ColImpIncl.PropertiesClass := TcxCheckBoxProperties;
+  with TcxCheckBoxProperties(ColImpIncl.Properties) do
+  begin
+    ReadOnly := True;
+    ValueChecked := 'S';
+    ValueUnchecked := 'N';
+  end;
   Col('Total', 'TOTAL_ALBLIN', 95, False);
   Col('Almacén', 'CODIGO_ALMACEN_ALBLIN', 75, True);
   ColLote := Col('Lote', 'LOTE_ALBLIN', 80, True);
@@ -987,7 +978,9 @@ begin
   tvMovimientos.DataController.DataSource   := dmmAlbaranes.dsMovimientosAlb;
   cbbTotalesFORMA_PAGO_ALB.Properties.ListSource := dmmAlbaranes.dsFormasPago;
   cbbCODIGO_ALM_ALB.Properties.ListSource := dmmAlbaranes.dsAlmacenesAlb;
+  cbbTarifaAlbaran.Properties.ListSource := dmmAlbaranes.dsTarifas;
   DesactivarEnterAsTabEnCombo(cbbCODIGO_ALM_ALB);
+  DesactivarEnterAsTabEnCombo(cbbTarifaAlbaran);
   // Master-detail: enganchar las queries de detalle a la cabecera (dsTablaG)
   // para que lineas, facturas y movimientos sigan al albaran seleccionado.
   dmmAlbaranes.unqryAlbaranesLineas.MasterSource := dsTablaG;
@@ -1109,6 +1102,11 @@ end;
 procedure TfrmMtoAlbaranes.dsTablaGDataChangeHook(Sender: TObject;
                                                    Field: TField);
 begin
+  if (Field = nil) and Assigned(dmmAlbaranes) and
+     dmmAlbaranes.unqryTablaG.Active and
+     (not dmmAlbaranes.unqryTablaG.IsEmpty) then
+    dmmAlbaranes.RefrescarAlmacenes(
+      dmmAlbaranes.unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString);
   if Field = nil then
     ActualizarLabelPrendas;
   // Al navegar de albaran: si la construccion inicial no pudo hacerse
@@ -1314,6 +1312,23 @@ begin
         FBuscandoDatosCabecera := False;
       end;
     end;
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.cbbTarifaAlbaranPropertiesChange(
+  Sender: TObject);
+var
+  Editor: TcxCustomEdit;
+  sTarifa: string;
+begin
+  inherited;
+  if Assigned(dmmAlbaranes) and Assigned(dsTablaG.DataSet) and
+     dsTablaG.DataSet.Active and
+     (dsTablaG.DataSet.State in dsEditModes) then
+  begin
+    Editor := Sender as TcxCustomEdit;
+    sTarifa := Trim(VarToStr(Editor.EditingValue));
+    dmmAlbaranes.ActualizarImpuestosTarifaCabecera(sTarifa);
   end;
 end;
 

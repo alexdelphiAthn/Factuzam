@@ -22,6 +22,9 @@ uses
 procedure AplicarPorcentajesIvaVenta(AConn: TUniConnection;
   ACabecera: TDataSet; const ASufijoCabecera: string);
 
+function PorcentajeIvaDocumentoVenta(AConn: TUniConnection;
+  ACabecera: TDataSet; const ASufijoCabecera, ATipoIva: string): Double;
+
 procedure PrepararLineaFiscalVenta(AConn: TUniConnection;
   ACabecera, ALinea: TDataSet; const ASufijoCabecera, ASufijoLinea,
   ACampoTotalLinea: string);
@@ -550,7 +553,8 @@ procedure PrepararLineaFiscalVenta(AConn: TUniConnection;
   ACabecera, ALinea: TDataSet; const ASufijoCabecera, ASufijoLinea,
   ACampoTotalLinea: string);
 var
-  rCantidad, rPorIva, rPrecioSiva: Double;
+  rCantidad, rFactorIva, rPorIva, rPrecioCiva, rPrecioSiva: Double;
+  bImpuestosIncluidos: Boolean;
   sArticulo, sCampoTipo, sTipoArt, sTipoIva: string;
 begin
   if Assigned(ACabecera) and Assigned(ALinea) and ALinea.Active then
@@ -571,14 +575,33 @@ begin
     if ClienteExento(ACabecera, ASufijoCabecera) then
       rPorIva := 0;
     rCantidad := CampoFloat(ALinea, 'CANTIDAD_' + ASufijoLinea);
-    rPrecioSiva := CampoFloat(ALinea,
-      'PRECIO_VENTA_SIVA_ARTICULO_' + ASufijoLinea);
+    rFactorIva := 1 + rPorIva / 100;
+    bImpuestosIncluidos := EsSi(ALinea,
+      'ESIMP_INCL_TARIFA_' + ASufijoLinea);
+    if bImpuestosIncluidos then
+    begin
+      // El PVP de una tarifa con impuestos es el precio maestro.
+      rPrecioCiva := CampoFloat(ALinea,
+        'PRECIO_VENTA_CIVA_ARTICULO_' + ASufijoLinea);
+      rPrecioSiva := rPrecioCiva;
+      if rFactorIva <> 0 then
+        rPrecioSiva := rPrecioCiva / rFactorIva;
+    end
+    else
+    begin
+      // En una tarifa sin impuestos la base es el precio maestro.
+      rPrecioSiva := CampoFloat(ALinea,
+        'PRECIO_VENTA_SIVA_ARTICULO_' + ASufijoLinea);
+      rPrecioCiva := rPrecioSiva * rFactorIva;
+    end;
     if not (ALinea.State in dsEditModes) then
       ALinea.Edit;
     PonerString(ALinea, sCampoTipo, sTipoIva);
     PonerFloat(ALinea, 'PORCENTAJE_IVA_' + ASufijoLinea, rPorIva);
+    PonerFloat(ALinea, 'PRECIO_VENTA_SIVA_ARTICULO_' + ASufijoLinea,
+      rPrecioSiva);
     PonerFloat(ALinea, 'PRECIO_VENTA_CIVA_ARTICULO_' + ASufijoLinea,
-      rPrecioSiva * (1 + rPorIva / 100));
+      rPrecioCiva);
     PonerFloat(ALinea, ACampoTotalLinea, rCantidad * rPrecioSiva);
   end;
 end;

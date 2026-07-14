@@ -39,6 +39,8 @@ type
     dsFormasPago:         TDataSource;
     unqryAlmacenesAlb:    TUniQuery;
     dsAlmacenesAlb:       TDataSource;
+    unqryTarifas:         TUniQuery;
+    dsTarifas:            TDataSource;
     unstrdprcGetContadorAlbaran: TUniStoredProc;
     unstrdprcCrearFacturaInicio: TUniStoredProc;
     unstrdprcCrearFacturaLinea:  TUniStoredProc;
@@ -74,6 +76,8 @@ type
     function BuscarCliente(const ACodigo: string): Boolean;
     procedure OpenTables;
     procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
+    procedure ActualizarImpuestosTarifaCabecera(
+      const ACodigoTarifa: string);
     // Override: abre las queries detalle del Mto de Albaranes tras
     // unqryTablaG. Invocada desde TfrmMtoGen.AbrirTablaPrincipalAsync
     // en el callback main thread. OpenTables delega aqui.
@@ -107,6 +111,8 @@ type
     // puramente descriptivo que NO debe disparar la logica fiscal ni
     // la sincronizacion de movimientos (cascada por linea al navegar).
     FDesempaquetandoAtributos: Boolean;
+    procedure NegarMovimientosFacturaDesdeAlbaran(const ASerie,
+                                                  ANumero: string);
     procedure AsignarNumeroLineaAlbaran(DataSet: TDataSet);
     procedure NormalizarCamposOpcionalesLinea(DataSet: TDataSet);
     function ResolverSkuMovimientoSalida(const ACodigoArticulo: string): string;
@@ -127,7 +133,7 @@ implementation
 uses
   inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics,
   System.UITypes, Vcl.Dialogs, inLibArticulosValidador,
-  inLibVentasImpuestos, inLibContadorLineas;
+  inLibVentasImpuestos, inLibContadorLineas, inLibCajaParam, inLibData;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -237,6 +243,7 @@ begin
   unqryMovimientosAlb.Connection         := inLibGlobalVar.oConn;
   unqryFormasPago.Connection             := inLibGlobalVar.oConn;
   unqryAlmacenesAlb.Connection           := inLibGlobalVar.oConn;
+  unqryTarifas.Connection                := inLibGlobalVar.oConn;
   unstrdprcGetContadorAlbaran.Connection := inLibGlobalVar.oConn;
   unstrdprcCrearFacturaInicio.Connection := inLibGlobalVar.oConn;
   unstrdprcCrearFacturaLinea.Connection  := inLibGlobalVar.oConn;
@@ -256,6 +263,8 @@ begin
     unqryFormasPago.Close;
   if Assigned(unqryAlmacenesAlb) and unqryAlmacenesAlb.Active then
     unqryAlmacenesAlb.Close;
+  if Assigned(unqryTarifas) and unqryTarifas.Active then
+    unqryTarifas.Close;
   inherited;
 end;
 
@@ -304,13 +313,32 @@ begin
   AbrirConTiempo(unqryFacturas,        'unqryFacturas');
   AbrirConTiempo(unqryMovimientosAlb,  'unqryMovimientosAlb');
   AbrirConTiempo(unqryFormasPago,      'unqryFormasPago');
+  AbrirConTiempo(unqryTarifas,         'unqryTarifas');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmAlbaranes.RefrescarAlmacenes(const ACodigoEmpresa: string);
+var
+  sEmpresa: string;
 begin
-  if not unqryAlmacenesAlb.Active then
+  sEmpresa := Trim(ACodigoEmpresa);
+  if (sEmpresa = '') and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+    sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString);
+  if sEmpresa = '' then
+    sEmpresa := Trim(oEmpresa);
+  if (not unqryAlmacenesAlb.Active) or
+     (not SameText(unqryAlmacenesAlb.ParamByName('EMPRESA').AsString,
+                   sEmpresa)) then
+  begin
+    unqryAlmacenesAlb.Close;
+    unqryAlmacenesAlb.ParamByName('EMPRESA').AsString := sEmpresa;
     unqryAlmacenesAlb.Open;
+  end;
+  if unqryTablaG.Active and
+     (unqryTablaG.State in [dsInsert, dsEdit]) then
+    AjustarEmpresaAlmacenDataSet(unqryTablaG.Connection, unqryTablaG,
+      'CODIGO_EMP_ALB', 'CODIGO_ALM_ALB');
 end;
 
 procedure TdmAlbaranes.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -340,11 +368,15 @@ begin
     if FindField('CODIGO_ALM_ALB') <> nil then
       FieldByName('CODIGO_ALM_ALB').AsString := oAlmacen;
     FieldByName('CODIGO_CLI_ALB').AsString := '0';
+    FieldByName('TARIFA_ARTICULO_CLIENTE_ALB').Clear;
+    FieldByName('ESIMP_INCL_TARIFA_CLIENTE_ALB').Clear;
     if Trim(oEmpresa) <> '' then
       BuscarEmpresa(oEmpresa);
     if FindField('CODIGO_ALM_ALB') <> nil then
       FieldByName('CODIGO_ALM_ALB').AsString := oAlmacen;
   end;
+  RefrescarAlmacenes(
+    DataSet.FieldByName('CODIGO_EMP_ALB').AsString);
 end;
 
 procedure TdmAlbaranes.unqryTablaGBeforePost(DataSet: TDataSet);
@@ -503,6 +535,14 @@ begin
     FieldByName('CANTIDAD_ALBLIN').AsFloat := 1;
     if FindField('ESFACTURADA_ALBLIN') <> nil then
       FieldByName('ESFACTURADA_ALBLIN').AsString := 'N';
+    if FindField('CODIGO_TAR_ALBLIN') <> nil then
+      FieldByName('CODIGO_TAR_ALBLIN').AsString :=
+        unqryTablaG.FieldByName(
+          'TARIFA_ARTICULO_CLIENTE_ALB').AsString;
+    if FindField('ESIMP_INCL_TARIFA_ALBLIN') <> nil then
+      FieldByName('ESIMP_INCL_TARIFA_ALBLIN').AsString :=
+        unqryTablaG.FieldByName(
+          'ESIMP_INCL_TARIFA_CLIENTE_ALB').AsString;
     // Columnas del contrato ColumnSKUcxGrid: NOT NULL en BBDD con
     // DEFAULT de servidor que el cliente no conoce; sin inicializarlas
     // el Post lanza "must have a value" (leccion de pedidos).
@@ -1299,7 +1339,35 @@ begin
   AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'ALB');
 end;
 
+procedure TdmAlbaranes.ActualizarImpuestosTarifaCabecera(
+  const ACodigoTarifa: string);
+var
+  sTarifa: string;
+begin
+  sTarifa := Trim(ACodigoTarifa);
+  if unqryTablaG.Active and (unqryTablaG.State in dsEditModes) then
+  begin
+    if sTarifa = '' then
+      unqryTablaG.FieldByName(
+        'ESIMP_INCL_TARIFA_CLIENTE_ALB').Clear
+    else
+    begin
+      if not unqryTarifas.Active then
+        unqryTarifas.Open;
+      if unqryTarifas.Locate('CODIGO_TAR_ARTTAR', sTarifa, []) then
+        unqryTablaG.FieldByName(
+          'ESIMP_INCL_TARIFA_CLIENTE_ALB').AsString :=
+          unqryTarifas.FieldByName('ESIMP_INCL_TAR').AsString
+      else
+        unqryTablaG.FieldByName(
+          'ESIMP_INCL_TARIFA_CLIENTE_ALB').Clear;
+    end;
+  end;
+end;
+
 procedure TdmAlbaranes.CopiarClienteaAlbaran(DataSet: TDataSet);
+var
+  sTarifa: string;
 begin
   with unqryTablaG do
   begin
@@ -1336,10 +1404,37 @@ begin
     FindField('ESINTRACOMUNITARIO_CLIENTE_ALB').AsString :=
                             DataSet.FindField(
                               'ESINTRACOMUNITARIO_CLI').AsString;
-    FindField('TARIFA_ARTICULO_CLIENTE_ALB').AsString :=
-                            DataSet.FindField('TARIFA_ARTICULO_CLI').AsString;
+    sTarifa := Trim(DataSet.FindField('TARIFA_ARTICULO_CLI').AsString);
+    if sTarifa = '' then
+      sTarifa := TarifaDefecto;
+    FindField('TARIFA_ARTICULO_CLIENTE_ALB').AsString := sTarifa;
+    ActualizarImpuestosTarifaCabecera(sTarifa);
   end;
   AplicarPorcentajesIvaVenta(inLibGlobalVar.oConn, unqryTablaG, 'ALB');
+end;
+
+procedure TdmAlbaranes.NegarMovimientosFacturaDesdeAlbaran(
+  const ASerie, ANumero: string);
+var
+  qryFactura: TUniQuery;
+begin
+  qryFactura := TUniQuery.Create(nil);
+  try
+    qryFactura.Connection := inLibGlobalVar.oConn;
+    qryFactura.SQL.Text :=
+      'UPDATE fza_facturas ' +
+      '   SET ESMUEVE_STOCK_FAC = ''N'', ' +
+      '       INSTANTE_MODIF = NOW(), ' +
+      '       USUARIO_MODIF = :pUSUARIO ' +
+      ' WHERE SERIE_FAC = :pSERIE ' +
+      '   AND NUMERO_FAC = :pNUMERO';
+    qryFactura.ParamByName('pUSUARIO').AsString := oUser;
+    qryFactura.ParamByName('pSERIE').AsString := ASerie;
+    qryFactura.ParamByName('pNUMERO').AsString := ANumero;
+    qryFactura.ExecSQL;
+  finally
+    FreeAndNil(qryFactura);
+  end;
 end;
 
 procedure TdmAlbaranes.InstalarProcedimientos;
@@ -1634,6 +1729,7 @@ begin
     sNumeroFac := ParamByName('p_NUMERO_FAC').AsString;
     sSerieFac  := ParamByName('p_SERIE_FAC').AsString;
   end;
+  NegarMovimientosFacturaDesdeAlbaran(sSerieFac, sNumeroFac);
 
   // 2) Líneas: las indicadas, o todas las pendientes si no se pasa lista.
   if bUsarTodas then
@@ -1813,6 +1909,7 @@ begin
           sNumFac := ParamByName('p_NUMERO_FAC').AsString;
           sSerFac := ParamByName('p_SERIE_FAC').AsString;
         end;
+        NegarMovimientosFacturaDesdeAlbaran(sSerFac, sNumFac);
         sNumFacActual := sNumFac;
         sSerFacActual := sSerFac;
         sCliActual    := sCliAlb;

@@ -10,8 +10,8 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Declaración responsable del sistema informático de facturación            }
-{    (art. 15 de la Orden HAC/1177/2024). Descarga la declaración pública      }
-{    del productor y la muestra en un visor HTML embebido.                     }
+{    (art. 15 de la Orden HAC/1177/2024). Descarga desde el servicio la        }
+{    declaración aplicable y la muestra en un visor HTML embebido.             }
 {******************************************************************************}
 unit inMtoModalVerifactuDecl;
 
@@ -52,15 +52,11 @@ type
 implementation
 
 uses
-  System.IOUtils, System.Net.HttpClient, System.Net.URLClient,
+  System.IOUtils,
   Data.DB, Uni,
   inLibGlobalVar, inLibVerifactuInstalacion;
 
 {$R *.dfm}
-
-const
-  cUrlDeclaracionResponsable =
-    'https://veryverifactu.com/declaracion.html';
 
 function AjustarHtmlParaVisor(const AHtml: string): string;
 var
@@ -83,27 +79,8 @@ begin
 end;
 
 function DescargarHtmlDeclaracion: string;
-var
-  oHttp: THTTPClient;
-  oResp: IHTTPResponse;
 begin
-  Result := '';
-  oHttp  := THTTPClient.Create;
-  try
-    oHttp.ConnectionTimeout := 15000;
-    oHttp.ResponseTimeout   := 30000;
-    oResp := oHttp.Get(cUrlDeclaracionResponsable);
-    if oResp.StatusCode <> 200 then
-    begin
-      raise Exception.CreateFmt('El servidor respondió con HTTP %d %s.',
-        [oResp.StatusCode, oResp.StatusText]);
-    end;
-    Result := oResp.ContentAsString(TEncoding.UTF8);
-    if Trim(Result) = '' then
-      raise Exception.Create('La declaración descargada está vacía.');
-  finally
-    FreeAndNil(oHttp);
-  end;
+  Result := ObtenerDeclaracionResponsableSif(oVersion);
 end;
 
 function GuardarHtmlTemporal(const AHtml: string): string;
@@ -445,7 +422,7 @@ begin
   mDeclaracion.Lines.Text :=
     'No se ha podido descargar la declaración responsable.' +
     sLineBreak + sLineBreak +
-    'URL: ' + cUrlDeclaracionResponsable +
+    'Versión solicitada: ' + oVersion +
     sLineBreak + sLineBreak +
     'Detalle: ' + AMensaje;
   mDeclaracion.SelStart := 0;
@@ -473,7 +450,7 @@ begin
   mDeclaracion.Lines.Text :=
     'Descargando declaración responsable...' +
     sLineBreak + sLineBreak +
-    cUrlDeclaracionResponsable;
+    'Versión: ' + oVersion;
   mDeclaracion.SelStart := 0;
   Application.ProcessMessages;
   try

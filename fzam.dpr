@@ -224,6 +224,7 @@ uses
   uDJMSepa3414XML in 'src\Lib3par\uDJMSepa3414XML.pas',
   inLibGenerarTicket in 'src\Lib\inLibGenerarTicket.pas',
   inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas',
+  inLibCorreoTickets in 'src\Lib\inLibCorreoTickets.pas',
   inLibXades in 'src\Lib\inLibXades.pas',
   inLibDocumentoFiscal in 'src\Lib\inLibDocumentoFiscal.pas',
   inLibRelojFiscal in 'src\Lib\inLibRelojFiscal.pas',

@@ -440,7 +440,8 @@ Acciones habituales:
 
 | Acción | Uso |
 |--------|-----|
-| **Reimprimir** | Saca duplicado de ticket, resguardo de depósito o recordatorio según la operación. |
+| **Reimprimir** | Saca el duplicado por la impresora de tickets configurada en parámetros. |
+| **Reimprimir otros** | Abre la vista previa del ticket, desde la que se puede elegir otra impresora. |
 | **F5** | Recarga la consulta del día. |
 | **Esc** | Cierra la búsqueda y vuelve al menú de caja. |
 

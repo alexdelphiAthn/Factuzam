@@ -28,21 +28,31 @@ type
     // confirman o deshacen juntas.
     class procedure EncolarFactura(AQryTrx: TUniQuery;
                                    const ASerie, ANumero: string;
-                                   const ATipoOperacion: string = 'ALTA');
+                                   const ATipoOperacion: string = 'ALTA';
+                                   ABorrarMovimientos: Boolean = True);
     // Genera y guarda el registro de facturación firmado sin enviarlo a AEAT.
     // Es el camino NO VERI*FACTU y debe ejecutarse al crear la factura.
     class procedure RegistrarFacturaNoVerifactu(AQryTrx: TUniQuery;
                                                const ASerie,
                                                ANumero: string;
                                                const ATipoOperacion: string =
-                                               'ALTA');
+                                               'ALTA';
+                                               ABorrarMovimientos: Boolean =
+                                               True);
     // Modo transitorio sin Verifactu: emite la factura con fase propia,
     // sin cola AEAT y sin registro NO VERI*FACTU.
     class procedure MarcarFacturaSinVerifactu(AQryTrx: TUniQuery;
                                              const ASerie,
                                              ANumero: string;
                                              const ATipoOperacion: string =
-                                             'ALTA');
+                                             'ALTA';
+                                             ABorrarMovimientos: Boolean =
+                                             True);
+    // Revierte los movimientos vinculados a una factura de caja (VE) o
+    // creada desde el mantenimiento (FC). El SP mantiene stock y acumulados.
+    class procedure BorrarMovimientosFactura(AQry: TUniQuery;
+                                             const ASerie,
+                                             ANumero: string);
     // Marca una factura recién abonada como RECTIFICATIVA, la enlaza con
     // la original (columnas ABONO) y la encola en Verifactu si está
     // activo. La llama el modal de Rectificar de Facturas.
@@ -130,8 +140,8 @@ begin
   end;
 end;
 
-procedure BorrarMovimientosVentaAnulada(AQry: TUniQuery;
-                                        const ASerie, ANumero: string);
+class procedure TVerifactuCola.BorrarMovimientosFactura(
+  AQry: TUniQuery; const ASerie, ANumero: string);
 begin
   if (Trim(ASerie) <> '') and (Trim(ANumero) <> '') then
   begin
@@ -172,7 +182,8 @@ procedure GuardarRegistroNoVerifactu(AQry: TUniQuery;
                                      const ASerie, ANumero,
                                      ATipoOperacion: string;
                                      const AResultado:
-                                     TResultadoEnvioVerifactu);
+                                     TResultadoEnvioVerifactu;
+                                     ABorrarMovimientos: Boolean);
 var
   oPngStream: TBytesStream;
   sEstado: string;
@@ -306,8 +317,8 @@ begin
   AQry.ParamByName('SERIE').AsString := ASerie;
   AQry.ParamByName('NUMERO').AsString := ANumero;
   AQry.Execute;
-  if ATipoOperacion = 'ANULACION' then
-    BorrarMovimientosVentaAnulada(AQry, ASerie, ANumero);
+  if (ATipoOperacion = 'ANULACION') and ABorrarMovimientos then
+    TVerifactuCola.BorrarMovimientosFactura(AQry, ASerie, ANumero);
 end;
 
 // ===========================================================================
@@ -316,7 +327,8 @@ end;
 
 class procedure TVerifactuCola.EncolarFactura(AQryTrx: TUniQuery;
                                               const ASerie, ANumero: string;
-                                              const ATipoOperacion: string);
+                                              const ATipoOperacion: string;
+                                              ABorrarMovimientos: Boolean);
 begin
   // ON DUPLICATE: si la operación ya estaba encolada se relanza
   // (vuelve a PENDIENTE con los intentos a cero)
@@ -339,8 +351,8 @@ begin
   AQryTrx.ParamByName('TIPOOP').AsString  := ATipoOperacion;
   AQryTrx.ParamByName('USUARIO').AsString := oUser;
   AQryTrx.Execute;
-  if ATipoOperacion = 'ANULACION' then
-    BorrarMovimientosVentaAnulada(AQryTrx, ASerie, ANumero);
+  if (ATipoOperacion = 'ANULACION') and ABorrarMovimientos then
+    BorrarMovimientosFactura(AQryTrx, ASerie, ANumero);
   // El lanzamiento saca la factura de BORRADOR en el acto: el QR es
   // calculable en local (ConstruirUrlQR) y la petición al ws viaja
   // asíncrona en el hilo de la cola.
@@ -369,7 +381,9 @@ class procedure TVerifactuCola.RegistrarFacturaNoVerifactu(AQryTrx: TUniQuery;
                                                            const ASerie,
                                                            ANumero: string;
                                                            const ATipoOperacion:
-                                                           string);
+                                                           string;
+                                                           ABorrarMovimientos:
+                                                           Boolean);
 var
   oResultado: TResultadoEnvioVerifactu;
 begin
@@ -383,7 +397,7 @@ begin
     if not oResultado.Ok then
       raise Exception.Create(oResultado.MensajeError);
     GuardarRegistroNoVerifactu(AQryTrx, ASerie, ANumero, ATipoOperacion,
-                               oResultado);
+                               oResultado, ABorrarMovimientos);
     RegistrarEventoVerifactu(AQryTrx.Connection, cEventoVerifactuInfo,
       'Registro de facturación NO VERI*FACTU registrado', ATipoOperacion,
       ASerie, ANumero);
@@ -408,7 +422,9 @@ class procedure TVerifactuCola.MarcarFacturaSinVerifactu(AQryTrx: TUniQuery;
                                                          const ASerie,
                                                          ANumero: string;
                                                          const ATipoOperacion:
-                                                         string);
+                                                         string;
+                                                         ABorrarMovimientos:
+                                                         Boolean);
 var
   sFase: string;
 begin
@@ -430,8 +446,8 @@ begin
   AQryTrx.ParamByName('SERIE').AsString := ASerie;
   AQryTrx.ParamByName('NUMERO').AsString := ANumero;
   AQryTrx.Execute;
-  if ATipoOperacion = 'ANULACION' then
-    BorrarMovimientosVentaAnulada(AQryTrx, ASerie, ANumero);
+  if (ATipoOperacion = 'ANULACION') and ABorrarMovimientos then
+    BorrarMovimientosFactura(AQryTrx, ASerie, ANumero);
   Log.LogInfo('Factura ' + ASerie + '\' + ANumero +
     ' emitida en modo SIN VERIFACTU. Operación: ' + ATipoOperacion);
 end;
@@ -1037,8 +1053,9 @@ begin
     Qry.ParamByName('SERIE').AsString   := ASerie;
     Qry.ParamByName('NUMERO').AsString  := ANumero;
     Qry.Execute;
-    if ATipoOperacion = 'ANULACION' then
-      BorrarMovimientosVentaAnulada(Qry, ASerie, ANumero);
+    // Los movimientos se resuelven al solicitar la anulación, cuando el
+    // usuario decide si desea revertir el stock. No se repite aquí porque
+    // el hilo no conserva esa elección.
     // Cola: fila enviada. El mensaje informativo se conserva cuando la
     // AEAT acepta con errores.
     Qry.SQL.Text :=

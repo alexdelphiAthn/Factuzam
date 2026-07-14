@@ -28,6 +28,7 @@ uses
   cxDataStorage, cxNavigator, cxDBData, cxGridLevel, cxClasses,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   cxGrid, cxDropDownEdit, dxDateRanges, dxScrollbarAnnotations,
+  cxCheckBox,
   // Acceso a Datos y Librerías Propias
   Uni, MemDS, VirtualTable,
   inLibGlobalVar, inMtoFrmBase, inLibFacturas, inLibFaseCobro,
@@ -114,6 +115,8 @@ type
     actDepositoCliente: TAction;
     actFactura: TAction;
     cxImage1: TcxImage;
+    imgEnviarEmail: TImage;
+    chkEnviarEmail: TcxCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure dbmImportePropertiesEditValueChanged(Sender: TObject);
@@ -146,12 +149,14 @@ type
     procedure btnDepositoClick(Sender: TObject);
     procedure btnFacturaClick(Sender: TObject);
     procedure actFacturaExecute(Sender: TObject);
+    procedure chkEnviarEmailPropertiesEditValueChanged(Sender: TObject);
   private
-
     FTipoImpresion: TTipoImpresionTicket;
     FDatosCobro: TDatosFaseCobro;
     FMemTablePagos: TVirtualTable;
     FActualizandoVale: Boolean;
+    FEmailEnvio: string;
+    FActualizandoEmail: Boolean;
     function ValidaryConfirmar:boolean;
     function PuedeEmitir(const ASerie: string; AFecha: TDateTime): Boolean;
     function SerieAdmiteFecha(const ASerie: string;
@@ -171,12 +176,17 @@ type
     procedure EscribirImporteEnFormaActual(AImporte: Double);
     procedure MemTablePagosAfterPost(DataSet: TDataSet);
     procedure FMemTablePagosBeforePost(DataSet: TDataSet);
+    procedure DibujarIconoEmail;
+    function GetEnviarEmail: Boolean;
   public
     property DatosCobro: TDatosFaseCobro read FDatosCobro;
     property TipoImpresion: TTipoImpresionTicket read FTipoImpresion;
+    property EnviarEmail: Boolean read GetEnviarEmail;
+    property EmailEnvio: string read FEmailEnvio;
   public
     FCodigoEmpresa:String;
     FCodigoCliente: String;
+    FEmailCliente: String;
     FNifCliente: String;
     FCodigoPaisCliente: String;
     FNombrePaisCliente: String;
@@ -200,7 +210,7 @@ implementation
 {$R *.dfm}
 
 uses inMtoCajaSeleccionVale, inLibCajaParam, inMtoModalSerieFechaFactura,
-     UniDataCaja, inLibDocumentoFiscal;
+     UniDataCaja, inLibDocumentoFiscal, inLibCorreoTickets;
 
 procedure TfrmMtoCajaFaseCobro.CargarComboSeries;
 var
@@ -536,6 +546,10 @@ end;
 procedure TfrmMtoCajaFaseCobro.FormCreate(Sender: TObject);
 begin
   inherited;
+  FActualizandoEmail := False;
+  FEmailEnvio := '';
+  chkEnviarEmail.Checked := False;
+  DibujarIconoEmail;
   ConfigurarTablaVirtual;
   FDatosCobro := TDatosFaseCobro.Create(FMemTablePagos);
   FDatosCobro.OnRecalculado := AlRecalcularDatos;
@@ -544,6 +558,73 @@ begin
   dsFormasPago.DataSet := FMemTablePagos;
   FMemTablePagos.AfterPost := MemTablePagosAfterPost;
   FMemTablePagos.BeforePost := FMemTablePagosBeforePost;
+end;
+
+procedure TfrmMtoCajaFaseCobro.DibujarIconoEmail;
+var
+  Lienzo: TCanvas;
+begin
+  imgEnviarEmail.Picture.Bitmap.SetSize(24, 18);
+  imgEnviarEmail.Picture.Bitmap.PixelFormat := pf32bit;
+  imgEnviarEmail.Picture.Bitmap.TransparentColor := clFuchsia;
+  imgEnviarEmail.Picture.Bitmap.Transparent := True;
+  Lienzo := imgEnviarEmail.Picture.Bitmap.Canvas;
+  Lienzo.Brush.Color := clFuchsia;
+  Lienzo.FillRect(Rect(0, 0, 24, 18));
+  Lienzo.Brush.Style := bsClear;
+  Lienzo.Pen.Color := clNavy;
+  Lienzo.Pen.Width := 2;
+  Lienzo.Rectangle(1, 2, 23, 17);
+  Lienzo.MoveTo(2, 3);
+  Lienzo.LineTo(12, 11);
+  Lienzo.LineTo(22, 3);
+  Lienzo.MoveTo(2, 16);
+  Lienzo.LineTo(9, 9);
+  Lienzo.MoveTo(22, 16);
+  Lienzo.LineTo(15, 9);
+end;
+
+function TfrmMtoCajaFaseCobro.GetEnviarEmail: Boolean;
+begin
+  Result := chkEnviarEmail.Checked and (Trim(FEmailEnvio) <> '');
+end;
+
+procedure TfrmMtoCajaFaseCobro.chkEnviarEmailPropertiesEditValueChanged(
+  Sender: TObject);
+var
+  sMensaje: string;
+  bContinuar: Boolean;
+begin
+  if not FActualizandoEmail then
+  begin
+    if chkEnviarEmail.Checked then
+    begin
+      bContinuar := CorreoTicketsConfigurado(sMensaje);
+      if not bContinuar then
+        ShowMessage(sMensaje)
+      else
+      begin
+        FEmailEnvio := Trim(FEmailEnvio);
+        if FEmailEnvio = '' then
+          bContinuar := InputQuery('Enviar documentación',
+            'Correo electrónico:', FEmailEnvio);
+        if bContinuar and (Trim(FEmailEnvio) = '') then
+        begin
+          ShowMessage('Indique una dirección de correo electrónico.');
+          bContinuar := False;
+        end;
+      end;
+      if not bContinuar then
+      begin
+        FActualizandoEmail := True;
+        try
+          chkEnviarEmail.Checked := False;
+        finally
+          FActualizandoEmail := False;
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoCajaFaseCobro.FMemTablePagosBeforePost(DataSet: TDataSet);
@@ -1103,6 +1184,7 @@ var
   NomCliente: string;
 begin
   inherited;
+  FEmailEnvio := Trim(FEmailCliente);
   // Modo rectificación: número de la factura rectificada a la vista
   if FRectificaA <> '' then
     Caption := Caption + '  -  RECTIFICA al borrador ' + FRectificaA;
@@ -1111,7 +1193,7 @@ begin
     qryCli := TUniQuery.Create(nil);
     try
       qryCli.Connection := inLibGlobalVar.oConn;
-      qryCli.SQL.Text := 'SELECT RAZON_SOCIAL_CLI, ' +
+      qryCli.SQL.Text := 'SELECT RAZON_SOCIAL_CLI, EMAIL_CLI, ' +
                          '       ESPERMITE_DEUDA_CLI, ' +
                          '       TOTAL_LIMITE_CREDITO_CLI, ' +
                          '       TOTAL_DEUDA_CLI ' +
@@ -1122,6 +1204,8 @@ begin
       if not qryCli.IsEmpty then
       begin
         NomCliente := qryCli.FieldByName('RAZON_SOCIAL_CLI').AsString;
+        if FEmailEnvio = '' then
+          FEmailEnvio := Trim(qryCli.FieldByName('EMAIL_CLI').AsString);
         PermiteDeuda :=
           (qryCli.FieldByName('ESPERMITE_DEUDA_CLI').AsString = 'S');
         LimiteCredito :=

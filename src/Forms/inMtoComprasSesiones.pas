@@ -748,6 +748,11 @@ end;
 procedure TfrmMtoComprasSesiones.dsTablaGDataChangeHook(Sender: TObject;
                                                           Field: TField);
 begin
+  if ((Field = nil) or SameText(Field.FieldName, 'CODIGO_EMP_SES')) and
+     (Dmm <> nil) and Dmm.unqryTablaG.Active and
+     (not Dmm.unqryTablaG.IsEmpty) then
+    Dmm.RefrescarAlmacenes(
+      Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
   // Refrescar el rotulo del proveedor al navegar entre sesiones (Field=nil)
   // o al cambiar CODIGO_PRV_SES tecleado directamente en el ButtonEdit.
   if (Field = nil) or SameText(Field.FieldName, 'CODIGO_PRV_SES') then

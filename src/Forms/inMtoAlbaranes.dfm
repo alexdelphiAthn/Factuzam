@@ -369,6 +369,45 @@ inherited frmMtoAlbaranes: TfrmMtoAlbaranes
                 Height = 21
                 Width = 380
               end
+              object lblTarifaAlbaran: TcxLabel
+                Left = 792
+                Top = 80
+                Caption = 'Tarifa'
+                TabOrder = 24
+                Transparent = True
+              end
+              object cbbTarifaAlbaran: TcxDBLookupComboBox
+                Left = 792
+                Top = 100
+                DataBinding.DataField = 'TARIFA_ARTICULO_CLIENTE_ALB'
+                DataBinding.DataSource = dsTablaG
+                Properties.DropDownListStyle = lsFixedList
+                Properties.KeyFieldNames = 'CODIGO_TAR_ARTTAR'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'Tarifa'
+                    FieldName = 'NOMBRE_TAR_TAR'
+                  end
+                  item
+                    Caption = 'Imp. incl.'
+                    FieldName = 'ESIMP_INCL_TAR'
+                  end>
+                Properties.OnChange = cbbTarifaAlbaranPropertiesChange
+                TabOrder = 25
+                Width = 132
+              end
+              object chkTarifaImpuestosIncluidosAlbaran: TcxDBCheckBox
+                Left = 792
+                Top = 129
+                Caption = 'Imp. incl.'
+                DataBinding.DataField = 'ESIMP_INCL_TARIFA_CLIENTE_ALB'
+                DataBinding.DataSource = dsTablaG
+                Properties.ReadOnly = True
+                Properties.ValueChecked = 'S'
+                Properties.ValueUnchecked = 'N'
+                TabOrder = 26
+                Transparent = True
+              end
             end
             object tsEmpresa: TcxTabSheet
               Caption = 'Empresa'

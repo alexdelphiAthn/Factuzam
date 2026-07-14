@@ -78,6 +78,8 @@ type
     unqryErrores: TUniQuery;
     unqryMovimientosFac: TUniQuery;
     dsMovimientosFac:    TDataSource;
+    unqryAlmacenesFac:   TUniQuery;
+    dsAlmacenesFac:      TDataSource;
     unqryEfectosVenta:   TUniQuery;
     dsEfectosVenta:      TDataSource;
     unstrdprcInsertarMovFac: TUniStoredProc;
@@ -124,6 +126,7 @@ private
     // unqryFacBeforePost dentro de la guarda de re-entrancia.
     procedure ValidarCabeceraBeforePost(DataSet: TDataSet);
     procedure GuardarParametrosEDocFactura(ADataSet: TDataSet);
+    procedure GuardarOpcionMovimientosFactura(ADataSet: TDataSet);
     function FacturaPermiteRecalcularLineas: Boolean;
     // True si facturas_columnas_sku.sql esta aplicado (ATTR1..5 +
     // NUM_ATRIBUTOS en fza_facturas_lineas). Sin la migracion, los
@@ -160,6 +163,7 @@ public
     function GetCodigoGrupoIVAAGricola:String;
     function GetUserEmpresaDef:String;
     procedure CalcularFactura;
+    procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
     function GetTipoIVA(sTipoIVA:string):Currency;
     function ExisteSerieEmpresa(sSerie,
                                 sEmpresa,
@@ -213,7 +217,9 @@ uses
   inLibLog,
   System.Diagnostics,
   inLibFacturas,
+  inLibData,
   inLibVerifactu,
+  inLibVerifactuCola,
   inLibDocumentoFiscal,
   inLibArticulosValidador,
   inLibLicenciaAplicacion,
@@ -1157,6 +1163,7 @@ begin
   unqryConsolidacion.Connection := inLibGlobalVar.oConn;
   unqryErrores.Connection := inLibGlobalVar.oConn;
   unqryMovimientosFac.Connection := inLibGlobalVar.oConn;
+  unqryAlmacenesFac.Connection := inLibGlobalVar.oConn;
   unstrdprcInsertarMovFac.Connection := inLibGlobalVar.oConn;
   unqryEfectosVenta := TUniQuery.Create(Self);
   unqryEfectosVenta.Connection := inLibGlobalVar.oConn;
@@ -1331,6 +1338,7 @@ begin
   // Consolidacion, Errores, MovimientosFac) se abren al activar su
   // sub-pestaña via AsegurarXxxAbierta.
   AbrirConTiempo(unqryIvasTipos,      'unqryIvasTipos');
+  RefrescarAlmacenes('');
   AbrirConTiempo(unqryLinFac,         'unqryLinFac');
   AbrirConTiempo(unqrySeries,         'unqrySeries');
   AbrirConTiempo(unqryIvas,           'unqryIvas');
@@ -1340,6 +1348,30 @@ begin
   AbrirConTiempo(unqryPaisesCli,      'unqryPaisesCli');
   AbrirConTiempo(unqryPaisesEmp,      'unqryPaisesEmp');
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+end;
+
+procedure TdmFacturas.RefrescarAlmacenes(const ACodigoEmpresa: string);
+var
+  sEmpresa: string;
+begin
+  sEmpresa := Trim(ACodigoEmpresa);
+  if (sEmpresa = '') and unqryTablaG.Active and
+     (not unqryTablaG.IsEmpty) then
+    sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString);
+  if sEmpresa = '' then
+    sEmpresa := Trim(oEmpresa);
+  if (not unqryAlmacenesFac.Active) or
+     (not SameText(unqryAlmacenesFac.ParamByName('EMPRESA').AsString,
+                   sEmpresa)) then
+  begin
+    unqryAlmacenesFac.Close;
+    unqryAlmacenesFac.ParamByName('EMPRESA').AsString := sEmpresa;
+    unqryAlmacenesFac.Open;
+  end;
+  if unqryTablaG.Active and
+     (unqryTablaG.State in [dsInsert, dsEdit]) then
+    AjustarEmpresaAlmacenDataSet(unqryTablaG.Connection, unqryTablaG,
+      'CODIGO_EMP_FAC', 'CODIGO_ALM_FAC');
 end;
 
 procedure TdmFacturas.RellenarParamsDesdeMaestro(AQry: TUniQuery);
@@ -1675,6 +1707,8 @@ begin
   unqryErrores.Close;
   if Assigned(unqryMovimientosFac) and unqryMovimientosFac.Active then
     unqryMovimientosFac.Close;
+  if Assigned(unqryAlmacenesFac) and unqryAlmacenesFac.Active then
+    unqryAlmacenesFac.Close;
   FreeAndNil(dsEfectosVenta);
   FreeAndNil(unqryEfectosVenta);
   //unqrySeriesEditCombo.Close;
@@ -1981,6 +2015,35 @@ begin
   end;
 end;
 
+procedure TdmFacturas.GuardarOpcionMovimientosFactura(ADataSet: TDataSet);
+var
+  Qry: TUniQuery;
+begin
+  if (ADataSet.FindField('ESMUEVE_STOCK_FAC') <> nil) and
+     (Trim(ADataSet.FieldByName('NUMERO_FAC').AsString) <> '') and
+     (Trim(ADataSet.FieldByName('SERIE_FAC').AsString) <> '') then
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := unqryTablaG.Connection;
+      Qry.SQL.Text :=
+        'UPDATE fza_facturas ' +
+        '   SET ESMUEVE_STOCK_FAC = :pMUEVE ' +
+        ' WHERE NUMERO_FAC = :pNUMERO ' +
+        '   AND SERIE_FAC = :pSERIE';
+      Qry.ParamByName('pMUEVE').AsString :=
+        ADataSet.FieldByName('ESMUEVE_STOCK_FAC').AsString;
+      Qry.ParamByName('pNUMERO').AsString :=
+        ADataSet.FieldByName('NUMERO_FAC').AsString;
+      Qry.ParamByName('pSERIE').AsString :=
+        ADataSet.FieldByName('SERIE_FAC').AsString;
+      Qry.ExecSQL;
+    finally
+      FreeAndNil(Qry);
+    end;
+  end;
+end;
+
 procedure TdmFacturas.GetCodigoAutoEmpresa;
 begin
   if unqryTablaG.FindField('CODIGO_EMP_FAC').AsString = '0' then
@@ -2006,6 +2069,9 @@ var
   bGeneraMovs: Boolean;
 begin
   inherited;
+  // SQLInsert/SQLUpdate del DFM son anteriores a esta columna; se persiste
+  // expresamente para que el valor del check no se pierda al grabar.
+  GuardarOpcionMovimientosFactura(DataSet);
   CalcularFactura;
   GuardarParametrosEDocFactura(DataSet);
   // Las facturas SIMPLIFICADAS (tickets directos sin albaran previo)
@@ -2117,6 +2183,7 @@ procedure TdmFacturas.unqryTablaGBeforeDelete(DataSet: TDataSet);
   qryBorrarLineas : TUniQuery;
   qryBorrarRecibos: TUniquery;
   qryBorrarEfectos: TUniQuery;
+  qryBorrarMovimientos: TUniQuery;
 begin
   // Una factura lanzada a Verifactu (fuera de BORRADOR) ya está
   // registrada en la AEAT: no se borra, se anula o rectifica
@@ -2224,20 +2291,16 @@ begin
     ExecSQL;
     Free;
   end;
-  // Borrar movimientos asociados via SP (decrementa stock + acumulados)
-  var qMov := TUniQuery.Create(Self);
+  // Revierte VE (caja) y FC (mantenimiento), manteniendo stock y acumulados.
+  qryBorrarMovimientos := TUniQuery.Create(Self);
   try
-    qMov.Connection := inLibGlobalVar.oConn;
-    qMov.SQL.Text :=
-      'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
-    qMov.ParamByName('t').AsString := 'FC';
-    qMov.ParamByName('s').AsString :=
-                            unqryTablaG.FieldByName(fseriefac).AsString;
-    qMov.ParamByName('n').AsString :=
-                            unqryTablaG.FieldByName(fnrofac).AsString;
-    qMov.ExecSQL;
+    qryBorrarMovimientos.Connection := inLibGlobalVar.oConn;
+    TVerifactuCola.BorrarMovimientosFactura(
+      qryBorrarMovimientos,
+      unqryTablaG.FieldByName(fseriefac).AsString,
+      unqryTablaG.FieldByName(fnrofac).AsString);
   finally
-    FreeAndNil(qMov);
+    FreeAndNil(qryBorrarMovimientos);
   end;
 end;
 
@@ -2262,7 +2325,17 @@ begin
     // Tipo de factura segun el formulario (NORMAL / SIMPLIFICADA)
     FieldByName('TIPO_FAC').AsString :=
       (GetOwnerForm<TfrmMtoFacturasBase>).TipoFacturaFiltro;
+    // Una factura normal insertada a mano es venta directa y mueve stock.
+    // Los flujos que parten de otro documento deben negarlo expresamente.
+    if FindField('ESMUEVE_STOCK_FAC') <> nil then
+    begin
+      if SameText(FieldByName('TIPO_FAC').AsString, 'NORMAL') then
+        FieldByName('ESMUEVE_STOCK_FAC').AsString := 'S'
+      else
+        FieldByName('ESMUEVE_STOCK_FAC').AsString := 'N';
+    end;
     (GetOwnerForm<TfrmMtoFacturasBase>).sbNuevaFacturaClick(Self.Owner);
+    RefrescarAlmacenes(FieldByName('CODIGO_EMP_FAC').AsString);
   end;
 end;
 
@@ -2561,9 +2634,10 @@ end;
 
 function TdmFacturas.GenerarMovimientosSalidaFactura: Integer;
 var
-  qLineas, qExiste: TUniQuery;
+  qLineas, qExiste, qActualizar: TUniQuery;
   sNumeroFac, sSerieFac, sEmpresa, sCliente: string;
   sLinea, sSku, sAlmacen, sArticulo, sCaja, sNumOp: string;
+  sNumeroMov: string;
   fCantidad: Double;
 begin
   Result := 0;
@@ -2584,11 +2658,12 @@ begin
 
   qLineas := TUniQuery.Create(nil);
   qExiste := TUniQuery.Create(nil);
+  qActualizar := TUniQuery.Create(nil);
   try
     qLineas.Connection := inLibGlobalVar.oConn;
     qLineas.SQL.Text :=
       'SELECT LINEA_FACLIN, CODIGO_UNIDAD_FACLIN, CODIGO_ART_FACLIN, ' +
-      '       CANTIDAD_FACLIN, CODIGO_ALM_FACLIN ' +
+      '       CANTIDAD_FACLIN, CODIGO_ALM_FACLIN, NUMERO_MOV_FACLIN ' +
       '  FROM fza_facturas_lineas ' +
       ' WHERE NUMERO_FAC_FACLIN = :pNUM ' +
       '   AND SERIE_FAC_FACLIN  = :pSER ' +
@@ -2603,12 +2678,24 @@ begin
     // TIPO_DOC_MOV='VE': si no se cuentan, un Post posterior de la
     // simplificada duplicaría el movimiento (y el descuento de stock).
     qExiste.SQL.Text :=
-      'SELECT COUNT(*) AS N ' +
+      'SELECT NUMERO_MOV ' +
       '  FROM fza_movimientos_almacen ' +
       ' WHERE TIPO_DOC_MOV IN (''FC'', ''VE'') ' +
       '   AND SERIE_DOC_MOV  = :pSER ' +
       '   AND NUMERO_DOC_MOV = :pNUM ' +
-      '   AND LINEA_MOV      = :pLIN';
+      '   AND LINEA_MOV      = :pLIN ' +
+      ' ORDER BY CASE TIPO_DOC_MOV WHEN ''VE'' THEN 0 ELSE 1 END, ' +
+      '          NUMERO_MOV ' +
+      ' LIMIT 1';
+    qActualizar.Connection := inLibGlobalVar.oConn;
+    qActualizar.SQL.Text :=
+      'UPDATE fza_facturas_lineas ' +
+      '   SET NUMERO_MOV_FACLIN = :pMOV, ' +
+      '       INSTANTE_MODIF = NOW(), ' +
+      '       USUARIO_MODIF = :pUSUARIO ' +
+      ' WHERE SERIE_FAC_FACLIN  = :pSER ' +
+      '   AND NUMERO_FAC_FACLIN = :pNUM ' +
+      '   AND LINEA_FACLIN      = :pLIN';
 
     qLineas.First;
     while not qLineas.Eof do
@@ -2621,13 +2708,17 @@ begin
 
       if (sSku <> '') and (fCantidad > 0) then
       begin
+        sNumeroMov := '';
         qExiste.Close;
         qExiste.ParamByName('pSER').AsString := sSerieFac;
         qExiste.ParamByName('pNUM').AsString := sNumeroFac;
         qExiste.ParamByName('pLIN').AsString := sLinea;
         qExiste.Open;
-        if qExiste.FieldByName('N').AsInteger = 0 then
+        if not qExiste.IsEmpty then
+          sNumeroMov := qExiste.FieldByName('NUMERO_MOV').AsString
+        else
         begin
+          sNumeroMov := ObtenerSiguienteContador('MV');
           with unstrdprcInsertarMovFac do
           begin
             Params.Clear;
@@ -2652,9 +2743,7 @@ begin
             Params.CreateParam(ftString, 'p_CODIGO_CAJA_DOC_MOV', ptInput);
             Params.CreateParam(ftString, 'p_CODCLIENTE',          ptInput);
             Params.CreateParam(ftString, 'p_CODARTICULO',         ptInput);
-            ParamByName('p_NUMERO_MOV').AsString          :=
-                                                    ObtenerSiguienteContador(
-                                                      'MV');
+            ParamByName('p_NUMERO_MOV').AsString          := sNumeroMov;
             ParamByName('p_TIPO_DOC_MOV').AsString        := 'FC';
             ParamByName('p_SERIE_DOC_MOV').AsString       := sSerieFac;
             ParamByName('p_NRO_DOC_MOV').AsString         := sNumeroFac;
@@ -2678,12 +2767,24 @@ begin
           Inc(Result);
         end;
         qExiste.Close;
+        if (sNumeroMov <> '') and
+           (qLineas.FieldByName('NUMERO_MOV_FACLIN').AsString <>
+            sNumeroMov) then
+        begin
+          qActualizar.ParamByName('pMOV').AsString := sNumeroMov;
+          qActualizar.ParamByName('pUSUARIO').AsString := oUser;
+          qActualizar.ParamByName('pSER').AsString := sSerieFac;
+          qActualizar.ParamByName('pNUM').AsString := sNumeroFac;
+          qActualizar.ParamByName('pLIN').AsString := sLinea;
+          qActualizar.ExecSQL;
+        end;
       end;
       qLineas.Next;
     end;
   finally
     FreeAndNil(qLineas);
     FreeAndNil(qExiste);
+    FreeAndNil(qActualizar);
   end;
 
   if unqryMovimientosFac.Active then

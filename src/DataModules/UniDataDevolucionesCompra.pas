@@ -127,6 +127,7 @@ uses
   inLibDevolucionesCompraMovimientos,
   inLibContadorLineas,
   inLibComprasImpuestos,
+  inLibData,
   inLibArticulosValidador;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -230,12 +231,18 @@ begin
   sEmpresa := Trim(ACodigoEmpresa);
   if sEmpresa = '' then
     sEmpresa := Trim(oEmpresa);
-  if unqryAlmacenesDevc.Active and
-     (unqryAlmacenesDevc.ParamByName('EMPRESA').AsString = sEmpresa) then
-    Exit;
-  unqryAlmacenesDevc.Close;
-  unqryAlmacenesDevc.ParamByName('EMPRESA').AsString := sEmpresa;
-  unqryAlmacenesDevc.Open;
+  if (not unqryAlmacenesDevc.Active) or
+     (not SameText(unqryAlmacenesDevc.ParamByName('EMPRESA').AsString,
+                   sEmpresa)) then
+  begin
+    unqryAlmacenesDevc.Close;
+    unqryAlmacenesDevc.ParamByName('EMPRESA').AsString := sEmpresa;
+    unqryAlmacenesDevc.Open;
+  end;
+  if unqryTablaG.Active and
+     (unqryTablaG.State in [dsInsert, dsEdit]) then
+    AjustarEmpresaAlmacenDataSet(unqryTablaG.Connection, unqryTablaG,
+      'CODIGO_EMP_DEVC', 'CODIGO_ALM_DEVC');
 end;
 
 procedure TdmDevolucionesCompra.ValidarAlmacenSalida;
@@ -279,6 +286,8 @@ begin
     AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
       'DEVC');
   end;
+  RefrescarAlmacenes(
+    DataSet.FieldByName('CODIGO_EMP_DEVC').AsString);
 end;
 
 procedure TdmDevolucionesCompra.unqryTablaGBeforePost(DataSet: TDataSet);
