@@ -4,6 +4,7 @@ uses
 //  {$IFDEF DEBUG}
 //  FastMM4,
 //  {$ENDIF}
+  Winapi.Windows,
   Forms,
   MidasLib,
   {$IF CompilerVersion >= 37.0}
@@ -418,4 +419,12 @@ begin
     inLibGlobalVar.oCerrandoApp := True;
     TVerifactuCola.DetenerHilo;
   end;
+  // Salida garantizada del proceso. Una tarea huerfana bloqueada contra
+  // MySQL deja colgada la finalizacion de System.Threading (espera a sus
+  // workers) y el exe se queda en memoria sin ventanas (visto 14/07/26).
+  // Se cierra el log de forma explicita (su finalization ya no correra)
+  // y se termina el proceso sin ejecutar las finalizaciones restantes.
+  inLibLog.Log.LogInfo('Salida del proceso');
+  FreeAndNil(inLibLog.Log);
+  ExitProcess(0);
 end.
