@@ -372,11 +372,14 @@ end;
 
 procedure TfrmConsultaOpe.btnAnularVerifactuClick(Sender: TObject);
 var
-  Qry:     TUniQuery;
-  sSerie:  string;
-  sNumero: string;
+  Qry:                  TUniQuery;
+  sSerie:               string;
+  sNumero:              string;
+  bBorrarMovimientos:   Boolean;
+  EsFacturaSimplificada: Boolean;
 begin
   //Anulación Verifactu (RegistroAnulacion) de la factura del ticket
+  bBorrarMovimientos := True;
   if not FacturaSeleccionada(sSerie, sNumero) then
     ShowMessage('La operación seleccionada no tiene borrador.')
   else
@@ -385,7 +388,7 @@ begin
     try
       Qry.Connection := inLibGlobalVar.oConn;
       Qry.SQL.Text :=
-        ' SELECT ESCONSOLIDADA_FAC FROM fza_facturas ' +
+        ' SELECT ESCONSOLIDADA_FAC, TIPO_FAC FROM fza_facturas ' +
         ' WHERE SERIE_FAC  = :SERIE ' +
         '   AND NUMERO_FAC = :NUMERO';
       Qry.ParamByName('SERIE').AsString  := sSerie;
@@ -398,12 +401,23 @@ begin
                          '\' + sNumero + '?', mtConfirmation,
                          [mbYes, mbNo], 0) = mrYes then
       begin
+        EsFacturaSimplificada := SameText(
+          Qry.FieldByName('TIPO_FAC').AsString, 'SIMPLIFICADA');
+        if EsFacturaSimplificada then
+        begin
+          bBorrarMovimientos := MessageDlg(
+            '¿Desea borrar también los movimientos de almacén asociados ' +
+            'al ticket ' + sSerie + '\' + sNumero + '?' + sLineBreak +
+            'Se revertirá el stock de sus líneas.', mtConfirmation,
+            [mbYes, mbNo], 0) = mrYes;
+        end;
         Qry.Close;
         case ModoVerifactu of
           mvVerifactu:
             begin
               TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero,
-                                            'ANULACION');
+                                            'ANULACION',
+                                            bBorrarMovimientos);
               RegistrarEventoVerifactu(inLibGlobalVar.oConn,
                 cEventoVerifactuEncolado,
                 'Anulación encolada desde Buscar operaciones', '',
@@ -415,13 +429,15 @@ begin
             begin
               TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, sSerie,
                                                          sNumero,
-                                                         'ANULACION');
+                                                         'ANULACION',
+                                                         bBorrarMovimientos);
               ShowMessage('Anulación registrada y firmada en NO VERI*FACTU.');
             end;
         else
           begin
             TVerifactuCola.MarcarFacturaSinVerifactu(Qry, sSerie, sNumero,
-                                                     'ANULACION');
+                                                     'ANULACION',
+                                                     bBorrarMovimientos);
             ShowMessage('Anulación registrada en modo SIN VERIFACTU.');
           end;
         end;

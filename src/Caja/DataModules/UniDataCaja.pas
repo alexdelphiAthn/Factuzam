@@ -175,7 +175,8 @@ type
                           const ANumOperacion: string = '';
                           const ACodCliente:string = '';
                           const ACodArticulo:string='';
-                          AFechaMovimiento: TDateTime = 0);
+                          AFechaMovimiento: TDateTime = 0;
+                          const ANumeroMovimiento: string = '');
     procedure InsertarLineaFactura(
                         QryTrx:              TUniQuery;
                         // — identificación —
@@ -914,13 +915,16 @@ procedure TdmCajaOpe.InsertarMovimientoAlmacen(
                           const ANumOperacion: string = '';
                           const ACodCliente:string = '';
                           const ACodArticulo:string='';
-                          AFechaMovimiento: TDateTime = 0);
+                          AFechaMovimiento: TDateTime = 0;
+                          const ANumeroMovimiento: string = '');
 var
   uspMov: TUniStoredProc;
   QryFecha: TUniQuery;
   sNumeroMov: string;
 begin
-  sNumeroMov := ObtenerSiguienteContador('MV');
+  sNumeroMov := Trim(ANumeroMovimiento);
+  if sNumeroMov = '' then
+    sNumeroMov := ObtenerSiguienteContador('MV');
   uspMov := TUniStoredProc.Create(nil);
   try
     uspMov.Connection := QryTrx.Connection;
@@ -1517,7 +1521,8 @@ begin
             QryTrx, 'VE', SerieGenerada, NumFactura, Lin.Linea,
             AEmpresa, AlmacenOrigenSalida, ACaja, '', TipoMov, Lin.Sku,
             Lin.Cantidad, 0, UsuarioCaja, AAlmacen, NumOperacionVE,
-            Cab.CodigoCliente, Lin.Articulo, FechaOperacion);
+            Cab.CodigoCliente, Lin.Articulo, FechaOperacion,
+            NumMovGenerado);
         cdsLineas.Next;
       end;
     finally
