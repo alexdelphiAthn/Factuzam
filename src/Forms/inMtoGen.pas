@@ -1520,14 +1520,15 @@ begin
 end;
 
 destructor TfrmMtoGen.Destroy;
+var
+  bTareasVivas: Boolean;
 begin
   if Assigned(dsTablaG) then
     dsTablaG.DataSet := nil;
   // ANTES de liberar nada relacionado con BBDD (data module, FConn),
   // esperar a que terminen las tareas en background. Si quedaran tareas
   // vivas accederian a TUniQuery / TUniConnection ya liberadas → AV.
-  // Timeout 5s: si MySQL no responde en 5s preferimos asumir tarea muerta
-  // antes que dejar la app colgada cerrando un tab.
+  bTareasVivas := False;
   if Assigned(FTareasActivas) then
   begin
     try
@@ -1536,24 +1537,48 @@ begin
         if (tdmDataModule <> nil) and (tdmDataModule is TdmBase) then
           TdmBase(tdmDataModule).CancelarEjecucionActiva;
         if inLibGlobalVar.oCerrandoApp then
-          // Apagado de la app: primero pedimos BreakExec a las queries/SPs
-          // y despues esperamos a que las tareas terminen del todo. Si
-          // liberaramos FConn / el data module antes de que salgan, el
-          // thread quedaria vivo usando objetos destruidos.
-          TTask.WaitForAll(FTareasActivas.ToArray)
+          // Apagado de la app: BreakExec ya pedido y espera ACOTADA. Si
+          // una consulta sigue atascada contra MySQL preferimos fugar
+          // sus objetos (abajo) a dejar la app congelada cerrando o el
+          // proceso en memoria (cuelgue visto en produccion 14/07/26:
+          // vi_paises bloqueada 27,5 s al cerrar la pestaña).
+          bTareasVivas :=
+            not TTask.WaitForAll(FTareasActivas.ToArray, 15000)
         else
-          // Cierre de una sola pestaña: si MySQL no responde en 5s asumimos
-          // tarea muerta antes que dejar la app colgada cerrando un tab.
-          TTask.WaitForAll(FTareasActivas.ToArray, 5000);
+          // Cierre de una sola pestaña: si MySQL no responde en 5s
+          // asumimos tarea atascada antes que dejar la app colgada
+          // cerrando un tab.
+          bTareasVivas :=
+            not TTask.WaitForAll(FTareasActivas.ToArray, 5000);
       end;
     except
       // WaitForAll puede lanzar si alguna tarea fallo — lo ignoramos
-      // porque solo queremos drenar, no propagar.
+      // porque solo queremos drenar, no propagar. Una tarea que lanzo
+      // ya termino: no cuenta como viva.
     end;
     FreeAndNil(FTareasActivas);
   end;
   if (oPerfilDic <> nil) then
     FreeAndNil(oPerfilDic);
+  if bTareasVivas then
+  begin
+    // Tarea de fondo aun bloqueada (p.ej. consulta MySQL atascada): la
+    // tarea sigue usando el data module y FConn, y liberarlos provoca
+    // AVs y cuelgues del cierre. Se sueltan del Owner y NO se liberan:
+    // fuga controlada que el SO recupera al terminar el proceso.
+    inliblog.Log.LogWarning('Tareas de fondo aun vivas al destruir "' +
+                            Self.Name + '": se dejan sin liberar su ' +
+                            'data module y su conexion.');
+    if (tdmDataModule <> nil) and (tdmDataModule.Owner = Self) then
+      RemoveComponent(tdmDataModule);
+    tdmDataModule := nil;
+    if Assigned(FConn) then
+    begin
+      if FConn.Owner = Self then
+        RemoveComponent(FConn);
+      FConn := nil;
+    end;
+  end;
   if (tdmDataModule <> nil) then
     FreeAndNil(tdmDataModule);
   // Liberar la conexion propia DESPUES del data module: las queries del
