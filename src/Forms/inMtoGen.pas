@@ -2736,58 +2736,84 @@ function TfrmMtoGen.ExtraerBusquedaGlobalDelFiltro: string;
       Result := Copy(sValor, 2, Length(sValor) - 2);
     end;
   end;
+  function TextoBusquedaLista(
+    ALista: TcxFilterCriteriaItemList): string;
+  var
+    i: Integer;
+    bValido: Boolean;
+    oItemBase: TcxCustomFilterCriteriaItem;
+    oItem: TcxFilterCriteriaItem;
+    sTexto: string;
+    sTextoItem: string;
+  begin
+    Result := '';
+    sTexto := '';
+    bValido := Assigned(ALista) and
+               (ALista.BoolOperatorKind = fboOr) and
+               (ALista.Count > 0);
+    i := 0;
+    oItem := nil;
+    while bValido and (i < ALista.Count) do
+    begin
+      oItemBase := ALista.Items[i];
+      bValido := (not oItemBase.IsItemList) and
+                 (oItemBase is TcxFilterCriteriaItem);
+      if bValido then
+      begin
+        oItem := TcxFilterCriteriaItem(oItemBase);
+        bValido := oItem.OperatorKind = foLike;
+      end;
+      if bValido then
+      begin
+        sTextoItem := TextoDesdeLike(VarToStr(oItem.Value));
+        if sTextoItem = '' then
+        begin
+          sTextoItem := TextoDesdeLike(oItem.DisplayValue);
+        end;
+        bValido := sTextoItem <> '';
+      end;
+      if bValido then
+      begin
+        if sTexto = '' then
+        begin
+          sTexto := sTextoItem;
+        end
+        else
+        begin
+          bValido := SameText(sTexto, sTextoItem);
+        end;
+      end;
+      Inc(i);
+    end;
+    if bValido then
+    begin
+      Result := sTexto;
+    end;
+  end;
 var
   i: Integer;
-  bValido: Boolean;
   oItemBase: TcxCustomFilterCriteriaItem;
-  oItem: TcxFilterCriteriaItem;
-  sTexto: string;
-  sTextoItem: string;
+  oRaiz: TcxFilterCriteriaItemList;
 begin
   Result := '';
-  sTexto := '';
-  bValido :=
-    cxGrdDBTabPrin.DataController.Filter.Root.BoolOperatorKind = fboOr;
-  bValido := bValido and
-    (cxGrdDBTabPrin.DataController.Filter.Root.Count > 0);
-  i := 0;
-  oItem := nil;
-  while bValido and
-        (i < cxGrdDBTabPrin.DataController.Filter.Root.Count) do
+  oRaiz := cxGrdDBTabPrin.DataController.Filter.Root;
+  if oRaiz.BoolOperatorKind = fboOr then
   begin
-    oItemBase := cxGrdDBTabPrin.DataController.Filter.Root.Items[i];
-    bValido := (not oItemBase.IsItemList) and
-               (oItemBase is TcxFilterCriteriaItem);
-    if bValido then
-    begin
-      oItem := TcxFilterCriteriaItem(oItemBase);
-      bValido := oItem.OperatorKind = foLike;
-    end;
-    if bValido then
-    begin
-      sTextoItem := TextoDesdeLike(VarToStr(oItem.Value));
-      if sTextoItem = '' then
-      begin
-        sTextoItem := TextoDesdeLike(oItem.DisplayValue);
-      end;
-      bValido := sTextoItem <> '';
-    end;
-    if bValido then
-    begin
-      if sTexto = '' then
-      begin
-        sTexto := sTextoItem;
-      end
-      else
-      begin
-        bValido := SameText(sTexto, sTextoItem);
-      end;
-    end;
-    Inc(i);
+    Result := TextoBusquedaLista(oRaiz);
   end;
-  if bValido then
+  if (Result = '') and (oRaiz.BoolOperatorKind = fboAnd) then
   begin
-    Result := sTexto;
+    i := 0;
+    while (Result = '') and (i < oRaiz.Count) do
+    begin
+      oItemBase := oRaiz.Items[i];
+      if oItemBase.IsItemList then
+      begin
+        Result := TextoBusquedaLista(
+          TcxFilterCriteriaItemList(oItemBase));
+      end;
+      Inc(i);
+    end;
   end;
 end;
 
