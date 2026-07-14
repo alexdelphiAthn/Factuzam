@@ -960,7 +960,10 @@ begin
     end;
   end
   else
+  begin
     AdbTvGen.DataController.Filter.Root.Clear;
+    AdbTvGen.DataController.Filter.Root.BoolOperatorKind := fboAnd;
+  end;
 end;
 
 procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
@@ -975,6 +978,7 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
     if AsDatoBusq = '' then
     begin
       AView.DataController.Filter.Root.Clear;
+      AView.DataController.Filter.Root.BoolOperatorKind := fboAnd;
       AView.DataController.Filter.Active := False;
       Exit;
     end;
