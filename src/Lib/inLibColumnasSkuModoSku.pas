@@ -483,13 +483,28 @@ end;
 // Al cerrar el desplegable con seleccion: resuelve el SKU elegido de forma
 // diferida (timer 1ms) para no tocar el cds mientras el editor se cierra.
 procedure TModoEntradaSku.ComboBusqCloseUp(Sender: TObject);
+var
+  Edit: TcxCustomEdit;
+  sEntrada: string;
 begin
   LimpiarFiltroDesplegable;
   // NO se restaura aqui el EnterAsTab: el foco sigue en la celda de
   // SKU y el siguiente Enter debe llegar al grid (mismo arreglo que
   // inLibGridArticulos). Restauran EditorSalir / FocoItemCambiado.
   if Sender is TcxCustomEdit then
-    DispararResolucion(VarToStr(TcxCustomEdit(Sender).EditValue));
+  begin
+    Edit := TcxCustomEdit(Sender);
+    sEntrada := Trim(VarToStr(Edit.EditValue));
+    // Codigo tecleado SIN coincidencias en el desplegable: EditValue
+    // queda vacio (el lookup solo lo rellena al elegir de la lista) y
+    // la entrada vive en el texto libre del combo. Sin este rescate,
+    // cerrar el desplegable vacio descartaba el codigo en silencio y
+    // los articulos fuera de catalogo no se podian teclear.
+    if (sEntrada = '') and (Edit is TcxCustomTextEdit) and
+       (FBusqQry <> nil) and FBusqQry.Active and FBusqQry.IsEmpty then
+      sEntrada := Trim(TcxCustomTextEdit(Edit).Text);
+    DispararResolucion(sEntrada);
+  end;
 end;
 
 // OnChange del editor de la celda de SKU: rearma el debounce que abrira el
@@ -596,7 +611,8 @@ begin
     FTimerBusq.Enabled := False;
     FTimerBusq.Enabled := True;
   end
-  else if (AItem = FColSku) and (Key = VK_RETURN) then
+  else if (AItem = FColSku) and
+          ((Key = VK_RETURN) or (Key = VK_TAB)) then
   begin
     // Si el desplegable esta abierto lo cerramos (selecciona la fila)
     // para que el Enter no quede consumido en el dropdown.
@@ -609,7 +625,10 @@ begin
       sEntrada := Trim(VarToStr(AEdit.EditValue));
     if sEntrada <> '' then
     begin
-      Key := 0;
+      // El Enter se consume (la resolucion recoloca el foco); el Tab
+      // sigue su curso y avanza de celda con la entrada ya en curso.
+      if Key = VK_RETURN then
+        Key := 0;
       DispararResolucion(sEntrada);
     end;
   end;
