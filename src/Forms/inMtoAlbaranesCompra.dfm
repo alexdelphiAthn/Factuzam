@@ -209,14 +209,20 @@
                 TabOrder = 6
                 Transparent = True
               end
-              object txtTEMPORADA_ALBC: TcxDBTextEdit
+              object cbbTemporadaAlbc: TcxDBLookupComboBox
                 Left = 320
                 Top = 32
-                DataBinding.DataField = 'TEMPORADA_ALBC'
+                DataBinding.DataField = 'ID_PV_TEMPORADA_ALBC'
                 DataBinding.DataSource = dsTablaG
-                Properties.ReadOnly = True
+                Properties.KeyFieldNames = 'ID_PV_ARTPROP'
+                Properties.ListColumns = <
+                  item
+                    Caption = 'Temporada'
+                    FieldName = 'PV'
+                  end>
+                Properties.ListOptions.ShowHeader = False
                 TabOrder = 7
-                Width = 140
+                Width = 180
               end
               object lblPedidoOrigen: TcxLabel
                 Left = 440

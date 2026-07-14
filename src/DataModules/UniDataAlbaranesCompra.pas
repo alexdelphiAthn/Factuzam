@@ -46,6 +46,8 @@ type
     // Definicion de atributos del articulo padre (para columnas
     // dinamicas ATTR1..ATTR5 en modo "atributo por columna").
     unqryDefArticuloAlbc:       TUniQuery;
+    unqryTemporadasAlbc:        TUniQuery;
+    dsTemporadasAlbc:           TDataSource;
     // Datasets para impresion del albaran via FastReport. Mismo patron
     // que TdmComprasSesiones (unqry*Print -> ds*Print -> fxds*). El
     // .fr3 embebido en el modal inMtoModalImpAlbCompra.dfm los
@@ -149,7 +151,7 @@ uses
 
 procedure TdmAlbaranesCompra.ConfigurarSqlCabecera;
 const
-  CAMPOS_ALBC: array[0..78] of string = (
+  CAMPOS_ALBC: array[0..79] of string = (
     'NUMERO_ALBC',
     'SERIE_ALBC',
     'FECHA_ALBC',
@@ -219,6 +221,7 @@ const
     'TOTAL_RETENCION_ALBC',
     'TOTAL_LIQUIDO_ALBC',
     'FORMA_PAGO_ALBC',
+    'ID_PV_TEMPORADA_ALBC',
     'CONTADOR_LINEAS_ALBC',
     'COMENTARIOS_ALBC',
     'OBSERVACIONES_ALBC',
@@ -310,6 +313,8 @@ begin
   unqryAlmacenesAlbc.Connection         := inLibGlobalVar.oConn;
   unstrdprcGetContadorAlbc.Connection   := inLibGlobalVar.oConn;
   unqryDefArticuloAlbc.Connection       := inLibGlobalVar.oConn;
+  unqryTemporadasAlbc.Connection        := inLibGlobalVar.oConn;
+  unqryTemporadasAlbc.Open;
   // Master-detail server-side: el WHERE del SQL toma los valores de
   // dsTablaG (master), evitando descargar fza_albaranes_compra_lineas
   // entera y filtrar en cliente.

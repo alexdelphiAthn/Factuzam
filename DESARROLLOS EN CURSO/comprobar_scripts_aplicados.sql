@@ -602,6 +602,22 @@ SELECT t.orden AS orden_aplicacion,
                          AND TABLE_NAME = 'vi_albaranes_compra'
                          AND COLUMN_NAME = 'FECHA_TOPE_RECEPCION_ALBC')
     UNION ALL
+    SELECT 425, 'albaranes_compra_temporada.sql',
+           'fza_albaranes_compra.ID_PV_TEMPORADA_ALBC + vista',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_albaranes_compra'
+                     AND COLUMN_NAME = 'ID_PV_TEMPORADA_ALBC')
+           AND EXISTS(SELECT 1 FROM information_schema.STATISTICS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_albaranes_compra'
+                         AND INDEX_NAME = 'IDX_ALBC_TEMPORADA')
+           AND EXISTS(SELECT 1 FROM information_schema.VIEWS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_albaranes_compra'
+                         AND VIEW_DEFINITION LIKE
+                             '%ID_PV_TEMPORADA_ALBC%')
+    UNION ALL
     SELECT 430, 'quitar_esdefault_tar.sql',
            'fza_tarifas y vistas sin ESDEFAULT_TAR',
            NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS
