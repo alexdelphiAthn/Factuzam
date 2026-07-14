@@ -128,6 +128,10 @@ private
     procedure GuardarParametrosEDocFactura(ADataSet: TDataSet);
     procedure GuardarOpcionMovimientosFactura(ADataSet: TDataSet);
     function FacturaPermiteRecalcularLineas: Boolean;
+    // True si el borrador genera movimientos de stock al consolidar:
+    // SIMPLIFICADA siempre; NORMAL solo con el check ESMUEVE_STOCK_FAC.
+    // Si no los genera, el almacen de la factura es OPCIONAL.
+    function FacturaGeneraMovimientos: Boolean;
     // True si facturas_columnas_sku.sql esta aplicado (ATTR1..5 +
     // NUM_ATRIBUTOS en fza_facturas_lineas). Sin la migracion, los
     // SQL de lineas se quedan como en el dfm: incluir los parametros
@@ -1368,8 +1372,13 @@ begin
     unqryAlmacenesFac.ParamByName('EMPRESA').AsString := sEmpresa;
     unqryAlmacenesFac.Open;
   end;
+  // El almacen solo es obligatorio si el borrador genera movimientos de
+  // stock: AjustarEmpresaAlmacenDataSet lanza excepcion si la empresa no
+  // tiene ningun almacen activo, y una instalacion sin almacenes (solo
+  // servicios) debe poder facturar sin el.
   if unqryTablaG.Active and
-     (unqryTablaG.State in [dsInsert, dsEdit]) then
+     (unqryTablaG.State in [dsInsert, dsEdit]) and
+     FacturaGeneraMovimientos then
     AjustarEmpresaAlmacenDataSet(unqryTablaG.Connection, unqryTablaG,
       'CODIGO_EMP_FAC', 'CODIGO_ALM_FAC');
 end;
@@ -2063,9 +2072,29 @@ begin
   end;
 end;
 
+function TdmFacturas.FacturaGeneraMovimientos: Boolean;
+var
+  sTipo: string;
+begin
+  // Las SIMPLIFICADAS (tickets directos) siempre mueven stock; las
+  // NORMALES solo si el usuario marco el check ESMUEVE_STOCK_FAC
+  // (venta directa al mayor sin albaran).
+  Result := False;
+  if unqryTablaG.Active and
+     (unqryTablaG.FindField('TIPO_FAC') <> nil) then
+  begin
+    sTipo := unqryTablaG.FieldByName('TIPO_FAC').AsString;
+    if SameText(sTipo, 'SIMPLIFICADA') then
+      Result := True
+    else if SameText(sTipo, 'NORMAL') and
+            (unqryTablaG.FindField('ESMUEVE_STOCK_FAC') <> nil) then
+      Result := SameText(
+        unqryTablaG.FieldByName('ESMUEVE_STOCK_FAC').AsString, 'S');
+  end;
+end;
+
 procedure TdmFacturas.unqryFacAfterPost(DataSet: TDataSet);
 var
-  sTipo, sMueveStock: string;
   bGeneraMovs: Boolean;
 begin
   inherited;
@@ -2083,14 +2112,7 @@ begin
      (unqryTablaG.FindField('TIPO_FAC') = nil) or
      (Trim(unqryTablaG.FieldByName('NUMERO_FAC').AsString) = '') then
     Exit;
-  sTipo := unqryTablaG.FieldByName('TIPO_FAC').AsString;
-  bGeneraMovs := (sTipo = 'SIMPLIFICADA');
-  if (not bGeneraMovs) and (sTipo = 'NORMAL') and
-     (unqryTablaG.FindField('ESMUEVE_STOCK_FAC') <> nil) then
-  begin
-    sMueveStock := unqryTablaG.FieldByName('ESMUEVE_STOCK_FAC').AsString;
-    bGeneraMovs := SameText(sMueveStock, 'S');
-  end;
+  bGeneraMovs := FacturaGeneraMovimientos;
   if bGeneraMovs then
     GenerarMovimientosSalidaFactura;
 end;
@@ -2336,6 +2358,12 @@ begin
     end;
     (GetOwnerForm<TfrmMtoFacturasBase>).sbNuevaFacturaClick(Self.Owner);
     RefrescarAlmacenes(FieldByName('CODIGO_EMP_FAC').AsString);
+    // Empresa sin almacenes activos (instalacion de solo servicios): la
+    // factura no puede mover stock y el check nace desmarcado, dejando
+    // el almacen como opcional.
+    if (FindField('ESMUEVE_STOCK_FAC') <> nil) and
+       unqryAlmacenesFac.Active and unqryAlmacenesFac.IsEmpty then
+      FieldByName('ESMUEVE_STOCK_FAC').AsString := 'N';
   end;
 end;
 
