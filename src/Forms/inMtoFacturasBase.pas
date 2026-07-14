@@ -654,6 +654,10 @@ type
     // (tarifa del cliente, IVA, dtos, precios y recalculo de totales).
     // Es el nucleo compartido de ConsolidarSkuLinea y del OnResuelto.
     procedure AplicarArticuloFactura(const AEntrada: string);
+    // Linea libre en venta mayor: codigo fuera de catalogo aceptado por
+    // el modo (AceptarNoCatalogo). Sin SKU (no mueve stock); completa
+    // la fiscalidad por defecto y deja descripcion/precio al usuario.
+    procedure AplicarLineaNoCatalogo(const ACodArt: string);
     // Porcentaje de IVA de la cabecera para un tipo (N/R/S/E).
     function  PorcentajeIvaFactura(const ATipoIva: string): Double;
     // Contrato ObtenerPrecioSku del modo tallas: PVP C/IVA que la
@@ -3514,6 +3518,9 @@ begin
         Cfg.AlmacenStock := Trim(dmmFacturas.unqryTablaG.
           FieldByName('CODIGO_ALM_FAC').AsString);
       Cfg.Distribuido := False;
+      // La venta mayor factura tambien articulos fuera de catalogo:
+      // el modo acepta el codigo tecleado como linea libre (sin SKU).
+      Cfg.AceptarNoCatalogo := EsVentaMayorNormal;
       Cfg.Campos.CodigoArt := 'CODIGO_ART_FACLIN';
       Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_FACLIN';
       Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_FACLIN';
@@ -3897,7 +3904,11 @@ begin
   // dtos, precios y totales) se reaprovecha tal cual:
   // AplicarArticuloFactura acepta articulo o SKU.
   if ACompleto and (ASku <> '') then
-    AplicarArticuloFactura(ASku);
+    AplicarArticuloFactura(ASku)
+  else if ACompleto and (ACodArt <> '') then
+    // ASku vacio con resolucion completa = codigo fuera de catalogo
+    // aceptado por el modo (AceptarNoCatalogo): linea libre.
+    AplicarLineaNoCatalogo(ACodArt);
 end;
 
 procedure TfrmMtoFacturasBase.AplicarArticuloFactura(
@@ -4009,6 +4020,63 @@ begin
   finally
     FreeAndNil(Resolver);
     FreeAndNil(Validador);
+    FConsolidandoSku := False;
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.AplicarLineaNoCatalogo(const ACodArt: string);
+var
+  Lin: TDataSet;
+  CodTarifa: string;
+begin
+  if FConsolidandoSku or (Trim(ACodArt) = '') or
+     (not Assigned(dmmFacturas)) then
+    Exit;
+  Lin := dmmFacturas.unqryLinFac;
+  if (Lin = nil) or (not Lin.Active) then
+    Exit;
+  if not (Lin.State in [dsInsert, dsEdit]) then
+    if Lin.CanModify then
+      Lin.Edit;
+  if not (Lin.State in [dsInsert, dsEdit]) then
+    Exit;
+  FConsolidandoSku := True;
+  try
+    CodTarifa := dmmFacturas.unqryTablaG.FindField(
+                   'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+    // Linea libre: el codigo tecleado se factura tal cual, sin SKU (no
+    // mueve stock) y sin datos de catalogo. El usuario teclea la
+    // descripcion, la cantidad y el precio.
+    Lin.FindField('CODIGO_ART_FACLIN').AsString := Trim(ACodArt);
+    if Assigned(Lin.FindField('CODIGO_UNIDAD_FACLIN')) then
+      Lin.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := '';
+    if Assigned(Lin.FindField('DESCRIPCION_VARIACION_FACLIN')) then
+      Lin.FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString := '';
+    // La descripcion es obligatoria (el BeforePost de la linea descarta
+    // las lineas sin ella): se precarga con el codigo y queda editable.
+    if Trim(Lin.FindField('DESCRIPCION_ARTICULO_FACLIN').AsString) = '' then
+      Lin.FindField('DESCRIPCION_ARTICULO_FACLIN').AsString :=
+        Trim(ACodArt);
+    // Fiscalidad por defecto: IVA normal si la linea no trae tipo.
+    if Trim(Lin.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString) = '' then
+      Lin.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString := 'N';
+    Lin.FindField('CODIGO_TAR_FACLIN').AsString := CodTarifa;
+    Lin.FindField('ESIMP_INCL_TARIFA_FACLIN').AsString :=
+      dmmFacturas.unqryTablaG.FindField(
+        'ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString;
+    Lin.FindField('PORCENTAJE_DTO_FACLIN').AsFloat := 0;
+    Lin.FindField('PRECIO_DTO_FACLIN').AsFloat := 0;
+    // Sin tarifa aplicable: precios a 0 hasta que el usuario los ponga.
+    Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat := 0;
+    Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat := 0;
+    Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat := 0;
+    if Lin.FindField('CANTIDAD_FACLIN').AsFloat = 0 then
+      Lin.FindField('CANTIDAD_FACLIN').AsFloat := 1;
+    // Recalculo de la linea y de los totales fiscales de la cabecera.
+    ActualizarLineaFacturaGen(Lin, dmmFacturas.unqryTablaG,
+      'PRECIO_SALIDA_FACLIN',
+      Lin.FieldByName('PRECIO_SALIDA_FACLIN').Value);
+  finally
     FConsolidandoSku := False;
   end;
 end;

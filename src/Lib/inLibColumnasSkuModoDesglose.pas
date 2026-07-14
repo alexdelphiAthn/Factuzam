@@ -76,6 +76,7 @@ begin
                                        AConfig.Cds, Campos);
   FGrid.OnResuelto := GridResuelto;
   FGrid.AlmacenStock := AConfig.AlmacenStock;
+  FGrid.AceptarNoCatalogo := AConfig.AceptarNoCatalogo;
 end;
 
 destructor TModoEntradaDesglose.Destroy;

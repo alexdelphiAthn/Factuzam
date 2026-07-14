@@ -115,6 +115,11 @@ type
     FTimerBusq: TTimer;
     // Ultimo texto consultado en el desplegable (evita reabrir igual).
     FUltimoFiltro: string;
+    // El documento admite lineas de articulos fuera del catalogo: una
+    // entrada no encontrada se acepta como codigo libre (sin SKU, sin
+    // atributos, no mueve stock) en vez de descartarse. Lo activan las
+    // facturas de venta mayor; caja y traspasos lo dejan a False.
+    FAceptarNoCatalogo: Boolean;
     // OnExit de los editores in-place: reenvia a FOnSalirEdicion.
     procedure EditorSalir(Sender: TObject);
     // Restaura el EnterAsTab al SALIR de las columnas de la
@@ -216,6 +221,9 @@ type
     // Almacen para la columna de stock del buscador de SKU (origen). Al
     // cambiarlo se recarga el desplegable de busqueda incremental.
     property AlmacenStock: string read FAlmacenStock write SetAlmacenStock;
+    // Admitir codigos fuera de catalogo como linea libre (ver campo).
+    property AceptarNoCatalogo: Boolean read FAceptarNoCatalogo
+                                        write FAceptarNoCatalogo;
   end;
 
 implementation
@@ -1336,7 +1344,24 @@ begin
     FreeAndNil(Val);
   end;
   if not R.Encontrado then
+  begin
+    // Codigo fuera de catalogo: si el documento lo admite, se acepta
+    // como linea libre (sin SKU ni atributos: no mueve stock) y el host
+    // completa fiscalidad y precios en su OnResuelto.
+    if FAceptarNoCatalogo then
+    begin
+      if not CdsEditando then
+        FCds.Edit;
+      FCds.FieldByName(FCampos.CodigoArt).AsString := sEntrada;
+      FCds.FieldByName(FCampos.CodigoUnidad).AsString := '';
+      FCds.FieldByName(FCampos.Descripcion).AsString := '';
+      ActualizarColumnasAtributo(sEntrada);
+      if Assigned(FOnResuelto) then
+        FOnResuelto(sEntrada, '', '', True);
+      Result := True;
+    end;
     Exit;
+  end;
   sCodArt := R.CodigoArticulo;
   sSku := R.CodigoSku;
   sDesc := R.DescripcionArticulo;
