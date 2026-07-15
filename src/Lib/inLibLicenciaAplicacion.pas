@@ -25,7 +25,6 @@ type
                                elaSinNifEmpresa);
 
 const
-  CONMUTADOR_REGISTRO_LICENCIA = 'SETMAJORLICENCSE';
   LIMITE_FACTURAS_DEMO_DIA     = 10;
 
 function RutaIniLicenciaAplicacion: string;
@@ -57,8 +56,7 @@ const
   SECCION_LICENCIA       = 'License';
   CLAVE_CODIGO           = 'Code';
   HASH_CONMUTADOR_REG    =
-    'C4FC41F78B570CC40A3B12BDAFB6432AB782046241192013742C13EA6CB73306';
-  CONMUTADOR_REGISTRO_LICENCIA_OK = 'SETMAJORLICENSE';
+    '636846B83B12EC337655B2DBB30A4FDD0A38D7FF681C3A102C513614951F05F9';
 
 function ParametroIniAplicacion: string;
 begin
@@ -88,9 +86,7 @@ begin
     if sParametro <> '' then
     begin
       sHash := THashSHA2.GetHashString(sParametro);
-      Result := SameText(sParametro, CONMUTADOR_REGISTRO_LICENCIA) or
-                SameText(sParametro, CONMUTADOR_REGISTRO_LICENCIA_OK) or
-                SameText(sHash, HASH_CONMUTADOR_REG);
+      Result := SameText(sHash, HASH_CONMUTADOR_REG);
     end;
     Inc(i);
   end;
