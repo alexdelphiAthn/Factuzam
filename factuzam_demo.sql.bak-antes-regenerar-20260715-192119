@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 15/07/2026 19:21:20
+-- Backup generado: 15/07/2026 09:51:39
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -31276,4 +31276,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 15/07/2026 19:21:20
+-- Backup completado: 15/07/2026 09:51:39

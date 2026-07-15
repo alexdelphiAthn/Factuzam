@@ -40,3 +40,45 @@ Tablas sin INSERT en demo: 35
 - inv_eventos
 - inv_recuentos
 Validacion: DDL de tablas igual a original; INSERT del demo conservado por tabla; vistas/procedimientos desde original.
+
+Regeneracion de factuzam_demo.sql
+Fecha: 2026-07-15 19:21:21
+Backup previo demo: factuzam_demo.sql.bak-antes-regenerar-20260715-192119
+Tablas estructurales: 143
+Tablas sin INSERT en demo: 35
+- fzaest_estadisticas_dia
+- fza_albaranes_celdas
+- fza_albaranes_compra_celdas
+- fza_atributos_valores_info
+- fza_compras_plantillas
+- fza_compras_plantillas_kits
+- fza_compras_plantillas_kits_det
+- fza_compras_plantillas_props
+- fza_compras_sesiones_fotos
+- fza_compras_sesiones_kits
+- fza_compras_sesiones_kits_det
+- fza_compras_sesiones_lineas_filas
+- fza_compras_sesiones_lineas_filas_atr
+- fza_compras_sesiones_lineas_props
+- fza_compras_sesiones_lineas_skus_precios
+- fza_compras_sesiones_props
+- fza_devoluciones_compra_celdas
+- fza_documentos_trabajo_celdas
+- fza_facturas_compra_celdas
+- fza_familias_atributos_defecto
+- fza_familias_claves_info_defecto
+- fza_filtros_guardados_compartidos
+- fza_informes_guias
+- fza_inventarios_celdas
+- fza_inventarios_recuentos
+- fza_pedidos_celdas
+- fza_pedidos_mensajes
+- fza_proveedores_familias
+- fza_proveedores_familias_conjuntos
+- fza_prueba_skucel
+- inv_almacenes
+- inv_catalogo
+- inv_dispositivos
+- inv_eventos
+- inv_recuentos
+Validacion: DDL de tablas igual a original; INSERT del demo conservado por tabla; vistas/procedimientos desde original.
