@@ -131,6 +131,10 @@ Flujo típico para empezar una migración limpia:
 6. Marca las migraciones y dale a "Ejecutar".
 ```
 
+Al terminar todos los dominios, el migrador ejecuta `ANALYZE TABLE` sobre
+todas las tablas base `fza_*`. Esto recalcula las estadísticas del optimizador
+después de los `INSERT` masivos y evita planes de consulta degradados.
+
 Si se añade una nueva tabla seed al sistema, registrarla en
 `inLibMigDumpEsqueleto.pas → TablasSistema` para que el esqueleto
 también la incluya con datos.

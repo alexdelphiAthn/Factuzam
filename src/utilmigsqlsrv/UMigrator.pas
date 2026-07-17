@@ -1104,6 +1104,7 @@ begin
       LocalSrvAjuste:              TUniConnection;
       LocalDstAjuste:              TUniConnection;
       LocalEngAjuste:              TMigEngine;
+      iTablasAnalizadas:           Integer;
     begin
       iTotL := 0; iTotI := 0; iTotS := 0; iTotE := 0;
       iMaxHilos := task.Param['MaxHilos'].AsInteger;
@@ -1332,6 +1333,23 @@ begin
           begin
             TInterlocked.Increment(iTotE);
             FEngine.Log('FALLO al ajustar contadores: ' + E.Message);
+          end;
+        end;
+        if Assigned(LocalEngAjuste) then
+        begin
+          try
+            FEngine.Log(
+              '=== Actualizacion de estadisticas de tablas importadas ===');
+            iTablasAnalizadas := LocalEngAjuste.AnalizarTablasDestino;
+            FEngine.Log(Format(
+              'ANALYZE TABLE completado: %d tablas actualizadas.',
+              [iTablasAnalizadas]));
+          except
+            on E: Exception do
+            begin
+              TInterlocked.Increment(iTotE);
+              FEngine.Log('FALLO al actualizar estadisticas: ' + E.Message);
+            end;
           end;
         end;
         if Assigned(LocalEngAjuste) then

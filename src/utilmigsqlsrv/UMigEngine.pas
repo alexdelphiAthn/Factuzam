@@ -110,6 +110,10 @@ type
     procedure SetTotal(iTotal: Integer);
     procedure IncRow(iCount: Integer = 1);
 
+    // Recalcula las estadisticas del optimizador en todas las tablas base
+    // fza_* despues de una carga masiva. Devuelve el numero de tablas.
+    function AnalizarTablasDestino: Integer;
+
     // Helper: cuenta filas que devolveria un SELECT, ejecutandolo
     // sobre la conexion origen. Usado por los mappers como
     // 'SELECT COUNT(*) FROM dbo.X' equivalente al SELECT que abren.
@@ -329,6 +333,50 @@ begin
   if (FCurrentRow mod 2000 = 0)
   or ((FCurrentTotal > 0) and (FCurrentRow >= FCurrentTotal)) then
     DoProgress;
+end;
+
+function TMigEngine.AnalizarTablasDestino: Integer;
+var
+  i: Integer;
+  oAnalisis: TUniQuery;
+  oTablas: TUniQuery;
+  sTabla: string;
+  slTablas: TStringList;
+begin
+  Result := 0;
+  slTablas := TStringList.Create;
+  oTablas := TUniQuery.Create(nil);
+  oAnalisis := TUniQuery.Create(nil);
+  try
+    oTablas.Connection := FConDst;
+    oTablas.SQL.Text :=
+      'SELECT TABLE_NAME' +
+      '  FROM INFORMATION_SCHEMA.TABLES' +
+      ' WHERE TABLE_SCHEMA = DATABASE()' +
+      '   AND TABLE_TYPE = ''BASE TABLE''' +
+      '   AND LEFT(TABLE_NAME, 4) = ''fza_''' +
+      ' ORDER BY TABLE_NAME';
+    oTablas.Open;
+    while not oTablas.Eof do
+    begin
+      slTablas.Add(oTablas.FieldByName('TABLE_NAME').AsString);
+      oTablas.Next;
+    end;
+    oTablas.Close;
+    oAnalisis.Connection := FConDst;
+    for i := 0 to slTablas.Count - 1 do
+    begin
+      sTabla := StringReplace(slTablas[i], '`', '``', [rfReplaceAll]);
+      oAnalisis.SQL.Text := Format('ANALYZE TABLE `%s`', [sTabla]);
+      oAnalisis.Open;
+      oAnalisis.Close;
+      Inc(Result);
+    end;
+  finally
+    FreeAndNil(oAnalisis);
+    FreeAndNil(oTablas);
+    FreeAndNil(slTablas);
+  end;
 end;
 
 function TMigEngine.ContarOrigen(const sSelectCount: string): Integer;
