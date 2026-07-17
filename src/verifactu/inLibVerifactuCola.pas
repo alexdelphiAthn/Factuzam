@@ -331,6 +331,7 @@ class procedure TVerifactuCola.EncolarFactura(AQryTrx: TUniQuery;
                                               const ATipoOperacion: string;
                                               ABorrarMovimientos: Boolean);
 begin
+  ValidarRequisitosFiscalesEmision(AQryTrx.Connection, ASerie, ANumero);
   // ON DUPLICATE: si la operación ya estaba encolada se relanza
   // (vuelve a PENDIENTE con los intentos a cero)
   AQryTrx.SQL.Text :=
@@ -391,6 +392,7 @@ var
   oResultado: TResultadoEnvioVerifactu;
 begin
   try
+    ValidarRequisitosFiscalesEmision(AQryTrx.Connection, ASerie, ANumero);
     ExigirRelojFiscal('Registro de facturación NO VERI*FACTU');
     if not VerifactuFirmaCertificado then
       raise Exception.Create('El modo NO VERI*FACTU exige firmar el ' +
@@ -433,6 +435,7 @@ class procedure TVerifactuCola.MarcarFacturaSinVerifactu(AQryTrx: TUniQuery;
 var
   sFase: string;
 begin
+  ValidarRequisitosFiscalesEmision(AQryTrx.Connection, ASerie, ANumero);
   if ATipoOperacion = 'ANULACION' then
     sFase := cFaseFacturaSinVerifactuAnulada
   else

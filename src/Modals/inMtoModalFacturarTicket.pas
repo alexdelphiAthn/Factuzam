@@ -409,6 +409,8 @@ begin
       Qry.ParamByName('SERIE').AsString  := ASerie;
       Qry.ParamByName('NUMERO').AsString := sNumero;
       Qry.Execute;
+      ValidarRequisitosFiscalesEmision(inLibGlobalVar.oConn,
+        ASerie, sNumero);
       // Histórico N:1 de relaciones (la F3 sustituye al ticket)
       TVerifactuCola.RegistrarRelacionFactura(
         inLibGlobalVar.oConn, ASerie, sNumero,

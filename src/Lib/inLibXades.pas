@@ -67,6 +67,8 @@ function FirmarXmlXadesEnveloped(const AXml: string;
                                   const AOpciones: TXadesOpciones;
                                   out ADatosCert: TXadesDatosCertificado):
                                   string;
+procedure ValidarCertificadoXades(const ASerialCert,
+                                  ATitularCert: string);
 function NormalizarSerieCertificadoXades(const AValor: string): string;
 
 implementation
@@ -703,8 +705,7 @@ begin
   sHasta := FechaCertificadoTexto(ACert^.pCertInfo^.NotAfter);
   Result := 'El certificado configurado ' + sEstado + '. Vigencia: ' +
             sDesde + ' - ' + sHasta + '. Seleccione un certificado vigente ' +
-            'en la ficha de empresa o desactive la firma con certificado ' +
-            'para seguir usando SHA-256.';
+            'en la ficha de empresa.';
 end;
 
 function CertificadoCoincide(ACert: PXadesCertContext;
@@ -778,6 +779,19 @@ begin
         'Windows un certificado vigente que coincida con el numero de serie ' +
         'o titular configurado.');
   end;
+end;
+
+procedure ValidarCertificadoXades(const ASerialCert,
+                                  ATitularCert: string);
+var
+  pCert: PXadesCertContext;
+begin
+  if (Trim(ASerialCert) = '') and (Trim(ATitularCert) = '') then
+    raise EXadesError.Create('No hay un certificado configurado en la ' +
+      'ficha de la empresa.');
+  pCert := BuscarCertificado(ASerialCert, ATitularCert);
+  // BuscarCertificado exige que exista en MY y que esté vigente.
+  CertFreeCertificateContext(pCert);
 end;
 
 function FirmarCapiSha256(hProv: ULONG_PTR; dwKeySpec: DWORD;
