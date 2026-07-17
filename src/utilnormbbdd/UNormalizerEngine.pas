@@ -302,6 +302,7 @@ begin
   AddSuf('fza_variaciones',                     'VAR');
   AddSuf('fza_variaciones_atributos',           'VA');
   AddSuf('fza_facturas_relaciones',             'FACREL');
+  AddSuf('fza_ventas_ws_cola',                  'VWSC');
   AddSuf('fza_verifactu_cadena',                'VFCAD');
   AddSuf('fza_verifactu_cola',                  'VFCOLA');
   AddSuf('fza_verifactu_eventos',               'LOG');
@@ -403,6 +404,7 @@ begin
   AddOwn('fza_efectos_venta',                  ['EFECTO','VENTA']);
   AddOwn('fza_remesas_venta',                  ['REMESA','VENTA']);
   AddOwn('fza_tipos_efecto',                   ['TIPO','EFECTO']);
+  AddOwn('fza_ventas_ws_cola',                 ['VENTA','WS','COLA']);
 
   // ========== Auditoría ==========
   FAuditRenames.AddOrSetValue('INSTANTEALTA',  'INSTANTE_ALTA');

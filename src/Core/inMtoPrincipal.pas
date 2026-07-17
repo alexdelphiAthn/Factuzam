@@ -360,6 +360,7 @@ uses inLibUser,
   inLibVerifactu,
   inLibVerifactuInstalacion,
   inLibVerifactuCola,
+  inLibVentasWsCola,
   inLibLicenciaAplicacion,
   inLibCertificates,
   inMtoGen,
@@ -691,6 +692,7 @@ begin
   // Hilo de la cola Verifactu: arranca siempre; cada ciclo consulta el
   // parámetro appVerifactuActivo, así puede activarse sin reiniciar
   TVerifactuCola.IniciarHilo;
+  TVentasWsCola.IniciarHilo;
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
   if oRootGroup = 'S' then
@@ -1399,6 +1401,7 @@ begin
   RegistrarEventoFiscalSeguro(cEventoNoVerifactuFin,
     'Cierre del sistema');
   // Parar el hilo de la cola Verifactu antes de liberar las conexiones
+  TVentasWsCola.DetenerHilo;
   TVerifactuCola.DetenerHilo;
   if Assigned(FAppEvents) then
   begin

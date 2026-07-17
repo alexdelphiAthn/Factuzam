@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 14/07/2026 17:45:48
+-- Backup generado: 17/07/2026 7:36:58
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -6153,7 +6153,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 549, 3, 'S', 'S', '2026-07-14 17:45:36', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 550, 3, 'S', 'S', '2026-07-17 07:36:47', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 28, 2, 'S', 'S', '2026-07-07 08:17:26', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -20910,8 +20910,230 @@ SELECT a.*,
   ) r
     ON r.`SERIE_ALBC_ALBCLIN` = a.`SERIE_ALBC`
    AND r.`NUMERO_ALBC_ALBCLIN` = a.`NUMERO_ALBC`;
-', '2026-07-14 17:45:36', '2026-07-14 17:45:36', 'Administrador', 'Administrador');
--- 78 registros exportados
+', '2026-07-14 17:45:36', '2026-07-14 17:45:36', 'Administrador', 'Administrador'),
+  ('549', NULL, '-- Cola de eventos de ventas hacia el webservice de Factuzam.
+-- Sufijo confirmado: VWSC.
+-- Estados: PENDIENTE, PROCESANDO, ENVIADA y ERROR.
+SET @sExisteTabla := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_ventas_ws_cola''
+);
+SET @sSql := IF(@sExisteTabla = 0,
+  ''CREATE TABLE fza_ventas_ws_cola (
+     ID_VWSC bigint(20) NOT NULL AUTO_INCREMENT,
+     ID_EVENTO_VWSC char(36) NOT NULL,
+     CODIGO_EMP_VWSC varchar(20) NOT NULL,
+     SERIE_FAC_VWSC varchar(20) NOT NULL,
+     NUMERO_FAC_VWSC varchar(20) NOT NULL,
+     TIPO_EVENTO_VWSC varchar(30) NOT NULL,
+     VERSION_CONTRATO_VWSC int(11) NOT NULL DEFAULT 1,
+     ESTADO_VWSC varchar(20) NOT NULL DEFAULT ''''PENDIENTE'''',
+     CONTADOR_INTENTOS_VWSC int(11) NOT NULL DEFAULT 0,
+     INSTANTE_PROXIMO_INTENTO_VWSC datetime NULL DEFAULT NULL,
+     INSTANTE_ENVIO_VWSC datetime NULL DEFAULT NULL,
+     ID_PETICION_VWSC varchar(64) NULL DEFAULT NULL,
+     CONTENIDO_JSON_VWSC longtext NULL DEFAULT NULL,
+     HUELLA_CONTENIDO_VWSC char(64) NULL DEFAULT NULL,
+     NOMBRE_PDF_VWSC varchar(255) NULL DEFAULT NULL,
+     TICKET_PDF_VWSC longblob NULL DEFAULT NULL,
+     TAMANO_PDF_VWSC bigint(20) NULL DEFAULT NULL,
+     HUELLA_PDF_VWSC char(64) NULL DEFAULT NULL,
+     NOMBRE_FACTURA_PDF_VWSC varchar(255) NULL DEFAULT NULL,
+     FACTURA_PDF_VWSC longblob NULL DEFAULT NULL,
+     TAMANO_FACTURA_PDF_VWSC bigint(20) NULL DEFAULT NULL,
+     HUELLA_FACTURA_PDF_VWSC char(64) NULL DEFAULT NULL,
+     MENSAJE_ERROR_VWSC text NULL DEFAULT NULL,
+     INSTANTE_ALTA datetime NOT NULL,
+     USUARIO_ALTA varchar(50) NULL DEFAULT NULL,
+     INSTANTE_MODIF datetime NULL DEFAULT NULL,
+     USUARIO_MODIF varchar(50) NULL DEFAULT NULL,
+     PRIMARY KEY (ID_VWSC)
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+     COLLATE=utf8mb4_spanish_ci'',
+  ''SELECT ''''fza_ventas_ws_cola ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteColumna := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_ventas_ws_cola''
+     AND COLUMN_NAME = ''NOMBRE_PDF_VWSC''
+);
+SET @sSql := IF(@sExisteColumna = 0,
+  ''ALTER TABLE fza_ventas_ws_cola
+     ADD COLUMN NOMBRE_PDF_VWSC varchar(255) NULL DEFAULT NULL
+     AFTER HUELLA_CONTENIDO_VWSC'',
+  ''SELECT ''''NOMBRE_PDF_VWSC ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteColumna := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_ventas_ws_cola''
+     AND COLUMN_NAME = ''TICKET_PDF_VWSC''
+);
+SET @sSql := IF(@sExisteColumna = 0,
+  ''ALTER TABLE fza_ventas_ws_cola
+     ADD COLUMN TICKET_PDF_VWSC longblob NULL DEFAULT NULL
+     AFTER NOMBRE_PDF_VWSC'',
+  ''SELECT ''''TICKET_PDF_VWSC ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteColumna := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_ventas_ws_cola''
+     AND COLUMN_NAME = ''TAMANO_PDF_VWSC''
+);
+SET @sSql := IF(@sExisteColumna = 0,
+  ''ALTER TABLE fza_ventas_ws_cola
+     ADD COLUMN TAMANO_PDF_VWSC bigint(20) NULL DEFAULT NULL
+     AFTER TICKET_PDF_VWSC'',
+  ''SELECT ''''TAMANO_PDF_VWSC ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteColumna := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_ventas_ws_cola''
+     AND COLUMN_NAME = ''HUELLA_PDF_VWSC''
+);
+SET @sSql := IF(@sExisteColumna = 0,
+  ''ALTER TABLE fza_ventas_ws_cola
+     ADD COLUMN HUELLA_PDF_VWSC char(64) NULL DEFAULT NULL
+     AFTER TAMANO_PDF_VWSC'',
+  ''SELECT ''''HUELLA_PDF_VWSC ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteColumna := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_ventas_ws_cola''
+     AND COLUMN_NAME = ''NOMBRE_FACTURA_PDF_VWSC''
+);
+SET @sSql := IF(@sExisteColumna = 0,
+  ''ALTER TABLE fza_ventas_ws_cola
+     ADD COLUMN NOMBRE_FACTURA_PDF_VWSC varchar(255) NULL DEFAULT NULL
+     AFTER HUELLA_PDF_VWSC'',
+  ''SELECT ''''NOMBRE_FACTURA_PDF_VWSC ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteColumna := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_ventas_ws_cola''
+     AND COLUMN_NAME = ''FACTURA_PDF_VWSC''
+);
+SET @sSql := IF(@sExisteColumna = 0,
+  ''ALTER TABLE fza_ventas_ws_cola
+     ADD COLUMN FACTURA_PDF_VWSC longblob NULL DEFAULT NULL
+     AFTER NOMBRE_FACTURA_PDF_VWSC'',
+  ''SELECT ''''FACTURA_PDF_VWSC ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteColumna := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_ventas_ws_cola''
+     AND COLUMN_NAME = ''TAMANO_FACTURA_PDF_VWSC''
+);
+SET @sSql := IF(@sExisteColumna = 0,
+  ''ALTER TABLE fza_ventas_ws_cola
+     ADD COLUMN TAMANO_FACTURA_PDF_VWSC bigint(20) NULL DEFAULT NULL
+     AFTER FACTURA_PDF_VWSC'',
+  ''SELECT ''''TAMANO_FACTURA_PDF_VWSC ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteColumna := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_ventas_ws_cola''
+     AND COLUMN_NAME = ''HUELLA_FACTURA_PDF_VWSC''
+);
+SET @sSql := IF(@sExisteColumna = 0,
+  ''ALTER TABLE fza_ventas_ws_cola
+     ADD COLUMN HUELLA_FACTURA_PDF_VWSC char(64) NULL DEFAULT NULL
+     AFTER TAMANO_FACTURA_PDF_VWSC'',
+  ''SELECT ''''HUELLA_FACTURA_PDF_VWSC ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_ventas_ws_cola''
+     AND INDEX_NAME = ''UQ_VWSC_EVENTO''
+);
+SET @sSql := IF(@sExisteIdx = 0,
+  ''ALTER TABLE fza_ventas_ws_cola
+     ADD UNIQUE INDEX UQ_VWSC_EVENTO (ID_EVENTO_VWSC)'',
+  ''SELECT ''''UQ_VWSC_EVENTO ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_ventas_ws_cola''
+     AND INDEX_NAME = ''IDX_VWSC_ESTADO_PROXIMO''
+);
+SET @sSql := IF(@sExisteIdx = 0,
+  ''ALTER TABLE fza_ventas_ws_cola
+     ADD INDEX IDX_VWSC_ESTADO_PROXIMO
+       (ESTADO_VWSC, INSTANTE_PROXIMO_INTENTO_VWSC)'',
+  ''SELECT ''''IDX_VWSC_ESTADO_PROXIMO ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteIdx := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_ventas_ws_cola''
+     AND INDEX_NAME = ''IDX_VWSC_DOCUMENTO''
+);
+SET @sSql := IF(@sExisteIdx = 0,
+  ''ALTER TABLE fza_ventas_ws_cola
+     ADD INDEX IDX_VWSC_DOCUMENTO
+       (CODIGO_EMP_VWSC, SERIE_FAC_VWSC, NUMERO_FAC_VWSC)'',
+  ''SELECT ''''IDX_VWSC_DOCUMENTO ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+', '2026-07-17 07:36:47', '2026-07-17 07:36:47', 'Administrador', 'Administrador');
+-- 79 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -24637,7 +24859,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-14 17:45:11', '2026-07-14 17:45:11', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-17 07:36:40', '2026-07-17 07:36:40', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Vendedores', 'S', '012', '2026-07-02 18:49:30', '2026-07-02 18:49:30', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
 -- 2 registros exportados
 
@@ -35125,6 +35347,44 @@ INSERT INTO `fza_variaciones_atributos` (`ID_VAR_VA`, `ID_ATB_VA`, `NOMBRE_VA`, 
 -- 2 registros exportados
 
 
+-- Tabla: fza_ventas_ws_cola
+
+DROP TABLE IF EXISTS `fza_ventas_ws_cola`;
+CREATE TABLE `fza_ventas_ws_cola` (
+  `ID_VWSC` bigint(20) NOT NULL AUTO_INCREMENT,
+  `ID_EVENTO_VWSC` char(36) NOT NULL,
+  `CODIGO_EMP_VWSC` varchar(20) NOT NULL,
+  `SERIE_FAC_VWSC` varchar(20) NOT NULL,
+  `NUMERO_FAC_VWSC` varchar(20) NOT NULL,
+  `TIPO_EVENTO_VWSC` varchar(30) NOT NULL,
+  `VERSION_CONTRATO_VWSC` int(11) NOT NULL DEFAULT '1',
+  `ESTADO_VWSC` varchar(20) NOT NULL DEFAULT 'PENDIENTE',
+  `CONTADOR_INTENTOS_VWSC` int(11) NOT NULL DEFAULT '0',
+  `INSTANTE_PROXIMO_INTENTO_VWSC` datetime NULL DEFAULT NULL,
+  `INSTANTE_ENVIO_VWSC` datetime NULL DEFAULT NULL,
+  `ID_PETICION_VWSC` varchar(64) NULL DEFAULT NULL,
+  `CONTENIDO_JSON_VWSC` longtext NULL DEFAULT NULL,
+  `HUELLA_CONTENIDO_VWSC` char(64) NULL DEFAULT NULL,
+  `NOMBRE_PDF_VWSC` varchar(255) NULL DEFAULT NULL,
+  `TICKET_PDF_VWSC` longblob NULL DEFAULT NULL,
+  `TAMANO_PDF_VWSC` bigint(20) NULL DEFAULT NULL,
+  `HUELLA_PDF_VWSC` char(64) NULL DEFAULT NULL,
+  `NOMBRE_FACTURA_PDF_VWSC` varchar(255) NULL DEFAULT NULL,
+  `FACTURA_PDF_VWSC` longblob NULL DEFAULT NULL,
+  `TAMANO_FACTURA_PDF_VWSC` bigint(20) NULL DEFAULT NULL,
+  `HUELLA_FACTURA_PDF_VWSC` char(64) NULL DEFAULT NULL,
+  `MENSAJE_ERROR_VWSC` text NULL DEFAULT NULL,
+  `INSTANTE_ALTA` datetime NOT NULL,
+  `USUARIO_ALTA` varchar(50) NULL DEFAULT NULL,
+  `INSTANTE_MODIF` datetime NULL DEFAULT NULL,
+  `USUARIO_MODIF` varchar(50) NULL DEFAULT NULL,
+  PRIMARY KEY (`ID_VWSC`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+ALTER TABLE `fza_ventas_ws_cola` ADD INDEX `IDX_VWSC_DOCUMENTO` (`CODIGO_EMP_VWSC`, `SERIE_FAC_VWSC`, `NUMERO_FAC_VWSC`);
+ALTER TABLE `fza_ventas_ws_cola` ADD INDEX `IDX_VWSC_ESTADO_PROXIMO` (`ESTADO_VWSC`, `INSTANTE_PROXIMO_INTENTO_VWSC`);
+ALTER TABLE `fza_ventas_ws_cola` ADD UNIQUE INDEX `UQ_VWSC_EVENTO` (`ID_EVENTO_VWSC`);
+
+
 -- Tabla: fza_verifactu_cadena
 
 DROP TABLE IF EXISTS `fza_verifactu_cadena`;
@@ -43867,4 +44127,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 14/07/2026 17:45:51
+-- Backup completado: 17/07/2026 7:37:03

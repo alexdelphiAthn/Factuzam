@@ -352,7 +352,7 @@ uses
   inMtoCajaFaseCobro, inLibDevExp, inLibtb,
   UniDataFacturas, inMtoModalImpFac, inLibVerifactuCola,
   inLibFacturas, inLibGenBusq, inLibCajaParam, inLibGenerarTicket,
-  inLibGenerarTicketCaja,
+  inLibGenerarTicketCaja, inLibGenerarTicketBD, inLibVentasWsCola,
   inMtoModalGenImpSave, inLibLayoutForm,
   inLibArticulosValidador, inLibArticulosResolver,
   inLibArticulosAtributosLookup,
@@ -360,6 +360,7 @@ uses
   inLibShowMto, inMtoPrincipal,
   inMtoStockConsulta,
   inLibCorreoTickets,
+  inLibDir,
   System.StrUtils;
 
 procedure TfrmMtoOpeCaja.ActualizarFoco;
@@ -3295,6 +3296,7 @@ var
   NumeroGenerado: string;
   CodigoValeGenerado: string;
   sMensajeCorreo: string;
+  slRutasTicketPdf: TStringList;
 begin
   if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
   begin
@@ -3318,6 +3320,7 @@ begin
   ActualizarRelojCaja;
   SincronizarFechaCajaCabecera;
   frmFaseCobro := nil;
+  slRutasTicketPdf := TStringList.Create;
   try
     ObjTotales := TFacturaTotales.Create(DatosCaja.cdsCabecera,
                                          DatosCaja.cdsLineas);
@@ -3392,7 +3395,8 @@ begin
                                   frmFaseCobro.DatosCobro,
                                   oNomImpresoraCaja,
                                   False,
-                                  FFecha);
+                                  FFecha,
+                                  slRutasTicketPdf);
            tiFactura:
              // Sin ticket térmico: vista previa A4 en FastReport para
              // imprimir/exportar
@@ -3418,12 +3422,30 @@ begin
                          frmFaseCobro.DatosCobro,
                          oNomImpresoraCaja,
                          False,
-                         FFecha);
+                         FFecha,
+                         slRutasTicketPdf);
              end;
            tiSinTicket:
              // F11: no imprime ticket pero abre la cajonera
              AbrirCajonSinVenta;
          end;
+         if slRutasTicketPdf.Count = 0 then
+         begin
+           try
+             ImprimirTicketDesdeBD(FCodigoEmpresa, FCodigoAlmacen,
+               FCodigoCaja, NumeroGenerado, 'DEBUG', slRutasTicketPdf, True);
+           except
+             on E: Exception do
+               Log.LogError('No se pudo generar el PDF de respaldo del ' +
+                 'ticket ' + DatosCaja.UltSerieFacturaGrabada + '\' +
+                 DatosCaja.UltNumeroFacturaGrabada + ': ' + E.Message);
+           end;
+         end;
+         if slRutasTicketPdf.Count > 0 then
+           TVentasWsCola.AdjuntarTicketPdfSeguro(inLibGlobalVar.oConn,
+             DatosCaja.UltSerieFacturaGrabada,
+             DatosCaja.UltNumeroFacturaGrabada,
+             slRutasTicketPdf[slRutasTicketPdf.Count - 1]);
          // Rectificación: enlazar original→rectificativa (fase
          // RECTIFICADA + columnas ABONO), comentario y encolado; y
          // salir del modo
@@ -3472,6 +3494,7 @@ begin
   finally
     if Assigned(frmFaseCobro) then
       FreeAndNil(frmFaseCobro);
+    FreeAndNil(slRutasTicketPdf);
     FreeAndNil(ObjTotales);
   end;
 end;
@@ -3578,6 +3601,7 @@ procedure TfrmMtoOpeCaja.ImprimirFacturaA4(const ASerie, ANumero: string);
 var
   dm:   TdmFacturas;
   form: TfrmPrintFac;
+  sRutaPdf: string;
 begin
   // Mismo visor de formatos FastReport que usa el Mto de Facturas; el
   // data module se crea al vuelo solo para las queries de impresión
@@ -3589,6 +3613,12 @@ begin
     form.edtNroFac.Text := ANumero;
     form.dmFac := dm;
     form.ShowModal;
+    if not FileExists(form.UltimaRutaPdf) then
+    begin
+      sRutaPdf := GetUserFolderTickets + 'Factura_' +
+        FormatDateTime('yyyy_mm_dd_hh_nn_ss_zzz', Now) + '.pdf';
+      form.ExportarPdfActual(sRutaPdf);
+    end;
   finally
     FreeAndNil(form);
     FreeAndNil(dm);

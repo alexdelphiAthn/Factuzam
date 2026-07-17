@@ -29,7 +29,8 @@ uses
                             DatosCobro: TDatosFaseCobro;
                             NombreImpresora:string = 'DEBUG';
                             ASinPrecios: Boolean = False;
-                            AFechaOperacion: TDateTime = 0);
+                            AFechaOperacion: TDateTime = 0;
+                            ARutasPDF: TStrings = nil);
 
   // Diminutivo de ticket del empleado (fza_empleados) a partir de su
   // codigo. Si no se resuelve, devuelve el propio codigo recibido.
@@ -163,7 +164,8 @@ procedure ImprimirT(const ACodigoEmpresa,
                           DatosCobro: TDatosFaseCobro;
                           NombreImpresora:string = 'DEBUG';
                           ASinPrecios: Boolean = False;
-                          AFechaOperacion: TDateTime = 0);
+                          AFechaOperacion: TDateTime = 0;
+                          ARutasPDF: TStrings = nil);
 var
   Ticket: TTicketTermico;
   Cab: TDatosCabeceraFactura;
@@ -383,6 +385,8 @@ begin
                         sSufijoPDF + '.pdf';
     ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
                                  NombreImpresora);
+    if (ARutasPDF <> nil) and FileExists(RutaFicheroPDF) then
+      ARutasPDF.Add(RutaFicheroPDF);
   finally
     FreeAndNil(Ticket);
   end;

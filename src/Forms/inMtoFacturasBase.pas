@@ -702,6 +702,7 @@ uses
   inLibUser,
   inLibVerifactu,
   inLibVerifactuCola,
+  inLibVentasWsCola,
   inMtoModalFacturarTicket,
   inMtoArticulos,
   inMtoEmpresas,
@@ -2495,6 +2496,8 @@ begin
       cEventoVerifactuInfo,
       'Lanzamiento anulado: borrador devuelto a BORRADOR', '',
       sSerie, sNumero);
+    TVentasWsCola.RegistrarEventoSeguro(inLibGlobalVar.oConn,
+      'VENTA_REABIERTA', sSerie, sNumero);
     dsTablaG.DataSet.Refresh;
     ShowMessage('Borrador ' + sSerie + '\' + sNumero + ' de nuevo en ' +
                 'BORRADOR. Corrija los datos (si el error es de la ' +

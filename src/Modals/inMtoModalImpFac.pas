@@ -63,6 +63,8 @@ type
     procedure rbRangoFechasClick(Sender: TObject);
     procedure rbActualClick(Sender: TObject);
     procedure btnExcelClick(Sender: TObject);
+  protected
+    procedure PdfExportado(const ARuta: string); override;
   public
     procedure preparar_consulta; override;
     procedure AfterReportLoaded; override;
@@ -81,7 +83,7 @@ implementation
 {$R *.dfm}
 
 uses inMtoPreviewExcel, inLibFacturaExcel, inLibAppParam, inLibVerifactu,
-     inLibFormatoDocumento;
+     inLibFormatoDocumento, inLibVentasWsCola, inLibGlobalVar;
 
 { TfrmPrintFac }
 
@@ -151,6 +153,17 @@ end;
 procedure TfrmPrintFac.ConfigurarNombrePDF;
 begin
   frxpdfxprtPedWeb.FileName := ObtenerNombreFactura(dmFac.unqrytablaG);
+end;
+
+procedure TfrmPrintFac.PdfExportado(const ARuta: string);
+begin
+  inherited;
+  if (Trim(ARuta) <> '') and (dmFac <> nil) and
+     dmFac.unqryFacPrint.Active and (not dmFac.unqryFacPrint.IsEmpty) then
+    TVentasWsCola.AdjuntarFacturaPdfSeguro(inLibGlobalVar.oConn,
+      dmFac.unqryFacPrint.FieldByName('SERIE_FAC').AsString,
+      dmFac.unqryFacPrint.FieldByName('NUMERO_FAC').AsString,
+      ARuta);
 end;
 
 function TfrmPrintFac.ObtenerNombreFactura(ADataSet: TDataSet): string;
