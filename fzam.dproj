@@ -642,6 +642,9 @@
         <DCCReference Include="src\Lib\inLibGenerarTicket.pas"/>
         <DCCReference Include="src\Lib\inLibGenerarTicketBD.pas"/>
         <DCCReference Include="src\Lib\inLibCorreoTickets.pas"/>
+        <DCCReference Include="src\Lib\inLibFactuzamApi.pas"/>
+        <DCCReference Include="src\Lib\inLibVentasWsJson.pas"/>
+        <DCCReference Include="src\Lib\inLibVentasWsCola.pas"/>
         <DCCReference Include="src\Lib\inLibXades.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentoFiscal.pas"/>
         <DCCReference Include="src\Lib\inLibRelojFiscal.pas"/>

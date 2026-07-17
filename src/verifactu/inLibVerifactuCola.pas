@@ -76,7 +76,8 @@ implementation
 uses
   Winapi.Windows, Data.DB,
   inLibGlobalVar, inLibAppParam, inLibLog,
-  inLibVerifactu, inLibVerifactuEnvio, inLibRelojFiscal;
+  inLibVerifactu, inLibVerifactuEnvio, inLibRelojFiscal,
+  inLibVentasWsCola;
 
 const
   fidvfcola       = 'ID_VFCOLA';
@@ -375,6 +376,8 @@ begin
     AQryTrx.ParamByName('USUARIO').AsString := oUser;
     AQryTrx.Execute;
   end;
+  TVentasWsCola.RegistrarFactura(AQryTrx, ASerie, ANumero,
+                                 ATipoOperacion);
 end;
 
 class procedure TVerifactuCola.RegistrarFacturaNoVerifactu(AQryTrx: TUniQuery;
@@ -401,6 +404,8 @@ begin
     RegistrarEventoVerifactu(AQryTrx.Connection, cEventoVerifactuInfo,
       'Registro de facturación NO VERI*FACTU registrado', ATipoOperacion,
       ASerie, ANumero);
+    TVentasWsCola.RegistrarFactura(AQryTrx, ASerie, ANumero,
+                                   ATipoOperacion);
   except
     on E: Exception do
     begin
@@ -450,6 +455,8 @@ begin
     BorrarMovimientosFactura(AQryTrx, ASerie, ANumero);
   Log.LogInfo('Factura ' + ASerie + '\' + ANumero +
     ' emitida en modo SIN VERIFACTU. Operación: ' + ATipoOperacion);
+  TVentasWsCola.RegistrarFactura(AQryTrx, ASerie, ANumero,
+                                 ATipoOperacion);
 end;
 
 class procedure TVerifactuCola.EncolarRectificativa(AConn: TUniConnection;
@@ -1077,6 +1084,8 @@ begin
     'Registro de facturación (' + ATipoOperacion + ') aceptado por la ' +
     'AEAT (' + AResultado.EstadoRegistro + ')',
     'CSV: ' + AResultado.RequestId, ASerie, ANumero);
+  TVentasWsCola.RegistrarEventoSeguro(FConn, 'FISCAL_ACTUALIZADO',
+                                      ASerie, ANumero);
 end;
 
 procedure THiloVerifactuCola.GuardarEnvioError(AIdCola: Int64;
@@ -1140,6 +1149,8 @@ begin
   RegistrarEventoVerifactu(FConn, cEventoVerifactuEnvioError,
     'Error de envío Verifactu (intento ' + IntToStr(AIntentos + 1) +
     '): ' + AMensaje, '', ASerie, ANumero);
+  TVentasWsCola.RegistrarEventoSeguro(FConn, 'FISCAL_ACTUALIZADO',
+                                      ASerie, ANumero);
 end;
 
 end.

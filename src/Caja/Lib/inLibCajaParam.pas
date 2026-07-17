@@ -234,6 +234,11 @@ begin
                      'Cargar depósitos automáticamente al seleccionar cliente',
                      tpBoolean,
                      'False');
+  RegistrarParametro('Servicios web',
+                     'vgerEnviarVentasWS',
+                     'Enviar ventas completas al webservice de respaldo',
+                     tpBoolean,
+                     'False');
 
   // --- Devoluciones y Vales ---
   RegistrarParametro('Devoluciones y Vales',

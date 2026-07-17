@@ -203,6 +203,18 @@ begin
   RegistrarParametro('Fotos', 'appFotosCarpetaCliente',
     'Referencia global de la instalación',
     tpString, '');
+  // --- Webservice de ventas ---
+  RegistrarParametro('Servicios web', 'appApiUrl',
+    'URL base de la API de Factuzam', tpString, '');
+  RegistrarParametro('Servicios web', 'appApiToken',
+    'Token Bearer de la API de Factuzam', tpString, '');
+  RegistrarParametro('Servicios web', 'appApiReferencia',
+    'Referencia de la instalación en la API de Factuzam', tpString, '');
+  RegistrarParametro('Servicios web', 'appVentasWsSegundosCiclo',
+    'Segundos entre ciclos de la cola de ventas', tpInteger, '60');
+  RegistrarParametro('Servicios web', 'appVentasWsMaxIntentos',
+    'Reintentos antes de marcar un envío de venta en ERROR',
+    tpInteger, '20');
   // --- Recuentos (app de recuento de inventarios) ---
   // Los consume inLibInventarioNube (enviar/recoger recuentos). Mismo estilo
   // que el servidor de fotos: X-API-Key + carpeta_cliente.

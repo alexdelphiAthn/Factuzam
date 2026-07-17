@@ -93,6 +93,7 @@ type
     // para poder restaurarlo en CerrarGuiasRuntime. Asi el data module
     // queda igual que como vino tras el cierre del modal.
     FSqlOriginales: TStringList;
+    FUltimaRutaPdf: string;
     // Lee el .frx serializado en VALUE_BLOB_USUPER de la fila identificada
     // por (Self.Name, aDescripcion) — una vez localizada en unqryPerfiles
     // por Locate. La query principal ya no trae el BLOB (cientos de KB)
@@ -108,6 +109,8 @@ type
                                   aDescripcion: string;
                                   aStream: TStream;
                                   aInsertar: Boolean);
+  protected
+    procedure PdfExportado(const ARuta: string); virtual;
   public
     procedure CargarFormatos(form:TfrmMtoModalGenImpEle);
     procedure DeleteForm(sElegido:String;form:TfrmMtoModalGenImpEle);
@@ -138,6 +141,9 @@ type
     // fza_informes_guias las guias globales referenciadas en el report
     // para que queden tambien atadas a ese formato. Idempotente.
     procedure ConsolidarGuiasParaFormato(const aFormato: string);
+    // Exporta sin diálogo el formato que el usuario acaba de seleccionar.
+    function ExportarPdfActual(const ARuta: string): Boolean;
+    property UltimaRutaPdf: string read FUltimaRutaPdf;
     // NUEVOS HOOKS PARA SOPORTE DE CLIENTDATASETS:
     function RelacionarClientDataSetConQuery(aCDS: TDataSet): TDataSet; virtual;
     procedure OnGuiasAplicadas; virtual;
@@ -164,6 +170,22 @@ end;
 procedure TfrmPrint.OnGuiasAplicadas;
 begin
   // Vacío por defecto en la clase base
+end;
+
+procedure TfrmPrint.PdfExportado(const ARuta: string);
+begin
+  FUltimaRutaPdf := ARuta;
+end;
+
+function RutaPdfExportado(AExportador: TfrxPDFExport): string;
+begin
+  Result := AExportador.FileName;
+  if ExtractFilePath(Result) = '' then
+    Result := IncludeTrailingPathDelimiter(AExportador.DefaultPath) + Result;
+  if SameText(ExtractFileExt(Result), '') then
+    Result := Result + '.pdf';
+  if not FileExists(Result) then
+    Result := '';
 end;
 
 procedure RebindReportDataSetsByDataModule(Report: TfrxReport;
@@ -857,11 +879,46 @@ begin
       frxrprt1.PrepareReport(True);
       frxpdfxprtPedWeb.DefaultPath := oAppParams.GetPath('appDirPDF');
       frxrprt1.Export(frxpdfxprtPedWeb);
+      PdfExportado(RutaPdfExportado(frxpdfxprtPedWeb));
     finally
       CerrarGuiasRuntime;
     end;
   end;
   Self.Show;
+end;
+
+function TfrmPrint.ExportarPdfActual(const ARuta: string): Boolean;
+var
+  bMostrarDialogo: Boolean;
+  sDirectorioPrevio: string;
+  sFicheroPrevio: string;
+begin
+  Result := False;
+  if (sElegido <> '') and (Trim(ARuta) <> '') then
+  begin
+    Preparar_consulta;
+    AfterReportLoaded;
+    AbrirGuiasRuntime(True);
+    OnGuiasAplicadas;
+    bMostrarDialogo := frxpdfxprtPedWeb.ShowDialog;
+    sDirectorioPrevio := frxpdfxprtPedWeb.DefaultPath;
+    sFicheroPrevio := frxpdfxprtPedWeb.FileName;
+    try
+      frxrprt1.PrepareReport(True);
+      frxpdfxprtPedWeb.ShowDialog := False;
+      frxpdfxprtPedWeb.DefaultPath := ExtractFilePath(ARuta);
+      frxpdfxprtPedWeb.FileName := ARuta;
+      frxrprt1.Export(frxpdfxprtPedWeb);
+      Result := FileExists(ARuta);
+      if Result then
+        PdfExportado(ARuta);
+    finally
+      frxpdfxprtPedWeb.ShowDialog := bMostrarDialogo;
+      frxpdfxprtPedWeb.DefaultPath := sDirectorioPrevio;
+      frxpdfxprtPedWeb.FileName := sFicheroPrevio;
+      CerrarGuiasRuntime;
+    end;
+  end;
 end;
 
 procedure TfrmPrint.btnVistaPreliminarClick(Sender: TObject);
