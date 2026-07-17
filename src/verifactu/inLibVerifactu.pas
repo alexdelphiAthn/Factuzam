@@ -72,6 +72,9 @@ function NoVerifactuActivo: Boolean;
 function SinVerifactuActivo: Boolean;
 // True si se firman registros y eventos con certificado de empresa
 function VerifactuFirmaCertificado: Boolean;
+// Impide emitir en modo fiscal si faltan el SIF o el certificado.
+procedure ValidarRequisitosFiscalesEmision(AConn: TUniConnection;
+  const ASerie, ANumero: string);
 // 'PRE' (pruebas) o 'PRO' (producción) según appVerifactuEntorno
 function VerifactuEntorno: string;
 // Identificador serie+número que se comunica a la AEAT. DEBE coincidir
@@ -578,6 +581,85 @@ end;
 function VerifactuFirmaCertificado: Boolean;
 begin
   Result := oAppParams.GetBool('appVerifactuFirmaCertificado', False);
+end;
+
+procedure ValidarRequisitosFiscalesEmision(AConn: TUniConnection;
+  const ASerie, ANumero: string);
+var
+  Qry: TUniQuery;
+  sCodigoEmpresa: string;
+  sCodigoSif: string;
+  sNombreEmpresa: string;
+  sNifEmpresa: string;
+  sNifProductor: string;
+  sNumeroInstalacion: string;
+  sSerialCertificado: string;
+  sTitularCertificado: string;
+  sVersionInstalacion: string;
+begin
+  if not SinVerifactuActivo then
+  begin
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := AConn;
+      Qry.SQL.Text :=
+        ' SELECT f.CODIGO_EMP_FAC, e.RAZON_SOCIAL_EMP, e.NIF_EMP, ' +
+        '        e.NUMERO_INSTALACION_EMP, e.VERSION_INSTALACION_EMP, ' +
+        '        e.CODIGO_SIF_INSTALACION_EMP, ' +
+        '        e.CODIGO_CERTIFICADO_EMP, e.TITULAR_CERTIFICADO_EMP ' +
+        ' FROM fza_facturas f ' +
+        ' LEFT JOIN fza_empresas e ' +
+        '   ON e.CODIGO_EMP_EMP = f.CODIGO_EMP_FAC ' +
+        ' WHERE f.SERIE_FAC = :SERIE AND f.NUMERO_FAC = :NUMERO';
+      Qry.ParamByName('SERIE').AsString := ASerie;
+      Qry.ParamByName('NUMERO').AsString := ANumero;
+      Qry.Open;
+      if Qry.IsEmpty then
+        raise Exception.Create('No existe la factura ' + ASerie + '\' +
+          ANumero + ' para validar sus requisitos fiscales.');
+      sCodigoEmpresa :=
+        Trim(Qry.FieldByName('CODIGO_EMP_FAC').AsString);
+      sNombreEmpresa :=
+        Trim(Qry.FieldByName('RAZON_SOCIAL_EMP').AsString);
+      sNifEmpresa := NormalizarNifVerifactu(
+        Qry.FieldByName('NIF_EMP').AsString);
+      sNumeroInstalacion :=
+        Trim(Qry.FieldByName('NUMERO_INSTALACION_EMP').AsString);
+      sVersionInstalacion :=
+        Trim(Qry.FieldByName('VERSION_INSTALACION_EMP').AsString);
+      sCodigoSif :=
+        Trim(Qry.FieldByName('CODIGO_SIF_INSTALACION_EMP').AsString);
+      sSerialCertificado :=
+        Trim(Qry.FieldByName('CODIGO_CERTIFICADO_EMP').AsString);
+      sTitularCertificado :=
+        Trim(Qry.FieldByName('TITULAR_CERTIFICADO_EMP').AsString);
+    finally
+      FreeAndNil(Qry);
+    end;
+    if sNombreEmpresa = '' then
+      sNombreEmpresa := sCodigoEmpresa;
+    if Length(sNifEmpresa) <> 9 then
+      raise Exception.Create('La empresa ' + sNombreEmpresa +
+        ' no tiene un NIF válido para la emisión fiscal.');
+    sNifProductor := NormalizarNifVerifactu(
+      oAppParams.GetString('appVerifactuSifNif', ''));
+    if Length(sNifProductor) <> 9 then
+      raise Exception.Create('El parámetro appVerifactuSifNif no contiene ' +
+        'un NIF de productor válido.');
+    ValidarInstalacionSif(sNumeroInstalacion, sVersionInstalacion,
+      sCodigoSif, sNombreEmpresa, sNifEmpresa);
+    try
+      ValidarCertificadoXades(sSerialCertificado,
+        sTitularCertificado);
+    except
+      on E: Exception do
+        raise Exception.Create('La empresa ' + sNombreEmpresa +
+          ' no dispone de un certificado fiscal utilizable: ' + E.Message);
+    end;
+    if NoVerifactuActivo and (not VerifactuFirmaCertificado) then
+      raise Exception.Create('El modo NO VERI*FACTU exige activar la firma ' +
+        'con certificado en appVerifactuFirmaCertificado.');
+  end;
 end;
 
 function VerifactuEntorno: string;
