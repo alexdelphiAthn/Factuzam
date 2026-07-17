@@ -118,7 +118,7 @@ uses
    dxSkinsLookAndFeelPainter,
    dxSkinsDefaultPainters, dxSkinsForm,
   FileCtrl, inLibPathTokens,               // SelectDirectory
-  inLibLayoutForm, inLibVerifactu;
+  inLibLayoutForm, inLibVerifactu, inLibFactuzamApi;
 
 procedure RegistrarCambioConfiguracionVerifactuSeguro(
   const ADetalle: string);
@@ -252,9 +252,11 @@ begin
 
     for Param in oAppParams.Params.Values do
     begin
-      CatItem := ObtenerCategoria(Param.Categoria);
-
-      case Param.Tipo of
+      // Categoría vacía = parámetro histórico cargado solo como respaldo.
+      if Param.Categoria <> '' then
+      begin
+        CatItem := ObtenerCategoria(Param.Categoria);
+        case Param.Tipo of
         tpBoolean:
           begin
             New(pBool);
@@ -329,6 +331,7 @@ begin
             // Los directorios (appDirPDF, appDirExcel) quedan como
             // tpString normal: el usuario escribe la ruta directamente
           end;
+        end;
       end;
     end;
     AplicarBloqueoParametros;
@@ -576,9 +579,46 @@ var
   SubKey  : string;
   ValorStr: string;
   ItemData: TJvCustomInspectorItem;
+  sUrlFotos: string;
+  sTokenFotos: string;
+  sReferenciaFotos: string;
+  sUrlRecuentos: string;
+  sTokenRecuentos: string;
+  sReferenciaRecuentos: string;
+  bUrlComun: Boolean;
+  bTokenComun: Boolean;
+  bReferenciaComun: Boolean;
+
+  procedure AplicarValorHistorico(const ANombre, AValorFotos,
+    AValorRecuentos: string; AConfigurado: Boolean);
+  var
+    sValor: string;
+    oItem: TJvCustomInspectorItem;
+  begin
+    if not AConfigurado then
+    begin
+      sValor := AValorFotos;
+      if Trim(sValor) = '' then
+        sValor := AValorRecuentos;
+      oItem := BuscarItemPorNombre(Grid.Root, ANombre);
+      if (Trim(sValor) <> '') and (oItem <> nil) and
+         (oItem.Data <> nil) then
+        oItem.DisplayValue := sValor;
+    end;
+  end;
+
 begin
   ResetearADefectos;
   Grid.Refresh;
+  sUrlFotos := cUrlFactuzamApiDefecto;
+  sTokenFotos := '';
+  sReferenciaFotos := '';
+  sUrlRecuentos := '';
+  sTokenRecuentos := '';
+  sReferenciaRecuentos := '';
+  bUrlComun := False;
+  bTokenComun := False;
+  bReferenciaComun := False;
 
   qry := TUniQuery.Create(nil);
   try
@@ -596,6 +636,24 @@ begin
       begin
         SubKey   := qry.FieldByName('SUBKEY_USUPER').AsString;
         ValorStr := qry.FieldByName('VALUE_USUPER').AsString;
+        if SameText(SubKey, 'appApiUrl') then
+          bUrlComun := Trim(ValorStr) <> ''
+        else if SameText(SubKey, 'appApiToken') then
+          bTokenComun := Trim(ValorStr) <> ''
+        else if SameText(SubKey, 'appApiReferencia') then
+          bReferenciaComun := Trim(ValorStr) <> ''
+        else if SameText(SubKey, 'appFotosUrlDescarga') then
+          sUrlFotos := ValorStr
+        else if SameText(SubKey, 'appFotosApiKey') then
+          sTokenFotos := ValorStr
+        else if SameText(SubKey, 'appFotosCarpetaCliente') then
+          sReferenciaFotos := ValorStr
+        else if SameText(SubKey, 'appRecuentoUrl') then
+          sUrlRecuentos := ValorStr
+        else if SameText(SubKey, 'appRecuentoApiKey') then
+          sTokenRecuentos := ValorStr
+        else if SameText(SubKey, 'appRecuentoCarpetaCliente') then
+          sReferenciaRecuentos := ValorStr;
         ItemData := BuscarItemPorNombre(Grid.Root, SubKey);
         if (ItemData <> nil) and (ItemData.Data <> nil) then
         begin
@@ -609,6 +667,14 @@ begin
         end;
         qry.Next;
       end;
+      if (Trim(sUrlFotos) = '') and (Trim(sUrlRecuentos) = '') then
+        sUrlFotos := cUrlFactuzamApiDefecto;
+      AplicarValorHistorico('appApiUrl', sUrlFotos, sUrlRecuentos,
+        bUrlComun);
+      AplicarValorHistorico('appApiToken', sTokenFotos, sTokenRecuentos,
+        bTokenComun);
+      AplicarValorHistorico('appApiReferencia', sReferenciaFotos,
+        sReferenciaRecuentos, bReferenciaComun);
     finally
       Grid.EndUpdate;
     end;

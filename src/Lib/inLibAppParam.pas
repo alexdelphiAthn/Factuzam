@@ -192,38 +192,33 @@ begin
   RegistrarParametro('Fotos', 'appNumAtributosFoto',
     'Atributos del SKU que componen la clave de foto (0 = solo artículo)',
     tpInteger, '1');
-  // Acceso al servicio web general. La carpeta local de destino es
-  // appDirFotos (ya definida arriba). Se conservan las claves internas
-  // historicas para no perder los valores guardados en las instalaciones.
-  RegistrarParametro('Fotos', 'appFotosUrlDescarga',
-    'URL general del servicio web', tpString,
+  // Claves históricas ocultas. Se siguen cargando para que las instalaciones
+  // existentes mantengan sus valores hasta guardar el conjunto unificado.
+  RegistrarParametro('', 'appFotosUrlDescarga',
+    'URL histórica del servicio de fotos', tpString,
     'https://webservice.veryverifactu.com/api/v1/');
-  RegistrarParametro('Fotos', 'appFotosApiKey',
-    'API key de la instalación', tpString, '');
-  RegistrarParametro('Fotos', 'appFotosCarpetaCliente',
-    'Referencia global de la instalación',
-    tpString, '');
-  // --- Webservice de ventas ---
+  RegistrarParametro('', 'appFotosApiKey',
+    'API key histórica del servicio de fotos', tpString, '');
+  RegistrarParametro('', 'appFotosCarpetaCliente',
+    'Referencia histórica del servicio de fotos', tpString, '');
+  // --- Servicios web comunes ---
   RegistrarParametro('Servicios web', 'appApiUrl',
-    'URL base de la API de Factuzam', tpString, '');
+    'URL general del servicio web', tpString, '');
   RegistrarParametro('Servicios web', 'appApiToken',
-    'Token Bearer de la API de Factuzam', tpString, '');
+    'API key / token de la instalación', tpString, '');
   RegistrarParametro('Servicios web', 'appApiReferencia',
-    'Referencia de la instalación en la API de Factuzam', tpString, '');
+    'Referencia global de la instalación', tpString, '');
   RegistrarParametro('Servicios web', 'appVentasWsSegundosCiclo',
     'Segundos entre ciclos de la cola de ventas', tpInteger, '60');
   RegistrarParametro('Servicios web', 'appVentasWsMaxIntentos',
     'Reintentos antes de marcar un envío de venta en ERROR',
     tpInteger, '20');
-  // --- Recuentos (app de recuento de inventarios) ---
-  // Los consume inLibInventarioNube (enviar/recoger recuentos). Mismo estilo
-  // que el servidor de fotos: X-API-Key + carpeta_cliente.
-  RegistrarParametro('Recuentos', 'appRecuentoUrl',
-    'URL base del servidor de recuentos (acaba en /)', tpString, '');
-  RegistrarParametro('Recuentos', 'appRecuentoApiKey',
-    'Clave X-API-Key del servidor de recuentos', tpString, '');
-  RegistrarParametro('Recuentos', 'appRecuentoCarpetaCliente',
-    'Carpeta de cliente en el servidor de recuentos', tpString, '');
+  RegistrarParametro('', 'appRecuentoUrl',
+    'URL histórica del servicio de recuentos', tpString, '');
+  RegistrarParametro('', 'appRecuentoApiKey',
+    'API key histórica del servicio de recuentos', tpString, '');
+  RegistrarParametro('', 'appRecuentoCarpetaCliente',
+    'Referencia histórica del servicio de recuentos', tpString, '');
   // --- Impresión ---
   RegistrarParametro('Impresión', 'appImpresoraInformes',
     'Impresora para informes', tpString, '');

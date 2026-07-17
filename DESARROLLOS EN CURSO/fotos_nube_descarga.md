@@ -7,13 +7,13 @@ local descrito en `fotos_articulos.md`; no lo sustituye.
 
 Unidad principal: `src/Lib/inLibFotosNube.pas`.
 
-## Parámetros (categoría "Fotos")
+## Parámetros (categoría "Servicios web")
 
 | Parámetro | Para qué |
 |---|---|
-| `appFotosUrlDescarga` | URL del `download_foto.php`. |
-| `appFotosApiKey` | Clave que viaja en la cabecera `X-API-Key`. |
-| `appFotosCarpetaCliente` | `carpeta_cliente` del servidor (aísla cada cliente). |
+| `appApiUrl` | URL general de la API. |
+| `appApiToken` | Credencial común; en fotos viaja como `X-API-Key`. |
+| `appApiReferencia` | Referencia global que aísla cada instalación. |
 | `appDirFotos` | Carpeta local destino (la misma del sistema de fotos). |
 
 Si falta alguno, `FotosNubeConfigurado` devuelve `False` con la lista de lo

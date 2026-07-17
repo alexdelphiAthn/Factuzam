@@ -433,12 +433,12 @@ Parámetros objetivo:
 | Parámetro | Función |
 |---|---|
 | `appApiUrl` | URL base, hasta `/api/v1/`. |
-| `appApiIdInstalacion` | Identificador público de la instalación. |
+| `appApiReferencia` | Referencia pública de la instalación. |
 | `appApiToken` | Token protegido de la instalación. |
 
-Los parámetros actuales de fotos y recuentos se conservarán mientras existan
-endpoints antiguos. Se marcarán como obsoletos únicamente cuando su sustituto
-esté desplegado y probado.
+Los parámetros anteriores de fotos y recuentos se cargan de forma oculta como
+respaldo cuando el conjunto común todavía está vacío. La pantalla muestra un
+único juego de URL, credencial y referencia para todos los servicios.
 
 Las unidades de dominio seguirán existiendo:
 

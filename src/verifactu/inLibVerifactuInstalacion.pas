@@ -57,7 +57,7 @@ uses
   System.Classes, System.IOUtils, System.JSON, System.Net.HttpClient,
   System.Net.URLClient,
   Data.DB,
-  inLibGlobalVar, inLibAppParam, inLibLog;
+  inLibGlobalVar, inLibLog, inLibFactuzamApi;
 
 const
   cUrlServicios = 'https://webservice.veryverifactu.com/api/v1/';
@@ -116,8 +116,7 @@ end;
 
 function UrlServicioSif(const ARuta: string): string;
 begin
-  Result := Trim(oAppParams.GetString('appFotosUrlDescarga',
-                                      cUrlServicios));
+  Result := TClienteFactuzamApi.UrlBase;
   if Result = '' then
     Result := cUrlServicios;
   if not Result.EndsWith('/') then
@@ -199,8 +198,8 @@ begin
     oReqJson.AddPair('razon_social', ARazonSocial);
     oReqJson.AddPair('nif', ANif);
     oReqJson.AddPair('sif', ACodigoSif);
-    sReferencia := Trim(oAppParams.GetString('appFotosCarpetaCliente'));
-    sToken := Trim(oAppParams.GetString('appFotosApiKey'));
+    sReferencia := TClienteFactuzamApi.Referencia;
+    sToken := TClienteFactuzamApi.Token;
     if sReferencia = '' then
       raise Exception.Create('Falta la referencia global de la instalación.');
     if sToken = '' then
@@ -259,8 +258,8 @@ var
   sVersion:    string;
 begin
   Result := '';
-  sReferencia := Trim(oAppParams.GetString('appFotosCarpetaCliente'));
-  sToken := Trim(oAppParams.GetString('appFotosApiKey'));
+  sReferencia := TClienteFactuzamApi.Referencia;
+  sToken := TClienteFactuzamApi.Token;
   if sReferencia = '' then
     raise Exception.Create('Falta la referencia global de la instalación.');
   if sToken = '' then

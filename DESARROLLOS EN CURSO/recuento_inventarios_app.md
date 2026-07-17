@@ -259,7 +259,7 @@ filas `INVREC`). El almacén del recuento libre sale de `inv_almacenes`.
 - **Nueva unit `inLibInventarioNube.pas`** (en `src/Lib/`), gemela de
   `inLibFotosNube`: `EnviarInventario`, `SincronizarAlmacenes`, `ListarPendientes`,
   `RecogerRecuento`. THTTPClient + JSON. Config en `oAppParams` (categoría nueva
-  "Recuentos": `appRecuentoUrl`, `appRecuentoApiKey`, `appRecuentoCarpetaCliente`).
+  "Servicios web": `appApiUrl`, `appApiToken`, `appApiReferencia`).
 - **Botones en `inMtoInventarios`** (junto a `btnExportarInv`/`btnCargarExcel`),
   preferentemente `TcxButton`:
   - **"Enviar a recuento"**: arma el catálogo del inventario (SKUs de las líneas
