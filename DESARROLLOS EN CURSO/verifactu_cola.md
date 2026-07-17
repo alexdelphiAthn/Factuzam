@@ -58,7 +58,7 @@ el registro a Verifactu.
 | Parámetro                   | Defecto | Uso                            |
 |-----------------------------|---------|--------------------------------|
 | `appVerifactuModo`          | SIN     | `SIN`, `VERIFACTU` o `NO_VERIFACTU` |
-| `appVerifactuActivo`        | False   | Compatibilidad antigua; usar `appVerifactuModo` |
+| `appVerifactuActivo`        | False   | Interruptor maestro; `False` fuerza modo `SIN` y desactiva el QR |
 | `appVerifactuFirmaCertificado` | False | Firma XAdES local de eventos y registros con certificado de empresa |
 | `appVerifactuEntorno`       | PRE     | PRE (pruebas) / PRO            |
 | `appVerifactuUrlQRPre`      | URL AEAT prewww2 | Cotejo QR en pruebas  |

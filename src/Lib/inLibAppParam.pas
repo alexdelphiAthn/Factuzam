@@ -280,7 +280,7 @@ begin
     'Modo fiscal: SIN, VERIFACTU o NO_VERIFACTU',
     tpString, 'SIN');
   RegistrarParametro('Verifactu', 'appVerifactuActivo',
-    'Compatibilidad: activar Verifactu (usar appVerifactuModo)',
+    'Activar SIF (False fuerza modo SIN y no imprime QR)',
     tpBoolean, 'False');
   RegistrarParametro('Verifactu', 'appVerifactuFirmaCertificado',
     'Firmar registros y eventos con certificado de empresa',

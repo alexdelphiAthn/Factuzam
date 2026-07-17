@@ -26,8 +26,10 @@ al guardar.
 | `VERIFACTU` | Remision a AEAT. | Encola alta/anulacion y guarda respuesta. | Si. | AEAT. |
 | `NO_VERIFACTU` | SIF no verificable. | Guarda registro local encadenado y firmado con certificado. | No. | XML local de eventos y facturacion. |
 
-`appVerifactuActivo` queda como compatibilidad antigua. La decision nueva
-debe leerse siempre con `ModoVerifactu`.
+`appVerifactuActivo` es el interruptor maestro. Con valor `False`,
+`ModoVerifactu` devuelve siempre `SIN`, no exige SIF y no imprime QR. Con
+valor `True`, `appVerifactuModo` decide entre `SIN`, `VERIFACTU` y
+`NO_VERIFACTU`.
 
 ## Estados de `FASE_FAC`
 

@@ -62,6 +62,7 @@ const
   cEventoNoVerifactuIncidenciaReloj = 111;
 
 // Modo fiscal activo: SIN, VERIFACTU o NO_VERIFACTU.
+// appVerifactuActivo=False fuerza SIN como interruptor maestro.
 function ModoVerifactu: TModoVerifactu;
 function ModoVerifactuTexto: string;
 // True si el modo fiscal activo es VERIFACTU
@@ -537,17 +538,17 @@ end;
 
 function ModoVerifactuTexto: string;
 begin
-  Result := UpperCase(Trim(oAppParams.GetString('appVerifactuModo', '')));
-  if Result = '' then
+  if not oAppParams.GetBool('appVerifactuActivo', False) then
+    Result := cModoVerifactuSin
+  else
   begin
-    if oAppParams.GetBool('appVerifactuActivo', False) then
+    Result := UpperCase(Trim(oAppParams.GetString('appVerifactuModo', '')));
+    if Result = '' then
       Result := cModoVerifactuVerifactu
-    else
+    else if (Result <> cModoVerifactuVerifactu) and
+            (Result <> cModoVerifactuNoVerifactu) then
       Result := cModoVerifactuSin;
   end;
-  if (Result <> cModoVerifactuVerifactu) and
-     (Result <> cModoVerifactuNoVerifactu) then
-    Result := cModoVerifactuSin;
 end;
 
 function ModoVerifactu: TModoVerifactu;
@@ -1012,13 +1013,29 @@ end;
 // título a los que correspondan, con el registro de factura activo
 procedure AplicarVerifactuARama(AComp: TfrxComponent; ADataSet: TDataSet);
 var
-  i: Integer;
+  i:    Integer;
+  oPic: TfrxPictureView;
 begin
   if AComp <> nil then
   begin
-    if (AComp is TfrxPictureView) and
-       SameText(AComp.Name, 'qrverifactu') then
-      RellenarQRPicture(TfrxPictureView(AComp), ADataSet);
+    if AComp is TfrxPictureView then
+    begin
+      oPic := TfrxPictureView(AComp);
+      if SameText(oPic.Name, 'qrverifactu') then
+        RellenarQRPicture(oPic, ADataSet);
+      // Los formatos antiguos enlazan el QR almacenado directamente al
+      // campo QRCODE_PNG_FACCON. Al reimprimir, FastReport vuelve a cargar
+      // ese PNG aunque el SIF esté desactivado. Se elimina también el enlace
+      // para que la preparación posterior del informe no lo reponga.
+      if SinVerifactuActivo and
+         SameText(oPic.DataField, 'QRCODE_PNG_FACCON') then
+      begin
+        oPic.Visible := False;
+        oPic.DataField := '';
+        oPic.DataSet := nil;
+        oPic.Picture.Assign(nil);
+      end;
+    end;
     if AComp is TfrxMemoView then
       AjustarTituloMemo(TfrxMemoView(AComp), ADataSet);
     for i := 0 to AComp.Objects.Count - 1 do
