@@ -18,6 +18,10 @@ interface
 uses
   System.SysUtils;
 
+const
+  cUrlFactuzamApiDefecto =
+    'https://webservice.veryverifactu.com/api/v1/';
+
 type
   TResultadoFactuzamApi = record
     Ok: Boolean;
@@ -28,10 +32,13 @@ type
 
   TClienteFactuzamApi = class
   private
-    class function ComponerUrl(const ARuta: string): string; static;
     class function LeerRespuesta(const AContenido: string;
       AEstadoHttp: Integer): TResultadoFactuzamApi; static;
   public
+    class function UrlBase: string; static;
+    class function Token: string; static;
+    class function Referencia: string; static;
+    class function ComponerUrl(const ARuta: string): string; static;
     class function Configurada: Boolean; static;
     class function EnviarJson(const ARuta, AContenido: string):
       TResultadoFactuzamApi; static;
@@ -50,9 +57,7 @@ var
   sBase: string;
   sRuta: string;
 begin
-  sBase := Trim(oAppParams.GetString('appApiUrl', ''));
-  if sBase = '' then
-    sBase := Trim(oAppParams.GetString('appFotosUrlDescarga', ''));
+  sBase := UrlBase;
   if (sBase <> '') and (sBase[Length(sBase)] <> '/') then
     sBase := sBase + '/';
   sRuta := Trim(ARuta);
@@ -61,20 +66,38 @@ begin
   Result := sBase + sRuta;
 end;
 
-class function TClienteFactuzamApi.Configurada: Boolean;
-var
-  sReferencia: string;
-  sToken: string;
+class function TClienteFactuzamApi.UrlBase: string;
 begin
-  sToken := Trim(oAppParams.GetString('appApiToken', ''));
-  if sToken = '' then
-    sToken := Trim(oAppParams.GetString('appFotosApiKey', ''));
-  sReferencia := Trim(oAppParams.GetString('appApiReferencia', ''));
-  if sReferencia = '' then
-    sReferencia := Trim(oAppParams.GetString(
-      'appFotosCarpetaCliente', ''));
-  Result := (ComponerUrl('') <> '') and (sToken <> '') and
-            (sReferencia <> '');
+  Result := Trim(oAppParams.GetString('appApiUrl', ''));
+  if Result = '' then
+    Result := Trim(oAppParams.GetString('appFotosUrlDescarga', ''));
+  if Result = '' then
+    Result := Trim(oAppParams.GetString('appRecuentoUrl', ''));
+  if Result = '' then
+    Result := cUrlFactuzamApiDefecto;
+end;
+
+class function TClienteFactuzamApi.Token: string;
+begin
+  Result := Trim(oAppParams.GetString('appApiToken', ''));
+  if Result = '' then
+    Result := Trim(oAppParams.GetString('appFotosApiKey', ''));
+  if Result = '' then
+    Result := Trim(oAppParams.GetString('appRecuentoApiKey', ''));
+end;
+
+class function TClienteFactuzamApi.Referencia: string;
+begin
+  Result := Trim(oAppParams.GetString('appApiReferencia', ''));
+  if Result = '' then
+    Result := Trim(oAppParams.GetString('appFotosCarpetaCliente', ''));
+  if Result = '' then
+    Result := Trim(oAppParams.GetString('appRecuentoCarpetaCliente', ''));
+end;
+
+class function TClienteFactuzamApi.Configurada: Boolean;
+begin
+  Result := (UrlBase <> '') and (Token <> '') and (Referencia <> '');
 end;
 
 class function TClienteFactuzamApi.LeerRespuesta(
@@ -128,9 +151,7 @@ begin
     Result.Mensaje := 'La API de Factuzam no está configurada.'
   else
   begin
-    sToken := Trim(oAppParams.GetString('appApiToken', ''));
-    if sToken = '' then
-      sToken := Trim(oAppParams.GetString('appFotosApiKey', ''));
+    sToken := Token;
     oHttp := THTTPClient.Create;
     try
       oHttp.ConnectionTimeout := 10000;

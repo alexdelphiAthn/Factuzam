@@ -69,22 +69,11 @@ uses
   System.IOUtils, System.StrUtils, System.JSON,
   System.Net.HttpClient, System.Net.URLClient, System.NetEncoding,
   System.Zip,
-  inLibAppParam;
+  inLibAppParam, inLibFactuzamApi;
 
 const
-  cParUrl      = 'appFotosUrlDescarga';
-  cParApiKey   = 'appFotosApiKey';
-  cParReferencia = 'appFotosCarpetaCliente';
   cParDirFotos = 'appDirFotos';
   cRutaDescarga = 'fotos/descargar.php';
-
-function ComponerUrlServicio(const AUrlBase, ARuta: string): string;
-begin
-  Result := Trim(AUrlBase);
-  if not Result.EndsWith('/') then
-    Result := Result + '/';
-  Result := Result + ARuta;
-end;
 
 function FotosNubeConfigurado(out AMensaje: string): Boolean;
 var
@@ -93,19 +82,18 @@ begin
   AMensaje := '';
   faltan := TStringList.Create;
   try
-    if Trim(oAppParams.GetString(cParUrl)) = '' then
-      faltan.Add('  - URL general del servicio web (appFotosUrlDescarga)');
-    if Trim(oAppParams.GetString(cParApiKey)) = '' then
-      faltan.Add('  - Clave X-API-Key (appFotosApiKey)');
-    if Trim(oAppParams.GetString(cParReferencia)) = '' then
-      faltan.Add('  - Referencia global de instalación ' +
-                 '(appFotosCarpetaCliente)');
+    if TClienteFactuzamApi.UrlBase = '' then
+      faltan.Add('  - URL general del servicio web');
+    if TClienteFactuzamApi.Token = '' then
+      faltan.Add('  - API key / token de la instalación');
+    if TClienteFactuzamApi.Referencia = '' then
+      faltan.Add('  - Referencia global de la instalación');
     if Trim(oAppParams.GetPath(cParDirFotos)) = '' then
       faltan.Add('  - Carpeta de fotos (appDirFotos)');
     Result := faltan.Count = 0;
     if not Result then
       AMensaje := 'Configura primero estos parámetros (Parámetros de la ' +
-                  'aplicación -> Fotos):' + sLineBreak + faltan.Text;
+                  'aplicación -> Servicios web):' + sLineBreak + faltan.Text;
   finally
     FreeAndNil(faltan);
   end;
@@ -175,7 +163,7 @@ function DescargarFotosArticulo(const ACodArt: string;
                                 out AArchivos: TArray<string>;
                                 out AMensaje: string): Boolean;
 var
-  sUrl, sKey, sReferencia, sDir, sUrlFull, sZipTmp, sTs: string;
+  sKey, sReferencia, sDir, sUrlFull, sZipTmp, sTs: string;
   http   : THTTPClient;
   resp   : IHTTPResponse;
   cuerpo : TMemoryStream;
@@ -188,12 +176,11 @@ begin
   AArchivos := nil;
   if FotosNubeConfigurado(AMensaje) then
   begin
-    sUrl        := Trim(oAppParams.GetString(cParUrl));
-    sKey        := Trim(oAppParams.GetString(cParApiKey));
-    sReferencia := Trim(oAppParams.GetString(cParReferencia));
+    sKey        := TClienteFactuzamApi.Token;
+    sReferencia := TClienteFactuzamApi.Referencia;
     // Pedimos resolución 'real' (calidad original): el sistema de fotos
     // ya genera 300/600 al integrar la foto representativa.
-    sUrlFull := ComponerUrlServicio(sUrl, cRutaDescarga) +
+    sUrlFull := TClienteFactuzamApi.ComponerUrl(cRutaDescarga) +
       '?referencia=' + TNetEncoding.URL.Encode(sReferencia) +
       '&articulo=' + TNetEncoding.URL.Encode(ACodArt) +
       '&resolucion=real';

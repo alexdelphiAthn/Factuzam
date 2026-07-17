@@ -41,22 +41,11 @@ implementation
 
 uses
   System.Classes, System.JSON, System.Net.HttpClient, System.Net.Mime,
-  Uni, inLibAppParam, inLibGlobalVar, inLibGenerarTicketBD,
-  inLibGenerarTicketCaja, inLibTraspasoTicket, inLibLog;
+  Uni, inLibGlobalVar, inLibGenerarTicketBD, inLibGenerarTicketCaja,
+  inLibTraspasoTicket, inLibLog, inLibFactuzamApi;
 
 const
-  cParUrl = 'appFotosUrlDescarga';
-  cParApiKey = 'appFotosApiKey';
-  cParReferencia = 'appFotosCarpetaCliente';
   cRutaCorreo = 'correo/enviar_ticket.php';
-
-function ComponerUrlServicio(const AUrlBase, ARuta: string): string;
-begin
-  Result := Trim(AUrlBase);
-  if not Result.EndsWith('/') then
-    Result := Result + '/';
-  Result := Result + ARuta;
-end;
 
 function CorreoTicketsConfigurado(out AMensaje: string): Boolean;
 var
@@ -65,21 +54,16 @@ begin
   AMensaje := '';
   Faltan := TStringList.Create;
   try
-    if not Assigned(oAppParams) then
-      Faltan.Add('  - Parámetros de la aplicación no inicializados')
-    else
-    begin
-      if Trim(oAppParams.GetString(cParUrl)) = '' then
-        Faltan.Add('  - URL general del servicio web');
-      if Trim(oAppParams.GetString(cParApiKey)) = '' then
-        Faltan.Add('  - API key de la instalación');
-      if Trim(oAppParams.GetString(cParReferencia)) = '' then
-        Faltan.Add('  - Referencia global de la instalación');
-    end;
+    if TClienteFactuzamApi.UrlBase = '' then
+      Faltan.Add('  - URL general del servicio web');
+    if TClienteFactuzamApi.Token = '' then
+      Faltan.Add('  - API key / token de la instalación');
+    if TClienteFactuzamApi.Referencia = '' then
+      Faltan.Add('  - Referencia global de la instalación');
     Result := Faltan.Count = 0;
     if not Result then
       AMensaje := 'Configura primero estos parámetros (Parámetros de la ' +
-        'aplicación -> Fotos):' + sLineBreak + Faltan.Text;
+        'aplicación -> Servicios web):' + sLineBreak + Faltan.Text;
   finally
     FreeAndNil(Faltan);
   end;
@@ -285,11 +269,9 @@ begin
               AMensaje := 'La operación no tiene documentación asociada.'
             else
             begin
-              sUrl := ComponerUrlServicio(
-                oAppParams.GetString(cParUrl), cRutaCorreo);
-              sApiKey := Trim(oAppParams.GetString(cParApiKey));
-              sReferencia := Trim(
-                oAppParams.GetString(cParReferencia));
+              sUrl := TClienteFactuzamApi.ComponerUrl(cRutaCorreo);
+              sApiKey := TClienteFactuzamApi.Token;
+              sReferencia := TClienteFactuzamApi.Referencia;
               Result := EnviarAlServicio(sUrl, sApiKey, sReferencia,
                 ANumeroOperacion, Datos.NombreEmpresa, Trim(AEmail),
                 RutasPDF, AMensaje);

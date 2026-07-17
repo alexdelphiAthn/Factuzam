@@ -47,8 +47,8 @@ Categorías habituales:
 
 | Categoría | Uso |
 |-----------|-----|
-| **Directorios / Fotos** | Carpeta local o compartida de fotos (`appDirFotos`) y credenciales de descarga desde el servidor. |
-| **Recuentos** | URL, clave y carpeta de cliente del servidor de recuento móvil. |
+| **Directorios / Fotos** | Carpeta local o compartida de fotos (`appDirFotos`) y número de atributos usado en su clave. |
+| **Servicios web** | URL, credencial y referencia comunes para fotos, correo, ventas, SIF y recuentos. |
 | **Verifactu** | Modo fiscal, entorno, datos del SIF, ciclo de cola, URLs y parámetros de firma/reloj. |
 | **Caja** | Valores por defecto del TPV y comportamiento de arqueo. |
 

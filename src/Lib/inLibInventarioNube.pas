@@ -11,7 +11,7 @@
 {  Descripción:                                                                }
 {    Cliente del servidor de recuentos (PHP) desde Factuzam. Gemelo de         }
 {    inLibFotosNube: THTTPClient + System.JSON, X-API-Key + carpeta_cliente,   }
-{    parámetros en oAppParams (categoría "Recuentos").                         }
+{    parámetros comunes de la categoría "Servicios web".                      }
 {      - EnviarInventario: manda la plantilla (cabecera + líneas + códigos de  }
 {        barras) a inv_enviar.php. Devuelve el id_recuento del servidor.       }
 {      - RecogerRecuento: trae los eventos de inv_recoger.php, los inserta en  }
@@ -43,12 +43,7 @@ uses
   System.JSON, System.Generics.Collections, System.NetEncoding,
   System.Net.HttpClient, System.Net.URLClient,
   Data.DB, Uni,
-  inLibGlobalVar, inLibAppParam;
-
-const
-  cParUrl     = 'appRecuentoUrl';
-  cParApiKey  = 'appRecuentoApiKey';
-  cParCarpeta = 'appRecuentoCarpetaCliente';
+  inLibGlobalVar, inLibFactuzamApi;
 
 // ============================================================================
 //   Configuración y transporte
@@ -61,16 +56,16 @@ begin
   AMensaje := '';
   faltan := TStringList.Create;
   try
-    if Trim(oAppParams.GetString(cParUrl)) = '' then
-      faltan.Add('  - URL del servidor de recuentos (appRecuentoUrl)');
-    if Trim(oAppParams.GetString(cParApiKey)) = '' then
-      faltan.Add('  - Clave X-API-Key (appRecuentoApiKey)');
-    if Trim(oAppParams.GetString(cParCarpeta)) = '' then
-      faltan.Add('  - Carpeta de cliente (appRecuentoCarpetaCliente)');
+    if TClienteFactuzamApi.UrlBase = '' then
+      faltan.Add('  - URL general del servicio web');
+    if TClienteFactuzamApi.Token = '' then
+      faltan.Add('  - API key / token de la instalación');
+    if TClienteFactuzamApi.Referencia = '' then
+      faltan.Add('  - Referencia global de la instalación');
     Result := faltan.Count = 0;
     if not Result then
       AMensaje := 'Configura primero estos parámetros (Parámetros de la ' +
-                  'aplicación -> Recuentos):' + sLineBreak + faltan.Text;
+                  'aplicación -> Servicios web):' + sLineBreak + faltan.Text;
   finally
     FreeAndNil(faltan);
   end;
@@ -125,11 +120,10 @@ begin
   req := TStringStream.Create(ABody, TEncoding.UTF8);
   resp := TMemoryStream.Create;
   try
-    http.CustomHeaders['X-API-Key'] := Trim(oAppParams.GetString(cParApiKey));
+    http.CustomHeaders['X-API-Key'] := TClienteFactuzamApi.Token;
     http.CustomHeaders['Content-Type'] := 'application/json';
     try
-      respHttp := http.Post(Trim(oAppParams.GetString(cParUrl)) + ARuta,
-                            req, resp);
+      respHttp := http.Post(TClienteFactuzamApi.ComponerUrl(ARuta), req, resp);
       Result := respHttp.StatusCode;
       ARespuesta := LeerStream(resp);
     except
@@ -155,9 +149,9 @@ begin
   http := THTTPClient.Create;
   resp := TMemoryStream.Create;
   try
-    http.CustomHeaders['X-API-Key'] := Trim(oAppParams.GetString(cParApiKey));
+    http.CustomHeaders['X-API-Key'] := TClienteFactuzamApi.Token;
     try
-      respHttp := http.Get(Trim(oAppParams.GetString(cParUrl)) + ARuta, resp);
+      respHttp := http.Get(TClienteFactuzamApi.ComponerUrl(ARuta), resp);
       Result := respHttp.StatusCode;
       ARespuesta := LeerStream(resp);
     except
@@ -192,8 +186,7 @@ begin
     root := TJSONObject.Create;
     qry := TUniQuery.Create(nil);
     try
-      root.AddPair('carpeta_cliente',
-                   Trim(oAppParams.GetString(cParCarpeta)));
+      root.AddPair('carpeta_cliente', TClienteFactuzamApi.Referencia);
       root.AddPair('codigo_emp', AEmp);
       root.AddPair('codigo_alm', AAlm);
       root.AddPair('serie', ASerie);

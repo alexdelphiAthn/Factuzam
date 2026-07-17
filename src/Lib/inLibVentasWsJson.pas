@@ -38,7 +38,7 @@ implementation
 uses
   System.Classes, System.DateUtils, System.NetEncoding,
   Data.DB,
-  inLibGlobalVar, inLibAppParam;
+  inLibGlobalVar, inLibFactuzamApi;
 
 function LeerCampoBinario(ACampo: TField): TBytes;
 var
@@ -253,9 +253,7 @@ begin
     oOrigen := TJSONObject.Create;
     oOrigen.AddPair('aplicacion', 'Factuzam');
     oOrigen.AddPair('version', oVersion);
-    sReferencia := oAppParams.GetString('appApiReferencia', '');
-    if Trim(sReferencia) = '' then
-      sReferencia := oAppParams.GetString('appFotosCarpetaCliente', '');
+    sReferencia := TClienteFactuzamApi.Referencia;
     oOrigen.AddPair('referencia', sReferencia);
     oRaiz.AddPair('origen', oOrigen);
     oDocumento := TJSONObject.Create;
