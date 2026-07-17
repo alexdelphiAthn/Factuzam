@@ -76,8 +76,10 @@ src/utilmigsqlsrv/
    no estaba activado en el `fzam` principal).
 3. Compila y ejecuta.
 4. En el formulario:
-   - Configura las **cinco filas** de cada conexión (host, puerto,
-     base, usuario, contraseña).
+   - Configura los datos de cada conexión (host, puerto, base, usuario y
+     contraseña). En SQL Server elige además el **driver**:
+     `UniDAC Direct`, `Microsoft OLE DB`, `SQL Native Client` o el
+     `Windows OLE DB` incluido en el sistema.
    - Pulsa "Probar conexión" en cada lado.
    - Marca las migraciones que quieras ejecutar (el listado respeta el
      orden de dependencias: formas de pago antes que clientes,
@@ -89,6 +91,18 @@ El programa guarda los valores de las conexiones en
 cifradas con DPAPI (ligadas a la cuenta Windows del usuario), nunca en
 claro; si el `.ini` se copia a otro equipo o usuario, las contraseñas no
 se podrán descifrar y habrá que volver a teclearlas.
+
+La selección del driver SQL Server se persiste como `Origen/Provider`.
+El valor por defecto es `prDirect`, que conserva el comportamiento anterior.
+Ante errores `Protocol error in TDS stream`, se puede probar
+`prMSOLEDB`; esta opción requiere tener instalado Microsoft OLE DB Driver
+for SQL Server en el equipo que ejecuta el migrador. Todos los workers
+heredan la misma opción al clonar la conexión.
+
+Si ese driver no está instalado, `prSQL` usa el proveedor `SQLOLEDB`
+incluido en Windows y permite hacer la prueba sin instalar componentes.
+Es un proveedor legado, por lo que se ofrece como opción de compatibilidad
+para migraciones, no como recomendación para aplicaciones nuevas.
 
 ## Preparar la BBDD destino desde cero
 

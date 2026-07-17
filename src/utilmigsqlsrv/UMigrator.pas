@@ -49,6 +49,8 @@ type
     edSrcPwd:          TEdit;
     btnProbarSrc:      TButton;
     chkSrcWinAuth:     TCheckBox;
+    lblSrcDriver:      TLabel;
+    cbSrcDriver:       TComboBox;
     PanelDestino:      TGroupBox;
     lblDstHost:        TLabel;
     lblDstPort:        TLabel;
@@ -126,6 +128,8 @@ type
     procedure CargarConfig;
     procedure GuardarConfig;
     function  RutaIni: string;
+    function  ProviderOrigenSeleccionado: string;
+    procedure SeleccionarProviderOrigen(const sProvider: string);
     procedure SetEjecutando(bValue: Boolean);
     procedure EjecutarMigracionesBackground;
     procedure ActualizarProgreso(const sDominio: string;
@@ -828,16 +832,41 @@ begin
   end;
 end;
 
+function TFormMigrator.ProviderOrigenSeleccionado: string;
+begin
+  case cbSrcDriver.ItemIndex of
+    1: Result := 'prMSOLEDB';
+    2: Result := 'prNativeClient';
+    3: Result := 'prSQL';
+  else
+    Result := 'prDirect';
+  end;
+end;
+
+procedure TFormMigrator.SeleccionarProviderOrigen(const sProvider: string);
+begin
+  if SameText(Trim(sProvider), 'prMSOLEDB') then
+    cbSrcDriver.ItemIndex := 1
+  else if SameText(Trim(sProvider), 'prNativeClient') then
+    cbSrcDriver.ItemIndex := 2
+  else if SameText(Trim(sProvider), 'prSQL') then
+    cbSrcDriver.ItemIndex := 3
+  else
+    cbSrcDriver.ItemIndex := 0;
+end;
+
 procedure TFormMigrator.btnProbarSrcClick(Sender: TObject);
 begin
   Screen.Cursor := crHourGlass;
   try
     dmMig.ConfigurarOrigen(edSrcHost.Text, edSrcPort.Text, edSrcBase.Text,
                            edSrcUser.Text, edSrcPwd.Text,
-                           chkSrcWinAuth.Checked);
+                           chkSrcWinAuth.Checked,
+                           ProviderOrigenSeleccionado);
     dmMig.ProbarOrigen;
-    Log(Format('OK origen: %s:%s/%s',
-      [edSrcHost.Text, edSrcPort.Text, edSrcBase.Text]));
+    Log(Format('OK origen: %s:%s/%s [%s]',
+      [edSrcHost.Text, edSrcPort.Text, edSrcBase.Text,
+       ProviderOrigenSeleccionado]));
     ShowMessage('Conexión a SQL Server correcta.');
   except
     on E: Exception do
@@ -890,6 +919,7 @@ begin
     btnMarcarTodas.Enabled   := False;
     btnDesmarcarTodas.Enabled:= False;
     listMigs.Enabled         := False;
+    cbSrcDriver.Enabled      := False;
   end
   else
   begin
@@ -905,6 +935,7 @@ begin
     btnMarcarTodas.Enabled   := True;
     btnDesmarcarTodas.Enabled:= True;
     listMigs.Enabled         := True;
+    cbSrcDriver.Enabled      := True;
   end;
 end;
 
@@ -948,7 +979,8 @@ begin
   // empiece a hacer SELECT/INSERT el ownership pasa a el.
   dmMig.ConfigurarOrigen(edSrcHost.Text, edSrcPort.Text, edSrcBase.Text,
                          edSrcUser.Text, edSrcPwd.Text,
-                         chkSrcWinAuth.Checked);
+                         chkSrcWinAuth.Checked,
+                         ProviderOrigenSeleccionado);
   dmMig.ConfigurarDestino(edDstHost.Text, edDstPort.Text, edDstBase.Text,
                           edDstUser.Text, edDstPwd.Text);
   FEngine.Usuario := edUsuario.Text;
@@ -1539,6 +1571,8 @@ begin
     edSrcPwd.Text          := DescifrarPwd(
                                 oIni.ReadString('Origen', 'PwdEnc', ''));
     chkSrcWinAuth.Checked  := oIni.ReadBool  ('Origen',  'WinAuth', False);
+    SeleccionarProviderOrigen(
+      oIni.ReadString('Origen', 'Provider', 'prDirect'));
     chkSrcWinAuthClick(nil);  // refresca enabled de user/pwd
     edDstHost.Text := oIni.ReadString('Destino', 'Host',   '127.0.0.1');
     edDstPort.Text := oIni.ReadString('Destino', 'Port',   '3306');
@@ -1572,6 +1606,7 @@ begin
     oIni.WriteString('Origen',  'User',    edSrcUser.Text);
     oIni.WriteString('Origen',  'PwdEnc',  CifrarPwd(edSrcPwd.Text));
     oIni.WriteBool  ('Origen',  'WinAuth', chkSrcWinAuth.Checked);
+    oIni.WriteString('Origen',  'Provider', ProviderOrigenSeleccionado);
     oIni.WriteString('Destino', 'Host', edDstHost.Text);
     oIni.WriteString('Destino', 'Port', edDstPort.Text);
     oIni.WriteString('Destino', 'Base', edDstBase.Text);

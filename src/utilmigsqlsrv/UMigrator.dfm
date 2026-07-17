@@ -68,6 +68,13 @@ object FormMigrator: TFormMigrator
         Height = 17
         Caption = 'Contrase'#241'a:'
       end
+      object lblSrcDriver: TLabel
+        Left = 230
+        Top = 58
+        Width = 47
+        Height = 17
+        Caption = 'Driver:'
+      end
       object edSrcHost: TEdit
         Left = 130
         Top = 25
@@ -88,14 +95,14 @@ object FormMigrator: TFormMigrator
         Top = 85
         Width = 200
         Height = 25
-        TabOrder = 2
+        TabOrder = 3
       end
       object edSrcUser: TEdit
         Left = 130
         Top = 115
         Width = 200
         Height = 25
-        TabOrder = 3
+        TabOrder = 4
         Text = 'sa'
       end
       object edSrcPwd: TEdit
@@ -104,7 +111,7 @@ object FormMigrator: TFormMigrator
         Width = 200
         Height = 25
         PasswordChar = '*'
-        TabOrder = 4
+        TabOrder = 6
       end
       object btnProbarSrc: TButton
         Left = 350
@@ -112,7 +119,7 @@ object FormMigrator: TFormMigrator
         Width = 140
         Height = 25
         Caption = 'Probar conexi'#243'n'
-        TabOrder = 5
+        TabOrder = 7
         OnClick = btnProbarSrcClick
       end
       object chkSrcWinAuth: TCheckBox
@@ -121,8 +128,23 @@ object FormMigrator: TFormMigrator
         Width = 140
         Height = 17
         Caption = 'Auth. Windows'
-        TabOrder = 6
+        TabOrder = 5
         OnClick = chkSrcWinAuthClick
+      end
+      object cbSrcDriver: TComboBox
+        Left = 290
+        Top = 55
+        Width = 200
+        Height = 25
+        Style = csDropDownList
+        ItemIndex = 0
+        TabOrder = 2
+        Text = 'UniDAC Direct (prDirect)'
+        Items.Strings = (
+          'UniDAC Direct (prDirect)'
+          'Microsoft OLE DB (prMSOLEDB)'
+          'SQL Native Client (prNativeClient)'
+          'Windows OLE DB incluido (prSQL)')
       end
     end
     object PanelDestino: TGroupBox
