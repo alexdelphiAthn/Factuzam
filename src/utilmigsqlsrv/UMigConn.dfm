@@ -5,8 +5,7 @@ object dmMig: TdmMig
     ProviderName = 'SQL Server'
     Port = 1433
     SpecificOptions.Strings = (
-      'SQL Server.Authentication=auWindows'
-      'SQL Server.Provider=prDirect')
+      'SQL Server.Authentication=auWindows')
     LoginPrompt = False
     Left = 80
     Top = 40

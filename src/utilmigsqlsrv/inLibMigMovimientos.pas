@@ -47,9 +47,11 @@
 {                           colisión con el contador 'MV' de la app)           }
 {                                                                              }
 {    Heurísticas (primera versión, afinar con el catálogo real del legacy):    }
-{      - Dirección (TIPO_MOV E/S): ocmovarp.Tipo si es 'E'/'S'; si no, signo   }
-{        de UnidadesStock; si no, signo de Cantidad. En RP manda Cantidad,     }
-{        porque el legacy guarda Tipo='E' aunque sea salida a proveedor.       }
+{      - Dirección (TIPO_MOV E/S): ocmovarp.Tipo da el sentido base, pero      }
+{        Cantidad negativa lo invierte. Si no hay Tipo, manda el signo de      }
+{        Cantidad. UnidadesStock queda como ultimo respaldo porque puede ser   }
+{        stock resultante. En RP manda Cantidad, porque el legacy guarda       }
+{        Tipo='E' aunque sea salida a proveedor.                               }
 {      - TIPO_DOC_MOV: ocmovarp.TipoDoc pasa tal cual cuando ya coincide con   }
 {        el destino (AC/AV/TR/AT/IN/DP/VE/AE/DC); sinónimos frecuentes         }
 {        mapeados; RP se importa como DC; desconocido se clasifica por         }
@@ -140,9 +142,11 @@ begin
 end;
 
 // Dirección del movimiento para documentos que NO son traspaso. El flag Tipo
-// del legacy es fiable aqui ('S' en ventas/albaranes de salida, 'E' en
-// albaranes de entrada); si no es explicito, caemos al signo de las unidades
-// de stock y por ultimo al de Cantidad. Por defecto entrada.
+// del legacy suele indicar el sentido base ('S' en ventas/albaranes de salida,
+// 'E' en albaranes de entrada), pero una Cantidad negativa representa una
+// reversión de esa operación. Si no hay Tipo explícito, manda el signo de
+// Cantidad; UnidadesStock se usa solo como último respaldo porque en legacy
+// puede traer el stock resultante, no la variación de la línea.
 // OJO traspasos (TR/AT): aqui Tipo viene 'E' en las DOS patas y TipoMov trae
 // 'SE', asi que NO sirven; su sentido se decide por estructura en el bucle
 // (almacen del movimiento == almacen destino -> entrada; si no, salida).
@@ -152,15 +156,24 @@ var
   u: string;
 begin
   u := UpperCase(Trim(sTipo));
-  if u = 'E' then
+  if fCantidad < 0 then
+  begin
+    if u = 'E' then
+      Result := 'S'
+    else if u = 'S' then
+      Result := 'E'
+    else
+      Result := 'S';
+  end
+  else if u = 'E' then
     Result := 'E'
   else if u = 'S' then
     Result := 'S'
+  else if fCantidad > 0 then
+    Result := 'E'
   else if fUnidades > 0 then
     Result := 'E'
   else if fUnidades < 0 then
-    Result := 'S'
-  else if fCantidad < 0 then
     Result := 'S'
   else
     Result := 'E';

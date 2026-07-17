@@ -131,3 +131,53 @@ insert_hashes_preserved=True
 vistas_procedimientos_desde_original=True
 columnas_insert_validas=True
 sha256=0D8448F9FC1DCEDA23BE771177888CA8288482B38D2526B671F0B74E662F4375
+
+Adaptacion factuzam_demo.sql para MariaDB 10.2.41
+Fecha: 2026-07-17 18:00:14
+Backup previo demo: factuzam_demo.sql.bak-antes-mariadb102-20260717-180014
+current_timestamp_parentesis_normalizados=117
+create_or_replace_table_normalizados=1
+insert_multifila_troceados=11
+insert_batches_generados=59
+filas_en_inserts_troceados=13068
+insert_grande_restante=0
+sha256=579B6C7228D52685D9A5DDD2107C689AB345D3B11874F2BC3B602C32710DF11C
+
+Validacion post-adaptacion
+current_timestamp_parentesis_ejecutable=0
+create_or_replace_table_ejecutable=0
+insert_grande_mayor_512k=0
+max_insert_bytes=131094
+importacion_temporal_mariadb_local_12_3=OK
+
+Adaptacion vistas UNION para MariaDB 10.2.41
+Fecha: 2026-07-17 18:10:18
+Backup previo demo: factuzam_demo.sql.bak-antes-colaciones-vistas-20260717-181018
+vistas_actualizadas=fza_caja_depositos_view,vi_atributos_sku_basico,vi_caja_busqueda_unificada,viest_dia
+motivo=Illegal mix of collations for operation UNION en MariaDB 10.2
+importacion_temporal_mariadb_local_12_3=OK
+tablas_objetos=241
+vistas=97
+sha256=50299EE09BAAC62BAD405665B4A4DAD669847E93C2BBDCFC3E1FAD9DB49972D6
+
+Adaptacion indices CREATE TABLE para MariaDB 10.2.41 / Windows
+Fecha: 2026-07-17 18:14:46
+Backup previo demo: factuzam_demo.sql.bak-antes-integrar-indices-20260717-181446
+motivo=Error 1025 errno 13 Permission denied al renombrar tabla temporal durante ALTER TABLE ADD INDEX
+alter_add_index_eliminados=249
+indices_integrados_en_create_table=249
+tablas_actualizadas=94
+alter_add_index_restantes=0
+importacion_temporal_mariadb_local_12_3=OK
+tablas_objetos=241
+vistas=97
+sha256=CBE6005C6592C6F7C72DAB3FC4553C0CEB5A31E1E31249827D639CE40FCA8913
+
+Silenciar notas esperadas en carga demo
+Fecha: 2026-07-17 18:17:00
+motivo=HeidiSQL muestra advertencias por DROP IF EXISTS de objetos no existentes en bases limpias
+accion=SET SQL_NOTES=0 al inicio y restauracion de SQL_NOTES al final
+importacion_temporal_mariadb_local_12_3=OK
+tablas_objetos=241
+vistas=97
+sha256=0ECC9E3D97572B915767ACB0E9D8B9E27F8ED7A08AD91BB69E7BD3C7692B49CD

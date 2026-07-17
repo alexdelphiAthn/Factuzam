@@ -21,7 +21,9 @@
 {          PRECIO_MEDIO_INVLIN = PrecioMedio origen                           }
 {                                                                             }
 {    Al estar el inventario en ESTADO='APLICADO' (lo dejamos directamente     }
-{    aplicado), generamos los movimientos de regularizacion 'IN'.        }
+{    aplicado), generamos los movimientos de regularizacion 'IN'. El          }
+{    movimiento guarda CANTIDAD_MOV en positivo y el sentido en TIPO_MOV,     }
+{    tambien cuando UnidadesStock origen viene negativo.                      }
 {                                                                             }
 {    Solo se incluyen filas con UnidadesStock <> 0. Si el usuario quiere      }
 {    mantener las filas con stock 0 (utiles para forzar la creacion del      }
@@ -243,11 +245,13 @@ var
   sDesc:                string;
   sNumero:              string;
   fCantidad, fPrecio:   Double;
-  fAcumDif, fImporte:   Double;
+  fCantMov, fAcumDif:   Double;
+  fImporte:             Double;
   bCabecera:            Boolean;
   bulkMov:              TBulkInsert;
   fs:                   TFormatSettings;
   sLineaPad:            string;
+  sTipoMov:             string;
   sNumeroMov, sFilaMov: string;
   sAhora, sUser:        string;
 begin
@@ -339,14 +343,18 @@ begin
                       sArt, sCodUnidad, sDesc, fCantidad, fPrecio);
         Inc(Stats.Insertadas);
         fAcumDif := fAcumDif + fCantidad;
-        // Movimiento de regularizacion (entrada) que CUADRA el stock: la
-        // misma fila que generaria PRC_FZA_INVENTARIOS_APLICAR al regularizar
-        // en la app (TIPO_DOC='IN', TIPO_MOV='E'). En migracion la teorica es
-        // 0, por eso solo hay entrada. NUMERO_MOV 'IV-MIG....-NNNNNNNNE' (<=20)
-        // identifica el origen migrador y lo separa de las regularizaciones
-        // que haga luego la app. ESACTIVO_MOV literal 'S'.
-        sNumeroMov := 'IV-' + sNumero + '-' + sLineaPad + 'E';
-        fImporte   := fCantidad * fPrecio;
+        // Movimiento de regularizacion que CUADRA el stock. La cantidad se
+        // guarda siempre en positivo y el signo vive en TIPO_MOV, igual que
+        // en el historico de movimientos. NUMERO_MOV 'IV-MIG....-NNNNNNNNE/S'
+        // (<=20) identifica el origen migrador y lo separa de las
+        // regularizaciones que haga luego la app. ESACTIVO_MOV literal 'S'.
+        if fCantidad < 0 then
+          sTipoMov := 'S'
+        else
+          sTipoMov := 'E';
+        fCantMov   := Abs(fCantidad);
+        sNumeroMov := 'IV-' + sNumero + '-' + sLineaPad + sTipoMov;
+        fImporte   := fCantMov * fPrecio;
         sFilaMov := Format(
           '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ' +
           '%s, %s, %s, %s, NULL, NULL, ''S'', %s, NULL, NULL, ' +
@@ -356,7 +364,7 @@ begin
            ValorOrNull(sLineaPad), ValorOrNull(sEmp),
            ValorOrNull(sAlm), sAhora, ValorOrNull(sArt),
            ValorOrNull(sCodUnidad), ValorOrNull(sDesc),
-           ValorOrNull('E'), FloatToStr(fCantidad, fs),
+           ValorOrNull(sTipoMov), FloatToStr(fCantMov, fs),
            FloatToStr(fPrecio, fs), FloatToStr(fImporte, fs),
            FloatToStr(fPrecio, fs), ValorOrNull(sAlm),
            sAhora, sAhora, sUser, sUser]);

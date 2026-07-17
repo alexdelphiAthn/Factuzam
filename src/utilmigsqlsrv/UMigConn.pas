@@ -36,7 +36,8 @@ type
     procedure SrvAfterConnect(Sender: TObject);
   public
     procedure ConfigurarOrigen(const sHost, sPort, sBase, sUser,
-                               sPwd: string; bWindowsAuth: Boolean = False);
+                               sPwd: string; bWindowsAuth: Boolean = False;
+                               const sProvider: string = 'prDirect');
     procedure ConfigurarDestino(const sHost, sPort, sBase, sUser,
                                 sPwd: string);
     procedure ProbarOrigen;
@@ -111,7 +112,10 @@ end;
 
 procedure TdmMig.ConfigurarOrigen(const sHost, sPort, sBase, sUser,
                                   sPwd: string;
-                                  bWindowsAuth: Boolean = False);
+                                  bWindowsAuth: Boolean = False;
+                                  const sProvider: string = 'prDirect');
+var
+  sProviderNormalizado: string;
 begin
   // COM/OLE DB del provider SQL Server: el hilo principal necesita COM
   // inicializado antes de abrir la conexion (si no: "CoInitialize has not
@@ -128,11 +132,25 @@ begin
   conSrv.LoginPrompt := False;
   coInitialize(nil);
   conSrv.AfterConnect := SrvAfterConnect;  // READ UNCOMMITTED al conectar
-  // Provider: dejamos el default de UniDAC (en general escoge OLE DB
-  // nativo si esta el cliente de SQL Server instalado, o protocolo TDS
-  // interno si no). Si tu version de UniDAC necesita uno concreto se
-  // puede fijar via SpecificOptions['Provider'] (ej 'MSOLEDBSQL',
-  // 'SNAC11', 'OLEDB', 'Direct'...).
+
+  // Elegir el transporte de forma explicita. No usamos el literal "Auto":
+  // algunas versiones de UniDAC no lo aceptan. La lista se valida aqui para
+  // que un valor manual o corrupto del INI no llegue a SpecificOptions.
+  if SameText(Trim(sProvider), 'prMSOLEDB') then
+    sProviderNormalizado := 'prMSOLEDB'
+  else if SameText(Trim(sProvider), 'prNativeClient') then
+    sProviderNormalizado := 'prNativeClient'
+  else if SameText(Trim(sProvider), 'prSQL') then
+    sProviderNormalizado := 'prSQL'
+  else
+    sProviderNormalizado := 'prDirect';
+
+  // SpecificOptions valida el valor en cada asignacion. No intentar borrar
+  // primero la opcion con una cadena vacia: UniDAC la rechaza con
+  // "Invalid value:  for option Provider". Asignar directamente sustituye
+  // tanto la variante con prefijo que pueda venir del DFM como la actual.
+  conSrv.SpecificOptions.Values['Provider'] := sProviderNormalizado;
+
   if bWindowsAuth then
   begin
     // Autenticación Windows (Integrated Security): el proceso que
@@ -252,7 +270,6 @@ begin
 end;
 
 function TdmMig.ClonarConexionOrigen: TUniConnection;
-var sAuth: string;
 begin
   Result := TUniConnection.Create(nil);
   Result.ProviderName := conSrv.ProviderName;
@@ -263,10 +280,9 @@ begin
   Result.Password     := conSrv.Password;
   Result.LoginPrompt  := False;
   Result.AfterConnect := SrvAfterConnect;  // READ UNCOMMITTED tambien aqui
-  // Preservar el modo de autenticacion (Windows / SQL).
-  sAuth := conSrv.SpecificOptions.Values['Authentication'];
-  if sAuth <> '' then
-    Result.SpecificOptions.Values['Authentication'] := sAuth;
+  // Copiar provider, autenticacion y cualquier otra opcion SQL Server. Cada
+  // worker debe usar exactamente el mismo driver elegido en el formulario.
+  Result.SpecificOptions.Assign(conSrv.SpecificOptions);
 end;
 
 function TdmMig.ClonarConexionDestino: TUniConnection;
