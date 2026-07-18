@@ -1,4 +1,4 @@
-inherited frmMtoFacturasBase: TfrmMtoFacturasBase
+﻿inherited frmMtoFacturasBase: TfrmMtoFacturasBase
   Margins.Left = 0
   Margins.Top = 0
   Margins.Right = 0
@@ -3833,7 +3833,7 @@ inherited frmMtoFacturasBase: TfrmMtoFacturasBase
     end
     object actEmpresa: TAction
       Caption = 'actEmpresa'
-      ShortCut = 16453
+      ShortCut = 49221
       OnExecute = actEmpresaExecute
     end
     object actCliente: TAction

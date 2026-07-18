@@ -811,6 +811,7 @@ SELECT t.orden AS orden_aplicacion,
  ORDER BY t.aplicado, t.orden;
 -- Scripts solo-datos, no detectables por esquema. Son idempotentes:
 -- si hay duda, relanzarlos no hace daño.
+--   busqueda_datos_shortcuts.sql
 --   reubicar_shortcuts_menu.sql
 --   reubicar_shortcuts_facturas.sql
 --   migracion_shortcuts_caja_ctrl_shift.sql

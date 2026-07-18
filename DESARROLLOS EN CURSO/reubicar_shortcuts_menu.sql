@@ -1,5 +1,6 @@
 -- =============================================================================
--- Reubicar shortcuts de menu: Arqueos, Paises, Unidades, Empleados y Efectos
+-- Reubicar shortcuts de menú: Empresas, Empleados, Arqueos, Países,
+-- Unidades y Efectos
 -- =============================================================================
 -- Sincroniza fza_winforms con los aceleradores definidos en inMtoPrincipal.dfm.
 -- Da un atajo unico a opciones que antes chocaban o no tenian, y resuelve de
@@ -8,25 +9,31 @@
 -- Cambios (CALL_WINF: antiguo -> nuevo):
 --   EfectosCompra:    Ctrl+Alt+E   -> Ctrl+Alt+C   (antes era un valor
 --                     huerfano sin atajo real; ahora con ShortCut en el DFM)
---   Empleados:        (sin atajo)  -> Ctrl+Alt+E
+--   Empresas:         Ctrl+E       -> Ctrl+Alt+E
+--   Empleados:        Ctrl+Alt+E   -> Ctrl+Shift+E
 --   CajaArqueosHist:  Ctrl+Shift+A -> Ctrl+Shift+H (Ctrl+Shift+A lo usaba
 --                     tambien Albaranes de compra)
 --   Paises:           Ctrl+L       -> Ctrl+Alt+L   (Ctrl+L lo usa Almacenes)
 --   UnidadesMedida:   (sin atajo)  -> Ctrl+Alt+U
 --
 -- Idempotente: cada UPDATE solo actua si el valor actual difiere del nuevo;
--- COALESCE cubre los casos NULL / cadena vacia (Unidades y Empleados).
+-- COALESCE cubre los casos NULL o cadena vacía.
 -- =============================================================================
--- Efectos de pago: Ctrl+Alt+C (libera Ctrl+Alt+E para Empleados)
+-- Efectos de pago: Ctrl+Alt+C.
 UPDATE fza_winforms
    SET SHORTCUT_WINF = 'Ctrl+Alt+C'
  WHERE CALL_WINF = 'EfectosCompra'
    AND COALESCE(SHORTCUT_WINF, '') <> 'Ctrl+Alt+C';
--- Empleados: Ctrl+Alt+E (antes sin atajo)
+-- Empresas: Ctrl+Alt+E (libera Ctrl+E para Búsqueda de datos).
 UPDATE fza_winforms
    SET SHORTCUT_WINF = 'Ctrl+Alt+E'
- WHERE CALL_WINF = 'Empleados'
+ WHERE CALL_WINF = 'Empresas'
    AND COALESCE(SHORTCUT_WINF, '') <> 'Ctrl+Alt+E';
+-- Empleados: Ctrl+Shift+E.
+UPDATE fza_winforms
+   SET SHORTCUT_WINF = 'Ctrl+Shift+E'
+ WHERE CALL_WINF = 'Empleados'
+   AND COALESCE(SHORTCUT_WINF, '') <> 'Ctrl+Shift+E';
 -- Historico de Arqueos: Ctrl+Shift+H (libera Ctrl+Shift+A de Albaranes compra)
 UPDATE fza_winforms
    SET SHORTCUT_WINF = 'Ctrl+Shift+H'

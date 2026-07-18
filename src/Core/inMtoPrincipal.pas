@@ -340,6 +340,7 @@ uses inLibUser,
   inMtoAppParam,
   inMtoCajaMenu,
   inMtoCajaParam,
+  inMtoBusquedaDatos,
   inMtoModalVerifactuDecl,
   inLibGenerarTicketCaja,
   inMtoStockConsulta,
@@ -1513,8 +1514,20 @@ begin
       AbrirCajonSinVenta;
       Handled := True;
     end
+    // Ctrl+E: búsqueda avanzada de artículos y SKU desde cualquier ventana.
+    else if (Msg.wParam = WPARAM(Ord('E'))) and
+            (GetKeyState(VK_CONTROL) < 0) and
+            (GetKeyState(VK_MENU) >= 0) and
+            (GetKeyState(VK_SHIFT) >= 0) then
+    begin
+      LForm := Screen.ActiveForm;
+      if not (LForm is TfrmMtoBusquedaDatos) then
+        TfrmMtoBusquedaDatos.Ejecutar(Self, LForm);
+      Handled := True;
+    end
     // Ctrl+U: consulta de stock global, precargando el articulo en foco.
-    else if (Msg.wParam = WPARAM(Ord('U'))) and (GetKeyState(VK_CONTROL) < 0) and
+    else if (Msg.wParam = WPARAM(Ord('U'))) and
+            (GetKeyState(VK_CONTROL) < 0) and
             (GetKeyState(VK_MENU) >= 0) and (GetKeyState(VK_SHIFT) >= 0) then
     begin
       // Si el principal esta activo, el form logico es el de la pestaña activa.

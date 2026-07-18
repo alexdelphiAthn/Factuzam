@@ -75,6 +75,16 @@ const
     'WHERE a.Proveedor IS NOT NULL AND a.Proveedor > 0 ' +
     '  AND LTRIM(RTRIM(a.Articulo)) <> '''' ' +
     'ORDER BY a.Proveedor, a.Articulo';
+  // SQL Server 2014 puede cortar el flujo TDS al materializar el ROW_NUMBER.
+  // Se conserva el vinculo y la referencia; precio y fecha quedan a NULL.
+  cSelectSrcCompat =
+    'SELECT a.Articulo, a.Proveedor, ISNULL(a.Modelo, '''') AS Modelo, ' +
+    '       CAST(NULL AS money) AS PrecioUltCompra, ' +
+    '       CAST(NULL AS smalldatetime) AS FechaCompra ' +
+    'FROM dbo.ocartp a WITH (NOLOCK) ' +
+    'WHERE a.Proveedor IS NOT NULL AND a.Proveedor > 0 ' +
+    '  AND LTRIM(RTRIM(a.Articulo)) <> '''' ' +
+    'ORDER BY a.Articulo';
   cCols =
     'CODIGO_PRV_AP, CODIGO_ART_AP, REF_PROVEEDOR_AP, ' +
     'PRECIO_ULT_COMPRA_AP, FECHA_VALIDEZ_AP, ' +
@@ -88,7 +98,14 @@ var
   sPrecio, sFecha:            string;
   fPrecioCompra:              Double;
 begin
-  qSrc := NuevoQOrigen(Eng, cSelectSrc);
+  if EsSqlServer2014OAnterior(Eng) then
+  begin
+    Eng.Log('  SQL Server 2014: consulta compatible sin ROW_NUMBER; ' +
+            'precio/fecha de ultima compra quedaran vacios.');
+    qSrc := NuevoQOrigen(Eng, cSelectSrcCompat);
+  end
+  else
+    qSrc := NuevoQOrigen(Eng, cSelectSrc);
   bulk := TBulkInsert.Create(Eng.ConDst, 'fza_articulos_proveedores',
                               cCols, 5000);
   try

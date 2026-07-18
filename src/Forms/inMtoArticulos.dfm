@@ -1,4 +1,4 @@
-inherited frmMtoArticulos: TfrmMtoArticulos
+﻿inherited frmMtoArticulos: TfrmMtoArticulos
   Left = 5
   Top = 4
   Caption = 'Articulos'
@@ -2503,7 +2503,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
       OnExecute = actFacturasExecute
     end
     object actEmpresas: TAction
-      ShortCut = 16453
+      ShortCut = 49221
       OnExecute = actEmpresasExecute
     end
     object actClientes: TAction
