@@ -27,7 +27,7 @@ uses
   Vcl.ActnList, Vcl.Dialogs, dxShellDialogs, JvComponentBase, JvEnterTab,
   cxLocalization, Vcl.StdCtrls, cxRadioGroup, cxNavigator, cxDBNavigator,
   Vcl.Buttons, cxGridCustomTableView, cxGridTableView, cxGridLevel, cxClasses,
-  cxGridCustomView, cxGrid, cxPC;
+  cxGridCustomView, cxGrid, cxPC, inLibDocumentosTrabajo;
 
 type
   TfrmMtoBusquedaDatos = class(TfrmMtoSearch)
@@ -69,9 +69,14 @@ type
   private
     FColumnasCreadas: Boolean;
     FAltoCriterios: Integer;
+    FPopupGrid: TPopupMenu;
+    FPopupGridOriginal: TNotifyEvent;
     procedure InicializarListas;
     procedure ActualizarInterfazCampo;
     procedure ActualizarColumnasColor;
+    procedure ConfigurarMenuContextual;
+    procedure PopupGridPopup(Sender: TObject);
+    procedure MenuAgregarDocumentoClick(Sender: TObject);
     procedure Buscar;
     function PrepararConsulta: Boolean;
     procedure ActualizarContador;
@@ -83,6 +88,9 @@ type
       out ARojo, AVerde, AAzul: Integer): Boolean;
     function ResolverColorObjetivo(const AValor: string; out AHex: string;
       out ARojo, AVerde, AAzul: Integer): Boolean;
+    function ResolverLineaDocumentoTrabajo(
+      out ALinea: TDocTrabajoLineaOrigen;
+      out AMensaje: string): Boolean;
   public
     class procedure Ejecutar(AOwner: TComponent;
       AParentForm: TCustomForm = nil);
@@ -153,6 +161,63 @@ begin
   InicializarListas;
   cxGrdDBTabPrin.FilterRow.Visible := True;
   cxGrdDBTabPrin.OptionsView.GroupByBox := True;
+  ConfigurarMenuContextual;
+end;
+
+procedure TfrmMtoBusquedaDatos.ConfigurarMenuContextual;
+begin
+  FPopupGrid := nil;
+  if cxGrdPrincipal.PopupMenu is TPopupMenu then
+    FPopupGrid := TPopupMenu(cxGrdPrincipal.PopupMenu);
+  if Assigned(FPopupGrid) then
+  begin
+    FPopupGridOriginal := FPopupGrid.OnPopup;
+    FPopupGrid.OnPopup := PopupGridPopup;
+  end;
+end;
+
+procedure TfrmMtoBusquedaDatos.PopupGridPopup(Sender: TObject);
+var
+  miAgregar: TMenuItem;
+  miSeparador: TMenuItem;
+  linea: TDocTrabajoLineaOrigen;
+  sMensaje: string;
+begin
+  if Assigned(FPopupGridOriginal) then
+    FPopupGridOriginal(Sender);
+  if Assigned(FPopupGrid) then
+  begin
+    miAgregar := TMenuItem.Create(FPopupGrid);
+    miAgregar.Caption := 'Añadir a Documento de Trabajo...';
+    miAgregar.Enabled := ResolverLineaDocumentoTrabajo(linea, sMensaje);
+    miAgregar.OnClick := MenuAgregarDocumentoClick;
+    FPopupGrid.Items.Insert(0, miAgregar);
+    miSeparador := TMenuItem.Create(FPopupGrid);
+    miSeparador.Caption := '-';
+    FPopupGrid.Items.Insert(1, miSeparador);
+  end;
+end;
+
+procedure TfrmMtoBusquedaDatos.MenuAgregarDocumentoClick(Sender: TObject);
+var
+  linea: TDocTrabajoLineaOrigen;
+  sMensaje: string;
+begin
+  if ResolverLineaDocumentoTrabajo(linea, sMensaje) then
+  begin
+    try
+      AgregarUnidadADocumentoTrabajo(Self, inLibGlobalVar.oConn, linea);
+    except
+      on E: Exception do
+      begin
+        MessageDlg(E.Message, mtError, [mbOK], 0);
+      end;
+    end;
+  end
+  else
+  begin
+    MessageDlg(sMensaje, mtInformation, [mbOK], 0);
+  end;
 end;
 
 procedure TfrmMtoBusquedaDatos.FormShow(Sender: TObject);
@@ -443,6 +508,9 @@ begin
     unqryResultados.SQL.Add('       eti.ATR_TAL,');
     unqryResultados.SQL.Add(
       '       COALESCE(stk.CANTIDAD_STOCK, 0) AS CANTIDAD_STOCK,');
+    unqryResultados.SQL.Add(
+      '       COALESCE(stk.CANTIDAD_STOCK_ALMACEN, 0)');
+    unqryResultados.SQL.Add('         AS CANTIDAD_STOCK_ALMACEN,');
     unqryResultados.SQL.Add('       stk.ALMACENES_STOCK,');
     unqryResultados.SQL.Add('       eti.CODIGO_BARRAS_CB,');
     unqryResultados.SQL.Add('       eti.CODIGO_FAM_ART,');
@@ -503,6 +571,11 @@ begin
     unqryResultados.SQL.Add('       SELECT CODIGO_UNIDAD_STK,');
     unqryResultados.SQL.Add(
       '              SUM(CANTIDAD_STK) AS CANTIDAD_STOCK,');
+    unqryResultados.SQL.Add(
+      '              SUM(CASE WHEN CODIGO_ALM_STK = :ALMACEN_DOC');
+    unqryResultados.SQL.Add('                       THEN CANTIDAD_STK');
+    unqryResultados.SQL.Add('                       ELSE 0 END)');
+    unqryResultados.SQL.Add('                AS CANTIDAD_STOCK_ALMACEN,');
     unqryResultados.SQL.Add(
       '              GROUP_CONCAT(DISTINCT CODIGO_ALM_STK');
     unqryResultados.SQL.Add(
@@ -589,6 +662,7 @@ begin
       unqryResultados.SQL.Add('          eti.CODIGO_UNIDAD_SKU');
     end;
     unqryResultados.SQL.Add(' LIMIT ' + IntToStr(ObtenerLimite));
+    unqryResultados.ParamByName('ALMACEN_DOC').AsString := oAlmacen;
     if bProximidad then
     begin
       unqryResultados.ParamByName('ROJO').AsInteger := iRojo;
@@ -710,6 +784,63 @@ begin
   end;
 end;
 
+function TfrmMtoBusquedaDatos.ResolverLineaDocumentoTrabajo(
+  out ALinea: TDocTrabajoLineaOrigen;
+  out AMensaje: string): Boolean;
+var
+  ds: TDataSet;
+  rec: TcxCustomGridRecord;
+  sColor: string;
+  sTalla: string;
+begin
+  Result := False;
+  ALinea.Clear;
+  AMensaje := '';
+  ds := unqryResultados;
+  rec := cxGrdDBTabPrin.Controller.FocusedRecord;
+  if (rec = nil) or (rec.RecordIndex < 0) then
+  begin
+    AMensaje := 'Seleccione una fila de SKU de la rejilla.';
+  end
+  else if (not ds.Active) or ds.IsEmpty then
+  begin
+    AMensaje := 'Seleccione un SKU de la rejilla.';
+  end
+  else if (ds.FindField('CODIGO_ART_ART') = nil) or
+          (ds.FindField('CODIGO_UNIDAD_SKU') = nil) then
+  begin
+    AMensaje := 'No se ha podido identificar el artículo y el SKU.';
+  end
+  else
+  begin
+    ALinea.CodigoArticulo :=
+      ds.FieldByName('CODIGO_ART_ART').AsString;
+    ALinea.CodigoSku :=
+      ds.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+    if (Trim(ALinea.CodigoArticulo) = '') or
+       (Trim(ALinea.CodigoSku) = '') then
+    begin
+      AMensaje := 'Seleccione una fila que contenga un SKU válido.';
+    end
+    else
+    begin
+      ALinea.CodigoAlmacen := oAlmacen;
+      ALinea.DescripcionArticulo :=
+        ds.FieldByName('DESCRIPCION_ART').AsString;
+      sColor := ds.FieldByName('ATR_CO').AsString;
+      sTalla := ds.FieldByName('ATR_TAL').AsString;
+      ALinea.DescripcionSku := Trim(sColor + ' ' + sTalla);
+      if ALinea.DescripcionSku = '' then
+        ALinea.DescripcionSku := ALinea.CodigoSku;
+      ALinea.CantidadStock :=
+        ds.FieldByName('CANTIDAD_STOCK_ALMACEN').AsFloat;
+      ALinea.Cantidad := ALinea.CantidadStock;
+      ALinea.Origen := 'CTRL_E';
+      Result := True;
+    end;
+  end;
+end;
+
 function TfrmMtoBusquedaDatos.ObtenerLimite: Integer;
 begin
   case cbbLimite.ItemIndex of
@@ -749,6 +880,7 @@ begin
   ConfigurarColumna('DISTANCIA_COLOR', 'Distancia RGB', 95, False);
   ConfigurarColumna('ATR_TAL', 'Talla', 75, True);
   ConfigurarColumna('CANTIDAD_STOCK', 'Stock', 75, True);
+  ConfigurarColumna('CANTIDAD_STOCK_ALMACEN', 'Stock almacén', 95, False);
   ConfigurarColumna('ALMACENES_STOCK', 'Almacenes', 110, True);
   ConfigurarColumna('CODIGO_BARRAS_CB', 'Código de barras', 135, True);
   ConfigurarColumna('CODIGO_FAM_ART', 'Familia', 90, True);
