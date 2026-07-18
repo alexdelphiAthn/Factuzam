@@ -1154,7 +1154,7 @@
     end
     object actEmpresas: TAction
       Caption = 'Empresas'
-      ShortCut = 16453
+      ShortCut = 49221
       OnExecute = actEmpresasExecute
     end
   end

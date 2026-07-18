@@ -521,7 +521,7 @@ end;
 
 procedure TfrmMtoClientes.actEmpresasExecute(Sender: TObject);
 begin
-  //control + E -> Empresas
+  // Ctrl+Alt+E -> Empresas.
   inherited;
     if (
         (pcPestanas.ActivePage = tsHistoriaFacturacion)) then

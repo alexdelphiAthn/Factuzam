@@ -104,6 +104,13 @@ incluido en Windows y permite hacer la prueba sin instalar componentes.
 Es un proveedor legado, por lo que se ofrece como opción de compatibilidad
 para migraciones, no como recomendación para aplicaciones nuevas.
 
+En SQL Server 2014 o anterior, el migrador activa automáticamente consultas de
+streaming compatibles para `articulos_proveedores` y `movimientos`. Evita los
+CTE con `ROW_NUMBER` y las ordenaciones globales que pueden terminar en
+`Protocol error in TDS stream`. En este modo, proveedor/modelo se conservan pero
+el último precio/fecha de compra queda vacío; en movimientos se usa el
+`PrecioMedioSIva` del movimiento y no se enlaza la operación de caja.
+
 ## Preparar la BBDD destino desde cero
 
 El propio Migrator ofrece tres botones en la sección "Preparar BBDD

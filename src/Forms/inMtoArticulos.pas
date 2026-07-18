@@ -907,7 +907,7 @@ end;
 procedure TfrmMtoArticulos.actEmpresasExecute(Sender: TObject);
 begin
   inherited;
-  //Control + E   -> Empresas
+  // Ctrl+Alt+E -> Empresas.
    with tvLinFac.DataController.DataSet do
     if (
         (pcDetail.ActivePage = tsLineasFactura)        and

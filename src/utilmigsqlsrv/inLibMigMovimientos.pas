@@ -445,6 +445,56 @@ const
     '                    AND opc.NroDoc = m.NroDoc ' +
     'WHERE LTRIM(RTRIM(m.Articulo)) <> '''' ' +
     'ORDER BY m.Empresa, m.Articulo, DescColor, m.Talla, m.Numero';
+  // Variante de streaming para SQL Server 2014. Evita CTEs, ROW_NUMBER,
+  // agregaciones globales y la ordenacion por SKU que cortaban el flujo TDS.
+  // El PK de ocmovarp ya esta ordenado por Numero.
+  cSelectSrcCompat =
+    'SELECT m.Numero, m.Empresa, m.Almacen, ' +
+    '       ISNULL(alm.Abreviatura, '''') AS AbreviaturaAlm, ' +
+    '       ISNULL(almdes.Abreviatura, '''') AS AbreviaturaAlmDes, ' +
+    '       m.EmpresaDes, m.AlmacenDes, m.AlmacenOri, ' +
+    '       m.Articulo, m.Color, m.Talla, ' +
+    '       ISNULL(m.Cantidad, 0) AS Cantidad, ' +
+    '       ISNULL(m.UnidadesStock, 0) AS UnidadesStock, ' +
+    '       ISNULL(m.Tipo, '''') AS Tipo, ' +
+    '       ISNULL(m.TipoMov, '''') AS TipoMov, ' +
+    '       ISNULL(m.TipoDoc, '''') AS TipoDoc, ' +
+    '       ISNULL(m.PrecioMedioSIva, 0) AS PrecioMedioSIva, ' +
+    '       m.FechaOpe, m.Fecha, m.Ejercicio, ' +
+    '       ISNULL(m.Serie, '''') AS Serie, m.NroDoc, ' +
+    '       ISNULL(m.Cliente, '''') AS Cliente, ' +
+    '       ISNULL(m.NroCaja, 0) AS NroCaja, ' +
+    '       CAST(NULL AS int) AS OpeCaja, ' +
+    '       CASE ' +
+    '         WHEN ac.Color IS NOT NULL ' +
+    '          AND LTRIM(RTRIM(ac.Color)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(ac.Color))) ' +
+    '         WHEN m.Color IS NOT NULL ' +
+    '          AND LTRIM(RTRIM(m.Color)) <> '''' ' +
+    '           THEN UPPER(LTRIM(RTRIM(m.Color))) ' +
+    '         ELSE ''0'' ' +
+    '       END AS DescColor, ' +
+    '       ISNULL(m.PrecioMedioSIva, 0) AS PrecioAlbaranLinea, ' +
+    '       ISNULL(m.PrecioMedioSIva, 0) AS SeedPrecio, ' +
+    '       ISNULL(almori.Abreviatura, '''') AS AbreviaturaAlmOri, ' +
+    '       ISNULL(art.DescripcionLarga, ' +
+    '              ISNULL(art.DescripcionCorta, '''')) AS DescArt ' +
+    'FROM dbo.ocmovarp m WITH (NOLOCK) ' +
+    'LEFT JOIN dbo.ocalm alm WITH (NOLOCK) ' +
+    '       ON alm.Empresa = m.Empresa AND alm.Almacen = m.Almacen ' +
+    'LEFT JOIN dbo.ocalm almdes WITH (NOLOCK) ' +
+    '       ON almdes.Empresa = m.EmpresaDes ' +
+    '      AND almdes.Almacen = m.AlmacenDes ' +
+    'LEFT JOIN dbo.ocartcol ac WITH (NOLOCK) ' +
+    '       ON ac.Articulo = m.Articulo AND ac.Color = m.Color ' +
+    'LEFT JOIN dbo.ocartp art WITH (NOLOCK) ' +
+    '       ON art.Articulo = m.Articulo ' +
+    'LEFT JOIN dbo.ocalm almori WITH (NOLOCK) ' +
+    '       ON almori.Empresa = m.Empresa ' +
+    '      AND almori.Almacen = m.AlmacenOri ' +
+    'WHERE m.Articulo IS NOT NULL ' +
+    '  AND LTRIM(RTRIM(m.Articulo)) <> '''' ' +
+    'ORDER BY m.Numero';
   cCols =
     'NUMERO_MOV, TIPO_DOC_MOV, SERIE_DOC_MOV, NUMERO_DOC_MOV, LINEA_MOV, ' +
     'CODIGO_EMP_MOV, CODIGO_ALM_MOV, FECHA_MOV, CODIGO_ART_MOV, ' +
@@ -472,13 +522,14 @@ var
   fPmpAlm, fSeed, fPrecAlb:       Double;
   fStkAlm, fValAlm, fStkOri, fValOri: Double;
   iAlmDes, iTmpNro, iNoMH, iBorr: Integer;
-  sSkuKey, sSkuActual, sAlmOri:   string;
+  sSkuKey, sEstadoKey:            string;
+  sEstadoOriKey, sAlmOri:         string;
+  sSelectSrcUsado:                string;
   oStock, oValor:                 TDictionary<string, Double>;
 begin
   fs := TFormatSettings.Create('en-US');
   oStock := TDictionary<string, Double>.Create;
   oValor := TDictionary<string, Double>.Create;
-  sSkuActual := '';
   // Reimport limpio: esto es un volcado COMPLETO del historico y el bulk usa
   // INSERT IGNORE (no actualiza filas ya existentes). Antes de recargar
   // borramos lo que crea ESTA migracion (prefijo 'MH'), para que los cambios
@@ -523,7 +574,17 @@ begin
   // Reabrimos transaccion: el bulk insert siguiente va en la del dominio y el
   // motor hace el Commit final.
   Eng.ConDst.StartTransaction;
-  qSrc := NuevoQOrigen(Eng, cSelectSrc);
+  if EsSqlServer2014OAnterior(Eng) then
+  begin
+    Eng.Log('  SQL Server 2014: consulta compatible en orden de Numero, ' +
+            'sin CTEs ni ROW_NUMBER.');
+    Eng.Log('  El coste usa PrecioMedioSIva del movimiento y no se ' +
+            'enlaza la operacion de caja.');
+    sSelectSrcUsado := cSelectSrcCompat;
+  end
+  else
+    sSelectSrcUsado := cSelectSrc;
+  qSrc := NuevoQOrigen(Eng, sSelectSrcUsado);
   // Streaming: ocmovarp puede tener cientos de miles de filas; no las
   // cacheamos en memoria (lectura hacia delante).
   qSrc.UniDirectional := True;
@@ -618,22 +679,16 @@ begin
           end;
         end;
         // === PMP rodante por almacen (coste SIN IVA) ===
-        // Al cambiar de SKU reiniciamos el estado por almacen y leemos la
-        // semilla (precio del PRIMER albaran del SKU) para valorar los
-        // movimientos anteriores al primer albaran.
+        // La clave incluye SKU y almacen para poder procesar por Numero. Asi
+        // no hace falta que SQL Server ordene los millones de filas por SKU.
         sSkuKey := sEmp + '|' + sArt + '|' + sDescColor + '|' +
                    Trim(qSrc.FieldByName('Talla').AsString);
-        if sSkuKey <> sSkuActual then
-        begin
-          oStock.Clear;
-          oValor.Clear;
-          sSkuActual := sSkuKey;
-          fSeed := qSrc.FieldByName('SeedPrecio').AsFloat;
-        end;
+        sEstadoKey := sSkuKey + '|' + sAlm;
+        fSeed := qSrc.FieldByName('SeedPrecio').AsFloat;
         // PMP vigente del almacen del movimiento (semilla si aun sin stock).
-        if not oStock.TryGetValue(sAlm, fStkAlm) then
+        if not oStock.TryGetValue(sEstadoKey, fStkAlm) then
           fStkAlm := 0;
-        if not oValor.TryGetValue(sAlm, fValAlm) then
+        if not oValor.TryGetValue(sEstadoKey, fValAlm) then
           fValAlm := 0;
         if fStkAlm > 0 then
           fPmpAlm := fValAlm / fStkAlm
@@ -653,9 +708,10 @@ begin
                        qSrc.FieldByName('AbreviaturaAlmOri').AsString));
           if sAlmOri = '' then
             sAlmOri := IntToStr(qSrc.FieldByName('AlmacenOri').AsInteger);
-          if not oStock.TryGetValue(sAlmOri, fStkOri) then
+          sEstadoOriKey := sSkuKey + '|' + sAlmOri;
+          if not oStock.TryGetValue(sEstadoOriKey, fStkOri) then
             fStkOri := 0;
-          if not oValor.TryGetValue(sAlmOri, fValOri) then
+          if not oValor.TryGetValue(sEstadoOriKey, fValOri) then
             fValOri := 0;
           if fStkOri > 0 then
             fCoste := fValOri / fStkOri
@@ -676,8 +732,8 @@ begin
           fValAlm := fValAlm - fCantMov * fCoste;
           fStkAlm := fStkAlm - fCantMov;
         end;
-        oStock.AddOrSetValue(sAlm, fStkAlm);
-        oValor.AddOrSetValue(sAlm, fValAlm);
+        oStock.AddOrSetValue(sEstadoKey, fStkAlm);
+        oValor.AddOrSetValue(sEstadoKey, fValAlm);
         // PMP tras el movimiento (si el stock queda <=0, mantenemos el ult.).
         if fStkAlm > 0 then
           fPmp := fValAlm / fStkAlm

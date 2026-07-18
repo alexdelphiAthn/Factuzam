@@ -58,6 +58,8 @@ uses
   inMtoFormasdePago in 'src\Forms\inMtoFormasdePago.pas' {frmMtoFormasdePago},
   inMtoGeneradorProcesos in 'src\Forms\inMtoGeneradorProcesos.pas' {frmMtoGeneradorProcesos},
   inMtoGenSearch in 'src\Forms\inMtoGenSearch.pas' {frmMtoSearch},
+  inMtoBusquedaDatos in
+    'src\Forms\inMtoBusquedaDatos.pas' {frmMtoBusquedaDatos},
   inMtoEmpleados in 'src\Forms\inMtoEmpleados.pas' {frmMtoEmpleados},
   inMtoGrupos in 'src\Forms\inMtoGrupos.pas' {frmMtoGrupos},
   inMtoIvas in 'src\Forms\inMtoIvas.pas' {frmMtoIvas},

@@ -211,6 +211,10 @@ function NormalizarCodigoAtb(const s: string): string;
 // Devuelve la cadena en mayúsculas y sin espacios laterales, o cadena vacía.
 function NormalizarCodigo(const s: string): string;
 
+// Detecta versiones antiguas de SQL Server para que los mappers eviten
+// consultas pesadas que algunos drivers TDS no transmiten de forma fiable.
+function EsSqlServer2014OAnterior(Eng: TMigEngine): Boolean;
+
 // Convierte 'S' / 'N' del origen a booleano destino. Si el origen es null o
 // vacío, devuelve sFalse ('N' por defecto).
 function BoolSN(const sValor: string; const sTrue: string = 'S';
@@ -697,6 +701,24 @@ end;
 function NormalizarCodigo(const s: string): string;
 begin
   Result := UpperCase(Trim(s));
+end;
+
+function EsSqlServer2014OAnterior(Eng: TMigEngine): Boolean;
+var
+  Q: TUniQuery;
+  iVersionMayor: Integer;
+begin
+  iVersionMayor := 0;
+  Q := NuevoQOrigen(Eng,
+    'SELECT CAST(SERVERPROPERTY(''ProductMajorVersion'') AS int)');
+  try
+    Q.Open;
+    if not Q.Fields[0].IsNull then
+      iVersionMayor := Q.Fields[0].AsInteger;
+  finally
+    Q.Free;
+  end;
+  Result := (iVersionMayor > 0) and (iVersionMayor <= 12);
 end;
 
 function BoolSN(const sValor: string;

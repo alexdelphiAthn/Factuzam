@@ -1,4 +1,4 @@
-inherited frmMtoClientes: TfrmMtoClientes
+﻿inherited frmMtoClientes: TfrmMtoClientes
   Caption = 'Clientes'
   ClientHeight = 703
   ClientWidth = 1141
@@ -2828,7 +2828,7 @@ inherited frmMtoClientes: TfrmMtoClientes
     Top = 400
     object actEmpresas: TAction
       Caption = 'Empresas'
-      ShortCut = 16453
+      ShortCut = 49221
       OnExecute = actEmpresasExecute
     end
     object actFacturas: TAction
