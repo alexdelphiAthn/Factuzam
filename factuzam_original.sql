@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 17/07/2026 7:36:58
+-- Backup generado: 18/07/2026 6:33:14
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -6153,7 +6153,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 550, 3, 'S', 'S', '2026-07-17 07:36:47', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 551, 3, 'S', 'S', '2026-07-18 06:02:54', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 28, 2, 'S', 'S', '2026-07-07 08:17:26', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -21132,8 +21132,29 @@ SET @sSql := IF(@sExisteIdx = 0,
 PREPARE stmt FROM @sSql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
-', '2026-07-17 07:36:47', '2026-07-17 07:36:47', 'Administrador', 'Administrador');
--- 79 registros exportados
+', '2026-07-17 07:36:47', '2026-07-17 07:36:47', 'Administrador', 'Administrador'),
+  ('550', 'busqueda_datos_shortcuts', '-- =============================================================================
+-- Atajos de Búsqueda de datos, Empresas y Empleados
+-- =============================================================================
+-- Sincroniza fza_winforms con los accesos definidos en la aplicación:
+--   Ctrl+E       -> Búsqueda compleja de artículos y SKU.
+--   Ctrl+Alt+E   -> Empresas.
+--   Ctrl+Shift+E -> Empleados.
+--
+-- Búsqueda de datos no se registra en fza_winforms porque es un modal global
+-- invocado desde TfrmMtoPrincipal.AppMessage, no un Mto abierto por ShowMto.
+-- Los UPDATE son idempotentes y pueden reaplicarse sin efectos adicionales.
+-- =============================================================================
+UPDATE `fza_winforms`
+   SET `SHORTCUT_WINF` = ''Ctrl+Alt+E''
+ WHERE `CALL_WINF` = ''Empresas''
+   AND COALESCE(`SHORTCUT_WINF`, '''') <> ''Ctrl+Alt+E'';
+UPDATE `fza_winforms`
+   SET `SHORTCUT_WINF` = ''Ctrl+Shift+E''
+ WHERE `CALL_WINF` = ''Empleados''
+   AND COALESCE(`SHORTCUT_WINF`, '''') <> ''Ctrl+Shift+E'';
+', '2026-07-18 06:02:54', '2026-07-18 06:02:54', 'Administrador', 'Administrador');
+-- 80 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -24859,7 +24880,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-17 07:36:40', '2026-07-17 07:36:40', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-18 06:29:15', '2026-07-18 06:29:15', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Vendedores', 'S', '012', '2026-07-02 18:49:30', '2026-07-02 18:49:30', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
 -- 2 registros exportados
 
@@ -36173,8 +36194,8 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('DocumentosTrabajo', 'Documentos de Trabajo', 'mnuDocumentosTrabajo', 'inMtoDocumentosTrabajo.TfrmMtoDocumentosTrabajo', 'Ctrl+W', 'UniDataDocumentosTrabajo.TdmDocumentosTrabajo', 5),
   ('EfectosCompra', 'Efectos de Pago a Proveedor', 'EfectosCompra1', 'inMtoEfectosCompra.TfrmMtoEfectosCompra', 'Ctrl+Alt+C', 'UniDataEfectosCompra.TdmEfectosCompra', 5),
   ('EfectosVenta', 'Efectos de Cobro a Cliente', 'EfectosVenta1', 'inMtoEfectosVenta.TfrmMtoEfectosVenta', '', 'UniDataEfectosVenta.TdmEfectosVenta', 5),
-  ('Empleados', 'Empleados', 'mnuEmpleados', 'inMtoEmpleados.TfrmMtoEmpleados', 'Ctrl+Alt+E', 'UniDataEmpleados.TdmEmpleados', 5),
-  ('Empresas', 'Empresas', 'mnuEmpresas', 'inMtoEmpresas.TfrmMtoEmpresas', 'Ctrl+E', 'UniDataEmpresas.TdmEmpresas', 5),
+  ('Empleados', 'Empleados', 'mnuEmpleados', 'inMtoEmpleados.TfrmMtoEmpleados', 'Ctrl+Shift+E', 'UniDataEmpleados.TdmEmpleados', 5),
+  ('Empresas', 'Empresas', 'mnuEmpresas', 'inMtoEmpresas.TfrmMtoEmpresas', 'Ctrl+Alt+E', 'UniDataEmpresas.TdmEmpresas', 5),
   ('Facturas', 'Facturas', 'mnuFacturas', 'inMtoFacturasNormal.TfrmMtoFacturasNormal', 'Ctrl+Alt+F', 'UniDataFacturas.TdmFacturas', 5),
   ('FacturasCompra', 'Facturas de Compra', 'Facturas1', 'inMtoFacturasCompra.TfrmMtoFacturasCompra', 'Ctrl+Alt+F', 'UniDataFacturasCompra.TdmFacturasCompra', 5),
   ('FacturasSimplif', 'Facturas Simplificadas', 'mnuFacturasSimplif', 'inMtoFacturasSimplif.TfrmMtoFacturasSimplif', 'Ctrl+Shift+F', 'UniDataFacturas.TdmFacturas', 5),
@@ -44127,4 +44148,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 17/07/2026 7:37:03
+-- Backup completado: 18/07/2026 6:33:18

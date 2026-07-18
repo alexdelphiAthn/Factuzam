@@ -1,4 +1,4 @@
-inherited frmMtoBusquedaDatos: TfrmMtoBusquedaDatos
+﻿inherited frmMtoBusquedaDatos: TfrmMtoBusquedaDatos
   Caption = 'B'#250'squeda de datos de art'#237'culos (Ctrl+E)'
   ClientHeight = 720
   ClientWidth = 1240
@@ -58,6 +58,7 @@ inherited frmMtoBusquedaDatos: TfrmMtoBusquedaDatos
             Left = 12
             Top = 27
             Properties.DropDownListStyle = lsFixedList
+            Properties.OnChange = cbbCampoPropertiesChange
             TabOrder = 0
             Width = 180
           end
@@ -68,10 +69,16 @@ inherited frmMtoBusquedaDatos: TfrmMtoBusquedaDatos
             TabOrder = 10
             Transparent = True
           end
-          object edtValor: TcxTextEdit
+          object edtValor: TcxButtonEdit
             Left = 204
             Top = 27
+            Properties.Buttons = <
+              item
+                Default = True
+                Kind = bkEllipsis
+              end>
             Properties.Nullstring = 'Introduzca el valor y pulse Entrar'
+            Properties.OnButtonClick = edtValorPropertiesButtonClick
             TabOrder = 1
             OnKeyDown = edtValorKeyDown
             Width = 265
