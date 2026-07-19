@@ -469,6 +469,7 @@ var
   codigos    : TList<string>;
   precOrigSal, precOrigFin: Double;
   precSalida, precFinal, dto: Double;
+  dtoEuros: Double;
 begin
   Result := False;
   ANumInsertados := 0;
@@ -488,12 +489,13 @@ begin
       'INSERT INTO fza_articulos_tarifas (' +
       '  CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, CODIGO_TAR_ARTTAR,' +
       '  ESACTIVO_ARTTAR, PRECIO_SALIDA_ARTTAR, PRECIO_FINAL_ARTTAR,' +
-      '  PORCENTAJE_DTO_ARTTAR, FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR,' +
+      '  PRECIO_DTO_ARTTAR, PORCENTAJE_DTO_ARTTAR,' +
+      '  FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR,' +
       '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA' +
       ') VALUES (' +
       '  :CODIGO_ART_ART, '''', :CODIGO_TAR_ARTTAR,' +
       '  ''S'', :PRECIO_SALIDA, :PRECIO_FINAL,' +
-      '  :PORCEN_DTO, :FECHA_DESDE, :FECHA_HASTA,' +
+      '  :PRECIO_DTO, :PORCEN_DTO, :FECHA_DESDE, :FECHA_HASTA,' +
       '  :USR, :USR2, NOW()' +
       ')';
 
@@ -530,11 +532,17 @@ begin
           dto        := spnPorcenDto.Value;
         end;
 
+        // Euros de descuento: salida - final (0 si no hay descuento real)
+        dtoEuros := precSalida - precFinal;
+        if dtoEuros < 0 then
+          dtoEuros := 0;
+
         ins.ParamByName('CODIGO_ART_ART').AsString :=
           FSqlPreview.FieldByName('CODIGO_ART_ART').AsString;
         ins.ParamByName('CODIGO_TAR_ARTTAR').AsString  := codigoTar;
         ins.ParamByName('PRECIO_SALIDA').AsFloat   := precSalida;
         ins.ParamByName('PRECIO_FINAL').AsFloat    := precFinal;
+        ins.ParamByName('PRECIO_DTO').AsFloat      := dtoEuros;
         ins.ParamByName('PORCEN_DTO').AsFloat      := dto;
         ins.ParamByName('FECHA_DESDE').AsDateTime  := dtFechaDesde.Date;
 
