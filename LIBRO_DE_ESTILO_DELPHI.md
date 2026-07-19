@@ -1536,7 +1536,9 @@ Los ficheros se generan en `GetLogFolder` con nombre
 `LOG_<yyyy_mm_dd_hhnnss>_<UUID>.log` para que ordenen por fecha. Cuando
 el contador de ficheros supera `DEFAULT_LOG_RETENTION` (10), se zippean
 los más antiguos en `archive/<yyyy>/<mm>/Logs_<yyyy-mm-dd>.zip`. La
-rotación se hace al arrancar.
+rotación se hace al arrancar. En ese mismo momento, los ZIP del formato
+anterior `archive/Logs_<yyyymmdd_hhnnss>.zip` se trasladan y consolidan
+en el ZIP diario correspondiente.
 
 ### 19.6 Sistema de errores — `AppException`
 
