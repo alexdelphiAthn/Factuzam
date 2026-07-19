@@ -2364,12 +2364,13 @@ procedure TfrmMtoArticulos.TrasPrecargaAsync;
 begin
   inherited;
   // Dialogo de precarga DESACTIVADO de momento: la lista se carga entera
-  // (overlay con barra de progreso). Aqui solo aseguramos que la ficha del
-  // primer articulo quede cargada tras la carga async (si el AfterScroll de
-  // RestaurarFocoGrid no la fijo ya).
+  // (overlay con barra de progreso). El Open async corre con
+  // DisableControls (el AfterScroll en el hilo de trabajo se autoexcluye),
+  // asi que este es el punto canonico donde queda cargada la ficha del
+  // registro actual. El escudo de OnAfterScrollArticulos evita recargarla
+  // si RestaurarFocoGrid ya la fijo o si el articulo no cambio.
   if dmmArticulos.unqryTablaG.Active
-     and (not dmmArticulos.unqryTablaG.IsEmpty)
-     and (FArticuloCargado = '') then
+     and (not dmmArticulos.unqryTablaG.IsEmpty) then
     OnAfterScrollArticulos(dmmArticulos.unqryTablaG);
 end;
 
