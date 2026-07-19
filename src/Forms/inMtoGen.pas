@@ -1305,6 +1305,13 @@ begin
   // un parpadeo "<No hay datos a mostrar>" innecesario.
   if (not yaActiva) and Assigned(dsTablaG) then
     dsTablaG.DataSet := nil;
+  // El Open en hilo dispara AfterScroll EN EL HILO DE TRABAJO. Los
+  // handlers pesados (p.ej. Articulos: CargarPropiedades toca VCL y
+  // comparte lista/conexion) se autoprotegen con "if
+  // DataSet.ControlsDisabled then Exit": deshabilitamos aqui y
+  // reactivamos en el callback, ya en main thread. La ficha del
+  // registro actual la carga RestaurarFocoGrid o TrasPrecargaAsync.
+  unqry.DisableControls;
   sw := TStopwatch.StartNew;
   EjecutarEnBackground(
     procedure
@@ -1325,6 +1332,10 @@ begin
       // liberados; salir limpio sin tocar nada.
       if csDestroying in ComponentState then
         Exit;
+      // Reactivar SIEMPRE (tambien con error) para no dejar el contador
+      // de DisableControls desbalanceado. Estamos en main thread.
+      if Assigned(unqry) then
+        unqry.EnableControls;
       if ErrMsg = '' then
         inLibLog.Log.LogPerf('Carga/async', Self.Name + ' | OK',
           sw.ElapsedMilliseconds)
