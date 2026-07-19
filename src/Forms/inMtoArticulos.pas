@@ -2841,6 +2841,7 @@ procedure TfrmMtoArticulos.dbcTarifasPRECIOFINALPropertiesEditValueChanged(
   Sender: TObject);
 var
     e: TcxCustomEdit;
+    pct: Double;
   begin
   inherited;
   if (dmmArticulos <> nil) then
@@ -2850,15 +2851,18 @@ var
       begin
         e := Sender as TcxCustomEdit;
         FindField('PRECIO_FINAL_ARTTAR').AsString := VarToStr(e.EditingValue);
-        if (FindField('PORCENTAJE_DTO_ARTTAR').AsFloat <> 0) then
+        pct := FindField('PORCENTAJE_DTO_ARTTAR').AsFloat;
+        // Mantener el % fijo: salida = final / (1 - pct/100). Con pct
+        // fuera de (0,100) no se puede derivar la salida (división por
+        // cero o salida negativa): se trata como fila sin descuento.
+        if (pct > 0) and (pct < 100) then
         begin
-          FindField('PRECIO_DTO_ARTTAR').AsFloat :=
-                                (FindField('PRECIO_FINAL_ARTTAR').AsFloat * (
-                                 FindField(
-                                   'PORCENTAJE_DTO_ARTTAR').AsFloat / 100));
           FindField('PRECIO_SALIDA_ARTTAR').AsFloat :=
-                                        FindField('PRECIO_FINAL_ARTTAR').AsFloat
-                                       - FindField('PRECIO_DTO_ARTTAR').AsFloat;
+                              (FindField('PRECIO_FINAL_ARTTAR').AsFloat /
+                               (1 - (pct / 100)));
+          FindField('PRECIO_DTO_ARTTAR').AsFloat :=
+                              (FindField('PRECIO_SALIDA_ARTTAR').AsFloat -
+                               FindField('PRECIO_FINAL_ARTTAR').AsFloat);
         end
         else
         begin
