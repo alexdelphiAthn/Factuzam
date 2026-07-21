@@ -35,6 +35,7 @@ uses
   inLibIBAN in 'src\Lib\inLibIBAN.pas',
   inLibSepaRemesasVenta in 'src\Lib\inLibSepaRemesasVenta.pas',
   inLibFacturas in 'src\Lib\inLibFacturas.pas',
+  inLibFacturaPdfBlob in 'src\Lib\inLibFacturaPdfBlob.pas',
   inLibFormatoDocumento in 'src\Lib\inLibFormatoDocumento.pas',
   inLibInformesGuiasCache in 'src\Lib\inLibInformesGuiasCache.pas',
   inLibGridColumnChooser in 'src\Lib\inLibGridColumnChooser.pas',

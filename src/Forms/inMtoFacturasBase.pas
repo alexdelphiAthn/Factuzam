@@ -631,6 +631,9 @@ type
     // de celda; mismo patron defensivo que en inMtoCajaOpe.
     procedure RecalcLineaFacturaSegura(Sender: TObject);
     procedure GuardarPendienteAntesDeImprimir;
+    // Genera en silencio el PDF de la factura recien lanzada y lo deja
+    // archivado en fza_facturas.PDF_FAC (via PdfExportado del modal)
+    procedure GenerarPdfFacturaConsolidada(const ASerie, ANumero: string);
     // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
     // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal con las
     // lineas de la factura a la vista. El Construir hace ClearItems:
@@ -709,6 +712,7 @@ uses
   inMtoClientes,
   inLibGlobalVar,
   inLibLog,
+  inLibDir,
   inLibtb,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku;
@@ -1347,6 +1351,37 @@ begin
     form.edtSerie.Text := dsTablaG.DataSet.findField(fseriefac).AsString;
     form.dmFac := dmmFacturas;
     form.ShowModal;
+  finally
+    FreeAndNil(form);
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.GenerarPdfFacturaConsolidada(
+  const ASerie, ANumero: string);
+var
+  form:     TfrmPrintFac;
+  sRutaPdf: string;
+begin
+  // Usa el formato por defecto del usuario (perfil <form>_default). Si
+  // hay formatos guardados pero ninguno por defecto, aparece el selector
+  // una vez, igual que al imprimir. El volcado al blob lo hace el propio
+  // PdfExportado del modal; el fichero temporal no se conserva.
+  form := TfrmPrintFac.Create(Application);
+  try
+    try
+      form.edtSerie.Text  := ASerie;
+      form.edtNroFac.Text := ANumero;
+      form.dmFac := dmmFacturas;
+      form.Consultar_Formularios;
+      sRutaPdf := GetUserFolderTickets + 'Factura_' +
+        FormatDateTime('yyyy_mm_dd_hh_nn_ss_zzz', Now) + '.pdf';
+      if form.ExportarPdfActual(sRutaPdf) then
+        System.SysUtils.DeleteFile(sRutaPdf);
+    except
+      on E: Exception do
+        Log.LogError('No se pudo archivar el PDF al consolidar ' +
+          ASerie + '\' + ANumero + ': ' + E.Message);
+    end;
   finally
     FreeAndNil(form);
   end;
@@ -2368,6 +2403,10 @@ begin
         'Lanzamiento manual (Consolidar) desde Borradores', '',
         sSerie, sNumero);
     dsTablaG.DataSet.Refresh;
+    // Archivado del PDF recien lanzado en fza_facturas.PDF_FAC. En modo
+    // VERIFACTU la fase es VERIFACTU_PENDIENTE pero el QR tributario ya
+    // es imprimible; una reimpresion posterior refresca el blob.
+    GenerarPdfFacturaConsolidada(sSerie, sNumero);
     if VerifactuActivo then
       ShowMessage('Borrador ' + sSerie + '\' + sNumero +
                   ' en VERIFACTU_PENDIENTE: el QR ya puede imprimirse ' +

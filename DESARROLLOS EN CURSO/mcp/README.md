@@ -5,18 +5,24 @@ consulta sobre la BBDD de Factuzam en MariaDB. Pensado para conectarlo
 a Claude Code / Claude Desktop y poder preguntar por datos de la
 aplicacion en lenguaje natural.
 
-Primera herramienta implementada:
+Herramientas implementadas:
 
 | Herramienta       | Descripcion                                        |
 |-------------------|----------------------------------------------------|
 | `buscar_clientes` | Busqueda de clientes por texto libre en `fza_clientes` |
+| `factura_pdf`     | Extrae a fichero el PDF archivado de una factura (`fza_facturas.PDF_FAC`) |
 
-La busqueda compara el texto contra codigo, razon social, NIF, email,
-telefono, movil, poblacion y referencia. Parametros:
+`buscar_clientes` compara el texto contra codigo, razon social, NIF,
+email, telefono, movil, poblacion y referencia. Parametros:
 
 - `texto` — texto a buscar (vacio = listar los primeros).
 - `solo_activos` — por defecto `True`; con `False` incluye bajas.
 - `limite` — maximo de filas, entre 1 y 100 (defecto 20).
+
+`factura_pdf(serie, numero)` vuelca el PDF que Factuzam archiva al
+consolidar la factura (ver `../facturas_pdf_blob.md`) a la carpeta
+`FACTUZAM_DIR_PDF` (o la temporal del sistema) y devuelve ruta, nombre,
+tamano, huella SHA-256 e instante de archivado.
 
 Solo lanza SELECT: el servidor no modifica datos.
 
@@ -42,6 +48,7 @@ La conexion se configura por variables de entorno:
 | `FACTUZAM_BBDD_USUARIO` | `root`      | Usuario              |
 | `FACTUZAM_BBDD_CLAVE`   | *(vacia)*   | Contrasena           |
 | `FACTUZAM_BBDD_NOMBRE`  | `factuzam`  | Nombre de la BBDD    |
+| `FACTUZAM_DIR_PDF`      | *(temporal)*| Carpeta donde extraer los PDF |
 
 Recomendable usar un usuario MariaDB de solo lectura para el MCP.
 
@@ -82,5 +89,6 @@ Anadir al `claude_desktop_config.json`:
 ## Proximos pasos
 
 - `ficha_cliente(codigo)` — ficha completa de un cliente.
+- `buscar_facturas` — busqueda de facturas por cliente / fechas.
 - Busqueda de articulos y consulta de stock.
 - Consulta de facturas / deuda por cliente.
