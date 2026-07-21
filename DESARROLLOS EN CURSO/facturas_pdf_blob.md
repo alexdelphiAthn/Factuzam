@@ -18,7 +18,10 @@ consulta.
 
 Columnas nuevas en `fza_facturas` (patrón de `fza_ventas_ws_cola`):
 `PDF_FAC` (longblob), `NOMBRE_PDF_FAC`, `TAMANO_PDF_FAC`,
-`HUELLA_PDF_FAC` (SHA-256 hex), `INSTANTE_PDF_FAC`.
+`HUELLA_PDF_FAC` (SHA-256 hex), `INSTANTE_PDF_FAC` y
+`FORMATO_PDF_FAC` (formato de impresión con el que se generó: el
+`sElegido` del modal — `VALUE_USUPER` de `fza_usuarios_perfiles` — o
+`'Predeterminado'` para el .frx de fábrica).
 
 ## Flujo
 
