@@ -83,7 +83,8 @@ implementation
 {$R *.dfm}
 
 uses inMtoPreviewExcel, inLibFacturaExcel, inLibAppParam, inLibVerifactu,
-     inLibFormatoDocumento, inLibVentasWsCola, inLibGlobalVar;
+     inLibFormatoDocumento, inLibVentasWsCola, inLibGlobalVar,
+     inLibFacturaPdfBlob;
 
 { TfrmPrintFac }
 
@@ -156,14 +157,31 @@ begin
 end;
 
 procedure TfrmPrintFac.PdfExportado(const ARuta: string);
+var
+  sSerie:  string;
+  sNumero: string;
+  sFase:   string;
+  bLanzada: Boolean;
 begin
   inherited;
   if (Trim(ARuta) <> '') and (dmFac <> nil) and
      dmFac.unqryFacPrint.Active and (not dmFac.unqryFacPrint.IsEmpty) then
+  begin
+    sSerie  := dmFac.unqryFacPrint.FieldByName('SERIE_FAC').AsString;
+    sNumero := dmFac.unqryFacPrint.FieldByName('NUMERO_FAC').AsString;
     TVentasWsCola.AdjuntarFacturaPdfSeguro(inLibGlobalVar.oConn,
-      dmFac.unqryFacPrint.FieldByName('SERIE_FAC').AsString,
-      dmFac.unqryFacPrint.FieldByName('NUMERO_FAC').AsString,
-      ARuta);
+      sSerie, sNumero, ARuta);
+    // Archivado en fza_facturas.PDF_FAC: solo el PDF de UNA factura
+    // (rbActual; un rango de fechas mezcla varias en un fichero) y solo
+    // si ya salio de borrador (en modo SIN se imprimen borradores)
+    sFase := dmFac.unqryFacPrint.FieldByName('FASE_FAC').AsString;
+    bLanzada :=
+      (dmFac.unqryFacPrint.FieldByName('ESCONSOLIDADA_FAC').AsString = 'S')
+      or ((sFase <> '') and (not SameText(sFase, 'BORRADOR')));
+    if rbActual.Checked and bLanzada then
+      GuardarPdfFacturaEnBlob(inLibGlobalVar.oConn, sSerie, sNumero, ARuta,
+                              sElegido);
+  end;
 end;
 
 function TfrmPrintFac.ObtenerNombreFactura(ADataSet: TDataSet): string;
