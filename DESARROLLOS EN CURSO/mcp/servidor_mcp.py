@@ -3,6 +3,7 @@
 
 Herramientas disponibles:
   - buscar_clientes: busqueda de clientes por texto libre.
+  - buscar_facturas: busqueda de facturas por cliente y fechas.
   - factura_pdf: extrae a fichero el PDF archivado de una factura.
 
 Configuracion por variables de entorno (ver README.md):
@@ -106,6 +107,65 @@ def buscar_clientes(texto: str, solo_activos: bool = True,
         conexion.close()
     return [{clave: valor_serializable(valor)
              for clave, valor in fila.items()} for fila in filas]
+
+
+@servidor.tool()
+def buscar_facturas(cliente: str = '', desde: str = '', hasta: str = '',
+                    solo_consolidadas: bool = True,
+                    limite: int = 10) -> list[dict]:
+    """Busca facturas de venta de Factuzam, las mas recientes primero.
+
+    `cliente` compara contra el codigo de cliente (exacto) y contra
+    razon social y NIF (contiene). `desde`/`hasta` acotan la fecha de
+    la factura (formato AAAA-MM-DD). `solo_consolidadas` (defecto True)
+    limita a facturas emitidas; con False incluye borradores. Devuelve
+    hasta `limite` filas (1-100) con serie, numero, fecha, tipo, fase,
+    cliente, total y si tienen PDF archivado (extraible despues con
+    factura_pdf). Para "la ultima factura de X": cliente='X', limite=1.
+    """
+    limite = max(1, min(int(limite), 100))
+    condiciones = []
+    parametros = []
+    cliente = cliente.strip()
+    if cliente != '':
+        condiciones.append('(CODIGO_CLI_FAC = %s '
+                           'OR RAZON_SOCIAL_CLIENTE_FAC LIKE %s '
+                           'OR NIF_CLIENTE_FAC LIKE %s)')
+        parametros.extend([cliente, f'%{cliente}%', f'%{cliente}%'])
+    if desde.strip() != '':
+        condiciones.append('FECHA_FAC >= %s')
+        parametros.append(desde.strip())
+    if hasta.strip() != '':
+        condiciones.append('FECHA_FAC <= %s')
+        parametros.append(hasta.strip())
+    if solo_consolidadas:
+        condiciones.append("ESCONSOLIDADA_FAC = 'S'")
+    sql = ('SELECT SERIE_FAC, NUMERO_FAC, FECHA_FAC, TIPO_FAC, FASE_FAC, '
+           '       ESCONSOLIDADA_FAC, CODIGO_CLI_FAC, '
+           '       RAZON_SOCIAL_CLIENTE_FAC, NIF_CLIENTE_FAC, '
+           '       TOTAL_LIQUIDO_FAC, '
+           '       PDF_FAC IS NOT NULL AS PDF_DISPONIBLE, '
+           '       FORMATO_PDF_FAC, INSTANTE_PDF_FAC '
+           '  FROM fza_facturas')
+    if condiciones:
+        sql += ' WHERE ' + ' AND '.join(condiciones)
+    sql += (' ORDER BY FECHA_FAC DESC, INSTANTECONSO_FAC DESC, '
+            '          NUMERO_FAC DESC LIMIT %s')
+    parametros.append(limite)
+    conexion = abrir_conexion()
+    try:
+        with conexion.cursor() as cursor:
+            cursor.execute(sql, parametros)
+            filas = cursor.fetchall()
+    finally:
+        conexion.close()
+    resultado = []
+    for fila in filas:
+        fila = {clave: valor_serializable(valor)
+                for clave, valor in fila.items()}
+        fila['PDF_DISPONIBLE'] = bool(fila['PDF_DISPONIBLE'])
+        resultado.append(fila)
+    return resultado
 
 
 @servidor.tool()
