@@ -353,6 +353,7 @@ uses
   UniDataFacturas, inMtoModalImpFac, inLibVerifactuCola,
   inLibFacturas, inLibGenBusq, inLibCajaParam, inLibGenerarTicket,
   inLibGenerarTicketCaja, inLibGenerarTicketBD, inLibVentasWsCola,
+  inLibFacturaPdfBlob,
   inMtoModalGenImpSave, inLibLayoutForm,
   inLibArticulosValidador, inLibArticulosResolver,
   inLibArticulosAtributosLookup,
@@ -3442,10 +3443,20 @@ begin
            end;
          end;
          if slRutasTicketPdf.Count > 0 then
+         begin
            TVentasWsCola.AdjuntarTicketPdfSeguro(inLibGlobalVar.oConn,
              DatosCaja.UltSerieFacturaGrabada,
              DatosCaja.UltNumeroFacturaGrabada,
              slRutasTicketPdf[slRutasTicketPdf.Count - 1]);
+           // Archivado en fza_facturas.PDF_FAC: el ultimo PDF de la
+           // lista es el ticket fiscal completo (con precios y QR); el
+           // regalo se genera sin ruta y no llega a la lista
+           GuardarPdfFacturaEnBlob(inLibGlobalVar.oConn,
+             DatosCaja.UltSerieFacturaGrabada,
+             DatosCaja.UltNumeroFacturaGrabada,
+             slRutasTicketPdf[slRutasTicketPdf.Count - 1],
+             'TicketTermico');
+         end;
          // Rectificación: enlazar original→rectificativa (fase
          // RECTIFICADA + columnas ABONO), comentario y encolado; y
          // salir del modo
