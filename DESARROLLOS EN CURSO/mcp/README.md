@@ -60,6 +60,10 @@ La conexion se configura por variables de entorno:
 | `FACTUZAM_BBDD_CLAVE`   | *(vacia)*   | Contrasena           |
 | `FACTUZAM_BBDD_NOMBRE`  | `factuzam`  | Nombre de la BBDD    |
 | `FACTUZAM_DIR_PDF`      | *(temporal)*| Carpeta donde extraer los PDF |
+| `FACTUZAM_MCP_TRANSPORTE`| `stdio`    | `stdio` (local) o `http` (remoto) |
+| `FACTUZAM_MCP_HOST`     | `127.0.0.1` | Escucha del modo http |
+| `FACTUZAM_MCP_PUERTO`   | `8974`      | Puerto del modo http  |
+| `FACTUZAM_MCP_TOKEN`    | *(vacio)*   | Si se define, exige `Authorization: Bearer <token>` |
 
 Recomendable usar un usuario MariaDB de solo lectura para el MCP.
 
@@ -96,6 +100,53 @@ Anadir al `claude_desktop_config.json`:
   }
 }
 ```
+
+## Modo HTTP (acceso remoto: claude.ai, ChatGPT, moviles)
+
+El mismo servidor puede exponerse por HTTP (endpoint `/mcp`, protocolo
+MCP "streamable http") para clientes que no lanzan procesos locales:
+
+```bash
+set FACTUZAM_MCP_TRANSPORTE=http
+set FACTUZAM_MCP_TOKEN=un-token-largo-y-aleatorio
+python servidor_mcp.py
+```
+
+Escucha en `http://127.0.0.1:8974/mcp`. Con `FACTUZAM_MCP_TOKEN`
+definido, toda peticion sin `Authorization: Bearer <token>` recibe 401.
+
+### Despliegue recomendado en la oficina
+
+1. **Servicio**: arrancar `servidor_mcp.py` como servicio junto a
+   MariaDB (Windows: Programador de tareas "al iniciar el equipo" o
+   NSSM; Linux: unidad systemd). Siempre con usuario BBDD de solo
+   lectura (`factuzam_ro`) y escucha en `127.0.0.1`.
+2. **HTTPS hacia internet**: NO abrir el puerto 8974 directamente.
+   Opciones, de mas a menos recomendada:
+   - **Cloudflare Tunnel** (`cloudflared tunnel --url
+     http://127.0.0.1:8974`): sin abrir puertos en el router, da una
+     URL HTTPS publica; con Cloudflare Access se puede exigir ademas
+     login por email.
+   - **Reverse proxy en el servidor web existente** (Apache/nginx/IIS):
+     `ProxyPass /mcp http://127.0.0.1:8974/mcp` con certificado TLS
+     (Let's Encrypt) y el dominio de la empresa.
+   - VPN (Tailscale/WireGuard) si solo van a consultar empleados.
+3. **MariaDB nunca se expone**: solo el MCP sale a internet, y es de
+   solo lectura + token.
+
+### Alta en los clientes
+
+- **Claude Code**: `claude mcp add factuzam --transport http
+  https://tu-dominio/mcp --header "Authorization: Bearer <token>"`.
+- **claude.ai / app movil de Claude**: Configuracion → Conectores →
+  "Añadir conector personalizado" con la URL `https://tu-dominio/mcp`
+  (planes de pago; si la UI no permite cabeceras, proteger con
+  Cloudflare Access en lugar de token).
+- **ChatGPT**: Configuracion → Conectores → conector personalizado MCP
+  con la misma URL (planes de pago; requiere URL publica HTTPS).
+
+La disponibilidad exacta de conectores MCP por plan/plataforma cambia
+con frecuencia: verificar con el plan del cliente al desplegar.
 
 ## Proximos pasos
 
