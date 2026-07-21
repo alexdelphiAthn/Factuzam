@@ -3,6 +3,7 @@
 
 Herramientas disponibles:
   - buscar_clientes: busqueda de clientes por texto libre.
+  - factura_pdf: extrae a fichero el PDF archivado de una factura.
 
 Configuracion por variables de entorno (ver README.md):
   FACTUZAM_BBDD_HOST     host de MariaDB (defecto 127.0.0.1)
@@ -10,10 +11,12 @@ Configuracion por variables de entorno (ver README.md):
   FACTUZAM_BBDD_USUARIO  usuario (defecto root)
   FACTUZAM_BBDD_CLAVE    contrasena (defecto vacia)
   FACTUZAM_BBDD_NOMBRE   nombre de la BBDD (defecto factuzam)
+  FACTUZAM_DIR_PDF       carpeta donde extraer PDFs (defecto temporal)
 """
 import datetime
 import decimal
 import os
+import tempfile
 import pymysql
 from pymysql.cursors import DictCursor
 from mcp.server.fastmcp import FastMCP
@@ -103,6 +106,61 @@ def buscar_clientes(texto: str, solo_activos: bool = True,
         conexion.close()
     return [{clave: valor_serializable(valor)
              for clave, valor in fila.items()} for fila in filas]
+
+
+@servidor.tool()
+def factura_pdf(serie: str, numero: str) -> dict:
+    """Extrae a fichero el PDF archivado de una factura de Factuzam.
+
+    Factuzam guarda el PDF en fza_facturas.PDF_FAC al consolidar la
+    factura (y lo refresca en cada exportacion manual). Esta herramienta
+    lo vuelca a la carpeta FACTUZAM_DIR_PDF (o la temporal del sistema)
+    y devuelve la ruta junto con nombre, tamano, huella SHA-256 e
+    instante de archivado. Si la factura existe pero aun no tiene PDF
+    archivado, lo indica en el resultado.
+    """
+    conexion = abrir_conexion()
+    try:
+        with conexion.cursor() as cursor:
+            cursor.execute(
+                'SELECT NUMERO_FAC, SERIE_FAC, ESCONSOLIDADA_FAC, '
+                '       FASE_FAC, RAZON_SOCIAL_CLIENTE_FAC, PDF_FAC, '
+                '       NOMBRE_PDF_FAC, TAMANO_PDF_FAC, HUELLA_PDF_FAC, '
+                '       INSTANTE_PDF_FAC '
+                '  FROM fza_facturas '
+                ' WHERE SERIE_FAC = %s AND NUMERO_FAC = %s',
+                (serie.strip(), numero.strip()))
+            fila = cursor.fetchone()
+    finally:
+        conexion.close()
+    if fila is None:
+        return {'encontrada': False,
+                'mensaje': f'No existe la factura {serie}\\{numero}'}
+    if not fila['PDF_FAC']:
+        return {'encontrada': True,
+                'pdf_disponible': False,
+                'fase': fila['FASE_FAC'],
+                'consolidada': fila['ESCONSOLIDADA_FAC'] == 'S',
+                'mensaje': 'La factura existe pero no tiene PDF archivado '
+                           '(se archiva al consolidarla o reimprimirla)'}
+    directorio = os.environ.get('FACTUZAM_DIR_PDF', tempfile.gettempdir())
+    os.makedirs(directorio, exist_ok=True)
+    nombre = fila['NOMBRE_PDF_FAC'] or f'Factura_{serie}_{numero}.pdf'
+    nombre = os.path.basename(nombre)
+    ruta = os.path.join(directorio, nombre)
+    with open(ruta, 'wb') as fichero:
+        fichero.write(fila['PDF_FAC'])
+    return {'encontrada': True,
+            'pdf_disponible': True,
+            'ruta': ruta,
+            'nombre': nombre,
+            'tamano_bytes': fila['TAMANO_PDF_FAC'],
+            'huella_sha256': fila['HUELLA_PDF_FAC'],
+            'instante_archivado': valor_serializable(
+                fila['INSTANTE_PDF_FAC']),
+            'cliente': fila['RAZON_SOCIAL_CLIENTE_FAC'],
+            'consolidada': fila['ESCONSOLIDADA_FAC'] == 'S',
+            'fase': fila['FASE_FAC']}
 
 
 if __name__ == '__main__':
