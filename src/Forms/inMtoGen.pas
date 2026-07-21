@@ -193,6 +193,11 @@ type
     FGuardianBorradoInstalado: Boolean;
     FFiltroMenuBase64: string;
     FBusqGlobalMenu: string;
+    function FiltroGridActivo: Boolean;
+    procedure MoverRegistroGridFiltrado(AAvanzar: Boolean);
+    procedure NavegadorButtonClick(Sender: TObject;
+                                   AButtonIndex: Integer;
+                                   var ADone: Boolean);
     // Filtros guardados (desplegable junto a "Guardar Excel"). Guardan y
     // comparten DataController.Filter de la lista principal con nombre
     // propio, independiente del layout de columnas.
@@ -1670,6 +1675,7 @@ begin
   swTotal := TStopwatch.StartNew;
   inherited;
   Self.HandleNeeded; //da problemas
+  nvNavegador.Buttons.OnButtonClick := NavegadorButtonClick;
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
                                                      Self.Caption + ' Abierta');
   tsFichCab := nil;
@@ -2242,6 +2248,48 @@ begin
             (dsTablaG.State = dsBrowse) and
             PermitirNavegacionTeclas and
             not FocoEnEditorTexto;
+end;
+
+function TfrmMtoGen.FiltroGridActivo: Boolean;
+begin
+  Result := Assigned(cxGrdDBTabPrin) and
+            cxGrdDBTabPrin.DataController.Filter.Active and
+            not cxGrdDBTabPrin.DataController.Filter.IsEmpty;
+end;
+
+procedure TfrmMtoGen.MoverRegistroGridFiltrado(AAvanzar: Boolean);
+var
+  iFila: Integer;
+  iUltimaFila: Integer;
+begin
+  iUltimaFila := cxGrdDBTabPrin.DataController.RowCount - 1;
+  if iUltimaFila >= 0 then
+  begin
+    iFila := cxGrdDBTabPrin.DataController.FocusedRowIndex;
+    if iFila < 0 then
+      iFila := 0
+    else if AAvanzar then
+      Inc(iFila)
+    else
+      Dec(iFila);
+    if iFila < 0 then
+      iFila := 0;
+    if iFila > iUltimaFila then
+      iFila := iUltimaFila;
+    cxGrdDBTabPrin.DataController.FocusedRowIndex := iFila;
+  end;
+end;
+
+procedure TfrmMtoGen.NavegadorButtonClick(Sender: TObject;
+  AButtonIndex: Integer; var ADone: Boolean);
+begin
+  // El filtro pertenece al grid, no al dataset del navegador.
+  if FiltroGridActivo and
+     (AButtonIndex in [NBDI_PRIOR, NBDI_NEXT]) then
+  begin
+    MoverRegistroGridFiltrado(AButtonIndex = NBDI_NEXT);
+    ADone := True;
+  end;
 end;
 
 procedure TfrmMtoGen.actNavBrowseUpdate(Sender: TObject);
