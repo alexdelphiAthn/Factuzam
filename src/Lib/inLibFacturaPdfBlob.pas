@@ -21,12 +21,15 @@ uses
 
 /// <summary>
 /// Vuelca el PDF de ARutaPdf en fza_facturas (PDF_FAC, NOMBRE_PDF_FAC,
-/// TAMANO_PDF_FAC, HUELLA_PDF_FAC, INSTANTE_PDF_FAC) para la factura
-/// ASerie\ANumero. "Seguro": cualquier fallo queda en el log y no
-/// interrumpe la consolidación ni la impresión que lo invoca.
+/// TAMANO_PDF_FAC, HUELLA_PDF_FAC, INSTANTE_PDF_FAC, FORMATO_PDF_FAC)
+/// para la factura ASerie\ANumero. AFormato es el formato de impresión
+/// usado (sElegido del modal; vacío se registra como 'Predeterminado').
+/// "Seguro": cualquier fallo queda en el log y no interrumpe la
+/// consolidación ni la impresión que lo invoca.
 /// </summary>
 procedure GuardarPdfFacturaEnBlob(AConn: TUniConnection;
-                                  const ASerie, ANumero, ARutaPdf: string);
+                                  const ASerie, ANumero, ARutaPdf: string;
+                                  const AFormato: string = '');
 
 implementation
 
@@ -34,14 +37,19 @@ uses
   Data.DB, System.Hash, System.IOUtils, inLibGlobalVar, inLibLog;
 
 procedure GuardarPdfFacturaEnBlob(AConn: TUniConnection;
-                                  const ASerie, ANumero, ARutaPdf: string);
+                                  const ASerie, ANumero, ARutaPdf: string;
+                                  const AFormato: string = '');
 var
-  Qry:     TUniQuery;
-  iTamano: Int64;
-  sHuella: string;
+  Qry:      TUniQuery;
+  iTamano:  Int64;
+  sHuella:  string;
+  sFormato: string;
 begin
   if FileExists(ARutaPdf) then
   begin
+    sFormato := Trim(AFormato);
+    if sFormato = '' then
+      sFormato := 'Predeterminado';
     Qry := TUniQuery.Create(nil);
     try
       try
@@ -55,6 +63,7 @@ begin
           '     TAMANO_PDF_FAC = :TAMANO, ' +
           '     HUELLA_PDF_FAC = :HUELLA, ' +
           '     INSTANTE_PDF_FAC = NOW(), ' +
+          '     FORMATO_PDF_FAC = :FORMATO, ' +
           '     INSTANTE_MODIF = NOW(), ' +
           '     USUARIO_MODIF  = :USUARIO ' +
           ' WHERE SERIE_FAC  = :SERIE ' +
@@ -63,6 +72,7 @@ begin
         Qry.ParamByName('NOMBRE').AsString := ExtractFileName(ARutaPdf);
         Qry.ParamByName('TAMANO').AsLargeInt := iTamano;
         Qry.ParamByName('HUELLA').AsString := sHuella;
+        Qry.ParamByName('FORMATO').AsString := sFormato;
         Qry.ParamByName('USUARIO').AsString := oUser;
         Qry.ParamByName('SERIE').AsString := ASerie;
         Qry.ParamByName('NUMERO').AsString := ANumero;

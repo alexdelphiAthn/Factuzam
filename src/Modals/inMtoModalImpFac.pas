@@ -179,7 +179,8 @@ begin
       (dmFac.unqryFacPrint.FieldByName('ESCONSOLIDADA_FAC').AsString = 'S')
       or ((sFase <> '') and (not SameText(sFase, 'BORRADOR')));
     if rbActual.Checked and bLanzada then
-      GuardarPdfFacturaEnBlob(inLibGlobalVar.oConn, sSerie, sNumero, ARuta);
+      GuardarPdfFacturaEnBlob(inLibGlobalVar.oConn, sSerie, sNumero, ARuta,
+                              sElegido);
   end;
 end;
 

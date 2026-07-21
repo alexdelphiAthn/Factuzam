@@ -126,7 +126,7 @@ def factura_pdf(serie: str, numero: str) -> dict:
                 'SELECT NUMERO_FAC, SERIE_FAC, ESCONSOLIDADA_FAC, '
                 '       FASE_FAC, RAZON_SOCIAL_CLIENTE_FAC, PDF_FAC, '
                 '       NOMBRE_PDF_FAC, TAMANO_PDF_FAC, HUELLA_PDF_FAC, '
-                '       INSTANTE_PDF_FAC '
+                '       INSTANTE_PDF_FAC, FORMATO_PDF_FAC '
                 '  FROM fza_facturas '
                 ' WHERE SERIE_FAC = %s AND NUMERO_FAC = %s',
                 (serie.strip(), numero.strip()))
@@ -158,6 +158,7 @@ def factura_pdf(serie: str, numero: str) -> dict:
             'huella_sha256': fila['HUELLA_PDF_FAC'],
             'instante_archivado': valor_serializable(
                 fila['INSTANTE_PDF_FAC']),
+            'formato': fila['FORMATO_PDF_FAC'],
             'cliente': fila['RAZON_SOCIAL_CLIENTE_FAC'],
             'consolidada': fila['ESCONSOLIDADA_FAC'] == 'S',
             'fase': fila['FASE_FAC']}
