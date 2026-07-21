@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       UPrincipal                                                    }
 {    Tipo:       Formulario                                                    }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       12/07/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       21/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -91,9 +91,15 @@ begin
   edtUrl.Text :=
     'https://webservice.veryverifactu.com/api/v1/admin/crear_api.php';
   mAmbitos.Lines.Text :=
-    'sif:instalacion' + sLineBreak +
+    'prueba:leer' + sLineBreak +
+    'ventas:leer' + sLineBreak +
+    'ventas:escribir' + sLineBreak +
     'fotos:leer' + sLineBreak +
-    'recuentos:leer';
+    'fotos:escribir' + sLineBreak +
+    'sif:instalacion' + sLineBreak +
+    'recuentos:leer' + sLineBreak +
+    'recuentos:escribir' + sLineBreak +
+    'correo:enviar';
   CargarIdentidad;
 end;
 

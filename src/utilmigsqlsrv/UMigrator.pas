@@ -94,6 +94,11 @@ type
     MemoLog:           TMemo;
     TabErrores:        TTabSheet;
     MemoErrores:       TMemo;
+    TabAlmacenesDeposito: TTabSheet;
+    PanelAlmacenesDeposito: TPanel;
+    lblAlmacenesDeposito: TLabel;
+    btnCargarAlmacenesDeposito: TButton;
+    listAlmacenesDeposito: TCheckListBox;
     StatusBar:         TStatusBar;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -109,6 +114,8 @@ type
     procedure btnLimpiarDemoClick(Sender: TObject);
     procedure btnResetearMigClick(Sender: TObject);
     procedure btnBorrarBBDDClick(Sender: TObject);
+    procedure btnCargarAlmacenesDepositoClick(Sender: TObject);
+    procedure listAlmacenesDepositoClickCheck(Sender: TObject);
   private
     FEngine:       TMigEngine;
     FTask:         IOmniTaskControl;
@@ -121,6 +128,7 @@ type
     // completo). Se calculan al pulsar Ejecutar; vacias fuera de migracion.
     FRutaLogErrores: string;
     FRutaLogCompleto: string;
+    FOrigenAlmacenesDeposito: string;
     procedure AnexarLinea(const sRuta, sTexto: string);
     procedure Log(const sMsg: string);
     procedure RegistrarMigraciones;
@@ -134,6 +142,11 @@ type
     procedure EjecutarMigracionesBackground;
     procedure ActualizarProgreso(const sDominio: string;
                                   iRow, iTotal: Integer);
+    procedure LiberarAlmacenesDeposito;
+    procedure CargarAlmacenesDeposito;
+    procedure GuardarSeleccionAlmacenesDeposito;
+    function HayDominioAlmacenesDeposito: Boolean;
+    function PrepararAlmacenesDeposito: Boolean;
   public
   end;
 
@@ -174,6 +187,16 @@ uses
   inLibMigEfectosCompra,
   inLibMigFotos,
   inLibPathTokens;
+
+type
+  TAlmacenDepositoInfo = class
+  public
+    Empresa:   Integer;
+    Almacen:   Integer;
+    Codigo:    string;
+    Nombre:    string;
+    Prioridad: Integer;
+  end;
 
 // =========================================================================
 //  Lifecycle
@@ -236,6 +259,7 @@ begin
   except
     // no podemos hacer nada en destroy, ignoramos
   end;
+  LiberarAlmacenesDeposito;
   FLineasProgreso.Free;
   // Solo liberamos el motor si el worker TERMINO. Si sigue vivo (atascado
   // en una query larga que no chequea cancelacion), liberar FEngine
@@ -367,7 +391,7 @@ begin
     MigrarMovimientos);
   FEngine.Registrar('ventas', 'Ventas / Caja (occaj)',
     'dbo.occaj → fza_caja_operaciones + fza_caja_pagos + ' +
-    'fza_depositos_cliente (AL→depósito, cobro→adelanto)',
+    'fza_depositos_cliente (almacén depósito→DE, cobro→adelanto)',
     MigrarVentas);
   FEngine.Registrar('pedidos_venta', 'Pedidos venta mayor (ocpedcli)',
     'dbo.ocpedcli/ocpedcliart → fza_pedidos + fza_pedidos_lineas',
@@ -832,6 +856,274 @@ begin
   end;
 end;
 
+procedure TFormMigrator.btnCargarAlmacenesDepositoClick(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass;
+  try
+    dmMig.ConfigurarOrigen(edSrcHost.Text, edSrcPort.Text, edSrcBase.Text,
+                           edSrcUser.Text, edSrcPwd.Text,
+                           chkSrcWinAuth.Checked,
+                           ProviderOrigenSeleccionado);
+    dmMig.conSrv.Open;
+    CargarAlmacenesDeposito;
+    PageInferior.ActivePage := TabAlmacenesDeposito;
+  except
+    on E: Exception do
+    begin
+      Log('ERROR cargando almacenes de depósito: ' + E.Message);
+      ShowMessage('No se pudieron cargar los almacenes:'#13#10 + E.Message);
+    end;
+  end;
+  Screen.Cursor := crDefault;
+end;
+
+procedure TFormMigrator.listAlmacenesDepositoClickCheck(Sender: TObject);
+var
+  oSeleccionado, oInfo: TAlmacenDepositoInfo;
+  i, iSeleccionado: Integer;
+begin
+  iSeleccionado := listAlmacenesDeposito.ItemIndex;
+  if (iSeleccionado >= 0) and
+     listAlmacenesDeposito.Checked[iSeleccionado] then
+  begin
+    oSeleccionado := TAlmacenDepositoInfo(
+      listAlmacenesDeposito.Items.Objects[iSeleccionado]);
+    for i := 0 to listAlmacenesDeposito.Items.Count - 1 do
+    begin
+      if i <> iSeleccionado then
+      begin
+        oInfo := TAlmacenDepositoInfo(
+          listAlmacenesDeposito.Items.Objects[i]);
+        if oInfo.Empresa = oSeleccionado.Empresa then
+          listAlmacenesDeposito.Checked[i] := False;
+      end;
+    end;
+  end;
+end;
+
+procedure TFormMigrator.LiberarAlmacenesDeposito;
+var
+  i: Integer;
+begin
+  for i := 0 to listAlmacenesDeposito.Items.Count - 1 do
+    listAlmacenesDeposito.Items.Objects[i].Free;
+  listAlmacenesDeposito.Items.Clear;
+end;
+
+procedure TFormMigrator.CargarAlmacenesDeposito;
+const
+  cSql =
+    'SELECT Empresa, Almacen, ISNULL(Nombre, '''') AS Nombre, ' +
+    '       ISNULL(Abreviatura, '''') AS Abreviatura, ' +
+    '       ISNULL(Deposito, '''') AS Deposito ' +
+    'FROM dbo.ocalm ORDER BY Empresa, Almacen';
+var
+  q: TUniQuery;
+  oInfo: TAlmacenDepositoInfo;
+  oIni: TIniFile;
+  stEmpresas: TStringList;
+  i, j, iMejor, iPrioridad: Integer;
+  sAbreviatura, sNombre, sTexto, sMarca: string;
+  sEmpresa, sGuardado, sSeccion: string;
+begin
+  LiberarAlmacenesDeposito;
+  q := TUniQuery.Create(nil);
+  oIni := TIniFile.Create(RutaIni);
+  stEmpresas := TStringList.Create;
+  try
+    sSeccion := 'AlmacenesDeposito.' + Trim(edSrcBase.Text);
+    q.Connection := dmMig.conSrv;
+    q.SQL.Text := cSql;
+    q.Open;
+    while not q.Eof do
+    begin
+      oInfo := TAlmacenDepositoInfo.Create;
+      oInfo.Empresa := q.FieldByName('Empresa').AsInteger;
+      oInfo.Almacen := q.FieldByName('Almacen').AsInteger;
+      sAbreviatura := UpperCase(Trim(
+        q.FieldByName('Abreviatura').AsString));
+      sNombre := Trim(q.FieldByName('Nombre').AsString);
+      if sAbreviatura = '' then
+        sAbreviatura := IntToStr(oInfo.Almacen);
+      oInfo.Codigo := sAbreviatura;
+      oInfo.Nombre := sNombre;
+      sEmpresa := IntToStr(oInfo.Empresa);
+      sGuardado := oIni.ReadString(sSeccion, sEmpresa, '');
+      sTexto := UpperCase(sNombre) + '|' + sAbreviatura;
+      sMarca := '';
+      if sGuardado = IntToStr(oInfo.Almacen) then
+      begin
+        oInfo.Prioridad := 40;
+        sMarca := ' [selección guardada]';
+      end
+      else if BoolSN(q.FieldByName('Deposito').AsString) = 'S' then
+      begin
+        oInfo.Prioridad := 30;
+        sMarca := ' [ocalm.Deposito=S]';
+      end
+      else if SameText(sNombre, 'DEPOSITO') or
+              SameText(sNombre, 'DEPÓSITO') or
+              SameText(sAbreviatura, 'DEPOSITO') or
+              SameText(sAbreviatura, 'DEPÓSITO') then
+      begin
+        oInfo.Prioridad := 20;
+        sMarca := ' [nombre DEPOSITO]';
+      end
+      else if Pos('DEPO', sTexto) > 0 then
+      begin
+        oInfo.Prioridad := 10;
+        sMarca := ' [nombre contiene DEPO]';
+      end
+      else
+        oInfo.Prioridad := 0;
+      listAlmacenesDeposito.Items.AddObject(
+        Format('Empresa %d | %d | %s - %s%s',
+          [oInfo.Empresa, oInfo.Almacen, oInfo.Codigo,
+           oInfo.Nombre, sMarca]), oInfo);
+      if stEmpresas.IndexOf(sEmpresa) < 0 then
+        stEmpresas.Add(sEmpresa);
+      q.Next;
+    end;
+    for i := 0 to stEmpresas.Count - 1 do
+    begin
+      iMejor := -1;
+      iPrioridad := 0;
+      for j := 0 to listAlmacenesDeposito.Items.Count - 1 do
+      begin
+        oInfo := TAlmacenDepositoInfo(
+          listAlmacenesDeposito.Items.Objects[j]);
+        if (IntToStr(oInfo.Empresa) = stEmpresas[i]) and
+           (oInfo.Prioridad > iPrioridad) then
+        begin
+          iMejor := j;
+          iPrioridad := oInfo.Prioridad;
+        end;
+      end;
+      if iMejor >= 0 then
+        listAlmacenesDeposito.Checked[iMejor] := True;
+    end;
+    FOrigenAlmacenesDeposito :=
+      UpperCase(Trim(edSrcHost.Text)) + '|' +
+      UpperCase(Trim(edSrcBase.Text)) + '|' +
+      ProviderOrigenSeleccionado;
+    Log(Format('Almacenes de depósito: %d almacenes cargados.',
+               [listAlmacenesDeposito.Items.Count]));
+  finally
+    stEmpresas.Free;
+    oIni.Free;
+    q.Free;
+  end;
+end;
+
+procedure TFormMigrator.GuardarSeleccionAlmacenesDeposito;
+var
+  oInfo: TAlmacenDepositoInfo;
+  oIni: TIniFile;
+  i: Integer;
+  sSeccion: string;
+begin
+  if listAlmacenesDeposito.Items.Count > 0 then
+  begin
+    oIni := TIniFile.Create(RutaIni);
+    try
+      sSeccion := 'AlmacenesDeposito.' + Trim(edSrcBase.Text);
+      for i := 0 to listAlmacenesDeposito.Items.Count - 1 do
+      begin
+        if listAlmacenesDeposito.Checked[i] then
+        begin
+          oInfo := TAlmacenDepositoInfo(
+            listAlmacenesDeposito.Items.Objects[i]);
+          oIni.WriteString(sSeccion, IntToStr(oInfo.Empresa),
+                           IntToStr(oInfo.Almacen));
+        end;
+      end;
+    finally
+      oIni.Free;
+    end;
+  end;
+end;
+
+function TFormMigrator.HayDominioAlmacenesDeposito: Boolean;
+var
+  i: Integer;
+  sCodigo: string;
+begin
+  Result := False;
+  for i := 0 to listMigs.Items.Count - 1 do
+  begin
+    if listMigs.Checked[i] then
+    begin
+      sCodigo := FEngine.Items[i].Codigo;
+      if (sCodigo = 'almacenes') or (sCodigo = 'movimientos') or
+         (sCodigo = 'ventas') then
+        Result := True;
+    end;
+  end;
+end;
+
+function TFormMigrator.PrepararAlmacenesDeposito: Boolean;
+var
+  oInfo: TAlmacenDepositoInfo;
+  stEmpresas, stPendientes: TStringList;
+  i, j, iMarcados: Integer;
+  sOrigen, sEmpresa: string;
+begin
+  Result := True;
+  FEngine.LimpiarAlmacenesDeposito;
+  if HayDominioAlmacenesDeposito then
+  begin
+    sOrigen := UpperCase(Trim(edSrcHost.Text)) + '|' +
+               UpperCase(Trim(edSrcBase.Text)) + '|' +
+               ProviderOrigenSeleccionado;
+    if (listAlmacenesDeposito.Items.Count = 0) or
+       (FOrigenAlmacenesDeposito <> sOrigen) then
+      CargarAlmacenesDeposito;
+    stEmpresas := TStringList.Create;
+    stPendientes := TStringList.Create;
+    try
+      for i := 0 to listAlmacenesDeposito.Items.Count - 1 do
+      begin
+        oInfo := TAlmacenDepositoInfo(
+          listAlmacenesDeposito.Items.Objects[i]);
+        sEmpresa := IntToStr(oInfo.Empresa);
+        if stEmpresas.IndexOf(sEmpresa) < 0 then
+          stEmpresas.Add(sEmpresa);
+      end;
+      for i := 0 to stEmpresas.Count - 1 do
+      begin
+        iMarcados := 0;
+        for j := 0 to listAlmacenesDeposito.Items.Count - 1 do
+        begin
+          oInfo := TAlmacenDepositoInfo(
+            listAlmacenesDeposito.Items.Objects[j]);
+          if (IntToStr(oInfo.Empresa) = stEmpresas[i]) and
+             listAlmacenesDeposito.Checked[j] then
+          begin
+            Inc(iMarcados);
+            FEngine.DefinirAlmacenDeposito(oInfo.Empresa, oInfo.Almacen);
+          end;
+        end;
+        if iMarcados <> 1 then
+          stPendientes.Add(stEmpresas[i]);
+      end;
+      Result := stPendientes.Count = 0;
+      if Result then
+        GuardarSeleccionAlmacenesDeposito
+      else
+      begin
+        PageInferior.ActivePage := TabAlmacenesDeposito;
+        ShowMessage('Selecciona exactamente un almacén de depósitos para ' +
+                    'cada empresa. Pendientes: ' +
+                    StringReplace(stPendientes.CommaText, ',', ', ',
+                                  [rfReplaceAll]));
+      end;
+    finally
+      stPendientes.Free;
+      stEmpresas.Free;
+    end;
+  end;
+end;
+
 function TFormMigrator.ProviderOrigenSeleccionado: string;
 begin
   case cbSrcDriver.ItemIndex of
@@ -864,6 +1156,7 @@ begin
                            chkSrcWinAuth.Checked,
                            ProviderOrigenSeleccionado);
     dmMig.ProbarOrigen;
+    CargarAlmacenesDeposito;
     Log(Format('OK origen: %s:%s/%s [%s]',
       [edSrcHost.Text, edSrcPort.Text, edSrcBase.Text,
        ProviderOrigenSeleccionado]));
@@ -919,6 +1212,8 @@ begin
     btnMarcarTodas.Enabled   := False;
     btnDesmarcarTodas.Enabled:= False;
     listMigs.Enabled         := False;
+    btnCargarAlmacenesDeposito.Enabled := False;
+    listAlmacenesDeposito.Enabled := False;
     cbSrcDriver.Enabled      := False;
   end
   else
@@ -935,6 +1230,8 @@ begin
     btnMarcarTodas.Enabled   := True;
     btnDesmarcarTodas.Enabled:= True;
     listMigs.Enabled         := True;
+    btnCargarAlmacenesDeposito.Enabled := True;
+    listAlmacenesDeposito.Enabled := True;
     cbSrcDriver.Enabled      := True;
   end;
 end;
@@ -1005,23 +1302,25 @@ begin
     end;
   end;
 
-  // Preparar log de errores en disco para esta corrida.
-  FRutaLogErrores := TPath.Combine(
-    TPath.Combine(TPath.GetHomePath, 'Factuzam'),
-    'migrator_errores_' +
-    FormatDateTime('yyyymmdd_hhnnss', Now) + '.log');
-  FRutaLogCompleto := TPath.Combine(
-    TPath.Combine(TPath.GetHomePath, 'Factuzam'),
-    'migrator_log_' +
-    FormatDateTime('yyyymmdd_hhnnss', Now) + '.log');
-  if not TDirectory.Exists(ExtractFilePath(FRutaLogErrores)) then
-    TDirectory.CreateDirectory(ExtractFilePath(FRutaLogErrores));
-  MemoErrores.Lines.Clear;
-  Log('Log completo de esta corrida: ' + FRutaLogCompleto);
-  Log('Errores de esta corrida se guardaran en: ' + FRutaLogErrores);
-
-  SetEjecutando(True);
-  EjecutarMigracionesBackground;
+  if PrepararAlmacenesDeposito then
+  begin
+    // Preparar log de errores en disco para esta corrida.
+    FRutaLogErrores := TPath.Combine(
+      TPath.Combine(TPath.GetHomePath, 'Factuzam'),
+      'migrator_errores_' +
+      FormatDateTime('yyyymmdd_hhnnss', Now) + '.log');
+    FRutaLogCompleto := TPath.Combine(
+      TPath.Combine(TPath.GetHomePath, 'Factuzam'),
+      'migrator_log_' +
+      FormatDateTime('yyyymmdd_hhnnss', Now) + '.log');
+    if not TDirectory.Exists(ExtractFilePath(FRutaLogErrores)) then
+      TDirectory.CreateDirectory(ExtractFilePath(FRutaLogErrores));
+    MemoErrores.Lines.Clear;
+    Log('Log completo de esta corrida: ' + FRutaLogCompleto);
+    Log('Errores de esta corrida se guardaran en: ' + FRutaLogErrores);
+    SetEjecutando(True);
+    EjecutarMigracionesBackground;
+  end;
 end;
 
 // Tabla de dependencias entre dominios (DAG simplificado a waves):
@@ -1622,6 +1921,7 @@ begin
   finally
     oIni.Free;
   end;
+  GuardarSeleccionAlmacenesDeposito;
 end;
 
 end.

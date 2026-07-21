@@ -13,14 +13,14 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Base)'!=''">
     <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Vcl;System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
-    <DCC_UnitSearchPath>..\..\..\DelphiDcus\Win32\Release\CryptoLib4PascalPackage;..\..\..\DelphiDcus\Win32\Release\HashLib4PascalPackage;..\..\..\DelphiDcus\Win32\Release\SimpleBaseLib4PascalPackage;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+    <DCC_UnitSearchPath>..\..\..\..\..\DelphiDcus\Win32\Release\CryptoLib4PascalPackage;..\..\..\..\..\DelphiDcus\Win32\Release\HashLib4PascalPackage;..\..\..\..\..\DelphiDcus\Win32\Release\SimpleBaseLib4PascalPackage;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     <DCC_ExeOutput>..\bin</DCC_ExeOutput>
     <DCC_DcuOutput>.\dcu</DCC_DcuOutput>
     <DCC_ImageBase>00400000</DCC_ImageBase>
     <SanitizedProjectName>CertApiWeb</SanitizedProjectName>
     <VerInfo_Locale>3082</VerInfo_Locale>
     <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-    <VerInfo_Keys>CompanyName=Factuzam;FileDescription=Generador de credenciales API;FileVersion=1.0.0.0;InternalName=CertApiWeb;LegalCopyright=Copyright (c) Alejandro Laorden Hidalgo;OriginalFilename=CertApiWeb.exe;ProductName=CertApiWeb;ProductVersion=1.0.0.0</VerInfo_Keys>
+    <VerInfo_Keys>CompanyName=Factuzam;FileDescription=Generador de credenciales API;FileVersion=1.1.0.0;InternalName=CertApiWeb;LegalCopyright=Copyright (c) Alejandro Laorden Hidalgo;OriginalFilename=CertApiWeb.exe;ProductName=CertApiWeb;ProductVersion=1.1.0.0</VerInfo_Keys>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Config)'=='Release'">
     <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>

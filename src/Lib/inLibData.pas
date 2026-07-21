@@ -186,7 +186,7 @@ begin
       '  FROM fza_almacenes ' +
       ' WHERE CODIGO_EMP_ALM = :EMP ' +
       '   AND ESACTIVO_ALM = ''S'' ' +
-      '   AND TIPO_USO_ALM = ''DEPÓSITO'' ' + // <-- Usando tu flag real
+      '   AND TIPO_USO_ALM IN (''DEPÓSITO'', ''DEPOSITO'') ' +
       ' LIMIT 1';
     QryAlm.ParamByName('EMP').AsString := AEmpresa;
     QryAlm.Open;

@@ -180,7 +180,7 @@ begin
       or ((sFase <> '') and (not SameText(sFase, 'BORRADOR')));
     if rbActual.Checked and bLanzada then
       GuardarPdfFacturaEnBlob(inLibGlobalVar.oConn, sSerie, sNumero, ARuta,
-                              sElegido);
+                              FormatoElegido);
   end;
 end;
 

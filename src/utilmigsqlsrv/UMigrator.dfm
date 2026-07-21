@@ -1,4 +1,4 @@
-object FormMigrator: TFormMigrator
+﻿object FormMigrator: TFormMigrator
   Left = 0
   Top = 0
   Caption = 'Factuzam Migrator SQL Server'
@@ -533,6 +533,50 @@ object FormMigrator: TFormMigrator
         ReadOnly = True
         ScrollBars = ssVertical
         TabOrder = 0
+      end
+    end
+    object TabAlmacenesDeposito: TTabSheet
+      Caption = 'Almacenes de dep'#243'sitos'
+      ImageIndex = 3
+      object PanelAlmacenesDeposito: TPanel
+        Left = 0
+        Top = 0
+        Width = 1016
+        Height = 52
+        Align = alTop
+        BevelOuter = bvNone
+        TabOrder = 0
+        object lblAlmacenesDeposito: TLabel
+          Left = 12
+          Top = 8
+          Width = 750
+          Height = 34
+          AutoSize = False
+          Caption =
+            'Marca un almac'#233'n de dep'#243'sitos por empresa. Se propone ' +
+            'ocalm.Deposito=S y, como respaldo, los nombres que ' +
+            'contienen DEPO.'
+          WordWrap = True
+        end
+        object btnCargarAlmacenesDeposito: TButton
+          Left = 780
+          Top = 12
+          Width = 220
+          Height = 28
+          Caption = 'Cargar almacenes del origen'
+          TabOrder = 0
+          OnClick = btnCargarAlmacenesDepositoClick
+        end
+      end
+      object listAlmacenesDeposito: TCheckListBox
+        Left = 0
+        Top = 52
+        Width = 1016
+        Height = 255
+        Align = alClient
+        ItemHeight = 17
+        TabOrder = 1
+        OnClickCheck = listAlmacenesDepositoClickCheck
       end
     end
   end

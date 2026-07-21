@@ -111,6 +111,7 @@ type
                                   aInsertar: Boolean);
   protected
     procedure PdfExportado(const ARuta: string); virtual;
+    property FormatoElegido: string read sElegido;
   public
     procedure CargarFormatos(form:TfrmMtoModalGenImpEle);
     procedure DeleteForm(sElegido:String;form:TfrmMtoModalGenImpEle);

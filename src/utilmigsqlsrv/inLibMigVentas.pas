@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibMigVentas                                                }
 {    Tipo:       Librería de migración (sin formulario)                        }
@@ -9,10 +9,11 @@
 {    + `dbo.occajarp` líneas) a la capa de caja de Factuzam:                   }
 {      occaj                         → fza_caja_operaciones (cabecera)         }
 {      columnas de pago de occaj     → fza_caja_pagos (formas de pago)         }
-{      operaciones AL                → fza_depositos_cliente + DE              }
+{      operaciones almacén depósito  → fza_depositos_cliente + DE              }
 {                                                                              }
 {    Mapeo de tipo (occaj.TipoDoc/Tipo → TIPO_OPERACION_OPCAJA):               }
-{      AL (Tipo='A')   → 'DE'  (depósito; además crea fza_depositos_cliente)   }
+{      almacén depósito → 'DE'  (además crea fza_depositos_cliente)            }
+{      AL (Tipo='A')    → 'DE'  (respaldo si ocalm no está definido)           }
 {      cobro (Tipo='C')→ 'CB'  (cobro a cuenta = adelanto)                     }
 {      TR              → 'TR'  (traspaso; ESTRASPASO='S' + almacén contra)     }
 {      AT              → 'AT'  (traspaso entre empresas)                       }
@@ -102,23 +103,35 @@ begin
   Result := sArt + '/' + sC + '/' + sT;
 end;
 
-// occaj.TipoDoc/Tipo → TIPO_OPERACION_OPCAJA de Factuzam.
-function MapearTipoOp(const sTipoDoc, sTipo: string): string;
+function NombreSugiereDeposito(const sNombre,
+                               sAbreviatura: string): Boolean;
+var
+  sTexto: string;
+begin
+  sTexto := UpperCase(Trim(sNombre)) + '|' +
+            UpperCase(Trim(sAbreviatura));
+  Result := Pos('DEPO', sTexto) > 0;
+end;
+
+// El almacén de depósitos es la señal principal del legacy. TipoDoc='AL'
+// se conserva como respaldo para bases que no tengan bien definido ocalm.
+function MapearTipoOp(const sTipoDoc, sTipo: string;
+                      EsAlmacenDeposito: Boolean): string;
 var
   d, t: string;
 begin
   d := UpperCase(Trim(sTipoDoc));
   t := UpperCase(Trim(sTipo));
-  if d = 'AL' then
-    Result := 'DE'
-  else if t = 'C' then
-    Result := 'CB'
-  else if d = 'TR' then
+  if d = 'TR' then
     Result := 'TR'
   else if d = 'AT' then
     Result := 'AT'
+  else if t = 'C' then
+    Result := 'CB'
   else if t = 'L' then
     Result := 'VL'
+  else if EsAlmacenDeposito or (d = 'AL') then
+    Result := 'DE'
   else
     Result := 'VE';
 end;
@@ -730,6 +743,8 @@ const
   cSelectSrc =
     'SELECT c.Empresa, c.Almacen, c.Caja, c.Operacion, ' +
     '       ISNULL(alm.Abreviatura, '''')    AS AbrevAlm, ' +
+    '       ISNULL(alm.Nombre, '''')         AS NombreAlm, ' +
+    '       ISNULL(alm.Deposito, '''')       AS EsDepositoAlm, ' +
     '       ISNULL(almdes.Abreviatura, '''') AS AbrevAlmDes, ' +
     '       ISNULL(c.TipoDoc, '''') AS TipoDoc, ISNULL(c.Tipo, '''') AS Tipo, ' +
     '       c.Fecha, c.FechaOpe, ISNULL(c.Hora, '''') AS Hora, ' +
@@ -796,6 +811,7 @@ var
   sUltimoCli:                string;
   dtInstante:                TDateTime;
   fNeto:                     Double;
+  EsAlmacenDeposito:         Boolean;
 
   // Inserta una línea de pago si el importe no es ~0.
   procedure AddPago(const sFp: string; fImporte: Double);
@@ -859,8 +875,17 @@ begin
         sUltimaCaja := sCajaKey;
         sUltimoCli  := '';
       end;
+      if Eng.TieneAlmacenDeposito(iEmp) then
+        EsAlmacenDeposito := Eng.EsAlmacenDeposito(iEmp, iAlm)
+      else
+        EsAlmacenDeposito :=
+          (BoolSN(qSrc.FieldByName('EsDepositoAlm').AsString) = 'S') or
+          NombreSugiereDeposito(
+            qSrc.FieldByName('NombreAlm').AsString,
+            qSrc.FieldByName('AbrevAlm').AsString);
       sTipoOp := MapearTipoOp(qSrc.FieldByName('TipoDoc').AsString,
-                              qSrc.FieldByName('Tipo').AsString);
+                              qSrc.FieldByName('Tipo').AsString,
+                              EsAlmacenDeposito);
       sCli  := Trim(qSrc.FieldByName('Cliente').AsString);
       // Cobro SIN cliente: hereda el del documento adyacente (último
       // documento con cliente en la misma caja). Ese cliente es el que nos

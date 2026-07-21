@@ -48,9 +48,10 @@
 {                                                                              }
 {    Heurísticas (primera versión, afinar con el catálogo real del legacy):    }
 {      - Dirección (TIPO_MOV E/S): ocmovarp.Tipo da el sentido base, pero      }
-{        Cantidad negativa lo invierte. Si no hay Tipo, manda el signo de      }
-{        Cantidad. UnidadesStock queda como ultimo respaldo porque puede ser   }
-{        stock resultante. En RP manda Cantidad, porque el legacy guarda       }
+{        Cantidad negativa lo invierte. En movimientos SE manda siempre el     }
+{        signo de Cantidad porque AlmacenOri/AlmacenDes no se invierten al     }
+{        revertirlos. UnidadesStock queda como ultimo respaldo porque puede    }
+{        ser stock resultante. En RP manda Cantidad, porque el legacy guarda   }
 {        Tipo='E' aunque sea salida a proveedor.                               }
 {      - TIPO_DOC_MOV: ocmovarp.TipoDoc pasa tal cual cuando ya coincide con   }
 {        el destino (AC/AV/TR/AT/IN/DP/VE/AE/DC); sinónimos frecuentes         }
@@ -147,9 +148,9 @@ end;
 // reversión de esa operación. Si no hay Tipo explícito, manda el signo de
 // Cantidad; UnidadesStock se usa solo como último respaldo porque en legacy
 // puede traer el stock resultante, no la variación de la línea.
-// OJO traspasos (TR/AT): aqui Tipo viene 'E' en las DOS patas y TipoMov trae
-// 'SE', asi que NO sirven; su sentido se decide por estructura en el bucle
-// (almacen del movimiento == almacen destino -> entrada; si no, salida).
+// OJO movimientos SE: Tipo viene 'E' en las DOS patas y AlmacenOri/AlmacenDes
+// conservan el sentido original al revertir. Su direccion se decide por el
+// signo de Cantidad y solo se usa la estructura si Cantidad es cero.
 function DeducirTipoMov(const sTipo: string;
                         fUnidades, fCantidad: Double): string;
 var
@@ -177,6 +178,16 @@ begin
     Result := 'S'
   else
     Result := 'E';
+end;
+
+function NombreSugiereDeposito(const sNombre,
+                               sAbreviatura: string): Boolean;
+var
+  sTexto: string;
+begin
+  sTexto := UpperCase(Trim(sNombre)) + '|' +
+            UpperCase(Trim(sAbreviatura));
+  Result := Pos('DEPO', sTexto) > 0;
 end;
 
 function DeducirTipoMovDocumento(const sTipoDoc, sTipo: string;
@@ -223,6 +234,9 @@ begin
     // La pestaña "Movimientos" del albaran de compra filtra TIPO_DOC_MOV='AC'
     // y el stock acumula las compras por 'AC' (CANTIDAD_ENT_COMPRA_STK).
     Result := 'AC'
+  else if d = 'DE' then
+    // Movimiento entre almacen de venta y deposito.
+    Result := 'DP'
   else if d = 'RP' then
     Result := 'DC'
   else if (d = 'FC') or (d = 'FV') or (d = 'TK') or (d = 'TP') then
@@ -378,17 +392,19 @@ const
     '  WHERE ISNULL(alp.PrecioSIva, 0) > 0 ' +
     '), ' +
     // Mapa (documento de caja) -> Operacion: recupera la Operacion de occaj
-    // por la identidad del documento (Empresa, Caja, TipoDoc, Ejercicio,
-    // Serie, NroDoc). Se agrega una sola vez y MIN garantiza una fila por
-    // clave, asi el LEFT JOIN no multiplica filas de movimiento.
+    // por la identidad del documento (Empresa, Almacen, Caja, TipoDoc,
+    // Ejercicio, Serie, NroDoc). Almacen es obligatorio: los números de
+    // operación y documento se repiten entre tiendas.
     'cte_op AS ( ' +
-    '  SELECT Empresa, Caja, TipoDoc, Ejercicio, Serie, NroDoc, ' +
+    '  SELECT Empresa, Almacen, Caja, TipoDoc, Ejercicio, Serie, NroDoc, ' +
     '         MIN(Operacion) AS Operacion ' +
     '  FROM dbo.occaj ' +
-    '  GROUP BY Empresa, Caja, TipoDoc, Ejercicio, Serie, NroDoc ' +
+    '  GROUP BY Empresa, Almacen, Caja, TipoDoc, Ejercicio, Serie, NroDoc ' +
     ') ' +
     'SELECT m.Numero, m.Empresa, m.Almacen, ' +
     '       ISNULL(alm.Abreviatura, '''')    AS AbreviaturaAlm, ' +
+    '       ISNULL(alm.Nombre, '''')         AS NombreAlm, ' +
+    '       ISNULL(alm.Deposito, '''')       AS EsDepositoAlm, ' +
     '       ISNULL(almdes.Abreviatura, '''') AS AbreviaturaAlmDes, ' +
     '       m.EmpresaDes, m.AlmacenDes, m.AlmacenOri, ' +
     '       m.Articulo, m.Color, m.Talla, ' +
@@ -438,6 +454,7 @@ const
     'LEFT JOIN dbo.ocalm almori ON almori.Empresa = m.Empresa ' +
     '                          AND almori.Almacen = m.AlmacenOri ' +
     'LEFT JOIN cte_op opc ON opc.Empresa = m.Empresa ' +
+    '                    AND opc.Almacen = m.Almacen ' +
     '                    AND opc.Caja = m.NroCaja ' +
     '                    AND opc.TipoDoc = m.TipoDoc ' +
     '                    AND opc.Ejercicio = m.Ejercicio ' +
@@ -451,6 +468,8 @@ const
   cSelectSrcCompat =
     'SELECT m.Numero, m.Empresa, m.Almacen, ' +
     '       ISNULL(alm.Abreviatura, '''') AS AbreviaturaAlm, ' +
+    '       ISNULL(alm.Nombre, '''') AS NombreAlm, ' +
+    '       ISNULL(alm.Deposito, '''') AS EsDepositoAlm, ' +
     '       ISNULL(almdes.Abreviatura, '''') AS AbreviaturaAlmDes, ' +
     '       m.EmpresaDes, m.AlmacenDes, m.AlmacenOri, ' +
     '       m.Articulo, m.Color, m.Talla, ' +
@@ -525,6 +544,7 @@ var
   sSkuKey, sEstadoKey:            string;
   sEstadoOriKey, sAlmOri:         string;
   sSelectSrcUsado:                string;
+  EsAlmacenDeposito:              Boolean;
   oStock, oValor:                 TDictionary<string, Double>;
 begin
   fs := TFormatSettings.Create('en-US');
@@ -619,17 +639,45 @@ begin
                       fUnidades, fCantidad);
       sTipoDoc   := MapearTipoDoc(qSrc.FieldByName('TipoDoc').AsString,
                                   sTipoMov);
-      // Traspaso: el legacy marca las DOS patas igual (Tipo='E', TipoMov='SE')
-      // y NO distingue el sentido en esos flags. El legacy YA trae dos filas
-      // (una por almacen), asi que no hay que duplicar: basta etiquetar cada
-      // una. La direccion real esta en la estructura: la pata cuyo almacen es
-      // el DESTINO del traspaso es la ENTRADA; la del ORIGEN es la SALIDA. Asi
-      // el origen se descuenta y el stock cuadra (antes ambas salian 'E',
-      // inflaban el origen y el ticket de traspaso -filtra TIPO_MOV='S'-
-      // quedaba vacio). El signo de Cantidad (+entra/-sale) corrobora;
-      // UnidadesStock no vale (viene 0 en la salida).
-      if (UpperCase(Trim(qSrc.FieldByName('TipoMov').AsString)) = 'SE')
-      or (sTipoDoc = 'TR') or (sTipoDoc = 'AT') then
+      if Eng.TieneAlmacenDeposito(
+           qSrc.FieldByName('Empresa').AsInteger) then
+        EsAlmacenDeposito := Eng.EsAlmacenDeposito(
+          qSrc.FieldByName('Empresa').AsInteger,
+          qSrc.FieldByName('Almacen').AsInteger)
+      else
+        EsAlmacenDeposito :=
+          (BoolSN(qSrc.FieldByName('EsDepositoAlm').AsString) = 'S') or
+          NombreSugiereDeposito(
+            qSrc.FieldByName('NombreAlm').AsString,
+            qSrc.FieldByName('AbreviaturaAlm').AsString);
+      if EsAlmacenDeposito and (sTipoDoc <> 'TR') and
+         (sTipoDoc <> 'AT') then
+        sTipoDoc := 'DP';
+      // En movimientos SE el legacy conserva AlmacenOri/AlmacenDes del
+      // movimiento original tambien cuando se revierte. Por eso el signo de
+      // Cantidad es la fuente fiable: positivo entra y negativo sale. Solo si
+      // Cantidad es cero usamos la estructura origen/destino como respaldo.
+      if UpperCase(Trim(qSrc.FieldByName('TipoMov').AsString)) = 'SE' then
+      begin
+        if fCantidad > 0 then
+          sTipoMov := 'E'
+        else if fCantidad < 0 then
+          sTipoMov := 'S'
+        else
+        begin
+          iAlmDes := qSrc.FieldByName('AlmacenDes').AsInteger;
+          if iAlmDes > 0 then
+          begin
+            if qSrc.FieldByName('Almacen').AsInteger = iAlmDes then
+              sTipoMov := 'E'
+            else
+              sTipoMov := 'S';
+          end;
+        end;
+      end
+      // Los traspasos etiquetados directamente como TR/AT mantienen la regla
+      // estructural porque no todos los legacy firman su Cantidad.
+      else if (sTipoDoc = 'TR') or (sTipoDoc = 'AT') then
       begin
         iAlmDes := qSrc.FieldByName('AlmacenDes').AsInteger;
         if iAlmDes > 0 then

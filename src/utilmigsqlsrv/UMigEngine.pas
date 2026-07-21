@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UMigEngine                                                    }
 {    Tipo:       Lógica sin formulario                                         }
@@ -67,6 +67,10 @@ type
     FDirFotosOrigen: string;
     FDirFotosDestino: string;
     FHilosFotos:     Integer;
+    // Un almacén de depósitos por empresa, identificado con las claves
+    // numéricas del origen dbo.ocalm. La UI rellena este mapa antes de
+    // lanzar los dominios que clasifican caja, almacenes y movimientos.
+    FAlmacenesDeposito: TStringList;
     FItems:          TObjectList<TMigItem>;
     FItemsCompartidos: Boolean;  // True si FItems no nos pertenece
     FCurrentDominio:      string;
@@ -96,6 +100,11 @@ type
     procedure Cancelar;
     procedure ResetCancel;
     function  IsCancelado: Boolean;
+
+    procedure LimpiarAlmacenesDeposito;
+    procedure DefinirAlmacenDeposito(iEmpresa, iAlmacen: Integer);
+    function TieneAlmacenDeposito(iEmpresa: Integer): Boolean;
+    function EsAlmacenDeposito(iEmpresa, iAlmacen: Integer): Boolean;
 
     procedure Registrar(const sCodigo, sNombre, sDescripcion: string;
                         Proc: TMigProc);
@@ -251,6 +260,7 @@ begin
   FConSrv              := ConSrv;
   FConDst              := ConDst;
   FItems               := TObjectList<TMigItem>.Create(True);
+  FAlmacenesDeposito    := TStringList.Create;
   FItemsCompartidos    := False;
   FUsuario             := 'MIGRADOR';
   FHilosFotos          := 4;
@@ -265,6 +275,8 @@ begin
   // Compartimos la lista de items (registrada en el maestro). El
   // flag evita que el destructor del clon libere objetos ajenos.
   FItems               := Master.FItems;
+  FAlmacenesDeposito    := TStringList.Create;
+  FAlmacenesDeposito.Assign(Master.FAlmacenesDeposito);
   FItemsCompartidos    := True;
   FOnLog               := Master.FOnLog;
   FOnProgress          := Master.FOnProgress;
@@ -303,9 +315,31 @@ end;
 
 destructor TMigEngine.Destroy;
 begin
+  FAlmacenesDeposito.Free;
   if not FItemsCompartidos then
     FItems.Free;
   inherited;
+end;
+
+procedure TMigEngine.LimpiarAlmacenesDeposito;
+begin
+  FAlmacenesDeposito.Clear;
+end;
+
+procedure TMigEngine.DefinirAlmacenDeposito(iEmpresa, iAlmacen: Integer);
+begin
+  FAlmacenesDeposito.Values[IntToStr(iEmpresa)] := IntToStr(iAlmacen);
+end;
+
+function TMigEngine.TieneAlmacenDeposito(iEmpresa: Integer): Boolean;
+begin
+  Result := FAlmacenesDeposito.IndexOfName(IntToStr(iEmpresa)) >= 0;
+end;
+
+function TMigEngine.EsAlmacenDeposito(iEmpresa, iAlmacen: Integer): Boolean;
+begin
+  Result := FAlmacenesDeposito.Values[IntToStr(iEmpresa)] =
+            IntToStr(iAlmacen);
 end;
 
 procedure TMigEngine.DoLog(const sMensaje: string);

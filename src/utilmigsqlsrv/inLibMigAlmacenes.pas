@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibMigAlmacenes                                             }
 {    Tipo:       Librería de migración (sin formulario)                        }
@@ -44,16 +44,27 @@ uses
   System.SysUtils,
   Data.DB, Uni;
 
-// Decide el TIPO_USO_ALM a partir de los flags del origen
-function DeducirTipoUso(const Q: TUniQuery): string;
+function NombreSugiereDeposito(const Q: TUniQuery): Boolean;
+var
+  sNombre: string;
 begin
-  if BoolSN(Q.FieldByName('Transito').AsString) = 'S' then
-    Exit('TRANSITO');
-  if BoolSN(Q.FieldByName('Deposito').AsString) = 'S' then
-    Exit('DEPOSITO');
-  if BoolSN(Q.FieldByName('Auxiliar').AsString) = 'S' then
-    Exit('AUXILIAR');
-  Result := 'ESTANDAR';
+  sNombre := UpperCase(Trim(Q.FieldByName('Nombre').AsString)) + '|' +
+             UpperCase(Trim(Q.FieldByName('Abreviatura').AsString));
+  Result := Pos('DEPO', sNombre) > 0;
+end;
+
+// La selección de la UI tiene prioridad sobre los flags del origen.
+function DeducirTipoUso(const Q: TUniQuery;
+                        EsDepositoSeleccionado: Boolean): string;
+begin
+  if EsDepositoSeleccionado then
+    Result := 'DEPÓSITO'
+  else if BoolSN(Q.FieldByName('Transito').AsString) = 'S' then
+    Result := 'TRÁNSITO'
+  else if BoolSN(Q.FieldByName('Auxiliar').AsString) = 'S' then
+    Result := 'AUXILIAR'
+  else
+    Result := 'ESTANDAR';
 end;
 
 procedure MigrarAlmacenes(Eng: TMigEngine; var Stats: TMigStats);
@@ -79,19 +90,29 @@ const
       ':CODIGO_CLI_ALM, :ORDEN_ALM, ' +
       ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, :USUARIO_MODIF)';
 var
-  qSrc, qIns, qChk: TUniQuery;
-  sCod, sCli:       string;
-  iOrden:           Integer;
+  qSrc, qIns, qChk, qUpd: TUniQuery;
+  sCod, sCli, sTipoUso:   string;
+  sTipoUsoExistente:      string;
+  iEmpresa, iAlmacen:     Integer;
+  iOrden:                 Integer;
+  EsDeposito:             Boolean;
 begin
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   qIns := TUniQuery.Create(nil);
   qChk := TUniQuery.Create(nil);
+  qUpd := TUniQuery.Create(nil);
   try
     qIns.Connection := Eng.ConDst;
     qIns.SQL.Text   := cInsertDst;
     qChk.Connection := Eng.ConDst;
     qChk.SQL.Text   :=
-      'SELECT 1 FROM fza_almacenes WHERE CODIGO_ALM_ALM = :c';
+      'SELECT TIPO_USO_ALM FROM fza_almacenes ' +
+      'WHERE CODIGO_ALM_ALM = :c';
+    qUpd.Connection := Eng.ConDst;
+    qUpd.SQL.Text :=
+      'UPDATE fza_almacenes SET TIPO_USO_ALM = :tipo, ' +
+      'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :usuario ' +
+      'WHERE CODIGO_ALM_ALM = :codigo';
 
     Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocalm'));
     qSrc.Open;
@@ -100,22 +121,48 @@ begin
     begin
       Inc(Stats.Leidas);
       Eng.IncRow;
+      iEmpresa := qSrc.FieldByName('Empresa').AsInteger;
+      iAlmacen := qSrc.FieldByName('Almacen').AsInteger;
       // CODIGO_ALM_ALM: usamos la Abreviatura del legacy (MARTA, MERE,
       // LEMON, LABRADORES, TARAS, DEPOSITOS...) que es como el
       // cliente identifica sus almacenes en la operativa. Si esta
       // vacia, fallback al numero de Almacen como texto.
       sCod := UpperCase(Trim(qSrc.FieldByName('Abreviatura').AsString));
       if sCod = '' then
-        sCod := IntToStr(qSrc.FieldByName('Almacen').AsInteger);
+        sCod := IntToStr(iAlmacen);
+      if Eng.TieneAlmacenDeposito(iEmpresa) then
+        EsDeposito := Eng.EsAlmacenDeposito(iEmpresa, iAlmacen)
+      else
+        EsDeposito :=
+          (BoolSN(qSrc.FieldByName('Deposito').AsString) = 'S') or
+          NombreSugiereDeposito(qSrc);
+      sTipoUso := DeducirTipoUso(qSrc, EsDeposito);
 
       qChk.Close;
       qChk.ParamByName('c').AsString := sCod;
       qChk.Open;
       if not qChk.IsEmpty then
       begin
+        sTipoUsoExistente := Trim(
+          qChk.FieldByName('TIPO_USO_ALM').AsString);
+        qChk.Close;
+        // Una reimportación también corrige almacenes ya creados con el
+        // valor antiguo sin tilde. Si la UI eligió otro, deja un único
+        // almacén de depósitos por empresa.
+        if (not SameText(sTipoUsoExistente, sTipoUso)) and
+           (EsDeposito or
+           (Eng.TieneAlmacenDeposito(iEmpresa) and
+            SameText(sTipoUsoExistente, 'DEPOSITO')) or
+           (Eng.TieneAlmacenDeposito(iEmpresa) and
+            SameText(sTipoUsoExistente, 'DEPÓSITO'))) then
+        begin
+          qUpd.ParamByName('tipo').AsString := sTipoUso;
+          qUpd.ParamByName('usuario').AsString := Eng.Usuario;
+          qUpd.ParamByName('codigo').AsString := sCod;
+          qUpd.ExecSQL;
+        end;
         Inc(Stats.Saltadas);
         Eng.Log('  - almacen "%s" ya existe, se omite', [sCod]);
-        qChk.Close;
         qSrc.Next;
         Continue;
       end;
@@ -124,7 +171,7 @@ begin
       sCli := Trim(qSrc.FieldByName('Cliente').AsString);
       qIns.ParamByName('CODIGO_ALM_ALM').AsString  := sCod;
       qIns.ParamByName('CODIGO_EMP_ALM').AsString  :=
-        IntToStr(qSrc.FieldByName('Empresa').AsInteger);
+        IntToStr(iEmpresa);
       // Todos los almacenes migrados arrancan activos. El campo
       // Activo del legacy usa 'A' (no 'S') y se interpretaria como
       // baja; ademas el usuario quiere editarlos en destino partiendo
@@ -133,7 +180,7 @@ begin
       qIns.ParamByName('NOMBRE_ALM_ALM').AsString  :=
         Trim(qSrc.FieldByName('Nombre').AsString);
       qIns.ParamByName('ESFISICO_ALM').AsString    := 'S';
-      qIns.ParamByName('TIPO_USO_ALM').AsString    := DeducirTipoUso(qSrc);
+      qIns.ParamByName('TIPO_USO_ALM').AsString    := sTipoUso;
       qIns.ParamByName('DIRECCION_ALM').AsString   :=
         Trim(qSrc.FieldByName('Direccion1').AsString);
       qIns.ParamByName('POBLACION_ALM').AsString   :=
@@ -169,6 +216,7 @@ begin
       qSrc.Next;
     end;
   finally
+    qUpd.Free;
     qChk.Free;
     qIns.Free;
     qSrc.Free;

@@ -1314,16 +1314,22 @@ end;
 //  Colores del articulo (lista de seleccion multiple)
 // ---------------------------------------------------------------------------
 // Carga los AVs distintos de color (ID_VA_AV='CO') que aparecen en los SKUs
-// activos del articulo. Por defecto todos seleccionados; el usuario puede
-// seleccionar uno o varios para filtrar las filas (modo Por Color) o las
-// cantidades agregadas (modo Por Almacen).
+// activos del articulo. Si la entrada resolvio un SKU concreto, se selecciona
+// solo su color; el usuario puede anadir despues los demas. Sin SKU o si este
+// no permite resolver un color, se seleccionan todos como hasta ahora.
 procedure TfrmStockConsulta.CargarColores;
 var
-  q    : TUniQuery;
-  iItem: Integer;
+  q                    : TUniQuery;
+  i                    : Integer;
+  iItem                : Integer;
+  bFiltrarPorSku       : Boolean;
+  bEsColorSku          : Boolean;
+  bColorSkuEncontrado  : Boolean;
 begin
   lstColores.Items.Clear;
   if Trim(FCodArt) = '' then Exit;
+  bFiltrarPorSku := Trim(FCodSku) <> '';
+  bColorSkuEncontrado := False;
   q := TUniQuery.Create(nil);
   try
     q.Connection := inLibGlobalVar.oConn;
@@ -1332,7 +1338,9 @@ begin
     // (ej. NEGRO con ID_AV=100 y otro NEGRO con otro ID_AV/ORDEN_AV).
     // En el checklist y en el grid los queremos como UNA sola entrada.
     q.SQL.Text :=
-      'SELECT AV.AV, MIN(AV.ORDEN_AV) AS ORDEN_AV ' +
+      'SELECT AV.AV, MIN(AV.ORDEN_AV) AS ORDEN_AV, ' +
+      '       MAX(CASE WHEN SKU.CODIGO_UNIDAD_SKU = :sku ' +
+      '                THEN 1 ELSE 0 END) AS ES_COLOR_SKU ' +
       '  FROM fza_articulos_skus SKU ' +
       '  JOIN fza_atributos_sku SA ' +
       '    ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
@@ -1342,12 +1350,22 @@ begin
       ' GROUP BY AV.AV ' +
       ' ORDER BY MIN(AV.ORDEN_AV), AV.AV';
     q.ParamByName('art').AsString := FCodArt;
+    q.ParamByName('sku').AsString := FCodSku;
     q.Open;
     while not q.Eof do
     begin
       iItem := lstColores.Items.Add(q.FieldByName('AV').AsString);
-      lstColores.Selected[iItem] := True;
+      bEsColorSku := bFiltrarPorSku and
+                     (q.FieldByName('ES_COLOR_SKU').AsInteger = 1);
+      lstColores.Selected[iItem] := (not bFiltrarPorSku) or bEsColorSku;
+      if bEsColorSku then
+        bColorSkuEncontrado := True;
       q.Next;
+    end;
+    if bFiltrarPorSku and not bColorSkuEncontrado then
+    begin
+      for i := 0 to lstColores.Items.Count - 1 do
+        lstColores.Selected[i] := True;
     end;
   finally
     FreeAndNil(q);
