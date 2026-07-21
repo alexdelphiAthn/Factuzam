@@ -38,7 +38,13 @@ Columnas nuevas en `fza_facturas` (patrón de `fza_ventas_ws_cola`):
    - solo si la factura salió de borrador (`ESCONSOLIDADA_FAC = 'S'` o
      fase distinta de BORRADOR): en modo SIN se imprimen borradores y
      esos PDFs no se archivan.
-3. El volcado es "seguro": un fallo se anota en el log y no interrumpe
+3. **Venta en Caja (factura simplificada)**: al cerrar el cobro en
+   `inMtoCajaOpe`, el ticket fiscal en PDF (con precios y QR; el ticket
+   regalo no genera ruta) se archiva en la fila de la simplificada con
+   `FORMATO_PDF_FAC = 'TicketTermico'` — mismo punto donde ya se
+   adjuntaba a la cola de ventas WS. Si la venta sale como factura
+   NORMAL (A4), su impresión pasa por el modal y la cubre el punto 2.
+4. El volcado es "seguro": un fallo se anota en el log y no interrumpe
    ni la consolidación ni la impresión.
 
 ## Decisiones
@@ -57,10 +63,10 @@ Columnas nuevas en `fza_facturas` (patrón de `fza_ventas_ws_cola`):
 
 ## Pendiente / fuera de alcance
 
-- Consolidación desde Caja (facturas simplificadas / tickets): la caja
-  archiva su ticket por su propio circuito; si se quiere el A4 en
-  `PDF_FAC` para simplificadas, enganchar el mismo mecanismo en su
-  flujo de consolidación.
+- Reimpresión de ticket desde Consulta de Operaciones: va directa a la
+  impresora térmica sin generar PDF, no refresca el blob. El envío por
+  email regenera el mismo ticket desde BBDD (contenido idéntico), no
+  hace falta refrescar.
 - Refresco automático del blob cuando el hilo Verifactu recibe la
   aceptación de la AEAT (hoy: reimpresión manual). Generar FastReport
   desde ese hilo no es seguro; habría que delegarlo al hilo principal.
