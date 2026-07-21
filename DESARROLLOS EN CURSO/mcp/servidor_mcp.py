@@ -1,18 +1,27 @@
 #!/usr/bin/env python3
-"""Servidor MCP de Factuzam (transporte stdio).
+"""Servidor MCP de Factuzam.
 
 Herramientas disponibles:
   - buscar_clientes: busqueda de clientes por texto libre.
   - buscar_facturas: busqueda de facturas por cliente y fechas.
   - factura_pdf: extrae a fichero el PDF archivado de una factura.
 
+Transportes:
+  - stdio (defecto): para clientes locales (Claude Desktop / Claude Code).
+  - http: servidor HTTP (streamable) en /mcp para clientes remotos
+    (claude.ai, ChatGPT, moviles) a traves de un proxy HTTPS o tunel.
+
 Configuracion por variables de entorno (ver README.md):
-  FACTUZAM_BBDD_HOST     host de MariaDB (defecto 127.0.0.1)
-  FACTUZAM_BBDD_PUERTO   puerto (defecto 3306)
-  FACTUZAM_BBDD_USUARIO  usuario (defecto root)
-  FACTUZAM_BBDD_CLAVE    contrasena (defecto vacia)
-  FACTUZAM_BBDD_NOMBRE   nombre de la BBDD (defecto factuzam)
-  FACTUZAM_DIR_PDF       carpeta donde extraer PDFs (defecto temporal)
+  FACTUZAM_BBDD_HOST       host de MariaDB (defecto 127.0.0.1)
+  FACTUZAM_BBDD_PUERTO     puerto (defecto 3306)
+  FACTUZAM_BBDD_USUARIO    usuario (defecto root)
+  FACTUZAM_BBDD_CLAVE      contrasena (defecto vacia)
+  FACTUZAM_BBDD_NOMBRE     nombre de la BBDD (defecto factuzam)
+  FACTUZAM_DIR_PDF         carpeta donde extraer PDFs (defecto temporal)
+  FACTUZAM_MCP_TRANSPORTE  'stdio' (defecto) o 'http'
+  FACTUZAM_MCP_HOST        escucha HTTP (defecto 127.0.0.1)
+  FACTUZAM_MCP_PUERTO      puerto HTTP (defecto 8974)
+  FACTUZAM_MCP_TOKEN       si se define, exige Authorization: Bearer <token>
 """
 import datetime
 import decimal
@@ -22,7 +31,9 @@ import pymysql
 from pymysql.cursors import DictCursor
 from mcp.server.fastmcp import FastMCP
 
-servidor = FastMCP('factuzam')
+servidor = FastMCP('factuzam',
+                   host=os.environ.get('FACTUZAM_MCP_HOST', '127.0.0.1'),
+                   port=int(os.environ.get('FACTUZAM_MCP_PUERTO', '8974')))
 
 # Columnas contra las que compara la busqueda por texto libre
 COLUMNAS_BUSQUEDA = (
@@ -224,5 +235,29 @@ def factura_pdf(serie: str, numero: str) -> dict:
             'fase': fila['FASE_FAC']}
 
 
+def ejecutar_http():
+    """Arranca el transporte HTTP (endpoint /mcp) con token opcional."""
+    import uvicorn
+    from starlette.middleware.base import BaseHTTPMiddleware
+    from starlette.responses import JSONResponse
+    token = os.environ.get('FACTUZAM_MCP_TOKEN', '').strip()
+    aplicacion = servidor.streamable_http_app()
+    if token != '':
+        class ComprobarToken(BaseHTTPMiddleware):
+            async def dispatch(self, peticion, siguiente):
+                esperado = f'Bearer {token}'
+                if peticion.headers.get('authorization') != esperado:
+                    return JSONResponse({'error': 'No autorizado'},
+                                        status_code=401)
+                return await siguiente(peticion)
+        aplicacion.add_middleware(ComprobarToken)
+    uvicorn.run(aplicacion,
+                host=servidor.settings.host,
+                port=servidor.settings.port)
+
+
 if __name__ == '__main__':
-    servidor.run()
+    if os.environ.get('FACTUZAM_MCP_TRANSPORTE', 'stdio') == 'http':
+        ejecutar_http()
+    else:
+        servidor.run()
