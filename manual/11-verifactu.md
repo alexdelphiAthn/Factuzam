@@ -126,7 +126,6 @@ datos del productor/instalación configurados en los parámetros. Es el
 documento que acredita que el programa cumple la normativa.
 
 ![Declaración responsable](img/11-declaracion.png)
-*▢ Captura pendiente — Modal de Declaración Responsable.*
 
 ### Cola de Envíos
 
@@ -142,7 +141,6 @@ fecha del **próximo intento** y el **mensaje de error** si lo hubo.
 | **ERROR** | Agotó los reintentos; requiere revisión. |
 
 ![Cola de envíos de Verifactu](img/11-cola.png)
-*▢ Captura pendiente — Cola de Envíos con estados e intentos.*
 
 > **Reproceso manual:** en esta pantalla puedes editar las columnas
 > *Estado*, *Intentos* y *Próximo intento* de una fila. Al grabar, el
@@ -158,7 +156,6 @@ la traza completa de altas, anulaciones y respuestas de la AEAT con su
 Solo lectura.
 
 ![Verifactu Log](img/11-log.png)
-*▢ Captura pendiente — Log de eventos con la cadena de hashes.*
 
 En modo **NO_VERIFACTU**, el botón `Exportar NO*VF` genera dos ficheros
 XML: registro de eventos y registro de facturación. La exportación solo
@@ -192,7 +189,6 @@ y NIF-IVA/documento para construir el destinatario correcto.
 ![Tipo de operación Verifactu en borradores](img/11-tipo-operacion.png)
 
 ![Pestaña Verifactu de una factura](img/11-factura-verifactu.png)
-*▢ Captura pendiente — Pestaña Verifactu de la factura (QR, URL, hash, estado).*
 
 > Un borrador **consolidado** (`ESCONSOLIDADA = S`) ya tiene cierre fiscal
 > y **no se puede modificar ni borrar**: cualquier corrección se hace con
@@ -217,7 +213,6 @@ sobre un documento **ya consolidado**:
 | El cliente se identifica en el momento de la venta | **Factura (F8)** en la fase de cobro | Graba la venta directamente como **factura normal** (no ticket); exige cliente con NIF e imprime en A4/PDF. |
 
 ![Botones de acciones fiscales en Facturas](img/11-acciones.png)
-*▢ Captura pendiente — Botones Consolidar / Anular / Subsanar / Rectificar / Facturar ticket.*
 
 Cada una de estas operaciones **se vuelve a encolar** y se comunica a la
 AEAT en modo `VERIFACTU`, o se registra localmente en modo `NO_VERIFACTU`,

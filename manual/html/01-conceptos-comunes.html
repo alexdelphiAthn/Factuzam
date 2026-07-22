@@ -23,8 +23,7 @@ añaden lo específico de cada pantalla.</p>
 <hr>
 <h2 id="1-estructura-de-una-pantalla-de-mantenimiento">1. Estructura de una pantalla de mantenimiento</h2>
 <p>Una pantalla de mantenimiento típica tiene <strong>dos pestañas principales</strong>:</p>
-<p><img src="img/01-lista.png" alt="Pestaña Lista de un mantenimiento" loading="lazy">
-<em>▢ Captura pendiente — Pestaña Lista (rejilla) de un mantenimiento cualquiera.</em></p>
+<p><img src="img/01-lista.png" alt="Pestaña Lista de un mantenimiento" loading="lazy"></p>
 <h3 id="pestana-lista">Pestaña <strong>Lista</strong></h3>
 <p>Muestra una <strong>rejilla (grid)</strong> con todos los registros de la tabla (clientes,
 artículos, facturas…). Desde aquí puedes:</p>
@@ -59,10 +58,8 @@ como al resetear, el diálogo te deja elegir <strong>a quién afecta</strong> el
 <tr><td><strong>Todos</strong></td><td>A <strong>todos los usuarios</strong> de la aplicación. Solo disponible si eres <strong>administrador</strong> (grupo root).</td></tr>
 </tbody>
 </table>
-<p><img src="img/01-guardar-layout.png" alt="Diálogo de Guardar layout con el selector de alcance" loading="lazy">
-<em>▢ Captura pendiente — Diálogo «Guardar Objeto Editado» con el campo Permiso (Usuario / Grupo / Todos).</em></p>
-<p><img src="img/01-resetear-layout.png" alt="Diálogo de Resetear layout" loading="lazy">
-<em>▢ Captura pendiente — Diálogo de reseteo de la rejilla con el selector de alcance.</em></p>
+<p><img src="img/01-guardar-layout.png" alt="Diálogo de Guardar layout con el selector de alcance" loading="lazy"></p>
+<p><img src="img/01-resetear-layout.png" alt="Diálogo de Resetear layout" loading="lazy"></p>
 <blockquote><p>Por defecto se guarda <strong>solo para tu usuario</strong>, así que puedes ajustar tu
 rejilla sin afectar a nadie. Elige <strong>Grupo</strong> o <strong>Todos</strong> únicamente cuando
 quieras imponer la misma vista a más gente; ten en cuenta que <strong>Todos</strong>
@@ -72,8 +69,7 @@ administrador.</p></blockquote>
 <p>Muestra el <strong>detalle de un único registro</strong> con todos sus campos
 organizados en sub-pestañas (Datos principales, Más datos, etc.). Es donde
 se <strong>da de alta, se consulta y se edita</strong> un registro concreto.</p>
-<p><img src="img/01-ficha.png" alt="Pestaña Ficha de un mantenimiento" loading="lazy">
-<em>▢ Captura pendiente — Pestaña Ficha con sus sub-pestañas.</em></p>
+<p><img src="img/01-ficha.png" alt="Pestaña Ficha de un mantenimiento" loading="lazy"></p>
 <blockquote><p>Algunas pantallas tienen además una pestaña <strong>Perfil</strong> (visible solo para
 administradores) para configurar columnas, captions y comportamiento de
 la propia pantalla por usuario/perfil.</p></blockquote>
@@ -81,8 +77,7 @@ la propia pantalla por usuario/perfil.</p></blockquote>
 <h2 id="2-el-navegador-de-registros">2. El navegador de registros</h2>
 <p>En la parte inferior (o lateral) de la pantalla hay una <strong>barra de
 navegación</strong> con los botones estándar. Sus acciones son siempre las mismas:</p>
-<p><img src="img/01-navegador.png" alt="Barra del navegador de registros" loading="lazy">
-<em>▢ Captura pendiente — Barra de navegación con sus botones.</em></p>
+<p><img src="img/01-navegador.png" alt="Barra del navegador de registros" loading="lazy"></p>
 <table>
 <thead><tr>
 <th>Botón</th>
@@ -112,6 +107,7 @@ navegación</strong> con los botones estándar. Sus acciones son siempre las mis
 <tbody>
 <tr><td><strong>Foto artículo</strong></td><td><code>[Ctrl]+[F]</code></td><td>Muestra la foto del artículo.</td></tr>
 <tr><td><strong>Consulta stock</strong></td><td><code>[Ctrl]+[U]</code></td><td>Consulta el stock del artículo actual.</td></tr>
+<tr><td><strong>Búsqueda de datos</strong></td><td><code>[Ctrl]+[E]</code></td><td>Abre la <strong>búsqueda avanzada de artículos y SKU</strong> (ver abajo).</td></tr>
 </tbody>
 </table>
 <blockquote><p>Los atajos del navegador funcionan cuando la pantalla de mantenimiento
@@ -128,6 +124,20 @@ la ventana sigue al registro seleccionado.</p>
 <blockquote><p>Las fotos se guardan en la carpeta configurada en <code>appDirFotos</code>. En
 instalaciones con varios puestos conviene que sea una ruta compartida en
 red para que todos vean las mismas imágenes.</p></blockquote>
+<h3 id="busqueda-de-datos-de-articulos-ctrle">Búsqueda de datos de artículos (Ctrl+E)</h3>
+<p><code>[Ctrl]+[E]</code> abre desde <strong>cualquier ventana</strong> del programa la <strong>búsqueda
+avanzada de artículos y SKU</strong>: una pantalla de consulta rápida para
+localizar referencias por cualquier dato, sin salir de lo que estés
+haciendo.</p>
+<p><img src="img/01-busqueda-datos.png" alt="Búsqueda de datos de artículos" loading="lazy">
+<em>Búsqueda por talla «M»: cada fila es un SKU, con su color, stock y almacenes.</em></p>
+<p>Criterios de búsqueda:</p>
+<ul><li><strong>Buscar por</strong> — el campo sobre el que buscar: todos los campos, código de artículo, SKU, descripción, <strong>talla</strong>, <strong>color</strong>, código de barras, familia, proveedor, referencia de proveedor, temporada, almacén, atributos y propiedades, <strong>color básico</strong> o <strong>proximidad de paleta</strong> (encuentra colores parecidos al indicado).</li><li><strong>Coincidencia</strong> — contiene, empieza por, es igual a, termina en o no contiene, con opción de distinguir mayúsculas/minúsculas.</li><li><strong>Estado</strong> — solo activos, todos o solo inactivos.</li><li><strong>Existencias</strong> — cualquier stock, con existencias o sin existencias.</li><li><strong>Máximo de filas</strong> — límite de resultados (500 / 2.000 / 5.000).</li></ul>
+<p>Sobre la rejilla de resultados se pueden <strong>combinar más filtros en la fila
+de filtro</strong> del grid y guardar la combinación como <strong>perfil</strong> (botón
+<strong>Perfiles...</strong>) para repetir búsquedas habituales.</p>
+<p>Desde los resultados:</p>
+<ul><li><strong>F12</strong> o doble clic — <strong>abre la ficha del artículo</strong> seleccionado.</li><li>Menú contextual <strong>Añadir a Documento de Trabajo...</strong> — apunta el SKU en un <a href="06-menu-almacen.html#documentos-de-trabajo">Documento de Trabajo</a>.</li><li><strong>Ocultar criterios</strong> — pliega la zona de filtros para ver más filas.</li><li><strong>Esc</strong> — cierra la ventana y devuelve el foco a la pantalla anterior.</li></ul>
 <hr>
 <h2 id="3-botones-de-accion">3. Botones de acción</h2>
 <p>Independientemente del navegador, las pantallas suelen mostrar tres botones
@@ -272,7 +282,7 @@ trazabilidad y soporte.</p>
 <hr>
 <p><a href="00-acceso-y-primeros-pasos.html">◀ Acceso</a> · <a href="index.html">Índice</a> · <a href="02-menu-archivo.html">Siguiente ▶ Menú Archivo</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 26/06/2026</footer>
+<footer>Manual de Factuzam · generado el 22/07/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

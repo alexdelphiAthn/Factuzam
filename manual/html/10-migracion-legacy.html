@@ -27,8 +27,7 @@ datos (la antigua y la nueva).</p></blockquote>
 <hr>
 <h2 id="1-que-es-y-que-necesita">1. Qué es y qué necesita</h2>
 <ul><li>Programa <strong>separado</strong> de <code>fzam.exe</code>: se ejecuta solo durante la migración y no forma parte del trabajo diario.</li><li>Conecta a la vez con:</li><li><strong>Origen:</strong> la base de datos SQL Server del software anterior.</li><li><strong>Destino:</strong> la base de datos <code>factuzam</code> en MariaDB.</li><li>Guarda la configuración de conexiones (sin contraseñas) en <code>%USERPROFILE%\Factuzam\migrator.ini</code>.</li></ul>
-<p><img src="img/10-migrator-principal.png" alt="Pantalla principal del Migrator" loading="lazy">
-<em>▢ Captura pendiente — Migrator con los paneles Origen/Destino y la lista de migraciones.</em></p>
+<p><img src="img/10-migrator-principal.png" alt="Pantalla principal del Migrator" loading="lazy"></p>
 <hr>
 <h2 id="2-que-datos-migra">2. Qué datos migra</h2>
 <p>El migrador traslada, <strong>respetando el orden de dependencias</strong>, los
@@ -81,8 +80,7 @@ de pagos).</p></blockquote>
 <ol><li><strong>Copia de seguridad</strong> de ambas bases de datos (origen y destino).</li><li>Abre <code>FactuzamMigrator.exe</code>.</li><li>Configura el panel <strong>Origen</strong> (SQL Server): host, puerto, base de datos, usuario y contraseña. Pulsa <strong>Probar conexión</strong>.</li><li>Configura el panel <strong>Destino</strong> (MariaDB) igual, y prueba la conexión.</li><li><strong>Marca las migraciones</strong> a ejecutar. La lista ya respeta el orden de dependencias; para una migración completa, márcalas todas. En compras, los dominios entran después de maestros y SKUs: pedidos, albaranes, devoluciones a proveedor, facturas de compra, efectos y remesas de pago.</li><li>Pulsa <strong>Ejecutar migraciones</strong>. Durante el proceso:</li></ol>
 <ul><li>El panel de progreso muestra <strong>una línea por dominio activo</strong> con su contador <code>X / Y (Z %)</code> en tiempo real.</li><li>El botón cambia a <strong>Cancelar</strong>: si lo pulsas, termina el dominio en curso y se detiene (lo ya migrado queda hecho).</li></ul>
 <ol><li>Al terminar, revisa el resumen y el <strong>panel de errores</strong>.</li></ol>
-<p><img src="img/10-migrator-progreso.png" alt="Migración en curso" loading="lazy">
-<em>▢ Captura pendiente — Progreso por dominios y log al pie.</em></p>
+<p><img src="img/10-migrator-progreso.png" alt="Migración en curso" loading="lazy"></p>
 <h3 id="re-ejecucion-segura-idempotencia">Re-ejecución segura (idempotencia)</h3>
 <p>Las migraciones son <strong>idempotentes</strong>: si un registro ya existe en destino
 se <strong>salta</strong> (se contabiliza como «saltado») y se continúa. Cada dominio
@@ -122,7 +120,7 @@ datos antiguos <strong>en solo lectura</strong> como referencia histórica.</p><
 <hr>
 <p><a href="09-instalacion-windows.html">◀ Instalación en Windows</a> · <a href="index.html">Índice</a> · <a href="11-verifactu.html">Siguiente ▶ Verifactu (AEAT)</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 26/06/2026</footer>
+<footer>Manual de Factuzam · generado el 22/07/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

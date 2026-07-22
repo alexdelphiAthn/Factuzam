@@ -21,7 +21,6 @@ requiere ninguna acción. La misma pantalla puede consultarse en cualquier
 momento desde *Ayuda ▸ Acerca de*.
 
 ![Pantalla de presentación](img/00-splash.png)
-*▢ Captura pendiente — Pantalla de presentación (Splash).*
 
 ---
 
@@ -30,7 +29,6 @@ momento desde *Ayuda ▸ Acerca de*.
 A continuación aparece la ventana **Login FactuZam**:
 
 ![Ventana de login](img/00-login.png)
-*▢ Captura pendiente — Ventana de login.*
 
 | Campo | Descripción |
 |-------|-------------|
@@ -61,7 +59,6 @@ despliega el panel **Configuración BBDD**. Aquí se indican los datos de
 conexión al servidor **MariaDB/MySQL** donde residen los datos:
 
 ![Panel de configuración de BBDD](img/00-config-bbdd.png)
-*▢ Captura pendiente — Login con el panel Configuración BBDD desplegado.*
 
 | Campo | Descripción |
 |-------|-------------|
@@ -90,7 +87,6 @@ conexión al servidor **MariaDB/MySQL** donde residen los datos:
 Tras validar el login se muestra la ventana principal de Factuzam, con:
 
 ![Ventana principal](img/00-principal.png)
-*▢ Captura pendiente — Ventana principal con varias pestañas abiertas.*
 
 - La **barra de menú** en la parte superior (Archivo, Compras, Ventas
   Mayor, Caja, Almacén, Otros, Verifactu, Ayuda). Es el eje de navegación

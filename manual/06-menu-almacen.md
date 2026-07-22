@@ -12,6 +12,7 @@ Estructura del menú:
 Almacén
 ├── Movimientos de almacén
 ├── Inventarios
+├── Documentos de Trabajo
 └── Informes
     ├── Balance de Almacén Horizontal
     ├── Balance de Almacén sin tallas
@@ -28,7 +29,6 @@ Almacén
 ## Movimientos de almacén
 
 ![Movimientos de almacén](img/06-movimientos.png)
-*▢ Captura pendiente — Movimientos de almacén.*
 
 **Atajo de menú:** `[Ctrl]+[M]`
 
@@ -51,7 +51,6 @@ Sirve para:
 ## Inventarios
 
 ![Inventario con su detalle de recuento](img/06-inventarios.png)
-*▢ Captura pendiente — Inventario con su detalle de recuento.*
 
 **Atajo de menú:** `[Ctrl]+[Alt]+[I]`
 
@@ -83,11 +82,80 @@ una app móvil de recuento mediante un servidor puente:
 | **Recoger recuento móvil** | Trae las lecturas escaneadas, rellena las cantidades físicas y deja el inventario listo para revisar. |
 
 ![Inventario enviado a recuento móvil](img/06-inventarios-recuento-movil.png)
-*▢ Captura pendiente — Inventarios con botones Enviar a recuento móvil y Recoger recuento móvil.*
 
 El recuento móvil no regulariza stock por sí solo. Primero se recogen las
 lecturas, se revisan las diferencias en Factuzam y después se aplica el
 inventario con el flujo normal.
+
+---
+
+## Documentos de Trabajo
+
+![Documentos de Trabajo con sus líneas](img/06-documentos-trabajo.png)
+*Documento de Trabajo con líneas cargadas por filtros y el menú Enviar a... desplegado.*
+
+**Atajo de menú:** `[Ctrl]+[W]`
+
+Un **Documento de Trabajo** es una **lista de trabajo de artículos/SKUs**:
+un borrador personal donde vas apuntando referencias con cantidades (con
+una foto del stock en ese momento) para después **convertirla en un
+documento real** o imprimir etiquetas. Piensa en él como un "carrito"
+interno reutilizable: preparar una reposición, un recuento parcial, una
+selección para cambiar precios, un pedido que aún no sabes cómo acabará…
+
+La pantalla tiene dos pestañas de ámbito:
+
+- **Mis documentos** — los documentos de los que eres **propietario**.
+  Solo aquí puedes crear, editar y borrar.
+- **Compartidos conmigo** — documentos de otros usuarios compartidos
+  contigo o con tu grupo. Se abren en **solo lectura**.
+
+### Cabecera y líneas
+
+La cabecera guarda **Título**, **Tipo** (por defecto `GENERAL`), **Estado**
+(por defecto `ABIERTO`), propietario, fecha, **Empresa** y **Almacén** (el
+almacén de referencia para el stock). Las líneas recogen:
+
+| Columna | Qué indica |
+|---------|------------|
+| **Artículo / SKU** | Referencia apuntada, con su descripción. |
+| **Almacén** | Almacén de la línea (por defecto el de la cabecera). |
+| **Stock** | Existencias del SKU **en el momento de apuntarlo** (ver *Instante stock*). No se recalcula solo. |
+| **Cantidad** | Unidades de trabajo de la línea (al leer un código, entra 1 por defecto). |
+| **Origen** | De dónde salió la línea: entrada manual, carga por filtros, consulta de stock… |
+
+Las líneas se teclean igual que en Inventarios: con `[F1]` se alterna el
+modo de entrada **Desglose** (artículo + atributos) → **SKU** (lectura
+directa de código) → **Tallas horizontal** (rejilla de tallas en columnas).
+
+### Botones de la pantalla
+
+| Botón | Uso |
+|-------|-----|
+| **Cargar artículos...** | **Carga masiva por filtros** (la misma pantalla de filtros que usan Inventarios y las sesiones de tarifas): familias en árbol, proveedores, propiedades/temporadas y almacenes, con opciones de solo activos, solo con stock y excluir lo ya cargado. |
+| **Compartir...** | Comparte el documento con un **usuario** o un **grupo** (permiso de lectura). Los destinatarios lo ven en su pestaña *Compartidos conmigo*. Solo el propietario puede compartir. |
+| **Imprimir etiquetas** | Abre la impresión de **etiquetas de artículo** con los SKUs del documento (elige tarifa y almacenes como en la impresión de etiquetas normal). |
+| **Enviar a...** | Convierte el documento en un documento real (ver abajo). |
+
+### Enviar a...
+
+El botón **Enviar a...** despliega los destinos posibles. El documento debe
+estar grabado y tener líneas; el Documento de Trabajo **no se consume**: se
+puede reutilizar o enviar a varios destinos.
+
+| Destino | Qué crea |
+|---------|----------|
+| **Albarán de venta (mayor)...** | Un **albarán de venta ABIERTO** con las líneas y cantidades del documento (número del contador oficial o el que indiques). Los precios entran a 0: asigna cliente, tarifa y precios en el Mto de albaranes. |
+| **Venta TPV** | Vuelca los SKUs con sus cantidades en la **venta de caja en curso**. Requiere tener abierta *Caja ▸ Ventas*; los precios los resuelve el TPV con su tarifa. |
+| **Inventario...** | Un **inventario ABIERTO** donde la cantidad del documento entra como **cantidad física** y el stock apuntado como teórica. Después usa *Recalcular teórico/PMP* en Inventarios antes de aplicar. |
+| **Sesión de cambio de tarifas** | Una **sesión de cambios de tarifa en BORRADOR** con un artículo por línea. Abre *Tarifas ▸ Cambios* para elegir tarifas origen/destino, regla de cálculo y aplicar. |
+
+> **Añadir líneas desde otras pantallas:** además de teclear o cargar por
+> filtros, puedes apuntar referencias sin salir de donde estás con el menú
+> contextual **Agregar a Documento de Trabajo...** disponible en la
+> **Consulta de stock** (`[Ctrl]+[U]`) y en la
+> [Búsqueda de datos de artículos](01-conceptos-comunes.md#busqueda-de-datos-de-articulos-ctrle)
+> (`[Ctrl]+[E]`).
 
 ---
 
@@ -96,7 +164,6 @@ inventario con el flujo normal.
 ### Balance de Almacén Horizontal
 
 ![Filtros e informe del balance con tallas](img/06-balance-horizontal.png)
-*▢ Captura pendiente — Filtros e informe del balance con tallas.*
 
 Informe de existencias **con desglose por tallas** en columnas
 (horizontal). Muestra el stock de cada artículo repartido por sus

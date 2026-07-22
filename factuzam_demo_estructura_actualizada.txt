@@ -181,3 +181,24 @@ importacion_temporal_mariadb_local_12_3=OK
 tablas_objetos=241
 vistas=97
 sha256=0ECC9E3D97572B915767ACB0E9D8B9E27F8ED7A08AD91BB69E7BD3C7692B49CD
+
+Regeneracion temporal factuzam_demo.sql
+Fecha: 2026-07-22 16:51:27
+tablas_original=144
+tablas_demo_previa=144
+tablas_con_insert_demo=108
+tablas_original_con_insert_sin_insert_demo=3
+- original_data_no_copiada=fza_albaranes_celdas
+- original_data_no_copiada=fza_documentos_trabajo_celdas
+- original_data_no_copiada=fza_pedidos_celdas
+indices_integrados_en_create_table=249
+tablas_actualizadas_con_indices=94
+alter_add_index_restantes=0
+current_timestamp_parentesis_ejecutable=0
+create_or_replace_table_ejecutable=0
+vistas_union_corregidas=fza_caja_depositos_view,vi_atributos_sku_basico,vi_caja_busqueda_unificada,viest_dia
+insert_statements=160
+max_insert_bytes=131208
+insert_grande_mayor_512k=0
+sha256=8322080C1C8CB969B501D249E521873C7D0E1A8E6E2D94FFF0022E585362C90D
+

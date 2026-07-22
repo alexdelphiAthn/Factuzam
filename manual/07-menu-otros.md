@@ -34,7 +34,6 @@ Otros
 ## Parámetros del entorno
 
 ![Parámetros Generales de la Aplicación](img/07-parametros.png)
-*▢ Captura pendiente — Parámetros Generales de la Aplicación.*
 
 **Atajo de menú:** `[Ctrl]+[F10]`
 
@@ -71,7 +70,6 @@ que les corresponde (p. ej. IVA peninsular frente a otros regímenes).
 ## Impuesto IVA
 
 ![Tipos de IVA y recargo de equivalencia](img/07-iva.png)
-*▢ Captura pendiente — Tipos de IVA y recargo de equivalencia.*
 
 **Atajo de menú:** `[Ctrl]+[I]`
 
@@ -88,7 +86,6 @@ ventas.
 ## Contadores
 
 ![Contadores de numeración por serie](img/07-contadores.png)
-*▢ Captura pendiente — Contadores de numeración por serie.*
 
 **Atajo de menú:** `[Ctrl]+[R]`
 
@@ -121,7 +118,6 @@ Campos principales:
 Sub-pestañas: **Más Datos**, **Ventas** (uso en ventas) y **Otros**.
 
 ![Formas de pago](img/03-formas-pago.png)
-*▢ Captura pendiente — Catálogo de formas de pago.*
 
 **Atajo de menú:** `[Shift]+[Ctrl]+[G]`
 
@@ -169,7 +165,6 @@ para un usuario o grupo.
 ### Permisos
 
 ![Gestión de Permisos en árbol](img/07-permisos.png)
-*▢ Captura pendiente — Gestión de Permisos en árbol.*
 
 **Atajo de menú:** `[Ctrl]+[Q]`
 
@@ -230,7 +225,6 @@ Permite **restaurar** la base de datos a partir de un fichero de copia o
 ## Generador de Procesos
 
 ![Generador de Procesos con la pestaña Código SQL](img/07-generador-procesos.png)
-*▢ Captura pendiente — Generador de Procesos con la pestaña Código SQL.*
 
 **Atajo de menú:** `[Ctrl]+[G]`
 

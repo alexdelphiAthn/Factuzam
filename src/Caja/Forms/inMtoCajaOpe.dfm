@@ -485,8 +485,11 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           OnFocusedRecordChanged = cxGrid1DBTableView1FocusedRecordChanged
           OnInitEdit = cxGrid1DBTableView1InitEdit
           DataController.DataSource = dsLineas
+          OptionsBehavior.AlwaysShowEditor = True
+          OptionsBehavior.FocusCellOnTab = True
           OptionsBehavior.GoToNextCellOnEnter = True
           OptionsBehavior.FocusCellOnCycle = True
+          OptionsBehavior.ImmediateEditor = True
           OptionsData.Appending = True
           OptionsView.NoDataToDisplayInfoText = 'No hay art'#237'culos'
           OptionsView.ColumnAutoWidth = True

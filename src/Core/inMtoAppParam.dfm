@@ -157,7 +157,7 @@ object frmMtoAppParam: TfrmMtoAppParam
     Top = 496
     object actGuardar: TAction
       Caption = 'Guardar'
-      ShortCut = 16467
+      ShortCut = 123
       OnExecute = actGuardarExecute
     end
     object actSalir: TAction

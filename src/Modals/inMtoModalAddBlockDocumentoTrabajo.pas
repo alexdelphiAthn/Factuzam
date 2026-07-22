@@ -51,6 +51,7 @@ type
     FIdDtr: Int64;
     FAlmacen: string;
     FTitulo: string;
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     function ValidarAntesDePrevisualizar(out AMensaje: string): Boolean;
       override;
     function SubquerYaCargado: string; override;
@@ -63,6 +64,7 @@ type
                                out ACodigos: TArray<string>): Boolean;
       override;
   private
+    procedure AjustarAPantalla;
     function AlmacenesCargaSql: string;
     function ProximoNumeroLinea: Integer;
     procedure PreseleccionarAlmacen;
@@ -115,10 +117,50 @@ end;
 procedure TfrmModalAddBlockDocumentoTrabajo.FormCreate(Sender: TObject);
 begin
   inherited;
+  AjustarAPantalla;
   Self.Caption := 'Anadir Bloque - Documento de Trabajo';
+  btnAceptar.Caption := '&Aceptar (F12)';
+  btnCancelar.Caption := '&Cancelar (ESC)';
   chkSoloConStock.Checked := True;
   chkSoloConStock.Enabled := False;
   FResultadoDoc.Aceptado := False;
+end;
+
+procedure TfrmModalAddBlockDocumentoTrabajo.KeyDown(var Key: Word;
+  Shift: TShiftState);
+begin
+  if (Key = VK_F12) and (Shift = []) then
+  begin
+    Key := 0;
+    btnAceptarClick(btnAceptar);
+  end
+  else if (Key = VK_ESCAPE) and (Shift = []) then
+  begin
+    Key := 0;
+    btnCancelarClick(btnCancelar);
+  end
+  else
+  begin
+    inherited KeyDown(Key, Shift);
+  end;
+end;
+
+procedure TfrmModalAddBlockDocumentoTrabajo.AjustarAPantalla;
+var
+  rArea: TRect;
+begin
+  if Assigned(Application.MainForm) then
+  begin
+    rArea := Application.MainForm.Monitor.WorkareaRect;
+  end
+  else
+  begin
+    rArea := Screen.PrimaryMonitor.WorkareaRect;
+  end;
+  if Height > rArea.Height then
+  begin
+    Height := rArea.Height;
+  end;
 end;
 
 procedure TfrmModalAddBlockDocumentoTrabajo.PreseleccionarAlmacen;

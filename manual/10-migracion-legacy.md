@@ -25,7 +25,6 @@ datos destino y cómo ejecutar y verificar la migración.
   `%USERPROFILE%\Factuzam\migrator.ini`.
 
 ![Pantalla principal del Migrator](img/10-migrator-principal.png)
-*▢ Captura pendiente — Migrator con los paneles Origen/Destino y la lista de migraciones.*
 
 ---
 
@@ -107,7 +106,6 @@ externos:
 7. Al terminar, revisa el resumen y el **panel de errores**.
 
 ![Migración en curso](img/10-migrator-progreso.png)
-*▢ Captura pendiente — Progreso por dominios y log al pie.*
 
 ### Re-ejecución segura (idempotencia)
 

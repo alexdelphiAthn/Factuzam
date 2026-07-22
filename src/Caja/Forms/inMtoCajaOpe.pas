@@ -1798,41 +1798,43 @@ var
   VieneDeDep: string;
 begin
   Result := False;
-  if Trim(SkuBuscado) = '' then Exit;
-  Clon := TClientDataSet.Create(nil);
-  try
-    Clon.CloneCursor(DatosCaja.cdsLineas, True);
-    Clon.First;
-    while not Clon.Eof do
-    begin
-      VieneDeDep := Clon.FieldByName('VIENE_DE_DEPOSITO').AsString;
-
-      // Solo consolidamos líneas de venta normal.
-      // Las líneas de depósito ('S' = prenda apartada, 'A' = abono)
-      // NO se consolidan: representan operaciones distintas aunque
-      // compartan SKU con un artículo que el cliente se lleva ahora.
-      if (VieneDeDep <> 'S') and (VieneDeDep <> 'A') and
-         (Clon.FieldByName('CODIGO_UNIDAD_FACLIN').AsString = SkuBuscado)
-         and (Clon.RecNo <> DatosCaja.cdsLineas.RecNo) then
+  if oCajaParams.GetBool('vgerAgruparUnidadesIguales', False) and
+     (Trim(SkuBuscado) <> '') then
+  begin
+    Clon := TClientDataSet.Create(nil);
+    try
+      Clon.CloneCursor(DatosCaja.cdsLineas, True);
+      Clon.First;
+      while not Clon.Eof do
       begin
-        OldQty := Clon.FieldByName('CANTIDAD_FACLIN').AsFloat;
-        Clon.Edit;
-        Clon.FieldByName('CANTIDAD_FACLIN').AsFloat := OldQty + 1;
-        dsLineas.DataSet.DisableControls;
-        Clon.Post;
-        dsLineas.DataSet.EnableControls;
-        GridRecalc(nil,
-                   tvLineasOpe,
-                   DatosCaja.cdsLineas,
-                   DatosCaja.cdsCabecera,
-                   ActualizarLabelTotal);
-        Result := True;
-        Break;
+        VieneDeDep := Clon.FieldByName('VIENE_DE_DEPOSITO').AsString;
+        // Solo consolidamos líneas de venta normal.
+        // Las líneas de depósito ('S' = prenda apartada, 'A' = abono)
+        // NO se consolidan: representan operaciones distintas aunque
+        // compartan SKU con un artículo que el cliente se lleva ahora.
+        if (VieneDeDep <> 'S') and (VieneDeDep <> 'A') and
+           (Clon.FieldByName('CODIGO_UNIDAD_FACLIN').AsString = SkuBuscado)
+           and (Clon.RecNo <> DatosCaja.cdsLineas.RecNo) then
+        begin
+          OldQty := Clon.FieldByName('CANTIDAD_FACLIN').AsFloat;
+          Clon.Edit;
+          Clon.FieldByName('CANTIDAD_FACLIN').AsFloat := OldQty + 1;
+          dsLineas.DataSet.DisableControls;
+          Clon.Post;
+          dsLineas.DataSet.EnableControls;
+          GridRecalc(nil,
+                     tvLineasOpe,
+                     DatosCaja.cdsLineas,
+                     DatosCaja.cdsCabecera,
+                     ActualizarLabelTotal);
+          Result := True;
+          Break;
+        end;
+        Clon.Next;
       end;
-      Clon.Next;
+    finally
+      FreeAndNil(Clon);
     end;
-  finally
-    FreeAndNil(Clon);
   end;
 end;
 
@@ -2307,6 +2309,9 @@ var
   Info      : TInfoBasico;
   Btn       : TcxEditButton;
 begin
+  // Estilo Excel: al entrar en una celda, teclear sustituye su contenido.
+  if AEdit is TcxCustomTextEdit then
+    TcxCustomTextEdit(AEdit).SelectAll;
   // Columnas de atributo dinamico (Color, Talla, ...). Mismo patron que
   // inMtoInventarios:
   //   (1) Si el AV actual tiene color en la paleta basica, el boton muestra
@@ -2424,8 +2429,8 @@ end;
 procedure TfrmMtoOpeCaja.cxGrid1DBTableView1MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  // Solo actuamos si el clic es con el botón izquierdo
-  if Button = mbLeft then
+  // No cambiar la celda elegida; solo crear una linea si no existe ninguna.
+  if (Button = mbLeft) and DatosCaja.cdsLineas.IsEmpty then
     AsegurarLineaNueva;
 end;
 
@@ -3816,20 +3821,26 @@ var
   sRuta: string;
   png  : TPngImage;
 begin
-  if not Assigned(imgFotoStock) then Exit;
-  imgFotoStock.Picture.Assign(nil);
-  if not Assigned(dsLineas) then Exit;
-  LeerArtSkuDeDataSet(dsLineas.DataSet, sArt, sSku);
-  if sArt = '' then Exit;
-  info  := oFotos.Resolver(sArt, sSku);
-  sRuta := oFotos.RutaFoto(info, frPx300);
-  if sRuta = '' then Exit;
-  png := TPngImage.Create;
-  try
-    png.LoadFromFile(sRuta);
-    imgFotoStock.Picture.Assign(png);
-  finally
-    FreeAndNil(png);
+  if Assigned(imgFotoStock) and Assigned(dsLineas) then
+  begin
+    LeerArtSkuDeDataSet(dsLineas.DataSet, sArt, sSku);
+    // La linea nueva conserva la foto del ultimo articulo introducido.
+    if sArt <> '' then
+    begin
+      imgFotoStock.Picture.Assign(nil);
+      info  := oFotos.Resolver(sArt, sSku);
+      sRuta := oFotos.RutaFoto(info, frPx300);
+      if sRuta <> '' then
+      begin
+        png := TPngImage.Create;
+        try
+          png.LoadFromFile(sRuta);
+          imgFotoStock.Picture.Assign(png);
+        finally
+          FreeAndNil(png);
+        end;
+      end;
+    end;
   end;
 end;
 

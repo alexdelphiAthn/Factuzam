@@ -13,6 +13,11 @@ un mapa rápido de cambios.
 
 | Novedad | Dónde verlo |
 |---------|-------------|
+| **Documentos de Trabajo**: listas de artículos/SKUs para compartir, imprimir etiquetas y enviar a albarán, TPV, inventario o cambio de tarifas. | [Almacén ▸ Documentos de Trabajo](06-menu-almacen.md#documentos-de-trabajo) |
+| **Búsqueda de datos de artículos** con `[Ctrl]+[E]` desde cualquier ventana: por talla, color, proximidad de paleta, stock y perfiles guardados. | [Conceptos comunes ▸ Búsqueda de datos](01-conceptos-comunes.md#busqueda-de-datos-de-articulos-ctrle) |
+| **Cuenta de cliente en el TPV** (F2): carga de depósitos y abonos a cuenta, cancelación por signo y reparto del cobro parcial en depósitos. | [Caja ▸ Ventas](05-menu-caja.md#ventas-f5-la-pantalla-de-venta) |
+| **Listado de efectos de pago** con filtros por vencimiento, proveedor, banco/remesa, tipo y situación. | [Compras ▸ Listados](03-menu-compras.md#listados-listado-de-efectos-de-pago) |
+| Menú **Ayuda** con acceso directo al **manual web** y al **foro de soporte**. | [Menú Ayuda](08-menu-ayuda.md) |
 | Emisión de eDoc Facturae firmado desde borradores de venta mayor consolidados. | [Ventas Mayor ▸ Borradores](04-menu-ventas-mayor.md#efectos-y-edoc-en-el-borrador) |
 | Parámetros eDoc del cliente: DIR3 y datos de persona física. | [Clientes](02-menu-archivo.md#clientes) |
 | Código Facturae en formas de pago para informar el medio de pago oficial. | [Formas de pago documentos](07-menu-otros.md#formas-de-pago-documentos) |

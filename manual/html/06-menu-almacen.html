@@ -23,6 +23,7 @@ analizar el stock.</p>
 <pre><code>Almacén
 ├── Movimientos de almacén
 ├── Inventarios
+├── Documentos de Trabajo
 └── Informes
     ├── Balance de Almacén Horizontal
     ├── Balance de Almacén sin tallas
@@ -33,8 +34,7 @@ genera <strong>movimientos de almacén</strong>, que son el origen de verdad de 
 existencias.</p></blockquote>
 <hr>
 <h2 id="movimientos-de-almacen">Movimientos de almacén</h2>
-<p><img src="img/06-movimientos.png" alt="Movimientos de almacén" loading="lazy">
-<em>▢ Captura pendiente — Movimientos de almacén.</em></p>
+<p><img src="img/06-movimientos.png" alt="Movimientos de almacén" loading="lazy"></p>
 <p><strong>Atajo de menú:</strong> <code>[Ctrl]+[M]</code></p>
 <p>Consulta y mantenimiento de los <strong>movimientos de stock</strong>: cada entrada o
 salida de un SKU en un almacén, con su fecha, cantidad, motivo y documento
@@ -46,8 +46,7 @@ automáticamente los albaranes, devoluciones, ventas de caja e
 inventarios.</p></blockquote>
 <hr>
 <h2 id="inventarios">Inventarios</h2>
-<p><img src="img/06-inventarios.png" alt="Inventario con su detalle de recuento" loading="lazy">
-<em>▢ Captura pendiente — Inventario con su detalle de recuento.</em></p>
+<p><img src="img/06-inventarios.png" alt="Inventario con su detalle de recuento" loading="lazy"></p>
 <p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[I]</code></p>
 <p>Mantenimiento de <strong>Inventarios</strong> (recuentos físicos). Permite contar el
 stock real y <strong>regularizar</strong> las diferencias frente a lo que dice el
@@ -70,16 +69,82 @@ una app móvil de recuento mediante un servidor puente:</p>
 <tr><td><strong>Recoger recuento móvil</strong></td><td>Trae las lecturas escaneadas, rellena las cantidades físicas y deja el inventario listo para revisar.</td></tr>
 </tbody>
 </table>
-<p><img src="img/06-inventarios-recuento-movil.png" alt="Inventario enviado a recuento móvil" loading="lazy">
-<em>▢ Captura pendiente — Inventarios con botones Enviar a recuento móvil y Recoger recuento móvil.</em></p>
+<p><img src="img/06-inventarios-recuento-movil.png" alt="Inventario enviado a recuento móvil" loading="lazy"></p>
 <p>El recuento móvil no regulariza stock por sí solo. Primero se recogen las
 lecturas, se revisan las diferencias en Factuzam y después se aplica el
 inventario con el flujo normal.</p>
 <hr>
+<h2 id="documentos-de-trabajo">Documentos de Trabajo</h2>
+<p><img src="img/06-documentos-trabajo.png" alt="Documentos de Trabajo con sus líneas" loading="lazy">
+<em>Documento de Trabajo con líneas cargadas por filtros y el menú Enviar a... desplegado.</em></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[W]</code></p>
+<p>Un <strong>Documento de Trabajo</strong> es una <strong>lista de trabajo de artículos/SKUs</strong>:
+un borrador personal donde vas apuntando referencias con cantidades (con
+una foto del stock en ese momento) para después <strong>convertirla en un
+documento real</strong> o imprimir etiquetas. Piensa en él como un "carrito"
+interno reutilizable: preparar una reposición, un recuento parcial, una
+selección para cambiar precios, un pedido que aún no sabes cómo acabará…</p>
+<p>La pantalla tiene dos pestañas de ámbito:</p>
+<ul><li><strong>Mis documentos</strong> — los documentos de los que eres <strong>propietario</strong>. Solo aquí puedes crear, editar y borrar.</li><li><strong>Compartidos conmigo</strong> — documentos de otros usuarios compartidos contigo o con tu grupo. Se abren en <strong>solo lectura</strong>.</li></ul>
+<h3 id="cabecera-y-lineas">Cabecera y líneas</h3>
+<p>La cabecera guarda <strong>Título</strong>, <strong>Tipo</strong> (por defecto <code>GENERAL</code>), <strong>Estado</strong>
+(por defecto <code>ABIERTO</code>), propietario, fecha, <strong>Empresa</strong> y <strong>Almacén</strong> (el
+almacén de referencia para el stock). Las líneas recogen:</p>
+<table>
+<thead><tr>
+<th>Columna</th>
+<th>Qué indica</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Artículo / SKU</strong></td><td>Referencia apuntada, con su descripción.</td></tr>
+<tr><td><strong>Almacén</strong></td><td>Almacén de la línea (por defecto el de la cabecera).</td></tr>
+<tr><td><strong>Stock</strong></td><td>Existencias del SKU <strong>en el momento de apuntarlo</strong> (ver <em>Instante stock</em>). No se recalcula solo.</td></tr>
+<tr><td><strong>Cantidad</strong></td><td>Unidades de trabajo de la línea (al leer un código, entra 1 por defecto).</td></tr>
+<tr><td><strong>Origen</strong></td><td>De dónde salió la línea: entrada manual, carga por filtros, consulta de stock…</td></tr>
+</tbody>
+</table>
+<p>Las líneas se teclean igual que en Inventarios: con <code>[F1]</code> se alterna el
+modo de entrada <strong>Desglose</strong> (artículo + atributos) → <strong>SKU</strong> (lectura
+directa de código) → <strong>Tallas horizontal</strong> (rejilla de tallas en columnas).</p>
+<h3 id="botones-de-la-pantalla">Botones de la pantalla</h3>
+<table>
+<thead><tr>
+<th>Botón</th>
+<th>Uso</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Cargar artículos...</strong></td><td><strong>Carga masiva por filtros</strong> (la misma pantalla de filtros que usan Inventarios y las sesiones de tarifas): familias en árbol, proveedores, propiedades/temporadas y almacenes, con opciones de solo activos, solo con stock y excluir lo ya cargado.</td></tr>
+<tr><td><strong>Compartir...</strong></td><td>Comparte el documento con un <strong>usuario</strong> o un <strong>grupo</strong> (permiso de lectura). Los destinatarios lo ven en su pestaña <em>Compartidos conmigo</em>. Solo el propietario puede compartir.</td></tr>
+<tr><td><strong>Imprimir etiquetas</strong></td><td>Abre la impresión de <strong>etiquetas de artículo</strong> con los SKUs del documento (elige tarifa y almacenes como en la impresión de etiquetas normal).</td></tr>
+<tr><td><strong>Enviar a...</strong></td><td>Convierte el documento en un documento real (ver abajo).</td></tr>
+</tbody>
+</table>
+<h3 id="enviar-a">Enviar a...</h3>
+<p>El botón <strong>Enviar a...</strong> despliega los destinos posibles. El documento debe
+estar grabado y tener líneas; el Documento de Trabajo <strong>no se consume</strong>: se
+puede reutilizar o enviar a varios destinos.</p>
+<table>
+<thead><tr>
+<th>Destino</th>
+<th>Qué crea</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Albarán de venta (mayor)...</strong></td><td>Un <strong>albarán de venta ABIERTO</strong> con las líneas y cantidades del documento (número del contador oficial o el que indiques). Los precios entran a 0: asigna cliente, tarifa y precios en el Mto de albaranes.</td></tr>
+<tr><td><strong>Venta TPV</strong></td><td>Vuelca los SKUs con sus cantidades en la <strong>venta de caja en curso</strong>. Requiere tener abierta <em>Caja ▸ Ventas</em>; los precios los resuelve el TPV con su tarifa.</td></tr>
+<tr><td><strong>Inventario...</strong></td><td>Un <strong>inventario ABIERTO</strong> donde la cantidad del documento entra como <strong>cantidad física</strong> y el stock apuntado como teórica. Después usa <em>Recalcular teórico/PMP</em> en Inventarios antes de aplicar.</td></tr>
+<tr><td><strong>Sesión de cambio de tarifas</strong></td><td>Una <strong>sesión de cambios de tarifa en BORRADOR</strong> con un artículo por línea. Abre <em>Tarifas ▸ Cambios</em> para elegir tarifas origen/destino, regla de cálculo y aplicar.</td></tr>
+</tbody>
+</table>
+<blockquote><p><strong>Añadir líneas desde otras pantallas:</strong> además de teclear o cargar por
+filtros, puedes apuntar referencias sin salir de donde estás con el menú
+contextual <strong>Agregar a Documento de Trabajo...</strong> disponible en la
+<strong>Consulta de stock</strong> (<code>[Ctrl]+[U]</code>) y en la
+<a href="01-conceptos-comunes.html#busqueda-de-datos-de-articulos-ctrle">Búsqueda de datos de artículos</a>
+(<code>[Ctrl]+[E]</code>).</p></blockquote>
+<hr>
 <h2 id="informes">Informes</h2>
 <h3 id="balance-de-almacen-horizontal">Balance de Almacén Horizontal</h3>
-<p><img src="img/06-balance-horizontal.png" alt="Filtros e informe del balance con tallas" loading="lazy">
-<em>▢ Captura pendiente — Filtros e informe del balance con tallas.</em></p>
+<p><img src="img/06-balance-horizontal.png" alt="Filtros e informe del balance con tallas" loading="lazy"></p>
 <p>Informe de existencias <strong>con desglose por tallas</strong> en columnas
 (horizontal). Muestra el stock de cada artículo repartido por sus
 variantes/tallas, ideal para artículos de moda. Se filtra (almacén,
@@ -133,7 +198,7 @@ se suman ni se promedian los porcentajes de cada artículo.</p>
 <hr>
 <p><a href="05-menu-caja.html">◀ Menú Caja</a> · <a href="index.html">Índice</a> · <a href="07-menu-otros.html">Siguiente ▶ Menú Otros</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 26/06/2026</footer>
+<footer>Manual de Factuzam · generado el 22/07/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

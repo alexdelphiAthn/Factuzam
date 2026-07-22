@@ -234,6 +234,11 @@ begin
                      'Cargar depósitos automáticamente al seleccionar cliente',
                      tpBoolean,
                      'False');
+  RegistrarParametro('Configuración de Caja',
+                     'vgerAgruparUnidadesIguales',
+                     'Agrupar unidades iguales en una sola línea',
+                     tpBoolean,
+                     'False');
   RegistrarParametro('Servicios web',
                      'vgerEnviarVentasWS',
                      'Enviar ventas completas al webservice de respaldo',

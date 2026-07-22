@@ -3289,7 +3289,7 @@ begin
       // tsqlLeft / tsqlRight son palabras reservadas (LEFT/RIGHT JOIN) pero
       // tambien funciones de cadena MySQL LEFT(str,n) / RIGHT(str,n). En una
       // expresion solo pueden ser la funcion, asi que las tratamos como tal.
-      tsqlIdentifier, tsqlIf, tsqlLeft, tsqlRight:
+      tsqlIdentifier, tsqlIf, tsqlLeft, tsqlRight, tsqlDate:
         begin
           if CurrentToken = tsqlIf then
             N := 'IF'

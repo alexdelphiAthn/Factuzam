@@ -21,7 +21,8 @@ Compras
 ├── Remesas de pago
 ├── Cargar efectos en remesa...
 └── Listados
-    └── Listado de documentos proveedor
+    ├── Listado de documentos proveedor
+    └── Listado de efectos de pago
 ```
 
 > Flujo habitual de compra:
@@ -42,7 +43,6 @@ sesión se **materializa** generando automáticamente los artículos, los
 SKUs, los códigos de barras y el **pedido y/o albarán de compra**.
 
 ![Pantalla de Sesiones de compra](img/03-sesiones-general.png)
-*▢ Captura pendiente — Vista general de la sesión: cabecera y líneas de artículos.*
 
 ### 1. La cabecera de la sesión
 
@@ -99,7 +99,6 @@ Cada línea es un **artículo + color** con su escandallo de tallas:
 - **+ Foto / Bajar fotos** — asocia fotografías al artículo o las descarga.
 
 ![Líneas de artículos con matriz de tallas](img/03-sesiones-lineas.png)
-*▢ Captura pendiente — Pestaña Líneas de Artículos con la matriz de tallas.*
 
 ![Pestaña Proveedor de una sesión de compra](img/03-sesiones-proveedor.png)
 
@@ -132,7 +131,6 @@ proveedor según el detalle de la sesión»*) y pide confirmación
 (`[F12]` Confirmar / `[Esc]` Cancelar).
 
 ![Asistente de materialización](img/03-sesiones-materializar.png)
-*▢ Captura pendiente — Modal «Crear artículos y albarán / pedido» y confirmación de materialización.*
 
 **Qué hace exactamente la materialización:**
 
@@ -153,7 +151,6 @@ También hay accesos rápidos **Ir a Artículos**, **Ir a Albaranes de
 Compra** e **Ir a Pedidos de Compra**.
 
 ![Documentos creados por la sesión](img/03-sesiones-documentos.png)
-*▢ Captura pendiente — Pestaña Documentos creados con el botón Ir a documento.*
 
 ### 5. Revertir materialización
 
@@ -187,7 +184,6 @@ Mantenimiento de **Pedidos de Compra**. Registra lo que se ha **encargado**
 a un proveedor (todavía no ha llegado, no mueve stock).
 
 ![Pedidos de compra](img/03-pedidos-compra.png)
-*▢ Captura pendiente — Mantenimiento de Pedidos de Compra.*
 
 **Atajo de menú:** `[Shift]+[Ctrl]+[P]`
 
@@ -219,7 +215,6 @@ la mercancía: al confirmar el albarán **entra el stock** en el almacén
 indicado.
 
 ![Albaranes de compra](img/03-albaranes-compra.png)
-*▢ Captura pendiente — Mantenimiento de Albaranes de Compra.*
 
 **Atajo de menú:** `[Shift]+[Ctrl]+[A]`
 
@@ -245,7 +240,6 @@ Mantenimiento de **Devoluciones a Proveedor**. Registra la mercancía que se
 stock** del almacén y sirve de base para el **abono** del proveedor.
 
 ![Devoluciones a proveedor](img/03-devoluciones.png)
-*▢ Captura pendiente — Mantenimiento de Devoluciones a Proveedor.*
 
 *(Sin atajo de menú; se abre desde el menú.)*
 
@@ -286,7 +280,6 @@ albaranes, conserva la referencia al documento de origen y marca esos
 albaranes como facturados para evitar duplicidades.
 
 ![Facturas de compra](img/03-facturas-compra.png)
-*▢ Captura pendiente — Mantenimiento de Borradores de Compra con pestaña Efectos.*
 
 La ficha incluye:
 
@@ -359,6 +352,24 @@ alimentarla con vencimientos filtrados por proveedor, vencimiento o estado.
 Listado de documentos de proveedor para revisar pedidos, albaranes,
 devoluciones, borradores y vencimientos dentro de un rango de fechas o por
 proveedor.
+
+---
+
+## Listados ▸ Listado de efectos de pago
+
+Listado de la **cartera de pagos a proveedor**: los efectos (vencimientos)
+de compra con sus importes y situación. Permite filtrar por:
+
+- **Fechas** (por fecha de vencimiento o fecha de emisión del efecto).
+- **Almacén** y **proveedor**.
+- **Número de efecto** (desde/hasta).
+- **Banco/remesa** en que está cargado el efecto.
+- **Tipo de efecto** y **situación** (pendiente, remesado, pagado…).
+
+Puede sacarse en detalle o **solo totales** (con los agrupados que se
+marquen), y se previsualiza, imprime o exporta como el resto de listados.
+Es el complemento de impresión de las pantallas
+[Efectos de pago](#efectos-de-pago) y [Remesas de pago](#remesas-de-pago).
 
 ---
 

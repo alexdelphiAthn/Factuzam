@@ -143,7 +143,6 @@ incluir y pulsa **Cargar en remesa**.
 ## Pedidos
 
 ![Pedidos de venta](img/04-pedidos.png)
-*▢ Captura pendiente — Pedidos de venta.*
 
 **Atajo de menú:** `[Ctrl]+[Alt]+[P]`
 
@@ -156,7 +155,6 @@ el **albarán** de salida cuando se sirve el pedido.
 ## Albaranes
 
 ![Albaranes de venta](img/04-albaranes.png)
-*▢ Captura pendiente — Albaranes de venta.*
 
 **Atajo de menú:** `[Ctrl]+[Alt]+[A]`
 
@@ -175,7 +173,6 @@ agrupado para el mismo cliente.
 ## Listados ▸ Ventas
 
 ![Filtros del listado de ventas](img/04-listado-ventas.png)
-*▢ Captura pendiente — Filtros del listado de ventas.*
 
 **Atajo de menú:** `[Ctrl]+[Alt]+[V]`
 

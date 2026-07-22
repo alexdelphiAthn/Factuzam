@@ -1,8 +1,12 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibMigArticulosPropiedades                                  }
-{    Tipo:       Librería de migración (sin formulario)                        }
-{ Versión:       1.0.0                                                         }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.1                                                         }
+{   Fecha:       22/07/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
 {    Crea la propiedad TEMPORADA y la asigna a cada articulo del legacy a    }
@@ -35,10 +39,9 @@
 {    (paso 1) se nutre de ambas fuentes (ocartp y ocartcol).                  }
 {                                                                              }
 {    Idempotente:                                                              }
-{      - fza_propiedades: comprueba CODIGO_PROP_ARTPROP, si existe se salta. }
-{      - fza_propiedades_valores: chequea (ID_PROP_PV, PV), idem.            }
-{      - fza_articulos_propiedades: PK (CODIGO_ART_ART, CODIGO_PROP_ARTPROP) }
-{        + INSERT IGNORE en el bulk.                                          }
+{      - fza_propiedades: asegura LISTA, nivel COLOR y estado activo.          }
+{      - fza_propiedades_valores: comprueba (ID_PROP_PV, PV).                  }
+{      - fza_articulos_propiedades: INSERT IGNORE sobre su PK.                 }
 {******************************************************************************}
 unit inLibMigArticulosPropiedades;
 
@@ -71,34 +74,32 @@ begin
 end;
 
 procedure AsegurarPropiedadTemporada(Eng: TMigEngine);
-var qChk, qIns: TUniQuery;
+var
+  qIns: TUniQuery;
 begin
-  qChk := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
   try
-    qChk.Connection := Eng.ConDst;
-    qChk.SQL.Text   :=
-      'SELECT 1 FROM fza_propiedades ' +
-      'WHERE CODIGO_PROP_ARTPROP = ''TEMPORADA''';
-    qChk.Open;
-    if not qChk.IsEmpty then Exit;
-    qChk.Close;
-
     qIns.Connection := Eng.ConDst;
     qIns.SQL.Text   :=
       'INSERT INTO fza_propiedades (' +
         'CODIGO_PROP_ARTPROP, NOMBRE_PROP_PROP, TIPO_VALOR_PROP, ' +
-        'ESACTIVO_PROP, ' +
+        'NIVEL_PROP, ESACTIVO_PROP, ' +
         'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'VALUES (''TEMPORADA'', ''Temporada'', ''LISTA'', ''S'', ' +
+      'VALUES (''TEMPORADA'', ''Temporada'', ''LISTA'', ''COLOR'', ''S'', ' +
               ':INSTANTE_ALTA, :INSTANTE_MODIF, ' +
-              ':USUARIO_ALTA, :USUARIO_MODIF)';
+              ':USUARIO_ALTA, :USUARIO_MODIF) ' +
+      'ON DUPLICATE KEY UPDATE ' +
+        'NOMBRE_PROP_PROP = ''Temporada'', ' +
+        'TIPO_VALOR_PROP = ''LISTA'', ' +
+        'NIVEL_PROP = ''COLOR'', ' +
+        'ESACTIVO_PROP = ''S'', ' +
+        'INSTANTE_MODIF = :INSTANTE_MODIF, ' +
+        'USUARIO_MODIF = :USUARIO_MODIF';
     RellenarAuditoria(qIns, Eng.Usuario);
     qIns.ExecSQL;
-    Eng.Log('  + propiedad TEMPORADA creada');
+    Eng.Log('  + propiedad TEMPORADA asegurada (LISTA, COLOR, activa)');
   finally
-    qIns.Free;
-    qChk.Free;
+    FreeAndNil(qIns);
   end;
 end;
 

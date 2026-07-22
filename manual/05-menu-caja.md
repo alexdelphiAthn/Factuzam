@@ -61,7 +61,6 @@ y rapidez en el mostrador. Muestra la **Empresa**, la **caja activa**
 reloj.
 
 ![Menú de Caja](img/05-menu-caja.png)
-*▢ Captura pendiente — Menú de Caja con las opciones y sus teclas rápidas.*
 
 Funciones y sus teclas rápidas:
 
@@ -81,7 +80,6 @@ Funciones y sus teclas rápidas:
 > seleccionada** (empresa + almacén + caja).
 
 ![Selector de caja](img/05-caja-selector-caja.png)
-*▢ Captura pendiente — Selector de empresa, almacén y caja al entrar al TPV.*
 
 El calendario del menú marca los días con ventas y permite cambiar la fecha
 de trabajo. La fecha elegida se arrastra a ventas, traspasos, entradas,
@@ -96,7 +94,6 @@ Es la pantalla donde se hace el ticket. Arriba se indica el **Empleado**
 **líneas de venta** y el **Total** en grande.
 
 ![Pantalla de Ventas del TPV](img/05-caja-ventas.png)
-*▢ Captura pendiente — Operación de venta con líneas y total.*
 
 **Cómo se añaden líneas:**
 
@@ -122,15 +119,36 @@ artículo tiene foto, se muestra en el panel lateral de stock/foto.
 5. Pulsa **F12 Cobro** cuando el total sea correcto.
 
 ![Búsqueda de artículos en caja](img/05-caja-busqueda-articulos.png)
-*▢ Captura pendiente — Búsqueda de artículos desde la venta de caja.*
 
 **Cliente, cuenta y depósitos:**
 
 Si se asigna un cliente, la cabecera de la venta toma sus datos fiscales,
 tarifa y condiciones. Cuando el cliente tiene depósitos o prendas apartadas,
-**F2 Cargar cta.** trae esas líneas a la venta para cobrarlas, cancelarlas o
-aumentar el anticipo. Las líneas que vienen de depósito se distinguen de una
-línea normal y tienen menos campos editables.
+**F2 Cargar cta.** trae su **cuenta de cliente** a la venta. Al pulsarlo, el
+ticket carga:
+
+- Una línea por cada **prenda apartada pendiente** (con su cantidad
+  pendiente y el precio al que se apartó), marcada para **Cobrar**.
+- Una línea negativa **«Abono a cuenta»** por cada **anticipo** ya
+  entregado, que descuenta del total lo que el cliente ya pagó.
+
+La vista cambia al **modo cuenta de cliente**: aparece la columna **Fecha**
+(cuándo se apartó cada prenda) y se ocultan las columnas **%** y **Menos**.
+Mientras tanto se puede seguir escaneando prendas nuevas con normalidad.
+
+Las líneas que vienen de depósito tienen reglas propias:
+
+- No se pueden **eliminar** (F8) ni sustituir por otra búsqueda (F3).
+- Solo se permite **cambiar el signo de la cantidad**: en **negativo** la
+  prenda queda marcada para **cancelar el depósito** (no se cobra la prenda
+  y el anticipo entregado se recupera como saldo a favor en el cobro); de
+  vuelta a positivo, se vuelve a marcar para **cobrar**.
+- Con líneas de depósito en el ticket **no se admite descuento global** en
+  la fase de cobro.
+
+> Con el parámetro **Cargar depósitos automáticamente**
+> (`vgerAutoLoadDepositos`) la cuenta se carga sola al seleccionar el
+> cliente, sin pulsar F2 (ver [Parámetros de Caja](#parametros-de-caja)).
 
 **Varias ventas a la vez:**
 
@@ -152,6 +170,7 @@ de cerrar el menú de caja, el programa avisa si queda alguna operación abierta
 | **F8** | **Eliminar** | Elimina la línea seleccionada. |
 | **F2** | **Cargar cta.** | Carga los **depósitos/a cuenta** del cliente para aplicarlos. |
 | **Ctrl+U** | **Consulta stock** | Consulta el stock del artículo de la línea en foco. |
+| **Ctrl+E** | **Búsqueda de datos** | Abre la [búsqueda avanzada de artículos y SKU](01-conceptos-comunes.md#busqueda-de-datos-de-articulos-ctrle). |
 | **Ctrl+A** | **Artículos** | Abre la consulta de artículos. |
 | **Esc** | **Salir** | Abandona la operación. |
 
@@ -166,7 +185,6 @@ Tras pulsar **Cobro (F12)** se entra en la **Fase de cobro**, donde se
 liquida el ticket:
 
 ![Fase de cobro](img/05-caja-cobro.png)
-*▢ Captura pendiente — Fase de cobro con formas de pago y cambio.*
 
 **Zona de importes:**
 
@@ -177,6 +195,21 @@ liquida el ticket:
 - **Vale Emitido / Vale Recogido** — vales generados (devoluciones) o
   canjeados en esta operación.
 - **Devolución de cambio** — cambio a devolver al cliente.
+
+**Cobro parcial y depósitos (a cuenta):** si el cliente entrega **menos**
+del total, la diferencia queda **a cuenta** y el programa reparte el dinero
+entregado en este orden:
+
+1. Primero a las **prendas de depósito ya existentes** cargadas con F2: la
+   que no quede pagada del todo **aumenta su anticipo** con lo entregado.
+2. Después a las **prendas nuevas** del ticket: la que no llegue a cubrirse
+   se convierte en un **depósito nuevo** con lo entregado como anticipo (o
+   con anticipo 0 si ya no queda dinero: la prenda queda simplemente
+   **apartada**).
+
+Los abonos por devolución del propio ticket y los anticipos de depósitos
+**cancelados** cuentan como dinero disponible en ese reparto. Todo queda
+registrado en [Depósitos de Clientes](#depositos-de-clientes).
 
 **Rejilla de pagos:** se reparte el total entre una o varias **formas de
 pago** (efectivo, tarjeta, vale…), indicando el **Importe Entregado** de
@@ -216,7 +249,6 @@ Cuando una forma de pago pide referencia, usa divisa o cripto, se abre una
 pantalla auxiliar:
 
 ![Datos de pago](img/05-caja-referencia-pago.png)
-*▢ Captura pendiente — Referencia de tarjeta, divisa o cripto en el cobro.*
 
 | Caso | Qué se pide |
 |------|-------------|
@@ -233,7 +265,6 @@ el cliente usa como forma de pago.
 Con **Buscar Vale (F6)** se abre la selección de vales pendientes:
 
 ![Seleccionar vale](img/05-caja-seleccionar-vale.png)
-*▢ Captura pendiente — Búsqueda y selección de vales pendientes.*
 
 La pantalla muestra **Código Vale**, **Estado**, **Importe**, **Fecha de
 emisión**, **Caducidad** y **Observaciones**. Si la configuración exige PIN,
@@ -272,10 +303,8 @@ movimiento quedará como cobro de cliente.
 | **Borrador (F8)** | Genera un borrador normal/A4 con serie y fecha, exige cliente con NIF válido. |
 
 ![Ticket de venta](img/05-caja-ticket-venta.png)
-*▢ Captura pendiente — Ticket de venta con líneas, total, forma de pago y QR.*
 
 ![Ticket regalo](img/05-caja-ticket-regalo.png)
-*▢ Captura pendiente — Ticket sin precios para entregar como regalo.*
 
 > Si el botón **Borrador (F8)** está bloqueado o avisa, revisa que la venta
 > tenga cliente, NIF/CIF/NIE válido y datos fiscales suficientes.
@@ -289,7 +318,6 @@ tienda ↔ almacén central). El stock sale del almacén origen y entra en el
 destino.
 
 ![Traspasos entre almacenes](img/05-caja-traspasos.png)
-*▢ Captura pendiente — Pantalla de Traspasos con origen, destino y líneas.*
 
 | Elemento | Descripción |
 |----------|-------------|
@@ -325,7 +353,6 @@ El traspaso no es una venta y no genera cobro. Sí genera trazabilidad de stock:
 la mercancía deja de estar disponible en el origen y pasa al destino.
 
 ![Ticket de traspaso](img/05-caja-ticket-traspaso.png)
-*▢ Captura pendiente — Justificante impreso de un traspaso entre almacenes.*
 
 ### Solicitar a otro almacén (F6)
 
@@ -333,7 +360,6 @@ Se usa cuando una tienda necesita género que está en otra tienda o en almacén
 central, pero todavía no se está enviando físicamente.
 
 ![Solicitud de traspaso](img/05-caja-solicitar-traspaso.png)
-*▢ Captura pendiente — Modo de solicitud a otro almacén con líneas pedidas.*
 
 El flujo recomendado es:
 
@@ -352,7 +378,6 @@ Se usa en el almacén que recibe peticiones de otras tiendas. Permite revisar
 qué han solicitado, preparar las líneas y cerrar el envío.
 
 ![Atender solicitudes de traspaso](img/05-caja-atender-traspasos.png)
-*▢ Captura pendiente — Lista de solicitudes recibidas para preparar envío.*
 
 Cuando se atiende una solicitud, conviene imprimir el ticket de traspaso y
 meterlo con la mercancía. Así la tienda destino puede cotejar lo recibido con
@@ -371,7 +396,6 @@ la jornada (o un refuerzo de cambio a mitad de día). Este importe se tiene
 en cuenta en el arqueo como entrada de efectivo.
 
 ![Entrada de cambio](img/05-caja-entrada-cambio.png)
-*▢ Captura pendiente — Modal de Entrada de Cambio.*
 
 Campos principales:
 
@@ -392,7 +416,6 @@ Registra **pagos en efectivo** hechos desde el cajón (mensajería, compras
 menores…). Restan efectivo en el arqueo y quedan en el histórico de pagos.
 
 ![Gastos por caja](img/05-caja-gastos.png)
-*▢ Captura pendiente — Modal de Gastos por caja.*
 
 La pantalla permite clasificar la salida:
 
@@ -415,7 +438,6 @@ Abre la pantalla **«Buscar operaciones»** para localizar cualquier
 operación de la caja y revisarla o corregirla.
 
 ![Buscar operaciones](img/05-caja-buscar.png)
-*▢ Captura pendiente — Buscar operaciones con el detalle de pagos.*
 
 **Filtros:** **Fecha** de caja y campo **Buscar** (texto libre: cliente,
 importe, nº de documento…).
@@ -456,7 +478,6 @@ El **arqueo** es el cierre y cuadre de la caja: calcula lo que **debería
 haber** en el cajón y lo compara con lo que se cuenta físicamente.
 
 ![Arqueo de caja](img/05-caja-arqueo.png)
-*▢ Captura pendiente — Arqueo de caja con el desglose en cascada.*
 
 **Periodo:** se arquea entre **Fecha desde (F10)** y **Fecha hasta (F6)**
 (normalmente la jornada en curso).
@@ -498,7 +519,6 @@ cuadrar el datáfono.
 La pestaña **Recuento** sirve para introducir lo contado físicamente:
 
 ![Recuento de arqueo](img/05-caja-arqueo-recuento.png)
-*▢ Captura pendiente — Recuento de billetes, monedas y otras formas de pago.*
 
 | Zona | Qué se introduce |
 |------|------------------|
@@ -521,7 +541,6 @@ incluyen traspasos salientes, ingresos por caja, gastos por caja y ventas a
 crédito.
 
 ![Tira de caja](img/05-caja-tira-caja.png)
-*▢ Captura pendiente — Opciones de impresión y Excel de la Tira de Caja.*
 
 Úsala cuando el responsable quiera revisar el detalle antes del cierre o
 adjuntar una relación de movimientos al arqueo.
@@ -543,7 +562,6 @@ impresora, permisos operativos y resumen del arqueo. Normalmente lo
 configura el responsable al instalar la tienda.
 
 ![Parámetros de Caja](img/05-caja-parametros.png)
-*▢ Captura pendiente — Parámetros de Caja.*
 
 La parte superior tiene tres controles importantes:
 
@@ -580,7 +598,7 @@ Uso recomendado:
 | **Rellenar empleado por defecto al abrir** (`vgerFillEmpleadoDefecto`) | `False` | Al crear una venta o un traspaso rellena el empleado si no había empleado anterior. Usa el valor de **Código de empleado por defecto**. |
 | **Tarifa por defecto en caja** (`vgerDefTarifa`) | `PVP` | Tarifa inicial de una venta de contado. Al seleccionar cliente, puede cambiarse por la tarifa propia del cliente. |
 | **Número de operaciones pendientes** (`vgerMaxOpPending`) | `5` | Parámetro preparado para limitar o dimensionar operaciones pendientes. En la versión actual está registrado en la pantalla, pero no se ha localizado uso operativo directo en la caja. |
-| **Cargar depósitos automáticamente al seleccionar cliente** (`vgerAutoLoadDepositos`) | `False` | Si el cliente permite deuda y tiene depósitos, la caja carga sus depósitos pendientes al seleccionarlo. Si está desactivado, el usuario debe entrar por **Más datos (F2)**. |
+| **Cargar depósitos automáticamente al seleccionar cliente** (`vgerAutoLoadDepositos`) | `False` | Si el cliente permite deuda y tiene depósitos, la caja carga sus depósitos pendientes al seleccionarlo. Si está desactivado, el usuario debe cargarlos con **Cargar cta. (F2)** desde la pantalla de Ventas. |
 
 Ejemplo práctico: en una tienda con varias cajas físicas conviene activar
 **Presentar selección de caja** para evitar que un usuario facture desde la
@@ -698,7 +716,6 @@ Define las **formas de pago admitidas en el TPV** y cómo se comporta cada
 una en el cobro y en el arqueo.
 
 ![Formas de Pago Caja](img/05-caja-formas-pago.png)
-*▢ Captura pendiente — Mantenimiento de Formas de Pago Caja.*
 
 Campos de cada forma de pago:
 
@@ -732,12 +749,12 @@ Configuración recomendada:
 
 **Atajo de menú:** `[Ctrl]+[D]`
 
-Gestiona los **depósitos/anticipos** de clientes: dinero entregado a cuenta
-(señales, reservas) que luego se aplica a una venta (tecla **F2 Cargar
-cta.** en el TPV). Lleva el saldo disponible por cliente.
+Gestiona los **depósitos/anticipos** de clientes: prendas apartadas y
+dinero entregado a cuenta (señales, reservas) que luego se aplica a una
+venta (tecla **F2 Cargar cta.** en el TPV). Lleva el saldo disponible por
+cliente.
 
 ![Depósitos de clientes](img/05-caja-depositos.png)
-*▢ Captura pendiente — Depósitos de Clientes.*
 
 Columnas principales:
 
@@ -748,14 +765,23 @@ Columnas principales:
 | **Artículo / SKU** | Prenda reservada, con talla/color si procede. |
 | **Precio Venta** | Precio total previsto para la entrega. |
 | **Anticipo** | Importe ya pagado por el cliente. |
-| **Estado** | Pendiente, entregado, cancelado o situación equivalente. |
+| **Estado** | **PENDIENTE** mientras la prenda sigue apartada; al entregarse o cancelarse, el depósito queda **CERRADO**. |
 | **Cant. Pendiente** | Unidades que quedan pendientes de entregar o regularizar. |
 
-Desde caja se trabaja con ellos de dos formas:
+Los depósitos **no se teclean aquí**: nacen y se cierran solos desde el
+TPV, y esta pantalla es su consulta y auditoría:
+
+| Momento | Qué ocurre con el depósito |
+|---------|---------------------------|
+| **Cobro parcial en caja** | La prenda no cubierta del todo se convierte en depósito **PENDIENTE**, con lo entregado como **anticipo** (o anticipo 0 si solo se aparta). |
+| **F2 Cargar cta. + cobro** | La prenda apartada se cobra (descontando su anticipo) y el depósito pasa a **CERRADO**. Si se entrega menos, el **anticipo aumenta** y sigue PENDIENTE. |
+| **F2 + cantidad en negativo** | El depósito se **cancela**: la prenda no se cobra y el anticipo se recupera como saldo a favor en ese cobro. |
+
+Desde caja se trabaja con la cuenta del cliente de dos formas:
 
 | Acción | Efecto |
 |--------|--------|
-| **Cargar cta. (F2)** | Lleva los depósitos del cliente al ticket para cobrarlos o cancelarlos. |
+| **Cargar cta. (F2)** | Lleva los depósitos del cliente al ticket para cobrarlos, aumentar el anticipo o cancelarlos. |
 | **Préstamo (F7)** | Deja pendiente de cobro en cuenta si el cliente tiene crédito permitido. |
 
 > Depósito y préstamo no son lo mismo. El depósito es dinero/prenda ya
@@ -772,7 +798,6 @@ formas de pago e importes. Permite filtrar por fechas y revisar el detalle
 del efectivo movido.
 
 ![Histórico de pagos](img/05-caja-hist-pagos.png)
-*▢ Captura pendiente — Histórico de Pagos de Caja.*
 
 Incluye empresa, almacén, caja, serie y número de operación, línea, fecha,
 forma de pago, divisa, referencia, importe entregado, cambio y observaciones.
@@ -789,7 +814,6 @@ Consulta de los **vales** emitidos (por devoluciones de cliente sin
 reembolso en efectivo) y su estado (pendiente, canjeado, caducado).
 
 ![Histórico de vales](img/05-caja-hist-vales.png)
-*▢ Captura pendiente — Histórico de Vales.*
 
 Muestra el código del vale, estado, importe nominal, fecha de emisión,
 caducidad, PIN si existe, operación de emisión y operación de redención. Sirve
@@ -806,7 +830,6 @@ devoluciones, entradas de cambio, gastos, traspasos… con su trazabilidad.
 Es la vista de auditoría de la actividad de caja.
 
 ![Histórico de operaciones](img/05-caja-hist-operaciones.png)
-*▢ Captura pendiente — Histórico de Operaciones.*
 
 No es la pantalla de venta diaria, sino una consulta administrativa. Permite
 revisar por años y almacenes, localizar operaciones por cliente, número,
@@ -823,7 +846,6 @@ descuadres, fecha, usuario. Permite revisar el cuadre de cada jornada.
 También accesible desde el propio arqueo con **F8**.
 
 ![Histórico de arqueos](img/05-caja-hist-arqueos.png)
-*▢ Captura pendiente — Histórico de Arqueos.*
 
 Incluye el botón **Imprimir Informe A4**, que genera un informe horizontal
 por empresa, almacén, caja y rango de fechas. El formato se puede editar y

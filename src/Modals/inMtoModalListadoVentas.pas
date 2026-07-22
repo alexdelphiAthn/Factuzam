@@ -18,8 +18,9 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.DateUtils, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.ExtCtrls, Data.DB, MemDS, DBAccess, Uni,
+  System.Classes, System.DateUtils, System.UITypes, Vcl.Graphics, Vcl.Controls,
+  Vcl.Forms,
+  Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Menus, Data.DB, MemDS, DBAccess, Uni,
   inMtoFrmBase, cxClasses, cxLocalization, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
   cxData, cxDataStorage, cxEdit, cxNavigator, cxDBData, cxGridLevel,
@@ -41,6 +42,8 @@ type
     lblProveedor:          TcxLabel;
     lblTemporada:          TcxLabel;
     lblInfo:               TcxLabel;
+    lblPrimeraVenta:       TcxLabel;
+    lblUltimaVenta:        TcxLabel;
     dteDesde:              TcxDateEdit;
     dteHasta:              TcxDateEdit;
     cbbFamilia:            TcxComboBox;
@@ -55,26 +58,37 @@ type
     lvVentas:              TcxGridLevel;
     unqryVentas:           TUniQuery;
     dsVentas:              TDataSource;
+    pmVentas:              TPopupMenu;
+    miAgregarDocumento:    TMenuItem;
     procedure CrearInterfaz;
     procedure CrearFiltros;
     procedure CrearGrid;
     procedure CrearColumnas;
+    procedure CrearMenuContextual;
     procedure CargarCombos;
     procedure CargarCombo(ACombo: TcxComboBox;
                           const ASQL,
                                 ACampoCodigo,
                                 ACampoNombre: string);
     procedure CargarListado;
+    procedure ActualizarResumenListado;
     procedure btnBuscarClick(Sender: TObject);
     procedure btnExcelClick(Sender: TObject);
     procedure btnSalirClick(Sender: TObject);
+    procedure pmVentasPopup(Sender: TObject);
+    procedure miAgregarDocumentoClick(Sender: TObject);
     function  CodigoCombo(ACombo: TcxComboBox): string;
     function  NuevaColumna(const ACampo,
                                  ACaption: string;
                            AAncho: Integer): TcxGridDBColumn;
     procedure ConfigurarMoneda(ACol: TcxGridDBColumn);
     procedure ConfigurarNumero(ACol: TcxGridDBColumn);
+    procedure MostrarFotoArticuloActivo;
     function  SQLListado: string;
+  protected
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+  public
+    procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); override;
   end;
 
 var
@@ -83,7 +97,8 @@ var
 implementation
 
 uses
-  System.Diagnostics, inLibGlobalVar, inLibDevExp, inLibLog;
+  System.Diagnostics, inLibGlobalVar, inLibDevExp, inLibFotos, inLibLog,
+  inLibDocumentosTrabajo, inMtoFotoArticulo;
 
 {$R *.dfm}
 
@@ -118,8 +133,20 @@ begin
   lblInfo.Parent := pnlBotones;
   lblInfo.Left := 12;
   lblInfo.Top := 12;
-  lblInfo.Width := 420;
+  lblInfo.Width := 170;
   lblInfo.Transparent := True;
+  lblPrimeraVenta := TcxLabel.Create(Self);
+  lblPrimeraVenta.Parent := pnlBotones;
+  lblPrimeraVenta.Left := 194;
+  lblPrimeraVenta.Top := 12;
+  lblPrimeraVenta.Width := 220;
+  lblPrimeraVenta.Transparent := True;
+  lblUltimaVenta := TcxLabel.Create(Self);
+  lblUltimaVenta.Parent := pnlBotones;
+  lblUltimaVenta.Left := 426;
+  lblUltimaVenta.Top := 12;
+  lblUltimaVenta.Width := 220;
+  lblUltimaVenta.Transparent := True;
   btnExcel := TcxButton.Create(Self);
   btnExcel.Parent := pnlBotones;
   btnExcel.Left := 888;
@@ -244,6 +271,18 @@ begin
   lvVentas := cxgrdVentas.Levels.Add;
   lvVentas.GridView := tvVentas;
   CrearColumnas;
+  CrearMenuContextual;
+end;
+
+procedure TfrmModalListadoVentas.CrearMenuContextual;
+begin
+  pmVentas := TPopupMenu.Create(Self);
+  pmVentas.OnPopup := pmVentasPopup;
+  miAgregarDocumento := TMenuItem.Create(pmVentas);
+  miAgregarDocumento.Caption := 'Añadir a Documento de Trabajo...';
+  miAgregarDocumento.OnClick := miAgregarDocumentoClick;
+  pmVentas.Items.Add(miAgregarDocumento);
+  cxgrdVentas.PopupMenu := pmVentas;
 end;
 
 procedure TfrmModalListadoVentas.CrearColumnas;
@@ -263,6 +302,7 @@ begin
   NuevaColumna('CODIGO_UNIDAD_FACLIN', 'SKU', 140);
   NuevaColumna('DESCRIPCION_ARTICULO_FACLIN', 'Descripcion', 230);
   NuevaColumna('DESCRIPCION_VARIACION_FACLIN', 'Variacion', 120);
+  NuevaColumna('REF_PROVEEDOR', 'Modelo', 120);
   NuevaColumna('CODIGO_FAM_FACLIN', 'Cod. familia', 90);
   NuevaColumna('NOMBRE_FAM_FACLIN', 'Familia', 150);
   NuevaColumna('CODIGO_PRV_FACLIN', 'Cod. prov.', 80);
@@ -411,8 +451,7 @@ begin
       unqryVentas.ParamByName('pTMP').AsString := CodigoCombo(cbbTemporada);
       unqryVentas.ParamByName('pCON').AsString := sConsolidadas;
       unqryVentas.Open;
-      lblInfo.Caption := Format('%d lineas cargadas',
-                                 [unqryVentas.RecordCount]);
+      ActualizarResumenListado;
       Log.LogPerf('ListadoVentas.CargarListado',
         Format('filas=%d', [unqryVentas.RecordCount]),
         sw.ElapsedMilliseconds);
@@ -425,6 +464,34 @@ begin
     end;
   finally
     Screen.Cursor := crDefault;
+  end;
+end;
+
+procedure TfrmModalListadoVentas.ActualizarResumenListado;
+var
+  dPrimeraVenta: TDateTime;
+  dUltimaVenta: TDateTime;
+begin
+  lblInfo.Caption := Format('%d líneas cargadas',
+                            [unqryVentas.RecordCount]);
+  lblPrimeraVenta.Caption := 'Primera venta: -';
+  lblUltimaVenta.Caption := 'Última venta: -';
+  if not unqryVentas.IsEmpty then
+  begin
+    unqryVentas.DisableControls;
+    try
+      unqryVentas.First;
+      dUltimaVenta := unqryVentas.FieldByName('FECHA_FAC').AsDateTime;
+      unqryVentas.Last;
+      dPrimeraVenta := unqryVentas.FieldByName('FECHA_FAC').AsDateTime;
+      unqryVentas.First;
+    finally
+      unqryVentas.EnableControls;
+    end;
+    lblPrimeraVenta.Caption := 'Primera venta: ' +
+      FormatDateTime('dd/mm/yyyy', dPrimeraVenta);
+    lblUltimaVenta.Caption := 'Última venta: ' +
+      FormatDateTime('dd/mm/yyyy', dUltimaVenta);
   end;
 end;
 
@@ -442,6 +509,64 @@ end;
 procedure TfrmModalListadoVentas.btnSalirClick(Sender: TObject);
 begin
   ModalResult := mrCancel;
+end;
+
+procedure TfrmModalListadoVentas.pmVentasPopup(Sender: TObject);
+var
+  sArt: string;
+  sSku: string;
+begin
+  ResolverArtSkuStock(sArt, sSku);
+  miAgregarDocumento.Enabled := Trim(sArt) <> '';
+end;
+
+procedure TfrmModalListadoVentas.miAgregarDocumentoClick(Sender: TObject);
+begin
+  try
+    AgregarArticuloActivoADocumentoTrabajo(Self, inLibGlobalVar.oConn,
+                                           ResolverArtSkuStock);
+  except
+    on E: Exception do
+      MessageDlg(E.Message, mtError, [mbOK], 0);
+  end;
+end;
+
+procedure TfrmModalListadoVentas.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  if (Key = Ord('F')) and (ssCtrl in Shift) and
+     not (ssShift in Shift) and not (ssAlt in Shift) then
+  begin
+    MostrarFotoArticuloActivo;
+    Key := 0;
+  end
+  else
+    inherited KeyDown(Key, Shift);
+end;
+
+procedure TfrmModalListadoVentas.MostrarFotoArticuloActivo;
+var
+  sArt: string;
+  sSku: string;
+begin
+  if Assigned(frmFotoArticulo) and frmFotoArticulo.Visible then
+    frmFotoArticulo.Hide
+  else
+  begin
+    ResolverArtSkuStock(sArt, sSku);
+    if sArt <> '' then
+    begin
+      MostrarFotoFlotante(Self, sArt, sSku);
+      if Assigned(frmFotoArticulo) then
+        frmFotoArticulo.VincularDataSources([dsVentas],
+                                            ResolverArtSkuStock);
+    end;
+  end;
+end;
+
+procedure TfrmModalListadoVentas.ResolverArtSkuStock(out ACodArt,
+  ACodSku: string);
+begin
+  inLibFotos.LeerArtSkuDeDataSet(unqryVentas, ACodArt, ACodSku);
 end;
 
 function TfrmModalListadoVentas.CodigoCombo(ACombo: TcxComboBox): string;
@@ -492,12 +617,22 @@ begin
     Add('       fl.`CODIGO_UNIDAD_FACLIN`,');
     Add('       fl.`DESCRIPCION_ARTICULO_FACLIN`,');
     Add('       fl.`DESCRIPCION_VARIACION_FACLIN`,');
-    Add('       fl.`CODIGO_FAM_FACLIN`,');
+    Add('       COALESCE(ap.`REF_PROVEEDOR_AP`, '''')');
+    Add('         AS `REF_PROVEEDOR`,');
+    // Conserva el dato historico y recupera el maestro solo si falta.
+    Add('       COALESCE(NULLIF(TRIM(fl.`CODIGO_FAM_FACLIN`), ''''),');
+    Add('                art.`CODIGO_FAM_ART`, '''') AS `CODIGO_FAM_FACLIN`,');
     Add('       COALESCE(NULLIF(fl.`NOMBRE_FAM_FACLIN`, ''''),');
-    Add('                fam.`NOMBRE_FAM_FAM`) AS `NOMBRE_FAM_FACLIN`,');
-    Add('       fl.`CODIGO_PRV_FACLIN`,');
+    Add('                NULLIF(fam.`NOMBRE_FAM_FAM`, ''''),');
+    Add('                NULLIF(fam.`DESCRIPCION_FAM`, ''''),');
+    Add('                NULLIF(TRIM(fl.`CODIGO_FAM_FACLIN`), ''''),');
+    Add('                art.`CODIGO_FAM_ART`, '''') AS `NOMBRE_FAM_FACLIN`,');
+    Add('       COALESCE(NULLIF(TRIM(fl.`CODIGO_PRV_FACLIN`), ''''),');
+    Add('                ap.`CODIGO_PRV_AP`, '''') AS `CODIGO_PRV_FACLIN`,');
     Add('       COALESCE(NULLIF(fl.`RAZON_SOCIAL_PROVEEDOR_FACLIN`, ''''),');
-    Add('                prv.`RAZON_SOCIAL_PRV`)');
+    Add('                NULLIF(prv.`RAZON_SOCIAL_PRV`, ''''),');
+    Add('                NULLIF(TRIM(fl.`CODIGO_PRV_FACLIN`), ''''),');
+    Add('                ap.`CODIGO_PRV_AP`, '''')');
     Add('         AS `RAZON_SOCIAL_PROVEEDOR_FACLIN`,');
     Add('       COALESCE(pvsku.`PV`, tsku.`VALOR_LIBRE_ARTPROP`,');
     Add('                pvcol.`PV`, tcol.`VALOR_LIBRE_ARTPROP`,');
@@ -514,10 +649,31 @@ begin
     Add('  JOIN `fza_facturas` f');
     Add('    ON f.`NUMERO_FAC` = fl.`NUMERO_FAC_FACLIN`');
     Add('   AND f.`SERIE_FAC` = fl.`SERIE_FAC_FACLIN`');
+    Add('  LEFT JOIN `fza_articulos` art');
+    Add('    ON art.`CODIGO_ART_ART` = fl.`CODIGO_ART_FACLIN`');
     Add('  LEFT JOIN `fza_articulos_familias` fam');
-    Add('    ON fam.`CODIGO_FAM_FAM` = fl.`CODIGO_FAM_FACLIN`');
+    Add('    ON fam.`CODIGO_FAM_FAM` =');
+    Add('       COALESCE(NULLIF(TRIM(fl.`CODIGO_FAM_FACLIN`), ''''),');
+    Add('                art.`CODIGO_FAM_ART`)');
+    Add('  LEFT JOIN `fza_articulos_proveedores` ap');
+    Add('    ON ap.`CODIGO_ART_AP` = art.`CODIGO_ART_ART`');
+    Add('   AND ap.`CODIGO_PRV_AP` =');
+    // Usa el proveedor historico de la venta y el principal como respaldo.
+    Add('       COALESCE(NULLIF(TRIM(fl.`CODIGO_PRV_FACLIN`), ''''),');
+    Add('         (SELECT apx.`CODIGO_PRV_AP`');
+    Add('            FROM `fza_articulos_proveedores` apx');
+    Add('           WHERE apx.`CODIGO_ART_AP` = art.`CODIGO_ART_ART`');
+    Add('           ORDER BY CASE');
+    Add('                      WHEN apx.`ESPROVEEDORPRINCIPAL_AP` = ''S''');
+    Add('                      THEN 0 ELSE 1');
+    Add('                    END,');
+    Add('                    apx.`FECHA_VALIDEZ_AP` DESC,');
+    Add('                    apx.`CODIGO_PRV_AP`');
+    Add('           LIMIT 1))');
     Add('  LEFT JOIN `fza_proveedores` prv');
-    Add('    ON prv.`CODIGO_PRV_PRV` = fl.`CODIGO_PRV_FACLIN`');
+    Add('    ON prv.`CODIGO_PRV_PRV` =');
+    Add('       COALESCE(NULLIF(TRIM(fl.`CODIGO_PRV_FACLIN`), ''''),');
+    Add('                ap.`CODIGO_PRV_AP`)');
     Add('  LEFT JOIN `fza_articulos_propiedades` tsku');
     Add('    ON tsku.`CODIGO_ART_ART` = fl.`CODIGO_ART_FACLIN`');
     Add('   AND tsku.`CODIGO_PROP_ARTPROP` = ''TEMPORADA''');
@@ -539,8 +695,12 @@ begin
     Add('    ON pvart.`ID_PV_ARTPROP` = tart.`ID_PV_ARTPROP`');
     Add(' WHERE f.`FECHA_FAC` >= :pDESDE');
     Add('   AND f.`FECHA_FAC` < :pHASTA');
-    Add('   AND (:pFAM = '''' OR fl.`CODIGO_FAM_FACLIN` = :pFAM)');
-    Add('   AND (:pPRV = '''' OR fl.`CODIGO_PRV_FACLIN` = :pPRV)');
+    Add('   AND (:pFAM = '''' OR');
+    Add('        COALESCE(NULLIF(TRIM(fl.`CODIGO_FAM_FACLIN`), ''''),');
+    Add('                 art.`CODIGO_FAM_ART`) = :pFAM)');
+    Add('   AND (:pPRV = '''' OR');
+    Add('        COALESCE(NULLIF(TRIM(fl.`CODIGO_PRV_FACLIN`), ''''),');
+    Add('                 ap.`CODIGO_PRV_AP`) = :pPRV)');
     Add('   AND (:pCON = ''N''');
     Add('        OR COALESCE(f.`ESCONSOLIDADA_FAC`, ''N'') = ''S'')');
     Add('   AND COALESCE(f.`FASE_FAC`, '''') <> ''CANCELADA''');

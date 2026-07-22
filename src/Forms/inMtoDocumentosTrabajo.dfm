@@ -208,6 +208,12 @@ inherited frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo
                     DataBinding.FieldName = 'DESCRIPCION_ARTICULO_DTL'
                     Width = 220
                   end
+                  object colDtlModelo: TcxGridDBColumn
+                    Caption = 'Modelo'
+                    DataBinding.FieldName = 'REF_PROVEEDOR'
+                    Options.Editing = False
+                    Width = 120
+                  end
                   object colDtlDescripcionSku: TcxGridDBColumn
                     Caption = 'Descripcion unidad'
                     DataBinding.FieldName = 'DESCRIPCION_UNIDAD_DTL'

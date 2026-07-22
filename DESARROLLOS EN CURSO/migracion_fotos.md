@@ -61,6 +61,10 @@ usan las fotos descargadas del servidor de fotos_nube.
 
 - **Idempotente**: si la pareja (`CODIGO_ART_FOT`, `CODIGO_UNIDAD_FOT`) ya
   existe en destino, se salta sin tocar ficheros ni fila.
+- **Recuperación desde disco**: si la fila no existe pero se conserva el
+  nombre esperado en las tres carpetas `300/`, `600/` y `real/`, se inserta
+  de nuevo la asociación en `fza_articulos_fotos` sin leer ni convertir la
+  imagen legacy. Si falta alguna resolución, se regenera el trío completo.
 - **Fichero origen inexistente**: la fila se cuenta como saltada y queda
   un aviso `- SALTO` en el log con la ruta que se buscó.
 - **Imagen corrupta / formato sin codec**: error contabilizado y log

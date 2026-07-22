@@ -35,9 +35,9 @@ El fichero es `Factuzam_DEMO_1.0.15.202606240020.alpha.exe`.
 | [03 · Menú Compras](03-menu-compras.md) | Sesiones de compra, Pedidos, Albaranes, Devoluciones a proveedor y Facturas de compra. |
 | [04 · Menú Ventas Mayor](04-menu-ventas-mayor.md) | Facturación a mayor: Borradores, cartera de cobro, Pedidos, Albaranes y Listados de ventas. |
 | [05 · Menú Caja](05-menu-caja.md) | Punto de venta (TPV): menú de caja, parámetros, depósitos, históricos, arqueos y facturas simplificadas. |
-| [06 · Menú Almacén](06-menu-almacen.md) | Movimientos de almacén, Inventarios e Informes de stock. |
+| [06 · Menú Almacén](06-menu-almacen.md) | Movimientos de almacén, Inventarios, Documentos de Trabajo e Informes de stock. |
 | [07 · Menú Otros](07-menu-otros.md) | Parámetros del entorno, IVA, Contadores, Formas de pago documentos, Usuarios/Permisos, Copias de seguridad y Generador de procesos. |
-| [08 · Menú Ayuda](08-menu-ayuda.md) | Acerca de y datos de versión. |
+| [08 · Menú Ayuda](08-menu-ayuda.md) | Manual web, Foro de soporte y Acerca de (versión). |
 | [09 · Instalación en Windows](09-instalacion-windows.md) | MariaDB, base de datos inicial, instalación por puesto y puesta en marcha. |
 | [10 · Migración desde software legacy](10-migracion-legacy.md) | Traslado de datos del ERP anterior (SQL Server) con el Factuzam Migrator. |
 | [11 · Verifactu (AEAT)](11-verifactu.md) | Sistema de facturación verificable: configuración, cola de envío, QR, y acciones fiscales (anular, rectificar, subsanar). |
@@ -49,13 +49,13 @@ El fichero es `Factuzam_DEMO_1.0.15.202606240020.alpha.exe`.
 
 ```
 Archivo        Compras        Ventas Mayor   Caja           Almacén        Otros          Verifactu      Ayuda
-─────────      ─────────      ────────────   ─────          ────────       ─────          ─────────     ─────
-Empresas       Sesiones       Borradores     Menú de Caja   Movimientos    Parám. entorno Declaración   Acerca de
-Almacenes      Pedidos        Efectos cobro  Parám. de Caja Inventarios    Grupos de IVA  Cola envíos
-Clientes       Albaranes      Remesas cobro  Formas Pago    Informes       Impuesto IVA   Log
-Proveedores    Devoluciones   Cargar efectos Depósitos                     Contadores
-Artículos      Crear borrad.  Pedidos        Históricos                    Formas pago docs
-Tablas Aux.    Borradores     Albaranes      Borrad. Simplif.              Usuarios y Perfiles
+─────────      ─────────      ────────────   ─────          ────────       ─────          ─────────      ─────
+Empresas       Sesiones       Pedidos        Menú de Caja   Movimientos    Parám. entorno Declaración    Manual web
+Almacenes      Pedidos        Albaranes      Parám. de Caja Inventarios    Grupos de IVA  Cola envíos    Foro soporte
+Clientes       Albaranes      Borradores     Formas Pago    Doc. Trabajo   Impuesto IVA   Log            Acerca de
+Proveedores    Devoluciones   Efectos cobro  Depósitos      Informes       Contadores
+Artículos      Crear borrad.  Remesas cobro  Históricos                    Formas pago docs
+Tablas Aux.    Borradores     Cargar efectos Borrad. Simplif.              Usuarios y Perfiles
 Invocar login  Efectos pago   Listados                                     Copias de Seguridad
 Salir          Remesas pago                                                Generador de Procesos
                Cargar efectos

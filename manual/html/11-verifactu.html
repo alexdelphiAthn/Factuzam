@@ -104,8 +104,7 @@ facturación (art. 13 del RD 1007/2023), compuesto con el nombre del
 sistema (<code>Factuzam</code>), su identificador, la <strong>versión</strong> instalada y los
 datos del productor/instalación configurados en los parámetros. Es el
 documento que acredita que el programa cumple la normativa.</p>
-<p><img src="img/11-declaracion.png" alt="Declaración responsable" loading="lazy">
-<em>▢ Captura pendiente — Modal de Declaración Responsable.</em></p>
+<p><img src="img/11-declaracion.png" alt="Declaración responsable" loading="lazy"></p>
 <h3 id="cola-de-envios">Cola de Envíos</h3>
 <p>Consulta de la <strong>cola de comunicación</strong> (<code>fza_verifactu_cola</code>): muestra cada
 factura pendiente o procesada con su <strong>estado</strong>, número de <strong>intentos</strong>,
@@ -122,8 +121,7 @@ fecha del <strong>próximo intento</strong> y el <strong>mensaje de error</stron
 <tr><td><strong>ERROR</strong></td><td>Agotó los reintentos; requiere revisión.</td></tr>
 </tbody>
 </table>
-<p><img src="img/11-cola.png" alt="Cola de envíos de Verifactu" loading="lazy">
-<em>▢ Captura pendiente — Cola de Envíos con estados e intentos.</em></p>
+<p><img src="img/11-cola.png" alt="Cola de envíos de Verifactu" loading="lazy"></p>
 <blockquote><p><strong>Reproceso manual:</strong> en esta pantalla puedes editar las columnas
 <em>Estado</em>, <em>Intentos</em> y <em>Próximo intento</em> de una fila. Al grabar, el
 proceso la retomará en el siguiente ciclo. Es la forma de <strong>relanzar</strong> un
@@ -134,8 +132,7 @@ o el certificado). El resto de columnas son de solo lectura.</p></blockquote>
 la traza completa de altas, anulaciones y respuestas de la AEAT con su
 <strong>cadena de huellas SHA-256</strong>. Es la pantalla de auditoría del sistema.
 Solo lectura.</p>
-<p><img src="img/11-log.png" alt="Verifactu Log" loading="lazy">
-<em>▢ Captura pendiente — Log de eventos con la cadena de hashes.</em></p>
+<p><img src="img/11-log.png" alt="Verifactu Log" loading="lazy"></p>
 <p>En modo <strong>NO_VERIFACTU</strong>, el botón <code>Exportar NO*VF</code> genera dos ficheros
 XML: registro de eventos y registro de facturación. La exportación solo
 empaqueta registros ya generados; no crea la trazabilidad en ese momento.</p>
@@ -151,8 +148,7 @@ intracomunitario, entrega intracomunitaria, inversión del sujeto pasivo o
 exportación. Para clientes extranjeros, la aplicación usa los datos de país
 y NIF-IVA/documento para construir el destinatario correcto.</p>
 <p><img src="img/11-tipo-operacion.png" alt="Tipo de operación Verifactu en borradores" loading="lazy"></p>
-<p><img src="img/11-factura-verifactu.png" alt="Pestaña Verifactu de una factura" loading="lazy">
-<em>▢ Captura pendiente — Pestaña Verifactu de la factura (QR, URL, hash, estado).</em></p>
+<p><img src="img/11-factura-verifactu.png" alt="Pestaña Verifactu de una factura" loading="lazy"></p>
 <blockquote><p>Un borrador <strong>consolidado</strong> (<code>ESCONSOLIDADA = S</code>) ya tiene cierre fiscal
 y <strong>no se puede modificar ni borrar</strong>: cualquier corrección se hace con
 una <strong>rectificativa</strong> o una <strong>anulación</strong> (ver abajo). Es el principio de
@@ -177,8 +173,7 @@ sobre un documento <strong>ya consolidado</strong>:</p>
 <tr><td>El cliente se identifica en el momento de la venta</td><td><strong>Factura (F8)</strong> en la fase de cobro</td><td>Graba la venta directamente como <strong>factura normal</strong> (no ticket); exige cliente con NIF e imprime en A4/PDF.</td></tr>
 </tbody>
 </table>
-<p><img src="img/11-acciones.png" alt="Botones de acciones fiscales en Facturas" loading="lazy">
-<em>▢ Captura pendiente — Botones Consolidar / Anular / Subsanar / Rectificar / Facturar ticket.</em></p>
+<p><img src="img/11-acciones.png" alt="Botones de acciones fiscales en Facturas" loading="lazy"></p>
 <p>Cada una de estas operaciones <strong>se vuelve a encolar</strong> y se comunica a la
 AEAT en modo <code>VERIFACTU</code>, o se registra localmente en modo <code>NO_VERIFACTU</code>,
 conservando la <strong>trazabilidad</strong> (qué documento rectifica o sustituye a
@@ -205,7 +200,7 @@ aplicación lo da por bueno. No hay que hacer nada.</p>
 <hr>
 <p><a href="10-migracion-legacy.html">◀ Migración desde legacy</a> · <a href="index.html">Índice</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 26/06/2026</footer>
+<footer>Manual de Factuzam · generado el 22/07/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

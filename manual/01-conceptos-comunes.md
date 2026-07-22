@@ -14,7 +14,6 @@ añaden lo específico de cada pantalla.
 Una pantalla de mantenimiento típica tiene **dos pestañas principales**:
 
 ![Pestaña Lista de un mantenimiento](img/01-lista.png)
-*▢ Captura pendiente — Pestaña Lista (rejilla) de un mantenimiento cualquiera.*
 
 ### Pestaña **Lista**
 
@@ -50,10 +49,8 @@ como al resetear, el diálogo te deja elegir **a quién afecta** el cambio:
 | **Todos** | A **todos los usuarios** de la aplicación. Solo disponible si eres **administrador** (grupo root). |
 
 ![Diálogo de Guardar layout con el selector de alcance](img/01-guardar-layout.png)
-*▢ Captura pendiente — Diálogo «Guardar Objeto Editado» con el campo Permiso (Usuario / Grupo / Todos).*
 
 ![Diálogo de Resetear layout](img/01-resetear-layout.png)
-*▢ Captura pendiente — Diálogo de reseteo de la rejilla con el selector de alcance.*
 
 > Por defecto se guarda **solo para tu usuario**, así que puedes ajustar tu
 > rejilla sin afectar a nadie. Elige **Grupo** o **Todos** únicamente cuando
@@ -68,7 +65,6 @@ organizados en sub-pestañas (Datos principales, Más datos, etc.). Es donde
 se **da de alta, se consulta y se edita** un registro concreto.
 
 ![Pestaña Ficha de un mantenimiento](img/01-ficha.png)
-*▢ Captura pendiente — Pestaña Ficha con sus sub-pestañas.*
 
 > Algunas pantallas tienen además una pestaña **Perfil** (visible solo para
 > administradores) para configurar columnas, captions y comportamiento de
@@ -82,7 +78,6 @@ En la parte inferior (o lateral) de la pantalla hay una **barra de
 navegación** con los botones estándar. Sus acciones son siempre las mismas:
 
 ![Barra del navegador de registros](img/01-navegador.png)
-*▢ Captura pendiente — Barra de navegación con sus botones.*
 
 | Botón | Atajo | Acción |
 |-------|-------|--------|
@@ -103,6 +98,7 @@ En artículos y documentos aparecen además botones específicos:
 |-------|-------|--------|
 | **Foto artículo** | `[Ctrl]+[F]` | Muestra la foto del artículo. |
 | **Consulta stock** | `[Ctrl]+[U]` | Consulta el stock del artículo actual. |
+| **Búsqueda de datos** | `[Ctrl]+[E]` | Abre la **búsqueda avanzada de artículos y SKU** (ver abajo). |
 
 > Los atajos del navegador funcionan cuando la pantalla de mantenimiento
 > tiene el foco. **Grabar** dispone de dos atajos equivalentes: `[F12]`
@@ -128,6 +124,41 @@ Desde esa ventana puedes:
 > Las fotos se guardan en la carpeta configurada en `appDirFotos`. En
 > instalaciones con varios puestos conviene que sea una ruta compartida en
 > red para que todos vean las mismas imágenes.
+
+### Búsqueda de datos de artículos (Ctrl+E)
+
+`[Ctrl]+[E]` abre desde **cualquier ventana** del programa la **búsqueda
+avanzada de artículos y SKU**: una pantalla de consulta rápida para
+localizar referencias por cualquier dato, sin salir de lo que estés
+haciendo.
+
+![Búsqueda de datos de artículos](img/01-busqueda-datos.png)
+*Búsqueda por talla «M»: cada fila es un SKU, con su color, stock y almacenes.*
+
+Criterios de búsqueda:
+
+- **Buscar por** — el campo sobre el que buscar: todos los campos, código
+  de artículo, SKU, descripción, **talla**, **color**, código de barras,
+  familia, proveedor, referencia de proveedor, temporada, almacén,
+  atributos y propiedades, **color básico** o **proximidad de paleta**
+  (encuentra colores parecidos al indicado).
+- **Coincidencia** — contiene, empieza por, es igual a, termina en o no
+  contiene, con opción de distinguir mayúsculas/minúsculas.
+- **Estado** — solo activos, todos o solo inactivos.
+- **Existencias** — cualquier stock, con existencias o sin existencias.
+- **Máximo de filas** — límite de resultados (500 / 2.000 / 5.000).
+
+Sobre la rejilla de resultados se pueden **combinar más filtros en la fila
+de filtro** del grid y guardar la combinación como **perfil** (botón
+**Perfiles...**) para repetir búsquedas habituales.
+
+Desde los resultados:
+
+- **F12** o doble clic — **abre la ficha del artículo** seleccionado.
+- Menú contextual **Añadir a Documento de Trabajo...** — apunta el SKU en
+  un [Documento de Trabajo](06-menu-almacen.md#documentos-de-trabajo).
+- **Ocultar criterios** — pliega la zona de filtros para ver más filas.
+- **Esc** — cierra la ventana y devuelve el foco a la pantalla anterior.
 
 ---
 

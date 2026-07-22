@@ -1,9 +1,9 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       UniDataDocumentosTrabajo                                      }
 {    Tipo:       Data Module                                                   }
-{ Version:       1.0.0                                                         }
-{   Fecha:       21/06/2026                                                    }
+{ Version:       1.0.1                                                         }
+{   Fecha:       22/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -186,10 +186,20 @@ begin
   unqryTablaG.BeforePost := unqryTablaGBeforePost;
   unqryLineas.Connection := oConn;
   unqryLineas.SQL.Text :=
-    'SELECT * ' +
-    '  FROM fza_documentos_trabajo_lineas ' +
-    ' WHERE ID_DTR_DTL = :ID_DTR ' +
-    ' ORDER BY LINEA_DTL';
+    'SELECT l.*, ' +
+    '       COALESCE((SELECT ap.REF_PROVEEDOR_AP ' +
+    '                   FROM fza_articulos_proveedores ap ' +
+    '                  WHERE ap.CODIGO_ART_AP = l.CODIGO_ART_DTL ' +
+    '                  ORDER BY CASE ' +
+    '                             WHEN ap.ESPROVEEDORPRINCIPAL_AP = ''S'' ' +
+    '                             THEN 0 ELSE 1 ' +
+    '                           END, ' +
+    '                           ap.FECHA_VALIDEZ_AP DESC, ' +
+    '                           ap.CODIGO_PRV_AP ' +
+    '                  LIMIT 1), '''') AS REF_PROVEEDOR ' +
+    '  FROM fza_documentos_trabajo_lineas l ' +
+    ' WHERE l.ID_DTR_DTL = :ID_DTR ' +
+    ' ORDER BY l.LINEA_DTL';
   unqryLineas.KeyFields := 'ID_DTL';
   unqryLineas.MasterFields := 'ID_DTR';
   unqryLineas.DetailFields := 'ID_DTR_DTL';
@@ -262,7 +272,19 @@ begin
   unqryLineas.SQLDelete.Text :=
     'DELETE FROM fza_documentos_trabajo_lineas WHERE ID_DTL = :Old_ID_DTL';
   unqryLineas.SQLRefresh.Text :=
-    'SELECT * FROM fza_documentos_trabajo_lineas WHERE ID_DTL = :ID_DTL';
+    'SELECT l.*, ' +
+    '       COALESCE((SELECT ap.REF_PROVEEDOR_AP ' +
+    '                   FROM fza_articulos_proveedores ap ' +
+    '                  WHERE ap.CODIGO_ART_AP = l.CODIGO_ART_DTL ' +
+    '                  ORDER BY CASE ' +
+    '                             WHEN ap.ESPROVEEDORPRINCIPAL_AP = ''S'' ' +
+    '                             THEN 0 ELSE 1 ' +
+    '                           END, ' +
+    '                           ap.FECHA_VALIDEZ_AP DESC, ' +
+    '                           ap.CODIGO_PRV_AP ' +
+    '                  LIMIT 1), '''') AS REF_PROVEEDOR ' +
+    '  FROM fza_documentos_trabajo_lineas l ' +
+    ' WHERE l.ID_DTL = :ID_DTL';
   unqryLineas.SQLLock.Text :=
     'SELECT * FROM fza_documentos_trabajo_lineas ' +
     ' WHERE ID_DTL = :Old_ID_DTL FOR UPDATE';
@@ -851,6 +873,8 @@ begin
       unqryTablaG.FieldByName('ID_DTR').AsLargeInt;
   end;
   DataSet.FieldByName('LINEA_DTL').AsString := SiguienteLinea;
+  // El default SQL no se aplica antes de validar los campos requeridos.
+  DataSet.FieldByName('LOTE_DTL').AsString := '';
   DataSet.FieldByName('CANTIDAD_STOCK_DTL').AsFloat := 0;
   DataSet.FieldByName('CANTIDAD_DTL').AsFloat := 0;
   DataSet.FieldByName('INSTANTE_STOCK_DTL').AsDateTime := Now;

@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inMtoModalAddBlockBase                                        }
 {    Tipo:       Formulario (Modal)                                            }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       11/05/2026                                                    }
+{ Versión:       1.0.1                                                         }
+{   Fecha:       22/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -484,7 +484,8 @@ end;
 
 procedure TfrmModalAddBlockBase.CargarPropiedades;
 var
-  qry: TUniQuery;
+  qry             : TUniQuery;
+  iPropiedadDefecto: Integer;
 begin
   qry := TUniQuery.Create(nil);
   try
@@ -508,8 +509,11 @@ begin
       FCodigosPropiedades.Add(qry.FieldByName('CODIGO_PROP_ARTPROP').AsString);
       qry.Next;
     end;
-    cbxPropiedad.ItemIndex := 0;
-    CargarValoresPropiedad('');
+    iPropiedadDefecto := FCodigosPropiedades.IndexOf('TEMPORADA');
+    if iPropiedadDefecto < 0 then
+      iPropiedadDefecto := 0;
+    cbxPropiedad.ItemIndex := iPropiedadDefecto;
+    CargarValoresPropiedad(FCodigosPropiedades[iPropiedadDefecto]);
   finally
     FreeAndNil(qry);
   end;
@@ -541,6 +545,8 @@ begin
   end;
   FQryPropValores.Open;
   tvPropValores.DataController.DataSource := FDsPropValores;
+  // Al filtrar una propiedad queda un único grupo; debe mostrar sus valores.
+  tvPropValores.DataController.Groups.FullExpand;
 end;
 
 procedure TfrmModalAddBlockBase.CargarAlmacenes;

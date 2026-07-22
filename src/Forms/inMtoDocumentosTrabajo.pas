@@ -62,6 +62,7 @@ type
     colDtlSku: TcxGridDBColumn;
     colDtlAlmacen: TcxGridDBColumn;
     colDtlDescripcionArticulo: TcxGridDBColumn;
+    colDtlModelo: TcxGridDBColumn;
     colDtlDescripcionSku: TcxGridDBColumn;
     colDtlCantidadStock: TcxGridDBColumn;
     colDtlCantidad: TcxGridDBColumn;
@@ -322,6 +323,7 @@ begin
   // Columnas propias del documento tras el ClearItems del contrato.
   Col('Almacén', 'CODIGO_ALM_DTL', 70, True);
   Col('Descripción', 'DESCRIPCION_ARTICULO_DTL', 200, False);
+  Col('Modelo', 'REF_PROVEEDOR', 120, False);
   with Col('Stock', 'CANTIDAD_STOCK_DTL', 80, False) do
     HeaderAlignmentHorz := taRightJustify;
   with Col('Cantidad', 'CANTIDAD_DTL', 80,

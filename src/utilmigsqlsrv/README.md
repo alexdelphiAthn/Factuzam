@@ -215,6 +215,12 @@ fila en `fza_articulos_fotos` con `CODIGO_UNIDAD_FOT = ARTICULO/COLOR`
 exe la encuentre por prefijo). Detalle completo en
 `DESARROLLOS EN CURSO/migracion_fotos.md`.
 
+Al repetir la migración se catalogan primero los PNG de las tres
+resoluciones. Si la fila de BBDD ya no existe pero se conserva el trío
+completo `300/600/real`, se vuelve a registrar directamente sin leer ni
+convertir la foto legacy. Un juego parcial se regenera para no dejar una
+foto incompleta.
+
 El dominio corre en un **hilo independiente de las waves** (en paralelo
 a toda la migración de datos) y, por dentro, reparte la conversión
 (decodificar + 3 PNG por foto) entre los hilos del pool. Los hilos del

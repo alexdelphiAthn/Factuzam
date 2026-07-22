@@ -40,7 +40,6 @@ Archivo
 ## Empresas
 
 ![Ficha de Empresas con sus sub-pestañas (Series, Retenciones, Certificado)](img/02-empresas.png)
-*▢ Captura pendiente — Ficha de Empresas con sus sub-pestañas (Series, Retenciones, Certificado).*
 
 **Atajo de menú:** `[Ctrl]+[E]`
 
@@ -80,7 +79,6 @@ completa (dirección, población, provincia, código postal), Móvil, Email.
 ## Almacenes
 
 ![Ficha de Almacenes](img/02-almacenes.png)
-*▢ Captura pendiente — Ficha de Almacenes.*
 
 **Atajo de menú:** `[Ctrl]+[L]`
 
@@ -101,7 +99,6 @@ Sub-pestañas de la ficha:
 ## Clientes
 
 ![Ficha de Clientes con los indicadores fiscales](img/02-clientes.png)
-*▢ Captura pendiente — Ficha de Clientes con los indicadores fiscales.*
 
 **Atajo de menú:** `[Ctrl]+[K]`
 
@@ -148,7 +145,6 @@ pestaña **Parámetros eDoc** del propio borrador.
 ## Proveedores
 
 ![Ficha de Proveedores](img/02-proveedores.png)
-*▢ Captura pendiente — Ficha de Proveedores.*
 
 **Atajo de menú:** `[Ctrl]+[P]`
 
@@ -174,7 +170,6 @@ Concentra valores que se **proponen automáticamente** cuando creas una
 repetirlos en cada entrada de género.
 
 ![Pestaña Compras del proveedor: margen, sistema de tallas y kits](img/02-proveedores-compras.png)
-*▢ Captura pendiente — Pestaña Compras con los defectos y la biblioteca de kits.*
 
 **Defectos para sesiones de compra:**
 
@@ -227,7 +222,6 @@ compra de este proveedor:
 ## Artículos
 
 ![Ficha de Artículos con la pestaña SKUs](img/02-articulos.png)
-*▢ Captura pendiente — Ficha de Artículos con la pestaña SKUs.*
 
 **Atajo de menú:** `[Ctrl]+[A]`
 
@@ -272,7 +266,6 @@ artículos.
 ### Tarifas
 
 ![Mantenimiento de Tarifas con los precios por artículo](img/02-tarifas.png)
-*▢ Captura pendiente — Mantenimiento de Tarifas con los precios por artículo.*
 
 **Atajo de menú:** `[Ctrl]+[T]`
 
@@ -295,7 +288,6 @@ destino cuando estén validadas.
 ### Familias
 
 ![Mantenimiento de Familias](img/02-familias.png)
-*▢ Captura pendiente — Mantenimiento de Familias.*
 
 **Atajo de menú:** `[Ctrl]+[N]`
 

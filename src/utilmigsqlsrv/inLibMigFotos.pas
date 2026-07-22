@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inLibMigFotos                                                 }
 {    Tipo:       Librería de migración (sin formulario)                        }
-{ Versión:       1.2.0                                                         }
+{ Versión:       1.3.0                                                         }
 {                                                                              }
 {  Descripción:                                                                }
 {    Importa las fotos legacy de `dbo.ocartcol.ArchivoFoto` al sistema de      }
@@ -44,8 +44,10 @@
 {    se reintenta una vez en serie antes de contarla como error.               }
 {                                                                              }
 {    Idempotente: si la pareja (CODIGO_ART_FOT, CODIGO_UNIDAD_FOT) ya          }
-{    existe en destino se salta sin tocar ficheros. Las filas cuyo             }
-{    fichero origen no existe se contabilizan como saltadas con aviso.         }
+{    existe en destino se salta sin tocar ficheros. Si no existe la fila       }
+{    pero ya esta el trio 300/600/real en disco, se registra directamente      }
+{    sin reconvertirlo. Las filas cuyo fichero origen no existe se             }
+{    contabilizan como saltadas con aviso.                                     }
 {******************************************************************************}
 unit inLibMigFotos;
 
@@ -408,6 +410,43 @@ begin
   end;
 end;
 
+// Construye la fila SQL tanto para fotos nuevas como para las recuperadas
+// desde los ficheros que ya existen en la carpeta destino.
+function ConstruirFilaFoto(const AClave: TFotoClave;
+                           const AAhoraSQL, AUserSQL: string): string;
+begin
+  Result := Format('%s, %s, %s, %s, %s, %s, %s, %s',
+    [ValorOrNull(AClave.CodArt), ValorOrNull(AClave.CodUnidad),
+     ValorOrNull(AClave.Nombre), ValorOrNull(AClave.Ext),
+     AAhoraSQL, AAhoraSQL, AUserSQL, AUserSQL]);
+end;
+
+// Carga solo el nombre base de cada PNG para comprobar en memoria si el trio
+// 300/600/real ya fue generado en una migracion anterior.
+procedure CargarIndicePng(const ADirectorio: string; ANombres: TStringList);
+var
+  aFicheros: TArray<string>;
+  sFichero:  string;
+begin
+  ANombres.Clear;
+  ANombres.CaseSensitive := False;
+  ANombres.Sorted := True;
+  ANombres.Duplicates := dupIgnore;
+  aFicheros := TDirectory.GetFiles(ADirectorio, '*.png',
+                                   TSearchOption.soTopDirectoryOnly);
+  for sFichero in aFicheros do
+    ANombres.Add(ChangeFileExt(ExtractFileName(sFichero), ''));
+end;
+
+function ExisteTrioDestino(const ANombre: string;
+                           ANombres300, ANombres600,
+                           ANombresReal: TStringList): Boolean;
+begin
+  Result := (ANombres300.IndexOf(ANombre) >= 0) and
+            (ANombres600.IndexOf(ANombre) >= 0) and
+            (ANombresReal.IndexOf(ANombre) >= 0);
+end;
+
 // =========================================================================
 //  TFotoGrupo
 // =========================================================================
@@ -470,10 +509,7 @@ procedure TImportadorFotos.EncolarFila(const AClave: TFotoClave);
 var
   sFila: string;
 begin
-  sFila := Format('%s, %s, %s, %s, %s, %s, %s, %s',
-    [ValorOrNull(AClave.CodArt), ValorOrNull(AClave.CodUnidad),
-     ValorOrNull(AClave.Nombre), ValorOrNull(AClave.Ext),
-     FAhoraSQL, FAhoraSQL, FUserSQL, FUserSQL]);
+  sFila := ConstruirFilaFoto(AClave, FAhoraSQL, FUserSQL);
   FLock.Enter;
   try
     FPendientes.Add(sFila);
@@ -666,8 +702,12 @@ var
   qDst:        TUniQuery;
   bulk:        TBulkInsert;
   oExistentes: TDictionary<string, Boolean>;
+  oReutilizadas: TList<TFotoClave>;
   oGrupos:     TObjectList<TFotoGrupo>;
   oPorFichero: TDictionary<string, TFotoGrupo>;
+  oNombres300: TStringList;
+  oNombres600: TStringList;
+  oNombresReal: TStringList;
   oImp:        TImportadorFotos;
   aHilos:      TArray<TThread>;
   oGrupo:      TFotoGrupo;
@@ -728,13 +768,24 @@ begin
   Eng.Log('  destino fotos: %s', [sDestino]);
 
   oExistentes := TDictionary<string, Boolean>.Create;
+  oReutilizadas := TList<TFotoClave>.Create;
   oGrupos     := TObjectList<TFotoGrupo>.Create(True);
   oPorFichero := TDictionary<string, TFotoGrupo>.Create;
+  oNombres300 := TStringList.Create;
+  oNombres600 := TStringList.Create;
+  oNombresReal := TStringList.Create;
   oImp := nil;
   qSrc := nil;
   bulk := nil;
   SetLength(aHilos, 0);
   try
+    // Inventariar primero los PNG conservados de corridas anteriores. Solo un
+    // trio completo es reutilizable; uno parcial se vuelve a generar.
+    CargarIndicePng(sDir300, oNombres300);
+    CargarIndicePng(sDir600, oNombres600);
+    CargarIndicePng(sDirReal, oNombresReal);
+    Eng.Log('  destino disco: %d PNG en 300, %d en 600 y %d en real',
+            [oNombres300.Count, oNombres600.Count, oNombresReal.Count]);
     // Pre-cargar las fotos ya registradas en destino (idempotencia O(1)).
     qDst := TUniQuery.Create(nil);
     try
@@ -787,12 +838,6 @@ begin
       else
       begin
         sFichero := ComponerRutaOrigen(sRaiz, sRel);
-        if not oPorFichero.TryGetValue(sFichero, oGrupo) then
-        begin
-          oGrupo := TFotoGrupo.Create(sFichero);
-          oGrupos.Add(oGrupo);
-          oPorFichero.Add(sFichero, oGrupo);
-        end;
         // Extension de origen solo por trazabilidad (todo acaba PNG).
         sExt := LowerCase(ExtractFileExt(sFichero));
         if sExt <> '' then
@@ -804,18 +849,40 @@ begin
         // Nombre estilo inLibFotos: clave saneada + indice _001.
         oClave.Nombre    := SanearNombreFichero(sCodUnidad) + '_001';
         oClave.Ext       := sExt;
-        oGrupo.Claves.Add(oClave);
+        if ExisteTrioDestino(oClave.Nombre, oNombres300, oNombres600,
+                             oNombresReal) then
+        begin
+          // La BBDD se ha rehecho pero los PNG siguen migrados: recuperar la
+          // asociacion sin leer ni convertir otra vez el fichero legacy.
+          oReutilizadas.Add(oClave);
+          Eng.IncRow;
+        end
+        else
+        begin
+          if not oPorFichero.TryGetValue(sFichero, oGrupo) then
+          begin
+            oGrupo := TFotoGrupo.Create(sFichero);
+            oGrupos.Add(oGrupo);
+            oPorFichero.Add(sFichero, oGrupo);
+          end;
+          oGrupo.Claves.Add(oClave);
+          Inc(iPend);
+        end;
         oExistentes.AddOrSetValue(sKey, True);
-        Inc(iPend);
       end;
       qSrc.Next;
     end;
+    Eng.Log('  reutilizadas: %d fotos ya completas en disco',
+            [oReutilizadas.Count]);
     Eng.Log('  pendientes: %d fotos en %d ficheros; %d hilos de ' +
             'conversion', [iPend, oGrupos.Count, iNumHilos]);
 
     // ---- Fase 2: pool de hilos convirtiendo; este hilo drena a BBDD ----
     bulk := TBulkInsert.Create(Eng.ConDst, 'fza_articulos_fotos',
                                cColsFotos, 500);
+    for i := 0 to oReutilizadas.Count - 1 do
+      bulk.Add(ConstruirFilaFoto(oReutilizadas[i], sAhora, sUser));
+    Inc(Stats.Insertadas, oReutilizadas.Count);
     if oGrupos.Count > 0 then
     begin
       if iNumHilos > oGrupos.Count then
@@ -876,8 +943,12 @@ begin
     FreeAndNil(oImp);
     bulk.Free;
     qSrc.Free;
+    oNombresReal.Free;
+    oNombres600.Free;
+    oNombres300.Free;
     oPorFichero.Free;
     oGrupos.Free;
+    oReutilizadas.Free;
     oExistentes.Free;
   end;
 end;
