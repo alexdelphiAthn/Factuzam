@@ -25,13 +25,13 @@
         ExplicitWidth = 1090
         ExplicitHeight = 594
         inherited cxGrdPrincipal: TcxGrid
-          Top = 118
+          Top = 172
           Width = 1092
-          Height = 484
+          Height = 430
           TabOrder = 1
-          ExplicitTop = 118
+          ExplicitTop = 172
           ExplicitWidth = 1090
-          ExplicitHeight = 476
+          ExplicitHeight = 422
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             FilterRow.Visible = True
             OptionsView.GroupByBox = True
@@ -41,7 +41,7 @@
           Left = 0
           Top = 0
           Width = 1092
-          Height = 118
+          Height = 172
           Align = alTop
           BevelOuter = bvNone
           ParentBackground = False
@@ -168,7 +168,7 @@
           object lblAyuda: TcxLabel
             Left = 463
             Top = 81
-            Caption = 'Combine filtros en la fila del grid y gu'#225'rdelos como perfiles.'
+            Caption = 'Los filtros previos reducen la carga antes de consultar SKU.'
             TabOrder = 15
             Transparent = True
           end
@@ -180,6 +180,48 @@
             Caption = '&Perfiles...'
             TabOrder = 16
             OnClick = btnPerfilesClick
+          end
+          object lblFamilia: TcxLabel
+            Left = 12
+            Top = 116
+            Caption = 'Familia (opcional)'
+            TabOrder = 20
+            Transparent = True
+          end
+          object cbbFamilia: TcxComboBox
+            Left = 12
+            Top = 137
+            Properties.DropDownListStyle = lsFixedList
+            TabOrder = 17
+            Width = 250
+          end
+          object lblProveedor: TcxLabel
+            Left = 274
+            Top = 116
+            Caption = 'Proveedor (opcional)'
+            TabOrder = 21
+            Transparent = True
+          end
+          object cbbProveedor: TcxComboBox
+            Left = 274
+            Top = 137
+            Properties.DropDownListStyle = lsFixedList
+            TabOrder = 18
+            Width = 300
+          end
+          object lblTemporada: TcxLabel
+            Left = 586
+            Top = 116
+            Caption = 'Temporada (opcional)'
+            TabOrder = 22
+            Transparent = True
+          end
+          object cbbTemporada: TcxComboBox
+            Left = 586
+            Top = 137
+            Properties.DropDownListStyle = lsFixedList
+            TabOrder = 19
+            Width = 220
           end
         end
       end

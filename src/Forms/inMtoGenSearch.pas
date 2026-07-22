@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoGenSearch                                                }
 {    Tipo:       Formulario (Mto)                                              }
@@ -67,6 +67,8 @@ type
     function ProcesarValor(const aValor, aTipo: string): Variant;
     procedure AddValorDefecto(const aCampo: string; const aValor: Variant);
     function EjecutarAltaGenerica(sCod, sDesc: string):Boolean;
+  protected
+    function DebeAjustarColumnasAutomaticamente: Boolean; virtual;
   public
     FConfigAlta: TConfigAltaRapida;
     sFicha:string;
@@ -154,7 +156,8 @@ begin
   // Asignar properties por prefijo (PRECIO_/TOTAL_/IMPORTE_ -> currency €,
   // PORCENTAJE_ -> %, VALOR_/CANTIDAD_ -> numerico, ESxxx -> checkbox S/N).
   AplicarPropertiesPorPrefijo(cxGrdDBTabPrin);
-  cxGrdDBTabPrin.ApplyBestFit();
+  if DebeAjustarColumnasAutomaticamente then
+    cxGrdDBTabPrin.ApplyBestFit();
   // Titulos y anchos "bonitos" desde fza_config_campos (cache oConfigCampos):
   // sustituye los nombres crudos de columna (CODIGO_PRV_PRV, RAZON_SOCIAL_PRV
   // ...) por el TITULO_VISUAL_CC configurado. Es el mismo origen que usa
@@ -174,6 +177,11 @@ begin
       if iAncho > 0 then
         col.Width := iAncho;
     end;
+end;
+
+function TfrmMtoSearch.DebeAjustarColumnasAutomaticamente: Boolean;
+begin
+  Result := True;
 end;
 
 procedure TfrmMtoSearch.ResetForm;

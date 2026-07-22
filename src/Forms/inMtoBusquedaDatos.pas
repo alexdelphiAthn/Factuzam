@@ -52,6 +52,12 @@ type
     unqryResultados: TUniQuery;
     btnOcultar: TcxButton;
     btnPerfiles: TcxButton;
+    lblFamilia: TcxLabel;
+    cbbFamilia: TcxComboBox;
+    lblProveedor: TcxLabel;
+    cbbProveedor: TcxComboBox;
+    lblTemporada: TcxLabel;
+    cbbTemporada: TcxComboBox;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnBuscarClick(Sender: TObject);
@@ -71,7 +77,12 @@ type
     FAltoCriterios: Integer;
     FPopupGrid: TPopupMenu;
     FPopupGridOriginal: TNotifyEvent;
+    FTimerPrecarga: TTimer;
+    FCronometroApertura: TStopwatch;
     procedure InicializarListas;
+    procedure CargarFiltrosPrecarga;
+    procedure CargarCombo(ACombo: TcxComboBox; const ASQL,
+      ACampoCodigo, ACampoNombre: string);
     procedure ActualizarInterfazCampo;
     procedure ActualizarColumnasColor;
     procedure ConfigurarMenuContextual;
@@ -91,6 +102,10 @@ type
     function ResolverLineaDocumentoTrabajo(
       out ALinea: TDocTrabajoLineaOrigen;
       out AMensaje: string): Boolean;
+    function CodigoCombo(ACombo: TcxComboBox): string;
+    procedure TimerPrecargaTimer(Sender: TObject);
+  protected
+    function DebeAjustarColumnasAutomaticamente: Boolean; override;
   public
     class procedure Ejecutar(AOwner: TComponent;
       AParentForm: TCustomForm = nil);
@@ -129,10 +144,13 @@ class procedure TfrmMtoBusquedaDatos.Ejecutar(AOwner: TComponent;
 var
   frm: TfrmMtoBusquedaDatos;
   sCodigoArt: string;
+  swApertura: TStopwatch;
 begin
+  swApertura := TStopwatch.StartNew;
   sCodigoArt := '';
   frm := TfrmMtoBusquedaDatos.Create(nil);
   try
+    frm.FCronometroApertura := swApertura;
     if Assigned(AParentForm) then
       frm.PopupParent := AParentForm;
     frm.ShowModal;
@@ -162,6 +180,10 @@ begin
   cxGrdDBTabPrin.FilterRow.Visible := True;
   cxGrdDBTabPrin.OptionsView.GroupByBox := True;
   ConfigurarMenuContextual;
+  FTimerPrecarga := TTimer.Create(Self);
+  FTimerPrecarga.Enabled := False;
+  FTimerPrecarga.Interval := 1;
+  FTimerPrecarga.OnTimer := TimerPrecargaTimer;
 end;
 
 procedure TfrmMtoBusquedaDatos.ConfigurarMenuContextual;
@@ -223,14 +245,26 @@ end;
 procedure TfrmMtoBusquedaDatos.FormShow(Sender: TObject);
 begin
   inherited;
-  Buscar;
-  TThread.ForceQueue(nil,
-    procedure
-    begin
-      if (not (csDestroying in ComponentState)) and
-         edtValor.CanFocus then
-        edtValor.SetFocus;
-    end);
+  lblResultados.Caption := 'Seleccione los filtros y pulse Buscar';
+  FTimerPrecarga.Enabled := True;
+end;
+
+procedure TfrmMtoBusquedaDatos.TimerPrecargaTimer(Sender: TObject);
+var
+  sw: TStopwatch;
+begin
+  FTimerPrecarga.Enabled := False;
+  Update;
+  inLibLog.Log.LogPerf('BusquedaDatos.Abrir',
+    'formulario visible sin consultar artículos',
+    FCronometroApertura.ElapsedMilliseconds);
+  sw := TStopwatch.StartNew;
+  CargarFiltrosPrecarga;
+  inLibLog.Log.LogPerf('BusquedaDatos.Precarga',
+    'catálogos de familia, proveedor y temporada',
+    sw.ElapsedMilliseconds);
+  if edtValor.CanFocus then
+    edtValor.SetFocus;
 end;
 
 procedure TfrmMtoBusquedaDatos.InicializarListas;
@@ -268,13 +302,73 @@ begin
   cbbStock.Properties.Items.Add('Cualquier stock');
   cbbStock.Properties.Items.Add('Con existencias');
   cbbStock.Properties.Items.Add('Sin existencias');
-  cbbStock.ItemIndex := 0;
+  cbbStock.ItemIndex := 1;
   cbbLimite.Properties.Items.Clear;
   cbbLimite.Properties.Items.Add('500');
   cbbLimite.Properties.Items.Add('2.000');
   cbbLimite.Properties.Items.Add('5.000');
-  cbbLimite.ItemIndex := 1;
+  cbbLimite.ItemIndex := 0;
   ActualizarInterfazCampo;
+end;
+
+procedure TfrmMtoBusquedaDatos.CargarFiltrosPrecarga;
+begin
+  CargarCombo(cbbFamilia,
+    'SELECT CODIGO_FAM_FAM AS COD, ' +
+    '       COALESCE(NOMBRE_FAM_FAM, DESCRIPCION_FAM, ' +
+    '                CODIGO_FAM_FAM) AS NOM ' +
+    '  FROM fza_articulos_familias ' +
+    ' WHERE IFNULL(ESACTIVO_FAM, ''S'') = ''S'' ' +
+    ' ORDER BY ORDEN_FAM, CODIGO_FAM_FAM',
+    'COD', 'NOM');
+  CargarCombo(cbbProveedor,
+    'SELECT CODIGO_PRV_PRV AS COD, RAZON_SOCIAL_PRV AS NOM ' +
+    '  FROM fza_proveedores ' +
+    ' WHERE IFNULL(ESACTIVO_PRV, ''S'') = ''S'' ' +
+    ' ORDER BY RAZON_SOCIAL_PRV, CODIGO_PRV_PRV',
+    'COD', 'NOM');
+  CargarCombo(cbbTemporada,
+    'SELECT PV AS COD, PV AS NOM ' +
+    '  FROM fza_propiedades_valores ' +
+    ' WHERE ID_PROP_PV = ''TEMPORADA'' ' +
+    '   AND IFNULL(ESACTIVO_PV, ''S'') = ''S'' ' +
+    ' ORDER BY PV',
+    'COD', 'NOM');
+end;
+
+procedure TfrmMtoBusquedaDatos.CargarCombo(ACombo: TcxComboBox;
+  const ASQL, ACampoCodigo, ACampoNombre: string);
+var
+  qry: TUniQuery;
+  sCodigo: string;
+  sNombre: string;
+begin
+  ACombo.Properties.Items.BeginUpdate;
+  try
+    ACombo.Properties.Items.Clear;
+    ACombo.Properties.Items.Add('(Todos)');
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := inLibGlobalVar.oConn;
+      qry.SQL.Text := ASQL;
+      qry.Open;
+      while not qry.Eof do
+      begin
+        sCodigo := qry.FieldByName(ACampoCodigo).AsString;
+        sNombre := qry.FieldByName(ACampoNombre).AsString;
+        if (sNombre <> '') and (sNombre <> sCodigo) then
+          ACombo.Properties.Items.Add(sCodigo + ' - ' + sNombre)
+        else
+          ACombo.Properties.Items.Add(sCodigo);
+        qry.Next;
+      end;
+    finally
+      FreeAndNil(qry);
+    end;
+  finally
+    ACombo.Properties.Items.EndUpdate;
+  end;
+  ACombo.ItemIndex := 0;
 end;
 
 procedure TfrmMtoBusquedaDatos.btnBuscarClick(Sender: TObject);
@@ -289,11 +383,16 @@ begin
   ActualizarInterfazCampo;
   cbbCoincidencia.ItemIndex := 0;
   cbbEstado.ItemIndex := 0;
-  cbbStock.ItemIndex := 0;
+  cbbStock.ItemIndex := 1;
+  cbbLimite.ItemIndex := 0;
+  cbbFamilia.ItemIndex := 0;
+  cbbProveedor.ItemIndex := 0;
+  cbbTemporada.ItemIndex := 0;
   chkDistinguirMayusculas.Checked := False;
   edtBusqGlobal.Clear;
   cxGrdDBTabPrin.DataController.Filter.Clear;
-  Buscar;
+  unqryResultados.Close;
+  lblResultados.Caption := 'Seleccione los filtros y pulse Buscar';
 end;
 
 procedure TfrmMtoBusquedaDatos.cbbCampoPropertiesChange(Sender: TObject);
@@ -418,23 +517,39 @@ end;
 
 procedure TfrmMtoBusquedaDatos.Buscar;
 var
-  sw: TStopwatch;
+  swTotal: TStopwatch;
+  swTramo: TStopwatch;
   bConsultaPreparada: Boolean;
+  msPreparar: Int64;
+  msConsulta: Int64;
+  msColumnas: Int64;
+  msInterfaz: Int64;
 begin
-  sw := TStopwatch.StartNew;
+  swTotal := TStopwatch.StartNew;
+  msConsulta := 0;
+  msColumnas := 0;
+  msInterfaz := 0;
   Screen.Cursor := crHourGlass;
   try
+    swTramo := TStopwatch.StartNew;
     bConsultaPreparada := PrepararConsulta;
+    msPreparar := swTramo.ElapsedMilliseconds;
     if bConsultaPreparada then
     begin
+      swTramo := TStopwatch.StartNew;
       unqryResultados.Open;
+      msConsulta := swTramo.ElapsedMilliseconds;
       if not FColumnasCreadas then
       begin
+        swTramo := TStopwatch.StartNew;
         ProcesarPerfiles;
+        msColumnas := swTramo.ElapsedMilliseconds;
         FColumnasCreadas := True;
       end;
+      swTramo := TStopwatch.StartNew;
       ActualizarColumnasColor;
       ActualizarContador;
+      msInterfaz := swTramo.ElapsedMilliseconds;
     end;
   finally
     Screen.Cursor := crDefault;
@@ -442,10 +557,17 @@ begin
   if bConsultaPreparada then
   begin
     inLibLog.Log.LogPerf('BusquedaDatos.Buscar',
-      Format('campo=%d filas=%d',
-             [cbbCampo.ItemIndex, unqryResultados.RecordCount]),
-      sw.ElapsedMilliseconds);
+      Format('campo=%d filas=%d preparar=%d consulta=%d columnas=%d ' +
+             'interfaz=%d',
+             [cbbCampo.ItemIndex, unqryResultados.RecordCount,
+              msPreparar, msConsulta, msColumnas, msInterfaz]),
+      swTotal.ElapsedMilliseconds);
   end;
+end;
+
+function TfrmMtoBusquedaDatos.DebeAjustarColumnasAutomaticamente: Boolean;
+begin
+  Result := False;
 end;
 
 function TfrmMtoBusquedaDatos.PrepararConsulta: Boolean;
@@ -453,6 +575,9 @@ var
   sCampo: string;
   sValor: string;
   sParametro: string;
+  sFamilia: string;
+  sProveedor: string;
+  sTemporada: string;
   sHexObjetivo: string;
   sComponenteRojo: string;
   sComponenteVerde: string;
@@ -465,6 +590,9 @@ var
 begin
   Result := True;
   sValor := Trim(edtValor.Text);
+  sFamilia := CodigoCombo(cbbFamilia);
+  sProveedor := CodigoCombo(cbbProveedor);
+  sTemporada := CodigoCombo(cbbTemporada);
   bProximidad := cbbCampo.ItemIndex = CAMPO_PROXIMIDAD_COLOR;
   if bProximidad then
   begin
@@ -605,6 +733,15 @@ begin
     else if cbbStock.ItemIndex = 2 then
       unqryResultados.SQL.Add(
         '   AND COALESCE(stk.CANTIDAD_STOCK, 0) <= 0');
+    if sFamilia <> '' then
+      unqryResultados.SQL.Add(
+        '   AND eti.CODIGO_FAM_ART = :FAMILIA');
+    if sProveedor <> '' then
+      unqryResultados.SQL.Add(
+        '   AND eti.CODIGO_PRV_PRV = :PROVEEDOR');
+    if sTemporada <> '' then
+      unqryResultados.SQL.Add(
+        '   AND eti.PROP_TEMPORADA = :TEMPORADA');
     if bProximidad then
       unqryResultados.SQL.Add(
         '   AND pal.HEX_ATB REGEXP ''^#?[0-9A-Fa-f]{6}$''')
@@ -663,6 +800,12 @@ begin
     end;
     unqryResultados.SQL.Add(' LIMIT ' + IntToStr(ObtenerLimite));
     unqryResultados.ParamByName('ALMACEN_DOC').AsString := oAlmacen;
+    if sFamilia <> '' then
+      unqryResultados.ParamByName('FAMILIA').AsString := sFamilia;
+    if sProveedor <> '' then
+      unqryResultados.ParamByName('PROVEEDOR').AsString := sProveedor;
+    if sTemporada <> '' then
+      unqryResultados.ParamByName('TEMPORADA').AsString := sTemporada;
     if bProximidad then
     begin
       unqryResultados.ParamByName('ROJO').AsInteger := iRojo;
@@ -838,6 +981,23 @@ begin
       ALinea.Origen := 'CTRL_E';
       Result := True;
     end;
+  end;
+end;
+
+function TfrmMtoBusquedaDatos.CodigoCombo(ACombo: TcxComboBox): string;
+var
+  iSeparador: Integer;
+  sTexto: string;
+begin
+  Result := '';
+  if ACombo.ItemIndex > 0 then
+  begin
+    sTexto := Trim(ACombo.Text);
+    iSeparador := Pos(' - ', sTexto);
+    if iSeparador > 0 then
+      Result := Copy(sTexto, 1, iSeparador - 1)
+    else
+      Result := sTexto;
   end;
 end;
 
