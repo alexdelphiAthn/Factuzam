@@ -1,4 +1,4 @@
-inherited frmMtoOpeCaja: TfrmMtoOpeCaja
+﻿inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   Caption = 'Operaci'#243'n de Caja'
   ClientHeight = 413
   ClientWidth = 1355
@@ -530,9 +530,11 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
             HeaderAlignmentHorz = taRightJustify
           end
           object tvTipoCantidad: TcxGridDBColumn
+            Caption = 'Tipo de Cantidad'
             DataBinding.FieldName = 'TIPO_CANTIDAD_ARTICULO_FACLIN'
             Visible = False
             VisibleForCustomization = False
+            Width = 150
           end
           object tvPrecioUni: TcxGridDBColumn
             Caption = 'Precio'
