@@ -16,18 +16,23 @@ File_13=TSourceModule,'c:\program files (x86)\embarcadero\studio\37.0\source\dat
 File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Modals\inMtoModalImpSesion.pas',0,1,1,1,1,0,0,,
 
 [Modules]
-Module0=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dproj
-Count=1
+Module0=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\inLibMigCompras.pas
+Module1=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dproj
+Count=2
 EditWindowCount=1
+
+[C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\inLibMigCompras.pas]
+ModuleType=TSourceModule
 
 [C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dproj]
 ModuleType=TBaseProject
 
 [EditWindow0]
-ViewCount=2
-CurrentView=1
+ViewCount=3
+CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\inLibMigCompras.pas
 View0=0
 View1=1
+View2=2
 PercentageSizes=1
 Create=1
 Visible=1
@@ -62,6 +67,10 @@ BottomMiddlePanelClients=DockSite0,GraphDrawingModel
 BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E67566965779F1D00000000000002F706000000000000FFFFFFFF
 
 [View0]
+CustomEditViewType=TOTACustomEditView
+OTAEditViewType=WelcomePage.MainPage
+
+[View1]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dpr
 CursorX=1
@@ -72,9 +81,16 @@ Elisions=
 Bookmarks=
 EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dpr
 
-[View1]
-CustomEditViewType=TOTACustomEditView
-OTAEditViewType=WelcomePage.MainPage
+[View2]
+CustomEditViewType=TEditView
+Module=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\inLibMigCompras.pas
+CursorX=1
+CursorY=1821
+TopLine=1809
+LeftCol=1
+Elisions=
+Bookmarks=
+EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\inLibMigCompras.pas
 
 [Watches]
 Count=0

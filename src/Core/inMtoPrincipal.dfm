@@ -2632,6 +2632,16 @@
     end
     object Ayuda1: TMenuItem
       Caption = 'Ayuda'
+      object mnuConsultaStocks: TMenuItem
+        Caption = 'Consulta de stocks'
+        ShortCut = 16469
+        OnClick = mnuConsultaStocksClick
+      end
+      object mnuArticulosSimilares: TMenuItem
+        Caption = 'Consulta de art'#237'culos similares'
+        ShortCut = 16453
+        OnClick = mnuArticulosSimilaresClick
+      end
       object mnuManualWeb: TMenuItem
         Caption = 'Manual web'
         OnClick = mnuManualWebClick

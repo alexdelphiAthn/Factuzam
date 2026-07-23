@@ -174,6 +174,7 @@ begin
   FModoEntradaSel := mcsAuto;
   FColsModoConstruido := False;
   cxgrdLineasDTR.OnEnter := GridLineasEnterDTR;
+  btnListadoDTR.Visible := PuedeExportar;
 end;
 
 procedure TfrmMtoDocumentosTrabajo.GridLineasEnterDTR(Sender: TObject);
@@ -442,6 +443,8 @@ var
   sTitulo: string;
 begin
   inherited;
+  if not PuedeExportar then
+    Abort;
   if dmmDocumentosTrabajo <> nil then
   begin
     dsCabecera := dmmDocumentosTrabajo.unqryTablaG;
@@ -619,6 +622,8 @@ var
   sTitulo: string;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   if dmmDocumentosTrabajo <> nil then
   begin
     if (dmmDocumentosTrabajo.unqryTablaG.Active) and

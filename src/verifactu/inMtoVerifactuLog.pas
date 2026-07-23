@@ -139,6 +139,8 @@ var
   oResultado: TResultadoExportacionNoVerifactu;
 begin
   inherited;
+  if not PuedeExportar then
+    Abort;
   oDialogo := TSaveDialog.Create(Self);
   try
     oDialogo.Title := 'Guardar exportacion NO VERI*FACTU';

@@ -425,8 +425,12 @@ end;
 
 procedure TfrmMtoEmpresas.btnExportarExcelClick(Sender: TObject);
 begin
-  ExportarExcel(cxgrdEmpresasFacturas, 'Historico_Borradores_Empresa_' +
-                       dsTablaG.Dataset.FieldByName('CODIGO_EMP_EMP').AsString);
+  if not PuedeExportar then
+    Abort;
+  ExportarExcel(
+    cxgrdEmpresasFacturas,
+    'Historico_Borradores_Empresa_' +
+    dsTablaG.Dataset.FieldByName('CODIGO_EMP_EMP').AsString);
 end;
 
 procedure TfrmMtoEmpresas.btnIraFacturaClick(Sender: TObject);

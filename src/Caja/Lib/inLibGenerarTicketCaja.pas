@@ -18,7 +18,8 @@ unit inLibGenerarTicketCaja;
 interface
 
 uses
-  System.SysUtils, System.Classes;
+  System.SysUtils, System.Classes,
+  inLibPermisosIntf;
 
 procedure ImprimirTicketOperacionCaja(
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
@@ -30,7 +31,8 @@ procedure ImprimirTicketOperacionCaja(
 // global en cualquier ventana del programa). Comprueba el permiso
 // 'caja.abrirCajon' y manda el pulso de apertura por la impresora de
 // tickets de parametros (vgerDefPrinter -> oNomImpresoraCaja).
-procedure AbrirCajonSinVenta;
+procedure AbrirCajonSinVenta(
+  const APermisos: IPermisosAplicacion);
 
 // True si hay impresora de tickets real asignada en parametros
 // (oNomImpresoraCaja con valor no vacio y distinto de 'DEBUG').
@@ -40,7 +42,7 @@ implementation
 
 uses
   Data.DB, Uni, DBAccess, Vcl.Dialogs,
-  inLibGlobalVar, inLibFTicket, inMtoPreviewTicket, inLibDir, inLibPermisos,
+  inLibGlobalVar, inLibFTicket, inMtoPreviewTicket, inLibDir,
   inLibGenerarTicket;
 
 procedure ImprimirTicketOperacionCaja(
@@ -147,13 +149,17 @@ begin
   Result := (sImpresora <> '') and (UpperCase(sImpresora) <> 'DEBUG');
 end;
 
-procedure AbrirCajonSinVenta;
+procedure AbrirCajonSinVenta(
+  const APermisos: IPermisosAplicacion);
 var
   Ticket: TTicketTermico;
 begin
   // Lanzada por F9 global. Si no hay permiso o impresora valida, avisa y no
   // hace nada; en otro caso manda solo el pulso de apertura del cajon.
-  if Assigned(oPermisos) and (not oPermisos.TienePermiso('caja.abrirCajon')) then
+  if (not Assigned(APermisos)) or
+     (not APermisos.TienePermiso(
+       PERMISO_CAJA_ABRIR_CAJON,
+       paPermitir)) then
     ShowMessage('No tiene permiso para abrir el cajón.')
   else if not ImpresoraCajaAsignada then
     ShowMessage('No hay impresora de tickets configurada en parámetros ' +

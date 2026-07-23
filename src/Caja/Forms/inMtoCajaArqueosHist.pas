@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaArqueosHist                                          }
 {    Tipo:       Formulario (Mto)                                              }
@@ -103,6 +103,8 @@ end;
 procedure TfrmMtoCajaArqueosHist.btnExportarExcelClick(Sender: TObject);
 begin
   inherited;
+  if not PuedeExportar then
+    Abort;
   dlgGuardar.DefaultExtension := 'xlsx';
   dlgGuardar.FileName := 'Arqueos_' +
     FormatDateTime('yyyymmdd', Now) + '.xlsx';
@@ -115,6 +117,8 @@ var
   frm: TfrmPrintArqueos;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   // Informe A4 horizontal (FastReport). El usuario puede retocar el formato
   // con el botón Editar del propio modal y guardarlo como formato propio.
   frm := TfrmPrintArqueos.Create(Application);

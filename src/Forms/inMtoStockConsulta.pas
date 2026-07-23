@@ -66,7 +66,8 @@ uses
   cxGridDBTableView, cxGrid, cxPC, cxGraphics, cxLocalization,
   dxSkinsCore, dxSkinBlue, dxSkinsForm, dxScrollbarAnnotations,
   dxDateRanges, cxMemo, cxControls, dxCoreGraphics, cxCustomListBox,
-  cxRadioGroup, inLibLectorScanner, inLibDocumentosTrabajo, inLibFotos;
+  cxRadioGroup, inLibLectorScanner, inLibDocumentosTrabajo, inLibFotos,
+  inLibPermisosIntf;
 
 const
   // Detector por velocidad de tecleo (codigo de barras + CR, sin STX/ETX).
@@ -170,6 +171,7 @@ type
     FStyEstado  : array[TEstadoStock] of TcxStyle; // un estilo por estado
     FEstadosCombo : TList<TEstadoStock>; // mapeo combo.ItemIndex -> estado
     FModoDesglosado : Boolean;
+    FPermisos       : IPermisosAplicacion;
     FVerCoste       : Boolean;   // permiso para ver el coste (precio compra)
     FrbSimplificado : TcxRadioButton;
     FrbDesglosado   : TcxRadioButton;
@@ -273,6 +275,9 @@ type
               Shift: TShiftState);
     procedure ResolverTextoArticulo(AMostrarError: Boolean);
   public
+    constructor Create(AOwner: TComponent;
+                       const APermisos: IPermisosAplicacion); reintroduce;
+    procedure AsignarPermisos(const APermisos: IPermisosAplicacion);
     procedure SetArticuloSku(const ACodArt, ACodSku: string);
   end;
 
@@ -282,6 +287,7 @@ var
 /// Abre (o trae al frente) la consulta de stock con el (articulo, sku)
 /// indicado. Mismo patron que inMtoFotoArticulo.MostrarFotoFlotante.
 procedure MostrarStockConsulta(AOwner: TComponent;
+                               const APermisos: IPermisosAplicacion;
                                const ACodArt, ACodSku: string);
 
 implementation
@@ -289,7 +295,7 @@ implementation
 uses
   System.StrUtils,
   inLibGlobalVar, inLibAppParam, inLibCajaParam, inLibAtributosPaleta,
-  inLibGenBusq, inLibUser, UniDataPerfiles, inLibPermisos,
+  inLibGenBusq, inLibUser, UniDataPerfiles,
   inLibArticulosValidador;
 
 {$R *.dfm}
@@ -353,10 +359,15 @@ end;
 //  Funcion publica de apertura
 // ---------------------------------------------------------------------------
 procedure MostrarStockConsulta(AOwner: TComponent;
+                               const APermisos: IPermisosAplicacion;
                                const ACodArt, ACodSku: string);
 begin
   if frmStockConsulta = nil then
-    frmStockConsulta := TfrmStockConsulta.Create(Application);
+    frmStockConsulta := TfrmStockConsulta.Create(
+      Application,
+      APermisos)
+  else
+    frmStockConsulta.AsignarPermisos(APermisos);
   frmStockConsulta.SetArticuloSku(ACodArt, ACodSku);
   if frmStockConsulta.WindowState = wsMinimized then
     frmStockConsulta.WindowState := wsMaximized;
@@ -371,6 +382,24 @@ end;
 // ---------------------------------------------------------------------------
 //  Form
 // ---------------------------------------------------------------------------
+constructor TfrmStockConsulta.Create(
+  AOwner: TComponent;
+  const APermisos: IPermisosAplicacion);
+begin
+  FPermisos := APermisos;
+  inherited Create(AOwner);
+end;
+
+procedure TfrmStockConsulta.AsignarPermisos(
+  const APermisos: IPermisosAplicacion);
+begin
+  FPermisos := APermisos;
+  FVerCoste := Assigned(FPermisos) and
+               FPermisos.TienePermiso(
+                 PERMISO_CAJA_VER_COSTE,
+                 paDenegar);
+end;
+
 procedure TfrmStockConsulta.FormCreate(Sender: TObject);
 begin
   Self.Position := poDesigned;
@@ -394,8 +423,7 @@ begin
   // Coste (ultimo precio de compra del proveedor) solo para quien tenga
   // permiso: TienePermiso devuelve True siempre a admin; al resto, oculto
   // por defecto salvo permiso explicito 'caja.verCoste'.
-  FVerCoste := Assigned(oPermisos) and
-               oPermisos.TienePermiso('caja.verCoste', False);
+  AsignarPermisos(FPermisos);
   FQry := TUniQuery.Create(Self);
   FQry.Connection := inLibGlobalVar.oConn;
   FDs  := TDataSource.Create(Self);

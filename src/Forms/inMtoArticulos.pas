@@ -1336,6 +1336,8 @@ end;
 procedure TfrmMtoArticulos.btnExportarProveedorClick(Sender: TObject);
 begin
   inherited;
+  if not PuedeExportar then
+    Abort;
   ExportarExcel(cxgrdProveedores, 'Historico_Proveedores_Artículo_' +
                 dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;
@@ -1343,6 +1345,8 @@ end;
 procedure TfrmMtoArticulos.btnExportarTarifaClick(Sender: TObject);
 begin
   inherited;
+  if not PuedeExportar then
+    Abort;
   ExportarExcel(cxGrdTarifas, 'Historico_Tarifas_Artículo_' +
                 dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;
@@ -1474,6 +1478,8 @@ end;
 procedure TfrmMtoArticulos.btnStockExportarExcelClick(Sender: TObject);
 begin
   inherited;
+  if not PuedeExportar then
+    Abort;
   ExportarExcel(cxgrdStock, 'Stock_Artículo_' +
                 dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;
@@ -1519,6 +1525,8 @@ var
   formulario: TfrmPrintEtiqArt;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   if (not dsTablaG.Dataset.Active) or dsTablaG.Dataset.IsEmpty then
   begin
     ShowMessage('Seleccione primero un artículo para imprimir sus etiquetas.');
@@ -2754,6 +2762,8 @@ end;
 procedure TfrmMtoArticulos.cxButton11Click(Sender: TObject);
 begin
   inherited;
+  if not PuedeExportar then
+    Abort;
   ExportarExcel(cxGrdMovimientos, 'Movimientos_Artículo_' +
                 dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;

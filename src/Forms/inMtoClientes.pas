@@ -463,6 +463,7 @@ uses
   inMtoModalCliEti,
   inLibDir,
   inLibIBAN,
+  inLibPermisosIntf,
   inMtoPrincipal,
   Uni,
   inLibGlobalVar;
@@ -548,20 +549,26 @@ var
   formulario : TfrmPrintCliEti;
 begin
   inherited;
-  formulario := TfrmPrintCliEti.Create(Application);
-  try
-    formulario.edtCodCli.Text :=
-                        dsTablaG.Dataset.FieldByName('CODIGO_CLI_CLI').AsString;
-    formulario.ShowModal;
-  finally
-    FreeAndNil(formulario);
+  if PuedeImprimir then
+  begin
+    formulario := TfrmPrintCliEti.Create(Application);
+    try
+      formulario.edtCodCli.Text :=
+        dsTablaG.Dataset.FieldByName('CODIGO_CLI_CLI').AsString;
+      formulario.ShowModal;
+    finally
+      FreeAndNil(formulario);
+    end;
   end;
 end;
 
 procedure TfrmMtoClientes.btnExportarClick(Sender: TObject);
 begin
-  ExportarExcel(cxgrdClientesFacturas, 'Historico_Borradores_Cliente_' +
-                       dsTablaG.Dataset.FieldByName('CODIGO_CLI_CLI').AsString);
+  if PuedeAccionMto(apmExcel) then
+    ExportarExcel(
+      cxgrdClientesFacturas,
+      'Historico_Borradores_Cliente_' +
+      dsTablaG.Dataset.FieldByName('CODIGO_CLI_CLI').AsString);
 end;
 
 procedure TfrmMtoClientes.btnIraEmpresaClick(Sender: TObject);
@@ -612,17 +619,20 @@ end;
 procedure TfrmMtoClientes.btnNuevoClienteClick(Sender: TObject);
 begin
   inherited;
-    if ( (dmmClientes.unqryTablaG.State = dsInsert) or
-       (dmmClientes.unqryTablaG.State = dsEdit)) then
+  if PuedeAccionMto(apmInsertar) then
   begin
-    dmmClientes.unqryTablaG.Post;
+    if ((dmmClientes.unqryTablaG.State = dsInsert) or
+        (dmmClientes.unqryTablaG.State = dsEdit)) then
+    begin
+      dmmClientes.unqryTablaG.Post;
+    end;
+    dmmClientes.unqryTablaG.Insert;
+    pcPantalla.Properties.ActivePage := tsFicha;
+    tsFicha.SetFocus;
+    pcPestanas.Properties.ActivePage := tsDomicilioFiscal;
+    tsDomicilioFiscal.SetFocus;
+    txtRAZONSOCIAL_CLIENTE.SetFocus;
   end;
-  dmmClientes.unqryTablaG.Insert;
-  pcPantalla.Properties.ActivePage := tsFicha;
-  tsFicha.SetFocus;
-  pcPestanas.Properties.ActivePage := tsDomicilioFiscal;
-  tsDomicilioFiscal.SetFocus;
-  txtRAZONSOCIAL_CLIENTE.SetFocus;
 end;
 
 procedure TfrmMtoClientes.btnValidarClick(Sender: TObject);
@@ -692,6 +702,10 @@ begin
   // que no usa query detail). Historia/Depositos se abren solo cuando
   // el usuario activa su pestaña.
   pcPestanas.OnChange := PcPestanasChange;
+  btnNuevoCliente.Enabled := PuedeAccionMto(apmInsertar);
+  btnExportar.Visible := PuedeAccionMto(apmExcel);
+  btnExportarExcelPrestamos.Visible := PuedeAccionMto(apmExcel);
+  btnImprimirEtiqueta.Visible := PuedeImprimir;
 end;
 
 procedure TfrmMtoClientes.PcPestanasChange(Sender: TObject);
@@ -706,9 +720,11 @@ end;
 procedure TfrmMtoClientes.cxButton4Click(Sender: TObject);
 begin
   inherited;
-  ExportarExcel(cxgrdPrestamosCliente, 'Historico_Prestamos_Cliente_' +
-                       dsTablaG.Dataset.FieldByName('CODIGO_CLI_CLI').AsString);
-
+  if PuedeAccionMto(apmExcel) then
+    ExportarExcel(
+      cxgrdPrestamosCliente,
+      'Historico_Prestamos_Cliente_' +
+      dsTablaG.Dataset.FieldByName('CODIGO_CLI_CLI').AsString);
 end;
 
 procedure TfrmMtoClientes.btnIrAArticuloPresClick(Sender: TObject);

@@ -553,7 +553,7 @@ begin
     end;
     if oCaja = nil then
     begin
-      oCaja := TfrmMtoOpeCaja.Create(Application);
+      oCaja := TfrmMtoOpeCaja.Create(Application, Permisos);
       oCaja.Caption := Format('Operación - (Caja Real %s)', [FCaja]);
       oCaja.PrepararValores(FEmpresa, FAlmacen, FCaja, Now);
     end;

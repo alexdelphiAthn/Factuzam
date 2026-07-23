@@ -1377,6 +1377,8 @@ var
   sNumero : string;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   if dmmAlbaranesCompra = nil then Exit;
   if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
   begin
@@ -1407,6 +1409,8 @@ var
   sNumero : string;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   if dmmAlbaranesCompra = nil then Exit;
   if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
   begin
@@ -1439,6 +1443,8 @@ var
   sNumero : string;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   if dmmAlbaranesCompra = nil then Exit;
   if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
   begin

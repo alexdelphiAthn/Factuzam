@@ -1600,6 +1600,8 @@ var
   sNumero : string;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   if dmmDevolucionesCompra = nil then Exit;
   if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
   begin
@@ -1630,6 +1632,8 @@ var
   sNumero : string;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   if dmmDevolucionesCompra = nil then Exit;
   if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
   begin
@@ -1662,6 +1666,8 @@ var
   sNumero : string;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   if dmmDevolucionesCompra = nil then Exit;
   if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
   begin

@@ -2788,6 +2788,8 @@ procedure TfrmMtoInventarios.btnExportarInvClick(Sender: TObject);
 var
   fPreview: TfrmMtoPreviewExcel;
 begin
+  if not PuedeExportar then
+    Abort;
   if dmmInventarios.unqryTablaG.IsEmpty then
   begin
     ShowMessage('No hay inventario activo.');

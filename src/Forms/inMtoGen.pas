@@ -50,7 +50,7 @@ uses
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
   dxSkinXmas2008Blue, System.Generics.Collections, System.Actions, Vcl.ActnList,
-  System.Threading;
+  System.Threading, inLibPermisosIntf;
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   THackWinControl = class(TWinControl);
@@ -186,11 +186,13 @@ type
     FCamposGuia: TStringList;
     FCamposGuiaTabla: TStringList;
     FColumnasVisiblesGuia: TStringList;
-    // Hook BeforeDelete del dataset principal original (en el data module).
-    // Lo conservamos para reinvocarlo cuando la accion final sea Borrar; si
-    // el usuario elige Desactivar o Cancelar lo saltamos.
+    // Hooks del dataset principal original (en el data module).
+    FBeforeInsertOrig: TDataSetNotifyEvent;
+    FBeforeEditOrig: TDataSetNotifyEvent;
+    FBeforePostOrig: TDataSetNotifyEvent;
     FBeforeDeleteOrig: TDataSetNotifyEvent;
     FGuardianBorradoInstalado: Boolean;
+    FDesactivandoPorBorrado: Boolean;
     FFiltroMenuBase64: string;
     FBusqGlobalMenu: string;
     function FiltroGridActivo: Boolean;
@@ -210,7 +212,12 @@ type
     procedure GuardarFiltroActualClick(Sender: TObject);
     procedure GestionarFiltrosClick(Sender: TObject);
     procedure InstalarGuardianBorrado;
+    procedure GuardianBeforeInsert(DataSet: TDataSet);
+    procedure GuardianBeforeEdit(DataSet: TDataSet);
+    procedure GuardianBeforePost(DataSet: TDataSet);
     procedure GuardianBeforeDelete(DataSet: TDataSet);
+    procedure OcultarComponentesPorTexto(
+      const AFragmentos: array of string);
     procedure PopMenuColumnasPopup(Sender: TObject);
     procedure PopMenuColumnaClick(Sender: TObject);
     procedure PopMenuNuevaGuiaClick(Sender: TObject);
@@ -258,6 +265,7 @@ type
     // (reapertura, o el propio Mto lo integro en su ConstruirWhere*) no
     // toca nada. Cierra la query si venia activa del DFM streaming.
     procedure AplicarRestriccionUsuario(unqry: TUniQuery);
+    function PuedeAccionMto(AAccion: TAccionPermisoMto): Boolean;
   public
     tdmDataModule:TObject;
     sDataModuleName:string;
@@ -278,13 +286,15 @@ type
     procedure AplicarEtiquetas;     virtual;
     procedure CrearTablaPrincipal;  virtual;
     procedure ResetForm;  virtual;
-    // Aplica los permisos por pantalla (<CALL>.consultar / insertar /
-    // modificar / borrar / excel) ocultando o deshabilitando los
-    // controles correspondientes. Las pantallas sin CALL no se tocan.
+    // Aplica permisos por pantalla (consultar, insertar, modificar,
+    // borrar, excel e imprimir) ocultando o deshabilitando los controles.
+    // Las pantallas sin CALL no se tocan.
     procedure AplicarPermisosPantalla;
     // True si el usuario puede imprimir informes de esta pantalla. Los
     // Mtos con boton de impresion la consultan antes de imprimir.
     function PuedeImprimir: Boolean;
+    // True si el usuario puede exportar datos de esta pantalla.
+    function PuedeExportar: Boolean;
     procedure AbrirPerfiles(bTabVisible:Boolean);
     procedure CargarPerfilesParticulares; virtual;
     // Hook que cada Mto puede sobreescribir para añadir entradas extra al
@@ -384,7 +394,6 @@ implementation
 
 uses inMtoGenSearch,
      inLibGlobalVar,
-     inLibPermisos,
      inLibUnitForm,
      inLibShowMto,
      inLibLog,
@@ -848,9 +857,14 @@ begin
   ds := dsTablaG.DataSet;
   if ds = nil then
     Exit;
-  // Encadenamos: el handler original (p.ej. cascada de DELETE de lineas y
-  // recibos en facturas) sigue ejecutandose si la accion final es Borrar.
+  // Encadenamos los handlers originales del data module.
+  FBeforeInsertOrig := ds.BeforeInsert;
+  FBeforeEditOrig := ds.BeforeEdit;
+  FBeforePostOrig := ds.BeforePost;
   FBeforeDeleteOrig := ds.BeforeDelete;
+  ds.BeforeInsert := GuardianBeforeInsert;
+  ds.BeforeEdit := GuardianBeforeEdit;
+  ds.BeforePost := GuardianBeforePost;
   ds.BeforeDelete := GuardianBeforeDelete;
   // Desactivamos el dialogo nativo de confirmacion del navegador para no
   // mostrar dos popups en cascada (el nativo y el nuestro). El cxGrid del
@@ -863,30 +877,149 @@ begin
   FGuardianBorradoInstalado := True;
 end;
 
+procedure TfrmMtoGen.GuardianBeforeInsert(DataSet: TDataSet);
+begin
+  if not PuedeAccionMto(apmInsertar) then
+  begin
+    ShowMessage(
+      'No tienes permiso para insertar registros en esta pantalla.');
+    Abort;
+  end
+  else if Assigned(FBeforeInsertOrig) then
+    FBeforeInsertOrig(DataSet);
+end;
+
+procedure TfrmMtoGen.GuardianBeforeEdit(DataSet: TDataSet);
+begin
+  if (not FDesactivandoPorBorrado) and
+     (not PuedeAccionMto(apmModificar)) then
+  begin
+    ShowMessage(
+      'No tienes permiso para modificar registros en esta pantalla.');
+    Abort;
+  end
+  else if Assigned(FBeforeEditOrig) then
+    FBeforeEditOrig(DataSet);
+end;
+
+procedure TfrmMtoGen.GuardianBeforePost(DataSet: TDataSet);
+var
+  bPermitido: Boolean;
+begin
+  bPermitido :=
+    FDesactivandoPorBorrado or
+    ((DataSet.State = dsInsert) and
+     PuedeAccionMto(apmInsertar)) or
+    ((DataSet.State = dsEdit) and
+     PuedeAccionMto(apmModificar));
+  if not bPermitido then
+  begin
+    ShowMessage(
+      'No tienes permiso para guardar este registro.');
+    Abort;
+  end
+  else if Assigned(FBeforePostOrig) then
+    FBeforePostOrig(DataSet);
+end;
+
 procedure TfrmMtoGen.GuardianBeforeDelete(DataSet: TDataSet);
 var
   sCampoActivo: string;
 begin
-  case PreguntarAccionBorrado of
-    abCancelar:
-      Abort;
-    abDesactivar:
-      begin
-        sCampoActivo := NombreCampoESACTIVO;
-        if (sCampoActivo <> '') and
-           (DataSet.FindField(sCampoActivo) <> nil) then
-        begin
-          if not (DataSet.State in [dsEdit, dsInsert]) then
-            DataSet.Edit;
-          DataSet.FieldByName(sCampoActivo).AsString := 'N';
-          DataSet.Post;
-        end;
+  if not PuedeAccionMto(apmBorrar) then
+  begin
+    ShowMessage(
+      'No tienes permiso para borrar registros en esta pantalla.');
+    Abort;
+  end
+  else
+  begin
+    case PreguntarAccionBorrado of
+      abCancelar:
         Abort;
-      end;
-    abContinuar:
-      if Assigned(FBeforeDeleteOrig) then
-        FBeforeDeleteOrig(DataSet);
+      abDesactivar:
+        begin
+          sCampoActivo := NombreCampoESACTIVO;
+          if (sCampoActivo <> '') and
+             (DataSet.FindField(sCampoActivo) <> nil) then
+          begin
+            FDesactivandoPorBorrado := True;
+            try
+              if not (DataSet.State in [dsEdit, dsInsert]) then
+                DataSet.Edit;
+              DataSet.FieldByName(sCampoActivo).AsString := 'N';
+              DataSet.Post;
+            finally
+              FDesactivandoPorBorrado := False;
+            end;
+          end;
+          Abort;
+        end;
+      abContinuar:
+        if Assigned(FBeforeDeleteOrig) then
+          FBeforeDeleteOrig(DataSet);
+    end;
   end;
+end;
+
+procedure TfrmMtoGen.OcultarComponentesPorTexto(
+  const AFragmentos: array of string);
+var
+  i: Integer;
+  j: Integer;
+  sTexto: string;
+  bCoincide: Boolean;
+  function TextoPublicado(AComponente: TComponent;
+                          const APropiedad: string): string;
+  begin
+    Result := '';
+    if IsPublishedProp(AComponente, APropiedad) then
+      Result := GetStrProp(AComponente, APropiedad);
+  end;
+begin
+  for i := 0 to Self.ComponentCount - 1 do
+  begin
+    sTexto := Self.Components[i].Name + ' ' +
+              TextoPublicado(Self.Components[i], 'Caption') + ' ' +
+              TextoPublicado(Self.Components[i], 'Hint');
+    sTexto := LowerCase(sTexto);
+    sTexto := StringReplace(sTexto, '&', '', [rfReplaceAll]);
+    sTexto := StringReplace(sTexto, '.', '', [rfReplaceAll]);
+    bCoincide := False;
+    for j := Low(AFragmentos) to High(AFragmentos) do
+      if Pos(LowerCase(AFragmentos[j]), sTexto) > 0 then
+        bCoincide := True;
+    if bCoincide then
+    begin
+      if Self.Components[i] is TControl then
+        TControl(Self.Components[i]).Visible := False
+      else if Self.Components[i] is TCustomAction then
+        TCustomAction(Self.Components[i]).Enabled := False
+      else if Self.Components[i] is TMenuItem then
+      begin
+        TMenuItem(Self.Components[i]).Visible := False;
+        TMenuItem(Self.Components[i]).Enabled := False;
+      end;
+    end;
+  end;
+end;
+
+function TfrmMtoGen.PuedeAccionMto(
+  AAccion: TAccionPermisoMto): Boolean;
+var
+  sCall: string;
+begin
+  sCall := '';
+  if (Self.Owner is TfrmMtoPrincipal) then
+    sCall := (Self.Owner as TfrmMtoPrincipal).oFzaWinf.CallDeUnit(
+               Self.UnitName + '.' + Self.ClassName);
+  if sCall = '' then
+    Result := True
+  else
+    Result := Assigned(Permisos) and
+              Permisos.TienePermiso(
+                CodigoPermisoMto(sCall, AAccion),
+                paPermitir);
 end;
 
 procedure TfrmMtoGen.CargarPerfilesComunes(sUser:string = 'Todos');
@@ -1060,12 +1193,8 @@ end;
 procedure TfrmMtoGen.AplicarPermisosPantalla;
 var
   sCall: string;
-  function Puede(const ASufijo: string): Boolean;
-  begin
-    Result := (oPermisos = nil) or
-              oPermisos.TienePermiso(sCall + '.' + ASufijo, True);
-  end;
 begin
+  InstalarGuardianBorrado;
   // CALL de la pantalla (Clientes, Articulos...). Los Mtos sin registro
   // en fza_winforms (p.ej. cajas de busqueda) no tienen CALL: todo activo.
   sCall := '';
@@ -1077,7 +1206,7 @@ begin
     // Consultar/buscar: solo se quita el buscador global. NO se bloquea la
     // apertura ni la carga, asi se puede llegar a una ficha navegando
     // desde otro Mto (Ctrl+A, ir a factura...).
-    if not Puede('consultar') then
+    if not PuedeAccionMto(apmConsultar) then
     begin
       edtBusqGlobal.Visible   := False;
       lblTextoaBuscar.Visible := False;
@@ -1085,14 +1214,14 @@ begin
       rbGrid.Visible          := False;
     end;
     // Alta. Enabled:=False en la accion neutraliza tambien su atajo.
-    if not Puede('insertar') then
+    if not PuedeAccionMto(apmInsertar) then
     begin
       actInsertarRegistro.Enabled        := False;
       nvNavegador.Buttons.Insert.Visible := False;
       nvNavegador.Buttons.Append.Visible := False;
     end;
     // Modificacion.
-    if not Puede('modificar') then
+    if not PuedeAccionMto(apmModificar) then
     begin
       actEditarRegistro.Enabled        := False;
       actGrabarRegistro.Enabled        := False;
@@ -1100,29 +1229,31 @@ begin
       nvNavegador.Buttons.Post.Visible := False;
     end;
     // Borrado.
-    if not Puede('borrar') then
+    if not PuedeAccionMto(apmBorrar) then
     begin
       actEliminarRegistro.Enabled        := False;
       nvNavegador.Buttons.Delete.Visible := False;
     end;
     // Exportar a Excel.
-    if not Puede('excel') then
+    if not PuedeExportar then
+    begin
       sbExportExcel.Visible := False;
+      OcultarComponentesPorTexto(['export', 'exp excel']);
+    end;
+    // Impresion.
+    if not PuedeImprimir then
+      OcultarComponentesPorTexto(['imprim', 'print', 'pegatin']);
   end;
 end;
 
 function TfrmMtoGen.PuedeImprimir: Boolean;
-var
-  sCall: string;
 begin
-  sCall := '';
-  if (Self.Owner is TfrmMtoPrincipal) then
-    sCall := (Self.Owner as TfrmMtoPrincipal).oFzaWinf.CallDeUnit(
-               Self.UnitName + '.' + Self.ClassName);
-  if (sCall = '') or (oPermisos = nil) then
-    Result := True
-  else
-    Result := oPermisos.TienePermiso(sCall + '.imprimir', True);
+  Result := PuedeAccionMto(apmImprimir);
+end;
+
+function TfrmMtoGen.PuedeExportar: Boolean;
+begin
+  Result := PuedeAccionMto(apmExcel);
 end;
 
 procedure TfrmMtoGen.BloquearTabPorOcupado(Bloquear: Boolean);
@@ -2293,12 +2424,20 @@ begin
 end;
 
 procedure TfrmMtoGen.actNavBrowseUpdate(Sender: TObject);
+var
+  bPermitido: Boolean;
 begin
+  bPermitido := True;
+  if Sender = actInsertarRegistro then
+    bPermitido := PuedeAccionMto(apmInsertar)
+  else if Sender = actEditarRegistro then
+    bPermitido := PuedeAccionMto(apmModificar);
   TAction(Sender).Enabled :=
     Assigned(dsTablaG.DataSet) and
     dsTablaG.DataSet.Active and
     (dsTablaG.State = dsBrowse) and
-    PermitirNavegacionTeclas;
+    PermitirNavegacionTeclas and
+    bPermitido;
 end;
 
 procedure TfrmMtoGen.actEliminarRegistroUpdate(Sender: TObject);
@@ -2307,7 +2446,8 @@ begin
     Assigned(dsTablaG.DataSet) and
     dsTablaG.DataSet.Active and
     not dsTablaG.DataSet.IsEmpty and
-    (dsTablaG.State = dsBrowse);
+    (dsTablaG.State = dsBrowse) and
+    PuedeAccionMto(apmBorrar);
 end;
 
 procedure TfrmMtoGen.actEliminarRegistroExecute(Sender: TObject);
@@ -2318,7 +2458,8 @@ begin
   // usuario pulsa el boton de borrar del navegador (que llama directamente
   // a DataSet.Delete sin pasar por esta accion).
   if Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and
-     not dsTablaG.DataSet.IsEmpty then
+     not dsTablaG.DataSet.IsEmpty and
+     PuedeAccionMto(apmBorrar) then
     dsTablaG.DataSet.Delete;
 end;
 
@@ -2408,7 +2549,10 @@ end;
 
 procedure TfrmMtoGen.actInsertarRegistroExecute(Sender: TObject);
 begin
-  dsTablaG.DataSet.Insert;
+  if Assigned(dsTablaG.DataSet) and
+     dsTablaG.DataSet.Active and
+     PuedeAccionMto(apmInsertar) then
+    dsTablaG.DataSet.Insert;
 end;
 
 procedure TfrmMtoGen.actPrimerRegistroExecute(Sender: TObject);
@@ -2471,20 +2615,35 @@ end;
 
 procedure TfrmMtoGen.actEditarRegistroExecute(Sender: TObject);
 begin
-  dsTablaG.DataSet.Edit;
+  if Assigned(dsTablaG.DataSet) and
+     dsTablaG.DataSet.Active and
+     PuedeAccionMto(apmModificar) then
+    dsTablaG.DataSet.Edit;
 end;
 
 procedure TfrmMtoGen.actGrabarRegistroUpdate(Sender: TObject);
+var
+  bPermitido: Boolean;
 begin
+  bPermitido :=
+    ((dsTablaG.State = dsInsert) and
+     PuedeAccionMto(apmInsertar)) or
+    ((dsTablaG.State = dsEdit) and
+     PuedeAccionMto(apmModificar));
   TAction(Sender).Enabled :=
     Assigned(dsTablaG.DataSet) and
     dsTablaG.DataSet.Active and
-    ((dsTablaG.State = dsEdit) or (dsTablaG.State = dsInsert));
+    bPermitido;
 end;
 
 procedure TfrmMtoGen.actGrabarRegistroExecute(Sender: TObject);
 begin
-  dsTablaG.DataSet.Post;
+  if Assigned(dsTablaG.DataSet) and
+     (((dsTablaG.State = dsInsert) and
+       PuedeAccionMto(apmInsertar)) or
+      ((dsTablaG.State = dsEdit) and
+       PuedeAccionMto(apmModificar))) then
+    dsTablaG.DataSet.Post;
 end;
 
 procedure TfrmMtoGen.actFotoArticuloExecute(Sender: TObject);
@@ -2518,7 +2677,11 @@ begin
   sArt := '';
   sSku := '';
   ResolverArtSkuActivo(sArt, sSku);
-  inMtoStockConsulta.MostrarStockConsulta(Self, sArt, sSku);
+  inMtoStockConsulta.MostrarStockConsulta(
+    Self,
+    Permisos,
+    sArt,
+    sSku);
 end;
 
 procedure TfrmMtoGen.ResolverArtSkuActivo(out ACodArt, ACodSku: string);
@@ -2630,7 +2793,7 @@ begin
     end;
   end;
   // Permisos por pantalla: ocultan/deshabilitan los controles segun
-  // <CALL>.consultar / insertar / modificar / borrar / excel.
+  // consultar, insertar, modificar, borrar, excel e imprimir.
   AplicarPermisosPantalla;
 end;
 
@@ -2699,13 +2862,16 @@ end;
 
 procedure TfrmMtoGen.sbExportExcelClick(Sender: TObject);
 begin
-  saveDialog.Title := 'Guardar listado a Excel';
-  saveDialog.InitialDir :=  GetSpecialFolderPath(CSIDL_MYDOCUMENTS);
-  saveDialog.Filter := 'Archivo Excel|*.xlsx';
-  saveDialog.DefaultExt := 'xlsx';
-  saveDialog.FilterIndex := 1;
-  if ( saveDialog.Execute ) then
-    ExportGridToXLSX(saveDialog.FileName, cxGrdPrincipal);
+  if PuedeExportar then
+  begin
+    saveDialog.Title := 'Guardar listado a Excel';
+    saveDialog.InitialDir := GetSpecialFolderPath(CSIDL_MYDOCUMENTS);
+    saveDialog.Filter := 'Archivo Excel|*.xlsx';
+    saveDialog.DefaultExt := 'xlsx';
+    saveDialog.FilterIndex := 1;
+    if saveDialog.Execute then
+      ExportGridToXLSX(saveDialog.FileName, cxGrdPrincipal);
+  end;
 end;
 
 // ===========================================================================

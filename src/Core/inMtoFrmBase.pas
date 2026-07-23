@@ -39,7 +39,7 @@ uses
   dxSkinOffice2019Colorful, dxSkinOffice2019DarkGray, dxSkinOffice2019White,
   dxSkinPumpkin, dxSkinSilver, dxSkinTheBezier, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, JvComponentBase,
-  JvEnterTab;
+  JvEnterTab, inLibPermisosIntf;
 
 type
   TEnterAsTabEstado = record
@@ -47,13 +47,15 @@ type
     EnterAsTab : Boolean;
   end;
 
-  TfrmBase = class(TForm)
+  TfrmBase = class(TForm, IProveedorPermisosAplicacion)
     Localizer1: TcxLocalizer;
     jvntrstb1: TJvEnterAsTab;
     procedure FormCreate(Sender: TObject);
   private
+    FPermisos: IPermisosAplicacion;
     FEnterAsTabEstados: array of TEnterAsTabEstado;
     FEnterAsTabTemporalActivo: Boolean;
+    function GetPermisos: IPermisosAplicacion;
     procedure GuardarEnterAsTabDe(AOwner: TComponent);
     function EnterAsTabGuardado(AComp: TJvEnterAsTab): Boolean;
   protected
@@ -66,10 +68,16 @@ type
     procedure RestaurarEnterAsTabTemporal(Sender: TObject);
   public
     { Public declarations }
+    constructor Create(AOwner: TComponent); overload; override;
+    constructor Create(AOwner: TComponent;
+                       const APermisos: IPermisosAplicacion); reintroduce;
+                       overload;
+    procedure AsignarPermisos(const APermisos: IPermisosAplicacion);
     // Articulo/sku del registro/linea en foco, para la consulta de stock
     // global (Ctrl+U, capturado en inMtoPrincipal). Por defecto vacio; los
     // formularios con articulo activo lo sobreescriben.
     procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); virtual;
+    property Permisos: IPermisosAplicacion read GetPermisos;
   end;
 
 var
@@ -82,6 +90,35 @@ uses
 
 {$R *.dfm}
 {$R CXLOCALIZATION.res}
+
+constructor TfrmBase.Create(AOwner: TComponent);
+var
+  Proveedor: IProveedorPermisosAplicacion;
+begin
+  FPermisos := nil;
+  if Supports(AOwner, IProveedorPermisosAplicacion, Proveedor) then
+    FPermisos := Proveedor.Permisos;
+  inherited Create(AOwner);
+end;
+
+constructor TfrmBase.Create(
+  AOwner: TComponent;
+  const APermisos: IPermisosAplicacion);
+begin
+  FPermisos := APermisos;
+  inherited Create(AOwner);
+end;
+
+procedure TfrmBase.AsignarPermisos(
+  const APermisos: IPermisosAplicacion);
+begin
+  FPermisos := APermisos;
+end;
+
+function TfrmBase.GetPermisos: IPermisosAplicacion;
+begin
+  Result := FPermisos;
+end;
 
 procedure TfrmBase.FormCreate(Sender: TObject);
 var

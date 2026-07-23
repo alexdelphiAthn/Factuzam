@@ -175,7 +175,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibCajaParam, inLibPermisos,
+  inLibGlobalVar, inLibCajaParam, inLibPermisosIntf,
   DateUtils, inMtoConsultaOpe, inMtoPrincipal,
   inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja;
 
@@ -233,7 +233,10 @@ begin
   calMes.ParentShowHint := False;
   lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', Now);
   // Permiso: si no puede cambiar fecha, deshabilitar calendario
-  if Assigned(oPermisos) and (not oPermisos.TienePermiso('caja.cambiarFecha')) then
+  if (not Assigned(Permisos)) or
+     (not Permisos.TienePermiso(
+       PERMISO_CAJA_CAMBIAR_FECHA,
+       paPermitir)) then
     calMes.Enabled := False;
   // Crear el caché ANTES de cualquier cosa que pueda disparar eventos del
   // calendario
@@ -384,7 +387,7 @@ begin
                 'Selecciona una caja antes de buscar operaciones.');
     Exit;
   end;
-  frm := TfrmConsultaOpe.Create(Application);
+  frm := TfrmConsultaOpe.Create(Application, Permisos);
   try
     frm.PopupParent := Self;
     frm.PrepararValores(FEmpresa, FAlmacen, FCaja, FFechaCaja);
@@ -603,7 +606,7 @@ procedure TfrmMtoMenuCaja.lblVentasClick(Sender: TObject);
 var
   frmMtoOpeCaja: TfrmMtoOpeCaja;
 begin
-  frmMtoOpeCaja := TfrmMtoOpeCaja.Create(Application);
+  frmMtoOpeCaja := TfrmMtoOpeCaja.Create(Application, Permisos);
   try
     frmMtoOpeCaja.PopupParent := Self;
     frmMtoOpeCaja.Tag := 1;
@@ -803,7 +806,7 @@ begin
                 'Selecciona una caja antes de hacer traspasos.')
   else
   begin
-    frmTraspaso := TfrmMtoOpeTraspaso.Create(Application);
+    frmTraspaso := TfrmMtoOpeTraspaso.Create(Application, Permisos);
     try
       frmTraspaso.PopupParent := Self;
       frmTraspaso.Caption := Format('Traspasos - (Almacén %s · Caja %s)',

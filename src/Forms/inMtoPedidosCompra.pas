@@ -2746,6 +2746,8 @@ var
   sNumero: string;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   if dmmPedidosCompra = nil then
     Exit;
   if dmmPedidosCompra.unqryTablaG.IsEmpty then

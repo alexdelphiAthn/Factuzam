@@ -190,6 +190,8 @@ type
     Acercade1: TMenuItem;
     mnuManualWeb: TMenuItem;
     mnuForoSoporte: TMenuItem;
+    mnuConsultaStocks: TMenuItem;
+    mnuArticulosSimilares: TMenuItem;
     Listados1: TMenuItem;
     mnuLisVentas: TMenuItem;
     mnuPedidosVenta: TMenuItem;
@@ -238,6 +240,8 @@ type
     procedure mnuAcercadeClick(Sender: TObject);
     procedure mnuManualWebClick(Sender: TObject);
     procedure mnuForoSoporteClick(Sender: TObject);
+    procedure mnuConsultaStocksClick(Sender: TObject);
+    procedure mnuArticulosSimilaresClick(Sender: TObject);
     function IsShortCut(var Message: TWMKey): Boolean; override;
 //    procedure undmp1Error(Sender: TObject; E: Exception; SQL: string;
 //      var Action: TErrorAction);
@@ -254,6 +258,7 @@ type
     FWorkerOperacion: TThread;
     FReiniciando: Boolean;
     FCancelaOperacionSolicitada: Boolean;
+    FFalloCargaPermisosAvisado: Boolean;
     // Handlers de aplicacion (OnException/OnIdle/OnMessage) registrados via
     // TApplicationEvents: una asignacion directa Application.OnX queda
     // anulada en cuanto cualquier form crea su propio TApplicationEvents
@@ -266,6 +271,7 @@ type
     procedure MostrarDetalleExcepcion(const ATexto: string);
     procedure CopiarExceptionDialogClick(Sender: TObject);
     procedure AplicarPermisosMenu;
+    procedure AvisarFalloCargaPermisos(const ADetalle: string);
     // Precarga de caches de arranque. El modo (serie / paralelo) lo decide
     // el parametro appArranqueEnParalelo.
     procedure PrecargarCachesSerie;
@@ -293,7 +299,7 @@ type
     // Atajos globales capturados a nivel de aplicacion (las ventanas de caja
     // son top-level y no pasan por IsShortCut): F9 abre el cajon desde
     // cualquier ventana si hay impresora de tickets asignada y Ctrl+U abre
-    // la consulta de stock en cualquier pantalla.
+    // la consulta de stock; Ctrl+E abre la consulta de articulos similares.
     procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
     procedure MostrarAvisoCaducidadCertificado;
   public
@@ -334,6 +340,8 @@ uses inLibUser,
   inLibInformesGuiasCache,
   inLibConfigCampos,
   inLibPermisos,
+  inLibPermisosIntf,
+  inLibPermisosUniDAC,
   inLibLog,
   inLibDir,
   inMtoSplash,
@@ -980,6 +988,7 @@ end;
 procedure TfrmMtoPrincipal.PrecargarCachesSerie;
 var
   swTotal: TStopwatch;
+  Identidad: TIdentidadPermisos;
 begin
   swTotal := TStopwatch.StartNew;
   Log.LogInfo('Arranque: PrecargarCachesSerie INICIO');
@@ -988,8 +997,21 @@ begin
   oInfGuiasCache.Precargar;
   oConfigCampos := TConfigCamposCache.Create;
   oConfigCampos.Precargar;
-  oPermisos := TPermisosCache.Create;
-  oPermisos.Precargar(oConn, oUser, oGroup, oRootGroup = 'S');
+  Identidad := TIdentidadPermisos.Crear(
+    oUser,
+    oGroup,
+    oRootGroup = 'S');
+  try
+    AsignarPermisos(
+      TCargadorPermisosUniDAC.Cargar(oConn, Identidad));
+  except
+    on E: Exception do
+    begin
+      AsignarPermisos(
+        TPermisosAplicacion.CrearNoDisponible(Identidad));
+      AvisarFalloCargaPermisos(E.ClassName + ': ' + E.Message);
+    end;
+  end;
   Log.LogInfo(Format('PrecargaSerie: total=%d ms', [swTotal.ElapsedMilliseconds]));
 end;
 
@@ -1055,6 +1077,8 @@ procedure TfrmMtoPrincipal.PrecargarCachesParalelo;
 var
   swTotal: TStopwatch;
   bEsAdmin: Boolean;
+  Identidad: TIdentidadPermisos;
+  PermisosCargados: IPermisosAplicacion;
   msPerfiles, msInfGuias, msConfig, msPermisos: Int64;
   errPerfiles, errInfGuias, errConfig, errPermisos: string;
   t1, t2, t3, t4: ITask;
@@ -1062,6 +1086,8 @@ begin
   swTotal := TStopwatch.StartNew;
   Log.LogInfo('Arranque: PrecargarCachesParalelo INICIO');
   bEsAdmin := (oRootGroup = 'S');
+  Identidad := TIdentidadPermisos.Crear(oUser, oGroup, bEsAdmin);
+  PermisosCargados := nil;
   msPerfiles := 0;
   msInfGuias := 0;
   msConfig := 0;
@@ -1072,7 +1098,6 @@ begin
   errPermisos := '';
   oInfGuiasCache := TInformesGuiasCache.Create;
   oConfigCampos  := TConfigCamposCache.Create;
-  oPermisos      := TPermisosCache.Create;
   // Cada tarea escribe solo en SUS variables (sin estado compartido) y captura
   // su excepcion (no se propaga al WaitForAll). El log es thread-safe (mutex).
   t1 := TTask.Run(
@@ -1108,10 +1133,20 @@ begin
       msPermisos := EjecutarCargaWorker(
         procedure(c: TUniConnection)
         begin
-          oPermisos.Precargar(c, oUser, oGroup, bEsAdmin);
+          PermisosCargados :=
+            TCargadorPermisosUniDAC.Cargar(c, Identidad);
         end, errPermisos);
     end);
   TTask.WaitForAll([t1, t2, t3, t4]);
+  if Assigned(PermisosCargados) then
+    AsignarPermisos(PermisosCargados)
+  else
+  begin
+    AsignarPermisos(
+      TPermisosAplicacion.CrearNoDisponible(Identidad));
+    if errPermisos = '' then
+      errPermisos := 'La carga no devolvió una caché de permisos';
+  end;
   Log.LogInfo(Format('PrecargaParalela: total=%d ms || ' +
     'perfiles=%d infguias=%d config=%d permisos=%d',
     [swTotal.ElapsedMilliseconds,
@@ -1121,25 +1156,41 @@ begin
     Log.LogError(Format('PrecargaParalela errores -> perfiles=[%s] ' +
       'infguias=[%s] config=[%s] permisos=[%s]',
       [errPerfiles, errInfGuias, errConfig, errPermisos]));
+  if errPermisos <> '' then
+    AvisarFalloCargaPermisos(errPermisos);
+end;
+
+procedure TfrmMtoPrincipal.AvisarFalloCargaPermisos(
+  const ADetalle: string);
+var
+  sMensaje: string;
+begin
+  if not FFalloCargaPermisosAvisado then
+  begin
+    FFalloCargaPermisosAvisado := True;
+    Log.LogError('No se pudieron cargar los permisos: ' + ADetalle);
+    sMensaje :=
+      'No se pudieron cargar los permisos.' + sLineBreak +
+      'El acceso se ha restringido por seguridad.' + sLineBreak +
+      'Revise el registro de la aplicación en:' + sLineBreak +
+      GetLogFolder;
+    MessageDlg(sMensaje, mtWarning, [mbOK], 0);
+  end;
 end;
 
 procedure TfrmMtoPrincipal.AplicarPermisosMenu;
 var
   i: Integer;
-  // Procesa un item y sus hijos. Devuelve True si queda visible. Una hoja
-  // se oculta y deshabilita cuando su permiso (oFzaWinf.CodigoMenu, que
-  // resuelve 'menu.<CALL>' si esta registrado o 'menu.<Name>' si no) esta
-  // denegado. Enabled:=False ademas neutraliza el atajo de teclado del
-  // item (un menu solo invisible seguiria disparando su ShortCut). Un
-  // contenedor se oculta si ninguno de sus hijos queda visible.
+  // Las pantallas registradas quedan visibles y desactivadas. Los menús
+  // directos de la rama "Menús no visibles" se ocultan por completo.
   function ProcesarItem(AItem: TMenuItem): Boolean;
   var
     j: Integer;
-    sCodigo: string;
+    sCall, sCodigo: string;
     bHayHijoVisible: Boolean;
   begin
     if AItem.Caption = '-' then
-      Result := AItem.Visible
+      Result := False
     else if AItem.Count > 0 then
     begin
       bHayHijoVisible := False;
@@ -1156,17 +1207,31 @@ var
     else
     begin
       sCodigo := oFzaWinf.CodigoMenu(AItem);
-      if (sCodigo <> '') and (not oPermisos.TienePermiso(sCodigo)) then
+      if (sCodigo <> '') and
+         (not Permisos.TienePermiso(sCodigo, paPermitir)) then
       begin
-        AItem.Visible := False;
+        sCall := oFzaWinf.CallRegistrado(AItem);
         AItem.Enabled := False;
-        Log.LogInfo(Format('Permiso %s denegado: menu oculto', [sCodigo]));
+        if sCall <> '' then
+        begin
+          AItem.Visible := True;
+          Log.LogInfo(Format(
+            'Permiso %s denegado: menú desactivado',
+            [sCodigo]));
+        end
+        else
+        begin
+          AItem.Visible := False;
+          Log.LogInfo(Format(
+            'Permiso %s denegado: menú oculto',
+            [sCodigo]));
+        end;
       end;
       Result := AItem.Visible;
     end;
   end;
 begin
-  if (oPermisos <> nil) and (oPermisos.Cargada) and (Menu <> nil) then
+  if Assigned(Permisos) and (Menu <> nil) then
     for i := 0 to Menu.Items.Count - 1 do
       ProcesarItem(Menu.Items[i]);
 end;
@@ -1480,10 +1545,6 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.AppMessage(var Msg: TMsg; var Handled: Boolean);
-var
-  LForm: TForm;
-  ts: TcxTabSheet;
-  sArt, sSku: string;
 begin
   // Solo pulsaciones de tecla y descartando la autorrepeticion (bit 30).
   if (Msg.message = WM_KEYDOWN) and ((Msg.lParam and $40000000) = 0) then
@@ -1511,39 +1572,24 @@ begin
        (GetKeyState(VK_CONTROL) >= 0) and (GetKeyState(VK_MENU) >= 0) and
        (GetKeyState(VK_SHIFT) >= 0) then
     begin
-      AbrirCajonSinVenta;
+      AbrirCajonSinVenta(Permisos);
       Handled := True;
     end
-    // Ctrl+E: búsqueda avanzada de artículos y SKU desde cualquier ventana.
+    // Ctrl+E: consulta de articulos similares desde cualquier ventana.
     else if (Msg.wParam = WPARAM(Ord('E'))) and
-            (GetKeyState(VK_CONTROL) < 0) and
-            (GetKeyState(VK_MENU) >= 0) and
-            (GetKeyState(VK_SHIFT) >= 0) then
+             (GetKeyState(VK_CONTROL) < 0) and
+             (GetKeyState(VK_MENU) >= 0) and
+             (GetKeyState(VK_SHIFT) >= 0) then
     begin
-      LForm := Screen.ActiveForm;
-      if not (LForm is TfrmMtoBusquedaDatos) then
-        TfrmMtoBusquedaDatos.Ejecutar(Self, LForm);
+      mnuArticulosSimilaresClick(Self);
       Handled := True;
     end
     // Ctrl+U: consulta de stock global, precargando el articulo en foco.
     else if (Msg.wParam = WPARAM(Ord('U'))) and
-            (GetKeyState(VK_CONTROL) < 0) and
-            (GetKeyState(VK_MENU) >= 0) and (GetKeyState(VK_SHIFT) >= 0) then
+             (GetKeyState(VK_CONTROL) < 0) and
+             (GetKeyState(VK_MENU) >= 0) and (GetKeyState(VK_SHIFT) >= 0) then
     begin
-      // Si el principal esta activo, el form logico es el de la pestaña activa.
-      LForm := Screen.ActiveForm;
-      if (LForm = Self) and (pcPrincipal.PageCount > 0) and
-         (pcPrincipal.ActivePageIndex >= 0) then
-      begin
-        ts := pcPrincipal.Pages[pcPrincipal.ActivePageIndex] as TcxTabSheet;
-        if (ts.ControlCount > 0) and (ts.Controls[0] is TForm) then
-          LForm := TForm(ts.Controls[0]);
-      end;
-      sArt := '';
-      sSku := '';
-      if LForm is TfrmBase then
-        TfrmBase(LForm).ResolverArtSkuStock(sArt, sSku);
-      MostrarStockConsulta(LForm, sArt, sSku);
+      mnuConsultaStocksClick(Self);
       Handled := True;
     end;
   end;
@@ -1569,7 +1615,7 @@ begin
      (GetKeyState(VK_CONTROL) >= 0) and (GetKeyState(VK_MENU) >= 0) and
      (GetKeyState(VK_SHIFT) >= 0) then
   begin
-    AbrirCajonSinVenta;
+    AbrirCajonSinVenta(Permisos);
     Result := True;
     Exit;
   end;
@@ -1853,7 +1899,7 @@ begin
   end
   else
   begin
-    frmMtoMenuCaja := TfrmMtoMenuCaja.Create(Application);
+    frmMtoMenuCaja := TfrmMtoMenuCaja.Create(Application, Permisos);
     frmMtoMenuCaja.Show;
   end;
   Self.WindowState := wsMinimized;
@@ -1890,6 +1936,49 @@ procedure TfrmMtoPrincipal.mnuForoSoporteClick(Sender: TObject);
 begin
   inherited;
   AbrirUrlAyuda(URL_FORO_SOPORTE);
+end;
+
+procedure TfrmMtoPrincipal.mnuConsultaStocksClick(Sender: TObject);
+var
+  LForm: TForm;
+  ts: TcxTabSheet;
+  sArt, sSku: string;
+begin
+  if mnuConsultaStocks.Enabled then
+  begin
+    // Si el principal esta activo, el form logico es el de la pestaña activa.
+    LForm := Screen.ActiveForm;
+    if (LForm = Self) and (pcPrincipal.PageCount > 0) and
+       (pcPrincipal.ActivePageIndex >= 0) then
+    begin
+      ts := pcPrincipal.Pages[pcPrincipal.ActivePageIndex] as TcxTabSheet;
+      if (ts.ControlCount > 0) and (ts.Controls[0] is TForm) then
+      begin
+        LForm := TForm(ts.Controls[0]);
+      end;
+    end;
+    sArt := '';
+    sSku := '';
+    if LForm is TfrmBase then
+    begin
+      TfrmBase(LForm).ResolverArtSkuStock(sArt, sSku);
+    end;
+    MostrarStockConsulta(LForm, Permisos, sArt, sSku);
+  end;
+end;
+
+procedure TfrmMtoPrincipal.mnuArticulosSimilaresClick(Sender: TObject);
+var
+  LForm: TForm;
+begin
+  if mnuArticulosSimilares.Enabled then
+  begin
+    LForm := Screen.ActiveForm;
+    if not (LForm is TfrmMtoBusquedaDatos) then
+    begin
+      TfrmMtoBusquedaDatos.Ejecutar(Self, LForm);
+    end;
+  end;
 end;
 
 procedure TfrmMtoPrincipal.mnuManualWebClick(Sender: TObject);

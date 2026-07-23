@@ -1952,6 +1952,8 @@ end;
 procedure TfrmMtoPedidos.btnImprimirClick(Sender: TObject);
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   // Hook FastReport
 end;
 

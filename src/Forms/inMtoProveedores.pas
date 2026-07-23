@@ -384,6 +384,8 @@ end;
 procedure TfrmMtoProveedores.btnExportarClick(Sender: TObject);
 begin
   inherited;
+  if not PuedeExportar then
+    Abort;
   ExportarExcel(cxgrdLinFac, 'Ventas de artículos por proveedor_' +
                      dsTablaG.DataSet.FieldByName('CODIGO_PRV_PRV').AsString);
 end;

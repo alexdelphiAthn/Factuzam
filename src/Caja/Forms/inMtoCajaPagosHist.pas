@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaPagosHist                                            }
 {    Tipo:       Formulario (Mto)                                              }
@@ -104,6 +104,8 @@ var
   frm: TfrmPrintPagos;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   // Informe A4 horizontal (FastReport) de los pagos de caja. El usuario
   // filtra empresa / almacen / caja y rango de fechas en el modal.
   frm := TfrmPrintPagos.Create(Application);

@@ -3441,7 +3441,7 @@ begin
              end;
            tiSinTicket:
              // F11: no imprime ticket pero abre la cajonera
-             AbrirCajonSinVenta;
+             AbrirCajonSinVenta(Permisos);
          end;
          if slRutasTicketPdf.Count = 0 then
          begin
@@ -3754,7 +3754,7 @@ begin
   end
   else
   begin
-    TargetForm := TfrmMtoOpeCaja.Create(Application);
+    TargetForm := TfrmMtoOpeCaja.Create(Application, Permisos);
     TargetForm.PopupParent := Self.PopupParent;
     TargetForm.Tag := NextIndex;
     TargetForm.Caption := Format('Operación %d - (Caja Real %s)',
@@ -3953,7 +3953,11 @@ var
   sSku: string;
 begin
   ResolverArtSkuStock(sArt, sSku);
-  inMtoStockConsulta.MostrarStockConsulta(Self, sArt, sSku);
+  inMtoStockConsulta.MostrarStockConsulta(
+    Self,
+    Permisos,
+    sArt,
+    sSku);
 end;
 
 procedure TfrmMtoOpeCaja.FormShow(Sender: TObject);

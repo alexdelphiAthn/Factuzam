@@ -1044,6 +1044,8 @@ var
   form:TfrmPrintRecFac;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   if EsVentaMayorNormal then
     ShowMessage('La impresión de efectos de cobro se gestiona desde ' +
                 'Remesas de Cobro.')
@@ -1141,6 +1143,8 @@ end;
 procedure TfrmMtoFacturasBase.btnExportarLineasClick(Sender: TObject);
 begin
   inherited;
+  if not PuedeExportar then
+    Abort;
   ExportarExcel(cxGrdLineasFactura, 'Lineas_Borrador_' +
                 dsTablaG.Dataset.FieldByName(fseriefac).AsString +
                 '_' +
@@ -1231,6 +1235,8 @@ end;
 procedure TfrmMtoFacturasBase.btnExportarRecibosClick(Sender: TObject);
 begin
   inherited;
+  if not PuedeExportar then
+    Abort;
   ExportarExcel(cxgrdRecibos, PrefijoExportCobros +
                       dsTablaG.Dataset.FieldByName(fseriefac).AsString +
                       '_' +
@@ -1329,6 +1335,8 @@ var
   sFase: string;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   // En modo SIN el borrador se imprime directamente, sin consolidar. Si
   // se estaba editando, se graban antes los cambios para que la copia
   // impresa refleje el estado actual del borrador.

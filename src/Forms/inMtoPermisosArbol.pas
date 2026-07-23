@@ -80,6 +80,7 @@ type
     procedure AgregarCategorias;
     procedure AnadirAccionesPantalla(AParent: TcxTreeListNode;
                                      const ACall: string);
+    function  EsPermisoAccionGenerico(const ACodigo: string): Boolean;
     function  EsPantallaMto(const AUnitForm: string): Boolean;
     function  NuevoNodo(AParent: TcxTreeListNode;
                         const ANombre, ACodigo: string): TcxTreeListNode;
@@ -271,7 +272,8 @@ begin
   try
     for i := 0 to High(FCatalogo) do
     begin
-      if not FColocados.ContainsKey(FCatalogo[i].Codigo) then
+      if (not FColocados.ContainsKey(FCatalogo[i].Codigo)) and
+         (not EsPermisoAccionGenerico(FCatalogo[i].Codigo)) then
       begin
         titulo := TituloCategoria(FCatalogo[i].Codigo);
         if not catNodes.TryGetValue(titulo, catNode) then
@@ -288,6 +290,13 @@ begin
   finally
     FreeAndNil(catNodes);
   end;
+end;
+
+function TfrmMtoPermisosArbol.EsPermisoAccionGenerico(
+  const ACodigo: string): Boolean;
+begin
+  // Las acciones reales de un mantenimiento cuelgan de su propia pantalla.
+  Result := StartsText('accion.', ACodigo);
 end;
 
 procedure TfrmMtoPermisosArbol.AnadirAccionesPantalla(
@@ -333,9 +342,7 @@ begin
     pref := Copy(ACodigo, 1, p - 1)
   else
     pref := ACodigo;
-  if SameText(pref, 'accion') then
-    Result := 'Acciones'
-  else if SameText(pref, 'caja') then
+  if SameText(pref, 'caja') then
     Result := 'Caja (TPV)'
   else if SameText(pref, 'arqueo') then
     Result := 'Arqueo'

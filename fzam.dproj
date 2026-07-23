@@ -192,7 +192,9 @@
         <DCCReference Include="src\Lib\inLibInformesGuiasCache.pas"/>
         <DCCReference Include="src\Lib\inLibGridColumnChooser.pas"/>
         <DCCReference Include="src\Lib\inLibConfigCampos.pas"/>
+        <DCCReference Include="src\Lib\inLibPermisosIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPermisos.pas"/>
+        <DCCReference Include="src\Lib\inLibPermisosUniDAC.pas"/>
         <DCCReference Include="src\Lib\inLibPermisosAdmin.pas"/>
         <DCCReference Include="src\Lib\inLibFiltroUsuario.pas"/>
         <DCCReference Include="src\Lib\inLibLicenciaAplicacion.pas"/>

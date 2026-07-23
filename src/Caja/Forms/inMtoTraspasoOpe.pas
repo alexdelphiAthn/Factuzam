@@ -31,7 +31,7 @@ uses
   cxGrid, cxSplitter, Vcl.Imaging.PngImage, System.Generics.Collections,
   Data.DB, Datasnap.DBClient, Uni, inLibGlobalVar, UniDataTraspaso,
   inLibTraspasoTicket, inLibGridArticulos, inLibArticulosValidador,
-  inLibPermisos, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
+  inLibPermisosIntf, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
   inLibCajaParam, Vcl.Menus, dxCoreGraphics, JvComponentBase, JvEnterTab,
   cxLocalization, inLibLectorScanner, cxStyles, cxDBData, cxCustomData,
   cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
@@ -172,8 +172,10 @@ begin
   // Coste/importe solo para administrador: TienePermiso devuelve True siempre a
   // admin; al resto, oculto por defecto (default False) salvo permiso explicito
   // 'caja.verCoste'. Sin sistema de permisos, oculto.
-  FVerCoste := Assigned(oPermisos) and
-               oPermisos.TienePermiso('caja.verCoste', False);
+  FVerCoste := Assigned(Permisos) and
+               Permisos.TienePermiso(
+                 PERMISO_CAJA_VER_COSTE,
+                 paDenegar);
   // Los labels los pone transparentes TfrmBase.FormCreate (via inherited).
   ConstruirGrid;
   ConstruirPanelStock;

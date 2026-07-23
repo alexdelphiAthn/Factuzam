@@ -946,6 +946,8 @@ var
   sNumero : string;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   if dmmFacturasCompra = nil then
     ShowMessage('No hay factura de compra activa que imprimir.')
   else if dmmFacturasCompra.unqryTablaG.IsEmpty then
@@ -980,6 +982,8 @@ var
   sNumero : string;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   if dmmFacturasCompra = nil then
     ShowMessage('No hay factura de compra activa que imprimir.')
   else if dmmFacturasCompra.unqryTablaG.IsEmpty then
@@ -1010,6 +1014,8 @@ end;
 procedure TfrmMtoFacturasCompra.btnPegatinasClick(Sender: TObject);
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   ShowMessage('Etiquetas de borrador de compra: pendiente (hito de ' +
               'informes).');
 end;

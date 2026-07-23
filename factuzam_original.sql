@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 21/07/2026 18:24:36
+-- Backup generado: 23/07/2026 18:33:28
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -6130,8 +6130,8 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('BC', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BD', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
   ('BE', '-', '-', 1, 10, 'S', 'S', '2026-05-08 16:13:42', '2026-05-08 16:13:42', 'Administrador', 'Administrador'),
-  ('CL', '-', '-', 335, 3, 'S', 'S', '2026-07-07 19:19:56', '2026-03-11 22:27:52', 'Administrador', 'Administrador'),
-  ('CO', '-', '-', 8, 3, 'S', 'S', '2026-07-02 16:05:05', '2023-05-15 12:54:31', 'Administrador', 'Administrador'),
+  ('CL', '-', '-', 337, 3, 'S', 'S', '2026-07-23 18:15:39', '2026-03-11 22:27:52', 'Administrador', 'QATEST'),
+  ('CO', '-', '-', 10, 3, 'S', 'S', '2026-07-23 18:15:39', '2023-05-15 12:54:31', 'Administrador', 'QATEST'),
   ('DC', '012', 'C1', 6, 6, 'S', 'N', '2026-06-23 07:03:51', '2026-06-22 19:14:30', 'Administrador', 'Administrador'),
   ('EB', '-', '-', 3, 4, 'S', 'S', '2026-06-25 07:38:56', '2026-06-19 08:27:53', 'SISTEMA', 'Administrador'),
   ('EM', '-', '-', 13, 3, 'S', 'S', '2024-02-12 09:38:07', '2026-03-11 22:27:52', 'Administrador', 'Administrador'),
@@ -6153,7 +6153,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 553, 3, 'S', 'S', '2026-07-21 18:24:12', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 554, 3, 'S', 'S', '2026-07-23 18:33:03', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 28, 2, 'S', 'S', '2026-07-07 08:17:26', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -6469,9 +6469,10 @@ ALTER TABLE `fza_documentos_trabajo` ADD INDEX `IDX_DTR_USUARIO` (`USUARIO_DTR`)
 -- Datos de fza_documentos_trabajo
 /*!40000 ALTER TABLE `fza_documentos_trabajo` DISABLE KEYS */;
 INSERT INTO `fza_documentos_trabajo` (`ID_DTR`, `TITULO_DTR`, `TIPO_DTR`, `ESTADO_DTR`, `CODIGO_EMP_DTR`, `CODIGO_ALM_DTR`, `USUARIO_DTR`, `INSTANTE_DOCUMENTO_DTR`, `OBSERVACIONES_DTR`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  (1, 'Documento de trabajo 22/06/2026 06:48', 'GENERAL', 'ABIERTO', '012', 'GEN', 'Administrador', '2026-06-22 06:48:22', NULL, '2026-06-22 06:48:22', '2026-06-22 06:48:22', 'Administrador', 'Administrador');
+  (1, 'Documento de trabajo 22/06/2026 06:48', 'GENERAL', 'ABIERTO', '012', 'GEN', 'Administrador', '2026-06-22 06:48:22', NULL, '2026-06-22 06:48:22', '2026-06-22 06:48:22', 'Administrador', 'Administrador'),
+  (2, 'Documento de trabajo 22/07/2026 17:53', 'GENERAL', 'ABIERTO', '012', 'GEN', 'Administrador', '2026-07-22 17:53:29', NULL, '2026-07-22 17:53:55', '2026-07-22 17:53:55', 'Administrador', 'Administrador');
 /*!40000 ALTER TABLE `fza_documentos_trabajo` ENABLE KEYS */;
--- 1 registros exportados
+-- 2 registros exportados
 
 
 -- Tabla: fza_documentos_trabajo_celdas
@@ -6494,8 +6495,35 @@ ALTER TABLE `fza_documentos_trabajo_celdas` ADD INDEX `IDX_DTRCEL_AV_PIVOT` (`ID
 
 -- Datos de fza_documentos_trabajo_celdas
 INSERT INTO `fza_documentos_trabajo_celdas` (`ID_DTR_DTRCEL`, `LINEA_DTRCEL`, `ID_FILA_DTRCEL`, `ID_AV_PIVOT_DTRCEL`, `CODIGO_ALM_DTRCEL`, `CANTIDAD_DTRCEL`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES
-  (1, 1, 1, 225, '', 1, '2026-07-07 07:55:03', 'Administrador', '2026-07-07 07:55:03', 'Administrador');
--- 1 registros exportados
+  (1, 1, 1, 225, '', 1, '2026-07-07 07:55:03', 'Administrador', '2026-07-07 07:55:03', 'Administrador'),
+  (2, 2, 1, 126, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 2, 1, 127, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 2, 1, 224, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 2, 1, 225, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 2, 1, 226, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 7, 1, 126, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 7, 1, 127, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 7, 1, 224, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 7, 1, 225, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 7, 1, 226, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 7, 1, 227, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 13, 1, 126, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 13, 1, 127, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 13, 1, 224, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 13, 1, 225, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 13, 1, 226, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 13, 1, 227, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 19, 1, 9101, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 19, 1, 9102, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 19, 1, 9103, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 19, 1, 9104, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 23, 1, 9101, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 23, 1, 9102, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 23, 1, 9103, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 23, 1, 9104, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 23, 1, 9210, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador'),
+  (2, 23, 1, 9212, '', 1, '2026-07-22 20:39:23', 'Administrador', '2026-07-22 20:39:23', 'Administrador');
+-- 28 registros exportados
 
 
 -- Tabla: fza_documentos_trabajo_compartidos
@@ -6573,9 +6601,42 @@ ALTER TABLE `fza_documentos_trabajo_lineas` ADD UNIQUE INDEX `UQ_DTL_DTR_LINEA` 
 -- Datos de fza_documentos_trabajo_lineas
 /*!40000 ALTER TABLE `fza_documentos_trabajo_lineas` DISABLE KEYS */;
 INSERT INTO `fza_documentos_trabajo_lineas` (`ID_DTL`, `ID_DTR_DTL`, `LINEA_DTL`, `CODIGO_ART_DTL`, `CODIGO_UNIDAD_DTL`, `CODIGO_ALM_DTL`, `LOTE_DTL`, `FECHA_CADUCIDAD_DTL`, `DESCRIPCION_ARTICULO_DTL`, `DESCRIPCION_UNIDAD_DTL`, `CANTIDAD_STOCK_DTL`, `CANTIDAD_DTL`, `INSTANTE_STOCK_DTL`, `ORIGEN_DTL`, `OBSERVACIONES_DTL`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ATTR1_VALOR_DTL`, `ATTR1_NOMBRE_DTL`, `ATTR2_VALOR_DTL`, `ATTR2_NOMBRE_DTL`, `ATTR3_VALOR_DTL`, `ATTR3_NOMBRE_DTL`, `ATTR4_VALOR_DTL`, `ATTR4_NOMBRE_DTL`, `ATTR5_VALOR_DTL`, `ATTR5_NOMBRE_DTL`, `NUM_ATRIBUTOS_DTL`, `ID_AC_PIVOT_DTL`) VALUES
-  (1, 1, '00000001', 'BOLSOS00006', 'BOLSOS00006/VERDE/40', 'GEN', '', NULL, 'Bolsos y Mochilas', 'VERDE 40', 2, 1, '2026-06-22 06:48:22', 'CTRL_U', NULL, '2026-07-07 07:55:03', '2026-06-22 06:48:22', 'Administrador', 'Administrador', 'VERDE', 'Color', '', '', '', '', '', '', '', '', 2, 4);
+  (1, 1, '00000001', 'BOLSOS00006', 'BOLSOS00006/VERDE/40', 'GEN', '', NULL, 'Bolsos y Mochilas', 'VERDE 40', 2, 1, '2026-06-22 06:48:22', 'CTRL_U', NULL, '2026-07-07 07:55:03', '2026-06-22 06:48:22', 'Administrador', 'Administrador', 'VERDE', 'Color', '', '', '', '', '', '', '', '', 2, 4),
+  (2, 2, '00000001', 'BOLSO-PIEL', 'BOLSO-PIEL', 'GEN', '', NULL, 'Bolso de Piel Mujer Grande', '', 1, 1, '2026-07-22 17:55:19', 'FILTROS', NULL, '2026-07-22 17:55:19', '2026-07-22 17:55:19', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  (3, 2, '00000002', 'BOLSOS00005', 'BOLSOS00005/AZUL_CIELO/40', 'GEN', '', NULL, 'Bolsos y Mochilas', 'AZUL_CIELO / 40', 1, 5, '2026-07-22 17:55:19', 'FILTROS', NULL, '2026-07-22 20:46:30', '2026-07-22 17:55:19', 'Administrador', 'Administrador', 'AZUL_CIELO', 'Color', '40', '', '', '', '', '', '', '', 2, 4),
+  (8, 2, '00000007', 'BOLSOS00005', 'BOLSOS00005/BEIGE/39', 'GEN', '', NULL, 'Bolsos y Mochilas', '39 / BEIGE', 1, 6, '2026-07-22 17:55:19', 'FILTROS', NULL, '2026-07-22 20:46:30', '2026-07-22 17:55:19', 'Administrador', 'Administrador', 'BEIGE', 'Color', '39', '', '', '', '', '', '', '', 2, 4),
+  (14, 2, '00000013', 'BOLSOS00006', 'BOLSOS00006/VERDE/39', 'GEN', '', NULL, 'Bolsos y Mochilas', '39 / VERDE', 1, 6, '2026-07-22 17:55:19', 'FILTROS', NULL, '2026-07-22 20:46:30', '2026-07-22 17:55:19', 'Administrador', 'Administrador', 'VERDE', 'Color', '39', '', '', '', '', '', '', '', 2, 4),
+  (20, 2, '00000019', 'BOLSOS00007', 'BOLSOS00007/AMARILLO/L', 'GEN', '', NULL, 'Bolsos y Mochilas', 'AMARILLO / L', 2, 4, '2026-07-22 17:55:19', 'FILTROS', NULL, '2026-07-22 20:46:30', '2026-07-22 17:55:19', 'Administrador', 'Administrador', 'AMARILLO', 'Color', 'L', '', '', '', '', '', '', '', 2, 3),
+  (24, 2, '00000023', 'BOLSOS00011', 'BOLSOS00011/VERDE/L', 'GEN', '', NULL, 'Bolsos y Mochilas', 'VERDE / L', 6, 6, '2026-07-22 17:55:19', 'FILTROS', NULL, '2026-07-22 20:46:30', '2026-07-22 17:55:19', 'Administrador', 'Administrador', 'VERDE', 'Color', 'L', '', '', '', '', '', '', '', 2, 1),
+  (30, 2, '00000029', 'MOCHILA-SPORT', 'MOCHILA-SPORT', 'GEN', '', NULL, 'Mochila Deportiva 30L', '', 2, 1, '2026-07-22 17:55:19', 'FILTROS', NULL, '2026-07-22 17:55:19', '2026-07-22 17:55:19', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  (75, 2, '00000030', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/S', 'GEN', '', NULL, 'Abrigo de Paño Caballero', 'CAMEL / S', 0, 1, '2026-07-22 20:42:26', 'MTO', NULL, '2026-07-22 20:46:30', '2026-07-22 20:42:26', 'Administrador', 'Administrador', 'CAMEL', '', 'S', '', '', '', '', '', '', '', 2, 0),
+  (76, 2, '00000031', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/L', 'GEN', '', NULL, 'Camiseta de Algodón Básica', 'BLANCO / L', 1, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'BLANCO', '', 'L', '', '', '', '', '', '', '', 2, 0),
+  (77, 2, '00000032', 'CAMI-BASICA', 'CAMI-BASICA/BLANCO/M', 'GEN', '', NULL, 'Camiseta de Algodón Básica', 'BLANCO / M', 24, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'BLANCO', '', 'M', '', '', '', '', '', '', '', 2, 0),
+  (78, 2, '00000033', 'CAMI-BASICA', 'CAMI-BASICA/ROJO/L', 'GEN', '', NULL, 'Camiseta de Algodón Básica', 'ROJO / L', 19, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'ROJO', '', 'L', '', '', '', '', '', '', '', 2, 0),
+  (79, 2, '00000034', 'CAMI-POLO', 'CAMI-POLO/AZUL/L', 'GEN', '', NULL, 'Polo Manga Corta Hombre', 'AZUL / L', 12, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'AZUL', '', 'L', '', '', '', '', '', '', '', 2, 0),
+  (80, 2, '00000035', 'CAMI-POLO', 'CAMI-POLO/AZUL/M', 'GEN', '', NULL, 'Polo Manga Corta Hombre', 'AZUL / M', 17, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'AZUL', '', 'M', '', '', '', '', '', '', '', 2, 0),
+  (81, 2, '00000036', 'CAMI-POLO', 'CAMI-POLO/BLANCO/M', 'GEN', '', NULL, 'Polo Manga Corta Hombre', 'BLANCO / M', 7, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'BLANCO', '', 'M', '', '', '', '', '', '', '', 2, 0),
+  (82, 2, '00000037', 'CAMI-POLO', 'CAMI-POLO/BLANCO/S', 'GEN', '', NULL, 'Polo Manga Corta Hombre', 'BLANCO / S', 15, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'BLANCO', '', 'S', '', '', '', '', '', '', '', 2, 0),
+  (83, 2, '00000038', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/L', 'GEN', '', NULL, 'Chaqueta Biker Cuero', 'MARRON / L', 2, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'MARRON', '', 'L', '', '', '', '', '', '', '', 2, 0),
+  (84, 2, '00000039', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/S', 'GEN', '', NULL, 'Chaqueta Biker Cuero', 'MARRON / S', 2, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'MARRON', '', 'S', '', '', '', '', '', '', '', 2, 0),
+  (85, 2, '00000040', 'CHAQ-CUERO', 'CHAQ-CUERO/MARRON/XL', 'GEN', '', NULL, 'Chaqueta Biker Cuero', 'MARRON / XL', 4, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'MARRON', '', 'XL', '', '', '', '', '', '', '', 2, 0),
+  (86, 2, '00000041', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/L', 'GEN', '', NULL, 'Chaqueta Biker Cuero', 'NEGRO / L', 5, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'NEGRO', '', 'L', '', '', '', '', '', '', '', 2, 0),
+  (87, 2, '00000042', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/M', 'GEN', '', NULL, 'Chaqueta Biker Cuero', 'NEGRO / M', 2, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'NEGRO', '', 'M', '', '', '', '', '', '', '', 2, 0),
+  (88, 2, '00000043', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', 'GEN', '', NULL, 'Chaqueta Biker Cuero', 'NEGRO / XL', 3, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'NEGRO', '', 'XL', '', '', '', '', '', '', '', 2, 0),
+  (89, 2, '00000044', 'DEMO-BASICO', 'DEMO-BASICO', 'GEN', '', NULL, 'Camiseta Algodón Demo', '', 2, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:10', '2026-07-23 05:22:10', 'Administrador', 'Administrador', '', '', '', '', '', '', '', '', '', '', 0, 0),
+  (90, 2, '00000045', 'DEMO-CAMISA', 'DEMO-CAMISA/AMARILLO/3XL', 'GEN', '', NULL, 'Camisa Lino Demo', 'AMARILLO / 3XL', 2, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'AMARILLO', '', '3XL', '', '', '', '', '', '', '', 2, 0),
+  (91, 2, '00000046', 'DEMO-CAMISA', 'DEMO-CAMISA/BLANCO/L', 'GEN', '', NULL, 'Camisa Lino Demo', 'BLANCO / L', 6, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'BLANCO', '', 'L', '', '', '', '', '', '', '', 2, 0),
+  (92, 2, '00000047', 'DEMO-CAMISA', 'DEMO-CAMISA/NEGRO/M', 'GEN', '', NULL, 'Camisa Lino Demo', 'NEGRO / M', 4, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'NEGRO', '', 'M', '', '', '', '', '', '', '', 2, 0),
+  (93, 2, '00000048', 'FALD-JEAN', 'FALD-JEAN/VAQUERO/L', 'GEN', '', NULL, 'Minifalda Vaquera', 'VAQUERO / L', 1, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'VAQUERO', '', 'L', '', '', '', '', '', '', '', 2, 0),
+  (94, 2, '00000049', 'FALD-PLIS', 'FALD-PLIS/BLANCO/L', 'GEN', '', NULL, 'Falda Larga Plisada', 'BLANCO / L', 1, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'BLANCO', '', 'L', '', '', '', '', '', '', '', 2, 0),
+  (95, 2, '00000050', 'JERSEY-LANA', 'JERSEY-LANA/BEIGE/M', 'GEN', '', NULL, 'Jersey de Lana Cuello Redondo', 'BEIGE / M', 1, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'BEIGE', '', 'M', '', '', '', '', '', '', '', 2, 0),
+  (96, 2, '00000051', 'JERSEY-LANA', 'JERSEY-LANA/GRIS/L', 'GEN', '', NULL, 'Jersey de Lana Cuello Redondo', 'GRIS / L', 5, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'GRIS', '', 'L', '', '', '', '', '', '', '', 2, 0),
+  (97, 2, '00000052', 'PANT-CHIN', 'PANT-CHIN/BEIGE/38', 'GEN', '', NULL, 'Pantalón Chino Slim', 'BEIGE / 38', 10, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'BEIGE', '', '38', '', '', '', '', '', '', '', 2, 0),
+  (98, 2, '00000053', 'PANT-CHIN', 'PANT-CHIN/BEIGE/40', 'GEN', '', NULL, 'Pantalón Chino Slim', '40 / BEIGE', 10, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'BEIGE', '', '40', '', '', '', '', '', '', '', 2, 0),
+  (99, 2, '00000054', 'VEST-FLOR', 'VEST-FLOR/AZUL/S', 'GEN', '', NULL, 'Vestido Estampado Verano', 'AZUL / S', 7, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'AZUL', '', 'S', '', '', '', '', '', '', '', 2, 0),
+  (100, 2, '00000055', 'VEST-FLOR', 'VEST-FLOR/ROJO/M', 'GEN', '', NULL, 'Vestido Estampado Verano', 'ROJO / M', 5, 1, '2026-07-23 05:22:10', 'FILTROS', NULL, '2026-07-23 05:22:19', '2026-07-23 05:22:10', 'Administrador', 'Administrador', 'ROJO', '', 'M', '', '', '', '', '', '', '', 2, 0);
 /*!40000 ALTER TABLE `fza_documentos_trabajo_lineas` ENABLE KEYS */;
--- 1 registros exportados
+-- 34 registros exportados
 
 
 -- Tabla: fza_efectos_compra
@@ -21282,8 +21343,25 @@ SET @sSql := IF(@sExisteCol = 0,
 PREPARE stmt FROM @sSql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
-', '2026-07-21 18:24:12', '2026-07-21 18:24:12', 'Administrador', 'Administrador');
--- 82 registros exportados
+', '2026-07-21 18:24:12', '2026-07-21 18:24:12', 'Administrador', 'Administrador'),
+  ('553', 'consultas_ayuda', '-- =============================================================================
+-- Consultas del menu Ayuda: permisos
+-- =============================================================================
+-- Las consultas de stocks (Ctrl+U) y de articulos similares (Ctrl+E) se
+-- abren mediante handlers propios del menu principal. Al no usar ShowMto,
+-- CodigoMenu genera el permiso a partir del nombre de cada TMenuItem.
+-- Idempotente: INSERT IGNORE conserva cualquier configuracion existente.
+-- =============================================================================
+INSERT IGNORE INTO fza_permisos
+  (USUARIO_GRUPO_PERM, CODIGO_PERM, VALOR_PERM, DESCRIPCION_PERM,
+   INSTANTE_ALTA, USUARIO_ALTA)
+VALUES
+  (''Todos'', ''menu.mnuConsultaStocks'', ''S'',
+   ''Ayuda: Consulta de stocks (Ctrl+U)'', NOW(), ''SISTEMA''),
+  (''Todos'', ''menu.mnuArticulosSimilares'', ''S'',
+   ''Ayuda: Consulta de artículos similares (Ctrl+E)'', NOW(), ''SISTEMA'');
+', '2026-07-23 18:33:03', '2026-07-23 18:33:03', 'Administrador', 'Administrador');
+-- 83 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -24093,6 +24171,139 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
   ('Alfredo', 'VerifactuLog.imprimir', 'S', 'Imprimir informes', NULL, '2026-07-02 17:18:13', 'Administrador', NULL),
   ('Alfredo', 'VerifactuLog.insertar', 'S', 'Alta de registros', NULL, '2026-07-02 17:18:13', 'Administrador', NULL),
   ('Alfredo', 'VerifactuLog.modificar', 'S', 'Modificar registros', NULL, '2026-07-02 17:18:13', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Albaranes.borrar', 'N', 'Borrar registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Albaranes.consultar', 'N', 'Consultar / buscar', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Albaranes.excel', 'N', 'Exportar a Excel', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Albaranes.imprimir', 'N', 'Imprimir informes', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Albaranes.insertar', 'N', 'Alta de registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Albaranes.modificar', 'N', 'Modificar registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'AlbaranesCompra.borrar', 'N', 'Borrar registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'AlbaranesCompra.consultar', 'N', 'Consultar / buscar', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'AlbaranesCompra.excel', 'N', 'Exportar a Excel', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'AlbaranesCompra.imprimir', 'N', 'Imprimir informes', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'AlbaranesCompra.insertar', 'N', 'Alta de registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'AlbaranesCompra.modificar', 'N', 'Modificar registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Clientes.borrar', 'N', 'Borrar registros', NULL, '2026-07-23 18:23:11', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Clientes.excel', 'N', 'Exportar a Excel', NULL, '2026-07-23 18:23:26', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Clientes.imprimir', 'N', 'Imprimir informes', NULL, '2026-07-23 18:23:27', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'DevolucionesCompra.borrar', 'N', 'Borrar registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'DevolucionesCompra.consultar', 'N', 'Consultar / buscar', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'DevolucionesCompra.excel', 'N', 'Exportar a Excel', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'DevolucionesCompra.imprimir', 'N', 'Imprimir informes', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'DevolucionesCompra.insertar', 'N', 'Alta de registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'DevolucionesCompra.modificar', 'N', 'Modificar registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'EfectosCompra.borrar', 'N', 'Borrar registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'EfectosCompra.consultar', 'N', 'Consultar / buscar', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'EfectosCompra.excel', 'N', 'Exportar a Excel', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'EfectosCompra.imprimir', 'N', 'Imprimir informes', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'EfectosCompra.insertar', 'N', 'Alta de registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'EfectosCompra.modificar', 'N', 'Modificar registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'EfectosVenta.borrar', 'N', 'Borrar registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'EfectosVenta.consultar', 'N', 'Consultar / buscar', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'EfectosVenta.excel', 'N', 'Exportar a Excel', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'EfectosVenta.imprimir', 'N', 'Imprimir informes', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'EfectosVenta.insertar', 'N', 'Alta de registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'EfectosVenta.modificar', 'N', 'Modificar registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Facturas.borrar', 'N', 'Borrar registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Facturas.consultar', 'N', 'Consultar / buscar', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Facturas.excel', 'N', 'Exportar a Excel', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Facturas.imprimir', 'N', 'Imprimir informes', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Facturas.insertar', 'N', 'Alta de registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Facturas.modificar', 'N', 'Modificar registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'FacturasCompra.borrar', 'N', 'Borrar registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'FacturasCompra.consultar', 'N', 'Consultar / buscar', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'FacturasCompra.excel', 'N', 'Exportar a Excel', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'FacturasCompra.imprimir', 'N', 'Imprimir informes', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'FacturasCompra.insertar', 'N', 'Alta de registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'FacturasCompra.modificar', 'N', 'Modificar registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.Albaranes', 'N', 'Albaranes', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.AlbaranesCompra', 'N', 'Albaranes', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.CargarEfectos1', 'N', 'Cargar efectos en remesa...', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.CargarEfectosVenta1', 'N', 'Cargar efectos en remesa...', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.DevolucionesCompra', 'N', 'Devoluciones a Proveedor', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.EfectosCompra', 'N', 'Efectos de pago', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.EfectosVenta', 'N', 'Efectos de cobro', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.FacturarAlbaranes1', 'N', 'Crear borradores de albaranes...', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.Facturas', 'N', 'Borradores', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.Facturas1', 'N', 'Facturas', NULL, '2026-07-23 17:22:50', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.FacturasCompra', 'N', 'Borradores', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.mnuCrearArtculosyunpedidoounalbarn', 'N', 'Crear artículos y un pedido o un albarán', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.mnuListadoDocsProveedor', 'N', 'Listado de documentos proveedor', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.mnuListadoEfectosPago', 'N', 'Listado de efectos de pago', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.mnuLisVentas', 'N', 'Ventas', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.Pedidos', 'N', 'Pedidos', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.PedidosCompra', 'N', 'Pedidos', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.RemesasCompra', 'N', 'Remesas de pago', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'menu.RemesasVenta', 'N', 'Remesas de cobro', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Pedidos.borrar', 'N', 'Borrar registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Pedidos.consultar', 'N', 'Consultar / buscar', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Pedidos.excel', 'N', 'Exportar a Excel', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Pedidos.imprimir', 'N', 'Imprimir informes', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Pedidos.insertar', 'N', 'Alta de registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'Pedidos.modificar', 'N', 'Modificar registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'PedidosCompra.borrar', 'N', 'Borrar registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'PedidosCompra.consultar', 'N', 'Consultar / buscar', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'PedidosCompra.excel', 'N', 'Exportar a Excel', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'PedidosCompra.imprimir', 'N', 'Imprimir informes', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'PedidosCompra.insertar', 'N', 'Alta de registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'PedidosCompra.modificar', 'N', 'Modificar registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'RemesasCompra.borrar', 'N', 'Borrar registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'RemesasCompra.consultar', 'N', 'Consultar / buscar', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'RemesasCompra.excel', 'N', 'Exportar a Excel', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'RemesasCompra.imprimir', 'N', 'Imprimir informes', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'RemesasCompra.insertar', 'N', 'Alta de registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'RemesasCompra.modificar', 'N', 'Modificar registros', NULL, '2026-07-23 17:22:49', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'RemesasVenta.borrar', 'N', 'Borrar registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'RemesasVenta.consultar', 'N', 'Consultar / buscar', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'RemesasVenta.excel', 'N', 'Exportar a Excel', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'RemesasVenta.imprimir', 'N', 'Imprimir informes', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'RemesasVenta.insertar', 'N', 'Alta de registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QA_PRUEBAS', 'RemesasVenta.modificar', 'N', 'Modificar registros', NULL, '2026-07-23 17:22:38', 'Administrador', NULL),
+  ('QATEST', 'accion.borrarRegistro', 'N', 'Borrar registros', NULL, '2026-07-23 17:24:14', 'Administrador', NULL),
+  ('QATEST', 'accion.exportarExcel', 'N', 'Exportar grid a Excel', NULL, '2026-07-23 17:24:14', 'Administrador', NULL),
+  ('QATEST', 'accion.imprimir', 'N', 'Imprimir informes', NULL, '2026-07-23 17:24:15', 'Administrador', NULL),
+  ('QATEST', 'Albaranes.borrar', 'S', 'Borrar registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'Albaranes.consultar', 'S', 'Consultar / buscar', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'Albaranes.excel', 'S', 'Exportar a Excel', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'Albaranes.imprimir', 'S', 'Imprimir informes', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'Albaranes.insertar', 'S', 'Alta de registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'Albaranes.modificar', 'S', 'Modificar registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'arqueo.verImportes', 'S', 'Ver importes pre-rellenados en recuento', NULL, '2026-07-23 17:24:50', 'Administrador', NULL),
+  ('QATEST', 'caja.abrirCajon', 'N', 'Abrir cajón sin venta (F9)', NULL, '2026-07-23 17:24:51', 'Administrador', NULL),
+  ('QATEST', 'caja.cambiarFecha', 'S', 'Cambiar fecha de operación en caja', NULL, '2026-07-23 17:24:52', 'Administrador', NULL),
+  ('QATEST', 'caja.verCoste', 'N', 'Ver coste/importe en traspasos y caja', NULL, '2026-07-23 17:25:14', 'Administrador', NULL),
+  ('QATEST', 'EfectosVenta.borrar', 'S', 'Borrar registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'EfectosVenta.consultar', 'S', 'Consultar / buscar', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'EfectosVenta.excel', 'S', 'Exportar a Excel', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'EfectosVenta.imprimir', 'S', 'Imprimir informes', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'EfectosVenta.insertar', 'S', 'Alta de registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'EfectosVenta.modificar', 'S', 'Modificar registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'Facturas.borrar', 'S', 'Borrar registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'Facturas.consultar', 'S', 'Consultar / buscar', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'Facturas.excel', 'S', 'Exportar a Excel', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'Facturas.imprimir', 'S', 'Imprimir informes', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'Facturas.insertar', 'S', 'Alta de registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'Facturas.modificar', 'S', 'Modificar registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'menu.Albaranes', 'S', 'Albaranes', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'menu.CargarEfectosVenta1', 'S', 'Cargar efectos en remesa...', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'menu.EfectosVenta', 'S', 'Efectos de cobro', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'menu.Facturas', 'S', 'Borradores', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'menu.mnuLisVentas', 'S', 'Ventas', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'menu.Pedidos', 'N', 'Pedidos', '2026-07-23 17:26:26', '2026-07-23 17:23:44', 'Administrador', 'Administrador'),
+  ('QATEST', 'menu.RemesasVenta', 'S', 'Remesas de cobro', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'Pedidos.borrar', 'N', 'Borrar registros', '2026-07-23 17:26:26', '2026-07-23 17:23:44', 'Administrador', 'Administrador'),
+  ('QATEST', 'Pedidos.consultar', 'N', 'Consultar / buscar', '2026-07-23 17:26:26', '2026-07-23 17:23:44', 'Administrador', 'Administrador'),
+  ('QATEST', 'Pedidos.excel', 'N', 'Exportar a Excel', '2026-07-23 17:26:26', '2026-07-23 17:23:44', 'Administrador', 'Administrador'),
+  ('QATEST', 'Pedidos.imprimir', 'N', 'Imprimir informes', '2026-07-23 17:26:26', '2026-07-23 17:23:44', 'Administrador', 'Administrador'),
+  ('QATEST', 'Pedidos.insertar', 'N', 'Alta de registros', '2026-07-23 17:26:26', '2026-07-23 17:23:44', 'Administrador', 'Administrador'),
+  ('QATEST', 'Pedidos.modificar', 'N', 'Modificar registros', '2026-07-23 17:26:26', '2026-07-23 17:23:44', 'Administrador', 'Administrador'),
+  ('QATEST', 'RemesasVenta.borrar', 'S', 'Borrar registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'RemesasVenta.consultar', 'S', 'Consultar / buscar', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'RemesasVenta.excel', 'S', 'Exportar a Excel', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'RemesasVenta.imprimir', 'S', 'Imprimir informes', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'RemesasVenta.insertar', 'S', 'Alta de registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL);
+INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `DESCRIPCION_PERM`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('QATEST', 'RemesasVenta.modificar', 'S', 'Modificar registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
   ('Todos', 'accion.borrarRegistro', 'S', 'Borrar registros', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'accion.crearGuias', 'S', 'Crear guías de grid/informes', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'accion.exportarExcel', 'S', 'Exportar grid a Excel', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
@@ -24141,6 +24352,8 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
   ('Todos', 'menu.Ivas', 'S', 'Impuestos IVA', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'menu.IvasGrupos', 'S', 'Grupos de IVA', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'menu.MenuCaja', 'S', 'Menú de Caja', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
+  ('Todos', 'menu.mnuArticulosSimilares', 'S', 'Ayuda: Consulta de artículos similares (Ctrl+E)', NULL, '2026-07-23 18:33:03', 'SISTEMA', NULL),
+  ('Todos', 'menu.mnuConsultaStocks', 'S', 'Ayuda: Consulta de stocks (Ctrl+U)', NULL, '2026-07-23 18:33:03', 'SISTEMA', NULL),
   ('Todos', 'menu.mnuVerifactuDeclaracion', 'S', 'Verifactu: Declaración Responsable', NULL, '2026-06-12 07:30:05', 'SISTEMA', NULL),
   ('Todos', 'menu.MovimientosAlmacen', 'S', 'Movimientos de Almacén', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'menu.Paises', 'S', 'Países', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
@@ -24223,10 +24436,9 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
   ('Vendedores', 'menu.Proveedores', 'N', 'Proveedores', NULL, '2026-06-02 19:50:01', 'Administrador', NULL),
   ('Vendedores', 'menu.Tarifas', 'N', 'Tarifas', NULL, '2026-06-02 19:49:58', 'Administrador', NULL),
   ('Vendedores', 'menu.Usuarios', 'N', 'Usuarios', NULL, '2026-06-02 20:07:56', 'Administrador', NULL),
-  ('Vendedores', 'menu.UsuariosPerfiles', 'N', 'Perfiles', NULL, '2026-06-02 20:07:56', 'Administrador', NULL);
-INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `DESCRIPCION_PERM`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Vendedores', 'menu.UsuariosPerfiles', 'N', 'Perfiles', NULL, '2026-06-02 20:07:56', 'Administrador', NULL),
   ('Vendedores', 'menu.Variaciones', 'N', 'Tipos de Variaciones', NULL, '2026-06-02 19:49:58', 'Administrador', NULL);
--- 501 registros exportados
+-- 635 registros exportados
 
 
 -- Tabla: fza_propiedades
@@ -25009,9 +25221,10 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-21 18:21:02', '2026-07-21 18:21:02', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
-  ('Alfredo', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Vendedores', 'S', '012', '2026-07-02 18:49:30', '2026-07-02 18:49:30', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1');
--- 2 registros exportados
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-23 18:32:48', '2026-07-23 18:32:48', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Alfredo', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Vendedores', 'S', '012', '2026-07-02 18:49:30', '2026-07-02 18:49:30', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('QATEST', '6E797DC797D26129DAE46F17A7255650', 'QA_PRUEBAS', 'S', NULL, '2026-07-23 18:30:48', '2026-07-23 18:30:48', '2026-07-23 17:18:45', 'Administrador', 'Administrador', NULL, NULL);
+-- 3 registros exportados
 
 
 -- Tabla: fza_usuarios_empl_bak
@@ -25047,9 +25260,10 @@ CREATE TABLE `fza_usuarios_grupos` (
 -- Datos de fza_usuarios_grupos
 INSERT INTO `fza_usuarios_grupos` (`GRUPO_USUGRP`, `ESGRUPOADMINISTRADOR_USUGRP`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
   ('Administradores', 'S', '2023-01-21 08:29:44', '2021-05-14 19:55:13', 'Administrador', 'Administrador'),
+  ('QA_PRUEBAS', 'N', '2026-07-23 17:16:28', '2026-07-23 17:16:28', 'Administrador', 'Administrador'),
   ('Usuarios', 'N', '2021-05-24 20:53:04', '2021-05-24 20:52:52', 'Administrador', 'Administrador'),
   ('Vendedores', 'N', '2026-06-02 17:14:53', '2026-06-02 17:14:53', 'Administrador', 'Administrador');
--- 3 registros exportados
+-- 4 registros exportados
 
 
 -- Tabla: fza_usuarios_perfiles
@@ -25336,10 +25550,10 @@ FROM vi_tarifas
   ('Administrador', 'frmMtoAppParam', 'appDirHistoricoCaja', '$(LOCALAPPDATA)\\factuzam\\tickets', NULL, NULL, NULL, '2026-04-19 06:26:29', '2026-04-19 06:26:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoAppParam', 'appDirPDF', '$(DOCUMENTOS)\\PDF', NULL, NULL, NULL, '2026-04-19 06:26:29', '2026-04-19 06:26:29', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoAppParam', 'appImpresoraInformes', '', NULL, NULL, NULL, '2026-06-16 17:48:07', '2026-04-15 06:01:36', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoAppParam', 'appLogAvanzado', 'True', NULL, NULL, NULL, '2026-07-07 07:11:41', '2026-05-24 06:58:54', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoAppParam', 'appLogSQL', 'True', NULL, NULL, NULL, '2026-07-07 07:11:41', '2026-05-24 06:58:54', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoAppParam', 'appModoDebug', 'True', NULL, NULL, NULL, '2026-07-07 07:11:41', '2026-05-24 16:40:52', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoAppParam', 'appModoDebugSQL', 'True', NULL, NULL, NULL, '2026-07-07 07:11:41', '2026-05-24 16:40:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoAppParam', 'appLogAvanzado', 'False', NULL, NULL, NULL, '2026-07-22 17:35:56', '2026-05-24 06:58:54', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoAppParam', 'appLogSQL', 'False', NULL, NULL, NULL, '2026-07-22 17:35:56', '2026-05-24 06:58:54', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoAppParam', 'appModoDebug', 'False', NULL, NULL, NULL, '2026-07-22 17:35:56', '2026-05-24 16:40:52', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoAppParam', 'appModoDebugSQL', 'False', NULL, NULL, NULL, '2026-07-22 17:35:56', '2026-05-24 16:40:52', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoAppParam', 'appTema', 'Caramel', NULL, NULL, NULL, '2026-06-21 06:45:47', '2026-04-14 13:23:51', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoAppParam', 'appTemporadaDefecto', 'Primavera/Verano 2026', NULL, NULL, NULL, '2026-05-26 06:43:06', '2026-05-26 06:43:06', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoAppParam', 'appVerifactuActivo', 'True', NULL, NULL, NULL, '2026-06-25 19:37:55', '2026-06-12 06:16:44', 'Administrador', 'Administrador'),
@@ -29468,7 +29682,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Administrador', 'frmMtoCajaParam', 'vgerArqueoTarjetas', 'False', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerAutoLoadDepositos', 'False', NULL, NULL, NULL, '2026-04-27 20:08:57', '2026-04-09 06:42:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerAvisoStockWarning', 'Artículo sin Stock. Compruebe Stock en almacén', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
-  ('Administrador', 'frmMtoCajaParam', 'vgerBusqArtStockOnly', 'True', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
+  ('Administrador', 'frmMtoCajaParam', 'vgerBusqArtStockOnly', 'False', NULL, NULL, NULL, '2026-07-22 20:50:54', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerBusqArtTarifaOnly', 'True', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerCaducidadDefVale', 'False', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
   ('Administrador', 'frmMtoCajaParam', 'vgerChkExistOnly', 'True', NULL, NULL, NULL, '2026-04-03 19:05:27', '2026-03-19 09:18:11', 'Administrador', 'Administrador'),
@@ -34964,6 +35178,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Alfredo', 'frmMtoOpeCaja', 'StockPanelHeight', '304', NULL, NULL, NULL, '2026-06-02 20:16:20', '2026-06-02 20:16:20', 'Alfredo', 'Alfredo'),
   ('Alfredo', 'frmMtoOpeCaja', 'WindowState', '2', NULL, NULL, NULL, '2026-06-02 20:16:20', '2026-06-02 20:16:20', 'Alfredo', 'Alfredo'),
   ('Alfredo', 'frmStockConsulta', 'ModoDesglosado', 'N', '', NULL, NULL, '2026-06-09 09:49:06', '2026-06-09 09:49:06', 'Alfredo', 'Alfredo'),
+  ('QATEST', 'frmStockConsulta', 'ModoDesglosado', 'N', '', NULL, NULL, '2026-07-23 17:53:02', '2026-07-23 17:53:02', 'QATEST', 'QATEST'),
   ('Todos', 'frmLogon', 'DataBaseVersion', '1.0.0.20231204.alpha', NULL, NULL, NULL, '2023-12-01 19:54:58', '2023-12-01 19:54:49', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoAppParam', 'appRestringirEmpAlmCaja', 'True', NULL, NULL, NULL, '2026-07-02 17:41:23', '2026-07-02 17:41:23', 'Todos', 'Todos'),
   ('Todos', 'frmMtoAppParam', 'appVerifactuDeclaracionFecha', '27/06/2025', NULL, NULL, NULL, '2026-07-02 19:22:46', '2026-07-02 19:22:46', 'Todos', 'Todos'),
@@ -35182,9 +35397,9 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESREGIMENESPECIALAGRICOLA_CLIENTE_Index', '21', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESREGIMENESPECIALAGRICOLA_CLIENTE_Visible', 'True', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESREGIMENESPECIALAGRICOLA_CLIENTE_Width', '315', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESRETENCIONES_CLIENTE_Caption', 'Retiene IRPF', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
-  ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESRETENCIONES_CLIENTE_Index', '19', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador');
+  ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESRETENCIONES_CLIENTE_Caption', 'Retiene IRPF', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador');
 INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBKEY_USUPER`, `VALUE_USUPER`, `VALUE_TEXT_USUPER`, `TYPE_BLOB_USUPER`, `VALUE_BLOB_USUPER`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESRETENCIONES_CLIENTE_Index', '19', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESRETENCIONES_CLIENTE_Visible', 'True', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_ESRETENCIONES_CLIENTE_Width', '203', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
   ('Todos', 'frmMtoCliFacSearch', 'cxGrdDBTabPrin_IBAN_CLIENTE_Caption', 'Nro Cuenta IBAN', '', NULL, NULL, '2023-12-14 17:40:16', '2023-12-14 17:40:16', 'Administrador', 'Administrador'),
@@ -35388,7 +35603,7 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
   ('Vendedores', 'frmMtoOpeCaja', 'Lineas_Col_TOTAL_FACLIN', '171', NULL, NULL, NULL, '2026-06-02 20:16:12', '2026-06-02 20:16:12', 'Alfredo', 'Alfredo'),
   ('Vendedores', 'frmMtoOpeCaja', 'StockPanelHeight', '304', NULL, NULL, NULL, '2026-06-02 20:16:12', '2026-06-02 20:16:12', 'Alfredo', 'Alfredo'),
   ('Vendedores', 'frmMtoOpeCaja', 'WindowState', '2', NULL, NULL, NULL, '2026-06-02 20:16:12', '2026-06-02 20:16:12', 'Alfredo', 'Alfredo');
--- 10203 registros exportados
+-- 10204 registros exportados
 
 
 -- Tabla: fza_valores_defecto
@@ -44277,4 +44492,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 21/07/2026 18:24:40
+-- Backup completado: 23/07/2026 18:33:33

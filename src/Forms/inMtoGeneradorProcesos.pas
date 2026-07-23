@@ -1301,6 +1301,8 @@ procedure TfrmMtoGeneradorProcesos.btnExportarExcelClick(Sender: TObject);
 var
   saveDialog : tsavedialog;
 begin
+  if not PuedeExportar then
+    Abort;
   saveDialog := TSaveDialog.Create(self);
   saveDialog.Title := 'Guardar listado a Excel';
   saveDialog.InitialDir :=  GetSpecialFolderPath(CSIDL_MYDOCUMENTS);
@@ -1316,6 +1318,8 @@ procedure TfrmMtoGeneradorProcesos.btnExportarExcelMetaClick(Sender: TObject);
 var
   saveDialog : tsavedialog;
 begin
+  if not PuedeExportar then
+    Abort;
   saveDialog := TSaveDialog.Create(self);
   saveDialog.Title := 'Guardar listado a Excel';
   saveDialog.InitialDir :=  GetSpecialFolderPath(CSIDL_MYDOCUMENTS);

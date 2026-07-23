@@ -2584,6 +2584,8 @@ var
   sNumero  : string;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   if Dmm.unqryTablaG.IsEmpty then
   begin
     ShowMessage('No hay sesion activa que imprimir.');

@@ -106,7 +106,8 @@ type
                              AIncluirTraspasos: Boolean = False;
                              AIncluirIngresos: Boolean = False;
                              AIncluirGastos: Boolean = False;
-                             AIncluirCredito: Boolean = False);
+                             AIncluirCredito: Boolean = False;
+                             AValorarTraspasos: Boolean = False);
     // Vuelca las mismas operaciones de la tira a una hoja de cálculo y la abre
     // en el visor de Excel (TfrmMtoPreviewExcel), con detalle por línea y el
     // mismo orden / agrupamiento que la impresión.
@@ -119,7 +120,8 @@ type
                                   AIncluirTraspasos: Boolean = False;
                                   AIncluirIngresos: Boolean = False;
                                   AIncluirGastos: Boolean = False;
-                                  AIncluirCredito: Boolean = False);
+                                  AIncluirCredito: Boolean = False;
+                                  AValorarTraspasos: Boolean = False);
   end;
 
 implementation
@@ -129,7 +131,7 @@ uses
   dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetGraphics,
   dxSpreadSheetTypes, dxSpreadSheetStyles, dxHashUtils,
   inMtoPreviewTicket, inLibDir, inLibFormatoDocumento, inLibVerifactu,
-  inLibPermisos, inMtoPreviewExcel, inLibDevExcel;
+  inMtoPreviewExcel, inLibDevExcel;
 
 // =============================================================================
 //   Helpers de formato
@@ -721,7 +723,8 @@ class procedure TTiraCajaTicket.Imprimir(AConn: TUniConnection;
                                          AIncluirTraspasos: Boolean;
                                          AIncluirIngresos: Boolean;
                                          AIncluirGastos: Boolean;
-                                         AIncluirCredito: Boolean);
+                                         AIncluirCredito: Boolean;
+                                         AValorarTraspasos: Boolean);
 var
   Ope: TUniQuery;
   Ticket: TTicketTermico;
@@ -860,8 +863,7 @@ begin
   totDepC  := 0;
   // Los traspasos solo se valoran (coste) si el usuario tiene permiso para ver
   // coste; el resto de bloques (ingresos, gastos, depósitos) siempre se valoran.
-  bVerCoste := Assigned(oPermisos)
-               and oPermisos.TienePermiso('caja.verCoste', False);
+  bVerCoste := AValorarTraspasos;
   Ticket := TTicketTermico.Create(ANombreImpresora);
   try
     Ticket.Inicializar;
@@ -989,7 +991,8 @@ class procedure TTiraCajaTicket.ExportarExcel(AOwner: TComponent;
   AFechaDesde, AFechaHasta: TDate; const ASeries: TArray<string>;
   ACronologico: Boolean = False; AIncluirTraspasos: Boolean = False;
   AIncluirIngresos: Boolean = False; AIncluirGastos: Boolean = False;
-  AIncluirCredito: Boolean = False);
+  AIncluirCredito: Boolean = False;
+  AValorarTraspasos: Boolean = False);
 const
   cTIPO  = 0;
   cFECHA = 1;
@@ -1312,8 +1315,7 @@ begin
   nIng := 0;
   nGas := 0;
   nDep := 0;
-  bVerCoste := Assigned(oPermisos)
-               and oPermisos.TienePermiso('caja.verCoste', False);
+  bVerCoste := AValorarTraspasos;
   Frm := TfrmMtoPreviewExcel.Create(AOwner);
   try
     if Frm.dxSpreadSheet1.SheetCount = 0 then

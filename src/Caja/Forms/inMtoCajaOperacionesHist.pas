@@ -214,6 +214,8 @@ var
   frm: TfrmPrintOperaciones;
 begin
   inherited;
+  if not PuedeImprimir then
+    Abort;
   // Informe A4 horizontal (FastReport) de las operaciones de caja. El
   // usuario filtra empresa / almacen / caja y rango de fechas en el modal.
   frm := TfrmPrintOperaciones.Create(Application);
@@ -1052,6 +1054,8 @@ var
   sNombre: string;
 begin
   inherited;
+  if not PuedeExportar then
+    Abort;
   fPreview := nil;
   if (not Assigned(dmmCajaOperacionesHist)) or
      (not Assigned(dmmCajaOperacionesHist.unqryTablaG)) or

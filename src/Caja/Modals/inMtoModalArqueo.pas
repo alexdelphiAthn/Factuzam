@@ -21,7 +21,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  System.Classes, System.UITypes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
+  Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ActnList, System.Actions, Vcl.Menus,
   System.DateUtils,
   Data.DB, MemDS, DBAccess,
@@ -272,6 +273,7 @@ type
     FAlmacen      : string;
     FCaja         : string;
     FArqueoActual : TArqueoCaja;
+    FPuedeVerResumen: Boolean;
     function  FechaEditada(AEdit: TcxDateEdit): TDateTime;
     function  FechaDesdeSeleccionada: TDateTime;
     function  FechaHastaSeleccionada: TDateTime;
@@ -305,7 +307,8 @@ implementation
 
 {$R *.dfm}
 
-uses inLibGlobalVar, inLibPermisos, inLibLog, inMtoModalArqueosHistCaja,
+uses inLibGlobalVar, inLibPermisosIntf, inLibLog,
+     inMtoModalArqueosHistCaja,
      inLibCajaParam, inLibTiraCajaTicket, inMtoModalTiraCaja, inLibVerifactu;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -335,20 +338,35 @@ begin
     frm.dteFechaHasta.EditValue :=
       DateOf(AFechaHasta) + EncodeTime(23, 59, 59, 0);
     // Permisos
-    if Assigned(oPermisos) then
+    if (not Assigned(frm.Permisos)) or
+       (not frm.Permisos.TienePermiso(
+         PERMISO_CAJA_CAMBIAR_FECHA,
+         paPermitir)) then
     begin
-      if not oPermisos.TienePermiso('caja.cambiarFecha') then
-      begin
-        frm.dteFechaDesde.Properties.ReadOnly := True;
-        frm.dteFechaHasta.Properties.ReadOnly := True;
-      end;
-      if not oPermisos.TienePermiso('arqueo.verImportes') then
-      begin
-        // Ocultar importes en recuento; solo salen en el ticket de cierre
-        frm.tvRecuentoSistema.Visible := False;
-        frm.tvRecuentoImporte.Visible := False;
-        frm.tvRecuentoDiferencia.Visible := False;
-      end;
+      frm.dteFechaDesde.Properties.ReadOnly := True;
+      frm.dteFechaHasta.Properties.ReadOnly := True;
+    end;
+    if (not Assigned(frm.Permisos)) or
+       (not frm.Permisos.TienePermiso(
+         PERMISO_ARQUEO_VER_IMPORTES,
+         paPermitir)) then
+    begin
+      // Ocultar importes en recuento; solo salen en el ticket de cierre
+      frm.tvRecuentoSistema.Visible := False;
+      frm.tvRecuentoImporte.Visible := False;
+      frm.tvRecuentoDiferencia.Visible := False;
+    end;
+    frm.FPuedeVerResumen :=
+      Assigned(frm.Permisos) and
+      frm.Permisos.TienePermiso(
+        PERMISO_ARQUEO_VER_RESUMEN,
+        paPermitir);
+    if not frm.FPuedeVerResumen then
+    begin
+      frm.tsResumenes.TabVisible := False;
+      frm.tsMasDatos.TabVisible := False;
+      frm.btnImprimir.Visible := False;
+      frm.actImprimir.Enabled := False;
     end;
     frm.Recalcular;
     frm.ShowModal;
@@ -416,15 +434,26 @@ end;
 procedure TfrmModalArqueo.actImprimirExecute(Sender: TObject);
 begin
   inherited;
-  if (FConn = nil) or (not FConn.Connected) then Exit;
-  Screen.Cursor := crHourGlass;
-  try
-    TArqueoTicket.Imprimir(FConn, FEmpresa, FAlmacen, FCaja,
-                           FechaDesdeSeleccionada,
-                           FechaHastaSeleccionada,
-                           oNomImpresoraCaja);
-  finally
-    Screen.Cursor := crDefault;
+  if not FPuedeVerResumen then
+  begin
+    Log.LogWarning('Intento de imprimir el resumen de arqueo sin permiso');
+    MessageDlg(
+      'No tiene permiso para consultar el resumen del arqueo.',
+      mtWarning,
+      [mbOK],
+      0);
+  end
+  else if (FConn <> nil) and FConn.Connected then
+  begin
+    Screen.Cursor := crHourGlass;
+    try
+      TArqueoTicket.Imprimir(FConn, FEmpresa, FAlmacen, FCaja,
+                             FechaDesdeSeleccionada,
+                             FechaHastaSeleccionada,
+                             oNomImpresoraCaja);
+    finally
+      Screen.Cursor := crDefault;
+    end;
   end;
 end;
 
@@ -458,6 +487,7 @@ var
   bIncluirIngresos: Boolean;
   bIncluirGastos: Boolean;
   bIncluirCredito: Boolean;
+  bVerCoste: Boolean;
 begin
   inherited;
   if (FConn = nil) or (not FConn.Connected) then
@@ -476,6 +506,10 @@ begin
   // El QR solo aplica con Verifactu activo (envío PRE o PRO).
   bVerifactu := VerifactuActivo;
   bQR        := False;
+  bVerCoste := Assigned(Permisos) and
+               Permisos.TienePermiso(
+                 PERMISO_CAJA_VER_COSTE,
+                 paDenegar);
   // El diálogo se muestra siempre: serie (multi-selección), agrupamiento, QR,
   // los bloques opcionales y la elección entre Imprimir y Ver Excel.
   if not TfrmModalTiraCaja.Ejecutar(Self, FCaja, Series, bVerifactu,
@@ -491,7 +525,8 @@ begin
                                     FechaHastaSeleccionada,
                                     SeleccionSeries, bCronologico,
                                     bIncluirTraspasos, bIncluirIngresos,
-                                    bIncluirGastos, bIncluirCredito)
+                                    bIncluirGastos, bIncluirCredito,
+                                    bVerCoste)
     else
       TTiraCajaTicket.Imprimir(FConn, FEmpresa, FAlmacen, FCaja,
                                FechaDesdeSeleccionada,
@@ -499,7 +534,8 @@ begin
                                SeleccionSeries, bQR, oNomImpresoraCaja,
                                bCronologico,
                                bIncluirTraspasos, bIncluirIngresos,
-                               bIncluirGastos, bIncluirCredito);
+                               bIncluirGastos, bIncluirCredito,
+                               bVerCoste);
   finally
     Screen.Cursor := crDefault;
   end;
@@ -735,12 +771,16 @@ end;
 
 procedure TfrmModalArqueo.RefrescarResumenes;
 begin
-  if (FConn = nil) or (not FConn.Connected) then Exit;
-  AbrirQryConParams(qryResEmpleado);
-  AbrirQryConParams(qryResFP);
-  AbrirQryConParams(qryResFam);
-  AbrirQryConParams(qryResProp);
-  AbrirQryConParams(qryResIVA);
+  if FPuedeVerResumen and
+     (FConn <> nil) and
+     FConn.Connected then
+  begin
+    AbrirQryConParams(qryResEmpleado);
+    AbrirQryConParams(qryResFP);
+    AbrirQryConParams(qryResFam);
+    AbrirQryConParams(qryResProp);
+    AbrirQryConParams(qryResIVA);
+  end;
 end;
 
 procedure TfrmModalArqueo.RellenarPantalla(const AArqueo: TArqueoCaja);
