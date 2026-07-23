@@ -1,4 +1,4 @@
-inherited frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo
+﻿inherited frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo
   Caption = 'Documentos de Trabajo'
   TextHeight = 19
   inherited pButtonPage: TPanel
@@ -112,6 +112,16 @@ inherited frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo
               Height = 32
               Width = 160
             end
+            object btnListadoDTR: TcxButton
+              Left = 163
+              Top = 0
+              Width = 120
+              Height = 32
+              Align = alRight
+              Caption = 'Listado'
+              TabOrder = 5
+              OnClick = btnListadoDTRClick
+            end
             object btnEnviarADTR: TcxButton
               Left = 283
               Top = 0
@@ -213,6 +223,24 @@ inherited frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo
                     DataBinding.FieldName = 'REF_PROVEEDOR'
                     Options.Editing = False
                     Width = 120
+                  end
+                  object colDtlFamilia: TcxGridDBColumn
+                    Caption = 'Familia'
+                    DataBinding.FieldName = 'DESCRIPCION_FAM'
+                    Options.Editing = False
+                    Width = 160
+                  end
+                  object colDtlProveedor: TcxGridDBColumn
+                    Caption = 'Proveedor'
+                    DataBinding.FieldName = 'NOMBRE_PRV'
+                    Options.Editing = False
+                    Width = 180
+                  end
+                  object colDtlTemporada: TcxGridDBColumn
+                    Caption = 'Temporada'
+                    DataBinding.FieldName = 'TEMPORADA_ART'
+                    Options.Editing = False
+                    Width = 110
                   end
                   object colDtlDescripcionSku: TcxGridDBColumn
                     Caption = 'Descripcion unidad'

@@ -182,6 +182,8 @@ type
     procedure btnF12Click(Sender: TObject);
     procedure btnCodigoEmpleadoPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
+    procedure btnCodigoClientePropertiesButtonClick(Sender: TObject;
+      AButtonIndex: Integer);
     procedure actBuscarEmpleadosExecute(Sender: TObject);
     procedure actSalirExecute(Sender: TObject);
     procedure actEliminarLineaExecute(Sender: TObject);
@@ -3111,6 +3113,12 @@ procedure TfrmMtoOpeCaja.btnCodigoEmpleadoPropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
   BuscarEmpleados;
+end;
+
+procedure TfrmMtoOpeCaja.btnCodigoClientePropertiesButtonClick(Sender: TObject;
+  AButtonIndex: Integer);
+begin
+  BuscarClientes;
 end;
 
 procedure TfrmMtoOpeCaja.btnCodigoEmpleadoPropertiesValidate(Sender: TObject;

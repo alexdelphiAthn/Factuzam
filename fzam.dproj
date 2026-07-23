@@ -606,6 +606,7 @@
         <DCCReference Include="src\Lib\inLibComprasImpuestos.pas"/>
         <DCCReference Include="src\Lib\inLibVentasImpuestos.pas"/>
         <DCCReference Include="src\Lib\inLibInventarioExcel.pas"/>
+        <DCCReference Include="src\Lib\inLibDocumentosTrabajoExcel.pas"/>
         <DCCReference Include="src\Lib\inLibBalanceTallasExcel.pas"/>
         <DCCReference Include="src\Lib\inLibBalanceSinTallasExcel.pas"/>
         <DCCReference Include="src\Lib\inLibMovVentasArtExcel.pas"/>

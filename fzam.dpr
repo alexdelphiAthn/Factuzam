@@ -194,6 +194,7 @@ uses
   inLibComprasImpuestos in 'src\Lib\inLibComprasImpuestos.pas',
   inLibVentasImpuestos in 'src\Lib\inLibVentasImpuestos.pas',
   inLibInventarioExcel in 'src\Lib\inLibInventarioExcel.pas',
+  inLibDocumentosTrabajoExcel in 'src\Lib\inLibDocumentosTrabajoExcel.pas',
   inLibBalanceTallasExcel in 'src\Lib\inLibBalanceTallasExcel.pas',
   inLibBalanceSinTallasExcel in 'src\Lib\inLibBalanceSinTallasExcel.pas',
   inLibMovVentasArtExcel in 'src\Lib\inLibMovVentasArtExcel.pas',

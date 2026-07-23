@@ -1,14 +1,14 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
-{  Modulo:       inMtoDocumentosTrabajo                                        }
+{  Módulo:       inMtoDocumentosTrabajo                                        }
 {    Tipo:       Formulario (Mto)                                              }
-{ Version:       1.0.0                                                         }
-{   Fecha:       21/06/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       23/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
-{  Descripcion:                                                                }
+{  Descripción:                                                                }
 {    Mantenimiento de Documentos de Trabajo.                                   }
 {******************************************************************************}
 unit inMtoDocumentosTrabajo;
@@ -17,7 +17,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  System.Classes, System.Types, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
+  Vcl.Dialogs,
   inMtoGen, dxSkinsCore, dxSkinsDefaultPainters, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
   cxData, cxDataStorage, cxEdit, cxNavigator, dxDateRanges, Data.DB,
@@ -49,6 +50,7 @@ type
     pnlLineasDTR: TPanel;
     pnlAccionesDTR: TPanel;
     lblLineasDTR: TcxLabel;
+    btnListadoDTR: TcxButton;
     btnCargarFiltrosDTR: TcxButton;
     btnCompartirDTR: TcxButton;
     btnImprimirEtiquetasDTR: TcxButton;
@@ -63,6 +65,9 @@ type
     colDtlAlmacen: TcxGridDBColumn;
     colDtlDescripcionArticulo: TcxGridDBColumn;
     colDtlModelo: TcxGridDBColumn;
+    colDtlFamilia: TcxGridDBColumn;
+    colDtlProveedor: TcxGridDBColumn;
+    colDtlTemporada: TcxGridDBColumn;
     colDtlDescripcionSku: TcxGridDBColumn;
     colDtlCantidadStock: TcxGridDBColumn;
     colDtlCantidad: TcxGridDBColumn;
@@ -87,6 +92,7 @@ type
     procedure miEnviarTpvDTRClick(Sender: TObject);
     procedure miEnviarInventarioDTRClick(Sender: TObject);
     procedure miEnviarTarifasDTRClick(Sender: TObject);
+    procedure btnListadoDTRClick(Sender: TObject);
     procedure btnCargarFiltrosDTRClick(Sender: TObject);
     procedure btnCompartirDTRClick(Sender: TObject);
     procedure btnImprimirEtiquetasDTRClick(Sender: TObject);
@@ -140,7 +146,9 @@ uses
   // Modal de destino (almacen/serie/numero) del "Enviar a...".
   inMtoModalEnviarDestino,
   // Venta TPV abierta (frmMtoOpeCaja) para el volcado de SKUs.
-  inMtoCajaOpe;
+  inMtoCajaOpe,
+  // Listado del documento con una foto de 300 x 300 por línea.
+  inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin, inLibAppParam;
 
 {$R *.dfm}
 
@@ -324,6 +332,9 @@ begin
   Col('Almacén', 'CODIGO_ALM_DTL', 70, True);
   Col('Descripción', 'DESCRIPCION_ARTICULO_DTL', 200, False);
   Col('Modelo', 'REF_PROVEEDOR', 120, False);
+  Col('Familia', 'DESCRIPCION_FAM', 160, False);
+  Col('Proveedor', 'NOMBRE_PRV', 180, False);
+  Col('Temporada', 'TEMPORADA_ART', 110, False);
   with Col('Stock', 'CANTIDAD_STOCK_DTL', 80, False) do
     HeaderAlignmentHorz := taRightJustify;
   with Col('Cantidad', 'CANTIDAD_DTL', 80,
@@ -420,6 +431,72 @@ begin
                                                   ACodTarifa,
                                                   AAlmacenesCsv,
                                                   AFecha);
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.btnListadoDTRClick(Sender: TObject);
+var
+  fPreview: TfrmMtoPreviewExcel;
+  dsCabecera: TDataSet;
+  sId: string;
+  sTitulo: string;
+begin
+  inherited;
+  if dmmDocumentosTrabajo <> nil then
+  begin
+    dsCabecera := dmmDocumentosTrabajo.unqryTablaG;
+    if (not dsCabecera.Active) or dsCabecera.IsEmpty then
+    begin
+      ShowMessage(
+        'Seleccione un Documento de Trabajo antes de sacar el listado.');
+    end
+    else
+    begin
+      if dmmDocumentosTrabajo.unqryLineas.State in dsEditModes then
+      begin
+        dmmDocumentosTrabajo.unqryLineas.Post;
+      end;
+      if dsCabecera.State in dsEditModes then
+      begin
+        dsCabecera.Post;
+      end;
+      if dsCabecera.FieldByName('ID_DTR').IsNull then
+      begin
+        ShowMessage(
+          'Grabe el Documento de Trabajo antes de sacar el listado.');
+      end
+      else if dmmDocumentosTrabajo.unqryLineas.IsEmpty then
+      begin
+        ShowMessage(
+          'El Documento de Trabajo no tiene líneas para el listado.');
+      end
+      else
+      begin
+        sId := dsCabecera.FieldByName('ID_DTR').AsString;
+        sTitulo := Copy(dsCabecera.FieldByName('TITULO_DTR').AsString,
+                        1, 60);
+        fPreview := TfrmMtoPreviewExcel.Create(Self);
+        try
+          fPreview.PopupParent := Self;
+          fPreview.DialogoGuardar.InitialDir :=
+            oAppParams.GetPath('appDirExcel');
+          fPreview.DialogoGuardar.FileName := SanitizeFileName(
+            'Documento_trabajo_' + sId + '_' + sTitulo);
+          Screen.Cursor := crHourGlass;
+          try
+            ExportarDocumentoTrabajoExcel(
+              fPreview.dxSpreadSheet1,
+              dsCabecera,
+              dmmDocumentosTrabajo.unqryLineas);
+          finally
+            Screen.Cursor := crDefault;
+          end;
+          fPreview.ShowModal;
+        finally
+          FreeAndNil(fPreview);
+        end;
+      end;
+    end;
   end;
 end;
 

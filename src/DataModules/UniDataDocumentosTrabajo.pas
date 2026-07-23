@@ -1,14 +1,14 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Modulo:       UniDataDocumentosTrabajo                                      }
+{  Módulo:       UniDataDocumentosTrabajo                                      }
 {    Tipo:       Data Module                                                   }
-{ Version:       1.0.1                                                         }
-{   Fecha:       22/07/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       23/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
-{  Descripcion:                                                                }
+{  Descripción:                                                                }
 {    Data module de Documentos de Trabajo.                                     }
 {******************************************************************************}
 unit UniDataDocumentosTrabajo;
@@ -40,6 +40,7 @@ type
     procedure ConfigurarQueries;
     procedure ConfigurarSqlCabecera;
     procedure ConfigurarQueryCompartidos;
+    function SqlSelectLineas: string;
     procedure ExpandirEtiquetasPorCantidadDoc(ADmArt: TObject;
                                               AIdDtr: Int64;
                                               const AAlmacenesCsv: string);
@@ -146,6 +147,80 @@ begin
   end;
 end;
 
+function TdmDocumentosTrabajo.SqlSelectLineas: string;
+begin
+  Result :=
+    'SELECT l.*, ' +
+    '       COALESCE(a.CODIGO_FAM_ART, '''') AS CODIGO_FAM_ART, ' +
+    '       COALESCE(f.DESCRIPCION_FAM, '''') AS DESCRIPCION_FAM, ' +
+    '       COALESCE(ap.CODIGO_PRV_AP, '''') AS CODIGO_PRV_AP, ' +
+    '       COALESCE(NULLIF(p.NOMBRE_PRV, ''''), ' +
+    '                p.RAZON_SOCIAL_PRV, '''') AS NOMBRE_PRV, ' +
+    '       COALESCE(ap.REF_PROVEEDOR_AP, '''') AS REF_PROVEEDOR, ' +
+    '       COALESCE((SELECT COALESCE(pe.VALOR_PV, ' +
+    '                                pe.VALOR_LIBRE_ARTPROP) ' +
+    '                   FROM vi_articulos_propiedades_efectivas pe ' +
+    '                  WHERE pe.CODIGO_ART = l.CODIGO_ART_DTL ' +
+    '                    AND pe.CODIGO_UNIDAD_SKU = ' +
+    '                        l.CODIGO_UNIDAD_DTL ' +
+    '                    AND pe.CODIGO_PROP_ARTPROP = ''TEMPORADA'' ' +
+    '                  LIMIT 1), '''') AS TEMPORADA_ART, ' +
+    '       COALESCE(tar.CODIGO_TAR_ARTTAR, '''') ' +
+    '         AS CODIGO_TAR_ARTTAR, ' +
+    '       COALESCE(tar.NOMBRE_TAR_TAR, '''') AS NOMBRE_TAR_TAR, ' +
+    '       COALESCE((SELECT at.PRECIO_FINAL_ARTTAR ' +
+    '                   FROM fza_articulos_tarifas at ' +
+    '                  WHERE at.CODIGO_ART_ARTTAR = ' +
+    '                        l.CODIGO_ART_DTL ' +
+    '                    AND at.CODIGO_TAR_ARTTAR = ' +
+    '                        tar.CODIGO_TAR_ARTTAR ' +
+    '                    AND at.ESACTIVO_ARTTAR = ''S'' ' +
+    '                    AND (at.CODIGO_UNIDAD_ARTTAR = ' +
+    '                         l.CODIGO_UNIDAD_DTL ' +
+    '                         OR at.CODIGO_UNIDAD_ARTTAR IS NULL ' +
+    '                         OR at.CODIGO_UNIDAD_ARTTAR = '''') ' +
+    '                    AND (at.FECHA_DESDE_ARTTAR IS NULL ' +
+    '                         OR at.FECHA_DESDE_ARTTAR <= CURRENT_DATE) ' +
+    '                    AND (at.FECHA_HASTA_ARTTAR IS NULL ' +
+    '                         OR at.FECHA_HASTA_ARTTAR >= CURRENT_DATE) ' +
+    '                  ORDER BY CASE ' +
+    '                    WHEN at.CODIGO_UNIDAD_ARTTAR = ' +
+    '                         l.CODIGO_UNIDAD_DTL ' +
+    '                     AND l.CODIGO_UNIDAD_DTL <> '''' ' +
+    '                    THEN 0 ELSE 1 END, ' +
+    '                    at.FECHA_DESDE_ARTTAR DESC, ' +
+    '                    at.CODIGO_UNICO_ARTTAR DESC ' +
+    '                  LIMIT 1), 0) AS PRECIO_FINAL_ARTTAR ' +
+    '  FROM fza_documentos_trabajo_lineas l ' +
+    '  LEFT JOIN fza_articulos a ' +
+    '    ON a.CODIGO_ART_ART = l.CODIGO_ART_DTL ' +
+    '  LEFT JOIN fza_articulos_familias f ' +
+    '    ON f.CODIGO_FAM_FAM = a.CODIGO_FAM_ART ' +
+    '  LEFT JOIN fza_articulos_proveedores ap ' +
+    '    ON ap.CODIGO_ART_AP = l.CODIGO_ART_DTL ' +
+    '   AND ap.CODIGO_PRV_AP = ' +
+    '       (SELECT apx.CODIGO_PRV_AP ' +
+    '          FROM fza_articulos_proveedores apx ' +
+    '         WHERE apx.CODIGO_ART_AP = l.CODIGO_ART_DTL ' +
+    '         ORDER BY CASE ' +
+    '                    WHEN apx.ESPROVEEDORPRINCIPAL_AP = ''S'' ' +
+    '                    THEN 0 ELSE 1 ' +
+    '                  END, ' +
+    '                  apx.FECHA_VALIDEZ_AP DESC, ' +
+    '                  apx.CODIGO_PRV_AP ' +
+    '         LIMIT 1) ' +
+    '  LEFT JOIN fza_proveedores p ' +
+    '    ON p.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP ' +
+    '  LEFT JOIN fza_tarifas tar ' +
+    '    ON tar.CODIGO_TAR_ARTTAR = ' +
+    '       (SELECT t.CODIGO_TAR_ARTTAR ' +
+    '          FROM fza_tarifas t ' +
+    '         WHERE t.ESACTIVO_ARTTAR = ''S'' ' +
+    '         ORDER BY (t.ORDEN_TAR IS NULL), t.ORDEN_TAR, ' +
+    '                  t.CODIGO_TAR_ARTTAR ' +
+    '         LIMIT 1) ';
+end;
+
 procedure TdmDocumentosTrabajo.ConfigurarQueries;
 var
   frm: TfrmMtoDocumentosTrabajo;
@@ -185,19 +260,7 @@ begin
   unqryTablaG.BeforeDelete := unqryTablaGBeforeDelete;
   unqryTablaG.BeforePost := unqryTablaGBeforePost;
   unqryLineas.Connection := oConn;
-  unqryLineas.SQL.Text :=
-    'SELECT l.*, ' +
-    '       COALESCE((SELECT ap.REF_PROVEEDOR_AP ' +
-    '                   FROM fza_articulos_proveedores ap ' +
-    '                  WHERE ap.CODIGO_ART_AP = l.CODIGO_ART_DTL ' +
-    '                  ORDER BY CASE ' +
-    '                             WHEN ap.ESPROVEEDORPRINCIPAL_AP = ''S'' ' +
-    '                             THEN 0 ELSE 1 ' +
-    '                           END, ' +
-    '                           ap.FECHA_VALIDEZ_AP DESC, ' +
-    '                           ap.CODIGO_PRV_AP ' +
-    '                  LIMIT 1), '''') AS REF_PROVEEDOR ' +
-    '  FROM fza_documentos_trabajo_lineas l ' +
+  unqryLineas.SQL.Text := SqlSelectLineas +
     ' WHERE l.ID_DTR_DTL = :ID_DTR ' +
     ' ORDER BY l.LINEA_DTL';
   unqryLineas.KeyFields := 'ID_DTL';
@@ -271,19 +334,7 @@ begin
     'WHERE ID_DTL = :Old_ID_DTL';
   unqryLineas.SQLDelete.Text :=
     'DELETE FROM fza_documentos_trabajo_lineas WHERE ID_DTL = :Old_ID_DTL';
-  unqryLineas.SQLRefresh.Text :=
-    'SELECT l.*, ' +
-    '       COALESCE((SELECT ap.REF_PROVEEDOR_AP ' +
-    '                   FROM fza_articulos_proveedores ap ' +
-    '                  WHERE ap.CODIGO_ART_AP = l.CODIGO_ART_DTL ' +
-    '                  ORDER BY CASE ' +
-    '                             WHEN ap.ESPROVEEDORPRINCIPAL_AP = ''S'' ' +
-    '                             THEN 0 ELSE 1 ' +
-    '                           END, ' +
-    '                           ap.FECHA_VALIDEZ_AP DESC, ' +
-    '                           ap.CODIGO_PRV_AP ' +
-    '                  LIMIT 1), '''') AS REF_PROVEEDOR ' +
-    '  FROM fza_documentos_trabajo_lineas l ' +
+  unqryLineas.SQLRefresh.Text := SqlSelectLineas +
     ' WHERE l.ID_DTL = :ID_DTL';
   unqryLineas.SQLLock.Text :=
     'SELECT * FROM fza_documentos_trabajo_lineas ' +

@@ -170,6 +170,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
           Default = True
           Kind = bkEllipsis
         end>
+      Properties.OnButtonClick = btnCodigoClientePropertiesButtonClick
       Properties.OnValidate = btnCodigoClientePropertiesValidate
       TabOrder = 8
       OnExit = btnCodigoClienteExit

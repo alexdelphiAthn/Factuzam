@@ -132,6 +132,7 @@ directa de código) → **Tallas horizontal** (rejilla de tallas en columnas).
 
 | Botón | Uso |
 |-------|-----|
+| **Listado** | Abre una vista previa de Excel con una línea por SKU, su foto de 300 × 300, familia, proveedor, temporada y precio de la primera tarifa activa. Desde la vista previa se puede guardar el libro `.xlsx`. |
 | **Cargar artículos...** | **Carga masiva por filtros** (la misma pantalla de filtros que usan Inventarios y las sesiones de tarifas): familias en árbol, proveedores, propiedades/temporadas y almacenes, con opciones de solo activos, solo con stock y excluir lo ya cargado. |
 | **Compartir...** | Comparte el documento con un **usuario** o un **grupo** (permiso de lectura). Los destinatarios lo ven en su pestaña *Compartidos conmigo*. Solo el propietario puede compartir. |
 | **Imprimir etiquetas** | Abre la impresión de **etiquetas de artículo** con los SKUs del documento (elige tarifa y almacenes como en la impresión de etiquetas normal). |
