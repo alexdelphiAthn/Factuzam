@@ -543,7 +543,7 @@ begin
   unqryGuiasSesionPrint.Connection  := inLibGlobalVar.oConn;
   // unqryProveedores alimenta tanto el rotulo resuelto de la cabecera
   // (ActualizarLabelProveedor via Locate) como cbbProveedor, el combo de
-  // busqueda incremental por codigo.
+  // busqueda incremental por nombre.
   unqryProveedores.Open;
   unqryFamilias.Open;
   unqryVariaciones.Open;

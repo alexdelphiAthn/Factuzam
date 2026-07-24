@@ -37,14 +37,12 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibGlobalVar;
-
 {$R *.dfm}
 
 procedure TdmGenFilter.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryEmpresas.Connection := oConn;
+  unqryEmpresas.Connection := ConexionPrincipal;
 
   unqryEmpresas.Open;
 end;

@@ -780,7 +780,11 @@ end;
 procedure TfrmMtoEmpresas.btnCargarColumnasClick(Sender: TObject);
 begin
   inherited;
-  GetSettingsColumn(tvRetenciones, Self.Name, Self.Owner);
+  GetSettingsColumn(
+    tvRetenciones,
+    Self.Name,
+    Self.Owner,
+    PerfilesUsuario);
 end;
 
 procedure TfrmMtoEmpresas.chkAplicaRetencionesPropertiesChange(Sender: TObject);

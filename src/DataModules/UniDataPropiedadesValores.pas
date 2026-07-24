@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataPropiedadesValores                                     }
 {    Tipo:       Data Module                                                   }
@@ -18,7 +18,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-  inLibUser, UniDataConn;
+  inLibUser;
 
 type
   TdmPropiedadesValores = class(TdmBase)
@@ -35,8 +35,6 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibGlobalVar;
-
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -44,7 +42,7 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TdmPropiedadesValores.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryPropiedades.Connection := oConn;
+  unqryPropiedades.Connection := ConexionPrincipal;
   if not unqryPropiedades.Active then
     unqryPropiedades.Open;
 end;

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataUsuarios                                               }
 {    Tipo:       Data Module                                                   }
@@ -112,7 +112,8 @@ begin
   with unqryTablaG do
   begin
     sUsuario := Trim(FindField('USUARIO_USU').AsString);
-    if ((sUsuario = '') or (SimbolosProhibidos(sUsuario))) then
+    if (sUsuario = '') or
+       SimbolosProhibidos(sUsuario, PerfilesUsuario) then
     begin
       ShowMessageFmt('%s no es un valor de registro válido ' +
                      'para el campo usuario', [sUsuario]);

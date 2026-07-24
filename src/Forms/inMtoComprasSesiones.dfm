@@ -1,4 +1,4 @@
-inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
+﻿inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
   Caption = 'Crear art'#237'culos y un pedido o un albar'#225'n'
   ClientHeight = 783
   ClientWidth = 1240
@@ -1544,16 +1544,23 @@ inherited frmMtoComprasSesiones: TfrmMtoComprasSesiones
                 DataBinding.DataSource = dsTablaG
                 Properties.DropDownListStyle = lsEditList
                 Properties.DropDownRows = 15
+                Properties.DropDownWidth = 480
+                Properties.ImmediateDropDownWhenKeyPressed = True
+                Properties.IncrementalFiltering = True
                 Properties.KeyFieldNames = 'CODIGO_PRV_PRV'
                 Properties.ListColumns = <
                   item
                     Caption = 'C'#243'digo'
+                    Width = 110
                     FieldName = 'CODIGO_PRV_PRV'
                   end
                   item
                     Caption = 'Proveedor'
+                    Width = 350
                     FieldName = 'RAZON_SOCIAL_PRV'
                   end>
+                Properties.ListFieldIndex = 1
+                Properties.ListOptions.CaseInsensitive = True
                 TabOrder = 9
                 OnKeyUp = cbbProveedorKeyUp
                 Width = 160

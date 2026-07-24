@@ -22,7 +22,8 @@ uses
    System.StrUtils, inLibUser, cxLabel, cxPC, cxDBEdit, cxButtons, Uni,
    cxGroupBox, cxRadioGroup, Vcl.Buttons, inlibGlobalVar,
    System.Win.Registry, Winapi.Messages,
-   system.math,IdGlobal, IdHash, IdHashMessageDigest, System.IOUtils;
+   system.math,IdGlobal, IdHash, IdHashMessageDigest, System.IOUtils,
+   inLibPerfilesUsuarioIntf;
 
 //  function IsOpenMDI(sName: String; Owner : TComponent):boolean; overload;
 //  function IsOpenMDI(sName: String; Owner : TComponent;
@@ -37,11 +38,13 @@ uses
                            sNameObject:String):TObject; overload;
   procedure CargarCaptions(oControl:TComponent;
                            Sender:TComponent;
+                           const APerfilesUsuario: IPerfilesUsuario;
                            sUser:String = 'Todos');
   procedure SetLabelForm(oControl:TComponent;
                          var oPerfilDic : TProfileDicc );
   procedure GrabarPerfilDatam(dmmModule:TDataModule;
                               Sender:TComponent;
+                              const APerfilesUsuario: IPerfilesUsuario;
                               sUser:string = 'Todos');
   function GetVolumeID(ADriveChar: Char): String;
   function FindFormOwner(AoSender: TObject):TComponent;
@@ -348,6 +351,7 @@ end;
 
 procedure GrabarPerfilDatam(dmmModule:TDataModule;
                             Sender:TComponent;
+                            const APerfilesUsuario: IPerfilesUsuario;
                             sUser:string = 'Todos');
 var
   oControl:TComponent;
@@ -356,14 +360,14 @@ begin
   oControl := dmmModule as TComponent;
   for i := 0 to oControl.ComponentCount - 1 do
     if ( Pos('unqry', oControl.Components[i].Name) > 0  ) then
-      odmPerfiles.GrabarPerfil(sUser, dmmModule.Name,
+      APerfilesUsuario.GrabarPerfil(sUser, dmmModule.Name,
                                   (oControl.Components[i] as TUniQuery).Name,
                                   'SQL',
                                   (
                                     oControl.Components[i] as TUniQuery).SQL.Text)
     else
       if ( Pos('unstrdprc', oControl.Components[i].Name) > 0 )  then
-        odmPerfiles.GrabarPerfil(sUser, dmmModule.Name,
+        APerfilesUsuario.GrabarPerfil(sUser, dmmModule.Name,
                        (oControl.Components[i] as TUniStoredProc).Name,
                        'Procedure',
                        (
@@ -525,6 +529,7 @@ end;
 
 procedure CargarCaptions(oControl:TComponent;
                          Sender:TComponent;
+                         const APerfilesUsuario: IPerfilesUsuario;
                          sUser:String = 'Todos');
     function GetComponentPropertyValue(Component: TComponent;
                                        APropName: string): string;
@@ -601,7 +606,11 @@ begin
     begin
       sValue := GetComponentPropertyValue(oControl.Components[i], 'Caption');
       if (sValue <> '') then
-        odmPerfiles.GrabarPerfil(sUser, sName, sCompName + '_Caption', sValue );
+        APerfilesUsuario.GrabarPerfil(
+          sUser,
+          sName,
+          sCompName + '_Caption',
+          sValue);
       sValue := '';
     end;
   end;

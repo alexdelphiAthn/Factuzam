@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataFiltros                                                }
 {    Tipo:       Data Module                                                   }
@@ -20,37 +20,29 @@ unit UniDataFiltros;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Collections,
-  Data.DB, MemDS, DBAccess, Uni;
+  System.SysUtils, System.Classes,
+  Data.DB, MemDS, DBAccess, Uni, inLibConexionesIntf,
+  inLibContextoSesionIntf, inLibFiltrosGuardadosIntf;
 
 type
-  TFiltroGuardadoInfo = record
-    Id: Int64;
-    Nombre: string;
-    Descripcion: string;
-    Propietario: string;
-    EsPropio: Boolean;
-  end;
-
-  TFiltrosGuardadosList = TList<TFiltroGuardadoInfo>;
-
-  TDestinoCompartidoInfo = record
-    Id: Int64;
-    TipoDestino: string;
-    UsuarioGrupo: string;
-  end;
-
-  TDestinosCompartidosList = TList<TDestinoCompartidoInfo>;
-
-  TdmFiltros = class(TDataModule)
+  TdmFiltros = class(
+    TDataModule,
+    IProveedorConexiones,
+    IProveedorContextoSesion,
+    IFiltrosGuardados
+  )
     procedure DataModuleCreate(Sender: TObject);
+  private
+    FConexiones: IServicioConexiones;
+    FContextoSesion: IContextoSesionAplicacion;
+    function GetConexiones: IServicioConexiones;
+    function GetConexionPrincipal: TUniConnection;
+    function GetContextoSesion: IContextoSesionAplicacion;
+    function GetIdentidadSesion: TIdentidadSesion;
+    procedure HeredarConexiones(AOwner: TComponent);
+    procedure HeredarContextoSesion(AOwner: TComponent);
   public
-    // Query de solo lectura para pintar la lista en el modal de gestion.
-    // Las altas/bajas/cambios se hacen siempre con SQL directo (metodos de
-    // abajo) y luego se refresca con AbrirListadoParaGrid.
-    unqryListado: TUniQuery;
-    dsListado: TDataSource;
-    procedure AbrirListadoParaGrid(const AMto, AVista: string);
+    constructor Create(AOwner: TComponent); override;
     function ListarFiltros(const AMto,
                            AVista: string): TFiltrosGuardadosList;
     function BuscarFiltroPropio(const AMto,
@@ -75,6 +67,13 @@ type
     procedure CompartirConDestino(AIdFiltro: Int64;
                                   const ATipoDestino, ADestino: string);
     procedure QuitarDestinoCompartido(AIdDestino: Int64);
+    property Conexiones: IServicioConexiones read GetConexiones;
+    property ConexionPrincipal: TUniConnection
+      read GetConexionPrincipal;
+    property ContextoSesion: IContextoSesionAplicacion
+      read GetContextoSesion;
+    property IdentidadSesion: TIdentidadSesion
+      read GetIdentidadSesion;
   end;
 
 var
@@ -83,7 +82,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar;
+  Vcl.Forms;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -109,38 +108,81 @@ const
     '                   AND C.USUARIO_GRUPO_FILTC = :GRUPO) ' +
     '               OR      C.TIPO_DESTINO_FILTC = ''TODOS'')) ) ';
 
+constructor TdmFiltros.Create(AOwner: TComponent);
+begin
+  HeredarConexiones(AOwner);
+  HeredarContextoSesion(AOwner);
+  inherited Create(AOwner);
+end;
+
+procedure TdmFiltros.HeredarConexiones(AOwner: TComponent);
+var
+  Proveedor: IProveedorConexiones;
+begin
+  FConexiones := nil;
+  if Supports(AOwner, IProveedorConexiones, Proveedor) then
+    FConexiones := Proveedor.Conexiones;
+  if not Assigned(FConexiones) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorConexiones,
+       Proveedor) then
+    FConexiones := Proveedor.Conexiones;
+end;
+
+procedure TdmFiltros.HeredarContextoSesion(AOwner: TComponent);
+var
+  Proveedor: IProveedorContextoSesion;
+begin
+  FContextoSesion := nil;
+  if Supports(AOwner, IProveedorContextoSesion, Proveedor) then
+    FContextoSesion := Proveedor.ContextoSesion;
+  if not Assigned(FContextoSesion) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorContextoSesion,
+       Proveedor) then
+    FContextoSesion := Proveedor.ContextoSesion;
+end;
+
+function TdmFiltros.GetConexiones: IServicioConexiones;
+begin
+  Result := FConexiones;
+end;
+
+function TdmFiltros.GetConexionPrincipal: TUniConnection;
+begin
+  Result := nil;
+  if Assigned(FConexiones) then
+    Result := FConexiones.ConexionPrincipal;
+  if not Assigned(Result) and
+     not (csDesigning in ComponentState) then
+    raise Exception.Create(
+      'No se ha configurado el servicio de conexiones de datos.');
+end;
+
+function TdmFiltros.GetContextoSesion: IContextoSesionAplicacion;
+begin
+  Result := FContextoSesion;
+end;
+
+function TdmFiltros.GetIdentidadSesion: TIdentidadSesion;
+begin
+  Result := TIdentidadSesion.Crear('', '', '');
+  if Assigned(FContextoSesion) then
+    Result := FContextoSesion.Identidad
+  else if not (csDesigning in ComponentState) then
+    raise Exception.Create(
+      'No se ha configurado el contexto de sesión.');
+end;
+
 procedure TdmFiltros.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryListado := TUniQuery.Create(Self);
-  dsListado := TDataSource.Create(Self);
-  dsListado.DataSet := unqryListado;
-end;
-
-procedure TdmFiltros.AbrirListadoParaGrid(const AMto, AVista: string);
-begin
-  if unqryListado.Active then
-  begin
-    unqryListado.Close;
-  end;
-  unqryListado.Connection := oConn;
-  unqryListado.SQL.Text :=
-    '  SELECT F.ID_FILT, ' +
-    '         F.NOMBRE_FILT, ' +
-    '         F.DESCRIPCION_FILT, ' +
-    '         F.USUARIO_PROPIETARIO_FILT, ' +
-    '         CASE WHEN F.USUARIO_PROPIETARIO_FILT = :USUARIO ' +
-    '              THEN ''S'' ELSE ''N'' END AS ESPROPIO_FILT ' +
-    '    FROM fza_filtros_guardados F ' +
-    '   WHERE F.MTO_FILT = :MTO ' +
-    '     AND F.VISTA_FILT = :VISTA ' +
-    cSqlVisibilidad +
-    'ORDER BY ESPROPIO_FILT DESC, F.NOMBRE_FILT';
-  unqryListado.ParamByName('MTO').AsString := AMto;
-  unqryListado.ParamByName('VISTA').AsString := AVista;
-  unqryListado.ParamByName('USUARIO').AsString := oUser;
-  unqryListado.ParamByName('GRUPO').AsString := oGroup;
-  unqryListado.Open;
 end;
 
 function TdmFiltros.ListarFiltros(const AMto,
@@ -148,11 +190,13 @@ function TdmFiltros.ListarFiltros(const AMto,
 var
   qry: TUniQuery;
   info: TFiltroGuardadoInfo;
+  IdentidadActual: TIdentidadSesion;
 begin
+  IdentidadActual := IdentidadSesion;
   Result := TFiltrosGuardadosList.Create;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       '  SELECT F.ID_FILT, ' +
       '         F.NOMBRE_FILT, ' +
@@ -165,8 +209,8 @@ begin
       'ORDER BY F.USUARIO_PROPIETARIO_FILT <> :USUARIO, F.NOMBRE_FILT';
     qry.ParamByName('MTO').AsString := AMto;
     qry.ParamByName('VISTA').AsString := AVista;
-    qry.ParamByName('USUARIO').AsString := oUser;
-    qry.ParamByName('GRUPO').AsString := oGroup;
+    qry.ParamByName('USUARIO').AsString := IdentidadActual.Usuario;
+    qry.ParamByName('GRUPO').AsString := IdentidadActual.Grupo;
     qry.Open;
     while not qry.Eof do
     begin
@@ -175,7 +219,9 @@ begin
       info.Descripcion := qry.FieldByName('DESCRIPCION_FILT').AsString;
       info.Propietario :=
         qry.FieldByName('USUARIO_PROPIETARIO_FILT').AsString;
-      info.EsPropio := SameText(info.Propietario, oUser);
+      info.EsPropio := SameText(
+        info.Propietario,
+        IdentidadActual.Usuario);
       Result.Add(info);
       qry.Next;
     end;
@@ -194,7 +240,7 @@ begin
   Result := 0;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT ID_FILT ' +
       '  FROM fza_filtros_guardados ' +
@@ -205,7 +251,7 @@ begin
     qry.ParamByName('MTO').AsString := AMto;
     qry.ParamByName('VISTA').AsString := AVista;
     qry.ParamByName('NOMBRE').AsString := ANombre;
-    qry.ParamByName('USUARIO').AsString := oUser;
+    qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
     qry.Open;
     if not qry.IsEmpty then
     begin
@@ -228,7 +274,7 @@ begin
   Result := 0;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'INSERT INTO fza_filtros_guardados ' +
       '  (MTO_FILT, VISTA_FILT, NOMBRE_FILT, DESCRIPCION_FILT, ' +
@@ -247,7 +293,7 @@ begin
     // UniDataPerfiles.GrabarPerfil).
     qry.ParamByName('FILTRO').DataType := ftMemo;
     qry.ParamByName('FILTRO').AsString := AFiltroBase64;
-    qry.ParamByName('USUARIO').AsString := oUser;
+    qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
     qry.Execute;
     qry.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
     qry.Open;
@@ -270,7 +316,7 @@ var
 begin
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'UPDATE fza_filtros_guardados ' +
       '   SET NOMBRE_FILT = :NOMBRE, ' +
@@ -283,7 +329,7 @@ begin
     qry.ParamByName('DESCRIPCION').AsString := ADescripcion;
     qry.ParamByName('FILTRO').DataType := ftMemo;
     qry.ParamByName('FILTRO').AsString := AFiltroBase64;
-    qry.ParamByName('USUARIO').AsString := oUser;
+    qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
     qry.ParamByName('ID').AsLargeInt := AIdFiltro;
     qry.Execute;
   finally
@@ -298,7 +344,7 @@ var
 begin
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'UPDATE fza_filtros_guardados ' +
       '   SET NOMBRE_FILT = :NOMBRE, ' +
@@ -308,7 +354,7 @@ begin
       '   AND USUARIO_PROPIETARIO_FILT = :USUARIO';
     qry.ParamByName('NOMBRE').AsString := ANombre;
     qry.ParamByName('DESCRIPCION').AsString := ADescripcion;
-    qry.ParamByName('USUARIO').AsString := oUser;
+    qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
     qry.ParamByName('ID').AsLargeInt := AIdFiltro;
     qry.Execute;
   finally
@@ -322,10 +368,10 @@ var
 begin
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     // No hay FK fisica (convencion del proyecto): borramos primero los
     // destinos compartidos y despues la cabecera, en una transaccion.
-    oConn.StartTransaction;
+    ConexionPrincipal.StartTransaction;
     try
       qry.SQL.Text :=
         'DELETE FROM fza_filtros_guardados_compartidos ' +
@@ -337,11 +383,11 @@ begin
         ' WHERE ID_FILT = :ID ' +
         '   AND USUARIO_PROPIETARIO_FILT = :USUARIO';
       qry.ParamByName('ID').AsLargeInt := AIdFiltro;
-      qry.ParamByName('USUARIO').AsString := oUser;
+      qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
       qry.Execute;
-      oConn.Commit;
+      ConexionPrincipal.Commit;
     except
-      oConn.Rollback;
+      ConexionPrincipal.Rollback;
       raise;
     end;
   finally
@@ -356,14 +402,14 @@ begin
   Result := False;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT 1 ' +
       '  FROM fza_filtros_guardados ' +
       ' WHERE ID_FILT = :ID ' +
       '   AND USUARIO_PROPIETARIO_FILT = :USUARIO';
     qry.ParamByName('ID').AsLargeInt := AIdFiltro;
-    qry.ParamByName('USUARIO').AsString := oUser;
+    qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
     qry.Open;
     Result := not qry.IsEmpty;
     qry.Close;
@@ -379,7 +425,7 @@ begin
   Result := '';
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT FILTRO_FILT ' +
       '  FROM fza_filtros_guardados ' +
@@ -405,7 +451,7 @@ begin
   Result := TDestinosCompartidosList.Create;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       '  SELECT ID_FILTC, TIPO_DESTINO_FILTC, USUARIO_GRUPO_FILTC ' +
       '    FROM fza_filtros_guardados_compartidos ' +
@@ -441,7 +487,7 @@ begin
   end;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'INSERT INTO fza_filtros_guardados_compartidos ' +
       '  (ID_FILT_FILTC, USUARIO_GRUPO_FILTC, TIPO_DESTINO_FILTC, ' +
@@ -453,7 +499,7 @@ begin
     qry.ParamByName('ID').AsLargeInt := AIdFiltro;
     qry.ParamByName('DESTINO').AsString := sDestino;
     qry.ParamByName('TIPO').AsString := UpperCase(ATipoDestino);
-    qry.ParamByName('USUARIO').AsString := oUser;
+    qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
     qry.Execute;
   finally
     FreeAndNil(qry);
@@ -466,7 +512,7 @@ var
 begin
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'DELETE FROM fza_filtros_guardados_compartidos ' +
       ' WHERE ID_FILTC = :ID';

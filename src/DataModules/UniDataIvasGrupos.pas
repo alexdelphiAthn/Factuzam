@@ -18,7 +18,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-   inLibUser, UniDataConn, inLibtb;
+   inLibUser, inLibtb;
 
 type
   TdmIvasGrupos = class(TdmBase)
@@ -32,9 +32,6 @@ type
   end;
 
 implementation
-
-uses
-  inLibGlobalVar;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -70,11 +67,13 @@ begin
   begin
     sCodigo := Trim(FindField('IVA_IVAGRP').AsString);
     sDescripcion := Trim(FindField('DESCRIPCION_IVA_IVAGRP').AsString);
-    if ((sDescripcion = '') or (SimbolosProhibidos(sDescripcion))) then
+    if (sDescripcion = '') or
+       SimbolosProhibidos(sDescripcion, PerfilesUsuario) then
       raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
                                   'para el campo Descripción de Grupos de IVA',
                                   [sDescripcion]);
-    if ((sCodigo = '') or (SimbolosProhibidos(sCodigo))) then
+    if (sCodigo = '') or
+       SimbolosProhibidos(sCodigo, PerfilesUsuario) then
       raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
                                   'para el campo Código de Grupos de IVA',
                                   [sCodigo]);
@@ -82,7 +81,7 @@ begin
     begin
       unqrySol := TUniQuery.Create(nil);
       try
-        unqrySol.Connection := oConn;
+        unqrySol.Connection := ConexionPrincipal;
         unqrySol.SQL.Text := 'SELECT ESDEFAULT_IVA_IVAGRP ' +
                              '  FROM vi_ivas_grupos ' +
                              ' WHERE ESDEFAULT_IVA_IVAGRP = ' + QuotedStr('S');
@@ -104,7 +103,6 @@ end;
 procedure TdmIvasGrupos.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-//  unstrdprcContador.Connection := oConn;
 end;
 
 procedure TdmIvasGrupos.GetCodigoAutoIvaGrupo;

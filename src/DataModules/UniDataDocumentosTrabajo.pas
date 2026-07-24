@@ -969,7 +969,7 @@ begin
   begin
     DataSet.FieldByName('INSTANTE_STOCK_DTL').AsDateTime := Now;
   end;
-  odmConn.ActualizarUserTimeModif(DataSet);
+  ActualizarAuditoria(DataSet);
 end;
 
 procedure TdmDocumentosTrabajo.DesempaquetarAtributosLineas;
@@ -1095,7 +1095,7 @@ begin
   begin
     DataSet.FieldByName('PERMISO_DTC').AsString := 'LECTURA';
   end;
-  odmConn.ActualizarUserTimeModif(DataSet);
+  ActualizarAuditoria(DataSet);
 end;
 
 initialization

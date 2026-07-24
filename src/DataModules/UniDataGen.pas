@@ -19,10 +19,18 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.TypInfo, Data.DB, MemDS, DBAccess,
-  Uni, inLibUser, inLibWin, inLibLog;
+  Uni, inLibUser, inLibWin, inLibLog, inLibAuditoriaDatosIntf,
+  inLibConexionesIntf, inLibContextoSesionIntf,
+  inLibPerfilesUsuarioIntf;
 
 type
-  TdmBase = class(TDataModule)
+  TdmBase = class(
+    TDataModule,
+    IProveedorAuditoriaDatos,
+    IProveedorConexiones,
+    IProveedorContextoSesion,
+    IProveedorPerfilesUsuario
+  )
     unqryTablaG: TUniQuery;
     unqryPerfiles: TUniQuery;
     dsPerfiles: TDataSource;
@@ -32,19 +40,55 @@ type
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryTablaGBeforeInsert(DataSet: TDataSet);
   private
+    FAuditoriaDatos: IServicioAuditoriaDatos;
+    FConexiones: IServicioConexiones;
+    FContextoSesion: IContextoSesionAplicacion;
+    FPerfilesUsuario: IPerfilesUsuario;
     function GetCurrentForm: TComponent;
+    function GetAuditoriaDatos: IServicioAuditoriaDatos;
+    function GetConexiones: IServicioConexiones;
+    function GetContextoSesion: IContextoSesionAplicacion;
+    function GetPerfilesUsuario: IPerfilesUsuario;
+    function GetConexionPrincipal: TUniConnection;
     procedure SetCurrentForm(const Value: TComponent);
+    procedure HeredarAuditoriaDatos(AOwner: TComponent);
+    procedure HeredarConexiones(AOwner: TComponent);
+    procedure HeredarContextoSesion(AOwner: TComponent);
+    procedure HeredarPerfilesUsuario(AOwner: TComponent);
   protected
     procedure DoCreate; reintroduce; virtual;
     function GetOwnerForm<T: TComponent>: T;
     function HasOwnerForm: Boolean;
+    procedure ActualizarAuditoria(DataSet: TDataSet);
   public
+    constructor Create(AOwner: TComponent); override;
     property CurrentForm: TComponent read GetCurrentForm write SetCurrentForm;
+    property AuditoriaDatos: IServicioAuditoriaDatos
+      read GetAuditoriaDatos;
+    property Conexiones: IServicioConexiones read GetConexiones;
+    property ContextoSesion: IContextoSesionAplicacion
+      read GetContextoSesion;
+    property PerfilesUsuario: IPerfilesUsuario
+      read GetPerfilesUsuario;
+    property ConexionPrincipal: TUniConnection
+      read GetConexionPrincipal;
+    procedure AsignarAuditoriaDatos(
+      const AAuditoriaDatos: IServicioAuditoriaDatos);
+    procedure AsignarConexiones(
+      const AConexiones: IServicioConexiones);
+    procedure AsignarContextoSesion(
+      const AContextoSesion: IContextoSesionAplicacion);
+    procedure AsignarPerfilesUsuario(
+      const APerfilesUsuario: IPerfilesUsuario);
+    function CrearConexionTrabajo(
+      AOwner: TComponent;
+      AUso: TUsoConexionTrabajo
+    ): TUniConnection;
     procedure ResetGridsProfile(sGrid, sForm, sPermisos:String);
     // Reasigna la conexion (TUniConnection) de todos los datasets/SQL del
     // data module a `NewConn`. Lo usa TfrmMtoGen tras crear el data module
     // para que cada pestaña use una conexion propia del pool en lugar de
-    // la global `oConn` (asi dos tabs no se serializan a nivel de conexion).
+    // la conexion principal compartida (asi dos tabs no se serializan).
     procedure ReasignarConexion(NewConn: TUniConnection);
     // Corta consultas/procedimientos UniDAC en curso antes de destruir el
     // mantenimiento. Se llama desde el hilo principal mientras la tarea BBDD
@@ -75,15 +119,173 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses  inLibGlobalVar, inMtoPrincipal, inMtoGen, inLibData;
+uses
+  Vcl.Forms, inMtoGen, inLibData;
 
 {$R *.dfm}
 
+constructor TdmBase.Create(AOwner: TComponent);
+begin
+  HeredarAuditoriaDatos(AOwner);
+  HeredarConexiones(AOwner);
+  HeredarContextoSesion(AOwner);
+  HeredarPerfilesUsuario(AOwner);
+  inherited Create(AOwner);
+end;
+
+procedure TdmBase.HeredarAuditoriaDatos(AOwner: TComponent);
+var
+  Proveedor: IProveedorAuditoriaDatos;
+begin
+  FAuditoriaDatos := nil;
+  if Supports(AOwner, IProveedorAuditoriaDatos, Proveedor) then
+    FAuditoriaDatos := Proveedor.AuditoriaDatos;
+  if not Assigned(FAuditoriaDatos) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorAuditoriaDatos,
+       Proveedor) then
+    FAuditoriaDatos := Proveedor.AuditoriaDatos;
+end;
+
+procedure TdmBase.HeredarConexiones(AOwner: TComponent);
+var
+  Proveedor: IProveedorConexiones;
+begin
+  FConexiones := nil;
+  if Supports(AOwner, IProveedorConexiones, Proveedor) then
+    FConexiones := Proveedor.Conexiones;
+  if not Assigned(FConexiones) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorConexiones,
+       Proveedor) then
+    FConexiones := Proveedor.Conexiones;
+end;
+
+procedure TdmBase.HeredarContextoSesion(AOwner: TComponent);
+var
+  Proveedor: IProveedorContextoSesion;
+begin
+  FContextoSesion := nil;
+  if Supports(AOwner, IProveedorContextoSesion, Proveedor) then
+    FContextoSesion := Proveedor.ContextoSesion;
+  if not Assigned(FContextoSesion) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorContextoSesion,
+       Proveedor) then
+    FContextoSesion := Proveedor.ContextoSesion;
+end;
+
+procedure TdmBase.HeredarPerfilesUsuario(AOwner: TComponent);
+var
+  Proveedor: IProveedorPerfilesUsuario;
+begin
+  FPerfilesUsuario := nil;
+  if Supports(AOwner, IProveedorPerfilesUsuario, Proveedor) then
+    FPerfilesUsuario := Proveedor.PerfilesUsuario;
+  if not Assigned(FPerfilesUsuario) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorPerfilesUsuario,
+       Proveedor) then
+    FPerfilesUsuario := Proveedor.PerfilesUsuario;
+end;
+
+procedure TdmBase.AsignarAuditoriaDatos(
+  const AAuditoriaDatos: IServicioAuditoriaDatos);
+begin
+  FAuditoriaDatos := AAuditoriaDatos;
+end;
+
+function TdmBase.GetAuditoriaDatos: IServicioAuditoriaDatos;
+begin
+  Result := FAuditoriaDatos;
+end;
+
+procedure TdmBase.AsignarConexiones(
+  const AConexiones: IServicioConexiones);
+begin
+  FConexiones := AConexiones;
+end;
+
+function TdmBase.GetConexiones: IServicioConexiones;
+begin
+  Result := FConexiones;
+end;
+
+procedure TdmBase.AsignarContextoSesion(
+  const AContextoSesion: IContextoSesionAplicacion);
+begin
+  FContextoSesion := AContextoSesion;
+end;
+
+procedure TdmBase.AsignarPerfilesUsuario(
+  const APerfilesUsuario: IPerfilesUsuario);
+begin
+  FPerfilesUsuario := APerfilesUsuario;
+end;
+
+function TdmBase.GetContextoSesion: IContextoSesionAplicacion;
+begin
+  Result := FContextoSesion;
+end;
+
+function TdmBase.GetPerfilesUsuario: IPerfilesUsuario;
+begin
+  Result := FPerfilesUsuario;
+end;
+
+function TdmBase.GetConexionPrincipal: TUniConnection;
+begin
+  Result := nil;
+  if Assigned(FConexiones) then
+    Result := FConexiones.ConexionPrincipal;
+  if not Assigned(Result) and
+     not (csDesigning in ComponentState) then
+    raise Exception.Create(
+      'No se ha configurado el servicio de conexiones de datos.');
+end;
+
+function TdmBase.CrearConexionTrabajo(
+  AOwner: TComponent;
+  AUso: TUsoConexionTrabajo): TUniConnection;
+begin
+  if not Assigned(FConexiones) then
+    raise Exception.Create(
+      'No se ha configurado el servicio de conexiones de datos.');
+  Result := FConexiones.CrearConexion(AOwner, AUso);
+end;
+
+procedure TdmBase.ActualizarAuditoria(DataSet: TDataSet);
+begin
+  if Assigned(FAuditoriaDatos) then
+    FAuditoriaDatos.Actualizar(DataSet)
+  else if not (csDesigning in ComponentState) then
+    raise Exception.Create(
+      'No se ha configurado el servicio de auditoría de datos.');
+end;
+
 procedure TdmBase.DoCreate;
+var
+  Conexion: TUniConnection;
 begin
   FoPerfilDic := nil;
-  unqryTablaG.Connection := oConn;
-  unqryPerfiles.Connection := oConn;
+  Conexion := ConexionPrincipal;
+  if Assigned(Conexion) then
+  begin
+    unqryTablaG.Connection := Conexion;
+    unqryPerfiles.Connection := Conexion;
+  end;
 end;
 
 procedure TdmBase.DataModuleCreate(Sender: TObject);
@@ -142,8 +344,8 @@ begin
     begin
       ds := TCustomDADataSet(Comp);
       // Si el dataset YA esta activo, lo dejamos en paz. Muchos data
-      // modules (Empresas, Clientes, Atributos...) abren lookups en su
-      // DataModuleCreate contra `oConn` global; cerrarlos para reasignar
+      // modules (Empresas, Clientes, Atributos...) abren lookups contra la
+      // conexion principal en DataModuleCreate; cerrarlos para reasignar
       // los dejaria vacios y obligaria a re-fetchearlos. Solo redirigimos
       // los datasets que aun no se han abierto — esos son los que nos
       // interesa que vayan contra FConn (unqryTablaG, SPs como
@@ -197,7 +399,7 @@ var
   unqrySol:TUniQuery;
 begin
   unqrySol := TUniQuery.Create(nil);
-  unqrySol.Connection := oConn;
+  unqrySol.Connection := ConexionPrincipal;
   unqrySol.SQL.Text := 'DELETE FROM fza_usuarios_perfiles ' +
                        '      WHERE USUARIO_GRUPO_USUPER = :user ' +
                        '        AND KEY_USUPER = :form ';
@@ -211,7 +413,7 @@ end;
 
 procedure TdmBase.unqryPerfilesBeforePost(DataSet: TDataSet);
 begin
-  odmConn.ActualizarUserTimeModif(DataSet);
+  ActualizarAuditoria(DataSet);
   if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
     Log.LogEvento(Self.UnitName, DataSet.Name, 'BeforePost',
                   'state=' + GetEnumName(TypeInfo(TDataSetState),
@@ -235,7 +437,7 @@ end;
 procedure TdmBase.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   AjustarEmpresasAlmacenesDocumento(unqryTablaG.Connection, DataSet);
-  oDmConn.ActualizarUserTimeModif(DataSet);
+  ActualizarAuditoria(DataSet);
   if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
     Log.LogEvento(Self.UnitName, DataSet.Name, 'BeforePost',
                   'state=' + GetEnumName(TypeInfo(TDataSetState),

@@ -29,7 +29,7 @@ ModuleType=TBaseProject
 
 [EditWindow0]
 ViewCount=3
-CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\inLibMigCompras.pas
+CurrentView=2
 View0=0
 View1=1
 View2=2
@@ -67,10 +67,6 @@ BottomMiddlePanelClients=DockSite0,GraphDrawingModel
 BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E67566965779F1D00000000000002F706000000000000FFFFFFFF
 
 [View0]
-CustomEditViewType=TOTACustomEditView
-OTAEditViewType=WelcomePage.MainPage
-
-[View1]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dpr
 CursorX=1
@@ -81,16 +77,20 @@ Elisions=
 Bookmarks=
 EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\FactuzamMigrator.dpr
 
-[View2]
+[View1]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\inLibMigCompras.pas
 CursorX=1
-CursorY=1821
+CursorY=1820
 TopLine=1809
 LeftCol=1
 Elisions=
 Bookmarks=
 EditViewName=C:\DISCO_DURO\proyectos\Factuzam\src\utilmigsqlsrv\inLibMigCompras.pas
+
+[View2]
+CustomEditViewType=TOTACustomEditView
+OTAEditViewType=WelcomePage.MainPage
 
 [Watches]
 Count=0

@@ -22,14 +22,14 @@ unit inLibLayoutForm;
 //    * Anchos de columnas de cxGrid (cualquier número de grids)
 //    * Altura de paneles asociados a splitters
 //
-//  Persistencia: usa odmPerfiles.GrabarPerfilesBatch para escribir TODAS las
+//  Persistencia: usa IPerfilesUsuario.GrabarPerfiles para escribir TODAS las
 //  claves del layout en un único INSERT ... VALUES por lote, en lugar de un
 //  INSERT por clave. Para un layout con varios grids esto reduce drásticamente
 //  el tráfico contra MySQL.
 //
 //  Uso típico:
 //    Para guardar (Alt+F12):
-//      var Layout := TLayoutSaver.Create(Self.Name);
+//      var Layout := TLayoutSaver.Create(Self.Name, PerfilesUsuario);
 //      try
 //        Layout.GuardarGeometria(Self);
 //        Layout.GuardarAlturaPanel('PanelMaestro', pnlMaestro);
@@ -41,7 +41,7 @@ unit inLibLayoutForm;
 //      end;
 //
 //    Para restaurar (FormShow):
-//      var Layout := TLayoutLoader.Create(Self.Name);
+//      var Layout := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
 //      try
 //        if Layout.Disponible then
 //        begin
@@ -61,7 +61,7 @@ uses
   cxGridDBTableView, cxGridCustomTableView,
   JvInspector,          // TJvInspector (divider del inspector)
   inLibUser,            // TProfileDicc
-  UniDataPerfiles;      // TPerfilList, TPerfilItem
+  inLibPerfilesUsuarioIntf;
 
 type
   // ---------------------------------------------------------------------------
@@ -72,8 +72,11 @@ type
     FFormKey: string;
     FPerfil: TProfileDicc;
     FDisponible: Boolean;
+    FPerfilesUsuario: IPerfilesUsuario;
   public
-    constructor Create(const AFormKey: string);
+    constructor Create(
+      const AFormKey: string;
+      const APerfilesUsuario: IPerfilesUsuario);
     destructor  Destroy; override;
     procedure RestaurarGeometria(AForm: TForm);
     procedure RestaurarAlturaPanel(const AClave: string;
@@ -93,15 +96,18 @@ type
 
   // ---------------------------------------------------------------------------
   // Acumula valores en memoria; PreguntarYGrabar los persiste TODOS de una
-  // sola vez con GrabarPerfilesBatch.
+  // sola vez con GrabarPerfiles.
   // ---------------------------------------------------------------------------
   TLayoutSaver = class
   private
     FFormKey: string;
     FClaves: TStringList;
+    FPerfilesUsuario: IPerfilesUsuario;
     procedure SetClave(const AClave, AValor: string);
   public
-    constructor Create(const AFormKey: string);
+    constructor Create(
+      const AFormKey: string;
+      const APerfilesUsuario: IPerfilesUsuario);
     destructor  Destroy; override;
     procedure GuardarGeometria(AForm: TForm);
     procedure GuardarAlturaPanel(const AClave: string; APanel: TPanel);
@@ -117,7 +123,9 @@ type
 // Borra el perfil de layout guardado para el formulario dado.
 // Muestra un modal para elegir el nivel de permisos a resetear.
 // Devuelve True si se borró, False si el usuario canceló.
-function ResetearLayout(const AFormKey: string): Boolean;
+function ResetearLayout(
+  const AFormKey: string;
+  const APerfilesUsuario: IPerfilesUsuario): Boolean;
 
 implementation
 
@@ -130,17 +138,22 @@ uses
 // TLayoutLoader
 // =============================================================================
 
-constructor TLayoutLoader.Create(const AFormKey: string);
+constructor TLayoutLoader.Create(
+  const AFormKey: string;
+  const APerfilesUsuario: IPerfilesUsuario);
 var
   iClaves: Integer;
 begin
   inherited Create;
   FFormKey := AFormKey;
+  FPerfilesUsuario := APerfilesUsuario;
   FPerfil  := nil;
   Log.LogInfo(Format('TLayoutLoader.Create: formKey="%s" -> GetFormUserProfile',
                      [AFormKey]));
   inLibUser.GetFormUserProfile(FPerfil, FFormKey,
-                               inLibGlobalVar.oUser, inLibGlobalVar.oGroup);
+                               inLibGlobalVar.oUser,
+                               inLibGlobalVar.oGroup,
+                               FPerfilesUsuario);
   FDisponible := FPerfil <> nil;
   if FPerfil <> nil then
     iClaves := FPerfil.Count
@@ -243,10 +256,13 @@ end;
 // TLayoutSaver
 // =============================================================================
 
-constructor TLayoutSaver.Create(const AFormKey: string);
+constructor TLayoutSaver.Create(
+  const AFormKey: string;
+  const APerfilesUsuario: IPerfilesUsuario);
 begin
   inherited Create;
   FFormKey := AFormKey;
+  FPerfilesUsuario := APerfilesUsuario;
   FClaves  := TStringList.Create;
 end;
 
@@ -343,7 +359,7 @@ begin
       Item.Value     := FClaves.ValueFromIndex[i];
       Lote.Add(Item);
     end;
-    odmPerfiles.GrabarPerfilesBatch(Lote);
+    FPerfilesUsuario.GrabarPerfiles(Lote);
   finally
     FreeAndNil(Lote);
   end;
@@ -354,7 +370,9 @@ end;
 // ResetearLayout
 // =============================================================================
 
-function ResetearLayout(const AFormKey: string): Boolean;
+function ResetearLayout(
+  const AFormKey: string;
+  const APerfilesUsuario: IPerfilesUsuario): Boolean;
 var
   formulario: TfrmModalGenImpSave;
   sPermisos: string;
@@ -372,7 +390,7 @@ begin
   finally
     FreeAndNil(formulario);
   end;
-  odmPerfiles.DeleteProfile(sPermisos, AFormKey);
+  APerfilesUsuario.EliminarPerfil(sPermisos, AFormKey);
   ShowMessage('Layout reseteado.' + sLineBreak +
               'Se aplicará la próxima vez que abra el formulario.');
   Result := True;

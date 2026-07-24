@@ -19,7 +19,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics,
+  System.Classes, Data.DB, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxClasses, cxLocalization, cxContainer,
   cxEdit, cxLabel, cxDropDownEdit, dxSkinsCore, dxSkinsDefaultPainters,
   cxLookAndFeels, dxSkinsForm, dxSkinBlack, dxSkinBlue, dxSkinBlueprint,
@@ -39,7 +39,10 @@ uses
   dxSkinOffice2019Colorful, dxSkinOffice2019DarkGray, dxSkinOffice2019White,
   dxSkinPumpkin, dxSkinSilver, dxSkinTheBezier, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, JvComponentBase,
-  JvEnterTab, inLibPermisosIntf;
+  JvEnterTab, Uni, inLibPermisosIntf, inLibConexionesIntf,
+  inLibAuditoriaDatosIntf, inLibMonitorSQLIntf,
+  inLibContextoSesionIntf, inLibFiltrosGuardadosIntf,
+  inLibPerfilesUsuarioIntf;
 
 type
   TEnterAsTabEstado = record
@@ -47,15 +50,43 @@ type
     EnterAsTab : Boolean;
   end;
 
-  TfrmBase = class(TForm, IProveedorPermisosAplicacion)
+  TfrmBase = class(
+    TForm,
+    IProveedorPermisosAplicacion,
+    IProveedorConexiones,
+    IProveedorAuditoriaDatos,
+    IProveedorMonitorSQL,
+    IProveedorContextoSesion,
+    IProveedorFiltrosGuardados,
+    IProveedorPerfilesUsuario
+  )
     Localizer1: TcxLocalizer;
     jvntrstb1: TJvEnterAsTab;
     procedure FormCreate(Sender: TObject);
   private
     FPermisos: IPermisosAplicacion;
+    FConexiones: IServicioConexiones;
+    FAuditoriaDatos: IServicioAuditoriaDatos;
+    FMonitorSQL: IServicioMonitorSQL;
+    FContextoSesion: IContextoSesionAplicacion;
+    FFiltrosGuardados: IFiltrosGuardados;
+    FPerfilesUsuario: IPerfilesUsuario;
     FEnterAsTabEstados: array of TEnterAsTabEstado;
     FEnterAsTabTemporalActivo: Boolean;
     function GetPermisos: IPermisosAplicacion;
+    function GetConexiones: IServicioConexiones;
+    function GetAuditoriaDatos: IServicioAuditoriaDatos;
+    function GetMonitorSQL: IServicioMonitorSQL;
+    function GetContextoSesion: IContextoSesionAplicacion;
+    function GetFiltrosGuardados: IFiltrosGuardados;
+    function GetPerfilesUsuario: IPerfilesUsuario;
+    function GetConexionPrincipal: TUniConnection;
+    procedure HeredarConexiones(AOwner: TComponent);
+    procedure HeredarAuditoriaDatos(AOwner: TComponent);
+    procedure HeredarMonitorSQL(AOwner: TComponent);
+    procedure HeredarContextoSesion(AOwner: TComponent);
+    procedure HeredarFiltrosGuardados(AOwner: TComponent);
+    procedure HeredarPerfilesUsuario(AOwner: TComponent);
     procedure GuardarEnterAsTabDe(AOwner: TComponent);
     function EnterAsTabGuardado(AComp: TJvEnterAsTab): Boolean;
   protected
@@ -66,6 +97,8 @@ type
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure DesactivarEnterAsTabTemporal(Sender: TObject);
     procedure RestaurarEnterAsTabTemporal(Sender: TObject);
+    procedure ActualizarAuditoria(DataSet: TDataSet);
+    procedure CerrarMonitorSQLPendiente;
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); overload; override;
@@ -73,11 +106,33 @@ type
                        const APermisos: IPermisosAplicacion); reintroduce;
                        overload;
     procedure AsignarPermisos(const APermisos: IPermisosAplicacion);
+    procedure AsignarConexiones(
+      const AConexiones: IServicioConexiones);
+    procedure AsignarAuditoriaDatos(
+      const AAuditoriaDatos: IServicioAuditoriaDatos);
+    procedure AsignarMonitorSQL(
+      const AMonitorSQL: IServicioMonitorSQL);
+    procedure AsignarContextoSesion(
+      const AContextoSesion: IContextoSesionAplicacion);
+    procedure AsignarFiltrosGuardados(
+      const AFiltrosGuardados: IFiltrosGuardados);
+    procedure AsignarPerfilesUsuario(
+      const APerfilesUsuario: IPerfilesUsuario);
     // Articulo/sku del registro/linea en foco, para la consulta de stock
     // global (Ctrl+U, capturado en inMtoPrincipal). Por defecto vacio; los
     // formularios con articulo activo lo sobreescriben.
     procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); virtual;
     property Permisos: IPermisosAplicacion read GetPermisos;
+    property Conexiones: IServicioConexiones read GetConexiones;
+    property AuditoriaDatos: IServicioAuditoriaDatos
+      read GetAuditoriaDatos;
+    property MonitorSQL: IServicioMonitorSQL read GetMonitorSQL;
+    property ContextoSesion: IContextoSesionAplicacion
+      read GetContextoSesion;
+    property FiltrosGuardados: IFiltrosGuardados
+      read GetFiltrosGuardados;
+    property PerfilesUsuario: IPerfilesUsuario read GetPerfilesUsuario;
+    property ConexionPrincipal: TUniConnection read GetConexionPrincipal;
   end;
 
 var
@@ -93,11 +148,20 @@ uses
 
 constructor TfrmBase.Create(AOwner: TComponent);
 var
-  Proveedor: IProveedorPermisosAplicacion;
+  ProveedorPermisos: IProveedorPermisosAplicacion;
 begin
   FPermisos := nil;
-  if Supports(AOwner, IProveedorPermisosAplicacion, Proveedor) then
-    FPermisos := Proveedor.Permisos;
+  if Supports(
+       AOwner,
+       IProveedorPermisosAplicacion,
+       ProveedorPermisos) then
+    FPermisos := ProveedorPermisos.Permisos;
+  HeredarConexiones(AOwner);
+  HeredarAuditoriaDatos(AOwner);
+  HeredarMonitorSQL(AOwner);
+  HeredarContextoSesion(AOwner);
+  HeredarFiltrosGuardados(AOwner);
+  HeredarPerfilesUsuario(AOwner);
   inherited Create(AOwner);
 end;
 
@@ -106,7 +170,115 @@ constructor TfrmBase.Create(
   const APermisos: IPermisosAplicacion);
 begin
   FPermisos := APermisos;
+  HeredarConexiones(AOwner);
+  HeredarAuditoriaDatos(AOwner);
+  HeredarMonitorSQL(AOwner);
+  HeredarContextoSesion(AOwner);
+  HeredarFiltrosGuardados(AOwner);
+  HeredarPerfilesUsuario(AOwner);
   inherited Create(AOwner);
+end;
+
+procedure TfrmBase.HeredarConexiones(AOwner: TComponent);
+var
+  Proveedor: IProveedorConexiones;
+begin
+  FConexiones := nil;
+  if Supports(AOwner, IProveedorConexiones, Proveedor) then
+    FConexiones := Proveedor.Conexiones;
+  if not Assigned(FConexiones) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorConexiones,
+       Proveedor) then
+    FConexiones := Proveedor.Conexiones;
+end;
+
+procedure TfrmBase.HeredarAuditoriaDatos(AOwner: TComponent);
+var
+  Proveedor: IProveedorAuditoriaDatos;
+begin
+  FAuditoriaDatos := nil;
+  if Supports(AOwner, IProveedorAuditoriaDatos, Proveedor) then
+    FAuditoriaDatos := Proveedor.AuditoriaDatos;
+  if not Assigned(FAuditoriaDatos) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorAuditoriaDatos,
+       Proveedor) then
+    FAuditoriaDatos := Proveedor.AuditoriaDatos;
+end;
+
+procedure TfrmBase.HeredarMonitorSQL(AOwner: TComponent);
+var
+  Proveedor: IProveedorMonitorSQL;
+begin
+  FMonitorSQL := nil;
+  if Supports(AOwner, IProveedorMonitorSQL, Proveedor) then
+    FMonitorSQL := Proveedor.MonitorSQL;
+  if not Assigned(FMonitorSQL) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorMonitorSQL,
+       Proveedor) then
+    FMonitorSQL := Proveedor.MonitorSQL;
+end;
+
+procedure TfrmBase.HeredarContextoSesion(AOwner: TComponent);
+var
+  Proveedor: IProveedorContextoSesion;
+begin
+  FContextoSesion := nil;
+  if Supports(AOwner, IProveedorContextoSesion, Proveedor) then
+    FContextoSesion := Proveedor.ContextoSesion;
+  if not Assigned(FContextoSesion) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorContextoSesion,
+       Proveedor) then
+    FContextoSesion := Proveedor.ContextoSesion;
+end;
+
+procedure TfrmBase.HeredarFiltrosGuardados(AOwner: TComponent);
+var
+  Proveedor: IProveedorFiltrosGuardados;
+begin
+  FFiltrosGuardados := nil;
+  if Supports(AOwner, IProveedorFiltrosGuardados, Proveedor) then
+    FFiltrosGuardados := Proveedor.FiltrosGuardados;
+  if not Assigned(FFiltrosGuardados) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorFiltrosGuardados,
+       Proveedor) then
+    FFiltrosGuardados := Proveedor.FiltrosGuardados;
+end;
+
+procedure TfrmBase.HeredarPerfilesUsuario(AOwner: TComponent);
+var
+  Proveedor: IProveedorPerfilesUsuario;
+begin
+  FPerfilesUsuario := nil;
+  if Supports(AOwner, IProveedorPerfilesUsuario, Proveedor) then
+    FPerfilesUsuario := Proveedor.PerfilesUsuario;
+  if not Assigned(FPerfilesUsuario) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorPerfilesUsuario,
+       Proveedor) then
+    FPerfilesUsuario := Proveedor.PerfilesUsuario;
 end;
 
 procedure TfrmBase.AsignarPermisos(
@@ -115,9 +287,97 @@ begin
   FPermisos := APermisos;
 end;
 
+procedure TfrmBase.AsignarConexiones(
+  const AConexiones: IServicioConexiones);
+begin
+  FConexiones := AConexiones;
+end;
+
+procedure TfrmBase.AsignarAuditoriaDatos(
+  const AAuditoriaDatos: IServicioAuditoriaDatos);
+begin
+  FAuditoriaDatos := AAuditoriaDatos;
+end;
+
+procedure TfrmBase.AsignarMonitorSQL(
+  const AMonitorSQL: IServicioMonitorSQL);
+begin
+  FMonitorSQL := AMonitorSQL;
+end;
+
+procedure TfrmBase.AsignarContextoSesion(
+  const AContextoSesion: IContextoSesionAplicacion);
+begin
+  FContextoSesion := AContextoSesion;
+end;
+
+procedure TfrmBase.AsignarFiltrosGuardados(
+  const AFiltrosGuardados: IFiltrosGuardados);
+begin
+  FFiltrosGuardados := AFiltrosGuardados;
+end;
+
+procedure TfrmBase.AsignarPerfilesUsuario(
+  const APerfilesUsuario: IPerfilesUsuario);
+begin
+  FPerfilesUsuario := APerfilesUsuario;
+end;
+
 function TfrmBase.GetPermisos: IPermisosAplicacion;
 begin
   Result := FPermisos;
+end;
+
+function TfrmBase.GetConexiones: IServicioConexiones;
+begin
+  Result := FConexiones;
+end;
+
+function TfrmBase.GetAuditoriaDatos: IServicioAuditoriaDatos;
+begin
+  Result := FAuditoriaDatos;
+end;
+
+function TfrmBase.GetMonitorSQL: IServicioMonitorSQL;
+begin
+  Result := FMonitorSQL;
+end;
+
+function TfrmBase.GetContextoSesion: IContextoSesionAplicacion;
+begin
+  Result := FContextoSesion;
+end;
+
+function TfrmBase.GetFiltrosGuardados: IFiltrosGuardados;
+begin
+  Result := FFiltrosGuardados;
+end;
+
+function TfrmBase.GetPerfilesUsuario: IPerfilesUsuario;
+begin
+  Result := FPerfilesUsuario;
+end;
+
+function TfrmBase.GetConexionPrincipal: TUniConnection;
+begin
+  Result := nil;
+  if Assigned(FConexiones) then
+    Result := FConexiones.ConexionPrincipal;
+end;
+
+procedure TfrmBase.ActualizarAuditoria(DataSet: TDataSet);
+begin
+  if Assigned(FAuditoriaDatos) then
+    FAuditoriaDatos.Actualizar(DataSet)
+  else if not (csDesigning in ComponentState) then
+    raise Exception.Create(
+      'No se ha configurado el servicio de auditoría de datos.');
+end;
+
+procedure TfrmBase.CerrarMonitorSQLPendiente;
+begin
+  if Assigned(FMonitorSQL) then
+    FMonitorSQL.CerrarPendiente;
 end;
 
 procedure TfrmBase.FormCreate(Sender: TObject);

@@ -2197,7 +2197,7 @@ begin
     end;
   end;
   if DataSet.State in [dsEdit, dsInsert] then
-    oDmConn.ActualizarUserTimeModif(DataSet);
+    ActualizarAuditoria(DataSet);
 end;
 
 procedure TdmFacturas.unqryTablaGBeforeDelete(DataSet: TDataSet);
@@ -2655,7 +2655,7 @@ begin
           ShowMessage('Aviso: hay un salto en la numeracion de la serie ' +
             FieldByName('SERIE_FAC').AsString + '. La ley exige numeracion ' +
             'correlativa: el numero o numeros que falten deben cubrirse.');
-        odmConn.ActualizarUserTimeModif(DataSet);
+        ActualizarAuditoria(DataSet);
       end;
   end;
 end;

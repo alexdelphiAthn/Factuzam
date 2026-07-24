@@ -16,7 +16,7 @@ unit inLibVentasWsCola;
 interface
 
 uses
-  System.SysUtils, System.Classes, Uni;
+  System.SysUtils, System.Classes, Uni, inLibConexionesIntf;
 
 type
   TVentasWsCola = class
@@ -36,7 +36,8 @@ type
       const ASerie, ANumero, ARutaPdf: string); static;
     class procedure AdjuntarFacturaPdfSeguro(AConn: TUniConnection;
       const ASerie, ANumero, ARutaPdf: string); static;
-    class procedure IniciarHilo; static;
+    class procedure IniciarHilo(
+      const AConexiones: IServicioConexiones); static;
     class procedure DetenerHilo; static;
   end;
 
@@ -51,8 +52,8 @@ type
   THiloVentasWsCola = class(TThread)
   private
     FConn: TUniConnection;
+    FConexiones: IServicioConexiones;
     FAvisoConfiguracion: Boolean;
-    function CrearConexionPropia: TUniConnection;
     procedure EsperarCiclo;
     procedure EsperarSegundos(ASegundos: Integer);
     procedure ProcesarPendientes;
@@ -62,6 +63,8 @@ type
   protected
     procedure Execute; override;
   public
+    constructor Create(
+      const AConexiones: IServicioConexiones); reintroduce;
     destructor Destroy; override;
   end;
 
@@ -275,11 +278,12 @@ begin
   end;
 end;
 
-class procedure TVentasWsCola.IniciarHilo;
+class procedure TVentasWsCola.IniciarHilo(
+  const AConexiones: IServicioConexiones);
 begin
   if oHiloVentasWs = nil then
   begin
-    oHiloVentasWs := THiloVentasWsCola.Create(True);
+    oHiloVentasWs := THiloVentasWsCola.Create(AConexiones);
     oHiloVentasWs.FreeOnTerminate := False;
     oHiloVentasWs.Start;
     Log.LogInfo('Cola de ventas WS: hilo iniciado');
@@ -297,9 +301,19 @@ begin
   end;
 end;
 
+constructor THiloVentasWsCola.Create(
+  const AConexiones: IServicioConexiones);
+begin
+  if not Assigned(AConexiones) then
+    raise EArgumentNilException.Create('AConexiones');
+  inherited Create(True);
+  FConexiones := AConexiones;
+end;
+
 destructor THiloVentasWsCola.Destroy;
 begin
   FreeAndNil(FConn);
+  FConexiones := nil;
   inherited;
 end;
 
@@ -322,32 +336,6 @@ begin
         end;
       end;
     end;
-  end;
-end;
-
-function THiloVentasWsCola.CrearConexionPropia: TUniConnection;
-begin
-  Result := TUniConnection.Create(nil);
-  try
-    Result.LoginPrompt := False;
-    Result.ProviderName := oConn.ProviderName;
-    Result.Server := oConn.Server;
-    Result.Port := oConn.Port;
-    Result.Database := oConn.Database;
-    Result.Username := oConn.Username;
-    Result.Password := oConn.Password;
-    Result.Pooling := True;
-    Result.PoolingOptions.ConnectionLifetime := 0;
-    Result.PoolingOptions.Validate := True;
-    Result.SpecificOptions.Values['MySQL.Interactive'] := 'True';
-    Result.SpecificOptions.Values['ConnectionTimeout'] := '30';
-    Result.Options.LocalFailover := True;
-    Result.Options.DisconnectedMode := True;
-    Result.AfterConnect := oConn.AfterConnect;
-    Result.Connect;
-  except
-    FreeAndNil(Result);
-    raise;
   end;
 end;
 
@@ -386,7 +374,9 @@ begin
   begin
     FAvisoConfiguracion := False;
     if FConn = nil then
-      FConn := CrearConexionPropia;
+      FConn := FConexiones.CrearConexion(
+        nil,
+        uctSegundoPlano);
     Qry := TUniQuery.Create(nil);
     try
       Qry.Connection := FConn;

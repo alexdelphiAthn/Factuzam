@@ -186,7 +186,7 @@ begin
        DataSet.FieldByName('ESACTIVO_PV').IsNull then
       DataSet.FieldByName('ESACTIVO_PV').AsString := 'S';
   end;
-  oDmConn.ActualizarUserTimeModif(DataSet);
+  ActualizarAuditoria(DataSet);
 end;
 
 procedure TfrmMtoPropiedades.actGoArticuloUpdate(Sender: TObject);

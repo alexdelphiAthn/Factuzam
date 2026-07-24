@@ -14,8 +14,8 @@
 --   fza_empleados saca ese concepto a tabla propia, le añade datos básicos
 --   (nombre, dirección, teléfono) y lo independiza del usuario de login: el
 --   empleado y el usuario PUEDEN SER DISTINTOS. La auditoría (USUARIO_ALTA /
---   USUARIO_MODIF) sigue siendo el usuario logado (la sella TdmConn.
---   ActualizarUserTimeModif), no el empleado.
+--   USUARIO_MODIF) sigue siendo el usuario logado (la sella el servicio
+--   TServicioAuditoriaDatos), no el empleado.
 --
 -- Sufijo de tabla: EMPL (EMP ya es de fza_empresas). Registrado en el catálogo
 --   §2 de LIBRO_DE_ESTILO_BBDD.md y en UNormalizerEngine.pas (InitDefaults).

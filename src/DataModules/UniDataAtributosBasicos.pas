@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-  inLibUser, UniDataConn;
+  inLibUser;
 
 type
   TdmAtributosBasicos = class(TdmBase)
@@ -37,7 +37,7 @@ type
 implementation
 
 uses
-  inMtoAtributosBasicos, inLibGlobalVar, inLibLog, System.Diagnostics;
+  inMtoAtributosBasicos, inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -48,7 +48,7 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TdmAtributosBasicos.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryAtributosLookup.Connection := oConn;
+  unqryAtributosLookup.Connection := ConexionPrincipal;
   // unqryAtributosLookup.Open movido a AbrirDetalles.
 end;
 
@@ -88,7 +88,7 @@ begin
     raise Exception.Create('El código del atributo básico es obligatorio.');
   if Trim(DataSet.FieldByName('NOMBRE_ATB').AsString) = '' then
     raise Exception.Create('El nombre del atributo básico es obligatorio.');
-  oDmConn.ActualizarUserTimeModif(DataSet);
+  ActualizarAuditoria(DataSet);
 end;
 
 initialization

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoMovimientosAlmacen                                       }
 {    Tipo:       Formulario (Mto)                                              }
@@ -29,7 +29,7 @@ uses
   cxButtons, cxDBNavigator, Vcl.Buttons, dxBevel, cxLabel, cxTextEdit,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, Vcl.ComCtrls,
-  UniDataMovimientosAlmacen, UniDataPerfiles, MemDS, DBAccess, Uni,
+  UniDataMovimientosAlmacen, inLibPerfilesUsuarioIntf, MemDS, DBAccess, Uni,
   cxCheckBox, cxCheckComboBox, cxCurrencyEdit, cxSpinEdit, cxBlobEdit,
   dxScrollbarAnnotations, dxCore, cxRadioGroup, Vcl.AppEvnts, JvComponentBase,
   JvEnterTab, dxShellDialogs, System.Actions, Vcl.ActnList;

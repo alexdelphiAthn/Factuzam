@@ -40,6 +40,18 @@ uses
   inLibInformesGuiasCache in 'src\Lib\inLibInformesGuiasCache.pas',
   inLibGridColumnChooser in 'src\Lib\inLibGridColumnChooser.pas',
   inLibConfigCampos in 'src\Lib\inLibConfigCampos.pas',
+  inLibContextoSesionIntf in 'src\Lib\inLibContextoSesionIntf.pas',
+  inLibContextoSesion in 'src\Lib\inLibContextoSesion.pas',
+  inLibContextoSesionGlobal in 'src\Lib\inLibContextoSesionGlobal.pas',
+  inLibFiltrosGuardadosIntf in 'src\Lib\inLibFiltrosGuardadosIntf.pas',
+  inLibPerfilesUsuarioIntf in 'src\Lib\inLibPerfilesUsuarioIntf.pas',
+  inLibConexionesIntf in 'src\Lib\inLibConexionesIntf.pas',
+  inLibConexionesUniDAC in 'src\Lib\inLibConexionesUniDAC.pas',
+  inLibAuditoriaDatosIntf in 'src\Lib\inLibAuditoriaDatosIntf.pas',
+  inLibAuditoriaDatos in 'src\Lib\inLibAuditoriaDatos.pas',
+  inLibMonitorSQLIntf in 'src\Lib\inLibMonitorSQLIntf.pas',
+  inLibMonitorSQLUniDAC in 'src\Lib\inLibMonitorSQLUniDAC.pas',
+  inLibMonitorSQLLog in 'src\Lib\inLibMonitorSQLLog.pas',
   inLibPermisosIntf in 'src\Lib\inLibPermisosIntf.pas',
   inLibPermisos in 'src\Lib\inLibPermisos.pas',
   inLibPermisosUniDAC in 'src\Lib\inLibPermisosUniDAC.pas',
@@ -426,6 +438,7 @@ begin
     Application.Run;
   finally
     inLibGlobalVar.oCerrandoApp := True;
+    TVentasWsCola.DetenerHilo;
     TVerifactuCola.DetenerHilo;
   end;
   // Salida garantizada del proceso. Una tarea huerfana bloqueada contra

@@ -276,7 +276,6 @@ type
     // el parametro appArranqueEnParalelo.
     procedure PrecargarCachesSerie;
     procedure PrecargarCachesParalelo;
-    function CrearConexionPrecarga: TUniConnection;
     function EjecutarCargaWorker(ACarga: TProc<TUniConnection>;
                                  out AError: string): Int64;
     function CopiaSeguridad: Boolean;
@@ -342,6 +341,15 @@ uses inLibUser,
   inLibPermisos,
   inLibPermisosIntf,
   inLibPermisosUniDAC,
+  inLibContextoSesionIntf,
+  inLibContextoSesionGlobal,
+  inLibConexionesIntf,
+  inLibConexionesUniDAC,
+  inLibAuditoriaDatosIntf,
+  inLibAuditoriaDatos,
+  inLibMonitorSQLIntf,
+  inLibMonitorSQLUniDAC,
+  inLibMonitorSQLLog,
   inLibLog,
   inLibDir,
   inMtoSplash,
@@ -597,6 +605,10 @@ end;
 procedure TfrmMtoPrincipal.FormCreate(Sender: TObject);
 var
   sDis: string;
+  ServicioMonitorSQL: IServicioMonitorSQL;
+  RegistroMonitorSQL: IRegistroMonitorSQL;
+  IdentidadActual: TIdentidadSesion;
+  UbicacionActual: TUbicacionSesion;
 
   procedure AplicarTema;
   var
@@ -627,6 +639,12 @@ var
   end;
 
 begin
+  AsignarContextoSesion(
+    TContextoSesionGlobal.Create(
+      TIdentidadSesion.Crear(oUser, oGroup, oRootGroup),
+      TUbicacionSesion.Crear(oEmpresa, oAlmacen, oCaja)));
+  IdentidadActual := ContextoSesion.Identidad;
+  UbicacionActual := ContextoSesion.Ubicacion;
   FAppEvents := TApplicationEvents.Create(Self);
   FAppEvents.OnException := AppException;
   FSavedNCMValid := False;
@@ -654,14 +672,26 @@ begin
   end;
   FormManager := TEmbeddedFormManager.Create(Self.pcPrincipal);
   FDmConn     := TdmConn.Create(Self);
+  RegistroMonitorSQL := TRegistroMonitorSQLLog.Create(inLibLog.Log);
+  ServicioMonitorSQL :=
+    TServicioMonitorSQLUniDAC.Create(
+      FDmConn.UniSQLMonitor1,
+      RegistroMonitorSQL);
+  FDmConn.AsignarReceptorMonitorSQL(
+    ServicioMonitorSQL as IReceptorEventosMonitorSQL);
+  AsignarMonitorSQL(ServicioMonitorSQL);
+  inLibLog.Log.AsignarMonitorSQL(ServicioMonitorSQL);
   FDmConn.conUni.Connect;
+  AsignarConexiones(
+    TServicioConexionesUniDAC.Create(FDmConn.conUni));
+  AsignarAuditoriaDatos(
+    TServicioAuditoriaDatos.Create(ContextoSesion));
   tmr1Timer(Sender);
   FdmDataPerfiles := TdmPerfiles.Create(Self);
-  odmPerfiles     := FdmDataPerfiles;
+  AsignarPerfilesUsuario(FdmDataPerfiles);
   FdmDataFiltros  := TdmFiltros.Create(Self);
-  odmFiltros      := FdmDataFiltros;
+  AsignarFiltrosGuardados(FdmDataFiltros);
   oConn           := FDmConn.conUni;
-  odmConn         := FDmConn;
   ofrmMto2        := Self;
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(oConn);
@@ -669,7 +699,9 @@ begin
   // se precargan las caches pesadas (perfiles, informes-guias, config-campos
   // y permisos). Charge se queda siempre en el hilo principal (toca VCL).
   inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosApp');
-  oAppParams.InicializarParametrosApp(oUser, oGroup);
+  oAppParams.InicializarParametrosApp(
+    IdentidadActual.Usuario,
+    IdentidadActual.Grupo);
   try
     SincronizarVersionInstalacionesSif(oConn);
   except
@@ -689,7 +721,9 @@ begin
   else
     PrecargarCachesSerie;
   inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosCaja');
-  oCajaParams.InicializarParametrosCaja(oUser, oGroup);
+  oCajaParams.InicializarParametrosCaja(
+    IdentidadActual.Usuario,
+    IdentidadActual.Grupo);
   // Cache de unidades de medida: decimales por unidad y factores de
   // conversion. La usan ficha de articulo, lineas de documento e informes.
   oUnidades.Cargar;
@@ -700,14 +734,16 @@ begin
                        oNomImpresoraCaja + '"');
   // Hilo de la cola Verifactu: arranca siempre; cada ciclo consulta el
   // parámetro appVerifactuActivo, así puede activarse sin reiniciar
-  TVerifactuCola.IniciarHilo;
-  TVentasWsCola.IniciarHilo;
+  TVerifactuCola.IniciarHilo(Conexiones);
+  TVentasWsCola.IniciarHilo(Conexiones);
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
-  if oRootGroup = 'S' then
+  if IdentidadActual.EsAdministrador then
     sDis := ' ✪';
-  jvStatusBar1.Panels[2].Text := oUser + ' (' + oGroup + ') ' + sDis;
-  jvStatusBar1.Panels[3].Text := oEmpresa + '\' + oAlmacen + '\' + oCaja;
+  jvStatusBar1.Panels[2].Text := IdentidadActual.Usuario + ' (' +
+    IdentidadActual.Grupo + ') ' + sDis;
+  jvStatusBar1.Panels[3].Text := UbicacionActual.Empresa + '\' +
+    UbicacionActual.Almacen + '\' + UbicacionActual.Caja;
   AplicarTituloVentana;
   // Aplicar permisos de menú: ocultar items sin acceso
   AplicarPermisosMenu;
@@ -989,18 +1025,20 @@ procedure TfrmMtoPrincipal.PrecargarCachesSerie;
 var
   swTotal: TStopwatch;
   Identidad: TIdentidadPermisos;
+  IdentidadActual: TIdentidadSesion;
 begin
   swTotal := TStopwatch.StartNew;
   Log.LogInfo('Arranque: PrecargarCachesSerie INICIO');
-  odmPerfiles.PrecargarPerfilesUsuario;
+  PerfilesUsuario.PrecargarPerfilesUsuario;
   oInfGuiasCache := TInformesGuiasCache.Create;
   oInfGuiasCache.Precargar;
   oConfigCampos := TConfigCamposCache.Create;
   oConfigCampos.Precargar;
+  IdentidadActual := ContextoSesion.Identidad;
   Identidad := TIdentidadPermisos.Crear(
-    oUser,
-    oGroup,
-    oRootGroup = 'S');
+    IdentidadActual.Usuario,
+    IdentidadActual.Grupo,
+    IdentidadActual.EsAdministrador);
   try
     AsignarPermisos(
       TCargadorPermisosUniDAC.Cargar(oConn, Identidad));
@@ -1015,38 +1053,6 @@ begin
   Log.LogInfo(Format('PrecargaSerie: total=%d ms', [swTotal.ElapsedMilliseconds]));
 end;
 
-function TfrmMtoPrincipal.CrearConexionPrecarga: TUniConnection;
-begin
-  // Conexion efimera para una tarea de precarga, creada y usada en SU hilo.
-  // Mismos parametros que oConn (salen del mismo pool) pero SIN cablear
-  // OnError/AfterConnect: el AfterConnect global ejecuta SQL sobre el conUni
-  // global por nombre, y llamarlo desde un worker seria una carrera; el SET
-  // wait_timeout no aporta a una conexion de un solo uso. Leer aqui las
-  // propiedades de oConn es seguro: en la fase paralela el hilo principal
-  // esta en WaitForAll y nadie las modifica.
-  Result := TUniConnection.Create(nil);
-  try
-    Result.LoginPrompt  := False;
-    Result.ProviderName := oConn.ProviderName;
-    Result.Server       := oConn.Server;
-    Result.Port         := oConn.Port;
-    Result.Database     := oConn.Database;
-    Result.Username     := oConn.Username;
-    Result.Password     := oConn.Password;
-    Result.Pooling      := True;
-    Result.PoolingOptions.ConnectionLifetime := 0;
-    Result.PoolingOptions.Validate := True;
-    Result.SpecificOptions.Values['MySQL.Interactive'] := 'True';
-    Result.SpecificOptions.Values['ConnectionTimeout'] := '30';
-    Result.Options.LocalFailover    := True;
-    Result.Options.DisconnectedMode := True;
-    Result.Connect;
-  except
-    FreeAndNil(Result);
-    raise;
-  end;
-end;
-
 function TfrmMtoPrincipal.EjecutarCargaWorker(ACarga: TProc<TUniConnection>;
                                               out AError: string): Int64;
 var
@@ -1058,7 +1064,12 @@ begin
   c := nil;
   try
     try
-      c := CrearConexionPrecarga;
+      if not Assigned(Conexiones) then
+        raise Exception.Create(
+          'No está disponible el servicio de conexiones.');
+      c := Conexiones.CrearConexion(
+        nil,
+        uctPrecarga);
       ACarga(c);
     except
       // Capturamos la excepcion en la tarea para que NO aborte el WaitForAll.
@@ -1078,6 +1089,7 @@ var
   swTotal: TStopwatch;
   bEsAdmin: Boolean;
   Identidad: TIdentidadPermisos;
+  IdentidadActual: TIdentidadSesion;
   PermisosCargados: IPermisosAplicacion;
   msPerfiles, msInfGuias, msConfig, msPermisos: Int64;
   errPerfiles, errInfGuias, errConfig, errPermisos: string;
@@ -1085,8 +1097,12 @@ var
 begin
   swTotal := TStopwatch.StartNew;
   Log.LogInfo('Arranque: PrecargarCachesParalelo INICIO');
-  bEsAdmin := (oRootGroup = 'S');
-  Identidad := TIdentidadPermisos.Crear(oUser, oGroup, bEsAdmin);
+  IdentidadActual := ContextoSesion.Identidad;
+  bEsAdmin := IdentidadActual.EsAdministrador;
+  Identidad := TIdentidadPermisos.Crear(
+    IdentidadActual.Usuario,
+    IdentidadActual.Grupo,
+    bEsAdmin);
   PermisosCargados := nil;
   msPerfiles := 0;
   msInfGuias := 0;
@@ -1106,7 +1122,7 @@ begin
       msPerfiles := EjecutarCargaWorker(
         procedure(c: TUniConnection)
         begin
-          odmPerfiles.PrecargarPerfilesUsuario(c);
+          FdmDataPerfiles.PrecargarPerfilesUsuario(c);
         end, errPerfiles);
     end);
   t2 := TTask.Run(
@@ -1486,10 +1502,27 @@ begin
                                                                      E.Message);
     end;
     FreeAndNil(oFzaWinf);
+    DesvincularPerfilesStockConsulta;
+    AsignarPerfilesUsuario(nil);
     if (FdmDataPerfiles <> nil) then
       FreeAndNil(FdmDataPerfiles);
+    AsignarFiltrosGuardados(nil);
     if (FdmDataFiltros <> nil) then
       FreeAndNil(FdmDataFiltros);
+    AsignarAuditoriaDatos(nil);
+    if Assigned(MonitorSQL) then
+    begin
+      MonitorSQL.CerrarPendiente;
+      MonitorSQL.EstablecerActivo(False);
+      MonitorSQL.Invalidar;
+    end;
+    if Assigned(FDmConn) then
+      FDmConn.AsignarReceptorMonitorSQL(nil);
+    inLibLog.Log.AsignarMonitorSQL(nil);
+    AsignarMonitorSQL(nil);
+    if Assigned(Conexiones) then
+      Conexiones.Invalidar;
+    AsignarConexiones(nil);
     FreeAndNil(FDmConn);
   finally
     inLibLog.Log.LogInfo('Ventana principal Cerrada');
@@ -1963,7 +1996,12 @@ begin
     begin
       TfrmBase(LForm).ResolverArtSkuStock(sArt, sSku);
     end;
-    MostrarStockConsulta(LForm, Permisos, sArt, sSku);
+    MostrarStockConsulta(
+      LForm,
+      Permisos,
+      PerfilesUsuario,
+      sArt,
+      sSku);
   end;
 end;
 
@@ -2557,7 +2595,11 @@ var
   pAddr: Pointer;
   Inner: Exception;
   iNivel: Integer;
+  IdentidadActual: TIdentidadSesion;
+  UbicacionActual: TUbicacionSesion;
 begin
+  IdentidadActual := ContextoSesion.Identidad;
+  UbicacionActual := ContextoSesion.Ubicacion;
   if Assigned(Sender) then
   begin
     sSenderClass := Sender.ClassName;
@@ -2577,9 +2619,11 @@ begin
     'Aplicación   : ' + oAppName + ' ' + oVersion + sLineBreak +
     'Fecha / hora : ' + FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now) +
                                                                   sLineBreak +
-    'Usuario      : ' + oUser + ' (' + oGroup + ')' + sLineBreak +
-    'Empresa      : ' + oEmpresa + sLineBreak +
-    'Almacén/Caja : ' + oAlmacen + ' / ' + oCaja + sLineBreak +
+    'Usuario      : ' + IdentidadActual.Usuario + ' (' +
+      IdentidadActual.Grupo + ')' + sLineBreak +
+    'Empresa      : ' + UbicacionActual.Empresa + sLineBreak +
+    'Almacén/Caja : ' + UbicacionActual.Almacen + ' / ' +
+      UbicacionActual.Caja + sLineBreak +
     'Equipo       : ' + GetComputerName + sLineBreak +
     sLineBreak +
     '--- Excepción ---' + sLineBreak +

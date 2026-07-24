@@ -162,7 +162,7 @@ Tres niveles de automatización, de menos a más cómodo:
   vista se mantiene siempre alineada con el catálogo.
 
 Mi recomendación es la opción 3 — el `AfterPost` ya existe en el patrón
-del proyecto (`oDmConn.ActualizarUserTimeModif`, etc.), así que añadir
+del proyecto (`ActualizarAuditoria`, etc.), así que añadir
 una llamada a un SP es de una línea.
 
 ### 3.3 Impacto en Delphi

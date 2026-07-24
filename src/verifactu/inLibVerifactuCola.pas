@@ -18,7 +18,7 @@ unit inLibVerifactuCola;
 interface
 
 uses
-  System.SysUtils, System.Classes, Uni;
+  System.SysUtils, System.Classes, Uni, inLibConexionesIntf;
 
 type
   TVerifactuCola = class
@@ -67,7 +67,8 @@ type
                                              ASerieOrigen, ANumeroOrigen,
                                              ATipoRelacion: string);
     // Arranque tras el logon y parada al cerrar (ver inMtoPrincipal)
-    class procedure IniciarHilo;
+    class procedure IniciarHilo(
+      const AConexiones: IServicioConexiones);
     class procedure DetenerHilo;
   end;
 
@@ -88,13 +89,13 @@ const
 
 type
   // Worker: despierta cada appVerifactuSegundosCiclo segundos, reclama
-  // filas PENDIENTE y delega el envío en inLibVerifactuEnvio. Usa una
-  // conexión propia: oConn no se comparte entre hilos.
+  // filas PENDIENTE y delega el envío en inLibVerifactuEnvio. Solicita
+  // una conexión propia al servicio: la principal no se comparte.
   THiloVerifactuCola = class(TThread)
   private
     FConn:              TUniConnection;
+    FConexiones:        IServicioConexiones;
     FAvisoNoDisponible: Boolean;
-    function CrearConexionPropia: TUniConnection;
     procedure ProcesarPendientes;
     // Devuelve los segundos de espera que pide la AEAT tras el envío
     // (control de flujo TiempoEsperaEnvio); 0 si no procede esperar
@@ -112,6 +113,8 @@ type
   protected
     procedure Execute; override;
   public
+    constructor Create(
+      const AConexiones: IServicioConexiones); reintroduce;
     destructor Destroy; override;
   end;
 
@@ -583,11 +586,12 @@ begin
   end;
 end;
 
-class procedure TVerifactuCola.IniciarHilo;
+class procedure TVerifactuCola.IniciarHilo(
+  const AConexiones: IServicioConexiones);
 begin
   if oHiloCola = nil then
   begin
-    oHiloCola := THiloVerifactuCola.Create(True);
+    oHiloCola := THiloVerifactuCola.Create(AConexiones);
     oHiloCola.FreeOnTerminate := False;
     oHiloCola.Start;
     inLibLog.Log.LogInfo('Cola Verifactu: hilo iniciado');
@@ -609,9 +613,19 @@ end;
 //   THiloVerifactuCola — worker en segundo plano
 // ===========================================================================
 
+constructor THiloVerifactuCola.Create(
+  const AConexiones: IServicioConexiones);
+begin
+  if not Assigned(AConexiones) then
+    raise EArgumentNilException.Create('AConexiones');
+  inherited Create(True);
+  FConexiones := AConexiones;
+end;
+
 destructor THiloVerifactuCola.Destroy;
 begin
   FreeAndNil(FConn);
+  FConexiones := nil;
   inherited;
 end;
 
@@ -670,45 +684,15 @@ begin
   end;
 end;
 
-function THiloVerifactuCola.CrearConexionPropia: TUniConnection;
-begin
-  // Clon de la conexión global (mismo patrón que
-  // TfrmMtoGen.CrearConexionPropia): con los mismos parámetros las
-  // conexiones físicas salen del mismo pool de UniDAC
-  Result := TUniConnection.Create(nil);
-  try
-    Result.LoginPrompt  := False;
-    Result.ProviderName := oConn.ProviderName;
-    Result.Server       := oConn.Server;
-    Result.Port         := oConn.Port;
-    Result.Database     := oConn.Database;
-    Result.Username     := oConn.Username;
-    Result.Password     := oConn.Password;
-    Result.Pooling      := True;
-    Result.PoolingOptions.ConnectionLifetime := 0;
-    Result.PoolingOptions.Validate := True;
-    Result.SpecificOptions.Values['MySQL.Interactive'] := 'True';
-    Result.SpecificOptions.Values['ConnectionTimeout'] := '30';
-    Result.Options.LocalFailover    := True;
-    Result.Options.DisconnectedMode := True;
-    // AfterConnect reaplica colación y timeouts tras cada reconexión.
-    // El OnError de UI no se engancha: los errores del hilo se capturan
-    // en Execute y van al log.
-    Result.AfterConnect := oConn.AfterConnect;
-    Result.Connect;
-  except
-    FreeAndNil(Result);
-    raise;
-  end;
-end;
-
 procedure THiloVerifactuCola.ProcesarPendientes;
 var
   Qry:     TUniQuery;
   iEspera: Integer;
 begin
   if FConn = nil then
-    FConn := CrearConexionPropia;
+    FConn := FConexiones.CrearConexion(
+      nil,
+      uctSegundoPlano);
   if not EnvioVerifactuDisponible then
   begin
     // Cliente de envío desactivado: la cola se acumula en PENDIENTE.

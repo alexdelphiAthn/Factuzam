@@ -27,9 +27,10 @@ guardan el **código de empleado** suelto, no el usuario:
 ## Auditoría ≠ empleado
 
 `USUARIO_ALTA` / `USUARIO_MODIF` de **todas** las tablas (incluida
-`fza_empleados`) las sella automáticamente `TdmConn.ActualizarUserTimeModif`
-(`src/DataModules/UniDataConn.pas`) con `inLibGlobalVar.oUser` = el **usuario
-logado**. La auditoría es siempre del usuario; el empleado es otra cosa.
+`fza_empleados`) las sella automáticamente `IServicioAuditoriaDatos`
+mediante `TServicioAuditoriaDatos`. La ventana principal le inyecta el
+**usuario logado** al iniciar la sesión. La auditoría es siempre del usuario;
+el empleado es otra cosa.
 
 ## Esquema
 

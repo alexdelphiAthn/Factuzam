@@ -18,7 +18,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-   inLibUser, UniDataConn, vcl.dialogs;
+   inLibUser, vcl.dialogs;
 
 type
   TdmIvas = class(TdmBase)
@@ -80,8 +80,8 @@ begin
   with unqryTablaG do
   begin
     sCodigo := Trim(FindField('CODIGO_IVA').AsString);
-    if ((sCodigo = '') or
-        (SimbolosProhibidos(sCodigo))) then
+    if (sCodigo = '') or
+       SimbolosProhibidos(sCodigo, PerfilesUsuario) then
     begin
       ShowMessageFmt('%s no es un valor de registro válido ' +
                                                   'para el campo Código de IVA',
@@ -102,7 +102,7 @@ begin
         if (not(bError)) then
         begin
           unqrySol := TUniQuery.Create(nil);
-          unqrySol.Connection := oConn;
+          unqrySol.Connection := ConexionPrincipal;
           unqrySol.SQL.Text := 'SELECT * ' +
                                '  FROM vi_ivas ' +
                                ' WHERE IVA_IVAGRP = :IVA_IVAGRP';
@@ -139,8 +139,8 @@ end;
 procedure TdmIvas.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unstrdprcContador.Connection := oConn;;
-  unqryZonasIVA.Connection := oConn;
+  unstrdprcContador.Connection := ConexionPrincipal;
+  unqryZonasIVA.Connection := ConexionPrincipal;
   // unqryZonasIVA.Open movido a AbrirDetalles.
 end;
 
@@ -171,7 +171,7 @@ var
   unqrySol: TUniQuery;
 begin
   unqrySol := TUniQuery.Create(nil);
-  unqrySol.Connection := oConn;
+  unqrySol.Connection := ConexionPrincipal;
   unqrySol.SQL.Text := 'SELECT * ' +
                        '  FROM fza_ivas_grupos ' +
                        ' WHERE IVA_IVAGRP = :IVA_IVAGRP';

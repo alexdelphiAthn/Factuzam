@@ -406,11 +406,8 @@ begin
   try
     frm.qrySeleccion.Connection := inLibGlobalVar.oConn;
     frm.qrySeleccion.Open;
-    // Cierra el cronometro del monitor SQL antes del ShowModal (vease
-    // TdmConn.CerrarSQLPendiente). La instancia viva es odmConn: la
-    // variable global dmConn de UniDataConn no se asigna nunca.
-    if Assigned(odmConn) then
-      odmConn.CerrarSQLPendiente;
+    // Cierra el cronometro SQL antes de entrar en el selector modal.
+    CerrarMonitorSQLPendiente;
     frm.sEmpresa := oEmpresa;
     frm.sAlmacen := oAlmacen;
     frm.sCaja    := oCaja;

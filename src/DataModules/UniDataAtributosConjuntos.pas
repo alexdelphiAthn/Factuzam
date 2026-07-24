@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-  inLibUser, UniDataConn;
+  inLibUser;
 
 type
   TdmAtributosConjuntos = class(TdmBase)
@@ -122,7 +122,7 @@ begin
   inherited;
   if DataSet.FieldByName('ID_AV_ACD').IsNull then
     raise Exception.Create('Selecciona un valor para añadirlo a la colección.');
-  oDmConn.ActualizarUserTimeModif(DataSet);
+  ActualizarAuditoria(DataSet);
 end;
 
 initialization

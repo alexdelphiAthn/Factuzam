@@ -67,7 +67,7 @@ uses
   dxSkinsCore, dxSkinBlue, dxSkinsForm, dxScrollbarAnnotations,
   dxDateRanges, cxMemo, cxControls, dxCoreGraphics, cxCustomListBox,
   cxRadioGroup, inLibLectorScanner, inLibDocumentosTrabajo, inLibFotos,
-  inLibPermisosIntf;
+  inLibPermisosIntf, inLibPerfilesUsuarioIntf;
 
 const
   // Detector por velocidad de tecleo (codigo de barras + CR, sin STX/ETX).
@@ -172,6 +172,7 @@ type
     FEstadosCombo : TList<TEstadoStock>; // mapeo combo.ItemIndex -> estado
     FModoDesglosado : Boolean;
     FPermisos       : IPermisosAplicacion;
+    FPerfilesUsuario: IPerfilesUsuario;
     FVerCoste       : Boolean;   // permiso para ver el coste (precio compra)
     FrbSimplificado : TcxRadioButton;
     FrbDesglosado   : TcxRadioButton;
@@ -276,8 +277,11 @@ type
     procedure ResolverTextoArticulo(AMostrarError: Boolean);
   public
     constructor Create(AOwner: TComponent;
-                       const APermisos: IPermisosAplicacion); reintroduce;
+                       const APermisos: IPermisosAplicacion;
+                       const APerfilesUsuario: IPerfilesUsuario); reintroduce;
     procedure AsignarPermisos(const APermisos: IPermisosAplicacion);
+    procedure AsignarPerfilesUsuario(
+      const APerfilesUsuario: IPerfilesUsuario);
     procedure SetArticuloSku(const ACodArt, ACodSku: string);
   end;
 
@@ -288,14 +292,16 @@ var
 /// indicado. Mismo patron que inMtoFotoArticulo.MostrarFotoFlotante.
 procedure MostrarStockConsulta(AOwner: TComponent;
                                const APermisos: IPermisosAplicacion;
+                               const APerfilesUsuario: IPerfilesUsuario;
                                const ACodArt, ACodSku: string);
+procedure DesvincularPerfilesStockConsulta;
 
 implementation
 
 uses
   System.StrUtils,
   inLibGlobalVar, inLibAppParam, inLibCajaParam, inLibAtributosPaleta,
-  inLibGenBusq, inLibUser, UniDataPerfiles,
+  inLibGenBusq, inLibUser,
   inLibArticulosValidador;
 
 {$R *.dfm}
@@ -360,14 +366,19 @@ end;
 // ---------------------------------------------------------------------------
 procedure MostrarStockConsulta(AOwner: TComponent;
                                const APermisos: IPermisosAplicacion;
+                               const APerfilesUsuario: IPerfilesUsuario;
                                const ACodArt, ACodSku: string);
 begin
   if frmStockConsulta = nil then
     frmStockConsulta := TfrmStockConsulta.Create(
       Application,
-      APermisos)
+      APermisos,
+      APerfilesUsuario)
   else
+  begin
     frmStockConsulta.AsignarPermisos(APermisos);
+    frmStockConsulta.AsignarPerfilesUsuario(APerfilesUsuario);
+  end;
   frmStockConsulta.SetArticuloSku(ACodArt, ACodSku);
   if frmStockConsulta.WindowState = wsMinimized then
     frmStockConsulta.WindowState := wsMaximized;
@@ -379,14 +390,22 @@ begin
   SetForegroundWindow(frmStockConsulta.Handle);
 end;
 
+procedure DesvincularPerfilesStockConsulta;
+begin
+  if Assigned(frmStockConsulta) then
+    frmStockConsulta.AsignarPerfilesUsuario(nil);
+end;
+
 // ---------------------------------------------------------------------------
 //  Form
 // ---------------------------------------------------------------------------
 constructor TfrmStockConsulta.Create(
   AOwner: TComponent;
-  const APermisos: IPermisosAplicacion);
+  const APermisos: IPermisosAplicacion;
+  const APerfilesUsuario: IPerfilesUsuario);
 begin
   FPermisos := APermisos;
+  FPerfilesUsuario := APerfilesUsuario;
   inherited Create(AOwner);
 end;
 
@@ -398,6 +417,12 @@ begin
                FPermisos.TienePermiso(
                  PERMISO_CAJA_VER_COSTE,
                  paDenegar);
+end;
+
+procedure TfrmStockConsulta.AsignarPerfilesUsuario(
+  const APerfilesUsuario: IPerfilesUsuario);
+begin
+  FPerfilesUsuario := APerfilesUsuario;
 end;
 
 procedure TfrmStockConsulta.FormCreate(Sender: TObject);
@@ -550,7 +575,9 @@ begin
   dic := nil;
   try
     GetFormUserProfile(dic, 'frmStockConsulta',
-                       inLibGlobalVar.oUser, inLibGlobalVar.oGroup);
+                       inLibGlobalVar.oUser,
+                       inLibGlobalVar.oGroup,
+                       FPerfilesUsuario);
     FModoDesglosado := SameText(
       GetPerfilValueDef(dic, 'ModoDesglosado', 'N'), 'S');
   finally
@@ -561,10 +588,12 @@ end;
 
 procedure TfrmStockConsulta.GuardarModoUsuario;
 begin
-  if odmPerfiles <> nil then
-    odmPerfiles.GrabarPerfil(inLibGlobalVar.oUser, 'frmStockConsulta',
-                             'ModoDesglosado',
-                             IfThen(FModoDesglosado, 'S', 'N'));
+  if Assigned(FPerfilesUsuario) then
+    FPerfilesUsuario.GrabarPerfil(
+      inLibGlobalVar.oUser,
+      'frmStockConsulta',
+      'ModoDesglosado',
+      IfThen(FModoDesglosado, 'S', 'N'));
 end;
 
 // Crea un TcxStyle por estado con su TextColor. Los asignamos como

@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
-  Uni, inLibUser, UniDataConn, Datasnap.Provider,
+  Uni, inLibUser, Datasnap.Provider,
   Datasnap.DBClient, Forms, Windows, Dateutils;
 
 type
@@ -168,7 +168,7 @@ begin
   end;
   if (bSinErrores) then
   begin
-    oDmConn.ActualizarUserTimeModif(DataSet);
+    ActualizarAuditoria(DataSet);
     GetCodigoAutoRetencion;
   end
   else
@@ -197,7 +197,9 @@ begin
   begin
     if (FindField('EMPSER').AsString = '') or
        (FindField('EMPSER').IsNull) or
-       (SimbolosProhibidos(FindField('EMPSER').AsString)) then
+       SimbolosProhibidos(
+         FindField('EMPSER').AsString,
+         PerfilesUsuario) then
     begin
       raise ERangeError.CreateFmt('%s no es un valor válido ' +
                                                      ' para serie por Empresa ',
@@ -230,7 +232,7 @@ begin
   end;
   if (bSinErrores) then
   begin
-    oDmConn.ActualizarUserTimeModif(DataSet);
+    ActualizarAuditoria(DataSet);
     GetCodigoAutoSerie;
   end
   else
@@ -285,7 +287,7 @@ begin
       end;
     end;
   end;
-  oDmConn.ActualizarUserTimeModif(DataSet);
+  ActualizarAuditoria(DataSet);
   GetCodigoAutoBanco;
 end;
 
@@ -638,13 +640,15 @@ begin
         Copy(Trim(FindField('TEXTO_PIE_TICKET_CAJA_4_EMP').AsString), 1, 42);
     sCodigoEmpresa := Trim(FindField('CODIGO_EMP_EMP').AsString);
     sRazonSocial := Trim(FindField('RAZON_SOCIAL_EMP').AsString);
-    if ((sRazonSocial = '') or (SimbolosProhibidos(sRazonSocial))) then
+    if (sRazonSocial = '') or
+       SimbolosProhibidos(sRazonSocial, PerfilesUsuario) then
     begin
       raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
                                         'para el campo Razón Social de Empresa',
                                                                 [sRazonSocial]);
     end;
-    if ((sCodigoEmpresa = '') or (SimbolosProhibidos(sCodigoEmpresa))) then
+    if (sCodigoEmpresa = '') or
+       SimbolosProhibidos(sCodigoEmpresa, PerfilesUsuario) then
     begin
       raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
                                               'para el campo Código de Empresa',

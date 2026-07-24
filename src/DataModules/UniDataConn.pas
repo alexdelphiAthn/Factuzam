@@ -17,8 +17,9 @@ unit UniDataConn;
 interface
 
 uses
-  SysUtils, Classes, DB, ADODB, DBAccess, Uni, inLibUser, vcl.Controls,
-  UniProvider, MySQLUniProvider, DASQLMonitor, UniSQLMonitor, vcl.Dialogs;
+  SysUtils, Classes, ADODB, DBAccess, Uni, inLibUser, vcl.Controls,
+  UniProvider, MySQLUniProvider, DASQLMonitor, UniSQLMonitor, vcl.Dialogs,
+  inLibMonitorSQLIntf;
 
 type
   TdmConn = class(TDataModule)
@@ -32,16 +33,11 @@ type
     procedure conUniError(Sender: TObject; E: EDAError; var Fail: Boolean);
     procedure conUniAfterConnect(Sender: TObject);
   private
-    // Estado para cronometrar entre tfQExecute y el siguiente flag que
-    // indique fin (tfQOpen para SELECT, tfQClose para DML, tfQError...).
-    // Si llega un nuevo tfQExecute antes de cerrar, se loguea el pendiente.
-    FSQLStartMs   : Int64;
-    FSQLActual    : string;
-    FSQLPendiente : Boolean;
-    procedure VolcarSQLPendiente(AOk: Boolean; const AError: string);
+    FReceptorMonitorSQL: IReceptorEventosMonitorSQL;
   public
-    procedure CerrarSQLPendiente;
-    procedure ActualizarUserTimeModif(DataSet: TDataSet);
+    destructor Destroy; override;
+    procedure AsignarReceptorMonitorSQL(
+      const AReceptor: IReceptorEventosMonitorSQL);
   end;
 
 var
@@ -53,16 +49,27 @@ uses inLibDir,
      inLibtb,
      inLibWin,
      inLibLog,
-     inLibAppParam,
-     inMtoPrincipal,
-     inLibGlobalVar,
-     Winapi.Windows;
+     inLibAppParam;
 
 {$R *.dfm}
 
-procedure TdmConn.CerrarSQLPendiente;
+procedure TdmConn.AsignarReceptorMonitorSQL(
+  const AReceptor: IReceptorEventosMonitorSQL);
 begin
-  VolcarSQLPendiente(True, '');
+  FReceptorMonitorSQL := AReceptor;
+end;
+
+destructor TdmConn.Destroy;
+var
+  ServicioMonitorSQL: IServicioMonitorSQL;
+begin
+  if Supports(
+       FReceptorMonitorSQL,
+       IServicioMonitorSQL,
+       ServicioMonitorSQL) then
+    ServicioMonitorSQL.Invalidar;
+  FReceptorMonitorSQL := nil;
+  inherited;
 end;
 
 procedure TdmConn.connBeforeConnect(Sender: TObject);
@@ -211,74 +218,24 @@ begin
   // segun IsLogTypeEnabled(ltSQL). El estado del monitor lo reajusta
   // inLibLog.AplicarModosDepuracion cuando se cargan/cambian los flags.
   UniSQLMonitor1.Active := True;
-  FSQLPendiente := False;
-end;
-
-procedure TdmConn.VolcarSQLPendiente(AOk: Boolean; const AError: string);
-var
-  ElapsedMs: Int64;
-begin
-  if not FSQLPendiente then
-    Exit;
-  ElapsedMs     := GetTickCount64 - FSQLStartMs;
-  // -1 en filas: el UniSQLMonitor no expone RowsAffected en su evento.
-  // Si un caller necesita la cifra exacta, debe llamar directamente a
-  // Log.LogSQLExt desde el AfterExecute/AfterOpen de su query concreta.
-  inLibLog.Log.LogSQLExt(FSQLActual, ElapsedMs, -1, AOk, AError);
-  FSQLPendiente := False;
 end;
 
 procedure TdmConn.UniSQLMonitor1SQL(Sender: TObject; Text: string;
   Flag: TDATraceFlag);
+var
+  Evento: TEventoMonitorSQL;
 begin
-  if not inLibLog.Log.IsLogTypeEnabled(ltSQL) then
-  begin
-    // Tambien limpiamos el pendiente si lo hay para no arrastrar timing
-    // entre sesiones de log activado/desactivado.
-    FSQLPendiente := False;
-    Exit;
-  end;
-
+  Evento := emsOtro;
   case Flag of
     tfQExecute:
-      begin
-        // Si quedaba uno sin cerrar (operacion sin tfQOpen/tfQClose),
-        // lo volcamos antes de arrancar el nuevo cronometro.
-        if FSQLPendiente then
-          VolcarSQLPendiente(True, '');
-        FSQLActual    := Text;
-        FSQLStartMs   := GetTickCount64;
-        FSQLPendiente := True;
-      end;
+      Evento := emsEjecutar;
     tfConnect, tfQFetch, tfObjDestroy:
-      VolcarSQLPendiente(True, '');
+      Evento := emsFinalizar;
     tfError:
-      VolcarSQLPendiente(False, Text);
+      Evento := emsError;
   end;
-
-  // Dump al memo SQL en pantalla si esta visible (lo controla
-  // AplicarModosDepuracion en funcion de los flags). No restringido a
-  // DEBUG: si el usuario activo el modo SQL, ya esta autorizado.
-  if Assigned(oMemoSQL) and oMemoSQL.Visible and (Flag = tfQExecute) then
-    oMemoSQL.Lines.Add(FormatDateTime('hh:nn:ss.zzz', Now) + ' - ' + Text);
-end;
-
-procedure TdmConn.ActualizarUserTimeModif(DataSet: TDataSet);
-begin
-  if Assigned(DataSet) and (DataSet.State in dsEditModes) then
-  begin
-    if DataSet.FindField('USUARIO_MODIF') <> nil then
-      DataSet.FieldByName('USUARIO_MODIF').AsString := oUser;
-    if DataSet.State = dsInsert then
-    begin
-      if DataSet.FindField('INSTANTE_ALTA') <> nil then
-        DataSet.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-      if DataSet.FindField('USUARIO_ALTA') <> nil then
-        DataSet.FieldByName('USUARIO_ALTA').AsString := oUser;
-      if DataSet.FindField('INSTANTE_MODIF') <> nil then
-        DataSet.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
-    end;
-  end;
+  if Assigned(FReceptorMonitorSQL) then
+    FReceptorMonitorSQL.ProcesarEvento(Text, Evento);
 end;
 
 end.

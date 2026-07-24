@@ -326,7 +326,7 @@ procedure TfrmMtoCajaParam.GuardarLayout;
 var
   Layout: TLayoutSaver;
 begin
-  Layout := TLayoutSaver.Create(Self.Name);
+  Layout := TLayoutSaver.Create(Self.Name, PerfilesUsuario);
   try
     Layout.GuardarGeometria(Self);
     Layout.GuardarDividerInspector('Divider', JvInspector1);
@@ -341,7 +341,7 @@ procedure TfrmMtoCajaParam.RestaurarLayout;
 var
   Layout: TLayoutLoader;
 begin
-  Layout := TLayoutLoader.Create(Self.Name);
+  Layout := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
   try
     if Layout.Disponible then
     begin

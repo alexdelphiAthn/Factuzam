@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalImpPagos                                            }
 {    Tipo:       Formulario (Modal)                                            }
@@ -185,11 +185,8 @@ begin
       ' ORDER BY Almacen, Caja ';
     frm.qrySeleccion.ParamByName('pEMP').AsString := edtEmpresa.Text;
     frm.qrySeleccion.Open;
-    // Cierra el cronometro del monitor SQL antes del ShowModal (vease
-    // TdmConn.CerrarSQLPendiente). La instancia viva es odmConn: la
-    // variable global dmConn de UniDataConn no se asigna nunca.
-    if Assigned(odmConn) then
-      odmConn.CerrarSQLPendiente;
+    // Cierra el cronometro SQL antes de entrar en el selector modal.
+    CerrarMonitorSQLPendiente;
     frm.sEmpresa := edtEmpresa.Text;
     frm.sAlmacen := bedAlmacen.Text;
     frm.sCaja    := bedCaja.Text;

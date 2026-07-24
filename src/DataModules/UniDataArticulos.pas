@@ -18,7 +18,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
-  Uni, inLibUser, UniDataConn, inLibLog, cxListView, Vcl.Forms, vcl.dialogs,
+  Uni, inLibUser, inLibLog, cxListView, Vcl.Forms, vcl.dialogs,
   Vcl.ComCtrls, Winapi.Windows, system.strUtils, cxGridDBTableView,
   cxCustomData, cxFilter, inLibAppParam, inLibCajaParam,
   System.Variants, vcl.Controls, Datasnap.Provider, Datasnap.DBClient,
@@ -258,13 +258,13 @@ begin
         'Para crear un SKU nuevo use la pestaña SKUs.');
     if (fldCB = nil) then
       raise ERangeError.Create('Falta el campo CODIGO_BARRAS_CB.');
-    oDmConn.ActualizarUserTimeModif(DataSet);
+    ActualizarAuditoria(DataSet);
     Exit; // El framework lanza SQLInsert
   end;
 
   if DataSet.State <> dsEdit then Exit;
 
-  oDmConn.ActualizarUserTimeModif(DataSet);
+  ActualizarAuditoria(DataSet);
 
   bChangedActivo := (fldAct <> nil) and
                     (VarToStr(fldAct.OldValue) <> fldAct.AsString);
@@ -291,7 +291,7 @@ begin
                               unqryTablaG.FieldByName(
                                 'CODIGO_ART_ART').AsString;
   end;
-  oDmConn.ActualizarUserTimeModif(DataSet);
+  ActualizarAuditoria(DataSet);
 
   // El SQLInsert / SQLUpdate del framework sólo escribe en fza_articulos_skus.
   // El coste y la fecha de última compra viven en fza_articulos_skus_costes:
@@ -405,7 +405,7 @@ begin
                                        [FindField('CODIGO_ART_ART').AsString]);
       end;
     end;
-  oDmConn.ActualizarUserTimeModif(DataSet);
+  ActualizarAuditoria(DataSet);
 end;
 
 procedure TdmArticulos.unqryStockArticulosAfterScroll(DataSet: TDataSet);
@@ -851,7 +851,8 @@ begin
   with unqryTablaG do
   begin
     var sDescripcion := Trim(FindField('DESCRIPCION_ART').AsString);
-    if (sDescripcion = '') or (SimbolosProhibidos(sDescripcion)) then
+    if (sDescripcion = '') or
+       SimbolosProhibidos(sDescripcion, PerfilesUsuario) then
     begin
       raise ERangeError.CreateFmt('%s no es un valor válido ' +
                                        'para el campo Descripción de Artículos',
@@ -987,7 +988,7 @@ begin
     end;
 
     if ((State = dsInsert) or (State = dsEdit)) then
-      oDmConn.ActualizarUserTimeModif(DataSet);
+      ActualizarAuditoria(DataSet);
   end;
 end;
 

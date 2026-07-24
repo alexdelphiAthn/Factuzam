@@ -170,7 +170,7 @@ procedure TfrmConsultaOpe.FormCreate(Sender: TObject);
 begin
   inherited;
   FdmConsulta := TdmConsultaOpe.Create(Self);
-  FLayout     := TLayoutLoader.Create(Self.Name);
+  FLayout := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
   FVentasCal := TVentasCalendarioCache.Create(inLibGlobalVar.oConn);
   dtpFecha.Properties.OnGetDayState := dtpFechaGetDayState;
   cxViewMaestro.DataController.DataSource := FdmConsulta.dsMaestro;
@@ -290,7 +290,7 @@ begin
       if (ssAlt in Shift) and not (ssCtrl in Shift) then
         GuardarLayout
       else if (ssCtrl in Shift) and not (ssAlt in Shift) then
-        ResetearLayout(Self.Name);
+        ResetearLayout(Self.Name, PerfilesUsuario);
   end;
 end;
 
@@ -656,7 +656,7 @@ procedure TfrmConsultaOpe.GuardarLayout;
 var
   Layout: TLayoutSaver;
 begin
-  Layout := TLayoutSaver.Create(Self.Name);
+  Layout := TLayoutSaver.Create(Self.Name, PerfilesUsuario);
   try
     Layout.GuardarGeometria(Self);
     Layout.GuardarAlturaPanel('PnlMaestroHeight', pnlMaestro);

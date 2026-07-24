@@ -1,25 +1,20 @@
--- ========================================
--- Backup generado: 21/07/2026 18:24:36
+﻿-- ========================================
+-- Backup generado: 23/07/2026 18:33:28
 -- Base de datos: Factuzam
--- ========================================
--- Demo regenerada: 22/07/2026 16:51:26 desde factuzam_original.sql; datos demo conservados.
+-- Demo regenerada: 24/07/2026 19:45:56 desde factuzam_original.sql; datos demo conservados.
 -- Compatibilidad MariaDB 10.2.41: CURRENT_TIMESTAMP sin parentesis, CREATE TABLE conservador, INSERT grandes troceados e indices integrados en CREATE TABLE.
+-- ========================================
 
 SET NAMES utf8mb4 COLLATE utf8mb4_spanish_ci;
 
-
 SET @OLD_SQL_NOTES=@@SQL_NOTES;
 SET SQL_NOTES=0;
+
 START TRANSACTION;
 
 SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET AUTOCOMMIT=0;
-
-
--- ========================================
--- TABLAS
--- ========================================
 
 
 -- ========================================
@@ -38,6 +33,7 @@ CREATE TABLE `bak_atributos_sku_tallas_dup` (
   PRIMARY KEY (`CODIGO_UNIDAD_SKU_SA`,`ID_AV_SA_ORIG`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 53 registros exportados
 
 -- Datos de bak_atributos_sku_tallas_dup
 
@@ -95,7 +91,6 @@ INSERT INTO `bak_atributos_sku_tallas_dup` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA_OR
 ('VEST-FLOR/VERDE/M',3,9102,'2026-06-09 15:17:33'),
 ('VEST-FLOR/VERDE/S',110,9101,'2026-06-09 15:17:33');
 
-
 -- Tabla: fzaest_estadisticas_dia
 
 DROP TABLE IF EXISTS `fzaest_estadisticas_dia`;
@@ -115,7 +110,6 @@ CREATE TABLE `fzaest_estadisticas_dia` (
   INDEX `IDX_FZAEST_FAM_FECHA` (`CODIGO_FAMILIA`, `FECHA`),
   INDEX `IDX_FZAEST_TEMP_FECHA` (`TEMPORADA`, `FECHA`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_albaranes
 
@@ -200,13 +194,13 @@ CREATE TABLE `fza_albaranes` (
   INDEX `IDX_ALB_PEDIDO` (`SERIE_PED_ALB`, `NUMERO_PED_ALB`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 8 registros exportados
 
 -- Datos de fza_albaranes
 
 INSERT INTO `fza_albaranes` (`NUMERO_ALB`, `SERIE_ALB`, `FECHA_ALB`, `ESCONSOLIDADO_ALB`, `ESTADO_ALB`, `NUMERO_PED_ALB`, `SERIE_PED_ALB`, `NUMERO_FAC_ALB`, `SERIE_FAC_ALB`, `CODIGO_EMP_ALB`, `CODIGO_ALM_ALB`, `RAZON_SOCIAL_EMPRESA_ALB`, `NIF_EMPRESA_ALB`, `MOVIL_EMPRESA_ALB`, `EMAIL_EMPRESA_ALB`, `DIRECCION1_EMPRESA_ALB`, `DIRECCION2_EMPRESA_ALB`, `POBLACION_EMPRESA_ALB`, `PROVINCIA_EMPRESA_ALB`, `CODIGO_PAI_EMPRESA_ALB`, `NOMBRE_PAI_EMPRESA_ALB`, `CODIGO_POSTAL_EMPRESA_ALB`, `GRUPO_ZONA_IVA_EMPRESA_ALB`, `CODIGO_CLI_ALB`, `RAZON_SOCIAL_CLIENTE_ALB`, `NIF_CLIENTE_ALB`, `MOVIL_CLIENTE_ALB`, `EMAIL_CLIENTE_ALB`, `DIRECCION1_CLIENTE_ALB`, `DIRECCION2_CLIENTE_ALB`, `POBLACION_CLIENTE_ALB`, `PROVINCIA_CLIENTE_ALB`, `CODIGO_POSTAL_CLIENTE_ALB`, `CODIGO_PAI_CLIENTE_ALB`, `NOMBRE_PAI_CLIENTE_ALB`, `NOMBRE_CLI_ENVIO_ALB`, `MOVIL_CLIENTE_ENVIO_ALB`, `DIRECCION1_CLIENTE_ENVIO_ALB`, `DIRECCION2_CLIENTE_ENVIO_ALB`, `POBLACION_CLIENTE_ENVIO_ALB`, `PROVINCIA_CLIENTE_ENVIO_ALB`, `CODIGO_POSTAL_CLIENTE_ENVIO_ALB`, `CODIGO_PAI_CLIENTE_ENVIO_ALB`, `NOMBRE_PAI_CLIENTE_ENVIO_ALB`, `TRANSPORTISTA_ALB`, `CODIGO_IVA_ALB`, `ESIVA_RECARGO_CLIENTE_ALB`, `ESIVA_EXENTO_CLIENTE_ALB`, `ESINTRACOMUNITARIO_CLIENTE_ALB`, `TARIFA_ARTICULO_CLIENTE_ALB`, `ESIMP_INCL_TARIFA_CLIENTE_ALB`, `PORCENTAJE_IVAN_ALB`, `TOTAL_IVAN_ALB`, `PORCENTAJE_IVAR_ALB`, `TOTAL_IVAR_ALB`, `PORCENTAJE_IVAS_ALB`, `TOTAL_IVAS_ALB`, `PORCENTAJE_IVAE_ALB`, `TOTAL_IVAE_ALB`, `TOTAL_BASES_ALB`, `TOTAL_IMPUESTOS_ALB`, `TOTAL_LIQUIDO_ALB`, `FORMA_PAGO_ALB`, `CONTADOR_LINEAS_ALB`, `COMENTARIOS_ALB`, `OBSERVACIONES_ALB`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('000001','A1','2026-07-01','N','ABIERTO',NULL,NULL,NULL,NULL,'012',NULL,'ALEJANDRO LAORDEN HIDALGO','45684134Q','65869556','miemail@gmail.com','CALLE POZO BLANCO, 2','','SANTOVENIA','ZAMORA','ES','España','49750','1','302','CARLOS HERRERO SANTOS','23456789B','666202020','carlos.herrero@hotmail.com','AVDA. LIBERTAD, 22','2º A','BARCELONA','BARCELONA','08001','724','España',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'724','España',NULL,'1','N','N','N','PVP','S',21.000000,0.000000,10.000000,0.000000,4.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,NULL,NULL,'','','2026-07-01 07:21:26','2026-07-01 07:21:26','Administrador','Administrador'),
 ('000001','AG1','2026-07-02','N','ABIERTO',NULL,NULL,NULL,NULL,'1',NULL,'AGRICULTOR','NIF DEL AGRICULTOR','TFNO DEL AGRICULTOR','EMAIL DEL AGRICULTOR','DIRECCION DEL AGRICULTOR','','POBLACION DEL AGRICULTOR','PROVINCIA DEL AGRICULTOR','ES','España','POSAGRI','2','302','CARLOS HERRERO SANTOS','23456789B','666202020','carlos.herrero@hotmail.com','AVDA. LIBERTAD, 22','2º A','BARCELONA','BARCELONA','08001','724','España',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'724','España',NULL,NULL,'N','N','N','PVP','S',NULL,0.000000,NULL,0.000000,NULL,0.000000,NULL,0.000000,0.000000,0.000000,0.000000,NULL,NULL,'','','2026-07-02 16:55:16','2026-07-02 16:55:16','Administrador','Administrador'),
 ('000003','A1','2026-07-03','N','ABIERTO',NULL,NULL,NULL,NULL,'012','GEN','ALEJANDRO LAORDEN HIDALGO','45684134Q','65869556','miemail@gmail.com','CALLE POZO BLANCO, 2','','SANTOVENIA','ZAMORA','ES','España','49750','1','313','TEXTILES NORDESTE SL','B11223344','937333333','gerencia@texnordeste.com','C/ ARGENTINA, 55','POL. PRAT','EL PRAT LLOBREGAT','BARCELONA','08820','724','España',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'724','España',NULL,'1','N','N','N','VENTAMAYOR','S',21.000000,21.000000,10.000000,0.000000,4.000000,0.000000,0.000000,0.000000,100.000000,21.000000,121.000000,NULL,'00000010','','','2026-07-03 18:10:41','2026-07-03 14:51:59','Administrador','Administrador');
-
 
 -- Tabla: fza_albaranes_celdas
 
@@ -227,6 +221,7 @@ CREATE TABLE `fza_albaranes_celdas` (
   INDEX `IDX_ALBCEL_AV_PIVOT` (`ID_AV_PIVOT_ALBCEL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 8 registros exportados
 
 -- Tabla: fza_albaranes_compra
 
@@ -320,6 +315,7 @@ CREATE TABLE `fza_albaranes_compra` (
   INDEX `IDX_ALBC_TEMPORADA` (`ID_PV_TEMPORADA_ALBC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 32 registros exportados
 
 -- Datos de fza_albaranes_compra
 
@@ -356,7 +352,6 @@ INSERT INTO `fza_albaranes_compra` (`NUMERO_ALBC`, `SERIE_ALBC`, `FECHA_ALBC`, `
 ('037','A1','2026-05-24','CERRADO',NULL,NULL,NULL,NULL,'012','ALEJANDRO LAORDEN HIDALGO','45684134Q','65869556','miemail@gmail.com','CALLE POZO BLANCO, 2','','SANTOVENIA','ZAMORA','ES','España','49750','FER','FERNANDO E HIJOS, SL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'724','Espana',NULL,'322323','GEN',NULL,'1','N','N',21.000000,600.000000,126.000000,5.200000,0.000000,10.000000,0.000000,0.000000,1.400000,0.000000,4.000000,0.000000,0.000000,0.500000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,600.000000,126.000000,NULL,0.000000,600.000000,0.000000,0.000000,0.000000,0.000000,726.000000,'TRANSFERENCIA','00000480','','','S',NULL,'S','2026-07-01 17:03:52','2026-06-26 17:37:44','Administrador','Administrador'),
 ('038','A1','2026-06-26','CERRADO','000001','A1',NULL,NULL,'012','ALEJANDRO LAORDEN HIDALGO','4587545EQ','65869556','miemail@gmail.com','CALLE POZO BLANCO, 2','','SANTOVENIA','ZAMORA','ES','España','49750','PEPI','PEPINO RODRÍGUEZ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'724','Espana',NULL,'398383','GEN',NULL,'1','N','N',21.000000,121.000000,25.410000,5.200000,0.000000,10.000000,0.000000,0.000000,1.400000,0.000000,4.000000,0.000000,0.000000,0.500000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,121.000000,25.410000,NULL,0.000000,121.000000,0.000000,0.000000,0.000000,0.000000,146.410000,NULL,'00000150','','','S',NULL,'N','2026-07-01 17:03:52','2026-06-26 17:41:20','Administrador','Administrador');
 
-
 -- Tabla: fza_albaranes_compra_celdas
 
 DROP TABLE IF EXISTS `fza_albaranes_compra_celdas`;
@@ -375,7 +370,6 @@ CREATE TABLE `fza_albaranes_compra_celdas` (
   PRIMARY KEY (`SERIE_ALBC_ALBCCEL`,`NUMERO_ALBC_ALBCCEL`,`LINEA_ALBC_ALBCCEL`,`ID_FILA_ALBC_ALBCCEL`,`ID_AV_PIVOT_ALBCCEL`),
   INDEX `IDX_ALBCCEL_LINEA` (`SERIE_ALBC_ALBCCEL`, `NUMERO_ALBC_ALBCCEL`, `LINEA_ALBC_ALBCCEL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_albaranes_compra_lineas
 
@@ -430,6 +424,7 @@ CREATE TABLE `fza_albaranes_compra_lineas` (
   INDEX `IDX_ALBCLIN_PEDIDO` (`SERIE_PEDC_ALBCLIN`, `NUMERO_PEDC_ALBCLIN`, `LINEA_PEDC_ALBCLIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 394 registros exportados
 
 -- Datos de fza_albaranes_compra_lineas
 
@@ -830,7 +825,6 @@ INSERT INTO `fza_albaranes_compra_lineas` (`NUMERO_ALBC_ALBCLIN`, `SERIE_ALBC_AL
 ('038','A1','0140','000001','A1','0140','DEPORTIVO009','DEPORTIVO009/NEGRO/M','222',1,'DEPORTIVO','','mallitas','Uds',1.000000,0.000000,'N',21.000000,2.000000,2.420000,2.000000,'GEN',NULL,NULL,NULL,'N',NULL,NULL,NULL,'2026-06-26 17:41:20','2026-06-26 17:41:20','Administrador','Administrador','','','','','','','','','','',0),
 ('038','A1','0150','000001','A1','0130','DEPORTIVO009','DEPORTIVO009/NEGRO/S','222',1,'DEPORTIVO','','mallitas','Uds',1.000000,0.000000,'N',21.000000,2.000000,2.420000,2.000000,'GEN',NULL,NULL,NULL,'N',NULL,NULL,NULL,'2026-06-26 17:41:20','2026-06-26 17:41:20','Administrador','Administrador','','','','','','','','','','',0);
 
-
 -- Tabla: fza_albaranes_lineas
 
 DROP TABLE IF EXISTS `fza_albaranes_lineas`;
@@ -886,11 +880,11 @@ CREATE TABLE `fza_albaranes_lineas` (
   INDEX `IDX_ALBLIN_UNIDAD` (`CODIGO_UNIDAD_ALBLIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 11 registros exportados
 
 -- Datos de fza_albaranes_lineas
 
 INSERT INTO `fza_albaranes_lineas` (`NUMERO_ALB_ALBLIN`, `SERIE_ALB_ALBLIN`, `LINEA_ALBLIN`, `NUMERO_PED_ALBLIN`, `SERIE_PED_ALBLIN`, `LINEA_PED_ALBLIN`, `CODIGO_ART_ALBLIN`, `CODIGO_FAM_ALBLIN`, `NOMBRE_FAM_ALBLIN`, `DESCRIPCION_ARTICULO_ALBLIN`, `TIPO_CANTIDAD_ARTICULO_ALBLIN`, `CANTIDAD_ALBLIN`, `CODIGO_TAR_ALBLIN`, `ESIMP_INCL_TARIFA_ALBLIN`, `TIPO_IVA_ARTICULO_ALBLIN`, `PORCENTAJE_IVA_ALBLIN`, `PRECIO_VENTA_SIVA_ARTICULO_ALBLIN`, `PRECIO_VENTA_CIVA_ARTICULO_ALBLIN`, `TOTAL_ALBLIN`, `CODIGO_ALMACEN_ALBLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ESFACTURADA_ALBLIN`, `NUMERO_FAC_ALBLIN`, `SERIE_FAC_ALBLIN`, `LINEA_FAC_ALBLIN`, `CODIGO_UNIDAD_ALBLIN`, `LOTE_ALBLIN`, `FECHA_CADUCIDAD_ALBLIN`, `DESCRIPCION_VARIACION_ALBLIN`, `ATTR1_VALOR_ALBLIN`, `ATTR1_NOMBRE_ALBLIN`, `ATTR2_VALOR_ALBLIN`, `ATTR2_NOMBRE_ALBLIN`, `ATTR3_VALOR_ALBLIN`, `ATTR3_NOMBRE_ALBLIN`, `ATTR4_VALOR_ALBLIN`, `ATTR4_NOMBRE_ALBLIN`, `ATTR5_VALOR_ALBLIN`, `ATTR5_NOMBRE_ALBLIN`, `NUM_ATRIBUTOS_ALBLIN`, `ID_AC_PIVOT_ALBLIN`) VALUES ('000003','A1','0010',NULL,NULL,NULL,'TESTPMP1','OTR','Otros articulos agrícolas','Test_PMP_1','Uds',4.000000,'VENTAMAYOR','N','N',21.000000,25.000000,30.250000,100.000000,'GEN','2026-07-03 18:10:40','2026-07-03 14:51:20','Administrador','Administrador','N',NULL,NULL,NULL,'TESTPMP1',NULL,NULL,NULL,'','','','','','','','','','',0,0);
-
 
 -- Tabla: fza_almacenes
 
@@ -924,6 +918,7 @@ CREATE TABLE `fza_almacenes` (
   INDEX `IDX_PADRE_ALM` (`CODIGO_PADRE_ALM`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 6 registros exportados
 
 -- Datos de fza_almacenes
 
@@ -933,7 +928,6 @@ INSERT INTO `fza_almacenes` (`CODIGO_ALM_ALM`, `CODIGO_EMP_ALM`, `ESACTIVO_ALM`,
 ('DESTBCN','1','S','Furgoneta -> BCN',NULL,'S','TRÁNSITO',NULL,NULL,NULL,NULL,NULL,NULL,'BCN','',NULL,'2026-01-29 04:42:51','2026-03-11 21:27:51','DEMO','Administrador',NULL),
 ('GEN','012','S','Almacén Central',NULL,'S','ESTANDAR',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,2,'2026-01-04 21:13:10','2026-01-29 05:11:20','DEMO','Administrador',NULL),
 ('TARAS_G','1','S','Taras Almacén Central','GEN','S','TARAS',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-05 06:21:37','2026-03-11 21:27:51','DEMO','DEMO',NULL);
-
 
 -- Tabla: fza_almacenes_cajas
 
@@ -945,13 +939,13 @@ CREATE TABLE `fza_almacenes_cajas` (
   PRIMARY KEY (`CODIGO_ALM_ALMCAJ`,`CODIGO_CAJA_ALMCAJ`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 3 registros exportados
 
 -- Datos de fza_almacenes_cajas
 
 INSERT INTO `fza_almacenes_cajas` (`CODIGO_ALM_ALMCAJ`, `CODIGO_CAJA_ALMCAJ`, `DESCRIPCION_ALMCAJ`) VALUES ('ALE','1','CAJA DE VENTA AL PÚBLICO'),
 ('BCN','1','CAJA DE VENTA BCN'),
 ('GEN','1','CAJA PARA VENDER ARTÍCULOS AL DETALLE');
-
 
 -- Tabla: fza_articulos
 
@@ -980,6 +974,7 @@ CREATE TABLE `fza_articulos` (
   INDEX `TIPO_VARIACION_ART` (`TIPO_VARIACION_ART`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 58 registros exportados
 
 -- Datos de fza_articulos
 
@@ -1042,7 +1037,6 @@ INSERT INTO `fza_articulos` (`CODIGO_ART_ART`, `ESACTIVO_ART`, `TIPO_ART`, `DESC
 ('ZAP-OXFORD','S','ESTANDAR','Zapato Oxford Piel Hombre','CALZADO','N','N','Uds','S','N',NULL,'2026-03-08 05:57:33','2026-03-11 21:27:51','DEMO','Administrador','TC'),
 ('ZAP-TACÓN','S','ESTANDAR','Zapato Tacón Alto Señora','CALZADO','N','N','Uds','S','N',NULL,'2026-03-08 05:57:34','2026-03-11 21:27:51','DEMO','Administrador','TC');
 
-
 -- Tabla: fza_articulos_atributos_basicos
 
 DROP TABLE IF EXISTS `fza_articulos_atributos_basicos`;
@@ -1060,6 +1054,7 @@ CREATE TABLE `fza_articulos_atributos_basicos` (
   INDEX `IDX_AAB_VAL` (`ID_AV_AAB`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 53 registros exportados
 
 -- Datos de fza_articulos_atributos_basicos
 
@@ -1117,7 +1112,6 @@ INSERT INTO `fza_articulos_atributos_basicos` (`CODIGO_ART_AAB`, `ID_AV_AAB`, `I
 ('VEST-FLOR',9204,170,NULL,'2026-05-16 16:21:49','2026-05-16 16:05:32','Administrador','Administrador'),
 ('VEST-FLOR',9207,169,NULL,'2026-05-16 12:31:55','2026-05-16 12:31:46','Administrador','Administrador');
 
-
 -- Tabla: fza_articulos_conjuntos_asign
 
 DROP TABLE IF EXISTS `fza_articulos_conjuntos_asign`;
@@ -1135,6 +1129,7 @@ CREATE TABLE `fza_articulos_conjuntos_asign` (
   INDEX `IDX_ACA_CONJUNTO` (`CODIGO_ART_ACA`, `ID_AC_ACA`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 68 registros exportados
 
 -- Datos de fza_articulos_conjuntos_asign
 
@@ -1207,7 +1202,6 @@ INSERT INTO `fza_articulos_conjuntos_asign` (`CODIGO_ART_ACA`, `ID_AC_ACA`, `ID_
 ('ZAP-TACÓN',6,'CO',0,'S','2026-05-12 05:13:38','2026-05-12 05:13:38','DEMO','DEMO'),
 ('ZAP-TACÓN',5,'TAL',0,'S','2026-05-12 05:13:38','2026-05-12 05:13:38','DEMO','DEMO');
 
-
 -- Tabla: fza_articulos_familias
 
 DROP TABLE IF EXISTS `fza_articulos_familias`;
@@ -1231,6 +1225,7 @@ CREATE TABLE `fza_articulos_familias` (
   INDEX `IDX_FAM_PADRE` (`CODIGO_PADRE_FAM`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 8 registros exportados
 
 -- Datos de fza_articulos_familias
 
@@ -1242,7 +1237,6 @@ INSERT INTO `fza_articulos_familias` (`CODIGO_FAM_FAM`, `CODIGO_PADRE_FAM`, `ESA
 ('LIM',NULL,'S',0,'N',NULL,'PRODUCTOS DE LIMPIEZA',NULL,NULL,'S','2026-06-05 17:38:15','2026-06-05 17:38:15','Administrador','Administrador',5),
 ('OTR',NULL,'S',6,'S',NULL,'Otros articulos agrícolas','Otros articulos agrícolas',0,'N','2026-05-12 16:38:02','2022-11-02 15:06:31','Administrador','Administrador',5),
 ('ROPA',NULL,'S',1,'N',NULL,'Ropa de Vestir','Ropa de Vestir a la moda',0,'N','2026-05-12 16:34:25','2026-03-11 21:27:51','Adminnistrador','Administrador',5);
-
 
 -- Tabla: fza_articulos_fotos
 
@@ -1260,6 +1254,7 @@ CREATE TABLE `fza_articulos_fotos` (
   INDEX `IDX_FOT_SKU` (`CODIGO_UNIDAD_FOT`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 26 registros exportados
 
 -- Datos de fza_articulos_fotos
 
@@ -1290,7 +1285,6 @@ INSERT INTO `fza_articulos_fotos` (`CODIGO_ART_FOT`, `CODIGO_UNIDAD_FOT`, `NOMBR
 ('ZAP-BOTA-MT','','ZAP-BOTA-MT_001','webp','2026-05-18 03:53:13','2026-05-18 03:53:13','Administrador','Administrador'),
 ('ZAP-BOTA-MT','ZAP-BOTA-MT/MARRON','ZAP-BOTA-MT_MARRON_001','webp','2026-05-18 03:55:08','2026-05-18 03:55:08','Administrador','Administrador');
 
-
 -- Tabla: fza_articulos_pdte_recibir
 
 DROP TABLE IF EXISTS `fza_articulos_pdte_recibir`;
@@ -1317,6 +1311,7 @@ CREATE TABLE `fza_articulos_pdte_recibir` (
   INDEX `IDX_PDR_SKU_ALM` (`CODIGO_UNIDAD_PDR`, `CODIGO_ALM_PDR`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 19 registros exportados
 
 -- Datos de fza_articulos_pdte_recibir
 
@@ -1332,7 +1327,6 @@ INSERT INTO `fza_articulos_pdte_recibir` (`CODIGO_UNIDAD_PDR`, `CODIGO_ALM_PDR`,
 ('DEPORTIVO008/BEIGE/40','GEN','A1','000002',110,'DEPORTIVO008','18','012',1.000000,12.000000,'2026-05-26',NULL,'2026-06-22 06:22:16','2026-06-22 06:22:16','Administrador','Administrador'),
 ('DEPORTIVO008/BEIGE/41','GEN','A1','000002',100,'DEPORTIVO008','18','012',1.000000,12.000000,'2026-05-26',NULL,'2026-06-22 06:22:16','2026-06-22 06:22:16','Administrador','Administrador'),
 ('DEPORTIVO008/BEIGE/42','GEN','A1','000002',90,'DEPORTIVO008','18','012',1.000000,12.000000,'2026-05-26',NULL,'2026-06-22 06:22:16','2026-06-22 06:22:16','Administrador','Administrador');
-
 
 -- Tabla: fza_articulos_propiedades
 
@@ -1350,6 +1344,7 @@ CREATE TABLE `fza_articulos_propiedades` (
   INDEX `IDX_VALOR_LISTA` (`ID_PV_ARTPROP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 170 registros exportados
 
 -- Datos de fza_articulos_propiedades
 
@@ -1524,7 +1519,6 @@ INSERT INTO `fza_articulos_propiedades` (`CODIGO_ART_ART`, `CODIGO_PROP_ARTPROP`
 ('ZAP-TACÓN','TEMPORADA','',10,NULL,'2026-03-24 06:06:54','Administrador'),
 ('ZAP-TACÓN','TIPO_SUELA','',49,NULL,'2026-03-24 06:06:54','Administrador');
 
-
 -- Tabla: fza_articulos_proveedores
 
 DROP TABLE IF EXISTS `fza_articulos_proveedores`;
@@ -1544,6 +1538,7 @@ CREATE TABLE `fza_articulos_proveedores` (
   INDEX `IDX_AP_REF` (`REF_PROVEEDOR_AP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 57 registros exportados
 
 -- Datos de fza_articulos_proveedores
 
@@ -1605,7 +1600,6 @@ INSERT INTO `fza_articulos_proveedores` (`CODIGO_PRV_AP`, `CODIGO_ART_AP`, `REF_
 ('PEPI','PAPAFRITA',NULL,0.200000,NULL,'','2025-04-17 07:03:32','2025-04-17 07:03:32','Administrador','Administrador'),
 ('PRVTEST','TESTSKU01',NULL,7.000000,'2026-07-05 06:22:42','S','2026-07-05 04:22:42','2026-07-04 14:07:25','Administrador','Administrador');
 
-
 -- Tabla: fza_articulos_skus
 
 DROP TABLE IF EXISTS `fza_articulos_skus`;
@@ -1623,6 +1617,7 @@ CREATE TABLE `fza_articulos_skus` (
   INDEX `IDX_SKU_ART_ACT` (`CODIGO_ART_SKU`, `ESACTIVO_SKU`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 389 registros exportados
 
 -- Datos de fza_articulos_skus
 
@@ -2009,7 +2004,6 @@ INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, `CODIGO_ART_SKU`, `CODIGO
 ('ZAP-TACÓN/ROJO/37','ZAP-TACÓN','TC','S','2026-01-08 17:35:43','2026-01-04 21:06:12','DEMO','DEMO'),
 ('ZAP-TACÓN/ROJO/38','ZAP-TACÓN','TC','S','2026-02-22 05:13:04','2026-02-22 05:13:04','SCRIPT_DEMO','SCRIPT_DEMO');
 
-
 -- Tabla: fza_articulos_skus_costes
 
 DROP TABLE IF EXISTS `fza_articulos_skus_costes`;
@@ -2025,6 +2019,7 @@ CREATE TABLE `fza_articulos_skus_costes` (
   INDEX `IDX_SKUC_FECHA_ULT_COMPRA` (`FECHA_ULT_COMPRA_SKUC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 115 registros exportados
 
 -- Datos de fza_articulos_skus_costes
 
@@ -2084,7 +2079,6 @@ INSERT INTO `fza_articulos_skus_costes` (`CODIGO_UNIDAD_SKU_SKUC`, `PRECIO_ULT_C
 ('VEST-FLOR/VERDE/M',10.000000,'2026-05-01','2026-05-10 17:34:55','2026-05-10 17:34:55','MIGRACION','MIGRACION'),
 ('VEST-FLOR/VERDE/S',10.000000,'2026-05-01','2026-05-10 17:34:55','2026-05-10 17:34:55','MIGRACION','MIGRACION');
 
-
 -- Tabla: fza_articulos_stockactual
 
 DROP TABLE IF EXISTS `fza_articulos_stockactual`;
@@ -2114,6 +2108,7 @@ CREATE TABLE `fza_articulos_stockactual` (
   INDEX `IDX_STK_UNIDAD` (`CODIGO_UNIDAD_STK`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 397 registros exportados
 
 -- Datos de fza_articulos_stockactual
 
@@ -2510,7 +2505,6 @@ INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, `CODIGO_UNIDAD_STK`, 
 ('GEN','ZAP-OXFORD/NEGRO/42','',NULL,9.000000,'2026-06-26 17:48:54',45.000000,5.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,9.000000,0.000000,0.000000),
 ('GEN','ZAP-TACÓN/ROJO/37','',NULL,5.000000,'2026-06-26 17:48:54',25.000000,5.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,5.000000,0.000000,0.000000);
 
-
 -- Tabla: fza_articulos_tarifas
 
 DROP TABLE IF EXISTS `fza_articulos_tarifas`;
@@ -2539,6 +2533,10 @@ CREATE TABLE `fza_articulos_tarifas` (
   INDEX `IDX_ART_TARIFAS_BUSQUEDA` (`CODIGO_ART_ARTTAR`, `CODIGO_TAR_ARTTAR`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_articulos_tarifas` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_articulos_tarifas` ENABLE KEYS */;
+-- 101 registros exportados
 
 -- Datos de fza_articulos_tarifas
 
@@ -2644,7 +2642,6 @@ INSERT INTO `fza_articulos_tarifas` (`CODIGO_ART_ARTTAR`, `CODIGO_UNICO_ARTTAR`,
 ('TESTSKU01',165,'TESTSKU01/NEGRO/M','PVP','S',30.000000,30.000000,0.000000,0.000000,NULL,NULL,NULL,'2026-07-04',NULL,'2026-07-04 05:48:45','2026-07-04 05:48:45','Administrador','Administrador'),
 ('TESTSKU01',166,'TESTSKU01/NEGRO/S','PVP','S',25.000000,25.000000,0.000000,0.000000,NULL,NULL,NULL,'2026-07-04',NULL,'2026-07-04 05:48:45','2026-07-04 05:48:45','Administrador','Administrador');
 
-
 -- Tabla: fza_articulos_vinculos
 
 DROP TABLE IF EXISTS `fza_articulos_vinculos`;
@@ -2660,12 +2657,15 @@ CREATE TABLE `fza_articulos_vinculos` (
   INDEX `IDX_ARTVIN_PADRE` (`CODIGO_ART_PADRE_ARTVIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_articulos_vinculos` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_articulos_vinculos` ENABLE KEYS */;
+-- 2 registros exportados
 
 -- Datos de fza_articulos_vinculos
 
 INSERT INTO `fza_articulos_vinculos` (`ID_ARTVIN`, `CODIGO_ART_PADRE_ARTVIN`, `CODIGO_ART_HIJO_ARTVIN`, `CANTIDAD_ARTVIN`, `ORDEN_VISUAL_ARTVIN`, `ESOBLIGATORIO_ARTVIN`) VALUES (1,'MOCASIN-340','MOCASIN-340-UPPER',1.00,1,'S'),
 (2,'MOCASIN-340','MOCASIN-340-SOLE',1.00,2,'S');
-
 
 -- Tabla: fza_atributos_basicos
 
@@ -2689,6 +2689,10 @@ CREATE TABLE `fza_atributos_basicos` (
   UNIQUE INDEX `ID_VA_ATB` (`ID_VA_ATB`, `CODIGO_ATB`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_atributos_basicos` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_atributos_basicos` ENABLE KEYS */;
+-- 51 registros exportados
 
 -- Datos de fza_atributos_basicos
 
@@ -2744,7 +2748,6 @@ INSERT INTO `fza_atributos_basicos` (`ID_ATB`, `ID_VA_ATB`, `CODIGO_ATB`, `NOMBR
 (171,'CO','AD_VEST-FLOR_AMARILLO_CHILLÓN','AMARILLO CHILLÓN',NULL,'#FFFF00',NULL,NULL,0,'S','2026-05-16 16:05:38','2026-05-16 16:05:31','Administrador','Administrador'),
 (172,'CO','COLORADITO','COLORADITO',NULL,'#EB677B',NULL,NULL,0,'S','2026-05-16 16:08:46','2026-05-16 16:08:36','Administrador','Administrador');
 
-
 -- Tabla: fza_atributos_conjuntos
 
 DROP TABLE IF EXISTS `fza_atributos_conjuntos`;
@@ -2762,6 +2765,10 @@ CREATE TABLE `fza_atributos_conjuntos` (
   PRIMARY KEY (`ID_AC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_atributos_conjuntos` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_atributos_conjuntos` ENABLE KEYS */;
+-- 7 registros exportados
 
 -- Datos de fza_atributos_conjuntos
 
@@ -2771,7 +2778,6 @@ INSERT INTO `fza_atributos_conjuntos` (`ID_AC`, `NOMBRE_AC`, `NOMBRE_CORTO_AC`, 
 (4,'Tallas Calzado Hombre EU 39-44','EUR-H','TC','TAL','S','2026-05-19 05:34:11','2026-05-12 05:13:38','DEMO','DEMO'),
 (5,'Tallas Calzado Mujer EU 37-42','EUR-M','TC','TAL','S','2026-05-19 05:34:11','2026-05-12 05:13:38','DEMO','DEMO'),
 (6,'Colores Vivos','COL','TC','CO','S','2026-05-19 05:34:11','2026-05-12 05:13:38','DEMO','DEMO');
-
 
 -- Tabla: fza_atributos_conjuntos_det
 
@@ -2790,6 +2796,7 @@ CREATE TABLE `fza_atributos_conjuntos_det` (
   INDEX `IDX_VALOR_ACD` (`ID_AV_ACD`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 41 registros exportados
 
 -- Datos de fza_atributos_conjuntos_det
 
@@ -2828,7 +2835,6 @@ INSERT INTO `fza_atributos_conjuntos_det` (`ID_AC_ACD`, `ID_AV_ACD`, `ORDEN_ACD`
 (6,9209,20,15,'2026-05-14 18:29:38','2026-05-12 05:13:38','DEMO','DEMO'),
 (6,9211,30,NULL,'2026-05-12 05:13:38','2026-05-12 05:13:38','DEMO','DEMO');
 
-
 -- Tabla: fza_atributos_sku
 
 DROP TABLE IF EXISTS `fza_atributos_sku`;
@@ -2846,6 +2852,7 @@ CREATE TABLE `fza_atributos_sku` (
   INDEX `IDX_VALOR_SA` (`ID_AV_SA`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 765 registros exportados
 
 -- Datos de fza_atributos_sku
 
@@ -3601,7 +3608,6 @@ INSERT INTO `fza_atributos_sku` (`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_M
 ('ZAP-TACÓN/ROJO/38',1,'2026-03-07 07:00:00','2026-03-07 07:00:00','FIX_SKU_STOCK','FIX_SKU_STOCK'),
 ('ZAP-TACÓN/ROJO/38',122,'2026-03-07 07:00:00','2026-03-07 07:00:00','FIX_SKU_STOCK','FIX_SKU_STOCK');
 
-
 -- Tabla: fza_atributos_valores
 
 DROP TABLE IF EXISTS `fza_atributos_valores`;
@@ -3626,6 +3632,10 @@ CREATE TABLE `fza_atributos_valores` (
   INDEX `IDX_VAR_AV` (`ID_VA_AV`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_atributos_valores` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_atributos_valores` ENABLE KEYS */;
+-- 56 registros exportados
 
 -- Datos de fza_atributos_valores
 
@@ -3686,7 +3696,6 @@ INSERT INTO `fza_atributos_valores` (`ID_AV`, `ID_VA_AV`, `AV`, `ORDEN_AV`, `DES
 (9224,'CO','GRANATE',0,'GRANATE','S',1.000000,NULL,NULL,3,'2026-06-26 17:37:44','2026-06-26 17:37:44','Administrador','Administrador'),
 (9225,'CO','UNI',100,NULL,'S',1.000000,NULL,NULL,NULL,'2026-07-02 17:37:18','2026-07-02 17:37:18','SISTEMA','SISTEMA');
 
-
 -- Tabla: fza_atributos_valores_info
 
 DROP TABLE IF EXISTS `fza_atributos_valores_info`;
@@ -3698,7 +3707,6 @@ CREATE TABLE `fza_atributos_valores_info` (
   PRIMARY KEY (`ID_AVI`),
   INDEX `IDX_VALOR_INFO` (`ID_AV_AVI`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_bancos
 
@@ -3715,6 +3723,7 @@ CREATE TABLE `fza_bancos` (
   PRIMARY KEY (`CODIGO_BAN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 231 registros exportados
 
 -- Datos de fza_bancos
 
@@ -3950,7 +3959,6 @@ INSERT INTO `fza_bancos` (`CODIGO_BAN`, `NOMBRE_BAN`, `BIC_BAN`, `ESACTIVO_BAN`,
 ('3191','CAJA RURAL ARAGON','BCOEESMM191','S','2026-06-19 06:27:46','2026-06-19 06:27:46','SISTEMA','SISTEMA'),
 ('9000','BANCO DE ESPAÑA','ESPBESMM','S','2026-06-19 06:27:46','2026-06-19 06:27:46','SISTEMA','SISTEMA');
 
-
 -- Tabla: fza_caja_arqueos
 
 DROP TABLE IF EXISTS `fza_caja_arqueos`;
@@ -4007,11 +4015,11 @@ CREATE TABLE `fza_caja_arqueos` (
   INDEX `IDX_ARQ_FECHA` (`FECHA_DESDE_ARQ`, `FECHA_HASTA_ARQ`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 1 registros exportados
 
 -- Datos de fza_caja_arqueos
 
 INSERT INTO `fza_caja_arqueos` (`CODIGO_ARQ`, `CODIGO_EMP_ARQ`, `CODIGO_ALM_ARQ`, `CODIGO_CAJA_ARQ`, `FECHA_DESDE_ARQ`, `FECHA_HASTA_ARQ`, `FASE_ARQ`, `CODIGO_EMPLEADO_ARQ`, `CANTIDAD_VENTAS_ARQ`, `CANTIDAD_OPERACIONES_ARQ`, `TOTAL_BRUTO_LINEAS_ARQ`, `TOTAL_DESCUENTOS_LINEAS_ARQ`, `TOTAL_BRUTO_OPERACIONES_ARQ`, `TOTAL_DESCUENTOS_OPERACIONES_ARQ`, `TOTAL_NETO_ARQ`, `TOTAL_PRESTAMOS_ARQ`, `TOTAL_VENTAS_NORMALES_ARQ`, `TOTAL_VENTAS_PRESTAMOS_ARQ`, `TOTAL_DEVOLUCIONES_ARQ`, `TOTAL_VENTAS_ARQ`, `TOTAL_VENTA_CREDITO_ARQ`, `TOTAL_VALES_RECOGIDOS_ARQ`, `TOTAL_VALES_EMITIDOS_ARQ`, `TOTAL_COBROS_CLIENTES_ARQ`, `TOTAL_PENDIENTE_COBRO_ARQ`, `TOTAL_INGRESOS_CAJA_ARQ`, `TOTAL_EFECTIVO_INGRESOS_ARQ`, `TOTAL_EFECTIVO_ENTRADAS_ARQ`, `TOTAL_EFECTIVO_SALIDAS_ARQ`, `TOTAL_EFECTIVO_ANTERIOR_ARQ`, `TOTAL_EFECTIVO_CAJA_ARQ`, `TOTAL_OTROS_INGRESOS_ARQ`, `TOTAL_DEPOSITOS_ARQ`, `TOTAL_ENCARGOS_ARQ`, `TOTAL_SALDO_RECONTAR_ARQ`, `TOTAL_RECUENTO_ARQ`, `DIFERENCIA_TOTAL_ARQ`, `EFECTIVO_DEJADO_CAJA_ARQ`, `DESGLOSE_BILLETES_ARQ`, `IMPORTE_RETIRADA_ARQ`, `CONCEPTO_RETIRADA_ARQ`, `OBSERVACIONES_ARQ`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('20260613-01','012','GEN','1','2026-06-13 00:00:00','2026-06-13 23:59:59','CERRADO','1',2,3,185.856000,32.256000,153.600000,0.000000,153.600000,0.000000,153.600000,0.000000,0.000000,153.600000,0.000000,20.000000,0.000000,0.000000,0.000000,233.600000,10.000000,0.000000,10.000000,0.000000,0.000000,233.600000,0.000000,0.000000,233.600000,0.000000,0.000000,0.000000,NULL,0.000000,NULL,'','2026-06-20 03:38:40','2026-06-13 10:20:14','Administrador','Administrador');
-
 
 -- Tabla: fza_caja_arqueos_recuento
 
@@ -4034,6 +4042,10 @@ CREATE TABLE `fza_caja_arqueos_recuento` (
   UNIQUE INDEX `UQ_ARQR_ARQ_FP` (`CODIGO_ARQ_ARQR`, `CODIGO_FP_CFP_ARQR`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_caja_arqueos_recuento` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_caja_arqueos_recuento` ENABLE KEYS */;
+-- 19 registros exportados
 
 -- Datos de fza_caja_arqueos_recuento
 
@@ -4056,7 +4068,6 @@ INSERT INTO `fza_caja_arqueos_recuento` (`ID_ARQR`, `CODIGO_ARQ_ARQR`, `CODIGO_F
 (20,'20260613-01','BTC','Bitcoin','N',0.000000,0.000000,0.000000,'2026-06-13 10:20:14','2026-06-13 10:20:14','Administrador','Administrador'),
 (21,'20260613-01','TARJ','Tarjeta BBVA','N',173.600000,173.600000,0.000000,'2026-06-13 10:20:14','2026-06-13 10:20:14','Administrador','Administrador'),
 (22,'20260613-01','USD','Dólar Americano','N',0.000000,0.000000,0.000000,'2026-06-13 10:20:14','2026-06-13 10:20:14','Administrador','Administrador');
-
 
 -- Tabla: fza_caja_formas_pago
 
@@ -4083,6 +4094,7 @@ CREATE TABLE `fza_caja_formas_pago` (
   PRIMARY KEY (`CODIGO_FP_CFP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 5 registros exportados
 
 -- Datos de fza_caja_formas_pago
 
@@ -4091,7 +4103,6 @@ INSERT INTO `fza_caja_formas_pago` (`CODIGO_FP_CFP`, `DESCRIPCION_FORMA_PAGO_CFP
 ('EFE','Efectivo','N','N',NULL,NULL,'N','S','S','S',NULL,NULL,NULL,1,'2026-02-16 05:14:10','2026-03-11 21:27:52','SISTEMA','SISTEMA'),
 ('TARJ','Tarjeta BBVA','N','N',NULL,NULL,'N','N','N','S',NULL,NULL,NULL,2,'2026-02-16 05:14:12','2026-03-11 21:27:52','SISTEMA','SISTEMA'),
 ('USD','Dólar Americano','N','N',NULL,NULL,'S','N','N','S',NULL,NULL,NULL,5,'2026-02-17 06:33:18','2026-03-11 21:27:52','SISTEMA','SISTEMA');
-
 
 -- Tabla: fza_caja_operaciones
 
@@ -4135,6 +4146,10 @@ CREATE TABLE `fza_caja_operaciones` (
   INDEX `IDX_REF_ORIGEN_OPCAJA` (`SERIE_REF_ORIGEN_OPCAJA`, `NUMERO_REF_ORIGEN_OPCAJA`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_caja_operaciones` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_caja_operaciones` ENABLE KEYS */;
+-- 72 registros exportados
 
 -- Datos de fza_caja_operaciones
 
@@ -4211,7 +4226,6 @@ INSERT INTO `fza_caja_operaciones` (`ID_OPCAJA`, `CODIGO_EMP_OPCAJA`, `CODIGO_AL
 (194,'012','GEN','1','00000192','000166','2026.A1','2026-07-12 00:00:00','1','VE',170.000000,'0','N',0.000000,'Venta',NULL,NULL,NULL,NULL,NULL,'N',NULL,'2026-07-04 16:53:17','2026-07-04 16:53:17','Administrador','Administrador','','2026-07-12'),
 (195,'012','GEN','1','00000193','000005','TA','2026-07-04 19:18:36','1','TA',71.500000,NULL,'N',0.000000,'Traspaso a BCN',NULL,NULL,NULL,'1','BCN','S',NULL,'2026-07-04 17:18:36','2026-07-04 17:18:36','Administrador','Administrador',NULL,'2026-07-04');
 
-
 -- Tabla: fza_caja_pagos
 
 DROP TABLE IF EXISTS `fza_caja_pagos`;
@@ -4238,6 +4252,7 @@ CREATE TABLE `fza_caja_pagos` (
   INDEX `FK_PAGO_FORMAP` (`CODIGO_FP_CFP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 159 registros exportados
 
 -- Datos de fza_caja_pagos
 
@@ -4401,7 +4416,6 @@ INSERT INTO `fza_caja_pagos` (`CODIGO_EMP_PAGO`, `CODIGO_ALM_PAGO`, `CODIGO_CAJA
 ('012','GEN','1','2026.A1','00000188',1,'EFE','EUR',NULL,1.00000000,0.00000000,14.950000,0.000000,NULL,NULL,'2026-06-25 17:42:44','2026-06-25 17:42:44','Administrador'),
 ('012','GEN','1','2026.A1','00000192',1,'EFE','EUR',NULL,1.00000000,0.00000000,170.000000,0.000000,NULL,NULL,'2026-07-04 16:53:17','2026-07-04 16:53:17','Administrador');
 
-
 -- Tabla: fza_caja_vales
 
 DROP TABLE IF EXISTS `fza_caja_vales`;
@@ -4441,6 +4455,7 @@ CREATE TABLE `fza_caja_vales` (
   INDEX `IDX_VALES_RED_OP` (`CODIGO_EMP_RED_VL`, `CODIGO_ALM_RED_VL`, `CODIGO_CAJA_RED_VL`, `NUMERO_OPERACION_RED_VL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 12 registros exportados
 
 -- Datos de fza_caja_vales
 
@@ -4456,7 +4471,6 @@ INSERT INTO `fza_caja_vales` (`CODIGO_VL`, `CODIGO_PADRE_VL`, `PIN_SEGURIDAD_VL`
 ('VALE-1-GEN-1-00009',NULL,'7788','PENDIENTE',15.000000,'2026-02-01 11:15:00','2027-02-01','1','GEN','1','1_GEN_1_20260201004','A1','000187',NULL,0.000000,NULL,NULL,NULL,NULL,NULL,NULL,'CLI089','Devolución artículo defectuoso','2026-02-22 06:56:52','2026-02-01 10:15:00','ANA','ANA'),
 ('VALE-1-GEN-1-00010',NULL,'9012','PENDIENTE',32.000000,'2026-02-18 17:45:00','2026-08-18','1','GEN','1','1_GEN_1_20260218012','000031','A1',NULL,0.000000,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'Venta contado - vale anónimo','2026-02-22 06:56:52','2026-02-18 16:45:00','SISTEMA','SISTEMA'),
 ('VALE-1-GEN-2-00006','VALE-1-GEN-1-00005','7823','PENDIENTE',35.000000,'2026-02-15 15:35:00','2027-02-15','1','GEN','2','1_GEN_2_20260215008',NULL,NULL,NULL,0.000000,NULL,NULL,NULL,NULL,NULL,NULL,'CLI067','Vale de cambio generado de VALE-1-GEN-1-00005','2026-02-22 06:56:52','2026-02-15 14:35:00','SISTEMA','SISTEMA');
-
 
 -- Tabla: fza_clientes
 
@@ -4516,6 +4530,7 @@ CREATE TABLE `fza_clientes` (
   INDEX `IDX_REFERENCIA_CLIENTE` (`REFERENCIA_CLI`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 28 registros exportados
 
 -- Datos de fza_clientes
 
@@ -4548,7 +4563,6 @@ INSERT INTO `fza_clientes` (`CODIGO_CLI_CLI`, `ESACTIVO_CLI`, `ORDEN_CLI`, `RAZO
 ('PUBLICO','S',2,'PUBLICO','NIF CLIENTE','TFNO CLIENTE','EMAIL DEL CLIENTE','DIRECCION DEL CLIENTE','','POBLACION AGRICULTOR','PROVINCIA CLIENTE','POSCLI','ES','PAIS DEL CLIENTE',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'ES2101822356985665446552',NULL,NULL,'N','N',NULL,'N',0.000000,'N','N','N','CONTADO',NULL,'PVP',NULL,NULL,'2026-06-20 03:39:38','2022-11-02 19:28:28','Administrador','Administrador'),
 ('TIENDA','S',1,'TIENDA DE ROSA','52288816H','658963325','EMAIL','CALLE MAYOR, 2','','MORALES DEL VINO','ZAMORA','49190','ES','España',NULL,NULL,NULL,NULL,NULL,'',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'S','S',NULL,NULL,0.000000,'N','N','N','TRANSFERENCIA',NULL,'VENTAMAYOR','','','2026-06-25 05:50:29','2022-11-02 15:13:41','Administrador','Administrador');
 
-
 -- Tabla: fza_codigos_barras
 
 DROP TABLE IF EXISTS `fza_codigos_barras`;
@@ -4567,6 +4581,10 @@ CREATE TABLE `fza_codigos_barras` (
   INDEX `IDX_UNIDAD_CB` (`CODIGO_UNIDAD_CB`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_codigos_barras` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_codigos_barras` ENABLE KEYS */;
+-- 341 registros exportados
 
 -- Datos de fza_codigos_barras
 
@@ -4912,7 +4930,6 @@ INSERT INTO `fza_codigos_barras` (`ID_CB`, `CODIGO_BARRAS_CB`, `CODIGO_UNIDAD_CB
 (821,'2100000003761','DEPORTIVO005/GRANATE/44','EAN13','S','2026-06-26 17:37:44','2026-06-26 17:37:44','Administrador','Administrador'),
 (822,'2100000003778','DEPORTIVO005/GRANATE/39','EAN13','S','2026-06-26 17:37:44','2026-06-26 17:37:44','Administrador','Administrador');
 
-
 -- Tabla: fza_compras_plantillas
 
 DROP TABLE IF EXISTS `fza_compras_plantillas`;
@@ -4939,7 +4956,6 @@ CREATE TABLE `fza_compras_plantillas` (
   PRIMARY KEY (`CODIGO_SESPL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-
 -- Tabla: fza_compras_plantillas_kits
 
 DROP TABLE IF EXISTS `fza_compras_plantillas_kits`;
@@ -4951,7 +4967,6 @@ CREATE TABLE `fza_compras_plantillas_kits` (
   `ORDEN_SESPLKIT` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`CODIGO_SESPL_SESPLKIT`,`CODIGO_SESPLKIT`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_compras_plantillas_kits_det
 
@@ -4965,7 +4980,6 @@ CREATE TABLE `fza_compras_plantillas_kits_det` (
   PRIMARY KEY (`CODIGO_SESPL_SESPLKITD`,`CODIGO_SESPLKIT_SESPLKITD`,`VALOR_DESTINO_SESPLKITD`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-
 -- Tabla: fza_compras_plantillas_props
 
 DROP TABLE IF EXISTS `fza_compras_plantillas_props`;
@@ -4978,7 +4992,6 @@ CREATE TABLE `fza_compras_plantillas_props` (
   `ORDEN_SESPLPROP` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`CODIGO_SESPL_SESPLPROP`,`CODIGO_PROP_SESPLPROP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_compras_sesiones
 
@@ -5071,6 +5084,7 @@ CREATE TABLE `fza_compras_sesiones` (
   INDEX `IDX_SES_TEMPORADA` (`ID_PV_TEMPORADA_SES`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 11 registros exportados
 
 -- Datos de fza_compras_sesiones
 
@@ -5083,7 +5097,6 @@ INSERT INTO `fza_compras_sesiones` (`SERIE_SES`, `NUMERO_SES`, `FECHA_SES`, `FEC
 ('A1','000012','2026-06-11',NULL,'CERRADA','012','000','1236',NULL,NULL,'GEN','EUR','N','1','N',280.0000,'PVP','S','N',0.000000,0.000000,'TC',NULL,NULL,NULL,NULL,'N',NULL,'2026-06-13 12:02:01','Administrador','S','N','N','A1','000004','','',NULL,30,NULL,'2026-06-11 13:46:43','Administrador','2026-06-13 12:02:01','Administrador','N',11,'N','N',21.000000,177.000000,37.170000,0.000000,0.000000,10.000000,0.000000,0.000000,0.000000,0.000000,4.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,NULL,0.000000,177.000000,0.000000,0.000000,0.000000,0.000000,177.000000,37.170000,214.170000,214.170000),
 ('A1','000013','2026-06-11',NULL,'CERRADA','012','000','E00303',NULL,NULL,'GEN','EUR','N','1','N',280.0000,'PVP','S','N',0.000000,0.000000,'TC',NULL,NULL,NULL,NULL,'N',NULL,'2026-06-11 13:50:22','Administrador','N','S','S','','','A1','030',NULL,10,NULL,'2026-06-11 13:48:12','Administrador','2026-06-11 13:50:22','Administrador','N',11,'N','N',21.000000,1602.000000,336.420000,0.000000,0.000000,10.000000,0.000000,0.000000,0.000000,0.000000,4.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,NULL,0.000000,1602.000000,0.000000,0.000000,0.000000,0.000000,1602.000000,336.420000,1938.420000,1938.420000),
 ('A1','000014','2026-06-11',NULL,'CERRADA','012','000','',NULL,NULL,'GEN','EUR','N','1','N',280.0000,'PVP','S','N',0.000000,0.000000,'TC',NULL,NULL,NULL,NULL,'N',NULL,'2026-06-13 11:45:59','Administrador','N','S','S','','','A1','034',NULL,20,NULL,'2026-06-11 16:10:03','Administrador','2026-06-13 11:45:59','Administrador','N',11,'N','N',21.000000,962.000000,202.020000,5.200000,0.000000,10.000000,0.000000,0.000000,1.400000,0.000000,4.000000,0.000000,0.000000,0.500000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,NULL,0.000000,962.000000,0.000000,0.000000,0.000000,0.000000,962.000000,202.020000,1164.020000,1164.020000);
-
 
 -- Tabla: fza_compras_sesiones_celdas
 
@@ -5105,6 +5118,7 @@ CREATE TABLE `fza_compras_sesiones_celdas` (
   INDEX `IDX_SESCEL_AV_PIVOT` (`ID_AV_PIVOT_SESCEL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 338 registros exportados
 
 -- Datos de fza_compras_sesiones_celdas
 
@@ -5433,7 +5447,6 @@ INSERT INTO `fza_compras_sesiones_celdas` (`SERIE_SES_SESCEL`, `NUMERO_SES_SESCE
 ('A1','000014',20,1,9103,'ALE',3.000000,'2026-06-13 09:37:42','Administrador','2026-06-13 11:37:42','Administrador'),
 ('A1','000014',20,1,9104,'ALE',1.000000,'2026-06-13 09:37:42','Administrador','2026-06-13 11:37:42','Administrador');
 
-
 -- Tabla: fza_compras_sesiones_documentos
 
 DROP TABLE IF EXISTS `fza_compras_sesiones_documentos`;
@@ -5451,6 +5464,7 @@ CREATE TABLE `fza_compras_sesiones_documentos` (
   INDEX `IDX_SESDOC_DOC` (`TIPO_DOC_SESDOC`, `SERIE_SESDOC`, `NUMERO_SESDOC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 9 registros exportados
 
 -- Datos de fza_compras_sesiones_documentos
 
@@ -5463,7 +5477,6 @@ INSERT INTO `fza_compras_sesiones_documentos` (`SERIE_SES_SESDOC`, `NUMERO_SES_S
 ('A1','000013','ALBC','GEN','012','A1','030','2026-06-11 13:50:22','Administrador'),
 ('A1','000014','ALBC','ALE','012','A1','033','2026-06-13 11:45:59','Administrador'),
 ('A1','000014','ALBC','GEN','012','A1','034','2026-06-13 11:45:59','Administrador');
-
 
 -- Tabla: fza_compras_sesiones_fotos
 
@@ -5485,7 +5498,6 @@ CREATE TABLE `fza_compras_sesiones_fotos` (
   INDEX `IDX_CSF_TENT` (`CODIGO_ART_TENTATIVO_CSF`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-
 -- Tabla: fza_compras_sesiones_kits
 
 DROP TABLE IF EXISTS `fza_compras_sesiones_kits`;
@@ -5505,7 +5517,6 @@ CREATE TABLE `fza_compras_sesiones_kits` (
   PRIMARY KEY (`SERIE_SES_SESKIT`,`NUMERO_SES_SESKIT`,`CODIGO_SESKIT`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-
 -- Tabla: fza_compras_sesiones_kits_det
 
 DROP TABLE IF EXISTS `fza_compras_sesiones_kits_det`;
@@ -5518,7 +5529,6 @@ CREATE TABLE `fza_compras_sesiones_kits_det` (
   `ORDEN_SESKITD` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`SERIE_SES_SESKITD`,`NUMERO_SES_SESKITD`,`CODIGO_SESKIT_SESKITD`,`VALOR_DESTINO_SESKITD`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_compras_sesiones_lineas
 
@@ -5561,6 +5571,7 @@ CREATE TABLE `fza_compras_sesiones_lineas` (
   INDEX `IDX_SESLIN_ATB_COLOR` (`CODIGO_ATB_COLOR_SESLIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 42 registros exportados
 
 -- Datos de fza_compras_sesiones_lineas
 
@@ -5603,7 +5614,6 @@ INSERT INTO `fza_compras_sesiones_lineas` (`SERIE_SES_SESLIN`, `NUMERO_SES_SESLI
 ('A1','000014',10,'CALV00001','ZAPATO TRENZADO 98','CALV','MATRIZ','ESTANDAR','N','Uds','N','TC','TAL',4,NULL,NULL,NULL,'S','REUSAR','CALV00001',89.000000,NULL,150.000000,'89798',10.000000,890.000000,'2026-06-11 16:10:03','Administrador','2026-06-21 18:54:16','Administrador','9829','VERDE'),
 ('A1','000014',20,'ROPA','Ropa de Vestir','ROPA','MATRIZ','ESTANDAR',NULL,'Uds','N',NULL,NULL,3,NULL,NULL,NULL,'N',NULL,NULL,12.000000,NULL,33.600000,'34343',6.000000,72.000000,'2026-06-13 11:31:58','Administrador','2026-06-13 11:37:42','Administrador','3434','ROJO');
 
-
 -- Tabla: fza_compras_sesiones_lineas_filas
 
 DROP TABLE IF EXISTS `fza_compras_sesiones_lineas_filas`;
@@ -5619,7 +5629,6 @@ CREATE TABLE `fza_compras_sesiones_lineas_filas` (
   PRIMARY KEY (`SERIE_SES_SESFIL`,`NUMERO_SES_SESFIL`,`LINEA_SES_SESFIL`,`ID_FILA_SESFIL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-
 -- Tabla: fza_compras_sesiones_lineas_filas_atr
 
 DROP TABLE IF EXISTS `fza_compras_sesiones_lineas_filas_atr`;
@@ -5632,7 +5641,6 @@ CREATE TABLE `fza_compras_sesiones_lineas_filas_atr` (
   `ID_AV_SESFILAT` int(11) NOT NULL COMMENT 'FK fza_atributos_valores',
   PRIMARY KEY (`SERIE_SES_SESFILAT`,`NUMERO_SES_SESFILAT`,`LINEA_SES_SESFILAT`,`ID_FILA_SESFILAT`,`ID_VA_SESFILAT`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_compras_sesiones_lineas_props
 
@@ -5648,7 +5656,6 @@ CREATE TABLE `fza_compras_sesiones_lineas_props` (
   `USUARIO_ALTA` varchar(50) NOT NULL,
   PRIMARY KEY (`SERIE_SES_SESLPROP`,`NUMERO_SES_SESLPROP`,`LINEA_SES_SESLPROP`,`CODIGO_PROP_SESLPROP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_compras_sesiones_lineas_skus_precios
 
@@ -5668,7 +5675,6 @@ CREATE TABLE `fza_compras_sesiones_lineas_skus_precios` (
   PRIMARY KEY (`SERIE_SES_SESLINSKU`,`NUMERO_SES_SESLINSKU`,`LINEA_SES_SESLINSKU`,`ID_FILA_SES_SESLINSKU`,`ID_AV_PIVOT_SESLINSKU`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-
 -- Tabla: fza_compras_sesiones_props
 
 DROP TABLE IF EXISTS `fza_compras_sesiones_props`;
@@ -5686,7 +5692,6 @@ CREATE TABLE `fza_compras_sesiones_props` (
   INDEX `IDX_SESPROP_PROP` (`CODIGO_PROP_SESPROP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-
 -- Tabla: fza_config_campos
 
 DROP TABLE IF EXISTS `fza_config_campos`;
@@ -5700,6 +5705,7 @@ CREATE TABLE `fza_config_campos` (
   PRIMARY KEY (`TABLA_OBJETIVO_CC`,`OBJETIVO_CC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 240 registros exportados
 
 -- Datos de fza_config_campos
 
@@ -5943,7 +5949,6 @@ INSERT INTO `fza_config_campos` (`TABLA_OBJETIVO_CC`, `OBJETIVO_CC`, `TITULO_VIS
 ('vi_articulos','USUARIO_ALTA','Usu. Alta',100,92,'N'),
 ('vi_articulos','USUARIO_MODIF','Usu. Modif.',100,93,'N');
 
-
 -- Tabla: fza_contadores
 
 DROP TABLE IF EXISTS `fza_contadores`;
@@ -5962,6 +5967,7 @@ CREATE TABLE `fza_contadores` (
   PRIMARY KEY (`TIPO_DOC_CON`,`EMPRESA_CON`,`SERIE_CON`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 57 registros exportados
 
 -- Datos de fza_contadores
 
@@ -6023,7 +6029,6 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
 ('TR','012','TR',2,6,'S','N','2026-06-02 04:44:23','2026-06-02 04:44:23','Administrador','Administrador'),
 ('TS','-','-',2,10,'S','S','2026-06-25 17:47:42','2026-05-30 14:56:51','SISTEMA','Administrador');
 
-
 -- Tabla: fza_depositos_cliente
 
 DROP TABLE IF EXISTS `fza_depositos_cliente`;
@@ -6061,6 +6066,7 @@ CREATE TABLE `fza_depositos_cliente` (
   INDEX `IDX_DEP_UNIDAD` (`CODIGO_UNIDAD_DEP`, `ESTADO_DEP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 4 registros exportados
 
 -- Datos de fza_depositos_cliente
 
@@ -6068,7 +6074,6 @@ INSERT INTO `fza_depositos_cliente` (`ID_DEPOSITO_DEP`, `CODIGO_EMP_DEP`, `CODIG
 ('DP260427201131873IEL','012','321','CARTERA-PIEL','CARTERA-PIEL','GEN',50.000000,10.000000,'CERRADO','2026-04-27 20:11:31','2026-04-27 18:14:19','2026-04-27 18:11:31','1','1','N',21.000000,'S',1.000000,NULL,'1','00000136',NULL,NULL,NULL,NULL),
 ('DP260428173107136N/L','012','321','CHAQ-CUERO','CHAQ-CUERO/MARRON/L','GEN',120.000000,60.000000,'CERRADO','2026-04-28 17:31:07','2026-04-28 15:33:43','2026-04-28 15:31:07','1','1','N',21.000000,'S',1.000000,NULL,'1','00000141',NULL,NULL,NULL,NULL),
 ('DP260517162645368O/L','012','321','DEMO-CAMISA','DEMO-CAMISA/AMARILLO/L','GEN',28.950000,10.000000,'PENDIENTE','2026-05-17 16:26:45','2026-05-17 14:26:45','2026-05-17 14:26:45','1','1','N',21.000000,'S',1.000000,NULL,'1','00000149',NULL,NULL,NULL,NULL);
-
 
 -- Tabla: fza_devoluciones_compra
 
@@ -6159,11 +6164,11 @@ CREATE TABLE `fza_devoluciones_compra` (
   INDEX `IDX_DEVC_PROVEEDOR_FECHA` (`CODIGO_PRV_DEVC`, `FECHA_DEVC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 1 registros exportados
 
 -- Datos de fza_devoluciones_compra
 
 INSERT INTO `fza_devoluciones_compra` (`NUMERO_DEVC`, `SERIE_DEVC`, `FECHA_DEVC`, `ESTADO_DEVC`, `NUMERO_PED_DEVC`, `SERIE_PED_DEVC`, `NUMERO_FAC_DEVC`, `SERIE_FAC_DEVC`, `CODIGO_EMP_DEVC`, `RAZON_SOCIAL_EMPRESA_DEVC`, `NIF_EMPRESA_DEVC`, `MOVIL_EMPRESA_DEVC`, `EMAIL_EMPRESA_DEVC`, `DIRECCION1_EMPRESA_DEVC`, `DIRECCION2_EMPRESA_DEVC`, `POBLACION_EMPRESA_DEVC`, `PROVINCIA_EMPRESA_DEVC`, `CODIGO_PAI_EMPRESA_DEVC`, `NOMBRE_PAI_EMPRESA_DEVC`, `CODIGO_POSTAL_EMPRESA_DEVC`, `CODIGO_PRV_DEVC`, `RAZON_SOCIAL_PRV_DEVC`, `NIF_PRV_DEVC`, `MOVIL_PRV_DEVC`, `EMAIL_PRV_DEVC`, `DIRECCION1_PRV_DEVC`, `DIRECCION2_PRV_DEVC`, `POBLACION_PRV_DEVC`, `PROVINCIA_PRV_DEVC`, `CODIGO_PAI_PRV_DEVC`, `NOMBRE_PAI_PRV_DEVC`, `CODIGO_POSTAL_PRV_DEVC`, `REF_PROVEEDOR_DEVC`, `CODIGO_ALM_DEVC`, `TRANSPORTISTA_DEVC`, `CODIGO_IVA_DEVC`, `ESIVA_RECARGO_COMPRAS_DEVC`, `ESIVA_EXENTO_INTRACOMUNITARIO_DEVC`, `PORCENTAJE_IVAN_DEVC`, `TOTAL_BASEI_IVAN_DEVC`, `TOTAL_IVAN_DEVC`, `PORCENTAJE_REN_DEVC`, `TOTAL_REN_DEVC`, `PORCENTAJE_IVAR_DEVC`, `TOTAL_BASEI_IVAR_DEVC`, `TOTAL_IVAR_DEVC`, `PORCENTAJE_RER_DEVC`, `TOTAL_RER_DEVC`, `PORCENTAJE_IVAS_DEVC`, `TOTAL_BASEI_IVAS_DEVC`, `TOTAL_IVAS_DEVC`, `PORCENTAJE_RES_DEVC`, `TOTAL_RES_DEVC`, `PORCENTAJE_IVAE_DEVC`, `TOTAL_BASEI_IVAE_DEVC`, `TOTAL_IVAE_DEVC`, `PORCENTAJE_REE_DEVC`, `TOTAL_REE_DEVC`, `TOTAL_BASES_DEVC`, `TOTAL_IMPUESTOS_DEVC`, `PORCENTAJE_RETENCION_DEVC`, `TOTAL_RETENCION_DEVC`, `TOTAL_BRUTO_DEVC`, `PORCENTAJE_DTO_COMERCIAL_DEVC`, `TOTAL_DTO_COMERCIAL_DEVC`, `PORCENTAJE_DTO_FINANCIERO_DEVC`, `TOTAL_DTO_FINANCIERO_DEVC`, `TOTAL_LIQUIDO_DEVC`, `FORMA_PAGO_DEVC`, `CONTADOR_LINEAS_DEVC`, `COMENTARIOS_DEVC`, `OBSERVACIONES_DEVC`, `ESPIVOTE_HORIZONTAL_DEVC`, `CODIGO_TAR_DEVC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('000005','C1','2026-06-23','ABIERTO',NULL,NULL,NULL,NULL,'012',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'724','Espana',NULL,'ANGEL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'724','Espana',NULL,NULL,'GEN',NULL,'1','N','N',21.000000,647.000000,135.870000,5.200000,0.000000,10.000000,0.000000,0.000000,1.400000,0.000000,4.000000,0.000000,0.000000,0.500000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,647.000000,135.870000,NULL,0.000000,647.000000,0.000000,0.000000,0.000000,0.000000,782.870000,NULL,'00000120','','','S',NULL,'2026-07-03 14:50:29','2026-06-23 05:03:51','Administrador','Administrador');
-
 
 -- Tabla: fza_devoluciones_compra_celdas
 
@@ -6183,7 +6188,6 @@ CREATE TABLE `fza_devoluciones_compra_celdas` (
   PRIMARY KEY (`SERIE_DEVC_DEVCCEL`,`NUMERO_DEVC_DEVCCEL`,`LINEA_DEVC_DEVCCEL`,`ID_FILA_DEVC_DEVCCEL`,`ID_AV_PIVOT_DEVCCEL`),
   INDEX `IDX_DEVCCEL_LINEA` (`SERIE_DEVC_DEVCCEL`, `NUMERO_DEVC_DEVCCEL`, `LINEA_DEVC_DEVCCEL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_devoluciones_compra_lineas
 
@@ -6238,6 +6242,7 @@ CREATE TABLE `fza_devoluciones_compra_lineas` (
   INDEX `IDX_DEVCLIN_PEDIDO` (`SERIE_PEDC_DEVCLIN`, `NUMERO_PEDC_DEVCLIN`, `LINEA_PEDC_DEVCLIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 46 registros exportados
 
 -- Datos de fza_devoluciones_compra_lineas
 
@@ -6288,7 +6293,6 @@ INSERT INTO `fza_devoluciones_compra_lineas` (`NUMERO_DEVC_DEVCLIN`, `SERIE_DEVC
 ('000005','C1','0110',NULL,NULL,NULL,'DEPORTIVO002','DEPORTIVO002/VERDE/43','ADIDAS212',4,'DEPORTIVO','Ropa y calzado deportivo','Zapatillas deportivas','Uds',1.000000,1.000000,'N',21.000000,19.000000,22.990000,19.000000,'GEN',NULL,NULL,NULL,'N',NULL,NULL,NULL,'2026-06-23 05:21:05','2026-06-23 05:21:05','Administrador','Administrador','','','','','','','','','','',0),
 ('000005','C1','0120',NULL,NULL,NULL,'DEPORTIVO002','DEPORTIVO002/VERDE/44','ADIDAS212',4,'DEPORTIVO','Ropa y calzado deportivo','Zapatillas deportivas','Uds',1.000000,1.000000,'N',21.000000,19.000000,22.990000,19.000000,'GEN',NULL,NULL,NULL,'N',NULL,NULL,NULL,'2026-06-23 05:21:05','2026-06-23 05:21:05','Administrador','Administrador','','','','','','','','','','',0);
 
-
 -- Tabla: fza_documentos_trabajo
 
 DROP TABLE IF EXISTS `fza_documentos_trabajo`;
@@ -6312,11 +6316,14 @@ CREATE TABLE `fza_documentos_trabajo` (
   INDEX `IDX_DTR_USUARIO` (`USUARIO_DTR`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_documentos_trabajo` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_documentos_trabajo` ENABLE KEYS */;
+-- 2 registros exportados
 
 -- Datos de fza_documentos_trabajo
 
 INSERT INTO `fza_documentos_trabajo` (`ID_DTR`, `TITULO_DTR`, `TIPO_DTR`, `ESTADO_DTR`, `CODIGO_EMP_DTR`, `CODIGO_ALM_DTR`, `USUARIO_DTR`, `INSTANTE_DOCUMENTO_DTR`, `OBSERVACIONES_DTR`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES (1,'Documento de trabajo 22/06/2026 06:48','GENERAL','ABIERTO','012','GEN','Administrador','2026-06-22 06:48:22',NULL,'2026-06-22 04:48:22','2026-06-22 04:48:22','Administrador','Administrador');
-
 
 -- Tabla: fza_documentos_trabajo_celdas
 
@@ -6336,6 +6343,7 @@ CREATE TABLE `fza_documentos_trabajo_celdas` (
   INDEX `IDX_DTRCEL_AV_PIVOT` (`ID_AV_PIVOT_DTRCEL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 28 registros exportados
 
 -- Tabla: fza_documentos_trabajo_compartidos
 
@@ -6358,11 +6366,14 @@ CREATE TABLE `fza_documentos_trabajo_compartidos` (
   UNIQUE INDEX `UQ_DTC_DTR_TIPO_DESTINO_USUARIO_GRUPO` (`ID_DTR_DTC`, `TIPO_DESTINO_DTC`, `USUARIO_GRUPO_DTC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_documentos_trabajo_compartidos` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_documentos_trabajo_compartidos` ENABLE KEYS */;
+-- 1 registros exportados
 
 -- Datos de fza_documentos_trabajo_compartidos
 
 INSERT INTO `fza_documentos_trabajo_compartidos` (`ID_DTC`, `ID_DTR_DTC`, `USUARIO_DTC`, `USUARIO_GRUPO_DTC`, `TIPO_DESTINO_DTC`, `PERMISO_DTC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES (1,1,'Alfredo','Alfredo','USUARIO','LECTURA','2026-06-22 05:08:36','2026-06-22 05:08:36','Administrador','Administrador');
-
 
 -- Tabla: fza_documentos_trabajo_lineas
 
@@ -6407,11 +6418,14 @@ CREATE TABLE `fza_documentos_trabajo_lineas` (
   UNIQUE INDEX `UQ_DTL_DTR_LINEA` (`ID_DTR_DTL`, `LINEA_DTL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_documentos_trabajo_lineas` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_documentos_trabajo_lineas` ENABLE KEYS */;
+-- 34 registros exportados
 
 -- Datos de fza_documentos_trabajo_lineas
 
 INSERT INTO `fza_documentos_trabajo_lineas` (`ID_DTL`, `ID_DTR_DTL`, `LINEA_DTL`, `CODIGO_ART_DTL`, `CODIGO_UNIDAD_DTL`, `CODIGO_ALM_DTL`, `LOTE_DTL`, `FECHA_CADUCIDAD_DTL`, `DESCRIPCION_ARTICULO_DTL`, `DESCRIPCION_UNIDAD_DTL`, `CANTIDAD_STOCK_DTL`, `CANTIDAD_DTL`, `INSTANTE_STOCK_DTL`, `ORIGEN_DTL`, `OBSERVACIONES_DTL`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ATTR1_VALOR_DTL`, `ATTR1_NOMBRE_DTL`, `ATTR2_VALOR_DTL`, `ATTR2_NOMBRE_DTL`, `ATTR3_VALOR_DTL`, `ATTR3_NOMBRE_DTL`, `ATTR4_VALOR_DTL`, `ATTR4_NOMBRE_DTL`, `ATTR5_VALOR_DTL`, `ATTR5_NOMBRE_DTL`, `NUM_ATRIBUTOS_DTL`, `ID_AC_PIVOT_DTL`) VALUES (1,1,'00000001','BOLSOS00006','BOLSOS00006/VERDE/40','GEN','',NULL,'Bolsos y Mochilas','VERDE 40',2.000000,1.000000,'2026-06-22 06:48:22','CTRL_U',NULL,'2026-06-22 04:49:16','2026-06-22 04:48:22','Administrador','Administrador','','','','','','','','','','',0,0);
-
 
 -- Tabla: fza_efectos_compra
 
@@ -6464,11 +6478,11 @@ CREATE TABLE `fza_efectos_compra` (
   INDEX `IDX_EFEC_VENCIMIENTO` (`FECHA_VENCIMIENTO_EFEC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 1 registros exportados
 
 -- Datos de fza_efectos_compra
 
 INSERT INTO `fza_efectos_compra` (`SERIE_FACC_EFEC`, `NUMERO_FACC_EFEC`, `NUMERO_EFEC`, `CODIGO_EMP_EFEC`, `CODIGO_PRV_EFEC`, `RAZON_SOCIAL_PRV_EFEC`, `NIF_PRV_EFEC`, `CODIGO_TEFE_EFEC`, `ESTADO_EFEC`, `ORDEN_PLAZO_EFEC`, `FECHA_EMISION_EFEC`, `FECHA_VENCIMIENTO_EFEC`, `FECHA_PAGO_EFEC`, `TIPO_PAGO_EFEC`, `REFERENCIA_PAGO_EFEC`, `ENTIDAD_PAGO_EFEC`, `ESCONCILIADO_EFEC`, `IMPORTE_EFEC`, `IMPORTE_PAGADO_EFEC`, `IMPORTE_PENDIENTE_EFEC`, `SERIE_REMC_EFEC`, `NUMERO_REMC_EFEC`, `ENTIDAD_EFEC`, `OFICINA_EFEC`, `DIGITO_CONTROL_EFEC`, `CUENTA_EFEC`, `IBAN_EFEC`, `CODIGO_EMPBAN_EFEC`, `IBAN_EMP_EFEC`, `DOC_EXTERNO_EFEC`, `REFERENCIA_DOCUMENTO_EFEC`, `SERIE_FACC_CONCILIACION_EFEC`, `NUMERO_FACC_CONCILIACION_EFEC`, `NUMERO_EFEC_CONCILIACION_EFEC`, `OBSERVACIONES_EFEC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('-','000000',1,'012','ANGEL','ANGEL MARTIN JULIÁN',NULL,'RECIBO','PAGADO',1,'2026-06-11','2026-08-10','2026-06-11',NULL,NULL,NULL,'N',282.000000,282.000000,0.000000,'-','000000',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'-/000000',NULL,NULL,NULL,'','2026-06-20 07:26:12','2026-06-11 05:51:39','Administrador','Administrador');
-
 
 -- Tabla: fza_efectos_compra_pagos
 
@@ -6494,11 +6508,11 @@ CREATE TABLE `fza_efectos_compra_pagos` (
   INDEX `IDX_EFECPAG_FECHA` (`FECHA_EFECPAG`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 1 registros exportados
 
 -- Datos de fza_efectos_compra_pagos
 
 INSERT INTO `fza_efectos_compra_pagos` (`SERIE_FACC_EFECPAG`, `NUMERO_FACC_EFECPAG`, `NUMERO_EFEC_EFECPAG`, `NUMERO_PAGO_EFECPAG`, `FECHA_EFECPAG`, `IMPORTE_EFECPAG`, `TIPO_EFECPAG`, `CODIGO_FP_EFECPAG`, `REFERENCIA_EFECPAG`, `ENTIDAD_PAGO_EFECPAG`, `ESCONCILIADO_EFECPAG`, `OBSERVACIONES_EFECPAG`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('-','000000',1,1,'2026-06-11',282.000000,'TRANSFERENCIA',NULL,'98798','','N','','2026-06-11 14:16:23','2026-06-11 14:16:23','Administrador','Administrador');
-
 
 -- Tabla: fza_efectos_venta
 
@@ -6551,11 +6565,11 @@ CREATE TABLE `fza_efectos_venta` (
   INDEX `IDX_EFV_VENCIMIENTO` (`FECHA_VENCIMIENTO_EFV`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 1 registros exportados
 
 -- Datos de fza_efectos_venta
 
 INSERT INTO `fza_efectos_venta` (`SERIE_FAC_EFV`, `NUMERO_FAC_EFV`, `NUMERO_EFV`, `CODIGO_EMP_EFV`, `CODIGO_CLI_EFV`, `RAZON_SOCIAL_CLI_EFV`, `NIF_CLI_EFV`, `CODIGO_TEFE_EFV`, `ESTADO_EFV`, `ORDEN_PLAZO_EFV`, `FECHA_EMISION_EFV`, `FECHA_VENCIMIENTO_EFV`, `FECHA_COBRO_EFV`, `TIPO_COBRO_EFV`, `REFERENCIA_COBRO_EFV`, `ENTIDAD_COBRO_EFV`, `ESCONCILIADO_EFV`, `IMPORTE_EFV`, `IMPORTE_COBRADO_EFV`, `IMPORTE_PENDIENTE_EFV`, `SERIE_REMV_EFV`, `NUMERO_REMV_EFV`, `ENTIDAD_EFV`, `OFICINA_EFV`, `DIGITO_CONTROL_EFV`, `CUENTA_EFV`, `IBAN_EFV`, `CODIGO_EMPBAN_EFV`, `IBAN_EMP_EFV`, `DOC_EXTERNO_EFV`, `REFERENCIA_DOCUMENTO_EFV`, `SERIE_FAC_CONCILIACION_EFV`, `NUMERO_FAC_CONCILIACION_EFV`, `NUMERO_EFV_CONCILIACION_EFV`, `OBSERVACIONES_EFV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('A1','000030',1,'1','310','MODA FÁCIL SL','B87654321','RECIBO','REMESADO',1,'2026-01-28','2026-02-27',NULL,NULL,NULL,NULL,'N',1436.220000,0.000000,1436.220000,'-','000000',NULL,NULL,NULL,NULL,NULL,'0001','ES5001825584280208539535',NULL,'A1/000030',NULL,NULL,NULL,'','2026-06-23 15:58:30','2026-06-23 15:39:28','Administrador','Administrador');
-
 
 -- Tabla: fza_empleados
 
@@ -6588,12 +6602,12 @@ CREATE TABLE `fza_empleados` (
   INDEX `IDX_EMPL_DIMINUTIVO` (`DIMINUTIVO_TICKET_EMPL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 2 registros exportados
 
 -- Datos de fza_empleados
 
 INSERT INTO `fza_empleados` (`CODIGO_EMPL`, `NOMBRE_EMPL`, `RAZON_SOCIAL_EMPL`, `NIF_EMPL`, `DIRECCION_EMPL`, `DIRECCION2_EMPL`, `CODIGO_POSTAL_EMPL`, `POBLACION_EMPL`, `PROVINCIA_EMPL`, `TELEFONO_EMPL`, `TELEFONO2_EMPL`, `FAX_EMPL`, `EMAIL_EMPL`, `WEB_EMPL`, `IBAN_EMPL`, `BIC_EMPL`, `DIMINUTIVO_TICKET_EMPL`, `ESACTIVO_EMPL`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('1','Administrador',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'ALEX','S',NULL,'2026-06-03 16:37:06','SISTEMA',NULL),
 ('2','Alfredo',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'ALFRED','S',NULL,'2026-06-03 16:37:06','SISTEMA',NULL);
-
 
 -- Tabla: fza_empresas
 
@@ -6642,13 +6656,13 @@ CREATE TABLE `fza_empresas` (
   INDEX `IDX_EMPRESAS_ESTADO` (`ESACTIVO_EMP`, `CODIGO_EMP_EMP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 3 registros exportados
 
 -- Datos de fza_empresas
 
 INSERT INTO `fza_empresas` (`CODIGO_EMP_EMP`, `ORDEN_EMP`, `ESACTIVO_EMP`, `RAZON_SOCIAL_EMP`, `NIF_EMP`, `MOVIL_EMP`, `EMAIL_EMP`, `DIRECCION1_EMP`, `DIRECCION2_EMP`, `CODIGO_POSTAL_EMP`, `POBLACION_EMP`, `PROVINCIA_EMP`, `CODIGO_PAI_EMP`, `NOMBRE_PAI_EMP`, `SERIE_CON_EMP`, `IBAN_EMP`, `GRUPO_ZONA_IVA_EMP`, `ESRETENCIONES_EMP`, `ESIVA_RECARGO_COMPRAS_EMP`, `ESREGIMENESPECIALAGRICOLA_EMP`, `CODIGO_CERTIFICADO_EMP`, `TITULAR_CERTIFICADO_EMP`, `TIPO_CERTIFICADO_EMP`, `FECHA_DESDE_CERTIFICADO_EMP`, `FECHA_HASTA_CERTIFICADO_EMP`, `NUMERO_INSTALACION_EMP`, `VERSION_INSTALACION_EMP`, `CODIGO_SIF_INSTALACION_EMP`, `INSTANTE_INSTALACION_EMP`, `TEXTO_LEGAL_FACTURA_EMP`, `TEXTO_PIE_TICKET_CAJA_1_EMP`, `TEXTO_PIE_TICKET_CAJA_2_EMP`, `TEXTO_PIE_TICKET_CAJA_3_EMP`, `TEXTO_PIE_TICKET_CAJA_4_EMP`, `FORMATO_DOCUMENTO_EMP`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('012',NULL,'S','ALEJANDRO LAORDEN HIDALGO','45684134Q','65869556','miemail@gmail.com','CALLE POZO BLANCO, 2','','49750','SANTOVENIA','ZAMORA','ES','España',NULL,NULL,'1','S','N','N','EC20137B35732667ACBB1829548BE244','=LAORDEN HIDALGO ALEJANDRO - 45684134Q','Nominal FNMT',NULL,'2028-11-02 18:45:09','FZ-20260627-402CE3A98F80','1.0.15.202606260100.alpha','FZ','2026-06-27 18:00:14',NULL,'LE INVITAMOS A UNA CERVEZA EN EL BAR','DE AL LADO POR CADA COMPRA PRESENTE TICKET','LAS DEVOLUCIONES SE PUEDEN HACER EL DIA 30','GRACIAS POR SU AMABLE COMPRA.','Serie.NroDocumento','2026-06-27 16:00:14','2024-10-01 16:39:25','Administrador','Administrador'),
 ('1',1,'S','AGRICULTOR','NIF DEL AGRICULTOR','TFNO DEL AGRICULTOR','EMAIL DEL AGRICULTOR','DIRECCION DEL AGRICULTOR','','POSAGRI','POBLACION DEL AGRICULTOR','PROVINCIA DEL AGRICULTOR','ES','España',NULL,'ES5001825695365423253','2','S','N','S',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'Empresario emisor acogido al régimen especial de agricultura ganadería y pesca',NULL,NULL,NULL,NULL,'Serie.NroDocumento','2023-12-09 17:37:41','2021-05-14 18:07:06','Administrador','Administrador'),
 ('MODAEJ',NULL,'S','MODA EJEMPLO SL','B11111111','911000001','info@modaejemplo.es','AV. EUROPA, 10','','28020','MADRID','MADRID','724','España',NULL,NULL,'1','S','N','N',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'Serie.NroDocumento','2026-03-05 05:32:36','2026-03-05 05:32:36','Administrador','Administrador');
-
 
 -- Tabla: fza_empresas_bancos
 
@@ -6677,12 +6691,12 @@ CREATE TABLE `fza_empresas_bancos` (
   INDEX `IDX_EMPBAN_EMP` (`CODIGO_EMP_EMPBAN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 2 registros exportados
 
 -- Datos de fza_empresas_bancos
 
 INSERT INTO `fza_empresas_bancos` (`CODIGO_EMPBAN`, `CODIGO_EMP_EMPBAN`, `NOMBRE_EMPBAN`, `CODIGO_BAN_EMPBAN`, `IBAN_EMPBAN`, `ENTIDAD_EMPBAN`, `OFICINA_EMPBAN`, `DIGITO_CONTROL_EMPBAN`, `CUENTA_EMPBAN`, `BIC_EMPBAN`, `CODIGO_ACREEDOR_SEPA_EMPBAN`, `ESDEFECTO_COBRO_EMPBAN`, `ESDEFECTO_PAGO_EMPBAN`, `ESACTIVO_EMPBAN`, `ORDEN_EMPBAN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('0000','012','CAIXABANK','2100','ES6421004558410104116102','2100','4558','41','0104116102',NULL,NULL,'S','S','S',NULL,'2026-06-19 06:31:23','2026-06-19 06:31:23','Administrador','Administrador'),
 ('0001','1','BANCOBUENO','0182','ES5001825584280208539535','0182','5584','28','0208539535',NULL,'0000','S','S','S',NULL,'2026-06-23 16:17:38','2026-06-23 15:57:53','Administrador','Administrador');
-
 
 -- Tabla: fza_empresas_retenciones
 
@@ -6701,6 +6715,7 @@ CREATE TABLE `fza_empresas_retenciones` (
   INDEX `IDX_RETENCIONES_CALCULO` (`CODIGO_EMP_EMPRET`, `FECHA_DESDE_EMPRET`, `FECHA_HASTA_EMPRET`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 6 registros exportados
 
 -- Datos de fza_empresas_retenciones
 
@@ -6710,7 +6725,6 @@ INSERT INTO `fza_empresas_retenciones` (`CODIGO_RETENCION_EMPRET`, `CODIGO_EMP_E
 ('10','1',1.000000,'1999-12-31','2023-10-01','2023-10-31 17:20:15','2023-01-29 09:31:19','Administrador','Administrador'),
 ('11','007',18.000000,'2022-12-01',NULL,'2023-02-01 08:53:16','2023-02-01 08:53:16','Administrador','Administrador'),
 ('2','1',2.500000,'2023-10-01',NULL,'2022-10-17 14:19:29','2021-05-14 17:57:40','Administrador','Administrador');
-
 
 -- Tabla: fza_empresas_series
 
@@ -6733,6 +6747,7 @@ CREATE TABLE `fza_empresas_series` (
   INDEX `IDX_EMPSER_EMP_TIPO_FECHA` (`CODIGO_EMP_EMPSER`, `TIPO_DOC_EMPSER`, `FECHA_DESDE_EMPSER`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 58 registros exportados
 
 -- Datos de fza_empresas_series
 
@@ -6794,7 +6809,6 @@ INSERT INTO `fza_empresas_series` (`CODIGO_SERIE_EMPSER`, `CODIGO_EMP_EMPSER`, `
 ('058','1',NULL,NULL,'AG1','TR',NULL,'2026-01-01','2026-12-31','2026-07-02 16:54:32','2026-07-02 16:54:32','Administrador','Administrador'),
 ('059','1',NULL,NULL,'AG1','TS',NULL,'2026-01-01','2026-12-31','2026-07-02 16:54:32','2026-07-02 16:54:32','Administrador','Administrador'),
 ('060','1',NULL,NULL,'AG1','VE',NULL,'2026-01-01','2026-12-31','2026-07-02 16:54:32','2026-07-02 16:54:32','Administrador','Administrador');
-
 
 -- Tabla: fza_facturas
 
@@ -6915,6 +6929,7 @@ CREATE TABLE `fza_facturas` (
   INDEX `IDX_FAC_ABONO` (`SERIE_FAC_ABONO_FAC`, `NUMERO_FAC_ABONO_FAC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 167 registros exportados
 
 -- Datos de fza_facturas
 
@@ -7087,7 +7102,6 @@ INSERT INTO `fza_facturas` (`NUMERO_FAC`, `SERIE_FAC`, `FECHA_FAC`, `ESCONSOLIDA
 ('000164','2026.A1','2026-06-25','S','2026-06-25 19:43:32','SIMPLIFICADA','N','VERIFACTU_OK','012','ALEJANDRO LAORDEN HIDALGO','45684134Q','65869556','miemail@gmail.com','CALLE POZO BLANCO, 2',NULL,'SANTOVENIA','ZAMORA','ES','España','49750','S','1','N','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'',NULL,NULL,NULL,NULL,NULL,NULL,'1','N','N','N','S','PVP','','N',NULL,'N','S','N','IVA','N',21.000000,2.590000,5.200000,0.000000,12.360000,10.000000,0.000000,1.400000,0.000000,0.000000,4.000000,0.000000,0.500000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,12.360000,2.590000,NULL,0.000000,0.000000,14.950000,NULL,NULL,'','',NULL,NULL,'010','N','N','N',NULL,'2026-06-25 17:43:32','2026-06-25 17:42:44','1','Administrador','1','GEN','1','00000188'),
 ('000166','2026.A1','2026-07-12','N',NULL,'SIMPLIFICADA','N','VERIFACTU_PENDIENTE','012','ALEJANDRO LAORDEN HIDALGO','45684134Q','65869556','miemail@gmail.com','CALLE POZO BLANCO, 2',NULL,'SANTOVENIA','ZAMORA','ES','España','49750','S','1','N','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'',NULL,NULL,NULL,NULL,NULL,NULL,'1','N','N','N','S','PVP','','N',NULL,'N','S','N','IVA','N',21.000000,29.500000,5.200000,0.000000,140.500000,10.000000,0.000000,1.400000,0.000000,0.000000,4.000000,0.000000,0.500000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,140.500000,29.500000,NULL,0.000000,0.000000,170.000000,NULL,NULL,'','',NULL,NULL,'150','N','N','N',NULL,'2026-07-04 16:53:17','2026-07-04 16:53:17','1','Administrador','1','GEN','1','00000192');
 
-
 -- Tabla: fza_facturas_compra
 
 DROP TABLE IF EXISTS `fza_facturas_compra`;
@@ -7190,11 +7204,11 @@ CREATE TABLE `fza_facturas_compra` (
   INDEX `IDX_FACC_TEMPORADA` (`ID_PV_TEMPORADA_FACC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 1 registros exportados
 
 -- Datos de fza_facturas_compra
 
 INSERT INTO `fza_facturas_compra` (`NUMERO_FACC`, `SERIE_FACC`, `FECHA_FACC`, `FECHA_VALOR_FACC`, `ESTADO_FACC`, `DOC_EXTERNO_FACC`, `REF_PROVEEDOR_FACC`, `CODIGO_EMP_FACC`, `RAZON_SOCIAL_EMPRESA_FACC`, `NIF_EMPRESA_FACC`, `MOVIL_EMPRESA_FACC`, `EMAIL_EMPRESA_FACC`, `DIRECCION1_EMPRESA_FACC`, `DIRECCION2_EMPRESA_FACC`, `POBLACION_EMPRESA_FACC`, `PROVINCIA_EMPRESA_FACC`, `CODIGO_PAI_EMPRESA_FACC`, `NOMBRE_PAI_EMPRESA_FACC`, `CODIGO_POSTAL_EMPRESA_FACC`, `CODIGO_PRV_FACC`, `RAZON_SOCIAL_PRV_FACC`, `NIF_PRV_FACC`, `MOVIL_PRV_FACC`, `EMAIL_PRV_FACC`, `DIRECCION1_PRV_FACC`, `DIRECCION2_PRV_FACC`, `POBLACION_PRV_FACC`, `PROVINCIA_PRV_FACC`, `CODIGO_PAI_PRV_FACC`, `NOMBRE_PAI_PRV_FACC`, `CODIGO_POSTAL_PRV_FACC`, `CODIGO_ALM_FACC`, `CODIGO_IVA_FACC`, `ESIVA_RECARGO_COMPRAS_FACC`, `ESIVA_EXENTO_INTRACOMUNITARIO_FACC`, `PORCENTAJE_IVAN_FACC`, `TOTAL_BASEI_IVAN_FACC`, `TOTAL_IVAN_FACC`, `PORCENTAJE_REN_FACC`, `TOTAL_REN_FACC`, `PORCENTAJE_IVAR_FACC`, `TOTAL_BASEI_IVAR_FACC`, `TOTAL_IVAR_FACC`, `PORCENTAJE_RER_FACC`, `TOTAL_RER_FACC`, `PORCENTAJE_IVAS_FACC`, `TOTAL_BASEI_IVAS_FACC`, `TOTAL_IVAS_FACC`, `PORCENTAJE_RES_FACC`, `TOTAL_RES_FACC`, `PORCENTAJE_IVAE_FACC`, `TOTAL_BASEI_IVAE_FACC`, `TOTAL_IVAE_FACC`, `PORCENTAJE_REE_FACC`, `TOTAL_REE_FACC`, `PORCENTAJE_DTO_COMERCIAL_FACC`, `TOTAL_DTO_COMERCIAL_FACC`, `PORCENTAJE_DTO_FINANCIERO_FACC`, `TOTAL_DTO_FINANCIERO_FACC`, `PORCENTAJE_PRONTO_PAGO_FACC`, `TOTAL_PRONTO_PAGO_FACC`, `PORCENTAJE_RAPPEL_FACC`, `TOTAL_RAPPEL_FACC`, `PORCENTAJE_FINANCIACION_FACC`, `TOTAL_FINANCIACION_FACC`, `TOTAL_PORTES_FACC`, `PORCENTAJE_RETENCION_FACC`, `TOTAL_RETENCION_FACC`, `TOTAL_BRUTO_FACC`, `TOTAL_BASES_FACC`, `TOTAL_IMPUESTOS_FACC`, `TOTAL_FACC`, `TOTAL_LIQUIDO_FACC`, `FORMA_PAGO_FACC`, `ID_PV_TEMPORADA_FACC`, `ESAGRUPAR_ALBARANES_FACC`, `ENTIDAD_FACC`, `OFICINA_FACC`, `DIGITO_CONTROL_FACC`, `CUENTA_FACC`, `IBAN_FACC`, `CONTADOR_LINEAS_FACC`, `COMENTARIOS_FACC`, `OBSERVACIONES_FACC`, `ESPIVOTE_HORIZONTAL_FACC`, `INSTANTE_CONTABILIZACION_FACC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('000000','-','2026-06-11',NULL,'ABIERTA',NULL,NULL,'012','ALEJANDRO LAORDEN HIDALGO','4587545EQ','65869556','miemail@gmail.com','CALLE POZO BLANCO, 2','','SANTOVENIA','ZAMORA','ES','España','49750','ANGEL','ANGEL MARTIN JULIÁN',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'724','Espana',NULL,'GEN','1','N','N',21.000000,1471.000000,308.910000,5.200000,0.000000,10.000000,0.000000,0.000000,1.400000,0.000000,4.000000,0.000000,0.000000,0.500000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,NULL,NULL,0.000000,0.000000,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0.000000,1471.000000,1471.000000,308.910000,1779.910000,1779.910000,'60DIAS',NULL,'S',NULL,NULL,NULL,NULL,NULL,'540','','','S',NULL,'2026-06-23 06:12:06','2026-06-11 05:20:03','Administrador','Administrador');
-
 
 -- Tabla: fza_facturas_compra_celdas
 
@@ -7214,7 +7228,6 @@ CREATE TABLE `fza_facturas_compra_celdas` (
   PRIMARY KEY (`SERIE_FACC_FACCCEL`,`NUMERO_FACC_FACCCEL`,`LINEA_FACC_FACCCEL`,`ID_FILA_FACC_FACCCEL`,`ID_AV_PIVOT_FACCCEL`),
   INDEX `IDX_FACCCEL_LINEA` (`SERIE_FACC_FACCCEL`, `NUMERO_FACC_FACCCEL`, `LINEA_FACC_FACCCEL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_facturas_compra_lineas
 
@@ -7265,6 +7278,7 @@ CREATE TABLE `fza_facturas_compra_lineas` (
   INDEX `IDX_FACCLIN_ARTICULO` (`CODIGO_ART_FACCLIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 53 registros exportados
 
 -- Datos de fza_facturas_compra_lineas
 
@@ -7322,7 +7336,6 @@ INSERT INTO `fza_facturas_compra_lineas` (`NUMERO_FACC_FACCLIN`, `SERIE_FACC_FAC
 ('000000','-','0520','006','A1','0520','DEPORTIVO002','DEPORTIVO002/VERDE/39',NULL,4,'DEPORTIVO','','Zapatillas deportivas','Uds',1.000000,0.000000,'N',0.000000,19.000000,19.000000,19.000000,'GEN',NULL,NULL,NULL,'2026-06-11 05:20:03','2026-06-11 05:20:03','Administrador','Administrador','','','','','','','','','','',0),
 ('000000','-','0530','006','A1','0530','DEPORTIVO003','DEPORTIVO003/COLORADITO/39',NULL,4,'DEPORTIVO','','Ropa Deportiva','Uds',1.000000,0.000000,'N',0.000000,12.000000,12.000000,12.000000,'GEN',NULL,NULL,NULL,'2026-06-11 05:20:03','2026-06-11 05:20:03','Administrador','Administrador','','','','','','','','','','',0);
 
-
 -- Tabla: fza_facturas_consolidaciones
 
 DROP TABLE IF EXISTS `fza_facturas_consolidaciones`;
@@ -7355,6 +7368,7 @@ CREATE TABLE `fza_facturas_consolidaciones` (
   UNIQUE INDEX `UK_FACTURA` (`SERIE_FAC_FACCON`, `NUMERO_FAC_FACCON`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 12 registros exportados
 
 -- Datos de fza_facturas_consolidaciones
 
@@ -7372,7 +7386,6 @@ INSERT INTO `fza_facturas_consolidaciones` (`ID_FACCON`, `SERIE_FAC_FACCON`, `NU
 (11,'2026.A1','000164','A-WZMGRWJE9SVFHX',17,NULL,'45684134Q','2026-06-25 19:43:32','11','61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5','https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR?nif=45684134Q&numserie=2026.A1000164&fecha=25-06-2026&importe=14.95','iVBORw0KGgoAAAANSUhEUgAAANQAAADUCAIAAABrvJpPAAAIr0lEQVR42u2dwXLkOAxDN///0bMXH+JqywZEQnKSh2OXSIH06ylbTU++/v379x9CO/QFfGiXgA9tE/ChbQI+tE3Ah7YJ+NA2AR/aJuBD2wR8aJuAD20T8KFtAj60TcCHtgn40DYBH9omG76vr692E10eRnkUz2/4Ero+v69Xah/Fdsm+jsA35yEh4GtoUNw08H2sB75VpoHvY/2fg69ywSqN65ICceIiKXu5kI3qSve2kgf4LgR8uoCvwcN3AZ8u4Gvw8F3Ap+sV8HXdLK8EonKT3gWBu97tT+JBpNKTkwfgm6sR+OZqPHkAvrkagW+uxpMH4JurEfjmajx5eDN8Kx8yKj5HsQmfiS8w8DUU4/rv8jmKTfgEvqBp4NPzA1+zaeDT8wNfs+mum/QKHLt+dH8DNMBnFAN8umfgM/IA31zfFA/A11AM8Omefy18rtI38r/1y5B4oPnxgwVdpoFPz1kR8F3kAT49Z0XAd5EH+PScFf14+LpUgYDP6593Cfj4HPhmTb/hYvy1z7sEfHz+e+FLKzFM2tX0XQOhFb3t+p768DZzwFf36XreJeCbzKP4B757Ad9kHsU/8N1r6WDBSOkf+3fdgLs1uto1PNF20A189fxdNboCvkXFAJ/eE+BrLgb49J78WvjsDQo/zLuNSBy07hoyeNtgaWT4A/jq+d3age/IA3z1/G7twHfkAb56frd24Dvy/PRh0q4LnB7STICoKNFbd82wV8BXr8X1A3xHLPDVa3H9AN8RC3z1Wlw/wHfErjxkToCegFhR18VIPMSshFvpybAW4NP9u3mA76EW4NP9u3mA76EW4NP9u3mA76GWrheIEhe1AvRPOch1e/W2w+pRTkXAZ6wBPt2bIuAz1gCf7k0R8BlrgE/3pijywLHrZtz1/12Ji+p6UFTJn/5RAPiMnN8FfHpO4JsU8M0J+BoEfHN6BXyKoURs4sa5C5SVN+mKuv4hSAB3yg98c/sqHhQBX7DIrljg0wV8zbHAp+vXwpe4mVX2Svzo7ta18qImPHQd+Lc9/AGfXhfw3e/rCviMuoDvfl9XwGfUBXz3+7radsisFOzuq6jr5jr9cFO58Okvibtm6BP45uoCvjlvp1jgm6sL+Oa8nWKBb64u4JvzdopNPHAkhiJ3+Uk/SCnqAtHtT9dg79Ab8N2vBz7dM/A1+wE+3TPwNfsBPt3z6+BbeYO/a5CzCyZlL7euyl7pHxSAzxDwzXkbegY+XcA3523oGfh0Ad+ct6HnriJH6joUdWMrh9KJnrRdsCaAXJ8JEIFv0rPbE+C7yAl8c57dngDfRU7gm/Ps9gT4LnImLnZaXT/Sr1TXgbC7vqveyGE78L3TsxILfM1FdjXiDT4rnpVY4GsusqsRb/BZ8azEAt/k50r+UfGJQU633sr69KF0YqC1a/0pFvjm6q2sB74jFvjm6q2sB74jFvjm6q2sB74jtuvCKI1Y+WJOJU/iCzBS+oWglS9AuQK+hjXANyfga1gDfHMCvoY1wDenyB97TrwQNFIXNJV63dpXvvS08gHCFfA11OvWDnzHXsBXr9etHfiOvYCvXq9bO/AdeyXgG6131TVA0PVQUlGXt0ofEv5HaxQB30Nsl4DvwjPw3cd2CfguPAPffWyXgO/CcwU+ZeNdB9G7bvBHte866N415KEI+B7WuJ5HtQPfRX7gu1/jeh7VDnwX+YHvfo3reVQ78F3k74JvZE7Jkxj2bLspfsGFfMPwbNd1P+0FfPX8wDe3L/A15Ae+uX2BryE/8M3t+4oXiNI375W9lJxK7ChP2n/68Nztz8kn8N2vUXIqsaM8wOcEAJ/cn5GA7/ADfPdrlJxK7CgP8C1S4oBa2StxOOx6rtQ7ik0Mii59uAG+XOxIwHfkBL5c7EjAd+QEvlzsSMB35HzDA0d6r8gBqXnzngCu4r9S4ysGC4BPF/Bd5Ae+ujdFwHeRH/jq3hQB30X+N5tODwcoa95wSJ44NN51LU45ge9+DfDpPl0B38Ma4NN9ugK+hzXAp/t0FX9pvBK7cv13VR5Wug6iXXUNPaQ9nPwA36eAL+fh5Af4PgV8OQ8nP8D3KeDLeTj5Kd0wLhwUGOVZeeOcHmhNv0CU+LJVBHyGB+DTe6UI+AwPwKf3ShHwGR6AT++Vojb4un78rjSo64K9YeDU7ZubfyX0Q5/Ap8e6tQPfg0/g02Pd2oHvwSfw6bFu7cD34DMxWDBqxK6LlBgOUDx0PYiMlHjQUfSKBw5pA+Br9an4AT6jYODTPSh+gM8oGPh0D4qfPwFfwvTKA1V3364f77sGQpWcXQMZlYGS4b7Ap+8LfHpORcBn7At8ek5FwGfsC3x6TkXb/tjzypt3N38aDkUrH5Jc/10gAt9DXcCn98oV8D3UBXx6r1wB30NdwKf3ytXS/xxSMlQYZqw0OjEY0TUQ8BMPrqV6ge8zJ/Dl8p9ige8zJ/Dl8p9ige8zJ/Dl8p9iE4OKrhJfgMRhb+IBpe3AduFLSa942u0S8PXWC3yGgK+3XuAzBHy99f4J+NIvH628iU4MFnQNUiQ+d3s16ltFwNfgp8sb8E02y94Y+Kb2Bb4GE8A3ty/wPRSpmO4aGnW9VUCvaNewZ9fBe0LA95Af+HICvof8wJcT8D3kB76cXg3fyiamhze7oEl/CV3PrrdTHuC737eyRvEAfE4A8MlrFA/A5wQAn7xG8QB8TsDLHjgSgw7uvpU+KDndfbsGBdIHzsBneE70Qcnp7gt8zQUDn74v8DUXDHz6vn8OPnvjpjyjnK4SN9eVwdK3Pbi4sYqA78ED8M3FKgK+Bw/ANxerCPgePADfXKyi171AlB4CSF8Yty43/8oHkYofRcD3sKbSB+B7qBH47tdU+gB8DzUC3/2aSh+A76HG9MAgQiMBH9om4EPbBHxom4APbRPwoW0CPrRNwIe2CfjQNgEf2ibgQ9sEfGibgA9tE/ChbQI+tE3Ah7bpf6YsX+6iNq0PAAAAAElFTkSuQmCC',0x89504E470D0A1A0A0000000D49484452000000D4000000D408020000006BBC9A4F000008AF4944415478DAED9DC172E4380C4337FFFFD1B3171FE26ACB06444272928763974881F4EB295B4D4FBEFEFDFBF71F423BF4057C6897800F6D13F0A16D023EB44DC087B609F8D036011FDA26E043DB047C689B800F6D13F0A16D023EB44DC087B609F8D036011FDA261BBEAFAFAF76135D1E467914CF6FF812BA3EBFAF576A1FC576C9BE8EC037E72121E06B6850DC34F07DAC07BE55A681EF63FD9F83AF72C12A8DEB920271E222297BB9908DEA4AF7B69207F82E047CBA80AFC1C377019F2EE06BF0F05DC0A7EB15F075DD2CAF04A27293DE0581BBDEED4FE241A4D2939307E09BAB11F8E66A3C7900BEB91A816FAEC69307E09BAB11F8E66A3C7978337C2B1F322A3E47B1099F892F30F03514E3FAEFF2398A4DF804BEA069E0D3F3035FB369E0D3F3035FB3E9AE9BF40A1CBB7E747F0334C06714037CBA67E033F200DF5CDF140FC0D7500CF0E99E7F2D7CAED237F2BFF5CB9078A0F9F183055DA6814FCF5911F05DE4013E3D6745C0779107F8F49C15FD78F8BA548180CFEB9F7709F8F81CF8664DBFE162FCB5CFBB047C7CFE7BE14B2B314CDAD5F45D03A115BDEDFA9EFAF03673C057F7E97ADE25E09BCCA3F807BE7B01DF641EC53FF0DD6BE960C148E91FFB77DD80BB35BADA353CD176D00D7CF5FC5D35BA02BE45C5009FDE13E06B2E06F8F49EFC5AF8EC0D0A3FCCBB8D481CB4EE1A3278DB606964F803F8EAF9DDDA81EFC8037CF5FC6EEDC077E401BE7A7EB776E03BF2FCF461D2AE0B9C1ED24C80A828D15B77CDB057C057AFC5F5037C472CF0D56B71FD00DF110B7CF55A5C3FC077C4AE3C644E809E805851D7C5483CC4AC845BE9C9B016E0D3FDBB7980EFA116E0D3FDBB7980EFA116E0D3FDBB7980EFA196AE17881217B502F44F39C8757BF5B6C3EA514E45C067AC013EDD9B22E033D6009FEE4D11F0196B804FF7A628F2C0B1EB66DCF5FF5D898BEA7A5054C99FFE5100F88C9CDF057C7A4EE09B14F0CD09F81A047C737A057C8AA1446CE2C6B90B949537E98ABAFE21480077CA0F7C73FB2A1E14015FB0C8AE58E0D3057CCDB1C0A7EBD7C297B89955F64AFCE8EED6B5F2A2263C741DF8B73DFC019F5E17F0DDEFEB0AF88CBA80EF7E5F57C067D4057CF7FBBADA76C8AC14ECEEABA8EBE63AFD7053B9F0E92F89BB66E813F8E6EA02BE396FA758E09BAB0BF8E6BC9D62816FAE2EE09BF3768A4D3C7024862277F9493F4829EA02D1ED4FD760EFD01BF0DDAF073EDD33F035FB013EDD33F035FB013EDDF3EBE05B7983BF6B90B30B26652FB7AECA5EE91F1480CF10F0CD791B7A063E5DC037E76DE819F87401DF9CB7A1E7AE2247EA3A1475632B87D2899EB45DB026805C9F0910816FD2B3DB13E0BBC8097C739EDD9E00DF454EE09BF3ECF604F82E72262E765A5D3FD2AF54D781B0BBBEABDEC8613BF0BDD3B3120B7CCD457635E20D3E2B9E9558E06B2EB2AB116FF059F1ACC402DFE4E74AFE51F189414EB7DECAFAF4A17462A0B56BFD2916F8E6EAADAC07BE2316F8E6EAADAC07BE2316F8E6EAADAC07BE23B6EBC2288D58F9624E254FE20B3052FA85A0952F40B902BE8635C03727E06B58037C7302BE8635C037A7C81F7B4EBC1034521734957ADDDA57BEF4B4F201C215F035D4EBD60E7CC75EC057AFD7AD1DF88EBD80AF5EAF5B3BF01D7B25E01BAD77D53540D0F550525197B74A1F12FE476B1401DF436C9780EFC233F0DDC77609F82E3C03DF7D6C9780EFC273053E65E35D07D1BB6EF047B5EF3AE8DE35E4A108F81ED6B89E47B503DF457EE0BB5FE37A1ED50E7C17F981EF7E8DEB79543BF05DE4EF826F644EC99318F66CBB297EC1857CC3F06CD7753FED057CF5FCC037B72FF035E407BEB97D81AF213FF0CDEDFB8A1788D237EF95BD949C4AEC284FDA7FFAF0DCEDCFC927F0DDAF51722AB1A33CC0E704009FDC9F9180EFF0037CF76B949C4AEC280FF02D52E2805AD92B7138EC7AAED43B8A4D0C8A2E7DB801BE5CEC48C077E404BE5CEC48C077E404BE5CEC48C077E47CC303477AAFC801A979F39E00AEE2BF52E32B060B804F17F05DE407BEBA3745C077911FF8EADE1401DF45FE379B4E0F07286BDE70489E3834DE752D4E3981EF7E0DF0E93E5D01DFC31AE0D37DBA02BE8735C0A7FB74157F69BC12BB72FD77551E56BA0EA25D750D3DA43D9CFC00DFA7802FE7E1E407F83E057C390F273FC0F729E0CB7938F929DD302E1C1418E55979E39C1E684DBF4094F8B255047C8607E0D37BA508F80C0FC0A7F74A11F0191E804FEF95A236F8BA7EFCAE34A8EB82BD61E0D4ED9B9B7F25F4439FC0A7C7BAB503DF834FE0D363DDDA81EFC127F0E9B16EEDC0F7E0333158306AC4AE8B94180E503C743D888C9478D051F48A070E6903E06BF5A9F8013EA360E0D33D287E80CF2818F8740F8A9F3F015FC2F4CA035577DFAE1FEFBB0642959C5D0319958192E1BEC0A7EF0B7C7A4E45C067EC0B7C7A4E45C067EC0B7C7A4E45DBFED8F3CA9B77377F1A0E452B1F925CFF5D2002DF435DC0A7F7CA15F03DD4057C7AAF5C01DF435DC0A7F7CAD5D2FF1C5232541866AC343A3118D13510F0130FAEA57A81EF3327F0E5F29F6281EF3327F0E5F29F6281EF3327F0E5F29F6213838AAE125F80C4616FE201A5EDC076E14B49AF78DAED12F0F5D60B7C8680AFB75EE033047CBDF5FE09F8D22F1FADBC894E0C16740D52243E777B35EA5B45C0D7E0A7CB1BF04D36CBDE18F8A6F605BE0613C037B72FF03D14A998EE1A1A75BD5540AF68D7B067D7C17B42C0F7901FF87202BE87FCC09713F03DE407BE9C5E0DDFCA26A68737BBA0497F095DCFAEB7531EE0BBDFB7B246F1007C4E00F0C96B140FC0E704009FBC46F1007C4EC0CB1E3812830EEEBE953E2839DD7DBB0605D207CEC067784EF441C9E9EE0B7CCD05039FBE2FF035170C7CFABE7F0E3E7BE3A63CA39CAE1237D795C1D2B73DB8B8B18A80EFC103F0CDC52A02BE070FC03717AB08F81E3C00DF5CACA2D7BD40941E02485F18B72E37FFCA07918A1F45C0F7B0A6D207E07BA811F8EED754FA007C0F3502DFFD9A4A1F80EFA1C6F4C0204223011FDA26E043DB047C689B800F6D13F0A16D023EB44DC087B609F8D036011FDA26E043DB047C689B800F6D13F0A16D023EB44DC087B6E97FA62C5FEEA236AD0F0000000049454E44AE426082,'2026-06-25 19:43:32','VERIFACTU_PROCESADO','<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<env:Envelope xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\">\n<env:Header></env:Header>\n<env:Body Id=\"Body\"><tikR:RespuestaRegFactuSistemaFacturacion xmlns:tikR=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/RespuestaSuministro.xsd\" xmlns:tik=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd\"><tikR:CSV>A-WZMGRWJE9SVFHX</tikR:CSV><tikR:DatosPresentacion><tik:NIFPresentador>45684134Q</tik:NIFPresentador><tik:TimestampPresentacion>2026-06-25T19:43:32+02:00</tik:TimestampPresentacion></tikR:DatosPresentacion><tikR:Cabecera><tik:ObligadoEmision><tik:NombreRazon>ALEJANDRO LAORDEN HIDALGO</tik:NombreRazon><tik:NIF>45684134Q</tik:NIF></tik:ObligadoEmision></tikR:Cabecera><tikR:TiempoEsperaEnvio>60</tikR:TiempoEsperaEnvio><tikR:EstadoEnvio>Correcto</tikR:EstadoEnvio><tikR:RespuestaLinea><tikR:IDFactura><tik:IDEmisorFactura>45684134Q</tik:IDEmisorFactura><tik:NumSerieFactura>2026.A1000164</tik:NumSerieFactura><tik:FechaExpedicionFactura>25-06-2026</tik:FechaExpedicionFactura></tikR:IDFactura><tikR:Operacion><tik:TipoOperacion>Alta</tik:TipoOperacion></tikR:Operacion><tikR:EstadoRegistro>Correcto</tikR:EstadoRegistro></tikR:RespuestaLinea></tikR:RespuestaRegFactuSistemaFacturacion>\n</env:Body></env:Envelope>','<?xml version=\"1.0\" encoding=\"UTF-8\"?><soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:sum=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd\" xmlns:sum1=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd\"><soapenv:Header/><soapenv:Body><sum:RegFactuSistemaFacturacion><sum:Cabecera><sum1:ObligadoEmision><sum1:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF></sum1:ObligadoEmision></sum:Cabecera><sum:RegistroFactura><sum1:RegistroAlta><sum1:IDVersion>1.0</sum1:IDVersion><sum1:IDFactura><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000164</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>25-06-2026</sum1:FechaExpedicionFactura></sum1:IDFactura><sum1:NombreRazonEmisor>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazonEmisor><sum1:TipoFactura>F2</sum1:TipoFactura><sum1:DescripcionOperacion>Venta detalle al por menor</sum1:DescripcionOperacion><sum1:Desglose><sum1:DetalleDesglose><sum1:Impuesto>01</sum1:Impuesto><sum1:ClaveRegimen>01</sum1:ClaveRegimen><sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion><sum1:TipoImpositivo>21.00</sum1:TipoImpositivo><sum1:BaseImponibleOimporteNoSujeto>12.36</sum1:BaseImponibleOimporteNoSujeto><sum1:CuotaRepercutida>2.59</sum1:CuotaRepercutida></sum1:DetalleDesglose></sum1:Desglose><sum1:CuotaTotal>2.59</sum1:CuotaTotal><sum1:ImporteTotal>14.95</sum1:ImporteTotal><sum1:Encadenamiento><sum1:RegistroAnterior><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000153</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>13-06-2026</sum1:FechaExpedicionFactura><sum1:Huella>C6F200EC8EFEFE40F7E45994CC2AB320C145781F19F9614228D2525C60417D03</sum1:Huella></sum1:RegistroAnterior></sum1:Encadenamiento><sum1:SistemaInformatico><sum1:NombreRazon>Alejandro Laorden Hidalgo</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF><sum1:NombreSistemaInformatico>Factuzam</sum1:NombreSistemaInformatico><sum1:IdSistemaInformatico>FZ</sum1:IdSistemaInformatico><sum1:Version>1.0.15.202606250160.alpha</sum1:Version><sum1:NumeroInstalacion>1</sum1:NumeroInstalacion><sum1:TipoUsoPosibleSoloVerifactu>N</sum1:TipoUsoPosibleSoloVerifactu><sum1:TipoUsoPosibleMultiOT>S</sum1:TipoUsoPosibleMultiOT><sum1:IndicadorMultiplesOT>S</sum1:IndicadorMultiplesOT></sum1:SistemaInformatico><sum1:FechaHoraHusoGenRegistro>2026-06-25T19:43:31+02:00</sum1:FechaHoraHusoGenRegistro><sum1:TipoHuella>01</sum1:TipoHuella><sum1:Huella>61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5</sum1:Huella></sum1:RegistroAlta></sum:RegistroFactura></sum:RegFactuSistemaFacturacion></soapenv:Body></soapenv:Envelope>','<?xml version=\"1.0\" encoding=\"UTF-8\"?><sum1:RegistroAlta xmlns:sum1=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\"><sum1:IDVersion>1.0</sum1:IDVersion><sum1:IDFactura><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000164</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>25-06-2026</sum1:FechaExpedicionFactura></sum1:IDFactura><sum1:NombreRazonEmisor>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazonEmisor><sum1:TipoFactura>F2</sum1:TipoFactura><sum1:DescripcionOperacion>Venta detalle al por menor</sum1:DescripcionOperacion><sum1:Desglose><sum1:DetalleDesglose><sum1:Impuesto>01</sum1:Impuesto><sum1:ClaveRegimen>01</sum1:ClaveRegimen><sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion><sum1:TipoImpositivo>21.00</sum1:TipoImpositivo><sum1:BaseImponibleOimporteNoSujeto>12.36</sum1:BaseImponibleOimporteNoSujeto><sum1:CuotaRepercutida>2.59</sum1:CuotaRepercutida></sum1:DetalleDesglose></sum1:Desglose><sum1:CuotaTotal>2.59</sum1:CuotaTotal><sum1:ImporteTotal>14.95</sum1:ImporteTotal><sum1:Encadenamiento><sum1:RegistroAnterior><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000153</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>13-06-2026</sum1:FechaExpedicionFactura><sum1:Huella>C6F200EC8EFEFE40F7E45994CC2AB320C145781F19F9614228D2525C60417D03</sum1:Huella></sum1:RegistroAnterior></sum1:Encadenamiento><sum1:SistemaInformatico><sum1:NombreRazon>Alejandro Laorden Hidalgo</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF><sum1:NombreSistemaInformatico>Factuzam</sum1:NombreSistemaInformatico><sum1:IdSistemaInformatico>FZ</sum1:IdSistemaInformatico><sum1:Version>1.0.15.202606250160.alpha</sum1:Version><sum1:NumeroInstalacion>1</sum1:NumeroInstalacion><sum1:TipoUsoPosibleSoloVerifactu>N</sum1:TipoUsoPosibleSoloVerifactu><sum1:TipoUsoPosibleMultiOT>S</sum1:TipoUsoPosibleMultiOT><sum1:IndicadorMultiplesOT>S</sum1:IndicadorMultiplesOT></sum1:SistemaInformatico><sum1:FechaHoraHusoGenRegistro>2026-06-25T19:43:31+02:00</sum1:FechaHoraHusoGenRegistro><sum1:TipoHuella>01</sum1:TipoHuella><sum1:Huella>61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5</sum1:Huella></sum1:RegistroAlta>','61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5','','','');
 INSERT INTO `fza_facturas_consolidaciones` (`ID_FACCON`, `SERIE_FAC_FACCON`, `NUMERO_FAC_FACCON`, `REQUEST_ID_CONSOLIDACION_FACCON`, `QUEUE_ID_CONSOLIDACION_FACCON`, `QUEUE_ID_CANCEL_FACCON`, `ISSUER_IRS_ID_CONSOLIDACION_FACCON`, `ISSUED_TIME_FACCON`, `CHAIN_NUMBER_FACCON`, `CHAIN_HASH_FACCON`, `VERIFACTU_URL_FACCON`, `QRCODE_BASE64_FACCON`, `QRCODE_PNG_FACCON`, `FECHA_PROCESAMIENTO_FACCON`, `ESTADO_FACCON`, `RESPUESTA_COMPLETA_FACCON`, `PETICION_COMPLETA_FACCON`, `REGISTRO_XML_FACCON`, `FIRMA_DIGITAL_FACCON`, `SERIE_CERTIFICADO_FACCON`, `TITULAR_CERTIFICADO_FACCON`, `HUELLA_CERTIFICADO_FACCON`) VALUES
 (12,'2026.A1','000165','A-HZ4BKZ9LYX63JY',18,NULL,'45684134Q','2026-07-04 17:58:42','12','F764E83F0F9E83890C72C26B26BC8E610AAB2787D5E84A4C0C1956CE0EAC7E88','https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR?nif=45684134Q&numserie=2026.A1000165&fecha=04-07-2026&importe=170.00','iVBORw0KGgoAAAANSUhEUgAAANQAAADUCAIAAABrvJpPAAAIhUlEQVR42u2dy47jMAwEN///0bOXOcSAJTVFtuhJqo6BHk26AtgeZff18/PzD6CDF/JBF8gHbSAftIF80AbyQRvIB20gH7SBfNAG8kEbyAdtIB+0gXzQBvJBG8gHbSAftBGW7/V6lYeoyjBa5338+5jR510ovY3mV2qvInwdkW8vgwPkK2iQPTTyyfmRrzo08sn5P1a+zAWLrnOy0e6LpOyV+ZJkehUlsw7y3YB8Osi3GIN8e2MUkG8xBvn2xig8Qr6qm2XHDbKjxioJouOVhy33F7XqoQ35NmtEvr0aLxmQb69G5Nur8ZIB+fZqRL69Gi8Z/qJ8yr7Ri5fJqewbJSOZY250HalG5MvnVPaNgnyLpiCfvm8U5Fs0Bfn0faMg36IpbvmUuaMx0fyjMVVEs1X1rWsdBeRbjKkC+W7qRb75mCqQ76Ze5JuPqQL5bup92sECx4OFY51MXcq+mQwKH3WwoCo08uUzKCDfzTrIl8+ggHw36yBfPoPCn5evCvfLZz6ff14F8vE58u2GfsLF+LbPq0A+Pv9c+dy4m1j1sjeaP7p+lRxPu76XPjwtHPLt1ZWptwvkW2TIzEW+Oci3yJCZi3xzjh4sGJF5Uew4lPCEm3GFqi9JVy3IV1xLtMYMyGcsBvnmIJ+xGOSb83XyOej6UdIoQ9X6J78kJ/tW9eMp5FvshXx72RSQb7EX8u1lU0C+xV7It5dNoexgQfSiOhpR9eCS4aSICu6DtI84TIp8+fxKT6Ig32aDkE/v4Qjk22wQ8uk9HPFR8g0XStwgR9d3HCzokjg692lyj9aUakc+PRvyzUG+zQYhXx7k22wQ8uV59AOH5UWl+UVutA/KXo6Hs6ox7oO6l3qRby8D8u317VIv8u1lQL69vl3qRb69DMi317dLvScvdgbHoYFozqoHDvdBzpMvk9v+woF8eoZonqqcylzkK9gX+ebrI98myJdf/6PkGxXmuFF1v4zN1KuMz9QepepAgPtABvIV1KuMz9QeBfkCIF8tyBcA+Wr5WPmi4d55wsNN1Utp90V1ZMh8MSwHb5FPXxP55vtGQb7Amsg33zcK8gXWRL75vlHsBwui60SLf8IFO/nFqHo4OzlmmBP59tZX9or2B/kChb2DfPn+IF+gsHeQL98f5ItMbnrxW7Wm+yWqklnB/ZK86g8HyBdYE/nyY0bjpT4gX22eaGYF5FsUhnx7mRWQbzPoyRtepSmOg5xVMil7jaiSLLpmBuQLgHx72YaZkU8H+fayDTMjnw7y7WUbZu46zFg1t+rl82hMNPOIsgvWdLjVISLyLcZEM49Avps1kW8+Jpp5BPLdrIl88zHRzCOQ72bNkwcCMlS9UI3WUsXJ/F39j4J8h0C+m/zIdwbku8mPfGdAvpv8jhvhkwchow1y5KnKP+Lkg5S7P5e5yHd+PPL9zkW+8+OR73cu8p0fj3y/c6sOkyqNeMLn0VoydSm4fxCU+TyaMwryLWrJ1KWAfLuTkW/6uQLy7U5GvunnCsgXmdD0QND1Qviv/GDn5ANfFci3yIl8PpBvkRP5fCDfIify+bDINxqfwfEDJUfOb8s/GqOAfMU5vy3/aIwC8hXn/Lb8ozEKyFec89vyj8YoHP3PnjPjo3PdByqrXvwq60czuF+8Z9a8rI98OsiXX/OyPvLpIF9+zcv6yKeDfPk1L+u7D5NmxleJqIyP5jx5IU8eAsh8gZFvMRf58vWOQL7FXOTL1zsC+RZzkS9f74ij8rlvSKsaVHUI1H0oVdnL8aATpew6It987midaE+UPMpeyLcoBvn0dZBvdzLyyT1R8ih7Id9mU0bjR4VVPcRUCTEar9TlmOt+yHO8uL7shXz58UpdjrnIV9CId5BvLyfybTbiHeTby/l18jl+5BKdm8lZdVOv4BBOWT/Dow8WIJ8O8t2sj3zz8cin50G+QE7km/M4+ap+/JI5UDnC8Qd1d0/cL8aVXlVdryjIF8js6AnyRSYgX2lPkC8yAflKe4J8kQmGoFWHKEd7VR3GrLoBr/oDv5LZvW80wyUP8u3ljO6lrJMB+RZFIp+ePwryLYpEPj1/lK+Wz/1H8UyGqpe0Dokzf7x3f3lGtB0mRb78msj3uxfy6RmQT++VAvIFMiCf3isFy2HSTFBHgxxfjMzhSvfLc8cDmeNwA/ItxiOf3k/kKx6PfHo/ka94PPLp/WyTT2lE5oGj6wXpyYebqp64X+Y/7oFDaRDy7e0V7QnybRasrOMA+fL5oyDfIgPy6etHsf+AKBr65M14VR73w1C0D5kaq74YCshXkAf59kC+gjzItwfyFeRBvj3aDpNWvaR13zg75FBw/1Ark79KROQL1JsB+W6yIZ9ebwbku8mGfHq9GZDvJpv7JXM4kPnls+PlbSZ/dN+/8uJaqhf59DWRr7he5NPXRL7iepFPXxP5iut1HFSMcvLB5eQDU6b2KCd/lPSIp90qkC8P8m2CfHmQbxPky/N18lUdSug62OhodNV49+fRnoz6kwH5Fmsi37w/GZBvsSbyzfuTAfkWayLfvD8ZHvcPBZ28Qc681I3Sddgzk9/9BwjkC8zNgHw3mZFPn5sB+W4yI58+NwPy3WT+K/JlMrgv8GiMkuFkLVV7VT38IV/BvqMxSgbki0xAPnmMkgH5IhOQTx6jZEC+yISD8kXnKpmjOG7wq+TueiBTalFAvkBmRx+UNaP7Il9xwcin74t8xQUjn77v18kX3tjQ6NHcKI4bf/e+7geX6FwF5LsB+fJzFZDvBuTLz1VAvhuQLz9X4XE/IDr5MKHkyezrqOvkg0gmjwLyLfJk9kW+RY3IN8+T2Rf5FjUi3zxPZl/kW9ToPjAIMAL5oA3kgzaQD9pAPmgD+aAN5IM2kA/aQD5oA/mgDeSDNpAP2kA+aAP5oA3kgzaQD9r4Dwpip+5LDAjqAAAAAElFTkSuQmCC',0x89504E470D0A1A0A0000000D49484452000000D4000000D408020000006BBC9A4F000008854944415478DAED9DCB8EE3300C0437FFFFD1B39739C480253545B6E849AA8E811E4DBA02D81E65F7F5F3F3F30FA08317F24117C8076D201FB4817CD006F2411BC8076D201FB4817CD006F2411BC8076D201FB4817CD006F2411BC8076D201FB41196EFF57A9587A8CA305AE77DFCFB98D1E75D28BD8DE6576AAF227C1D916F2F8303E42B68903D34F2C9F991AF3A34F2C9F93F56BECC058BAE73B2D1EE8BA4EC95F992647A1525B30EF2DD807C3AC8B718837C7B6314906F3106F9F6C6283C42BEAA9B65C70DB2A3C62A09A2E395872DF717B5EAA10DF9366B44BEBD1A2F19906FAF46E4DBABF19201F9F66A44BEBD1A2F19FEA27CCABED18B97C9A9EC1B252399636E741DA946E4CBE754F68D827C8BA6209FBE6F14E45B3405F9F47DA320DFA2296EF994B9A331D1FCA3315544B355F5AD6B1D05E45B8CA902F96EEA45BEF9982A90EFA65EE49B8FA902F96EEA7DDAC102C78385639D4C5DCABE990C0A1F75B0A02A34F2E5332820DFCD3AC897CFA0807C37EB205F3E83C29F97AF0AF7CB673E9F7F5E05F2F139F2ED867EC2C5F8B6CFAB403E3EFF5CF9DCB89B58F5B2379A3FBA7E951C4FBBBE973E3C2D1CF2EDD595A9B70BE45B64C8CC45BE39C8B7C890998B7C738E1E2C18917951EC3894F0849B7185AA2F49572DC8575C4BB4C60CC8672C06F9E6209FB118E49BF375F239E8FA51D22843D5FA27BF2427FB56F5E329E45BEC857C7BD914906FB117F2ED655340BEC55EC8B7974DA1EC6041F4A23A1A51F5E092E1A4880AEE83B48F384C8A7CF9FC4A4FA220DF6683904FEFE108E4DB6C10F2E93D1CF151F20D174ADC2047D7771C2CE892383AF769728FD6946A473E3D1BF2CD41BECD06215F1EE4DB6C10F2E579F40387E545A5F9456EB40FCA5E8E87B3AA31EE83BA977A916F2F03F2EDF5ED522FF2ED6540BEBDBE5DEA45BEBD0CC8B7D7B74BBD272F7606C7A18168CEAA070EF741CE932F93DBFEC2817C7A86689EAA9CCA5CE42BD817F9E6EB23DF26C8975FFFA3E41B15E6B85175BF8CCDD4AB8CCFD41EA5EA4080FB4006F215D4AB8CCFD41E05F902205F2DC81700F96AF958F9A2E1DE79C2C34DD54B69F7457564C87C312C076F914F5F13F9E6FB4641BEC09AC837DF370AF205D644BEF9BE51EC070BA2EB448B7FC2053BF9C5A87A383B39669813F9F6D657F68AF607F90285BD837CF9FE205FA0B077902FDF1FE48B4C6E7AF15BB5A6FB25AA9259C1FD92BCEA0F07C8175813F9F26346E3A53E205F6D9E686605E45B14867C7B9915906F33E8C91B5EA5298E839C5532297B8DA8922CBA6606E40B807C7BD98699914F07F9F6B20D33239F0EF2ED651B66EE3ACC5835B7EAE5F3684C34F388B20BD674B8D52122F22DC644338F40BE9B35916F3E269A7904F2DDAC897CF331D1CC2390EF66CD9307023254BD508DD652C5C9FC5DFD8F827C8740BE9BFCC87706E4BBC98F7C6740BE9BFC8E1BE1930721A30D72E4A9CA3FE2E48394BB3F97B9C8777E3CF2FDCE45BEF3E391EF772EF29D1F8F7CBF73AB0E932A8D78C2E7D15A327529B87F1094F93C9A330AF22D6AC9D4A5807CBB93916FFAB902F2ED4E46BEE9E70AC81799D0F440D0F542F8AFFC60E7E4035F15C8B7C8897C3E906F9113F97C20DF2227F2F9B0C8371A9FC1F1032547CE6FCB3F1AA3807CC539BF2DFF688C02F215E7FCB6FCA3310AC8579CF3DBF28FC6281CFDCF9E33E3A373DD072AAB5EFC2AEB4733B85FBC67D6BCAC8F7C3AC8975FF3B23EF2E9205F7ECDCBFAC8A7837CF9352FEBBB0F9366C65789A88C8FE63C79214F1E02C87C81916F3117F9F2F58E40BEC55CE4CBD73B02F91673912F5FEF88A3F2B96F48AB1A547508D47D2855D9CBF1A013A5EC3A22DF7CEE689D684F943CCA5EC8B72806F9F475906F7732F2C93D51F2287B21DF665346E34785553DC45409311AAFD4E598EB7EC873BCB8BEEC857CF9F14A5D8EB9C857D08877906F2F27F26D36E21DE4DBCBF975F2397EE4129D9BC9597553AFE0104E593FC3A30F16209F0EF2DDAC8F7CF3F1C8A7E741BE404EE49BF338F9AA7EFC92395039C2F10775774FDC2FC6955E555DAF28C817C8ECE809F24526205F694F902F3201F94A7B827C910986A0558728477B551DC6ACBA01AFFA03BF92D9BD6F34C3250FF2EDE58CEEA5AC9301F91645229F9E3F0AF22D8A443E3D7F94AF96CFFD47F14C86AA97B40E89337FBC777F7946B41D2645BEFC9AC8F7BB17F2E919904FEF9502F20532209FDE2B05CB61D24C5047831C5F8CCCE14AF7CB73C70399E37003F22DC6239FDE4FE42B1E8F7C7A3F91AF783CF2E9FD6C934F6944E681A3EB05E9C9879BAA9EB85FE63FEE81436910F2EDED15ED09F26D16ACACE300F9F2F9A320DF2203F2E9EB47B1FF80281AFAE4CD78551EF7C350B40F991AABBE180AC8579007F9F640BE823CC8B707F215E441BE3DDA0E9356BDA475DF383BE45070FF502B93BF4A44E40BD49B01F96EB2219F5E6F06E4BBC9867C7ABD1990EF269BFB25733890F9E5B3E3E56D267F74DFBFF2E25AAA17F9F43591AFB85EE4D3D744BEE27A914F5F13F98AEB751C548C72F2C1E5E40353A6F628277F94F488A7DD2A902F0FF26D827C79906F13E4CBF375F2551D4AE83AD8E86874D578F7E7D19E8CFA9301F9166B22DFBC3F19906FB126F2CDFB9301F9166B22DFBC3F191EF70F059DBC41CEBCD48DD275D83393DFFD0708E40BCCCD807C3799914F9F9B01F96E32239F3E3703F2DD64FE2BF26532B82FF0688C92E1642D557B553DFC215FC1BEA3314A06E48B4C403E798C9201F92213904F1EA36440BEC88483F245E72A99A3386EF0ABE4EE7A20536A5140BE4066471F9435A3FB225F71C1C8A7EF8B7CC505239FBEEFD7C917DED8D0E8D1DC288E1B7FF7BEEE0797E85C05E4BB01F9F2731590EF06E4CBCF5540BE1B902F3F57E1713F203AF930A1E4C9ECEBA8EBE48348268F02F22DF264F645BE458DC837CF93D917F9163522DF3C4F665FE45BD4E83E30083002F9A00DE48336900FDA403E6803F9A00DE48336900FDA403E6803F9A00DE48336900FDA403E6803F9A00DE48336900FDAF80F0A62A7EE4B0C08EA0000000049454E44AE426082,'2026-07-04 17:58:42','VERIFACTU_PROCESADO','<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<env:Envelope xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\">\n<env:Header></env:Header>\n<env:Body Id=\"Body\"><tikR:RespuestaRegFactuSistemaFacturacion xmlns:tikR=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/RespuestaSuministro.xsd\" xmlns:tik=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd\"><tikR:CSV>A-HZ4BKZ9LYX63JY</tikR:CSV><tikR:DatosPresentacion><tik:NIFPresentador>45684134Q</tik:NIFPresentador><tik:TimestampPresentacion>2026-07-04T17:58:42+02:00</tik:TimestampPresentacion></tikR:DatosPresentacion><tikR:Cabecera><tik:ObligadoEmision><tik:NombreRazon>ALEJANDRO LAORDEN HIDALGO</tik:NombreRazon><tik:NIF>45684134Q</tik:NIF></tik:ObligadoEmision></tikR:Cabecera><tikR:TiempoEsperaEnvio>60</tikR:TiempoEsperaEnvio><tikR:EstadoEnvio>Correcto</tikR:EstadoEnvio><tikR:RespuestaLinea><tikR:IDFactura><tik:IDEmisorFactura>45684134Q</tik:IDEmisorFactura><tik:NumSerieFactura>2026.A1000165</tik:NumSerieFactura><tik:FechaExpedicionFactura>04-07-2026</tik:FechaExpedicionFactura></tikR:IDFactura><tikR:Operacion><tik:TipoOperacion>Alta</tik:TipoOperacion></tikR:Operacion><tikR:EstadoRegistro>Correcto</tikR:EstadoRegistro></tikR:RespuestaLinea></tikR:RespuestaRegFactuSistemaFacturacion>\n</env:Body></env:Envelope>','<?xml version=\"1.0\" encoding=\"UTF-8\"?><soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:sum=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd\" xmlns:sum1=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd\"><soapenv:Header/><soapenv:Body><sum:RegFactuSistemaFacturacion><sum:Cabecera><sum1:ObligadoEmision><sum1:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF></sum1:ObligadoEmision></sum:Cabecera><sum:RegistroFactura><sum1:RegistroAlta><sum1:IDVersion>1.0</sum1:IDVersion><sum1:IDFactura><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000165</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>04-07-2026</sum1:FechaExpedicionFactura></sum1:IDFactura><sum1:NombreRazonEmisor>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazonEmisor><sum1:TipoFactura>F2</sum1:TipoFactura><sum1:DescripcionOperacion>Venta detalle al por menor</sum1:DescripcionOperacion><sum1:Desglose><sum1:DetalleDesglose><sum1:Impuesto>01</sum1:Impuesto><sum1:ClaveRegimen>01</sum1:ClaveRegimen><sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion><sum1:TipoImpositivo>21.00</sum1:TipoImpositivo><sum1:BaseImponibleOimporteNoSujeto>140.50</sum1:BaseImponibleOimporteNoSujeto><sum1:CuotaRepercutida>29.50</sum1:CuotaRepercutida></sum1:DetalleDesglose></sum1:Desglose><sum1:CuotaTotal>29.50</sum1:CuotaTotal><sum1:ImporteTotal>170.00</sum1:ImporteTotal><sum1:Encadenamiento><sum1:RegistroAnterior><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000164</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>25-06-2026</sum1:FechaExpedicionFactura><sum1:Huella>61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5</sum1:Huella></sum1:RegistroAnterior></sum1:Encadenamiento><sum1:SistemaInformatico><sum1:NombreRazon>Alejandro Laorden Hidalgo</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF><sum1:NombreSistemaInformatico>Factuzam</sum1:NombreSistemaInformatico><sum1:IdSistemaInformatico>FZ</sum1:IdSistemaInformatico><sum1:Version>1.0.15.202606260100.alpha</sum1:Version><sum1:NumeroInstalacion>FZ-20260627-402CE3A98F80</sum1:NumeroInstalacion><sum1:TipoUsoPosibleSoloVerifactu>N</sum1:TipoUsoPosibleSoloVerifactu><sum1:TipoUsoPosibleMultiOT>S</sum1:TipoUsoPosibleMultiOT><sum1:IndicadorMultiplesOT>S</sum1:IndicadorMultiplesOT></sum1:SistemaInformatico><sum1:FechaHoraHusoGenRegistro>2026-07-04T17:58:42+02:00</sum1:FechaHoraHusoGenRegistro><sum1:TipoHuella>01</sum1:TipoHuella><sum1:Huella>F764E83F0F9E83890C72C26B26BC8E610AAB2787D5E84A4C0C1956CE0EAC7E88</sum1:Huella></sum1:RegistroAlta></sum:RegistroFactura></sum:RegFactuSistemaFacturacion></soapenv:Body></soapenv:Envelope>','<?xml version=\"1.0\" encoding=\"UTF-8\"?><sum1:RegistroAlta xmlns:sum1=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\"><sum1:IDVersion>1.0</sum1:IDVersion><sum1:IDFactura><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000165</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>04-07-2026</sum1:FechaExpedicionFactura></sum1:IDFactura><sum1:NombreRazonEmisor>ALEJANDRO LAORDEN HIDALGO</sum1:NombreRazonEmisor><sum1:TipoFactura>F2</sum1:TipoFactura><sum1:DescripcionOperacion>Venta detalle al por menor</sum1:DescripcionOperacion><sum1:Desglose><sum1:DetalleDesglose><sum1:Impuesto>01</sum1:Impuesto><sum1:ClaveRegimen>01</sum1:ClaveRegimen><sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion><sum1:TipoImpositivo>21.00</sum1:TipoImpositivo><sum1:BaseImponibleOimporteNoSujeto>140.50</sum1:BaseImponibleOimporteNoSujeto><sum1:CuotaRepercutida>29.50</sum1:CuotaRepercutida></sum1:DetalleDesglose></sum1:Desglose><sum1:CuotaTotal>29.50</sum1:CuotaTotal><sum1:ImporteTotal>170.00</sum1:ImporteTotal><sum1:Encadenamiento><sum1:RegistroAnterior><sum1:IDEmisorFactura>45684134Q</sum1:IDEmisorFactura><sum1:NumSerieFactura>2026.A1000164</sum1:NumSerieFactura><sum1:FechaExpedicionFactura>25-06-2026</sum1:FechaExpedicionFactura><sum1:Huella>61C7E16633A1C78F8356CF06741305F98B9A2162E45DCAD724F538C0D57E52C5</sum1:Huella></sum1:RegistroAnterior></sum1:Encadenamiento><sum1:SistemaInformatico><sum1:NombreRazon>Alejandro Laorden Hidalgo</sum1:NombreRazon><sum1:NIF>45684134Q</sum1:NIF><sum1:NombreSistemaInformatico>Factuzam</sum1:NombreSistemaInformatico><sum1:IdSistemaInformatico>FZ</sum1:IdSistemaInformatico><sum1:Version>1.0.15.202606260100.alpha</sum1:Version><sum1:NumeroInstalacion>FZ-20260627-402CE3A98F80</sum1:NumeroInstalacion><sum1:TipoUsoPosibleSoloVerifactu>N</sum1:TipoUsoPosibleSoloVerifactu><sum1:TipoUsoPosibleMultiOT>S</sum1:TipoUsoPosibleMultiOT><sum1:IndicadorMultiplesOT>S</sum1:IndicadorMultiplesOT></sum1:SistemaInformatico><sum1:FechaHoraHusoGenRegistro>2026-07-04T17:58:42+02:00</sum1:FechaHoraHusoGenRegistro><sum1:TipoHuella>01</sum1:TipoHuella><sum1:Huella>F764E83F0F9E83890C72C26B26BC8E610AAB2787D5E84A4C0C1956CE0EAC7E88</sum1:Huella></sum1:RegistroAlta>','F764E83F0F9E83890C72C26B26BC8E610AAB2787D5E84A4C0C1956CE0EAC7E88','','','');
-
 
 -- Tabla: fza_facturas_lineas
 
@@ -7438,6 +7451,7 @@ CREATE TABLE `fza_facturas_lineas` (
   INDEX `IDX_FAC_LIN_FAMILIA` (`CODIGO_FAM_FACLIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 213 registros exportados
 
 -- Datos de fza_facturas_lineas
 
@@ -7654,7 +7668,6 @@ INSERT INTO `fza_facturas_lineas` (`NUMERO_FAC_FACLIN`, `SERIE_FAC_FACLIN`, `COD
 ('000166','2026.A1','012','0120','TESTSKU01','TESTSKU01/NEGRO/M',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'ESTANDAR','Uds.',2.000000,'ARTICULO PRUEBAS PMP SKU',NULL,NULL,'S',30.000000,0.000000,0.000000,24.793400,'N',21.000000,30.000000,60.000000,49.586800,'1','2026-07-04 16:53:17','2026-07-04 16:53:17','1','1','GEN','1','00000192','0000001112','','','','','','','','','','',0),
 ('000166','2026.A1','012','0150','TESTSKU01','TESTSKU01/AZUL/S',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'ESTANDAR','Uds.',1.000000,'ARTICULO PRUEBAS PMP SKU',NULL,NULL,'S',35.000000,0.000000,0.000000,28.925600,'N',21.000000,35.000000,35.000000,28.925600,'1','2026-07-04 16:53:17','2026-07-04 16:53:17','1','1','GEN','1','00000192','0000001114','','','','','','','','','','',0);
 
-
 -- Tabla: fza_facturas_pagos
 
 DROP TABLE IF EXISTS `fza_facturas_pagos`;
@@ -7677,6 +7690,7 @@ CREATE TABLE `fza_facturas_pagos` (
   INDEX `IDX_TIPO_PAGO` (`TIPO_FACPAG`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 6 registros exportados
 
 -- Datos de fza_facturas_pagos
 
@@ -7686,7 +7700,6 @@ INSERT INTO `fza_facturas_pagos` (`SERIE_FAC_FACPAG`, `NUMERO_FAC_FACPAG`, `LINE
 ('A1','000031',1,'EFECTIVO',50.000000,NULL,'Pago en efectivo','','2026-02-17 06:21:32','2026-02-17 05:21:32','2026-02-03 10:30:00','DEMO','DEMO'),
 ('A1','000032',1,'TARJETA',133.705000,NULL,'Pago con tarjeta','SANTANDER','2026-02-17 06:21:32','2026-02-17 05:21:32','2026-02-05 15:00:00','DEMO','DEMO'),
 ('A1','000034',1,'EFECTIVO',90.000000,NULL,'Pago en efectivo (vuelto 6,51€)','','2026-02-17 06:21:32','2026-02-17 05:21:32','2026-02-08 09:15:00','DEMO','DEMO');
-
 
 -- Tabla: fza_facturas_relaciones
 
@@ -7707,11 +7720,14 @@ CREATE TABLE `fza_facturas_relaciones` (
   UNIQUE INDEX `UQ_FACREL_FACTURA_TIPO` (`SERIE_FAC_FACREL`, `NUMERO_FAC_FACREL`, `TIPO_RELACION_FACREL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_facturas_relaciones` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_facturas_relaciones` ENABLE KEYS */;
+-- 1 registros exportados
 
 -- Datos de fza_facturas_relaciones
 
 INSERT INTO `fza_facturas_relaciones` (`ID_FACREL`, `SERIE_FAC_FACREL`, `NUMERO_FAC_FACREL`, `SERIE_FAC_ORIGEN_FACREL`, `NUMERO_FAC_ORIGEN_FACREL`, `TIPO_RELACION_FACREL`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES (1,'0','0','2026.A1','000153','RECTIFICA','2026-06-13 12:17:34','Administrador',NULL,NULL);
-
 
 -- Tabla: fza_familias_atributos
 
@@ -7725,6 +7741,7 @@ CREATE TABLE `fza_familias_atributos` (
   INDEX `IDX_FAM_ATR_ATR` (`CODIGO_PROP_ARTPROP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 37 registros exportados
 
 -- Datos de fza_familias_atributos
 
@@ -7766,7 +7783,6 @@ INSERT INTO `fza_familias_atributos` (`CODIGO_FAM_FAM`, `CODIGO_PROP_ARTPROP`, `
 ('ROPA','ORIGEN','N',8),
 ('ROPA','TEMPORADA','S',2);
 
-
 -- Tabla: fza_familias_atributos_defecto
 
 DROP TABLE IF EXISTS `fza_familias_atributos_defecto`;
@@ -7776,7 +7792,6 @@ CREATE TABLE `fza_familias_atributos_defecto` (
   `ESOBLIGATORIO_FAD` varchar(1) NULL DEFAULT 'N',
   PRIMARY KEY (`CODIGO_FAM_FAD`,`ID_VA_ATB_FAD`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_familias_claves_info_defecto
 
@@ -7789,7 +7804,6 @@ CREATE TABLE `fza_familias_claves_info_defecto` (
   `ESOBLIGATORIO_FCI` varchar(1) NULL DEFAULT 'N',
   PRIMARY KEY (`CODIGO_FAM_FCI`,`ID_VA_ATB_FCI`,`CLAVE_FCI`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_filtros_guardados
 
@@ -7812,6 +7826,10 @@ CREATE TABLE `fza_filtros_guardados` (
   UNIQUE INDEX `UQ_FILT_MTO_VISTA_NOMBRE_PROP` (`MTO_FILT`, `VISTA_FILT`, `NOMBRE_FILT`, `USUARIO_PROPIETARIO_FILT`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_filtros_guardados` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_filtros_guardados` ENABLE KEYS */;
+-- 6 registros exportados
 
 -- Datos de fza_filtros_guardados
 
@@ -7820,7 +7838,6 @@ INSERT INTO `fza_filtros_guardados` (`ID_FILT`, `MTO_FILT`, `VISTA_FILT`, `NOMBR
 (5,'frmMtoArticulos','cxGrdDBTabPrin','carteras','','VFBGMA5URmlsdGVyV3JhcHBlcgAORmlsdGVyLk9wdGlvbnMLEmZjb0Nhc2VJbnNlbnNpdGl2ZQAN\nRmlsdGVyLkFjdGl2ZQkPRmlsdGVyLkNyaXRlcmlhCrYEAAD7////AQkAAAAARFhVRk1UBgYAAAAl\nAGMAYQByAHQAJQAAAAAAJQAAAGMAeABnAHIAZABiAGMAbABtAG4ARwByAGQARABCAFQAYQBiAFAA\ncgBpAG4AQwBPAEQASQBHAE8AXwBBAFIAVABJAEMAVQBMAE8AEgYAAAAlAGMAYQByAHQAJQAAAAAA\nAAAAAABEWFVGTVQGBgAAACUAYwBhAHIAdAAlAAEAAAAlAAAAYwB4AGcAcgBkAGIAYwBsAG0AbgBH\nAHIAZABEAEIAVABhAGIAUAByAGkAbgBBAEMAVABJAFYATwBfAEEAUgBUAEkAQwBVAEwATwASBgAA\nACUAYwBhAHIAdAAlAAAAAAAAAAAAAERYVUZNVAYGAAAAJQBjAGEAcgB0ACUAAgAAACoAAABjAHgA\nZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAEQARQBTAEMAUgBJAFAAQwBJ\nAE8ATgBfAEEAUgBUAEkAQwBVAEwATwASBgAAACUAYwBhAHIAdAAlAAAAAAAAAAAAAERYVUZNVAYG\nAAAAJQBjAGEAcgB0ACUAAwAAAC0AAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEA\nYgBQAHIAaQBuAEMATwBEAEkARwBPAF8ARgBBAE0ASQBMAEkAQQBfAEEAUgBUAEkAQwBVAEwATwAS\nBgAAACUAYwBhAHIAdAAlAAAAAAAAAAAAAERYVUZNVAYGAAAAJQBjAGEAcgB0ACUABAAAACkAAABj\nAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAEQARQBTAEMAUgBJAFAA\nQwBJAE8ATgBfAEYAQQBNAEkATABJAEEAEgYAAAAlAGMAYQByAHQAJQAAAAAAAAAAAABEWFVGTVQG\nBgAAACUAYwBhAHIAdAAlAAUAAAAmAAAAYwB4AGcAcgBkAGIAYwBsAG0AbgBHAHIAZABEAEIAVABh\nAGIAUAByAGkAbgBUAEkAUABPAEkAVgBBAF8AQQBSAFQASQBDAFUATABPABIGAAAAJQBjAGEAcgB0\nACUAAAAAAAAAAAAARFhVRk1UBgYAAAAlAGMAYQByAHQAJQAGAAAAIwAAAGMAeABnAHIAZABiAGMA\nbABtAG4ARwByAGQARABCAFQAYQBiAFAAcgBpAG4AUgBFAEYAXwBQAFIATwBWAEUARQBEAE8AUgAS\nBgAAACUAYwBhAHIAdAAlAAAAAAAAAAAAAERYVUZNVAYGAAAAJQBjAGEAcgB0ACUABwAAACAAAABj\nAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAE4ATwBNAEIAUgBFAF8A\nUABSAFYAEgYAAAAlAGMAYQByAHQAJQAAAAAAAAAAAABEWFVGTVQGBgAAACUAYwBhAHIAdAAlAAgA\nAAAjAAAAYwB4AGcAcgBkAGIAYwBsAG0AbgBHAHIAZABEAEIAVABhAGIAUAByAGkAbgBUAEUATQBQ\nAE8AUgBBAEQAQQBfAEEAUgBUABIGAAAAJQBjAGEAcgB0ACUAAAAAAAAAAAAAAA==','Administrador','2026-07-02 07:48:41','2026-07-02 07:48:41','Administrador','Administrador'),
 (6,'frmMtoArticulos','cxGrdDBTabPrin','bolsos','','VFBGMA5URmlsdGVyV3JhcHBlcgAORmlsdGVyLk9wdGlvbnMLEmZjb0Nhc2VJbnNlbnNpdGl2ZQAN\nRmlsdGVyLkFjdGl2ZQkPRmlsdGVyLkNyaXRlcmlhCpIEAAD7////AQkAAAAARFhVRk1UBgUAAAAl\nAGIAbwBsACUAAAAAACUAAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIA\naQBuAEMATwBEAEkARwBPAF8AQQBSAFQASQBDAFUATABPABIFAAAAJQBiAG8AbAAlAAAAAAAAAAAA\nAERYVUZNVAYFAAAAJQBiAG8AbAAlAAEAAAAlAAAAYwB4AGcAcgBkAGIAYwBsAG0AbgBHAHIAZABE\nAEIAVABhAGIAUAByAGkAbgBBAEMAVABJAFYATwBfAEEAUgBUAEkAQwBVAEwATwASBQAAACUAYgBv\nAGwAJQAAAAAAAAAAAABEWFVGTVQGBQAAACUAYgBvAGwAJQACAAAAKgAAAGMAeABnAHIAZABiAGMA\nbABtAG4ARwByAGQARABCAFQAYQBiAFAAcgBpAG4ARABFAFMAQwBSAEkAUABDAEkATwBOAF8AQQBS\nAFQASQBDAFUATABPABIFAAAAJQBiAG8AbAAlAAAAAAAAAAAAAERYVUZNVAYFAAAAJQBiAG8AbAAl\nAAMAAAAtAAAAYwB4AGcAcgBkAGIAYwBsAG0AbgBHAHIAZABEAEIAVABhAGIAUAByAGkAbgBDAE8A\nRABJAEcATwBfAEYAQQBNAEkATABJAEEAXwBBAFIAVABJAEMAVQBMAE8AEgUAAAAlAGIAbwBsACUA\nAAAAAAAAAAAARFhVRk1UBgUAAAAlAGIAbwBsACUABAAAACkAAABjAHgAZwByAGQAYgBjAGwAbQBu\nAEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAEQARQBTAEMAUgBJAFAAQwBJAE8ATgBfAEYAQQBNAEkA\nTABJAEEAEgUAAAAlAGIAbwBsACUAAAAAAAAAAAAARFhVRk1UBgUAAAAlAGIAbwBsACUABQAAACYA\nAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIAaQBuAFQASQBQAE8ASQBW\nAEEAXwBBAFIAVABJAEMAVQBMAE8AEgUAAAAlAGIAbwBsACUAAAAAAAAAAAAARFhVRk1UBgUAAAAl\nAGIAbwBsACUABgAAACMAAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBUAGEAYgBQAHIA\naQBuAFIARQBGAF8AUABSAE8AVgBFAEUARABPAFIAEgUAAAAlAGIAbwBsACUAAAAAAAAAAAAARFhV\nRk1UBgUAAAAlAGIAbwBsACUABwAAACAAAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQAQgBU\nAGEAYgBQAHIAaQBuAE4ATwBNAEIAUgBFAF8AUABSAFYAEgUAAAAlAGIAbwBsACUAAAAAAAAAAAAA\nRFhVRk1UBgUAAAAlAGIAbwBsACUACAAAACMAAABjAHgAZwByAGQAYgBjAGwAbQBuAEcAcgBkAEQA\nQgBUAGEAYgBQAHIAaQBuAFQARQBNAFAATwBSAEEARABBAF8AQQBSAFQAEgUAAAAlAGIAbwBsACUA\nAAAAAAAAAAAAAA==','Administrador','2026-07-02 07:54:47','2026-07-02 07:54:47','Administrador','Administrador'),
 (7,'frmMtoMovimientosAlmacen','cxGrdDBTabPrin','testpmp','','VFBGMA5URmlsdGVyV3JhcHBlcgANRmlsdGVyLkFjdGl2ZQkPRmlsdGVyLkNyaXRlcmlhCowAAAD7\n////AAEAAAAARFhVRk1UAAgAAABUAEUAUwBUAFAATQBQADEACQAAACEAAABjAHgARwByAGQARABC\nAFQAYQBiAFAAcgBpAG4AQwBPAEQASQBHAE8AXwBBAFIAVABJAEMAVQBMAE8AXwBNAE8AVgASCAAA\nAFQARQBTAFQAUABNAFAAMQAAAAAAAAAAAAAA','Administrador','2026-07-03 16:58:11','2026-07-03 16:58:11','Administrador','Administrador');
-
 
 -- Tabla: fza_filtros_guardados_compartidos
 
@@ -7839,7 +7856,6 @@ CREATE TABLE `fza_filtros_guardados_compartidos` (
   INDEX `IDX_FILTC_TIPO_DESTINO_USUARIO_GRUPO` (`TIPO_DESTINO_FILTC`, `USUARIO_GRUPO_FILTC`),
   UNIQUE INDEX `UQ_FILTC_FILT_TIPO_DESTINO` (`ID_FILT_FILTC`, `TIPO_DESTINO_FILTC`, `USUARIO_GRUPO_FILTC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_formas_pago
 
@@ -7863,6 +7879,7 @@ CREATE TABLE `fza_formas_pago` (
   PRIMARY KEY (`CODIGO_FP_FP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 6 registros exportados
 
 -- Datos de fza_formas_pago
 
@@ -7872,7 +7889,6 @@ INSERT INTO `fza_formas_pago` (`CODIGO_FP_FP`, `ESACTIVO_FORMA_PAGO_FP`, `ORDEN_
 ('60DIAS','S',3,'RECIBO A 60 DIAS',1,60,0,'N','01','N','N','2023-12-09 17:25:00','2022-10-06 15:58:14','Administrador','Administrador'),
 ('CONTADO','S',1,'CONTADO',1,0,100,'N','01','S','S','2023-12-14 11:04:29','2021-05-14 18:08:58','Administrador','Administrador'),
 ('TRANSFERENCIA','S',3,'TRANSFERENCIA',1,0,100,'S','01','N','N','2023-12-14 11:04:13','2023-12-06 17:59:38','Administrador','Administrador');
-
 
 -- Tabla: fza_generadorprocesos
 
@@ -7888,6 +7904,7 @@ CREATE TABLE `fza_generadorprocesos` (
   PRIMARY KEY (`CODIGO_GENERADOR_PROCESO_GP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 83 registros exportados
 
 -- Datos de fza_generadorprocesos
 
@@ -7920,7 +7937,6 @@ INSERT INTO `fza_generadorprocesos` (`CODIGO_GENERADOR_PROCESO_GP`, `NOMBRE_GENE
 ('495','comprobar_scripts_aplicados','-- Batería de comprobación: ¿qué scripts de DESARROLLOS EN CURSO están\n-- aplicados en ESTA base de datos? Ejecutar conectado a la BBDD de\n-- trabajo (factuzam). Solo consulta INFORMATION_SCHEMA y catálogos:\n-- no modifica nada.\n--\n-- Salida: una fila por script, con \'>>> FALTA <<<\' arriba. Cada script\n-- de la lista es idempotente: el que falte se lanza tal cual, en el orden\n-- mostrado por orden_aplicacion.\n--\n-- Cubre los scripts de esquema detectables de las últimas tandas\n-- (jun/jul-2026). Los scripts solo-datos no se pueden detectar por\n-- esquema; ver la lista al final del fichero.\nSELECT t.orden AS orden_aplicacion,\n       t.script,\n       IF(t.aplicado = 1, \'OK\', \'>>> FALTA <<<\') AS estado,\n       t.objeto\n  FROM (\n    SELECT 10 AS orden, \'verifactu_relaciones.sql\' AS script,\n           \'tabla fza_facturas_relaciones\' AS objeto,\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_facturas_relaciones\')\n           AS aplicado\n    UNION ALL\n    SELECT 20, \'verifactu_rectificativas.sql\',\n           \'fza_facturas.SERIE_FAC_ABONO_FAC varchar(20)\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_facturas\'\n                     AND COLUMN_NAME = \'SERIE_FAC_ABONO_FAC\'\n                     AND CHARACTER_MAXIMUM_LENGTH >= 20)\n    UNION ALL\n    SELECT 30, \'verifactu_menu.sql\',\n           \'fza_winforms VerifactuCola + VerifactuLog\',\n           (SELECT COUNT(*) FROM fza_winforms\n             WHERE CALL_WINF IN (\'VerifactuCola\', \'VerifactuLog\')) = 2\n    UNION ALL\n    SELECT 40, \'verifactu_cola.sql\',\n           \'tabla fza_verifactu_cola\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_verifactu_cola\')\n    UNION ALL\n    SELECT 50, \'verifactu_cadena.sql\',\n           \'tabla fza_verifactu_cadena\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_verifactu_cadena\')\n    UNION ALL\n    SELECT 60, \'vi_articulos_temporada_nivel_articulo.sql\',\n           \'vi_articulos.TEMPORADA_ART (vista relanzable)\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'vi_articulos\'\n                     AND COLUMN_NAME = \'TEMPORADA_ART\')\n    UNION ALL\n    SELECT 70, \'proveedores_compras_defectos.sql\',\n           \'fza_proveedores.PORCENTAJE_MARGEN_PRV + kits\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_proveedores\'\n                     AND COLUMN_NAME = \'PORCENTAJE_MARGEN_PRV\')\n           AND EXISTS(SELECT 1 FROM information_schema.TABLES\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_proveedores_kits\')\n    UNION ALL\n    SELECT 80, \'facturas_compra.sql\',\n           \'tabla fza_facturas_compra\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_facturas_compra\')\n    UNION ALL\n    SELECT 85, \'facturas_compra_temporada.sql\',\n           \'fza_facturas_compra.ID_PV_TEMPORADA_FACC\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_facturas_compra\'\n                     AND COLUMN_NAME = \'ID_PV_TEMPORADA_FACC\')\n    UNION ALL\n    SELECT 87, \'vi_facturas_compra_print.sql\',\n           \'vista vi_facturas_compra_cab_print\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'vi_facturas_compra_cab_print\')\n    UNION ALL\n    SELECT 90, \'efectos_remesas_compra.sql\',\n           \'fza_efectos_compra + remesas + vistas actualizadas\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_efectos_compra\')\n           AND EXISTS(SELECT 1 FROM information_schema.TABLES\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_tipos_efecto\')\n           AND EXISTS(SELECT 1 FROM information_schema.TABLES\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_remesas_compra\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_efectos_compra\'\n                         AND COLUMN_NAME = \'REFERENCIA_DOCUMENTO_EFEC\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_efectos_compra\'\n                         AND COLUMN_NAME = \'CODIGO_EMPBAN_EFEC\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_efectos_compra\'\n                         AND COLUMN_NAME = \'DESCRIPCION_TEFE_VIEW_EFEC\')\n           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES\n                       WHERE ROUTINE_SCHEMA = DATABASE()\n                         AND ROUTINE_NAME = \'PRC_EFEC_GENERAR_DESDE_FACTURA\')\n    UNION ALL\n    SELECT 91, \'efectos_remesas_venta.sql\',\n           \'fza_efectos_venta + remesas de cobro + vistas/SP\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_efectos_venta\')\n           AND EXISTS(SELECT 1 FROM information_schema.TABLES\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_remesas_venta\')\n           AND EXISTS(SELECT 1 FROM information_schema.TABLES\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_efectos_venta\')\n           AND EXISTS(SELECT 1 FROM information_schema.TABLES\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_remesas_venta\')\n           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES\n                       WHERE ROUTINE_SCHEMA = DATABASE()\n                         AND ROUTINE_NAME = \'PRC_EFV_GENERAR_DESDE_FACTURA\')\n           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES\n                       WHERE ROUTINE_SCHEMA = DATABASE()\n                         AND ROUTINE_NAME = \'PRC_REMV_CREAR\')\n    UNION ALL\n    SELECT 92, \'bancos_catalogo.sql\',\n           \'tabla fza_bancos\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_bancos\')\n    UNION ALL\n    SELECT 94, \'bancos_empresa.sql\',\n           \'fza_empresas_bancos + vi_empresas_bancos + columnas de banco\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_empresas_bancos\')\n           AND EXISTS(SELECT 1 FROM information_schema.TABLES\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_empresas_bancos\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_efectos_compra\'\n                         AND COLUMN_NAME = \'CODIGO_EMPBAN_EFEC\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_efectos_compra\'\n                         AND COLUMN_NAME = \'IBAN_EMP_EFEC\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_recibos\'\n                         AND COLUMN_NAME = \'CODIGO_EMPBAN_REC\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_recibos\'\n                         AND COLUMN_NAME = \'IBAN_EMP_REC\')\n    UNION ALL\n    SELECT 96, \'clientes_banco_cobro_defecto.sql\',\n           \'fza_clientes.CODIGO_EMPBAN_CLI\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_clientes\'\n                     AND COLUMN_NAME = \'CODIGO_EMPBAN_CLI\')\n    UNION ALL\n    SELECT 98, \'proveedores_pagos_defecto.sql\',\n           \'fza_proveedores.CODIGO_FP_PRV / CODIGO_EMPBAN_PRV\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_proveedores\'\n                     AND COLUMN_NAME = \'CODIGO_FP_PRV\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_proveedores\'\n                         AND COLUMN_NAME = \'CODIGO_EMPBAN_PRV\')\n    UNION ALL\n    SELECT 100, \'albaran_compra_deposito.sql\',\n           \'fza_albaranes_compra.ESDEPOSITO_ALBC\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_albaranes_compra\'\n                     AND COLUMN_NAME = \'ESDEPOSITO_ALBC\')\n    UNION ALL\n    SELECT 110, \'movimientos_ventas_articulos.sql\',\n           \'SP PRC_GET_MOV_VENTAS_ART\',\n           EXISTS(SELECT 1 FROM information_schema.ROUTINES\n                   WHERE ROUTINE_SCHEMA = DATABASE()\n                     AND ROUTINE_NAME = \'PRC_GET_MOV_VENTAS_ART\')\n    UNION ALL\n    SELECT 120, \'indices_busqueda_skus.sql\',\n           \'índice fza_codigos_barras.IDX_BARRAS_CB\',\n           EXISTS(SELECT 1 FROM information_schema.STATISTICS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_codigos_barras\'\n                     AND INDEX_NAME = \'IDX_BARRAS_CB\')\n    UNION ALL\n    SELECT 130, \'vi_devoluciones_compra_print.sql\',\n           \'vista vi_devoluciones_compra_cab_print\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'vi_devoluciones_compra_cab_print\')\n    UNION ALL\n    SELECT 140, \'vi_articulos_nombre_proveedor.sql\',\n           \'vi_articulos.RAZON_SOCIAL_PRV (vista relanzable)\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'vi_articulos\'\n                     AND COLUMN_NAME = \'RAZON_SOCIAL_PRV\')\n    UNION ALL\n    SELECT 150, \'propiedades_por_unidad.sql\',\n           \'fza_articulos_propiedades.CODIGO_UNIDAD_ARTPROP\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_articulos_propiedades\'\n                     AND COLUMN_NAME = \'CODIGO_UNIDAD_ARTPROP\')\n    UNION ALL\n    SELECT 160, \'devoluciones_compra.sql\',\n           \'tabla fza_devoluciones_compra\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_devoluciones_compra\')\n    UNION ALL\n    SELECT 170, \'balance_almacen_tallas.sql\',\n           \'SP PRC_GET_BALANCE_ALMACEN_TALLAS\',\n           EXISTS(SELECT 1 FROM information_schema.ROUTINES\n                   WHERE ROUTINE_SCHEMA = DATABASE()\n                     AND ROUTINE_NAME = \'PRC_GET_BALANCE_ALMACEN_TALLAS\')\n    UNION ALL\n    SELECT 180, \'balance_almacen_sin_tallas.sql\',\n           \'SP PRC_GET_BALANCE_ALMACEN_SIN_TALLAS\',\n           EXISTS(SELECT 1 FROM information_schema.ROUTINES\n                   WHERE ROUTINE_SCHEMA = DATABASE()\n                     AND ROUTINE_NAME =\n                         \'PRC_GET_BALANCE_ALMACEN_SIN_TALLAS\')\n    UNION ALL\n    SELECT 190, \'columnas_visibles_infgui.sql\',\n           \'fza_informes_guias.COLUMNAS_VISIBLES_INFGUI\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_informes_guias\'\n                     AND COLUMN_NAME = \'COLUMNAS_VISIBLES_INFGUI\')\n    UNION ALL\n    SELECT 200, \'widen_codigo_infgui.sql\',\n           \'fza_informes_guias.CODIGO_INFGUI varchar(120)\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_informes_guias\'\n                     AND COLUMN_NAME = \'CODIGO_INFGUI\'\n                     AND CHARACTER_MAXIMUM_LENGTH >= 120)\n    UNION ALL\n    SELECT 210, \'fza_informes_guias_drop_idx_redundante.sql\',\n           \'sin índice IDX_INFGUI_INFORME (debe NO existir)\',\n           NOT EXISTS(SELECT 1 FROM information_schema.STATISTICS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_informes_guias\'\n                         AND INDEX_NAME = \'IDX_INFGUI_INFORME\')\n    UNION ALL\n    SELECT 220, \'vistas_facturas_por_tipo.sql\',\n           \'vista vi_facturas_simplificadas\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'vi_facturas_simplificadas\')\n    UNION ALL\n    SELECT 230, \'factura_mueve_stock.sql\',\n           \'fza_facturas.ESMUEVE_STOCK_FAC\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_facturas\'\n                     AND COLUMN_NAME = \'ESMUEVE_STOCK_FAC\')\n    UNION ALL\n    SELECT 240, \'widen_codigo_cli.sql\',\n           \'fza_clientes.CODIGO_CLI_CLI varchar(20)\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_clientes\'\n                     AND COLUMN_NAME = \'CODIGO_CLI_CLI\'\n                     AND CHARACTER_MAXIMUM_LENGTH >= 20)\n    UNION ALL\n    SELECT 250, \'widen_linea_invlin.sql\',\n           \'fza_inventarios_lineas.LINEA_INVLIN varchar(8)\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_inventarios_lineas\'\n                     AND COLUMN_NAME = \'LINEA_INVLIN\'\n                     AND CHARACTER_MAXIMUM_LENGTH >= 8)\n    UNION ALL\n    SELECT 260, \'empleados.sql\',\n           \'tabla fza_empleados\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_empleados\')\n    UNION ALL\n    SELECT 270, \'empleados_retirar_columnas_usuarios.sql\',\n           \'fza_usuarios sin CODIGO_EMPLEADO_USU (debe NO existir)\',\n           NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_usuarios\'\n                         AND COLUMN_NAME = \'CODIGO_EMPLEADO_USU\')\n    UNION ALL\n    SELECT 275, \'empleados_ampliar_ocemp.sql\',\n           \'fza_empleados con datos legacy de ocemp\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_empleados\'\n                     AND COLUMN_NAME = \'BIC_EMPL\')\n    UNION ALL\n    SELECT 278, \'recuento_inventarios_factuzam.sql\',\n           \'fza_inventarios recuento remoto + tabla INVREC\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_inventarios_recuentos\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_inventarios\'\n                         AND COLUMN_NAME = \'ESRECUENTO_REMOTO_INV\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_inventarios\'\n                         AND COLUMN_NAME = \'INSTANTE_ENVIO_RECUENTO_INV\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_inventarios\'\n                         AND COLUMN_NAME = \'INSTANTE_RECOGIDA_RECUENTO_INV\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_inventarios\'\n                         AND COLUMN_NAME = \'ID_RECUENTO_REMOTO_INV\')\n    UNION ALL\n    SELECT 280, \'sku_descripcion_color.sql\',\n           \'fza_articulos_atributos_basicos.DESCRIPCION_AAB + vista\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_articulos_atributos_basicos\'\n                     AND COLUMN_NAME = \'DESCRIPCION_AAB\')\n    UNION ALL\n    SELECT 290, \'documentos_trabajo.sql\',\n           \'tablas documentos de trabajo + menú\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_documentos_trabajo\')\n           AND EXISTS(SELECT 1 FROM information_schema.TABLES\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_documentos_trabajo_lineas\')\n           AND EXISTS(SELECT 1 FROM information_schema.TABLES\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME =\n                             \'fza_documentos_trabajo_compartidos\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_documentos_trabajo\'\n                         AND COLUMN_NAME = \'TITULO_DTR\')\n           AND EXISTS(SELECT 1 FROM fza_winforms\n                       WHERE CALL_WINF = \'DocumentosTrabajo\')\n    UNION ALL\n    SELECT 300, \'compras_sesiones_totales_iva.sql\',\n           \'sesiones compra con desglose IVA y total líquido\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_empresas\'\n                     AND COLUMN_NAME = \'ESIVA_RECARGO_COMPRAS_EMP\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_proveedores\'\n                         AND COLUMN_NAME = \'ESVARIOS_TIPOS_IVA_PRV\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_compras_sesiones\'\n                         AND COLUMN_NAME = \'CODIGO_IVA_SES\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_compras_sesiones\'\n                         AND COLUMN_NAME = \'ESIVA_RECARGO_COMPRAS_SES\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_compras_sesiones\'\n                         AND COLUMN_NAME = \'TOTAL_LIQUIDO_SES\')\n    UNION ALL\n    SELECT 310, \'vi_compras_sesiones_cab_print_formato.sql\',\n           \'vi_compras_sesiones_cab_print.ESFORMATO_DISTRIBUIDO_SES\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'vi_compras_sesiones_cab_print\'\n                     AND COLUMN_NAME = \'ESFORMATO_DISTRIBUIDO_SES\')\n    UNION ALL\n    SELECT 320, \'vi_albaranes_compra_print.sql\',\n           \'vistas print albaranes compra cab/lin/guias\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'vi_albaranes_compra_cab_print\')\n           AND EXISTS(SELECT 1 FROM information_schema.TABLES\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_albaranes_compra_lin_print\')\n           AND EXISTS(SELECT 1 FROM information_schema.TABLES\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_albaranes_compra_guias_print\')\n    UNION ALL\n    SELECT 330, \'vi_empresas_recargo_compras.sql\',\n           \'vi_empresas.ESIVA_RECARGO_COMPRAS_EMP\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_empresas\'\n                     AND COLUMN_NAME = \'ESIVA_RECARGO_COMPRAS_EMP\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_empresas\'\n                         AND COLUMN_NAME = \'ESIVA_RECARGO_COMPRAS_EMP\')\n    UNION ALL\n    SELECT 340, \'formato_documentos_empresa.sql\',\n           \'FORMATO_DOCUMENTO_EMP + DOCUMENTO_FORMATO en prints\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_empresas\'\n                     AND COLUMN_NAME = \'FORMATO_DOCUMENTO_EMP\')\n           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES\n                       WHERE ROUTINE_SCHEMA = DATABASE()\n                         AND ROUTINE_NAME = \'PRC_FORMATO_DOCUMENTO\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_facturas_print\'\n                         AND COLUMN_NAME = \'DOCUMENTO_FORMATO\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_compras_sesiones_cab_print\'\n                         AND COLUMN_NAME = \'DOCUMENTO_FORMATO\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_albaranes_compra_cab_print\'\n                         AND COLUMN_NAME = \'DOCUMENTO_FORMATO\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_devoluciones_compra_cab_print\'\n                         AND COLUMN_NAME = \'DOCUMENTO_FORMATO\')\n    UNION ALL\n    SELECT 350, \'sepa_remesas_venta_datos.sql\',\n           \'datos SEPA en bancos, clientes y remesas venta\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_empresas_bancos\'\n                     AND COLUMN_NAME = \'CODIGO_ACREEDOR_SEPA_EMPBAN\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_clientes\'\n                         AND COLUMN_NAME = \'ID_MANDATO_SEPA_CLI\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_clientes\'\n                         AND COLUMN_NAME = \'FECHA_FIRMA_MANDATO_SEPA_CLI\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_remesas_venta\'\n                         AND COLUMN_NAME = \'TIPO_SECUENCIA_SEPA_REMV\')\n    UNION ALL\n    SELECT 360, \'vi_caja_busqueda_unificada_colaciones.sql\',\n           \'vi_caja_busqueda_unificada con MODELO_PROV y colación fija\',\n           EXISTS(SELECT 1 FROM information_schema.VIEWS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'vi_caja_busqueda_unificada\'\n                     AND UPPER(VIEW_DEFINITION) LIKE \'%MODELO_PROV%\'\n                     AND UPPER(VIEW_DEFINITION) LIKE \'%REF_PROVEEDOR_AP%\'\n                     AND VIEW_DEFINITION LIKE \'%utf8mb4_spanish_ci%\')\n    UNION ALL\n    SELECT 370, \'verifactu_numero_instalacion_empresa.sql\',\n           \'datos instalación Verifactu en empresa\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_empresas\'\n                     AND COLUMN_NAME = \'NUMERO_INSTALACION_EMP\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_empresas\'\n                         AND COLUMN_NAME = \'VERSION_INSTALACION_EMP\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_empresas\'\n                         AND COLUMN_NAME = \'CODIGO_SIF_INSTALACION_EMP\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_empresas\'\n                         AND COLUMN_NAME = \'INSTANTE_INSTALACION_EMP\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_empresas\'\n                         AND COLUMN_NAME = \'NUMERO_INSTALACION_EMP\')\n    UNION ALL\n    SELECT 380, \'compras_sesiones_forma_pago.sql\',\n           \'fza_compras_sesiones.FORMA_PAGO_SES + vista\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_compras_sesiones\'\n                     AND COLUMN_NAME = \'FORMA_PAGO_SES\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_compras_sesiones\'\n                         AND COLUMN_NAME = \'FORMA_PAGO_SES\')\n    UNION ALL\n    SELECT 390, \'facturas_lineas_indice_movimiento.sql\',\n           \'índice fza_facturas_lineas.IDX_FACLIN_NUMMOV\',\n           EXISTS(SELECT 1 FROM information_schema.STATISTICS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_facturas_lineas\'\n                     AND INDEX_NAME = \'IDX_FACLIN_NUMMOV\')\n    UNION ALL\n    SELECT 400, \'proveedores_iva_exento_intracomunitario.sql\',\n           \'IVA exento intracomunitario en compras\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_proveedores\'\n                     AND COLUMN_NAME = \'ESIVA_EXENTO_INTRACOMUNITARIO_PRV\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_compras_sesiones\'\n                         AND COLUMN_NAME =\n                             \'ESIVA_EXENTO_INTRACOMUNITARIO_SES\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_pedidos_compra\'\n                         AND COLUMN_NAME =\n                             \'ESIVA_EXENTO_INTRACOMUNITARIO_PEDC\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_albaranes_compra\'\n                         AND COLUMN_NAME =\n                             \'ESIVA_EXENTO_INTRACOMUNITARIO_ALBC\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_facturas_compra\'\n                         AND COLUMN_NAME =\n                             \'ESIVA_EXENTO_INTRACOMUNITARIO_FACC\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_devoluciones_compra\'\n                         AND COLUMN_NAME =\n                             \'ESIVA_EXENTO_INTRACOMUNITARIO_DEVC\')\n    UNION ALL\n    SELECT 410, \'descuentos_globales_compra.sql\',\n           \'descuentos globales compra + SP factura compra\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_compras_sesiones\'\n                     AND COLUMN_NAME = \'PORCENTAJE_DTO_COMERCIAL_SES\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_pedidos_compra\'\n                         AND COLUMN_NAME = \'TOTAL_DTO_FINANCIERO_PEDC\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_albaranes_compra\'\n                         AND COLUMN_NAME = \'TOTAL_DTO_FINANCIERO_ALBC\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_devoluciones_compra\'\n                         AND COLUMN_NAME = \'TOTAL_DTO_FINANCIERO_DEVC\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_facturas_compra\'\n                         AND COLUMN_NAME = \'TOTAL_DTO_FINANCIERO_FACC\')\n           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES\n                       WHERE ROUTINE_SCHEMA = DATABASE()\n                         AND ROUTINE_NAME = \'PRC_FACC_RECALCULAR_TOTALES\')\n           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES\n                       WHERE ROUTINE_SCHEMA = DATABASE()\n                         AND ROUTINE_NAME =\n                             \'PRC_FACC_ACTUALIZAR_DTOS_ALBARANES\')\n           AND EXISTS(SELECT 1 FROM information_schema.ROUTINES\n                       WHERE ROUTINE_SCHEMA = DATABASE()\n                         AND ROUTINE_NAME = \'PRC_FACC_FACTURAR_ALBARAN\')\n    UNION ALL\n    SELECT 420, \'recepcion_tope_compras.sql\',\n           \'fecha tope recepción en sesiones/pedidos y vistas\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_compras_sesiones\'\n                     AND COLUMN_NAME = \'FECHA_TOPE_RECEPCION_SES\')\n           AND EXISTS(SELECT 1 FROM information_schema.STATISTICS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_compras_sesiones\'\n                         AND INDEX_NAME = \'IDX_SES_FECHA_TOPE_RECEPCION\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_pedidos_compra\'\n                         AND COLUMN_NAME = \'FECHA_TOPE_RECEPCION_PEDC\')\n           AND EXISTS(SELECT 1 FROM information_schema.STATISTICS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_pedidos_compra\'\n                         AND INDEX_NAME = \'IDX_PEDC_FECHA_TOPE_RECEPCION\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_pedidos_compra\'\n                         AND COLUMN_NAME =\n                             \'CANTIDAD_PENDIENTE_RECEPCION_PEDC\')\n           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_albaranes_compra\'\n                         AND COLUMN_NAME = \'FECHA_TOPE_RECEPCION_ALBC\')\n    UNION ALL\n    SELECT 430, \'quitar_esdefault_tar.sql\',\n           \'fza_tarifas y vistas sin ESDEFAULT_TAR\',\n           NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'fza_tarifas\'\n                         AND COLUMN_NAME = \'ESDEFAULT_TAR\')\n           AND NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                           WHERE TABLE_SCHEMA = DATABASE()\n                             AND TABLE_NAME = \'vi_tarifas\'\n                             AND COLUMN_NAME = \'ESDEFAULT_TAR\')\n           AND NOT EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                           WHERE TABLE_SCHEMA = DATABASE()\n                             AND TABLE_NAME = \'vi_articulos_tarifas\'\n                             AND COLUMN_NAME = \'ESDEFAULT_TAR\')\n           AND EXISTS(SELECT 1 FROM information_schema.TABLES\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME = \'vi_tarifas\')\n    UNION ALL\n    SELECT 440, \'vi_art_busquedas_ref_proveedor.sql\',\n           \'vi_art_busquedas.REF_PROVEEDOR\',\n           EXISTS(SELECT 1 FROM information_schema.COLUMNS\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'vi_art_busquedas\'\n                     AND COLUMN_NAME = \'REF_PROVEEDOR\')\n    UNION ALL\n    SELECT 450, \'filtros_guardados.sql\',\n           \'tablas fza_filtros_guardados / compartidos\',\n           EXISTS(SELECT 1 FROM information_schema.TABLES\n                   WHERE TABLE_SCHEMA = DATABASE()\n                     AND TABLE_NAME = \'fza_filtros_guardados\')\n           AND EXISTS(SELECT 1 FROM information_schema.TABLES\n                       WHERE TABLE_SCHEMA = DATABASE()\n                         AND TABLE_NAME =\n                             \'fza_filtros_guardados_compartidos\')\n  ) t\n ORDER BY t.aplicado, t.orden;\n-- Scripts solo-datos, no detectables por esquema. Son idempotentes:\n-- si hay duda, relanzarlos no hace daño.\n--   reubicar_shortcuts_menu.sql\n--   reubicar_shortcuts_facturas.sql\n--   migracion_shortcuts_caja_ctrl_shift.sql\n--   propiedades_shortcut_ctrl_alt_y.sql\n--   familias_asignar_codigo_padre.sql\n--   empresas_series_venta.sql\n--   clientes_deuda_actual.sql\n--   tallas_alinear_skus_conjunto.sql\n--   depositos_netear_devoluciones.sql (reemplaza SP existente)\n--   pedidos_albaranes_compra_pivote_default_horizontal.sql\n--   albc_pivote_tarifa.sql\n--   tarifas_limpiar_porcentaje_dto_basura.sql\n--   compras_sesiones_recalcular_totales.sql\n--   facturas_simplificadas_cabecera_empresa.sql\n','2026-07-05 04:42:28','2026-07-05 04:42:28','Administrador','Administrador'),
 ('496','recepcion_tope_compras','-- ============================================================================\n-- Compras: fecha tope de recepcion y resumenes de lista\n--\n-- Anade fecha limite de recepcion en sesiones y pedidos de compra. Reexpone\n-- las vistas de pedidos y albaranes con temporada, fechas y totales agregados\n-- para que las listas puedan pintar vencidos pendientes de recibir.\n--\n-- Idempotente: cada DDL comprueba INFORMATION_SCHEMA antes de aplicar.\n-- ============================================================================\n\nSET @col_exists := (\n  SELECT COUNT(*)\n    FROM INFORMATION_SCHEMA.COLUMNS\n   WHERE TABLE_SCHEMA = DATABASE()\n     AND TABLE_NAME = \'fza_compras_sesiones\'\n     AND COLUMN_NAME = \'FECHA_TOPE_RECEPCION_SES\'\n);\n\nSET @ddl := IF(@col_exists = 0,\n  \'ALTER TABLE `fza_compras_sesiones`\n     ADD COLUMN `FECHA_TOPE_RECEPCION_SES` date NULL DEFAULT NULL\n       COMMENT \'\'Fecha limite prevista para recibir la mercancia\'\'\n       AFTER `FECHA_SES`\',\n  \'SELECT 1\');\nPREPARE stmt FROM @ddl;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;\n\nSET @idx_exists := (\n  SELECT COUNT(*)\n    FROM INFORMATION_SCHEMA.STATISTICS\n   WHERE TABLE_SCHEMA = DATABASE()\n     AND TABLE_NAME = \'fza_compras_sesiones\'\n     AND INDEX_NAME = \'IDX_SES_FECHA_TOPE_RECEPCION\'\n);\n\nSET @ddl := IF(@idx_exists = 0,\n  \'ALTER TABLE `fza_compras_sesiones`\n     ADD INDEX `IDX_SES_FECHA_TOPE_RECEPCION`\n       (`FECHA_TOPE_RECEPCION_SES`)\',\n  \'SELECT 1\');\nPREPARE stmt FROM @ddl;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;\n\nSET @col_exists := (\n  SELECT COUNT(*)\n    FROM INFORMATION_SCHEMA.COLUMNS\n   WHERE TABLE_SCHEMA = DATABASE()\n     AND TABLE_NAME = \'fza_pedidos_compra\'\n     AND COLUMN_NAME = \'FECHA_TOPE_RECEPCION_PEDC\'\n);\n\nSET @ddl := IF(@col_exists = 0,\n  \'ALTER TABLE `fza_pedidos_compra`\n     ADD COLUMN `FECHA_TOPE_RECEPCION_PEDC` date NULL DEFAULT NULL\n       COMMENT \'\'Fecha limite prevista para recibir la mercancia\'\'\n       AFTER `FECHA_PREVISTA_PEDC`\',\n  \'SELECT 1\');\nPREPARE stmt FROM @ddl;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;\n\nSET @idx_exists := (\n  SELECT COUNT(*)\n    FROM INFORMATION_SCHEMA.STATISTICS\n   WHERE TABLE_SCHEMA = DATABASE()\n     AND TABLE_NAME = \'fza_pedidos_compra\'\n     AND INDEX_NAME = \'IDX_PEDC_FECHA_TOPE_RECEPCION\'\n);\n\nSET @ddl := IF(@idx_exists = 0,\n  \'ALTER TABLE `fza_pedidos_compra`\n     ADD INDEX `IDX_PEDC_FECHA_TOPE_RECEPCION`\n       (`FECHA_TOPE_RECEPCION_PEDC`)\',\n  \'SELECT 1\');\nPREPARE stmt FROM @ddl;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;\n\nCREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_pedidos_compra` AS\nSELECT p.*,\n       prv.`NOMBRE_PRV` AS `NOMBRE_PRV_PEDC`,\n       emp.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMPRESA_VIEW_PEDC`,\n       t.`PV` AS `TEMPORADA_PEDC`,\n       p.`FECHA_PEDC` AS `FECHA_REALIZACION_PEDC`,\n       p.`FECHA_PREVISTA_PEDC` AS `FECHA_EFECTO_STOCK_PEDC`,\n       COALESCE(r.`CANTIDAD_PEDIDA_PEDC`, 0) AS `CANTIDAD_PEDIDA_PEDC`,\n       COALESCE(r.`CANTIDAD_PEDIDA_PEDC`, 0) AS `TOTAL_PRENDAS_PEDC`,\n       COALESCE(r.`CANTIDAD_RECIBIDA_PEDC`, 0) AS `CANTIDAD_RECIBIDA_PEDC`,\n       GREATEST(COALESCE(r.`CANTIDAD_PEDIDA_PEDC`, 0) -\n                COALESCE(r.`CANTIDAD_RECIBIDA_PEDC`, 0), 0)\n          AS `CANTIDAD_PENDIENTE_RECEPCION_PEDC`,\n       COALESCE(r.`TOTAL_LINEAS_PEDC`, 0) AS `TOTAL_LINEAS_PEDC`\n  FROM `fza_pedidos_compra` p\n  LEFT JOIN `fza_proveedores` prv\n    ON prv.`CODIGO_PRV_PRV` = p.`CODIGO_PRV_PEDC`\n  LEFT JOIN `fza_empresas` emp\n    ON emp.`CODIGO_EMP_EMP` = p.`CODIGO_EMP_PEDC`\n  LEFT JOIN `fza_propiedades_valores` t\n    ON t.`ID_PV_ARTPROP` = p.`ID_PV_TEMPORADA_PEDC`\n   AND t.`ID_PROP_PV` = \'TEMPORADA\'\n  LEFT JOIN (\n    SELECT l.`SERIE_PEDC_PEDCLIN`,\n           l.`NUMERO_PEDC_PEDCLIN`,\n           COALESCE(SUM(l.`CANTIDAD_PEDCLIN`), 0)\n              AS `CANTIDAD_PEDIDA_PEDC`,\n           COALESCE(SUM(l.`CANTIDAD_RECIBIDA_PEDCLIN`), 0)\n              AS `CANTIDAD_RECIBIDA_PEDC`,\n           COALESCE(SUM(l.`TOTAL_PEDCLIN`), 0)\n              AS `TOTAL_LINEAS_PEDC`\n      FROM `fza_pedidos_compra_lineas` l\n     GROUP BY l.`SERIE_PEDC_PEDCLIN`, l.`NUMERO_PEDC_PEDCLIN`\n  ) r\n    ON r.`SERIE_PEDC_PEDCLIN` = p.`SERIE_PEDC`\n   AND r.`NUMERO_PEDC_PEDCLIN` = p.`NUMERO_PEDC`;\n\nCREATE OR REPLACE ALGORITHM=UNDEFINED VIEW `vi_albaranes_compra` AS\nSELECT a.*,\n       prv.`NOMBRE_PRV` AS `NOMBRE_PRV_ALBC`,\n       emp.`RAZON_SOCIAL_EMP` AS `RAZON_SOCIAL_EMPRESA_VIEW_ALBC`,\n       tp.`PV` AS `TEMPORADA_ALBC`,\n       a.`FECHA_ALBC` AS `FECHA_REALIZACION_ALBC`,\n       a.`FECHA_ALBC` AS `FECHA_EFECTO_STOCK_ALBC`,\n       p.`FECHA_TOPE_RECEPCION_PEDC` AS `FECHA_TOPE_RECEPCION_ALBC`,\n       COALESCE(r.`TOTAL_PRENDAS_ALBC`, 0) AS `TOTAL_PRENDAS_ALBC`,\n       COALESCE(r.`TOTAL_LINEAS_ALBC`, 0) AS `TOTAL_LINEAS_ALBC`\n  FROM `fza_albaranes_compra` a\n  LEFT JOIN `fza_proveedores` prv\n    ON prv.`CODIGO_PRV_PRV` = a.`CODIGO_PRV_ALBC`\n  LEFT JOIN `fza_empresas` emp\n    ON emp.`CODIGO_EMP_EMP` = a.`CODIGO_EMP_ALBC`\n  LEFT JOIN `fza_pedidos_compra` p\n    ON p.`SERIE_PEDC` = a.`SERIE_PED_ALBC`\n   AND p.`NUMERO_PEDC` = a.`NUMERO_PED_ALBC`\n  LEFT JOIN `fza_propiedades_valores` tp\n    ON tp.`ID_PV_ARTPROP` = p.`ID_PV_TEMPORADA_PEDC`\n   AND tp.`ID_PROP_PV` = \'TEMPORADA\'\n  LEFT JOIN (\n    SELECT l.`SERIE_ALBC_ALBCLIN`,\n           l.`NUMERO_ALBC_ALBCLIN`,\n           COALESCE(SUM(COALESCE(l.`TOTAL_UNIDADES_ALBCLIN`,\n                                 l.`CANTIDAD_ALBCLIN`, 0)), 0)\n              AS `TOTAL_PRENDAS_ALBC`,\n           COALESCE(SUM(l.`TOTAL_ALBCLIN`), 0)\n              AS `TOTAL_LINEAS_ALBC`\n      FROM `fza_albaranes_compra_lineas` l\n     GROUP BY l.`SERIE_ALBC_ALBCLIN`, l.`NUMERO_ALBC_ALBCLIN`\n  ) r\n    ON r.`SERIE_ALBC_ALBCLIN` = a.`SERIE_ALBC`\n   AND r.`NUMERO_ALBC_ALBCLIN` = a.`NUMERO_ALBC`;\n','2026-07-05 04:42:42','2026-07-05 04:42:42','Administrador','Administrador');
 
-
 -- Tabla: fza_informes_guias
 
 DROP TABLE IF EXISTS `fza_informes_guias`;
@@ -7943,7 +7959,6 @@ CREATE TABLE `fza_informes_guias` (
   `USUARIO_MODIF` varchar(50) NULL DEFAULT NULL,
   PRIMARY KEY (`CODIGO_INFGUI`,`INFORME_INFGUI`,`FORMATO_INFGUI`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_inventarios
 
@@ -7974,6 +7989,7 @@ CREATE TABLE `fza_inventarios` (
   INDEX `IDX_INV_FECHA` (`FECHA_INV`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 24 registros exportados
 
 -- Datos de fza_inventarios
 
@@ -7999,7 +8015,6 @@ INSERT INTO `fza_inventarios` (`CODIGO_EMP_INV`, `CODIGO_ALM_INV`, `SERIE_INV`, 
 ('012','GEN','A1','3','IN','2026-05-06 00:00:00','APLICADO','kk',NULL,-2.000000,-20.000000,'00000000','2026-05-06 06:15:17','2026-05-09 05:14:58','Administrador','Administrador','N',NULL,NULL,NULL),
 ('012','GEN','A1','4','IN','2026-05-07 00:00:00','APLICADO',NULL,NULL,2.000000,5.000000,'00000000','2026-05-08 05:13:42','2026-05-09 05:14:58','Administrador','Administrador','N',NULL,NULL,NULL);
 
-
 -- Tabla: fza_inventarios_celdas
 
 DROP TABLE IF EXISTS `fza_inventarios_celdas`;
@@ -8020,7 +8035,6 @@ CREATE TABLE `fza_inventarios_celdas` (
   PRIMARY KEY (`CODIGO_EMP_INVCEL`,`CODIGO_ALM_INV_INVCEL`,`SERIE_INV_INVCEL`,`NUMERO_INV_INVCEL`,`LINEA_INVCEL`,`ID_FILA_INVCEL`,`ID_AV_PIVOT_INVCEL`,`CODIGO_ALM_INVCEL`),
   INDEX `IDX_INVCEL_AV_PIVOT` (`ID_AV_PIVOT_INVCEL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_inventarios_lineas
 
@@ -8053,6 +8067,7 @@ CREATE TABLE `fza_inventarios_lineas` (
   INDEX `IDX_INV_LIN_UNIDAD` (`CODIGO_UNIDAD_INVLIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 232 registros exportados
 
 -- Datos de fza_inventarios_lineas
 
@@ -8540,7 +8555,6 @@ INSERT INTO `fza_inventarios_lineas` (`CODIGO_EMP_INVLIN`, `CODIGO_ALM_INVLIN`, 
 ('012','GEN','A1','3','0003','SOMBRERO-PJM','SOMBRERO-PJM',0,'',NULL,'Sombrero Panamá Verano',7.000000,6.000000,-1.000000,15.000000,15.000000,-15.000000,'2026-05-05 23:59:59','2026-05-06 06:15:17','2026-05-06 06:00:16','Administrador','Administrador'),
 ('012','GEN','A1','4','0001','ZAP-DEPOR','ZAP-DEPOR/BLANCO/43',0,NULL,NULL,'Zapatilla Deportiva Running',-1.000000,1.000000,2.000000,0.000000,5.000000,5.000000,'2026-05-08 07:13:25','2026-05-08 05:13:42','2026-05-09 05:14:58','Administrador','Administrador');
 
-
 -- Tabla: fza_inventarios_recuentos
 
 DROP TABLE IF EXISTS `fza_inventarios_recuentos`;
@@ -8572,7 +8586,6 @@ CREATE TABLE `fza_inventarios_recuentos` (
   UNIQUE INDEX `UQ_INVREC_UUID` (`UUID_INVREC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-
 -- Tabla: fza_ivas
 
 DROP TABLE IF EXISTS `fza_ivas`;
@@ -8597,6 +8610,7 @@ CREATE TABLE `fza_ivas` (
   PRIMARY KEY (`CODIGO_IVA`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 5 registros exportados
 
 -- Datos de fza_ivas
 
@@ -8605,7 +8619,6 @@ INSERT INTO `fza_ivas` (`CODIGO_IVA`, `IVA_IVAGRP`, `DESCRIPCION_IVA_IVAGRP`, `P
 ('2','2','COMPENSACIÓN AGRARIA',0.000000,0.000000,12.000000,0.000000,0.000000,0.000000,0.000000,0.000000,'1999-08-01',NULL,'2023-10-22 12:16:16','2022-05-27 18:04:13','Administrador','Administrador'),
 ('3','5','IGIC CANARIAS',0.000000,0.000000,5.000000,0.000000,0.000000,0.000000,0.000000,0.000000,'1999-08-01',NULL,'2023-04-28 10:43:22','2022-05-27 18:05:09','Administrador','Administrador'),
 ('4','3','IPSI CEUTA Y MELILLA',0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,'1999-08-01',NULL,'2023-05-12 11:58:57','2023-01-19 09:27:01','Administrador','Administrador');
-
 
 -- Tabla: fza_ivas_grupos
 
@@ -8627,6 +8640,7 @@ CREATE TABLE `fza_ivas_grupos` (
   PRIMARY KEY (`IVA_IVAGRP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 5 registros exportados
 
 -- Datos de fza_ivas_grupos
 
@@ -8635,7 +8649,6 @@ INSERT INTO `fza_ivas_grupos` (`IVA_IVAGRP`, `CODIGO_PAI_IVA_IVAGRP`, `NOMBRE_PA
 ('2','ES','España','COMPENSACIÓN AGRARIA Y FORESTAL','S','S','N','N','REAGP','2025-09-16 15:45:20','2022-08-31 13:18:41','Administrador','Administrador'),
 ('3','ES','España','IGIC CANARIAS','N','N','S','N','IGIC','2025-09-16 15:45:21','2022-08-31 13:19:52','Administrador','Administrador'),
 ('5','ES','España','CEUTA Y MELILLA','N','N','S','N','IPSI','2025-09-16 15:45:22','2023-01-19 09:24:36','Administrador','Administrador');
-
 
 -- Tabla: fza_ivas_tipos
 
@@ -8649,6 +8662,7 @@ CREATE TABLE `fza_ivas_tipos` (
   `USUARIO_MODIF` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 4 registros exportados
 
 -- Datos de fza_ivas_tipos
 
@@ -8656,7 +8670,6 @@ INSERT INTO `fza_ivas_tipos` (`CODIGO_ABREVIATURA_IVA_IVATIP`, `NOMBRE_TIPO_IVA_
 ('R','Reducido','2023-03-09 17:13:09','2023-03-09 17:13:03','Administrador','Administrador'),
 ('S','Súper Reducido','2023-03-09 17:13:31','2023-03-09 17:13:24','Administrador','Administrador'),
 ('E','Exento','2023-03-09 17:13:48','2023-03-09 17:13:40','Administrador','Administrador');
-
 
 -- Tabla: fza_ivas_zonas
 
@@ -8668,12 +8681,12 @@ CREATE TABLE `fza_ivas_zonas` (
   PRIMARY KEY (`CODIGO_ZONA_IVA_IVAZON`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 2 registros exportados
 
 -- Datos de fza_ivas_zonas
 
 INSERT INTO `fza_ivas_zonas` (`CODIGO_ZONA_IVA_IVAZON`, `DESCRIPCION_IVA_IVAGRP`, `ESDEFAULT_IVA_IVAGRP`) VALUES (0,'ESPAÑA PENÍNSULA','S'),
 (1,'INTRACOMUNITARIA','N');
-
 
 -- Tabla: fza_metadatos
 
@@ -8685,6 +8698,10 @@ CREATE TABLE `fza_metadatos` (
   PRIMARY KEY (`CODIGO_META_META`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_metadatos` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_metadatos` ENABLE KEYS */;
+-- 317 registros exportados
 
 -- Datos de fza_metadatos
 
@@ -9003,7 +9020,6 @@ INSERT INTO `fza_metadatos` (`CODIGO_META_META`, `NOMBRE_META_META`, `PARENT_MET
 (460,'SP_RECALCULAR_PMP_SKU','3'),
 (461,'SP_RECALCULAR_PMP_SKU_ALMACEN','3');
 
-
 -- Tabla: fza_movimientos_almacen
 
 DROP TABLE IF EXISTS `fza_movimientos_almacen`;
@@ -9051,6 +9067,7 @@ CREATE TABLE `fza_movimientos_almacen` (
   INDEX `IDX_SKU_ALM_MOV` (`CODIGO_UNIDAD_MOV`, `CODIGO_ALM_MOV`, `FECHA_MOV`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 780 registros exportados
 
 -- Datos de fza_movimientos_almacen
 
@@ -9875,7 +9892,6 @@ INSERT INTO `fza_movimientos_almacen` (`NUMERO_MOV`, `TIPO_DOC_MOV`, `SERIE_DOC_
 ('IV-4-0001E','IN','A1','4','0001','012','GEN','2026-05-08 07:13:25','ZAP-DEPOR','ZAP-DEPOR/BLANCO/43',NULL,'E',1.000000,5.000000,5.000000,5.000000,NULL,NULL,NULL,'S','2026-05-08 05:13:42','2026-05-09 05:14:59','Administrador','Administrador',NULL,NULL,NULL,NULL,'',NULL,'GEN',NULL,NULL),
 ('IV-4-0001S','IN','A1','4','0001','012','GEN','2026-05-08 07:13:24','ZAP-DEPOR','ZAP-DEPOR/BLANCO/43',NULL,'E',1.000000,0.000000,5.000000,5.000000,NULL,NULL,NULL,'S','2026-05-08 05:13:42','2026-05-09 05:14:59','Administrador','Administrador',NULL,NULL,NULL,NULL,'',NULL,'GEN',NULL,NULL);
 
-
 -- Tabla: fza_paises
 
 DROP TABLE IF EXISTS `fza_paises`;
@@ -9890,6 +9906,7 @@ CREATE TABLE `fza_paises` (
   PRIMARY KEY (`CODIGO_PAI_PAI`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 236 registros exportados
 
 -- Datos de fza_paises
 
@@ -10130,7 +10147,6 @@ INSERT INTO `fza_paises` (`CODIGO_PAI_PAI`, `COD_ALPHA3_PAI`, `COD_ALPHA2_PAI`, 
 ('887','YEM','YE','Yemen','Yemen','N',999),
 ('894','ZMB','ZM','Zambia','Zambia','N',999);
 
-
 -- Tabla: fza_pedidos
 
 DROP TABLE IF EXISTS `fza_pedidos`;
@@ -10250,6 +10266,7 @@ CREATE TABLE `fza_pedidos` (
   INDEX `IDX_PED_IDPS` (`IDPS_PED`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 12 registros exportados
 
 -- Datos de fza_pedidos
 
@@ -10258,7 +10275,6 @@ INSERT INTO `fza_pedidos` (`NUMERO_PED`, `SERIE_PED`, `FECHA_PED`, `ESCONSOLIDAD
 ('000001','PED','2026-02-12','N','ABIERTO',NULL,'1',NULL,'MODA EJEMPLO SL','B11111111',NULL,NULL,NULL,NULL,NULL,NULL,'724','España',NULL,'N',NULL,'N','317','B99887766','admin@importamoda.es',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'IMPORTACIONES LA MODA SL',NULL,'C/ ARTESANOS, 20 NAVE 3',NULL,'ALCOBENDAS','MADRID','28108','724','España','IMPORTACIONES LA MODA SL',NULL,NULL,'C/ ARTESANOS, 20 NAVE 3',NULL,'ALCOBENDAS','MADRID','28108','724','España','N','N','N','S','VENTAMAYOR','S','N','N','S','N','IVA',NULL,'N',21.000000,147.000000,NULL,0.000000,700.000000,NULL,0.000000,NULL,0.000000,0.000000,NULL,0.000000,NULL,0.000000,0.000000,NULL,0.000000,NULL,0.000000,0.000000,700.000000,147.000000,'30DIAS',NULL,0.000000,847.000000,NULL,NULL,NULL,'','',NULL,'Pedido urgente - Reposición colección primavera','','00000030',NULL,'S',NULL,'2026-07-03 14:50:29','2026-02-12 09:00:00','DEMO','Administrador'),
 ('000002','PED','2026-02-13','N','ABIERTO',NULL,'1',NULL,'MODA EJEMPLO SL','B11111111',NULL,NULL,NULL,NULL,NULL,NULL,'724','España',NULL,'N',NULL,'N','320','B55443322','compras@modaspain.es',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'TIENDAS MODA SPAIN SL',NULL,'GRAN VÍA, 48',NULL,'MADRID','MADRID','28013','724','España','TIENDAS MODA SPAIN SL',NULL,NULL,'GRAN VÍA, 48',NULL,'MADRID','MADRID','28013','724','España','N','N','N','S','VENTAMAYOR','S','N','N','S','N','IVA',NULL,'N',21.000000,176.400000,NULL,NULL,840.000000,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,840.000000,176.400000,'60DIAS',NULL,NULL,1016.400000,NULL,NULL,NULL,'','',NULL,'Colección verano 2026 - 1ª entrega','','00000040',NULL,'S',NULL,'2026-07-03 14:50:29','2026-02-13 08:00:00','DEMO','DEMO'),
 ('000003','PED','2026-02-14','N','ABIERTO',NULL,'1',NULL,'MODA EJEMPLO SL','B11111111',NULL,NULL,NULL,NULL,NULL,NULL,'724','España',NULL,'N',NULL,'N','304','45678901D','juan.martin@empresa.es',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'JUAN MARTÍN PÉREZ',NULL,'C/ ALCALÁ, 100',NULL,'MADRID','MADRID','28009','724','España','JUAN MARTÍN PÉREZ',NULL,NULL,'C/ ALCALÁ, 100',NULL,'MADRID','MADRID','28009','724','España','N','N','N','S','VENTAMAYOR','S','N','N','S','N','IVA',NULL,'N',21.000000,42.000000,NULL,NULL,200.000000,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,200.000000,42.000000,'60DIAS',NULL,NULL,242.000000,NULL,NULL,NULL,'','',NULL,'','','00000020',NULL,'S',NULL,'2026-07-03 14:50:29','2026-02-14 10:00:00','DEMO','DEMO');
-
 
 -- Tabla: fza_pedidos_celdas
 
@@ -10279,6 +10295,7 @@ CREATE TABLE `fza_pedidos_celdas` (
   INDEX `IDX_PEDCEL_AV_PIVOT` (`ID_AV_PIVOT_PEDCEL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 3 registros exportados
 
 -- Tabla: fza_pedidos_compra
 
@@ -10368,13 +10385,13 @@ CREATE TABLE `fza_pedidos_compra` (
   INDEX `IDX_PEDC_TEMPORADA` (`ID_PV_TEMPORADA_PEDC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 3 registros exportados
 
 -- Datos de fza_pedidos_compra
 
 INSERT INTO `fza_pedidos_compra` (`NUMERO_PEDC`, `SERIE_PEDC`, `FECHA_PEDC`, `FECHA_PREVISTA_PEDC`, `FECHA_TOPE_RECEPCION_PEDC`, `ESTADO_PEDC`, `CODIGO_EMP_PEDC`, `RAZON_SOCIAL_EMPRESA_PEDC`, `NIF_EMPRESA_PEDC`, `MOVIL_EMPRESA_PEDC`, `EMAIL_EMPRESA_PEDC`, `DIRECCION1_EMPRESA_PEDC`, `DIRECCION2_EMPRESA_PEDC`, `POBLACION_EMPRESA_PEDC`, `PROVINCIA_EMPRESA_PEDC`, `CODIGO_PAI_EMPRESA_PEDC`, `NOMBRE_PAI_EMPRESA_PEDC`, `CODIGO_POSTAL_EMPRESA_PEDC`, `CODIGO_PRV_PEDC`, `RAZON_SOCIAL_PRV_PEDC`, `NIF_PRV_PEDC`, `MOVIL_PRV_PEDC`, `EMAIL_PRV_PEDC`, `DIRECCION1_PRV_PEDC`, `DIRECCION2_PRV_PEDC`, `POBLACION_PRV_PEDC`, `PROVINCIA_PRV_PEDC`, `CODIGO_PAI_PRV_PEDC`, `NOMBRE_PAI_PRV_PEDC`, `CODIGO_POSTAL_PRV_PEDC`, `REF_PROVEEDOR_PEDC`, `CODIGO_ALM_PEDC`, `TRANSPORTISTA_PEDC`, `CODIGO_IVA_PEDC`, `ESIVA_RECARGO_COMPRAS_PEDC`, `ESIVA_EXENTO_INTRACOMUNITARIO_PEDC`, `PORCENTAJE_IVAN_PEDC`, `TOTAL_BASEI_IVAN_PEDC`, `TOTAL_IVAN_PEDC`, `PORCENTAJE_REN_PEDC`, `TOTAL_REN_PEDC`, `PORCENTAJE_IVAR_PEDC`, `TOTAL_BASEI_IVAR_PEDC`, `TOTAL_IVAR_PEDC`, `PORCENTAJE_RER_PEDC`, `TOTAL_RER_PEDC`, `PORCENTAJE_IVAS_PEDC`, `TOTAL_BASEI_IVAS_PEDC`, `TOTAL_IVAS_PEDC`, `PORCENTAJE_RES_PEDC`, `TOTAL_RES_PEDC`, `PORCENTAJE_IVAE_PEDC`, `TOTAL_BASEI_IVAE_PEDC`, `TOTAL_IVAE_PEDC`, `PORCENTAJE_REE_PEDC`, `TOTAL_REE_PEDC`, `TOTAL_BASES_PEDC`, `TOTAL_IMPUESTOS_PEDC`, `PORCENTAJE_RETENCION_PEDC`, `TOTAL_RETENCION_PEDC`, `TOTAL_BRUTO_PEDC`, `PORCENTAJE_DTO_COMERCIAL_PEDC`, `TOTAL_DTO_COMERCIAL_PEDC`, `PORCENTAJE_DTO_FINANCIERO_PEDC`, `TOTAL_DTO_FINANCIERO_PEDC`, `TOTAL_LIQUIDO_PEDC`, `FORMA_PAGO_PEDC`, `CONTADOR_LINEAS_PEDC`, `COMENTARIOS_PEDC`, `OBSERVACIONES_PEDC`, `ESPIVOTE_HORIZONTAL_PEDC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ID_PV_TEMPORADA_PEDC`) VALUES ('000001','A1','2026-05-26','2026-06-26',NULL,'RECIBIDO','012','ALEJANDRO LAORDEN HIDALGO','4587545EQ','65869556','miemail@gmail.com','CALLE POZO BLANCO, 2','','SANTOVENIA','ZAMORA','ES','España','49750','PEPI','PEPINO RODRÍGUEZ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'724','Espana',NULL,'398383','GEN',NULL,'1','N','N',21.000000,246.000000,51.660000,5.200000,0.000000,10.000000,0.000000,0.000000,1.400000,0.000000,4.000000,0.000000,0.000000,0.500000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,246.000000,51.660000,NULL,0.000000,246.000000,0.000000,0.000000,0.000000,0.000000,297.660000,NULL,'230','','','S','2026-07-01 17:03:52','2026-05-28 17:52:48','Administrador','Administrador',10),
 ('000002','A1','2026-05-26',NULL,NULL,'ABIERTO','012','ALEJANDRO LAORDEN HIDALGO','4587545EQ','65869556','miemail@gmail.com','CALLE POZO BLANCO, 2','','SANTOVENIA','ZAMORA','ES','España','49750','18','Formaggi Fortini s.r.l.',NULL,'(0544) 60323',NULL,'Viale Dante, 75',NULL,'Ravenna','','724','Espana','48100','32323','GEN',NULL,'1','N','S',21.000000,362.000000,76.020000,5.200000,0.000000,10.000000,0.000000,0.000000,1.400000,0.000000,4.000000,0.000000,0.000000,0.500000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,362.000000,76.020000,NULL,0.000000,362.000000,0.000000,0.000000,0.000000,0.000000,438.020000,'30DIAS','140','','','S','2026-07-01 17:03:52','2026-05-28 17:54:41','Administrador','Administrador',11),
 ('000004','A1','2026-06-11',NULL,NULL,'RECIBIDO','012','ALEJANDRO LAORDEN HIDALGO','45684134Q','65869556','miemail@gmail.com','CALLE POZO BLANCO, 2','','SANTOVENIA','ZAMORA','ES','España','49750','000','ANTONIO BAZOS',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'724','Espana',NULL,'1236','GEN',NULL,'1','N','N',21.000000,227.000000,47.670000,5.200000,0.000000,10.000000,0.000000,0.000000,1.400000,0.000000,4.000000,0.000000,0.000000,0.500000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,227.000000,47.670000,NULL,0.000000,227.000000,0.000000,0.000000,0.000000,0.000000,274.670000,NULL,'00000120','','','S','2026-07-03 14:50:29','2026-06-13 10:02:01','Administrador','Administrador',11);
-
 
 -- Tabla: fza_pedidos_compra_celdas
 
@@ -10396,6 +10413,7 @@ CREATE TABLE `fza_pedidos_compra_celdas` (
   INDEX `IDX_PEDCCEL_LINEA` (`SERIE_PEDC_PEDCCEL`, `NUMERO_PEDC_PEDCCEL`, `LINEA_PEDC_PEDCCEL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 34 registros exportados
 
 -- Datos de fza_pedidos_compra_celdas
 
@@ -10409,7 +10427,6 @@ INSERT INTO `fza_pedidos_compra_celdas` (`SERIE_PEDC_PEDCCEL`, `NUMERO_PEDC_PEDC
 ('A1','000000','70',1,9102,2.000000,'','2026-05-29 06:06:05','2026-05-29 06:06:05','Administrador','Administrador'),
 ('A1','000000','70',1,9103,2.000000,'','2026-05-29 06:06:05','2026-05-29 06:06:05','Administrador','Administrador'),
 ('A1','000000','70',1,9104,2.000000,'','2026-05-29 06:06:05','2026-05-29 06:06:05','Administrador','Administrador');
-
 
 -- Tabla: fza_pedidos_compra_lineas
 
@@ -10459,6 +10476,7 @@ CREATE TABLE `fza_pedidos_compra_lineas` (
   INDEX `IDX_PEDCLIN_ARTICULO` (`CODIGO_ART_PEDCLIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 25 registros exportados
 
 -- Datos de fza_pedidos_compra_lineas
 
@@ -10509,7 +10527,6 @@ INSERT INTO `fza_pedidos_compra_lineas` (`NUMERO_PEDC_PEDCLIN`, `SERIE_PEDC_PEDC
 ('000004','A1','0100','DEPORTIVO004','DEPORTIVO004/0908/44',4,'DEPORTIVO','','0908','Ropa Deportiva','Uds',1.000000,1.000000,0.000000,'N',21.000000,13.000000,15.730000,13.000000,'GEN','32122',NULL,NULL,'2026-06-13 10:04:17','2026-06-13 10:02:01','Administrador','Administrador','','','','','','','','','','',0,0.000000),
 ('000004','A1','0110','DEPORTIVO004','DEPORTIVO004/0908/39',4,'DEPORTIVO','','0908','Ropa Deportiva','Uds',1.000000,1.000000,0.000000,'N',21.000000,13.000000,15.730000,13.000000,'GEN','32122',NULL,NULL,'2026-06-13 10:04:17','2026-06-13 10:02:01','Administrador','Administrador','','','','','','','','','','',0,0.000000),
 ('000004','A1','0120','SUDADERA-HOOD','',1,'DEPORTIVO',NULL,NULL,'Sudadera con Capucha Unisex','Uds',5.000000,0.000000,0.000000,'N',21.000000,10.000000,12.100000,50.000000,'GEN','',NULL,NULL,'2026-07-01 08:05:19','2026-07-01 08:05:01','Administrador','Administrador','','','','','','','','','','',0,0.000000);
-
 
 -- Tabla: fza_pedidos_lineas
 
@@ -10565,6 +10582,7 @@ CREATE TABLE `fza_pedidos_lineas` (
   INDEX `IDX_PEDLIN_UNIDAD` (`CODIGO_UNIDAD_PEDLIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 21 registros exportados
 
 -- Datos de fza_pedidos_lineas
 
@@ -10577,7 +10595,6 @@ INSERT INTO `fza_pedidos_lineas` (`NUMERO_PED_PEDLIN`, `SERIE_PED_PEDLIN`, `LINE
 ('000002','PED','0040',NULL,NULL,NULL,NULL,NULL,'FALD-PLIS',NULL,NULL,NULL,'Uds','S','N','Falda Larga Plisada Blanco M',NULL,10.000000,0.000000,0.000000,0.000000,'N',NULL,18.000000,21.000000,0.000000,180.000000,'2026-07-03 14:50:29','2026-02-13 08:00:00','DEMO','DEMO','','','','','','','','','','','',0,0),
 ('000003','PED','0010',NULL,NULL,NULL,NULL,NULL,'ABRIGO-PAÑO',NULL,NULL,NULL,'Uds','S','N','Abrigo de Paño Negro XL',NULL,1.000000,0.000000,0.000000,0.000000,'N',NULL,120.000000,21.000000,0.000000,120.000000,'2026-07-03 14:50:29','2026-02-14 10:00:00','DEMO','DEMO','','','','','','','','','','','',0,0),
 ('000003','PED','0020',NULL,NULL,NULL,NULL,NULL,'ZAP-BOTA-MT',NULL,NULL,NULL,'Uds','S','N','Bota Montaña Marrón 43',NULL,1.000000,0.000000,0.000000,0.000000,'N',NULL,60.000000,21.000000,0.000000,60.000000,'2026-07-03 14:50:29','2026-02-14 10:00:00','DEMO','DEMO','','','','','','','','','','','',0,0);
-
 
 -- Tabla: fza_pedidos_mensajes
 
@@ -10595,7 +10612,6 @@ CREATE TABLE `fza_pedidos_mensajes` (
   PRIMARY KEY (`IDPS_MENSAJES_PEDMSG`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-
 -- Tabla: fza_permisos
 
 DROP TABLE IF EXISTS `fza_permisos`;
@@ -10611,6 +10627,7 @@ CREATE TABLE `fza_permisos` (
   PRIMARY KEY (`USUARIO_GRUPO_PERM`,`CODIGO_PERM`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 635 registros exportados
 
 -- Datos de fza_permisos
 
@@ -11116,7 +11133,6 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
 ('Vendedores','menu.UsuariosPerfiles','N','Perfiles',NULL,'2026-06-02 20:07:56','Administrador',NULL),
 ('Vendedores','menu.Variaciones','N','Tipos de Variaciones',NULL,'2026-06-02 19:49:58','Administrador',NULL);
 
-
 -- Tabla: fza_propiedades
 
 DROP TABLE IF EXISTS `fza_propiedades`;
@@ -11133,6 +11149,7 @@ CREATE TABLE `fza_propiedades` (
   PRIMARY KEY (`CODIGO_PROP_ARTPROP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 17 registros exportados
 
 -- Datos de fza_propiedades
 
@@ -11154,7 +11171,6 @@ INSERT INTO `fza_propiedades` (`CODIGO_PROP_ARTPROP`, `NOMBRE_PROP_PROP`, `TIPO_
 ('TIPO_SUELA','Tipo de suela','LISTA','ARTICULO','S','2026-03-22 17:32:14','2026-03-22 17:32:14','DEMO','DEMO'),
 ('TRANSPIRABLE','Transpirable','BOOLEANO','ARTICULO','S','2026-03-22 17:32:14','2026-03-22 17:32:14','DEMO','DEMO');
 
-
 -- Tabla: fza_propiedades_valores
 
 DROP TABLE IF EXISTS `fza_propiedades_valores`;
@@ -11172,6 +11188,10 @@ CREATE TABLE `fza_propiedades_valores` (
   INDEX `IDX_PROPIEDAD_PV` (`ID_PROP_PV`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_propiedades_valores` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_propiedades_valores` ENABLE KEYS */;
+-- 60 registros exportados
 
 -- Datos de fza_propiedades_valores
 
@@ -11236,7 +11256,6 @@ INSERT INTO `fza_propiedades_valores` (`ID_PV_ARTPROP`, `ID_PROP_PV`, `PV`, `DES
 (59,'ACTIVIDAD','Fitness / Gym',NULL,'S','2026-03-22 17:32:14','2026-03-22 17:32:14','DEMO','DEMO'),
 (60,'ACTIVIDAD','Multideporte',NULL,'S','2026-03-22 17:32:14','2026-03-22 17:32:14','DEMO','DEMO');
 
-
 -- Tabla: fza_proveedores
 
 DROP TABLE IF EXISTS `fza_proveedores`;
@@ -11276,6 +11295,7 @@ CREATE TABLE `fza_proveedores` (
   INDEX `IDX_PROVEEDORES_LISTADO` (`CODIGO_PRV_PRV`, `RAZON_SOCIAL_PRV`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 28 registros exportados
 
 -- Datos de fza_proveedores
 
@@ -11308,7 +11328,6 @@ INSERT INTO `fza_proveedores` (`CODIGO_PRV_PRV`, `ESACTIVO_PRV`, `ORDEN_PRV`, `R
 ('PEPI','S',NULL,'PEPINO RODRÍGUEZ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'N','N',NULL,'2025-04-17 07:03:32','2025-04-17 07:03:32','Administrador','Administrador'),
 ('PRVTEST','S',2,'PROVEEDOR PRUEBAS PMP',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'España',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'N','N',NULL,'2026-07-04 05:26:46','2026-07-04 05:26:46','Administrador','Administrador');
 
-
 -- Tabla: fza_proveedores_familias
 
 DROP TABLE IF EXISTS `fza_proveedores_familias`;
@@ -11324,7 +11343,6 @@ CREATE TABLE `fza_proveedores_familias` (
   PRIMARY KEY (`CODIGO_PRV_PF`,`CODIGO_FAM_PF`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-
 -- Tabla: fza_proveedores_familias_conjuntos
 
 DROP TABLE IF EXISTS `fza_proveedores_familias_conjuntos`;
@@ -11336,7 +11354,6 @@ CREATE TABLE `fza_proveedores_familias_conjuntos` (
   `ORDEN_PFC` int(11) NULL DEFAULT '0',
   PRIMARY KEY (`CODIGO_PRV_PFC`,`CODIGO_FAM_PFC`,`ID_AC_PFC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_proveedores_kits
 
@@ -11355,6 +11372,7 @@ CREATE TABLE `fza_proveedores_kits` (
   PRIMARY KEY (`CODIGO_PRV_PRVKIT`,`CODIGO_PRVKIT`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 4 registros exportados
 
 -- Datos de fza_proveedores_kits
 
@@ -11362,7 +11380,6 @@ INSERT INTO `fza_proveedores_kits` (`CODIGO_PRV_PRVKIT`, `CODIGO_PRVKIT`, `NOMBR
 ('000','B','OPC B',NULL,5,0,'2026-06-13 11:33:38','Administrador','2026-06-13 11:34:15','Administrador'),
 ('000','C','OPC C',NULL,3,0,'2026-06-13 11:35:56','Administrador','2026-06-13 11:36:18','Administrador'),
 ('22','A','OPC A',NULL,4,0,'2026-06-11 07:44:53','Administrador','2026-06-11 07:45:15','Administrador');
-
 
 -- Tabla: fza_proveedores_kits_det
 
@@ -11380,6 +11397,7 @@ CREATE TABLE `fza_proveedores_kits_det` (
   PRIMARY KEY (`CODIGO_PRV_PRVKITD`,`CODIGO_PRVKIT_PRVKITD`,`VALOR_DESTINO_PRVKITD`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 22 registros exportados
 
 -- Datos de fza_proveedores_kits_det
 
@@ -11406,7 +11424,6 @@ INSERT INTO `fza_proveedores_kits_det` (`CODIGO_PRV_PRVKITD`, `CODIGO_PRVKIT_PRV
 ('22','A','43',1.000000,50,'2026-06-11 07:45:15','Administrador','2026-06-11 07:45:21','Administrador'),
 ('22','A','44',1.000000,60,'2026-06-11 07:45:15','Administrador','2026-06-11 07:45:23','Administrador');
 
-
 -- Tabla: fza_prueba_skucel
 
 DROP TABLE IF EXISTS `fza_prueba_skucel`;
@@ -11424,7 +11441,6 @@ CREATE TABLE `fza_prueba_skucel` (
   `USUARIO_MODIF` varchar(50) NULL DEFAULT NULL,
   PRIMARY KEY (`SERIE_PSC`,`NUMERO_PSC`,`LINEA_PSC`,`ID_FILA_PSC`,`CODIGO_ALM_PSC`,`ID_AV_PIVOT_PSC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: fza_recibos
 
@@ -11462,6 +11478,7 @@ CREATE TABLE `fza_recibos` (
   INDEX `IDX_REC_ESTADO_VENC` (`ESTADO_RECIBO_REC`, `FECHA_VENCIMIENTO_RECIBO_REC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 19 registros exportados
 
 -- Datos de fza_recibos
 
@@ -11484,7 +11501,6 @@ INSERT INTO `fza_recibos` (`NUMERO_FAC_REC`, `SERIE_FAC_REC`, `NUMERO_PLAZO_REC`
 ('000102','2026.A1',2,'30Y60','30Y60',70.000000,'Emitido','2026-04-26','2026-06-25',NULL,'0000','ES6421004558410104116102',NULL,'SANTOVENIA','333',NULL,NULL,NULL,NULL,NULL,'724','España','SETENTA ','2026-07-02 14:29:42','2026-07-02 14:29:42','Administrador','Administrador'),
 ('000112','2026.A1',1,'TRANSFERENCIA','TRANSFERENCIA',180.000000,'Pagado','2026-04-28','2026-04-28',NULL,NULL,NULL,'2026-04-28','SANTOVENIA','321','RODOLFO MARTÍNEZ GIL','alsdkjfalsdkjf','alskdfjadsklñjf','alsdkfjasdkñlfj','21323','724','España','CIENTO OCHENTA ','2026-05-07 04:52:08','2026-05-07 04:52:08','Administrador','Administrador'),
 ('24','A1',1,'CONTADO','CONTADO',19.834711,'Pagado','2023-05-16','2023-05-16',NULL,NULL,NULL,'2023-05-16','','291','PEDRO CACHAS',NULL,NULL,NULL,NULL,NULL,NULL,'DIECINUEVE CON OCHENTA Y TRES CÉNTIMOS ','2023-05-17 11:12:06','2023-05-17 11:12:06','Administrador','Administrador');
-
 
 -- Tabla: fza_remesas_compra
 
@@ -11519,11 +11535,11 @@ CREATE TABLE `fza_remesas_compra` (
   INDEX `IDX_REMC_ESTADO` (`ESTADO_REMC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 1 registros exportados
 
 -- Datos de fza_remesas_compra
 
 INSERT INTO `fza_remesas_compra` (`NUMERO_REMC`, `SERIE_REMC`, `FECHA_REMC`, `ESTADO_REMC`, `CODIGO_EMP_REMC`, `TIPO_REMC`, `NORMA_REMC`, `ENTIDAD_REMC`, `OFICINA_REMC`, `DIGITO_CONTROL_REMC`, `CUENTA_REMC`, `IBAN_REMC`, `CONTADOR_EFECTOS_REMC`, `TOTAL_REMC`, `TOTAL_GASTOS_REMC`, `TOTAL_COMISION_REMC`, `FECHA_CARGO_REMC`, `ARCHIVO_REMC`, `OBSERVACIONES_REMC`, `INSTANTE_CONTABILIZACION_REMC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('000000','-','2026-06-11','ABIERTA','012','NORMA34',NULL,NULL,NULL,NULL,NULL,'',1,282.000000,0.000000,0.000000,NULL,NULL,'',NULL,'2026-06-11 06:08:43','2026-06-11 06:08:43','Administrador','Administrador');
-
 
 -- Tabla: fza_remesas_venta
 
@@ -11559,11 +11575,11 @@ CREATE TABLE `fza_remesas_venta` (
   INDEX `IDX_REMV_ESTADO` (`ESTADO_REMV`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 1 registros exportados
 
 -- Datos de fza_remesas_venta
 
 INSERT INTO `fza_remesas_venta` (`NUMERO_REMV`, `SERIE_REMV`, `FECHA_REMV`, `ESTADO_REMV`, `CODIGO_EMP_REMV`, `TIPO_REMV`, `NORMA_REMV`, `TIPO_SECUENCIA_SEPA_REMV`, `ENTIDAD_REMV`, `OFICINA_REMV`, `DIGITO_CONTROL_REMV`, `CUENTA_REMV`, `IBAN_REMV`, `CONTADOR_EFECTOS_REMV`, `TOTAL_REMV`, `TOTAL_GASTOS_REMV`, `TOTAL_COMISION_REMV`, `FECHA_CARGO_REMV`, `ARCHIVO_REMV`, `OBSERVACIONES_REMV`, `INSTANTE_CONTABILIZACION_REMV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('000000','-','2026-06-23','ENVIADA','1','NORMA19','19.14','RCUR','0182','5584','28','0208539535','ES5001825584280208539535',1,1436.220000,0.000000,0.000000,'2026-06-23','C:\\Users\\V3607\\Desktop\\remesa_cobro_-_000000.xml','',NULL,'2026-06-23 16:17:41','2026-06-23 15:53:32','Administrador','Administrador');
-
 
 -- Tabla: fza_tarifas
 
@@ -11586,13 +11602,13 @@ CREATE TABLE `fza_tarifas` (
   PRIMARY KEY (`CODIGO_TAR_ARTTAR`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 3 registros exportados
 
 -- Datos de fza_tarifas
 
 INSERT INTO `fza_tarifas` (`CODIGO_TAR_ARTTAR`, `ESACTIVO_ARTTAR`, `ORDEN_TAR`, `NOMBRE_TAR_TAR`, `ESIMP_INCL_TAR`, `PORCENTAJE_MARGEN_TAR`, `VALOR_MULTIPLO_AJUSTE_TAR`, `VALOR_MENOS_AJUSTE_TAR`, `FECHA_DESDE_DTO_TAR`, `FECHA_HASTA_DTO_TAR`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('3','S',NULL,'REBAJAS','S',NULL,NULL,NULL,NULL,NULL,'2026-05-06 17:02:19','2026-05-06 17:02:19','Administrador','Administrador'),
 ('PVP','S',1,'PVP','S',NULL,NULL,NULL,NULL,NULL,'2026-01-04 21:09:22','2022-09-05 07:30:49','Administrador','Administrador'),
 ('VENTAMAYOR','S',2,'VENTA MAYOR','N',NULL,NULL,NULL,NULL,NULL,'2026-01-04 21:09:26','2022-09-05 07:31:19','Administrador','Administrador');
-
 
 -- Tabla: fza_tarifas_cambios
 
@@ -11625,11 +11641,14 @@ CREATE TABLE `fza_tarifas_cambios` (
   PRIMARY KEY (`CODIGO_TARC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_tarifas_cambios` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_tarifas_cambios` ENABLE KEYS */;
+-- 1 registros exportados
 
 -- Datos de fza_tarifas_cambios
 
 INSERT INTO `fza_tarifas_cambios` (`CODIGO_TARC`, `NOMBRE_TARC`, `FECHA_TARC`, `ESTADO_TARC`, `CODIGO_TAR_ORIGEN_TARC`, `CODIGO_TAR_DESTINO_TARC`, `CAMPO_ORIGEN_TARC`, `CAMPO_DESTINO_TARC`, `TIPO_APLICACION_TARC`, `VALOR_APLICACION_TARC`, `VALOR_REDONDEO_TARC`, `VALOR_MENOS_AJUSTE_TARC`, `ESREDONDEAR_ARRIBA_TARC`, `FECHA_DESDE_TARC`, `FECHA_HASTA_TARC`, `FECHA_DESDE_DTO_TARC`, `FECHA_HASTA_DTO_TARC`, `INSTANTE_APLICACION_TARC`, `USUARIO_APLICACION_TARC`, `NOTAS_TARC`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES (1,'Sesion tarifas 24/06/2026 18:03','2026-06-24','APLICADA','PVP','PVP','PRECIO_ORIGEN','PRECIO_SALIDA','INCREMENTO_PORCENTUAL',10.000000,1.000000,0.050000,'S','2026-06-24',NULL,NULL,NULL,'2026-06-24 19:12:31','Administrador',NULL,'2026-06-24 18:03:11','Administrador','2026-06-24 19:12:31','Administrador');
-
 
 -- Tabla: fza_tarifas_cambios_lineas
 
@@ -11665,6 +11684,10 @@ CREATE TABLE `fza_tarifas_cambios_lineas` (
   UNIQUE INDEX `UQ_TARCLIN_TARC_ART_SKU` (`CODIGO_TARC_TARCLIN`, `CODIGO_ART_TARCLIN`, `CODIGO_UNIDAD_SKU_TARCLIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_tarifas_cambios_lineas` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_tarifas_cambios_lineas` ENABLE KEYS */;
+-- 25 registros exportados
 
 -- Datos de fza_tarifas_cambios_lineas
 
@@ -11694,7 +11717,6 @@ INSERT INTO `fza_tarifas_cambios_lineas` (`ID_TARCLIN`, `CODIGO_TARC_TARCLIN`, `
 (24,1,'ROPA','','PVP','PVP',33.600000,12.000000,33.600000,33.600000,0.000000,0.000000,36.950000,36.950000,0.000000,0.000000,'S','APLICADA','Aplicada',155,'2026-06-24 19:12:31','2026-06-24 18:03:39','Administrador','2026-06-24 19:12:31','Administrador'),
 (25,1,'VEST-FLOR','','PVP','PVP',29.950000,10.000000,29.950000,29.950000,0.000000,0.000000,32.950000,32.950000,0.000000,0.000000,'S','APLICADA','Aplicada',9,'2026-06-24 19:12:31','2026-06-24 18:03:39','Administrador','2026-06-24 19:12:31','Administrador');
 
-
 -- Tabla: fza_tipos_documentos
 
 DROP TABLE IF EXISTS `fza_tipos_documentos`;
@@ -11705,6 +11727,7 @@ CREATE TABLE `fza_tipos_documentos` (
   PRIMARY KEY (`CODIGO_TIPO_DOCUMENTO_TD`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 39 registros exportados
 
 -- Datos de fza_tipos_documentos
 
@@ -11748,7 +11771,6 @@ INSERT INTO `fza_tipos_documentos` (`CODIGO_TIPO_DOCUMENTO_TD`, `DESCRIPCION_TIP
 ('TR','TRASPASOS ALMACÉN','fza_caja_operaciones'),
 ('VE','VENTAS CONTADO','fza_caja_operaciones');
 
-
 -- Tabla: fza_tipos_efecto
 
 DROP TABLE IF EXISTS `fza_tipos_efecto`;
@@ -11766,6 +11788,7 @@ CREATE TABLE `fza_tipos_efecto` (
   PRIMARY KEY (`CODIGO_TEFE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 5 registros exportados
 
 -- Datos de fza_tipos_efecto
 
@@ -11774,7 +11797,6 @@ INSERT INTO `fza_tipos_efecto` (`CODIGO_TEFE`, `DESCRIPCION_TEFE`, `ESDOMICILIAD
 ('PAGARE','Pagare','N','S',4,'S','2026-06-11 05:18:45','2026-06-11 05:18:45','SISTEMA','SISTEMA'),
 ('RECIBO','Recibo domiciliado','S','S',3,'S','2026-06-11 05:18:45','2026-06-11 05:18:45','SISTEMA','SISTEMA'),
 ('TRANSFERENCIA','Transferencia bancaria','N','N',2,'S','2026-06-11 05:18:45','2026-06-11 05:18:45','SISTEMA','SISTEMA');
-
 
 -- Tabla: fza_traspasos_solicitudes
 
@@ -11802,12 +11824,12 @@ CREATE TABLE `fza_traspasos_solicitudes` (
   INDEX `IDX_TRSOL_ORIGEN` (`CODIGO_ALM_ORIGEN_TRSOL`, `ESTADO_TRSOL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 2 registros exportados
 
 -- Datos de fza_traspasos_solicitudes
 
 INSERT INTO `fza_traspasos_solicitudes` (`NUMERO_TRSOL`, `SERIE_TRSOL`, `FECHA_TRSOL`, `ESTADO_TRSOL`, `CODIGO_EMP_TRSOL`, `CODIGO_ALM_ORIGEN_TRSOL`, `CODIGO_ALM_DESTINO_TRSOL`, `CODIGO_EMP_CONTRA_TRSOL`, `CODIGO_CAJA_TRSOL`, `CODIGO_EMPLEADO_TRSOL`, `OBSERVACIONES_TRSOL`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('0000000000','TS','2026-06-25','PENDIENTE','012','BCN','GEN','1','1','1','','2026-06-25 17:47:19','2026-06-25 17:47:19','Administrador','Administrador'),
 ('0000000001','TS','2026-06-25','PENDIENTE','012','BCN','GEN','1','1','1','','2026-06-25 17:47:42','2026-06-25 17:47:42','Administrador','Administrador');
-
 
 -- Tabla: fza_traspasos_solicitudes_lineas
 
@@ -11831,12 +11853,12 @@ CREATE TABLE `fza_traspasos_solicitudes_lineas` (
   INDEX `IDX_TRSOLLIN_SKU` (`CODIGO_UNIDAD_TRSOLLIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 2 registros exportados
 
 -- Datos de fza_traspasos_solicitudes_lineas
 
 INSERT INTO `fza_traspasos_solicitudes_lineas` (`NUMERO_TRSOL_TRSOLLIN`, `SERIE_TRSOL_TRSOLLIN`, `LINEA_TRSOLLIN`, `CODIGO_ART_TRSOLLIN`, `CODIGO_UNIDAD_TRSOLLIN`, `DESCRIPCION_ARTICULO_TRSOLLIN`, `CANTIDAD_PEDIDA_TRSOLLIN`, `CANTIDAD_SERVIDA_TRSOLLIN`, `ESATENDIDA_TRSOLLIN`, `MOTIVO_RECHAZO_TRSOLLIN`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('0000000000','TS','0010','DEPORTIVO005','DEPORTIVO005/ROSA/39','Ropa Deportiva',1.000000,0.000000,'N',NULL,'2026-06-25 17:47:19','2026-06-25 17:47:19','Administrador','Administrador'),
 ('0000000001','TS','0010','LEGGING-SPORT','LEGGING-SPORT/NEGRO/S','Legging Deportivo Mujer',1.000000,0.000000,'N',NULL,'2026-06-25 17:47:42','2026-06-25 17:47:42','Administrador','Administrador');
-
 
 -- Tabla: fza_unidades_medida
 
@@ -11857,6 +11879,7 @@ CREATE TABLE `fza_unidades_medida` (
   PRIMARY KEY (`CODIGO_UNIMED`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 8 registros exportados
 
 -- Datos de fza_unidades_medida
 
@@ -11868,7 +11891,6 @@ INSERT INTO `fza_unidades_medida` (`CODIGO_UNIMED`, `DESCRIPCION_UNIMED`, `DECIM
 ('ml','Mililitros',3,'VOLUMEN','N',0.001000,41,'S','2026-06-05 18:45:40','2026-06-05 18:45:40','SISTEMA','SISTEMA'),
 ('mm','Milimetros',2,'LONGITUD','N',0.001000,22,'S','2026-06-05 18:45:40','2026-06-05 18:45:40','SISTEMA','SISTEMA'),
 ('Uds','Unidades',0,'UNIDAD','S',1.000000,10,'S','2026-06-05 18:45:40','2026-06-05 18:45:40','SISTEMA','SISTEMA');
-
 
 -- Tabla: fza_usuarios
 
@@ -11889,12 +11911,12 @@ CREATE TABLE `fza_usuarios` (
   PRIMARY KEY (`USUARIO_USU`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 3 registros exportados
 
 -- Datos de fza_usuarios
 
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES ('Administrador','4F8239A5B05A0E22D3DD4D7853808AF3','Administradores','S','012','2026-07-05 04:19:07','2026-07-05 04:19:07','2021-05-14 17:54:29','Administrador','Administrador','GEN','1'),
 ('Alfredo','4F8239A5B05A0E22D3DD4D7853808AF3','Vendedores','S','012','2026-07-02 16:49:30','2026-07-02 16:49:30','2026-06-02 15:45:16','Administrador','Administrador','GEN','1');
-
 
 -- Tabla: fza_usuarios_empl_bak
 
@@ -11906,12 +11928,12 @@ CREATE TABLE `fza_usuarios_empl_bak` (
   PRIMARY KEY (`USUARIO_USU`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 2 registros exportados
 
 -- Datos de fza_usuarios_empl_bak
 
 INSERT INTO `fza_usuarios_empl_bak` (`USUARIO_USU`, `CODIGO_EMPLEADO_USU`, `DIMINUTIVO_TICKET_USU`) VALUES ('Administrador','1','ALEX'),
 ('Alfredo','2','ALFRED');
-
 
 -- Tabla: fza_usuarios_grupos
 
@@ -11926,13 +11948,13 @@ CREATE TABLE `fza_usuarios_grupos` (
   PRIMARY KEY (`GRUPO_USUGRP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 4 registros exportados
 
 -- Datos de fza_usuarios_grupos
 
 INSERT INTO `fza_usuarios_grupos` (`GRUPO_USUGRP`, `ESGRUPOADMINISTRADOR_USUGRP`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('Administradores','S','2023-01-21 07:29:44','2021-05-14 17:55:13','Administrador','Administrador'),
 ('Usuarios','N','2021-05-24 18:53:04','2021-05-24 18:52:52','Administrador','Administrador'),
 ('Vendedores','N','2026-06-02 15:14:53','2026-06-02 15:14:53','Administrador','Administrador');
-
 
 -- Tabla: fza_usuarios_perfiles
 
@@ -11953,6 +11975,7 @@ CREATE TABLE `fza_usuarios_perfiles` (
   INDEX `IDX_KEYPERFIL` (`KEY_USUPER`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 10204 registros exportados
 
 -- Datos de fza_usuarios_perfiles
 
@@ -23015,7 +23038,6 @@ INSERT INTO `fza_usuarios_perfiles` (`USUARIO_GRUPO_USUPER`, `KEY_USUPER`, `SUBK
 ('Vendedores','frmMtoOpeCaja','StockPanelHeight','304',NULL,NULL,NULL,'2026-06-02 18:16:12','2026-06-02 18:16:12','Alfredo','Alfredo'),
 ('Vendedores','frmMtoOpeCaja','WindowState','2',NULL,NULL,NULL,'2026-06-02 18:16:12','2026-06-02 18:16:12','Alfredo','Alfredo');
 
-
 -- Tabla: fza_valores_defecto
 
 DROP TABLE IF EXISTS `fza_valores_defecto`;
@@ -23029,6 +23051,7 @@ CREATE TABLE `fza_valores_defecto` (
   PRIMARY KEY (`TABLA_OBJETIVO_DEF_VD`,`CAMPO_OBJETIVO_DEF_VD`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 48 registros exportados
 
 -- Datos de fza_valores_defecto
 
@@ -23081,7 +23104,6 @@ INSERT INTO `fza_valores_defecto` (`TABLA_OBJETIVO_DEF_VD`, `CAMPO_OBJETIVO_DEF_
 ('fza_facturas_lineas','TOTAL_FAC_SIVA_FACLIN','0','INTEGER','Total Linea Sin IVA',NULL),
 ('fza_facturas_lineas','TOTAL_FACLIN','0','INTEGER','Total Linea Con IVA',NULL);
 
-
 -- Tabla: fza_variaciones
 
 DROP TABLE IF EXISTS `fza_variaciones`;
@@ -23097,11 +23119,11 @@ CREATE TABLE `fza_variaciones` (
   PRIMARY KEY (`CODIGO_VAR`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 1 registros exportados
 
 -- Datos de fza_variaciones
 
 INSERT INTO `fza_variaciones` (`CODIGO_VAR`, `NOMBRE_VAR`, `ESACTIVO_VAR`, `ORDEN_VAR`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES ('TC','TALLAS Y COLORES','S',1,'2026-01-04 06:47:35','2026-01-04 06:39:32','Administrador','Administrador');
-
 
 -- Tabla: fza_variaciones_atributos
 
@@ -23115,12 +23137,12 @@ CREATE TABLE `fza_variaciones_atributos` (
   PRIMARY KEY (`ID_VAR_VA`,`ID_ATB_VA`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 2 registros exportados
 
 -- Datos de fza_variaciones_atributos
 
 INSERT INTO `fza_variaciones_atributos` (`ID_VAR_VA`, `ID_ATB_VA`, `NOMBRE_VA`, `ORDEN_VA`, `NOMBRE_VISIBLE_VA`) VALUES ('TC','CO','Color',1,'Paleta'),
 ('TC','TAL','Talla',2,'Sistema de tallas');
-
 
 -- Tabla: fza_ventas_ws_cola
 
@@ -23159,7 +23181,6 @@ CREATE TABLE `fza_ventas_ws_cola` (
   UNIQUE INDEX `UQ_VWSC_EVENTO` (`ID_EVENTO_VWSC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-
 -- Tabla: fza_verifactu_cadena
 
 DROP TABLE IF EXISTS `fza_verifactu_cadena`;
@@ -23177,11 +23198,11 @@ CREATE TABLE `fza_verifactu_cadena` (
   PRIMARY KEY (`NIF_VFCAD`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 1 registros exportados
 
 -- Datos de fza_verifactu_cadena
 
 INSERT INTO `fza_verifactu_cadena` (`NIF_VFCAD`, `CONTADOR_VFCAD`, `SERIE_FAC_VFCAD`, `NUMERO_FAC_VFCAD`, `FECHA_FAC_VFCAD`, `HUELLA_VFCAD`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `INSTANTE_MODIF`, `USUARIO_MODIF`) VALUES ('45684134Q',12,'2026.A1','000165','2026-07-04','F764E83F0F9E83890C72C26B26BC8E610AAB2787D5E84A4C0C1956CE0EAC7E88','2026-06-12 07:31:31','Administrador','2026-07-04 17:58:42','Administrador');
-
 
 -- Tabla: fza_verifactu_cola
 
@@ -23205,6 +23226,10 @@ CREATE TABLE `fza_verifactu_cola` (
   UNIQUE INDEX `UQ_VFCOLA_SERIE_NUMERO_TIPO` (`SERIE_FAC_VFCOLA`, `NUMERO_FAC_VFCOLA`, `TIPO_OPERACION_VFCOLA`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_verifactu_cola` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_verifactu_cola` ENABLE KEYS */;
+-- 15 registros exportados
 
 -- Datos de fza_verifactu_cola
 
@@ -23223,7 +23248,6 @@ INSERT INTO `fza_verifactu_cola` (`ID_VFCOLA`, `SERIE_FAC_VFCOLA`, `NUMERO_FAC_V
 (17,'2026.A1','000164','ALTA','ENVIADA',0,NULL,'2026-06-25 19:43:32',NULL,'2026-06-25 19:42:44','Administrador','2026-06-25 19:43:32','Administrador'),
 (18,'2026.A1','000165','ALTA','ENVIADA',0,NULL,'2026-07-04 17:58:42',NULL,'2026-07-04 17:58:00','Administrador','2026-07-04 17:58:42','Administrador'),
 (19,'2026.A1','000166','ALTA','PENDIENTE',7,'2026-07-05 06:52:14',NULL,'AEAT [1112] El campo FechaExpedicionFactura es superior a la fecha actual.','2026-07-04 18:53:17','Administrador','2026-07-05 06:20:14','Administrador');
-
 
 -- Tabla: fza_verifactu_eventos
 
@@ -23254,6 +23278,10 @@ CREATE TABLE `fza_verifactu_eventos` (
   INDEX `idx_usuario` (`USUARIO_LOG`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_verifactu_eventos` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_verifactu_eventos` ENABLE KEYS */;
+-- 615 registros exportados
 
 -- Datos de fza_verifactu_eventos
 
@@ -23901,7 +23929,6 @@ INSERT INTO `fza_verifactu_eventos` (`ID_LOG`, `TIMESTAMP_LOG`, `TIPO_EVENTO_LOG
 (611,'2026-07-04 19:28:55.000',4,'Administrador','1.0.15.202606260100.alpha','Error de envío Verifactu (intento 6): AEAT [1112] El campo FechaExpedicionFactura es superior a la fecha actual.',NULL,'13B1C30AD20C97A347F5F688B287AC422798E85C800D750F608F506400B4F4D4','A6D188AA70F2414A778392A46D09C2524072D776E9132AFF98C1759CF815914F','A6D188AA70F2414A778392A46D09C2524072D776E9132AFF98C1759CF815914F','2026-07-04 17:28:55','000166','2026.A1','<?xml version=\"1.0\" encoding=\"UTF-8\"?><sf:RegistroEvento xmlns:sf=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-04T19:28:55+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>90</sf:TipoEvento><sf:OtrosDatosEvento>Error de envío Verifactu (intento 6): AEAT [1112] El campo FechaExpedicionFactura es superior a la f</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>90</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-04T19:12:40+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>13B1C30AD20C97A347F5F688B287AC422798E85C800D750F608F506400B4F4D4</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>A6D188AA70F2414A778392A46D09C2524072D776E9132AFF98C1759CF815914F</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>',NULL,NULL,NULL,NULL),
 (612,'2026-07-05 06:20:14.000',4,'Administrador','1.0.15.202606260100.alpha','Error de envío Verifactu (intento 7): AEAT [1112] El campo FechaExpedicionFactura es superior a la fecha actual.',NULL,'A6D188AA70F2414A778392A46D09C2524072D776E9132AFF98C1759CF815914F','193E271231C18304B6862F00C440CFD3889B77F12EA7FE2BCB4F7F11E3DD2952','193E271231C18304B6862F00C440CFD3889B77F12EA7FE2BCB4F7F11E3DD2952','2026-07-05 04:20:14','000166','2026.A1','<?xml version=\"1.0\" encoding=\"UTF-8\"?><sf:RegistroEvento xmlns:sf=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\"><sf:IDVersion>1.0</sf:IDVersion><sf:Evento><sf:SistemaInformatico><sf:NombreRazon>Alejandro Laorden Hidalgo</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF><sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico><sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico><sf:Version>1.0.15.202606260100.alpha</sf:Version><sf:NumeroInstalacion>FZ-20260627-402CE3A98F80</sf:NumeroInstalacion><sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu><sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT><sf:IndicadorMultiplesOT>S</sf:IndicadorMultiplesOT></sf:SistemaInformatico><sf:ObligadoEmision><sf:NombreRazon>ALEJANDRO LAORDEN HIDALGO</sf:NombreRazon><sf:NIF>45684134Q</sf:NIF></sf:ObligadoEmision><sf:FechaHoraHusoGenEvento>2026-07-05T06:20:14+02:00</sf:FechaHoraHusoGenEvento><sf:TipoEvento>90</sf:TipoEvento><sf:OtrosDatosEvento>Error de envío Verifactu (intento 7): AEAT [1112] El campo FechaExpedicionFactura es superior a la f</sf:OtrosDatosEvento><sf:Encadenamiento><sf:EventoAnterior><sf:TipoEvento>90</sf:TipoEvento><sf:FechaHoraHusoGenEvento>2026-07-04T19:28:55+02:00</sf:FechaHoraHusoGenEvento><sf:HuellaEvento>A6D188AA70F2414A778392A46D09C2524072D776E9132AFF98C1759CF815914F</sf:HuellaEvento></sf:EventoAnterior></sf:Encadenamiento><sf:TipoHuella>01</sf:TipoHuella><sf:HuellaEvento>193E271231C18304B6862F00C440CFD3889B77F12EA7FE2BCB4F7F11E3DD2952</sf:HuellaEvento></sf:Evento></sf:RegistroEvento>',NULL,NULL,NULL,NULL);
 
-
 -- Tabla: fza_verifactu_operaciones
 
 DROP TABLE IF EXISTS `fza_verifactu_operaciones`;
@@ -23923,6 +23950,7 @@ CREATE TABLE `fza_verifactu_operaciones` (
   PRIMARY KEY (`CODIGO_VFO`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 6 registros exportados
 
 -- Datos de fza_verifactu_operaciones
 
@@ -23932,7 +23960,6 @@ INSERT INTO `fza_verifactu_operaciones` (`CODIGO_VFO`, `DESCRIPCION_VFO`, `AYUDA
 ('INTERIOR','Interior - regimen general','Venta nacional con IVA. Es el comportamiento por defecto.','01','S1',NULL,'S','NACIONAL',10,'S','2026-06-14 06:49:13',NULL,'SEED',NULL),
 ('ISP','Inversion del sujeto pasivo','El IVA lo autoliquida el destinatario (art. 84). No se repercute cuota.','01','S2',NULL,'N','CUALQUIERA',40,'S','2026-06-14 06:49:13',NULL,'SEED',NULL),
 ('SERVICIO_INTRA','Servicio intracomunitario (no sujeto)','Servicio a profesional UE: no sujeto en Espana por localizacion (art. 69), el cliente autoliquida el IVA.','01','N2',NULL,'N','UE',20,'S','2026-06-14 06:49:13',NULL,'SEED',NULL);
-
 
 -- Tabla: fza_winforms
 
@@ -23948,6 +23975,7 @@ CREATE TABLE `fza_winforms` (
   PRIMARY KEY (`CALL_WINF`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+-- 53 registros exportados
 
 -- Datos de fza_winforms
 
@@ -24005,7 +24033,6 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
 ('VerifactuCola','Verifactu - Cola de Envíos','mnuVerifactuCola','inMtoVerifactuCola.TfrmMtoVerifactuCola','','UniDataVerifactuCola.TdmVerifactuCola',5),
 ('VerifactuLog','Verifactu - Log','mnuVerifactuLog','inMtoVerifactuLog.TfrmMtoVerifactuLog','','UniDataVerifactuLog.TdmVerifactuLog',5);
 
-
 -- Tabla: inv_almacenes
 
 DROP TABLE IF EXISTS `inv_almacenes`;
@@ -24021,7 +24048,6 @@ CREATE TABLE `inv_almacenes` (
   INDEX `idx_alm_cliente` (`carpeta_cliente`, `esactivo`),
   UNIQUE INDEX `uq_alm` (`carpeta_cliente`, `codigo_emp`, `codigo_alm`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: inv_catalogo
 
@@ -24041,7 +24067,6 @@ CREATE TABLE `inv_catalogo` (
   INDEX `idx_cat_sku` (`id_recuento`, `codigo_unidad`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-
 -- Tabla: inv_dispositivos
 
 DROP TABLE IF EXISTS `inv_dispositivos`;
@@ -24058,7 +24083,6 @@ CREATE TABLE `inv_dispositivos` (
   INDEX `idx_disp_cliente` (`carpeta_cliente`, `esactivo`),
   UNIQUE INDEX `uq_disp_token` (`token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: inv_eventos
 
@@ -24084,7 +24108,6 @@ CREATE TABLE `inv_eventos` (
   INDEX `idx_evt_sku` (`id_recuento`, `codigo_unidad`),
   UNIQUE INDEX `uq_evento_uuid` (`uuid_evento`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
-
 
 -- Tabla: inv_recuentos
 
@@ -24114,8 +24137,8 @@ CREATE TABLE `inv_recuentos` (
   UNIQUE INDEX `uq_recuento_doc` (`carpeta_cliente`, `codigo_emp`, `codigo_alm`, `serie`, `numero`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
-
 -- ========================================
+
 -- VISTAS
 -- ========================================
 
@@ -32208,4 +32231,4 @@ SET FOREIGN_KEY_CHECKS=1;
 SET SQL_NOTES=@OLD_SQL_NOTES;
 COMMIT;
 
--- Backup completado: 21/07/2026 18:24:40
+-- Backup completado: 23/07/2026 18:33:33

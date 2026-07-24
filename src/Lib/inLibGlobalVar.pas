@@ -17,9 +17,7 @@ unit inLibGlobalVar;
 interface
 
 uses Uni,
-     UniDataPerfiles,
-     UniDataFiltros,
-     UniDataConn,cxMemo, inMtoPrincipal,
+     cxMemo, inMtoPrincipal,
      inLibInformesGuiasCache,
      inLibConfigCampos,
      inLibLicenciaAplicacion;
@@ -36,11 +34,8 @@ type
   TLogSesionProc = procedure(const S: string) of object;
 
 var
-  odmPerfiles    :TdmPerfiles;
-  odmFiltros     :TdmFiltros;
   oInfGuiasCache :TInformesGuiasCache;
   oConn          :TUniConnection;
-  odmConn        :TdmConn;
   oMemoSQL   :TcxMemo;
   ofrmMto2   :TfrmMtoPrincipal;
   oNomImpresoraCaja:String;
@@ -83,10 +78,7 @@ initialization
   oGroup           := 'No definido';
   oNomImpresoraCaja:='';
   orootGroup       := 'N';
-  odmPerfiles      := nil;
-  odmFiltros       := nil;
   oInfGuiasCache   := nil;
-  odmConn          := nil;
   oConn            := nil;
   oAll             := 'Todos';
   oLogSesion       := nil;

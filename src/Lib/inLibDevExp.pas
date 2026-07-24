@@ -29,7 +29,8 @@ uses
     cxClasses, cxGridCustomView, cxGrid, cxGridCardView, cxSpinEdit,
     cxGridDBCardView, cxGridBandedTableView, cxGridDBBandedTableView,
     cxRadioGroup, inMtoPrincipal, cxPc, dxShellDialogs, inLibUser,
-    cxGroupBox, cxLabel,  cxListBox, System.NetEncoding, UniDataPerfiles,
+    cxGroupBox, cxLabel, cxListBox, System.NetEncoding,
+    inLibPerfilesUsuarioIntf,
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
     OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo,
     inLibLog;
@@ -51,15 +52,19 @@ type
   procedure CollectSettingsColumnProfile( AcxgrdtvVista: TcxCustomGridTableView;
                                         const sName: string;
                                         const AsProfile: string;
+                                        const APerfilesUsuario:
+                                          IPerfilesUsuario;
                                         AList: TPerfilList);
 
   procedure GetSettingsColumn(AcxgrdtvVista: TcxCustomGridTableView;
                               sName: String;
                               Sender: TComponent;
+                              const APerfilesUsuario: IPerfilesUsuario;
                               sUserGroup:String = 'Todos');
   procedure GetSettingsColumnProfile( AcxgrdtvVista: TcxCustomGridTableView;
                                       sName: String;
                                       Sender: TComponent;
+                                      const APerfilesUsuario: IPerfilesUsuario;
                                       AsProfile: String);
   procedure PonerAnchosTitulos( AcxgrdtvVista: TcxCustomGridTableView;
                                 AsDes: string;
@@ -399,6 +404,7 @@ end;
 procedure GetSettingsColumn(AcxgrdtvVista: TcxCustomGridTableView;
                             sName: String;
                             Sender: TComponent;
+                            const APerfilesUsuario: IPerfilesUsuario;
                             sUserGroup:String = 'Todos');
 var
   i: Integer;
@@ -415,34 +421,34 @@ begin
       sValue := 'True'
     else
       sValue := 'False';
-    odmPerfiles.GrabarPerfil(sUserGroup,
+    APerfilesUsuario.GrabarPerfil(sUserGroup,
                              sName,
                              sVistaName + '_' + sColumnName + '_Visible',
                              sValue);
     sValue := IntToStr(oItem.Index);
-    odmPerfiles.GrabarPerfil(sUserGroup,
+    APerfilesUsuario.GrabarPerfil(sUserGroup,
                              sName,
                              sVistaName + '_' + sColumnName + '_Index',
                              sValue);
     sValue := IntToStr(oItem.Width);
-    odmPerfiles.GrabarPerfil(sUserGroup,
+    APerfilesUsuario.GrabarPerfil(sUserGroup,
                              sName,
                              sVistaName + '_' + sColumnName + '_Width',
                              sValue);
     sValue := oItem.Caption;
-    odmPerfiles.GrabarPerfil(sUserGroup,
+    APerfilesUsuario.GrabarPerfil(sUserGroup,
                              sName,
                              sVistaName + '_' + sColumnName + '_Caption',
                              sValue);
     if oItem is TcxGridDBBandedColumn then
     begin
-      odmPerfiles.GrabarPerfil(sUserGroup, sName,
+      APerfilesUsuario.GrabarPerfil(sUserGroup, sName,
         sVistaName + '_' + sColumnName + '_BandIndex',
         IntToStr(TcxGridDBBandedColumn(oItem).Position.BandIndex));
-      odmPerfiles.GrabarPerfil(sUserGroup, sName,
+      APerfilesUsuario.GrabarPerfil(sUserGroup, sName,
         sVistaName + '_' + sColumnName + '_ColIndex',
         IntToStr(TcxGridDBBandedColumn(oItem).Position.ColIndex));
-      odmPerfiles.GrabarPerfil(sUserGroup, sName,
+      APerfilesUsuario.GrabarPerfil(sUserGroup, sName,
         sVistaName + '_' + sColumnName + '_RowIndex',
         IntToStr(TcxGridDBBandedColumn(oItem).Position.RowIndex));
     end;
@@ -523,6 +529,8 @@ end;
 procedure CollectSettingsColumnProfile(AcxgrdtvVista: TcxCustomGridTableView;
                                         const sName: string;
                                         const AsProfile: string;
+                                        const APerfilesUsuario:
+                                          IPerfilesUsuario;
                                         AList: TPerfilList);
 var
   i: Integer;
@@ -619,7 +627,12 @@ begin
   begin
     // No hay filtro: Mandamos un texto vacío para borrar cualquier filtro
     // previo en la BBDD
-    odmPerfiles.GrabarPerfil(AsProfile, sName, sVistaName + '_Filtro', '', '');
+    APerfilesUsuario.GrabarPerfil(
+      AsProfile,
+      sName,
+      sVistaName + '_Filtro',
+      '',
+      '');
   end
   else
   begin
@@ -633,11 +646,12 @@ begin
 
       // Grabamos directamente usando tu función del DataModule
       // psValue lo pasamos vacío (''), el Base64 va a psValueText
-      odmPerfiles.GrabarPerfil(AsProfile,
-                               sName,
-                               sVistaName + '_Filtro',
-                               '',
-                               BStream.DataString);
+      APerfilesUsuario.GrabarPerfil(
+        AsProfile,
+        sName,
+        sVistaName + '_Filtro',
+        '',
+        BStream.DataString);
     finally
       FreeAndNil(LStream);
       FreeAndNil(BStream);
@@ -648,6 +662,8 @@ end;
 procedure GetSettingsColumnProfile( AcxgrdtvVista: TcxCustomGridTableView;
                                     sName: String;
                                     Sender: TComponent;
+                                    const APerfilesUsuario:
+                                      IPerfilesUsuario;
                                     AsProfile: String);
 var
   i: Integer;
@@ -665,41 +681,41 @@ begin
 
     // 1. Guardar Visibilidad
     if (oItem.Visible) then sValue := 'True' else sValue := 'False';
-    odmPerfiles.GrabarPerfil(AsProfile,
+    APerfilesUsuario.GrabarPerfil(AsProfile,
                              sName,
                              sVistaName + '_' + sColumnName + '_Visible',
                              sValue);
 
     // 2. Guardar Orden (Mantenemos Index como lo tenías)
     sValue := IntToStr(oItem.Index);
-    odmPerfiles.GrabarPerfil(AsProfile,
+    APerfilesUsuario.GrabarPerfil(AsProfile,
                              sName,
                              sVistaName + '_' + sColumnName + '_Index',
                              sValue);
 
     // 3. Guardar Ancho
     sValue := IntToStr(oItem.Width);
-    odmPerfiles.GrabarPerfil(AsProfile,
+    APerfilesUsuario.GrabarPerfil(AsProfile,
                              sName,
                              sVistaName + '_' + sColumnName + '_Width',
                              sValue);
 
     // 4. Guardar Caption
     sValue := oItem.Caption;
-    odmPerfiles.GrabarPerfil(AsProfile,
+    APerfilesUsuario.GrabarPerfil(AsProfile,
                              sName,
                              sVistaName + '_' + sColumnName + '_Caption',
                              sValue);
 
     // 5. Guardar Ordenación de datos (Sorting)
     sValue := IntToStr(Ord(oItem.SortOrder));
-    odmPerfiles.GrabarPerfil(AsProfile,
+    APerfilesUsuario.GrabarPerfil(AsProfile,
                              sName,
                              sVistaName + '_' + sColumnName + '_SortOrder',
                              sValue);
 
     sValue := IntToStr(oItem.SortIndex);
-    odmPerfiles.GrabarPerfil(AsProfile,
+    APerfilesUsuario.GrabarPerfil(AsProfile,
                              sName,
                              sVistaName + '_' + sColumnName + '_SortIndex',
                              sValue);
@@ -707,13 +723,13 @@ begin
     // 6. Si es columna banded, guardar tambien la posicion en band
     if oItem is TcxGridDBBandedColumn then
     begin
-      odmPerfiles.GrabarPerfil(AsProfile, sName,
+      APerfilesUsuario.GrabarPerfil(AsProfile, sName,
         sVistaName + '_' + sColumnName + '_BandIndex',
         IntToStr(TcxGridDBBandedColumn(oItem).Position.BandIndex));
-      odmPerfiles.GrabarPerfil(AsProfile, sName,
+      APerfilesUsuario.GrabarPerfil(AsProfile, sName,
         sVistaName + '_' + sColumnName + '_ColIndex',
         IntToStr(TcxGridDBBandedColumn(oItem).Position.ColIndex));
-      odmPerfiles.GrabarPerfil(AsProfile, sName,
+      APerfilesUsuario.GrabarPerfil(AsProfile, sName,
         sVistaName + '_' + sColumnName + '_RowIndex',
         IntToStr(TcxGridDBBandedColumn(oItem).Position.RowIndex));
     end;
@@ -732,7 +748,7 @@ begin
     sValue := BStream.DataString;
 
     // Lo guardamos en tu perfil con la clave terminada en "_Filtro"
-    odmPerfiles.GrabarPerfil(AsProfile,
+    APerfilesUsuario.GrabarPerfil(AsProfile,
                              sName,
                              AcxgrdtvVista.Name + '_Filtro',
                              sValue);
@@ -741,7 +757,7 @@ begin
     if Assigned(AcxgrdtvVista.Control) then
     begin
       sValue := IntToStr(AcxgrdtvVista.Control.Width);
-      odmPerfiles.GrabarPerfil(AsProfile,
+      APerfilesUsuario.GrabarPerfil(AsProfile,
                                sName,
                                AcxgrdtvVista.Name + '_GridTotalWidth',
                                sValue);

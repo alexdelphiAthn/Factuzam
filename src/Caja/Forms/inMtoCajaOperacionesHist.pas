@@ -29,7 +29,7 @@ uses
   cxButtons, cxDBNavigator, Vcl.Buttons, dxBevel, cxLabel, cxTextEdit,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, Vcl.ComCtrls,
-  UniDataCajaOperacionesHist, UniDataPerfiles, MemDS, DBAccess, Uni,
+  UniDataCajaOperacionesHist, inLibPerfilesUsuarioIntf, MemDS, DBAccess, Uni,
   cxCheckBox, cxCheckComboBox, cxCurrencyEdit, cxSpinEdit, cxBlobEdit,
   dxScrollbarAnnotations, dxCore, cxRadioGroup, Vcl.AppEvnts, JvComponentBase,
   JvEnterTab, dxShellDialogs, System.Actions, Vcl.ActnList, cxCalendar,
@@ -1796,7 +1796,7 @@ begin
       RecogerPerfilesParticulares(oList, sPermisos);
       oConn.StartTransaction;
       try
-        odmPerfiles.GrabarPerfilesBatch(oList);
+        PerfilesUsuario.GrabarPerfiles(oList);
         oConn.Commit;
       except
         oConn.Rollback;

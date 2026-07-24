@@ -285,6 +285,11 @@ begin
                      tpBoolean,
                      'False');
   RegistrarParametro('Avisos y Búsquedas',
+                     'vgerStockTodosColores',
+                     'Mostrar todos los colores por separado en el stock',
+                     tpBoolean,
+                     'False');
+  RegistrarParametro('Avisos y Búsquedas',
                      'vgerMoverLineaIdentif',
                      'Mover linea al identificar artículo',
                      tpBoolean,

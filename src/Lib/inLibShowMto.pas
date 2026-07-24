@@ -244,7 +244,8 @@ begin
                                     'False') = 'True') then
               begin
                 GetFormUserProfile(TdmBase(NewDM).FoPerfilDic,
-                                   TdmBase(NewDM).Name);
+                                   TdmBase(NewDM).Name,
+                                   AOwnerForm.PerfilesUsuario);
                 LoadSQLFromProfile(TdmBase(NewDM), TdmBase(NewDM).FoPerfilDic);
               end;
           end;

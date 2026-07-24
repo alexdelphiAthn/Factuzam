@@ -26,7 +26,7 @@ uses
   cxDBNavigator, Vcl.Buttons, dxBevel, Vcl.StdCtrls, cxButtons, cxLabel,
   cxTextEdit, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, MemDS,
-  DBAccess, Uni, UniDataConn, cxBlobEdit, dxScrollbarAnnotations, dxCore,
+  DBAccess, Uni, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, JvComponentBase, JvEnterTab, dxShellDialogs, inLibGlobalVar,
   cxMaskEdit, cxDropDownEdit, inLibtb, inMtoModalAltaRapida, inLibDevExp,
   inLibConfigCampos;
@@ -326,15 +326,17 @@ end;
 
 function TfrmMtoSearch.EjecutarAltaGenerica(sCod, sDesc: string): Boolean;
 var
+  Conn: TUniConnection;
   Qry: TUniQuery;
   sCodigoFinal: string;
   i: Integer;
 begin
   sCodigoFinal := sCod;
+  Conn := ConexionTrabajo;
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := inLibGlobalVar.oConn;
-    inLibGlobalVar.oConn.StartTransaction;
+    Qry.Connection := Conn;
+    Conn.StartTransaction;
     try
       if ((Trim(sCodigoFinal) = '0') or (Trim(sCodigoFinal) = '')) and
          (FConfigAlta.TipoDocContador <> '') then
@@ -358,9 +360,9 @@ begin
              FConfigAlta.ValoresDefecto[i].Valor;
         end;
       end;
-      odmConn.ActualizarUserTimeModif(Qry);
+      ActualizarAuditoria(Qry);
       Qry.Post;
-      inLibGlobalVar.oConn.Commit;
+      Conn.Commit;
       Result := True;
       ShowMessage('Registro ' + sCodigoFinal + ' creado correctamente.');
       if Assigned(cxGrdDBTabPrin.DataController.DataSource) and
@@ -375,7 +377,7 @@ begin
     except
       on E: Exception do
       begin
-        inLibGlobalVar.oConn.Rollback;
+        Conn.Rollback;
         if Qry.State in [dsInsert, dsEdit] then Qry.Cancel;
         ShowMessage('Error al insertar (se ha cancelado la operación): ' +
                                                                      E.Message);
@@ -405,7 +407,7 @@ begin
   SetLength(FConfigAlta.ValoresDefecto, 0);
   QryDef := TUniQuery.Create(nil);
   try
-    QryDef.Connection := inLibGlobalVar.oConn;
+    QryDef.Connection := ConexionTrabajo;
     QryDef.SQL.Text := 'SELECT * ' +
                        'FROM fza_gen_defaults ' +
                        'WHERE TABLA_OBJETIVO_DEF_VD = :Tabla';
@@ -427,7 +429,7 @@ begin
   end;
   QryCont := TUniQuery.Create(nil);
   try
-    QryCont.Connection := inLibGlobalVar.oConn;
+    QryCont.Connection := ConexionTrabajo;
     QryCont.SQL.Text :=
       'SELECT TIPO_DOC_CON ' +
       '  FROM fza_contadores ' +

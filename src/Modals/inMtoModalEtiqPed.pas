@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalEtiqPed                                             }
 {    Tipo:       Formulario (Modal)                                            }
@@ -70,7 +70,7 @@ begin
   inherited;
   frxReportOrigen.AssignAll(frxrprt1);
   FCodigosTarifa := TStringList.Create;
-  FLayout        := TLayoutLoader.Create(Self.Name);
+  FLayout := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
   dtFechaAplicacion.Date := Date;
 end;
 

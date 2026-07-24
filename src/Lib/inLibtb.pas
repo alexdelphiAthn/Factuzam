@@ -22,7 +22,8 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
       System.StrUtils, DCPrijndael, dcpbase64,DCPcrypt2, System.NetEncoding,
       inLibUser, Datasnap.Provider, Datasnap.DBClient, System.DateUtils,
       MidasLib,   Datasnap.Midas,   Soap.SOAPMidas, Datasnap.Win.MidasCon,
-      inLibGlobalVar, Dialogs, vcl.consts, inLibMsg, inLibFacturas;
+      inLibGlobalVar, Dialogs, vcl.consts, inLibMsg, inLibFacturas,
+      inLibPerfilesUsuarioIntf;
 
 type
   TUpdateTotalEvent = procedure(Sender: TObject;
@@ -63,7 +64,9 @@ type
                                                 sHostName,
                                                 sPort,
                                                 sDataBase:String);
-  function SimbolosProhibidos(s:String):Boolean;
+  function SimbolosProhibidos(
+    const s: String;
+    const APerfilesUsuario: IPerfilesUsuario): Boolean;
   procedure BusqDataBase(sqlConsulta: TUniQuery;
                         sBusqueda:String;
                         var ConsultaO:string);
@@ -659,14 +662,21 @@ begin
   Result := sResul;
 end;
 
-function SimbolosProhibidos(s:String):Boolean;
+function SimbolosProhibidos(
+  const s: String;
+  const APerfilesUsuario: IPerfilesUsuario): Boolean;
+const
+  SIMBOLOS_PREDETERMINADOS = 'ºª,="'':;·|.,¨{}~^][()/+€%*';
 var
   sSimbolos:string;
   sError:string;
 begin
-  sSimbolos := odmPerfiles.GetKeySubKeyValueDefNoDic('inLibtb',
-                                                   'oSimbolosProhibidos',
-                                                 'ºª,="'':;·|.,¨{}~^][()/+€%*');
+  sSimbolos := SIMBOLOS_PREDETERMINADOS;
+  if Assigned(APerfilesUsuario) then
+    sSimbolos := APerfilesUsuario.ObtenerValorPerfil(
+      'inLibtb',
+      'oSimbolosProhibidos',
+      SIMBOLOS_PREDETERMINADOS);
   sError := HayCoincidencia(s, sSimbolos);
   if sError <> '' then
     Result := True

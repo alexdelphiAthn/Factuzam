@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataAlmacenes                                              }
 {    Tipo:       Data Module                                                   }
@@ -16,7 +16,7 @@ unit UniDataAlmacenes;
 interface
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-  inLibUser, UniDataConn, inLibGlobalVar;
+  inLibUser;
 type
   TdmAlmacenes = class(TdmBase)
     qryAlmacenesCajas: TUniQuery;
@@ -38,7 +38,7 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TdmAlmacenes.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  qryAlmacenesCajas.Connection := oConn;
+  qryAlmacenesCajas.Connection := ConexionPrincipal;
   qryAlmacenesCajas.Open;
   qryAlmacenesCajas.MasterSource := (GetOwnerForm<TfrmMtoAlmacenes>).dsTablaG;
 end;

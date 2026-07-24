@@ -19,7 +19,8 @@ interface
 uses
   System.SysUtils, System.Classes, System.IOUtils, //inLibGlobalVar,
   inLibDir, Windows, System.SyncObjs, Winapi.Messages,
-  System.TypInfo, System.Zip, System.Generics.Collections;
+  System.TypInfo, System.Zip, System.Generics.Collections,
+  inLibMonitorSQLIntf;
 
 const
   DEFAULT_LOG_RETENTION = 10;
@@ -40,6 +41,7 @@ type
     FInstanceID: string;
     FLogRetention: Integer;
     FMutexHandle: THandle;
+    FMonitorSQL: IServicioMonitorSQL;
     function LogTypeToString(ALogType: TLogType): string;
     procedure WriteToLog(const AMessage: string; ALogType: TLogType);
     procedure WriteToLogInternal(const AMessage: string);
@@ -89,13 +91,16 @@ type
     procedure EnableLogType(ALogType: TLogType);
     procedure DisableLogType(ALogType: TLogType);
     function IsLogTypeEnabled(ALogType: TLogType): Boolean;
+    procedure AsignarMonitorSQL(
+      const AMonitorSQL: IServicioMonitorSQL);
+    procedure MostrarSQLMonitor(const ASQL: string);
     property InstanceID: string read FInstanceID;
   end;
 var
   Log: TLog;
 
 // Aplica los flags de depuración leídos de oAppParams (appModoDebug y
-// appModoDebugSQL) al log y al monitor SQL global. Idempotente: se puede
+// appModoDebugSQL) al log y al monitor SQL inyectado. Idempotente: se puede
 // invocar en arranque y cada vez que el usuario guarde los parámetros.
 procedure AplicarModosDepuracion;
 
@@ -202,9 +207,24 @@ end;
 destructor TLog.Destroy;
 begin
   WriteToLog('Fin de sesión de log.', ltInfo);
+  FMonitorSQL := nil;
   if FMutexHandle <> 0 then
     CloseHandle(FMutexHandle);
   inherited;
+end;
+
+procedure TLog.AsignarMonitorSQL(
+  const AMonitorSQL: IServicioMonitorSQL);
+begin
+  FMonitorSQL := AMonitorSQL;
+end;
+
+procedure TLog.MostrarSQLMonitor(const ASQL: string);
+begin
+  if Assigned(oMemoSQL) and
+     oMemoSQL.Visible then
+    oMemoSQL.Lines.Add(
+      FormatDateTime('hh:nn:ss.zzz', Now) + ' - ' + ASQL);
 end;
 
 
@@ -801,8 +821,8 @@ begin
   else
     Log.DisableLogType(ltAvanzado);
 
-  if Assigned(odmConn) and Assigned(odmConn.UniSQLMonitor1) then
-    odmConn.UniSQLMonitor1.Active := bSQLFinal;
+  if Assigned(Log.FMonitorSQL) then
+    Log.FMonitorSQL.EstablecerActivo(bSQLFinal);
 
   // El memo SQL en pantalla acompaña al modo: si se activa SQL, se muestra;
   // si se desactiva, se oculta junto con su panel contenedor.

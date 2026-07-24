@@ -17,8 +17,8 @@ unit inLibUser;
 interface
 
 uses Windows, Classes, System.Hash, System.Generics.Collections,
-  System.SysUtils, Generics.Defaults, ShlObj, Uni, System.diagnostics,
-  System.TimeSpan, vcl.dialogs;
+  System.SysUtils, Generics.Defaults, ShlObj, System.diagnostics,
+  System.TimeSpan, vcl.dialogs, inLibPerfilesUsuarioIntf;
 
 type
   TProperty = (User, Group, All);
@@ -34,19 +34,17 @@ type
     sSubkey: string;
     sValue: string;
   end;
-  TDictValue = record
-    sValue: string;
-    sValueText: WideString;
-  end;
+  TDictValue = inLibPerfilesUsuarioIntf.TDictValue;
   TProfileUserDicc = TDictionary<TDictUserKey, TDictValue>;
-  TProfileDicc = TDictionary<string, TDictValue>;
+  TProfileDicc = inLibPerfilesUsuarioIntf.TProfileDicc;
 function GetPerfilValue(var APerfilDic: TProfileDicc; ASubKey: string): string;
 function GetPerfilValueText(var APerfilDic: TProfileDicc; ASubKey: string):
                                                                      WideString;
 procedure FilterProfileUserGroup(var APerfilUserDic: TProfileUserDicc;
                                  var APerfilDic: TProfileDicc);
 procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
-                             AFormName: string); overload;
+                             AFormName: string;
+                             const APerfilesUsuario: IPerfilesUsuario); overload;
 function GetPerfilSubKeyValueDef( var APerfilDic: TProfileDicc;
                                   ASubKey: string;
                                   sSubSubKey: string;
@@ -63,68 +61,28 @@ procedure GetDictionaryKeySubKey( var APerfilDic: TProfileDicc;
                                 sColumnName,
                                 sGridViewName: string);
 procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
-                           const AFormName, sUsuario, sGrupo: string); overload;
-
-// procedure AbrirPerfiles(bTabVisible:Boolean; unqryPerfiles:TUniQuery;
-// Sender:TComponent);
+                             const AFormName, sUsuario, sGrupo: string;
+                             const APerfilesUsuario: IPerfilesUsuario); overload;
 
 implementation
 
 uses
   inLibDir, inLibWin,
-  inLibGlobalVar, inLibLog;
+  inLibLog;
 
 // Dentro de inLibUser.pas
 procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
-  const AFormName, sUsuario, sGrupo: string);
-var
-  oDictValue: TDictValue;
-  qPerfil: TUniQuery;
-  iFilas: Integer;
+  const AFormName, sUsuario, sGrupo: string;
+  const APerfilesUsuario: IPerfilesUsuario);
 begin
-  Log.LogInfo(Format('GetFormUserProfile(u,g): form="%s" sUser="%s" sGrupo="%s" ' +
-                     'oUser_global="%s" oGroup_global="%s"',
-                     [AFormName, sUsuario, sGrupo,
-                      inLibGlobalVar.oUser, inLibGlobalVar.oGroup]));
-  // Si la caché en memoria está precargada para el usuario y grupo actuales,
-  // sírvela y evita el round-trip a PRC_GETPERFILFORMULARIO.
-  if Assigned(inLibGlobalVar.odmPerfiles) and
-     (sUsuario = inLibGlobalVar.oUser) and
-     (sGrupo   = inLibGlobalVar.oGroup) and
-     inLibGlobalVar.odmPerfiles.ObtenerPerfilFormCache(AFormName, APerfilDic) then
-  begin
-    Log.LogInfo(Format('GetFormUserProfile(u,g): form="%s" servido desde CACHE',
-                       [AFormName]));
-    Exit;
-  end;
-  Log.LogInfo(Format('GetFormUserProfile(u,g): form="%s" cache no aplicable, ' +
-                     'llamando PRC_GETPERFILFORMULARIO', [AFormName]));
-  APerfilDic := TProfileDicc.Create;
-  APerfilDic.Clear;
-  qPerfil := TUniQuery.Create(nil);
-  iFilas := 0;
-  try
-    qPerfil.Connection := inLibGlobalVar.oConn;
-    qPerfil.SQL.Text := 'CALL PRC_GETPERFILFORMULARIO(:u, :g, :f)';
-    qPerfil.Params[0].AsString := sUsuario;
-    qPerfil.Params[1].AsString := sGrupo;
-    qPerfil.Params[2].AsString := AFormName;
-    qPerfil.Open;
-    while not qPerfil.Eof do
-    begin
-      oDictValue.sValue := qPerfil.FieldByName('VALUE_USUPER').AsString;
-      oDictValue.sValueText :=
-                        qPerfil.FieldByName('VALUE_TEXT_USUPER').AsWideString;
-      APerfilDic.AddOrSetValue(qPerfil.FieldByName('SUBKEY_USUPER').AsString,
-                               oDictValue);
-      Inc(iFilas);
-      qPerfil.Next;
-    end;
-    Log.LogInfo(Format('GetFormUserProfile(u,g): form="%s" via PRC filas=%d',
-                       [AFormName, iFilas]));
-  finally
-    FreeAndNil(qPerfil);
-  end;
+  if not Assigned(APerfilesUsuario) then
+    raise Exception.Create(
+      'No se ha configurado el servicio de perfiles de usuario.');
+  APerfilesUsuario.CargarPerfilFormulario(
+    AFormName,
+    sUsuario,
+    sGrupo,
+    APerfilDic);
 end;
 
 procedure FilterProfileUserGroup(var APerfilUserDic: TProfileUserDicc;
@@ -195,28 +153,15 @@ begin
   //ShowMessage(Elapsed.TotalMilliseconds.ToString);
 end;
 
-procedure GetFormUserProfile(var APerfilDic: TProfileDicc; AFormName: string);
-var
-  oPerfilUserDic    : TProfileUserDicc;
+procedure GetFormUserProfile(
+  var APerfilDic: TProfileDicc;
+  AFormName: string;
+  const APerfilesUsuario: IPerfilesUsuario);
 begin
-  Log.LogInfo(Format('GetFormUserProfile(form): form="%s" oUser="%s" oGroup="%s"',
-                     [AFormName, oUser, oGroup]));
-  // Si la caché está precargada para el usuario/grupo actuales, sírvela y
-  // ahorramos el SELECT a fza_usuarios_perfiles + FilterProfileUserGroup.
-  if Assigned(odmPerfiles) and
-     odmPerfiles.ObtenerPerfilFormCache(AFormName, APerfilDic) then
-  begin
-    Log.LogInfo(Format('GetFormUserProfile(form): form="%s" servido desde CACHE',
-                       [AFormName]));
-    Exit;
-  end;
-  Log.LogInfo(Format('GetFormUserProfile(form): form="%s" cayendo a ' +
-                     'Assign_Profile_Dict (camino SQL antiguo)', [AFormName]));
-  odmPerfiles.Assign_Profile_Dict(AFormName, oPerfilUserDic);
-  FilterProfileUserGroup(oPerfilUserDic, APerfilDic);
-  Log.LogInfo(Format('GetFormUserProfile(form): form="%s" via SQL antiguo, ' +
-                     'claves_finales=%d', [AFormName, APerfilDic.Count]));
-  FreeAndNil(oPerfilUserDic);
+  if not Assigned(APerfilesUsuario) then
+    raise Exception.Create(
+      'No se ha configurado el servicio de perfiles de usuario.');
+  APerfilesUsuario.CargarPerfilFormulario(AFormName, APerfilDic);
 end;
 
 // Dentro de inLibUser.pas

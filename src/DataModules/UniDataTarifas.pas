@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataTarifas                                                }
 {    Tipo:       Data Module                                                   }
@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
-  Uni, inLibUser, UniDataConn;
+  Uni, inLibUser;
 
 type
   TdmTarifas = class(TdmBase)
@@ -56,8 +56,8 @@ end;
 procedure TdmTarifas.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unstrdprcContador.Connection := oConn;
-  unqryArticulosTarifas.Connection := oConn;
+  unstrdprcContador.Connection := ConexionPrincipal;
+  unqryArticulosTarifas.Connection := ConexionPrincipal;
   unqryArticulosTarifas.Open;
 end;
 

@@ -30,7 +30,7 @@ uses
   cxGridTableView, cxGridDBTableView, cxGridDBDataDefinitions, cxGrid, dxmdaset,
   cxTextEdit, dxBevel,
   inLibDevExp, cxGridExportLink, inLibUser, System.UITypes, System.Types,
-  UniDataPerfiles, Uni, inLibDir, inLibtb, Data.DBCommon, inLibWin,
+  inLibPerfilesUsuarioIntf, Uni, inLibDir, inLibtb, Data.DBCommon, inLibWin,
   UniDataConn, cxBlobEdit, dxCore, dxScrollbarAnnotations, cxRadioGroup,
   Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs, dxSkinBlue,
   cxDBEdit, dxSkinBasic, dxSkinBlack,
@@ -161,12 +161,11 @@ type
     procedure actAvanzarBloqueExecute(Sender: TObject);
     procedure actRetrocederBloqueExecute(Sender: TObject);
   private
-    // Conexion propia del Mto (Fase 1 multithreading). Se clona de `oConn`
-    // global al crear el data module y se reasigna a todas las queries/SPs
-    // via TdmBase.ReasignarConexion. Asi dos pestañas dejan de serializarse
-    // sobre la misma TUniConnection — cada una agarra una conexion fisica
-    // distinta del pool. Liberada en Destroy DESPUES del data module para
-    // que los Close implicitos de las queries no queden colgando.
+    // Conexion propia solicitada al servicio al crear el data module. Se
+    // reasigna a todas las queries/SPs via TdmBase.ReasignarConexion. Asi
+    // dos pestañas dejan de serializarse sobre una misma TUniConnection.
+    // Se libera en Destroy DESPUES del data module para que los Close
+    // implicitos de las queries no queden colgando.
     FConn: TUniConnection;
     // Overlay para Fase 2 (background): panel que cubre el Mto entero
     // mientras corre una tarea en thread. Otros tabs siguen interactivos
@@ -195,6 +194,7 @@ type
     FDesactivandoPorBorrado: Boolean;
     FFiltroMenuBase64: string;
     FBusqGlobalMenu: string;
+    function GetConexionTrabajo: TUniConnection;
     function FiltroGridActivo: Boolean;
     procedure MoverRegistroGridFiltrado(AAvanzar: Boolean);
     procedure NavegadorButtonClick(Sender: TObject;
@@ -237,6 +237,7 @@ type
 //                                        const sProfile: string;
 //                                        AList: TPerfilList);
   protected
+    property ConexionTrabajo: TUniConnection read GetConexionTrabajo;
     procedure AplicarGuiasGrid(AQuery: TUniQuery);
     // Recorre los campos abiertos y deja en el log un error por cada
     // columna cuyo nombre empieza por `ES` (boolean por convencion del
@@ -251,11 +252,6 @@ type
     // editores multilinea (SynEdit, etc.) sobreescriben para devolver
     // False cuando el editor tiene el foco.
     function PermitirNavegacionTeclas: Boolean; virtual;
-    // Clona los params relevantes de `oConn` global y devuelve una nueva
-    // TUniConnection ya conectada (usa el pool de UniDAC). Los Mtos
-    // especializados pueden override para variantes (p.ej. una replica
-    // de solo-lectura), aunque por defecto basta el clon plano.
-    function CrearConexionPropia: TUniConnection; virtual;
     // Crea/oculta el overlay "Procesando..." sobre este Mto. Reentrante:
     // varias llamadas a Bloquear=True solo muestran el overlay una vez,
     // y solo se oculta cuando todas se compensan con un False.
@@ -394,11 +390,13 @@ implementation
 
 uses inMtoGenSearch,
      inLibGlobalVar,
+     inLibConexionesIntf,
      inLibUnitForm,
      inLibShowMto,
      inLibLog,
      inMtoModalGenImpSave,
-     UniDataFiltros, inMtoModalGuardarFiltro, inMtoModalGestionFiltros,
+     inLibFiltrosGuardadosIntf, inMtoModalGuardarFiltro,
+     inMtoModalGestionFiltros,
      System.NetEncoding,
      UniDataGen, uGenericIfThen, inMtoPrincipal,
      inLibFotos, inMtoFotoArticulo, inMtoStockConsulta,
@@ -412,6 +410,16 @@ uses inMtoGenSearch,
      Vcl.ComCtrls;          // TProgressBar marquee en overlay de carga
      // System.Threading ya esta en el interface (para TList<ITask>).
 
+function TfrmMtoGen.GetConexionTrabajo: TUniConnection;
+begin
+  Result := FConn;
+  if not Assigned(Result) then
+    Result := ConexionPrincipal;
+  if not Assigned(Result) then
+    raise Exception.Create(
+      'No está disponible la conexión de trabajo.');
+end;
+
 procedure TfrmMtoGen.AbrirPerfiles(bTabVisible:Boolean);
 begin
   if (bTabVisible = true) then
@@ -420,7 +428,6 @@ begin
     begin
       with (Self as TfrmMtoSearch).unqryPerfiles do
       begin
-        Connection := oConn;
         if ((Pos('Nothing', SQL.Text) > 0) or
             (Trim(SQL.Text) = '')
            ) then
@@ -430,8 +437,11 @@ begin
                      ' WHERE (KEY_USUPER = :NameFormModule)';
           ParamByName('NameFormModule').AsString := Self.Name;
         end;
-        if (Active = false) then
+        if not Active then
+        begin
+          Connection := ConexionTrabajo;
           Open;
+        end;
       end;
     end
     else //es modulo mantenimiento
@@ -440,7 +450,6 @@ begin
         begin
           tvPerfil.DataController.DataSource :=
                                           (tdmDataModule as TdmBase).dsPerfiles;
-          Connection := oConn;
           if ( (Pos('Nothing', SQL.Text) > 0) or
                (Trim(SQL.Text) = '') or
                (Pos(':NameDataModule', SQL.Text ) > 0)
@@ -454,8 +463,11 @@ begin
             ParamByName('NameFormModule').AsString :=
                                                 (tdmDataModule as TdmBase).Name;
           end;
-          if (Active = false) then
+          if not Active then
+          begin
+            Connection := ConexionTrabajo;
             Open;
+          end;
         end;
       end;
   end;
@@ -537,7 +549,7 @@ end;
 procedure TfrmMtoGen.btnCargarCaptionsClick(Sender: TObject);
 begin
   inherited;
-  CargarCaptions(Self, Self.Owner);
+  CargarCaptions(Self, Self.Owner, PerfilesUsuario);
 end;
 
 procedure TfrmMtoGen.btnCargarColumnasClick(Sender: TObject);
@@ -551,7 +563,7 @@ begin
       if (Self.Components[i] is TcxCustomGridTableView) then
     begin
       cxGrid := TcxCustomGridTableView(Self.Components[i]);
-      GetSettingsColumn(cxGrid, Self.Name, Self.Owner);
+      GetSettingsColumn(cxGrid, Self.Name, Self.Owner, PerfilesUsuario);
     end;
   end;
 end;
@@ -572,12 +584,9 @@ begin
     Exit;
   // Si el Mto tiene conexion propia (Fase 1), la transaccion DEBE ir
   // contra ella: las queries del data module ya apuntan a FConn via
-  // ReasignarConexion, asi que un StartTransaction sobre oConn no las
-  // cubriria y el commit/rollback no afectaria a los ApplyUpdates.
-  if Assigned(FConn) then
-    ConnGrabar := FConn
-  else
-    ConnGrabar := oDmConn.conUni;
+  // ReasignarConexion, asi que la transaccion debe usar ConexionTrabajo
+  // para que el commit/rollback afecte a los ApplyUpdates.
+  ConnGrabar := ConexionTrabajo;
   Screen.Cursor := crHourGlass;
   try
     try
@@ -653,6 +662,7 @@ var
   cxGrid: TcxCustomGridTableView;
   oList: TPerfilList;
   item: TPerfilItem;
+  ConnPerfiles: TUniConnection;
 begin
   inherited;
   bGuardar := False;
@@ -719,7 +729,12 @@ begin
                                          'False');
         oList.Add(item);
 
-        CollectSettingsColumnProfile(cxGrid, Self.Name, sPermisos, oList);
+        CollectSettingsColumnProfile(
+          cxGrid,
+          Self.Name,
+          sPermisos,
+          PerfilesUsuario,
+          oList);
       end;
 
     // 3. Perfiles particulares del Mto (hook para descendientes — por
@@ -727,14 +742,18 @@ begin
     // de la pestanya Lista).
     RecogerPerfilesParticulares(oList, sPermisos);
 
-    oConn.StartTransaction;
+    ConnPerfiles := ConexionPrincipal;
+    if not Assigned(ConnPerfiles) then
+      raise Exception.Create(
+        'No está disponible la conexión principal.');
+    ConnPerfiles.StartTransaction;
     try
-      odmPerfiles.GrabarPerfilesBatch(oList);
+      PerfilesUsuario.GrabarPerfiles(oList);
       // aquí puedes seguir llamando a GrabarPerfilDatam / CargarCaptions
       // si antes los refactorizas también para que acepten la lista
-      oConn.Commit;
+      ConnPerfiles.Commit;
     except
-      oConn.Rollback;
+      ConnPerfiles.Rollback;
       raise;
     end;
   finally
@@ -1024,7 +1043,7 @@ end;
 
 procedure TfrmMtoGen.CargarPerfilesComunes(sUser:string = 'Todos');
 begin
-  with odmPerfiles do
+  with PerfilesUsuario do
   begin
     GrabarPerfil(sUser, Self.Name, 'oRenameComponents', 'False' );
     GrabarPerfil(sUser, Self.Name, 'oCreateItems', 'False' );
@@ -1038,7 +1057,10 @@ end;
 procedure TfrmMtoGen.CargarPerfilesParticulares;
 begin
   if (tdmDataModule <> nil) then
-    GrabarPerfilDatam((tdmDataModule as TdmBase), Self.Owner);
+    GrabarPerfilDatam(
+      tdmDataModule as TdmBase,
+      Self.Owner,
+      PerfilesUsuario);
 end;
 
 procedure TfrmMtoGen.RecogerPerfilesParticulares(var oList: TPerfilList;
@@ -1158,21 +1180,25 @@ begin
     swTramo := TStopwatch.StartNew;
     tdmDataModule := CrearDataModule(sNameModule, Self);
     msCrearDM := swTramo.ElapsedMilliseconds;
-    // Conexion propia del Mto: la creamos si todavia no existe y la
-    // inyectamos en todas las queries/SPs del data module recien creado.
-    // El DataModule sigue arrancando con `oConn` en su DoCreate, lo cual
-    // es necesario para que el .dfm streaming no se queje; aqui hacemos
-    // el switch antes de cualquier Open real.
+    // La conexión persistente dmConn.conUni mantiene operativos los DFM en
+    // diseño. En ejecución el servicio crea la conexión propia del Mto y se
+    // inyecta antes de abrir la tabla principal.
     if FConn = nil then
     try
       swTramo := TStopwatch.StartNew;
-      FConn := CrearConexionPropia;
+      if not Assigned(Conexiones) then
+        raise Exception.Create(
+          'No está disponible el servicio de conexiones.');
+      FConn := Conexiones.CrearConexion(
+        Self,
+        uctMantenimiento);
       msFConn := swTramo.ElapsedMilliseconds;
     except
       on E: Exception do
       begin
-        inliblog.Log.LogError('No se pudo crear conexion propia para ' +
-          Self.Name + ': ' + E.Message + '. Se sigue usando oConn global.');
+        inliblog.Log.LogError('No se pudo crear conexión propia para ' +
+          Self.Name + ': ' + E.Message +
+          '. Se sigue usando dmConn.conUni.');
         FConn := nil;
       end;
     end;
@@ -1621,44 +1647,6 @@ begin
   end;
 end;
 
-function TfrmMtoGen.CrearConexionPropia: TUniConnection;
-begin
-  Result := TUniConnection.Create(Self);
-  try
-    Result.LoginPrompt := False;
-    Result.ProviderName := oConn.ProviderName;
-    Result.Server       := oConn.Server;
-    Result.Port         := oConn.Port;
-    Result.Database     := oConn.Database;
-    Result.Username     := oConn.Username;
-    Result.Password     := oConn.Password;
-    // Mismos ajustes que la conexion global (UniDataConn.connBeforeConnect).
-    // Con los mismos params, las conexiones fisicas salen del mismo pool.
-    Result.Pooling := True;
-    Result.PoolingOptions.ConnectionLifetime := 0;
-    Result.PoolingOptions.Validate := True;
-    Result.SpecificOptions.Values['MySQL.Interactive'] := 'True';
-    Result.SpecificOptions.Values['ConnectionTimeout'] := '30';
-    // El charset va como SpecificOption del clon, no solo en el SET NAMES
-    // manual del AfterConnect: asi UniDAC reaplica "SET NAMES utf8mb4" en
-    // cada reconexion fisica del LocalFailover. Sin esto, al reavivar una
-    // conexion muerta el texto volvia ilegible (mojibake) hasta reiniciar.
-    Result.SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
-    Result.SpecificOptions.Values['MySQL.Charset'] := 'utf8mb4';
-    Result.SpecificOptions.Values['MySQL.Protocol'] := 'mpDefault';
-    Result.Options.LocalFailover    := True;
-    Result.Options.DisconnectedMode := True;
-    // Reusamos el handler de errores y el AfterConnect (timeout extendido)
-    // de la conexion global para mantener comportamiento consistente.
-    Result.OnError       := oConn.OnError;
-    Result.AfterConnect  := oConn.AfterConnect;
-    Result.Connect;
-  except
-    FreeAndNil(Result);
-    raise;
-  end;
-end;
-
 procedure TfrmMtoGen.cxGrdDBTabPrinDblClick(Sender: TObject);
 begin
   inherited;
@@ -1844,7 +1832,7 @@ var
 begin
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionTrabajo;
     qry.SQL.Text :=
       'DELETE FROM fza_informes_guias ' +
       ' WHERE INFORME_INFGUI = :INF';
@@ -2255,7 +2243,7 @@ begin
             // Persistir columnas visibles en fza_informes_guias
             var qryVis := TUniQuery.Create(nil);
             try
-              qryVis.Connection := oConn;
+              qryVis.Connection := ConexionTrabajo;
               qryVis.SQL.Text :=
                 'UPDATE fza_informes_guias ' +
                 '   SET COLUMNAS_VISIBLES_INFGUI = :VIS ' +
@@ -2680,6 +2668,7 @@ begin
   inMtoStockConsulta.MostrarStockConsulta(
     Self,
     Permisos,
+    PerfilesUsuario,
     sArt,
     sSku);
 end;
@@ -2774,7 +2763,8 @@ begin
   inLibUser.GetFormUserProfile(oPerfilDic,
                                Self.Name,
                                inLibGlobalVar.oUser,
-                               inLibGlobalVar.oGroup);
+                               inLibGlobalVar.oGroup,
+                               PerfilesUsuario);
   CrearTablaPrincipal;
   AplicarEtiquetas;
   // Re-aplicar visibilidad de columnas guía: CreateAllItems y
@@ -2880,7 +2870,7 @@ end;
 // Guardan y comparten DataController.Filter de la lista principal con
 // nombre propio. Independientes del filtro incidental que ya guarda
 // "Grabar Grid" (sbGrabarGridClick) junto con el layout. Ver
-// UniDataFiltros.pas para el acceso a BBDD (fza_filtros_guardados /
+// IFiltrosGuardados para el acceso a BBDD (fza_filtros_guardados /
 // fza_filtros_guardados_compartidos).
 
 procedure TfrmMtoGen.sbFiltrosClick(Sender: TObject);
@@ -2915,9 +2905,11 @@ var
   oSeparador: TMenuItem;
 begin
   pmFiltros.Items.Clear;
-  if Assigned(odmFiltros) then
+  if Assigned(FiltrosGuardados) then
   begin
-    oLista := odmFiltros.ListarFiltros(Self.Name, cxGrdDBTabPrin.Name);
+    oLista := FiltrosGuardados.ListarFiltros(
+      Self.Name,
+      cxGrdDBTabPrin.Name);
     try
       if oLista.Count = 0 then
       begin
@@ -3135,7 +3127,8 @@ var
   sFiltroBase64: string;
 begin
   tmrBusqGlobal.Enabled := False;
-  sFiltroBase64 := odmFiltros.CargarFiltroBase64((Sender as TMenuItem).Tag);
+  sFiltroBase64 := FiltrosGuardados.CargarFiltroBase64(
+    (Sender as TMenuItem).Tag);
   AplicarFiltroDesdeBase64(sFiltroBase64);
   tmrBusqGlobal.Enabled := False;
 end;
@@ -3200,9 +3193,10 @@ begin
       res := TfrmModalGuardarFiltro.Ejecutar(Self);
       if res.Aceptado then
       begin
-        iIdFiltro := odmFiltros.BuscarFiltroPropio(Self.Name,
-                                                   cxGrdDBTabPrin.Name,
-                                                   res.Nombre);
+        iIdFiltro := FiltrosGuardados.BuscarFiltroPropio(
+          Self.Name,
+          cxGrdDBTabPrin.Name,
+          res.Nombre);
         if iIdFiltro > 0 then
         begin
           if Application.MessageBox(
@@ -3211,16 +3205,22 @@ begin
               'Sobrescribir filtro',
               MB_YESNO + MB_ICONQUESTION) = ID_YES then
           begin
-            odmFiltros.SobrescribirFiltro(iIdFiltro, res.Nombre,
-                                          res.Descripcion, sFiltroBase64);
+            FiltrosGuardados.SobrescribirFiltro(
+              iIdFiltro,
+              res.Nombre,
+              res.Descripcion,
+              sFiltroBase64);
             ShowMessage('Filtro sobrescrito correctamente.');
           end;
         end
         else
         begin
-          odmFiltros.GuardarFiltroNuevo(Self.Name, cxGrdDBTabPrin.Name,
-                                        res.Nombre, res.Descripcion,
-                                        sFiltroBase64);
+          FiltrosGuardados.GuardarFiltroNuevo(
+            Self.Name,
+            cxGrdDBTabPrin.Name,
+            res.Nombre,
+            res.Descripcion,
+            sFiltroBase64);
           ShowMessage('Filtro guardado correctamente.');
         end;
       end;

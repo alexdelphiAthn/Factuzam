@@ -19,29 +19,17 @@ interface
 uses
   System.SysUtils, System.Generics.Collections,
   Vcl.Dialogs, Classes, DB, MemDS, inLibUser,
-  DBAccess, Uni, UniDataConn;
+  DBAccess, Uni, inLibAuditoriaDatosIntf, inLibConexionesIntf,
+  inLibContextoSesionIntf, inLibPerfilesUsuarioIntf;
 
 type
-  TFieldsProfile = record
-    pUSUARIO_GRUPO_PERFILES		  :String;
-    pKEY_PERFILES               :String;
-    pSUBKEY_PERFILES            :String;
-    pVALUE_PERFILES             :String;
-    pVALUE_TEXT_PERFILES        :String;
-    //pTYPE_BLOB_PERFILES         :String;
-    //pVALUE_BLOB_PERFILES        :Variant;
-  end;
-
-  TPerfilItem = record
-    UserGroup: string;
-    KeyPerfil: string;
-    SubKey: string;
-    Value: string;
-  end;
-
-  TPerfilList = TList<TPerfilItem>;
-
-  TdmPerfiles = class(TDataModule)
+  TdmPerfiles = class(
+    TDataModule,
+    IProveedorAuditoriaDatos,
+    IProveedorConexiones,
+    IProveedorContextoSesion,
+    IPerfilesUsuario
+  )
     unqryPerfiles: TUniQuery;
     unstdGrabarPerfil: TUniStoredProc;
     procedure DataModuleCreate(Sender: TObject);
@@ -50,34 +38,61 @@ type
   private
     FCachePerfilesForm: TObjectDictionary<string, TProfileDicc>;
     FCachePrecargada: Boolean;
+    FAuditoriaDatos: IServicioAuditoriaDatos;
+    FConexiones: IServicioConexiones;
+    FContextoSesion: IContextoSesionAplicacion;
     function ClonarPerfilDicc(AOrigen: TProfileDicc): TProfileDicc;
     function CargarPerfilFormDesdeDB(const AFormName: string): TProfileDicc;
+    function GetAuditoriaDatos: IServicioAuditoriaDatos;
+    function GetConexiones: IServicioConexiones;
+    function GetConexionPrincipal: TUniConnection;
+    function GetContextoSesion: IContextoSesionAplicacion;
+    function GetIdentidadSesion: TIdentidadSesion;
+    procedure HeredarAuditoriaDatos(AOwner: TComponent);
+    procedure HeredarConexiones(AOwner: TComponent);
+    procedure HeredarContextoSesion(AOwner: TComponent);
+    procedure ActualizarAuditoria(DataSet: TDataSet);
+    function ObtenerPerfilFormCache(
+      const AFormName: string;
+      out APerfilDic: TProfileDicc): Boolean;
   public
-    // Métodos existentes mejorados
-    procedure GrabarPerfil(psuser,
-                           pskey,
-                           pssubkey,
-                           psvalue: string;
-                           psValueText: WideString = '');
-    procedure GrabarPerfilesBatch(const AItems: TPerfilList);
-    procedure Assign_Profile_Dict(pskey: string; var oDict: TProfileUserDicc);
-    procedure AddRecordToDict(fpProfile: TFieldsProfile;
-                              var oDict: TProfileUserDicc);
-    function GetKeySubKeyValueDefNoDic(skey, sSubKey, sDef: string): string;
-
-    // NUEVOS MÉTODOS para centralizar lógica y evitar SQL en los formularios
-    function GetProfileSubKey(sKey: string; sDef: string = ''): string;
-    procedure DeleteProfile(sUserGroup, sKey: string; sSubKey: string = '');
-
-    // Caché en memoria de perfiles de formulario (KEY_USUPER -> SUBKEY -> Value)
-    // resueltos por prioridad user > group > Todos. Se precarga al login para
-    // que GetFormUserProfile no llame a PRC_GETPERFILFORMULARIO en cada apertura.
-    procedure PrecargarPerfilesUsuario(AConn: TUniConnection = nil);
-    function ObtenerPerfilFormCache(const AFormName: string;
-                                    out APerfilDic: TProfileDicc): Boolean;
-    procedure ResincronizarCachePerfilForm(const AFormName: string);
+    constructor Create(AOwner: TComponent); override;
+    procedure GrabarPerfil(
+      const AUsuarioGrupo, AClave, ASubclave, AValor: string;
+      const AValorTexto: WideString = '');
+    procedure GrabarPerfiles(const APerfiles: TPerfilList);
+    procedure EliminarPerfil(
+      const AUsuarioGrupo, AClave: string;
+      const ASubclave: string = '');
+    function ObtenerValorPerfil(
+      const AClave, ASubclave, AValorPredeterminado: string
+    ): string;
+    function ObtenerSubclavePerfil(
+      const AClave: string;
+      const AValorPredeterminado: string = ''
+    ): string;
+    procedure PrecargarPerfilesUsuario; overload;
+    procedure PrecargarPerfilesUsuario(AConn: TUniConnection); overload;
+    function CargarPerfilFormulario(
+      const AFormulario: string;
+      out APerfil: TProfileDicc
+    ): Boolean; overload;
+    function CargarPerfilFormulario(
+      const AFormulario, AUsuario, AGrupo: string;
+      out APerfil: TProfileDicc
+    ): Boolean; overload;
+    procedure ResincronizarPerfilFormulario(const AFormulario: string);
     procedure InvalidarCachePerfiles;
     property CachePrecargada: Boolean read FCachePrecargada;
+    property AuditoriaDatos: IServicioAuditoriaDatos
+      read GetAuditoriaDatos;
+    property Conexiones: IServicioConexiones read GetConexiones;
+    property ConexionPrincipal: TUniConnection
+      read GetConexionPrincipal;
+    property ContextoSesion: IContextoSesionAplicacion
+      read GetContextoSesion;
+    property IdentidadSesion: TIdentidadSesion
+      read GetIdentidadSesion;
   end;
 
 var
@@ -85,78 +100,115 @@ var
 
 implementation
 
-uses inLibGlobalVar, inLibLog, System.SysConst;
+uses
+  Vcl.Forms, inLibLog, System.SysConst;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
 
-procedure TdmPerfiles.AddRecordToDict(fpProfile: TFieldsProfile;
-                                      var oDict : TProfileUserDicc);
-var
-  dvValue: TDictValue;
-  dukDictUser: TDictUserKey;
+constructor TdmPerfiles.Create(AOwner: TComponent);
 begin
-  dukDictUser.sUser := inLibGlobalVar.oUser;
-  dukDictUser.sGroup := inLibGlobalVar.oGroup;
-  dukDictUser.sKey := fpProfile.pKEY_PERFILES;
-  if ( (dukDictUser.sUser) = (fpProfile.pUSUARIO_GRUPO_PERFILES) ) then
-    dukDictUser.oProperty := User;
-  if ( (dukDictUser.sGroup) = (fpProfile.pUSUARIO_GRUPO_PERFILES) ) then
-    dukDictUser.oProperty := Group;
-  if ( (oAll) = (fpProfile.pUSUARIO_GRUPO_PERFILES) ) then
-    dukDictUser.oProperty := All;
-  dukDictUser.sSubkey := (fpProfile.pSUBKEY_PERFILES);
-  dvValue.sValue := (fpProfile.pVALUE_PERFILES);
-  dvValue.sValueText := fpProfile.pVALUE_TEXT_PERFILES;
-  //oValue.typevalueblob := objFProfile.pTYPE_BLOB_PERFILES;
-  //oValue.valueblob := objFProfile.pTYPE_BLOB_PERFILES;
-  oDict.Add(dukDictUser,dvValue);
+  HeredarAuditoriaDatos(AOwner);
+  HeredarConexiones(AOwner);
+  HeredarContextoSesion(AOwner);
+  inherited Create(AOwner);
 end;
 
-procedure TdmPerfiles.Assign_Profile_Dict(pskey:string;
-                                          var oDict: TProfileUserDicc);
+procedure TdmPerfiles.HeredarAuditoriaDatos(AOwner: TComponent);
 var
-  objFieldsProfile: TFieldsProfile;
+  Proveedor: IProveedorAuditoriaDatos;
 begin
-  oDict := TProfileUserDicc.Create;
-  with unqryPerfiles do
-  begin
-    sql.Text :=  '  SELECT *  ' +
-                 '    FROM fza_usuarios_perfiles ' +
-                 '   WHERE (   USUARIO_GRUPO_USUPER = :user ' +
-                 '          OR USUARIO_GRUPO_USUPER = :group' +
-                 '          OR USUARIO_GRUPO_USUPER = :todos)' +
-                 '     AND KEY_USUPER = :key ' +
-                 '     AND TYPE_BLOB_USUPER IS NULL ' +
-                 'ORDER BY USUARIO_GRUPO_USUPER, KEY_USUPER';
-    ParamByName('user').AsString := oUser;
-    ParamByName('group').AsString := oGroup;
-    ParamByName('key').AsString := pskey;
-    ParamByName('todos').AsString := oAll;
-    Open;
-    First;
-    while not Eof do
-    begin
-      objFieldsProfile.pUSUARIO_GRUPO_PERFILES:=
-                                   FindField('USUARIO_GRUPO_USUPER').AsString;
-      objFieldsProfile.pKEY_PERFILES:=
-                                             FindField('KEY_USUPER').AsString;
-      objFieldsProfile.pSUBKEY_PERFILES:=
-                                          FindField('SUBKEY_USUPER').AsString;
-      objFieldsProfile.pVALUE_PERFILES:=
-                                           FindField('VALUE_USUPER').AsString;
-      objFieldsProfile.pVALUE_TEXT_PERFILES         :=
-                                  FindField('VALUE_TEXT_USUPER').AsWideString;
-      //objFieldsProfile.pTYPE_BLOB_PERFILES
-      //:= FindField('TYPE_BLOB_USUPER').AsVariant;
-      //objFieldsProfile.pVALUE_BLOB_PERFILES
-      //:= FindField('VALUE_BLOB_USUPER').AsString;
-      AddRecordToDict(objFieldsProfile, oDict);
-      Next;
-    end;
-    Close;
-  end;
+  FAuditoriaDatos := nil;
+  if Supports(AOwner, IProveedorAuditoriaDatos, Proveedor) then
+    FAuditoriaDatos := Proveedor.AuditoriaDatos;
+  if not Assigned(FAuditoriaDatos) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorAuditoriaDatos,
+       Proveedor) then
+    FAuditoriaDatos := Proveedor.AuditoriaDatos;
+end;
+
+function TdmPerfiles.GetAuditoriaDatos: IServicioAuditoriaDatos;
+begin
+  Result := FAuditoriaDatos;
+end;
+
+procedure TdmPerfiles.HeredarConexiones(AOwner: TComponent);
+var
+  Proveedor: IProveedorConexiones;
+begin
+  FConexiones := nil;
+  if Supports(AOwner, IProveedorConexiones, Proveedor) then
+    FConexiones := Proveedor.Conexiones;
+  if not Assigned(FConexiones) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorConexiones,
+       Proveedor) then
+    FConexiones := Proveedor.Conexiones;
+end;
+
+procedure TdmPerfiles.HeredarContextoSesion(AOwner: TComponent);
+var
+  Proveedor: IProveedorContextoSesion;
+begin
+  FContextoSesion := nil;
+  if Supports(AOwner, IProveedorContextoSesion, Proveedor) then
+    FContextoSesion := Proveedor.ContextoSesion;
+  if not Assigned(FContextoSesion) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorContextoSesion,
+       Proveedor) then
+    FContextoSesion := Proveedor.ContextoSesion;
+end;
+
+function TdmPerfiles.GetConexiones: IServicioConexiones;
+begin
+  Result := FConexiones;
+end;
+
+function TdmPerfiles.GetConexionPrincipal: TUniConnection;
+begin
+  Result := nil;
+  if Assigned(FConexiones) then
+    Result := FConexiones.ConexionPrincipal;
+  if not Assigned(Result) and
+     not (csDesigning in ComponentState) then
+    raise Exception.Create(
+      'No se ha configurado el servicio de conexiones de datos.');
+end;
+
+function TdmPerfiles.GetContextoSesion: IContextoSesionAplicacion;
+begin
+  Result := FContextoSesion;
+end;
+
+function TdmPerfiles.GetIdentidadSesion: TIdentidadSesion;
+begin
+  Result := TIdentidadSesion.Crear('', '', '');
+  if Assigned(FContextoSesion) then
+    Result := FContextoSesion.Identidad
+  else if not (csDesigning in ComponentState) then
+    raise Exception.Create(
+      'No se ha configurado el contexto de sesión.');
+end;
+
+procedure TdmPerfiles.ActualizarAuditoria(DataSet: TDataSet);
+begin
+  if Assigned(FAuditoriaDatos) then
+    FAuditoriaDatos.Actualizar(DataSet)
+  else if not (csDesigning in ComponentState) then
+    raise Exception.Create(
+      'No se ha configurado el servicio de auditoría de datos.');
 end;
 
 procedure TdmPerfiles.DataModuleCreate(Sender: TObject);
@@ -187,11 +239,13 @@ function TdmPerfiles.CargarPerfilFormDesdeDB(
 var
   qry: TUniQuery;
   v: TDictValue;
+  IdentidadActual: TIdentidadSesion;
 begin
+  IdentidadActual := IdentidadSesion;
   Result := TProfileDicc.Create;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     // Mismo criterio de resolución que PRC_GETPERFILFORMULARIO: por cada
     // SUBKEY queda la fila con USUARIO_GRUPO de mayor prioridad. Lo conseguimos
     // ordenando ascendente por prioridad (Todos -> Group -> User) e iterando
@@ -209,9 +263,9 @@ begin
       '            WHEN :u THEN 3 ' +
       '          END';
     qry.ParamByName('key').AsString := AFormName;
-    qry.ParamByName('u').AsString   := oUser;
-    qry.ParamByName('g').AsString   := oGroup;
-    qry.ParamByName('a').AsString   := oAll;
+    qry.ParamByName('u').AsString   := IdentidadActual.Usuario;
+    qry.ParamByName('g').AsString   := IdentidadActual.Grupo;
+    qry.ParamByName('a').AsString   := PERFIL_TODOS;
     qry.Open;
     while not qry.Eof do
     begin
@@ -225,20 +279,28 @@ begin
   end;
 end;
 
-procedure TdmPerfiles.PrecargarPerfilesUsuario(AConn: TUniConnection = nil);
+procedure TdmPerfiles.PrecargarPerfilesUsuario;
+begin
+  PrecargarPerfilesUsuario(ConexionPrincipal);
+end;
+
+procedure TdmPerfiles.PrecargarPerfilesUsuario(AConn: TUniConnection);
 var
   qry: TUniQuery;
   sKeyForm, sSubKey: string;
   v: TDictValue;
   PerfilDic: TProfileDicc;
   iFilas, iForms: Integer;
+  IdentidadActual: TIdentidadSesion;
 begin
+  IdentidadActual := IdentidadSesion;
   if AConn = nil then
-    AConn := oConn;
+    AConn := ConexionPrincipal;
   Log.LogInfo(Format('PrecargarPerfilesUsuario: INICIO ' +
-                     'oUser="%s" oGroup="%s" oAll="%s" ' +
+                     'usuario="%s" grupo="%s" todos="%s" ' +
                      'connAssigned=%s connConnected=%s',
-                     [oUser, oGroup, oAll,
+                     [IdentidadActual.Usuario, IdentidadActual.Grupo,
+                      PERFIL_TODOS,
                       BoolToStr(AConn <> nil, True),
                       BoolToStr((AConn <> nil) and AConn.Connected, True)]));
   FCachePerfilesForm.Clear;
@@ -264,9 +326,9 @@ begin
         '            WHEN :g THEN 2 ' +
         '            WHEN :u THEN 3 ' +
         '          END';
-      qry.ParamByName('u').AsString := oUser;
-      qry.ParamByName('g').AsString := oGroup;
-      qry.ParamByName('a').AsString := oAll;
+      qry.ParamByName('u').AsString := IdentidadActual.Usuario;
+      qry.ParamByName('g').AsString := IdentidadActual.Grupo;
+      qry.ParamByName('a').AsString := PERFIL_TODOS;
       qry.Open;
       while not qry.Eof do
       begin
@@ -342,29 +404,83 @@ begin
   Result := True;
 end;
 
-procedure TdmPerfiles.ResincronizarCachePerfilForm(const AFormName: string);
+function TdmPerfiles.CargarPerfilFormulario(
+  const AFormulario: string;
+  out APerfil: TProfileDicc): Boolean;
+begin
+  Result := ObtenerPerfilFormCache(AFormulario, APerfil);
+  if not Result then
+  begin
+    APerfil := CargarPerfilFormDesdeDB(AFormulario);
+    Result := True;
+  end;
+end;
+
+function TdmPerfiles.CargarPerfilFormulario(
+  const AFormulario, AUsuario, AGrupo: string;
+  out APerfil: TProfileDicc): Boolean;
+var
+  IdentidadActual: TIdentidadSesion;
+  Perfil: TDictValue;
+  Consulta: TUniQuery;
+begin
+  IdentidadActual := IdentidadSesion;
+  if (AUsuario = IdentidadActual.Usuario) and
+     (AGrupo = IdentidadActual.Grupo) then
+    Result := CargarPerfilFormulario(AFormulario, APerfil)
+  else
+  begin
+    APerfil := TProfileDicc.Create;
+    Consulta := TUniQuery.Create(nil);
+    try
+      Consulta.Connection := ConexionPrincipal;
+      Consulta.SQL.Text := 'CALL PRC_GETPERFILFORMULARIO(:u, :g, :f)';
+      Consulta.Params[0].AsString := AUsuario;
+      Consulta.Params[1].AsString := AGrupo;
+      Consulta.Params[2].AsString := AFormulario;
+      Consulta.Open;
+      while not Consulta.Eof do
+      begin
+        Perfil.sValue :=
+          Consulta.FieldByName('VALUE_USUPER').AsString;
+        Perfil.sValueText :=
+          Consulta.FieldByName('VALUE_TEXT_USUPER').AsWideString;
+        APerfil.AddOrSetValue(
+          Consulta.FieldByName('SUBKEY_USUPER').AsString,
+          Perfil);
+        Consulta.Next;
+      end;
+      Result := True;
+    finally
+      FreeAndNil(Consulta);
+    end;
+  end;
+end;
+
+procedure TdmPerfiles.ResincronizarPerfilFormulario(
+  const AFormulario: string);
 var
   Nuevo: TProfileDicc;
 begin
   if not FCachePrecargada then
   begin
     Log.LogWarning(Format('ResincronizarCachePerfilForm: form="%s" ' +
-                          'cache no precargado, ignorado', [AFormName]));
+                          'cache no precargado, ignorado', [AFormulario]));
     Exit;
   end;
-  Nuevo := CargarPerfilFormDesdeDB(AFormName);
+  Nuevo := CargarPerfilFormDesdeDB(AFormulario);
   if Nuevo.Count > 0 then
   begin
-    FCachePerfilesForm.AddOrSetValue(AFormName, Nuevo);
+    FCachePerfilesForm.AddOrSetValue(AFormulario, Nuevo);
     Log.LogInfo(Format('ResincronizarCachePerfilForm: form="%s" actualizado ' +
-                       'claves=%d', [AFormName, Nuevo.Count]));
+                       'claves=%d', [AFormulario, Nuevo.Count]));
   end
   else
   begin
     FreeAndNil(Nuevo);
-    FCachePerfilesForm.Remove(AFormName);
+    FCachePerfilesForm.Remove(AFormulario);
     Log.LogInfo(Format('ResincronizarCachePerfilForm: form="%s" sin filas, ' +
-                       'eliminado del cache', [AFormName]));
+                       'eliminado del cache', [AFormulario]));
   end;
 end;
 
@@ -375,40 +491,42 @@ begin
   FCachePrecargada := False;
 end;
 
-procedure TdmPerfiles.DeleteProfile(sUserGroup,
-                                    sKey: string;
-                                    sSubKey: string = '');
+procedure TdmPerfiles.EliminarPerfil(
+  const AUsuarioGrupo, AClave: string;
+  const ASubclave: string);
 var
   unqryDelete: TUniQuery;
 begin
   unqryDelete := TUniQuery.Create(nil);
   try
-    unqryDelete.Connection := oConn;
+    unqryDelete.Connection := ConexionPrincipal;
     unqryDelete.SQL.Text := 'DELETE FROM fza_usuarios_perfiles ' +
                             ' WHERE USUARIO_GRUPO_USUPER = :UserGroup ' +
                             '   AND KEY_USUPER = :Key';
 
     // Si pasamos un SubKey, lo añadimos a la condición de borrado
-    if sSubKey <> '' then
+    if ASubclave <> '' then
       unqryDelete.SQL.Add(' AND SUBKEY_USUPER = :SubKey');
 
-    unqryDelete.ParamByName('UserGroup').AsString := sUserGroup;
-    unqryDelete.ParamByName('Key').AsString := sKey;
-    if sSubKey <> '' then
-      unqryDelete.ParamByName('SubKey').AsString := sSubKey;
+    unqryDelete.ParamByName('UserGroup').AsString := AUsuarioGrupo;
+    unqryDelete.ParamByName('Key').AsString := AClave;
+    if ASubclave <> '' then
+      unqryDelete.ParamByName('SubKey').AsString := ASubclave;
 
     unqryDelete.Execute;
   finally
     FreeAndNil(unqryDelete);
   end;
-  ResincronizarCachePerfilForm(sKey);
+  ResincronizarPerfilFormulario(AClave);
 end;
 
-function TdmPerfiles.GetKeySubKeyValueDefNoDic(skey,
-                                               sSubKey,
-                                               sDef: string): string;
+function TdmPerfiles.ObtenerValorPerfil(
+  const AClave, ASubclave, AValorPredeterminado: string): string;
+var
+  IdentidadActual: TIdentidadSesion;
 begin
-  Result := sDef;
+  IdentidadActual := IdentidadSesion;
+  Result := AValorPredeterminado;
   with unqryPerfiles do
   begin
     Close;
@@ -425,11 +543,11 @@ begin
                 '            WHEN :group THEN 2 ' +
                 '            WHEN :todos THEN 3 ' +
                 '         END';
-    ParamByName('user').AsString := oUser;
-    ParamByName('group').AsString := oGroup;
-    ParamByName('todos').AsString := oAll;
-    ParamByName('key').AsString := skey;
-    ParamByName('subkey').AsString := sSubKey;
+    ParamByName('user').AsString := IdentidadActual.Usuario;
+    ParamByName('group').AsString := IdentidadActual.Grupo;
+    ParamByName('todos').AsString := PERFIL_TODOS;
+    ParamByName('key').AsString := AClave;
+    ParamByName('subkey').AsString := ASubclave;
     Open;
 
     // Como está ordenado por prioridad, si hay registros, el primero es el
@@ -441,9 +559,13 @@ begin
   end;
 end;
 
-function TdmPerfiles.GetProfileSubKey(sKey: string; sDef: string = ''): string;
+function TdmPerfiles.ObtenerSubclavePerfil(
+  const AClave, AValorPredeterminado: string): string;
+var
+  IdentidadActual: TIdentidadSesion;
 begin
-  Result := sDef;
+  IdentidadActual := IdentidadSesion;
+  Result := AValorPredeterminado;
   with unqryPerfiles do
   begin
     Close;
@@ -456,10 +578,10 @@ begin
                 '            WHEN :group THEN 2 ' +
                 '            WHEN :todos THEN 3 ' +
                 '         END';
-    ParamByName('key').AsString := sKey;
-    ParamByName('user').AsString := oUser;
-    ParamByName('group').AsString := oGroup;
-    ParamByName('todos').AsString := oAll;
+    ParamByName('key').AsString := AClave;
+    ParamByName('user').AsString := IdentidadActual.Usuario;
+    ParamByName('group').AsString := IdentidadActual.Grupo;
+    ParamByName('todos').AsString := PERFIL_TODOS;
     Open;
 
     if not IsEmpty then
@@ -469,21 +591,23 @@ begin
   end;
 end;
 
-procedure TdmPerfiles.GrabarPerfil(psuser, pskey, pssubkey, psvalue: string;
-                                   psValueText:WideString = '');
+procedure TdmPerfiles.GrabarPerfil(
+  const AUsuarioGrupo, AClave, ASubclave, AValor: string;
+  const AValorTexto: WideString);
 begin
-  unstdGrabarPerfil.Connection := oConn;
-  unstdGrabarPerfil.ParamByName('pUSUARIO').AsString := psuser;
-  unstdGrabarPerfil.ParamByName('pKEY').AsString := pskey;
-  unstdGrabarPerfil.ParamByName('pSUBKEY').AsString := pssubkey;
-  unstdGrabarPerfil.ParamByName('pVALUE').AsString := psvalue;
-  unstdGrabarPerfil.ParamByName('pVALUE_TEXT').AsString := psValueText;
-  unstdGrabarPerfil.ParamByName('pUSUARIO_MODIF').AsString := oUser;
+  unstdGrabarPerfil.Connection := ConexionPrincipal;
+  unstdGrabarPerfil.ParamByName('pUSUARIO').AsString := AUsuarioGrupo;
+  unstdGrabarPerfil.ParamByName('pKEY').AsString := AClave;
+  unstdGrabarPerfil.ParamByName('pSUBKEY').AsString := ASubclave;
+  unstdGrabarPerfil.ParamByName('pVALUE').AsString := AValor;
+  unstdGrabarPerfil.ParamByName('pVALUE_TEXT').AsString := AValorTexto;
+  unstdGrabarPerfil.ParamByName('pUSUARIO_MODIF').AsString :=
+    IdentidadSesion.Usuario;
   unstdGrabarPerfil.Execute;
-  ResincronizarCachePerfilForm(pskey);
+  ResincronizarPerfilFormulario(AClave);
 end;
 
-procedure TdmPerfiles.GrabarPerfilesBatch(const AItems: TPerfilList);
+procedure TdmPerfiles.GrabarPerfiles(const APerfiles: TPerfilList);
 const
   BATCH_SIZE = 500;
 var
@@ -494,22 +618,22 @@ var
   oClavesAfectadas: TList<string>;
   sClave: string;
 begin
-  if (AItems = nil) or (AItems.Count = 0) then Exit;
+  if (APerfiles = nil) or (APerfiles.Count = 0) then Exit;
 
   // El usuario que está grabando, para USUARIO_ALTA / USUARIO_MODIF
-  sUsuarioActual := inLibGlobalVar.oUser;
+  sUsuarioActual := IdentidadSesion.Usuario;
 
   qry := TUniQuery.Create(nil);
   sSQL := TStringBuilder.Create;
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
 
     iStart := 0;
-    while iStart < AItems.Count do
+    while iStart < APerfiles.Count do
     begin
       iEnd := iStart + BATCH_SIZE - 1;
-      if iEnd >= AItems.Count then
-        iEnd := AItems.Count - 1;
+      if iEnd >= APerfiles.Count then
+        iEnd := APerfiles.Count - 1;
 
       sSQL.Clear;
       sSQL.Append(
@@ -536,10 +660,14 @@ begin
 
       for i := iStart to iEnd do
       begin
-        qry.ParamByName(Format('u%d', [i])).AsString := AItems[i].UserGroup;
-        qry.ParamByName(Format('k%d', [i])).AsString := AItems[i].KeyPerfil;
-        qry.ParamByName(Format('s%d', [i])).AsString := AItems[i].SubKey;
-        qry.ParamByName(Format('v%d', [i])).AsString := AItems[i].Value;
+        qry.ParamByName(Format('u%d', [i])).AsString :=
+          APerfiles[i].UserGroup;
+        qry.ParamByName(Format('k%d', [i])).AsString :=
+          APerfiles[i].KeyPerfil;
+        qry.ParamByName(Format('s%d', [i])).AsString :=
+          APerfiles[i].SubKey;
+        qry.ParamByName(Format('v%d', [i])).AsString :=
+          APerfiles[i].Value;
       end;
 
       qry.Execute;
@@ -553,11 +681,11 @@ begin
   // Resincronizar la caché solo para las KEY tocadas
   oClavesAfectadas := TList<string>.Create;
   try
-    for i := 0 to AItems.Count - 1 do
-      if oClavesAfectadas.IndexOf(AItems[i].KeyPerfil) < 0 then
-        oClavesAfectadas.Add(AItems[i].KeyPerfil);
+    for i := 0 to APerfiles.Count - 1 do
+      if oClavesAfectadas.IndexOf(APerfiles[i].KeyPerfil) < 0 then
+        oClavesAfectadas.Add(APerfiles[i].KeyPerfil);
     for sClave in oClavesAfectadas do
-      ResincronizarCachePerfilForm(sClave);
+      ResincronizarPerfilFormulario(sClave);
   finally
     FreeAndNil(oClavesAfectadas);
   end;
@@ -565,7 +693,7 @@ end;
 
 procedure TdmPerfiles.unqryPerfilesBeforePost(DataSet: TDataSet);
 begin
-  oDmConn.ActualizarUserTimeModif(DataSet);
+  ActualizarAuditoria(DataSet);
 end;
 
 end.

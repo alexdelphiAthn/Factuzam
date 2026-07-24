@@ -218,7 +218,7 @@ procedure TfrmPrintEtiqArt.FormCreate(Sender: TObject);
 begin
   inherited;
   FCodigosTarifa := TStringList.Create;
-  FLayout        := TLayoutLoader.Create(Self.Name);
+  FLayout := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
   dtFechaAplicacion.Date := Date;
 end;
 
@@ -275,7 +275,7 @@ begin
     GuardarLayout;
   // Ctrl+F12 -> resetear layout
   if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
-    ResetearLayout(Self.Name);
+    ResetearLayout(Self.Name, PerfilesUsuario);
 end;
 
 procedure TfrmPrintEtiqArt.RestaurarLayout;
@@ -288,7 +288,7 @@ procedure TfrmPrintEtiqArt.GuardarLayout;
 var
   Layout: TLayoutSaver;
 begin
-  Layout := TLayoutSaver.Create(Self.Name);
+  Layout := TLayoutSaver.Create(Self.Name, PerfilesUsuario);
   try
     Layout.GuardarGeometria(Self);
     if Layout.PreguntarYGrabar('Personalizacion Impresion Etiquetas Articulo')

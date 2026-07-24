@@ -29,7 +29,7 @@ uses
   cxMaskEdit, cxDropDownEdit, cxDBEdit, cxLabel, inLibArticulosPropiedades,
   cxLocalization,
   cxCurrencyEdit, cxDataControllerConditionalFormattingRulesManagerDialog,
-  dxBevel, cxDBNavigator, UniDataArticulos, UniDataPerfiles,
+  dxBevel, cxDBNavigator, UniDataArticulos, inLibPerfilesUsuarioIntf,
   dxDateRanges, MemDS, DBAccess, Uni, cxImage, dxGDIPlusClasses, inMtoGen,
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, Vcl.DBCtrls, cxCheckComboBox, cxDBCheckComboBox,
@@ -2505,11 +2505,11 @@ begin
     oList := TPerfilList.Create;
     try
       // Mismo volcado de filtros que usa Grabar Grid; el upsert de
-      // GrabarPerfilesBatch sobrescribe los valores previos del ambito.
+      // GrabarPerfiles sobrescribe los valores previos del ámbito.
       RecogerPerfilesParticulares(oList, sPermisos);
       oConn.StartTransaction;
       try
-        odmPerfiles.GrabarPerfilesBatch(oList);
+        PerfilesUsuario.GrabarPerfiles(oList);
         oConn.Commit;
       except
         oConn.Rollback;

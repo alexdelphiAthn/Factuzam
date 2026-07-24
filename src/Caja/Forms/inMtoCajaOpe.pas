@@ -55,6 +55,9 @@ const
   // Con PostMessage, OnEnter retorna, cxGrid termina de parentar, y solo
   // entonces abrimos el popup.
   WM_ABRIR_POPUP_AV       = WM_APP + 104;
+  // El grid termina de crear la fila después del cambio de dataset. El foco
+  // se aplica en un mensaje posterior para que no restaure la columna previa.
+  WM_ENFOCAR_ARTICULO_CAJA = WM_APP + 105;
 type
   TfrmMtoOpeCaja = class(TfrmBase)
     pnlUp: TPanel;
@@ -217,6 +220,7 @@ type
     FNumeroRectifica: string;
     FCaptionPrevio:   string;
     FUltimoTickReloj: TDateTime;
+    FEnfoqueArticuloPendiente: Boolean;
     procedure GuardarLayoutCaja;
     procedure RestaurarLayoutCaja;
     procedure CargarDepositosF2;
@@ -265,6 +269,9 @@ type
                                        message WM_AVANZAR_ATRIB_CAJA;
     procedure WMAbrirPopupAv(var Msg: TMessage);
                                        message WM_ABRIR_POPUP_AV;
+    procedure WMEnfocarArticuloCaja(var Msg: TMessage);
+                                       message WM_ENFOCAR_ARTICULO_CAJA;
+    procedure SolicitarFocoArticuloLineaNueva;
     procedure ProcesarLecturaScanner(const ACodigo: string);
     procedure LectorCodigoLeido(Sender: TObject; const ACodigo: string);
     function  LectorRejillaEditando: Boolean;
@@ -586,10 +593,23 @@ var
   View   : TcxGridDBTableView;
   I      : Integer;
   Mapa   : TDictionary<string, string>;
+  sCodigoArticulo: string;
+  sCodigoConsulta: string;
   sw, swSP, swBuild, swFit : TStopwatch;
   msSP, msBuild, msFit : Int64;
 begin
-  if CodigoInput = '' then Exit;
+  sCodigoConsulta := Trim(CodigoInput);
+  if sCodigoConsulta = '' then Exit;
+  if oCajaParams.GetBool('vgerStockTodosColores', False) and
+     (Pos('/', sCodigoConsulta) > 0) and
+     Assigned(DatosCaja) and DatosCaja.cdsLineas.Active then
+  begin
+    // El artículo padre devuelve una fila diferenciada por color y almacén.
+    sCodigoArticulo := Trim(DatosCaja.cdsLineas.FieldByName(
+      'CODIGO_ART_FACLIN').AsString);
+    if sCodigoArticulo <> '' then
+      sCodigoConsulta := sCodigoArticulo;
+  end;
   sw := TStopwatch.StartNew;
   msSP := 0; msBuild := 0; msFit := 0;
   View := dbtvStock;
@@ -600,7 +620,7 @@ begin
       Close;
       View.ClearItems;
       Connection := inLibGlobalVar.oConn;
-      ParamByName('ARTICULO').AsString := CodigoInput;
+      ParamByName('ARTICULO').AsString := sCodigoConsulta;
       swSP := TStopwatch.StartNew;
       Open;
       msSP := swSP.ElapsedMilliseconds;
@@ -645,7 +665,7 @@ begin
   end;
 //  LogPerfCaja('CajaOpe.ConsultarStock',
 //    Format('art=%s | SP=%d | Build=%d | Fit=%d | cols=%d | total=%d ms',
-//           [CodigoInput, msSP, msBuild, msFit, View.ColumnCount,
+//           [sCodigoConsulta, msSP, msBuild, msFit, View.ColumnCount,
 //            sw.ElapsedMilliseconds]));
 end;
 
@@ -2278,24 +2298,39 @@ var
   EsDeposito: boolean;
 begin
   if not DatosCaja.cdsLineas.Active then Exit;
-  if DatosCaja.cdsLineas.IsEmpty then Exit;
   if FActualizandoDepositos then Exit;
   if AFocusedRecord = nil then Exit;
-
-  VieneDeDep := DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
-  // Deshabilitar F3 y F8 (eliminar) visualmente en líneas de depósito
-  EsDeposito := (VieneDeDep = 'S') or (VieneDeDep = 'A');
-  btnF3.Enabled := not EsDeposito;
-  btnF8.Enabled := not EsDeposito;
-  sCodPadre := DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
-  sSku      := DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString;
-
-  if sCodPadre <> '' then
-    ActualizarColumnasDinamicas(sCodPadre);
-
-  if (Pos('/', sSku) > 0) and
-     (Trim(DatosCaja.cdsLineas.FieldByName('ATTR1_VALOR').AsString) = '') then
-    RellenarAtributosDesdeSku(sSku);
+  if AFocusedRecord.IsNewItemRecord then
+  begin
+    // La línea nueva conserva el último stock mostrado y queda lista para
+    // recibir un código de barras.
+    btnF3.Enabled := True;
+    btnF8.Enabled := True;
+    SolicitarFocoArticuloLineaNueva;
+  end
+  else if not DatosCaja.cdsLineas.IsEmpty then
+  begin
+    VieneDeDep := DatosCaja.cdsLineas.FieldByName(
+      'VIENE_DE_DEPOSITO').AsString;
+    // Deshabilitar F3 y F8 (eliminar) visualmente en líneas de depósito
+    EsDeposito := (VieneDeDep = 'S') or (VieneDeDep = 'A');
+    btnF3.Enabled := not EsDeposito;
+    btnF8.Enabled := not EsDeposito;
+    sCodPadre := DatosCaja.cdsLineas.FieldByName(
+      'CODIGO_ART_FACLIN').AsString;
+    sSku := DatosCaja.cdsLineas.FieldByName(
+      'CODIGO_UNIDAD_FACLIN').AsString;
+    if sCodPadre <> '' then
+      ActualizarColumnasDinamicas(sCodPadre);
+    if (Pos('/', sSku) > 0) and
+       (Trim(DatosCaja.cdsLineas.FieldByName(
+         'ATTR1_VALOR').AsString) = '') then
+      RellenarAtributosDesdeSku(sSku);
+    if Trim(sSku) <> '' then
+      ConsultarStock(sSku)
+    else if Trim(sCodPadre) <> '' then
+      ConsultarStock(sCodPadre);
+  end;
 end;
 
 
@@ -2633,7 +2668,7 @@ procedure TfrmMtoOpeCaja.RestaurarLayoutCaja;
 var
   Layout: TLayoutLoader;
 begin
-  Layout := TLayoutLoader.Create(Self.Name);
+  Layout := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
   try
     if not Layout.Disponible then Exit;
     Layout.RestaurarGeometria(Self);
@@ -3057,7 +3092,7 @@ begin
     if cxgrdLineasOpe.CanFocus then
       cxgrdLineasOpe.SetFocus;
     tvLineasOpe.Controller.FocusedColumn := tvArticulo;
-//    tvLineasOpe.Controller.EditingController.ShowEdit;
+    SolicitarFocoArticuloLineaNueva;
   end;
 end;
 
@@ -3857,7 +3892,43 @@ begin
   // Solo refrescamos cuando cambia el registro activo (Field = nil),
   // no en cada cambio de columna.
   if Field = nil then
+  begin
     RefrescarFotoStock;
+    if Assigned(DatosCaja) and DatosCaja.cdsLineas.Active and
+       (DatosCaja.cdsLineas.State = dsInsert) and
+       (Trim(DatosCaja.cdsLineas.FieldByName(
+         'CODIGO_ART_FACLIN').AsString) = '') then
+      SolicitarFocoArticuloLineaNueva;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.SolicitarFocoArticuloLineaNueva;
+begin
+  if (not FEnfoqueArticuloPendiente) and
+     (not (csDestroying in ComponentState)) then
+  begin
+    FEnfoqueArticuloPendiente := True;
+    PostMessage(Handle, WM_ENFOCAR_ARTICULO_CAJA, 0, 0);
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.WMEnfocarArticuloCaja(var Msg: TMessage);
+begin
+  FEnfoqueArticuloPendiente := False;
+  if Assigned(DatosCaja) and DatosCaja.cdsLineas.Active and
+     (DatosCaja.cdsLineas.State = dsInsert) and
+     (Trim(DatosCaja.cdsLineas.FieldByName(
+       'CODIGO_ART_FACLIN').AsString) = '') then
+  begin
+    if cxgrdLineasOpe.CanFocus then
+      cxgrdLineasOpe.SetFocus;
+    if tvLineasOpe.Controller.EditingController.IsEditing and
+       (tvLineasOpe.Controller.EditingItem <> tvArticulo) then
+      tvLineasOpe.Controller.EditingController.HideEdit(False);
+    tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+    if not tvLineasOpe.Controller.EditingController.IsEditing then
+      tvLineasOpe.Controller.EditingController.ShowEdit;
+  end;
 end;
 
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
@@ -3869,6 +3940,8 @@ begin
   FLector.Activo := oCajaParams.GetBool('vgerScanVelActivo', True);
   FLector.UmbralMs := oCajaParams.GetInt('vgerScanVelMs', 40);
   FLector.LongitudMinima := oCajaParams.GetInt('vgerScanMinLong', 4);
+  // En caja, la lectura se procesa como artículo desde cualquier columna.
+  FLector.OmitirEnRejilla := False;
   FLector.OnCodigoLeido := LectorCodigoLeido;
   FLector.OnLecturaIniciada := LectorLecturaIniciada;
   FLector.OnRejillaEditando := LectorRejillaEditando;
@@ -3928,7 +4001,7 @@ begin
   // Ctrl+F12 -> resetear layout
   if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
   begin
-    ResetearLayout(Self.Name);
+    ResetearLayout(Self.Name, PerfilesUsuario);
     Key := 0;
   end;
 end;
@@ -3956,6 +4029,7 @@ begin
   inMtoStockConsulta.MostrarStockConsulta(
     Self,
     Permisos,
+    PerfilesUsuario,
     sArt,
     sSku);
 end;
@@ -4351,7 +4425,7 @@ procedure TfrmMtoOpeCaja.GuardarLayoutCaja;
 var
   Layout: TLayoutSaver;
 begin
-  Layout := TLayoutSaver.Create(Self.Name);
+  Layout := TLayoutSaver.Create(Self.Name, PerfilesUsuario);
   try
     Layout.GuardarGeometria(Self);
     Layout.GuardarAlturaPanel('StockPanelHeight', pnlBusqueda);

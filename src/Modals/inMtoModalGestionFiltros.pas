@@ -15,7 +15,7 @@
 {    Compartir con un usuario concreto o con el propio grupo está abierto a    }
 {    cualquier propietario; compartir con otro grupo distinto o con Todos      }
 {    los usuarios requiere pertenecer al grupo administrador                   }
-{    (inLibGlobalVar.orootGroup = 'S').                                        }
+{    (`ContextoSesion.Identidad.EsAdministrador`).                              }
 {******************************************************************************}
 unit inMtoModalGestionFiltros;
 
@@ -30,7 +30,8 @@ uses
   cxTextEdit, cxButtons, cxListBox, cxStyles, cxCustomData, cxFilter,
   cxData, cxDataStorage, cxNavigator, cxDBData, cxGridLevel,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  cxGridCustomView, cxFilterControl, Data.DB, Uni, UniDataFiltros;
+  cxGridCustomView, cxFilterControl, Data.DB, Datasnap.DBClient, Uni,
+  inLibFiltrosGuardadosIntf;
 
 type
   TGestionFiltrosResult = record
@@ -87,10 +88,13 @@ type
     FVistaComponente: TcxCustomGridTableView;
     FFiltroActualBase64: string;
     FControlFiltro: TcxFilterControl;
+    FListadoFiltros: TClientDataSet;
+    FDataSourceFiltros: TDataSource;
     function IdFiltroSeleccionado: Int64;
     function GuardarFiltroEditorBase64: string;
     function ResumirFiltro(const ABase64: string): string;
     procedure CrearEditorFiltro;
+    procedure CrearListadoFiltros;
     procedure CargarFiltroEnControl(AControl: TcxFilterControl;
                                     const ABase64: string);
     procedure CargarFiltroEnEditor(const ABase64: string);
@@ -111,7 +115,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.NetEncoding, inLibGlobalVar, inLibGenBusq,
+  System.NetEncoding, inLibContextoSesionIntf, inLibGenBusq,
   inMtoModalGuardarFiltro;
 
 type
@@ -167,6 +171,7 @@ begin
   FDestinos := nil;
   FVistaComponente := nil;
   FFiltroActualBase64 := '';
+  CrearListadoFiltros;
   CrearEditorFiltro;
 end;
 
@@ -177,6 +182,9 @@ begin
   begin
     FreeAndNil(FDestinos);
   end;
+  tvFiltros.DataController.DataSource := nil;
+  FreeAndNil(FDataSourceFiltros);
+  FreeAndNil(FListadoFiltros);
   FreeAndNil(FControlFiltro);
 end;
 
@@ -189,13 +197,60 @@ begin
   FControlFiltro.Enabled := False;
 end;
 
-procedure TfrmModalGestionFiltros.CargarDatos;
+procedure TfrmModalGestionFiltros.CrearListadoFiltros;
 begin
-  if Assigned(odmFiltros) then
-  begin
-    FControlFiltro.LinkComponent := FVistaComponente;
-    odmFiltros.AbrirListadoParaGrid(FMto, FVista);
-    tvFiltros.DataController.DataSource := odmFiltros.dsListado;
+  FListadoFiltros := TClientDataSet.Create(Self);
+  FListadoFiltros.FieldDefs.Add('ID_FILT', ftLargeint);
+  FListadoFiltros.FieldDefs.Add('NOMBRE_FILT', ftString, 150);
+  FListadoFiltros.FieldDefs.Add('DESCRIPCION_FILT', ftString, 500);
+  FListadoFiltros.FieldDefs.Add(
+    'USUARIO_PROPIETARIO_FILT',
+    ftString,
+    100);
+  FListadoFiltros.FieldDefs.Add('ESPROPIO_FILT', ftString, 1);
+  FListadoFiltros.CreateDataSet;
+  FDataSourceFiltros := TDataSource.Create(Self);
+  FDataSourceFiltros.DataSet := FListadoFiltros;
+  tvFiltros.DataController.DataSource := FDataSourceFiltros;
+end;
+
+procedure TfrmModalGestionFiltros.CargarDatos;
+var
+  Filtros: TFiltrosGuardadosList;
+  Info: TFiltroGuardadoInfo;
+begin
+  FControlFiltro.LinkComponent := FVistaComponente;
+  FListadoFiltros.DisableControls;
+  try
+    FListadoFiltros.EmptyDataSet;
+    if Assigned(FiltrosGuardados) then
+    begin
+      Filtros := FiltrosGuardados.ListarFiltros(FMto, FVista);
+      try
+        for Info in Filtros do
+        begin
+          FListadoFiltros.Append;
+          FListadoFiltros.FieldByName('ID_FILT').AsLargeInt := Info.Id;
+          FListadoFiltros.FieldByName('NOMBRE_FILT').AsString :=
+            Info.Nombre;
+          FListadoFiltros.FieldByName('DESCRIPCION_FILT').AsString :=
+            Info.Descripcion;
+          FListadoFiltros.FieldByName(
+            'USUARIO_PROPIETARIO_FILT').AsString := Info.Propietario;
+          if Info.EsPropio then
+            FListadoFiltros.FieldByName('ESPROPIO_FILT').AsString := 'S'
+          else
+            FListadoFiltros.FieldByName('ESPROPIO_FILT').AsString := 'N';
+          FListadoFiltros.Post;
+        end;
+      finally
+        FreeAndNil(Filtros);
+      end;
+    end;
+    if not FListadoFiltros.IsEmpty then
+      FListadoFiltros.First;
+  finally
+    FListadoFiltros.EnableControls;
   end;
   CargarFiltroSeleccionado;
   RefrescarCompartidoCon;
@@ -204,11 +259,11 @@ end;
 function TfrmModalGestionFiltros.IdFiltroSeleccionado: Int64;
 begin
   Result := 0;
-  if Assigned(odmFiltros) and
-     odmFiltros.unqryListado.Active and
-     (not odmFiltros.unqryListado.IsEmpty) then
+  if Assigned(FiltrosGuardados) and
+     FListadoFiltros.Active and
+     (not FListadoFiltros.IsEmpty) then
   begin
-    Result := odmFiltros.unqryListado.FieldByName('ID_FILT').AsLargeInt;
+    Result := FListadoFiltros.FieldByName('ID_FILT').AsLargeInt;
   end;
 end;
 
@@ -270,7 +325,7 @@ begin
   if IdFiltroSeleccionado > 0 then
   begin
     sFiltroBase64 :=
-      odmFiltros.CargarFiltroBase64(IdFiltroSeleccionado);
+      FiltrosGuardados.CargarFiltroBase64(IdFiltroSeleccionado);
   end;
   CargarFiltroEnEditor(sFiltroBase64);
 end;
@@ -352,14 +407,14 @@ var
   bHayFiltro: Boolean;
   bEsPropio: Boolean;
 begin
-  bHayFiltro := Assigned(odmFiltros) and
-                odmFiltros.unqryListado.Active and
-                (not odmFiltros.unqryListado.IsEmpty);
+  bHayFiltro := Assigned(FiltrosGuardados) and
+                FListadoFiltros.Active and
+                (not FListadoFiltros.IsEmpty);
   bEsPropio := False;
   if bHayFiltro then
   begin
     bEsPropio :=
-      odmFiltros.unqryListado.FieldByName('ESPROPIO_FILT').AsString = 'S';
+      FListadoFiltros.FieldByName('ESPROPIO_FILT').AsString = 'S';
   end;
   btnAplicar.Enabled := bHayFiltro;
   btnGuardarCambios.Enabled := bHayFiltro and bEsPropio;
@@ -371,7 +426,7 @@ begin
   btnCompartirUsuario.Enabled := bHayFiltro and bEsPropio;
   btnCompartirGrupo.Enabled := bHayFiltro and bEsPropio;
   btnCompartirTodos.Enabled := bHayFiltro and bEsPropio and
-                               (inLibGlobalVar.orootGroup = 'S');
+                               ContextoSesion.Identidad.EsAdministrador;
   btnQuitarCompartido.Enabled := bHayFiltro and bEsPropio and
                                  (lbCompartidoCon.ItemIndex >= 0);
   FControlFiltro.Enabled := bHayFiltro;
@@ -400,7 +455,8 @@ begin
   lbCompartidoCon.Items.Clear;
   if IdFiltroSeleccionado > 0 then
   begin
-    FDestinos := odmFiltros.ListarDestinosCompartidos(IdFiltroSeleccionado);
+    FDestinos := FiltrosGuardados.ListarDestinosCompartidos(
+      IdFiltroSeleccionado);
     for info in FDestinos do
     begin
       if info.TipoDestino = 'TODOS' then
@@ -477,12 +533,14 @@ begin
   end
   else
   begin
-    sNombre := odmFiltros.unqryListado.FieldByName(
-                                             'NOMBRE_FILT').AsString;
-    sDescripcion := odmFiltros.unqryListado.FieldByName(
-                                        'DESCRIPCION_FILT').AsString;
-    odmFiltros.SobrescribirFiltro(IdFiltroSeleccionado, sNombre,
-                                  sDescripcion, sFiltroBase64);
+    sNombre := FListadoFiltros.FieldByName('NOMBRE_FILT').AsString;
+    sDescripcion := FListadoFiltros.FieldByName(
+      'DESCRIPCION_FILT').AsString;
+    FiltrosGuardados.SobrescribirFiltro(
+      IdFiltroSeleccionado,
+      sNombre,
+      sDescripcion,
+      sFiltroBase64);
     CargarFiltroEnEditor(sFiltroBase64);
     ShowMessage('Cambios del filtro guardados correctamente.');
   end;
@@ -504,7 +562,7 @@ begin
   else
   begin
     sFiltroGuardado :=
-      odmFiltros.CargarFiltroBase64(IdFiltroSeleccionado);
+      FiltrosGuardados.CargarFiltroBase64(IdFiltroSeleccionado);
     sMensaje :=
       'Filtro guardado actualmente:' + sLineBreak +
       ResumirFiltro(sFiltroGuardado) + sLineBreak + sLineBreak +
@@ -514,13 +572,14 @@ begin
     if Application.MessageBox(PChar(sMensaje), 'Reemplazar filtro',
        MB_YESNO + MB_ICONQUESTION) = ID_YES then
     begin
-      sNombre := odmFiltros.unqryListado.FieldByName(
-                                               'NOMBRE_FILT').AsString;
-      sDescripcion := odmFiltros.unqryListado.FieldByName(
-                                          'DESCRIPCION_FILT').AsString;
-      odmFiltros.SobrescribirFiltro(IdFiltroSeleccionado, sNombre,
-                                    sDescripcion,
-                                    FFiltroActualBase64);
+      sNombre := FListadoFiltros.FieldByName('NOMBRE_FILT').AsString;
+      sDescripcion := FListadoFiltros.FieldByName(
+        'DESCRIPCION_FILT').AsString;
+      FiltrosGuardados.SobrescribirFiltro(
+        IdFiltroSeleccionado,
+        sNombre,
+        sDescripcion,
+        FFiltroActualBase64);
       CargarFiltroEnEditor(FFiltroActualBase64);
       ShowMessage('Filtro reemplazado correctamente.');
     end;
@@ -544,16 +603,18 @@ begin
   end
   else
   begin
-    sNombreInicial := odmFiltros.unqryListado.FieldByName(
-                                      'NOMBRE_FILT').AsString + ' - copia';
-    sDescripcionInicial := odmFiltros.unqryListado.FieldByName(
-                                        'DESCRIPCION_FILT').AsString;
+    sNombreInicial := FListadoFiltros.FieldByName(
+      'NOMBRE_FILT').AsString + ' - copia';
+    sDescripcionInicial := FListadoFiltros.FieldByName(
+      'DESCRIPCION_FILT').AsString;
     res := TfrmModalGuardarFiltro.Ejecutar(Self, sNombreInicial,
                                            sDescripcionInicial);
     if res.Aceptado then
     begin
-      iIdFiltro := odmFiltros.BuscarFiltroPropio(FMto, FVista,
-                                                  res.Nombre);
+      iIdFiltro := FiltrosGuardados.BuscarFiltroPropio(
+        FMto,
+        FVista,
+        res.Nombre);
       if iIdFiltro > 0 then
       begin
         ShowMessage('Ya existe un filtro propio con ese nombre. ' +
@@ -561,8 +622,12 @@ begin
       end
       else
       begin
-        odmFiltros.GuardarFiltroNuevo(FMto, FVista, res.Nombre,
-                                      res.Descripcion, sFiltroBase64);
+        FiltrosGuardados.GuardarFiltroNuevo(
+          FMto,
+          FVista,
+          res.Nombre,
+          res.Descripcion,
+          sFiltroBase64);
         CargarDatos;
         ShowMessage('Copia del filtro guardada correctamente.');
       end;
@@ -582,12 +647,14 @@ begin
   else
   begin
     res := TfrmModalGuardarFiltro.Ejecutar(Self,
-      odmFiltros.unqryListado.FieldByName('NOMBRE_FILT').AsString,
-      odmFiltros.unqryListado.FieldByName('DESCRIPCION_FILT').AsString);
+      FListadoFiltros.FieldByName('NOMBRE_FILT').AsString,
+      FListadoFiltros.FieldByName('DESCRIPCION_FILT').AsString);
     if res.Aceptado then
     begin
-      odmFiltros.RenombrarFiltro(IdFiltroSeleccionado, res.Nombre,
-                                 res.Descripcion);
+      FiltrosGuardados.RenombrarFiltro(
+        IdFiltroSeleccionado,
+        res.Nombre,
+        res.Descripcion);
       CargarDatos;
     end;
   end;
@@ -606,7 +673,7 @@ begin
                               'Confirmar borrado',
                               MB_YESNO + MB_ICONQUESTION) = ID_YES then
     begin
-      odmFiltros.BorrarFiltro(IdFiltroSeleccionado);
+      FiltrosGuardados.BorrarFiltro(IdFiltroSeleccionado);
       CargarDatos;
     end;
   end;
@@ -616,24 +683,29 @@ procedure TfrmModalGestionFiltros.btnCompartirUsuarioClick(Sender: TObject);
 var
   q: TUniQuery;
   sUsuario: string;
+  IdentidadActual: TIdentidadSesion;
 begin
   inherited;
+  IdentidadActual := ContextoSesion.Identidad;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'SELECT USUARIO_USU AS USUARIO ' +
       '  FROM fza_usuarios ' +
       ' WHERE COALESCE(ESACTIVO_USU, ''S'') = ''S'' ' +
       '   AND USUARIO_USU <> :USUARIOACTUAL ' +
       'ORDER BY USUARIO_USU';
-    q.ParamByName('USUARIOACTUAL').AsString := oUser;
+    q.ParamByName('USUARIOACTUAL').AsString :=
+      IdentidadActual.Usuario;
     if TBusquedaUtils.EjecutarBusqueda('Compartir filtro con usuario', q,
                                        'frmBuscarUsuarioFiltro', Self) then
     begin
       sUsuario := q.FieldByName('USUARIO').AsString;
-      odmFiltros.CompartirConDestino(IdFiltroSeleccionado, 'USUARIO',
-                                     sUsuario);
+      FiltrosGuardados.CompartirConDestino(
+        IdFiltroSeleccionado,
+        'USUARIO',
+        sUsuario);
       RefrescarCompartidoCon;
     end;
   finally
@@ -645,13 +717,15 @@ procedure TfrmModalGestionFiltros.btnCompartirGrupoClick(Sender: TObject);
 var
   q: TUniQuery;
   sGrupo: string;
+  IdentidadActual: TIdentidadSesion;
 begin
   inherited;
-  if inLibGlobalVar.orootGroup = 'S' then
+  IdentidadActual := ContextoSesion.Identidad;
+  if IdentidadActual.EsAdministrador then
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text :=
         'SELECT GRUPO_USUGRP AS GRUPO ' +
         '  FROM fza_usuarios_grupos ' +
@@ -660,8 +734,10 @@ begin
                                          'frmBuscarGrupoFiltro', Self) then
       begin
         sGrupo := q.FieldByName('GRUPO').AsString;
-        odmFiltros.CompartirConDestino(IdFiltroSeleccionado, 'GRUPO',
-                                       sGrupo);
+        FiltrosGuardados.CompartirConDestino(
+          IdFiltroSeleccionado,
+          'GRUPO',
+          sGrupo);
         RefrescarCompartidoCon;
       end;
     finally
@@ -670,16 +746,25 @@ begin
   end
   else
   begin
-    odmFiltros.CompartirConDestino(IdFiltroSeleccionado, 'GRUPO', oGroup);
+    FiltrosGuardados.CompartirConDestino(
+      IdFiltroSeleccionado,
+      'GRUPO',
+      IdentidadActual.Grupo);
     RefrescarCompartidoCon;
-    ShowMessage('Filtro compartido con tu grupo (' + oGroup + ').');
+    ShowMessage(
+      'Filtro compartido con tu grupo (' +
+      IdentidadActual.Grupo +
+      ').');
   end;
 end;
 
 procedure TfrmModalGestionFiltros.btnCompartirTodosClick(Sender: TObject);
 begin
   inherited;
-  odmFiltros.CompartirConDestino(IdFiltroSeleccionado, 'TODOS', '');
+  FiltrosGuardados.CompartirConDestino(
+    IdFiltroSeleccionado,
+    'TODOS',
+    '');
   RefrescarCompartidoCon;
   ShowMessage('Filtro compartido con todos los usuarios.');
 end;
@@ -689,7 +774,7 @@ begin
   inherited;
   if (lbCompartidoCon.ItemIndex >= 0) and Assigned(FDestinos) then
   begin
-    odmFiltros.QuitarDestinoCompartido(
+    FiltrosGuardados.QuitarDestinoCompartido(
       FDestinos[lbCompartidoCon.ItemIndex].Id);
     RefrescarCompartidoCon;
   end;

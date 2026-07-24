@@ -1,4 +1,4 @@
-inherited dmComprasSesiones: TdmComprasSesiones
+﻿inherited dmComprasSesiones: TdmComprasSesiones
   Height = 726
   Width = 1127
   PixelsPerInch = 120
@@ -610,7 +610,7 @@ inherited dmComprasSesiones: TdmComprasSesiones
     SQL.Strings = (
       'SELECT CODIGO_PRV_PRV, NOMBRE_PRV, RAZON_SOCIAL_PRV'
       '  FROM fza_proveedores'
-      'ORDER BY CODIGO_PRV_PRV')
+      ' ORDER BY RAZON_SOCIAL_PRV, CODIGO_PRV_PRV')
     Left = 496
     Top = 120
   end

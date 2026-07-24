@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-  inLibUser, UniDataConn;
+  inLibUser;
 
 type
   TdmGrupos = class(TdmBase)
@@ -37,7 +37,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inMtoGrupos, inLibGlobalVar, inLibLog, System.Diagnostics;
+uses inMtoGrupos, inLibLog, System.Diagnostics;
 
 {$R *.dfm}
 
@@ -46,8 +46,8 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TdmGrupos.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryUsuariosGrupo.Connection := oConn;
-  unqryTablaG.Connection := oConn;
+  unqryUsuariosGrupo.Connection := ConexionPrincipal;
+  unqryTablaG.Connection := ConexionPrincipal;
   // unqryUsuariosGrupo.Open movido a AbrirDetalles.
 end;
 

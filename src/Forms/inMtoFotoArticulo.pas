@@ -162,7 +162,7 @@ begin
   // procesar F11 / Alt+F12.
   Self.KeyPreview  := True;
   // Restaura la resolución elegida guardada con el layout (default 'real').
-  loaderRes := TLayoutLoader.Create(Self.Name);
+  loaderRes := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
   try
     if loaderRes.Disponible then
       rgResolucion.ItemIndex :=
@@ -208,7 +208,7 @@ begin
   // (antes de mostrar) para que el tamaño se aplique de forma fiable aunque
   // la ventana se muestre con SW_SHOWNOACTIVATE. Si no hay layout, centra.
   if not Assigned(FLayoutLoader) then
-    FLayoutLoader := TLayoutLoader.Create(Self.Name);
+    FLayoutLoader := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
   if FLayoutLoader.Disponible then
     FLayoutLoader.RestaurarGeometria(Self)
   else
@@ -277,7 +277,7 @@ begin
   // Ctrl+F12 -> resetear layout
   if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
   begin
-    ResetearLayout(Self.Name);
+    ResetearLayout(Self.Name, PerfilesUsuario);
     Key := 0;
     Exit;
   end;
@@ -293,7 +293,7 @@ procedure TfrmFotoArticulo.GuardarLayout;
 var
   saver: TLayoutSaver;
 begin
-  saver := TLayoutSaver.Create(Self.Name);
+  saver := TLayoutSaver.Create(Self.Name, PerfilesUsuario);
   try
     saver.GuardarGeometria(Self);
     saver.GuardarValor('Resolucion', IntToStr(rgResolucion.ItemIndex));
