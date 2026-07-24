@@ -380,11 +380,45 @@ uses
 {$R *.res}
 {$R fondo.res}
 
+function CrearContextoSesionInicial(
+  out AContextoSesion: IContextoSesionAplicacion): Boolean;
 var
   frmLogon: TfrmLogon;
-  AutoLoginSuccessful: Boolean;
+  AutoLoginCorrecto: Boolean;
+  ResultadoInicioSesion: TResultadoInicioSesion;
+begin
+  Result := False;
+  AContextoSesion := nil;
+  frmLogon := TfrmLogon.Create(Application);
+  try
+    if not frmLogon.DebeCerrarAplicacion then
+    begin
+      AutoLoginCorrecto := False;
+      if frmLogon.IsInitializeAuto then
+      begin
+        frmLogon.btnAceptarClick(nil);
+        AutoLoginCorrecto :=
+          frmLogon.ResultadoInicioSesion.Autenticado;
+      end;
+      if not AutoLoginCorrecto then
+        frmLogon.ShowModal;
+      ResultadoInicioSesion := frmLogon.ResultadoInicioSesion;
+      if ResultadoInicioSesion.Autenticado then
+      begin
+        AContextoSesion :=
+          TContextoSesionGlobal.Create(
+            ResultadoInicioSesion.Identidad,
+            ResultadoInicioSesion.Ubicacion);
+        Result := True;
+      end;
+    end;
+  finally
+    frmLogon.Free;
+  end;
+end;
 
 begin
+  var ContextoSesionInicial: IContextoSesionAplicacion;
 //  {$IFDEF DEBUG}
 //      ReportMemoryLeaksOnShutdown := True;
 //  {$ENDIF}
@@ -401,52 +435,36 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.Title := 'Fzam';
-  frmLogon := TfrmLogon.Create(Application);
-  try
-    if frmLogon.DebeCerrarAplicacion then
-      Exit;
-    AutoLoginSuccessful := False;
-    if (frmLogon.IsInitializeAuto) then
-    begin
-      frmLogon.btnAceptarClick(nil);
-      AutoLoginSuccessful := (frmLogon.sSuccess = 'S');
-    end;
-    if (not AutoLoginSuccessful) then
-    begin
-      frmLogon.ShowModal;
-      //frmLogon.Caption := Application.Title;
-    end;
-    if (frmLogon.sSuccess <> 'S') then
-      Exit;
-  finally
-    frmLogon.Free;
-  end;
-  // Fuente global para toda la aplicacion
-  Application.DefaultFont.Name   := 'Lucida Sans';
-  Application.DefaultFont.Height := -15;
-  Screen.MenuFont.Name := 'Lucida Sans';
-  Screen.MenuFont.Size := 11;
-  Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
-  // Diagnóstico: con /teststack se encola una excepción de prueba
-  // para verificar JCL stack trace + AppException + log + modal.
+  if CrearContextoSesionInicial(ContextoSesionInicial) then
+  begin
+    // Fuente global para toda la aplicacion
+    Application.DefaultFont.Name   := 'Lucida Sans';
+    Application.DefaultFont.Height := -15;
+    Screen.MenuFont.Name := 'Lucida Sans';
+    Screen.MenuFont.Size := 11;
+    Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
+    frmMtoPrincipal.InicializarAplicacion(ContextoSesionInicial);
+    // Diagnóstico: con /teststack se encola una excepción de prueba
+    // para verificar JCL stack trace + AppException + log + modal.
 //  if FindCmdLineSwitch('teststack', True) then
 //    TThread.ForceQueue(nil, procedure
 //                            begin
 //                              inLibDiag.ProbarStackTrace;
 //                            end);
-  try
-    Application.Run;
-  finally
-    inLibGlobalVar.oCerrandoApp := True;
-    TVentasWsCola.DetenerHilo;
-    TVerifactuCola.DetenerHilo;
+    try
+      Application.Run;
+    finally
+      inLibGlobalVar.oCerrandoApp := True;
+      TVentasWsCola.DetenerHilo;
+      TVerifactuCola.DetenerHilo;
+    end;
+    // Salida garantizada del proceso. Una tarea huerfana bloqueada contra
+    // MySQL deja colgada la finalizacion de System.Threading (espera a sus
+    // workers) y el exe se queda en memoria sin ventanas (visto 14/07/26).
+    // Se cierra el log de forma explicita (su finalization ya no correra)
+    // y se termina el proceso sin ejecutar las finalizaciones restantes.
+    inLibLog.Log.LogInfo('Salida del proceso');
+    FreeAndNil(inLibLog.Log);
+    ExitProcess(0);
   end;
-  // Salida garantizada del proceso. Una tarea huerfana bloqueada contra
-  // MySQL deja colgada la finalizacion de System.Threading (espera a sus
-  // workers) y el exe se queda en memoria sin ventanas (visto 14/07/26).
-  // Se cierra el log de forma explicita (su finalization ya no correra)
-  // y se termina el proceso sin ejecutar las finalizaciones restantes.
-  inLibLog.Log.LogInfo('Salida del proceso');
-  FreeAndNil(inLibLog.Log);
-  ExitProcess(0);
 end.

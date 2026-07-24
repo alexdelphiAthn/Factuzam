@@ -7,6 +7,7 @@ $rutaAdaptador = Join-Path $raiz 'src\Lib\inLibContextoSesionGlobal.pas'
 $rutaBaseForm = Join-Path $raiz 'src\Core\inMtoFrmBase.pas'
 $rutaBaseDatos = Join-Path $raiz 'src\DataModules\UniDataGen.pas'
 $rutaPrincipal = Join-Path $raiz 'src\Core\inMtoPrincipal.pas'
+$rutaProyecto = Join-Path $raiz 'fzam.dpr'
 $rutaAuditoria = Join-Path $raiz 'src\Lib\inLibAuditoriaDatos.pas'
 $rutaPerfiles = Join-Path $raiz 'src\DataModules\UniDataPerfiles.pas'
 $rutaFiltros = Join-Path $raiz 'src\DataModules\UniDataFiltros.pas'
@@ -16,6 +17,7 @@ $adaptador = Get-Content -Raw -LiteralPath $rutaAdaptador
 $baseForm = Get-Content -Raw -LiteralPath $rutaBaseForm
 $baseDatos = Get-Content -Raw -LiteralPath $rutaBaseDatos
 $principal = Get-Content -Raw -LiteralPath $rutaPrincipal
+$proyecto = Get-Content -Raw -LiteralPath $rutaProyecto
 $auditoria = Get-Content -Raw -LiteralPath $rutaAuditoria
 $perfiles = Get-Content -Raw -LiteralPath $rutaPerfiles
 $filtros = Get-Content -Raw -LiteralPath $rutaFiltros
@@ -63,11 +65,14 @@ Comprobar (
     ($baseDatos -match 'IProveedorContextoSesion') -and
     ($baseDatos -match 'HeredarContextoSesion\(AOwner\)')
   ) 'TdmBase publica y hereda el contexto'
-Comprobar ($principal -match
-    'TContextoSesionGlobal\.Create\(\s*' +
-    'TIdentidadSesion\.Crear\(oUser, oGroup, oRootGroup\),\s*' +
-    'TUbicacionSesion\.Crear\(oEmpresa, oAlmacen, oCaja\)') `
-  'La raíz compone el contexto desde el login existente'
+Comprobar (
+    ($proyecto -match
+      'TContextoSesionGlobal\.Create\(\s*' +
+      'ResultadoInicioSesion\.Identidad,\s*' +
+      'ResultadoInicioSesion\.Ubicacion\)') -and
+    ($principal -match
+      'AsignarContextoSesion\(AContextoSesion\)')
+  ) 'La raíz compone e inyecta el contexto desde el resultado del login'
 Comprobar ($principal -match
     'TServicioAuditoriaDatos\.Create\(ContextoSesion\)') `
   'La auditoría recibe el contexto en lugar del usuario global'

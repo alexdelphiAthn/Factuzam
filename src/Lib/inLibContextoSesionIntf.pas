@@ -35,6 +35,17 @@ type
     ): TUbicacionSesion; static;
   end;
 
+  TResultadoInicioSesion = record
+    Autenticado: Boolean;
+    Identidad  : TIdentidadSesion;
+    Ubicacion  : TUbicacionSesion;
+    class function CrearAutenticado(
+      const AIdentidad: TIdentidadSesion;
+      const AUbicacion: TUbicacionSesion
+    ): TResultadoInicioSesion; static;
+    class function CrearNoAutenticado: TResultadoInicioSesion; static;
+  end;
+
   IContextoSesionAplicacion = interface
     ['{EC179077-3766-447E-8117-E5B6714444EC}']
     function GetIdentidad: TIdentidadSesion;
@@ -80,6 +91,23 @@ begin
   Result.Empresa := Trim(AEmpresa);
   Result.Almacen := Trim(AAlmacen);
   Result.Caja := Trim(ACaja);
+end;
+
+class function TResultadoInicioSesion.CrearAutenticado(
+  const AIdentidad: TIdentidadSesion;
+  const AUbicacion: TUbicacionSesion): TResultadoInicioSesion;
+begin
+  Result.Autenticado := True;
+  Result.Identidad := AIdentidad;
+  Result.Ubicacion := AUbicacion;
+end;
+
+class function TResultadoInicioSesion.CrearNoAutenticado:
+  TResultadoInicioSesion;
+begin
+  Result.Autenticado := False;
+  Result.Identidad := TIdentidadSesion.Crear('', '', '');
+  Result.Ubicacion := TUbicacionSesion.Crear('', '', '');
 end;
 
 end.

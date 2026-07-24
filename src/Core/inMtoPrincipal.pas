@@ -49,7 +49,8 @@ uses
   Vcl.ComCtrls, JvExComCtrls, JvStatusBar, Vcl.AppEvnts,
   System.Diagnostics,
   System.Threading,
-  dxGDIPlusClasses, cxImage, Vcl.Imaging.pngimage;
+  dxGDIPlusClasses, cxImage, Vcl.Imaging.pngimage,
+  inLibContextoSesionIntf;
 
 const
   WM_FREECONTROL = WM_USER;
@@ -319,6 +320,8 @@ type
     FLogoBgImage:   TObject;
     FLogoBgNombre:  TObject;
     FLogoBgVersion: TObject;
+    procedure InicializarAplicacion(
+      const AContextoSesion: IContextoSesionAplicacion);
     procedure CerrarSplashInicio(aMinimoMs: Integer);
     procedure CrearLogoFondoBg;
     procedure CentrarLogoFondoBg;
@@ -341,8 +344,6 @@ uses inLibUser,
   inLibPermisos,
   inLibPermisosIntf,
   inLibPermisosUniDAC,
-  inLibContextoSesionIntf,
-  inLibContextoSesionGlobal,
   inLibConexionesIntf,
   inLibConexionesUniDAC,
   inLibAuditoriaDatosIntf,
@@ -603,6 +604,12 @@ end;
 
 
 procedure TfrmMtoPrincipal.FormCreate(Sender: TObject);
+begin
+  // El proyecto inyecta el contexto antes de inicializar los servicios.
+end;
+
+procedure TfrmMtoPrincipal.InicializarAplicacion(
+  const AContextoSesion: IContextoSesionAplicacion);
 var
   sDis: string;
   ServicioMonitorSQL: IServicioMonitorSQL;
@@ -639,10 +646,10 @@ var
   end;
 
 begin
-  AsignarContextoSesion(
-    TContextoSesionGlobal.Create(
-      TIdentidadSesion.Crear(oUser, oGroup, oRootGroup),
-      TUbicacionSesion.Crear(oEmpresa, oAlmacen, oCaja)));
+  if not Assigned(AContextoSesion) then
+    raise EArgumentNilException.Create(
+      'No se ha proporcionado el contexto de inicio de sesión.');
+  AsignarContextoSesion(AContextoSesion);
   IdentidadActual := ContextoSesion.Identidad;
   UbicacionActual := ContextoSesion.Ubicacion;
   FAppEvents := TApplicationEvents.Create(Self);
@@ -686,7 +693,7 @@ begin
     TServicioConexionesUniDAC.Create(FDmConn.conUni));
   AsignarAuditoriaDatos(
     TServicioAuditoriaDatos.Create(ContextoSesion));
-  tmr1Timer(Sender);
+  tmr1Timer(nil);
   FdmDataPerfiles := TdmPerfiles.Create(Self);
   AsignarPerfilesUsuario(FdmDataPerfiles);
   FdmDataFiltros  := TdmFiltros.Create(Self);

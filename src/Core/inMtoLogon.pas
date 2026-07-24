@@ -26,7 +26,7 @@ uses
   cxTextEdit, dxSkinsCore, inMtoFrmBase, cxClasses, cxLocalization, cxMemo,
   DASQLMonitor, UniSQLMonitor, System.UITypes, dxShellDialogs, dxSkinBlue,
   dxCore, cxStyles, dxSkinsForm, dxSkinOffice2007Blue, cxGeometry,
-  cxLabel,  JvComponentBase, JvEnterTab, JvExControls, JvAnimatedImage,
+  cxLabel, JvComponentBase, JvEnterTab, JvExControls, JvAnimatedImage,
   JvGIFCtrl, dxSkinBasic, dxSkinBlack, dxSkinBlueprint, dxSkinCaramel,
   dxSkinCoffee, dxSkinDarkroom, dxSkinDarkSide, dxSkinDevExpressDarkStyle,
   dxSkinDevExpressStyle, dxSkinFoggy, dxSkinGlassOceans, dxSkinHighContrast,
@@ -42,8 +42,8 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier,
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
-  dxSkinWhiteprint, dxSkinXmas2008Blue, dascript,
-      UniScript, System.Diagnostics;
+  dxSkinWhiteprint, dxSkinXmas2008Blue, dascript, UniScript,
+  System.Diagnostics, inLibContextoSesionIntf;
 
 type
   EInvalidUser = class(Exception);
@@ -112,6 +112,7 @@ type
     FCerrarAplicacion: Boolean;
     FEnOperacionLarga: Boolean;
     FCancelaOperacionSolicitada: Boolean;
+    FResultadoInicioSesion: TResultadoInicioSesion;
     procedure CambiarPass(f:TUniConnection);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
                               var Action: TErrorAction);
@@ -152,10 +153,12 @@ type
     function ConexionAplicacionPreparada: Boolean;
     function LicenciaAplicacionPreparada: Boolean;
     function ProcesarLicenciaAplicacion: Boolean;
+    procedure InvalidarResultadoInicioSesion;
   public
-    sSuccess:String;
     function IsInitializeAuto:Boolean;
     function DebeCerrarAplicacion:Boolean;
+    property ResultadoInicioSesion: TResultadoInicioSesion
+      read FResultadoInicioSesion;
   end;
 var
   frmLogon          : TfrmLogon;
@@ -278,6 +281,7 @@ procedure TfrmLogon.FormCreate(Sender: TObject);
 var
   CheckResult: TDBStructureCheckResult;
 begin
+  InvalidarResultadoInicioSesion;
   ucConexion.Pooling := True;
   ucConexion.PoolingOptions.MinPoolSize := 1;
   ucConexion.PoolingOptions.MaxPoolSize := 50;
@@ -422,7 +426,7 @@ begin
         if tbUsers.Active then
           tbUsers.Close;
         sUserPassOK := 'false';
-        sSuccess := 'N';
+        InvalidarResultadoInicioSesion;
         ModalResult := mrNone;
       end;
     end;
@@ -550,7 +554,7 @@ begin
   begin
     Result := False;
     FCerrarAplicacion := True;
-    sSuccess := 'N';
+    InvalidarResultadoInicioSesion;
     try
       if RegistrarLicenciaAplicacion(ucConexion,
                                      sCodigo,
@@ -1235,11 +1239,12 @@ end;
 procedure TfrmLogon.btnAceptarClick(Sender: TObject);
 var
   sGrupoAdmin: string;
+  sGrupoUsuario: string;
 begin
+  InvalidarResultadoInicioSesion;
   try
     if not LicenciaAplicacionPreparada then
     begin
-      sSuccess := 'N';
       if FCerrarAplicacion then
       begin
         ModalResult := mrCancel;
@@ -1257,7 +1262,6 @@ begin
     begin
       if (Sender <> nil) then
         ShowMessage(SErrorAuthPass);
-      sSuccess := 'N';
       Log.LogError(SErrorAuthPass);
     end
     else
@@ -1266,16 +1270,20 @@ begin
       tbUsers.Edit;
       tbUsers.FieldByName('ULTIMO_LOGIN_USU').AsDateTime := Now;
       tbUsers.Post;
-      oUser    := edtUser.Text;
-      oGroup   := GetGrupo(edtUser.Text, ucConexion, sGrupoAdmin);
-      orootGroup := sGrupoAdmin;
-      oEmpresa := tbUsers.FieldByName('EMPRESA_DEFECTO_USU').AsString;
-      oAlmacen := tbUsers.FieldByName('ALMACEN_DEFECTO_USU').AsString;
-      oCaja    := tbUsers.FieldByName('CAJA_DEFECTO_USU').AsString;
+      sGrupoUsuario := GetGrupo(edtUser.Text, ucConexion, sGrupoAdmin);
+      FResultadoInicioSesion :=
+        TResultadoInicioSesion.CrearAutenticado(
+          TIdentidadSesion.Crear(
+            edtUser.Text,
+            sGrupoUsuario,
+            sGrupoAdmin),
+          TUbicacionSesion.Crear(
+            tbUsers.FieldByName('EMPRESA_DEFECTO_USU').AsString,
+            tbUsers.FieldByName('ALMACEN_DEFECTO_USU').AsString,
+            tbUsers.FieldByName('CAJA_DEFECTO_USU').AsString));
       tbUsers.Close;
       sUserPassOK := 'true';
       SetIniValues;
-      sSuccess := 'S';
       PostMessage(Handle, WM_CLOSE, 0, 0);
       ModalResult := mrOK;
     end;
@@ -1284,18 +1292,23 @@ begin
     begin
       if (Sender <> nil) then
         ShowMessage(E.Message);
-      sSuccess := 'N';
       raise; // que la propague el caller (FormCreate) si es auto-login
     end;
     on E: Exception do
     begin
       Log.LogError('Error en login: ' + E.ClassName + ': ' + E.Message);
-      sSuccess := 'N';
+      InvalidarResultadoInicioSesion;
       if tbUsers.Active then
         tbUsers.Close;
       raise; // para que FormCreate decida qué hacer
     end;
   end;
+end;
+
+procedure TfrmLogon.InvalidarResultadoInicioSesion;
+begin
+  FResultadoInicioSesion :=
+    TResultadoInicioSesion.CrearNoAutenticado;
 end;
 
 function TfrmLogon.ExisteUser(sNom: string; f: TUniConnection): Boolean;
