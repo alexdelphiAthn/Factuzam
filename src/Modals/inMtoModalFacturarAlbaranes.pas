@@ -98,7 +98,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibUser, inLibGenBusq, inLibFormatoDocumento;
+  inLibUser, inLibGenBusq, inLibFormatoDocumento;
 
 {$R *.dfm}
 
@@ -111,7 +111,7 @@ begin
   FConfirmado := False;
   FFacSeries  := TStringList.Create;
   FFacNumeros := TStringList.Create;
-  FConn := oConn;
+  FConn := ConexionPrincipal;
   // Query de albaranes candidatos (pendientes de facturar). El DataSource se
   // engancha al grid por codigo para no depender de un data module.
   FQryAlb := TUniQuery.Create(Self);
@@ -248,7 +248,7 @@ begin
     FFacSeries.Add(FQryFac.FieldByName('SERIE_FACC').AsString);
     FFacNumeros.Add(FQryFac.FieldByName('NUMERO_FACC').AsString);
     cbbFacExistente.Properties.Items.Add(
-      FormatearDocumentoEmpresa(AEmp,
+      FormatearDocumentoEmpresa(ConexionPrincipal, AEmp,
         FQryFac.FieldByName('SERIE_FACC').AsString,
         FQryFac.FieldByName('NUMERO_FACC').AsString) + '   (' +
       FormatDateTime('dd/mm/yyyy',
@@ -288,7 +288,7 @@ var
 begin
   inherited;
   // Caja de busqueda modal generica (TfrmMtoSearch via inLibGenBusq).
-  if TBusquedaUtils.EjecutarBusqueda('Buscar empresa',
+  if TBusquedaUtils.EjecutarBusqueda(ConexionPrincipal, 'Buscar empresa',
        'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
        'CODIGO_EMP_EMP', sVal, 'srchEmpFacAlb', Self) then
     btnEmpresa.Text := sVal;
@@ -300,7 +300,7 @@ var
   sVal: string;
 begin
   inherited;
-  if TBusquedaUtils.EjecutarBusqueda('Buscar proveedor',
+  if TBusquedaUtils.EjecutarBusqueda(ConexionPrincipal, 'Buscar proveedor',
        'SELECT * FROM fza_proveedores ORDER BY NOMBRE_PRV',
        'CODIGO_PRV_PRV', sVal, 'srchPrvFacAlb', Self) then
   begin

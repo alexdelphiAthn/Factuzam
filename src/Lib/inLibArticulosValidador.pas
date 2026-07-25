@@ -40,7 +40,7 @@ unit inLibArticulosValidador;
 
   Uso típico:
 
-      val := TArticulosValidador.Create(oConn);
+      val := TArticulosValidador.Create(AConexion);
       try
         r := val.Resolver(InputUsuario);
         if not r.Encontrado then

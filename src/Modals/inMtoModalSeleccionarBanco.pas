@@ -85,9 +85,6 @@ type
 
 implementation
 
-uses
-  inLibGlobalVar;
-
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -144,7 +141,7 @@ var
   sColDef: string;
 begin
   if not Assigned(FConn) then
-    FConn := oConn;
+    FConn := ConexionPrincipal;
   if FUso = ubePago then
   begin
     sColDef := 'ESDEFECTO_PAGO_EMPBAN';

@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoDocumentosTrabajo                                        }
 {    Tipo:       Formulario (Mto)                                              }
@@ -589,7 +589,9 @@ begin
           '       GRUPO_USUGRP AS DESTINO ' +
           '  FROM fza_usuarios_grupos ' +
           ' ORDER BY TIPO, DESTINO';
-        if TBusquedaUtils.EjecutarBusqueda('Compartir Documento de Trabajo',
+        if TBusquedaUtils.EjecutarBusqueda(
+          ConexionPrincipal,
+          'Compartir Documento de Trabajo',
                                            q,
                                            'frmBuscarCompartirDTR',
                                            Self) then

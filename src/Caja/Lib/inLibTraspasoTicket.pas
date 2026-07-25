@@ -387,7 +387,7 @@ begin
     if bExiste then
     begin
       if Trim(sSerie + sNumDoc) <> '' then
-        sDocRef := FormatearDocumentoEmpresa(AEmpresa, sSerie, sNumDoc)
+        sDocRef := FormatearDocumentoEmpresa(AConn, AEmpresa, sSerie, sNumDoc)
       else
         sDocRef := ANumOperacion;
       Ticket := TTicketTermico.Create(sImpresora);

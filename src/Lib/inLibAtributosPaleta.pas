@@ -21,6 +21,7 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
   System.Types, System.Generics.Collections,
   Vcl.Graphics, Vcl.Controls, Vcl.ImgList,
+  Uni,
   cxGraphics,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView, System.UITypes;
 
@@ -46,13 +47,15 @@ procedure InvalidarCachePaleta;
 
 // Busca por (ID_VA_ATB, CODIGO_ATB). Devuelve True si existe en la paleta
 // Y su EXTRA_ATB es un color valido.
-function ObtenerInfoBasico(const AIdVA: string;
+function ObtenerInfoBasico(AConexion: TUniConnection;
+                           const AIdVA: string;
                            const ACodigoATB: string;
                            out AInfo: TInfoBasico): Boolean;
 
 // Resuelve el basico asignado a un valor dentro de un articulo concreto.
 // Es necesario para codigos de proveedor ambiguos como PALO.
-function ObtenerInfoBasicoArticulo(const ACodArt, AIdVA, AValor: string;
+function ObtenerInfoBasicoArticulo(AConexion: TUniConnection;
+                                   const ACodArt, AIdVA, AValor: string;
                                    out AInfo: TInfoBasico): Boolean;
 
 // Convierte '#RRGGBB' o '#RGB' a TColor. Devuelve clNone si no parseable.
@@ -84,21 +87,24 @@ function PintarCeldaConTextoColor(ACanvas: TcxCanvas;
 // Rellena ADict con NOMBRE_ATRIBUTO (uppercase) -> ID_ATRIBUTO para todos los
 // atributos del articulo padre. Pensado para grids de stock que no conocen
 // a priori el ID_VA de cada columna.
-procedure CargarMapaAtributosArticulo(const ACodArt: string;
+procedure CargarMapaAtributosArticulo(AConexion: TUniConnection;
+                                      const ACodArt: string;
                                       ADict: TDictionary<string, string>);
 
 // Variante global del anterior: NOMBRE_VA (uppercase) -> ID_ATB_VA para todos
 // los atributos definidos en fza_variaciones_atributos. Pensada para grids que
 // muestran lineas de articulos distintos (inventario, caja, ...) y necesitan
 // un solo diccionario en vez de uno por articulo.
-procedure CargarMapaAtributosGlobal(ADict: TDictionary<string, string>);
+procedure CargarMapaAtributosGlobal(AConexion: TUniConnection;
+  ADict: TDictionary<string, string>);
 
 // Diccionario global cacheado en la propia libreria (carga perezosa). NO
 // liberar el resultado — pertenece a la unidad. Pensado para que un form
 // que quiera pintar cuadraditos solo tenga que llamar a
 // `PintarCeldaSwatchSiAplica` desde su OnCustomDrawCell, sin gestionar
 // estado ni inicializaciones.
-function ObtenerMapaAtributosGlobal: TDictionary<string, string>;
+function ObtenerMapaAtributosGlobal(
+  AConexion: TUniConnection): TDictionary<string, string>;
 
 // Invalida el diccionario global (llamar tras alta/baja en
 // fza_variaciones_atributos o tras refrescar la paleta basica).
@@ -115,7 +121,8 @@ procedure InvalidarMapaAtributosGlobal;
 //     if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
 //       ADone := True;
 //   end;
-function PintarCeldaSwatchSiAplica(ACanvas: TcxCanvas;
+function PintarCeldaSwatchSiAplica(AConexion: TUniConnection;
+                                   ACanvas: TcxCanvas;
                                    AViewInfo: TcxGridTableDataCellViewInfo;
                                    ADict: TDictionary<string, string>): Boolean;
 
@@ -123,21 +130,23 @@ function PintarCeldaSwatchSiAplica(ACanvas: TcxCanvas;
 // asignacion especifica del articulo (color proveedor -> color basico) y usa
 // la paleta global solo como fallback. ATexto puede ser un valor o un SKU.
 function PintarCeldaSwatchArticuloSiAplica(
-  ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+  AConexion: TUniConnection; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo;
   const ACodArt, ATexto: string;
   ADict: TDictionary<string, string>): Boolean;
 
 // Busca un basico para `ATexto` probando cada ID_VA presente en `ADict`. Si
 // el texto contiene '/', tambien prueba con el ultimo segmento tras la barra.
 // Devuelve True en el primer match valido.
-function BuscarInfoBasicoEnArticulo(const ATexto: string;
+function BuscarInfoBasicoEnArticulo(AConexion: TUniConnection;
+                                    const ATexto: string;
                                     ADict: TDictionary<string, string>;
                                     out AInfo: TInfoBasico): Boolean;
 
 // Igual que BuscarInfoBasicoEnArticulo, dando prioridad a las asignaciones
 // particulares del articulo antes de consultar el basico global del AV.
 function BuscarInfoBasicoEnArticuloContextual(
-  const ACodArt, ATexto: string;
+  AConexion: TUniConnection; const ACodArt, ATexto: string;
   ADict: TDictionary<string, string>;
   out AInfo: TInfoBasico): Boolean;
 
@@ -146,7 +155,8 @@ function BuscarInfoBasicoEnArticuloContextual(
 // columna en ANCHO_SWATCH_PX para que el cuadradito de color no recorte el
 // texto tras un ApplyBestFit (que solo mide caracteres). Devuelve True si
 // se aplico el ensanche.
-function AjustarAnchoColumnaParaSwatch(AColumn: TcxGridColumn;
+function AjustarAnchoColumnaParaSwatch(AConexion: TUniConnection;
+                                       AColumn: TcxGridColumn;
                                        ADict: TDictionary<string, string>)
                                        : Boolean;
 
@@ -154,7 +164,8 @@ function AjustarAnchoColumnaParaSwatch(AColumn: TcxGridColumn;
 // `AAvs` (CODIGO_ATB esperado). El swatch se genera SOLO si existe en la
 // paleta basica para (AIdVa, AV). El dict AAvToImageIndex queda con
 // uppercase(AV) -> ImageIndex; los AV sin color en paleta no aparecen.
-procedure RellenarImageListPaleta(AImages: TCustomImageList;
+procedure RellenarImageListPaleta(AConexion: TUniConnection;
+                                  AImages: TCustomImageList;
                                   const AIdVa: string;
                                   const AAvs: array of string;
                                   AAvToImageIndex: TDictionary<string, Integer>);
@@ -171,7 +182,8 @@ function PintarSwatchEnBitmap(ABmp: TBitmap; const AInfo: TInfoBasico;
 // pantalla justo debajo del editor, y AWidthHint = ancho del editor (se
 // expande si los AVs no caben). Un click selecciona y cierra; Esc o click
 // fuera cancelan. Si AScreenLeft/Top son negativos, sale centrado.
-function SeleccionarAvConPaleta(const AIdVa: string;
+function SeleccionarAvConPaleta(AConexion: TUniConnection;
+                                const AIdVa: string;
                                 const AAvs: array of string;
                                 const AValorActual: string;
                                 out AValor: string;
@@ -183,7 +195,6 @@ function SeleccionarAvConPaleta(const AIdVa: string;
 implementation
 
 uses
-  Uni, inLibGlobalVar,
   Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls;
 
 type
@@ -194,6 +205,7 @@ type
   // click fuera cancelan.
   TfrmSelPalAvAux = class(TForm)
   private
+    FConexion  : TUniConnection;
     FListBox  : TListBox;
     FIdVa     : string;
     FAvs      : TArray<string>;
@@ -210,7 +222,8 @@ type
     procedure FormDeactivate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   public
-    constructor CreateConOpciones(const AIdVa: string;
+    constructor CreateConOpciones(AConexion: TUniConnection;
+                                  const AIdVa: string;
                                   const AAvs: array of string;
                                   const AValorActual: string;
                                   AScreenLeft, AScreenTop, AWidthHint: Integer;
@@ -262,7 +275,7 @@ begin
   end;
 end;
 
-procedure CargarCache;
+procedure CargarCache(AConexion: TUniConnection);
 var
   q    : TUniQuery;
   Info : TInfoBasico;
@@ -270,10 +283,10 @@ var
 begin
   GCache.Clear;
   GCacheCargado := False;
-  if oConn = nil then Exit;
+  if AConexion = nil then Exit;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := AConexion;
     // Hacemos JOIN con fza_atributos_valores para cachear también los textos reales (AV y DESCRIPCION)
     // que los usuarios han escrito libremente y que son los que viajan en los SKUs de los Grids.
     q.SQL.Text :=
@@ -329,14 +342,15 @@ begin
   GCacheCargado := False;
 end;
 
-function ObtenerInfoBasico(const AIdVA, ACodigoATB: string;
+function ObtenerInfoBasico(AConexion: TUniConnection;
+                           const AIdVA, ACodigoATB: string;
                            out AInfo: TInfoBasico): Boolean;
 begin
   AInfo  := Default(TInfoBasico);
   Result := False;
   if (Trim(AIdVA) = '') or (Trim(ACodigoATB) = '') then Exit;
   if not GCacheCargado then
-    CargarCache;
+    CargarCache(AConexion);
   if not GCacheCargado then Exit;
   if GCache.TryGetValue(ClaveCache(AIdVA, ACodigoATB), AInfo) then
     Result := AInfo.EsValido;
@@ -445,17 +459,18 @@ begin
   Result := True;
 end;
 
-procedure CargarMapaAtributosArticulo(const ACodArt: string;
+procedure CargarMapaAtributosArticulo(AConexion: TUniConnection;
+                                      const ACodArt: string;
                                       ADict: TDictionary<string, string>);
 var
   q : TUniQuery;
 begin
   if ADict = nil then Exit;
   ADict.Clear;
-  if (Trim(ACodArt) = '') or (oConn = nil) then Exit;
+  if (Trim(ACodArt) = '') or (AConexion = nil) then Exit;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := AConexion;
     q.SQL.Text :=
       'SELECT DISTINCT ID_ATRIBUTO, NOMBRE_ATRIBUTO '          +
       '  FROM vi_atributos_nombres '                           +
@@ -474,17 +489,18 @@ begin
   end;
 end;
 
-procedure CargarMapaAtributosGlobal(ADict: TDictionary<string, string>);
+procedure CargarMapaAtributosGlobal(AConexion: TUniConnection;
+                                    ADict: TDictionary<string, string>);
 var
   q : TUniQuery;
   Nombre : string;
 begin
   if ADict = nil then Exit;
   ADict.Clear;
-  if oConn = nil then Exit;
+  if AConexion = nil then Exit;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := AConexion;
     q.SQL.Text :=
       'SELECT ID_ATB_VA, COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE_VA ' +
       '  FROM fza_variaciones_atributos';
@@ -501,13 +517,14 @@ begin
   end;
 end;
 
-function ObtenerMapaAtributosGlobal: TDictionary<string, string>;
+function ObtenerMapaAtributosGlobal(
+  AConexion: TUniConnection): TDictionary<string, string>;
 begin
   if GMapaGlobal = nil then
     GMapaGlobal := TDictionary<string, string>.Create;
   if not GMapaGlobalCargado then
   begin
-    CargarMapaAtributosGlobal(GMapaGlobal);
+    CargarMapaAtributosGlobal(AConexion, GMapaGlobal);
     GMapaGlobalCargado := True;
   end;
   Result := GMapaGlobal;
@@ -520,7 +537,8 @@ begin
   GMapaGlobalCargado := False;
 end;
 
-function PintarCeldaSwatchSiAplica(ACanvas: TcxCanvas;
+function PintarCeldaSwatchSiAplica(AConexion: TUniConnection;
+                                   ACanvas: TcxCanvas;
                                    AViewInfo: TcxGridTableDataCellViewInfo;
                                    ADict: TDictionary<string, string>): Boolean;
 var
@@ -539,15 +557,16 @@ begin
   if ADict <> nil then
     Dict := ADict
   else
-    Dict := ObtenerMapaAtributosGlobal;
+    Dict := ObtenerMapaAtributosGlobal(AConexion);
   if (Dict = nil) or (Dict.Count = 0) then Exit;
-  if not BuscarInfoBasicoEnArticulo(sTexto, Dict, Info) then Exit;
+  if not BuscarInfoBasicoEnArticulo(AConexion, sTexto, Dict, Info) then Exit;
   // Pasamos sTexto explicitly a la función de pintado
   Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
 end;
 
 function PintarCeldaSwatchArticuloSiAplica(
-  ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+  AConexion: TUniConnection; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo;
   const ACodArt, ATexto: string;
   ADict: TDictionary<string, string>): Boolean;
 var
@@ -562,14 +581,16 @@ begin
   if ADict <> nil then
     Dict := ADict
   else
-    Dict := ObtenerMapaAtributosGlobal;
+    Dict := ObtenerMapaAtributosGlobal(AConexion);
   if (ACanvas <> nil) and (AViewInfo <> nil) and
      (Dict <> nil) and (Dict.Count > 0) and
-     BuscarInfoBasicoEnArticuloContextual(ACodArt, sTexto, Dict, Info) then
+     BuscarInfoBasicoEnArticuloContextual(AConexion, ACodArt, sTexto, Dict,
+       Info) then
     Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
 end;
 
-function BuscarInfoBasicoEnArticulo(const ATexto: string;
+function BuscarInfoBasicoEnArticulo(AConexion: TUniConnection;
+                                    const ATexto: string;
                                     ADict: TDictionary<string, string>;
                                     out AInfo: TInfoBasico): Boolean;
 var
@@ -585,7 +606,7 @@ begin
 
   // 1) Probamos con el texto entero
   for IdVa in ADict.Values do
-    if ObtenerInfoBasico(IdVa, Texto, AInfo) then
+    if ObtenerInfoBasico(AConexion, IdVa, Texto, AInfo) then
       Exit(True);
 
   // 2) Si el texto es un SKU compuesto (ej: ART/COLOR/TALLA),
@@ -601,14 +622,15 @@ begin
       if Segmento <> '' then
       begin
         for IdVa in ADict.Values do
-          if ObtenerInfoBasico(IdVa, Segmento, AInfo) then
+          if ObtenerInfoBasico(AConexion, IdVa, Segmento, AInfo) then
             Exit(True);
       end;
     end;
   end;
 end;
 
-function AjustarAnchoColumnaParaSwatch(AColumn: TcxGridColumn;
+function AjustarAnchoColumnaParaSwatch(AConexion: TUniConnection;
+                                       AColumn: TcxGridColumn;
                                        ADict: TDictionary<string, string>)
                                        : Boolean;
 var
@@ -627,7 +649,7 @@ begin
   begin
     v := Tabla.DataController.Values[i, AColumn.Index];
     if VarIsNull(v) or VarIsClear(v) then Continue;
-    if BuscarInfoBasicoEnArticulo(VarToStr(v), ADict, Info) then
+    if BuscarInfoBasicoEnArticulo(AConexion, VarToStr(v), ADict, Info) then
     begin
       AColumn.Width := AColumn.Width + ANCHO_SWATCH_PX;
       Exit(True);
@@ -635,7 +657,8 @@ begin
   end;
 end;
 
-procedure RellenarImageListPaleta(AImages: TCustomImageList;
+procedure RellenarImageListPaleta(AConexion: TUniConnection;
+                                  AImages: TCustomImageList;
                                   const AIdVa: string;
                                   const AAvs: array of string;
                                   AAvToImageIndex: TDictionary<string, Integer>);
@@ -665,7 +688,7 @@ begin
     for i := 0 to High(AAvs) do
     begin
       Av := AAvs[i];
-      if not ObtenerInfoBasico(AIdVa, Av, Info) then Continue;
+      if not ObtenerInfoBasico(AConexion, AIdVa, Av, Info) then Continue;
 
       Bmp.Canvas.Brush.Style := bsSolid;
       Bmp.Canvas.Brush.Color := Info.Color;
@@ -717,7 +740,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := FConexion;
       q.SQL.Text :=
         'SELECT av.AV, b.NOMBRE_ATB, b.HEX_ATB ' +
         '  FROM fza_articulos_atributos_basicos aab ' +
@@ -750,7 +773,7 @@ begin
 end;
 
 function BuscarInfoBasicoEnArticuloContextual(
-  const ACodArt, ATexto: string;
+  AConexion: TUniConnection; const ACodArt, ATexto: string;
   ADict: TDictionary<string, string>;
   out AInfo: TInfoBasico): Boolean;
 var
@@ -766,7 +789,8 @@ var
     if (Trim(ACodArt) <> '') and (Trim(AValor) <> '') then
       for IdVa in ADict.Values do
         if not Result then
-          Result := ObtenerInfoBasicoArticulo(ACodArt, IdVa, AValor, AInfo);
+          Result := ObtenerInfoBasicoArticulo(AConexion, ACodArt, IdVa,
+            AValor, AInfo);
   end;
 
 begin
@@ -788,11 +812,12 @@ begin
       end;
     end;
     if not Result then
-      Result := BuscarInfoBasicoEnArticulo(Texto, ADict, AInfo);
+      Result := BuscarInfoBasicoEnArticulo(AConexion, Texto, ADict, AInfo);
   end;
 end;
 
-function ObtenerInfoBasicoArticulo(const ACodArt, AIdVA, AValor: string;
+function ObtenerInfoBasicoArticulo(AConexion: TUniConnection;
+  const ACodArt, AIdVA, AValor: string;
   out AInfo: TInfoBasico): Boolean;
 var
   q: TUniQuery;
@@ -809,7 +834,7 @@ begin
     begin
       q := TUniQuery.Create(nil);
       try
-        q.Connection := oConn;
+        q.Connection := AConexion;
         q.SQL.Text :=
           'SELECT b.NOMBRE_ATB, b.HEX_ATB ' +
           '  FROM fza_articulos_atributos_basicos aab ' +
@@ -842,7 +867,8 @@ begin
   end;
 end;
 
-constructor TfrmSelPalAvAux.CreateConOpciones(const AIdVa: string;
+constructor TfrmSelPalAvAux.CreateConOpciones(AConexion: TUniConnection;
+                                              const AIdVa: string;
                                               const AAvs: array of string;
                                               const AValorActual: string;
                                               AScreenLeft, AScreenTop,
@@ -859,6 +885,7 @@ var
   Bmp : TBitmap;
 begin
   inherited CreateNew(nil);
+  FConexion := AConexion;
 
   // Anclar explicitamente el popup al form activo (Caja / Inventarios)
   // como PopupParent. Sin esto el ShowModal de un form sin borde reasigna
@@ -988,10 +1015,10 @@ begin
   // Si FIdVa esta vacio o no casa, probamos contra el mapa global (mismo
   // fallback que usa el browse via BuscarInfoBasicoEnArticulo).
   if (not HayColor) and (Trim(FIdVa) <> '') then
-    HayColor := ObtenerInfoBasico(FIdVa, Av, Info);
+    HayColor := ObtenerInfoBasico(FConexion, FIdVa, Av, Info);
   if not HayColor then
-    HayColor := BuscarInfoBasicoEnArticulo(Av,
-                                           ObtenerMapaAtributosGlobal, Info);
+    HayColor := BuscarInfoBasicoEnArticulo(FConexion, Av,
+      ObtenerMapaAtributosGlobal(FConexion), Info);
 
   if HayColor then
   begin
@@ -1079,7 +1106,8 @@ begin
   end;
 end;
 
-function SeleccionarAvConPaleta(const AIdVa: string;
+function SeleccionarAvConPaleta(AConexion: TUniConnection;
+                                const AIdVa: string;
                                 const AAvs: array of string;
                                 const AValorActual: string;
                                 out AValor: string;
@@ -1092,7 +1120,7 @@ begin
   AValor := '';
   Result := False;
   if Length(AAvs) = 0 then Exit;
-  F := TfrmSelPalAvAux.CreateConOpciones(AIdVa, AAvs, AValorActual,
+  F := TfrmSelPalAvAux.CreateConOpciones(AConexion, AIdVa, AAvs, AValorActual,
     AScreenLeft, AScreenTop, AWidthHint, ACodArt);
   try
     if F.ShowModal = mrOk then

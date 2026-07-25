@@ -69,7 +69,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inLibShowMto, inLibGlobalVar,
+  inLibWin, inMtoPrincipal, inLibShowMto,
   inLibVerifactuNoVerifactuExport, inLibVerifactuNoVerifactuVerify;
 
 {$R *.dfm}
@@ -127,7 +127,7 @@ begin
     // navega cuando la línea tiene serie y número.
     if (Trim(sSerie) <> '') and (Trim(sNumero) <> '') then
     begin
-      sCall := ResolverCallFactura(sNumero, sSerie);
+      sCall := ResolverCallFactura(ConexionPrincipal,sNumero, sSerie);
       ShowMto(Self.Owner, sCall, sNumero + ',' + sSerie);
     end;
   end;
@@ -151,7 +151,7 @@ begin
                          FormatDateTime('yyyymmdd_hhnnss', Now) + '.xml';
     if oDialogo.Execute then
     begin
-      oResultado := ExportarRegistrosNoVerifactu(oConn,
+      oResultado := ExportarRegistrosNoVerifactu(ConexionPrincipal,
         IdentidadSesion.Usuario, oDialogo.FileName);
       MessageDlg('Exportacion NO VERI*FACTU generada:' + sLineBreak +
         oResultado.ArchivoEventos + sLineBreak +

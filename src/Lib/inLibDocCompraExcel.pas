@@ -23,7 +23,7 @@ unit inLibDocCompraExcel;
 interface
 
 uses
-  DB, System.SysUtils,
+  DB, System.SysUtils, Uni,
   dxSpreadSheet, dxSpreadSheetCore, cxGraphics, Vcl.Graphics,
   dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics,
   dxSpreadSheetStyles, dxHashUtils,
@@ -66,11 +66,13 @@ type
   end;
 
 procedure ExportarDocCompraHorizontal(
+  AConexion: TUniConnection;
   ASheetControl: TdxSpreadSheet;
   const QMaster, QLineas, QGuias: TDataSet;
   const ACfg: TDocCompraCabCfg);
 
 procedure ExportarDocCompraVertical(
+  AConexion: TUniConnection;
   ASheetControl: TdxSpreadSheet;
   const QMaster, QLineas: TDataSet;
   const ACfg: TDocCompraCabCfg);
@@ -342,7 +344,8 @@ begin
   end;
 end;
 
-procedure PintarCabeceraDoc(Sheet: TdxSpreadSheetTableView;
+procedure PintarCabeceraDoc(AConexion: TUniConnection;
+  Sheet: TdxSpreadSheetTableView;
   const QMaster: TDataSet; const ACfg: TDocCompraCabCfg;
   AColMax: Integer; out AFilaSiguiente: Integer);
 var
@@ -413,7 +416,8 @@ begin
   var cDoc := AColMax - 3;
   if cDoc < 10 then
     cDoc := 10;
-  sDocumento := FormatearDocumentoDataSet(QMaster, ACfg.FieldSerie,
+  sDocumento := FormatearDocumentoDataSet(AConexion, QMaster,
+    ACfg.FieldSerie,
     ACfg.FieldNumero);
   iRow := 3;
   W(Sheet, iRow, cDoc, 'DOCUMENTO', True);
@@ -472,6 +476,7 @@ end;
 // ===== Exportacion horizontal ===============================================
 
 procedure ExportarDocCompraHorizontal(
+  AConexion: TUniConnection;
   ASheetControl: TdxSpreadSheet;
   const QMaster, QLineas, QGuias: TDataSet;
   const ACfg: TDocCompraCabCfg);
@@ -518,7 +523,7 @@ begin
   Sheet.BeginUpdate;
   try
   // --- Cabecera ---
-  PintarCabeceraDoc(Sheet, QMaster, ACfg, iColMax, iRow);
+  PintarCabeceraDoc(AConexion, Sheet, QMaster, ACfg, iColMax, iRow);
   // --- Guias de tallas (justo encima de las cabeceras de columna) ---
   Inc(iRow);
   iFilaInicioGuias := iRow;
@@ -694,6 +699,7 @@ end;
 // ===== Exportacion vertical (una fila por SKU) ==============================
 
 procedure ExportarDocCompraVertical(
+  AConexion: TUniConnection;
   ASheetControl: TdxSpreadSheet;
   const QMaster, QLineas: TDataSet;
   const ACfg: TDocCompraCabCfg);
@@ -719,7 +725,7 @@ begin
   Sheet.BeginUpdate;
   try
   // --- Cabecera ---
-  PintarCabeceraDoc(Sheet, QMaster, ACfg, COL_TOTAL, iRow);
+  PintarCabeceraDoc(AConexion, Sheet, QMaster, ACfg, COL_TOTAL, iRow);
   // --- Cabecera de lineas ---
   Inc(iRow, 2);
   W(Sheet, iRow, COL_LINEA, 'Linea',        True, ssahCenter);

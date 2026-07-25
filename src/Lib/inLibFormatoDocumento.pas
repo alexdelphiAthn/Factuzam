@@ -3,7 +3,7 @@ unit inLibFormatoDocumento;
 interface
 
 uses
-  Data.DB;
+  Data.DB, Uni;
 
 const
   FORMATO_DOCUMENTO_DEFECTO = 'Serie.NroDocumento';
@@ -11,17 +11,19 @@ const
 function FormatearDocumento(const AFormato, ASerie, ANumero: string): string;
 function ExpresionSqlFormatoDocumento(const AFormato, ASerie,
   ANumero: string): string;
-function FormatearDocumentoDataSet(ADataSet: TDataSet;
+function FormatearDocumentoDataSet(AConexion: TUniConnection;
+  ADataSet: TDataSet;
   const ACampoSerie, ACampoNumero: string;
   const ACampoFormato: string = 'FORMATO_DOCUMENTO_EMP'): string;
-function LeerFormatoDocumentoEmpresa(const ACodigoEmpresa: string): string;
-function FormatearDocumentoEmpresa(const ACodigoEmpresa, ASerie,
-  ANumero: string): string;
+function LeerFormatoDocumentoEmpresa(AConexion: TUniConnection;
+  const ACodigoEmpresa: string): string;
+function FormatearDocumentoEmpresa(AConexion: TUniConnection;
+  const ACodigoEmpresa, ASerie, ANumero: string): string;
 
 implementation
 
 uses
-  System.SysUtils, Uni, inLibGlobalVar;
+  System.SysUtils;
 
 const
   TOKENS_NUMERO_SQL: array[0..20] of string = (
@@ -233,7 +235,8 @@ begin
     sResultado + ' END';
 end;
 
-function FormatearDocumentoDataSet(ADataSet: TDataSet;
+function FormatearDocumentoDataSet(AConexion: TUniConnection;
+  ADataSet: TDataSet;
   const ACampoSerie, ACampoNumero: string;
   const ACampoFormato: string): string;
 var
@@ -244,13 +247,14 @@ begin
   if sFormato = '' then
   begin
     sCodigoEmpresa := BuscarCodigoEmpresa(ADataSet);
-    sFormato := LeerFormatoDocumentoEmpresa(sCodigoEmpresa);
+    sFormato := LeerFormatoDocumentoEmpresa(AConexion, sCodigoEmpresa);
   end;
   Result := FormatearDocumento(sFormato, CampoTexto(ADataSet, ACampoSerie),
     CampoTexto(ADataSet, ACampoNumero));
 end;
 
-function LeerFormatoDocumentoEmpresa(const ACodigoEmpresa: string): string;
+function LeerFormatoDocumentoEmpresa(AConexion: TUniConnection;
+  const ACodigoEmpresa: string): string;
 var
   Qry: TUniQuery;
 begin
@@ -260,7 +264,7 @@ begin
     Qry := TUniQuery.Create(nil);
     try
       try
-        Qry.Connection := oConn;
+        Qry.Connection := AConexion;
         Qry.SQL.Text :=
           'SELECT FORMATO_DOCUMENTO_EMP ' +
           '  FROM fza_empresas ' +
@@ -281,11 +285,11 @@ begin
   end;
 end;
 
-function FormatearDocumentoEmpresa(const ACodigoEmpresa, ASerie,
-  ANumero: string): string;
+function FormatearDocumentoEmpresa(AConexion: TUniConnection;
+  const ACodigoEmpresa, ASerie, ANumero: string): string;
 begin
-  Result := FormatearDocumento(LeerFormatoDocumentoEmpresa(ACodigoEmpresa),
-    ASerie, ANumero);
+  Result := FormatearDocumento(
+    LeerFormatoDocumentoEmpresa(AConexion, ACodigoEmpresa), ASerie, ANumero);
 end;
 
 end.

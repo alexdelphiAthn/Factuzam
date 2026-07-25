@@ -46,9 +46,10 @@ type
   TInformesGuiasCache = class
   private
     FPorInforme: TGuiasPorInforme;
+    FConexion: TUniConnection;
     FCargada:    Boolean;
   public
-    constructor Create;
+    constructor Create(AConexion: TUniConnection);
     destructor  Destroy; override;
     procedure   Precargar(AConn: TUniConnection = nil);
     procedure   Invalidar;
@@ -63,12 +64,10 @@ type
 
 implementation
 
-uses
-  inLibGlobalVar;
-
-constructor TInformesGuiasCache.Create;
+constructor TInformesGuiasCache.Create(AConexion: TUniConnection);
 begin
   inherited Create;
+  FConexion := AConexion;
   FPorInforme := TGuiasPorInforme.Create([doOwnsValues]);
   FCargada    := False;
 end;
@@ -95,7 +94,7 @@ begin
   FPorInforme.Clear;
   FCargada := False;
   if AConn = nil then
-    AConn := oConn;
+    AConn := FConexion;
   if (AConn = nil) or (not AConn.Connected) then
     Exit;
   try

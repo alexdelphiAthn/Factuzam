@@ -113,7 +113,8 @@ Comprobar (
   ) 'La escritura de fotos recibe el usuario explícitamente'
 Comprobar (
     ($tb -match
-      'ObtenerSiguienteContador\(const ATipoDoc,\s*AUsuario: string\)') -and
+      'ObtenerSiguienteContador\(AConexion:\s*TUniConnection;\s*' +
+      'const ATipoDoc,\s*AUsuario:\s*string\)') -and
     ($tb -match
       '''pUSUARIO_MODIF''.*AsString :=\s*AUsuario')
   ) 'La reserva de contadores recibe el usuario explícitamente'
@@ -159,11 +160,20 @@ foreach ($archivo in $dfm) {
 Comprobar (($dfmConConexion.Count -eq 52) -and ($enlaces -eq 253)) `
   'Se conservan los 253 enlaces persistentes de 52 DFM'
 
-$dfmModificados = @(
-  & git -C $raiz diff --name-only -- 'src/*.dfm' 'src/**/*.dfm'
+$dfmPermitidosXI_B1 = @(
+  'src\Forms\inMtoStockConsulta.dfm',
+  'src\Modals\inMtoModalFacturarAlbaranesFechas.dfm'
 )
-Comprobar ($dfmModificados.Count -eq 0) `
-  'No se modifica ningún DFM'
+$dfmModificados = @(
+  & git -C $raiz diff --name-only -- 'src/*.dfm' 'src/**/*.dfm' |
+    ForEach-Object { $_.Replace('/', '\') }
+)
+$dfmFueraXI_B1 = @(
+  $dfmModificados |
+    Where-Object { $dfmPermitidosXI_B1 -notcontains $_ }
+)
+Comprobar ($dfmFueraXI_B1.Count -eq 0) `
+  'Solo XI-B1 modifica DFM para introducir herencia visual'
 
 $dumpModificado = @(
   & git -C $raiz diff --name-only -- 'factuzam_original.sql'

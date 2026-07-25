@@ -31,7 +31,7 @@ uses
   cxCheckBox,
   // Acceso a Datos y Librerías Propias
   Uni, MemDS, VirtualTable,
-  inLibGlobalVar, inMtoFrmBase, inLibFacturas, inLibFaseCobro,
+  inMtoFrmBase, inLibFacturas, inLibFaseCobro,
   inMtoCajaReferenciaPago, System.UITypes, dxGDIPlusClasses, cxImage;
 
 type
@@ -225,7 +225,7 @@ begin
     sSubtipo := 'SIMPLIFICADA';
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     // Series propias del almacen/caja y tambien las genericas de la
     // empresa (almacen/caja a NULL), p.ej. la rectificativa R1
     qry.SQL.Text := 'SELECT EMPSER AS SERIE_CON              ' +
@@ -379,7 +379,10 @@ begin
   // ya emitido en la misma serie. Si lo es, se avisa y NO se cierra la fase
   // de cobro, para elegir otra serie sin perder las formas de pago.
   Result := True;
-  dUltima := TdmCajaOpe.FechaUltimoTicketSerie(FCodigoEmpresa, ASerie);
+  dUltima := TdmCajaOpe.FechaUltimoTicketSerie(
+    ConexionPrincipal,
+    FCodigoEmpresa,
+    ASerie);
   if (dUltima > 0) and (Trunc(AFecha) < Trunc(dUltima)) then
   begin
     Result := False;
@@ -408,7 +411,7 @@ begin
   begin
     Qry := TUniQuery.Create(nil);
     try
-      Qry.Connection := oConn;
+      Qry.Connection := ConexionPrincipal;
       Qry.SQL.Text :=
         'SELECT COUNT(*) AS NFILAS, ' +
         '       MIN(CAST(NUMERO_FAC AS UNSIGNED)) AS NMIN, ' +
@@ -468,7 +471,7 @@ begin
   begin
     Qry := TUniQuery.Create(nil);
     try
-      Qry.Connection := oConn;
+      Qry.Connection := ConexionPrincipal;
       Qry.SQL.Text :=
         'SELECT MIN(CAST(NUMERO_FAC AS UNSIGNED)) AS NMIN, ' +
         '       MAX(CAST(NUMERO_FAC AS UNSIGNED)) AS NMAX, ' +
@@ -551,7 +554,7 @@ begin
   chkEnviarEmail.Checked := False;
   DibujarIconoEmail;
   ConfigurarTablaVirtual;
-  FDatosCobro := TDatosFaseCobro.Create(FMemTablePagos);
+  FDatosCobro := TDatosFaseCobro.Create(ConexionPrincipal, FMemTablePagos);
   FDatosCobro.OnRecalculado := AlRecalcularDatos;
   FDatosCobro.OnRequiereReferencia := AlRequerirReferencia;
 //  CargarFormasPago;
@@ -675,7 +678,7 @@ var
 begin
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text := '  SELECT * ' +
                     '    FROM fza_caja_formas_pago ' +
                     '   WHERE ESACTIVO_FORMA_PAGO_CFP = ''S'' ' +
@@ -1192,7 +1195,7 @@ begin
   begin
     qryCli := TUniQuery.Create(nil);
     try
-      qryCli.Connection := oConn;
+      qryCli.Connection := ConexionPrincipal;
       qryCli.SQL.Text := 'SELECT RAZON_SOCIAL_CLI, EMAIL_CLI, ' +
                          '       ESPERMITE_DEUDA_CLI, ' +
                          '       TOTAL_LIMITE_CREDITO_CLI, ' +

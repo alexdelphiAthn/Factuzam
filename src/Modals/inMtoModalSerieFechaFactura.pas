@@ -57,7 +57,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibtb;
+  inLibtb;
 
 {$R *.dfm}
 
@@ -71,11 +71,12 @@ var
 begin
   frm := TfrmModalSerieFechaFactura.Create(AOwner);
   try
-    frm.qrySeries.Connection := oConn;
+    frm.qrySeries.Connection := frm.ConexionPrincipal;
     frm.qrySeries.Open;
     // Serie por defecto: la ligada al almacén; si no tiene, la primera
     // serie FC activa (DEFAULT_CON primero)
-    sSerie := ObtenerSeriePropiaAlmacen(AEmpresa, 'FC', AAlmacen);
+    sSerie := ObtenerSeriePropiaAlmacen(frm.ConexionPrincipal, AEmpresa,
+      'FC', AAlmacen);
     if sSerie = '' then
       sSerie := frm.qrySeries.FieldByName('SERIE_CON').AsString;
     frm.cbbSerie.EditValue := sSerie;

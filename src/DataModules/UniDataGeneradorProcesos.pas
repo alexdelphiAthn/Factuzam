@@ -48,7 +48,7 @@ type
 implementation
 
 uses
-  inMtoGeneradorProcesos, inLibGlobalVar;
+  inMtoGeneradorProcesos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -81,12 +81,12 @@ end;
 procedure TdmGeneradorProcesos.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unstrdprcContador.Connection := oConn;
-  unqryMetadatos.Connection := oConn;
-  unqryEstructura.Connection := oConn;
-  unqryContenido.Connection := oConn;
-  unstrdprcRefresh.Connection := oConn;
-  unqryCommand.Connection := oConn;
+  unstrdprcContador.Connection := ConexionPrincipal;
+  unqryMetadatos.Connection := ConexionPrincipal;
+  unqryEstructura.Connection := ConexionPrincipal;
+  unqryContenido.Connection := ConexionPrincipal;
+  unstrdprcRefresh.Connection := ConexionPrincipal;
+  unqryCommand.Connection := ConexionPrincipal;
 end;
 
 procedure TdmGeneradorProcesos.GetCodigoAutoGeneradorProcesos;

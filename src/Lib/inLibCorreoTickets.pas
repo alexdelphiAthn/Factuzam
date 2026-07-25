@@ -17,7 +17,7 @@ unit inLibCorreoTickets;
 interface
 
 uses
-  System.SysUtils;
+  System.SysUtils, Uni;
 
 type
   TDatosCorreoOperacion = record
@@ -32,16 +32,18 @@ type
   end;
 
 function CorreoTicketsConfigurado(out AMensaje: string): Boolean;
-function ObtenerDatosCorreoOperacion(const AEmpresa, AAlmacen, ACaja,
+function ObtenerDatosCorreoOperacion(AConexion: TUniConnection;
+  const AEmpresa, AAlmacen, ACaja,
   ANumeroOperacion: string): TDatosCorreoOperacion;
-function EnviarDocumentacionOperacion(const AEmpresa, AAlmacen, ACaja,
-  ANumeroOperacion, AEmail: string; out AMensaje: string): Boolean;
+function EnviarDocumentacionOperacion(AConexion: TUniConnection;
+  const AEmpresa, AAlmacen, ACaja, ANumeroOperacion, AEmail: string;
+  out AMensaje: string): Boolean;
 
 implementation
 
 uses
   System.Classes, System.JSON, System.Net.HttpClient, System.Net.Mime,
-  Uni, inLibGlobalVar, inLibGenerarTicketBD, inLibGenerarTicketCaja,
+  inLibGenerarTicketBD, inLibGenerarTicketCaja,
   inLibTraspasoTicket, inLibLog, inLibFactuzamApi;
 
 const
@@ -69,7 +71,8 @@ begin
   end;
 end;
 
-function ObtenerDatosCorreoOperacion(const AEmpresa, AAlmacen, ACaja,
+function ObtenerDatosCorreoOperacion(AConexion: TUniConnection;
+  const AEmpresa, AAlmacen, ACaja,
   ANumeroOperacion: string): TDatosCorreoOperacion;
 var
   Qry: TUniQuery;
@@ -78,7 +81,7 @@ begin
   Result := Default(TDatosCorreoOperacion);
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := oConn;
+    Qry.Connection := AConexion;
     Qry.SQL.Text :=
       'SELECT COUNT(*) AS NUM_FILAS,' +
       '       MAX(COALESCE(NULLIF(f.CODIGO_CLI_FAC, ''''),' +
@@ -175,26 +178,27 @@ begin
     Result := Format('El servidor respondió con código %d.', [AEstado]);
 end;
 
-procedure GenerarDocumentos(const AEmpresa, AAlmacen, ACaja,
+procedure GenerarDocumentos(AConexion: TUniConnection;
+  const AEmpresa, AAlmacen, ACaja,
   ANumeroOperacion: string; const ADatos: TDatosCorreoOperacion;
   ARutasPDF: TStrings);
 begin
   if ADatos.EsTraspaso then
-    TTraspasoTicket.ImprimirTraspasoDesdeBD(oConn, AEmpresa, AAlmacen,
+    TTraspasoTicket.ImprimirTraspasoDesdeBD(AConexion, AEmpresa, AAlmacen,
       ACaja, ANumeroOperacion, 'DEBUG', ARutasPDF, True)
   else
   begin
     if ADatos.TieneFactura then
-      ImprimirTicketDesdeBD(AEmpresa, AAlmacen, ACaja, ANumeroOperacion,
-        'DEBUG', ARutasPDF, True);
+      ImprimirTicketDesdeBD(AConexion, AEmpresa, AAlmacen, ACaja,
+        ANumeroOperacion, 'DEBUG', ARutasPDF, True);
     if ADatos.TieneDepositos then
-      ImprimirResguardoDeposito(AEmpresa, AAlmacen, ACaja,
+      ImprimirResguardoDeposito(AConexion, AEmpresa, AAlmacen, ACaja,
         ANumeroOperacion, 'DEBUG', ARutasPDF, True);
     if ADatos.EsOperacionCaja then
-      ImprimirTicketOperacionCaja(AEmpresa, AAlmacen, ACaja,
+      ImprimirTicketOperacionCaja(AConexion, AEmpresa, AAlmacen, ACaja,
         ANumeroOperacion, 'DEBUG', ARutasPDF, True);
     if (ARutasPDF.Count > 0) and (Trim(ADatos.CodigoCliente) <> '') then
-      ImprimirRecordatorio(AEmpresa, ADatos.CodigoCliente, 'DEBUG',
+      ImprimirRecordatorio(AConexion, AEmpresa, ADatos.CodigoCliente, 'DEBUG',
         ARutasPDF, True);
   end;
 end;
@@ -237,8 +241,9 @@ begin
   end;
 end;
 
-function EnviarDocumentacionOperacion(const AEmpresa, AAlmacen, ACaja,
-  ANumeroOperacion, AEmail: string; out AMensaje: string): Boolean;
+function EnviarDocumentacionOperacion(AConexion: TUniConnection;
+  const AEmpresa, AAlmacen, ACaja, ANumeroOperacion, AEmail: string;
+  out AMensaje: string): Boolean;
 var
   Datos: TDatosCorreoOperacion;
   RutasPDF: TStringList;
@@ -255,7 +260,7 @@ begin
       AMensaje := 'Indique una dirección de correo electrónico.'
     else
     begin
-      Datos := ObtenerDatosCorreoOperacion(AEmpresa, AAlmacen, ACaja,
+      Datos := ObtenerDatosCorreoOperacion(AConexion, AEmpresa, AAlmacen, ACaja,
         ANumeroOperacion);
       if not Datos.Encontrada then
         AMensaje := 'No se ha encontrado la operación seleccionada.'
@@ -264,7 +269,7 @@ begin
         RutasPDF := TStringList.Create;
         try
           try
-            GenerarDocumentos(AEmpresa, AAlmacen, ACaja,
+            GenerarDocumentos(AConexion, AEmpresa, AAlmacen, ACaja,
               ANumeroOperacion, Datos, RutasPDF);
             if RutasPDF.Count = 0 then
               AMensaje := 'La operación no tiene documentación asociada.'

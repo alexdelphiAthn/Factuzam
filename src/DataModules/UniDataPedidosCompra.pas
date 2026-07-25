@@ -123,7 +123,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibLog, inLibtb, inLibContadorLineas,
+  inLibLog, inLibtb, inLibContadorLineas,
   System.Diagnostics, System.UITypes, System.Generics.Collections,
   Vcl.Dialogs, ComCtrls, cxListView,
   inMtoPedidosCompra,
@@ -312,29 +312,29 @@ end;
 procedure TdmPedidosCompra.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryTablaG.Connection              := oConn;
+  unqryTablaG.Connection              := ConexionPrincipal;
   unqryTablaG.KeyFields               := 'NUMERO_PEDC;SERIE_PEDC';
   ConfigurarSqlCabecera;
-  unqryPedidosCompraLineas.Connection := oConn;
-  unqryEmpDataPedc.Connection         := oConn;
-  unqryPrvDataPedc.Connection         := oConn;
+  unqryPedidosCompraLineas.Connection := ConexionPrincipal;
+  unqryEmpDataPedc.Connection         := ConexionPrincipal;
+  unqryPrvDataPedc.Connection         := ConexionPrincipal;
   // Lookup completo de proveedores (NOMBRE_PRV + RAZON_SOCIAL_PRV) para
   // el rotulo resuelto de la cabecera y para el combo de busqueda
   // incremental por codigo (cbbCODIGO_PRV_PEDC). Se abre una vez y se
   // recorre con Locate; no depende del proveedor del pedido en pantalla.
   unqryPrvDataPedc.Open;
-  unqrySkusPedc.Connection            := oConn;
-  unstrdprcGetContadorPedc.Connection := oConn;
-  unqryDefArticuloPedc.Connection     := oConn;
-  unqryTemporadasPedc.Connection      := oConn;
+  unqrySkusPedc.Connection            := ConexionPrincipal;
+  unstrdprcGetContadorPedc.Connection := ConexionPrincipal;
+  unqryDefArticuloPedc.Connection     := ConexionPrincipal;
+  unqryTemporadasPedc.Connection      := ConexionPrincipal;
   unqryTemporadasPedc.Open;
-  unqryFormasPago.Connection          := oConn;
-  unqryAlmacenesPedc.Connection       := oConn;
+  unqryFormasPago.Connection          := ConexionPrincipal;
+  unqryAlmacenesPedc.Connection       := ConexionPrincipal;
   unqryPedidosCompraLineas.MasterSource :=
     (GetOwnerForm<TfrmMtoPedidosCompra>).dsTablaG;
   // Albaranes de compra creados desde este pedido (master-detail por
   // NUMERO_PED_ALBC / SERIE_PED_ALBC). Solo lectura, para la pestania.
-  unqryAlbaranesPedc.Connection := oConn;
+  unqryAlbaranesPedc.Connection := ConexionPrincipal;
   unqryAlbaranesPedc.MasterSource :=
     (GetOwnerForm<TfrmMtoPedidosCompra>).dsTablaG;
 end;
@@ -468,7 +468,10 @@ begin
   with unqryTablaG do
   begin
     FieldByName('NUMERO_PEDC').AsString := '0';
-    sSerie := ObtenerSerieDefecto(UbicacionSesion.Empresa, 'PC');
+    sSerie := ObtenerSerieDefecto(
+      ConexionPrincipal,
+      UbicacionSesion.Empresa,
+      'PC');
     if FindField('SERIE_PEDC') <> nil then
     begin
       if sSerie <> '' then
@@ -492,9 +495,9 @@ begin
       FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString := 'N';
     if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_PEDC') <> nil then
       FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_PEDC').AsString := 'N';
-    AplicarRecargoComprasEmpresa(oConn, unqryTablaG,
+    AplicarRecargoComprasEmpresa(ConexionPrincipal, unqryTablaG,
       'CODIGO_EMP_PEDC', 'ESIVA_RECARGO_COMPRAS_PEDC');
-    AplicarPorcentajesIvaCompra(oConn, unqryTablaG,
+    AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG,
       'PEDC');
   end;
   RefrescarAlmacenes(
@@ -584,7 +587,7 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '') then
     GetCodigoAutoPedidoCompra;
-  AplicarPorcentajesIvaCompra(oConn, unqryTablaG,
+  AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG,
     'PEDC');
   CalcularTotalesPedidoCompra;
 end;
@@ -606,7 +609,7 @@ begin
     FReorganizacionPendiente := True
   else
     inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-      oConn, sSerie, sNumero, IdentidadSesion.Usuario);
+      ConexionPrincipal, sSerie, sNumero, IdentidadSesion.Usuario);
 end;
 
 procedure TdmPedidosCompra.unqryTablaGBeforeDelete(DataSet: TDataSet);
@@ -630,12 +633,12 @@ begin
     Abort;
   end;
   inLibPedidosCompra.BorrarPdteRecibirDesdePedido(
-    oConn, sSerie, sNumero);
+    ConexionPrincipal, sSerie, sNumero);
   // Borrar lineas asociadas para que no se queden huerfanas (no hay
   // FK con CASCADE).
   with TUniQuery.Create(nil) do
   try
-    Connection := oConn;
+    Connection := ConexionPrincipal;
     SQL.Text :=
       'DELETE FROM fza_pedidos_compra_lineas ' +
       ' WHERE SERIE_PEDC_PEDCLIN  = :s ' +
@@ -712,7 +715,7 @@ begin
   with unqryPedidosCompraLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
-    NormalizarArticuloSkuEnDataSet(oConn,
+    NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
       unqryPedidosCompraLineas, 'CODIGO_ART_PEDCLIN',
       'CODIGO_UNIDAD_PEDCLIN');
     if (FindField('CANTIDAD_PEDCLIN') <> nil) and
@@ -751,7 +754,7 @@ begin
         unqrySkusPedc.Close;
       end;
     end;
-    PrepararLineaFiscalCompra(oConn, unqryTablaG,
+    PrepararLineaFiscalCompra(ConexionPrincipal, unqryTablaG,
       unqryPedidosCompraLineas, 'PEDC', 'PEDCLIN', 'TOTAL_PEDCLIN');
   end;
 end;
@@ -770,7 +773,8 @@ begin
     sSerie  := Trim(unqryTablaG.FieldByName('SERIE_PEDC').AsString);
     if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(LIN_PEDIDOS_COMPRA, sSerie, sNumero, sLinea)) then
+        LineaDocExiste(ConexionPrincipal, LIN_PEDIDOS_COMPRA, sSerie,
+          sNumero, sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
         raise Exception.Create(
@@ -779,8 +783,8 @@ begin
         DataSet.FieldByName('NUMERO_PEDC_PEDCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_PEDC_PEDCLIN') <> nil then
         DataSet.FieldByName('SERIE_PEDC_PEDCLIN').AsString := sSerie;
-      iNuevaLinea := GetSiguienteLineaDocLibre(CONT_PEDIDOS_COMPRA,
-        LIN_PEDIDOS_COMPRA, sSerie, sNumero);
+      iNuevaLinea := GetSiguienteLineaDocLibre(ConexionPrincipal,
+        CONT_PEDIDOS_COMPRA, LIN_PEDIDOS_COMPRA, sSerie, sNumero);
       if iNuevaLinea = 0 then
       begin
         iNuevaLinea := StrToIntDef(
@@ -817,7 +821,7 @@ begin
     FReorganizacionPendiente := True
   else
     inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-      oConn, sSerie, sNumero, IdentidadSesion.Usuario);
+      ConexionPrincipal, sSerie, sNumero, IdentidadSesion.Usuario);
 end;
 
 procedure TdmPedidosCompra.unqryPedidosCompraLineasBeforeDelete(
@@ -833,7 +837,7 @@ begin
   sLinea  := unqryPedidosCompraLineas.FieldByName('LINEA_PEDCLIN').AsString;
   if (sSerie = '') or (sNumero = '') then Exit;
   inLibPedidosCompra.BorrarPdteRecibirDesdePedido(
-    oConn, sSerie, sNumero, sLinea);
+    ConexionPrincipal, sSerie, sNumero, sLinea);
 end;
 
 function TdmPedidosCompra.ObtenerAlmacenesSql(
@@ -889,7 +893,7 @@ begin
     oLv.Items.Clear;
     oQry := TUniQuery.Create(nil);
     try
-      oQry.Connection := oConn;
+      oQry.Connection := ConexionPrincipal;
       oQry.SQL.Text :=
         'SELECT X.COD, COALESCE(A.NOMBRE_ALM_ALM, X.COD) AS NOM ' +
         '  FROM ( ' +
@@ -948,7 +952,7 @@ begin
   sAlmacenes := ObtenerAlmacenesSql(AAlmacenesCsv);
   oQry := TUniQuery.Create(nil);
   try
-    oQry.Connection := oConn;
+    oQry.Connection := ConexionPrincipal;
     oQry.SQL.Text :=
       'SELECT DISTINCT L.CODIGO_UNIDAD_PEDCLIN ' +
       '  FROM fza_pedidos_compra_lineas L ' +
@@ -1009,7 +1013,7 @@ begin
     try
       oQry := TUniQuery.Create(nil);
       try
-        oQry.Connection := oConn;
+        oQry.Connection := ConexionPrincipal;
         sAlmacenes := ObtenerAlmacenesSql(AAlmacenesCsv);
         oQry.SQL.Text :=
           'SELECT X.SKU, SUM(X.CANTIDAD) AS CANTIDAD ' +
@@ -1285,7 +1289,7 @@ begin
   begin
     FCalculandoTotales := True;
     try
-      CalcularTotalesDocumentoCompra(oConn, unqryTablaG,
+      CalcularTotalesDocumentoCompra(ConexionPrincipal, unqryTablaG,
         unqryPedidosCompraLineas, 'PEDC', 'TOTAL_PEDCLIN',
         'TIPO_IVA_ARTICULO_PEDCLIN', 'PORCENTAJE_IVA_PEDCLIN');
       // Nº de prendas: TOTAL_PRENDAS_PEDC es columna calculada de la
@@ -1344,7 +1348,7 @@ begin
       sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
       if (sSerie <> '') and (sNumero <> '') then
         inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-          oConn, sSerie, sNumero, IdentidadSesion.Usuario);
+          ConexionPrincipal, sSerie, sNumero, IdentidadSesion.Usuario);
     end;
   end;
 end;
@@ -1372,7 +1376,7 @@ begin
     sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
     if (sSerie <> '') and (sNumero <> '') then
       inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-        oConn, sSerie, sNumero, IdentidadSesion.Usuario);
+        ConexionPrincipal, sSerie, sNumero, IdentidadSesion.Usuario);
   end;
 end;
 
@@ -1385,7 +1389,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       // El cruce de LINEA va en NUMERICO: la celda guarda '10' (el
       // parametro entra como entero) y la linea '0010'; como texto
       // nunca casaban, TODA linea con SKU contaba como sin pivotar y

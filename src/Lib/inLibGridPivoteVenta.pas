@@ -2210,7 +2210,7 @@ begin
       if sValorColor = '' then
         sValorColor := sColorCodigo;
       if PintarCeldaSwatchArticuloSiAplica(
-           ACanvas, AViewInfo, sArt, sValorColor, nil) then
+           FConfig.Conexion, ACanvas, AViewInfo, sArt, sValorColor, nil) then
         ADone := True;
     end
     else if EsColumnaTalla(Col) then
@@ -2359,7 +2359,8 @@ begin
         ' ORDER BY STOCK DESC, a.CODIGO_ART_ART';
       Q.ParamByName('ALM').AsString := FConfig.AlmacenStock;
       Q.Open;
-      if TBusquedaUtils.EjecutarBusqueda('Búsqueda de artículos', Q,
+      if TBusquedaUtils.EjecutarBusqueda(FConfig.Conexion,
+                                         'Búsqueda de artículos', Q,
                                          'frmMtoArtTraspasoSearch') then
       begin
         sArt := Q.FieldByName('ARTICULO').AsString;
@@ -2975,13 +2976,14 @@ begin
           for j := 0 to High(Avs) do
             AvsStr[j] := Avs[j].Valor;
           sIdVa := '';
-          Mapa := ObtenerMapaAtributosGlobal;
+          Mapa := ObtenerMapaAtributosGlobal(FConfig.Conexion);
           if Mapa <> nil then
             Mapa.TryGetValue(UpperCase(Trim(Atribs[i].NombreAtributo)),
                              sIdVa);
           // Paleta de swatches auto-centrada (-1,-1), como caja e
           // inventarios.
-          if SeleccionarAvConPaleta(sIdVa, AvsStr, '', sAvNuevo,
+          if SeleccionarAvConPaleta(FConfig.Conexion, sIdVa, AvsStr, '',
+                                    sAvNuevo,
                                     -1, -1, 160) then
             Result := Result + '/' + sAvNuevo
           else

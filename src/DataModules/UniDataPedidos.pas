@@ -143,7 +143,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibtb, inLibLog, System.Diagnostics, System.UITypes,
+  inLibtb, inLibLog, System.Diagnostics, System.UITypes,
   Vcl.Dialogs, inLibVentasImpuestos, inLibContadorLineas, JclDebug,
   inLibCajaParam, inLibData;
 
@@ -158,14 +158,14 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TdmPedidos.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryTablaG.Connection           := oConn;
+  unqryTablaG.Connection           := ConexionPrincipal;
   unqryTablaG.BeforeDelete         := unqryTablaGBeforeDelete;
   unqryTablaG.AfterPost            := unqryTablaGAfterPost;
   unqryTablaG.SQLRefresh.Text      :=
     'SELECT * FROM vi_pedidos ' +
     ' WHERE NUMERO_PED = :NUMERO_PED ' +
     '   AND SERIE_PED = :SERIE_PED';
-  unqryPedidosLineas.Connection    := oConn;
+  unqryPedidosLineas.Connection    := ConexionPrincipal;
   unqryPedidosLineas.BeforeDelete  := unqryPedidosLineasBeforeDelete;
   // Contrato ColumnSKUcxGrid (pedidos_columnas_sku.sql): los SQL del
   // dfm no conocen las columnas nuevas (SKU + ATTR1..5 + pivote); se
@@ -276,22 +276,22 @@ begin
     '   AND SERIE_PED_PEDLIN = :Old_SERIE_PED_PEDLIN ' +
     '   AND LINEA_PEDLIN = :Old_LINEA_PEDLIN ' +
     ' FOR UPDATE';
-  unqryLinPedido.Connection        := oConn;
-  unqryEmpDataPedido.Connection    := oConn;
-  unqryCliDataPedido.Connection    := oConn;
-  unqryArtDataLinPedido.Connection := oConn;
-  unstrdprcCrearPedido.Connection            := oConn;
-  unstrdprcGetContadorPedido.Connection      := oConn;
-  unstrdprcGetContador.Connection            := oConn;
-  unstrdprcCrearAlbaranInicio.Connection     := oConn;
-  unstrdprcCrearAlbaranLinea.Connection      := oConn;
-  unstrdprcCrearAlbaranFin.Connection        := oConn;
-  unqryPerfiles.Connection         := oConn;
-  unqryAlbaranes.Connection        := oConn;
-  unqryMensajes.Connection         := oConn;
-  unqryFormasPago.Connection       := oConn;
-  unqryAlmacenesPed.Connection     := oConn;
-  unqryTarifas.Connection          := oConn;
+  unqryLinPedido.Connection        := ConexionPrincipal;
+  unqryEmpDataPedido.Connection    := ConexionPrincipal;
+  unqryCliDataPedido.Connection    := ConexionPrincipal;
+  unqryArtDataLinPedido.Connection := ConexionPrincipal;
+  unstrdprcCrearPedido.Connection            := ConexionPrincipal;
+  unstrdprcGetContadorPedido.Connection      := ConexionPrincipal;
+  unstrdprcGetContador.Connection            := ConexionPrincipal;
+  unstrdprcCrearAlbaranInicio.Connection     := ConexionPrincipal;
+  unstrdprcCrearAlbaranLinea.Connection      := ConexionPrincipal;
+  unstrdprcCrearAlbaranFin.Connection        := ConexionPrincipal;
+  unqryPerfiles.Connection         := ConexionPrincipal;
+  unqryAlbaranes.Connection        := ConexionPrincipal;
+  unqryMensajes.Connection         := ConexionPrincipal;
+  unqryFormasPago.Connection       := ConexionPrincipal;
+  unqryAlmacenesPed.Connection     := ConexionPrincipal;
+  unqryTarifas.Connection          := ConexionPrincipal;
 end;
 
 procedure TdmPedidos.DesempaquetarAtributosLineas;
@@ -464,7 +464,10 @@ begin
     FieldByName('NUMERO_PED').AsString     := '0';
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='PE'
     // (mismo criterio que compras); fallback historico 'A1'
-    sSerie := ObtenerSerieDefecto(UbicacionSesion.Empresa, 'PE');
+    sSerie := ObtenerSerieDefecto(
+      ConexionPrincipal,
+      UbicacionSesion.Empresa,
+      'PE');
     if sSerie = '' then
       sSerie := 'A1';
     if FindField('SERIE_PED') <> nil then
@@ -490,7 +493,7 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_PED').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_PED').AsString = '') then
     GetCodigoAutoPedido;
-  AplicarPorcentajesIvaVenta(oConn, unqryTablaG, 'PED');
+  AplicarPorcentajesIvaVenta(ConexionPrincipal, unqryTablaG, 'PED');
   CalcularTotalesPedido;
 end;
 
@@ -525,7 +528,7 @@ begin
   RestarPdteServirPedido(sSerie, sNumero, '');
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'DELETE FROM fza_pedidos_lineas ' +
       ' WHERE SERIE_PED_PEDLIN  = :s ' +
@@ -673,7 +676,7 @@ begin
       'La línea del pedido no tiene artículo; no se puede guardar.');
   end;
   AsignarNumeroLineaPedido(DataSet);
-  NormalizarArticuloSkuEnDataSet(oConn, unqryPedidosLineas,
+  NormalizarArticuloSkuEnDataSet(ConexionPrincipal, unqryPedidosLineas,
     'CODIGO_ART_PEDLIN', 'CODIGOPRODPS_PEDLIN', 'CODBAR_ART_PEDLIN');
   RecalcularEntregasLinea;
   // El total de la línea siempre se mantiene coherente
@@ -705,7 +708,7 @@ begin
       else
         FieldByName('ESENTREGADA_PEDLIN').AsString := 'N';
     end;
-    PrepararLineaFiscalVenta(oConn, unqryTablaG,
+    PrepararLineaFiscalVenta(ConexionPrincipal, unqryTablaG,
       unqryPedidosLineas, 'PED', 'PEDLIN', 'TOTAL_PEDLIN');
     if FindField('USUARIO_MODIF') <> nil then
       FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
@@ -737,7 +740,8 @@ begin
     sSerie  := Trim(unqryTablaG.FieldByName('SERIE_PED').AsString);
     if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(LIN_PEDIDOS, sSerie, sNumero, sLinea)) then
+        LineaDocExiste(ConexionPrincipal, LIN_PEDIDOS, sSerie, sNumero,
+          sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
         raise Exception.Create(
@@ -746,8 +750,8 @@ begin
         DataSet.FieldByName('NUMERO_PED_PEDLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_PED_PEDLIN') <> nil then
         DataSet.FieldByName('SERIE_PED_PEDLIN').AsString := sSerie;
-      iNuevaLinea := GetSiguienteLineaDocLibre(CONT_PEDIDOS,
-        LIN_PEDIDOS, sSerie, sNumero);
+      iNuevaLinea := GetSiguienteLineaDocLibre(ConexionPrincipal,
+        CONT_PEDIDOS, LIN_PEDIDOS, sSerie, sNumero);
       // El helper ya persiste CONTADOR_LINEAS_PED en BBDD dentro de su
       // propia transaccion. NO se toca unqryTablaG: el Edit anterior
       // dejaba la cabecera en edicion sin postear, y eso disparaba el
@@ -801,7 +805,7 @@ begin
     end;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text :=
         'UPDATE fza_articulos_stockactual STK ' +
         'JOIN ( ' +
@@ -933,7 +937,7 @@ begin
   begin
     FCalculandoTotales := True;
     try
-      CalcularTotalesDocumentoVenta(oConn, unqryTablaG,
+      CalcularTotalesDocumentoVenta(ConexionPrincipal, unqryTablaG,
         unqryPedidosLineas, 'PED', 'TOTAL_PEDLIN',
         'TIPO_IVA_ARTICULO_PEDLIN', 'PORCENTAJE_IVA_PEDLIN');
     finally
@@ -1092,7 +1096,7 @@ begin
     // conserva su serie aunque se retoque la empresa
     if (sNumero = '') or (sNumero = '0') then
     begin
-      sSerie := ObtenerSerieDefecto(AEmpresa, 'PE');
+      sSerie := ObtenerSerieDefecto(ConexionPrincipal, AEmpresa, 'PE');
       if sSerie <> '' then
         unqryTablaG.FieldByName('SERIE_PED').AsString := sSerie;
     end;
@@ -1194,7 +1198,7 @@ begin
   // La serie acompana a la empresa emisora (fza_empresas_series).
   // Cubre las dos rutas: codigo tecleado (BuscarEmpresa) y modal.
   ProponerSerieEmpresa(DataSet.FindField('CODIGO_EMP_EMP').AsString);
-  AplicarPorcentajesIvaVenta(oConn, unqryTablaG, 'PED');
+  AplicarPorcentajesIvaVenta(ConexionPrincipal, unqryTablaG, 'PED');
 end;
 
 procedure TdmPedidos.ActualizarImpuestosTarifaCabecera(
@@ -1277,7 +1281,7 @@ begin
       FindField('FORMA_PAGO_PED').AsString :=
         Trim(DataSet.FindField('CODIGO_FP_CLI').AsString);
   end;
-  AplicarPorcentajesIvaVenta(oConn, unqryTablaG, 'PED');
+  AplicarPorcentajesIvaVenta(ConexionPrincipal, unqryTablaG, 'PED');
 end;
 
 procedure TdmPedidos.CopiarFormaPagoPedidoAAlbaran(const ASeriePed,
@@ -1289,7 +1293,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'UPDATE fza_albaranes A ' +
       '  JOIN fza_pedidos P ' +
@@ -1333,7 +1337,7 @@ begin
   begin
     q := TUniSQL.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       Run('DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_FIN');
       Run(
         'CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_FIN(' +
@@ -1686,7 +1690,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text := 'SELECT 1 FROM fza_pedidos WHERE IDPS_PED = :id LIMIT 1';
     q.ParamByName('id').AsString := sIdPS;
     q.Open;
@@ -1732,7 +1736,7 @@ begin
   sEmail := aOrder.custMail;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     // 1) Buscar por NIF
     if sNif <> '' then
     begin
@@ -1839,11 +1843,11 @@ begin
       sDesc := 'Articulo PrestaShop ' + Result;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       // Las 3 altas (articulo + SKU + barras) deben ser atomicas entre si
-      bTx := not oConn.InTransaction;
+      bTx := not ConexionPrincipal.InTransaction;
       if bTx then
-        oConn.StartTransaction;
+        ConexionPrincipal.StartTransaction;
       try
         // Articulo padre (ESVARIACION_ART = 'N', IVA Normal por defecto)
         q.SQL.Text :=
@@ -1881,10 +1885,10 @@ begin
           q.Execute;
         end;
         if bTx then
-          oConn.Commit;
+          ConexionPrincipal.Commit;
       except
-        if bTx and oConn.InTransaction then
-          oConn.Rollback;
+        if bTx and ConexionPrincipal.InTransaction then
+          ConexionPrincipal.Rollback;
         raise;
       end;
     finally
@@ -1945,7 +1949,7 @@ begin
   // Resolver/crear cliente y articulos ANTES de la tx: los contadores
   // (PRC_GET_NEXT_CONT) hacen COMMIT propio y romperian la tx del pedido.
   sCodigoCli := ResolverCodigoCliente(aOrder);
-  oValidador := TArticulosValidador.Create(oConn);
+  oValidador := TArticulosValidador.Create(ConexionPrincipal);
   try
     SetLength(aCodArt, aOrder.LineasPedido.Count);
     for i := 0 to aOrder.LineasPedido.Count - 1 do
@@ -1959,11 +1963,11 @@ begin
   qMsg := TUniQuery.Create(nil);
   try
     // Importacion atomica: cabecera + lineas + mensajes, todo o nada
-    bTxOwned := not oConn.InTransaction;
+    bTxOwned := not ConexionPrincipal.InTransaction;
     if bTxOwned then
-      oConn.StartTransaction;
+      ConexionPrincipal.StartTransaction;
     try
-      qIns.Connection := oConn;
+      qIns.Connection := ConexionPrincipal;
       qIns.SQL.Text :=
         'INSERT INTO fza_pedidos (NUMERO_PED, SERIE_PED, FECHA_PED, '
           +
@@ -2027,7 +2031,7 @@ begin
       qIns.ParamByName('USU').AsString       := IdentidadSesion.Usuario;
       qIns.Execute;
       // Lineas
-      qLin.Connection := oConn;
+      qLin.Connection := ConexionPrincipal;
       qLin.SQL.Text :=
         'INSERT INTO fza_pedidos_lineas (NUMERO_PED_PEDLIN, ' +
         'SERIE_PED_PEDLIN, LINEA_PEDLIN, ' +
@@ -2072,7 +2076,7 @@ begin
         qLin.Execute;
       end;
       // Mensajes (si hay)
-      qMsg.Connection := oConn;
+      qMsg.Connection := ConexionPrincipal;
       qMsg.SQL.Text :=
         'INSERT INTO fza_pedidos_mensajes (IDPS_MENSAJES_PEDMSG, ' +
         'IDMENSAJEPS_PEDMSG, ' +
@@ -2096,11 +2100,11 @@ begin
         end;
       end;
       if bTxOwned then
-        oConn.Commit;
+        ConexionPrincipal.Commit;
       Result := True;
     except
-      if bTxOwned and oConn.InTransaction then
-        oConn.Rollback;
+      if bTxOwned and ConexionPrincipal.InTransaction then
+        ConexionPrincipal.Rollback;
       raise;
     end;
   finally

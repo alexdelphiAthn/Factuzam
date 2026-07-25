@@ -22,7 +22,7 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
       System.StrUtils, DCPrijndael, dcpbase64,DCPcrypt2, System.NetEncoding,
       inLibUser, Datasnap.Provider, Datasnap.DBClient, System.DateUtils,
       MidasLib,   Datasnap.Midas,   Soap.SOAPMidas, Datasnap.Win.MidasCon,
-      inLibGlobalVar, Dialogs, vcl.consts, inLibMsg, inLibFacturas,
+      Dialogs, vcl.consts, inLibMsg, inLibFacturas,
       inLibPerfilesUsuarioIntf;
 
 type
@@ -81,14 +81,18 @@ type
                                fFechaFin:TField
                                ): boolean;
   function HayCoincidencia(str1, str2: string): string;
-  procedure AplicarValoresPorDefecto(AunqryDestino: TDataSet;
+  procedure AplicarValoresPorDefecto(AConexion: TUniConnection;
+                                   AunqryDestino: TDataSet;
                                    const NombreTabla: string);
-  function ObtenerSiguienteContador(const ATipoDoc,
+  function ObtenerSiguienteContador(AConexion: TUniConnection;
+                                    const ATipoDoc,
                                     AUsuario: string): string;
-  function GetDefaultValue(const ATable,
+  function GetDefaultValue(AConexion: TUniConnection;
+                                 const ATable,
                                  AField,
                                  AConditionField: string): string;
   procedure ActualizarLineaFacturaGen(
+                                    AConexion: TUniConnection;
                                     cdsLineas: TDataSet;
                                     cdsCabecera: TDataSet;
                                     const NombreCampo: string;
@@ -96,11 +100,14 @@ type
                                     EventoUpdateTotal: TUpdateTotalEvent = nil
                                    );
 
-  function ObtenerSerieDefecto(const AEmpresa, ATipoDoc: string;
+  function ObtenerSerieDefecto(AConexion: TUniConnection;
+                               const AEmpresa, ATipoDoc: string;
                                const AAlmacen: string = ''): string;
-  function ObtenerSeriePropiaAlmacen(const AEmpresa, ATipoDoc,
+  function ObtenerSeriePropiaAlmacen(AConexion: TUniConnection;
+                                     const AEmpresa, ATipoDoc,
                                      AAlmacen: string): string;
-  procedure CargarSeriesEmpresa(const AEmpresa, ATipoDoc: string;
+  procedure CargarSeriesEmpresa(AConexion: TUniConnection;
+                                const AEmpresa, ATipoDoc: string;
                                 AItems: TStrings);
   function CheckOpenDatasets(AModule: TDataModule): Boolean;
   procedure CancelarDatasets(AModule: TDataModule);
@@ -357,7 +364,8 @@ begin
   end;
 end;
 
-procedure ActualizarLineaFacturaGen(cdsLineas: TDataSet;
+procedure ActualizarLineaFacturaGen(AConexion: TUniConnection;
+                                    cdsLineas: TDataSet;
                                     cdsCabecera: TDataSet;
                                     const NombreCampo: string;
                                     const NuevoValor: Variant;
@@ -423,7 +431,7 @@ begin
   finally
     FreeAndNil(Calculador);
   end;
-  Totales := TFacturaTotales.Create(cdsCabecera, cdsLineas);
+  Totales := TFacturaTotales.Create(AConexion, cdsCabecera, cdsLineas);
   try
     Totales.ProcesarFacturaCompleta;
     if Assigned(EventoUpdateTotal) then
@@ -437,7 +445,8 @@ end;
 // para la empresa + tipo de documento, vigente por fechas. Devuelve ''
 // si el almacen no tiene serie propia. Es la pieza que usa el flujo
 // "un documento por almacen": cada documento toma la serie de SU almacen.
-function ObtenerSeriePropiaAlmacen(const AEmpresa, ATipoDoc,
+function ObtenerSeriePropiaAlmacen(AConexion: TUniConnection;
+                                   const AEmpresa, ATipoDoc,
                                    AAlmacen: string): string;
 var
   q: TUniQuery;
@@ -448,7 +457,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := AConexion;
       q.SQL.Text :=
         'SELECT EMPSER FROM fza_empresas_series ' +
         ' WHERE CODIGO_EMP_EMPSER = :emp ' +
@@ -474,7 +483,8 @@ end;
 // (CODIGO_ALM_EMPSER = almacen), 2) serie generica (sin almacen). Sin
 // AAlmacen se mantiene el comportamiento historico: primera serie del
 // tipo, este o no ligada a un almacen.
-function ObtenerSerieDefecto(const AEmpresa, ATipoDoc: string;
+function ObtenerSerieDefecto(AConexion: TUniConnection;
+                             const AEmpresa, ATipoDoc: string;
                              const AAlmacen: string = ''): string;
 var
   q: TUniQuery;
@@ -484,7 +494,8 @@ begin
   if (Trim(AEmpresa) <> '') and (Trim(ATipoDoc) <> '') then
   begin
     if Trim(AAlmacen) <> '' then
-      Result := ObtenerSeriePropiaAlmacen(AEmpresa, ATipoDoc, AAlmacen);
+      Result := ObtenerSeriePropiaAlmacen(AConexion, AEmpresa, ATipoDoc,
+        AAlmacen);
     if Result = '' then
     begin
       // Con almacen informado, la serie generica no puede ser una
@@ -494,7 +505,7 @@ begin
         sFiltroAlm := '   AND IFNULL(CODIGO_ALM_EMPSER, '''') = '''' ';
       q := TUniQuery.Create(nil);
       try
-        q.Connection := oConn;
+        q.Connection := AConexion;
         q.SQL.Text :=
           'SELECT EMPSER FROM fza_empresas_series ' +
           ' WHERE CODIGO_EMP_EMPSER = :emp ' +
@@ -519,7 +530,8 @@ end;
 // documento (genericas y ligadas a almacen). Alimenta los combos de
 // serie de los modales: el usuario ve todas y puede cambiar la
 // propuesta que acompanya al almacen.
-procedure CargarSeriesEmpresa(const AEmpresa, ATipoDoc: string;
+procedure CargarSeriesEmpresa(AConexion: TUniConnection;
+                              const AEmpresa, ATipoDoc: string;
                               AItems: TStrings);
 var
   q: TUniQuery;
@@ -529,7 +541,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := AConexion;
       q.SQL.Text :=
         'SELECT DISTINCT EMPSER FROM fza_empresas_series ' +
         ' WHERE CODIGO_EMP_EMPSER = :emp ' +
@@ -551,14 +563,15 @@ begin
   end;
 end;
 
-function GetDefaultValue(const ATable, AField, AConditionField: string): string;
+function GetDefaultValue(AConexion: TUniConnection;
+  const ATable, AField, AConditionField: string): string;
 var
   unqry: TUniQuery;
 begin
   Result := ''; // Valor por defecto inicial
   unqry := TUniQuery.Create(nil);
   try
-    unqry.Connection := oConn;
+    unqry.Connection := AConexion;
     unqry.SQL.Text := Format('SELECT %s FROM %s WHERE %s = %s LIMIT 1',
                              [AField, ATable, AConditionField, QuotedStr('S')]);
     unqry.Open;
@@ -569,7 +582,8 @@ begin
   end;
 end;
 
-function ObtenerSiguienteContador(const ATipoDoc,
+function ObtenerSiguienteContador(AConexion: TUniConnection;
+                                  const ATipoDoc,
                                   AUsuario: string): string;
 var
   SP: TUniStoredProc;
@@ -577,7 +591,7 @@ begin
   Result := '';
   SP := TUniStoredProc.Create(nil);
   try
-    SP.Connection := inLibGlobalVar.oConn; // Tu conexión global
+    SP.Connection := AConexion;
     SP.StoredProcName := 'PRC_GET_NEXT_CONT';
     SP.Params.Clear;
     SP.Params.CreateParam(ftString, 'pTipoDoc', ptInput).AsString := ATipoDoc;
@@ -596,7 +610,8 @@ begin
   end;
 end;
 
-procedure AplicarValoresPorDefecto(AunqryDestino: TDataSet;
+procedure AplicarValoresPorDefecto(AConexion: TUniConnection;
+                                   AunqryDestino: TDataSet;
                                    const NombreTabla: string);
 var
   qryDefaults: TUniQuery; // O TFDQuery, según uses
@@ -606,7 +621,7 @@ begin
     AunqryDestino.Edit;
   qryDefaults := TUniQuery.Create(nil);
   try
-    qryDefaults.Connection := inLibGlobalVar.oConn;
+    qryDefaults.Connection := AConexion;
     // Buscamos todos los valores configurados para esa tabla específica
     qryDefaults.SQL.Text := 'SELECT CAMPO_OBJETIVO_DEF_VD, ' +
                             '       VALOR_DEF_VD, ' +

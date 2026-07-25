@@ -28,7 +28,7 @@ unit inLibVentasCalendario;
 //  MySQL. Si cambia el contexto de caja (Reconfigurar) el caché se vacía.
 //
 //  Uso típico (en FormCreate):
-//      FVentasCal := TVentasCalendarioCache.Create(oConn);
+//      FVentasCal := TVentasCalendarioCache.Create(ConexionPrincipal);
 //      FVentasCal.Reconfigurar(FEmpresa, FAlmacen, FCaja);
 //
 //  En el evento OnGetMonthBoldInfo del JvMonthCalendar:

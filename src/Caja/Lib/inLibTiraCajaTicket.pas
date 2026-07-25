@@ -335,7 +335,8 @@ begin
   ATicket.Alinear(alIzquierda);
   ATicket.EscribirLinea(
     CentrarRelleno('Nº Fac.: ' +
-                   FormatearDocumentoEmpresa(sEmp, sSerie, sNumFac), '_'));
+                   FormatearDocumentoEmpresa(AConn, sEmp, sSerie, sNumFac),
+                   '_'));
   // Operación, fecha/hora, empresa y Tda.almacén-caja.
   ATicket.EscribirLinea(Format('%s %s %s Tda.%s-%s',
     [sOpe, FormatDateTime('dd/mm/yy hh:nn:ss', dFechaOpe),
@@ -408,7 +409,7 @@ begin
   sRef := Trim(AOpe.FieldByName('SERIE_FAC_OPCAJA').AsString);
   if (sRef <> '') and
      (Trim(AOpe.FieldByName('NUMERO_FAC_OPCAJA').AsString) <> '') then
-    sRef := FormatearDocumentoEmpresa(sEmp, sRef,
+    sRef := FormatearDocumentoEmpresa(AConn, sEmp, sRef,
               AOpe.FieldByName('NUMERO_FAC_OPCAJA').AsString)
   else
     sRef := 'Op.' + sOpe;
@@ -1025,7 +1026,7 @@ var
   function RefDoc: string;
   begin
     if Trim(Ope.FieldByName('SERIE_FAC_OPCAJA').AsString) <> '' then
-      Result := FormatearDocumentoEmpresa(
+      Result := FormatearDocumentoEmpresa(AConn,
         Ope.FieldByName('CODIGO_EMP_OPCAJA').AsString,
         Ope.FieldByName('SERIE_FAC_OPCAJA').AsString,
         Ope.FieldByName('NUMERO_FAC_OPCAJA').AsString)

@@ -122,12 +122,13 @@ uses
   inLibLayoutForm, inLibVerifactu, inLibFactuzamApi;
 
 procedure RegistrarCambioConfiguracionVerifactuSeguro(
+  AConexion: TUniConnection;
   const AUsuario: string;
   const ADetalle: string);
 begin
   try
-    if oConn <> nil then
-      RegistrarEventoVerifactu(oConn, AUsuario,
+    if AConexion <> nil then
+      RegistrarEventoVerifactu(AConexion, AUsuario,
         cEventoNoVerifactuCambioConfig,
         'Cambio de configuración Verifactu', ADetalle);
   except
@@ -466,7 +467,7 @@ begin
   Strings.Add('');
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT PV FROM fza_propiedades_valores' +
       ' WHERE ID_PROP_PV = ''TEMPORADA''' +
@@ -492,7 +493,7 @@ begin
   Strings.Add('');
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT DISTINCT NIF_EMP FROM fza_empresas' +
       ' WHERE IFNULL(NIF_EMP, '''') <> ''''' +
@@ -626,7 +627,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text   :=
       'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
     qry.ParamByName('p_usuario').AsString    := pUsuario;
@@ -714,7 +715,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text   :=
       'CALL PRC_SETPERFILFORMULARIO(:p_usuario_grupo, ' +
       '                             :p_formulario,    ' +
@@ -796,6 +797,7 @@ begin
       end;
       if CambioVerifactu then
         RegistrarCambioConfiguracionVerifactuSeguro(
+          ConexionPrincipal,
           IdentidadSesion.Usuario,
           'Parámetros guardados para ' + sUsuarioGrupo + ': ' +
           IntToStr(GuardadosCount));
@@ -878,7 +880,7 @@ begin
   begin
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := ConexionPrincipal;
       qry.SQL.Text :=
         'SELECT ''Todos'' AS S ' +
         ' UNION SELECT GRUPO_USUGRP FROM fza_usuarios_grupos ' +
@@ -1019,7 +1021,7 @@ begin
   qry      := TUniQuery.Create(nil);
   usuarios := TStringList.Create;
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text   :=
       'SELECT ''Todos'' AS S ' +
       ' UNION SELECT GRUPO_USUGRP FROM fza_usuarios_grupos ' +

@@ -83,8 +83,7 @@ implementation
 {$R *.dfm}
 
 uses inMtoPreviewExcel, inLibFacturaExcel, inLibAppParam, inLibVerifactu,
-     inLibFormatoDocumento, inLibVentasWsCola, inLibGlobalVar,
-     inLibFacturaPdfBlob;
+     inLibFormatoDocumento, inLibVentasWsCola, inLibFacturaPdfBlob;
 
 { TfrmPrintFac }
 
@@ -103,7 +102,7 @@ begin
       fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
       fPreview.DialogoGuardar.FileName := NombreSugerido;
       try
-        ExportarFacturaADevExpress(fPreview.dxSpreadSheet1,
+        ExportarFacturaADevExpress(ConexionPrincipal,fPreview.dxSpreadSheet1,
                                    unqryTablaG,
                                    unqryLinFac);
       finally
@@ -169,7 +168,7 @@ begin
   begin
     sSerie  := dmFac.unqryFacPrint.FieldByName('SERIE_FAC').AsString;
     sNumero := dmFac.unqryFacPrint.FieldByName('NUMERO_FAC').AsString;
-    TVentasWsCola.AdjuntarFacturaPdfSeguro(oConn,
+    TVentasWsCola.AdjuntarFacturaPdfSeguro(ConexionPrincipal,
       IdentidadSesion.Usuario,
       sSerie, sNumero, ARuta);
     // Archivado en fza_facturas.PDF_FAC: solo el PDF de UNA factura
@@ -180,7 +179,7 @@ begin
       (dmFac.unqryFacPrint.FieldByName('ESCONSOLIDADA_FAC').AsString = 'S')
       or ((sFase <> '') and (not SameText(sFase, 'BORRADOR')));
     if rbActual.Checked and bLanzada then
-      GuardarPdfFacturaEnBlob(oConn, ContextoSesion,
+      GuardarPdfFacturaEnBlob(ConexionPrincipal, ContextoSesion,
         sSerie, sNumero, ARuta, FormatoElegido);
   end;
 end;
@@ -204,7 +203,11 @@ begin
                                               'TOTAL_LIQUIDO_FAC').AsFloat);
   TotalFormateado := StringReplace(TotalFormateado, ',', '_', [rfReplaceAll]);
   TotalFormateado := StringReplace(TotalFormateado, '.', '_', [rfReplaceAll]);
-  sDocumento := FormatearDocumentoDataSet(ADataSet, 'SERIE_FAC', 'NUMERO_FAC');
+  sDocumento := FormatearDocumentoDataSet(
+    ConexionPrincipal,
+    ADataSet,
+    'SERIE_FAC',
+    'NUMERO_FAC');
   sDocumento := StringReplace(sDocumento, '\', '_', [rfReplaceAll]);
   sDocumento := StringReplace(sDocumento, '/', '_', [rfReplaceAll]);
   sDocumento := StringReplace(sDocumento, '.', '_', [rfReplaceAll]);
@@ -228,8 +231,7 @@ begin
       Close;
       Params.Clear;
       // vi_facturas_print ya trae TIPO_FAC/FASE_FAC (de fza_facturas.*)
-      // y la consolidación Verifactu por LEFT JOIN (QRCODE_PNG_FACCON…),
-      // así que basta SELECT *: el título por tipo y el QR enlazado por
+      // y la consolidación Verifactu por LEFT JOIN (QRCODE_PNG_FACCON…),// así que basta SELECT *: el título por tipo y el QR enlazado por
       // DataField salen de la propia vista.
       SQL.Text := 'SELECT * ' +
                   '  FROM vi_FACTURAS_print' +

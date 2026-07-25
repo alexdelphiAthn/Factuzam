@@ -141,7 +141,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibAppParam, inLibLog, inLibtb, inLibContadorLineas,
+  inLibAppParam, inLibLog, inLibtb, inLibContadorLineas,
   System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inMtoFacturasCompra,
   inLibComprasImpuestos,
@@ -155,33 +155,33 @@ uses
 procedure TdmFacturasCompra.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryTablaG.Connection                := oConn;
+  unqryTablaG.Connection                := ConexionPrincipal;
   unqryTablaG.KeyFields                 := 'NUMERO_FACC;SERIE_FACC';
   unqryTablaG.SQLDelete.Text            :=
     'DELETE FROM fza_facturas_compra ' + sLineBreak +
     'WHERE NUMERO_FACC = :Old_NUMERO_FACC ' + sLineBreak +
     '  AND SERIE_FACC = :Old_SERIE_FACC';
-  unqryFacturasCompraLineas.Connection := oConn;
-  unqryEmpDataFacc.Connection           := oConn;
-  unqryPrvDataFacc.Connection           := oConn;
+  unqryFacturasCompraLineas.Connection := ConexionPrincipal;
+  unqryEmpDataFacc.Connection           := ConexionPrincipal;
+  unqryPrvDataFacc.Connection           := ConexionPrincipal;
   // Lookup completo de proveedores (NOMBRE_PRV + RAZON_SOCIAL_PRV) para
   // el rotulo resuelto de la cabecera y para el combo de busqueda
   // incremental por codigo (cbbCODIGO_PRV_FACC). Se abre una vez y se
   // recorre con Locate; no depende del proveedor de la factura en
   // pantalla.
   unqryPrvDataFacc.Open;
-  unqryArtDataLinFacc.Connection        := oConn;
-  unqrySkusFacc.Connection              := oConn;
-  unqryFormasPago.Connection            := oConn;
-  unqryAlmacenesFacc.Connection         := oConn;
-  unstrdprcGetContadorFacc.Connection   := oConn;
-  unqryDefArticuloFacc.Connection       := oConn;
+  unqryArtDataLinFacc.Connection        := ConexionPrincipal;
+  unqrySkusFacc.Connection              := ConexionPrincipal;
+  unqryFormasPago.Connection            := ConexionPrincipal;
+  unqryAlmacenesFacc.Connection         := ConexionPrincipal;
+  unstrdprcGetContadorFacc.Connection   := ConexionPrincipal;
+  unqryDefArticuloFacc.Connection       := ConexionPrincipal;
   // Master-detail server-side: el WHERE del SQL toma los valores de
   // dsTablaG (master), evitando descargar fza_facturas_compra_lineas
   // entera y filtrar en cliente.
   unqryFacturasCompraLineas.MasterSource :=
     (GetOwnerForm<TfrmMtoFacturasCompra>).dsTablaG;
-  unqryEfectos.Connection := oConn;
+  unqryEfectos.Connection := ConexionPrincipal;
   unqryEfectos.MasterSource :=
     (GetOwnerForm<TfrmMtoFacturasCompra>).dsTablaG;
 end;
@@ -287,7 +287,7 @@ begin
     sNumero := unqryTablaG.FieldByName('NUMERO_FACC').AsString;
     sp := TUniStoredProc.Create(nil);
     try
-      sp.Connection     := oConn;
+      sp.Connection     := ConexionPrincipal;
       sp.StoredProcName := 'PRC_EFEC_GENERAR_DESDE_FACTURA';
       sp.Params.Clear;
       sp.Params.CreateParam(ftString,  'p_SERIE',     ptInput);
@@ -307,7 +307,7 @@ begin
     begin
       qStamp := TUniQuery.Create(nil);
       try
-        qStamp.Connection := oConn;
+        qStamp.Connection := ConexionPrincipal;
         qStamp.SQL.Text :=
           'UPDATE fza_efectos_compra ' +
           '   SET CODIGO_EMPBAN_EFEC = :banco, ' +
@@ -342,7 +342,7 @@ begin
     Exit;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text := 'SELECT CODIGO_EMPBAN_PRV ' +
                   '  FROM fza_proveedores ' +
                   ' WHERE CODIGO_PRV_PRV = :prv';
@@ -365,7 +365,7 @@ begin
     Exit;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text := 'SELECT CODIGO_FP_PRV ' +
                   '  FROM fza_proveedores ' +
                   ' WHERE CODIGO_PRV_PRV = :prv';
@@ -386,7 +386,7 @@ begin
   begin
     if unqryTablaG.FindField('ESIVA_EXENTO_INTRACOMUNITARIO_FACC') <> nil then
       unqryTablaG.FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_FACC').AsString :=
-        ObtenerIvaExentoIntracomunitarioProveedor(oConn,
+        ObtenerIvaExentoIntracomunitarioProveedor(ConexionPrincipal,
           ACodigoPrv);
     if (ACodigoPrv <> '') and (ACodigoPrv <> '0') then
     begin
@@ -413,7 +413,7 @@ begin
     sNumero := unqryTablaG.FieldByName('NUMERO_FACC').AsString;
     sp := TUniStoredProc.Create(nil);
     try
-      sp.Connection     := oConn;
+      sp.Connection     := ConexionPrincipal;
       sp.StoredProcName := 'PRC_EFEC_CONCILIAR_PAGO';
       sp.Params.Clear;
       sp.Params.CreateParam(ftString,  'p_SERIE',      ptInput);
@@ -457,7 +457,10 @@ begin
   begin
     FieldByName('NUMERO_FACC').AsString := '0';
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='FP'
-    sSerie := ObtenerSerieDefecto(UbicacionSesion.Empresa, 'FP');
+    sSerie := ObtenerSerieDefecto(
+      ConexionPrincipal,
+      UbicacionSesion.Empresa,
+      'FP');
     if FindField('SERIE_FACC') <> nil then
     begin
       if sSerie <> '' then
@@ -477,9 +480,9 @@ begin
       FieldByName('ESPIVOTE_HORIZONTAL_FACC').AsString := 'N';
     if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_FACC') <> nil then
       FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_FACC').AsString := 'N';
-    AplicarRecargoComprasEmpresa(oConn, unqryTablaG,
+    AplicarRecargoComprasEmpresa(ConexionPrincipal, unqryTablaG,
       'CODIGO_EMP_FACC', 'ESIVA_RECARGO_COMPRAS_FACC');
-    AplicarPorcentajesIvaCompra(oConn, unqryTablaG,
+    AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG,
       'FACC');
     RefrescarAlmacenes(FieldByName('CODIGO_EMP_FACC').AsString);
   end;
@@ -500,7 +503,7 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_FACC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_FACC').AsString = '') then
     GetCodigoAutoFacturaCompra;
-  AplicarPorcentajesIvaCompra(oConn, unqryTablaG,
+  AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG,
     'FACC');
   CalcularTotalesFacturaCompra;
   // Deteccion de transicion de ESTADO_FACC. Solo aplica en modo Edit
@@ -531,7 +534,7 @@ begin
   begin
     qChk := TUniQuery.Create(nil);
     try
-      qChk.Connection := oConn;
+      qChk.Connection := ConexionPrincipal;
       qChk.SQL.Text :=
         'SELECT COUNT(*) AS N FROM fza_facturas_compra_lineas ' +
         ' WHERE SERIE_FACC_FACCLIN  = :s ' +
@@ -587,7 +590,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text :=
         'SELECT COUNT(*) AS N ' +
         '  FROM fza_efectos_compra E ' +
@@ -720,7 +723,7 @@ begin
   with unqryFacturasCompraLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
-    NormalizarArticuloSkuEnDataSet(oConn,
+    NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
       unqryFacturasCompraLineas, 'CODIGO_ART_FACCLIN',
       'CODIGO_UNIDAD_FACCLIN');
     if (FindField('CANTIDAD_FACCLIN') <> nil) and
@@ -764,7 +767,7 @@ begin
         unqrySkusFacc.Close;
       end;
     end;
-    PrepararLineaFiscalCompra(oConn, unqryTablaG,
+    PrepararLineaFiscalCompra(ConexionPrincipal, unqryTablaG,
       unqryFacturasCompraLineas, 'FACC', 'FACCLIN', 'TOTAL_FACCLIN');
   end;
 end;
@@ -784,7 +787,8 @@ begin
     sSerie  := Trim(unqryTablaG.FieldByName('SERIE_FACC').AsString);
     if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(LIN_FACTURAS_COMPRA, sSerie, sNumero, sLinea)) then
+        LineaDocExiste(ConexionPrincipal, LIN_FACTURAS_COMPRA, sSerie,
+          sNumero, sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
         raise Exception.Create(
@@ -793,8 +797,8 @@ begin
         DataSet.FieldByName('NUMERO_FACC_FACCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_FACC_FACCLIN') <> nil then
         DataSet.FieldByName('SERIE_FACC_FACCLIN').AsString := sSerie;
-      iNuevaLinea := GetSiguienteLineaDocLibre(CONT_FACTURAS_COMPRA,
-        LIN_FACTURAS_COMPRA, sSerie, sNumero);
+      iNuevaLinea := GetSiguienteLineaDocLibre(ConexionPrincipal,
+        CONT_FACTURAS_COMPRA, LIN_FACTURAS_COMPRA, sSerie, sNumero);
       if iNuevaLinea = 0 then
       begin
         iNuevaLinea := StrToIntDef(
@@ -859,7 +863,7 @@ begin
   // recalculo por linea (cascada de consultas de IVA al navegar).
   if FDesempaquetandoAtributos then
     Exit;
-  CalcularTotalesDocumentoCompra(oConn, unqryTablaG,
+  CalcularTotalesDocumentoCompra(ConexionPrincipal, unqryTablaG,
     unqryFacturasCompraLineas, 'FACC', 'TOTAL_FACCLIN',
     'TIPO_IVA_ARTICULO_FACCLIN', 'PORCENTAJE_IVA_FACCLIN');
 end;
@@ -901,7 +905,7 @@ begin
     oLv.Items.Clear;
     oQry := TUniQuery.Create(nil);
     try
-      oQry.Connection := oConn;
+      oQry.Connection := ConexionPrincipal;
       oQry.SQL.Text :=
         'SELECT DISTINCT L.CODIGO_ALMACEN_FACCLIN AS COD, ' +
         '       COALESCE(A.NOMBRE_ALM_ALM, L.CODIGO_ALMACEN_FACCLIN) AS NOM ' +
@@ -960,7 +964,7 @@ begin
   Result := '';
   oQry := TUniQuery.Create(nil);
   try
-    oQry.Connection := oConn;
+    oQry.Connection := ConexionPrincipal;
     oQry.SQL.Text :=
       'SELECT DISTINCT CODIGO_UNIDAD_FACCLIN ' +
       '  FROM fza_facturas_compra_lineas ' +

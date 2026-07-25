@@ -46,9 +46,6 @@ type
 
 implementation
 
-uses
-  inLibGlobalVar;
-
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
@@ -111,10 +108,10 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
-      bTxOwned := not oConn.InTransaction;
+      q.Connection := ConexionPrincipal;
+      bTxOwned := not ConexionPrincipal.InTransaction;
       if bTxOwned then
-        oConn.StartTransaction;
+        ConexionPrincipal.StartTransaction;
       try
       q.SQL.Text :=
         'CREATE TEMPORARY TABLE IF NOT EXISTS tmp_efec_fusion (' +
@@ -279,10 +276,10 @@ begin
       q.SQL.Text := 'DROP TEMPORARY TABLE IF EXISTS tmp_efec_fusion';
       q.ExecSQL;
       if bTxOwned then
-        oConn.Commit;
+        ConexionPrincipal.Commit;
       except
-        if bTxOwned and oConn.InTransaction then
-          oConn.Rollback;
+        if bTxOwned and ConexionPrincipal.InTransaction then
+          ConexionPrincipal.Rollback;
         raise;
       end;
     finally
@@ -300,7 +297,7 @@ var
 begin
   sp := TUniStoredProc.Create(nil);
   try
-    sp.Connection     := oConn;
+    sp.Connection     := ConexionPrincipal;
     sp.StoredProcName := 'PRC_EFEC_CONCILIAR_PAGO';
     sp.Params.Clear;
     sp.Params.CreateParam(ftString,  'p_SERIE',      ptInput);

@@ -18,7 +18,7 @@ interface
 
 uses
   Uni, System.StrUtils, System.SysUtils, System.Classes, Data.DB, System.Math,
-  Datasnap.DBClient, Datasnap.Provider, inLibGlobalVar;
+  Datasnap.DBClient, Datasnap.Provider;
 
 const
   fnrofaclin = 'NUMERO_FAC_FACLIN';
@@ -226,6 +226,7 @@ type
 
   TFacturaTotales = class
   private
+    _conexion: TUniConnection;
     _unqryFac: TDataset;
     _unqryLineas: TDataset;
     _totales: TTotalesFactura;
@@ -257,7 +258,8 @@ type
     function BuscarDatosIVAAgricola(CodEmpresa: string): Boolean;
   public
     FTieneLineasNegativas:Boolean;
-    constructor Create(AUnqryFac: TDataset;
+    constructor Create(AConexion: TUniConnection;
+                       AUnqryFac: TDataset;
                        unqryLineas: TDataset;
                        LineaEnEdicion:TLinFac = nil);
     function ProcesarFacturaCompleta: Boolean;
@@ -636,11 +638,13 @@ end;
 
 { TFacturaTotales - Implementación completa }
 
-constructor TFacturaTotales.Create(AUnqryFac: TDataset;
+constructor TFacturaTotales.Create(AConexion: TUniConnection;
+                                   AUnqryFac: TDataset;
                                    unqryLineas: TDataset;
                                    LineaEnEdicion:TLinFac = nil);
 begin
   inherited Create;
+  _conexion := AConexion;
   _unqryFac := AUnqryFac;
   _unqryLineas := unqryLineas;
   _LineaEnEdicion := LineaEnEdicion;
@@ -737,7 +741,7 @@ begin
   if sGrupoZona = '' then Exit;
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := inLibGlobalVar.oConn;
+    Qry.Connection := _conexion;
     Qry.SQL.Text := 'SELECT * FROM vi_ivas ' +
                     ' WHERE IVA_IVAGRP = :grupo ' +
                     '   AND FECHA_DESDE_IVA <= :fecha ' +
@@ -1199,7 +1203,7 @@ begin
   Result := 0;
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := inLibGlobalVar.oConn;
+    Qry.Connection := _conexion;
     Qry.SQL.Text := 'SELECT PORCENTAJE_EMPRET ' +
                     '  FROM fza_empresas_retenciones ' +
                     ' WHERE CODIGO_EMP_EMPRET = :EMP ' +
@@ -1224,7 +1228,7 @@ begin
   Result := False;
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := inLibGlobalVar.oConn;
+    Qry.Connection := _conexion;
     Qry.SQL.Text := 'SELECT IVA_IVAGRP, CODIGO_IVA, ' +
                     '       PORCENTAJE_NORMAL_IVA, PORCENTAJE_EXENTO_IVA, ' +
                     '       PORCENTAJE_REDUCIDO_IVA, ' +
@@ -1272,7 +1276,7 @@ begin
     Exit;
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := inLibGlobalVar.oConn;
+    Qry.Connection := _conexion;
     Qry.SQL.Text := '    SELECT * ' +
                     '      FROM fza_clientes ' +
                     ' LEFT JOIN fza_tarifas ' +
@@ -1342,7 +1346,7 @@ begin
     Exit;
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := inLibGlobalVar.oConn;
+    Qry.Connection := _conexion;
     Qry.SQL.Text := 'SELECT * ' +
                     '  FROM fza_empresas ' +
                     ' WHERE CODIGO_EMP_EMP = :empresa';

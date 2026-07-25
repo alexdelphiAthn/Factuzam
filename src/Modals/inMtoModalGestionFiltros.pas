@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalGestionFiltros                                      }
 {    Tipo:       Formulario (Modal)                                            }
@@ -698,7 +698,10 @@ begin
       'ORDER BY USUARIO_USU';
     q.ParamByName('USUARIOACTUAL').AsString :=
       IdentidadActual.Usuario;
-    if TBusquedaUtils.EjecutarBusqueda('Compartir filtro con usuario', q,
+    if TBusquedaUtils.EjecutarBusqueda(
+      ConexionPrincipal,
+      'Compartir filtro con usuario',
+      q,
                                        'frmBuscarUsuarioFiltro', Self) then
     begin
       sUsuario := q.FieldByName('USUARIO').AsString;
@@ -730,7 +733,10 @@ begin
         'SELECT GRUPO_USUGRP AS GRUPO ' +
         '  FROM fza_usuarios_grupos ' +
         'ORDER BY GRUPO_USUGRP';
-      if TBusquedaUtils.EjecutarBusqueda('Compartir filtro con grupo', q,
+      if TBusquedaUtils.EjecutarBusqueda(
+        ConexionPrincipal,
+        'Compartir filtro con grupo',
+        q,
                                          'frmBuscarGrupoFiltro', Self) then
       begin
         sGrupo := q.FieldByName('GRUPO').AsString;

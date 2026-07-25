@@ -34,9 +34,13 @@ La prueba de X-D revisa dinámicamente todos los importadores de
 `inLibGlobalVar` y falla si encuentra un `uses` que no consuma ninguno de sus
 símbolos públicos actuales.
 
-La conexión global `oConn` no forma parte de X-D y permanece sin cambios:
-933 referencias en 111 unidades. Su futura migración debe abordarse como una
-fase independiente.
+XI-D ha retirado posteriormente `oConn` y la excepción transitoria. La
+prueba vuelve a exigir que todo `uses inLibGlobalVar` consuma uno de los
+símbolos que la unidad publica realmente.
+
+La conexión global no formaba parte del corte original X-D; su retirada
+definitiva se documenta en
+`PruebasConexionGlobalFase11D/INFORME_PRUEBAS.md`.
 
 ## Prueba estructural de X-D
 
@@ -56,7 +60,8 @@ La barrera anti-regresión comprueba:
 7. Que no quedan importaciones huérfanas de `inLibGlobalVar`.
 8. Que las siete unidades detectadas permanecen limpias.
 9. Que se conservan los enlaces persistentes de conexión.
-10. Que no se modifica ningún DFM.
+10. Que no se modifica ningún DFM ajeno a las dos conversiones de
+    herencia visual añadidas después en XI-B1.
 11. Que `factuzam_original.sql` permanece intacto.
 
 ## Regresión automatizada
@@ -94,7 +99,8 @@ estructura del parche.
 
 - Se conservan los 253 enlaces persistentes
   `Connection = dmConn.conUni` de 52 ficheros DFM.
-- No se ha modificado ningún DFM.
+- En X-D no se modificó ningún DFM. La barrera admite después los dos
+  cambios de raíz de XI-B1 y rechaza cualquier otro.
 - No hay cambios de esquema ni scripts SQL.
 - `factuzam_original.sql` permanece intacto.
 - La eliminación de las antiguas variables es intencionada: cualquier código

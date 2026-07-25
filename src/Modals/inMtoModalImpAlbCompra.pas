@@ -98,8 +98,7 @@ begin
     fPreview.DialogoGuardar.FileName :=
       'AlbCompra_' + edtSerie.Text + '_' + edtNumero.Text;
     try
-      ExportarDocCompraHorizontal(
-        fPreview.dxSpreadSheet1,
+      ExportarDocCompraHorizontal(ConexionPrincipal,fPreview.dxSpreadSheet1,
         dmAlbc.unqryCabAlbcPrint,
         dmAlbc.unqryLinAlbcPrint,
         dmAlbc.unqryGuiasAlbcPrint,

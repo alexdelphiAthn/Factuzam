@@ -82,7 +82,7 @@ type
 implementation
 
 uses
-  inMtoProveedores, inLibGlobalVar, inLibLog, inLibDocumentoFiscal,
+  inMtoProveedores, inLibLog, inLibDocumentoFiscal,
   inLibtb, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -95,16 +95,16 @@ procedure TdmProveedores.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   // Solo Connection. Los .Open se han movido a AbrirDetalles.
-  unqryArticulos.Connection := oConn;
-  unqryLinFacturasArticulos.Connection := oConn;
-  unqryConjuntosTallas.Connection := oConn;
-  unqryKits.Connection := oConn;
-  unqryKitsDet.Connection := oConn;
+  unqryArticulos.Connection := ConexionPrincipal;
+  unqryLinFacturasArticulos.Connection := ConexionPrincipal;
+  unqryConjuntosTallas.Connection := ConexionPrincipal;
+  unqryKits.Connection := ConexionPrincipal;
+  unqryKitsDet.Connection := ConexionPrincipal;
   // Lookups de la pestaña Pagos: solo Connection; se abren al activar la
   // pestaña (AsegurarPagosAbierta), igual que el resto de detalles lazy.
-  unqryFormaPago.Connection := oConn;
-  unqryEmpresasBancos.Connection := oConn;
-  unqryPaises.Connection := oConn;
+  unqryFormaPago.Connection := ConexionPrincipal;
+  unqryEmpresasBancos.Connection := ConexionPrincipal;
+  unqryPaises.Connection := ConexionPrincipal;
 end;
 
 procedure TdmProveedores.AbrirDetalles;
@@ -266,7 +266,7 @@ begin
   // Cascade en aplicación (no hay FK en BBDD): borrar el detalle del kit.
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'DELETE FROM fza_proveedores_kits_det ' +
       ' WHERE CODIGO_PRV_PRVKITD = :prv ' +
@@ -299,7 +299,7 @@ begin
   // Orden siguiente con pasos de 10 (huecos para intercalar).
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'SELECT COALESCE(MAX(ORDEN_PRVKITD), 0) + 10 AS NEXT_ORDEN ' +
       '  FROM fza_proveedores_kits_det ' +
@@ -352,7 +352,7 @@ begin
       'en la columna "Sistema tallas" para poder generar sus tallas.');
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'INSERT IGNORE INTO fza_proveedores_kits_det ' +
       '  (CODIGO_PRV_PRVKITD, CODIGO_PRVKIT_PRVKITD, VALOR_DESTINO_PRVKITD, ' +
@@ -381,7 +381,10 @@ var
 begin
   if unqryTablaG.FindField('CODIGO_PRV_PRV').AsString = '0' then
   begin
-    sContador := ObtenerSiguienteContador('PV', IdentidadSesion.Usuario);
+    sContador := ObtenerSiguienteContador(
+      ConexionPrincipal,
+      'PV',
+      IdentidadSesion.Usuario);
     if Trim(sContador) = '' then
       raise Exception.Create('No se pudo generar el código automático ' +
         'del proveedor.');
@@ -389,7 +392,10 @@ begin
   end;
   if unqryTablaG.FindField('ORDEN_PRV').AsString = '0' then
   begin
-    sContador := ObtenerSiguienteContador('PO', IdentidadSesion.Usuario);
+    sContador := ObtenerSiguienteContador(
+      ConexionPrincipal,
+      'PO',
+      IdentidadSesion.Usuario);
     if Trim(sContador) = '' then
       raise Exception.Create('No se pudo generar el orden automático ' +
         'del proveedor.');
@@ -443,7 +449,7 @@ begin
     if fExento <> nil then
     begin
       sExento := 'N';
-      if PaisIntracomunitarioExento(oConn, APais) then
+      if PaisIntracomunitarioExento(ConexionPrincipal, APais) then
         sExento := 'S';
       if fExento.IsNull or (fExento.AsString <> sExento) then
       begin

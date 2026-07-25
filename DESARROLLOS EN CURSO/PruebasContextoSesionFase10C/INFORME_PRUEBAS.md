@@ -33,7 +33,8 @@ unidades de compatibilidad corresponde a X-D.
   preparados para su retirada en X-D.
 - Se mantienen los 253 enlaces persistentes
   `Connection = dmConn.conUni` existentes en 52 ficheros DFM.
-- No se ha modificado ningún DFM ni el esquema de la base de datos.
+- En X-C no se modificó ningún DFM ni el esquema. La barrera admite
+  después los dos cambios de raíz de la herencia visual de XI-B1.
 - `factuzam_original.sql` permanece intacto.
 
 ## Pruebas automatizadas

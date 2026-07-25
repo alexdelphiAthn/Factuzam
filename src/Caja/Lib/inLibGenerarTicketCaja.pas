@@ -18,10 +18,11 @@ unit inLibGenerarTicketCaja;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  System.SysUtils, System.Classes, Uni,
   inLibPermisosIntf;
 
 procedure ImprimirTicketOperacionCaja(
+  AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
   const ANombreImpresora: string = 'DEBUG';
   ARutasPDF: TStrings = nil;
@@ -41,11 +42,12 @@ function ImpresoraCajaAsignada: Boolean;
 implementation
 
 uses
-  Data.DB, Uni, DBAccess, Vcl.Dialogs,
+  Data.DB, DBAccess, Vcl.Dialogs,
   inLibGlobalVar, inLibFTicket, inMtoPreviewTicket, inLibDir,
   inLibGenerarTicket;
 
 procedure ImprimirTicketOperacionCaja(
+  AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
   const ANombreImpresora: string;
   ARutasPDF: TStrings;
@@ -60,7 +62,7 @@ var
 begin
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := oConn;
+    Qry.Connection := AConexion;
     Qry.SQL.Text :=
       'SELECT o.TIPO_OPERACION_OPCAJA,' +
       '       o.FECHA_OPERACION_OPCAJA,' +
@@ -125,7 +127,7 @@ begin
     Ticket.EscribirLinea('Firma:');
     Ticket.SaltarLineas(2);
     Ticket.LineaSeparadora('.');
-    EscribirPieTicketCaja(Ticket, AEmpresa);
+    EscribirPieTicketCaja(AConexion, Ticket, AEmpresa);
     Ticket.SaltarLineas(1);
     Ticket.CortarPapel;
     { Imprimir o previsualizar }

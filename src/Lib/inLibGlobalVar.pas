@@ -10,16 +10,14 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Estado global del programa.                                               }
-{    Conexión principal, UI compartida y parametrización en memoria.           }
+{    UI compartida y parametrización en memoria.                               }
 {******************************************************************************}
 unit inLibGlobalVar;
 
 interface
 
-uses Uni,
-     cxMemo, inMtoPrincipal,
+uses cxMemo, inMtoPrincipal,
      inLibInformesGuiasCache,
-     inLibConfigCampos,
      inLibLicenciaAplicacion;
 //type
 // TUpdateTotalEvent = procedure(Sender: TObject; NuevoTotal: Currency) of
@@ -35,7 +33,6 @@ type
 
 var
   oInfGuiasCache :TInformesGuiasCache;
-  oConn          :TUniConnection;
   oMemoSQL   :TcxMemo;
   ofrmMto2   :TfrmMtoPrincipal;
   oNomImpresoraCaja:String;
@@ -70,7 +67,6 @@ initialization
   oVersion         := '1.0.15.202606260100.alpha';
   oNomImpresoraCaja:='';
   oInfGuiasCache   := nil;
-  oConn            := nil;
   oAll             := 'Todos';
   oLogSesion       := nil;
   oLicenciaAplicacionComprobada := False;

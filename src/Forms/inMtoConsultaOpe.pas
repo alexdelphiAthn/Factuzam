@@ -169,9 +169,9 @@ end;
 procedure TfrmConsultaOpe.FormCreate(Sender: TObject);
 begin
   inherited;
-  FdmConsulta := TdmConsultaOpe.Create(Self);
+  FdmConsulta := TdmConsultaOpe.Create(Self, ConexionPrincipal);
   FLayout := TLayoutLoader.Create(Self.Name, ContextoSesion, PerfilesUsuario);
-  FVentasCal := TVentasCalendarioCache.Create(oConn);
+  FVentasCal := TVentasCalendarioCache.Create(ConexionPrincipal);
   dtpFecha.Properties.OnGetDayState := dtpFechaGetDayState;
   cxViewMaestro.DataController.DataSource := FdmConsulta.dsMaestro;
   cxViewOpe.DataController.DataSource     := FdmConsulta.dsOperacion;
@@ -386,7 +386,7 @@ begin
   begin
     Qry := TUniQuery.Create(nil);
     try
-      Qry.Connection := oConn;
+      Qry.Connection := ConexionPrincipal;
       Qry.SQL.Text :=
         ' SELECT ESCONSOLIDADA_FAC, TIPO_FAC FROM fza_facturas ' +
         ' WHERE SERIE_FAC  = :SERIE ' +
@@ -418,7 +418,7 @@ begin
               TVerifactuCola.EncolarFactura(Qry,
                 IdentidadSesion.Usuario, sSerie, sNumero, 'ANULACION',
                 bBorrarMovimientos);
-              RegistrarEventoVerifactu(oConn,
+              RegistrarEventoVerifactu(ConexionPrincipal,
                 IdentidadSesion.Usuario,
                 cEventoVerifactuEncolado,
                 'Anulación encolada desde Buscar operaciones', '',
@@ -466,7 +466,7 @@ begin
   begin
     Qry := TUniQuery.Create(nil);
     try
-      Qry.Connection := oConn;
+      Qry.Connection := ConexionPrincipal;
       Qry.SQL.Text :=
         ' SELECT TIPO_FAC, FECHA_FAC FROM fza_facturas ' +
         ' WHERE SERIE_FAC  = :SERIE ' +
@@ -519,7 +519,7 @@ begin
   begin
     Qry := TUniQuery.Create(nil);
     try
-      Qry.Connection := oConn;
+      Qry.Connection := ConexionPrincipal;
       Qry.SQL.Text :=
         ' SELECT TIPO_FAC FROM fza_facturas ' +
         ' WHERE SERIE_FAC  = :SERIE ' +
@@ -807,7 +807,8 @@ begin
         FieldByName('CODIGO_CAJA_OPCAJA').AsString;
       sNumOp := FdmConsulta.qryMaestro.
         FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
-      Datos := ObtenerDatosCorreoOperacion(sEmp, sAlm, sCaja, sNumOp);
+      Datos := ObtenerDatosCorreoOperacion(ConexionPrincipal, sEmp, sAlm,
+        sCaja, sNumOp);
       sEmail := Datos.EmailCliente;
       bContinuar := Datos.Encontrada;
       if not bContinuar then
@@ -824,7 +825,8 @@ begin
       begin
         Screen.Cursor := crHourGlass;
         try
-          if EnviarDocumentacionOperacion(sEmp, sAlm, sCaja, sNumOp,
+          if EnviarDocumentacionOperacion(ConexionPrincipal, sEmp, sAlm,
+            sCaja, sNumOp,
             sEmail, sMensaje) then
             ShowMessage(sMensaje)
           else
@@ -856,25 +858,30 @@ begin
     sCliente := FdmConsulta.qryMaestro.FieldByName('CLIENTE').AsString;
     // Los traspasos usan su ticket específico con stock origen/destino.
     if FdmConsulta.EsTraspaso then
-      TTraspasoTicket.ImprimirTraspasoDesdeBD(oConn, sEmp, sAlm, sCaja,
-                                              sNumOp, ANombreImpresora)
+      TTraspasoTicket.ImprimirTraspasoDesdeBD(ConexionPrincipal, sEmp,
+                                              sAlm, sCaja, sNumOp,
+                                              ANombreImpresora)
     else
     begin
       if FdmConsulta.TieneFactura then
-        ImprimirTicketDesdeBD(sEmp, sAlm, sCaja, sNumOp,
+        ImprimirTicketDesdeBD(ConexionPrincipal, sEmp, sAlm, sCaja, sNumOp,
                               ANombreImpresora);
       if FdmConsulta.TieneDepositos then
-        ImprimirResguardoDeposito(sEmp, sAlm, sCaja, sNumOp,
+        ImprimirResguardoDeposito(ConexionPrincipal, sEmp, sAlm, sCaja, sNumOp,
                                   ANombreImpresora);
       if FdmConsulta.EsOperacionCaja then
-        ImprimirTicketOperacionCaja(sEmp, sAlm, sCaja, sNumOp,
+        ImprimirTicketOperacionCaja(ConexionPrincipal, sEmp, sAlm, sCaja,
+                                    sNumOp,
                                     ANombreImpresora);
       if (not FdmConsulta.TieneFactura)
          and (not FdmConsulta.TieneDepositos)
          and (not FdmConsulta.EsOperacionCaja) then
         ShowMessage('Esta operación no tiene ticket asociado.')
       else if Trim(sCliente) <> '' then
-        ImprimirRecordatorio(UbicacionSesion.Empresa, sCliente,
+        ImprimirRecordatorio(
+          ConexionPrincipal,
+          UbicacionSesion.Empresa,
+          sCliente,
           ANombreImpresora);
     end;
   end;

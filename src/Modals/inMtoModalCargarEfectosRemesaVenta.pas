@@ -90,7 +90,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibUser, inLibGenBusq;
+  inLibUser, inLibGenBusq;
 
 {$R *.dfm}
 
@@ -103,7 +103,7 @@ begin
   FConfirmado := False;
   FRemSeries  := TStringList.Create;
   FRemNumeros := TStringList.Create;
-  FConn := oConn;
+  FConn := ConexionPrincipal;
   // Efectos candidatos: pendientes, sin remesar, de la empresa, hasta vto.
   FQryEfe := TUniQuery.Create(Self);
   FQryEfe.Connection := FConn;
@@ -152,7 +152,7 @@ var
   sVal: string;
 begin
   inherited;
-  if TBusquedaUtils.EjecutarBusqueda('Buscar empresa',
+  if TBusquedaUtils.EjecutarBusqueda(ConexionPrincipal, 'Buscar empresa',
        'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
        'CODIGO_EMP_EMP', sVal, 'srchEmpRem', Self) then
     btnEmpresa.Text := sVal;

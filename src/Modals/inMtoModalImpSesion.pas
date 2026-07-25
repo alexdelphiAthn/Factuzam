@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalImpSesion                                           }
 {    Tipo:       Formulario (Modal)                                            }
@@ -104,8 +104,7 @@ begin
     fPreview.DialogoGuardar.FileName :=
       'Sesion_' + edtSerie.Text + '_' + edtNumero.Text;
     try
-      ExportarDocCompraHorizontal(
-        fPreview.dxSpreadSheet1,
+      ExportarDocCompraHorizontal(ConexionPrincipal,fPreview.dxSpreadSheet1,
         dmSesion.unqryCabSesionPrint,
         dmSesion.unqryLinSesionPrint,
         dmSesion.unqryGuiasSesionPrint,

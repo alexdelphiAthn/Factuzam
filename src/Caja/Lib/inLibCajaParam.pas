@@ -43,11 +43,13 @@ type
 
   TCajaParams = class
   private
+    FConexion: TUniConnection;
     FParams: TObjectDictionary<string, TParamDef>;
     procedure CargarDesdeDB(const AUsuario, AGrupo: string);
   public
     constructor Create;
     destructor Destroy; override;
+    procedure AsignarConexion(AConexion: TUniConnection);
 
     // --- INTERFAZ PARA REGISTRAR PARÁMETROS (Actualizada con Categoría) ---
     procedure RegistrarParametro(const ACategoria,
@@ -87,7 +89,7 @@ var
 implementation
 
 uses
-  System.StrUtils, inLibGlobalVar; // Asumo que aquí tienes oConn
+  System.StrUtils;
 
 { TParamDef }
 
@@ -110,6 +112,7 @@ end;
 constructor TCajaParams.Create;
 begin
   inherited;
+  FConexion := nil;
   FParams := TObjectDictionary<string, TParamDef>.Create([doOwnsValues]);
 end;
 
@@ -137,6 +140,11 @@ begin
     Param.ValorActual := Param.ValorPorDefecto;
 end;
 
+procedure TCajaParams.AsignarConexion(AConexion: TUniConnection);
+begin
+  FConexion := AConexion;
+end;
+
 procedure TCajaParams.CargarDesdeDB(const AUsuario, AGrupo: string);
 var
   qry: TUniQuery;
@@ -145,9 +153,12 @@ var
 begin
   // 1. Aseguramos que la base sea la de por defecto antes de sobreescribir
   RegistrarDefectos;
+  if (FConexion = nil) or (not FConexion.Connected) then
+    raise Exception.Create(
+      'TCajaParams requiere una conexión activa');
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := FConexion;
     qry.SQL.Text   :=
       'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
     qry.ParamByName('p_usuario').AsString    := AUsuario;

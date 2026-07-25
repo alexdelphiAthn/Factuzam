@@ -76,7 +76,7 @@ type
 implementation
 
 uses
-  inLibtb, inLibGlobalVar, inMtoEmpresas, inLibLog, System.Diagnostics,
+  inLibtb, inMtoEmpresas, inLibLog, System.Diagnostics,
   inLibFormatoDocumento, inLibIBAN;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -141,7 +141,7 @@ begin
     if (bSinErrores) then
     begin
       unqrySol := TUniQuery.Create(nil);
-      unqrySol.Connection := oConn;
+      unqrySol.Connection := ConexionPrincipal;
       unqrySol.SQL.Text := 'SELECT * ' +
                            '  FROM vi_empresas_retenciones ' +
                            ' WHERE CODIGO_EMP_EMPRET = :CODIGO_EMP_EMP';
@@ -213,7 +213,7 @@ begin
     if (bSinErrores) then
     begin
       unqrySol := TUniQuery.Create(nil);
-      unqrySol.Connection := oConn;
+      unqrySol.Connection := ConexionPrincipal;
       unqrySol.SQL.Text := 'SELECT * ' +
                            '  FROM vi_empresas_series ' +
                            ' WHERE CODIGO_EMP_EMPSER = :CODIGO_EMP_EMP';
@@ -298,7 +298,7 @@ begin
   qryBorrarLineas := TUniQuery.Create(Self);
   with qryBorrarLineas do
   begin
-    Connection := oConn;
+    Connection := ConexionPrincipal;
     SQL.Text := 'DELETE ' +
                 '  FROM fza_empresas_retenciones ' +
                 ' WHERE CODIGO_EMP_EMPRET = :Empresa ;';
@@ -324,9 +324,13 @@ end;
 procedure TdmEmpresas.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  AplicarValoresPorDefecto(unqryTablaG, 'fza_empresas');
+  AplicarValoresPorDefecto(ConexionPrincipal, unqryTablaG, 'fza_empresas');
   unqryTablaG.FindField('GRUPO_ZONA_IVA_EMP').AsString :=
-       GetDefaultValue('vi_ivas_grupos', 'IVA_IVAGRP','ESDEFAULT_IVA_IVAGRP');
+       GetDefaultValue(
+         ConexionPrincipal,
+         'vi_ivas_grupos',
+         'IVA_IVAGRP',
+         'ESDEFAULT_IVA_IVAGRP');
   if unqryTablaG.FindField('FORMATO_DOCUMENTO_EMP') <> nil then
     unqryTablaG.FindField('FORMATO_DOCUMENTO_EMP').AsString :=
       FORMATO_DOCUMENTO_DEFECTO;
@@ -347,8 +351,9 @@ var
   unqryPie: TUniQuery;
   unqryFormato: TUniQuery;
 begin
-  // Usar la conexion del Post evita bloquear la misma fila con oConn.
-  oConexion := oConn;
+  // Usar la conexion del Post evita bloquear la misma fila que la
+  // conexion principal.
+  oConexion := ConexionPrincipal;
   if DataSet is TUniQuery then
     oConexion := TUniQuery(DataSet).Connection;
   oCampoFormato := DataSet.FindField('FORMATO_DOCUMENTO_EMP');
@@ -414,13 +419,13 @@ begin
   // Solo asignaciones de Connection y MasterSource. Los .Open se han
   // movido a AbrirDetalles (callback main thread con overlay visible)
   // para no congelar la UI durante la creacion del data module.
-  unqryRetenciones.Connection            := oConn;
-  unqrySeries.Connection                 := oConn;
-  unqryBancos.Connection                 := oConn;
-  unqryIvas.Connection                   := oConn;
-  unqryFacturasEmpresas.Connection       := oConn;
-  unqryFacturasLineasEmpresas.Connection := oConn;
-  unqryPaises.Connection                 := oConn;
+  unqryRetenciones.Connection            := ConexionPrincipal;
+  unqrySeries.Connection                 := ConexionPrincipal;
+  unqryBancos.Connection                 := ConexionPrincipal;
+  unqryIvas.Connection                   := ConexionPrincipal;
+  unqryFacturasEmpresas.Connection       := ConexionPrincipal;
+  unqryFacturasLineasEmpresas.Connection := ConexionPrincipal;
+  unqryPaises.Connection                 := ConexionPrincipal;
   unqryTablaG.AfterPost                  := unqryTablaGAfterPost;
   unqryTablaG.BeforeInsert               := unqryTablaGBeforeInsert;
   unqryTablaG.BeforeEdit                 := unqryTablaGBeforeEdit;
@@ -558,12 +563,18 @@ begin
   if unqryTablaG.FindField('CODIGO_EMP_EMP').AsString = '0' then
   begin
       unqryTablaG.FindField('CODIGO_EMP_EMP').AsString :=
-                                                 ObtenerSiguienteContador('EM', IdentidadSesion.Usuario);
+                                                 ObtenerSiguienteContador(
+                                                   ConexionPrincipal,
+                                                   'EM',
+                                                   IdentidadSesion.Usuario);
   end;
   if unqryTablaG.FindField('ORDEN_EMP').AsString = '0' then
   begin
       unqryTablaG.FindField('ORDEN_EMP').AsString :=
-                                                 ObtenerSiguienteContador('EO', IdentidadSesion.Usuario);
+                                                 ObtenerSiguienteContador(
+                                                   ConexionPrincipal,
+                                                   'EO',
+                                                   IdentidadSesion.Usuario);
   end;
 end;
 
@@ -666,7 +677,10 @@ begin
   if unqryRetenciones.FindField('CODIGO_RETENCION_EMPRET').AsString = '0' then
   begin
       unqryRetenciones.FindField('CODIGO_RETENCION_EMPRET').AsString :=
-                                                 ObtenerSiguienteContador('RT', IdentidadSesion.Usuario);
+                                                 ObtenerSiguienteContador(
+                                                   ConexionPrincipal,
+                                                   'RT',
+                                                   IdentidadSesion.Usuario);
     end;
 end;
 
@@ -675,7 +689,10 @@ begin
   if unqrySeries.FindField('CODIGO_SERIE_EMPSER').AsString = '0' then
   begin
       unqrySeries.FindField('CODIGO_SERIE_EMPSER').AsString :=
-                                                ObtenerSiguienteContador('ES', IdentidadSesion.Usuario);
+                                                ObtenerSiguienteContador(
+                                                  ConexionPrincipal,
+                                                  'ES',
+                                                  IdentidadSesion.Usuario);
   end;
 end;
 
@@ -684,7 +701,10 @@ begin
   if unqryBancos.FindField('CODIGO_EMPBAN').AsString = '0' then
   begin
       unqryBancos.FindField('CODIGO_EMPBAN').AsString :=
-                                                ObtenerSiguienteContador('EB', IdentidadSesion.Usuario);
+                                                ObtenerSiguienteContador(
+                                                  ConexionPrincipal,
+                                                  'EB',
+                                                  IdentidadSesion.Usuario);
   end;
 end;
 

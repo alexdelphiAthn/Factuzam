@@ -34,7 +34,7 @@ uses
   Vcl.ComCtrls, dxCore, cxStyles, dxSkinsForm, cxClasses, cxLocalization,
   JvComponentBase, JvEnterTab, System.Actions, Vcl.ActnList, frxSmartMemo,
   frLocalization, frLanguageSpanish, frxExportBaseImageSettingsDialog,
-  frCoreClasses, inLibGlobalVar;
+  frCoreClasses;
 
 type
   TfrmPrintOperaciones = class(TfrmPrint)
@@ -109,7 +109,7 @@ begin
   // del usuario. De la fila elegida tomamos almacen y caja.
   frm := TfrmMtoModalCajDef.Create(Self);
   try
-    frm.qrySeleccion.Connection := oConn;
+    frm.qrySeleccion.Connection := ConexionPrincipal;
     frm.qrySeleccion.SQL.Text :=
       ' SELECT * FROM vi_cajasdef WHERE Empresa = :pEMP ' +
       ' ORDER BY Almacen, Caja ';
@@ -160,7 +160,7 @@ begin
   with unqryOperacionesPrint do
   begin
     Close;
-    Connection := oConn;
+    Connection := ConexionPrincipal;
     SQL.Text :=
       ' SELECT *                                                          ' +
       '   FROM fza_caja_operaciones                                       ' +

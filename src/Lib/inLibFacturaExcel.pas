@@ -23,8 +23,8 @@ uses
   dxSpreadSheetStyles, dxSpreadSheetContainers, dxHashUtils,
   dxGDIPlusClasses, dxSmartImage, inLibDevExcel, inLibVerifactu;
 
-procedure ExportarFacturaADevExpress(ASheetControl: TdxSpreadSheet;
-                                              const QMaster, QLineas: TDataSet);
+procedure ExportarFacturaADevExpress(AConexion: TUniConnection;
+  ASheetControl: TdxSpreadSheet; const QMaster, QLineas: TDataSet);
 
 
 implementation
@@ -32,8 +32,8 @@ implementation
 uses
   inLibFormatoDocumento;
 
-procedure ExportarFacturaADevExpress(ASheetControl: TdxSpreadSheet;
-                                              const QMaster, QLineas: TDataSet);
+procedure ExportarFacturaADevExpress(AConexion: TUniConnection;
+  ASheetControl: TdxSpreadSheet; const QMaster, QLineas: TDataSet);
 const
   // Columnas Visibles
   COL_DESC   = 0; // A: Descripción / Base Imponible (en tabla inferior)
@@ -155,7 +155,8 @@ begin
                             TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
   Sheet.BeginUpdate;
   try
-  sDocumento := FormatearDocumentoDataSet(QMaster, 'SERIE_FAC', 'NUMERO_FAC');
+  sDocumento := FormatearDocumentoDataSet(AConexion, QMaster,
+    'SERIE_FAC', 'NUMERO_FAC');
   if sDocumento <> '' then
   begin
     sDocumentoHoja := StringReplace(sDocumento, '\', '_', [rfReplaceAll]);

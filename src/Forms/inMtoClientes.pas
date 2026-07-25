@@ -465,8 +465,7 @@ uses
   inLibIBAN,
   inLibPermisosIntf,
   inMtoPrincipal,
-  Uni,
-  inLibGlobalVar;
+  Uni;
 
 {$R *.dfm}
 
@@ -590,7 +589,7 @@ begin
   sSerieFactura := tvFacturacion.DataController.DataSet.FieldByName(
                                                       'SERIE_FAC').AsString;
   ShowMto(Self.Owner,
-          ResolverCallFactura(sNroFactura, sSerieFactura),
+          ResolverCallFactura(ConexionPrincipal,sNroFactura, sSerieFactura),
           sNroFactura + ',' + sSerieFactura);
 end;
 
@@ -698,8 +697,7 @@ begin
   cbbPaises.Properties.ListSource := dmmClientes.dsPaises;
   pcPestanas.ActivePage := tsDomicilioFiscal;
   Self.pkFieldName := 'CODIGO_CLI_CLI';
-  // Carga perezosa de sub-pestañas detail (default = tsDomicilioFiscal,
-  // que no usa query detail). Historia/Depositos se abren solo cuando
+  // Carga perezosa de sub-pestañas detail (default = tsDomicilioFiscal,// que no usa query detail). Historia/Depositos se abren solo cuando
   // el usuario activa su pestaña.
   pcPestanas.OnChange := PcPestanasChange;
   btnNuevoCliente.Enabled := PuedeAccionMto(apmInsertar);
@@ -770,7 +768,7 @@ begin
     Exit;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'SELECT (SELECT COUNT(*) FROM fza_facturas  ' +
       '         WHERE CODIGO_CLI_FAC = :pCli) ' +

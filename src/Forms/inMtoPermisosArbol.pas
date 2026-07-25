@@ -122,7 +122,7 @@ var
 implementation
 
 uses
-  System.StrUtils, System.Rtti, inLibGlobalVar, inMtoPrincipal;
+  System.StrUtils, System.Rtti, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -438,10 +438,14 @@ begin
   FreeAndNil(FExpSujeto);
   FreeAndNil(FExpGrupo);
   FreeAndNil(FExpTodos);
-  FExpSujeto := TPermisosAdmin.CargarExplicitos(oConn, FSujetoActual.Nombre);
-  FExpTodos  := TPermisosAdmin.CargarExplicitos(oConn, 'Todos');
+  FExpSujeto := TPermisosAdmin.CargarExplicitos(
+    ConexionPrincipal,
+    FSujetoActual.Nombre);
+  FExpTodos  := TPermisosAdmin.CargarExplicitos(ConexionPrincipal, 'Todos');
   if (FSujetoActual.Tipo = tsUsuario) and (FSujetoActual.Grupo <> '') then
-    FExpGrupo := TPermisosAdmin.CargarExplicitos(oConn, FSujetoActual.Grupo)
+    FExpGrupo := TPermisosAdmin.CargarExplicitos(
+      ConexionPrincipal,
+      FSujetoActual.Grupo)
   else
     FExpGrupo := nil;
   if FSujetoActual.EsAdmin then
@@ -553,7 +557,10 @@ begin
     sVal := 'S'
   else
     sVal := 'N';
-  TPermisosAdmin.Establecer(oConn, ContextoSesion, FSujetoActual.Nombre,
+  TPermisosAdmin.Establecer(
+    ConexionPrincipal,
+    ContextoSesion,
+    FSujetoActual.Nombre,
     ACodigo, sVal, ADescripcion);
   if FExpSujeto <> nil then
     FExpSujeto.AddOrSetValue(ACodigo, sVal);
@@ -612,7 +619,7 @@ procedure TfrmMtoPermisosArbol.HeredarRama(ANode: TcxTreeListNode);
     code := N.Texts[cIdxCodigo];
     if code <> '' then
     begin
-      TPermisosAdmin.Heredar(oConn, FSujetoActual.Nombre, code);
+      TPermisosAdmin.Heredar(ConexionPrincipal, FSujetoActual.Nombre, code);
       if FExpSujeto <> nil then
         FExpSujeto.Remove(code);
     end;
@@ -699,8 +706,8 @@ begin
   FInicializando := True;
   try
     sNombre := FSujetoActual.Nombre;
-    FSujetos := TPermisosAdmin.ListarSujetos(oConn);
-    FCatalogo := TPermisosAdmin.CatalogoCodigos(oConn);
+    FSujetos := TPermisosAdmin.ListarSujetos(ConexionPrincipal);
+    FCatalogo := TPermisosAdmin.CatalogoCodigos(ConexionPrincipal);
     PoblarCombos;
     ConstruirArbol;
     idx := IndiceSujeto(sNombre);
@@ -776,7 +783,10 @@ begin
       begin
         Screen.Cursor := crHourGlass;
         try
-          n := TPermisosAdmin.Copiar(oConn, ContextoSesion, org.Nombre,
+          n := TPermisosAdmin.Copiar(
+            ConexionPrincipal,
+            ContextoSesion,
+            org.Nombre,
             dst.Nombre, reempl, chkSoloMenu.Checked);
         finally
           Screen.Cursor := crDefault;
@@ -815,8 +825,8 @@ begin
   FInicializando := True;
   try
     ConstruirInterfaz;
-    FSujetos  := TPermisosAdmin.ListarSujetos(oConn);
-    FCatalogo := TPermisosAdmin.CatalogoCodigos(oConn);
+    FSujetos  := TPermisosAdmin.ListarSujetos(ConexionPrincipal);
+    FCatalogo := TPermisosAdmin.CatalogoCodigos(ConexionPrincipal);
     PoblarCombos;
     ConstruirArbol;
     if Length(FSujetos) > 0 then

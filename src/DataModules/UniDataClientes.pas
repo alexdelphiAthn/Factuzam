@@ -69,7 +69,7 @@ type
 implementation
 
 uses
-  inMtoClientes, inLibGlobalVar, inLibAppParam, inLibCajaParam, inLibtb,
+  inMtoClientes, inLibAppParam, inLibCajaParam, inLibtb,
   inLibLog,
   System.Diagnostics;
 
@@ -84,7 +84,7 @@ procedure TdmClientes.CrearDataSetEtiquetas(iNroEspaciosBlanco: Integer;
 var
   i:Integer;
 begin
-  unqryCliPrint.Connection := oConn;
+  unqryCliPrint.Connection := ConexionPrincipal;
   unqryCliPrint.SQL.Text := ' SELECT * ' +
                             ' from vi_clientes ' +
                             ' where CODIGO_CLI_CLI = :CODIGO';
@@ -123,13 +123,13 @@ begin
   // Solo asignaciones de Connection y MasterSource. Los .Open se han
   // movido a AbrirDetalles (callback main thread con overlay visible)
   // para no congelar la UI durante la creacion del data module.
-  unqryFormaPago.Connection := oConn;
-  unqryEmpresasBancos.Connection := oConn;
-  unqryPerfiles.Connection := oConn;
-  unqryTarifas.Connection := oConn;
-  unqryFacturasClientes.Connection := oConn;
-  unqryFacturasLineasClientes.Connection := oConn;
-  unqryPaises.Connection := oConn;
+  unqryFormaPago.Connection := ConexionPrincipal;
+  unqryEmpresasBancos.Connection := ConexionPrincipal;
+  unqryPerfiles.Connection := ConexionPrincipal;
+  unqryTarifas.Connection := ConexionPrincipal;
+  unqryFacturasClientes.Connection := ConexionPrincipal;
+  unqryFacturasLineasClientes.Connection := ConexionPrincipal;
+  unqryPaises.Connection := ConexionPrincipal;
   var LForm := GetOwnerForm<TfrmMtoClientes>;
   unqryFacturasClientes.MasterSource := LForm.dsTablaG;
   unqryFacturasLineasClientes.MasterSource := LForm.dsTablaG;
@@ -235,21 +235,29 @@ begin
   if (unqryTablaG.FindField('CODIGO_CLI_CLI').AsString = '0') then
   begin
     unqryTablaG.FindField('CODIGO_CLI_CLI').AsString :=
-                                                 ObtenerSiguienteContador('CL', IdentidadSesion.Usuario);
+                                                 ObtenerSiguienteContador(
+                                                   ConexionPrincipal,
+                                                   'CL',
+                                                   IdentidadSesion.Usuario);
   end;
   if (unqryTablaG.FindField('ORDEN_CLI').AsString = '0') then
   begin
     unqryTablaG.FindField('ORDEN_CLI').AsString :=
-                                                 ObtenerSiguienteContador('CO', IdentidadSesion.Usuario);
+                                                 ObtenerSiguienteContador(
+                                                   ConexionPrincipal,
+                                                   'CO',
+                                                   IdentidadSesion.Usuario);
   end;
 end;
 
 procedure TdmClientes.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  AplicarValoresPorDefecto(unqryTablaG, 'fza_clientes');
+  AplicarValoresPorDefecto(ConexionPrincipal, unqryTablaG, 'fza_clientes');
   unqryTablaG.FindField('CODIGO_FP_CLI').AsString :=
-                                            GetDefaultValue('fza_formas_pago',
+                                            GetDefaultValue(
+                                              ConexionPrincipal,
+                                              'fza_formas_pago',
                                                             'CODIGO_FP_FP',
                                                      'ESDEFAULT_FORMA_PAGO_FP');
   unqryTablaG.FindField('TARIFA_ARTICULO_CLI').AsString := TarifaDefecto;
@@ -275,7 +283,7 @@ begin
   begin
     Qry := TUniQuery.Create(nil);
     try
-      Qry.Connection := oConn;
+      Qry.Connection := ConexionPrincipal;
       if bCamposDir3Disponibles then
       begin
         Qry.SQL.Text :=

@@ -121,7 +121,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibAppParam, inLibLog, inLibtb,
+  inLibAppParam, inLibLog, inLibtb,
   System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inMtoDevolucionesCompra,
   inLibDevolucionesCompraMovimientos,
@@ -137,8 +137,8 @@ uses
 procedure TdmDevolucionesCompra.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryTablaG.Connection                := oConn;
-  unqryDevolucionesCompraLineas.Connection := oConn;
+  unqryTablaG.Connection                := ConexionPrincipal;
+  unqryDevolucionesCompraLineas.Connection := ConexionPrincipal;
   unqryDevolucionesCompraLineas.KeyFields :=
     'SERIE_DEVC_DEVCLIN;NUMERO_DEVC_DEVCLIN;LINEA_DEVCLIN';
   unqryDevolucionesCompraLineas.SQLDelete.Text :=
@@ -146,20 +146,20 @@ begin
     ' WHERE SERIE_DEVC_DEVCLIN = :Old_SERIE_DEVC_DEVCLIN ' +
     '   AND NUMERO_DEVC_DEVCLIN = :Old_NUMERO_DEVC_DEVCLIN ' +
     '   AND LINEA_DEVCLIN = :Old_LINEA_DEVCLIN';
-  unqryEmpDataDevc.Connection           := oConn;
-  unqryPrvDataDevc.Connection           := oConn;
+  unqryEmpDataDevc.Connection           := ConexionPrincipal;
+  unqryPrvDataDevc.Connection           := ConexionPrincipal;
   // Lookup completo de proveedores (NOMBRE_PRV + RAZON_SOCIAL_PRV) para
   // el rotulo resuelto de la cabecera y para el combo de busqueda
   // incremental por codigo (cbbCODIGO_PRV_DEVC). Se abre una vez y se
   // recorre con Locate; no depende del proveedor de la devolucion en
   // pantalla.
   unqryPrvDataDevc.Open;
-  unqryArtDataLinDevc.Connection        := oConn;
-  unqrySkusDevc.Connection              := oConn;
-  unqryAlmacenesDevc.Connection         := oConn;
-  unqryMovimientosProveedor.Connection  := oConn;
-  unstrdprcGetContadorDevc.Connection   := oConn;
-  unqryDefArticuloDevc.Connection       := oConn;
+  unqryArtDataLinDevc.Connection        := ConexionPrincipal;
+  unqrySkusDevc.Connection              := ConexionPrincipal;
+  unqryAlmacenesDevc.Connection         := ConexionPrincipal;
+  unqryMovimientosProveedor.Connection  := ConexionPrincipal;
+  unstrdprcGetContadorDevc.Connection   := ConexionPrincipal;
+  unqryDefArticuloDevc.Connection       := ConexionPrincipal;
   // Master-detail server-side: el WHERE del SQL toma los valores de
   // dsTablaG (master), evitando descargar fza_devoluciones_compra_lineas
   // entera y filtrar en cliente.
@@ -261,7 +261,10 @@ begin
   begin
     FieldByName('NUMERO_DEVC').AsString := '0';
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='DC'
-    sSerie := ObtenerSerieDefecto(UbicacionSesion.Empresa, 'DC');
+    sSerie := ObtenerSerieDefecto(
+      ConexionPrincipal,
+      UbicacionSesion.Empresa,
+      'DC');
     if FindField('SERIE_DEVC') <> nil then
     begin
       if sSerie <> '' then
@@ -281,9 +284,9 @@ begin
       FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_DEVC').AsString := 'N';
     if FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil then
       FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString := 'N';
-    AplicarRecargoComprasEmpresa(oConn, unqryTablaG,
+    AplicarRecargoComprasEmpresa(ConexionPrincipal, unqryTablaG,
       'CODIGO_EMP_DEVC', 'ESIVA_RECARGO_COMPRAS_DEVC');
-    AplicarPorcentajesIvaCompra(oConn, unqryTablaG,
+    AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG,
       'DEVC');
   end;
   RefrescarAlmacenes(
@@ -301,7 +304,7 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_DEVC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_DEVC').AsString = '') then
     GetCodigoAutoDevolucionCompra;
-  AplicarPorcentajesIvaCompra(oConn, unqryTablaG,
+  AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG,
     'DEVC');
   CalcularTotalesDevolucionCompra;
 end;
@@ -458,7 +461,7 @@ begin
   with unqryDevolucionesCompraLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
-    NormalizarArticuloSkuEnDataSet(oConn,
+    NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
       unqryDevolucionesCompraLineas, 'CODIGO_ART_DEVCLIN',
       'CODIGO_UNIDAD_DEVCLIN');
     if (Trim(FieldByName('NUMERO_DEVC_DEVCLIN').AsString) = '') or
@@ -506,7 +509,7 @@ begin
         unqrySkusDevc.Close;
       end;
     end;
-    PrepararLineaFiscalCompra(oConn, unqryTablaG,
+    PrepararLineaFiscalCompra(ConexionPrincipal, unqryTablaG,
       unqryDevolucionesCompraLineas, 'DEVC', 'DEVCLIN', 'TOTAL_DEVCLIN');
   end;
 end;
@@ -526,8 +529,8 @@ begin
     sSerie  := Trim(unqryTablaG.FieldByName('SERIE_DEVC').AsString);
     if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(LIN_DEVOLUCIONES_COMPRA, sSerie, sNumero,
-          sLinea)) then
+        LineaDocExiste(ConexionPrincipal, LIN_DEVOLUCIONES_COMPRA, sSerie,
+          sNumero, sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
         raise Exception.Create(
@@ -536,8 +539,8 @@ begin
         DataSet.FieldByName('NUMERO_DEVC_DEVCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_DEVC_DEVCLIN') <> nil then
         DataSet.FieldByName('SERIE_DEVC_DEVCLIN').AsString := sSerie;
-      iNuevaLinea := GetSiguienteLineaDocLibre(CONT_DEVOLUCIONES_COMPRA,
-        LIN_DEVOLUCIONES_COMPRA, sSerie, sNumero);
+      iNuevaLinea := GetSiguienteLineaDocLibre(ConexionPrincipal,
+        CONT_DEVOLUCIONES_COMPRA, LIN_DEVOLUCIONES_COMPRA, sSerie, sNumero);
       if iNuevaLinea = 0 then
       begin
         iNuevaLinea := StrToIntDef(
@@ -689,7 +692,7 @@ begin
   Result := False;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'SELECT 1 ' +
       '  FROM INFORMATION_SCHEMA.COLUMNS ' +
@@ -778,7 +781,7 @@ begin
     oLv.Items.Clear;
     oQry := TUniQuery.Create(nil);
     try
-      oQry.Connection := oConn;
+      oQry.Connection := ConexionPrincipal;
       oQry.SQL.Text :=
         'SELECT DISTINCT L.CODIGO_ALMACEN_DEVCLIN AS COD, ' +
         '       COALESCE(A.NOMBRE_ALM_ALM, L.CODIGO_ALMACEN_DEVCLIN) AS NOM ' +
@@ -837,7 +840,7 @@ begin
   Result := '';
   oQry := TUniQuery.Create(nil);
   try
-    oQry.Connection := oConn;
+    oQry.Connection := ConexionPrincipal;
     oQry.SQL.Text :=
       'SELECT DISTINCT CODIGO_UNIDAD_DEVCLIN ' +
       '  FROM fza_devoluciones_compra_lineas ' +

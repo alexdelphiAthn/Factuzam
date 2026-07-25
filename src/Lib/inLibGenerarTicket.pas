@@ -16,13 +16,14 @@ unit inLibGenerarTicket;
 
 interface
 uses
-  System.SysUtils, System.Classes, Data.DB,
+  System.SysUtils, System.Classes, Data.DB, Uni,
   UniDataCaja,
   inLibFTicket,        // Donde está tu TTicketTermico
   inMtoPreviewTicket,  // Donde está tu TFormVisualizador
   inLibFaseCobro;      // Para TDatosFaseCobro
 
-  procedure ImprimirT(const ACodigoEmpresa,
+  procedure ImprimirT(AConexion: TUniConnection;
+                      const ACodigoEmpresa,
                             ACodigoAlmacen,
                             ACodigoCaja,
                             ANumeroGenerado: string;
@@ -34,17 +35,18 @@ uses
 
   // Diminutivo de ticket del empleado (fza_empleados) a partir de su
   // codigo. Si no se resuelve, devuelve el propio codigo recibido.
-  function ObtenerDiminutivoVendedor(const ACodigo: string): string;
+  function ObtenerDiminutivoVendedor(AConexion: TUniConnection;
+    const ACodigo: string): string;
   // Escribe las cuatro lineas configurables del pie de caja de la empresa.
   // Cada linea se limita al ancho real del ticket termico (42 caracteres).
-  procedure EscribirPieTicketCaja(ATicket: TTicketTermico;
+  procedure EscribirPieTicketCaja(AConexion: TUniConnection;
+                                  ATicket: TTicketTermico;
                                   const ACodigoEmpresa: string);
 
 implementation
 
 uses
-  inLibDir, inLibUnidadesMedida, inLibVerifactu, inLibFormatoDocumento,
-  inLibGlobalVar, Uni;
+  inLibDir, inLibUnidadesMedida, inLibVerifactu, inLibFormatoDocumento;
 
 const
   CAMPOS_PIE_TICKET_CAJA: array[0..3] of string = (
@@ -53,16 +55,17 @@ const
     'TEXTO_PIE_TICKET_CAJA_3_EMP',
     'TEXTO_PIE_TICKET_CAJA_4_EMP');
 
-function CamposPieTicketCajaDisponibles: Boolean;
+function CamposPieTicketCajaDisponibles(
+  AConexion: TUniConnection): Boolean;
 var
   qry: TUniQuery;
 begin
   Result := False;
-  if (oConn <> nil) and oConn.Connected then
+  if (AConexion <> nil) and AConexion.Connected then
   begin
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := AConexion;
       qry.SQL.Text :=
         'SELECT COUNT(*) AS N ' +
         '  FROM INFORMATION_SCHEMA.COLUMNS ' +
@@ -80,7 +83,8 @@ begin
   end;
 end;
 
-procedure EscribirPieTicketCaja(ATicket: TTicketTermico;
+procedure EscribirPieTicketCaja(AConexion: TUniConnection;
+                                ATicket: TTicketTermico;
                                 const ACodigoEmpresa: string);
 var
   qry: TUniQuery;
@@ -90,11 +94,11 @@ var
 begin
   EsHaEscrito := False;
   if (ATicket <> nil) and (Trim(ACodigoEmpresa) <> '') and
-     CamposPieTicketCajaDisponibles then
+     CamposPieTicketCajaDisponibles(AConexion) then
   begin
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := AConexion;
       qry.SQL.Text :=
         'SELECT TEXTO_PIE_TICKET_CAJA_1_EMP, ' +
         '       TEXTO_PIE_TICKET_CAJA_2_EMP, ' +
@@ -132,16 +136,17 @@ end;
 // Cruza el codigo de empleado (CODIGO_CAJERO_FAC) con su diminutivo de
 // ticket en fza_empleados. Si no hay conexion o no se encuentra, devuelve
 // el codigo recibido para no dejar el dato en blanco.
-function ObtenerDiminutivoVendedor(const ACodigo: string): string;
+function ObtenerDiminutivoVendedor(AConexion: TUniConnection;
+  const ACodigo: string): string;
 var
   qry: TUniQuery;
 begin
   Result := ACodigo;
-  if (Trim(ACodigo) <> '') and (oConn <> nil) and oConn.Connected then
+  if (Trim(ACodigo) <> '') and (AConexion <> nil) and AConexion.Connected then
   begin
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := AConexion;
       qry.SQL.Text :=
         'SELECT DIMINUTIVO_TICKET_EMPL' +
         '  FROM fza_empleados' +
@@ -157,7 +162,8 @@ begin
   end;
 end;
 
-procedure ImprimirT(const ACodigoEmpresa,
+procedure ImprimirT(AConexion: TUniConnection;
+                    const ACodigoEmpresa,
                           ACodigoAlmacen,
                           ACodigoCaja,
                           ANumeroGenerado: string;
@@ -197,8 +203,8 @@ begin
   if dtFechaOperacion = 0 then
     dtFechaOperacion := Now;
   dLin := DatosCobro.TotalesFactura.Lineas;
-  sDocumento := FormatearDocumentoDataSet(DatosCobro.TotalesFactura.Cabecera,
-    'SERIE_FAC', 'NUMERO_FAC');
+  sDocumento := FormatearDocumentoDataSet(AConexion,
+    DatosCobro.TotalesFactura.Cabecera, 'SERIE_FAC', 'NUMERO_FAC');
   // QR tributario fiscal: URL de cotejo/remisión AEAT generada en local.
   // El ticket regalo (sin precios) no lleva QR ni datos fiscales.
   QRTexto := '';
@@ -361,14 +367,14 @@ begin
     Ticket.Alinear(alCentro);
     // Mostramos el diminutivo de ticket del vendedor (fza_empleados) en
     // lugar de su codigo de empleado.
-    var sVendedor := ObtenerDiminutivoVendedor(
+    var sVendedor := ObtenerDiminutivoVendedor(AConexion,
           DatosCobro.TotalesFactura.Cabecera.FieldByName(
             'CODIGO_CAJERO_FAC').AsString);
     Ticket.EscribirLinea('LE ATENDIÓ: ' + sVendedor);
     if not ASinPrecios then
       Ticket.EscribirLinea('IVA INCLUIDO');
     Ticket.EscribirLinea('GRACIAS POR SU VISITA');
-    EscribirPieTicketCaja(Ticket, ACodigoEmpresa);
+    EscribirPieTicketCaja(AConexion, Ticket, ACodigoEmpresa);
     Ticket.SaltarLineas(1);
     Ticket.EscribirLinea('');
     Ticket.SaltarLineas(3);

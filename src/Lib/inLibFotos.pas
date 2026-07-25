@@ -101,9 +101,10 @@ type
   end;
 
   /// Acceso al sistema de fotos. Vive como singleton `oFotos` igual que
-  /// `oAppParams`. Reutiliza la conexion global `inLibGlobalVar.oConn`.
+  /// `oAppParams`. La conexión se asigna desde la raíz de composición.
   TFotosArticulos = class
   private
+    FConexion: TUniConnection;
     // Caché de precarga a nivel artículo (código artículo -> foto resuelta).
     // Cuando está activa, Resolver(art, '') la consulta en vez de ir a BBDD,
     // evitando el N+1 en informes con muchas fotos. La llena PrecargarFotosLote
@@ -130,6 +131,7 @@ type
     procedure RotarFicheroPng(const ARuta: string; AHorario: Boolean);
     procedure BorrarFicherosDeNombre(const ANombreBase: string);
   public
+    procedure AsignarConexion(AConexion: TUniConnection);
     /// Ruta del fichero para una foto resuelta, en la resolucion pedida.
     /// Devuelve '' si AInfo.Encontrada = False o si el fichero no existe.
     function RutaFoto(const AInfo: TFotoInfo;
@@ -221,6 +223,7 @@ type
     /// hace que en informes iterativos (etiquetas) cada fila salga con
     /// su foto y no con la del primero.
     procedure HandlerReportBeforePrint(Component: TfrxReportComponent);
+    property Conexion: TUniConnection read FConexion;
   end;
 
 /// Engancha el evento Delphi `Report.OnBeforePrint` para que en cada
@@ -299,7 +302,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibAppParam, inLibArticulosValidador,
+  inLibAppParam, inLibArticulosValidador,
   Winapi.GDIPOBJ, Winapi.GDIPAPI;
 
 { TFotoInfo }
@@ -332,6 +335,11 @@ begin
     if Pos('/', sActual) = 0 then Break;  // ya no es prefijo, es el articulo
     Result := Result + [sActual];
   end;
+end;
+
+procedure TFotosArticulos.AsignarConexion(AConexion: TUniConnection);
+begin
+  FConexion := AConexion;
 end;
 
 { ----------------------------------------------------------------- }
@@ -448,7 +456,7 @@ begin
 
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := FConexion;
 
     // 1. SKU completo o prefijo: una sola consulta con IN y ORDER BY
     //    LENGTH(CODIGO_UNIDAD_FOT) DESC para que la mas especifica gane.
@@ -582,7 +590,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := FConexion;
       sIn := '';
       for i := 0 to High(ACodigos) do
       begin
@@ -1022,7 +1030,7 @@ begin
   iIndice         := 1;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := FConexion;
     q.SQL.Text :=
       ' SELECT * FROM fza_articulos_fotos ' +
       '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
@@ -1065,7 +1073,7 @@ begin
   // 3. Upsert en fza_articulos_fotos
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := FConexion;
     q.SQL.Text :=
       ' SELECT * FROM fza_articulos_fotos ' +
       '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
@@ -1159,7 +1167,7 @@ begin
   // Actualizamos la fila correspondiente.
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := FConexion;
     q.SQL.Text :=
       ' UPDATE fza_articulos_fotos ' +
       '    SET NOMBRE_FOT_FOT   = :NOMBRE, ' +
@@ -1198,7 +1206,7 @@ begin
   sNombre := '';
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := FConexion;
     q.SQL.Text :=
       ' SELECT NOMBRE_FOT_FOT '                  +
       '   FROM fza_articulos_fotos '             +
@@ -1217,7 +1225,7 @@ begin
 
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := FConexion;
     q.SQL.Text :=
       ' DELETE FROM fza_articulos_fotos ' +
       '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
@@ -1279,7 +1287,7 @@ var
   res      : TArtResolucionEntrada;
 begin
   if (ACodSku = '') and (ADataSet <> nil) and ADataSet.Active and
-     (inLibGlobalVar.oConn <> nil) then
+     (oFotos.Conexion <> nil) then
   begin
     sCodigo := '';
     for i := Low(cAliasCodBarras) to High(cAliasCodBarras) do
@@ -1294,7 +1302,7 @@ begin
     end;
     if sCodigo <> '' then
     begin
-      validador := TArticulosValidador.Create(inLibGlobalVar.oConn);
+      validador := TArticulosValidador.Create(oFotos.Conexion);
       try
         res := validador.ResolverCodigoBarras(sCodigo);
         if res.Encontrado and (res.CodigoSku <> '') and
@@ -1596,7 +1604,7 @@ begin
   iIndice := 1;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := FConexion;
     q.SQL.Text :=
       'SELECT NOMBRE_FOT_CSF FROM fza_compras_sesiones_fotos ' +
       ' WHERE SERIE_SES_CSF     = :s ' +
@@ -1636,7 +1644,7 @@ begin
 
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := FConexion;
     q.SQL.Text :=
       'INSERT INTO fza_compras_sesiones_fotos ' +
       '  (SERIE_SES_CSF, NUMERO_SES_CSF, LINEA_CSF, CODIGO_UNIDAD_CSF, ' +
@@ -1689,7 +1697,7 @@ begin
 
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := FConexion;
 
     // 1. Match exacto por SKU (o cadena vacia = padre)
     q.SQL.Text :=
@@ -1798,7 +1806,7 @@ begin
   sNombreBase := '';
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := FConexion;
     q.SQL.Text :=
       'SELECT NOMBRE_FOT_CSF FROM fza_compras_sesiones_fotos ' +
       ' WHERE SERIE_SES_CSF     = :s ' +
@@ -1848,9 +1856,9 @@ begin
   qIns := TUniQuery.Create(nil);
   qDel := TUniQuery.Create(nil);
   try
-    qSrc.Connection := oConn;
-    qIns.Connection := oConn;
-    qDel.Connection := oConn;
+    qSrc.Connection := FConexion;
+    qIns.Connection := FConexion;
+    qDel.Connection := FConexion;
 
     qSrc.SQL.Text :=
       'SELECT * FROM fza_compras_sesiones_fotos ' +

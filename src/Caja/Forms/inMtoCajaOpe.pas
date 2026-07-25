@@ -478,7 +478,7 @@ begin
   begin
     DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat := ACant;
     DatosCaja.cdsLineas.Post;
-    GridRecalc(nil, tvLineasOpe, DatosCaja.cdsLineas,
+    GridRecalc(ConexionPrincipal,nil, tvLineasOpe, DatosCaja.cdsLineas,
                DatosCaja.cdsCabecera, ActualizarLabelTotal);
     AsegurarLineaNueva;
   end
@@ -548,7 +548,10 @@ begin
     btnCodigoCliente.Text := '';
     // 4. Aplicar valores base
     DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime := FFecha;
-    AplicarValoresPorDefecto(DatosCaja.cdsCabecera, 'fza_facturas');
+    AplicarValoresPorDefecto(
+      ConexionPrincipal,
+      DatosCaja.cdsCabecera,
+      'fza_facturas');
     DatosCaja.cdsCabecera.FieldByName('CODIGO_EMP_FAC').AsString :=
       FCodigoEmpresa;
     DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime := FFecha;
@@ -619,7 +622,7 @@ begin
     begin
       Close;
       View.ClearItems;
-      Connection := oConn;
+      Connection := ConexionPrincipal;
       ParamByName('ARTICULO').AsString := sCodigoConsulta;
       swSP := TStopwatch.StartNew;
       Open;
@@ -655,18 +658,15 @@ begin
       // tiene match en la paleta basica, le sumamos ANCHO_SWATCH_PX para
       // que el cuadradito no recorte el codigo. El resto de columnas
       // (talla pivotada, total) no llevan swatch -> no las tocamos.
-      Mapa := ObtenerMapaAtributosGlobal;
+      Mapa := ObtenerMapaAtributosGlobal(ConexionPrincipal);
       if (Mapa <> nil) and (Mapa.Count > 0) and (View.ColumnCount > 0) then
-        AjustarAnchoColumnaParaSwatch(View.Columns[0], Mapa);
+        AjustarAnchoColumnaParaSwatch(ConexionPrincipal,View.Columns[0], Mapa);
       msFit := swFit.ElapsedMilliseconds;
     finally
       View.EndUpdate;
     end;
   end;
-//  LogPerfCaja('CajaOpe.ConsultarStock',
-//    Format('art=%s | SP=%d | Build=%d | Fit=%d | cols=%d | total=%d ms',
-//           [sCodigoConsulta, msSP, msBuild, msFit, View.ColumnCount,
-//            sw.ElapsedMilliseconds]));
+//  LogPerfCaja('CajaOpe.ConsultarStock',//    Format('art=%s | SP=%d | Build=%d | Fit=%d | cols=%d | total=%d ms',//           [sCodigoConsulta,msSP,msBuild,msFit,View.ColumnCount,//            sw.ElapsedMilliseconds]));
 end;
 
 procedure TfrmMtoOpeCaja.tvLineasOpeCustomDrawCell(
@@ -690,16 +690,21 @@ begin
     sArticulo := VarToStr(
       AViewInfo.GridRecord.Values[tvArticulo.Index]);
     sTexto := AViewInfo.Text;
-    Mapa := ObtenerMapaAtributosGlobal;
+    Mapa := ObtenerMapaAtributosGlobal(ConexionPrincipal);
     sIdVa := '';
     if (Mapa <> nil) and (AViewInfo.Item is TcxGridColumn) then
       Mapa.TryGetValue(UpperCase(Trim(
         TcxGridColumn(AViewInfo.Item).Caption)), sIdVa);
-    if ObtenerInfoBasicoArticulo(sArticulo, sIdVa, sTexto, Info) then
+    if ObtenerInfoBasicoArticulo(
+      ConexionPrincipal,
+      sArticulo,
+      sIdVa,
+      sTexto,
+      Info) then
       ADone := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
   end;
   if (not ADone) and
-     PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+     PintarCeldaSwatchSiAplica(ConexionPrincipal,ACanvas, AViewInfo, nil) then
     ADone := True;
 end;
 
@@ -712,7 +717,7 @@ begin
   // cuadradito al lado de cada numero — basta con la del codigo.
   if (AViewInfo = nil) or (AViewInfo.Item = nil) then Exit;
   if AViewInfo.Item.VisibleIndex <> 0 then Exit;
-  if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+  if PintarCeldaSwatchSiAplica(ConexionPrincipal,ACanvas, AViewInfo, nil) then
     ADone := True;
 end;
 
@@ -724,8 +729,7 @@ end;
 //  // esta activo.
 ////  if Assigned(oMemoSQL) then
 ////    oMemoSQL.Lines.Add(
-////      Format('-- PERF -- %s  [PERF:%s] %s',
-////             [FormatDateTime('hh:nn:ss.zzz', Now), AContexto, ADetalles]));
+////      Format('-- PERF -- %s  [PERF:%s] %s',////             [FormatDateTime('hh:nn:ss.zzz',Now),AContexto,ADetalles]));
 ////  try
 ////    inLibLog.Log.LogInfo(
 ////      Format('[PERF:%s] %s', [AContexto, ADetalles]));
@@ -751,7 +755,7 @@ begin
   begin
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := ConexionPrincipal;
       qry.SQL.Text :=
         'SELECT ESACTIVO_SKU FROM fza_articulos_skus ' +
         ' WHERE CODIGO_UNIDAD_SKU = :SKU';
@@ -776,8 +780,7 @@ begin
     end;
   end;
 
-  // vgerChkStockOnly bloquea la venta sin stock. vgerAvisoStockWarning,
-  // cuando trae texto, sirve como aviso informativo aunque no se bloquee.
+  // vgerChkStockOnly bloquea la venta sin stock. vgerAvisoStockWarning,// cuando trae texto,sirve como aviso informativo aunque no se bloquee.
   bChkStockOnly   := oCajaParams.GetBool('vgerChkStockOnly', False);
   MensajeStock    := Trim(oCajaParams.GetString('vgerAvisoStockWarning', ''));
   bAvisarSinStock := MensajeStock <> '';
@@ -786,7 +789,7 @@ begin
   begin
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := ConexionPrincipal;
       if Trim(FCodigoAlmacen) <> '' then
       begin
         qry.SQL.Text :=
@@ -840,7 +843,7 @@ begin
   end;
 
   //dbtvStock.ClearItems;
-  GridRecalc(nil,
+  GridRecalc(ConexionPrincipal,nil,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -928,7 +931,7 @@ begin
       // crear/rellenar ninguna linea. Asi decidimos si hay que consolidar (el
       // SKU ya esta en el ticket) sin haber grabado todavia una linea de
       // trabajo, que es justo lo que generaba el duplicado.
-      Validador := TArticulosValidador.Create(oConn);
+      Validador := TArticulosValidador.Create(ConexionPrincipal);
       try
         Resolucion := Validador.ResolverCodigoBarras(ACodigo);
       finally
@@ -987,7 +990,7 @@ begin
             RellenarAtributosDesdeSku(sSku);
           if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
             DatosCaja.cdsLineas.Post;
-          GridRecalc(nil,
+          GridRecalc(ConexionPrincipal,nil,
                      tvLineasOpe,
                      DatosCaja.cdsLineas,
                      DatosCaja.cdsCabecera,
@@ -1028,7 +1031,7 @@ begin
     else if not DatosCaja.cdsLineas.IsEmpty then
       DatosCaja.cdsLineas.Delete;
 
-    GridRecalc(nil,
+    GridRecalc(ConexionPrincipal,nil,
                tvLineasOpe,
                DatosCaja.cdsLineas,
                DatosCaja.cdsCabecera,
@@ -1075,7 +1078,7 @@ begin
         TextoBusqueda := Trim(TextoBusqueda);
         if Length(TextoBusqueda) >= 1 then
         begin
-          qryBusq.Connection := oConn;
+          qryBusq.Connection := ConexionPrincipal;
           qryBusq.Close;
           qryBusq.ParamByName('TARIFA').AsString :=
                                               DatosCaja.cdsCabecera.FieldByName(
@@ -1230,11 +1233,10 @@ begin
   // ya en la vista), junto con la ref. del proveedor principal.
   // Configuramos DisplayLabel/DisplayFormat por campo
   // para que la grilla salga legible aunque no haya layout guardado en
-  // fza_usuarios_perfiles para frmMtoArtFacSearch; si hay layout,
-  // PonerAnchosTitulos lo sobrepone (vease inLibDevExp).
+  // fza_usuarios_perfiles para frmMtoArtFacSearch; si hay layout,// PonerAnchosTitulos lo sobrepone (vease inLibDevExp).
   var unqryBusq := TUniQuery.Create(nil);
   try
-    unqryBusq.Connection := oConn;
+    unqryBusq.Connection := ConexionPrincipal;
     unqryBusq.SQL.Text :=
       'SELECT'                                                      + sLineBreak +
       '    v.CODIGO_ART_ART,'                                       + sLineBreak +
@@ -1299,7 +1301,9 @@ begin
     ConfigCampo(unqryBusq.FindField('FECHA_HASTA_ARTTAR'),
                 'Hasta',                 'dd/mm/yyyy');
 
-    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Caja',
+    if TBusquedaUtils.EjecutarBusqueda(
+      ConexionPrincipal,
+      'Búsqueda de Artículos en Caja',
                                        unqryBusq,
                                        'frmMtoArtFacSearch',
                                        Self) then
@@ -1350,15 +1354,13 @@ begin
       EliminarLineaPorValidacion;
       DisplayValue := null;
       Error := False;
-//      LogPerfCaja('CajaOpe.ArticuloValidate',
-//        Format('art=%s | Rellenar=%d | -> EliminarLineaPorValidacion | total=%d ms',
-//               [CodigoInput, msRellenar, sw.ElapsedMilliseconds]));
+//      LogPerfCaja('CajaOpe.ArticuloValidate',//        Format('art=%s | Rellenar=%d | -> EliminarLineaPorValidacion | total=%d ms',//               [CodigoInput,msRellenar,sw.ElapsedMilliseconds]));
       Abort;
     end;
     if (NumAtributos > 0) and (SkuDetectado = CodigoPadre) then
     begin
       DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency := 0;
-      GridRecalc(nil,
+      GridRecalc(ConexionPrincipal,nil,
                  tvLineasOpe,
                  DatosCaja.cdsLineas,
                  DatosCaja.cdsCabecera,
@@ -1382,10 +1384,7 @@ begin
        DatosCaja.cdsLineas.Append;
        DisplayValue := null;
        Error := False;
-//       LogPerfCaja('CajaOpe.ArticuloValidate',
-//         Format('art=%s | Rellenar=%d | Consolidar=%d | -> consolidado | total=%d ms',
-//                [CodigoInput, msRellenar, msConsolidar,
-//                 sw.ElapsedMilliseconds]));
+//       LogPerfCaja('CajaOpe.ArticuloValidate',//         Format('art=%s | Rellenar=%d | Consolidar=%d | -> consolidado | total=%d ms',//                [CodigoInput,msRellenar,msConsolidar,//                 sw.ElapsedMilliseconds]));
        Abort;
     end;
     msConsolidar := swStep.ElapsedMilliseconds;
@@ -1393,7 +1392,7 @@ begin
     if (CodigoPadre <> '') and (CodigoPadre <> CodigoInput) then
     begin
        DisplayValue := CodigoPadre;
-       qryBusq.Connection := oConn;
+       qryBusq.Connection := ConexionPrincipal;
        if qryBusq.Active then qryBusq.Close;
        qryBusq.ParamByName('TARIFA').AsString :=
                                               DatosCaja.cdsCabecera.FieldByName(
@@ -1421,10 +1420,7 @@ begin
        msAtribs := swStep.ElapsedMilliseconds;
     end;
     Error := False;
-//    LogPerfCaja('CajaOpe.ArticuloValidate',
-//      Format('art=%s | Rellenar=%d | Consolidar=%d | qryBusq=%d | Columnas=%d | Atribs=%d | total=%d ms',
-//             [CodigoInput, msRellenar, msConsolidar, msBusq,
-//              msColumnas, msAtribs, sw.ElapsedMilliseconds]));
+//    LogPerfCaja('CajaOpe.ArticuloValidate',//      Format('art=%s | Rellenar=%d | Consolidar=%d | qryBusq=%d | Columnas=%d | Atribs=%d | total=%d ms',//             [CodigoInput,msRellenar,msConsolidar,msBusq,//              msColumnas,msAtribs,sw.ElapsedMilliseconds]));
   end
   else
   begin
@@ -1434,9 +1430,7 @@ begin
       ErrorText := FMotivoRechazoArticulo
     else
       ErrorText := 'ARTÍCULO NO ENCONTRADO O DESCATALOGADO';
-//    LogPerfCaja('CajaOpe.ArticuloValidate',
-//      Format('art=%s | NO ENCONTRADO | Rellenar=%d | total=%d ms',
-//             [CodigoInput, msRellenar, sw.ElapsedMilliseconds]));
+//    LogPerfCaja('CajaOpe.ArticuloValidate',//      Format('art=%s | NO ENCONTRADO | Rellenar=%d | total=%d ms',//             [CodigoInput,msRellenar,sw.ElapsedMilliseconds]));
   end;
 end;
 
@@ -1453,7 +1447,7 @@ begin
       'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
   end;
 
-  GridRecalc(Sender,
+  GridRecalc(ConexionPrincipal,Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1472,7 +1466,7 @@ begin
       'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
   end;
 
-  GridRecalc(Sender,
+  GridRecalc(ConexionPrincipal,Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1489,7 +1483,7 @@ begin
                      'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
   end;
 
-  GridRecalc(Sender,
+  GridRecalc(ConexionPrincipal,Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1498,7 +1492,7 @@ end;
 
 procedure TfrmMtoOpeCaja.tvTotalPropertiesEditValueChanged(Sender: TObject);
 begin
-  GridRecalc(Sender,
+  GridRecalc(ConexionPrincipal,Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1507,7 +1501,7 @@ end;
 
 procedure TfrmMtoOpeCaja.tvUdsPropertiesEditValueChanged(Sender: TObject);
 begin
-  GridRecalc(Sender,
+  GridRecalc(ConexionPrincipal,Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1587,8 +1581,8 @@ begin
   sw := TStopwatch.StartNew;
   msResolver := 0; msStock := 0; msPrecio := 0; msResolverDatos := 0;
 
-  Validador := TArticulosValidador.Create(oConn);
-  Resolver  := TArticulosResolver.Create(oConn);
+  Validador := TArticulosValidador.Create(ConexionPrincipal);
+  Resolver  := TArticulosResolver.Create(ConexionPrincipal);
   try
     swStep := TStopwatch.StartNew;
     // Si la entrada viene de la pistola (STX...ETX), resolvemos UNICAMENTE
@@ -1600,9 +1594,7 @@ begin
     msResolver := swStep.ElapsedMilliseconds;
     if not Resolucion.Encontrado then
     begin
-//      LogPerfCaja('CajaOpe.RellenarArt',
-//        Format('cod=%s | Resolver=%d | NO ENCONTRADO | total=%d ms',
-//               [CodigoLimpio, msResolver, sw.ElapsedMilliseconds]));
+//      LogPerfCaja('CajaOpe.RellenarArt',//        Format('cod=%s | Resolver=%d | NO ENCONTRADO | total=%d ms',//               [CodigoLimpio,msResolver,sw.ElapsedMilliseconds]));
       Exit;
     end;
 
@@ -1693,16 +1685,13 @@ begin
       DatosCaja.cdsLineas.EnableControls;
     end;
     if Result and (not FActualizandoDepositos) then
-      GridRecalc(nil, tvLineasOpe, DatosCaja.cdsLineas,
+      GridRecalc(ConexionPrincipal,nil, tvLineasOpe, DatosCaja.cdsLineas,
                  DatosCaja.cdsCabecera, ActualizarLabelTotal);
   finally
     FreeAndNil(Validador);
     FreeAndNil(Resolver);
   end;
-//  LogPerfCaja('CajaOpe.RellenarArt',
-//    Format('cod=%s | Resolver=%d | Stock=%d | Precio=%d | ResolverDatos=%d | total=%d ms',
-//           [CodigoLimpio, msResolver, msStock, msPrecio, msResolverDatos,
-//            sw.ElapsedMilliseconds]));
+//  LogPerfCaja('CajaOpe.RellenarArt',//    Format('cod=%s | Resolver=%d | Stock=%d | Precio=%d | ResolverDatos=%d | total=%d ms',//           [CodigoLimpio,msResolver,msStock,msPrecio,msResolverDatos,//            sw.ElapsedMilliseconds]));
 end;
 
 procedure TfrmMtoOpeCaja.repComboBoxPropertiesInitPopup(Sender: TObject);
@@ -1742,7 +1731,7 @@ begin
   FechaFactura := DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime;
   CodArt       := DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
 
-  Resolver := TArticulosResolver.Create(oConn);
+  Resolver := TArticulosResolver.Create(ConexionPrincipal);
   try
     Precio := Resolver.ResolverPrecio(CodArt, sSKU, CodTarifa, FechaFactura);
     if not Precio.TieneRegistro then Exit;
@@ -1763,7 +1752,7 @@ begin
     DatosCaja.cdsLineas.FieldByName(
                           'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
 
-    GridRecalc(nil, tvLineasOpe, DatosCaja.cdsLineas,
+    GridRecalc(ConexionPrincipal,nil, tvLineasOpe, DatosCaja.cdsLineas,
                DatosCaja.cdsCabecera, ActualizarLabelTotal);
   finally
     FreeAndNil(Resolver);
@@ -1781,16 +1770,14 @@ var
 begin
   if Trim(Sku) = '' then Exit;
   sw := TStopwatch.StartNew;
-  Lookup := TArticulosAtributosLookup.Create(oConn);
+  Lookup := TArticulosAtributosLookup.Create(ConexionPrincipal);
   try
     swQry := TStopwatch.StartNew;
     Valores := Lookup.ObtenerAtributosDeSku(Sku);
     msQry := swQry.ElapsedMilliseconds;
     if Length(Valores) = 0 then
     begin
-//      LogPerfCaja('CajaOpe.RellenarAtribsDesdeSku',
-//        Format('sku=%s | Qry=%d | sin valores | total=%d ms',
-//               [Sku, msQry, sw.ElapsedMilliseconds]));
+//      LogPerfCaja('CajaOpe.RellenarAtribsDesdeSku',//        Format('sku=%s | Qry=%d | sin valores | total=%d ms',//               [Sku,msQry,sw.ElapsedMilliseconds]));
       Exit;
     end;
 
@@ -1808,9 +1795,7 @@ begin
   finally
     FreeAndNil(Lookup);
   end;
-//  LogPerfCaja('CajaOpe.RellenarAtribsDesdeSku',
-//    Format('sku=%s | Qry=%d | total=%d ms',
-//           [Sku, msQry, sw.ElapsedMilliseconds]));
+//  LogPerfCaja('CajaOpe.RellenarAtribsDesdeSku',//    Format('sku=%s | Qry=%d | total=%d ms',//           [Sku,msQry,sw.ElapsedMilliseconds]));
 end;
 
 function TfrmMtoOpeCaja.ConsolidarSiExiste(SkuBuscado: string): Boolean;
@@ -1844,7 +1829,7 @@ begin
           dsLineas.DataSet.DisableControls;
           Clon.Post;
           dsLineas.DataSet.EnableControls;
-          GridRecalc(nil,
+          GridRecalc(ConexionPrincipal,nil,
                      tvLineasOpe,
                      DatosCaja.cdsLineas,
                      DatosCaja.cdsCabecera,
@@ -1918,7 +1903,7 @@ begin
   DatosCaja.cdsLineas.DisableControls;
   FActualizandoDepositos := True;
   try
-    QryNom.Connection := oConn;
+    QryNom.Connection := ConexionPrincipal;
     QryNom.SQL.Text :=
       'SELECT vat.NOMBRE_VA AS NOMBRE_ATRIBUTO ' +
       '  FROM fza_articulos a ' +
@@ -2377,13 +2362,13 @@ begin
         end;
 
         IdVa := '';
-        Mapa := ObtenerMapaAtributosGlobal;
+        Mapa := ObtenerMapaAtributosGlobal(ConexionPrincipal);
         if Mapa <> nil then
           Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
 
         Info := Default(TInfoBasico);
         if (IdVa <> '') and (Trim(AvActual) <> '') then
-          ObtenerInfoBasico(IdVa, AvActual, Info);
+          ObtenerInfoBasico(ConexionPrincipal,IdVa, AvActual, Info);
 
         if Info.EsValido and
            PintarSwatchEnBitmap(FBmpSwatchBoton, Info, 14) then
@@ -2714,9 +2699,7 @@ begin
   Cacheado := SameText(ArticuloPadre, FUltimoArticuloPadre);
   if Cacheado then
   begin
-//    LogPerfCaja('CajaOpe.ActualizarColumnas',
-//      Format('art=%s | cache hit | total=%d ms',
-//             [ArticuloPadre, sw.ElapsedMilliseconds]));
+//    LogPerfCaja('CajaOpe.ActualizarColumnas',//      Format('art=%s | cache hit | total=%d ms',//             [ArticuloPadre,sw.ElapsedMilliseconds]));
     Exit;
   end;
   FUltimoArticuloPadre := ArticuloPadre;
@@ -2726,7 +2709,7 @@ begin
     // Solo atacamos la base de datos si hay un artículo real
     if (ArticuloPadre <> '') and (ArticuloPadre <> 'ACUENTA') then
     begin
-      datosCaja.qryDefinicionArticulo.Connection := oConn;
+      datosCaja.qryDefinicionArticulo.Connection := ConexionPrincipal;
       datosCaja.qryDefinicionArticulo.Close;
       // ANTES: 4-way join sobre fza_articulos_skus -> fza_atributos_sku ->
       //        fza_atributos_valores -> vi_atributos_nombres con DISTINCT.
@@ -2803,9 +2786,7 @@ begin
   finally
     FreeAndNil(NombresAtributos);
   end;
-//  LogPerfCaja('CajaOpe.ActualizarColumnas',
-//    Format('art=%s | Qry=%d | UI=%d | total=%d ms',
-//           [ArticuloPadre, msQry, msUI, sw.ElapsedMilliseconds]));
+//  LogPerfCaja('CajaOpe.ActualizarColumnas',//    Format('art=%s | Qry=%d | UI=%d | total=%d ms',//           [ArticuloPadre,msQry,msUI,sw.ElapsedMilliseconds]));
 //  tvLineasOpe.ApplyBestFit(nil, True, False);
 end;
 
@@ -2929,7 +2910,7 @@ begin
   begin
     var unqry := TUniQuery.Create(nil);
     try
-      unqry.Connection := oConn;
+      unqry.Connection := ConexionPrincipal;
       unqry.SQL.Text := 'SELECT RAZON_SOCIAL_CLI, ' +
                         '       NIF_CLI, MOVIL_CLI, EMAIL_CLI, ' +
                         '       DIRECCION1_CLI, DIRECCION2_CLI, ' +
@@ -3054,7 +3035,7 @@ begin
 
     // 3º Como paso final absoluto, pisamos la etiqueta leyendo la memoria
     // contable
-    Totales := TFacturaTotales.Create(DatosCaja.cdsCabecera,
+    Totales := TFacturaTotales.Create(ConexionPrincipal,DatosCaja.cdsCabecera,
                                       DatosCaja.cdsLineas);
     try
       Totales.ProcesarFacturaCompleta;
@@ -3109,7 +3090,7 @@ var
 begin
   unqryClientes := TUniQuery.Create(nil);
   try
-    unqryClientes.Connection := oConn;
+    unqryClientes.Connection := ConexionPrincipal;
 unqryClientes.SQL.Text := 'SELECT CODIGO_CLI_CLI as `Código`, ' +
                           '   RAZON_SOCIAL_CLI as `Razón Social`, ' +
                           '   NIF_CLI as `NIF Cliente`, ' +
@@ -3184,7 +3165,7 @@ begin
   end;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text := 'SELECT CODIGO_EMPL, DIMINUTIVO_TICKET_EMPL ' +
                     '  FROM fza_empleados ' +
                     ' WHERE ESACTIVO_EMPL = ''S'' ' +
@@ -3371,7 +3352,9 @@ begin
   frmFaseCobro := nil;
   slRutasTicketPdf := TStringList.Create;
   try
-    ObjTotales := TFacturaTotales.Create(DatosCaja.cdsCabecera,
+    ObjTotales := TFacturaTotales.Create(
+      ConexionPrincipal,
+      DatosCaja.cdsCabecera,
                                          DatosCaja.cdsLineas);
     ObjTotales.ProcesarFacturaCompleta;
     frmFaseCobro := TfrmMtoCajaFaseCobro.Create(Self);
@@ -3437,7 +3420,7 @@ begin
                                               frmFaseCobro.FNumeroManual) then
        begin
          case frmFaseCobro.TipoImpresion of
-           tiConTicket: ImprimirT(FCodigoEmpresa,
+           tiConTicket: ImprimirT(ConexionPrincipal,FCodigoEmpresa,
                                   FCodigoAlmacen,
                                   FCodigoCaja,
                                   NumeroGenerado,
@@ -3456,7 +3439,7 @@ begin
              begin
                // F10: ticket regalo (sin precios ni QR) y, además, el
                // ticket fiscal completo con precios y QR Verifactu
-               ImprimirT(FCodigoEmpresa,
+               ImprimirT(ConexionPrincipal,FCodigoEmpresa,
                          FCodigoAlmacen,
                          FCodigoCaja,
                          NumeroGenerado,
@@ -3464,7 +3447,7 @@ begin
                          oNomImpresoraCaja,
                          True,
                          FFecha);
-               ImprimirT(FCodigoEmpresa,
+               ImprimirT(ConexionPrincipal,FCodigoEmpresa,
                          FCodigoAlmacen,
                          FCodigoCaja,
                          NumeroGenerado,
@@ -3481,7 +3464,10 @@ begin
          if slRutasTicketPdf.Count = 0 then
          begin
            try
-             ImprimirTicketDesdeBD(FCodigoEmpresa, FCodigoAlmacen,
+             ImprimirTicketDesdeBD(
+               ConexionPrincipal,
+               FCodigoEmpresa,
+               FCodigoAlmacen,
                FCodigoCaja, NumeroGenerado, 'DEBUG', slRutasTicketPdf, True);
            except
              on E: Exception do
@@ -3492,7 +3478,7 @@ begin
          end;
          if slRutasTicketPdf.Count > 0 then
          begin
-           TVentasWsCola.AdjuntarTicketPdfSeguro(oConn,
+           TVentasWsCola.AdjuntarTicketPdfSeguro(ConexionPrincipal,
              IdentidadSesion.Usuario,
              DatosCaja.UltSerieFacturaGrabada,
              DatosCaja.UltNumeroFacturaGrabada,
@@ -3500,7 +3486,7 @@ begin
            // Archivado en fza_facturas.PDF_FAC: el ultimo PDF de la
            // lista es el ticket fiscal completo (con precios y QR); el
            // regalo se genera sin ruta y no llega a la lista
-           GuardarPdfFacturaEnBlob(oConn, ContextoSesion,
+           GuardarPdfFacturaEnBlob(ConexionPrincipal, ContextoSesion,
              DatosCaja.UltSerieFacturaGrabada,
              DatosCaja.UltNumeroFacturaGrabada,
              slRutasTicketPdf[slRutasTicketPdf.Count - 1],
@@ -3515,7 +3501,7 @@ begin
            // se leian de cdsCabecera, que queda con SERIE_FAC='0', y se
            // encolaba un registro fantasma 0\0 en Verifactu
            TVerifactuCola.EncolarRectificativa(
-             oConn,
+             ConexionPrincipal,
              IdentidadSesion.Usuario,
              FSerieRectifica, FNumeroRectifica,
              DatosCaja.UltSerieFacturaGrabada,
@@ -3527,8 +3513,7 @@ begin
          end;
          if CodigoValeGenerado <> '' then
          begin
-           // ImprimirTicketVale(CodigoValeGenerado,
-           // frmFaseCobro.DatosCobro.ImporteValeEmitido);
+           // ImprimirTicketVale(CodigoValeGenerado,// frmFaseCobro.DatosCobro.ImporteValeEmitido);
            // ShowMessage('Entregue el vale generado al cliente: ' +
            // CodigoValeGenerado);
          end;
@@ -3536,7 +3521,7 @@ begin
          begin
            Screen.Cursor := crHourGlass;
            try
-             if EnviarDocumentacionOperacion(FCodigoEmpresa,
+             if EnviarDocumentacionOperacion(ConexionPrincipal,FCodigoEmpresa,
                FCodigoAlmacen, FCodigoCaja, NumeroGenerado,
                frmFaseCobro.EmailEnvio, sMensajeCorreo) then
                ShowMessage(sMensajeCorreo)
@@ -3580,7 +3565,7 @@ var
 begin
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := oConn;
+    Qry.Connection := ConexionPrincipal;
     // Cliente del ticket original a la cabecera de la operación
     Qry.SQL.Text :=
       ' SELECT * FROM fza_facturas ' +
@@ -3743,7 +3728,10 @@ begin
   AsegurarLineaNueva;
   // 6. Calculamos el total SIEMPRE AL FINAL, forzando la lectura de memoria
   // interna
-  Totales := TFacturaTotales.Create(DatosCaja.cdsCabecera, DatosCaja.cdsLineas);
+  Totales := TFacturaTotales.Create(
+    ConexionPrincipal,
+    DatosCaja.cdsCabecera,
+    DatosCaja.cdsLineas);
   try
     Totales.ProcesarFacturaCompleta;
     ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
@@ -3812,7 +3800,7 @@ var
 begin
   unqryEmpleados := TUniQuery.Create(nil);
   try
-    unqryEmpleados.Connection := oConn;
+    unqryEmpleados.Connection := ConexionPrincipal;
     unqryEmpleados.SQL.Text := 'SELECT CODIGO_EMPL ' +
                                                     'as `Código de Empleado`,' +
                                '       DIMINUTIVO_TICKET_EMPL ' +
@@ -3891,8 +3879,7 @@ end;
 
 procedure TfrmMtoOpeCaja.DsLineasDataChange(Sender: TObject; Field: TField);
 begin
-  // Solo refrescamos cuando cambia el registro activo (Field = nil),
-  // no en cada cambio de columna.
+  // Solo refrescamos cuando cambia el registro activo (Field = nil),// no en cada cambio de columna.
   if Field = nil then
   begin
     RefrescarFotoStock;
@@ -3952,7 +3939,7 @@ begin
   // FswArtAPopup es un record (TStopwatch) — se inicializa a cero por
   // defecto, IsRunning sera False hasta que se arranque en
   // tvArticuloPropertiesValidate.
-  DatosCaja := TdmCajaOpe.Create(Self);
+  DatosCaja := TdmCajaOpe.Create(Self, ConexionPrincipal);
   dsLineas.DataSet := DatosCaja.cdsLineas;
   dsStock.DataSet := DatosCaja.qryStock;
   dsLineas.OnDataChange := DsLineasDataChange;
@@ -4028,12 +4015,7 @@ var
   sSku: string;
 begin
   ResolverArtSkuStock(sArt, sSku);
-  inMtoStockConsulta.MostrarStockConsulta(
-    Self,
-    Permisos,
-    PerfilesUsuario,
-    ContextoSesion,
-    sArt,
+  inMtoStockConsulta.MostrarStockConsulta(sArt,
     sSku);
 end;
 
@@ -4088,8 +4070,7 @@ begin
   begin
     msTotal := FswArtAPopup.ElapsedMilliseconds;
     FswArtAPopup.Stop;
-//    LogPerfCaja('CajaOpe.Art2Popup',
-//      Format('total Enter->popup=%d ms', [msTotal]));
+//    LogPerfCaja('CajaOpe.Art2Popup',//      Format('total Enter->popup=%d ms',[msTotal]));
   end;
   if not tvLineasOpe.Controller.EditingController.IsEditing then Exit;
   CurrentEdit := tvLineasOpe.Controller.EditingController.Edit;
@@ -4112,7 +4093,7 @@ begin
   SetLength(AAvs, 0);
   if Trim(ACodArt) = '' then Exit;
   if (AOrden < 1) or (AOrden > 5) then Exit;
-  Lookup := TArticulosAtributosLookup.Create(oConn);
+  Lookup := TArticulosAtributosLookup.Create(ConexionPrincipal);
   try
     Vals := Lookup.ObtenerAvsEnSkus(ACodArt, AOrden);
   finally
@@ -4285,14 +4266,12 @@ begin
   if Length(Avs) = 0 then
   begin
     ShowMessage('No hay valores definidos para este atributo.');
-//    LogPerfCaja('CajaOpe.AvButtonClick',
-//      Format('art=%s orden=%d | Avs=%d | sin valores | total=%d ms',
-//             [ArtPadre, Orden, msAvs, sw.ElapsedMilliseconds]));
+//    LogPerfCaja('CajaOpe.AvButtonClick',//      Format('art=%s orden=%d | Avs=%d | sin valores | total=%d ms',//             [ArtPadre,Orden,msAvs,sw.ElapsedMilliseconds]));
     Exit;
   end;
 
   IdVa := '';
-  Mapa := ObtenerMapaAtributosGlobal;
+  Mapa := ObtenerMapaAtributosGlobal(ConexionPrincipal);
   if Mapa <> nil then
     Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
 
@@ -4322,7 +4301,7 @@ begin
     end;
   end;
 
-  if not SeleccionarAvConPaleta(IdVa, Avs, AvActual, AvNuevo,
+  if not SeleccionarAvConPaleta(ConexionPrincipal,IdVa, Avs, AvActual, AvNuevo,
                                  ScrPt.X, ScrPt.Y, WidHint, ArtPadre) then
     Exit;
 
@@ -4365,9 +4344,7 @@ begin
   else
     PostMessage(Self.Handle, WM_AVANZAR_ATRIB_CAJA, Orden + 1, 0);
 
-//  LogPerfCaja('CajaOpe.AvButtonClick',
-//    Format('art=%s orden=%d AvNuevo=%s | Avs=%d | total=%d ms',
-//           [ArtPadre, Orden, AvNuevo, msAvs, sw.ElapsedMilliseconds]));
+//  LogPerfCaja('CajaOpe.AvButtonClick',//    Format('art=%s orden=%d AvNuevo=%s | Avs=%d | total=%d ms',//           [ArtPadre,Orden,AvNuevo,msAvs,sw.ElapsedMilliseconds]));
 end;
 
 procedure TfrmMtoOpeCaja.WMFinalizarAtribCaja(var Msg: TMessage);
@@ -4419,9 +4396,7 @@ begin
     tvLineasOpe.Controller.FocusedColumn := SigCol;
     tvLineasOpe.Controller.EditingController.ShowEdit;
   end;
-//  LogPerfCaja('CajaOpe.AvanzarAtrib',
-//    Format('tag=%d | total=%d ms',
-//           [Integer(Msg.WParam), sw.ElapsedMilliseconds]));
+//  LogPerfCaja('CajaOpe.AvanzarAtrib',//    Format('tag=%d | total=%d ms',//           [Integer(Msg.WParam),sw.ElapsedMilliseconds]));
 end;
 
 procedure TfrmMtoOpeCaja.GuardarLayoutCaja;

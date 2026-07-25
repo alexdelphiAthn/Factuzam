@@ -194,8 +194,8 @@ end;
 procedure TfrmModalWizardEditar.FormShow(Sender: TObject);
 begin
   inherited;
-  unqryFormatos.Connection := oConn;
-  unqryGuias.Connection    := oConn;
+  unqryFormatos.Connection := ConexionPrincipal;
+  unqryGuias.Connection    := ConexionPrincipal;
   edtOrigen.Text := sInforme;
   // Textos del header del wizard y botones habilitados por pagina:
   // los seteamos en codigo para no depender de propiedades anidadas
@@ -339,9 +339,9 @@ begin
     Format('Gu'#237'as ligadas al formato "%s"  ('#39'%s'#39')',
            [sFormato, sScope]);
   // Aseguro conexion en los TUniQuery del wizard.
-  unqryGuias.Connection         := oConn;
-  unqryTablas.Connection        := oConn;
-  unqryCamposTabla.Connection   := oConn;
+  unqryGuias.Connection         := ConexionPrincipal;
+  unqryTablas.Connection        := ConexionPrincipal;
+  unqryCamposTabla.Connection   := ConexionPrincipal;
   // Abrir las guias filtradas por (informe, formato elegido) +
   // las globales del informe.
   unqryGuias.Close;
@@ -528,7 +528,7 @@ begin
     end;
     if sSql = '' then Exit;
     qryTmp := TUniQuery.Create(nil);
-    qryTmp.Connection := oConn;
+    qryTmp.Connection := ConexionPrincipal;
     // Envoltorio para no traer filas reales aunque los parametros
     // dummy hagan match.
     qryTmp.SQL.Text :=

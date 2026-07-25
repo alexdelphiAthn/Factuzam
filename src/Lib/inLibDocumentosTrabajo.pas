@@ -56,7 +56,7 @@ implementation
 
 uses
   Vcl.Dialogs, Vcl.Forms, Winapi.Windows,
-  inLibGlobalVar, inLibGenBusq, inLibArticulosResolver;
+  inLibGenBusq, inLibArticulosResolver;
 
 procedure TDocTrabajoLineaOrigen.Clear;
 begin
@@ -74,14 +74,9 @@ end;
 
 function ConnTrabajo(AConexion: TUniConnection): TUniConnection;
 begin
-  if AConexion <> nil then
-  begin
-    Result := AConexion;
-  end
-  else
-  begin
-    Result := oConn;
-  end;
+  if AConexion = nil then
+    raise EArgumentNilException.Create('AConexion');
+  Result := AConexion;
 end;
 
 function CrearDocumentoTrabajo(AConexion: TUniConnection;
@@ -172,7 +167,8 @@ begin
       '   AND USUARIO_DTR = ' +
       QuotedStr(AContextoSesion.Identidad.Usuario) + ' ' +
       ' ORDER BY INSTANTE_DOCUMENTO_DTR DESC, ID_DTR DESC';
-    if TBusquedaUtils.EjecutarBusqueda('Documentos de Trabajo abiertos',
+    if TBusquedaUtils.EjecutarBusqueda(AConexion,
+                                       'Documentos de Trabajo abiertos',
                                        sSql, 'ID_DTR', sId,
                                        'frmBuscarDocumentosTrabajo',
                                        frmParent) then

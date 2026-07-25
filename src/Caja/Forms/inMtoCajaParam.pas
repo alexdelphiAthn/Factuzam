@@ -390,7 +390,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
             'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
     qry.ParamByName('p_usuario').AsString    := pUsuario;
@@ -443,7 +443,7 @@ begin
   GuardadosCount := 0;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text := 'CALL PRC_SETPERFILFORMULARIO(:p_usuario_grupo, ' +
                     '                             :p_formulario, ' +
                     '                             :p_subkey, ' +
@@ -524,7 +524,7 @@ begin
   begin
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := ConexionPrincipal;
       qry.SQL.Text :=
         'SELECT ''Todos'' AS S ' +
         'UNION SELECT GRUPO_USUGRP FROM fza_usuarios_grupos ' +
@@ -579,7 +579,7 @@ begin
   Strings.Clear;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT CODIGO_TAR_ARTTAR FROM fza_tarifas' +
       ' WHERE ESACTIVO_ARTTAR = ''S''' +
@@ -726,7 +726,7 @@ begin
   qry := TUniQuery.Create(nil);
   usuarios := TStringList.Create;
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text := 'SELECT ''Todos'' AS S ' +
                     'UNION SELECT GRUPO_USUGRP FROM fza_usuarios_grupos ' +
                     'UNION SELECT USUARIO_USU FROM fza_usuarios ' +

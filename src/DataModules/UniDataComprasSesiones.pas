@@ -473,22 +473,22 @@ begin
     '   AND ped.NUMERO_PEDC_PEDCLIN = s.NUMERO_PEDC_SES ' +
     ' WHERE s.SERIE_SES = :SERIE_SES ' +
     '   AND s.NUMERO_SES = :NUMERO_SES';
-  unqrySesionLin.Connection         := oConn;
-  unqrySesDocs.Connection           := oConn;
-  unqrySesionFil.Connection         := oConn;
-  unqrySesionFilAtr.Connection      := oConn;
-  unqrySesionCel.Connection         := oConn;
-  unqrySesionProps.Connection       := oConn;
-  unqrySesionLinProps.Connection    := oConn;
-  unqrySesionKits.Connection        := oConn;
-  unqrySesionKitsDet.Connection     := oConn;
-  unqryPreviewSkus.Connection       := oConn;
-  unqryResumenAlmacen.Connection    := oConn;
-  unqryLineaSkusPrecios.Connection  := oConn;
-  unqryPrvFicha.Connection          := oConn;
-  unqryPrvKits.Connection           := oConn;
-  unqryPrvKitsDet.Connection        := oConn;
-  unqryPrvKitsCombo.Connection      := oConn;
+  unqrySesionLin.Connection         := ConexionPrincipal;
+  unqrySesDocs.Connection           := ConexionPrincipal;
+  unqrySesionFil.Connection         := ConexionPrincipal;
+  unqrySesionFilAtr.Connection      := ConexionPrincipal;
+  unqrySesionCel.Connection         := ConexionPrincipal;
+  unqrySesionProps.Connection       := ConexionPrincipal;
+  unqrySesionLinProps.Connection    := ConexionPrincipal;
+  unqrySesionKits.Connection        := ConexionPrincipal;
+  unqrySesionKitsDet.Connection     := ConexionPrincipal;
+  unqryPreviewSkus.Connection       := ConexionPrincipal;
+  unqryResumenAlmacen.Connection    := ConexionPrincipal;
+  unqryLineaSkusPrecios.Connection  := ConexionPrincipal;
+  unqryPrvFicha.Connection          := ConexionPrincipal;
+  unqryPrvKits.Connection           := ConexionPrincipal;
+  unqryPrvKitsDet.Connection        := ConexionPrincipal;
+  unqryPrvKitsCombo.Connection      := ConexionPrincipal;
   // Etiqueta del desplegable de kits: nombre + sistema de tallas +
   // primera y ultima talla CON cantidad>0, p.ej.
   //   "OPC A  Calzado Hombre EU 39-44  39(1)...44(2)".
@@ -520,27 +520,27 @@ begin
     '  LEFT JOIN fza_atributos_conjuntos AC ON AC.ID_AC = K.ID_AC_TALLAS_PRVKIT ' +
     ' WHERE K.CODIGO_PRV_PRVKIT = :prv ' +
     ' ORDER BY K.ORDEN_PRVKIT, K.CODIGO_PRVKIT';
-  unqryProveedores.Connection       := oConn;
-  unqryFamilias.Connection          := oConn;
-  unqryVariaciones.Connection       := oConn;
-  unqryVariacionesAtributos.Connection := oConn;
-  unqryAtributosConjuntos.Connection := oConn;
-  unqryAtributosValores.Connection  := oConn;
-  unqryPropiedades.Connection       := oConn;
-  unqryPropiedadesValores.Connection := oConn;
-  unqryIvas.Connection              := oConn;
-  unqryAlmacenes.Connection         := oConn;
-  unqryTarifas.Connection           := oConn;
-  unqryEmpresas.Connection          := oConn;
-  unqryFormasPago.Connection        := oConn;
-  unqryTemporadas.Connection        := oConn;
-  unqryEmpresaSeries.Connection     := oConn;
-  unqryArticuloExiste.Connection    := oConn;
-  unstrdprcGetContadorSesion.Connection := oConn;
-  unstrdprcValidarSesion.Connection := oConn;
-  unqryCabSesionPrint.Connection    := oConn;
-  unqryLinSesionPrint.Connection    := oConn;
-  unqryGuiasSesionPrint.Connection  := oConn;
+  unqryProveedores.Connection       := ConexionPrincipal;
+  unqryFamilias.Connection          := ConexionPrincipal;
+  unqryVariaciones.Connection       := ConexionPrincipal;
+  unqryVariacionesAtributos.Connection := ConexionPrincipal;
+  unqryAtributosConjuntos.Connection := ConexionPrincipal;
+  unqryAtributosValores.Connection  := ConexionPrincipal;
+  unqryPropiedades.Connection       := ConexionPrincipal;
+  unqryPropiedadesValores.Connection := ConexionPrincipal;
+  unqryIvas.Connection              := ConexionPrincipal;
+  unqryAlmacenes.Connection         := ConexionPrincipal;
+  unqryTarifas.Connection           := ConexionPrincipal;
+  unqryEmpresas.Connection          := ConexionPrincipal;
+  unqryFormasPago.Connection        := ConexionPrincipal;
+  unqryTemporadas.Connection        := ConexionPrincipal;
+  unqryEmpresaSeries.Connection     := ConexionPrincipal;
+  unqryArticuloExiste.Connection    := ConexionPrincipal;
+  unstrdprcGetContadorSesion.Connection := ConexionPrincipal;
+  unstrdprcValidarSesion.Connection := ConexionPrincipal;
+  unqryCabSesionPrint.Connection    := ConexionPrincipal;
+  unqryLinSesionPrint.Connection    := ConexionPrincipal;
+  unqryGuiasSesionPrint.Connection  := ConexionPrincipal;
   // unqryProveedores alimenta tanto el rotulo resuelto de la cabecera
   // (ActualizarLabelProveedor via Locate) como cbbProveedor, el combo de
   // busqueda incremental por nombre.
@@ -621,9 +621,9 @@ begin
       FieldByName('CODIGO_EMP_SES').AsString := UbicacionSesion.Empresa;
     if Trim(UbicacionSesion.Almacen) <> '' then
       FieldByName('CODIGO_ALM_SES').AsString := UbicacionSesion.Almacen;
-    AplicarRecargoComprasEmpresa(oConn, unqryTablaG,
+    AplicarRecargoComprasEmpresa(ConexionPrincipal, unqryTablaG,
       'CODIGO_EMP_SES', 'ESIVA_RECARGO_COMPRAS_SES');
-    AplicarPorcentajesIvaCompra(oConn, unqryTablaG, 'SES');
+    AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG, 'SES');
     // Si solo hay una variacion definida, preseleccionarla. Es el caso
     // mayoritario (la mayoria de instalaciones solo tienen 'TC').
     if unqryVariaciones.Active and (unqryVariaciones.RecordCount = 1) then
@@ -642,7 +642,10 @@ begin
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='SE'
     if Trim(UbicacionSesion.Empresa) <> '' then
     begin
-      var sSerieDef := ObtenerSerieDefecto(UbicacionSesion.Empresa, 'SE');
+      var sSerieDef := ObtenerSerieDefecto(
+        ConexionPrincipal,
+        UbicacionSesion.Empresa,
+        'SE');
       if sSerieDef <> '' then
         FieldByName('SERIE_SES').AsString := sSerieDef;
     end;
@@ -723,7 +726,8 @@ begin
   // estaba en BD; el siguiente Add reasignaba la misma LINEA).
   sSerie  := unqryTablaG.FieldByName('SERIE_SES').AsString;
   sNumero := unqryTablaG.FieldByName('NUMERO_SES').AsString;
-  iNuevaLinea := GetSiguienteLineaDoc(CONT_SESIONES, sSerie, sNumero);
+  iNuevaLinea := GetSiguienteLineaDoc(ConexionPrincipal, CONT_SESIONES,
+    sSerie, sNumero);
   if iNuevaLinea = 0 then
   begin
     // Cabecera no localizada (caso raro: master aun no posteado, sin
@@ -838,7 +842,7 @@ begin
   if sTecla <> '' then
   begin
     if inLibComprasSesiones.ResolverCodigoFamilia(
-         oConn, sTecla, IdentidadSesion.Usuario, sNuevo) then
+         ConexionPrincipal, sTecla, IdentidadSesion.Usuario, sNuevo) then
     begin
       unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString :=
                                                                          sNuevo;
@@ -926,7 +930,7 @@ begin
 
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'SELECT COALESCE(SUM(CANTIDAD_SESCEL), 0) AS TOTAL ' +
       '  FROM fza_compras_sesiones_celdas ' +
@@ -961,7 +965,7 @@ begin
   // PRC_GET_NEXT_CONT('ES') -- mismo patron que UniDataEmpresas.
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N FROM fza_empresas_series ' +
       ' WHERE TIPO_DOC_EMPSER = ''SE'' ' +
@@ -974,7 +978,10 @@ begin
     q.Close;
 
     // PK de la nueva fila: contador 'ES' (mismo que pantalla Empresas)
-    sCodigoSer := ObtenerSiguienteContador('ES', IdentidadSesion.Usuario);
+    sCodigoSer := ObtenerSiguienteContador(
+      ConexionPrincipal,
+      'ES',
+      IdentidadSesion.Usuario);
     if Trim(sCodigoSer) = '' then
       raise Exception.Create('No se pudo obtener CODIGO_SERIE_EMPSER del ' +
         'contador ES via PRC_GET_NEXT_CONT.');
@@ -1068,7 +1075,7 @@ begin
        (UpperCase(Trim(unqryTablaG.FieldByName(
          'ESVARIOS_TIPOS_IVA_SES').AsString)) = 'S') then
       sCampoTipoIvaLinea := 'TIPO_IVA_SESLIN';
-    CalcularTotalesDocumentoCompra(oConn, unqryTablaG,
+    CalcularTotalesDocumentoCompra(ConexionPrincipal, unqryTablaG,
       unqrySesionLin, 'SES', 'TOTAL_LINEA_SESLIN',
       sCampoTipoIvaLinea, 'PORCENTAJE_IVA_SESLIN');
     if EstadoInicial <> dsInsert then
@@ -1131,7 +1138,7 @@ begin
         ' WHERE `SERIE_SES` = :SERIE AND `NUMERO_SES` = :NUMERO';
       q := TUniQuery.Create(nil);
       try
-        q.Connection := oConn;
+        q.Connection := ConexionPrincipal;
         q.SQL.Text := sSql;
         for sCampo in CAMPOS_TOTALES do
         begin
@@ -1160,7 +1167,7 @@ begin
   Result := False;
   uxTmp  := TUniQuery.Create(nil);
   try
-    uxTmp.Connection := oConn;
+    uxTmp.Connection := ConexionPrincipal;
     uxTmp.SQL.Text :=
       'SELECT INSTANTE_MODIF FROM fza_compras_sesiones ' +
       'WHERE SERIE_SES = :s AND NUMERO_SES = :n';

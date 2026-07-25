@@ -34,11 +34,13 @@ type
 
   TUnidadesMedida = class
   private
+    FConexion: TUniConnection;
     FUnidades: TObjectDictionary<string, TUnidadInfo>;
     FDecimalesPorDefecto: Integer;
   public
     constructor Create;
     destructor Destroy; override;
+    procedure AsignarConexion(AConexion: TUniConnection);
     // (Re)carga la cache desde fza_unidades_medida. Tolera tabla ausente o
     // conexion cerrada: deja la cache vacia y aplican los valores por defecto.
     procedure Cargar;
@@ -69,13 +71,14 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibLog;
+  inLibLog;
 
 { TUnidadesMedida }
 
 constructor TUnidadesMedida.Create;
 begin
   inherited;
+  FConexion := nil;
   // Comparador sin distincion de mayusculas: 'Uds' y 'uds' son la misma unidad.
   FUnidades := TObjectDictionary<string, TUnidadInfo>.Create([doOwnsValues],
                                                   TIStringComparer.Ordinal);
@@ -88,6 +91,11 @@ begin
   inherited;
 end;
 
+procedure TUnidadesMedida.AsignarConexion(AConexion: TUniConnection);
+begin
+  FConexion := AConexion;
+end;
+
 procedure TUnidadesMedida.Cargar;
 var
   qry: TUniQuery;
@@ -95,12 +103,12 @@ var
   sCod: string;
 begin
   FUnidades.Clear;
-  if (oConn = nil) or (not oConn.Connected) then
+  if (FConexion = nil) or (not FConexion.Connected) then
     Exit;
   qry := TUniQuery.Create(nil);
   try
     try
-      qry.Connection := oConn;
+      qry.Connection := FConexion;
       qry.SQL.Text :=
         'SELECT CODIGO_UNIMED, DESCRIPCION_UNIMED, DECIMALES_UNIMED,' +
         '       MAGNITUD_UNIMED, ESBASE_UNIMED, FACTOR_BASE_UNIMED' +

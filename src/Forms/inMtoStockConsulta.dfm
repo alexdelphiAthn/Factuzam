@@ -1,4 +1,4 @@
-object frmStockConsulta: TfrmStockConsulta
+﻿inherited frmStockConsulta: TfrmStockConsulta
   Left = 0
   Top = 0
   Caption = 'Consulta de stock (Ctrl+U)'

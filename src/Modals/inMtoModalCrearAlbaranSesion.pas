@@ -157,8 +157,16 @@ end;
 procedure TfrmModalCrearAlbaranSesion.CargarSeries(const AEmpresa: string);
 begin
   FEmpresa := Trim(AEmpresa);
-  CargarSeriesEmpresa(FEmpresa, 'AB', cbbSerieAlb.Properties.Items);
-  CargarSeriesEmpresa(FEmpresa, 'PC', cbbSeriePed.Properties.Items);
+  CargarSeriesEmpresa(
+    ConexionPrincipal,
+    FEmpresa,
+    'AB',
+    cbbSerieAlb.Properties.Items);
+  CargarSeriesEmpresa(
+    ConexionPrincipal,
+    FEmpresa,
+    'PC',
+    cbbSeriePed.Properties.Items);
 end;
 
 procedure TfrmModalCrearAlbaranSesion.ProponerSeriesAlmacen;
@@ -171,11 +179,19 @@ begin
   // serie de la sesion). El usuario siempre puede cambiarla en el combo.
   if FEmpresa <> '' then
   begin
-    sSerie := ObtenerSeriePropiaAlmacen(FEmpresa, 'AB', GetAlmacen);
+    sSerie := ObtenerSeriePropiaAlmacen(
+      ConexionPrincipal,
+      FEmpresa,
+      'AB',
+      GetAlmacen);
     if sSerie = '' then
       sSerie := FSerieAlbDef;
     cbbSerieAlb.Text := sSerie;
-    sSerie := ObtenerSeriePropiaAlmacen(FEmpresa, 'PC', GetAlmacen);
+    sSerie := ObtenerSeriePropiaAlmacen(
+      ConexionPrincipal,
+      FEmpresa,
+      'PC',
+      GetAlmacen);
     if sSerie = '' then
       sSerie := FSeriePedDef;
     cbbSeriePed.Text := sSerie;
@@ -246,8 +262,7 @@ end;
 // Pedido y albaran son mutuamente exclusivos: nunca tiene sentido
 // generar los dos a la vez para la misma sesion (el pedido es
 // compromiso, el albaran es entrada real de stock — se eligen uno u
-// otro segun el momento de la operacion). Cuando el usuario marca uno,
-// desmarcamos el otro silenciosamente y refrescamos habilitados.
+// otro segun el momento de la operacion). Cuando el usuario marca uno,// desmarcamos el otro silenciosamente y refrescamos habilitados.
 procedure TfrmModalCrearAlbaranSesion.chkGenAlbaranPropertiesEditValueChanged(
   Sender: TObject);
 begin

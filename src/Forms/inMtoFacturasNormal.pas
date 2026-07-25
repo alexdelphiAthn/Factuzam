@@ -57,8 +57,7 @@ type
 implementation
 
 uses
-  inLibFacturae,
-  inLibGlobalVar;
+  inLibFacturae;
 
 {$R *.dfm}
 
@@ -145,7 +144,7 @@ begin
     oDialogo.FileName := NombreArchivoFacturae(sSerie, sNumero);
     if oDialogo.Execute then
     begin
-      oResultado := EmitirFacturae(oConn, ContextoSesion,
+      oResultado := EmitirFacturae(ConexionPrincipal, ContextoSesion,
         sSerie, sNumero, oDialogo.FileName);
       dsTablaG.DataSet.Refresh;
       ShowMessage('eDoc emitido correctamente:' + sLineBreak +

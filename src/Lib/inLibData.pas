@@ -10,13 +10,13 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Utilidades de acceso a datos auxiliares.                                  }
-{    Lecturas puntuales sobre la conexión global del sistema.                  }
+{    Lecturas puntuales sobre una conexión proporcionada por el consumidor.   }
 {******************************************************************************}
 unit inLibData;
 
 interface
 uses
-  Uni,inLibGlobalVar, System.SysUtils, Data.DB;
+  Uni, System.SysUtils, Data.DB;
 
 function AlmacenPerteneceEmpresa(AConexion: TUniConnection;
   const AEmpresa, AAlmacen: string): Boolean;
@@ -28,7 +28,8 @@ procedure AjustarEmpresaAlmacenDataSet(AConexion: TUniConnection;
   ADataSet: TDataSet; const ACampoEmpresa, ACampoAlmacen: string);
 procedure AjustarEmpresasAlmacenesDocumento(AConexion: TUniConnection;
   ADataSet: TDataSet);
-function ObtenerAlmacenDepositoEmpresa(const AEmpresa: string): string;
+function ObtenerAlmacenDepositoEmpresa(AConexion: TUniConnection;
+  const AEmpresa: string): string;
 
 implementation
 
@@ -172,7 +173,8 @@ begin
     'CODIGO_EMP_CONTRA_TRSOL', 'CODIGO_ALM_DESTINO_TRSOL');
 end;
 
-function ObtenerAlmacenDepositoEmpresa(const AEmpresa: string): string;
+function ObtenerAlmacenDepositoEmpresa(AConexion: TUniConnection;
+  const AEmpresa: string): string;
 var
   QryAlm: TUniQuery;
 begin
@@ -180,7 +182,7 @@ begin
   QryAlm := TUniQuery.Create(nil);
   try
     // Usamos la conexión global del sistema
-    QryAlm.Connection := inLibGlobalVar.oConn;
+    QryAlm.Connection := AConexion;
     QryAlm.SQL.Text :=
       'SELECT CODIGO_ALM_ALM ' +
       '  FROM fza_almacenes ' +

@@ -102,7 +102,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibShowMto, inLibGlobalVar, inLibFotos, inMtoPrincipal;
+  inLibWin, inLibShowMto, inLibFotos, inMtoPrincipal;
 
 {$R *.dfm}
 
@@ -139,8 +139,8 @@ begin
   dmmPropiedades := tdmDataModule as TdmPropiedades;
   pkFieldName := 'CODIGO_PROP_ARTPROP';
 
-  dmmPropiedades.unqryArticulos.Connection := oConn;
-  dmmPropiedades.unqryValores.Connection   := oConn;
+  dmmPropiedades.unqryArticulos.Connection := ConexionPrincipal;
+  dmmPropiedades.unqryValores.Connection   := ConexionPrincipal;
   if not dmmPropiedades.unqryArticulos.Active then
     dmmPropiedades.unqryArticulos.Open;
   if not dmmPropiedades.unqryValores.Active then

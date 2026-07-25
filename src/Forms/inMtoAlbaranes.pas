@@ -312,7 +312,11 @@ begin
   begin
     sEmpresa := Trim(UbicacionSesion.Empresa);
   end;
-  CargarSeriesEmpresa(sEmpresa, 'AV', cbbSERIE_ALB.Properties.Items);
+  CargarSeriesEmpresa(
+    ConexionPrincipal,
+    sEmpresa,
+    'AV',
+    cbbSERIE_ALB.Properties.Items);
   if cbbSERIE_ALB.Properties.Items.Count = 0 then
   begin
     if MessageDlg('No hay series de albaranes de venta mayor (tipo AV) ' +
@@ -382,7 +386,8 @@ begin
       qry.ParamByName('tarifa').AsString := sTarifa;
       qry.ParamByName('fecha').AsDateTime := dFecha;
       if TBusquedaUtils.EjecutarBusqueda(
-           'Búsqueda de Artículos en Líneas de Albarán',
+        ConexionPrincipal,
+        'Búsqueda de Artículos en Líneas de Albarán',
            qry,
            'frmMtoArtFacSearch',
            Self) then
@@ -450,7 +455,8 @@ begin
         ' ORDER BY SK.CODIGO_UNIDAD_SKU';
       qry.ParamByName('art').AsString := sArt;
       if TBusquedaUtils.EjecutarBusqueda(
-           'SKUs del artículo ' + sArt,
+        ConexionPrincipal,
+        'SKUs del artículo ' + sArt,
            qry,
            'frmMtoAlbSkuSearch',
            Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
@@ -623,8 +629,7 @@ end;
 procedure TfrmMtoAlbaranes.ModoEntradaResuelto(const ACodArt, ASku,
   ADescripcion: string; ACompleto: Boolean);
 begin
-  // El flujo fiscal clasico del albaran (tarifa de cabecera, IVA,
-  // precios, total) se reaprovecha tal cual: AplicarArticuloAlbaran
+  // El flujo fiscal clasico del albaran (tarifa de cabecera,IVA,// precios,total) se reaprovecha tal cual: AplicarArticuloAlbaran
   // acepta articulo o SKU.
   if ACompleto and (ASku <> '') then
     AplicarArticuloAlbaran(ASku);
@@ -935,8 +940,7 @@ var
   end;
 begin
   // Al salir del grid hacia la cabecera, la linea vacia auto-anadida
-  // (AsegurarPrimeraLineaAlbaran) se cancela: si quedara en dsInsert,
-  // cualquier Edit de la cabecera la postearia via CheckBrowseMode del
+  // (AsegurarPrimeraLineaAlbaran) se cancela: si quedara en dsInsert,// cualquier Edit de la cabecera la postearia via CheckBrowseMode del
   // master-detail y chocaria con la guarda de linea sin articulo.
   if Assigned(dmmAlbaranes) then
   begin
@@ -961,8 +965,7 @@ begin
   inherited;
   // Reutilizar la instancia de data module creada por
   // TfrmMtoGen.CrearTablaPrincipal (tdmDataModule). Antes este form creaba
-  // OTRO TdmAlbaranes en FormCreate y enganchaba los grids a ese segundo DM,
-  // cuyas queries de detalle nunca se abren (la carga async abre las del DM
+  // OTRO TdmAlbaranes en FormCreate y enganchaba los grids a ese segundo DM,// cuyas queries de detalle nunca se abren (la carga async abre las del DM
   // del padre): las pestanas de lineas, facturas y movimientos salian vacias.
   dmmAlbaranes := (tdmDataModule as TdmAlbaranes);
   if not Assigned(dmmAlbaranes) then
@@ -1001,8 +1004,7 @@ begin
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
   ActualizarColumnasOpcionalesLinea;
   ActualizarLabelPrendas;
-  // Primera construccion del contrato al abrir la pantalla: sin ella,
-  // hasta entrar en el grid se veian las columnas del dfm.
+  // Primera construccion del contrato al abrir la pantalla: sin ella,// hasta entrar en el grid se veian las columnas del dfm.
   if dmmAlbaranes.unqryAlbaranesLineas.Active then
     ConstruirModoEntrada;
 end;
@@ -1215,7 +1217,8 @@ begin
     FBuscandoDatosCabecera := True;
     try
       if TBusquedaUtils.EjecutarBusqueda(
-           'Búsqueda de Empresas en Albaranes',
+        ConexionPrincipal,
+        'Búsqueda de Empresas en Albaranes',
            dmmAlbaranes.unqryEmpDataAlb,
            'frmMtoEmpFacSearch',
            Self) then
@@ -1239,7 +1242,8 @@ begin
     FBuscandoDatosCabecera := True;
     try
       if TBusquedaUtils.EjecutarBusqueda(
-           'Búsqueda de Clientes en Albaranes',
+        ConexionPrincipal,
+        'Búsqueda de Clientes en Albaranes',
            dmmAlbaranes.unqryCliDataAlb,
            'frmMtoCliFacSearch',
            Self) then
@@ -1738,7 +1742,10 @@ begin
                          FieldByName('NUMERO_FAC_ALB').AsString);
     if (sSerieFac <> '') and (sNumeroFac <> '') then
     begin
-      sCallFactura := ResolverCallFactura(sNumeroFac, sSerieFac);
+      sCallFactura := ResolverCallFactura(
+        ConexionPrincipal,
+        sNumeroFac,
+        sSerieFac);
       ShowMto(Self.Owner, sCallFactura, sSerieFac + ',' + sNumeroFac);
     end
     else

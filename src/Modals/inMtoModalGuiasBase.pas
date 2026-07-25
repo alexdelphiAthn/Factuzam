@@ -105,7 +105,7 @@ implementation
 {$R *.dfm}
 
 uses
-  UniDataConn, inLibUser, inLibGlobalVar, inLibLog;
+  UniDataConn, inLibUser, inLibLog;
 
 procedure TfrmModalGuiasBase.FormCreate(Sender: TObject);
 begin
@@ -116,7 +116,7 @@ end;
 procedure TfrmModalGuiasBase.FormShow(Sender: TObject);
 begin
   inherited;
-  unqryGuias.Connection := oConn;
+  unqryGuias.Connection := ConexionPrincipal;
   unqryGuias.Close;
   unqryGuias.ParamByName('INF').AsString := ObtenerClaveInforme;
   unqryGuias.Open;
@@ -134,7 +134,7 @@ begin
   cbbTabla.Properties.Items.Clear;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT TABLE_NAME FROM information_schema.TABLES ' +
       ' WHERE TABLE_SCHEMA = database() ' +
@@ -168,7 +168,7 @@ begin
     Exit;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT COLUMN_NAME FROM information_schema.COLUMNS ' +
       ' WHERE TABLE_SCHEMA = database() AND TABLE_NAME = :TAB ' +

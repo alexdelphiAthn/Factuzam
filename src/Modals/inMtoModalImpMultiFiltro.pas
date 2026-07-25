@@ -45,7 +45,7 @@ uses
   cxEdit, cxLabel, cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar,
   cxPC, cxCheckListBox, cxCheckBox, cxCustomListBox, cxClasses,
   cxTL, cxTLData, cxInplaceContainer,
-  cxButtons, cxSpinEdit, dxSkinsCore, dxSkinsForm, inLibGlobalVar;
+  cxButtons, cxSpinEdit, dxSkinsCore, dxSkinsForm;
 
 type
   TFiltroReport = (frFechas, frAlmacenes, frFamilias, frProveedores,
@@ -369,7 +369,7 @@ begin
     AFc.Marcados.Clear;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text := ASQL;
       q.Open;
       while not q.Eof do
@@ -849,7 +849,7 @@ begin
       colocados.Sorted := True;
       q := TUniQuery.Create(nil);
       try
-        q.Connection := oConn;
+        q.Connection := ConexionPrincipal;
         q.SQL.Text :=
           'SELECT CODIGO_FAM_FAM AS COD, ' +
           '       COALESCE(NOMBRE_FAM_FAM, DESCRIPCION_FAM, ' +

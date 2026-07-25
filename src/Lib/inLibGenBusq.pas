@@ -22,18 +22,20 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
       System.StrUtils, DCPrijndael, dcpbase64,DCPcrypt2, System.NetEncoding,
       inLibUser, Datasnap.Provider, Datasnap.DBClient, System.DateUtils,
       MidasLib,   Datasnap.Midas,   Soap.SOAPMidas, Datasnap.Win.MidasCon,
-      inLibGlobalVar, Dialogs, vcl.consts, inLibMsg, inMtoGenSearch;
+      Dialogs, vcl.consts, inLibMsg, inMtoGenSearch;
 
 
 type
   TBusquedaUtils = class
   public
-  class function EjecutarBusqueda(const ACaption: string;
+  class function EjecutarBusqueda(AConexion: TUniConnection;
+                                const ACaption: string;
                                 ADataSet: TCustomDADataSet;
                                 const AName: String;
                              AParentForm: TCustomForm = nil): Boolean; overload;
 
-  class function EjecutarBusqueda(const ACaption: string;
+  class function EjecutarBusqueda(AConexion: TUniConnection;
+                                const ACaption: string;
                                 const ASql: string;
                                 const CampoResultado: string;
                                 out ValorDevuelto: string;
@@ -44,7 +46,8 @@ end;
 
 implementation
 
-class function TBusquedaUtils.EjecutarBusqueda(const ACaption: string;
+class function TBusquedaUtils.EjecutarBusqueda(AConexion: TUniConnection;
+                                const ACaption: string;
                                 ADataSet: TCustomDADataSet;
                                 const AName: String;
                              AParentForm: TCustomForm = nil): Boolean;
@@ -57,7 +60,7 @@ begin
     formulario.Name := AName;
     if Assigned(AParentForm) then
       formulario.PopupParent := AParentForm;
-    ADataSet.Connection := oConn;
+    ADataSet.Connection := AConexion;
     formulario.dsTablaG.DataSet := ADataSet;
     if not ADataSet.Active then
       ADataSet.Open;
@@ -69,7 +72,8 @@ begin
   end;
 end;
 
-class function TBusquedaUtils.EjecutarBusqueda(const ACaption: string;
+class function TBusquedaUtils.EjecutarBusqueda(AConexion: TUniConnection;
+                                               const ACaption: string;
                                                const ASql: string;
                                                const CampoResultado: string;
                                                out ValorDevuelto: string;
@@ -91,7 +95,7 @@ begin
       formulario.PopupParent := AParentForm;
     // --------------------------------------------------------------------
 
-    QueryTemp.Connection := oConn;
+    QueryTemp.Connection := AConexion;
     QueryTemp.SQL.Text := ASql;
     formulario.dsTablaG.DataSet := QueryTemp;
     QueryTemp.Open;

@@ -97,7 +97,7 @@ var
 implementation
 
 uses
-  System.Diagnostics, inLibGlobalVar, inLibDevExp, inLibFotos, inLibLog,
+  System.Diagnostics, inLibDevExp, inLibFotos, inLibLog,
   inLibDocumentosTrabajo, inMtoFotoArticulo;
 
 {$R *.dfm}
@@ -112,7 +112,7 @@ begin
   Self.Position := poScreenCenter;
   KeyPreview := True;
   unqryVentas := TUniQuery.Create(Self);
-  unqryVentas.Connection := oConn;
+  unqryVentas.Connection := ConexionPrincipal;
   dsVentas := TDataSource.Create(Self);
   dsVentas.DataSet := unqryVentas;
   CrearInterfaz;
@@ -399,7 +399,7 @@ begin
       ACombo.Properties.Items.Add('(Todos)');
       q := TUniQuery.Create(nil);
       try
-        q.Connection := oConn;
+        q.Connection := ConexionPrincipal;
         q.SQL.Text := ASQL;
         q.Open;
         while not q.Eof do
@@ -523,7 +523,7 @@ end;
 procedure TfrmModalListadoVentas.miAgregarDocumentoClick(Sender: TObject);
 begin
   try
-    AgregarArticuloActivoADocumentoTrabajo(Self, oConn,
+    AgregarArticuloActivoADocumentoTrabajo(Self, ConexionPrincipal,
       ContextoSesion, ResolverArtSkuStock);
   except
     on E: Exception do

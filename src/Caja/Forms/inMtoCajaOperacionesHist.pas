@@ -198,7 +198,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibUser, inLibGlobalVar, inLibShowMto, inMtoPrincipal,
+  inLibWin, inLibUser, inLibShowMto, inMtoPrincipal,
   inMtoModalGenImpSave, inMtoModalImpOperaciones, inMtoPreviewExcel,
   inLibDevExcel, inLibAppParam, inLibFotos, inLibFiltroUsuario,
   dxSpreadSheetGraphics;
@@ -271,7 +271,7 @@ procedure TfrmMtoCajaOperacionesHist.CrearTablaPrincipal;
 begin
   inherited;
   dmmCajaOperacionesHist := tdmDataModule as TdmCajaOperacionesHist;
-  FdmConsulta := TdmConsultaOpe.Create(Self);
+  FdmConsulta := TdmConsultaOpe.Create(Self, ConexionPrincipal);
   CrearAccionesFicha;
   CrearFichaDetalle;
   pkFieldName := 'CODIGO_EMP_OPCAJA;CODIGO_ALM_OPCAJA;' +
@@ -1794,12 +1794,12 @@ begin
     oList := TPerfilList.Create;
     try
       RecogerPerfilesParticulares(oList, sPermisos);
-      oConn.StartTransaction;
+        ConexionPrincipal.StartTransaction;
       try
         PerfilesUsuario.GrabarPerfiles(oList);
-        oConn.Commit;
+        ConexionPrincipal.Commit;
       except
-        oConn.Rollback;
+        ConexionPrincipal.Rollback;
         raise;
       end;
     finally

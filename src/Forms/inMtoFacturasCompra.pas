@@ -282,7 +282,6 @@ implementation
 
 uses
   System.StrUtils,
-  inLibGlobalVar,
   inLibFiltroUsuario,
   inLibFotos,
   inLibLog,
@@ -319,7 +318,11 @@ begin
   begin
     sEmpresa := Trim(UbicacionSesion.Empresa);
   end;
-  CargarSeriesEmpresa(sEmpresa, 'FP', cbbSERIE_FACC.Properties.Items);
+  CargarSeriesEmpresa(
+    ConexionPrincipal,
+    sEmpresa,
+    'FP',
+    cbbSERIE_FACC.Properties.Items);
   if cbbSERIE_FACC.Properties.Items.Count = 0 then
   begin
     if MessageDlg('No hay series de facturas de compra (tipo FP) para la ' +
@@ -401,7 +404,8 @@ begin
           ' ORDER BY art.ORDEN_ART, art.CODIGO_ART_ART';
         qry.ParamByName('prv').AsString := sPrv;
         if TBusquedaUtils.EjecutarBusqueda(
-             'Búsqueda de artículos',
+          ConexionPrincipal,
+          'Búsqueda de artículos',
              qry,
              'frmMtoFaccArtSearch',
              Self) and (qry.FindField('CODIGO_ART_ART') <> nil) then
@@ -464,7 +468,8 @@ begin
         ' ORDER BY SK.CODIGO_UNIDAD_SKU';
       qry.ParamByName('art').AsString := sArt;
       if TBusquedaUtils.EjecutarBusqueda(
-           'SKUs del artículo ' + sArt,
+        ConexionPrincipal,
+        'SKUs del artículo ' + sArt,
            qry,
            'frmMtoFaccSkuSearch',
            Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
@@ -488,7 +493,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text :=
         'SELECT ATB.CODIGO_ATB, MIN(ATB.ORDEN_ATB) AS ORDEN_ATB, ' +
         '       MIN(ATB.NOMBRE_ATB) AS NOMBRE_ATB ' +
@@ -708,8 +713,7 @@ begin
 end;
 
 // Crea CANT_ATRIB_MAX columnas no-bound para mostrar los valores de
-// los atributos del SKU de cada linea (modo "atributo por columna",
-// estilo inventarios). Read-only y no persistentes: solo
+// los atributos del SKU de cada linea (modo "atributo por columna",// estilo inventarios). Read-only y no persistentes: solo
 // visualizacion. La carga real de valores por SKU queda como TODO.
 procedure TfrmMtoFacturasCompra.CrearColumnasAtributos;
 var
@@ -2088,7 +2092,11 @@ begin
           ScrPt := Edit.ClientToScreen(Point(0, Edit.Height));
           WidHint := Edit.Width;
         end;
-        if SeleccionarAvConPaleta(ID_VA_COLOR, FBasicosColor, sActual,
+        if SeleccionarAvConPaleta(
+          ConexionPrincipal,
+          ID_VA_COLOR,
+          FBasicosColor,
+          sActual,
                                   sNuevo, ScrPt.X, ScrPt.Y, WidHint) then
         begin
           if FPivote.CambiarColorLineaActiva(sNuevo, sMensaje) then
@@ -2161,7 +2169,8 @@ begin
       MessageDlg('Crea o selecciona una factura de compra antes de ' +
                  'elegir el proveedor.', mtInformation, [mbOk], 0)
     else if TBusquedaUtils.EjecutarBusqueda(
-              'Búsqueda de proveedores',
+      ConexionPrincipal,
+      'Búsqueda de proveedores',
               'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
               'CODIGO_PRV_PRV',
               sCodigo,
@@ -2202,7 +2211,7 @@ begin
     sEmp  := dsTablaG.DataSet.FieldByName('CODIGO_EMP_FACC').AsString;
     sPrv  := dsTablaG.DataSet.FieldByName('CODIGO_PRV_FACC').AsString;
     sPref := dmmFacturasCompra.GetBancoDefectoProveedor(sPrv);
-    selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, oConn,
+    selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, ConexionPrincipal,
                                                    sEmp, ubePago, sPref);
     if not selBanco.Aceptado then
       ShowMessage('Generación de efectos cancelada.')

@@ -85,7 +85,9 @@ El script `PruebasPerfilesFase9.ps1` valida:
   estructuras.
 - Conservación de los 253 enlaces persistentes a `dmConn.conUni`
   existentes en 52 DFM.
-- Ausencia de cambios en los DFM incluidos en esta fase.
+- En la Fase IX no hubo cambios en los DFM incluidos. La barrera admite
+  después el cambio de raíz de `inMtoStockConsulta.dfm` exigido por la
+  herencia visual de XI-B1.
 - Integridad de `factuzam_original.sql`.
 
 Resultado: 20 comprobaciones correctas y 0 fallos.

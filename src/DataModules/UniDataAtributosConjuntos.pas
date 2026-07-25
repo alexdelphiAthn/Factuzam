@@ -48,7 +48,7 @@ type
 implementation
 
 uses
-  inMtoAtributosConjuntos, inLibGlobalVar, inLibLog, System.Diagnostics;
+  inMtoAtributosConjuntos, inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -63,13 +63,13 @@ begin
   inherited;
   // Solo Connection + MasterSource. Los .Open se han movido a AbrirDetalles.
   LDsTablaG := (GetOwnerForm<TfrmMtoAtributosConjuntos>).dsTablaG;
-  unqryValoresLookup.Connection := oConn;
-  unqryVariacionesLookup.Connection := oConn;
-  unqryAtributosLookup.Connection := oConn;
-  unqryAtributosBasicosLookup.Connection := oConn;
-  unqryConjuntoDetalle.Connection := oConn;
+  unqryValoresLookup.Connection := ConexionPrincipal;
+  unqryVariacionesLookup.Connection := ConexionPrincipal;
+  unqryAtributosLookup.Connection := ConexionPrincipal;
+  unqryAtributosBasicosLookup.Connection := ConexionPrincipal;
+  unqryConjuntoDetalle.Connection := ConexionPrincipal;
   unqryConjuntoDetalle.MasterSource := LDsTablaG;
-  unqryArticulosConjunto.Connection := oConn;
+  unqryArticulosConjunto.Connection := ConexionPrincipal;
   unqryArticulosConjunto.MasterSource := LDsTablaG;
 end;
 

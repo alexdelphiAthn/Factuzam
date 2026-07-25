@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalImpFacCompraV                                       }
 {    Tipo:       Formulario (Modal)                                            }
@@ -99,8 +99,7 @@ begin
         fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
         fPreview.DialogoGuardar.FileName :=
           'FacCompraV_' + edtSerie.Text + '_' + edtNumero.Text;
-        ExportarDocCompraVertical(
-          fPreview.dxSpreadSheet1,
+        ExportarDocCompraVertical(ConexionPrincipal,fPreview.dxSpreadSheet1,
           dmFacc.unqryCabFaccPrint,
           dmFacc.unqryLinFaccSkuPrint,
           cfg);

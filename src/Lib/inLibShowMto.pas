@@ -20,7 +20,7 @@ uses
   System.Generics.Defaults, System.Generics.Collections, System.Contnrs,
   Classes, Windows, Forms, Menus, Controls, Uni,   System.SysUtils, UniDataGen,
   Vcl.Dialogs, ShellAPI, System.Rtti, System.TypInfo, System.Variants,
-  System.StrUtils, inLibUser, Vcl.Buttons, inlibGlobalVar, inMtoGen,
+  System.StrUtils, inLibUser, Vcl.Buttons, inMtoGen,
   system.math, System.IOUtils, inLibWin, cxPC, Types, Vcl.Consts,
   Data.DB, inLibFormManager;
 
@@ -32,7 +32,8 @@ type
   procedure ShowMto(AOwner: TComponent;
                     ACall:String;
                     ABusq:string = '');
-  function ResolverCallFactura(const ANumero, ASerie: string): string;
+  function ResolverCallFactura(AConexion: TUniConnection;
+    const ANumero, ASerie: string): string;
   function CrearDataModule(ADataUnit:String;var AOwnerForm:TfrmMtoGen):TObject;
 
 implementation
@@ -264,17 +265,18 @@ begin
   end;
 end;
 
-function ResolverCallFactura(const ANumero, ASerie: string): string;
+function ResolverCallFactura(AConexion: TUniConnection;
+  const ANumero, ASerie: string): string;
 var
   qry: TUniQuery;
   sTipo: string;
 begin
   Result := 'Facturas';
-  if (oConn = nil) or (not oConn.Connected) then
+  if (AConexion = nil) or (not AConexion.Connected) then
     Exit;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := AConexion;
     qry.SQL.Text :=
       'SELECT TIPO_FAC FROM fza_facturas' +
       ' WHERE NUMERO_FAC = :NUM AND SERIE_FAC = :SER';

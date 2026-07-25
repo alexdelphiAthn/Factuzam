@@ -21,6 +21,9 @@ unit inLibContadorLineas;
 
 interface
 
+uses
+  Uni;
+
 type
   TInfoContadorLineas = record
     TablaHdr     : string;
@@ -131,23 +134,27 @@ const
 // actualiza CONTADOR_LINEAS_X en BD atomicamente al mismo valor devuelto.
 // Devuelve 0 si la cabecera no existe (caller decide fallback).
 function GetSiguienteLineaDoc(
+  AConexion: TUniConnection;
   const Info: TInfoContadorLineas;
   const sSerie, sNumero: string
 ): Integer;
 
 function GetSiguienteLineaDocLibre(
+  AConexion: TUniConnection;
   const Info: TInfoContadorLineas;
   const Lineas: TInfoLineasDoc;
   const sSerie, sNumero: string
 ): Integer;
 
 function GetSiguienteLineaDocLibreSiguiente(
+  AConexion: TUniConnection;
   const Info: TInfoContadorLineas;
   const Lineas: TInfoLineasDoc;
   const sSerie, sNumero: string
 ): Integer;
 
 function LineaDocExiste(
+  AConexion: TUniConnection;
   const Lineas: TInfoLineasDoc;
   const sSerie, sNumero, sLinea: string
 ): Boolean;
@@ -155,10 +162,10 @@ function LineaDocExiste(
 implementation
 
 uses
-  System.SysUtils, Uni,
-  inLibGlobalVar;
+  System.SysUtils;
 
 function GetSiguienteLineaDoc(
+  AConexion: TUniConnection;
   const Info: TInfoContadorLineas;
   const sSerie, sNumero: string
 ): Integer;
@@ -170,13 +177,13 @@ begin
   Result := 0;
   if (sSerie = '') or (sNumero = '') then Exit;
 
-  bTransPropia := not inLibGlobalVar.oConn.InTransaction;
+  bTransPropia := not AConexion.InTransaction;
   if bTransPropia then
-    inLibGlobalVar.oConn.StartTransaction;
+    AConexion.StartTransaction;
   q := TUniQuery.Create(nil);
   try
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := AConexion;
       // Bloqueo pesimista de la cabecera: el contador de lineas vive en el
       // propio documento. Si el llamador ya abrio una transaccion, el
       // bloqueo queda dentro de ella.
@@ -213,11 +220,11 @@ begin
           Result := 0;
       end;
 
-      if bTransPropia and inLibGlobalVar.oConn.InTransaction then
-        inLibGlobalVar.oConn.Commit;
+      if bTransPropia and AConexion.InTransaction then
+        AConexion.Commit;
     except
-      if bTransPropia and inLibGlobalVar.oConn.InTransaction then
-        inLibGlobalVar.oConn.Rollback;
+      if bTransPropia and AConexion.InTransaction then
+        AConexion.Rollback;
       raise;
     end;
   finally
@@ -225,7 +232,8 @@ begin
   end;
 end;
 
-function MaxLineaDoc(const Lineas: TInfoLineasDoc;
+function MaxLineaDoc(AConexion: TUniConnection;
+                     const Lineas: TInfoLineasDoc;
                      const sSerie, sNumero: string): Integer;
 var
   q: TUniQuery;
@@ -233,7 +241,7 @@ begin
   Result := 0;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := AConexion;
     q.SQL.Text :=
       'SELECT IFNULL(MAX(CAST(NULLIF(TRIM(' + Lineas.ColLinea +
       '), '''') AS UNSIGNED)), 0) AS NV ' +
@@ -251,6 +259,7 @@ begin
 end;
 
 function GetSiguienteLineaDocLibre(
+  AConexion: TUniConnection;
   const Info: TInfoContadorLineas;
   const Lineas: TInfoLineasDoc;
   const sSerie, sNumero: string
@@ -263,13 +272,13 @@ var
 begin
   Result := 0;
   if (sSerie = '') or (sNumero = '') then Exit;
-  bTransPropia := not inLibGlobalVar.oConn.InTransaction;
+  bTransPropia := not AConexion.InTransaction;
   if bTransPropia then
-    inLibGlobalVar.oConn.StartTransaction;
+    AConexion.StartTransaction;
   q := TUniQuery.Create(nil);
   try
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := AConexion;
       q.SQL.Text :=
         'SELECT IFNULL(CAST(NULLIF(CAST(' + Info.ColContador +
         ' AS CHAR), '''') AS UNSIGNED), 0) AS NV ' +
@@ -286,7 +295,7 @@ begin
       finally
         q.Close;
       end;
-      iMaxLineas := MaxLineaDoc(Lineas, sSerie, sNumero);
+      iMaxLineas := MaxLineaDoc(AConexion, Lineas, sSerie, sNumero);
       if iMaxLineas > Result then
         Result := iMaxLineas;
       if Result > 0 then
@@ -308,11 +317,11 @@ begin
         if iFilas = 0 then
           Result := 0;
       end;
-      if bTransPropia and inLibGlobalVar.oConn.InTransaction then
-        inLibGlobalVar.oConn.Commit;
+      if bTransPropia and AConexion.InTransaction then
+        AConexion.Commit;
     except
-      if bTransPropia and inLibGlobalVar.oConn.InTransaction then
-        inLibGlobalVar.oConn.Rollback;
+      if bTransPropia and AConexion.InTransaction then
+        AConexion.Rollback;
       raise;
     end;
   finally
@@ -321,6 +330,7 @@ begin
 end;
 
 function GetSiguienteLineaDocLibreSiguiente(
+  AConexion: TUniConnection;
   const Info: TInfoContadorLineas;
   const Lineas: TInfoLineasDoc;
   const sSerie, sNumero: string
@@ -334,13 +344,13 @@ var
 begin
   Result := 0;
   if (sSerie = '') or (sNumero = '') then Exit;
-  bTransPropia := not inLibGlobalVar.oConn.InTransaction;
+  bTransPropia := not AConexion.InTransaction;
   if bTransPropia then
-    inLibGlobalVar.oConn.StartTransaction;
+    AConexion.StartTransaction;
   q := TUniQuery.Create(nil);
   try
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := AConexion;
       q.SQL.Text :=
         'SELECT IFNULL(CAST(NULLIF(CAST(' + Info.ColContador +
         ' AS CHAR), '''') AS UNSIGNED), 0) AS NV ' +
@@ -359,7 +369,7 @@ begin
       finally
         q.Close;
       end;
-      iMaxLineas := MaxLineaDoc(Lineas, sSerie, sNumero);
+      iMaxLineas := MaxLineaDoc(AConexion, Lineas, sSerie, sNumero);
       if iContador <= 0 then
         Result := 10
       else
@@ -381,11 +391,11 @@ begin
         if iFilas = 0 then
           Result := 0;
       end;
-      if bTransPropia and inLibGlobalVar.oConn.InTransaction then
-        inLibGlobalVar.oConn.Commit;
+      if bTransPropia and AConexion.InTransaction then
+        AConexion.Commit;
     except
-      if bTransPropia and inLibGlobalVar.oConn.InTransaction then
-        inLibGlobalVar.oConn.Rollback;
+      if bTransPropia and AConexion.InTransaction then
+        AConexion.Rollback;
       raise;
     end;
   finally
@@ -394,6 +404,7 @@ begin
 end;
 
 function LineaDocExiste(
+  AConexion: TUniConnection;
   const Lineas: TInfoLineasDoc;
   const sSerie, sNumero, sLinea: string
 ): Boolean;
@@ -404,7 +415,7 @@ begin
   if (sSerie = '') or (sNumero = '') or (sLinea = '') then Exit;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := AConexion;
     q.SQL.Text :=
       'SELECT 1 AS EXISTE ' +
       '  FROM ' + Lineas.TablaLin + ' ' +

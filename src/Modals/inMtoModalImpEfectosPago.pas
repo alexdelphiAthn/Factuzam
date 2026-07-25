@@ -28,7 +28,7 @@ uses
   cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxLabel, cxRadioGroup,
   cxCheckListBox, cxCheckBox, cxCustomListBox, cxClasses, dxSkinsForm,
   System.Actions, Vcl.ActnList, frxSmartMemo, frLocalization,
-  frLanguageSpanish, frCoreClasses, inLibGlobalVar,
+  frLanguageSpanish, frCoreClasses,
   frxExportBaseImageSettingsDialog, JvComponentBase, JvEnterTab,
   cxLocalization;
 
@@ -192,7 +192,7 @@ begin
     AClb.Items.Clear;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text := ASQL;
       q.Open;
       while not q.Eof do
@@ -349,7 +349,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'SELECT COUNT(*) AS C ' +
       '  FROM INFORMATION_SCHEMA.TABLES ' +
@@ -579,7 +579,7 @@ begin
   with unqryEfectosPagoPrint do
   begin
     Close;
-    Connection := oConn;
+    Connection := ConexionPrincipal;
     SQL.Text := SQLListado;
     ParamByName('pDESDE').AsDateTime := DateOf(FechaDesde);
     ParamByName('pHASTA').AsDateTime := DateOf(FechaHasta);

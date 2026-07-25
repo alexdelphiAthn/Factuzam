@@ -280,6 +280,7 @@ begin
   begin
     ShowMto(Self.Owner,
             ResolverCallFactura(
+              ConexionPrincipal,
               FieldByName('NUMERO_FAC').AsString,
               FieldByName('SERIE_FAC').AsString),
             FieldByName('NUMERO_FAC').AsString + ',' +

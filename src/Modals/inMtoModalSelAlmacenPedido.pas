@@ -119,7 +119,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibtb, inLibFormatoDocumento;
+  inLibtb, inLibFormatoDocumento;
 
 {$R *.dfm}
 
@@ -144,19 +144,24 @@ begin
   AlbaranSerieDestino  := '';
   AlbaranNumDestino    := '';
   // Conexion de las queries que usa el modal.
-  unqryTemporadas.Connection := oConn;
-  unqryAlbExist.Connection   := oConn;
+  unqryTemporadas.Connection := ConexionPrincipal;
+  unqryAlbExist.Connection   := ConexionPrincipal;
 end;
 
 procedure TfrmModalSelAlmacenPedido.FormShow(Sender: TObject);
 begin
   inherited;
   lblPedido.Caption := 'Crear albarán desde pedido ' +
-    FormatearDocumentoEmpresa(CodigoEmpresa, SeriePedc, NumPedc);
+    FormatearDocumentoEmpresa(ConexionPrincipal, CodigoEmpresa, SeriePedc,
+      NumPedc);
   CargarAlmacenes;
   ConfigurarLookupTemporada;
   // Defaults. El combo de serie ofrece las series 'AB' de la empresa.
-  CargarSeriesEmpresa(CodigoEmpresa, 'AB', cbbSerieAlb.Properties.Items);
+  CargarSeriesEmpresa(
+    ConexionPrincipal,
+    CodigoEmpresa,
+    'AB',
+    cbbSerieAlb.Properties.Items);
   cbbSerieAlb.Text := SerieAlbDefecto;
   CargarAlbaranesExistentes;
   // Por defecto se crea un albaran nuevo; el usuario decide si incorpora.
@@ -200,7 +205,7 @@ begin
   // (que en el modal es definitivo) puede ser distinto del que figura
   // en las lineas — util cuando el pedido se generaliza al almacen
   // central y el albaran se hace contra una tienda concreta.
-  unqryAlmacenes.Connection := oConn;
+  unqryAlmacenes.Connection := ConexionPrincipal;
   if not unqryAlmacenes.Active then
     unqryAlmacenes.Open
   else
@@ -226,7 +231,11 @@ begin
     sAlm := ''
   else
     sAlm := Trim(VarToStr(vAlm));
-  sSerie := ObtenerSeriePropiaAlmacen(CodigoEmpresa, 'AB', sAlm);
+  sSerie := ObtenerSeriePropiaAlmacen(
+    ConexionPrincipal,
+    CodigoEmpresa,
+    'AB',
+    sAlm);
   if sSerie = '' then
     sSerie := SerieAlbDefecto;
   cbbSerieAlb.Text := sSerie;
@@ -258,7 +267,7 @@ procedure TfrmModalSelAlmacenPedido.CargarAlbaranesExistentes;
 begin
   // Albaranes de compra ya creados desde ESTE pedido y no facturados ni
   // cancelados: son los unicos destinos validos para incorporar lineas.
-  unqryAlbExist.Connection := oConn;
+  unqryAlbExist.Connection := ConexionPrincipal;
   if unqryAlbExist.Active then
     unqryAlbExist.Close;
   unqryAlbExist.ParamByName('np').AsString := NumPedc;

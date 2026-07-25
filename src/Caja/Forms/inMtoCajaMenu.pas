@@ -175,7 +175,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibCajaParam, inLibPermisosIntf,
+  inLibCajaParam, inLibPermisosIntf,
   DateUtils, inMtoConsultaOpe, inMtoPrincipal,
   inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja;
 
@@ -240,7 +240,7 @@ begin
     calMes.Enabled := False;
   // Crear el caché ANTES de cualquier cosa que pueda disparar eventos del
   // calendario
-  FVentasCal := TVentasCalendarioCache.Create(oConn);
+  FVentasCal := TVentasCalendarioCache.Create(ConexionPrincipal);
 
   if oCajaParams.GetBool('vgerShowCajaSelection', True) then
     AbrirSelectorCaja
@@ -404,7 +404,7 @@ var
 begin
   frm := TfrmMtoModalCajDef.Create(Self);
   try
-    frm.qrySeleccion.Connection := oConn;
+    frm.qrySeleccion.Connection := ConexionPrincipal;
     frm.qrySeleccion.Open;
     // Cierra el cronometro SQL antes de entrar en el selector modal.
     CerrarMonitorSQLPendiente;
@@ -687,7 +687,7 @@ end;
 
 procedure TfrmMtoMenuCaja.lblEntradaCambioClick(Sender: TObject);
 begin
-  TfrmModalEntradaCambio.Ejecutar(Self, oConn,
+  TfrmModalEntradaCambio.Ejecutar(Self, ConexionPrincipal,
     FEmpresa, FAlmacen, FCaja, FFechaCaja);
 end;
 
@@ -716,7 +716,7 @@ end;
 // F7 - Gastos por Caja
 procedure TfrmMtoMenuCaja.lblGastosCajaClick(Sender: TObject);
 begin
-  TfrmModalGastoCaja.Ejecutar(Self, oConn,
+  TfrmModalGastoCaja.Ejecutar(Self, ConexionPrincipal,
     FEmpresa, FAlmacen, FCaja, FFechaCaja);
 end;
 
@@ -763,7 +763,7 @@ begin
     Exit;
   end;
   TfrmModalArqueo.Ejecutar(Self,
-                           oConn,
+                           ConexionPrincipal,
                            FEmpresa,
                            FAlmacen,
                            FCaja,

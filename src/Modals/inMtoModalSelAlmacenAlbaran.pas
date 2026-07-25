@@ -108,7 +108,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibFormatoDocumento;
+  inLibFormatoDocumento;
 
 {$R *.dfm}
 
@@ -157,15 +157,16 @@ begin
   FEsExistente   := False;
   FNumeroAlb     := '';
   FSerieAlb      := '';
-  unqryAlmacenes.Connection    := oConn;
-  unqryAlbaranesPed.Connection := oConn;
+  unqryAlmacenes.Connection    := ConexionPrincipal;
+  unqryAlbaranesPed.Connection := ConexionPrincipal;
 end;
 
 procedure TfrmModalSelAlmacenAlbaran.FormShow(Sender: TObject);
 begin
   inherited;
   lblPedido.Caption := 'Crear albarán desde pedido ' +
-    FormatearDocumentoEmpresa(FCodigoEmpresa, FSeriePed, FNumPed);
+    FormatearDocumentoEmpresa(ConexionPrincipal, FCodigoEmpresa, FSeriePed,
+      FNumPed);
   CargarAlmacenes;
   CargarAlbaranesPedido;
   // Defecto: almacen comun de las lineas a entregar. Si viene vacio
@@ -195,7 +196,7 @@ end;
 procedure TfrmModalSelAlmacenAlbaran.CargarAlmacenes;
 begin
   // Combo con todos los almacenes activos.
-  unqryAlmacenes.Connection := oConn;
+  unqryAlmacenes.Connection := ConexionPrincipal;
   if unqryAlmacenes.Active then
     unqryAlmacenes.Close;
   unqryAlmacenes.Open;
@@ -206,7 +207,7 @@ procedure TfrmModalSelAlmacenAlbaran.CargarAlbaranesPedido;
 begin
   // Albaranes ya creados desde ESTE pedido y no facturados; son los
   // unicos destinos validos para anadir lineas.
-  unqryAlbaranesPed.Connection := oConn;
+  unqryAlbaranesPed.Connection := ConexionPrincipal;
   if unqryAlbaranesPed.Active then
     unqryAlbaranesPed.Close;
   unqryAlbaranesPed.ParamByName('np').AsString := FNumPed;

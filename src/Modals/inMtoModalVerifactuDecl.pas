@@ -151,7 +151,8 @@ begin
   end;
 end;
 
-function AnexoEmpresasInstalacionHtml: string;
+function AnexoEmpresasInstalacionHtml(
+  AConexion: TUniConnection): string;
 var
   Qry:       TUniQuery;
   sFilas:    string;
@@ -167,7 +168,7 @@ begin
   iTotal := 0;
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := oConn;
+    Qry.Connection := AConexion;
     Qry.SQL.Text :=
       ' SELECT CODIGO_EMP_EMP, RAZON_SOCIAL_EMP, NIF_EMP, ESACTIVO_EMP, ' +
       '        NUMERO_INSTALACION_EMP, VERSION_INSTALACION_EMP, ' +
@@ -257,14 +258,17 @@ begin
     '</section>' + sLineBreak;
 end;
 
-function AgregarAnexoImpresion(const AHtml: string): string;
+function AgregarAnexoImpresion(
+  AConexion: TUniConnection;
+  const AHtml: string): string;
 var
   iPosBody: Integer;
   sHtmlMin: string;
   sBloque:  string;
 begin
   Result := AHtml;
-  sBloque := CssAnexoImpresion + AnexoEmpresasInstalacionHtml;
+  sBloque := CssAnexoImpresion +
+    AnexoEmpresasInstalacionHtml(AConexion);
   sHtmlMin := AnsiLowerCase(Result);
   iPosBody := Pos('</body>', sHtmlMin);
   if iPosBody > 0 then
@@ -316,7 +320,7 @@ var
   sNumero: string;
 begin
   try
-    if ObtenerEmpresaInstalacionSifDefecto(oConn, oEstado) then
+    if ObtenerEmpresaInstalacionSifDefecto(ConexionPrincipal, oEstado) then
     begin
       sNumero := oEstado.Numero;
       if sNumero = '' then
@@ -370,7 +374,9 @@ begin
     begin
       FHtmlDeclaracion := AjustarHtmlParaVisor(DescargarHtmlDeclaracion);
     end;
-    sHtml := AgregarAnexoImpresion(FHtmlDeclaracion);
+    sHtml := AgregarAnexoImpresion(
+      ConexionPrincipal,
+      FHtmlDeclaracion);
     sArchivo := GuardarHtmlTemporalImpresion(sHtml);
     FWebDeclaracion.Navigate(sArchivo);
     if not EsperarCargaWeb(FWebDeclaracion, 15000) then
@@ -401,7 +407,7 @@ begin
   lblInstalacionEstado.Caption := 'Solicitando número al servicio...';
   Application.ProcessMessages;
   try
-    oEstado := GenerarInstalacionSifEmpresa(oConn,
+    oEstado := GenerarInstalacionSifEmpresa(ConexionPrincipal,
       IdentidadSesion.Usuario, '');
     lblInstalacionEstado.Caption := 'Número disponible y guardado.';
     ShowMessage('Número de instalación SIF disponible: ' + oEstado.Numero);

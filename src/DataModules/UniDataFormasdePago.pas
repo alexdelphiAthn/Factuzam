@@ -42,7 +42,7 @@ type
 implementation
 
 uses
-  inMtoFormasdePago, inLibGlobalVar, inLibLog, System.Diagnostics;
+  inMtoFormasdePago, inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -67,9 +67,9 @@ procedure TdmFormasdePago.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   // Solo Connection + MasterSource. Los .Open se han movido a AbrirDetalles.
-  unstrdprcContador.Connection := oConn;
-  unqryFacturas.Connection := oConn;
-  unqryFacturasLineas.Connection := oConn;
+  unstrdprcContador.Connection := ConexionPrincipal;
+  unqryFacturas.Connection := ConexionPrincipal;
+  unqryFacturasLineas.Connection := ConexionPrincipal;
   unqryFacturas.MasterSource := (GetOwnerForm<TfrmMtoFormasdePago>).dsTablaG;
   unqryFacturasLineas.MasterSource :=
                                    (GetOwnerForm<TfrmMtoFormasdePago>).dsTablaG;

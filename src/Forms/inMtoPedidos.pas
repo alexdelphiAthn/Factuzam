@@ -355,7 +355,11 @@ begin
   begin
     sEmpresa := Trim(UbicacionSesion.Empresa);
   end;
-  CargarSeriesEmpresa(sEmpresa, 'PE', cbbSERIE_PED.Properties.Items);
+  CargarSeriesEmpresa(
+    ConexionPrincipal,
+    sEmpresa,
+    'PE',
+    cbbSERIE_PED.Properties.Items);
   if cbbSERIE_PED.Properties.Items.Count = 0 then
   begin
     if MessageDlg('No hay series de pedidos de venta mayor (tipo PE) ' +
@@ -425,7 +429,8 @@ begin
       qry.ParamByName('tarifa').AsString := sTarifa;
       qry.ParamByName('fecha').AsDateTime := dFecha;
       if TBusquedaUtils.EjecutarBusqueda(
-           'Búsqueda de Artículos en Líneas de Pedido',
+        ConexionPrincipal,
+        'Búsqueda de Artículos en Líneas de Pedido',
            qry,
            'frmMtoArtFacSearch',
            Self) then
@@ -492,7 +497,8 @@ begin
         ' ORDER BY SK.CODIGO_UNIDAD_SKU';
       qry.ParamByName('art').AsString := sArt;
       if TBusquedaUtils.EjecutarBusqueda(
-           'SKUs del artículo ' + sArt,
+        ConexionPrincipal,
+        'SKUs del artículo ' + sArt,
            qry,
            'frmMtoPedSkuSearch',
            Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
@@ -901,7 +907,8 @@ begin
     FBuscandoDatosCabecera := True;
     try
       if TBusquedaUtils.EjecutarBusqueda(
-           'Búsqueda de Empresas en Pedidos',
+        ConexionPrincipal,
+        'Búsqueda de Empresas en Pedidos',
            dmmPedidos.unqryEmpDataPedido,
            'frmMtoEmpFacSearch',
            Self) then
@@ -922,7 +929,8 @@ begin
     FBuscandoDatosCabecera := True;
     try
       if TBusquedaUtils.EjecutarBusqueda(
-           'Búsqueda de Clientes en Pedidos',
+        ConexionPrincipal,
+        'Búsqueda de Clientes en Pedidos',
            dmmPedidos.unqryCliDataPedido,
            'frmMtoCliFacSearch',
            Self) then
@@ -1315,8 +1323,7 @@ var
 begin
   inherited;
   // Al salir del grid hacia la cabecera, la linea vacia auto-anadida
-  // (AsegurarPrimeraLineaPedido) se cancela. Si quedara en dsInsert,
-  // cualquier Edit de la cabecera (p.ej. elegir almacen) fuerza su Post
+  // (AsegurarPrimeraLineaPedido) se cancela. Si quedara en dsInsert,// cualquier Edit de la cabecera (p.ej. elegir almacen) fuerza su Post
   // via CheckBrowseMode del master-detail y choca con la guarda de
   // linea sin articulo (bucle contador del 07/07/2026).
   if Assigned(dmmPedidos) then
@@ -1415,8 +1422,7 @@ begin
     tvPedidosLineas.OnFocusedRecordChanged := nil;
     tvPedidosLineas.OnFocusedItemChanged := nil;
     tvPedidosLineas.OnCustomDrawCell := nil;
-    // Las columnas del modo saliente guardan handlers (OnGetProperties,
-    // OnCustomDrawCell...) del objeto que se libera en la linea de abajo.
+    // Las columnas del modo saliente guardan handlers (OnGetProperties,// OnCustomDrawCell...) del objeto que se libera en la linea de abajo.
     // Se eliminan ANTES: el repintado que provoca DesempaquetarAtributos-
     // Lineas llamaria a un modo muerto (AV en ArtGetProperties 07/07/26).
     tvPedidosLineas.ClearItems;
@@ -1616,8 +1622,7 @@ end;
 procedure TfrmMtoPedidos.ModoEntradaResuelto(const ACodArt, ASku,
   ADescripcion: string; ACompleto: Boolean);
 begin
-  // El flujo fiscal clasico del pedido (tarifa de cabecera, IVA,
-  // precios, total y CODIGOPRODPS para el albaraneado) se reaprovecha
+  // El flujo fiscal clasico del pedido (tarifa de cabecera,IVA,// precios,total y CODIGOPRODPS para el albaraneado) se reaprovecha
   // tal cual: AplicarArticuloPedido acepta articulo o SKU.
   if ACompleto and (ASku <> '') then
     AplicarArticuloPedido(ASku);

@@ -56,7 +56,7 @@ Comprobar ($proyecto -notmatch
   'El proyecto no registra la compatibilidad eliminada'
 
 $patronSimbolosGlobales =
-  '(?i)\b(TLogSesionProc|oInfGuiasCache|oConn|oMemoSQL|ofrmMto2|' +
+  '(?i)\b(TLogSesionProc|oInfGuiasCache|oMemoSQL|ofrmMto2|' +
   'oNomImpresoraCaja|oAppName|oVersion|oAll|oLogSesion|' +
   'oLicenciaAplicacionComprobada|oLicenciaAplicacionBBDD|' +
   'oLicenciaAplicacionEstado|oLicenciaAplicacionMensaje|' +
@@ -73,7 +73,7 @@ foreach ($archivo in $archivosPascal) {
   }
 }
 Comprobar ($usesHuerfanos.Count -eq 0) `
-  'No quedan uses de inLibGlobalVar sin un consumidor real'
+  'No quedan uses huerfanos de inLibGlobalVar'
 
 $unidadesLimpiadas = @(
   'src\DataModules\UniDataEmpleados.pas',
@@ -109,11 +109,20 @@ foreach ($archivo in $dfm) {
 Comprobar (($dfmConConexion.Count -eq 52) -and ($enlaces -eq 253)) `
   'Se conservan los 253 enlaces persistentes de 52 DFM'
 
-$dfmModificados = @(
-  & git -C $raiz diff --name-only -- 'src/*.dfm' 'src/**/*.dfm'
+$dfmPermitidosXI_B1 = @(
+  'src\Forms\inMtoStockConsulta.dfm',
+  'src\Modals\inMtoModalFacturarAlbaranesFechas.dfm'
 )
-Comprobar ($dfmModificados.Count -eq 0) `
-  'No se modifica ningún DFM'
+$dfmModificados = @(
+  & git -C $raiz diff --name-only -- 'src/*.dfm' 'src/**/*.dfm' |
+    ForEach-Object { $_.Replace('/', '\') }
+)
+$dfmFueraXI_B1 = @(
+  $dfmModificados |
+    Where-Object { $dfmPermitidosXI_B1 -notcontains $_ }
+)
+Comprobar ($dfmFueraXI_B1.Count -eq 0) `
+  'Solo XI-B1 modifica DFM para introducir herencia visual'
 
 $dumpModificado = @(
   & git -C $raiz diff --name-only -- 'factuzam_original.sql'

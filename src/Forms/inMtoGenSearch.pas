@@ -342,6 +342,7 @@ begin
          (FConfigAlta.TipoDocContador <> '') then
       begin
         sCodigoFinal := ObtenerSiguienteContador(
+          ConexionPrincipal,
           FConfigAlta.TipoDocContador,
           IdentidadSesion.Usuario);
         if sCodigoFinal = '' then

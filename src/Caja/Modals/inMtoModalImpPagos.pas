@@ -35,7 +35,7 @@ uses
   Vcl.ComCtrls, dxCore, cxStyles, dxSkinsForm, cxClasses, cxLocalization,
   JvComponentBase, JvEnterTab, System.Actions, Vcl.ActnList, frxSmartMemo,
   frLocalization, frLanguageSpanish, frxExportBaseImageSettingsDialog,
-  frCoreClasses, inLibGlobalVar;
+  frCoreClasses;
 
 type
   TfrmPrintPagos = class(TfrmPrint)
@@ -133,7 +133,7 @@ begin
     FCodigosFP.Clear;
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := ConexionPrincipal;
       qry.SQL.Text :=
         ' SELECT DISTINCT p.CODIGO_FP_CFP AS COD,                         ' +
         '        COALESCE(fp.DESCRIPCION_FORMA_PAGO_FP, p.CODIGO_FP_CFP)  ' +
@@ -179,7 +179,7 @@ begin
   bCambio := False;
   frm := TfrmMtoModalCajDef.Create(Self);
   try
-    frm.qrySeleccion.Connection := oConn;
+    frm.qrySeleccion.Connection := ConexionPrincipal;
     frm.qrySeleccion.SQL.Text :=
       ' SELECT * FROM vi_cajasdef WHERE Empresa = :pEMP ' +
       ' ORDER BY Almacen, Caja ';
@@ -261,7 +261,7 @@ begin
   with unqryPagosPrint do
   begin
     Close;
-    Connection := oConn;
+    Connection := ConexionPrincipal;
     SQL.Text :=
       ' SELECT *                                                          ' +
       '   FROM vi_caja_pagos                                              ' +

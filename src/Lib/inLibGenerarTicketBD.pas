@@ -21,7 +21,6 @@ uses
   System.Classes,
   Data.DB,
   Uni,
-  inLibGlobalVar,      // Donde está tu oConn
   inLibFTicket,        // Donde está tu TTicketTermico
   inMtoPreviewTicket,  // Donde está tu TFormVisualizador
   inLibData,
@@ -32,7 +31,8 @@ uses
   /// Genera un resguardo no fiscal con las prendas que el cliente
   ///tiene apartadas.
   /// </summary>
-  procedure ImprimirResguardoDeposito(const ACodigoEmpresa,
+  procedure ImprimirResguardoDeposito(AConexion: TUniConnection;
+                                      const ACodigoEmpresa,
                                             ACodigoAlmacen,
                                             ACodigoCaja,
                                             AOperacion: string;
@@ -43,14 +43,16 @@ uses
   /// Genera e imprime un ticket recuperando todos los datos
   /// directamente de la Base de Datos.
   /// </summary>
-  procedure ImprimirTicketDesdeBD(const ACodigoEmpresa,
+  procedure ImprimirTicketDesdeBD(AConexion: TUniConnection;
+                                  const ACodigoEmpresa,
                                         ACodigoAlmacen,
                                         ACodigoCaja,
                                         ANumeroOperacion: string;
                                   const ANombreImpresora: string = 'DEBUG';
                                   ARutasPDF: TStrings = nil;
                                   ASoloPDF: Boolean = False);
-  procedure ImprimirRecordatorio(const ACodigoEmpresa: string;
+  procedure ImprimirRecordatorio(AConexion: TUniConnection;
+                                 const ACodigoEmpresa: string;
                                  CodigoCliente:string;
                                  NombreImpresora:string='DEBUG';
                                  ARutasPDF: TStrings = nil;
@@ -74,7 +76,8 @@ begin
     Result := StringOfChar(APadChar, ALength - CurrentLength) + AValue;
 end;
 
-procedure ImprimirResguardoDeposito(const ACodigoEmpresa,
+procedure ImprimirResguardoDeposito(AConexion: TUniConnection;
+                                    const ACodigoEmpresa,
                                           ACodigoAlmacen,
                                           ACodigoCaja,
                                           AOperacion: string;
@@ -98,8 +101,8 @@ begin
   QrySec := TUniQuery.Create(nil);
   QryEmp := TUniQuery.Create(nil);
   try
-    QrySec.Connection := inLibGlobalVar.oConn;
-    QryEmp.Connection := inLibGlobalVar.oConn;
+    QrySec.Connection := AConexion;
+    QryEmp.Connection := AConexion;
     // 1. Datos de la empresa para la cabecera
     QryEmp.SQL.Text := 'SELECT RAZON_SOCIAL_EMP ' +
                        '  FROM fza_empresas ' +
@@ -392,7 +395,7 @@ begin
       Ticket.EscribirLinea('Conforme, el cliente');
       Ticket.SaltarLineas(4);
       Ticket.LineaSeparadora('_');
-      EscribirPieTicketCaja(Ticket, ACodigoEmpresa);
+      EscribirPieTicketCaja(AConexion, Ticket, ACodigoEmpresa);
       Ticket.CortarPapel;
       // =======================================================================
       // IMPRESIÓN / VISUALIZACIÓN
@@ -413,7 +416,8 @@ begin
   end;
 end;
 
-procedure ImprimirTicketDesdeBD(const ACodigoEmpresa,
+procedure ImprimirTicketDesdeBD(AConexion: TUniConnection;
+                                const ACodigoEmpresa,
                                       ACodigoAlmacen,
                                       ACodigoCaja,
                                       ANumeroOperacion: string;
@@ -433,9 +437,9 @@ begin
   QryPagos := TUniQuery.Create(nil);
 
   try
-    QryCab.Connection   := inLibGlobalVar.oConn;
-    QryLin.Connection   := inLibGlobalVar.oConn;
-    QryPagos.Connection := inLibGlobalVar.oConn;
+    QryCab.Connection   := AConexion;
+    QryLin.Connection   := AConexion;
+    QryPagos.Connection := AConexion;
 
     // 1. OBTENER CABECERA DE OPERACIÓN Y FACTURA
     QryCab.SQL.Text :=
@@ -471,7 +475,7 @@ begin
         QryCab.FieldByName('INSTANTE_ALTA_OPCAJA').AsDateTime);
     SerieFac := QryCab.FieldByName('SERIE_FAC').AsString;
     NroFac   := QryCab.FieldByName('NUMERO_FAC').AsString;
-    DocumentoFac := FormatearDocumentoEmpresa(ACodigoEmpresa,
+    DocumentoFac := FormatearDocumentoEmpresa(AConexion, ACodigoEmpresa,
       SerieFac, NroFac);
     // 2. INICIALIZAR IMPRESORA
     // QR tributario fiscal en la reimpresión: misma URL de cotejo/remisión
@@ -648,8 +652,9 @@ begin
       Ticket.Alinear(alCentro);
       // Mostramos el diminutivo de ticket del vendedor (fza_empleados) en
       // lugar de su codigo, igual que en la impresion de la venta.
-      Ticket.EscribirLinea('LE ATENDIÓ: ' + ObtenerDiminutivoVendedor(
-                  QryCab.FieldByName('CODIGO_EMPLEADO_OPCAJA').AsString));
+      Ticket.EscribirLinea('LE ATENDIÓ: ' +
+        ObtenerDiminutivoVendedor(AConexion,
+          QryCab.FieldByName('CODIGO_EMPLEADO_OPCAJA').AsString));
       Ticket.EscribirLinea('IVA INCLUIDO');
       Ticket.EscribirLinea('GRACIAS POR SU VISITA');
       // Textos legales (si están rellenos en la DB)
@@ -660,7 +665,7 @@ begin
         Ticket.EscribirLinea(QryCab.FieldByName(
                                'TEXTO_LEGAL_EMPRESA_FAC').AsString);
       end;
-      EscribirPieTicketCaja(Ticket, ACodigoEmpresa);
+      EscribirPieTicketCaja(AConexion, Ticket, ACodigoEmpresa);
       var CodigoCliente := qryCab.FieldByName('CODIGO_CLI_FAC').AsString;
 //      ImprimirRecordatorio(CodigoCliente);
       Ticket.CortarPapel;
@@ -683,7 +688,8 @@ begin
   end;
 end;
 
-procedure ImprimirRecordatorio(const ACodigoEmpresa: string;
+procedure ImprimirRecordatorio(AConexion: TUniConnection;
+                               const ACodigoEmpresa: string;
                                CodigoCliente:   string;
                                NombreImpresora: string = 'DEBUG';
                                ARutasPDF: TStrings = nil;
@@ -706,7 +712,7 @@ begin
     // ── Datos de la empresa del contexto ─────────────────────────────────
     var QryEmp := TUniQuery.Create(nil);
     try
-      QryEmp.Connection := inLibGlobalVar.oConn;
+      QryEmp.Connection := AConexion;
       QryEmp.SQL.Text :=
         'SELECT CODIGO_EMP_EMP, RAZON_SOCIAL_EMP ' +
         '  FROM fza_empresas ' +
@@ -725,7 +731,7 @@ begin
     // ── Depósitos pendientes del cliente con sus cobros ───────────────────
     var QryAnticipo := TUniQuery.Create(nil);
     try
-      QryAnticipo.Connection := inLibGlobalVar.oConn;
+      QryAnticipo.Connection := AConexion;
       QryAnticipo.SQL.Text :=
           'SELECT o.TIPO_OPERACION_OPCAJA, ' +
           '       o.IMPORTE_TOTAL_OPCAJA, ' +
@@ -740,7 +746,7 @@ begin
           ' ORDER BY o.FECHA_OPERACION_OPCAJA';
       var QryDep := TUniQuery.Create(nil);
       try
-        QryDep.Connection := inLibGlobalVar.oConn;
+        QryDep.Connection := AConexion;
         QryDep.SQL.Text :=
           'SELECT dep.ID_DEPOSITO_DEP, ' +
           '       dep.CODIGO_UNIDAD_DEP, ' +

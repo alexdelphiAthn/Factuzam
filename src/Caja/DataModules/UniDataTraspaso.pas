@@ -20,7 +20,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Data.DB, Datasnap.DBClient, Uni, MemDS,
-  DBAccess, System.Math, System.StrUtils, inLibGlobalVar, inLibtb,
+  DBAccess, System.Math, System.StrUtils, inLibtb,
   inLibContextoSesionIntf;
 
 type
@@ -41,6 +41,7 @@ type
     qryAux: TUniQuery;
     procedure DataModuleCreate(Sender: TObject);
   private
+    FConexion: TUniConnection;
     FModo: TModoTraspaso;
     FContextoSesion: IContextoSesionAplicacion;
     function GetIdentidadSesion: TIdentidadSesion;
@@ -87,7 +88,9 @@ type
     procedure MarcarSolicitudAtendida(QryTrx: TUniQuery;
                              const ANumero, ASerie: string);
   public
-    constructor Create(AOwner: TComponent); override;
+    constructor Create(
+      AOwner: TComponent;
+      AConexion: TUniConnection); reintroduce;
     property IdentidadSesion: TIdentidadSesion read GetIdentidadSesion;
     property Modo: TModoTraspaso read FModo write FModo;
     procedure PrepararNuevo(AModo: TModoTraspaso; const AEmpresa, AAlmacen,
@@ -133,10 +136,13 @@ implementation
 
 {$R *.dfm}
 
-constructor TdmTraspaso.Create(AOwner: TComponent);
+constructor TdmTraspaso.Create(
+  AOwner: TComponent;
+  AConexion: TUniConnection);
 var
   ProveedorContexto: IProveedorContextoSesion;
 begin
+  FConexion := AConexion;
   FContextoSesion := nil;
   if Supports(AOwner, IProveedorContextoSesion, ProveedorContexto) then
     FContextoSesion := ProveedorContexto.ContextoSesion;
@@ -153,7 +159,7 @@ end;
 
 procedure TdmTraspaso.DataModuleCreate(Sender: TObject);
 begin
-  qryAux.Connection := oConn;
+  qryAux.Connection := FConexion;
   ConfigurarEstructuraCabecera;
   ConfigurarEstructuraLineas;
   cdsLineas.OnNewRecord := cdsLineasNewRecord;
@@ -402,7 +408,7 @@ var
 begin
   SpTrx := TUniStoredProc.Create(nil);
   try
-    SpTrx.Connection := oConn;
+    SpTrx.Connection := FConexion;
     SpTrx.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
     SpTrx.Prepare;
     SpTrx.ParamByName('pserie').AsString := ASerie;
@@ -464,7 +470,7 @@ var
 begin
   SpTrx := TUniStoredProc.Create(nil);
   try
-    SpTrx.Connection := oConn;
+    SpTrx.Connection := FConexion;
     SpTrx.StoredProcName := 'PRC_GET_NEXT_OP_CAJA';
     SpTrx.Params.CreateParam(ftString, 'pEmpresa', ptInput).AsString :=
       AEmpresa;
@@ -505,7 +511,8 @@ var
   QryFecha: TUniQuery;
   sNumeroMov: string;
 begin
-  sNumeroMov := inLibtb.ObtenerSiguienteContador('MV', IdentidadSesion.Usuario);
+  sNumeroMov := inLibtb.ObtenerSiguienteContador(FConexion, 'MV',
+    IdentidadSesion.Usuario);
   uspMov := TUniStoredProc.Create(nil);
   try
     uspMov.Connection := QryTrx.Connection;
@@ -656,12 +663,12 @@ begin
   sSerieDoc := ObtenerSerieDocumento(sEmpresa, sAlmacenOrigen, sCaja, sTipoDoc);
   QryTrx := TUniQuery.Create(nil);
   try
-    QryTrx.Connection := oConn;
+    QryTrx.Connection := FConexion;
     ANumOperacion := SiguienteOpCaja(sEmpresa, sAlmacenOrigen, sCaja, sUsuario);
     // Número del documento dentro de la serie (mismo SP que la factura).
     sNumeroDoc := SiguienteNumeroDocumento(sSerieDoc, sTipoDoc, sEmpresa,
                                            sUsuario);
-    oConn.StartTransaction;
+    FConexion.StartTransaction;
     try
       cTotal := 0;
       iLinea := 0;
@@ -703,10 +710,10 @@ begin
         sEmpContra, AAlmacenDestino, 'S', sNumeroDoc, sSerieDoc);
       if Trim(ANumSolicitud) <> '' then
         MarcarSolicitudAtendida(QryTrx, ANumSolicitud, ASerieSolicitud);
-      oConn.Commit;
+      FConexion.Commit;
       Result := True;
     except
-      oConn.Rollback;
+      FConexion.Rollback;
       raise;
     end;
   finally
@@ -805,12 +812,13 @@ begin
   if SameText(sAlmacenPropio, AAlmacenOrigen) then
     raise EValidacionTraspaso.Create('No puedes solicitarte a ti mismo.');
   sEmpContra := ObtenerEmpresaAlmacen(AAlmacenOrigen);
-  ANumero := inLibtb.ObtenerSiguienteContador('TS', IdentidadSesion.Usuario);
+  ANumero := inLibtb.ObtenerSiguienteContador(FConexion, 'TS',
+    IdentidadSesion.Usuario);
   ASerie := 'TS';
   QryTrx := TUniQuery.Create(nil);
   try
-    QryTrx.Connection := oConn;
-    oConn.StartTransaction;
+    QryTrx.Connection := FConexion;
+    FConexion.StartTransaction;
     try
       QryTrx.SQL.Text :=
         'INSERT INTO fza_traspasos_solicitudes (' +
@@ -867,10 +875,10 @@ begin
       end;
       if iLinea = 0 then
         raise EValidacionTraspaso.Create('No hay líneas que solicitar.');
-      oConn.Commit;
+      FConexion.Commit;
       Result := True;
     except
-      oConn.Rollback;
+      FConexion.Rollback;
       raise;
     end;
   finally
@@ -925,7 +933,7 @@ begin
   // salir. Cada fila lleva el resumen para el modal y el NUMERO/SERIE.
   sPropio := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
   Result := TUniQuery.Create(nil);
-  Result.Connection := oConn;
+  Result.Connection := FConexion;
   // Devolvemos los nombres reales de columna (sin alias) para que el
   // formateador (fza_config_campos / oConfigCampos) ponga los titulos, igual
   // que el resto de buscadores. El conteo de lineas pendientes es calculado,
@@ -953,7 +961,7 @@ begin
   // para que el formateador (fza_config_campos) ponga los titulos; el origen
   // es a quien pedi. El llamante libera el query.
   Result := TUniQuery.Create(nil);
-  Result.Connection := oConn;
+  Result.Connection := FConexion;
   Result.SQL.Text :=
     'SELECT S.NUMERO_TRSOL, S.SERIE_TRSOL, S.FECHA_TRSOL,' +
     '       S.CODIGO_ALM_ORIGEN_TRSOL, S.ESTADO_TRSOL,' +
@@ -1004,14 +1012,14 @@ begin
     raise EValidacionTraspaso.Create('No hay solicitud cargada que denegar.');
   QryTrx := TUniQuery.Create(nil);
   try
-    QryTrx.Connection := oConn;
-    oConn.StartTransaction;
+    QryTrx.Connection := FConexion;
+    FConexion.StartTransaction;
     try
       MarcarSolicitudAtendida(QryTrx, sNum, sSer);
-      oConn.Commit;
+      FConexion.Commit;
       Result := True;
     except
-      oConn.Rollback;
+      FConexion.Rollback;
       raise;
     end;
   finally

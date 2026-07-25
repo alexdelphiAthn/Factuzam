@@ -102,12 +102,15 @@ Comprobar (
     ($utilidades -notmatch '\bodmPerfiles\b')
   ) 'Las utilidades ya no dependen de la global de perfiles'
 Comprobar (
-    ($stock -match 'FPerfilesUsuario: IPerfilesUsuario') -and
+    ($stock -match
+      'TfrmStockConsulta\s*=\s*class\(TfrmBase\)') -and
+    ($stock -match '\bPerfilesUsuario\b') -and
+    ($stock -notmatch '\bFPerfilesUsuario\b') -and
     ($stock -match 'procedure DesvincularPerfilesStockConsulta') -and
     ($stock -notmatch '\bUniDataPerfiles\b|\bodmPerfiles\b') -and
     ($principal -match
       'DesvincularPerfilesStockConsulta;\s*AsignarPerfilesUsuario\(nil\)')
-  ) 'La consulta de stock recibe el servicio de forma explícita'
+  ) 'La consulta de stock hereda el servicio desde TfrmBase'
 Comprobar (
     ($modal -match '\bPerfilesUsuario\.') -and
     ($modal -notmatch '\bodmPerfiles\b')
@@ -158,10 +161,15 @@ $dfmObjetivo = @(
   'src/Modals/inMtoModalGenImp.dfm'
 )
 $dfmObjetivoModificados = @(
-  & git -C $raiz diff --name-only -- $dfmObjetivo
+  & git -C $raiz diff --name-only -- $dfmObjetivo |
+    ForEach-Object { $_.Replace('/', '\') }
 )
-Comprobar ($dfmObjetivoModificados.Count -eq 0) `
-  'No hay DFM modificados dentro del alcance de perfiles'
+$dfmObjetivoFueraXI_B1 = @(
+  $dfmObjetivoModificados |
+    Where-Object { $_ -ne 'src\Forms\inMtoStockConsulta.dfm' }
+)
+Comprobar ($dfmObjetivoFueraXI_B1.Count -eq 0) `
+  'Solo XI-B1 modifica el DFM de stock dentro de este alcance'
 
 $dumpModificado = @(
   & git -C $raiz diff --name-only -- 'factuzam_original.sql'

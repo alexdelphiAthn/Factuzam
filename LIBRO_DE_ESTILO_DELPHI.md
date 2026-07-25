@@ -347,10 +347,10 @@ Cuando un bloque de asignaciones repite el mismo destino o tiene
 estructura uniforme, se permite alinear los `:=`:
 
 ```pascal
-unqryTablaG.Connection           := inLibGlobalVar.oConn;
-unqryPedidosLineas.Connection    := inLibGlobalVar.oConn;
-unqryLinPedido.Connection        := inLibGlobalVar.oConn;
-unqryEmpDataPedido.Connection    := inLibGlobalVar.oConn;
+unqryTablaG.Connection           := ConexionPrincipal;
+unqryPedidosLineas.Connection    := ConexionPrincipal;
+unqryLinPedido.Connection        := ConexionPrincipal;
+unqryEmpDataPedido.Connection    := ConexionPrincipal;
 ```
 
 Igual con las firmas de funciones de muchos parámetros:
@@ -402,7 +402,7 @@ class function Ejecutar(
 | `b` / `Es` | `Boolean`          | `bEncontrado`, `EsIBANErr`        |
 | `d`     | `Double` / `Currency` | `dImporte`, `dTotal`              |
 | `dt`    | `TDateTime`           | `dtAlta`, `dtVencimiento`         |
-| `o`     | objeto                | `oConn`, `oCliente`               |
+| `o`     | objeto                | `oCliente`, `oServicio`           |
 | `st`    | `TStringList`         | `stErr`, `stLineas`               |
 | `f`     | constante de nombre de campo (ver §11) | `fnrofac`, `fcodcli` |
 
@@ -497,7 +497,11 @@ type
 Uso en el llamador:
 
 ```pascal
-res := TfrmModalCalcularMargen.Ejecutar(Self, oConn, idArttar, ...);
+res := TfrmModalCalcularMargen.Ejecutar(
+  Self,
+  ConexionPrincipal,
+  idArttar,
+  ...);
 if res.Aceptado then
   ...
 ```
@@ -508,15 +512,15 @@ Esta variante evita exponer `frmModalXxx.ShowModal` en cada llamador.
 
 - Hereda de `TdmBase`.
 - Su query principal se llama **siempre** `unqryTablaG`.
-- Asocia todas las conexiones a `inLibGlobalVar.oConn` en `DataModuleCreate`.
+- Asocia las queries a `ConexionPrincipal`, heredada de `TdmBase`.
 - Métodos de servicio en `PascalCase`: `GetCodigoAutoCliente`,
   `CrearDataSetEtiquetas(iNroEspaciosBlanco: Integer; sCodCli: string)`.
 
 ```pascal
 procedure TdmClientes.DataModuleCreate(Sender: TObject);
 begin
-  unqryTablaG.Connection := inLibGlobalVar.oConn;
-  unqryFacturasClientes.Connection := inLibGlobalVar.oConn;
+  unqryTablaG.Connection := ConexionPrincipal;
+  unqryFacturasClientes.Connection := ConexionPrincipal;
   ...
 end;
 ```
@@ -640,10 +644,10 @@ type
 
 ## 14. Constantes globales, variables globales y singletons
 
-- `inLibGlobalVar` es el módulo de **estado global** del programa
-  (conexión `oConn`, usuario actual, parametrización en memoria). Toda
-  variable global vive ahí; no se crean nuevas variables globales en
-  otras unidades.
+- `inLibGlobalVar` conserva únicamente compatibilidad para estado de UI y
+  parametrización todavía no migrado. No contiene conexión ni sesión.
+  No se crean nuevas variables globales: las dependencias nuevas se exponen
+  mediante interfaces o parámetros explícitos.
 - Constantes de dominio (porcentajes legales, códigos especiales, claves
   de parametrización) van en la librería del dominio o en
   `inLibGlobalVar` si son transversales.
@@ -1002,7 +1006,8 @@ el combo de niveles.
 ### 18.4 API pública — `inLibFotos`
 
 Singleton `oFotos: TFotosArticulos` creado en `initialization` de la
-unit. Reutiliza `inLibGlobalVar.oConn`.
+unit. La raíz de composición le entrega la conexión mediante
+`AsignarConexion`.
 
 ```pascal
 // Resolver con fallback
@@ -1384,7 +1389,7 @@ patrón, **no tienes que escribir nada**: el log ya cubre lo siguiente.
 | `TfrmMtoGen`  | Lo de `TfrmBase` (encadena por `inherited`)                                        |
 | `TdmBase`     | `EVT: <UnitName> | <DataSet.Name> | BeforeInsert | ''` (solo `unqryTablaG`)        |
 | `TdmBase`     | `EVT: <UnitName> | <DataSet.Name> | BeforePost | state=<estado>` (`unqryTablaG` y `unqryPerfiles`) |
-| Toda query que pase por `oConn` | `SQL: [OK|ERR] N ms | filas=- | <sentencia>` vía `UniSQLMonitor1` |
+| Toda query sobre la conexión principal | `SQL: [OK|ERR] N ms | filas=- | <sentencia>` vía `UniSQLMonitor1` |
 | Toda excepción no atrapada      | `ERROR: AppException <Clase>: <Mensaje>` + diálogo modal con detalle copiable     |
 
 Reglas que esto impone al código nuevo:
@@ -1394,9 +1399,9 @@ Reglas que esto impone al código nuevo:
 - **Data modules**: heredar de `TdmBase`. El dataset principal se llama
   `unqryTablaG` (§5.4 y §10.3). Si lo renombras, pierdes el autolog de
   `BeforeInsert` / `BeforePost`.
-- **Queries**: usar `inLibGlobalVar.oConn` como `Connection` (§10.3).
-  Si creas un `TUniConnection` paralelo, su SQL **no** se loguea
-  porque `UniSQLMonitor1` está cableado al conn global.
+- **Queries**: usar `ConexionPrincipal` en formularios y módulos base, o
+  recibir `AConexion: TUniConnection` en librerías (§10.3). No acceder a
+  `dmConn` ni introducir conexiones globales.
 - **Excepciones**: si las dejas subir sin `try/except`, las captura el
   manejador global. Solo envuelve en `try/except` cuando vas a reaccionar
   (§12.2). El comportamiento por defecto es el correcto.
@@ -1575,8 +1580,8 @@ intente mostrar diálogos sobre un form ya liberado.
 - [ ] El formulario hereda de `TfrmBase` o derivado → autolog Show/Close.
 - [ ] El data module hereda de `TdmBase` y su query principal se llama
       `unqryTablaG` → autolog BeforeInsert/BeforePost.
-- [ ] Todas las queries usan `inLibGlobalVar.oConn` → autolog SQL con
-      cronómetro.
+- [ ] Las queries usan `ConexionPrincipal` o una conexión recibida por
+      contrato; ninguna unidad introduce una conexión global.
 - [ ] Operaciones que puedan tardar > 100 ms instrumentadas con
       `Log.LogPerf` y `TStopwatch`.
 - [ ] Eventos relevantes del dominio (no triviales) con `Log.LogEvento`.

@@ -23,18 +23,20 @@ unit inLibInventarioNube;
 interface
 
 uses
-  System.SysUtils, System.Classes;
+  System.SysUtils, System.Classes, Uni;
 
 function InventarioNubeConfigurado(out AMensaje: string): Boolean;
 
-function EnviarInventario(const AEmp, AAlm, ASerie, ANumero, ADescripcion,
-  AModo: string; out AIdRecuento: Int64; out AMensaje: string): Boolean;
+function EnviarInventario(AConexion: TUniConnection;
+  const AEmp, AAlm, ASerie, ANumero, ADescripcion, AModo: string;
+  out AIdRecuento: Int64; out AMensaje: string): Boolean;
 
 // Recoge el recuento del servidor: inserta los eventos en INVREC y deja en
 // AAgregado la lista 'SKU=CANTIDAD' (lo que el Mto pasa a CargarDesdeListaSkus
 // para rellenar CANTIDAD_FISICA_INVLIN). ANumEventos = eventos insertados.
-function RecogerRecuento(const AEmp, AAlm, ASerie, ANumero, AUsuario: string;
-  AIdRecuento: Int64; AAgregado: TStringList; out ANumEventos: Integer;
+function RecogerRecuento(AConexion: TUniConnection;
+  const AEmp, AAlm, ASerie, ANumero, AUsuario: string; AIdRecuento: Int64;
+  AAgregado: TStringList; out ANumEventos: Integer;
   out AMensaje: string): Boolean;
 
 implementation
@@ -42,8 +44,8 @@ implementation
 uses
   System.JSON, System.Generics.Collections, System.NetEncoding,
   System.Net.HttpClient, System.Net.URLClient,
-  Data.DB, Uni,
-  inLibGlobalVar, inLibFactuzamApi;
+  Data.DB,
+  inLibFactuzamApi;
 
 // ============================================================================
 //   Configuración y transporte
@@ -168,8 +170,9 @@ end;
 //   Enviar inventario (plantilla)
 // ============================================================================
 
-function EnviarInventario(const AEmp, AAlm, ASerie, ANumero, ADescripcion,
-  AModo: string; out AIdRecuento: Int64; out AMensaje: string): Boolean;
+function EnviarInventario(AConexion: TUniConnection;
+  const AEmp, AAlm, ASerie, ANumero, ADescripcion, AModo: string;
+  out AIdRecuento: Int64; out AMensaje: string): Boolean;
 var
   qry: TUniQuery;
   root, linea: TJSONObject;
@@ -195,7 +198,7 @@ begin
       root.AddPair('modo', AModo);
       // Una fila por (línea, código de barras): el SKU se repite si tiene
       // varios códigos. El catálogo del servidor guarda una fila por código.
-      qry.Connection := oConn;
+      qry.Connection := AConexion;
       qry.SQL.Text :=
         ' SELECT L.CODIGO_ART_INVLIN, L.CODIGO_UNIDAD_INVLIN,' +
         '        L.DESCRIPCION_ARTICULO_INVLIN, L.CANTIDAD_TEORICA_INVLIN,' +
@@ -261,8 +264,9 @@ end;
 //   Recoger recuento
 // ============================================================================
 
-function RecogerRecuento(const AEmp, AAlm, ASerie, ANumero, AUsuario: string;
-  AIdRecuento: Int64; AAgregado: TStringList; out ANumEventos: Integer;
+function RecogerRecuento(AConexion: TUniConnection;
+  const AEmp, AAlm, ASerie, ANumero, AUsuario: string; AIdRecuento: Int64;
+  AAgregado: TStringList; out ANumEventos: Integer;
   out AMensaje: string): Boolean;
 var
   sResp: string;
@@ -292,7 +296,7 @@ begin
         begin
           oRoot := TJSONObject(respJson);
           // 1) Insertar cada evento en INVREC (idempotente por UUID).
-          ins.Connection := oConn;
+          ins.Connection := AConexion;
           ins.SQL.Text :=
             ' INSERT INTO fza_inventarios_recuentos' +
             '   (UUID_INVREC, CODIGO_EMP_INVREC, CODIGO_ALM_INVREC,' +

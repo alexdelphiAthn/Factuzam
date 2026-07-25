@@ -99,7 +99,6 @@ implementation
 
 {$R *.dfm}
 
-uses inLibGlobalVar;
 
 procedure TfrmMtoModalGenerarSKUS.GenerarCombinaciones(Nivel: Integer;
   NombreSKU, IdsValores: string);
@@ -169,8 +168,8 @@ end;
 
 procedure TfrmMtoModalGenerarSKUS.FormShow(Sender: TObject);
 begin
-  unqryMaestro.Connection := oConn;
-  unqryDetalle.Connection := oConn;
+  unqryMaestro.Connection := ConexionPrincipal;
+  unqryDetalle.Connection := ConexionPrincipal;
   tvMaestro.OnDblClick := tvMaestroDblClick;
   RecargarMaestro;
   unqryDetalle.Close;

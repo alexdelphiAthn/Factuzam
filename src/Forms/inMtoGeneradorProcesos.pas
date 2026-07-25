@@ -253,7 +253,7 @@ uses
   inLibUser,
   inLibNet,
   inLibDevExp,
-  inLibGlobalVar,
+
   inLibDir,
   Vcl.Clipbrd,
   ts.Editor.CodeFormatters, inMtoPrincipal;
@@ -847,7 +847,7 @@ begin
     uScript := TUniScript.Create(nil);
     try
       try
-        uScript.Connection := oConn;
+        uScript.Connection := ConexionPrincipal;
         uScript.SQL.Text := ASQL;
         // El parser de TUniScript respeta comentarios y literales al trocear
         for i := 0 to uScript.Statements.Count - 1 do
@@ -1044,7 +1044,7 @@ begin
   sError := '';
   qryDatos := TUniQuery.Create(nil);
   try
-    qryDatos.Connection := oConn;
+    qryDatos.Connection := ConexionPrincipal;
     qryDatos.SQL.Text := ASQL;
     startTime := Now;
     try
@@ -1262,7 +1262,7 @@ begin
         else
         begin
           uScript := TUniScript.Create(nil);
-          uScript.Connection := oConn;
+          uScript.Connection := ConexionPrincipal;
           uScript.OnError := UniScript1Error;
           uScript.AfterExecute := ScriptAfterExecute;
           try
@@ -1348,7 +1348,7 @@ begin
     with dmmGeneradorProcesos do
     begin
       unstrdprcRefresh.ParamByName('pDATABASENAME').AsString :=
-                                                    oConn.Database;
+                                                    ConexionPrincipal.Database;
       unstrdprcRefresh.ExecProc;
       if not unqryMetadatos.Active then
         unqryMetadatos.Open

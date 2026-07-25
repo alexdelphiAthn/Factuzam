@@ -30,7 +30,7 @@ uses
   cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxLabel,
   cxCheckListBox, cxCheckBox, cxCustomListBox, cxClasses, dxSkinsForm,
   System.Actions, Vcl.ActnList, frxSmartMemo, frLocalization,
-  frLanguageSpanish, frCoreClasses, inLibGlobalVar,
+  frLanguageSpanish, frCoreClasses,
   frxExportBaseImageSettingsDialog, JvComponentBase, JvEnterTab,
   cxLocalization;
 
@@ -137,7 +137,7 @@ begin
     FclbSeries.Items.Clear;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text :=
         'SELECT SERIE AS COD FROM (' +
         ' SELECT SERIE_PEDC AS SERIE FROM fza_pedidos_compra ' +
@@ -175,7 +175,7 @@ begin
   with unqryDocsProveedorPrint do
   begin
     Close;
-    Connection := oConn;
+    Connection := ConexionPrincipal;
     SQL.Text := SQLListado;
     ParamByName('pDESDE').AsDateTime := FechaDesde;
     ParamByName('pHASTA').AsDateTime := FechaHasta;

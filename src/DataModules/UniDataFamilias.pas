@@ -48,7 +48,7 @@ type
 implementation
 
 uses
-  inMtoFamilias, inLibGlobalVar;
+  inMtoFamilias;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -117,11 +117,11 @@ end;
 procedure TdmFamilias.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryPropiedades.Connection := oConn;
-  unstrdprcContador.Connection := oConn;
-  unqryArticulosFamilias.Connection := oConn;
-  unqrySubFamilias.Connection := oConn;
-  unqryFamiliasAtributos.Connection := oConn;
+  unqryPropiedades.Connection := ConexionPrincipal;
+  unstrdprcContador.Connection := ConexionPrincipal;
+  unqryArticulosFamilias.Connection := ConexionPrincipal;
+  unqrySubFamilias.Connection := ConexionPrincipal;
+  unqryFamiliasAtributos.Connection := ConexionPrincipal;
   unqryArticulosFamilias.MasterSource :=
                                        (GetOwnerForm<TfrmMtoFamilias>).dsTablaG;
   unqryFamiliasAtributos.MasterSource :=
@@ -171,7 +171,7 @@ function TdmFamilias.PropiedadExisteEnFamilia(sPropiedad,
 begin
   var unqryFamProp:TUniQuery := TUniQuery.Create(nil);
   try
-    unqryFamProp.Connection := oConn;
+    unqryFamProp.Connection := ConexionPrincipal;
     unqryFamProp.sql.Text := 'SELECT CODIGO_PROP_ARTPROP '+
                              '  FROM fza_familias_atributos ' +
                              ' WHERE CODIGO_FAM_FAM = :CODIGO_FAM_FAM ' +

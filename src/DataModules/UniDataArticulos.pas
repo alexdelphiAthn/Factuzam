@@ -134,7 +134,7 @@ implementation
 
 uses
   inMtoArticulos,
-  inLibGlobalVar,
+
   System.Diagnostics,
   inLibtb;
 
@@ -149,7 +149,7 @@ var
   unqrySol: TUniQuery;
 begin
   unqrySol := TUniQuery.Create(nil);
-  unqrySol.Connection := oConn;
+  unqrySol.Connection := ConexionPrincipal;
   unqrySol.SQL.Text := 'SELECT * ' +
                        '  FROM vi_articulos_proveedores ' +
                        ' WHERE CODIGO_ART_ART = :CODIGO_ART_ART' +
@@ -172,7 +172,7 @@ var
 begin
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'UPDATE fza_articulos_skus '   +
       '   SET ESACTIVO_SKU = :ACT, ' +
@@ -203,7 +203,7 @@ begin
   qrySel := TUniQuery.Create(nil);
   qryUpd := TUniQuery.Create(nil);
   try
-    qrySel.Connection := oConn;
+    qrySel.Connection := ConexionPrincipal;
     qrySel.SQL.Text :=
       'SELECT DISTINCT CODIGO_UNIDAD_SKU '                                  +
       '  FROM vi_atributos_sku_basico '                                     +
@@ -213,7 +213,7 @@ begin
     qrySel.ParamByName('ART').AsString   := aCodArt;
     qrySel.ParamByName('COLOR').AsString := aColor;
     qrySel.Open;
-    qryUpd.Connection := oConn;
+    qryUpd.Connection := ConexionPrincipal;
     qryUpd.SQL.Text :=
       'UPDATE fza_articulos_skus '   +
       '   SET ESACTIVO_SKU  = :ACT, '+
@@ -331,7 +331,7 @@ begin
   if Trim(aSku) = '' then Exit;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'INSERT INTO fza_articulos_skus_costes '                              +
       '       (CODIGO_UNIDAD_SKU_SKUC, PRECIO_ULT_COMPRA_SKUC, '            +
@@ -366,7 +366,7 @@ begin
   if Trim(aSku) = '' then Exit;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'DELETE FROM fza_articulos_skus_costes ' +
       ' WHERE CODIGO_UNIDAD_SKU_SKUC = :SKU';
@@ -536,7 +536,7 @@ begin
 //                                   MB_YESNO ) = ID_YES ) then
 //    begin
     qryBorrarLineas := TUniQuery.Create(Self);
-    Connection := oConn;
+    Connection := ConexionPrincipal;
     SQL.Text := 'DELETE ' +
                 '  FROM fza_articulos_proveedores ' +
                 ' WHERE CODIGO_ART_AP = :Articulo ;';
@@ -557,9 +557,11 @@ end;
 procedure TdmArticulos.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  AplicarValoresPorDefecto(unqryTablaG, 'fza_articulos');
+  AplicarValoresPorDefecto(ConexionPrincipal, unqryTablaG, 'fza_articulos');
   unqryTablaG.FindField('CODIGO_FAM_ART').AsString :=
-                                   GetDefaultValue('vi_articulos_familias_list',
+                                   GetDefaultValue(
+                                     ConexionPrincipal,
+                                     'vi_articulos_familias_list',
                                                    'CODIGO_FAM_FAM',
                                                    'ESDEFAULT_FAM');
   // Por defecto los articulos van en Unidades (sin decimales). Solo los que
@@ -593,7 +595,7 @@ begin
   // BBDD, p.ej. el SKU 'BOLSO-PIEL'). Idempotente: NOT EXISTS + INSERT IGNORE.
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'INSERT IGNORE INTO fza_articulos_skus ' +
       '  (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ESACTIVO_SKU, ' +
@@ -636,21 +638,21 @@ begin
   // Solo asignamos Connection y MasterSource. Los Open se han movido a
   // AbrirDetalles (que invoca TfrmMtoGen.AbrirTablaPrincipalAsync en thread)
   // para no congelar la UI durante la creacion del data module.
-  unqryFamiliaArticulos.Connection := oConn;
-  unqryPerfiles.Connection := oConn;
-  unqryTarifasArticulos.Connection := oConn;
-  unqryProveedoresArticulos.Connection := oConn;
-  unqryLinFacturasArticulos.Connection := oConn;
-  unqryProveedores.Connection := oConn;
-  unqryTiposIVA.Connection := oConn;
-  unqryTarifas.Connection := oConn;
-  unqryVariacionesArticulos.Connection := oConn;
-  unqrySkus.Connection := oConn;
-  unqryStockArticulos.Connection := oConn;
-  unqryMovimientosArticulos.Connection := oConn;
-  unqryDetallesAtributos.Connection := oConn;
-  unqryAtributosBasicosLookup.Connection := oConn;
-  unqryUnidadesMedidaLookup.Connection := oConn;
+  unqryFamiliaArticulos.Connection := ConexionPrincipal;
+  unqryPerfiles.Connection := ConexionPrincipal;
+  unqryTarifasArticulos.Connection := ConexionPrincipal;
+  unqryProveedoresArticulos.Connection := ConexionPrincipal;
+  unqryLinFacturasArticulos.Connection := ConexionPrincipal;
+  unqryProveedores.Connection := ConexionPrincipal;
+  unqryTiposIVA.Connection := ConexionPrincipal;
+  unqryTarifas.Connection := ConexionPrincipal;
+  unqryVariacionesArticulos.Connection := ConexionPrincipal;
+  unqrySkus.Connection := ConexionPrincipal;
+  unqryStockArticulos.Connection := ConexionPrincipal;
+  unqryMovimientosArticulos.Connection := ConexionPrincipal;
+  unqryDetallesAtributos.Connection := ConexionPrincipal;
+  unqryAtributosBasicosLookup.Connection := ConexionPrincipal;
+  unqryUnidadesMedidaLookup.Connection := ConexionPrincipal;
   // Las MasterSource solo aplican cuando el DM se instancia desde el
   // Mto de Articulos (Owner = TfrmMtoArticulos). Si lo crea otro
   // contexto puntual (p.ej. el boton 'Pegatinas' del Mto de Albaranes
@@ -832,12 +834,18 @@ begin
   if unqryTablaG.FindField('CODIGO_ART_ART').AsString = '0' then
   begin
     unqryTablaG.FindField('CODIGO_ART_ART').AsString :=
-                                                 ObtenerSiguienteContador('AR', IdentidadSesion.Usuario);
+                                                 ObtenerSiguienteContador(
+                                                   ConexionPrincipal,
+                                                   'AR',
+                                                   IdentidadSesion.Usuario);
   end;
   if unqryTablaG.FindField('ORDEN_ART').AsString = '0' then
   begin
       unqryTablaG.FindField('ORDEN_ART').AsString :=
-                                                 ObtenerSiguienteContador('AO', IdentidadSesion.Usuario);
+                                                 ObtenerSiguienteContador(
+                                                   ConexionPrincipal,
+                                                   'AO',
+                                                   IdentidadSesion.Usuario);
   end;
 end;
 
@@ -931,7 +939,7 @@ begin
 
     unqrySol := TUniQuery.Create(nil);
     try
-      unqrySol.Connection := oConn;
+      unqrySol.Connection := ConexionPrincipal;
 
       // 2. Añadimos: AND CODIGO_UNICO_ARTTAR <> :PK para que no se valide
       // contra sí mismo
@@ -999,7 +1007,7 @@ begin
   Result := '';
   unqrySol := TUniQuery.Create(nil);
   try
-    unqrySol.Connection := oConn;
+    unqrySol.Connection := ConexionPrincipal;
     unqrySol.SQL.Text := 'CALL PRC_RECALCULAR_STOCK()';
     unqrySol.Open;
     if not unqrySol.IsEmpty then
@@ -1018,7 +1026,7 @@ begin
   Result := 0;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     // Fila padre = misma tarifa, mismo artículo, sin SKU específico,
     // activa y vigente en la fecha actual.
     qry.SQL.Text :=

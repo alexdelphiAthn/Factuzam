@@ -33,7 +33,7 @@ uses
     inLibPerfilesUsuarioIntf,
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
     OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo,
-    inLibLog;
+    inLibLog, Uni;
 type
   TUpdateTotalEvent = procedure(Sender: TObject;
                                 NuevoTotal: Currency) of object;
@@ -86,7 +86,8 @@ type
   procedure ExportarExcel(AcxGrd: TcxGrid;
                           AsNomFile: string);
   procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
-  procedure GridRecalc(Sender: TObject;
+  procedure GridRecalc(AConexion: TUniConnection;
+                       Sender: TObject;
                        View: TcxGridDBTableView;
                        AcdsLineas, AcdsCabecera: TDataSet;
                        AOnUpdateTotal: TUpdateTotalEvent = nil);
@@ -109,7 +110,8 @@ implementation
        inLibAppParam, uGenericIfThen,
        inLibConfigCampos;
 
-procedure GridRecalc(Sender: TObject;
+procedure GridRecalc(AConexion: TUniConnection;
+                     Sender: TObject;
                      View: TcxGridDBTableView;
                      AcdsLineas, AcdsCabecera: TDataSet;
                      AOnUpdateTotal: TUpdateTotalEvent = nil);
@@ -147,7 +149,7 @@ begin
       else
         ValoEditado := 0;
     end;
-    ActualizarLineaFacturaGen(AcdsLineas,
+    ActualizarLineaFacturaGen(AConexion, AcdsLineas,
                               AcdsCabecera,
                               FieldName,
                               ValoEditado,

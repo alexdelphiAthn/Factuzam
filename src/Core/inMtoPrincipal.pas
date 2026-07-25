@@ -374,6 +374,7 @@ uses inLibUser,
   inLibCajaParam,
   inLibAppParam,
   inLibUnidadesMedida,
+  inLibFotos,
   inLibBuscarImpresora,
   inLibVerifactu,
   inLibVerifactuInstalacion,
@@ -427,15 +428,17 @@ begin
   end;
 end;
 
-procedure RegistrarEventoFiscalSeguro(const AUsuario: string;
+procedure RegistrarEventoFiscalSeguro(
+                                      AConexion: TUniConnection;
+                                      const AUsuario: string;
                                       ATipoEvento: Integer;
                                       const ADescripcion: string);
 begin
   if PuedeRegistrarEventoFiscalSeguro(ATipoEvento, ADescripcion) then
   begin
     try
-      if oConn <> nil then
-        RegistrarEventoVerifactu(oConn, AUsuario, ATipoEvento,
+      if AConexion <> nil then
+        RegistrarEventoVerifactu(AConexion, AUsuario, ATipoEvento,
           ADescripcion);
     except
       on E: Exception do
@@ -479,14 +482,14 @@ var
   end;
 
 begin
-  if oConn <> nil then
+  if ConexionPrincipal <> nil then
   begin
     Avisos := TStringList.Create;
     try
       Qry := TUniQuery.Create(nil);
       try
         try
-          Qry.Connection := oConn;
+          Qry.Connection := ConexionPrincipal;
           Qry.SQL.Text :=
             'SELECT CODIGO_EMP_EMP, RAZON_SOCIAL_EMP, ' +
             '       CODIGO_CERTIFICADO_EMP, TITULAR_CERTIFICADO_EMP, ' +
@@ -693,6 +696,10 @@ begin
   FDmConn.conUni.Connect;
   AsignarConexiones(
     TServicioConexionesUniDAC.Create(FDmConn.conUni));
+  oAppParams.AsignarConexion(ConexionPrincipal);
+  oCajaParams.AsignarConexion(ConexionPrincipal);
+  oUnidades.AsignarConexion(ConexionPrincipal);
+  oFotos.AsignarConexion(ConexionPrincipal);
   AsignarAuditoriaDatos(
     TServicioAuditoriaDatos.Create(ContextoSesion));
   tmr1Timer(nil);
@@ -700,10 +707,9 @@ begin
   AsignarPerfilesUsuario(FdmDataPerfiles);
   FdmDataFiltros  := TdmFiltros.Create(Self);
   AsignarFiltrosGuardados(FdmDataFiltros);
-  oConn           := FDmConn.conUni;
   ofrmMto2        := Self;
   oFzaWinf := TfzaWinF.Create(Self);
-  oFzaWinf.Charge(oConn);
+  oFzaWinf.Charge(ConexionPrincipal);
   // AppParams primero: define y lee appArranqueEnParalelo, que decide como
   // se precargan las caches pesadas (perfiles, informes-guias, config-campos
   // y permisos). Charge se queda siempre en el hilo principal (toca VCL).
@@ -712,7 +718,7 @@ begin
     IdentidadActual.Usuario,
     IdentidadActual.Grupo);
   try
-    SincronizarVersionInstalacionesSif(oConn,
+    SincronizarVersionInstalacionesSif(ConexionPrincipal,
       IdentidadSesion.Usuario);
   except
     on E: Exception do
@@ -787,7 +793,9 @@ begin
   Self.OnResize := FormResize;
   ActualizarFondoLogo;
   inLibLog.Log.LogInfo('Arranque del sistema');
-  RegistrarEventoFiscalSeguro(IdentidadSesion.Usuario,
+  RegistrarEventoFiscalSeguro(
+    ConexionPrincipal,
+    IdentidadSesion.Usuario,
     cEventoNoVerifactuInicio,
     'Inicio del sistema');
   // Suelo de visibilidad del splash: si la inicializacion fue mas rapida
@@ -1041,9 +1049,9 @@ begin
   swTotal := TStopwatch.StartNew;
   Log.LogInfo('Arranque: PrecargarCachesSerie INICIO');
   PerfilesUsuario.PrecargarPerfilesUsuario;
-  oInfGuiasCache := TInformesGuiasCache.Create;
+  oInfGuiasCache := TInformesGuiasCache.Create(ConexionPrincipal);
   oInfGuiasCache.Precargar;
-  oConfigCampos := TConfigCamposCache.Create;
+  oConfigCampos := TConfigCamposCache.Create(ConexionPrincipal);
   oConfigCampos.Precargar;
   IdentidadActual := ContextoSesion.Identidad;
   Identidad := TIdentidadPermisos.Crear(
@@ -1052,7 +1060,7 @@ begin
     IdentidadActual.EsAdministrador);
   try
     AsignarPermisos(
-      TCargadorPermisosUniDAC.Cargar(oConn, Identidad));
+      TCargadorPermisosUniDAC.Cargar(ConexionPrincipal, Identidad));
   except
     on E: Exception do
     begin
@@ -1123,8 +1131,8 @@ begin
   errInfGuias := '';
   errConfig := '';
   errPermisos := '';
-  oInfGuiasCache := TInformesGuiasCache.Create;
-  oConfigCampos  := TConfigCamposCache.Create;
+  oInfGuiasCache := TInformesGuiasCache.Create(ConexionPrincipal);
+  oConfigCampos  := TConfigCamposCache.Create(ConexionPrincipal);
   // Cada tarea escribe solo en SUS variables (sin estado compartido) y captura
   // su excepcion (no se propaga al WaitForAll). El log es thread-safe (mutex).
   t1 := TTask.Run(
@@ -1491,7 +1499,9 @@ begin
   // nuevo ni tocan formularios en destruccion (ver inMtoGen.EjecutarEnBackground
   // y el destructor de TfrmMtoGen).
   inLibGlobalVar.oCerrandoApp := True;
-  RegistrarEventoFiscalSeguro(IdentidadSesion.Usuario,
+  RegistrarEventoFiscalSeguro(
+    ConexionPrincipal,
+    IdentidadSesion.Usuario,
     cEventoNoVerifactuFin,
     'Cierre del sistema');
   // Parar el hilo de la cola Verifactu antes de liberar las conexiones
@@ -2008,13 +2018,7 @@ begin
     begin
       TfrmBase(LForm).ResolverArtSkuStock(sArt, sSku);
     end;
-    MostrarStockConsulta(
-      LForm,
-      Permisos,
-      PerfilesUsuario,
-      ContextoSesion,
-      sArt,
-      sSku);
+    MostrarStockConsulta(sArt, sSku);
   end;
 end;
 

@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalImpDevCompra                                        }
 {    Tipo:       Formulario (Modal)                                            }
@@ -98,8 +98,7 @@ begin
     fPreview.DialogoGuardar.FileName :=
       'DevCompra_' + edtSerie.Text + '_' + edtNumero.Text;
     try
-      ExportarDocCompraHorizontal(
-        fPreview.dxSpreadSheet1,
+      ExportarDocCompraHorizontal(ConexionPrincipal,fPreview.dxSpreadSheet1,
         dmDevc.unqryCabDevcPrint,
         dmDevc.unqryLinDevcPrint,
         dmDevc.unqryGuiasDevcPrint,

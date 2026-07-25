@@ -149,6 +149,7 @@ type
     procedure cdsLineasAfterPost(DataSet: TDataSet);
     procedure cdsLineasAfterDelete(DataSet: TDataSet);
   private
+    FConexion: TUniConnection;
     FOnRellenarArticulo:  TRellenarArticuloEvent;
     FOnRellenarAtributos: TRellenarAtributosEvent;
     FOnUpdateTotal: TOnUpdateTotalEvent;
@@ -312,7 +313,9 @@ type
     procedure TransformarLineasParaCobroParcial(cdsLineas: TDataSet;
                                                 DineroEntregado: Currency);
   public
-    constructor Create(AOwner: TComponent); override;
+    constructor Create(
+      AOwner: TComponent;
+      AConexion: TUniConnection); reintroduce;
     procedure AsignarContextoSesion(
       const AContextoSesion: IContextoSesionAplicacion);
     property IdentidadSesion: TIdentidadSesion read GetIdentidadSesion;
@@ -362,6 +365,7 @@ type
     // Mayor FECHA_FAC ya emitida en la serie (0 si aun no tiene tickets).
     // Soporta el control de fecha por serie (grabacion y fase de cobro).
     class function FechaUltimoTicketSerie(
+                            AConexion: TUniConnection;
                             const AEmpresa, ASerie: string): TDateTime;
     procedure InsertarOperacionCaja(
                         QryTrx:          TUniQuery;
@@ -428,10 +432,13 @@ uses inLibtb,
 
 {$R *.dfm}
 
-constructor TdmCajaOpe.Create(AOwner: TComponent);
+constructor TdmCajaOpe.Create(
+  AOwner: TComponent;
+  AConexion: TUniConnection);
 var
   ProveedorContexto: IProveedorContextoSesion;
 begin
+  FConexion := AConexion;
   FContextoSesion := nil;
   if Supports(AOwner, IProveedorContextoSesion, ProveedorContexto) then
     FContextoSesion := ProveedorContexto.ContextoSesion;
@@ -580,7 +587,7 @@ var
 begin
   QryDep := TUniQuery.Create(nil);
   try
-    QryDep.Connection := oConn;
+    QryDep.Connection := FConexion;
     QryDep.SQL.Text :=
         'SELECT d.ID_DEPOSITO_DEP, '           +
         '       d.CODIGO_ART_DEP, '       +
@@ -697,7 +704,7 @@ begin
       cdsLineas.EnableControls;
     end;
     // GridRecalc UNA SOLA VEZ al final, fuera del bucle
-    GridRecalc(nil,
+    GridRecalc(FConexion, nil,
                (Owner as TfrmMtoOpeCaja).tvLineasOpe,
                cdsLineas,
                cdsCabecera,
@@ -955,7 +962,10 @@ var
 begin
   sNumeroMov := Trim(ANumeroMovimiento);
   if sNumeroMov = '' then
-    sNumeroMov := ObtenerSiguienteContador('MV', IdentidadSesion.Usuario);
+    sNumeroMov := ObtenerSiguienteContador(
+      FConexion,
+      'MV',
+      IdentidadSesion.Usuario);
   uspMov := TUniStoredProc.Create(nil);
   try
     uspMov.Connection := QryTrx.Connection;
@@ -1128,6 +1138,7 @@ begin
 end;
 
 class function TdmCajaOpe.FechaUltimoTicketSerie(
+                          AConexion: TUniConnection;
                           const AEmpresa, ASerie: string): TDateTime;
 var
   Qry: TUniQuery;
@@ -1139,7 +1150,7 @@ begin
   begin
     Qry := TUniQuery.Create(nil);
     try
-      Qry.Connection := oConn;
+      Qry.Connection := AConexion;
       Qry.SQL.Text :=
         'SELECT MAX(FECHA_FAC) AS ULTIMA_FECHA ' +
         '  FROM fza_facturas ' +
@@ -1221,7 +1232,7 @@ begin
   FechaOperacion := FechaCajaConHora(AFechaOperacion);
   UsuarioCaja     := cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString;
   // Generamos el número global de caja que agrupará toda la operación
-  AlmacenDeposito := ObtenerAlmacenDepositoEmpresa(AEmpresa);
+  AlmacenDeposito := ObtenerAlmacenDepositoEmpresa(FConexion, AEmpresa);
   if cdsCabecera.State in [dsEdit, dsInsert] then cdsCabecera.Post;
   if cdsLineas.State   in [dsEdit, dsInsert] then cdsLineas.Post;
   if cdsLineas.IsEmpty then
@@ -1256,7 +1267,7 @@ begin
   end;
   if not HayNovedad then
   begin
-    ImprimirRecordatorio(FContextoSesion.Ubicacion.Empresa,
+    ImprimirRecordatorio(FConexion, FContextoSesion.Ubicacion.Empresa,
       Cab.CodigoCliente,
       oNomImpresoraCaja);
     Result := True;
@@ -1323,7 +1334,10 @@ begin
   // =======================================================================
   if RequiereFactura and (ANumeroManual = '') then
   begin
-    var dUltimaFechaSerie := FechaUltimoTicketSerie(AEmpresa, ASerieElegida);
+    var dUltimaFechaSerie := FechaUltimoTicketSerie(
+      FConexion,
+      AEmpresa,
+      ASerieElegida);
     if (dUltimaFechaSerie > 0) and
        (Trunc(Cab.Fecha) < Trunc(dUltimaFechaSerie)) then
       raise Exception.CreateFmt(
@@ -1336,7 +1350,7 @@ begin
          FormatDateTime('dd/mm/yyyy', Cab.Fecha)]);
   end;
   if RequiereFactura and oLicenciaAplicacionComprobada then
-    ValidarLimiteDemoFacturas(oConn,
+    ValidarLimiteDemoFacturas(FConexion,
                               oLicenciaAplicacionEstado,
                               Cab.Fecha);
   if DatosCobro.ImporteEntregado <
@@ -1352,13 +1366,13 @@ begin
   // =======================================================================
   // INICIO DE LA TRANSACCIÓN GLOBAL EN BASE DE DATOS
   // =======================================================================
-  oConn.StartTransaction;
+  FConexion.StartTransaction;
   var sOpeCaja := SiguienteOpCaja(AEmpresa, AAlmacen, ACaja, UsuarioCaja);
   NumOperacionVE := sOpeCaja;
   NumeroGenerado := sOpeCaja;
   QryTrx := TUniQuery.Create(nil);
   try try
-    QryTrx.Connection := oConn;
+    QryTrx.Connection := FConexion;
     // =======================================================================
     // PASO 1 Y 3: NÚMERO Y CABECERA (SOLO SI REQUIERE FACTURA)
     // =======================================================================
@@ -1372,7 +1386,7 @@ begin
       begin
         uspQryTrx := TUniStoredProc.Create(nil);
         try
-          uspQryTrx.Connection := oConn;
+          uspQryTrx.Connection := FConexion;
           uspQryTrx.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
           uspQryTrx.Prepare;
           uspQryTrx.ParamByName('pserie').AsString   := SerieGenerada;
@@ -1501,7 +1515,10 @@ begin
         // CASO D: VENTA NORMAL O COBRO TOTAL DE DEPÓSITO EXISTENTE
         // -------------------------------------------------------------------
         if Lin.TipoArticulo = 'ESTANDAR' then
-          NumMovGenerado := ObtenerSiguienteContador('MV', IdentidadSesion.Usuario)
+          NumMovGenerado := ObtenerSiguienteContador(
+            FConexion,
+            'MV',
+            IdentidadSesion.Usuario)
         else
           NumMovGenerado := '';
         if Lin.VieneDeDeposito = 'S' then
@@ -1707,15 +1724,16 @@ begin
     // =======================================================================
     // CONFIRMAR
     // =======================================================================
-    oConn.Commit;
+    FConexion.Commit;
     if TieneDepositosPendientes and (sOpeCaja <> '') then
     begin
-      ImprimirResguardoDeposito(AEmpresa,
+      ImprimirResguardoDeposito(FConexion,
+                                AEmpresa,
                                 AAlmacen,
                                 ACaja,
                                 sOpeCaja,
                                 oNomImpresoraCaja);
-      ImprimirRecordatorio(FContextoSesion.Ubicacion.Empresa,
+      ImprimirRecordatorio(FConexion, FContextoSesion.Ubicacion.Empresa,
         Cab.CodigoCliente,
         oNomImpresoraCaja);
     end;
@@ -1737,7 +1755,7 @@ begin
   except
     on E: Exception do
     begin
-      oConn.Rollback;
+      FConexion.Rollback;
       raise Exception.Create(
         'Error al guardar el ticket. No se ha registrado la operación.' +
         sLineBreak + 'Motivo: ' + E.Message);
@@ -1766,7 +1784,10 @@ var
   CalculadorFiscal: TFacturaTotales;
 begin
   // Instanciamos tu clase pasándole los datasets de la caja
-  CalculadorFiscal := TFacturaTotales.Create(dsCabecera, dsLineas);
+  CalculadorFiscal := TFacturaTotales.Create(
+    FConexion,
+    dsCabecera,
+    dsLineas);
   try
     // ProcesarFacturaCompleta se encarga de leer configuración, recorrer líneas
     // y sumarizar
@@ -1863,7 +1884,7 @@ var
 begin
   SpTrx := TUniStoredProc.Create(nil);
   try
-    SpTrx.Connection := oConn;
+    SpTrx.Connection := FConexion;
     SpTrx.StoredProcName := 'PRC_GET_NEXT_OP_CAJA';
     // 1. Creación y asignación explícita de parámetros IN
     SpTrx.Params.CreateParam(ftString,
@@ -2019,7 +2040,7 @@ begin
     Exit;
   unqry := TUniQuery.Create(nil);
   try
-    unqry.Connection := oConn;
+    unqry.Connection := FConexion;
     unqry.SQL.Text := SQLStr;
     unqry.ParamByName('COD').AsString := Codigo;
     unqry.Open;
@@ -2059,7 +2080,7 @@ end;
 
 procedure TdmCajaOpe.cdsCabeceraAfterInsert(DataSet: TDataSet);
 begin
-  AplicarValoresPorDefecto(cdsCabecera, 'fza_facturas');
+  AplicarValoresPorDefecto(FConexion, cdsCabecera, 'fza_facturas');
   cdsCabecera.FieldByName('SERIE_FAC').AsString := '0';
   cdsCabecera.FieldByName('TIPO_FAC').AsString := 'SIMPLIFICADA';
 end;
@@ -2068,7 +2089,7 @@ procedure TdmCajaOpe.cdsLineasAfterDelete(DataSet: TDataSet);
 begin
   if not DataSet.ControlsDisabled then
   begin
-    GridRecalc(nil,
+    GridRecalc(FConexion, nil,
              (Owner as TfrmMtoOpeCaja).tvLineasOpe,
              cdsLineas,
              cdsCabecera,
@@ -2083,7 +2104,10 @@ begin
   with cdsLineas do
   begin
     if not DataSet.ControlsDisabled then
-      AplicarValoresPorDefecto(cdsLineas, 'fza_facturas_lineas');
+      AplicarValoresPorDefecto(
+        FConexion,
+        cdsLineas,
+        'fza_facturas_lineas');
     FieldByName('SERIE_FAC_FACLIN').AsString := '0';
     FieldByName('NUMERO_FAC_FACLIN').AsString := '0';
     NuevoNumero := cdsCabecera.FieldByName('CONTADOR_LINEAS_FAC').AsInteger
@@ -2127,7 +2151,7 @@ if not DataSet.ControlsDisabled then
     // 1. Desenganchamos el evento para evitar el bucle infinito
     cdsLineas.AfterPost := nil;
     try
-      GridRecalc(nil,
+      GridRecalc(FConexion, nil,
                  (Owner as TfrmMtoOpeCaja).tvLineasOpe,
                  cdsLineas,
                  cdsCabecera,
@@ -2340,9 +2364,9 @@ end;
 
 procedure TdmCajaOpe.DataModuleCreate(Sender: TObject);
 begin
-  qryDefinicionArticulo.Connection := oConn;
-  qryVales.Connection := oConn;
-  qryStock.Connection := oConn;
+  qryDefinicionArticulo.Connection := FConexion;
+  qryVales.Connection := FConexion;
+  qryStock.Connection := FConexion;
   ConfigurarEstructuraCabecera;
   ConfigurarEstructuraLineas;
 end;

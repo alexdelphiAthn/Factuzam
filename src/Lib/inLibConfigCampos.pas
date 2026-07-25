@@ -39,9 +39,10 @@ type
     FPorCampo: TDictionary<string, TConfigCampoItem>;
     // Diccionario indexado por TABLA.CAMPO para resolucion exacta.
     FPorTablaCampo: TDictionary<string, TConfigCampoItem>;
+    FConexion: TUniConnection;
     FCargada: Boolean;
   public
-    constructor Create;
+    constructor Create(AConexion: TUniConnection);
     destructor Destroy; override;
     procedure Precargar(AConn: TUniConnection = nil);
     procedure Invalidar;
@@ -61,11 +62,12 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibLog;
+  inLibLog;
 
-constructor TConfigCamposCache.Create;
+constructor TConfigCamposCache.Create(AConexion: TUniConnection);
 begin
   inherited Create;
+  FConexion := AConexion;
   FPorCampo := TDictionary<string, TConfigCampoItem>.Create;
   FPorTablaCampo := TDictionary<string, TConfigCampoItem>.Create;
   FCargada := False;
@@ -95,7 +97,7 @@ begin
   FPorTablaCampo.Clear;
   FCargada := False;
   if AConn = nil then
-    AConn := oConn;
+    AConn := FConexion;
   if (AConn = nil) or (not AConn.Connected) then
     Exit;
   try

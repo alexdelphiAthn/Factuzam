@@ -2894,7 +2894,7 @@ begin
   if sTexto = '' then
     sTexto := sCodigo;
   if PintarCeldaSwatchArticuloSiAplica(
-       ACanvas, AViewInfo, sArticulo, sTexto, nil) then
+       FCfg.Conexion, ACanvas, AViewInfo, sArticulo, sTexto, nil) then
     ADone := True;
 end;
 

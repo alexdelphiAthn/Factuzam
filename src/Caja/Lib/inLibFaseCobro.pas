@@ -32,7 +32,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.Math,
-  Data.DB, VirtualTable, inLibFacturas, Uni, inLibGlobalVar;
+  Data.DB, VirtualTable, inLibFacturas, Uni;
 
 type
   TDatosCliente = record
@@ -98,6 +98,7 @@ type
 
   TDatosFaseCobro = class
   private
+    FConexion: TUniConnection;
     FTotalesFactura: TFacturaTotales;
     FDatosCliente: TDatosCliente;
     FMemTablePagos: TVirtualTable;
@@ -130,7 +131,7 @@ type
                                const ADefault: string = ''): string;
   public
     FRequiereFactura:Boolean;
-    constructor Create(AMemTable: TVirtualTable);
+    constructor Create(AConexion: TUniConnection; AMemTable: TVirtualTable);
     destructor Destroy; override;
     procedure CargarDatosFactura(ATotales: TFacturaTotales);
     procedure EstablecerCliente(const ACodigo, ANombre: string;
@@ -239,9 +240,11 @@ end;
 
 { TDatosFaseCobro }
 
-constructor TDatosFaseCobro.Create(AMemTable: TVirtualTable);
+constructor TDatosFaseCobro.Create(AConexion: TUniConnection;
+                                   AMemTable: TVirtualTable);
 begin
   inherited Create;
+  FConexion := AConexion;
   FMemTablePagos := AMemTable;
   FValesRecogidos := TList<TValeAplicado>.Create;
   FImporteBruto := 0;
@@ -727,7 +730,7 @@ begin
   FMemTablePagos.DisableControls;
   Bookmark := FMemTablePagos.GetBookmark;
   try
-    qry.Connection := inLibGlobalVar.oConn;
+    qry.Connection := FConexion;
     qry.SQL.Text := 'SELECT * ' +
                     '  FROM fza_caja_vales ' +
                     ' WHERE CODIGO_VL = :CODIGO ' +

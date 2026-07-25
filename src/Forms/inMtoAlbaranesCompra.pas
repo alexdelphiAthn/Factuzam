@@ -299,7 +299,6 @@ implementation
 
 uses
   System.StrUtils,
-  inLibGlobalVar,
   inLibFiltroUsuario,
   inLibFotos,
   inLibLog,
@@ -388,7 +387,8 @@ begin
           ' ORDER BY art.ORDEN_ART, art.CODIGO_ART_ART';
         qry.ParamByName('prv').AsString := sPrv;
         if TBusquedaUtils.EjecutarBusqueda(
-             'Búsqueda de artículos',
+          ConexionPrincipal,
+          'Búsqueda de artículos',
              qry,
              'frmMtoDevcArtSearch',
              Self) and (qry.FindField('CODIGO_ART_ART') <> nil) then
@@ -451,7 +451,8 @@ begin
         ' ORDER BY SK.CODIGO_UNIDAD_SKU';
       qry.ParamByName('art').AsString := sArt;
       if TBusquedaUtils.EjecutarBusqueda(
-           'SKUs del artículo ' + sArt,
+        ConexionPrincipal,
+        'SKUs del artículo ' + sArt,
            qry,
            'frmMtoAlbcSkuSearch',
            Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
@@ -475,7 +476,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text :=
         'SELECT ATB.CODIGO_ATB, MIN(ATB.ORDEN_ATB) AS ORDEN_ATB, ' +
         '       MIN(ATB.NOMBRE_ATB) AS NOMBRE_ATB ' +
@@ -951,7 +952,11 @@ begin
                        FieldByName('CODIGO_EMP_ALBC').AsString);
   if sEmpresa = '' then
     sEmpresa := Trim(UbicacionSesion.Empresa);
-  CargarSeriesEmpresa(sEmpresa, 'AB', cbbSERIE_ALBC.Properties.Items);
+  CargarSeriesEmpresa(
+    ConexionPrincipal,
+    sEmpresa,
+    'AB',
+    cbbSERIE_ALBC.Properties.Items);
   if cbbSERIE_ALBC.Properties.Items.Count = 0 then
   begin
     if MessageDlg('No hay series de albaranes de compra (tipo AB) para la ' +
@@ -1139,8 +1144,7 @@ begin
 end;
 
 // Crea CANT_ATRIB_MAX columnas no-bound para mostrar los valores de
-// los atributos del SKU de cada linea (modo "atributo por columna",
-// estilo inventarios). Read-only y no persistentes: solo
+// los atributos del SKU de cada linea (modo "atributo por columna",// estilo inventarios). Read-only y no persistentes: solo
 // visualizacion. La carga real de valores por SKU queda como TODO.
 procedure TfrmMtoAlbaranesCompra.CrearColumnasAtributos;
 var
@@ -2042,7 +2046,8 @@ begin
       MessageDlg('Crea o selecciona un albarán de compra antes de ' +
                  'elegir la empresa.', mtInformation, [mbOk], 0)
     else if TBusquedaUtils.EjecutarBusqueda(
-              'Búsqueda de empresas',
+      ConexionPrincipal,
+      'Búsqueda de empresas',
               'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
               'CODIGO_EMP_EMP',
               sCodigo,
@@ -2080,7 +2085,8 @@ begin
       MessageDlg('Crea o selecciona un albarán de compra antes de ' +
                  'elegir el proveedor.', mtInformation, [mbOk], 0)
     else if TBusquedaUtils.EjecutarBusqueda(
-              'Búsqueda de proveedores',
+      ConexionPrincipal,
+      'Búsqueda de proveedores',
               'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
               'CODIGO_PRV_PRV',
               sCodigo,
@@ -2090,7 +2096,7 @@ begin
       if not (ds.State in [dsInsert, dsEdit]) then
         ds.Edit;
       ds.FieldByName('CODIGO_PRV_ALBC').AsString := sCodigo;
-      AplicarIvaExentoIntracomunitarioProveedor(oConn, ds,
+      AplicarIvaExentoIntracomunitarioProveedor(ConexionPrincipal, ds,
         'CODIGO_PRV_ALBC', 'ESIVA_EXENTO_INTRACOMUNITARIO_ALBC');
       dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
       ActualizarLabelProveedor;
@@ -2307,7 +2313,11 @@ begin
           ScrPt := Edit.ClientToScreen(Point(0, Edit.Height));
           WidHint := Edit.Width;
         end;
-        if SeleccionarAvConPaleta(ID_VA_COLOR, FBasicosColor, sActual,
+        if SeleccionarAvConPaleta(
+          ConexionPrincipal,
+          ID_VA_COLOR,
+          FBasicosColor,
+          sActual,
                                   sNuevo, ScrPt.X, ScrPt.Y, WidHint) then
         begin
           if FPivote.CambiarColorLineaActiva(sNuevo, sMensaje) then

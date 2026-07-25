@@ -118,7 +118,7 @@ var
 implementation
 
 uses
-  inLibGlobalVar, inLibLog, inLibShowMto, inLibAtributosPaleta;
+  inLibLog, inLibShowMto, inLibAtributosPaleta;
 
 {$R *.dfm}
 
@@ -171,7 +171,7 @@ end;
 procedure TfrmMtoBusquedaDatos.FormCreate(Sender: TObject);
 begin
   inherited;
-  unqryResultados.Connection := oConn;
+  unqryResultados.Connection := ConexionPrincipal;
   unqryResultados.ReadOnly := True;
   dsTablaG.DataSet := unqryResultados;
   FColumnasCreadas := False;
@@ -228,7 +228,7 @@ begin
   if ResolverLineaDocumentoTrabajo(linea, sMensaje) then
   begin
     try
-      AgregarUnidadADocumentoTrabajo(Self, oConn,
+      AgregarUnidadADocumentoTrabajo(Self, ConexionPrincipal,
         ContextoSesion, linea);
     except
       on E: Exception do
@@ -350,7 +350,7 @@ begin
     ACombo.Properties.Items.Add('(Todos)');
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := ConexionPrincipal;
       qry.SQL.Text := ASQL;
       qry.Open;
       while not qry.Eof do
@@ -445,7 +445,7 @@ begin
   qryPaleta := TUniQuery.Create(nil);
   lstColores := TStringList.Create;
   try
-    qryPaleta.Connection := oConn;
+    qryPaleta.Connection := ConexionPrincipal;
     qryPaleta.SQL.Add('SELECT NOMBRE_ATB');
     qryPaleta.SQL.Add('  FROM fza_atributos_basicos');
     qryPaleta.SQL.Add(' WHERE ID_VA_ATB = ''CO''');
@@ -465,7 +465,12 @@ begin
     pPopup.X := 0;
     pPopup.Y := edtValor.Height;
     pPopup := edtValor.ClientToScreen(pPopup);
-    if SeleccionarAvConPaleta('CO', aColores, edtValor.Text, sColor,
+    if SeleccionarAvConPaleta(
+      ConexionPrincipal,
+      'CO',
+      aColores,
+      edtValor.Text,
+      sColor,
                               pPopup.X, pPopup.Y, edtValor.Width) then
     begin
       edtValor.Text := sColor;
@@ -900,7 +905,7 @@ begin
   begin
     qryColor := TUniQuery.Create(nil);
     try
-      qryColor.Connection := oConn;
+      qryColor.Connection := ConexionPrincipal;
       qryColor.SQL.Add('SELECT HEX_ATB');
       qryColor.SQL.Add('  FROM fza_atributos_basicos');
       qryColor.SQL.Add(' WHERE ID_VA_ATB = ''CO''');

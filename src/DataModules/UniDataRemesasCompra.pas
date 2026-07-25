@@ -52,7 +52,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inMtoRemesasCompra;
+  inMtoRemesasCompra;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -65,9 +65,9 @@ var
   frm: TfrmMtoRemesasCompra;
 begin
   inherited;
-  unqryTablaG.Connection := oConn;
-  unqryEfectosRemesa.Connection := oConn;
-  unqryBancosEmpresa.Connection := oConn;
+  unqryTablaG.Connection := ConexionPrincipal;
+  unqryEfectosRemesa.Connection := ConexionPrincipal;
+  unqryBancosEmpresa.Connection := ConexionPrincipal;
   frm := GetOwnerForm<TfrmMtoRemesasCompra>;
   if frm <> nil then
   begin
@@ -144,7 +144,7 @@ var
 begin
   sp := TUniStoredProc.Create(nil);
   try
-    sp.Connection := oConn;
+    sp.Connection := ConexionPrincipal;
     sp.StoredProcName := 'PRC_REMC_RECALCULAR';
     sp.Params.Clear;
     sp.Params.CreateParam(ftString, 'p_SERIE', ptInput);
@@ -169,7 +169,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'SELECT COUNT(e.NUMERO_EFEC) AS EFECTOS, ' +
       '       COALESCE(r.TOTAL_REMC, 0) AS TOTAL, ' +
@@ -245,7 +245,7 @@ begin
   begin
     sp := TUniStoredProc.Create(nil);
     try
-      sp.Connection := oConn;
+      sp.Connection := ConexionPrincipal;
       sp.StoredProcName := 'PRC_EFEC_CONCILIAR_PAGO';
       sp.Params.Clear;
       sp.Params.CreateParam(ftString, 'p_SERIE', ptInput);
@@ -329,7 +329,7 @@ begin
     fResto := AImporte;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text :=
         'SELECT SERIE_FACC_EFEC, NUMERO_FACC_EFEC, NUMERO_EFEC, ' +
         '       COALESCE(IMPORTE_PENDIENTE_EFEC, 0) AS PENDIENTE ' +
@@ -390,7 +390,7 @@ begin
     sNumeroRem := unqryTablaG.FieldByName('NUMERO_REMC').AsString;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text :=
         'UPDATE fza_efectos_compra ' +
         '   SET SERIE_REMC_EFEC = NULL, ' +
@@ -442,13 +442,13 @@ begin
   begin
     sSerieRem := unqryTablaG.FieldByName('SERIE_REMC').AsString;
     sNumeroRem := unqryTablaG.FieldByName('NUMERO_REMC').AsString;
-    bTxOwned := not oConn.InTransaction;
+    bTxOwned := not ConexionPrincipal.InTransaction;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       try
         if bTxOwned then
-          oConn.StartTransaction;
+          ConexionPrincipal.StartTransaction;
         // 1. Desvincular los efectos de la remesa y restaurar su estado.
         q.SQL.Text :=
           'UPDATE fza_efectos_compra ' +
@@ -477,10 +477,10 @@ begin
         q.ExecSQL;
         Result := q.RowsAffected > 0;
         if bTxOwned then
-          oConn.Commit;
+          ConexionPrincipal.Commit;
       except
-        if bTxOwned and oConn.InTransaction then
-          oConn.Rollback;
+        if bTxOwned and ConexionPrincipal.InTransaction then
+          ConexionPrincipal.Rollback;
         raise;
       end;
     finally
@@ -507,7 +507,7 @@ begin
     sNumeroRem := unqryTablaG.FieldByName('NUMERO_REMC').AsString;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text :=
         'UPDATE fza_remesas_compra ' +
         '   SET ENTIDAD_REMC = :entidad, ' +
@@ -567,7 +567,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text :=
         'UPDATE fza_remesas_compra ' +
         '   SET FECHA_CARGO_REMC = :fecha, ' +

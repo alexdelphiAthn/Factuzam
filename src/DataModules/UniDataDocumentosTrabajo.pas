@@ -81,7 +81,7 @@ implementation
 
 uses
   System.Generics.Collections, System.Variants,
-  UniDataArticulos, inLibGlobalVar, inMtoDocumentosTrabajo;
+  UniDataArticulos, inMtoDocumentosTrabajo;
 
 {$R *.dfm}
 
@@ -259,7 +259,7 @@ begin
   unqryTablaG.AfterInsert := unqryTablaGAfterInsert;
   unqryTablaG.BeforeDelete := unqryTablaGBeforeDelete;
   unqryTablaG.BeforePost := unqryTablaGBeforePost;
-  unqryLineas.Connection := oConn;
+  unqryLineas.Connection := ConexionPrincipal;
   unqryLineas.SQL.Text := SqlSelectLineas +
     ' WHERE l.ID_DTR_DTL = :ID_DTR ' +
     ' ORDER BY l.LINEA_DTL';
@@ -349,7 +349,7 @@ procedure TdmDocumentosTrabajo.ConfigurarQueryCompartidos;
 var
   frm: TfrmMtoDocumentosTrabajo;
 begin
-  unqryCompartidos.Connection := oConn;
+  unqryCompartidos.Connection := ConexionPrincipal;
   unqryCompartidos.SQL.Text :=
     'SELECT * ' +
     '  FROM fza_documentos_trabajo_compartidos ' +
@@ -435,7 +435,7 @@ begin
   Result := '';
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     sAlmacenes := ObtenerAlmacenesSql(AAlmacenesCsv);
     q.SQL.Text :=
       'SELECT DISTINCT CODIGO_UNIDAD_DTL ' +
@@ -477,7 +477,7 @@ begin
       ALV.Clear;
       q := TUniQuery.Create(nil);
       try
-        q.Connection := oConn;
+        q.Connection := ConexionPrincipal;
         q.SQL.Text :=
           'SELECT DISTINCT L.CODIGO_ALM_DTL AS COD, ' +
           '       COALESCE(A.NOMBRE_ALM_ALM, L.CODIGO_ALM_DTL) AS NOM ' +
@@ -523,7 +523,7 @@ begin
     try
       q := TUniQuery.Create(nil);
       try
-        q.Connection := oConn;
+        q.Connection := ConexionPrincipal;
         sAlmacenes := ObtenerAlmacenesSql(AAlmacenesCsv);
         q.SQL.Text :=
           'SELECT CODIGO_UNIDAD_DTL, ' +
@@ -657,7 +657,7 @@ begin
   Result := False;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     if SameText(ATipo, 'USUARIO') then
     begin
       q.SQL.Text :=

@@ -49,7 +49,7 @@ uses
   cxGridDBTableView, cxGrid, UniDataCaja,
   // Acceso a datos
   Uni, MemDS, VirtualTable,
-  inLibGlobalVar, inMtoFrmBase, Vcl.Menus, cxStyles, dxDateRanges,
+  inMtoFrmBase, Vcl.Menus, cxStyles, dxDateRanges,
   dxScrollbarAnnotations;
 
 type
@@ -218,7 +218,7 @@ begin
   sPin := Trim(edtPin.Text);
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     SQL :=
       'SELECT CODIGO_VL, PIN_SEGURIDAD_VL, ESTADO_VL,' +
       '       IMPORTE_NOMINAL_VL, FECHA_EMISION_VL,' +

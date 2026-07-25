@@ -2665,13 +2665,7 @@ begin
   sArt := '';
   sSku := '';
   ResolverArtSkuActivo(sArt, sSku);
-  inMtoStockConsulta.MostrarStockConsulta(
-    Self,
-    Permisos,
-    PerfilesUsuario,
-    ContextoSesion,
-    sArt,
-    sSku);
+  inMtoStockConsulta.MostrarStockConsulta(sArt, sSku);
 end;
 
 procedure TfrmMtoGen.ResolverArtSkuActivo(out ACodArt, ACodSku: string);

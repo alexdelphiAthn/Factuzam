@@ -35,7 +35,7 @@ uses
   cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxLabel, cxRadioGroup,
   cxCheckListBox, cxCheckBox, cxCustomListBox,
   cxClasses, dxSkinsForm, System.Actions, Vcl.ActnList, frxSmartMemo,
-  frLocalization, frLanguageSpanish, frCoreClasses, inLibGlobalVar;
+  frLocalization, frLanguageSpanish, frCoreClasses;
 
 type
   TfrmPrintBalanceSinTallas = class(TfrmPrintMultiFiltro)
@@ -218,7 +218,7 @@ begin
   with unqryBalancePrint do
   begin
     Close;
-    Connection := oConn;
+    Connection := ConexionPrincipal;
     SQL.Text :=
       'CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS(' +
       ':pMODO, :pDESDE, :pHASTA, :pALM, :pFAM, :pPRV, :pTMP, :pART, :pTAR, ' +

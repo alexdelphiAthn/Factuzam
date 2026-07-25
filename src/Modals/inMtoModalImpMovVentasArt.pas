@@ -38,7 +38,7 @@ uses
   cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxLabel, cxRadioGroup,
   cxCheckListBox, cxCheckBox, cxCustomListBox,
   cxClasses, dxSkinsForm, System.Actions, Vcl.ActnList, frxSmartMemo,
-  frLocalization, frLanguageSpanish, frCoreClasses, inLibGlobalVar,
+  frLocalization, frLanguageSpanish, frCoreClasses,
   frxExportBaseImageSettingsDialog, JvComponentBase, JvEnterTab, cxLocalization;
 
 type
@@ -165,7 +165,7 @@ begin
   with unqryMovVentasPrint do
   begin
     Close;
-    Connection := oConn;
+    Connection := ConexionPrincipal;
     SQL.Text :=
       'CALL PRC_GET_MOV_VENTAS_ART(' +
       ':pDESDE, :pHASTA, :pINICMP, :pALM, :pFAM, :pPRV, :pTMP, :pART, ' +

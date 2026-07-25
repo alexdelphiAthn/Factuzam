@@ -774,7 +774,7 @@ begin
   if (Field <> nil) and SameText(Field.FieldName, 'CODIGO_EMP_SES') and
      (Dmm <> nil) and (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
   begin
-    AplicarRecargoComprasEmpresa(oConn, Dmm.unqryTablaG,
+    AplicarRecargoComprasEmpresa(ConexionPrincipal, Dmm.unqryTablaG,
       'CODIGO_EMP_SES', 'ESIVA_RECARGO_COMPRAS_SES');
     Dmm.RefrescarTotalesSesion;
   end;
@@ -882,9 +882,7 @@ procedure TfrmMtoComprasSesiones.unqrySesionLinRecargarTallasHook(
                                                       DataSet: TDataSet);
 begin
   // AfterRefresh / AfterOpen comparten handler. Cualquier re-fetch del
-  // dataset de lineas (Refresh explicito en btnCrearClick / Distribuidor,
-  // re-fetch master/detail al cambiar de cabecera o al Postear el master,
-  // boton Refresh del navegador) borra los Values[] no-bound de las
+  // dataset de lineas (Refresh explicito en btnCrearClick / Distribuidor,// re-fetch master/detail al cambiar de cabecera o al Postear el master,// boton Refresh del navegador) borra los Values[] no-bound de las
   // columnas talla. El SELECT que CargarCantidadesUnaLinea hace para
   // recuperarlos solo funciona si se ejecuta DESPUES del re-fetch — y la
   // tabla `fza_compras_sesiones_celdas` ya tiene la cantidad correcta, lo
@@ -941,7 +939,7 @@ begin
   LogSes(Format('BeforeDelete: limpiando SESCEL linea=%d', [iLinea]));
   with TUniQuery.Create(nil) do
   try
-    Connection := oConn;
+    Connection := ConexionPrincipal;
     SQL.Text :=
       'DELETE FROM fza_compras_sesiones_celdas ' +
       ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
@@ -998,7 +996,7 @@ begin
   // ademas primera y ultima talla (ordenadas por ORDEN_ACD) para
   // mostrarlas como rango (columnas 'Desde' / 'Hasta') en el listbox.
   FQryConjuntosTallas := TUniQuery.Create(Self);
-  FQryConjuntosTallas.Connection := oConn;
+  FQryConjuntosTallas.Connection := ConexionPrincipal;
   FQryConjuntosTallas.SQL.Text :=
     'SELECT AC.ID_AC, AC.NOMBRE_AC, ' +
     '  (SELECT AV.AV FROM fza_atributos_conjuntos_det ACD ' +
@@ -1018,8 +1016,7 @@ begin
   // ID_AC -> NOMBRE_AC (lo usa CustomDrawCell para mostrar el nombre).
   CargarConjuntosTallas;
 
-  // CrearColumnasTallas debe correr antes de inherited (CrearTablaPrincipal,
-  // lanzada desde inherited, llama a RecalcularMaxColumnas y
+  // CrearColumnasTallas debe correr antes de inherited (CrearTablaPrincipal,// lanzada desde inherited,llama a RecalcularMaxColumnas y
   // CargarCantidadesTodasLineas del gestor; si las columnas no existen
   // todavia ambos son no-op).
   CrearColumnasTallas;
@@ -1170,7 +1167,11 @@ begin
     sEmpresa := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
   if sEmpresa = '' then
     sEmpresa := Trim(UbicacionSesion.Empresa);
-  CargarSeriesEmpresa(sEmpresa, 'SE', cbbSerie.Properties.Items);
+  CargarSeriesEmpresa(
+    ConexionPrincipal,
+    sEmpresa,
+    'SE',
+    cbbSerie.Properties.Items);
   if cbbSerie.Properties.Items.Count = 0 then
   begin
     if MessageDlg('No hay series de sesiones de compra (tipo SE) para la ' +
@@ -1277,7 +1278,7 @@ procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
 begin
   // Cerrar la query del lookup y soltar la connection ANTES del
   // inherited: TfrmMtoGen.FormDestroy libera el DataModule y, por
-  // los caminos de UniDAC, la oConn global puede quedar en estado
+  // los caminos de UniDAC,la ConexionPrincipal global puede quedar en estado
   // 'not connected' antes de que esta query (Owner=Self) sea
   // destruida automaticamente al final del proceso. Si la
   // destrucion automatica encuentra Active=True intenta cerrar el
@@ -1320,7 +1321,7 @@ begin
   SetLength(FBasicosColor, 0);
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'SELECT CODIGO_ATB FROM fza_atributos_basicos ' +
       ' WHERE ID_VA_ATB = :va AND ESACTIVO_ATB = ''S'' ' +
@@ -1374,7 +1375,8 @@ begin
     MessageDlg('Crea o selecciona una sesion antes de elegir el proveedor.',
                mtInformation, [mbOk], 0)
   else if TBusquedaUtils.EjecutarBusqueda(
-            'Busqueda de proveedores',
+    ConexionPrincipal,
+    'Busqueda de proveedores',
             'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
             'CODIGO_PRV_PRV', sCodigo, 'frmMtoSesProvSearch') then
   begin
@@ -1759,8 +1761,7 @@ begin
   // Cablea el gestor de tallas pivotadas (libreria reutilizable) con
   // los nombres de tabla/campos especificos de Sesiones de compra.
   // Si en el futuro se reusa este patron para Pedidos / Albaranes /
-  // Facturas, basta crear otro form con los sufijos PEDLIN/PEDCEL,
-  // ALBLIN/ALBCEL, etc. y la libreria hace lo mismo sin cambios.
+  // Facturas,basta crear otro form con los sufijos PEDLIN/PEDCEL,// ALBLIN/ALBCEL,etc. y la libreria hace lo mismo sin cambios.
   if FGestorTallas <> nil then FreeAndNil(FGestorTallas);
   if Dmm = nil then Exit;
 
@@ -1769,7 +1770,7 @@ begin
     arrCols[i] := FTallaColumns[i];
 
   cfg := Default(TGridTallasConfig);
-  cfg.Conexion           := oConn;
+  cfg.Conexion           := ConexionPrincipal;
   cfg.Usuario            := IdentidadSesion.Usuario;
   cfg.Grid               := tvLineas;
   cfg.SourceMaster       := dsTablaG;
@@ -1832,7 +1833,7 @@ begin
   //    filtrado "empieza por" mientras tecleas lo hace IncrementalFiltering
   //    en cliente; :prv lo fija RecargarModelos.
   FModeloBusqQry := TUniQuery.Create(nil);
-  FModeloBusqQry.Connection := oConn;
+  FModeloBusqQry.Connection := ConexionPrincipal;
   FModeloBusqQry.SQL.Text :=
     'SELECT ap.REF_PROVEEDOR_AP AS REFPRV,' +
     '       ap.CODIGO_ART_AP    AS CODART,' +
@@ -1999,8 +2000,7 @@ begin
   FModeloTimerBusq.Enabled := True;
 end;
 
-// Al saltar el debounce abre el desplegable ya filtrado por lo tecleado,
-// como inLibGridArticulos.TimerBusqTimer.
+// Al saltar el debounce abre el desplegable ya filtrado por lo tecleado,// como inLibGridArticulos.TimerBusqTimer.
 procedure TfrmMtoComprasSesiones.ModeloTimerBusqTimer(Sender: TObject);
 var
   Edit  : TcxCustomEdit;
@@ -2085,7 +2085,7 @@ begin
   sSerie := Trim(Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString);
   sNumero := Trim(Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString);
   iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
-  rDup := ResolverDuplicadoIntraSesion(oConn, sSerie, sNumero,
+  rDup := ResolverDuplicadoIntraSesion(ConexionPrincipal, sSerie, sNumero,
                                        iLinea, AModelo, ACodigoArt);
   if not rDup.Encontrado then
     Exit;
@@ -2102,8 +2102,7 @@ begin
   // Copia completa opcional (otro color / otro rango de precios): la
   // decide el usuario en un modal que no puede abrirse aqui (seguimos
   // dentro del editor in-place) — se difiere con el timer. Si los dos
-  // caminos de resolucion disparan seguidos (combo + editor de texto),
-  // el rearme solo deja un modal.
+  // caminos de resolucion disparan seguidos (combo + editor de texto),// el rearme solo deja un modal.
   if rDup.LineaOrigen > 0 then
   begin
     FDupLineaOrigen := rDup.LineaOrigen;
@@ -2119,8 +2118,7 @@ end;
 
 // Resuelve el modelo elegido. El valor es un REF_PROVEEDOR existente del
 // proveedor: ResolverDuplicadoSesion lo localiza por su rama REF y
-// AplicarDuplicadoEnLinea marca la linea REUSAR + precarga descripcion,
-// familia, sistema de tallas (fijo), coste y PVP de referencia. Si no casa
+// AplicarDuplicadoEnLinea marca la linea REUSAR + precarga descripcion,// familia,sistema de tallas (fijo),coste y PVP de referencia. Si no casa
 // (modelo nuevo tecleado a mano) se deja como linea normal (alta nueva).
 procedure TfrmMtoComprasSesiones.ModeloTimerResolveTimer(Sender: TObject);
 var
@@ -2155,7 +2153,7 @@ begin
       end;
     Exit;
   end;
-  rDup := ResolverDuplicadoSesion(oConn, sRef, sPrv,
+  rDup := ResolverDuplicadoSesion(ConexionPrincipal, sRef, sPrv,
                                   True, sCodArt);
   if not rDup.Encontrado then
     Exit;
@@ -2178,9 +2176,7 @@ begin
     end;
 end;
 
-// Toda la logica reusable de tallas pivotadas (cache de conjuntos,
-// maximo del documento, recalcular columnas, captions dinamicas,
-// carga / persistencia de celdas, refresco de totales y validacion)
+// Toda la logica reusable de tallas pivotadas (cache de conjuntos,// maximo del documento,recalcular columnas,captions dinamicas,// carga / persistencia de celdas,refresco de totales y validacion)
 // vive ahora en inLibGridTallasInline.TGestorGridTallas — ver
 // InicializarGestorTallas mas abajo. El form solo delega y mantiene
 // la cabecera y los handlers especificos (familia, color, PVP).
@@ -2192,8 +2188,7 @@ end;
 procedure TfrmMtoComprasSesiones.btnAddLineaClick(Sender: TObject);
 begin
   inherited;
-  // BeforeInsert se encarga de preparar el master (Post si pendiente,
-  // Edit si Browse, Abort si IsEmpty).
+  // BeforeInsert se encarga de preparar el master (Post si pendiente,// Edit si Browse,Abort si IsEmpty).
   LogSes('btnAddLineaClick: detail.Insert');
   Dmm.unqrySesionLin.Insert;
   LogSes(Format('btnAddLineaClick FIN. LINEA_SESLIN=%d',
@@ -2336,7 +2331,7 @@ begin
   // (mismo articulo)" ya lo deja marcado desde su creacion; esto es
   // para sesiones que ya tenian duplicados sin marcar.
   iAutoFix := NormalizarDuplicadosIntraSesion(
-                oConn, IdentidadSesion.Usuario,
+                ConexionPrincipal, IdentidadSesion.Usuario,
                 Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
                 Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString);
   if iAutoFix > 0 then
@@ -2389,11 +2384,15 @@ begin
     // Series por defecto (fallback si el almacen no lleva serie propia
     // ni la empresa una generica): buscar en Empresas->Series por tipo
     var sSerieAlbDef := ObtenerSerieDefecto(
-          Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString, 'AB');
+      ConexionPrincipal,
+      Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString,
+      'AB');
     if sSerieAlbDef = '' then
       sSerieAlbDef := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
     var sSeriePedDef := ObtenerSerieDefecto(
-          Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString, 'PC');
+      ConexionPrincipal,
+      Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString,
+      'PC');
     if sSeriePedDef = '' then
       sSeriePedDef := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
     frmSet.SetDefecto(
@@ -2642,8 +2641,7 @@ var
   v                  : Variant;
   q                  : TUniQuery;
 begin
-  // Duplica la linea activa con todos los datos comerciales (codigo,
-  // familia, modelo prov., descripcion, sistema de tallas). Segun AModo:
+  // Duplica la linea activa con todos los datos comerciales (codigo,// familia,modelo prov.,descripcion,sistema de tallas). Segun AModo:
   //   'C' (otro color): precios y cantidades por talla copiados;
   //       COLOR_TEXTO_SESLIN y CODIGO_ATB_COLOR_SESLIN vacios. Mismo
   //       articulo en varios colores: clic, cambias color, terminas.
@@ -2680,7 +2678,7 @@ begin
   iSiguiente := 0;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'SELECT MIN(LINEA_SESLIN) AS SIGUIENTE ' +
       '  FROM fza_compras_sesiones_lineas ' +
@@ -2842,7 +2840,7 @@ begin
   // cantidades se sumarian al recargar).
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'DELETE FROM fza_compras_sesiones_celdas ' +
       ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
@@ -3026,8 +3024,7 @@ begin
     AbrirSelectorTallas(AEdit, sBusq);
     Key := 0;
   end
-  // Ctrl+Enter sobre cualquier columna 'editbutton' (color basico,
-  // sistema tallas, ...) dispara el click de su primer boton, igual que
+  // Ctrl+Enter sobre cualquier columna 'editbutton' (color basico,// sistema tallas,...) dispara el click de su primer boton,igual que
   // pulsar el ellipsis '...'. Generico: invoca el OnButtonClick cableado
   // en esa columna pasando AEdit (el editor en edicion) como Sender.
   // Normalmente lo atrapa antes el KeyDown del form (KeyPreview); esto es
@@ -3265,13 +3262,12 @@ begin
     Exit;
 
   // 2. Reusar articulo existente: si lo tecleado coincide con un
-  //    CODIGO_ART_ART, marcamos REUSAR y prerellenamos descripcion,
-  //    familia, sistema de tallas, color base y coste sugerido. Asi el
+  //    CODIGO_ART_ART,marcamos REUSAR y prerellenamos descripcion,//    familia,sistema de tallas,color base y coste sugerido. Asi el
   //    usuario solo tiene que poner el color nuevo y las cantidades.
   sPrv := '';
   if not Dmm.unqryTablaG.IsEmpty then
     sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
-  rDup := ResolverDuplicadoSesion(oConn, sNuevo, sPrv);
+  rDup := ResolverDuplicadoSesion(ConexionPrincipal, sNuevo, sPrv);
   if rDup.Encontrado then
   begin
     AplicarDuplicadoEnLinea(Dmm, rDup);
@@ -3327,8 +3323,12 @@ begin
   // ResolverCodigoFamilia incrementa el contador como efecto colateral si
   // resuelve: solo se llama una vez por edicion de celda. Si devuelve False
   // no consume nada y dejamos el codigo manual sin tocar.
-  if not ResolverCodigoFamilia(oConn, sTecleado, IdentidadSesion.Usuario,
-                               sExpandido) then Exit;
+  if not ResolverCodigoFamilia(
+    ConexionPrincipal,
+    sTecleado,
+    IdentidadSesion.Usuario,
+                               sExpandido) then
+    Exit;
 
   if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
   ds.FieldByName('CODIGO_FAM_SESLIN').AsString          := sTecleado;
@@ -3341,7 +3341,7 @@ begin
   if ds.FieldByName('DESCRIPCION_SESLIN').AsString <> '' then Exit;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'SELECT NOMBRE_FAM_FAM FROM fza_articulos_familias ' +
       ' WHERE CODIGO_FAM_FAM = :p';
@@ -3388,9 +3388,8 @@ begin
   if AplicarDuplicadoDeSesion(sRef, '') then
     Exit;
 
-  // Buscamos por REF_PROVEEDOR del proveedor de la cabecera. Si match,
-  // marcamos REUSAR (la helper rellena el resto de campos de la linea).
-  rDup := ResolverDuplicadoSesion(oConn, sRef, sPrv, True);
+  // Buscamos por REF_PROVEEDOR del proveedor de la cabecera. Si match,// marcamos REUSAR (la helper rellena el resto de campos de la linea).
+  rDup := ResolverDuplicadoSesion(ConexionPrincipal, sRef, sPrv, True);
   if not rDup.Encontrado then
     Exit;
   AplicarDuplicadoEnLinea(Dmm, rDup);
@@ -3420,7 +3419,10 @@ begin
   if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
   ds.FieldByName('CODIGO_FAM_SESLIN').AsString := ACodigoFam;
   sTentativo := ACodigoFam;
-  if ResolverCodigoFamilia(oConn, ACodigoFam, IdentidadSesion.Usuario,
+  if ResolverCodigoFamilia(
+    ConexionPrincipal,
+    ACodigoFam,
+    IdentidadSesion.Usuario,
                            sExpandido) then
     sTentativo := sExpandido;
   ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sTentativo;
@@ -3436,7 +3438,7 @@ begin
     begin
       q := TUniQuery.Create(nil);
       try
-        q.Connection := oConn;
+        q.Connection := ConexionPrincipal;
         q.SQL.Text :=
           'SELECT NOMBRE_FAM_FAM FROM fza_articulos_familias ' +
           ' WHERE CODIGO_FAM_FAM = :p';
@@ -3476,8 +3478,7 @@ var
   Info     : TInfoBasico;
 begin
   inherited;
-  // Estilo Excel: al entrar a una celda el contenido queda seleccionado,
-  // asi una pulsacion lo sustituye y Tab/Enter lo deja como esta.
+  // Estilo Excel: al entrar a una celda el contenido queda seleccionado,// asi una pulsacion lo sustituye y Tab/Enter lo deja como esta.
   if AEdit is TcxCustomTextEdit then
     TcxCustomTextEdit(AEdit).SelectAll;
   // 'Modelo prov.': cuando el editor es el desplegable de busqueda
@@ -3489,8 +3490,7 @@ begin
     Exit;
   end;
   // 'Sistema tallas' ya no es un combo: es un TcxButtonEdit con ellipsis
-  // que abre el listbox de 3 columnas (dbcLinTallasPropertiesButtonClick),
-  // igual que el selector de color basico. No hay popup que auto-desplegar
+  // que abre el listbox de 3 columnas (dbcLinTallasPropertiesButtonClick),// igual que el selector de color basico. No hay popup que auto-desplegar
   // ni guerra con JvEnterAsTab/DroppedDown dentro del grid.
   if AItem <> dbcLinColorBasico then Exit;
   if not (AEdit is TcxButtonEdit) then Exit;
@@ -3505,7 +3505,7 @@ begin
 
   Info := Default(TInfoBasico);
   if Trim(AvActual) <> '' then
-    ObtenerInfoBasico(fIdVaColor, AvActual, Info);
+    ObtenerInfoBasico(ConexionPrincipal,fIdVaColor, AvActual, Info);
 
   if Info.EsValido and PintarSwatchEnBitmap(FBmpSwatch, Info, 14) then
   begin
@@ -3607,7 +3607,11 @@ begin
   AvActual := VarToStr(AViewInfo.GridRecord.Values[Col.Index]);
   if Trim(AvActual) = '' then Exit;
   Info := Default(TInfoBasico);
-  if not ObtenerInfoBasico(fIdVaColor, AvActual, Info) then Exit;
+  if not ObtenerInfoBasico(
+    ConexionPrincipal,
+    fIdVaColor,
+    AvActual,
+    Info) then Exit;
   if not Info.EsValido then Exit;
   if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info) then
     ADone := True;
@@ -3657,7 +3661,7 @@ function TfrmMtoComprasSesiones.MaterializarSesionConTx(
                   AListaDocs: TStringList;
                   out ASerPed, ANumPed, ASerAlb, ANumAlb, AErr: string): Boolean;
 var
-  oConn      : TUniConnection;
+  oConexion  : TUniConnection;
   bTxOwned   : Boolean;
   oQry       : TUniQuery;
   bGenPed    : Boolean;
@@ -3686,9 +3690,10 @@ begin
   bGenAlb   := Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S';
   bUnPorAlm := AFrmSet.UnDocPorAlmacen;
   sEmpresa  := Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
-  oConn     := inLibGlobalVar.oConn;
-  bTxOwned  := not oConn.InTransaction;
-  if bTxOwned then oConn.StartTransaction;
+  oConexion := ConexionPrincipal;
+  bTxOwned  := not oConexion.InTransaction;
+  if bTxOwned then
+    oConexion.StartTransaction;
   try
     if bUnPorAlm then
     begin
@@ -3699,7 +3704,7 @@ begin
       // lista completa vive en fza_compras_sesiones_documentos).
       oQry := TUniQuery.Create(nil);
       try
-        oQry.Connection := oConn;
+        oQry.Connection := oConexion;
         oQry.SQL.Text :=
           'SELECT DISTINCT IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), ' +
           '                       :alm_cab) AS ALM ' +
@@ -3727,10 +3732,18 @@ begin
           // propia (fza_empresas_series.CODIGO_ALM_EMPSER) el documento
           // de ese almacen sale con ella; si no, con la elegida en el
           // modal (que el usuario pudo cambiar en el combo).
-          sSerieAlbAlm := ObtenerSeriePropiaAlmacen(sEmpresa, 'AB', sAlm);
+          sSerieAlbAlm := ObtenerSeriePropiaAlmacen(
+            ConexionPrincipal,
+            sEmpresa,
+            'AB',
+            sAlm);
           if sSerieAlbAlm = '' then
             sSerieAlbAlm := AFrmSet.SerieAlb;
-          sSeriePedAlm := ObtenerSeriePropiaAlmacen(sEmpresa, 'PC', sAlm);
+          sSeriePedAlm := ObtenerSeriePropiaAlmacen(
+            ConexionPrincipal,
+            sEmpresa,
+            'PC',
+            sAlm);
           if sSeriePedAlm = '' then
             sSeriePedAlm := AFrmSet.SeriePed;
           if not MaterializarSesion(Dmm, bGenPed, bGenAlb, AUsuario,
@@ -3776,12 +3789,14 @@ begin
         AListaDocs.Add(Format('Pedido|%s|%s|%s',
                               [ASerPed, ANumPed, sAlm]));
     end;
-    if bTxOwned then oConn.Commit;
+    if bTxOwned then
+      oConexion.Commit;
     Result := True;
   except
     on E: Exception do
     begin
-      if bTxOwned and oConn.InTransaction then oConn.Rollback;
+      if bTxOwned and oConexion.InTransaction then
+        oConexion.Rollback;
       if AErr = '' then AErr := E.Message;
       Result := False;
     end;
@@ -3806,7 +3821,7 @@ begin
   sAlmCab := Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
   oQry := TUniQuery.Create(nil);
   try
-    oQry.Connection := oConn;
+    oQry.Connection := ConexionPrincipal;
     oQry.SQL.Text :=
       'INSERT INTO fza_compras_sesiones_celdas ' +
       '  (SERIE_SES_SESCEL, NUMERO_SES_SESCEL, LINEA_SES_SESCEL, ' +
@@ -3884,7 +3899,7 @@ begin
   // FreeAndNil manual en el finally sin riesgo de doble liberacion.
   oForm.OnClose := nil;
   try
-    oForm.Preparar(oConn, IdentidadSesion.Usuario,
+    oForm.Preparar(ConexionPrincipal, IdentidadSesion.Usuario,
                     Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
                     Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
                     iLinea, iAc,
@@ -3952,7 +3967,11 @@ begin
     WidHint := Edit.Width;
   end;
 
-  if not SeleccionarAvConPaleta(fIdVaColor, FBasicosColor, AvActual,
+  if not SeleccionarAvConPaleta(
+    ConexionPrincipal,
+    fIdVaColor,
+    FBasicosColor,
+    AvActual,
                                 AvNuevo, ScrPt.X, ScrPt.Y, WidHint) then
     Exit;
 

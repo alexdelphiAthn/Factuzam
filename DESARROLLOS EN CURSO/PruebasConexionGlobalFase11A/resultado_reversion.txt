@@ -1,0 +1,96 @@
+﻿Reversion de ficheros ajenos - 2026-07-25 06:46:17
+index.lock huerfano eliminado.
+
+Devolviendo a su estado original:
+  src/3rdpartyComp/SynEdit/Source/SynEditReg.pas  -> OK
+  src/3rdpartyComp/SynEdit/Source/SynTextDrawer.pas  -> OK
+  src/3rdpartyComp/SynEdit/Source/SynAutoCorrect.pas  -> OK
+  src/3rdpartyComp/DCPCrypt-master/DCPblockciphers.pas  -> OK
+  src/3rdpartyComp/SQLBuilder4Delphi/unittest/SQLBuilder4D.Parser.UnitTest.pas  -> OK
+  src/Lib/inLibDir.pas  -> OK
+  src/Lib/inLibMsg.pas  -> OK
+  src/otras pruebas/parametros VerticalGrid/Unit1.pas  -> OK
+
+Ficheros modificados que quedan:
+  total: 80
+  DESARROLLOS EN CURSO/PruebasContextoSesionFase10D/INFORME_PRUEBAS.md
+  DESARROLLOS EN CURSO/PruebasContextoSesionFase10D/PruebasContextoSesionFase10D.ps1
+  src/Caja/Forms/inMtoCajaFaseCobro.pas
+  src/Caja/Forms/inMtoCajaMenu.pas
+  src/Caja/Forms/inMtoCajaOpe.pas
+  src/Caja/Forms/inMtoCajaOperacionesHist.pas
+  src/Caja/Forms/inMtoCajaPagosHist.pas
+  src/Caja/Forms/inMtoCajaParam.pas
+  src/Caja/Forms/inMtoCajaSeleccionVale.pas
+  src/Caja/Forms/inMtoTraspasoOpe.pas
+  src/Caja/Modals/inMtoModalImpArqueos.pas
+  src/Caja/Modals/inMtoModalImpDepositos.pas
+  src/Caja/Modals/inMtoModalImpOperaciones.pas
+  src/Caja/Modals/inMtoModalImpPagos.pas
+  src/Core/inMtoAppParam.pas
+  src/Core/inMtoPrincipal.pas
+  src/DataModules/UniDataAlbaranes.pas
+  src/DataModules/UniDataAlbaranesCompra.pas
+  src/DataModules/UniDataArticulos.pas
+  src/DataModules/UniDataAtributosConjuntos.pas
+  src/DataModules/UniDataClientes.pas
+  src/DataModules/UniDataComprasSesiones.pas
+  src/DataModules/UniDataDevolucionesCompra.pas
+  src/DataModules/UniDataDocumentosTrabajo.pas
+  src/DataModules/UniDataEfectosCompra.pas
+  src/DataModules/UniDataEfectosVenta.pas
+  src/DataModules/UniDataEmpresas.pas
+  src/DataModules/UniDataFacturas.pas
+  src/DataModules/UniDataFacturasCompra.pas
+  src/DataModules/UniDataFamilias.pas
+  src/DataModules/UniDataFormasdePago.pas
+  src/DataModules/UniDataGeneradorProcesos.pas
+  src/DataModules/UniDataInventarios.pas
+  src/DataModules/UniDataPedidos.pas
+  src/DataModules/UniDataPedidosCompra.pas
+  src/DataModules/UniDataProveedores.pas
+  src/DataModules/UniDataRemesasCompra.pas
+  src/DataModules/UniDataRemesasVenta.pas
+  src/DataModules/UniDataUsuarios.pas
+  src/DataModules/UniDataVariaciones.pas
+  src/Forms/inMtoAlbaranesCompra.pas
+  src/Forms/inMtoArticulos.pas
+  src/Forms/inMtoBusquedaDatos.pas
+  src/Forms/inMtoClientes.pas
+  src/Forms/inMtoComprasPlantillas.pas
+  src/Forms/inMtoComprasSesiones.pas
+  src/Forms/inMtoConsultaOpe.pas
+  src/Forms/inMtoDevolucionesCompra.pas
+  src/Forms/inMtoEmpresas.pas
+  src/Forms/inMtoFacturasBase.pas
+  src/Forms/inMtoFacturasCompra.pas
+  src/Forms/inMtoFacturasNormal.pas
+  src/Forms/inMtoGeneradorProcesos.pas
+  src/Forms/inMtoInventarios.pas
+  src/Forms/inMtoPedidosCompra.pas
+  src/Forms/inMtoPermisosArbol.pas
+  src/Forms/inMtoPropiedades.pas
+  src/Modals/inMtoModalCargarEfectosRemesa.pas
+  src/Modals/inMtoModalCargarEfectosRemesaVenta.pas
+  src/Modals/inMtoModalFacRec.pas
+  src/Modals/inMtoModalFacturarAlbaranes.pas
+  src/Modals/inMtoModalFacturarTicket.pas
+  src/Modals/inMtoModalGenImp.pas
+  src/Modals/inMtoModalGenerarSKUs.pas
+  src/Modals/inMtoModalGuiasBase.pas
+  src/Modals/inMtoModalImpBalanceSinTallas.pas
+  src/Modals/inMtoModalImpBalanceTallas.pas
+  src/Modals/inMtoModalImpDocsProveedor.pas
+  src/Modals/inMtoModalImpEfectosPago.pas
+  src/Modals/inMtoModalImpFac.pas
+  src/Modals/inMtoModalImpMovVentasArt.pas
+  src/Modals/inMtoModalImpMultiFiltro.pas
+  src/Modals/inMtoModalListadoVentas.pas
+  src/Modals/inMtoModalSelAlmacenAlbaran.pas
+  src/Modals/inMtoModalSelAlmacenPedido.pas
+  src/Modals/inMtoModalSelFamilia.pas
+  src/Modals/inMtoModalSeleccionarBanco.pas
+  src/Modals/inMtoModalVerifactuDecl.pas
+  src/Modals/inMtoModalWizardEditar.pas
+  src/verifactu/inMtoVerifactuLog.pas
+Pruebas y compilacion relanzadas. FIN

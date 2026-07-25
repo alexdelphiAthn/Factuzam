@@ -358,7 +358,7 @@ uses
   inLibDevExp,
   inLibFotos,
   inLibGenBusq,
-  inLibGlobalVar,
+
   inLibArticulosValidador,
   inLibArticulosAtributosLookup,
   inLibAtributosPaleta,
@@ -883,7 +883,7 @@ begin
     AsegurarDesempaquetadoAtributos;
   end;
   Cfg := Default(TConfigColumnasSku);
-  Cfg.Conexion := oConn;
+  Cfg.Conexion := ConexionPrincipal;
   Cfg.View := tvLineas;
   Cfg.Cds := dmmInventarios.cdsLineas;
   Cfg.Modo := FModoEntradaSel;
@@ -992,7 +992,7 @@ begin
   // pruebas ColumnSKUcxGrid.
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := oConn;
+    Qry.Connection := ConexionPrincipal;
     Qry.SQL.Text :=
       'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
       '       MIN(ORDEN_VA) AS ORDEN' +
@@ -1535,7 +1535,7 @@ begin
   swTotal := TStopwatch.StartNew;
 
   swCreate := TStopwatch.StartNew;
-  Lookup := TArticulosAtributosLookup.Create(oConn);
+  Lookup := TArticulosAtributosLookup.Create(ConexionPrincipal);
   msCreate := swCreate.ElapsedMilliseconds;
   try
     swObtener := TStopwatch.StartNew;
@@ -1581,7 +1581,7 @@ procedure TfrmMtoInventarios.tvLineasCustomDrawCell(
   Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
 begin
-  if PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+  if PintarCeldaSwatchSiAplica(ConexionPrincipal, ACanvas, AViewInfo, nil) then
     ADone := True;
 end;
 
@@ -1620,13 +1620,13 @@ begin
   end;
 
   IdVa := '';
-  Mapa := ObtenerMapaAtributosGlobal;
+  Mapa := ObtenerMapaAtributosGlobal(ConexionPrincipal);
   if Mapa <> nil then
     Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
 
   Info := Default(TInfoBasico);
   if (IdVa <> '') and (Trim(AvActual) <> '') then
-    ObtenerInfoBasico(IdVa, AvActual, Info);
+    ObtenerInfoBasico(ConexionPrincipal, IdVa, AvActual, Info);
 
   if Info.EsValido and
      PintarSwatchEnBitmap(FBmpSwatchBoton, Info, 14) then
@@ -1889,7 +1889,7 @@ begin
   SetLength(AAvs, 0);
   if Trim(ACodArt) = '' then Exit;
   if (AOrden < 1) or (AOrden > 5) then Exit;
-  Lookup := TArticulosAtributosLookup.Create(oConn);
+  Lookup := TArticulosAtributosLookup.Create(ConexionPrincipal);
   try
     Vals := Lookup.ObtenerAvsEnSkus(ACodArt, AOrden);
   finally
@@ -1990,7 +1990,7 @@ begin
   end;
 
   IdVa := '';
-  Mapa := ObtenerMapaAtributosGlobal;
+  Mapa := ObtenerMapaAtributosGlobal(ConexionPrincipal);
   if Mapa <> nil then
     Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
 
@@ -2004,7 +2004,7 @@ begin
     WidHint  := EditCtrl.Width;
   end;
 
-  if not SeleccionarAvConPaleta(IdVa, Avs, AvActual, AvNuevo,
+  if not SeleccionarAvConPaleta(ConexionPrincipal, IdVa, Avs, AvActual, AvNuevo,
                                 ScrPt.X, ScrPt.Y, WidHint) then
     Exit;
 
@@ -2129,7 +2129,7 @@ begin
   Result := '';
   unqryBusq := TUniQuery.Create(nil);
   try
-    unqryBusq.Connection := oConn;
+    unqryBusq.Connection := ConexionPrincipal;
     unqryBusq.SQL.Text :=
       'SELECT'                                                      + sLineBreak +
       '    v.CODIGO_ART_ART,'                                       + sLineBreak +
@@ -2169,7 +2169,7 @@ begin
                 'P. venta',              '#,##0.00 €');
     ConfigCampo(unqryBusq.FindField('TIPO_CANTIDAD_ART'),
                 'Tipo cant.',            '');
-    if TBusquedaUtils.EjecutarBusqueda(
+    if TBusquedaUtils.EjecutarBusqueda(ConexionPrincipal,
          'Búsqueda de Artículos',
          unqryBusq,
          'frmMtoArtInvSearch') then
@@ -2200,7 +2200,7 @@ begin
   Result := '';
   unqryBusq := TUniQuery.Create(nil);
   try
-    unqryBusq.Connection := oConn;
+    unqryBusq.Connection := ConexionPrincipal;
     unqryBusq.SQL.Text :=
       'SELECT SK.CODIGO_UNIDAD_SKU,'                         + sLineBreak +
       '       SK.CODIGO_ART_SKU,'                            + sLineBreak +
@@ -2258,7 +2258,7 @@ begin
                 'Stock',                 '#,##0.00');
     ConfigCampo(unqryBusq.FindField('PRECIO_MEDIO_STK'),
                 'PMP',                   '#,##0.0000');
-    if TBusquedaUtils.EjecutarBusqueda(
+    if TBusquedaUtils.EjecutarBusqueda(ConexionPrincipal,
          'Búsqueda de SKUs',
          unqryBusq,
          'frmMtoInvSkuSearch',
@@ -2286,7 +2286,7 @@ begin
   AEncontrado  := False;
   if Trim(AInput) = '' then Exit;
 
-  Validador := TArticulosValidador.Create(oConn);
+  Validador := TArticulosValidador.Create(ConexionPrincipal);
   try
     Resolucion := Validador.Resolver(AInput);
     if not Resolucion.Encontrado then Exit;
@@ -3175,10 +3175,10 @@ begin
     Exit;
   Screen.Cursor := crHourGlass;
   try
-    if EnviarInventario(sEmp, sAlm, sSerie, sNumero, sDesc, 'DIRIGIDO',
-                        idRec, sMsg) then
+    if EnviarInventario(ConexionPrincipal, sEmp, sAlm, sSerie, sNumero,
+                        sDesc, 'DIRIGIDO', idRec, sMsg) then
     begin
-      oConn.ExecSQL(
+      ConexionPrincipal.ExecSQL(
         ' UPDATE fza_inventarios SET ESRECUENTO_REMOTO_INV = ''S'',' +
         '   INSTANTE_ENVIO_RECUENTO_INV = NOW(),' +
         '   ID_RECUENTO_REMOTO_INV = :ID' +
@@ -3230,13 +3230,14 @@ begin
   Screen.Cursor := crHourGlass;
   Lista := TStringList.Create;
   try
-    if RecogerRecuento(sEmp, sAlm, sSerie, sNumero, IdentidadSesion.Usuario, idRec, Lista,
-                       iNumEv, sMsg) then
+    if RecogerRecuento(ConexionPrincipal, sEmp, sAlm, sSerie, sNumero,
+                       IdentidadSesion.Usuario, idRec, Lista, iNumEv,
+                       sMsg) then
     begin
       // Volcamos el agregado SKU=CANTIDAD a las físicas, igual que el Excel.
       if Lista.Count > 0 then
         dmmInventarios.CargarDesdeListaSkus(Lista);
-      oConn.ExecSQL(
+      ConexionPrincipal.ExecSQL(
         ' UPDATE fza_inventarios SET INSTANTE_RECOGIDA_RECUENTO_INV = NOW()' +
         ' WHERE CODIGO_EMP_INV = :E AND CODIGO_ALM_INV = :A' +
         '   AND SERIE_INV = :S AND NUMERO_INV = :N',

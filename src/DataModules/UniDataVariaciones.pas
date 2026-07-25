@@ -42,7 +42,7 @@ type
 implementation
 
 uses
-  inMtoVariaciones, inLibGlobalVar, inLibLog, System.Diagnostics;
+  inMtoVariaciones, inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -57,11 +57,11 @@ begin
   inherited;
   // Solo Connection + MasterSource. Los .Open se han movido a AbrirDetalles.
   LDsTablaG := (GetOwnerForm<TfrmMtoVariaciones>).dsTablaG;
-  unqryArticulosVariacion.Connection := oConn;
+  unqryArticulosVariacion.Connection := ConexionPrincipal;
   unqryArticulosVariacion.MasterSource := LDsTablaG;
-  unqryAtributosVariacion.Connection := oConn;
+  unqryAtributosVariacion.Connection := ConexionPrincipal;
   unqryAtributosVariacion.MasterSource := LDsTablaG;
-  unqrySkusArticulo.Connection := oConn;
+  unqrySkusArticulo.Connection := ConexionPrincipal;
 end;
 
 procedure TdmVariaciones.AbrirDetalles;

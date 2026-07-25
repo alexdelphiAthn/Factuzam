@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoArticulos                                                }
 {    Tipo:       Formulario (Mto)                                              }
@@ -607,7 +607,6 @@ uses
   inMtoEmpresas,
   inMtoFacturasBase,
   inMtoModalArtTar,
-  inLibGlobalVar,
   inMtoModalGenerarSKUs,
   inMtoModalAddPreciosTar,
   inMtoModalCalcularMargen,
@@ -753,7 +752,7 @@ begin
   if aCodArticulo = '' then Exit;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
 
     // 1) ¿El artículo tiene variaciones? Si las tiene, no hacemos nada
     qry.SQL.Text := 'SELECT ESVARIACION_ART FROM fza_articulos ' +
@@ -801,7 +800,7 @@ begin
   if aCodArticulo = '' then Exit;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
 
     // 1) ¿Ya existe algún SKU activo para este artículo? Nada que hacer.
     qry.SQL.Text := 'SELECT 1 FROM fza_articulos_skus '       +
@@ -952,7 +951,7 @@ procedure TfrmMtoArticulos.AbrirFacturaLineaActiva(const ANumero,
   ASerie: string);
 begin
   ShowMto(Self.Owner,
-          ResolverCallFactura(ANumero, ASerie),
+          ResolverCallFactura(ConexionPrincipal, ANumero, ASerie),
           ANumero + ',' + ASerie);
 end;
 
@@ -1395,8 +1394,8 @@ begin
   inherited;
     ShowMto(Self.Owner,
             'Tarifas',
-                 dmmArticulos.unqryTarifasArticulos.FieldByName(
-                                                     'CODIGO_TAR_ARTTAR').AsString);
+            dmmArticulos.unqryTarifasArticulos.FieldByName(
+                                                 'CODIGO_TAR_ARTTAR').AsString);
 end;
 
 procedure TfrmMtoArticulos.btnGrabarClick(Sender: TObject);
@@ -1582,9 +1581,9 @@ begin
   iVacios    := 0;
   iSaltados  := 0;
   try
-    qrySkus.Connection   := oConn;
-    qryInsert.Connection := oConn;
-    qryDel.Connection    := oConn;
+    qrySkus.Connection   := ConexionPrincipal;
+    qryInsert.Connection := ConexionPrincipal;
+    qryDel.Connection    := ConexionPrincipal;
 
     // 2) Limpieza: placeholders _FAB_ residuales de versiones anteriores.
     qryDel.SQL.Text :=
@@ -1657,7 +1656,10 @@ begin
         if qrySkus.FieldByName('NUM_PRIN').AsInteger = 0 then
         begin
           // Fase A: principal con contador EAN-13
-          sCounter := ObtenerSiguienteContador(CB_TIPO_DOC, IdentidadSesion.Usuario);
+          sCounter := ObtenerSiguienteContador(
+            ConexionPrincipal,
+            CB_TIPO_DOC,
+            IdentidadSesion.Usuario);
           if Length(sCounter) > CB_NUM_DIGITOS then
             sCounter := Copy(sCounter, Length(sCounter) - CB_NUM_DIGITOS + 1,
                              CB_NUM_DIGITOS)
@@ -1750,7 +1752,7 @@ begin
   iSkip := 0;
   sErrores := '';
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT cb.CODIGO_BARRAS_CB, cb.CODIGO_UNIDAD_CB, cb.TIPO_CODIGO_CB ' +
       '  FROM fza_codigos_barras cb '                                       +
@@ -1913,7 +1915,9 @@ end;
 
 procedure TfrmMtoArticulos.BuscarProveedores;
 begin
-  if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Proveedores en Articulos',
+  if TBusquedaUtils.EjecutarBusqueda(
+    ConexionPrincipal,
+    'Búsqueda de Proveedores en Articulos',
                                      dmmArticulos.unqryProveedores,
                                      'frmMtoArtProvSearch') then
     dmmArticulos.CopiarProveedoraArticulo(dmmArticulos.unqryProveedores);
@@ -2008,7 +2012,7 @@ begin
   ccbFiltroTemporadaArt.Properties.Items.Clear;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT PV FROM fza_propiedades_valores ' +
       ' WHERE ID_PROP_PV = ''TEMPORADA'' AND ESACTIVO_PV = ''S'' ' +
@@ -2254,7 +2258,7 @@ begin
   // Misma conexion (propia del Mto) que usara la carga real.
   cn := dmmArticulos.unqryTablaG.Connection;
   if cn = nil then
-    cn := oConn;
+    cn := ConexionPrincipal;
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := cn;
@@ -2309,7 +2313,10 @@ begin
   ActualizarVisibilidadVariaciones;
   ActualizarVisibilidadColumnaSku;
   if (FAtributosStock <> nil) and (FArticuloCargado <> '') then
-    CargarMapaAtributosArticulo(FArticuloCargado, FAtributosStock);
+    CargarMapaAtributosArticulo(
+      ConexionPrincipal,
+      FArticuloCargado,
+      FAtributosStock);
   if (FArticuloCargado <> '') and Assigned(dmmArticulos)
      and (pcDetail.ActivePage = cxTabSheet3) then
   begin
@@ -2326,7 +2333,7 @@ begin
   if not Assigned(dmmArticulos) or (dmmArticulos.unqryTablaG = nil) then Exit;
   cn := dmmArticulos.unqryTablaG.Connection;
   if cn = nil then
-    cn := oConn;
+    cn := ConexionPrincipal;
   sTempIn := CsvTemporadasControl;
   sPrvIn  := FFiltroProvCsv;
   sFamIn  := FFiltroFamCsv;
@@ -2507,12 +2514,12 @@ begin
       // Mismo volcado de filtros que usa Grabar Grid; el upsert de
       // GrabarPerfiles sobrescribe los valores previos del ámbito.
       RecogerPerfilesParticulares(oList, sPermisos);
-      oConn.StartTransaction;
+      ConexionPrincipal.StartTransaction;
       try
         PerfilesUsuario.GrabarPerfiles(oList);
-        oConn.Commit;
+        ConexionPrincipal.Commit;
       except
-        oConn.Rollback;
+        ConexionPrincipal.Rollback;
         raise;
       end;
     finally
@@ -2556,7 +2563,7 @@ begin
   // Crear el gestor
   FGestorProp := TGestorPropiedades.Create(
     FScrollProp,
-    oConn,   // <-- ajusta al nombre real de tu TUniConnection
+    ConexionPrincipal,   // <-- ajusta al nombre real de tu TUniConnection
     IdentidadSesion.Usuario               // <-- ajusta a tu función/variable de usuario
   );
 end;
@@ -2618,7 +2625,7 @@ begin
   FGestorVar := TGestorVariaciones.Create(
     FScrollVarAtrib,
 //    FScrollVarSkus,
-    oConn,
+    ConexionPrincipal,
     IdentidadSesion.Usuario
   );
 end;
@@ -2727,7 +2734,10 @@ begin
   if FAtributosStock <> nil then
   begin
     swTramo := TStopwatch.StartNew;
-    CargarMapaAtributosArticulo(CodArticulo, FAtributosStock);
+    CargarMapaAtributosArticulo(
+      ConexionPrincipal,
+      CodArticulo,
+      FAtributosStock);
     msMapaAtr := swTramo.ElapsedMilliseconds;
   end;
 
@@ -3037,7 +3047,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     // 1) Buscar AV existente para esta variacion + valor.
     qry.SQL.Text :=
       'SELECT ID_AV FROM fza_atributos_valores '   +
@@ -3158,7 +3168,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     // 1) Insertar (o reutilizar) básico ad-hoc.
     qry.SQL.Text :=
       'INSERT INTO fza_atributos_basicos '              +
@@ -3230,7 +3240,7 @@ begin
   vNew := (Sender as TcxCustomEdit).EditingValue;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'UPDATE fza_atributos_basicos '   +
       '   SET NOMBRE_ATB    = :VAL, '   +
@@ -3270,7 +3280,7 @@ begin
   vNew := (Sender as TcxCustomEdit).EditingValue;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'UPDATE fza_atributos_basicos '   +
       '   SET VALOR_NUM_ATB = :VAL, '   +
@@ -3313,7 +3323,7 @@ begin
   vNew := (Sender as TcxCustomEdit).EditingValue;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'UPDATE fza_atributos_basicos '   +
       '   SET UNIDAD_ATB    = :VAL, '   +
@@ -3366,7 +3376,7 @@ begin
   vNew := (Sender as TcxCustomEdit).EditingValue;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'INSERT INTO fza_articulos_atributos_basicos '          +
       '   (CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, '           +
@@ -3587,7 +3597,7 @@ begin
   CodigoExistente := '';
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT ID_ATB, CODIGO_ATB FROM fza_atributos_basicos '          +
       ' WHERE ID_VA_ATB = :IDVA '                                      +
@@ -3640,7 +3650,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'INSERT INTO fza_atributos_basicos '              +
       '   (ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, '         +
@@ -3704,7 +3714,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     // UPSERT del override per-artículo. Si vNew es NULL/'' guardamos
     // un BLOQUEO: la fila existe con ID_ATB_AAB = NULL para indicar que
     // este artículo no quiere básico para este valor (la vista da
@@ -3787,7 +3797,7 @@ begin
 
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := ConexionPrincipal;
       qry.SQL.Text :=
         'UPDATE fza_atributos_basicos '   +
         '   SET HEX_ATB       = :HEX, '   +
@@ -3874,7 +3884,11 @@ begin
   // diccionario, asi que no entran aqui.
   if not FAtributosStock.TryGetValue(
        UpperCase(Trim(GetItemFieldName(AViewInfo.Item))), IdVa) then Exit;
-  if not ObtenerInfoBasico(IdVa, AViewInfo.Text, Info) then Exit;
+  if not ObtenerInfoBasico(
+    ConexionPrincipal,
+    IdVa,
+    AViewInfo.Text,
+    Info) then Exit;
   if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info) then
     ADone := True;
 end;
@@ -3936,7 +3950,10 @@ begin
   for i := 0 to tvStock.ColumnCount - 1 do
     if FAtributosStock.ContainsKey(
          UpperCase(Trim(GetItemFieldName(tvStock.Columns[i])))) then
-      AjustarAnchoColumnaParaSwatch(tvStock.Columns[i], FAtributosStock);
+      AjustarAnchoColumnaParaSwatch(
+        ConexionPrincipal,
+        tvStock.Columns[i],
+        FAtributosStock);
 end;
 
 procedure TfrmMtoArticulos.tvStockGetCellHint(Sender: TcxCustomGridTableView;
@@ -3951,7 +3968,7 @@ begin
   if FAtributosStock.Count = 0 then Exit;
   if not FAtributosStock.TryGetValue(
        UpperCase(Trim(GetItemFieldName(ACellViewInfo.Item))), IdVa) then Exit;
-  if ObtenerInfoBasico(IdVa, ACellViewInfo.Text, Info) then
+  if ObtenerInfoBasico(ConexionPrincipal, IdVa, ACellViewInfo.Text, Info) then
     AHintText := Info.Nombre;
 end;
 

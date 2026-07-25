@@ -90,7 +90,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibUser, inLibGlobalVar, inMtoPrincipal,
+  inLibWin, inLibUser, inMtoPrincipal,
   inMtoModalGenImpSave, inMtoModalImpPagos, inLibFiltroUsuario;
 
 {$R *.dfm}
@@ -359,12 +359,12 @@ begin
     oList := TPerfilList.Create;
     try
       RecogerPerfilesParticulares(oList, sPermisos);
-      oConn.StartTransaction;
+        ConexionPrincipal.StartTransaction;
       try
         PerfilesUsuario.GrabarPerfiles(oList);
-        oConn.Commit;
+        ConexionPrincipal.Commit;
       except
-        oConn.Rollback;
+        ConexionPrincipal.Rollback;
         raise;
       end;
     finally

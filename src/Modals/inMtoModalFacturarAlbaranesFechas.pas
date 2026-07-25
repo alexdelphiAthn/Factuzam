@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalFacturarAlbaranesFechas                             }
 {    Tipo:       Formulario (Modal)                                            }
@@ -29,10 +29,10 @@ uses
   cxDropDownEdit, cxNavigator, cxPropertiesStore, dxSkinsForm,
   cxCalendar, cxDBData,
   Data.DB, MemDS, DBAccess, Uni,
-  UniDataAlbaranes, dxCore, cxDateUtils, Vcl.Menus;
+  inMtoFrmBase, UniDataAlbaranes, dxCore, cxDateUtils, Vcl.Menus;
 
 type
-  TfrmModalFacturarAlbaranesFechas = class(TForm)
+  TfrmModalFacturarAlbaranesFechas = class(TfrmBase)
     pnlTop: TPanel;
     lblSerie: TcxLabel;
     edtSerie: TcxTextEdit;
@@ -72,18 +72,16 @@ type
 
 implementation
 
-uses
-  inLibGlobalVar;
-
 {$R *.dfm}
 
 procedure TfrmModalFacturarAlbaranesFechas.FormCreate(Sender: TObject);
 begin
+  inherited;
   edtSerie.Text   := 'A1';
   dteDesde.Date   := EncodeDate(YearOf(Date), MonthOf(Date), 1);
   dteHasta.Date   := Date;
   chkAgruparPorCliente.Checked := True;
-  qBuscar.Connection := inLibGlobalVar.oConn;
+  qBuscar.Connection := ConexionPrincipal;
 end;
 
 procedure TfrmModalFacturarAlbaranesFechas.btnCerrarClick(Sender: TObject);

@@ -36,12 +36,14 @@ type
 
   TAppParams = class
   private
+    FConexion: TUniConnection;
     FParams: TObjectDictionary<string, TAppParamDef>;
     procedure CargarDesdeDB(const AUsuario, AGrupo: string);
   public
     constructor Create;
     destructor Destroy; override;
 
+    procedure AsignarConexion(AConexion: TUniConnection);
     procedure RegistrarParametro(const ACategoria, ANombre, ADesc: string;
                                  ATipo: TTipoParametro; const ADefecto: string);
     procedure RegistrarDefectos;
@@ -67,7 +69,7 @@ var
 implementation
 
 uses
-  System.StrUtils, inLibGlobalVar, inLibPathTokens, inLibLog;
+  System.StrUtils, inLibPathTokens, inLibLog;
 
 { TAppParamDef }
 
@@ -87,6 +89,7 @@ end;
 constructor TAppParams.Create;
 begin
   inherited;
+  FConexion := nil;
   FParams := TObjectDictionary<string, TAppParamDef>.Create([doOwnsValues]);
 end;
 
@@ -114,6 +117,11 @@ begin
     Param.ValorActual := Param.ValorPorDefecto;
 end;
 
+procedure TAppParams.AsignarConexion(AConexion: TUniConnection);
+begin
+  FConexion := AConexion;
+end;
+
 procedure TAppParams.CargarDesdeDB(const AUsuario, AGrupo: string);
 var
   qry    : TUniQuery;
@@ -122,9 +130,12 @@ var
   ParamObj: TAppParamDef;
 begin
   RegistrarDefectos;
+  if (FConexion = nil) or (not FConexion.Connected) then
+    raise Exception.Create(
+      'TAppParams requiere una conexión activa');
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := FConexion;
     qry.SQL.Text   :=
       'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
     qry.ParamByName('p_usuario').AsString    := AUsuario;

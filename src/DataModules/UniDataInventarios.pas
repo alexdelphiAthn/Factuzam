@@ -234,9 +234,8 @@ uses
   System.StrUtils,      // IfThen(Boolean, string, string) para snapshot
   inLibUser,            // Usuario logueado
   inLibLog,             // Log.LogInfo para metricas
-  inLibGlobalVar,
   inLibData,
-  UniDataConn;      // oConn
+  UniDataConn;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -352,20 +351,20 @@ end;
 procedure TdmInventarios.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryTablaG.Connection           := oConn;
-  unqryLineas.Connection           := oConn;
-  unqryMovsRegul.Connection        := oConn;
-  unqryArticulo.Connection         := oConn;
-  unqryDefinicionArticulo.Connection := oConn;
-  unqryStockActual.Connection      := oConn;
-  unqryFamilias.Connection         := oConn;
-  unqryProveedores.Connection      := oConn;
-  unqryAlmacenes.Connection        := oConn;
-  unqryEmpresas.Connection         := oConn;
-  unqrySeries.Connection           := oConn;
-  unspActualizarTeorico.Connection := oConn;
-  unspAplicar.Connection           := oConn;
-  unspEliminarRegul.Connection     := oConn;
+  unqryTablaG.Connection           := ConexionPrincipal;
+  unqryLineas.Connection           := ConexionPrincipal;
+  unqryMovsRegul.Connection        := ConexionPrincipal;
+  unqryArticulo.Connection         := ConexionPrincipal;
+  unqryDefinicionArticulo.Connection := ConexionPrincipal;
+  unqryStockActual.Connection      := ConexionPrincipal;
+  unqryFamilias.Connection         := ConexionPrincipal;
+  unqryProveedores.Connection      := ConexionPrincipal;
+  unqryAlmacenes.Connection        := ConexionPrincipal;
+  unqryEmpresas.Connection         := ConexionPrincipal;
+  unqrySeries.Connection           := ConexionPrincipal;
+  unspActualizarTeorico.Connection := ConexionPrincipal;
+  unspAplicar.Connection           := ConexionPrincipal;
+  unspEliminarRegul.Connection     := ConexionPrincipal;
   PrepararSqlCabecera;
 
   unqryLineas.SQLUpdate.Text :=
@@ -622,7 +621,7 @@ begin
   Result := '';
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT EMPSER ' +
       '  FROM fza_empresas_series ' +
@@ -649,7 +648,7 @@ begin
   if unqryTablaG.FindField('NUMERO_INV').AsString <> '0' then Exit;
   sp := TUniStoredProc.Create(nil);
   try
-    sp.Connection := oConn;
+    sp.Connection := ConexionPrincipal;
     sp.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
     sp.Params.Clear;
     sp.Params.CreateParam(ftString, 'pserie',           ptInput);
@@ -706,13 +705,13 @@ begin
     raise Exception.Create(
       'No se puede reservar la linea: graba primero la cabecera del ' +
       'inventario para tener empresa, almacen, serie y numero definitivos.');
-  bTransPropia := not oConn.InTransaction;
+  bTransPropia := not ConexionPrincipal.InTransaction;
   if bTransPropia then
-    oConn.StartTransaction;
+    ConexionPrincipal.StartTransaction;
   qry := TUniQuery.Create(nil);
   try
     try
-      qry.Connection := oConn;
+      qry.Connection := ConexionPrincipal;
       qry.SQL.Text :=
         'SELECT IFNULL(CAST(NULLIF(CAST(CONTADOR_LINEAS_INV ' +
         'AS CHAR), '''') AS UNSIGNED), 0) AS NV ' +
@@ -749,12 +748,12 @@ begin
       if qry.RowsAffected = 0 then
         raise Exception.Create(
           'No se ha podido actualizar el contador de lineas del inventario.');
-      if bTransPropia and oConn.InTransaction then
-        oConn.Commit;
+      if bTransPropia and ConexionPrincipal.InTransaction then
+        ConexionPrincipal.Commit;
       Result := Format('%.4d', [iNuevaLinea]);
     except
-      if bTransPropia and oConn.InTransaction then
-        oConn.Rollback;
+      if bTransPropia and ConexionPrincipal.InTransaction then
+        ConexionPrincipal.Rollback;
       raise;
     end;
   finally
@@ -1344,7 +1343,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, ' +
       '       a.DESCRIPCION_ART, ' +
@@ -1411,7 +1410,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, ' +
       '       a.DESCRIPCION_ART, ' +
@@ -1477,7 +1476,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, ' +
       '       a.DESCRIPCION_ART, ' +
@@ -1542,7 +1541,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, ' +
       '       a.DESCRIPCION_ART, ' +
@@ -1622,7 +1621,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT DISTINCT m.CODIGO_UNIDAD_MOV AS CODIGO_UNIDAD_SKU, ' +
       '       m.CODIGO_ART_MOV    AS CODIGO_ART_SKU, ' +
@@ -1700,7 +1699,7 @@ begin
   if Trim(ASku) = '' then Exit;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text := 'SELECT 1 FROM fza_articulos_skus ' +
                     ' WHERE CODIGO_UNIDAD_SKU = :SKU LIMIT 1';
     qry.ParamByName('SKU').AsString := ASku;
@@ -1725,7 +1724,7 @@ begin
   // hay ninguno, de fza_articulos.TIPO_VARIACION_ART.
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
 
     // 1) Insertar la cabecera del SKU.
     qry.SQL.Text :=
@@ -1845,7 +1844,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT s.CODIGO_ART_SKU, a.DESCRIPCION_ART ' +
       '  FROM fza_articulos_skus s ' +

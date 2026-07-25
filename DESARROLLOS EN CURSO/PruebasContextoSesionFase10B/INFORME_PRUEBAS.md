@@ -31,15 +31,18 @@ interfaz y datos:
   de su propietario cuando este implementa `IProveedorContextoSesion`.
 - `TdmTraspaso` hereda el contexto de su propietario sin modificar su herencia
   ni su DFM.
-- `TfrmStockConsulta` recibe el contexto explícitamente en sus tres puntos de
-  apertura.
+- En X-B, `TfrmStockConsulta` recibía el contexto explícitamente en sus
+  tres puntos de apertura. Desde XI-B1 hereda de `TfrmBase`, por lo que
+  la barrera comprueba ahora que no duplica el campo ni transporta el
+  servicio desde los llamantes.
 - Doce unidades han eliminado por completo su dependencia de
   `inLibGlobalVar`.
 - El adaptador `TContextoSesionGlobal` se conserva de forma temporal para los
   consumidores no visuales que corresponden a la futura Fase X-C.
 - Se mantienen los 253 enlaces persistentes de conexión existentes en 52
   ficheros DFM.
-- No se ha modificado ningún DFM ni el esquema de la base de datos.
+- En X-B no se modificó ningún DFM. La barrera admite después los dos
+  cambios de raíz necesarios para la herencia visual de XI-B1.
 - `factuzam_original.sql` permanece intacto.
 
 Tras X-B todavía existen 88 referencias a las seis variables en 20 unidades

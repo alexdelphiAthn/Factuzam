@@ -38,7 +38,7 @@ type
 implementation
 
 uses
-  inLibtb, inLibGlobalVar, inMtoUsuarios;
+  inLibtb, inMtoUsuarios;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -53,7 +53,7 @@ begin
   unqrySol := TUniQuery.Create(Self);
   with unqrySol do
   begin
-    Connection := oConn;
+    Connection := ConexionPrincipal;
     SQL.Text :=  'SELECT * '+
                  '  FROM fza_usuarios_grupos ' +
                  ' WHERE GRUPO_USUGRP = :grupo ';
@@ -67,8 +67,8 @@ end;
 procedure TdmUsuarios.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryEmpresas.Connection := oConn;
-  unqryGrupos.Connection := oConn;
+  unqryEmpresas.Connection := ConexionPrincipal;
+  unqryGrupos.Connection := ConexionPrincipal;
   unqryEmpresas.MasterSource :=  (GetOwnerForm<TfrmMtoUsuarios>).dsTablaG;
   //unqry
 end;

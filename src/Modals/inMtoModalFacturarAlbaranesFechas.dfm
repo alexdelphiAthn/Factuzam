@@ -1,4 +1,4 @@
-﻿object frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
+﻿inherited frmModalFacturarAlbaranesFechas: TfrmModalFacturarAlbaranesFechas
   Left = 0
   Top = 0
   BorderStyle = bsDialog

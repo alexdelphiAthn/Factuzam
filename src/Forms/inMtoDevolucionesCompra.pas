@@ -311,7 +311,6 @@ implementation
 
 uses
   System.StrUtils,
-  inLibGlobalVar,
   inLibFiltroUsuario,
   inLibFotos,
   inLibLog,
@@ -347,7 +346,11 @@ begin
   begin
     sEmpresa := Trim(UbicacionSesion.Empresa);
   end;
-  CargarSeriesEmpresa(sEmpresa, 'DC', cbbSERIE_DEVC.Properties.Items);
+  CargarSeriesEmpresa(
+    ConexionPrincipal,
+    sEmpresa,
+    'DC',
+    cbbSERIE_DEVC.Properties.Items);
   if cbbSERIE_DEVC.Properties.Items.Count = 0 then
   begin
     if MessageDlg('No hay series de devoluciones a proveedor (tipo DC) ' +
@@ -579,7 +582,7 @@ begin
   begin
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := ConexionPrincipal;
       qry.SQL.Text :=
         'SELECT X.SKU ' +
         '  FROM ( ' +
@@ -655,7 +658,7 @@ begin
           begin
             qry := TUniQuery.Create(nil);
             try
-              qry.Connection := oConn;
+              qry.Connection := ConexionPrincipal;
               qry.SQL.Text :=
                 'SELECT X.COLOR_TXT, MIN(X.COLOR_COD) AS COLOR_COD ' +
                 '  FROM ( ' +
@@ -804,12 +807,13 @@ begin
       FColorPivotCodigos.TryGetValue(UpperCase(Trim(sTexto)), sCodigo);
     bHayColor := False;
     if sCodigo <> '' then
-      bHayColor := ObtenerInfoBasico('CO', sCodigo, Info);
+      bHayColor := ObtenerInfoBasico(ConexionPrincipal,'CO', sCodigo, Info);
     if not bHayColor then
-      bHayColor := ObtenerInfoBasico('CO', sTexto, Info);
+      bHayColor := ObtenerInfoBasico(ConexionPrincipal,'CO', sTexto, Info);
     if not bHayColor then
-      bHayColor := BuscarInfoBasicoEnArticulo(sTexto,
-                                              ObtenerMapaAtributosGlobal,
+      bHayColor := BuscarInfoBasicoEnArticulo(ConexionPrincipal,sTexto,
+                                              ObtenerMapaAtributosGlobal(
+                                                ConexionPrincipal),
                                               Info);
     if bHayColor then
     begin
@@ -896,7 +900,7 @@ begin
   begin
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := ConexionPrincipal;
       qry.SQL.Text :=
         'SELECT COALESCE(AVC.ID_AV, 0) AS COLOR_AV ' +
         '  FROM fza_devoluciones_compra_lineas L ' +
@@ -1013,17 +1017,17 @@ begin
         begin
           qry := TUniQuery.Create(nil);
           try
-            qry.Connection := oConn;
+            qry.Connection := ConexionPrincipal;
             Screen.Cursor := crHourGlass;
             try
               if bPivotActivo then
                 FPivote.Desactivar;
               if dsLin.Active then
                 dsLin.Close;
-              bTxOwned := not oConn.InTransaction;
+              bTxOwned := not ConexionPrincipal.InTransaction;
               try
                 if bTxOwned then
-                  oConn.StartTransaction;
+                  ConexionPrincipal.StartTransaction;
                 qry.SQL.Text :=
                   'DELETE C ' +
                   '  FROM fza_devoluciones_compra_celdas C ' +
@@ -1044,11 +1048,11 @@ begin
                 ParametrosGrupo(qry);
                 qry.ExecSQL;
                 iFilas := qry.RowsAffected;
-                if bTxOwned and oConn.InTransaction then
-                  oConn.Commit;
+                if bTxOwned and ConexionPrincipal.InTransaction then
+                  ConexionPrincipal.Commit;
               except
-                if bTxOwned and oConn.InTransaction then
-                  oConn.Rollback;
+                if bTxOwned and ConexionPrincipal.InTransaction then
+                  ConexionPrincipal.Rollback;
                 raise;
               end;
               if not dsLin.Active then
@@ -1362,8 +1366,7 @@ begin
 end;
 
 // Crea CANT_ATRIB_MAX columnas no-bound para mostrar los valores de
-// los atributos del SKU de cada linea (modo "atributo por columna",
-// estilo inventarios). Read-only y no persistentes: solo
+// los atributos del SKU de cada linea (modo "atributo por columna",// estilo inventarios). Read-only y no persistentes: solo
 // visualizacion. La carga real de valores por SKU queda como TODO.
 procedure TfrmMtoDevolucionesCompra.CrearColumnasAtributos;
 var
@@ -2057,7 +2060,7 @@ begin
       begin
         qAux := TUniQuery.Create(nil);
         try
-          qAux.Connection := oConn;
+          qAux.Connection := ConexionPrincipal;
           if (iColorAv = 0) and ArticuloTieneColores then
             MessageDlg('Selecciona el color de la fila antes de devolver ' +
                        'su stock.', mtInformation, [mbOk], 0)
@@ -2079,18 +2082,18 @@ begin
                   FPivote.Desactivar;
                 if dsLin.Active then
                   dsLin.Close;
-                bTxOwned := not oConn.InTransaction;
+                bTxOwned := not ConexionPrincipal.InTransaction;
                 try
                   if bTxOwned then
-                    oConn.StartTransaction;
+                    ConexionPrincipal.StartTransaction;
                   BorrarGrupoFilaActual;
                   iLineaBase := LineaBaseDocumento;
                   InsertarLineasStockFila;
-                  if bTxOwned and oConn.InTransaction then
-                    oConn.Commit;
+                  if bTxOwned and ConexionPrincipal.InTransaction then
+                    ConexionPrincipal.Commit;
                 except
-                  if bTxOwned and oConn.InTransaction then
-                    oConn.Rollback;
+                  if bTxOwned and ConexionPrincipal.InTransaction then
+                    ConexionPrincipal.Rollback;
                   raise;
                 end;
                 if not dsLin.Active then
@@ -2722,7 +2725,7 @@ begin
   begin
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT art.CODIGO_ART_ART, art.ESACTIVO_ART, art.ORDEN_ART, ' +
       '       art.DESCRIPCION_ART, art.CODIGO_FAM_ART, ' +
@@ -2744,7 +2747,10 @@ begin
       '   AND COALESCE(art.ESACTIVO_ART, ''S'') = ''S'' ' +
       ' ORDER BY art.ORDEN_ART, art.CODIGO_ART_ART';
     qry.ParamByName('prv').AsString := sPrv;
-    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de artículos', qry,
+    if TBusquedaUtils.EjecutarBusqueda(
+      ConexionPrincipal,
+      'Búsqueda de artículos',
+      qry,
          'frmMtoDevcArtSearch', Self) and
        (qry.FindField('CODIGO_ART_ART') <> nil) then
       Result := qry.FieldByName('CODIGO_ART_ART').AsString;
@@ -2786,7 +2792,7 @@ begin
   begin
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := ConexionPrincipal;
       qry.SQL.Text :=
         'SELECT SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU, ' +
         '       GROUP_CONCAT(AV.AV ORDER BY COALESCE(VA.ORDEN_VA, 999), ' +
@@ -2805,7 +2811,8 @@ begin
         ' ORDER BY SK.CODIGO_UNIDAD_SKU';
       qry.ParamByName('art').AsString := sArt;
       if TBusquedaUtils.EjecutarBusqueda(
-           'SKUs del artículo ' + sArt,
+        ConexionPrincipal,
+        'SKUs del artículo ' + sArt,
            qry,
            'frmMtoDevcSkuSearch',
            Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
@@ -2970,7 +2977,7 @@ var
     Result := 0;
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := ConexionPrincipal;
       qry.SQL.Text :=
         'SELECT aca.ID_AC_ACA ' +
         '  FROM fza_articulos_conjuntos_asign aca ' +
@@ -2993,7 +3000,7 @@ var
     Result := '';
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := oConn;
+      qry.Connection := ConexionPrincipal;
       qry.SQL.Text :=
         'SELECT ap.REF_PROVEEDOR_AP ' +
         '  FROM fza_articulos_proveedores ap ' +
@@ -3023,7 +3030,7 @@ var
     begin
       qArt := TUniQuery.Create(nil);
       try
-        qArt.Connection := oConn;
+        qArt.Connection := ConexionPrincipal;
         qArt.SQL.Text :=
           'SELECT 1 ' +
           '  FROM fza_articulos ' +
@@ -3115,7 +3122,7 @@ begin
         Datos.Clear;
         if EsCodigoArticuloExacto(sArt) then
         begin
-          Resolver := TArticulosResolver.Create(oConn);
+          Resolver := TArticulosResolver.Create(ConexionPrincipal);
           try
             Datos := Resolver.ResolverDatos(sArt, '', '', dFecha, sAlm,
                                             sPrv);
@@ -3128,7 +3135,7 @@ begin
         end
         else
         begin
-          Validador := TArticulosValidador.Create(oConn);
+          Validador := TArticulosValidador.Create(ConexionPrincipal);
           try
             Resolucion := Validador.Resolver(sArt);
           finally
@@ -3138,7 +3145,7 @@ begin
           begin
             sArt := Resolucion.CodigoArticulo;
             sSku := Resolucion.CodigoSku;
-            Resolver := TArticulosResolver.Create(oConn);
+            Resolver := TArticulosResolver.Create(ConexionPrincipal);
             try
               Datos := Resolver.ResolverDatos(sArt, sSku, '', dFecha, sAlm,
                                               sPrv);
@@ -3351,7 +3358,8 @@ begin
       MessageDlg('Crea o selecciona una devolución de compra antes de ' +
                  'elegir la empresa.', mtInformation, [mbOk], 0)
     else if TBusquedaUtils.EjecutarBusqueda(
-              'Búsqueda de empresas',
+      ConexionPrincipal,
+      'Búsqueda de empresas',
               'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
               'CODIGO_EMP_EMP',
               sCodigo,
@@ -3390,7 +3398,8 @@ begin
       MessageDlg('Crea o selecciona una devolución de compra antes de ' +
                  'elegir el proveedor.', mtInformation, [mbOk], 0)
     else if TBusquedaUtils.EjecutarBusqueda(
-              'Búsqueda de proveedores',
+      ConexionPrincipal,
+      'Búsqueda de proveedores',
               'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
               'CODIGO_PRV_PRV',
               sCodigo,
@@ -3400,7 +3409,7 @@ begin
       if not (ds.State in [dsInsert, dsEdit]) then
         ds.Edit;
       ds.FieldByName('CODIGO_PRV_DEVC').AsString := sCodigo;
-      AplicarIvaExentoIntracomunitarioProveedor(oConn, ds,
+      AplicarIvaExentoIntracomunitarioProveedor(ConexionPrincipal, ds,
         'CODIGO_PRV_DEVC', 'ESIVA_EXENTO_INTRACOMUNITARIO_DEVC');
       dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
       ActualizarLabelProveedor;

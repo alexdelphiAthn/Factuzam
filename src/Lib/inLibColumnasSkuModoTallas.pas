@@ -2045,7 +2045,7 @@ begin
     sTexto := AViewInfo.Text;
   end;
   if PintarCeldaSwatchArticuloSiAplica(
-       ACanvas, AViewInfo, sArticulo, sTexto, nil) then
+       FConfig.Conexion, ACanvas, AViewInfo, sArticulo, sTexto, nil) then
     ADone := True;
 end;
 
@@ -2198,11 +2198,12 @@ begin
           for j := 0 to High(Avs) do
             AvsStr[j] := Avs[j].Valor;
           sIdVa := '';
-          Mapa := ObtenerMapaAtributosGlobal;
+          Mapa := ObtenerMapaAtributosGlobal(FConfig.Conexion);
           if Mapa <> nil then
             Mapa.TryGetValue(UpperCase(Trim(Atribs[i].NombreAtributo)),
                              sIdVa);
-          if not SeleccionarAvConPaleta(sIdVa, AvsStr, '', sAvNuevo,
+          if not SeleccionarAvConPaleta(FConfig.Conexion, sIdVa, AvsStr, '',
+                                        sAvNuevo,
                                         -1, -1, 160) then
             sAvNuevo := '';
         end;

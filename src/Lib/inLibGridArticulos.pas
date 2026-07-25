@@ -1107,7 +1107,7 @@ begin
       ' ORDER BY STOCK DESC, a.CODIGO_ART_ART';
     Q.ParamByName('ALM').AsString := FAlmacenStock;
     Q.Open;
-    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de artículos', Q,
+    if TBusquedaUtils.EjecutarBusqueda(FConn, 'Búsqueda de artículos', Q,
                                        'frmMtoArtTraspasoSearch') then
     begin
       sArt := Q.FieldByName('ARTICULO').AsString;
@@ -1181,7 +1181,7 @@ begin
     sTexto := AViewInfo.Text;
   end;
   if PintarCeldaSwatchArticuloSiAplica(
-       ACanvas, AViewInfo, sArticulo, sTexto, nil) then
+       FConn, ACanvas, AViewInfo, sArticulo, sTexto, nil) then
     ADone := True;
 end;
 
@@ -1516,7 +1516,7 @@ begin
   for i := 0 to High(Avs) do
     AvsStr[i] := Avs[i].Valor;
   sIdVa := '';
-  Mapa := ObtenerMapaAtributosGlobal;
+  Mapa := ObtenerMapaAtributosGlobal(FConn);
   if Mapa <> nil then
     Mapa.TryGetValue(UpperCase(Trim(sNombreAtb)), sIdVa);
   // Asegura el editor in-place visible en la celda del atributo para situar la
@@ -1556,7 +1556,7 @@ begin
           WidHint := 120;
         end;
       end;
-    if not SeleccionarAvConPaleta(sIdVa, AvsStr, sAvActual, sAvNuevo,
+    if not SeleccionarAvConPaleta(FConn, sIdVa, AvsStr, sAvActual, sAvNuevo,
                                   ScrX, ScrY, WidHint) then
       Exit;
     if FCds.State = dsBrowse then

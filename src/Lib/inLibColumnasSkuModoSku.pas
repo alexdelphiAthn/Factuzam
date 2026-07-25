@@ -658,7 +658,7 @@ begin
   sArticulo := ValorRecord(AViewInfo.GridRecord,
                            FConfig.Campos.CodigoArt);
   if PintarCeldaSwatchArticuloSiAplica(
-       ACanvas, AViewInfo, sArticulo, sTexto, nil) then
+       FConfig.Conexion, ACanvas, AViewInfo, sArticulo, sTexto, nil) then
     ADone := True;
   if (not ADone) and (sTexto <> '') and (sTexto <> AViewInfo.Text) then
   begin
@@ -865,13 +865,14 @@ begin
         for j := 0 to High(Avs) do
           AvsStr[j] := Avs[j].Valor;
         sIdVa := '';
-        Mapa := ObtenerMapaAtributosGlobal;
+        Mapa := ObtenerMapaAtributosGlobal(FConfig.Conexion);
         if Mapa <> nil then
           Mapa.TryGetValue(UpperCase(Trim(Atribs[i].NombreAtributo)),
                            sIdVa);
         // Paleta de swatches (desarrollo ya hecho, mismo selector que
         // caja/inventarios). Auto-centrada (-1,-1).
-        if SeleccionarAvConPaleta(sIdVa, AvsStr, '', sAvNuevo,
+        if SeleccionarAvConPaleta(FConfig.Conexion, sIdVa, AvsStr, '',
+                                  sAvNuevo,
                                   -1, -1, 160) then
           Result := Result + '/' + sAvNuevo
         else

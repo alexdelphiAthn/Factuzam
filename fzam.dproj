@@ -188,13 +188,13 @@
         <DCCReference Include="src\Lib\inLibIBAN.pas"/>
         <DCCReference Include="src\Lib\inLibSepaRemesasVenta.pas"/>
         <DCCReference Include="src\Lib\inLibFacturas.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturaPdfBlob.pas"/>
         <DCCReference Include="src\Lib\inLibFormatoDocumento.pas"/>
         <DCCReference Include="src\Lib\inLibInformesGuiasCache.pas"/>
         <DCCReference Include="src\Lib\inLibGridColumnChooser.pas"/>
         <DCCReference Include="src\Lib\inLibConfigCampos.pas"/>
         <DCCReference Include="src\Lib\inLibContextoSesionIntf.pas"/>
         <DCCReference Include="src\Lib\inLibContextoSesion.pas"/>
-        <DCCReference Include="src\Lib\inLibContextoSesionGlobal.pas"/>
         <DCCReference Include="src\Lib\inLibFiltrosGuardadosIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPerfilesUsuarioIntf.pas"/>
         <DCCReference Include="src\Lib\inLibConexionesIntf.pas"/>
@@ -663,7 +663,6 @@
         <DCCReference Include="src\Lib\inLibFactuzamApi.pas"/>
         <DCCReference Include="src\Lib\inLibVentasWsJson.pas"/>
         <DCCReference Include="src\Lib\inLibVentasWsCola.pas"/>
-        <DCCReference Include="src\Lib\inLibFacturaPdfBlob.pas"/>
         <DCCReference Include="src\Lib\inLibXades.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentoFiscal.pas"/>
         <DCCReference Include="src\Lib\inLibRelojFiscal.pas"/>

@@ -121,7 +121,7 @@ begin
   begin
     sSerie  := ds.FieldByName('SERIE_FAC_VFCOLA').AsString;
     sNumero := ds.FieldByName('NUMERO_FAC_VFCOLA').AsString;
-    sCall   := ResolverCallFactura(sNumero, sSerie);
+    sCall   := ResolverCallFactura(ConexionPrincipal,sNumero, sSerie);
     ShowMto(Self.Owner, sCall, sNumero + ',' + sSerie);
   end;
 end;

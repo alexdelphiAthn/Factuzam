@@ -15,7 +15,8 @@
 {    devoluciones y resúmenes por sección, empleado y forma de pago.           }
 {                                                                              }
 {    Uso:                                                                      }
-{      TArqueoTicket.Imprimir(oConn, sEmp, sAlm, sCaja, dDesde, dHasta, 'P1'); }
+{      TArqueoTicket.Imprimir(AConexion, sEmp, sAlm, sCaja, dDesde,
+        dHasta, 'P1'); }
 {                                                                              }
 {    Si la impresora es 'DEBUG' abre el preview (TFormVisualizador) en vez de  }
 {    mandar a la impresora física.                                             }

@@ -336,7 +336,7 @@ begin
     Exit;
   qryColsExt := TUniQuery.Create(nil);
   try
-    qryColsExt.Connection := oConn;
+    qryColsExt.Connection := ConexionPrincipal;
     qryColsExt.SQL.Text :=
       'select COLUMN_NAME from information_schema.COLUMNS ' +
       ' where TABLE_SCHEMA = database() and TABLE_NAME = :TAB ' +
@@ -406,7 +406,7 @@ begin
         try
           qryTmp := TUniQuery.Create(nil);
           try
-            qryTmp.Connection := oConn;
+            qryTmp.Connection := ConexionPrincipal;
             qryTmp.SQL.Text :=
               'select * from (' + sSqlActual + ') X_GUIAS where 1=0';
             CopiarParametros(uniMaster, qryTmp);
@@ -608,21 +608,21 @@ begin
   qryChk := TUniQuery.Create(nil);
   qryIns := TUniQuery.Create(nil);
   try
-    qrySrc.Connection := oConn;
+    qrySrc.Connection := ConexionPrincipal;
     qrySrc.SQL.Text :=
       'select CODIGO_INFGUI from fza_informes_guias ' +
       ' where INFORME_INFGUI = :INF and FORMATO_INFGUI = ''''';
     qrySrc.ParamByName('INF').AsString := Self.Name;
     qrySrc.Open;
 
-    qryChk.Connection := oConn;
+    qryChk.Connection := ConexionPrincipal;
     qryChk.SQL.Text :=
       'select 1 from fza_informes_guias ' +
       ' where INFORME_INFGUI = :INF ' +
       '   and FORMATO_INFGUI = :FMT ' +
       '   and CODIGO_INFGUI = :COD';
 
-    qryIns.Connection := oConn;
+    qryIns.Connection := ConexionPrincipal;
     qryIns.SQL.Text :=
       'insert into fza_informes_guias (' +
       '  CODIGO_INFGUI, INFORME_INFGUI, FORMATO_INFGUI, ' +
@@ -1126,7 +1126,7 @@ var
 begin
   unqrySol := TUniQuery.Create(nil);
   try
-    unqrySol.Connection := oConn;
+    unqrySol.Connection := ConexionPrincipal;
     unqrySol.SQL.Text := 'SELECT USUARIO_GRUPO_USUPER ' +
                          '  FROM fza_usuarios_perfiles ' +
                          ' WHERE KEY_USUPER = :NombreReport ' +
@@ -1184,7 +1184,7 @@ begin
   Result := False;
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT VALUE_BLOB_USUPER FROM fza_usuarios_perfiles ' +
       ' WHERE KEY_USUPER     = :FormName ' +
@@ -1221,7 +1221,7 @@ var
 begin
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := oConn;
+    qry.Connection := ConexionPrincipal;
     if aInsertar then
       qry.SQL.Text :=
         'INSERT INTO fza_usuarios_perfiles (' +

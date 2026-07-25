@@ -65,6 +65,7 @@ type
     dsFacturaLin:    TDataSource;
     procedure DataModuleCreate(Sender: TObject);
   private
+    FConexion: TUniConnection;
     FCargando: Boolean;
     // Clave (Emp|Alm|Caja|NumOp) de la ultima operacion para la que se
     // refrescaron las pestanas hijas. Si una nueva llamada a
@@ -81,6 +82,9 @@ type
     // antes salian 2-3 cargas identicas.
     FUltimaClaveMaestro: string;
   public
+    constructor Create(
+      AOwner: TComponent;
+      AConexion: TUniConnection); reintroduce;
     procedure CargarMaestro(AFecha:     TDate;
                             const AEmp,
                                   AAlm,
@@ -116,22 +120,31 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibGlobalVar, inLibLog;
+uses inLibLog;
 
 {$R *.dfm}
 
 // -----------------------------------------------------------------------------
+constructor TdmConsultaOpe.Create(
+  AOwner: TComponent;
+  AConexion: TUniConnection);
+begin
+  FConexion := AConexion;
+  inherited Create(AOwner);
+end;
+
+// -----------------------------------------------------------------------------
 procedure TdmConsultaOpe.DataModuleCreate(Sender: TObject);
 begin
-  qryMaestro.Connection     := oConn;
-  qryOperacion.Connection   := oConn;
-  qryPagos.Connection       := oConn;
-  qryVales.Connection       := oConn;
-  qryMovimientos.Connection := oConn;
-  qryCliente.Connection     := oConn;
-  qryDepositos.Connection   := oConn;
-  qryFactura.Connection     := oConn;
-  qryFacturaLin.Connection  := oConn;
+  qryMaestro.Connection     := FConexion;
+  qryOperacion.Connection   := FConexion;
+  qryPagos.Connection       := FConexion;
+  qryVales.Connection       := FConexion;
+  qryMovimientos.Connection := FConexion;
+  qryCliente.Connection     := FConexion;
+  qryDepositos.Connection   := FConexion;
+  qryFactura.Connection     := FConexion;
+  qryFacturaLin.Connection  := FConexion;
 
   // ------------------------------------------------------------------
   //  Grid MAESTRO: una fila por NUMERO_OPERACION_OPCAJA del dia.

@@ -67,16 +67,13 @@ type
 
 implementation
 
-uses
-  inLibGlobalVar;
-
 {$R *.dfm}
 
 procedure TfrmModalSelFamilia.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
-  unqryFamilias.Connection := oConn;
+  unqryFamilias.Connection := ConexionPrincipal;
 end;
 
 procedure TfrmModalSelFamilia.FormShow(Sender: TObject);

@@ -1,4 +1,4 @@
-﻿inherited frmMtoArticulos: TfrmMtoArticulos
+inherited frmMtoArticulos: TfrmMtoArticulos
   Left = 5
   Top = 4
   Caption = 'Articulos'
@@ -160,8 +160,8 @@
             object ccbFiltroTemporadaArt: TcxCheckComboBox
               Left = 605
               Top = 4
-              Properties.EditValueFormat = cvfStatesString
               Properties.EmptySelectionText = 'Ninguna seleccionada'
+              Properties.EditValueFormat = cvfStatesString
               Properties.Items = <>
               Properties.OnCloseUp = ccbFiltroTemporadaArtPropertiesCloseUp
               TabOrder = 2
@@ -441,6 +441,10 @@
             object tsSkuMto: TcxTabSheet
               Caption = '&2_SKUs'
               ImageIndex = 6
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlTopSkus: TPanel
                 Left = 0
                 Top = 0
@@ -721,10 +725,18 @@
             object tsPropiedades: TcxTabSheet
               Caption = '&3_Propiedades'
               ImageIndex = 9
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
             end
             object tsSKUs: TcxTabSheet
               Caption = '&4_CB'
               ImageIndex = 6
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object pnlBotonesCB: TPanel
                 Left = 940
                 Top = 0
@@ -895,6 +907,10 @@
             object tsTarifas: TcxTabSheet
               Caption = '&5_Tarifas'
               ImageIndex = 1
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdTarifas: TcxGrid
                 Left = 0
                 Top = 0
@@ -1190,6 +1206,10 @@
             object tsProveedores: TcxTabSheet
               Caption = '&6_Proveedores'
               ImageIndex = 2
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxgrdProveedores: TcxGrid
                 Left = 0
                 Top = 0
@@ -1883,6 +1903,10 @@
             object cxTabSheet3: TcxTabSheet
               Caption = '&8_Stock'
               ImageIndex = 7
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxGrdStock: TcxGrid
                 Left = 0
                 Top = 0
@@ -2006,6 +2030,10 @@
             object tsMovimientos: TcxTabSheet
               Caption = '&9_Movimientos'
               ImageIndex = 8
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 0
+              ExplicitHeight = 0
               object cxGrdMovimientos: TcxGrid
                 Left = 0
                 Top = 0

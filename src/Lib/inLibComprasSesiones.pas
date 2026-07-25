@@ -281,8 +281,7 @@ implementation
 
 uses
   System.Math,
-  System.StrUtils,
-  inLibGlobalVar;
+  System.StrUtils;
 
 const
   COL_WIDTH      = 60;
@@ -365,7 +364,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := FDM.ConexionPrincipal;
     q.SQL.Text :=
       'SELECT ACD.ID_AV_ACD, AV.AV AS VALOR ' +
       '  FROM fza_atributos_conjuntos_det ACD ' +
@@ -398,8 +397,8 @@ begin
   qF := TUniQuery.Create(nil);
   qA := TUniQuery.Create(nil);
   try
-    qF.Connection := inLibGlobalVar.oConn;
-    qA.Connection := inLibGlobalVar.oConn;
+    qF.Connection := FDM.ConexionPrincipal;
+    qA.Connection := FDM.ConexionPrincipal;
     qF.SQL.Text :=
       'SELECT * FROM fza_compras_sesiones_lineas_filas ' +
       ' WHERE SERIE_SES_SESFIL = :s AND NUMERO_SES_SESFIL = :n ' +
@@ -467,7 +466,7 @@ var
 begin
   qC := TUniQuery.Create(nil);
   try
-    qC.Connection := inLibGlobalVar.oConn;
+    qC.Connection := FDM.ConexionPrincipal;
     // Filtramos por almacen: la matriz muestra una "capa" por almacen.
     // Para no perder celdas legacy (creadas antes de anadir CODIGO_ALM_SESCEL),
     // tambien traemos las que tienen el codigo vacio cuando ese caso aplica.
@@ -594,7 +593,7 @@ begin
   // Upsert directo en fza_compras_sesiones_celdas para (linea, fila, pivot, almacen)
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := FDM.ConexionPrincipal;
     if rNew <= 0 then
     begin
       q.SQL.Text :=
@@ -714,7 +713,7 @@ begin
 
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := FDM.ConexionPrincipal;
 
     // Siguiente ID_FILA y ORDEN para la linea. Para el orden usamos pasos
     // de 10 (10, 20, 30...) para que el SKU se ordene correctamente y deje
@@ -785,7 +784,7 @@ begin
 
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := FDM.ConexionPrincipal;
 
     // Atributo del conjunto pivot (CO, TAL, ...) — necesario para crear el
     // AV bajo ese atributo.
@@ -884,7 +883,7 @@ begin
 
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := FDM.ConexionPrincipal;
     // 1. Borrar celdas
     q.SQL.Text :=
       'DELETE FROM fza_compras_sesiones_celdas ' +
@@ -940,7 +939,7 @@ begin
 
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := ADM.ConexionPrincipal;
     q.SQL.Text := 'DELETE FROM fza_compras_sesiones_celdas ' +
                   ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
                   '   AND LINEA_SES_SESCEL = :l';
@@ -1017,7 +1016,7 @@ begin
       // sobre otro aunque compartan algun valor de talla).
       q := TUniQuery.Create(nil);
       try
-        q.Connection := inLibGlobalVar.oConn;
+        q.Connection := ADM.ConexionPrincipal;
         q.SQL.Text :=
           'SELECT K.ID_AC_TALLAS_PRVKIT, ' +
           '  (SELECT NOMBRE_AC FROM fza_atributos_conjuntos ' +
@@ -1093,7 +1092,7 @@ begin
     sSinCasar  := '';
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := ADM.ConexionPrincipal;
       q.SQL.Text :=
         'SELECT VALOR_DESTINO_PRVKITD, CANTIDAD_PRVKITD ' +
         '  FROM fza_proveedores_kits_det ' +
@@ -1211,7 +1210,7 @@ begin
 
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := ADM.ConexionPrincipal;
 
     // ---- Hay al menos una linea ----
     q.SQL.Text :=
@@ -1403,7 +1402,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := ADM.ConexionPrincipal;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N FROM fza_compras_sesiones_lineas ' +
       ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n ' +
@@ -1426,7 +1425,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := ADM.ConexionPrincipal;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N FROM fza_compras_sesiones_celdas ' +
       ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
@@ -1448,7 +1447,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := ADM.ConexionPrincipal;
     q.SQL.Text :=
       'SELECT IFNULL(SUM(TOTAL_LINEA_SESLIN), 0) AS T ' +
       '  FROM fza_compras_sesiones_lineas ' +
@@ -1511,7 +1510,7 @@ begin
 
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := ADM.ConexionPrincipal;
     q.SQL.Text :=
       'SELECT PRECIO_COMPRA_SESLIN, PORCENTAJE_MARGEN_SESLIN ' +
       '  FROM fza_compras_sesiones_lineas ' +
@@ -1539,7 +1538,7 @@ begin
   // Persistir
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := ADM.ConexionPrincipal;
     q.SQL.Text :=
       'UPDATE fza_compras_sesiones_lineas SET ' +
       '  PRECIO_VENTA_SESLIN = :v, ' +

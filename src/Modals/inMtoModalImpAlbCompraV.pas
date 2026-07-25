@@ -97,8 +97,7 @@ begin
     fPreview.DialogoGuardar.FileName :=
       'AlbCompraV_' + edtSerie.Text + '_' + edtNumero.Text;
     try
-      ExportarDocCompraVertical(
-        fPreview.dxSpreadSheet1,
+      ExportarDocCompraVertical(ConexionPrincipal,fPreview.dxSpreadSheet1,
         dmAlbc.unqryCabAlbcPrint,
         dmAlbc.unqryLinAlbcSkuPrint,
         cfg);

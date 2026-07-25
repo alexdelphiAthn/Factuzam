@@ -168,7 +168,7 @@ begin
   FLector.OnCodigoLeido := LectorCodigoLeido;
   FLector.OnEsControlRejilla := LectorEsControlRejilla;
   FComboCodigos := TStringList.Create;
-  FDatos := TdmTraspaso.Create(Self);
+  FDatos := TdmTraspaso.Create(Self, ConexionPrincipal);
   // Coste/importe solo para administrador: TienePermiso devuelve True siempre a
   // admin; al resto, oculto por defecto (default False) salvo permiso explicito
   // 'caja.verCoste'. Sin sistema de permisos, oculto.
@@ -231,7 +231,10 @@ begin
     Campos.AttrNombre[i] := 'ATTR' + IntToStr(i) + '_NOMBRE';
   end;
   // La controladora crea la columna de artículo + las de talla/color.
-  FGridCtrl := TGridArticulosLineas.Create(oConn, FView, FDatos.cdsLineas,
+  FGridCtrl := TGridArticulosLineas.Create(
+    ConexionPrincipal,
+    FView,
+    FDatos.cdsLineas,
                                            Campos);
   FGridCtrl.OnResuelto := GridResuelto;
   FGridCtrl.Construir;
@@ -295,7 +298,7 @@ begin
   // Query del SP pivotado (mismo que usa caja: almacenes en filas, tallas en
   // columnas). Acepta codigo de articulo o SKU como entrada.
   FStockQry := TUniQuery.Create(Self);
-  FStockQry.Connection := oConn;
+  FStockQry.Connection := ConexionPrincipal;
   FStockQry.SQL.Text := 'CALL PRC_GET_CAJA_STOCK_PIVOTADO(:ARTICULO)';
   FStockDs := TDataSource.Create(Self);
   FStockDs.DataSet := FStockQry;
@@ -349,10 +352,13 @@ begin
         end;
         // La primera columna (codigo CODART/COLOR) lleva swatch de color: le
         // sumamos el ancho del cuadradito para que no recorte el texto.
-        Mapa := ObtenerMapaAtributosGlobal;
+        Mapa := ObtenerMapaAtributosGlobal(ConexionPrincipal);
         if (Mapa <> nil) and (Mapa.Count > 0) and
            (FStockView.ColumnCount > 0) then
-          AjustarAnchoColumnaParaSwatch(FStockView.Columns[0], Mapa);
+          AjustarAnchoColumnaParaSwatch(
+            ConexionPrincipal,
+            FStockView.Columns[0],
+            Mapa);
         // Mostrar solo las tallas con existencias: ocultamos las columnas de
         // talla que esten a cero en todos los almacenes (el SP devuelve una
         // columna por cada talla del articulo, tenga o no stock). No se tocan
@@ -467,7 +473,7 @@ begin
   // donde no toca. Mismo criterio que la rejilla de stock de caja.
   if (AViewInfo <> nil) and (AViewInfo.Item <> nil) and
      (AViewInfo.Item.VisibleIndex = 0) and
-     PintarCeldaSwatchSiAplica(ACanvas, AViewInfo, nil) then
+     PintarCeldaSwatchSiAplica(ConexionPrincipal,ACanvas, AViewInfo, nil) then
     ADone := True;
 end;
 
@@ -756,7 +762,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     // Destinos: cualquier almacen ESTANDAR activo (excepto el propio), de la
     // misma empresa o de otra (el traspaso entre empresas se graba como TA).
     q.SQL.Text :=
@@ -879,7 +885,11 @@ begin
         FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
       ActualizarTotal;
       // Ticket de la solicitud recibida (stock origen / destino por SKU).
-      TTraspasoTicket.ImprimirSolicitud(oConn, sNum, sSer, oNomImpresoraCaja);
+      TTraspasoTicket.ImprimirSolicitud(
+        ConexionPrincipal,
+        sNum,
+        sSer,
+        oNomImpresoraCaja);
     end
     else
       ShowMessage('No se pudo cargar la solicitud.');
@@ -1040,7 +1050,11 @@ begin
     sNum := FQModalSolic.FieldByName('NUMERO_TRSOL').AsString;
     sSer := FQModalSolic.FieldByName('SERIE_TRSOL').AsString;
     if sNum <> '' then
-      TTraspasoTicket.ImprimirSolicitud(oConn, sNum, sSer, oNomImpresoraCaja);
+      TTraspasoTicket.ImprimirSolicitud(
+        ConexionPrincipal,
+        sNum,
+        sSer,
+        oNomImpresoraCaja);
   end;
 end;
 
@@ -1072,8 +1086,7 @@ var
 begin
   // Deniega TODA la solicitud cargada (atajo F4): pide un motivo, lo marca en
   // cada linea (servir 0) y la resuelve como DENEGADO TOTAL sin mover stock. El
-  // solicitante lo vera en su historico (F7). Para denegar solo algunas lineas,
-  // sirve unas con cantidad y deja otras a 0 con su motivo, y pulsa F12.
+  // solicitante lo vera en su historico (F7). Para denegar solo algunas lineas,// sirve unas con cantidad y deja otras a 0 con su motivo,y pulsa F12.
   if FModo <> mtAtender then
     ShowMessage('Denegar solo aplica al atender una solicitud.')
   else if Trim(FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString) = '' then
@@ -1127,12 +1140,11 @@ var
   Q: TUniQuery;
 begin
   // Historico (solo consulta) de las peticiones que YO he hecho (soy el
-  // destino que pide): numero, serie, fecha, a quien pedi (origen) y estado,
-  // para saber si se han servido/denegado. Reutiliza el buscador de
+  // destino que pide): numero,serie,fecha,a quien pedi (origen) y estado,// para saber si se han servido/denegado. Reutiliza el buscador de
   // solicitudes; los titulos los pone el formateador (fza_config_campos).
   Q := FDatos.QueryMisPeticiones(FAlmacen);
   try
-    TBusquedaUtils.EjecutarBusqueda('Mis peticiones', Q,
+    TBusquedaUtils.EjecutarBusqueda(ConexionPrincipal,'Mis peticiones', Q,
                                     'frmMtoSolicitudesSearch');
   finally
     FreeAndNil(Q);
@@ -1155,7 +1167,7 @@ begin
         begin
           ShowMessage(Format('Solicitud %s/%s enviada.', [sSer, sNum]));
           // Ticket de la solicitud: cada SKU con stock origen / destino.
-          TTraspasoTicket.ImprimirSolicitud(oConn, sNum, sSer,
+          TTraspasoTicket.ImprimirSolicitud(ConexionPrincipal, sNum, sSer,
                                             oNomImpresoraCaja);
           AplicarModo(mtSolicitar);
         end;
@@ -1191,11 +1203,10 @@ procedure TfrmMtoOpeTraspaso.BuscarEmpleado;
 var
   Q: TUniQuery;
 begin
-  // Buscador de empleados (mismos datos y rejilla que la caja). Al elegir uno,
-  // su codigo va al campo y se valida para mostrar el nombre.
+  // Buscador de empleados (mismos datos y rejilla que la caja). Al elegir uno,// su codigo va al campo y se valida para mostrar el nombre.
   Q := TUniQuery.Create(nil);
   try
-    Q.Connection := oConn;
+    Q.Connection := ConexionPrincipal;
     Q.SQL.Text :=
       'SELECT CODIGO_EMPL AS `Código de Empleado`,' +
       '       DIMINUTIVO_TICKET_EMPL AS `Nombre de Empleado`' +
@@ -1203,7 +1214,7 @@ begin
       ' WHERE ESACTIVO_EMPL = ''S''' +
       '   AND CODIGO_EMPL IS NOT NULL' +
       ' ORDER BY CODIGO_EMPL';
-    if TBusquedaUtils.EjecutarBusqueda('Buscar empleado', Q,
+    if TBusquedaUtils.EjecutarBusqueda(ConexionPrincipal,'Buscar empleado', Q,
                                        'frmMtoEmpCajSearch') then
     begin
       txtEmpleado.Text := Q.Fields[0].AsString;
@@ -1310,7 +1321,11 @@ begin
             ShowMessage(Format('Solicitud atendida. Traspaso %s grabado.',
                                [sNumOp]));
             if AConTicket then
-              TTraspasoTicket.ImprimirTraspaso(oConn, sNumOp, sOrigen, sDestino,
+              TTraspasoTicket.ImprimirTraspaso(
+                ConexionPrincipal,
+                sNumOp,
+                sOrigen,
+                sDestino,
                 sEmpleado, FDatos.cdsLineas, oNomImpresoraCaja);
             AplicarModo(mtAtender);
           end;
@@ -1336,7 +1351,11 @@ begin
       begin
         ShowMessage(Format('Traspaso %s grabado correctamente.', [sNumOp]));
         if AConTicket then
-          TTraspasoTicket.ImprimirTraspaso(oConn, sNumOp, sOrigen, sDestino,
+          TTraspasoTicket.ImprimirTraspaso(
+            ConexionPrincipal,
+            sNumOp,
+            sOrigen,
+            sDestino,
             sEmpleado, FDatos.cdsLineas, oNomImpresoraCaja);
         AplicarModo(mtTraspaso);
       end;

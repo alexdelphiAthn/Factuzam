@@ -111,22 +111,19 @@ Comprobar (
   ) 'El DataModule de traspasos hereda el contexto de su propietario'
 Comprobar (
     ($stock -match
-      'const AContextoSesion:\s*IContextoSesionAplicacion') -and
-    ($stock -match
-      'FContextoSesion := AContextoSesion') -and
+      'TfrmStockConsulta\s*=\s*class\(TfrmBase\)') -and
+    ($stock -match '\bContextoSesion\b') -and
+    ($stock -notmatch '\bFContextoSesion\b') -and
     ($stock -notmatch $patronGlobalSesion)
-  ) 'La consulta de stock recibe el contexto explícitamente'
+  ) 'La consulta de stock hereda el contexto desde TfrmBase'
 Comprobar (
     ($principal -match
-      'MostrarStockConsulta\(\s*LForm,\s*Permisos,\s*' +
-      'PerfilesUsuario,\s*ContextoSesion') -and
+      'MostrarStockConsulta\(sArt,\s*sSku\)') -and
     ($mtoGen -match
-      'MostrarStockConsulta\(\s*Self,\s*Permisos,\s*' +
-      'PerfilesUsuario,\s*ContextoSesion') -and
+      'MostrarStockConsulta\(sArt,\s*sSku\)') -and
     ($cajaForm -match
-      'MostrarStockConsulta\(\s*Self,\s*Permisos,\s*' +
-      'PerfilesUsuario,\s*ContextoSesion')
-  ) 'Los tres puntos de apertura entregan el contexto al stock'
+      'MostrarStockConsulta\(sArt,\s*sSku\)')
+  ) 'Los tres puntos de apertura ya no transportan el contexto'
 
 $sinDependenciaGlobal = @(
   'src\DataModules/UniDataIvas.pas',
@@ -169,11 +166,20 @@ foreach ($archivo in $dfm) {
 Comprobar (($dfmConConexion.Count -eq 52) -and ($enlaces -eq 253)) `
   'Se conservan los 253 enlaces persistentes de 52 DFM'
 
-$dfmModificados = @(
-  & git -C $raiz diff --name-only -- 'src/*.dfm' 'src/**/*.dfm'
+$dfmPermitidosXI_B1 = @(
+  'src\Forms\inMtoStockConsulta.dfm',
+  'src\Modals\inMtoModalFacturarAlbaranesFechas.dfm'
 )
-Comprobar ($dfmModificados.Count -eq 0) `
-  'No se modifica ningún DFM'
+$dfmModificados = @(
+  & git -C $raiz diff --name-only -- 'src/*.dfm' 'src/**/*.dfm' |
+    ForEach-Object { $_.Replace('/', '\') }
+)
+$dfmFueraXI_B1 = @(
+  $dfmModificados |
+    Where-Object { $dfmPermitidosXI_B1 -notcontains $_ }
+)
+Comprobar ($dfmFueraXI_B1.Count -eq 0) `
+  'Solo XI-B1 modifica DFM para introducir herencia visual'
 
 $dumpModificado = @(
   & git -C $raiz diff --name-only -- 'factuzam_original.sql'

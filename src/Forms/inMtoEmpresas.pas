@@ -351,7 +351,6 @@ uses
   inLibDevExp,
   inLibIBAN,
   inLibFotos,
-  inLibGlobalVar,
   inLibVerifactuInstalacion,
   inLibtb,
   inMtoPrincipal,
@@ -447,7 +446,10 @@ begin
           sNroFactura := FieldByName('NUMERO_FAC').AsString;
           sSerieFactura := FieldByName('SERIE_FAC').AsString;
           ShowMto(Self.Owner,
-                  ResolverCallFactura(sNroFactura, sSerieFactura),
+                  ResolverCallFactura(
+                    ConexionPrincipal,
+                    sNroFactura,
+                    sSerieFactura),
                   sNroFactura + ',' + sSerieFactura);
        end
      else
@@ -503,8 +505,7 @@ begin
 end;
 
 // Crea una misma serie para todos los tipos de documento conocidos.
-// Idempotente: si ya hay una serie generica solapada para el mismo tipo,
-// subtipo, serie y empresa, no duplica la fila.
+// Idempotente: si ya hay una serie generica solapada para el mismo tipo,// subtipo,serie y empresa,no duplica la fila.
 procedure TfrmMtoEmpresas.btnCrearSeriesDocClick(Sender: TObject);
 const
   SUBTIPOS_FACTURA: array[0..2] of string = ('NORMAL', 'SIMPLIFICADA',
@@ -526,7 +527,7 @@ var
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text :=
         'SELECT 1 FROM fza_empresas_series ' +
         ' WHERE CODIGO_EMP_EMPSER = :emp ' +
@@ -558,13 +559,16 @@ var
     q: TUniQuery;
     sCodigo: string;
   begin
-    sCodigo := ObtenerSiguienteContador('ES', IdentidadSesion.Usuario);
+    sCodigo := ObtenerSiguienteContador(
+      ConexionPrincipal,
+      'ES',
+      IdentidadSesion.Usuario);
     if Trim(sCodigo) = '' then
       raise Exception.Create('No se pudo obtener el siguiente codigo del ' +
                              'contador "ES" para la nueva serie.');
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text :=
         'INSERT INTO fza_empresas_series ' +
         '  (CODIGO_SERIE_EMPSER, CODIGO_EMP_EMPSER, CODIGO_ALM_EMPSER, ' +
@@ -599,7 +603,7 @@ var
   function ConsultaTiposDocumento: TUniQuery;
   begin
     Result := TUniQuery.Create(nil);
-    Result.Connection := oConn;
+    Result.Connection := ConexionPrincipal;
     Result.SQL.Text :=
       'SELECT DISTINCT TIPO_DOC FROM (' +
       ' SELECT CODIGO_TIPO_DOCUMENTO_TD AS TIPO_DOC ' +
@@ -713,7 +717,7 @@ begin
   begin
     btnGenerarInstalacionSif.Enabled := False;
     try
-      oEstado := GenerarInstalacionSifEmpresa(oConn,
+      oEstado := GenerarInstalacionSifEmpresa(ConexionPrincipal,
         IdentidadSesion.Usuario, sCodigoEmpresa);
       with dmmEmpresas.unqryTablaG do
       begin

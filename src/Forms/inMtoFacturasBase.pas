@@ -710,7 +710,7 @@ uses
   inMtoArticulos,
   inMtoEmpresas,
   inMtoClientes,
-  inLibGlobalVar,
+
   inLibLog,
   inLibDir,
   inLibtb,
@@ -742,7 +742,7 @@ begin
       dsTablaG.Dataset.FindField('CODIGO_EMP_FAC').AsString :=
                                                      VarToStr(e.EditingValue);
       unqrySol := TUniQuery.Create(Self);
-      unqrySol.Connection := oConn;
+      unqrySol.Connection := ConexionPrincipal;
       unqrySol.SQL.Text := 'SELECT * ' +
                            '  FROM fza_empresas ' +
                            ' WHERE CODIGO_EMP_EMP = :EMPRESA';
@@ -1176,7 +1176,9 @@ begin
   if SinVerifactuActivo or
      (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
   begin
-    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Clientes en Borradores',
+    if TBusquedaUtils.EjecutarBusqueda(
+      ConexionPrincipal,
+      'Búsqueda de Clientes en Borradores',
                                        dmmFacturas.unqryCliDataFac,
                                        'frmMtoCliFacSearch') then
      begin
@@ -1218,7 +1220,9 @@ begin
   if SinVerifactuActivo or
      (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
   begin
-    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Empresas en Borradores',
+    if TBusquedaUtils.EjecutarBusqueda(
+      ConexionPrincipal,
+      'Búsqueda de Empresas en Borradores',
                                        dmmFacturas.unqryEmpDataFac,
                                        'frmMtoEmpFacSearch') then
       dmmFacturas.CopiarEmpresaaFactura(dmmFacturas.unqryEmpDataFac);
@@ -1285,7 +1289,7 @@ begin
     sEmp  := dsTablaG.DataSet.FieldByName('CODIGO_EMP_FAC').AsString;
     sCli  := dsTablaG.DataSet.FieldByName('CODIGO_CLI_FAC').AsString;
     sPref := dmmFacturas.GetBancoDefectoCliente(sCli);
-    selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, oConn,
+    selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, ConexionPrincipal,
                                                    sEmp, ubeCobro, sPref);
     if not selBanco.Aceptado then
       ShowMessage('Generación de ' + TextoCobroPlural + ' cancelada.')
@@ -1536,7 +1540,7 @@ begin
       try
         q := TUniQuery.Create(nil);
         try
-          q.Connection := oConn;
+          q.Connection := ConexionPrincipal;
           q.SQL.Text :=
             'SELECT a.ESVARIACION_ART, ' +
             '       (SELECT COUNT(*) FROM fza_articulos_skus s ' +
@@ -1705,7 +1709,7 @@ begin
   try
     Combo.Properties.Items.Clear;
     if CodArt = '' then Exit;
-    Resolver := TArticulosResolver.Create(oConn);
+    Resolver := TArticulosResolver.Create(ConexionPrincipal);
     try
       Skus := Resolver.ListarSkus(CodArt);
       for Item in Skus do
@@ -1776,8 +1780,8 @@ begin
                                        'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
     FechaFac  := dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
 
-    Validador := TArticulosValidador.Create(oConn);
-    Resolver := TArticulosResolver.Create(oConn);
+    Validador := TArticulosValidador.Create(ConexionPrincipal);
+    Resolver := TArticulosResolver.Create(ConexionPrincipal);
     Resolucion := Validador.Resolver(CodSku);
     if Resolucion.Encontrado and (Resolucion.CodigoSku <> '') then
     begin
@@ -2086,7 +2090,7 @@ begin
   sSerie := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM fza_facturas_lineas ' +
@@ -2114,7 +2118,7 @@ begin
   Qry := TUniQuery.Create(nil);
   try
     try
-      Qry.Connection := oConn;
+      Qry.Connection := ConexionPrincipal;
       Qry.SQL.Text :=
         ' SELECT COUNT(*) AS N ' +
         '   FROM INFORMATION_SCHEMA.COLUMNS ' +
@@ -2319,7 +2323,7 @@ begin
     end;
     Qry := TUniQuery.Create(nil);
     try
-      Qry.Connection := oConn;
+      Qry.Connection := ConexionPrincipal;
       case ModoVerifactu of
         mvVerifactu:
           TVerifactuCola.EncolarFactura(Qry,
@@ -2339,7 +2343,7 @@ begin
     end;
     if VerifactuActivo then
     begin
-      RegistrarEventoVerifactu(oConn,
+      RegistrarEventoVerifactu(ConexionPrincipal,
         IdentidadSesion.Usuario,
         cEventoVerifactuEncolado,
         AAccion + ' encolada desde Borradores', '', sSerie, sNumero);
@@ -2394,7 +2398,7 @@ begin
   begin
       Qry := TUniQuery.Create(nil);
       try
-        Qry.Connection := oConn;
+        Qry.Connection := ConexionPrincipal;
       case ModoVerifactu of
         mvVerifactu:
           TVerifactuCola.EncolarFactura(Qry,
@@ -2410,7 +2414,7 @@ begin
       FreeAndNil(Qry);
     end;
     if VerifactuActivo then
-      RegistrarEventoVerifactu(oConn,
+      RegistrarEventoVerifactu(ConexionPrincipal,
         IdentidadSesion.Usuario,
         cEventoVerifactuEncolado,
         'Lanzamiento manual (Consolidar) desde Borradores', '',
@@ -2470,9 +2474,9 @@ begin
   begin
     Qry := TUniQuery.Create(nil);
     try
-      oConn.StartTransaction;
+      ConexionPrincipal.StartTransaction;
       try
-        Qry.Connection := oConn;
+        Qry.Connection := ConexionPrincipal;
         // Bloquear la fila ALTA de la cola: si el hilo la está
         // enviando (PROCESANDO) o ya la envió (ENVIADA) no se puede
         // deshacer
@@ -2532,11 +2536,11 @@ begin
         Qry.ParamByName('NUMERO').AsString  := sNumero;
         Qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
         Qry.Execute;
-        oConn.Commit;
+        ConexionPrincipal.Commit;
       except
         on E: Exception do
         begin
-          oConn.Rollback;
+          ConexionPrincipal.Rollback;
           ShowMessage(E.Message);
           Abort;
         end;
@@ -2544,12 +2548,12 @@ begin
     finally
       FreeAndNil(Qry);
     end;
-    RegistrarEventoVerifactu(oConn,
+    RegistrarEventoVerifactu(ConexionPrincipal,
       IdentidadSesion.Usuario,
       cEventoVerifactuInfo,
       'Lanzamiento anulado: borrador devuelto a BORRADOR', '',
       sSerie, sNumero);
-    TVentasWsCola.RegistrarEventoSeguro(oConn,
+    TVentasWsCola.RegistrarEventoSeguro(ConexionPrincipal,
       IdentidadSesion.Usuario, 'VENTA_REABIERTA', sSerie, sNumero);
     dsTablaG.DataSet.Refresh;
     ShowMessage('Borrador ' + sSerie + '\' + sNumero + ' de nuevo en ' +
@@ -2967,7 +2971,9 @@ begin
     dmmFacturas.unqryArtDataLinFac.ParamByName('FECHA_FAC').AsDateTime :=
                   dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
     //      TLibDefaults.Configurar(formulario, esArticulo, True);
-    if TBusquedaUtils.EjecutarBusqueda('Búsqueda de Artículos en Lineas de ' +
+    if TBusquedaUtils.EjecutarBusqueda(
+      ConexionPrincipal,
+      'Búsqueda de Artículos en Lineas de ' +
                                                                    'Borradores',
                                        dmmFacturas.unqryArtDataLinFac,
                                        'frmMtoArtFacSearch') then
@@ -3015,8 +3021,8 @@ begin
                                        'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
   FechaFac  := dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
 
-  Validador := TArticulosValidador.Create(oConn);
-  Resolver  := TArticulosResolver.Create(oConn);
+  Validador := TArticulosValidador.Create(ConexionPrincipal);
+  Resolver  := TArticulosResolver.Create(ConexionPrincipal);
   try
     Resolucion := Validador.Resolver(sInput);
     if not Resolucion.Encontrado then Exit;
@@ -3333,7 +3339,7 @@ end;
 procedure TfrmMtoFacturasBase.RecalcLineaFacturaSegura(Sender: TObject);
 begin
   try
-    GridRecalc(Sender,
+    GridRecalc(ConexionPrincipal, Sender,
                tvLineasFactura,
                dmmFacturas.unqryLinFac,
                dmmFacturas.unqryTablaG);
@@ -4001,8 +4007,8 @@ begin
     if not dmmFacturas.unqryTablaG.FindField('FECHA_FAC').IsNull then
       FechaFac := dmmFacturas.unqryTablaG.
                     FindField('FECHA_FAC').AsDateTime;
-    Validador := TArticulosValidador.Create(oConn);
-    Resolver := TArticulosResolver.Create(oConn);
+    Validador := TArticulosValidador.Create(ConexionPrincipal);
+    Resolver := TArticulosResolver.Create(ConexionPrincipal);
     Resolucion := Validador.Resolver(Trim(AEntrada));
     if not Resolucion.Encontrado then
       Exit;
@@ -4070,7 +4076,7 @@ begin
     // Recalculo de la linea y de los totales fiscales de la cabecera
     // (sin esto TOTAL_FACLIN y TOTAL_FAC_SIVA_FACLIN quedaban a 0 en el
     // INSERT si el usuario abandonaba la fila sin tocar otros campos).
-    ActualizarLineaFacturaGen(Lin, dmmFacturas.unqryTablaG,
+    ActualizarLineaFacturaGen(ConexionPrincipal, Lin, dmmFacturas.unqryTablaG,
       'PRECIO_SALIDA_FACLIN',
       Lin.FieldByName('PRECIO_SALIDA_FACLIN').Value);
   finally
@@ -4129,7 +4135,7 @@ begin
     if Lin.FindField('CANTIDAD_FACLIN').AsFloat = 0 then
       Lin.FindField('CANTIDAD_FACLIN').AsFloat := 1;
     // Recalculo de la linea y de los totales fiscales de la cabecera.
-    ActualizarLineaFacturaGen(Lin, dmmFacturas.unqryTablaG,
+    ActualizarLineaFacturaGen(ConexionPrincipal, Lin, dmmFacturas.unqryTablaG,
       'PRECIO_SALIDA_FACLIN',
       Lin.FieldByName('PRECIO_SALIDA_FACLIN').Value);
   finally

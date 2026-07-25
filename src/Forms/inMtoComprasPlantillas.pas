@@ -126,7 +126,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibUser, inLibGlobalVar;
+  inLibWin, inLibUser;
 
 {$R *.dfm}
 
@@ -146,10 +146,10 @@ end;
 procedure TfrmMtoComprasPlantillas.FormCreate(Sender: TObject);
 begin
   inherited;
-  unqryPlantillas.Connection       := oConn;
-  unqryPlantillaProps.Connection   := oConn;
-  unqryPlantillaKits.Connection    := oConn;
-  unqryPlantillaKitsDet.Connection := oConn;
+  unqryPlantillas.Connection       := ConexionPrincipal;
+  unqryPlantillaProps.Connection   := ConexionPrincipal;
+  unqryPlantillaKits.Connection    := ConexionPrincipal;
+  unqryPlantillaKitsDet.Connection := ConexionPrincipal;
   unqryPlantillas.Open;
   unqryPlantillaProps.Open;
   unqryPlantillaKits.Open;

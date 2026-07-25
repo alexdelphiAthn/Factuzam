@@ -391,7 +391,6 @@ implementation
 
 uses
   System.StrUtils,
-  inLibGlobalVar,
   inLibFiltroUsuario,
   inLibFotos,
   inLibAtributosPaleta,
@@ -479,7 +478,8 @@ begin
           ' ORDER BY art.ORDEN_ART, art.CODIGO_ART_ART';
         qry.ParamByName('prv').AsString := sPrv;
         if TBusquedaUtils.EjecutarBusqueda(
-             'Búsqueda de artículos',
+          ConexionPrincipal,
+          'Búsqueda de artículos',
              qry,
              'frmMtoDevcArtSearch',
              Self) and (qry.FindField('CODIGO_ART_ART') <> nil) then
@@ -542,7 +542,8 @@ begin
         ' ORDER BY SK.CODIGO_UNIDAD_SKU';
       qry.ParamByName('art').AsString := sArt;
       if TBusquedaUtils.EjecutarBusqueda(
-           'SKUs del artículo ' + sArt,
+        ConexionPrincipal,
+        'SKUs del artículo ' + sArt,
            qry,
            'frmMtoPedcSkuSearch',
            Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
@@ -1361,7 +1362,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := oConn;
+      q.Connection := ConexionPrincipal;
       q.SQL.Text :=
         'SELECT ATB.CODIGO_ATB, MIN(ATB.ORDEN_ATB) AS ORDEN_ATB, ' +
         '       MIN(ATB.NOMBRE_ATB) AS NOMBRE_ATB ' +
@@ -1966,7 +1967,7 @@ begin
   Result := False;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM INFORMATION_SCHEMA.COLUMNS ' +
@@ -2019,7 +2020,8 @@ begin
       MessageDlg('Crea o selecciona un pedido de compra antes de ' +
                  'elegir la empresa.', mtInformation, [mbOk], 0)
     else if TBusquedaUtils.EjecutarBusqueda(
-              'Búsqueda de empresas',
+      ConexionPrincipal,
+      'Búsqueda de empresas',
               'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
               'CODIGO_EMP_EMP',
               sCodigo,
@@ -2057,7 +2059,8 @@ begin
       MessageDlg('Crea o selecciona un pedido de compra antes de ' +
                  'elegir el proveedor.', mtInformation, [mbOk], 0)
     else if TBusquedaUtils.EjecutarBusqueda(
-              'Búsqueda de proveedores',
+      ConexionPrincipal,
+      'Búsqueda de proveedores',
               'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
               'CODIGO_PRV_PRV',
               sCodigo,
@@ -2067,7 +2070,7 @@ begin
       if not (ds.State in [dsInsert, dsEdit]) then
         ds.Edit;
       ds.FieldByName('CODIGO_PRV_PEDC').AsString := sCodigo;
-      AplicarIvaExentoIntracomunitarioProveedor(oConn, ds,
+      AplicarIvaExentoIntracomunitarioProveedor(ConexionPrincipal, ds,
         'CODIGO_PRV_PEDC', 'ESIVA_EXENTO_INTRACOMUNITARIO_PEDC');
       dmmPedidosCompra.CalcularTotalesPedidoCompra;
       ActualizarLabelProveedor;
@@ -2284,7 +2287,11 @@ begin
           ScrPt := Edit.ClientToScreen(Point(0, Edit.Height));
           WidHint := Edit.Width;
         end;
-        if SeleccionarAvConPaleta(ID_VA_COLOR, FBasicosColor, sActual,
+        if SeleccionarAvConPaleta(
+          ConexionPrincipal,
+          ID_VA_COLOR,
+          FBasicosColor,
+          sActual,
                                   sNuevo, ScrPt.X, ScrPt.Y, WidHint) then
         begin
           if FPivote.CambiarColorLineaActiva(sNuevo, sMensaje) then
@@ -2331,7 +2338,7 @@ begin
   if (Trim(ASerie) = '') or (Trim(ANumero) = '') then Exit;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := oConn;
+    q.Connection := ConexionPrincipal;
     q.SQL.Text :=
       'SELECT IFNULL(NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
       '              P.CODIGO_ALM_PEDC) AS ALM ' +
@@ -2727,7 +2734,11 @@ begin
                        FieldByName('CODIGO_EMP_PEDC').AsString);
   if sEmpresa = '' then
     sEmpresa := Trim(UbicacionSesion.Empresa);
-  CargarSeriesEmpresa(sEmpresa, 'PC', cbbSERIE_PEDC.Properties.Items);
+  CargarSeriesEmpresa(
+    ConexionPrincipal,
+    sEmpresa,
+    'PC',
+    cbbSERIE_PEDC.Properties.Items);
   if cbbSERIE_PEDC.Properties.Items.Count = 0 then
   begin
     if MessageDlg('No hay series de pedidos de compra (tipo PC) para la ' +
@@ -2849,20 +2860,20 @@ begin
     else
       arrCeldas := RecogerCeldasARecibirVertical(form.CodigoAlmacen);
     bUsarCeldas := Length(arrCeldas) > 0;
-    bTxOwned := not oConn.InTransaction;
-    if bTxOwned then oConn.StartTransaction;
+    bTxOwned := not ConexionPrincipal.InTransaction;
+    if bTxOwned then ConexionPrincipal.StartTransaction;
     try
       if form.Incorporar then
       begin
         // Incorporar las lineas a un albaran existente del pedido.
         if bUsarCeldas then
           bOk := inLibPedidosCompra.IncorporarAlbaranDesdePedidoConCantidades(
-                  oConn, sSerie, sNumero, form.CodigoAlmacen,
+                  ConexionPrincipal, sSerie, sNumero, form.CodigoAlmacen,
                   form.AlbaranSerieDestino, form.AlbaranNumDestino, IdentidadSesion.Usuario,
                   form.IdPvTemporada, arrCeldas, sMsg)
         else
           bOk := inLibPedidosCompra.IncorporarAlbaranDesdePedido(
-                  oConn, sSerie, sNumero, form.CodigoAlmacen,
+                  ConexionPrincipal, sSerie, sNumero, form.CodigoAlmacen,
                   form.AlbaranSerieDestino, form.AlbaranNumDestino, IdentidadSesion.Usuario,
                   form.IdPvTemporada, sMsg);
       end
@@ -2871,20 +2882,20 @@ begin
         // Crear un albaran nuevo (flujo clasico).
         if bUsarCeldas then
           bOk := inLibPedidosCompra.CrearAlbaranDesdePedidoConCantidades(
-                  oConn, sSerie, sNumero, form.CodigoAlmacen,
+                  ConexionPrincipal, sSerie, sNumero, form.CodigoAlmacen,
                   form.SerieAlbaran, IdentidadSesion.Usuario,
                   form.RefProveedor, form.FechaRecepcion, form.IdPvTemporada,
                   arrCeldas, sNumAlb, sMsg)
         else
           bOk := inLibPedidosCompra.CrearAlbaranDesdePedido(
-                  oConn, sSerie, sNumero, form.CodigoAlmacen,
+                  ConexionPrincipal, sSerie, sNumero, form.CodigoAlmacen,
                   form.SerieAlbaran, IdentidadSesion.Usuario,
                   form.RefProveedor, form.FechaRecepcion, form.IdPvTemporada,
                   sNumAlb, sMsg);
       end;
       if bOk then
       begin
-        if bTxOwned then oConn.Commit;
+        if bTxOwned then ConexionPrincipal.Commit;
         // Limpiar las celdas "A recibir" tecleadas para el almacen
         // procesado, para que el usuario pueda seguir con otro almacen
         // sin tener que borrar manualmente.
@@ -2909,8 +2920,7 @@ begin
         dmmPedidosCompra.unqryTablaG.Refresh;
         dmmPedidosCompra.unqryPedidosCompraLineas.Refresh;
         // Refrescar el grid de la pestania "Albaranes" para que aparezca
-        // el albaran recien creado / incorporado (es detail del pedido,
-        // no se refresca solo al hacer Refresh del master).
+        // el albaran recien creado / incorporado (es detail del pedido,// no se refresca solo al hacer Refresh del master).
         if dmmPedidosCompra.unqryAlbaranesPedc.Active then
           dmmPedidosCompra.unqryAlbaranesPedc.Close;
         dmmPedidosCompra.unqryAlbaranesPedc.Open;
@@ -2947,14 +2957,14 @@ begin
       end
       else
       begin
-        if bTxOwned then oConn.Rollback;
+        if bTxOwned then ConexionPrincipal.Rollback;
         MessageDlg(sMsg, mtWarning, [mbOk], 0);
       end;
     except
       on E: Exception do
       begin
-        if bTxOwned and oConn.InTransaction then
-          oConn.Rollback;
+        if bTxOwned and ConexionPrincipal.InTransaction then
+          ConexionPrincipal.Rollback;
         MessageDlg('Error al crear el albaran: ' + E.Message,
                    mtError, [mbOk], 0);
       end;
