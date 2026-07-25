@@ -324,9 +324,9 @@ begin
     unqryGuias.RecordCount;
   unqryGuias.FieldByName('ESACTIVO_INFGUI').AsString := 'S';
   unqryGuias.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-  unqryGuias.FieldByName('USUARIO_ALTA').AsString := oUser;
+  unqryGuias.FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
   unqryGuias.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
-  unqryGuias.FieldByName('USUARIO_MODIF').AsString := oUser;
+  unqryGuias.FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
   ConfigurarGuiaNueva;
   unqryGuias.Post;
   ShowMessage(Format('Guía "%s" añadida: %s.%s → %s',

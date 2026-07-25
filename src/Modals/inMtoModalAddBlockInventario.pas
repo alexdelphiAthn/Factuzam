@@ -90,7 +90,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser, inLibGlobalVar;
+  inLibUser;
 
 class function TfrmModalAddBlockInventario.Ejecutar(AOwner: TComponent;
   AConn: TUniConnection;
@@ -368,7 +368,7 @@ begin
      (FSqlPreview.RecordCount = 0) then
     Exit;
 
-  usuario     := oUser;
+  usuario     := IdentidadSesion.Usuario;
   lineaActual := ProximoNumeroLinea;
 
   codigos := TList<string>.Create;

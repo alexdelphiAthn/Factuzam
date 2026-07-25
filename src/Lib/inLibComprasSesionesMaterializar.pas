@@ -2149,7 +2149,7 @@ begin
       //    modo "un doc por almacen" cada iteracion del bucle exterior
       //    pasa por aqui y obtiene su propio numero — antes se reusaba
       //    sNumSes y eso provocaba colisiones de PK entre almacenes.
-      ANumPed   := inLibtb.ObtenerSiguienteContador('PC');
+      ANumPed := inLibtb.ObtenerSiguienteContador('PC', AUsuario);
       ASeriePed := sSeriePedReal;
       // 2. Crear cabecera en fza_pedidos_compra denormalizando empresa
       //    y proveedor desde la sesion. AFiltroAlmacen viaja como
@@ -2204,7 +2204,7 @@ begin
     if AESGeneraAlbaran then
     begin
       // 1. Obtener NUMERO_ALBC del contador global (tipo 'AB').
-      ANumAlb   := inLibtb.ObtenerSiguienteContador('AB');
+      ANumAlb := inLibtb.ObtenerSiguienteContador('AB', AUsuario);
       ASerieAlb := sSerieAlbReal;
       // 2. Crear cabecera en fza_albaranes_compra denormalizando
       //    empresa + proveedor desde la sesion.

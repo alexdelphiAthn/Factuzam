@@ -83,11 +83,11 @@ begin
     BeginUpdate;
     try
       Clear;
-      Add(oUser);
-      Add(oGroup);
-      if (inLibGlobalVar.orootGroup = 'S') then
+      Add(IdentidadSesion.Usuario);
+      Add(IdentidadSesion.Grupo);
+      if (IdentidadSesion.GrupoRaiz = 'S') then
         Add(oAll);
-      cbbpermisos.Text := oUser;
+      cbbpermisos.Text := IdentidadSesion.Usuario;
     finally
       EndUpdate;
     end;

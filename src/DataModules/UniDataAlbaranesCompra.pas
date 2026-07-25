@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataAlbaranesCompra                                        }
 {    Tipo:       Data Module                                                   }
@@ -295,25 +295,25 @@ end;
 procedure TdmAlbaranesCompra.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryTablaG.Connection                := inLibGlobalVar.oConn;
+  unqryTablaG.Connection                := oConn;
   unqryTablaG.KeyFields                 := 'NUMERO_ALBC;SERIE_ALBC';
   ConfigurarSqlCabecera;
-  unqryAlbaranesCompraLineas.Connection := inLibGlobalVar.oConn;
-  unqryEmpDataAlbc.Connection           := inLibGlobalVar.oConn;
-  unqryPrvDataAlbc.Connection           := inLibGlobalVar.oConn;
+  unqryAlbaranesCompraLineas.Connection := oConn;
+  unqryEmpDataAlbc.Connection           := oConn;
+  unqryPrvDataAlbc.Connection           := oConn;
   // Lookup completo de proveedores (NOMBRE_PRV + RAZON_SOCIAL_PRV) para
   // el rotulo resuelto de la cabecera y para el combo de busqueda
   // incremental por codigo (cbbCODIGO_PRV_ALBC). Se abre una vez y se
   // recorre con Locate; no depende del proveedor del albaran en pantalla.
   unqryPrvDataAlbc.Open;
-  unqryArtDataLinAlbc.Connection        := inLibGlobalVar.oConn;
-  unqrySkusAlbc.Connection              := inLibGlobalVar.oConn;
-  unqryMovimientosProveedor.Connection  := inLibGlobalVar.oConn;
-  unqryFormasPago.Connection            := inLibGlobalVar.oConn;
-  unqryAlmacenesAlbc.Connection         := inLibGlobalVar.oConn;
-  unstrdprcGetContadorAlbc.Connection   := inLibGlobalVar.oConn;
-  unqryDefArticuloAlbc.Connection       := inLibGlobalVar.oConn;
-  unqryTemporadasAlbc.Connection        := inLibGlobalVar.oConn;
+  unqryArtDataLinAlbc.Connection        := oConn;
+  unqrySkusAlbc.Connection              := oConn;
+  unqryMovimientosProveedor.Connection  := oConn;
+  unqryFormasPago.Connection            := oConn;
+  unqryAlmacenesAlbc.Connection         := oConn;
+  unstrdprcGetContadorAlbc.Connection   := oConn;
+  unqryDefArticuloAlbc.Connection       := oConn;
+  unqryTemporadasAlbc.Connection        := oConn;
   unqryTemporadasAlbc.Open;
   // Master-detail server-side: el WHERE del SQL toma los valores de
   // dsTablaG (master), evitando descargar fza_albaranes_compra_lineas
@@ -355,7 +355,7 @@ begin
      (not unqryTablaG.IsEmpty) then
     sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_ALBC').AsString);
   if sEmpresa = '' then
-    sEmpresa := Trim(oEmpresa);
+    sEmpresa := Trim(UbicacionSesion.Empresa);
   if (not unqryAlmacenesAlbc.Active) or
      (not SameText(unqryAlmacenesAlbc.ParamByName('EMPRESA').AsString,
                    sEmpresa)) then
@@ -399,7 +399,7 @@ var
 begin
   inherited;
   sw := TStopwatch.StartNew;
-  RefrescarAlmacenes(oEmpresa);
+  RefrescarAlmacenes(UbicacionSesion.Empresa);
   AbrirConTiempo(unqryAlbaranesCompraLineas,
                  'unqryAlbaranesCompraLineas');
   AbrirConTiempo(unqryMovimientosProveedor,
@@ -417,7 +417,7 @@ begin
   begin
     FieldByName('NUMERO_ALBC').AsString := '0';
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='AB'
-    sSerie := ObtenerSerieDefecto(oEmpresa, 'AB');
+    sSerie := ObtenerSerieDefecto(UbicacionSesion.Empresa, 'AB');
     if FindField('SERIE_ALBC') <> nil then
     begin
       if sSerie <> '' then
@@ -428,14 +428,14 @@ begin
     FieldByName('FECHA_ALBC').AsDateTime := Date;
     if FindField('ESTADO_ALBC') <> nil then
       FieldByName('ESTADO_ALBC').AsString := 'ABIERTO';
-    if Trim(oEmpresa) <> '' then
-      FieldByName('CODIGO_EMP_ALBC').AsString := oEmpresa
+    if Trim(UbicacionSesion.Empresa) <> '' then
+      FieldByName('CODIGO_EMP_ALBC').AsString := UbicacionSesion.Empresa
     else
       FieldByName('CODIGO_EMP_ALBC').AsString := '0';
-    if Trim(oEmpresa) <> '' then
-      BuscarEmpresa(oEmpresa);
+    if Trim(UbicacionSesion.Empresa) <> '' then
+      BuscarEmpresa(UbicacionSesion.Empresa);
     if FindField('CODIGO_ALM_ALBC') <> nil then
-      FieldByName('CODIGO_ALM_ALBC').AsString := oAlmacen;
+      FieldByName('CODIGO_ALM_ALBC').AsString := UbicacionSesion.Almacen;
     FieldByName('CODIGO_PRV_ALBC').AsString := '0';
     if FindField('ESPIVOTE_HORIZONTAL_ALBC') <> nil then
       FieldByName('ESPIVOTE_HORIZONTAL_ALBC').AsString := 'N';
@@ -446,9 +446,9 @@ begin
       FieldByName('ESDEPOSITO_ALBC').AsString := 'N';
     if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_ALBC') <> nil then
       FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_ALBC').AsString := 'N';
-    AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
+    AplicarRecargoComprasEmpresa(oConn, unqryTablaG,
       'CODIGO_EMP_ALBC', 'ESIVA_RECARGO_COMPRAS_ALBC');
-    AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
+    AplicarPorcentajesIvaCompra(oConn, unqryTablaG,
       'ALBC');
   end;
   RefrescarAlmacenes(
@@ -538,7 +538,7 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_ALBC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_ALBC').AsString = '') then
     GetCodigoAutoAlbaranCompra;
-  AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
+  AplicarPorcentajesIvaCompra(oConn, unqryTablaG,
     'ALBC');
   CalcularTotalesAlbaranCompra;
 end;
@@ -632,7 +632,7 @@ begin
       Abort;
     end;
     inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(
-      unqryTablaG.Connection, sSerie, sNumero, oUser);
+      unqryTablaG.Connection, sSerie, sNumero, IdentidadSesion.Usuario);
     q.SQL.Text :=
       'DELETE FROM fza_albaranes_compra_celdas ' +
       ' WHERE SERIE_ALBC_ALBCCEL  = :s ' +
@@ -667,9 +667,9 @@ begin
     // Auditoria estandar: las 4 columnas del libro de estilo bbdd §3.7
     // son NOT NULL sin default; hay que rellenarlas en alta. En BeforePost
     // tambien sobrescribimos USUARIO_MODIF para que refleje la ultima edicion.
-    FieldByName('USUARIO_ALTA').AsString    := oUser;
+    FieldByName('USUARIO_ALTA').AsString    := IdentidadSesion.Usuario;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-    FieldByName('USUARIO_MODIF').AsString   := oUser;
+    FieldByName('USUARIO_MODIF').AsString   := IdentidadSesion.Usuario;
     FieldByName('INSTANTE_MODIF').AsDateTime:= Now;
   end;
 end;
@@ -751,7 +751,7 @@ begin
   with unqryAlbaranesCompraLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
-    NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn,
+    NormalizarArticuloSkuEnDataSet(oConn,
       unqryAlbaranesCompraLineas, 'CODIGO_ART_ALBCLIN',
       'CODIGO_UNIDAD_ALBCLIN');
     if (FindField('CANTIDAD_ALBCLIN') <> nil) and
@@ -762,7 +762,7 @@ begin
         FieldByName('PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN').AsFloat;
     // Refrescamos auditoria en cada Post (edicion / alta nueva).
     if FindField('USUARIO_MODIF') <> nil then
-      FieldByName('USUARIO_MODIF').AsString   := oUser;
+      FieldByName('USUARIO_MODIF').AsString   := IdentidadSesion.Usuario;
     if FindField('INSTANTE_MODIF') <> nil then
       FieldByName('INSTANTE_MODIF').AsDateTime:= Now;
     // En alta (State=dsInsert) tambien los campos *_ALTA por si
@@ -771,7 +771,7 @@ begin
     begin
       if (FindField('USUARIO_ALTA') <> nil) and
          (FieldByName('USUARIO_ALTA').AsString = '') then
-        FieldByName('USUARIO_ALTA').AsString := oUser;
+        FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
       if (FindField('INSTANTE_ALTA') <> nil) and
          FieldByName('INSTANTE_ALTA').IsNull then
         FieldByName('INSTANTE_ALTA').AsDateTime := Now;
@@ -795,7 +795,7 @@ begin
         unqrySkusAlbc.Close;
       end;
     end;
-    PrepararLineaFiscalCompra(inLibGlobalVar.oConn, unqryTablaG,
+    PrepararLineaFiscalCompra(oConn, unqryTablaG,
       unqryAlbaranesCompraLineas, 'ALBC', 'ALBCLIN', 'TOTAL_ALBCLIN');
   end;
 end;
@@ -873,7 +873,7 @@ begin
     ParamByName('pserie').AsString :=
       unqryTablaG.FieldByName('SERIE_ALBC').AsString;
     ParamByName('ptipodoc').AsString := 'AB';
-    ParamByName('pUSUARIOMODIF').AsString := oUser;
+    ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
     ParamByName('pEMPRESA_CONTADOR').AsString :=
       unqryTablaG.FieldByName('CODIGO_EMP_ALBC').AsString;
     ExecProc;
@@ -985,10 +985,10 @@ begin
     if (sSerie <> '') and (sNumero <> '') and (sNumero <> '0') then
     begin
       inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(
-        unqryTablaG.Connection, sSerie, sNumero, oUser);
+        unqryTablaG.Connection, sSerie, sNumero, IdentidadSesion.Usuario);
       if HayLineasMovimiento(sSerie, sNumero) then
         inLibAlbaranesCompraMovimientos.GenerarMovimientosDesdeAlbaranCompra(
-          unqryTablaG.Connection, sSerie, sNumero, oUser);
+          unqryTablaG.Connection, sSerie, sNumero, IdentidadSesion.Usuario);
       RefrescarMovimientosProveedor;
     end;
   end;
@@ -1061,7 +1061,7 @@ begin
     oLv.Items.Clear;
     oQry := TUniQuery.Create(nil);
     try
-      oQry.Connection := inLibGlobalVar.oConn;
+      oQry.Connection := oConn;
       oQry.SQL.Text :=
         'SELECT DISTINCT L.CODIGO_ALMACEN_ALBCLIN AS COD, ' +
         '       COALESCE(A.NOMBRE_ALM_ALM, L.CODIGO_ALMACEN_ALBCLIN) AS NOM ' +
@@ -1120,7 +1120,7 @@ begin
   Result := '';
   oQry := TUniQuery.Create(nil);
   try
-    oQry.Connection := inLibGlobalVar.oConn;
+    oQry.Connection := oConn;
     oQry.SQL.Text :=
       'SELECT DISTINCT CODIGO_UNIDAD_ALBCLIN ' +
       '  FROM fza_albaranes_compra_lineas ' +

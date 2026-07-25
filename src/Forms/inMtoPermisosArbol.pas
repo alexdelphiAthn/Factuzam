@@ -553,8 +553,8 @@ begin
     sVal := 'S'
   else
     sVal := 'N';
-  TPermisosAdmin.Establecer(oConn, FSujetoActual.Nombre, ACodigo, sVal,
-                            ADescripcion);
+  TPermisosAdmin.Establecer(oConn, ContextoSesion, FSujetoActual.Nombre,
+    ACodigo, sVal, ADescripcion);
   if FExpSujeto <> nil then
     FExpSujeto.AddOrSetValue(ACodigo, sVal);
 end;
@@ -776,8 +776,8 @@ begin
       begin
         Screen.Cursor := crHourGlass;
         try
-          n := TPermisosAdmin.Copiar(oConn, org.Nombre, dst.Nombre,
-                                     reempl, chkSoloMenu.Checked);
+          n := TPermisosAdmin.Copiar(oConn, ContextoSesion, org.Nombre,
+            dst.Nombre, reempl, chkSoloMenu.Checked);
         finally
           Screen.Cursor := crDefault;
         end;

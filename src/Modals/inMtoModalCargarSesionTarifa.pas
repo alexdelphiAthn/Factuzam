@@ -58,9 +58,6 @@ implementation
 
 {$R *.dfm}
 
-uses
-  inLibGlobalVar;
-
 class function TfrmModalCargarSesionTarifa.Ejecutar(AOwner: TComponent;
   AConn: TUniConnection; ACodigoTarc: Integer;
   const ACodigoTarOrig, ACodigoTarDest: string): TCargarSesionTarifaResult;
@@ -266,7 +263,7 @@ begin
                 FSqlPreview.FieldByName('PORC_DTO_ACT').AsFloat;
               qry.ParamByName('P_NUEVO').AsFloat := dOrigen;
               qry.ParamByName('P_FIN_NUEVO').AsFloat := dOrigen;
-              qry.ParamByName('USUARIO').AsString := oUser;
+              qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
               qry.Execute;
               codigos.Add(sArt);
               Inc(ANumInsertados);

@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaOperacionesHist                                      }
 {    Tipo:       Formulario (Mto)                                              }
@@ -433,7 +433,7 @@ begin
       'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM ' +
       '  FROM fza_almacenes ' +
       ' WHERE ESACTIVO_ALM = ''S'' ' +
-      SqlFiltroEmpAlmCaja('CODIGO_EMP_ALM', 'CODIGO_ALM_ALM', '') +
+      SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_ALM', 'CODIGO_ALM_ALM', '') +
       ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM';
     qry.Open;
     while not qry.Eof do
@@ -572,7 +572,7 @@ begin
     Result := Result + ' AND o.CODIGO_ALM_OPCAJA IN (' + sAlm + ')';
   // Restricción por usuario (appRestringirEmpAlmCaja): acota a su
   // empresa/almacén/caja por encima de lo marcado en los combos.
-  Result := Result + SqlFiltroEmpAlmCaja('o.CODIGO_EMP_OPCAJA',
+  Result := Result + SqlFiltroEmpAlmCaja(ContextoSesion, 'o.CODIGO_EMP_OPCAJA',
                                          'o.CODIGO_ALM_OPCAJA',
                                          'o.CODIGO_CAJA_OPCAJA');
 end;

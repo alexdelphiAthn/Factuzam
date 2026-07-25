@@ -2669,6 +2669,7 @@ begin
     Self,
     Permisos,
     PerfilesUsuario,
+    ContextoSesion,
     sArt,
     sSku);
 end;
@@ -2762,8 +2763,8 @@ procedure TfrmMtoGen.ProcesarPerfiles;
 begin
   inLibUser.GetFormUserProfile(oPerfilDic,
                                Self.Name,
-                               inLibGlobalVar.oUser,
-                               inLibGlobalVar.oGroup,
+                               IdentidadSesion.Usuario,
+                               IdentidadSesion.Grupo,
                                PerfilesUsuario);
   CrearTablaPrincipal;
   AplicarEtiquetas;

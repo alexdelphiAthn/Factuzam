@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoConsultaOpe                                              }
 {    Tipo:       Formulario (Mto)                                              }
@@ -170,8 +170,8 @@ procedure TfrmConsultaOpe.FormCreate(Sender: TObject);
 begin
   inherited;
   FdmConsulta := TdmConsultaOpe.Create(Self);
-  FLayout := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
-  FVentasCal := TVentasCalendarioCache.Create(inLibGlobalVar.oConn);
+  FLayout := TLayoutLoader.Create(Self.Name, ContextoSesion, PerfilesUsuario);
+  FVentasCal := TVentasCalendarioCache.Create(oConn);
   dtpFecha.Properties.OnGetDayState := dtpFechaGetDayState;
   cxViewMaestro.DataController.DataSource := FdmConsulta.dsMaestro;
   cxViewOpe.DataController.DataSource     := FdmConsulta.dsOperacion;
@@ -386,7 +386,7 @@ begin
   begin
     Qry := TUniQuery.Create(nil);
     try
-      Qry.Connection := inLibGlobalVar.oConn;
+      Qry.Connection := oConn;
       Qry.SQL.Text :=
         ' SELECT ESCONSOLIDADA_FAC, TIPO_FAC FROM fza_facturas ' +
         ' WHERE SERIE_FAC  = :SERIE ' +
@@ -415,10 +415,11 @@ begin
         case ModoVerifactu of
           mvVerifactu:
             begin
-              TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero,
-                                            'ANULACION',
-                                            bBorrarMovimientos);
-              RegistrarEventoVerifactu(inLibGlobalVar.oConn,
+              TVerifactuCola.EncolarFactura(Qry,
+                IdentidadSesion.Usuario, sSerie, sNumero, 'ANULACION',
+                bBorrarMovimientos);
+              RegistrarEventoVerifactu(oConn,
+                IdentidadSesion.Usuario,
                 cEventoVerifactuEncolado,
                 'Anulación encolada desde Buscar operaciones', '',
                 sSerie, sNumero);
@@ -427,17 +428,16 @@ begin
             end;
           mvNoVerifactu:
             begin
-              TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, sSerie,
-                                                         sNumero,
-                                                         'ANULACION',
-                                                         bBorrarMovimientos);
+              TVerifactuCola.RegistrarFacturaNoVerifactu(Qry,
+                IdentidadSesion.Usuario, sSerie, sNumero, 'ANULACION',
+                bBorrarMovimientos);
               ShowMessage('Anulación registrada y firmada en NO VERI*FACTU.');
             end;
         else
           begin
-            TVerifactuCola.MarcarFacturaSinVerifactu(Qry, sSerie, sNumero,
-                                                     'ANULACION',
-                                                     bBorrarMovimientos);
+            TVerifactuCola.MarcarFacturaSinVerifactu(Qry,
+              IdentidadSesion.Usuario, sSerie, sNumero, 'ANULACION',
+              bBorrarMovimientos);
             ShowMessage('Anulación registrada en modo SIN VERIFACTU.');
           end;
         end;
@@ -466,7 +466,7 @@ begin
   begin
     Qry := TUniQuery.Create(nil);
     try
-      Qry.Connection := inLibGlobalVar.oConn;
+      Qry.Connection := oConn;
       Qry.SQL.Text :=
         ' SELECT TIPO_FAC, FECHA_FAC FROM fza_facturas ' +
         ' WHERE SERIE_FAC  = :SERIE ' +
@@ -504,7 +504,7 @@ end;
 procedure TfrmConsultaOpe.btnRectificarClick(Sender: TObject);
 var
   Qry:     TUniQuery;
-  oCaja:   TfrmMtoOpeCaja;
+  FormularioCaja: TfrmMtoOpeCaja;
   i:       Integer;
   sSerie:  string;
   sNumero: string;
@@ -519,7 +519,7 @@ begin
   begin
     Qry := TUniQuery.Create(nil);
     try
-      Qry.Connection := inLibGlobalVar.oConn;
+      Qry.Connection := oConn;
       Qry.SQL.Text :=
         ' SELECT TIPO_FAC FROM fza_facturas ' +
         ' WHERE SERIE_FAC  = :SERIE ' +
@@ -544,24 +544,26 @@ begin
                  mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
   begin
     // Ventana de ventas libre, o una nueva si todas están ocupadas
-    oCaja := nil;
+    FormularioCaja := nil;
     for i := 0 to Screen.FormCount - 1 do
     begin
-      if (oCaja = nil) and (Screen.Forms[i] is TfrmMtoOpeCaja) and
+      if (FormularioCaja = nil) and
+         (Screen.Forms[i] is TfrmMtoOpeCaja) and
          TfrmMtoOpeCaja(Screen.Forms[i]).OperacionVacia then
-        oCaja := TfrmMtoOpeCaja(Screen.Forms[i]);
+        FormularioCaja := TfrmMtoOpeCaja(Screen.Forms[i]);
     end;
-    if oCaja = nil then
+    if FormularioCaja = nil then
     begin
-      oCaja := TfrmMtoOpeCaja.Create(Application, Permisos);
-      oCaja.Caption := Format('Operación - (Caja Real %s)', [FCaja]);
-      oCaja.PrepararValores(FEmpresa, FAlmacen, FCaja, Now);
+      FormularioCaja := TfrmMtoOpeCaja.Create(Application, Permisos);
+      FormularioCaja.Caption :=
+        Format('Operación - (Caja Real %s)', [FCaja]);
+      FormularioCaja.PrepararValores(FEmpresa, FAlmacen, FCaja, Now);
     end;
-    oCaja.CargarRectificacion(sSerie, sNumero);
-    oCaja.Show;
-    oCaja.BringToFront;
-    if oCaja.WindowState = wsMinimized then
-      oCaja.WindowState := wsNormal;
+    FormularioCaja.CargarRectificacion(sSerie, sNumero);
+    FormularioCaja.Show;
+    FormularioCaja.BringToFront;
+    if FormularioCaja.WindowState = wsMinimized then
+      FormularioCaja.WindowState := wsNormal;
   end;
 end;
 
@@ -872,7 +874,8 @@ begin
          and (not FdmConsulta.EsOperacionCaja) then
         ShowMessage('Esta operación no tiene ticket asociado.')
       else if Trim(sCliente) <> '' then
-        ImprimirRecordatorio(sCliente, ANombreImpresora);
+        ImprimirRecordatorio(UbicacionSesion.Empresa, sCliente,
+          ANombreImpresora);
     end;
   end;
 end;

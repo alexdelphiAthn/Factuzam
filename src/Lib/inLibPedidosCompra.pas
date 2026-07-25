@@ -497,7 +497,7 @@ begin
   end;
 
   // 2. Reservar numero de albaran del contador global ('AB').
-  ANumAlbc := inLibtb.ObtenerSiguienteContador('AB');
+  ANumAlbc := inLibtb.ObtenerSiguienteContador('AB', AUsuario);
   if Trim(ANumAlbc) = '' then
   begin
     AMensaje := 'No se pudo obtener un numero de albaran del contador "AB".';
@@ -832,7 +832,7 @@ begin
     Exit;
   end;
   // 1. Reservar NUMERO_ALBC del contador 'AB'.
-  ANumAlbc := inLibtb.ObtenerSiguienteContador('AB');
+  ANumAlbc := inLibtb.ObtenerSiguienteContador('AB', AUsuario);
   if Trim(ANumAlbc) = '' then
   begin
     AMensaje := 'No se pudo obtener un numero de albaran del contador "AB".';

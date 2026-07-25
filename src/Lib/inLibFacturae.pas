@@ -18,7 +18,7 @@ unit inLibFacturae;
 interface
 
 uses
-  System.SysUtils, Uni;
+  System.SysUtils, Uni, inLibContextoSesionIntf;
 
 type
   TFacturaeResultado = record
@@ -30,6 +30,8 @@ type
 
 function NombreArchivoFacturae(const ASerie, ANumero: string): string;
 function EmitirFacturae(AConn: TUniConnection;
+                        const AContextoSesion:
+                        IContextoSesionAplicacion;
                         const ASerie, ANumero, AArchivo: string):
                         TFacturaeResultado;
 
@@ -37,7 +39,7 @@ implementation
 
 uses
   System.Classes, System.IOUtils, System.Math, System.StrUtils, Data.DB,
-  DBAccess, inLibDocumentoFiscal, inLibGlobalVar, inLibXades;
+  DBAccess, inLibDocumentoFiscal, inLibXades;
 
 const
   cNsFacturae =
@@ -828,7 +830,10 @@ begin
   Linea(ASb, 3, '</fe:PaymentDetails>');
 end;
 
-procedure GuardarXmlFactura(AConn: TUniConnection; const ASerie, ANumero,
+procedure GuardarXmlFactura(AConn: TUniConnection;
+                            const AContextoSesion:
+                            IContextoSesionAplicacion;
+                            const ASerie, ANumero,
                             AXml: string);
 var
   Qry: TUniQuery;
@@ -843,7 +848,8 @@ begin
       '   AND NUMERO_FAC = :NUMERO';
     Qry.ParamByName('XML_FAC').DataType := ftMemo;
     Qry.ParamByName('XML_FAC').AsString := AXml;
-    Qry.ParamByName('USUARIO_MODIF').AsString := oUser;
+    Qry.ParamByName('USUARIO_MODIF').AsString :=
+      AContextoSesion.Identidad.Usuario;
     Qry.ParamByName('SERIE').AsString := ASerie;
     Qry.ParamByName('NUMERO').AsString := ANumero;
     Qry.ExecSQL;
@@ -981,6 +987,8 @@ begin
 end;
 
 function EmitirFacturae(AConn: TUniConnection;
+                        const AContextoSesion:
+                        IContextoSesionAplicacion;
                         const ASerie, ANumero, AArchivo: string):
                         TFacturaeResultado;
 var
@@ -1027,7 +1035,8 @@ begin
     if (sCarpeta <> '') and (not TDirectory.Exists(sCarpeta)) then
       TDirectory.CreateDirectory(sCarpeta);
     TFile.WriteAllText(AArchivo, sXmlFirmado, TEncoding.UTF8);
-    GuardarXmlFactura(AConn, ASerie, ANumero, sXmlFirmado);
+    GuardarXmlFactura(AConn, AContextoSesion, ASerie, ANumero,
+      sXmlFirmado);
     Result.Archivo := AArchivo;
     Result.NumeroSerieCertificado := DatosCert.NumeroSerie;
     Result.TitularCertificado := DatosCert.Titular;

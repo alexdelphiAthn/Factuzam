@@ -76,7 +76,7 @@ procedure TfrmModalSelFamilia.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
-  unqryFamilias.Connection := inLibGlobalVar.oConn;
+  unqryFamilias.Connection := oConn;
 end;
 
 procedure TfrmModalSelFamilia.FormShow(Sender: TObject);

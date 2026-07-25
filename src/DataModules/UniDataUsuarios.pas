@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataUsuarios                                               }
 {    Tipo:       Data Module                                                   }
@@ -53,7 +53,7 @@ begin
   unqrySol := TUniQuery.Create(Self);
   with unqrySol do
   begin
-    Connection := inLibGlobalVar.oConn;
+    Connection := oConn;
     SQL.Text :=  'SELECT * '+
                  '  FROM fza_usuarios_grupos ' +
                  ' WHERE GRUPO_USUGRP = :grupo ';
@@ -67,8 +67,8 @@ end;
 procedure TdmUsuarios.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryEmpresas.Connection := inLibGlobalVar.oConn;
-  unqryGrupos.Connection := inLibGlobalVar.oConn;
+  unqryEmpresas.Connection := oConn;
+  unqryGrupos.Connection := oConn;
   unqryEmpresas.MasterSource :=  (GetOwnerForm<TfrmMtoUsuarios>).dsTablaG;
   //unqry
 end;

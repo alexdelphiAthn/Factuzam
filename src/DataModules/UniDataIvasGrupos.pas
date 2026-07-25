@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataIvasGrupos                                             }
 {    Tipo:       Data Module                                                   }
@@ -111,7 +111,7 @@ begin
   if unqryTablaG.FindField('IVA_IVAGRP').AsString = '0' then
   begin
     unqryTablaG.FindField('IVA_IVAGRP').AsString :=
-                                                 ObtenerSiguienteContador('IG');
+                                                 ObtenerSiguienteContador('IG', IdentidadSesion.Usuario);
   end;
 end;
 

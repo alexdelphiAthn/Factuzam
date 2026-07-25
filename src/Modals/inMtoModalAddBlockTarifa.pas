@@ -122,9 +122,6 @@ implementation
 
 {$R *.dfm}
 
-uses
-  inLibGlobalVar;
-
 // ============================================================================
 //   API publica
 // ============================================================================
@@ -479,7 +476,7 @@ begin
      (FSqlPreview.RecordCount = 0) then Exit;
 
   codigoTar := ObtenerCodigoTarifaActual;
-  usuario   := oUser;
+  usuario   := IdentidadSesion.Usuario;
 
   codigos := TList<string>.Create;
   ins     := TUniQuery.Create(nil);

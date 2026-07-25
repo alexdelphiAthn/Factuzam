@@ -111,7 +111,7 @@ begin
   FConfirmado := False;
   FFacSeries  := TStringList.Create;
   FFacNumeros := TStringList.Create;
-  FConn := inLibGlobalVar.oConn;
+  FConn := oConn;
   // Query de albaranes candidatos (pendientes de facturar). El DataSource se
   // engancha al grid por codigo para no depender de un data module.
   FQryAlb := TUniQuery.Create(Self);
@@ -397,7 +397,7 @@ begin
         FSp.ParamByName('p_NUMERO_ALB').AsString := lNumeros[i];
         FSp.ParamByName('p_SERIE_FAC').AsString  := sSerieAcum;
         FSp.ParamByName('p_NUMERO_FAC').AsString := sNumAcum;
-        FSp.ParamByName('p_USUARIO').AsString    := oUser;
+        FSp.ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
         FSp.ExecProc;
         res := FSp.ParamByName('p_RESULTADO').AsInteger;
         if res = 1 then

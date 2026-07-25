@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalListadoVentas                                       }
 {    Tipo:       Formulario (Modal)                                            }
@@ -112,7 +112,7 @@ begin
   Self.Position := poScreenCenter;
   KeyPreview := True;
   unqryVentas := TUniQuery.Create(Self);
-  unqryVentas.Connection := inLibGlobalVar.oConn;
+  unqryVentas.Connection := oConn;
   dsVentas := TDataSource.Create(Self);
   dsVentas.DataSet := unqryVentas;
   CrearInterfaz;
@@ -399,7 +399,7 @@ begin
       ACombo.Properties.Items.Add('(Todos)');
       q := TUniQuery.Create(nil);
       try
-        q.Connection := inLibGlobalVar.oConn;
+        q.Connection := oConn;
         q.SQL.Text := ASQL;
         q.Open;
         while not q.Eof do
@@ -523,8 +523,8 @@ end;
 procedure TfrmModalListadoVentas.miAgregarDocumentoClick(Sender: TObject);
 begin
   try
-    AgregarArticuloActivoADocumentoTrabajo(Self, inLibGlobalVar.oConn,
-                                           ResolverArtSkuStock);
+    AgregarArticuloActivoADocumentoTrabajo(Self, oConn,
+      ContextoSesion, ResolverArtSkuStock);
   except
     on E: Exception do
       MessageDlg(E.Message, mtError, [mbOK], 0);

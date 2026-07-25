@@ -10,7 +10,7 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Estado global del programa.                                               }
-{    Conexión oConn, usuario actual y parametrización en memoria.              }
+{    Conexión principal, UI compartida y parametrización en memoria.           }
 {******************************************************************************}
 unit inLibGlobalVar;
 
@@ -39,12 +39,6 @@ var
   oMemoSQL   :TcxMemo;
   ofrmMto2   :TfrmMtoPrincipal;
   oNomImpresoraCaja:String;
-  oUser      :String;
-  oGroup     :String;
-  orootGroup :String;
-  oEmpresa   :String;
-  oAlmacen   :String;
-  oCaja      :String;
   oAppName   :String;
   oVersion   :String;
   oAll       :string;
@@ -74,10 +68,7 @@ end;
 initialization
   oAppName         := 'Fzam';
   oVersion         := '1.0.15.202606260100.alpha';
-  oUser            := 'No definido';
-  oGroup           := 'No definido';
   oNomImpresoraCaja:='';
-  orootGroup       := 'N';
   oInfGuiasCache   := nil;
   oConn            := nil;
   oAll             := 'Todos';

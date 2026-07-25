@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaArqueosHist                                          }
 {    Tipo:       Formulario (Mto)                                              }
@@ -83,7 +83,7 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 function TfrmMtoCajaArqueosHist.SqlRestriccionUsuario: string;
 begin
   // Arqueos: empresa, almacén y caja del terminal
-  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_ARQ',
+  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_ARQ',
                                 'CODIGO_ALM_ARQ',
                                 'CODIGO_CAJA_ARQ');
 end;

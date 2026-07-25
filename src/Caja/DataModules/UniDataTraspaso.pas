@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataTraspaso                                               }
 {    Tipo:       Data Module                                                   }
@@ -20,7 +20,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, Data.DB, Datasnap.DBClient, Uni, MemDS,
-  DBAccess, System.Math, System.StrUtils, inLibGlobalVar, inLibtb;
+  DBAccess, System.Math, System.StrUtils, inLibGlobalVar, inLibtb,
+  inLibContextoSesionIntf;
 
 type
   // Modo de la operativa: traspaso directo, solicitar a otro almacén o
@@ -41,6 +42,8 @@ type
     procedure DataModuleCreate(Sender: TObject);
   private
     FModo: TModoTraspaso;
+    FContextoSesion: IContextoSesionAplicacion;
+    function GetIdentidadSesion: TIdentidadSesion;
     procedure ConfigurarEstructuraCabecera;
     procedure ConfigurarEstructuraLineas;
     procedure cdsLineasNewRecord(DataSet: TDataSet);
@@ -84,6 +87,8 @@ type
     procedure MarcarSolicitudAtendida(QryTrx: TUniQuery;
                              const ANumero, ASerie: string);
   public
+    constructor Create(AOwner: TComponent); override;
+    property IdentidadSesion: TIdentidadSesion read GetIdentidadSesion;
     property Modo: TModoTraspaso read FModo write FModo;
     procedure PrepararNuevo(AModo: TModoTraspaso; const AEmpresa, AAlmacen,
                             ACaja: string; AFecha: TDateTime);
@@ -127,6 +132,24 @@ var
 implementation
 
 {$R *.dfm}
+
+constructor TdmTraspaso.Create(AOwner: TComponent);
+var
+  ProveedorContexto: IProveedorContextoSesion;
+begin
+  FContextoSesion := nil;
+  if Supports(AOwner, IProveedorContextoSesion, ProveedorContexto) then
+    FContextoSesion := ProveedorContexto.ContextoSesion;
+  inherited Create(AOwner);
+end;
+
+function TdmTraspaso.GetIdentidadSesion: TIdentidadSesion;
+begin
+  if not Assigned(FContextoSesion) then
+    raise Exception.Create(
+      'No se ha configurado el contexto de sesión del módulo de traspasos.');
+  Result := FContextoSesion.Identidad;
+end;
 
 procedure TdmTraspaso.DataModuleCreate(Sender: TObject);
 begin
@@ -482,7 +505,7 @@ var
   QryFecha: TUniQuery;
   sNumeroMov: string;
 begin
-  sNumeroMov := inLibtb.ObtenerSiguienteContador('MV');
+  sNumeroMov := inLibtb.ObtenerSiguienteContador('MV', IdentidadSesion.Usuario);
   uspMov := TUniStoredProc.Create(nil);
   try
     uspMov.Connection := QryTrx.Connection;
@@ -581,7 +604,7 @@ begin
   QryTrx.ParamByName('NRODOC').AsString := ANroDoc;
   QryTrx.ParamByName('SERIEDOC').AsString := ASerieDoc;
   // Auditoría con el usuario logueado; el empleado responsable va en EMPLEADO.
-  QryTrx.ParamByName('USUARIO').AsString := inLibGlobalVar.oUser;
+  QryTrx.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
   QryTrx.Execute;
 end;
 
@@ -609,7 +632,7 @@ begin
   sEmpresa := cdsCabecera.FieldByName('CODIGO_EMP').AsString;
   sAlmacenOrigen := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
   sCaja := cdsCabecera.FieldByName('CODIGO_CAJA').AsString;
-  sUsuario := inLibGlobalVar.oUser;
+  sUsuario := IdentidadSesion.Usuario;
   sEmpleado := cdsCabecera.FieldByName('CODIGO_EMPLEADO').AsString;
   dFechaOperacion := cdsCabecera.FieldByName('FECHA').AsDateTime;
   if SameText(sAlmacenOrigen, AAlmacenDestino) then
@@ -696,7 +719,7 @@ procedure TdmTraspaso.MarcarSolicitudAtendida(QryTrx: TUniQuery;
 var
   sUsuario: string;
 begin
-  sUsuario := inLibGlobalVar.oUser;
+  sUsuario := IdentidadSesion.Usuario;
   // Resolucion por linea: registra lo servido (CANTIDAD) y, si se deniega
   // (servir 0), el motivo. CANTIDAD_SERVIDA suma; ESATENDIDA = 'S' cuando se
   // cubre lo pedido. El motivo solo se guarda en las lineas denegadas.
@@ -777,12 +800,12 @@ begin
   // En mtSolicitar el propio (CODIGO_ALM_ORIGEN) es el DESTINO de la petición.
   sAlmacenPropio := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
   sCaja := cdsCabecera.FieldByName('CODIGO_CAJA').AsString;
-  sUsuario := inLibGlobalVar.oUser;
+  sUsuario := IdentidadSesion.Usuario;
   sEmpleado := cdsCabecera.FieldByName('CODIGO_EMPLEADO').AsString;
   if SameText(sAlmacenPropio, AAlmacenOrigen) then
     raise EValidacionTraspaso.Create('No puedes solicitarte a ti mismo.');
   sEmpContra := ObtenerEmpresaAlmacen(AAlmacenOrigen);
-  ANumero := inLibtb.ObtenerSiguienteContador('TS');
+  ANumero := inLibtb.ObtenerSiguienteContador('TS', IdentidadSesion.Usuario);
   ASerie := 'TS';
   QryTrx := TUniQuery.Create(nil);
   try
@@ -958,7 +981,7 @@ begin
     'UPDATE fza_traspasos_solicitudes' +
     '   SET ESTADO_TRSOL = ''CERRADA'', USUARIO_MODIF = :USU' +
     ' WHERE NUMERO_TRSOL = :NUM AND SERIE_TRSOL = :SER';
-  qryAux.ParamByName('USU').AsString := inLibGlobalVar.oUser;
+  qryAux.ParamByName('USU').AsString := IdentidadSesion.Usuario;
   qryAux.ParamByName('NUM').AsString := sNum;
   qryAux.ParamByName('SER').AsString := sSer;
   qryAux.ExecSQL;

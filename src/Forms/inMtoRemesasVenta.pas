@@ -132,7 +132,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibGlobalVar, inMtoPrincipal,
+  inLibWin, inMtoPrincipal,
   inMtoModalCargarEfectosRemesaVenta, inMtoModalRegistrarPago,
   inMtoModalSepaRemesaVenta;
 
@@ -198,7 +198,7 @@ begin
   Result := False;
   frm := TfrmModalCargarEfectosRemesaVenta.Create(nil);
   try
-    frm.PrepararNuevaRemesa(oEmpresa);
+    frm.PrepararNuevaRemesa(UbicacionSesion.Empresa);
     if frm.ShowModal = mrOk then
     begin
       sSerie := frm.RemesaSerie;

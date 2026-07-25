@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoBusquedaDatos                                            }
 {    Tipo:       Formulario (Mto)                                              }
@@ -171,7 +171,7 @@ end;
 procedure TfrmMtoBusquedaDatos.FormCreate(Sender: TObject);
 begin
   inherited;
-  unqryResultados.Connection := inLibGlobalVar.oConn;
+  unqryResultados.Connection := oConn;
   unqryResultados.ReadOnly := True;
   dsTablaG.DataSet := unqryResultados;
   FColumnasCreadas := False;
@@ -228,7 +228,8 @@ begin
   if ResolverLineaDocumentoTrabajo(linea, sMensaje) then
   begin
     try
-      AgregarUnidadADocumentoTrabajo(Self, inLibGlobalVar.oConn, linea);
+      AgregarUnidadADocumentoTrabajo(Self, oConn,
+        ContextoSesion, linea);
     except
       on E: Exception do
       begin
@@ -349,7 +350,7 @@ begin
     ACombo.Properties.Items.Add('(Todos)');
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := inLibGlobalVar.oConn;
+      qry.Connection := oConn;
       qry.SQL.Text := ASQL;
       qry.Open;
       while not qry.Eof do
@@ -444,7 +445,7 @@ begin
   qryPaleta := TUniQuery.Create(nil);
   lstColores := TStringList.Create;
   try
-    qryPaleta.Connection := inLibGlobalVar.oConn;
+    qryPaleta.Connection := oConn;
     qryPaleta.SQL.Add('SELECT NOMBRE_ATB');
     qryPaleta.SQL.Add('  FROM fza_atributos_basicos');
     qryPaleta.SQL.Add(' WHERE ID_VA_ATB = ''CO''');
@@ -799,7 +800,7 @@ begin
       unqryResultados.SQL.Add('          eti.CODIGO_UNIDAD_SKU');
     end;
     unqryResultados.SQL.Add(' LIMIT ' + IntToStr(ObtenerLimite));
-    unqryResultados.ParamByName('ALMACEN_DOC').AsString := oAlmacen;
+    unqryResultados.ParamByName('ALMACEN_DOC').AsString := UbicacionSesion.Almacen;
     if sFamilia <> '' then
       unqryResultados.ParamByName('FAMILIA').AsString := sFamilia;
     if sProveedor <> '' then
@@ -899,7 +900,7 @@ begin
   begin
     qryColor := TUniQuery.Create(nil);
     try
-      qryColor.Connection := inLibGlobalVar.oConn;
+      qryColor.Connection := oConn;
       qryColor.SQL.Add('SELECT HEX_ATB');
       qryColor.SQL.Add('  FROM fza_atributos_basicos');
       qryColor.SQL.Add(' WHERE ID_VA_ATB = ''CO''');
@@ -967,7 +968,7 @@ begin
     end
     else
     begin
-      ALinea.CodigoAlmacen := oAlmacen;
+      ALinea.CodigoAlmacen := UbicacionSesion.Almacen;
       ALinea.DescripcionArticulo :=
         ds.FieldByName('DESCRIPCION_ART').AsString;
       sColor := ds.FieldByName('ATR_CO').AsString;

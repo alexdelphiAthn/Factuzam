@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoClientes                                                 }
 {    Tipo:       Formulario (Mto)                                              }
@@ -770,7 +770,7 @@ begin
     Exit;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     q.SQL.Text :=
       'SELECT (SELECT COUNT(*) FROM fza_facturas  ' +
       '         WHERE CODIGO_CLI_FAC = :pCli) ' +

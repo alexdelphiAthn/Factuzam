@@ -58,6 +58,7 @@ function EnvioVerifactuDisponible: Boolean;
 // fza_verifactu_cadena del emisor hasta el commit/rollback del llamador,
 // serializando así el encadenamiento entre puestos.
 function EnviarRegistroFactura(AConn: TUniConnection;
+                               const AUsuario: string;
                                const ASerie, ANumero, ATipoOperacion: string)
                                : TResultadoEnvioVerifactu;
 
@@ -65,6 +66,7 @@ function EnviarRegistroFactura(AConn: TUniConnection;
 // sin llamar al servicio AEAT. El llamador persiste el resultado y avanza
 // la cadena si procede (NO VERI*FACTU).
 function GenerarRegistroFacturaLocal(AConn: TUniConnection;
+                                     const AUsuario: string;
                                      const ASerie, ANumero,
                                      ATipoOperacion: string):
                                      TResultadoEnvioVerifactu;
@@ -536,6 +538,7 @@ end;
 // Asegura la fila de cadena del emisor y la bloquea (FOR UPDATE) dentro
 // de la transacción del llamador: nadie más encadena hasta el commit
 procedure ObtenerCadenaParaEnvio(AConn: TUniConnection;
+                                 const AUsuario: string;
                                  const ANif: string;
                                  out ACadena: TCadenaAnterior);
 var
@@ -549,7 +552,7 @@ begin
       ' (NIF_VFCAD, CONTADOR_VFCAD, INSTANTE_ALTA, USUARIO_ALTA) ' +
       ' VALUES (:NIF, 0, NOW(), :USUARIO)';
     Qry.ParamByName('NIF').AsString     := ANif;
-    Qry.ParamByName('USUARIO').AsString := oUser;
+    Qry.ParamByName('USUARIO').AsString := AUsuario;
     Qry.Execute;
     Qry.SQL.Text :=
       ' SELECT CONTADOR_VFCAD, SERIE_FAC_VFCAD, NUMERO_FAC_VFCAD, ' +
@@ -1119,6 +1122,7 @@ begin
 end;
 
 function ConstruirRegistroFactura(AConn: TUniConnection;
+                                  const AUsuario: string;
                                   const ASerie, ANumero,
                                   ATipoOperacion: string;
                                   out ADatos: TDatosFacturaRegistro;
@@ -1136,7 +1140,7 @@ begin
       raise Exception.Create('NIF de la empresa emisora vacío o no ' +
         'válido para Verifactu: "' + ADatos.NifEmisor + '". Revisar la ' +
         'ficha de la empresa (NIF de 9 caracteres, sin guiones).');
-    ObtenerCadenaParaEnvio(AConn, ADatos.NifEmisor, ACadena);
+    ObtenerCadenaParaEnvio(AConn, AUsuario, ADatos.NifEmisor, ACadena);
     sFhGen := FechaHoraHusoGen(Now);
     sSif   := ConstruirSistemaInformatico(AConn, ADatos);
     if ATipoOperacion = 'ANULACION' then
@@ -1152,6 +1156,7 @@ begin
 end;
 
 function GenerarRegistroFacturaLocal(AConn: TUniConnection;
+                                     const AUsuario: string;
                                      const ASerie, ANumero,
                                      ATipoOperacion: string):
                                      TResultadoEnvioVerifactu;
@@ -1164,8 +1169,9 @@ var
   sHuella:    string;
 begin
   InicializarResultadoEnvio(Result);
-  if not ConstruirRegistroFactura(AConn, ASerie, ANumero, ATipoOperacion,
-                                  oDatos, oCadena, sRegistro, sHuella) then
+  if not ConstruirRegistroFactura(AConn, AUsuario, ASerie, ANumero,
+                                  ATipoOperacion, oDatos, oCadena,
+                                  sRegistro, sHuella) then
     Result.MensajeError := 'Factura ' + ASerie + '\' + ANumero +
                            ' no encontrada para el registro fiscal'
   else
@@ -1218,6 +1224,7 @@ begin
 end;
 
 function EnviarRegistroFactura(AConn: TUniConnection;
+                               const AUsuario: string;
                                const ASerie, ANumero, ATipoOperacion: string)
                                : TResultadoEnvioVerifactu;
 var
@@ -1237,8 +1244,9 @@ var
   bAceptado:       Boolean;
 begin
   InicializarResultadoEnvio(Result);
-  if not ConstruirRegistroFactura(AConn, ASerie, ANumero, ATipoOperacion,
-                                  oDatos, oCadena, sRegistro, sHuella) then
+  if not ConstruirRegistroFactura(AConn, AUsuario, ASerie, ANumero,
+                                  ATipoOperacion, oDatos, oCadena,
+                                  sRegistro, sHuella) then
     // Fila de la cola sin factura real (huérfana, p.ej. 0\0): no se
     // lanza excepción; se devuelve el error para que la cola lo deje
     // únicamente en el log de Verifactu (RegistrarEventoVerifactu).

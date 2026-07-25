@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalVerifactuDecl                                       }
 {    Tipo:       Formulario (Modal)                                            }
@@ -401,7 +401,8 @@ begin
   lblInstalacionEstado.Caption := 'Solicitando número al servicio...';
   Application.ProcessMessages;
   try
-    oEstado := GenerarInstalacionSifEmpresa(oConn, '');
+    oEstado := GenerarInstalacionSifEmpresa(oConn,
+      IdentidadSesion.Usuario, '');
     lblInstalacionEstado.Caption := 'Número disponible y guardado.';
     ShowMessage('Número de instalación SIF disponible: ' + oEstado.Numero);
   except

@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataFacturas                                               }
 {    Tipo:       Data Module                                                   }
@@ -453,7 +453,7 @@ begin
   try
     with unqrySol do
     begin
-      Connection := inLibGlobalVar.oConn;
+      Connection := oConn;
       SQL.Text := 'SELECT SUBTIPO_EMPSER ' +
                   '  FROM fza_empresas_series ' +
                   ' WHERE EMPSER = :Serie ' +
@@ -491,7 +491,7 @@ begin
       SQL.Text := 'SELECT EMPRESA_DEFECTO_USU ' +
                   '  FROM fza_usuarios ' +
                   ' WHERE USUARIO_USU = :Usuario ';
-      ParamByName('Usuario').AsString := oUser;
+      ParamByName('Usuario').AsString := IdentidadSesion.Usuario;
       Open;
       if RecordCount <> 0 then
       begin
@@ -510,7 +510,7 @@ procedure TdmFacturas.CrearTablaSeries(sEmpresa,
 begin
   with unqrySeriesEditCombo do
   begin
-    Connection := inLibGlobalVar.oConn;
+    Connection := oConn;
     SQL.Text := 'SELECT SERIE_CON_CLI AS SERIE_CON ' +
                 '  FROM vi_clientes                              ' +
                 ' WHERE (SERIE_CON_CLI IS NOT NULL      ' +
@@ -547,7 +547,7 @@ begin
     unqrySol := TUniQuery.Create(Self);
     with unqrySol do
     begin
-      Connection := inLibGlobalVar.oConn;
+      Connection := oConn;
       SQL.Text :=  'SELECT *  ' +
                    '  FROM vi_ivas ' +
                    ' WHERE IVA_IVAGRP = :grupo ' +
@@ -605,7 +605,7 @@ var
   unqrySol:TUniQuery;
 begin
   unqrySol := TUniQuery.Create(Self);
-  unqrySol.Connection := inLibGlobalVar.oConn;
+  unqrySol.Connection := oConn;
   unqrySol.SQL.Text := 'SELECT * ' +
                        '  FROM fza_clientes ' +
                        ' WHERE CODIGO_CLI_CLI = :cliente';
@@ -675,7 +675,7 @@ begin
   with unqryTablaG do
   begin
     unqrySol := TUniQuery.Create(Self);
-    unqrySol.Connection := inLibGlobalVar.oConn;
+    unqrySol.Connection := oConn;
     unqrySol.SQL.Text := 'SELECT * '+
                          '  FROM fza_empresas_retenciones ' +
                          ' WHERE CODIGO_EMP_EMPRET = :empresa ' +
@@ -976,7 +976,7 @@ begin
                           'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC').AsString;
       ParamByName('pTARIFA_ARTICULO_CLIENTE').AsString :=
             unqryTablaG.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-      ParamByName('pUSUARIO').AsString := oUser;
+      ParamByName('pUSUARIO').AsString := IdentidadSesion.Usuario;
     end;
     unstrdprcCrearCliente.ExecProc;
 end;
@@ -1016,7 +1016,7 @@ begin
   unqryTablaG.FieldByName('ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC').AsString;
       ParamByName('pGRUPO_ZONA_IVA_EMPRESA').AsString :=
              unqryTablaG.FieldByName('GRUPO_ZONA_IVA_EMPRESA_FAC').AsString;
-      ParamByName('pUSUARIO').AsString := oUser;
+      ParamByName('pUSUARIO').AsString := IdentidadSesion.Usuario;
     end;
     unstdCrearEmpresa.ExecProc;
 end;
@@ -1024,15 +1024,15 @@ end;
 procedure TdmFacturas.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryPerfiles.Connection := inLibGlobalVar.oConn;
-  unqryTablaG.Connection := inLibGlobalVar.oConn;
+  unqryPerfiles.Connection := oConn;
+  unqryTablaG.Connection := oConn;
   unqryTablaG.KeyFields := 'NUMERO_FAC;SERIE_FAC';
   unqryTablaG.SQLDelete.Text :=
     'DELETE FROM fza_facturas ' + sLineBreak +
     'WHERE NUMERO_FAC = :Old_NUMERO_FAC ' + sLineBreak +
     '  AND SERIE_FAC = :Old_SERIE_FAC';
   PrepararCabeceraSinCamposComplejos;
-  unqryLinFac.Connection := inLibGlobalVar.oConn;
+  unqryLinFac.Connection := oConn;
   // Contrato ColumnSKUcxGrid (facturas_columnas_sku.sql): los SQL del
   // dfm no conocen las columnas nuevas (ATTR1..5 + NUM_ATRIBUTOS); se
   // reescriben aqui COMPLETOS para no editar el dfm cableado (mismo
@@ -1143,34 +1143,34 @@ begin
     '   AND LINEA_FACLIN = :Old_LINEA_FACLIN ' +
     ' FOR UPDATE';
   end;
-  unqrySeries.Connection := inLibGlobalVar.oConn;
-  unqryIvas.Connection := inLibGlobalVar.oConn;
-  unqryRecibos.Connection := inLibGlobalVar.oConn;
-  unqryEmpDataFac.Connection := inLibGlobalVar.oConn;
-  unqryCliDataFac.Connection := inLibGlobalVar.oConn;
-  unqryArtDataLinFac.Connection := inLibGlobalVar.oConn;
-  unqryTarifas.Connection := inLibGlobalVar.oConn;
-  unstrdprcCrearCliente.Connection := inLibGlobalVar.oConn;
-  unstdCrearEmpresa.Connection := inLibGlobalVar.oConn;
-  unstdCrearArticuloLin.Connection := inLibGlobalVar.oConn;
-  unqryFormaPago.Connection := inLibGlobalVar.oConn;
-  unstrdprcGetContadorFactura.Connection := inLibGlobalVar.oConn;
-  unstdGetContadorLinea.Connection := inLibGlobalVar.oConn;
-  unstdCalcularFactura.Connection := inLibGlobalVar.oConn;
-  unstrdprcGetDataCliente.Connection := inLibGlobalVar.oConn;
-  unstrdprcGetRecibos.Connection := inLibGlobalVar.oConn;
-  unqryRecibosPrint.Connection := inLibGlobalVar.oConn;
-  unqrySeriesEditCombo.Connection := inLibGlobalVar.oConn;
-  unqryIvasTipos.Connection := inLibGlobalVar.oConn;
-  unqryPaisesEmp.Connection := inLibGlobalVar.oConn;
-  unqryPaisesCli.Connection := inLibGlobalVar.oConn;
-  unqryConsolidacion.Connection := inLibGlobalVar.oConn;
-  unqryErrores.Connection := inLibGlobalVar.oConn;
-  unqryMovimientosFac.Connection := inLibGlobalVar.oConn;
-  unqryAlmacenesFac.Connection := inLibGlobalVar.oConn;
-  unstrdprcInsertarMovFac.Connection := inLibGlobalVar.oConn;
+  unqrySeries.Connection := oConn;
+  unqryIvas.Connection := oConn;
+  unqryRecibos.Connection := oConn;
+  unqryEmpDataFac.Connection := oConn;
+  unqryCliDataFac.Connection := oConn;
+  unqryArtDataLinFac.Connection := oConn;
+  unqryTarifas.Connection := oConn;
+  unstrdprcCrearCliente.Connection := oConn;
+  unstdCrearEmpresa.Connection := oConn;
+  unstdCrearArticuloLin.Connection := oConn;
+  unqryFormaPago.Connection := oConn;
+  unstrdprcGetContadorFactura.Connection := oConn;
+  unstdGetContadorLinea.Connection := oConn;
+  unstdCalcularFactura.Connection := oConn;
+  unstrdprcGetDataCliente.Connection := oConn;
+  unstrdprcGetRecibos.Connection := oConn;
+  unqryRecibosPrint.Connection := oConn;
+  unqrySeriesEditCombo.Connection := oConn;
+  unqryIvasTipos.Connection := oConn;
+  unqryPaisesEmp.Connection := oConn;
+  unqryPaisesCli.Connection := oConn;
+  unqryConsolidacion.Connection := oConn;
+  unqryErrores.Connection := oConn;
+  unqryMovimientosFac.Connection := oConn;
+  unqryAlmacenesFac.Connection := oConn;
+  unstrdprcInsertarMovFac.Connection := oConn;
   unqryEfectosVenta := TUniQuery.Create(Self);
-  unqryEfectosVenta.Connection := inLibGlobalVar.oConn;
+  unqryEfectosVenta.Connection := oConn;
   unqryEfectosVenta.SQL.Text :=
     'SELECT * ' +
     '  FROM vi_efectos_venta ' +
@@ -1232,12 +1232,12 @@ var
   qCol: TUniQuery;
 begin
   Result := False;
-  if inLibGlobalVar.oConn <> nil then
+  if oConn <> nil then
   begin
     qCol := TUniQuery.Create(nil);
     try
       try
-        qCol.Connection := inLibGlobalVar.oConn;
+        qCol.Connection := oConn;
         qCol.SQL.Text :=
           'SELECT COUNT(*) AS N ' +
           '  FROM INFORMATION_SCHEMA.COLUMNS ' +
@@ -1265,11 +1265,11 @@ var
   sCampos: string;
 begin
   sCampos := '';
-  if inLibGlobalVar.oConn <> nil then
+  if oConn <> nil then
   begin
     qCampos := TUniQuery.Create(nil);
     try
-      qCampos.Connection := inLibGlobalVar.oConn;
+      qCampos.Connection := oConn;
       qCampos.SQL.Text := 'SHOW COLUMNS FROM vi_facturas';
       qCampos.Open;
       while not qCampos.Eof do
@@ -1363,7 +1363,7 @@ begin
      (not unqryTablaG.IsEmpty) then
     sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString);
   if sEmpresa = '' then
-    sEmpresa := Trim(oEmpresa);
+    sEmpresa := Trim(UbicacionSesion.Empresa);
   if (not unqryAlmacenesFac.Active) or
      (not SameText(unqryAlmacenesFac.ParamByName('EMPRESA').AsString,
                    sEmpresa)) then
@@ -1454,7 +1454,7 @@ var
 begin
   qStamp := TUniQuery.Create(nil);
   try
-    qStamp.Connection := inLibGlobalVar.oConn;
+    qStamp.Connection := oConn;
     qStamp.SQL.Text :=
       'UPDATE fza_recibos ' +
       '   SET CODIGO_EMPBAN_REC = :banco, ' +
@@ -1481,7 +1481,7 @@ begin
     Exit;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     q.SQL.Text := 'SELECT CODIGO_EMPBAN_CLI ' +
                   '  FROM fza_clientes ' +
                   ' WHERE CODIGO_CLI_CLI = :cli';
@@ -1514,7 +1514,7 @@ begin
     sNumero := unqryTablaG.FieldByName('NUMERO_FAC').AsString;
     sp := TUniStoredProc.Create(nil);
     try
-      sp.Connection := inLibGlobalVar.oConn;
+      sp.Connection := oConn;
       sp.StoredProcName := 'PRC_EFV_GENERAR_DESDE_FACTURA';
       sp.Params.Clear;
       sp.Params.CreateParam(ftString, 'p_SERIE', ptInput);
@@ -1525,7 +1525,7 @@ begin
       sp.Params.CreateParam(ftInteger, 'p_RESULTADO', ptOutput);
       sp.ParamByName('p_SERIE').AsString := sSerie;
       sp.ParamByName('p_NUMERO').AsString := sNumero;
-      sp.ParamByName('p_USUARIO').AsString := oUser;
+      sp.ParamByName('p_USUARIO').AsString := IdentidadSesion.Usuario;
       sp.ParamByName('p_CODIGO_EMPBAN').AsString := ACodEmpban;
       sp.ParamByName('p_IBAN_EMP').AsString := AIbanEmp;
       sp.ExecProc;
@@ -1557,7 +1557,7 @@ begin
     sNumero := unqryTablaG.FieldByName('NUMERO_FAC').AsString;
     sp := TUniStoredProc.Create(nil);
     try
-      sp.Connection := inLibGlobalVar.oConn;
+      sp.Connection := oConn;
       sp.StoredProcName := 'PRC_EFV_CONCILIAR_COBRO';
       sp.Params.Clear;
       sp.Params.CreateParam(ftString, 'p_SERIE', ptInput);
@@ -1578,7 +1578,7 @@ begin
       sp.ParamByName('p_TIPO').AsString := ATipo;
       sp.ParamByName('p_REFERENCIA').AsString := AReferencia;
       sp.ParamByName('p_ENTIDAD').AsString := '';
-      sp.ParamByName('p_USUARIO').AsString := oUser;
+      sp.ParamByName('p_USUARIO').AsString := IdentidadSesion.Usuario;
       sp.ExecProc;
       Result := sp.ParamByName('p_RESULTADO').AsInteger;
     finally
@@ -1605,7 +1605,7 @@ begin
     sEstado := UpperCase(Trim(AEstado));
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := oConn;
       q.SQL.Text :=
         'UPDATE fza_efectos_venta ' +
         '   SET ESTADO_EFV = :estado, ' +
@@ -1621,7 +1621,7 @@ begin
         '   AND COALESCE(IMPORTE_COBRADO_EFV, 0) <= 0.0001 ' +
         '   AND COALESCE(ESCONCILIADO_EFV, ''N'') <> ''S''';
       q.ParamByName('estado').AsString := sEstado;
-      q.ParamByName('usuario').AsString := oUser;
+      q.ParamByName('usuario').AsString := IdentidadSesion.Usuario;
       q.ParamByName('serie').AsString :=
         unqryEfectosVenta.FieldByName('SERIE_FAC_EFV').AsString;
       q.ParamByName('numero').AsString :=
@@ -1780,7 +1780,7 @@ begin
   qryIVAAG := TUniQuery.Create(Self);
   with qryIVAAG do
   begin
-    Connection := inLibGlobalVar.oConn;
+    Connection := oConn;
         SQL.Text := 'SELECT IVA_IVAGRP ' +
                     '  FROM vi_ivas_empresa ' +
                     ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = ' + QuotedStr('S') +
@@ -1855,7 +1855,7 @@ begin
       ParamByName('pserie').AsString :=
                                 unqryTablaG.FindField('SERIE_FAC').AsString;
       ParamByName('ptipodoc').AsString :=  'FC';
-      ParamByName('pUSUARIOMODIF').AsString := oUser;
+      ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
       ParamByName('pEMPRESA_CONTADOR').AsString :=
                        unqryTablaG.FindField('CODIGO_EMP_FAC').AsString;
       ExecProc;
@@ -1962,11 +1962,11 @@ begin
 //      Params.CreateParam(ftString, 'ptipodoc', ptInput);
 //      Params.CreateParam(ftInteger, 'pcont', ptOutput);
 //      Params.CreateParam(ftString, 'pUSUARIOMODIF', ptInput);
-//      ParamByName('pUSUARIOMODIF').AsString := oUser;
+//      ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
 //      ParamByName('ptipodoc').AsString :=  'CL';
 //      ExecProc;
       unqryTablaG.FindField('CODIGO_CLI_FAC').AsString :=
-                                                 ObtenerSiguienteContador('CL');
+                                                 ObtenerSiguienteContador('CL', IdentidadSesion.Usuario);
 //    end;
   end;
 end;
@@ -2064,10 +2064,10 @@ begin
 //      Params.CreateParam(ftInteger, 'pcont', ptOutput);
 //      Params.CreateParam(ftString, 'pUSUARIOMODIF', ptInput);
 //      ParamByName('ptipodoc').AsString :=  'EM';
-//      ParamByName('pUSUARIOMODIF').AsString := oUser;
+//      ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
 //      ExecProc;
       unqryTablaG.FindField('CODIGO_EMP_FAC').AsString :=
-                                                 ObtenerSiguienteContador('EM');
+                                                 ObtenerSiguienteContador('EM', IdentidadSesion.Usuario);
 //    end;
   end;
 end;
@@ -2156,7 +2156,7 @@ begin
   begin
     // Salvaguarda si la linea llega con un SKU/codigo de barras sin pasar
     // por el editor de articulo del formulario.
-    NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn, unqryLinFac,
+    NormalizarArticuloSkuEnDataSet(oConn, unqryLinFac,
       'CODIGO_ART_FACLIN', 'CODIGO_UNIDAD_FACLIN');
     if (FieldByName(fdesart).AsString = '') then
     begin
@@ -2230,7 +2230,7 @@ begin
   end;
   qryBorrarEfectos := TUniQuery.Create(Self);
   try
-    qryBorrarEfectos.Connection := inLibGlobalVar.oConn;
+    qryBorrarEfectos.Connection := oConn;
     qryBorrarEfectos.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM INFORMATION_SCHEMA.TABLES ' +
@@ -2280,7 +2280,7 @@ begin
   qryBorrarLineas := TUniQuery.Create(Self);
   with qryBorrarLineas do
   begin
-    Connection := inLibGlobalVar.oConn;
+    Connection := oConn;
     SQL.Text := 'DELETE ' +
                 '  FROM fza_facturas_lineas ' +
                 ' WHERE SERIE_FAC_FACLIN = :serie ' +
@@ -2298,7 +2298,7 @@ begin
   qryBorrarRecibos := TUniQuery.Create(Self);
   with qryBorrarRecibos do
   begin
-    Connection := inLibGlobalVar.oConn;
+    Connection := oConn;
     SQL.Text := 'DELETE ' +
                 '  FROM fza_recibos ' +
                 ' WHERE SERIE_FAC_REC = :serie ' +
@@ -2316,7 +2316,7 @@ begin
   // Revierte VE (caja) y FC (mantenimiento), manteniendo stock y acumulados.
   qryBorrarMovimientos := TUniQuery.Create(Self);
   try
-    qryBorrarMovimientos.Connection := inLibGlobalVar.oConn;
+    qryBorrarMovimientos.Connection := oConn;
     TVerifactuCola.BorrarMovimientosFactura(
       qryBorrarMovimientos,
       unqryTablaG.FieldByName(fseriefac).AsString,
@@ -2459,8 +2459,8 @@ begin
                                     unqryLinFac.FieldByName(fpordto).AsCurrency;
       ParamByName('pPORCEN_DTO_TARIFA').AsCurrency :=
                                     unqryLinFac.FieldByName(fpordto).AsCurrency;
-      ParamByName('pUSUARIO').AsString         := oUser;
-//      ParamByName('pUSUARIO').AsString         := oUser;
+      ParamByName('pUSUARIO').AsString         := IdentidadSesion.Usuario;
+//      ParamByName('pUSUARIO').AsString         := IdentidadSesion.Usuario;
       //ParamByName('pINSTANTEMODIF').AsDateTime := Now;
       // ojo!!!! HAY UN TEMAZO DE UNIDAC CON EL PASO DE TIMESTAMPS POR PARÁMETRO
       //  ParamByName('pINSTANTEMODIF').AsString :=
@@ -2630,7 +2630,7 @@ begin
       begin
         if (State = dsInsert) and oLicenciaAplicacionComprobada and
            (FieldByName('FECHA_FAC').AsString <> '') then
-          ValidarLimiteDemoFacturas(inLibGlobalVar.oConn,
+          ValidarLimiteDemoFacturas(oConn,
                                     oLicenciaAplicacionEstado,
                                     FieldByName('FECHA_FAC').AsDateTime);
         if (FieldByName('NUMERO_FAC').AsString = '0') then
@@ -2688,7 +2688,7 @@ begin
   qExiste := TUniQuery.Create(nil);
   qActualizar := TUniQuery.Create(nil);
   try
-    qLineas.Connection := inLibGlobalVar.oConn;
+    qLineas.Connection := oConn;
     qLineas.SQL.Text :=
       'SELECT LINEA_FACLIN, CODIGO_UNIDAD_FACLIN, CODIGO_ART_FACLIN, ' +
       '       CANTIDAD_FACLIN, CODIGO_ALM_FACLIN, NUMERO_MOV_FACLIN ' +
@@ -2700,7 +2700,7 @@ begin
     qLineas.ParamByName('pSER').AsString := sSerieFac;
     qLineas.Open;
 
-    qExiste.Connection := inLibGlobalVar.oConn;
+    qExiste.Connection := oConn;
     // El SP guarda el documento en las columnas DOC (las REF quedan
     // NULL). Las ventas de caja ya registran su salida con
     // TIPO_DOC_MOV='VE': si no se cuentan, un Post posterior de la
@@ -2715,7 +2715,7 @@ begin
       ' ORDER BY CASE TIPO_DOC_MOV WHEN ''VE'' THEN 0 ELSE 1 END, ' +
       '          NUMERO_MOV ' +
       ' LIMIT 1';
-    qActualizar.Connection := inLibGlobalVar.oConn;
+    qActualizar.Connection := oConn;
     qActualizar.SQL.Text :=
       'UPDATE fza_facturas_lineas ' +
       '   SET NUMERO_MOV_FACLIN = :pMOV, ' +
@@ -2746,7 +2746,7 @@ begin
           sNumeroMov := qExiste.FieldByName('NUMERO_MOV').AsString
         else
         begin
-          sNumeroMov := ObtenerSiguienteContador('MV');
+          sNumeroMov := ObtenerSiguienteContador('MV', IdentidadSesion.Usuario);
           with unstrdprcInsertarMovFac do
           begin
             Params.Clear;
@@ -2784,7 +2784,7 @@ begin
             ParamByName('p_CANTIDAD_MOV').AsFloat         := fCantidad;
             ParamByName('p_PRECIO_MEDIO_MOV').AsFloat     := 0;
             ParamByName('p_TOTAL_COSTE_MOV').AsFloat      := 0;
-            ParamByName('p_USUARIO').AsString             := oUser;
+            ParamByName('p_USUARIO').AsString             := IdentidadSesion.Usuario;
             ParamByName('p_ALMACEN_DOC').AsString         := sAlmacen;
             ParamByName('p_NUMOP_DOC').AsString           := sNumOp;
             ParamByName('p_CODIGO_CAJA_DOC_MOV').AsString := sCaja;
@@ -2800,7 +2800,7 @@ begin
             sNumeroMov) then
         begin
           qActualizar.ParamByName('pMOV').AsString := sNumeroMov;
-          qActualizar.ParamByName('pUSUARIO').AsString := oUser;
+          qActualizar.ParamByName('pUSUARIO').AsString := IdentidadSesion.Usuario;
           qActualizar.ParamByName('pSER').AsString := sSerieFac;
           qActualizar.ParamByName('pNUM').AsString := sNumeroFac;
           qActualizar.ParamByName('pLIN').AsString := sLinea;

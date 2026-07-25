@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoPedidosCompra                                            }
 {    Tipo:       Formulario (Mto)                                              }
@@ -1257,7 +1257,7 @@ end;
 function TfrmMtoPedidosCompra.SqlRestriccionUsuario: string;
 begin
   // Documentos de compra: empresa y almacén (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_PEDC', 'CODIGO_ALM_PEDC', '');
+  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_PEDC', 'CODIGO_ALM_PEDC', '');
 end;
 
 procedure TfrmMtoPedidosCompra.CrearTablaPrincipal;
@@ -1361,7 +1361,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := oConn;
       q.SQL.Text :=
         'SELECT ATB.CODIGO_ATB, MIN(ATB.ORDEN_ATB) AS ORDEN_ATB, ' +
         '       MIN(ATB.NOMBRE_ATB) AS NOMBRE_ATB ' +
@@ -1414,7 +1414,7 @@ begin
   // 1. Gestor inline de tallas (libreria existente).
   cfgT := Default(TGridTallasConfig);
   cfgT.Conexion           := dmmPedidosCompra.unqryTablaG.Connection;
-  cfgT.Usuario            := oUser;
+  cfgT.Usuario            := IdentidadSesion.Usuario;
   cfgT.Grid               := tvLineasPedido;
   cfgT.SourceMaster       := dsTablaG;
   cfgT.SourceLineas       := dmmPedidosCompra.dsPedidosCompraLineas;
@@ -1448,6 +1448,7 @@ begin
   // 2. Orquestador de pivote (libreria nueva compartida con albaranes).
   cfgP := Default(TGridPivoteCompraConfig);
   cfgP.Conexion             := dmmPedidosCompra.unqryTablaG.Connection;
+  cfgP.ContextoSesion       := ContextoSesion;
   cfgP.Grid                 := tvLineasPedido;
   cfgP.SourceMaster         := dsTablaG;
   cfgP.SourceLineas         := dmmPedidosCompra.unqryPedidosCompraLineas;
@@ -1965,7 +1966,7 @@ begin
   Result := False;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM INFORMATION_SCHEMA.COLUMNS ' +
@@ -2066,7 +2067,7 @@ begin
       if not (ds.State in [dsInsert, dsEdit]) then
         ds.Edit;
       ds.FieldByName('CODIGO_PRV_PEDC').AsString := sCodigo;
-      AplicarIvaExentoIntracomunitarioProveedor(inLibGlobalVar.oConn, ds,
+      AplicarIvaExentoIntracomunitarioProveedor(oConn, ds,
         'CODIGO_PRV_PEDC', 'ESIVA_EXENTO_INTRACOMUNITARIO_PEDC');
       dmmPedidosCompra.CalcularTotalesPedidoCompra;
       ActualizarLabelProveedor;
@@ -2330,7 +2331,7 @@ begin
   if (Trim(ASerie) = '') or (Trim(ANumero) = '') then Exit;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     q.SQL.Text :=
       'SELECT IFNULL(NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
       '              P.CODIGO_ALM_PEDC) AS ALM ' +
@@ -2725,7 +2726,7 @@ begin
     sEmpresa := Trim(dmmPedidosCompra.unqryTablaG.
                        FieldByName('CODIGO_EMP_PEDC').AsString);
   if sEmpresa = '' then
-    sEmpresa := Trim(inLibGlobalVar.oEmpresa);
+    sEmpresa := Trim(UbicacionSesion.Empresa);
   CargarSeriesEmpresa(sEmpresa, 'PC', cbbSERIE_PEDC.Properties.Items);
   if cbbSERIE_PEDC.Properties.Items.Count = 0 then
   begin
@@ -2848,21 +2849,21 @@ begin
     else
       arrCeldas := RecogerCeldasARecibirVertical(form.CodigoAlmacen);
     bUsarCeldas := Length(arrCeldas) > 0;
-    bTxOwned := not inLibGlobalVar.oConn.InTransaction;
-    if bTxOwned then inLibGlobalVar.oConn.StartTransaction;
+    bTxOwned := not oConn.InTransaction;
+    if bTxOwned then oConn.StartTransaction;
     try
       if form.Incorporar then
       begin
         // Incorporar las lineas a un albaran existente del pedido.
         if bUsarCeldas then
           bOk := inLibPedidosCompra.IncorporarAlbaranDesdePedidoConCantidades(
-                  inLibGlobalVar.oConn, sSerie, sNumero, form.CodigoAlmacen,
-                  form.AlbaranSerieDestino, form.AlbaranNumDestino, oUser,
+                  oConn, sSerie, sNumero, form.CodigoAlmacen,
+                  form.AlbaranSerieDestino, form.AlbaranNumDestino, IdentidadSesion.Usuario,
                   form.IdPvTemporada, arrCeldas, sMsg)
         else
           bOk := inLibPedidosCompra.IncorporarAlbaranDesdePedido(
-                  inLibGlobalVar.oConn, sSerie, sNumero, form.CodigoAlmacen,
-                  form.AlbaranSerieDestino, form.AlbaranNumDestino, oUser,
+                  oConn, sSerie, sNumero, form.CodigoAlmacen,
+                  form.AlbaranSerieDestino, form.AlbaranNumDestino, IdentidadSesion.Usuario,
                   form.IdPvTemporada, sMsg);
       end
       else
@@ -2870,20 +2871,20 @@ begin
         // Crear un albaran nuevo (flujo clasico).
         if bUsarCeldas then
           bOk := inLibPedidosCompra.CrearAlbaranDesdePedidoConCantidades(
-                  inLibGlobalVar.oConn, sSerie, sNumero, form.CodigoAlmacen,
-                  form.SerieAlbaran, oUser,
+                  oConn, sSerie, sNumero, form.CodigoAlmacen,
+                  form.SerieAlbaran, IdentidadSesion.Usuario,
                   form.RefProveedor, form.FechaRecepcion, form.IdPvTemporada,
                   arrCeldas, sNumAlb, sMsg)
         else
           bOk := inLibPedidosCompra.CrearAlbaranDesdePedido(
-                  inLibGlobalVar.oConn, sSerie, sNumero, form.CodigoAlmacen,
-                  form.SerieAlbaran, oUser,
+                  oConn, sSerie, sNumero, form.CodigoAlmacen,
+                  form.SerieAlbaran, IdentidadSesion.Usuario,
                   form.RefProveedor, form.FechaRecepcion, form.IdPvTemporada,
                   sNumAlb, sMsg);
       end;
       if bOk then
       begin
-        if bTxOwned then inLibGlobalVar.oConn.Commit;
+        if bTxOwned then oConn.Commit;
         // Limpiar las celdas "A recibir" tecleadas para el almacen
         // procesado, para que el usuario pueda seguir con otro almacen
         // sin tener que borrar manualmente.
@@ -2946,14 +2947,14 @@ begin
       end
       else
       begin
-        if bTxOwned then inLibGlobalVar.oConn.Rollback;
+        if bTxOwned then oConn.Rollback;
         MessageDlg(sMsg, mtWarning, [mbOk], 0);
       end;
     except
       on E: Exception do
       begin
-        if bTxOwned and inLibGlobalVar.oConn.InTransaction then
-          inLibGlobalVar.oConn.Rollback;
+        if bTxOwned and oConn.InTransaction then
+          oConn.Rollback;
         MessageDlg('Error al crear el albaran: ' + E.Message,
                    mtError, [mbOk], 0);
       end;
@@ -3052,7 +3053,7 @@ begin
   begin
     CfgPV := Default(TGridPivoteVentaConfig);
     CfgPV.Conexion := dmmPedidosCompra.unqryTablaG.Connection;
-    CfgPV.Usuario := oUser;
+    CfgPV.Usuario := IdentidadSesion.Usuario;
     CfgPV.SourceMaster := dsTablaG;
     CfgPV.SourceLineas := dmmPedidosCompra.dsPedidosCompraLineas;
     CfgPV.FieldSerieMaster := 'SERIE_PEDC';
@@ -3083,7 +3084,7 @@ begin
     // consolidadas por articulo+color y cantidades por celda de talla
     // en fza_pedidos_compra_celdas.
     CfgT := Default(TGridTallasConfig);
-    CfgT.Usuario := oUser;
+    CfgT.Usuario := IdentidadSesion.Usuario;
     CfgT.Grid := tvLineasPedido;
     CfgT.SourceMaster := dsTablaG;
     CfgT.SourceLineas := dmmPedidosCompra.dsPedidosCompraLineas;

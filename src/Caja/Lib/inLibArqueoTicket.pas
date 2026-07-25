@@ -31,7 +31,8 @@ uses
   inLibArqueoPersistencia,
   inLibFTicket,
   inMtoPreviewTicket,
-  inLibDir;
+  inLibDir,
+  inLibContextoSesionIntf;
 
 type
   TArqueoTicket = class
@@ -75,6 +76,7 @@ type
                              ADuplicado: Boolean = False);
     class procedure ImprimirCierre(
       AConn: TUniConnection;
+      const AContextoSesion: IContextoSesionAplicacion;
       const AArqueo: TArqueoCaja;
       const ALineas: TArray<TArqueoRecuentoLinea>;
       ATotalSistema: Currency;
@@ -100,6 +102,7 @@ type
     // fza_caja_arqueos + fza_caja_arqueos_recuento (sin recalcular nada).
     class procedure ImprimirCierreDesdeHistorico(
       AConn: TUniConnection;
+      const AContextoSesion: IContextoSesionAplicacion;
       const AEmpresa, AAlmacen, ACaja: string;
       const ACodigoArqueo: string;
       const ANombreImpresora: string = 'DEBUG');
@@ -108,7 +111,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibCajaParam;
+  inLibCajaParam;
 
 // =============================================================================
 //   Helpers de formato
@@ -691,6 +694,7 @@ end;
 
 class procedure TArqueoTicket.ImprimirCierre(
   AConn: TUniConnection;
+  const AContextoSesion: IContextoSesionAplicacion;
   const AArqueo: TArqueoCaja;
   const ALineas: TArray<TArqueoRecuentoLinea>;
   ATotalSistema: Currency;
@@ -739,7 +743,7 @@ begin
     Ticket.TextoColumnas('Ventas:',
       IntToStr(AArqueo.CantidadVentas));
     Ticket.TextoColumnas('Cierre por:',
-      inLibGlobalVar.oUser);
+      AContextoSesion.Identidad.Usuario);
     // Vendedor (empleado de caja) que estampa el cierre; los arqueos
     // grabados antes de exigirlo pueden venir sin él
     if AVendedor <> '' then
@@ -917,6 +921,7 @@ end;
 
 class procedure TArqueoTicket.ImprimirCierreDesdeHistorico(
   AConn: TUniConnection;
+  const AContextoSesion: IContextoSesionAplicacion;
   const AEmpresa, AAlmacen, ACaja: string;
   const ACodigoArqueo: string;
   const ANombreImpresora: string = 'DEBUG');
@@ -1039,7 +1044,7 @@ begin
     finally
       FreeAndNil(Q);
     end;
-    ImprimirCierre(AConn, Arqueo, Lineas,
+    ImprimirCierre(AConn, AContextoSesion, Arqueo, Lineas,
                    dTotalSistema, dTotalRecuento, dDiferencia,
                    dRetirada, sConcepto, dEfectivoDejado,
                    sDesglose, sObs, sVendedor, ANombreImpresora, True);

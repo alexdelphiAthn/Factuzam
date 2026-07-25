@@ -163,13 +163,15 @@ type
     /// El indice incremental garantiza que cada guardado produce un
     /// nombre nuevo (`<clave>_<NNN>`) y borra los ficheros anteriores,
     /// asi se invalida cualquier cache por nombre de fichero.
-    function Guardar(const ACodArt, ACodSku, AFicheroOrigen: string): TFotoInfo;
+    function Guardar(const ACodArt, ACodSku, AFicheroOrigen,
+      AUsuario: string): TFotoInfo;
 
     /// Gira las tres copias de la foto (300/600/real) 90 grados en el
     /// sentido indicado y avanza el indice. La fila de BBDD apunta al
     /// nuevo nombre y los ficheros anteriores se borran.
     function Rotar(const ACodArt, ACodSku: string;
-                   AHorario: Boolean): TFotoInfo;
+                   AHorario: Boolean;
+                   const AUsuario: string): TFotoInfo;
 
     /// Elimina la foto (BBDD + ficheros 300/600/real). `ACodUnidad` es
     /// el valor exacto de `CODIGO_UNIDAD_FOT`: cadena vacia para la
@@ -186,7 +188,7 @@ type
     function GuardarSesion(const ASerieSes, ANumeroSes: string;
                            ALinea: Integer;
                            const ACodArtTentativo, ACodUnidad,
-                                 AFicheroOrigen: string): TFotoInfo;
+                                 AFicheroOrigen, AUsuario: string): TFotoInfo;
 
     /// Resuelve la foto aplicable a una linea de sesion. Como `Resolver`
     /// pero contra fza_compras_sesiones_fotos. Si ACodUnidad = '' busca
@@ -978,7 +980,7 @@ end;
 { ----------------------------------------------------------------- }
 
 function TFotosArticulos.Guardar(const ACodArt, ACodSku,
-                                 AFicheroOrigen: string): TFotoInfo;
+                                 AFicheroOrigen, AUsuario: string): TFotoInfo;
 var
   q              : TUniQuery;
   sDirBase       : string;
@@ -1080,9 +1082,9 @@ begin
     if not bExiste then
     begin
       q.FieldByName(finstalta).AsDateTime := Now;
-      q.FieldByName(fusralta).AsString    := oUser;
+      q.FieldByName(fusralta).AsString    := AUsuario;
     end;
-    q.FieldByName(fusrmodif).AsString     := oUser;
+    q.FieldByName(fusrmodif).AsString     := AUsuario;
     q.Post;
   finally
     FreeAndNil(q);
@@ -1108,7 +1110,8 @@ begin
 end;
 
 function TFotosArticulos.Rotar(const ACodArt, ACodSku: string;
-                               AHorario: Boolean): TFotoInfo;
+                               AHorario: Boolean;
+                               const AUsuario: string): TFotoInfo;
 var
   info             : TFotoInfo;
   sClave           : string;
@@ -1164,7 +1167,7 @@ begin
       '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
       '    AND CODIGO_UNIDAD_FOT = :CODIGO_UNIDAD';
     q.ParamByName('NOMBRE').AsString        := sNombreNuevo;
-    q.ParamByName('USUARIO').AsString       := oUser;
+    q.ParamByName('USUARIO').AsString       := AUsuario;
     q.ParamByName('CODIGO_ART').AsString    := ACodArt;
     q.ParamByName('CODIGO_UNIDAD').AsString := info.ClaveResuelta;
     q.Execute;
@@ -1553,7 +1556,7 @@ function TFotosArticulos.GuardarSesion(
   const ASerieSes, ANumeroSes: string;
   ALinea: Integer;
   const ACodArtTentativo, ACodUnidad,
-        AFicheroOrigen: string): TFotoInfo;
+        AFicheroOrigen, AUsuario: string): TFotoInfo;
 var
   q              : TUniQuery;
   sDirBase       : string;
@@ -1653,7 +1656,7 @@ begin
     q.ParamByName('a').AsString   := ACodArtTentativo;
     q.ParamByName('nom').AsString := sNombreNuevo;
     q.ParamByName('ext').AsString := sExt;
-    q.ParamByName('usr').AsString := inLibGlobalVar.oUser;
+    q.ParamByName('usr').AsString := AUsuario;
     q.ExecSQL;
   finally
     FreeAndNil(q);

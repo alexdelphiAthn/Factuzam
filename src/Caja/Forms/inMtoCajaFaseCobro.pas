@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaFaseCobro                                            }
 {    Tipo:       Formulario (Mto)                                              }
@@ -1192,7 +1192,7 @@ begin
   begin
     qryCli := TUniQuery.Create(nil);
     try
-      qryCli.Connection := inLibGlobalVar.oConn;
+      qryCli.Connection := oConn;
       qryCli.SQL.Text := 'SELECT RAZON_SOCIAL_CLI, EMAIL_CLI, ' +
                          '       ESPERMITE_DEUDA_CLI, ' +
                          '       TOTAL_LIMITE_CREDITO_CLI, ' +

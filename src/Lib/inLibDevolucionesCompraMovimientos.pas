@@ -247,7 +247,7 @@ begin
         qSrc.Next;
         Continue;
       end;
-      sNumeroMov := inLibtb.ObtenerSiguienteContador('MV');
+      sNumeroMov := inLibtb.ObtenerSiguienteContador('MV', AUsuario);
       // LINEA_DEVCLIN ya viene en formato '0010', '0020', etc. Lo
       // reusamos tal cual como LINEA_MOV.
       sLinea := qSrc.FieldByName('LINEA').AsString;

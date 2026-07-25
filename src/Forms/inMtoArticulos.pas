@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoArticulos                                                }
 {    Tipo:       Formulario (Mto)                                              }
@@ -781,7 +781,7 @@ begin
       'VALUES (:SKU, :ART, ''-'', ''S'', CURRENT_TIMESTAMP, :USR, :USR)';
     qry.ParamByName('SKU').AsString := aCodArticulo;
     qry.ParamByName('ART').AsString := aCodArticulo;
-    qry.ParamByName('USR').AsString := oUser;
+    qry.ParamByName('USR').AsString := IdentidadSesion.Usuario;
     qry.ExecSQL;
   finally
     FreeAndNil(qry);
@@ -834,7 +834,7 @@ begin
         '       USUARIO_MODIF = :USR '                                      +
         ' WHERE CODIGO_UNIDAD_SKU = :SKU';
       qry.ParamByName('SKU').AsString := aCodArticulo;
-      qry.ParamByName('USR').AsString := oUser;
+      qry.ParamByName('USR').AsString := IdentidadSesion.Usuario;
       qry.ExecSQL;
       Exit;
     end;
@@ -847,7 +847,7 @@ begin
       'VALUES (:SKU, :ART, ''-'', ''S'', CURRENT_TIMESTAMP, :USR, :USR)';
     qry.ParamByName('SKU').AsString := aCodArticulo;
     qry.ParamByName('ART').AsString := aCodArticulo;
-    qry.ParamByName('USR').AsString := oUser;
+    qry.ParamByName('USR').AsString := IdentidadSesion.Usuario;
     qry.ExecSQL;
   finally
     FreeAndNil(qry);
@@ -1657,7 +1657,7 @@ begin
         if qrySkus.FieldByName('NUM_PRIN').AsInteger = 0 then
         begin
           // Fase A: principal con contador EAN-13
-          sCounter := ObtenerSiguienteContador(CB_TIPO_DOC);
+          sCounter := ObtenerSiguienteContador(CB_TIPO_DOC, IdentidadSesion.Usuario);
           if Length(sCounter) > CB_NUM_DIGITOS then
             sCounter := Copy(sCounter, Length(sCounter) - CB_NUM_DIGITOS + 1,
                              CB_NUM_DIGITOS)
@@ -1676,7 +1676,7 @@ begin
           qryInsert.ParamByName('CB').AsString   := sCodigoCB;
           qryInsert.ParamByName('SKU').AsString  := sSku;
           qryInsert.ParamByName('TIPO').AsString := CB_TIPO_INT;
-          qryInsert.ParamByName('USR').AsString  := oUser;
+          qryInsert.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
           qryInsert.ExecSQL;
           Inc(iGenerados);
         end
@@ -1690,7 +1690,7 @@ begin
             'VALUES ('''', :SKU, ''EAN13'', ''N'', '                   +
             '        CURRENT_TIMESTAMP, :USR, :USR)';
           qryInsert.ParamByName('SKU').AsString := sSku;
-          qryInsert.ParamByName('USR').AsString := oUser;
+          qryInsert.ParamByName('USR').AsString := IdentidadSesion.Usuario;
           qryInsert.ExecSQL;
           Inc(iVacios);
         end
@@ -2557,7 +2557,7 @@ begin
   FGestorProp := TGestorPropiedades.Create(
     FScrollProp,
     oConn,   // <-- ajusta al nombre real de tu TUniConnection
-    oUser               // <-- ajusta a tu función/variable de usuario
+    IdentidadSesion.Usuario               // <-- ajusta a tu función/variable de usuario
   );
 end;
 
@@ -2619,7 +2619,7 @@ begin
     FScrollVarAtrib,
 //    FScrollVarSkus,
     oConn,
-    oUser
+    IdentidadSesion.Usuario
   );
 end;
 
@@ -3060,7 +3060,7 @@ begin
         'VALUES (:IDVA, :VAL, 0, NOW(), :USR, :USR)';
       qry.ParamByName('IDVA').AsString := AIdVaAv;
       qry.ParamByName('VAL').AsString  := AValorAv;
-      qry.ParamByName('USR').AsString  := oUser;
+      qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
       qry.Execute;
 
       qry.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
@@ -3079,7 +3079,7 @@ begin
       'VALUES (:SKU, :AV, NOW(), :USR, :USR)';
     qry.ParamByName('SKU').AsString  := ACodSKU;
     qry.ParamByName('AV').AsInteger  := Result;
-    qry.ParamByName('USR').AsString  := oUser;
+    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
     qry.Execute;
   finally
     FreeAndNil(qry);
@@ -3172,7 +3172,7 @@ begin
     qry.ParamByName('IDVA').AsString := IdVaAv;
     qry.ParamByName('COD').AsString  := Codigo;
     qry.ParamByName('NOM').AsString  := ValorAv;
-    qry.ParamByName('USR').AsString  := oUser;
+    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
     qry.Execute;
 
     // 2) Leer el ID resultante (sea recién creado o ya existente).
@@ -3200,7 +3200,7 @@ begin
     qry.ParamByName('ART').AsString  := CodArt;
     qry.ParamByName('AV').AsInteger  := IdAv;
     qry.ParamByName('ATB').AsInteger := Result;
-    qry.ParamByName('USR').AsString  := oUser;
+    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
     qry.Execute;
   finally
     FreeAndNil(qry);
@@ -3237,7 +3237,7 @@ begin
       '       USUARIO_MODIF = :USR '    +
       ' WHERE ID_ATB = :ID';
     qry.ParamByName('VAL').AsString  := VarToStr(vNew);
-    qry.ParamByName('USR').AsString  := oUser;
+    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
     qry.ParamByName('ID').AsInteger  := IdAtb;
     qry.Execute;
   finally
@@ -3280,7 +3280,7 @@ begin
       qry.ParamByName('VAL').Clear
     else
       qry.ParamByName('VAL').AsFloat := Double(vNew);
-    qry.ParamByName('USR').AsString  := oUser;
+    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
     qry.ParamByName('ID').AsInteger  := IdAtb;
     qry.Execute;
   finally
@@ -3320,7 +3320,7 @@ begin
       '       USUARIO_MODIF = :USR '    +
       ' WHERE ID_ATB = :ID';
     qry.ParamByName('VAL').AsString  := VarToStr(vNew);
-    qry.ParamByName('USR').AsString  := oUser;
+    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
     qry.ParamByName('ID').AsInteger  := IdAtb;
     qry.Execute;
   finally
@@ -3389,7 +3389,7 @@ begin
       qry.ParamByName('DESC').Clear
     else
       qry.ParamByName('DESC').AsString := VarToStr(vNew);
-    qry.ParamByName('USR').AsString := oUser;
+    qry.ParamByName('USR').AsString := IdentidadSesion.Usuario;
     qry.Execute;
   finally
     FreeAndNil(qry);
@@ -3653,7 +3653,7 @@ begin
     qry.ParamByName('IDVA').AsString := IdVaAv;
     qry.ParamByName('COD').AsString  := CodigoNuevo;
     qry.ParamByName('NOM').AsString  := NombreNuevo;
-    qry.ParamByName('USR').AsString  := oUser;
+    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
     qry.Execute;
   finally
     FreeAndNil(qry);
@@ -3726,7 +3726,7 @@ begin
       qry.ParamByName('ATB').Clear
     else
       qry.ParamByName('ATB').AsInteger := Integer(vNew);
-    qry.ParamByName('USR').AsString  := oUser;
+    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
     qry.Execute;
   finally
     FreeAndNil(qry);
@@ -3794,7 +3794,7 @@ begin
         '       USUARIO_MODIF = :USR '    +
         ' WHERE ID_ATB = :ID';
       qry.ParamByName('HEX').AsString  := LHex;
-      qry.ParamByName('USR').AsString  := oUser;
+      qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
       qry.ParamByName('ID').AsInteger  := IdAtb;
       qry.Execute;
     finally

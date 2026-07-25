@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalImpFac                                              }
 {    Tipo:       Formulario (Modal)                                            }
@@ -169,7 +169,8 @@ begin
   begin
     sSerie  := dmFac.unqryFacPrint.FieldByName('SERIE_FAC').AsString;
     sNumero := dmFac.unqryFacPrint.FieldByName('NUMERO_FAC').AsString;
-    TVentasWsCola.AdjuntarFacturaPdfSeguro(inLibGlobalVar.oConn,
+    TVentasWsCola.AdjuntarFacturaPdfSeguro(oConn,
+      IdentidadSesion.Usuario,
       sSerie, sNumero, ARuta);
     // Archivado en fza_facturas.PDF_FAC: solo el PDF de UNA factura
     // (rbActual; un rango de fechas mezcla varias en un fichero) y solo
@@ -179,8 +180,8 @@ begin
       (dmFac.unqryFacPrint.FieldByName('ESCONSOLIDADA_FAC').AsString = 'S')
       or ((sFase <> '') and (not SameText(sFase, 'BORRADOR')));
     if rbActual.Checked and bLanzada then
-      GuardarPdfFacturaEnBlob(inLibGlobalVar.oConn, sSerie, sNumero, ARuta,
-                              FormatoElegido);
+      GuardarPdfFacturaEnBlob(oConn, ContextoSesion,
+        sSerie, sNumero, ARuta, FormatoElegido);
   end;
 end;
 

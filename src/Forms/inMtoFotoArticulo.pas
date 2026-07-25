@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFotoArticulo                                             }
 {    Tipo:       Formulario (Mto)                                              }
@@ -162,7 +162,7 @@ begin
   // procesar F11 / Alt+F12.
   Self.KeyPreview  := True;
   // Restaura la resolución elegida guardada con el layout (default 'real').
-  loaderRes := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
+  loaderRes := TLayoutLoader.Create(Self.Name, ContextoSesion, PerfilesUsuario);
   try
     if loaderRes.Disponible then
       rgResolucion.ItemIndex :=
@@ -208,7 +208,7 @@ begin
   // (antes de mostrar) para que el tamaño se aplique de forma fiable aunque
   // la ventana se muestre con SW_SHOWNOACTIVATE. Si no hay layout, centra.
   if not Assigned(FLayoutLoader) then
-    FLayoutLoader := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
+    FLayoutLoader := TLayoutLoader.Create(Self.Name, ContextoSesion, PerfilesUsuario);
   if FLayoutLoader.Disponible then
     FLayoutLoader.RestaurarGeometria(Self)
   else
@@ -376,9 +376,10 @@ begin
         // Sentinela COLOR=NONE: si el PNG no es por color, lo guardamos a
         // nivel articulo (CODIGO_UNIDAD = ''); si no, al nivel del combo.
         if Pos('_NONE_', UpperCase(ExtractFileName(sFile))) > 0 then
-          oFotos.Guardar(FCodigoArt, '', sFile)
+          oFotos.Guardar(FCodigoArt, '', sFile, IdentidadSesion.Usuario)
         else
-          oFotos.Guardar(FCodigoArt, sClave, sFile);
+          oFotos.Guardar(FCodigoArt, sClave, sFile,
+            IdentidadSesion.Usuario);
       end;
       // Re-resolver y refrescar la imagen que se muestra ahora mismo.
       SetArticuloSku(FCodigoArt, FCodigoSku);
@@ -587,7 +588,8 @@ begin
   end;
   if not dlgAbrirFoto.Execute then Exit;
   try
-    oFotos.Guardar(FCodigoArt, '', dlgAbrirFoto.FileName);
+    oFotos.Guardar(FCodigoArt, '', dlgAbrirFoto.FileName,
+      IdentidadSesion.Usuario);
   except
     on E: Exception do
     begin
@@ -616,7 +618,8 @@ begin
   end;
   if not dlgAbrirFoto.Execute then Exit;
   try
-    oFotos.Guardar(FCodigoArt, sClave, dlgAbrirFoto.FileName);
+    oFotos.Guardar(FCodigoArt, sClave, dlgAbrirFoto.FileName,
+      IdentidadSesion.Usuario);
   except
     on E: Exception do
     begin
@@ -642,7 +645,8 @@ procedure TfrmFotoArticulo.btnRotarIzqClick(Sender: TObject);
 begin
   inherited;
   if not FUltimaInfo.Encontrada then Exit;
-  oFotos.Rotar(FCodigoArt, FCodigoSku, False);
+  oFotos.Rotar(FCodigoArt, FCodigoSku, False,
+    IdentidadSesion.Usuario);
   SetArticuloSku(FCodigoArt, FCodigoSku);
 end;
 
@@ -650,7 +654,8 @@ procedure TfrmFotoArticulo.btnRotarDerClick(Sender: TObject);
 begin
   inherited;
   if not FUltimaInfo.Encontrada then Exit;
-  oFotos.Rotar(FCodigoArt, FCodigoSku, True);
+  oFotos.Rotar(FCodigoArt, FCodigoSku, True,
+    IdentidadSesion.Usuario);
   SetArticuloSku(FCodigoArt, FCodigoSku);
 end;
 

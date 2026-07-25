@@ -20,7 +20,7 @@ uses
    Classes, Windows, Forms, sysutils, jpeg, idhttp, Menus, Controls,
    Vcl.Dialogs, ShellAPI, System.Rtti, System.TypInfo, System.Variants,
    System.StrUtils, inLibUser, cxLabel, cxPC, cxDBEdit, cxButtons, Uni,
-   cxGroupBox, cxRadioGroup, Vcl.Buttons, inlibGlobalVar,
+   cxGroupBox, cxRadioGroup, Vcl.Buttons,
    System.Win.Registry, Winapi.Messages,
    system.math,IdGlobal, IdHash, IdHashMessageDigest, System.IOUtils,
    inLibPerfilesUsuarioIntf;

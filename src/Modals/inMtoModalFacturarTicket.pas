@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalFacturarTicket                                      }
 {    Tipo:       Formulario (Modal)                                            }
@@ -99,7 +99,7 @@ begin
     frm.FNumeroTicket := ANumeroTicket;
     frm.FEmpresa      := AEmpresa;
     frm.edtTicket.Text := ASerieTicket + '\' + ANumeroTicket;
-    frm.qrySeries.Connection := inLibGlobalVar.oConn;
+    frm.qrySeries.Connection := oConn;
     frm.qrySeries.Open;
     // Serie por defecto: la ligada al almacén del ticket; si no tiene,
     // la primera serie FC activa (DEFAULT_CON primero)
@@ -140,7 +140,7 @@ begin
   // perfiles de columnas) que la búsqueda de clientes de la caja
   unqryClientes := TUniQuery.Create(nil);
   try
-    unqryClientes.Connection := inLibGlobalVar.oConn;
+    unqryClientes.Connection := oConn;
     unqryClientes.SQL.Text :=
       'SELECT CODIGO_CLI_CLI as `Código`, ' +
       '       RAZON_SOCIAL_CLI as `Razón Social`, ' +
@@ -201,7 +201,7 @@ var
 begin
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := inLibGlobalVar.oConn;
+    Qry.Connection := oConn;
     Qry.SQL.Text :=
       ' SELECT RAZON_SOCIAL_CLI, NIF_CLI, CODIGO_PAI_CLI, NOMBRE_PAI_CLI ' +
       ' FROM fza_clientes ' +
@@ -230,21 +230,21 @@ var
   Usp:     TUniStoredProc;
   sNumero: string;
 begin
-  inLibGlobalVar.oConn.StartTransaction;
+  oConn.StartTransaction;
   Usp := TUniStoredProc.Create(nil);
   Qry := TUniQuery.Create(nil);
   try
     try
-      Usp.Connection     := inLibGlobalVar.oConn;
+      Usp.Connection     := oConn;
       Usp.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
       Usp.Prepare;
       Usp.ParamByName('pserie').AsString            := ASerie;
       Usp.ParamByName('pTipoDoc').AsString          := 'FC';
       Usp.ParamByName('pEMPRESA_CONTADOR').AsString := FEmpresa;
-      Usp.ParamByName('pUSUARIOMODIF').AsString     := oUser;
+      Usp.ParamByName('pUSUARIOMODIF').AsString     := IdentidadSesion.Usuario;
       Usp.Execute;
       sNumero := Usp.ParamByName('pcont').AsString;
-      Qry.Connection := inLibGlobalVar.oConn;
+      Qry.Connection := oConn;
       // Cabecera: empresa, configuración fiscal y totales del ticket;
       // identidad del cliente desde su ficha; enlace al ticket en las
       // columnas ABONO (de ahí sale el F3 con FacturasSustituidas)
@@ -349,7 +349,7 @@ begin
       Qry.ParamByName('NUMERO').AsString  := sNumero;
       Qry.ParamByName('SERIE').AsString   := ASerie;
       Qry.ParamByName('FECHA').AsDate     := AFecha;
-      Qry.ParamByName('USUARIO').AsString := oUser;
+      Qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
       Qry.ParamByName('CLIENTE').AsString := ACliente;
       Qry.ParamByName('STICKET').AsString := FSerieTicket;
       Qry.ParamByName('NTICKET').AsString := FNumeroTicket;
@@ -383,7 +383,7 @@ begin
         '   AND NUMERO_FAC_FACLIN = :NTICKET';
       Qry.ParamByName('NUMERO').AsString  := sNumero;
       Qry.ParamByName('SERIE').AsString   := ASerie;
-      Qry.ParamByName('USUARIO').AsString := oUser;
+      Qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
       Qry.ParamByName('STICKET').AsString := FSerieTicket;
       Qry.ParamByName('NTICKET').AsString := FNumeroTicket;
       Qry.Execute;
@@ -400,7 +400,7 @@ begin
         '   AND NUMERO_FAC = :NTICKET';
       Qry.ParamByName('SERIE').AsString   := ASerie;
       Qry.ParamByName('NUMERO').AsString  := sNumero;
-      Qry.ParamByName('USUARIO').AsString := oUser;
+      Qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
       Qry.ParamByName('STICKET').AsString := FSerieTicket;
       Qry.ParamByName('NTICKET').AsString := FNumeroTicket;
       Qry.Execute;
@@ -409,17 +409,17 @@ begin
       Qry.ParamByName('SERIE').AsString  := ASerie;
       Qry.ParamByName('NUMERO').AsString := sNumero;
       Qry.Execute;
-      ValidarRequisitosFiscalesEmision(inLibGlobalVar.oConn,
+      ValidarRequisitosFiscalesEmision(oConn,
         ASerie, sNumero);
       // Histórico N:1 de relaciones (la F3 sustituye al ticket)
       TVerifactuCola.RegistrarRelacionFactura(
-        inLibGlobalVar.oConn, ASerie, sNumero,
+        oConn, IdentidadSesion.Usuario, ASerie, sNumero,
         FSerieTicket, FNumeroTicket, 'SUSTITUYE');
-      inLibGlobalVar.oConn.Commit;
+      oConn.Commit;
     except
       on E: Exception do
       begin
-        inLibGlobalVar.oConn.Rollback;
+        oConn.Rollback;
         raise;
       end;
     end;
@@ -428,16 +428,20 @@ begin
     case ModoVerifactu of
       mvVerifactu:
         begin
-          TVerifactuCola.EncolarFactura(Qry, ASerie, sNumero);
-          RegistrarEventoVerifactu(inLibGlobalVar.oConn,
+          TVerifactuCola.EncolarFactura(Qry,
+            IdentidadSesion.Usuario, ASerie, sNumero);
+          RegistrarEventoVerifactu(oConn,
+            IdentidadSesion.Usuario,
             cEventoVerifactuEncolado,
             'Borrador en sustitución del ticket ' + FSerieTicket + '\' +
             FNumeroTicket + ' encolada', '', ASerie, sNumero);
         end;
       mvNoVerifactu:
-        TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, ASerie, sNumero);
+        TVerifactuCola.RegistrarFacturaNoVerifactu(Qry,
+          IdentidadSesion.Usuario, ASerie, sNumero);
     else
-      TVerifactuCola.MarcarFacturaSinVerifactu(Qry, ASerie, sNumero);
+      TVerifactuCola.MarcarFacturaSinVerifactu(Qry,
+        IdentidadSesion.Usuario, ASerie, sNumero);
     end;
   finally
     FreeAndNil(Qry);

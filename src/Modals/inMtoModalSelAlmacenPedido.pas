@@ -144,8 +144,8 @@ begin
   AlbaranSerieDestino  := '';
   AlbaranNumDestino    := '';
   // Conexion de las queries que usa el modal.
-  unqryTemporadas.Connection := inLibGlobalVar.oConn;
-  unqryAlbExist.Connection   := inLibGlobalVar.oConn;
+  unqryTemporadas.Connection := oConn;
+  unqryAlbExist.Connection   := oConn;
 end;
 
 procedure TfrmModalSelAlmacenPedido.FormShow(Sender: TObject);
@@ -200,7 +200,7 @@ begin
   // (que en el modal es definitivo) puede ser distinto del que figura
   // en las lineas — util cuando el pedido se generaliza al almacen
   // central y el albaran se hace contra una tienda concreta.
-  unqryAlmacenes.Connection := inLibGlobalVar.oConn;
+  unqryAlmacenes.Connection := oConn;
   if not unqryAlmacenes.Active then
     unqryAlmacenes.Open
   else
@@ -258,7 +258,7 @@ procedure TfrmModalSelAlmacenPedido.CargarAlbaranesExistentes;
 begin
   // Albaranes de compra ya creados desde ESTE pedido y no facturados ni
   // cancelados: son los unicos destinos validos para incorporar lineas.
-  unqryAlbExist.Connection := inLibGlobalVar.oConn;
+  unqryAlbExist.Connection := oConn;
   if unqryAlbExist.Active then
     unqryAlbExist.Close;
   unqryAlbExist.ParamByName('np').AsString := NumPedc;

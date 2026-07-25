@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFacturasNormal                                           }
 {    Tipo:       Formulario (Mto) descendiente                                 }
@@ -145,8 +145,8 @@ begin
     oDialogo.FileName := NombreArchivoFacturae(sSerie, sNumero);
     if oDialogo.Execute then
     begin
-      oResultado := EmitirFacturae(inLibGlobalVar.oConn, sSerie, sNumero,
-        oDialogo.FileName);
+      oResultado := EmitirFacturae(oConn, ContextoSesion,
+        sSerie, sNumero, oDialogo.FileName);
       dsTablaG.DataSet.Refresh;
       ShowMessage('eDoc emitido correctamente:' + sLineBreak +
         oResultado.Archivo);

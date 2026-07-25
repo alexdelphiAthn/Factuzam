@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoVerifactuLog                                             }
 {    Tipo:       Formulario (Mto)                                              }
@@ -151,7 +151,8 @@ begin
                          FormatDateTime('yyyymmdd_hhnnss', Now) + '.xml';
     if oDialogo.Execute then
     begin
-      oResultado := ExportarRegistrosNoVerifactu(oConn, oDialogo.FileName);
+      oResultado := ExportarRegistrosNoVerifactu(oConn,
+        IdentidadSesion.Usuario, oDialogo.FileName);
       MessageDlg('Exportacion NO VERI*FACTU generada:' + sLineBreak +
         oResultado.ArchivoEventos + sLineBreak +
         oResultado.ArchivoFacturacion + sLineBreak + sLineBreak +

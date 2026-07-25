@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalImpArqueos                                          }
 {    Tipo:       Formulario (Modal)                                            }
@@ -94,9 +94,9 @@ begin
   begin
     dteDesde.Date   := EncodeDate(YearOf(Date), MonthOf(Date), 1);
     dteHasta.Date   := Date;
-    edtEmpresa.Text := oEmpresa;
-    bedAlmacen.Text := oAlmacen;
-    bedCaja.Text    := oCaja;
+    edtEmpresa.Text := UbicacionSesion.Empresa;
+    bedAlmacen.Text := UbicacionSesion.Almacen;
+    bedCaja.Text    := UbicacionSesion.Caja;
     FInicializado   := True;
   end;
 end;

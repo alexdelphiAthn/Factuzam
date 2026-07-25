@@ -16,7 +16,9 @@ unit inLibBuscarImpresora;
 
 interface
 
-uses  Classes, Windows, WinSpool, SysUtils, StrUtils, vcl.Printers;
+uses
+  Classes, Windows, WinSpool, SysUtils, StrUtils, vcl.Printers,
+  inLibContextoSesionIntf;
 
 function ObtenerSesionImpresora(const NombreImpresora: string): string;
 function EsImpresoraRedireccionada(const NombreImpresora: string): Boolean;
@@ -25,24 +27,29 @@ function ObtenerListaImpresoras: TStringList;
 function SepararSubcadenas(const Cadena: string): TStringList;
 function ObtenerNombreImpresoraPorCaja(Empresa, Almacen, Caja: Integer;
                                        ArchivoINI: string;
+                                       const AContextoSesion:
+                                       IContextoSesionAplicacion;
                                        out ModoImpresion: string): string;
 function ExtraerSesionDeImpresora(const NombreImpresora: string): string;
 function EsImpresoraRed(const NombreImpresora: string): Boolean;
 function ObtenerImpresoraPorPatronCached(const PatronBusqueda,
                                                ArchivoCache: string): string;
-function GetImpresoraCaja:string;
+function GetImpresoraCaja(
+  const AContextoSesion: IContextoSesionAplicacion): string;
 
 implementation
 
-uses inLibGlobalVar, inLibCajaParam;
+uses inLibCajaParam;
 
-function GetImpresoraCaja:string;
+function GetImpresoraCaja(
+  const AContextoSesion: IContextoSesionAplicacion): string;
 var
   sPatronNombreImpresora: string;
   sArchivoCache: string;
 begin
   sPatronNombreImpresora := oCajaParams.GetString('vgerDefPrinter', 'DEBUG');
-  sArchivoCache := Format('Caja_%s.cache', [oUser]);
+  sArchivoCache := Format('Caja_%s.cache',
+    [AContextoSesion.Identidad.Usuario]);
   Result := ObtenerImpresoraPorPatronCached(sPatronNombreImpresora,
                                             sArchivoCache);
 end;
@@ -374,6 +381,8 @@ end;
 
 function ObtenerNombreImpresoraPorCaja(Empresa, Almacen, Caja: Integer;
                                               ArchivoINI: string;
+                                             const AContextoSesion:
+                                             IContextoSesionAplicacion;
                                              out ModoImpresion: string): string;
 var
   F, FCache: TextFile;
@@ -392,7 +401,8 @@ begin
 //  if ArchivoINI = '' then
 //    ArchivoINI := Fconfig.IniImprimirFile;
   // Archivo cache: ImpresorasVerifactu_1_2_3.cache
-  ArchivoCache := Format('Caja_%s.cache', [oUser]);
+  ArchivoCache := Format('Caja_%s.cache',
+    [AContextoSesion.Identidad.Usuario]);
   if not FileExists(ArchivoINI) then
 //  begin
 //    EscribirLog('Archivo INI no encontrado: ' + ArchivoINI);

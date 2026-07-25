@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFacturasSimplif                                          }
 {    Tipo:       Formulario (Mto) descendiente                                 }
@@ -204,7 +204,7 @@ begin
       'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM ' +
       '  FROM fza_almacenes ' +
       ' WHERE ESACTIVO_ALM = ''S'' ' +
-      SqlFiltroEmpAlmCaja('CODIGO_EMP_ALM', 'CODIGO_ALM_ALM', '') +
+      SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_ALM', 'CODIGO_ALM_ALM', '') +
       ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM';
     qry.Open;
     while not qry.Eof do
@@ -339,7 +339,7 @@ begin
   // Restricción por usuario (appRestringirEmpAlmCaja): mismo fragmento
   // que SqlRestriccionUsuario de la base, integrado aquí porque este Mto
   // recompone su SQL al cambiar los filtros de carga.
-  Result := Result + SqlFiltroEmpAlmCaja('CODIGO_EMP_FAC',
+  Result := Result + SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_FAC',
                                          'CODIGO_ALM_FAC',
                                          'CODIGO_CAJA_FAC');
 end;

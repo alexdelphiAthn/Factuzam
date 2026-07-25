@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataProveedores                                            }
 {    Tipo:       Data Module                                                   }
@@ -242,7 +242,7 @@ begin
     FieldByName('CODIGO_PRV_PRVKIT').AsString :=
       unqryTablaG.FieldByName('CODIGO_PRV_PRV').AsString;
     FieldByName('ORDEN_PRVKIT').AsInteger   := 0;
-    FieldByName('USUARIO_ALTA').AsString    := oUser;
+    FieldByName('USUARIO_ALTA').AsString    := IdentidadSesion.Usuario;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
   end;
 end;
@@ -254,7 +254,7 @@ begin
     raise Exception.Create('El kit necesita un código (p. ej. CURVA-STD).');
   if Trim(unqryKits.FieldByName('NOMBRE_PRVKIT').AsString) = '' then
     raise Exception.Create('El kit necesita un nombre.');
-  unqryKits.FieldByName('USUARIO_MODIF').AsString    := oUser;
+  unqryKits.FieldByName('USUARIO_MODIF').AsString    := IdentidadSesion.Usuario;
   unqryKits.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
 
@@ -322,7 +322,7 @@ begin
       unqryKits.FieldByName('CODIGO_PRVKIT').AsString;
     FieldByName('CANTIDAD_PRVKITD').AsFloat   := 0;
     FieldByName('ORDEN_PRVKITD').AsInteger    := iOrden;
-    FieldByName('USUARIO_ALTA').AsString      := oUser;
+    FieldByName('USUARIO_ALTA').AsString      := IdentidadSesion.Usuario;
     FieldByName('INSTANTE_ALTA').AsDateTime   := Now;
   end;
 end;
@@ -333,7 +333,7 @@ begin
   if Trim(unqryKitsDet.FieldByName('VALOR_DESTINO_PRVKITD').AsString) = '' then
     raise Exception.Create('La fila del kit necesita la talla destino ' +
       '(p. ej. 38, M).');
-  unqryKitsDet.FieldByName('USUARIO_MODIF').AsString    := oUser;
+  unqryKitsDet.FieldByName('USUARIO_MODIF').AsString    := IdentidadSesion.Usuario;
   unqryKitsDet.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
 
@@ -366,7 +366,7 @@ begin
       unqryKits.FieldByName('CODIGO_PRV_PRVKIT').AsString;
     q.ParamByName('kit').AsString :=
       unqryKits.FieldByName('CODIGO_PRVKIT').AsString;
-    q.ParamByName('usu').AsString := oUser;
+    q.ParamByName('usu').AsString := IdentidadSesion.Usuario;
     q.ParamByName('ac').AsInteger := iAc;
     q.ExecSQL;
   finally
@@ -381,7 +381,7 @@ var
 begin
   if unqryTablaG.FindField('CODIGO_PRV_PRV').AsString = '0' then
   begin
-    sContador := ObtenerSiguienteContador('PV');
+    sContador := ObtenerSiguienteContador('PV', IdentidadSesion.Usuario);
     if Trim(sContador) = '' then
       raise Exception.Create('No se pudo generar el código automático ' +
         'del proveedor.');
@@ -389,7 +389,7 @@ begin
   end;
   if unqryTablaG.FindField('ORDEN_PRV').AsString = '0' then
   begin
-    sContador := ObtenerSiguienteContador('PO');
+    sContador := ObtenerSiguienteContador('PO', IdentidadSesion.Usuario);
     if Trim(sContador) = '' then
       raise Exception.Create('No se pudo generar el orden automático ' +
         'del proveedor.');

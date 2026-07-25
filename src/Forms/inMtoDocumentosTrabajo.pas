@@ -141,8 +141,8 @@ implementation
 uses
   Uni, UniDataArticulos, inLibFotos, inLibGenBusq, inMtoModalEtiqArt,
   inMtoModalAddBlockDocumentoTrabajo,
-  // Factoria del contrato + oUser para el gestor de tallas.
-  inLibColumnasSku, inLibGlobalVar,
+  // Factoria del contrato + IdentidadSesion.Usuario para el gestor de tallas.
+  inLibColumnasSku,
   // Modal de destino (almacen/serie/numero) del "Enviar a...".
   inMtoModalEnviarDestino,
   // Venta TPV abierta (frmMtoOpeCaja) para el volcado de SKUs.
@@ -269,7 +269,7 @@ begin
   if FModoEntradaSel = mcsTallasInline then
   begin
     CfgT := Default(TGridTallasConfig);
-    CfgT.Usuario := oUser;
+    CfgT.Usuario := IdentidadSesion.Usuario;
     CfgT.Grid := tvLineasDTR;
     CfgT.SourceMaster := dsTablaG;
     CfgT.SourceLineas := dmmDocumentosTrabajo.dsLineas;
@@ -748,7 +748,7 @@ begin
       sp.ParamByName('pserie').AsString := sSerie;
       sp.ParamByName('ptipodoc').AsString := 'AV';
       sp.ParamByName('pEMPRESA_CONTADOR').AsString := sEmp;
-      sp.ParamByName('pUSUARIOMODIF').AsString := oUser;
+      sp.ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
       sp.ExecProc;
       sNumero := sp.ParamByName('pcont').AsString;
     finally
@@ -780,7 +780,7 @@ begin
     q.ParamByName('EMP').AsString := sEmp;
     q.ParamByName('ALM').AsString := sAlm;
     q.ParamByName('ID').AsLargeInt := idDtr;
-    q.ParamByName('USU').AsString := oUser;
+    q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
     q.ExecSQL;
     // Lineas numeradas a paso 10 (convencion de albaranes) con
     // cantidad del documento; precios a 0 para revisar en el Mto.
@@ -805,7 +805,7 @@ begin
     q.ParamByName('SERIE').AsString := sSerie;
     q.ParamByName('ALM').AsString := sAlm;
     q.ParamByName('ID').AsLargeInt := idDtr;
-    q.ParamByName('USU').AsString := oUser;
+    q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
     q.ExecSQL;
     ShowMessage(Format(
       'Albarán de venta %s/%s creado ABIERTO con %d líneas.%s' +
@@ -909,7 +909,7 @@ begin
       sp.ParamByName('pserie').AsString := sSerie;
       sp.ParamByName('ptipodoc').AsString := 'IN';
       sp.ParamByName('pEMPRESA_CONTADOR').AsString := sEmp;
-      sp.ParamByName('pUSUARIOMODIF').AsString := oUser;
+      sp.ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
       sp.ExecProc;
       sNumero := sp.ParamByName('pcont').AsString;
     finally
@@ -942,7 +942,7 @@ begin
     q.ParamByName('SERIE').AsString := sSerie;
     q.ParamByName('NUMERO').AsString := sNumero;
     q.ParamByName('ID').AsLargeInt := idDtr;
-    q.ParamByName('USU').AsString := oUser;
+    q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
     q.ExecSQL;
     // Lineas: fisica = cantidad del documento; teorica = snapshot de
     // stock. El boton "Recalcular teorico/PMP" del Mto de inventarios
@@ -972,7 +972,7 @@ begin
     q.ParamByName('SERIE').AsString := sSerie;
     q.ParamByName('NUMERO').AsString := sNumero;
     q.ParamByName('ID').AsLargeInt := idDtr;
-    q.ParamByName('USU').AsString := oUser;
+    q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
     q.ExecSQL;
     ShowMessage(Format(
       'Inventario %s/%s creado en almacén %s con %d líneas del ' +
@@ -1009,7 +1009,7 @@ begin
       '  FROM (SELECT MIN(CODIGO_TAR_TAR) AS COD ' +
       '          FROM fza_tarifas) T';
     q.ParamByName('ID').AsLargeInt := idDtr;
-    q.ParamByName('USU').AsString := oUser;
+    q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
     q.ExecSQL;
     q.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
     q.Open;
@@ -1031,7 +1031,7 @@ begin
       ' WHERE L.ID_DTR_DTL = :ID';
     q.ParamByName('TARC').AsLargeInt := idTarc;
     q.ParamByName('ID').AsLargeInt := idDtr;
-    q.ParamByName('USU').AsString := oUser;
+    q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
     q.ExecSQL;
     ShowMessage(Format(
       'Sesión de cambio de tarifas %d creada en BORRADOR con los ' +

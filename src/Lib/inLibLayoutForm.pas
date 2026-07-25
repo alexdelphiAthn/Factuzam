@@ -61,6 +61,7 @@ uses
   cxGridDBTableView, cxGridCustomTableView,
   JvInspector,          // TJvInspector (divider del inspector)
   inLibUser,            // TProfileDicc
+  inLibContextoSesionIntf,
   inLibPerfilesUsuarioIntf;
 
 type
@@ -76,6 +77,7 @@ type
   public
     constructor Create(
       const AFormKey: string;
+      const AContextoSesion: IContextoSesionAplicacion;
       const APerfilesUsuario: IPerfilesUsuario);
     destructor  Destroy; override;
     procedure RestaurarGeometria(AForm: TForm);
@@ -131,7 +133,7 @@ implementation
 
 uses
   Vcl.Dialogs,
-  inLibGlobalVar, inLibLog, inLibtb, inMtoModalGenImpSave,
+  inLibLog, inLibtb, inMtoModalGenImpSave,
   cxGridDBDataDefinitions;
 
 // =============================================================================
@@ -140,8 +142,10 @@ uses
 
 constructor TLayoutLoader.Create(
   const AFormKey: string;
+  const AContextoSesion: IContextoSesionAplicacion;
   const APerfilesUsuario: IPerfilesUsuario);
 var
+  Identidad: TIdentidadSesion;
   iClaves: Integer;
 begin
   inherited Create;
@@ -150,10 +154,9 @@ begin
   FPerfil  := nil;
   Log.LogInfo(Format('TLayoutLoader.Create: formKey="%s" -> GetFormUserProfile',
                      [AFormKey]));
-  inLibUser.GetFormUserProfile(FPerfil, FFormKey,
-                               inLibGlobalVar.oUser,
-                               inLibGlobalVar.oGroup,
-                               FPerfilesUsuario);
+  Identidad := AContextoSesion.Identidad;
+  inLibUser.GetFormUserProfile(FPerfil, FFormKey, Identidad.Usuario,
+    Identidad.Grupo, FPerfilesUsuario);
   FDisponible := FPerfil <> nil;
   if FPerfil <> nil then
     iClaves := FPerfil.Count

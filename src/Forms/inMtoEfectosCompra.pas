@@ -86,7 +86,7 @@ function TfrmMtoEfectosCompra.SqlRestriccionUsuario: string;
 begin
   // Los efectos de compra llevan la empresa de la factura origen en
   // cabecera; sin almacén ni caja.
-  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_EFEC', '', '');
+  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_EFEC', '', '');
 end;
 
 procedure TfrmMtoEfectosCompra.btnRegistrarPagoClick(Sender: TObject);

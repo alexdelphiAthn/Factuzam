@@ -136,6 +136,7 @@ procedure PrepararImpresionFacturaVerifactu(AReport: TfrxReport;
 // hashes (HASH_ANTERIOR -> HASH_PROPIO). AConn puede ser la conexión
 // global o la propia del hilo de la cola.
 procedure RegistrarEventoVerifactu(AConn: TUniConnection;
+                                   const AUsuario: string;
                                    ATipoEvento: Integer;
                                    const ADescripcion: string;
                                    const ADatosAdicionales: string = '';
@@ -1135,6 +1136,7 @@ begin
 end;
 
 procedure RegistrarEventoVerifactu(AConn: TUniConnection;
+                                   const AUsuario: string;
                                    ATipoEvento: Integer;
                                    const ADescripcion: string;
                                    const ADatosAdicionales: string;
@@ -1142,7 +1144,7 @@ procedure RegistrarEventoVerifactu(AConn: TUniConnection;
                                    const ANumeroFac: string);
 var
   Qry: TUniQuery;
-  oEmpresa:      TDatosEmpresaEvento;
+  DatosEmpresa:  TDatosEmpresaEvento;
   oAnterior:     TEventoAnterior;
   oDatosCert:    TXadesDatosCertificado;
   sHashAnterior: string;
@@ -1199,8 +1201,8 @@ begin
       sHashAnterior := oAnterior.Huella;
     sInstante := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now);
     sFechaHuso := FechaHoraHusoSif(Now);
-    CargarEmpresaEvento(AConn, oEmpresa);
-    sXml := ConstruirXmlEventoSif(oEmpresa, oAnterior, ATipoEvento,
+    CargarEmpresaEvento(AConn, DatosEmpresa);
+    sXml := ConstruirXmlEventoSif(DatosEmpresa, oAnterior, ATipoEvento,
                                   sFechaHuso, ADescripcion,
                                   sDatosLog, sHashPropio);
     sXmlFirmado := sXml;
@@ -1210,13 +1212,14 @@ begin
     if bFirmarCertificado then
     begin
       try
-        if (Trim(oEmpresa.SerialCert) = '') or
-           (Trim(oEmpresa.TitularCert) = '') then
+        if (Trim(DatosEmpresa.SerialCert) = '') or
+           (Trim(DatosEmpresa.TitularCert) = '') then
           raise Exception.Create('No hay certificado configurado en ' +
             'Empresas para firmar eventos NO VERI*FACTU.');
         sXmlFirmado := FirmarXmlEventoSif(sXml, sHashPropio,
-                                          oEmpresa.SerialCert,
-                                          oEmpresa.TitularCert, oDatosCert,
+                                          DatosEmpresa.SerialCert,
+                                          DatosEmpresa.TitularCert,
+                                          oDatosCert,
                                           sFirmaXades);
         sFirma := UpperCase(THashSHA2.GetHashString(sFirmaXades));
       except
@@ -1225,7 +1228,8 @@ begin
           sErrorFirma := E.Message;
           sDatosLog := AnadirIncidenciaCertificado(ADatosAdicionales,
                                                    sErrorFirma);
-          sXml := ConstruirXmlEventoSif(oEmpresa, oAnterior, ATipoEvento,
+          sXml := ConstruirXmlEventoSif(DatosEmpresa, oAnterior,
+                                        ATipoEvento,
                                         sFechaHuso, ADescripcion,
                                         sDatosLog, sHashPropio);
           sXmlFirmado := sXml;
@@ -1263,7 +1267,7 @@ begin
         '  NULLIF(:NUMERO, ''''), NULLIF(:SERIE, ''''))';
     Qry.ParamByName('INSTANTE').AsString    := sInstante;
     Qry.ParamByName('TIPO').AsInteger       := ATipoEvento;
-    Qry.ParamByName('USUARIO').AsString     := oUser;
+    Qry.ParamByName('USUARIO').AsString     := AUsuario;
     Qry.ParamByName('VERSION').AsString     := oVersion;
     Qry.ParamByName('DESCRIPCION').AsString := ADescripcion;
     Qry.ParamByName('DATOS').AsString       := sDatosLog;

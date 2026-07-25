@@ -31,9 +31,6 @@ type
 
 implementation
 
-uses
-  inLibGlobalVar;
-
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}

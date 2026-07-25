@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataDevolucionesCompra                                        }
 {    Tipo:       Data Module                                                   }
@@ -137,8 +137,8 @@ uses
 procedure TdmDevolucionesCompra.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryTablaG.Connection                := inLibGlobalVar.oConn;
-  unqryDevolucionesCompraLineas.Connection := inLibGlobalVar.oConn;
+  unqryTablaG.Connection                := oConn;
+  unqryDevolucionesCompraLineas.Connection := oConn;
   unqryDevolucionesCompraLineas.KeyFields :=
     'SERIE_DEVC_DEVCLIN;NUMERO_DEVC_DEVCLIN;LINEA_DEVCLIN';
   unqryDevolucionesCompraLineas.SQLDelete.Text :=
@@ -146,20 +146,20 @@ begin
     ' WHERE SERIE_DEVC_DEVCLIN = :Old_SERIE_DEVC_DEVCLIN ' +
     '   AND NUMERO_DEVC_DEVCLIN = :Old_NUMERO_DEVC_DEVCLIN ' +
     '   AND LINEA_DEVCLIN = :Old_LINEA_DEVCLIN';
-  unqryEmpDataDevc.Connection           := inLibGlobalVar.oConn;
-  unqryPrvDataDevc.Connection           := inLibGlobalVar.oConn;
+  unqryEmpDataDevc.Connection           := oConn;
+  unqryPrvDataDevc.Connection           := oConn;
   // Lookup completo de proveedores (NOMBRE_PRV + RAZON_SOCIAL_PRV) para
   // el rotulo resuelto de la cabecera y para el combo de busqueda
   // incremental por codigo (cbbCODIGO_PRV_DEVC). Se abre una vez y se
   // recorre con Locate; no depende del proveedor de la devolucion en
   // pantalla.
   unqryPrvDataDevc.Open;
-  unqryArtDataLinDevc.Connection        := inLibGlobalVar.oConn;
-  unqrySkusDevc.Connection              := inLibGlobalVar.oConn;
-  unqryAlmacenesDevc.Connection         := inLibGlobalVar.oConn;
-  unqryMovimientosProveedor.Connection  := inLibGlobalVar.oConn;
-  unstrdprcGetContadorDevc.Connection   := inLibGlobalVar.oConn;
-  unqryDefArticuloDevc.Connection       := inLibGlobalVar.oConn;
+  unqryArtDataLinDevc.Connection        := oConn;
+  unqrySkusDevc.Connection              := oConn;
+  unqryAlmacenesDevc.Connection         := oConn;
+  unqryMovimientosProveedor.Connection  := oConn;
+  unstrdprcGetContadorDevc.Connection   := oConn;
+  unqryDefArticuloDevc.Connection       := oConn;
   // Master-detail server-side: el WHERE del SQL toma los valores de
   // dsTablaG (master), evitando descargar fza_devoluciones_compra_lineas
   // entera y filtrar en cliente.
@@ -215,7 +215,7 @@ var
 begin
   inherited;
   sw := TStopwatch.StartNew;
-  RefrescarAlmacenes(oEmpresa);
+  RefrescarAlmacenes(UbicacionSesion.Empresa);
   AbrirConTiempo(unqryDevolucionesCompraLineas,
                  'unqryDevolucionesCompraLineas');
   AbrirConTiempo(unqryMovimientosProveedor,
@@ -230,7 +230,7 @@ var
 begin
   sEmpresa := Trim(ACodigoEmpresa);
   if sEmpresa = '' then
-    sEmpresa := Trim(oEmpresa);
+    sEmpresa := Trim(UbicacionSesion.Empresa);
   if (not unqryAlmacenesDevc.Active) or
      (not SameText(unqryAlmacenesDevc.ParamByName('EMPRESA').AsString,
                    sEmpresa)) then
@@ -261,7 +261,7 @@ begin
   begin
     FieldByName('NUMERO_DEVC').AsString := '0';
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='DC'
-    sSerie := ObtenerSerieDefecto(oEmpresa, 'DC');
+    sSerie := ObtenerSerieDefecto(UbicacionSesion.Empresa, 'DC');
     if FindField('SERIE_DEVC') <> nil then
     begin
       if sSerie <> '' then
@@ -272,8 +272,8 @@ begin
     FieldByName('FECHA_DEVC').AsDateTime := Date;
     if FindField('ESTADO_DEVC') <> nil then
       FieldByName('ESTADO_DEVC').AsString := 'ABIERTO';
-    if Trim(oEmpresa) <> '' then
-      FieldByName('CODIGO_EMP_DEVC').AsString := oEmpresa
+    if Trim(UbicacionSesion.Empresa) <> '' then
+      FieldByName('CODIGO_EMP_DEVC').AsString := UbicacionSesion.Empresa
     else
       FieldByName('CODIGO_EMP_DEVC').AsString := '0';
     FieldByName('CODIGO_PRV_DEVC').AsString := '0';
@@ -281,9 +281,9 @@ begin
       FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_DEVC').AsString := 'N';
     if FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil then
       FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString := 'N';
-    AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
+    AplicarRecargoComprasEmpresa(oConn, unqryTablaG,
       'CODIGO_EMP_DEVC', 'ESIVA_RECARGO_COMPRAS_DEVC');
-    AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
+    AplicarPorcentajesIvaCompra(oConn, unqryTablaG,
       'DEVC');
   end;
   RefrescarAlmacenes(
@@ -301,7 +301,7 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_DEVC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_DEVC').AsString = '') then
     GetCodigoAutoDevolucionCompra;
-  AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
+  AplicarPorcentajesIvaCompra(oConn, unqryTablaG,
     'DEVC');
   CalcularTotalesDevolucionCompra;
 end;
@@ -384,7 +384,7 @@ begin
     end;
     inLibDevolucionesCompraMovimientos.
       RevertirMovimientosDesdeDevolucionCompra(
-        unqryTablaG.Connection, sSerie, sNumero, oUser);
+        unqryTablaG.Connection, sSerie, sNumero, IdentidadSesion.Usuario);
     q.SQL.Text :=
       'DELETE FROM fza_devoluciones_compra_celdas ' +
       ' WHERE SERIE_DEVC_DEVCCEL  = :s ' +
@@ -419,9 +419,9 @@ begin
     // Auditoria estandar: las 4 columnas del libro de estilo bbdd §3.7
     // son NOT NULL sin default; hay que rellenarlas en alta. En BeforePost
     // tambien sobrescribimos USUARIO_MODIF para que refleje la ultima edicion.
-    FieldByName('USUARIO_ALTA').AsString    := oUser;
+    FieldByName('USUARIO_ALTA').AsString    := IdentidadSesion.Usuario;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-    FieldByName('USUARIO_MODIF').AsString   := oUser;
+    FieldByName('USUARIO_MODIF').AsString   := IdentidadSesion.Usuario;
     FieldByName('INSTANTE_MODIF').AsDateTime:= Now;
   end;
 end;
@@ -458,7 +458,7 @@ begin
   with unqryDevolucionesCompraLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
-    NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn,
+    NormalizarArticuloSkuEnDataSet(oConn,
       unqryDevolucionesCompraLineas, 'CODIGO_ART_DEVCLIN',
       'CODIGO_UNIDAD_DEVCLIN');
     if (Trim(FieldByName('NUMERO_DEVC_DEVCLIN').AsString) = '') or
@@ -473,7 +473,7 @@ begin
         FieldByName('PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN').AsFloat;
     // Refrescamos auditoria en cada Post (edicion / alta nueva).
     if FindField('USUARIO_MODIF') <> nil then
-      FieldByName('USUARIO_MODIF').AsString   := oUser;
+      FieldByName('USUARIO_MODIF').AsString   := IdentidadSesion.Usuario;
     if FindField('INSTANTE_MODIF') <> nil then
       FieldByName('INSTANTE_MODIF').AsDateTime:= Now;
     // En alta (State=dsInsert) tambien los campos *_ALTA por si
@@ -482,7 +482,7 @@ begin
     begin
       if (FindField('USUARIO_ALTA') <> nil) and
          (FieldByName('USUARIO_ALTA').AsString = '') then
-        FieldByName('USUARIO_ALTA').AsString := oUser;
+        FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
       if (FindField('INSTANTE_ALTA') <> nil) and
          FieldByName('INSTANTE_ALTA').IsNull then
         FieldByName('INSTANTE_ALTA').AsDateTime := Now;
@@ -506,7 +506,7 @@ begin
         unqrySkusDevc.Close;
       end;
     end;
-    PrepararLineaFiscalCompra(inLibGlobalVar.oConn, unqryTablaG,
+    PrepararLineaFiscalCompra(oConn, unqryTablaG,
       unqryDevolucionesCompraLineas, 'DEVC', 'DEVCLIN', 'TOTAL_DEVCLIN');
   end;
 end;
@@ -588,7 +588,7 @@ begin
     ParamByName('pserie').AsString :=
       unqryTablaG.FieldByName('SERIE_DEVC').AsString;
     ParamByName('ptipodoc').AsString := 'DC';
-    ParamByName('pUSUARIOMODIF').AsString := oUser;
+    ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
     ParamByName('pEMPRESA_CONTADOR').AsString :=
       unqryTablaG.FieldByName('CODIGO_EMP_DEVC').AsString;
     ExecProc;
@@ -671,11 +671,11 @@ begin
     begin
       inLibDevolucionesCompraMovimientos.
         RevertirMovimientosDesdeDevolucionCompra(
-          unqryTablaG.Connection, sSerie, sNumero, oUser);
+          unqryTablaG.Connection, sSerie, sNumero, IdentidadSesion.Usuario);
       if HayLineasMovimiento(sSerie, sNumero) then
         inLibDevolucionesCompraMovimientos.
           GenerarMovimientosDesdeDevolucionCompra(
-            unqryTablaG.Connection, sSerie, sNumero, oUser);
+            unqryTablaG.Connection, sSerie, sNumero, IdentidadSesion.Usuario);
       RefrescarMovimientosProveedor;
     end;
   end;
@@ -689,7 +689,7 @@ begin
   Result := False;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     q.SQL.Text :=
       'SELECT 1 ' +
       '  FROM INFORMATION_SCHEMA.COLUMNS ' +
@@ -778,7 +778,7 @@ begin
     oLv.Items.Clear;
     oQry := TUniQuery.Create(nil);
     try
-      oQry.Connection := inLibGlobalVar.oConn;
+      oQry.Connection := oConn;
       oQry.SQL.Text :=
         'SELECT DISTINCT L.CODIGO_ALMACEN_DEVCLIN AS COD, ' +
         '       COALESCE(A.NOMBRE_ALM_ALM, L.CODIGO_ALMACEN_DEVCLIN) AS NOM ' +
@@ -837,7 +837,7 @@ begin
   Result := '';
   oQry := TUniQuery.Create(nil);
   try
-    oQry.Connection := inLibGlobalVar.oConn;
+    oQry.Connection := oConn;
     oQry.SQL.Text :=
       'SELECT DISTINCT CODIGO_UNIDAD_DEVCLIN ' +
       '  FROM fza_devoluciones_compra_lineas ' +

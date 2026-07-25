@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoComprasSesiones                                          }
 {    Tipo:       Formulario (Mto)                                              }
@@ -657,7 +657,7 @@ end;
 function TfrmMtoComprasSesiones.SqlRestriccionUsuario: string;
 begin
   // Sesiones de compra: empresa y almacén destino (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_SES', 'CODIGO_ALM_SES', '');
+  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_SES', 'CODIGO_ALM_SES', '');
 end;
 
 procedure TfrmMtoComprasSesiones.CrearTablaPrincipal;
@@ -774,7 +774,7 @@ begin
   if (Field <> nil) and SameText(Field.FieldName, 'CODIGO_EMP_SES') and
      (Dmm <> nil) and (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
   begin
-    AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, Dmm.unqryTablaG,
+    AplicarRecargoComprasEmpresa(oConn, Dmm.unqryTablaG,
       'CODIGO_EMP_SES', 'ESIVA_RECARGO_COMPRAS_SES');
     Dmm.RefrescarTotalesSesion;
   end;
@@ -941,7 +941,7 @@ begin
   LogSes(Format('BeforeDelete: limpiando SESCEL linea=%d', [iLinea]));
   with TUniQuery.Create(nil) do
   try
-    Connection := inLibGlobalVar.oConn;
+    Connection := oConn;
     SQL.Text :=
       'DELETE FROM fza_compras_sesiones_celdas ' +
       ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
@@ -998,7 +998,7 @@ begin
   // ademas primera y ultima talla (ordenadas por ORDEN_ACD) para
   // mostrarlas como rango (columnas 'Desde' / 'Hasta') en el listbox.
   FQryConjuntosTallas := TUniQuery.Create(Self);
-  FQryConjuntosTallas.Connection := inLibGlobalVar.oConn;
+  FQryConjuntosTallas.Connection := oConn;
   FQryConjuntosTallas.SQL.Text :=
     'SELECT AC.ID_AC, AC.NOMBRE_AC, ' +
     '  (SELECT AV.AV FROM fza_atributos_conjuntos_det ACD ' +
@@ -1169,7 +1169,7 @@ begin
   if (Dmm <> nil) and Dmm.unqryTablaG.Active then
     sEmpresa := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
   if sEmpresa = '' then
-    sEmpresa := Trim(inLibGlobalVar.oEmpresa);
+    sEmpresa := Trim(UbicacionSesion.Empresa);
   CargarSeriesEmpresa(sEmpresa, 'SE', cbbSerie.Properties.Items);
   if cbbSerie.Properties.Items.Count = 0 then
   begin
@@ -1262,7 +1262,8 @@ begin
       begin
         sFile := ElegirFotoRepresentativa(archivos);
         if sFile <> '' then
-          oFotos.GuardarSesion(sSerie, sNumero, iLinea, sCodArt, '', sFile);
+          oFotos.GuardarSesion(sSerie, sNumero, iLinea, sCodArt, '',
+            sFile, IdentidadSesion.Usuario);
         // Borrar los PNG temporales extraidos (no dejar huerfanos).
         LimpiarDescargaTemporal(archivos);
         ShowMessage(Format('Descargadas %d foto(s) del articulo %s.',
@@ -1319,7 +1320,7 @@ begin
   SetLength(FBasicosColor, 0);
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     q.SQL.Text :=
       'SELECT CODIGO_ATB FROM fza_atributos_basicos ' +
       ' WHERE ID_VA_ATB = :va AND ESACTIVO_ATB = ''S'' ' +
@@ -1768,8 +1769,8 @@ begin
     arrCols[i] := FTallaColumns[i];
 
   cfg := Default(TGridTallasConfig);
-  cfg.Conexion           := inLibGlobalVar.oConn;
-  cfg.Usuario            := oUser;
+  cfg.Conexion           := oConn;
+  cfg.Usuario            := IdentidadSesion.Usuario;
   cfg.Grid               := tvLineas;
   cfg.SourceMaster       := dsTablaG;
   cfg.SourceLineas       := Dmm.dsSesionLin;
@@ -1831,7 +1832,7 @@ begin
   //    filtrado "empieza por" mientras tecleas lo hace IncrementalFiltering
   //    en cliente; :prv lo fija RecargarModelos.
   FModeloBusqQry := TUniQuery.Create(nil);
-  FModeloBusqQry.Connection := inLibGlobalVar.oConn;
+  FModeloBusqQry.Connection := oConn;
   FModeloBusqQry.SQL.Text :=
     'SELECT ap.REF_PROVEEDOR_AP AS REFPRV,' +
     '       ap.CODIGO_ART_AP    AS CODART,' +
@@ -2084,7 +2085,7 @@ begin
   sSerie := Trim(Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString);
   sNumero := Trim(Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString);
   iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
-  rDup := ResolverDuplicadoIntraSesion(inLibGlobalVar.oConn, sSerie, sNumero,
+  rDup := ResolverDuplicadoIntraSesion(oConn, sSerie, sNumero,
                                        iLinea, AModelo, ACodigoArt);
   if not rDup.Encontrado then
     Exit;
@@ -2154,7 +2155,7 @@ begin
       end;
     Exit;
   end;
-  rDup := ResolverDuplicadoSesion(inLibGlobalVar.oConn, sRef, sPrv,
+  rDup := ResolverDuplicadoSesion(oConn, sRef, sPrv,
                                   True, sCodArt);
   if not rDup.Encontrado then
     Exit;
@@ -2262,7 +2263,7 @@ begin
 
   try
     info := inLibFotos.oFotos.GuardarSesion(sSerie, sNumero, iLinea,
-                                            sCodArt, '', dlgFoto.FileName);
+      sCodArt, '', dlgFoto.FileName, IdentidadSesion.Usuario);
     if info.Encontrada then
       ShowMessage('Foto asignada a la linea ' + IntToStr(iLinea) + '.')
     else
@@ -2335,7 +2336,7 @@ begin
   // (mismo articulo)" ya lo deja marcado desde su creacion; esto es
   // para sesiones que ya tenian duplicados sin marcar.
   iAutoFix := NormalizarDuplicadosIntraSesion(
-                inLibGlobalVar.oConn, oUser,
+                oConn, IdentidadSesion.Usuario,
                 Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
                 Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString);
   if iAutoFix > 0 then
@@ -2452,7 +2453,7 @@ begin
   try
     Screen.Cursor := crHourGlass;
     try
-      bOK := MaterializarSesionConTx(frmSet, oUser, oListaDocs,
+      bOK := MaterializarSesionConTx(frmSet, IdentidadSesion.Usuario, oListaDocs,
                                      sSerPed, sNumPed,
                                      sSerAlb, sNumAlb, sErr);
     finally
@@ -2560,7 +2561,7 @@ begin
   LogSes('  RevertirMaterializacion');
   Screen.Cursor := crHourGlass;
   try
-    if RevertirMaterializacion(Dmm, oUser, sErr) then
+    if RevertirMaterializacion(Dmm, IdentidadSesion.Usuario, sErr) then
     begin
       LogSes('  reversion OK, master.Refresh');
       ShowMessage('Sesion revertida. Estado: BORRADOR.');
@@ -2679,7 +2680,7 @@ begin
   iSiguiente := 0;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     q.SQL.Text :=
       'SELECT MIN(LINEA_SESLIN) AS SIGUIENTE ' +
       '  FROM fza_compras_sesiones_lineas ' +
@@ -2841,7 +2842,7 @@ begin
   // cantidades se sumarian al recargar).
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     q.SQL.Text :=
       'DELETE FROM fza_compras_sesiones_celdas ' +
       ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
@@ -3270,7 +3271,7 @@ begin
   sPrv := '';
   if not Dmm.unqryTablaG.IsEmpty then
     sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
-  rDup := ResolverDuplicadoSesion(inLibGlobalVar.oConn, sNuevo, sPrv);
+  rDup := ResolverDuplicadoSesion(oConn, sNuevo, sPrv);
   if rDup.Encontrado then
   begin
     AplicarDuplicadoEnLinea(Dmm, rDup);
@@ -3326,7 +3327,7 @@ begin
   // ResolverCodigoFamilia incrementa el contador como efecto colateral si
   // resuelve: solo se llama una vez por edicion de celda. Si devuelve False
   // no consume nada y dejamos el codigo manual sin tocar.
-  if not ResolverCodigoFamilia(inLibGlobalVar.oConn, sTecleado, oUser,
+  if not ResolverCodigoFamilia(oConn, sTecleado, IdentidadSesion.Usuario,
                                sExpandido) then Exit;
 
   if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
@@ -3340,7 +3341,7 @@ begin
   if ds.FieldByName('DESCRIPCION_SESLIN').AsString <> '' then Exit;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     q.SQL.Text :=
       'SELECT NOMBRE_FAM_FAM FROM fza_articulos_familias ' +
       ' WHERE CODIGO_FAM_FAM = :p';
@@ -3389,7 +3390,7 @@ begin
 
   // Buscamos por REF_PROVEEDOR del proveedor de la cabecera. Si match,
   // marcamos REUSAR (la helper rellena el resto de campos de la linea).
-  rDup := ResolverDuplicadoSesion(inLibGlobalVar.oConn, sRef, sPrv, True);
+  rDup := ResolverDuplicadoSesion(oConn, sRef, sPrv, True);
   if not rDup.Encontrado then
     Exit;
   AplicarDuplicadoEnLinea(Dmm, rDup);
@@ -3419,7 +3420,7 @@ begin
   if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
   ds.FieldByName('CODIGO_FAM_SESLIN').AsString := ACodigoFam;
   sTentativo := ACodigoFam;
-  if ResolverCodigoFamilia(inLibGlobalVar.oConn, ACodigoFam, oUser,
+  if ResolverCodigoFamilia(oConn, ACodigoFam, IdentidadSesion.Usuario,
                            sExpandido) then
     sTentativo := sExpandido;
   ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sTentativo;
@@ -3435,7 +3436,7 @@ begin
     begin
       q := TUniQuery.Create(nil);
       try
-        q.Connection := inLibGlobalVar.oConn;
+        q.Connection := oConn;
         q.SQL.Text :=
           'SELECT NOMBRE_FAM_FAM FROM fza_articulos_familias ' +
           ' WHERE CODIGO_FAM_FAM = :p';
@@ -3805,7 +3806,7 @@ begin
   sAlmCab := Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
   oQry := TUniQuery.Create(nil);
   try
-    oQry.Connection := inLibGlobalVar.oConn;
+    oQry.Connection := oConn;
     oQry.SQL.Text :=
       'INSERT INTO fza_compras_sesiones_celdas ' +
       '  (SERIE_SES_SESCEL, NUMERO_SES_SESCEL, LINEA_SES_SESCEL, ' +
@@ -3827,7 +3828,7 @@ begin
     oQry.ParamByName('lsrc').AsInteger := ALineaOrigen;
     oQry.ParamByName('ldst').AsInteger := ALineaDestino;
     oQry.ParamByName('alm_cab').AsString := sAlmCab;
-    oQry.ParamByName('u').AsString    := oUser;
+    oQry.ParamByName('u').AsString    := IdentidadSesion.Usuario;
     oQry.ExecSQL;
     // Tras copiar, refrescar totales de la linea destino para que
     // TOTAL_UNIDADES_SESLIN y TOTAL_LINEA_SESLIN cuadren con la suma
@@ -3856,7 +3857,7 @@ begin
     oQry.ParamByName('s').AsString  := sSer;
     oQry.ParamByName('n').AsString  := sNum;
     oQry.ParamByName('l').AsInteger := ALineaDestino;
-    oQry.ParamByName('u').AsString  := oUser;
+    oQry.ParamByName('u').AsString  := IdentidadSesion.Usuario;
     oQry.ExecSQL;
   finally
     FreeAndNil(oQry);
@@ -3883,7 +3884,7 @@ begin
   // FreeAndNil manual en el finally sin riesgo de doble liberacion.
   oForm.OnClose := nil;
   try
-    oForm.Preparar(inLibGlobalVar.oConn, oUser,
+    oForm.Preparar(oConn, IdentidadSesion.Usuario,
                     Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
                     Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
                     iLinea, iAc,

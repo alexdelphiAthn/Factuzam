@@ -157,8 +157,8 @@ begin
   FEsExistente   := False;
   FNumeroAlb     := '';
   FSerieAlb      := '';
-  unqryAlmacenes.Connection    := inLibGlobalVar.oConn;
-  unqryAlbaranesPed.Connection := inLibGlobalVar.oConn;
+  unqryAlmacenes.Connection    := oConn;
+  unqryAlbaranesPed.Connection := oConn;
 end;
 
 procedure TfrmModalSelAlmacenAlbaran.FormShow(Sender: TObject);
@@ -195,7 +195,7 @@ end;
 procedure TfrmModalSelAlmacenAlbaran.CargarAlmacenes;
 begin
   // Combo con todos los almacenes activos.
-  unqryAlmacenes.Connection := inLibGlobalVar.oConn;
+  unqryAlmacenes.Connection := oConn;
   if unqryAlmacenes.Active then
     unqryAlmacenes.Close;
   unqryAlmacenes.Open;
@@ -206,7 +206,7 @@ procedure TfrmModalSelAlmacenAlbaran.CargarAlbaranesPedido;
 begin
   // Albaranes ya creados desde ESTE pedido y no facturados; son los
   // unicos destinos validos para anadir lineas.
-  unqryAlbaranesPed.Connection := inLibGlobalVar.oConn;
+  unqryAlbaranesPed.Connection := oConn;
   if unqryAlbaranesPed.Active then
     unqryAlbaranesPed.Close;
   unqryAlbaranesPed.ParamByName('np').AsString := FNumPed;

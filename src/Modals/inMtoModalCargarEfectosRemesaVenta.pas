@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalCargarEfectosRemesa                                 }
 {    Tipo:       Formulario (Modal)                                            }
@@ -103,7 +103,7 @@ begin
   FConfirmado := False;
   FRemSeries  := TStringList.Create;
   FRemNumeros := TStringList.Create;
-  FConn := inLibGlobalVar.oConn;
+  FConn := oConn;
   // Efectos candidatos: pendientes, sin remesar, de la empresa, hasta vto.
   FQryEfe := TUniQuery.Create(Self);
   FQryEfe.Connection := FConn;
@@ -272,7 +272,7 @@ begin
     sp.Params.CreateParam(ftString, 'p_NUMERO_OUT', ptOutput);
     sp.ParamByName('p_EMPRESA').AsString := AEmp;
     sp.ParamByName('p_IBAN').AsString    := '';
-    sp.ParamByName('p_USUARIO').AsString := oUser;
+    sp.ParamByName('p_USUARIO').AsString := IdentidadSesion.Usuario;
     sp.ExecProc;
     ASerie  := sp.ParamByName('p_SERIE_OUT').AsString;
     ANumero := sp.ParamByName('p_NUMERO_OUT').AsString;
@@ -347,7 +347,7 @@ begin
         spAdd.ParamByName('p_NUM_EFV').AsInteger  :=
           StrToIntDef(VarToStr(
             tvEfe.DataController.Values[ri, colNumEfe.Index]), 0);
-        spAdd.ParamByName('p_USUARIO').AsString    := oUser;
+        spAdd.ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
         spAdd.ExecProc;
         res := spAdd.ParamByName('p_RESULTADO').AsInteger;
         if res = 1 then

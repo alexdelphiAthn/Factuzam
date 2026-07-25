@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataArticulos                                              }
 {    Tipo:       Data Module                                                   }
@@ -179,7 +179,7 @@ begin
       '       USUARIO_MODIF = :USR ' +
       ' WHERE CODIGO_UNIDAD_SKU = :SKU';
     qry.ParamByName('ACT').AsString := aActivo;
-    qry.ParamByName('USR').AsString := oUser;
+    qry.ParamByName('USR').AsString := IdentidadSesion.Usuario;
     qry.ParamByName('SKU').AsString := aSku;
     qry.ExecSQL;
   finally
@@ -222,7 +222,7 @@ begin
     while not qrySel.Eof do
     begin
       qryUpd.ParamByName('ACT').AsString := aActivo;
-      qryUpd.ParamByName('USR').AsString := oUser;
+      qryUpd.ParamByName('USR').AsString := IdentidadSesion.Usuario;
       qryUpd.ParamByName('SKU').AsString :=
         qrySel.FieldByName('CODIGO_UNIDAD_SKU').AsString;
       qryUpd.ExecSQL;
@@ -352,7 +352,7 @@ begin
       qry.ParamByName('FECHA').AsDateTime := aFechaField.AsDateTime
     else
       qry.ParamByName('FECHA').Clear;
-    qry.ParamByName('USR').AsString := oUser;
+    qry.ParamByName('USR').AsString := IdentidadSesion.Usuario;
     qry.ExecSQL;
   finally
     FreeAndNil(qry);
@@ -536,7 +536,7 @@ begin
 //                                   MB_YESNO ) = ID_YES ) then
 //    begin
     qryBorrarLineas := TUniQuery.Create(Self);
-    Connection := inLibGlobalVar.oConn;
+    Connection := oConn;
     SQL.Text := 'DELETE ' +
                 '  FROM fza_articulos_proveedores ' +
                 ' WHERE CODIGO_ART_AP = :Articulo ;';
@@ -605,7 +605,7 @@ begin
     qry.ParamByName('cod').AsString  := ACodArt;
     qry.ParamByName('art').AsString  := ACodArt;
     qry.ParamByName('art2').AsString := ACodArt;
-    qry.ParamByName('usr').AsString  := oUser;
+    qry.ParamByName('usr').AsString  := IdentidadSesion.Usuario;
     qry.ExecSQL;
   finally
     FreeAndNil(qry);
@@ -832,12 +832,12 @@ begin
   if unqryTablaG.FindField('CODIGO_ART_ART').AsString = '0' then
   begin
     unqryTablaG.FindField('CODIGO_ART_ART').AsString :=
-                                                 ObtenerSiguienteContador('AR');
+                                                 ObtenerSiguienteContador('AR', IdentidadSesion.Usuario);
   end;
   if unqryTablaG.FindField('ORDEN_ART').AsString = '0' then
   begin
       unqryTablaG.FindField('ORDEN_ART').AsString :=
-                                                 ObtenerSiguienteContador('AO');
+                                                 ObtenerSiguienteContador('AO', IdentidadSesion.Usuario);
   end;
 end;
 

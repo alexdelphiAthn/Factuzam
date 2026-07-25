@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFacturasCompra                                          }
 {    Tipo:       Formulario (Mto)                                              }
@@ -317,7 +317,7 @@ begin
   end;
   if (sEmpresa = '') or (sEmpresa = '0') then
   begin
-    sEmpresa := Trim(inLibGlobalVar.oEmpresa);
+    sEmpresa := Trim(UbicacionSesion.Empresa);
   end;
   CargarSeriesEmpresa(sEmpresa, 'FP', cbbSERIE_FACC.Properties.Items);
   if cbbSERIE_FACC.Properties.Items.Count = 0 then
@@ -488,7 +488,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := oConn;
       q.SQL.Text :=
         'SELECT ATB.CODIGO_ATB, MIN(ATB.ORDEN_ATB) AS ORDEN_ATB, ' +
         '       MIN(ATB.NOMBRE_ATB) AS NOMBRE_ATB ' +
@@ -617,7 +617,7 @@ end;
 function TfrmMtoFacturasCompra.SqlRestriccionUsuario: string;
 begin
   // Documentos de compra: empresa y almacén (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_FACC', 'CODIGO_ALM_FACC', '');
+  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_FACC', 'CODIGO_ALM_FACC', '');
 end;
 
 procedure TfrmMtoFacturasCompra.CrearTablaPrincipal;
@@ -746,7 +746,7 @@ begin
   //    Sesiones, con los nombres FACC/FACCLIN/FACCCEL.
   cfgT := Default(TGridTallasConfig);
   cfgT.Conexion           := dmmFacturasCompra.unqryTablaG.Connection;
-  cfgT.Usuario            := oUser;
+  cfgT.Usuario            := IdentidadSesion.Usuario;
   cfgT.Grid               := tvLineasFactura;
   cfgT.SourceMaster       := dsTablaG;
   cfgT.SourceLineas       := dmmFacturasCompra.dsFacturasCompraLineas;
@@ -782,6 +782,7 @@ begin
   // 2. Orquestador de pivote (libreria nueva, compartida con pedidos).
   cfgP := Default(TGridPivoteCompraConfig);
   cfgP.Conexion             := dmmFacturasCompra.unqryTablaG.Connection;
+  cfgP.ContextoSesion       := ContextoSesion;
   cfgP.Grid                 := tvLineasFactura;
   cfgP.SourceMaster         := dsTablaG;
   cfgP.SourceLineas         := dmmFacturasCompra.unqryFacturasCompraLineas;
@@ -1334,7 +1335,7 @@ begin
   begin
     CfgPV := Default(TGridPivoteVentaConfig);
     CfgPV.Conexion := dmmFacturasCompra.unqryTablaG.Connection;
-    CfgPV.Usuario := oUser;
+    CfgPV.Usuario := IdentidadSesion.Usuario;
     CfgPV.SourceMaster := dsTablaG;
     CfgPV.SourceLineas := dmmFacturasCompra.dsFacturasCompraLineas;
     CfgPV.FieldSerieMaster := 'SERIE_FACC';
@@ -2201,7 +2202,7 @@ begin
     sEmp  := dsTablaG.DataSet.FieldByName('CODIGO_EMP_FACC').AsString;
     sPrv  := dsTablaG.DataSet.FieldByName('CODIGO_PRV_FACC').AsString;
     sPref := dmmFacturasCompra.GetBancoDefectoProveedor(sPrv);
-    selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, inLibGlobalVar.oConn,
+    selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, oConn,
                                                    sEmp, ubePago, sPref);
     if not selBanco.Aceptado then
       ShowMessage('Generación de efectos cancelada.')

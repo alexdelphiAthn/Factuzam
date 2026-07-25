@@ -93,7 +93,7 @@ begin
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
     frm.FFechaOperacion := AFechaOperacion;
-    frm.btnEmpleado.Text := oUser;
+    frm.btnEmpleado.Text := frm.IdentidadSesion.Usuario;
     frm.ValidarEmpleado;
     if frm.ShowModal = mrOk then
       Result := True;
@@ -220,6 +220,7 @@ var
 begin
   dm := TdmCajaOpe.Create(nil);
   try
+    dm.AsignarContextoSesion(ContextoSesion);
     dImporte  := Currency(txtImporte.Value);
     sEmpleado := Trim(btnEmpleado.Text);
     sConcepto := Trim(txtConcepto.Text);

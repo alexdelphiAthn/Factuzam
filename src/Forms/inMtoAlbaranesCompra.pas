@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoAlbaranesCompra                                          }
 {    Tipo:       Formulario (Mto)                                              }
@@ -475,7 +475,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := oConn;
       q.SQL.Text :=
         'SELECT ATB.CODIGO_ATB, MIN(ATB.ORDEN_ATB) AS ORDEN_ATB, ' +
         '       MIN(ATB.NOMBRE_ATB) AS NOMBRE_ATB ' +
@@ -950,7 +950,7 @@ begin
     sEmpresa := Trim(dmmAlbaranesCompra.unqryTablaG.
                        FieldByName('CODIGO_EMP_ALBC').AsString);
   if sEmpresa = '' then
-    sEmpresa := Trim(inLibGlobalVar.oEmpresa);
+    sEmpresa := Trim(UbicacionSesion.Empresa);
   CargarSeriesEmpresa(sEmpresa, 'AB', cbbSERIE_ALBC.Properties.Items);
   if cbbSERIE_ALBC.Properties.Items.Count = 0 then
   begin
@@ -1045,7 +1045,7 @@ end;
 function TfrmMtoAlbaranesCompra.SqlRestriccionUsuario: string;
 begin
   // Documentos de compra: empresa y almacén (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_ALBC', 'CODIGO_ALM_ALBC', '');
+  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_ALBC', 'CODIGO_ALM_ALBC', '');
 end;
 
 procedure TfrmMtoAlbaranesCompra.CrearTablaPrincipal;
@@ -1177,7 +1177,7 @@ begin
   //    Sesiones, con los nombres ALBC/ALBCLIN/ALBCCEL.
   cfgT := Default(TGridTallasConfig);
   cfgT.Conexion           := dmmAlbaranesCompra.unqryTablaG.Connection;
-  cfgT.Usuario            := oUser;
+  cfgT.Usuario            := IdentidadSesion.Usuario;
   cfgT.Grid               := tvLineasAlbaran;
   cfgT.SourceMaster       := dsTablaG;
   cfgT.SourceLineas       := dmmAlbaranesCompra.dsAlbaranesCompraLineas;
@@ -1213,6 +1213,7 @@ begin
   // 2. Orquestador de pivote (libreria nueva, compartida con pedidos).
   cfgP := Default(TGridPivoteCompraConfig);
   cfgP.Conexion             := dmmAlbaranesCompra.unqryTablaG.Connection;
+  cfgP.ContextoSesion       := ContextoSesion;
   cfgP.Grid                 := tvLineasAlbaran;
   cfgP.SourceMaster         := dsTablaG;
   cfgP.SourceLineas         := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
@@ -1799,7 +1800,7 @@ begin
   begin
     CfgPV := Default(TGridPivoteVentaConfig);
     CfgPV.Conexion := dmmAlbaranesCompra.unqryTablaG.Connection;
-    CfgPV.Usuario := oUser;
+    CfgPV.Usuario := IdentidadSesion.Usuario;
     CfgPV.SourceMaster := dsTablaG;
     CfgPV.SourceLineas := dmmAlbaranesCompra.dsAlbaranesCompraLineas;
     CfgPV.FieldSerieMaster := 'SERIE_ALBC';
@@ -2089,7 +2090,7 @@ begin
       if not (ds.State in [dsInsert, dsEdit]) then
         ds.Edit;
       ds.FieldByName('CODIGO_PRV_ALBC').AsString := sCodigo;
-      AplicarIvaExentoIntracomunitarioProveedor(inLibGlobalVar.oConn, ds,
+      AplicarIvaExentoIntracomunitarioProveedor(oConn, ds,
         'CODIGO_PRV_ALBC', 'ESIVA_EXENTO_INTRACOMUNITARIO_ALBC');
       dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
       ActualizarLabelProveedor;

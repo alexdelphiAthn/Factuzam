@@ -1,4 +1,4 @@
-﻿{*******************************************************}
+{*******************************************************}
 {                                                       }
 {       FactuZam                                        }
 {                                                       }
@@ -146,10 +146,10 @@ end;
 procedure TfrmMtoComprasPlantillas.FormCreate(Sender: TObject);
 begin
   inherited;
-  unqryPlantillas.Connection       := inLibGlobalVar.oConn;
-  unqryPlantillaProps.Connection   := inLibGlobalVar.oConn;
-  unqryPlantillaKits.Connection    := inLibGlobalVar.oConn;
-  unqryPlantillaKitsDet.Connection := inLibGlobalVar.oConn;
+  unqryPlantillas.Connection       := oConn;
+  unqryPlantillaProps.Connection   := oConn;
+  unqryPlantillaKits.Connection    := oConn;
+  unqryPlantillaKitsDet.Connection := oConn;
   unqryPlantillas.Open;
   unqryPlantillaProps.Open;
   unqryPlantillaKits.Open;

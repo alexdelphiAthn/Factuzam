@@ -99,7 +99,7 @@ begin
       Params.CreateParam(ftString, 'ptipodoc', ptInput);
       Params.CreateParam(ftInteger, 'pcont', ptOutput);
       Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := oUser;
+      ParamByName('pUSUARIO_MODIF').AsString := IdentidadSesion.Usuario;
       ParamByName('ptipodoc').AsString :=  'GP';
       ExecProc;
       unqryTablaG.FindField('CODIGO_GENERADOR_PROCESO_GP').AsString :=

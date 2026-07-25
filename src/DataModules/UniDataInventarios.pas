@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataInventarios                                            }
 {    Tipo:       Data Module                                                   }
@@ -421,7 +421,7 @@ begin
   // ya traduce a "Hay campos obligatorios sin rellenar".
   ForzarRequiredFalseEnCdsLineas;
 
-  FUsuario := oUser;
+  FUsuario := IdentidadSesion.Usuario;
 end;
 
 procedure TdmInventarios.ForzarRequiredFalseEnCdsLineas;
@@ -546,21 +546,21 @@ begin
   inherited;
   // Pre-rellenamos los datos por defecto del usuario logueado al crear un
   // inventario nuevo, igual que hace facturas:
-  //   - empresa/almacen del usuario (oEmpresa/oAlmacen, cargados en login)
+  //   - empresa/almacen del usuario (UbicacionSesion.Empresa/UbicacionSesion.Almacen, cargados en login)
   //   - serie por defecto de la empresa para tipo IN
   //   - NUMERO_INV='0' como marcador para que BeforePost asigne el contador
   //     real desde fza_contadores via PRC_GET_NEXT_CONT_FACT_SERIE.
-  if Trim(oEmpresa) <> '' then
-    DataSet.FieldByName('CODIGO_EMP_INV').AsString := oEmpresa;
-  if Trim(oAlmacen) <> '' then
-    DataSet.FieldByName('CODIGO_ALM_INV').AsString := oAlmacen;
+  if Trim(UbicacionSesion.Empresa) <> '' then
+    DataSet.FieldByName('CODIGO_EMP_INV').AsString := UbicacionSesion.Empresa;
+  if Trim(UbicacionSesion.Almacen) <> '' then
+    DataSet.FieldByName('CODIGO_ALM_INV').AsString := UbicacionSesion.Almacen;
   DataSet.FieldByName('TIPO_DOC_INV').AsString := 'IN';
   DataSet.FieldByName('FECHA_INV').AsDateTime  := Now;
   DataSet.FieldByName('ESTADO_INV').AsString   := 'ABIERTO';
   DataSet.FieldByName('NUMERO_INV').AsString   := '0';
-  if Trim(oEmpresa) <> '' then
+  if Trim(UbicacionSesion.Empresa) <> '' then
     DataSet.FieldByName('SERIE_INV').AsString  :=
-                                       ObtenerSeriePorDefecto(oEmpresa, 'IN');
+                                       ObtenerSeriePorDefecto(UbicacionSesion.Empresa, 'IN');
   CargarAlmacenesPorEmpresa(
     DataSet.FieldByName('CODIGO_EMP_INV').AsString);
 end;
@@ -662,7 +662,7 @@ begin
     sp.ParamByName('ptipodoc').AsString := 'IN';
     sp.ParamByName('pEMPRESA_CONTADOR').AsString :=
                             unqryTablaG.FindField('CODIGO_EMP_INV').AsString;
-    sp.ParamByName('pUSUARIOMODIF').AsString := oUser;
+    sp.ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
     sp.ExecProc;
     unqryTablaG.FindField('NUMERO_INV').AsString :=
                                               sp.ParamByName('pcont').AsString;

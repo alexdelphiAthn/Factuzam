@@ -101,9 +101,6 @@ implementation
 
 {$R *.dfm}
 
-uses
-  inLibGlobalVar;
-
 // ============================================================================
 //   API pública
 // ============================================================================
@@ -294,7 +291,7 @@ begin
           '   USUARIO_MODIF          = VALUES(USUARIO_MODIF)';
         qry.ParamByName('p_sku').AsString     := FCodigoUnidadArttar;
         qry.ParamByName('p_coste').AsFloat    := FResultado.PrecioCoste;
-        qry.ParamByName('p_usuario').AsString := oUser;
+        qry.ParamByName('p_usuario').AsString := IdentidadSesion.Usuario;
         qry.Execute;
       end
       else
@@ -307,7 +304,7 @@ begin
           'WHERE CODIGO_ART_AP            = :p_art ' +
           '  AND ESPROVEEDORPRINCIPAL_AP  = ''S''';
         qry.ParamByName('p_coste').AsFloat    := FResultado.PrecioCoste;
-        qry.ParamByName('p_usuario').AsString := oUser;
+        qry.ParamByName('p_usuario').AsString := IdentidadSesion.Usuario;
         qry.ParamByName('p_art').AsString     := FCodigoArtArt;
         qry.Execute;
         filasCoste := qry.RowsAffected;
@@ -343,7 +340,7 @@ begin
         '  INSTANTE_MODIF        = NOW() ' +
         'WHERE CODIGO_UNICO_ARTTAR = :p_unico';
       qry.ParamByName('p_salida').AsFloat  := FResultado.PrecioSalidaFinal;
-      qry.ParamByName('p_usuario').AsString := oUser;
+      qry.ParamByName('p_usuario').AsString := IdentidadSesion.Usuario;
       qry.ParamByName('p_unico').AsInteger  := FCodigoUnicoArttar;
       qry.Execute;
 

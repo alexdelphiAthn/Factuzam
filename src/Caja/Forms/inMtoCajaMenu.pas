@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaMenu                                                 }
 {    Tipo:       Formulario (Mto)                                              }
@@ -240,15 +240,15 @@ begin
     calMes.Enabled := False;
   // Crear el caché ANTES de cualquier cosa que pueda disparar eventos del
   // calendario
-  FVentasCal := TVentasCalendarioCache.Create(inLibGlobalVar.oConn);
+  FVentasCal := TVentasCalendarioCache.Create(oConn);
 
   if oCajaParams.GetBool('vgerShowCajaSelection', True) then
     AbrirSelectorCaja
   else
   begin
-    FEmpresa := oEmpresa;
-    FAlmacen := oAlmacen;
-    FCaja    := oCaja;
+    FEmpresa := UbicacionSesion.Empresa;
+    FAlmacen := UbicacionSesion.Almacen;
+    FCaja    := UbicacionSesion.Caja;
     if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
     begin
       ShowMessage('Error al asignar Empresa Almacén Caja');
@@ -404,13 +404,13 @@ var
 begin
   frm := TfrmMtoModalCajDef.Create(Self);
   try
-    frm.qrySeleccion.Connection := inLibGlobalVar.oConn;
+    frm.qrySeleccion.Connection := oConn;
     frm.qrySeleccion.Open;
     // Cierra el cronometro SQL antes de entrar en el selector modal.
     CerrarMonitorSQLPendiente;
-    frm.sEmpresa := oEmpresa;
-    frm.sAlmacen := oAlmacen;
-    frm.sCaja    := oCaja;
+    frm.sEmpresa := UbicacionSesion.Empresa;
+    frm.sAlmacen := UbicacionSesion.Almacen;
+    frm.sCaja    := UbicacionSesion.Caja;
     frm.ShowModal;
     if (frm.sFicha = 'S') then
     begin
@@ -763,7 +763,7 @@ begin
     Exit;
   end;
   TfrmModalArqueo.Ejecutar(Self,
-                           inLibGlobalVar.oConn,
+                           oConn,
                            FEmpresa,
                            FAlmacen,
                            FCaja,

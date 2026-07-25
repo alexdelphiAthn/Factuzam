@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalEtiqArt                                             }
 {    Tipo:       Formulario (Modal)                                            }
@@ -218,7 +218,7 @@ procedure TfrmPrintEtiqArt.FormCreate(Sender: TObject);
 begin
   inherited;
   FCodigosTarifa := TStringList.Create;
-  FLayout := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
+  FLayout := TLayoutLoader.Create(Self.Name, ContextoSesion, PerfilesUsuario);
   dtFechaAplicacion.Date := Date;
 end;
 

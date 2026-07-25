@@ -65,9 +65,9 @@ var
   frm: TfrmMtoRemesasCompra;
 begin
   inherited;
-  unqryTablaG.Connection := inLibGlobalVar.oConn;
-  unqryEfectosRemesa.Connection := inLibGlobalVar.oConn;
-  unqryBancosEmpresa.Connection := inLibGlobalVar.oConn;
+  unqryTablaG.Connection := oConn;
+  unqryEfectosRemesa.Connection := oConn;
+  unqryBancosEmpresa.Connection := oConn;
   frm := GetOwnerForm<TfrmMtoRemesasCompra>;
   if frm <> nil then
   begin
@@ -144,7 +144,7 @@ var
 begin
   sp := TUniStoredProc.Create(nil);
   try
-    sp.Connection := inLibGlobalVar.oConn;
+    sp.Connection := oConn;
     sp.StoredProcName := 'PRC_REMC_RECALCULAR';
     sp.Params.Clear;
     sp.Params.CreateParam(ftString, 'p_SERIE', ptInput);
@@ -169,7 +169,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     q.SQL.Text :=
       'SELECT COUNT(e.NUMERO_EFEC) AS EFECTOS, ' +
       '       COALESCE(r.TOTAL_REMC, 0) AS TOTAL, ' +
@@ -225,7 +225,7 @@ begin
         ' WHERE SERIE_REMC = :serie ' +
         '   AND NUMERO_REMC = :numero';
     q.ParamByName('estado').AsString := sEstado;
-    q.ParamByName('usuario').AsString := oUser;
+    q.ParamByName('usuario').AsString := IdentidadSesion.Usuario;
     q.ParamByName('serie').AsString := ASerie;
     q.ParamByName('numero').AsString := ANumero;
     q.ExecSQL;
@@ -245,7 +245,7 @@ begin
   begin
     sp := TUniStoredProc.Create(nil);
     try
-      sp.Connection := inLibGlobalVar.oConn;
+      sp.Connection := oConn;
       sp.StoredProcName := 'PRC_EFEC_CONCILIAR_PAGO';
       sp.Params.Clear;
       sp.Params.CreateParam(ftString, 'p_SERIE', ptInput);
@@ -266,7 +266,7 @@ begin
       sp.ParamByName('p_TIPO').AsString := ATipo;
       sp.ParamByName('p_REFERENCIA').AsString := AReferencia;
       sp.ParamByName('p_ENTIDAD').AsString := AEntidad;
-      sp.ParamByName('p_USUARIO').AsString := oUser;
+      sp.ParamByName('p_USUARIO').AsString := IdentidadSesion.Usuario;
       sp.ExecProc;
       Result := sp.ParamByName('p_RESULTADO').AsInteger;
     finally
@@ -329,7 +329,7 @@ begin
     fResto := AImporte;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := oConn;
       q.SQL.Text :=
         'SELECT SERIE_FACC_EFEC, NUMERO_FACC_EFEC, NUMERO_EFEC, ' +
         '       COALESCE(IMPORTE_PENDIENTE_EFEC, 0) AS PENDIENTE ' +
@@ -390,7 +390,7 @@ begin
     sNumeroRem := unqryTablaG.FieldByName('NUMERO_REMC').AsString;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := oConn;
       q.SQL.Text :=
         'UPDATE fza_efectos_compra ' +
         '   SET SERIE_REMC_EFEC = NULL, ' +
@@ -406,7 +406,7 @@ begin
         '   AND NUMERO_EFEC = :num_efec ' +
         '   AND SERIE_REMC_EFEC = :serie_rem ' +
         '   AND NUMERO_REMC_EFEC = :numero_rem';
-      q.ParamByName('usuario').AsString := oUser;
+      q.ParamByName('usuario').AsString := IdentidadSesion.Usuario;
       q.ParamByName('serie_fac').AsString :=
         ds.FieldByName('SERIE_FACC_EFEC').AsString;
       q.ParamByName('numero_fac').AsString :=
@@ -442,13 +442,13 @@ begin
   begin
     sSerieRem := unqryTablaG.FieldByName('SERIE_REMC').AsString;
     sNumeroRem := unqryTablaG.FieldByName('NUMERO_REMC').AsString;
-    bTxOwned := not inLibGlobalVar.oConn.InTransaction;
+    bTxOwned := not oConn.InTransaction;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := oConn;
       try
         if bTxOwned then
-          inLibGlobalVar.oConn.StartTransaction;
+          oConn.StartTransaction;
         // 1. Desvincular los efectos de la remesa y restaurar su estado.
         q.SQL.Text :=
           'UPDATE fza_efectos_compra ' +
@@ -462,7 +462,7 @@ begin
           '       USUARIO_MODIF = :usuario ' +
           ' WHERE SERIE_REMC_EFEC = :serie ' +
           '   AND NUMERO_REMC_EFEC = :numero';
-        q.ParamByName('usuario').AsString := oUser;
+        q.ParamByName('usuario').AsString := IdentidadSesion.Usuario;
         q.ParamByName('serie').AsString := sSerieRem;
         q.ParamByName('numero').AsString := sNumeroRem;
         q.ExecSQL;
@@ -477,10 +477,10 @@ begin
         q.ExecSQL;
         Result := q.RowsAffected > 0;
         if bTxOwned then
-          inLibGlobalVar.oConn.Commit;
+          oConn.Commit;
       except
-        if bTxOwned and inLibGlobalVar.oConn.InTransaction then
-          inLibGlobalVar.oConn.Rollback;
+        if bTxOwned and oConn.InTransaction then
+          oConn.Rollback;
         raise;
       end;
     finally
@@ -507,7 +507,7 @@ begin
     sNumeroRem := unqryTablaG.FieldByName('NUMERO_REMC').AsString;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := oConn;
       q.SQL.Text :=
         'UPDATE fza_remesas_compra ' +
         '   SET ENTIDAD_REMC = :entidad, ' +
@@ -529,7 +529,7 @@ begin
         unqryBancosEmpresa.FieldByName('CUENTA_EMPBAN').AsString;
       q.ParamByName('iban').AsString :=
         unqryBancosEmpresa.FieldByName('IBAN_EMPBAN').AsString;
-      q.ParamByName('usuario').AsString := oUser;
+      q.ParamByName('usuario').AsString := IdentidadSesion.Usuario;
       q.ParamByName('serie').AsString := sSerieRem;
       q.ParamByName('numero').AsString := sNumeroRem;
       q.ExecSQL;
@@ -544,7 +544,7 @@ begin
       q.ParamByName('codigo').AsString := ACodigoEmpban;
       q.ParamByName('iban').AsString :=
         unqryBancosEmpresa.FieldByName('IBAN_EMPBAN').AsString;
-      q.ParamByName('usuario').AsString := oUser;
+      q.ParamByName('usuario').AsString := IdentidadSesion.Usuario;
       q.ParamByName('serie').AsString := sSerieRem;
       q.ParamByName('numero').AsString := sNumeroRem;
       q.ExecSQL;
@@ -567,7 +567,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := oConn;
       q.SQL.Text :=
         'UPDATE fza_remesas_compra ' +
         '   SET FECHA_CARGO_REMC = :fecha, ' +
@@ -576,7 +576,7 @@ begin
         ' WHERE SERIE_REMC = :serie ' +
         '   AND NUMERO_REMC = :numero';
       q.ParamByName('fecha').AsDateTime := AFecha;
-      q.ParamByName('usuario').AsString := oUser;
+      q.ParamByName('usuario').AsString := IdentidadSesion.Usuario;
       q.ParamByName('serie').AsString :=
         unqryTablaG.FieldByName('SERIE_REMC').AsString;
       q.ParamByName('numero').AsString :=

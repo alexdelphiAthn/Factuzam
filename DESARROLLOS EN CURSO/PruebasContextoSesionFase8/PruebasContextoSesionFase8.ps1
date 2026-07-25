@@ -13,7 +13,6 @@ $rutaPerfiles = Join-Path $raiz 'src\DataModules\UniDataPerfiles.pas'
 $rutaFiltros = Join-Path $raiz 'src\DataModules\UniDataFiltros.pas'
 $contrato = Get-Content -Raw -LiteralPath $rutaContrato
 $contexto = Get-Content -Raw -LiteralPath $rutaContexto
-$adaptador = Get-Content -Raw -LiteralPath $rutaAdaptador
 $baseForm = Get-Content -Raw -LiteralPath $rutaBaseForm
 $baseDatos = Get-Content -Raw -LiteralPath $rutaBaseDatos
 $principal = Get-Content -Raw -LiteralPath $rutaPrincipal
@@ -54,9 +53,8 @@ Comprobar (
     ($contexto -notmatch 'inLibGlobalVar')
   ) 'La implementación es sincronizada y no depende de globales'
 Comprobar (
-    ($adaptador -match 'TContextoSesionGlobal') -and
-    ($adaptador -match 'SincronizarGlobales')
-  ) 'El puente global está aislado en un adaptador de transición'
+    (-not (Test-Path -LiteralPath $rutaAdaptador))
+  ) 'El puente global transitorio queda retirado tras completar X-C'
 Comprobar (
     ($baseForm -match 'IProveedorContextoSesion') -and
     ($baseForm -match 'HeredarContextoSesion\(AOwner\)')
@@ -67,7 +65,7 @@ Comprobar (
   ) 'TdmBase publica y hereda el contexto'
 Comprobar (
     ($proyecto -match
-      'TContextoSesionGlobal\.Create\(\s*' +
+      'TContextoSesionAplicacion\.Create\(\s*' +
       'ResultadoInicioSesion\.Identidad,\s*' +
       'ResultadoInicioSesion\.Ubicacion\)') -and
     ($principal -match

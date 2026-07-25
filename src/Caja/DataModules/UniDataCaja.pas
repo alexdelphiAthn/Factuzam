@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataCaja                                                   }
 {    Tipo:       Data Module                                                   }
@@ -19,7 +19,8 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.ExtCtrls, Data.DB, Datasnap.Provider,
   Datasnap.DBClient, Uni, MemDS, DBAccess, system.Math, UniDataGen,
-  inLibGlobalVar, system.StrUtils, inLibFaseCobro, Windows;
+  inLibGlobalVar, system.StrUtils, inLibFaseCobro, Windows,
+  inLibContextoSesionIntf;
 
 type
   TDatosCabeceraFactura = record
@@ -156,6 +157,8 @@ type
     // necesitan fiables: cdsCabecera puede quedar con SERIE_FAC='0'.
     FUltSerieFacGrabada:  string;
     FUltNumeroFacGrabada: string;
+    FContextoSesion: IContextoSesionAplicacion;
+    function GetIdentidadSesion: TIdentidadSesion;
     procedure InsertarMovimientoAlmacen(
                           QryTrx:     TUniQuery;
                           ATipoDoc:   string;
@@ -309,6 +312,10 @@ type
     procedure TransformarLineasParaCobroParcial(cdsLineas: TDataSet;
                                                 DineroEntregado: Currency);
   public
+    constructor Create(AOwner: TComponent); override;
+    procedure AsignarContextoSesion(
+      const AContextoSesion: IContextoSesionAplicacion);
+    property IdentidadSesion: TIdentidadSesion read GetIdentidadSesion;
     procedure CargarDepositosCliente(const ACodigoCliente: string);
     function GenerarSkuFinal(ArticuloBase: string): string;
     procedure MarcarValeComoCanjeado(QryTrx:           TUniQuery;
@@ -420,6 +427,30 @@ uses inLibtb,
      inLibLicenciaAplicacion;
 
 {$R *.dfm}
+
+constructor TdmCajaOpe.Create(AOwner: TComponent);
+var
+  ProveedorContexto: IProveedorContextoSesion;
+begin
+  FContextoSesion := nil;
+  if Supports(AOwner, IProveedorContextoSesion, ProveedorContexto) then
+    FContextoSesion := ProveedorContexto.ContextoSesion;
+  inherited Create(AOwner);
+end;
+
+procedure TdmCajaOpe.AsignarContextoSesion(
+  const AContextoSesion: IContextoSesionAplicacion);
+begin
+  FContextoSesion := AContextoSesion;
+end;
+
+function TdmCajaOpe.GetIdentidadSesion: TIdentidadSesion;
+begin
+  if not Assigned(FContextoSesion) then
+    raise Exception.Create(
+      'No se ha configurado el contexto de sesión del módulo de caja.');
+  Result := FContextoSesion.Identidad;
+end;
 
 function LeerCabecera(cdsCabecera:TDataset): TDatosCabeceraFactura;
 begin
@@ -549,7 +580,7 @@ var
 begin
   QryDep := TUniQuery.Create(nil);
   try
-    QryDep.Connection := inLibGlobalVar.oConn;
+    QryDep.Connection := oConn;
     QryDep.SQL.Text :=
         'SELECT d.ID_DEPOSITO_DEP, '           +
         '       d.CODIGO_ART_DEP, '       +
@@ -924,7 +955,7 @@ var
 begin
   sNumeroMov := Trim(ANumeroMovimiento);
   if sNumeroMov = '' then
-    sNumeroMov := ObtenerSiguienteContador('MV');
+    sNumeroMov := ObtenerSiguienteContador('MV', IdentidadSesion.Usuario);
   uspMov := TUniStoredProc.Create(nil);
   try
     uspMov.Connection := QryTrx.Connection;
@@ -1225,7 +1256,9 @@ begin
   end;
   if not HayNovedad then
   begin
-    ImprimirRecordatorio(Cab.CodigoCliente, oNomImpresoraCaja);
+    ImprimirRecordatorio(FContextoSesion.Ubicacion.Empresa,
+      Cab.CodigoCliente,
+      oNomImpresoraCaja);
     Result := True;
     Exit;
   end;
@@ -1303,7 +1336,7 @@ begin
          FormatDateTime('dd/mm/yyyy', Cab.Fecha)]);
   end;
   if RequiereFactura and oLicenciaAplicacionComprobada then
-    ValidarLimiteDemoFacturas(inLibGlobalVar.oConn,
+    ValidarLimiteDemoFacturas(oConn,
                               oLicenciaAplicacionEstado,
                               Cab.Fecha);
   if DatosCobro.ImporteEntregado <
@@ -1319,13 +1352,13 @@ begin
   // =======================================================================
   // INICIO DE LA TRANSACCIÓN GLOBAL EN BASE DE DATOS
   // =======================================================================
-  inLibGlobalVar.oConn.StartTransaction;
+  oConn.StartTransaction;
   var sOpeCaja := SiguienteOpCaja(AEmpresa, AAlmacen, ACaja, UsuarioCaja);
   NumOperacionVE := sOpeCaja;
   NumeroGenerado := sOpeCaja;
   QryTrx := TUniQuery.Create(nil);
   try try
-    QryTrx.Connection := inLibGlobalVar.oConn;
+    QryTrx.Connection := oConn;
     // =======================================================================
     // PASO 1 Y 3: NÚMERO Y CABECERA (SOLO SI REQUIERE FACTURA)
     // =======================================================================
@@ -1339,7 +1372,7 @@ begin
       begin
         uspQryTrx := TUniStoredProc.Create(nil);
         try
-          uspQryTrx.Connection := inLibGlobalVar.oConn;
+          uspQryTrx.Connection := oConn;
           uspQryTrx.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
           uspQryTrx.Prepare;
           uspQryTrx.ParamByName('pserie').AsString   := SerieGenerada;
@@ -1468,7 +1501,7 @@ begin
         // CASO D: VENTA NORMAL O COBRO TOTAL DE DEPÓSITO EXISTENTE
         // -------------------------------------------------------------------
         if Lin.TipoArticulo = 'ESTANDAR' then
-          NumMovGenerado := ObtenerSiguienteContador('MV')
+          NumMovGenerado := ObtenerSiguienteContador('MV', IdentidadSesion.Usuario)
         else
           NumMovGenerado := '';
         if Lin.VieneDeDeposito = 'S' then
@@ -1576,13 +1609,14 @@ begin
     begin
       case ModoVerifactu of
         mvVerifactu:
-          TVerifactuCola.EncolarFactura(QryTrx, SerieGenerada, NumFactura);
+          TVerifactuCola.EncolarFactura(QryTrx, IdentidadSesion.Usuario,
+            SerieGenerada, NumFactura);
         mvNoVerifactu:
-          TVerifactuCola.RegistrarFacturaNoVerifactu(QryTrx, SerieGenerada,
-                                                     NumFactura);
+          TVerifactuCola.RegistrarFacturaNoVerifactu(QryTrx,
+            IdentidadSesion.Usuario, SerieGenerada, NumFactura);
       else
-        TVerifactuCola.MarcarFacturaSinVerifactu(QryTrx, SerieGenerada,
-                                                 NumFactura);
+        TVerifactuCola.MarcarFacturaSinVerifactu(QryTrx,
+          IdentidadSesion.Usuario, SerieGenerada, NumFactura);
       end;
     end;
     // =======================================================================
@@ -1673,7 +1707,7 @@ begin
     // =======================================================================
     // CONFIRMAR
     // =======================================================================
-    inLibGlobalVar.oConn.Commit;
+    oConn.Commit;
     if TieneDepositosPendientes and (sOpeCaja <> '') then
     begin
       ImprimirResguardoDeposito(AEmpresa,
@@ -1681,7 +1715,9 @@ begin
                                 ACaja,
                                 sOpeCaja,
                                 oNomImpresoraCaja);
-      ImprimirRecordatorio(Cab.CodigoCliente, oNomImpresoraCaja);
+      ImprimirRecordatorio(FContextoSesion.Ubicacion.Empresa,
+        Cab.CodigoCliente,
+        oNomImpresoraCaja);
     end;
     try
       cdsLineas.DisableControls;
@@ -1701,7 +1737,7 @@ begin
   except
     on E: Exception do
     begin
-      inLibGlobalVar.oConn.Rollback;
+      oConn.Rollback;
       raise Exception.Create(
         'Error al guardar el ticket. No se ha registrado la operación.' +
         sLineBreak + 'Motivo: ' + E.Message);
@@ -1814,7 +1850,7 @@ begin
   QryTrx.ParamByName('IMPORTEDIVISA').AsFloat := AImporteDivisa;
   QryTrx.ParamByName('REFERENCIA').AsString:= AReferencia;
   QryTrx.ParamByName('OBS').AsString       := AObservaciones;
-  QryTrx.ParamByName('USUARIO').AsString   := inLibGlobalVar.oUser;
+  QryTrx.ParamByName('USUARIO').AsString   := IdentidadSesion.Usuario;
   QryTrx.Execute;
 end;
 
@@ -1949,7 +1985,7 @@ begin
   QryTrx.ParamByName('EMPCONTRA').AsString:= AEmpresaContra;
   QryTrx.ParamByName('ALMCONTRA').AsString:= AAlmContra;
   QryTrx.ParamByName('ESTRASPASO').AsString := AEsTraspaso;
-  QryTrx.ParamByName('USUARIO').AsString  := inLibGlobalVar.oUser;
+  QryTrx.ParamByName('USUARIO').AsString  := IdentidadSesion.Usuario;
   QryTrx.ParamByName('DEP').AsString  := AIdDeposito;
   QryTrx.Execute;
 end;
@@ -2346,7 +2382,7 @@ begin
   QryTrx.ParamByName('numop').AsString     := ANumOperacion;
   QryTrx.ParamByName('serie').AsString     := ASerie;
   QryTrx.ParamByName('numfac').AsString    := ANumFactura;
-  QryTrx.ParamByName('usuario').AsString   := inLibGlobalVar.oUser;
+  QryTrx.ParamByName('usuario').AsString   := IdentidadSesion.Usuario;
   QryTrx.Execute;
   // Validar que se haya marcado realmente el vale.
   // Si RowsAffected = 0, el vale no existe, ya estaba redimido, o el codigo

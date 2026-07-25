@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaPagosHist                                            }
 {    Tipo:       Formulario (Mto)                                              }
@@ -257,7 +257,7 @@ begin
     Result := Result + ' AND YEAR(FECHA_PAGO) IN (' + sAnyos + ')';
   // Restricción por usuario (appRestringirEmpAlmCaja): acota a su
   // empresa/almacén/caja por encima del filtro de años.
-  Result := Result + SqlFiltroEmpAlmCaja('CODIGO_EMP_PAGO',
+  Result := Result + SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_PAGO',
                                          'CODIGO_ALM_PAGO',
                                          'CODIGO_CAJA_PAGO');
 end;

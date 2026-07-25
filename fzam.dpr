@@ -42,7 +42,6 @@ uses
   inLibConfigCampos in 'src\Lib\inLibConfigCampos.pas',
   inLibContextoSesionIntf in 'src\Lib\inLibContextoSesionIntf.pas',
   inLibContextoSesion in 'src\Lib\inLibContextoSesion.pas',
-  inLibContextoSesionGlobal in 'src\Lib\inLibContextoSesionGlobal.pas',
   inLibFiltrosGuardadosIntf in 'src\Lib\inLibFiltrosGuardadosIntf.pas',
   inLibPerfilesUsuarioIntf in 'src\Lib\inLibPerfilesUsuarioIntf.pas',
   inLibConexionesIntf in 'src\Lib\inLibConexionesIntf.pas',
@@ -405,10 +404,9 @@ begin
       ResultadoInicioSesion := frmLogon.ResultadoInicioSesion;
       if ResultadoInicioSesion.Autenticado then
       begin
-        AContextoSesion :=
-          TContextoSesionGlobal.Create(
-            ResultadoInicioSesion.Identidad,
-            ResultadoInicioSesion.Ubicacion);
+        AContextoSesion := TContextoSesionAplicacion.Create(
+          ResultadoInicioSesion.Identidad,
+          ResultadoInicioSesion.Ubicacion);
         Result := True;
       end;
     end;

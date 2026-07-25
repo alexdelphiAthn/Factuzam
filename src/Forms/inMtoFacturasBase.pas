@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFacturasBase                                             }
 {    Tipo:       Formulario (Mto)                                              }
@@ -1285,7 +1285,7 @@ begin
     sEmp  := dsTablaG.DataSet.FieldByName('CODIGO_EMP_FAC').AsString;
     sCli  := dsTablaG.DataSet.FieldByName('CODIGO_CLI_FAC').AsString;
     sPref := dmmFacturas.GetBancoDefectoCliente(sCli);
-    selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, inLibGlobalVar.oConn,
+    selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, oConn,
                                                    sEmp, ubeCobro, sPref);
     if not selBanco.Aceptado then
       ShowMessage('Generación de ' + TextoCobroPlural + ' cancelada.')
@@ -1313,7 +1313,7 @@ begin
                                dsTablaG.DataSet.FieldByName(fnrofac).AsString;
           ParamByName('pSERIE_FACTURA').AsString :=
                              dsTablaG.DataSet.FieldByName(fseriefac).AsString;
-          ParamByName('pUSUARIO').AsString := oUser;
+          ParamByName('pUSUARIO').AsString := IdentidadSesion.Usuario;
           ExecProc;
           dmmFacturas.unqryRecibos.Close;
           dmmFacturas.unqryRecibos.Open;
@@ -1536,7 +1536,7 @@ begin
       try
         q := TUniQuery.Create(nil);
         try
-          q.Connection := inLibGlobalVar.oConn;
+          q.Connection := oConn;
           q.SQL.Text :=
             'SELECT a.ESVARIACION_ART, ' +
             '       (SELECT COUNT(*) FROM fza_articulos_skus s ' +
@@ -1705,7 +1705,7 @@ begin
   try
     Combo.Properties.Items.Clear;
     if CodArt = '' then Exit;
-    Resolver := TArticulosResolver.Create(inLibGlobalVar.oConn);
+    Resolver := TArticulosResolver.Create(oConn);
     try
       Skus := Resolver.ListarSkus(CodArt);
       for Item in Skus do
@@ -1776,8 +1776,8 @@ begin
                                        'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
     FechaFac  := dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
 
-    Validador := TArticulosValidador.Create(inLibGlobalVar.oConn);
-    Resolver := TArticulosResolver.Create(inLibGlobalVar.oConn);
+    Validador := TArticulosValidador.Create(oConn);
+    Resolver := TArticulosResolver.Create(oConn);
     Resolucion := Validador.Resolver(CodSku);
     if Resolucion.Encontrado and (Resolucion.CodigoSku <> '') then
     begin
@@ -2086,7 +2086,7 @@ begin
   sSerie := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM fza_facturas_lineas ' +
@@ -2114,7 +2114,7 @@ begin
   Qry := TUniQuery.Create(nil);
   try
     try
-      Qry.Connection := inLibGlobalVar.oConn;
+      Qry.Connection := oConn;
       Qry.SQL.Text :=
         ' SELECT COUNT(*) AS N ' +
         '   FROM INFORMATION_SCHEMA.COLUMNS ' +
@@ -2148,7 +2148,7 @@ begin
   // facturas de su empresa/almacén/caja (fza_usuarios). Aplica a las
   // dos variantes; simplificadas además lo integra en su
   // ConstruirWhereFacturas al recomponer la SQL con filtros propios.
-  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_FAC',
+  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_FAC',
                                 'CODIGO_ALM_FAC',
                                 'CODIGO_CAJA_FAC');
 end;
@@ -2319,27 +2319,28 @@ begin
     end;
     Qry := TUniQuery.Create(nil);
     try
-      Qry.Connection := inLibGlobalVar.oConn;
+      Qry.Connection := oConn;
       case ModoVerifactu of
         mvVerifactu:
-          TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero,
-                                        ATipoOperacion,
-                                        bBorrarMovimientos);
+          TVerifactuCola.EncolarFactura(Qry,
+            IdentidadSesion.Usuario, sSerie, sNumero, ATipoOperacion,
+            bBorrarMovimientos);
         mvNoVerifactu:
-          TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, sSerie, sNumero,
-                                                     ATipoOperacion,
-                                                     bBorrarMovimientos);
+          TVerifactuCola.RegistrarFacturaNoVerifactu(Qry,
+            IdentidadSesion.Usuario, sSerie, sNumero, ATipoOperacion,
+            bBorrarMovimientos);
       else
-        TVerifactuCola.MarcarFacturaSinVerifactu(Qry, sSerie, sNumero,
-                                                 ATipoOperacion,
-                                                 bBorrarMovimientos);
+        TVerifactuCola.MarcarFacturaSinVerifactu(Qry,
+          IdentidadSesion.Usuario, sSerie, sNumero, ATipoOperacion,
+          bBorrarMovimientos);
       end;
     finally
       FreeAndNil(Qry);
     end;
     if VerifactuActivo then
     begin
-      RegistrarEventoVerifactu(inLibGlobalVar.oConn,
+      RegistrarEventoVerifactu(oConn,
+        IdentidadSesion.Usuario,
         cEventoVerifactuEncolado,
         AAccion + ' encolada desde Borradores', '', sSerie, sNumero);
       ShowMessage(AAccion + ' encolada: el hilo Verifactu la enviará en ' +
@@ -2393,20 +2394,24 @@ begin
   begin
       Qry := TUniQuery.Create(nil);
       try
-        Qry.Connection := inLibGlobalVar.oConn;
+        Qry.Connection := oConn;
       case ModoVerifactu of
         mvVerifactu:
-          TVerifactuCola.EncolarFactura(Qry, sSerie, sNumero);
+          TVerifactuCola.EncolarFactura(Qry,
+            IdentidadSesion.Usuario, sSerie, sNumero);
         mvNoVerifactu:
-          TVerifactuCola.RegistrarFacturaNoVerifactu(Qry, sSerie, sNumero);
+          TVerifactuCola.RegistrarFacturaNoVerifactu(Qry,
+            IdentidadSesion.Usuario, sSerie, sNumero);
       else
-        TVerifactuCola.MarcarFacturaSinVerifactu(Qry, sSerie, sNumero);
+        TVerifactuCola.MarcarFacturaSinVerifactu(Qry,
+          IdentidadSesion.Usuario, sSerie, sNumero);
       end;
     finally
       FreeAndNil(Qry);
     end;
     if VerifactuActivo then
-      RegistrarEventoVerifactu(inLibGlobalVar.oConn,
+      RegistrarEventoVerifactu(oConn,
+        IdentidadSesion.Usuario,
         cEventoVerifactuEncolado,
         'Lanzamiento manual (Consolidar) desde Borradores', '',
         sSerie, sNumero);
@@ -2465,9 +2470,9 @@ begin
   begin
     Qry := TUniQuery.Create(nil);
     try
-      inLibGlobalVar.oConn.StartTransaction;
+      oConn.StartTransaction;
       try
-        Qry.Connection := inLibGlobalVar.oConn;
+        Qry.Connection := oConn;
         // Bloquear la fila ALTA de la cola: si el hilo la está
         // enviando (PROCESANDO) o ya la envió (ENVIADA) no se puede
         // deshacer
@@ -2512,7 +2517,7 @@ begin
             '    AND TIPO_OPERACION_VFCOLA = ''ALTA''';
           Qry.ParamByName('SERIE').AsString   := sSerie;
           Qry.ParamByName('NUMERO').AsString  := sNumero;
-          Qry.ParamByName('USUARIO').AsString := oUser;
+          Qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
           Qry.Execute;
         end;
         Qry.SQL.Text :=
@@ -2525,13 +2530,13 @@ begin
           '    AND ESCONSOLIDADA_FAC <> ''S''';
         Qry.ParamByName('SERIE').AsString   := sSerie;
         Qry.ParamByName('NUMERO').AsString  := sNumero;
-        Qry.ParamByName('USUARIO').AsString := oUser;
+        Qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
         Qry.Execute;
-        inLibGlobalVar.oConn.Commit;
+        oConn.Commit;
       except
         on E: Exception do
         begin
-          inLibGlobalVar.oConn.Rollback;
+          oConn.Rollback;
           ShowMessage(E.Message);
           Abort;
         end;
@@ -2539,12 +2544,13 @@ begin
     finally
       FreeAndNil(Qry);
     end;
-    RegistrarEventoVerifactu(inLibGlobalVar.oConn,
+    RegistrarEventoVerifactu(oConn,
+      IdentidadSesion.Usuario,
       cEventoVerifactuInfo,
       'Lanzamiento anulado: borrador devuelto a BORRADOR', '',
       sSerie, sNumero);
-    TVentasWsCola.RegistrarEventoSeguro(inLibGlobalVar.oConn,
-      'VENTA_REABIERTA', sSerie, sNumero);
+    TVentasWsCola.RegistrarEventoSeguro(oConn,
+      IdentidadSesion.Usuario, 'VENTA_REABIERTA', sSerie, sNumero);
     dsTablaG.DataSet.Refresh;
     ShowMessage('Borrador ' + sSerie + '\' + sNumero + ' de nuevo en ' +
                 'BORRADOR. Corrija los datos (si el error es de la ' +
@@ -3009,8 +3015,8 @@ begin
                                        'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
   FechaFac  := dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
 
-  Validador := TArticulosValidador.Create(inLibGlobalVar.oConn);
-  Resolver  := TArticulosResolver.Create(inLibGlobalVar.oConn);
+  Validador := TArticulosValidador.Create(oConn);
+  Resolver  := TArticulosResolver.Create(oConn);
   try
     Resolucion := Validador.Resolver(sInput);
     if not Resolucion.Encontrado then Exit;
@@ -3590,7 +3596,7 @@ begin
       begin
         CfgPV := Default(TGridPivoteVentaConfig);
         CfgPV.Conexion := dmmFacturas.unqryTablaG.Connection;
-        CfgPV.Usuario := oUser;
+        CfgPV.Usuario := IdentidadSesion.Usuario;
         CfgPV.SourceMaster := dsTablaG;
         CfgPV.SourceLineas := dmmFacturas.dsLinFac;
         CfgPV.FieldSerieMaster := 'SERIE_FAC';
@@ -3995,8 +4001,8 @@ begin
     if not dmmFacturas.unqryTablaG.FindField('FECHA_FAC').IsNull then
       FechaFac := dmmFacturas.unqryTablaG.
                     FindField('FECHA_FAC').AsDateTime;
-    Validador := TArticulosValidador.Create(inLibGlobalVar.oConn);
-    Resolver := TArticulosResolver.Create(inLibGlobalVar.oConn);
+    Validador := TArticulosValidador.Create(oConn);
+    Resolver := TArticulosResolver.Create(oConn);
     Resolucion := Validador.Resolver(Trim(AEntrada));
     if not Resolucion.Encontrado then
       Exit;

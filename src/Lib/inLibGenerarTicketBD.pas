@@ -50,7 +50,8 @@ uses
                                   const ANombreImpresora: string = 'DEBUG';
                                   ARutasPDF: TStrings = nil;
                                   ASoloPDF: Boolean = False);
-  procedure ImprimirRecordatorio(CodigoCliente:string;
+  procedure ImprimirRecordatorio(const ACodigoEmpresa: string;
+                                 CodigoCliente:string;
                                  NombreImpresora:string='DEBUG';
                                  ARutasPDF: TStrings = nil;
                                  ASoloPDF: Boolean = False);
@@ -682,7 +683,8 @@ begin
   end;
 end;
 
-procedure ImprimirRecordatorio(CodigoCliente:   string;
+procedure ImprimirRecordatorio(const ACodigoEmpresa: string;
+                               CodigoCliente:   string;
                                NombreImpresora: string = 'DEBUG';
                                ARutasPDF: TStrings = nil;
                                ASoloPDF: Boolean = False);
@@ -709,7 +711,7 @@ begin
         'SELECT CODIGO_EMP_EMP, RAZON_SOCIAL_EMP ' +
         '  FROM fza_empresas ' +
         ' WHERE CODIGO_EMP_EMP = :EMP';
-      QryEmp.ParamByName('EMP').AsString := oEmpresa;
+      QryEmp.ParamByName('EMP').AsString := ACodigoEmpresa;
       QryEmp.Open;
       if not QryEmp.IsEmpty then
       begin

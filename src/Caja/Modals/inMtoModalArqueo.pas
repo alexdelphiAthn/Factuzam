@@ -1369,13 +1369,14 @@ begin
       sDesglose,
       sObs,
       sVendedor,
-      oUser);
+      IdentidadSesion.Usuario);
   finally
     Screen.Cursor := crDefault;
   end;
   { Justificante del cierre }
   TArqueoTicket.ImprimirCierre(
     FConn,
+    ContextoSesion,
     FArqueoActual,
     Lineas,
     dTotalSistema,

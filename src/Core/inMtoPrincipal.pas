@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoPrincipal                                                }
 {    Tipo:       Formulario (Core)                                             }
@@ -427,14 +427,16 @@ begin
   end;
 end;
 
-procedure RegistrarEventoFiscalSeguro(ATipoEvento: Integer;
+procedure RegistrarEventoFiscalSeguro(const AUsuario: string;
+                                      ATipoEvento: Integer;
                                       const ADescripcion: string);
 begin
   if PuedeRegistrarEventoFiscalSeguro(ATipoEvento, ADescripcion) then
   begin
     try
       if oConn <> nil then
-        RegistrarEventoVerifactu(oConn, ATipoEvento, ADescripcion);
+        RegistrarEventoVerifactu(oConn, AUsuario, ATipoEvento,
+          ADescripcion);
     except
       on E: Exception do
         inLibLog.Log.LogError('No se pudo registrar evento fiscal "' +
@@ -710,7 +712,8 @@ begin
     IdentidadActual.Usuario,
     IdentidadActual.Grupo);
   try
-    SincronizarVersionInstalacionesSif(oConn);
+    SincronizarVersionInstalacionesSif(oConn,
+      IdentidadSesion.Usuario);
   except
     on E: Exception do
       inLibLog.Log.LogWarning('No se pudo sincronizar la versión SIF: ' +
@@ -734,15 +737,15 @@ begin
   // Cache de unidades de medida: decimales por unidad y factores de
   // conversion. La usan ficha de articulo, lineas de documento e informes.
   oUnidades.Cargar;
-  oNomImpresoraCaja := GetImpresoraCaja;
+  oNomImpresoraCaja := GetImpresoraCaja(ContextoSesion);
   // Trazar la impresora resuelta: si queda '' o 'DEBUG', el F9 global de
   // abrir cajon no se activa fuera de caja (ver ImpresoraCajaAsignada).
   inLibLog.Log.LogInfo('Arranque: impresora de caja resuelta = "' +
                        oNomImpresoraCaja + '"');
   // Hilo de la cola Verifactu: arranca siempre; cada ciclo consulta el
   // parámetro appVerifactuActivo, así puede activarse sin reiniciar
-  TVerifactuCola.IniciarHilo(Conexiones);
-  TVentasWsCola.IniciarHilo(Conexiones);
+  TVerifactuCola.IniciarHilo(Conexiones, IdentidadSesion.Usuario);
+  TVentasWsCola.IniciarHilo(Conexiones, IdentidadSesion.Usuario);
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
   if IdentidadActual.EsAdministrador then
@@ -784,7 +787,8 @@ begin
   Self.OnResize := FormResize;
   ActualizarFondoLogo;
   inLibLog.Log.LogInfo('Arranque del sistema');
-  RegistrarEventoFiscalSeguro(cEventoNoVerifactuInicio,
+  RegistrarEventoFiscalSeguro(IdentidadSesion.Usuario,
+    cEventoNoVerifactuInicio,
     'Inicio del sistema');
   // Suelo de visibilidad del splash: si la inicializacion fue mas rapida
   // de 1000 ms, esperamos a llegar a ese minimo para que el usuario
@@ -1487,7 +1491,8 @@ begin
   // nuevo ni tocan formularios en destruccion (ver inMtoGen.EjecutarEnBackground
   // y el destructor de TfrmMtoGen).
   inLibGlobalVar.oCerrandoApp := True;
-  RegistrarEventoFiscalSeguro(cEventoNoVerifactuFin,
+  RegistrarEventoFiscalSeguro(IdentidadSesion.Usuario,
+    cEventoNoVerifactuFin,
     'Cierre del sistema');
   // Parar el hilo de la cola Verifactu antes de liberar las conexiones
   TVentasWsCola.DetenerHilo;
@@ -2007,6 +2012,7 @@ begin
       LForm,
       Permisos,
       PerfilesUsuario,
+      ContextoSesion,
       sArt,
       sSku);
   end;

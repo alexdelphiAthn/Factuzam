@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalGenImp                                              }
 {    Tipo:       Formulario (Modal)                                            }
@@ -656,7 +656,7 @@ begin
         if qryChk.IsEmpty then
         begin
           qryIns.ParamByName('FMT').AsString := aFormato;
-          qryIns.ParamByName('USU').AsString := oUser;
+          qryIns.ParamByName('USU').AsString := IdentidadSesion.Usuario;
           qryIns.ParamByName('INF').AsString := Self.Name;
           qryIns.ParamByName('COD').AsString := sCodigo;
           qryIns.Execute;
@@ -1056,10 +1056,10 @@ begin
                   sPermisos := formularioSave.cbbPermisos.Text;
                   // Borramos cualquier regla anterior para evitar duplicados
                   PerfilesUsuario.EliminarPerfil(
-                    oUser,
+                    IdentidadSesion.Usuario,
                     Self.Name + '_default');
                   PerfilesUsuario.EliminarPerfil(
-                    oGroup,
+                    IdentidadSesion.Grupo,
                     Self.Name + '_default');
                   PerfilesUsuario.EliminarPerfil(
                     oAll,
@@ -1080,10 +1080,10 @@ begin
             if sDefaultSubKey <> '' then
             begin
               PerfilesUsuario.EliminarPerfil(
-                oUser,
+                IdentidadSesion.Usuario,
                 Self.Name + '_default');
               PerfilesUsuario.EliminarPerfil(
-                oGroup,
+                IdentidadSesion.Grupo,
                 Self.Name + '_default');
               PerfilesUsuario.EliminarPerfil(
                 oAll,
@@ -1135,9 +1135,9 @@ begin
     unqrySol.ParamByName('Descripcion').AsString := sElegido;
     unqrySol.Open;
     sUserProp := unqrySol.FindField('USUARIO_GRUPO_USUPER').AsString;
-    if not((inLibGlobalVar.orootGroup = 'S') or
-        (oUser = sUserProp) or
-        (oGroup = sUserProp)) then
+    if not((IdentidadSesion.GrupoRaiz = 'S') or
+        (IdentidadSesion.Usuario = sUserProp) or
+        (IdentidadSesion.Grupo = sUserProp)) then
       ShowMessageFmt('No tiene privilegios suficientes ' +
                      'para borrar el formato de %s. '+
                      'Consulte con el Administrador', [sUserProp])
@@ -1195,8 +1195,8 @@ begin
       ' LIMIT 1';
     qry.ParamByName('FormName').AsString    := Self.Name;
     qry.ParamByName('Descripcion').AsString := aDescripcion;
-    qry.ParamByName('Usuario').AsString     := oUser;
-    qry.ParamByName('Grupo').AsString       := oGroup;
+    qry.ParamByName('Usuario').AsString     := IdentidadSesion.Usuario;
+    qry.ParamByName('Grupo').AsString       := IdentidadSesion.Grupo;
     qry.ParamByName('Todos').AsString       := oAll;
     qry.Open;
     if qry.IsEmpty then
@@ -1248,7 +1248,7 @@ begin
     qry.ParamByName('KEY').AsString    := Self.Name;
     qry.ParamByName('SUB').AsString    := aSubKey;
     qry.ParamByName('VAL').AsString    := aDescripcion;
-    qry.ParamByName('USUACT').AsString := oUser;
+    qry.ParamByName('USUACT').AsString := IdentidadSesion.Usuario;
     aStream.Position := 0;
     qry.ParamByName('BLOB').LoadFromStream(aStream, ftBlob);
     qry.Execute;
@@ -1262,8 +1262,8 @@ begin
   inherited;
   Self.Position := poScreenCenter;
   unqryPerfiles.ParamByName('FormName').AsString := Self.Name;
-  unqryPerfiles.ParamByName('Usuario').AsString := oUser;
-  unqryPerfiles.ParamByName('Grupo').AsString := oGroup;
+  unqryPerfiles.ParamByName('Usuario').AsString := IdentidadSesion.Usuario;
+  unqryPerfiles.ParamByName('Grupo').AsString := IdentidadSesion.Grupo;
   unqryPerfiles.ParamByName('Todos').AsString := oAll;
   unqryPerfiles.KeyFields := 'KEY_USUPER;VALUE_USUPER';
   unqryPerfiles.Open;
@@ -1287,7 +1287,7 @@ begin
     bGuardar     := True;
     sDescripcion := sElegido;
     sPermisos    := FScopePerfilFijado;
-    if sPermisos = '' then sPermisos := oUser;
+    if sPermisos = '' then sPermisos := IdentidadSesion.Usuario;
   end
   else
   begin

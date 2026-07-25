@@ -17,7 +17,7 @@ unit inLibFacturaPdfBlob;
 interface
 
 uses
-  System.SysUtils, Uni;
+  System.SysUtils, Uni, inLibContextoSesionIntf;
 
 /// <summary>
 /// Vuelca el PDF de ARutaPdf en fza_facturas (PDF_FAC, NOMBRE_PDF_FAC,
@@ -28,15 +28,19 @@ uses
 /// consolidación ni la impresión que lo invoca.
 /// </summary>
 procedure GuardarPdfFacturaEnBlob(AConn: TUniConnection;
+                                  const AContextoSesion:
+                                  IContextoSesionAplicacion;
                                   const ASerie, ANumero, ARutaPdf: string;
                                   const AFormato: string = '');
 
 implementation
 
 uses
-  Data.DB, System.Hash, System.IOUtils, inLibGlobalVar, inLibLog;
+  Data.DB, System.Hash, System.IOUtils, inLibLog;
 
 procedure GuardarPdfFacturaEnBlob(AConn: TUniConnection;
+                                  const AContextoSesion:
+                                  IContextoSesionAplicacion;
                                   const ASerie, ANumero, ARutaPdf: string;
                                   const AFormato: string = '');
 var
@@ -73,7 +77,8 @@ begin
         Qry.ParamByName('TAMANO').AsLargeInt := iTamano;
         Qry.ParamByName('HUELLA').AsString := sHuella;
         Qry.ParamByName('FORMATO').AsString := sFormato;
-        Qry.ParamByName('USUARIO').AsString := oUser;
+        Qry.ParamByName('USUARIO').AsString :=
+          AContextoSesion.Identidad.Usuario;
         Qry.ParamByName('SERIE').AsString := ASerie;
         Qry.ParamByName('NUMERO').AsString := ANumero;
         Qry.Execute;

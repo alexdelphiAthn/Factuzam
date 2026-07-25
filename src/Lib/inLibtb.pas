@@ -83,7 +83,8 @@ type
   function HayCoincidencia(str1, str2: string): string;
   procedure AplicarValoresPorDefecto(AunqryDestino: TDataSet;
                                    const NombreTabla: string);
-  function ObtenerSiguienteContador(const ATipoDoc: string): string;
+  function ObtenerSiguienteContador(const ATipoDoc,
+                                    AUsuario: string): string;
   function GetDefaultValue(const ATable,
                                  AField,
                                  AConditionField: string): string;
@@ -568,7 +569,8 @@ begin
   end;
 end;
 
-function ObtenerSiguienteContador(const ATipoDoc: string): string;
+function ObtenerSiguienteContador(const ATipoDoc,
+                                  AUsuario: string): string;
 var
   SP: TUniStoredProc;
 begin
@@ -579,8 +581,8 @@ begin
     SP.StoredProcName := 'PRC_GET_NEXT_CONT';
     SP.Params.Clear;
     SP.Params.CreateParam(ftString, 'pTipoDoc', ptInput).AsString := ATipoDoc;
-    SP.Params.CreateParam(ftString, 'pUSUARIO_MODIF', ptInput).AsString  :=
-                                                           inLibGlobalVar.oUser;
+    SP.Params.CreateParam(ftString, 'pUSUARIO_MODIF', ptInput).AsString :=
+      AUsuario;
     SP.Params.CreateParam(ftString, 'pcont', ptOutput);
     try
       SP.Execute;

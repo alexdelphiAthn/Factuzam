@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoGenSearch                                                }
 {    Tipo:       Formulario (Mto)                                              }
@@ -27,7 +27,7 @@ uses
   cxTextEdit, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, MemDS,
   DBAccess, Uni, cxBlobEdit, dxScrollbarAnnotations, dxCore,
-  cxRadioGroup, JvComponentBase, JvEnterTab, dxShellDialogs, inLibGlobalVar,
+  cxRadioGroup, JvComponentBase, JvEnterTab, dxShellDialogs,
   cxMaskEdit, cxDropDownEdit, inLibtb, inMtoModalAltaRapida, inLibDevExp,
   inLibConfigCampos;
 
@@ -341,9 +341,12 @@ begin
       if ((Trim(sCodigoFinal) = '0') or (Trim(sCodigoFinal) = '')) and
          (FConfigAlta.TipoDocContador <> '') then
       begin
-        sCodigoFinal := ObtenerSiguienteContador(FConfigAlta.TipoDocContador);
+        sCodigoFinal := ObtenerSiguienteContador(
+          FConfigAlta.TipoDocContador,
+          IdentidadSesion.Usuario);
         if sCodigoFinal = '' then
-          raise Exception.Create('No se pudo obtener el contador automático.');
+          raise Exception.Create(
+            'No se pudo obtener el contador automático.');
       end;
       Qry.SQL.Text := 'SELECT * FROM ' + FConfigAlta.Tabla + ' WHERE 1=0';
       Qry.Open;

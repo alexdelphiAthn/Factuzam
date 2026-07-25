@@ -106,7 +106,7 @@ implementation
        inLibWin,
        inLibtb,
        inLibDir,
-       inLibGlobalVar, inLibAppParam, uGenericIfThen,
+       inLibAppParam, uGenericIfThen,
        inLibConfigCampos;
 
 procedure GridRecalc(Sender: TObject;

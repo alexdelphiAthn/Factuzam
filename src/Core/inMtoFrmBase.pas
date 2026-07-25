@@ -78,6 +78,8 @@ type
     function GetAuditoriaDatos: IServicioAuditoriaDatos;
     function GetMonitorSQL: IServicioMonitorSQL;
     function GetContextoSesion: IContextoSesionAplicacion;
+    function GetIdentidadSesion: TIdentidadSesion;
+    function GetUbicacionSesion: TUbicacionSesion;
     function GetFiltrosGuardados: IFiltrosGuardados;
     function GetPerfilesUsuario: IPerfilesUsuario;
     function GetConexionPrincipal: TUniConnection;
@@ -129,6 +131,10 @@ type
     property MonitorSQL: IServicioMonitorSQL read GetMonitorSQL;
     property ContextoSesion: IContextoSesionAplicacion
       read GetContextoSesion;
+    property IdentidadSesion: TIdentidadSesion
+      read GetIdentidadSesion;
+    property UbicacionSesion: TUbicacionSesion
+      read GetUbicacionSesion;
     property FiltrosGuardados: IFiltrosGuardados
       read GetFiltrosGuardados;
     property PerfilesUsuario: IPerfilesUsuario read GetPerfilesUsuario;
@@ -346,6 +352,22 @@ end;
 function TfrmBase.GetContextoSesion: IContextoSesionAplicacion;
 begin
   Result := FContextoSesion;
+end;
+
+function TfrmBase.GetIdentidadSesion: TIdentidadSesion;
+begin
+  if not Assigned(FContextoSesion) then
+    raise Exception.Create(
+      'No se ha configurado el contexto de sesión del formulario.');
+  Result := FContextoSesion.Identidad;
+end;
+
+function TfrmBase.GetUbicacionSesion: TUbicacionSesion;
+begin
+  if not Assigned(FContextoSesion) then
+    raise Exception.Create(
+      'No se ha configurado el contexto de sesión del formulario.');
+  Result := FContextoSesion.Ubicacion;
 end;
 
 function TfrmBase.GetFiltrosGuardados: IFiltrosGuardados;

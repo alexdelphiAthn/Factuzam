@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaOpe                                                  }
 {    Tipo:       Formulario (Mto)                                              }
@@ -619,7 +619,7 @@ begin
     begin
       Close;
       View.ClearItems;
-      Connection := inLibGlobalVar.oConn;
+      Connection := oConn;
       ParamByName('ARTICULO').AsString := sCodigoConsulta;
       swSP := TStopwatch.StartNew;
       Open;
@@ -928,7 +928,7 @@ begin
       // crear/rellenar ninguna linea. Asi decidimos si hay que consolidar (el
       // SKU ya esta en el ticket) sin haber grabado todavia una linea de
       // trabajo, que es justo lo que generaba el duplicado.
-      Validador := TArticulosValidador.Create(inLibGlobalVar.oConn);
+      Validador := TArticulosValidador.Create(oConn);
       try
         Resolucion := Validador.ResolverCodigoBarras(ACodigo);
       finally
@@ -1587,8 +1587,8 @@ begin
   sw := TStopwatch.StartNew;
   msResolver := 0; msStock := 0; msPrecio := 0; msResolverDatos := 0;
 
-  Validador := TArticulosValidador.Create(inLibGlobalVar.oConn);
-  Resolver  := TArticulosResolver.Create(inLibGlobalVar.oConn);
+  Validador := TArticulosValidador.Create(oConn);
+  Resolver  := TArticulosResolver.Create(oConn);
   try
     swStep := TStopwatch.StartNew;
     // Si la entrada viene de la pistola (STX...ETX), resolvemos UNICAMENTE
@@ -1742,7 +1742,7 @@ begin
   FechaFactura := DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime;
   CodArt       := DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
 
-  Resolver := TArticulosResolver.Create(inLibGlobalVar.oConn);
+  Resolver := TArticulosResolver.Create(oConn);
   try
     Precio := Resolver.ResolverPrecio(CodArt, sSKU, CodTarifa, FechaFactura);
     if not Precio.TieneRegistro then Exit;
@@ -1781,7 +1781,7 @@ var
 begin
   if Trim(Sku) = '' then Exit;
   sw := TStopwatch.StartNew;
-  Lookup := TArticulosAtributosLookup.Create(inLibGlobalVar.oConn);
+  Lookup := TArticulosAtributosLookup.Create(oConn);
   try
     swQry := TStopwatch.StartNew;
     Valores := Lookup.ObtenerAtributosDeSku(Sku);
@@ -2668,7 +2668,7 @@ procedure TfrmMtoOpeCaja.RestaurarLayoutCaja;
 var
   Layout: TLayoutLoader;
 begin
-  Layout := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
+  Layout := TLayoutLoader.Create(Self.Name, ContextoSesion, PerfilesUsuario);
   try
     if not Layout.Disponible then Exit;
     Layout.RestaurarGeometria(Self);
@@ -3492,14 +3492,15 @@ begin
          end;
          if slRutasTicketPdf.Count > 0 then
          begin
-           TVentasWsCola.AdjuntarTicketPdfSeguro(inLibGlobalVar.oConn,
+           TVentasWsCola.AdjuntarTicketPdfSeguro(oConn,
+             IdentidadSesion.Usuario,
              DatosCaja.UltSerieFacturaGrabada,
              DatosCaja.UltNumeroFacturaGrabada,
              slRutasTicketPdf[slRutasTicketPdf.Count - 1]);
            // Archivado en fza_facturas.PDF_FAC: el ultimo PDF de la
            // lista es el ticket fiscal completo (con precios y QR); el
            // regalo se genera sin ruta y no llega a la lista
-           GuardarPdfFacturaEnBlob(inLibGlobalVar.oConn,
+           GuardarPdfFacturaEnBlob(oConn, ContextoSesion,
              DatosCaja.UltSerieFacturaGrabada,
              DatosCaja.UltNumeroFacturaGrabada,
              slRutasTicketPdf[slRutasTicketPdf.Count - 1],
@@ -3514,7 +3515,8 @@ begin
            // se leian de cdsCabecera, que queda con SERIE_FAC='0', y se
            // encolaba un registro fantasma 0\0 en Verifactu
            TVerifactuCola.EncolarRectificativa(
-             inLibGlobalVar.oConn,
+             oConn,
+             IdentidadSesion.Usuario,
              FSerieRectifica, FNumeroRectifica,
              DatosCaja.UltSerieFacturaGrabada,
              DatosCaja.UltNumeroFacturaGrabada);
@@ -3578,7 +3580,7 @@ var
 begin
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := inLibGlobalVar.oConn;
+    Qry.Connection := oConn;
     // Cliente del ticket original a la cabecera de la operación
     Qry.SQL.Text :=
       ' SELECT * FROM fza_facturas ' +
@@ -4030,6 +4032,7 @@ begin
     Self,
     Permisos,
     PerfilesUsuario,
+    ContextoSesion,
     sArt,
     sSku);
 end;

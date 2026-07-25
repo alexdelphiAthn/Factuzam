@@ -17,22 +17,32 @@ unit inLibFiltroUsuario;
 
 interface
 
+uses
+  inLibContextoSesionIntf;
+
 // Devuelve True si el usuario actual tiene activo el parámetro
-// appRestringirEmpAlmCaja. Los administradores (orootGroup = 'S') quedan
+// appRestringirEmpAlmCaja. Los administradores quedan
 // siempre exentos, igual que en inLibPermisos.
-function RestriccionEmpAlmCajaActiva: Boolean;
+function RestriccionEmpAlmCajaActiva(
+  const AContextoSesion: IContextoSesionAplicacion): Boolean;
 // Valores a los que queda restringido el usuario. Devuelven '' cuando la
 // restricción no está activa o cuando el usuario no tiene ese defecto
 // asignado en fza_usuarios (esa dimensión no se filtra).
-function EmpresaRestringida: string;
-function AlmacenRestringido: string;
-function CajaRestringida: string;
+function EmpresaRestringida(
+  const AContextoSesion: IContextoSesionAplicacion): string;
+function AlmacenRestringido(
+  const AContextoSesion: IContextoSesionAplicacion): string;
+function CajaRestringida(
+  const AContextoSesion: IContextoSesionAplicacion): string;
 // Construye el fragmento SQL ' AND (<col> = ''valor'' OR <col> IS NULL)'
 // para inyectar en el WHERE de la precarga de cada pantalla. Se pasa el
 // nombre de columna de cada dimensión ('' para omitirla, p. ej. pantallas
 // sin caja). El OR IS NULL evita excluir documentos sin esa dimensión
 // (p. ej. facturas de mayor con CODIGO_CAJA_FAC NULL).
-function SqlFiltroEmpAlmCaja(const AColEmpresa,
+function SqlFiltroEmpAlmCaja(
+                             const AContextoSesion:
+                             IContextoSesionAplicacion;
+                             const AColEmpresa,
                              AColAlmacen,
                              AColCaja: string): string;
 // Inyecta AFiltro (fragmentos ' AND col = valor') en el WHERE de nivel
@@ -45,45 +55,54 @@ function InyectarFiltroSql(const ASql, AFiltro: string): string;
 implementation
 
 uses
-  System.SysUtils, inLibGlobalVar, inLibAppParam;
+  System.SysUtils, inLibAppParam;
 
-function RestriccionEmpAlmCajaActiva: Boolean;
+function RestriccionEmpAlmCajaActiva(
+  const AContextoSesion: IContextoSesionAplicacion): Boolean;
 begin
   // Los administradores nunca quedan restringidos
-  if SameText(orootGroup, 'S') then
+  if AContextoSesion.Identidad.EsAdministrador then
     Result := False
   else
     Result := (oAppParams <> nil) and
               oAppParams.GetBool('appRestringirEmpAlmCaja', False);
 end;
 
-function EmpresaRestringida: string;
+function EmpresaRestringida(
+  const AContextoSesion: IContextoSesionAplicacion): string;
 begin
-  if RestriccionEmpAlmCajaActiva then
-    Result := oEmpresa
+  if RestriccionEmpAlmCajaActiva(AContextoSesion) then
+    Result := AContextoSesion.Ubicacion.Empresa
   else
     Result := '';
 end;
 
-function AlmacenRestringido: string;
+function AlmacenRestringido(
+  const AContextoSesion: IContextoSesionAplicacion): string;
 begin
-  if RestriccionEmpAlmCajaActiva then
-    Result := oAlmacen
+  if RestriccionEmpAlmCajaActiva(AContextoSesion) then
+    Result := AContextoSesion.Ubicacion.Almacen
   else
     Result := '';
 end;
 
-function CajaRestringida: string;
+function CajaRestringida(
+  const AContextoSesion: IContextoSesionAplicacion): string;
 begin
-  if RestriccionEmpAlmCajaActiva then
-    Result := oCaja
+  if RestriccionEmpAlmCajaActiva(AContextoSesion) then
+    Result := AContextoSesion.Ubicacion.Caja
   else
     Result := '';
 end;
 
-function SqlFiltroEmpAlmCaja(const AColEmpresa,
+function SqlFiltroEmpAlmCaja(
+                             const AContextoSesion:
+                             IContextoSesionAplicacion;
+                             const AColEmpresa,
                              AColAlmacen,
                              AColCaja: string): string;
+var
+  Ubicacion: TUbicacionSesion;
 
   // Fragmento de una dimensión tolerante a NULL: un documento sin esa
   // dimensión (columna NULL) no se excluye, igual que un defecto vacío
@@ -96,18 +115,19 @@ function SqlFiltroEmpAlmCaja(const AColEmpresa,
 
 begin
   Result := '';
-  if not RestriccionEmpAlmCajaActiva then
+  if not RestriccionEmpAlmCajaActiva(AContextoSesion) then
   begin
     // Sin restricción: fragmento vacío, la precarga no cambia
   end
   else
   begin
-    if (AColEmpresa <> '') and (oEmpresa <> '') then
-      Result := Result + Fragmento(AColEmpresa, oEmpresa);
-    if (AColAlmacen <> '') and (oAlmacen <> '') then
-      Result := Result + Fragmento(AColAlmacen, oAlmacen);
-    if (AColCaja <> '') and (oCaja <> '') then
-      Result := Result + Fragmento(AColCaja, oCaja);
+    Ubicacion := AContextoSesion.Ubicacion;
+    if (AColEmpresa <> '') and (Ubicacion.Empresa <> '') then
+      Result := Result + Fragmento(AColEmpresa, Ubicacion.Empresa);
+    if (AColAlmacen <> '') and (Ubicacion.Almacen <> '') then
+      Result := Result + Fragmento(AColAlmacen, Ubicacion.Almacen);
+    if (AColCaja <> '') and (Ubicacion.Caja <> '') then
+      Result := Result + Fragmento(AColCaja, Ubicacion.Caja);
   end;
 end;
 

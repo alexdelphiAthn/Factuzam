@@ -49,7 +49,8 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid,
   inLibGridTallasInline,
-  inLibAtributosPaleta;
+  inLibAtributosPaleta,
+  inLibContextoSesionIntf;
 
 type
   // Config inmutable que el form construye una vez y pasa al constructor.
@@ -58,6 +59,7 @@ type
   // metodos cambiando solo la config.
   TGridPivoteCompraConfig = record
     Conexion             : TUniConnection;
+    ContextoSesion       : IContextoSesionAplicacion;
     Grid                 : TcxGridDBTableView;
     SourceMaster         : TDataSource;
     SourceLineas         : TUniQuery;
@@ -460,7 +462,8 @@ begin
               '       USUARIO_MODIF = :usuario ' +
               ' WHERE ID_AV = :id_av';
             q.ParamByName('id_atb').AsInteger := iIdAtb;
-            q.ParamByName('usuario').AsString := oUser;
+            q.ParamByName('usuario').AsString :=
+              FCfg.ContextoSesion.Identidad.Usuario;
             q.ParamByName('id_av').AsInteger := AIdAv;
             q.Execute;
           end;
@@ -478,7 +481,8 @@ begin
           q.ParamByName('av').AsString := AValorAv;
           q.ParamByName('descripcion').AsString := ANombreColor;
           q.ParamByName('id_atb').AsInteger := iIdAtb;
-          q.ParamByName('usuario').AsString := oUser;
+          q.ParamByName('usuario').AsString :=
+            FCfg.ContextoSesion.Identidad.Usuario;
           q.Execute;
           q.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID_AV';
           q.Open;
@@ -2310,7 +2314,8 @@ begin
     q.ParamByName('sku').AsString := ASku;
     q.ParamByName('art').AsString := sArt;
     q.ParamByName('varsku').AsString := sVarSku;
-    q.ParamByName('u').AsString := oUser;
+    q.ParamByName('u').AsString :=
+      FCfg.ContextoSesion.Identidad.Usuario;
     q.ExecSQL;
     if iColorAv > 0 then
     begin
@@ -2321,7 +2326,8 @@ begin
         'VALUES (:sku, :av, NOW(), :u, NOW(), :u)';
       q.ParamByName('sku').AsString := ASku;
       q.ParamByName('av').AsInteger := iColorAv;
-      q.ParamByName('u').AsString := oUser;
+      q.ParamByName('u').AsString :=
+        FCfg.ContextoSesion.Identidad.Usuario;
       q.ExecSQL;
     end;
     q.SQL.Text :=
@@ -2331,7 +2337,8 @@ begin
       'VALUES (:sku, :av, NOW(), :u, NOW(), :u)';
     q.ParamByName('sku').AsString := ASku;
     q.ParamByName('av').AsInteger := iTallaAv;
-    q.ParamByName('u').AsString := oUser;
+    q.ParamByName('u').AsString :=
+      FCfg.ContextoSesion.Identidad.Usuario;
     q.ExecSQL;
     Result := Trim(ASku) <> '';
     if (Result) and (inLibLog.Log <> nil) then
@@ -2815,7 +2822,8 @@ begin
             q.ParamByName('sku').AsString := sSkuColor;
             q.ParamByName('art').AsString := sArt;
             q.ParamByName('varsku').AsString := sVarSku;
-            q.ParamByName('usuario').AsString := oUser;
+            q.ParamByName('usuario').AsString :=
+              FCfg.ContextoSesion.Identidad.Usuario;
             q.Execute;
             q.SQL.Text :=
               'INSERT IGNORE INTO fza_atributos_sku ' +
@@ -2824,7 +2832,8 @@ begin
               'VALUES (:sku, :av, NOW(), :usuario, NOW(), :usuario)';
             q.ParamByName('sku').AsString := sSkuColor;
             q.ParamByName('av').AsInteger := iIdAv;
-            q.ParamByName('usuario').AsString := oUser;
+            q.ParamByName('usuario').AsString :=
+              FCfg.ContextoSesion.Identidad.Usuario;
             q.Execute;
           finally
             FreeAndNil(q);

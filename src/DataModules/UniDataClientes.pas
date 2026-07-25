@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataClientes                                               }
 {    Tipo:       Data Module                                                   }
@@ -235,12 +235,12 @@ begin
   if (unqryTablaG.FindField('CODIGO_CLI_CLI').AsString = '0') then
   begin
     unqryTablaG.FindField('CODIGO_CLI_CLI').AsString :=
-                                                 ObtenerSiguienteContador('CL');
+                                                 ObtenerSiguienteContador('CL', IdentidadSesion.Usuario);
   end;
   if (unqryTablaG.FindField('ORDEN_CLI').AsString = '0') then
   begin
     unqryTablaG.FindField('ORDEN_CLI').AsString :=
-                                                 ObtenerSiguienteContador('CO');
+                                                 ObtenerSiguienteContador('CO', IdentidadSesion.Usuario);
   end;
 end;
 

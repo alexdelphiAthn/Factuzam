@@ -43,9 +43,11 @@ function ObtenerEmpresaInstalacionSifDefecto(AConn: TUniConnection;
                                              out AEstado:
                                              TEstadoInstalacionSif): Boolean;
 function GenerarInstalacionSifEmpresa(AConn: TUniConnection;
+                                      const AUsuario: string;
                                       const ACodigoEmpresa: string):
                                       TEstadoInstalacionSif;
-procedure SincronizarVersionInstalacionesSif(AConn: TUniConnection);
+procedure SincronizarVersionInstalacionesSif(AConn: TUniConnection;
+                                             const AUsuario: string);
 function ObtenerDeclaracionResponsableSif(const AVersion: string): string;
 procedure AsegurarDeclaracionResponsableSif(const AVersion: string);
 procedure ValidarInstalacionSif(const ANumero, AVersion, ACodigoSif,
@@ -608,6 +610,7 @@ begin
 end;
 
 function GenerarInstalacionSifEmpresa(AConn: TUniConnection;
+                                      const AUsuario: string;
                                       const ACodigoEmpresa: string):
                                       TEstadoInstalacionSif;
 var
@@ -649,7 +652,7 @@ begin
       Qry.ParamByName('NUMERO').AsString := sNumero;
       Qry.ParamByName('VERSION').AsString := oVersion;
       Qry.ParamByName('CODIGO_SIF').AsString := cCodigoSifFactuzam;
-      Qry.ParamByName('USUARIO').AsString := oUser;
+      Qry.ParamByName('USUARIO').AsString := AUsuario;
       Qry.ParamByName('CODIGO_EMP').AsString := Result.CodigoEmpresa;
       Qry.Execute;
     finally
@@ -659,12 +662,13 @@ begin
   end;
 end;
 
-procedure SincronizarVersionInstalacionesSif(AConn: TUniConnection);
+procedure SincronizarVersionInstalacionesSif(AConn: TUniConnection;
+                                             const AUsuario: string);
 var
   oEstado: TEstadoInstalacionSif;
   Qry:     TUniQuery;
 begin
-  oEstado := GenerarInstalacionSifEmpresa(AConn, '');
+  oEstado := GenerarInstalacionSifEmpresa(AConn, AUsuario, '');
   Qry := TUniQuery.Create(nil);
   try
     Qry.Connection := AConn;
@@ -682,7 +686,7 @@ begin
     Qry.ParamByName('NUMERO').AsString := oEstado.Numero;
     Qry.ParamByName('VERSION').AsString := oVersion;
     Qry.ParamByName('CODIGO_SIF').AsString := cCodigoSifFactuzam;
-    Qry.ParamByName('USUARIO').AsString := oUser;
+    Qry.ParamByName('USUARIO').AsString := AUsuario;
     Qry.Execute;
   finally
     FreeAndNil(Qry);

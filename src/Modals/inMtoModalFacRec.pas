@@ -116,7 +116,7 @@ begin
              ParamByName('pfechafacturaabono').AsDate :=  dtFecha.Date;
              ParamByName('pfechafacturaabono').AsDate :=  dtFecha.Date;
              ParamByName('pfechafacturaabono').AsDate :=  dtFecha.Date;
-             ParamByName('pUSUARIO').AsString := oUser;
+             ParamByName('pUSUARIO').AsString := IdentidadSesion.Usuario;
              //ParamByName('pINSTANTEMODIF').AsDateTime := Now;
              ExecProc;
              //connection.Commit;
@@ -126,7 +126,8 @@ begin
              // Rectificativa Verifactu: marcar tipo, enlazar con la
              // original y encolar el registro R1/R5
              TVerifactuCola.EncolarRectificativa(
-               inLibGlobalVar.oConn,
+               oConn,
+               IdentidadSesion.Usuario,
                edtSerieOrigen.Text, edtNumFacOrigen.Text,
                edtSerieFacAbono.Text, edtNumFacAbono.Text);
              unqryTablaG.Refresh;
@@ -147,7 +148,7 @@ begin
          ParamByName('pidnumfactura').AsString :=  edtNumFacOrigen.Text;
          ParamByName('pidcodigo_empresa').AsString :=
                     unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString;
-         ParamByName('pUSUARIO').AsString := oUser;
+         ParamByName('pUSUARIO').AsString := IdentidadSesion.Usuario;
          ParamByName('pidseriefacturaabono').AsString :=  cmbSerieFactura.Text;
          ParamByName('pfechafacturaabono').AsDate :=  dtFecha.Date;
          ExecProc;

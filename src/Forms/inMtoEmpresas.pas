@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoEmpresas                                                 }
 {    Tipo:       Formulario (Mto)                                              }
@@ -526,7 +526,7 @@ var
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := oConn;
       q.SQL.Text :=
         'SELECT 1 FROM fza_empresas_series ' +
         ' WHERE CODIGO_EMP_EMPSER = :emp ' +
@@ -558,13 +558,13 @@ var
     q: TUniQuery;
     sCodigo: string;
   begin
-    sCodigo := ObtenerSiguienteContador('ES');
+    sCodigo := ObtenerSiguienteContador('ES', IdentidadSesion.Usuario);
     if Trim(sCodigo) = '' then
       raise Exception.Create('No se pudo obtener el siguiente codigo del ' +
                              'contador "ES" para la nueva serie.');
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := oConn;
       q.SQL.Text :=
         'INSERT INTO fza_empresas_series ' +
         '  (CODIGO_SERIE_EMPSER, CODIGO_EMP_EMPSER, CODIGO_ALM_EMPSER, ' +
@@ -580,7 +580,7 @@ var
       q.ParamByName('sub').AsString  := ASubtipo;
       q.ParamByName('desde').AsDateTime := dtDesde;
       q.ParamByName('hasta').AsDateTime := dtHasta;
-      q.ParamByName('u').AsString    := inLibGlobalVar.oUser;
+      q.ParamByName('u').AsString    := IdentidadSesion.Usuario;
       q.ExecSQL;
       Inc(iCreadas);
     finally
@@ -599,7 +599,7 @@ var
   function ConsultaTiposDocumento: TUniQuery;
   begin
     Result := TUniQuery.Create(nil);
-    Result.Connection := inLibGlobalVar.oConn;
+    Result.Connection := oConn;
     Result.SQL.Text :=
       'SELECT DISTINCT TIPO_DOC FROM (' +
       ' SELECT CODIGO_TIPO_DOCUMENTO_TD AS TIPO_DOC ' +
@@ -713,7 +713,8 @@ begin
   begin
     btnGenerarInstalacionSif.Enabled := False;
     try
-      oEstado := GenerarInstalacionSifEmpresa(oConn, sCodigoEmpresa);
+      oEstado := GenerarInstalacionSifEmpresa(oConn,
+        IdentidadSesion.Usuario, sCodigoEmpresa);
       with dmmEmpresas.unqryTablaG do
       begin
         Close;

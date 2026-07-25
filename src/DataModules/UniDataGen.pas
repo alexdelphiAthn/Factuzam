@@ -48,6 +48,8 @@ type
     function GetAuditoriaDatos: IServicioAuditoriaDatos;
     function GetConexiones: IServicioConexiones;
     function GetContextoSesion: IContextoSesionAplicacion;
+    function GetIdentidadSesion: TIdentidadSesion;
+    function GetUbicacionSesion: TUbicacionSesion;
     function GetPerfilesUsuario: IPerfilesUsuario;
     function GetConexionPrincipal: TUniConnection;
     procedure SetCurrentForm(const Value: TComponent);
@@ -68,6 +70,10 @@ type
     property Conexiones: IServicioConexiones read GetConexiones;
     property ContextoSesion: IContextoSesionAplicacion
       read GetContextoSesion;
+    property IdentidadSesion: TIdentidadSesion
+      read GetIdentidadSesion;
+    property UbicacionSesion: TUbicacionSesion
+      read GetUbicacionSesion;
     property PerfilesUsuario: IPerfilesUsuario
       read GetPerfilesUsuario;
     property ConexionPrincipal: TUniConnection
@@ -238,6 +244,22 @@ end;
 function TdmBase.GetContextoSesion: IContextoSesionAplicacion;
 begin
   Result := FContextoSesion;
+end;
+
+function TdmBase.GetIdentidadSesion: TIdentidadSesion;
+begin
+  if not Assigned(FContextoSesion) then
+    raise Exception.Create(
+      'No se ha configurado el contexto de sesión del módulo de datos.');
+  Result := FContextoSesion.Identidad;
+end;
+
+function TdmBase.GetUbicacionSesion: TUbicacionSesion;
+begin
+  if not Assigned(FContextoSesion) then
+    raise Exception.Create(
+      'No se ha configurado el contexto de sesión del módulo de datos.');
+  Result := FContextoSesion.Ubicacion;
 end;
 
 function TdmBase.GetPerfilesUsuario: IPerfilesUsuario;

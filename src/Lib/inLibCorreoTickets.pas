@@ -194,7 +194,8 @@ begin
       ImprimirTicketOperacionCaja(AEmpresa, AAlmacen, ACaja,
         ANumeroOperacion, 'DEBUG', ARutasPDF, True);
     if (ARutasPDF.Count > 0) and (Trim(ADatos.CodigoCliente) <> '') then
-      ImprimirRecordatorio(ADatos.CodigoCliente, 'DEBUG', ARutasPDF, True);
+      ImprimirRecordatorio(AEmpresa, ADatos.CodigoCliente, 'DEBUG',
+        ARutasPDF, True);
   end;
 end;
 

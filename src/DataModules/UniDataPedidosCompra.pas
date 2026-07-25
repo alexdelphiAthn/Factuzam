@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Modulo:       UniDataPedidosCompra                                          }
 {    Tipo:       Data Module                                                   }
@@ -312,29 +312,29 @@ end;
 procedure TdmPedidosCompra.DataModuleCreate(Sender: TObject);
 begin
   inherited;
-  unqryTablaG.Connection              := inLibGlobalVar.oConn;
+  unqryTablaG.Connection              := oConn;
   unqryTablaG.KeyFields               := 'NUMERO_PEDC;SERIE_PEDC';
   ConfigurarSqlCabecera;
-  unqryPedidosCompraLineas.Connection := inLibGlobalVar.oConn;
-  unqryEmpDataPedc.Connection         := inLibGlobalVar.oConn;
-  unqryPrvDataPedc.Connection         := inLibGlobalVar.oConn;
+  unqryPedidosCompraLineas.Connection := oConn;
+  unqryEmpDataPedc.Connection         := oConn;
+  unqryPrvDataPedc.Connection         := oConn;
   // Lookup completo de proveedores (NOMBRE_PRV + RAZON_SOCIAL_PRV) para
   // el rotulo resuelto de la cabecera y para el combo de busqueda
   // incremental por codigo (cbbCODIGO_PRV_PEDC). Se abre una vez y se
   // recorre con Locate; no depende del proveedor del pedido en pantalla.
   unqryPrvDataPedc.Open;
-  unqrySkusPedc.Connection            := inLibGlobalVar.oConn;
-  unstrdprcGetContadorPedc.Connection := inLibGlobalVar.oConn;
-  unqryDefArticuloPedc.Connection     := inLibGlobalVar.oConn;
-  unqryTemporadasPedc.Connection      := inLibGlobalVar.oConn;
+  unqrySkusPedc.Connection            := oConn;
+  unstrdprcGetContadorPedc.Connection := oConn;
+  unqryDefArticuloPedc.Connection     := oConn;
+  unqryTemporadasPedc.Connection      := oConn;
   unqryTemporadasPedc.Open;
-  unqryFormasPago.Connection          := inLibGlobalVar.oConn;
-  unqryAlmacenesPedc.Connection       := inLibGlobalVar.oConn;
+  unqryFormasPago.Connection          := oConn;
+  unqryAlmacenesPedc.Connection       := oConn;
   unqryPedidosCompraLineas.MasterSource :=
     (GetOwnerForm<TfrmMtoPedidosCompra>).dsTablaG;
   // Albaranes de compra creados desde este pedido (master-detail por
   // NUMERO_PED_ALBC / SERIE_PED_ALBC). Solo lectura, para la pestania.
-  unqryAlbaranesPedc.Connection := inLibGlobalVar.oConn;
+  unqryAlbaranesPedc.Connection := oConn;
   unqryAlbaranesPedc.MasterSource :=
     (GetOwnerForm<TfrmMtoPedidosCompra>).dsTablaG;
 end;
@@ -366,7 +366,7 @@ begin
      (not unqryTablaG.IsEmpty) then
     sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString);
   if sEmpresa = '' then
-    sEmpresa := Trim(oEmpresa);
+    sEmpresa := Trim(UbicacionSesion.Empresa);
   if (not unqryAlmacenesPedc.Active) or
      (not SameText(unqryAlmacenesPedc.ParamByName('EMPRESA').AsString,
                    sEmpresa)) then
@@ -468,7 +468,7 @@ begin
   with unqryTablaG do
   begin
     FieldByName('NUMERO_PEDC').AsString := '0';
-    sSerie := ObtenerSerieDefecto(oEmpresa, 'PC');
+    sSerie := ObtenerSerieDefecto(UbicacionSesion.Empresa, 'PC');
     if FindField('SERIE_PEDC') <> nil then
     begin
       if sSerie <> '' then
@@ -479,22 +479,22 @@ begin
     FieldByName('FECHA_PEDC').AsDateTime := Date;
     if FindField('ESTADO_PEDC') <> nil then
       FieldByName('ESTADO_PEDC').AsString := 'ABIERTO';
-    if Trim(oEmpresa) <> '' then
-      FieldByName('CODIGO_EMP_PEDC').AsString := oEmpresa
+    if Trim(UbicacionSesion.Empresa) <> '' then
+      FieldByName('CODIGO_EMP_PEDC').AsString := UbicacionSesion.Empresa
     else
       FieldByName('CODIGO_EMP_PEDC').AsString := '0';
-    if Trim(oEmpresa) <> '' then
-      BuscarEmpresa(oEmpresa);
+    if Trim(UbicacionSesion.Empresa) <> '' then
+      BuscarEmpresa(UbicacionSesion.Empresa);
     if FindField('CODIGO_ALM_PEDC') <> nil then
-      FieldByName('CODIGO_ALM_PEDC').AsString := oAlmacen;
+      FieldByName('CODIGO_ALM_PEDC').AsString := UbicacionSesion.Almacen;
     FieldByName('CODIGO_PRV_PEDC').AsString := '0';
     if FindField('ESPIVOTE_HORIZONTAL_PEDC') <> nil then
       FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString := 'N';
     if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_PEDC') <> nil then
       FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_PEDC').AsString := 'N';
-    AplicarRecargoComprasEmpresa(inLibGlobalVar.oConn, unqryTablaG,
+    AplicarRecargoComprasEmpresa(oConn, unqryTablaG,
       'CODIGO_EMP_PEDC', 'ESIVA_RECARGO_COMPRAS_PEDC');
-    AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
+    AplicarPorcentajesIvaCompra(oConn, unqryTablaG,
       'PEDC');
   end;
   RefrescarAlmacenes(
@@ -584,7 +584,7 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '') then
     GetCodigoAutoPedidoCompra;
-  AplicarPorcentajesIvaCompra(inLibGlobalVar.oConn, unqryTablaG,
+  AplicarPorcentajesIvaCompra(oConn, unqryTablaG,
     'PEDC');
   CalcularTotalesPedidoCompra;
 end;
@@ -606,7 +606,7 @@ begin
     FReorganizacionPendiente := True
   else
     inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-      inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+      oConn, sSerie, sNumero, IdentidadSesion.Usuario);
 end;
 
 procedure TdmPedidosCompra.unqryTablaGBeforeDelete(DataSet: TDataSet);
@@ -630,12 +630,12 @@ begin
     Abort;
   end;
   inLibPedidosCompra.BorrarPdteRecibirDesdePedido(
-    inLibGlobalVar.oConn, sSerie, sNumero);
+    oConn, sSerie, sNumero);
   // Borrar lineas asociadas para que no se queden huerfanas (no hay
   // FK con CASCADE).
   with TUniQuery.Create(nil) do
   try
-    Connection := inLibGlobalVar.oConn;
+    Connection := oConn;
     SQL.Text :=
       'DELETE FROM fza_pedidos_compra_lineas ' +
       ' WHERE SERIE_PEDC_PEDCLIN  = :s ' +
@@ -672,9 +672,9 @@ begin
     if FindField('CODIGO_ALMACEN_PEDCLIN') <> nil then
       FieldByName('CODIGO_ALMACEN_PEDCLIN').AsString :=
         unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
-    FieldByName('USUARIO_ALTA').AsString    := oUser;
+    FieldByName('USUARIO_ALTA').AsString    := IdentidadSesion.Usuario;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-    FieldByName('USUARIO_MODIF').AsString   := oUser;
+    FieldByName('USUARIO_MODIF').AsString   := IdentidadSesion.Usuario;
     FieldByName('INSTANTE_MODIF').AsDateTime:= Now;
   end;
 end;
@@ -712,7 +712,7 @@ begin
   with unqryPedidosCompraLineas do
   begin
     // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
-    NormalizarArticuloSkuEnDataSet(inLibGlobalVar.oConn,
+    NormalizarArticuloSkuEnDataSet(oConn,
       unqryPedidosCompraLineas, 'CODIGO_ART_PEDCLIN',
       'CODIGO_UNIDAD_PEDCLIN');
     if (FindField('CANTIDAD_PEDCLIN') <> nil) and
@@ -722,14 +722,14 @@ begin
         FieldByName('CANTIDAD_PEDCLIN').AsFloat *
         FieldByName('PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN').AsFloat;
     if FindField('USUARIO_MODIF') <> nil then
-      FieldByName('USUARIO_MODIF').AsString   := oUser;
+      FieldByName('USUARIO_MODIF').AsString   := IdentidadSesion.Usuario;
     if FindField('INSTANTE_MODIF') <> nil then
       FieldByName('INSTANTE_MODIF').AsDateTime:= Now;
     if (DataSet.State = dsInsert) then
     begin
       if (FindField('USUARIO_ALTA') <> nil) and
          (FieldByName('USUARIO_ALTA').AsString = '') then
-        FieldByName('USUARIO_ALTA').AsString := oUser;
+        FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
       if (FindField('INSTANTE_ALTA') <> nil) and
          FieldByName('INSTANTE_ALTA').IsNull then
         FieldByName('INSTANTE_ALTA').AsDateTime := Now;
@@ -751,7 +751,7 @@ begin
         unqrySkusPedc.Close;
       end;
     end;
-    PrepararLineaFiscalCompra(inLibGlobalVar.oConn, unqryTablaG,
+    PrepararLineaFiscalCompra(oConn, unqryTablaG,
       unqryPedidosCompraLineas, 'PEDC', 'PEDCLIN', 'TOTAL_PEDCLIN');
   end;
 end;
@@ -817,7 +817,7 @@ begin
     FReorganizacionPendiente := True
   else
     inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-      inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+      oConn, sSerie, sNumero, IdentidadSesion.Usuario);
 end;
 
 procedure TdmPedidosCompra.unqryPedidosCompraLineasBeforeDelete(
@@ -833,7 +833,7 @@ begin
   sLinea  := unqryPedidosCompraLineas.FieldByName('LINEA_PEDCLIN').AsString;
   if (sSerie = '') or (sNumero = '') then Exit;
   inLibPedidosCompra.BorrarPdteRecibirDesdePedido(
-    inLibGlobalVar.oConn, sSerie, sNumero, sLinea);
+    oConn, sSerie, sNumero, sLinea);
 end;
 
 function TdmPedidosCompra.ObtenerAlmacenesSql(
@@ -889,7 +889,7 @@ begin
     oLv.Items.Clear;
     oQry := TUniQuery.Create(nil);
     try
-      oQry.Connection := inLibGlobalVar.oConn;
+      oQry.Connection := oConn;
       oQry.SQL.Text :=
         'SELECT X.COD, COALESCE(A.NOMBRE_ALM_ALM, X.COD) AS NOM ' +
         '  FROM ( ' +
@@ -948,7 +948,7 @@ begin
   sAlmacenes := ObtenerAlmacenesSql(AAlmacenesCsv);
   oQry := TUniQuery.Create(nil);
   try
-    oQry.Connection := inLibGlobalVar.oConn;
+    oQry.Connection := oConn;
     oQry.SQL.Text :=
       'SELECT DISTINCT L.CODIGO_UNIDAD_PEDCLIN ' +
       '  FROM fza_pedidos_compra_lineas L ' +
@@ -1009,7 +1009,7 @@ begin
     try
       oQry := TUniQuery.Create(nil);
       try
-        oQry.Connection := inLibGlobalVar.oConn;
+        oQry.Connection := oConn;
         sAlmacenes := ObtenerAlmacenesSql(AAlmacenesCsv);
         oQry.SQL.Text :=
           'SELECT X.SKU, SUM(X.CANTIDAD) AS CANTIDAD ' +
@@ -1176,7 +1176,7 @@ begin
     ParamByName('pserie').AsString :=
       unqryTablaG.FieldByName('SERIE_PEDC').AsString;
     ParamByName('ptipodoc').AsString := 'PC';
-    ParamByName('pUSUARIOMODIF').AsString := oUser;
+    ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
     ParamByName('pEMPRESA_CONTADOR').AsString :=
       unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString;
     ExecProc;
@@ -1285,7 +1285,7 @@ begin
   begin
     FCalculandoTotales := True;
     try
-      CalcularTotalesDocumentoCompra(inLibGlobalVar.oConn, unqryTablaG,
+      CalcularTotalesDocumentoCompra(oConn, unqryTablaG,
         unqryPedidosCompraLineas, 'PEDC', 'TOTAL_PEDCLIN',
         'TIPO_IVA_ARTICULO_PEDCLIN', 'PORCENTAJE_IVA_PEDCLIN');
       // Nº de prendas: TOTAL_PRENDAS_PEDC es columna calculada de la
@@ -1344,7 +1344,7 @@ begin
       sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
       if (sSerie <> '') and (sNumero <> '') then
         inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-          inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+          oConn, sSerie, sNumero, IdentidadSesion.Usuario);
     end;
   end;
 end;
@@ -1372,7 +1372,7 @@ begin
     sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
     if (sSerie <> '') and (sNumero <> '') then
       inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-        inLibGlobalVar.oConn, sSerie, sNumero, oUser);
+        oConn, sSerie, sNumero, IdentidadSesion.Usuario);
   end;
 end;
 
@@ -1385,7 +1385,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := oConn;
       // El cruce de LINEA va en NUMERICO: la celda guarda '10' (el
       // parametro entra como entero) y la linea '0010'; como texto
       // nunca casaban, TODA linea con SKU contaba como sin pivotar y

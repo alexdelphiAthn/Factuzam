@@ -21,7 +21,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  Data.DB, DBAccess, Uni;
+  Data.DB, DBAccess, Uni, inLibContextoSesionIntf;
 
 type
   // Tipo de sujeto sobre el que recaen los permisos.
@@ -57,6 +57,7 @@ type
       const ASujeto: string): TDictionary<string, string>;
     // Alta o actualizacion de un permiso explicito del sujeto.
     class procedure Establecer(AConn: TUniConnection;
+      const AContextoSesion: IContextoSesionAplicacion;
       const ASujeto, ACodigo, AValor, ADescripcion: string);
     // Borra la fila explicita: el sujeto vuelve a heredar.
     class procedure Heredar(AConn: TUniConnection;
@@ -65,14 +66,12 @@ type
     // antes los del destino (respetando el filtro ASoloMenu). Devuelve
     // el numero de permisos del origen volcados.
     class function Copiar(AConn: TUniConnection;
+      const AContextoSesion: IContextoSesionAplicacion;
       const AOrigen, ADestino: string;
       AReemplazar, ASoloMenu: Boolean): Integer;
   end;
 
 implementation
-
-uses
-  inLibGlobalVar;
 
 class function TPermisosAdmin.NuevaQuery(AConn: TUniConnection): TUniQuery;
 begin
@@ -209,6 +208,7 @@ begin
 end;
 
 class procedure TPermisosAdmin.Establecer(AConn: TUniConnection;
+  const AContextoSesion: IContextoSesionAplicacion;
   const ASujeto, ACodigo, AValor, ADescripcion: string);
 var
   qry: TUniQuery;
@@ -232,10 +232,12 @@ begin
       qry.ParamByName('C').AsString  := ACodigo;
       qry.ParamByName('V').AsString  := AValor;
       qry.ParamByName('D').AsString  := ADescripcion;
-      qry.ParamByName('UA').AsString := inLibGlobalVar.oUser;
+      qry.ParamByName('UA').AsString :=
+        AContextoSesion.Identidad.Usuario;
       qry.ParamByName('V2').AsString := AValor;
       qry.ParamByName('D2').AsString := ADescripcion;
-      qry.ParamByName('UM').AsString := inLibGlobalVar.oUser;
+      qry.ParamByName('UM').AsString :=
+        AContextoSesion.Identidad.Usuario;
       qry.ExecSQL;
     finally
       FreeAndNil(qry);
@@ -267,6 +269,7 @@ begin
 end;
 
 class function TPermisosAdmin.Copiar(AConn: TUniConnection;
+  const AContextoSesion: IContextoSesionAplicacion;
   const AOrigen, ADestino: string;
   AReemplazar, ASoloMenu: Boolean): Integer;
 var
@@ -316,9 +319,11 @@ begin
           '  INSTANTE_MODIF   = NOW(), ' +
           '  USUARIO_MODIF    = :UM';
         qry.ParamByName('D2').AsString := ADestino;
-        qry.ParamByName('UA').AsString := inLibGlobalVar.oUser;
+        qry.ParamByName('UA').AsString :=
+          AContextoSesion.Identidad.Usuario;
         qry.ParamByName('O2').AsString := AOrigen;
-        qry.ParamByName('UM').AsString := inLibGlobalVar.oUser;
+        qry.ParamByName('UM').AsString :=
+          AContextoSesion.Identidad.Usuario;
         qry.ExecSQL;
         if AConn.InTransaction then
           AConn.Commit;

@@ -23,21 +23,28 @@ type
   private
     class function Activa: Boolean; static;
     class function EncolarInterno(AQry: TUniQuery;
+      const AUsuario: string;
       const ATipoEvento, ASerie, ANumero: string): Int64; static;
     class procedure AdjuntarPdfSeguro(AConn: TUniConnection;
+      const AUsuario: string;
       const ASerie, ANumero, ARutaPdf: string;
       AEsFactura: Boolean); static;
   public
     class procedure RegistrarFactura(AQryTrx: TUniQuery;
+      const AUsuario: string;
       const ASerie, ANumero, ATipoOperacion: string); static;
     class procedure RegistrarEventoSeguro(AConn: TUniConnection;
+      const AUsuario: string;
       const ATipoEvento, ASerie, ANumero: string); static;
     class procedure AdjuntarTicketPdfSeguro(AConn: TUniConnection;
+      const AUsuario: string;
       const ASerie, ANumero, ARutaPdf: string); static;
     class procedure AdjuntarFacturaPdfSeguro(AConn: TUniConnection;
+      const AUsuario: string;
       const ASerie, ANumero, ARutaPdf: string); static;
     class procedure IniciarHilo(
-      const AConexiones: IServicioConexiones); static;
+      const AConexiones: IServicioConexiones;
+      const AUsuario: string); static;
     class procedure DetenerHilo; static;
   end;
 
@@ -53,6 +60,7 @@ type
   private
     FConn: TUniConnection;
     FConexiones: IServicioConexiones;
+    FUsuario: string;
     FAvisoConfiguracion: Boolean;
     procedure EsperarCiclo;
     procedure EsperarSegundos(ASegundos: Integer);
@@ -64,7 +72,8 @@ type
     procedure Execute; override;
   public
     constructor Create(
-      const AConexiones: IServicioConexiones); reintroduce;
+      const AConexiones: IServicioConexiones;
+      const AUsuario: string); reintroduce;
     destructor Destroy; override;
   end;
 
@@ -88,6 +97,7 @@ begin
 end;
 
 class function TVentasWsCola.EncolarInterno(AQry: TUniQuery;
+  const AUsuario: string;
   const ATipoEvento, ASerie, ANumero: string): Int64;
 var
   sEmpresa: string;
@@ -117,7 +127,7 @@ begin
     AQry.ParamByName('SERIE').AsString := ASerie;
     AQry.ParamByName('NUMERO').AsString := ANumero;
     AQry.ParamByName('TIPO').AsString := ATipoEvento;
-    AQry.ParamByName('USUARIO').AsString := oUser;
+    AQry.ParamByName('USUARIO').AsString := AUsuario;
     AQry.Execute;
     AQry.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
     AQry.Open;
@@ -127,6 +137,7 @@ begin
 end;
 
 class procedure TVentasWsCola.RegistrarFactura(AQryTrx: TUniQuery;
+  const AUsuario: string;
   const ASerie, ANumero, ATipoOperacion: string);
 var
   iIdCola: Int64;
@@ -140,7 +151,8 @@ begin
       sTipoEvento := 'FISCAL_ACTUALIZADO'
     else
       sTipoEvento := 'VENTA_CONFIRMADA';
-    iIdCola := EncolarInterno(AQryTrx, sTipoEvento, ASerie, ANumero);
+    iIdCola := EncolarInterno(AQryTrx, AUsuario, sTipoEvento, ASerie,
+      ANumero);
     if iIdCola = 0 then
       raise Exception.Create('No se pudo encolar la venta ' + ASerie +
         '\' + ANumero + ' para el webservice.');
@@ -148,7 +160,9 @@ begin
 end;
 
 class procedure TVentasWsCola.RegistrarEventoSeguro(
-  AConn: TUniConnection; const ATipoEvento, ASerie, ANumero: string);
+  AConn: TUniConnection;
+  const AUsuario: string;
+  const ATipoEvento, ASerie, ANumero: string);
 var
   Qry: TUniQuery;
 begin
@@ -158,7 +172,7 @@ begin
     try
       try
         Qry.Connection := AConn;
-        EncolarInterno(Qry, ATipoEvento, ASerie, ANumero);
+        EncolarInterno(Qry, AUsuario, ATipoEvento, ASerie, ANumero);
       except
         on E: Exception do
           Log.LogError('No se pudo encolar el evento ' + ATipoEvento +
@@ -171,19 +185,25 @@ begin
 end;
 
 class procedure TVentasWsCola.AdjuntarTicketPdfSeguro(
-  AConn: TUniConnection; const ASerie, ANumero, ARutaPdf: string);
+  AConn: TUniConnection;
+  const AUsuario: string;
+  const ASerie, ANumero, ARutaPdf: string);
 begin
-  AdjuntarPdfSeguro(AConn, ASerie, ANumero, ARutaPdf, False);
+  AdjuntarPdfSeguro(AConn, AUsuario, ASerie, ANumero, ARutaPdf, False);
 end;
 
 class procedure TVentasWsCola.AdjuntarFacturaPdfSeguro(
-  AConn: TUniConnection; const ASerie, ANumero, ARutaPdf: string);
+  AConn: TUniConnection;
+  const AUsuario: string;
+  const ASerie, ANumero, ARutaPdf: string);
 begin
-  AdjuntarPdfSeguro(AConn, ASerie, ANumero, ARutaPdf, True);
+  AdjuntarPdfSeguro(AConn, AUsuario, ASerie, ANumero, ARutaPdf, True);
 end;
 
 class procedure TVentasWsCola.AdjuntarPdfSeguro(
-  AConn: TUniConnection; const ASerie, ANumero, ARutaPdf: string;
+  AConn: TUniConnection;
+  const AUsuario: string;
+  const ASerie, ANumero, ARutaPdf: string;
   AEsFactura: Boolean);
 var
   iIdCola: Int64;
@@ -202,7 +222,7 @@ var
     Qry.ParamByName('PDF').LoadFromFile(ARutaPdf, ftBlob);
     Qry.ParamByName('TAMANO').AsLargeInt := iTamano;
     Qry.ParamByName('HUELLA').AsString := sHuella;
-    Qry.ParamByName('USUARIO').AsString := oUser;
+    Qry.ParamByName('USUARIO').AsString := AUsuario;
   end;
 
 begin
@@ -251,7 +271,8 @@ begin
         Qry.Execute;
         if Qry.RowsAffected = 0 then
         begin
-          iIdCola := EncolarInterno(Qry, sTipoEvento, ASerie, ANumero);
+          iIdCola := EncolarInterno(Qry, AUsuario, sTipoEvento, ASerie,
+            ANumero);
           if iIdCola > 0 then
           begin
             Qry.SQL.Text :=
@@ -279,11 +300,12 @@ begin
 end;
 
 class procedure TVentasWsCola.IniciarHilo(
-  const AConexiones: IServicioConexiones);
+  const AConexiones: IServicioConexiones;
+  const AUsuario: string);
 begin
   if oHiloVentasWs = nil then
   begin
-    oHiloVentasWs := THiloVentasWsCola.Create(AConexiones);
+    oHiloVentasWs := THiloVentasWsCola.Create(AConexiones, AUsuario);
     oHiloVentasWs.FreeOnTerminate := False;
     oHiloVentasWs.Start;
     Log.LogInfo('Cola de ventas WS: hilo iniciado');
@@ -302,12 +324,14 @@ begin
 end;
 
 constructor THiloVentasWsCola.Create(
-  const AConexiones: IServicioConexiones);
+  const AConexiones: IServicioConexiones;
+  const AUsuario: string);
 begin
   if not Assigned(AConexiones) then
     raise EArgumentNilException.Create('AConexiones');
   inherited Create(True);
   FConexiones := AConexiones;
+  FUsuario := AUsuario;
 end;
 
 destructor THiloVentasWsCola.Destroy;
@@ -430,7 +454,7 @@ begin
       ' UPDATE fza_ventas_ws_cola SET ESTADO_VWSC = ''PROCESANDO'', ' +
       ' INSTANTE_MODIF = NOW(), USUARIO_MODIF = :USUARIO ' +
       ' WHERE ID_VWSC = :ID AND ESTADO_VWSC = ''PENDIENTE''';
-    Qry.ParamByName('USUARIO').AsString := oUser;
+    Qry.ParamByName('USUARIO').AsString := FUsuario;
     Qry.ParamByName('ID').AsLargeInt := AIdCola;
     Qry.Execute;
     if Qry.RowsAffected = 1 then
@@ -477,7 +501,7 @@ begin
             ' INSTANTE_MODIF = NOW(), USUARIO_MODIF = :USUARIO ' +
             ' WHERE ID_VWSC = :ID';
           Qry.ParamByName('PETICION').AsString := oResultado.IdPeticion;
-          Qry.ParamByName('USUARIO').AsString := oUser;
+          Qry.ParamByName('USUARIO').AsString := FUsuario;
           Qry.ParamByName('ID').AsLargeInt := AIdCola;
           Qry.Execute;
         end
@@ -523,7 +547,7 @@ begin
     Qry.ParamByName('ESTADO').AsString := sEstado;
     Qry.ParamByName('ESPERA').AsInteger := iEspera;
     Qry.ParamByName('MENSAJE').AsString := AMensaje;
-    Qry.ParamByName('USUARIO').AsString := oUser;
+    Qry.ParamByName('USUARIO').AsString := FUsuario;
     Qry.ParamByName('ID').AsLargeInt := AIdCola;
     Qry.Execute;
   finally

@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalSerieFechaFactura                                   }
 {    Tipo:       Formulario (Modal)                                            }
@@ -71,7 +71,7 @@ var
 begin
   frm := TfrmModalSerieFechaFactura.Create(AOwner);
   try
-    frm.qrySeries.Connection := inLibGlobalVar.oConn;
+    frm.qrySeries.Connection := oConn;
     frm.qrySeries.Open;
     // Serie por defecto: la ligada al almacén; si no tiene, la primera
     // serie FC activa (DEFAULT_CON primero)

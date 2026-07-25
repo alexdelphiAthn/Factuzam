@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoInventarios                                              }
 {    Tipo:       Formulario (Mto)                                              }
@@ -418,7 +418,7 @@ end;
 function TfrmMtoInventarios.SqlRestriccionUsuario: string;
 begin
   // Inventarios: empresa y almacén (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_INV', 'CODIGO_ALM_INV', '');
+  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_INV', 'CODIGO_ALM_INV', '');
 end;
 
 procedure TfrmMtoInventarios.CrearTablaPrincipal;
@@ -432,8 +432,8 @@ begin
   if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
      not dsTablaG.DataSet.IsEmpty then
     emp := dsTablaG.DataSet.FieldByName('CODIGO_EMP_INV').AsString
-  else if Trim(oEmpresa) <> '' then
-    emp := oEmpresa;
+  else if Trim(UbicacionSesion.Empresa) <> '' then
+    emp := UbicacionSesion.Empresa;
   RefrescarLookupsCabeceraEmpresa(emp);
   // Datasources locales que apuntan a queries del data module.
   // El lookup de almacenes debe estar cargado antes de enlazarse, porque
@@ -1535,7 +1535,7 @@ begin
   swTotal := TStopwatch.StartNew;
 
   swCreate := TStopwatch.StartNew;
-  Lookup := TArticulosAtributosLookup.Create(inLibGlobalVar.oConn);
+  Lookup := TArticulosAtributosLookup.Create(oConn);
   msCreate := swCreate.ElapsedMilliseconds;
   try
     swObtener := TStopwatch.StartNew;
@@ -2129,7 +2129,7 @@ begin
   Result := '';
   unqryBusq := TUniQuery.Create(nil);
   try
-    unqryBusq.Connection := inLibGlobalVar.oConn;
+    unqryBusq.Connection := oConn;
     unqryBusq.SQL.Text :=
       'SELECT'                                                      + sLineBreak +
       '    v.CODIGO_ART_ART,'                                       + sLineBreak +
@@ -2200,7 +2200,7 @@ begin
   Result := '';
   unqryBusq := TUniQuery.Create(nil);
   try
-    unqryBusq.Connection := inLibGlobalVar.oConn;
+    unqryBusq.Connection := oConn;
     unqryBusq.SQL.Text :=
       'SELECT SK.CODIGO_UNIDAD_SKU,'                         + sLineBreak +
       '       SK.CODIGO_ART_SKU,'                            + sLineBreak +
@@ -2286,7 +2286,7 @@ begin
   AEncontrado  := False;
   if Trim(AInput) = '' then Exit;
 
-  Validador := TArticulosValidador.Create(inLibGlobalVar.oConn);
+  Validador := TArticulosValidador.Create(oConn);
   try
     Resolucion := Validador.Resolver(AInput);
     if not Resolucion.Encontrado then Exit;
@@ -3230,7 +3230,7 @@ begin
   Screen.Cursor := crHourGlass;
   Lista := TStringList.Create;
   try
-    if RecogerRecuento(sEmp, sAlm, sSerie, sNumero, oUser, idRec, Lista,
+    if RecogerRecuento(sEmp, sAlm, sSerie, sNumero, IdentidadSesion.Usuario, idRec, Lista,
                        iNumEv, sMsg) then
     begin
       // Volcamos el agregado SKU=CANTIDAD a las físicas, igual que el Excel.

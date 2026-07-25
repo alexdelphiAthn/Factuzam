@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoStockConsulta                                            }
 {    Tipo:       Formulario (flotante, fsStayOnTop)                            }
@@ -67,7 +67,7 @@ uses
   dxSkinsCore, dxSkinBlue, dxSkinsForm, dxScrollbarAnnotations,
   dxDateRanges, cxMemo, cxControls, dxCoreGraphics, cxCustomListBox,
   cxRadioGroup, inLibLectorScanner, inLibDocumentosTrabajo, inLibFotos,
-  inLibPermisosIntf, inLibPerfilesUsuarioIntf;
+  inLibPermisosIntf, inLibPerfilesUsuarioIntf, inLibContextoSesionIntf;
 
 const
   // Detector por velocidad de tecleo (codigo de barras + CR, sin STX/ETX).
@@ -202,6 +202,8 @@ type
     FSkusCoincidencia: TStringList;
     FActualizandoArticulo: Boolean;
     FResolviendoEntrada: Boolean;
+    FContextoSesion: IContextoSesionAplicacion;
+    function GetIdentidadSesion: TIdentidadSesion;
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure AplicarLecturaCodigoBarras(const ACodigo: string);
     procedure LectorCodigoLeido(Sender: TObject; const ACodigo: string);
@@ -278,10 +280,15 @@ type
   public
     constructor Create(AOwner: TComponent;
                        const APermisos: IPermisosAplicacion;
-                       const APerfilesUsuario: IPerfilesUsuario); reintroduce;
+                       const APerfilesUsuario: IPerfilesUsuario;
+                       const AContextoSesion: IContextoSesionAplicacion);
+                       reintroduce;
     procedure AsignarPermisos(const APermisos: IPermisosAplicacion);
     procedure AsignarPerfilesUsuario(
       const APerfilesUsuario: IPerfilesUsuario);
+    procedure AsignarContextoSesion(
+      const AContextoSesion: IContextoSesionAplicacion);
+    property IdentidadSesion: TIdentidadSesion read GetIdentidadSesion;
     procedure SetArticuloSku(const ACodArt, ACodSku: string);
   end;
 
@@ -293,6 +300,8 @@ var
 procedure MostrarStockConsulta(AOwner: TComponent;
                                const APermisos: IPermisosAplicacion;
                                const APerfilesUsuario: IPerfilesUsuario;
+                               const AContextoSesion:
+                                 IContextoSesionAplicacion;
                                const ACodArt, ACodSku: string);
 procedure DesvincularPerfilesStockConsulta;
 
@@ -367,17 +376,21 @@ end;
 procedure MostrarStockConsulta(AOwner: TComponent;
                                const APermisos: IPermisosAplicacion;
                                const APerfilesUsuario: IPerfilesUsuario;
+                               const AContextoSesion:
+                                 IContextoSesionAplicacion;
                                const ACodArt, ACodSku: string);
 begin
   if frmStockConsulta = nil then
     frmStockConsulta := TfrmStockConsulta.Create(
       Application,
       APermisos,
-      APerfilesUsuario)
+      APerfilesUsuario,
+      AContextoSesion)
   else
   begin
     frmStockConsulta.AsignarPermisos(APermisos);
     frmStockConsulta.AsignarPerfilesUsuario(APerfilesUsuario);
+    frmStockConsulta.AsignarContextoSesion(AContextoSesion);
   end;
   frmStockConsulta.SetArticuloSku(ACodArt, ACodSku);
   if frmStockConsulta.WindowState = wsMinimized then
@@ -402,10 +415,12 @@ end;
 constructor TfrmStockConsulta.Create(
   AOwner: TComponent;
   const APermisos: IPermisosAplicacion;
-  const APerfilesUsuario: IPerfilesUsuario);
+  const APerfilesUsuario: IPerfilesUsuario;
+  const AContextoSesion: IContextoSesionAplicacion);
 begin
   FPermisos := APermisos;
   FPerfilesUsuario := APerfilesUsuario;
+  FContextoSesion := AContextoSesion;
   inherited Create(AOwner);
 end;
 
@@ -423,6 +438,20 @@ procedure TfrmStockConsulta.AsignarPerfilesUsuario(
   const APerfilesUsuario: IPerfilesUsuario);
 begin
   FPerfilesUsuario := APerfilesUsuario;
+end;
+
+procedure TfrmStockConsulta.AsignarContextoSesion(
+  const AContextoSesion: IContextoSesionAplicacion);
+begin
+  FContextoSesion := AContextoSesion;
+end;
+
+function TfrmStockConsulta.GetIdentidadSesion: TIdentidadSesion;
+begin
+  if not Assigned(FContextoSesion) then
+    raise Exception.Create(
+      'No se ha configurado el contexto de sesión de la consulta de stock.');
+  Result := FContextoSesion.Identidad;
 end;
 
 procedure TfrmStockConsulta.FormCreate(Sender: TObject);
@@ -450,7 +479,7 @@ begin
   // por defecto salvo permiso explicito 'caja.verCoste'.
   AsignarPermisos(FPermisos);
   FQry := TUniQuery.Create(Self);
-  FQry.Connection := inLibGlobalVar.oConn;
+  FQry.Connection := oConn;
   FDs  := TDataSource.Create(Self);
   FDs.DataSet := FQry;
   tvStock.DataController.DataSource := FDs;
@@ -575,8 +604,8 @@ begin
   dic := nil;
   try
     GetFormUserProfile(dic, 'frmStockConsulta',
-                       inLibGlobalVar.oUser,
-                       inLibGlobalVar.oGroup,
+                       IdentidadSesion.Usuario,
+                       IdentidadSesion.Grupo,
                        FPerfilesUsuario);
     FModoDesglosado := SameText(
       GetPerfilValueDef(dic, 'ModoDesglosado', 'N'), 'S');
@@ -590,7 +619,7 @@ procedure TfrmStockConsulta.GuardarModoUsuario;
 begin
   if Assigned(FPerfilesUsuario) then
     FPerfilesUsuario.GrabarPerfil(
-      inLibGlobalVar.oUser,
+      IdentidadSesion.Usuario,
       'frmStockConsulta',
       'ModoDesglosado',
       IfThen(FModoDesglosado, 'S', 'N'));
@@ -769,7 +798,7 @@ var
   Validador  : TArticulosValidador;
   Resolucion : TArtResolucionEntrada;
 begin
-  Validador := TArticulosValidador.Create(inLibGlobalVar.oConn);
+  Validador := TArticulosValidador.Create(oConn);
   try
     Resolucion := Validador.ResolverCodigoBarras(ACodigo);
   finally
@@ -957,7 +986,7 @@ begin
       q := TUniQuery.Create(nil);
       stArticulos := TStringList.Create;
       try
-        q.Connection := inLibGlobalVar.oConn;
+        q.Connection := oConn;
         q.SQL.Text :=
           'SELECT DISTINCT X.TIPO_COINCIDENCIA, X.CODIGO_PADRE, ' +
           '       X.CODIGO_SKU, X.DESCRIPCION_ART, ' +
@@ -1042,7 +1071,8 @@ begin
   if ResolverCeldaDocumentoTrabajo(linea, sMsg) then
   begin
     try
-      AgregarUnidadADocumentoTrabajo(Self, inLibGlobalVar.oConn, linea);
+      AgregarUnidadADocumentoTrabajo(Self, oConn,
+        FContextoSesion, linea);
     except
       on E: Exception do
       begin
@@ -1069,7 +1099,7 @@ begin
   AMensaje := '';
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     sSql :=
       'SELECT sk.CODIGO_UNIDAD_SKU ' +
       '  FROM fza_articulos_skus sk ' +
@@ -1309,7 +1339,7 @@ begin
   lstAlmacenes.Items.Clear;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     q.SQL.Text :=
       'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM, TIPO_USO_ALM ' +
       '  FROM fza_almacenes ' +
@@ -1389,7 +1419,7 @@ begin
   bColorSkuEncontrado := False;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     // GROUP BY AV.AV para deduplicar por nombre de color: en
     // fza_atributos_valores puede haber varios ID_AV con el mismo texto
     // (ej. NEGRO con ID_AV=100 y otro NEGRO con otro ID_AV/ORDEN_AV).
@@ -1469,7 +1499,7 @@ begin
   if Trim(FCodArt) = '' then Exit;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     // FCodArt va inline (QuotedStr) como en EstadoBaseSelectFor: aparece dos
     // veces y asi evitamos lios de parametros duplicados con UniDAC. La
     // derivada COLORS mapea el prefijo ART/COLOR al nombre del color (AV) via
@@ -1636,7 +1666,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := oConn;
       q.SQL.Text :=
         'SELECT DESCRIPCION_ART FROM fza_articulos ' +
         ' WHERE CODIGO_ART_ART = :p';
@@ -2068,7 +2098,7 @@ begin
     fotos := nil;
     try
       filtros := FFotosFiltros[ADimension] + [ADimension];
-      q.Connection := inLibGlobalVar.oConn;
+      q.Connection := oConn;
       q.SQL.Clear;
       q.SQL.Add('SELECT A.CODIGO_ART_ART,');
       q.SQL.Add('       A.DESCRIPCION_ART,');
@@ -2308,7 +2338,7 @@ begin
   sb := TStringList.Create;
   q  := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
 
     // ---- Propiedades del articulo (todas las activas) ----
     // El valor mostrado depende del tipo: LISTA -> texto del valor en
@@ -2743,7 +2773,7 @@ begin
 
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
 
     // 1. Conjunto pivot (tallas) asignado al articulo. Si la asignacion
     //    tiene varios candidatos no-color, cogemos el primero por
@@ -3121,7 +3151,7 @@ begin
   Result := '';
   q := TUniQuery.Create(nil);
   try
-    q.Connection := inLibGlobalVar.oConn;
+    q.Connection := oConn;
     q.SQL.Text :=
       'SELECT'                                                       + sLineBreak +
       '    a.CODIGO_ART_ART,'                                        + sLineBreak +

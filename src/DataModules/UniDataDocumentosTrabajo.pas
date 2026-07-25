@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataDocumentosTrabajo                                      }
 {    Tipo:       Data Module                                                   }
@@ -140,10 +140,10 @@ begin
       ' WHERE USUARIO_DTR = :USUARIO ' +
       ' ORDER BY INSTANTE_DOCUMENTO_DTR DESC, ID_DTR DESC';
   end;
-  unqryTablaG.ParamByName('USUARIO').AsString := oUser;
+  unqryTablaG.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
   if FAmbito = dtaCompartidos then
   begin
-    unqryTablaG.ParamByName('GRUPO').AsString := oGroup;
+    unqryTablaG.ParamByName('GRUPO').AsString := IdentidadSesion.Grupo;
   end;
 end;
 
@@ -743,7 +743,7 @@ begin
       'Grabe primero la cabecera del Documento de Trabajo.');
   end;
   sTipo := NormalizarTipoDestino(sDestino, ATipo);
-  if SameText(sTipo, 'USUARIO') and SameText(sDestino, oUser) then
+  if SameText(sTipo, 'USUARIO') and SameText(sDestino, IdentidadSesion.Usuario) then
   begin
     raise ERangeError.Create(
       'No es necesario compartir el documento consigo mismo.');
@@ -831,7 +831,7 @@ begin
     if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
     begin
       Result := SameText(unqryTablaG.FieldByName('USUARIO_DTR').AsString,
-                         oUser);
+                         IdentidadSesion.Usuario);
     end;
   end;
 end;
@@ -851,9 +851,9 @@ begin
     'Documento de trabajo ' + FormatDateTime('dd/mm/yyyy hh:nn', Now);
   DataSet.FieldByName('TIPO_DTR').AsString := 'GENERAL';
   DataSet.FieldByName('ESTADO_DTR').AsString := 'ABIERTO';
-  DataSet.FieldByName('CODIGO_EMP_DTR').AsString := oEmpresa;
-  DataSet.FieldByName('CODIGO_ALM_DTR').AsString := oAlmacen;
-  DataSet.FieldByName('USUARIO_DTR').AsString := oUser;
+  DataSet.FieldByName('CODIGO_EMP_DTR').AsString := UbicacionSesion.Empresa;
+  DataSet.FieldByName('CODIGO_ALM_DTR').AsString := UbicacionSesion.Almacen;
+  DataSet.FieldByName('USUARIO_DTR').AsString := IdentidadSesion.Usuario;
   DataSet.FieldByName('INSTANTE_DOCUMENTO_DTR').AsDateTime := Now;
 end;
 
@@ -862,13 +862,13 @@ begin
   inherited;
   if DataSet.State = dsInsert then
   begin
-    DataSet.FieldByName('USUARIO_DTR').AsString := oUser;
+    DataSet.FieldByName('USUARIO_DTR').AsString := IdentidadSesion.Usuario;
   end;
   if Trim(DataSet.FieldByName('USUARIO_DTR').AsString) = '' then
   begin
-    DataSet.FieldByName('USUARIO_DTR').AsString := oUser;
+    DataSet.FieldByName('USUARIO_DTR').AsString := IdentidadSesion.Usuario;
   end;
-  if not SameText(DataSet.FieldByName('USUARIO_DTR').AsString, oUser) then
+  if not SameText(DataSet.FieldByName('USUARIO_DTR').AsString, IdentidadSesion.Usuario) then
   begin
     raise ERangeError.Create(
       'El propietario del Documento de Trabajo no se puede cambiar.');
@@ -1083,7 +1083,7 @@ begin
   end;
   sTipo := NormalizarTipoDestino(
     sDestino, DataSet.FieldByName('TIPO_DESTINO_DTC').AsString);
-  if SameText(sTipo, 'USUARIO') and SameText(sDestino, oUser) then
+  if SameText(sTipo, 'USUARIO') and SameText(sDestino, IdentidadSesion.Usuario) then
   begin
     raise ERangeError.Create(
       'No es necesario compartir el documento consigo mismo.');

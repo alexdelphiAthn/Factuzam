@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaParam                                                }
 {    Tipo:       Formulario (Core)                                             }
@@ -341,7 +341,7 @@ procedure TfrmMtoCajaParam.RestaurarLayout;
 var
   Layout: TLayoutLoader;
 begin
-  Layout := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
+  Layout := TLayoutLoader.Create(Self.Name, ContextoSesion, PerfilesUsuario);
   try
     if Layout.Disponible then
     begin
@@ -491,10 +491,10 @@ begin
     begin
       ShowMessage(Format('Se han guardado %d parámetros correctamente para: %s',
                          [GuardadosCount, sUsuarioGrupo]));
-      if (sUsuarioGrupo = oUser) or
-         (sUsuarioGrupo = oGroup) or
+      if (sUsuarioGrupo = IdentidadSesion.Usuario) or
+         (sUsuarioGrupo = IdentidadSesion.Grupo) or
          (sUsuarioGrupo = oAll) then
-        oCajaParams.Recargar(oUser, oGroup);
+        oCajaParams.Recargar(IdentidadSesion.Usuario, IdentidadSesion.Grupo);
     end
     else
     begin
@@ -512,15 +512,15 @@ var
 begin
   ConstruirInspector;
   cmbGrupoUsuario.Properties.Items.Clear;
-  // Todo usuario gestiona sus propios parametros (oUser) y los de su
-  // grupo (oGroup), y puede consultar los de 'Todos' (oAll) en modo
+  // Todo usuario gestiona sus propios parametros (IdentidadSesion.Usuario) y los de su
+  // grupo (IdentidadSesion.Grupo), y puede consultar los de 'Todos' (oAll) en modo
   // solo lectura (lo aplica cmbGrupoUsuarioPropertiesChange).
-  cmbGrupoUsuario.Properties.Items.Add(oUser);
-  cmbGrupoUsuario.Properties.Items.Add(oGroup);
+  cmbGrupoUsuario.Properties.Items.Add(IdentidadSesion.Usuario);
+  cmbGrupoUsuario.Properties.Items.Add(IdentidadSesion.Grupo);
   cmbGrupoUsuario.Properties.Items.Add(oAll);
   // Solo los administradores ven ademas la lista completa de usuarios y
   // grupos del sistema (y pueden editarla).
-  if oRootGroup = 'S' then
+  if IdentidadSesion.GrupoRaiz = 'S' then
   begin
     qry := TUniQuery.Create(nil);
     try
@@ -621,8 +621,8 @@ begin
   if cmbGrupoUsuario.ItemIndex >= 0 then
   begin
     case cmbGrupoUsuario.ItemIndex of
-      0: begin sUsuario := oUser;  sGrupo := '';      end;
-      1: begin sUsuario := '';     sGrupo := oGroup;  end;
+      0: begin sUsuario := IdentidadSesion.Usuario;  sGrupo := '';      end;
+      1: begin sUsuario := '';     sGrupo := IdentidadSesion.Grupo;  end;
       2: begin sUsuario := '';     sGrupo := oAll;    end;
     else
       begin
@@ -636,9 +636,9 @@ begin
     // Un usuario normal edita lo suyo y lo de su grupo; los parametros de
     // 'Todos' (y cualquier otro sujeto) solo los ve en modo lectura. Los
     // administradores editan todo.
-    bSoloLectura := (oRootGroup <> 'S') and
-                    (not SameText(cmbGrupoUsuario.Text, oUser)) and
-                    (not SameText(cmbGrupoUsuario.Text, oGroup));
+    bSoloLectura := (IdentidadSesion.GrupoRaiz <> 'S') and
+                    (not SameText(cmbGrupoUsuario.Text, IdentidadSesion.Usuario)) and
+                    (not SameText(cmbGrupoUsuario.Text, IdentidadSesion.Grupo));
     JvInspector1.ReadOnly := bSoloLectura;
     btnGuardar.Enabled    := not bSoloLectura;
     actGuardar.Enabled    := not bSoloLectura;

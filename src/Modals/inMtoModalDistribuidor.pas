@@ -142,7 +142,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibGlobalVar, inLibLog;
+  inLibLog;
 
 procedure TfrmModalDistribuidor.FormCreate(Sender: TObject);
 begin

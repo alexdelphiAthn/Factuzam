@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataEmpresas                                               }
 {    Tipo:       Data Module                                                   }
@@ -298,7 +298,7 @@ begin
   qryBorrarLineas := TUniQuery.Create(Self);
   with qryBorrarLineas do
   begin
-    Connection := inLibGlobalVar.oConn;
+    Connection := oConn;
     SQL.Text := 'DELETE ' +
                 '  FROM fza_empresas_retenciones ' +
                 ' WHERE CODIGO_EMP_EMPRET = :Empresa ;';
@@ -558,12 +558,12 @@ begin
   if unqryTablaG.FindField('CODIGO_EMP_EMP').AsString = '0' then
   begin
       unqryTablaG.FindField('CODIGO_EMP_EMP').AsString :=
-                                                 ObtenerSiguienteContador('EM');
+                                                 ObtenerSiguienteContador('EM', IdentidadSesion.Usuario);
   end;
   if unqryTablaG.FindField('ORDEN_EMP').AsString = '0' then
   begin
       unqryTablaG.FindField('ORDEN_EMP').AsString :=
-                                                 ObtenerSiguienteContador('EO');
+                                                 ObtenerSiguienteContador('EO', IdentidadSesion.Usuario);
   end;
 end;
 
@@ -666,7 +666,7 @@ begin
   if unqryRetenciones.FindField('CODIGO_RETENCION_EMPRET').AsString = '0' then
   begin
       unqryRetenciones.FindField('CODIGO_RETENCION_EMPRET').AsString :=
-                                                 ObtenerSiguienteContador('RT');
+                                                 ObtenerSiguienteContador('RT', IdentidadSesion.Usuario);
     end;
 end;
 
@@ -675,7 +675,7 @@ begin
   if unqrySeries.FindField('CODIGO_SERIE_EMPSER').AsString = '0' then
   begin
       unqrySeries.FindField('CODIGO_SERIE_EMPSER').AsString :=
-                                                ObtenerSiguienteContador('ES');
+                                                ObtenerSiguienteContador('ES', IdentidadSesion.Usuario);
   end;
 end;
 
@@ -684,7 +684,7 @@ begin
   if unqryBancos.FindField('CODIGO_EMPBAN').AsString = '0' then
   begin
       unqryBancos.FindField('CODIGO_EMPBAN').AsString :=
-                                                ObtenerSiguienteContador('EB');
+                                                ObtenerSiguienteContador('EB', IdentidadSesion.Usuario);
   end;
 end;
 

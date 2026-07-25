@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoAlbaranes                                                }
 {    Tipo:       Formulario (Mto)                                              }
@@ -290,7 +290,7 @@ implementation
 
 uses
   inMtoModalFacturarAlbaranesFechas, inLibFotos, inLibGridCantidad,
-  inLibGenBusq, inLibShowMto, inLibGlobalVar, inLibFiltroUsuario, Uni,
+  inLibGenBusq, inLibShowMto, inLibFiltroUsuario, Uni,
   inLibArticulosResolver, inLibArticulosValidador, inLibVentasImpuestos,
   inLibtb, inLibUser, inLibColumnasSku;
 
@@ -310,7 +310,7 @@ begin
   end;
   if (sEmpresa = '') or (sEmpresa = '0') then
   begin
-    sEmpresa := Trim(inLibGlobalVar.oEmpresa);
+    sEmpresa := Trim(UbicacionSesion.Empresa);
   end;
   CargarSeriesEmpresa(sEmpresa, 'AV', cbbSERIE_ALB.Properties.Items);
   if cbbSERIE_ALB.Properties.Items.Count = 0 then
@@ -761,7 +761,7 @@ begin
   if FModoEntradaSel = mcsTallasInline then
   begin
     CfgT := Default(TGridTallasConfig);
-    CfgT.Usuario := oUser;
+    CfgT.Usuario := IdentidadSesion.Usuario;
     CfgT.Grid := tvLineasAlbaran;
     CfgT.SourceMaster := dsTablaG;
     CfgT.SourceLineas := dmmAlbaranes.dsAlbaranesLineas;
@@ -953,7 +953,7 @@ end;
 
 function TfrmMtoAlbaranes.SqlRestriccionUsuario: string;
 begin
-  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_ALB', 'CODIGO_ALM_ALB', '');
+  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_ALB', 'CODIGO_ALM_ALB', '');
 end;
 
 procedure TfrmMtoAlbaranes.CrearTablaPrincipal;

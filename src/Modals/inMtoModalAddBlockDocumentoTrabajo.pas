@@ -89,8 +89,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser,
-  inLibGlobalVar;
+  inLibUser;
 
 class function TfrmModalAddBlockDocumentoTrabajo.Ejecutar(
   AOwner: TComponent; AConn: TUniConnection; AIdDtr: Int64;
@@ -401,7 +400,7 @@ begin
   if (FSqlPreview <> nil) and FSqlPreview.Active and
      (FSqlPreview.RecordCount > 0) then
   begin
-    sUsuario := oUser;
+    sUsuario := IdentidadSesion.Usuario;
     sAlmacenesSql := AlmacenesCargaSql;
     iLineaActual := ProximoNumeroLinea;
     iNumLineas := 0;

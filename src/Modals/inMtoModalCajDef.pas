@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalCajDef                                              }
 {    Tipo:       Formulario (Modal)                                            }
@@ -111,7 +111,7 @@ begin
   // Se inyecta aquí porque los callers abren qrySeleccion tras el Create.
   qrySeleccion.SQL.Text :=
     InyectarFiltroSql(qrySeleccion.SQL.Text,
-                      SqlFiltroEmpAlmCaja('Empresa', 'Almacen', 'Caja'));
+                      SqlFiltroEmpAlmCaja(ContextoSesion, 'Empresa', 'Almacen', 'Caja'));
 end;
 
 procedure TfrmMtoModalCajDef.FormShow(Sender: TObject);

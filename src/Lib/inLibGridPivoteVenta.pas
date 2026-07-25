@@ -100,7 +100,7 @@ implementation
 
 uses
   inLibArticulosAtributosLookup, inLibArticulosValidador,
-  inLibAtributosPaleta, inLibGenBusq, inLibGlobalVar, inLibLog;
+  inLibAtributosPaleta, inLibGenBusq, inLibLog;
 
 const
   ID_AV_SIN_TALLA = 0;

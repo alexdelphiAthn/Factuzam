@@ -111,10 +111,10 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := inLibGlobalVar.oConn;
-      bTxOwned := not inLibGlobalVar.oConn.InTransaction;
+      q.Connection := oConn;
+      bTxOwned := not oConn.InTransaction;
       if bTxOwned then
-        inLibGlobalVar.oConn.StartTransaction;
+        oConn.StartTransaction;
       try
       q.SQL.Text :=
         'CREATE TEMPORARY TABLE IF NOT EXISTS tmp_efec_fusion (' +
@@ -244,7 +244,7 @@ begin
         '   AND H.NUMERO_EFEC = :efecto';
       q.ParamByName('nuevo').AsInteger := iNuevoEfec;
       q.ParamByName('referencia').AsString := AReferencia;
-      q.ParamByName('usuario').AsString := oUser;
+      q.ParamByName('usuario').AsString := IdentidadSesion.Usuario;
       q.ParamByName('serie').AsString := sSerieDestino;
       q.ParamByName('numero').AsString := sNumeroDestino;
       q.ParamByName('efecto').AsInteger := AClaves[0].NumeroEfec;
@@ -273,16 +273,16 @@ begin
       q.ParamByName('serie_dst').AsString := sSerieDestino;
       q.ParamByName('numero_dst').AsString := sNumeroDestino;
       q.ParamByName('efecto_dst').AsInteger := iNuevoEfec;
-      q.ParamByName('usuario').AsString := oUser;
+      q.ParamByName('usuario').AsString := IdentidadSesion.Usuario;
       q.ExecSQL;
       Result := q.RowsAffected;
       q.SQL.Text := 'DROP TEMPORARY TABLE IF EXISTS tmp_efec_fusion';
       q.ExecSQL;
       if bTxOwned then
-        inLibGlobalVar.oConn.Commit;
+        oConn.Commit;
       except
-        if bTxOwned and inLibGlobalVar.oConn.InTransaction then
-          inLibGlobalVar.oConn.Rollback;
+        if bTxOwned and oConn.InTransaction then
+          oConn.Rollback;
         raise;
       end;
     finally
@@ -300,7 +300,7 @@ var
 begin
   sp := TUniStoredProc.Create(nil);
   try
-    sp.Connection     := inLibGlobalVar.oConn;
+    sp.Connection     := oConn;
     sp.StoredProcName := 'PRC_EFEC_CONCILIAR_PAGO';
     sp.Params.Clear;
     sp.Params.CreateParam(ftString,  'p_SERIE',      ptInput);
@@ -321,7 +321,7 @@ begin
     sp.ParamByName('p_TIPO').AsString       := ATipo;
     sp.ParamByName('p_REFERENCIA').AsString := AReferencia;
     sp.ParamByName('p_ENTIDAD').AsString    := '';
-    sp.ParamByName('p_USUARIO').AsString    := oUser;
+    sp.ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
     sp.ExecProc;
     Result := sp.ParamByName('p_RESULTADO').AsInteger;
   finally

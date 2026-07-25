@@ -18,7 +18,8 @@ unit inLibDocumentosTrabajo;
 interface
 
 uses
-  System.SysUtils, System.Classes, Data.DB, DBAccess, Uni;
+  System.SysUtils, System.Classes, Data.DB, DBAccess, Uni,
+  inLibContextoSesionIntf;
 
 type
   TResolverDocTrabajoArtSku = procedure(out ACodArt, ACodSku: string) of object;
@@ -39,10 +40,14 @@ type
 
 function AgregarUnidadADocumentoTrabajo(AOwner: TComponent;
                                         AConexion: TUniConnection;
+                                        const AContextoSesion:
+                                        IContextoSesionAplicacion;
                                         const ALinea: TDocTrabajoLineaOrigen):
                                         Boolean;
 function AgregarArticuloActivoADocumentoTrabajo(AOwner: TComponent;
                                                 AConexion: TUniConnection;
+                                                const AContextoSesion:
+                                                IContextoSesionAplicacion;
                                                 AResolver:
                                                 TResolverDocTrabajoArtSku):
                                                 Boolean;
@@ -80,11 +85,17 @@ begin
 end;
 
 function CrearDocumentoTrabajo(AConexion: TUniConnection;
+                               const AContextoSesion:
+                               IContextoSesionAplicacion;
                                const ATitulo: string): Int64;
 var
   q: TUniQuery;
+  Identidad: TIdentidadSesion;
+  Ubicacion: TUbicacionSesion;
 begin
   Result := 0;
+  Identidad := AContextoSesion.Identidad;
+  Ubicacion := AContextoSesion.Ubicacion;
   q := TUniQuery.Create(nil);
   try
     q.Connection := ConnTrabajo(AConexion);
@@ -97,11 +108,11 @@ begin
       '  (:TITULO, ''GENERAL'', ''ABIERTO'', :EMPRESA, :ALMACEN, ' +
       '   :USUARIO, NOW(), NOW(), :USUARIO_ALTA, :USUARIO_MODIF)';
     q.ParamByName('TITULO').AsString := ATitulo;
-    q.ParamByName('EMPRESA').AsString := oEmpresa;
-    q.ParamByName('ALMACEN').AsString := oAlmacen;
-    q.ParamByName('USUARIO').AsString := oUser;
-    q.ParamByName('USUARIO_ALTA').AsString := oUser;
-    q.ParamByName('USUARIO_MODIF').AsString := oUser;
+    q.ParamByName('EMPRESA').AsString := Ubicacion.Empresa;
+    q.ParamByName('ALMACEN').AsString := Ubicacion.Almacen;
+    q.ParamByName('USUARIO').AsString := Identidad.Usuario;
+    q.ParamByName('USUARIO_ALTA').AsString := Identidad.Usuario;
+    q.ParamByName('USUARIO_MODIF').AsString := Identidad.Usuario;
     q.Execute;
     q.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
     q.Open;
@@ -116,6 +127,8 @@ end;
 
 function SeleccionarDocumentoTrabajo(AOwner: TComponent;
                                      AConexion: TUniConnection;
+                                     const AContextoSesion:
+                                     IContextoSesionAplicacion;
                                      out AIdDtr: Int64): Boolean;
 var
   iResp: Integer;
@@ -143,7 +156,8 @@ begin
     begin
       if Trim(sTitulo) <> '' then
       begin
-        AIdDtr := CrearDocumentoTrabajo(AConexion, Trim(sTitulo));
+        AIdDtr := CrearDocumentoTrabajo(AConexion, AContextoSesion,
+          Trim(sTitulo));
         Result := AIdDtr > 0;
       end;
     end;
@@ -155,7 +169,8 @@ begin
       '       INSTANTE_DOCUMENTO_DTR, ESTADO_DTR ' +
       '  FROM fza_documentos_trabajo ' +
       ' WHERE ESTADO_DTR = ''ABIERTO'' ' +
-      '   AND USUARIO_DTR = ' + QuotedStr(oUser) + ' ' +
+      '   AND USUARIO_DTR = ' +
+      QuotedStr(AContextoSesion.Identidad.Usuario) + ' ' +
       ' ORDER BY INSTANTE_DOCUMENTO_DTR DESC, ID_DTR DESC';
     if TBusquedaUtils.EjecutarBusqueda('Documentos de Trabajo abiertos',
                                        sSql, 'ID_DTR', sId,
@@ -260,6 +275,8 @@ begin
 end;
 
 procedure InsertarLineaDocumentoTrabajo(AConexion: TUniConnection;
+                                        const AContextoSesion:
+                                        IContextoSesionAplicacion;
                                         AIdDtr: Int64;
                                         const ALinea:
                                         TDocTrabajoLineaOrigen);
@@ -299,8 +316,10 @@ begin
     q.ParamByName('CANTIDAD_STOCK').AsFloat := ALinea.CantidadStock;
     q.ParamByName('CANTIDAD').AsFloat := ALinea.Cantidad;
     q.ParamByName('ORIGEN').AsString := ALinea.Origen;
-    q.ParamByName('USUARIO_ALTA').AsString := oUser;
-    q.ParamByName('USUARIO_MODIF').AsString := oUser;
+    q.ParamByName('USUARIO_ALTA').AsString :=
+      AContextoSesion.Identidad.Usuario;
+    q.ParamByName('USUARIO_MODIF').AsString :=
+      AContextoSesion.Identidad.Usuario;
     q.Execute;
   finally
     FreeAndNil(q);
@@ -309,6 +328,8 @@ end;
 
 function AgregarUnidadADocumentoTrabajo(AOwner: TComponent;
                                         AConexion: TUniConnection;
+                                        const AContextoSesion:
+                                        IContextoSesionAplicacion;
                                         const ALinea: TDocTrabajoLineaOrigen):
                                         Boolean;
 var
@@ -331,9 +352,11 @@ begin
   begin
     rLinea.Origen := 'MANUAL';
   end;
-  if SeleccionarDocumentoTrabajo(AOwner, AConexion, iIdDtr) then
+  if SeleccionarDocumentoTrabajo(AOwner, AConexion, AContextoSesion,
+    iIdDtr) then
   begin
-    InsertarLineaDocumentoTrabajo(AConexion, iIdDtr, rLinea);
+    InsertarLineaDocumentoTrabajo(AConexion, AContextoSesion, iIdDtr,
+      rLinea);
     Application.MessageBox('Unidad agregada al Documento de Trabajo.',
                            'Documento de Trabajo',
                            MB_OK + MB_ICONINFORMATION);
@@ -343,6 +366,8 @@ end;
 
 function AgregarArticuloActivoADocumentoTrabajo(AOwner: TComponent;
                                                 AConexion: TUniConnection;
+                                                const AContextoSesion:
+                                                IContextoSesionAplicacion;
                                                 AResolver:
                                                 TResolverDocTrabajoArtSku):
                                                 Boolean;
@@ -354,11 +379,12 @@ begin
   begin
     AResolver(rLinea.CodigoArticulo, rLinea.CodigoSku);
   end;
-  rLinea.CodigoAlmacen := oAlmacen;
+  rLinea.CodigoAlmacen := AContextoSesion.Ubicacion.Almacen;
   rLinea.CantidadStock := 0;
   rLinea.Cantidad := 1;
   rLinea.Origen := 'MTO';
-  Result := AgregarUnidadADocumentoTrabajo(AOwner, AConexion, rLinea);
+  Result := AgregarUnidadADocumentoTrabajo(AOwner, AConexion,
+    AContextoSesion, rLinea);
 end;
 
 end.

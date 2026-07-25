@@ -197,9 +197,8 @@ begin
   end;
   Screen.Cursor := crHourGlass;
   try
-    TArqueoTicket.ImprimirCierreDesdeHistorico(FConn, FEmpresa, FAlmacen,
-                                               FCaja, sCod,
-                                               oNomImpresoraCaja);
+    TArqueoTicket.ImprimirCierreDesdeHistorico(FConn, ContextoSesion,
+      FEmpresa, FAlmacen, FCaja, sCod, oNomImpresoraCaja);
   finally
     Screen.Cursor := crDefault;
   end;

@@ -244,8 +244,8 @@ procedure TfrmModalWizardEditar.CargarFormatosExistentes;
 begin
   unqryFormatos.Close;
   unqryFormatos.ParamByName('KEY').AsString := sInforme;
-  unqryFormatos.ParamByName('USU').AsString := oUser;
-  unqryFormatos.ParamByName('GRP').AsString := oGroup;
+  unqryFormatos.ParamByName('USU').AsString := IdentidadSesion.Usuario;
+  unqryFormatos.ParamByName('GRP').AsString := IdentidadSesion.Grupo;
   unqryFormatos.ParamByName('ALL').AsString := oAll;
   unqryFormatos.Open;
   cbbFormato.Properties.Items.BeginUpdate;
@@ -269,14 +269,14 @@ begin
   cbbScope.Properties.Items.BeginUpdate;
   try
     cbbScope.Properties.Items.Clear;
-    cbbScope.Properties.Items.Add(oUser);
-    cbbScope.Properties.Items.Add(oGroup);
-    if (inLibGlobalVar.orootGroup = 'S') then
+    cbbScope.Properties.Items.Add(IdentidadSesion.Usuario);
+    cbbScope.Properties.Items.Add(IdentidadSesion.Grupo);
+    if (IdentidadSesion.GrupoRaiz = 'S') then
       cbbScope.Properties.Items.Add(oAll);
   finally
     cbbScope.Properties.Items.EndUpdate;
   end;
-  cbbScope.Text := oUser;
+  cbbScope.Text := IdentidadSesion.Usuario;
 end;
 
 function TfrmModalWizardEditar.EsFormatoNuevo: Boolean;
@@ -328,7 +328,7 @@ begin
   // Fijar la informacion del paso 1 antes de mostrar paso 2.
   sFormato := NombreFinal;
   sScope   := cbbScope.Text;
-  if sScope = '' then sScope := oUser;
+  if sScope = '' then sScope := IdentidadSesion.Usuario;
   bExiste  := not EsFormatoNuevo;
 end;
 
@@ -858,10 +858,10 @@ begin
        (DataSet.FieldByName('TIPO_INFGUI').AsString = '') then
       DataSet.FieldByName('TIPO_INFGUI').AsString := 'TABLA';
     DataSet.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-    DataSet.FieldByName('USUARIO_ALTA').AsString    := oUser;
+    DataSet.FieldByName('USUARIO_ALTA').AsString    := IdentidadSesion.Usuario;
   end;
   DataSet.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
-  DataSet.FieldByName('USUARIO_MODIF').AsString    := oUser;
+  DataSet.FieldByName('USUARIO_MODIF').AsString    := IdentidadSesion.Usuario;
 end;
 
 procedure TfrmModalWizardEditar.wzWizardFinishButtonClick(Sender: TObject);

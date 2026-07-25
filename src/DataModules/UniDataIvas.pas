@@ -40,7 +40,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibtb, inLibGlobalVar, inLibLog, System.Diagnostics;
+uses inLibtb, inLibLog, System.Diagnostics;
 
 {$R *.dfm}
 
@@ -194,7 +194,7 @@ begin
       Params.CreateParam(ftString, 'ptipodoc', ptInput);
       Params.CreateParam(ftInteger, 'pcont', ptOutput);
       Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := oUser;
+      ParamByName('pUSUARIO_MODIF').AsString := IdentidadSesion.Usuario;
       ParamByName('ptipodoc').AsString :=  'IV';
       ExecProc;
       unqryTablaG.FindField('CODIGO_IVA').AsString :=

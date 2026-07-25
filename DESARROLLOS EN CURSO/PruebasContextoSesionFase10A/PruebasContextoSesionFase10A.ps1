@@ -10,7 +10,6 @@ $contrato = Get-Content -Raw -LiteralPath $rutaContrato
 $logon = Get-Content -Raw -LiteralPath $rutaLogon
 $principal = Get-Content -Raw -LiteralPath $rutaPrincipal
 $proyecto = Get-Content -Raw -LiteralPath $rutaProyecto
-$adaptador = Get-Content -Raw -LiteralPath $rutaAdaptador
 $pruebas = 0
 $fallos = 0
 
@@ -60,10 +59,10 @@ Comprobar (
 Comprobar ($proyecto -notmatch '\bsSuccess\b') `
   'El proyecto no interpreta indicadores de sesión basados en texto'
 Comprobar ($proyecto -match
-    'TContextoSesionGlobal\.Create\(\s*' +
+    'TContextoSesionAplicacion\.Create\(\s*' +
     'ResultadoInicioSesion\.Identidad,\s*' +
     'ResultadoInicioSesion\.Ubicacion\)') `
-  'La raíz compone el adaptador temporal desde el resultado tipado'
+  'La raíz compone el contexto definitivo desde el resultado tipado'
 Comprobar (
     ($principal -match
       'procedure TfrmMtoPrincipal\.InicializarAplicacion\(') -and
@@ -76,9 +75,9 @@ Comprobar ($principal -notmatch
 Comprobar ($principal -notmatch '\binLibContextoSesionGlobal\b') `
   'La ventana principal desconoce el adaptador de compatibilidad'
 Comprobar (
-    ($adaptador -match 'TContextoSesionGlobal') -and
-    ($adaptador -match 'SincronizarGlobales')
-  ) 'Se conserva el adaptador para los consumidores aún no migrados'
+    (-not (Test-Path -LiteralPath $rutaAdaptador)) -and
+    ($proyecto -notmatch '\binLibContextoSesionGlobal\b')
+  ) 'El adaptador transitorio puede retirarse tras completar X-C'
 
 $dfmObjetivo = @(
   'src/Core/inMtoLogon.dfm',

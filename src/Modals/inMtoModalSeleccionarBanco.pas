@@ -144,7 +144,7 @@ var
   sColDef: string;
 begin
   if not Assigned(FConn) then
-    FConn := inLibGlobalVar.oConn;
+    FConn := oConn;
   if FUso = ubePago then
   begin
     sColDef := 'ESDEFECTO_PAGO_EMPBAN';

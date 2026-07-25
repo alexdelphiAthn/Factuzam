@@ -57,7 +57,6 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
-  inLibGlobalVar,
   inLibUser;
 
 {$R *.dfm}
@@ -321,7 +320,7 @@ begin
           qry.ParamByName('FINAL').AsFloat := dFinal;
           qry.ParamByName('DTO').AsFloat := dDto;
           qry.ParamByName('PORC_DTO').AsFloat := dPorcDto;
-          qry.ParamByName('USUARIO').AsString := oUser;
+          qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
           qry.ParamByName('ID').AsInteger :=
             unqryLineas.FieldByName('ID_TARCLIN').AsInteger;
           qry.Execute;
@@ -339,7 +338,7 @@ begin
         '  USUARIO_MODIF = :USUARIO, ' +
         '  INSTANTE_MODIF = NOW() ' +
         'WHERE CODIGO_TARC = :CODIGO';
-      qry.ParamByName('USUARIO').AsString := oUser;
+      qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
       qry.ParamByName('CODIGO').AsInteger :=
         unqryTablaG.FieldByName('CODIGO_TARC').AsInteger;
       qry.Execute;
@@ -487,7 +486,7 @@ begin
               else
                 qryExec.ParamByName('HASTA').AsDateTime :=
                   CampoCabecera('FECHA_HASTA_TARC').AsDateTime;
-              qryExec.ParamByName('USUARIO').AsString := oUser;
+              qryExec.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
               qryExec.Execute;
               if EsInsertar then
               begin
@@ -498,7 +497,7 @@ begin
               end;
               qryMarca.ParamByName('MENSAJE').AsString := 'Aplicada';
               qryMarca.ParamByName('UNICO').AsInteger := iUnico;
-              qryMarca.ParamByName('USUARIO').AsString := oUser;
+              qryMarca.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
               qryMarca.ParamByName('ID').AsInteger :=
                 unqryLineas.FieldByName('ID_TARCLIN').AsInteger;
               qryMarca.Execute;
@@ -534,7 +533,7 @@ begin
             qryExec.ParamByName('HASTA_DTO').Clear
           else
             qryExec.ParamByName('HASTA_DTO').AsDateTime := fHastaDto.AsDateTime;
-          qryExec.ParamByName('USUARIO').AsString := oUser;
+          qryExec.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
           qryExec.ParamByName('TAR').AsString :=
             unqryTablaG.FieldByName('CODIGO_TAR_DESTINO_TARC').AsString;
           qryExec.Execute;
@@ -547,7 +546,7 @@ begin
           '  USUARIO_MODIF = :USUARIO, ' +
           '  INSTANTE_MODIF = NOW() ' +
           'WHERE CODIGO_TARC = :CODIGO';
-        qryExec.ParamByName('USUARIO').AsString := oUser;
+        qryExec.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
         qryExec.ParamByName('CODIGO').AsInteger :=
           unqryTablaG.FieldByName('CODIGO_TARC').AsInteger;
         qryExec.Execute;

@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoPedidos                                                  }
 {    Tipo:       Formulario (Mto)                                              }
@@ -311,7 +311,7 @@ implementation
 uses
   inMtoModalImportarPedidosPS, inLibFotos, inLibGridCantidad,
   inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibGenBusq,
-  inLibShowMto, inLibGlobalVar, inLibFiltroUsuario, Uni, inLibArticulosResolver,
+  inLibShowMto, inLibFiltroUsuario, Uni, inLibArticulosResolver,
   inLibArticulosValidador, inLibVentasImpuestos, inLibtb,
   inLibGridTallasInline,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
@@ -353,7 +353,7 @@ begin
   end;
   if (sEmpresa = '') or (sEmpresa = '0') then
   begin
-    sEmpresa := Trim(inLibGlobalVar.oEmpresa);
+    sEmpresa := Trim(UbicacionSesion.Empresa);
   end;
   CargarSeriesEmpresa(sEmpresa, 'PE', cbbSERIE_PED.Properties.Items);
   if cbbSERIE_PED.Properties.Items.Count = 0 then
@@ -757,7 +757,7 @@ end;
 
 function TfrmMtoPedidos.SqlRestriccionUsuario: string;
 begin
-  Result := SqlFiltroEmpAlmCaja('CODIGO_EMP_PED', 'CODIGO_ALM_PED', '');
+  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_PED', 'CODIGO_ALM_PED', '');
 end;
 
 procedure TfrmMtoPedidos.CrearTablaPrincipal;
@@ -1462,7 +1462,7 @@ begin
   begin
     CfgPV := Default(TGridPivoteVentaConfig);
     CfgPV.Conexion := dmmPedidos.unqryTablaG.Connection;
-    CfgPV.Usuario := oUser;
+    CfgPV.Usuario := IdentidadSesion.Usuario;
     CfgPV.SourceMaster := dsTablaG;
     CfgPV.SourceLineas := dmmPedidos.dsPedidosLineas;
     CfgPV.FieldSerieMaster := 'SERIE_PED';
