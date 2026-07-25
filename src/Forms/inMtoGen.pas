@@ -2848,15 +2848,7 @@ end;
 procedure TfrmMtoGen.sbExportExcelClick(Sender: TObject);
 begin
   if PuedeExportar then
-  begin
-    saveDialog.Title := 'Guardar listado a Excel';
-    saveDialog.InitialDir := GetSpecialFolderPath(CSIDL_MYDOCUMENTS);
-    saveDialog.Filter := 'Archivo Excel|*.xlsx';
-    saveDialog.DefaultExt := 'xlsx';
-    saveDialog.FilterIndex := 1;
-    if saveDialog.Execute then
-      ExportGridToXLSX(saveDialog.FileName, cxGrdPrincipal);
-  end;
+    ExportarExcel(ParametrosApp, cxGrdPrincipal, 'Listado');
 end;
 
 // ===========================================================================

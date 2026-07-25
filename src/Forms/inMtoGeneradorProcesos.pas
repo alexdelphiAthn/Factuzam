@@ -1298,37 +1298,15 @@ begin
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnExportarExcelClick(Sender: TObject);
-var
-  saveDialog : tsavedialog;
 begin
-  if not PuedeExportar then
-    Abort;
-  saveDialog := TSaveDialog.Create(self);
-  saveDialog.Title := 'Guardar listado a Excel';
-  saveDialog.InitialDir :=  GetSpecialFolderPath(CSIDL_MYDOCUMENTS);
-  saveDialog.Filter := 'Archivo Excel|*.xlsx';
-  saveDialog.DefaultExt := 'xlsx';
-  saveDialog.FilterIndex := 1;
-  if ( saveDialog.Execute ) then
-    ExportGridToXLSX(saveDialog.FileName, cxVista);
-  FreeAndNil(saveDialog);
+  if PuedeExportar then
+    ExportarExcel(ParametrosApp, cxVista, 'Listado');
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnExportarExcelMetaClick(Sender: TObject);
-var
-  saveDialog : tsavedialog;
 begin
-  if not PuedeExportar then
-    Abort;
-  saveDialog := TSaveDialog.Create(self);
-  saveDialog.Title := 'Guardar listado a Excel';
-  saveDialog.InitialDir :=  GetSpecialFolderPath(CSIDL_MYDOCUMENTS);
-  saveDialog.Filter := 'Archivo Excel|*.xlsx';
-  saveDialog.DefaultExt := 'xlsx';
-  saveDialog.FilterIndex := 1;
-  if ( saveDialog.Execute ) then
-    ExportGridToXLSX(saveDialog.FileName, cxgrdMetadatos1);
-  FreeAndNil(saveDialog);
+  if PuedeExportar then
+    ExportarExcel(ParametrosApp, cxgrdMetadatos1, 'Metadatos');
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnVerDatosClick(Sender: TObject);
