@@ -62,7 +62,7 @@ var
 
 implementation
 
-uses inLibdxSpreadSheetStrs_ESP;
+uses inLibdxSpreadSheetStrs_ESP, inLibFormatoExcel;
 
 {$R *.dfm}
 
@@ -79,12 +79,41 @@ begin
 end;
 
 procedure TfrmMtoPreviewExcel.btnGuardarClick(Sender: TObject);
+var
+  oFormato: TFormatoExcel;
+  sFormato: string;
+  sExt: string;
+  oDialogo: TFileSaveDialog;
 begin
   inherited;
-  DialogoGuardar.DefaultExt := 'xlsx';
-  DialogoGuardar.Filter := 'Libro de Excel (*.xlsx)|*.xlsx';
-  if DialogoGuardar.Execute then
-    dxSpreadSheet1.SaveToFile(DialogoGuardar.FileName);
+  sFormato := VALOR_FORMATO_DEFECTO;
+  if Assigned(ParametrosApp) then
+    sFormato := ParametrosApp.GetString(CLAVE_FORMATO_EXCEL,
+      VALOR_FORMATO_DEFECTO);
+  oFormato := FormatoExcelDesde(sFormato);
+  sExt := ExtensionFormato(oFormato);
+  // Diálogo Vista nativo (TFileSaveDialog) con Execute(Self.Handle) como
+  // owner: aparece bien sobre el preview modal, a diferencia del shell de
+  // DevExpress. Nombre y carpeta se toman de DialogoGuardar / parámetros.
+  oDialogo := TFileSaveDialog.Create(nil);
+  try
+    oDialogo.Title := 'Guardar Excel';
+    if DialogoGuardar.InitialDir <> '' then
+      oDialogo.DefaultFolder := DialogoGuardar.InitialDir
+    else if Assigned(ParametrosApp) then
+      oDialogo.DefaultFolder := ParametrosApp.GetPath('appDirExcel');
+    oDialogo.DefaultExtension := sExt;
+    with oDialogo.FileTypes.Add do
+    begin
+      DisplayName := 'Archivo ' + sExt;
+      FileMask := '*.' + sExt;
+    end;
+    oDialogo.FileName := DialogoGuardar.FileName;
+    if oDialogo.Execute(Self.Handle) then
+      dxSpreadSheet1.SaveToFile(oDialogo.FileName);
+  finally
+    FreeAndNil(oDialogo);
+  end;
 end;
 
 procedure TfrmMtoPreviewExcel.FormCreate(Sender: TObject);

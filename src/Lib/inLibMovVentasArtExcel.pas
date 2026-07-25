@@ -2,19 +2,23 @@
 {                                                                              }
 {  Módulo:       inLibMovVentasArtExcel                                        }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       09/06/2026                                                    }
+{ Versión:       2.0.0                                                         }
+{   Fecha:       25/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Exportación a Excel (dxSpreadSheet) del informe "Movimientos de ventas    }
-{    por artículos y fechas". Una fila por artículo con las magnitudes de      }
-{    compra y venta del periodo y los dos márgenes. Si el SP devuelve          }
-{    agrupaciones (GRUPO1..GRUPO3), dibuja una cabecera por grupo y una línea  }
-{    de TOTAL por corte (sumas de las magnitudes base y porcentajes/márgenes   }
-{    recalculados a partir de esas sumas, no sumando porcentajes).             }
+{    Exportación a Excel del informe "Movimientos de ventas por artículos y    }
+{    fechas". Una fila por artículo con las magnitudes de compra y venta del   }
+{    periodo y los dos márgenes. Si el SP devuelve agrupaciones (GRUPO1..3),   }
+{    dibuja una cabecera por grupo y una línea de TOTAL por corte (sumas de    }
+{    las magnitudes base y porcentajes/márgenes recalculados a partir de esas  }
+{    sumas, no sumando porcentajes).                                           }
+{                                                                              }
+{    v2.0 (Fase 2): desacoplado de DevExpress. Escribe a través del puerto     }
+{    IEscritorHojaCalculo; ya no depende de dxSpreadSheet. Ver                 }
+{    desacoplar_excel_hojacalculo.md.                                          }
 {                                                                              }
 {    Consume el resultado de PRC_GET_MOV_VENTAS_ART (mismo dataset filtrado    }
 {    que alimenta el informe FastReport).                                      }
@@ -24,13 +28,9 @@ unit inLibMovVentasArtExcel;
 interface
 
 uses
-  System.SysUtils, System.Variants, System.Classes,
-  System.Generics.Collections, Data.DB, cxGraphics, Vcl.Graphics,
-  dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes, dxSpreadSheetContainers,
-  dxSpreadSheetGraphics, dxCoreGraphics, dxSpreadSheetStyles, dxHashUtils,
-  dxGDIPlusClasses, dxSmartImage, inLibDevExcel;
+  System.SysUtils, System.Variants, Data.DB, inLibHojaCalculoIntf;
 
-procedure ExportarMovVentasArtExcel(ASheetControl: TdxSpreadSheet;
+procedure ExportarMovVentasArtExcel(const AEscritor: IEscritorHojaCalculo;
                                     const QDatos: TDataSet);
 
 implementation
@@ -94,10 +94,9 @@ begin
   VtaEnt := VtaEnt + Q.FieldByName('VENTA_ENT').AsFloat;
 end;
 
-procedure ExportarMovVentasArtExcel(ASheetControl: TdxSpreadSheet;
+procedure ExportarMovVentasArtExcel(const AEscritor: IEscritorHojaCalculo;
                                     const QDatos: TDataSet);
 var
-  Sheet: TdxSpreadSheetTableView;
   iRow, c, lvl, nivelCambio: Integer;
   grpCods : array[1..N_NIVELES] of string;
   grpEtqs : array[1..N_NIVELES] of string;
@@ -109,10 +108,7 @@ var
                    AOcultarCero: Boolean);
   begin
     if (not AOcultarCero) or (AVal <> 0) then
-    begin
-      W(Sheet, iRow, ACol, AVal, False, ssahRight);
-      Sheet.Cells[iRow, ACol].Style.DataFormat.FormatCode := AFmt;
-    end;
+      AEscritor.Escribir(iRow, ACol, AVal, False, acDerecha, AFmt);
   end;
 
   function CampoStr(const AName: string): string;
@@ -131,35 +127,35 @@ var
   var
     cc: Integer;
   begin
-    W(Sheet, iRow, COL_ART,      'Art' + #237 + 'culo', True, ssahLeft);
-    W(Sheet, iRow, COL_UNIENT,   'Uni.Ent.', True, ssahRight);
-    W(Sheet, iRow, COL_IMPENT,   'Imp.Ent.', True, ssahRight);
-    W(Sheet, iRow, COL_UDSVTA,   'Uds Vta',  True, ssahRight);
-    W(Sheet, iRow, COL_IMPVTA,   'Imp Venta', True, ssahRight);
-    W(Sheet, iRow, COL_IMPCOS,   'Imp Coste', True, ssahRight);
-    W(Sheet, iRow, COL_BENEF,    'Beneficio', True, ssahRight);
-    W(Sheet, iRow, COL_PCTBNF,   '% Bnf', True, ssahRight);
-    W(Sheet, iRow, COL_VTAENT,   'Venta-Ent', True, ssahRight);
-    W(Sheet, iRow, COL_VENTENT,  'VentEnt%', True, ssahRight);
-    W(Sheet, iRow, COL_MARG1,    'Margen 1', True, ssahRight);
-    W(Sheet, iRow, COL_MARG2,    'Margen 2', True, ssahRight);
-    W(Sheet, iRow, COL_PCTVDTO,  '% V.dto', True, ssahRight);
-    W(Sheet, iRow, COL_PCTVLAST, '% Vlast', True, ssahRight);
+    AEscritor.Escribir(iRow, COL_ART,      'Art' + #237 + 'culo', True);
+    AEscritor.Escribir(iRow, COL_UNIENT,   'Uni.Ent.', True, acDerecha);
+    AEscritor.Escribir(iRow, COL_IMPENT,   'Imp.Ent.', True, acDerecha);
+    AEscritor.Escribir(iRow, COL_UDSVTA,   'Uds Vta',  True, acDerecha);
+    AEscritor.Escribir(iRow, COL_IMPVTA,   'Imp Venta', True, acDerecha);
+    AEscritor.Escribir(iRow, COL_IMPCOS,   'Imp Coste', True, acDerecha);
+    AEscritor.Escribir(iRow, COL_BENEF,    'Beneficio', True, acDerecha);
+    AEscritor.Escribir(iRow, COL_PCTBNF,   '% Bnf', True, acDerecha);
+    AEscritor.Escribir(iRow, COL_VTAENT,   'Venta-Ent', True, acDerecha);
+    AEscritor.Escribir(iRow, COL_VENTENT,  'VentEnt%', True, acDerecha);
+    AEscritor.Escribir(iRow, COL_MARG1,    'Margen 1', True, acDerecha);
+    AEscritor.Escribir(iRow, COL_MARG2,    'Margen 2', True, acDerecha);
+    AEscritor.Escribir(iRow, COL_PCTVDTO,  '% V.dto', True, acDerecha);
+    AEscritor.Escribir(iRow, COL_PCTVLAST, '% Vlast', True, acDerecha);
     for cc := 0 to COL_MAX do
-      if Sheet.Cells[iRow, cc] <> nil then
+      if AEscritor.CeldaExiste(iRow, cc) then
       begin
-        Sheet.Cells[iRow, cc].Style.Brush.BackgroundColor := CL_CABECERA;
-        Sheet.Cells[iRow, cc].Style.Borders[bBottom].Style := sscbsThin;
+        AEscritor.FondoCelda(iRow, cc, CL_CABECERA);
+        AEscritor.BordeCelda(iRow, cc, lbInferior, ebFino);
       end;
   end;
 
   // Escribe una fila de totales (sumas base + porcentajes recalculados).
   procedure EscribirTotales(const A: TAcum; const ALabel: string;
-                            AColorFondo: TColor);
+                            AColorFondo: Cardinal);
   var
     cc: Integer;
   begin
-    W(Sheet, iRow, COL_ART, ALabel, True, ssahLeft);
+    AEscritor.Escribir(iRow, COL_ART, ALabel, True);
     EscNum(COL_UNIENT, A.UniEnt, FMT_NUM_HZ, False);
     EscNum(COL_IMPENT, A.ImpEnt, FMT_EUR_HZ, False);
     EscNum(COL_UDSVTA, A.UdsVta, FMT_NUM_HZ, False);
@@ -181,11 +177,11 @@ var
     if A.ImpEnt <> 0 then
       EscNum(COL_PCTVLAST, A.ImpVta / A.ImpEnt * 100, FMT_PCT, False);
     for cc := 0 to COL_MAX do
-      if Sheet.Cells[iRow, cc] <> nil then
+      if AEscritor.CeldaExiste(iRow, cc) then
       begin
-        Sheet.Cells[iRow, cc].Style.Font.Style := [fsBold];
-        Sheet.Cells[iRow, cc].Style.Brush.BackgroundColor := AColorFondo;
-        Sheet.Cells[iRow, cc].Style.Borders[bTop].Style := sscbsThin;
+        AEscritor.Negrita(iRow, cc);
+        AEscritor.FondoCelda(iRow, cc, AColorFondo);
+        AEscritor.BordeCelda(iRow, cc, lbSuperior, ebFino);
       end;
     Inc(iRow);
   end;
@@ -197,14 +193,14 @@ var
   begin
     if grpUsado[ANivel] then
     begin
-      W(Sheet, iRow, 0, StringOfChar(' ', (ANivel - 1) * 2) + grpEtqs[ANivel],
-        True, ssahLeft);
-      Sheet.Cells[iRow, 0].Style.Font.Size := 12;
+      AEscritor.Escribir(iRow, 0,
+        StringOfChar(' ', (ANivel - 1) * 2) + grpEtqs[ANivel], True);
+      AEscritor.TamanoFuente(iRow, 0, 12);
       for cc := 0 to COL_MAX do
-        if Sheet.Cells[iRow, cc] <> nil then
+        if AEscritor.CeldaExiste(iRow, cc) then
         begin
-          Sheet.Cells[iRow, cc].Style.Brush.BackgroundColor := CL_GRUPO_H;
-          Sheet.Cells[iRow, cc].Style.Borders[bBottom].Style := sscbsThin;
+          AEscritor.FondoCelda(iRow, cc, CL_GRUPO_H);
+          AEscritor.BordeCelda(iRow, cc, lbInferior, ebFino);
         end;
       Inc(iRow);
       CabeceraColumnas;
@@ -221,9 +217,7 @@ var
   end;
 
 begin
-  ASheetControl.ClearAll;
-  Sheet := ASheetControl.AddSheet('Ventas',
-    TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
+  AEscritor.NuevaHoja('Ventas');
   for lvl := 1 to N_NIVELES do
   begin
     grpCods[lvl]  := #1;
@@ -232,11 +226,12 @@ begin
     grpAcum[lvl].Reset;
   end;
   totAcum.Reset;
-  Sheet.BeginUpdate;
+  AEscritor.IniciarLote;
   try
     iRow := 1;
-    W(Sheet, iRow, 0, 'MOVIMIENTOS DE VENTAS POR ARTICULOS Y FECHAS', True);
-    Sheet.Cells[iRow, 0].Style.Font.Size := 14;
+    AEscritor.Escribir(iRow, 0,
+      'MOVIMIENTOS DE VENTAS POR ARTICULOS Y FECHAS', True);
+    AEscritor.TamanoFuente(iRow, 0, 14);
     Inc(iRow, 2);
     CabeceraColumnas;
     Inc(iRow);
@@ -269,7 +264,7 @@ begin
             end;
           end;
           // Fila de detalle del artículo (código + descripción + magnitudes).
-          W(Sheet, iRow, COL_ART,
+          AEscritor.Escribir(iRow, COL_ART,
             QDatos.FieldByName('CODIGO_ART_ART').AsString + '  ' +
             QDatos.FieldByName('DESCRIPCION_ART').AsString);
           EscNum(COL_UNIENT,  QDatos.FieldByName('UNI_ENT_TOT').AsFloat, FMT_NUM, True);
@@ -297,17 +292,17 @@ begin
             EmitirResumenGrupo(lvl);
         // Total general.
         EscribirTotales(totAcum, 'TOTAL GENERAL', CL_GRUPO_H);
-        Sheet.Cells[iRow - 1, 0].Style.Borders[bBottom].Style := sscbsThin;
+        AEscritor.BordeCelda(iRow - 1, 0, lbInferior, ebFino);
       finally
         QDatos.EnableControls;
       end;
     end;
     // Anchos de columna.
-    Sheet.Columns[COL_ART].Size := 240;
+    AEscritor.AnchoColumna(COL_ART, 240);
     for c := COL_UNIENT to COL_MAX do
-      Sheet.Columns[c].Size := 72;
+      AEscritor.AnchoColumna(c, 72);
   finally
-    Sheet.EndUpdate;
+    AEscritor.FinalizarLote;
   end;
 end;
 

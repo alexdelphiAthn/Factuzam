@@ -363,7 +363,7 @@ uses
   inLibArticulosAtributosLookup,
   inLibAtributosPaleta,
   inLibLog,
-  inLibInventarioExcel,
+  inLibInventarioExcel, inLibHojaCalculoDevEx,
   inLibInventarioNube,
   inMtoPreviewExcel,
   System.Diagnostics,
@@ -3045,7 +3045,8 @@ begin
     Sheet := TdxSpreadSheet.Create(nil);
     try
       Sheet.LoadFromFile(Archivo);
-      ImportarInventarioDesdeSheet(Sheet, Lineas, Lista, sMsg);
+      ImportarInventarioDesdeSheet(CrearLectorDevEx(Sheet),
+        Lineas, Lista, sMsg);
     finally
       FreeAndNil(Sheet);
     end;

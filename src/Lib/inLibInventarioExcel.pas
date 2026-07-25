@@ -24,7 +24,7 @@ uses
   dxSpreadSheet, dxSpreadSheetCore, cxGraphics, Vcl.Graphics,
   dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics,
   dxSpreadSheetStyles, dxHashUtils,
-  inLibDevExcel;
+  inLibDevExcel, inLibHojaCalculoIntf;
 
 type
   TLineaImportada = record
@@ -39,11 +39,11 @@ procedure ExportarInventarioExcel(
   ASheetControl: TdxSpreadSheet;
   const QMaster, QLineas: TDataSet);
 
-// Lee la primera hoja del dxSpreadSheet. Busca columnas SKU, Cantidad
-// y PMP Nuevo por cabecera. Si no encuentra cabecera, asume col A=SKU,
-// col B=Cantidad. Devuelve un array de registros y un mensaje resumen.
+// Lee la hoja a través del lector (ILectorHojaCalculo). Busca columnas SKU,
+// Cantidad y PMP Nuevo por cabecera (fila 0). Si no encuentra cabecera, asume
+// col A=SKU, col B=Cantidad. Devuelve un array de registros y un mensaje.
 procedure ImportarInventarioDesdeSheet(
-  ASheetControl: TdxSpreadSheet;
+  const ALector: ILectorHojaCalculo;
   out ALineas: TLineasImportadas;
   out ALista: TStringList;
   out AMsg: string);
@@ -241,12 +241,11 @@ end;
 // =============================================================================
 
 procedure ImportarInventarioDesdeSheet(
-  ASheetControl: TdxSpreadSheet;
+  const ALector: ILectorHojaCalculo;
   out ALineas: TLineasImportadas;
   out ALista: TStringList;
   out AMsg: string);
 var
-  Sheet: TdxSpreadSheetTableView;
   iColSku, iColCant, iColPmp: Integer;
   r, c, iLastRow: Integer;
   sSku, sCant, sPmp: string;
@@ -254,25 +253,21 @@ var
   lin: TLineaImportada;
 
   function CellText(ARow, ACol: Integer): string;
+  var
+    vCelda: Variant;
   begin
     Result := '';
     if (ACol < 0) then
       Exit;
-    if (Sheet.Cells[ARow, ACol] <> nil) then
-      if not VarIsNull(Sheet.Cells[ARow, ACol].AsVariant) then
-        Result := Trim(VarToStr(Sheet.Cells[ARow, ACol].AsVariant));
+    vCelda := ALector.LeerCelda(ARow, ACol);
+    if not VarIsNull(vCelda) then
+      Result := Trim(VarToStr(vCelda));
   end;
 
 begin
   ALista := TStringList.Create;
   SetLength(ALineas, 0);
   AMsg := '';
-  if ASheetControl.SheetCount = 0 then
-  begin
-    AMsg := 'El archivo no contiene hojas.';
-    Exit;
-  end;
-  Sheet := ASheetControl.Sheets[0] as TdxSpreadSheetTableView;
   // Buscar columnas por cabecera (fila 0)
   iColSku  := -1;
   iColCant := -1;
@@ -298,10 +293,10 @@ begin
     iColCant := 1;
     iFilaInicio := 0;
   end;
-  iLastRow := Sheet.Dimensions.Bottom;
+  iLastRow := ALector.UltimaFila;
   if iLastRow < iFilaInicio then
   begin
-    AMsg := 'La hoja esta vacia.';
+    AMsg := 'La hoja está vacía o no tiene datos.';
     Exit;
   end;
   iLeidas := 0;

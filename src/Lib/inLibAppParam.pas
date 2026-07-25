@@ -122,6 +122,11 @@ begin
   RegistrarParametro('Impresión', 'appImpresoraInformes',
     'Impresora para informes', tpString, '');
 
+  // --- Exportación ---
+  RegistrarParametro('Exportación', 'appFormatoHojaCalculo',
+    'Formato al guardar hojas de cálculo: xlsx o xls',
+    tpString, 'xlsx');
+
   // --- Apariencia ---
   RegistrarParametro('Apariencia', 'appTema',
     'Tema de interfaz (DevExpress)', tpString, 'Office2019Colorful');

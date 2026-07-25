@@ -33,7 +33,7 @@ uses
     inLibPerfilesUsuarioIntf,
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
     OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo,
-    inLibLog, inLibParametrosIntf, Uni;
+    inLibLog, inLibParametrosIntf, Uni, inLibFormatoExcel;
 type
   TUpdateTotalEvent = procedure(Sender: TObject;
                                 NuevoTotal: Currency) of object;
@@ -164,22 +164,33 @@ procedure ExportarExcel(
   AsNomFile: string);
 var
   saveDialog: TFileSaveDialog;
+  oFormato: TFormatoExcel;
+  sExt: string;
 begin
+  oFormato := FormatoExcelDesde(
+    AParametrosApp.GetString(CLAVE_FORMATO_EXCEL, VALOR_FORMATO_DEFECTO));
+  sExt := ExtensionFormato(oFormato);
   saveDialog := TFileSaveDialog.Create(nil);
-  saveDialog.Title := 'Guardar listado a Excel';
-  saveDialog.DefaultFolder := AParametrosApp.GetPath('appDirExcel');
+  try
+    saveDialog.Title := 'Guardar listado a Excel';
+    saveDialog.DefaultFolder := AParametrosApp.GetPath('appDirExcel');
+    saveDialog.DefaultExtension := sExt;
     with saveDialog.FileTypes.Add do
-  begin
-    DisplayName := 'Archivo Excel';
-    FileMask := '*.xlsx';
+    begin
+      DisplayName := 'Archivo ' + sExt;
+      FileMask := '*.' + sExt;
+    end;
+    saveDialog.FileName := AsNomFile;
+    if saveDialog.Execute then
+    begin
+      if oFormato = feXls then
+        ExportGridToExcel(saveDialog.FileName, AcxGrd)
+      else
+        ExportGridToXLSX(saveDialog.FileName, AcxGrd);
+    end;
+  finally
+    FreeAndNil(saveDialog);
   end;
-//  saveDialog.FilterIndex := 1;
-  saveDialog.FileName := AsNomFile;
-  //saveDialog.Options.ofOverwritePrompt := True;
-  if (saveDialog.Execute)
-  then
-    ExportGridToXLSX(saveDialog.FileName, AcxGrd);
-  FreeAndNil(saveDialog);
 end;
 
 // Helpers para soportar tanto TcxGridDBTableView como TcxGridDBBandedTableView

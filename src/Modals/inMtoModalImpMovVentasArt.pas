@@ -77,7 +77,7 @@ implementation
 
 uses
   System.StrUtils, inMtoPreviewExcel, inLibMovVentasArtExcel,
-  dxSpreadSheet, inLibFotos;
+  inLibHojaCalculoDevEx, dxSpreadSheet, inLibFotos;
 
 { TfrmPrintMovVentasArt }
 
@@ -281,7 +281,8 @@ begin
       fPreview.DialogoGuardar.InitialDir :=
         ParametrosApp.GetPath('appDirExcel');
       fPreview.DialogoGuardar.FileName := 'Movimientos_ventas_articulos';
-      ExportarMovVentasArtExcel(fPreview.dxSpreadSheet1, unqryMovVentasPrint);
+      ExportarMovVentasArtExcel(
+        CrearEscritorDevEx(fPreview.dxSpreadSheet1), unqryMovVentasPrint);
       fPreview.ShowModal;
     finally
       FreeAndNil(fPreview);

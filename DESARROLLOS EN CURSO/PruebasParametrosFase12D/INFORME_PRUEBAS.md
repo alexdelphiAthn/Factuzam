@@ -203,6 +203,55 @@ instalación de la API. Y el reloj fiscal y la exportación NO
 VERI*FACTU implican tráfico real contra el entorno de preproducción de
 la AEAT y contra los servidores NTP, lo que hay que autorizar antes.
 
+## Validación funcional — puntos 5 a 8 (25/07/2026)
+
+Ejecutados sobre `Factuzam` con el binario corregido. Durante el punto 5
+se detectaron y corrigieron dos defectos del subsistema de caja
+(devoluciones y emisión de vales); el detalle está en
+`../caja_devoluciones_vales_fix.md`.
+
+- **Punto 5 — Caja.** Correcto. Tarifa por defecto PVP al abrir; venta
+  completa (factura simplificada, QR Verifactu, stock); vale emitido
+  como reembolso de devolución (creado en `fza_caja_vales`, línea de
+  pago, operación VL, código en ticket); vale usado como moneda
+  (canje con su apunte de pago, vale a REDIMIDO); arqueo cuadrando
+  ventas, devoluciones, vales emitidos y recogidos, con desglose por
+  familias. No se grabó el arqueo (no se cerró el día).
+- **Punto 6 — Impresión.** PDF del ticket generado; ticket con QR en
+  modo DEBUG. Excel y tira de caja no probados por separado.
+- **Punto 7 — Correo por API.** Correcto y de extremo a extremo. Con el
+  token de la API configurado, «e-mail» de una operación envía por el
+  webservice y el correo llega al destinatario con el PDF del ticket
+  adjunto (remitente `info@veryverifactu.com`). Fotos de nube e
+  inventarios por API quedan sin probar.
+- **Punto 8 — Colas.**
+  - *Verifactu*: todas las facturas de la prueba pasaron a ENVIADA. El
+    mecanismo de error y reintento está demostrado con datos reales:
+    la factura 000166 quedó en ERROR tras 10 intentos (el máximo), con
+    mensaje «AEAT [1112] El campo FechaExpedicionFactura es superior a
+    la fecha actual» y su instante de próximo intento fijado.
+  - *Ventas WS*: gobernada por el parámetro de caja
+    `vgerEnviarVentasWS` (por defecto False; por eso no se encolaba).
+    Activado, una venta encola sus eventos (`VENTA_CONFIRMADA` y
+    `FISCAL_ACTUALIZADO`) y el hilo los envía al webservice de
+    LosChicos: ambos pasaron a ENVIADA sin error.
+  - *Conmutación en caliente de `appVerifactuActivo`*: el hilo lee los
+    parámetros por interfaz en cada ciclo (verificado indirectamente
+    en el punto 4 al activar `appLogSQL`).
+  - Reloj fiscal y exportación NO VERI*FACTU: no probados; requieren
+    tráfico autorizado contra la preproducción de la AEAT y los
+    servidores NTP.
+
+### Cambios de configuración a revertir tras las pruebas
+
+- `frmMtoCajaParam` / `vgerEnviarVentasWS` = True (era False).
+- `frmMtoAppParam` / `appApiToken` y `appApiReferencia` (= LosChicos),
+  añadidos para probar API/WS/correo.
+
+Los documentos generados en BBDD (facturas 000167-000172, vales,
+operaciones 194-199, colas) se detallan en
+`../caja_devoluciones_vales_fix.md`.
+
 ## Reproducción
 
 - Pruebas: `ejecutar_pruebas.cmd`
