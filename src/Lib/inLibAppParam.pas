@@ -17,168 +17,59 @@ unit inLibAppParam;
 interface
 
 uses
-  System.Generics.Collections, System.SysUtils, Uni;
+  inLibParametrosIntf, inLibParametrosBase, inLibPerfilesUsuarioIntf;
 
 type
-  TTipoParametro = (tpString, tpInteger, tpBoolean);
-
-  TAppParamDef = class
-  public
-    Categoria      : string;
-    Nombre         : string;
-    Descripcion    : string;
-    Tipo           : TTipoParametro;
-    ValorPorDefecto: string;
-    ValorActual    : string;
-    constructor Create(const ACategoria, ANombre, ADesc: string;
-                       ATipo: TTipoParametro; const ADefecto: string);
-  end;
-
-  TAppParams = class
+  TParametrosAplicacion = class(
+    TParametrosBase,
+    IParametrosAplicacion
+  )
   private
-    FConexion: TUniConnection;
-    FParams: TObjectDictionary<string, TAppParamDef>;
-    procedure CargarDesdeDB(const AUsuario, AGrupo: string);
+    procedure InicializarParametrosApp(
+      const AUsuario, AGrupo: string);
+  protected
+    procedure DespuesDeRecargar; override;
   public
-    constructor Create;
-    destructor Destroy; override;
-
-    procedure AsignarConexion(AConexion: TUniConnection);
-    procedure RegistrarParametro(const ACategoria, ANombre, ADesc: string;
-                                 ATipo: TTipoParametro; const ADefecto: string);
-    procedure RegistrarDefectos;
-    procedure InicializarParametrosApp(const AUsuario, AGrupo: string);
-    procedure Inicializar(const AUsuario, AGrupo: string);
-    procedure Recargar(const AUsuario, AGrupo: string);
-    // Sincroniza los flags del singleton Log (inLibLog) con los parametros
-    // booleanos appLogSQL / appLogAvanzado. Se llama tras Inicializar y
-    // tras Recargar para aplicar los cambios sin reiniciar.
-    procedure AplicarFlagsLog;
+    constructor Create(const APerfilesUsuario: IPerfilesUsuario);
     function GetPath(const ANombre: string): string;
-    function GetString(const AKey: string; const ADefault: string = '' ): string;
-    function GetBool  (const AKey: string;
-                       const ADefault: Boolean  = False): Boolean;
-    function GetInt (const AKey: string; const ADefault: Integer = 0 ): Integer;
-
-    property Params: TObjectDictionary<string, TAppParamDef> read FParams;
   end;
+
+function CrearParametrosAplicacion(
+  const APerfilesUsuario: IPerfilesUsuario;
+  const AUsuario, AGrupo: string
+): IParametrosAplicacion;
 
 var
-  oAppParams: TAppParams;
+  oAppParams: IParametrosAplicacion;
 
 implementation
 
 uses
-  System.StrUtils, inLibPathTokens, inLibLog;
+  System.SysUtils, inLibPathTokens, inLibLog;
 
-{ TAppParamDef }
+{ TParametrosAplicacion }
 
-constructor TAppParamDef.Create(const ACategoria, ANombre, ADesc: string;
-                                ATipo: TTipoParametro; const ADefecto: string);
+constructor TParametrosAplicacion.Create(
+  const APerfilesUsuario: IPerfilesUsuario);
 begin
-  Categoria       := ACategoria;
-  Nombre          := ANombre;
-  Descripcion     := ADesc;
-  Tipo            := ATipo;
-  ValorPorDefecto := ADefecto;
-  ValorActual     := ADefecto;
+  inherited Create(
+    APerfilesUsuario,
+    'frmMtoAppParam',
+    TArray<string>.Create(
+      'WindowState',
+      'Left',
+      'Top',
+      'Width',
+      'Height',
+      'Divider',
+      'appVerifactuIdInstalacion',
+      'appVerifactuInstalacionUrl'
+    )
+  );
 end;
 
-{ TAppParams }
-
-constructor TAppParams.Create;
-begin
-  inherited;
-  FConexion := nil;
-  FParams := TObjectDictionary<string, TAppParamDef>.Create([doOwnsValues]);
-end;
-
-destructor TAppParams.Destroy;
-begin
-  FreeAndNil(FParams);
-  inherited;
-end;
-
-procedure TAppParams.RegistrarParametro(const ACategoria,
-                                        ANombre,
-                                        ADesc: string;
-                                        ATipo: TTipoParametro;
-                                        const ADefecto: string);
-begin
-  FParams.AddOrSetValue(ANombre,
-    TAppParamDef.Create(ACategoria, ANombre, ADesc, ATipo, ADefecto));
-end;
-
-procedure TAppParams.RegistrarDefectos;
-var
-  Param: TAppParamDef;
-begin
-  for Param in FParams.Values do
-    Param.ValorActual := Param.ValorPorDefecto;
-end;
-
-procedure TAppParams.AsignarConexion(AConexion: TUniConnection);
-begin
-  FConexion := AConexion;
-end;
-
-procedure TAppParams.CargarDesdeDB(const AUsuario, AGrupo: string);
-var
-  qry    : TUniQuery;
-  KeyDB  : string;
-  ValueDB: string;
-  ParamObj: TAppParamDef;
-begin
-  RegistrarDefectos;
-  if (FConexion = nil) or (not FConexion.Connected) then
-    raise Exception.Create(
-      'TAppParams requiere una conexión activa');
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := FConexion;
-    qry.SQL.Text   :=
-      'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
-    qry.ParamByName('p_usuario').AsString    := AUsuario;
-    qry.ParamByName('p_grupo').AsString      := AGrupo;
-    qry.ParamByName('p_formulario').AsString := 'frmMtoAppParam';
-    qry.Open;
-    while not qry.Eof do
-    begin
-      KeyDB   := qry.FieldByName('SUBKEY_USUPER').AsString;
-      ValueDB := qry.FieldByName('VALUE_USUPER').AsString;
-      // Las claves de geometría/layout (WindowState, Left, Top, Width,
-      // Height, Divider) se persisten bajo el mismo KEY_USUPER que los
-      // parámetros (véase inLibLayoutForm.TLayoutSaver). No son parámetros
-      // configurables. appVerifactuIdInstalacion queda obsoleto: el número
-      // de instalación SIF se guarda por empresa en fza_empresas.
-      if not MatchText(KeyDB, ['WindowState', 'Left', 'Top', 'Width',
-                               'Height', 'Divider',
-                               'appVerifactuIdInstalacion',
-                               'appVerifactuInstalacionUrl']) then
-      begin
-        if FParams.TryGetValue(KeyDB, ParamObj) then
-          ParamObj.ValorActual := ValueDB
-        else
-        begin
-          // Parámetro huérfano en BD → lo registramos para que siga visible
-          RegistrarParametro('Otros (Heredados de BD)', KeyDB,
-                             'Parámetro sin descripción', tpString, ValueDB);
-          FParams.Items[KeyDB].ValorActual := ValueDB;
-        end;
-      end;
-      qry.Next;
-    end;
-  finally
-    FreeAndNil(qry);
-  end;
-end;
-
-procedure TAppParams.Inicializar(const AUsuario, AGrupo: string);
-begin
-  CargarDesdeDB(AUsuario, AGrupo);
-end;
-
-procedure TAppParams.InicializarParametrosApp(const AUsuario, AGrupo: string);
+procedure TParametrosAplicacion.InicializarParametrosApp(
+  const AUsuario, AGrupo: string);
 begin
   // --- Directorios ---
   RegistrarParametro('Directorios', 'appDirPDF',
@@ -373,69 +264,33 @@ begin
     tpBoolean, 'False');
 
   Inicializar(AUsuario, AGrupo);
-  AplicarFlagsLog;
 end;
 
-procedure TAppParams.Recargar(const AUsuario, AGrupo: string);
+procedure TParametrosAplicacion.DespuesDeRecargar;
 begin
-  CargarDesdeDB(AUsuario, AGrupo);
-  AplicarFlagsLog;
+  AplicarModosDepuracion(Self as IParametrosAplicacion);
 end;
 
-procedure TAppParams.AplicarFlagsLog;
-begin
-  // Delegamos en inLibLog.AplicarModosDepuracion: es la unica fuente de
-  // verdad para los 4 flags (appModoDebug, appModoDebugSQL, appLogSQL,
-  // appLogAvanzado) y se ocupa tambien del UniSQLMonitor y del memo SQL.
-  AplicarModosDepuracion;
-end;
-
-function TAppParams.GetString(const AKey: string; const ADefault: string): string;
-var
-  ParamObj: TAppParamDef;
-begin
-  if FParams.TryGetValue(AKey, ParamObj) then
-    Result := ParamObj.ValorActual
-  else
-    Result := ADefault;
-end;
-
-function TAppParams.GetBool(const AKey: string; const ADefault: Boolean): Boolean;
-var
-  ParamObj: TAppParamDef;
-  sVal: string;
-begin
-  if FParams.TryGetValue(AKey, ParamObj) then
-  begin
-    sVal   := ParamObj.ValorActual;
-    Result := SameText(sVal, 'True') or (sVal = '1');
-  end
-  else
-    Result := ADefault;
-end;
-
-function TAppParams.GetInt(const AKey: string; const ADefault: Integer): Integer;
-var
-  ParamObj: TAppParamDef;
-begin
-  if FParams.TryGetValue(AKey, ParamObj) then
-  begin
-    if not TryStrToInt(ParamObj.ValorActual, Result) then
-      Result := ADefault;
-  end
-  else
-    Result := ADefault;
-end;
-
-function TAppParams.GetPath(const ANombre: string): string;
+function TParametrosAplicacion.GetPath(const ANombre: string): string;
 begin
   Result := ExpandPathTokens(GetString(ANombre));
 end;
 
-initialization
-  oAppParams := TAppParams.Create;
-
-finalization
-  FreeAndNil(oAppParams);
+function CrearParametrosAplicacion(
+  const APerfilesUsuario: IPerfilesUsuario;
+  const AUsuario, AGrupo: string
+): IParametrosAplicacion;
+var
+  Parametros: TParametrosAplicacion;
+begin
+  Parametros := TParametrosAplicacion.Create(APerfilesUsuario);
+  try
+    Parametros.InicializarParametrosApp(AUsuario, AGrupo);
+    Result := Parametros;
+  except
+    FreeAndNil(Parametros);
+    raise;
+  end;
+end;
 
 end.

@@ -1,0 +1,89 @@
+Compilación Fase XII-0 - 2026-07-25 08:28:03
+Proyecto: C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
+Salida temporal: C:\Users\V3607\AppData\Local\Temp\fzam_fase12_0_32476
+
+rsvars.bat encontrados:
+  C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat
+  C:\Program Files (x86)\Embarcadero\Studio\37.0\bin\rsvars.bat
+Elegido: C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\rsvars.bat
+
+==================================================
+### Debug Win64
+    Embarcadero Delphi for Win64 compiler version 35.0
+    Copyright (c) 1983,2022 Embarcadero Technologies, Inc.
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(66): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(100): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(104): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(186): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(188): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(234): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(322): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(324): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(399): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(421): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(640): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(642): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(644): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(776): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(778): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(971): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\DISCO_DURO\SQLBuilder4Delphi\dependencies\gaSQLParser\src\gaBasicSQLParser.pas(206): warning W1063: Widening given AnsiChar constant (#$FF) to WideChar lost information [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  src\DataModules\UniDataFiltros.pas(402): Hint warning H2077: Value assigned to 'TdmFiltros.EsPropietario' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  src\Lib\inLibFotos.pas(58): error F2063: Could not compile used unit 'frxClass' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+
+==================================================
+### Release Win32
+    Embarcadero Delphi for Win32 compiler version 35.0
+    Copyright (c) 1983,2022 Embarcadero Technologies, Inc.
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(66): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(100): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(104): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(186): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(188): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(234): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(322): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(324): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(399): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(421): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(640): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(642): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(644): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(776): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(778): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(971): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\DISCO_DURO\SQLBuilder4Delphi\dependencies\gaSQLParser\src\gaBasicSQLParser.pas(206): warning W1063: Widening given AnsiChar constant (#$FF) to WideChar lost information [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  src\DataModules\UniDataFiltros.pas(402): Hint warning H2077: Value assigned to 'TdmFiltros.EsPropietario' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  src\Lib\inLibFotos.pas(58): error F2063: Could not compile used unit 'frxClass' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+
+==================================================
+### Release Win64
+    Embarcadero Delphi for Win64 compiler version 35.0
+    Copyright (c) 1983,2022 Embarcadero Technologies, Inc.
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(66): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(100): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(104): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(186): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(188): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(234): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(322): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(324): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(399): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(421): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(640): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(642): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(644): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(776): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(778): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\Program Files (x86)\DevExpress\VCL\ExpressSpreadSheet Core\Sources\dxSpreadSheetFunctionsStrs.pas(971): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  C:\DISCO_DURO\SQLBuilder4Delphi\dependencies\gaSQLParser\src\gaBasicSQLParser.pas(206): warning W1063: Widening given AnsiChar constant (#$FF) to WideChar lost information [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  src\DataModules\UniDataFiltros.pas(402): Hint warning H2077: Value assigned to 'TdmFiltros.EsPropietario' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+  src\Lib\inLibFotos.pas(58): error F2063: Could not compile used unit 'frxClass' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+
+==================================================
+RESUMEN
+Debug Win64      FALLO     salida=1 errores=1 avisos=18
+Release Win32    FALLO     salida=1 errores=1 avisos=18
+Release Win64    FALLO     salida=1 errores=1 avisos=18
+
+Artefactos temporales eliminados.
+FIN

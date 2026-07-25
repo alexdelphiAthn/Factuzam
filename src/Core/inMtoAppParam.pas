@@ -26,7 +26,7 @@ uses
   cxButtonEdit, cxSpinEdit, Vcl.ExtCtrls, inMtoFrmBase, Uni,
   cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls, cxButtons,
   JvComponentBase, JvInspector, JvExControls, System.Actions,
-  Vcl.ActnList, dxSkinsCore, System.UITypes;   // dxSkinsCore para TdxSkinController
+  Vcl.ActnList, dxSkinsCore, System.UITypes, inLibParametrosIntf;
 
 type
   PBoolean = ^Boolean;
@@ -68,6 +68,7 @@ type
     FInts             : TList<PInteger>;
     FStrs             : TList<PString>;
     FValoresOriginales: TDictionary<string, string>;
+    FParametrosEdicion: IParametrosEdicion;
     procedure InspectorItemEdit(Sender: TJvCustomInspector;
                                 Item: TJvCustomInspectorItem;
                                 var DisplayStr: string);
@@ -115,7 +116,7 @@ implementation
 {$R *.dfm}
 
 uses
-  StrUtils, inLibAppParam, inLibLog, Vcl.Printers,
+  StrUtils, inLibLog, Vcl.Printers,
    dxSkinsLookAndFeelPainter,
    dxSkinsDefaultPainters, dxSkinsForm,
   FileCtrl, inLibPathTokens,               // SelectDirectory
@@ -155,8 +156,17 @@ end;
 // -----------------------------------------------------------------------
 
 procedure TfrmMtoAppParam.FormCreate(Sender: TObject);
+var
+  Proveedor: IProveedorParametrosEdicion;
 begin
   inherited;
+  if not Supports(Owner, IProveedorParametrosEdicion, Proveedor) then
+    raise Exception.Create(
+      'No se ha configurado el proveedor de edición de parámetros.');
+  FParametrosEdicion := Proveedor.ParametrosAppEdicion;
+  if not Assigned(FParametrosEdicion) then
+    raise Exception.Create(
+      'No se han configurado los parámetros de aplicación editables.');
   if jvntrstb1 <> nil then
     jvntrstb1.EnterAsTab := False;
   FBools             := TList<PBoolean>.Create;
@@ -197,6 +207,7 @@ end;
 
 procedure TfrmMtoAppParam.FormDestroy(Sender: TObject);
 begin
+  FParametrosEdicion := nil;
   LimpiarMemoria;
   FreeAndNil(FBools);
   FreeAndNil(FInts);
@@ -243,7 +254,8 @@ end;
 
 procedure TfrmMtoAppParam.ConstruirInspector;
 var
-  Param   : TAppParamDef;
+  Parametros: TArray<TParamInfo>;
+  Param: TParamInfo;
   CatItem : TJvInspectorCustomCategoryItem;
   ItemCombo: TJvCustomInspectorItem;
   pBool   : PBoolean;
@@ -251,11 +263,12 @@ var
   pStr    : PString;
 begin
   LimpiarMemoria;
+  Parametros := FParametrosEdicion.ListarDefiniciones;
   JvInspector1.BeginUpdate;
   try
     JvInspector1.Root.Clear;
 
-    for Param in oAppParams.Params.Values do
+    for Param in Parametros do
     begin
       // Categoría vacía = parámetro histórico cargado solo como respaldo.
       if Param.Categoria <> '' then
@@ -422,7 +435,7 @@ begin
     if (LItemTema <> nil) and Assigned(LItemTema.Data) then
       LSkinName := LItemTema.Data.AsString
     else
-      LSkinName := oAppParams.GetString('appTema');
+      LSkinName := ParametrosApp.GetString('appTema');
 
     if Trim(LSkinName) = '' then
       Exit;
@@ -566,10 +579,12 @@ end;
 
 procedure TfrmMtoAppParam.ResetearADefectos;
 var
-  Param   : TAppParamDef;
+  Parametros: TArray<TParamInfo>;
+  Param: TParamInfo;
   ItemData: TJvCustomInspectorItem;
 begin
-  for Param in oAppParams.Params.Values do
+  Parametros := FParametrosEdicion.ListarDefiniciones;
+  for Param in Parametros do
   begin
     ItemData := BuscarItemPorNombre(JvInspector1.Root, Param.Nombre);
     if ItemData <> nil then
@@ -710,7 +725,7 @@ begin
 
   GuardadosCount := 0;
   IgnoradosCount := 0;
-  TemaAnterior   := oAppParams.GetString('appTema');
+  TemaAnterior := ParametrosApp.GetString('appTema');
   CambioVerifactu := False;
 
   qry := TUniQuery.Create(nil);
@@ -779,15 +794,13 @@ begin
          (sUsuarioGrupo = IdentidadSesion.Grupo) or
          (sUsuarioGrupo = oAll) then
       begin
-        oAppParams.Recargar(IdentidadSesion.Usuario, IdentidadSesion.Grupo);
-
-        // ── Aplicar modos de depuración al vuelo ─────────────────────
-        // Si el usuario acaba de tocar appModoDebug / appModoDebugSQL,
-        // surte efecto sin necesidad de reiniciar.
-        inLibLog.AplicarModosDepuracion;
+        FParametrosEdicion.Recargar(
+          IdentidadSesion.Usuario,
+          IdentidadSesion.Grupo
+        );
 
         // ── Aplicar tema al vuelo si cambió ──────────────────────────
-        var TemaNuevo := oAppParams.GetString('appTema');
+        var TemaNuevo := ParametrosApp.GetString('appTema');
         if not SameText(TemaAnterior, TemaNuevo) and (TemaNuevo <> '') then
         begin
 //          dxSkinsCore.dxSkinController.SkinName := TemaNuevo;

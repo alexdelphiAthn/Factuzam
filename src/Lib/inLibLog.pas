@@ -20,7 +20,7 @@ uses
   System.SysUtils, System.Classes, System.IOUtils, //inLibGlobalVar,
   inLibDir, Windows, System.SyncObjs, Winapi.Messages,
   System.TypInfo, System.Zip, System.Generics.Collections,
-  inLibMonitorSQLIntf;
+  inLibMonitorSQLIntf, inLibParametrosIntf;
 
 const
   DEFAULT_LOG_RETENTION = 10;
@@ -99,17 +99,16 @@ type
 var
   Log: TLog;
 
-// Aplica los flags de depuración leídos de oAppParams (appModoDebug y
-// appModoDebugSQL) al log y al monitor SQL inyectado. Idempotente: se puede
-// invocar en arranque y cada vez que el usuario guarde los parámetros.
-procedure AplicarModosDepuracion;
+// Aplica los flags de depuración al log y al monitor SQL inyectado.
+// Es idempotente y se invoca al cargar o recargar los parámetros.
+procedure AplicarModosDepuracion(
+  const AParametros: IParametrosAplicacion);
 
 implementation
 
 uses
   System.DateUtils, System.Generics.Defaults, inLibWin,
-  inLibGlobalVar,                                // oMemoSQL para LogPerf
-  inLibAppParam;                                 // oAppParams.GetBool
+  inLibGlobalVar;
 
 type
   TLogFileInfo = record
@@ -779,7 +778,8 @@ begin
   end;
 end;
 
-procedure AplicarModosDepuracion;
+procedure AplicarModosDepuracion(
+  const AParametros: IParametrosAplicacion);
 var
   bDebug      : Boolean;
   bDebugSQL   : Boolean;
@@ -787,13 +787,17 @@ var
   bLogAvanzado: Boolean;
   bSQLFinal   : Boolean;
 begin
-  if not Assigned(oAppParams) then Exit;
+  if not Assigned(AParametros) then
+    raise EArgumentNilException.Create(
+      'No se han proporcionado los parámetros de aplicación.');
   // Flags 'Depuración' (modest-fermat-WUvkF): switches gordos.
-  bDebug    := oAppParams.GetBool('appModoDebug',    False);
-  bDebugSQL := oAppParams.GetBool('appModoDebugSQL', False) or bDebug;
+  bDebug := AParametros.GetBool('appModoDebug', False);
+  bDebugSQL :=
+    AParametros.GetBool('appModoDebugSQL', False) or bDebug;
   // Flags 'Log' (great-wright-Xs8yZ): controles finos por tipo.
-  bLogSQL      := oAppParams.GetBool('appLogSQL',      False);
-  bLogAvanzado := oAppParams.GetBool('appLogAvanzado', False);
+  bLogSQL := AParametros.GetBool('appLogSQL', False);
+  bLogAvanzado :=
+    AParametros.GetBool('appLogAvanzado', False);
 
   // ltSQL se enciende si CUALQUIERA de los modos relacionados con SQL
   // está activo. El cronómetro de UniSQLMonitor (LogSQLExt) y el dump

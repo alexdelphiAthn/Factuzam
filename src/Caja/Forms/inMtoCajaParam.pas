@@ -25,7 +25,7 @@ uses
   inLibGlobalVar, dxCoreGraphics, cxMaskEdit, cxButtonEdit, cxSpinEdit,
   Vcl.ExtCtrls, inMtoFrmBase, Uni, cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls,
   cxButtons, JvComponentBase, JvInspector, JvExControls, System.Actions,
-  Vcl.ActnList, Vcl.Printers, System.UITypes;
+  Vcl.ActnList, Vcl.Printers, System.UITypes, inLibParametrosIntf;
 
 type
   // Tipos de punteros necesarios para la generación dinámica en JvInspector
@@ -71,6 +71,7 @@ type
     FInts:  TList<PInteger>;
     FStrs:  TList<PString>;
     FValoresOriginales: TDictionary<string, string>;
+    FParametrosEdicion: IParametrosEdicion;
     procedure CapturarValoresOriginales;
     function  HayCambiosPendientes: Boolean;
     procedure LimpiarMemoria;
@@ -104,15 +105,24 @@ implementation
 {$R *.dfm}
 
 uses
-  StrUtils, inLibCajaParam, inLibLayoutForm;
+  StrUtils, inLibLayoutForm;
 
 // ----------------------------------------------------------------------
 // GESTIÓN DE MEMORIA Y CICLO DE VIDA
 // ----------------------------------------------------------------------
 
 procedure TfrmMtoCajaParam.FormCreate(Sender: TObject);
+var
+  Proveedor: IProveedorParametrosEdicion;
 begin
   inherited;
+  if not Supports(Owner, IProveedorParametrosEdicion, Proveedor) then
+    raise Exception.Create(
+      'No se ha configurado el proveedor de edición de parámetros.');
+  FParametrosEdicion := Proveedor.ParametrosCajaEdicion;
+  if not Assigned(FParametrosEdicion) then
+    raise Exception.Create(
+      'No se han configurado los parámetros de caja editables.');
   if jvntrstb1 <> nil then
     jvntrstb1.EnterAsTab := False;
   FBools := TList<PBoolean>.Create;
@@ -152,6 +162,7 @@ end;
 
 procedure TfrmMtoCajaParam.FormDestroy(Sender: TObject);
 begin
+  FParametrosEdicion := nil;
   LimpiarMemoria;
   FreeAndNil(FBools);
   FreeAndNil(FInts);
@@ -238,23 +249,21 @@ end;
 
 procedure TfrmMtoCajaParam.ConstruirInspector;
 var
-  Param: TParamDef;
+  Parametros: TArray<TParamInfo>;
+  Param: TParamInfo;
   CatItem: TJvInspectorCustomCategoryItem;
   ItemCombo: TJvCustomInspectorItem;
   pBool: PBoolean; pInt: PInteger; pStr: PString;
 begin
   LimpiarMemoria;
+  Parametros := FParametrosEdicion.ListarDefiniciones;
   JvInspector1.BeginUpdate;
   try
     JvInspector1.Root.Clear;
 
-    // Magia pura: Leemos la librería de parámetros y dibujamos según su tipo y
-    // categoría
-    for Param in oCajaParams.Params.Values do
+    // La instantánea evita exponer el diccionario interno al editor.
+    for Param in Parametros do
     begin
-      // Nota: Asume que has añadido Categoria: string en TParamDef
-      // (inLibCajaParam)
-      // Si no, puedes usar una categoría genérica: ObtenerCategoria('General');
       CatItem := ObtenerCategoria(Param.Categoria);
 
       case Param.Tipo of
@@ -364,12 +373,14 @@ end;
 
 procedure TfrmMtoCajaParam.ResetearADefectos;
 var
-  Param: TParamDef;
+  Parametros: TArray<TParamInfo>;
+  Param: TParamInfo;
   ItemData: TJvCustomInspectorItem;
 begin
   // Fuerza a los controles visuales a mostrar el valor por defecto antes de
   // cargar de DB
-  for Param in oCajaParams.Params.Values do
+  Parametros := FParametrosEdicion.ListarDefiniciones;
+  for Param in Parametros do
   begin
     ItemData := BuscarItemPorNombre(JvInspector1.Root, Param.Nombre);
     if ItemData <> nil then
@@ -494,7 +505,10 @@ begin
       if (sUsuarioGrupo = IdentidadSesion.Usuario) or
          (sUsuarioGrupo = IdentidadSesion.Grupo) or
          (sUsuarioGrupo = oAll) then
-        oCajaParams.Recargar(IdentidadSesion.Usuario, IdentidadSesion.Grupo);
+        FParametrosEdicion.Recargar(
+          IdentidadSesion.Usuario,
+          IdentidadSesion.Grupo
+        );
     end
     else
     begin

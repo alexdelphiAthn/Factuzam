@@ -42,7 +42,7 @@ uses
   JvEnterTab, Uni, inLibPermisosIntf, inLibConexionesIntf,
   inLibAuditoriaDatosIntf, inLibMonitorSQLIntf,
   inLibContextoSesionIntf, inLibFiltrosGuardadosIntf,
-  inLibPerfilesUsuarioIntf;
+  inLibPerfilesUsuarioIntf, inLibParametrosIntf;
 
 type
   TEnterAsTabEstado = record
@@ -58,7 +58,8 @@ type
     IProveedorMonitorSQL,
     IProveedorContextoSesion,
     IProveedorFiltrosGuardados,
-    IProveedorPerfilesUsuario
+    IProveedorPerfilesUsuario,
+    IProveedorParametros
   )
     Localizer1: TcxLocalizer;
     jvntrstb1: TJvEnterAsTab;
@@ -71,6 +72,8 @@ type
     FContextoSesion: IContextoSesionAplicacion;
     FFiltrosGuardados: IFiltrosGuardados;
     FPerfilesUsuario: IPerfilesUsuario;
+    FParametrosApp: IParametrosAplicacion;
+    FParametrosCaja: IParametrosCaja;
     FEnterAsTabEstados: array of TEnterAsTabEstado;
     FEnterAsTabTemporalActivo: Boolean;
     function GetPermisos: IPermisosAplicacion;
@@ -82,6 +85,8 @@ type
     function GetUbicacionSesion: TUbicacionSesion;
     function GetFiltrosGuardados: IFiltrosGuardados;
     function GetPerfilesUsuario: IPerfilesUsuario;
+    function GetParametrosApp: IParametrosAplicacion;
+    function GetParametrosCaja: IParametrosCaja;
     function GetConexionPrincipal: TUniConnection;
     procedure HeredarConexiones(AOwner: TComponent);
     procedure HeredarAuditoriaDatos(AOwner: TComponent);
@@ -89,6 +94,7 @@ type
     procedure HeredarContextoSesion(AOwner: TComponent);
     procedure HeredarFiltrosGuardados(AOwner: TComponent);
     procedure HeredarPerfilesUsuario(AOwner: TComponent);
+    procedure HeredarParametros(AOwner: TComponent);
     procedure GuardarEnterAsTabDe(AOwner: TComponent);
     function EnterAsTabGuardado(AComp: TJvEnterAsTab): Boolean;
   protected
@@ -120,6 +126,9 @@ type
       const AFiltrosGuardados: IFiltrosGuardados);
     procedure AsignarPerfilesUsuario(
       const APerfilesUsuario: IPerfilesUsuario);
+    procedure AsignarParametros(
+      const AParametrosApp: IParametrosAplicacion;
+      const AParametrosCaja: IParametrosCaja);
     // Articulo/sku del registro/linea en foco, para la consulta de stock
     // global (Ctrl+U, capturado en inMtoPrincipal). Por defecto vacio; los
     // formularios con articulo activo lo sobreescriben.
@@ -138,6 +147,8 @@ type
     property FiltrosGuardados: IFiltrosGuardados
       read GetFiltrosGuardados;
     property PerfilesUsuario: IPerfilesUsuario read GetPerfilesUsuario;
+    property ParametrosApp: IParametrosAplicacion read GetParametrosApp;
+    property ParametrosCaja: IParametrosCaja read GetParametrosCaja;
     property ConexionPrincipal: TUniConnection read GetConexionPrincipal;
   end;
 
@@ -168,6 +179,7 @@ begin
   HeredarContextoSesion(AOwner);
   HeredarFiltrosGuardados(AOwner);
   HeredarPerfilesUsuario(AOwner);
+  HeredarParametros(AOwner);
   inherited Create(AOwner);
 end;
 
@@ -182,6 +194,7 @@ begin
   HeredarContextoSesion(AOwner);
   HeredarFiltrosGuardados(AOwner);
   HeredarPerfilesUsuario(AOwner);
+  HeredarParametros(AOwner);
   inherited Create(AOwner);
 end;
 
@@ -287,6 +300,31 @@ begin
     FPerfilesUsuario := Proveedor.PerfilesUsuario;
 end;
 
+procedure TfrmBase.HeredarParametros(AOwner: TComponent);
+var
+  Proveedor: IProveedorParametros;
+begin
+  FParametrosApp := nil;
+  FParametrosCaja := nil;
+  if Supports(AOwner, IProveedorParametros, Proveedor) then
+  begin
+    FParametrosApp := Proveedor.ParametrosApp;
+    FParametrosCaja := Proveedor.ParametrosCaja;
+  end;
+  if (not Assigned(FParametrosApp) or
+      not Assigned(FParametrosCaja)) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorParametros,
+       Proveedor) then
+  begin
+    FParametrosApp := Proveedor.ParametrosApp;
+    FParametrosCaja := Proveedor.ParametrosCaja;
+  end;
+end;
+
 procedure TfrmBase.AsignarPermisos(
   const APermisos: IPermisosAplicacion);
 begin
@@ -327,6 +365,14 @@ procedure TfrmBase.AsignarPerfilesUsuario(
   const APerfilesUsuario: IPerfilesUsuario);
 begin
   FPerfilesUsuario := APerfilesUsuario;
+end;
+
+procedure TfrmBase.AsignarParametros(
+  const AParametrosApp: IParametrosAplicacion;
+  const AParametrosCaja: IParametrosCaja);
+begin
+  FParametrosApp := AParametrosApp;
+  FParametrosCaja := AParametrosCaja;
 end;
 
 function TfrmBase.GetPermisos: IPermisosAplicacion;
@@ -378,6 +424,16 @@ end;
 function TfrmBase.GetPerfilesUsuario: IPerfilesUsuario;
 begin
   Result := FPerfilesUsuario;
+end;
+
+function TfrmBase.GetParametrosApp: IParametrosAplicacion;
+begin
+  Result := FParametrosApp;
+end;
+
+function TfrmBase.GetParametrosCaja: IParametrosCaja;
+begin
+  Result := FParametrosCaja;
 end;
 
 function TfrmBase.GetConexionPrincipal: TUniConnection;

@@ -197,6 +197,8 @@
         <DCCReference Include="src\Lib\inLibContextoSesion.pas"/>
         <DCCReference Include="src\Lib\inLibFiltrosGuardadosIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPerfilesUsuarioIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibParametrosIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibParametrosBase.pas"/>
         <DCCReference Include="src\Lib\inLibConexionesIntf.pas"/>
         <DCCReference Include="src\Lib\inLibConexionesUniDAC.pas"/>
         <DCCReference Include="src\Lib\inLibAuditoriaDatosIntf.pas"/>

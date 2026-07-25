@@ -10,17 +10,22 @@ singletons gemelos fuera de `inLibGlobalVar`: `oAppParams`
 
 Estado al abrir la fase (recontar antes de aplicar cada subfase):
 
-- `inLibAppParam` aparece en el `uses` de **43 unidades**;
-  `inLibCajaParam` en **25**.
-- **116 referencias directas** `oAppParams.*` / `oCajaParams.*` en
-  **42 unidades** (79 App / 37 Caja).
+- `inLibAppParam` se menciona en **43 ficheros** y
+  `inLibCajaParam` en **25** (incluidos `fzam.dpr`, las propias
+  unidades y comentarios cruzados). Las cláusulas `uses` reales son
+  **39/22** dentro de `src`; `fzam.dpr` registra además ambas
+  unidades.
+- **116 accesos directos** `oAppParams.*` / `oCajaParams.*` en
+  **41 unidades** (79 App / 37 Caja). Los nombres globales aparecen en
+  42 unidades al incluir su declaración.
 - Reparto por método — App: `GetString` 31, `GetPath` 23, `GetBool` 12,
   `GetInt` 8, `Params` 2, `Recargar` 1, `InicializarParametrosApp` 1,
   `AsignarConexion` 1. Caja: `GetBool` 22, `GetString` 7, `GetInt` 3,
   `Params` 2, `Recargar` 1, `InicializarParametrosCaja` 1,
   `AsignarConexion` 1.
 - Las funciones libres `TarifaDefecto` y `NivelesFamiliaArqueo`
-  (`inLibCajaParam`) se llaman desde **15 unidades** más.
+  (`inLibCajaParam`) se mencionan en **15 unidades** externas; dos
+  menciones son comentarios y se excluyen del lote de llamadas real.
 - Solo dos unidades tocan las tripas (`Params: TObjectDictionary` y las
   clases `TAppParamDef` / `TParamDef`): los editores `inMtoAppParam` e
   `inMtoCajaParam`.
@@ -58,6 +63,83 @@ Estado al abrir la fase (recontar antes de aplicar cada subfase):
 - `IPerfilesUsuario.CargarPerfilFormulario(AFormulario, AUsuario,
   AGrupo, out APerfil)` ya encapsula `PRC_GETPERFILFORMULARIO`, que es
   exactamente lo que hace hoy `CargarDesdeDB` a mano con `TUniQuery`.
+
+## XII-0 — Cierre de diseño y línea base
+
+Estado: **iniciada el 25/07/2026**.
+
+Esta subfase no modifica código Pascal. Su objetivo es cerrar las
+decisiones de arquitectura, congelar una línea base reproducible y
+evitar que XII-A empiece con contratos o ciclos de vida incompletos.
+Los artefactos viven en `PruebasParametrosFase12_0/`.
+
+### Decisiones cerradas
+
+1. **Propiedad y creación**. `inMtoPrincipal` es el único propietario
+   lógico de los servicios. Los crea, mediante factorías que devuelven
+   interfaces, después de crear `TdmPerfiles`. Durante la transición,
+   `oAppParams` y `oCajaParams` son únicamente alias de interfaz hacia
+   esas mismas instancias; nunca crean ni destruyen objetos.
+2. **Fuente de datos**. El motor recibe `IPerfilesUsuario`; no recibe
+   `TUniConnection` ni contiene `TUniQuery`. `Recargar` llama primero a
+   `ResincronizarPerfilFormulario` y después a
+   `CargarPerfilFormulario`, porque la sobrecarga con usuario/grupo
+   puede devolver la caché de la sesión actual.
+3. **Lectura y edición separadas**. Los consumidores reciben
+   `IParametrosAplicacion` / `IParametrosCaja`. Los dos editores
+   reciben además `IParametrosEdicion` mediante un proveedor
+   específico; no ven el diccionario interno.
+4. **Sin referencias mixtas**. Las factorías devuelven interfaces y la
+   raíz conserva solo referencias de interfaz. No se mantiene a la vez
+   una referencia de objeto y otra de interfaz sobre la misma
+   instancia.
+5. **Orden de cierre**. Detener hilos, cerrar formularios, liberar los
+   alias y las interfaces de parámetros, liberar las interfaces de
+   perfiles y `TdmPerfiles`, y por último las conexiones. Así ninguna
+   interfaz conserva un `TdmPerfiles` ya destruido.
+6. **Bloqueo mínimo**. La lectura del perfil se hace fuera de la
+   sección crítica. Bajo bloqueo solo se sustituye la instantánea del
+   diccionario y se atienden getters/listados. Los efectos posteriores
+   a la recarga, como aplicar flags de log, se ejecutan fuera del
+   bloqueo.
+7. **Ciclo del log**. `AplicarModosDepuracion` recibe
+   `IParametrosAplicacion` desde XII-A, no se aplaza a XII-C.
+8. **Compatibilidad exacta**. Se conservan las conversiones actuales:
+   booleano verdadero solo para `True` o `1`; entero inválido usa el
+   default; una tarifa existente pero vacía sigue vacía; el default
+   `PVP` se usa cuando falta el parámetro; niveles de familia se
+   limitan a `[1..9]`; las exclusiones App y Caja siguen separadas.
+9. **Proyecto Delphi**. Toda unidad nueva se añade tanto a `fzam.dpr`
+   como a `fzam.dproj`.
+
+### Línea base a congelar
+
+- Inventario exacto de `uses`, accesos a los globales, métodos,
+  funciones libres y propagación por firmas.
+- Capturas de los dos editores, número de claves por categoría y
+  valores representativos antes de XII-A.
+- Matriz de compilación Debug Win64, Release Win32 y Release Win64,
+  con salida aislada y comparación contra los warnings ya existentes.
+- Pruebas de humo de arranque, recarga, log en caliente, caja y lectura
+  desde hilos.
+
+Los conteos iniciales de la cabecera quedan como referencia histórica.
+El inventario ejecutable de XII-0 será la fuente de verdad al abrir
+cada lote.
+
+### Avance registrado el 25/07/2026
+
+- Inventario ejecutado sobre 612 ficheros Pascal: conteos directos y
+  métodos coherentes con la cabecera; corregida la distinción entre
+  menciones y cláusulas `uses`.
+- Confirmadas cero lecturas de parámetros en secciones
+  `initialization`.
+- La incidencia `frxClass` de la primera matriz quedó aislada al abrir
+  XII-A: el script elegía Studio 22.0 por un error al ordenar las
+  versiones. Corregido el selector, Studio 37.0 compila la matriz
+  completa.
+- Pendientes de XII-0: obtener las capturas y pruebas funcionales
+  contra BBDD de pruebas.
 
 ## Diseño destino
 
@@ -118,6 +200,16 @@ type
       read GetParametrosApp;
     property ParametrosCaja: IParametrosCaja read GetParametrosCaja;
   end;
+
+  IProveedorParametrosEdicion = interface
+    ['{NUEVO-GUID}']
+    function GetParametrosAppEdicion: IParametrosEdicion;
+    function GetParametrosCajaEdicion: IParametrosEdicion;
+    property ParametrosAppEdicion: IParametrosEdicion
+      read GetParametrosAppEdicion;
+    property ParametrosCajaEdicion: IParametrosEdicion
+      read GetParametrosCajaEdicion;
+  end;
 ```
 
 **`inLibParametrosBase`** — motor común único.
@@ -131,13 +223,11 @@ type
   parámetros huérfanos → «Otros (Heredados de BD)»), `Inicializar`,
   `Recargar` y los tres getters. Getters y carga bajo bloqueo: corrige
   la carrera con los hilos.
-- **Decisión a validar en XII-A**: sustituir el `TUniQuery` +
+- **Decisión cerrada en XII-0**: sustituir el `TUniQuery` +
   `AsignarConexion` por `IPerfilesUsuario.CargarPerfilFormulario`
-  (sobrecarga con usuario/grupo). Si cubre el caso — mismo SP, lectura
-  fresca en `Recargar` —, el motor pierde `Uni` por completo y el
-  servicio se alinea con el resto de la serie. Si no, se mantiene el
-  SQL directo y `AsignarConexion` como hoy (plan B, sin impacto en el
-  resto de la fase).
+  (sobrecarga con usuario/grupo). **Validado en XII-0**: antes de cargar
+  hay que llamar a `ResincronizarPerfilFormulario`; el motor pierde
+  `Uni` por completo y no conserva `AsignarConexion`.
 
 Las unidades actuales quedan como implementaciones finas:
 
@@ -149,10 +239,11 @@ Las unidades actuales quedan como implementaciones finas:
   `TarifaDefecto` y `NivelesFamiliaArqueo` como métodos (con el mismo
   saneo de rango [1..9] y el default 'PVP').
 
-Propagación: `inMtoPrincipal` implementa `IProveedorParametros`;
-`TfrmBase` y `TdmBase` añaden las propiedades `ParametrosApp` y
-`ParametrosCaja` resueltas del propietario, igual que `Conexiones` o
-`PerfilesUsuario`.
+Propagación: `inMtoPrincipal` implementa `IProveedorParametros` e
+`IProveedorParametrosEdicion`; `TfrmBase` y `TdmBase` añaden las
+propiedades de lectura resueltas del propietario, igual que
+`Conexiones` o `PerfilesUsuario`. Solo los editores resuelven el
+proveedor de edición.
 
 ---
 
@@ -170,19 +261,24 @@ Cambios:
    nombre**: `oAppParams: IParametrosAplicacion` y
    `oCajaParams: IParametrosCaja`. Como los getters conservan nombre y
    firma, las ~110 llamadas existentes compilan sin tocarse.
-3. Ciclo de vida: las instancias se siguen creando en
-   `initialization` (misma ventana temporal que hoy: los getters antes
-   de `Inicializar*` devuelven el default del punto de llamada). En
-   `finalization`, `oAppParams := nil` — **nunca** `FreeAndNil` sobre
-   una interfaz. La raíz guarda además su propia referencia de
-   interfaz durante toda la vida de la aplicación.
-4. `inMtoPrincipal` implementa `IProveedorParametros`; `TfrmBase` y
-   `TdmBase` añaden las propiedades (mismo molde `Supports(AOwner,...)`
-   que las seis existentes).
-5. Migrar los dos editores a `IParametrosEdicion.ListarDefiniciones`
+3. Añadir factorías de implementación que reciben
+   `IPerfilesUsuario` y devuelven `IParametrosAplicacion` /
+   `IParametrosCaja`. La raíz crea ambos servicios después de
+   `TdmPerfiles`, publica los alias temporales y ejecuta la
+   inicialización de los catálogos. No hay creación en
+   `initialization` ni destrucción en `finalization`.
+4. `inMtoPrincipal` implementa `IProveedorParametros` e
+   `IProveedorParametrosEdicion`; `TfrmBase` y `TdmBase` añaden las
+   propiedades de lectura (mismo molde `Supports(AOwner,...)` que las
+   existentes).
+5. Cambiar `inLibLog.AplicarModosDepuracion` para recibir
+   `IParametrosAplicacion` y eliminar el ciclo con `inLibAppParam`.
+6. Migrar los dos editores a `IParametrosEdicion.ListarDefiniciones`
    (construcción del `JvInspector`, `ResetearADefectos`) y `Recargar`.
    Desaparece todo uso externo de `.Params` y de
    `TParamDef` / `TAppParamDef`.
+7. Añadir las unidades nuevas a `fzam.dpr` y `fzam.dproj` y verificar
+   el orden de liberación de servicios en la raíz.
 
 Pruebas (carpeta `PruebasParametrosFase12A/`, mismo esquema que
 `PruebasConexionGlobalFase11A`):
@@ -190,10 +286,17 @@ Pruebas (carpeta `PruebasParametrosFase12A/`, mismo esquema que
 - Estructurales:
   - `inLibParametrosIntf` no usa `Uni` ni unidades del proyecto.
   - Toda interfaz declara GUID.
-  - 0 apariciones de `TParamDef|TAppParamDef|\.Params\b` fuera de
+  - 0 apariciones de `TParamDef|TAppParamDef` fuera de
     `inLibParametrosBase`.
+  - 0 apariciones de `oAppParams\.Params|oCajaParams\.Params`.
+    No usar `\.Params\b`: produce falsos positivos sobre componentes
+    UniDAC legítimos.
   - 0 apariciones de `TObjectDictionary` en los editores.
+  - 0 creación de servicios de parámetros en `initialization`.
 - Compilación: matriz Delphi completa sin errores ni warnings nuevos.
+- Unitarias con fuente de perfiles falsa: defaults, conversiones,
+  exclusiones, huérfanos, copia de instantáneas, `QueryInterface`,
+  vida de interfaces y lectores concurrentes durante una recarga.
 - Funcionales (contra BBDD de pruebas, capturar pantallas de
   referencia ANTES de empezar):
   1. Arranque completo hasta el menú principal.
@@ -210,9 +313,39 @@ Pruebas (carpeta `PruebasParametrosFase12A/`, mismo esquema que
   7. Hilo Verifactu: conmutar `appVerifactuActivo` y comprobar que el
      ciclo siguiente lo lee (log del hilo).
 
-Resultado esperado: comportamiento idéntico; el diff solo toca las 2
-unidades nuevas + 2 de parámetros + 2 editores + raíz + 2 clases base;
+Resultado esperado: comportamiento idéntico; el diff se limita al
+motor y contratos nuevos, las dos implementaciones, los dos editores,
+la raíz, las dos clases base, el log y los dos ficheros de proyecto;
 ~400 líneas duplicadas eliminadas; carrera de hilos cerrada.
+
+### Resultado real de XII-A — 25/07/2026
+
+Estado de implementación: **terminada**.
+
+- Creados `inLibParametrosIntf` e `inLibParametrosBase`.
+- Los catálogos conservan sus 49 claves App y 30 claves Caja.
+- El motor usa `IPerfilesUsuario`, resincroniza antes de cargar y no
+  depende de UniDAC.
+- `oAppParams` / `oCajaParams` son alias de interfaz creados desde la
+  raíz después de `TdmPerfiles`; no hay creación en `initialization`.
+- La raíz libera parámetros antes de liberar perfiles y conexiones.
+- `TfrmBase` / `TdmBase` propagan lectura; la raíz provee por separado
+  las dos interfaces de edición.
+- Los editores trabajan con copias `TParamInfo`; han desaparecido
+  `.Params`, `TAppParamDef` y `TParamDef`.
+- `inLibLog.AplicarModosDepuracion` recibe
+  `IParametrosAplicacion`; el ciclo con `inLibAppParam` desaparece.
+- Inventario tras XII-A: 98 accesos a miembros de los alias en 38
+  unidades (66 App / 32 Caja). Ya no quedan accesos de ciclo de vida,
+  edición ni diccionario mediante los alias.
+- Pruebas estructurales y unitarias correctas en Win32/Win64.
+- Matriz Delphi correcta: Debug Win64, Release Win32 y Release Win64,
+  con 0 errores y exactamente los mismos avisos que XI-D
+  (110/107/109).
+
+Detalle en `PruebasParametrosFase12A/INFORME_PRUEBAS.md`. Queda
+pendiente la batería funcional interactiva contra BBDD de pruebas
+antes de considerar validado el comportamiento en ejecución.
 
 ---
 
@@ -250,14 +383,27 @@ Resultado esperado: quedan ~55 referencias vivas, todas en `src/Lib`,
 
 ## XII-C — Librerías e hilos
 
-Alcance: `inLibVerifactu` (11), `inLibFactuzamApi` (9), `inLibLog` (5),
-`inLibVerifactuEnvio` (5), `inLibVerifactuCola` (3),
-`inLibVentasWsCola` (3), `inLibRelojFiscal` (3), `inLibFotos` (2),
-`inLibFotosNube`, `inLibFiltroUsuario`, `inLibDevExp`,
-`inLibBuscarImpresora`, `inLibArticulosResolver`, `inLibArqueoTicket`,
-`UniDataConn`.
+El alcance no se limita a las 15 unidades que leen directamente los
+globales. Al cambiar firmas se propaga a sus llamantes y alcanza unas
+87 unidades. Se ejecuta en lotes compilables y reversibles:
 
-Mecanismo, según el caso:
+- **XII-C1 — Filtros de usuario**: `inLibFiltroUsuario`,
+  `SqlFiltroEmpAlmCaja` y sus llamantes.
+- **XII-C2 — Caja, tarifas y resolución de artículos**:
+  `inLibArticulosResolver`, `inLibArqueoTicket`, tickets y llamantes.
+- **XII-C3 — Excel, fotos y API**: `inLibDevExp`, exportaciones,
+  `inLibFotos`, `inLibFotosNube`, `inLibFactuzamApi` y llamantes.
+- **XII-C4 — Ventas WS**: cola, hilo y todos los métodos estáticos de
+  encolado/adjuntos. `TVentasWsCola.Activa` también se consulta desde
+  `RegistrarFactura`, `RegistrarEventoSeguro` y adjuntos PDF; no basta
+  con ampliar `IniciarHilo`.
+- **XII-C5 — Verifactu, envío, reloj e hilos**:
+  `inLibVerifactu`, `inLibVerifactuEnvio`, `inLibVerifactuCola`,
+  `inLibRelojFiscal` y su grafo de llamantes.
+- **XII-C6 — Barrido transversal**: `UniDataConn`,
+  `inLibBuscarImpresora` y cualquier referencia residual.
+
+Mecanismo según el caso:
 
 1. **Parámetro explícito en la firma** (precedente
    `inLibBuscarImpresora(AContextoSesion)`): la rutina recibe
@@ -267,10 +413,13 @@ Mecanismo, según el caso:
    `TVentasWsCola.IniciarHilo` amplían su firma para recibir la
    interfaz junto a `Conexiones`; el hilo guarda la referencia (las
    lecturas ya son seguras desde XII-A).
-3. **`inLibLog`**: aquí muere el ciclo. `AplicarModosDepuracion` pasa a
-   recibir `IParametrosAplicacion`; `AplicarFlagsLog` del motor le
-   pasa `Self`. `inLibLog` deja de usar `inLibAppParam` y depende solo
-   de `inLibParametrosIntf`.
+3. **Objetos con estado**: `TArticulosResolver` recibe la dependencia
+   en el constructor. El singleton `TFotosArticulos` la recibe una vez
+   desde la raíz; no se añade un parámetro repetido a cada método.
+4. **Métodos estáticos de colas**: reciben la interfaz de parámetros
+   en cada operación que decide si debe encolar.
+5. **`inLibLog`** ya queda desacoplado en XII-A; los lotes C solo
+   limpian llamantes residuales si aparecen.
 
 Pruebas:
 
@@ -284,8 +433,10 @@ Pruebas:
   reloj fiscal NTP, API Factuzam (si hay instalación de pruebas), y
   arranque midiendo que no se degrada (log de cronómetros).
 
-Resultado esperado: solo la raíz y las dos unidades de parámetros
-mencionan las variables globales.
+Cada lote termina con inventario estructural, compilación completa y
+una prueba funcional focalizada. Resultado esperado al cerrar XII-C:
+solo la raíz y las dos unidades de parámetros mencionan los alias
+globales.
 
 ---
 
@@ -294,11 +445,12 @@ mencionan las variables globales.
 Cambios:
 
 1. Marcar `oAppParams` / `oCajaParams` con `deprecated`, compilar y
-   confirmar **cero warnings** de uso.
+   confirmar **cero warnings nuevos** y cero warnings `deprecated` de
+   uso.
 2. Retirar las variables públicas y las funciones libres
-   `TarifaDefecto` / `NivelesFamiliaArqueo`. La creación de instancias
-   se traslada del `initialization` a `inMtoPrincipal`, junto al resto
-   de servicios (a partir de aquí el orden de arranque es explícito).
+   `TarifaDefecto` / `NivelesFamiliaArqueo`. La creación ya reside en
+   `inMtoPrincipal` desde XII-A; aquí solo desaparecen los alias de
+   transición.
 3. Barrido final de `uses`: ningún consumidor fuera de la raíz debe
    usar `inLibAppParam` / `inLibCajaParam`; limpiar menciones en
    comentarios cruzados.
@@ -327,22 +479,28 @@ Resultado esperado final:
 - **Conteo de referencias**: nunca mezclar referencia de objeto y de
   interfaz sobre la misma instancia fuera de la raíz; los globales de
   transición son de tipo interfaz desde XII-A; `:= nil` en
-  `finalization`, jamás `Free`.
-- **Orden de arranque**: hasta XII-D las instancias nacen en
-  `initialization`, exactamente como hoy; el traslado a la raíz se
-  hace el último, cuando ya nadie las toca en unidades ajenas.
-- **`Recargar` vs. caché de perfiles**: si XII-A adopta
-  `IPerfilesUsuario`, verificar que la sobrecarga con usuario/grupo lee
-  de BBDD y no de caché (si no, invalidar antes con
-  `ResincronizarPerfilFormulario`). Es la prueba nº 4 de XII-A.
+  la raíz, jamás `Free` ni `FreeAndNil`.
+- **Orden de arranque**: las instancias nacen en la raíz después de
+  `TdmPerfiles`. La auditoría de XII-0 no encontró lecturas de
+  `oAppParams.*` / `oCajaParams.*` en secciones `initialization`.
+- **Vida de perfiles**: el servicio conserva `IPerfilesUsuario`; esa
+  referencia y los alias de parámetros deben liberarse antes de
+  destruir manualmente `TdmPerfiles`.
+- **`Recargar` vs. caché de perfiles**: invalidar siempre con
+  `ResincronizarPerfilFormulario` antes de
+  `CargarPerfilFormulario`.
+- **Reentrada del log**: aplicar flags fuera de la sección crítica.
 - **Regresión silenciosa en modales de impresión**: son 12 unidades de
   1 referencia; el riesgo es dejarse alguna. La comprobación
   estructural por carpeta la cubre.
-- Cada subfase es un commit propio → rollback = `git revert` de la
-  subfase, sin arrastrar las anteriores.
+- Cada subfase es una frontera lógica de rollback. Solo se crea un
+  commit cuando el usuario lo solicite; hasta entonces se conserva el
+  trabajo por lotes revisables.
 
 ## Orden y dependencias
 
-XII-A es prerequisito de todo. XII-B y XII-C son independientes entre
-sí (pueden intercambiarse o solaparse por lotes), pero ambas antes que
-XII-D. No abrir XII-D con ningún warning `deprecated` pendiente.
+XII-0 cierra diseño y línea base. XII-A es prerequisito de todo.
+XII-B y XII-C son independientes entre sí, pero C se ejecuta en orden
+C1 → C6 para mantener compilable el grafo de firmas. Ambas terminan
+antes de XII-D. No abrir XII-D con referencias estructurales ni
+warnings `deprecated` pendientes.

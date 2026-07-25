@@ -44,6 +44,8 @@ uses
   inLibContextoSesion in 'src\Lib\inLibContextoSesion.pas',
   inLibFiltrosGuardadosIntf in 'src\Lib\inLibFiltrosGuardadosIntf.pas',
   inLibPerfilesUsuarioIntf in 'src\Lib\inLibPerfilesUsuarioIntf.pas',
+  inLibParametrosIntf in 'src\Lib\inLibParametrosIntf.pas',
+  inLibParametrosBase in 'src\Lib\inLibParametrosBase.pas',
   inLibConexionesIntf in 'src\Lib\inLibConexionesIntf.pas',
   inLibConexionesUniDAC in 'src\Lib\inLibConexionesUniDAC.pas',
   inLibAuditoriaDatosIntf in 'src\Lib\inLibAuditoriaDatosIntf.pas',

@@ -50,14 +50,17 @@ uses
   System.Diagnostics,
   System.Threading,
   dxGDIPlusClasses, cxImage, Vcl.Imaging.pngimage,
-  inLibContextoSesionIntf;
+  inLibContextoSesionIntf, inLibParametrosIntf;
 
 const
   WM_FREECONTROL = WM_USER;
 
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
-  TfrmMtoPrincipal = class(TfrmBase)
+  TfrmMtoPrincipal = class(
+    TfrmBase,
+    IProveedorParametrosEdicion
+  )
     mnuCaja: TMenuItem;
     mnuMenuCaja: TMenuItem;
     mnuAlmacenes: TMenuItem;
@@ -260,6 +263,8 @@ type
     FReiniciando: Boolean;
     FCancelaOperacionSolicitada: Boolean;
     FFalloCargaPermisosAvisado: Boolean;
+    FParametrosAppEdicion: IParametrosEdicion;
+    FParametrosCajaEdicion: IParametrosEdicion;
     // Handlers de aplicacion (OnException/OnIdle/OnMessage) registrados via
     // TApplicationEvents: una asignacion directa Application.OnX queda
     // anulada en cuanto cualquier form crea su propio TApplicationEvents
@@ -296,6 +301,8 @@ type
     procedure ActualizarFondoLogo;
     procedure CargarFondoLogo;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
+    function GetParametrosAppEdicion: IParametrosEdicion;
+    function GetParametrosCajaEdicion: IParametrosEdicion;
     // Atajos globales capturados a nivel de aplicacion (las ventanas de caja
     // son top-level y no pasan por IsShortCut): F9 abre el cajon desde
     // cualquier ventana si hay impresora de tickets asignada y Ctrl+U abre
@@ -613,6 +620,16 @@ begin
   // El proyecto inyecta el contexto antes de inicializar los servicios.
 end;
 
+function TfrmMtoPrincipal.GetParametrosAppEdicion: IParametrosEdicion;
+begin
+  Result := FParametrosAppEdicion;
+end;
+
+function TfrmMtoPrincipal.GetParametrosCajaEdicion: IParametrosEdicion;
+begin
+  Result := FParametrosCajaEdicion;
+end;
+
 procedure TfrmMtoPrincipal.InicializarAplicacion(
   const AContextoSesion: IContextoSesionAplicacion);
 var
@@ -621,6 +638,8 @@ var
   RegistroMonitorSQL: IRegistroMonitorSQL;
   IdentidadActual: TIdentidadSesion;
   UbicacionActual: TUbicacionSesion;
+  ParametrosAppCreados: IParametrosAplicacion;
+  ParametrosCajaCreados: IParametrosCaja;
 
   procedure AplicarTema;
   var
@@ -696,8 +715,6 @@ begin
   FDmConn.conUni.Connect;
   AsignarConexiones(
     TServicioConexionesUniDAC.Create(FDmConn.conUni));
-  oAppParams.AsignarConexion(ConexionPrincipal);
-  oCajaParams.AsignarConexion(ConexionPrincipal);
   oUnidades.AsignarConexion(ConexionPrincipal);
   oFotos.AsignarConexion(ConexionPrincipal);
   AsignarAuditoriaDatos(
@@ -705,18 +722,40 @@ begin
   tmr1Timer(nil);
   FdmDataPerfiles := TdmPerfiles.Create(Self);
   AsignarPerfilesUsuario(FdmDataPerfiles);
+  inLibLog.Log.LogInfo('Arranque: creando parámetros de aplicación');
+  ParametrosAppCreados := CrearParametrosAplicacion(
+    PerfilesUsuario,
+    IdentidadActual.Usuario,
+    IdentidadActual.Grupo
+  );
+  inLibLog.Log.LogInfo('Arranque: creando parámetros de caja');
+  ParametrosCajaCreados := CrearParametrosCaja(
+    PerfilesUsuario,
+    IdentidadActual.Usuario,
+    IdentidadActual.Grupo
+  );
+  if not Supports(
+    ParametrosAppCreados,
+    IParametrosEdicion,
+    FParametrosAppEdicion
+  ) then
+    raise Exception.Create(
+      'Los parámetros de aplicación no ofrecen el contrato de edición.');
+  if not Supports(
+    ParametrosCajaCreados,
+    IParametrosEdicion,
+    FParametrosCajaEdicion
+  ) then
+    raise Exception.Create(
+      'Los parámetros de caja no ofrecen el contrato de edición.');
+  AsignarParametros(ParametrosAppCreados, ParametrosCajaCreados);
+  oAppParams := ParametrosAppCreados;
+  oCajaParams := ParametrosCajaCreados;
   FdmDataFiltros  := TdmFiltros.Create(Self);
   AsignarFiltrosGuardados(FdmDataFiltros);
   ofrmMto2        := Self;
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(ConexionPrincipal);
-  // AppParams primero: define y lee appArranqueEnParalelo, que decide como
-  // se precargan las caches pesadas (perfiles, informes-guias, config-campos
-  // y permisos). Charge se queda siempre en el hilo principal (toca VCL).
-  inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosApp');
-  oAppParams.InicializarParametrosApp(
-    IdentidadActual.Usuario,
-    IdentidadActual.Grupo);
   try
     SincronizarVersionInstalacionesSif(ConexionPrincipal,
       IdentidadSesion.Usuario);
@@ -736,10 +775,6 @@ begin
     PrecargarCachesParalelo
   else
     PrecargarCachesSerie;
-  inLibLog.Log.LogInfo('Arranque: pre-InicializarParametrosCaja');
-  oCajaParams.InicializarParametrosCaja(
-    IdentidadActual.Usuario,
-    IdentidadActual.Grupo);
   // Cache de unidades de medida: decimales por unidad y factores de
   // conversion. La usan ficha de articulo, lineas de documento e informes.
   oUnidades.Cargar;
@@ -765,10 +800,10 @@ begin
   AplicarPermisosMenu;
   // Visibilidad inicial del panel de monitor SQL: ya no la decide solo el
   // {$IFDEF DEBUG}. AplicarModosDepuracion la sincronizará con los flags
-  // appModoDebug / appModoDebugSQL que acaba de cargar InicializarParametrosApp.
+  // appModoDebug / appModoDebugSQL que acaba de cargar el servicio.
   pnlPPBottom.Visible := False;
   cxMemo1.Visible     := False;
-  inLibLog.AplicarModosDepuracion;
+  inLibLog.AplicarModosDepuracion(ParametrosApp);
   AplicarTema;
   CargarFondoLogo;
   // pcPrincipal tiene Align=alClient en Panel1 y repinta su area cliente
@@ -1524,6 +1559,11 @@ begin
                                                                      E.Message);
     end;
     FreeAndNil(oFzaWinf);
+    oAppParams := nil;
+    oCajaParams := nil;
+    AsignarParametros(nil, nil);
+    FParametrosAppEdicion := nil;
+    FParametrosCajaEdicion := nil;
     DesvincularPerfilesStockConsulta;
     AsignarPerfilesUsuario(nil);
     if (FdmDataPerfiles <> nil) then

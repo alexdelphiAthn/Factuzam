@@ -21,7 +21,7 @@ uses
   System.SysUtils, System.Classes, System.TypInfo, Data.DB, MemDS, DBAccess,
   Uni, inLibUser, inLibWin, inLibLog, inLibAuditoriaDatosIntf,
   inLibConexionesIntf, inLibContextoSesionIntf,
-  inLibPerfilesUsuarioIntf;
+  inLibPerfilesUsuarioIntf, inLibParametrosIntf;
 
 type
   TdmBase = class(
@@ -29,7 +29,8 @@ type
     IProveedorAuditoriaDatos,
     IProveedorConexiones,
     IProveedorContextoSesion,
-    IProveedorPerfilesUsuario
+    IProveedorPerfilesUsuario,
+    IProveedorParametros
   )
     unqryTablaG: TUniQuery;
     unqryPerfiles: TUniQuery;
@@ -44,6 +45,8 @@ type
     FConexiones: IServicioConexiones;
     FContextoSesion: IContextoSesionAplicacion;
     FPerfilesUsuario: IPerfilesUsuario;
+    FParametrosApp: IParametrosAplicacion;
+    FParametrosCaja: IParametrosCaja;
     function GetCurrentForm: TComponent;
     function GetAuditoriaDatos: IServicioAuditoriaDatos;
     function GetConexiones: IServicioConexiones;
@@ -51,12 +54,15 @@ type
     function GetIdentidadSesion: TIdentidadSesion;
     function GetUbicacionSesion: TUbicacionSesion;
     function GetPerfilesUsuario: IPerfilesUsuario;
+    function GetParametrosApp: IParametrosAplicacion;
+    function GetParametrosCaja: IParametrosCaja;
     function GetConexionPrincipal: TUniConnection;
     procedure SetCurrentForm(const Value: TComponent);
     procedure HeredarAuditoriaDatos(AOwner: TComponent);
     procedure HeredarConexiones(AOwner: TComponent);
     procedure HeredarContextoSesion(AOwner: TComponent);
     procedure HeredarPerfilesUsuario(AOwner: TComponent);
+    procedure HeredarParametros(AOwner: TComponent);
   protected
     procedure DoCreate; reintroduce; virtual;
     function GetOwnerForm<T: TComponent>: T;
@@ -76,6 +82,8 @@ type
       read GetUbicacionSesion;
     property PerfilesUsuario: IPerfilesUsuario
       read GetPerfilesUsuario;
+    property ParametrosApp: IParametrosAplicacion read GetParametrosApp;
+    property ParametrosCaja: IParametrosCaja read GetParametrosCaja;
     property ConexionPrincipal: TUniConnection
       read GetConexionPrincipal;
     procedure AsignarAuditoriaDatos(
@@ -86,6 +94,9 @@ type
       const AContextoSesion: IContextoSesionAplicacion);
     procedure AsignarPerfilesUsuario(
       const APerfilesUsuario: IPerfilesUsuario);
+    procedure AsignarParametros(
+      const AParametrosApp: IParametrosAplicacion;
+      const AParametrosCaja: IParametrosCaja);
     function CrearConexionTrabajo(
       AOwner: TComponent;
       AUso: TUsoConexionTrabajo
@@ -136,6 +147,7 @@ begin
   HeredarConexiones(AOwner);
   HeredarContextoSesion(AOwner);
   HeredarPerfilesUsuario(AOwner);
+  HeredarParametros(AOwner);
   inherited Create(AOwner);
 end;
 
@@ -207,6 +219,31 @@ begin
     FPerfilesUsuario := Proveedor.PerfilesUsuario;
 end;
 
+procedure TdmBase.HeredarParametros(AOwner: TComponent);
+var
+  Proveedor: IProveedorParametros;
+begin
+  FParametrosApp := nil;
+  FParametrosCaja := nil;
+  if Supports(AOwner, IProveedorParametros, Proveedor) then
+  begin
+    FParametrosApp := Proveedor.ParametrosApp;
+    FParametrosCaja := Proveedor.ParametrosCaja;
+  end;
+  if (not Assigned(FParametrosApp) or
+      not Assigned(FParametrosCaja)) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorParametros,
+       Proveedor) then
+  begin
+    FParametrosApp := Proveedor.ParametrosApp;
+    FParametrosCaja := Proveedor.ParametrosCaja;
+  end;
+end;
+
 procedure TdmBase.AsignarAuditoriaDatos(
   const AAuditoriaDatos: IServicioAuditoriaDatos);
 begin
@@ -241,6 +278,14 @@ begin
   FPerfilesUsuario := APerfilesUsuario;
 end;
 
+procedure TdmBase.AsignarParametros(
+  const AParametrosApp: IParametrosAplicacion;
+  const AParametrosCaja: IParametrosCaja);
+begin
+  FParametrosApp := AParametrosApp;
+  FParametrosCaja := AParametrosCaja;
+end;
+
 function TdmBase.GetContextoSesion: IContextoSesionAplicacion;
 begin
   Result := FContextoSesion;
@@ -265,6 +310,16 @@ end;
 function TdmBase.GetPerfilesUsuario: IPerfilesUsuario;
 begin
   Result := FPerfilesUsuario;
+end;
+
+function TdmBase.GetParametrosApp: IParametrosAplicacion;
+begin
+  Result := FParametrosApp;
+end;
+
+function TdmBase.GetParametrosCaja: IParametrosCaja;
+begin
+  Result := FParametrosCaja;
 end;
 
 function TdmBase.GetConexionPrincipal: TUniConnection;

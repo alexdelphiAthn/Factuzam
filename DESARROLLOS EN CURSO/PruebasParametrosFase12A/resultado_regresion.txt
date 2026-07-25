@@ -1,0 +1,14 @@
+Regresión estructural Fase XII-A - 2026-07-25
+
+PruebasPerfilesFase9:
+  20 comprobaciones, 20 correctas, 0 fallos.
+
+PruebasFiltrosFase9:
+  17 comprobaciones, 17 correctas, 0 fallos.
+
+PruebasConexionGlobalFase11D:
+  15 comprobaciones, 14 correctas, 1 expectativa histórica no aplicable.
+  Las 14 barreras de conexión, contratos, usos, DFM persistentes y dump
+  modelo son correctas. La comprobación restante exige exactamente dos
+  DFM modificados que existían al ejecutar XI-D; el árbol actual contiene
+  cero DFM modificados. No es una regresión de XII-A.

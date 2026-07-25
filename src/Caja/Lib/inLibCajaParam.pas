@@ -17,59 +17,26 @@ unit inLibCajaParam;
 interface
 
 uses
-  System.Generics.Collections, System.SysUtils, Uni;
+  inLibParametrosIntf, inLibParametrosBase, inLibPerfilesUsuarioIntf;
 
 type
-  // Enumerado para definir el tipo de dato del parámetro
-  TTipoParametro = (tpString, tpInteger, tpBoolean);
-
-  // Clase que contiene la definición, metadatos y valor actual de cada
-  // parámetro
-  TParamDef = class
-  public
-    Categoria: string;
-    Nombre: string;
-    Descripcion: string;
-    Tipo: TTipoParametro;
-    ValorPorDefecto: string;
-    ValorActual: string;
-
-    constructor Create(const ACategoria,
-                       ANombre,
-                       ADesc: string;
-                       ATipo: TTipoParametro;
-                       const ADefecto: string);
-  end;
-
-  TCajaParams = class
+  TParametrosCaja = class(
+    TParametrosBase,
+    IParametrosCaja
+  )
   private
-    FConexion: TUniConnection;
-    FParams: TObjectDictionary<string, TParamDef>;
-    procedure CargarDesdeDB(const AUsuario, AGrupo: string);
+    procedure InicializarParametrosCaja(
+      const AUsuario, AGrupo: string);
   public
-    constructor Create;
-    destructor Destroy; override;
-    procedure AsignarConexion(AConexion: TUniConnection);
-
-    // --- INTERFAZ PARA REGISTRAR PARÁMETROS (Actualizada con Categoría) ---
-    procedure RegistrarParametro(const ACategoria,
-                                 ANombre,
-                                 ADesc: string;
-                                 ATipo: TTipoParametro;
-                                 const ADefecto: string);
-    procedure RegistrarDefectos;
-    procedure InicializarParametrosCaja(const AUsuario, AGrupo: string);
-    procedure Inicializar(const AUsuario, AGrupo: string);
-    procedure Recargar(const AUsuario, AGrupo: string);
-
-    // Acceso tipado
-    function GetString (const AKey: string; const ADefault: string = '' ): string;
-    function GetBool   (const AKey: string;
-                        const ADefault: Boolean = False): Boolean;
-    function GetInt (const AKey: string; const ADefault: Integer = 0 ): Integer;
-
-    property Params: TObjectDictionary<string, TParamDef> read FParams;
+    constructor Create(const APerfilesUsuario: IPerfilesUsuario);
+    function NivelesFamiliaArqueo: Integer;
+    function TarifaDefecto: string;
   end;
+
+function CrearParametrosCaja(
+  const APerfilesUsuario: IPerfilesUsuario;
+  const AUsuario, AGrupo: string
+): IParametrosCaja;
 
 // Niveles de la jerarquía de familias (padre→hijo→nieto…) que el resumen
 // por sección del arqueo debe desglosar. Devuelve el valor saneado al
@@ -84,128 +51,34 @@ function NivelesFamiliaArqueo: Integer;
 function TarifaDefecto: string;
 
 var
-  oCajaParams: TCajaParams;
+  oCajaParams: IParametrosCaja;
 
 implementation
 
 uses
-  System.StrUtils;
+  System.SysUtils;
 
-{ TParamDef }
+{ TParametrosCaja }
 
-constructor TParamDef.Create(const ACategoria,
-                             ANombre,
-                             ADesc: string;
-                             ATipo: TTipoParametro;
-                             const ADefecto: string);
+constructor TParametrosCaja.Create(
+  const APerfilesUsuario: IPerfilesUsuario);
 begin
-  Categoria := ACategoria;
-  Nombre := ANombre;
-  Descripcion := ADesc;
-  Tipo := ATipo;
-  ValorPorDefecto := ADefecto;
-  ValorActual := ADefecto;
+  inherited Create(
+    APerfilesUsuario,
+    'frmMtoCajaParam',
+    TArray<string>.Create(
+      'WindowState',
+      'Left',
+      'Top',
+      'Width',
+      'Height',
+      'Divider'
+    )
+  );
 end;
 
-{ TCajaParams }
-
-constructor TCajaParams.Create;
-begin
-  inherited;
-  FConexion := nil;
-  FParams := TObjectDictionary<string, TParamDef>.Create([doOwnsValues]);
-end;
-
-destructor TCajaParams.Destroy;
-begin
-  FreeAndNil(FParams);
-  inherited;
-end;
-
-procedure TCajaParams.RegistrarParametro(const ACategoria,
-                                         ANombre,
-                                         ADesc: string;
-                                         ATipo: TTipoParametro;
-                                         const ADefecto: string);
-begin
-  FParams.AddOrSetValue(ANombre,
-    TParamDef.Create(ACategoria, ANombre, ADesc, ATipo, ADefecto));
-end;
-
-procedure TCajaParams.RegistrarDefectos;
-var
-  Param: TParamDef;
-begin
-  for Param in FParams.Values do
-    Param.ValorActual := Param.ValorPorDefecto;
-end;
-
-procedure TCajaParams.AsignarConexion(AConexion: TUniConnection);
-begin
-  FConexion := AConexion;
-end;
-
-procedure TCajaParams.CargarDesdeDB(const AUsuario, AGrupo: string);
-var
-  qry: TUniQuery;
-  KeyDB, ValueDB: string;
-  ParamObj: TParamDef;
-begin
-  // 1. Aseguramos que la base sea la de por defecto antes de sobreescribir
-  RegistrarDefectos;
-  if (FConexion = nil) or (not FConexion.Connected) then
-    raise Exception.Create(
-      'TCajaParams requiere una conexión activa');
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := FConexion;
-    qry.SQL.Text   :=
-      'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
-    qry.ParamByName('p_usuario').AsString    := AUsuario;
-    qry.ParamByName('p_grupo').AsString      := AGrupo;
-    qry.ParamByName('p_formulario').AsString := 'frmMtoCajaParam';
-    qry.Open;
-    // 2. Sobrescribimos los valores por defecto con los que tenga el usuario
-    while not qry.Eof do
-    begin
-      KeyDB := qry.FieldByName('SUBKEY_USUPER').AsString;
-      ValueDB := qry.FieldByName('VALUE_USUPER').AsString;
-      // Las claves de geometría/layout (WindowState, Left, Top, Width,
-      // Height, Divider) se persisten bajo el mismo KEY_USUPER que los
-      // parámetros (véase inLibLayoutForm.TLayoutSaver). No son parámetros
-      // configurables: las saltamos para que no aparezcan como huérfanas.
-      if not MatchText(KeyDB, ['WindowState', 'Left', 'Top', 'Width',
-                               'Height', 'Divider']) then
-      begin
-        if FParams.TryGetValue(KeyDB, ParamObj) then
-        begin
-          ParamObj.ValorActual := ValueDB;
-        end
-        else
-        begin
-          // Si hay un parámetro huérfano en la BD que no hemos registrado,
-          // lo metemos en una categoría genérica para que siga viéndose.
-          RegistrarParametro('Otros (Heredados de BD)',
-                             KeyDB,
-                             'Parámetro sin descripción',
-                             tpString,
-                             ValueDB);
-          FParams.Items[KeyDB].ValorActual := ValueDB;
-        end;
-      end;
-      qry.Next;
-    end;
-  finally
-    FreeAndNil(qry);
-  end;
-end;
-
-procedure TCajaParams.Inicializar(const AUsuario, AGrupo: string);
-begin
-  CargarDesdeDB(AUsuario, AGrupo);
-end;
-
-procedure TCajaParams.InicializarParametrosCaja(const AUsuario, AGrupo: string);
+procedure TParametrosCaja.InicializarParametrosCaja(
+  const AUsuario, AGrupo: string);
 begin
   // --- Control de Artículos ---
   RegistrarParametro('Control de Artículos',
@@ -383,72 +256,51 @@ begin
   Inicializar(AUsuario, AGrupo);
 end;
 
-procedure TCajaParams.Recargar(const AUsuario, AGrupo: string);
+function TParametrosCaja.NivelesFamiliaArqueo: Integer;
 begin
-  CargarDesdeDB(AUsuario, AGrupo);
-end;
-
-// --- Getters ---
-function TCajaParams.GetString(const AKey: string;
-                               const ADefault: string): string;
-var
-  ParamObj: TParamDef;
-begin
-  if FParams.TryGetValue(AKey, ParamObj) then
-    Result := ParamObj.ValorActual
-  else
-    Result := ADefault;
-end;
-
-function TCajaParams.GetBool(const AKey: string;
-                             const ADefault: Boolean): Boolean;
-var
-  ParamObj: TParamDef;
-  sVal: string;
-begin
-  if FParams.TryGetValue(AKey, ParamObj) then
-  begin
-    sVal := ParamObj.ValorActual;
-    Result := SameText(sVal, 'True') or (sVal = '1');
-  end
-  else
-    Result := ADefault;
-end;
-
-function TCajaParams.GetInt(const AKey: string; const ADefault: Integer): Integer;
-var
-  ParamObj: TParamDef;
-begin
-  if FParams.TryGetValue(AKey, ParamObj) then
-  begin
-    if not TryStrToInt(ParamObj.ValorActual, Result) then
-      Result := ADefault;
-  end
-  else
-    Result := ADefault;
-end;
-
-function NivelesFamiliaArqueo: Integer;
-begin
-  Result := oCajaParams.GetInt('vgerArqueoNivelesFamilia', 2);
+  Result := GetInt('vgerArqueoNivelesFamilia', 2);
   if Result < 1 then
     Result := 1;
   if Result > 9 then
     Result := 9;
 end;
 
+function TParametrosCaja.TarifaDefecto: string;
+begin
+  Result := GetString('vgerDefTarifa', 'PVP');
+end;
+
+function CrearParametrosCaja(
+  const APerfilesUsuario: IPerfilesUsuario;
+  const AUsuario, AGrupo: string
+): IParametrosCaja;
+var
+  Parametros: TParametrosCaja;
+begin
+  Parametros := TParametrosCaja.Create(APerfilesUsuario);
+  try
+    Parametros.InicializarParametrosCaja(AUsuario, AGrupo);
+    Result := Parametros;
+  except
+    FreeAndNil(Parametros);
+    raise;
+  end;
+end;
+
+function NivelesFamiliaArqueo: Integer;
+begin
+  if Assigned(oCajaParams) then
+    Result := oCajaParams.NivelesFamiliaArqueo
+  else
+    Result := 2;
+end;
+
 function TarifaDefecto: string;
 begin
   if Assigned(oCajaParams) then
-    Result := oCajaParams.GetString('vgerDefTarifa', 'PVP')
+    Result := oCajaParams.TarifaDefecto
   else
     Result := 'PVP';
 end;
-
-initialization
-  oCajaParams := TCajaParams.Create;
-
-finalization
-  FreeAndNil(oCajaParams);
 
 end.
