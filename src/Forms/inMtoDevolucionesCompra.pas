@@ -1282,7 +1282,12 @@ end;
 function TfrmMtoDevolucionesCompra.SqlRestriccionUsuario: string;
 begin
   // Documentos de compra: empresa y almacén (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_DEVC', 'CODIGO_ALM_DEVC', '');
+  Result := SqlFiltroEmpAlmCaja(
+    ContextoSesion,
+    ParametrosApp,
+    'CODIGO_EMP_DEVC',
+    'CODIGO_ALM_DEVC',
+    '');
 end;
 
 procedure TfrmMtoDevolucionesCompra.CrearTablaPrincipal;
@@ -3122,7 +3127,9 @@ begin
         Datos.Clear;
         if EsCodigoArticuloExacto(sArt) then
         begin
-          Resolver := TArticulosResolver.Create(ConexionPrincipal);
+          Resolver := TArticulosResolver.Create(
+            ConexionPrincipal,
+            ParametrosCaja);
           try
             Datos := Resolver.ResolverDatos(sArt, '', '', dFecha, sAlm,
                                             sPrv);
@@ -3145,7 +3152,9 @@ begin
           begin
             sArt := Resolucion.CodigoArticulo;
             sSku := Resolucion.CodigoSku;
-            Resolver := TArticulosResolver.Create(ConexionPrincipal);
+            Resolver := TArticulosResolver.Create(
+              ConexionPrincipal,
+              ParametrosCaja);
             try
               Datos := Resolver.ResolverDatos(sArt, sSku, '', dFecha, sAlm,
                                               sPrv);

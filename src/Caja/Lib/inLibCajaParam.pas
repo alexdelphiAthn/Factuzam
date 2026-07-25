@@ -38,21 +38,6 @@ function CrearParametrosCaja(
   const AUsuario, AGrupo: string
 ): IParametrosCaja;
 
-// Niveles de la jerarquía de familias (padre→hijo→nieto…) que el resumen
-// por sección del arqueo debe desglosar. Devuelve el valor saneado al
-// rango [1..9]. Configurable en Parámetros de Caja, clave
-// 'vgerArqueoNivelesFamilia' (1 = solo la sección raíz).
-function NivelesFamiliaArqueo: Integer;
-
-// Tarifa por defecto del sistema (código de tarifa). ÚNICA definición:
-// parámetro de caja 'vgerDefTarifa' (Parámetros de Caja > Configuración
-// de Caja). Sustituye a los antiguos appTarifaDefecto / appTarifaDefault
-// (inLibAppParam) y al flag ESDEFAULT_TAR de fza_tarifas, ya eliminados.
-function TarifaDefecto: string;
-
-var
-  oCajaParams: IParametrosCaja;
-
 implementation
 
 uses
@@ -278,29 +263,11 @@ var
   Parametros: TParametrosCaja;
 begin
   Parametros := TParametrosCaja.Create(APerfilesUsuario);
-  try
-    Parametros.InicializarParametrosCaja(AUsuario, AGrupo);
-    Result := Parametros;
-  except
-    FreeAndNil(Parametros);
-    raise;
-  end;
-end;
-
-function NivelesFamiliaArqueo: Integer;
-begin
-  if Assigned(oCajaParams) then
-    Result := oCajaParams.NivelesFamiliaArqueo
-  else
-    Result := 2;
-end;
-
-function TarifaDefecto: string;
-begin
-  if Assigned(oCajaParams) then
-    Result := oCajaParams.TarifaDefecto
-  else
-    Result := 'PVP';
+  // Mismo orden que en la factoria de aplicacion: el interfaz gobierna
+  // la vida del objeto antes de inicializar, por si algun hook toma una
+  // referencia temporal a Self durante la carga.
+  Result := Parametros;
+  Parametros.InicializarParametrosCaja(AUsuario, AGrupo);
 end;
 
 end.

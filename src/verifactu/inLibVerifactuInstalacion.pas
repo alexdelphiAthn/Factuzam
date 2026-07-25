@@ -17,7 +17,7 @@ unit inLibVerifactuInstalacion;
 interface
 
 uses
-  System.SysUtils, Uni;
+  System.SysUtils, Uni, inLibParametrosIntf;
 
 const
   cCodigoSifFactuzam = 'FZ';
@@ -42,14 +42,24 @@ function ObtenerEmpresaInstalacionSif(AConn: TUniConnection;
 function ObtenerEmpresaInstalacionSifDefecto(AConn: TUniConnection;
                                              out AEstado:
                                              TEstadoInstalacionSif): Boolean;
-function GenerarInstalacionSifEmpresa(AConn: TUniConnection;
+function GenerarInstalacionSifEmpresa(
+                                      const AParametrosApp:
+                                      IParametrosAplicacion;
+                                      AConn: TUniConnection;
                                       const AUsuario: string;
                                       const ACodigoEmpresa: string):
                                       TEstadoInstalacionSif;
-procedure SincronizarVersionInstalacionesSif(AConn: TUniConnection;
+procedure SincronizarVersionInstalacionesSif(
+                                             const AParametrosApp:
+                                             IParametrosAplicacion;
+                                             AConn: TUniConnection;
                                              const AUsuario: string);
-function ObtenerDeclaracionResponsableSif(const AVersion: string): string;
-procedure AsegurarDeclaracionResponsableSif(const AVersion: string);
+function ObtenerDeclaracionResponsableSif(
+  const AParametrosApp: IParametrosAplicacion;
+  const AVersion: string): string;
+procedure AsegurarDeclaracionResponsableSif(
+  const AParametrosApp: IParametrosAplicacion;
+  const AVersion: string);
 procedure ValidarInstalacionSif(const ANumero, AVersion, ACodigoSif,
                                 ANombreEmpresa, ANifEmpresa: string);
 
@@ -116,9 +126,11 @@ begin
   end;
 end;
 
-function UrlServicioSif(const ARuta: string): string;
+function UrlServicioSif(
+  const AParametrosApp: IParametrosAplicacion;
+  const ARuta: string): string;
 begin
-  Result := TClienteFactuzamApi.UrlBase;
+  Result := TClienteFactuzamApi.UrlBase(AParametrosApp);
   if Result = '' then
     Result := cUrlServicios;
   if not Result.EndsWith('/') then
@@ -126,14 +138,16 @@ begin
   Result := Result + ARuta;
 end;
 
-function UrlServicioInstalacionSif: string;
+function UrlServicioInstalacionSif(
+  const AParametrosApp: IParametrosAplicacion): string;
 begin
-  Result := UrlServicioSif(cRutaInstalacionSif);
+  Result := UrlServicioSif(AParametrosApp, cRutaInstalacionSif);
 end;
 
-function UrlServicioDeclaracionSif: string;
+function UrlServicioDeclaracionSif(
+  const AParametrosApp: IParametrosAplicacion): string;
 begin
-  Result := UrlServicioSif(cRutaDeclaracionSif);
+  Result := UrlServicioSif(AParametrosApp, cRutaDeclaracionSif);
 end;
 
 function JsonString(AObj: TJSONObject; const AClave: string): string;
@@ -179,7 +193,10 @@ begin
     Result := Format('El servicio respondió con HTTP %d.', [AEstadoHttp]);
 end;
 
-function PedirNumeroInstalacionServicio(const AVersion, ARazonSocial,
+function PedirNumeroInstalacionServicio(
+                                        const AParametrosApp:
+                                        IParametrosAplicacion;
+                                        const AVersion, ARazonSocial,
                                         ANif, ACodigoSif: string): string;
 var
   oHttp:     THTTPClient;
@@ -200,8 +217,8 @@ begin
     oReqJson.AddPair('razon_social', ARazonSocial);
     oReqJson.AddPair('nif', ANif);
     oReqJson.AddPair('sif', ACodigoSif);
-    sReferencia := TClienteFactuzamApi.Referencia;
-    sToken := TClienteFactuzamApi.Token;
+    sReferencia := TClienteFactuzamApi.Referencia(AParametrosApp);
+    sToken := TClienteFactuzamApi.Token(AParametrosApp);
     if sReferencia = '' then
       raise Exception.Create('Falta la referencia global de la instalación.');
     if sToken = '' then
@@ -212,7 +229,10 @@ begin
       oHttp.ConnectionTimeout := 15000;
       oHttp.ResponseTimeout := 30000;
       oHttp.CustomHeaders['X-API-Key'] := sToken;
-      oResp := oHttp.Post(UrlServicioInstalacionSif, oCuerpo, nil,
+      oResp := oHttp.Post(
+        UrlServicioInstalacionSif(AParametrosApp),
+        oCuerpo,
+        nil,
         [TNetHeader.Create('Content-Type', 'application/json; charset=utf-8')]);
       sRespuesta := oResp.ContentAsString(TEncoding.UTF8);
       if oResp.StatusCode <> 200 then
@@ -245,7 +265,9 @@ begin
   end;
 end;
 
-function DescargarDeclaracionResponsableSif(const AVersion: string): string;
+function DescargarDeclaracionResponsableSif(
+  const AParametrosApp: IParametrosAplicacion;
+  const AVersion: string): string;
 var
   oHttp:       THTTPClient;
   oReqJson:    TJSONObject;
@@ -260,8 +282,8 @@ var
   sVersion:    string;
 begin
   Result := '';
-  sReferencia := TClienteFactuzamApi.Referencia;
-  sToken := TClienteFactuzamApi.Token;
+  sReferencia := TClienteFactuzamApi.Referencia(AParametrosApp);
+  sToken := TClienteFactuzamApi.Token(AParametrosApp);
   if sReferencia = '' then
     raise Exception.Create('Falta la referencia global de la instalación.');
   if sToken = '' then
@@ -277,7 +299,10 @@ begin
       oHttp.ConnectionTimeout := 15000;
       oHttp.ResponseTimeout := 30000;
       oHttp.CustomHeaders['X-API-Key'] := sToken;
-      oResp := oHttp.Post(UrlServicioDeclaracionSif, oCuerpo, nil,
+      oResp := oHttp.Post(
+        UrlServicioDeclaracionSif(AParametrosApp),
+        oCuerpo,
+        nil,
         [TNetHeader.Create('Content-Type',
                            'application/json; charset=utf-8')]);
       sRespuesta := oResp.ContentAsString(TEncoding.UTF8);
@@ -454,7 +479,9 @@ begin
   end;
 end;
 
-function ObtenerDeclaracionResponsableSif(const AVersion: string): string;
+function ObtenerDeclaracionResponsableSif(
+  const AParametrosApp: IParametrosAplicacion;
+  const AVersion: string): string;
 var
   sErrorCache: string;
   sErrorPublica: string;
@@ -465,7 +492,9 @@ begin
   sErrorPublica := '';
   sErrorServicio := '';
   try
-    Result := DescargarDeclaracionResponsableSif(AVersion);
+    Result := DescargarDeclaracionResponsableSif(
+      AParametrosApp,
+      AVersion);
     if not DeclaracionCoincideSifVersion(Result, AVersion) then
       raise Exception.Create('El webservice devolvió una declaración de ' +
                              'otra versión.');
@@ -511,13 +540,15 @@ begin
       '. Caché: ' + sErrorCache + '. Página pública: ' + sErrorPublica);
 end;
 
-procedure AsegurarDeclaracionResponsableSif(const AVersion: string);
+procedure AsegurarDeclaracionResponsableSif(
+  const AParametrosApp: IParametrosAplicacion;
+  const AVersion: string);
 var
   sHtml: string;
 begin
   sHtml := CargarDeclaracionCacheSif(AVersion);
   if sHtml = '' then
-    sHtml := ObtenerDeclaracionResponsableSif(AVersion);
+    sHtml := ObtenerDeclaracionResponsableSif(AParametrosApp, AVersion);
 end;
 
 procedure VaciarEstado(var AEstado: TEstadoInstalacionSif);
@@ -609,7 +640,10 @@ begin
   Result := ObtenerEmpresaInstalacionSif(AConn, '', AEstado);
 end;
 
-function GenerarInstalacionSifEmpresa(AConn: TUniConnection;
+function GenerarInstalacionSifEmpresa(
+                                      const AParametrosApp:
+                                      IParametrosAplicacion;
+                                      AConn: TUniConnection;
                                       const AUsuario: string;
                                       const ACodigoEmpresa: string):
                                       TEstadoInstalacionSif;
@@ -635,7 +669,10 @@ begin
       Result.Nif + '".');
   if sNumero = '' then
   begin
-    sNumero := PedirNumeroInstalacionServicio(oVersion, Result.RazonSocial,
+    sNumero := PedirNumeroInstalacionServicio(
+                                              AParametrosApp,
+                                              oVersion,
+                                              Result.RazonSocial,
                                               Result.Nif, cCodigoSifFactuzam);
     Qry := TUniQuery.Create(nil);
     try
@@ -662,13 +699,20 @@ begin
   end;
 end;
 
-procedure SincronizarVersionInstalacionesSif(AConn: TUniConnection;
+procedure SincronizarVersionInstalacionesSif(
+                                             const AParametrosApp:
+                                             IParametrosAplicacion;
+                                             AConn: TUniConnection;
                                              const AUsuario: string);
 var
   oEstado: TEstadoInstalacionSif;
   Qry:     TUniQuery;
 begin
-  oEstado := GenerarInstalacionSifEmpresa(AConn, AUsuario, '');
+  oEstado := GenerarInstalacionSifEmpresa(
+    AParametrosApp,
+    AConn,
+    AUsuario,
+    '');
   Qry := TUniQuery.Create(nil);
   try
     Qry.Connection := AConn;

@@ -16,12 +16,17 @@ File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPreviewTic
 File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGenerarTicketBD.pas',0,1,65,17,77,0,0,,
 
 [Modules]
-Count=0
+Module0=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
+Count=1
 EditWindowCount=1
 
+[C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+ModuleType=TBaseProject
+
 [EditWindow0]
-ViewCount=0
-CurrentView=-1
+ViewCount=1
+CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
+View0=0
 PercentageSizes=1
 Create=1
 Visible=1
@@ -54,6 +59,17 @@ BottomPanelData=0000080001020100000009000000446F636B5369746531D93D00000000000002
 BottomMiddlePanelSize=0
 BottomMiddlePanelClients=DockSite0,GraphDrawingModel
 BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E67566965779F1D00000000000002F706000000000000FFFFFFFF
+
+[View0]
+CustomEditViewType=TEditView
+Module=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
+CursorX=1
+CursorY=1
+TopLine=1
+LeftCol=1
+Elisions=
+Bookmarks=
+EditViewName=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
 
 [Watches]
 Count=0
@@ -215,11 +231,11 @@ State=0
 Left=0
 Top=0
 Width=1500
-Height=8237
+Height=6193
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1500
-ClientHeight=8237
+ClientHeight=6193
 TBDockHeight=5956
 LRDockWidth=2510
 Dockable=1
@@ -420,11 +436,11 @@ State=0
 Left=0
 Top=0
 Width=1500
-Height=8237
+Height=6193
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1500
-ClientHeight=8237
+ClientHeight=6193
 TBDockHeight=4886
 LRDockWidth=7151
 Dockable=1

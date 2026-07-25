@@ -209,7 +209,7 @@ implementation
 
 {$R *.dfm}
 
-uses inMtoCajaSeleccionVale, inLibCajaParam, inMtoModalSerieFechaFactura,
+uses inMtoCajaSeleccionVale, inMtoModalSerieFechaFactura,
      UniDataCaja, inLibDocumentoFiscal, inLibCorreoTickets;
 
 procedure TfrmMtoCajaFaseCobro.CargarComboSeries;
@@ -258,8 +258,6 @@ begin
     end;
     if cbbSERIE_FAC.Properties.Items.Count > 0 then
     begin
-//      SerieDefecto := oCajaParams.GetString('vgerDefSerieCaja', 'T');
-//      cbbSERIE_FAC.ItemIndex := cbbSERIE_FAC.Properties.Items.IndexOf(SerieDefecto);
       if cbbSERIE_FAC.ItemIndex = -1 then
         cbbSERIE_FAC.ItemIndex := 0;
     end;
@@ -602,7 +600,7 @@ begin
   begin
     if chkEnviarEmail.Checked then
     begin
-      bContinuar := CorreoTicketsConfigurado(sMensaje);
+      bContinuar := CorreoTicketsConfigurado(ParametrosApp, sMensaje);
       if not bContinuar then
         ShowMessage(sMensaje)
       else
@@ -1034,7 +1032,8 @@ begin
     ConfigurarModoDevolucion
   else
     ConfigurarModoCobroNormal;
-  var PermiteCredito := oCajaParams.GetBool('vgerVentasCredito', True) and
+  var PermiteCredito :=
+    ParametrosCaja.GetBool('vgerVentasCredito', True) and
                      FDatosCobro.HayCliente and FDatosCobro.PermiteDeuda and
                      FDatosCobro.PuedeDejarEnCuenta;
   if Assigned(btnDeposito) then
@@ -1063,7 +1062,8 @@ begin
     txtPorcenDtoGlobal.ShowHint := True;
   end
   else
-    txtPorcenDtoGlobal.Enabled := oCajaParams.GetBool('vgerDescuentos', True);
+    txtPorcenDtoGlobal.Enabled :=
+      ParametrosCaja.GetBool('vgerDescuentos', True);
 
   txtValeEmitido.Properties.ReadOnly := True;
   txtValeEmitido.Style.Color := clWhite;

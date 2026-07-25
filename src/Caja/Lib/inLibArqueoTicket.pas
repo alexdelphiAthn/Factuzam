@@ -33,7 +33,8 @@ uses
   inLibFTicket,
   inMtoPreviewTicket,
   inLibDir,
-  inLibContextoSesionIntf;
+  inLibContextoSesionIntf,
+  inLibParametrosIntf;
 
 type
   TArqueoTicket = class
@@ -53,6 +54,8 @@ type
                                               const AArqueo: TArqueoCaja);
     class procedure EscribirResumenSeccion(ATicket: TTicketTermico;
                                            AConn: TUniConnection;
+                                           const AParametrosCaja:
+                                           IParametrosCaja;
                                            const AArqueo: TArqueoCaja);
     class procedure EscribirResumenTemporada(ATicket: TTicketTermico;
                                              AConn: TUniConnection;
@@ -68,6 +71,7 @@ type
                                          const AArqueo: TArqueoCaja);
   public
     class procedure Imprimir(AConn: TUniConnection;
+                             const AParametrosCaja: IParametrosCaja;
                              const AEmpresa: string;
                              const AAlmacen: string;
                              const ACaja: string;
@@ -96,6 +100,7 @@ type
     // del rango son inmutables tras el cierre) y la marca como DUPLICADO.
     class procedure ImprimirDesdeHistorico(
       AConn: TUniConnection;
+      const AParametrosCaja: IParametrosCaja;
       const AEmpresa, AAlmacen, ACaja: string;
       const ACodigoArqueo: string;
       const ANombreImpresora: string = 'DEBUG');
@@ -110,9 +115,6 @@ type
   end;
 
 implementation
-
-uses
-  inLibCajaParam;
 
 // =============================================================================
 //   Helpers de formato
@@ -333,6 +335,8 @@ end;
 
 class procedure TArqueoTicket.EscribirResumenSeccion(ATicket: TTicketTermico;
                                                     AConn: TUniConnection;
+                                                    const AParametrosCaja:
+                                                    IParametrosCaja;
                                                     const AArqueo: TArqueoCaja);
 var
   Q: TUniQuery;
@@ -349,7 +353,8 @@ begin
   try
     Q.Connection := AConn;
     // Niveles de familia a desglosar según Parámetros de Caja.
-    Q.SQL.Text := TArqueoCalculadora.SQLResumenSeccion(NivelesFamiliaArqueo);
+    Q.SQL.Text := TArqueoCalculadora.SQLResumenSeccion(
+      AParametrosCaja.NivelesFamiliaArqueo);
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
     Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
     Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
@@ -610,6 +615,8 @@ end;
 // =============================================================================
 
 class procedure TArqueoTicket.Imprimir(AConn: TUniConnection;
+                                      const AParametrosCaja:
+                                      IParametrosCaja;
                                       const AEmpresa: string;
                                       const AAlmacen: string;
                                       const ACaja: string;
@@ -664,7 +671,7 @@ begin
     EscribirDevolucionesPorFP(Ticket, AConn, Arqueo);
 
     // Resúmenes
-    EscribirResumenSeccion(Ticket, AConn, Arqueo);
+    EscribirResumenSeccion(Ticket, AConn, AParametrosCaja, Arqueo);
     EscribirResumenTemporada(Ticket, AConn, Arqueo);
     EscribirResumenEmpleado(Ticket, AConn, Arqueo);
     EscribirResumenFormaPago(Ticket, AConn, Arqueo);
@@ -867,6 +874,7 @@ end;
 
 class procedure TArqueoTicket.ImprimirDesdeHistorico(
   AConn: TUniConnection;
+  const AParametrosCaja: IParametrosCaja;
   const AEmpresa, AAlmacen, ACaja: string;
   const ACodigoArqueo: string;
   const ANombreImpresora: string = 'DEBUG');
@@ -914,7 +922,7 @@ begin
   begin
     if (Frac(dDesde) = 0) and (Frac(dHasta) = 0) then
       dHasta := dHasta + EncodeTime(23, 59, 59, 0);
-    Imprimir(AConn, sEmp, sAlm, sCaja,
+    Imprimir(AConn, AParametrosCaja, sEmp, sAlm, sCaja,
              dDesde, dHasta,
              ANombreImpresora, True);
   end;

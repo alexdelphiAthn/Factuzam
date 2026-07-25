@@ -54,7 +54,7 @@ type
 implementation
 
 uses
-  inMtoPreviewExcel, inLibDocCompraExcel, inLibAppParam;
+  inMtoPreviewExcel, inLibDocCompraExcel;
 
 {$R *.dfm}
 
@@ -93,7 +93,8 @@ begin
   fPreview := TfrmMtoPreviewExcel.Create(Self);
   try
     fPreview.PopupParent := Self;
-    fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
+    fPreview.DialogoGuardar.InitialDir :=
+      ParametrosApp.GetPath('appDirExcel');
     fPreview.DialogoGuardar.FileName :=
       'DevCompraV_' + edtSerie.Text + '_' + edtNumero.Text;
     try

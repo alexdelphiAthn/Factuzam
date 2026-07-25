@@ -240,7 +240,7 @@
         object btnF12: TcxButton
           Left = 10
           Top = 6
-          Width = 103
+          Width = 96
           Height = 57
           Caption = 'F12'
           Colors.Default = clBlue
@@ -258,9 +258,9 @@
           OnClick = btnF12Click
         end
         object btnF3: TcxButton
-          Left = 117
+          Left = 110
           Top = 6
-          Width = 103
+          Width = 96
           Height = 57
           Caption = 'F3'
           Colors.Default = clBlue
@@ -277,9 +277,9 @@
           ParentFont = False
         end
         object btnF8: TcxButton
-          Left = 224
+          Left = 210
           Top = 6
-          Width = 103
+          Width = 96
           Height = 57
           Caption = 'F8'
           Colors.Default = clBlue
@@ -296,9 +296,9 @@
           ParentFont = False
         end
         object btnF6: TcxButton
-          Left = 331
+          Left = 310
           Top = 6
-          Width = 103
+          Width = 96
           Height = 57
           Caption = 'F6'
           Colors.Default = clBlue
@@ -315,9 +315,9 @@
           ParentFont = False
         end
         object btnF61: TcxButton
-          Left = 437
+          Left = 410
           Top = 6
-          Width = 103
+          Width = 96
           Height = 57
           Caption = 'F4'
           Colors.Default = clBlue
@@ -334,9 +334,9 @@
           ParentFont = False
         end
         object btnF7: TcxButton
-          Left = 542
+          Left = 510
           Top = 6
-          Width = 103
+          Width = 96
           Height = 57
           Caption = 'F7'
           Colors.Default = clBlue
@@ -353,9 +353,9 @@
           ParentFont = False
         end
         object btnF5: TcxButton
-          Left = 645
+          Left = 610
           Top = 6
-          Width = 103
+          Width = 96
           Height = 57
           Caption = 'F5'
           Colors.Default = clBlue
@@ -373,9 +373,9 @@
           OnClick = btnF5Click
         end
         object btnF2: TcxButton
-          Left = 763
+          Left = 710
           Top = 6
-          Width = 103
+          Width = 96
           Height = 57
           Caption = 'F2'
           Colors.Default = clBlue
@@ -392,60 +392,88 @@
           ParentFont = False
           OnClick = btnF2Click
         end
+        object btnF10: TcxButton
+          Left = 810
+          Top = 6
+          Width = 96
+          Height = 57
+          Caption = 'F10'
+          Colors.Default = clBlue
+          Colors.Normal = clBlue
+          Colors.NormalText = clNavy
+          Hint = 'Buscar / Modificar operaciones'
+          TabOrder = 8
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clBlue
+          Font.Height = -27
+          Font.Name = 'Segoe UI Black'
+          Font.Pitch = fpFixed
+          Font.Style = [fsUnderline]
+          Font.Quality = fqClearTypeNatural
+          ParentFont = False
+          OnClick = btnF10Click
+        end
         object lblCobro: TcxLabel
-          Left = 31
+          Left = 32
           Top = 71
           Caption = 'Cobro'
-          TabOrder = 8
-          Transparent = True
-        end
-        object lblBuscar: TcxLabel
-          Left = 136
-          Top = 71
-          Caption = 'Buscar'
           TabOrder = 9
           Transparent = True
         end
-        object lblEliminar: TcxLabel
-          Left = 235
+        object lblBuscar: TcxLabel
+          Left = 132
           Top = 71
-          Caption = 'Eliminar'
+          Caption = 'Buscar'
           TabOrder = 10
           Transparent = True
         end
-        object lblTextoTarifa: TcxLabel
-          Left = 354
+        object lblEliminar: TcxLabel
+          Left = 225
           Top = 71
-          Caption = 'Tarifa'
+          Caption = 'Eliminar'
           TabOrder = 11
           Transparent = True
         end
-        object lblBusqTick: TcxLabel
-          Left = 452
+        object lblTextoTarifa: TcxLabel
+          Left = 337
           Top = 71
-          Caption = 'B'#250'sq Tick'
+          Caption = 'Tarifa'
           TabOrder = 12
           Transparent = True
         end
-        object lblIndIVA: TcxLabel
-          Left = 555
+        object lblBusqTick: TcxLabel
+          Left = 425
           Top = 71
-          Caption = 'Ind. IVA'
+          Caption = 'B'#250'sq Tick'
           TabOrder = 13
           Transparent = True
         end
-        object lblOtro: TcxLabel
-          Left = 673
+        object lblIndIVA: TcxLabel
+          Left = 531
           Top = 71
-          Caption = 'Otro'
+          Caption = 'Ind. IVA'
           TabOrder = 14
           Transparent = True
         end
+        object lblOtro: TcxLabel
+          Left = 643
+          Top = 71
+          Caption = 'Otro'
+          TabOrder = 15
+          Transparent = True
+        end
         object lblCargarCta: TcxLabel
-          Left = 763
+          Left = 717
           Top = 71
           Caption = 'Cargar cta.'
-          TabOrder = 15
+          TabOrder = 16
+          Transparent = True
+        end
+        object lblBuscarModificar: TcxLabel
+          Left = 811
+          Top = 71
+          Caption = 'Buscar/Mod.'
+          TabOrder = 17
           Transparent = True
         end
       end
@@ -895,6 +923,11 @@
       Caption = 'CargarCta'
       ShortCut = 113
       OnExecute = actCargarCtaExecute
+    end
+    object actBuscarModificar: TAction
+      Caption = 'Buscar / Modificar'
+      ShortCut = 121
+      OnExecute = actBuscarModificarExecute
     end
     object actGuardarLayout: TAction
       Caption = 'Guardar Layout'

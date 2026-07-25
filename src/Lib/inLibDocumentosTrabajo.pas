@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Data.DB, DBAccess, Uni,
-  inLibContextoSesionIntf;
+  inLibContextoSesionIntf, inLibParametrosIntf;
 
 type
   TResolverDocTrabajoArtSku = procedure(out ACodArt, ACodSku: string) of object;
@@ -42,12 +42,16 @@ function AgregarUnidadADocumentoTrabajo(AOwner: TComponent;
                                         AConexion: TUniConnection;
                                         const AContextoSesion:
                                         IContextoSesionAplicacion;
+                                        const AParametrosCaja:
+                                        IParametrosCaja;
                                         const ALinea: TDocTrabajoLineaOrigen):
                                         Boolean;
 function AgregarArticuloActivoADocumentoTrabajo(AOwner: TComponent;
                                                 AConexion: TUniConnection;
                                                 const AContextoSesion:
                                                 IContextoSesionAplicacion;
+                                                const AParametrosCaja:
+                                                IParametrosCaja;
                                                 AResolver:
                                                 TResolverDocTrabajoArtSku):
                                                 Boolean;
@@ -240,7 +244,9 @@ begin
   end;
 end;
 
-procedure ResolverSkuSiEsUnico(AConexion: TUniConnection;
+procedure ResolverSkuSiEsUnico(
+                               AConexion: TUniConnection;
+                               const AParametrosCaja: IParametrosCaja;
                                var ALinea: TDocTrabajoLineaOrigen);
 var
   oResolver: TArticulosResolver;
@@ -248,7 +254,9 @@ var
 begin
   if (Trim(ALinea.CodigoArticulo) <> '') and (Trim(ALinea.CodigoSku) = '') then
   begin
-    oResolver := TArticulosResolver.Create(ConnTrabajo(AConexion));
+    oResolver := TArticulosResolver.Create(
+      ConnTrabajo(AConexion),
+      AParametrosCaja);
     try
       oDatos := oResolver.ResolverDatos(ALinea.CodigoArticulo, '',
                                         '', Date, ALinea.CodigoAlmacen);
@@ -326,6 +334,8 @@ function AgregarUnidadADocumentoTrabajo(AOwner: TComponent;
                                         AConexion: TUniConnection;
                                         const AContextoSesion:
                                         IContextoSesionAplicacion;
+                                        const AParametrosCaja:
+                                        IParametrosCaja;
                                         const ALinea: TDocTrabajoLineaOrigen):
                                         Boolean;
 var
@@ -334,7 +344,7 @@ var
 begin
   Result := False;
   rLinea := ALinea;
-  ResolverSkuSiEsUnico(AConexion, rLinea);
+  ResolverSkuSiEsUnico(AConexion, AParametrosCaja, rLinea);
   if Trim(rLinea.CodigoArticulo) = '' then
   begin
     raise Exception.Create('No hay articulo activo para agregar.');
@@ -364,6 +374,8 @@ function AgregarArticuloActivoADocumentoTrabajo(AOwner: TComponent;
                                                 AConexion: TUniConnection;
                                                 const AContextoSesion:
                                                 IContextoSesionAplicacion;
+                                                const AParametrosCaja:
+                                                IParametrosCaja;
                                                 AResolver:
                                                 TResolverDocTrabajoArtSku):
                                                 Boolean;
@@ -380,7 +392,7 @@ begin
   rLinea.Cantidad := 1;
   rLinea.Origen := 'MTO';
   Result := AgregarUnidadADocumentoTrabajo(AOwner, AConexion,
-    AContextoSesion, rLinea);
+    AContextoSesion, AParametrosCaja, rLinea);
 end;
 
 end.

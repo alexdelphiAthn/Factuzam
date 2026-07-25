@@ -1,4 +1,4 @@
-inherited frmConsultaOpe: TfrmConsultaOpe
+﻿inherited frmConsultaOpe: TfrmConsultaOpe
   Caption = 'Buscar operaciones'
   ClientHeight = 720
   ClientWidth = 1163
@@ -152,7 +152,7 @@ inherited frmConsultaOpe: TfrmConsultaOpe
     Height = 326
     Align = alClient
     TabOrder = 2
-    Properties.ActivePage = tsOperacion
+    Properties.ActivePage = tsMovimientos
     Properties.CustomButtons.Buttons = <>
     ClientRectBottom = 322
     ClientRectLeft = 4
@@ -431,6 +431,7 @@ inherited frmConsultaOpe: TfrmConsultaOpe
         Align = alClient
         TabOrder = 0
         object cxViewMov: TcxGridDBTableView
+          OnCustomDrawCell = cxViewMovCustomDrawCell
           OptionsData.Deleting = False
           OptionsData.Editing = False
           OptionsData.Inserting = False
@@ -469,6 +470,16 @@ inherited frmConsultaOpe: TfrmConsultaOpe
             Caption = 'SKU'
             DataBinding.FieldName = 'CODIGO_UNIDAD_MOV'
             Width = 126
+          end
+          object colMovColor: TcxGridDBColumn
+            Caption = 'Color'
+            DataBinding.FieldName = 'COLOR_AV'
+            Width = 120
+          end
+          object colMovTalla: TcxGridDBColumn
+            Caption = 'Talla'
+            DataBinding.FieldName = 'TALLA_AV'
+            Width = 70
           end
           object colMovDesc: TcxGridDBColumn
             Caption = 'Descripci'#243'n'

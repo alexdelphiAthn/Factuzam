@@ -622,7 +622,12 @@ end;
 function TfrmMtoFacturasCompra.SqlRestriccionUsuario: string;
 begin
   // Documentos de compra: empresa y almacén (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_FACC', 'CODIGO_ALM_FACC', '');
+  Result := SqlFiltroEmpAlmCaja(
+    ContextoSesion,
+    ParametrosApp,
+    'CODIGO_EMP_FACC',
+    'CODIGO_ALM_FACC',
+    '');
 end;
 
 procedure TfrmMtoFacturasCompra.CrearTablaPrincipal;
@@ -1917,7 +1922,8 @@ begin
         Validador := TArticulosValidador.Create(
                        dmmFacturasCompra.unqryTablaG.Connection);
         Resolver := TArticulosResolver.Create(
-                      dmmFacturasCompra.unqryTablaG.Connection);
+                      dmmFacturasCompra.unqryTablaG.Connection,
+                      ParametrosCaja);
         Resolucion := Validador.Resolver(sInput);
         if Resolucion.Encontrado then
         begin

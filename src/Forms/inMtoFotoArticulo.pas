@@ -38,7 +38,7 @@ uses
   cxDropDownEdit, cxRadioGroup, cxGroupBox, cxButtons,
   JvComponentBase, JvEnterTab,
   Vcl.Menus, cxControls, cxMaskEdit,
-  inLibFotos, inLibFotosNube, inLibLayoutForm, inLibAppParam,
+  inLibFotos, inLibFotosNube, inLibLayoutForm,
   System.UITypes;
 
 type
@@ -355,7 +355,11 @@ begin
   begin
     Screen.Cursor := crHourGlass;
     try
-      bOK := DescargarFotosArticulo(FCodigoArt, archivos, sMsg);
+      bOK := DescargarFotosArticulo(
+        ParametrosApp,
+        FCodigoArt,
+        archivos,
+        sMsg);
     finally
       Screen.Cursor := crDefault;
     end;
@@ -465,7 +469,7 @@ begin
     // de segmentos del SKU completo = numero de '/' + 1 = articulo +
     // N atributos. El prefijo cuyo numero de '/' = appNumAtributosFoto
     // es el que tiene exactamente esa cantidad de atributos.
-    iNumAtribsCfg := oAppParams.GetInt('appNumAtributosFoto', 1);
+    iNumAtribsCfg := ParametrosApp.GetInt('appNumAtributosFoto', 1);
     iIdxDefault   := 0;
     for i := 0 to cbbNivelSku.Properties.Items.Count - 1 do
     begin

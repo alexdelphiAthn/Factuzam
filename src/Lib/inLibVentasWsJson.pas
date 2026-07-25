@@ -16,7 +16,7 @@ unit inLibVentasWsJson;
 interface
 
 uses
-  System.SysUtils, System.JSON, Uni;
+  System.SysUtils, System.JSON, Uni, inLibParametrosIntf;
 
 type
   TVentasWsJson = class
@@ -28,7 +28,9 @@ type
     class function ConstruirDocumentos(AConn: TUniConnection;
       AIdCola: Int64): TJSONObject; static;
   public
-    class function ConstruirEvento(AConn: TUniConnection;
+    class function ConstruirEvento(
+      const AParametrosApp: IParametrosAplicacion;
+      AConn: TUniConnection;
       AIdCola: Int64; const AIdEvento, ATipoEvento, AEmpresa,
       ASerie, ANumero: string): string; static;
   end;
@@ -231,7 +233,9 @@ begin
   end;
 end;
 
-class function TVentasWsJson.ConstruirEvento(AConn: TUniConnection;
+class function TVentasWsJson.ConstruirEvento(
+  const AParametrosApp: IParametrosAplicacion;
+  AConn: TUniConnection;
   AIdCola: Int64; const AIdEvento, ATipoEvento, AEmpresa,
   ASerie, ANumero: string): string;
 var
@@ -253,7 +257,7 @@ begin
     oOrigen := TJSONObject.Create;
     oOrigen.AddPair('aplicacion', 'Factuzam');
     oOrigen.AddPair('version', oVersion);
-    sReferencia := TClienteFactuzamApi.Referencia;
+    sReferencia := TClienteFactuzamApi.Referencia(AParametrosApp);
     oOrigen.AddPair('referencia', sReferencia);
     oRaiz.AddPair('origen', oOrigen);
     oDocumento := TJSONObject.Create;

@@ -313,8 +313,7 @@ begin
             end
             else if SameText(Param.Nombre, 'vgerDefTarifa') then
             begin
-              // Única definición de la tarifa por defecto del sistema
-              // (véase inLibCajaParam.TarifaDefecto)
+              // Única definición de la tarifa por defecto del sistema.
               ItemCombo.Flags := ItemCombo.Flags + [iifValueList,
                                                          iifAllowNonListValues];
               ItemCombo.OnGetValueList := GetTarifasList;

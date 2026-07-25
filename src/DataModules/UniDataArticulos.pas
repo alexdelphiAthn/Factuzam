@@ -20,7 +20,7 @@ uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
   Uni, inLibUser, inLibLog, cxListView, Vcl.Forms, vcl.dialogs,
   Vcl.ComCtrls, Winapi.Windows, system.strUtils, cxGridDBTableView,
-  cxCustomData, cxFilter, inLibAppParam, inLibCajaParam,
+  cxCustomData, cxFilter,
   System.Variants, vcl.Controls, Datasnap.Provider, Datasnap.DBClient,
   System.Generics.Collections,
   frxClass, frxDBSet, frCoreClasses, System.UITypes;
@@ -499,8 +499,10 @@ begin
                                                         ftMemo, ftWideMemo]) then
           colGrupo := col;
       end;
-      bOcultarCeros := Assigned(oAppParams)
-                       and oAppParams.GetBool('appStockOcultarCeros', True);
+      bOcultarCeros := Assigned(ParametrosApp)
+                       and ParametrosApp.GetBool(
+                         'appStockOcultarCeros',
+                         True);
       with tvArticulosStock.DataController.Filter do
       begin
         BeginUpdate;
@@ -821,7 +823,7 @@ begin
       Itm.Caption := FindField('CODIGO_TAR_ARTTAR').AsString;
       Itm.SubItems.Add(FindField('NOMBRE_TAR_TAR').AsString);
       if SameText(FindField('CODIGO_TAR_ARTTAR').AsString,
-                  TarifaDefecto) then
+                  ParametrosCaja.TarifaDefecto) then
         Itm.Checked := True;
       Next;
     end;
@@ -1072,7 +1074,7 @@ begin
     codigos.Add(unqryTarifasPrint.FieldByName('CODIGO_TAR_ARTTAR').AsString);
     if (aIdxDefault = -1) and
        SameText(unqryTarifasPrint.FieldByName('CODIGO_TAR_ARTTAR').AsString,
-                TarifaDefecto) then
+                ParametrosCaja.TarifaDefecto) then
       aIdxDefault := i;
     Inc(i);
     unqryTarifasPrint.Next;

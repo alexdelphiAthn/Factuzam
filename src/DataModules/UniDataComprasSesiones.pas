@@ -201,8 +201,6 @@ implementation
 uses
   System.Variants,
   inLibGlobalVar,
-  inLibAppParam,
-  inLibCajaParam,
   inLibtb,
   inLibComprasSesiones,
   inLibComprasSesionesMaterializar,
@@ -631,14 +629,15 @@ begin
         unqryVariaciones.FieldByName('CODIGO_VAR').AsString;
     // Temporada por defecto: el parámetro almacena el nombre visible
     // (ej. 'PRIM-VER 2026'); buscamos su ID numérico en el lookup
-    var sTemp := oAppParams.GetString('appTemporadaDefecto');
+    var sTemp := ParametrosApp.GetString('appTemporadaDefecto');
     if (sTemp <> '') and unqryTemporadas.Active
        and unqryTemporadas.Locate('PV', sTemp, []) then
       FieldByName('ID_PV_TEMPORADA_SES').AsInteger :=
         unqryTemporadas.FieldByName('ID_PV_ARTPROP').AsInteger;
-    // Tarifa sugerida desde parámetros (vgerDefTarifa, inLibCajaParam)
-    if TarifaDefecto <> '' then
-      FieldByName('CODIGO_TAR_SES').AsString := TarifaDefecto;
+    // Tarifa sugerida desde parámetros de caja.
+    if ParametrosCaja.TarifaDefecto <> '' then
+      FieldByName('CODIGO_TAR_SES').AsString :=
+        ParametrosCaja.TarifaDefecto;
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='SE'
     if Trim(UbicacionSesion.Empresa) <> '' then
     begin

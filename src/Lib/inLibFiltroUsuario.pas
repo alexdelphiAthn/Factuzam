@@ -18,22 +18,26 @@ unit inLibFiltroUsuario;
 interface
 
 uses
-  inLibContextoSesionIntf;
+  inLibContextoSesionIntf, inLibParametrosIntf;
 
 // Devuelve True si el usuario actual tiene activo el parámetro
 // appRestringirEmpAlmCaja. Los administradores quedan
 // siempre exentos, igual que en inLibPermisos.
 function RestriccionEmpAlmCajaActiva(
-  const AContextoSesion: IContextoSesionAplicacion): Boolean;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion): Boolean;
 // Valores a los que queda restringido el usuario. Devuelven '' cuando la
 // restricción no está activa o cuando el usuario no tiene ese defecto
 // asignado en fza_usuarios (esa dimensión no se filtra).
 function EmpresaRestringida(
-  const AContextoSesion: IContextoSesionAplicacion): string;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion): string;
 function AlmacenRestringido(
-  const AContextoSesion: IContextoSesionAplicacion): string;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion): string;
 function CajaRestringida(
-  const AContextoSesion: IContextoSesionAplicacion): string;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion): string;
 // Construye el fragmento SQL ' AND (<col> = ''valor'' OR <col> IS NULL)'
 // para inyectar en el WHERE de la precarga de cada pantalla. Se pasa el
 // nombre de columna de cada dimensión ('' para omitirla, p. ej. pantallas
@@ -42,6 +46,8 @@ function CajaRestringida(
 function SqlFiltroEmpAlmCaja(
                              const AContextoSesion:
                              IContextoSesionAplicacion;
+                             const AParametrosApp:
+                             IParametrosAplicacion;
                              const AColEmpresa,
                              AColAlmacen,
                              AColCaja: string): string;
@@ -55,41 +61,45 @@ function InyectarFiltroSql(const ASql, AFiltro: string): string;
 implementation
 
 uses
-  System.SysUtils, inLibAppParam;
+  System.SysUtils;
 
 function RestriccionEmpAlmCajaActiva(
-  const AContextoSesion: IContextoSesionAplicacion): Boolean;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion): Boolean;
 begin
   // Los administradores nunca quedan restringidos
   if AContextoSesion.Identidad.EsAdministrador then
     Result := False
   else
-    Result := (oAppParams <> nil) and
-              oAppParams.GetBool('appRestringirEmpAlmCaja', False);
+    Result := Assigned(AParametrosApp) and
+              AParametrosApp.GetBool('appRestringirEmpAlmCaja', False);
 end;
 
 function EmpresaRestringida(
-  const AContextoSesion: IContextoSesionAplicacion): string;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion): string;
 begin
-  if RestriccionEmpAlmCajaActiva(AContextoSesion) then
+  if RestriccionEmpAlmCajaActiva(AContextoSesion, AParametrosApp) then
     Result := AContextoSesion.Ubicacion.Empresa
   else
     Result := '';
 end;
 
 function AlmacenRestringido(
-  const AContextoSesion: IContextoSesionAplicacion): string;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion): string;
 begin
-  if RestriccionEmpAlmCajaActiva(AContextoSesion) then
+  if RestriccionEmpAlmCajaActiva(AContextoSesion, AParametrosApp) then
     Result := AContextoSesion.Ubicacion.Almacen
   else
     Result := '';
 end;
 
 function CajaRestringida(
-  const AContextoSesion: IContextoSesionAplicacion): string;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion): string;
 begin
-  if RestriccionEmpAlmCajaActiva(AContextoSesion) then
+  if RestriccionEmpAlmCajaActiva(AContextoSesion, AParametrosApp) then
     Result := AContextoSesion.Ubicacion.Caja
   else
     Result := '';
@@ -98,6 +108,8 @@ end;
 function SqlFiltroEmpAlmCaja(
                              const AContextoSesion:
                              IContextoSesionAplicacion;
+                             const AParametrosApp:
+                             IParametrosAplicacion;
                              const AColEmpresa,
                              AColAlmacen,
                              AColCaja: string): string;
@@ -115,7 +127,9 @@ var
 
 begin
   Result := '';
-  if not RestriccionEmpAlmCajaActiva(AContextoSesion) then
+  if not RestriccionEmpAlmCajaActiva(
+    AContextoSesion,
+    AParametrosApp) then
   begin
     // Sin restricción: fragmento vacío, la precarga no cambia
   end

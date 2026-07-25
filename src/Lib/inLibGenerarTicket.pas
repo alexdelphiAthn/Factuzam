@@ -20,9 +20,11 @@ uses
   UniDataCaja,
   inLibFTicket,        // Donde está tu TTicketTermico
   inMtoPreviewTicket,  // Donde está tu TFormVisualizador
-  inLibFaseCobro;      // Para TDatosFaseCobro
+  inLibFaseCobro,      // Para TDatosFaseCobro
+  inLibParametrosIntf;
 
-  procedure ImprimirT(AConexion: TUniConnection;
+  procedure ImprimirT(const AParametrosApp: IParametrosAplicacion;
+                      AConexion: TUniConnection;
                       const ACodigoEmpresa,
                             ACodigoAlmacen,
                             ACodigoCaja,
@@ -162,7 +164,8 @@ begin
   end;
 end;
 
-procedure ImprimirT(AConexion: TUniConnection;
+procedure ImprimirT(const AParametrosApp: IParametrosAplicacion;
+                    AConexion: TUniConnection;
                     const ACodigoEmpresa,
                           ACodigoAlmacen,
                           ACodigoCaja,
@@ -208,8 +211,8 @@ begin
   // QR tributario fiscal: URL de cotejo/remisión AEAT generada en local.
   // El ticket regalo (sin precios) no lleva QR ni datos fiscales.
   QRTexto := '';
-  if (not SinVerifactuActivo) and (not ASinPrecios) then
-    QRTexto := ConstruirUrlQR(
+  if (not SinVerifactuActivo(AParametrosApp)) and (not ASinPrecios) then
+    QRTexto := ConstruirUrlQR(AParametrosApp,
                  Cab.NifEmp,
                  DatosCobro.TotalesFactura.Cabecera.FieldByName(
                                                      'SERIE_FAC').AsString,
@@ -228,7 +231,7 @@ begin
       Ticket.EscribirLinea('QR tributario:');
       // Nivel de corrección M (49) exigido por la AEAT para el QR
       Ticket.ImprimirQRNativo(QRTexto, 6, 49);
-      if VerifactuActivo then
+      if VerifactuActivo(AParametrosApp) then
       begin
         Ticket.Alinear(alCentro);
         Ticket.EscribirLinea('VERI*FACTU - Factura verificable');
@@ -339,8 +342,17 @@ begin
       Ticket.Negrita(True);
       Ticket.TextoColumnas('VALE EMITIDO A SU FAVOR', Format('%.2f',
                                        [DatosCobro.ImporteValeEmitido]) + ' €');
-      Ticket.TextoColumnas('CÓDIGO VALE EMITIDO: ',
-                                                 DatosCobro.CodigoValeEmitido );
+      // Si el codigo no cabe junto a la etiqueta (ancho 42), va en
+      // una linea propia debajo.
+      if Length('CÓDIGO VALE EMITIDO: ' +
+                DatosCobro.CodigoValeEmitido) <= 42 then
+        Ticket.TextoColumnas('CÓDIGO VALE EMITIDO: ',
+                             DatosCobro.CodigoValeEmitido)
+      else
+      begin
+        Ticket.EscribirLinea('CÓDIGO VALE EMITIDO:');
+        Ticket.EscribirLinea(DatosCobro.CodigoValeEmitido);
+      end;
       Ticket.Negrita(False);
     end;
 //    Ticket.TextoColumnas('CANTIDAD DE ARTICULOS', Format('%.2f',

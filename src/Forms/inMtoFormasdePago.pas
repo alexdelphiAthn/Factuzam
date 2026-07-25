@@ -308,7 +308,8 @@ begin
   inherited;
   if not PuedeExportar then
     Abort;
-  ExportarExcel(cxgrdFacturas, 'Historico_Formas_de_pago' +
+  ExportarExcel(ParametrosApp, cxgrdFacturas,
+                'Historico_Formas_de_pago' +
                 dsTablaG.Dataset.FieldByName(
                   'DESCRIPCION_FORMA_PAGO_FP').AsString);
 end;

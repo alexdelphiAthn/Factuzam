@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataConsultaOpe                                            }
 {    Tipo:       Data Module                                                   }
@@ -221,10 +221,10 @@ begin
     '          o.CODIGO_ALM_OPCAJA, '                                 +
     '          o.CODIGO_CAJA_OPCAJA, '                                    +
     '          o.NUMERO_OPERACION_OPCAJA '                                +
-    // Ultima operacion arriba: si varias comparten FECHA_OP (empate),
+    // Ultima operacion abajo: si varias comparten FECHA_OP (empate),
     // desempatamos por numero de operacion en numerico, no como texto.
-    ' ORDER BY FECHA_OP DESC, '                                            +
-    '          CAST(o.NUMERO_OPERACION_OPCAJA AS UNSIGNED) DESC ';
+    ' ORDER BY FECHA_OP, '                                                 +
+    '          CAST(o.NUMERO_OPERACION_OPCAJA AS UNSIGNED) ';
 
   // ------------------------------------------------------------------
   //  Pestaña OPERACION: filas crudas de fza_caja_operaciones.
@@ -332,6 +332,8 @@ begin
     '       m.CODIGO_ALM_CONTRA_MOV, '                                +
     '       m.CODIGO_ART_MOV, '                                      +
     '       m.CODIGO_UNIDAD_MOV, '                                        +
+    '       atr.COLOR_AV, '                                                +
+    '       atr.TALLA_AV, '                                                +
     '       a.DESCRIPCION_ART, '                                     +
     '       m.TIPO_MOV, '                                      +
     '       m.CANTIDAD_MOV, '                                             +
@@ -340,6 +342,18 @@ begin
     '  FROM fza_movimientos_almacen m '                                   +
     '  LEFT JOIN fza_articulos a '                                        +
     '    ON a.CODIGO_ART_ART = m.CODIGO_ART_MOV '                   +
+    '  LEFT JOIN ( '                                                       +
+    '       SELECT sa.CODIGO_UNIDAD_SKU_SA, '                              +
+    '              MAX(CASE WHEN av.ID_VA_AV = ''CO'' '                    +
+    '                       THEN av.AV END) AS COLOR_AV, '                  +
+    '              MAX(CASE WHEN av.ID_VA_AV = ''TAL'' '                   +
+    '                       THEN av.AV END) AS TALLA_AV '                   +
+    '         FROM fza_atributos_sku sa '                                  +
+    '         JOIN fza_atributos_valores av '                              +
+    '           ON av.ID_AV = sa.ID_AV_SA '                                +
+    '        GROUP BY sa.CODIGO_UNIDAD_SKU_SA '                            +
+    '       ) atr '                                                        +
+    '    ON atr.CODIGO_UNIDAD_SKU_SA = m.CODIGO_UNIDAD_MOV '              +
     ' WHERE m.CODIGO_EMP_MOV          = :PEMP '                       +
     '   AND m.CODIGO_ALM_DOC_MOV      = :PALM '                       +
     '   AND m.CODIGO_CAJA_DOC_MOV         = :PCAJA '                      +

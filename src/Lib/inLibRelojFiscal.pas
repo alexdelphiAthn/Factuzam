@@ -12,7 +12,7 @@ unit inLibRelojFiscal;
 interface
 
 uses
-  System.SysUtils;
+  System.SysUtils, inLibParametrosIntf;
 
 type
   TResultadoRelojFiscal = record
@@ -25,15 +25,19 @@ type
     Mensaje:            string;
   end;
 
-function ComprobarRelojFiscal(out AResultado: TResultadoRelojFiscal):
+function ComprobarRelojFiscal(
+  const AParametrosApp: IParametrosAplicacion;
+  out AResultado: TResultadoRelojFiscal):
   Boolean;
-procedure ExigirRelojFiscal(const AContexto: string = '');
+procedure ExigirRelojFiscal(
+  const AParametrosApp: IParametrosAplicacion;
+  const AContexto: string = '');
 
 implementation
 
 uses
   System.Classes, System.DateUtils, System.StrUtils,
-  IdSNTP, inLibAppParam;
+  IdSNTP;
 
 const
   cServidoresNtpDefecto = 'time.google.com,time.windows.com,pool.ntp.org';
@@ -51,33 +55,39 @@ begin
   AResultado.Mensaje := '';
 end;
 
-function ListaServidoresNtp: TStringList;
+function ListaServidoresNtp(
+  const AParametrosApp: IParametrosAplicacion): TStringList;
 var
   sServidores: string;
 begin
   Result := TStringList.Create;
   Result.StrictDelimiter := True;
   Result.Delimiter := ',';
-  sServidores := oAppParams.GetString('appVerifactuNtpServidores',
-                                      cServidoresNtpDefecto);
+  sServidores := AParametrosApp.GetString(
+    'appVerifactuNtpServidores',
+    cServidoresNtpDefecto);
   sServidores := StringReplace(sServidores, ';', ',', [rfReplaceAll]);
   Result.DelimitedText := sServidores;
 end;
 
-function MargenSegundos: Integer;
+function MargenSegundos(
+  const AParametrosApp: IParametrosAplicacion): Integer;
 begin
-  Result := oAppParams.GetInt('appVerifactuNtpMargenSegundos',
-                              cMargenLegalSegundos);
+  Result := AParametrosApp.GetInt(
+    'appVerifactuNtpMargenSegundos',
+    cMargenLegalSegundos);
   if Result <= 0 then
     Result := cMargenLegalSegundos;
   if Result > cMargenLegalSegundos then
     Result := cMargenLegalSegundos;
 end;
 
-function TimeoutNtpMs: Integer;
+function TimeoutNtpMs(
+  const AParametrosApp: IParametrosAplicacion): Integer;
 begin
-  Result := oAppParams.GetInt('appVerifactuNtpTimeoutMs',
-                              cTimeoutDefectoMs);
+  Result := AParametrosApp.GetInt(
+    'appVerifactuNtpTimeoutMs',
+    cTimeoutDefectoMs);
   if Result < 250 then
     Result := 250;
   if Result > 10000 then
@@ -122,7 +132,9 @@ begin
   end;
 end;
 
-function ComprobarRelojFiscal(out AResultado: TResultadoRelojFiscal):
+function ComprobarRelojFiscal(
+  const AParametrosApp: IParametrosAplicacion;
+  out AResultado: TResultadoRelojFiscal):
   Boolean;
 var
   Servidores: TStringList;
@@ -137,10 +149,10 @@ var
   dHoraNtp: TDateTime;
 begin
   InicializarResultado(AResultado);
-  iMargen := MargenSegundos;
-  iTimeout := TimeoutNtpMs;
+  iMargen := MargenSegundos(AParametrosApp);
+  iTimeout := TimeoutNtpMs(AParametrosApp);
   AResultado.MargenSegundos := iMargen;
-  Servidores := ListaServidoresNtp;
+  Servidores := ListaServidoresNtp(AParametrosApp);
   try
     Result := False;
     bComprobado := False;
@@ -192,12 +204,14 @@ begin
   end;
 end;
 
-procedure ExigirRelojFiscal(const AContexto: string);
+procedure ExigirRelojFiscal(
+  const AParametrosApp: IParametrosAplicacion;
+  const AContexto: string);
 var
   oResultado: TResultadoRelojFiscal;
   sMensaje: string;
 begin
-  if not ComprobarRelojFiscal(oResultado) then
+  if not ComprobarRelojFiscal(AParametrosApp, oResultado) then
   begin
     sMensaje := oResultado.Mensaje;
     if Trim(AContexto) <> '' then

@@ -215,8 +215,6 @@ implementation
 uses
   inMtoFacturasBase,
   inLibGlobalVar,
-  inLibAppParam,
-  inLibCajaParam,
   inLibtb,
   inLibLog,
   System.Diagnostics,
@@ -1223,7 +1221,7 @@ begin
   begin
     sFase := Trim(oCampoFase.AsString);
     Result := (sFase = '') or SameText(sFase, 'BORRADOR') or
-              (SinVerifactuActivo and
+              (SinVerifactuActivo(ParametrosApp) and
                SameText(sFase, cFaseFacturaSinVerifactu));
   end;
 end;
@@ -1977,7 +1975,7 @@ end;
 
 function TdmFacturas.TarifaDefault: string;
 begin
-  Result := TarifaDefecto;  // vgerDefTarifa (inLibCajaParam)
+  Result := ParametrosCaja.TarifaDefecto;
 end;
 
 procedure TdmFacturas.GuardarParametrosEDocFactura(ADataSet: TDataSet);
@@ -2608,7 +2606,7 @@ begin
     // (bloqueo): la numeracion debe seguir orden cronologico. En modo SIN
     // Verifactu se permite trabajar sin este control fiscal.
     if (not IsError) and bValidar and
-       (not SinVerifactuActivo) and
+       (not SinVerifactuActivo(ParametrosApp)) and
        (FieldByName('FECHA_FAC').AsString <> '') then
     begin
       dtUltima := UltimaFechaSerie(FieldByName('SERIE_FAC').AsString,

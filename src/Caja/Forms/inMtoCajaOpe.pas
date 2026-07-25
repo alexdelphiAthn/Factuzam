@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaOpe                                                  }
 {    Tipo:       Formulario (Mto)                                              }
@@ -139,6 +139,9 @@ type
     btnF2: TcxButton;
     lblCargarCta: TcxLabel;
     actCargarCta: TAction;
+    btnF10: TcxButton;
+    lblBuscarModificar: TcxLabel;
+    actBuscarModificar: TAction;
     actGuardarLayout: TAction;
     actAbrirArticulos: TAction;
     actConsultaStock: TAction;
@@ -201,6 +204,8 @@ type
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure btnF2Click(Sender: TObject);
     procedure actCargarCtaExecute(Sender: TObject);
+    procedure btnF10Click(Sender: TObject);
+    procedure actBuscarModificarExecute(Sender: TObject);
     procedure cxGrid1DBTableView1FocusedRecordChanged(
       Sender: TcxCustomGridTableView; APrevFocusedRecord,
       AFocusedRecord: TcxCustomGridRecord;
@@ -223,6 +228,7 @@ type
     FEnfoqueArticuloPendiente: Boolean;
     procedure GuardarLayoutCaja;
     procedure RestaurarLayoutCaja;
+    procedure AbrirBuscarModificar;
     procedure CargarDepositosF2;
     procedure ActualizarRelojCaja;
     procedure SincronizarFechaCajaCabecera;
@@ -360,7 +366,7 @@ uses
   inLibLog,
   inMtoCajaFaseCobro, inLibDevExp, inLibtb,
   UniDataFacturas, inMtoModalImpFac, inLibVerifactuCola,
-  inLibFacturas, inLibGenBusq, inLibCajaParam, inLibGenerarTicket,
+  inLibFacturas, inLibGenBusq, inLibGenerarTicket,
   inLibGenerarTicketCaja, inLibGenerarTicketBD, inLibVentasWsCola,
   inLibFacturaPdfBlob,
   inMtoModalGenImpSave, inLibLayoutForm,
@@ -371,7 +377,8 @@ uses
   inMtoStockConsulta,
   inLibCorreoTickets,
   inLibDir,
-  System.StrUtils;
+  System.StrUtils,
+  inMtoConsultaOpe;
 
 procedure TfrmMtoOpeCaja.ActualizarFoco;
 begin
@@ -560,7 +567,7 @@ begin
     // A) Tarifa por defecto (como tenías en FormShow)
     DatosCaja.cdsCabecera.FieldByName(
                                   'TARIFA_ARTICULO_CLIENTE_FAC').AsString :=
-                                  oCajaParams.GetString('vgerDefTarifa', 'PVP');
+                                  ParametrosCaja.GetString('vgerDefTarifa', 'PVP');
     lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
                                     'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
     // B) Empleado: Mantenemos el anterior, o buscamos el parámetro por defecto
@@ -571,10 +578,10 @@ begin
       btnCodigoEmpleado.Text := EmpleadoAnterior;
       lblNombreEmpleado.Caption := NombreEmpleadoAnterior;
     end
-    else if oCajaParams.GetBool('vgerFillEmpleadoDefecto', False) then
+    else if ParametrosCaja.GetBool('vgerFillEmpleadoDefecto', False) then
     begin
-      sCodEmpleadoDefecto := oCajaParams.GetString('vgerCodEmpleadoDefecto',
-                                                   '');
+      sCodEmpleadoDefecto :=
+        ParametrosCaja.GetString('vgerCodEmpleadoDefecto', '');
       if sCodEmpleadoDefecto <> '' then
       begin
         btnCodigoEmpleado.Text := sCodEmpleadoDefecto;
@@ -603,7 +610,7 @@ var
 begin
   sCodigoConsulta := Trim(CodigoInput);
   if sCodigoConsulta = '' then Exit;
-  if oCajaParams.GetBool('vgerStockTodosColores', False) and
+  if ParametrosCaja.GetBool('vgerStockTodosColores', False) and
      (Pos('/', sCodigoConsulta) > 0) and
      Assigned(DatosCaja) and DatosCaja.cdsLineas.Active then
   begin
@@ -751,7 +758,7 @@ begin
   SkuLimpio := Trim(SkuFinal);
   if SkuLimpio = '' then Exit;
 
-  if oCajaParams.GetBool('vgerChkExistOnly', True) then
+  if ParametrosCaja.GetBool('vgerChkExistOnly', True) then
   begin
     qry := TUniQuery.Create(nil);
     try
@@ -781,8 +788,9 @@ begin
   end;
 
   // vgerChkStockOnly bloquea la venta sin stock. vgerAvisoStockWarning,// cuando trae texto,sirve como aviso informativo aunque no se bloquee.
-  bChkStockOnly   := oCajaParams.GetBool('vgerChkStockOnly', False);
-  MensajeStock    := Trim(oCajaParams.GetString('vgerAvisoStockWarning', ''));
+  bChkStockOnly := ParametrosCaja.GetBool('vgerChkStockOnly', False);
+  MensajeStock :=
+    Trim(ParametrosCaja.GetString('vgerAvisoStockWarning', ''));
   bAvisarSinStock := MensajeStock <> '';
 
   if bChkStockOnly or bAvisarSinStock then
@@ -1582,7 +1590,9 @@ begin
   msResolver := 0; msStock := 0; msPrecio := 0; msResolverDatos := 0;
 
   Validador := TArticulosValidador.Create(ConexionPrincipal);
-  Resolver  := TArticulosResolver.Create(ConexionPrincipal);
+  Resolver := TArticulosResolver.Create(
+    ConexionPrincipal,
+    ParametrosCaja);
   try
     swStep := TStopwatch.StartNew;
     // Si la entrada viene de la pistola (STX...ETX), resolvemos UNICAMENTE
@@ -1731,7 +1741,9 @@ begin
   FechaFactura := DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime;
   CodArt       := DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
 
-  Resolver := TArticulosResolver.Create(ConexionPrincipal);
+  Resolver := TArticulosResolver.Create(
+    ConexionPrincipal,
+    ParametrosCaja);
   try
     Precio := Resolver.ResolverPrecio(CodArt, sSKU, CodTarifa, FechaFactura);
     if not Precio.TieneRegistro then Exit;
@@ -1805,7 +1817,7 @@ var
   VieneDeDep: string;
 begin
   Result := False;
-  if oCajaParams.GetBool('vgerAgruparUnidadesIguales', False) and
+  if ParametrosCaja.GetBool('vgerAgruparUnidadesIguales', False) and
      (Trim(SkuBuscado) <> '') then
   begin
     Clon := TClientDataSet.Create(nil);
@@ -2219,7 +2231,7 @@ begin
     if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticuloActual) then
     begin
        RellenarAtributosDesdeSku(SkuDetectado);
-       if oCajaParams.GetBool('vgerMoverLineaIdentif', True) then
+       if ParametrosCaja.GetBool('vgerMoverLineaIdentif', True) then
        begin
          if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
            DatosCaja.cdsLineas.Post;
@@ -2237,7 +2249,7 @@ begin
     if (NumAtributos = 0) then
     begin
        // Verificamos el parámetro para saber a dónde saltar
-       if oCajaParams.GetBool('vgerMoverLineaIdentif', True) then
+       if ParametrosCaja.GetBool('vgerMoverLineaIdentif', True) then
        begin
          // Comportamiento habitual: Guardar, nueva línea y foco a Artículo
          DatosCaja.cdsLineas.Post;
@@ -2556,8 +2568,8 @@ begin
            and (SkuDetectado <> CodArticulo);
         // Supongamos que lees tu parámetro global así (ajusta el nombre a tu
         // variable real)
-        var AutoPasarLinea := oCajaParams.GetBool('vgerMoverLineaIdentif',
-                                                  False);
+        var AutoPasarLinea :=
+          ParametrosCaja.GetBool('vgerMoverLineaIdentif', False);
         // Si necesita atributos Y NO ES un SKU ya cerrado, nos paramos en la
         // columna de atributos
         if (NumAtributos > 0) and not EsSkuCompleto then
@@ -2599,6 +2611,42 @@ end;
 procedure TfrmMtoOpeCaja.actCargarCtaExecute(Sender: TObject);
 begin
   btnF2Click(Sender);
+end;
+
+procedure TfrmMtoOpeCaja.AbrirBuscarModificar;
+var
+  Formulario: TfrmConsultaOpe;
+begin
+  if (FCodigoEmpresa = '') or
+     (FCodigoAlmacen = '') or
+     (FCodigoCaja = '') then
+    ShowMessage('No hay empresa/almacén/caja asignados. ' +
+                'Selecciona una caja antes de buscar operaciones.')
+  else
+  begin
+    Formulario := TfrmConsultaOpe.Create(Application, Permisos);
+    try
+      Formulario.PopupParent := Self;
+      Formulario.PrepararValores(FCodigoEmpresa,
+                                 FCodigoAlmacen,
+                                 FCodigoCaja,
+                                 FFecha);
+      Formulario.Show;
+    except
+      FreeAndNil(Formulario);
+      raise;
+    end;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.btnF10Click(Sender: TObject);
+begin
+  AbrirBuscarModificar;
+end;
+
+procedure TfrmMtoOpeCaja.actBuscarModificarExecute(Sender: TObject);
+begin
+  btnF10Click(Sender);
 end;
 
 procedure TfrmMtoOpeCaja.actCobroExecute(Sender: TObject);
@@ -3000,7 +3048,7 @@ begin
           tvLineasOpe.BeginUpdate;
           FActualizandoDepositos := True;
           try
-            if oCajaParams.GetBool('vgerAutoLoadDepositos', False) then
+            if ParametrosCaja.GetBool('vgerAutoLoadDepositos', False) then
               DatosCaja.CargarDepositosCliente(sCodigo);
           finally
             tvLineasOpe.EndUpdate;
@@ -3419,8 +3467,12 @@ begin
                                               FFecha,
                                               frmFaseCobro.FNumeroManual) then
        begin
+         // El codigo del vale emitido lo genera GrabarFacturaSimplificada;
+         // hay que devolverlo a DatosCobro para que el ticket lo imprima.
+         frmFaseCobro.DatosCobro.CodigoValeEmitido := CodigoValeGenerado;
          case frmFaseCobro.TipoImpresion of
-           tiConTicket: ImprimirT(ConexionPrincipal,FCodigoEmpresa,
+           tiConTicket: ImprimirT(ParametrosApp, ConexionPrincipal,
+                                  FCodigoEmpresa,
                                   FCodigoAlmacen,
                                   FCodigoCaja,
                                   NumeroGenerado,
@@ -3439,7 +3491,7 @@ begin
              begin
                // F10: ticket regalo (sin precios ni QR) y, además, el
                // ticket fiscal completo con precios y QR Verifactu
-               ImprimirT(ConexionPrincipal,FCodigoEmpresa,
+               ImprimirT(ParametrosApp, ConexionPrincipal, FCodigoEmpresa,
                          FCodigoAlmacen,
                          FCodigoCaja,
                          NumeroGenerado,
@@ -3447,7 +3499,7 @@ begin
                          oNomImpresoraCaja,
                          True,
                          FFecha);
-               ImprimirT(ConexionPrincipal,FCodigoEmpresa,
+               ImprimirT(ParametrosApp, ConexionPrincipal, FCodigoEmpresa,
                          FCodigoAlmacen,
                          FCodigoCaja,
                          NumeroGenerado,
@@ -3465,6 +3517,7 @@ begin
          begin
            try
              ImprimirTicketDesdeBD(
+               ParametrosApp,
                ConexionPrincipal,
                FCodigoEmpresa,
                FCodigoAlmacen,
@@ -3478,7 +3531,9 @@ begin
          end;
          if slRutasTicketPdf.Count > 0 then
          begin
-           TVentasWsCola.AdjuntarTicketPdfSeguro(ConexionPrincipal,
+           TVentasWsCola.AdjuntarTicketPdfSeguro(
+             ParametrosCaja,
+             ConexionPrincipal,
              IdentidadSesion.Usuario,
              DatosCaja.UltSerieFacturaGrabada,
              DatosCaja.UltNumeroFacturaGrabada,
@@ -3501,6 +3556,8 @@ begin
            // se leian de cdsCabecera, que queda con SERIE_FAC='0', y se
            // encolaba un registro fantasma 0\0 en Verifactu
            TVerifactuCola.EncolarRectificativa(
+             ParametrosApp,
+             ParametrosCaja,
              ConexionPrincipal,
              IdentidadSesion.Usuario,
              FSerieRectifica, FNumeroRectifica,
@@ -3513,15 +3570,19 @@ begin
          end;
          if CodigoValeGenerado <> '' then
          begin
-           // ImprimirTicketVale(CodigoValeGenerado,// frmFaseCobro.DatosCobro.ImporteValeEmitido);
-           // ShowMessage('Entregue el vale generado al cliente: ' +
-           // CodigoValeGenerado);
+           // Vale emitido como reembolso o cambio: avisar al cajero para
+           // que lo entregue al cliente. El vale ya queda grabado en
+           // fza_caja_vales (estado PENDIENTE) y es canjeable.
+           ShowMessage('Entregue el vale al cliente: ' + CodigoValeGenerado);
          end;
          if frmFaseCobro.EnviarEmail then
          begin
            Screen.Cursor := crHourGlass;
            try
-             if EnviarDocumentacionOperacion(ConexionPrincipal,FCodigoEmpresa,
+             if EnviarDocumentacionOperacion(
+               ParametrosApp,
+               ConexionPrincipal,
+               FCodigoEmpresa,
                FCodigoAlmacen, FCodigoCaja, NumeroGenerado,
                frmFaseCobro.EmailEnvio, sMensajeCorreo) then
                ShowMessage(sMensajeCorreo)
@@ -3926,9 +3987,9 @@ begin
   // Detector del lector de codigo de barras (modo restaurar, con anti-eco para
   // la rejilla editable). Los parametros salen de la configuracion de caja.
   FLector := TLectorScanner.Create;
-  FLector.Activo := oCajaParams.GetBool('vgerScanVelActivo', True);
-  FLector.UmbralMs := oCajaParams.GetInt('vgerScanVelMs', 40);
-  FLector.LongitudMinima := oCajaParams.GetInt('vgerScanMinLong', 4);
+  FLector.Activo := ParametrosCaja.GetBool('vgerScanVelActivo', True);
+  FLector.UmbralMs := ParametrosCaja.GetInt('vgerScanVelMs', 40);
+  FLector.LongitudMinima := ParametrosCaja.GetInt('vgerScanMinLong', 4);
   // En caja, la lectura se procesa como artículo desde cualquier columna.
   FLector.OmitirEnRejilla := False;
   FLector.OnCodigoLeido := LectorCodigoLeido;
@@ -3939,7 +4000,8 @@ begin
   // FswArtAPopup es un record (TStopwatch) — se inicializa a cero por
   // defecto, IsRunning sera False hasta que se arranque en
   // tvArticuloPropertiesValidate.
-  DatosCaja := TdmCajaOpe.Create(Self, ConexionPrincipal);
+  DatosCaja := TdmCajaOpe.Create(Self, ConexionPrincipal, ParametrosApp,
+    ParametrosCaja);
   dsLineas.DataSet := DatosCaja.cdsLineas;
   dsStock.DataSet := DatosCaja.qryStock;
   dsLineas.OnDataChange := DsLineasDataChange;
@@ -3950,8 +4012,10 @@ begin
   DatosCaja.OnRellenarArticulo  := RellenarDatosArticuloEnDataset;
   DatosCaja.OnRellenarAtributos := RellenarAtributosDesdeSku;
   lblFechaCaja.OnDblClick := lblFechaCajaDblClick;
-  tvEmpleado.Visible      := oCajaParams.GetBool('vgerShowEmpleadoLinea', True);
-  var PermiteDescuentos := oCajaParams.GetBool('vgerDescuentos', True);
+  tvEmpleado.Visible :=
+    ParametrosCaja.GetBool('vgerShowEmpleadoLinea', True);
+  var PermiteDescuentos :=
+    ParametrosCaja.GetBool('vgerDescuentos', True);
   tvDescuento.Options.Editing := PermiteDescuentos;
   tvDescuentoMenos.Options.Editing := PermiteDescuentos;
   // El Total tambien es editable y, al bajarlo, aplica un descuento
@@ -4210,7 +4274,7 @@ begin
     DatosCaja.cdsLineas.EnableControls;
   end;
 
-  if oCajaParams.GetBool('vgerMoverLineaIdentif', True) then
+  if ParametrosCaja.GetBool('vgerMoverLineaIdentif', True) then
   begin
     if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
       DatosCaja.cdsLineas.Post;

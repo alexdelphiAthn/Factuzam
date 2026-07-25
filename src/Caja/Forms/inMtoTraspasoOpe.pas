@@ -32,7 +32,7 @@ uses
   Data.DB, Datasnap.DBClient, Uni, inLibGlobalVar, UniDataTraspaso,
   inLibTraspasoTicket, inLibGridArticulos, inLibArticulosValidador,
   inLibPermisosIntf, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
-  inLibCajaParam, Vcl.Menus, dxCoreGraphics, JvComponentBase, JvEnterTab,
+  Vcl.Menus, dxCoreGraphics, JvComponentBase, JvEnterTab,
   cxLocalization, inLibLectorScanner, cxStyles, cxDBData, cxCustomData,
   cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
   dxScrollbarAnnotations;
@@ -537,10 +537,11 @@ begin
   AplicarModo(AModo);
   // Empleado responsable por defecto desde parametros de caja (igual que
   // inMtoCajaOpe): si esta activado, se rellena al abrir la pantalla.
-  if Assigned(oCajaParams) and
-     oCajaParams.GetBool('vgerFillEmpleadoDefecto', False) then
+  if Assigned(ParametrosCaja) and
+     ParametrosCaja.GetBool('vgerFillEmpleadoDefecto', False) then
   begin
-    txtEmpleado.Text := oCajaParams.GetString('vgerCodEmpleadoDefecto', '');
+    txtEmpleado.Text :=
+      ParametrosCaja.GetString('vgerCodEmpleadoDefecto', '');
     if Trim(txtEmpleado.Text) <> '' then
       txtEmpleadoExit(nil);
   end;

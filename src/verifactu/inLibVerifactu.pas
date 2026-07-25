@@ -18,7 +18,7 @@ unit inLibVerifactu;
 interface
 
 uses
-  System.SysUtils, Uni, frxClass,  Data.DB;
+  System.SysUtils, Uni, frxClass, Data.DB, inLibParametrosIntf;
 
 type
   TModoVerifactu = (mvSinVerifactu, mvVerifactu, mvNoVerifactu);
@@ -63,21 +63,30 @@ const
 
 // Modo fiscal activo: SIN, VERIFACTU o NO_VERIFACTU.
 // appVerifactuActivo=False fuerza SIN como interruptor maestro.
-function ModoVerifactu: TModoVerifactu;
-function ModoVerifactuTexto: string;
+function ModoVerifactu(
+  const AParametrosApp: IParametrosAplicacion): TModoVerifactu;
+function ModoVerifactuTexto(
+  const AParametrosApp: IParametrosAplicacion): string;
 // True si el modo fiscal activo es VERIFACTU
-function VerifactuActivo: Boolean;
+function VerifactuActivo(
+  const AParametrosApp: IParametrosAplicacion): Boolean;
 // True si el modo fiscal activo es NO_VERIFACTU
-function NoVerifactuActivo: Boolean;
+function NoVerifactuActivo(
+  const AParametrosApp: IParametrosAplicacion): Boolean;
 // True si el modo fiscal activo es SIN
-function SinVerifactuActivo: Boolean;
+function SinVerifactuActivo(
+  const AParametrosApp: IParametrosAplicacion): Boolean;
 // True si se firman registros y eventos con certificado de empresa
-function VerifactuFirmaCertificado: Boolean;
+function VerifactuFirmaCertificado(
+  const AParametrosApp: IParametrosAplicacion): Boolean;
 // Impide emitir en modo fiscal si faltan el SIF o el certificado.
-procedure ValidarRequisitosFiscalesEmision(AConn: TUniConnection;
+procedure ValidarRequisitosFiscalesEmision(
+  const AParametrosApp: IParametrosAplicacion;
+  AConn: TUniConnection;
   const ASerie, ANumero: string);
 // 'PRE' (pruebas) o 'PRO' (producción) según appVerifactuEntorno
-function VerifactuEntorno: string;
+function VerifactuEntorno(
+  const AParametrosApp: IParametrosAplicacion): string;
 // Identificador serie+número que se comunica a la AEAT. DEBE coincidir
 // con el NumSerieFactura del registro de facturación que se envíe.
 function ComponerNumSerieFactura(const ASerie, ANumero: string): string;
@@ -87,7 +96,9 @@ function FormatearImporteVerifactu(AImporte: Currency): string;
 // El MISMO valor debe viajar en el QR y en el registro de facturación.
 function NormalizarNifVerifactu(const AValor: string): string;
 // URL completa de cotejo para el QR tributario del ticket / factura
-function ConstruirUrlQR(const ANif, ASerie, ANumero: string;
+function ConstruirUrlQR(
+                        const AParametrosApp: IParametrosAplicacion;
+                        const ANif, ASerie, ANumero: string;
                         AFecha: TDateTime;
                         AImporteTotal: Currency): string;
 // PNG del QR tributario (ISO/IEC 18004:2015, corrección M) como bytes.
@@ -98,7 +109,9 @@ function GenerarQRPngVerifactu(const AUrl: string;
 // QR tributario de la factura del registro activo de su banda (campos
 // NIF_EMPRESA_FAC, SERIE_FAC, NUMERO_FAC, FECHA_FAC,
 // TOTAL_LIQUIDO_FAC). Encadenar desde TfrxReport.OnBeforePrint.
-procedure SustituirQRVerifactuEnReport(Component: TfrxReportComponent);
+procedure SustituirQRVerifactuEnReport(
+  const AParametrosApp: IParametrosAplicacion;
+  Component: TfrxReportComponent);
 // FastReport: si el formato cargado no trae un TfrxPictureView llamado
 // 'qrverifactu', lo crea (30 mm, arriba a la derecha) dentro de la
 // cabecera de página; los objetos sueltos en la página no reciben
@@ -117,12 +130,17 @@ procedure SustituirTituloFacturaEnReport(Component: TfrxReportComponent);
 // se dispara una banda recorremos sus hijos y rellenamos el QR y el
 // título con el registro de factura activo. Encadenar desde
 // OnBeforePrint además de las dos anteriores.
-procedure AplicarVerifactuEnBanda(Component: TfrxReportComponent);
+procedure AplicarVerifactuEnBanda(
+  const AParametrosApp: IParametrosAplicacion;
+  Component: TfrxReportComponent);
 // FastReport: rellena directamente (sin esperar a OnBeforePrint) el QR
 // y el título de TODO el informe con el registro de ADataSet. Para una
 // sola factura, llamar tras cargar el formato y antes de PrepareReport:
 // el QR sale por defecto aunque el hueco quede suelto en la página.
-procedure AplicarVerifactuEnReportDirecto(AReport: TfrxReport;
+procedure AplicarVerifactuEnReportDirecto(
+                                          const AParametrosApp:
+                                          IParametrosAplicacion;
+                                          AReport: TfrxReport;
                                           ADataSet: TDataSet);
 // FastReport (impresión de factura): fuerza, sea cual sea el formato
 // cargado (base del .dfm o copia guardada en el diseñador), que el QR
@@ -130,12 +148,18 @@ procedure AplicarVerifactuEnReportDirecto(AReport: TfrxReport;
 // rellena ahí. Un TfrxPictureView en una banda estática (cabecera de
 // página) no se dibuja aunque se rellene; en banda de datos sí (igual
 // que las fotos). Ajusta también el título por tipo.
-procedure PrepararImpresionFacturaVerifactu(AReport: TfrxReport;
+procedure PrepararImpresionFacturaVerifactu(
+                                            const AParametrosApp:
+                                            IParametrosAplicacion;
+                                            AReport: TfrxReport;
                                             ADataSet: TDataSet);
 // Registra un evento en fza_verifactu_eventos manteniendo la cadena de
 // hashes (HASH_ANTERIOR -> HASH_PROPIO). AConn puede ser la conexión
 // global o la propia del hilo de la cola.
-procedure RegistrarEventoVerifactu(AConn: TUniConnection;
+procedure RegistrarEventoVerifactu(
+                                   const AParametrosApp:
+                                   IParametrosAplicacion;
+                                   AConn: TUniConnection;
                                    const AUsuario: string;
                                    ATipoEvento: Integer;
                                    const ADescripcion: string;
@@ -150,7 +174,7 @@ uses
   System.TimeSpan,
   Vcl.Imaging.pngimage,
   DelphiZXIngQRCode, frxDBSet,
-  inLibGlobalVar, inLibAppParam, inLibFotos, inLibXades,
+  inLibGlobalVar, inLibFotos, inLibXades,
   inLibRelojFiscal, inLibVerifactuInstalacion;
 
 const
@@ -297,7 +321,10 @@ begin
   end;
 end;
 
-procedure CargarEmpresaEvento(AConn: TUniConnection;
+procedure CargarEmpresaEvento(
+                              const AParametrosApp:
+                              IParametrosAplicacion;
+                              AConn: TUniConnection;
                               out ADatos: TDatosEmpresaEvento);
 var
   Qry: TUniQuery;
@@ -307,8 +334,8 @@ begin
   ADatos.SerialCert := '';
   ADatos.TitularCert := '';
   ADatos.NifProductor := NormalizarNifVerifactu(
-    oAppParams.GetString('appVerifactuSifNif', ''));
-  ADatos.NombreProductor := oAppParams.GetString(
+    AParametrosApp.GetString('appVerifactuSifNif', ''));
+  ADatos.NombreProductor := AParametrosApp.GetString(
     'appVerifactuSifNombreRazon', 'Alejandro Laorden Hidalgo');
   ADatos.IdInstalacion := '';
   ADatos.VersionInstalacion := '';
@@ -537,13 +564,15 @@ begin
   end;
 end;
 
-function ModoVerifactuTexto: string;
+function ModoVerifactuTexto(
+  const AParametrosApp: IParametrosAplicacion): string;
 begin
-  if not oAppParams.GetBool('appVerifactuActivo', False) then
+  if not AParametrosApp.GetBool('appVerifactuActivo', False) then
     Result := cModoVerifactuSin
   else
   begin
-    Result := UpperCase(Trim(oAppParams.GetString('appVerifactuModo', '')));
+    Result := UpperCase(Trim(
+      AParametrosApp.GetString('appVerifactuModo', '')));
     if Result = '' then
       Result := cModoVerifactuVerifactu
     else if (Result <> cModoVerifactuVerifactu) and
@@ -552,11 +581,12 @@ begin
   end;
 end;
 
-function ModoVerifactu: TModoVerifactu;
+function ModoVerifactu(
+  const AParametrosApp: IParametrosAplicacion): TModoVerifactu;
 var
   sModo: string;
 begin
-  sModo := ModoVerifactuTexto;
+  sModo := ModoVerifactuTexto(AParametrosApp);
   if sModo = cModoVerifactuVerifactu then
     Result := mvVerifactu
   else if sModo = cModoVerifactuNoVerifactu then
@@ -565,27 +595,34 @@ begin
     Result := mvSinVerifactu;
 end;
 
-function VerifactuActivo: Boolean;
+function VerifactuActivo(
+  const AParametrosApp: IParametrosAplicacion): Boolean;
 begin
-  Result := ModoVerifactu = mvVerifactu;
+  Result := ModoVerifactu(AParametrosApp) = mvVerifactu;
 end;
 
-function NoVerifactuActivo: Boolean;
+function NoVerifactuActivo(
+  const AParametrosApp: IParametrosAplicacion): Boolean;
 begin
-  Result := ModoVerifactu = mvNoVerifactu;
+  Result := ModoVerifactu(AParametrosApp) = mvNoVerifactu;
 end;
 
-function SinVerifactuActivo: Boolean;
+function SinVerifactuActivo(
+  const AParametrosApp: IParametrosAplicacion): Boolean;
 begin
-  Result := ModoVerifactu = mvSinVerifactu;
+  Result := ModoVerifactu(AParametrosApp) = mvSinVerifactu;
 end;
 
-function VerifactuFirmaCertificado: Boolean;
+function VerifactuFirmaCertificado(
+  const AParametrosApp: IParametrosAplicacion): Boolean;
 begin
-  Result := oAppParams.GetBool('appVerifactuFirmaCertificado', False);
+  Result :=
+    AParametrosApp.GetBool('appVerifactuFirmaCertificado', False);
 end;
 
-procedure ValidarRequisitosFiscalesEmision(AConn: TUniConnection;
+procedure ValidarRequisitosFiscalesEmision(
+  const AParametrosApp: IParametrosAplicacion;
+  AConn: TUniConnection;
   const ASerie, ANumero: string);
 var
   Qry: TUniQuery;
@@ -599,7 +636,7 @@ var
   sTitularCertificado: string;
   sVersionInstalacion: string;
 begin
-  if not SinVerifactuActivo then
+  if not SinVerifactuActivo(AParametrosApp) then
   begin
     Qry := TUniQuery.Create(nil);
     try
@@ -644,7 +681,7 @@ begin
       raise Exception.Create('La empresa ' + sNombreEmpresa +
         ' no tiene un NIF válido para la emisión fiscal.');
     sNifProductor := NormalizarNifVerifactu(
-      oAppParams.GetString('appVerifactuSifNif', ''));
+      AParametrosApp.GetString('appVerifactuSifNif', ''));
     if Length(sNifProductor) <> 9 then
       raise Exception.Create('El parámetro appVerifactuSifNif no contiene ' +
         'un NIF de productor válido.');
@@ -658,16 +695,18 @@ begin
         raise Exception.Create('La empresa ' + sNombreEmpresa +
           ' no dispone de un certificado fiscal utilizable: ' + E.Message);
     end;
-    if NoVerifactuActivo and (not VerifactuFirmaCertificado) then
+    if NoVerifactuActivo(AParametrosApp) and
+       (not VerifactuFirmaCertificado(AParametrosApp)) then
       raise Exception.Create('El modo NO VERI*FACTU exige activar la firma ' +
         'con certificado en appVerifactuFirmaCertificado.');
   end;
 end;
 
-function VerifactuEntorno: string;
+function VerifactuEntorno(
+  const AParametrosApp: IParametrosAplicacion): string;
 begin
-  Result := UpperCase(Trim(oAppParams.GetString('appVerifactuEntorno',
-                                                'PRE')));
+  Result := UpperCase(Trim(
+    AParametrosApp.GetString('appVerifactuEntorno', 'PRE')));
   if Result <> 'PRO' then
     Result := 'PRE';
 end;
@@ -731,28 +770,30 @@ begin
   end;
 end;
 
-function ConstruirUrlQR(const ANif, ASerie, ANumero: string;
+function ConstruirUrlQR(
+                        const AParametrosApp: IParametrosAplicacion;
+                        const ANif, ASerie, ANumero: string;
                         AFecha: TDateTime;
                         AImporteTotal: Currency): string;
 var
   sBase: string;
 begin
-  if VerifactuEntorno = 'PRO' then
+  if VerifactuEntorno(AParametrosApp) = 'PRO' then
   begin
-    if NoVerifactuActivo then
-      sBase := oAppParams.GetString('appNoVerifactuUrlQRPro',
+    if NoVerifactuActivo(AParametrosApp) then
+      sBase := AParametrosApp.GetString('appNoVerifactuUrlQRPro',
                                     cNoVerifactuUrlQRPro)
     else
-      sBase := oAppParams.GetString('appVerifactuUrlQRPro',
+      sBase := AParametrosApp.GetString('appVerifactuUrlQRPro',
                                     cVerifactuUrlQRPro);
   end
   else
   begin
-    if NoVerifactuActivo then
-      sBase := oAppParams.GetString('appNoVerifactuUrlQRPre',
+    if NoVerifactuActivo(AParametrosApp) then
+      sBase := AParametrosApp.GetString('appNoVerifactuUrlQRPre',
                                     cNoVerifactuUrlQRPre)
     else
-      sBase := oAppParams.GetString('appVerifactuUrlQRPre',
+      sBase := AParametrosApp.GetString('appVerifactuUrlQRPre',
                                     cVerifactuUrlQRPre);
   end;
   // Formato fijado por la AEAT (documento técnico del QR tributario):
@@ -829,7 +870,10 @@ end;
 
 // Rellena un TfrxPictureView con el QR tributario de la factura del
 // dataset dado (vacío en modo SIN o si faltan datos)
-procedure RellenarQRPicture(APic: TfrxPictureView; ADataSet: TDataSet);
+procedure RellenarQRPicture(
+  const AParametrosApp: IParametrosAplicacion;
+  APic: TfrxPictureView;
+  ADataSet: TDataSet);
 var
   aPng:    TBytes;
   oPng:    TPngImage;
@@ -837,9 +881,11 @@ var
   sUrl:    string;
 begin
   sUrl := '';
-  if (not SinVerifactuActivo) and TieneCamposFactura(ADataSet) and
+  if (not SinVerifactuActivo(AParametrosApp)) and
+     TieneCamposFactura(ADataSet) and
      (Trim(ADataSet.FieldByName('NUMERO_FAC').AsString) <> '') then
     sUrl := ConstruirUrlQR(
+              AParametrosApp,
               ADataSet.FieldByName('NIF_EMPRESA_FAC').AsString,
               ADataSet.FieldByName('SERIE_FAC').AsString,
               ADataSet.FieldByName('NUMERO_FAC').AsString,
@@ -886,11 +932,13 @@ begin
   end;
 end;
 
-procedure SustituirQRVerifactuEnReport(Component: TfrxReportComponent);
+procedure SustituirQRVerifactuEnReport(
+  const AParametrosApp: IParametrosAplicacion;
+  Component: TfrxReportComponent);
 begin
   if (Component is TfrxPictureView) and
      SameText(Component.Name, 'qrverifactu') then
-    RellenarQRPicture(TfrxPictureView(Component),
+    RellenarQRPicture(AParametrosApp, TfrxPictureView(Component),
                       DataSetFacturaDeReport(Component));
 end;
 
@@ -1012,7 +1060,10 @@ end;
 
 // Recorre recursivamente los hijos de una banda aplicando el QR y el
 // título a los que correspondan, con el registro de factura activo
-procedure AplicarVerifactuARama(AComp: TfrxComponent; ADataSet: TDataSet);
+procedure AplicarVerifactuARama(
+  const AParametrosApp: IParametrosAplicacion;
+  AComp: TfrxComponent;
+  ADataSet: TDataSet);
 var
   i:    Integer;
   oPic: TfrxPictureView;
@@ -1023,12 +1074,12 @@ begin
     begin
       oPic := TfrxPictureView(AComp);
       if SameText(oPic.Name, 'qrverifactu') then
-        RellenarQRPicture(oPic, ADataSet);
+        RellenarQRPicture(AParametrosApp, oPic, ADataSet);
       // Los formatos antiguos enlazan el QR almacenado directamente al
       // campo QRCODE_PNG_FACCON. Al reimprimir, FastReport vuelve a cargar
       // ese PNG aunque el SIF esté desactivado. Se elimina también el enlace
       // para que la preparación posterior del informe no lo reponga.
-      if SinVerifactuActivo and
+      if SinVerifactuActivo(AParametrosApp) and
          SameText(oPic.DataField, 'QRCODE_PNG_FACCON') then
       begin
         oPic.Visible := False;
@@ -1040,11 +1091,16 @@ begin
     if AComp is TfrxMemoView then
       AjustarTituloMemo(TfrxMemoView(AComp), ADataSet);
     for i := 0 to AComp.Objects.Count - 1 do
-      AplicarVerifactuARama(TfrxComponent(AComp.Objects[i]), ADataSet);
+      AplicarVerifactuARama(
+        AParametrosApp,
+        TfrxComponent(AComp.Objects[i]),
+        ADataSet);
   end;
 end;
 
-procedure AplicarVerifactuEnBanda(Component: TfrxReportComponent);
+procedure AplicarVerifactuEnBanda(
+  const AParametrosApp: IParametrosAplicacion;
+  Component: TfrxReportComponent);
 var
   oDataSet: TDataSet;
 begin
@@ -1052,11 +1108,14 @@ begin
   begin
     oDataSet := DataSetFacturaDeReport(Component);
     if TieneCamposFactura(oDataSet) then
-      AplicarVerifactuARama(Component, oDataSet);
+      AplicarVerifactuARama(AParametrosApp, Component, oDataSet);
   end;
 end;
 
-procedure AplicarVerifactuEnReportDirecto(AReport: TfrxReport;
+procedure AplicarVerifactuEnReportDirecto(
+                                          const AParametrosApp:
+                                          IParametrosAplicacion;
+                                          AReport: TfrxReport;
                                           ADataSet: TDataSet);
 var
   i:    Integer;
@@ -1070,17 +1129,26 @@ begin
     // que la jerarquía Objects para un objeto recién cargado)
     oObj := AReport.FindObject('qrverifactu');
     if oObj is TfrxPictureView then
-      RellenarQRPicture(TfrxPictureView(oObj), ADataSet);
+      RellenarQRPicture(
+        AParametrosApp,
+        TfrxPictureView(oObj),
+        ADataSet);
     // El título recorriendo los memos de cada página
     for i := 0 to AReport.PagesCount - 1 do
     begin
       if AReport.Pages[i] is TfrxReportPage then
-        AplicarVerifactuARama(TfrxReportPage(AReport.Pages[i]), ADataSet);
+        AplicarVerifactuARama(
+          AParametrosApp,
+          TfrxReportPage(AReport.Pages[i]),
+          ADataSet);
     end;
   end;
 end;
 
-procedure PrepararImpresionFacturaVerifactu(AReport: TfrxReport;
+procedure PrepararImpresionFacturaVerifactu(
+                                            const AParametrosApp:
+                                            IParametrosAplicacion;
+                                            AReport: TfrxReport;
                                             ADataSet: TDataSet);
 var
   oPage:  TfrxReportPage;
@@ -1123,19 +1191,25 @@ begin
         oQr.Parent := oBanda;
         oQr.SetBounds(oBanda.Width - dLado, 0, dLado, dLado);
         oQr.Stretched := True;
-        RellenarQRPicture(oQr, ADataSet);
+        RellenarQRPicture(AParametrosApp, oQr, ADataSet);
       end;
     end;
     // Título por tipo (recorre los memos de todas las páginas)
     for i := 0 to AReport.PagesCount - 1 do
     begin
       if AReport.Pages[i] is TfrxReportPage then
-        AplicarVerifactuARama(TfrxReportPage(AReport.Pages[i]), ADataSet);
+        AplicarVerifactuARama(
+          AParametrosApp,
+          TfrxReportPage(AReport.Pages[i]),
+          ADataSet);
     end;
   end;
 end;
 
-procedure RegistrarEventoVerifactu(AConn: TUniConnection;
+procedure RegistrarEventoVerifactu(
+                                   const AParametrosApp:
+                                   IParametrosAplicacion;
+                                   AConn: TUniConnection;
                                    const AUsuario: string;
                                    ATipoEvento: Integer;
                                    const ADescripcion: string;
@@ -1165,15 +1239,15 @@ begin
   try
     Qry.Connection := AConn;
     bColumnasFirma := ColumnasFirmaEventosDisponibles(AConn);
-    bFirmarCertificado := VerifactuFirmaCertificado;
+    bFirmarCertificado := VerifactuFirmaCertificado(AParametrosApp);
     sDatosLog := ADatosAdicionales;
     sErrorFirma := '';
     sErrorReloj := '';
-    if NoVerifactuActivo and
+    if NoVerifactuActivo(AParametrosApp) and
        (ATipoEvento <> cEventoNoVerifactuIncidenciaReloj) then
     begin
       try
-        ExigirRelojFiscal('Evento NO VERI*FACTU');
+        ExigirRelojFiscal(AParametrosApp, 'Evento NO VERI*FACTU');
       except
         on E: Exception do
         begin
@@ -1182,7 +1256,8 @@ begin
         end;
       end;
     end;
-    if NoVerifactuActivo and (not bFirmarCertificado) then
+    if NoVerifactuActivo(AParametrosApp) and
+       (not bFirmarCertificado) then
       sErrorFirma := 'El modo NO VERI*FACTU exige firma electrónica ' +
         'con certificado oficial. Active appVerifactuFirmaCertificado.';
     if bFirmarCertificado and (not bColumnasFirma) then
@@ -1201,7 +1276,7 @@ begin
       sHashAnterior := oAnterior.Huella;
     sInstante := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now);
     sFechaHuso := FechaHoraHusoSif(Now);
-    CargarEmpresaEvento(AConn, DatosEmpresa);
+    CargarEmpresaEvento(AParametrosApp, AConn, DatosEmpresa);
     sXml := ConstruirXmlEventoSif(DatosEmpresa, oAnterior, ATipoEvento,
                                   sFechaHuso, ADescripcion,
                                   sDatosLog, sHashPropio);
@@ -1285,10 +1360,12 @@ begin
       Qry.ParamByName('HUELLACERT').AsString := oDatosCert.HuellaSha1;
     end;
     Qry.Execute;
-    if NoVerifactuActivo and (sErrorFirma <> '') then
+    if NoVerifactuActivo(AParametrosApp) and
+       (sErrorFirma <> '') then
       raise Exception.Create('No se pudo firmar el evento NO VERI*FACTU: ' +
                              sErrorFirma);
-    if NoVerifactuActivo and (sErrorReloj <> '') then
+    if NoVerifactuActivo(AParametrosApp) and
+       (sErrorReloj <> '') then
       raise Exception.Create('No se pudo validar el reloj del evento ' +
                              'NO VERI*FACTU: ' + sErrorReloj);
   finally

@@ -23,7 +23,7 @@ unit inLibFotos;
     articulos y SKUs. La tabla fza_articulos_fotos guarda una fila por
     foto registrada (a nivel articulo cuando CODIGO_UNIDAD_FOT = '',
     a nivel SKU en otro caso); las imagenes viven en
-    `oAppParams.GetPath('appDirFotos')` repartidas en tres subcarpetas
+    `ParametrosApp.GetPath('appDirFotos')` repartidas en tres subcarpetas
     siempre como PNG:
 
       300/   PNG redimensionado a 300 px (lado mayor)
@@ -55,7 +55,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.ExtCtrls, Vcl.Imaging.PngImage,
   Vcl.Imaging.Jpeg, Vcl.Imaging.GIFImg,
   Data.DB, DBAccess, Uni,
-  frxClass, frxDBSet;
+  frxClass, frxDBSet, inLibParametrosIntf;
 
 const
   // Columnas de fza_articulos_fotos
@@ -101,10 +101,11 @@ type
   end;
 
   /// Acceso al sistema de fotos. Vive como singleton `oFotos` igual que
-  /// `oAppParams`. La conexión se asigna desde la raíz de composición.
+  /// `ParametrosApp`. La conexión se asigna desde la raíz de composición.
   TFotosArticulos = class
   private
     FConexion: TUniConnection;
+    FParametrosApp: IParametrosAplicacion;
     // Caché de precarga a nivel artículo (código artículo -> foto resuelta).
     // Cuando está activa, Resolver(art, '') la consulta en vez de ir a BBDD,
     // evitando el N+1 en informes con muchas fotos. La llena PrecargarFotosLote
@@ -131,7 +132,10 @@ type
     procedure RotarFicheroPng(const ARuta: string; AHorario: Boolean);
     procedure BorrarFicherosDeNombre(const ANombreBase: string);
   public
-    procedure AsignarConexion(AConexion: TUniConnection);
+    procedure AsignarConexion(
+      AConexion: TUniConnection;
+      const AParametrosApp: IParametrosAplicacion);
+    procedure LiberarServicios;
     /// Ruta del fichero para una foto resuelta, en la resolucion pedida.
     /// Devuelve '' si AInfo.Encontrada = False o si el fichero no existe.
     function RutaFoto(const AInfo: TFotoInfo;
@@ -302,7 +306,7 @@ var
 implementation
 
 uses
-  inLibAppParam, inLibArticulosValidador,
+  inLibArticulosValidador,
   Winapi.GDIPOBJ, Winapi.GDIPAPI;
 
 { TFotoInfo }
@@ -337,9 +341,20 @@ begin
   end;
 end;
 
-procedure TFotosArticulos.AsignarConexion(AConexion: TUniConnection);
+procedure TFotosArticulos.AsignarConexion(
+  AConexion: TUniConnection;
+  const AParametrosApp: IParametrosAplicacion);
 begin
+  if not Assigned(AParametrosApp) then
+    raise EArgumentNilException.Create('AParametrosApp');
   FConexion := AConexion;
+  FParametrosApp := AParametrosApp;
+end;
+
+procedure TFotosArticulos.LiberarServicios;
+begin
+  FConexion := nil;
+  FParametrosApp := nil;
 end;
 
 { ----------------------------------------------------------------- }
@@ -348,7 +363,7 @@ end;
 
 function TFotosArticulos.DirBase: string;
 begin
-  Result := oAppParams.GetPath('appDirFotos');
+  Result := FParametrosApp.GetPath('appDirFotos');
   if Result <> '' then
     Result := IncludeTrailingPathDelimiter(Result);
 end;

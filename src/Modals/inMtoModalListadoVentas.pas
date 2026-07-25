@@ -503,7 +503,7 @@ end;
 procedure TfrmModalListadoVentas.btnExcelClick(Sender: TObject);
 begin
   if unqryVentas.Active then
-    ExportarExcel(cxgrdVentas, 'Listado_ventas');
+    ExportarExcel(ParametrosApp, cxgrdVentas, 'Listado_ventas');
 end;
 
 procedure TfrmModalListadoVentas.btnSalirClick(Sender: TObject);
@@ -524,7 +524,7 @@ procedure TfrmModalListadoVentas.miAgregarDocumentoClick(Sender: TObject);
 begin
   try
     AgregarArticuloActivoADocumentoTrabajo(Self, ConexionPrincipal,
-      ContextoSesion, ResolverArtSkuStock);
+      ContextoSesion, ParametrosCaja, ResolverArtSkuStock);
   except
     on E: Exception do
       MessageDlg(E.Message, mtError, [mbOK], 0);

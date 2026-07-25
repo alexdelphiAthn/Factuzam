@@ -33,7 +33,7 @@ uses
     inLibPerfilesUsuarioIntf,
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
     OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo,
-    inLibLog, Uni;
+    inLibLog, inLibParametrosIntf, Uni;
 type
   TUpdateTotalEvent = procedure(Sender: TObject;
                                 NuevoTotal: Currency) of object;
@@ -83,7 +83,9 @@ type
   // defecto); FECHA_/INSTANTE_ son date/datetime (cxGrid usa
   // TcxDateEditProperties por defecto). Por eso quedan fuera.
   procedure AplicarPropertiesPorPrefijo(AView: TcxCustomGridTableView);
-  procedure ExportarExcel(AcxGrd: TcxGrid;
+  procedure ExportarExcel(
+                          const AParametrosApp: IParametrosAplicacion;
+                          AcxGrd: TcxGrid;
                           AsNomFile: string);
   procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
   procedure GridRecalc(AConexion: TUniConnection;
@@ -106,8 +108,7 @@ implementation
   uses inMtoGen,
        inLibWin,
        inLibtb,
-       inLibDir,
-       inLibAppParam, uGenericIfThen,
+       inLibDir, uGenericIfThen,
        inLibConfigCampos;
 
 procedure GridRecalc(AConexion: TUniConnection;
@@ -157,13 +158,16 @@ begin
   end;
 end;
 
-procedure ExportarExcel(AcxGrd: TcxGrid; AsNomFile: string);
+procedure ExportarExcel(
+  const AParametrosApp: IParametrosAplicacion;
+  AcxGrd: TcxGrid;
+  AsNomFile: string);
 var
   saveDialog: TFileSaveDialog;
 begin
   saveDialog := TFileSaveDialog.Create(nil);
   saveDialog.Title := 'Guardar listado a Excel';
-  saveDialog.DefaultFolder := oAppParams.GetPath('appDirExcel');
+  saveDialog.DefaultFolder := AParametrosApp.GetPath('appDirExcel');
     with saveDialog.FileTypes.Add do
   begin
     DisplayName := 'Archivo Excel';

@@ -550,7 +550,8 @@ begin
         Validador := TArticulosValidador.Create(
                        dmmAlbaranes.unqryTablaG.Connection);
         Resolver := TArticulosResolver.Create(
-                      dmmAlbaranes.unqryTablaG.Connection);
+                      dmmAlbaranes.unqryTablaG.Connection,
+                      ParametrosCaja);
         Resolucion := Validador.Resolver(sInput);
         if Resolucion.Encontrado then
         begin
@@ -663,7 +664,8 @@ begin
       dFecha := dmmAlbaranes.unqryTablaG.
                   FieldByName('FECHA_ALB').AsDateTime;
     Resolver := TArticulosResolver.Create(
-                  dmmAlbaranes.unqryTablaG.Connection);
+                  dmmAlbaranes.unqryTablaG.Connection,
+                  ParametrosCaja);
     try
       Datos := Resolver.ResolverDatos(ACodigoArticulo, ACodigoSku,
                                       sTarifa, dFecha);
@@ -957,7 +959,12 @@ end;
 
 function TfrmMtoAlbaranes.SqlRestriccionUsuario: string;
 begin
-  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_ALB', 'CODIGO_ALM_ALB', '');
+  Result := SqlFiltroEmpAlmCaja(
+    ContextoSesion,
+    ParametrosApp,
+    'CODIGO_EMP_ALB',
+    'CODIGO_ALM_ALB',
+    '');
 end;
 
 procedure TfrmMtoAlbaranes.CrearTablaPrincipal;

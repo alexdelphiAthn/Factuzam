@@ -410,7 +410,7 @@ begin
       Qry.ParamByName('SERIE').AsString  := ASerie;
       Qry.ParamByName('NUMERO').AsString := sNumero;
       Qry.Execute;
-      ValidarRequisitosFiscalesEmision(ConexionPrincipal,
+      ValidarRequisitosFiscalesEmision(ParametrosApp, ConexionPrincipal,
         ASerie, sNumero);
       // Histórico N:1 de relaciones (la F3 sustituye al ticket)
       TVerifactuCola.RegistrarRelacionFactura(
@@ -426,22 +426,24 @@ begin
     end;
     // Encolar el alta en Verifactu (saldrá como F3 con el bloque
     // FacturasSustituidas apuntando al ticket)
-    case ModoVerifactu of
+    case ModoVerifactu(ParametrosApp) of
       mvVerifactu:
         begin
-          TVerifactuCola.EncolarFactura(Qry,
+          TVerifactuCola.EncolarFactura(ParametrosApp, ParametrosCaja, Qry,
             IdentidadSesion.Usuario, ASerie, sNumero);
-          RegistrarEventoVerifactu(ConexionPrincipal,
+          RegistrarEventoVerifactu(ParametrosApp, ConexionPrincipal,
             IdentidadSesion.Usuario,
             cEventoVerifactuEncolado,
             'Borrador en sustitución del ticket ' + FSerieTicket + '\' +
             FNumeroTicket + ' encolada', '', ASerie, sNumero);
         end;
       mvNoVerifactu:
-        TVerifactuCola.RegistrarFacturaNoVerifactu(Qry,
+        TVerifactuCola.RegistrarFacturaNoVerifactu(ParametrosApp,
+          ParametrosCaja, Qry,
           IdentidadSesion.Usuario, ASerie, sNumero);
     else
-      TVerifactuCola.MarcarFacturaSinVerifactu(Qry,
+      TVerifactuCola.MarcarFacturaSinVerifactu(ParametrosApp,
+        ParametrosCaja, Qry,
         IdentidadSesion.Usuario, ASerie, sNumero);
     end;
   finally

@@ -414,7 +414,7 @@ begin
     'fza_facturas_lineas → fza_movimientos_almacen (pestaña Movimientos)',
     MigrarEnlaceMovimientosFacturas);
   FEngine.Registrar('vales', 'Vales de tienda (occajvale)',
-    'dbo.occajvale → fza_caja_vales',
+    'dbo.occajvale → fza_caja_vales + apunte VALE en fza_caja_pagos',
     MigrarVales);
   FEngine.Registrar('arqueos', 'Arqueos / cierres Z (ocarqueonew)',
     'dbo.ocarqueonew → fza_caja_arqueos + fza_caja_arqueos_recuento',

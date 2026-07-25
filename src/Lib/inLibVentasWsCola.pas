@@ -16,34 +16,47 @@ unit inLibVentasWsCola;
 interface
 
 uses
-  System.SysUtils, System.Classes, Uni, inLibConexionesIntf;
+  System.SysUtils, System.Classes, Uni, inLibConexionesIntf,
+  inLibParametrosIntf;
 
 type
   TVentasWsCola = class
   private
-    class function Activa: Boolean; static;
+    class function Activa(
+      const AParametrosCaja: IParametrosCaja): Boolean; static;
     class function EncolarInterno(AQry: TUniQuery;
       const AUsuario: string;
       const ATipoEvento, ASerie, ANumero: string): Int64; static;
-    class procedure AdjuntarPdfSeguro(AConn: TUniConnection;
+    class procedure AdjuntarPdfSeguro(
+      const AParametrosCaja: IParametrosCaja;
+      AConn: TUniConnection;
       const AUsuario: string;
       const ASerie, ANumero, ARutaPdf: string;
       AEsFactura: Boolean); static;
   public
-    class procedure RegistrarFactura(AQryTrx: TUniQuery;
+    class procedure RegistrarFactura(
+      const AParametrosCaja: IParametrosCaja;
+      AQryTrx: TUniQuery;
       const AUsuario: string;
       const ASerie, ANumero, ATipoOperacion: string); static;
-    class procedure RegistrarEventoSeguro(AConn: TUniConnection;
+    class procedure RegistrarEventoSeguro(
+      const AParametrosCaja: IParametrosCaja;
+      AConn: TUniConnection;
       const AUsuario: string;
       const ATipoEvento, ASerie, ANumero: string); static;
-    class procedure AdjuntarTicketPdfSeguro(AConn: TUniConnection;
+    class procedure AdjuntarTicketPdfSeguro(
+      const AParametrosCaja: IParametrosCaja;
+      AConn: TUniConnection;
       const AUsuario: string;
       const ASerie, ANumero, ARutaPdf: string); static;
-    class procedure AdjuntarFacturaPdfSeguro(AConn: TUniConnection;
+    class procedure AdjuntarFacturaPdfSeguro(
+      const AParametrosCaja: IParametrosCaja;
+      AConn: TUniConnection;
       const AUsuario: string;
       const ASerie, ANumero, ARutaPdf: string); static;
     class procedure IniciarHilo(
       const AConexiones: IServicioConexiones;
+      const AParametrosApp: IParametrosAplicacion;
       const AUsuario: string); static;
     class procedure DetenerHilo; static;
   end;
@@ -52,7 +65,7 @@ implementation
 
 uses
   Winapi.Windows, Data.DB, System.Hash, System.IOUtils,
-  inLibGlobalVar, inLibAppParam, inLibCajaParam, inLibLog,
+  inLibGlobalVar, inLibLog,
   inLibVentasWsJson, inLibFactuzamApi;
 
 type
@@ -60,6 +73,7 @@ type
   private
     FConn: TUniConnection;
     FConexiones: IServicioConexiones;
+    FParametrosApp: IParametrosAplicacion;
     FUsuario: string;
     FAvisoConfiguracion: Boolean;
     procedure EsperarCiclo;
@@ -73,6 +87,7 @@ type
   public
     constructor Create(
       const AConexiones: IServicioConexiones;
+      const AParametrosApp: IParametrosAplicacion;
       const AUsuario: string); reintroduce;
     destructor Destroy; override;
   end;
@@ -90,10 +105,11 @@ begin
   Result := Copy(sGuid, 2, 36);
 end;
 
-class function TVentasWsCola.Activa: Boolean;
+class function TVentasWsCola.Activa(
+  const AParametrosCaja: IParametrosCaja): Boolean;
 begin
-  Result := Assigned(oCajaParams) and
-            oCajaParams.GetBool('vgerEnviarVentasWS', False);
+  Result := Assigned(AParametrosCaja) and
+            AParametrosCaja.GetBool('vgerEnviarVentasWS', False);
 end;
 
 class function TVentasWsCola.EncolarInterno(AQry: TUniQuery;
@@ -136,14 +152,16 @@ begin
   end;
 end;
 
-class procedure TVentasWsCola.RegistrarFactura(AQryTrx: TUniQuery;
+class procedure TVentasWsCola.RegistrarFactura(
+  const AParametrosCaja: IParametrosCaja;
+  AQryTrx: TUniQuery;
   const AUsuario: string;
   const ASerie, ANumero, ATipoOperacion: string);
 var
   iIdCola: Int64;
   sTipoEvento: string;
 begin
-  if Activa then
+  if Activa(AParametrosCaja) then
   begin
     if SameText(ATipoOperacion, 'ANULACION') then
       sTipoEvento := 'VENTA_ANULADA'
@@ -160,13 +178,14 @@ begin
 end;
 
 class procedure TVentasWsCola.RegistrarEventoSeguro(
+  const AParametrosCaja: IParametrosCaja;
   AConn: TUniConnection;
   const AUsuario: string;
   const ATipoEvento, ASerie, ANumero: string);
 var
   Qry: TUniQuery;
 begin
-  if Activa then
+  if Activa(AParametrosCaja) then
   begin
     Qry := TUniQuery.Create(nil);
     try
@@ -185,22 +204,39 @@ begin
 end;
 
 class procedure TVentasWsCola.AdjuntarTicketPdfSeguro(
+  const AParametrosCaja: IParametrosCaja;
   AConn: TUniConnection;
   const AUsuario: string;
   const ASerie, ANumero, ARutaPdf: string);
 begin
-  AdjuntarPdfSeguro(AConn, AUsuario, ASerie, ANumero, ARutaPdf, False);
+  AdjuntarPdfSeguro(
+    AParametrosCaja,
+    AConn,
+    AUsuario,
+    ASerie,
+    ANumero,
+    ARutaPdf,
+    False);
 end;
 
 class procedure TVentasWsCola.AdjuntarFacturaPdfSeguro(
+  const AParametrosCaja: IParametrosCaja;
   AConn: TUniConnection;
   const AUsuario: string;
   const ASerie, ANumero, ARutaPdf: string);
 begin
-  AdjuntarPdfSeguro(AConn, AUsuario, ASerie, ANumero, ARutaPdf, True);
+  AdjuntarPdfSeguro(
+    AParametrosCaja,
+    AConn,
+    AUsuario,
+    ASerie,
+    ANumero,
+    ARutaPdf,
+    True);
 end;
 
 class procedure TVentasWsCola.AdjuntarPdfSeguro(
+  const AParametrosCaja: IParametrosCaja;
   AConn: TUniConnection;
   const AUsuario: string;
   const ASerie, ANumero, ARutaPdf: string;
@@ -226,7 +262,7 @@ var
   end;
 
 begin
-  if Activa and FileExists(ARutaPdf) then
+  if Activa(AParametrosCaja) and FileExists(ARutaPdf) then
   begin
     if AEsFactura then
     begin
@@ -301,11 +337,15 @@ end;
 
 class procedure TVentasWsCola.IniciarHilo(
   const AConexiones: IServicioConexiones;
+  const AParametrosApp: IParametrosAplicacion;
   const AUsuario: string);
 begin
   if oHiloVentasWs = nil then
   begin
-    oHiloVentasWs := THiloVentasWsCola.Create(AConexiones, AUsuario);
+    oHiloVentasWs := THiloVentasWsCola.Create(
+      AConexiones,
+      AParametrosApp,
+      AUsuario);
     oHiloVentasWs.FreeOnTerminate := False;
     oHiloVentasWs.Start;
     Log.LogInfo('Cola de ventas WS: hilo iniciado');
@@ -325,12 +365,16 @@ end;
 
 constructor THiloVentasWsCola.Create(
   const AConexiones: IServicioConexiones;
+  const AParametrosApp: IParametrosAplicacion;
   const AUsuario: string);
 begin
   if not Assigned(AConexiones) then
     raise EArgumentNilException.Create('AConexiones');
+  if not Assigned(AParametrosApp) then
+    raise EArgumentNilException.Create('AParametrosApp');
   inherited Create(True);
   FConexiones := AConexiones;
+  FParametrosApp := AParametrosApp;
   FUsuario := AUsuario;
 end;
 
@@ -338,6 +382,7 @@ destructor THiloVentasWsCola.Destroy;
 begin
   FreeAndNil(FConn);
   FConexiones := nil;
+  FParametrosApp := nil;
   inherited;
 end;
 
@@ -367,7 +412,8 @@ procedure THiloVentasWsCola.EsperarCiclo;
 var
   iSegundos: Integer;
 begin
-  iSegundos := oAppParams.GetInt('appVentasWsSegundosCiclo', 60);
+  iSegundos :=
+    FParametrosApp.GetInt('appVentasWsSegundosCiclo', 60);
   if iSegundos < 5 then
     iSegundos := 5;
   EsperarSegundos(iSegundos);
@@ -394,7 +440,7 @@ procedure THiloVentasWsCola.ProcesarPendientes;
 var
   Qry: TUniQuery;
 begin
-  if TClienteFactuzamApi.Configurada then
+  if TClienteFactuzamApi.Configurada(FParametrosApp) then
   begin
     FAvisoConfiguracion := False;
     if FConn = nil then
@@ -477,7 +523,10 @@ begin
       try
         if sContenido = '' then
         begin
-          sContenido := TVentasWsJson.ConstruirEvento(FConn, AIdCola,
+          sContenido := TVentasWsJson.ConstruirEvento(
+            FParametrosApp,
+            FConn,
+            AIdCola,
             sEvento, sTipo, sEmpresa, sSerie, sNumero);
           sHuella := UpperCase(THashSHA2.GetHashString(sContenido));
           Qry.SQL.Text :=
@@ -491,6 +540,7 @@ begin
           Qry.Execute;
         end;
         oResultado := TClienteFactuzamApi.EnviarJson(
+          FParametrosApp,
           'ventas/eventos.php', sContenido);
         if oResultado.Ok then
         begin
@@ -525,7 +575,8 @@ var
   Qry: TUniQuery;
   sEstado: string;
 begin
-  iMaxIntentos := oAppParams.GetInt('appVentasWsMaxIntentos', 20);
+  iMaxIntentos :=
+    FParametrosApp.GetInt('appVentasWsMaxIntentos', 20);
   if AIntentos > 6 then
     iEspera := 60 * 64
   else

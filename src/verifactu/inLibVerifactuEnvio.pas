@@ -19,7 +19,7 @@ unit inLibVerifactuEnvio;
 interface
 
 uses
-  System.SysUtils, Uni;
+  System.SysUtils, Uni, inLibParametrosIntf;
 
 type
   // Resultado del envío de un registro de facturación. Los campos calcan
@@ -57,7 +57,9 @@ function EnvioVerifactuDisponible: Boolean;
 // transacción de AConn: deja bloqueada (FOR UPDATE) la fila de
 // fza_verifactu_cadena del emisor hasta el commit/rollback del llamador,
 // serializando así el encadenamiento entre puestos.
-function EnviarRegistroFactura(AConn: TUniConnection;
+function EnviarRegistroFactura(
+                               const AParametrosApp: IParametrosAplicacion;
+                               AConn: TUniConnection;
                                const AUsuario: string;
                                const ASerie, ANumero, ATipoOperacion: string)
                                : TResultadoEnvioVerifactu;
@@ -65,7 +67,10 @@ function EnviarRegistroFactura(AConn: TUniConnection;
 // Genera el registro oficial de facturación en local y lo firma XAdES,
 // sin llamar al servicio AEAT. El llamador persiste el resultado y avanza
 // la cadena si procede (NO VERI*FACTU).
-function GenerarRegistroFacturaLocal(AConn: TUniConnection;
+function GenerarRegistroFacturaLocal(
+                                     const AParametrosApp:
+                                     IParametrosAplicacion;
+                                     AConn: TUniConnection;
                                      const AUsuario: string;
                                      const ASerie, ANumero,
                                      ATipoOperacion: string):
@@ -77,7 +82,7 @@ uses
   System.Classes, System.StrUtils, System.Hash, System.DateUtils,
   System.TimeSpan, System.NetEncoding, System.Net.HttpClient,
   System.Net.URLClient, Data.DB,
-  inLibGlobalVar, inLibAppParam, inLibVerifactu, inLibVerifactuInstalacion,
+  inLibGlobalVar, inLibVerifactu, inLibVerifactuInstalacion,
   inLibXades;
 
 const
@@ -597,7 +602,10 @@ begin
       '</sum1:RegistroAnterior></sum1:Encadenamiento>';
 end;
 
-function ConstruirSistemaInformatico(AConn: TUniConnection;
+function ConstruirSistemaInformatico(
+                                     const AParametrosApp:
+                                     IParametrosAplicacion;
+                                     AConn: TUniConnection;
                                      const ADatos: TDatosFacturaRegistro):
                                      string;
 var
@@ -607,12 +615,12 @@ var
   sNif:         string;
   sInstalacion: string;
 begin
-  sNombre := oAppParams.GetString('appVerifactuSifNombreRazon',
-                                  'Alejandro Laorden Hidalgo');
+  sNombre := AParametrosApp.GetString('appVerifactuSifNombreRazon',
+                                      'Alejandro Laorden Hidalgo');
   // La AEAT responde un 1100 genérico ('NIF') si el NIF del productor
   // va vacío o mal formado: se valida aquí con un mensaje claro
   sNif := NormalizarNifVerifactu(
-            oAppParams.GetString('appVerifactuSifNif', ''));
+            AParametrosApp.GetString('appVerifactuSifNif', ''));
   if Length(sNif) <> 9 then
     raise Exception.Create('Parámetro appVerifactuSifNif (NIF del ' +
       'productor del software) vacío o no válido: "' + sNif + '". ' +
@@ -780,7 +788,9 @@ begin
       '</sum1:DetalleDesglose>';
 end;
 
-function ConstruirRegistroAlta(const ADatos: TDatosFacturaRegistro;
+function ConstruirRegistroAlta(
+                               const AParametrosApp: IParametrosAplicacion;
+                               const ADatos: TDatosFacturaRegistro;
                                const ASerie, ANumero: string;
                                const ACadena: TCadenaAnterior;
                                const ASif, AFhGen: string;
@@ -801,8 +811,8 @@ begin
   sNumSerie := ComponerNumSerieFactura(ASerie, ANumero);
   sCuota    := FormatearImporteVerifactu(ADatos.CuotaTotal);
   sImporte  := FormatearImporteVerifactu(ADatos.ImporteTotal);
-  sDescripcion := oAppParams.GetString('appVerifactuDescripcionOpe',
-                                       'Venta');
+  sDescripcion := AParametrosApp.GetString('appVerifactuDescripcionOpe',
+                                           'Venta');
   // Huella del registro de alta según la especificación técnica de la
   // AEAT (TipoHuella 01 = SHA-256, hexadecimal en mayúsculas)
   AHuella := UpperCase(THashSHA2.GetHashString(
@@ -1054,14 +1064,15 @@ end;
 //   Transporte HTTP con certificado de cliente
 // ===========================================================================
 
-function UrlEnvio: string;
+function UrlEnvio(
+  const AParametrosApp: IParametrosAplicacion): string;
 begin
-  if VerifactuEntorno = 'PRO' then
-    Result := oAppParams.GetString('appVerifactuUrlEnvioPro',
-                                   cVerifactuUrlEnvioPro)
+  if VerifactuEntorno(AParametrosApp) = 'PRO' then
+    Result := AParametrosApp.GetString('appVerifactuUrlEnvioPro',
+                                       cVerifactuUrlEnvioPro)
   else
-    Result := oAppParams.GetString('appVerifactuUrlEnvioPre',
-                                   cVerifactuUrlEnvioPre);
+    Result := AParametrosApp.GetString('appVerifactuUrlEnvioPre',
+                                       cVerifactuUrlEnvioPre);
 end;
 
 procedure EnviarHttp(const AUrl, APeticion: string;
@@ -1121,7 +1132,10 @@ begin
   AResultado.RespuestaCompleta := '';
 end;
 
-function ConstruirRegistroFactura(AConn: TUniConnection;
+function ConstruirRegistroFactura(
+                                  const AParametrosApp:
+                                  IParametrosAplicacion;
+                                  AConn: TUniConnection;
                                   const AUsuario: string;
                                   const ASerie, ANumero,
                                   ATipoOperacion: string;
@@ -1142,20 +1156,24 @@ begin
         'ficha de la empresa (NIF de 9 caracteres, sin guiones).');
     ObtenerCadenaParaEnvio(AConn, AUsuario, ADatos.NifEmisor, ACadena);
     sFhGen := FechaHoraHusoGen(Now);
-    sSif   := ConstruirSistemaInformatico(AConn, ADatos);
+    sSif   := ConstruirSistemaInformatico(AParametrosApp, AConn, ADatos);
     if ATipoOperacion = 'ANULACION' then
       ARegistro := ConstruirRegistroAnulacion(ADatos, ASerie, ANumero,
                                               ACadena, sSif, sFhGen,
                                               AHuella)
     else
-      ARegistro := ConstruirRegistroAlta(ADatos, ASerie, ANumero,
+      ARegistro := ConstruirRegistroAlta(AParametrosApp, ADatos,
+                                         ASerie, ANumero,
                                          ACadena, sSif, sFhGen,
                                          ATipoOperacion = 'SUBSANACION',
                                          AHuella);
   end;
 end;
 
-function GenerarRegistroFacturaLocal(AConn: TUniConnection;
+function GenerarRegistroFacturaLocal(
+                                     const AParametrosApp:
+                                     IParametrosAplicacion;
+                                     AConn: TUniConnection;
                                      const AUsuario: string;
                                      const ASerie, ANumero,
                                      ATipoOperacion: string):
@@ -1169,7 +1187,8 @@ var
   sHuella:    string;
 begin
   InicializarResultadoEnvio(Result);
-  if not ConstruirRegistroFactura(AConn, AUsuario, ASerie, ANumero,
+  if not ConstruirRegistroFactura(AParametrosApp, AConn, AUsuario,
+                                  ASerie, ANumero,
                                   ATipoOperacion, oDatos, oCadena,
                                   sRegistro, sHuella) then
     Result.MensajeError := 'Factura ' + ASerie + '\' + ANumero +
@@ -1183,7 +1202,7 @@ begin
     Result.FechaExpedicion := oDatos.FechaExpedicion;
     Result.ChainNumber := IntToStr(oCadena.Contador + 1);
     Result.ChainHash := sHuella;
-    if VerifactuFirmaCertificado then
+    if VerifactuFirmaCertificado(AParametrosApp) then
     begin
       Result.RegistroXmlFirmado := FirmarRegistroFacturacion(
         sRegistro, ATipoOperacion, sHuella, oDatos.SerialCert,
@@ -1200,7 +1219,8 @@ begin
     end;
     if ATipoOperacion <> 'ANULACION' then
     begin
-      Result.VerifactuUrl := ConstruirUrlQR(oDatos.NifEmisor, ASerie,
+      Result.VerifactuUrl := ConstruirUrlQR(AParametrosApp,
+                                            oDatos.NifEmisor, ASerie,
                                             ANumero, oDatos.FechaFac,
                                             oDatos.ImporteTotal);
       try
@@ -1223,7 +1243,9 @@ begin
   end;
 end;
 
-function EnviarRegistroFactura(AConn: TUniConnection;
+function EnviarRegistroFactura(
+                               const AParametrosApp: IParametrosAplicacion;
+                               AConn: TUniConnection;
                                const AUsuario: string;
                                const ASerie, ANumero, ATipoOperacion: string)
                                : TResultadoEnvioVerifactu;
@@ -1244,7 +1266,8 @@ var
   bAceptado:       Boolean;
 begin
   InicializarResultadoEnvio(Result);
-  if not ConstruirRegistroFactura(AConn, AUsuario, ASerie, ANumero,
+  if not ConstruirRegistroFactura(AParametrosApp, AConn, AUsuario,
+                                  ASerie, ANumero,
                                   ATipoOperacion, oDatos, oCadena,
                                   sRegistro, sHuella) then
     // Fila de la cola sin factura real (huérfana, p.ej. 0\0): no se
@@ -1254,7 +1277,7 @@ begin
                            ' no encontrada para el envío Verifactu'
   else
   begin
-    if VerifactuFirmaCertificado then
+    if VerifactuFirmaCertificado(AParametrosApp) then
     begin
       Result.RegistroXmlFirmado := FirmarRegistroFacturacion(
         sRegistro, ATipoOperacion, sHuella, oDatos.SerialCert,
@@ -1270,7 +1293,7 @@ begin
       Result.FirmaDigital := sHuella;
     end;
     Result.PeticionCompleta := EnvolverSoap(oDatos, sRegistro);
-    EnviarHttp(UrlEnvio, Result.PeticionCompleta,
+    EnviarHttp(UrlEnvio(AParametrosApp), Result.PeticionCompleta,
                oDatos.SerialCert, oDatos.TitularCert, iStatus, sCuerpo);
     Result.RespuestaCompleta := sCuerpo;
     if iStatus <> 200 then
@@ -1316,7 +1339,8 @@ begin
         Result.ChainHash       := sHuella;
         if ATipoOperacion <> 'ANULACION' then
         begin
-          Result.VerifactuUrl := ConstruirUrlQR(oDatos.NifEmisor, ASerie,
+          Result.VerifactuUrl := ConstruirUrlQR(AParametrosApp,
+                                                oDatos.NifEmisor, ASerie,
                                                 ANumero, oDatos.FechaFac,
                                                 oDatos.ImporteTotal);
           // QR de la consolidación (PNG y base64). Si fallara, no tumba

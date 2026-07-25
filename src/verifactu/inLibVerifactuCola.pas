@@ -18,7 +18,8 @@ unit inLibVerifactuCola;
 interface
 
 uses
-  System.SysUtils, System.Classes, Uni, inLibConexionesIntf;
+  System.SysUtils, System.Classes, Uni, inLibConexionesIntf,
+  inLibParametrosIntf;
 
 type
   TVerifactuCola = class
@@ -26,14 +27,23 @@ type
     // Encola el registro de una factura. AQryTrx participa en la
     // transacción de la grabación de la venta: factura y cola se
     // confirman o deshacen juntas.
-    class procedure EncolarFactura(AQryTrx: TUniQuery;
+    class procedure EncolarFactura(
+                                   const AParametrosApp:
+                                   IParametrosAplicacion;
+                                   const AParametrosCaja: IParametrosCaja;
+                                   AQryTrx: TUniQuery;
                                    const AUsuario: string;
                                    const ASerie, ANumero: string;
                                    const ATipoOperacion: string = 'ALTA';
                                    ABorrarMovimientos: Boolean = True);
     // Genera y guarda el registro de facturación firmado sin enviarlo a AEAT.
     // Es el camino NO VERI*FACTU y debe ejecutarse al crear la factura.
-    class procedure RegistrarFacturaNoVerifactu(AQryTrx: TUniQuery;
+    class procedure RegistrarFacturaNoVerifactu(
+                                               const AParametrosApp:
+                                               IParametrosAplicacion;
+                                               const AParametrosCaja:
+                                               IParametrosCaja;
+                                               AQryTrx: TUniQuery;
                                                const AUsuario: string;
                                                const ASerie,
                                                ANumero: string;
@@ -43,7 +53,12 @@ type
                                                True);
     // Modo transitorio sin Verifactu: emite la factura con fase propia,
     // sin cola AEAT y sin registro NO VERI*FACTU.
-    class procedure MarcarFacturaSinVerifactu(AQryTrx: TUniQuery;
+    class procedure MarcarFacturaSinVerifactu(
+                                             const AParametrosApp:
+                                             IParametrosAplicacion;
+                                             const AParametrosCaja:
+                                             IParametrosCaja;
+                                             AQryTrx: TUniQuery;
                                              const AUsuario: string;
                                              const ASerie,
                                              ANumero: string;
@@ -59,7 +74,12 @@ type
     // Marca una factura recién abonada como RECTIFICATIVA, la enlaza con
     // la original (columnas ABONO) y la encola en Verifactu si está
     // activo. La llama el modal de Rectificar de Facturas.
-    class procedure EncolarRectificativa(AConn: TUniConnection;
+    class procedure EncolarRectificativa(
+                                         const AParametrosApp:
+                                         IParametrosAplicacion;
+                                         const AParametrosCaja:
+                                         IParametrosCaja;
+                                         AConn: TUniConnection;
                                          const AUsuario: string;
                                          const ASerieOriginal,
                                          ANumeroOriginal,
@@ -74,6 +94,8 @@ type
     // Arranque tras el logon y parada al cerrar (ver inMtoPrincipal)
     class procedure IniciarHilo(
       const AConexiones: IServicioConexiones;
+      const AParametrosApp: IParametrosAplicacion;
+      const AParametrosCaja: IParametrosCaja;
       const AUsuario: string);
     class procedure DetenerHilo;
   end;
@@ -82,7 +104,7 @@ implementation
 
 uses
   Winapi.Windows, Data.DB,
-  inLibGlobalVar, inLibAppParam, inLibLog,
+  inLibGlobalVar, inLibLog,
   inLibVerifactu, inLibVerifactuEnvio, inLibRelojFiscal,
   inLibVentasWsCola;
 
@@ -101,6 +123,8 @@ type
   private
     FConn:              TUniConnection;
     FConexiones:        IServicioConexiones;
+    FParametrosApp:     IParametrosAplicacion;
+    FParametrosCaja:    IParametrosCaja;
     FUsuario:           string;
     FAvisoNoDisponible: Boolean;
     procedure ProcesarPendientes;
@@ -122,6 +146,8 @@ type
   public
     constructor Create(
       const AConexiones: IServicioConexiones;
+      const AParametrosApp: IParametrosAplicacion;
+      const AParametrosCaja: IParametrosCaja;
       const AUsuario: string); reintroduce;
     destructor Destroy; override;
   end;
@@ -172,7 +198,10 @@ begin
   end;
 end;
 
-procedure RegistrarIncidenciaNoVerifactuSeguro(AConn: TUniConnection;
+procedure RegistrarIncidenciaNoVerifactuSeguro(
+                                               const AParametrosApp:
+                                               IParametrosAplicacion;
+                                               AConn: TUniConnection;
                                                const AUsuario: string;
                                                ATipoEvento: Integer;
                                                const ADescripcion,
@@ -180,8 +209,8 @@ procedure RegistrarIncidenciaNoVerifactuSeguro(AConn: TUniConnection;
                                                ANumero: string);
 begin
   try
-    RegistrarEventoVerifactu(AConn, AUsuario, ATipoEvento, ADescripcion,
-      AMensaje, ASerie, ANumero);
+    RegistrarEventoVerifactu(AParametrosApp, AConn, AUsuario,
+      ATipoEvento, ADescripcion, AMensaje, ASerie, ANumero);
   except
     on E: Exception do
     begin
@@ -339,13 +368,19 @@ end;
 //   TVerifactuCola — API pública
 // ===========================================================================
 
-class procedure TVerifactuCola.EncolarFactura(AQryTrx: TUniQuery;
+class procedure TVerifactuCola.EncolarFactura(
+                                              const AParametrosApp:
+                                              IParametrosAplicacion;
+                                              const AParametrosCaja:
+                                              IParametrosCaja;
+                                              AQryTrx: TUniQuery;
                                               const AUsuario: string;
                                               const ASerie, ANumero: string;
                                               const ATipoOperacion: string;
                                               ABorrarMovimientos: Boolean);
 begin
-  ValidarRequisitosFiscalesEmision(AQryTrx.Connection, ASerie, ANumero);
+  ValidarRequisitosFiscalesEmision(AParametrosApp, AQryTrx.Connection,
+    ASerie, ANumero);
   // ON DUPLICATE: si la operación ya estaba encolada se relanza
   // (vuelve a PENDIENTE con los intentos a cero)
   AQryTrx.SQL.Text :=
@@ -391,11 +426,18 @@ begin
     AQryTrx.ParamByName('USUARIO').AsString := AUsuario;
     AQryTrx.Execute;
   end;
-  TVentasWsCola.RegistrarFactura(AQryTrx, AUsuario, ASerie, ANumero,
-    ATipoOperacion);
+  TVentasWsCola.RegistrarFactura(AParametrosCaja, AQryTrx, AUsuario,
+    ASerie, ANumero, ATipoOperacion);
 end;
 
-class procedure TVerifactuCola.RegistrarFacturaNoVerifactu(AQryTrx: TUniQuery;
+class procedure TVerifactuCola.RegistrarFacturaNoVerifactu(
+                                                           const
+                                                           AParametrosApp:
+                                                           IParametrosAplicacion;
+                                                           const
+                                                           AParametrosCaja:
+                                                           IParametrosCaja;
+                                                           AQryTrx: TUniQuery;
                                                            const AUsuario:
                                                            string;
                                                            const ASerie,
@@ -408,32 +450,36 @@ var
   oResultado: TResultadoEnvioVerifactu;
 begin
   try
-    ValidarRequisitosFiscalesEmision(AQryTrx.Connection, ASerie, ANumero);
-    ExigirRelojFiscal('Registro de facturación NO VERI*FACTU');
-    if not VerifactuFirmaCertificado then
+    ValidarRequisitosFiscalesEmision(AParametrosApp, AQryTrx.Connection,
+      ASerie, ANumero);
+    ExigirRelojFiscal(AParametrosApp,
+      'Registro de facturación NO VERI*FACTU');
+    if not VerifactuFirmaCertificado(AParametrosApp) then
       raise Exception.Create('El modo NO VERI*FACTU exige firmar el ' +
         'registro de facturación con certificado oficial.');
-    oResultado := GenerarRegistroFacturaLocal(AQryTrx.Connection,
-      AUsuario, ASerie, ANumero, ATipoOperacion);
+    oResultado := GenerarRegistroFacturaLocal(AParametrosApp,
+      AQryTrx.Connection, AUsuario, ASerie, ANumero, ATipoOperacion);
     if not oResultado.Ok then
       raise Exception.Create(oResultado.MensajeError);
     GuardarRegistroNoVerifactu(AQryTrx, AUsuario, ASerie, ANumero,
       ATipoOperacion, oResultado, ABorrarMovimientos);
-    RegistrarEventoVerifactu(AQryTrx.Connection, AUsuario,
+    RegistrarEventoVerifactu(AParametrosApp, AQryTrx.Connection, AUsuario,
       cEventoVerifactuInfo,
       'Registro de facturación NO VERI*FACTU registrado', ATipoOperacion,
       ASerie, ANumero);
-    TVentasWsCola.RegistrarFactura(AQryTrx, AUsuario, ASerie, ANumero,
-      ATipoOperacion);
+    TVentasWsCola.RegistrarFactura(AParametrosCaja, AQryTrx, AUsuario,
+      ASerie, ANumero, ATipoOperacion);
   except
     on E: Exception do
     begin
       if Pos('reloj', LowerCase(E.Message)) > 0 then
-        RegistrarIncidenciaNoVerifactuSeguro(AQryTrx.Connection, AUsuario,
+        RegistrarIncidenciaNoVerifactuSeguro(AParametrosApp,
+          AQryTrx.Connection, AUsuario,
           cEventoNoVerifactuIncidenciaReloj,
           'Incidencia de reloj NO VERI*FACTU', E.Message, ASerie, ANumero)
       else
-        RegistrarIncidenciaNoVerifactuSeguro(AQryTrx.Connection, AUsuario,
+        RegistrarIncidenciaNoVerifactuSeguro(AParametrosApp,
+          AQryTrx.Connection, AUsuario,
           cEventoNoVerifactuIncidenciaCert,
           'Incidencia de certificado NO VERI*FACTU', E.Message,
           ASerie, ANumero);
@@ -442,7 +488,14 @@ begin
   end;
 end;
 
-class procedure TVerifactuCola.MarcarFacturaSinVerifactu(AQryTrx: TUniQuery;
+class procedure TVerifactuCola.MarcarFacturaSinVerifactu(
+                                                         const
+                                                         AParametrosApp:
+                                                         IParametrosAplicacion;
+                                                         const
+                                                         AParametrosCaja:
+                                                         IParametrosCaja;
+                                                         AQryTrx: TUniQuery;
                                                          const AUsuario:
                                                          string;
                                                          const ASerie,
@@ -454,7 +507,8 @@ class procedure TVerifactuCola.MarcarFacturaSinVerifactu(AQryTrx: TUniQuery;
 var
   sFase: string;
 begin
-  ValidarRequisitosFiscalesEmision(AQryTrx.Connection, ASerie, ANumero);
+  ValidarRequisitosFiscalesEmision(AParametrosApp, AQryTrx.Connection,
+    ASerie, ANumero);
   if ATipoOperacion = 'ANULACION' then
     sFase := cFaseFacturaSinVerifactuAnulada
   else
@@ -477,11 +531,16 @@ begin
     BorrarMovimientosFactura(AQryTrx, ASerie, ANumero);
   Log.LogInfo('Factura ' + ASerie + '\' + ANumero +
     ' emitida en modo SIN VERIFACTU. Operación: ' + ATipoOperacion);
-  TVentasWsCola.RegistrarFactura(AQryTrx, AUsuario, ASerie, ANumero,
-    ATipoOperacion);
+  TVentasWsCola.RegistrarFactura(AParametrosCaja, AQryTrx, AUsuario,
+    ASerie, ANumero, ATipoOperacion);
 end;
 
-class procedure TVerifactuCola.EncolarRectificativa(AConn: TUniConnection;
+class procedure TVerifactuCola.EncolarRectificativa(
+                                                    const AParametrosApp:
+                                                    IParametrosAplicacion;
+                                                    const AParametrosCaja:
+                                                    IParametrosCaja;
+                                                    AConn: TUniConnection;
                                                     const AUsuario: string;
                                                     const ASerieOriginal,
                                                     ANumeroOriginal,
@@ -496,7 +555,7 @@ begin
   // constancia en el log y no se toca nada mas.
   if (Trim(ASerieRect) = '') or (Trim(ASerieRect) = '0') or
      (Trim(ANumeroRect) = '') or (Trim(ANumeroRect) = '0') then
-    RegistrarEventoVerifactu(AConn, AUsuario,
+    RegistrarEventoVerifactu(AParametrosApp, AConn, AUsuario,
       cEventoVerifactuEnvioError,
       'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
       ' NO encolada: la factura rectificativa carece de serie/numero ' +
@@ -549,21 +608,22 @@ begin
       // aunque la original se rectifique varias veces
       RegistrarRelacionFactura(AConn, AUsuario, ASerieRect, ANumeroRect,
         ASerieOriginal, ANumeroOriginal, 'RECTIFICA');
-      case ModoVerifactu of
+      case ModoVerifactu(AParametrosApp) of
         mvVerifactu:
           begin
-            EncolarFactura(Qry, AUsuario, ASerieRect, ANumeroRect);
-            RegistrarEventoVerifactu(AConn, AUsuario,
+            EncolarFactura(AParametrosApp, AParametrosCaja, Qry,
+              AUsuario, ASerieRect, ANumeroRect);
+            RegistrarEventoVerifactu(AParametrosApp, AConn, AUsuario,
               cEventoVerifactuEncolado,
               'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
               ' encolada desde Facturas', '', ASerieRect, ANumeroRect);
           end;
         mvNoVerifactu:
-          RegistrarFacturaNoVerifactu(Qry, AUsuario, ASerieRect,
-            ANumeroRect);
+          RegistrarFacturaNoVerifactu(AParametrosApp, AParametrosCaja,
+            Qry, AUsuario, ASerieRect, ANumeroRect);
       else
-        MarcarFacturaSinVerifactu(Qry, AUsuario, ASerieRect,
-          ANumeroRect);
+        MarcarFacturaSinVerifactu(AParametrosApp, AParametrosCaja,
+          Qry, AUsuario, ASerieRect, ANumeroRect);
       end;
     finally
       FreeAndNil(Qry);
@@ -609,11 +669,14 @@ end;
 
 class procedure TVerifactuCola.IniciarHilo(
   const AConexiones: IServicioConexiones;
+  const AParametrosApp: IParametrosAplicacion;
+  const AParametrosCaja: IParametrosCaja;
   const AUsuario: string);
 begin
   if oHiloCola = nil then
   begin
-    oHiloCola := THiloVerifactuCola.Create(AConexiones, AUsuario);
+    oHiloCola := THiloVerifactuCola.Create(AConexiones, AParametrosApp,
+      AParametrosCaja, AUsuario);
     oHiloCola.FreeOnTerminate := False;
     oHiloCola.Start;
     inLibLog.Log.LogInfo('Cola Verifactu: hilo iniciado');
@@ -637,18 +700,28 @@ end;
 
 constructor THiloVerifactuCola.Create(
   const AConexiones: IServicioConexiones;
+  const AParametrosApp: IParametrosAplicacion;
+  const AParametrosCaja: IParametrosCaja;
   const AUsuario: string);
 begin
   if not Assigned(AConexiones) then
     raise EArgumentNilException.Create('AConexiones');
+  if not Assigned(AParametrosApp) then
+    raise EArgumentNilException.Create('AParametrosApp');
+  if not Assigned(AParametrosCaja) then
+    raise EArgumentNilException.Create('AParametrosCaja');
   inherited Create(True);
   FConexiones := AConexiones;
+  FParametrosApp := AParametrosApp;
+  FParametrosCaja := AParametrosCaja;
   FUsuario := AUsuario;
 end;
 
 destructor THiloVerifactuCola.Destroy;
 begin
   FreeAndNil(FConn);
+  FParametrosCaja := nil;
+  FParametrosApp := nil;
   FConexiones := nil;
   inherited;
 end;
@@ -663,7 +736,7 @@ begin
     // permite cerrar sin procesar nada a medias
     EsperarCiclo;
     if (not Terminated) and (not oCerrandoApp) and
-       (ModoVerifactu = mvVerifactu) then
+       (ModoVerifactu(FParametrosApp) = mvVerifactu) then
     begin
       try
         ProcesarPendientes;
@@ -684,7 +757,7 @@ procedure THiloVerifactuCola.EsperarCiclo;
 var
   iSegundos: Integer;
 begin
-  iSegundos := oAppParams.GetInt('appVerifactuSegundosCiclo', 60);
+  iSegundos := FParametrosApp.GetInt('appVerifactuSegundosCiclo', 60);
   if iSegundos < 5 then
     iSegundos := 5;
   EsperarSegundos(iSegundos);
@@ -723,7 +796,8 @@ begin
     // Se deja constancia una sola vez por sesión.
     if not FAvisoNoDisponible then
     begin
-      RegistrarEventoVerifactu(FConn, FUsuario, cEventoVerifactuInfo,
+      RegistrarEventoVerifactu(FParametrosApp, FConn, FUsuario,
+        cEventoVerifactuInfo,
         'Cola Verifactu activa sin cliente de envío AEAT disponible: ' +
         'las facturas quedan en estado PENDIENTE');
       FAvisoNoDisponible := True;
@@ -753,7 +827,7 @@ begin
         ' WHERE ESTADO_VFCOLA = ''ERROR'' ' +
         '   AND CONTADOR_INTENTOS_VFCOLA < :MAXINTENTOS';
       Qry.ParamByName('MAXINTENTOS').AsInteger :=
-        oAppParams.GetInt('appVerifactuMaxIntentos', 10);
+        FParametrosApp.GetInt('appVerifactuMaxIntentos', 10);
       Qry.Execute;
       Qry.SQL.Text :=
         ' SELECT ID_VFCOLA, SERIE_FAC_VFCOLA, NUMERO_FAC_VFCOLA, ' +
@@ -818,8 +892,8 @@ begin
     // puestos hasta el commit/rollback
     FConn.StartTransaction;
     try
-      oResultado := EnviarRegistroFactura(FConn, FUsuario, ASerie,
-        ANumero, ATipoOperacion);
+      oResultado := EnviarRegistroFactura(FParametrosApp, FConn,
+        FUsuario, ASerie, ANumero, ATipoOperacion);
       if oResultado.Ok then
       begin
         // El registro YA está aceptado por la AEAT: si fallara la
@@ -1091,11 +1165,12 @@ begin
   finally
     FreeAndNil(Qry);
   end;
-  RegistrarEventoVerifactu(FConn, FUsuario, cEventoVerifactuEnvioOk,
+  RegistrarEventoVerifactu(FParametrosApp, FConn, FUsuario,
+    cEventoVerifactuEnvioOk,
     'Registro de facturación (' + ATipoOperacion + ') aceptado por la ' +
     'AEAT (' + AResultado.EstadoRegistro + ')',
     'CSV: ' + AResultado.RequestId, ASerie, ANumero);
-  TVentasWsCola.RegistrarEventoSeguro(FConn, FUsuario,
+  TVentasWsCola.RegistrarEventoSeguro(FParametrosCaja, FConn, FUsuario,
     'FISCAL_ACTUALIZADO', ASerie, ANumero);
 end;
 
@@ -1109,7 +1184,7 @@ var
   iEspera:      Integer;
   sEstado:      string;
 begin
-  iMaxIntentos := oAppParams.GetInt('appVerifactuMaxIntentos', 10);
+  iMaxIntentos := FParametrosApp.GetInt('appVerifactuMaxIntentos', 10);
   // Backoff exponencial 60s * 2^intentos con techo en 32 minutos
   if AIntentos > 5 then
     iEspera := 60 * 32
@@ -1157,10 +1232,11 @@ begin
   finally
     FreeAndNil(Qry);
   end;
-  RegistrarEventoVerifactu(FConn, FUsuario, cEventoVerifactuEnvioError,
+  RegistrarEventoVerifactu(FParametrosApp, FConn, FUsuario,
+    cEventoVerifactuEnvioError,
     'Error de envío Verifactu (intento ' + IntToStr(AIntentos + 1) +
     '): ' + AMensaje, '', ASerie, ANumero);
-  TVentasWsCola.RegistrarEventoSeguro(FConn, FUsuario,
+  TVentasWsCola.RegistrarEventoSeguro(FParametrosCaja, FConn, FUsuario,
     'FISCAL_ACTUALIZADO', ASerie, ANumero);
 end;
 

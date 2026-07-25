@@ -379,6 +379,30 @@ Pruebas:
 Resultado esperado: quedan ~55 referencias vivas, todas en `src/Lib`,
 `src/Caja/Lib`, `src/verifactu` y la raíz.
 
+### Avance registrado el 25/07/2026
+
+- Migradas 30 unidades consumidoras en las seis carpetas: 61 lecturas
+  pasan por interfaces (20 App / 41 Caja). Cuarenta lecturas de caja
+  usan `ParametrosCaja` y `TdmCajaOpe` usa la interfaz inyectada.
+- En el alcance quedan 0 referencias a `oAppParams` / `oCajaParams`,
+  0 llamadas a las funciones libres y 0 dependencias de
+  `inLibAppParam` / `inLibCajaParam`. `UniDataConn` queda excluida
+  expresamente para XII-C6 porque no desciende de `TdmBase`.
+- `TdmCajaOpe`, que desciende directamente de `TDataModule`, recibe
+  `IParametrosCaja` en el constructor. Sus tres llamantes propagan la
+  propiedad heredada y la tarifa se resuelve mediante la interfaz
+  conservada por el módulo.
+- Inventario global tras XII-B: 50 accesos directos a los alias en 15
+  unidades (46 App / 4 Caja), todos fuera del lote o en
+  `UniDataConn`.
+- Regresión XII-A, pruebas estructurales XII-B y matriz Delphi correctas.
+  La compilación conserva exactamente los avisos de la línea base:
+  110/107/109 en Debug Win64, Release Win32 y Release Win64.
+
+Detalle en `PruebasParametrosFase12B/INFORME_PRUEBAS.md`. Queda
+pendiente la batería funcional interactiva contra BBDD de pruebas antes
+de considerar validado el comportamiento en ejecución.
+
 ---
 
 ## XII-C — Librerías e hilos
@@ -438,6 +462,37 @@ una prueba funcional focalizada. Resultado esperado al cerrar XII-C:
 solo la raíz y las dos unidades de parámetros mencionan los alias
 globales.
 
+### Estado XII-C — completada el 25/07/2026
+
+- **C1**: `inLibFiltroUsuario` recibe `IParametrosAplicacion` y sus 22
+  llamantes propagan `ParametrosApp`.
+- **C2**: el resolver de artículos conserva `IParametrosCaja`; documentos
+  de trabajo, arqueos y tickets reciben la dependencia explícita.
+- **C3**: exportaciones Excel, fotos, API Factuzam, correo, inventarios e
+  instalación SIF dejan de consultar parámetros globales. El singleton
+  de fotos recibe y libera el servicio desde la raíz.
+- **C4**: todas las operaciones estáticas de la cola de ventas reciben
+  `IParametrosCaja`; su hilo conserva `IParametrosAplicacion`.
+- **C5**: Verifactu, envío AEAT, reloj fiscal, exportación/verificación
+  NO VERI*FACTU y la cola fiscal reciben interfaces explícitas. El hilo
+  fiscal conserva App y Caja y las libera al detenerse.
+- **C6**: `UniDataConn` recibe App mediante setter de composición y
+  `inLibBuscarImpresora` recibe Caja en su firma.
+- Barrido de los 613 ficheros Pascal de `src`: cero menciones de
+  `oAppParams` / `oCajaParams` y cero dependencias de
+  `inLibAppParam` / `inLibCajaParam` fuera de `inMtoPrincipal` y las
+  dos unidades puente.
+- Regresión XII-A, control estructural XII-C y pruebas unitarias Win32 /
+  Win64 correctas.
+- Matriz Delphi Studio 37.0 correcta, con 0 errores y los mismos avisos
+  de la línea base: 110/107/109.
+
+Detalle en `PruebasParametrosFase12C/INFORME_PRUEBAS.md`. La aplicación
+ya puede compilarse y probarse al cerrar XII-C; XII-D retirará los alias
+de transición, pero no es un requisito para ejecutar esta versión.
+Queda pendiente la batería funcional interactiva contra una BBDD de
+pruebas, incluida la validación Verifactu en PRE.
+
 ---
 
 ## XII-D — Retirada y cierre
@@ -471,6 +526,64 @@ Resultado esperado final:
 - Lecturas thread-safe.
 - Editores trabajando contra `IParametrosEdicion` sin ver el
   diccionario interno.
+
+### Estado XII-D — completada el 25/07/2026
+
+- La raíz consume `ParametrosApp` y conserva ambos servicios mediante
+  `AsignarParametros`; ya no publica ni libera referencias globales
+  adicionales.
+- Se marcaron temporalmente `oAppParams`, `oCajaParams`,
+  `TarifaDefecto` y `NivelesFamiliaArqueo` como obsoletos. La
+  compilación puente Debug Win64 terminó con 0 errores, los 110 avisos
+  de la línea base y 0 avisos `deprecated`.
+- Retiradas las dos variables públicas y las dos funciones libres. El
+  inventario final encuentra 0 apariciones de `oAppParams` /
+  `oCajaParams` en `src`.
+- Ningún consumidor depende de `inLibAppParam` o
+  `inLibCajaParam`. Solo la raíz usa ambas unidades para acceder a sus
+  factorías; las unidades continúan registradas en el proyecto como
+  implementaciones.
+- `LIBRO_DE_ESTILO_DELPHI.md` §14 documenta el consumo mediante
+  `IProveedorParametros`, las propiedades de las clases base y la
+  inyección explícita para librerías e hilos.
+- La regresión estructural XII-C, los controles de cierre XII-D y las
+  pruebas unitarias del motor en Win32/Win64 son correctos.
+- Matriz Delphi correcta: Debug Win64, Release Win32 y Release Win64,
+  con 0 errores, 0 avisos `deprecated` y los mismos 110/107/109
+  avisos de la línea base.
+- `factuzam_original.sql` permanece intacto.
+
+### Validación funcional de XII-D — 25/07/2026
+
+Ejecutada contra la BBDD `Factuzam` de `127.0.0.1:3306` con un binario
+Release Win64 compilado del árbol de trabajo. Nota de método: la matriz
+de `ejecutar_compilacion.ps1` compila a `%TEMP%` y borra los
+artefactos, así que no actualiza `Win64\Release\fzam.exe`; para las
+pruebas funcionales hay que compilar aparte con la salida por defecto
+del proyecto.
+
+- Puntos 1 a 4 correctos: arranque y cierre, los dos editores con sus
+  49 y 30 parámetros, persistencia de booleano, entero y cadena en
+  ambos editores, recarga en caliente de `appLogSQL` en los dos
+  sentidos y aparición del huérfano en «Otros (Heredados de BD)».
+- Durante la validación apareció un defecto de contador de
+  referencias: `TParametrosAplicacion.DespuesDeRecargar` tomaba una
+  referencia temporal `Self as IParametrosAplicacion` con el contador
+  a cero, el objeto se autodestruía durante su construcción y el
+  bloque liberado lo reutilizaba `TParametrosCaja`, de modo que
+  `ParametrosApp` y `ParametrosCaja` acababan siendo el mismo objeto.
+  Corregido en las dos factorías asignando `Result` antes de
+  inicializar. Detalle y verificación en el informe de la fase.
+- Dos observaciones abiertas: el huérfano solo aparece tras una
+  recarga real —guardar sin cambios no la dispara— y los dos servicios
+  se crean antes de `PrecargarCachesSerie`, con lo que cada arranque
+  paga dos consultas directas a BBDD y dos avisos de caché fría.
+
+Detalle reproducible en
+`PruebasParametrosFase12D/INFORME_PRUEBAS.md`. Quedan pendientes los
+puntos 5 a 8 de la batería funcional, que escriben documentos
+persistentes: antes hay que fijar datos de prueba, resultado esperado
+por paso y procedimiento de limpieza.
 
 ---
 

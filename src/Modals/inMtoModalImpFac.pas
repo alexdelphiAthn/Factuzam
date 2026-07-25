@@ -82,7 +82,7 @@ implementation
 
 {$R *.dfm}
 
-uses inMtoPreviewExcel, inLibFacturaExcel, inLibAppParam, inLibVerifactu,
+uses inMtoPreviewExcel, inLibFacturaExcel, inLibVerifactu,
      inLibFormatoDocumento, inLibVentasWsCola, inLibFacturaPdfBlob;
 
 { TfrmPrintFac }
@@ -99,10 +99,12 @@ begin
     with dmFac do
     begin
       NombreSugerido := ObtenerNombreFactura(unqryTablaG);
-      fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
+      fPreview.DialogoGuardar.InitialDir :=
+        ParametrosApp.GetPath('appDirExcel');
       fPreview.DialogoGuardar.FileName := NombreSugerido;
       try
-        ExportarFacturaADevExpress(ConexionPrincipal,fPreview.dxSpreadSheet1,
+        ExportarFacturaADevExpress(ParametrosApp, ConexionPrincipal,
+          fPreview.dxSpreadSheet1,
                                    unqryTablaG,
                                    unqryLinFac);
       finally
@@ -127,7 +129,8 @@ begin
   // limpio; el QR del Excel (que sí funciona) no se toca.
   if (dmFac <> nil) and dmFac.unqryFacPrint.Active and
      (not dmFac.unqryFacPrint.IsEmpty) then
-    AplicarVerifactuEnReportDirecto(frxrprt1, dmFac.unqryFacPrint);
+    AplicarVerifactuEnReportDirecto(ParametrosApp, frxrprt1,
+      dmFac.unqryFacPrint);
 end;
 
 procedure TfrmPrintFac.AplicarSkuDescripcionReport(AReport: TfrxReport);
@@ -168,7 +171,9 @@ begin
   begin
     sSerie  := dmFac.unqryFacPrint.FieldByName('SERIE_FAC').AsString;
     sNumero := dmFac.unqryFacPrint.FieldByName('NUMERO_FAC').AsString;
-    TVentasWsCola.AdjuntarFacturaPdfSeguro(ConexionPrincipal,
+    TVentasWsCola.AdjuntarFacturaPdfSeguro(
+      ParametrosCaja,
+      ConexionPrincipal,
       IdentidadSesion.Usuario,
       sSerie, sNumero, ARuta);
     // Archivado en fza_facturas.PDF_FAC: solo el PDF de UNA factura

@@ -657,7 +657,12 @@ end;
 function TfrmMtoComprasSesiones.SqlRestriccionUsuario: string;
 begin
   // Sesiones de compra: empresa y almacén destino (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_SES', 'CODIGO_ALM_SES', '');
+  Result := SqlFiltroEmpAlmCaja(
+    ContextoSesion,
+    ParametrosApp,
+    'CODIGO_EMP_SES',
+    'CODIGO_ALM_SES',
+    '');
 end;
 
 procedure TfrmMtoComprasSesiones.CrearTablaPrincipal;
@@ -1252,7 +1257,11 @@ begin
     begin
       Screen.Cursor := crHourGlass;
       try
-        bOK := DescargarFotosArticulo(sCodArt, archivos, sMsg);
+        bOK := DescargarFotosArticulo(
+          ParametrosApp,
+          sCodArt,
+          archivos,
+          sMsg);
       finally
         Screen.Cursor := crDefault;
       end;

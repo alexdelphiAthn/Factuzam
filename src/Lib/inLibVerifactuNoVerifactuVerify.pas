@@ -18,7 +18,7 @@ unit inLibVerifactuNoVerifactuVerify;
 interface
 
 uses
-  System.SysUtils;
+  System.SysUtils, inLibParametrosIntf;
 
 type
   TResultadoVerificacionNoVerifactu = record
@@ -35,12 +35,16 @@ type
 procedure InferirFicherosNoVerifactu(const AArchivoSeleccionado: string;
                                      out AArchivoEventos,
                                      AArchivoFacturacion: string);
-function VerificarFicherosNoVerifactu(const AArchivoEventos,
+function VerificarFicherosNoVerifactu(
+                                      const AParametrosApp:
+                                      IParametrosAplicacion;
+                                      const AArchivoEventos,
                                       AArchivoFacturacion: string):
                                       TResultadoVerificacionNoVerifactu;
 function NombreInformeErroresNoVerifactu(const AArchivoSeleccionado: string):
                                       string;
 function ResumenVerificacionNoVerifactu(
+  const AParametrosApp: IParametrosAplicacion;
   const AResultado: TResultadoVerificacionNoVerifactu): string;
 
 implementation
@@ -311,20 +315,26 @@ begin
   end;
 end;
 
-function VerificacionLegalNoVerifactu(const AResultado:
+function VerificacionLegalNoVerifactu(
+                                      const AParametrosApp:
+                                      IParametrosAplicacion;
+                                      const AResultado:
                                       TResultadoVerificacionNoVerifactu):
                                       Boolean;
 begin
   if AResultado.ModoExportacion <> '' then
     Result := AResultado.ModoExportacion = cModoVerifactuNoVerifactu
   else
-    Result := NoVerifactuActivo;
+    Result := NoVerifactuActivo(AParametrosApp);
 end;
 
-function TipoIncidenciaFirmaLegal(const AResultado:
+function TipoIncidenciaFirmaLegal(
+                                  const AParametrosApp:
+                                  IParametrosAplicacion;
+                                  const AResultado:
                                   TResultadoVerificacionNoVerifactu): string;
 begin
-  if VerificacionLegalNoVerifactu(AResultado) then
+  if VerificacionLegalNoVerifactu(AParametrosApp, AResultado) then
     Result := 'ERROR'
   else
     Result := 'AVISO';
@@ -385,7 +395,10 @@ begin
     Inc(AResultado.Avisos);
 end;
 
-procedure VerificarPerfilXadesNoVerifactu(const AXml, AEtiqueta: string;
+procedure VerificarPerfilXadesNoVerifactu(
+                                          const AParametrosApp:
+                                          IParametrosAplicacion;
+                                          const AXml, AEtiqueta: string;
                                           AEsEvento: Boolean;
                                           var AResultado:
                                           TResultadoVerificacionNoVerifactu);
@@ -404,7 +417,7 @@ var
   sRaiz: string;
   sTipoFirma: string;
 begin
-  sTipoFirma := TipoIncidenciaFirmaLegal(AResultado);
+  sTipoFirma := TipoIncidenciaFirmaLegal(AParametrosApp, AResultado);
   if not CargarXmlTexto(AXml, oDoc) then
   begin
     AgregarDetalle(AResultado, sTipoFirma,
@@ -535,7 +548,9 @@ begin
   end;
 end;
 
-procedure VerificarEvento(const AEvento: IXMLNode; AIndice: Integer;
+procedure VerificarEvento(
+                          const AParametrosApp: IParametrosAplicacion;
+                          const AEvento: IXMLNode; AIndice: Integer;
                           var AHashAnteriorEsperado: string;
                           var AResultado:
                           TResultadoVerificacionNoVerifactu);
@@ -550,7 +565,7 @@ var
   sSignatureValue: string;
   sTipoFirma: string;
 begin
-  sTipoFirma := TipoIncidenciaFirmaLegal(AResultado);
+  sTipoFirma := TipoIncidenciaFirmaLegal(AParametrosApp, AResultado);
   sId := TextoHijo(AEvento, 'Id');
   sHashAnterior := UpperCase(TextoHijo(AEvento, 'HashAnterior'));
   sHashPropio := UpperCase(TextoHijo(AEvento, 'HashPropio'));
@@ -595,14 +610,17 @@ begin
          (sFirmaDigital <> Sha256HexMayus(sFirmaXades)) then
         AgregarDetalle(AResultado, 'ERROR',
           'Evento ' + sId + ': FirmaDigital no coincide con FirmaXades.');
-      VerificarPerfilXadesNoVerifactu(sRegistroXml, 'Evento ' + sId,
-                                      True, AResultado);
+      VerificarPerfilXadesNoVerifactu(AParametrosApp, sRegistroXml,
+        'Evento ' + sId, True, AResultado);
     end;
   end;
   AHashAnteriorEsperado := sHashPropio;
 end;
 
-procedure VerificarRegistroFactura(const ARegistro: IXMLNode; AIndice:
+procedure VerificarRegistroFactura(
+                                   const AParametrosApp:
+                                   IParametrosAplicacion;
+                                   const ARegistro: IXMLNode; AIndice:
                                    Integer; var AResultado:
                                    TResultadoVerificacionNoVerifactu);
 var
@@ -617,7 +635,7 @@ var
   sSignatureValue: string;
   sTipoFirma: string;
 begin
-  sTipoFirma := TipoIncidenciaFirmaLegal(AResultado);
+  sTipoFirma := TipoIncidenciaFirmaLegal(AParametrosApp, AResultado);
   sSerie := TextoHijo(ARegistro, 'Serie');
   sNumero := TextoHijo(ARegistro, 'Numero');
   sEtiqueta := sSerie + '/' + sNumero;
@@ -652,12 +670,15 @@ begin
     if (sSignatureValue <> '') and (sSignatureValue <> sFirma) then
       AgregarDetalle(AResultado, 'ERROR',
         'Factura ' + sEtiqueta + ': SignatureValue no coincide.');
-    VerificarPerfilXadesNoVerifactu(sRegistroXml, 'Factura ' + sEtiqueta,
-                                    False, AResultado);
+    VerificarPerfilXadesNoVerifactu(AParametrosApp, sRegistroXml,
+      'Factura ' + sEtiqueta, False, AResultado);
   end;
 end;
 
-procedure VerificarArchivoEventos(var AResultado:
+procedure VerificarArchivoEventos(
+                                  const AParametrosApp:
+                                  IParametrosAplicacion;
+                                  var AResultado:
                                   TResultadoVerificacionNoVerifactu);
 var
   oDoc: IXMLDocument;
@@ -684,8 +705,8 @@ begin
       if EsNodo(oNodo, 'Evento') then
       begin
         Inc(AResultado.Eventos);
-        VerificarEvento(oNodo, AResultado.Eventos, sHashAnterior,
-                        AResultado);
+        VerificarEvento(AParametrosApp, oNodo, AResultado.Eventos,
+          sHashAnterior, AResultado);
       end;
     end;
     if AResultado.Eventos = 0 then
@@ -694,7 +715,10 @@ begin
   end;
 end;
 
-procedure VerificarArchivoFacturacion(var AResultado:
+procedure VerificarArchivoFacturacion(
+                                      const AParametrosApp:
+                                      IParametrosAplicacion;
+                                      var AResultado:
                                       TResultadoVerificacionNoVerifactu);
 var
   oDoc: IXMLDocument;
@@ -720,8 +744,8 @@ begin
       if EsNodo(oNodo, 'RegistroFactura') then
       begin
         Inc(AResultado.RegistrosFacturacion);
-        VerificarRegistroFactura(oNodo, AResultado.RegistrosFacturacion,
-                                 AResultado);
+        VerificarRegistroFactura(AParametrosApp, oNodo,
+          AResultado.RegistrosFacturacion, AResultado);
       end;
     end;
     if AResultado.RegistrosFacturacion = 0 then
@@ -761,7 +785,10 @@ begin
   Result := TPath.Combine(sDir, 'errores_' + sNombre + '.txt');
 end;
 
-function VerificarFicherosNoVerifactu(const AArchivoEventos,
+function VerificarFicherosNoVerifactu(
+                                      const AParametrosApp:
+                                      IParametrosAplicacion;
+                                      const AArchivoEventos,
                                       AArchivoFacturacion: string):
                                       TResultadoVerificacionNoVerifactu;
 begin
@@ -774,14 +801,14 @@ begin
   Result.Avisos := 0;
   Result.Detalle := '';
   try
-    VerificarArchivoEventos(Result);
+    VerificarArchivoEventos(AParametrosApp, Result);
   except
     on E: Exception do
       AgregarDetalle(Result, 'ERROR',
         'No se pudo verificar eventos: ' + E.Message);
   end;
   try
-    VerificarArchivoFacturacion(Result);
+    VerificarArchivoFacturacion(AParametrosApp, Result);
   except
     on E: Exception do
       AgregarDetalle(Result, 'ERROR',
@@ -792,13 +819,14 @@ begin
 end;
 
 function ResumenVerificacionNoVerifactu(
+  const AParametrosApp: IParametrosAplicacion;
   const AResultado: TResultadoVerificacionNoVerifactu): string;
 var
   sModo: string;
 begin
   sModo := AResultado.ModoExportacion;
   if sModo = '' then
-    sModo := ModoVerifactuTexto + ' (modo actual)';
+    sModo := ModoVerifactuTexto(AParametrosApp) + ' (modo actual)';
   Result :=
     'Modo: ' + sModo + sLineBreak +
     'Eventos: ' + IntToStr(AResultado.Eventos) + sLineBreak +

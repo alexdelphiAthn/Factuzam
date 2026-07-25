@@ -20,7 +20,7 @@ uses
   System.SysUtils, System.Classes, Vcl.ExtCtrls, Data.DB, Datasnap.Provider,
   Datasnap.DBClient, Uni, MemDS, DBAccess, system.Math, UniDataGen,
   inLibGlobalVar, system.StrUtils, inLibFaseCobro, Windows,
-  inLibContextoSesionIntf;
+  inLibContextoSesionIntf, inLibParametrosIntf;
 
 type
   TDatosCabeceraFactura = record
@@ -150,6 +150,8 @@ type
     procedure cdsLineasAfterDelete(DataSet: TDataSet);
   private
     FConexion: TUniConnection;
+    FParametrosApp: IParametrosAplicacion;
+    FParametrosCaja: IParametrosCaja;
     FOnRellenarArticulo:  TRellenarArticuloEvent;
     FOnRellenarAtributos: TRellenarAtributosEvent;
     FOnUpdateTotal: TOnUpdateTotalEvent;
@@ -315,7 +317,9 @@ type
   public
     constructor Create(
       AOwner: TComponent;
-      AConexion: TUniConnection); reintroduce;
+      AConexion: TUniConnection;
+      const AParametrosApp: IParametrosAplicacion;
+      const AParametrosCaja: IParametrosCaja); reintroduce;
     procedure AsignarContextoSesion(
       const AContextoSesion: IContextoSesionAplicacion);
     property IdentidadSesion: TIdentidadSesion read GetIdentidadSesion;
@@ -419,8 +423,6 @@ implementation
 
 uses inLibtb,
      inLibData,
-     inLibAppParam,
-     inLibCajaParam,
      inMtoCajaOpe,
      inLibDevExp,
      inLibFacturas,
@@ -434,11 +436,21 @@ uses inLibtb,
 
 constructor TdmCajaOpe.Create(
   AOwner: TComponent;
-  AConexion: TUniConnection);
+  AConexion: TUniConnection;
+  const AParametrosApp: IParametrosAplicacion;
+  const AParametrosCaja: IParametrosCaja);
 var
   ProveedorContexto: IProveedorContextoSesion;
 begin
+  if not Assigned(AParametrosApp) then
+    raise Exception.Create(
+      'No se han configurado los parámetros de aplicación.');
+  if not Assigned(AParametrosCaja) then
+    raise Exception.Create(
+      'No se han configurado los parámetros del módulo de caja.');
   FConexion := AConexion;
+  FParametrosApp := AParametrosApp;
+  FParametrosCaja := AParametrosCaja;
   FContextoSesion := nil;
   if Supports(AOwner, IProveedorContextoSesion, ProveedorContexto) then
     FContextoSesion := ProveedorContexto.ContextoSesion;
@@ -1253,7 +1265,14 @@ begin
     while not cdsLineas.Eof do
     begin
       var sAccion := Trim(cdsLineas.FieldByName('ACCION_DEPOSITO').AsString);
+      // Novedad tambien cuando hay devolucion (total negativo o
+      // lineas devueltas) o se emite un vale como reembolso: en esos
+      // casos el cliente no entrega dinero (ImporteEntregado = 0) y
+      // sin esto la operacion se descartaba sin grabar.
       if (DatosCobro.ImporteEntregado > 0) or
+         DatosCobro.EsDevolucionEconomica or
+         DatosCobro.TieneArticulosDevueltos or
+         (DatosCobro.ImporteValeEmitido > 0) or
          (sAccion = 'CANCELAR') or
          (sAccion = 'NUEVO_DEP') then
       begin
@@ -1624,16 +1643,18 @@ begin
     // =======================================================================
     if RequiereFactura then
     begin
-      case ModoVerifactu of
+      case ModoVerifactu(FParametrosApp) of
         mvVerifactu:
-          TVerifactuCola.EncolarFactura(QryTrx, IdentidadSesion.Usuario,
-            SerieGenerada, NumFactura);
+          TVerifactuCola.EncolarFactura(FParametrosApp, FParametrosCaja,
+            QryTrx, IdentidadSesion.Usuario, SerieGenerada, NumFactura);
         mvNoVerifactu:
-          TVerifactuCola.RegistrarFacturaNoVerifactu(QryTrx,
-            IdentidadSesion.Usuario, SerieGenerada, NumFactura);
+          TVerifactuCola.RegistrarFacturaNoVerifactu(FParametrosApp,
+            FParametrosCaja, QryTrx, IdentidadSesion.Usuario,
+            SerieGenerada, NumFactura);
       else
-        TVerifactuCola.MarcarFacturaSinVerifactu(QryTrx,
-          IdentidadSesion.Usuario, SerieGenerada, NumFactura);
+        TVerifactuCola.MarcarFacturaSinVerifactu(FParametrosApp,
+          FParametrosCaja, QryTrx, IdentidadSesion.Usuario,
+          SerieGenerada, NumFactura);
       end;
     end;
     // =======================================================================
@@ -1703,6 +1724,67 @@ begin
           SerieGenerada, NumFactura,
           DatosCobro.ValesRecogidos[i].ImporteAplicado);
       end;
+    end;
+    // =======================================================================
+    // PASO 6.5: VALE EMITIDO
+    // La fase de cobro puede emitir un vale como reembolso de una
+    // devolucion o como cambio entregado en vale. Hay que crearlo en
+    // fza_caja_vales para que exista, se pueda canjear y lo sume el
+    // arqueo (que lee IMPORTE_NOMINAL_VL de esa tabla), y registrar la
+    // operacion de caja 'VL'. Sin esto el vale no se materializaba.
+    // =======================================================================
+    if DatosCobro.ImporteValeEmitido > 0.001 then
+    begin
+      var CodigoValeEmi := Format('VALE_%s_%s_%s_%s',
+        [AEmpresa, AAlmacen, ACaja, NumOperacionVE]);
+      var TieneCaducidadVale :=
+        FParametrosCaja.GetBool('vgerCaducidadDefVale', False);
+      QryTrx.SQL.Text :=
+        'INSERT INTO fza_caja_vales (' +
+        '  CODIGO_VL, ESTADO_VL, IMPORTE_NOMINAL_VL,' +
+        '  FECHA_EMISION_VL, FECHA_CADUCIDAD_VL,' +
+        '  CODIGO_EMP_EMI_VL, CODIGO_ALM_EMI_VL, CODIGO_CAJA_EMI_VL,' +
+        '  NUMERO_OPERACION_EMI_VL, SERIE_FAC_EMI_VL, NUMERO_FAC_EMI_VL,' +
+        '  CODIGO_CLI_VL, USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA) ' +
+        'VALUES (' +
+        '  :CODIGO, ''PENDIENTE'', :IMPORTE,' +
+        '  :FEMISION, :FCADUCIDAD,' +
+        '  :EMP, :ALM, :CAJA,' +
+        '  :NUMOPE, :SERIE, :NUMFAC,' +
+        '  :CLIENTE, :USUARIO, :USUARIO, NOW())';
+      QryTrx.ParamByName('CODIGO').AsString    := CodigoValeEmi;
+      QryTrx.ParamByName('IMPORTE').AsCurrency :=
+        DatosCobro.ImporteValeEmitido;
+      QryTrx.ParamByName('FEMISION').AsDateTime := FechaOperacion;
+      if TieneCaducidadVale then
+        QryTrx.ParamByName('FCADUCIDAD').AsDateTime :=
+          FechaOperacion +
+          FParametrosCaja.GetInt('vgerDiasCaducidadVale', 365)
+      else
+        QryTrx.ParamByName('FCADUCIDAD').Clear;
+      QryTrx.ParamByName('EMP').AsString     := AEmpresa;
+      QryTrx.ParamByName('ALM').AsString     := AAlmacen;
+      QryTrx.ParamByName('CAJA').AsString    := ACaja;
+      QryTrx.ParamByName('NUMOPE').AsString  := NumOperacionVE;
+      QryTrx.ParamByName('SERIE').AsString   := SerieGenerada;
+      QryTrx.ParamByName('NUMFAC').AsString  := NumFactura;
+      QryTrx.ParamByName('CLIENTE').AsString := Cab.CodigoCliente;
+      QryTrx.ParamByName('USUARIO').AsString := UsuarioCaja;
+      QryTrx.Execute;
+      // Linea de pago que refleja el reembolso entregado como vale,
+      // en negativo y con el codigo del vale como referencia (igual
+      // que un vale recogido deja su linea de pago).
+      Inc(NumLineaPago);
+      InsertarPagoCaja(
+        QryTrx, AEmpresa, AAlmacen, ACaja, SerieGenerada, NumOperacionVE,
+        NumLineaPago, 'VALE', -DatosCobro.ImporteValeEmitido, 0,
+        '', '', 1, 0, CodigoValeEmi);
+      InsertarOperacionCaja(
+        QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VL',
+        -DatosCobro.ImporteValeEmitido, UsuarioCaja,
+        FechaOperacion, NumFactura, SerieGenerada, Cab.CodigoCliente,
+        'Vale emitido: ' + CodigoValeEmi);
+      ValeGenerado := CodigoValeEmi;
     end;
     // =======================================================================
     // PASO 7: ALBARÁN DE DEPÓSITO
@@ -2075,7 +2157,7 @@ end;
 
 function TdmCajaOpe.GetTarifaDefault: string;
 begin
-  Result := TarifaDefecto;  // vgerDefTarifa (inLibCajaParam)
+  Result := FParametrosCaja.TarifaDefecto;
 end;
 
 procedure TdmCajaOpe.cdsCabeceraAfterInsert(DataSet: TDataSet);

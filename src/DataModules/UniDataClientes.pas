@@ -69,7 +69,7 @@ type
 implementation
 
 uses
-  inMtoClientes, inLibAppParam, inLibCajaParam, inLibtb,
+  inMtoClientes, inLibtb,
   inLibLog,
   System.Diagnostics;
 
@@ -260,7 +260,8 @@ begin
                                               'fza_formas_pago',
                                                             'CODIGO_FP_FP',
                                                      'ESDEFAULT_FORMA_PAGO_FP');
-  unqryTablaG.FindField('TARIFA_ARTICULO_CLI').AsString := TarifaDefecto;
+  unqryTablaG.FindField('TARIFA_ARTICULO_CLI').AsString :=
+    ParametrosCaja.TarifaDefecto;
 end;
 
 procedure TdmClientes.GuardarParametrosEDocCliente(ADataSet: TDataSet);

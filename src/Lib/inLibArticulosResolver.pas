@@ -62,7 +62,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  Data.DB, DBAccess, Uni;
+  Data.DB, DBAccess, Uni, inLibParametrosIntf;
 
 type
   TArticuloOrigenPrecio = (
@@ -83,7 +83,7 @@ type
     ValorMultiploAjuste: Double;        // efectivo
     ValorMenosAjuste   : Double;        // efectivo
     EsImpIncl          : Boolean;       // ESIMP_INCL_TAR
-    EsTarifaDefault    : Boolean;       // vgerDefTarifa (inLibCajaParam)
+    EsTarifaDefault    : Boolean;       // vgerDefTarifa (IParametrosCaja)
     FechaDesde         : TDateTime;
     FechaHasta         : TDateTime;     // 0 si abierta
     Vigente            : Boolean;       // hay fila vigente en la fecha
@@ -160,13 +160,16 @@ type
   TArticulosResolver = class
   private
     FConexion: TUniConnection;
+    FParametrosCaja: IParametrosCaja;
     procedure RellenarPrecioDesdeQry(const q: TUniQuery; var P: TArticuloPrecio;
                                      const AFecha: TDateTime);
     function  TarifaDefault: string;
     function  ContarSkusActivos(const ACodigoArt: string;
                                 out AUnicoSku: string): Integer;
   public
-    constructor Create(AConexion: TUniConnection);
+    constructor Create(
+      AConexion: TUniConnection;
+      const AParametrosCaja: IParametrosCaja);
 
     // Pipeline completo. Si ACodigoTarifa es '', usa vgerDefTarifa.
     // Si ACodigoAlmacen es '', el PMP es ponderado entre todos los almacenes.
@@ -214,9 +217,6 @@ function DescuentoTarifaVigente(AConexion: TUniConnection;
                                 const AFecha: TDateTime): Boolean;
 
 implementation
-
-uses
-  inLibCajaParam;
 
 { Helpers de records ──────────────────────────────────────────────────────── }
 
@@ -354,15 +354,20 @@ end;
 
 { TArticulosResolver ──────────────────────────────────────────────────────── }
 
-constructor TArticulosResolver.Create(AConexion: TUniConnection);
+constructor TArticulosResolver.Create(
+  AConexion: TUniConnection;
+  const AParametrosCaja: IParametrosCaja);
 begin
+  if not Assigned(AParametrosCaja) then
+    raise EArgumentNilException.Create('AParametrosCaja');
   inherited Create;
   FConexion := AConexion;
+  FParametrosCaja := AParametrosCaja;
 end;
 
 function TArticulosResolver.TarifaDefault: string;
 begin
-  Result := TarifaDefecto;  // vgerDefTarifa (inLibCajaParam)
+  Result := FParametrosCaja.TarifaDefecto;
 end;
 
 function TArticulosResolver.ContarSkusActivos(const ACodigoArt: string;

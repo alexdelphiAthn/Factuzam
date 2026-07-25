@@ -17,7 +17,7 @@ unit inLibVerifactuNoVerifactuExport;
 interface
 
 uses
-  System.SysUtils, Uni;
+  System.SysUtils, Uni, inLibParametrosIntf;
 
 type
   TResultadoExportacionNoVerifactu = record
@@ -29,7 +29,10 @@ type
     SerieCertificado:   string;
   end;
 
-function ExportarRegistrosNoVerifactu(AConn: TUniConnection;
+function ExportarRegistrosNoVerifactu(
+                                      const AParametrosApp:
+                                      IParametrosAplicacion;
+                                      AConn: TUniConnection;
                                       const AUsuario: string;
                                       const AArchivoBase: string):
                                       TResultadoExportacionNoVerifactu;
@@ -219,12 +222,15 @@ begin
   end;
 end;
 
-procedure RegistrarIncidenciaExportacionSeguro(AConn: TUniConnection;
+procedure RegistrarIncidenciaExportacionSeguro(
+                                               const AParametrosApp:
+                                               IParametrosAplicacion;
+                                               AConn: TUniConnection;
                                                const AUsuario: string;
                                                const AMensaje: string);
 begin
   try
-    RegistrarEventoVerifactu(AConn, AUsuario,
+    RegistrarEventoVerifactu(AParametrosApp, AConn, AUsuario,
       cEventoNoVerifactuIncidenciaCert,
       'Exportación NO VERI*FACTU bloqueada', AMensaje);
   except
@@ -235,17 +241,20 @@ begin
   end;
 end;
 
-procedure ValidarExportacionLegalNoVerifactu(AConn: TUniConnection;
+procedure ValidarExportacionLegalNoVerifactu(
+                                             const AParametrosApp:
+                                             IParametrosAplicacion;
+                                             AConn: TUniConnection;
                                              const AUsuario: string);
 var
   iEventos:  Integer;
   iFacturas: Integer;
   sError:    string;
 begin
-  if NoVerifactuActivo then
+  if NoVerifactuActivo(AParametrosApp) then
   begin
     sError := '';
-    if not VerifactuFirmaCertificado then
+    if not VerifactuFirmaCertificado(AParametrosApp) then
       sError := 'No se puede exportar NO VERI*FACTU legal: el modo ' +
         'NO VERI*FACTU exige firma electrónica con certificado oficial.'
     else if not ColumnasFirmaEventosDisponibles(AConn) then
@@ -265,13 +274,16 @@ begin
     end;
     if sError <> '' then
     begin
-      RegistrarIncidenciaExportacionSeguro(AConn, AUsuario, sError);
+      RegistrarIncidenciaExportacionSeguro(AParametrosApp, AConn,
+        AUsuario, sError);
       raise Exception.Create(sError);
     end;
   end;
 end;
 
-function ConstruirXmlEventos(AConn: TUniConnection;
+function ConstruirXmlEventos(
+                             const AParametrosApp: IParametrosAplicacion;
+                             AConn: TUniConnection;
                              const AUsuario: string;
                              out ATotal: Integer):
   string;
@@ -304,7 +316,7 @@ begin
     Sb.Append('" UsuarioExportacion="');
     Sb.Append(EscaparXml(AUsuario));
     Sb.Append('" ModoVerifactu="');
-    Sb.Append(EscaparXml(ModoVerifactuTexto));
+    Sb.Append(EscaparXml(ModoVerifactuTexto(AParametrosApp)));
     Sb.Append('">');
     while not Qry.Eof do
     begin
@@ -351,7 +363,10 @@ begin
   end;
 end;
 
-function ConstruirXmlFacturacion(AConn: TUniConnection;
+function ConstruirXmlFacturacion(
+                                 const AParametrosApp:
+                                 IParametrosAplicacion;
+                                 AConn: TUniConnection;
                                  const AUsuario: string;
                                  out ATotal: Integer):
   string;
@@ -399,7 +414,7 @@ begin
     Sb.Append('" UsuarioExportacion="');
     Sb.Append(EscaparXml(AUsuario));
     Sb.Append('" ModoVerifactu="');
-    Sb.Append(EscaparXml(ModoVerifactuTexto));
+    Sb.Append(EscaparXml(ModoVerifactuTexto(AParametrosApp)));
     Sb.Append('">');
     while not Qry.Eof do
     begin
@@ -492,7 +507,10 @@ begin
   TFile.WriteAllText(AArchivo, ATexto, TEncoding.UTF8);
 end;
 
-function ExportarRegistrosNoVerifactu(AConn: TUniConnection;
+function ExportarRegistrosNoVerifactu(
+                                      const AParametrosApp:
+                                      IParametrosAplicacion;
+                                      AConn: TUniConnection;
                                       const AUsuario: string;
                                       const AArchivoBase: string):
                                       TResultadoExportacionNoVerifactu;
@@ -504,22 +522,23 @@ begin
     raise Exception.Create('No hay conexion para exportar NO VERI*FACTU.');
   if Trim(AArchivoBase) = '' then
     raise Exception.Create('No se ha indicado archivo base de exportacion.');
-  ValidarExportacionLegalNoVerifactu(AConn, AUsuario);
+  ValidarExportacionLegalNoVerifactu(AParametrosApp, AConn, AUsuario);
   Result.TitularCertificado := '';
   Result.SerieCertificado := '';
   Result.ArchivoEventos := NombreArchivoConSufijo(AArchivoBase, '_eventos');
   Result.ArchivoFacturacion := NombreArchivoConSufijo(AArchivoBase,
                                                        '_facturacion');
-  RegistrarEventoVerifactu(AConn, AUsuario,
+  RegistrarEventoVerifactu(AParametrosApp, AConn, AUsuario,
     cEventoNoVerifactuExportFact,
     'Exportación de registros de facturación NO VERI*FACTU',
     Result.ArchivoFacturacion);
-  RegistrarEventoVerifactu(AConn, AUsuario,
+  RegistrarEventoVerifactu(AParametrosApp, AConn, AUsuario,
     cEventoNoVerifactuExportEventos,
     'Exportación de registros de eventos NO VERI*FACTU',
     Result.ArchivoEventos);
-  sXmlEventos := ConstruirXmlEventos(AConn, AUsuario, Result.Eventos);
-  sXmlFacturacion := ConstruirXmlFacturacion(AConn, AUsuario,
+  sXmlEventos := ConstruirXmlEventos(AParametrosApp, AConn, AUsuario,
+    Result.Eventos);
+  sXmlFacturacion := ConstruirXmlFacturacion(AParametrosApp, AConn, AUsuario,
     Result.RegistrosFactura);
   GuardarTextoUtf8(Result.ArchivoEventos, sXmlEventos);
   GuardarTextoUtf8(Result.ArchivoFacturacion, sXmlFacturacion);

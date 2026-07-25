@@ -133,7 +133,7 @@ implementation
 uses
   inLibtb, inLibLog, System.Diagnostics,
   System.UITypes, Vcl.Dialogs, inLibArticulosValidador,
-  inLibVentasImpuestos, inLibContadorLineas, inLibCajaParam, inLibData;
+  inLibVentasImpuestos, inLibContadorLineas, inLibData;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -1410,7 +1410,7 @@ begin
                               'ESINTRACOMUNITARIO_CLI').AsString;
     sTarifa := Trim(DataSet.FindField('TARIFA_ARTICULO_CLI').AsString);
     if sTarifa = '' then
-      sTarifa := TarifaDefecto;
+      sTarifa := ParametrosCaja.TarifaDefecto;
     FindField('TARIFA_ARTICULO_CLIENTE_ALB').AsString := sTarifa;
     ActualizarImpuestosTarifaCabecera(sTarifa);
   end;

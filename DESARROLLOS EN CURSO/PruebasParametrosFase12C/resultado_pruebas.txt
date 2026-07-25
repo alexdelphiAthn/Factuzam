@@ -1,0 +1,64 @@
+Pruebas Fase XII-C - 2026-07-25 14:42:26
+
+### Regresión XII-A
+  Pruebas Fase XII-A - 2026-07-25 14:42:26
+  
+  ### Pruebas estructurales
+    OK: el contrato puro no depende de UniDAC
+    OK: las seis interfaces declaran GUID
+    OK: el contrato puro no depende de otras unidades del proyecto
+    OK: el motor protege la instantánea con TCriticalSection
+    OK: el motor usa IPerfilesUsuario
+    OK: el motor no contiene componentes UniDAC
+    OK: no quedan las clases de definición duplicadas
+    OK: no queda acceso al diccionario mediante los globales
+    OK: los alias no exponen ciclo de vida ni edición
+    OK: los editores no conocen TObjectDictionary
+    OK: los editores consumen instantáneas de edición
+    OK: inLibLog ya no depende de inLibAppParam
+    OK: el log recibe IParametrosAplicacion
+    OK: los parámetros de aplicación no nacen en initialization
+    OK: los parámetros de caja no nacen en initialization
+    OK: el alias global App es una interfaz
+    OK: el alias global Caja es una interfaz
+    OK: el catálogo App conserva 49 claves
+    OK: el catálogo Caja conserva 30 claves
+    OK: las clases base propagan los parámetros de lectura
+    OK: la raíz crea parámetros después de TdmPerfiles
+    OK: la raíz libera parámetros antes de TdmPerfiles
+    OK: inLibParametrosIntf está registrada en fzam.dpr
+    OK: inLibParametrosIntf está registrada en fzam.dproj
+    OK: inLibParametrosBase está registrada en fzam.dpr
+    OK: inLibParametrosBase está registrada en fzam.dproj
+    
+    RESULTADO ESTRUCTURAL: CORRECTO
+  
+  ### Prueba unitaria Win32
+    Embarcadero Delphi for Win32 compiler version 37.0
+    Copyright (c) 1983,2025 Embarcadero Technologies, Inc.
+    1226 lines, 0.08 seconds, 939372 bytes code, 43140 bytes data.
+    RESULTADO UNITARIO: CORRECTO
+  
+  ### Prueba unitaria Win64
+    Embarcadero Delphi for Win64 compiler version 37.0
+    Copyright (c) 1983,2025 Embarcadero Technologies, Inc.
+    1226 lines, 0.16 seconds, 1416500 bytes code, 195016 bytes data.
+    RESULTADO UNITARIO: CORRECTO
+  
+  RESULTADO GLOBAL: CORRECTO
+
+### Estructura XII-C
+  OK: los alias globales solo aparecen en la raíz y las dos unidades puente
+  OK: ningún otro consumidor depende de las unidades antiguas
+  OK: inLibLog continúa desacoplado de las unidades de parámetros
+  OK: el hilo de ventas conserva y libera IParametrosAplicacion
+  OK: la API estática de ventas recibe IParametrosCaja explícitamente
+  OK: el hilo Verifactu conserva ambos servicios de parámetros
+  OK: UniDataConn recibe el modo de depuración mediante interfaz
+  OK: la búsqueda de impresora recibe IParametrosCaja
+  OK: la raíz inyecta los servicios en hilos y conexión
+  OK: factuzam_original.sql permanece intacto
+  
+  RESULTADO ESTRUCTURAL: CORRECTO
+
+RESULTADO GLOBAL: CORRECTO

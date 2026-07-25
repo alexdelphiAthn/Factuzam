@@ -17,7 +17,7 @@ unit inLibCorreoTickets;
 interface
 
 uses
-  System.SysUtils, Uni;
+  System.SysUtils, Uni, inLibParametrosIntf;
 
 type
   TDatosCorreoOperacion = record
@@ -31,11 +31,15 @@ type
     EsTraspaso: Boolean;
   end;
 
-function CorreoTicketsConfigurado(out AMensaje: string): Boolean;
+function CorreoTicketsConfigurado(
+  const AParametrosApp: IParametrosAplicacion;
+  out AMensaje: string): Boolean;
 function ObtenerDatosCorreoOperacion(AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja,
   ANumeroOperacion: string): TDatosCorreoOperacion;
-function EnviarDocumentacionOperacion(AConexion: TUniConnection;
+function EnviarDocumentacionOperacion(
+  const AParametrosApp: IParametrosAplicacion;
+  AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja, ANumeroOperacion, AEmail: string;
   out AMensaje: string): Boolean;
 
@@ -49,18 +53,20 @@ uses
 const
   cRutaCorreo = 'correo/enviar_ticket.php';
 
-function CorreoTicketsConfigurado(out AMensaje: string): Boolean;
+function CorreoTicketsConfigurado(
+  const AParametrosApp: IParametrosAplicacion;
+  out AMensaje: string): Boolean;
 var
   Faltan: TStringList;
 begin
   AMensaje := '';
   Faltan := TStringList.Create;
   try
-    if TClienteFactuzamApi.UrlBase = '' then
+    if TClienteFactuzamApi.UrlBase(AParametrosApp) = '' then
       Faltan.Add('  - URL general del servicio web');
-    if TClienteFactuzamApi.Token = '' then
+    if TClienteFactuzamApi.Token(AParametrosApp) = '' then
       Faltan.Add('  - API key / token de la instalación');
-    if TClienteFactuzamApi.Referencia = '' then
+    if TClienteFactuzamApi.Referencia(AParametrosApp) = '' then
       Faltan.Add('  - Referencia global de la instalación');
     Result := Faltan.Count = 0;
     if not Result then
@@ -178,7 +184,9 @@ begin
     Result := Format('El servidor respondió con código %d.', [AEstado]);
 end;
 
-procedure GenerarDocumentos(AConexion: TUniConnection;
+procedure GenerarDocumentos(
+  const AParametrosApp: IParametrosAplicacion;
+  AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja,
   ANumeroOperacion: string; const ADatos: TDatosCorreoOperacion;
   ARutasPDF: TStrings);
@@ -189,7 +197,8 @@ begin
   else
   begin
     if ADatos.TieneFactura then
-      ImprimirTicketDesdeBD(AConexion, AEmpresa, AAlmacen, ACaja,
+      ImprimirTicketDesdeBD(AParametrosApp, AConexion, AEmpresa, AAlmacen,
+        ACaja,
         ANumeroOperacion, 'DEBUG', ARutasPDF, True);
     if ADatos.TieneDepositos then
       ImprimirResguardoDeposito(AConexion, AEmpresa, AAlmacen, ACaja,
@@ -241,7 +250,9 @@ begin
   end;
 end;
 
-function EnviarDocumentacionOperacion(AConexion: TUniConnection;
+function EnviarDocumentacionOperacion(
+  const AParametrosApp: IParametrosAplicacion;
+  AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja, ANumeroOperacion, AEmail: string;
   out AMensaje: string): Boolean;
 var
@@ -254,7 +265,7 @@ var
 begin
   Result := False;
   AMensaje := '';
-  if CorreoTicketsConfigurado(AMensaje) then
+  if CorreoTicketsConfigurado(AParametrosApp, AMensaje) then
   begin
     if Trim(AEmail) = '' then
       AMensaje := 'Indique una dirección de correo electrónico.'
@@ -269,15 +280,19 @@ begin
         RutasPDF := TStringList.Create;
         try
           try
-            GenerarDocumentos(AConexion, AEmpresa, AAlmacen, ACaja,
+            GenerarDocumentos(AParametrosApp, AConexion, AEmpresa,
+              AAlmacen, ACaja,
               ANumeroOperacion, Datos, RutasPDF);
             if RutasPDF.Count = 0 then
               AMensaje := 'La operación no tiene documentación asociada.'
             else
             begin
-              sUrl := TClienteFactuzamApi.ComponerUrl(cRutaCorreo);
-              sApiKey := TClienteFactuzamApi.Token;
-              sReferencia := TClienteFactuzamApi.Referencia;
+              sUrl := TClienteFactuzamApi.ComponerUrl(
+                AParametrosApp,
+                cRutaCorreo);
+              sApiKey := TClienteFactuzamApi.Token(AParametrosApp);
+              sReferencia :=
+                TClienteFactuzamApi.Referencia(AParametrosApp);
               Result := EnviarAlServicio(sUrl, sApiKey, sReferencia,
                 ANumeroOperacion, Datos.NombreEmpresa, Trim(AEmail),
                 RutasPDF, AMensaje);

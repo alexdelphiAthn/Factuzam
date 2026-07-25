@@ -113,8 +113,6 @@ implementation
 
 {$R *.dfm}
 
-uses inLibCajaParam;
-
 { TfrmMtoCajaSeleccionVale }
 
 class function TfrmMtoCajaSeleccionVale.Ejecutar(
@@ -187,7 +185,8 @@ var
   bPinObligatorio: Boolean;
 begin
   inherited;
-  bPinObligatorio := oCajaParams.GetBool('vgerRecuperaValePIN', False);
+  bPinObligatorio :=
+    ParametrosCaja.GetBool('vgerRecuperaValePIN', False);
   lblPin.Visible := bPinObligatorio;
   edtPin.Visible := bPinObligatorio;
   CargarVales;
@@ -214,7 +213,8 @@ var
   bUsarCaducidad: Boolean;
   sPin: string;
 begin
-  bUsarCaducidad := oCajaParams.GetBool('vgerCaducidadDefVale', False);
+  bUsarCaducidad :=
+    ParametrosCaja.GetBool('vgerCaducidadDefVale', False);
   sPin := Trim(edtPin.Text);
   qry := TUniQuery.Create(nil);
   try
@@ -329,7 +329,8 @@ begin
     ShowMessage('No hay ningún vale seleccionado.');
     Exit;
   end;
-  bPinObligatorio := oCajaParams.GetBool('vgerRecuperaValePIN', False);
+  bPinObligatorio :=
+    ParametrosCaja.GetBool('vgerRecuperaValePIN', False);
   PinIntroducido  := Trim(edtPin.Text);
   PinReal         := FMemVales.FieldByName('PIN_SEGURIDAD_VL').AsString;
   if bPinObligatorio and (PinReal <> '') then

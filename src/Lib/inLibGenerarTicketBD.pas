@@ -25,7 +25,8 @@ uses
   inMtoPreviewTicket,  // Donde está tu TFormVisualizador
   inLibData,
   inLibUnidadesMedida, // Decimales por unidad en la cantidad
-  inLibDir;            // Para GetUserFolderTickets
+  inLibDir,            // Para GetUserFolderTickets
+  inLibParametrosIntf;
 
   /// <summary>
   /// Genera un resguardo no fiscal con las prendas que el cliente
@@ -43,7 +44,10 @@ uses
   /// Genera e imprime un ticket recuperando todos los datos
   /// directamente de la Base de Datos.
   /// </summary>
-  procedure ImprimirTicketDesdeBD(AConexion: TUniConnection;
+  procedure ImprimirTicketDesdeBD(
+                                  const AParametrosApp:
+                                  IParametrosAplicacion;
+                                  AConexion: TUniConnection;
                                   const ACodigoEmpresa,
                                         ACodigoAlmacen,
                                         ACodigoCaja,
@@ -416,7 +420,10 @@ begin
   end;
 end;
 
-procedure ImprimirTicketDesdeBD(AConexion: TUniConnection;
+procedure ImprimirTicketDesdeBD(
+                                const AParametrosApp:
+                                IParametrosAplicacion;
+                                AConexion: TUniConnection;
                                 const ACodigoEmpresa,
                                       ACodigoAlmacen,
                                       ACodigoCaja,
@@ -481,8 +488,9 @@ begin
     // QR tributario fiscal en la reimpresión: misma URL de cotejo/remisión
     // que en el ticket original (se genera en local desde la factura)
     QRTexto := '';
-    if (not SinVerifactuActivo) and (SerieFac <> '') and (NroFac <> '') then
-      QRTexto := ConstruirUrlQR(
+    if (not SinVerifactuActivo(AParametrosApp)) and (SerieFac <> '') and
+       (NroFac <> '') then
+      QRTexto := ConstruirUrlQR(AParametrosApp,
                    QryCab.FieldByName('NIF_EMPRESA_FAC').AsString,
                    SerieFac,
                    NroFac,
@@ -500,7 +508,7 @@ begin
         Ticket.EscribirLinea('QR tributario:');
         // Nivel de corrección M (49) exigido por la AEAT para el QR
         Ticket.ImprimirQRNativo(QRTexto, 6, 49);
-        if VerifactuActivo then
+        if VerifactuActivo(AParametrosApp) then
         begin
           Ticket.Alinear(alCentro);
           Ticket.EscribirLinea('VERI*FACTU - Factura verificable');
@@ -624,6 +632,41 @@ begin
         Ticket.TextoColumnas('CAMBIO EFECTIVO',
                                    FormatFloat('#,##0.00', TotalCambio) + ' €');
       Ticket.Negrita(False);
+      // === VALE(S) EMITIDO(S) ===
+      // En la reimpresion no hay datos en memoria: se leen de
+      // fza_caja_vales por la operacion, para mostrar importe y codigo
+      // igual que en el ticket de venta.
+      QryPagos.SQL.Text := 'SELECT CODIGO_VL, IMPORTE_NOMINAL_VL ' +
+                           '  FROM fza_caja_vales ' +
+                           ' WHERE CODIGO_EMP_EMI_VL  = :EMP ' +
+                           '   AND CODIGO_ALM_EMI_VL  = :ALM ' +
+                           '   AND CODIGO_CAJA_EMI_VL = :CAJA ' +
+                           '   AND NUMERO_OPERACION_EMI_VL = :OP ' +
+                           ' ORDER BY CODIGO_VL';
+      QryPagos.ParamByName('EMP').AsString  := ACodigoEmpresa;
+      QryPagos.ParamByName('ALM').AsString  := ACodigoAlmacen;
+      QryPagos.ParamByName('CAJA').AsString := ACodigoCaja;
+      QryPagos.ParamByName('OP').AsString   := ANumeroOperacion;
+      QryPagos.Open;
+      while not QryPagos.Eof do
+      begin
+        var CodVale := QryPagos.FieldByName('CODIGO_VL').AsString;
+        Ticket.SaltarLineas(1);
+        Ticket.Negrita(True);
+        Ticket.TextoColumnas('VALE EMITIDO A SU FAVOR',
+          FormatFloat('#,##0.00',
+            QryPagos.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency) + ' €');
+        if Length('CÓDIGO VALE EMITIDO: ' + CodVale) <= 42 then
+          Ticket.TextoColumnas('CÓDIGO VALE EMITIDO: ', CodVale)
+        else
+        begin
+          Ticket.EscribirLinea('CÓDIGO VALE EMITIDO:');
+          Ticket.EscribirLinea(CodVale);
+        end;
+        Ticket.Negrita(False);
+        QryPagos.Next;
+      end;
+      QryPagos.Close;
       Ticket.SaltarLineas(1);
       // === DESGLOSE DE IMPUESTOS (Si hay factura) ===
       if (SerieFac <> '') and (NroFac <> '') then

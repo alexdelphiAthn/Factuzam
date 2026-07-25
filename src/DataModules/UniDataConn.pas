@@ -19,7 +19,7 @@ interface
 uses
   SysUtils, Classes, ADODB, DBAccess, Uni, inLibUser, vcl.Controls,
   UniProvider, MySQLUniProvider, DASQLMonitor, UniSQLMonitor, vcl.Dialogs,
-  inLibMonitorSQLIntf;
+  inLibMonitorSQLIntf, inLibParametrosIntf;
 
 type
   TdmConn = class(TDataModule)
@@ -33,9 +33,12 @@ type
     procedure conUniError(Sender: TObject; E: EDAError; var Fail: Boolean);
     procedure conUniAfterConnect(Sender: TObject);
   private
+    FParametrosApp: IParametrosAplicacion;
     FReceptorMonitorSQL: IReceptorEventosMonitorSQL;
   public
     destructor Destroy; override;
+    procedure AsignarParametrosApp(
+      const AParametrosApp: IParametrosAplicacion);
     procedure AsignarReceptorMonitorSQL(
       const AReceptor: IReceptorEventosMonitorSQL);
   end;
@@ -48,10 +51,15 @@ implementation
 uses inLibDir,
      inLibtb,
      inLibWin,
-     inLibLog,
-     inLibAppParam;
+     inLibLog;
 
 {$R *.dfm}
+
+procedure TdmConn.AsignarParametrosApp(
+  const AParametrosApp: IParametrosAplicacion);
+begin
+  FParametrosApp := AParametrosApp;
+end;
 
 procedure TdmConn.AsignarReceptorMonitorSQL(
   const AReceptor: IReceptorEventosMonitorSQL);
@@ -69,6 +77,7 @@ begin
        ServicioMonitorSQL) then
     ServicioMonitorSQL.Invalidar;
   FReceptorMonitorSQL := nil;
+  FParametrosApp := nil;
   inherited;
 end;
 
@@ -199,8 +208,8 @@ begin
   // En DEBUG o si el usuario activó appModoDebug, anexamos el error MySQL
   // original al mensaje mostrado para facilitar el diagnóstico.
   if {$IFDEF DEBUG}True{$ELSE}
-      (Assigned(inLibAppParam.oAppParams) and
-       inLibAppParam.oAppParams.GetBool('appModoDebug', False)){$ENDIF} then
+      (Assigned(FParametrosApp) and
+       FParametrosApp.GetBool('appModoDebug', False)){$ENDIF} then
   begin
     if (not bEsErrorGenerico) and (E.ErrorCode <> 0) then
       sMensaje := sMensaje + Format('%s(MySQL %d: %s)',

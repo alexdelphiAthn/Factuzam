@@ -386,7 +386,8 @@ begin
   inherited;
   if not PuedeExportar then
     Abort;
-  ExportarExcel(cxgrdLinFac, 'Ventas de artículos por proveedor_' +
+  ExportarExcel(ParametrosApp, cxgrdLinFac,
+                'Ventas de artículos por proveedor_' +
                      dsTablaG.DataSet.FieldByName('CODIGO_PRV_PRV').AsString);
 end;
 

@@ -583,7 +583,8 @@ begin
         Validador := TArticulosValidador.Create(
                        dmmPedidos.unqryTablaG.Connection);
         Resolver := TArticulosResolver.Create(
-                      dmmPedidos.unqryTablaG.Connection);
+                      dmmPedidos.unqryTablaG.Connection,
+                      ParametrosCaja);
         Resolucion := Validador.Resolver(sInput);
         if Resolucion.Encontrado then
         begin
@@ -678,7 +679,8 @@ begin
       dFecha := dmmPedidos.unqryTablaG.
                   FieldByName('FECHA_PED').AsDateTime;
     Resolver := TArticulosResolver.Create(
-                  dmmPedidos.unqryTablaG.Connection);
+                  dmmPedidos.unqryTablaG.Connection,
+                  ParametrosCaja);
     try
       Datos := Resolver.ResolverDatos(ACodigoArticulo, ACodigoSku,
                                       sTarifa, dFecha);
@@ -763,7 +765,12 @@ end;
 
 function TfrmMtoPedidos.SqlRestriccionUsuario: string;
 begin
-  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_PED', 'CODIGO_ALM_PED', '');
+  Result := SqlFiltroEmpAlmCaja(
+    ContextoSesion,
+    ParametrosApp,
+    'CODIGO_EMP_PED',
+    'CODIGO_ALM_PED',
+    '');
 end;
 
 procedure TfrmMtoPedidos.CrearTablaPrincipal;

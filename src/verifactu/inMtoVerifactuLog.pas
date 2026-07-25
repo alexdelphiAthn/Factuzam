@@ -151,7 +151,8 @@ begin
                          FormatDateTime('yyyymmdd_hhnnss', Now) + '.xml';
     if oDialogo.Execute then
     begin
-      oResultado := ExportarRegistrosNoVerifactu(ConexionPrincipal,
+      oResultado := ExportarRegistrosNoVerifactu(ParametrosApp,
+        ConexionPrincipal,
         IdentidadSesion.Usuario, oDialogo.FileName);
       MessageDlg('Exportacion NO VERI*FACTU generada:' + sLineBreak +
         oResultado.ArchivoEventos + sLineBreak +
@@ -185,8 +186,9 @@ begin
     if oDialogo.Execute then
     begin
       InferirFicherosNoVerifactu(oDialogo.FileName, sEventos, sFacturacion);
-      oResultado := VerificarFicherosNoVerifactu(sEventos, sFacturacion);
-      sResumen := ResumenVerificacionNoVerifactu(oResultado);
+      oResultado := VerificarFicherosNoVerifactu(ParametrosApp, sEventos,
+        sFacturacion);
+      sResumen := ResumenVerificacionNoVerifactu(ParametrosApp, oResultado);
       sInforme := NombreInformeErroresNoVerifactu(oDialogo.FileName);
       TFile.WriteAllText(sInforme, sResumen + sLineBreak + sLineBreak +
         oResultado.Detalle, TEncoding.UTF8);

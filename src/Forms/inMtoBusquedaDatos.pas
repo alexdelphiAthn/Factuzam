@@ -229,7 +229,7 @@ begin
   begin
     try
       AgregarUnidadADocumentoTrabajo(Self, ConexionPrincipal,
-        ContextoSesion, linea);
+        ContextoSesion, ParametrosCaja, linea);
     except
       on E: Exception do
       begin

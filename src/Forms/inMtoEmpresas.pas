@@ -427,6 +427,7 @@ begin
   if not PuedeExportar then
     Abort;
   ExportarExcel(
+    ParametrosApp,
     cxgrdEmpresasFacturas,
     'Historico_Borradores_Empresa_' +
     dsTablaG.Dataset.FieldByName('CODIGO_EMP_EMP').AsString);
@@ -717,7 +718,9 @@ begin
   begin
     btnGenerarInstalacionSif.Enabled := False;
     try
-      oEstado := GenerarInstalacionSifEmpresa(ConexionPrincipal,
+      oEstado := GenerarInstalacionSifEmpresa(
+        ParametrosApp,
+        ConexionPrincipal,
         IdentidadSesion.Usuario, sCodigoEmpresa);
       with dmmEmpresas.unqryTablaG do
       begin

@@ -83,7 +83,10 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 function TfrmMtoCajaArqueosHist.SqlRestriccionUsuario: string;
 begin
   // Arqueos: empresa, almacén y caja del terminal
-  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_ARQ',
+  Result := SqlFiltroEmpAlmCaja(
+    ContextoSesion,
+    ParametrosApp,
+    'CODIGO_EMP_ARQ',
                                 'CODIGO_ALM_ARQ',
                                 'CODIGO_CAJA_ARQ');
 end;

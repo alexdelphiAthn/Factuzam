@@ -111,7 +111,12 @@ begin
   // Se inyecta aquí porque los callers abren qrySeleccion tras el Create.
   qrySeleccion.SQL.Text :=
     InyectarFiltroSql(qrySeleccion.SQL.Text,
-                      SqlFiltroEmpAlmCaja(ContextoSesion, 'Empresa', 'Almacen', 'Caja'));
+                      SqlFiltroEmpAlmCaja(
+                        ContextoSesion,
+                        ParametrosApp,
+                        'Empresa',
+                        'Almacen',
+                        'Caja'));
 end;
 
 procedure TfrmMtoModalCajDef.FormShow(Sender: TObject);

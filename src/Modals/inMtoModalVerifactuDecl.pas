@@ -54,7 +54,7 @@ implementation
 uses
   System.IOUtils,
   Data.DB, Uni,
-  inLibGlobalVar, inLibVerifactuInstalacion;
+  inLibGlobalVar, inLibVerifactuInstalacion, inLibParametrosIntf;
 
 {$R *.dfm}
 
@@ -78,9 +78,10 @@ begin
   end;
 end;
 
-function DescargarHtmlDeclaracion: string;
+function DescargarHtmlDeclaracion(
+  const AParametrosApp: IParametrosAplicacion): string;
 begin
-  Result := ObtenerDeclaracionResponsableSif(oVersion);
+  Result := ObtenerDeclaracionResponsableSif(AParametrosApp, oVersion);
 end;
 
 function GuardarHtmlTemporal(const AHtml: string): string;
@@ -372,7 +373,8 @@ begin
     AsegurarVisorHtml;
     if Trim(FHtmlDeclaracion) = '' then
     begin
-      FHtmlDeclaracion := AjustarHtmlParaVisor(DescargarHtmlDeclaracion);
+      FHtmlDeclaracion := AjustarHtmlParaVisor(
+        DescargarHtmlDeclaracion(ParametrosApp));
     end;
     sHtml := AgregarAnexoImpresion(
       ConexionPrincipal,
@@ -407,7 +409,9 @@ begin
   lblInstalacionEstado.Caption := 'Solicitando número al servicio...';
   Application.ProcessMessages;
   try
-    oEstado := GenerarInstalacionSifEmpresa(ConexionPrincipal,
+    oEstado := GenerarInstalacionSifEmpresa(
+      ParametrosApp,
+      ConexionPrincipal,
       IdentidadSesion.Usuario, '');
     lblInstalacionEstado.Caption := 'Número disponible y guardado.';
     ShowMessage('Número de instalación SIF disponible: ' + oEstado.Numero);
@@ -462,7 +466,8 @@ begin
   Application.ProcessMessages;
   try
     AsegurarVisorHtml;
-    FHtmlDeclaracion := AjustarHtmlParaVisor(DescargarHtmlDeclaracion);
+    FHtmlDeclaracion := AjustarHtmlParaVisor(
+      DescargarHtmlDeclaracion(ParametrosApp));
     sArchivo := GuardarHtmlTemporal(FHtmlDeclaracion);
     mDeclaracion.Visible := False;
     FWebDeclaracion.Visible := True;

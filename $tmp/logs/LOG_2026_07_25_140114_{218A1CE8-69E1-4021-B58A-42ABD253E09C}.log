@@ -1,0 +1,173 @@
+2026-07-25 14:01:14.512 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] -------- Nuevo fichero de log --------
+2026-07-25 14:01:14.512 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] Fecha: 2026-07-25 14:01:14
+2026-07-25 14:01:14.512 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] Nombre del equipo: FAUSTINO
+2026-07-25 14:01:14.512 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] Usuario de Windows: V3607
+2026-07-25 14:01:14.512 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] Versión de Windows: Windows 10 Enterprise 25H2
+2026-07-25 14:01:14.517 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] Ruta del programa: C:\DISCO_DURO\proyectos\Factuzam\Win64\Release\
+2026-07-25 14:01:14.517 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] Carpeta de log: C:\Users\V3607\AppData\Local\factuzam\log\
+2026-07-25 14:01:14.517 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] Version de fzam: 1.0.15.202606260100.alpha
+2026-07-25 14:01:14.517 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] -------------------------------
+2026-07-25 14:01:14.517 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] Inicio de sesión de log. - INFO
+2026-07-25 14:01:14.582 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Leyendo archivo ini de usuario - INFO
+2026-07-25 14:01:14.590 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] WARNING: Aplicación en modo DEMO. La licencia de aplicación no coincide con los NIF de empresa configurados. - WARNING
+2026-07-25 14:01:14.590 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] ERROR: Código guardado: 103811 Código esperado: 955651 - ERROR
+2026-07-25 14:01:15.363 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Login Correcto - INFO
+2026-07-25 14:01:15.370 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Login Correcto - INFO
+2026-07-25 14:01:15.793 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Arranque: creando parámetros de aplicación - INFO
+2026-07-25 14:01:15.793 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] WARNING: ResincronizarCachePerfilForm: form="frmMtoAppParam" cache no precargado, ignorado - WARNING
+2026-07-25 14:01:15.793 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] WARNING: ObtenerPerfilFormCache: form="frmMtoAppParam" cache NO precargado (FCachePrecargada=False), devuelve False - WARNING
+2026-07-25 14:01:15.793 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Modos log aplicados: appModoDebug=True, appModoDebugSQL=True, appLogSQL=True, appLogAvanzado=True - INFO
+2026-07-25 14:01:15.793 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Arranque: creando parámetros de caja - INFO
+2026-07-25 14:01:15.793 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] WARNING: ResincronizarCachePerfilForm: form="frmMtoCajaParam" cache no precargado, ignorado - WARNING
+2026-07-25 14:01:15.793 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] WARNING: ObtenerPerfilFormCache: form="frmMtoCajaParam" cache NO precargado (FCachePrecargada=False), devuelve False - WARNING
+2026-07-25 14:01:15.801 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] SQL: [OK] 0 ms | filas=- | SELECT SUBKEY_USUPER, VALUE_USUPER, VALUE_TEXT_USUPER   FROM fza_usuarios_perfiles  WHERE KEY_USUPER = :key    AND USUARIO_GRUPO_USUPER IN (:u, :g, :a)  ORDER BY SUBKEY_USUPER,           CASE USUARIO_GRUPO_USUPER             WHEN :a THEN 1             WHEN :g THEN 2             WHEN :u THEN 3           END :key(WideString[15])='frmMtoCajaParam'  :u(WideString[13])='Administrador'  :g(WideString[15])='Administradores'  :a(WideString[5])='Todos' - SQL
+2026-07-25 14:01:15.804 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] SQL: [OK] 0 ms | filas=- | SELECT * FROM fza_winforms - SQL
+2026-07-25 14:01:15.805 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] SQL: [OK] 0 ms | filas=- | SELECT CODIGO_EMP_EMP, RAZON_SOCIAL_EMP, NIF_EMP,         NUMERO_INSTALACION_EMP, VERSION_INSTALACION_EMP,         CODIGO_SIF_INSTALACION_EMP, INSTANTE_INSTALACION_EMP  FROM fza_empresas   ORDER BY IF(ESACTIVO_EMP = 'S', 0, 1), ORDEN_EMP,           CODIGO_EMP_EMP  LIMIT 1 - SQL
+2026-07-25 14:01:15.805 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] SQL: [OK] 0 ms | filas=- | UPDATE fza_empresas     SET NUMERO_INSTALACION_EMP = :NUMERO,         VERSION_INSTALACION_EMP = :VERSION,         CODIGO_SIF_INSTALACION_EMP = :CODIGO_SIF,         INSTANTE_INSTALACION_EMP = NOW(),         INSTANTE_MODIF = NOW(),         USUARIO_MODIF = :USUARIO   WHERE COALESCE(NUMERO_INSTALACION_EMP, '') <> :NUMERO      OR COALESCE(VERSION_INSTALACION_EMP, '') <> :VERSION      OR COALESCE(CODIGO_SIF_INSTALACION_EMP, '') <> :CODIGO_SIF :NUMERO(WideString[27])='FZ-34B1A7A4FC46A2036A13E279'  :VERSION(WideString[25])='1.0.15.202606260100.alpha'  :CODIGO_SIF(WideString[2])='FZ'  :USUARIO(WideString[13])='Administrador' - SQL
+2026-07-25 14:01:15.805 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Arranque: PrecargarCachesSerie INICIO - INFO
+2026-07-25 14:01:15.805 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: INICIO usuario="Administrador" grupo="Administradores" todos="Todos" connAssigned=True connConnected=True - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] SQL: [OK] 62 ms | filas=- | SELECT KEY_USUPER, SUBKEY_USUPER, VALUE_USUPER, VALUE_TEXT_USUPER   FROM fza_usuarios_perfiles  WHERE USUARIO_GRUPO_USUPER IN (:u, :g, :a)  ORDER BY KEY_USUPER, SUBKEY_USUPER,           CASE USUARIO_GRUPO_USUPER             WHEN :a THEN 1             WHEN :g THEN 2             WHEN :u THEN 3           END :u(WideString[13])='Administrador'  :g(WideString[15])='Administradores'  :a(WideString[5])='Todos' - SQL
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: OK filas=10367 forms_distintos=36 FCachePrecargada=True - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoArtFacSerach" claves=1 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmPrintEtiqArt" claves=1 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoDepositosCliente" claves=119 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoVariaciones" claves=152 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoSolicitudesSearch" claves=2 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoGeneradorProcesos" claves=100 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoContadores" claves=89 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoFacturas_2" claves=674 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoInventarios" claves=191 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoComprasSesiones" claves=138 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmStockConsulta" claves=1 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoFacturas_1" claves=674 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoArticulos" claves=1129 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoOpeCaja" claves=29 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoAppParam" claves=30 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoArticulos_1" claves=1171 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoEmpFacSearch" claves=89 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoCliFacSearch" claves=139 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoFacturasCompra" claves=123 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmFotoArticulo" claves=5 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoCajaValesHist" claves=173 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmLogon" claves=1 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoArtProvSearch" claves=135 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoCajaOperacionesHist" claves=670 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoAlbaranesCompra" claves=211 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmPrintAlbCompra" claves=1 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="dmFacturas" claves=27 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoSesProvSearch" claves=3 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoFacturas_4" claves=748 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoArticulos_2" claves=1123 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="inLibtb" claves=1 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoEmpresas_1" claves=646 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoFacturas_3" claves=748 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmConsultaOpe" claves=166 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoCajaParam" claves=29 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoEmpresas" claves=780 - INFO
+2026-07-25 14:01:15.857 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] SQL: [OK] 0 ms | filas=- | SELECT CODIGO_INFGUI, INFORME_INFGUI, FORMATO_INFGUI,        DATASET_MASTER_INFGUI, TIPO_INFGUI, TABLA_INFGUI,        SQL_INFGUI, MASTER_FIELDS_INFGUI, DETAIL_FIELDS_INFGUI,       ORDEN_INFGUI, COLUMNAS_VISIBLES_INFGUI   FROM fza_informes_guias  WHERE ESACTIVO_INFGUI = 'S'  ORDER BY INFORME_INFGUI, ORDEN_INFGUI, CODIGO_INFGUI - SQL
+2026-07-25 14:01:15.864 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] SQL: [OK] 0 ms | filas=- | SELECT TABLA_OBJETIVO_CC, OBJETIVO_CC, TITULO_VISUAL_CC,        ANCHO_COLUMNA_CC, ORDEN_VISUAL_CC, VISIBLE_CC   FROM fza_config_campos  ORDER BY TABLA_OBJETIVO_CC, ORDEN_VISUAL_CC - SQL
+2026-07-25 14:01:15.865 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: ConfigCamposCache: precargados 240 campos - INFO
+2026-07-25 14:01:15.866 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] SQL: [OK] 0 ms | filas=- | SELECT USUARIO_GRUPO_PERM, CODIGO_PERM, VALOR_PERM  FROM fza_permisos WHERE USUARIO_GRUPO_PERM IN (:U, :G, :A) :U(WideString[13])='Administrador'  :G(WideString[15])='Administradores'  :A(WideString[5])='Todos' - SQL
+2026-07-25 14:01:15.866 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: PrecargaSerie: total=59 ms - INFO
+2026-07-25 14:01:15.866 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] SQL: [OK] 0 ms | filas=- | SELECT CODIGO_UNIMED, DESCRIPCION_UNIMED, DECIMALES_UNIMED,       MAGNITUD_UNIMED, ESBASE_UNIMED, FACTOR_BASE_UNIMED  FROM fza_unidades_medida - SQL
+2026-07-25 14:01:15.866 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Arranque: impresora de caja resuelta = "DEBUG" - INFO
+2026-07-25 14:01:15.866 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Cola Verifactu: hilo iniciado - INFO
+2026-07-25 14:01:15.866 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Cola de ventas WS: hilo iniciado - INFO
+2026-07-25 14:01:15.873 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Modos log aplicados: appModoDebug=False, appModoDebugSQL=False, appLogSQL=False, appLogAvanzado=False - INFO
+2026-07-25 14:01:15.916 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarFondoLogo: OK desde recurso FONDO (8585 bytes) - INFO
+2026-07-25 14:01:15.916 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Arranque del sistema - INFO
+2026-07-25 14:01:19.249 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: TLayoutLoader.Create: formKey="frmConsultaOpe" -> GetFormUserProfile - INFO
+2026-07-25 14:01:19.249 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: ObtenerPerfilFormCache: form="frmConsultaOpe" HIT claves=166 - INFO
+2026-07-25 14:01:19.249 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: TLayoutLoader.Create: formKey="frmConsultaOpe" disponible=True claves=166 - INFO
+2026-07-25 14:01:19.258 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: RecargarMaestro: emp="1" alm="SG" caja="1" fecha=25/07/2026 txt="" - INFO
+2026-07-25 14:01:19.258 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarMaestro: fecha=25/07/2026 emp="1" alm="SG" caja="1" txt="" (prev="") - INFO
+2026-07-25 14:01:19.262 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:19.262 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: RefrescarPestanasHijas: BLOQUEADA por FCargando=True - INFO
+2026-07-25 14:01:19.265 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:19.265 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: RefrescarPestanasHijas: BLOQUEADA por FCargando=True - INFO
+2026-07-25 14:01:19.265 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:19.265 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: RefrescarPestanasHijas: BLOQUEADA por FCargando=True - INFO
+2026-07-25 14:01:19.266 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:19.266 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: RefrescarPestanasHijas: BLOQUEADA por FCargando=True - INFO
+2026-07-25 14:01:19.266 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: RefrescarPestanasHijas: maestro vacio (no-op, ya cerradas) - INFO
+2026-07-25 14:01:19.292 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: frmConsultaOpe.FormShow: INICIO emp="1" alm="SG" caja="1" fecha=25/07/2026 - INFO
+2026-07-25 14:01:19.299 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: RecargarMaestro: emp="1" alm="SG" caja="1" fecha=25/07/2026 txt="" - INFO
+2026-07-25 14:01:19.299 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarMaestro: SKIP (mismos params "25/07/2026|1|SG|1|") - INFO
+2026-07-25 14:01:19.300 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: RestaurarLayout: aplicando geometria + 9 grids - INFO
+2026-07-25 14:01:19.425 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: RestaurarLayout: FIN - INFO
+2026-07-25 14:01:19.443 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: frmConsultaOpe.FormShow: FIN - INFO
+2026-07-25 14:01:25.420 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: RecargarMaestro: emp="1" alm="SG" caja="1" fecha=09/07/2026 txt="" - INFO
+2026-07-25 14:01:25.420 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarMaestro: fecha=09/07/2026 emp="1" alm="SG" caja="1" txt="" (prev="25/07/2026|1|SG|1|") - INFO
+2026-07-25 14:01:26.118 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:26.118 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: RefrescarPestanasHijas: BLOQUEADA por FCargando=True - INFO
+2026-07-25 14:01:26.120 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:26.120 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: RefrescarPestanasHijas: BLOQUEADA por FCargando=True - INFO
+2026-07-25 14:01:26.120 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:26.120 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: RefrescarPestanasHijas: BLOQUEADA por FCargando=True - INFO
+2026-07-25 14:01:26.120 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:26.120 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: RefrescarPestanasHijas: BLOQUEADA por FCargando=True - INFO
+2026-07-25 14:01:26.120 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179270" (prev="") - INFO
+2026-07-25 14:01:30.334 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:30.334 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179271" (prev="1|SG|1|00179270") - INFO
+2026-07-25 14:01:31.637 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:31.637 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179272" (prev="1|SG|1|00179271") - INFO
+2026-07-25 14:01:32.112 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:32.112 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179273" (prev="1|SG|1|00179272") - INFO
+2026-07-25 14:01:32.509 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:32.509 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179272" (prev="1|SG|1|00179273") - INFO
+2026-07-25 14:01:32.703 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:32.703 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179271" (prev="1|SG|1|00179272") - INFO
+2026-07-25 14:01:32.865 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:32.865 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179270" (prev="1|SG|1|00179271") - INFO
+2026-07-25 14:01:38.174 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:38.174 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179271" (prev="1|SG|1|00179270") - INFO
+2026-07-25 14:01:38.421 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:38.421 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179272" (prev="1|SG|1|00179271") - INFO
+2026-07-25 14:01:38.821 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:38.821 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179273" (prev="1|SG|1|00179272") - INFO
+2026-07-25 14:01:39.135 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:39.135 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179274" (prev="1|SG|1|00179273") - INFO
+2026-07-25 14:01:39.404 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:39.404 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179275" (prev="1|SG|1|00179274") - INFO
+2026-07-25 14:01:39.685 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:39.685 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179276" (prev="1|SG|1|00179275") - INFO
+2026-07-25 14:01:40.092 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:40.092 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179277" (prev="1|SG|1|00179276") - INFO
+2026-07-25 14:01:40.448 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:40.448 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179278" (prev="1|SG|1|00179277") - INFO
+2026-07-25 14:01:40.697 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:40.697 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179279" (prev="1|SG|1|00179278") - INFO
+2026-07-25 14:01:41.121 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:41.121 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179280" (prev="1|SG|1|00179279") - INFO
+2026-07-25 14:01:41.712 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:41.712 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179279" (prev="1|SG|1|00179280") - INFO
+2026-07-25 14:01:41.914 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:41.914 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179278" (prev="1|SG|1|00179279") - INFO
+2026-07-25 14:01:53.034 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:53.036 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179280" (prev="1|SG|1|00179278") - INFO
+2026-07-25 14:01:55.194 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:55.194 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179281" (prev="1|SG|1|00179280") - INFO
+2026-07-25 14:01:55.678 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:55.678 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179282" (prev="1|SG|1|00179281") - INFO
+2026-07-25 14:01:56.407 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:56.407 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179283" (prev="1|SG|1|00179282") - INFO
+2026-07-25 14:01:58.465 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:58.465 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179284" (prev="1|SG|1|00179283") - INFO
+2026-07-25 14:01:58.946 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:01:58.946 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179285" (prev="1|SG|1|00179284") - INFO
+2026-07-25 14:02:00.271 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:02:00.274 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179286" (prev="1|SG|1|00179285") - INFO
+2026-07-25 14:02:00.990 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:02:00.990 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179287" (prev="1|SG|1|00179286") - INFO
+2026-07-25 14:02:01.557 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:02:01.557 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179288" (prev="1|SG|1|00179287") - INFO
+2026-07-25 14:02:01.996 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:02:01.996 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179289" (prev="1|SG|1|00179288") - INFO
+2026-07-25 14:02:02.974 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas - INFO
+2026-07-25 14:02:02.974 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: CargarDetalleOperacion: cargando op "1|SG|1|00179290" (prev="1|SG|1|00179289") - INFO
+2026-07-25 14:02:12.620 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Cola de ventas WS: hilo detenido - INFO
+2026-07-25 14:02:12.620 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Cola Verifactu: hilo detenido - INFO
+2026-07-25 14:02:12.621 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Cerrando ventana principal - INFO
+2026-07-25 14:02:12.621 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Ventana principal Cerrada - INFO
+2026-07-25 14:02:12.623 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] INFO: Salida del proceso - INFO
+2026-07-25 14:02:12.623 - [Instance: {218A1CE8-69E1-4021-B58A-42ABD253E09C}] Fin de sesión de log. - INFO

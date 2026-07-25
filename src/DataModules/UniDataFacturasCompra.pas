@@ -141,7 +141,7 @@ type
 implementation
 
 uses
-  inLibAppParam, inLibLog, inLibtb, inLibContadorLineas,
+  inLibLog, inLibtb, inLibContadorLineas,
   System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inMtoFacturasCompra,
   inLibComprasImpuestos,

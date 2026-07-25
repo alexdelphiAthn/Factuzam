@@ -363,7 +363,6 @@ uses
   inLibArticulosAtributosLookup,
   inLibAtributosPaleta,
   inLibLog,
-  inLibAppParam,
   inLibInventarioExcel,
   inLibInventarioNube,
   inMtoPreviewExcel,
@@ -418,7 +417,12 @@ end;
 function TfrmMtoInventarios.SqlRestriccionUsuario: string;
 begin
   // Inventarios: empresa y almacén (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_INV', 'CODIGO_ALM_INV', '');
+  Result := SqlFiltroEmpAlmCaja(
+    ContextoSesion,
+    ParametrosApp,
+    'CODIGO_EMP_INV',
+    'CODIGO_ALM_INV',
+    '');
 end;
 
 procedure TfrmMtoInventarios.CrearTablaPrincipal;
@@ -2803,7 +2807,8 @@ begin
     fPreview := TfrmMtoPreviewExcel.Create(Self);
     try
       fPreview.PopupParent := Self;
-      fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
+      fPreview.DialogoGuardar.InitialDir :=
+        ParametrosApp.GetPath('appDirExcel');
       fPreview.DialogoGuardar.FileName :=
         'Inventario_' +
         dmmInventarios.unqryTablaG.FieldByName('SERIE_INV').AsString + '_' +
@@ -3175,7 +3180,13 @@ begin
     Exit;
   Screen.Cursor := crHourGlass;
   try
-    if EnviarInventario(ConexionPrincipal, sEmp, sAlm, sSerie, sNumero,
+    if EnviarInventario(
+      ParametrosApp,
+      ConexionPrincipal,
+      sEmp,
+      sAlm,
+      sSerie,
+      sNumero,
                         sDesc, 'DIRIGIDO', idRec, sMsg) then
     begin
       ConexionPrincipal.ExecSQL(
@@ -3230,7 +3241,13 @@ begin
   Screen.Cursor := crHourGlass;
   Lista := TStringList.Create;
   try
-    if RecogerRecuento(ConexionPrincipal, sEmp, sAlm, sSerie, sNumero,
+    if RecogerRecuento(
+      ParametrosApp,
+      ConexionPrincipal,
+      sEmp,
+      sAlm,
+      sSerie,
+      sNumero,
                        IdentidadSesion.Usuario, idRec, Lista, iNumEv,
                        sMsg) then
     begin

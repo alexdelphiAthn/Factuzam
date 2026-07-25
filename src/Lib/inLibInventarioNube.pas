@@ -23,18 +23,24 @@ unit inLibInventarioNube;
 interface
 
 uses
-  System.SysUtils, System.Classes, Uni;
+  System.SysUtils, System.Classes, Uni, inLibParametrosIntf;
 
-function InventarioNubeConfigurado(out AMensaje: string): Boolean;
+function InventarioNubeConfigurado(
+  const AParametrosApp: IParametrosAplicacion;
+  out AMensaje: string): Boolean;
 
-function EnviarInventario(AConexion: TUniConnection;
+function EnviarInventario(
+  const AParametrosApp: IParametrosAplicacion;
+  AConexion: TUniConnection;
   const AEmp, AAlm, ASerie, ANumero, ADescripcion, AModo: string;
   out AIdRecuento: Int64; out AMensaje: string): Boolean;
 
 // Recoge el recuento del servidor: inserta los eventos en INVREC y deja en
 // AAgregado la lista 'SKU=CANTIDAD' (lo que el Mto pasa a CargarDesdeListaSkus
 // para rellenar CANTIDAD_FISICA_INVLIN). ANumEventos = eventos insertados.
-function RecogerRecuento(AConexion: TUniConnection;
+function RecogerRecuento(
+  const AParametrosApp: IParametrosAplicacion;
+  AConexion: TUniConnection;
   const AEmp, AAlm, ASerie, ANumero, AUsuario: string; AIdRecuento: Int64;
   AAgregado: TStringList; out ANumEventos: Integer;
   out AMensaje: string): Boolean;
@@ -51,18 +57,20 @@ uses
 //   Configuración y transporte
 // ============================================================================
 
-function InventarioNubeConfigurado(out AMensaje: string): Boolean;
+function InventarioNubeConfigurado(
+  const AParametrosApp: IParametrosAplicacion;
+  out AMensaje: string): Boolean;
 var
   faltan: TStringList;
 begin
   AMensaje := '';
   faltan := TStringList.Create;
   try
-    if TClienteFactuzamApi.UrlBase = '' then
+    if TClienteFactuzamApi.UrlBase(AParametrosApp) = '' then
       faltan.Add('  - URL general del servicio web');
-    if TClienteFactuzamApi.Token = '' then
+    if TClienteFactuzamApi.Token(AParametrosApp) = '' then
       faltan.Add('  - API key / token de la instalación');
-    if TClienteFactuzamApi.Referencia = '' then
+    if TClienteFactuzamApi.Referencia(AParametrosApp) = '' then
       faltan.Add('  - Referencia global de la instalación');
     Result := faltan.Count = 0;
     if not Result then
@@ -108,7 +116,10 @@ begin
     Result := Format('El servidor respondió con código %d.', [AStatus]);
 end;
 
-function PostNube(const ARuta, ABody: string; out ARespuesta: string;
+function PostNube(
+  const AParametrosApp: IParametrosAplicacion;
+  const ARuta, ABody: string;
+  out ARespuesta: string;
   out AMensaje: string): Integer;
 var
   http: THTTPClient;
@@ -122,10 +133,14 @@ begin
   req := TStringStream.Create(ABody, TEncoding.UTF8);
   resp := TMemoryStream.Create;
   try
-    http.CustomHeaders['X-API-Key'] := TClienteFactuzamApi.Token;
+    http.CustomHeaders['X-API-Key'] :=
+      TClienteFactuzamApi.Token(AParametrosApp);
     http.CustomHeaders['Content-Type'] := 'application/json';
     try
-      respHttp := http.Post(TClienteFactuzamApi.ComponerUrl(ARuta), req, resp);
+      respHttp := http.Post(
+        TClienteFactuzamApi.ComponerUrl(AParametrosApp, ARuta),
+        req,
+        resp);
       Result := respHttp.StatusCode;
       ARespuesta := LeerStream(resp);
     except
@@ -139,7 +154,10 @@ begin
   end;
 end;
 
-function GetNube(const ARuta: string; out ARespuesta: string;
+function GetNube(
+  const AParametrosApp: IParametrosAplicacion;
+  const ARuta: string;
+  out ARespuesta: string;
   out AMensaje: string): Integer;
 var
   http: THTTPClient;
@@ -151,9 +169,12 @@ begin
   http := THTTPClient.Create;
   resp := TMemoryStream.Create;
   try
-    http.CustomHeaders['X-API-Key'] := TClienteFactuzamApi.Token;
+    http.CustomHeaders['X-API-Key'] :=
+      TClienteFactuzamApi.Token(AParametrosApp);
     try
-      respHttp := http.Get(TClienteFactuzamApi.ComponerUrl(ARuta), resp);
+      respHttp := http.Get(
+        TClienteFactuzamApi.ComponerUrl(AParametrosApp, ARuta),
+        resp);
       Result := respHttp.StatusCode;
       ARespuesta := LeerStream(resp);
     except
@@ -170,7 +191,9 @@ end;
 //   Enviar inventario (plantilla)
 // ============================================================================
 
-function EnviarInventario(AConexion: TUniConnection;
+function EnviarInventario(
+  const AParametrosApp: IParametrosAplicacion;
+  AConexion: TUniConnection;
   const AEmp, AAlm, ASerie, ANumero, ADescripcion, AModo: string;
   out AIdRecuento: Int64; out AMensaje: string): Boolean;
 var
@@ -184,12 +207,14 @@ begin
   Result := False;
   AIdRecuento := 0;
   AMensaje := '';
-  if InventarioNubeConfigurado(AMensaje) then
+  if InventarioNubeConfigurado(AParametrosApp, AMensaje) then
   begin
     root := TJSONObject.Create;
     qry := TUniQuery.Create(nil);
     try
-      root.AddPair('carpeta_cliente', TClienteFactuzamApi.Referencia);
+      root.AddPair(
+        'carpeta_cliente',
+        TClienteFactuzamApi.Referencia(AParametrosApp));
       root.AddPair('codigo_emp', AEmp);
       root.AddPair('codigo_alm', AAlm);
       root.AddPair('serie', ASerie);
@@ -240,7 +265,12 @@ begin
       FreeAndNil(qry);
       FreeAndNil(root);
     end;
-    iStatus := PostNube('inv_enviar.php', sBody, sResp, AMensaje);
+    iStatus := PostNube(
+      AParametrosApp,
+      'inv_enviar.php',
+      sBody,
+      sResp,
+      AMensaje);
     if iStatus = 200 then
     begin
       respJson := TJSONObject.ParseJSONValue(sResp);
@@ -264,7 +294,9 @@ end;
 //   Recoger recuento
 // ============================================================================
 
-function RecogerRecuento(AConexion: TUniConnection;
+function RecogerRecuento(
+  const AParametrosApp: IParametrosAplicacion;
+  AConexion: TUniConnection;
   const AEmp, AAlm, ASerie, ANumero, AUsuario: string; AIdRecuento: Int64;
   AAgregado: TStringList; out ANumEventos: Integer;
   out AMensaje: string): Boolean;
@@ -283,9 +315,9 @@ begin
   AMensaje := '';
   if AAgregado <> nil then
     AAgregado.Clear;
-  if InventarioNubeConfigurado(AMensaje) then
+  if InventarioNubeConfigurado(AParametrosApp, AMensaje) then
   begin
-    iStatus := GetNube('inv_recoger.php?id_recuento=' +
+    iStatus := GetNube(AParametrosApp, 'inv_recoger.php?id_recuento=' +
                        IntToStr(AIdRecuento) + '&marcar=1', sResp, AMensaje);
     if iStatus = 200 then
     begin

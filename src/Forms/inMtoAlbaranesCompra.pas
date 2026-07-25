@@ -861,7 +861,8 @@ begin
         Validador := TArticulosValidador.Create(
                        dmmAlbaranesCompra.unqryTablaG.Connection);
         Resolver := TArticulosResolver.Create(
-                      dmmAlbaranesCompra.unqryTablaG.Connection);
+                      dmmAlbaranesCompra.unqryTablaG.Connection,
+                      ParametrosCaja);
         Resolucion := Validador.Resolver(sInput);
         if Resolucion.Encontrado then
         begin
@@ -1050,7 +1051,12 @@ end;
 function TfrmMtoAlbaranesCompra.SqlRestriccionUsuario: string;
 begin
   // Documentos de compra: empresa y almacén (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_ALBC', 'CODIGO_ALM_ALBC', '');
+  Result := SqlFiltroEmpAlmCaja(
+    ContextoSesion,
+    ParametrosApp,
+    'CODIGO_EMP_ALBC',
+    'CODIGO_ALM_ALBC',
+    '');
 end;
 
 procedure TfrmMtoAlbaranesCompra.CrearTablaPrincipal;

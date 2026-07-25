@@ -87,7 +87,10 @@ function TfrmMtoCajaValesHist.SqlRestriccionUsuario: string;
 begin
   // Vales: se filtra por el terminal de emisión (EMI); la redención
   // puede ocurrir en otra caja y no acota la consulta.
-  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_EMI_VL',
+  Result := SqlFiltroEmpAlmCaja(
+    ContextoSesion,
+    ParametrosApp,
+    'CODIGO_EMP_EMI_VL',
                                 'CODIGO_ALM_EMI_VL',
                                 'CODIGO_CAJA_EMI_VL');
 end;

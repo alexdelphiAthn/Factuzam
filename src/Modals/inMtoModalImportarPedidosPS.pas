@@ -72,7 +72,7 @@ implementation
 procedure TfrmModalImportarPedidosPS.FormCreate(Sender: TObject);
 begin
   FResumen := TPrestaPedidoResumenList.Create;
-  // Valores por defecto recuperables (en producción: leer de inLibAppParam)
+  // Valores por defecto recuperables desde el servicio de parámetros.
   edtBaseURL.Text := 'http://localhost/api';
   edtApiKey.Text  := '';
 end;

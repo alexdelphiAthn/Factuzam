@@ -644,10 +644,22 @@ type
 
 ## 14. Constantes globales, variables globales y singletons
 
-- `inLibGlobalVar` conserva únicamente compatibilidad para estado de UI y
-  parametrización todavía no migrado. No contiene conexión ni sesión.
+- `inLibGlobalVar` conserva únicamente compatibilidad para estado de UI
+  todavía no migrado. No contiene conexión, sesión ni parametrización.
   No se crean nuevas variables globales: las dependencias nuevas se exponen
   mediante interfaces o parámetros explícitos.
+- Los parámetros de aplicación y caja se consumen mediante
+  `IParametrosAplicacion` e `IParametrosCaja`, declaradas en
+  `inLibParametrosIntf`.
+- Los formularios y módulos de datos descendientes de `TfrmBase` y
+  `TdmBase` usan sus propiedades `ParametrosApp` y `ParametrosCaja`.
+  La raíz proporciona ambas interfaces mediante `IProveedorParametros`.
+- Las librerías, hilos y clases sin propietario reciben las interfaces de
+  parámetros explícitamente en su constructor, método o punto de arranque.
+  No deben depender de `inLibAppParam` ni `inLibCajaParam`; estas unidades
+  contienen únicamente las implementaciones y sus factorías.
+- Solo los editores de parámetros solicitan `IParametrosEdicion` mediante
+  `IProveedorParametrosEdicion`.
 - Constantes de dominio (porcentajes legales, códigos especiales, claves
   de parametrización) van en la librería del dominio o en
   `inLibGlobalVar` si son transversales.

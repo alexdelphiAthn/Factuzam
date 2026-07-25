@@ -289,7 +289,7 @@ implementation
 
 uses
   System.StrUtils,
-  inLibAppParam, inLibCajaParam, inLibAtributosPaleta,
+  inLibAtributosPaleta,
   inLibGenBusq, inLibUser,
   inLibArticulosValidador;
 
@@ -999,6 +999,7 @@ begin
         Self,
         ConexionPrincipal,
         ContextoSesion,
+        ParametrosCaja,
         linea);
     except
       on E: Exception do
@@ -2352,7 +2353,7 @@ begin
     begin
       sb.Add(Format('%s%s: %s',
         [IfThen(SameText(q.FieldByName('CODIGO_TAR_ARTTAR').AsString,
-                TarifaDefecto),
+                ParametrosCaja.TarifaDefecto),
                 'Tarifa por defecto - ', ''),
          IfThen(Trim(q.FieldByName('NOMBRE_TAR_TAR').AsString) <> '',
                 q.FieldByName('NOMBRE_TAR_TAR').AsString,
@@ -2601,7 +2602,8 @@ begin
   // grupos (almacen o color) cuyo total es cero o NULL (LEFT JOIN sin stock).
   // Se aplica como HAVING sobre el SUM para descartar tambien los NULL.
   sHaving := '';
-  if Assigned(oAppParams) and oAppParams.GetBool('appStockOcultarCeros', True) then
+  if Assigned(ParametrosApp) and
+     ParametrosApp.GetBool('appStockOcultarCeros', True) then
     sHaving := ' HAVING COALESCE(SUM(B.CANTIDAD), 0) <> 0 ';
 
   // En modo "Todo a la vez" el pivote agrupa ademas por ESTADO_NUM:
@@ -3102,7 +3104,7 @@ begin
       '        AND IFNULL(t.CODIGO_UNIDAD_ARTTAR, '''') = '''''      + sLineBreak +
       '        AND t.ESACTIVO_ARTTAR = ''S'''                        + sLineBreak +
       '        AND tt.CODIGO_TAR_ARTTAR = ' +
-      QuotedStr(TarifaDefecto)                                    + sLineBreak +
+      QuotedStr(ParametrosCaja.TarifaDefecto)                     + sLineBreak +
       '      LIMIT 1)                 AS PRECIO_PVP'                 + sLineBreak +
       'FROM fza_articulos a'                                         + sLineBreak +
       'LEFT JOIN fza_articulos_familias f'                           + sLineBreak +

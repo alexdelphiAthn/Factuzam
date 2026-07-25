@@ -1,0 +1,71 @@
+2026-07-25 16:25:15.178 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] -------- Nuevo fichero de log --------
+2026-07-25 16:25:15.178 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] Fecha: 2026-07-25 16:25:15
+2026-07-25 16:25:15.178 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] Nombre del equipo: FAUSTINO
+2026-07-25 16:25:15.178 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] Usuario de Windows: V3607
+2026-07-25 16:25:15.179 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] Versión de Windows: Windows 10 Enterprise 25H2
+2026-07-25 16:25:15.180 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] Ruta del programa: C:\DISCO_DURO\proyectos\Factuzam\Win64\Release\
+2026-07-25 16:25:15.180 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] Carpeta de log: C:\Users\V3607\AppData\Local\factuzam\log\
+2026-07-25 16:25:15.180 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] Version de fzam: 1.0.15.202606260100.alpha
+2026-07-25 16:25:15.180 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] -------------------------------
+2026-07-25 16:25:15.180 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] Inicio de sesión de log. - INFO
+2026-07-25 16:25:15.275 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: Leyendo archivo ini de usuario - INFO
+2026-07-25 16:25:15.284 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: Licencia de aplicación válida. - INFO
+2026-07-25 16:25:15.286 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: Login Correcto - INFO
+2026-07-25 16:25:15.293 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: Login Correcto - INFO
+2026-07-25 16:25:15.819 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: Arranque: creando parámetros de aplicación - INFO
+2026-07-25 16:25:15.819 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] WARNING: ResincronizarCachePerfilForm: form="frmMtoAppParam" cache no precargado, ignorado - WARNING
+2026-07-25 16:25:15.819 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] WARNING: ObtenerPerfilFormCache: form="frmMtoAppParam" cache NO precargado (FCachePrecargada=False), devuelve False - WARNING
+2026-07-25 16:25:15.821 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: Modos log aplicados: appModoDebug=False, appModoDebugSQL=False, appLogSQL=False, appLogAvanzado=False - INFO
+2026-07-25 16:25:15.821 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: Arranque: creando parámetros de caja - INFO
+2026-07-25 16:25:15.821 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] WARNING: ResincronizarCachePerfilForm: form="frmMtoCajaParam" cache no precargado, ignorado - WARNING
+2026-07-25 16:25:15.821 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] WARNING: ObtenerPerfilFormCache: form="frmMtoCajaParam" cache NO precargado (FCachePrecargada=False), devuelve False - WARNING
+2026-07-25 16:25:15.828 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: Arranque: PrecargarCachesSerie INICIO - INFO
+2026-07-25 16:25:15.828 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: INICIO usuario="Administrador" grupo="Administradores" todos="Todos" connAssigned=True connConnected=True - INFO
+2026-07-25 16:25:15.900 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: OK filas=10157 forms_distintos=35 FCachePrecargada=True - INFO
+2026-07-25 16:25:15.900 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoArtFacSerach" claves=1 - INFO
+2026-07-25 16:25:15.900 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmPrintEtiqArt" claves=1 - INFO
+2026-07-25 16:25:15.900 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoDepositosCliente" claves=119 - INFO
+2026-07-25 16:25:15.900 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoVariaciones" claves=152 - INFO
+2026-07-25 16:25:15.900 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoSolicitudesSearch" claves=2 - INFO
+2026-07-25 16:25:15.900 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoGeneradorProcesos" claves=100 - INFO
+2026-07-25 16:25:15.902 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoContadores" claves=89 - INFO
+2026-07-25 16:25:15.902 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoFacturas_2" claves=674 - INFO
+2026-07-25 16:25:15.902 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoInventarios" claves=191 - INFO
+2026-07-25 16:25:15.902 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoComprasSesiones" claves=138 - INFO
+2026-07-25 16:25:15.902 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmStockConsulta" claves=1 - INFO
+2026-07-25 16:25:15.902 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoFacturas_1" claves=674 - INFO
+2026-07-25 16:25:15.902 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoArticulos" claves=1129 - INFO
+2026-07-25 16:25:15.902 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoOpeCaja" claves=29 - INFO
+2026-07-25 16:25:15.902 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoAppParam" claves=30 - INFO
+2026-07-25 16:25:15.902 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoArticulos_1" claves=1171 - INFO
+2026-07-25 16:25:15.903 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoEmpFacSearch" claves=89 - INFO
+2026-07-25 16:25:15.903 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoCliFacSearch" claves=139 - INFO
+2026-07-25 16:25:15.903 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoFacturasCompra" claves=123 - INFO
+2026-07-25 16:25:15.903 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmFotoArticulo" claves=5 - INFO
+2026-07-25 16:25:15.903 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoCajaValesHist" claves=173 - INFO
+2026-07-25 16:25:15.903 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmLogon" claves=1 - INFO
+2026-07-25 16:25:15.903 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoArtProvSearch" claves=135 - INFO
+2026-07-25 16:25:15.903 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoCajaOperacionesHist" claves=670 - INFO
+2026-07-25 16:25:15.903 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmPrintAlbCompra" claves=1 - INFO
+2026-07-25 16:25:15.903 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="dmFacturas" claves=27 - INFO
+2026-07-25 16:25:15.904 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoSesProvSearch" claves=3 - INFO
+2026-07-25 16:25:15.904 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoFacturas_4" claves=748 - INFO
+2026-07-25 16:25:15.904 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoArticulos_2" claves=1123 - INFO
+2026-07-25 16:25:15.904 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="inLibtb" claves=1 - INFO
+2026-07-25 16:25:15.904 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoEmpresas_1" claves=646 - INFO
+2026-07-25 16:25:15.904 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoFacturas_3" claves=748 - INFO
+2026-07-25 16:25:15.904 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmConsultaOpe" claves=166 - INFO
+2026-07-25 16:25:15.904 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoCajaParam" claves=30 - INFO
+2026-07-25 16:25:15.904 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargarPerfilesUsuario: cache form="frmMtoEmpresas" claves=780 - INFO
+2026-07-25 16:25:15.906 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: ConfigCamposCache: precargados 240 campos - INFO
+2026-07-25 16:25:15.907 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: PrecargaSerie: total=78 ms - INFO
+2026-07-25 16:25:15.907 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: Arranque: impresora de caja resuelta = "DEBUG" - INFO
+2026-07-25 16:25:15.907 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: Cola Verifactu: hilo iniciado - INFO
+2026-07-25 16:25:15.907 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: Cola de ventas WS: hilo iniciado - INFO
+2026-07-25 16:25:15.921 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: Modos log aplicados: appModoDebug=False, appModoDebugSQL=False, appLogSQL=False, appLogAvanzado=False - INFO
+2026-07-25 16:25:16.070 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: CargarFondoLogo: OK desde recurso FONDO (8585 bytes) - INFO
+2026-07-25 16:25:16.074 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: Arranque del sistema - INFO
+2026-07-25 16:25:35.085 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: TLayoutLoader.Create: formKey="frmMtoAppParam" -> GetFormUserProfile - INFO
+2026-07-25 16:25:35.085 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: ObtenerPerfilFormCache: form="frmMtoAppParam" HIT claves=30 - INFO
+2026-07-25 16:25:35.085 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] INFO: TLayoutLoader.Create: formKey="frmMtoAppParam" disponible=True claves=30 - INFO
+2026-07-25 16:26:19.630 - [Instance: {4AC9F7AF-1808-443E-86D8-55D4662E1DB1}] WARNING: Cola de ventas WS pendiente: falta URL, API key o referencia de instalación. - WARNING

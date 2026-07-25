@@ -124,7 +124,8 @@ begin
              edtNumFacAbono.Text := ParamByName('pidnumfacturaabono').AsString;
              // Rectificativa Verifactu: marcar tipo, enlazar con la
              // original y encolar el registro R1/R5
-             TVerifactuCola.EncolarRectificativa(ConexionPrincipal,
+             TVerifactuCola.EncolarRectificativa(ParametrosApp,
+               ParametrosCaja, ConexionPrincipal,
                IdentidadSesion.Usuario,
                edtSerieOrigen.Text, edtNumFacOrigen.Text,
                edtSerieFacAbono.Text, edtNumFacAbono.Text);

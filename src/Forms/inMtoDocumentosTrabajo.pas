@@ -148,7 +148,7 @@ uses
   // Venta TPV abierta (frmMtoOpeCaja) para el volcado de SKUs.
   inMtoCajaOpe,
   // Listado del documento con una foto de 300 x 300 por línea.
-  inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin, inLibAppParam;
+  inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin;
 
 {$R *.dfm}
 
@@ -482,7 +482,7 @@ begin
         try
           fPreview.PopupParent := Self;
           fPreview.DialogoGuardar.InitialDir :=
-            oAppParams.GetPath('appDirExcel');
+            ParametrosApp.GetPath('appDirExcel');
           fPreview.DialogoGuardar.FileName := SanitizeFileName(
             'Documento_trabajo_' + sId + '_' + sTitulo);
           Screen.Cursor := crHourGlass;

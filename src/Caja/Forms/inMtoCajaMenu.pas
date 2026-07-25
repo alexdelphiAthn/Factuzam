@@ -175,7 +175,7 @@ var
 implementation
 
 uses
-  inLibCajaParam, inLibPermisosIntf,
+  inLibPermisosIntf,
   DateUtils, inMtoConsultaOpe, inMtoPrincipal,
   inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja;
 
@@ -242,7 +242,7 @@ begin
   // calendario
   FVentasCal := TVentasCalendarioCache.Create(ConexionPrincipal);
 
-  if oCajaParams.GetBool('vgerShowCajaSelection', True) then
+  if ParametrosCaja.GetBool('vgerShowCajaSelection', True) then
     AbrirSelectorCaja
   else
   begin
@@ -681,7 +681,7 @@ end;
 // F6 - Entrada de Cambio
 procedure TfrmMtoMenuCaja.lblEmpresaDblClick(Sender: TObject);
 begin
-  if oCajaParams.GetBool('vgerShowCajaSelection', True) then
+  if ParametrosCaja.GetBool('vgerShowCajaSelection', True) then
     AbrirSelectorCaja;
 end;
 

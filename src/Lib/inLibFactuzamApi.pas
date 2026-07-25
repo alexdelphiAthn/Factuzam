@@ -16,7 +16,7 @@ unit inLibFactuzamApi;
 interface
 
 uses
-  System.SysUtils;
+  System.SysUtils, inLibParametrosIntf;
 
 const
   cUrlFactuzamApiDefecto =
@@ -35,12 +35,20 @@ type
     class function LeerRespuesta(const AContenido: string;
       AEstadoHttp: Integer): TResultadoFactuzamApi; static;
   public
-    class function UrlBase: string; static;
-    class function Token: string; static;
-    class function Referencia: string; static;
-    class function ComponerUrl(const ARuta: string): string; static;
-    class function Configurada: Boolean; static;
-    class function EnviarJson(const ARuta, AContenido: string):
+    class function UrlBase(
+      const AParametrosApp: IParametrosAplicacion): string; static;
+    class function Token(
+      const AParametrosApp: IParametrosAplicacion): string; static;
+    class function Referencia(
+      const AParametrosApp: IParametrosAplicacion): string; static;
+    class function ComponerUrl(
+      const AParametrosApp: IParametrosAplicacion;
+      const ARuta: string): string; static;
+    class function Configurada(
+      const AParametrosApp: IParametrosAplicacion): Boolean; static;
+    class function EnviarJson(
+      const AParametrosApp: IParametrosAplicacion;
+      const ARuta, AContenido: string):
       TResultadoFactuzamApi; static;
   end;
 
@@ -48,16 +56,16 @@ implementation
 
 uses
   System.Classes, System.JSON, System.Net.HttpClient,
-  System.Net.URLClient,
-  inLibAppParam;
+  System.Net.URLClient;
 
 class function TClienteFactuzamApi.ComponerUrl(
+  const AParametrosApp: IParametrosAplicacion;
   const ARuta: string): string;
 var
   sBase: string;
   sRuta: string;
 begin
-  sBase := UrlBase;
+  sBase := UrlBase(AParametrosApp);
   if (sBase <> '') and (sBase[Length(sBase)] <> '/') then
     sBase := sBase + '/';
   sRuta := Trim(ARuta);
@@ -66,38 +74,44 @@ begin
   Result := sBase + sRuta;
 end;
 
-class function TClienteFactuzamApi.UrlBase: string;
+class function TClienteFactuzamApi.UrlBase(
+  const AParametrosApp: IParametrosAplicacion): string;
 begin
-  Result := Trim(oAppParams.GetString('appApiUrl', ''));
+  Result := Trim(AParametrosApp.GetString('appApiUrl', ''));
   if Result = '' then
-    Result := Trim(oAppParams.GetString('appFotosUrlDescarga', ''));
+    Result := Trim(AParametrosApp.GetString('appFotosUrlDescarga', ''));
   if Result = '' then
-    Result := Trim(oAppParams.GetString('appRecuentoUrl', ''));
+    Result := Trim(AParametrosApp.GetString('appRecuentoUrl', ''));
   if Result = '' then
     Result := cUrlFactuzamApiDefecto;
 end;
 
-class function TClienteFactuzamApi.Token: string;
+class function TClienteFactuzamApi.Token(
+  const AParametrosApp: IParametrosAplicacion): string;
 begin
-  Result := Trim(oAppParams.GetString('appApiToken', ''));
+  Result := Trim(AParametrosApp.GetString('appApiToken', ''));
   if Result = '' then
-    Result := Trim(oAppParams.GetString('appFotosApiKey', ''));
+    Result := Trim(AParametrosApp.GetString('appFotosApiKey', ''));
   if Result = '' then
-    Result := Trim(oAppParams.GetString('appRecuentoApiKey', ''));
+    Result := Trim(AParametrosApp.GetString('appRecuentoApiKey', ''));
 end;
 
-class function TClienteFactuzamApi.Referencia: string;
+class function TClienteFactuzamApi.Referencia(
+  const AParametrosApp: IParametrosAplicacion): string;
 begin
-  Result := Trim(oAppParams.GetString('appApiReferencia', ''));
+  Result := Trim(AParametrosApp.GetString('appApiReferencia', ''));
   if Result = '' then
-    Result := Trim(oAppParams.GetString('appFotosCarpetaCliente', ''));
+    Result := Trim(AParametrosApp.GetString('appFotosCarpetaCliente', ''));
   if Result = '' then
-    Result := Trim(oAppParams.GetString('appRecuentoCarpetaCliente', ''));
+    Result := Trim(AParametrosApp.GetString('appRecuentoCarpetaCliente', ''));
 end;
 
-class function TClienteFactuzamApi.Configurada: Boolean;
+class function TClienteFactuzamApi.Configurada(
+  const AParametrosApp: IParametrosAplicacion): Boolean;
 begin
-  Result := (UrlBase <> '') and (Token <> '') and (Referencia <> '');
+  Result := (UrlBase(AParametrosApp) <> '') and
+            (Token(AParametrosApp) <> '') and
+            (Referencia(AParametrosApp) <> '');
 end;
 
 class function TClienteFactuzamApi.LeerRespuesta(
@@ -136,6 +150,7 @@ begin
 end;
 
 class function TClienteFactuzamApi.EnviarJson(
+  const AParametrosApp: IParametrosAplicacion;
   const ARuta, AContenido: string): TResultadoFactuzamApi;
 var
   oCuerpo: TStringStream;
@@ -147,11 +162,11 @@ begin
   Result.EstadoHttp := 0;
   Result.IdPeticion := '';
   Result.Mensaje := '';
-  if not Configurada then
+  if not Configurada(AParametrosApp) then
     Result.Mensaje := 'La API de Factuzam no está configurada.'
   else
   begin
-    sToken := Token;
+    sToken := Token(AParametrosApp);
     oHttp := THTTPClient.Create;
     try
       oHttp.ConnectionTimeout := 10000;
@@ -160,7 +175,7 @@ begin
       oCuerpo := TStringStream.Create(AContenido, TEncoding.UTF8);
       try
         oRespuesta := oHttp.Post(
-          ComponerUrl(ARuta), oCuerpo, nil,
+          ComponerUrl(AParametrosApp, ARuta), oCuerpo, nil,
           [TNetHeader.Create('Content-Type',
                              'application/json; charset=utf-8'),
            TNetHeader.Create('Accept', 'application/json')]);

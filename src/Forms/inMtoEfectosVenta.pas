@@ -86,7 +86,12 @@ function TfrmMtoEfectosVenta.SqlRestriccionUsuario: string;
 begin
   // Los efectos de venta llevan la empresa de la factura origen en
   // cabecera; sin almacén ni caja.
-  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_EFV', '', '');
+  Result := SqlFiltroEmpAlmCaja(
+    ContextoSesion,
+    ParametrosApp,
+    'CODIGO_EMP_EFV',
+    '',
+    '');
 end;
 
 procedure TfrmMtoEfectosVenta.btnRegistrarCobroClick(Sender: TObject);

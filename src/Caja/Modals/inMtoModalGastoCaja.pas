@@ -270,7 +270,7 @@ var
   dImporte: Currency;
   sConcepto, sTipo, sEmpleado: string;
 begin
-  dm := TdmCajaOpe.Create(nil, FConn);
+  dm := TdmCajaOpe.Create(nil, FConn, ParametrosApp, ParametrosCaja);
   try
     dm.AsignarContextoSesion(ContextoSesion);
     dImporte  := Currency(txtImporte.Value);

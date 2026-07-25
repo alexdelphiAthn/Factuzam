@@ -565,6 +565,7 @@ procedure TfrmMtoClientes.btnExportarClick(Sender: TObject);
 begin
   if PuedeAccionMto(apmExcel) then
     ExportarExcel(
+      ParametrosApp,
       cxgrdClientesFacturas,
       'Historico_Borradores_Cliente_' +
       dsTablaG.Dataset.FieldByName('CODIGO_CLI_CLI').AsString);
@@ -720,6 +721,7 @@ begin
   inherited;
   if PuedeAccionMto(apmExcel) then
     ExportarExcel(
+      ParametrosApp,
       cxgrdPrestamosCliente,
       'Historico_Prestamos_Cliente_' +
       dsTablaG.Dataset.FieldByName('CODIGO_CLI_CLI').AsString);

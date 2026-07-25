@@ -1337,7 +1337,8 @@ begin
   inherited;
   if not PuedeExportar then
     Abort;
-  ExportarExcel(cxgrdProveedores, 'Historico_Proveedores_Artículo_' +
+  ExportarExcel(ParametrosApp, cxgrdProveedores,
+                'Historico_Proveedores_Artículo_' +
                 dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;
 
@@ -1346,7 +1347,8 @@ begin
   inherited;
   if not PuedeExportar then
     Abort;
-  ExportarExcel(cxGrdTarifas, 'Historico_Tarifas_Artículo_' +
+  ExportarExcel(ParametrosApp, cxGrdTarifas,
+                'Historico_Tarifas_Artículo_' +
                 dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;
 
@@ -1479,7 +1481,7 @@ begin
   inherited;
   if not PuedeExportar then
     Abort;
-  ExportarExcel(cxgrdStock, 'Stock_Artículo_' +
+  ExportarExcel(ParametrosApp, cxgrdStock, 'Stock_Artículo_' +
                 dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;
 
@@ -2774,7 +2776,8 @@ begin
   inherited;
   if not PuedeExportar then
     Abort;
-  ExportarExcel(cxGrdMovimientos, 'Movimientos_Artículo_' +
+  ExportarExcel(ParametrosApp, cxGrdMovimientos,
+                'Movimientos_Artículo_' +
                 dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString);
 end;
 

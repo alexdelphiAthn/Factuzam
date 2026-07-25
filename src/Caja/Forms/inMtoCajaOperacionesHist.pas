@@ -200,7 +200,7 @@ implementation
 uses
   inLibWin, inLibUser, inLibShowMto, inMtoPrincipal,
   inMtoModalGenImpSave, inMtoModalImpOperaciones, inMtoPreviewExcel,
-  inLibDevExcel, inLibAppParam, inLibFotos, inLibFiltroUsuario,
+  inLibDevExcel, inLibFotos, inLibFiltroUsuario,
   dxSpreadSheetGraphics;
 
 {$R *.dfm}
@@ -433,7 +433,12 @@ begin
       'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM ' +
       '  FROM fza_almacenes ' +
       ' WHERE ESACTIVO_ALM = ''S'' ' +
-      SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_ALM', 'CODIGO_ALM_ALM', '') +
+      SqlFiltroEmpAlmCaja(
+        ContextoSesion,
+        ParametrosApp,
+        'CODIGO_EMP_ALM',
+        'CODIGO_ALM_ALM',
+        '') +
       ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM';
     qry.Open;
     while not qry.Eof do
@@ -572,7 +577,10 @@ begin
     Result := Result + ' AND o.CODIGO_ALM_OPCAJA IN (' + sAlm + ')';
   // Restricción por usuario (appRestringirEmpAlmCaja): acota a su
   // empresa/almacén/caja por encima de lo marcado en los combos.
-  Result := Result + SqlFiltroEmpAlmCaja(ContextoSesion, 'o.CODIGO_EMP_OPCAJA',
+  Result := Result + SqlFiltroEmpAlmCaja(
+    ContextoSesion,
+    ParametrosApp,
+    'o.CODIGO_EMP_OPCAJA',
                                          'o.CODIGO_ALM_OPCAJA',
                                          'o.CODIGO_CAJA_OPCAJA');
 end;
@@ -1071,7 +1079,7 @@ begin
         fPreview := TfrmMtoPreviewExcel.Create(Self);
         fPreview.PopupParent := Self;
         fPreview.DialogoGuardar.InitialDir :=
-          oAppParams.GetPath('appDirExcel');
+          ParametrosApp.GetPath('appDirExcel');
         sNombre := 'Operacion_Caja_' +
                    ValorCampoPrincipal('CODIGO_EMP_OPCAJA') + '_' +
                    ValorCampoPrincipal('CODIGO_ALM_OPCAJA') + '_' +

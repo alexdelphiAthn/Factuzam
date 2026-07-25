@@ -21,9 +21,12 @@ uses
    dxSpreadSheet, dxSpreadSheetCore, cxGraphics, vcl.Graphics,
   dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics, dxShellDialogs,
   dxSpreadSheetStyles, dxSpreadSheetContainers, dxHashUtils,
-  dxGDIPlusClasses, dxSmartImage, inLibDevExcel, inLibVerifactu;
+  dxGDIPlusClasses, dxSmartImage, inLibDevExcel, inLibVerifactu,
+  inLibParametrosIntf;
 
-procedure ExportarFacturaADevExpress(AConexion: TUniConnection;
+procedure ExportarFacturaADevExpress(
+  const AParametrosApp: IParametrosAplicacion;
+  AConexion: TUniConnection;
   ASheetControl: TdxSpreadSheet; const QMaster, QLineas: TDataSet);
 
 
@@ -32,7 +35,9 @@ implementation
 uses
   inLibFormatoDocumento;
 
-procedure ExportarFacturaADevExpress(AConexion: TUniConnection;
+procedure ExportarFacturaADevExpress(
+  const AParametrosApp: IParametrosAplicacion;
+  AConexion: TUniConnection;
   ASheetControl: TdxSpreadSheet; const QMaster, QLineas: TDataSet);
 const
   // Columnas Visibles
@@ -67,7 +72,7 @@ var
   begin
     // El QR es opcional: cualquier fallo aquí NO debe tumbar la
     // exportación de la factura a Excel.
-    if SinVerifactuActivo or
+    if SinVerifactuActivo(AParametrosApp) or
        (QMaster.FindField('NIF_EMPRESA_FAC') = nil) or
        (QMaster.FindField('SERIE_FAC') = nil) or
        (QMaster.FindField('NUMERO_FAC') = nil) or
@@ -75,7 +80,7 @@ var
        (QMaster.FindField('TOTAL_LIQUIDO_FAC') = nil) or
        (Trim(QMaster.FieldByName('NUMERO_FAC').AsString) = '') then
       Exit;
-    sUrl := ConstruirUrlQR(
+    sUrl := ConstruirUrlQR(AParametrosApp,
               QMaster.FieldByName('NIF_EMPRESA_FAC').AsString,
               QMaster.FieldByName('SERIE_FAC').AsString,
               QMaster.FieldByName('NUMERO_FAC').AsString,

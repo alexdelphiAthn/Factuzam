@@ -18,7 +18,7 @@ interface
 
 uses
   Classes, Windows, WinSpool, SysUtils, StrUtils, vcl.Printers,
-  inLibContextoSesionIntf;
+  inLibContextoSesionIntf, inLibParametrosIntf;
 
 function ObtenerSesionImpresora(const NombreImpresora: string): string;
 function EsImpresoraRedireccionada(const NombreImpresora: string): Boolean;
@@ -35,19 +35,20 @@ function EsImpresoraRed(const NombreImpresora: string): Boolean;
 function ObtenerImpresoraPorPatronCached(const PatronBusqueda,
                                                ArchivoCache: string): string;
 function GetImpresoraCaja(
+  const AParametrosCaja: IParametrosCaja;
   const AContextoSesion: IContextoSesionAplicacion): string;
 
 implementation
 
-uses inLibCajaParam;
-
 function GetImpresoraCaja(
+  const AParametrosCaja: IParametrosCaja;
   const AContextoSesion: IContextoSesionAplicacion): string;
 var
   sPatronNombreImpresora: string;
   sArchivoCache: string;
 begin
-  sPatronNombreImpresora := oCajaParams.GetString('vgerDefPrinter', 'DEBUG');
+  sPatronNombreImpresora :=
+    AParametrosCaja.GetString('vgerDefPrinter', 'DEBUG');
   sArchivoCache := Format('Caja_%s.cache',
     [AContextoSesion.Identidad.Usuario]);
   Result := ObtenerImpresoraPorPatronCached(sPatronNombreImpresora,

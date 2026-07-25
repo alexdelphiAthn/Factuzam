@@ -32,7 +32,7 @@ interface
 uses
   System.SysUtils, System.Classes,
   Data.DB, Uni,
-  inLibFTicket;
+  inLibFTicket, inLibParametrosIntf;
 
 type
   TTiraCajaTicket = class
@@ -52,7 +52,10 @@ type
                                        AConn: TUniConnection;
                                        const AEmpresa, AAlmacen,
                                              ACaja, AOperacion: string);
-    class procedure EscribirOperacion(ATicket: TTicketTermico;
+    class procedure EscribirOperacion(
+                                      const AParametrosApp:
+                                      IParametrosAplicacion;
+                                      ATicket: TTicketTermico;
                                       AConn: TUniConnection;
                                       AOpe: TUniQuery;
                                       AImprimirQR: Boolean);
@@ -96,7 +99,9 @@ type
                                  const AEmpresa, AAlmacen, ACaja: string;
                                  AFechaDesde, AFechaHasta: TDate)
                                  : TArray<string>;
-    class procedure Imprimir(AConn: TUniConnection;
+    class procedure Imprimir(
+                             const AParametrosApp: IParametrosAplicacion;
+                             AConn: TUniConnection;
                              const AEmpresa, AAlmacen, ACaja: string;
                              AFechaDesde, AFechaHasta: TDate;
                              const ASeries: TArray<string>;
@@ -312,7 +317,10 @@ end;
 //   Bloque de una operación (cursor AOpe posicionado en la fila)
 // =============================================================================
 
-class procedure TTiraCajaTicket.EscribirOperacion(ATicket: TTicketTermico;
+class procedure TTiraCajaTicket.EscribirOperacion(
+                                                   const AParametrosApp:
+                                                   IParametrosAplicacion;
+                                                   ATicket: TTicketTermico;
                                                   AConn: TUniConnection;
                                                   AOpe: TUniQuery;
                                                   AImprimirQR: Boolean);
@@ -349,10 +357,11 @@ begin
   ATicket.Negrita(False);
   EscribirFormasPago(ATicket, AConn, sEmp, sAlm, sCaja, sOpe);
   // QR tributario por operación si Verifactu está activo y se ha pedido.
-  if AImprimirQR and (not SinVerifactuActivo)
+  if AImprimirQR and (not SinVerifactuActivo(AParametrosApp))
      and (Trim(sSerie) <> '') and (Trim(sNumFac) <> '') then
   begin
-    sQR := ConstruirUrlQR(sNif, sSerie, sNumFac, dFechaFac, dLiquido);
+    sQR := ConstruirUrlQR(AParametrosApp, sNif, sSerie, sNumFac,
+      dFechaFac, dLiquido);
     if sQR <> '' then
     begin
       ATicket.Alinear(alCentro);
@@ -713,7 +722,10 @@ begin
   end;
 end;
 
-class procedure TTiraCajaTicket.Imprimir(AConn: TUniConnection;
+class procedure TTiraCajaTicket.Imprimir(
+                                         const AParametrosApp:
+                                         IParametrosAplicacion;
+                                         AConn: TUniConnection;
                                          const AEmpresa, AAlmacen,
                                                ACaja: string;
                                          AFechaDesde, AFechaHasta: TDate;
@@ -842,7 +854,7 @@ var
     end
     else
     begin
-      EscribirOperacion(Ticket, AConn, Ope, AImprimirQR);
+      EscribirOperacion(AParametrosApp, Ticket, AConn, Ope, AImprimirQR);
       totVen := totVen + Ope.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency;
       Inc(nVen);
     end;

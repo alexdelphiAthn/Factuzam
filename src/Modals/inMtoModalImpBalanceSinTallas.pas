@@ -73,7 +73,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.StrUtils, inLibAppParam, inLibCajaParam, inMtoPreviewExcel,
+  System.StrUtils, inMtoPreviewExcel,
   inLibBalanceSinTallasExcel,
   dxSpreadSheet, inLibFotos;
 
@@ -235,7 +235,7 @@ begin
     ParamByName('pTMP').AsString := CSVTemporadas;
     // Filtro de artículos (CSV; vacío = todos), nuevo en la pestaña Artículos.
     ParamByName('pART').AsString := CSVArticulos;
-    ParamByName('pTAR').AsString := TarifaDefecto;
+    ParamByName('pTAR').AsString := ParametrosCaja.TarifaDefecto;
     if (FrgModo <> nil) and (FrgModo.ItemIndex = 0) and
        (FrgDetalle <> nil) and (FrgDetalle.ItemIndex = 1) then
       ParamByName('pDESG').AsString := 'S'
@@ -334,7 +334,8 @@ begin
   try
     fPreview := TfrmMtoPreviewExcel.Create(Self);
     try
-      fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
+      fPreview.DialogoGuardar.InitialDir :=
+        ParametrosApp.GetPath('appDirExcel');
       fPreview.DialogoGuardar.FileName := 'Balance_almacen_sin_tallas';
       ExportarBalanceSinTallasExcel(fPreview.dxSpreadSheet1, unqryBalancePrint);
       fPreview.ShowModal;

@@ -318,7 +318,14 @@ begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := Eng.ConDst;
-    q.SQL.Text := 'DELETE FROM fza_caja_pagos WHERE USUARIO_ALTA = :u';
+    // Los apuntes negativos con referencia pertenecen a la migracion de
+    // vales. Se conservan si se repite solo Ventas/Caja.
+    q.SQL.Text :=
+      'DELETE FROM fza_caja_pagos ' +
+      ' WHERE USUARIO_ALTA = :u ' +
+      '   AND NOT (CODIGO_FP_CFP = ''VALE'' ' +
+      '            AND IMPORTE_ENTREGADO_PAGO < 0 ' +
+      '            AND COALESCE(REFERENCIA_FACPAG, '''') <> '''')';
     q.ParamByName('u').AsString := Eng.Usuario;
     q.ExecSQL;
     q.SQL.Text := 'DELETE FROM fza_caja_operaciones WHERE USUARIO_ALTA = :u';

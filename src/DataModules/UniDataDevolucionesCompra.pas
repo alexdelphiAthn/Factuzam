@@ -121,7 +121,7 @@ type
 implementation
 
 uses
-  inLibAppParam, inLibLog, inLibtb,
+  inLibLog, inLibtb,
   System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inMtoDevolucionesCompra,
   inLibDevolucionesCompraMovimientos,

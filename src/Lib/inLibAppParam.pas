@@ -39,9 +39,6 @@ function CrearParametrosAplicacion(
   const AUsuario, AGrupo: string
 ): IParametrosAplicacion;
 
-var
-  oAppParams: IParametrosAplicacion;
-
 implementation
 
 uses
@@ -143,7 +140,7 @@ begin
 
   // --- Valores por defecto ---
   // NOTA: la tarifa por defecto ya NO se define aquí. La única definición
-  // es el parámetro de caja 'vgerDefTarifa' (inLibCajaParam.TarifaDefecto).
+  // es el parámetro de caja 'vgerDefTarifa', accesible por IParametrosCaja.
   RegistrarParametro('Valores por defecto', 'appTemporadaDefecto',
     'Temporada por defecto (ID de fza_propiedades_valores)',
     tpString, '');
@@ -284,13 +281,12 @@ var
   Parametros: TParametrosAplicacion;
 begin
   Parametros := TParametrosAplicacion.Create(APerfilesUsuario);
-  try
-    Parametros.InicializarParametrosApp(AUsuario, AGrupo);
-    Result := Parametros;
-  except
-    FreeAndNil(Parametros);
-    raise;
-  end;
+  // El interfaz gobierna la vida del objeto ANTES de inicializar:
+  // DespuesDeRecargar toma una referencia temporal a Self y, con el
+  // contador de referencias todavia a cero, al soltarla el objeto se
+  // autodestruiria y la factoria devolveria un puntero colgante.
+  Result := Parametros;
+  Parametros.InicializarParametrosApp(AUsuario, AGrupo);
 end;
 
 end.

@@ -1145,7 +1145,7 @@ begin
   inherited;
   if not PuedeExportar then
     Abort;
-  ExportarExcel(cxGrdLineasFactura, 'Lineas_Borrador_' +
+  ExportarExcel(ParametrosApp, cxGrdLineasFactura, 'Lineas_Borrador_' +
                 dsTablaG.Dataset.FieldByName(fseriefac).AsString +
                 '_' +
                 dsTablaG.Dataset.FieldByName(fnrofac).AsString);
@@ -1173,7 +1173,7 @@ procedure TfrmMtoFacturasBase.btnCODIGO_CLIENTEPropertiesButtonClick(
                                                          Sender: TObject;
                                                          AButtonIndex: Integer);
 begin
-  if SinVerifactuActivo or
+  if SinVerifactuActivo(ParametrosApp) or
      (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
   begin
     if TBusquedaUtils.EjecutarBusqueda(
@@ -1217,7 +1217,7 @@ end;
 procedure TfrmMtoFacturasBase.btnCODIGO_EMPRESA_FACTURAPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 begin
-  if SinVerifactuActivo or
+  if SinVerifactuActivo(ParametrosApp) or
      (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
   begin
     if TBusquedaUtils.EjecutarBusqueda(
@@ -1241,7 +1241,7 @@ begin
   inherited;
   if not PuedeExportar then
     Abort;
-  ExportarExcel(cxgrdRecibos, PrefijoExportCobros +
+  ExportarExcel(ParametrosApp, cxgrdRecibos, PrefijoExportCobros +
                       dsTablaG.Dataset.FieldByName(fseriefac).AsString +
                       '_' +
                       dsTablaG.Dataset.FieldByName(fnrofac).AsString);
@@ -1344,14 +1344,14 @@ begin
   // En modo SIN el borrador se imprime directamente, sin consolidar. Si
   // se estaba editando, se graban antes los cambios para que la copia
   // impresa refleje el estado actual del borrador.
-  if SinVerifactuActivo then
+  if SinVerifactuActivo(ParametrosApp) then
     GuardarPendienteAntesDeImprimir;
   // El QR tributario nace al consolidar el registro fiscal: en BORRADOR
   // no hay registro de facturación y no se puede imprimir.
   sFase := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
   if ((sFase = '') or SameText(sFase, 'BORRADOR')) and
      (dsTablaG.DataSet.FieldByName(fescon).AsString <> 'S') and
-     (ModoVerifactu <> mvSinVerifactu) then
+     (ModoVerifactu(ParametrosApp) <> mvSinVerifactu) then
   begin
     ShowMessage('El borrador está pendiente: use el botón Consolidar ' +
                 'antes de imprimirlo en este modo fiscal.');
@@ -1709,7 +1709,9 @@ begin
   try
     Combo.Properties.Items.Clear;
     if CodArt = '' then Exit;
-    Resolver := TArticulosResolver.Create(ConexionPrincipal);
+    Resolver := TArticulosResolver.Create(
+      ConexionPrincipal,
+      ParametrosCaja);
     try
       Skus := Resolver.ListarSkus(CodArt);
       for Item in Skus do
@@ -1781,7 +1783,9 @@ begin
     FechaFac  := dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
 
     Validador := TArticulosValidador.Create(ConexionPrincipal);
-    Resolver := TArticulosResolver.Create(ConexionPrincipal);
+    Resolver := TArticulosResolver.Create(
+      ConexionPrincipal,
+      ParametrosCaja);
     Resolucion := Validador.Resolver(CodSku);
     if Resolucion.Encontrado and (Resolucion.CodigoSku <> '') then
     begin
@@ -2018,7 +2022,7 @@ begin
       // estados terminales (anulada/rectificada) quedan bloqueados. Un
       // alta nueva (dsInsert) tampoco tiene fase y debe poder grabarse.
       bEditable := bBorrador;
-      if SinVerifactuActivo and
+      if SinVerifactuActivo(ParametrosApp) and
          ((sFase = '') or SameText(sFase, 'BORRADOR') or
           SameText(sFase, cFaseFacturaSinVerifactu)) then
         bEditable := True;
@@ -2038,7 +2042,7 @@ begin
       begin
         btnConsolidar.Enabled := bBorrador and
                                  (not dsTablaG.DataSet.IsEmpty);
-        if SinVerifactuActivo then
+        if SinVerifactuActivo(ParametrosApp) then
           btnImprimir.Enabled := not dsTablaG.DataSet.IsEmpty
         else
           btnImprimir.Enabled := not bEditable;
@@ -2152,7 +2156,10 @@ begin
   // facturas de su empresa/almacén/caja (fza_usuarios). Aplica a las
   // dos variantes; simplificadas además lo integra en su
   // ConstruirWhereFacturas al recomponer la SQL con filtros propios.
-  Result := SqlFiltroEmpAlmCaja(ContextoSesion, 'CODIGO_EMP_FAC',
+  Result := SqlFiltroEmpAlmCaja(
+    ContextoSesion,
+    ParametrosApp,
+    'CODIGO_EMP_FAC',
                                 'CODIGO_ALM_FAC',
                                 'CODIGO_CAJA_FAC');
 end;
@@ -2324,26 +2331,28 @@ begin
     Qry := TUniQuery.Create(nil);
     try
       Qry.Connection := ConexionPrincipal;
-      case ModoVerifactu of
+      case ModoVerifactu(ParametrosApp) of
         mvVerifactu:
-          TVerifactuCola.EncolarFactura(Qry,
+          TVerifactuCola.EncolarFactura(ParametrosApp, ParametrosCaja, Qry,
             IdentidadSesion.Usuario, sSerie, sNumero, ATipoOperacion,
             bBorrarMovimientos);
         mvNoVerifactu:
-          TVerifactuCola.RegistrarFacturaNoVerifactu(Qry,
+          TVerifactuCola.RegistrarFacturaNoVerifactu(ParametrosApp,
+            ParametrosCaja, Qry,
             IdentidadSesion.Usuario, sSerie, sNumero, ATipoOperacion,
             bBorrarMovimientos);
       else
-        TVerifactuCola.MarcarFacturaSinVerifactu(Qry,
+        TVerifactuCola.MarcarFacturaSinVerifactu(ParametrosApp,
+          ParametrosCaja, Qry,
           IdentidadSesion.Usuario, sSerie, sNumero, ATipoOperacion,
           bBorrarMovimientos);
       end;
     finally
       FreeAndNil(Qry);
     end;
-    if VerifactuActivo then
+    if VerifactuActivo(ParametrosApp) then
     begin
-      RegistrarEventoVerifactu(ConexionPrincipal,
+      RegistrarEventoVerifactu(ParametrosApp, ConexionPrincipal,
         IdentidadSesion.Usuario,
         cEventoVerifactuEncolado,
         AAccion + ' encolada desde Borradores', '', sSerie, sNumero);
@@ -2351,7 +2360,7 @@ begin
                   'el próximo ciclo. Puede seguirla en la columna ' +
                   '"Cola Verifactu" y en Verifactu - Cola de Envíos.');
     end
-    else if NoVerifactuActivo then
+    else if NoVerifactuActivo(ParametrosApp) then
     begin
       ShowMessage(AAccion + ' registrada y firmada en NO VERI*FACTU.');
     end
@@ -2399,22 +2408,24 @@ begin
       Qry := TUniQuery.Create(nil);
       try
         Qry.Connection := ConexionPrincipal;
-      case ModoVerifactu of
+      case ModoVerifactu(ParametrosApp) of
         mvVerifactu:
-          TVerifactuCola.EncolarFactura(Qry,
+          TVerifactuCola.EncolarFactura(ParametrosApp, ParametrosCaja, Qry,
             IdentidadSesion.Usuario, sSerie, sNumero);
         mvNoVerifactu:
-          TVerifactuCola.RegistrarFacturaNoVerifactu(Qry,
+          TVerifactuCola.RegistrarFacturaNoVerifactu(ParametrosApp,
+            ParametrosCaja, Qry,
             IdentidadSesion.Usuario, sSerie, sNumero);
       else
-        TVerifactuCola.MarcarFacturaSinVerifactu(Qry,
+        TVerifactuCola.MarcarFacturaSinVerifactu(ParametrosApp,
+          ParametrosCaja, Qry,
           IdentidadSesion.Usuario, sSerie, sNumero);
       end;
     finally
       FreeAndNil(Qry);
     end;
-    if VerifactuActivo then
-      RegistrarEventoVerifactu(ConexionPrincipal,
+    if VerifactuActivo(ParametrosApp) then
+      RegistrarEventoVerifactu(ParametrosApp, ConexionPrincipal,
         IdentidadSesion.Usuario,
         cEventoVerifactuEncolado,
         'Lanzamiento manual (Consolidar) desde Borradores', '',
@@ -2424,11 +2435,11 @@ begin
     // VERIFACTU la fase es VERIFACTU_PENDIENTE pero el QR tributario ya
     // es imprimible; una reimpresion posterior refresca el blob.
     GenerarPdfFacturaConsolidada(sSerie, sNumero);
-    if VerifactuActivo then
+    if VerifactuActivo(ParametrosApp) then
       ShowMessage('Borrador ' + sSerie + '\' + sNumero +
                   ' en VERIFACTU_PENDIENTE: el QR ya puede imprimirse ' +
                   'y el envío a la AEAT queda en la cola Verifactu.')
-    else if NoVerifactuActivo then
+    else if NoVerifactuActivo(ParametrosApp) then
       ShowMessage('Borrador ' + sSerie + '\' + sNumero +
                   ' registrado y firmado en NO VERI*FACTU.')
     else
@@ -2548,12 +2559,14 @@ begin
     finally
       FreeAndNil(Qry);
     end;
-    RegistrarEventoVerifactu(ConexionPrincipal,
+    RegistrarEventoVerifactu(ParametrosApp, ConexionPrincipal,
       IdentidadSesion.Usuario,
       cEventoVerifactuInfo,
       'Lanzamiento anulado: borrador devuelto a BORRADOR', '',
       sSerie, sNumero);
-    TVentasWsCola.RegistrarEventoSeguro(ConexionPrincipal,
+    TVentasWsCola.RegistrarEventoSeguro(
+      ParametrosCaja,
+      ConexionPrincipal,
       IdentidadSesion.Usuario, 'VENTA_REABIERTA', sSerie, sNumero);
     dsTablaG.DataSet.Refresh;
     ShowMessage('Borrador ' + sSerie + '\' + sNumero + ' de nuevo en ' +
@@ -2597,7 +2610,7 @@ begin
       ShowMessage('Creado el borrador ' + oRes.SerieNueva + '\' +
                   oRes.NumeroNueva + ' en sustitución del ticket ' +
                   sSerie + '\' + sNumero + ' en modo fiscal ' +
-                  ModoVerifactuTexto + ' (F3).');
+                  ModoVerifactuTexto(ParametrosApp) + ' (F3).');
       dsTablaG.DataSet.Refresh;
     end;
   end;
@@ -2841,7 +2854,7 @@ begin
       // En modo SIN el borrador se puede imprimir aunque se esté
       // editando o dando de alta: al pulsar Imprimir se graban antes los
       // cambios. En el resto de modos, durante la edición no se imprime.
-      btnImprimir.Enabled := SinVerifactuActivo;
+      btnImprimir.Enabled := SinVerifactuActivo(ParametrosApp);
     end
     else
     begin
@@ -2962,7 +2975,7 @@ procedure TfrmMtoFacturasBase.
   Sender: TObject; AButtonIndex: Integer);
 begin
   inherited;
-  if SinVerifactuActivo or
+  if SinVerifactuActivo(ParametrosApp) or
      (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
   begin
     dmmFacturas.unqryArtDataLinFac.ParamByName('TARIFA').AsString :=
@@ -3022,7 +3035,9 @@ begin
   FechaFac  := dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
 
   Validador := TArticulosValidador.Create(ConexionPrincipal);
-  Resolver  := TArticulosResolver.Create(ConexionPrincipal);
+  Resolver := TArticulosResolver.Create(
+    ConexionPrincipal,
+    ParametrosCaja);
   try
     Resolucion := Validador.Resolver(sInput);
     if not Resolucion.Encontrado then Exit;
@@ -4008,7 +4023,9 @@ begin
       FechaFac := dmmFacturas.unqryTablaG.
                     FindField('FECHA_FAC').AsDateTime;
     Validador := TArticulosValidador.Create(ConexionPrincipal);
-    Resolver := TArticulosResolver.Create(ConexionPrincipal);
+    Resolver := TArticulosResolver.Create(
+      ConexionPrincipal,
+      ParametrosCaja);
     Resolucion := Validador.Resolver(Trim(AEntrada));
     if not Resolucion.Encontrado then
       Exit;
@@ -4181,7 +4198,8 @@ begin
       dFecha := dmmFacturas.unqryTablaG.
                   FieldByName('FECHA_FAC').AsDateTime;
     Resolver := TArticulosResolver.Create(
-                  dmmFacturas.unqryTablaG.Connection);
+                  dmmFacturas.unqryTablaG.Connection,
+                  ParametrosCaja);
     try
       Datos := Resolver.ResolverDatos(ACodigoArticulo, ACodigoSku,
                                       sTarifa, dFecha);

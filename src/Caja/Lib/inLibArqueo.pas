@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibArqueo                                                   }
 {    Tipo:       Librería                                                      }
@@ -671,10 +671,17 @@ begin
         Forma.EsEfectivo  := Query.FieldByName('ESCAJON').AsString = 'S';
         Forma.Importe     := Query.FieldByName('IMPORTE').AsCurrency;
         Lista.Add(Forma);
-        if Forma.EsEfectivo then
-          AArqueo.EfectivoIngresos := AArqueo.EfectivoIngresos + Forma.Importe
-        else
-          AArqueo.OtrosIngresos    := AArqueo.OtrosIngresos    + Forma.Importe;
+        // El vale es moneda interna: se muestra por forma de pago, pero no
+        // incrementa el efectivo ni los otros ingresos a recontar.
+        if not SameText(Forma.Codigo, 'VALE') then
+        begin
+          if Forma.EsEfectivo then
+            AArqueo.EfectivoIngresos :=
+              AArqueo.EfectivoIngresos + Forma.Importe
+          else
+            AArqueo.OtrosIngresos :=
+              AArqueo.OtrosIngresos + Forma.Importe;
+        end;
         Query.Next;
       end;
     finally

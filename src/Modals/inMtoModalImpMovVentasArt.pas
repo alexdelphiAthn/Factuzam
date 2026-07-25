@@ -76,7 +76,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.StrUtils, inLibAppParam, inMtoPreviewExcel, inLibMovVentasArtExcel,
+  System.StrUtils, inMtoPreviewExcel, inLibMovVentasArtExcel,
   dxSpreadSheet, inLibFotos;
 
 { TfrmPrintMovVentasArt }
@@ -278,7 +278,8 @@ begin
   try
     fPreview := TfrmMtoPreviewExcel.Create(Self);
     try
-      fPreview.DialogoGuardar.InitialDir := oAppParams.GetPath('appDirExcel');
+      fPreview.DialogoGuardar.InitialDir :=
+        ParametrosApp.GetPath('appDirExcel');
       fPreview.DialogoGuardar.FileName := 'Movimientos_ventas_articulos';
       ExportarMovVentasArtExcel(fPreview.dxSpreadSheet1, unqryMovVentasPrint);
       fPreview.ShowModal;

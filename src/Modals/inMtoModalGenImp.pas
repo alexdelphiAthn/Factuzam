@@ -156,7 +156,7 @@ procedure RebindReportDataSetsByDataModule(Report: TfrxReport;
 implementation
 
 uses
-  inMtoModalGenImpSave, inLibUser, inLibPathTokens, inLibAppParam,
+  inMtoModalGenImpSave, inLibUser, inLibPathTokens,
   System.Generics.Collections, System.Rtti, inLibFotos, inLibVerifactu,
   inMtoModalInformesGuias, inMtoModalWizardEditar, inLibLog,
   inLibInformesGuiasCache;
@@ -256,12 +256,12 @@ procedure TfrmPrint.ReportBeforePrintConQR(Component: TfrxReportComponent);
 begin
   oFotos.HandlerReportBeforePrint(Component);
   // Objetos que SÍ reciben el evento (QR/título en una banda de datos)
-  SustituirQRVerifactuEnReport(Component);
+  SustituirQRVerifactuEnReport(ParametrosApp, Component);
   SustituirTituloFacturaEnReport(Component);
   // Vía fiable: al disparar la banda (la cabecera de página recibe el
   // evento aunque sus objetos sueltos no), rellenamos QR y título de
   // sus hijos con la factura activa
-  AplicarVerifactuEnBanda(Component);
+  AplicarVerifactuEnBanda(ParametrosApp, Component);
 end;
 
 procedure TfrmPrint.AbrirGuiasRuntime(aSoloUsadasEnReport: Boolean);
@@ -832,7 +832,7 @@ begin
     OnGuiasAplicadas;
     try
       frxrprt1.PrepareReport(True);
-      frxlsxprtExcel.DefaultPath := oAppParams.GetPath('appDirExcel');
+      frxlsxprtExcel.DefaultPath := ParametrosApp.GetPath('appDirExcel');
       frxrprt1.Export(frxlsxprtExcel);
     finally
       CerrarGuiasRuntime;
@@ -878,7 +878,7 @@ begin
     OnGuiasAplicadas;
     try
       frxrprt1.PrepareReport(True);
-      frxpdfxprtPedWeb.DefaultPath := oAppParams.GetPath('appDirPDF');
+      frxpdfxprtPedWeb.DefaultPath := ParametrosApp.GetPath('appDirPDF');
       frxrprt1.Export(frxpdfxprtPedWeb);
       PdfExportado(RutaPdfExportado(frxpdfxprtPedWeb));
     finally

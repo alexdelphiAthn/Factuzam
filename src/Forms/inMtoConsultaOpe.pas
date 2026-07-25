@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoConsultaOpe                                              }
 {    Tipo:       Formulario (Mto)                                              }
@@ -89,6 +89,8 @@ type
     btnFacturarTicket: TButton;
     btnRectificar: TButton;
     btnEnviarEmail: TcxButton;
+    colMovColor: TcxGridDBColumn;
+    colMovTalla: TcxGridDBColumn;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -107,6 +109,9 @@ type
     procedure btnFacturarTicketClick(Sender: TObject);
     procedure btnRectificarClick(Sender: TObject);
     procedure btnEnviarEmailClick(Sender: TObject);
+    procedure cxViewMovCustomDrawCell(Sender: TcxCustomGridTableView;
+      ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+      var ADone: Boolean);
   private
     FdmConsulta: TdmConsultaOpe;
     FEmpresa:    string;
@@ -157,7 +162,7 @@ uses inLibtb, inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibGlobalVar, inLibLog, inLibFotos, inMtoFotoArticulo,
      inLibTraspasoTicket, inLibShowMto, inMtoPrincipal, Uni,
      inLibVerifactu, inLibVerifactuCola, inMtoModalFacturarTicket,
-     inMtoCajaOpe, inLibCorreoTickets;
+     inMtoCajaOpe, inLibCorreoTickets, inLibAtributosPaleta;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -225,6 +230,7 @@ begin
   Caption := Format('Buscar operaciones — Empresa %s / Almacen %s / Caja %s',
                     [FEmpresa, FAlmacen, FCaja]);
   RecargarMaestro;
+  pcHijos.ActivePage := tsMovimientos;
   RestaurarLayout;
   AjustarAPantalla;
   if edtBuscar.CanFocus then
@@ -412,13 +418,14 @@ begin
             [mbYes, mbNo], 0) = mrYes;
         end;
         Qry.Close;
-        case ModoVerifactu of
+        case ModoVerifactu(ParametrosApp) of
           mvVerifactu:
             begin
-              TVerifactuCola.EncolarFactura(Qry,
+              TVerifactuCola.EncolarFactura(ParametrosApp, ParametrosCaja,
+                Qry,
                 IdentidadSesion.Usuario, sSerie, sNumero, 'ANULACION',
                 bBorrarMovimientos);
-              RegistrarEventoVerifactu(ConexionPrincipal,
+              RegistrarEventoVerifactu(ParametrosApp, ConexionPrincipal,
                 IdentidadSesion.Usuario,
                 cEventoVerifactuEncolado,
                 'Anulación encolada desde Buscar operaciones', '',
@@ -428,14 +435,16 @@ begin
             end;
           mvNoVerifactu:
             begin
-              TVerifactuCola.RegistrarFacturaNoVerifactu(Qry,
+              TVerifactuCola.RegistrarFacturaNoVerifactu(ParametrosApp,
+                ParametrosCaja, Qry,
                 IdentidadSesion.Usuario, sSerie, sNumero, 'ANULACION',
                 bBorrarMovimientos);
               ShowMessage('Anulación registrada y firmada en NO VERI*FACTU.');
             end;
         else
           begin
-            TVerifactuCola.MarcarFacturaSinVerifactu(Qry,
+            TVerifactuCola.MarcarFacturaSinVerifactu(ParametrosApp,
+              ParametrosCaja, Qry,
               IdentidadSesion.Usuario, sSerie, sNumero, 'ANULACION',
               bBorrarMovimientos);
             ShowMessage('Anulación registrada en modo SIN VERIFACTU.');
@@ -496,7 +505,7 @@ begin
         ShowMessage('Creado el borrador ' + oRes.SerieNueva + '\' +
                     oRes.NumeroNueva + ' en sustitución del ticket ' +
                     sSerie + '\' + sNumero + ' en modo fiscal ' +
-                    ModoVerifactuTexto + ' (F3).');
+                    ModoVerifactuTexto(ParametrosApp) + ' (F3).');
     end;
   end;
 end;
@@ -596,6 +605,38 @@ procedure TfrmConsultaOpe.OnFacturaLinDataChange(Sender: TObject;
                                                  Field: TField);
 begin
   if Field = nil then RefrescarFotoConsulta;
+end;
+
+procedure TfrmConsultaOpe.cxViewMovCustomDrawCell(
+  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+var
+  colArticulo: TcxGridDBColumn;
+  sArticulo: string;
+  sColor: string;
+begin
+  ADone := False;
+  if (AViewInfo <> nil) and
+     (AViewInfo.GridRecord <> nil) and
+     (AViewInfo.Item = colMovColor) then
+  begin
+    colArticulo := cxViewMov.GetColumnByFieldName('CODIGO_ART_MOV');
+    if colArticulo <> nil then
+    begin
+      sArticulo := VarToStr(
+        AViewInfo.GridRecord.Values[colArticulo.Index]);
+      sColor := VarToStr(
+        AViewInfo.GridRecord.Values[colMovColor.Index]);
+      if PintarCeldaSwatchArticuloSiAplica(
+        ConexionPrincipal,
+        ACanvas,
+        AViewInfo,
+        sArticulo,
+        sColor,
+        nil) then
+        ADone := True;
+    end;
+  end;
 end;
 
 procedure TfrmConsultaOpe.RestaurarLayout;
@@ -720,9 +761,9 @@ var
 begin
   PagActiva := pcHijos.ActivePage;
   tsOperacion.TabVisible   := True;   // siempre visible
-  tsPagos.TabVisible       := FdmConsulta.TienePagos;
+  tsPagos.TabVisible       := True;  // siempre visible
   tsVales.TabVisible       := FdmConsulta.TieneVales;
-  tsMovimientos.TabVisible := FdmConsulta.TieneMovimientos;
+  tsMovimientos.TabVisible := True;  // siempre visible y pestaña inicial
   tsCliente.TabVisible     := FdmConsulta.TieneCliente;
   tsDepositos.TabVisible   := FdmConsulta.TieneDepositos;
   tsFactura.TabVisible     := FdmConsulta.TieneFactura;
@@ -794,7 +835,7 @@ var
 begin
   if not FdmConsulta.qryMaestro.IsEmpty then
   begin
-    bContinuar := CorreoTicketsConfigurado(sMensaje);
+    bContinuar := CorreoTicketsConfigurado(ParametrosApp, sMensaje);
     if not bContinuar then
       ShowMessage(sMensaje)
     else
@@ -825,7 +866,11 @@ begin
       begin
         Screen.Cursor := crHourGlass;
         try
-          if EnviarDocumentacionOperacion(ConexionPrincipal, sEmp, sAlm,
+          if EnviarDocumentacionOperacion(
+            ParametrosApp,
+            ConexionPrincipal,
+            sEmp,
+            sAlm,
             sCaja, sNumOp,
             sEmail, sMensaje) then
             ShowMessage(sMensaje)
@@ -864,7 +909,8 @@ begin
     else
     begin
       if FdmConsulta.TieneFactura then
-        ImprimirTicketDesdeBD(ConexionPrincipal, sEmp, sAlm, sCaja, sNumOp,
+        ImprimirTicketDesdeBD(ParametrosApp, ConexionPrincipal, sEmp, sAlm,
+          sCaja, sNumOp,
                               ANombreImpresora);
       if FdmConsulta.TieneDepositos then
         ImprimirResguardoDeposito(ConexionPrincipal, sEmp, sAlm, sCaja, sNumOp,

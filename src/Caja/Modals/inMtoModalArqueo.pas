@@ -309,7 +309,7 @@ implementation
 
 uses inLibGlobalVar, inLibPermisosIntf, inLibLog,
      inMtoModalArqueosHistCaja,
-     inLibCajaParam, inLibTiraCajaTicket, inMtoModalTiraCaja, inLibVerifactu;
+     inLibTiraCajaTicket, inMtoModalTiraCaja, inLibVerifactu;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -447,7 +447,8 @@ begin
   begin
     Screen.Cursor := crHourGlass;
     try
-      TArqueoTicket.Imprimir(FConn, FEmpresa, FAlmacen, FCaja,
+      TArqueoTicket.Imprimir(FConn, ParametrosCaja,
+                             FEmpresa, FAlmacen, FCaja,
                              FechaDesdeSeleccionada,
                              FechaHastaSeleccionada,
                              oNomImpresoraCaja);
@@ -504,7 +505,7 @@ begin
     Exit;
   end;
   // El QR solo aplica con Verifactu activo (envío PRE o PRO).
-  bVerifactu := VerifactuActivo;
+  bVerifactu := VerifactuActivo(ParametrosApp);
   bQR        := False;
   bVerCoste := Assigned(Permisos) and
                Permisos.TienePermiso(
@@ -528,7 +529,8 @@ begin
                                     bIncluirGastos, bIncluirCredito,
                                     bVerCoste)
     else
-      TTiraCajaTicket.Imprimir(FConn, FEmpresa, FAlmacen, FCaja,
+      TTiraCajaTicket.Imprimir(ParametrosApp, FConn, FEmpresa, FAlmacen,
+                               FCaja,
                                FechaDesdeSeleccionada,
                                FechaHastaSeleccionada,
                                SeleccionSeries, bQR, oNomImpresoraCaja,
@@ -643,7 +645,7 @@ begin
   // la construye TArqueoCalculadora.SQLResumenSeccion (compartida con el
   // ticket impreso).
   qryResFam.SQL.Text := TArqueoCalculadora.SQLResumenSeccion(
-    NivelesFamiliaArqueo);
+    ParametrosCaja.NivelesFamiliaArqueo);
 
   // IVA (pestaña Más datos): 4 filas, una por tipo de IVA (Normal, Reducido,
   // Super Reducido, Exento). Se toma de fza_facturas SOLO las
