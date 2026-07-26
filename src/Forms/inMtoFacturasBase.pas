@@ -567,6 +567,14 @@ type
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
     FConstruyendoModo: Boolean;
+    // La validacion del DM senala un campo logico; aqui se traduce a
+    // pestania + foco. Suscrito a dmmFacturas.OnCampoInvalido.
+    procedure SenalarCampoValidacion(ACampo: TCampoValidacionFac);
+    procedure NuevaFacturaDesdeInsert(Sender: TObject);
+    procedure SeriesCambiadasDesdeDM(Sender: TObject);
+    // Conmuta que precio es editable (s/IVA o c/IVA) segun la tarifa
+    // de la linea. Antes vivia en TdmFacturas.dsLinFacStateChange.
+    procedure AplicarEdicionPreciosLinea(Sender: TObject);
     function  EsVentaMayorNormal: Boolean;
     function  TextoCobroPlural: string;
     function  PrefijoExportCobros: string;
@@ -2160,6 +2168,13 @@ begin
   dmmFacturas := (tdmDataModule as TdmFacturas);
   if not Assigned(dmmFacturas) then
     dmmFacturas := TdmFacturas.Create(Self);
+  // El DM ya no toca la UI: senala campos y este form pone pestania/foco.
+  dmmFacturas.OnCampoInvalido := SenalarCampoValidacion;
+  dmmFacturas.OnNuevaFactura := NuevaFacturaDesdeInsert;
+  dmmFacturas.OnSeriesCambiadas := SeriesCambiadasDesdeDM;
+  dmmFacturas.OnLinFacEstado := AplicarEdicionPreciosLinea;
+  dmmFacturas.TipoFacturaDefecto := TipoFacturaFiltro;
+  dmmFacturas.AsignarMaestroCabecera(dsTablaG);
   cbbSerieFactura.Properties.ListSource := dmmFacturas.dsSeries;
   cbbCanalIVA.Properties.ListSource := dmmFacturas.dsIvas;
   cbbFORMAPAGO.Properties.ListSource := dmmFacturas.dsFormasPago;
@@ -4131,6 +4146,86 @@ begin
       Lin.FieldByName('PRECIO_SALIDA_FACLIN').Value);
   finally
     FConsolidandoSku := False;
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.SenalarCampoValidacion(
+  ACampo: TCampoValidacionFac);
+begin
+  case ACampo of
+    cvfSerie:
+    begin
+      pcCab.ActivePage := tsCabecera;
+      if cbbSerieFactura.CanFocus then
+        cbbSerieFactura.SetFocus;
+    end;
+    cvfRazonSocialCliente:
+    begin
+      pcCab.ActivePage := tsDatosCliente;
+      if txtRAZONSOCIAL_CLIENTE_FACTURA.CanFocus then
+        txtRAZONSOCIAL_CLIENTE_FACTURA.SetFocus;
+    end;
+    cvfRazonSocialEmpresa:
+    begin
+      pcCab.ActivePage := tsEmpresa;
+      if txtRAZONSOCIAL_EMPRESA_FACTURA.CanFocus then
+        txtRAZONSOCIAL_EMPRESA_FACTURA.SetFocus;
+    end;
+    cvfFecha:
+      pcCab.ActivePage := tsCabecera;
+    cvfNifCliente:
+    begin
+      pcCab.ActivePage := tsDatosCliente;
+      if txtNIF_CLIENTE_FACTURA.CanFocus then
+        txtNIF_CLIENTE_FACTURA.SetFocus;
+    end;
+    cvfNifEmpresa:
+    begin
+      pcCab.ActivePage := tsEmpresa;
+      if txtNIF_EMPRESA_FACTURA.CanFocus then
+        txtNIF_EMPRESA_FACTURA.SetFocus;
+    end;
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.NuevaFacturaDesdeInsert(Sender: TObject);
+begin
+  sbNuevaFacturaClick(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.SeriesCambiadasDesdeDM(Sender: TObject);
+begin
+  ActualizarComboSeries;
+end;
+
+procedure TfrmMtoFacturasBase.AplicarEdicionPreciosLinea(Sender: TObject);
+begin
+  if not Assigned(dmmFacturas) then
+    Exit;
+  with dmmFacturas.dsLinFac do
+  begin
+    if ((State = dsEdit) or (State = dsInsert) or (State = dsBrowse)) then
+    begin
+      // Factura con impuestos incluidos: solo es editable el c/IVA.
+      if SameText(DataSet.FieldByName(fimpcl).AsString, 'S') then
+      begin
+        ctbPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA.Properties.ReadOnly :=
+          True;
+        ctbPRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA.Properties.ReadOnly :=
+          False;
+        ctbTOTAL_FACTURASIVA_LINEA.Visible := False;
+        ctbTOTAL_FACTURA_LINEA.Visible := True;
+      end
+      else
+      begin
+        ctbPRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA.Properties.ReadOnly :=
+          True;
+        ctbPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA.Properties.ReadOnly :=
+          False;
+        ctbTOTAL_FACTURASIVA_LINEA.Visible := True;
+        ctbTOTAL_FACTURA_LINEA.Visible := False;
+      end;
+    end;
   end;
 end;
 

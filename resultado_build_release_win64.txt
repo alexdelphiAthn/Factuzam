@@ -11,6 +11,8 @@ src\Caja\DataModules\UniDataTraspaso.pas(1035): Hint warning H2077: Value assign
 src\Lib\inLibAtributosPaleta.pas(854): Hint warning H2443: Inline function 'TDataSet.IsEmpty' has not been expanded because unit 'Data.DB' is not specified in USES list [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Caja\Forms\inMtoTraspasoOpe.pas(926): Hint warning H2077: Value assigned to 'iRes' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Caja\Forms\inMtoTraspasoOpe.pas(131): Hint warning H2219: Private symbol 'CargarSolicitudSeleccionada' declared but never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\DataModules\UniDataFacturas.pas(747): Hint warning H2164: Variable 'oLinFac' is declared but never used in 'TdmFacturas.CopiarArticuloaLinea' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\DataModules\UniDataFacturas.pas(748): Hint warning H2164: Variable 'facTotales' is declared but never used in 'TdmFacturas.CopiarArticuloaLinea' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Lib\inLibGridTallasInline.pas(739): Hint warning H2077: Value assigned to 'rTot' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Lib\inLibGridPivoteVenta.pas(1574): Hint warning H2077: Value assigned to 'iLinea' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Modals\inMtoModalWizardEditar.pas(340): warning W1057: Implicit string cast from 'AnsiString' to 'string' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
@@ -20,9 +22,7 @@ src\Modals\inMtoModalDistribuidor.pas(74): Hint warning H2269: Overriding virtua
 src\Lib\inLibColumnasSkuModoTallas.pas(1742): Hint warning H2077: Value assigned to 'rUdsAntes' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Lib\inLibColumnasSkuModoTallas.pas(1929): warning W1036: Variable 'rPrecio' might not have been initialized [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Lib\inLibColumnasSkuModoTallas.pas(2237): Hint warning H2443: Inline function 'cxTextWidth' has not been expanded because unit 'dxCoreGraphics' is not specified in USES list [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
-src\Forms\inMtoFacturasBase.pas(2109): Hint warning H2077: Value assigned to 'TfrmMtoFacturasBase.PuedeConsultarEstadoColaVerifactu' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
-src\DataModules\UniDataFacturas.pas(716): Hint warning H2164: Variable 'oLinFac' is declared but never used in 'TdmFacturas.CopiarArticuloaLinea' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
-src\DataModules\UniDataFacturas.pas(717): Hint warning H2164: Variable 'facTotales' is declared but never used in 'TdmFacturas.CopiarArticuloaLinea' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Forms\inMtoFacturasBase.pas(2117): Hint warning H2077: Value assigned to 'TfrmMtoFacturasBase.PuedeConsultarEstadoColaVerifactu' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Forms\inMtoArticulos.pas(2697): Hint warning H2077: Value assigned to 'msActVisCol' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Forms\inMtoArticulos.pas(2696): Hint warning H2077: Value assigned to 'msStockAS' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Forms\inMtoArticulos.pas(2694): Hint warning H2077: Value assigned to 'msRefVarArt' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
@@ -109,4 +109,4 @@ src\Forms\inMtoInventarios.pas(2047): Hint warning H2077: Value assigned to 'msD
 src\Forms\inMtoInventarios.pas(2351): Hint warning H2077: Value assigned to 'msResolver' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Forms\inMtoComprasSesiones.pas(578): Hint warning H2164: Variable 'bPopupAbierto' is declared but never used in 'TfrmMtoComprasSesiones.cxgrdLineasExit' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Forms\inMtoComprasSesiones.pas(3694): Hint warning H2077: Value assigned to 'TfrmMtoComprasSesiones.MaterializarSesionConTx' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
-  307540 lines, 18.48 seconds, 55578984 bytes code, 5270536 bytes data.
+  307640 lines, 19.20 seconds, 55580152 bytes code, 5270600 bytes data.

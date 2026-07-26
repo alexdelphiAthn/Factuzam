@@ -25,6 +25,14 @@ uses
    UniDataGen, frCoreClasses, inLibArticulosResolver;
 
 type
+  // Campo logico senalado por la validacion de cabecera. El FORM decide
+  // que pestania activar y que control enfocar: el data module NO toca
+  // controles de UI (antes fijaba pcCab.ActivePage y hacia SetFocus).
+  TCampoValidacionFac = (cvfSerie, cvfRazonSocialCliente,
+                         cvfRazonSocialEmpresa, cvfFecha,
+                         cvfNifCliente, cvfNifEmpresa);
+  TCampoInvalidoEvent = procedure(ACampo: TCampoValidacionFac) of object;
+
   TdmFacturas = class(TdmBase)
     dsLinFac: TDataSource;
     dsFacPrint: TDataSource;
@@ -112,6 +120,15 @@ private
     // True mientras el borrado de factura tiene transaccion propia
     // abierta en BeforeDelete; la cierra AfterDelete u OnDeleteError.
     FTransBorradoPropia: Boolean;
+    // Suscritos por el form: senalar campo invalido tras un mensaje de
+    // validacion, y encadenar una factura nueva tras el alta automatica.
+    FOnCampoInvalido: TCampoInvalidoEvent;
+    FOnNuevaFactura: TNotifyEvent;
+    FOnSeriesCambiadas: TNotifyEvent;
+    FOnLinFacEstado: TNotifyEvent;
+    // Tipo de las facturas nuevas (NORMAL / SIMPLIFICADA); lo fija el
+    // form al crear el DM (antes se leia del form en el AfterInsert).
+    FTipoFacturaDefecto: string;
     // Copia a los parámetros de la query los valores de los campos del
     // maestro (MasterSource) que se llamen igual. UniDAC solo rellena
     // los parámetros al hacer scroll del maestro con el detail ya
@@ -131,6 +148,7 @@ private
     // Cuerpo real del BeforePost de la cabecera. Lo invoca el wrapper
     // unqryFacBeforePost dentro de la guarda de re-entrancia.
     procedure ValidarCabeceraBeforePost(DataSet: TDataSet);
+    procedure SenalarCampoInvalido(ACampo: TCampoValidacionFac);
     procedure GuardarParametrosEDocFactura(ADataSet: TDataSet);
     procedure GuardarOpcionMovimientosFactura(ADataSet: TDataSet);
     function FacturaPermiteRecalcularLineas: Boolean;
@@ -215,11 +233,24 @@ public
     // líneas que ya tengan un movimiento registrado para el documento
     // (TIPO_DOC_MOV='FC' + serie/número/línea).
     function GenerarMovimientosSalidaFactura: Integer;
+    // Cablea los detalles (lineas, recibos, efectos, consolidacion,
+    // errores, movimientos) al datasource de cabecera que aporta el
+    // form. Antes DataModuleCreate lo tomaba del form directamente.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource);
+    property OnCampoInvalido: TCampoInvalidoEvent
+      read FOnCampoInvalido write FOnCampoInvalido;
+    property OnNuevaFactura: TNotifyEvent
+      read FOnNuevaFactura write FOnNuevaFactura;
+    property OnSeriesCambiadas: TNotifyEvent
+      read FOnSeriesCambiadas write FOnSeriesCambiadas;
+    property OnLinFacEstado: TNotifyEvent
+      read FOnLinFacEstado write FOnLinFacEstado;
+    property TipoFacturaDefecto: string
+      read FTipoFacturaDefecto write FTipoFacturaDefecto;
   end;
 implementation
 
 uses
-  inMtoFacturasBase,
   inLibGlobalVar,
   inLibtb,
   inLibLog,
@@ -890,8 +921,8 @@ begin
     end;
     if (FindField('ESRETENCIONES_CLIENTE_FAC').AsString <> 'S') then
       unqryTablaG.FindField('PORCENTAJE_RETENCION_FAC').AsFloat := 0;
-    if (State = dsInsert) then
-      (GetOwnerForm<TfrmMtoFacturasBase>).ActualizarComboSeries;
+    if ((State = dsInsert) and Assigned(FOnSeriesCambiadas)) then
+      FOnSeriesCambiadas(Self);
   end;
 end;
 
@@ -938,8 +969,8 @@ begin
       begin
         CalcularRetencionesEmpresa;
       end;
-     if (State = dsInsert) then
-       (GetOwnerForm<TfrmMtoFacturasBase>).ActualizarComboSeries;
+     if ((State = dsInsert) and Assigned(FOnSeriesCambiadas)) then
+       FOnSeriesCambiadas(Self);
    end;
 end;
 
@@ -1193,13 +1224,18 @@ begin
   unqryEfectosVenta.DetailFields := 'NUMERO_FAC_EFV;SERIE_FAC_EFV';
   dsEfectosVenta := TDataSource.Create(Self);
   dsEfectosVenta.DataSet := unqryEfectosVenta;
-  unqryLinfac.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
-  unqryRecibos.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
-  unqryEfectosVenta.MasterSource :=
-    (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
-  unqryConsolidacion.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
-  unqryErrores.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
-  unqryMovimientosFac.MasterSource := (GetOwnerForm<TfrmMtoFacturasBase>).dsTablaG;
+  // Los MasterSource de los detalles los cablea el form via
+  // AsignarMaestroCabecera (el DM ya no busca dsTablaG en el form).
+end;
+
+procedure TdmFacturas.AsignarMaestroCabecera(ADataSource: TDataSource);
+begin
+  unqryLinfac.MasterSource := ADataSource;
+  unqryRecibos.MasterSource := ADataSource;
+  unqryEfectosVenta.MasterSource := ADataSource;
+  unqryConsolidacion.MasterSource := ADataSource;
+  unqryErrores.MasterSource := ADataSource;
+  unqryMovimientosFac.MasterSource := ADataSource;
 end;
 
 procedure TdmFacturas.QuitarCampoComplejoCabecera(ALista: TStrings;
@@ -1740,35 +1776,10 @@ end;
 procedure TdmFacturas.dsLinFacStateChange(Sender: TObject);
 begin
   inherited;
-  var  Form := GetOwnerForm<TfrmMtoFacturasBase>;
-  if not Assigned(Form) then Exit;
-  with dsLinFac do
-  begin
-    with Form do
-    begin
-      if ((State = dsEdit) or (State = dsInsert) or (State = dsBrowse)) then
-      begin               //si la factura es con impuestos incluídos
-        if SameText(DataSet.FieldByName(fimpcl).AsString, 'S') then
-        begin //el precio sin iva no se puede editar, sólo el precio con IVA
-          ctbPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA.Properties.ReadOnly :=
-                                                                           True;
-          ctbPRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA.Properties.ReadOnly :=
-                                                                          False;
-          ctbTOTAL_FACTURASIVA_LINEA.Visible := False;
-          ctbTOTAL_FACTURA_LINEA.Visible := True;
-        end
-        else
-        begin
-          ctbPRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA.Properties.ReadOnly :=
-                                                                           True;
-          ctbPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA.Properties.ReadOnly :=
-                                                                          False;
-          ctbTOTAL_FACTURASIVA_LINEA.Visible := True;
-          ctbTOTAL_FACTURA_LINEA.Visible := False;
-        end;
-      end;
-    end;
-  end;
+  // La conmutacion de columnas editables (s/IVA vs c/IVA) es UI pura:
+  // la resuelve el form suscrito a OnLinFacEstado.
+  if Assigned(FOnLinFacEstado) then
+    FOnLinFacEstado(Sender);
 end;
 
 function TdmFacturas.FormaPagoDefault: String;
@@ -1834,7 +1845,7 @@ function TdmFacturas.GetTipoIVA(sTipoIVA: string): Currency;
 var
   fPorcen:Currency;
 begin
-  with (GetOwnerForm<TfrmMtoFacturasBase>).dmmFacturas.unqryTablaG do
+  with unqryTablaG do
   begin
   case IndexStr(sTipoIVA, ['N', 'R', 'S', 'E']) of
     0: fPorcen := FindField('PORCENTAJE_IVAN_FAC').AsCurrency;
@@ -2409,8 +2420,7 @@ begin
     // lanzarla a Verifactu (Consolidar)
     FieldByName('FASE_FAC').AsString := 'BORRADOR';
     // Tipo de factura segun el formulario (NORMAL / SIMPLIFICADA)
-    FieldByName('TIPO_FAC').AsString :=
-      (GetOwnerForm<TfrmMtoFacturasBase>).TipoFacturaFiltro;
+    FieldByName('TIPO_FAC').AsString := FTipoFacturaDefecto;
     // Una factura normal insertada a mano es venta directa y mueve stock.
     // Los flujos que parten de otro documento deben negarlo expresamente.
     if FindField('ESMUEVE_STOCK_FAC') <> nil then
@@ -2420,7 +2430,10 @@ begin
       else
         FieldByName('ESMUEVE_STOCK_FAC').AsString := 'N';
     end;
-    (GetOwnerForm<TfrmMtoFacturasBase>).sbNuevaFacturaClick(Self.Owner);
+    // Encadenar alta: lo resuelve el form via OnNuevaFactura (el DM ya
+    // no invoca botones de la UI directamente).
+    if Assigned(FOnNuevaFactura) then
+      FOnNuevaFactura(Self);
     RefrescarAlmacenes(FieldByName('CODIGO_EMP_FAC').AsString);
     // Empresa sin almacenes activos (instalacion de solo servicios): la
     // factura no puede mover stock y el check nace desmarcado, dejando
@@ -2554,15 +2567,19 @@ begin
   end;
 end;
 
+procedure TdmFacturas.SenalarCampoInvalido(ACampo: TCampoValidacionFac);
+begin
+  if Assigned(FOnCampoInvalido) then
+    FOnCampoInvalido(ACampo);
+end;
+
 procedure TdmFacturas.ValidarCabeceraBeforePost(DataSet: TDataSet);
 var
   ISError:Boolean;
-  frmFac:TfrmMtoFacturasBase;
   bValidar: Boolean;
   dtUltima: TDateTime;
 begin
   IsError := False;
-  frmFac := (GetOwnerForm<TfrmMtoFacturasBase>);
   with unqryTablaG do
   begin
     if ((ExisteSerieEmpresa(FieldByName(fseriefac).AsString,
@@ -2572,9 +2589,7 @@ begin
     begin
       ShowMessage('Esta serie es usada por otra empresa.' +
                   ' Debe cambiar la serie ');
-      frmFac.pcCab.ActivePage := frmFac.tsCabecera;
-      if frmFac.cbbSerieFactura.CanFocus then
-        frmFac.cbbSerieFactura.SetFocus;
+      SenalarCampoInvalido(cvfSerie);
       IsError := True;
     end;
     if (FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString = '') and
@@ -2582,27 +2597,21 @@ begin
        (IsError = False) then
     begin
       ShowMessage('Debe escribir la razón social del cliente del borrador');
-      frmFac.pcCab.ActivePage := frmFac.tsDatosCliente;
-      if frmFac.txtRAZONSOCIAL_CLIENTE_FACTURA.CanFocus then
-        frmFac.txtRAZONSOCIAL_CLIENTE_FACTURA.SetFocus;
+      SenalarCampoInvalido(cvfRazonSocialCliente);
       IsError := True;
     end;
     if (FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsSTring = '') and
        (IsError = False) then
     begin
       ShowMessage('Debe escribir la razón social de la empresa del borrador');
-      frmFac.pcCab.ActivePage := frmFac.tsEmpresa;
-      if frmFac.txtRAZONSOCIAL_EMPRESA_FACTURA.CanFocus then
-        frmFac.txtRAZONSOCIAL_EMPRESA_FACTURA.SetFocus;
+      SenalarCampoInvalido(cvfRazonSocialEmpresa);
       IsError := True;
     end;
     if (FieldByName('SERIE_FAC').AsString = '') and
        (IsError = False) then
     begin
       ShowMessage('Debe seleccionar una serie del borrador');
-      frmFac.pcCab.ActivePage := frmFac.tsCabecera;
-      if frmFac.cbbSerieFactura.CanFocus then
-        frmFac.cbbSerieFactura.SetFocus;
+      SenalarCampoInvalido(cvfSerie);
       IsError := True;
     end;
     if ((FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString = '') or
@@ -2623,7 +2632,7 @@ begin
        (FieldByName('FECHA_FAC').AsString = '') then
     begin
       ShowMessage('Debe indicar la fecha del borrador.');
-      frmFac.pcCab.ActivePage := frmFac.tsCabecera;
+      SenalarCampoInvalido(cvfFecha);
       IsError := True;
     end;
     // Coherencia del tipo de operacion Verifactu (bloqueo si es flagrante)
@@ -2638,9 +2647,7 @@ begin
       ShowMessage('El NIF/CIF/NIE del cliente no es valido: ' +
         MensajeDocumentoFiscalInvalido(
           FieldByName('NIF_CLIENTE_FAC').AsString));
-      frmFac.pcCab.ActivePage := frmFac.tsDatosCliente;
-      if frmFac.txtNIF_CLIENTE_FACTURA.CanFocus then
-        frmFac.txtNIF_CLIENTE_FACTURA.SetFocus;
+      SenalarCampoInvalido(cvfNifCliente);
       IsError := True;
     end;
     if (not IsError) and bValidar and
@@ -2652,9 +2659,7 @@ begin
       ShowMessage('El NIF/CIF/NIE de la empresa no es valido: ' +
         MensajeDocumentoFiscalInvalido(
           FieldByName('NIF_EMPRESA_FAC').AsString));
-      frmFac.pcCab.ActivePage := frmFac.tsEmpresa;
-      if frmFac.txtNIF_EMPRESA_FACTURA.CanFocus then
-        frmFac.txtNIF_EMPRESA_FACTURA.SetFocus;
+      SenalarCampoInvalido(cvfNifEmpresa);
       IsError := True;
     end;
     // La fecha no puede ser anterior a la ultima factura emitida de la serie
@@ -2676,7 +2681,7 @@ begin
           ' es anterior al ultimo borrador de la serie (' +
           FormatDateTime('dd/mm/yyyy', dtUltima) +
           '). La numeracion debe seguir orden cronologico.');
-        frmFac.pcCab.ActivePage := frmFac.tsCabecera;
+        SenalarCampoInvalido(cvfFecha);
         IsError := True;
       end;
     end;
