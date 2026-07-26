@@ -686,6 +686,7 @@ implementation
 uses
   inLibWin,
   inLibMsg,
+  inLibImpuestosComun,
   inLibFiltroUsuario,
   inLibGenBusq,
   inLibShowMto,
@@ -1746,7 +1747,6 @@ var
   FechaFac   : TDateTime;
   CodArt     : string;
   CodSku     : string;
-  iPorcen    : Integer;
   fPorcen    : Currency;
   sTipoIVA   : string;
 begin
@@ -1831,35 +1831,23 @@ begin
     Lin.FindField('ESIMP_INCL_TARIFA_FACLIN').AsString :=
                                           IfThen(Precio.EsImpIncl, 'S', 'N');
 
+    // Porcentaje con decimales (el AsInteger anterior truncaba IVAs no
+    // enteros y descuadraba centimos) y conversion unica de la comun.
     sTipoIVA := Datos.TipoIVA;
-    iPorcen  := 0;
-    case IndexStr(sTipoIVA, ['N', 'R', 'S', 'E']) of
-      0: iPorcen :=
-        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAN_FAC').AsInteger;
-      1: iPorcen :=
-        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAR_FAC').AsInteger;
-      2: iPorcen :=
-        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAS_FAC').AsInteger;
-      3: iPorcen :=
-        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAE_FAC').AsInteger;
-    end;
-    fPorcen := iPorcen / 100;
+    fPorcen  := PorcentajeIvaFactura(sTipoIVA);
     if Precio.EsImpIncl then
     begin
       Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
         Precio.PrecioFinal;
-      if (1 + fPorcen) <> 0 then
-        Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
-                                                  Precio.PrecioFinal / (
-                                                    1 + fPorcen);
+      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
+        PrecioSinIvaDesdeConIva(Precio.PrecioFinal, fPorcen);
     end
     else
     begin
       Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
         Precio.PrecioFinal;
       Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
-                                                  Precio.PrecioFinal * (
-                                                    1 + fPorcen);
+        PrecioConIvaDesdeSinIva(Precio.PrecioFinal, fPorcen);
     end;
   finally
     FreeAndNil(Validador);
@@ -3015,7 +3003,6 @@ var
   CodTarifa  : string;
   FechaFac   : TDateTime;
   SkuAnterior: string;
-  iPorcen    : Integer;
   fPorcen    : Currency;
   sTipoIVA   : string;
 begin
@@ -3144,35 +3131,23 @@ begin
     Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat := Precio.PrecioSalida;
 
     // Reproducimos la conversión IVA inc./exc. que hacía CopiarArticuloaLinea
+    // Porcentaje con decimales (el AsInteger anterior truncaba IVAs no
+    // enteros y descuadraba centimos) y conversion unica de la comun.
     sTipoIVA := Datos.TipoIVA;
-    iPorcen  := 0;
-    case IndexStr(sTipoIVA, ['N', 'R', 'S', 'E']) of
-      0: iPorcen :=
-        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAN_FAC').AsInteger;
-      1: iPorcen :=
-        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAR_FAC').AsInteger;
-      2: iPorcen :=
-        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAS_FAC').AsInteger;
-      3: iPorcen :=
-        dmmFacturas.unqryTablaG.FindField('PORCENTAJE_IVAE_FAC').AsInteger;
-    end;
-    fPorcen := iPorcen / 100;
+    fPorcen  := PorcentajeIvaFactura(sTipoIVA);
     if Precio.EsImpIncl then
     begin
       Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
         Precio.PrecioFinal;
-      if (1 + fPorcen) <> 0 then
-        Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
-                                                  Precio.PrecioFinal / (
-                                                    1 + fPorcen);
+      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
+        PrecioSinIvaDesdeConIva(Precio.PrecioFinal, fPorcen);
     end
     else
     begin
       Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
         Precio.PrecioFinal;
       Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
-                                                  Precio.PrecioFinal * (
-                                                    1 + fPorcen);
+        PrecioConIvaDesdeSinIva(Precio.PrecioFinal, fPorcen);
     end;
     // Disparamos el recalculo para que TOTAL_FACLIN y TOTAL_FAC_SIVA_FACLIN
     // se vuelquen al dataset. Si el usuario se va de la fila sin tocar
@@ -4074,21 +4049,20 @@ begin
       Precio.PorcentajeDto;
     Lin.FindField('PRECIO_DTO_FACLIN').AsFloat := Precio.PrecioDto;
     Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat := Precio.PrecioSalida;
-    fPorcen := PorcentajeIvaFactura(Datos.TipoIVA) / 100;
+    fPorcen := PorcentajeIvaFactura(Datos.TipoIVA);
     if Precio.EsImpIncl then
     begin
       Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
         Precio.PrecioFinal;
-      if (1 + fPorcen) <> 0 then
-        Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
-          Precio.PrecioFinal / (1 + fPorcen);
+      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
+        PrecioSinIvaDesdeConIva(Precio.PrecioFinal, fPorcen);
     end
     else
     begin
       Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
         Precio.PrecioFinal;
       Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
-        Precio.PrecioFinal * (1 + fPorcen);
+        PrecioConIvaDesdeSinIva(Precio.PrecioFinal, fPorcen);
     end;
     // Recalculo de la linea y de los totales fiscales de la cabecera
     // (sin esto TOTAL_FACLIN y TOTAL_FAC_SIVA_FACLIN quedaban a 0 en el
@@ -4162,20 +4136,12 @@ end;
 
 function TfrmMtoFacturasBase.PorcentajeIvaFactura(
   const ATipoIva: string): Double;
-var
-  Cab: TDataSet;
 begin
+  // Delegado en la comun (misma convencion PORCENTAJE_IVAx_FAC).
   Result := 0;
   if (dmmFacturas <> nil) and dmmFacturas.unqryTablaG.Active then
-  begin
-    Cab := dmmFacturas.unqryTablaG;
-    case IndexStr(ATipoIva, ['N', 'R', 'S', 'E']) of
-      0: Result := Cab.FieldByName('PORCENTAJE_IVAN_FAC').AsFloat;
-      1: Result := Cab.FieldByName('PORCENTAJE_IVAR_FAC').AsFloat;
-      2: Result := Cab.FieldByName('PORCENTAJE_IVAS_FAC').AsFloat;
-      3: Result := Cab.FieldByName('PORCENTAJE_IVAE_FAC').AsFloat;
-    end;
-  end;
+    Result := PorcentajeIvaCabecera(dmmFacturas.unqryTablaG, 'FAC',
+                                    ATipoIva);
 end;
 
 function TfrmMtoFacturasBase.PrecioSkuTallas(const ACodigoArticulo,
@@ -4212,7 +4178,7 @@ begin
         if Precio.EsImpIncl then
           Result := Precio.PrecioFinal
         else
-          Result := Precio.PrecioFinal * (1 + rPorIva / 100);
+          Result := PrecioConIvaDesdeSinIva(Precio.PrecioFinal, rPorIva);
       end;
     finally
       FreeAndNil(Resolver);

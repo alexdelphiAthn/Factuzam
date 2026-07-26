@@ -44,6 +44,14 @@ function ObtenerTipoIvaArticulo(AConn: TUniConnection;
   const ACodigoArt: string): string;
 function PorcentajeIvaCabecera(ACabecera: TDataSet;
   const ASufijoCabecera, ATipoIva: string): Double;
+// Conversion IVA incluido <-> excluido con guarda de division por cero.
+// APorcentajeIva viene en tanto por cien (21, 10.5...), NUNCA truncado
+// a entero: los IVAs con decimales existen y truncarlos descuadra
+// centimos entre linea y cabecera.
+function PrecioSinIvaDesdeConIva(APrecioConIva,
+                                 APorcentajeIva: Double): Double;
+function PrecioConIvaDesdeSinIva(APrecioSinIva,
+                                 APorcentajeIva: Double): Double;
 function SufijoLineaFiscalDesdeCampo(const ACampoTipoIva: string): string;
 
 implementation
@@ -313,6 +321,24 @@ begin
   iIndice := IndiceTipoIva(ATipoIva);
   Result := CampoFloat(ACabecera,
     'PORCENTAJE_' + CODIGOS_IVA[iIndice] + '_' + ASufijoCabecera);
+end;
+
+function PrecioSinIvaDesdeConIva(APrecioConIva,
+                                 APorcentajeIva: Double): Double;
+var
+  rFactor: Double;
+begin
+  rFactor := 1 + (APorcentajeIva / 100);
+  if rFactor = 0 then
+    Result := APrecioConIva
+  else
+    Result := APrecioConIva / rFactor;
+end;
+
+function PrecioConIvaDesdeSinIva(APrecioSinIva,
+                                 APorcentajeIva: Double): Double;
+begin
+  Result := APrecioSinIva * (1 + (APorcentajeIva / 100));
 end;
 
 function SufijoLineaFiscalDesdeCampo(const ACampoTipoIva: string): string;

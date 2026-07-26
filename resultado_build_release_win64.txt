@@ -20,7 +20,7 @@ src\Modals\inMtoModalDistribuidor.pas(74): Hint warning H2269: Overriding virtua
 src\Lib\inLibColumnasSkuModoTallas.pas(1742): Hint warning H2077: Value assigned to 'rUdsAntes' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Lib\inLibColumnasSkuModoTallas.pas(1929): warning W1036: Variable 'rPrecio' might not have been initialized [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Lib\inLibColumnasSkuModoTallas.pas(2237): Hint warning H2443: Inline function 'cxTextWidth' has not been expanded because unit 'dxCoreGraphics' is not specified in USES list [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
-src\Forms\inMtoFacturasBase.pas(2121): Hint warning H2077: Value assigned to 'TfrmMtoFacturasBase.PuedeConsultarEstadoColaVerifactu' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Forms\inMtoFacturasBase.pas(2109): Hint warning H2077: Value assigned to 'TfrmMtoFacturasBase.PuedeConsultarEstadoColaVerifactu' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\DataModules\UniDataFacturas.pas(716): Hint warning H2164: Variable 'oLinFac' is declared but never used in 'TdmFacturas.CopiarArticuloaLinea' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\DataModules\UniDataFacturas.pas(717): Hint warning H2164: Variable 'facTotales' is declared but never used in 'TdmFacturas.CopiarArticuloaLinea' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Forms\inMtoArticulos.pas(2697): Hint warning H2077: Value assigned to 'msActVisCol' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
@@ -109,4 +109,4 @@ src\Forms\inMtoInventarios.pas(2047): Hint warning H2077: Value assigned to 'msD
 src\Forms\inMtoInventarios.pas(2351): Hint warning H2077: Value assigned to 'msResolver' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Forms\inMtoComprasSesiones.pas(578): Hint warning H2164: Variable 'bPopupAbierto' is declared but never used in 'TfrmMtoComprasSesiones.cxgrdLineasExit' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Forms\inMtoComprasSesiones.pas(3694): Hint warning H2077: Value assigned to 'TfrmMtoComprasSesiones.MaterializarSesionConTx' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
-  307548 lines, 17.25 seconds, 55580680 bytes code, 5270536 bytes data.
+  307540 lines, 18.48 seconds, 55578984 bytes code, 5270536 bytes data.
