@@ -1,5 +1,6 @@
   Embarcadero Delphi for Win64 compiler version 37.0
   Copyright (c) 1983,2025 Embarcadero Technologies, Inc.
+src\Lib\inLibtb.pas(1445): Hint warning H2077: Value assigned to 'Dsp' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Lib\inLibDevExp.pas(798): Hint warning H2164: Variable 'oBandedView' is declared but never used in 'PonerAnchosTitulos' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\DataModules\UniDataFiltros.pas(402): Hint warning H2077: Value assigned to 'TdmFiltros.EsPropietario' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Lib\inLibFotos.pas(732): Hint warning H2077: Value assigned to 'TFotosArticulos.CargarGraficoDeFichero' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
@@ -109,4 +110,4 @@ src\Forms\inMtoInventarios.pas(2047): Hint warning H2077: Value assigned to 'msD
 src\Forms\inMtoInventarios.pas(2351): Hint warning H2077: Value assigned to 'msResolver' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Forms\inMtoComprasSesiones.pas(578): Hint warning H2164: Variable 'bPopupAbierto' is declared but never used in 'TfrmMtoComprasSesiones.cxgrdLineasExit' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
 src\Forms\inMtoComprasSesiones.pas(3694): Hint warning H2077: Value assigned to 'TfrmMtoComprasSesiones.MaterializarSesionConTx' never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
-  307640 lines, 19.20 seconds, 55580152 bytes code, 5270600 bytes data.
+  307665 lines, 17.38 seconds, 55580744 bytes code, 5270664 bytes data.

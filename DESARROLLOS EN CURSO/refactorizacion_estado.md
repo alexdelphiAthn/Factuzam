@@ -12,13 +12,28 @@ Fecha: 26/07/2026. Referencia: `refactorizacion_pendiente.md` (auditoría) y
 | 2 completa | `inLibImpuestosComun` (14 funciones); modal remesas único; fusión `CrearAlbaranDesdePedido`; conversión IVA única + fix `AsInteger` (~875 líneas duplicadas menos) | 4 docs resultados |
 | 3 (2 de ~5) | Validación de cabecera sin tocar UI; `TdmFacturas` sin `uses` del form (12 refs → 0) | 2 docs resultados |
 
-Pendiente TUYO sobre lo hecho: pasada de `plan_pruebas_funcionales_completo.md`,
-aplicar el script del índice a la BBDD real, **commit en git**, y borrar
-definitivamente `_to_delete/inMtoModalCargarEfectosRemesaVenta.*`.
+Validación acumulada: **96 comprobaciones de datos** (58 + 38 de compras)
+y **26 en pantalla**, 0 fallos. Documentos: `pruebas_funcionales_resultados.md`,
+`pruebas_compras_resultados.md`, `pruebas_ui_resultados.md`.
+
+Git: consolidado en `main` (commit `2561a179`, 26/07/2026) — incluye
+`inLibImpuestosComun.pas` y la baja de `inMtoModalCargarEfectosRemesaVenta.*`.
+
+Pendiente TUYO sobre lo hecho: aplicar `movimientos_indice_unico_fcve.sql`
+a la BBDD real (tras la consulta de duplicados), ejecutar si quieres
+`limpiar_datos_prueba_ui.sql` en desarrollo, borrar definitivamente
+`_to_delete/inMtoModalCargarEfectosRemesaVenta.*`, y la pasada de pantalla
+que quedó a medias (compras y bloque A) cuando vuelvas a dar permiso de
+control del escritorio.
 
 ## PENDIENTE de la auditoría (por orden de valor/riesgo sugerido)
 
-### A. Arreglos puntuales cortos (1-2 días, riesgo bajo — buen siguiente bloque)
+> **El plan de ejecución de todo lo que sigue está en
+> `refactorizacion_plan_pendiente.md`** (26/07/2026), con cifras medidas
+> sobre el código commiteado y plan de pruebas por bloque. La lista de
+> abajo se queda como índice de la auditoría.
+
+### A. Arreglos puntuales cortos — **HECHO** (ver `refactorizacion_bloqueA_resultados.md`)
 
 1. **AV latente**: `ExistePeriodoUnico` (`inLibtb`) usa un `TClientDataset`
    local SIN inicializar a nil que solo se crea en una rama; los `Assigned`
@@ -95,6 +110,12 @@ definitivamente `_to_delete/inMtoModalCargarEfectosRemesaVenta.*`.
 
 ## Sugerencia de secuencia
 
-Pruebas funcionales + commit → bloque A (arreglos cortos) → B.6/B.7 →
-DUnitX (22) → y a partir de ahí, D por fascículos cuando toques cada zona,
-con la regla B.10 evitando regresiones de acoplamiento.
+Detallada en `refactorizacion_plan_pendiente.md`. En corto: terminar el
+desacoplamiento (B) → estado global (C) → **DUnitX (22) antes de tocar
+las clases dios** → D por fascículos cuando toques cada zona, con la
+regla B.10 y su script evitando regresiones de acoplamiento → E en ratos
+sueltos.
+
+Siguiente paso recomendado: **bloque B1** (medio día) — 8 `uses` muertos
+y 18 data modules que suben al formulario a por `dsTablaG`. Quita 26 de
+las 33 infracciones y desarma el ciclo de 18 unidades.
