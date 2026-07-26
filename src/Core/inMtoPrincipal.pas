@@ -53,7 +53,7 @@ uses
   inLibContextoSesionIntf, inLibParametrosIntf;
 
 const
-  WM_FREECONTROL = WM_USER;
+  WM_FREECONTROL = WM_USER + 1;
 
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
@@ -251,7 +251,7 @@ type
 //      var Action: TErrorAction);
     procedure mnuLisVentasClick(Sender: TObject);
     procedure FormActivate(Sender: TObject);
-    procedure WMFreeControl(var Msg: TMessage); message WM_USER + 1;
+    procedure WMFreeControl(var Msg: TMessage); message WM_FREECONTROL;
   private
     FException: Boolean;
     FSavedNCMValid: Boolean;
@@ -377,7 +377,6 @@ uses inLibUser,
   inMtoModalImpEfectosPago,
   inMtoModalFacturarAlbaranes,
   inMtoModalCargarEfectosRemesa,
-  inMtoModalCargarEfectosRemesaVenta,
   inLibCajaParam,
   inLibAppParam,
   inLibUnidadesMedida,
@@ -758,7 +757,6 @@ begin
   oFotos.AsignarConexion(ConexionPrincipal, ParametrosApp);
   FdmDataFiltros  := TdmFiltros.Create(Self);
   AsignarFiltrosGuardados(FdmDataFiltros);
-  ofrmMto2        := Self;
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(ConexionPrincipal);
   try
@@ -2186,12 +2184,12 @@ end;
 
 procedure TfrmMtoPrincipal.CargarEfectosVenta1Click(Sender: TObject);
 var
-  f: TfrmModalCargarEfectosRemesaVenta;
+  f: TfrmModalCargarEfectosRemesa;
 begin
   inherited;
   if CargarEfectosVenta1.Visible then
   begin
-    f := TfrmModalCargarEfectosRemesaVenta.Create(nil);
+    f := TfrmModalCargarEfectosRemesa.CrearParaVenta(nil);
     try
       if f.ShowModal = mrOk then
         ShowMto(Self, 'RemesasVenta');
@@ -2267,7 +2265,7 @@ begin
   inherited;
   if CargarEfectos1.Visible then
   begin
-    f := TfrmModalCargarEfectosRemesa.Create(nil);
+    f := TfrmModalCargarEfectosRemesa.CrearParaCompra(nil);
     try
       if f.ShowModal = mrOk then
         ShowMto(Self, 'RemesasCompra');

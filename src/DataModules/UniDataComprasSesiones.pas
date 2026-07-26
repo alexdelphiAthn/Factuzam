@@ -20,7 +20,7 @@ interface
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
   frxClass, frxDBSet,
-  inLibUser, inMtoPrincipal, frCoreClasses;
+  inLibUser, frCoreClasses;
 
 type
   TdmComprasSesiones = class(TdmBase)

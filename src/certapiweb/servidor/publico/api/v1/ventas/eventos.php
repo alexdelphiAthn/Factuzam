@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require dirname(__DIR__, 4) . '/privado/autenticacion.php';
+require_once dirname(__DIR__, 4) . '/privado/ventas_proyeccion.php';
 
 function texto_evento(
     array $datos,
@@ -105,6 +106,60 @@ function validar_pdf(array $venta, string $clave): ?array
         'huella' => $huella,
         'contenido' => $contenido
     ];
+}
+
+/**
+ * Fotos de artículo que acompañan a la venta. Van a nivel de venta y no de
+ * línea: el emisor manda una sola copia por artículo aunque se repita en
+ * varias líneas. Un PNG que no cuadre se descarta en silencio en vez de
+ * tumbar la venta entera: la foto es un adorno, el importe no.
+ */
+function validar_fotos_articulo(array $venta): array
+{
+    $fotos = $venta['fotos'] ?? [];
+    if (!is_array($fotos)) {
+        return [];
+    }
+    $maximo = defined('CFG_VENTAS_FOTO_MAX_BYTES')
+        ? (int)constant('CFG_VENTAS_FOTO_MAX_BYTES')
+        : 4 * 1024 * 1024;
+    $validas = [];
+    foreach ($fotos as $foto) {
+        if (!is_array($foto)) {
+            continue;
+        }
+        $articulo = $foto['articulo'] ?? '';
+        $clave = $foto['clave_unidad'] ?? '';
+        $nombre = $foto['nombre'] ?? '';
+        $base64 = $foto['contenido_base64'] ?? '';
+        $huella = strtoupper((string)($foto['sha256'] ?? ''));
+        if (!is_string($articulo) || !is_string($clave) ||
+            !is_string($nombre) || !is_string($base64) ||
+            $articulo === '' || $base64 === '' ||
+            strlen($articulo) > 20 || strlen($clave) > 50 ||
+            strlen($nombre) > 255) {
+            continue;
+        }
+        $contenido = base64_decode($base64, true);
+        if (!is_string($contenido) || strlen($contenido) < 8 ||
+            strlen($contenido) > $maximo ||
+            substr($contenido, 0, 8) !== "\x89PNG\r\n\x1a\n") {
+            continue;
+        }
+        if (preg_match('/^[A-F0-9]{64}$/D', $huella) !== 1 ||
+            !hash_equals(strtoupper(hash('sha256', $contenido)), $huella)) {
+            continue;
+        }
+        $validas[$articulo . '|' . $clave] = [
+            'articulo' => $articulo,
+            'clave' => $clave,
+            'nombre' => $nombre === '' ? $articulo . '.png' : $nombre,
+            'tamano' => strlen($contenido),
+            'huella' => $huella,
+            'contenido' => $contenido
+        ];
+    }
+    return array_values($validas);
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -215,6 +270,7 @@ if (!is_array($fiscal)) {
 }
 $ticketPdf = validar_pdf($venta, 'ticket_pdf');
 $facturaPdf = validar_pdf($venta, 'factura_pdf');
+$fotosArticulo = validar_fotos_articulo($venta);
 $generado = texto_evento($datos, 'generado_utc', 40);
 try {
     $instanteGeneracion = (new DateTimeImmutable($generado))
@@ -228,6 +284,15 @@ try {
     );
 }
 $huellaContenido = strtoupper(hash('sha256', $cuerpo));
+$cabeceraProyectada = proyeccion_cabecera($cabecera);
+$contextoLinea = [
+    'referencia' => $referencia,
+    'empresa' => $empresa,
+    'serie' => $serie,
+    'numero' => $numero,
+    'fecha_venta' => $cabeceraProyectada['fecha_venta'],
+    'instante_venta' => $cabeceraProyectada['instante_venta']
+];
 $jsonCabecera = json_proyeccion($cabecera);
 $jsonPagosFactura = json_proyeccion($venta['pagos_factura']);
 $jsonRecibos = json_proyeccion($venta['recibos']);
@@ -304,9 +369,10 @@ try {
                 'efectos_venta_json, pagos_caja_json, ' .
                 'operaciones_caja_json, movimientos_almacen_json, ' .
                 'vales_json, depositos_json, relaciones_json, fiscal_json, ' .
+                'fecha_venta, instante_venta, tipo_factura, total_factura, ' .
                 'instante_alta, instante_modif) VALUES ' .
                 '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ' .
-                'UTC_TIMESTAMP(), UTC_TIMESTAMP())'
+                '?, ?, ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())'
             );
             $insertarVenta->execute([
                 $referencia,
@@ -326,7 +392,11 @@ try {
                 $jsonVales,
                 $jsonDepositos,
                 $jsonRelaciones,
-                $jsonFiscal
+                $jsonFiscal,
+                $cabeceraProyectada['fecha_venta'],
+                $cabeceraProyectada['instante_venta'],
+                $cabeceraProyectada['tipo_factura'],
+                $cabeceraProyectada['total_factura']
             ]);
             $idVenta = (int)$pdo->lastInsertId();
             $proyectado = true;
@@ -341,7 +411,9 @@ try {
                     'pagos_caja_json = ?, operaciones_caja_json = ?, ' .
                     'movimientos_almacen_json = ?, vales_json = ?, ' .
                     'depositos_json = ?, relaciones_json = ?, ' .
-                    'fiscal_json = ?, instante_modif = UTC_TIMESTAMP() ' .
+                    'fiscal_json = ?, fecha_venta = ?, ' .
+                    'instante_venta = ?, tipo_factura = ?, ' .
+                    'total_factura = ?, instante_modif = UTC_TIMESTAMP() ' .
                     'WHERE id = ?'
                 );
                 $actualizarVenta->execute([
@@ -359,6 +431,10 @@ try {
                     $jsonDepositos,
                     $jsonRelaciones,
                     $jsonFiscal,
+                    $cabeceraProyectada['fecha_venta'],
+                    $cabeceraProyectada['instante_venta'],
+                    $cabeceraProyectada['tipo_factura'],
+                    $cabeceraProyectada['total_factura'],
                     $idVenta
                 ]);
                 $proyectado = true;
@@ -369,18 +445,59 @@ try {
                 'DELETE FROM api_ventas_lineas WHERE id_venta = ?'
             );
             $borrarLineas->execute([$idVenta]);
+            $columnasLinea = columnas_proyeccion_linea();
             $insertarLinea = $pdo->prepare(
                 'INSERT INTO api_ventas_lineas ' .
-                '(id_venta, orden_linea, datos_json) VALUES (?, ?, ?)'
+                '(id_venta, orden_linea, datos_json, `' .
+                implode('`, `', $columnasLinea) . '`) VALUES (?, ?, ?, ' .
+                implode(', ', array_fill(0, count($columnasLinea), '?')) .
+                ')'
             );
             foreach ($lineas as $indice => $linea) {
                 if (!is_array($linea)) {
                     throw new RuntimeException('Línea de venta no válida.');
                 }
-                $insertarLinea->execute([
+                $proyeccion = proyeccion_linea($linea, $contextoLinea);
+                $valoresLinea = [
                     $idVenta,
                     $indice + 1,
                     json_proyeccion($linea)
+                ];
+                foreach ($columnasLinea as $columnaLinea) {
+                    $valoresLinea[] = $proyeccion[$columnaLinea];
+                }
+                $insertarLinea->execute($valoresLinea);
+            }
+        }
+        // Las fotos no dependen de la secuencia del evento: si la huella
+        // es la misma no se reescribe el blob, solo se toca la fecha.
+        if ($fotosArticulo !== []) {
+            $guardarFoto = $pdo->prepare(
+                'INSERT INTO api_articulos_fotos ' .
+                '(referencia, codigo_articulo, clave_unidad, ' .
+                'nombre_archivo, tipo_mime, tamano_bytes, huella_sha256, ' .
+                'contenido, instante_alta, instante_modif) VALUES ' .
+                '(?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP()) ' .
+                'ON DUPLICATE KEY UPDATE ' .
+                'nombre_archivo = IF(huella_sha256 = VALUES(huella_sha256), ' .
+                'nombre_archivo, VALUES(nombre_archivo)), ' .
+                'tamano_bytes = IF(huella_sha256 = VALUES(huella_sha256), ' .
+                'tamano_bytes, VALUES(tamano_bytes)), ' .
+                'contenido = IF(huella_sha256 = VALUES(huella_sha256), ' .
+                'contenido, VALUES(contenido)), ' .
+                'instante_modif = UTC_TIMESTAMP(), ' .
+                'huella_sha256 = VALUES(huella_sha256)'
+            );
+            foreach ($fotosArticulo as $foto) {
+                $guardarFoto->execute([
+                    $referencia,
+                    $foto['articulo'],
+                    $foto['clave'],
+                    $foto['nombre'],
+                    'image/png',
+                    $foto['tamano'],
+                    $foto['huella'],
+                    $foto['contenido']
                 ]);
             }
         }

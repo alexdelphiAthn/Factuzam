@@ -16,7 +16,7 @@ unit inLibGlobalVar;
 
 interface
 
-uses cxMemo, inMtoPrincipal,
+uses cxMemo,
      inLibInformesGuiasCache,
      inLibLicenciaAplicacion;
 //type
@@ -34,7 +34,6 @@ type
 var
   oInfGuiasCache :TInformesGuiasCache;
   oMemoSQL   :TcxMemo;
-  ofrmMto2   :TfrmMtoPrincipal;
   oNomImpresoraCaja:String;
   oAppName   :String;
   oVersion   :String;

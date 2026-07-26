@@ -28,7 +28,7 @@ uses
     cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGridLevel,
     cxClasses, cxGridCustomView, cxGrid, cxGridCardView, cxSpinEdit,
     cxGridDBCardView, cxGridBandedTableView, cxGridDBBandedTableView,
-    cxRadioGroup, inMtoPrincipal, cxPc, dxShellDialogs, inLibUser,
+    cxRadioGroup, cxPc, dxShellDialogs, inLibUser,
     cxGroupBox, cxLabel, cxListBox, System.NetEncoding,
     inLibPerfilesUsuarioIntf,
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
@@ -41,7 +41,7 @@ type
                         AsDatoBusq: String);
   procedure GrabarGrids(frmMto: TComponent);
   function CheckOpenGrids(frmMto: TComponent):Boolean;
-  procedure CancelarGrids(AoPrincipal:TComponent);
+  procedure CancelarGrids(ApcPrincipal:TcxPageControl);
   procedure SetCaseTcxTextProperty(oControl: TComponent;
                                    AsCase: TEditCharCase);
 //  procedure SaveColumnsStateActiveWindow;
@@ -105,8 +105,7 @@ type
 
 implementation
 
-  uses inMtoGen,
-       inLibWin,
+  uses inLibWin,
        inLibtb,
        inLibDir, uGenericIfThen,
        inLibConfigCampos;
@@ -1106,18 +1105,16 @@ begin
   end;
 end;
 
-procedure CancelarGrids(AoPrincipal:TComponent);
+procedure CancelarGrids(ApcPrincipal:TcxPageControl);
 var
   i: Integer;
   iPrincipal:Integer;
-  frmMto:TfrmMtoGen;
-  frmMtoPrin2:TfrmMtoPrincipal;
+  frmMto:TControl;
   tsNew: TcxTabSheet;
 begin
-  frmMtoPrin2 := (AoPrincipal as TfrmMtoPrincipal);
-  iPrincipal := frmMtoPrin2.pcPrincipal.ActivePageIndex;
-  tsNew := frmMtoPrin2.pcPrincipal.Pages[iPrincipal];
-  frmMto := (tsNew.Controls[0] as TfrmMtoGen);
+  iPrincipal := ApcPrincipal.ActivePageIndex;
+  tsNew := ApcPrincipal.Pages[iPrincipal];
+  frmMto := tsNew.Controls[0];
   for i := 0 to frmMto.Componentcount - 1 do
   begin
     if frmMto.Components[i].ClassNameis('TcxGridDBTableView')

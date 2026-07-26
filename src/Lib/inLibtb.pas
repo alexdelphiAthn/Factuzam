@@ -433,7 +433,11 @@ begin
   end;
   Totales := TFacturaTotales.Create(AConexion, cdsCabecera, cdsLineas);
   try
-    Totales.ProcesarFacturaCompleta;
+    // Un fallo del calculo no puede quedar silenciado: la linea se
+    // grabaria con totales obsoletos o a cero. Se aborta la edicion.
+    if not Totales.ProcesarFacturaCompleta then
+      raise Exception.Create('Error al recalcular totales de la ' +
+                             'factura: ' + Totales.MensajeError);
     if Assigned(EventoUpdateTotal) then
       EventoUpdateTotal(nil, Totales.Totales.TotalLiquido);
   finally

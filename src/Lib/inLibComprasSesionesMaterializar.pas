@@ -87,11 +87,47 @@ function RevertirMaterializacion(ADM: TdmComprasSesiones;
 implementation
 
 uses
+  inLibLog,
+  inLibGlobalVar,
   inLibEAN13,
   inLibComprasSesiones,
   inLibFotos,
   inLibtb,
   inLibAlbaranesCompraMovimientos;
+
+// ---------------------------------------------------------------------------
+// Soporte de reversion: tablas opcionales y avisos con rastro
+// ---------------------------------------------------------------------------
+// Antes cada paso de la reversion envolvia su DELETE en un try/except
+// vacio "por si la tabla no existe en BBDD legacy". Eso tragaba tambien
+// los fallos REALES (permisos, locks, FK) y dejaba la reversion a medias
+// sin avisar. Ahora la existencia de tablas se comprueba UNA sola vez y
+// un fallo real del DELETE aborta la reversion (rollback + AMsgError).
+function TablaExiste(AConn: TUniConnection; const ATabla: string): Boolean;
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.TABLES ' +
+      ' WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t';
+    q.ParamByName('t').AsString := ATabla;
+    q.Open;
+    Result := q.FieldByName('N').AsInteger > 0;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
+// Aviso de paso omitido o degradado: rastro en el log tecnico y en la
+// pestania Log de la pantalla de sesiones (LogSes es no-op si no esta).
+procedure AvisoPaso(const ATexto: string);
+begin
+  Log.LogWarning('inLibComprasSesionesMaterializar: ' + ATexto);
+  LogSes('  AVISO: ' + ATexto);
+end;
 
 // ---------------------------------------------------------------------------
 // Generación local de EAN13
@@ -2324,7 +2360,11 @@ begin
           FreeAndNil(qLin);
         end;
       except
-        // tragado: si esto también falla, no hay nada que hacer
+        // ultimo recurso: no se pudo persistir el error en la sesion,
+        // pero al menos queda rastro en el log
+        on E2: Exception do
+          AvisoPaso('No se pudo persistir MENSAJE_ERROR_SES: ' +
+                    E2.Message);
       end;
     end;
   end;
@@ -2342,6 +2382,8 @@ var
   sSerieSes, sNumSes: string;
   q         : TUniQuery;
   bTxOwned  : Boolean;
+  bTieneSesDocs, bTienePdteRecibir: Boolean;
+  bTienePedC, bTienePedCLin, bTieneAlbC: Boolean;
 begin
   Result    := False;
   AMsgError := '';
@@ -2365,6 +2407,16 @@ begin
   conn      := ADM.ConexionPrincipal;
   sSerieSes := ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
   sNumSes   := ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+
+  // Tablas opcionales (BBDD legacy sin migraciones aplicadas): se
+  // comprueban una sola vez; los pasos que las tocan se omiten con
+  // aviso si faltan, en vez de tragar cualquier excepcion.
+  bTieneSesDocs     := TablaExiste(conn, 'fza_compras_sesiones_documentos');
+  bTienePdteRecibir := TablaExiste(conn, 'fza_articulos_pdte_recibir');
+  bTienePedC        := TablaExiste(conn, 'fza_pedidos_compra');
+  bTienePedCLin     := TablaExiste(conn, 'fza_pedidos_compra_lineas');
+  bTieneAlbC        := TablaExiste(conn, 'fza_albaranes_compra') and
+                       TablaExiste(conn, 'fza_albaranes_compra_lineas');
 
   bTxOwned := not conn.InTransaction;
   if bTxOwned then conn.StartTransaction;
@@ -2493,7 +2545,9 @@ begin
         q.ParamByName('n').AsString := sNumSes;
         q.ExecSQL;
       except
-        // tragado: cleanup de fotos es best-effort
+        // best-effort: sin fotos no se aborta, pero queda rastro
+        on E: Exception do
+          AvisoPaso('0h fotos: ' + E.Message);
       end;
 
       // 0i. cabecera del articulo
@@ -2514,7 +2568,8 @@ begin
       //     cabecera de la sesion (apuntan al albaran creado).
       if ADM.unqryTablaG.FieldByName('NUMERO_ALBC_SES').AsString <> '' then
       begin
-        try
+        if bTieneAlbC then
+        begin
           // Lineas primero (PK incluye albaran)
           q.SQL.Text :=
             'DELETE FROM fza_albaranes_compra_lineas ' +
@@ -2534,17 +2589,19 @@ begin
           q.ParamByName('salb').AsString :=
                 ADM.unqryTablaG.FieldByName('SERIE_ALBC_SES').AsString;
           q.ExecSQL;
-        except
-          // tabla puede no existir en BBDD legacy — best effort
-        end;
+        end
+        else
+          AvisoPaso('0j omitido: fza_albaranes_compra(_lineas) no existe');
       end;
       // 0j-bis. Limpiar fza_compras_sesiones_documentos. Si se vuelve a
       //         materializar, los INSERT IGNORE meterian otra vez los
       //         mismos docs. Borramos siempre toda la lista de la
       //         sesion sin filtrar tipo, para vaciar tanto PEDC como
-      //         ALBC. Best effort: si la tabla no existe (BBDD legacy
-      //         pre-script) seguimos sin abortar.
-      try
+      //         ALBC. Si la tabla existe y el DELETE falla se ABORTA
+      //         (rollback): dejarla a medias duplicaria documentos en
+      //         la siguiente materializacion.
+      if bTieneSesDocs then
+      begin
         q.SQL.Text :=
           'DELETE FROM fza_compras_sesiones_documentos ' +
           ' WHERE SERIE_SES_SESDOC  = :s ' +
@@ -2552,8 +2609,10 @@ begin
         q.ParamByName('s').AsString := sSerieSes;
         q.ParamByName('n').AsString := sNumSes;
         q.ExecSQL;
-      except
-      end;
+      end
+      else
+        AvisoPaso('0j-bis omitido: fza_compras_sesiones_documentos ' +
+                  'no existe');
 
       // 1. Borrar los movimientos de almacen que esta sesion creo. Solo
       //    los TIPO_DOC_MOV='AC' cuyo NUMERO_DOC coincide con el de la
@@ -2574,9 +2633,9 @@ begin
           'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :salb, :nalb)';
         q.ParamByName('t').AsString := 'AC';
         q.ParamByName('salb').AsString :=
-                          ADM.unqryTablaG.FieldByName('SERIE_ALBC_SES').AsString;
+              ADM.unqryTablaG.FieldByName('SERIE_ALBC_SES').AsString;
         q.ParamByName('nalb').AsString :=
-                          ADM.unqryTablaG.FieldByName('NUMERO_ALBC_SES').AsString;
+              ADM.unqryTablaG.FieldByName('NUMERO_ALBC_SES').AsString;
         q.ExecSQL;
       end;
       // 1.ter Cleanup de movimientos AC huerfanos en la misma
@@ -2624,74 +2683,82 @@ begin
       //     NUMERO del pedido realmente generado — mas robusto que
       //     deducirlo de la cabecera de sesion porque en modo "un doc
       //     por almacen" cada iteracion genero su propio numero.
-      //     try/except porque hay BBDD que aun no tienen las tablas
-      //     creadas (migraciones pendientes) y no debe bloquear la
-      //     reversion del resto.
-      try
-        // 1b.1 Cantidades pendientes de recibir
-        q.SQL.Text :=
-          'DELETE PDR FROM fza_articulos_pdte_recibir PDR ' +
-          '  JOIN fza_compras_sesiones_documentos D ' +
-          '    ON D.SERIE_SESDOC  = PDR.SERIE_DOC_PDR ' +
-          '   AND D.NUMERO_SESDOC = PDR.NUMERO_DOC_PDR ' +
-          ' WHERE D.SERIE_SES_SESDOC  = :s ' +
-          '   AND D.NUMERO_SES_SESDOC = :n ' +
-          '   AND D.TIPO_DOC_SESDOC   = ''PEDC''';
-        q.ParamByName('s').AsString := sSerieSes;
-        q.ParamByName('n').AsString := sNumSes;
-        q.ExecSQL;
-      except
-        // tabla pdte_recibir o sesiones_documentos puede no existir.
-      end;
+      //     Los pasos se omiten (con aviso) si las tablas no existen
+      //     en esta BBDD; un fallo real del DELETE aborta la reversion
+      //     con rollback.
+      if (bTienePdteRecibir and bTieneSesDocs) then
+      begin
+          // 1b.1 Cantidades pendientes de recibir
+          q.SQL.Text :=
+            'DELETE PDR FROM fza_articulos_pdte_recibir PDR ' +
+            '  JOIN fza_compras_sesiones_documentos D ' +
+            '    ON D.SERIE_SESDOC  = PDR.SERIE_DOC_PDR ' +
+            '   AND D.NUMERO_SESDOC = PDR.NUMERO_DOC_PDR ' +
+            ' WHERE D.SERIE_SES_SESDOC  = :s ' +
+            '   AND D.NUMERO_SES_SESDOC = :n ' +
+            '   AND D.TIPO_DOC_SESDOC   = ''PEDC''';
+          q.ParamByName('s').AsString := sSerieSes;
+          q.ParamByName('n').AsString := sNumSes;
+          q.ExecSQL;
+      end
+      else
+        AvisoPaso('1b.1 omitido: falta fza_articulos_pdte_recibir ' +
+                  'o fza_compras_sesiones_documentos');
       // 1b.2 Lineas del pedido de compra
-      try
-        q.SQL.Text :=
-          'DELETE PEDL FROM fza_pedidos_compra_lineas PEDL ' +
-          '  JOIN fza_compras_sesiones_documentos D ' +
-          '    ON D.SERIE_SESDOC  = PEDL.SERIE_PEDC_PEDCLIN ' +
-          '   AND D.NUMERO_SESDOC = PEDL.NUMERO_PEDC_PEDCLIN ' +
-          ' WHERE D.SERIE_SES_SESDOC  = :s ' +
-          '   AND D.NUMERO_SES_SESDOC = :n ' +
-          '   AND D.TIPO_DOC_SESDOC   = ''PEDC''';
-        q.ParamByName('s').AsString := sSerieSes;
-        q.ParamByName('n').AsString := sNumSes;
-        q.ExecSQL;
-      except
-        // tabla fza_pedidos_compra_lineas puede no existir.
-      end;
+      if (bTienePedCLin and bTieneSesDocs) then
+      begin
+          q.SQL.Text :=
+            'DELETE PEDL FROM fza_pedidos_compra_lineas PEDL ' +
+            '  JOIN fza_compras_sesiones_documentos D ' +
+            '    ON D.SERIE_SESDOC  = PEDL.SERIE_PEDC_PEDCLIN ' +
+            '   AND D.NUMERO_SESDOC = PEDL.NUMERO_PEDC_PEDCLIN ' +
+            ' WHERE D.SERIE_SES_SESDOC  = :s ' +
+            '   AND D.NUMERO_SES_SESDOC = :n ' +
+            '   AND D.TIPO_DOC_SESDOC   = ''PEDC''';
+          q.ParamByName('s').AsString := sSerieSes;
+          q.ParamByName('n').AsString := sNumSes;
+          q.ExecSQL;
+      end
+      else
+        AvisoPaso('1b.2 omitido: falta fza_pedidos_compra_lineas ' +
+                  'o fza_compras_sesiones_documentos');
       // 1b.3 Cabeceras del pedido de compra
-      try
-        q.SQL.Text :=
-          'DELETE PED FROM fza_pedidos_compra PED ' +
-          '  JOIN fza_compras_sesiones_documentos D ' +
-          '    ON D.SERIE_SESDOC  = PED.SERIE_PEDC ' +
-          '   AND D.NUMERO_SESDOC = PED.NUMERO_PEDC ' +
-          ' WHERE D.SERIE_SES_SESDOC  = :s ' +
-          '   AND D.NUMERO_SES_SESDOC = :n ' +
-          '   AND D.TIPO_DOC_SESDOC   = ''PEDC''';
-        q.ParamByName('s').AsString := sSerieSes;
-        q.ParamByName('n').AsString := sNumSes;
-        q.ExecSQL;
-      except
-        // tabla fza_pedidos_compra puede no existir.
-      end;
+      if (bTienePedC and bTieneSesDocs) then
+      begin
+          q.SQL.Text :=
+            'DELETE PED FROM fza_pedidos_compra PED ' +
+            '  JOIN fza_compras_sesiones_documentos D ' +
+            '    ON D.SERIE_SESDOC  = PED.SERIE_PEDC ' +
+            '   AND D.NUMERO_SESDOC = PED.NUMERO_PEDC ' +
+            ' WHERE D.SERIE_SES_SESDOC  = :s ' +
+            '   AND D.NUMERO_SES_SESDOC = :n ' +
+            '   AND D.TIPO_DOC_SESDOC   = ''PEDC''';
+          q.ParamByName('s').AsString := sSerieSes;
+          q.ParamByName('n').AsString := sNumSes;
+          q.ExecSQL;
+      end
+      else
+        AvisoPaso('1b.3 omitido: falta fza_pedidos_compra ' +
+                  'o fza_compras_sesiones_documentos');
       // 1b.4 Fallback: tambien borramos por la ruta antigua (NUMERO_DOC_PDR
       // = sNumSes) por compatibilidad con sesiones materializadas antes de
       // este cambio, que usaban sNumSes como numero de pedido y no creaban
       // las cabeceras en fza_pedidos_compra.
-      try
-        q.SQL.Text :=
-          'DELETE FROM fza_articulos_pdte_recibir ' +
-          ' WHERE NUMERO_DOC_PDR = :n ' +
-          '   AND (SERIE_DOC_PDR = :ses ' +
-          '        OR (:sped <> '''' AND SERIE_DOC_PDR = :sped))';
-        q.ParamByName('n').AsString    := sNumSes;
-        q.ParamByName('ses').AsString  := sSerieSes;
-        q.ParamByName('sped').AsString :=
-                          ADM.unqryTablaG.FieldByName('SERIE_PEDC_SES').AsString;
-        q.ExecSQL;
-      except
-      end;
+      if bTienePdteRecibir then
+      begin
+          q.SQL.Text :=
+            'DELETE FROM fza_articulos_pdte_recibir ' +
+            ' WHERE NUMERO_DOC_PDR = :n ' +
+            '   AND (SERIE_DOC_PDR = :ses ' +
+            '        OR (:sped <> '''' AND SERIE_DOC_PDR = :sped))';
+          q.ParamByName('n').AsString    := sNumSes;
+          q.ParamByName('ses').AsString  := sSerieSes;
+          q.ParamByName('sped').AsString :=
+            ADM.unqryTablaG.FieldByName('SERIE_PEDC_SES').AsString;
+          q.ExecSQL;
+      end
+      else
+        AvisoPaso('1b.4 omitido: fza_articulos_pdte_recibir no existe');
 
       // 2. Cabecera vuelve a BORRADOR + limpiamos referencias a docs.
       q.SQL.Text :=

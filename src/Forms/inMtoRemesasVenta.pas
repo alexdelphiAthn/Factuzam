@@ -133,7 +133,7 @@ implementation
 
 uses
   inLibWin, inMtoPrincipal,
-  inMtoModalCargarEfectosRemesaVenta, inMtoModalRegistrarPago,
+  inMtoModalCargarEfectosRemesa, inMtoModalRegistrarPago,
   inMtoModalSepaRemesaVenta;
 
 {$R *.dfm}
@@ -191,12 +191,12 @@ end;
 
 function TfrmMtoRemesasVenta.CrearRemesaDesdeEfectos: Boolean;
 var
-  frm: TfrmModalCargarEfectosRemesaVenta;
+  frm: TfrmModalCargarEfectosRemesa;
   sSerie: string;
   sNumero: string;
 begin
   Result := False;
-  frm := TfrmModalCargarEfectosRemesaVenta.Create(nil);
+  frm := TfrmModalCargarEfectosRemesa.CrearParaVenta(nil);
   try
     frm.PrepararNuevaRemesa(UbicacionSesion.Empresa);
     if frm.ShowModal = mrOk then
@@ -306,7 +306,7 @@ end;
 
 procedure TfrmMtoRemesasVenta.btnAnadirEfectoClick(Sender: TObject);
 var
-  frm: TfrmModalCargarEfectosRemesaVenta;
+  frm: TfrmModalCargarEfectosRemesa;
   q: TDataSet;
 begin
   inherited;
@@ -317,7 +317,7 @@ begin
   else
   begin
     q := dmmRemesasVenta.unqryTablaG;
-    frm := TfrmModalCargarEfectosRemesaVenta.Create(nil);
+    frm := TfrmModalCargarEfectosRemesa.CrearParaVenta(nil);
     try
       frm.PrepararRemesaExistente(q.FieldByName('CODIGO_EMP_REMV').AsString,
         q.FieldByName('SERIE_REMV').AsString,

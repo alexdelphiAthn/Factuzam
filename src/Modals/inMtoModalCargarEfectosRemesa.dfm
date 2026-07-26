@@ -113,39 +113,39 @@ inherited frmModalCargarEfectosRemesa: TfrmModalCargarEfectosRemesa
         OptionsView.GroupByBox = False
         object colSerieFac: TcxGridDBColumn
           Caption = 'Serie fra'
-          DataBinding.FieldName = 'SERIE_FACC_EFEC'
+          DataBinding.FieldName = 'SERIE_FAC_EFECTO'
           Width = 70
         end
         object colNumFac: TcxGridDBColumn
           Caption = 'Nro fra'
-          DataBinding.FieldName = 'NUMERO_FACC_EFEC'
+          DataBinding.FieldName = 'NUMERO_FAC_EFECTO'
           Width = 80
         end
         object colNumEfe: TcxGridDBColumn
           Caption = 'Efecto'
-          DataBinding.FieldName = 'NUMERO_EFEC'
+          DataBinding.FieldName = 'NUMERO_EFECTO'
           Width = 55
         end
-        object colPrv: TcxGridDBColumn
+        object colTercero: TcxGridDBColumn
           Caption = 'Proveedor'
-          DataBinding.FieldName = 'RAZON_SOCIAL_PRV_EFEC'
+          DataBinding.FieldName = 'TERCERO_EFECTO'
           Width = 200
         end
         object colVto: TcxGridDBColumn
           Caption = 'Vencimiento'
-          DataBinding.FieldName = 'FECHA_VENCIMIENTO_EFEC'
+          DataBinding.FieldName = 'FECHA_VENCIMIENTO_EFECTO'
           Width = 110
         end
         object colPend: TcxGridDBColumn
           Caption = 'Pendiente'
-          DataBinding.FieldName = 'IMPORTE_PENDIENTE_EFEC'
+          DataBinding.FieldName = 'IMPORTE_PENDIENTE_EFECTO'
           PropertiesClassName = 'TcxCurrencyEditProperties'
           Properties.DisplayFormat = '#,##0.00 '#8364
           Width = 110
         end
         object colEstado: TcxGridDBColumn
           Caption = 'Estado'
-          DataBinding.FieldName = 'ESTADO_EFEC'
+          DataBinding.FieldName = 'ESTADO_EFECTO'
           Width = 100
         end
       end

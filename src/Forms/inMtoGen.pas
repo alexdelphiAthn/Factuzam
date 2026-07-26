@@ -381,8 +381,6 @@ type
   end;
 var
   frmMtoGen: TfrmMtoGen;
-  sConsultaO:string;
-  sConsultaP:string;
 
 implementation
 
@@ -619,8 +617,6 @@ begin
 end;
 
 procedure TfrmMtoGen.btnSalirClick(Sender: TObject);
-const
-  WM_FREECONTROL = WM_USER + 1;
 var
   ts: TcxTabSheet;
   formMain: TCustomForm;
@@ -2283,7 +2279,9 @@ begin
   // ESC -> cancelar grids en edicion
   if (Key = VK_ESCAPE) then
   begin
-    CancelarGrids(Owner);
+    // Solo dentro de fzam: standalone no hay principal con pcPrincipal
+    if Owner is TfrmMtoPrincipal then
+      CancelarGrids((Owner as TfrmMtoPrincipal).pcPrincipal);
     Key := 0;
   end;
   // RETURN sin control activo -> simular Tab
@@ -2830,10 +2828,10 @@ begin
   inherited;
   // Flujo normal dentro de fzam: cancela el Mto activo del principal.
   if Owner is TfrmMtoPrincipal then
-    CancelarGrids(Owner)
+    CancelarGrids((Owner as TfrmMtoPrincipal).pcPrincipal)
   else
     // Fuera de fzam (pruebas standalone, DESARROLLOS EN CURSO) Owner no
-    // es el principal y el cast de CancelarGrids lanzaria EInvalidCast:
+    // es el principal y no hay pcPrincipal al que cancelar:
     // se cancelan los datasets en edicion de los grids de ESTE form.
     for i := 0 to ComponentCount - 1 do
       if Components[i] is TcxGridDBTableView then

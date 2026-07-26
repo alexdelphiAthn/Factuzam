@@ -20,7 +20,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   Data.DB, MemDS, DBAccess, Uni,
-  UniDataGen, inLibUser, inMtoPrincipal,
+  UniDataGen, inLibUser,
   frxClass, frxDBSet,
   inLibPresta, frCoreClasses,
   inLibArticulosValidador;
@@ -1589,6 +1589,7 @@ function TdmPedidos.CrearAlbaranDesdePedido(out sNumeroAlb, sSerieAlb: string;
 var
   i: Integer;
   sNumeroPed, sSeriePed: string;
+  bTransPropia: Boolean;
   par: TPair<string, Currency>;
 begin
   Result := False;
@@ -1596,88 +1597,109 @@ begin
   if (aLineas = nil) or (aLineas.Count = 0) then Exit;
 
   // Asegura que los procedimientos existen (idempotente y barato).
+  // OJO: es DDL (CREATE PROCEDURE) y debe quedar FUERA de la
+  // transaccion: el DDL hace commit implicito en MySQL/MariaDB.
   InstalarProcedimientos;
 
   sNumeroPed := unqryTablaG.FieldByName('NUMERO_PED').AsString;
   sSeriePed  := unqryTablaG.FieldByName('SERIE_PED').AsString;
 
-  // 1) Cabecera del albarán. Si el llamador pasa un albarán existente
-  //    (AAlbExistenteNum), las líneas se añaden a ese albarán y se omite
-  //    crear cabecera; si no, se crea uno nuevo desde el pedido.
-  if Trim(AAlbExistenteNum) <> '' then
-  begin
-    sNumeroAlb := AAlbExistenteNum;
-    sSerieAlb  := AAlbExistenteSerie;
-    CopiarFormaPagoPedidoAAlbaran(sSeriePed, sNumeroPed, sSerieAlb,
-      sNumeroAlb, False);
-  end
-  else
-  begin
-    with unstrdprcCrearAlbaranInicio do
+  // Alta atomica: cabecera + lineas + totales/estado del pedido se
+  // confirman o se deshacen juntos (mismo patron bTransPropia que
+  // TdmAlbaranes).
+  bTransPropia := not ConexionPrincipal.InTransaction;
+  if bTransPropia then
+    ConexionPrincipal.StartTransaction;
+  try
+    // 1) Cabecera del albarán. Si el llamador pasa un albarán existente
+    //    (AAlbExistenteNum), las líneas se añaden a ese albarán y se omite
+    //    crear cabecera; si no, se crea uno nuevo desde el pedido.
+    if Trim(AAlbExistenteNum) <> '' then
+    begin
+      sNumeroAlb := AAlbExistenteNum;
+      sSerieAlb  := AAlbExistenteSerie;
+      CopiarFormaPagoPedidoAAlbaran(sSeriePed, sNumeroPed, sSerieAlb,
+        sNumeroAlb, False);
+    end
+    else
+    begin
+      with unstrdprcCrearAlbaranInicio do
+      begin
+        Params.Clear;
+        Params.CreateParam(ftString, 'p_NUMERO_PED', ptInput);
+        Params.CreateParam(ftString, 'p_SERIE_PED',  ptInput);
+        Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
+        Params.CreateParam(ftString, 'p_NUMERO_ALB', ptOutput);
+        Params.CreateParam(ftString, 'p_SERIE_ALB',  ptOutput);
+        ParamByName('p_NUMERO_PED').AsString := sNumeroPed;
+        ParamByName('p_SERIE_PED').AsString  := sSeriePed;
+        ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
+        ExecProc;
+        sNumeroAlb := ParamByName('p_NUMERO_ALB').AsString;
+        sSerieAlb  := ParamByName('p_SERIE_ALB').AsString;
+      end;
+      CopiarFormaPagoPedidoAAlbaran(sSeriePed, sNumeroPed, sSerieAlb,
+        sNumeroAlb, True);
+    end;
+
+    // 2) Por cada línea con cantidad > 0 generamos línea de albarán
+    for i := 0 to aLineas.Count - 1 do
+    begin
+      par := aLineas[i];
+      if par.Value <= 0 then Continue;
+      with unstrdprcCrearAlbaranLinea do
+      begin
+        Params.Clear;
+        Params.CreateParam(ftString,    'p_NUMERO_ALB', ptInput);
+        Params.CreateParam(ftString,    'p_SERIE_ALB',  ptInput);
+        Params.CreateParam(ftString,    'p_NUMERO_PED', ptInput);
+        Params.CreateParam(ftString,    'p_SERIE_PED',  ptInput);
+        Params.CreateParam(ftString,    'p_LINEA_PED',  ptInput);
+        Params.CreateParam(ftBCD,       'p_CANTIDAD',   ptInput);
+        Params.CreateParam(ftString,    'p_CODIGO_ALM', ptInput);
+        Params.CreateParam(ftString,    'p_USUARIO',    ptInput);
+        ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
+        ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
+        ParamByName('p_NUMERO_PED').AsString := sNumeroPed;
+        ParamByName('p_SERIE_PED').AsString  := sSeriePed;
+        ParamByName('p_LINEA_PED').AsString  := par.Key;
+        ParamByName('p_CANTIDAD').AsCurrency := par.Value;
+        ParamByName('p_CODIGO_ALM').AsString := ACodigoAlmacen;
+        ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
+        ExecProc;
+      end;
+    end;
+
+    // 3) Recalcular totales del albarán y refrescar estado del pedido
+    with unstrdprcCrearAlbaranFin do
     begin
       Params.Clear;
+      Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
+      Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
       Params.CreateParam(ftString, 'p_NUMERO_PED', ptInput);
       Params.CreateParam(ftString, 'p_SERIE_PED',  ptInput);
       Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
-      Params.CreateParam(ftString, 'p_NUMERO_ALB', ptOutput);
-      Params.CreateParam(ftString, 'p_SERIE_ALB',  ptOutput);
-      ParamByName('p_NUMERO_PED').AsString := sNumeroPed;
-      ParamByName('p_SERIE_PED').AsString  := sSeriePed;
-      ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
-      ExecProc;
-      sNumeroAlb := ParamByName('p_NUMERO_ALB').AsString;
-      sSerieAlb  := ParamByName('p_SERIE_ALB').AsString;
-    end;
-    CopiarFormaPagoPedidoAAlbaran(sSeriePed, sNumeroPed, sSerieAlb,
-      sNumeroAlb, True);
-  end;
-
-  // 2) Por cada línea con cantidad > 0 generamos línea de albarán
-  for i := 0 to aLineas.Count - 1 do
-  begin
-    par := aLineas[i];
-    if par.Value <= 0 then Continue;
-    with unstrdprcCrearAlbaranLinea do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString,    'p_NUMERO_ALB', ptInput);
-      Params.CreateParam(ftString,    'p_SERIE_ALB',  ptInput);
-      Params.CreateParam(ftString,    'p_NUMERO_PED', ptInput);
-      Params.CreateParam(ftString,    'p_SERIE_PED',  ptInput);
-      Params.CreateParam(ftString,    'p_LINEA_PED',  ptInput);
-      Params.CreateParam(ftBCD,       'p_CANTIDAD',   ptInput);
-      Params.CreateParam(ftString,    'p_CODIGO_ALM', ptInput);
-      Params.CreateParam(ftString,    'p_USUARIO',    ptInput);
       ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
       ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
       ParamByName('p_NUMERO_PED').AsString := sNumeroPed;
       ParamByName('p_SERIE_PED').AsString  := sSeriePed;
-      ParamByName('p_LINEA_PED').AsString  := par.Key;
-      ParamByName('p_CANTIDAD').AsCurrency := par.Value;
-      ParamByName('p_CODIGO_ALM').AsString := ACodigoAlmacen;
       ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
       ExecProc;
     end;
-  end;
 
-  // 3) Recalcular totales del albarán y refrescar estado del pedido
-  with unstrdprcCrearAlbaranFin do
-  begin
-    Params.Clear;
-    Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
-    Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
-    Params.CreateParam(ftString, 'p_NUMERO_PED', ptInput);
-    Params.CreateParam(ftString, 'p_SERIE_PED',  ptInput);
-    Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
-    ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
-    ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
-    ParamByName('p_NUMERO_PED').AsString := sNumeroPed;
-    ParamByName('p_SERIE_PED').AsString  := sSeriePed;
-    ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
-    ExecProc;
+    if bTransPropia then
+      ConexionPrincipal.Commit;
+  except
+    on E: Exception do
+    begin
+      if bTransPropia then
+        ConexionPrincipal.Rollback;
+      raise;
+    end;
   end;
+  // 4) Refrescar las queries del pedido en pantalla (fuera de la
+  // transaccion: solo lectura para la UI)
 
-  // 4) Refrescar las queries del pedido en pantalla
   unqryPedidosLineas.Close; unqryPedidosLineas.Open;
   unqryAlbaranes.Close;     unqryAlbaranes.Open;
   unqryTablaG.RefreshRecord;

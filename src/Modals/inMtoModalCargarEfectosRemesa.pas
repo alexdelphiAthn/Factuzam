@@ -2,17 +2,18 @@
 {                                                                              }
 {  Modulo:       inMtoModalCargarEfectosRemesa                                 }
 {    Tipo:       Formulario (Modal)                                            }
-{ Version:       1.0.0                                                         }
-{   Fecha:       11/06/2026                                                    }
+{ Version:       2.0.0                                                         }
+{   Fecha:       26/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripcion:                                                                }
-{    Carga efectos de pago pendientes (sin remesar) en una remesa: nueva       }
-{    (PRC_REMC_CREAR) o existente. Por cada efecto marcado llama a             }
-{    PRC_REMC_ANYADIR_EFECTO. Filtro por empresa y, opcionalmente, por         }
-{    fecha de vencimiento (hasta). Devuelve la remesa en RemesaSerie/Numero.   }
+{    Carga efectos pendientes (sin remesar) en una remesa: nueva o             }
+{    existente. Sirve tanto para remesas de COMPRA (pagos, PRC_REMC_*)         }
+{    como de VENTA (cobros, PRC_REMV_*): la variante se elige con              }
+{    Configurar / CrearParaCompra / CrearParaVenta. Sustituye al antiguo       }
+{    par duplicado inMtoModalCargarEfectosRemesa(Venta).                       }
 {******************************************************************************}
 unit inMtoModalCargarEfectosRemesa;
 
@@ -31,6 +32,25 @@ uses
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid;
 
 type
+  // Todo lo que distingue una remesa de compra (pagos a proveedor) de
+  // una de venta (cobros a cliente): tablas, sufijos de campo, SPs y
+  // textos. El SELECT de efectos usa alias neutros (SERIE_FAC_EFECTO,
+  // TERCERO_EFECTO...) para que el mismo dfm sirva a ambas variantes.
+  TConfigRemesa = record
+    TablaEfectos:   string;  // fza_efectos_compra / fza_efectos_venta
+    TablaRemesas:   string;  // fza_remesas_compra / fza_remesas_venta
+    SufEfecto:      string;  // EFEC / EFV
+    SufRemesa:      string;  // REMC / REMV
+    CampoSerieFac:  string;  // SERIE_FACC_EFEC / SERIE_FAC_EFV
+    CampoNumeroFac: string;  // NUMERO_FACC_EFEC / NUMERO_FAC_EFV
+    CampoTercero:   string;  // RAZON_SOCIAL_PRV_EFEC / RAZON_SOCIAL_CLI_EFV
+    TituloTercero:  string;  // Proveedor / Cliente
+    SPCrear:        string;  // PRC_REMC_CREAR / PRC_REMV_CREAR
+    SPAnyadir:      string;  // PRC_REMC_ANYADIR_EFECTO / PRC_REMV_...
+    ParamNumEfecto: string;  // p_NUM_EFEC / p_NUM_EFV
+    TextoOmitidos:  string;  // pagados / cobrados
+  end;
+
   TfrmModalCargarEfectosRemesa = class(TfrmBase)
     pnlTop:          TPanel;
     lblEmpresa:      TcxLabel;
@@ -48,7 +68,7 @@ type
     colSerieFac:     TcxGridDBColumn;
     colNumFac:       TcxGridDBColumn;
     colNumEfe:       TcxGridDBColumn;
-    colPrv:          TcxGridDBColumn;
+    colTercero:      TcxGridDBColumn;
     colVto:          TcxGridDBColumn;
     colPend:         TcxGridDBColumn;
     colEstado:       TcxGridDBColumn;
@@ -66,6 +86,7 @@ type
     procedure rgModoPropertiesEditValueChanged(Sender: TObject);
   private
     // Campos primero (E2169).
+    FConfig:     TConfigRemesa;
     FConn:       TUniConnection;
     FQryEfe:     TUniQuery;
     FDsEfe:      TDataSource;
@@ -80,11 +101,23 @@ type
     function  CrearRemesaNueva(const AEmp: string;
                                out ASerie, ANumero: string): Boolean;
   public
+    // Aplica la variante (compra/venta): reescribe el SQL de efectos y
+    // la cabecera de la columna del tercero. Se puede llamar tras
+    // Create; los CrearPara* ya la dejan aplicada.
+    procedure Configurar(const AConfig: TConfigRemesa);
     procedure PrepararRemesaExistente(const AEmp, ASerie, ANumero: string);
+    procedure PrepararNuevaRemesa(const AEmp: string);
+    class function CrearParaCompra(AOwner: TComponent):
+      TfrmModalCargarEfectosRemesa;
+    class function CrearParaVenta(AOwner: TComponent):
+      TfrmModalCargarEfectosRemesa;
     property Confirmado:   Boolean read FConfirmado;
     property RemesaSerie:  string  read FRemSerie;
     property RemesaNumero: string  read FRemNumero;
   end;
+
+function ConfigRemesaCompra: TConfigRemesa;
+function ConfigRemesaVenta: TConfigRemesa;
 
 implementation
 
@@ -95,6 +128,52 @@ uses
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
+function ConfigRemesaCompra: TConfigRemesa;
+begin
+  Result.TablaEfectos   := 'fza_efectos_compra';
+  Result.TablaRemesas   := 'fza_remesas_compra';
+  Result.SufEfecto      := 'EFEC';
+  Result.SufRemesa      := 'REMC';
+  Result.CampoSerieFac  := 'SERIE_FACC_EFEC';
+  Result.CampoNumeroFac := 'NUMERO_FACC_EFEC';
+  Result.CampoTercero   := 'RAZON_SOCIAL_PRV_EFEC';
+  Result.TituloTercero  := 'Proveedor';
+  Result.SPCrear        := 'PRC_REMC_CREAR';
+  Result.SPAnyadir      := 'PRC_REMC_ANYADIR_EFECTO';
+  Result.ParamNumEfecto := 'p_NUM_EFEC';
+  Result.TextoOmitidos  := 'pagados';
+end;
+
+function ConfigRemesaVenta: TConfigRemesa;
+begin
+  Result.TablaEfectos   := 'fza_efectos_venta';
+  Result.TablaRemesas   := 'fza_remesas_venta';
+  Result.SufEfecto      := 'EFV';
+  Result.SufRemesa      := 'REMV';
+  Result.CampoSerieFac  := 'SERIE_FAC_EFV';
+  Result.CampoNumeroFac := 'NUMERO_FAC_EFV';
+  Result.CampoTercero   := 'RAZON_SOCIAL_CLI_EFV';
+  Result.TituloTercero  := 'Cliente';
+  Result.SPCrear        := 'PRC_REMV_CREAR';
+  Result.SPAnyadir      := 'PRC_REMV_ANYADIR_EFECTO';
+  Result.ParamNumEfecto := 'p_NUM_EFV';
+  Result.TextoOmitidos  := 'cobrados';
+end;
+
+class function TfrmModalCargarEfectosRemesa.CrearParaCompra(
+  AOwner: TComponent): TfrmModalCargarEfectosRemesa;
+begin
+  Result := TfrmModalCargarEfectosRemesa.Create(AOwner);
+  Result.Configurar(ConfigRemesaCompra);
+end;
+
+class function TfrmModalCargarEfectosRemesa.CrearParaVenta(
+  AOwner: TComponent): TfrmModalCargarEfectosRemesa;
+begin
+  Result := TfrmModalCargarEfectosRemesa.Create(AOwner);
+  Result.Configurar(ConfigRemesaVenta);
+end;
+
 procedure TfrmModalCargarEfectosRemesa.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -103,20 +182,8 @@ begin
   FRemSeries  := TStringList.Create;
   FRemNumeros := TStringList.Create;
   FConn := ConexionPrincipal;
-  // Efectos candidatos: pendientes, sin remesar, de la empresa, hasta vto.
   FQryEfe := TUniQuery.Create(Self);
   FQryEfe.Connection := FConn;
-  FQryEfe.SQL.Text :=
-    'SELECT SERIE_FACC_EFEC, NUMERO_FACC_EFEC, NUMERO_EFEC, ' +
-    '       RAZON_SOCIAL_PRV_EFEC, FECHA_VENCIMIENTO_EFEC, ' +
-    '       IMPORTE_PENDIENTE_EFEC, ESTADO_EFEC ' +
-    '  FROM fza_efectos_compra ' +
-    ' WHERE CODIGO_EMP_EFEC = :emp ' +
-    '   AND SERIE_REMC_EFEC IS NULL ' +
-    '   AND COALESCE(ESTADO_EFEC, '''') IN (''PENDIENTE'', ''PARCIAL'') ' +
-    '   AND COALESCE(IMPORTE_PENDIENTE_EFEC, 0) > 0 ' +
-    '   AND FECHA_VENCIMIENTO_EFEC <= :hasta ' +
-    ' ORDER BY FECHA_VENCIMIENTO_EFEC, RAZON_SOCIAL_PRV_EFEC';
   FDsEfe := TDataSource.Create(Self);
   FDsEfe.DataSet := FQryEfe;
   tvEfe.DataController.DataSource := FDsEfe;
@@ -125,6 +192,41 @@ begin
   rgModo.ItemIndex := 0;
   dteHasta.Clear;
   ActualizarModo;
+  // Variante por defecto: compra (comportamiento historico de esta
+  // unidad). CrearParaVenta la reconfigura justo despues del Create.
+  Configurar(ConfigRemesaCompra);
+end;
+
+procedure TfrmModalCargarEfectosRemesa.Configurar(
+  const AConfig: TConfigRemesa);
+begin
+  FConfig := AConfig;
+  colTercero.Caption := FConfig.TituloTercero;
+  // Efectos candidatos: pendientes, sin remesar, de la empresa, hasta
+  // vto. Alias neutros para que el dfm valga en compra y en venta.
+  FQryEfe.Close;
+  FQryEfe.SQL.Text :=
+    'SELECT ' + FConfig.CampoSerieFac + ' AS SERIE_FAC_EFECTO, ' +
+    '       ' + FConfig.CampoNumeroFac + ' AS NUMERO_FAC_EFECTO, ' +
+    '       NUMERO_' + FConfig.SufEfecto + ' AS NUMERO_EFECTO, ' +
+    '       ' + FConfig.CampoTercero + ' AS TERCERO_EFECTO, ' +
+    '       FECHA_VENCIMIENTO_' + FConfig.SufEfecto +
+    '         AS FECHA_VENCIMIENTO_EFECTO, ' +
+    '       IMPORTE_PENDIENTE_' + FConfig.SufEfecto +
+    '         AS IMPORTE_PENDIENTE_EFECTO, ' +
+    '       ESTADO_' + FConfig.SufEfecto + ' AS ESTADO_EFECTO ' +
+    '  FROM ' + FConfig.TablaEfectos + ' ' +
+    ' WHERE CODIGO_EMP_' + FConfig.SufEfecto + ' = :emp ' +
+    '   AND SERIE_' + FConfig.SufRemesa + '_' + FConfig.SufEfecto +
+    '       IS NULL ' +
+    '   AND COALESCE(ESTADO_' + FConfig.SufEfecto + ', ' +
+    QuotedStr('') + ') IN (' + QuotedStr('PENDIENTE') + ', ' +
+    QuotedStr('PARCIAL') + ') ' +
+    '   AND COALESCE(IMPORTE_PENDIENTE_' + FConfig.SufEfecto +
+    ', 0) > 0 ' +
+    '   AND FECHA_VENCIMIENTO_' + FConfig.SufEfecto + ' <= :hasta ' +
+    ' ORDER BY FECHA_VENCIMIENTO_' + FConfig.SufEfecto + ', ' +
+    FConfig.CampoTercero;
 end;
 
 procedure TfrmModalCargarEfectosRemesa.FormDestroy(Sender: TObject);
@@ -181,22 +283,28 @@ begin
   cbbRemExistente.ItemIndex := -1;
   FQryRem.Close;
   FQryRem.SQL.Text :=
-    'SELECT SERIE_REMC, NUMERO_REMC, FECHA_REMC, TOTAL_REMC ' +
-    '  FROM fza_remesas_compra ' +
-    ' WHERE CODIGO_EMP_REMC = :emp ' +
-    '   AND COALESCE(ESTADO_REMC, '''') IN (''ABIERTA'', ''CERRADA'') ' +
-    ' ORDER BY FECHA_REMC DESC, NUMERO_REMC DESC';
+    'SELECT SERIE_' + FConfig.SufRemesa + ' AS SERIE_REMESA, ' +
+    '       NUMERO_' + FConfig.SufRemesa + ' AS NUMERO_REMESA, ' +
+    '       FECHA_' + FConfig.SufRemesa + ' AS FECHA_REMESA, ' +
+    '       TOTAL_' + FConfig.SufRemesa + ' AS TOTAL_REMESA ' +
+    '  FROM ' + FConfig.TablaRemesas + ' ' +
+    ' WHERE CODIGO_EMP_' + FConfig.SufRemesa + ' = :emp ' +
+    '   AND COALESCE(ESTADO_' + FConfig.SufRemesa + ', ' +
+    QuotedStr('') + ') IN (' + QuotedStr('ABIERTA') + ', ' +
+    QuotedStr('CERRADA') + ') ' +
+    ' ORDER BY FECHA_' + FConfig.SufRemesa + ' DESC, ' +
+    '          NUMERO_' + FConfig.SufRemesa + ' DESC';
   FQryRem.ParamByName('emp').AsString := AEmp;
   FQryRem.Open;
   while not FQryRem.Eof do
   begin
-    FRemSeries.Add(FQryRem.FieldByName('SERIE_REMC').AsString);
-    FRemNumeros.Add(FQryRem.FieldByName('NUMERO_REMC').AsString);
+    FRemSeries.Add(FQryRem.FieldByName('SERIE_REMESA').AsString);
+    FRemNumeros.Add(FQryRem.FieldByName('NUMERO_REMESA').AsString);
     cbbRemExistente.Properties.Items.Add(
-      FQryRem.FieldByName('SERIE_REMC').AsString + ' / ' +
-      FQryRem.FieldByName('NUMERO_REMC').AsString + '   (' +
-      FormatDateTime('dd/mm/yyyy', FQryRem.FieldByName('FECHA_REMC').AsDateTime)
-      + ')');
+      FQryRem.FieldByName('SERIE_REMESA').AsString + ' / ' +
+      FQryRem.FieldByName('NUMERO_REMESA').AsString + '   (' +
+      FormatDateTime('dd/mm/yyyy',
+        FQryRem.FieldByName('FECHA_REMESA').AsDateTime) + ')');
     FQryRem.Next;
   end;
   FQryRem.Close;
@@ -216,6 +324,14 @@ begin
     if (FRemSeries[i] = ASerie) and (FRemNumeros[i] = ANumero) then
       cbbRemExistente.ItemIndex := i;
   end;
+end;
+
+procedure TfrmModalCargarEfectosRemesa.PrepararNuevaRemesa(
+  const AEmp: string);
+begin
+  btnEmpresa.Text := AEmp;
+  rgModo.ItemIndex := 0;
+  ActualizarModo;
 end;
 
 procedure TfrmModalCargarEfectosRemesa.btnBuscarClick(Sender: TObject);
@@ -254,7 +370,7 @@ begin
   sp := TUniStoredProc.Create(nil);
   try
     sp.Connection     := FConn;
-    sp.StoredProcName := 'PRC_REMC_CREAR';
+    sp.StoredProcName := FConfig.SPCrear;
     sp.Params.Clear;
     sp.Params.CreateParam(ftString, 'p_EMPRESA',    ptInput);
     sp.Params.CreateParam(ftString, 'p_IBAN',       ptInput);
@@ -315,13 +431,13 @@ begin
     spAdd := TUniStoredProc.Create(nil);
     try
       spAdd.Connection     := FConn;
-      spAdd.StoredProcName := 'PRC_REMC_ANYADIR_EFECTO';
+      spAdd.StoredProcName := FConfig.SPAnyadir;
       spAdd.Params.Clear;
       spAdd.Params.CreateParam(ftString,  'p_SERIE_REM',  ptInput);
       spAdd.Params.CreateParam(ftString,  'p_NUMERO_REM', ptInput);
       spAdd.Params.CreateParam(ftString,  'p_SERIE_FAC',  ptInput);
       spAdd.Params.CreateParam(ftString,  'p_NUMERO_FAC', ptInput);
-      spAdd.Params.CreateParam(ftInteger, 'p_NUM_EFEC',   ptInput);
+      spAdd.Params.CreateParam(ftInteger, FConfig.ParamNumEfecto, ptInput);
       spAdd.Params.CreateParam(ftString,  'p_USUARIO',    ptInput);
       spAdd.Params.CreateParam(ftInteger, 'p_RESULTADO',  ptOutput);
       nOk   := 0;
@@ -335,7 +451,7 @@ begin
           VarToStr(tvEfe.DataController.Values[ri, colSerieFac.Index]);
         spAdd.ParamByName('p_NUMERO_FAC').AsString :=
           VarToStr(tvEfe.DataController.Values[ri, colNumFac.Index]);
-        spAdd.ParamByName('p_NUM_EFEC').AsInteger  :=
+        spAdd.ParamByName(FConfig.ParamNumEfecto).AsInteger :=
           StrToIntDef(VarToStr(
             tvEfe.DataController.Values[ri, colNumEfe.Index]), 0);
         spAdd.ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
@@ -353,8 +469,8 @@ begin
     FRemNumero  := sNumRem;
     FConfirmado := nOk > 0;
     ShowMessage(Format('Cargados %d efecto(s) en la remesa %s / %s.' +
-      sLineBreak + 'Omitidos (ya remesados o pagados): %d.',
-      [nOk, sSerieRem, sNumRem, nSkip]));
+      sLineBreak + 'Omitidos (ya remesados o %s): %d.',
+      [nOk, sSerieRem, sNumRem, FConfig.TextoOmitidos, nSkip]));
     if FConfirmado then
       ModalResult := mrOk;
   end;

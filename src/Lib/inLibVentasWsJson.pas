@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inLibVentasWsJson                                             }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.1.0                                                         }
+{ Versión:       1.3.0                                                         }
 {   Fecha:       25/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -27,6 +27,10 @@ type
       const ASerie, ANumero: string): TJSONObject; static;
     class function ConstruirDocumentos(AConn: TUniConnection;
       AIdCola: Int64): TJSONObject; static;
+    class function ConstruirFotos(
+      const AParametrosApp: IParametrosAplicacion;
+      AConn: TUniConnection;
+      const ASerie, ANumero: string): TJSONArray; static;
   public
     class function ConstruirEvento(
       const AParametrosApp: IParametrosAplicacion;
@@ -40,6 +44,7 @@ implementation
 
 uses
   System.Classes, System.DateUtils, System.NetEncoding,
+  System.Hash, System.IOUtils,
   Data.DB,
   inLibFactuzamApi;
 
@@ -239,6 +244,124 @@ begin
   end;
 end;
 
+{ Fotos de los articulos de la venta, en la version de 300 px que Factuzam
+  ya tiene generada en disco. Van a nivel de venta y no de linea: si el mismo
+  articulo aparece cinco veces, la foto viaja una sola vez.
+
+  La resolucion replica la de inLibFotos (foto del SKU, si no la del prefijo
+  mas largo, si no la del articulo) pero por SQL, para no arrastrar hasta
+  aqui las dependencias graficas y de FastReport de aquella unidad. }
+class function TVentasWsJson.ConstruirFotos(
+  const AParametrosApp: IParametrosAplicacion;
+  AConn: TUniConnection;
+  const ASerie, ANumero: string): TJSONArray;
+const
+  cMaxBytesFoto = 4 * 1024 * 1024;
+var
+  aDatos: TBytes;
+  iTamano: Int64;
+  oArray: TJSONArray;
+  oEnviadas: TStringList;
+  oFoto: TJSONObject;
+  QryFoto: TUniQuery;
+  QryLin: TUniQuery;
+  sArticulo: string;
+  sClave: string;
+  sDir300: string;
+  sDirFotos: string;
+  sRuta: string;
+  sUnidad: string;
+begin
+  oArray := TJSONArray.Create;
+  oEnviadas := TStringList.Create;
+  QryLin := TUniQuery.Create(nil);
+  QryFoto := TUniQuery.Create(nil);
+  try
+    try
+      oEnviadas.Sorted := True;
+      oEnviadas.Duplicates := dupIgnore;
+      sDirFotos := '';
+      if Assigned(AParametrosApp) then
+        sDirFotos := Trim(AParametrosApp.GetPath('appDirFotos'));
+      if sDirFotos <> '' then
+      begin
+        sDir300 := TPath.Combine(sDirFotos, '300');
+        QryLin.Connection := AConn;
+        QryLin.SQL.Text :=
+          ' SELECT DISTINCT CODIGO_ART_FACLIN AS ARTICULO, ' +
+          '   IFNULL(CODIGO_UNIDAD_FACLIN, '''') AS UNIDAD ' +
+          ' FROM fza_facturas_lineas ' +
+          ' WHERE SERIE_FAC_FACLIN = :SERIE ' +
+          '   AND NUMERO_FAC_FACLIN = :NUMERO ' +
+          '   AND CODIGO_ART_FACLIN IS NOT NULL';
+        QryLin.ParamByName('SERIE').AsString := ASerie;
+        QryLin.ParamByName('NUMERO').AsString := ANumero;
+        QryLin.Open;
+        QryFoto.Connection := AConn;
+        QryFoto.SQL.Text :=
+          ' SELECT CODIGO_UNIDAD_FOT, NOMBRE_FOT_FOT ' +
+          ' FROM fza_articulos_fotos ' +
+          ' WHERE CODIGO_ART_FOT = :ART ' +
+          '   AND (CODIGO_UNIDAD_FOT = :SKU ' +
+          '        OR :SKU LIKE CONCAT(CODIGO_UNIDAD_FOT, ''/%'') ' +
+          '        OR CODIGO_UNIDAD_FOT = '''') ' +
+          ' ORDER BY LENGTH(CODIGO_UNIDAD_FOT) DESC, ' +
+          '          CODIGO_UNIDAD_FOT DESC ' +
+          ' LIMIT 1';
+        while not QryLin.Eof do
+        begin
+          sArticulo := QryLin.FieldByName('ARTICULO').AsString;
+          sUnidad := QryLin.FieldByName('UNIDAD').AsString;
+          QryFoto.Close;
+          QryFoto.ParamByName('ART').AsString := sArticulo;
+          QryFoto.ParamByName('SKU').AsString := sUnidad;
+          QryFoto.Open;
+          if not QryFoto.IsEmpty then
+          begin
+            sClave := sArticulo + '|' +
+                      QryFoto.FieldByName('CODIGO_UNIDAD_FOT').AsString;
+            sRuta := TPath.Combine(sDir300,
+              QryFoto.FieldByName('NOMBRE_FOT_FOT').AsString + '.png');
+            if (oEnviadas.IndexOf(sClave) < 0) and TFile.Exists(sRuta) then
+            begin
+              iTamano := TFile.GetSize(sRuta);
+              if (iTamano > 0) and (iTamano <= cMaxBytesFoto) then
+              begin
+                oEnviadas.Add(sClave);
+                aDatos := TFile.ReadAllBytes(sRuta);
+                oFoto := TJSONObject.Create;
+                oArray.AddElement(oFoto);
+                oFoto.AddPair('articulo', sArticulo);
+                oFoto.AddPair('clave_unidad',
+                  QryFoto.FieldByName('CODIGO_UNIDAD_FOT').AsString);
+                oFoto.AddPair('nombre', ExtractFileName(sRuta));
+                oFoto.AddPair('mime', 'image/png');
+                oFoto.AddPair('tamano', TJSONNumber.Create(iTamano));
+                oFoto.AddPair('sha256',
+                  UpperCase(THashSHA2.GetHashStringFromFile(sRuta)));
+                oFoto.AddPair('contenido_base64',
+                  TNetEncoding.Base64.EncodeBytesToString(aDatos));
+              end;
+            end;
+          end;
+          QryFoto.Close;
+          QryLin.Next;
+        end;
+        QryLin.Close;
+      end;
+      Result := oArray;
+    except
+      // Que falle una foto no puede impedir que la venta se envie.
+      FreeAndNil(oArray);
+      Result := TJSONArray.Create;
+    end;
+  finally
+    FreeAndNil(QryFoto);
+    FreeAndNil(QryLin);
+    FreeAndNil(oEnviadas);
+  end;
+end;
+
 class function TVentasWsJson.ConstruirEvento(
   const AParametrosApp: IParametrosAplicacion;
   const AVersionApp: string;
@@ -262,11 +385,11 @@ begin
     oRaiz.AddPair('generado_utc',
       DateToISO8601(TTimeZone.Local.ToUniversalTime(Now), True));
     oOrigen := TJSONObject.Create;
+    oRaiz.AddPair('origen', oOrigen);
     oOrigen.AddPair('aplicacion', 'Factuzam');
     oOrigen.AddPair('version', AVersionApp);
     sReferencia := TClienteFactuzamApi.Referencia(AParametrosApp);
     oOrigen.AddPair('referencia', sReferencia);
-    oRaiz.AddPair('origen', oOrigen);
     oDocumento := TJSONObject.Create;
     oDocumento.AddPair('empresa', AEmpresa);
     oDocumento.AddPair('serie', ASerie);
@@ -276,11 +399,29 @@ begin
     oRaiz.AddPair('venta', oVenta);
     oVenta.AddPair('cabecera',
       ConstruirCabecera(AConn, ASerie, ANumero));
+    // La temporada no vive en la linea: es una propiedad del articulo. Se
+    // resuelve del nivel mas concreto al mas general (sku, color, articulo)
+    // y viaja como TEMPORADA_CALC, que es lo que proyecta el webservice.
     oVenta.AddPair('lineas', ConstruirArray(AConn,
-      ' SELECT * FROM fza_facturas_lineas ' +
-      ' WHERE SERIE_FAC_FACLIN = :SERIE ' +
-      '   AND NUMERO_FAC_FACLIN = :NUMERO ' +
-      ' ORDER BY LINEA_FACLIN', ASerie, ANumero));
+      ' SELECT L.*, ' +
+      '   (SELECT COALESCE(V.PV, P.VALOR_LIBRE_ARTPROP) ' +
+      '      FROM fza_articulos_propiedades P ' +
+      '      LEFT JOIN fza_propiedades_valores V ' +
+      '             ON V.ID_PV_ARTPROP = P.ID_PV_ARTPROP ' +
+      '     WHERE P.CODIGO_ART_ART = L.CODIGO_ART_FACLIN ' +
+      '       AND P.CODIGO_PROP_ARTPROP = ''TEMPORADA'' ' +
+      '       AND P.CODIGO_UNIDAD_ARTPROP IN ( ' +
+      '             IFNULL(L.CODIGO_UNIDAD_FACLIN, ''''), ' +
+      '             SUBSTRING_INDEX( ' +
+      '               IFNULL(L.CODIGO_UNIDAD_FACLIN, ''''), ''/'', 2), ' +
+      '             '''') ' +
+      '     ORDER BY LENGTH(P.CODIGO_UNIDAD_ARTPROP) DESC, ' +
+      '              P.CODIGO_UNIDAD_ARTPROP DESC ' +
+      '     LIMIT 1) AS TEMPORADA_CALC ' +
+      ' FROM fza_facturas_lineas L ' +
+      ' WHERE L.SERIE_FAC_FACLIN = :SERIE ' +
+      '   AND L.NUMERO_FAC_FACLIN = :NUMERO ' +
+      ' ORDER BY L.LINEA_FACLIN', ASerie, ANumero));
     oVenta.AddPair('pagos_factura', ConstruirArray(AConn,
       ' SELECT * FROM fza_facturas_pagos ' +
       ' WHERE SERIE_FAC_FACPAG = :SERIE ' +
@@ -353,6 +494,8 @@ begin
       ' WHERE SERIE_FAC_LOG = :SERIE AND NUMERO_FAC_LOG = :NUMERO ' +
       ' ORDER BY ID_LOG', ASerie, ANumero));
     oVenta.AddPair('documentos', ConstruirDocumentos(AConn, AIdCola));
+    oVenta.AddPair('fotos',
+      ConstruirFotos(AParametrosApp, AConn, ASerie, ANumero));
     Result := oRaiz.ToJSON;
   finally
     FreeAndNil(oRaiz);

@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
-  inMtoPrincipal, Uni, inLibUser, UniDataConn, inLibWin, Forms, Windows,
+  Uni, inLibUser, UniDataConn, inLibWin, Forms, Windows,
   Datasnap.DBClient, Datasnap.Provider, frxClass, frxDBSet, frCoreClasses;
 
 type

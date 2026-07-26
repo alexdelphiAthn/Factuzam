@@ -281,6 +281,8 @@ type
 
 implementation
 
+uses inLibLog;
+
 function IfThen(AValue: Boolean;
                 const ATrue: string;
                 AFalse: string = ''): string;
@@ -911,6 +913,10 @@ begin
     on E: Exception do
     begin
       _mensajeError := E.Message;
+      // Se registra la causa original; el llamante decide si aborta
+      if Assigned(Log) then
+        Log.LogError('TFacturaTotales.ProcesarFacturaCompleta (' +
+                     E.ClassName + '): ' + E.Message);
       Result := False;
     end;
   end;

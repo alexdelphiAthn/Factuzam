@@ -99,7 +99,6 @@ type
 
 implementation
 
-uses inMtoPrincipal;
 
 { TfzaForm }
 
@@ -111,8 +110,6 @@ constructor TfzaForm.Create(ACall,
                             ADataUnit: string;
                             ANumVentanas: Integer;
                             AOwn:TComponent  );
-var
-  frmOpen2:TfrmMtoPrincipal;
 begin
   FCall := ACall;
   FCaption := ACaption;
@@ -124,8 +121,7 @@ begin
     FNumVentanas := 1
   else
     FNumVentanas := ANumVentanas;
-  frmOpen2 := (AOwn as TfrmMtoPrincipal);
-  FmnMenuItem := (frmOpen2.FindComponent(FMenuItem) as TMenuItem);
+  FmnMenuItem := (AOwn.FindComponent(FMenuItem) as TMenuItem);
 end;
 
 function TfzaForm.GetCall: string;

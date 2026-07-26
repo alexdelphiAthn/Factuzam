@@ -26,7 +26,7 @@ uses
   Vcl.ComCtrls, cxListView,
   Data.DB, MemDS, DBAccess, Uni,
   frxClass, frxDBSet,
-  UniDataGen, UniDataArticulos, inLibUser, inMtoPrincipal;
+  UniDataGen, UniDataArticulos, inLibUser;
 
 type
   TdmFacturasCompra = class(TdmBase)

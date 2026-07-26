@@ -20,7 +20,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   Data.DB, MemDS, DBAccess, Uni,
-  UniDataGen, inLibUser, inMtoPrincipal,
+  UniDataGen, inLibUser,
   frxClass, frxDBSet, frCoreClasses;
 
 type

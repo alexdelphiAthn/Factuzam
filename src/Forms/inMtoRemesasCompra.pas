@@ -255,7 +255,7 @@ begin
   else
   begin
     q := dmmRemesasCompra.unqryTablaG;
-    frm := TfrmModalCargarEfectosRemesa.Create(nil);
+    frm := TfrmModalCargarEfectosRemesa.CrearParaCompra(nil);
     try
       frm.PrepararRemesaExistente(q.FieldByName('CODIGO_EMP_REMC').AsString,
         q.FieldByName('SERIE_REMC').AsString,

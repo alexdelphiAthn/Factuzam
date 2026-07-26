@@ -19,7 +19,7 @@ interface
 
 uses
   SysUtils, Classes,  DB,
-   inMtoPrincipal, DBClient, Provider, frxClass, frxDBSet, inLibUser,
+   DBClient, Provider, frxClass, frxDBSet, inLibUser,
    System.StrUtils, Windows, Dialogs, System.UITypes, System.Variants,
    MemDS, DBAccess, Uni,
    UniDataGen, frCoreClasses, inLibArticulosResolver;
@@ -93,6 +93,9 @@ type
     procedure unqryLinFacAfterInsert(DataSet: TDataSet);
     procedure unqryLinFacBeforePost(DataSet: TDataSet);
     procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
+    procedure unqryTablaGAfterDeleteTx(DataSet: TDataSet);
+    procedure unqryTablaGDeleteErrorTx(DataSet: TDataSet;
+      E: EDatabaseError; var Action: TDataAction);
     procedure unqryLinFacAfterDelete(DataSet: TDataSet);
     procedure dsLinFacStateChange(Sender: TObject);
     procedure unqryLinFacBeforeEdit(DataSet: TDataSet);
@@ -106,6 +109,9 @@ private
     // puramente descriptivo que NO debe disparar numeracion, creacion
     // de articulos ni recalculos (cascada por linea al navegar).
     FDesempaquetandoAtributos: Boolean;
+    // True mientras el borrado de factura tiene transaccion propia
+    // abierta en BeforeDelete; la cierra AfterDelete u OnDeleteError.
+    FTransBorradoPropia: Boolean;
     // Copia a los parámetros de la query los valores de los campos del
     // maestro (MasterSource) que se llamen igual. UniDAC solo rellena
     // los parámetros al hacer scroll del maestro con el detail ya
@@ -603,23 +609,26 @@ var
   unqrySol:TUniQuery;
 begin
   unqrySol := TUniQuery.Create(Self);
-  unqrySol.Connection := ConexionPrincipal;
-  unqrySol.SQL.Text := 'SELECT * ' +
-                       '  FROM fza_clientes ' +
-                       ' WHERE CODIGO_CLI_CLI = :cliente';
-  unqrySol.ParamByName('cliente').AsString := s;
-  unqrySol.Open;
-  if unqrySol.RecordCount = 0 then
-  begin
-    Result := False;
-  end
-  else
-  begin
-    CopiarClienteaFactura(unqrySol);
-    Result := True;
+  try
+    unqrySol.Connection := ConexionPrincipal;
+    unqrySol.SQL.Text := 'SELECT * ' +
+                         '  FROM fza_clientes ' +
+                         ' WHERE CODIGO_CLI_CLI = :cliente';
+    unqrySol.ParamByName('cliente').AsString := s;
+    unqrySol.Open;
+    if unqrySol.RecordCount = 0 then
+    begin
+      Result := False;
+    end
+    else
+    begin
+      CopiarClienteaFactura(unqrySol);
+      Result := True;
+    end;
+    unqrySol.Close;
+  finally
+    FreeAndNil(unqrySol);
   end;
-  unqrySol.Close;
-  FreeAndNil(unqrySol);
 end;
 
 
@@ -674,27 +683,28 @@ begin
   with unqryTablaG do
   begin
     unqrySol := TUniQuery.Create(Self);
-    unqrySol.Connection := ConexionPrincipal;
-    unqrySol.SQL.Text := 'SELECT * '+
-                         '  FROM fza_empresas_retenciones ' +
-                         ' WHERE CODIGO_EMP_EMPRET = :empresa ' +
-                         '   AND FECHA_DESDE_EMPRET <= :fecha ' +
-                         '   AND (    FECHA_HASTA_EMPRET >= :fecha ' +
-                         '         OR FECHA_HASTA_EMPRET IS NULL)' +
-                         ' LIMIT 1';
-    unqrySol.ParamByName('empresa').AsString :=
-                                   FindField('CODIGO_EMP_FAC').AsString;
-    unqrySol.ParamByName('fecha').AsDateTime :=
-                                        FieldByName('FECHA_FAC').AsDateTime;
-    unqrySol.Open;
-    if (unqrySol.RecordCount = 0) then
-      Sleep(0)
-    else
-      if (FindField('PORCENTAJE_RETENCION_FAC').AsFloat = 0) then
+    try
+      unqrySol.Connection := ConexionPrincipal;
+      unqrySol.SQL.Text := 'SELECT * '+
+                           '  FROM fza_empresas_retenciones ' +
+                           ' WHERE CODIGO_EMP_EMPRET = :empresa ' +
+                           '   AND FECHA_DESDE_EMPRET <= :fecha ' +
+                           '   AND (    FECHA_HASTA_EMPRET >= :fecha ' +
+                           '         OR FECHA_HASTA_EMPRET IS NULL)' +
+                           ' LIMIT 1';
+      unqrySol.ParamByName('empresa').AsString :=
+                                     FindField('CODIGO_EMP_FAC').AsString;
+      unqrySol.ParamByName('fecha').AsDateTime :=
+                                          FieldByName('FECHA_FAC').AsDateTime;
+      unqrySol.Open;
+      if ((unqrySol.RecordCount > 0) and
+          (FindField('PORCENTAJE_RETENCION_FAC').AsFloat = 0)) then
         FindField('PORCENTAJE_RETENCION_FAC').AsFloat :=
                         unqrySol.FindField('PORCENTAJE_EMPRET').AsFloat;
-    unqrySol.Close;
-    FreeAndNil(unqrySol);
+      unqrySol.Close;
+    finally
+      FreeAndNil(unqrySol);
+    end;
   end;
 end;
 
@@ -1030,6 +1040,9 @@ begin
     'DELETE FROM fza_facturas ' + sLineBreak +
     'WHERE NUMERO_FAC = :Old_NUMERO_FAC ' + sLineBreak +
     '  AND SERIE_FAC = :Old_SERIE_FAC';
+  // Cierre de la transaccion del borrado (abierta en BeforeDelete)
+  unqryTablaG.AfterDelete := unqryTablaGAfterDeleteTx;
+  unqryTablaG.OnDeleteError := unqryTablaGDeleteErrorTx;
   PrepararCabeceraSinCamposComplejos;
   unqryLinFac.Connection := ConexionPrincipal;
   // Contrato ColumnSKUcxGrid (facturas_columnas_sku.sql): los SQL del
@@ -2112,7 +2125,14 @@ begin
   // generan movimientos automaticos al consolidarse. Las NORMALES solo
   // si el usuario marco el check ESMUEVE_STOCK_FAC (caso venta directa
   // al mayor sin albaran). La generacion es idempotente: se comprueba
-  // que no exista ya el movimiento por TIPO_DOC_MOV/SERIE/NUMERO/LINEA.
+  // que no exista ya el movimiento por TIPO_DOC_MOV/SERIE/NUMERO/LINEA,
+  // ahora reforzado por el indice unico UX_MOV_CLAVE_FCVE (ver script
+  // movimientos_indice_unico_fcve.sql) y por la transaccion interna de
+  // GenerarMovimientosSalidaFactura.
+  // PENDIENTE (plan fase 1.2): valorar mover esta llamada del AfterPost
+  // al flujo explicito de consolidacion, para no evaluarla en cada
+  // grabacion intermedia del borrador. Requiere validar el flujo de
+  // caja (tickets) antes de moverla.
   if (not unqryTablaG.Active) or
      (unqryTablaG.FindField('TIPO_FAC') = nil) or
      (Trim(unqryTablaG.FieldByName('NUMERO_FAC').AsString) = '') then
@@ -2237,101 +2257,136 @@ begin
   begin
     Abort;
   end;
-  qryBorrarEfectos := TUniQuery.Create(Self);
+  // Borrado atomico: los hijos (efectos, lineas, recibos, movimientos)
+  // y la cabecera se confirman juntos (Commit en AfterDelete) o se
+  // deshacen juntos (Rollback en OnDeleteError o en el except de aqui).
+  FTransBorradoPropia := not ConexionPrincipal.InTransaction;
+  if FTransBorradoPropia then
+    ConexionPrincipal.StartTransaction;
   try
-    qryBorrarEfectos.Connection := ConexionPrincipal;
-    qryBorrarEfectos.SQL.Text :=
-      'SELECT COUNT(*) AS N ' +
-      '  FROM INFORMATION_SCHEMA.TABLES ' +
-      ' WHERE TABLE_SCHEMA = DATABASE() ' +
-      '   AND TABLE_NAME = ''fza_efectos_venta''';
-    qryBorrarEfectos.Open;
-    if qryBorrarEfectos.FieldByName('N').AsInteger > 0 then
-    begin
-      qryBorrarEfectos.Close;
+    qryBorrarEfectos := TUniQuery.Create(Self);
+    try
+      qryBorrarEfectos.Connection := ConexionPrincipal;
       qryBorrarEfectos.SQL.Text :=
         'SELECT COUNT(*) AS N ' +
-        '  FROM fza_efectos_venta ' +
-        ' WHERE SERIE_FAC_EFV = :serie ' +
-        '   AND NUMERO_FAC_EFV = :nrofactura ' +
-        '   AND (COALESCE(IMPORTE_COBRADO_EFV, 0) > 0.0001 ' +
-        '    OR COALESCE(ESCONCILIADO_EFV, ''N'') = ''S'' ' +
-        '    OR COALESCE(SERIE_REMV_EFV, '''') <> '''' ' +
-        '    OR COALESCE(NUMERO_REMV_EFV, '''') <> '''' ' +
-        '    OR COALESCE(ESTADO_EFV, '''') IN ' +
-        '       (''COBRADO'', ''REMESADO'', ''CONCILIADO''))';
-      qryBorrarEfectos.ParamByName('serie').AsString :=
-        unqryTablaG.FieldByName(fseriefac).AsString;
-      qryBorrarEfectos.ParamByName('nrofactura').AsString :=
-        unqryTablaG.FieldByName(fnrofac).AsString;
+        '  FROM INFORMATION_SCHEMA.TABLES ' +
+        ' WHERE TABLE_SCHEMA = DATABASE() ' +
+        '   AND TABLE_NAME = ''fza_efectos_venta''';
       qryBorrarEfectos.Open;
       if qryBorrarEfectos.FieldByName('N').AsInteger > 0 then
       begin
-        ShowMessage('El borrador tiene efectos de cobro cobrados, ' +
-                    'conciliados o remesados. No puede borrarse.');
-        Abort;
+        qryBorrarEfectos.Close;
+        qryBorrarEfectos.SQL.Text :=
+          'SELECT COUNT(*) AS N ' +
+          '  FROM fza_efectos_venta ' +
+          ' WHERE SERIE_FAC_EFV = :serie ' +
+          '   AND NUMERO_FAC_EFV = :nrofactura ' +
+          '   AND (COALESCE(IMPORTE_COBRADO_EFV, 0) > 0.0001 ' +
+          '    OR COALESCE(ESCONCILIADO_EFV, ''N'') = ''S'' ' +
+          '    OR COALESCE(SERIE_REMV_EFV, '''') <> '''' ' +
+          '    OR COALESCE(NUMERO_REMV_EFV, '''') <> '''' ' +
+          '    OR COALESCE(ESTADO_EFV, '''') IN ' +
+          '       (''COBRADO'', ''REMESADO'', ''CONCILIADO''))';
+        qryBorrarEfectos.ParamByName('serie').AsString :=
+          unqryTablaG.FieldByName(fseriefac).AsString;
+        qryBorrarEfectos.ParamByName('nrofactura').AsString :=
+          unqryTablaG.FieldByName(fnrofac).AsString;
+        qryBorrarEfectos.Open;
+        if qryBorrarEfectos.FieldByName('N').AsInteger > 0 then
+        begin
+          ShowMessage('El borrador tiene efectos de cobro cobrados, ' +
+                      'conciliados o remesados. No puede borrarse.');
+          Abort;
+        end;
+        qryBorrarEfectos.Close;
+        qryBorrarEfectos.SQL.Text :=
+          'DELETE ' +
+          '  FROM fza_efectos_venta ' +
+          ' WHERE SERIE_FAC_EFV = :serie ' +
+          '   AND NUMERO_FAC_EFV = :nrofactura';
+        qryBorrarEfectos.ParamByName('serie').AsString :=
+          unqryTablaG.FieldByName(fseriefac).AsString;
+        qryBorrarEfectos.ParamByName('nrofactura').AsString :=
+          unqryTablaG.FieldByName(fnrofac).AsString;
+        qryBorrarEfectos.ExecSQL;
       end;
-      qryBorrarEfectos.Close;
-      qryBorrarEfectos.SQL.Text :=
-        'DELETE ' +
-        '  FROM fza_efectos_venta ' +
-        ' WHERE SERIE_FAC_EFV = :serie ' +
-        '   AND NUMERO_FAC_EFV = :nrofactura';
-      qryBorrarEfectos.ParamByName('serie').AsString :=
-        unqryTablaG.FieldByName(fseriefac).AsString;
-      qryBorrarEfectos.ParamByName('nrofactura').AsString :=
-        unqryTablaG.FieldByName(fnrofac).AsString;
-      qryBorrarEfectos.ExecSQL;
+    finally
+      FreeAndNil(qryBorrarEfectos);
     end;
-  finally
-    FreeAndNil(qryBorrarEfectos);
+    qryBorrarLineas := TUniQuery.Create(Self);
+    try
+      qryBorrarLineas.Connection := ConexionPrincipal;
+      qryBorrarLineas.SQL.Text :=
+        'DELETE ' +
+        '  FROM fza_facturas_lineas ' +
+        ' WHERE SERIE_FAC_FACLIN = :serie ' +
+        '   AND NUMERO_FAC_FACLIN = :nrofactura';
+      qryBorrarLineas.ParamByName('serie').AsString :=
+        unqryTablaG.FieldByName(fseriefac).AsString;
+      qryBorrarLineas.ParamByName('nrofactura').AsString :=
+        unqryTablaG.FieldByName(fnrofac).AsString;
+      qryBorrarLineas.ExecSQL;
+    finally
+      FreeAndNil(qryBorrarLineas);
+    end;
+    qryBorrarRecibos := TUniQuery.Create(Self);
+    try
+      qryBorrarRecibos.Connection := ConexionPrincipal;
+      qryBorrarRecibos.SQL.Text :=
+        'DELETE ' +
+        '  FROM fza_recibos ' +
+        ' WHERE SERIE_FAC_REC = :serie ' +
+        '   AND NUMERO_FAC_REC = :nrofactura';
+      qryBorrarRecibos.ParamByName('serie').AsString :=
+        unqryTablaG.FieldByName(fseriefac).AsString;
+      qryBorrarRecibos.ParamByName('nrofactura').AsString :=
+        unqryTablaG.FieldByName(fnrofac).AsString;
+      qryBorrarRecibos.ExecSQL;
+    finally
+      FreeAndNil(qryBorrarRecibos);
+    end;
+    // Revierte VE (caja) y FC (mantenimiento), manteniendo stock y acumulados.
+    qryBorrarMovimientos := TUniQuery.Create(Self);
+    try
+      qryBorrarMovimientos.Connection := ConexionPrincipal;
+      TVerifactuCola.BorrarMovimientosFactura(
+        qryBorrarMovimientos,
+        unqryTablaG.FieldByName(fseriefac).AsString,
+        unqryTablaG.FieldByName(fnrofac).AsString);
+    finally
+      FreeAndNil(qryBorrarMovimientos);
+    end;
+  except
+    on E: Exception do
+    begin
+      if FTransBorradoPropia then
+      begin
+        ConexionPrincipal.Rollback;
+        FTransBorradoPropia := False;
+      end;
+      raise;
+    end;
   end;
-  qryBorrarLineas := TUniQuery.Create(Self);
-  with qryBorrarLineas do
+end;
+
+procedure TdmFacturas.unqryTablaGAfterDeleteTx(DataSet: TDataSet);
+begin
+  // La cabecera ya se ha borrado sin error: se confirma todo el borrado
+  if FTransBorradoPropia then
   begin
-    Connection := ConexionPrincipal;
-    SQL.Text := 'DELETE ' +
-                '  FROM fza_facturas_lineas ' +
-                ' WHERE SERIE_FAC_FACLIN = :serie ' +
-                '   AND NUMERO_FAC_FACLIN   = :nrofactura';
-    Params.Clear;
-    Params.CreateParam(ftString, 'serie', ptInput);
-    Params.CreateParam(ftString, 'nrofactura', ptInput);
-    Params.ParamByName('serie').AsString :=
-                                unqryTablaG.FieldByName(fseriefac).AsString;
-    Params.ParamByName('nrofactura').AsString :=
-                                  unqryTablaG.FieldByName(fnrofac).AsString;
-    ExecSQL;
-    Free;
+    ConexionPrincipal.Commit;
+    FTransBorradoPropia := False;
   end;
-  qryBorrarRecibos := TUniQuery.Create(Self);
-  with qryBorrarRecibos do
+end;
+
+procedure TdmFacturas.unqryTablaGDeleteErrorTx(DataSet: TDataSet;
+  E: EDatabaseError; var Action: TDataAction);
+begin
+  // El DELETE de la cabecera fallo: se deshace el borrado de los hijos
+  if FTransBorradoPropia then
   begin
-    Connection := ConexionPrincipal;
-    SQL.Text := 'DELETE ' +
-                '  FROM fza_recibos ' +
-                ' WHERE SERIE_FAC_REC = :serie ' +
-                '   AND NUMERO_FAC_REC  = :nrofactura';
-    Params.Clear;
-    Params.CreateParam(ftString, 'serie', ptInput);
-    Params.CreateParam(ftString, 'nrofactura', ptInput);
-    Params.ParamByName('serie').AsString :=
-                              unqryTablaG.FieldByName(fseriefac).AsString;
-    Params.ParamByName('nrofactura').AsString :=
-                                unqryTablaG.FieldByName(fnrofac).AsString;
-    ExecSQL;
-    Free;
-  end;
-  // Revierte VE (caja) y FC (mantenimiento), manteniendo stock y acumulados.
-  qryBorrarMovimientos := TUniQuery.Create(Self);
-  try
-    qryBorrarMovimientos.Connection := ConexionPrincipal;
-    TVerifactuCola.BorrarMovimientosFactura(
-      qryBorrarMovimientos,
-      unqryTablaG.FieldByName(fseriefac).AsString,
-      unqryTablaG.FieldByName(fnrofac).AsString);
-  finally
-    FreeAndNil(qryBorrarMovimientos);
+    ConexionPrincipal.Rollback;
+    FTransBorradoPropia := False;
   end;
 end;
 
@@ -2676,6 +2731,7 @@ var
   sLinea, sSku, sAlmacen, sArticulo, sCaja, sNumOp: string;
   sNumeroMov: string;
   fCantidad: Double;
+  bTransPropia: Boolean;
 begin
   Result := 0;
   if not unqryTablaG.Active then Exit;
@@ -2693,138 +2749,158 @@ begin
   else
     sNumOp := '';
 
-  qLineas := TUniQuery.Create(nil);
-  qExiste := TUniQuery.Create(nil);
-  qActualizar := TUniQuery.Create(nil);
+  // Generacion atomica: o se insertan TODOS los movimientos
+  // pendientes (con su NUMERO_MOV_FACLIN en las lineas) o ninguno.
+  // Sin transaccion, un corte a mitad dejaba stock descontado
+  // parcialmente y lineas sin numero de movimiento.
+  bTransPropia := not ConexionPrincipal.InTransaction;
+  if bTransPropia then
+    ConexionPrincipal.StartTransaction;
   try
-    qLineas.Connection := ConexionPrincipal;
-    qLineas.SQL.Text :=
-      'SELECT LINEA_FACLIN, CODIGO_UNIDAD_FACLIN, CODIGO_ART_FACLIN, ' +
-      '       CANTIDAD_FACLIN, CODIGO_ALM_FACLIN, NUMERO_MOV_FACLIN ' +
-      '  FROM fza_facturas_lineas ' +
-      ' WHERE NUMERO_FAC_FACLIN = :pNUM ' +
-      '   AND SERIE_FAC_FACLIN  = :pSER ' +
-      ' ORDER BY LINEA_FACLIN';
-    qLineas.ParamByName('pNUM').AsString := sNumeroFac;
-    qLineas.ParamByName('pSER').AsString := sSerieFac;
-    qLineas.Open;
+    qLineas := TUniQuery.Create(nil);
+    qExiste := TUniQuery.Create(nil);
+    qActualizar := TUniQuery.Create(nil);
+    try
+      qLineas.Connection := ConexionPrincipal;
+      qLineas.SQL.Text :=
+        'SELECT LINEA_FACLIN, CODIGO_UNIDAD_FACLIN, CODIGO_ART_FACLIN, ' +
+        '       CANTIDAD_FACLIN, CODIGO_ALM_FACLIN, NUMERO_MOV_FACLIN ' +
+        '  FROM fza_facturas_lineas ' +
+        ' WHERE NUMERO_FAC_FACLIN = :pNUM ' +
+        '   AND SERIE_FAC_FACLIN  = :pSER ' +
+        ' ORDER BY LINEA_FACLIN';
+      qLineas.ParamByName('pNUM').AsString := sNumeroFac;
+      qLineas.ParamByName('pSER').AsString := sSerieFac;
+      qLineas.Open;
 
-    qExiste.Connection := ConexionPrincipal;
-    // El SP guarda el documento en las columnas DOC (las REF quedan
-    // NULL). Las ventas de caja ya registran su salida con
-    // TIPO_DOC_MOV='VE': si no se cuentan, un Post posterior de la
-    // simplificada duplicaría el movimiento (y el descuento de stock).
-    qExiste.SQL.Text :=
-      'SELECT NUMERO_MOV ' +
-      '  FROM fza_movimientos_almacen ' +
-      ' WHERE TIPO_DOC_MOV IN (''FC'', ''VE'') ' +
-      '   AND SERIE_DOC_MOV  = :pSER ' +
-      '   AND NUMERO_DOC_MOV = :pNUM ' +
-      '   AND LINEA_MOV      = :pLIN ' +
-      ' ORDER BY CASE TIPO_DOC_MOV WHEN ''VE'' THEN 0 ELSE 1 END, ' +
-      '          NUMERO_MOV ' +
-      ' LIMIT 1';
-    qActualizar.Connection := ConexionPrincipal;
-    qActualizar.SQL.Text :=
-      'UPDATE fza_facturas_lineas ' +
-      '   SET NUMERO_MOV_FACLIN = :pMOV, ' +
-      '       INSTANTE_MODIF = NOW(), ' +
-      '       USUARIO_MODIF = :pUSUARIO ' +
-      ' WHERE SERIE_FAC_FACLIN  = :pSER ' +
-      '   AND NUMERO_FAC_FACLIN = :pNUM ' +
-      '   AND LINEA_FACLIN      = :pLIN';
+      qExiste.Connection := ConexionPrincipal;
+      // El SP guarda el documento en las columnas DOC (las REF quedan
+      // NULL). Las ventas de caja ya registran su salida con
+      // TIPO_DOC_MOV='VE': si no se cuentan, un Post posterior de la
+      // simplificada duplicaría el movimiento (y el descuento de stock).
+      qExiste.SQL.Text :=
+        'SELECT NUMERO_MOV ' +
+        '  FROM fza_movimientos_almacen ' +
+        ' WHERE TIPO_DOC_MOV IN (''FC'', ''VE'') ' +
+        '   AND SERIE_DOC_MOV  = :pSER ' +
+        '   AND NUMERO_DOC_MOV = :pNUM ' +
+        '   AND LINEA_MOV      = :pLIN ' +
+        ' ORDER BY CASE TIPO_DOC_MOV WHEN ''VE'' THEN 0 ELSE 1 END, ' +
+        '          NUMERO_MOV ' +
+        ' LIMIT 1';
+      qActualizar.Connection := ConexionPrincipal;
+      qActualizar.SQL.Text :=
+        'UPDATE fza_facturas_lineas ' +
+        '   SET NUMERO_MOV_FACLIN = :pMOV, ' +
+        '       INSTANTE_MODIF = NOW(), ' +
+        '       USUARIO_MODIF = :pUSUARIO ' +
+        ' WHERE SERIE_FAC_FACLIN  = :pSER ' +
+        '   AND NUMERO_FAC_FACLIN = :pNUM ' +
+        '   AND LINEA_FACLIN      = :pLIN';
 
-    qLineas.First;
-    while not qLineas.Eof do
-    begin
-      sLinea    := qLineas.FieldByName('LINEA_FACLIN').AsString;
-      sSku      := Trim(qLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString);
-      sArticulo := qLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
-      fCantidad := qLineas.FieldByName('CANTIDAD_FACLIN').AsFloat;
-      sAlmacen  := qLineas.FieldByName('CODIGO_ALM_FACLIN').AsString;
-
-      if (sSku <> '') and (fCantidad > 0) then
+      qLineas.First;
+      while not qLineas.Eof do
       begin
-        sNumeroMov := '';
-        qExiste.Close;
-        qExiste.ParamByName('pSER').AsString := sSerieFac;
-        qExiste.ParamByName('pNUM').AsString := sNumeroFac;
-        qExiste.ParamByName('pLIN').AsString := sLinea;
-        qExiste.Open;
-        if not qExiste.IsEmpty then
-          sNumeroMov := qExiste.FieldByName('NUMERO_MOV').AsString
-        else
+        sLinea    := qLineas.FieldByName('LINEA_FACLIN').AsString;
+        sSku      := Trim(qLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString);
+        sArticulo := qLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
+        fCantidad := qLineas.FieldByName('CANTIDAD_FACLIN').AsFloat;
+        sAlmacen  := qLineas.FieldByName('CODIGO_ALM_FACLIN').AsString;
+
+        if (sSku <> '') and (fCantidad > 0) then
         begin
-          sNumeroMov := ObtenerSiguienteContador(
-            ConexionPrincipal,
-            'MV',
-            IdentidadSesion.Usuario);
-          with unstrdprcInsertarMovFac do
+          sNumeroMov := '';
+          qExiste.Close;
+          qExiste.ParamByName('pSER').AsString := sSerieFac;
+          qExiste.ParamByName('pNUM').AsString := sNumeroFac;
+          qExiste.ParamByName('pLIN').AsString := sLinea;
+          qExiste.Open;
+          if not qExiste.IsEmpty then
+            sNumeroMov := qExiste.FieldByName('NUMERO_MOV').AsString
+          else
           begin
-            Params.Clear;
-            Params.CreateParam(ftString, 'p_NUMERO_MOV',          ptInput);
-            Params.CreateParam(ftString, 'p_TIPO_DOC_MOV',        ptInput);
-            Params.CreateParam(ftString, 'p_SERIE_DOC_MOV',       ptInput);
-            Params.CreateParam(ftString, 'p_NRO_DOC_MOV',         ptInput);
-            Params.CreateParam(ftString, 'p_LINEA_MOV',           ptInput);
-            Params.CreateParam(ftString, 'p_CODIGO_EMPRESA_MOV',  ptInput);
-            Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_MOV',  ptInput);
-            Params.CreateParam(ftString,
-                               'p_CODIGO_ALMACEN_CONTRA_MOV',
-                               ptInput);
-            Params.CreateParam(ftString, 'p_CODIGO_UNIDAD_MOV',   ptInput);
-            Params.CreateParam(ftString, 'p_TIPO_MOVIMIENTO_MOV', ptInput);
-            Params.CreateParam(ftBCD,    'p_CANTIDAD_MOV',        ptInput);
-            Params.CreateParam(ftBCD,    'p_PRECIO_MEDIO_MOV',    ptInput);
-            Params.CreateParam(ftBCD,    'p_TOTAL_COSTE_MOV',     ptInput);
-            Params.CreateParam(ftString, 'p_USUARIO',             ptInput);
-            Params.CreateParam(ftString, 'p_ALMACEN_DOC',         ptInput);
-            Params.CreateParam(ftString, 'p_NUMOP_DOC',           ptInput);
-            Params.CreateParam(ftString, 'p_CODIGO_CAJA_DOC_MOV', ptInput);
-            Params.CreateParam(ftString, 'p_CODCLIENTE',          ptInput);
-            Params.CreateParam(ftString, 'p_CODARTICULO',         ptInput);
-            ParamByName('p_NUMERO_MOV').AsString          := sNumeroMov;
-            ParamByName('p_TIPO_DOC_MOV').AsString        := 'FC';
-            ParamByName('p_SERIE_DOC_MOV').AsString       := sSerieFac;
-            ParamByName('p_NRO_DOC_MOV').AsString         := sNumeroFac;
-            ParamByName('p_LINEA_MOV').AsString           := sLinea;
-            ParamByName('p_CODIGO_EMPRESA_MOV').AsString  := sEmpresa;
-            ParamByName('p_CODIGO_ALMACEN_MOV').AsString  := sAlmacen;
-            ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').Clear;
-            ParamByName('p_CODIGO_UNIDAD_MOV').AsString   := sSku;
-            ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString := 'S';
-            ParamByName('p_CANTIDAD_MOV').AsFloat         := fCantidad;
-            ParamByName('p_PRECIO_MEDIO_MOV').AsFloat     := 0;
-            ParamByName('p_TOTAL_COSTE_MOV').AsFloat      := 0;
-            ParamByName('p_USUARIO').AsString             := IdentidadSesion.Usuario;
-            ParamByName('p_ALMACEN_DOC').AsString         := sAlmacen;
-            ParamByName('p_NUMOP_DOC').AsString           := sNumOp;
-            ParamByName('p_CODIGO_CAJA_DOC_MOV').AsString := sCaja;
-            ParamByName('p_CODCLIENTE').AsString          := sCliente;
-            ParamByName('p_CODARTICULO').AsString         := sArticulo;
-            ExecProc;
+            sNumeroMov := ObtenerSiguienteContador(
+              ConexionPrincipal,
+              'MV',
+              IdentidadSesion.Usuario);
+            with unstrdprcInsertarMovFac do
+            begin
+              Params.Clear;
+              Params.CreateParam(ftString, 'p_NUMERO_MOV',          ptInput);
+              Params.CreateParam(ftString, 'p_TIPO_DOC_MOV',        ptInput);
+              Params.CreateParam(ftString, 'p_SERIE_DOC_MOV',       ptInput);
+              Params.CreateParam(ftString, 'p_NRO_DOC_MOV',         ptInput);
+              Params.CreateParam(ftString, 'p_LINEA_MOV',           ptInput);
+              Params.CreateParam(ftString, 'p_CODIGO_EMPRESA_MOV',  ptInput);
+              Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_MOV',  ptInput);
+              Params.CreateParam(ftString,
+                                 'p_CODIGO_ALMACEN_CONTRA_MOV',
+                                 ptInput);
+              Params.CreateParam(ftString, 'p_CODIGO_UNIDAD_MOV',   ptInput);
+              Params.CreateParam(ftString, 'p_TIPO_MOVIMIENTO_MOV', ptInput);
+              Params.CreateParam(ftBCD,    'p_CANTIDAD_MOV',        ptInput);
+              Params.CreateParam(ftBCD,    'p_PRECIO_MEDIO_MOV',    ptInput);
+              Params.CreateParam(ftBCD,    'p_TOTAL_COSTE_MOV',     ptInput);
+              Params.CreateParam(ftString, 'p_USUARIO',             ptInput);
+              Params.CreateParam(ftString, 'p_ALMACEN_DOC',         ptInput);
+              Params.CreateParam(ftString, 'p_NUMOP_DOC',           ptInput);
+              Params.CreateParam(ftString, 'p_CODIGO_CAJA_DOC_MOV', ptInput);
+              Params.CreateParam(ftString, 'p_CODCLIENTE',          ptInput);
+              Params.CreateParam(ftString, 'p_CODARTICULO',         ptInput);
+              ParamByName('p_NUMERO_MOV').AsString          := sNumeroMov;
+              ParamByName('p_TIPO_DOC_MOV').AsString        := 'FC';
+              ParamByName('p_SERIE_DOC_MOV').AsString       := sSerieFac;
+              ParamByName('p_NRO_DOC_MOV').AsString         := sNumeroFac;
+              ParamByName('p_LINEA_MOV').AsString           := sLinea;
+              ParamByName('p_CODIGO_EMPRESA_MOV').AsString  := sEmpresa;
+              ParamByName('p_CODIGO_ALMACEN_MOV').AsString  := sAlmacen;
+              ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').Clear;
+              ParamByName('p_CODIGO_UNIDAD_MOV').AsString   := sSku;
+              ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString := 'S';
+              ParamByName('p_CANTIDAD_MOV').AsFloat         := fCantidad;
+              ParamByName('p_PRECIO_MEDIO_MOV').AsFloat     := 0;
+              ParamByName('p_TOTAL_COSTE_MOV').AsFloat      := 0;
+              ParamByName('p_USUARIO').AsString :=
+              IdentidadSesion.Usuario;
+              ParamByName('p_ALMACEN_DOC').AsString         := sAlmacen;
+              ParamByName('p_NUMOP_DOC').AsString           := sNumOp;
+              ParamByName('p_CODIGO_CAJA_DOC_MOV').AsString := sCaja;
+              ParamByName('p_CODCLIENTE').AsString          := sCliente;
+              ParamByName('p_CODARTICULO').AsString         := sArticulo;
+              ExecProc;
+            end;
+            Inc(Result);
           end;
-          Inc(Result);
+          qExiste.Close;
+          if (sNumeroMov <> '') and
+             (qLineas.FieldByName('NUMERO_MOV_FACLIN').AsString <>
+              sNumeroMov) then
+          begin
+            qActualizar.ParamByName('pMOV').AsString := sNumeroMov;
+            qActualizar.ParamByName('pUSUARIO').AsString :=
+            IdentidadSesion.Usuario;
+            qActualizar.ParamByName('pSER').AsString := sSerieFac;
+            qActualizar.ParamByName('pNUM').AsString := sNumeroFac;
+            qActualizar.ParamByName('pLIN').AsString := sLinea;
+            qActualizar.ExecSQL;
+          end;
         end;
-        qExiste.Close;
-        if (sNumeroMov <> '') and
-           (qLineas.FieldByName('NUMERO_MOV_FACLIN').AsString <>
-            sNumeroMov) then
-        begin
-          qActualizar.ParamByName('pMOV').AsString := sNumeroMov;
-          qActualizar.ParamByName('pUSUARIO').AsString := IdentidadSesion.Usuario;
-          qActualizar.ParamByName('pSER').AsString := sSerieFac;
-          qActualizar.ParamByName('pNUM').AsString := sNumeroFac;
-          qActualizar.ParamByName('pLIN').AsString := sLinea;
-          qActualizar.ExecSQL;
-        end;
+        qLineas.Next;
       end;
-      qLineas.Next;
+    finally
+      FreeAndNil(qLineas);
+      FreeAndNil(qExiste);
+      FreeAndNil(qActualizar);
     end;
-  finally
-    FreeAndNil(qLineas);
-    FreeAndNil(qExiste);
-    FreeAndNil(qActualizar);
+    if bTransPropia then
+      ConexionPrincipal.Commit;
+  except
+    on E: Exception do
+    begin
+      if bTransPropia then
+        ConexionPrincipal.Rollback;
+      raise;
+    end;
   end;
 
   if unqryMovimientosFac.Active then

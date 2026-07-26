@@ -27,7 +27,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Variants,
   Data.DB, MemDS, DBAccess, Uni,
-  UniDataGen, inLibUser, inMtoPrincipal;
+  UniDataGen, inLibUser;
 
 type
   TdmPedidosCompra = class(TdmBase)

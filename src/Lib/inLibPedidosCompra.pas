@@ -62,6 +62,8 @@ procedure BorrarPdteRecibirDesdePedido(AConn: TUniConnection;
 //
 // Devuelve True si el albaran se creo. Si no habia lineas pendientes
 // para el almacen, devuelve False y AMensaje explica el motivo.
+// Implementada como caso particular de ...ConCantidades: construye una
+// celda por linea pendiente y delega (un solo camino de codigo).
 //
 // Los parametros ARefPrv, AFechaRecepcion y AIdPvTemporada vienen del
 // modal "Crear albaran" y sobreescriben los defaults del pedido
@@ -450,26 +452,25 @@ function CrearAlbaranDesdePedido(AConn: TUniConnection;
                                   out ANumAlbc: string;
                                   out AMensaje: string): Boolean;
 var
-  q, qIns: TUniQuery;
-  iCount, iLinea, iLineaAlbc: Integer;
-  sLineaAlbc: string;
+  q: TUniQuery;
+  oCeldas: TList<TCeldaARecibir>;
+  rCelda: TCeldaARecibir;
 begin
   Result   := False;
-  AMensaje := '';
   ANumAlbc := '';
-  if Trim(ACodigoAlm) = '' then
-  begin
-    AMensaje := 'Debes seleccionar un almacen.';
-    Exit;
-  end;
-
-  // 1. Comprobar que hay algo pendiente para ese almacen. Si no, abortar
-  //    con mensaje claro.
+  AMensaje := '';
+  // Construye una celda por linea pendiente del almacen y delega en
+  // CrearAlbaranDesdePedidoConCantidades: un unico camino de codigo
+  // para el flujo "todo lo pendiente" y el flujo celda a celda del
+  // pivote. Antes eran dos funciones gemelas de ~350 lineas cada una.
+  oCeldas := TList<TCeldaARecibir>.Create;
   q := TUniQuery.Create(nil);
   try
     q.Connection := AConn;
     q.SQL.Text :=
-      'SELECT COUNT(*) AS N ' +
+      'SELECT L.LINEA_PEDCLIN, L.CODIGO_UNIDAD_PEDCLIN, ' +
+      '       L.CANTIDAD_PEDCLIN - IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) ' +
+      '         AS PENDIENTE ' +
       '  FROM fza_pedidos_compra_lineas L ' +
       '  JOIN fza_pedidos_compra P ' +
       '    ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
@@ -478,154 +479,8 @@ begin
       '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
       '   AND IFNULL(NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
       '              P.CODIGO_ALM_PEDC) = :alm ' +
-      '   AND L.CANTIDAD_PEDCLIN - IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) > 0';
-    q.ParamByName('s').AsString   := ASeriePedc;
-    q.ParamByName('n').AsString   := ANumPedc;
-    q.ParamByName('alm').AsString := ACodigoAlm;
-    q.Open;
-    iCount := q.FieldByName('N').AsInteger;
-    q.Close;
-    if iCount = 0 then
-    begin
-      AMensaje := Format(
-        'No hay lineas pendientes de recibir para el almacen "%s" en el pedido %s/%s.',
-        [ACodigoAlm, ASeriePedc, ANumPedc]);
-      Exit;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
-
-  // 2. Reservar numero de albaran del contador global ('AB').
-  ANumAlbc := inLibtb.ObtenerSiguienteContador(AConn, 'AB', AUsuario);
-  if Trim(ANumAlbc) = '' then
-  begin
-    AMensaje := 'No se pudo obtener un numero de albaran del contador "AB".';
-    Exit;
-  end;
-
-  // 3. Crear cabecera del albaran denormalizando proveedor/empresa del
-  //    pedido. El estado nace ABIERTO; lo pasamos a CERRADO al final
-  //    para que se disparen los movimientos via DM/lib de movimientos.
-  qIns := TUniQuery.Create(nil);
-  try
-    qIns.Connection := AConn;
-    qIns.SQL.Text :=
-      'INSERT INTO fza_albaranes_compra ' +
-      '  (NUMERO_ALBC, SERIE_ALBC, FECHA_ALBC, ESTADO_ALBC, ' +
-      '   NUMERO_PED_ALBC, SERIE_PED_ALBC, ' +
-      '   CODIGO_EMP_ALBC, RAZON_SOCIAL_EMPRESA_ALBC, NIF_EMPRESA_ALBC, ' +
-      '   MOVIL_EMPRESA_ALBC, EMAIL_EMPRESA_ALBC, ' +
-      '   DIRECCION1_EMPRESA_ALBC, DIRECCION2_EMPRESA_ALBC, ' +
-      '   POBLACION_EMPRESA_ALBC, PROVINCIA_EMPRESA_ALBC, ' +
-      '   CODIGO_PAI_EMPRESA_ALBC, NOMBRE_PAI_EMPRESA_ALBC, ' +
-      '   CODIGO_POSTAL_EMPRESA_ALBC, ' +
-      '   CODIGO_IVA_ALBC, ESIVA_RECARGO_COMPRAS_ALBC, ' +
-      '   ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ' +
-      '   PORCENTAJE_IVAN_ALBC, PORCENTAJE_IVAR_ALBC, ' +
-      '   PORCENTAJE_IVAS_ALBC, PORCENTAJE_IVAE_ALBC, ' +
-      '   PORCENTAJE_REN_ALBC, PORCENTAJE_RER_ALBC, ' +
-      '   PORCENTAJE_RES_ALBC, PORCENTAJE_REE_ALBC, ' +
-      '   PORCENTAJE_RETENCION_ALBC, ' +
-      '   CODIGO_PRV_ALBC, RAZON_SOCIAL_PRV_ALBC, NIF_PRV_ALBC, ' +
-      '   MOVIL_PRV_ALBC, EMAIL_PRV_ALBC, ' +
-      '   DIRECCION1_PRV_ALBC, DIRECCION2_PRV_ALBC, ' +
-      '   POBLACION_PRV_ALBC, PROVINCIA_PRV_ALBC, ' +
-      '   CODIGO_POSTAL_PRV_ALBC, ' +
-      '   REF_PROVEEDOR_ALBC, FORMA_PAGO_ALBC, ' +
-      '   ID_PV_TEMPORADA_ALBC, CODIGO_ALM_ALBC, ' +
-      '   TOTAL_BRUTO_ALBC, PORCENTAJE_DTO_COMERCIAL_ALBC, ' +
-      '   TOTAL_DTO_COMERCIAL_ALBC, PORCENTAJE_DTO_FINANCIERO_ALBC, ' +
-      '   TOTAL_DTO_FINANCIERO_ALBC, TOTAL_BASES_ALBC, ' +
-      '   TOTAL_IMPUESTOS_ALBC, TOTAL_LIQUIDO_ALBC, ' +
-      '   CONTADOR_LINEAS_ALBC, ' +
-      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-      // Fecha del albaran: override del modal (AFechaRecepcion) > FECHA_PEDC > hoy.
-      // Ref proveedor: override del modal (ARefPrv) > REF_PROVEEDOR_PEDC.
-      'SELECT :nalbc, :salbc, ' +
-      '       CASE WHEN :usar_fecha = ''S'' THEN :freal ' +
-      '            ELSE IFNULL(P.FECHA_PEDC, CURDATE()) END, ' +
-      '       ''ABIERTO'', ' +
-      '       P.NUMERO_PEDC, P.SERIE_PEDC, ' +
-      '       P.CODIGO_EMP_PEDC, P.RAZON_SOCIAL_EMPRESA_PEDC, P.NIF_EMPRESA_PEDC, ' +
-      '       P.MOVIL_EMPRESA_PEDC, P.EMAIL_EMPRESA_PEDC, ' +
-      '       P.DIRECCION1_EMPRESA_PEDC, P.DIRECCION2_EMPRESA_PEDC, ' +
-      '       P.POBLACION_EMPRESA_PEDC, P.PROVINCIA_EMPRESA_PEDC, ' +
-      '       P.CODIGO_PAI_EMPRESA_PEDC, P.NOMBRE_PAI_EMPRESA_PEDC, ' +
-      '       P.CODIGO_POSTAL_EMPRESA_PEDC, ' +
-      '       P.CODIGO_IVA_PEDC, IFNULL(P.ESIVA_RECARGO_COMPRAS_PEDC, ''N''), ' +
-      '       IFNULL(P.ESIVA_EXENTO_INTRACOMUNITARIO_PEDC, ''N''), ' +
-      '       P.PORCENTAJE_IVAN_PEDC, P.PORCENTAJE_IVAR_PEDC, ' +
-      '       P.PORCENTAJE_IVAS_PEDC, P.PORCENTAJE_IVAE_PEDC, ' +
-      '       P.PORCENTAJE_REN_PEDC, P.PORCENTAJE_RER_PEDC, ' +
-      '       P.PORCENTAJE_RES_PEDC, P.PORCENTAJE_REE_PEDC, ' +
-      '       P.PORCENTAJE_RETENCION_PEDC, ' +
-      '       P.CODIGO_PRV_PEDC, P.RAZON_SOCIAL_PRV_PEDC, P.NIF_PRV_PEDC, ' +
-      '       P.MOVIL_PRV_PEDC, P.EMAIL_PRV_PEDC, ' +
-      '       P.DIRECCION1_PRV_PEDC, P.DIRECCION2_PRV_PEDC, ' +
-      '       P.POBLACION_PRV_PEDC, P.PROVINCIA_PRV_PEDC, ' +
-      '       P.CODIGO_POSTAL_PRV_PEDC, ' +
-      '       IFNULL(NULLIF(:rprv,''''), P.REF_PROVEEDOR_PEDC), ' +
-      '       NULLIF(P.FORMA_PAGO_PEDC, ''''), NULLIF(:pv, 0), :alm, ' +
-      '       0, IFNULL(P.PORCENTAJE_DTO_COMERCIAL_PEDC, 0), ' +
-      '       0, IFNULL(P.PORCENTAJE_DTO_FINANCIERO_PEDC, 0), ' +
-      '       0, 0, 0, 0, ''0'', ' +
-      '       NOW(), :u, NOW(), :u ' +
-      '  FROM fza_pedidos_compra P ' +
-      ' WHERE P.SERIE_PEDC = :s AND P.NUMERO_PEDC = :n';
-    qIns.ParamByName('nalbc').AsString := ANumAlbc;
-    qIns.ParamByName('salbc').AsString := ASerieAlbc;
-    qIns.ParamByName('alm').AsString   := ACodigoAlm;
-    qIns.ParamByName('rprv').AsString  := ARefPrv;
-    qIns.ParamByName('pv').AsInteger   := AIdPvTemporada;
-    if AFechaRecepcion > 0 then
-    begin
-      qIns.ParamByName('usar_fecha').AsString  := 'S';
-      qIns.ParamByName('freal').AsDateTime     := AFechaRecepcion;
-    end
-    else
-    begin
-      qIns.ParamByName('usar_fecha').AsString  := 'N';
-      qIns.ParamByName('freal').Clear;
-    end;
-    qIns.ParamByName('s').AsString     := ASeriePedc;
-    qIns.ParamByName('n').AsString     := ANumPedc;
-    qIns.ParamByName('u').AsString     := AUsuario;
-    qIns.ExecSQL;
-  finally
-    FreeAndNil(qIns);
-  end;
-
-  // 4. Por cada linea pendiente del pedido para ese almacen:
-  //    - insertar linea en albaran con cantidad pendiente
-  //    - actualizar CANTIDAD_RECIBIDA_PEDCLIN
-  //    - borrar / actualizar fza_articulos_pdte_recibir
-  q := TUniQuery.Create(nil);
-  qIns := TUniQuery.Create(nil);
-  iLineaAlbc := 0;
-  try
-    q.Connection    := AConn;
-    qIns.Connection := AConn;
-    q.SQL.Text :=
-      'SELECT L.LINEA_PEDCLIN, L.CODIGO_ART_PEDCLIN, L.CODIGO_UNIDAD_PEDCLIN, ' +
-      '       L.REF_PRV_PEDCLIN, L.ID_AC_PIVOT_PEDCLIN, ' +
-      '       L.CODIGO_FAM_PEDCLIN, L.NOMBRE_FAM_PEDCLIN, ' +
-      '       L.DESCRIPCION_ARTICULO_PEDCLIN, ' +
-      '       L.TIPO_CANTIDAD_ARTICULO_PEDCLIN, ' +
-      '       L.TIPO_IVA_ARTICULO_PEDCLIN, L.PORCENTAJE_IVA_PEDCLIN, ' +
-      '       IFNULL(P.ESIVA_EXENTO_INTRACOMUNITARIO_PEDC, ''N'') AS EXENTO_INTRACOM, ' +
-      '       L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN, ' +
-      '       L.PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN, ' +
-      '       L.CANTIDAD_PEDCLIN - IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) AS PENDIENTE ' +
-      '  FROM fza_pedidos_compra_lineas L ' +
-      '  JOIN fza_pedidos_compra P ' +
-      '    ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
-      '   AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
-      ' WHERE L.SERIE_PEDC_PEDCLIN  = :s ' +
-      '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
-      '   AND IFNULL(NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
-      '              P.CODIGO_ALM_PEDC) = :alm ' +
-      '   AND L.CANTIDAD_PEDCLIN - IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) > 0 ' +
+      '   AND L.CANTIDAD_PEDCLIN - ' +
+      '       IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) > 0 ' +
       ' ORDER BY L.LINEA_PEDCLIN';
     q.ParamByName('s').AsString   := ASeriePedc;
     q.ParamByName('n').AsString   := ANumPedc;
@@ -633,162 +488,29 @@ begin
     q.Open;
     while not q.Eof do
     begin
-      Inc(iLineaAlbc, 10);
-      sLineaAlbc := Format('%.4d', [iLineaAlbc]);
-      qIns.SQL.Text :=
-        'INSERT INTO fza_albaranes_compra_lineas ' +
-        '  (NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN, LINEA_ALBCLIN, ' +
-        '   NUMERO_PEDC_ALBCLIN, SERIE_PEDC_ALBCLIN, LINEA_PEDC_ALBCLIN, ' +
-        '   CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, REF_PRV_ALBCLIN, ' +
-        '   ID_AC_PIVOT_ALBCLIN, CODIGO_FAM_ALBCLIN, NOMBRE_FAM_ALBCLIN, ' +
-        '   DESCRIPCION_ARTICULO_ALBCLIN, TIPO_CANTIDAD_ARTICULO_ALBCLIN, ' +
-        '   CANTIDAD_ALBCLIN, TOTAL_UNIDADES_ALBCLIN, ' +
-        '   TIPO_IVA_ARTICULO_ALBCLIN, ' +
-        '   PORCENTAJE_IVA_ALBCLIN, ' +
-        '   PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN, ' +
-        '   PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN, ' +
-        '   TOTAL_ALBCLIN, CODIGO_ALMACEN_ALBCLIN, ESFACTURADA_ALBCLIN, ' +
-        '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-        'VALUES (:nalbc, :salbc, :lalbc, :npedc, :spedc, :lpedc, ' +
-        '        :art, :sku, :refprv, :acpivot, :fam, :nfam, ' +
-        '        :desc, :tipcant, ' +
-        '        :cant, :cant, :tiva, :piva, :pre, :preciva, ' +
-        '        :cant * :pre, :alm, ''N'', ' +
-        '        NOW(), :u, NOW(), :u)';
-      qIns.ParamByName('nalbc').AsString  := ANumAlbc;
-      qIns.ParamByName('salbc').AsString  := ASerieAlbc;
-      qIns.ParamByName('lalbc').AsString  := sLineaAlbc;
-      qIns.ParamByName('npedc').AsString  := ANumPedc;
-      qIns.ParamByName('spedc').AsString  := ASeriePedc;
-      qIns.ParamByName('lpedc').AsString  := q.FieldByName('LINEA_PEDCLIN').AsString;
-      qIns.ParamByName('art').AsString    := q.FieldByName('CODIGO_ART_PEDCLIN').AsString;
-      qIns.ParamByName('sku').AsString    := q.FieldByName('CODIGO_UNIDAD_PEDCLIN').AsString;
-      qIns.ParamByName('refprv').AsString := q.FieldByName('REF_PRV_PEDCLIN').AsString;
-      if q.FieldByName('ID_AC_PIVOT_PEDCLIN').IsNull then
-        qIns.ParamByName('acpivot').Clear
-      else
-        qIns.ParamByName('acpivot').AsInteger :=
-          q.FieldByName('ID_AC_PIVOT_PEDCLIN').AsInteger;
-      qIns.ParamByName('fam').AsString    := q.FieldByName('CODIGO_FAM_PEDCLIN').AsString;
-      qIns.ParamByName('nfam').AsString   := q.FieldByName('NOMBRE_FAM_PEDCLIN').AsString;
-      qIns.ParamByName('desc').AsString   :=
-        q.FieldByName('DESCRIPCION_ARTICULO_PEDCLIN').AsString;
-      qIns.ParamByName('tipcant').AsString :=
-        q.FieldByName('TIPO_CANTIDAD_ARTICULO_PEDCLIN').AsString;
-      qIns.ParamByName('cant').AsFloat    := q.FieldByName('PENDIENTE').AsFloat;
-      if q.FieldByName('EXENTO_INTRACOM').AsString = 'S' then
-      begin
-        qIns.ParamByName('tiva').AsString := 'E';
-        qIns.ParamByName('piva').AsFloat := 0;
-      end
-      else
-      begin
-        qIns.ParamByName('tiva').AsString :=
-          q.FieldByName('TIPO_IVA_ARTICULO_PEDCLIN').AsString;
-        qIns.ParamByName('piva').AsFloat :=
-          q.FieldByName('PORCENTAJE_IVA_PEDCLIN').AsFloat;
-      end;
-      qIns.ParamByName('pre').AsFloat     :=
-        q.FieldByName('PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN').AsFloat;
-      qIns.ParamByName('preciva').AsFloat :=
-        q.FieldByName('PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN').AsFloat;
-      qIns.ParamByName('alm').AsString    := ACodigoAlm;
-      qIns.ParamByName('u').AsString      := AUsuario;
-      qIns.ExecSQL;
-      // Aumentar CANTIDAD_RECIBIDA del pedido por la cantidad albaraneada.
-      iLinea := StrToIntDef(q.FieldByName('LINEA_PEDCLIN').AsString, 0);
-      qIns.SQL.Text :=
-        'UPDATE fza_pedidos_compra_lineas ' +
-        '   SET CANTIDAD_RECIBIDA_PEDCLIN = ' +
-        '         IFNULL(CANTIDAD_RECIBIDA_PEDCLIN,0) + :qty, ' +
-        '       USUARIO_MODIF  = :u, ' +
-        '       INSTANTE_MODIF = NOW() ' +
-        ' WHERE SERIE_PEDC_PEDCLIN  = :s ' +
-        '   AND NUMERO_PEDC_PEDCLIN = :n ' +
-        '   AND LINEA_PEDCLIN       = :l';
-      qIns.ParamByName('qty').AsFloat  := q.FieldByName('PENDIENTE').AsFloat;
-      qIns.ParamByName('u').AsString   := AUsuario;
-      qIns.ParamByName('s').AsString   := ASeriePedc;
-      qIns.ParamByName('n').AsString   := ANumPedc;
-      qIns.ParamByName('l').AsString   := q.FieldByName('LINEA_PEDCLIN').AsString;
-      qIns.ExecSQL;
+      rCelda.LineaPedido   := q.FieldByName('LINEA_PEDCLIN').AsString;
+      rCelda.CodigoSku     :=
+        q.FieldByName('CODIGO_UNIDAD_PEDCLIN').AsString;
+      rCelda.CodigoAlmacen := ACodigoAlm;
+      rCelda.Cantidad      := q.FieldByName('PENDIENTE').AsFloat;
+      oCeldas.Add(rCelda);
       q.Next;
     end;
+    q.Close;
+    if oCeldas.Count = 0 then
+      AMensaje := Format(
+        'No hay lineas pendientes de recibir para el almacen "%s" ' +
+        'en el pedido %s/%s.',
+        [ACodigoAlm, ASeriePedc, ANumPedc])
+    else
+      Result := CrearAlbaranDesdePedidoConCantidades(AConn, ASeriePedc,
+        ANumPedc, ACodigoAlm, ASerieAlbc, AUsuario, ARefPrv,
+        AFechaRecepcion, AIdPvTemporada, oCeldas.ToArray, ANumAlbc,
+        AMensaje);
   finally
     FreeAndNil(q);
-    FreeAndNil(qIns);
+    FreeAndNil(oCeldas);
   end;
-
-  // 5. Recalcular totales del albaran (bases / impuestos / liquido) y
-  //    pasar a CERRADO para disparar los movimientos. El stored proc
-  //    PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT entra el stock fisico en el
-  //    almacen elegido.
-  RecalcularTotalesAlbaranCompra(AConn, ASerieAlbc, ANumAlbc, AUsuario);
-
-  // 6. Disparar movimientos de almacen. Reutilizamos la libreria del
-  //    albaran de compra: genera los movs y deja el albaran listo como
-  //    si el usuario hubiese cerrado a mano.
-  inLibAlbaranesCompraMovimientos.GenerarMovimientosDesdeAlbaranCompra(
-    AConn, ASerieAlbc, ANumAlbc, AUsuario);
-
-  // Marcar el estado del albaran como CERRADO ahora que los movs ya
-  // estan creados (los hooks del DM no aplican aqui — vamos por SQL).
-  qIns := TUniQuery.Create(nil);
-  try
-    qIns.Connection := AConn;
-    qIns.SQL.Text :=
-      'UPDATE fza_albaranes_compra ' +
-      '   SET ESTADO_ALBC    = ''CERRADO'', ' +
-      '       USUARIO_MODIF  = :u, ' +
-      '       INSTANTE_MODIF = NOW() ' +
-      ' WHERE SERIE_ALBC = :s AND NUMERO_ALBC = :n';
-    qIns.ParamByName('s').AsString := ASerieAlbc;
-    qIns.ParamByName('n').AsString := ANumAlbc;
-    qIns.ParamByName('u').AsString := AUsuario;
-    qIns.ExecSQL;
-  finally
-    FreeAndNil(qIns);
-  end;
-
-  // 7. Resincronizar pendientes de recibir y recalcular estado pedido.
-  GenerarPdteRecibirDesdePedido(AConn, ASeriePedc, ANumPedc, AUsuario);
-  RecalcularEstadoPedido(AConn, ASeriePedc, ANumPedc, AUsuario);
-
-  // 8. Si el modal indico temporada explicita, actualizamos la
-  //    propiedad TEMPORADA de los articulos del albaran. Usamos
-  //    INSERT ... ON DUPLICATE KEY UPDATE para sobreescribir un valor
-  //    previo (los articulos ya existen — los creo la sesion al
-  //    materializar — y aqui el usuario lo cambia al recibir).
-  if AIdPvTemporada > 0 then
-  begin
-    qIns := TUniQuery.Create(nil);
-    try
-      qIns.Connection := AConn;
-      qIns.SQL.Text :=
-        'INSERT INTO fza_articulos_propiedades ' +
-        '  (CODIGO_ART_ART, CODIGO_PROP_ARTPROP, ID_PV_ARTPROP, ' +
-        '   VALOR_LIBRE_ARTPROP, INSTANTE_ALTA, USUARIO_ALTA) ' +
-        'SELECT DISTINCT L.CODIGO_ART_ALBCLIN, ''TEMPORADA'', :pv, ' +
-        '       NULL, NOW(), :u ' +
-        '  FROM fza_albaranes_compra_lineas L ' +
-        ' WHERE L.SERIE_ALBC_ALBCLIN  = :s ' +
-        '   AND L.NUMERO_ALBC_ALBCLIN = :n ' +
-        '   AND L.CODIGO_ART_ALBCLIN IS NOT NULL ' +
-        '   AND L.CODIGO_ART_ALBCLIN <> '''' ' +
-        'ON DUPLICATE KEY UPDATE ID_PV_ARTPROP = :pv';
-      qIns.ParamByName('pv').AsInteger := AIdPvTemporada;
-      qIns.ParamByName('u').AsString   := AUsuario;
-      qIns.ParamByName('s').AsString   := ASerieAlbc;
-      qIns.ParamByName('n').AsString   := ANumAlbc;
-      qIns.ExecSQL;
-    finally
-      FreeAndNil(qIns);
-    end;
-  end;
-
-  AMensaje := Format('Albaran %s/%s creado correctamente.',
-                     [ASerieAlbc, ANumAlbc]);
-  Result := True;
 end;
 
 function CrearAlbaranDesdePedidoConCantidades(AConn: TUniConnection;
