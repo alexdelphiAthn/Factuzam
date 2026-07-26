@@ -1094,8 +1094,10 @@ begin
   swTotal := TStopwatch.StartNew;
   Log.LogInfo('Arranque: PrecargarCachesSerie INICIO');
   PerfilesUsuario.PrecargarPerfilesUsuario;
+  FreeAndNil(oInfGuiasCache);
   oInfGuiasCache := TInformesGuiasCache.Create(ConexionPrincipal);
   oInfGuiasCache.Precargar;
+  FreeAndNil(oConfigCampos);
   oConfigCampos := TConfigCamposCache.Create(ConexionPrincipal);
   oConfigCampos.Precargar;
   IdentidadActual := ContextoSesion.Identidad;
@@ -1176,7 +1178,9 @@ begin
   errInfGuias := '';
   errConfig := '';
   errPermisos := '';
+  FreeAndNil(oInfGuiasCache);
   oInfGuiasCache := TInformesGuiasCache.Create(ConexionPrincipal);
+  FreeAndNil(oConfigCampos);
   oConfigCampos  := TConfigCamposCache.Create(ConexionPrincipal);
   // Cada tarea escribe solo en SUS variables (sin estado compartido) y captura
   // su excepcion (no se propaga al WaitForAll). El log es thread-safe (mutex).
@@ -1597,6 +1601,11 @@ begin
     if Assigned(Conexiones) then
       Conexiones.Invalidar;
     AsignarConexiones(nil);
+    // Caches globales de la sesion: liberarlas evita la fuga en
+    // re-login; oMemoSQL a nil deja el log sin puntero colgante.
+    FreeAndNil(oInfGuiasCache);
+    FreeAndNil(oConfigCampos);
+    oMemoSQL := nil;
     FreeAndNil(FDmConn);
   finally
     inLibLog.Log.LogInfo('Ventana principal Cerrada');

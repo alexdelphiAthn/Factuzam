@@ -1439,6 +1439,10 @@ var
  dtFechaIni, dtFechaFin:TDateTime;
  sFechaIni, sFechaFin : String;
 begin
+  // cli/Dsp SIN inicializar provocaban lecturas de basura de pila en los
+  // Assigned() de abajo cuando la rama que los crea no se ejecutaba.
+  cli := nil;
+  Dsp := nil;
   sFechaIni := fFechaIni.FieldName;
   sFechaFin := fFechaFin.FieldName;
   bFechaOrd := True;
@@ -1458,56 +1462,58 @@ begin
     begin
       bFechaOrd := False;
     end;
-    if ((bFechaOrd)) then
-    begin
-      cli := TClientDataSet.Create(nil);
-      Dsp := TDataSetProvider.Create(cli);
-      Dsp.DataSet := qryData;
-      cli.SetProvider(Dsp);
-      cli.Open;
-      cli.First;
-    end;
-    while ( (Assigned(cli)) and (not(cli.Eof)) and ((bFechaOrd))) do
-    begin
-      if (bFechaFinNul) then
+    try
+      if ((bFechaOrd)) then
       begin
-        if (cli.FieldByName(sFechaFin).isnull) then
-          bFechaOrd := False;
-        // FECHA_HASTA tiene que ser menor que dFechaFin, sino dar error
-        // Si hay dos fechas_fin null ha de dar error.
-        if (bFechaOrd) then
+        cli := TClientDataSet.Create(nil);
+        Dsp := TDataSetProvider.Create(cli);
+        Dsp.DataSet := qryData;
+        cli.SetProvider(Dsp);
+        cli.Open;
+        cli.First;
+      end;
+      while ( (Assigned(cli)) and (not(cli.Eof)) and ((bFechaOrd))) do
+      begin
+        if (bFechaFinNul) then
         begin
-          iCom := CompareDate(cli.FieldByName(sFechaFin).AsDateTime,
-                              dtFechaIni);
-          if ((iCom > 0)) then
+          if (cli.FieldByName(sFechaFin).isnull) then
+            bFechaOrd := False;
+          // FECHA_HASTA tiene que ser menor que dFechaFin, sino dar error
+          // Si hay dos fechas_fin null ha de dar error.
+          if (bFechaOrd) then
+          begin
+            iCom := CompareDate(cli.FieldByName(sFechaFin).AsDateTime,
+                                dtFechaIni);
+            if ((iCom > 0)) then
+              bFechaOrd := False;
+          end;
+        end;
+          {CompareDate compares the date parts of two timestamps A and B
+          and returns the following results:
+          < 0
+          if the day part of A is earlier than the day part of B.
+          0
+          if A and B are the on same day (times may differ) .
+          > 0
+          if the day part of A is later than the day part of B.}
+        if ((bFechaFinNul = False) and (bFechaOrd = True)) then
+        begin
+          iCom := CompareDate(cli.FieldByName(sFechaIni).AsDateTime,
+                              dtFechaFin);
+          iCom2 := CompareDate(cli.FieldByName(sFechaFin).AsDateTime,
+                               dtFechaIni);
+          if ((iCom < 0) and (iCom2 > 0)) then
             bFechaOrd := False;
         end;
+        cli.Next;
       end;
-        {CompareDate compares the date parts of two timestamps A and B
-        and returns the following results:
-        < 0
-        if the day part of A is earlier than the day part of B.
-        0
-        if A and B are the on same day (times may differ) .
-        > 0
-        if the day part of A is later than the day part of B.}
-      if ((bFechaFinNul = False) and (bFechaOrd = True)) then
+    finally
+      if assigned(cli) then
       begin
-        iCom := CompareDate(cli.FieldByName(sFechaIni).AsDateTime,
-                            dtFechaFin);
-        iCom2 := CompareDate(cli.FieldByName(sFechaFin).AsDateTime,
-                             dtFechaIni);
-        if ((iCom < 0) and (iCom2 > 0)) then
-          bFechaOrd := False;
+        cli.Close;
+        // Dsp tiene a cli como Owner: se libera con el.
+        FreeAndNil(cli);
       end;
-      cli.Next;
-    end;
-    if assigned(cli) then
-    begin
-      cli.Close;
-      FreeAndNil(cli);
-//      if (Dsp <> nil) then
-//        FreeAndNil(Dsp);
     end;
     Result := bFechaOrd;
   end

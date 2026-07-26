@@ -1167,7 +1167,9 @@ begin
   msCrearDM := 0; msFConn := 0; msReasignar := 0;
   tdmDataModule := nil;
   sNameModule := '';
-  if Self.Owner <> nil then
+  // Guard con 'is': fuera de fzam (standalone) Owner no es el principal
+  // y el cast lanzaba EInvalidCast en plena creacion del Mto.
+  if (Self.Owner is TfrmMtoPrincipal) then
     sNameModule :=
      (Self.Owner as TfrmMtoPrincipal).oFzaWinf.GetDataModuleName(Self.UnitName +
                                                           '.' + Self.ClassName);
@@ -1732,6 +1734,11 @@ begin
   end;
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
                                                    Self.Caption + ' Cerrada');
+  // Caches de guias del grid: se creaban al usar el column chooser y
+  // nunca se liberaban (fuga por cada pestaña abierta).
+  FreeAndNil(FCamposGuia);
+  FreeAndNil(FCamposGuiaTabla);
+  FreeAndNil(FColumnasVisiblesGuia);
   frmMtoGen := nil;
   inherited;
 end;

@@ -179,7 +179,10 @@ begin
     ParentTab := AForm.Parent;
     FForms.Remove(AForm);
     AForm.Parent := nil;
-    FreeAndNil(AForm);
+    // Release, no Free: difiere la destruccion a la cola de mensajes.
+    // Un Free inline aqui (handler de WM_FREECONTROL / cierre con tareas
+    // async vivas) podia liberar el form con mensajes aun pendientes.
+    AForm.Release;
     if (ParentTab <> nil) and
        (ParentTab is TcxTabSheet) and
        not (csDestroying in ParentTab.ComponentState) then
