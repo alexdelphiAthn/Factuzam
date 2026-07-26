@@ -1,19 +1,19 @@
 ﻿[Closed Files]
-File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoFrmBase.pas',0,1,341,1,362,0,0,,
-File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPrincipal.pas',0,1,695,33,706,0,0,,
-File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibConexionesIntf.pas',0,1,17,1,29,0,0,,
-File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuCola.pas',0,1,86,16,97,0,0,,
-File_4=TSourceModule,'c:\program files (x86)\embarcadero\studio\37.0\source\rtl\common\System.Classes.pas',0,1,16469,1,16481,0,0,,
-File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibConexionesUniDAC.pas',0,1,91,3,113,0,0,,
-File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaMenu.pas',0,1,172,35,184,0,0,,
-File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoClientes.pas',0,1,22,49,22,0,0,,
-File_8=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOperacionesHist.pas',0,1,1,1,1,0,0,,
-File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoConsultaOpe.pas',0,1,22,1,35,0,0,,
-File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibCorreoTickets.pas',0,1,1,1,1,0,0,,
-File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaFaseCobro.pas',0,1,148,25,159,0,0,,
-File_12=TSourceModule,'C:\DISCO_DURO\SynPDF\SynZip.pas',0,1,5528,1,5540,0,0,,
-File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPreviewTicket.pas',0,1,149,34,149,0,0,,
-File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibGenerarTicketBD.pas',0,1,65,17,77,0,0,,
+File_0=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataArticulos.pas',0,1,1003,1,1025,0,0,,
+File_1=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoArticulos.pas',0,1,1486,42,1500,0,0,,
+File_2=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoClientes.pas',0,1,22,49,22,0,0,,
+File_3=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataClientes.pas',0,1,1,36,87,0,0,,
+File_4=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\DataModules\UniDataGen.pas',0,1,139,25,154,0,0,,
+File_5=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoPrincipal.pas',0,1,695,33,706,0,0,,
+File_6=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibConexionesIntf.pas',0,1,17,1,29,0,0,,
+File_7=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\verifactu\inLibVerifactuCola.pas',0,1,86,16,97,0,0,,
+File_8=TSourceModule,'c:\program files (x86)\embarcadero\studio\37.0\source\rtl\common\System.Classes.pas',0,1,16469,1,16481,0,0,,
+File_9=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibConexionesUniDAC.pas',0,1,91,3,113,0,0,,
+File_10=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaMenu.pas',0,1,172,35,184,0,0,,
+File_11=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaOperacionesHist.pas',0,1,1,1,1,0,0,,
+File_12=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoConsultaOpe.pas',0,1,22,1,35,0,0,,
+File_13=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibCorreoTickets.pas',0,1,1,1,1,0,0,,
+File_14=TSourceModule,'C:\DISCO_DURO\proyectos\Factuzam\src\Caja\Forms\inMtoCajaFaseCobro.pas',0,1,148,25,159,0,0,,
 
 [Modules]
 Module0=C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
@@ -24,9 +24,10 @@ EditWindowCount=1
 ModuleType=TBaseProject
 
 [EditWindow0]
-ViewCount=1
+ViewCount=2
 CurrentEditView=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
 View0=0
+View1=1
 PercentageSizes=1
 Create=1
 Visible=1
@@ -61,11 +62,15 @@ BottomMiddlePanelClients=DockSite0,GraphDrawingModel
 BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E67566965779F1D00000000000002F706000000000000FFFFFFFF
 
 [View0]
+CustomEditViewType=TOTACustomEditView
+OTAEditViewType=WelcomePage.MainPage
+
+[View1]
 CustomEditViewType=TEditView
 Module=C:\DISCO_DURO\proyectos\Factuzam\fzam.dpr
 CursorX=1
-CursorY=1
-TopLine=1
+CursorY=438
+TopLine=438
 LeftCol=1
 Elisions=
 Bookmarks=
@@ -96,11 +101,10 @@ Dockable=1
 StayOnTop=0
 
 [Breakpoints]
-Count=4
+Count=3
 Breakpoint0='C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoComprasSesiones.pas',1494,'',0,1,'',1,0,0,'',1,'','','',0,''
 Breakpoint1='C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoComprasSesiones.pas',1553,'',0,1,'',1,0,0,'',1,'','','',0,''
-Breakpoint2='C:\DISCO_DURO\proyectos\Factuzam\src\Forms\inMtoArticulos.pas',1357,'',0,1,'',1,0,0,'',1,'','','',0,''
-Breakpoint3='C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibShowMto.pas',271,'',0,1,'',1,0,0,'',1,'','','',0,''
+Breakpoint2='C:\DISCO_DURO\proyectos\Factuzam\src\Lib\inLibShowMto.pas',271,'',0,1,'',1,0,0,'',1,'','','',0,''
 
 [EmbarcaderoWin32Debugger_AddressBreakpoints]
 Count=0

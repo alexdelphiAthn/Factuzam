@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibVentasWsCola                                             }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       17/07/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       25/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -525,6 +525,7 @@ begin
         begin
           sContenido := TVentasWsJson.ConstruirEvento(
             FParametrosApp,
+            oVersion,
             FConn,
             AIdCola,
             sEvento, sTipo, sEmpresa, sSerie, sNumero);

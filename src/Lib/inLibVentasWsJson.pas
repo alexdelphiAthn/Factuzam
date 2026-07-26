@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibVentasWsJson                                             }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       17/07/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       25/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -30,6 +30,7 @@ type
   public
     class function ConstruirEvento(
       const AParametrosApp: IParametrosAplicacion;
+      const AVersionApp: string;
       AConn: TUniConnection;
       AIdCola: Int64; const AIdEvento, ATipoEvento, AEmpresa,
       ASerie, ANumero: string): string; static;
@@ -40,7 +41,7 @@ implementation
 uses
   System.Classes, System.DateUtils, System.NetEncoding,
   Data.DB,
-  inLibGlobalVar, inLibFactuzamApi;
+  inLibFactuzamApi;
 
 function LeerCampoBinario(ACampo: TField): TBytes;
 var
@@ -211,22 +212,27 @@ begin
   Result := TJSONObject.Create;
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := AConn;
-    Qry.SQL.Text :=
-      ' SELECT NOMBRE_PDF_VWSC, TICKET_PDF_VWSC, ' +
-      '        TAMANO_PDF_VWSC, HUELLA_PDF_VWSC, ' +
-      '        NOMBRE_FACTURA_PDF_VWSC, FACTURA_PDF_VWSC, ' +
-      '        TAMANO_FACTURA_PDF_VWSC, HUELLA_FACTURA_PDF_VWSC ' +
-      ' FROM fza_ventas_ws_cola WHERE ID_VWSC = :ID';
-    Qry.ParamByName('ID').AsLargeInt := AIdCola;
-    Qry.Open;
-    if not Qry.IsEmpty then
-    begin
-      AgregarPdf('ticket_pdf', 'NOMBRE_PDF_VWSC', 'TICKET_PDF_VWSC',
-        'TAMANO_PDF_VWSC', 'HUELLA_PDF_VWSC');
-      AgregarPdf('factura_pdf', 'NOMBRE_FACTURA_PDF_VWSC',
-        'FACTURA_PDF_VWSC', 'TAMANO_FACTURA_PDF_VWSC',
-        'HUELLA_FACTURA_PDF_VWSC');
+    try
+      Qry.Connection := AConn;
+      Qry.SQL.Text :=
+        ' SELECT NOMBRE_PDF_VWSC, TICKET_PDF_VWSC, ' +
+        '        TAMANO_PDF_VWSC, HUELLA_PDF_VWSC, ' +
+        '        NOMBRE_FACTURA_PDF_VWSC, FACTURA_PDF_VWSC, ' +
+        '        TAMANO_FACTURA_PDF_VWSC, HUELLA_FACTURA_PDF_VWSC ' +
+        ' FROM fza_ventas_ws_cola WHERE ID_VWSC = :ID';
+      Qry.ParamByName('ID').AsLargeInt := AIdCola;
+      Qry.Open;
+      if not Qry.IsEmpty then
+      begin
+        AgregarPdf('ticket_pdf', 'NOMBRE_PDF_VWSC', 'TICKET_PDF_VWSC',
+          'TAMANO_PDF_VWSC', 'HUELLA_PDF_VWSC');
+        AgregarPdf('factura_pdf', 'NOMBRE_FACTURA_PDF_VWSC',
+          'FACTURA_PDF_VWSC', 'TAMANO_FACTURA_PDF_VWSC',
+          'HUELLA_FACTURA_PDF_VWSC');
+      end;
+    except
+      FreeAndNil(Result);
+      raise;
     end;
   finally
     FreeAndNil(Qry);
@@ -235,6 +241,7 @@ end;
 
 class function TVentasWsJson.ConstruirEvento(
   const AParametrosApp: IParametrosAplicacion;
+  const AVersionApp: string;
   AConn: TUniConnection;
   AIdCola: Int64; const AIdEvento, ATipoEvento, AEmpresa,
   ASerie, ANumero: string): string;
@@ -256,7 +263,7 @@ begin
       DateToISO8601(TTimeZone.Local.ToUniversalTime(Now), True));
     oOrigen := TJSONObject.Create;
     oOrigen.AddPair('aplicacion', 'Factuzam');
-    oOrigen.AddPair('version', oVersion);
+    oOrigen.AddPair('version', AVersionApp);
     sReferencia := TClienteFactuzamApi.Referencia(AParametrosApp);
     oOrigen.AddPair('referencia', sReferencia);
     oRaiz.AddPair('origen', oOrigen);
@@ -266,6 +273,7 @@ begin
     oDocumento.AddPair('numero', ANumero);
     oRaiz.AddPair('documento', oDocumento);
     oVenta := TJSONObject.Create;
+    oRaiz.AddPair('venta', oVenta);
     oVenta.AddPair('cabecera',
       ConstruirCabecera(AConn, ASerie, ANumero));
     oVenta.AddPair('lineas', ConstruirArray(AConn,
@@ -329,6 +337,7 @@ begin
       '        AND NUMERO_FAC_ORIGEN_FACREL = :NUMERO) ' +
       ' ORDER BY ID_FACREL', ASerie, ANumero));
     oFiscal := TJSONObject.Create;
+    oVenta.AddPair('fiscal', oFiscal);
     oFiscal.AddPair('cola', ConstruirArray(AConn,
       ' SELECT * FROM fza_verifactu_cola ' +
       ' WHERE SERIE_FAC_VFCOLA = :SERIE ' +
@@ -343,9 +352,7 @@ begin
       ' SELECT * FROM fza_verifactu_eventos ' +
       ' WHERE SERIE_FAC_LOG = :SERIE AND NUMERO_FAC_LOG = :NUMERO ' +
       ' ORDER BY ID_LOG', ASerie, ANumero));
-    oVenta.AddPair('fiscal', oFiscal);
     oVenta.AddPair('documentos', ConstruirDocumentos(AConn, AIdCola));
-    oRaiz.AddPair('venta', oVenta);
     Result := oRaiz.ToJSON;
   finally
     FreeAndNil(oRaiz);

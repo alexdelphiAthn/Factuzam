@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibFactuzamApi                                              }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       17/07/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       25/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -33,7 +33,8 @@ type
   TClienteFactuzamApi = class
   private
     class function LeerRespuesta(const AContenido: string;
-      AEstadoHttp: Integer): TResultadoFactuzamApi; static;
+      AEstadoHttp: Integer;
+      const AMensajeOk: string): TResultadoFactuzamApi; static;
   public
     class function UrlBase(
       const AParametrosApp: IParametrosAplicacion): string; static;
@@ -44,19 +45,53 @@ type
     class function ComponerUrl(
       const AParametrosApp: IParametrosAplicacion;
       const ARuta: string): string; static;
+    class function ComponerConsulta(
+      const ANombres, AValores: array of string): string; static;
     class function Configurada(
       const AParametrosApp: IParametrosAplicacion): Boolean; static;
     class function EnviarJson(
       const AParametrosApp: IParametrosAplicacion;
       const ARuta, AContenido: string):
       TResultadoFactuzamApi; static;
+    class function RecibirJson(
+      const AParametrosApp: IParametrosAplicacion;
+      const ARuta, AConsulta: string;
+      out AContenido: string): TResultadoFactuzamApi; static;
+    class function DescargarArchivo(
+      const AParametrosApp: IParametrosAplicacion;
+      const ARuta, AConsulta, ARutaDestino: string):
+      TResultadoFactuzamApi; static;
   end;
 
 implementation
 
 uses
-  System.Classes, System.JSON, System.Net.HttpClient,
-  System.Net.URLClient;
+  System.Classes, System.JSON, System.NetEncoding,
+  System.Net.HttpClient, System.Net.URLClient;
+
+{ Crea el cliente HTTP con los tiempos de espera y la credencial ya
+  puestos. Todas las llamadas de la API comparten esta configuración. }
+function CrearClienteHttp(const AToken: string): THTTPClient;
+begin
+  Result := THTTPClient.Create;
+  Result.ConnectionTimeout := 10000;
+  Result.ResponseTimeout := 60000;
+  Result.CustomHeaders['Authorization'] := 'Bearer ' + AToken;
+end;
+
+function TextoDesdeFlujo(AFlujo: TStream): string;
+var
+  aDatos: TBytes;
+begin
+  Result := '';
+  if Assigned(AFlujo) and (AFlujo.Size > 0) then
+  begin
+    AFlujo.Position := 0;
+    SetLength(aDatos, AFlujo.Size);
+    AFlujo.ReadBuffer(aDatos[0], AFlujo.Size);
+    Result := TEncoding.UTF8.GetString(aDatos);
+  end;
+end;
 
 class function TClienteFactuzamApi.ComponerUrl(
   const AParametrosApp: IParametrosAplicacion;
@@ -72,6 +107,35 @@ begin
   while (sRuta <> '') and (sRuta[1] = '/') do
     Delete(sRuta, 1, 1);
   Result := sBase + sRuta;
+end;
+
+{ Monta la cadena de consulta emparejando nombres y valores por posición.
+  Los valores vacíos no se envían, de forma que el mismo listado sirve
+  para búsquedas con y sin filtros. }
+class function TClienteFactuzamApi.ComponerConsulta(
+  const ANombres, AValores: array of string): string;
+var
+  iIndice: Integer;
+  sConsulta: string;
+  sValor: string;
+begin
+  sConsulta := '';
+  for iIndice := Low(ANombres) to High(ANombres) do
+  begin
+    if iIndice <= High(AValores) then
+    begin
+      sValor := Trim(AValores[iIndice]);
+      if sValor <> '' then
+      begin
+        if sConsulta <> '' then
+          sConsulta := sConsulta + '&';
+        sConsulta := sConsulta +
+          TNetEncoding.URL.Encode(ANombres[iIndice]) + '=' +
+          TNetEncoding.URL.Encode(sValor);
+      end;
+    end;
+  end;
+  Result := sConsulta;
 end;
 
 class function TClienteFactuzamApi.UrlBase(
@@ -115,7 +179,8 @@ begin
 end;
 
 class function TClienteFactuzamApi.LeerRespuesta(
-  const AContenido: string; AEstadoHttp: Integer): TResultadoFactuzamApi;
+  const AContenido: string; AEstadoHttp: Integer;
+  const AMensajeOk: string): TResultadoFactuzamApi;
 var
   oError: TJSONObject;
   oJson: TJSONObject;
@@ -130,16 +195,16 @@ begin
   begin
     oJson := TJSONObject(oValor);
     try
-      if Assigned(oJson.GetValue('id_peticion')) then
+      if oJson.GetValue('id_peticion') is TJSONString then
         Result.IdPeticion :=
-          oJson.GetValue<string>('id_peticion');
+          oJson.GetValue('id_peticion').Value;
       if Result.Ok then
-        Result.Mensaje := 'Evento recibido correctamente.'
-      else
+        Result.Mensaje := AMensajeOk
+      else if oJson.GetValue('error') is TJSONObject then
       begin
-        oError := oJson.GetValue('error') as TJSONObject;
-        if Assigned(oError) and Assigned(oError.GetValue('mensaje')) then
-          Result.Mensaje := oError.GetValue<string>('mensaje');
+        oError := TJSONObject(oJson.GetValue('error'));
+        if oError.GetValue('mensaje') is TJSONString then
+          Result.Mensaje := oError.GetValue('mensaje').Value;
       end;
     finally
       FreeAndNil(oJson);
@@ -156,7 +221,6 @@ var
   oCuerpo: TStringStream;
   oHttp: THTTPClient;
   oRespuesta: IHTTPResponse;
-  sToken: string;
 begin
   Result.Ok := False;
   Result.EstadoHttp := 0;
@@ -166,12 +230,8 @@ begin
     Result.Mensaje := 'La API de Factuzam no está configurada.'
   else
   begin
-    sToken := Token(AParametrosApp);
-    oHttp := THTTPClient.Create;
+    oHttp := CrearClienteHttp(Token(AParametrosApp));
     try
-      oHttp.ConnectionTimeout := 10000;
-      oHttp.ResponseTimeout := 60000;
-      oHttp.CustomHeaders['Authorization'] := 'Bearer ' + sToken;
       oCuerpo := TStringStream.Create(AContenido, TEncoding.UTF8);
       try
         oRespuesta := oHttp.Post(
@@ -181,9 +241,105 @@ begin
            TNetHeader.Create('Accept', 'application/json')]);
         Result := LeerRespuesta(
           oRespuesta.ContentAsString(TEncoding.UTF8),
-          oRespuesta.StatusCode);
+          oRespuesta.StatusCode,
+          'Evento recibido correctamente.');
       finally
         FreeAndNil(oCuerpo);
+      end;
+    finally
+      FreeAndNil(oHttp);
+    end;
+  end;
+end;
+
+{ Lectura genérica en JSON. Devuelve el cuerpo completo en AContenido
+  para que el llamante lo interprete según el endpoint consultado. }
+class function TClienteFactuzamApi.RecibirJson(
+  const AParametrosApp: IParametrosAplicacion;
+  const ARuta, AConsulta: string;
+  out AContenido: string): TResultadoFactuzamApi;
+var
+  oHttp: THTTPClient;
+  oRespuesta: IHTTPResponse;
+  sUrl: string;
+begin
+  Result.Ok := False;
+  Result.EstadoHttp := 0;
+  Result.IdPeticion := '';
+  Result.Mensaje := '';
+  AContenido := '';
+  if not Configurada(AParametrosApp) then
+    Result.Mensaje := 'La API de Factuzam no está configurada.'
+  else
+  begin
+    sUrl := ComponerUrl(AParametrosApp, ARuta);
+    if Trim(AConsulta) <> '' then
+      sUrl := sUrl + '?' + Trim(AConsulta);
+    oHttp := CrearClienteHttp(Token(AParametrosApp));
+    try
+      oRespuesta := oHttp.Get(sUrl, nil,
+        [TNetHeader.Create('Accept', 'application/json')]);
+      AContenido := oRespuesta.ContentAsString(TEncoding.UTF8);
+      Result := LeerRespuesta(
+        AContenido,
+        oRespuesta.StatusCode,
+        'Consulta realizada correctamente.');
+    finally
+      FreeAndNil(oHttp);
+    end;
+  end;
+end;
+
+{ Descarga binaria. Si el servidor responde con error el cuerpo llega en
+  JSON, así que solo se escribe el archivo cuando el estado es correcto. }
+class function TClienteFactuzamApi.DescargarArchivo(
+  const AParametrosApp: IParametrosAplicacion;
+  const ARuta, AConsulta, ARutaDestino: string): TResultadoFactuzamApi;
+var
+  oDestino: TFileStream;
+  oHttp: THTTPClient;
+  oMemoria: TMemoryStream;
+  oRespuesta: IHTTPResponse;
+  sUrl: string;
+begin
+  Result.Ok := False;
+  Result.EstadoHttp := 0;
+  Result.IdPeticion := '';
+  Result.Mensaje := '';
+  if not Configurada(AParametrosApp) then
+    Result.Mensaje := 'La API de Factuzam no está configurada.'
+  else
+  begin
+    sUrl := ComponerUrl(AParametrosApp, ARuta);
+    if Trim(AConsulta) <> '' then
+      sUrl := sUrl + '?' + Trim(AConsulta);
+    oHttp := CrearClienteHttp(Token(AParametrosApp));
+    try
+      oMemoria := TMemoryStream.Create;
+      try
+        oRespuesta := oHttp.Get(sUrl, oMemoria,
+          [TNetHeader.Create('Accept', '*/*')]);
+        Result.EstadoHttp := oRespuesta.StatusCode;
+        if (oRespuesta.StatusCode >= 200) and
+           (oRespuesta.StatusCode < 300) then
+        begin
+          oMemoria.Position := 0;
+          oDestino := TFileStream.Create(ARutaDestino, fmCreate);
+          try
+            oDestino.CopyFrom(oMemoria, 0);
+          finally
+            FreeAndNil(oDestino);
+          end;
+          Result.Ok := True;
+          Result.Mensaje := 'Documento guardado en ' + ARutaDestino;
+        end
+        else
+          Result := LeerRespuesta(
+            TextoDesdeFlujo(oMemoria),
+            oRespuesta.StatusCode,
+            'Documento descargado.');
+      finally
+        FreeAndNil(oMemoria);
       end;
     finally
       FreeAndNil(oHttp);
