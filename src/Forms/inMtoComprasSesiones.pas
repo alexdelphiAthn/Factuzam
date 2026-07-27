@@ -574,8 +574,6 @@ begin
 end;
 
 procedure TfrmMtoComprasSesiones.cxgrdLineasExit(Sender: TObject);
-var
-  bPopupAbierto: Boolean;
 begin
   inherited;
 
@@ -3691,7 +3689,6 @@ begin
   // sesion) falla, hacemos rollback completo y la BBDD queda como
   // antes. Sin esto un fallo a mitad dejaba albaranes huerfanos con
   // ESTADO_ALBC='ABIERTO' y total 0 (visto en debug).
-  Result    := False;
   ASerPed   := ''; ANumPed := '';
   ASerAlb   := ''; ANumAlb := '';
   AErr      := '';

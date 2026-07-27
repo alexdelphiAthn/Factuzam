@@ -194,7 +194,7 @@ begin
       Agregar('ENTCMP', 'Ent. compra');
       Agregar('ENTALB', 'Alb. entrada');
       Agregar('ENTTRA', 'Traspasos (neto)');
-      Agregar('ENTDEP', 'Dep'#243'sitos (neto)');
+      Agregar('ENTDEP', string('Dep'#243'sitos (neto)'));
       Agregar('ENTREG', 'Regulariz.');
       Agregar('SALALB', 'Alb. venta');
       Agregar('VEN',    'Ventas');

@@ -45,7 +45,7 @@ implementation
 uses
   inLibHojaCalculoDevEx, inLibHojaCalculoUtil;
 
-{$MESSAGE HINT 'inLibDevExcel es transitorio (Fase 1): migra a IEscritorHojaCalculo'}
+// Unidad transitoria (Fase 1): migrar a IEscritorHojaCalculo.
 
   procedure Merge(Sheet: TdxSpreadSheetTableView;
                   ARow, ACol, ColCount, RowCount: Integer);

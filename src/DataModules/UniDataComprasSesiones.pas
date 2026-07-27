@@ -919,7 +919,6 @@ begin
   // actualmente en edición sumando las celdas de fza_compras_sesiones_celdas.
   // Se invoca desde unqrySesionLinBeforePost para que los totales se
   // persistan correctamente cuando el usuario graba la sesión.
-  rTotalUds := 0;
   if unqrySesionLin.IsEmpty then Exit;
   iLinea  := unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
   sSerie  := unqrySesionLin.FieldByName('SERIE_SES_SESLIN').AsString;

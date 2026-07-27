@@ -1571,7 +1571,6 @@ var
   iLinea, iLineaVista, iAc, i: Integer;
   Arr: TArrPosConjunto;
 begin
-  iLinea := 0;
   iLineaVista := 0;
   if (FConfig.View <> nil) and (FConfig.View.Controller <> nil) then
     iLineaVista := LineaDesdeRecord(FConfig.View.Controller.FocusedRecord);

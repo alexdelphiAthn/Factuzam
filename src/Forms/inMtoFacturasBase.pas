@@ -2114,7 +2114,6 @@ function TfrmMtoFacturasBase.PuedeConsultarEstadoColaVerifactu: Boolean;
 var
   Qry: TUniQuery;
 begin
-  Result := False;
   Qry := TUniQuery.Create(nil);
   try
     try

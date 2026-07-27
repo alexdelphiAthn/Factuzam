@@ -795,7 +795,6 @@ var
   BStream: TStringStream;
   iMaxIdx: Integer;
   oBanded: TcxGridDBBandedColumn;
-  oBandedView: TcxGridDBBandedTableView;
   iMaxBands: Integer;
 begin
   AcxgrdtvVista.BeginUpdate;

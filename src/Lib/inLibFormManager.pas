@@ -45,6 +45,10 @@ type
     function FindFormByCaption(const ATitle: string): TForm;
     // Ventana registrada con esa clave; nil si no hay ninguna.
     function FormPorClave(const AClave: string): TForm;
+    // Formulario embebido en la pestania activa; nil si no hay ninguno.
+    function FormActivo: TForm;
+    // Clave con la que se registro un formulario; '' si no esta.
+    function ClaveDeForm(AForm: TForm): string;
     function GetEnumerator: TList<TForm>.TEnumerator;
     procedure CloseFormByCaption(const ATitle:string);
     procedure CloseActiveForm;
@@ -142,6 +146,34 @@ function TEmbeddedFormManager.FormPorClave(const AClave: string): TForm;
 begin
   if not FClaves.TryGetValue(AClave, Result) then
     Result := nil;
+end;
+
+function TEmbeddedFormManager.FormActivo: TForm;
+var
+  ts: TcxTabSheet;
+begin
+  Result := nil;
+  if (FPageControl <> nil) and (FPageControl.ActivePage <> nil) then
+  begin
+    ts := FPageControl.ActivePage;
+    if (ts.ControlCount > 0) and (ts.Controls[0] is TForm) then
+      Result := TForm(ts.Controls[0]);
+  end;
+end;
+
+function TEmbeddedFormManager.ClaveDeForm(AForm: TForm): string;
+var
+  sClave: string;
+begin
+  Result := '';
+  for sClave in FClaves.Keys do
+  begin
+    if FClaves[sClave] = AForm then
+    begin
+      Result := sClave;
+      Break;
+    end;
+  end;
 end;
 
 procedure TEmbeddedFormManager.QuitarClave(AForm: TForm);

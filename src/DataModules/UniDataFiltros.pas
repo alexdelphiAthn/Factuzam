@@ -399,7 +399,6 @@ function TdmFiltros.EsPropietario(AIdFiltro: Int64): Boolean;
 var
   qry: TUniQuery;
 begin
-  Result := False;
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := ConexionPrincipal;

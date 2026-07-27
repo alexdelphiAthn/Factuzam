@@ -448,27 +448,27 @@
       object mnuEmpresas: TMenuItem
         Caption = 'Empresas'
         ShortCut = 49221
-        OnClick = mnuEmpresasClick
+        OnClick = MenuGenericoClick
       end
       object mnuAlmacenes: TMenuItem
         Caption = '&Almacenes'
         ShortCut = 16460
-        OnClick = mnuAlmacenesClick
+        OnClick = MenuGenericoClick
       end
       object mnuClientes: TMenuItem
         Caption = 'Clientes'
         ShortCut = 16459
-        OnClick = mnuClientesClick
+        OnClick = MenuGenericoClick
       end
       object mnuProveedores: TMenuItem
         Caption = 'Proveedores'
         ShortCut = 16464
-        OnClick = mnuProveedoresClick
+        OnClick = MenuGenericoClick
       end
       object mnuArticulos: TMenuItem
         Caption = 'Art'#237'culos'
         ShortCut = 16449
-        OnClick = mnuArticulosClick
+        OnClick = MenuGenericoClick
       end
       object ablasAuxiliares1: TMenuItem
         Caption = 'Tablas Auxiliares'
@@ -742,37 +742,37 @@
             0000000000000000000000000000000000000000000000000000}
           Caption = 'Familias'
           ShortCut = 16462
-          OnClick = mnuFamiliasClick
+          OnClick = MenuGenericoClick
         end
         object mnuPaises: TMenuItem
           Caption = 'Paises'
           ShortCut = 49228
-          OnClick = mnuPaisesClick
+          OnClick = MenuGenericoClick
         end
         object mnuUnidadesMedida: TMenuItem
           Caption = 'Unidades de Medida'
           ShortCut = 49237
-          OnClick = mnuUnidadesMedidaClick
+          OnClick = MenuGenericoClick
         end
         object mnuPropiedades: TMenuItem
           Caption = 'Propiedades'
           ShortCut = 49241
-          OnClick = mnuPropiedadesClick
+          OnClick = MenuGenericoClick
         end
         object mnuVariaciones: TMenuItem
           Caption = 'Tipos de Variaciones'
           ShortCut = 49236
-          OnClick = mnuVariacionesClick
+          OnClick = MenuGenericoClick
         end
         object mnuAtributosConjuntos: TMenuItem
           Caption = 'Colecciones de Atributos'
           ShortCut = 49235
-          OnClick = mnuAtributosConjuntosClick
+          OnClick = MenuGenericoClick
         end
         object mnuAtributosBasicos: TMenuItem
           Caption = 'Atributos b'#225'sicos'
           ShortCut = 49218
-          OnClick = mnuAtributosBasicosClick
+          OnClick = MenuGenericoClick
         end
       end
       object mnuInvocarLogin: TMenuItem
@@ -929,16 +929,16 @@
       object Pedidos1: TMenuItem
         Caption = 'Pedidos'
         ShortCut = 24656
-        OnClick = Pedidos1Click
+        OnClick = MenuGenericoClick
       end
       object Albaranes1: TMenuItem
         Caption = 'Albaranes'
         ShortCut = 24641
-        OnClick = Albaranes1Click
+        OnClick = MenuGenericoClick
       end
       object Devoluciones1: TMenuItem
         Caption = 'Devoluciones a Proveedor'
-        OnClick = Devoluciones1Click
+        OnClick = MenuGenericoClick
       end
       object FacturarAlbaranes1: TMenuItem
         Caption = 'Crear borradores de albaranes...'
@@ -947,16 +947,16 @@
       object Facturas1: TMenuItem
         Caption = 'Borradores'
         ShortCut = 57414
-        OnClick = Facturas1Click
+        OnClick = MenuGenericoClick
       end
       object EfectosCompra1: TMenuItem
         Caption = 'Efectos de pago'
         ShortCut = 49219
-        OnClick = EfectosCompra1Click
+        OnClick = MenuGenericoClick
       end
       object RemesasCompra1: TMenuItem
         Caption = 'Remesas de pago'
-        OnClick = RemesasCompra1Click
+        OnClick = MenuGenericoClick
       end
       object CargarEfectos1: TMenuItem
         Caption = 'Cargar efectos en remesa...'
@@ -979,12 +979,12 @@
       object mnuPedidosVenta: TMenuItem
         Caption = '&Pedidos'
         ShortCut = 49232
-        OnClick = mnuPedidosVentaClick
+        OnClick = MenuGenericoClick
       end
       object mnuAlbaranesVenta: TMenuItem
         Caption = '&Albaranes'
         ShortCut = 49217
-        OnClick = mnuAlbaranesVentaClick
+        OnClick = MenuGenericoClick
       end
       object mnuFacturas: TMenuItem
         Bitmap.Data = {
@@ -1120,15 +1120,15 @@
           0000000000000000000000000000000000000000000000000000}
         Caption = 'Borradores'
         ShortCut = 49222
-        OnClick = mnuFacturasClick
+        OnClick = MenuGenericoClick
       end
       object EfectosVenta1: TMenuItem
         Caption = 'Efectos de cobro'
-        OnClick = EfectosVenta1Click
+        OnClick = MenuGenericoClick
       end
       object RemesasVenta1: TMenuItem
         Caption = 'Remesas de cobro'
-        OnClick = RemesasVenta1Click
+        OnClick = MenuGenericoClick
       end
       object CargarEfectosVenta1: TMenuItem
         Caption = 'Cargar efectos en remesa...'
@@ -1158,37 +1158,37 @@
       object FormasdePagoCaja1: TMenuItem
         Caption = 'Formas de Pago Caja'
         ShortCut = 24657
-        OnClick = FormasdePagoCaja1Click
+        OnClick = MenuGenericoClick
       end
       object mnuDepositosCliente: TMenuItem
         Caption = 'Dep'#243'sitos de Clientes'
         ShortCut = 16452
-        OnClick = mnuDepositosClienteClick
+        OnClick = MenuGenericoClick
       end
       object mnuCajaPagosHist: TMenuItem
         Caption = 'Hist'#243'rico de Pagos de Caja'
         ShortCut = 24650
-        OnClick = mnuCajaPagosHistClick
+        OnClick = MenuGenericoClick
       end
       object mnuCajaValesHist: TMenuItem
         Caption = 'Hist'#243'rico de Vales'
         ShortCut = 24662
-        OnClick = mnuCajaValesHistClick
+        OnClick = MenuGenericoClick
       end
       object mnuCajaOperacionesHist: TMenuItem
         Caption = 'Hist'#243'rico de Operaciones'
         ShortCut = 24655
-        OnClick = mnuCajaOperacionesHistClick
+        OnClick = MenuGenericoClick
       end
       object mnuCajaArqueosHist: TMenuItem
         Caption = 'Hist'#243'rico de Arqueos'
         ShortCut = 24648
-        OnClick = mnuCajaArqueosHistClick
+        OnClick = MenuGenericoClick
       end
       object mnuFacturasSimplif: TMenuItem
         Caption = 'Borradores Simplificados'
         ShortCut = 24646
-        OnClick = mnuFacturasSimplifClick
+        OnClick = MenuGenericoClick
       end
     end
     object mnuAlmacen: TMenuItem
@@ -1196,17 +1196,17 @@
       object Movimientosdealmacn1: TMenuItem
         Caption = 'Movimientos de almac'#233'n'
         ShortCut = 16461
-        OnClick = Movimientosdealmacn1Click
+        OnClick = MenuGenericoClick
       end
       object mnuInventarios: TMenuItem
         Caption = 'Inventarios'
         ShortCut = 49225
-        OnClick = mnuInventariosClick
+        OnClick = MenuGenericoClick
       end
       object mnuDocumentosTrabajo: TMenuItem
         Caption = 'Documentos de Trabajo'
         ShortCut = 16471
-        OnClick = mnuDocumentosTrabajoClick
+        OnClick = MenuGenericoClick
       end
       object mnuAlmacenInformes: TMenuItem
         Caption = 'Informes'
@@ -1368,7 +1368,7 @@
           0000000000000000000000000000000000000000000000000000}
         Caption = 'Grupos de IVA'
         ShortCut = 16463
-        OnClick = mnuGruposdeIVAClick
+        OnClick = MenuGenericoClick
       end
       object mnuIvas: TMenuItem
         Bitmap.Data = {
@@ -1504,7 +1504,7 @@
           0000000000000000000000000000000000000000000000000000}
         Caption = 'Impuesto IVA'
         ShortCut = 16457
-        OnClick = mnuIvasClick
+        OnClick = MenuGenericoClick
       end
       object mnuContadores: TMenuItem
         Bitmap.Data = {
@@ -1640,7 +1640,7 @@
           0000000000000000000000000000000000000000000000000000}
         Caption = 'Contadores'
         ShortCut = 16466
-        OnClick = mnuContadoresClick
+        OnClick = MenuGenericoClick
       end
       object Formasdepago2: TMenuItem
         Caption = 'Formas de pago documentos'
@@ -1917,12 +1917,12 @@
             0000000000000000000000000000000000000000000000000000}
           Caption = 'Usuarios'
           ShortCut = 16456
-          OnClick = mnuUsuariosClick
+          OnClick = MenuGenericoClick
         end
         object mnuEmpleados: TMenuItem
           Caption = 'Empleados'
           ShortCut = 24645
-          OnClick = mnuEmpleadosClick
+          OnClick = MenuGenericoClick
         end
         object mnuGrupos: TMenuItem
           Bitmap.Data = {
@@ -2058,7 +2058,7 @@
             0000000000000000000000000000000000000000000000000000}
           Caption = 'Grupos'
           ShortCut = 16458
-          OnClick = mnuGruposClick
+          OnClick = MenuGenericoClick
         end
         object mnuPerfiles: TMenuItem
           Bitmap.Data = {
@@ -2194,16 +2194,16 @@
             0000000000000000000000000000000000000000000000000000}
           Caption = 'Perfiles'
           ShortCut = 57424
-          OnClick = mnuPerfilesClick
+          OnClick = MenuGenericoClick
         end
         object mnuPermisos: TMenuItem
           Caption = 'Permisos'
           ShortCut = 16465
-          OnClick = mnuPermisosClick
+          OnClick = MenuGenericoClick
         end
         object mnuPermisosTabla: TMenuItem
           Caption = 'Permisos (tabla)'
-          OnClick = mnuPermisosTablaClick
+          OnClick = MenuGenericoClick
         end
       end
       object HacerCopiadeSeguridad1: TMenuItem
@@ -2612,7 +2612,7 @@
           0000000000000000000000000000000000000000000000000000}
         Caption = 'Generador de Procesos'
         ShortCut = 16455
-        OnClick = mnuGeneradorProcesosClick
+        OnClick = MenuGenericoClick
       end
     end
     object mnuVerifactu: TMenuItem
@@ -2623,11 +2623,11 @@
       end
       object mnuVerifactuCola: TMenuItem
         Caption = 'Cola de Env'#237'os'
-        OnClick = mnuVerifactuColaClick
+        OnClick = MenuGenericoClick
       end
       object mnuVerifactuLog: TMenuItem
         Caption = 'Verifactu Log'
-        OnClick = mnuVerifactuLogClick
+        OnClick = MenuGenericoClick
       end
     end
     object Ayuda1: TMenuItem

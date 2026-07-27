@@ -49,10 +49,6 @@ type
     // foco al grid (el ancestro lo deja en btnAceptar) y que Enter / doble
     // click navegue inmediatamente al doc.
     procedure DoShow; override;
-    // CloseQuery virtual: capturamos la fila seleccionada justo antes de
-    // cerrar si el usuario confirmo. La navegacion (ShowMto) la hace el
-    // llamador para evitar acoplar este modal a frmMtoPrincipal.
-    function CloseQuery: Boolean; override;
   private
     FSelTipo   : string;
     FSelSerie  : string;
@@ -60,6 +56,8 @@ type
     procedure PrepararEstructura;
     function GetConfirmado: Boolean;
   public
+    // Captura la fila seleccionada antes de cerrar si se confirma.
+    function CloseQuery: Boolean; override;
     property Confirmado: Boolean read GetConfirmado;
     property SeleccionadoTipo:   string read FSelTipo;
     property SeleccionadoSerie:  string read FSelSerie;

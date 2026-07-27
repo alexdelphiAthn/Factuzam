@@ -1439,10 +1439,8 @@ var
  dtFechaIni, dtFechaFin:TDateTime;
  sFechaIni, sFechaFin : String;
 begin
-  // cli/Dsp SIN inicializar provocaban lecturas de basura de pila en los
-  // Assigned() de abajo cuando la rama que los crea no se ejecutaba.
+  // cli sin inicializar provocaba lecturas de basura de pila en Assigned().
   cli := nil;
-  Dsp := nil;
   sFechaIni := fFechaIni.FieldName;
   sFechaFin := fFechaFin.FieldName;
   bFechaOrd := True;

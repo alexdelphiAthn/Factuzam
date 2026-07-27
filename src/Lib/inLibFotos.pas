@@ -729,7 +729,6 @@ var
   wic  : TWICImage;
   bmp  : TBitmap;
 begin
-  Result := nil;
   sExt := LowerCase(ExtractFileExt(ARuta));
   if (sExt = '.png') then
   begin

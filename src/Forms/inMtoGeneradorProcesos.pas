@@ -1041,7 +1041,6 @@ var
   sFormatteddt, sError, sCaption: string;
   bConResultado, bConFilas: Boolean;
 begin
-  Result := nil;
   bConResultado := SentenciaDevuelveFilas(ASQL);
   bConFilas := False;
   sError := '';

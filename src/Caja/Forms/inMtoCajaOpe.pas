@@ -284,7 +284,6 @@ type
     function  LectorEsControlRejilla(AControl: TControl): Boolean;
     procedure LectorLecturaIniciada(Sender: TObject);
 //    procedure LogPerfCaja(const AContexto, ADetalles: string);
-    procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); override;
   public
     DatosCaja: TdmCajaOpe;
   private
@@ -332,6 +331,7 @@ type
     FswArtAPopup: TStopwatch;
     const MAX_CAJAS = 5;
   public
+    procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); override;
     // Carga EXTERNA ("Enviar a..." de Documentos de Trabajo): anade
     // una linea con el SKU y cantidad indicados usando el mismo flujo
     // que el lector (RellenarDatosArticuloEnDataset). False si el
@@ -605,8 +605,6 @@ var
   Mapa   : TDictionary<string, string>;
   sCodigoArticulo: string;
   sCodigoConsulta: string;
-  sw, swSP, swBuild, swFit : TStopwatch;
-  msSP, msBuild, msFit : Int64;
 begin
   sCodigoConsulta := Trim(CodigoInput);
   if sCodigoConsulta = '' then Exit;
@@ -620,8 +618,6 @@ begin
     if sCodigoArticulo <> '' then
       sCodigoConsulta := sCodigoArticulo;
   end;
-  sw := TStopwatch.StartNew;
-  msSP := 0; msBuild := 0; msFit := 0;
   View := dbtvStock;
   View.BeginUpdate;
   try
@@ -631,12 +627,9 @@ begin
       View.ClearItems;
       Connection := ConexionPrincipal;
       ParamByName('ARTICULO').AsString := sCodigoConsulta;
-      swSP := TStopwatch.StartNew;
       Open;
-      msSP := swSP.ElapsedMilliseconds;
       if not IsEmpty then
       begin
-        swBuild := TStopwatch.StartNew;
         View.DataController.CreateAllItems;
         for I := 0 to View.ColumnCount - 1 do
         begin
@@ -645,7 +638,6 @@ begin
           else
             View.Columns[I].HeaderAlignmentHorz := taRightJustify;
         end;
-        msBuild := swBuild.ElapsedMilliseconds;
       end;
     end;
   finally
@@ -655,7 +647,6 @@ begin
   begin
     View.BeginUpdate;
     try
-      swFit := TStopwatch.StartNew;
       try
         View.ApplyBestFit;
       except
@@ -668,12 +659,10 @@ begin
       Mapa := ObtenerMapaAtributosGlobal(ConexionPrincipal);
       if (Mapa <> nil) and (Mapa.Count > 0) and (View.ColumnCount > 0) then
         AjustarAnchoColumnaParaSwatch(ConexionPrincipal,View.Columns[0], Mapa);
-      msFit := swFit.ElapsedMilliseconds;
     finally
       View.EndUpdate;
     end;
   end;
-//  LogPerfCaja('CajaOpe.ConsultarStock',//    Format('art=%s | SP=%d | Build=%d | Fit=%d | cols=%d | total=%d ms',//           [sCodigoConsulta,msSP,msBuild,msFit,View.ColumnCount,//            sw.ElapsedMilliseconds]));
 end;
 
 procedure TfrmMtoOpeCaja.tvLineasOpeCustomDrawCell(
@@ -1330,22 +1319,15 @@ var
   CodigoPadre: string;
   SkuDetectado: string;
   NumAtributos: Integer;
-  sw, swStep: TStopwatch;
-  msRellenar, msConsolidar, msBusq, msColumnas, msAtribs: Int64;
 begin
   // Arrancamos el cronometro global art -> primer popup para diagnosticar
   // donde se va el tiempo entre Enter en el codigo y la salida del primer
   // desplegable de atributo (lo cierra WMAbrirPopupAv).
   FswArtAPopup := TStopwatch.StartNew;
-  sw := TStopwatch.StartNew;
-  msRellenar := 0; msConsolidar := 0; msBusq := 0;
-  msColumnas := 0; msAtribs := 0;
   CodigoInput := VarToStr(DisplayValue);
   FArticuloResueltoEdicion := '';
-  swStep := TStopwatch.StartNew;
   if RellenarDatosArticuloEnDataset(CodigoInput) then
   begin
-    msRellenar := swStep.ElapsedMilliseconds;
     CodigoPadre  := DatosCaja.cdsLineas.FieldByName(
                                       'CODIGO_ART_FACLIN').AsString;
     FArticuloResueltoEdicion := CodigoPadre;
@@ -1362,7 +1344,6 @@ begin
       EliminarLineaPorValidacion;
       DisplayValue := null;
       Error := False;
-//      LogPerfCaja('CajaOpe.ArticuloValidate',//        Format('art=%s | Rellenar=%d | -> EliminarLineaPorValidacion | total=%d ms',//               [CodigoInput,msRellenar,sw.ElapsedMilliseconds]));
       Abort;
     end;
     if (NumAtributos > 0) and (SkuDetectado = CodigoPadre) then
@@ -1374,10 +1355,8 @@ begin
                  DatosCaja.cdsCabecera,
                  ActualizarLabelTotal);
     end;
-    swStep := TStopwatch.StartNew;
     if ConsolidarSiExiste(SkuDetectado) then
     begin
-       msConsolidar := swStep.ElapsedMilliseconds;
        // RellenarDatosArticuloEnDataset ya CONFIRMA (Post) la linea de trabajo
        // en su recalculo fiscal interno, asi que un Cancel no la elimina: si
        // tras cancelar sigue ahi y es el mismo SKU recien consolidado, la
@@ -1392,10 +1371,8 @@ begin
        DatosCaja.cdsLineas.Append;
        DisplayValue := null;
        Error := False;
-//       LogPerfCaja('CajaOpe.ArticuloValidate',//         Format('art=%s | Rellenar=%d | Consolidar=%d | -> consolidado | total=%d ms',//                [CodigoInput,msRellenar,msConsolidar,//                 sw.ElapsedMilliseconds]));
        Abort;
     end;
-    msConsolidar := swStep.ElapsedMilliseconds;
     tmrBusq.Enabled := False;
     if (CodigoPadre <> '') and (CodigoPadre <> CodigoInput) then
     begin
@@ -1409,13 +1386,9 @@ begin
                                               DatosCaja.cdsCabecera.FieldByName(
                                                        'FECHA_FAC').AsDateTime;
        qryBusq.ParamByName('TOKEN').AsString := CodigoPadre;
-       swStep := TStopwatch.StartNew;
        qryBusq.Open;
-       msBusq := swStep.ElapsedMilliseconds;
     end;
-    swStep := TStopwatch.StartNew;
     ActualizarColumnasDinamicas(CodigoPadre);
-    msColumnas := swStep.ElapsedMilliseconds;
     // Solo desglosamos atributos si SkuDetectado es un SKU real (distinto
     // del padre). Si SkuDetectado == CodigoPadre estamos a la espera de
     // que el usuario elija talla/color: la query no encontraria nada y
@@ -1423,22 +1396,17 @@ begin
     if (Trim(SkuDetectado) <> '') and (NumAtributos > 0)
        and (SkuDetectado <> CodigoPadre) then
     begin
-       swStep := TStopwatch.StartNew;
        RellenarAtributosDesdeSku(SkuDetectado);
-       msAtribs := swStep.ElapsedMilliseconds;
     end;
     Error := False;
-//    LogPerfCaja('CajaOpe.ArticuloValidate',//      Format('art=%s | Rellenar=%d | Consolidar=%d | qryBusq=%d | Columnas=%d | Atribs=%d | total=%d ms',//             [CodigoInput,msRellenar,msConsolidar,msBusq,//              msColumnas,msAtribs,sw.ElapsedMilliseconds]));
   end
   else
   begin
-    msRellenar := swStep.ElapsedMilliseconds;
     Error := True;
     if FMotivoRechazoArticulo <> '' then
       ErrorText := FMotivoRechazoArticulo
     else
       ErrorText := 'ARTÍCULO NO ENCONTRADO O DESCATALOGADO';
-//    LogPerfCaja('CajaOpe.ArticuloValidate',//      Format('art=%s | NO ENCONTRADO | Rellenar=%d | total=%d ms',//             [CodigoInput,msRellenar,sw.ElapsedMilliseconds]));
   end;
 end;
 
@@ -1579,32 +1547,24 @@ var
   Datos         : TArticuloDatos;
   CodTarifa     : string;
   FechaTicket   : TDateTime;
-  sw, swStep    : TStopwatch;
-  msResolver, msStock, msPrecio, msResolverDatos: Int64;
 begin
   Result := False;
   FMotivoRechazoArticulo := '';
   CodigoLimpio := UpperCase(Trim(Codigo));
   if CodigoLimpio = '' then Exit;
-  sw := TStopwatch.StartNew;
-  msResolver := 0; msStock := 0; msPrecio := 0; msResolverDatos := 0;
-
   Validador := TArticulosValidador.Create(ConexionPrincipal);
   Resolver := TArticulosResolver.Create(
     ConexionPrincipal,
     ParametrosCaja);
   try
-    swStep := TStopwatch.StartNew;
     // Si la entrada viene de la pistola (STX...ETX), resolvemos UNICAMENTE
     // contra codigos de barras; en cualquier otro caso, busqueda unificada.
     if FResolviendoPorScanner then
       Resolucion := Validador.ResolverCodigoBarras(CodigoLimpio)
     else
       Resolucion := Validador.Resolver(CodigoLimpio);
-    msResolver := swStep.ElapsedMilliseconds;
     if not Resolucion.Encontrado then
     begin
-//      LogPerfCaja('CajaOpe.RellenarArt',//        Format('cod=%s | Resolver=%d | NO ENCONTRADO | total=%d ms',//               [CodigoLimpio,msResolver,sw.ElapsedMilliseconds]));
       Exit;
     end;
 
@@ -1630,15 +1590,11 @@ begin
         // SKU resuelto (uno único, o detectado por la vista de búsqueda).
         if not FActualizandoDepositos then
         begin
-          swStep := TStopwatch.StartNew;
           ConsultarStock(Resolucion.CodigoSku);
-          msStock := swStep.ElapsedMilliseconds;
         end;
         DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString :=
                                                 Resolucion.CodigoSku;
-        swStep := TStopwatch.StartNew;
         RecalcularPrecioDesdeSku(Resolucion.CodigoSku);
-        msPrecio := swStep.ElapsedMilliseconds;
         Result := True;
       end
       else if Resolucion.RequiereSku then
@@ -1648,22 +1604,18 @@ begin
         // definitivo hasta que se elija el SKU.
         if not FActualizandoDepositos then
         begin
-          swStep := TStopwatch.StartNew;
           ConsultarStock(Resolucion.CodigoArticulo);
-          msStock := swStep.ElapsedMilliseconds;
         end;
         DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString :=
                                                 Resolucion.CodigoArticulo;
         if not FActualizandoDepositos then
         begin
-          swStep := TStopwatch.StartNew;
           Datos := Resolver.ResolverDatos(Resolucion.CodigoArticulo, '',
                                           CodTarifa, FechaTicket);
           // ResolverDatos no calcula precio cuando hay >1 SKU sin elegir;
           // pedimos el del padre explícitamente para arrastrar IVA y %dto.
           var Precio := Resolver.ResolverPrecio(Resolucion.CodigoArticulo, '',
                                                 CodTarifa, FechaTicket);
-          msResolverDatos := swStep.ElapsedMilliseconds;
           DatosCaja.cdsLineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString
                                                 := Datos.TipoIVA;
           DatosCaja.cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString
@@ -1701,7 +1653,6 @@ begin
     FreeAndNil(Validador);
     FreeAndNil(Resolver);
   end;
-//  LogPerfCaja('CajaOpe.RellenarArt',//    Format('cod=%s | Resolver=%d | Stock=%d | Precio=%d | ResolverDatos=%d | total=%d ms',//           [CodigoLimpio,msResolver,msStock,msPrecio,msResolverDatos,//            sw.ElapsedMilliseconds]));
 end;
 
 procedure TfrmMtoOpeCaja.repComboBoxPropertiesInitPopup(Sender: TObject);
@@ -1777,19 +1728,13 @@ var
   Valores : TArray<TArticuloAtributoValor>;
   V       : TArticuloAtributoValor;
   i       : Integer;
-  sw, swQry : TStopwatch;
-  msQry   : Int64;
 begin
   if Trim(Sku) = '' then Exit;
-  sw := TStopwatch.StartNew;
   Lookup := TArticulosAtributosLookup.Create(ConexionPrincipal);
   try
-    swQry := TStopwatch.StartNew;
     Valores := Lookup.ObtenerAtributosDeSku(Sku);
-    msQry := swQry.ElapsedMilliseconds;
     if Length(Valores) = 0 then
     begin
-//      LogPerfCaja('CajaOpe.RellenarAtribsDesdeSku',//        Format('sku=%s | Qry=%d | sin valores | total=%d ms',//               [Sku,msQry,sw.ElapsedMilliseconds]));
       Exit;
     end;
 
@@ -1807,7 +1752,6 @@ begin
   finally
     FreeAndNil(Lookup);
   end;
-//  LogPerfCaja('CajaOpe.RellenarAtribsDesdeSku',//    Format('sku=%s | Qry=%d | total=%d ms',//           [Sku,msQry,sw.ElapsedMilliseconds]));
 end;
 
 function TfrmMtoOpeCaja.ConsolidarSiExiste(SkuBuscado: string): Boolean;
@@ -2737,17 +2681,12 @@ var
   i: Integer;
   Col: TcxGridDBColumn;
   NombresAtributos: TStringList;
-  sw, swQry, swUI: TStopwatch;
-  msQry, msUI: Int64;
   Cacheado: Boolean;
 begin
-  sw := TStopwatch.StartNew;
-  msQry := 0; msUI := 0;
   // --- OPTIMIZACIÓN: Si es el mismo tipo de artículo, no repintamos ---
   Cacheado := SameText(ArticuloPadre, FUltimoArticuloPadre);
   if Cacheado then
   begin
-//    LogPerfCaja('CajaOpe.ActualizarColumnas',//      Format('art=%s | cache hit | total=%d ms',//             [ArticuloPadre,sw.ElapsedMilliseconds]));
     Exit;
   end;
   FUltimoArticuloPadre := ArticuloPadre;
@@ -2782,9 +2721,7 @@ begin
       ' LIMIT 5';
       datosCaja.qryDefinicionArticulo.ParamByName('ARTICULO').AsString :=
         ArticuloPadre;
-      swQry := TStopwatch.StartNew;
       datosCaja.qryDefinicionArticulo.Open;
-      msQry := swQry.ElapsedMilliseconds;
       while not datosCaja.qryDefinicionArticulo.Eof do
       begin
         NombresAtributos.Add(datosCaja.qryDefinicionArticulo.FieldByName(
@@ -2792,8 +2729,6 @@ begin
         datosCaja.qryDefinicionArticulo.Next;
       end;
     end;
-    swUI := TStopwatch.StartNew;
-
     FNumAtributosActual := NombresAtributos.Count;
 
     // Solo tocamos la memoria del dataset si estamos escaneando algo nuevo
@@ -2830,11 +2765,9 @@ begin
     finally
       tvLineasOpe.EndUpdate;
     end;
-    msUI := swUI.ElapsedMilliseconds;
   finally
     FreeAndNil(NombresAtributos);
   end;
-//  LogPerfCaja('CajaOpe.ActualizarColumnas',//    Format('art=%s | Qry=%d | UI=%d | total=%d ms',//           [ArticuloPadre,msQry,msUI,sw.ElapsedMilliseconds]));
 //  tvLineasOpe.ApplyBestFit(nil, True, False);
 end;
 
@@ -4122,7 +4055,6 @@ end;
 procedure TfrmMtoOpeCaja.WMAbrirPopupAv(var Msg: TMessage);
 var
   CurrentEdit: TcxCustomEdit;
-  msTotal: Int64;
 begin
   // Disparado por AbrirPopupAvEnEntrada via PostMessage. Para entonces
   // cxGrid ya termino de parentar el TcxButtonEdit, asi que podemos
@@ -4132,9 +4064,7 @@ begin
   // percibe como "demora entre Enter del codigo y desplegable".
   if FswArtAPopup.IsRunning then
   begin
-    msTotal := FswArtAPopup.ElapsedMilliseconds;
     FswArtAPopup.Stop;
-//    LogPerfCaja('CajaOpe.Art2Popup',//      Format('total Enter->popup=%d ms',[msTotal]));
   end;
   if not tvLineasOpe.Controller.EditingController.IsEditing then Exit;
   CurrentEdit := tvLineasOpe.Controller.EditingController.Edit;
@@ -4302,14 +4232,10 @@ var
   EditCtrl  : TWinControl;
   ScrPt     : TPoint;
   WidHint   : Integer;
-  sw, swAvs : TStopwatch;
-  msAvs     : Int64;
 begin
   // Click en el boton de una columna de atributo (Color, Talla, ...): abre
   // el popup SeleccionarAvConPaleta con cuadraditos de paleta. Mismo flujo
   // que inMtoInventarios.tvLineasSkuPropertiesButtonClick.
-  sw := TStopwatch.StartNew;
-  msAvs := 0;
   Col := tvLineasOpe.Controller.FocusedColumn;
   if Col = nil then Exit;
   Orden := Col.Tag;
@@ -4324,13 +4250,10 @@ begin
   NombreAtb := DatosCaja.cdsLineas.FieldByName(
                  'ATTR' + IntToStr(Orden) + '_NOMBRE').AsString;
 
-  swAvs := TStopwatch.StartNew;
   CargarAvsValidos(ArtPadre, Orden, Avs);
-  msAvs := swAvs.ElapsedMilliseconds;
   if Length(Avs) = 0 then
   begin
     ShowMessage('No hay valores definidos para este atributo.');
-//    LogPerfCaja('CajaOpe.AvButtonClick',//      Format('art=%s orden=%d | Avs=%d | sin valores | total=%d ms',//             [ArtPadre,Orden,msAvs,sw.ElapsedMilliseconds]));
     Exit;
   end;
 
@@ -4408,7 +4331,6 @@ begin
   else
     PostMessage(Self.Handle, WM_AVANZAR_ATRIB_CAJA, Orden + 1, 0);
 
-//  LogPerfCaja('CajaOpe.AvButtonClick',//    Format('art=%s orden=%d AvNuevo=%s | Avs=%d | total=%d ms',//           [ArtPadre,Orden,AvNuevo,msAvs,sw.ElapsedMilliseconds]));
 end;
 
 procedure TfrmMtoOpeCaja.WMFinalizarAtribCaja(var Msg: TMessage);

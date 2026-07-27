@@ -318,7 +318,7 @@ then begin
 
 if FListOrdenantes[iOrdenanteFound].iPagos=5000
 then begin
-     showmessage('No admitimos más de 5000 pagos por Ordenante');
+     showmessage(string('No admitimos más de 5000 pagos por Ordenante'));
      Exit;
      end;
 
@@ -345,7 +345,7 @@ var
 begin
   if FiOrdenantes=10
   then begin
-       ShowMessage('Solamente se admiten como máximo 10 Ordenantes');
+       ShowMessage(string('Solamente se admiten como máximo 10 Ordenantes'));
        Exit;
        end;
   //si ya hay uno con esa cuenta, no lo añadimos

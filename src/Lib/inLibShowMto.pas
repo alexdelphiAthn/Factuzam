@@ -54,6 +54,27 @@ implementation
       inLibRegistroPantallas,
       inLibVentanaEmbebidaIntf;
 
+// Numero de instancia (2..N) de la pantalla ACall que hay en la
+// pestania activa; 0 si la pestania activa no es de esta pantalla. Se
+// usa para rotar el foco entre las instancias abiertas con Ctrl+K.
+function NumInstanciaActiva(AGestor: TEmbeddedFormManager;
+                            const ACall: string): Integer;
+var
+  oForm: TForm;
+  sClaveAct, sPrefijo: string;
+begin
+  Result := 0;
+  oForm := AGestor.FormActivo;
+  if oForm <> nil then
+  begin
+    sClaveAct := AGestor.ClaveDeForm(oForm);
+    sPrefijo := ACall + '#';
+    if Copy(sClaveAct, 1, Length(sPrefijo)) = sPrefijo then
+      Result := StrToIntDef(
+        Copy(sClaveAct, Length(sPrefijo) + 1, Length(sClaveAct)), 0);
+  end;
+end;
+
 procedure ShowMto(AOwner: TComponent;
                   ACall: String;
                   ABusq:string = '');
@@ -65,6 +86,7 @@ var
   FormClass: TFormClass;
   oMto: IMantenimientoEmbebido;
   iNum : Integer;
+  iActiva, iSiguiente, iPrimera, iHueco: Integer;
   sClave: string;
   NewCaption: string;
   bBusquedaTemporal: Boolean;
@@ -88,7 +110,6 @@ begin
   // título rompía la detección de instancias).
   NewCaption := ofzaF.Caption;
   sClave := ofzaF.Call;
-  TargetForm := nil;
   if ofzaF.NumVentanas > 1 then
   begin
     if ABusq <> '' then
@@ -101,24 +122,47 @@ begin
     end
     else
     begin
-      // Apertura normal del usuario: empieza en la 2 para dejar la 1
-      // reservada como instancia de búsqueda.
-      iNum := 2;
-      sClave := ofzaF.Call + '#2';
-      NewCaption := ofzaF.Caption + ' 2';
-      while (iNum <= ofzaF.NumVentanas) and
-            (oGestor.FormPorClave(sClave) <> nil) do
+      // Apertura normal (Ctrl+K / menu) con rotacion. Las instancias van
+      // de 2..NumVentanas (la 1 se reserva para busquedas). Regla:
+      //  - ninguna abierta -> crea la #2.
+      //  - estas en otra pantalla -> trae al frente la mas baja abierta.
+      //  - estas en una instancia y hay otra abierta por encima -> saltas
+      //    a ella (rota el foco).
+      //  - estas en la ultima abierta y queda hueco -> crea la siguiente.
+      //  - todo lleno y estas en la ultima -> vuelves a la primera
+      //    (rotacion circular 2->3->4->2).
+      iActiva := NumInstanciaActiva(oGestor, ofzaF.Call);
+      iPrimera := 0;
+      iSiguiente := 0;
+      iHueco := 0;
+      for iNum := 2 to ofzaF.NumVentanas do
       begin
-        Inc(iNum);
-        sClave := ofzaF.Call + '#' + IntToStr(iNum);
-        NewCaption := ofzaF.Caption + ' ' + IntToStr(iNum);
+        if oGestor.FormPorClave(
+             ofzaF.Call + '#' + IntToStr(iNum)) <> nil then
+        begin
+          if iPrimera = 0 then
+            iPrimera := iNum;
+          if (iSiguiente = 0) and (iNum > iActiva) then
+            iSiguiente := iNum;
+        end
+        else if iHueco = 0 then
+          iHueco := iNum;
       end;
-      if iNum > ofzaF.NumVentanas then
-      begin
-        sClave := ofzaF.Call + '#2';
-        NewCaption := ofzaF.Caption + ' 2';
-        TargetForm := oGestor.FormPorClave(sClave);
-      end;
+      if iPrimera = 0 then
+        iNum := 2
+      else if iActiva = 0 then
+        iNum := iPrimera
+      else if iSiguiente > 0 then
+        iNum := iSiguiente
+      else if iHueco > 0 then
+        iNum := iHueco
+      else
+        iNum := iPrimera;
+      sClave := ofzaF.Call + '#' + IntToStr(iNum);
+      NewCaption := ofzaF.Caption + ' ' + IntToStr(iNum);
+      // Si la clave elegida existe -> se activa; si no -> se crea (el
+      // bloque 'if TargetForm = nil' de abajo hace ambos casos).
+      TargetForm := oGestor.FormPorClave(sClave);
     end;
   end
   else

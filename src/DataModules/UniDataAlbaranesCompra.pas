@@ -690,7 +690,6 @@ function TdmAlbaranesCompra.LineaTieneCeldasPivote(
 var
   q: TUniQuery;
 begin
-  Result := False;
   q := TUniQuery.Create(nil);
   try
     q.Connection := unqryTablaG.Connection;

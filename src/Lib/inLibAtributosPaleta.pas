@@ -19,7 +19,7 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
-  System.Types, System.Generics.Collections,
+  System.Types, System.Generics.Collections, Data.DB,
   Vcl.Graphics, Vcl.Controls, Vcl.ImgList,
   Uni,
   cxGraphics,

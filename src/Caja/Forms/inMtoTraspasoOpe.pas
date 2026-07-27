@@ -128,7 +128,6 @@ type
     procedure EjecutarTraspaso(AConTicket: Boolean);
     procedure EjecutarTraspasoInterno(AConTicket: Boolean);
     procedure EnviarSolicitud;
-    procedure CargarSolicitudSeleccionada;
     function EmpleadoValido: Boolean;
     procedure BuscarEmpleado;
     // Consulta rapida de stock (banda inferior, igual que inMtoCajaOpe): una
@@ -868,35 +867,6 @@ begin
   // Aqui no se hace nada; el combo solo se usa en Traspaso/Solicitar.
 end;
 
-procedure TfrmMtoOpeTraspaso.CargarSolicitudSeleccionada;
-var
-  sCod, sNum, sSer: string;
-  iSep: Integer;
-begin
-  sCod := DestinoSeleccionado;
-  // Sin seleccion (p.ej. al resetear el desplegable) no hace nada.
-  if sCod <> '' then
-  begin
-    iSep := Pos('|', sCod);
-    sNum := Copy(sCod, 1, iSep - 1);
-    sSer := Copy(sCod, iSep + 1, Length(sCod));
-    if FDatos.CargarSolicitud(sNum, sSer) then
-    begin
-      txtOrigen.Text :=
-        FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
-      ActualizarTotal;
-      // Ticket de la solicitud recibida (stock origen / destino por SKU).
-      TTraspasoTicket.ImprimirSolicitud(
-        ConexionPrincipal,
-        sNum,
-        sSer,
-        oNomImpresoraCaja);
-    end
-    else
-      ShowMessage('No se pudo cargar la solicitud.');
-  end;
-end;
-
 procedure TfrmMtoOpeTraspaso.AbrirModalSolicitudes;
 var
   Dlg: TForm;
@@ -923,7 +893,6 @@ begin
       ShowMessage('No hay solicitudes pendientes de atender.')
     else
     begin
-      iRes := mrCancel;
       Dlg := TForm.CreateNew(Self);
       try
         Dlg.Caption := 'Solicitudes pendientes de atender';

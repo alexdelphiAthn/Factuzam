@@ -336,7 +336,7 @@ procedure TfrmModalWizardEditar.pgGuiasShow(Sender: TObject);
 begin
   // Cabecera del paso 2 con el formato elegido.
   lblTituloGuias.Caption :=
-    Format('Gu'#237'as ligadas al formato "%s"  ('#39'%s'#39')',
+    Format(string('Gu'#237'as ligadas al formato "%s"  ('#39'%s'#39')'),
            [sFormato, sScope]);
   // Aseguro conexion en los TUniQuery del wizard.
   unqryGuias.Connection         := ConexionPrincipal;
@@ -783,7 +783,7 @@ var
   begin
     Result := '';
     for k := 1 to Length(aStr) do
-      if (aStr[k] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
+      if CharInSet(aStr[k], ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
         Result := Result + aStr[k]
       else
         Result := Result + '_';

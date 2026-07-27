@@ -629,7 +629,6 @@ var
   cCoste, cTotal: Currency;
   iLinea: Integer;
 begin
-  Result := False;
   // Quita la linea en blanco y la fantasma antes de mover stock.
   LimpiarLineasIncompletas;
   if cdsLineas.IsEmpty then
@@ -796,7 +795,6 @@ var
   sEmpleado: string;
   iLinea: Integer;
 begin
-  Result := False;
   // Quita la linea en blanco y la fantasma antes de grabar la solicitud.
   LimpiarLineasIncompletas;
   if cdsLineas.IsEmpty then
@@ -1005,7 +1003,6 @@ begin
   // en cdsLineas (CANTIDAD por linea y MOTIVO). Si todo va a 0 el estado queda
   // DENEGADO TOTAL; si alguna lleva cantidad, COMPLETADO TOTAL/PARCIAL. Lo usa
   // el atender cuando no se sirve nada (denegacion total con motivo por linea).
-  Result := False;
   sNum := cdsCabecera.FieldByName('NUMERO_SOL').AsString;
   sSer := cdsCabecera.FieldByName('SERIE_SOL').AsString;
   if (Trim(sNum) = '') or (Trim(sSer) = '') then
@@ -1032,7 +1029,6 @@ var
   bExiste: Boolean;
   sPropio, sSolicitante: string;
 begin
-  bExiste := False;
   sPropio := '';
   sSolicitante := '';
   qryAux.SQL.Text :=

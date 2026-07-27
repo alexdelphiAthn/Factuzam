@@ -64,14 +64,6 @@ type
     procedure btnCancelarClick(Sender: TObject);
     procedure btnKitTodosClick(Sender: TObject);
   protected
-    // CloseQuery es VIRTUAL en TCustomForm, asi que este override se
-    // despacha correctamente por VMT. Es el unico hook fiable: el ancestro
-    // TfrmModalAceptCancel.btnAceptarClick es estatico (no virtual), y
-    // ademas Action1Execute (F12) lo llama por enlace estatico -> nuestro
-    // antiguo override de btnAceptarClick no se invocaba por F12 ni se
-    // garantizaba via DFM-streaming. CloseQuery siempre se llama al cerrar,
-    // tanto si fue click en boton, F12 (Action1) o cierre programatico.
-    function CloseQuery: Boolean; override;
     // DoShow es dynamic en TCustomForm. Lo overrideamos para mover el
     // foco al grid (el ancestro lo deja en btnAceptar). Asi el usuario
     // teclea numeros y entra en edicion inmediata sobre la primera
@@ -119,6 +111,8 @@ type
     SerieSes  : string;
     NumeroSes : string;
     LineaSes  : Integer;
+    // CloseQuery se ejecuta al cerrar mediante boton, F12 o codigo.
+    function CloseQuery: Boolean; override;
     // Confirmado se deriva de sFicha ('S' tras Aceptar, 'N' tras Cancelar)
     // que gestiona el ancestro TfrmModalAceptCancel.
     property Confirmado: Boolean read GetConfirmado;

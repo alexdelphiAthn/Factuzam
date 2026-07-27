@@ -744,8 +744,6 @@ var
   sPpTipoIVA:string;
   fPorcen:Currency;
   iPorcen:Integer;
-  oLinFac:TLinFac;
-  facTotales : TFacturaTotales;
   bDtoVig    : Boolean;
   dFinalEf   : Double;
 begin

@@ -1943,7 +1943,6 @@ var
 
   function ArticuloTieneColores: Boolean;
   begin
-    Result := False;
     qAux.Close;
     qAux.SQL.Text :=
       'SELECT 1 ' +

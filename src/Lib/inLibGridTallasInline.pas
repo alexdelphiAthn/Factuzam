@@ -736,7 +736,6 @@ begin
   if iLinea <= 0 then Exit;
   if SerieDoc = '' then Exit;
 
-  rTot := 0;
   q := TUniQuery.Create(nil);
   try
     q.Connection := FCfg.Conexion;

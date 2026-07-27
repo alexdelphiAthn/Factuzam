@@ -850,7 +850,6 @@ begin
   ADescripcion  := '';
   ANumAtributos := 0;
   ATipoArticulo := 'ESTANDAR';
-  msArt := 0;
   msDef := 0;
   swTotal := TStopwatch.StartNew;
 
@@ -1284,10 +1283,6 @@ var
 begin
   // [PERF:Aplicar] Camino sincrono instrumentado. Mide los 4 tramos para
   // tener una base de comparacion con el camino background (Fase 2).
-  msApply    := 0;
-  msExecProc := 0;
-  msRecargas := 0;
-  msRefresh  := 0;
   swTotal := TStopwatch.StartNew;
 
   swTramo := TStopwatch.StartNew;

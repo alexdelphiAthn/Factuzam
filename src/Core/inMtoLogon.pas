@@ -43,7 +43,7 @@ uses
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
   dxSkinWhiteprint, dxSkinXmas2008Blue, dascript, UniScript,
-  System.Diagnostics, inLibContextoSesionIntf;
+  inLibContextoSesionIntf;
 
 type
   EInvalidUser = class(Exception);
@@ -106,8 +106,6 @@ type
     FProgressPanel: TPanel;
     FProgressBar: TProgressBar;
     FProgressLabel: TcxLabel;
-    FLogBuffer: TStringList;
-    FStopwatch: TStopwatch;
     FWorkerOperacion: TThread;
     FCerrarAplicacion: Boolean;
     FEnOperacionLarga: Boolean;
@@ -118,10 +116,6 @@ type
                               var Action: TErrorAction);
     procedure escribirini;
     procedure SetIniValues;
-    procedure BackupProgress(const AEtapa: string;
-                              APaso, ATotal: Integer;
-                              AFilaGlobal,
-                              AFilasGlobalTotal: Integer);
     procedure BloquearPantallaOperacion;
     procedure DesbloquearPantallaOperacion;
     procedure RecolocarBarraProgreso;
@@ -140,10 +134,6 @@ type
                                ALogBuffer: TStringList);
     procedure RestoreFinalizar(AExito: Boolean; const AError: string;
                                 ALogBuffer: TStringList);
-    procedure RestoreBeforeExecute(Sender: TObject;
-                                    var SQL: string;
-                                    var Omit: Boolean);
-    procedure RestoreAfterExecute(Sender: TObject; SQL: string);
     function ExisteUser(sNom: string; f: TUniConnection): Boolean;
     function LoginCorrecto(sNom,
                            sPassLogin: string;
@@ -655,30 +645,6 @@ begin
   end;
 end;
 
-procedure TfrmLogon.BackupProgress(const AEtapa: string;
-                                   APaso, ATotal: Integer;
-                                   AFilaGlobal,
-                                   AFilasGlobalTotal: Integer);
-var
-  iValor: Integer;
-  iTotal: Integer;
-begin
-  iValor := APaso;
-  iTotal := ATotal;
-  if AFilasGlobalTotal > 0 then
-  begin
-    iValor := AFilaGlobal;
-    iTotal := AFilasGlobalTotal;
-  end;
-  FProgressBar.Max := 100;
-  FProgressBar.Position := PorcentajeProgreso(iValor, iTotal);
-  FProgressLabel.Caption := TextoProgreso('Copia de seguridad',
-                                          iValor, iTotal);
-  FProgressLabel.Hint := FProgressLabel.Caption;
-  FProgressBar.Update;
-  FProgressLabel.Update;
-end;
-
 procedure TfrmLogon.BloquearPantallaOperacion;
 begin
   FEnOperacionLarga := True;
@@ -964,42 +930,6 @@ begin
       Log.LogError('Error en restauración: ' + AError);
       ShowMessage('Hubo problemas al restaurar la copia.' +
                   sLineBreak + AError);
-    end;
-  end;
-end;
-
-procedure TfrmLogon.RestoreBeforeExecute(Sender: TObject;
-                                          var SQL: string;
-                                          var Omit: Boolean);
-begin
-  if FLogBuffer = nil then
-    FLogBuffer := TStringList.Create;
-  FLogBuffer.Add(' -- Ejecutando (' +
-                  FormatDateTime('hh:nn:ss.zzz', Now) + '): ');
-  FLogBuffer.Add(SQL);
-  FStopwatch := TStopwatch.StartNew;
-end;
-
-procedure TfrmLogon.RestoreAfterExecute(Sender: TObject; SQL: string);
-begin
-  FStopwatch.Stop;
-  if FLogBuffer <> nil then
-  begin
-    FLogBuffer.Add(Format(' -- [OK] Filas afectadas: %d | Tiempo: %d ms',
-                           [(Sender as TUniScript).RowsAffected,
-                           FStopwatch.ElapsedMilliseconds]));
-    FLogBuffer.Add('--------------------------------------------------');
-  end;
-  if (FProgressBar <> nil) and FProgressBar.Visible then
-  begin
-    FProgressBar.Position := FProgressBar.Position + 1;
-    if (FProgressBar.Position mod 20) = 0 then
-    begin
-      FProgressLabel.Caption :=
-        Format('Sentencia %d / %d...',
-               [FProgressBar.Position, FProgressBar.Max]);
-      FProgressBar.Update;
-      FProgressLabel.Update;
     end;
   end;
 end;

@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 26/07/2026 8:08:15
+-- Backup generado: 27/07/2026 7:55:07
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -6169,7 +6169,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 555, 3, 'S', 'S', '2026-07-26 07:18:54', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 556, 3, 'S', 'S', '2026-07-27 07:54:25', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 28, 2, 'S', 'S', '2026-07-07 08:17:26', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -6183,7 +6183,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('PG', '-', '-', 3, 3, 'S', 'S', '2023-12-06 18:58:55', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
   ('PO', '-', '-', 3, 3, 'S', 'S', '2026-07-04 07:26:46', '2026-07-04 07:25:00', 'Administrador', 'Administrador'),
   ('PV', '-', '-', 25, 3, 'S', 'S', '2023-06-30 12:49:26', '2021-06-10 18:47:22', 'Administrador', 'Administrador'),
-  ('RC', '-', '-', 1, 6, 'S', 'S', '2026-06-23 17:53:32', '2026-06-21 07:44:00', 'SISTEMA', 'SISTEMA'),
+  ('RC', '-', '-', 2, 6, 'S', 'S', '2026-07-26 19:39:48', '2026-06-21 07:44:00', 'SISTEMA', 'SISTEMA'),
   ('RP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 08:08:43', '2026-06-11 07:18:45', 'SISTEMA', 'SISTEMA'),
   ('RT', '-', '-', 6, 3, 'S', 'S', '2026-02-01 07:20:07', '2023-10-26 16:34:31', 'Administrador', 'Administrador'),
   ('SE', '-', '-', 0, 6, 'S', 'S', '2026-05-12 18:38:25', '2026-05-12 18:38:25', 'Administrador', 'Administrador'),
@@ -6795,8 +6795,9 @@ ALTER TABLE `fza_efectos_venta` ADD INDEX `IDX_EFV_VENCIMIENTO` (`FECHA_VENCIMIE
 
 -- Datos de fza_efectos_venta
 INSERT INTO `fza_efectos_venta` (`SERIE_FAC_EFV`, `NUMERO_FAC_EFV`, `NUMERO_EFV`, `CODIGO_EMP_EFV`, `CODIGO_CLI_EFV`, `RAZON_SOCIAL_CLI_EFV`, `NIF_CLI_EFV`, `CODIGO_TEFE_EFV`, `ESTADO_EFV`, `ORDEN_PLAZO_EFV`, `FECHA_EMISION_EFV`, `FECHA_VENCIMIENTO_EFV`, `FECHA_COBRO_EFV`, `TIPO_COBRO_EFV`, `REFERENCIA_COBRO_EFV`, `ENTIDAD_COBRO_EFV`, `ESCONCILIADO_EFV`, `IMPORTE_EFV`, `IMPORTE_COBRADO_EFV`, `IMPORTE_PENDIENTE_EFV`, `SERIE_REMV_EFV`, `NUMERO_REMV_EFV`, `ENTIDAD_EFV`, `OFICINA_EFV`, `DIGITO_CONTROL_EFV`, `CUENTA_EFV`, `IBAN_EFV`, `CODIGO_EMPBAN_EFV`, `IBAN_EMP_EFV`, `DOC_EXTERNO_EFV`, `REFERENCIA_DOCUMENTO_EFV`, `SERIE_FAC_CONCILIACION_EFV`, `NUMERO_FAC_CONCILIACION_EFV`, `NUMERO_EFV_CONCILIACION_EFV`, `OBSERVACIONES_EFV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
+  ('A1', '000028', 1, '1', '306', 'DISTRIBUCIONES VELÁZQUEZ SL', 'B12345678', 'RECIBO', 'REMESADO', 1, '2026-01-23 00:00:00', '2026-02-22 00:00:00', NULL, NULL, NULL, NULL, 'N', 726, 0, 726, '-', '000001', NULL, NULL, NULL, NULL, NULL, '0001', 'ES5001825584280208539535', NULL, 'A1/000028', NULL, NULL, NULL, '', '2026-07-26 19:39:48', '2026-07-26 19:37:10', 'Administrador', 'Administrador'),
   ('A1', '000030', 1, '1', '310', 'MODA FÁCIL SL', 'B87654321', 'RECIBO', 'REMESADO', 1, '2026-01-28 00:00:00', '2026-02-27 00:00:00', NULL, NULL, NULL, NULL, 'N', 1436.22, 0, 1436.22, '-', '000000', NULL, NULL, NULL, NULL, NULL, '0001', 'ES5001825584280208539535', NULL, 'A1/000030', NULL, NULL, NULL, '', '2026-06-23 17:58:30', '2026-06-23 17:39:28', 'Administrador', 'Administrador');
--- 1 registros exportados
+-- 2 registros exportados
 
 
 -- Tabla: fza_empleados
@@ -8039,14 +8040,14 @@ INSERT INTO `fza_facturas_lineas` (`NUMERO_FAC_FACLIN`, `SERIE_FAC_FACLIN`, `COD
   ('000032', 'A1', '1', '010', 'ZAP-BOTA-MT', 'ZAP-BOTA-MT/NEGRO/42', NULL, NULL, 'CALZADO', 'Calzado Elegante', 42, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Bota Montaña Impermeable Negro 42', NULL, 'PVP', 'N', 95, 0, 0, 95, 'N', 21, 114.95, 114.95, 95, NULL, '2026-04-23 10:36:41', '2026-02-05 16:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
   ('000032', 'A1', '1', '020', 'MOCHILA-SPORT', 'MOCHILA-SPORT', NULL, NULL, 'BOLSOS', 'Bolsos y Mochilas', 18, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Mochila Deportiva 30L', NULL, 'PVP', 'N', 39.95, 25, 9.9875, 29.9625, 'N', 21, 36.2546, 36.2546, 29.9625, NULL, '2026-04-23 10:36:41', '2026-02-05 16:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
   ('000033', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 21:53:29', '2026-04-03 21:53:29', '1', '1', 'GEN', '1', '00000022', '0000000034', '', '', '', '', '', '', '', '', '', '', 0),
-  ('000033', 'A1', '1', '010', 'VEST-FLOR', 'VEST-FLOR/ROJO/M', NULL, NULL, 'ROPA', 'Ropa de Vestir', 10, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 3, 'Vestido Estampado Verano - Rojo M', NULL, 'PVP', 'N', 20, 0, 0, 20, 'N', 21, 24.2, 72.6, 60, NULL, '2026-04-23 10:36:41', '2026-02-07 18:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000033', 'A1', '1', '010', 'VEST-FLOR', 'VEST-FLOR/ROJO/M', NULL, NULL, 'ROPA', 'Ropa de Vestir', 10, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 3, 'Vestido Estampado Verano - Rojo M', NULL, 'PVP', 'N', 20, 0, 0, 20, 'N', 21, 24.2, 72.6, 60, NULL, '2026-04-23 10:36:41', '2026-02-07 18:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL, 'ROJO', '', 'M', '', '', '', '', '', '', '', 2),
   ('000033', 'A1', '1', '020', 'SRV-ENVIO', 'SRV-ENVIO', NULL, NULL, 'OTR', 'Otros', 0, NULL, NULL, NULL, NULL, 'SERVICIO', 'Uds', 1, 'Gastos de Envío - Burgos', NULL, 'PVP', 'N', 5.95, 0, 0, 5.95, 'N', 21, 7.1995, 7.1995, 5.95, NULL, '2026-04-23 10:36:41', '2026-02-07 18:00:00', 'DEMO', 'DEMO', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
   ('000034', '2026.A1', NULL, '0010', 'BLUS-SEDA', 'BLUS-SEDA/BLANCO/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Blusa de Seda Cuello V', NULL, NULL, 'S', 49.95, 0, 0, 41.281, 'N', 21, 49.95, 49.95, 41.281, '1', '2026-04-03 22:08:46', '2026-04-03 22:08:46', '1', '1', 'GEN', '1', '00000023', '0000000036', '', '', '', '', '', '', '', '', '', '', 0),
   ('000034', 'A1', '1', '010', 'CAMI-POLO', 'CAMI-POLO/AZUL/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 12, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Polo Manga Corta Azul L', NULL, 'PVP', 'N', 28, 0, 0, 28, 'N', 21, 33.88, 33.88, 28, NULL, '2026-04-23 10:36:41', '2026-02-08 10:15:00', 'DEMO', 'DEMO', 'GEN', '1', '002', NULL, '', '', '', '', '', '', '', '', '', '', 0),
   ('000034', 'A1', '1', '020', 'ZAP-DEPOR', 'ZAP-DEPOR/BLANCO/43', NULL, NULL, 'CALZADO', 'Calzado Elegante', 30, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 1, 'Zapatilla Deportiva Running B43', NULL, 'PVP', 'N', 55, 25, 13.75, 41.25, 'N', 21, 49.9125, 49.9125, 41.25, NULL, '2026-04-23 10:36:41', '2026-02-08 10:15:00', 'DEMO', 'DEMO', 'GEN', '1', '002', NULL, '', '', '', '', '', '', '', '', '', '', 0),
   ('000035', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-03 22:19:49', '2026-04-03 22:19:49', '1', '1', 'GEN', '1', '00000024', '0000000038', '', '', '', '', '', '', '', '', '', '', 0),
-  ('000035', 'A1', '1', '010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 80, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Abrigo de Paño Caballero Camel L', NULL, 'VENTAMAYOR', 'N', 120, 0, 0, 120, 'N', 21, 145.2, 290.4, 240, NULL, '2026-04-23 10:36:41', '2026-02-10 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
-  ('000035', 'A1', '1', '020', 'JERSEY-LANA', 'JERSEY-LANA/GRIS/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 25, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 4, 'Jersey de Lana Gris L', NULL, 'VENTAMAYOR', 'N', 35, 0, 0, 35, 'N', 21, 42.35, 169.4, 140, NULL, '2026-04-23 10:36:41', '2026-02-10 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
+  ('000035', 'A1', '1', '010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 80, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Abrigo de Paño Caballero Camel L', NULL, 'VENTAMAYOR', 'N', 120, 0, 0, 120, 'N', 21, 145.2, 290.4, 240, NULL, '2026-04-23 10:36:41', '2026-02-10 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, 'CAMEL', '', 'L', '', '', '', '', '', '', '', 2),
+  ('000035', 'A1', '1', '020', 'JERSEY-LANA', 'JERSEY-LANA/GRIS/L', NULL, NULL, 'ROPA', 'Ropa de Vestir', 25, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 4, 'Jersey de Lana Gris L', NULL, 'VENTAMAYOR', 'N', 35, 0, 0, 35, 'N', 21, 42.35, 169.4, 140, NULL, '2026-04-23 10:36:41', '2026-02-10 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, 'GRIS', '', 'L', '', '', '', '', '', '', '', 2),
   ('000035', 'A1', '1', '030', 'BOLSO-PIEL', 'BOLSO-PIEL', NULL, NULL, 'BOLSOS', 'Bolsos y Mochilas', 45, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds', 2, 'Bolso de Piel Mujer Grande', NULL, 'VENTAMAYOR', 'N', 55, 0, 0, 55, 'N', 21, 66.55, 133.1, 110, NULL, '2026-04-23 10:36:41', '2026-02-10 09:00:00', 'DEMO', 'Administrador', 'GEN', '1', NULL, NULL, '', '', '', '', '', '', '', '', '', '', 0),
   ('000036', '2026.A1', NULL, '0010', 'CHAQ-CUERO', 'CHAQ-CUERO/NEGRO/XL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Chaqueta Biker Cuero', NULL, NULL, 'S', 130, 0, 0, 107.438, 'N', 21, 130, 130, 107.438, '1', '2026-04-03 22:26:43', '2026-04-03 22:26:43', '1', '1', 'GEN', '1', '00000025', '0000000040', '', '', '', '', '', '', '', '', '', '', 0),
   ('000037', '2026.A1', NULL, '0010', 'ABRIGO-PAÑO', 'ABRIGO-PAÑO/CAMEL/L', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ESTANDAR', 'Uds.', 1, 'Abrigo de Paño Caballero', NULL, NULL, 'S', 180, 0, 0, 148.7603, 'N', 21, 180, 180, 148.7603, '1', '2026-04-03 22:28:10', '2026-04-03 22:28:10', '1', '1', 'GEN', '1', '00000026', '0000000042', '', '', '', '', '', '', '', '', '', '', 0),
@@ -21479,8 +21480,76 @@ SET @sql := IF(@existe = 0,
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
-', '2026-07-26 07:18:54', '2026-07-26 07:18:54', 'Administrador', 'Administrador');
--- 84 registros exportados
+', '2026-07-26 07:18:54', '2026-07-26 07:18:54', 'Administrador', 'Administrador'),
+  ('555', 'limpiar_winform_articulospropiedades', '-- ============================================================================
+-- limpiar_winform_articulospropiedades.sql
+-- ----------------------------------------------------------------------------
+-- Quita la fila huerfana ''ArticulosPropiedades'' de fza_winforms y sus
+-- permisos de menu asociados.
+--
+-- Motivo: esa fila apunta a
+--   UNITF_WINF      = inMtoArticulosPropiedades.TfrmMtoArticulosPropiedades
+--   DATAMODULE_WINF = UniDataArticulosPropiedades.TdmArticulosPropiedades
+-- unidades que YA NO EXISTEN en el codigo (la funcionalidad de propiedades
+-- de articulo son ahora los modales TfrmSelPropiedades / TfrmPropPorUnidad
+-- de inLibArticulosPropiedades). Ademas su item de menu
+-- ''mnuArticulosPropiedades'' tampoco esta en inMtoPrincipal.dfm ni tiene
+-- handler: es metadato muerto. El validador de arranque nuevo
+-- (TfzaWinF.ComprobarRegistradas) la marca con ERROR en cada arranque.
+--
+-- Al borrarla no se pierde ninguna funcionalidad: no hay menu, ni atajo
+-- activo, ni pantalla real detras.
+--
+-- Idempotente (el segundo pase no hace nada). NO tocar factuzam_original.sql.
+-- ============================================================================
+
+-- 1) Comprobacion previa: mira que se va a borrar antes de lanzar los DELETE.
+SELECT ''winform a borrar'' AS que, w.CALL_WINF, w.CAPTION_WINF,
+       w.MENUITEM_WINF, w.UNITF_WINF, w.DATAMODULE_WINF
+  FROM fza_winforms w
+ WHERE w.CALL_WINF = ''ArticulosPropiedades'';
+
+SELECT ''permiso a borrar'' AS que, p.USUARIO_GRUPO_PERM,
+       p.CODIGO_PERM, p.VALOR_PERM
+  FROM fza_permisos p
+ WHERE p.CODIGO_PERM = ''menu.ArticulosPropiedades'';
+
+-- 2) Borrado (idempotente).
+DELETE FROM fza_winforms
+ WHERE CALL_WINF = ''ArticulosPropiedades'';
+
+DELETE FROM fza_permisos
+ WHERE CODIGO_PERM = ''menu.ArticulosPropiedades'';
+
+-- 3) Verificacion: las dos consultas deben devolver 0.
+SELECT COUNT(*) AS winforms_restantes
+  FROM fza_winforms
+ WHERE CALL_WINF = ''ArticulosPropiedades'';
+
+SELECT COUNT(*) AS permisos_restantes
+  FROM fza_permisos
+ WHERE CODIGO_PERM = ''menu.ArticulosPropiedades'';
+
+-- ============================================================================
+-- ROLLBACK (solo si necesitas restaurar la fila; normalmente NO hace falta).
+-- Los valores son los que tenia la demo; en tu BBDD los permisos por grupo
+-- pueden variar, ajusta los USUARIO_GRUPO_PERM / VALOR_PERM a los tuyos.
+-- ----------------------------------------------------------------------------
+-- INSERT INTO fza_winforms
+--   (CALL_WINF, CAPTION_WINF, MENUITEM_WINF, UNITF_WINF,
+--    SHORTCUT_WINF, DATAMODULE_WINF, NUM_VENTANAS_WINF)
+--   VALUES (''ArticulosPropiedades'', ''Propiedades de Articulos'',
+--           ''mnuArticulosPropiedades'',
+--           ''inMtoArticulosPropiedades.TfrmMtoArticulosPropiedades'',
+--           ''Ctrl+B'',
+--           ''UniDataArticulosPropiedades.TdmArticulosPropiedades'', 5);
+-- INSERT INTO fza_permisos (USUARIO_GRUPO_PERM, CODIGO_PERM, VALOR_PERM)
+--   VALUES (''Alfredo'',    ''menu.ArticulosPropiedades'', ''S''),
+--          (''Todos'',      ''menu.ArticulosPropiedades'', ''S''),
+--          (''Vendedores'', ''menu.ArticulosPropiedades'', ''N'');
+-- ============================================================================
+', '2026-07-27 07:54:25', '2026-07-27 07:54:25', 'Administrador', 'Administrador');
+-- 85 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -24126,7 +24195,6 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
   ('Alfredo', 'menu.AlbaranesCompra', 'S', 'Albaranes', NULL, '2026-07-02 17:18:10', 'Administrador', NULL),
   ('Alfredo', 'menu.Almacenes', 'S', 'Almacenes', NULL, '2026-07-02 17:18:10', 'Administrador', NULL),
   ('Alfredo', 'menu.Articulos', 'S', 'Artículos', NULL, '2026-07-02 17:18:10', 'Administrador', NULL),
-  ('Alfredo', 'menu.ArticulosPropiedades', 'S', 'Propiedades de Artículos', NULL, '2026-07-02 17:18:15', 'Administrador', NULL),
   ('Alfredo', 'menu.AtributosBasicos', 'S', 'Atributos básicos', NULL, '2026-07-02 17:18:10', 'Administrador', NULL),
   ('Alfredo', 'menu.AtributosConjuntos', 'S', 'Colecciones de Atributos', NULL, '2026-07-02 17:18:10', 'Administrador', NULL),
   ('Alfredo', 'menu.CajaArqueosHist', 'S', 'Histórico de Arqueos', NULL, '2026-07-02 17:18:12', 'Administrador', NULL),
@@ -24428,9 +24496,9 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
   ('QATEST', 'RemesasVenta.consultar', 'S', 'Consultar / buscar', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
   ('QATEST', 'RemesasVenta.excel', 'S', 'Exportar a Excel', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
   ('QATEST', 'RemesasVenta.imprimir', 'S', 'Imprimir informes', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
-  ('QATEST', 'RemesasVenta.insertar', 'S', 'Alta de registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL);
+  ('QATEST', 'RemesasVenta.insertar', 'S', 'Alta de registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('QATEST', 'RemesasVenta.modificar', 'S', 'Modificar registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL);
 INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `DESCRIPCION_PERM`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('QATEST', 'RemesasVenta.modificar', 'S', 'Modificar registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
   ('Todos', 'accion.borrarRegistro', 'S', 'Borrar registros', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'accion.crearGuias', 'S', 'Crear guías de grid/informes', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'accion.exportarExcel', 'S', 'Exportar grid a Excel', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
@@ -24453,7 +24521,6 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
   ('Todos', 'menu.AlbaranesCompra', 'S', 'Albaranes de Compra', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'menu.Almacenes', 'S', 'Almacenes', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'menu.Articulos', 'S', 'Artículos', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
-  ('Todos', 'menu.ArticulosPropiedades', 'S', 'Propiedades de Artículos', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'menu.AtributosBasicos', 'S', 'Atributos básicos', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'menu.AtributosConjuntos', 'S', 'Colecciones de Atributos', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'menu.CajaArqueosHist', 'S', 'Histórico Arqueos', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
@@ -24517,7 +24584,6 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
   ('Vendedores', 'menu.AlbaranesCompra', 'N', 'Albaranes', NULL, '2026-06-02 19:50:09', 'Administrador', NULL),
   ('Vendedores', 'menu.Almacenes', 'N', 'Almacenes', NULL, '2026-06-02 19:38:57', 'Administrador', NULL),
   ('Vendedores', 'menu.Articulos', 'N', 'Artículos', NULL, '2026-06-02 19:50:04', 'Administrador', NULL),
-  ('Vendedores', 'menu.ArticulosPropiedades', 'N', 'Propiedades de Artículos', NULL, '2026-06-02 19:51:53', 'Administrador', NULL),
   ('Vendedores', 'menu.AtributosBasicos', 'N', 'Atributos básicos', NULL, '2026-06-02 19:49:58', 'Administrador', NULL),
   ('Vendedores', 'menu.AtributosConjuntos', 'N', 'Colecciones de Atributos', NULL, '2026-06-02 19:49:58', 'Administrador', NULL),
   ('Vendedores', 'menu.CajaArqueosHist', 'N', 'Histórico de Arqueos', NULL, '2026-06-02 19:49:04', 'Administrador', NULL),
@@ -24565,7 +24631,7 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
   ('Vendedores', 'menu.Usuarios', 'N', 'Usuarios', NULL, '2026-06-02 20:07:56', 'Administrador', NULL),
   ('Vendedores', 'menu.UsuariosPerfiles', 'N', 'Perfiles', NULL, '2026-06-02 20:07:56', 'Administrador', NULL),
   ('Vendedores', 'menu.Variaciones', 'N', 'Tipos de Variaciones', NULL, '2026-06-02 19:49:58', 'Administrador', NULL);
--- 635 registros exportados
+-- 632 registros exportados
 
 
 -- Tabla: fza_propiedades
@@ -25014,8 +25080,9 @@ ALTER TABLE `fza_remesas_venta` ADD INDEX `IDX_REMV_ESTADO` (`ESTADO_REMV`);
 
 -- Datos de fza_remesas_venta
 INSERT INTO `fza_remesas_venta` (`NUMERO_REMV`, `SERIE_REMV`, `FECHA_REMV`, `ESTADO_REMV`, `CODIGO_EMP_REMV`, `TIPO_REMV`, `NORMA_REMV`, `TIPO_SECUENCIA_SEPA_REMV`, `ENTIDAD_REMV`, `OFICINA_REMV`, `DIGITO_CONTROL_REMV`, `CUENTA_REMV`, `IBAN_REMV`, `CONTADOR_EFECTOS_REMV`, `TOTAL_REMV`, `TOTAL_GASTOS_REMV`, `TOTAL_COMISION_REMV`, `FECHA_CARGO_REMV`, `ARCHIVO_REMV`, `OBSERVACIONES_REMV`, `INSTANTE_CONTABILIZACION_REMV`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('000000', '-', '2026-06-23 00:00:00', 'ENVIADA', '1', 'NORMA19', '19.14', 'RCUR', '0182', '5584', '28', '0208539535', 'ES5001825584280208539535', 1, 1436.22, 0, 0, '2026-06-23 00:00:00', 'C:\\Users\\V3607\\Desktop\\remesa_cobro_-_000000.xml', '', NULL, '2026-06-23 18:17:41', '2026-06-23 17:53:32', 'Administrador', 'Administrador');
--- 1 registros exportados
+  ('000000', '-', '2026-06-23 00:00:00', 'ENVIADA', '1', 'NORMA19', '19.14', 'RCUR', '0182', '5584', '28', '0208539535', 'ES5001825584280208539535', 1, 1436.22, 0, 0, '2026-06-23 00:00:00', 'C:\\Users\\V3607\\Desktop\\remesa_cobro_-_000000.xml', '', NULL, '2026-06-23 18:17:41', '2026-06-23 17:53:32', 'Administrador', 'Administrador'),
+  ('000001', '-', '2026-07-26 00:00:00', 'ABIERTA', '1', 'NORMA19', NULL, 'RCUR', NULL, NULL, NULL, NULL, '', 1, 726, 0, 0, NULL, NULL, '', NULL, '2026-07-26 19:39:48', '2026-07-26 19:39:48', 'Administrador', 'Administrador');
+-- 2 registros exportados
 
 
 -- Tabla: fza_tarifas
@@ -25348,7 +25415,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-26 08:08:02', '2026-07-26 08:08:02', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-27 07:47:16', '2026-07-27 07:47:16', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Vendedores', 'S', '012', '2026-07-02 18:49:30', '2026-07-02 18:49:30', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1'),
   ('QATEST', '6E797DC797D26129DAE46F17A7255650', 'QA_PRUEBAS', 'S', NULL, '2026-07-24 19:49:59', '2026-07-24 19:49:59', '2026-07-23 17:18:45', 'Administrador', 'Administrador', NULL, NULL);
 -- 3 registros exportados
@@ -36673,7 +36740,6 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('AlbaranesCompra', 'Albaranes de Compra', 'Albaranes1', 'inMtoAlbaranesCompra.TfrmMtoAlbaranesCompra', 'Ctrl+Alt+Shift+F', 'UniDataAlbaranesCompra.TdmAlbaranesCompra', 5),
   ('Almacenes', 'Almacenes', 'mnuAlmacenes', 'inMtoAlmacenes.TfrmMtoAlmacenes', 'Ctrl+L', 'UniDataAlmacenes.TdmAlmacenes', 5),
   ('Articulos', 'Artículos', 'mnuArticulos', 'inMtoArticulos.TfrmMtoArticulos', 'Ctrl+A', 'UniDataArticulos.TdmArticulos', 5),
-  ('ArticulosPropiedades', 'Propiedades de Artículos', 'mnuArticulosPropiedades', 'inMtoArticulosPropiedades.TfrmMtoArticulosPropiedades', 'Ctrl+B', 'UniDataArticulosPropiedades.TdmArticulosPropiedades', 5),
   ('AtributosBasicos', 'Atributos básicos', 'mnuAtributosBasicos', 'inMtoAtributosBasicos.TfrmMtoAtributosBasicos', 'Ctrl+Alt+B', 'UniDataAtributosBasicos.TdmAtributosBasicos', 5),
   ('AtributosConjuntos', 'Colecciones de Atributos', 'mnuAtributosConjuntos', 'inMtoAtributosConjuntos.TfrmMtoAtributosConjuntos', 'Ctrl+Alt+S', 'UniDataAtributosConjuntos.TdmAtributosConjuntos', 5),
   ('CajaArqueosHist', 'Histórico de Arqueos de Caja', 'mnuCajaArqueosHist', 'inMtoCajaArqueosHist.TfrmMtoCajaArqueosHist', 'Ctrl+Shift+H', 'UniDataCajaArqueosHist.TdmCajaArqueosHist', 5),
@@ -36722,7 +36788,7 @@ INSERT INTO `fza_winforms` (`CALL_WINF`, `CAPTION_WINF`, `MENUITEM_WINF`, `UNITF
   ('Variaciones', 'Tipos de Variaciones', 'mnuVariaciones', 'inMtoVariaciones.TfrmMtoVariaciones', 'Ctrl+Alt+T', 'UniDataVariaciones.TdmVariaciones', 5),
   ('VerifactuCola', 'Verifactu - Cola de Envíos', 'mnuVerifactuCola', 'inMtoVerifactuCola.TfrmMtoVerifactuCola', '', 'UniDataVerifactuCola.TdmVerifactuCola', 5),
   ('VerifactuLog', 'Verifactu - Log', 'mnuVerifactuLog', 'inMtoVerifactuLog.TfrmMtoVerifactuLog', '', 'UniDataVerifactuLog.TdmVerifactuLog', 5);
--- 53 registros exportados
+-- 52 registros exportados
 
 
 -- Tabla: inv_almacenes
@@ -44644,4 +44710,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 26/07/2026 8:08:20
+-- Backup completado: 27/07/2026 7:55:09

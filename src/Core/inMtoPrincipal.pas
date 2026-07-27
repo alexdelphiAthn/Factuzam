@@ -115,34 +115,17 @@ type
     RemesasVenta1: TMenuItem;
     CargarEfectosVenta1: TMenuItem;
     procedure mnuMenuCajaClick(Sender: TObject);
-    procedure mnuAlmacenesClick(Sender: TObject);
     procedure mnuInvocarLoginClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure mnuCajaParamClick(Sender: TObject);
     procedure mnuParmetrosdeEntornoClick(Sender: TObject);
-    procedure mnuInventariosClick(Sender: TObject);
-    procedure mnuDocumentosTrabajoClick(Sender: TObject);
-    procedure mnuPropiedadesClick(Sender: TObject);
 //    procedure mnuPropiedadesValoresClick(Sender: TObject);
-    procedure mnuVariacionesClick(Sender: TObject);
-    procedure mnuAtributosConjuntosClick(Sender: TObject);
-    procedure mnuAtributosBasicosClick(Sender: TObject);
-    procedure mnuCajaPagosHistClick(Sender: TObject);
-    procedure mnuCajaValesHistClick(Sender: TObject);
-    procedure mnuCajaOperacionesHistClick(Sender: TObject);
-    procedure mnuCajaArqueosHistClick(Sender: TObject);
-    procedure FormasdePagoCaja1Click(Sender: TObject);
-    procedure mnuFacturasSimplifClick(Sender: TObject);
     procedure mnuVerifactuDeclaracionClick(Sender: TObject);
-    procedure mnuVerifactuColaClick(Sender: TObject);
-    procedure mnuVerifactuLogClick(Sender: TObject);
-    procedure Movimientosdealmacn1Click(Sender: TObject);
     procedure mnuBalanceAlmacenHorizontalClick(Sender: TObject);
     procedure mnuBalanceAlmacenSinTallasClick(Sender: TObject);
     procedure mnuMovVentasArtClick(Sender: TObject);
     procedure mnuListadoDocsProveedorClick(Sender: TObject);
     procedure mnuListadoEfectosPagoClick(Sender: TObject);
-    procedure mnuDepositosClienteClick(Sender: TObject);
     procedure pcPrincipalChange(Sender: TObject);
   public
     // Re-vincula la pantalla flotante de fotos (si esta abierta) al
@@ -206,43 +189,20 @@ type
     mnuLisVentas: TMenuItem;
     mnuPedidosVenta: TMenuItem;
     mnuAlbaranesVenta: TMenuItem;
-    procedure mnuPedidosVentaClick(Sender: TObject);
-    procedure mnuAlbaranesVentaClick(Sender: TObject);
-    procedure EfectosVenta1Click(Sender: TObject);
-    procedure RemesasVenta1Click(Sender: TObject);
     procedure CargarEfectosVenta1Click(Sender: TObject);
     procedure Sesiones1Click(Sender: TObject);
-    procedure Albaranes1Click(Sender: TObject);
-    procedure Devoluciones1Click(Sender: TObject);
     procedure FacturarAlbaranes1Click(Sender: TObject);
-    procedure Facturas1Click(Sender: TObject);
-    procedure EfectosCompra1Click(Sender: TObject);
-    procedure RemesasCompra1Click(Sender: TObject);
     procedure CargarEfectos1Click(Sender: TObject);
     procedure Formasdepago2Click(Sender: TObject);
-    procedure Pedidos1Click(Sender: TObject);
-    procedure mnuEmpresasClick(Sender: TObject);
-    procedure mnuClientesClick(Sender: TObject);
-    procedure mnuProveedoresClick(Sender: TObject);
-    procedure mnuArticulosClick(Sender: TObject);
     procedure mnuTarifasClick(Sender: TObject);
-    procedure mnuFamiliasClick(Sender: TObject);
     procedure mnArchivoSalirClick(Sender: TObject);
-    procedure mnuFacturasClick(Sender: TObject);
-    procedure mnuGruposdeIVAClick(Sender: TObject);
-    procedure mnuIvasClick(Sender: TObject);
-    procedure mnuContadoresClick(Sender: TObject);
-    procedure mnuUsuariosClick(Sender: TObject);
-    procedure mnuEmpleadosClick(Sender: TObject);
-    procedure mnuGruposClick(Sender: TObject);
-    procedure mnuPerfilesClick(Sender: TObject);
-    procedure mnuPermisosClick(Sender: TObject);
-    procedure mnuPermisosTablaClick(Sender: TObject);
     procedure CopiasdeSeguridad1Click(Sender: TObject);
+    // Handler unico de los menus de apertura de pantalla: resuelve
+    // el CALL del item (fza_winforms) y delega en ShowMto. Sustituye a
+    // ~45 OnClick identicos. Pantalla nueva = fila en fza_winforms +
+    // OnClick del item = MenuGenericoClick (sin handler nuevo).
+    procedure MenuGenericoClick(Sender: TObject);
     procedure mnuEjecutarScriptClick(Sender: TObject);
-    procedure mnuGeneradorProcesosClick(Sender: TObject);
-    procedure mnuPaisesClick(Sender: TObject);
-    procedure mnuUnidadesMedidaClick(Sender: TObject);
     procedure tmr1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -623,7 +583,6 @@ begin
     jvStatusBar1.Panels[0].Text := EstadoTeclas;
   ActualizarFondoLogo;
 end;
-
 
 procedure TfrmMtoPrincipal.FormCreate(Sender: TObject);
 begin
@@ -1958,7 +1917,6 @@ begin
 
 end;
 
-
 procedure TfrmMtoPrincipal.WMFreeControl(var Msg: TMessage);
 var
   TabACerrar: TcxTabSheet;
@@ -2113,17 +2071,23 @@ begin
   AbrirUrlAyuda(URL_MANUAL_WEB);
 end;
 
-procedure TfrmMtoPrincipal.mnuAlmacenesClick(Sender: TObject);
+procedure TfrmMtoPrincipal.MenuGenericoClick(Sender: TObject);
+var
+  oItem: TMenuItem;
+  sCall: string;
 begin
-  inherited;
-  if mnuAlmacenes.Visible then
-    ShowMto(Self, 'Almacenes');
-end;
-
-procedure TfrmMtoPrincipal.mnuArticulosClick(Sender: TObject);
-begin
-  if (mnuArticulos.Visible) then
-    ShowMto(Self, 'Articulos');
+  if (Sender is TMenuItem) then
+  begin
+    oItem := TMenuItem(Sender);
+    // Mismo guardado que los handlers viejos: solo abre si el item
+    // esta visible (permisos de menu ya aplicados).
+    if oItem.Visible then
+    begin
+      sCall := oFzaWinf.CallRegistrado(oItem);
+      if sCall <> '' then
+        ShowMto(Self, sCall);
+    end;
+  end;
 end;
 
 procedure TfrmMtoPrincipal.mnuCajaParamClick(Sender: TObject);
@@ -2140,64 +2104,6 @@ begin
       FreeAndNil(frmMtoCajaParam);
     end;
   end;
-end;
-
-procedure TfrmMtoPrincipal.mnuClientesClick(Sender: TObject);
-begin
-  if (mnuClientes.Visible) then
-    ShowMto(Self, 'Clientes');
-end;
-
-procedure TfrmMtoPrincipal.mnuContadoresClick(Sender: TObject);
-begin
-  if (mnuContadores.Visible) then
-    ShowMto(Self, 'Contadores');
-end;
-
-procedure TfrmMtoPrincipal.mnuFacturasClick(Sender: TObject);
-begin
-  if (mnuFacturas.Visible) then
-    ShowMto(Self, 'Facturas');
-end;
-
-procedure TfrmMtoPrincipal.mnuFacturasSimplifClick(Sender: TObject);
-begin
-  if (mnuFacturasSimplif.Visible) then
-    ShowMto(Self, 'FacturasSimplif');
-end;
-
-procedure TfrmMtoPrincipal.mnuFamiliasClick(Sender: TObject);
-begin
-  if (mnuFamilias.Visible) then
-    ShowMto(Self, 'Familias');
-end;
-
-procedure TfrmMtoPrincipal.mnuPedidosVentaClick(Sender: TObject);
-begin
-  inherited;
-  if mnuPedidosVenta.Visible then
-    ShowMto(Self, 'Pedidos');
-end;
-
-procedure TfrmMtoPrincipal.mnuAlbaranesVentaClick(Sender: TObject);
-begin
-  inherited;
-  if mnuAlbaranesVenta.Visible then
-    ShowMto(Self, 'Albaranes');
-end;
-
-procedure TfrmMtoPrincipal.EfectosVenta1Click(Sender: TObject);
-begin
-  inherited;
-  if EfectosVenta1.Visible then
-    ShowMto(Self, 'EfectosVenta');
-end;
-
-procedure TfrmMtoPrincipal.RemesasVenta1Click(Sender: TObject);
-begin
-  inherited;
-  if RemesasVenta1.Visible then
-    ShowMto(Self, 'RemesasVenta');
 end;
 
 procedure TfrmMtoPrincipal.CargarEfectosVenta1Click(Sender: TObject);
@@ -2224,20 +2130,6 @@ begin
     ShowMto(Self, 'ComprasSesiones');
 end;
 
-procedure TfrmMtoPrincipal.Albaranes1Click(Sender: TObject);
-begin
-  inherited;
-  if Albaranes1.Visible then
-    ShowMto(Self, 'AlbaranesCompra');
-end;
-
-procedure TfrmMtoPrincipal.Devoluciones1Click(Sender: TObject);
-begin
-  inherited;
-  if Devoluciones1.Visible then
-    ShowMto(Self, 'DevolucionesCompra');
-end;
-
 procedure TfrmMtoPrincipal.FacturarAlbaranes1Click(Sender: TObject);
 var
   f: TfrmModalFacturarAlbaranes;
@@ -2253,27 +2145,6 @@ begin
       f.Free;
     end;
   end;
-end;
-
-procedure TfrmMtoPrincipal.Facturas1Click(Sender: TObject);
-begin
-  inherited;
-  if Facturas1.Visible then
-    ShowMto(Self, 'FacturasCompra');
-end;
-
-procedure TfrmMtoPrincipal.EfectosCompra1Click(Sender: TObject);
-begin
-  inherited;
-  if EfectosCompra1.Visible then
-    ShowMto(Self, 'EfectosCompra');
-end;
-
-procedure TfrmMtoPrincipal.RemesasCompra1Click(Sender: TObject);
-begin
-  inherited;
-  if RemesasCompra1.Visible then
-    ShowMto(Self, 'RemesasCompra');
 end;
 
 procedure TfrmMtoPrincipal.CargarEfectos1Click(Sender: TObject);
@@ -2300,60 +2171,6 @@ begin
     ShowMto(Self, 'FormasdePago');
 end;
 
-procedure TfrmMtoPrincipal.Pedidos1Click(Sender: TObject);
-begin
-  inherited;
-  if Pedidos1.Visible then
-    ShowMto(Self, 'PedidosCompra');
-end;
-
-procedure TfrmMtoPrincipal.mnuGeneradorProcesosClick(Sender: TObject);
-begin
-  if (mnuGeneradorProcesos.Visible) then
-    ShowMto(Self, 'GeneradorProcesos');
-end;
-
-procedure TfrmMtoPrincipal.mnuGruposClick(Sender: TObject);
-begin
-  if (mnuGrupos.Visible) then
-    ShowMto(Self, 'Grupos');
-end;
-
-procedure TfrmMtoPrincipal.mnuGruposdeIVAClick(Sender: TObject);
-begin
-  if (mnuGruposdeIVA.Visible) then
-    ShowMto(Self, 'IvasGrupos');
-end;
-
-procedure TfrmMtoPrincipal.mnuInventariosClick(Sender: TObject);
-begin
-  inherited;
-  if mnuInventarios.Visible then
-    ShowMto(Self, 'Inventarios');
-end;
-
-procedure TfrmMtoPrincipal.mnuDocumentosTrabajoClick(Sender: TObject);
-begin
-  inherited;
-  if mnuDocumentosTrabajo.Visible then
-  begin
-    ShowMto(Self, 'DocumentosTrabajo');
-  end;
-end;
-
-procedure TfrmMtoPrincipal.mnuIvasClick(Sender: TObject);
-begin
-  if (mnuIvas.Visible) then
-    ShowMto(Self, 'Ivas');
-end;
-
-procedure TfrmMtoPrincipal.mnuEmpresasClick(Sender: TObject);
-begin
-  if (mnuEmpresas.Visible) then
-    ShowMto(Self,
-            'Empresas');
-end;
-
 procedure TfrmMtoPrincipal.mnuInvocarLoginClick(Sender: TObject);
 begin
   // Cerrar sesion: relanza Fzam con el conmutador /relogin (que ignora el
@@ -2369,57 +2186,6 @@ begin
   Close;
 end;
 
-procedure TfrmMtoPrincipal.mnuPaisesClick(Sender: TObject);
-begin
-  inherited;
-  if (mnuPaises.Visible) then
-    ShowMto(Self, 'Paises');
-end;
-
-procedure TfrmMtoPrincipal.mnuUnidadesMedidaClick(Sender: TObject);
-begin
-  inherited;
-  if (mnuUnidadesMedida.Visible) then
-    ShowMto(Self, 'UnidadesMedida');
-end;
-
-procedure TfrmMtoPrincipal.mnuPerfilesClick(Sender: TObject);
-begin
-  if (mnuPerfiles.Visible) then
-    ShowMto(Self,
-            'UsuariosPerfiles');
-end;
-
-procedure TfrmMtoPrincipal.mnuPermisosClick(Sender: TObject);
-begin
-  if (mnuPermisos.Visible) then
-    ShowMto(Self, 'Permisos');
-end;
-
-procedure TfrmMtoPrincipal.mnuPermisosTablaClick(Sender: TObject);
-begin
-  if (mnuPermisosTabla.Visible) then
-    ShowMto(Self, 'PermisosTabla');
-end;
-
-procedure TfrmMtoPrincipal.mnuProveedoresClick(Sender: TObject);
-begin
-  if (mnuProveedores.Visible) then
-    ShowMto(Self, 'Proveedores');
-end;
-
-procedure TfrmMtoPrincipal.mnuUsuariosClick(Sender: TObject);
-begin
-  if (mnuUsuarios.Visible) then
-    ShowMto(Self, 'Usuarios');
-end;
-
-procedure TfrmMtoPrincipal.mnuEmpleadosClick(Sender: TObject);
-begin
-  if (mnuEmpleados.Visible) then
-    ShowMto(Self, 'Empleados');
-end;
-
 procedure TfrmMtoPrincipal.mnuParmetrosdeEntornoClick(Sender: TObject);
 var
     frmMtoAppParam: TfrmMtoAppParam;
@@ -2433,88 +2199,16 @@ begin
   end;
 end;
 
-procedure TfrmMtoPrincipal.mnuPropiedadesClick(Sender: TObject);
-begin
-  if (mnuPropiedades.Visible) then
-    ShowMto(Self, 'Propiedades');
-end;
-
 //procedure TfrmMtoPrincipal.mnuPropiedadesValoresClick(Sender: TObject);
 //begin
 //  if (mnuPropiedadesValores.Visible) then
 //    ShowMto(Self, 'PropiedadesValores');
 //end;
 
-procedure TfrmMtoPrincipal.mnuVariacionesClick(Sender: TObject);
-begin
-  if (mnuVariaciones.Visible) then
-    ShowMto(Self, 'Variaciones');
-end;
-
-procedure TfrmMtoPrincipal.mnuAtributosConjuntosClick(Sender: TObject);
-begin
-  if (mnuAtributosConjuntos.Visible) then
-    ShowMto(Self, 'AtributosConjuntos');
-end;
-
-procedure TfrmMtoPrincipal.mnuAtributosBasicosClick(Sender: TObject);
-begin
-  if (mnuAtributosBasicos.Visible) then
-    ShowMto(Self, 'AtributosBasicos');
-end;
-
-procedure TfrmMtoPrincipal.mnuCajaPagosHistClick(Sender: TObject);
-begin
-  if (mnuCajaPagosHist.Visible) then
-    ShowMto(Self, 'CajaPagosHist');
-end;
-
-procedure TfrmMtoPrincipal.FormasdePagoCaja1Click(Sender: TObject);
-begin
-  if (FormasdePagoCaja1.Visible) then
-    ShowMto(Self, 'CajaFormasPago');
-end;
-
-procedure TfrmMtoPrincipal.mnuCajaValesHistClick(Sender: TObject);
-begin
-  if (mnuCajaValesHist.Visible) then
-    ShowMto(Self, 'CajaValesHist');
-end;
-
-procedure TfrmMtoPrincipal.mnuCajaOperacionesHistClick(Sender: TObject);
-begin
-  if (mnuCajaOperacionesHist.Visible) then
-    ShowMto(Self, 'CajaOperacionesHist');
-end;
-
 procedure TfrmMtoPrincipal.mnuVerifactuDeclaracionClick(Sender: TObject);
 begin
   if (mnuVerifactuDeclaracion.Visible) then
     TfrmModalVerifactuDecl.Ejecutar(Self);
-end;
-
-procedure TfrmMtoPrincipal.mnuVerifactuColaClick(Sender: TObject);
-begin
-  if (mnuVerifactuCola.Visible) then
-    ShowMto(Self, 'VerifactuCola');
-end;
-
-procedure TfrmMtoPrincipal.mnuVerifactuLogClick(Sender: TObject);
-begin
-  if (mnuVerifactuLog.Visible) then
-    ShowMto(Self, 'VerifactuLog');
-end;
-
-procedure TfrmMtoPrincipal.mnuCajaArqueosHistClick(Sender: TObject);
-begin
-  if (mnuCajaArqueosHist.Visible) then
-    ShowMto(Self, 'CajaArqueosHist');
-end;
-
-procedure TfrmMtoPrincipal.Movimientosdealmacn1Click(Sender: TObject);
-begin
-  if (Movimientosdealmacn1.Visible) then
-    ShowMto(Self, 'MovimientosAlmacen');
 end;
 
 procedure TfrmMtoPrincipal.mnuBalanceAlmacenHorizontalClick(Sender: TObject);
@@ -2571,12 +2265,6 @@ begin
       FreeAndNil(frm);
     end;
   end;
-end;
-
-procedure TfrmMtoPrincipal.mnuDepositosClienteClick(Sender: TObject);
-begin
-  if (mnuDepositosCliente.Visible) then
-    ShowMto(Self, 'DepositosCliente');
 end;
 
 // Foto flotante transversal: cuando el usuario cambia de pestana

@@ -869,7 +869,6 @@ function CalcularPendienteTotal(AConn: TUniConnection;
 var
   q: TUniQuery;
 begin
-  Result := 0;
   q := TUniQuery.Create(nil);
   try
     q.Connection := AConn;
@@ -896,7 +895,6 @@ function MaxLineaAlbaranCompra(AConn: TUniConnection;
 var
   q: TUniQuery;
 begin
-  Result := 0;
   q := TUniQuery.Create(nil);
   try
     q.Connection := AConn;

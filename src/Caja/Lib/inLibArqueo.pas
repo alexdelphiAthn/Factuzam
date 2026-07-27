@@ -703,7 +703,6 @@ begin
     evento OnError de la conexión UniDAC propaga la excepción antes
     de que un except local la capture, así que hay que evitar el
     SELECT sobre una columna inexistente. }
-  bExiste := False;
   Query := TUniQuery.Create(nil);
   try
     Query.Connection := AConn;

@@ -1533,9 +1533,6 @@ begin
   if Sku = '' then Exit;
   if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then Exit;
 
-  msCreate  := 0;
-  msObtener := 0;
-  msSet     := 0;
   swTotal := TStopwatch.StartNew;
 
   swCreate := TStopwatch.StartNew;
@@ -2044,10 +2041,6 @@ var
   swTotal, swDialog, swRellenar, swReflect, swFocus: TStopwatch;
   msDialog, msRellenar, msReflect, msFocus: Int64;
 begin
-  msDialog   := 0;
-  msRellenar := 0;
-  msReflect  := 0;
-  msFocus    := 0;
   swTotal := TStopwatch.StartNew;
 
   swDialog := TStopwatch.StartNew;
@@ -2348,7 +2341,6 @@ begin
   // en la SQL de columnas dinamicas, en RellenarDatosSku o en
   // RellenarAtributosDesdeSku. Cada Lookup arranca una conexion / ejecuta
   // queries, asi que aqui se ve el reparto.
-  msResolver              := 0;
 //  msSetFieldsCabecera     := 0;
 //  msActColsDin            := 0;
 //  msSetFieldsSku          := 0;

@@ -445,9 +445,6 @@ begin
   begin
     FillChar(aImportes, SizeOf(aImportes), 0);
     rBruto := 0;
-    rDtoComercial := 0;
-    rDtoFinanciero := 0;
-    rFactorComercial := 1;
     AplicarPorcentajesIvaCompra(AConn, ACabecera, ASufijoCabecera);
     sSufijoLinea := SufijoLineaFiscalDesdeCampo(ACampoTipoIvaLinea);
     bExento := DocumentoCompraExentoIntracomunitario(ACabecera,

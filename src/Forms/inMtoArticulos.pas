@@ -504,30 +504,15 @@ type
     procedure LeerFiltrosPerfil;
     // Construye el WHERE de vi_articulos a partir de los controles de
     // estado/stock y de los CSV de temporada/proveedor/familia recibidos.
-    // Lo comparten ConstruirSqlArticulos (SELECT) y ContarArticulos (COUNT)
-    // para que la cuenta y la carga apliquen exactamente el mismo filtro.
+    // Se reutiliza desde ConstruirSqlArticulos para centralizar el filtro.
     function  ConstruirWhereArticulos(const aTempCsv, aPrvCsv,
                                       aFamCsv: string): string;
     function  ConstruirSqlArticulos: string;
     // Convierte un CSV ';' en lista IN (...) ya entrecomillada, o '' si
     // viene vacio.
     function  CsvAInList(const aCsv: string): string;
-    // Lee/escribe el estado marcado del ccbFiltroTemporadaArt como CSV ';'.
+    // Lee el estado marcado del ccbFiltroTemporadaArt como CSV ';'.
     function  CsvTemporadasControl: string;
-    procedure MarcarTemporadasControl(const aCsv: string);
-    // COUNT(*) sobre vi_articulos con el mismo WHERE que la carga. Devuelve
-    // el numero de articulos que saldrian con esos filtros.
-    function  ContarArticulos(const aTempCsv, aPrvCsv,
-                              aFamCsv: string): Integer;
-    // Reabre unqryTablaG con el SQL filtrado actual. aVacia=True añade
-    // LIMIT 0 (apertura instantanea para el caso "demasiados articulos").
-    procedure AbrirListaArticulos(aVacia: Boolean = False);
-    // Carga propiedades/variaciones/atributos del articulo en foco tras
-    // (re)abrir la lista. Equivale a la cola de CrearTablaPrincipal.
-    procedure CargarArticuloActual;
-    // Muestra el dialogo modal de filtrado (temporada/proveedor/familia) y
-    // vuelca la seleccion del usuario a los filtros del Mto.
-    procedure MostrarDialogoRefinar;
     procedure AplicarFiltrosArticulos;
     function  ObtenerFacturaLineaActiva(out ANumero,
                                         ASerie: string): Boolean;
@@ -2173,32 +2158,6 @@ begin
     end;
 end;
 
-procedure TfrmMtoArticulos.MarcarTemporadasControl(const aCsv: string);
-var
-  lst: TStringList;
-  i: Integer;
-begin
-  // Marca en el ccbFiltroTemporadaArt las temporadas presentes en aCsv. No
-  // dispara la reaplicacion (FFiltrosArtCargando) porque el llamador ya
-  // controla el ciclo de reapertura.
-  FFiltrosArtCargando := True;
-  lst := TStringList.Create;
-  try
-    lst.Delimiter := ';';
-    lst.StrictDelimiter := True;
-    lst.DelimitedText := aCsv;
-    for i := 0 to ccbFiltroTemporadaArt.Properties.Items.Count - 1 do
-      if lst.IndexOf(
-              ccbFiltroTemporadaArt.Properties.Items[i].Description) >= 0 then
-        ccbFiltroTemporadaArt.States[i] := cbsChecked
-      else
-        ccbFiltroTemporadaArt.States[i] := cbsUnchecked;
-  finally
-    FreeAndNil(lst);
-    FFiltrosArtCargando := False;
-  end;
-end;
-
 function TfrmMtoArticulos.ConstruirWhereArticulos(const aTempCsv, aPrvCsv,
                                                   aFamCsv: string): string;
 var
@@ -2249,120 +2208,6 @@ begin
             ConstruirWhereArticulos(CsvTemporadasControl,
                                     FFiltroProvCsv, FFiltroFamCsv) +
             'ORDER BY vi_articulos.ORDEN_ART';
-end;
-
-function TfrmMtoArticulos.ContarArticulos(const aTempCsv, aPrvCsv,
-                                          aFamCsv: string): Integer;
-var
-  qry: TUniQuery;
-  cn: TUniConnection;
-begin
-  Result := 0;
-  if not Assigned(dmmArticulos) or (dmmArticulos.unqryTablaG = nil) then Exit;
-  // Misma conexion (propia del Mto) que usara la carga real.
-  cn := dmmArticulos.unqryTablaG.Connection;
-  if cn = nil then
-    cn := ConexionPrincipal;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := cn;
-    qry.SQL.Text := 'SELECT COUNT(*) AS N FROM vi_articulos ' +
-                    ConstruirWhereArticulos(aTempCsv, aPrvCsv, aFamCsv);
-    qry.Open;
-    Result := qry.FieldByName('N').AsInteger;
-    qry.Close;
-  finally
-    FreeAndNil(qry);
-  end;
-end;
-
-procedure TfrmMtoArticulos.AbrirListaArticulos(aVacia: Boolean = False);
-var
-  qry: TUniQuery;
-  sSql: string;
-begin
-  if not Assigned(dmmArticulos) then Exit;
-  qry := dmmArticulos.unqryTablaG;
-  if qry = nil then Exit;
-  sSql := ConstruirSqlArticulos;
-  // aVacia: apertura instantanea (sin traer filas) para el caso
-  // "demasiados articulos"; el dialogo de filtrado la reabrira acotada.
-  if aVacia then
-    sSql := sSql + ' LIMIT 0';
-  qry.DisableControls;
-  try
-    qry.Close;
-    qry.SQL.Text := sSql;
-    qry.Open;
-  finally
-    qry.EnableControls;
-  end;
-end;
-
-procedure TfrmMtoArticulos.CargarArticuloActual;
-begin
-  // Cola comun tras (re)abrir la lista: resolver el articulo en foco y
-  // cargar su ficha (propiedades, variaciones, mapa de atributos y stock
-  // si la pestaña Stock esta activa). Defensivo ante lista cerrada/vacia.
-  FArticuloCargado := '';
-  if dmmArticulos.unqryTablaG.Active
-     and (not dmmArticulos.unqryTablaG.IsEmpty)
-     and (dmmArticulos.unqryTablaG.FindField('CODIGO_ART_ART') <> nil) then
-    FArticuloCargado :=
-      dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
-  if Assigned(FGestorProp) then
-    FGestorProp.CargarPropiedades(FArticuloCargado);
-  if Assigned(FGestorVar) then
-    FGestorVar.CargarVariaciones(FArticuloCargado);
-  ActualizarVisibilidadVariaciones;
-  ActualizarVisibilidadColumnaSku;
-  if (FAtributosStock <> nil) and (FArticuloCargado <> '') then
-    CargarMapaAtributosArticulo(
-      ConexionPrincipal,
-      FArticuloCargado,
-      FAtributosStock);
-  if (FArticuloCargado <> '') and Assigned(dmmArticulos)
-     and (pcDetail.ActivePage = cxTabSheet3) then
-  begin
-    dmmArticulos.unqryStockArticulosAfterScroll(dmmArticulos.unqryTablaG);
-    FStockArticuloCargado := FArticuloCargado;
-  end;
-end;
-
-procedure TfrmMtoArticulos.MostrarDialogoRefinar;
-var
-  cn: TUniConnection;
-  sTempIn, sPrvIn, sFamIn, sTempOut, sPrvOut, sFamOut: string;
-begin
-  if not Assigned(dmmArticulos) or (dmmArticulos.unqryTablaG = nil) then Exit;
-  cn := dmmArticulos.unqryTablaG.Connection;
-  if cn = nil then
-    cn := ConexionPrincipal;
-  sTempIn := CsvTemporadasControl;
-  sPrvIn  := FFiltroProvCsv;
-  sFamIn  := FFiltroFamCsv;
-  // El dialogo se invoca tambien desde TrasPrecargaAsync (callback async),
-  // donde una excepcion se tragaria dejando la lista en blanco sin aviso.
-  // Lo blindamos: si el dialogo falla, se loguea y el llamador sigue con
-  // AbrirListaArticulos, asi nunca queda una lista vacia silenciosa.
-  try
-    if TfrmModalFiltroArt.Ejecutar(Self, cn, UMBRAL_PRECARGA,
-         sTempIn, sPrvIn, sFamIn,
-         function(const t, p, f: string): Integer
-         begin
-           Result := ContarArticulos(t, p, f);
-         end,
-         sTempOut, sPrvOut, sFamOut) then
-    begin
-      MarcarTemporadasControl(sTempOut);
-      FFiltroProvCsv := sPrvOut;
-      FFiltroFamCsv  := sFamOut;
-    end;
-  except
-    on E: Exception do
-      inLibLog.Log.LogError('[Articulos.MostrarDialogoRefinar] ' +
-        E.ClassName + ': ' + E.Message);
-  end;
 end;
 
 procedure TfrmMtoArticulos.AplicarFiltrosArticulos;
@@ -2690,13 +2535,7 @@ begin
   swTotal := TStopwatch.StartNew;
   msCargarProp := 0;
   msCargarVar := 0;
-  msActVisVar := 0;
-  msAseguraSku := 0;
-  msRefSkus := 0;
-  msRefVarArt := 0;
   msMapaAtr := 0;
-  msStockAS := 0;
-  msActVisCol := 0;
 
   // 4. Ahora sí, cargamos la interfaz visual de forma segura
   if Assigned(FGestorProp) then

@@ -1198,9 +1198,7 @@ var
   Cab:                 TDatosCabeceraFactura;
   Lin:                 TDatosLineaFactura;
   NumOperacionVE:      String;
-  TotalFactura,
-  DineroDisponible,
-  ImporteDevuelto:     Currency;
+  TotalFactura:        Currency;
   AlmacenDeposito,
   AlmacenOrigenSalida,
   TipoMov,

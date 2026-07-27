@@ -34,7 +34,9 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
   System.StrUtils, System.Generics.Collections,
   Data.DB, Uni, Vcl.Controls, Vcl.Dialogs, Vcl.Forms, Vcl.ExtCtrls,
-  cxGraphics, cxEdit, cxTextEdit, cxDropDownEdit, cxCurrencyEdit,
+  Vcl.Graphics,
+  cxGraphics, dxCoreGraphics, cxEdit, cxTextEdit, cxDropDownEdit,
+  cxCurrencyEdit,
   cxDataStorage, cxEditRepositoryItems, cxDBExtLookupComboBox, cxGrid,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   inLibColumnasSkuIntf, inLibGridTallasInline, inLibArticulosValidador,
@@ -1739,7 +1741,7 @@ begin
     // dejaba celdas sin borrar junto a lineas ya creadas y cada
     // reentrada re-sumaba las celdas (cantidades duplicadas).
     bExpandio := False;
-    rUdsAntes := 0;
+    rPrecio := 0;
     bTxPropia := not FConfig.Conexion.InTransaction;
     if bTxPropia then
       FConfig.Conexion.StartTransaction;

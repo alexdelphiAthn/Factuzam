@@ -694,7 +694,6 @@ function TdmDevolucionesCompra.CampoVistaCabeceraPrintExiste(
 var
   q: TUniQuery;
 begin
-  Result := False;
   q := TUniQuery.Create(nil);
   try
     q.Connection := ConexionPrincipal;

@@ -1735,7 +1735,6 @@ begin
   inherited;
   if dmmPedidosCompra = nil then
     Exit;
-  iRellenadas := 0;
   if FColsModoConstruido then
     // Contrato construido: volcar el pendiente de cada linea al campo
     // "A recibir" (los Post rearman la recarga del pivote de tallas).
@@ -1970,7 +1969,6 @@ function TfrmMtoPedidosCompra.ColumnaPedidosCompraExiste(
 var
   q: TUniQuery;
 begin
-  Result := False;
   q := TUniQuery.Create(nil);
   try
     q.Connection := ConexionPrincipal;

@@ -130,7 +130,7 @@ do begin
 //sOut := ansiuppercase(sOut);
 
 // Codificar a Utf8
-sOut := Utf8Encode(Trim(sOut));
+sOut := string(Utf8Encode(Trim(sOut)));
 if (iMaxLen >= 0) and (Length(sOut) > iMaxLen)
 then sOut := Copy(sOut, 1, iMaxLen);
 Result:=sOut;
