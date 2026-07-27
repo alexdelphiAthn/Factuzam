@@ -2141,20 +2141,21 @@ var
   sVista: string;
 begin
   inherited;
-  dmmFacturas := (tdmDataModule as TdmFacturas);
-  if not Assigned(dmmFacturas) then
-    dmmFacturas := TdmFacturas.Create(Self);
+  dmmFacturas := TdmFacturas(AsegurarDataModuleDocumento(
+    Self, tdmDataModule, TdmFacturas));
   // El DM ya no toca la UI: senala campos y este form pone pestania/foco.
   dmmFacturas.OnCampoInvalido := SenalarCampoValidacion;
   dmmFacturas.OnNuevaFactura := NuevaFacturaDesdeInsert;
   dmmFacturas.OnSeriesCambiadas := SeriesCambiadasDesdeDM;
   dmmFacturas.OnLinFacEstado := AplicarEdicionPreciosLinea;
   dmmFacturas.TipoFacturaDefecto := TipoFacturaFiltro;
-  dmmFacturas.AsignarMaestroCabecera(dsTablaG);
+  ConfigurarTablaPrincipalDocumento(
+    dmmFacturas, dsTablaG, tvLineasFactura,
+    dmmFacturas.dsLinFac, [], pkFieldName,
+    'NUMERO_FAC; SERIE_FAC');
   cbbSerieFactura.Properties.ListSource := dmmFacturas.dsSeries;
   cbbCanalIVA.Properties.ListSource := dmmFacturas.dsIvas;
   cbbFORMAPAGO.Properties.ListSource := dmmFacturas.dsFormasPago;
-  tvLineasFactura.DataController.DataSource := dmmFacturas.dsLinFac;
   cxgrdLineasFactura.OnEnter := cxgrdLineasFacturaEnter;
   // Contrato de entrada ColumnSKUcxGrid: Auto (desglose) por defecto;
   // F1 cicla los modos. La primera construccion se hace al abrir la
@@ -2203,7 +2204,6 @@ begin
   // Estado inicial: Variacion oculta, creacion/SKU segun cab/lineas.
   ReaplicarVisibilidadDetalle;
   ActualizarLabelPrendas;
-  Self.pkFieldName := 'NUMERO_FAC; SERIE_FAC';
   AsignarControles;
   // El check de mover stock solo aplica a facturas NORMAL: en SIMPLIFICADA
   // se generan movimientos siempre. Lo ocultamos para que el descendiente

@@ -1019,16 +1019,15 @@ end;
 procedure TfrmMtoPedidosCompra.CrearTablaPrincipal;
 begin
   inherited;
-  dmmPedidosCompra := (tdmDataModule as TdmPedidosCompra);
-  if not Assigned(dmmPedidosCompra) then
-  begin
-    dmmPedidosCompra := TdmPedidosCompra.Create(Self);
-    dsTablaG.DataSet := dmmPedidosCompra.unqryTablaG;
-    tdmDataModule := dmmPedidosCompra;
-  end;
-  tvLineasPedido.DataController.DataSource :=
-    dmmPedidosCompra.dsPedidosCompraLineas;
-  dmmPedidosCompra.unqryPedidosCompraLineas.MasterSource := dsTablaG;
+  dmmPedidosCompra := TdmPedidosCompra(
+    AsegurarDataModuleDocumento(
+      Self, tdmDataModule, TdmPedidosCompra));
+  ConfigurarTablaPrincipalDocumento(
+    dmmPedidosCompra, dsTablaG, tvLineasPedido,
+    dmmPedidosCompra.dsPedidosCompraLineas,
+    [dmmPedidosCompra.unqryPedidosCompraLineas,
+     dmmPedidosCompra.unqryAlbaranesPedc],
+    pkFieldName, 'SERIE_PEDC;NUMERO_PEDC');
   tvAlbaranesPedc.DataController.DataSource :=
     dmmPedidosCompra.dsAlbaranesPedc;
   cbbTotalesFORMA_PAGO_PEDC.Properties.ListSource :=
@@ -1036,8 +1035,6 @@ begin
   cbbCODIGO_ALM_PEDC.Properties.ListSource :=
     dmmPedidosCompra.dsAlmacenesPedc;
   DesactivarEnterAsTabEnCombo(cbbCODIGO_ALM_PEDC);
-  dmmPedidosCompra.unqryAlbaranesPedc.MasterSource := dsTablaG;
-  pkFieldName := 'SERIE_PEDC;NUMERO_PEDC';
 end;
 
 procedure TfrmMtoPedidosCompra.CrearColumnasTallas;

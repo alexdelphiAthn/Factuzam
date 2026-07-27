@@ -1123,36 +1123,17 @@ end;
 procedure TfrmMtoDevolucionesCompra.CrearTablaPrincipal;
 begin
   inherited;
-  // El padre (TfrmMtoGen.CrearTablaPrincipal -> CrearDataModule) ya creo
-  // la instancia del DM via RTTI desde fza_winforms y la dejo en
-  // tdmDataModule, ademas de enganchar dsTablaG.DataSet a su unqryTablaG.
-  // Tomamos esa misma instancia; antes haciamos TdmDevolucionesCompra.Create
-  // en FormCreate y enlazabamos el grid de lineas a un segundo DM cuyo
-  // unqryDevolucionesCompraLineas nunca recibia el .Open de
-  // AbrirTablaPrincipalAsync. Fallback Create(Self) por si la BBDD no
-  // tiene la entrada en fza_winforms (migracion no aplicada).
-  dmmDevolucionesCompra := (tdmDataModule as TdmDevolucionesCompra);
-  if not Assigned(dmmDevolucionesCompra) then
-  begin
-    dmmDevolucionesCompra := TdmDevolucionesCompra.Create(Self);
-    dsTablaG.DataSet := dmmDevolucionesCompra.unqryTablaG;
-    // Sin esta linea, TfrmMtoGen.AbrirTablaPrincipalAsync ve
-    // tdmDataModule=nil y aborta -> la query principal nunca se abre y
-    // el form se queda vacio. Solo pasa cuando fza_winforms NO tiene la
-    // entrada de DevolucionesCompra (BBDD sin la migracion aplicada); con
-    // la entrada presente, el padre rellena tdmDataModule antes de
-    // entrar a CrearTablaPrincipal y este bloque no se ejecuta.
-    tdmDataModule := dmmDevolucionesCompra;
-  end;
-  tvLineasDevolucion.DataController.DataSource :=
-    dmmDevolucionesCompra.dsDevolucionesCompraLineas;
+  dmmDevolucionesCompra := TdmDevolucionesCompra(
+    AsegurarDataModuleDocumento(
+      Self, tdmDataModule, TdmDevolucionesCompra));
+  ConfigurarTablaPrincipalDocumento(
+    dmmDevolucionesCompra, dsTablaG, tvLineasDevolucion,
+    dmmDevolucionesCompra.dsDevolucionesCompraLineas,
+    [dmmDevolucionesCompra.unqryDevolucionesCompraLineas,
+     dmmDevolucionesCompra.unqryMovimientosProveedor],
+    pkFieldName, 'SERIE_DEVC;NUMERO_DEVC');
   tvMovimientosProveedor.DataController.DataSource :=
     dmmDevolucionesCompra.dsMovimientosProveedor;
-  // MasterSource se enlaza en DataModuleCreate del DM, pero lo
-  // re-aseguramos por idempotencia.
-  dmmDevolucionesCompra.unqryDevolucionesCompraLineas.MasterSource := dsTablaG;
-  dmmDevolucionesCompra.unqryMovimientosProveedor.MasterSource := dsTablaG;
-  pkFieldName := 'SERIE_DEVC;NUMERO_DEVC';
 end;
 
 procedure TfrmMtoDevolucionesCompra.FormDestroy(Sender: TObject);

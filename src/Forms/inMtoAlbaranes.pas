@@ -878,18 +878,15 @@ end;
 procedure TfrmMtoAlbaranes.CrearTablaPrincipal;
 begin
   inherited;
-  // Reutilizar la instancia de data module creada por
-  // TfrmMtoGen.CrearTablaPrincipal (tdmDataModule). Antes este form creaba
-  // OTRO TdmAlbaranes en FormCreate y enganchaba los grids a ese segundo DM,// cuyas queries de detalle nunca se abren (la carga async abre las del DM
-  // del padre): las pestanas de lineas, facturas y movimientos salian vacias.
-  dmmAlbaranes := (tdmDataModule as TdmAlbaranes);
-  if not Assigned(dmmAlbaranes) then
-  begin
-    dmmAlbaranes := TdmAlbaranes.Create(Self);
-    dsTablaG.DataSet := dmmAlbaranes.unqryTablaG;
-    tdmDataModule := dmmAlbaranes;
-  end;
-  tvLineasAlbaran.DataController.DataSource := dmmAlbaranes.dsAlbaranesLineas;
+  dmmAlbaranes := TdmAlbaranes(AsegurarDataModuleDocumento(
+    Self, tdmDataModule, TdmAlbaranes));
+  ConfigurarTablaPrincipalDocumento(
+    dmmAlbaranes, dsTablaG, tvLineasAlbaran,
+    dmmAlbaranes.dsAlbaranesLineas,
+    [dmmAlbaranes.unqryAlbaranesLineas,
+     dmmAlbaranes.unqryFacturas,
+     dmmAlbaranes.unqryMovimientosAlb],
+    pkFieldName, 'SERIE_ALB;NUMERO_ALB');
   cxgrdLineasAlbaran.OnEnter := cxgrdLineasAlbaranEnter;
   cxgrdLineasAlbaran.OnExit := cxgrdLineasAlbaranExit;
   tvFacturas.DataController.DataSource      := dmmAlbaranes.dsFacturas;
@@ -899,14 +896,6 @@ begin
   cbbTarifaAlbaran.Properties.ListSource := dmmAlbaranes.dsTarifas;
   DesactivarEnterAsTabEnCombo(cbbCODIGO_ALM_ALB);
   DesactivarEnterAsTabEnCombo(cbbTarifaAlbaran);
-  // Master-detail: enganchar las queries de detalle a la cabecera (dsTablaG)
-  // para que lineas, facturas y movimientos sigan al albaran seleccionado.
-  dmmAlbaranes.unqryAlbaranesLineas.MasterSource := dsTablaG;
-  dmmAlbaranes.unqryFacturas.MasterSource        := dsTablaG;
-  dmmAlbaranes.unqryMovimientosAlb.MasterSource  := dsTablaG;
-  // Clave de localizacion para ShowMto (p.ej. "Ir a documento" desde el
-  // pedido de venta o navegacion hacia su pedido de origen).
-  pkFieldName := 'SERIE_ALB;NUMERO_ALB';
   // Total de prendas (pestana Totales): se recalcula tras cada Post/Delete
   // de linea y al navegar entre albaranes. Se conservan los handlers
   // originales (los que trae el DM) encadenandolos desde los hooks.

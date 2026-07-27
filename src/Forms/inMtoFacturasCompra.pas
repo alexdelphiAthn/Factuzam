@@ -478,32 +478,15 @@ end;
 procedure TfrmMtoFacturasCompra.CrearTablaPrincipal;
 begin
   inherited;
-  // El padre (TfrmMtoGen.CrearTablaPrincipal -> CrearDataModule) ya creo
-  // la instancia del DM via RTTI desde fza_winforms y la dejo en
-  // tdmDataModule, ademas de enganchar dsTablaG.DataSet a su unqryTablaG.
-  // Tomamos esa misma instancia; antes haciamos TdmFacturasCompra.Create
-  // en FormCreate y enlazabamos el grid de lineas a un segundo DM cuyo
-  // unqryFacturasCompraLineas nunca recibia el .Open de
-  // AbrirTablaPrincipalAsync. Fallback Create(Self) por si la BBDD no
-  // tiene la entrada en fza_winforms (migracion no aplicada).
-  dmmFacturasCompra := (tdmDataModule as TdmFacturasCompra);
-  if not Assigned(dmmFacturasCompra) then
-  begin
-    dmmFacturasCompra := TdmFacturasCompra.Create(Self);
-    dsTablaG.DataSet := dmmFacturasCompra.unqryTablaG;
-    // Sin esta linea, TfrmMtoGen.AbrirTablaPrincipalAsync ve
-    // tdmDataModule=nil y aborta -> la query principal nunca se abre y
-    // el form se queda vacio. Solo pasa cuando fza_winforms NO tiene la
-    // entrada de FacturasCompra (BBDD sin la migracion aplicada); con
-    // la entrada presente, el padre rellena tdmDataModule antes de
-    // entrar a CrearTablaPrincipal y este bloque no se ejecuta.
-    tdmDataModule := dmmFacturasCompra;
-  end;
-  tvLineasFactura.DataController.DataSource :=
-    dmmFacturasCompra.dsFacturasCompraLineas;
-  // MasterSource se enlaza en DataModuleCreate del DM, pero lo
-  // re-aseguramos por idempotencia.
-  dmmFacturasCompra.unqryFacturasCompraLineas.MasterSource := dsTablaG;
+  dmmFacturasCompra := TdmFacturasCompra(
+    AsegurarDataModuleDocumento(
+      Self, tdmDataModule, TdmFacturasCompra));
+  ConfigurarTablaPrincipalDocumento(
+    dmmFacturasCompra, dsTablaG, tvLineasFactura,
+    dmmFacturasCompra.dsFacturasCompraLineas,
+    [dmmFacturasCompra.unqryFacturasCompraLineas,
+     dmmFacturasCompra.unqryEfectos],
+    pkFieldName, 'SERIE_FACC;NUMERO_FACC');
   tvEfectos.DataController.DataSource := dmmFacturasCompra.dsEfectos;
   cbbFORMA_PAGO_FACC.Properties.ListSource :=
     dmmFacturasCompra.dsFormasPago;
@@ -514,8 +497,6 @@ begin
   cbbCODIGO_PRV_FACC.Properties.ListSource := dmmFacturasCompra.dsPrvDataFacc;
   cbbCODIGO_ALM_FACC.Properties.ListSource :=
     dmmFacturasCompra.dsAlmacenesFacc;
-  dmmFacturasCompra.unqryEfectos.MasterSource := dsTablaG;
-  pkFieldName := 'SERIE_FACC;NUMERO_FACC';
 end;
 
 procedure TfrmMtoFacturasCompra.FormDestroy(Sender: TObject);

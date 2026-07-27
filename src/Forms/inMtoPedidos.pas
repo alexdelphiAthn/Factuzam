@@ -757,18 +757,13 @@ end;
 procedure TfrmMtoPedidos.CrearTablaPrincipal;
 begin
   inherited;
-  // Tomamos la instancia creada por TfrmMtoGen.CrearTablaPrincipal. Antes
-  // este form creaba otro TdmPedidos en FormCreate; la carga async abria el
-  // DM del padre y el grid quedaba enlazado al segundo DM, con las lineas
-  // cerradas al pulsar "Añadir linea".
-  dmmPedidos := (tdmDataModule as TdmPedidos);
-  if not Assigned(dmmPedidos) then
-  begin
-    dmmPedidos := TdmPedidos.Create(Self);
-    dsTablaG.DataSet := dmmPedidos.unqryTablaG;
-    tdmDataModule := dmmPedidos;
-  end;
-  tvPedidosLineas.DataController.DataSource := dmmPedidos.dsPedidosLineas;
+  dmmPedidos := TdmPedidos(AsegurarDataModuleDocumento(
+    Self, tdmDataModule, TdmPedidos));
+  ConfigurarTablaPrincipalDocumento(
+    dmmPedidos, dsTablaG, tvPedidosLineas,
+    dmmPedidos.dsPedidosLineas,
+    [dmmPedidos.unqryPedidosLineas, dmmPedidos.unqryAlbaranes],
+    pkFieldName, 'SERIE_PED;NUMERO_PED');
   cxGrdPedidosLineas.OnEnter := cxGrdPedidosLineasEnter;
   cxGrdPedidosLineas.OnExit := cxGrdPedidosLineasExit;
   tvAlbaranes.DataController.DataSource := dmmPedidos.dsAlbaranes;
@@ -778,9 +773,6 @@ begin
   cbbTarifaPedido.Properties.ListSource := dmmPedidos.dsTarifas;
   DesactivarEnterAsTabEnCombo(cbbCODIGO_ALM_PED);
   DesactivarEnterAsTabEnCombo(cbbTarifaPedido);
-  dmmPedidos.unqryPedidosLineas.MasterSource := dsTablaG;
-  dmmPedidos.unqryAlbaranes.MasterSource := dsTablaG;
-  pkFieldName := 'SERIE_PED;NUMERO_PED';
   // Total de prendas y columnas: se encadenan los handlers originales
   // del DM para no perder su logica propia.
   FOldLineasAfterOpen := dmmPedidos.unqryPedidosLineas.AfterOpen;

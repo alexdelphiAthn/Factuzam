@@ -765,29 +765,15 @@ end;
 procedure TfrmMtoAlbaranesCompra.CrearTablaPrincipal;
 begin
   inherited;
-  // El padre (TfrmMtoGen.CrearTablaPrincipal -> CrearDataModule) ya creo
-  // la instancia del DM via RTTI desde fza_winforms y la dejo en
-  // tdmDataModule, ademas de enganchar dsTablaG.DataSet a su unqryTablaG.
-  // Tomamos esa misma instancia; antes haciamos TdmAlbaranesCompra.Create
-  // en FormCreate y enlazabamos el grid de lineas a un segundo DM cuyo
-  // unqryAlbaranesCompraLineas nunca recibia el .Open de
-  // AbrirTablaPrincipalAsync. Fallback Create(Self) por si la BBDD no
-  // tiene la entrada en fza_winforms (migracion no aplicada).
-  dmmAlbaranesCompra := (tdmDataModule as TdmAlbaranesCompra);
-  if not Assigned(dmmAlbaranesCompra) then
-  begin
-    dmmAlbaranesCompra := TdmAlbaranesCompra.Create(Self);
-    dsTablaG.DataSet := dmmAlbaranesCompra.unqryTablaG;
-    // Sin esta linea, TfrmMtoGen.AbrirTablaPrincipalAsync ve
-    // tdmDataModule=nil y aborta -> la query principal nunca se abre y
-    // el form se queda vacio. Solo pasa cuando fza_winforms NO tiene la
-    // entrada de AlbaranesCompra (BBDD sin la migracion aplicada); con
-    // la entrada presente, el padre rellena tdmDataModule antes de
-    // entrar a CrearTablaPrincipal y este bloque no se ejecuta.
-    tdmDataModule := dmmAlbaranesCompra;
-  end;
-  tvLineasAlbaran.DataController.DataSource :=
-    dmmAlbaranesCompra.dsAlbaranesCompraLineas;
+  dmmAlbaranesCompra := TdmAlbaranesCompra(
+    AsegurarDataModuleDocumento(
+      Self, tdmDataModule, TdmAlbaranesCompra));
+  ConfigurarTablaPrincipalDocumento(
+    dmmAlbaranesCompra, dsTablaG, tvLineasAlbaran,
+    dmmAlbaranesCompra.dsAlbaranesCompraLineas,
+    [dmmAlbaranesCompra.unqryAlbaranesCompraLineas,
+     dmmAlbaranesCompra.unqryMovimientosProveedor],
+    pkFieldName, 'SERIE_ALBC;NUMERO_ALBC');
   tvMovimientosProveedor.DataController.DataSource :=
     dmmAlbaranesCompra.dsMovimientosProveedor;
   cbbTotalesFORMA_PAGO_ALBC.Properties.ListSource :=
@@ -801,11 +787,6 @@ begin
   // Reutiliza el lookup unqryPrvDataAlbc, ya cargado para el rotulo.
   cbbCODIGO_PRV_ALBC.Properties.ListSource := dmmAlbaranesCompra.dsPrvDataAlbc;
   DesactivarEnterAsTabEnCombo(cbbCODIGO_ALM_ALBC);
-  // MasterSource se enlaza en DataModuleCreate del DM, pero lo
-  // re-aseguramos por idempotencia.
-  dmmAlbaranesCompra.unqryAlbaranesCompraLineas.MasterSource := dsTablaG;
-  dmmAlbaranesCompra.unqryMovimientosProveedor.MasterSource := dsTablaG;
-  pkFieldName := 'SERIE_ALBC;NUMERO_ALBC';
 end;
 
 procedure TfrmMtoAlbaranesCompra.FormDestroy(Sender: TObject);

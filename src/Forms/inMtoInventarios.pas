@@ -419,7 +419,11 @@ var
 begin
   dmmInventarios := nil;
   inherited;
-  dmmInventarios := tdmDataModule as TdmInventarios;
+  dmmInventarios := TdmInventarios(AsegurarDataModuleDocumento(
+    Self, tdmDataModule, TdmInventarios));
+  ConfigurarTablaPrincipalDocumento(
+    dmmInventarios, dsTablaG, tvLineas, dmmInventarios.dsLineas,
+    [], pkFieldName, '');
   emp := '';
   if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
      not dsTablaG.DataSet.IsEmpty then
@@ -440,7 +444,6 @@ begin
   finally
     FRefrescandoLookupsCabecera := False;
   end;
-  tvLineas.DataController.DataSource := dmmInventarios.dsLineas;
   tvMovs.DataController.DataSource   := dmmInventarios.dsMovsRegul;
   dmmInventarios.cdsLineas.AfterInsert := cdsLineasAfterInsertHook;
 end;

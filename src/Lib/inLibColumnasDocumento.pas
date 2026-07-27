@@ -24,7 +24,7 @@ uses
   System.Classes, Vcl.Forms, Data.DB, Uni, cxEdit,
   cxGridCustomTableView, cxGridDBTableView, inLibContextoSesionIntf,
   inLibColumnasSkuIntf, inLibGridTallasInline, inLibGridPivoteCompra,
-  inLibGridPivoteVenta;
+  inLibGridPivoteVenta, UniDataGen;
 
 type
   TConfigPivoteDocumentoCompra = record
@@ -57,6 +57,8 @@ type
   TConjuntoModosColumnasSku = set of TModoColumnasSku;
 
   TAccionDocumento = procedure of object;
+
+  TClaseDataModuleDocumento = class of TdmBase;
 
 procedure CrearColumnasTallasDocumento(
   AVista: TcxGridDBTableView; const APrefijoNombre: string;
@@ -124,6 +126,14 @@ procedure ResolverArtSkuActivoDocumento(
 function DataSourcesParaFotoDocumento(
   ACabecera: TDataSource; AVista: TcxGridDBTableView):
   TArray<TDataSource>;
+function AsegurarDataModuleDocumento(
+  APropietario: TComponent; var ADataModule: TObject;
+  AClaseDataModule: TClaseDataModuleDocumento): TdmBase;
+procedure ConfigurarTablaPrincipalDocumento(
+  ADataModule: TdmBase; ACabecera: TDataSource;
+  AVistaLineas: TcxGridDBTableView; ASourceLineas: TDataSource;
+  const AConsultasDetalle: array of TUniQuery;
+  var AClavePrincipal: string; const AClave: string);
 function CrearConfigColumnasSkuDocumento(
   AConexion: TUniConnection;
   const AContextoSesion: IContextoSesionAplicacion;
@@ -527,6 +537,54 @@ begin
     Result := [ACabecera, oDetalle]
   else
     Result := [ACabecera];
+end;
+
+function AsegurarDataModuleDocumento(
+  APropietario: TComponent; var ADataModule: TObject;
+  AClaseDataModule: TClaseDataModuleDocumento): TdmBase;
+begin
+  if not Assigned(AClaseDataModule) then
+    raise EArgumentNilException.Create(
+      'No se ha indicado la clase del data module.');
+  if Assigned(ADataModule) then
+  begin
+    if ADataModule.ClassType.InheritsFrom(AClaseDataModule) then
+      Result := TdmBase(ADataModule)
+    else
+      raise EInvalidCast.CreateFmt(
+        'El data module %s no es de la clase %s.',
+        [ADataModule.ClassName, AClaseDataModule.ClassName]);
+  end
+  else
+  begin
+    Result := AClaseDataModule.Create(APropietario);
+    ADataModule := Result;
+  end;
+end;
+
+procedure ConfigurarTablaPrincipalDocumento(
+  ADataModule: TdmBase; ACabecera: TDataSource;
+  AVistaLineas: TcxGridDBTableView; ASourceLineas: TDataSource;
+  const AConsultasDetalle: array of TUniQuery;
+  var AClavePrincipal: string; const AClave: string);
+var
+  iIndice: Integer;
+begin
+  if Assigned(ADataModule) and Assigned(ACabecera) then
+  begin
+    ACabecera.DataSet := ADataModule.unqryTablaG;
+    ADataModule.AsignarMaestroCabecera(ACabecera);
+  end;
+  if Assigned(AVistaLineas) then
+    AVistaLineas.DataController.DataSource := ASourceLineas;
+  for iIndice := Low(AConsultasDetalle) to
+    High(AConsultasDetalle) do
+  begin
+    if Assigned(AConsultasDetalle[iIndice]) then
+      AConsultasDetalle[iIndice].MasterSource := ACabecera;
+  end;
+  if AClave <> '' then
+    AClavePrincipal := AClave;
 end;
 
 function CrearConfigColumnasSkuDocumento(
