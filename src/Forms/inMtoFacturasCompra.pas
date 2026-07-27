@@ -283,7 +283,6 @@ implementation
 uses
   System.StrUtils,
   inLibFiltroUsuario,
-  inLibFotos,
   inLibArticulosResolver,
   inLibArticulosValidador,
   inLibGridCantidad,
@@ -344,27 +343,15 @@ end;
 // (CODIGO_ART_FACCLIN / CODIGO_UNIDAD_FACCLIN).
 procedure TfrmMtoFacturasCompra.ResolverArtSkuActivo(out ACodArt,
                                                       ACodSku: string);
-var
-  ds: TDataSet;
 begin
-  ACodArt := '';
-  ACodSku := '';
-  if Assigned(tvLineasFactura.DataController.DataSource) then
-  begin
-    ds := tvLineasFactura.DataController.DataSource.DataSet;
-    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
-  end;
+  ResolverArtSkuActivoDocumento(
+    tvLineasFactura, ACodArt, ACodSku);
 end;
 
-// Para que la pantalla flotante refresque al moverse entre lineas del
-// factura, ademas de dsTablaG (cabecera) enganchamos
-// dsFacturasCompraLineas.
 function TfrmMtoFacturasCompra.DataSourcesParaFoto: TArray<TDataSource>;
 begin
-  if Assigned(dmmFacturasCompra) then
-    Result := [dsTablaG, dmmFacturasCompra.dsFacturasCompraLineas]
-  else
-    Result := [dsTablaG];
+  Result := DataSourcesParaFotoDocumento(
+    dsTablaG, tvLineasFactura);
 end;
 
 function TfrmMtoFacturasCompra.BuscarArticuloFacturaCompra: string;
@@ -423,9 +410,6 @@ begin
 end;
 
 procedure TfrmMtoFacturasCompra.FormCreate(Sender: TObject);
-var
-  colArt: TcxGridDBColumn;
-  colSku: TcxGridDBColumn;
 begin
   // Columnas no-bound de tallas y atributos ANTES del inherited.
   CrearColumnasTallas;
@@ -433,49 +417,18 @@ begin
   // Columna no-bound 'Color' solo visible en modo pivote: distingue las
   // lineas representantes que comparten articulo. El pintado del swatch
   // lo hace la libreria de pivote tras crearla (ver mas abajo).
-  FColColorPivot := tvLineasFactura.CreateColumn;
-  FColColorPivot.Name    := 'colLinFaccColorPivot';
-  FColColorPivot.Caption := 'Color';
-  FColColorPivot.Width   := 110;
-  FColColorPivot.Visible := False;
-  FColColorPivot.Options.Editing := True;
-  FColColorPivot.Options.ShowEditButtons := isebAlways;
-  FColColorPivot.PropertiesClass := TcxButtonEditProperties;
-  with TcxButtonEditProperties(FColColorPivot.Properties) do
-  begin
-    Buttons.Clear;
-    with Buttons.Add do
-      Kind := bkEllipsis;
-    OnButtonClick := colLinFaccColorPivotButtonClick;
-  end;
+  FColColorPivot := CrearColumnaColorPivoteDocumento(
+    tvLineasFactura, 'colLinFaccColorPivot', 110);
+  ConfigurarColumnaBotonDocumento(
+    FColColorPivot, colLinFaccColorPivotButtonClick);
   inherited;
-  colArt := tvLineasFactura.GetColumnByFieldName('CODIGO_ART_FACCLIN');
-  if colArt <> nil then
-  begin
-    colArt.PropertiesClass := TcxButtonEditProperties;
-    colArt.Options.ShowEditButtons := isebAlways;
-    with TcxButtonEditProperties(colArt.Properties) do
-    begin
-      Buttons.Clear;
-      with Buttons.Add do
-        Kind := bkEllipsis;
-      OnButtonClick := colLineaFaccCODIGO_ARTPropertiesButtonClick;
-      OnValidate := colLineaFaccCODIGO_ARTPropertiesValidate;
-    end;
-  end;
-  colSku := tvLineasFactura.GetColumnByFieldName('CODIGO_UNIDAD_FACCLIN');
-  if colSku <> nil then
-  begin
-    colSku.PropertiesClass := TcxButtonEditProperties;
-    colSku.Options.ShowEditButtons := isebAlways;
-    with TcxButtonEditProperties(colSku.Properties) do
-    begin
-      Buttons.Clear;
-      with Buttons.Add do
-        Kind := bkEllipsis;
-      OnButtonClick := colLineaFaccCODIGO_UNIDADPropertiesButtonClick;
-    end;
-  end;
+  ConfigurarColumnaBusquedaDocumento(
+    tvLineasFactura, 'CODIGO_ART_FACCLIN',
+    colLineaFaccCODIGO_ARTPropertiesButtonClick,
+    colLineaFaccCODIGO_ARTPropertiesValidate);
+  ConfigurarColumnaBusquedaDocumento(
+    tvLineasFactura, 'CODIGO_UNIDAD_FACCLIN',
+    colLineaFaccCODIGO_UNIDADPropertiesButtonClick);
   InicializarGestorYPivote;
   if Assigned(FPivote) then
     FColColorPivot.OnCustomDrawCell := FPivote.CustomDrawColorCell;
@@ -567,20 +520,8 @@ end;
 
 procedure TfrmMtoFacturasCompra.FormDestroy(Sender: TObject);
 begin
-  // El modo del contrato se libera ANTES del inherited: su teardown
-  // toca el view y el dataset de lineas, que deben seguir vivos (misma
-  // leccion que pedidos/facturas de venta, AV al cerrar 08/07/26).
-  if FModoEntrada <> nil then
-  begin
-    try
-      FModoEntrada.Desmontar;
-    except
-      // Teardown defensivo en cierre.
-    end;
-    FModoEntrada := nil;
-  end;
-  FreeAndNil(FPivote);
-  FreeAndNil(FGestorTallas);
+  LiberarModoYGestoresDocumento(
+    FModoEntrada, FPivote, FGestorTallas);
   inherited;
 end;
 
@@ -718,17 +659,8 @@ end;
 
 procedure TfrmMtoFacturasCompra.PersistirPreferenciaPivote;
 begin
-  // Persiste el modo en la cabecera para que la proxima apertura del
-  // factura arranque ya en el modo elegido.
-  if (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) or
-     dsTablaG.DataSet.IsEmpty or
-     (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_FACC') = nil) then
-    Exit;
-  if not (dsTablaG.DataSet.State in [dsEdit, dsInsert]) then
-    dsTablaG.DataSet.Edit;
-  dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_FACC').AsString :=
-    IfThen(FPivote.Activo, 'S', 'N');
-  dsTablaG.DataSet.Post;
+  PersistirPreferenciaPivoteDocumento(
+    dsTablaG.DataSet, 'ESPIVOTE_HORIZONTAL_FACC', FPivote.Activo);
 end;
 
 procedure TfrmMtoFacturasCompra.btnImprimirHClick(Sender: TObject);
@@ -856,10 +788,7 @@ begin
     FPivote.RecargarYRepublicar;
 end;
 
-// Hook del OnDataChange de dsTablaG: solo nos interesa el evento global
-// (Field=nil) que dispara cxGrid al cambiar de record activo. Sincroniza
-// el toggle con la preferencia guardada en la cabecera y dispara la
-// recarga del controlador de pivote.
+// Actualiza la cabecera y delega el modo al navegar entre facturas.
 procedure TfrmMtoFacturasCompra.dsTablaGDataChangeHook(Sender: TObject;
                                                        Field: TField);
 begin
@@ -878,24 +807,12 @@ begin
   // lineas cargadas son las de la factura recien enfocada.
   if Field = nil then
     ActualizarLabelPrendas;
-  if Field <> nil then Exit;
-  // Contrato de entrada: al navegar de factura, las lineas llegan
-  // recargadas por el master-detail. En desglose basta desempaquetar
-  // SKU->ATTR; el modo tallas re-pivota su cache reconstruyendo. La
-  // preferencia ESPIVOTE del pivote de compras antiguo se IGNORA
-  // (pivote retirado de esta pantalla).
-  if Assigned(dmmFacturasCompra) and
-     dmmFacturasCompra.unqryFacturasCompraLineas.Active and
-     (not (dsTablaG.State in dsEditModes)) then
-  begin
-    // Sin modo construido (llegar navegando sin pisar el grid) se
-    // veian las columnas del dfm: construir tambien en ese caso.
-    if (not FColsModoConstruido) or
-       (FModoEntradaSel = mcsTallasHorPed) then
-      ConstruirModoEntrada
-    else if FModoEntradaSel = mcsAuto then
-      dmmFacturasCompra.DesempaquetarAtributosLineas;
-  end;
+  if Assigned(dmmFacturasCompra) then
+    ActualizarModoEntradaAlNavegarDocumento(
+      Field, dmmFacturasCompra.unqryFacturasCompraLineas,
+      dsTablaG, FColsModoConstruido, FModoEntradaSel, True,
+      ConstruirModoEntrada,
+      dmmFacturasCompra.DesempaquetarAtributosLineas);
 end;
 
 procedure TfrmMtoFacturasCompra.ActualizarLabelProveedor;
@@ -939,10 +856,9 @@ procedure TfrmMtoFacturasCompra.tvLineasFacturaFocusedRecordChanged(
   ANewItemRecordFocusingChanged: Boolean);
 begin
   inherited;
-  if Assigned(FGestorTallas) and Assigned(FPivote) and FPivote.Activo then
-    FGestorTallas.ActualizarCaptionsLineaActiva;
-  if FMostrarAtributos then
-    CargarCaptionsAtributosLineaActiva;
+  ActualizarFocoLineaDocumento(
+    FGestorTallas, FPivote, FMostrarAtributos,
+    CargarCaptionsAtributosLineaActiva);
 end;
 
 // Sombreado de celdas talla fuera del conjunto pivot — delegamos en lib.
@@ -971,17 +887,9 @@ end;
 procedure TfrmMtoFacturasCompra.cxgrdLineasFacturaEnter(Sender: TObject);
 begin
   inherited;
-  inLibGridTallasInline.ActivarEnterComoTab(Self, False);
-  AsegurarPrimeraLineaFacturaCompra;
-  // Contrato de entrada: primera construccion al entrar en el grid.
-  // El teardown cancela la linea vacia auto-anadida: se recrea.
-  if not FColsModoConstruido then
-  begin
-    ConstruirModoEntrada;
-    AsegurarPrimeraLineaFacturaCompra;
-  end;
-  if FModoEntrada <> nil then
-    FModoEntrada.MostrarEditor;
+  EntrarGridLineasDocumento(
+    Self, FColsModoConstruido, False, FModoEntrada,
+    AsegurarPrimeraLineaFacturaCompra, ConstruirModoEntrada);
 end;
 
 procedure TfrmMtoFacturasCompra.cxgrdLineasFacturaExit(Sender: TObject);
@@ -1000,21 +908,10 @@ end;
 procedure TfrmMtoFacturasCompra.KeyDown(var Key: Word;
   Shift: TShiftState);
 begin
-  // F1: alterna Auto (desglose) -> SKU -> Tallas horizontal con las
-  // lineas de la factura a la vista, igual que albaranes de compra.
-  if (Key = VK_F1) and (Shift = []) and
-     (pcFactura.ActivePage = tsLineasFactura) and
-     (dmmFacturasCompra <> nil) then
-  begin
-    Key := 0;
-    case FModoEntradaSel of
-      mcsAuto: FModoEntradaSel := mcsSku;
-      mcsSku: FModoEntradaSel := mcsTallasHorPed;
-    else
-      FModoEntradaSel := mcsAuto;
-    end;
-    ConstruirModoEntrada;
-  end;
+  ProcesarTeclaCambioModoDocumento(
+    Key, Shift, (pcFactura.ActivePage = tsLineasFactura) and
+    (dmmFacturasCompra <> nil), FModoEntradaSel,
+    [mcsAuto, mcsSku, mcsTallasHorPed], ConstruirModoEntrada);
   inherited;
 end;
 

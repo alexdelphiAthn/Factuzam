@@ -24,15 +24,23 @@ type
   TPruebasColumnasDocumento = class
   private
     FVista: TcxGridDBTableView;
+    FAccionesAsegurar: Integer;
+    FAccionesConstruir: Integer;
+    FAccionesDesempaquetar: Integer;
+    FBotonPulsado: Boolean;
     FEntroEnEdicion: Boolean;
     FResolvioSku: Boolean;
     FSalioDeEdicion: Boolean;
+    procedure AccionAsegurar;
+    procedure AccionConstruir;
+    procedure AccionDesempaquetar;
     procedure CambiarValorTalla(Sender: TObject);
     procedure EntrarEnEdicion(Sender: TObject);
     procedure ObtenerTextoAtributo(Sender: TcxCustomGridTableItem;
       ARecordIndex: Integer; var AText: string);
     procedure ResolverSku(const ACodArt, ASku, ADescripcion: string;
       ACompleto: Boolean);
+    procedure PulsarBoton(Sender: TObject; AButtonIndex: Integer);
     procedure SalirDeEdicion(Sender: TObject);
     procedure ValidarTalla(Sender: TObject; var DisplayValue: Variant;
       var ErrorText: TCaption; var Error: Boolean);
@@ -74,6 +82,30 @@ type
     [Test]
     procedure ConstruccionComun_PropagaModoNoDegradable;
     [Test]
+    procedure ColumnaBusqueda_ConfiguraBotonYValidacion;
+    [Test]
+    procedure ColumnaColorPivote_AplicaConfiguracionBase;
+    [Test]
+    procedure NavegacionModo_DecideAccionComun;
+    [Test]
+    procedure EntradaGrid_ReconstruyeYAseguraLinea;
+    [Test]
+    procedure LiberacionComun_ToleraFalloDeDesmontaje;
+    [Test]
+    procedure Teclado_CiclaModosYReconstruye;
+    [Test]
+    procedure Teclado_IgnoraContextoTeclaOModificadores;
+    [Test]
+    procedure CambioModo_ReconstruyeSoloCuandoCambia;
+    [Test]
+    procedure PreferenciaPivote_PersisteValorValido;
+    [Test]
+    procedure PreferenciaPivote_IgnoraDataSetNoDisponible;
+    [Test]
+    procedure Foto_ResuelveArticuloSkuDeLaVista;
+    [Test]
+    procedure Foto_SeleccionaCabeceraYDetalleDeLaVista;
+    [Test]
     procedure ConfigSku_DerivaCamposPorPrefijo;
     [Test]
     procedure ColumnaHost_AplicaPropiedades;
@@ -96,8 +128,8 @@ type
 implementation
 
 uses
-  System.Classes, Data.DB, Datasnap.DBClient, Uni, cxDataStorage,
-  cxCurrencyEdit,
+  System.Classes, Winapi.Windows, Vcl.Forms, Data.DB, Datasnap.DBClient, Uni,
+  cxButtonEdit, cxDataStorage, cxCurrencyEdit,
   inLibColumnasSkuIntf, inLibGridTallasInline, inLibGridPivoteCompra,
   inLibGridPivoteVenta, inLibColumnasDocumento;
 
@@ -105,7 +137,9 @@ type
   TModoEntradaPrueba = class(TInterfacedObject, IModoEntradaGrid)
   private
     FConstrucciones: Integer;
+    FEditoresMostrados: Integer;
     FFallarAlConstruir: Boolean;
+    FFallarAlDesmontar: Boolean;
     FOnEntrarEdicion: TNotifyEvent;
     FOnResuelto: TSkuResueltoEvent;
     FOnSalirEdicion: TNotifyEvent;
@@ -117,19 +151,23 @@ type
     procedure SetOnResuelto(const AValue: TSkuResueltoEvent);
     procedure SetOnSalirEdicion(const AValue: TNotifyEvent);
   public
-    constructor Create(AFallarAlConstruir: Boolean);
+    constructor Create(AFallarAlConstruir: Boolean;
+      AFallarAlDesmontar: Boolean = False);
     procedure Construir;
     procedure Desmontar;
     procedure MostrarEditor;
     function ResolverEntrada(const AEntrada: string): Boolean;
     procedure SetAlmacenStock(const AValue: string);
     property Construcciones: Integer read FConstrucciones;
+    property EditoresMostrados: Integer read FEditoresMostrados;
   end;
 
-constructor TModoEntradaPrueba.Create(AFallarAlConstruir: Boolean);
+constructor TModoEntradaPrueba.Create(AFallarAlConstruir: Boolean;
+  AFallarAlDesmontar: Boolean);
 begin
   inherited Create;
   FFallarAlConstruir := AFallarAlConstruir;
+  FFallarAlDesmontar := AFallarAlDesmontar;
 end;
 
 procedure TModoEntradaPrueba.Construir;
@@ -147,6 +185,8 @@ end;
 
 procedure TModoEntradaPrueba.Desmontar;
 begin
+  if FFallarAlDesmontar then
+    raise Exception.Create('Fallo de desmontaje controlado');
 end;
 
 function TModoEntradaPrueba.GetModo: TModoColumnasSku;
@@ -171,6 +211,7 @@ end;
 
 procedure TModoEntradaPrueba.MostrarEditor;
 begin
+  Inc(FEditoresMostrados);
 end;
 
 function TModoEntradaPrueba.ResolverEntrada(
@@ -204,9 +245,28 @@ end;
 procedure TPruebasColumnasDocumento.Preparar;
 begin
   FVista := TcxGridDBTableView.Create(nil);
+  FAccionesAsegurar := 0;
+  FAccionesConstruir := 0;
+  FAccionesDesempaquetar := 0;
+  FBotonPulsado := False;
   FEntroEnEdicion := False;
   FResolvioSku := False;
   FSalioDeEdicion := False;
+end;
+
+procedure TPruebasColumnasDocumento.AccionAsegurar;
+begin
+  Inc(FAccionesAsegurar);
+end;
+
+procedure TPruebasColumnasDocumento.AccionConstruir;
+begin
+  Inc(FAccionesConstruir);
+end;
+
+procedure TPruebasColumnasDocumento.AccionDesempaquetar;
+begin
+  Inc(FAccionesDesempaquetar);
 end;
 
 procedure TPruebasColumnasDocumento.Limpiar;
@@ -236,6 +296,12 @@ procedure TPruebasColumnasDocumento.ResolverSku(
 begin
   FResolvioSku := (ACodArt = 'ART') and (ASku = 'SKU') and
     (ADescripcion = 'Artículo') and ACompleto;
+end;
+
+procedure TPruebasColumnasDocumento.PulsarBoton(
+  Sender: TObject; AButtonIndex: Integer);
+begin
+  FBotonPulsado := AButtonIndex = 0;
 end;
 
 procedure TPruebasColumnasDocumento.SalirDeEdicion(Sender: TObject);
@@ -572,6 +638,307 @@ begin
       bPropagada := E.Message = 'Fallo controlado';
   end;
   Assert.IsTrue(bPropagada);
+end;
+
+procedure TPruebasColumnasDocumento.
+  ColumnaBusqueda_ConfiguraBotonYValidacion;
+var
+  oColumna: TcxGridDBColumn;
+  oResultado: TcxGridDBColumn;
+  oPropiedades: TcxButtonEditProperties;
+begin
+  oColumna := FVista.CreateColumn;
+  oColumna.DataBinding.FieldName := 'CODIGO';
+  oResultado := ConfigurarColumnaBusquedaDocumento(
+    FVista, 'CODIGO', PulsarBoton, ValidarTalla);
+  Assert.IsTrue(oResultado = oColumna);
+  Assert.IsTrue(oColumna.Properties is
+    TcxButtonEditProperties);
+  Assert.IsTrue(oColumna.Options.ShowEditButtons = isebAlways);
+  oPropiedades := TcxButtonEditProperties(oColumna.Properties);
+  Assert.AreEqual(1, oPropiedades.Buttons.Count);
+  Assert.IsTrue(oPropiedades.Buttons[0].Kind = bkEllipsis);
+  Assert.IsTrue(Assigned(oPropiedades.OnButtonClick));
+  Assert.IsTrue(Assigned(oPropiedades.OnValidate));
+  oPropiedades.OnButtonClick(oPropiedades, 0);
+  Assert.IsTrue(FBotonPulsado);
+end;
+
+procedure TPruebasColumnasDocumento.
+  ColumnaColorPivote_AplicaConfiguracionBase;
+var
+  oColumna: TcxGridDBColumn;
+begin
+  oColumna := CrearColumnaColorPivoteDocumento(
+    FVista, 'colColorPrueba', 130);
+  Assert.IsTrue(Assigned(oColumna));
+  Assert.AreEqual('colColorPrueba', oColumna.Name);
+  Assert.AreEqual('Color', oColumna.Caption);
+  Assert.AreEqual(130, oColumna.Width);
+  Assert.IsFalse(oColumna.Visible);
+  Assert.IsTrue(oColumna.Options.Editing);
+end;
+
+procedure TPruebasColumnasDocumento.
+  NavegacionModo_DecideAccionComun;
+var
+  oLineas: TClientDataSet;
+  oMaster: TClientDataSet;
+  oSourceMaster: TDataSource;
+begin
+  oLineas := TClientDataSet.Create(nil);
+  oMaster := TClientDataSet.Create(nil);
+  oSourceMaster := TDataSource.Create(nil);
+  try
+    oLineas.FieldDefs.Add('ID', ftInteger);
+    oLineas.CreateDataSet;
+    oMaster.FieldDefs.Add('ID', ftInteger);
+    oMaster.CreateDataSet;
+    oSourceMaster.DataSet := oMaster;
+    ActualizarModoEntradaAlNavegarDocumento(
+      nil, oLineas, oSourceMaster, False, mcsSku, False,
+      AccionConstruir, AccionDesempaquetar);
+    ActualizarModoEntradaAlNavegarDocumento(
+      nil, oLineas, oSourceMaster, True, mcsAuto, False,
+      AccionConstruir, AccionDesempaquetar);
+    ActualizarModoEntradaAlNavegarDocumento(
+      oLineas.FieldByName('ID'), oLineas, oSourceMaster,
+      False, mcsSku, False,
+      AccionConstruir, AccionDesempaquetar);
+    ActualizarModoEntradaAlNavegarDocumento(
+      nil, oLineas, oSourceMaster, True, mcsTallasHorPed, True,
+      AccionConstruir, AccionDesempaquetar);
+    oMaster.Append;
+    ActualizarModoEntradaAlNavegarDocumento(
+      nil, oLineas, oSourceMaster, False, mcsSku, False,
+      AccionConstruir, AccionDesempaquetar);
+    oMaster.Cancel;
+    Assert.AreEqual(2, FAccionesConstruir);
+    Assert.AreEqual(1, FAccionesDesempaquetar);
+  finally
+    FreeAndNil(oSourceMaster);
+    FreeAndNil(oMaster);
+    FreeAndNil(oLineas);
+  end;
+end;
+
+procedure TPruebasColumnasDocumento.
+  EntradaGrid_ReconstruyeYAseguraLinea;
+var
+  oFormulario: TForm;
+  oImplementacion: TModoEntradaPrueba;
+  oModoEntrada: IModoEntradaGrid;
+begin
+  oFormulario := TForm.Create(nil);
+  try
+    oImplementacion := TModoEntradaPrueba.Create(False);
+    oModoEntrada := oImplementacion;
+    EntrarGridLineasDocumento(
+      oFormulario, False, False, oModoEntrada,
+      AccionAsegurar, AccionConstruir);
+    EntrarGridLineasDocumento(
+      oFormulario, True, False, oModoEntrada,
+      AccionAsegurar, AccionConstruir);
+    Assert.AreEqual(3, FAccionesAsegurar);
+    Assert.AreEqual(1, FAccionesConstruir);
+    Assert.AreEqual(2, oImplementacion.EditoresMostrados);
+  finally
+    FreeAndNil(oFormulario);
+  end;
+end;
+
+procedure TPruebasColumnasDocumento.
+  LiberacionComun_ToleraFalloDeDesmontaje;
+var
+  oGestorTallas: TGestorGridTallas;
+  oModoEntrada: IModoEntradaGrid;
+  oPivote: TGridPivoteCompra;
+begin
+  oGestorTallas := nil;
+  oPivote := nil;
+  oModoEntrada := TModoEntradaPrueba.Create(False, True);
+  LiberarModoYGestoresDocumento(
+    oModoEntrada, oPivote, oGestorTallas);
+  Assert.IsFalse(Assigned(oModoEntrada));
+  Assert.IsFalse(Assigned(oPivote));
+  Assert.IsFalse(Assigned(oGestorTallas));
+end;
+
+procedure TPruebasColumnasDocumento.Teclado_CiclaModosYReconstruye;
+var
+  iTecla: Word;
+  Modo: TModoColumnasSku;
+begin
+  Modo := mcsAuto;
+  iTecla := VK_F1;
+  Assert.IsTrue(ProcesarTeclaCambioModoDocumento(
+    iTecla, [], True, Modo,
+    [mcsAuto, mcsSku, mcsTallasInline, mcsTallasHorPed],
+    AccionConstruir));
+  Assert.AreEqual(Integer(mcsSku), Integer(Modo));
+  Assert.AreEqual(0, Integer(iTecla));
+  iTecla := VK_F1;
+  ProcesarTeclaCambioModoDocumento(
+    iTecla, [], True, Modo,
+    [mcsAuto, mcsSku, mcsTallasInline, mcsTallasHorPed],
+    AccionConstruir);
+  Assert.AreEqual(Integer(mcsTallasInline), Integer(Modo));
+  iTecla := VK_F1;
+  ProcesarTeclaCambioModoDocumento(
+    iTecla, [], True, Modo,
+    [mcsAuto, mcsSku, mcsTallasInline, mcsTallasHorPed],
+    AccionConstruir);
+  Assert.AreEqual(Integer(mcsTallasHorPed), Integer(Modo));
+  iTecla := VK_F1;
+  ProcesarTeclaCambioModoDocumento(
+    iTecla, [], True, Modo,
+    [mcsAuto, mcsSku, mcsTallasInline, mcsTallasHorPed],
+    AccionConstruir);
+  Assert.AreEqual(Integer(mcsAuto), Integer(Modo));
+  Assert.AreEqual(4, FAccionesConstruir);
+end;
+
+procedure TPruebasColumnasDocumento.
+  Teclado_IgnoraContextoTeclaOModificadores;
+var
+  iTecla: Word;
+  Modo: TModoColumnasSku;
+begin
+  Modo := mcsAuto;
+  iTecla := VK_F1;
+  Assert.IsFalse(ProcesarTeclaCambioModoDocumento(
+    iTecla, [], False, Modo, [mcsAuto, mcsSku],
+    AccionConstruir));
+  Assert.AreEqual(Integer(VK_F1), Integer(iTecla));
+  iTecla := VK_F1;
+  Assert.IsFalse(ProcesarTeclaCambioModoDocumento(
+    iTecla, [ssCtrl], True, Modo, [mcsAuto, mcsSku],
+    AccionConstruir));
+  iTecla := VK_F2;
+  Assert.IsFalse(ProcesarTeclaCambioModoDocumento(
+    iTecla, [], True, Modo, [mcsAuto, mcsSku],
+    AccionConstruir));
+  Assert.AreEqual(Integer(mcsAuto), Integer(Modo));
+  Assert.AreEqual(0, FAccionesConstruir);
+end;
+
+procedure TPruebasColumnasDocumento.
+  CambioModo_ReconstruyeSoloCuandoCambia;
+var
+  Modo: TModoColumnasSku;
+begin
+  Modo := mcsAuto;
+  Assert.IsFalse(CambiarModoEntradaDocumento(
+    Modo, mcsAuto, AccionConstruir));
+  Assert.IsTrue(CambiarModoEntradaDocumento(
+    Modo, mcsSku, AccionConstruir));
+  Assert.AreEqual(Integer(mcsSku), Integer(Modo));
+  Assert.AreEqual(1, FAccionesConstruir);
+end;
+
+procedure TPruebasColumnasDocumento.
+  PreferenciaPivote_PersisteValorValido;
+var
+  oDataSet: TClientDataSet;
+begin
+  oDataSet := TClientDataSet.Create(nil);
+  try
+    oDataSet.FieldDefs.Add('ESPIVOTE', ftString, 1);
+    oDataSet.CreateDataSet;
+    oDataSet.AppendRecord(['N']);
+    PersistirPreferenciaPivoteDocumento(
+      oDataSet, 'ESPIVOTE', True);
+    Assert.AreEqual('S',
+      oDataSet.FieldByName('ESPIVOTE').AsString);
+    Assert.IsTrue(oDataSet.State = dsBrowse);
+    PersistirPreferenciaPivoteDocumento(
+      oDataSet, 'ESPIVOTE', False);
+    Assert.AreEqual('N',
+      oDataSet.FieldByName('ESPIVOTE').AsString);
+  finally
+    FreeAndNil(oDataSet);
+  end;
+end;
+
+procedure TPruebasColumnasDocumento.
+  PreferenciaPivote_IgnoraDataSetNoDisponible;
+var
+  oDataSet: TClientDataSet;
+begin
+  PersistirPreferenciaPivoteDocumento(nil, 'ESPIVOTE', True);
+  oDataSet := TClientDataSet.Create(nil);
+  try
+    oDataSet.FieldDefs.Add('OTRO_CAMPO', ftString, 1);
+    PersistirPreferenciaPivoteDocumento(
+      oDataSet, 'ESPIVOTE', True);
+    oDataSet.CreateDataSet;
+    oDataSet.AppendRecord(['N']);
+    PersistirPreferenciaPivoteDocumento(
+      oDataSet, 'ESPIVOTE', True);
+    Assert.AreEqual('N',
+      oDataSet.FieldByName('OTRO_CAMPO').AsString);
+    Assert.IsTrue(oDataSet.State = dsBrowse);
+  finally
+    FreeAndNil(oDataSet);
+  end;
+end;
+
+procedure TPruebasColumnasDocumento.
+  Foto_ResuelveArticuloSkuDeLaVista;
+var
+  oDataSet: TClientDataSet;
+  oDataSource: TDataSource;
+  sArticulo: string;
+  sSku: string;
+begin
+  oDataSet := TClientDataSet.Create(nil);
+  oDataSource := TDataSource.Create(nil);
+  try
+    ResolverArtSkuActivoDocumento(nil, sArticulo, sSku);
+    Assert.AreEqual('', sArticulo);
+    Assert.AreEqual('', sSku);
+    oDataSet.FieldDefs.Add('CODIGO_ART_PEDLIN', ftString, 20);
+    oDataSet.FieldDefs.Add('CODIGO_UNIDAD_PEDLIN', ftString, 40);
+    oDataSet.CreateDataSet;
+    oDataSet.AppendRecord(['ART-01', 'ART-01/ROJO/L']);
+    oDataSource.DataSet := oDataSet;
+    FVista.DataController.DataSource := oDataSource;
+    ResolverArtSkuActivoDocumento(
+      FVista, sArticulo, sSku);
+    Assert.AreEqual('ART-01', sArticulo);
+    Assert.AreEqual('ART-01/ROJO/L', sSku);
+  finally
+    FVista.DataController.DataSource := nil;
+    FreeAndNil(oDataSource);
+    FreeAndNil(oDataSet);
+  end;
+end;
+
+procedure TPruebasColumnasDocumento.
+  Foto_SeleccionaCabeceraYDetalleDeLaVista;
+var
+  aDataSources: TArray<TDataSource>;
+  oCabecera: TDataSource;
+  oDetalle: TDataSource;
+begin
+  oCabecera := TDataSource.Create(nil);
+  oDetalle := TDataSource.Create(nil);
+  try
+    aDataSources := DataSourcesParaFotoDocumento(
+      oCabecera, FVista);
+    Assert.AreEqual(1, Integer(Length(aDataSources)));
+    Assert.IsTrue(aDataSources[0] = oCabecera);
+    FVista.DataController.DataSource := oDetalle;
+    aDataSources := DataSourcesParaFotoDocumento(
+      oCabecera, FVista);
+    Assert.AreEqual(2, Integer(Length(aDataSources)));
+    Assert.IsTrue(aDataSources[0] = oCabecera);
+    Assert.IsTrue(aDataSources[1] = oDetalle);
+  finally
+    FVista.DataController.DataSource := nil;
+    FreeAndNil(oDetalle);
+    FreeAndNil(oCabecera);
+  end;
 end;
 
 procedure TPruebasColumnasDocumento.

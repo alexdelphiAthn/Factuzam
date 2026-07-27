@@ -289,7 +289,7 @@ var
 implementation
 
 uses
-  inMtoModalFacturarAlbaranesFechas, inLibFotos, inLibGridCantidad,
+  inMtoModalFacturarAlbaranesFechas, inLibGridCantidad,
   inLibGenBusq, inLibShowMto, inLibFiltroUsuario, Uni,
   inLibArticulosResolver, inLibArticulosValidador, inLibVentasImpuestos,
   inLibtb, inLibUser, inLibColumnasSku, inLibColumnasDocumento,
@@ -333,26 +333,15 @@ end;
 // CODIGO_UNIDAD_ALBLIN).
 procedure TfrmMtoAlbaranes.ResolverArtSkuActivo(out ACodArt,
                                                 ACodSku: string);
-var
-  ds: TDataSet;
 begin
-  ACodArt := '';
-  ACodSku := '';
-  if Assigned(tvLineasAlbaran.DataController.DataSource) then
-  begin
-    ds := tvLineasAlbaran.DataController.DataSource.DataSet;
-    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
-  end;
+  ResolverArtSkuActivoDocumento(
+    tvLineasAlbaran, ACodArt, ACodSku);
 end;
 
-// Para que la pantalla flotante refresque al moverse entre lineas del
-// albaran, ademas de dsTablaG (cabecera) enganchamos dsAlbaranesLineas.
 function TfrmMtoAlbaranes.DataSourcesParaFoto: TArray<TDataSource>;
 begin
-  if Assigned(dmmAlbaranes) then
-    Result := [dsTablaG, dmmAlbaranes.dsAlbaranesLineas]
-  else
-    Result := [dsTablaG];
+  Result := DataSourcesParaFotoDocumento(
+    dsTablaG, tvLineasAlbaran);
 end;
 
 function TfrmMtoAlbaranes.BuscarArticuloAlbaran: string;
@@ -685,20 +674,10 @@ end;
 
 procedure TfrmMtoAlbaranes.KeyDown(var Key: Word; Shift: TShiftState);
 begin
-  // F1: alterna Auto (desglose) -> SKU -> Tallas horizontal con las
-  // lineas del albaran a la vista.
-  if (Key = VK_F1) and (Shift = []) and
-     (pcAlbaran.ActivePage = tsLineasAlbaran) then
-  begin
-    Key := 0;
-    case FModoEntradaSel of
-      mcsAuto: FModoEntradaSel := mcsSku;
-      mcsSku: FModoEntradaSel := mcsTallasInline;
-    else
-      FModoEntradaSel := mcsAuto;
-    end;
-    ConstruirModoEntrada;
-  end;
+  ProcesarTeclaCambioModoDocumento(
+    Key, Shift, pcAlbaran.ActivePage = tsLineasAlbaran,
+    FModoEntradaSel, [mcsAuto, mcsSku, mcsTallasInline],
+    ConstruirModoEntrada);
   inherited;
 end;
 
@@ -1046,21 +1025,13 @@ begin
       dmmAlbaranes.unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString);
   if Field = nil then
     ActualizarLabelPrendas;
-  // Al navegar de albaran: si la construccion inicial no pudo hacerse
-  // (el detail aun no estaba abierto), se construye aqui. En desglose
-  // ademas se desempaqueta SKU->ATTR: Color y Talla llegaban vacios en
-  // lineas creadas en modo SKU, que no persiste los ATTR (es
-  // idempotente por comparacion: sin cambios no postea nada).
-  if (Field = nil) and
-     Assigned(dmmAlbaranes) and
-     dmmAlbaranes.unqryAlbaranesLineas.Active and
-     (not (dsTablaG.State in dsEditModes)) then
-  begin
-    if not FColsModoConstruido then
-      ConstruirModoEntrada
-    else if FModoEntradaSel = mcsAuto then
-      dmmAlbaranes.DesempaquetarAtributosLineas;
-  end;
+  // Construye o desempaqueta el modo tras cambiar de albaran.
+  if Assigned(dmmAlbaranes) then
+    ActualizarModoEntradaAlNavegarDocumento(
+      Field, dmmAlbaranes.unqryAlbaranesLineas,
+      dsTablaG, FColsModoConstruido, FModoEntradaSel, False,
+      ConstruirModoEntrada,
+      dmmAlbaranes.DesempaquetarAtributosLineas);
 end;
 
 procedure TfrmMtoAlbaranes.dsLineasDataChangeHook(Sender: TObject;
@@ -1075,7 +1046,7 @@ end;
 
 procedure TfrmMtoAlbaranes.FormCreate(Sender: TObject);
 var
-  colFact, colSku: TcxGridDBColumn;
+  colFact: TcxGridDBColumn;
   stFact: TcxStyle;
 begin
   inherited;
@@ -1087,20 +1058,10 @@ begin
   VincularCantidadGrid(
     tvLineasAlbaran.GetColumnByFieldName('CANTIDAD_ALBLIN'),
     tvLineasAlbaran.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_ALBLIN'));
-  colSku := tvLineasAlbaran.GetColumnByFieldName('CODIGO_UNIDAD_ALBLIN');
-  if colSku <> nil then
-  begin
-    colSku.PropertiesClass := TcxButtonEditProperties;
-    colSku.Options.ShowEditButtons := isebAlways;
-    with TcxButtonEditProperties(colSku.Properties) do
-    begin
-      Buttons.Clear;
-      with Buttons.Add do
-        Kind := bkEllipsis;
-      OnButtonClick := cxgrdcArtAlbSkuPropertiesButtonClick;
-      OnValidate := cxgrdcArtAlbSkuPropertiesValidate;
-    end;
-  end;
+  ConfigurarColumnaBusquedaDocumento(
+    tvLineasAlbaran, 'CODIGO_UNIDAD_ALBLIN',
+    cxgrdcArtAlbSkuPropertiesButtonClick,
+    cxgrdcArtAlbSkuPropertiesValidate);
   // Resaltar la columna ESFACTURADA_ALBLIN cuando exista (S/N).
   colFact := tvLineasAlbaran.GetColumnByFieldName('ESFACTURADA_ALBLIN');
   if colFact <> nil then

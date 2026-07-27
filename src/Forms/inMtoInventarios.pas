@@ -356,7 +356,6 @@ uses
   inLibFiltroUsuario,
   inLibShowMto,
   inLibDevExp,
-  inLibFotos,
   inLibGenBusq,
 
   inLibArticulosValidador,
@@ -382,26 +381,15 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 // / CODIGO_UNIDAD_INVLIN).
 procedure TfrmMtoInventarios.ResolverArtSkuActivo(out ACodArt,
                                                   ACodSku: string);
-var
-  ds: TDataSet;
 begin
-  ACodArt := '';
-  ACodSku := '';
-  if Assigned(tvLineas.DataController.DataSource) then
-  begin
-    ds := tvLineas.DataController.DataSource.DataSet;
-    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
-  end;
+  ResolverArtSkuActivoDocumento(
+    tvLineas, ACodArt, ACodSku);
 end;
 
-// Para que la pantalla flotante refresque al moverse entre lineas del
-// inventario, ademas de dsTablaG (cabecera) enganchamos dsLineas.
 function TfrmMtoInventarios.DataSourcesParaFoto: TArray<TDataSource>;
 begin
-  if Assigned(dmmInventarios) then
-    Result := [dsTablaG, dmmInventarios.dsLineas]
-  else
-    Result := [dsTablaG];
+  Result := DataSourcesParaFotoDocumento(
+    dsTablaG, tvLineas);
 end;
 
 function TfrmMtoInventarios.ComprobarRecuentoRemotoDisponible: Boolean;
@@ -1027,20 +1015,9 @@ end;
 
 procedure TfrmMtoInventarios.KeyDown(var Key: Word; Shift: TShiftState);
 begin
-  // F1: alterna el modo de entrada (Auto -> SKU -> Tallas horizontal)
-  // y reconstruye las columnas, solo con el detalle a la vista.
-  if (Key = VK_F1) and (Shift = []) and
-     (pcDetail.ActivePage = tsDetalle) then
-  begin
-    Key := 0;
-    // Solo Auto (desglose) <-> SKU: el modo tallas en horizontal no
-    // tiene sentido en inventarios (dos cantidades por linea).
-    if FModoEntradaSel = mcsSku then
-      FModoEntradaSel := mcsAuto
-    else
-      FModoEntradaSel := mcsSku;
-    ConstruirModoEntrada;
-  end;
+  ProcesarTeclaCambioModoDocumento(
+    Key, Shift, pcDetail.ActivePage = tsDetalle,
+    FModoEntradaSel, [mcsAuto, mcsSku], ConstruirModoEntrada);
   inherited;
 end;
 

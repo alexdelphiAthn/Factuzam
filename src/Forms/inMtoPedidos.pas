@@ -310,7 +310,7 @@ var
 implementation
 
 uses
-  inMtoModalImportarPedidosPS, inLibFotos, inLibGridCantidad,
+  inMtoModalImportarPedidosPS, inLibGridCantidad,
   inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibGenBusq,
   inLibShowMto, inLibFiltroUsuario, Uni, inLibArticulosResolver,
   inLibArticulosValidador, inLibVentasImpuestos, inLibtb,
@@ -380,26 +380,15 @@ end;
 // CODIGOPRODPS_PEDLIN, usado como SKU efectivo en venta mayor).
 procedure TfrmMtoPedidos.ResolverArtSkuActivo(out ACodArt,
                                               ACodSku: string);
-var
-  ds: TDataSet;
 begin
-  ACodArt := '';
-  ACodSku := '';
-  if Assigned(tvPedidosLineas.DataController.DataSource) then
-  begin
-    ds := tvPedidosLineas.DataController.DataSource.DataSet;
-    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
-  end;
+  ResolverArtSkuActivoDocumento(
+    tvPedidosLineas, ACodArt, ACodSku);
 end;
 
-// Para que la pantalla flotante refresque al moverse entre lineas del
-// pedido, ademas de dsTablaG (cabecera) enganchamos dsPedidosLineas.
 function TfrmMtoPedidos.DataSourcesParaFoto: TArray<TDataSource>;
 begin
-  if Assigned(dmmPedidos) then
-    Result := [dsTablaG, dmmPedidos.dsPedidosLineas]
-  else
-    Result := [dsTablaG];
+  Result := DataSourcesParaFotoDocumento(
+    dsTablaG, tvPedidosLineas);
 end;
 
 function TfrmMtoPedidos.BuscarArticuloPedido: string;
@@ -716,7 +705,7 @@ end;
 
 procedure TfrmMtoPedidos.FormCreate(Sender: TObject);
 var
-  colEnt, colPend, colSku: TcxGridDBColumn;
+  colEnt, colPend: TcxGridDBColumn;
   stEnt, stPend: TcxStyle;
 begin
   inherited;
@@ -732,20 +721,10 @@ begin
   VincularCantidadGrid(
     tvPedidosLineas.GetColumnByFieldName('CANTIDAD_PEDLIN'),
     tvPedidosLineas.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_PEDLIN'));
-  colSku := tvPedidosLineas.GetColumnByFieldName('CODIGOPRODPS_PEDLIN');
-  if colSku <> nil then
-  begin
-    colSku.PropertiesClass := TcxButtonEditProperties;
-    colSku.Options.ShowEditButtons := isebAlways;
-    with TcxButtonEditProperties(colSku.Properties) do
-    begin
-      Buttons.Clear;
-      with Buttons.Add do
-        Kind := bkEllipsis;
-      OnButtonClick := cxgrdcPedLinSKUPropertiesButtonClick;
-      OnValidate := cxgrdcPedLinSKUPropertiesValidate;
-    end;
-  end;
+  ConfigurarColumnaBusquedaDocumento(
+    tvPedidosLineas, 'CODIGOPRODPS_PEDLIN',
+    cxgrdcPedLinSKUPropertiesButtonClick,
+    cxgrdcPedLinSKUPropertiesValidate);
 
   colEnt  := tvPedidosLineas.GetColumnByFieldName('CANTIDAD_ENTREGADA_PEDLIN');
   colPend := tvPedidosLineas.GetColumnByFieldName('CANTIDAD_PENDIENTE_PEDLIN');
@@ -1297,20 +1276,10 @@ end;
 
 procedure TfrmMtoPedidos.KeyDown(var Key: Word; Shift: TShiftState);
 begin
-  // F1: alterna Tallas horizontal -> Auto (desglose) -> SKU con las
-  // lineas del pedido a la vista.
-  if (Key = VK_F1) and (Shift = []) and
-     (pcPedido.ActivePage = tsLineasPedido) then
-  begin
-    Key := 0;
-    case FModoEntradaSel of
-      mcsAuto: FModoEntradaSel := mcsSku;
-      mcsSku: FModoEntradaSel := mcsTallasHorPed;
-    else
-      FModoEntradaSel := mcsAuto;
-    end;
-    ConstruirModoEntrada;
-  end;
+  ProcesarTeclaCambioModoDocumento(
+    Key, Shift, pcPedido.ActivePage = tsLineasPedido,
+    FModoEntradaSel, [mcsAuto, mcsSku, mcsTallasHorPed],
+    ConstruirModoEntrada);
   inherited;
 end;
 
@@ -1319,11 +1288,9 @@ end;
 procedure TfrmMtoPedidos.btnExpandirFilasClick(Sender: TObject);
 begin
   inherited;
-  if (dmmPedidos <> nil) and (FModoEntradaSel <> mcsTallasHorPed) then
-  begin
-    FModoEntradaSel := mcsTallasHorPed;
-    ConstruirModoEntrada;
-  end;
+  if dmmPedidos <> nil then
+    CambiarModoEntradaDocumento(
+      FModoEntradaSel, mcsTallasHorPed, ConstruirModoEntrada);
 end;
 
 procedure TfrmMtoPedidos.ConstruirModoEntrada;

@@ -409,16 +409,16 @@ cuadrar el datáfono.</p>
 con el arqueo previo, de modo que los descuadres no se arrastran sin ser
 detectados.</p></blockquote>
 <h3 id="recuento-del-arqueo">Recuento del arqueo</h3>
-<p>La pestaña <strong>Recuento</strong> sirve para introducir lo contado físicamente:</p>
-<p><img src="img/05-caja-arqueo-recuento.png" alt="Recuento de arqueo" loading="lazy">
-<em>▢ Captura pendiente — Recuento de billetes, monedas y otras formas de pago.</em></p>
+<p>La pestaña <strong>Recuento</strong> presenta una sola línea por forma de pago. El efectivo
+se introduce como un importe total, sin contar billetes y monedas por
+denominación.</p>
 <table>
 <thead><tr>
 <th>Zona</th>
 <th>Qué se introduce</th>
 </tr></thead>
 <tbody>
-<tr><td><strong>Efectivo</strong></td><td>Unidades por denominación de billetes y monedas.</td></tr>
+<tr><td><strong>Efectivo</strong></td><td>Importe total contado en el cajón.</td></tr>
 <tr><td><strong>Otras formas de pago</strong></td><td>Importe recontado de tarjeta, bono, divisa, cripto u otras formas no efectivo.</td></tr>
 <tr><td><strong>Retirada</strong></td><td>Importe retirado a banco, encargado o caja fuerte.</td></tr>
 <tr><td><strong>Dejo para mañana</strong></td><td>Efectivo que queda como cambio para la siguiente jornada.</td></tr>
@@ -429,6 +429,10 @@ detectados.</p></blockquote>
 <p>La pantalla calcula <strong>Total sistema</strong>, <strong>Total recontado</strong> y <strong>Diferencia</strong>.
 Si la diferencia no es cero, conviene explicar el motivo en observaciones antes
 de grabar.</p>
+<p>Con <strong>Permitir Arqueo de Tarjetas</strong> desactivado, la línea de efectivo muestra
+la propuesta del sistema y el usuario confirma el total en <strong>Recontado</strong>. Con
+el parámetro activado no se muestran las propuestas ni las diferencias de
+efectivo o tarjetas; el recuento se introduce sin esos totalizadores.</p>
 <h3 id="tira-de-caja-f7">Tira de Caja (F7)</h3>
 <p>La <strong>Tira de Caja</strong> imprime o exporta un detalle de lo ocurrido en el rango del
 arqueo. Permite seleccionar series de facturas simplificadas y decidir si se
@@ -626,7 +630,7 @@ ganar espacio en la rejilla.</p>
 <th>Qué controla</th>
 </tr></thead>
 <tbody>
-<tr><td><strong>Permitir Arqueo de Tarjetas</strong> (<code>vgerArqueoTarjetas</code>)</td><td><code>False</code></td><td>Parámetro preparado para separar permisos del arqueo de tarjetas. En la versión actual está registrado, pero no se ha localizado uso operativo directo.</td></tr>
+<tr><td><strong>Permitir Arqueo de Tarjetas</strong> (<code>vgerArqueoTarjetas</code>)</td><td><code>False</code></td><td>Con <code>False</code>, muestra las propuestas del sistema, incluido el efectivo total en una sola línea. Con <code>True</code>, oculta las propuestas y diferencias de efectivo y tarjetas para introducir el recuento sin totalizadores.</td></tr>
 <tr><td><strong>Permitir Ventas a Crédito</strong> (<code>vgerVentasCredito</code>)</td><td><code>True</code></td><td>Habilita el botón <strong>Préstamo (F7)</strong> en la fase de cobro, siempre que haya cliente, el cliente permita deuda y quede importe pendiente para dejar en cuenta.</td></tr>
 <tr><td><strong>Permite descuentos en ventas</strong> (<code>vgerDescuentos</code>)</td><td><code>True</code></td><td>Permite editar descuentos de línea, descuento global, total y precio unitario. Si está desactivado, esas vías quedan bloqueadas para evitar descuentos indirectos.</td></tr>
 </tbody>

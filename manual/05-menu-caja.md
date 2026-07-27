@@ -516,13 +516,13 @@ cuadrar el datáfono.
 
 ### Recuento del arqueo
 
-La pestaña **Recuento** sirve para introducir lo contado físicamente:
-
-![Recuento de arqueo](img/05-caja-arqueo-recuento.png)
+La pestaña **Recuento** presenta una sola línea por forma de pago. El efectivo
+se introduce como un importe total, sin contar billetes y monedas por
+denominación.
 
 | Zona | Qué se introduce |
 |------|------------------|
-| **Efectivo** | Unidades por denominación de billetes y monedas. |
+| **Efectivo** | Importe total contado en el cajón. |
 | **Otras formas de pago** | Importe recontado de tarjeta, bono, divisa, cripto u otras formas no efectivo. |
 | **Retirada** | Importe retirado a banco, encargado o caja fuerte. |
 | **Dejo para mañana** | Efectivo que queda como cambio para la siguiente jornada. |
@@ -532,6 +532,11 @@ La pestaña **Recuento** sirve para introducir lo contado físicamente:
 La pantalla calcula **Total sistema**, **Total recontado** y **Diferencia**.
 Si la diferencia no es cero, conviene explicar el motivo en observaciones antes
 de grabar.
+
+Con **Permitir Arqueo de Tarjetas** desactivado, la línea de efectivo muestra
+la propuesta del sistema y el usuario confirma el total en **Recontado**. Con
+el parámetro activado no se muestran las propuestas ni las diferencias de
+efectivo o tarjetas; el recuento se introduce sin esos totalizadores.
 
 ### Tira de Caja (F7)
 
@@ -684,7 +689,7 @@ ganar espacio en la rejilla.
 
 | Parámetro | Defecto | Qué controla |
 |-----------|---------|--------------|
-| **Permitir Arqueo de Tarjetas** (`vgerArqueoTarjetas`) | `False` | Parámetro preparado para separar permisos del arqueo de tarjetas. En la versión actual está registrado, pero no se ha localizado uso operativo directo. |
+| **Permitir Arqueo de Tarjetas** (`vgerArqueoTarjetas`) | `False` | Con `False`, muestra las propuestas del sistema, incluido el efectivo total en una sola línea. Con `True`, oculta las propuestas y diferencias de efectivo y tarjetas para introducir el recuento sin totalizadores. |
 | **Permitir Ventas a Crédito** (`vgerVentasCredito`) | `True` | Habilita el botón **Préstamo (F7)** en la fase de cobro, siempre que haya cliente, el cliente permita deuda y quede importe pendiente para dejar en cuenta. |
 | **Permite descuentos en ventas** (`vgerDescuentos`) | `True` | Permite editar descuentos de línea, descuento global, total y precio unitario. Si está desactivado, esas vías quedan bloqueadas para evitar descuentos indirectos. |
 

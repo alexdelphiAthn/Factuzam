@@ -392,7 +392,6 @@ implementation
 uses
   System.StrUtils,
   inLibFiltroUsuario,
-  inLibFotos,
   inLibAtributosPaleta,
   inLibPedidosCompra,
   inLibLog,
@@ -419,27 +418,15 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 // (CODIGO_ART_PEDCLIN / CODIGO_UNIDAD_PEDCLIN).
 procedure TfrmMtoPedidosCompra.ResolverArtSkuActivo(out ACodArt,
                                                     ACodSku: string);
-var
-  ds: TDataSet;
 begin
-  ACodArt := '';
-  ACodSku := '';
-  if Assigned(tvLineasPedido.DataController.DataSource) then
-  begin
-    ds := tvLineasPedido.DataController.DataSource.DataSet;
-    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
-  end;
+  ResolverArtSkuActivoDocumento(
+    tvLineasPedido, ACodArt, ACodSku);
 end;
 
-// Para que la pantalla flotante refresque al moverse entre lineas del
-// pedido, ademas de dsTablaG (cabecera) enganchamos
-// dsPedidosCompraLineas.
 function TfrmMtoPedidosCompra.DataSourcesParaFoto: TArray<TDataSource>;
 begin
-  if Assigned(dmmPedidosCompra) then
-    Result := [dsTablaG, dmmPedidosCompra.dsPedidosCompraLineas]
-  else
-    Result := [dsTablaG];
+  Result := DataSourcesParaFotoDocumento(
+    dsTablaG, tvLineasPedido);
 end;
 
 function TfrmMtoPedidosCompra.BuscarArticuloPedidoCompra: string;
@@ -784,7 +771,6 @@ end;
 
 procedure TfrmMtoPedidosCompra.FormCreate(Sender: TObject);
 var
-  colSku: TcxGridDBColumn;
   i     : Integer;
 begin
   // Mismo orden que albaranes / sesiones: columnas no-bound de tallas
@@ -796,21 +782,10 @@ begin
   // del basico, el texto del nombre del atributo en la jerarquia del
   // SKU. Asi el usuario ve a la vez la etiqueta que el sistema usa
   // ("VERDE") y el color real que la representa.
-  FColColorPivot := tvLineasPedido.CreateColumn;
-  FColColorPivot.Name    := 'colLinPedcColorPivot';
-  FColColorPivot.Caption := 'Color';
-  FColColorPivot.Width   := 130;
-  FColColorPivot.Visible := False;
-  FColColorPivot.Options.Editing := True;
-  FColColorPivot.Options.ShowEditButtons := isebAlways;
-  FColColorPivot.PropertiesClass := TcxButtonEditProperties;
-  with TcxButtonEditProperties(FColColorPivot.Properties) do
-  begin
-    Buttons.Clear;
-    with Buttons.Add do
-      Kind := bkEllipsis;
-    OnButtonClick := colLinPedcColorPivotButtonClick;
-  end;
+  FColColorPivot := CrearColumnaColorPivoteDocumento(
+    tvLineasPedido, 'colLinPedcColorPivot', 130);
+  ConfigurarColumnaBotonDocumento(
+    FColColorPivot, colLinPedcColorPivotButtonClick);
   FColColorProveedorPivot := nil;
   inherited;
   FEstiloRecepcionVencida := TcxStyle.Create(Self);
@@ -819,20 +794,10 @@ begin
   for i := 0 to cxGrdDBTabPrin.ItemCount - 1 do
     cxGrdDBTabPrin.Items[i].Styles.OnGetContentStyle :=
       GridListaGetContentStyle;
-  colSku := tvLineasPedido.GetColumnByFieldName('CODIGO_UNIDAD_PEDCLIN');
-  if colSku <> nil then
-  begin
-    colSku.PropertiesClass := TcxButtonEditProperties;
-    colSku.Options.ShowEditButtons := isebAlways;
-    with TcxButtonEditProperties(colSku.Properties) do
-    begin
-      Buttons.Clear;
-      with Buttons.Add do
-        Kind := bkEllipsis;
-      OnButtonClick := colLineaPedcCODIGO_UNIDADPropertiesButtonClick;
-      OnValidate := colLineaPedcCODIGO_UNIDADPropertiesValidate;
-    end;
-  end;
+  ConfigurarColumnaBusquedaDocumento(
+    tvLineasPedido, 'CODIGO_UNIDAD_PEDCLIN',
+    colLineaPedcCODIGO_UNIDADPropertiesButtonClick,
+    colLineaPedcCODIGO_UNIDADPropertiesValidate);
   InicializarGestorYPivote;
   // Pintado del swatch de color en la columna no-bound: delegamos en el
   // controlador de pivote.
@@ -1213,15 +1178,8 @@ end;
 
 procedure TfrmMtoPedidosCompra.PersistirPreferenciaPivote;
 begin
-  if (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) or
-     dsTablaG.DataSet.IsEmpty or
-     (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_PEDC') = nil) then
-    Exit;
-  if not (dsTablaG.DataSet.State in [dsEdit, dsInsert]) then
-    dsTablaG.DataSet.Edit;
-  dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString :=
-    IfThen(FPivote.Activo, 'S', 'N');
-  dsTablaG.DataSet.Post;
+  PersistirPreferenciaPivoteDocumento(
+    dsTablaG.DataSet, 'ESPIVOTE_HORIZONTAL_PEDC', FPivote.Activo);
 end;
 
 procedure TfrmMtoPedidosCompra.btnTallasHorizontalClick(Sender: TObject);
@@ -1292,22 +1250,11 @@ end;
 
 procedure TfrmMtoPedidosCompra.KeyDown(var Key: Word; Shift: TShiftState);
 begin
-  // F1: alterna Auto (desglose) -> SKU -> Tallas horizontal con las
-  // lineas del pedido a la vista, igual que pedidos de venta.
-  if (Key = VK_F1) and (Shift = []) and
-     (pcPedido.ActivePage = tsLineasPedido) and
-     (dmmPedidosCompra <> nil) then
-  begin
-    Key := 0;
-    case FModoEntradaSel of
-      mcsAuto: FModoEntradaSel := mcsSku;
-      mcsSku: FModoEntradaSel := mcsTallasInline;
-      mcsTallasInline: FModoEntradaSel := mcsTallasHorPed;
-    else
-      FModoEntradaSel := mcsAuto;
-    end;
-    ConstruirModoEntrada;
-  end;
+  ProcesarTeclaCambioModoDocumento(
+    Key, Shift, (pcPedido.ActivePage = tsLineasPedido) and
+    (dmmPedidosCompra <> nil), FModoEntradaSel,
+    [mcsAuto, mcsSku, mcsTallasInline, mcsTallasHorPed],
+    ConstruirModoEntrada);
   inherited;
 end;
 
@@ -1317,13 +1264,9 @@ end;
 procedure TfrmMtoPedidosCompra.btnExpandirRecibidosClick(Sender: TObject);
 begin
   inherited;
-  if dmmPedidosCompra = nil then
-    Exit;
-  if FModoEntradaSel <> mcsTallasHorPed then
-  begin
-    FModoEntradaSel := mcsTallasHorPed;
-    ConstruirModoEntrada;
-  end;
+  if dmmPedidosCompra <> nil then
+    CambiarModoEntradaDocumento(
+      FModoEntradaSel, mcsTallasHorPed, ConstruirModoEntrada);
 end;
 
 // Rellena el sub-segmento 'A recibir' con el pendiente (Pedido -
@@ -1952,10 +1895,9 @@ procedure TfrmMtoPedidosCompra.tvLineasPedidoFocusedRecordChanged(
   ANewItemRecordFocusingChanged: Boolean);
 begin
   inherited;
-  if Assigned(FGestorTallas) and Assigned(FPivote) and FPivote.Activo then
-    FGestorTallas.ActualizarCaptionsLineaActiva;
-  if FMostrarAtributos then
-    CargarCaptionsAtributosLineaActiva;
+  ActualizarFocoLineaDocumento(
+    FGestorTallas, FPivote, FMostrarAtributos,
+    CargarCaptionsAtributosLineaActiva);
   // Al saltar de fila la celda activa cambia aunque la columna no —
   // refrescamos el label de contexto. Sender.Controller expone
   // FocusedItem (TcxCustomGridTableItem); FocusedColumn solo esta en
@@ -1998,27 +1940,14 @@ end;
 procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoEnter(Sender: TObject);
 begin
   inherited;
-  inLibGridTallasInline.ActivarEnterComoTab(Self, False);
-  AsegurarPrimeraLineaPedidoCompra;
-  // Contrato de entrada: primera construccion al entrar en el grid.
-  // El teardown cancela la linea vacia auto-anadida: se recrea.
-  if not FColsModoConstruido then
-  begin
-    ConstruirModoEntrada;
-    AsegurarPrimeraLineaPedidoCompra;
-  end
-  // Tallas INLINE: el pedido se fusiona al entrar al grid (intencion
-  // clara de trabajar sus lineas), nunca al navegar. Solo si trae
-  // lineas SKU sin pivotar; ya fusionado, entrar no cuesta nada.
-  else if (FModoEntradaSel = mcsTallasInline) and
-          Assigned(dmmPedidosCompra) and
-          dmmPedidosCompra.HayLineasSinPivotar then
-  begin
-    ConstruirModoEntrada;
-    AsegurarPrimeraLineaPedidoCompra;
-  end;
-  if FModoEntrada <> nil then
-    FModoEntrada.MostrarEditor;
+  EntrarGridLineasDocumento(
+    Self, FColsModoConstruido,
+    FColsModoConstruido and
+    (FModoEntradaSel = mcsTallasInline) and
+    Assigned(dmmPedidosCompra) and
+    dmmPedidosCompra.HayLineasSinPivotar,
+    FModoEntrada, AsegurarPrimeraLineaPedidoCompra,
+    ConstruirModoEntrada);
 end;
 
 procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoExit(Sender: TObject);

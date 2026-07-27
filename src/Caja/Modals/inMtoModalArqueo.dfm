@@ -1,4 +1,4 @@
-inherited frmModalArqueo: TfrmModalArqueo
+﻿inherited frmModalArqueo: TfrmModalArqueo
   Caption = 'Arqueo de caja'
   ClientHeight = 639
   ClientWidth = 1006
@@ -836,80 +836,19 @@ inherited frmModalArqueo: TfrmModalArqueo
             Transparent = True
           end
         end
-        object pnlBilletes: TPanel
+        object pnlOtrasFP: TPanel
           Left = 8
           Top = 32
-          Width = 320
-          Height = 310
-          BevelInner = bvLowered
-          BevelOuter = bvNone
-          ParentBackground = False
-          TabOrder = 1
-          object lblBilletesTit: TcxLabel
-            Left = 8
-            Top = 4
-            Caption = 'Efectivo (billetes y monedas)'
-            Style.TextColor = clNavy
-            TabOrder = 1
-            Transparent = True
-          end
-          object cxgrdBilletes: TcxGrid
-            Left = 4
-            Top = 26
-            Width = 310
-            Height = 252
-            TabOrder = 0
-            object tvBilletes: TcxGridTableView
-              OnKeyDown = tvBilletesKeyDown
-              OnEditValueChanged = tvBilletesUdsEditValueChanged
-              OptionsBehavior.FocusCellOnTab = True
-              OptionsData.Deleting = False
-              OptionsData.Inserting = False
-              OptionsView.ColumnAutoWidth = True
-              OptionsView.GroupByBox = False
-              object tvBilletesDenom: TcxGridColumn
-                Caption = 'Denominaci'#243'n'
-                Options.Editing = False
-                Width = 100
-              end
-              object tvBilletesUds: TcxGridColumn
-                Caption = 'Uds'
-                PropertiesClassName = 'TcxSpinEditProperties'
-                Width = 60
-              end
-              object tvBilletesSubtotal: TcxGridColumn
-                Caption = 'Subtotal'
-                PropertiesClassName = 'TcxCurrencyEditProperties'
-                Options.Editing = False
-                Width = 100
-              end
-            end
-            object lvBilletes: TcxGridLevel
-              GridView = tvBilletes
-            end
-          end
-          object lblTotalEfectivo: TcxLabel
-            Left = 8
-            Top = 284
-            Caption = '0,00'
-            Style.TextColor = clNavy
-            TabOrder = 2
-            Transparent = True
-          end
-        end
-        object pnlOtrasFP: TPanel
-          Left = 336
-          Top = 32
-          Width = 628
+          Width = 956
           Height = 186
           BevelInner = bvLowered
           BevelOuter = bvNone
           ParentBackground = False
-          TabOrder = 2
+          TabOrder = 1
           object lblOtrasFPTit: TcxLabel
             Left = 8
             Top = 4
-            Caption = 'Otras formas de pago'
+            Caption = 'Recuento por forma de pago'
             Style.TextColor = clNavy
             TabOrder = 1
             Transparent = True
@@ -917,7 +856,7 @@ inherited frmModalArqueo: TfrmModalArqueo
           object cxgrdRecuento: TcxGrid
             Left = 4
             Top = 26
-            Width = 618
+            Width = 946
             Height = 154
             TabOrder = 0
             object tvRecuento: TcxGridTableView
@@ -926,6 +865,7 @@ inherited frmModalArqueo: TfrmModalArqueo
               OptionsBehavior.FocusCellOnTab = True
               OptionsData.Deleting = False
               OptionsData.Inserting = False
+              OptionsView.ColumnAutoWidth = True
               OptionsView.GroupByBox = False
               object tvRecuentoFP: TcxGridColumn
                 Caption = 'C'#243'digo'
@@ -961,14 +901,14 @@ inherited frmModalArqueo: TfrmModalArqueo
           end
         end
         object pnlRecuentoTotales: TPanel
-          Left = 336
-          Top = 211
-          Width = 665
+          Left = 8
+          Top = 224
+          Width = 956
           Height = 195
           BevelInner = bvLowered
           BevelOuter = bvNone
           ParentBackground = False
-          TabOrder = 3
+          TabOrder = 2
           object lblDesgloseEfectivo: TcxLabel
             Left = 8
             Top = 4
@@ -1121,11 +1061,11 @@ inherited frmModalArqueo: TfrmModalArqueo
         end
         object btnGrabarArqueo: TcxButton
           Left = 340
-          Top = 412
+          Top = 425
           Width = 320
           Height = 34
           Caption = 'Grabar Arqueo y emitir justificante (F2)'
-          TabOrder = 4
+          TabOrder = 3
           OnClick = btnGrabarArqueoClick
         end
       end

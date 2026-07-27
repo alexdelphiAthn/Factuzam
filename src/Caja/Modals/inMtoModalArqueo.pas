@@ -35,7 +35,7 @@ uses
   Uni,
   inMtoFrmBase, inLibArqueo, inLibArqueoTicket, inLibArqueoPersistencia,
   Vcl.ComCtrls, dxCore,
-  cxDateUtils, cxCurrencyEdit, cxSpinEdit, cxRadioGroup,
+  cxDateUtils, cxCurrencyEdit, cxRadioGroup,
   JvComponentBase, JvEnterTab, cxLocalization, cxGroupBox;
 
 type
@@ -179,17 +179,7 @@ type
     pnlAnterior: TPanel;
     lblAnteriorTit: TcxLabel;
     lblAnteriorImporte: TcxLabel;
-    // -- Sección 2: Billetes y monedas
-    pnlBilletes: TPanel;
-    lblBilletesTit: TcxLabel;
-    cxgrdBilletes: TcxGrid;
-    tvBilletes: TcxGridTableView;
-    tvBilletesDenom: TcxGridColumn;
-    tvBilletesUds: TcxGridColumn;
-    tvBilletesSubtotal: TcxGridColumn;
-    lvBilletes: TcxGridLevel;
-    lblTotalEfectivo: TcxLabel;
-    // -- Sección 3: Otras formas de pago
+    // -- Sección 2: Recuento por forma de pago
     pnlOtrasFP: TPanel;
     lblOtrasFPTit: TcxLabel;
     cxgrdRecuento: TcxGrid;
@@ -200,7 +190,7 @@ type
     tvRecuentoImporte: TcxGridColumn;
     tvRecuentoDiferencia: TcxGridColumn;
     lvRecuento: TcxGridLevel;
-    // -- Sección 4: Totales + Retirada + Dejo mañana
+    // -- Sección 3: Totales + Retirada + Dejo mañana
     pnlRecuentoTotales: TPanel;
     lblDesgloseEfectivo: TcxLabel;
     lblRecTotalSistemaLbl: TcxLabel;
@@ -258,11 +248,6 @@ type
     procedure tvRecuentoImportePropertiesEditValueChanged(
       Sender: TcxCustomGridTableView;
       AItem: TcxCustomGridTableItem);
-    procedure tvBilletesUdsEditValueChanged(
-      Sender: TcxCustomGridTableView;
-      AItem: TcxCustomGridTableItem);
-    procedure tvBilletesKeyDown(Sender: TObject;
-      var Key: Word; Shift: TShiftState);
     procedure tvRecuentoKeyDown(Sender: TObject;
       var Key: Word; Shift: TShiftState);
     procedure txtRetiradaImportePropertiesChange(Sender: TObject);
@@ -273,6 +258,7 @@ type
     FAlmacen      : string;
     FCaja         : string;
     FArqueoActual : TArqueoCaja;
+    FArqueoTarjetasPermitido: Boolean;
     FPuedeVerResumen: Boolean;
     function  FechaEditada(AEdit: TcxDateEdit): TDateTime;
     function  FechaDesdeSeleccionada: TDateTime;
@@ -283,13 +269,10 @@ type
     procedure RefrescarResumenes;
     procedure AbrirQryConParams(Q: TUniQuery);
     function  FormatImporte(AValor: Currency): string;
-    procedure CargarBilletes;
     procedure CargarRecuento(const AArqueo: TArqueoCaja);
-    procedure RecalcularTotalEfectivo;
     procedure RecalcularTotalesRecuento;
     procedure RecalcularDejoManana;
-    function  ObtenerDesgloseBilletes: string;
-    function  ObtenerTotalEfectivoBilletes: Currency;
+    function  ObtenerEfectivoRecontado: Currency;
     function  ObtenerConceptoRetirada: string;
     function  BuscarNombreVendedor(const ACodigo: string): string;
     procedure GrabarArqueo;
@@ -334,6 +317,8 @@ begin
     frm.FEmpresa := AEmpresa;
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
+    frm.FArqueoTarjetasPermitido :=
+      frm.ParametrosCaja.GetBool('vgerArqueoTarjetas', False);
     // Defaults: desde = 00:00:00, hasta = 23:59:59 del mismo día/rango.
     frm.dteFechaDesde.EditValue := DateOf(AFechaDesde);
     frm.dteFechaHasta.EditValue :=
@@ -352,10 +337,20 @@ begin
          PERMISO_ARQUEO_VER_IMPORTES,
          paPermitir)) then
     begin
-      // Ocultar importes en recuento; solo salen en el ticket de cierre
+      // El usuario introduce el recuento sin ver los importes del sistema.
       frm.tvRecuentoSistema.Visible := False;
-      frm.tvRecuentoImporte.Visible := False;
       frm.tvRecuentoDiferencia.Visible := False;
+    end;
+    if frm.FArqueoTarjetasPermitido then
+    begin
+      // Arqueo ciego: no mostrar propuestas de efectivo ni de tarjetas.
+      frm.tvRecuentoSistema.Visible := False;
+      frm.tvRecuentoDiferencia.Visible := False;
+      frm.lblDesgloseEfectivo.Visible := False;
+      frm.lblRecTotalSistemaLbl.Visible := False;
+      frm.lblRecTotalSistema.Visible := False;
+      frm.lblRecDiferenciaLbl.Visible := False;
+      frm.lblRecDiferencia.Visible := False;
     end;
     frm.FPuedeVerResumen :=
       Assigned(frm.Permisos) and
@@ -840,39 +835,8 @@ begin
 end;
 
 // =============================================================================
-//   Recuento: billetes, formas de pago, retirada, dejo mañana
+//   Recuento: formas de pago, retirada, dejo mañana
 // =============================================================================
-
-const
-  DENOMINACIONES: array[0..14] of Double = (
-    500, 200, 100, 50, 20, 10, 5, 2, 1, 0.50, 0.20, 0.10, 0.05, 0.02, 0.01);
-
-procedure TfrmModalArqueo.CargarBilletes;
-var
-  i: Integer;
-  sNombre: string;
-begin
-  tvBilletes.BeginUpdate;
-  try
-    tvBilletes.DataController.RecordCount := Length(DENOMINACIONES);
-    for i := 0 to High(DENOMINACIONES) do
-    begin
-      if DENOMINACIONES[i] >= 5 then
-        sNombre := FormatFloat('0', DENOMINACIONES[i]) + ' EUR'
-      else
-        sNombre := FormatFloat('0.00', DENOMINACIONES[i]) + ' EUR';
-      tvBilletes.DataController.Values[
-        i, tvBilletesDenom.Index] := sNombre;
-      tvBilletes.DataController.Values[
-        i, tvBilletesUds.Index] := 0;
-      tvBilletes.DataController.Values[
-        i, tvBilletesSubtotal.Index] := Double(0);
-    end;
-  finally
-    tvBilletes.EndUpdate;
-  end;
-  lblTotalEfectivo.Caption := '0,00';
-end;
 
 procedure TfrmModalArqueo.CargarRecuento(const AArqueo: TArqueoCaja);
 var
@@ -890,13 +854,24 @@ begin
        FormatFloat(',0.00', AArqueo.EfectivoEntradas),
        FormatFloat(',0.00', AArqueo.EfectivoSalidas),
        FormatFloat(',0.00', AArqueo.EfectivoAnterior)]);
-  { Grid de otras formas de pago (solo las NO efectivo) }
+  { Grid de recuento: efectivo agrupado y formas de pago sin cajón }
   Log.LogInfo(Format('CargarRecuento: PagosPorForma=%d filas',
     [Length(AArqueo.PagosPorForma)]));
   tvRecuento.BeginUpdate;
   try
-    tvRecuento.DataController.RecordCount := 0;
-    iRow := 0;
+    tvRecuento.DataController.RecordCount := 1;
+    tvRecuento.DataController.Values[
+      0, tvRecuentoFP.Index] := 'EFE';
+    tvRecuento.DataController.Values[
+      0, tvRecuentoDesc.Index] := 'Efectivo';
+    tvRecuento.DataController.Values[
+      0, tvRecuentoSistema.Index] := Double(AArqueo.EfectivoCaja);
+    tvRecuento.DataController.Values[
+      0, tvRecuentoImporte.Index] := Double(0);
+    tvRecuento.DataController.Values[
+      0, tvRecuentoDiferencia.Index] :=
+      -Double(AArqueo.EfectivoCaja);
+    iRow := 1;
     for i := 0 to High(AArqueo.PagosPorForma) do
     begin
       Log.LogInfo(Format('  FP[%d]: %s (%s) EsEfectivo=%s Importe=%.2f',
@@ -904,54 +879,55 @@ begin
          AArqueo.PagosPorForma[i].Descripcion,
          BoolToStr(AArqueo.PagosPorForma[i].EsEfectivo, True),
          Double(AArqueo.PagosPorForma[i].Importe)]));
-      if AArqueo.PagosPorForma[i].EsEfectivo then
-        Continue;
-      tvRecuento.DataController.RecordCount := iRow + 1;
-      tvRecuento.DataController.Values[
-        iRow, tvRecuentoFP.Index] :=
-        AArqueo.PagosPorForma[i].Codigo;
-      tvRecuento.DataController.Values[
-        iRow, tvRecuentoDesc.Index] :=
-        AArqueo.PagosPorForma[i].Descripcion;
-      tvRecuento.DataController.Values[
-        iRow, tvRecuentoSistema.Index] :=
-        Double(AArqueo.PagosPorForma[i].Importe);
-      // Pre-rellenar con el importe del sistema para avisar del recuento
-      tvRecuento.DataController.Values[
-        iRow, tvRecuentoImporte.Index] :=
-        Double(AArqueo.PagosPorForma[i].Importe);
-      tvRecuento.DataController.Values[
-        iRow, tvRecuentoDiferencia.Index] := Double(0);
-      Inc(iRow);
+      if not AArqueo.PagosPorForma[i].EsEfectivo then
+      begin
+        tvRecuento.DataController.RecordCount := iRow + 1;
+        tvRecuento.DataController.Values[
+          iRow, tvRecuentoFP.Index] :=
+          AArqueo.PagosPorForma[i].Codigo;
+        tvRecuento.DataController.Values[
+          iRow, tvRecuentoDesc.Index] :=
+          AArqueo.PagosPorForma[i].Descripcion;
+        tvRecuento.DataController.Values[
+          iRow, tvRecuentoSistema.Index] :=
+          Double(AArqueo.PagosPorForma[i].Importe);
+        if FArqueoTarjetasPermitido then
+        begin
+          tvRecuento.DataController.Values[
+            iRow, tvRecuentoImporte.Index] := Double(0);
+          tvRecuento.DataController.Values[
+            iRow, tvRecuentoDiferencia.Index] :=
+            -Double(AArqueo.PagosPorForma[i].Importe);
+        end
+        else
+        begin
+          tvRecuento.DataController.Values[
+            iRow, tvRecuentoImporte.Index] :=
+            Double(AArqueo.PagosPorForma[i].Importe);
+          tvRecuento.DataController.Values[
+            iRow, tvRecuentoDiferencia.Index] := Double(0);
+        end;
+        Inc(iRow);
+      end;
     end;
   finally
     tvRecuento.EndUpdate;
   end;
-  { Inicializar billetes a 0 }
-  CargarBilletes;
   RecalcularTotalesRecuento;
 end;
 
-function TfrmModalArqueo.ObtenerTotalEfectivoBilletes: Currency;
+function TfrmModalArqueo.ObtenerEfectivoRecontado: Currency;
 var
-  i: Integer;
   v: Variant;
 begin
   Result := 0;
-  for i := 0 to tvBilletes.DataController.RecordCount - 1 do
+  if tvRecuento.DataController.RecordCount > 0 then
   begin
-    v := tvBilletes.DataController.Values[
-           i, tvBilletesSubtotal.Index];
+    v := tvRecuento.DataController.Values[
+           0, tvRecuentoImporte.Index];
     if not VarIsNull(v) then
-      Result := Result + Currency(Double(v));
+      Result := Currency(Double(v));
   end;
-end;
-
-procedure TfrmModalArqueo.RecalcularTotalEfectivo;
-begin
-  lblTotalEfectivo.Caption :=
-    FormatFloat(',0.00', ObtenerTotalEfectivoBilletes);
-  RecalcularTotalesRecuento;
 end;
 
 procedure TfrmModalArqueo.RecalcularTotalesRecuento;
@@ -960,19 +936,15 @@ var
   dSistema, dRecuento, dDif: Double;
   v: Variant;
 begin
-  { Sistema: efectivo caja + otras FP }
-  dSistema := Double(FArqueoActual.EfectivoCaja);
+  { Sistema y recuento: todas las formas, incluido el efectivo agrupado }
+  dSistema := 0;
+  dRecuento := 0;
   for i := 0 to tvRecuento.DataController.RecordCount - 1 do
   begin
     v := tvRecuento.DataController.Values[
            i, tvRecuentoSistema.Index];
     if not VarIsNull(v) then
       dSistema := dSistema + Double(v);
-  end;
-  { Recontado: billetes + otras FP recontadas }
-  dRecuento := Double(ObtenerTotalEfectivoBilletes);
-  for i := 0 to tvRecuento.DataController.RecordCount - 1 do
-  begin
     v := tvRecuento.DataController.Values[
            i, tvRecuentoImporte.Index];
     if not VarIsNull(v) then
@@ -995,43 +967,13 @@ procedure TfrmModalArqueo.RecalcularDejoManana;
 var
   dEfectivoRecontado, dRetirada, dDejo: Currency;
 begin
-  dEfectivoRecontado := ObtenerTotalEfectivoBilletes;
+  dEfectivoRecontado := ObtenerEfectivoRecontado;
   dRetirada := Currency(txtRetiradaImporte.Value);
   dDejo := dEfectivoRecontado - dRetirada;
   if dDejo < 0 then
     dDejo := 0;
   lblDejoImporte.Caption :=
     FormatFloat(',0.00', dDejo) + ' EUR';
-end;
-
-procedure TfrmModalArqueo.tvBilletesUdsEditValueChanged(
-  Sender: TcxCustomGridTableView;
-  AItem: TcxCustomGridTableItem);
-var
-  iRow, iUds: Integer;
-  dDenom: Double;
-  v: Variant;
-  oEdit: TcxCustomEdit;
-begin
-  if AItem <> tvBilletesUds then
-    Exit;
-  iRow := tvBilletes.DataController.FocusedRecordIndex;
-  if (iRow < 0) or (iRow > High(DENOMINACIONES)) then
-    Exit;
-  dDenom := DENOMINACIONES[iRow];
-  iUds := 0;
-  oEdit := tvBilletes.Controller.EditingController.Edit;
-  if Assigned(oEdit) then
-  begin
-    v := oEdit.EditValue;
-    if not VarIsNull(v) then
-      iUds := Round(Double(v));
-  end;
-  tvBilletes.DataController.Values[
-    iRow, tvBilletesUds.Index] := iUds;
-  tvBilletes.DataController.Values[
-    iRow, tvBilletesSubtotal.Index] := dDenom * iUds;
-  RecalcularTotalEfectivo;
 end;
 
 procedure TfrmModalArqueo.tvRecuentoImportePropertiesEditValueChanged(
@@ -1067,39 +1009,6 @@ begin
   tvRecuento.DataController.Values[
     iRow, tvRecuentoImporte.Index] := dRecuento;
   RecalcularTotalesRecuento;
-end;
-
-procedure TfrmModalArqueo.tvBilletesKeyDown(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-var
-  iRow, iDest: Integer;
-begin
-  if (Key = VK_RETURN) or
-     ((Key = VK_END) and (ssCtrl in Shift)) or
-     ((Key = VK_HOME) and (ssCtrl in Shift)) then
-  begin
-    if tvBilletes.Controller.EditingController.IsEditing then
-      tvBilletes.Controller.EditingController.HideEdit(True);
-    iRow := tvBilletes.DataController.FocusedRecordIndex;
-    if Key = VK_RETURN then
-      iDest := iRow + 1
-    else if Key = VK_END then
-      iDest := tvBilletes.DataController.RecordCount - 1
-    else
-      iDest := 0;
-    if iDest < 0 then
-      iDest := 0;
-    if iDest > tvBilletes.DataController.RecordCount - 1 then
-      iDest := tvBilletes.DataController.RecordCount - 1;
-    if iDest <> iRow then
-    begin
-      tvBilletes.DataController.FocusedRecordIndex := iDest;
-      tvBilletes.Controller.FocusedColumn := tvBilletesUds;
-      tvBilletes.Controller.EditingController.ShowEdit(
-        tvBilletesUds);
-    end;
-    Key := 0;
-  end;
 end;
 
 procedure TfrmModalArqueo.tvRecuentoKeyDown(Sender: TObject;
@@ -1139,31 +1048,6 @@ procedure TfrmModalArqueo.txtRetiradaImportePropertiesChange(
   Sender: TObject);
 begin
   RecalcularDejoManana;
-end;
-
-function TfrmModalArqueo.ObtenerDesgloseBilletes: string;
-var
-  i, iUds: Integer;
-  v: Variant;
-  sl: TStringList;
-begin
-  sl := TStringList.Create;
-  try
-    sl.Delimiter := ';';
-    for i := 0 to High(DENOMINACIONES) do
-    begin
-      iUds := 0;
-      v := tvBilletes.DataController.Values[
-             i, tvBilletesUds.Index];
-      if not VarIsNull(v) then
-        iUds := Round(Double(v));
-      sl.Add(FormatFloat('0.##', DENOMINACIONES[i]) +
-             ':' + IntToStr(iUds));
-    end;
-    Result := sl.DelimitedText;
-  finally
-    FreeAndNil(sl);
-  end;
 end;
 
 function TfrmModalArqueo.ObtenerConceptoRetirada: string;
@@ -1239,8 +1123,7 @@ end;
 procedure TfrmModalArqueo.GrabarArqueo;
 var
   Lineas: TArray<TArqueoRecuentoLinea>;
-  LinEfe: TArqueoRecuentoLinea;
-  i, iLin: Integer;
+  i: Integer;
   dTotalRecuento, dDiferenciaTotal: Currency;
   dTotalSistema: Currency;
   dEfectivoRecontado, dRetirada, dDejo: Currency;
@@ -1303,7 +1186,7 @@ begin
   finally
     FreeAndNil(qryChk);
   end;
-  dEfectivoRecontado := ObtenerTotalEfectivoBilletes;
+  dEfectivoRecontado := ObtenerEfectivoRecontado;
   if (dEfectivoRecontado = 0)
      and (tvRecuento.DataController.RecordCount = 0) then
   begin
@@ -1334,45 +1217,38 @@ begin
   if dDejo < 0 then
     dDejo := 0;
   sConceptoRet := ObtenerConceptoRetirada;
-  sDesglose    := ObtenerDesgloseBilletes;
+  sDesglose    := '';
   sObs         := Trim(txtObservaciones.Text);
-  { Montar array de líneas: 1 para efectivo + N para otras FP }
-  iLin := 1 + tvRecuento.DataController.RecordCount;
-  SetLength(Lineas, iLin);
-  { Línea 0: efectivo (billetes+monedas) }
-  LinEfe.CodigoFP    := 'EFE';
-  LinEfe.Descripcion := 'Efectivo (billetes y monedas)';
-  LinEfe.EsCajon     := 'S';
-  LinEfe.Sistema     := FArqueoActual.EfectivoCaja;
-  LinEfe.Recuento    := dEfectivoRecontado;
-  LinEfe.Diferencia  := dEfectivoRecontado - FArqueoActual.EfectivoCaja;
-  Lineas[0] := LinEfe;
-  dTotalSistema  := FArqueoActual.EfectivoCaja;
-  dTotalRecuento := dEfectivoRecontado;
-  { Líneas 1..N: otras formas de pago }
+  { Montar una línea por forma de pago; la primera agrupa el efectivo }
+  SetLength(Lineas, tvRecuento.DataController.RecordCount);
+  dTotalSistema := 0;
+  dTotalRecuento := 0;
   for i := 0 to tvRecuento.DataController.RecordCount - 1 do
   begin
-    Lineas[i + 1].CodigoFP := VarToStr(
+    Lineas[i].CodigoFP := VarToStr(
       tvRecuento.DataController.Values[i, tvRecuentoFP.Index]);
-    Lineas[i + 1].Descripcion := VarToStr(
+    Lineas[i].Descripcion := VarToStr(
       tvRecuento.DataController.Values[i, tvRecuentoDesc.Index]);
-    Lineas[i + 1].EsCajon := 'N';
+    if i = 0 then
+      Lineas[i].EsCajon := 'S'
+    else
+      Lineas[i].EsCajon := 'N';
     v := tvRecuento.DataController.Values[
            i, tvRecuentoSistema.Index];
     if not VarIsNull(v) then
-      Lineas[i + 1].Sistema := Currency(Double(v))
+      Lineas[i].Sistema := Currency(Double(v))
     else
-      Lineas[i + 1].Sistema := 0;
+      Lineas[i].Sistema := 0;
     v := tvRecuento.DataController.Values[
            i, tvRecuentoImporte.Index];
     if not VarIsNull(v) then
-      Lineas[i + 1].Recuento := Currency(Double(v))
+      Lineas[i].Recuento := Currency(Double(v))
     else
-      Lineas[i + 1].Recuento := 0;
-    Lineas[i + 1].Diferencia :=
-      Lineas[i + 1].Recuento - Lineas[i + 1].Sistema;
-    dTotalSistema  := dTotalSistema  + Lineas[i + 1].Sistema;
-    dTotalRecuento := dTotalRecuento + Lineas[i + 1].Recuento;
+      Lineas[i].Recuento := 0;
+    Lineas[i].Diferencia :=
+      Lineas[i].Recuento - Lineas[i].Sistema;
+    dTotalSistema := dTotalSistema + Lineas[i].Sistema;
+    dTotalRecuento := dTotalRecuento + Lineas[i].Recuento;
   end;
   dDiferenciaTotal := dTotalRecuento - dTotalSistema;
   Screen.Cursor := crHourGlass;

@@ -700,7 +700,6 @@ uses
   inLibShowMto,
   inLibFacturas,
   inLibGridCantidad,
-  inLibFotos,
   inLibArticulosValidador,
   inLibArticulosResolver,
   inMtoGenSearch,
@@ -2044,28 +2043,15 @@ end;
 // de la linea actual.
 procedure TfrmMtoFacturasBase.ResolverArtSkuActivo(out ACodArt,
                                                    ACodSku: string);
-var
-  ds: TDataSet;
 begin
-  ACodArt := '';
-  ACodSku := '';
-  if Assigned(tvLineasFactura.DataController.DataSource) then
-  begin
-    ds := tvLineasFactura.DataController.DataSource.DataSet;
-    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
-  end;
+  ResolverArtSkuActivoDocumento(
+    tvLineasFactura, ACodArt, ACodSku);
 end;
 
 function TfrmMtoFacturasBase.DataSourcesParaFoto: TArray<TDataSource>;
 begin
-  // dsTablaG es la cabecera (no tiene articulo). El articulo activo
-  // viene de la linea seleccionada en tvLineasFactura, cuyo
-  // DataSource es dmmFacturas.dsLinFac. Lo anadimos al hook para que
-  // la pantalla flotante refresque al cambiar de linea.
-  if Assigned(dmmFacturas) then
-    Result := [dsTablaG, dmmFacturas.dsLinFac]
-  else
-    Result := [dsTablaG];
+  Result := DataSourcesParaFotoDocumento(
+    dsTablaG, tvLineasFactura);
 end;
 
 function TfrmMtoFacturasBase.ContarHijosActivos: Integer;
@@ -3479,23 +3465,11 @@ end;
 
 procedure TfrmMtoFacturasBase.KeyDown(var Key: Word; Shift: TShiftState);
 begin
-  // F1: alterna Auto (desglose) -> SKU -> Tallas horizontal con las
-  // lineas de la factura a la vista. Con el modo creacion de articulos
-  // activo la presentacion es la clasica y F1 queda inerte.
-  if (Key = VK_F1) and (Shift = []) and
-     (pcPantalla.ActivePage = tsFicha) and
-     (pcDetail.ActivePage = tsLineasFactura) and
-     (not ModoCreacionSolicitado) then
-  begin
-    Key := 0;
-    case FModoEntradaSel of
-      mcsAuto: FModoEntradaSel := mcsSku;
-      mcsSku: FModoEntradaSel := mcsTallasHorPed;
-    else
-      FModoEntradaSel := mcsAuto;
-    end;
-    ConstruirModoEntrada;
-  end;
+  ProcesarTeclaCambioModoDocumento(
+    Key, Shift, (pcPantalla.ActivePage = tsFicha) and
+    (pcDetail.ActivePage = tsLineasFactura) and
+    (not ModoCreacionSolicitado), FModoEntradaSel,
+    [mcsAuto, mcsSku, mcsTallasHorPed], ConstruirModoEntrada);
   inherited;
 end;
 

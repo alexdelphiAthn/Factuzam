@@ -13,16 +13,17 @@
 {    talla y atributo usadas por los documentos de compra, incluida la carga  }
 {    de nombres de atributo y la configuración compartida del gestor y el     }
 {    pivote de tallas, el desmontaje y construcción del modo, su configuración}
-{    base, las columnas host, el pivote por bandas y los atributos globales.  }
+{    base, las columnas host, el pivote por bandas, los atributos globales,  }
+{    los hooks de ciclo de vida, la navegación, el modo y la foto activa.   }
 {******************************************************************************}
 unit inLibColumnasDocumento;
 
 interface
 
 uses
-  System.Classes, Data.DB, Uni, cxEdit, cxGridCustomTableView,
-  cxGridDBTableView, inLibContextoSesionIntf, inLibColumnasSkuIntf,
-  inLibGridTallasInline, inLibGridPivoteCompra,
+  System.Classes, Vcl.Forms, Data.DB, Uni, cxEdit,
+  cxGridCustomTableView, cxGridDBTableView, inLibContextoSesionIntf,
+  inLibColumnasSkuIntf, inLibGridTallasInline, inLibGridPivoteCompra,
   inLibGridPivoteVenta;
 
 type
@@ -55,6 +56,8 @@ type
 
   TConjuntoModosColumnasSku = set of TModoColumnasSku;
 
+  TAccionDocumento = procedure of object;
+
 procedure CrearColumnasTallasDocumento(
   AVista: TcxGridDBTableView; const APrefijoNombre: string;
   AAncho: Integer; var AColumnas: array of TcxGridDBColumn);
@@ -78,6 +81,49 @@ function ConstruirModoEntradaDocumento(
   AModoSeleccionado: TModoColumnasSku;
   const AModosDegradables: TConjuntoModosColumnasSku;
   const AContextoLog: string): Boolean;
+procedure ConfigurarColumnaBotonDocumento(
+  AColumna: TcxGridDBColumn;
+  AOnButtonClick: TcxEditButtonClickEvent;
+  AOnValidate: TcxEditValidateEvent = nil);
+function ConfigurarColumnaBusquedaDocumento(
+  AVista: TcxGridDBTableView; const ACampo: string;
+  AOnButtonClick: TcxEditButtonClickEvent;
+  AOnValidate: TcxEditValidateEvent = nil): TcxGridDBColumn;
+function CrearColumnaColorPivoteDocumento(
+  AVista: TcxGridDBTableView; const ANombre: string;
+  AAncho: Integer): TcxGridDBColumn;
+procedure LiberarModoYGestoresDocumento(
+  var AModoEntrada: IModoEntradaGrid;
+  var APivote: TGridPivoteCompra;
+  var AGestorTallas: TGestorGridTallas);
+procedure ActualizarModoEntradaAlNavegarDocumento(
+  AField: TField; ALineas: TDataSet; AMaster: TDataSource;
+  AConstruido: Boolean; AModo: TModoColumnasSku;
+  AReconstruirTallas: Boolean;
+  AConstruir, ADesempaquetar: TAccionDocumento);
+procedure ActualizarFocoLineaDocumento(
+  AGestorTallas: TGestorGridTallas;
+  APivote: TGridPivoteCompra; AMostrarAtributos: Boolean;
+  ACargarAtributos: TAccionDocumento);
+procedure EntrarGridLineasDocumento(
+  AFormulario: TForm; AConstruido, AReconstruir: Boolean;
+  var AModoEntrada: IModoEntradaGrid;
+  AAsegurarLinea, AConstruir: TAccionDocumento);
+function CambiarModoEntradaDocumento(
+  var AModo: TModoColumnasSku; ANuevoModo: TModoColumnasSku;
+  AConstruir: TAccionDocumento): Boolean;
+function ProcesarTeclaCambioModoDocumento(
+  var ATecla: Word; AShift: TShiftState; AHabilitado: Boolean;
+  var AModo: TModoColumnasSku;
+  const ACiclo: array of TModoColumnasSku;
+  AConstruir: TAccionDocumento): Boolean;
+procedure PersistirPreferenciaPivoteDocumento(
+  ADataSet: TDataSet; const ACampo: string; AActivo: Boolean);
+procedure ResolverArtSkuActivoDocumento(
+  AVista: TcxGridDBTableView; out ACodArt, ACodSku: string);
+function DataSourcesParaFotoDocumento(
+  ACabecera: TDataSource; AVista: TcxGridDBTableView):
+  TArray<TDataSource>;
 function CrearConfigColumnasSkuDocumento(
   AConexion: TUniConnection;
   const AContextoSesion: IContextoSesionAplicacion;
@@ -129,7 +175,8 @@ procedure ConfigurarEventosTallasDocumento(
 implementation
 
 uses
-  System.SysUtils, cxDataStorage, cxCurrencyEdit, inLibLog;
+  System.SysUtils, Winapi.Windows, cxDataStorage, cxButtonEdit,
+  cxCurrencyEdit, inLibLog, inLibFotos;
 
 procedure CrearColumnasTallasDocumento(
   AVista: TcxGridDBTableView; const APrefijoNombre: string;
@@ -263,6 +310,223 @@ begin
         raise;
     end;
   end;
+end;
+
+procedure ConfigurarColumnaBotonDocumento(
+  AColumna: TcxGridDBColumn;
+  AOnButtonClick: TcxEditButtonClickEvent;
+  AOnValidate: TcxEditValidateEvent);
+var
+  oBoton: TcxEditButton;
+  oPropiedades: TcxButtonEditProperties;
+begin
+  if Assigned(AColumna) then
+  begin
+    AColumna.PropertiesClass := TcxButtonEditProperties;
+    AColumna.Options.ShowEditButtons := isebAlways;
+    oPropiedades := TcxButtonEditProperties(AColumna.Properties);
+    oPropiedades.Buttons.Clear;
+    oBoton := oPropiedades.Buttons.Add;
+    oBoton.Kind := bkEllipsis;
+    oPropiedades.OnButtonClick := AOnButtonClick;
+    oPropiedades.OnValidate := AOnValidate;
+  end;
+end;
+
+function ConfigurarColumnaBusquedaDocumento(
+  AVista: TcxGridDBTableView; const ACampo: string;
+  AOnButtonClick: TcxEditButtonClickEvent;
+  AOnValidate: TcxEditValidateEvent): TcxGridDBColumn;
+begin
+  Result := nil;
+  if Assigned(AVista) then
+    Result := AVista.GetColumnByFieldName(ACampo);
+  ConfigurarColumnaBotonDocumento(
+    Result, AOnButtonClick, AOnValidate);
+end;
+
+function CrearColumnaColorPivoteDocumento(
+  AVista: TcxGridDBTableView; const ANombre: string;
+  AAncho: Integer): TcxGridDBColumn;
+begin
+  Result := nil;
+  if Assigned(AVista) then
+  begin
+    Result := AVista.CreateColumn;
+    Result.Name := ANombre;
+    Result.Caption := 'Color';
+    Result.Width := AAncho;
+    Result.Visible := False;
+    Result.Options.Editing := True;
+  end;
+end;
+
+procedure LiberarModoYGestoresDocumento(
+  var AModoEntrada: IModoEntradaGrid;
+  var APivote: TGridPivoteCompra;
+  var AGestorTallas: TGestorGridTallas);
+begin
+  if Assigned(AModoEntrada) then
+  begin
+    try
+      AModoEntrada.Desmontar;
+    except
+      // El cierre no debe quedar bloqueado por un desmontaje parcial.
+    end;
+    AModoEntrada := nil;
+  end;
+  FreeAndNil(APivote);
+  FreeAndNil(AGestorTallas);
+end;
+
+procedure ActualizarModoEntradaAlNavegarDocumento(
+  AField: TField; ALineas: TDataSet; AMaster: TDataSource;
+  AConstruido: Boolean; AModo: TModoColumnasSku;
+  AReconstruirTallas: Boolean;
+  AConstruir, ADesempaquetar: TAccionDocumento);
+var
+  bMasterEditable: Boolean;
+begin
+  bMasterEditable := Assigned(AMaster) and
+    (AMaster.State in dsEditModes);
+  if (AField = nil) and Assigned(ALineas) and ALineas.Active and
+     (not bMasterEditable) then
+  begin
+    if (not AConstruido) or
+       (AReconstruirTallas and (AModo = mcsTallasHorPed)) then
+    begin
+      if Assigned(AConstruir) then
+        AConstruir;
+    end
+    else if (AModo = mcsAuto) and Assigned(ADesempaquetar) then
+      ADesempaquetar;
+  end;
+end;
+
+procedure ActualizarFocoLineaDocumento(
+  AGestorTallas: TGestorGridTallas;
+  APivote: TGridPivoteCompra; AMostrarAtributos: Boolean;
+  ACargarAtributos: TAccionDocumento);
+begin
+  if Assigned(AGestorTallas) and Assigned(APivote) and
+     APivote.Activo then
+    AGestorTallas.ActualizarCaptionsLineaActiva;
+  if AMostrarAtributos and Assigned(ACargarAtributos) then
+    ACargarAtributos;
+end;
+
+procedure EntrarGridLineasDocumento(
+  AFormulario: TForm; AConstruido, AReconstruir: Boolean;
+  var AModoEntrada: IModoEntradaGrid;
+  AAsegurarLinea, AConstruir: TAccionDocumento);
+begin
+  inLibGridTallasInline.ActivarEnterComoTab(
+    AFormulario, False);
+  if Assigned(AAsegurarLinea) then
+    AAsegurarLinea;
+  if (not AConstruido) or AReconstruir then
+  begin
+    if Assigned(AConstruir) then
+      AConstruir;
+    if Assigned(AAsegurarLinea) then
+      AAsegurarLinea;
+  end;
+  if Assigned(AModoEntrada) then
+    AModoEntrada.MostrarEditor;
+end;
+
+function CambiarModoEntradaDocumento(
+  var AModo: TModoColumnasSku; ANuevoModo: TModoColumnasSku;
+  AConstruir: TAccionDocumento): Boolean;
+begin
+  Result := AModo <> ANuevoModo;
+  if Result then
+  begin
+    AModo := ANuevoModo;
+    if Assigned(AConstruir) then
+      AConstruir;
+  end;
+end;
+
+function ProcesarTeclaCambioModoDocumento(
+  var ATecla: Word; AShift: TShiftState; AHabilitado: Boolean;
+  var AModo: TModoColumnasSku;
+  const ACiclo: array of TModoColumnasSku;
+  AConstruir: TAccionDocumento): Boolean;
+var
+  iIndice: Integer;
+  ModoNuevo: TModoColumnasSku;
+begin
+  Result := (ATecla = VK_F1) and (AShift = []) and AHabilitado and
+    (Length(ACiclo) > 0);
+  if Result then
+  begin
+    ModoNuevo := ACiclo[0];
+    for iIndice := Low(ACiclo) to High(ACiclo) do
+    begin
+      if AModo = ACiclo[iIndice] then
+      begin
+        if iIndice < High(ACiclo) then
+          ModoNuevo := ACiclo[iIndice + 1];
+      end;
+    end;
+    ATecla := 0;
+    CambiarModoEntradaDocumento(AModo, ModoNuevo, AConstruir);
+  end;
+end;
+
+procedure PersistirPreferenciaPivoteDocumento(
+  ADataSet: TDataSet; const ACampo: string; AActivo: Boolean);
+var
+  oCampo: TField;
+  sValor: string;
+begin
+  oCampo := nil;
+  if Assigned(ADataSet) then
+  begin
+    if ADataSet.Active and (not ADataSet.IsEmpty) then
+      oCampo := ADataSet.FindField(ACampo);
+  end;
+  if Assigned(oCampo) then
+  begin
+    if not (ADataSet.State in dsEditModes) then
+      ADataSet.Edit;
+    sValor := 'N';
+    if AActivo then
+      sValor := 'S';
+    oCampo.AsString := sValor;
+    ADataSet.Post;
+  end;
+end;
+
+procedure ResolverArtSkuActivoDocumento(
+  AVista: TcxGridDBTableView; out ACodArt, ACodSku: string);
+var
+  oDataSource: TDataSource;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  oDataSource := nil;
+  if Assigned(AVista) then
+    oDataSource := AVista.DataController.DataSource;
+  if Assigned(oDataSource) then
+    inLibFotos.LeerArtSkuDeDataSet(
+      oDataSource.DataSet, ACodArt, ACodSku);
+end;
+
+function DataSourcesParaFotoDocumento(
+  ACabecera: TDataSource; AVista: TcxGridDBTableView):
+  TArray<TDataSource>;
+var
+  oDetalle: TDataSource;
+begin
+  oDetalle := nil;
+  if Assigned(AVista) then
+    oDetalle := AVista.DataController.DataSource;
+  if Assigned(oDetalle) then
+    Result := [ACabecera, oDetalle]
+  else
+    Result := [ACabecera];
 end;
 
 function CrearConfigColumnasSkuDocumento(

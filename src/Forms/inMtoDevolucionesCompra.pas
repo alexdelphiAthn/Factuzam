@@ -313,7 +313,6 @@ implementation
 uses
   System.StrUtils,
   inLibFiltroUsuario,
-  inLibFotos,
   inLibArticulosResolver,
   inLibArticulosValidador,
   inLibGridCantidad,
@@ -371,16 +370,9 @@ end;
 // (CODIGO_ART_DEVCLIN / CODIGO_UNIDAD_DEVCLIN).
 procedure TfrmMtoDevolucionesCompra.ResolverArtSkuActivo(out ACodArt,
                                                       ACodSku: string);
-var
-  ds: TDataSet;
 begin
-  ACodArt := '';
-  ACodSku := '';
-  if Assigned(tvLineasDevolucion.DataController.DataSource) then
-  begin
-    ds := tvLineasDevolucion.DataController.DataSource.DataSet;
-    inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
-  end;
+  ResolverArtSkuActivoDocumento(
+    tvLineasDevolucion, ACodArt, ACodSku);
   if ACodArt = '' then
   begin
     ACodArt := ValorLineaActiva('CODIGO_ART_DEVCLIN');
@@ -388,20 +380,13 @@ begin
   end;
 end;
 
-// Para que la pantalla flotante refresque al moverse entre lineas del
-// devolucion, ademas de dsTablaG (cabecera) enganchamos
-// dsDevolucionesCompraLineas.
 function TfrmMtoDevolucionesCompra.DataSourcesParaFoto: TArray<TDataSource>;
 begin
-  if Assigned(dmmDevolucionesCompra) then
-    Result := [dsTablaG, dmmDevolucionesCompra.dsDevolucionesCompraLineas]
-  else
-    Result := [dsTablaG];
+  Result := DataSourcesParaFotoDocumento(
+    dsTablaG, tvLineasDevolucion);
 end;
 
 procedure TfrmMtoDevolucionesCompra.FormCreate(Sender: TObject);
-var
-  colSku: TcxGridDBColumn;
 begin
   FColorPivotCodigos := TDictionary<string, string>.Create;
   // Columnas no-bound de tallas y atributos ANTES del inherited.
@@ -410,12 +395,8 @@ begin
   // Columna no-bound 'Color' solo visible en modo pivote: distingue las
   // lineas representantes que comparten articulo. El pintado del swatch
   // lo hace la libreria de pivote tras crearla (ver mas abajo).
-  FColColorPivot := tvLineasDevolucion.CreateColumn;
-  FColColorPivot.Name    := 'colLinDevcColorPivot';
-  FColColorPivot.Caption := 'Color';
-  FColColorPivot.Width   := 110;
-  FColColorPivot.Visible := False;
-  FColColorPivot.Options.Editing := True;
+  FColColorPivot := CrearColumnaColorPivoteDocumento(
+    tvLineasDevolucion, 'colLinDevcColorPivot', 110);
   FColColorPivot.DataBinding.ValueTypeClass := TcxStringValueType;
   FColColorPivot.PropertiesClass := TcxComboBoxProperties;
   with TcxComboBoxProperties(FColColorPivot.Properties) do
@@ -431,20 +412,10 @@ begin
     OnEditValueChanged := ColorPivotEditValueChanged;
   end;
   inherited;
-  colSku := tvLineasDevolucion.GetColumnByFieldName('CODIGO_UNIDAD_DEVCLIN');
-  if colSku <> nil then
-  begin
-    colSku.PropertiesClass := TcxButtonEditProperties;
-    colSku.Options.ShowEditButtons := isebAlways;
-    with TcxButtonEditProperties(colSku.Properties) do
-    begin
-      Buttons.Clear;
-      with Buttons.Add do
-        Kind := bkEllipsis;
-      OnButtonClick := colLineaDevcCODIGO_UNIDADPropertiesButtonClick;
-      OnValidate := colLineaDevcCODIGO_UNIDADPropertiesValidate;
-    end;
-  end;
+  ConfigurarColumnaBusquedaDocumento(
+    tvLineasDevolucion, 'CODIGO_UNIDAD_DEVCLIN',
+    colLineaDevcCODIGO_UNIDADPropertiesButtonClick,
+    colLineaDevcCODIGO_UNIDADPropertiesValidate);
   tvLineasDevolucion.OptionsData.Editing := True;
   tvLineasDevolucion.OptionsBehavior.AlwaysShowEditor := True;
   tvLineasDevolucion.OnFocusedItemChanged :=
@@ -1186,20 +1157,8 @@ end;
 
 procedure TfrmMtoDevolucionesCompra.FormDestroy(Sender: TObject);
 begin
-  // El modo del contrato se libera ANTES del inherited: su teardown
-  // toca el view y el dataset de lineas, que deben seguir vivos (misma
-  // leccion que pedidos/facturas de venta, AV al cerrar 08/07/26).
-  if FModoEntrada <> nil then
-  begin
-    try
-      FModoEntrada.Desmontar;
-    except
-      // Teardown defensivo en cierre.
-    end;
-    FModoEntrada := nil;
-  end;
-  FreeAndNil(FPivote);
-  FreeAndNil(FGestorTallas);
+  LiberarModoYGestoresDocumento(
+    FModoEntrada, FPivote, FGestorTallas);
   FreeAndNil(FColorPivotCodigos);
   inherited;
 end;
@@ -1338,17 +1297,8 @@ end;
 
 procedure TfrmMtoDevolucionesCompra.PersistirPreferenciaPivote;
 begin
-  // Persiste el modo en la cabecera para que la proxima apertura del
-  // devolucion arranque ya en el modo elegido.
-  if (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) or
-     dsTablaG.DataSet.IsEmpty or
-     (dsTablaG.DataSet.FindField('ESPIVOTE_HORIZONTAL_DEVC') = nil) then
-    Exit;
-  if not (dsTablaG.DataSet.State in [dsEdit, dsInsert]) then
-    dsTablaG.DataSet.Edit;
-  dsTablaG.DataSet.FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString :=
-    IfThen(FPivote.Activo, 'S', 'N');
-  dsTablaG.DataSet.Post;
+  PersistirPreferenciaPivoteDocumento(
+    dsTablaG.DataSet, 'ESPIVOTE_HORIZONTAL_DEVC', FPivote.Activo);
 end;
 
 procedure TfrmMtoDevolucionesCompra.btnImprimirHClick(Sender: TObject);
@@ -1925,10 +1875,7 @@ begin
     FPivote.RecargarYRepublicar;
 end;
 
-// Hook del OnDataChange de dsTablaG: solo nos interesa el evento global
-// (Field=nil) que dispara cxGrid al cambiar de record activo. Sincroniza
-// el toggle con la preferencia guardada en la cabecera y dispara la
-// recarga del controlador de pivote.
+// Actualiza la cabecera y delega el modo al navegar entre devoluciones.
 procedure TfrmMtoDevolucionesCompra.dsTablaGDataChangeHook(Sender: TObject;
                                                        Field: TField);
 begin
@@ -1942,25 +1889,12 @@ begin
   // las lineas cargadas son las de la devolucion recien enfocada.
   if Field = nil then
     ActualizarLabelPrendas;
-  if Field <> nil then
-    Exit;
-  // Contrato de entrada: al navegar de devolucion, las lineas llegan
-  // recargadas por el master-detail. En desglose basta desempaquetar
-  // SKU->ATTR; el modo tallas re-pivota su cache reconstruyendo. La
-  // preferencia ESPIVOTE del pivote de compras antiguo se IGNORA
-  // (pivote retirado de esta pantalla).
-  if Assigned(dmmDevolucionesCompra) and
-     dmmDevolucionesCompra.unqryDevolucionesCompraLineas.Active and
-     (not (dsTablaG.State in dsEditModes)) then
-  begin
-    // Sin modo construido (llegar navegando sin pisar el grid) se
-    // veian las columnas del dfm: construir tambien en ese caso.
-    if (not FColsModoConstruido) or
-       (FModoEntradaSel = mcsTallasHorPed) then
-      ConstruirModoEntrada
-    else if FModoEntradaSel = mcsAuto then
-      dmmDevolucionesCompra.DesempaquetarAtributosLineas;
-  end;
+  if Assigned(dmmDevolucionesCompra) then
+    ActualizarModoEntradaAlNavegarDocumento(
+      Field, dmmDevolucionesCompra.unqryDevolucionesCompraLineas,
+      dsTablaG, FColsModoConstruido, FModoEntradaSel, True,
+      ConstruirModoEntrada,
+      dmmDevolucionesCompra.DesempaquetarAtributosLineas);
 end;
 
 procedure TfrmMtoDevolucionesCompra.ActualizarLabelProveedor;
@@ -2007,10 +1941,9 @@ procedure TfrmMtoDevolucionesCompra.tvLineasDevolucionFocusedRecordChanged(
   ANewItemRecordFocusingChanged: Boolean);
 begin
   inherited;
-  if Assigned(FGestorTallas) and Assigned(FPivote) and FPivote.Activo then
-    FGestorTallas.ActualizarCaptionsLineaActiva;
-  if FMostrarAtributos then
-    CargarCaptionsAtributosLineaActiva;
+  ActualizarFocoLineaDocumento(
+    FGestorTallas, FPivote, FMostrarAtributos,
+    CargarCaptionsAtributosLineaActiva);
 end;
 
 procedure TfrmMtoDevolucionesCompra.tvLineasDevolucionFocusedItemChanged(
@@ -2084,17 +2017,9 @@ end;
 procedure TfrmMtoDevolucionesCompra.cxgrdLineasDevolucionEnter(Sender: TObject);
 begin
   inherited;
-  inLibGridTallasInline.ActivarEnterComoTab(Self, False);
-  AsegurarPrimeraLineaDevolucionCompra;
-  // Contrato de entrada: primera construccion al entrar en el grid.
-  // El teardown cancela la linea vacia auto-anadida: se recrea.
-  if not FColsModoConstruido then
-  begin
-    ConstruirModoEntrada;
-    AsegurarPrimeraLineaDevolucionCompra;
-  end;
-  if FModoEntrada <> nil then
-    FModoEntrada.MostrarEditor;
+  EntrarGridLineasDocumento(
+    Self, FColsModoConstruido, False, FModoEntrada,
+    AsegurarPrimeraLineaDevolucionCompra, ConstruirModoEntrada);
 end;
 
 procedure TfrmMtoDevolucionesCompra.cxgrdLineasDevolucionExit(Sender: TObject);
@@ -2113,21 +2038,10 @@ end;
 procedure TfrmMtoDevolucionesCompra.KeyDown(var Key: Word;
   Shift: TShiftState);
 begin
-  // F1: alterna Auto (desglose) -> SKU -> Tallas horizontal con las
-  // lineas de la devolucion a la vista, igual que albaranes de compra.
-  if (Key = VK_F1) and (Shift = []) and
-     (pcDevolucion.ActivePage = tsLineasDevolucion) and
-     (dmmDevolucionesCompra <> nil) then
-  begin
-    Key := 0;
-    case FModoEntradaSel of
-      mcsAuto: FModoEntradaSel := mcsSku;
-      mcsSku: FModoEntradaSel := mcsTallasHorPed;
-    else
-      FModoEntradaSel := mcsAuto;
-    end;
-    ConstruirModoEntrada;
-  end;
+  ProcesarTeclaCambioModoDocumento(
+    Key, Shift, (pcDevolucion.ActivePage = tsLineasDevolucion) and
+    (dmmDevolucionesCompra <> nil), FModoEntradaSel,
+    [mcsAuto, mcsSku, mcsTallasHorPed], ConstruirModoEntrada);
   inherited;
 end;
 

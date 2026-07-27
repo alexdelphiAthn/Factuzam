@@ -1,4 +1,4 @@
-# Plan de lo PENDIENTE — refactorización Factuzam
+﻿# Plan de lo PENDIENTE — refactorización Factuzam
 
 Fecha: 26/07/2026. Parte de `refactorizacion_estado.md` (grupos B a E) y
 de la auditoría `refactorizacion_pendiente.md`. El grupo A ya está hecho
@@ -252,7 +252,7 @@ cada zona. Lo ordeno por retorno.
 
 ## D1 — `TfrmMtoDocumentoBase` (la mayor duplicación que queda)
 
-Estado a 27/07/2026: **fascículos 6A a 6Q terminados**. La creación,
+Estado a 27/07/2026: **fascículos 6A a 6S terminados**. La creación,
 visibilidad, captions de modo, carga de nombres de atributo por artículo y
 globales, configuración del gestor/pivote, desmontaje del modo,
 configuración base de columnas SKU, columnas host y configuración del
@@ -265,11 +265,17 @@ en `inLibValidacionDocumento`. La carga de básicos de color por artículo
 vive en `inLibAtributosPaleta`. Pedidos, albaranes y facturas de venta e
 inventarios reutilizan ya la configuración SKU y los nombres globales de
 `inLibColumnasDocumento`. Los textos de proveedor y totales de prendas se
-comparten mediante `inLibPresentacionDocumento`. La batería DUnitX pasa
-57/57. La navegación común entre mantenimientos vive en `inLibShowMto`.
+comparten mediante `inLibPresentacionDocumento`. La navegación común
+entre mantenimientos vive en `inLibShowMto`.
 La construcción y los callbacks de los ocho modos de documento, además
 del desmontaje equivalente de venta e inventarios, se comparten mediante
-`inLibColumnasDocumento`. Detalles en
+`inLibColumnasDocumento`. La configuración de columnas en `FormCreate`,
+el cierre defensivo y los hooks equivalentes de navegación, foco y
+entrada al grid también se comparten en esa fachada. El teclado F1, los
+ciclos y saltos de modo y la persistencia de la preferencia del pivote se
+centralizan igualmente. La resolución del artículo/SKU activo y las
+fuentes de refresco de la foto parten ya de la misma vista de líneas en
+los ocho documentos. La batería DUnitX pasa 70/70. Detalles en
 `refactorizacion_fase6a_resultados.md` y
 `refactorizacion_fase6b_resultados.md` y
 `refactorizacion_fase6c_resultados.md` y
@@ -286,7 +292,9 @@ del desmontaje equivalente de venta e inventarios, se comparten mediante
 `refactorizacion_fase6n_resultados.md` y
 `refactorizacion_fase6o_resultados.md` y
 `refactorizacion_fase6p_resultados.md` y
-`refactorizacion_fase6q_resultados.md`.
+`refactorizacion_fase6q_resultados.md` y
+`refactorizacion_fase6r_resultados.md` y
+`refactorizacion_fase6s_resultados.md`.
 
 Los seis formularios de la familia suman **16.335 líneas** y comparten
 **40 métodos con el mismo nombre en tres o más de ellos**:
