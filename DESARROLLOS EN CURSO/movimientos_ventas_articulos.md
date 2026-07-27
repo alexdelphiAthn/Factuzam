@@ -175,6 +175,10 @@ mismo criterio PRV/FAM/TMP/ALM, resumen por corte de grupo). Idempotente:
 
 1. Aplicar `movimientos_ventas_articulos.sql` a las BBDD existentes (crea el
    SP; no toca esquema). Idempotente.
+
+El procedimiento excluye las simplificadas originales que tengan una
+rectificativa sustitutiva `S`; la rectificativa positiva ocupa su lugar en
+unidades e importe de venta.
 2. Compilar `fzam.dproj` en el IDE y verificar el modal y la plantilla
    (posiciones de columnas en apaisado, cortes de grupo, ocultado de
    niveles inactivos). La plantilla se editó en el `.dfm` sin diseñador

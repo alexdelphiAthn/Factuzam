@@ -281,6 +281,25 @@ BEGIN
      WHERE COALESCE(fl.`CODIGO_ALM_FACLIN`, f.`CODIGO_ALM_FAC`)
            IN (SELECT `CODIGO_ALM` FROM `tmp_mva_alm`)
        AND DATE(f.`FECHA_FAC`) BETWEEN v_desde AND v_hasta
+       -- Una sustitutiva S reemplaza íntegramente a la simplificada original.
+       AND NOT EXISTS (
+           SELECT 1
+             FROM `fza_facturas` fo
+             JOIN `fza_facturas_relaciones` fr
+               ON fr.`SERIE_FAC_ORIGEN_FACREL` = fo.`SERIE_FAC`
+              AND fr.`NUMERO_FAC_ORIGEN_FACREL` = fo.`NUMERO_FAC`
+             JOIN `fza_facturas` fs
+               ON fs.`CODIGO_EMP_FAC` = fo.`CODIGO_EMP_FAC`
+              AND fs.`SERIE_FAC` = fr.`SERIE_FAC_FACREL`
+              AND fs.`NUMERO_FAC` = fr.`NUMERO_FAC_FACREL`
+            WHERE fo.`CODIGO_EMP_FAC` = f.`CODIGO_EMP_FAC`
+              AND fo.`SERIE_FAC` = f.`SERIE_FAC`
+              AND fo.`NUMERO_FAC` = f.`NUMERO_FAC`
+              AND fo.`TIPO_FAC` = 'SIMPLIFICADA'
+              AND fo.`FASE_FAC` = 'RECTIFICADA'
+              AND fr.`TIPO_RELACION_FACREL` = 'RECTIFICA'
+              AND fs.`TIPO_RECTIFICATIVA_FAC` = 'S'
+       )
        -- Solo los artículos del informe: no agregar las ventas de todo el
        -- catálogo para descartarlas al unir con tmp_mva_base.
        AND sk.`CODIGO_ART_SKU` IN (SELECT `CODIGO_ART` FROM `tmp_mva_arts0`)

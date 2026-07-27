@@ -385,6 +385,11 @@ marcar «Abonar» → Generar. Esperar un ciclo del hilo.
 `facturas_tipo_rectificativa.sql`.) En Buscar/Modificar seleccionar un
 ticket, pulsar Rectificar y elegir «Sustitutiva».
 - Las líneas se presentan en positivo y conservan su descripción original.
+- Se pregunta por los movimientos de almacén:
+  - «Mantener originales» no crea movimientos para la rectificativa y el
+    stock queda igual.
+  - «Eliminar originales» revierte los movimientos de la simplificada y
+    crea los de la rectificativa; el stock refleja las cantidades corregidas.
 - `TIPO_RECTIFICATIVA_FAC='S'` en la nueva factura.
 - En `PETICION_COMPLETA_FACCON`: `TipoFactura=R5` (R1 si la original era
   completa), `TipoRectificativa=S`, `FacturasRectificadas` apunta a la
@@ -395,6 +400,8 @@ ticket, pulsar Rectificar y elegir «Sustitutiva».
 - En el arqueo, la original no interviene en ningún total, desglose, pago,
   vale ni ticket; la sustitutiva sí. Repetir con «Por diferencias» y
   comprobar que en ese caso la original continúa apareciendo y computando.
+- En Listado de ventas y Movimientos de ventas por artículos y fechas, la
+  original no aparece ni suma; la sustitutiva aparece con importes positivos.
 - Con el webservice interno de ventas activo, la cola contiene
   `VENTA_CONFIRMADA` para la rectificativa y `VENTA_SUSTITUIDA` para la
   original. Esta última no aparece en `ventas/lineas.php` ni en sus totales.

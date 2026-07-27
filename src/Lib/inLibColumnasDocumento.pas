@@ -12,8 +12,8 @@
 {    Creación, visibilidad y captions comunes de las columnas visuales de     }
 {    talla y atributo usadas por los documentos de compra, incluida la carga  }
 {    de nombres de atributo y la configuración compartida del gestor y el     }
-{    pivote de tallas, el desmontaje del modo, su configuración base y las    }
-{    columnas host, el pivote por bandas y los atributos globales.            }
+{    pivote de tallas, el desmontaje y construcción del modo, su configuración}
+{    base, las columnas host, el pivote por bandas y los atributos globales.  }
 {******************************************************************************}
 unit inLibColumnasDocumento;
 

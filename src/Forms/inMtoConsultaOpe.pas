@@ -122,6 +122,10 @@ type
     function SeleccionarTipoRectificativa(
       const ASerie, ANumero: string;
       out ATipoRectificativa: TTipoRectificativaCaja): Boolean;
+    function SeleccionarMovimientosRectificativa(
+      const ASerie, ANumero: string;
+      out ATratamiento:
+        TTratamientoMovimientosRectificativa): Boolean;
     procedure RecargarMaestro;
     procedure GuardarLayout;
     procedure RestaurarLayout;
@@ -529,6 +533,7 @@ var
   sNumero: string;
   bSigue:  Boolean;
   TipoRectificativa: TTipoRectificativaCaja;
+  TratamientoMovimientos: TTratamientoMovimientosRectificativa;
 begin
   // Rectificar carga la venta con el signo del tipo elegido; al cobrar
   // saldrá con serie rectificativa y quedará enlazada.
@@ -560,28 +565,37 @@ begin
   if bSigue and SeleccionarTipoRectificativa(
     sSerie, sNumero, TipoRectificativa) then
   begin
-    // Ventana de ventas libre, o una nueva si todas están ocupadas
-    FormularioCaja := nil;
-    for i := 0 to Screen.FormCount - 1 do
+    TratamientoMovimientos := tmrMantenerOriginales;
+    if TipoRectificativa = trcSustitutiva then
     begin
-      if (FormularioCaja = nil) and
-         (Screen.Forms[i] is TfrmMtoOpeCaja) and
-         TfrmMtoOpeCaja(Screen.Forms[i]).OperacionVacia then
-        FormularioCaja := TfrmMtoOpeCaja(Screen.Forms[i]);
+      bSigue := SeleccionarMovimientosRectificativa(
+        sSerie, sNumero, TratamientoMovimientos);
     end;
-    if FormularioCaja = nil then
+    if bSigue then
     begin
-      FormularioCaja := TfrmMtoOpeCaja.Create(Application, Permisos);
-      FormularioCaja.Caption :=
-        Format('Operación - (Caja Real %s)', [FCaja]);
-      FormularioCaja.PrepararValores(FEmpresa, FAlmacen, FCaja, Now);
+      // Ventana de ventas libre, o una nueva si todas están ocupadas
+      FormularioCaja := nil;
+      for i := 0 to Screen.FormCount - 1 do
+      begin
+        if (FormularioCaja = nil) and
+           (Screen.Forms[i] is TfrmMtoOpeCaja) and
+           TfrmMtoOpeCaja(Screen.Forms[i]).OperacionVacia then
+          FormularioCaja := TfrmMtoOpeCaja(Screen.Forms[i]);
+      end;
+      if FormularioCaja = nil then
+      begin
+        FormularioCaja := TfrmMtoOpeCaja.Create(Application, Permisos);
+        FormularioCaja.Caption :=
+          Format('Operación - (Caja Real %s)', [FCaja]);
+        FormularioCaja.PrepararValores(FEmpresa, FAlmacen, FCaja, Now);
+      end;
+      FormularioCaja.CargarRectificacion(
+        sSerie, sNumero, TipoRectificativa, TratamientoMovimientos);
+      FormularioCaja.Show;
+      FormularioCaja.BringToFront;
+      if FormularioCaja.WindowState = wsMinimized then
+        FormularioCaja.WindowState := wsNormal;
     end;
-    FormularioCaja.CargarRectificacion(
-      sSerie, sNumero, TipoRectificativa);
-    FormularioCaja.Show;
-    FormularioCaja.BringToFront;
-    if FormularioCaja.WindowState = wsMinimized then
-      FormularioCaja.WindowState := wsNormal;
   end;
 end;
 
@@ -642,6 +656,72 @@ begin
       mrNo:
         begin
           ATipoRectificativa := trcSustitutiva;
+          Result := True;
+        end;
+    end;
+  finally
+    FreeAndNil(oDialogo);
+  end;
+end;
+
+function TfrmConsultaOpe.SeleccionarMovimientosRectificativa(
+  const ASerie, ANumero: string;
+  out ATratamiento: TTratamientoMovimientosRectificativa): Boolean;
+const
+  AnchoBoton = 155;
+  SeparacionBotones = 8;
+var
+  oDialogo: TForm;
+  oBoton: TButton;
+  i: Integer;
+  iBotones: Integer;
+  iIzquierda: Integer;
+begin
+  Result := False;
+  ATratamiento := tmrMantenerOriginales;
+  oDialogo := CreateMessageDialog(
+    Format(SPreguntaMovimientosRectificativaSustitutiva,
+      [ASerie, ANumero]),
+    mtConfirmation, [mbYes, mbNo, mbCancel]);
+  try
+    oDialogo.Caption := 'Movimientos de almacén';
+    if oDialogo.ClientWidth < 520 then
+      oDialogo.ClientWidth := 520;
+    iBotones := 0;
+    for i := 0 to oDialogo.ComponentCount - 1 do
+    begin
+      if oDialogo.Components[i] is TButton then
+        Inc(iBotones);
+    end;
+    iIzquierda := (oDialogo.ClientWidth -
+      (iBotones * AnchoBoton) -
+      ((iBotones - 1) * SeparacionBotones)) div 2;
+    for i := 0 to oDialogo.ComponentCount - 1 do
+    begin
+      if oDialogo.Components[i] is TButton then
+      begin
+        oBoton := TButton(oDialogo.Components[i]);
+        case oBoton.ModalResult of
+          mrYes:
+            oBoton.Caption := 'Eliminar originales';
+          mrNo:
+            oBoton.Caption := 'Mantener originales';
+          mrCancel:
+            oBoton.Caption := 'Cancelar';
+        end;
+        oBoton.SetBounds(iIzquierda, oBoton.Top, AnchoBoton, oBoton.Height);
+        Inc(iIzquierda, AnchoBoton + SeparacionBotones);
+      end;
+    end;
+    case oDialogo.ShowModal of
+      mrYes:
+        begin
+          ATratamiento := tmrReemplazarOriginales;
+          Result := True;
+        end;
+      mrNo:
+        begin
+          ATratamiento := tmrMantenerOriginales;
           Result := True;
         end;
     end;

@@ -1681,6 +1681,13 @@ var
     '¿Desea borrar también los movimientos de almacén asociados al ticket ' +
     '%s\%s?' + sLineBreak +
     'Se revertirá el stock de sus líneas.';
+  SPreguntaMovimientosRectificativaSustitutiva:string =
+    '¿Qué desea hacer con los movimientos de almacén de la factura ' +
+    'original %s\%s?' + sLineBreak + sLineBreak +
+    'Eliminar originales: se revierte su stock y se generan los ' +
+    'movimientos de la nueva rectificativa.' + sLineBreak +
+    'Mantener originales: se conserva el stock actual y la nueva ' +
+    'rectificativa no genera movimientos adicionales.';
   SInfoAnulacionVerifactuEncolada:string =
     'Anulación encolada: el hilo Verifactu la enviará en el próximo ciclo.';
   SInfoAnulacionNoVerifactuRegistrada:string =

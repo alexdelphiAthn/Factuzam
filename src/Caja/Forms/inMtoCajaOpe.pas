@@ -225,6 +225,8 @@ type
     FSerieRectifica:  string;
     FNumeroRectifica: string;
     FTipoRectificativa: TTipoRectificativaCaja;
+    FTratamientoMovRectificativa:
+      TTratamientoMovimientosRectificativa;
     FCaptionPrevio:   string;
     FUltimoTickReloj: TDateTime;
     FEnfoqueArticuloPendiente: Boolean;
@@ -350,7 +352,9 @@ type
     // decide el signo de las líneas y la leyenda de la operación de caja.
     procedure CargarRectificacion(
       const ASerie, ANumero: string;
-      ATipoRectificativa: TTipoRectificativaCaja);
+      ATipoRectificativa: TTipoRectificativaCaja;
+      ATratamientoMovimientos:
+        TTratamientoMovimientosRectificativa);
     property NumeroCajaActual: Integer read FNumeroCajaActual
                                        write FNumeroCajaActual;
   end;
@@ -3401,7 +3405,8 @@ begin
                                               frmFaseCobro.FNumeroManual,
                                               FTipoRectificativa,
                                               FSerieRectifica,
-                                              FNumeroRectifica) then
+                                              FNumeroRectifica,
+                                              FTratamientoMovRectificativa) then
        begin
          // El codigo del vale emitido lo genera GrabarFacturaSimplificada;
          // hay que devolverlo a DatosCobro para que el ticket lo imprima.
@@ -3501,6 +3506,8 @@ begin
            FSerieRectifica  := '';
            FNumeroRectifica := '';
            FTipoRectificativa := trcNinguna;
+           FTratamientoMovRectificativa :=
+             tmrMantenerOriginales;
            if FCaptionPrevio <> '' then
              Caption := FCaptionPrevio;
          end;
@@ -3555,7 +3562,9 @@ end;
 
 procedure TfrmMtoOpeCaja.CargarRectificacion(
   const ASerie, ANumero: string;
-  ATipoRectificativa: TTipoRectificativaCaja);
+  ATipoRectificativa: TTipoRectificativaCaja;
+  ATratamientoMovimientos:
+    TTratamientoMovimientosRectificativa);
 var
   Qry:     TUniQuery;
   i:       Integer;
@@ -3655,6 +3664,7 @@ begin
   FSerieRectifica  := ASerie;
   FNumeroRectifica := ANumero;
   FTipoRectificativa := ATipoRectificativa;
+  FTratamientoMovRectificativa := ATratamientoMovimientos;
   if FCaptionPrevio = '' then
     FCaptionPrevio := Caption;
   Caption := FCaptionPrevio + '  —  RECTIFICATIVA ' + sTipoRectificativa +

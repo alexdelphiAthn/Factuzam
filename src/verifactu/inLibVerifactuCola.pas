@@ -85,7 +85,9 @@ type
                                          ANumeroOriginal,
                                          ASerieRect, ANumeroRect: string;
                                          const ATipoRectificativa: string =
-                                         'I');
+                                         'I';
+                                         ABorrarMovimientosOriginales:
+                                         Boolean = False);
     // Histórico N:1 de rectificaciones/sustituciones
     // (fza_facturas_relaciones): cada hija guarda su factura de origen
     class procedure RegistrarRelacionFactura(AConn: TUniConnection;
@@ -192,6 +194,14 @@ begin
     AQry.SQL.Text :=
       'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
     AQry.ParamByName('t').AsString := 'VE';
+    AQry.ParamByName('s').AsString := ASerie;
+    AQry.ParamByName('n').AsString := ANumero;
+    AQry.ExecSQL;
+    AQry.SQL.Text :=
+      'UPDATE fza_facturas_lineas ' +
+      '   SET NUMERO_MOV_FACLIN = NULL ' +
+      ' WHERE SERIE_FAC_FACLIN = :s ' +
+      '   AND NUMERO_FAC_FACLIN = :n';
     AQry.ParamByName('s').AsString := ASerie;
     AQry.ParamByName('n').AsString := ANumero;
     AQry.ExecSQL;
@@ -539,19 +549,13 @@ begin
 end;
 
 class procedure TVerifactuCola.EncolarRectificativa(
-                                                    const AParametrosApp:
-                                                    IParametrosAplicacion;
-                                                    const AParametrosCaja:
-                                                    IParametrosCaja;
-                                                    AConn: TUniConnection;
-                                                    const AUsuario: string;
-                                                    const ASerieOriginal,
-                                                    ANumeroOriginal,
-                                                    ASerieRect,
-                                                    ANumeroRect: string;
-                                                    const
-                                                    ATipoRectificativa:
-                                                    string);
+  const AParametrosApp: IParametrosAplicacion;
+  const AParametrosCaja: IParametrosCaja;
+  AConn: TUniConnection;
+  const AUsuario: string;
+  const ASerieOriginal, ANumeroOriginal, ASerieRect, ANumeroRect: string;
+  const ATipoRectificativa: string;
+  ABorrarMovimientosOriginales: Boolean);
 var
   Qry: TUniQuery;
   sComentario: string;
@@ -626,6 +630,11 @@ begin
       // aunque la original se rectifique varias veces
       RegistrarRelacionFactura(AConn, AUsuario, ASerieRect, ANumeroRect,
         ASerieOriginal, ANumeroOriginal, 'RECTIFICA');
+      if (sTipoRectificativa = 'S') and
+         ABorrarMovimientosOriginales then
+      begin
+        BorrarMovimientosFactura(Qry, ASerieOriginal, ANumeroOriginal);
+      end;
       case ModoVerifactu(AParametrosApp) of
         mvVerifactu:
           begin
