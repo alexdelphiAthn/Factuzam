@@ -259,25 +259,25 @@ end;
 function TfzaWinF.ComprobarRegistradas: Integer;
 var
   i: Integer;
-  oF: TfzaForm;
+  ozaForm: TfzaForm;
 begin
   Result := 0;
   for i := 0 to Count - 1 do
   begin
-    oF := Item(i);
-    if (Trim(oF.UnitForm) <> '') and
-       (ClasePantalla(oF.UnitForm) = nil) then
+    ozaForm := Item(i);
+    if (Trim(ozaForm.UnitForm) <> '') and
+       (ClasePantalla(ozaForm.UnitForm) = nil) then
     begin
       Inc(Result);
       inLibLog.Log.LogError('Pantalla sin clase registrada: ' +
-                            oF.Call + ' -> ' + oF.UnitForm);
+                            ozaForm.Call + ' -> ' + ozaForm.UnitForm);
     end;
-    if (Trim(oF.DataUnit) <> '') and
-       (ClaseDataModule(oF.DataUnit) = nil) then
+    if (Trim(ozaForm.DataUnit) <> '') and
+       (ClaseDataModule(ozaForm.DataUnit) = nil) then
     begin
       Inc(Result);
       inLibLog.Log.LogError('Data module sin clase registrada: ' +
-                            oF.Call + ' -> ' + oF.DataUnit);
+                            ozaForm.Call + ' -> ' + ozaForm.DataUnit);
     end;
   end;
 end;
