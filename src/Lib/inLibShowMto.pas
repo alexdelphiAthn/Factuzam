@@ -2,80 +2,77 @@
 {                                                                              }
 {  Módulo:       inLibShowMto                                                  }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       11/05/2026                                                    }
+{ Versión:       2.0.0                                                         }
+{   Fecha:       27/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Apertura genérica de formularios de mantenimiento.                        }
-{    Resuelve el formulario por nombre y crea su data module asociado.         }
+{    Apertura genérica de formularios de mantenimiento. Resuelve las clases  }
+{    por el registro de pantallas (inLibRegistroPantallas) y habla con el     }
+{    anfitrión y con los mantenimientos a través de interfaces: esta         }
+{    unidad ya no conoce TfrmMtoPrincipal ni TfrmMtoGen.                      }
 {******************************************************************************}
 unit inLibShowMto;
 
 interface
 
 uses
-  System.Generics.Defaults, System.Generics.Collections, System.Contnrs,
-  Classes, Windows, Forms, Menus, Controls, Uni,   System.SysUtils, UniDataGen,
-  Vcl.Dialogs, ShellAPI, System.Rtti, System.TypInfo, System.Variants,
-  System.StrUtils, inLibUser, Vcl.Buttons, inMtoGen,
-  system.math, System.IOUtils, inLibWin, cxPC, Types, Vcl.Consts,
-  Data.DB, inLibFormManager;
+  Classes, Forms, Menus, Controls, Data.DB, Uni, System.SysUtils,
+  Vcl.Dialogs, cxPC, inLibUnitForm, inLibFormManager;
 
 type
-  TFormBaseClass = class of TForm;
-  function BuscarTabla(AQuery: TUniQuery;
-                       const AClavePrimaria,
-                       AValoresBusqueda: string):Boolean;
+  // Lo que ShowMto necesita del formulario principal. TfrmMtoPrincipal
+  // lo implementa; así esta librería no depende de la unidad inMto*.
+  IAnfitrionPantallas = interface
+    ['{3C56E82E-C2DB-418B-8850-5F548E7C9114}']
+    // Gestor de ventanas embebidas (lo crea si aún no existe).
+    function GestorVentanas: TEmbeddedFormManager;
+    // Registro de pantallas cargado de fza_winforms.
+    function RegistroPantallas: TfzaWinF;
+    // Restaurar la ventana principal y minimizar el menú de caja.
+    procedure PrepararAperturaPantalla;
+  end;
+
   procedure ShowMto(AOwner: TComponent;
                     ACall:String;
                     ABusq:string = '');
   function ResolverCallFactura(AConexion: TUniConnection;
     const ANumero, ASerie: string): string;
-  function CrearDataModule(ADataUnit:String;var AOwnerForm:TfrmMtoGen):TObject;
+  // Crea el data module de la pantalla desde el registro de clases. El
+  // cableado con el form (FCurrentForm, dsTablaG, SQL de perfil) vive
+  // ahora en TfrmMtoGen.CrearTablaPrincipal.
+  function CrearDataModule(const ADataUnit: string;
+                           AOwner: TComponent): TDataModule;
 
 implementation
 
  uses
       inLibMsg,
-      inMtoPrincipal,
       inLibLog,
-      inLibUnitForm;
+      inLibRegistroPantallas,
+      inLibVentanaEmbebidaIntf;
 
 procedure ShowMto(AOwner: TComponent;
                   ACall: String;
                   ABusq:string = '');
 var
-  frmMain: TfrmMtoPrincipal;
+  oAnfitrion: IAnfitrionPantallas;
+  oGestor: TEmbeddedFormManager;
   ofzaF: TfzaForm;
   TargetForm: TForm;
-  ctx: TRttiContext;
-  lType: TRttiType;
-  FormClass: TFormBaseClass;
-  frmGen: TfrmMtoGen;
-  dmDat: TdmBase;
-  sPkTab: String;
+  FormClass: TFormClass;
+  oMto: IMantenimientoEmbebido;
   iNum : Integer;
-  iForm: Integer;
+  sClave: string;
   NewCaption: string;
-  bEncontrado: Boolean;
   bBusquedaTemporal: Boolean;
 begin
-  if not (AOwner is TfrmMtoPrincipal) then Exit;
-  frmMain := TfrmMtoPrincipal(AOwner);
-  if frmMain.WindowState = wsMinimized then
-    frmMain.WindowState := wsMaximized;
-  for iForm := 0 to Screen.FormCount - 1 do
-  begin
-    if (Screen.Forms[iForm].ClassName = 'TfrmMtoMenuCaja') and
-       (Screen.Forms[iForm].WindowState <> wsMinimized) then
-      Screen.Forms[iForm].WindowState := wsMinimized;
-  end;
-  if frmMain.FormManager = nil then
-    frmMain.FormManager := TEmbeddedFormManager.Create(frmMain.pcPrincipal);
-  ofzaF := frmMain.oFzaWinf.GetElement(ACall);
+  if not Supports(AOwner, IAnfitrionPantallas, oAnfitrion) then Exit;
+  oAnfitrion.PrepararAperturaPantalla;
+  oGestor := oAnfitrion.GestorVentanas;
+  ofzaF := oAnfitrion.RegistroPantallas.GetElement(ACall);
   if ofzaF = nil then
   begin
     ShowMessageFmt(SResWinFNotFnd, [ACall]);
@@ -86,77 +83,86 @@ begin
     inLibLog.Log.LogWarning('Intento de acceso a menú oculto: ' + ACall);
     Exit;
   end;
+  // Identidad de la ventana: clave estable CALL[#instancia] separada
+  // del caption visible (antes se buscaba por caption y cambiar un
+  // título rompía la detección de instancias).
   NewCaption := ofzaF.Caption;
+  sClave := ofzaF.Call;
+  TargetForm := nil;
   if ofzaF.NumVentanas > 1 then
   begin
     if ABusq <> '' then
     begin
       // Ctrl+A: la instancia 1 es la de búsquedas (filtro Todos).
       // Si no existe la creamos; si existe la reutilizamos.
+      sClave := ofzaF.Call + '#1';
       NewCaption := ofzaF.Caption + ' 1';
-      TargetForm := frmMain.FormManager.FindFormByCaption(NewCaption);
+      TargetForm := oGestor.FormPorClave(sClave);
     end
     else
     begin
       // Apertura normal del usuario: empieza en la 2 para dejar la 1
       // reservada como instancia de búsqueda.
       iNum := 2;
-      NewCaption := ofzaF.Caption + ' ' + IntToStr(iNum);
+      sClave := ofzaF.Call + '#2';
+      NewCaption := ofzaF.Caption + ' 2';
       while (iNum <= ofzaF.NumVentanas) and
-            (frmMain.FormManager.FindFormByCaption(NewCaption) <> nil) do
+            (oGestor.FormPorClave(sClave) <> nil) do
       begin
         Inc(iNum);
+        sClave := ofzaF.Call + '#' + IntToStr(iNum);
         NewCaption := ofzaF.Caption + ' ' + IntToStr(iNum);
       end;
       if iNum > ofzaF.NumVentanas then
-        TargetForm := frmMain.FormManager.FindFormByCaption(
-                                                  ofzaF.Caption + ' 2')
-      else
-        TargetForm := nil;
+      begin
+        sClave := ofzaF.Call + '#2';
+        NewCaption := ofzaF.Caption + ' 2';
+        TargetForm := oGestor.FormPorClave(sClave);
+      end;
     end;
   end
   else
-    TargetForm := frmMain.FormManager.FindFormByCaption(ofzaF.Caption);
+    TargetForm := oGestor.FormPorClave(sClave);
   if TargetForm = nil then
   begin
-    ctx := TRttiContext.Create;
-    try
-      lType := ctx.FindType(ofzaF.UnitForm);
-      if (lType <> nil) and (lType.IsInstance) then
-      begin
-        FormClass := TFormBaseClass(GetTypeData(lType.Handle)^.ClassType);
-        TargetForm := FormClass.Create(frmMain);
-        TargetForm.Hide;
-        bBusquedaTemporal := False;
-        // Si es la instancia 1 (reservada para busquedas), marcar el flag
-        // y recortar el layout antes de embeber: sin Lista, sin Busqueda,
-        // sin Precarga, sin Exportar a Excel; navegador con solo Insert/
-        // Delete/Edit/Post/Cancel. Asi el Show muestra ya la UI reducida.
-        if (TargetForm is TfrmMtoGen) and (ABusq <> '') then
-        begin
-          TfrmMtoGen(TargetForm).EsInstanciaBusqueda := True;
-          if (ofzaF.NumVentanas > 1) and
-             (NewCaption = ofzaF.Caption + ' 1') then
-            TfrmMtoGen(TargetForm).AplicarLayoutInstanciaBusqueda
-          else
-            bBusquedaTemporal := True;
-        end;
-        try
-          frmMain.FormManager.EmbedForm(TargetForm, NewCaption, True);
-        finally
-          if bBusquedaTemporal and (TargetForm is TfrmMtoGen) then
-            TfrmMtoGen(TargetForm).EsInstanciaBusqueda := False;
-        end;
-        inLibLog.Log.LogInfo('Pantalla abierta: ' + ofzaF.Caption);
-      end
+    FormClass := ClasePantalla(ofzaF.UnitForm);
+    if FormClass = nil then
+    begin
+      // Antes era un FindType RTTI que fallaba en runtime; ahora la
+      // clase o está en el catálogo o se avisa (y el arranque ya lo
+      // dejó en el log vía ComprobarRegistradas).
+      inLibLog.Log.LogError('Pantalla sin clase registrada: ' +
+                            ofzaF.UnitForm);
+      ShowMessageFmt(SClassRttiNotFnd, [ofzaF.UnitForm]);
+      Exit;
+    end;
+    TargetForm := FormClass.Create(AOwner);
+    TargetForm.Hide;
+    bBusquedaTemporal := False;
+    // Si es la instancia 1 (reservada para busquedas), marcar el modo
+    // y recortar el layout antes de embeber: sin Lista, sin Busqueda,
+    // sin Precarga, sin Exportar a Excel; navegador con solo Insert/
+    // Delete/Edit/Post/Cancel. Asi el Show muestra ya la UI reducida.
+    if (ABusq <> '') and
+       Supports(TargetForm, IMantenimientoEmbebido, oMto) then
+    begin
+      if (ofzaF.NumVentanas > 1) and
+         (sClave = ofzaF.Call + '#1') then
+        oMto.ActivarModoBusqueda(True)
       else
       begin
-        ShowMessageFmt(SClassRttiNotFnd, [ofzaF.UnitForm]);
-        Exit;
+        oMto.ActivarModoBusqueda(False);
+        bBusquedaTemporal := True;
       end;
-    finally
-      ctx.Free;
     end;
+    try
+      oGestor.EmbedForm(TargetForm, NewCaption, sClave, True);
+    finally
+      if bBusquedaTemporal and
+         Supports(TargetForm, IMantenimientoEmbebido, oMto) then
+        oMto.DesactivarModoBusqueda;
+    end;
+    inLibLog.Log.LogInfo('Pantalla abierta: ' + ofzaF.Caption);
   end
   else
   begin
@@ -165,104 +171,36 @@ begin
                                              (TargetForm.Parent as TcxTabSheet);
   end;
   // Carga inicial de la lista principal:
-  // - Sin parametro de busqueda: async, asi el tab aparece de inmediato y
-  //   se rellena en background mientras la UI sigue respondiendo. El
-  //   resto de tabs siguen totalmente interactivos durante el fetch.
-  // - Con parametro de busqueda: sincrono, porque BuscarTabla.Locate
-  //   (mas abajo) necesita la query activa al volver.
-  if TargetForm is TfrmMtoGen then
+  // - Sin parametro de busqueda: async, asi el tab aparece de inmediato
+  //   y se rellena en background mientras la UI sigue respondiendo.
+  // - Con parametro de busqueda: sincrono, porque el Locate necesita la
+  //   query activa al volver.
+  if Supports(TargetForm, IMantenimientoEmbebido, oMto) then
   begin
-    // Busqueda externa: filtrar a la clave recibida antes del Open.
-    // Evita precargas completas y filtros de usuario/pantalla que oculten
-    // la factura localizada desde otra pantalla.
     if ABusq <> '' then
-      TfrmMtoGen(TargetForm).PrepararBusquedaExterna(ABusq);
-    if ABusq <> '' then
-      TfrmMtoGen(TargetForm).AbrirTablaPrincipalSincrono
-    else
-      TfrmMtoGen(TargetForm).AbrirTablaPrincipalAsync;
-  end;
-  if (ABusq <> '') and (TargetForm is TfrmMtoGen) then
-  begin
-    frmGen := TfrmMtoGen(TargetForm);
-    if (frmGen.tdmDataModule <> nil) and (frmGen.tdmDataModule is TdmBase) then
     begin
-      dmDat := TdmBase(frmGen.tdmDataModule);
-      sPkTab := frmGen.pkFieldName;
-      bEncontrado := BuscarTabla(dmDat.unqryTablaG, sPkTab, ABusq);
-      if not bEncontrado then
+      // Busqueda externa: filtrar a la clave recibida antes del Open.
+      oMto.PrepararBusquedaExterna(ABusq);
+      oMto.AbrirTablaPrincipal(True);
+      if not oMto.LocalizarYEnfocar(ABusq) then
         ShowMessageFmt(SLocateNotFnd, [ABusq, ofzaF.Caption]);
-      if bEncontrado then
-      begin
-        if (frmGen.tsFicha <> nil) and (frmGen.tsFicha.TabVisible) then
-          frmGen.pcPantalla.ActivePage := frmGen.tsFicha;
-        if frmGen.CanFocus then
-          frmGen.SetFocus;
-      end;
-    end;
+    end
+    else
+      oMto.AbrirTablaPrincipal(False);
   end;
 end;
 
-function CrearDataModule(ADataUnit: String; var AOwnerForm: TfrmMtoGen): TObject;
-type
-  TDataMBaseClass = class of TDataModule;
+function CrearDataModule(const ADataUnit: string;
+                         AOwner: TComponent): TDataModule;
 var
-  ctx: TRttiContext;
-  lType: TRttiType;
-  DataModuleClass: TClass;
-  Instance: TObject;
-  NewDM: TDataModule;
+  Clase: TComponentClass;
 begin
   Result := nil;
-  if (AOwnerForm.tdmDataModule <> nil) then
-  begin
-    Result := AOwnerForm.tdmDataModule;
-    Exit;
-  end;
-  ctx := TRttiContext.Create;
-  try
-    lType := ctx.FindType(ADataUnit);
-    if (lType <> nil) and (lType is TRttiInstanceType) then
-    begin
-      DataModuleClass := TRttiInstanceType(lType).MetaclassType;
-      if DataModuleClass.InheritsFrom(TDataModule) then
-      begin
-        Instance := DataModuleClass.NewInstance;
-        NewDM := TDataModule(Instance);
-        try
-          NewDM.Create(AOwnerForm);
-          if NewDM is TdmBase then
-          begin
-             TdmBase(NewDM).FCurrentForm := AOwnerForm;
-             // Asignamos el DataSet al DataSource del form. La query aun
-             // esta cerrada — el Open lo dispara ShowMto despues, sincrono
-             // o async segun haya parametro de busqueda. Mientras tanto el
-             // grid mostrara "<No hay datos a mostrar>" un instante.
-             if Assigned(AOwnerForm.dsTablaG) then
-               AOwnerForm.dsTablaG.DataSet := TdmBase(NewDM).unqryTablaG;
-              if (GetPerfilValueDef(AOwnerForm.oPerfilDic,
-                                    'oGetSQLFromDB',
-                                    'False') = 'True') then
-              begin
-                GetFormUserProfile(TdmBase(NewDM).FoPerfilDic,
-                                   TdmBase(NewDM).Name,
-                                   AOwnerForm.PerfilesUsuario);
-                LoadSQLFromProfile(TdmBase(NewDM), TdmBase(NewDM).FoPerfilDic);
-              end;
-          end;
-//          if NewDM is TdmBase then
-//             TdmBase(NewDM).FCurrentForm := AOwnerForm;
-          AOwnerForm.tdmDataModule := NewDM;
-          Result := NewDM;
-        except
-          FreeAndNil(NewDM);
-          raise;
-        end;
-      end;
-    end;
-  finally
-    ctx.Free;
-  end;
+  Clase := ClaseDataModule(ADataUnit);
+  if Clase = nil then
+    inLibLog.Log.LogError('Data module sin clase registrada: ' + ADataUnit)
+  else
+    Result := TDataModule(Clase.Create(AOwner));
 end;
 
 function ResolverCallFactura(AConexion: TUniConnection;
@@ -291,45 +229,6 @@ begin
     end;
   finally
     FreeAndNil(qry);
-  end;
-end;
-
-function BuscarTabla(AQuery: TUniQuery;
-                     const AClavePrimaria,
-                     AValoresBusqueda: string):Boolean;
-var
-  ValArr: TArray<string>;
-  bIsOnlyOne:boolean;
-  I:integer;
-  miArray: array of Variant;
-begin
-  bIsOnlyOne := false;
-  Result := False;
-  ValArr := AValoresBusqueda.Split([',']);
-  if Length(ValArr) = 1 then
-    bIsOnlyOne := True
-  else
-  begin
-    SetLength(miarray, Length(ValArr));
-    for i := 0 to Length(ValArr) - 1 do
-      miarray[i] := Trim(ValArr[i]);
-  end;
-  if AQuery.Active then
-  begin
-    if bIsonlyOne then
-    begin
-      if AQuery.Locate(AClavePrimaria, AValoresBusqueda, []) then
-        Result := True;
-    end
-    else
-    begin
-      if AQuery.Locate(AClavePrimaria, miArray, []) then
-      begin
-        Finalize(ValArr);
-        Finalize(miArray);
-        Result := True;
-      end;
-    end;
   end;
 end;
 

@@ -50,13 +50,13 @@ uses
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
   dxSkinXmas2008Blue, System.Generics.Collections, System.Actions, Vcl.ActnList,
-  System.Threading, inLibPermisosIntf;
+  System.Threading, inLibPermisosIntf, inLibVentanaEmbebidaIntf;
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   THackWinControl = class(TWinControl);
   // Resultado del dialogo de borrado: cancelar, desactivar o borrar igual.
   TAccionBorrado = (abContinuar, abDesactivar, abCancelar);
-  TfrmMtoGen = class(TfrmBase)
+  TfrmMtoGen = class(TfrmBase, IVentanaEmbebida, IMantenimientoEmbebido)
     pButtonPage: TPanel;
     pButtonRightBar: TPanel;
     pButtonBDStat: TPanel;
@@ -307,6 +307,13 @@ type
     // Hook para que descendientes amplíen filtros antes de una búsqueda
     // externa (Ctrl+A desde otra pantalla). Por defecto no hace nada.
     procedure PrepararBusquedaExterna(const ABusq: string); virtual;
+    // IVentanaEmbebida / IMantenimientoEmbebido: contrato con
+    // inLibFormManager e inLibShowMto, que ya no conocen TfrmMtoGen.
+    function InterceptarCierre: Boolean;
+    procedure ActivarModoBusqueda(AAplicarLayout: Boolean);
+    procedure DesactivarModoBusqueda;
+    procedure AbrirTablaPrincipal(ASincrono: Boolean);
+    function LocalizarYEnfocar(const ABusq: string): Boolean;
     // Aplica el layout reducido propio de la instancia 1 (la reservada
     // para busquedas). Lo invoca inLibShowMto cuando crea la instancia
     // 1, antes del Show. Los descendientes pueden override (llamando a
@@ -391,6 +398,7 @@ implementation
 
 uses inMtoGenSearch,
      inLibGlobalVar,
+     inLibData,
      inLibConexionesIntf,
      inLibUnitForm,
      inLibShowMto,
@@ -1120,6 +1128,58 @@ begin
   end;
 end;
 
+// La primera pulsacion de cierre desde la ficha vuelve a la lista; el
+// gestor de ventanas pregunta por esta interfaz en vez de conocer la
+// clase (antes ese if vivia en inLibFormManager con un cast directo).
+function TfrmMtoGen.InterceptarCierre: Boolean;
+begin
+  Result := False;
+  if pcPantalla.ActivePage = tsFicha then
+  begin
+    pcPantalla.ActivePage := tsLista;
+    Result := True;
+  end;
+end;
+
+procedure TfrmMtoGen.ActivarModoBusqueda(AAplicarLayout: Boolean);
+begin
+  EsInstanciaBusqueda := True;
+  if AAplicarLayout then
+    AplicarLayoutInstanciaBusqueda;
+end;
+
+procedure TfrmMtoGen.DesactivarModoBusqueda;
+begin
+  EsInstanciaBusqueda := False;
+end;
+
+procedure TfrmMtoGen.AbrirTablaPrincipal(ASincrono: Boolean);
+begin
+  if ASincrono then
+    AbrirTablaPrincipalSincrono
+  else
+    AbrirTablaPrincipalAsync;
+end;
+
+// False SOLO si se busco y no se encontro (inLibShowMto avisa entonces
+// al usuario); True si se encontro o si no procedia buscar.
+function TfrmMtoGen.LocalizarYEnfocar(const ABusq: string): Boolean;
+begin
+  Result := True;
+  if (tdmDataModule <> nil) and (tdmDataModule is TdmBase) then
+  begin
+    Result := BuscarTabla(TdmBase(tdmDataModule).unqryTablaG,
+                          pkFieldName, ABusq);
+    if Result then
+    begin
+      if (tsFicha <> nil) and tsFicha.TabVisible then
+        pcPantalla.ActivePage := tsFicha;
+      if CanFocus then
+        SetFocus;
+    end;
+  end;
+end;
+
 procedure TfrmMtoGen.AplicarLayoutInstanciaBusqueda;
 begin
   // Lista: la instancia de busqueda llega directa a la Ficha del registro
@@ -1189,6 +1249,24 @@ begin
     swTramo := TStopwatch.StartNew;
     tdmDataModule := CrearDataModule(sNameModule, Self);
     msCrearDM := swTramo.ElapsedMilliseconds;
+    if (tdmDataModule <> nil) and (tdmDataModule is TdmBase) then
+    begin
+      // Cableado que antes hacia inLibShowMto.CrearDataModule tocando
+      // este form: ahora el form se cablea a si mismo.
+      TdmBase(tdmDataModule).FCurrentForm := Self;
+      if Assigned(dsTablaG) then
+        dsTablaG.DataSet := TdmBase(tdmDataModule).unqryTablaG;
+      if GetPerfilValueDef(oPerfilDic,
+                           'oGetSQLFromDB',
+                           'False') = 'True' then
+      begin
+        GetFormUserProfile(TdmBase(tdmDataModule).FoPerfilDic,
+                           TdmBase(tdmDataModule).Name,
+                           PerfilesUsuario);
+        LoadSQLFromProfile(TdmBase(tdmDataModule),
+                           TdmBase(tdmDataModule).FoPerfilDic);
+      end;
+    end;
     // La conexión persistente dmConn.conUni mantiene operativos los DFM en
     // diseño. En ejecución el servicio crea la conexión propia del Mto y se
     // inyecta antes de abrir la tabla principal.

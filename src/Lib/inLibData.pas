@@ -16,7 +16,7 @@ unit inLibData;
 
 interface
 uses
-  Uni, System.SysUtils, Data.DB;
+  Uni, System.SysUtils, System.Variants, Data.DB;
 
 function AlmacenPerteneceEmpresa(AConexion: TUniConnection;
   const AEmpresa, AAlmacen: string): Boolean;
@@ -30,8 +30,53 @@ procedure AjustarEmpresasAlmacenesDocumento(AConexion: TUniConnection;
   ADataSet: TDataSet);
 function ObtenerAlmacenDepositoEmpresa(AConexion: TUniConnection;
   const AEmpresa: string): string;
+// Locate generico sobre la clave primaria (uno o varios campos
+// separados por coma). Lo usan TfrmMtoGen.LocalizarYEnfocar y las
+// busquedas externas entre pantallas. Antes vivia en inLibShowMto.
+function BuscarTabla(AQuery: TUniQuery;
+                     const AClavePrimaria,
+                     AValoresBusqueda: string): Boolean;
 
 implementation
+
+function BuscarTabla(AQuery: TUniQuery;
+                     const AClavePrimaria,
+                     AValoresBusqueda: string): Boolean;
+var
+  ValArr: TArray<string>;
+  bIsOnlyOne: Boolean;
+  i: Integer;
+  miArray: array of Variant;
+begin
+  bIsOnlyOne := False;
+  Result := False;
+  ValArr := AValoresBusqueda.Split([',']);
+  if Length(ValArr) = 1 then
+    bIsOnlyOne := True
+  else
+  begin
+    SetLength(miArray, Length(ValArr));
+    for i := 0 to Length(ValArr) - 1 do
+      miArray[i] := Trim(ValArr[i]);
+  end;
+  if AQuery.Active then
+  begin
+    if bIsOnlyOne then
+    begin
+      if AQuery.Locate(AClavePrimaria, AValoresBusqueda, []) then
+        Result := True;
+    end
+    else
+    begin
+      if AQuery.Locate(AClavePrimaria, miArray, []) then
+      begin
+        Finalize(ValArr);
+        Finalize(miArray);
+        Result := True;
+      end;
+    end;
+  end;
+end;
 
 function AlmacenPerteneceEmpresa(AConexion: TUniConnection;
   const AEmpresa, AAlmacen: string): Boolean;

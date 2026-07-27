@@ -50,7 +50,7 @@ uses
   System.Diagnostics,
   System.Threading,
   dxGDIPlusClasses, cxImage, Vcl.Imaging.pngimage,
-  inLibContextoSesionIntf, inLibParametrosIntf;
+  inLibContextoSesionIntf, inLibParametrosIntf, inLibShowMto;
 
 const
   WM_FREECONTROL = WM_USER + 1;
@@ -59,7 +59,8 @@ type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   TfrmMtoPrincipal = class(
     TfrmBase,
-    IProveedorParametrosEdicion
+    IProveedorParametrosEdicion,
+    IAnfitrionPantallas
   )
     mnuCaja: TMenuItem;
     mnuMenuCaja: TMenuItem;
@@ -150,6 +151,11 @@ type
     // en el Mto activo. Llamado desde pcPrincipalChange (cambio de
     // pestana) y desde TfrmMtoGen.FormShow para mantener el contexto.
     procedure EngancharFotoAlMto(AMto: TObject);
+    // IAnfitrionPantallas: lo que inLibShowMto necesita del principal
+    // (asi la libreria ya no conoce TfrmMtoPrincipal).
+    function GestorVentanas: TEmbeddedFormManager;
+    function RegistroPantallas: TfzaWinF;
+    procedure PrepararAperturaPantalla;
   published
     tmr1: TTimer;
     StyleRepository1: TcxStyleRepository;
@@ -343,7 +349,6 @@ implementation
 
 uses inLibUser,
   inLibWin,
-  inLibShowMto,
   inLibtb,
   inLibGlobalVar,
   inLibInformesGuiasCache,
@@ -759,6 +764,10 @@ begin
   AsignarFiltrosGuardados(FdmDataFiltros);
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(ConexionPrincipal);
+  // Toda pantalla de fza_winforms debe tener su clase en el catalogo
+  // (inMtoCatalogoPantallas); si falta alguna queda en el log desde el
+  // arranque en vez de reventar al abrir el menu.
+  oFzaWinf.ComprobarRegistradas;
   try
     SincronizarVersionInstalacionesSif(
       ParametrosApp,
@@ -2596,6 +2605,36 @@ begin
     Exit;
   end;
   EngancharFotoAlMto(ts.Controls[0]);
+end;
+
+// --- IAnfitrionPantallas -------------------------------------------
+function TfrmMtoPrincipal.GestorVentanas: TEmbeddedFormManager;
+begin
+  if FormManager = nil then
+    FormManager := TEmbeddedFormManager.Create(pcPrincipal);
+  Result := FormManager;
+end;
+
+function TfrmMtoPrincipal.RegistroPantallas: TfzaWinF;
+begin
+  Result := oFzaWinf;
+end;
+
+// Restaurar la ventana principal y apartar el menu de caja antes de
+// abrir una pantalla de gestion (antes lo hacia inLibShowMto tocando
+// este form directamente).
+procedure TfrmMtoPrincipal.PrepararAperturaPantalla;
+var
+  iForm: Integer;
+begin
+  if WindowState = wsMinimized then
+    WindowState := wsMaximized;
+  for iForm := 0 to Screen.FormCount - 1 do
+  begin
+    if (Screen.Forms[iForm].ClassName = 'TfrmMtoMenuCaja') and
+       (Screen.Forms[iForm].WindowState <> wsMinimized) then
+      Screen.Forms[iForm].WindowState := wsMinimized;
+  end;
 end;
 
 procedure TfrmMtoPrincipal.EngancharFotoAlMto(AMto: TObject);

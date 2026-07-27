@@ -25,8 +25,12 @@ type
   private
     FPageControl: TcxPageControl;
     FForms: TList<TForm>;
+    // Identidad estable de cada ventana (CALL[#instancia]); el caption
+    // queda solo como texto visible de la pestania.
+    FClaves: TDictionary<string, TForm>;
     procedure InternalCloseForm(AForm: TForm;
                                 AForzar: Boolean = False);
+    procedure QuitarClave(AForm: TForm);
   protected
     procedure Notification(AComponent: TComponent;
                            Operation: TOperation); override;
@@ -36,8 +40,11 @@ type
     destructor Destroy; override;
     procedure EmbedForm(AForm: TForm;
                         const ATitle: string;
+                        const AClave: string = '';
                         ASelect: Boolean = True);
     function FindFormByCaption(const ATitle: string): TForm;
+    // Ventana registrada con esa clave; nil si no hay ninguna.
+    function FormPorClave(const AClave: string): TForm;
     function GetEnumerator: TList<TForm>.TEnumerator;
     procedure CloseFormByCaption(const ATitle:string);
     procedure CloseActiveForm;
@@ -46,7 +53,7 @@ type
 
 implementation
 
-uses inMtoGen;
+uses inLibVentanaEmbebidaIntf;
 
 { TEmbeddedFormManager }
 
@@ -55,6 +62,7 @@ begin
   inherited Create(APageControl);   // Owner = PageControl para autoliberación
   FPageControl := APageControl;
   FForms := TList<TForm>.Create;
+  FClaves := TDictionary<string, TForm>.Create;
 end;
 
 procedure TEmbeddedFormManager.Notification(AComponent: TComponent;
@@ -62,15 +70,21 @@ procedure TEmbeddedFormManager.Notification(AComponent: TComponent;
 begin
   inherited;
   if (Operation = opRemove) and (AComponent is TForm) then
+  begin
     FForms.Remove(TForm(AComponent));
+    QuitarClave(TForm(AComponent));
+  end;
 end;
 
 procedure TEmbeddedFormManager.EmbedForm(AForm: TForm;
                                          const ATitle: string;
+                                         const AClave: string = '';
                                          ASelect: Boolean = True);
 var
   NewTab: TcxTabSheet;
 begin
+  if AClave <> '' then
+    FClaves.AddOrSetValue(AClave, AForm);
   SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(False), 0);
   try
     AForm.BorderStyle := bsNone;
@@ -96,6 +110,7 @@ end;
 destructor TEmbeddedFormManager.Destroy;
 begin
   FreeAndNil(FForms);
+  FreeAndNil(FClaves);
   inherited;
 end;
 
@@ -120,6 +135,26 @@ begin
     if (F.Parent is TcxTabSheet) and
        (Trim(TcxTabSheet(F.Parent).Caption) = Trim(ATitle)) then
       Exit(F);
+  end;
+end;
+
+function TEmbeddedFormManager.FormPorClave(const AClave: string): TForm;
+begin
+  if not FClaves.TryGetValue(AClave, Result) then
+    Result := nil;
+end;
+
+procedure TEmbeddedFormManager.QuitarClave(AForm: TForm);
+var
+  sClave: string;
+begin
+  for sClave in FClaves.Keys do
+  begin
+    if FClaves[sClave] = AForm then
+    begin
+      FClaves.Remove(sClave);
+      Break;
+    end;
   end;
 end;
 
@@ -154,6 +189,7 @@ procedure TEmbeddedFormManager.InternalCloseForm(AForm: TForm;
                                                 AForzar: Boolean);
 var
   ParentTab: TWinControl;
+  oVentana: IVentanaEmbebida;
 begin
   if (AForm = nil) or (PPointer(AForm)^ = nil) then
     Exit;
@@ -163,21 +199,19 @@ begin
       FForms.Remove(AForm);
       Exit;
     end;
-    if (not AForzar) and (AForm is TfrmMtoGen) then
-      with (AForm as TfrmMtoGen) do
-      begin
-        if pcPantalla.ActivePage = tsFicha then
-        begin
-          pcPantalla.ActivePage := tsLista;
-          Exit;
-        end;
-      end;
+    // La ventana decide si intercepta el cierre (p.ej. volver de la
+    // ficha a la lista); este gestor ya no conoce TfrmMtoGen.
+    if (not AForzar) and
+       Supports(AForm, IVentanaEmbebida, oVentana) and
+       oVentana.InterceptarCierre then
+      Exit;
     // Congela todo antes de tocar nada
     SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(False), 0);
     SendMessage(AForm.Handle, WM_SETREDRAW, WPARAM(False), 0);
     AForm.Hide;
     ParentTab := AForm.Parent;
     FForms.Remove(AForm);
+    QuitarClave(AForm);
     AForm.Parent := nil;
     // Release, no Free: difiere la destruccion a la cola de mensajes.
     // Un Free inline aqui (handler de WM_FREECONTROL / cierre con tareas

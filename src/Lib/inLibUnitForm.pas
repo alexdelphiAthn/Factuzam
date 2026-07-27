@@ -94,10 +94,18 @@ type
    function CallDeUnit(const AUnit: string): string;
    // CALL del item de menu si esta registrado (mnMenuItem); '' si no.
    function CallRegistrado(AItem: TMenuItem): string;
+   // Comprueba que cada pantalla de fza_winforms tiene su clase (form
+   // y data module) en el registro; deja un error en el log por cada
+   // una que falte y devuelve cuantas faltan. Llamado en el arranque:
+   // el typo-en-BBDD que antes reventaba en runtime queda a la vista.
+   function ComprobarRegistradas: Integer;
  end;
 
 
 implementation
+
+uses
+  inLibRegistroPantallas, inLibLog;
 
 
 { TfzaForm }
@@ -245,6 +253,32 @@ begin
     qrySol.Close;
   finally
     FreeAndNil(qrySol);
+  end;
+end;
+
+function TfzaWinF.ComprobarRegistradas: Integer;
+var
+  i: Integer;
+  oF: TfzaForm;
+begin
+  Result := 0;
+  for i := 0 to Count - 1 do
+  begin
+    oF := Item(i);
+    if (Trim(oF.UnitForm) <> '') and
+       (ClasePantalla(oF.UnitForm) = nil) then
+    begin
+      Inc(Result);
+      inLibLog.Log.LogError('Pantalla sin clase registrada: ' +
+                            oF.Call + ' -> ' + oF.UnitForm);
+    end;
+    if (Trim(oF.DataUnit) <> '') and
+       (ClaseDataModule(oF.DataUnit) = nil) then
+    begin
+      Inc(Result);
+      inLibLog.Log.LogError('Data module sin clase registrada: ' +
+                            oF.Call + ' -> ' + oF.DataUnit);
+    end;
   end;
 end;
 
