@@ -131,7 +131,7 @@ type
 implementation
 
 uses
-  System.DateUtils;
+  System.DateUtils, inLibRectificativas;
 
 // =============================================================================
 //   API pública
@@ -240,6 +240,10 @@ begin
     '                AND o.CODIGO_CAJA_OPCAJA = :pCAJA             ' +
     '                AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE      ' +
     '                AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA      ' +
+    SQLExcluirSimplificadaSustituida(
+      'o.CODIGO_EMP_OPCAJA',
+      'o.SERIE_FAC_OPCAJA',
+      'o.NUMERO_FAC_OPCAJA') +
     '           ) b0                                               ' +
     '       ) b                                                    ' +
     '       JOIN (' + sNiveles + ') n ON n.NIVEL <= b.PROF         ' +
@@ -273,6 +277,10 @@ begin
     '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                    ' +
     '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                  ' +
     '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                  ' +
+    SQLExcluirSimplificadaSustituida(
+      'o.CODIGO_EMP_OPCAJA',
+      'o.SERIE_FAC_OPCAJA',
+      'o.NUMERO_FAC_OPCAJA') +
     '  GROUP BY TEMPORADA                                          ' +
     '  ORDER BY TEMPORADA                                          ';
 end;
@@ -296,12 +304,16 @@ begin
       '                    THEN NUMERO_OPERACION_OPCAJA                     ' +
       '                  END)                                  AS VENTAS,   ' +
       '   COUNT(DISTINCT NUMERO_OPERACION_OPCAJA)              AS OPERAC    ' +
-      '   FROM fza_caja_operaciones                                         ' +
+      '   FROM fza_caja_operaciones o                                       ' +
       '  WHERE CODIGO_EMP_OPCAJA      = :pEMPRESA                           ' +
       '    AND CODIGO_ALM_OPCAJA      = :pALMACEN                           ' +
       '    AND CODIGO_CAJA_OPCAJA     = :pCAJA                              ' +
       '    AND FECHA_OPERACION_OPCAJA >= :pFDESDE                              ' +
-      '    AND FECHA_OPERACION_OPCAJA <= :pFHASTA';
+      '    AND FECHA_OPERACION_OPCAJA <= :pFHASTA' +
+      SQLExcluirSimplificadaSustituida(
+        'o.CODIGO_EMP_OPCAJA',
+        'o.SERIE_FAC_OPCAJA',
+        'o.NUMERO_FAC_OPCAJA');
     Query.ParamByName('pTIPO_VE').AsString  := TipoOpVenta;
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
@@ -349,7 +361,11 @@ begin
       '    AND o.CODIGO_ALM_OPCAJA        = :pALMACEN                       ' +
       '    AND o.CODIGO_CAJA_OPCAJA       = :pCAJA                          ' +
       '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                            ' +
-      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA';
+      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA' +
+      SQLExcluirSimplificadaSustituida(
+        'o.CODIGO_EMP_OPCAJA',
+        'o.SERIE_FAC_OPCAJA',
+        'o.NUMERO_FAC_OPCAJA');
     Query.ParamByName('pTIPO_VE').AsString  := TipoOpVenta;
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
@@ -431,7 +447,11 @@ begin
       '    AND o.CODIGO_ALM_OPCAJA      = :pALMACEN                           ' +
       '    AND o.CODIGO_CAJA_OPCAJA     = :pCAJA                              ' +
       '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                           ' +
-      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA';
+      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA' +
+      SQLExcluirSimplificadaSustituida(
+        'o.CODIGO_EMP_OPCAJA',
+        'o.SERIE_FAC_OPCAJA',
+        'o.NUMERO_FAC_OPCAJA');
     Query.ParamByName('pTIPO_VE').AsString      := TipoOpVenta;
     Query.ParamByName('pTIPO_DV').AsString      := TipoOpDevolucion;
     Query.ParamByName('pTIPO_EC').AsString      := TipoOpEntradaCambio;
@@ -531,7 +551,11 @@ begin
       '    AND o.TIPO_OPERACION_OPCAJA IN (:pTIPO_CB, :pTIPO_DE)             ' +
       '    AND o.IMPORTE_TOTAL_OPCAJA  > 0                                  ' +
       '    AND o.ID_DEPOSITO_OPCAJA   IS NOT NULL                           ' +
-      '    AND o.ID_DEPOSITO_OPCAJA  <> ''''                                ';
+      '    AND o.ID_DEPOSITO_OPCAJA  <> '''' ' +
+      SQLExcluirSimplificadaSustituida(
+        'o.CODIGO_EMP_OPCAJA',
+        'o.SERIE_FAC_OPCAJA',
+        'o.NUMERO_FAC_OPCAJA');
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
     Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
@@ -558,12 +582,16 @@ begin
     Query.Connection := AConn;
     Query.SQL.Text :=
       ' SELECT COALESCE(SUM(IMPORTE_NOMINAL_VL), 0)            AS EMITIDOS  ' +
-      '   FROM fza_caja_vales                                               ' +
-      '  WHERE CODIGO_EMP_EMI_VL      = :pEMPRESA                           ' +
-      '    AND CODIGO_ALM_EMI_VL      = :pALMACEN                           ' +
-      '    AND CODIGO_CAJA_EMI_VL     = :pCAJA                              ' +
-      '    AND FECHA_EMISION_VL       >= :pFDESDE                           ' +
-      '    AND FECHA_EMISION_VL       <= :pFHASTA                           ';
+      '   FROM fza_caja_vales v                                             ' +
+      '  WHERE v.CODIGO_EMP_EMI_VL      = :pEMPRESA                         ' +
+      '    AND v.CODIGO_ALM_EMI_VL      = :pALMACEN                         ' +
+      '    AND v.CODIGO_CAJA_EMI_VL     = :pCAJA                            ' +
+      '    AND v.FECHA_EMISION_VL       >= :pFDESDE                         ' +
+      '    AND v.FECHA_EMISION_VL       <= :pFHASTA ' +
+      SQLExcluirSimplificadaSustituida(
+        'v.CODIGO_EMP_EMI_VL',
+        'v.SERIE_FAC_EMI_VL',
+        'v.NUMERO_FAC_EMI_VL');
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
     Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
@@ -582,12 +610,16 @@ begin
     Query.Connection := AConn;
     Query.SQL.Text :=
       ' SELECT COALESCE(SUM(IMPORTE_REDIMIDO_VL), 0)           AS RECOGIDOS ' +
-      '   FROM fza_caja_vales                                               ' +
-      '  WHERE CODIGO_EMP_RED_VL        = :pEMPRESA                         ' +
-      '    AND CODIGO_ALM_RED_VL        = :pALMACEN                         ' +
-      '    AND CODIGO_CAJA_RED_VL       = :pCAJA                            ' +
-      '    AND FECHA_REDENCION_VL       >= :pFDESDE                         ' +
-      '    AND FECHA_REDENCION_VL       <= :pFHASTA                         ';
+      '   FROM fza_caja_vales v                                             ' +
+      '  WHERE v.CODIGO_EMP_RED_VL        = :pEMPRESA                       ' +
+      '    AND v.CODIGO_ALM_RED_VL        = :pALMACEN                       ' +
+      '    AND v.CODIGO_CAJA_RED_VL       = :pCAJA                          ' +
+      '    AND v.FECHA_REDENCION_VL       >= :pFDESDE                       ' +
+      '    AND v.FECHA_REDENCION_VL       <= :pFHASTA ' +
+      SQLExcluirSimplificadaSustituida(
+        'v.CODIGO_EMP_RED_VL',
+        'v.SERIE_FAC_RED_VL',
+        'v.NUMERO_FAC_RED_VL');
     Query.ParamByName('pEMPRESA').AsString  := AArqueo.Empresa;
     Query.ParamByName('pALMACEN').AsString  := AArqueo.Almacen;
     Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
@@ -653,6 +685,10 @@ begin
         '    AND o.NUMERO_OPERACION_OPCAJA = p.NUMERO_OPERACION_PAGO          ' +
         '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                         ' +
         '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                         ' +
+        SQLExcluirSimplificadaSustituida(
+          'o.CODIGO_EMP_OPCAJA',
+          'o.SERIE_FAC_OPCAJA',
+          'o.NUMERO_FAC_OPCAJA') +
         '  WHERE fp.ESACTIVO_FORMA_PAGO_CFP = ''S''                            ' +
         '  GROUP BY fp.CODIGO_FP_CFP,                                         ' +
         '           fp.DESCRIPCION_FORMA_PAGO_CFP,                            ' +

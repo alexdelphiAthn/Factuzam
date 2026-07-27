@@ -99,6 +99,7 @@ type
                                            ASerie,
                                            ANroFac: string);
     procedure RefrescarPestanasHijas;
+    procedure InvalidarCacheMaestro;
     function  TienePagos:       Boolean;
     function  TieneVales:       Boolean;
     function  TieneMovimientos: Boolean;
@@ -120,7 +121,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibLog, inLibMsg;
+uses inLibLog, inLibMsg, inLibRectificativas;
 
 {$R *.dfm}
 
@@ -195,6 +196,10 @@ begin
     '   AND o.CODIGO_EMP_OPCAJA = :PEMP '                             +
     '   AND o.CODIGO_ALM_OPCAJA = :PALM '                             +
     '   AND o.CODIGO_CAJA_OPCAJA    = :PCAJA '                            +
+    SQLExcluirSimplificadaSustituida(
+      'o.CODIGO_EMP_OPCAJA',
+      'o.SERIE_FAC_OPCAJA',
+      'o.NUMERO_FAC_OPCAJA') +
     '   AND ( :PTXT = '''' '                                              +
     '         OR o.NUMERO_OPERACION_OPCAJA LIKE CONCAT(''%'', :PTXT, ''%'') ' +
     '         OR f.NUMERO_FAC           LIKE CONCAT(''%'', :PTXT, ''%'') ' +
@@ -658,6 +663,12 @@ begin
   // Una vez cargado el maestro, refrescamos las pestañas hijas con la
   // primera fila (si hay).
   RefrescarPestanasHijas;
+end;
+
+procedure TdmConsultaOpe.InvalidarCacheMaestro;
+begin
+  FUltimaClaveMaestro := '';
+  FUltimaClaveHijas := '';
 end;
 
 // -----------------------------------------------------------------------------

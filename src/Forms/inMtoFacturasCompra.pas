@@ -284,7 +284,6 @@ uses
   System.StrUtils,
   inLibFiltroUsuario,
   inLibFotos,
-  inLibLog,
   inLibArticulosResolver,
   inLibArticulosValidador,
   inLibGridCantidad,
@@ -1063,30 +1062,13 @@ begin
   end
   else
     FModoEntrada := CrearModoEntradaGrid(Cfg);
-  FModoEntrada.OnResuelto := ModoEntradaResuelto;
-  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
-  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
   // El flag ANTES del Construir: si algo aborta a medias, nadie debe
   // tocar las columnas del dfm, muertas en el ClearItems.
   FColsModoConstruido := True;
-  bDegradarASku := False;
-  try
-    FModoEntrada.Construir;
-  except
-    // Fallo montando tallas horizontal (modo por defecto): degradar a
-    // SKU. En cualquier otro modo la excepcion sigue su curso.
-    on E: Exception do
-      if FModoEntradaSel = mcsTallasHorPed then
-      begin
-        if inLibLog.Log <> nil then
-          inLibLog.Log.LogError(
-            'FacturasCompra: fallo construyendo tallas horizontal, ' +
-            'se degrada a SKU: ' + E.Message);
-        bDegradarASku := True;
-      end
-      else
-        raise;
-  end;
+  bDegradarASku := not ConstruirModoEntradaDocumento(
+    FModoEntrada, ModoEntradaResuelto, DesactivarEnterAsTabTemporal,
+    RestaurarEnterAsTabTemporal, FModoEntradaSel,
+    [mcsTallasHorPed], 'FacturasCompra');
   if bDegradarASku then
   begin
     // Reconstruccion completa en SKU: el teardown de la reentrada

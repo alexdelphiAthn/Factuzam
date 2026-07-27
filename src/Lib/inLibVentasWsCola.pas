@@ -168,6 +168,8 @@ begin
   begin
     if SameText(ATipoOperacion, 'ANULACION') then
       sTipoEvento := 'VENTA_ANULADA'
+    else if SameText(ATipoOperacion, 'SUSTITUCION') then
+      sTipoEvento := 'VENTA_SUSTITUIDA'
     else if SameText(ATipoOperacion, 'SUBSANACION') then
       sTipoEvento := 'FISCAL_ACTUALIZADO'
     else

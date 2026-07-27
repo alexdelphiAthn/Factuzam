@@ -116,6 +116,9 @@ type
 
 implementation
 
+uses
+  inLibRectificativas;
+
 // =============================================================================
 //   Helpers de formato
 // =============================================================================
@@ -198,7 +201,11 @@ begin
       '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
       '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
       '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
-      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA';
+      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA' +
+      SQLExcluirSimplificadaSustituida(
+        'o.CODIGO_EMP_OPCAJA',
+        'o.SERIE_FAC_OPCAJA',
+        'o.NUMERO_FAC_OPCAJA');
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
     Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
     Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
@@ -305,6 +312,10 @@ begin
       '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
       '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
       '    AND o.TIPO_OPERACION_OPCAJA = ''DV''                             ' +
+      SQLExcluirSimplificadaSustituida(
+        'o.CODIGO_EMP_OPCAJA',
+        'o.SERIE_FAC_OPCAJA',
+        'o.NUMERO_FAC_OPCAJA') +
       '  GROUP BY p.CODIGO_FP_CFP                                           ' +
       '  ORDER BY p.CODIGO_FP_CFP                                           ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
@@ -454,6 +465,10 @@ begin
       '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
       '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
       '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
+      SQLExcluirSimplificadaSustituida(
+        'o.CODIGO_EMP_OPCAJA',
+        'o.SERIE_FAC_OPCAJA',
+        'o.NUMERO_FAC_OPCAJA') +
       '  GROUP BY o.CODIGO_EMPLEADO_OPCAJA, e.DIMINUTIVO_TICKET_EMPL        ' +
       '  ORDER BY NETO DESC                                                 ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
@@ -510,6 +525,10 @@ begin
       '    AND p.CODIGO_CAJA_PAGO     = :pCAJA                              ' +
       '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
       '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
+      SQLExcluirSimplificadaSustituida(
+        'o.CODIGO_EMP_OPCAJA',
+        'o.SERIE_FAC_OPCAJA',
+        'o.NUMERO_FAC_OPCAJA') +
       '  GROUP BY p.CODIGO_FP_CFP, fp.DESCRIPCION_FORMA_PAGO_CFP            ' +
       '  ORDER BY IMP DESC                                                  ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
@@ -568,6 +587,10 @@ begin
       '    AND o.CODIGO_CAJA_OPCAJA    = :pCAJA                             ' +
       '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
       '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
+      SQLExcluirSimplificadaSustituida(
+        'o.CODIGO_EMP_OPCAJA',
+        'o.SERIE_FAC_OPCAJA',
+        'o.NUMERO_FAC_OPCAJA') +
       '  GROUP BY f.SERIE_FAC                                               ' +
       '  ORDER BY f.SERIE_FAC                                               ';
     Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;

@@ -12,6 +12,7 @@ ni la cola de VeriFactu.
 - `VENTA_CONFIRMADA`: el documento abandona el estado de borrador.
 - `FISCAL_ACTUALIZADO`: cambia el resultado fiscal o de VeriFactu.
 - `VENTA_ANULADA`: se solicita o confirma la anulación fiscal.
+- `VENTA_SUSTITUIDA`: una rectificativa `S` sustituye al documento original.
 - `VENTA_REABIERTA`: un lanzamiento pendiente vuelve a borrador.
 - `TICKET_PDF_ACTUALIZADO`: incorpora un ticket PDF generado después del
   evento inicial.
@@ -34,6 +35,8 @@ tamaño y huella SHA-256. La cola conserva también el binario original; el
 servidor lo valida, lo decodifica y lo almacena como documento independiente.
 El servidor conserva el JSON original y proyecta cabecera, líneas, pagos y
 estado fiscal para las consultas de la futura aplicación.
+Las ventas anuladas o sustituidas se conservan como histórico, pero el
+endpoint de líneas no las incluye por defecto en ventas ni totales.
 
 ## Parámetros
 

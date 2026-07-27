@@ -91,8 +91,9 @@ if ($texto !== '') {
     $parametros[] = $comodin;
 }
 if ($incluirAnuladas === 0) {
-    $condiciones[] = 'V.ultimo_tipo_evento <> ?';
+    $condiciones[] = 'V.ultimo_tipo_evento NOT IN (?, ?)';
     $parametros[] = 'VENTA_ANULADA';
+    $parametros[] = 'VENTA_SUSTITUIDA';
 }
 $filtro = implode(' AND ', $condiciones);
 $origen = 'api_ventas_lineas L ' .
@@ -223,6 +224,8 @@ foreach ($filas as $fila) {
         'total_coste' => round((float)($fila['total_coste'] ?? 0), 2),
         'anulada' =>
             ($fila['ultimo_tipo_evento'] ?? '') === 'VENTA_ANULADA',
+        'sustituida' =>
+            ($fila['ultimo_tipo_evento'] ?? '') === 'VENTA_SUSTITUIDA',
         'foto_ruta' => $rutaFoto
     ];
 }

@@ -107,7 +107,7 @@ Estados permitidos: `PENDIENTE`, `EN CURSO`, `COMPILADO`, `PROBADO` y
 | M10 | `Lib3par` propia y `verifactu` | 53 | COMPILADO |
 | M11 | Forms `inMtoA*` a `inMtoB*` | 69 | COMPILADO |
 | M12 | Forms `inMtoC*` | 57 | COMPILADO |
-| M13 | Forms `inMtoD*` a `inMtoE*` | 58 | PENDIENTE |
+| M13 | Forms `inMtoD*` a `inMtoE*` | 66 | COMPILADO |
 | M14 | Forms `inMtoF*` | 77 | PENDIENTE |
 | M15 | Forms `inMtoG*` a `inMtoI*` | 77 | PENDIENTE |
 | M16 | Forms `inMtoJ*` a `inMtoP*` | 40 | PENDIENTE |
@@ -269,6 +269,7 @@ test; si solo compila, el estado permanece en `COMPILADO`.
 | 27/07/2026 | M10 | Win32 Debug OK | 53 revisados; 0 directos | No ejecutado | Un hint previo |
 | 27/07/2026 | M11 | Win32 Debug OK | 69 revisados; 0 directos | No ejecutado | Un hint previo |
 | 27/07/2026 | M12 | Win32 Debug OK | 57 revisados; 0 directos | No ejecutado | Un hint previo |
+| 27/07/2026 | M13 | Win32 Debug OK | 66 revisados; 0 directos | No ejecutado | Un hint previo |
 
 ## Criterio de finalización
 

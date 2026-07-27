@@ -846,31 +846,8 @@ begin
   // Posts intermedios del pivote/des-pivote (lineas consolidadas o
   // con unidad=padre). Al final del metodo queda True solo en tallas.
   dmmInventarios.ModoPivoteActivo := True;
-  // Teardown del modo anterior (patron del banco de pruebas): cerrar
-  // el editor, soltar la edicion, des-pivotar si venimos de tallas y
-  // anular TODOS los eventos del view que los modos enganchan.
-  if tvLineas.Controller.EditingController.IsEditing then
-    try
-      tvLineas.Controller.EditingController.HideEdit(False);
-    except
-      on E: EInvalidOperation do
-        ;
-    end;
-  if dmmInventarios.cdsLineas.State in [dsEdit, dsInsert] then
-    dmmInventarios.cdsLineas.Cancel;
-  if FModoEntrada <> nil then
-    FModoEntrada.Desmontar;
-  tvLineas.OnInitEdit := nil;
-  tvLineas.OnEditKeyDown := nil;
-  tvLineas.OnEditing := nil;
-  tvLineas.OnFocusedRecordChanged := nil;
-  tvLineas.OnFocusedItemChanged := nil;
-  // Las columnas del modo saliente guardan handlers (OnGetProperties,
-  // OnCustomDrawCell...) del objeto que se libera en la linea de abajo:
-  // se eliminan ANTES de soltarlo para que ningun repintado llame a un
-  // modo muerto (mismo AV que pedidos, 07/07/2026).
-  tvLineas.ClearItems;
-  FModoEntrada := nil;
+  DesmontarModoEntradaDocumento(tvLineas,
+    dmmInventarios.cdsLineas, FModoEntrada);
   // Desglose ensenya atributos: desempaquetar SKU->ATTR ahora Y en
   // cada recarga de lineas (DesempaquetarAlCargar: las recargas del
   // data module que no pasan por el form barrian los ATTR in-memory
@@ -905,16 +882,15 @@ begin
   // y una celda de pivote solo puede representar una. Se probo y se
   // retiro (queda la infraestructura de celdas por si se retoma).
   FModoEntrada := CrearModoEntradaGrid(Cfg);
-  FModoEntrada.OnResuelto := ModoEntradaResuelto;
-  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
-  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
   // Construir hace ClearItems: mueren las columnas del dfm (primera
   // vez) y nacen las del contrato; despues remontamos las numericas.
   // El flag va ANTES: si Construir aborta a medias (validaciones de
   // BeforePost, SQL...), las rutas legacy ya no deben tocar las
   // columnas del dfm, que han muerto en el ClearItems.
   FColsModoConstruido := True;
-  FModoEntrada.Construir;
+  ConstruirModoEntradaDocumento(FModoEntrada, ModoEntradaResuelto,
+    DesactivarEnterAsTabTemporal, RestaurarEnterAsTabTemporal,
+    FModoEntradaSel, [], '');
   CrearColumnasHostInventario;
   // En desglose, las columnas de atributo del contrato nacen ocultas
   // (cada articulo re-rotula las suyas al resolver): precargar los

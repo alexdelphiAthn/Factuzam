@@ -36,6 +36,7 @@ uses
   inLibVentanaEmbebidaIntf in 'src\Lib\inLibVentanaEmbebidaIntf.pas',
   inLibUnitForm in 'src\Lib\inLibUnitForm.pas',
   inLibMsg in 'src\Lib\inLibMsg.pas',
+  inLibRectificativas in 'src\Lib\inLibRectificativas.pas',
   inLibNet in 'src\Lib\inLibNet.pas',
   inLibScriptDB in 'src\Lib\inLibScriptDB.pas',
   inLibIBAN in 'src\Lib\inLibIBAN.pas',

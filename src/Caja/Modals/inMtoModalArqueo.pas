@@ -309,7 +309,8 @@ implementation
 
 uses inLibPermisosIntf, inLibLog,
      inMtoModalArqueosHistCaja,
-     inLibTiraCajaTicket, inMtoModalTiraCaja, inLibVerifactu;
+     inLibTiraCajaTicket, inMtoModalTiraCaja, inLibVerifactu,
+     inLibRectificativas;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -617,6 +618,10 @@ begin
     '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
     '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
     '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
+    SQLExcluirSimplificadaSustituida(
+      'o.CODIGO_EMP_OPCAJA',
+      'o.SERIE_FAC_OPCAJA',
+      'o.NUMERO_FAC_OPCAJA') +
     '  GROUP BY o.CODIGO_EMPLEADO_OPCAJA, e.DIMINUTIVO_TICKET_EMPL        ' +
     '  ORDER BY o.CODIGO_EMPLEADO_OPCAJA                                  ';
 
@@ -638,6 +643,10 @@ begin
     '    AND p.CODIGO_CAJA_PAGO     = :pCAJA                              ' +
     '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
     '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
+    SQLExcluirSimplificadaSustituida(
+      'o.CODIGO_EMP_OPCAJA',
+      'o.SERIE_FAC_OPCAJA',
+      'o.NUMERO_FAC_OPCAJA') +
     '  GROUP BY p.CODIGO_FP_CFP                                           ' +
     '  ORDER BY p.CODIGO_FP_CFP                                           ';
 
@@ -650,9 +659,8 @@ begin
     ParametrosCaja.NivelesFamiliaArqueo);
 
   // IVA (pestaña Más datos): 4 filas, una por tipo de IVA (Normal, Reducido,
-  // Super Reducido, Exento). Se toma de fza_facturas SOLO las
-  // SIMPLIFICADAS — incluye también las facturas asociadas a operaciones
-  // de depósito (apertura "Depósito: Abono") que llevan su propio IVA.
+  // Super Reducido, Exento). Se toman simplificadas y rectificativas para
+  // que las diferencias resten y las sustitutivas aporten el importe corregido.
   // Filtro por la fecha-hora de la operación. El DISTINCT evita multiplicar
   // totales cuando una operación tiene varias filas (DE+VE+CB).
   qryResIVA.SQL.Text :=
@@ -719,7 +727,11 @@ begin
     '        AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                        ' +
     '        AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                      ' +
     '        AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                      ' +
-    '        AND f.TIPO_FAC             = ''SIMPLIFICADA''                 ' +
+    '        AND f.TIPO_FAC IN (''SIMPLIFICADA'', ''RECTIFICATIVA'')       ' +
+    SQLExcluirSimplificadaSustituida(
+      'o.CODIGO_EMP_OPCAJA',
+      'o.SERIE_FAC_OPCAJA',
+      'o.NUMERO_FAC_OPCAJA') +
     '   ) f                                                                ' +
     '   CROSS JOIN (                                                       ' +
     '     SELECT 1 AS ORD, ''N'' AS TIPO                                   ' +
@@ -757,6 +769,10 @@ begin
     '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
     '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
     '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
+    SQLExcluirSimplificadaSustituida(
+      'o.CODIGO_EMP_OPCAJA',
+      'o.SERIE_FAC_OPCAJA',
+      'o.NUMERO_FAC_OPCAJA') +
     '  GROUP BY ap.CODIGO_PROP_ARTPROP, VALOR                             ' +
     '  ORDER BY ap.CODIGO_PROP_ARTPROP, VALOR                             ';
 end;

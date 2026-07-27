@@ -23,6 +23,7 @@ uses
   inLibImpuestosComun in '..\src\Lib\inLibImpuestosComun.pas',
   inLibComprasImpuestos in '..\src\Lib\inLibComprasImpuestos.pas',
   inLibVentasImpuestos in '..\src\Lib\inLibVentasImpuestos.pas',
+  inLibRectificativas in '..\src\Lib\inLibRectificativas.pas',
   PruebasAtributosPaleta in 'PruebasAtributosPaleta.pas',
   PruebasColumnasDocumento in 'PruebasColumnasDocumento.pas',
   PruebasBusquedasCompra in 'PruebasBusquedasCompra.pas',
@@ -33,7 +34,8 @@ uses
   PruebasNavegacionDocumento in
     'PruebasNavegacionDocumento.pas',
   PruebasImpuestosComun in 'PruebasImpuestosComun.pas',
-  PruebasTotalesDocumentos in 'PruebasTotalesDocumentos.pas';
+  PruebasTotalesDocumentos in 'PruebasTotalesDocumentos.pas',
+  PruebasRectificativas in 'PruebasRectificativas.pas';
 
 var
   oEjecutor: ITestRunner;

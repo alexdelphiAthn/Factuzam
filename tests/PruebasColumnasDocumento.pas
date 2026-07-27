@@ -24,9 +24,16 @@ type
   TPruebasColumnasDocumento = class
   private
     FVista: TcxGridDBTableView;
+    FEntroEnEdicion: Boolean;
+    FResolvioSku: Boolean;
+    FSalioDeEdicion: Boolean;
     procedure CambiarValorTalla(Sender: TObject);
+    procedure EntrarEnEdicion(Sender: TObject);
     procedure ObtenerTextoAtributo(Sender: TcxCustomGridTableItem;
       ARecordIndex: Integer; var AText: string);
+    procedure ResolverSku(const ACodArt, ASku, ADescripcion: string;
+      ACompleto: Boolean);
+    procedure SalirDeEdicion(Sender: TObject);
     procedure ValidarTalla(Sender: TObject; var DisplayValue: Variant;
       var ErrorText: TCaption; var Error: Boolean);
   public
@@ -61,6 +68,12 @@ type
     [Test]
     procedure PrepararReconstruccion_LimpiaVistaYReferencias;
     [Test]
+    procedure ConstruccionComun_CableaEventos;
+    [Test]
+    procedure ConstruccionComun_DegradaModoPermitido;
+    [Test]
+    procedure ConstruccionComun_PropagaModoNoDegradable;
+    [Test]
     procedure ConfigSku_DerivaCamposPorPrefijo;
     [Test]
     procedure ColumnaHost_AplicaPropiedades;
@@ -83,13 +96,117 @@ type
 implementation
 
 uses
-  Data.DB, Datasnap.DBClient, Uni, cxDataStorage, cxCurrencyEdit,
+  System.Classes, Data.DB, Datasnap.DBClient, Uni, cxDataStorage,
+  cxCurrencyEdit,
   inLibColumnasSkuIntf, inLibGridTallasInline, inLibGridPivoteCompra,
   inLibGridPivoteVenta, inLibColumnasDocumento;
+
+type
+  TModoEntradaPrueba = class(TInterfacedObject, IModoEntradaGrid)
+  private
+    FConstrucciones: Integer;
+    FFallarAlConstruir: Boolean;
+    FOnEntrarEdicion: TNotifyEvent;
+    FOnResuelto: TSkuResueltoEvent;
+    FOnSalirEdicion: TNotifyEvent;
+    function GetModo: TModoColumnasSku;
+    function GetOnEntrarEdicion: TNotifyEvent;
+    function GetOnResuelto: TSkuResueltoEvent;
+    function GetOnSalirEdicion: TNotifyEvent;
+    procedure SetOnEntrarEdicion(const AValue: TNotifyEvent);
+    procedure SetOnResuelto(const AValue: TSkuResueltoEvent);
+    procedure SetOnSalirEdicion(const AValue: TNotifyEvent);
+  public
+    constructor Create(AFallarAlConstruir: Boolean);
+    procedure Construir;
+    procedure Desmontar;
+    procedure MostrarEditor;
+    function ResolverEntrada(const AEntrada: string): Boolean;
+    procedure SetAlmacenStock(const AValue: string);
+    property Construcciones: Integer read FConstrucciones;
+  end;
+
+constructor TModoEntradaPrueba.Create(AFallarAlConstruir: Boolean);
+begin
+  inherited Create;
+  FFallarAlConstruir := AFallarAlConstruir;
+end;
+
+procedure TModoEntradaPrueba.Construir;
+begin
+  Inc(FConstrucciones);
+  if FFallarAlConstruir then
+    raise Exception.Create('Fallo controlado');
+  if Assigned(FOnEntrarEdicion) then
+    FOnEntrarEdicion(Self);
+  if Assigned(FOnResuelto) then
+    FOnResuelto('ART', 'SKU', 'Artículo', True);
+  if Assigned(FOnSalirEdicion) then
+    FOnSalirEdicion(Self);
+end;
+
+procedure TModoEntradaPrueba.Desmontar;
+begin
+end;
+
+function TModoEntradaPrueba.GetModo: TModoColumnasSku;
+begin
+  Result := mcsSku;
+end;
+
+function TModoEntradaPrueba.GetOnEntrarEdicion: TNotifyEvent;
+begin
+  Result := FOnEntrarEdicion;
+end;
+
+function TModoEntradaPrueba.GetOnResuelto: TSkuResueltoEvent;
+begin
+  Result := FOnResuelto;
+end;
+
+function TModoEntradaPrueba.GetOnSalirEdicion: TNotifyEvent;
+begin
+  Result := FOnSalirEdicion;
+end;
+
+procedure TModoEntradaPrueba.MostrarEditor;
+begin
+end;
+
+function TModoEntradaPrueba.ResolverEntrada(
+  const AEntrada: string): Boolean;
+begin
+  Result := False;
+end;
+
+procedure TModoEntradaPrueba.SetAlmacenStock(const AValue: string);
+begin
+end;
+
+procedure TModoEntradaPrueba.SetOnEntrarEdicion(
+  const AValue: TNotifyEvent);
+begin
+  FOnEntrarEdicion := AValue;
+end;
+
+procedure TModoEntradaPrueba.SetOnResuelto(
+  const AValue: TSkuResueltoEvent);
+begin
+  FOnResuelto := AValue;
+end;
+
+procedure TModoEntradaPrueba.SetOnSalirEdicion(
+  const AValue: TNotifyEvent);
+begin
+  FOnSalirEdicion := AValue;
+end;
 
 procedure TPruebasColumnasDocumento.Preparar;
 begin
   FVista := TcxGridDBTableView.Create(nil);
+  FEntroEnEdicion := False;
+  FResolvioSku := False;
+  FSalioDeEdicion := False;
 end;
 
 procedure TPruebasColumnasDocumento.Limpiar;
@@ -101,11 +218,29 @@ procedure TPruebasColumnasDocumento.CambiarValorTalla(Sender: TObject);
 begin
 end;
 
+procedure TPruebasColumnasDocumento.EntrarEnEdicion(Sender: TObject);
+begin
+  FEntroEnEdicion := True;
+end;
+
 procedure TPruebasColumnasDocumento.ObtenerTextoAtributo(
   Sender: TcxCustomGridTableItem; ARecordIndex: Integer;
   var AText: string);
 begin
   AText := IntToStr(ARecordIndex);
+end;
+
+procedure TPruebasColumnasDocumento.ResolverSku(
+  const ACodArt, ASku, ADescripcion: string;
+  ACompleto: Boolean);
+begin
+  FResolvioSku := (ACodArt = 'ART') and (ASku = 'SKU') and
+    (ADescripcion = 'Artículo') and ACompleto;
+end;
+
+procedure TPruebasColumnasDocumento.SalirDeEdicion(Sender: TObject);
+begin
+  FSalioDeEdicion := True;
 end;
 
 procedure TPruebasColumnasDocumento.ValidarTalla(Sender: TObject;
@@ -384,6 +519,59 @@ begin
   finally
     oDataSet.Free;
   end;
+end;
+
+procedure TPruebasColumnasDocumento.
+  ConstruccionComun_CableaEventos;
+var
+  oImplementacion: TModoEntradaPrueba;
+  oModoEntrada: IModoEntradaGrid;
+begin
+  oImplementacion := TModoEntradaPrueba.Create(False);
+  oModoEntrada := oImplementacion;
+  Assert.IsTrue(ConstruirModoEntradaDocumento(
+    oModoEntrada, ResolverSku, EntrarEnEdicion, SalirDeEdicion,
+    mcsSku, [], 'Prueba'));
+  Assert.AreEqual(1, oImplementacion.Construcciones);
+  Assert.IsTrue(FEntroEnEdicion);
+  Assert.IsTrue(FResolvioSku);
+  Assert.IsTrue(FSalioDeEdicion);
+end;
+
+procedure TPruebasColumnasDocumento.
+  ConstruccionComun_DegradaModoPermitido;
+var
+  oImplementacion: TModoEntradaPrueba;
+  oModoEntrada: IModoEntradaGrid;
+begin
+  oImplementacion := TModoEntradaPrueba.Create(True);
+  oModoEntrada := oImplementacion;
+  Assert.IsFalse(ConstruirModoEntradaDocumento(
+    oModoEntrada, ResolverSku, EntrarEnEdicion, SalirDeEdicion,
+    mcsTallasHorPed, [mcsTallasHorPed], 'Prueba'));
+  Assert.AreEqual(1, oImplementacion.Construcciones);
+  Assert.IsFalse(FEntroEnEdicion);
+  Assert.IsFalse(FResolvioSku);
+  Assert.IsFalse(FSalioDeEdicion);
+end;
+
+procedure TPruebasColumnasDocumento.
+  ConstruccionComun_PropagaModoNoDegradable;
+var
+  bPropagada: Boolean;
+  oModoEntrada: IModoEntradaGrid;
+begin
+  oModoEntrada := TModoEntradaPrueba.Create(True);
+  bPropagada := False;
+  try
+    ConstruirModoEntradaDocumento(
+      oModoEntrada, ResolverSku, EntrarEnEdicion, SalirDeEdicion,
+      mcsSku, [mcsTallasHorPed], 'Prueba');
+  except
+    on E: Exception do
+      bPropagada := E.Message = 'Fallo controlado';
+  end;
+  Assert.IsTrue(bPropagada);
 end;
 
 procedure TPruebasColumnasDocumento.

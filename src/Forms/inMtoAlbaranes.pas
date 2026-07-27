@@ -713,28 +713,7 @@ begin
   ds := dmmAlbaranes.unqryAlbaranesLineas;
   if not ds.Active then
     Exit;
-  // Teardown del modo anterior (patron pedidos).
-  if tvLineasAlbaran.Controller.EditingController.IsEditing then
-    try
-      tvLineasAlbaran.Controller.EditingController.HideEdit(False);
-    except
-      on E: EInvalidOperation do
-        ;
-    end;
-  if ds.State in dsEditModes then
-    ds.Cancel;
-  if FModoEntrada <> nil then
-    FModoEntrada.Desmontar;
-  tvLineasAlbaran.OnInitEdit := nil;
-  tvLineasAlbaran.OnEditKeyDown := nil;
-  tvLineasAlbaran.OnEditing := nil;
-  tvLineasAlbaran.OnFocusedRecordChanged := nil;
-  tvLineasAlbaran.OnFocusedItemChanged := nil;
-  // Las columnas del modo saliente guardan handlers del objeto que se
-  // libera abajo: se eliminan ANTES para que ningun repintado llame a
-  // un modo muerto (leccion de pedidos, AV 07/07/2026).
-  tvLineasAlbaran.ClearItems;
-  FModoEntrada := nil;
+  DesmontarModoEntradaDocumento(tvLineasAlbaran, ds, FModoEntrada);
   // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
   // (columnas reales _ALBLIN; idempotente por comparacion).
   if FModoEntradaSel <> mcsSku then
@@ -776,13 +755,12 @@ begin
   end
   else
     FModoEntrada := CrearModoEntradaGrid(Cfg);
-  FModoEntrada.OnResuelto := ModoEntradaResuelto;
-  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
-  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
   // El flag ANTES del Construir: si aborta a medias, nadie debe tocar
   // las columnas del dfm, muertas en el ClearItems.
   FColsModoConstruido := True;
-  FModoEntrada.Construir;
+  ConstruirModoEntradaDocumento(FModoEntrada, ModoEntradaResuelto,
+    DesactivarEnterAsTabTemporal, RestaurarEnterAsTabTemporal,
+    FModoEntradaSel, [], '');
   CrearColumnasHostAlbaran;
   case DetectarModoColumnasSku(Cfg) of
     mcsSku: tsLineasAlbaran.Caption := 'Líneas [SKU]';

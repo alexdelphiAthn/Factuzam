@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoEfectosCompra                                             }
 {    Tipo:       Formulario (Mto)                                               }
@@ -64,7 +64,8 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inMtoModalRegistrarPago, inLibFiltroUsuario;
+  inLibWin, inMtoPrincipal, inMtoModalRegistrarPago, inLibFiltroUsuario,
+  inLibMsg;
 
 {$R *.dfm}
 
@@ -118,16 +119,16 @@ begin
           q.FieldByName('NUMERO_FACC_EFEC').AsString,
           iEfe, frm.Fecha, frm.Importe, frm.Tipo, frm.Referencia);
         if iRes > 0 then
-          ShowMessage('Efecto conciliado.')
+          ShowMessage(SInfoEfectoConciliado)
         else
-          ShowMessage('No se pudo conciliar el efecto.');
+          ShowMessage(SErrorConciliarEfecto);
       end;
     finally
       frm.Free;
     end;
   end
   else
-    ShowMessage('Selecciona un efecto en la rejilla.');
+    ShowMessage(SErrorEfectoNoSeleccionado);
 end;
 
 procedure TfrmMtoEfectosCompra.btnFusionarEfectosClick(Sender: TObject);
@@ -140,11 +141,11 @@ var
 begin
   inherited;
   if not Assigned(dmmEfectosCompra) then
-    ShowMessage('No hay cartera de efectos abierta.')
+    ShowMessage(SErrorCarteraEfectosNoAbierta)
   else if cxGrdDBTabPrin.Controller.SelectedRecordCount < 2 then
-    ShowMessage('Selecciona dos o más efectos impagados.')
-  else if MessageDlg('¿Fusionar los efectos seleccionados en un único ' +
-          'efecto pendiente?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    ShowMessage(SErrorEfectosCompraFusionInsuficientes)
+  else if MessageDlg(SPreguntaFusionarEfectos, mtConfirmation,
+                     [mbYes, mbNo], 0) = mrYes then
   begin
     SetLength(aClaves, cxGrdDBTabPrin.Controller.SelectedRecordCount);
     for i := 0 to cxGrdDBTabPrin.Controller.SelectedRecordCount - 1 do
@@ -160,9 +161,9 @@ begin
     end;
     iRes := dmmEfectosCompra.FusionarEfectosPendientes(aClaves, sReferencia);
     if iRes > 0 then
-      ShowMessage(Format('Efectos conciliados en %s.', [sReferencia]))
+      ShowMessage(Format(SInfoEfectosConciliados, [sReferencia]))
     else
-      ShowMessage('No se pudieron fusionar los efectos.');
+      ShowMessage(SErrorFusionarEfectos);
   end;
 end;
 

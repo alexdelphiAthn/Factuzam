@@ -147,6 +147,7 @@ type
                                     AAlmacen,
                                     ACaja: string;
                                     AFecha: TDateTime);
+    procedure RefrescarOperaciones;
   private
     FLayout: TLayoutLoader;
     FVentasCal: TVentasCalendarioCache;
@@ -222,6 +223,15 @@ begin
   FCaja    := ACaja;
   dtpFecha.Date := AFecha;
   FVentasCal.Reconfigurar(AEmpresa, AAlmacen, ACaja);
+end;
+
+procedure TfrmConsultaOpe.RefrescarOperaciones;
+begin
+  if Assigned(FdmConsulta) then
+  begin
+    FdmConsulta.InvalidarCacheMaestro;
+    RecargarMaestro;
+  end;
 end;
 
 procedure TfrmConsultaOpe.FormShow(Sender: TObject);

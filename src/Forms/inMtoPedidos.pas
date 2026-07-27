@@ -1428,20 +1428,21 @@ begin
   end
   else
     FModoEntrada := CrearModoEntradaGrid(Cfg);
-  FModoEntrada.OnResuelto := ModoEntradaResuelto;
-  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
-  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
   // El flag ANTES del Construir: si aborta a medias, nadie debe tocar
   // las columnas del dfm, muertas en el ClearItems.
   FColsModoConstruido := True;
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CrearColumnasHostPedido;
-    FModoEntrada.Construir;
+    ConstruirModoEntradaDocumento(FModoEntrada, ModoEntradaResuelto,
+      DesactivarEnterAsTabTemporal, RestaurarEnterAsTabTemporal,
+      FModoEntradaSel, [], '');
   end
   else
   begin
-    FModoEntrada.Construir;
+    ConstruirModoEntradaDocumento(FModoEntrada, ModoEntradaResuelto,
+      DesactivarEnterAsTabTemporal, RestaurarEnterAsTabTemporal,
+      FModoEntradaSel, [], '');
     CrearColumnasHostPedido;
   end;
   // Navegación tipo Excel en todos los modos de presentación.

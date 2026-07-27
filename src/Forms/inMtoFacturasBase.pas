@@ -3518,29 +3518,7 @@ begin
   dmmFacturas.dsLinFac.OnStateChange := nil;
   dmmFacturas.dsLinFac.OnDataChange := nil;
   try
-    // Teardown del modo anterior (patron pedidos/inventarios).
-    if tvLineasFactura.Controller.EditingController.IsEditing then
-      try
-        tvLineasFactura.Controller.EditingController.HideEdit(False);
-      except
-        on E: EInvalidOperation do
-          ;
-      end;
-    if ds.State in dsEditModes then
-      ds.Cancel;
-    if FModoEntrada <> nil then
-      FModoEntrada.Desmontar;
-    tvLineasFactura.OnInitEdit := nil;
-    tvLineasFactura.OnEditKeyDown := nil;
-    tvLineasFactura.OnEditing := nil;
-    tvLineasFactura.OnFocusedRecordChanged := nil;
-    tvLineasFactura.OnFocusedItemChanged := nil;
-    tvLineasFactura.OnCustomDrawCell := nil;
-    // Las columnas del modo saliente guardan handlers del objeto que se
-    // libera abajo: se eliminan ANTES (leccion del AV en repintados
-    // diferidos de pedidos, 07/07/26).
-    tvLineasFactura.ClearItems;
-    FModoEntrada := nil;
+    DesmontarModoEntradaDocumento(tvLineasFactura, ds, FModoEntrada);
     // El flag ANTES del Construir: si algo aborta a medias, nadie debe
     // tocar las columnas del dfm, muertas en el ClearItems.
     FColsModoConstruido := True;
@@ -3604,15 +3582,14 @@ begin
       end
       else
         FModoEntrada := CrearModoEntradaGrid(Cfg);
-      FModoEntrada.OnResuelto := ModoEntradaResuelto;
-      FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
-      FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
       // SIEMPRE primero el bloque del modo (articulo/color/tallas o
       // SKU) y detras las columnas del documento: queda Nro | Articulo
       // | Color | Cantidad/tallas | Descripcion | precios | totales.
       // El pivote publica sus Values[] no-bound en diferido, asi que
       // crear las columnas del host despues no los pisa.
-      FModoEntrada.Construir;
+      ConstruirModoEntradaDocumento(FModoEntrada, ModoEntradaResuelto,
+        DesactivarEnterAsTabTemporal, RestaurarEnterAsTabTemporal,
+        FModoEntradaSel, [], '');
       CrearColumnasHostFactura(False);
       case DetectarModoColumnasSku(Cfg) of
         mcsSku:

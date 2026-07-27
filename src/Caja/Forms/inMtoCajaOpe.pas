@@ -3307,6 +3307,7 @@ var
   CodigoValeGenerado: string;
   sMensajeCorreo: string;
   slRutasTicketPdf: TStringList;
+  iFormulario: Integer;
 begin
   if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
   begin
@@ -3486,6 +3487,17 @@ begin
          // misma transacción que la factura. Aquí solo salimos del modo.
          if FNumeroRectifica <> '' then
          begin
+           if FTipoRectificativa = trcSustitutiva then
+           begin
+             for iFormulario := 0 to Screen.FormCount - 1 do
+             begin
+               if Screen.Forms[iFormulario] is TfrmConsultaOpe then
+               begin
+                 TfrmConsultaOpe(
+                   Screen.Forms[iFormulario]).RefrescarOperaciones;
+               end;
+             end;
+           end;
            FSerieRectifica  := '';
            FNumeroRectifica := '';
            FTipoRectificativa := trcNinguna;

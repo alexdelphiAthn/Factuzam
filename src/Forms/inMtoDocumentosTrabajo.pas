@@ -148,7 +148,7 @@ uses
   // Venta TPV abierta (frmMtoOpeCaja) para el volcado de SKUs.
   inMtoCajaOpe,
   // Listado del documento con una foto de 300 x 300 por línea.
-  inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin;
+  inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin, inLibMsg;
 
 {$R *.dfm}
 
@@ -452,8 +452,7 @@ begin
     dsCabecera := dmmDocumentosTrabajo.unqryTablaG;
     if (not dsCabecera.Active) or dsCabecera.IsEmpty then
     begin
-      ShowMessage(
-        'Seleccione un Documento de Trabajo antes de sacar el listado.');
+      ShowMessage(SErrorDocumentoTrabajoNoSeleccionadoListado);
     end
     else
     begin
@@ -467,13 +466,11 @@ begin
       end;
       if dsCabecera.FieldByName('ID_DTR').IsNull then
       begin
-        ShowMessage(
-          'Grabe el Documento de Trabajo antes de sacar el listado.');
+        ShowMessage(SErrorDocumentoTrabajoSinGrabarListado);
       end
       else if dmmDocumentosTrabajo.unqryLineas.IsEmpty then
       begin
-        ShowMessage(
-          'El Documento de Trabajo no tiene líneas para el listado.');
+        ShowMessage(SErrorDocumentoTrabajoSinLineasListado);
       end
       else
       begin
@@ -518,12 +515,11 @@ begin
     ds := dmmDocumentosTrabajo.unqryTablaG;
     if (not ds.Active) or ds.IsEmpty then
     begin
-      ShowMessage('Seleccione un Documento de Trabajo antes de cargar.');
+      ShowMessage(SErrorDocumentoTrabajoNoSeleccionadoCargar);
     end
     else if dmmDocumentosTrabajo.Ambito <> dtaPropios then
     begin
-      ShowMessage(
-        'Solo el propietario puede cargar articulos en el documento.');
+      ShowMessage(SErrorCargarDocumentoTrabajoNoPropietario);
     end
     else
     begin
@@ -537,7 +533,7 @@ begin
       end;
       if ds.FieldByName('ID_DTR').IsNull then
       begin
-        ShowMessage('Grabe el Documento de Trabajo antes de cargar.');
+        ShowMessage(SErrorDocumentoTrabajoSinGrabarCargar);
       end
       else
       begin
@@ -575,7 +571,7 @@ begin
     if (not dmmDocumentosTrabajo.unqryTablaG.Active) or
        (dmmDocumentosTrabajo.unqryTablaG.IsEmpty) then
     begin
-      ShowMessage('Seleccione un Documento de Trabajo antes de compartir.');
+      ShowMessage(SErrorDocumentoTrabajoNoSeleccionadoCompartir);
     end
     else
     begin
@@ -603,11 +599,11 @@ begin
           if dmmDocumentosTrabajo.CompartirDocumentoActual(sDestino,
                                                            sTipo) then
           begin
-            ShowMessage('Documento compartido.');
+            ShowMessage(SInfoDocumentoTrabajoCompartido);
           end
           else
           begin
-            ShowMessage('El Documento de Trabajo ya estaba compartido.');
+            ShowMessage(SInfoDocumentoTrabajoYaCompartido);
           end;
           pcDetalleDTR.ActivePage := tsCompartirDTR;
         end;
@@ -667,14 +663,12 @@ begin
       end
       else
       begin
-        ShowMessage(
-          'Grabe el Documento de Trabajo antes de imprimir etiquetas.');
+        ShowMessage(SErrorDocumentoTrabajoSinGrabarImprimirEtiquetas);
       end;
     end
     else
     begin
-      ShowMessage(
-        'Seleccione un Documento de Trabajo antes de imprimir etiquetas.');
+      ShowMessage(SErrorDocumentoTrabajoNoSeleccionadoImprimirEtiquetas);
     end;
   end;
 end;
@@ -688,7 +682,7 @@ begin
   begin
     ds := dmmDocumentosTrabajo.unqryTablaG;
     if (not ds.Active) or ds.IsEmpty then
-      ShowMessage('Seleccione un Documento de Trabajo antes de enviar.')
+      ShowMessage(SErrorDocumentoTrabajoNoSeleccionadoEnviar)
     else
     begin
       if dmmDocumentosTrabajo.unqryLineas.State in dsEditModes then
@@ -696,9 +690,9 @@ begin
       if ds.State in dsEditModes then
         ds.Post;
       if ds.FieldByName('ID_DTR').IsNull then
-        ShowMessage('Grabe el Documento de Trabajo antes de enviar.')
+        ShowMessage(SErrorDocumentoTrabajoSinGrabarEnviar)
       else if dmmDocumentosTrabajo.unqryLineas.IsEmpty then
-        ShowMessage('El Documento de Trabajo no tiene lineas que enviar.')
+        ShowMessage(SErrorDocumentoTrabajoSinLineasEnviar)
       else
         Result := ds.FieldByName('ID_DTR').AsLargeInt;
     end;
@@ -760,8 +754,7 @@ begin
     end;
     if (sNumero = '') or (sNumero = '0') then
     begin
-      ShowMessage('El contador de albaranes no ha devuelto numero ' +
-                  'para la serie ' + sSerie + '.');
+      ShowMessage(Format(SErrorContadorAlbaranDocumentoTrabajo, [sSerie]));
       Exit;
     end;
   end;
@@ -811,10 +804,8 @@ begin
     q.ParamByName('ID').AsLargeInt := idDtr;
     q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
     q.ExecSQL;
-    ShowMessage(Format(
-      'Albarán de venta %s/%s creado ABIERTO con %d líneas.%s' +
-      'Asigna cliente, tarifa y precios en el Mto de albaranes.',
-      [sSerie, sNumero, q.RowsAffected, sLineBreak]));
+    ShowMessage(Format(SInfoAlbaranDocumentoTrabajoCreado,
+                       [sSerie, sNumero, q.RowsAffected]));
   finally
     FreeAndNil(q);
   end;
@@ -834,9 +825,7 @@ begin
   // de resolucion (precios/tarifa/IVA de la operacion en curso).
   if (frmMtoOpeCaja = nil) or (not frmMtoOpeCaja.Visible) then
   begin
-    ShowMessage('La venta TPV no está abierta.' + sLineBreak +
-                'Abre Caja > Ventas y repite "Enviar a... > Venta ' +
-                'TPV" para volcar los SKUs en la operación en curso.');
+    ShowMessage(SErrorVentaTpvNoAbiertaDocumentoTrabajo);
     Exit;
   end;
   ds := dmmDocumentosTrabajo.unqryLineas;
@@ -864,12 +853,10 @@ begin
   end;
   frmMtoOpeCaja.BringToFront;
   if iMal = 0 then
-    ShowMessage(Format('%d líneas volcadas a la venta TPV.', [iOk]))
+    ShowMessage(Format(SInfoLineasDocumentoTrabajoVolcadasTpv, [iOk]))
   else
-    ShowMessage(Format(
-      '%d líneas volcadas a la venta TPV; %d no se han podido ' +
-      'resolver (artículo inexistente o descatalogado).',
-      [iOk, iMal]));
+    ShowMessage(Format(SAvisoLineasDocumentoTrabajoNoVolcadasTpv,
+                       [iOk, iMal]));
 end;
 
 procedure TfrmMtoDocumentosTrabajo.miEnviarInventarioDTRClick(
@@ -921,8 +908,8 @@ begin
     end;
     if (sNumero = '') or (sNumero = '0') then
     begin
-      ShowMessage('El contador de inventarios no ha devuelto numero ' +
-                  'para la serie ' + sSerie + '.');
+      ShowMessage(Format(SErrorContadorInventarioDocumentoTrabajo,
+                         [sSerie]));
       Exit;
     end;
   end;
@@ -978,11 +965,8 @@ begin
     q.ParamByName('ID').AsLargeInt := idDtr;
     q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
     q.ExecSQL;
-    ShowMessage(Format(
-      'Inventario %s/%s creado en almacén %s con %d líneas del ' +
-      'documento.%sAbre Inventarios y usa "Recalcular teórico/PMP" ' +
-      'para fijar teóricos y costes.',
-      [sSerie, sNumero, sAlm, q.RowsAffected, sLineBreak]));
+    ShowMessage(Format(SInfoInventarioDocumentoTrabajoCreado,
+                       [sSerie, sNumero, sAlm, q.RowsAffected]));
   finally
     FreeAndNil(q);
   end;
@@ -1037,11 +1021,8 @@ begin
     q.ParamByName('ID').AsLargeInt := idDtr;
     q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
     q.ExecSQL;
-    ShowMessage(Format(
-      'Sesión de cambio de tarifas %d creada en BORRADOR con los ' +
-      'artículos del documento.%sAbre "Cambios de tarifa" para ' +
-      'elegir tarifas, regla de cálculo y aplicar.',
-      [idTarc, sLineBreak]));
+    ShowMessage(Format(SInfoCambioTarifasDocumentoTrabajoCreado,
+                       [idTarc]));
   finally
     FreeAndNil(q);
   end;

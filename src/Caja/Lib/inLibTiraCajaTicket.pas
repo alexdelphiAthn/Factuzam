@@ -136,7 +136,7 @@ uses
   dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetGraphics,
   dxSpreadSheetTypes, dxSpreadSheetStyles, dxHashUtils,
   inLibPreviewTicket, inLibDir, inLibFormatoDocumento, inLibVerifactu,
-  inLibPreviewExcel, inLibDevExcel;
+  inLibPreviewExcel, inLibDevExcel, inLibRectificativas;
 
 // =============================================================================
 //   Helpers de formato
@@ -650,6 +650,10 @@ begin
     '    AND o.CODIGO_CAJA_OPCAJA  = :pCAJA                            ' +
     '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                      ' +
     '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                      ' +
+    SQLExcluirSimplificadaSustituida(
+      'o.CODIGO_EMP_OPCAJA',
+      'o.SERIE_FAC_OPCAJA',
+      'o.NUMERO_FAC_OPCAJA') +
     '    AND (' + sCond + ') ';
   if ACronologico then
     sSQL := sSQL +
@@ -704,6 +708,10 @@ begin
       '    AND o.SERIE_FAC_OPCAJA  <> ''''                               ' +
       '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                      ' +
       '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                      ' +
+      SQLExcluirSimplificadaSustituida(
+        'o.CODIGO_EMP_OPCAJA',
+        'o.SERIE_FAC_OPCAJA',
+        'o.NUMERO_FAC_OPCAJA') +
       '  ORDER BY o.SERIE_FAC_OPCAJA                                     ';
     Q.ParamByName('pEMP').AsString      := AEmpresa;
     Q.ParamByName('pALM').AsString      := AAlmacen;

@@ -644,6 +644,13 @@ begin
         MarcarFacturaSinVerifactu(AParametrosApp, AParametrosCaja,
           Qry, AUsuario, ASerieRect, ANumeroRect);
       end;
+      // El webservice conserva el histórico, pero deja la original fuera
+      // de las ventas activas cuando la rectificación es sustitutiva.
+      if sTipoRectificativa = 'S' then
+      begin
+        TVentasWsCola.RegistrarFactura(AParametrosCaja, Qry, AUsuario,
+          ASerieOriginal, ANumeroOriginal, 'SUSTITUCION');
+      end;
     finally
       FreeAndNil(Qry);
     end;

@@ -24,6 +24,9 @@ uses
 
 type
   TTipoRectificativaCaja = (trcNinguna, trcDiferencias, trcSustitutiva);
+  TTratamientoMovimientosRectificativa = (
+    tmrMantenerOriginales,
+    tmrReemplazarOriginales);
 
   TDatosCabeceraFactura = record
     // identificación
@@ -360,7 +363,10 @@ type
                                      ATipoRectificativa:
                                        TTipoRectificativaCaja = trcNinguna;
                                      const ASerieRectificada: string = '';
-                                     const ANumeroRectificado: string = ''):
+                                     const ANumeroRectificado: string = '';
+                                     ATratamientoMovimientos:
+                                       TTratamientoMovimientosRectificativa =
+                                         tmrMantenerOriginales):
                                        Boolean;
     property OnUpdateTotal: TOnUpdateTotalEvent read FOnUpdateTotal
                                                 write FOnUpdateTotal;
@@ -442,7 +448,8 @@ uses inLibtb,
      inLibVerifactuCola,
      inLibGenerarTicketBD,
      inLibDocumentoFiscal,
-     inLibLicenciaAplicacion;
+     inLibLicenciaAplicacion,
+     inLibRectificativas;
 
 {$R *.dfm}
 
@@ -1205,7 +1212,10 @@ function TdmCajaOpe.GrabarFacturaSimplificada(
                           ATipoRectificativa:
                             TTipoRectificativaCaja = trcNinguna;
                           const ASerieRectificada: string = '';
-                          const ANumeroRectificado: string = ''): Boolean;
+                          const ANumeroRectificado: string = '';
+                          ATratamientoMovimientos:
+                            TTratamientoMovimientosRectificativa =
+                              tmrMantenerOriginales): Boolean;
 var
   QryTrx:              TUniQuery;
   uspQryTrx:           TUniStoredProc;
@@ -1226,6 +1236,7 @@ var
   FechaOperacion: TDateTime;
   sConceptoOperacion: string;
   sTipoRectificativaFiscal: string;
+  bGenerarMovimientos: Boolean;
   // ---------------------------------------------------------------------------
   // Inserta línea fiscal de anticipo (Solo si hay factura)
   // ---------------------------------------------------------------------------
@@ -1274,6 +1285,9 @@ begin
       sTipoRectificativaFiscal := '';
     end;
   end;
+  bGenerarMovimientos := DebeGenerarMovimientosRectificativa(
+    sTipoRectificativaFiscal,
+    ATratamientoMovimientos = tmrReemplazarOriginales);
   if (sConceptoOperacion <> '') and
      (Trim(ASerieRectificada) <> '') and
      (Trim(ANumeroRectificado) <> '') then
@@ -1572,7 +1586,7 @@ begin
         // -------------------------------------------------------------------
         // CASO D: VENTA NORMAL O COBRO TOTAL DE DEPÓSITO EXISTENTE
         // -------------------------------------------------------------------
-        if Lin.TipoArticulo = 'ESTANDAR' then
+        if (Lin.TipoArticulo = 'ESTANDAR') and bGenerarMovimientos then
           NumMovGenerado := ObtenerSiguienteContador(
             FConexion,
             'MV',
@@ -1624,7 +1638,7 @@ begin
             Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, Lin.Vendedor, AEmpresa,
             AAlmacen, ACaja, NumOperacionVE, NumMovGenerado, UsuarioCaja);
         end;
-        if Lin.TipoArticulo = 'ESTANDAR' then
+        if (Lin.TipoArticulo = 'ESTANDAR') and bGenerarMovimientos then
           InsertarMovimientoAlmacen(
             QryTrx, 'VE', SerieGenerada, NumFactura, Lin.Linea,
             AEmpresa, AlmacenOrigenSalida, ACaja, '', TipoMov, Lin.Sku,
@@ -1707,7 +1721,8 @@ begin
           ANumeroRectificado,
           SerieGenerada,
           NumFactura,
-          sTipoRectificativaFiscal);
+          sTipoRectificativaFiscal,
+          ATratamientoMovimientos = tmrReemplazarOriginales);
       end
       else
       begin

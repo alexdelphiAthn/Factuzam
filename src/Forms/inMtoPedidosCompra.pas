@@ -2583,7 +2583,6 @@ begin
   // Registrar para que pedido se construye: el hook de DataChange solo
   // reconstruye el modo bandas cuando esta clave cambia.
   FPedidoModoActual := PedidoClaveActual;
-  bDegradarASku := False;
   // Expansion/consolidacion en bloque (una linea por SKU): totales y
   // pendientes de recibir se recalculan UNA vez al finalizar en vez de
   // por cada post de linea (segundos de cascada al entrar al modo).
@@ -2655,29 +2654,13 @@ begin
   end
   else
     FModoEntrada := CrearModoEntradaGrid(Cfg);
-  FModoEntrada.OnResuelto := ModoEntradaResuelto;
-  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
-  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
   // El flag ANTES del Construir: si algo aborta a medias, nadie debe
   // tocar las columnas del dfm, muertas en el ClearItems.
   FColsModoConstruido := True;
-  try
-    FModoEntrada.Construir;
-  except
-    // Fallo montando un modo de tallas (inline o bandas): degradar a
-    // SKU. En cualquier otro modo la excepcion sigue su curso.
-    on E: Exception do
-      if FModoEntradaSel in [mcsTallasInline, mcsTallasHorPed] then
-      begin
-        if inLibLog.Log <> nil then
-          inLibLog.Log.LogError(
-            'PedidosCompra: fallo construyendo tallas horizontal, ' +
-            'se degrada a SKU: ' + E.Message);
-        bDegradarASku := True;
-      end
-      else
-        raise;
-  end;
+  bDegradarASku := not ConstruirModoEntradaDocumento(
+    FModoEntrada, ModoEntradaResuelto, DesactivarEnterAsTabTemporal,
+    RestaurarEnterAsTabTemporal, FModoEntradaSel,
+    [mcsTallasInline, mcsTallasHorPed], 'PedidosCompra');
   if not bDegradarASku then
   begin
     CrearColumnasHostPedidoCompra;

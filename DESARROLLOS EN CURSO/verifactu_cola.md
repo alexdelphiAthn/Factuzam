@@ -329,6 +329,13 @@ el enlace ABONO de la original se rompía. Solución:
 - Sustitutiva presenta los importes corregidos en positivo y envía
   `TipoRectificativa=S` con `ImporteRectificacion`: base, cuota y, si
   existe, recargo de equivalencia de la factura original.
+- La simplificada original de una sustitutiva deja de aparecer en
+  Buscar/Modificar y se excluye íntegramente del arqueo: operaciones,
+  líneas, IVA, agrupaciones, pagos, vales y tickets de arqueo. Las
+  rectificativas por diferencias no aplican esta exclusión.
+- Si el webservice interno de ventas está activo, la original genera el
+  evento `VENTA_SUSTITUIDA`; permanece en el histórico remoto, pero sale de
+  las líneas y totales de venta normales.
 
 **Log Verifactu (registro de eventos).** El Mto del log
 (`inMtoVerifactuLog`) es de solo consulta: se bloquean alta, edición y

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoEmpresas                                                 }
 {    Tipo:       Formulario (Mto)                                              }
@@ -352,6 +352,7 @@ uses
   inLibIBAN,
   inLibFotos,
   inLibVerifactuInstalacion,
+  inLibMsg,
   inLibtb,
   inMtoPrincipal,
   inMtoFacturasBase,
@@ -565,8 +566,7 @@ var
       'ES',
       IdentidadSesion.Usuario);
     if Trim(sCodigo) = '' then
-      raise Exception.Create('No se pudo obtener el siguiente codigo del ' +
-                             'contador "ES" para la nueva serie.');
+      raise Exception.Create(SErrorContadorSerieEmpresa);
     q := TUniQuery.Create(nil);
     try
       q.Connection := ConexionPrincipal;
@@ -629,7 +629,7 @@ begin
     dmmEmpresas.unqryTablaG.Post;
   sEmpresa := Trim(dsTablaG.DataSet.FieldByName('CODIGO_EMP_EMP').AsString);
   if sEmpresa = '' then
-    ShowMessage('Selecciona una empresa antes de crear sus series.')
+    ShowMessage(SErrorEmpresaCrearSeriesNoSeleccionada)
   else
   begin
     if TfrmModalSeriesDocumentos.Ejecutar(Self, sSerie,
@@ -656,7 +656,7 @@ begin
       end;
       dmmEmpresas.AsegurarSeriesAbierta;
       dmmEmpresas.unqrySeries.Refresh;
-      ShowMessage(Format('Creadas %d series. Omitidas %d ya existentes.',
+      ShowMessage(Format(SInfoSeriesEmpresaCreadas,
                          [iCreadas, iOmitidas]));
     end;
   end;
@@ -712,7 +712,7 @@ begin
   end;
   if sCodigoEmpresa = '' then
   begin
-    ShowMessage('No hay empresa seleccionada.');
+    ShowMessage(SErrorEmpresaNoSeleccionada);
   end
   else
   begin
@@ -728,8 +728,8 @@ begin
         Open;
         Locate('CODIGO_EMP_EMP', oEstado.CodigoEmpresa, []);
       end;
-      ShowMessage('Número de instalación SIF disponible para ' +
-        oEstado.RazonSocial + ':' + sLineBreak + oEstado.Numero);
+      ShowMessage(Format(SInfoInstalacionSifEmpresaDisponible,
+                         [oEstado.RazonSocial, oEstado.Numero]));
     finally
       btnGenerarInstalacionSif.Enabled := True;
     end;
@@ -781,7 +781,7 @@ begin
     end;
   end;
   if not(EsIBANErr) then
-    ShowMessage('IBAN Validado OK');
+    ShowMessage(SInfoIbanValidado);
   FreeAndNil(stErr);
 end;
 

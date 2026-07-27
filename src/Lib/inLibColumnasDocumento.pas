@@ -53,6 +53,8 @@ type
     ColPrecioCompra: TcxGridDBColumn;
   end;
 
+  TConjuntoModosColumnasSku = set of TModoColumnasSku;
+
 procedure CrearColumnasTallasDocumento(
   AVista: TcxGridDBTableView; const APrefijoNombre: string;
   AAncho: Integer; var AColumnas: array of TcxGridDBColumn);
@@ -60,12 +62,22 @@ procedure CrearColumnasAtributosDocumento(
   AVista: TcxGridDBTableView; const APrefijoNombre: string;
   var AColumnas: array of TcxGridDBColumn;
   AOnGetDataText: TcxGridGetDataTextEvent = nil);
+procedure DesmontarModoEntradaDocumento(
+  AVista: TcxGridDBTableView; ADataSet: TDataSet;
+  var AModoEntrada: IModoEntradaGrid);
 procedure PrepararReconstruccionModoDocumento(
   AVista: TcxGridDBTableView; ADataSet: TDataSet;
   var AModoEntrada: IModoEntradaGrid;
   var AColumnasTallas: array of TcxGridDBColumn;
   var AColumnasAtributos: array of TcxGridDBColumn;
   var AColColorPivot: TcxGridDBColumn);
+function ConstruirModoEntradaDocumento(
+  const AModoEntrada: IModoEntradaGrid;
+  AOnResuelto: TSkuResueltoEvent;
+  AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent;
+  AModoSeleccionado: TModoColumnasSku;
+  const AModosDegradables: TConjuntoModosColumnasSku;
+  const AContextoLog: string): Boolean;
 function CrearConfigColumnasSkuDocumento(
   AConexion: TUniConnection;
   const AContextoSesion: IContextoSesionAplicacion;
@@ -117,7 +129,7 @@ procedure ConfigurarEventosTallasDocumento(
 implementation
 
 uses
-  System.SysUtils, cxDataStorage, cxCurrencyEdit;
+  System.SysUtils, cxDataStorage, cxCurrencyEdit, inLibLog;
 
 procedure CrearColumnasTallasDocumento(
   AVista: TcxGridDBTableView; const APrefijoNombre: string;
@@ -172,14 +184,9 @@ begin
   end;
 end;
 
-procedure PrepararReconstruccionModoDocumento(
+procedure DesmontarModoEntradaDocumento(
   AVista: TcxGridDBTableView; ADataSet: TDataSet;
-  var AModoEntrada: IModoEntradaGrid;
-  var AColumnasTallas: array of TcxGridDBColumn;
-  var AColumnasAtributos: array of TcxGridDBColumn;
-  var AColColorPivot: TcxGridDBColumn);
-var
-  iIndice: Integer;
+  var AModoEntrada: IModoEntradaGrid);
 begin
   if Assigned(AVista) then
   begin
@@ -206,12 +213,56 @@ begin
     AVista.ClearItems;
   end;
   AModoEntrada := nil;
+end;
+
+procedure PrepararReconstruccionModoDocumento(
+  AVista: TcxGridDBTableView; ADataSet: TDataSet;
+  var AModoEntrada: IModoEntradaGrid;
+  var AColumnasTallas: array of TcxGridDBColumn;
+  var AColumnasAtributos: array of TcxGridDBColumn;
+  var AColColorPivot: TcxGridDBColumn);
+var
+  iIndice: Integer;
+begin
+  DesmontarModoEntradaDocumento(AVista, ADataSet, AModoEntrada);
   for iIndice := Low(AColumnasTallas) to High(AColumnasTallas) do
     AColumnasTallas[iIndice] := nil;
   for iIndice := Low(AColumnasAtributos) to
     High(AColumnasAtributos) do
     AColumnasAtributos[iIndice] := nil;
   AColColorPivot := nil;
+end;
+
+function ConstruirModoEntradaDocumento(
+  const AModoEntrada: IModoEntradaGrid;
+  AOnResuelto: TSkuResueltoEvent;
+  AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent;
+  AModoSeleccionado: TModoColumnasSku;
+  const AModosDegradables: TConjuntoModosColumnasSku;
+  const AContextoLog: string): Boolean;
+begin
+  Result := True;
+  AModoEntrada.OnResuelto := AOnResuelto;
+  AModoEntrada.OnEntrarEdicion := AOnEntrarEdicion;
+  AModoEntrada.OnSalirEdicion := AOnSalirEdicion;
+  try
+    AModoEntrada.Construir;
+  except
+    on E: Exception do
+    begin
+      if AModoSeleccionado in AModosDegradables then
+      begin
+        if inLibLog.Log <> nil then
+          inLibLog.Log.LogError(
+            AContextoLog +
+            ': fallo construyendo tallas horizontal, ' +
+            'se degrada a SKU: ' + E.Message);
+        Result := False;
+      end
+      else
+        raise;
+    end;
+  end;
 end;
 
 function CrearConfigColumnasSkuDocumento(

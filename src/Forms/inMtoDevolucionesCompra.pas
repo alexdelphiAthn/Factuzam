@@ -314,7 +314,6 @@ uses
   System.StrUtils,
   inLibFiltroUsuario,
   inLibFotos,
-  inLibLog,
   inLibArticulosResolver,
   inLibArticulosValidador,
   inLibGridCantidad,
@@ -325,6 +324,7 @@ uses
   inLibAtributosPaleta,
   UniDataArticulos,
   inLibComprasImpuestos,
+  inLibMsg,
   inMtoModalImpDevCompra,
   inMtoModalImpDevCompraV,
   inMtoModalEtiqDev, inLibShowMto, inLibGenBusq, inLibtb,
@@ -358,10 +358,7 @@ begin
     cbbSERIE_DEVC.Properties.Items);
   if cbbSERIE_DEVC.Properties.Items.Count = 0 then
   begin
-    if MessageDlg('No hay series de devoluciones a proveedor (tipo DC) ' +
-                  'para la empresa "' + sEmpresa + '".' + sLineBreak +
-                  'Se dan de alta en Empresas -> Series. ' +
-                  '¿Abrir el mantenimiento de Empresas ahora?',
+    if MessageDlg(Format(SPreguntaAbrirSeriesDevolucionCompra, [sEmpresa]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       ShowMto(Self.Owner, 'Empresas');
@@ -1064,7 +1061,7 @@ begin
                 dsLin.Open;
               RefrescarTrasBorrado;
               if iFilas = 0 then
-                MessageDlg('No se ha encontrado ninguna linea de ese color.',
+                MessageDlg(SErrorLineaColorDevolucionNoEncontrada,
                            mtInformation, [mbOk], 0);
             finally
               Screen.Cursor := crDefault;
@@ -1098,8 +1095,7 @@ begin
     pcCab.ActivePage := tsCabecera;
     if cbbCODIGO_ALM_DEVC.CanFocus then
       cbbCODIGO_ALM_DEVC.SetFocus;
-    raise Exception.Create(
-      'Debe seleccionar el almacen de salida de la devolucion.');
+    raise Exception.Create(SErrorAlmacenSalidaDevolucionCompra);
   end;
 end;
 
@@ -1367,7 +1363,7 @@ begin
   if dmmDevolucionesCompra = nil then Exit;
   if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
   begin
-    ShowMessage('No hay devolucion de compra activo que imprimir.');
+    ShowMessage(SErrorDevolucionCompraSinImpresionActiva);
     Exit;
   end;
   if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -1399,7 +1395,7 @@ begin
   if dmmDevolucionesCompra = nil then Exit;
   if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
   begin
-    ShowMessage('No hay devolucion de compra activo que imprimir.');
+    ShowMessage(SErrorDevolucionCompraSinImpresionActiva);
     Exit;
   end;
   if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -1433,7 +1429,7 @@ begin
   if dmmDevolucionesCompra = nil then Exit;
   if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
   begin
-    ShowMessage('No hay devolucion de compra activo.');
+    ShowMessage(SErrorDevolucionCompraNoActiva);
     Exit;
   end;
   if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -1803,35 +1799,32 @@ begin
       rIvaS := CampoCabeceraFloat('PORCENTAJE_IVAS_DEVC');
       rIvaE := CampoCabeceraFloat('PORCENTAJE_IVAE_DEVC');
       if (sPrv = '') or (sPrv = '0') then
-        MessageDlg('Selecciona un proveedor antes de devolver la fila.',
+        MessageDlg(SErrorProveedorDevolucionFilaNoSeleccionado,
                    mtWarning, [mbOk], 0)
       else if sAlm = '' then
-        MessageDlg('Selecciona el almacen de salida antes de devolver el ' +
-                   'stock.', mtWarning, [mbOk], 0)
+        MessageDlg(SErrorAlmacenDevolucionFilaNoSeleccionado,
+                   mtWarning, [mbOk], 0)
       else if sLinea = '' then
-        MessageDlg('Selecciona una fila antes de devolver su stock.',
+        MessageDlg(SErrorFilaDevolucionStockNoSeleccionada,
                    mtInformation, [mbOk], 0)
       else if sArt = '' then
-        MessageDlg('Selecciona un articulo en la fila antes de devolver ' +
-                   'su stock.', mtInformation, [mbOk], 0)
+        MessageDlg(SErrorArticuloDevolucionFilaNoSeleccionado,
+                   mtInformation, [mbOk], 0)
       else
       begin
         qAux := TUniQuery.Create(nil);
         try
           qAux.Connection := ConexionPrincipal;
           if (iColorAv = 0) and ArticuloTieneColores then
-            MessageDlg('Selecciona el color de la fila antes de devolver ' +
-                       'su stock.', mtInformation, [mbOk], 0)
+            MessageDlg(SErrorColorDevolucionFilaNoSeleccionado,
+                       mtInformation, [mbOk], 0)
           else
           begin
             iStock := ContarStockDisponible;
             if iStock = 0 then
-              MessageDlg('No hay stock positivo para el articulo/color de ' +
-                         'la fila en el almacen de salida.',
+              MessageDlg(SErrorStockDevolucionFilaNoDisponible,
                          mtInformation, [mbOk], 0)
-            else if MessageDlg('Esto sustituira las cantidades de la fila ' +
-                      'actual por el stock positivo de ese articulo/color ' +
-                      'en el almacen de salida. Continuar?',
+            else if MessageDlg(SPreguntaPrepararStockFilaDevolucion,
                       mtConfirmation, [mbYes, mbNo], 0) = mrYes then
             begin
               Screen.Cursor := crHourGlass;
@@ -1860,8 +1853,8 @@ begin
                 if dsCab.State in dsEditModes then
                   dsCab.Post;
                 RestaurarPivoteHorizontalTrasOperacion(bPivotActivo);
-                MessageDlg(Format('Se han preparado %d lineas de la fila ' +
-                                  'con el stock actual.', [iLineas]),
+                MessageDlg(Format(SInfoStockFilaDevolucionPreparado,
+                                  [iLineas]),
                            mtInformation, [mbOk], 0);
                 finally
                   Screen.Cursor := crDefault;
@@ -1905,8 +1898,7 @@ begin
     pcCab.ActivePage := tsCabecera;
     if cbbCODIGO_ALM_DEVC.CanFocus then
       cbbCODIGO_ALM_DEVC.SetFocus;
-    raise Exception.Create(
-      'Debe seleccionar el almacen de salida de la devolucion.');
+    raise Exception.Create(SErrorAlmacenSalidaDevolucionCompra);
   end;
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
@@ -1914,9 +1906,8 @@ begin
     dmmDevolucionesCompra.unqryTablaG.Connection,
     dmmDevolucionesCompra.unqryDevolucionesCompraLineas, 'DEVCLIN');
   if (sLineasSinSku <> '') and
-     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
-                 'con variaciones sin SKU asignado. ' +
-                 '¿Grabar de todas formas?',
+     (MessageDlg(Format(SPreguntaGrabarDevolucionCompraSinSku,
+                        [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) <> mrYes) then
     Exit;
   if Assigned(FPivote) and FPivote.Activo and
@@ -2184,30 +2175,13 @@ begin
   end
   else
     FModoEntrada := CrearModoEntradaGrid(Cfg);
-  FModoEntrada.OnResuelto := ModoEntradaResuelto;
-  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
-  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
   // El flag ANTES del Construir: si algo aborta a medias, nadie debe
   // tocar las columnas del dfm, muertas en el ClearItems.
   FColsModoConstruido := True;
-  bDegradarASku := False;
-  try
-    FModoEntrada.Construir;
-  except
-    // Fallo montando tallas horizontal (modo por defecto): degradar a
-    // SKU. En cualquier otro modo la excepcion sigue su curso.
-    on E: Exception do
-      if FModoEntradaSel = mcsTallasHorPed then
-      begin
-        if inLibLog.Log <> nil then
-          inLibLog.Log.LogError(
-            'DevolucionesCompra: fallo construyendo tallas horizontal, ' +
-            'se degrada a SKU: ' + E.Message);
-        bDegradarASku := True;
-      end
-      else
-        raise;
-  end;
+  bDegradarASku := not ConstruirModoEntradaDocumento(
+    FModoEntrada, ModoEntradaResuelto, DesactivarEnterAsTabTemporal,
+    RestaurarEnterAsTabTemporal, FModoEntradaSel,
+    [mcsTallasHorPed], 'DevolucionesCompra');
   if bDegradarASku then
   begin
     // Reconstruccion completa en SKU: el teardown de la reentrada
@@ -2299,7 +2273,7 @@ begin
   sPrv := ValorTextoDataSetCompra(
     dsTablaG.DataSet, 'CODIGO_PRV_DEVC');
   if (sPrv = '') or (sPrv = '0') then
-    MessageDlg('Selecciona un proveedor antes de buscar articulos.',
+    MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulosDevolucion,
                mtInformation, [mbOk], 0)
   else
     Result := BuscarArticuloProveedorCompra(
@@ -2324,10 +2298,10 @@ begin
   Result := '';
   sArt := Trim(ACodigoArt);
   if not Assigned(dmmDevolucionesCompra) then
-    MessageDlg('No está abierta la devolución de compra.',
+    MessageDlg(SErrorDevolucionCompraNoAbierta,
                mtInformation, [mbOk], 0)
   else if sArt = '' then
-    MessageDlg('Selecciona un artículo antes de buscar sus SKUs.',
+    MessageDlg(SErrorArticuloNoSeleccionadoBuscarSkusDevolucion,
                mtInformation, [mbOk], 0)
   else
     Result := BuscarSkuArticuloCompra(
@@ -2864,8 +2838,8 @@ begin
   begin
     ds := dmmDevolucionesCompra.unqryTablaG;
     if ds.IsEmpty then
-      MessageDlg('Crea o selecciona una devolución de compra antes de ' +
-                 'elegir la empresa.', mtInformation, [mbOk], 0)
+      MessageDlg(SErrorDevolucionCompraElegirEmpresaNoSeleccionada,
+                 mtInformation, [mbOk], 0)
     else if TBusquedaUtils.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de empresas',
@@ -2904,8 +2878,8 @@ begin
   begin
     ds := dmmDevolucionesCompra.unqryTablaG;
     if ds.IsEmpty then
-      MessageDlg('Crea o selecciona una devolución de compra antes de ' +
-                 'elegir el proveedor.', mtInformation, [mbOk], 0)
+      MessageDlg(SErrorDevolucionCompraElegirProveedorNoSeleccionada,
+                 mtInformation, [mbOk], 0)
     else if TBusquedaUtils.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de proveedores',
@@ -2947,7 +2921,7 @@ end;
 procedure TfrmMtoDevolucionesCompra.btnBorrarLineaClick(Sender: TObject);
 begin
   inherited;
-  if MessageDlg('Esta seguro de que desea eliminar esta linea?',
+  if MessageDlg(SPreguntaEliminarLineaDevolucionCompra,
                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     if Assigned(FPivote) and FPivote.Activo then

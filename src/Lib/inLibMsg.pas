@@ -1782,6 +1782,130 @@ var
   SErrorColoresBasicosSesionNoDisponibles:string =
     'No hay colores basicos cargados en fza_atributos_basicos para ' +
     'ID_VA=''CO''.';
+  // Forms D-E
+  SInfoEfectoConciliado:string = 'Efecto conciliado.';
+  SErrorConciliarEfecto:string = 'No se pudo conciliar el efecto.';
+  SErrorEfectoNoSeleccionado:string =
+    'Selecciona un efecto en la rejilla.';
+  SErrorCarteraEfectosNoAbierta:string =
+    'No hay cartera de efectos abierta.';
+  SErrorEfectosCompraFusionInsuficientes:string =
+    'Selecciona dos o más efectos impagados.';
+  SErrorEfectosVentaFusionInsuficientes:string =
+    'Selecciona dos o más efectos imcobrados.';
+  SPreguntaFusionarEfectos:string =
+    '¿Fusionar los efectos seleccionados en un único efecto pendiente?';
+  SInfoEfectosConciliados:string = 'Efectos conciliados en %s.';
+  SErrorFusionarEfectos:string =
+    'No se pudieron fusionar los efectos.';
+  SErrorContadorSerieEmpresa:string =
+    'No se pudo obtener el siguiente codigo del contador "ES" para la ' +
+    'nueva serie.';
+  SErrorEmpresaCrearSeriesNoSeleccionada:string =
+    'Selecciona una empresa antes de crear sus series.';
+  SInfoSeriesEmpresaCreadas:string =
+    'Creadas %d series. Omitidas %d ya existentes.';
+  SErrorEmpresaNoSeleccionada:string = 'No hay empresa seleccionada.';
+  SInfoInstalacionSifEmpresaDisponible:string =
+    'Número de instalación SIF disponible para %s:' + sLineBreak + '%s';
+  SErrorDocumentoTrabajoNoSeleccionadoListado:string =
+    'Seleccione un Documento de Trabajo antes de sacar el listado.';
+  SErrorDocumentoTrabajoSinGrabarListado:string =
+    'Grabe el Documento de Trabajo antes de sacar el listado.';
+  SErrorDocumentoTrabajoSinLineasListado:string =
+    'El Documento de Trabajo no tiene líneas para el listado.';
+  SErrorDocumentoTrabajoNoSeleccionadoCargar:string =
+    'Seleccione un Documento de Trabajo antes de cargar.';
+  SErrorCargarDocumentoTrabajoNoPropietario:string =
+    'Solo el propietario puede cargar articulos en el documento.';
+  SErrorDocumentoTrabajoSinGrabarCargar:string =
+    'Grabe el Documento de Trabajo antes de cargar.';
+  SErrorDocumentoTrabajoNoSeleccionadoCompartir:string =
+    'Seleccione un Documento de Trabajo antes de compartir.';
+  SInfoDocumentoTrabajoCompartido:string = 'Documento compartido.';
+  SInfoDocumentoTrabajoYaCompartido:string =
+    'El Documento de Trabajo ya estaba compartido.';
+  SErrorDocumentoTrabajoSinGrabarImprimirEtiquetas:string =
+    'Grabe el Documento de Trabajo antes de imprimir etiquetas.';
+  SErrorDocumentoTrabajoNoSeleccionadoImprimirEtiquetas:string =
+    'Seleccione un Documento de Trabajo antes de imprimir etiquetas.';
+  SErrorDocumentoTrabajoNoSeleccionadoEnviar:string =
+    'Seleccione un Documento de Trabajo antes de enviar.';
+  SErrorDocumentoTrabajoSinGrabarEnviar:string =
+    'Grabe el Documento de Trabajo antes de enviar.';
+  SErrorDocumentoTrabajoSinLineasEnviar:string =
+    'El Documento de Trabajo no tiene lineas que enviar.';
+  SErrorContadorAlbaranDocumentoTrabajo:string =
+    'El contador de albaranes no ha devuelto numero para la serie %s.';
+  SInfoAlbaranDocumentoTrabajoCreado:string =
+    'Albarán de venta %s/%s creado ABIERTO con %d líneas.' + sLineBreak +
+    'Asigna cliente, tarifa y precios en el Mto de albaranes.';
+  SErrorVentaTpvNoAbiertaDocumentoTrabajo:string =
+    'La venta TPV no está abierta.' + sLineBreak +
+    'Abre Caja > Ventas y repite "Enviar a... > Venta TPV" para volcar ' +
+    'los SKUs en la operación en curso.';
+  SInfoLineasDocumentoTrabajoVolcadasTpv:string =
+    '%d líneas volcadas a la venta TPV.';
+  SAvisoLineasDocumentoTrabajoNoVolcadasTpv:string =
+    '%d líneas volcadas a la venta TPV; %d no se han podido resolver ' +
+    '(artículo inexistente o descatalogado).';
+  SErrorContadorInventarioDocumentoTrabajo:string =
+    'El contador de inventarios no ha devuelto numero para la serie %s.';
+  SInfoInventarioDocumentoTrabajoCreado:string =
+    'Inventario %s/%s creado en almacén %s con %d líneas del documento.' +
+    sLineBreak +
+    'Abre Inventarios y usa "Recalcular teórico/PMP" para fijar teóricos ' +
+    'y costes.';
+  SInfoCambioTarifasDocumentoTrabajoCreado:string =
+    'Sesión de cambio de tarifas %d creada en BORRADOR con los artículos ' +
+    'del documento.' + sLineBreak +
+    'Abre "Cambios de tarifa" para elegir tarifas, regla de cálculo y ' +
+    'aplicar.';
+  SPreguntaAbrirSeriesDevolucionCompra:string =
+    'No hay series de devoluciones a proveedor (tipo DC) para la empresa ' +
+    '"%s".' + sLineBreak +
+    'Se dan de alta en Empresas -> Series. ¿Abrir el mantenimiento de ' +
+    'Empresas ahora?';
+  SErrorLineaColorDevolucionNoEncontrada:string =
+    'No se ha encontrado ninguna linea de ese color.';
+  SErrorDevolucionCompraSinImpresionActiva:string =
+    'No hay devolucion de compra activo que imprimir.';
+  SErrorDevolucionCompraNoActiva:string =
+    'No hay devolucion de compra activo.';
+  SErrorProveedorDevolucionFilaNoSeleccionado:string =
+    'Selecciona un proveedor antes de devolver la fila.';
+  SErrorAlmacenDevolucionFilaNoSeleccionado:string =
+    'Selecciona el almacen de salida antes de devolver el stock.';
+  SErrorFilaDevolucionStockNoSeleccionada:string =
+    'Selecciona una fila antes de devolver su stock.';
+  SErrorArticuloDevolucionFilaNoSeleccionado:string =
+    'Selecciona un articulo en la fila antes de devolver su stock.';
+  SErrorColorDevolucionFilaNoSeleccionado:string =
+    'Selecciona el color de la fila antes de devolver su stock.';
+  SErrorStockDevolucionFilaNoDisponible:string =
+    'No hay stock positivo para el articulo/color de la fila en el almacen ' +
+    'de salida.';
+  SPreguntaPrepararStockFilaDevolucion:string =
+    'Esto sustituira las cantidades de la fila actual por el stock positivo ' +
+    'de ese articulo/color en el almacen de salida. Continuar?';
+  SInfoStockFilaDevolucionPreparado:string =
+    'Se han preparado %d lineas de la fila con el stock actual.';
+  SPreguntaGrabarDevolucionCompraSinSku:string =
+    'Las líneas %s tienen artículos con variaciones sin SKU asignado. ' +
+    '¿Grabar de todas formas?';
+  SErrorProveedorNoSeleccionadoBuscarArticulosDevolucion:string =
+    'Selecciona un proveedor antes de buscar articulos.';
+  SErrorDevolucionCompraNoAbierta:string =
+    'No está abierta la devolución de compra.';
+  SErrorArticuloNoSeleccionadoBuscarSkusDevolucion:string =
+    'Selecciona un artículo antes de buscar sus SKUs.';
+  SErrorDevolucionCompraElegirEmpresaNoSeleccionada:string =
+    'Crea o selecciona una devolución de compra antes de elegir la empresa.';
+  SErrorDevolucionCompraElegirProveedorNoSeleccionada:string =
+    'Crea o selecciona una devolución de compra antes de elegir el ' +
+    'proveedor.';
+  SPreguntaEliminarLineaDevolucionCompra:string =
+    'Esta seguro de que desea eliminar esta linea?';
 implementation
 
 

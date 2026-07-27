@@ -252,7 +252,7 @@ cada zona. Lo ordeno por retorno.
 
 ## D1 — `TfrmMtoDocumentoBase` (la mayor duplicación que queda)
 
-Estado a 27/07/2026: **fascículos 6A a 6P terminados**. La creación,
+Estado a 27/07/2026: **fascículos 6A a 6Q terminados**. La creación,
 visibilidad, captions de modo, carga de nombres de atributo por artículo y
 globales, configuración del gestor/pivote, desmontaje del modo,
 configuración base de columnas SKU, columnas host y configuración del
@@ -266,7 +266,10 @@ vive en `inLibAtributosPaleta`. Pedidos, albaranes y facturas de venta e
 inventarios reutilizan ya la configuración SKU y los nombres globales de
 `inLibColumnasDocumento`. Los textos de proveedor y totales de prendas se
 comparten mediante `inLibPresentacionDocumento`. La batería DUnitX pasa
-por `inLibShowMto`. La batería DUnitX pasa 52/52. Detalles en
+57/57. La navegación común entre mantenimientos vive en `inLibShowMto`.
+La construcción y los callbacks de los ocho modos de documento, además
+del desmontaje equivalente de venta e inventarios, se comparten mediante
+`inLibColumnasDocumento`. Detalles en
 `refactorizacion_fase6a_resultados.md` y
 `refactorizacion_fase6b_resultados.md` y
 `refactorizacion_fase6c_resultados.md` y
@@ -282,7 +285,8 @@ por `inLibShowMto`. La batería DUnitX pasa 52/52. Detalles en
 `refactorizacion_fase6m_resultados.md` y
 `refactorizacion_fase6n_resultados.md` y
 `refactorizacion_fase6o_resultados.md` y
-`refactorizacion_fase6p_resultados.md`.
+`refactorizacion_fase6p_resultados.md` y
+`refactorizacion_fase6q_resultados.md`.
 
 Los seis formularios de la familia suman **16.335 líneas** y comparten
 **40 métodos con el mismo nombre en tres o más de ellos**:

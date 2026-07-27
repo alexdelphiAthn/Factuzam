@@ -391,6 +391,13 @@ ticket, pulsar Rectificar y elegir «Sustitutiva».
   original e `ImporteRectificacion` contiene `BaseRectificada`,
   `CuotaRectificada` y, cuando corresponda, `CuotaRecargoRectificado`.
 - El desglose y el importe total son los importes corregidos positivos.
+- Tras refrescar Buscar/Modificar, la simplificada original ya no aparece.
+- En el arqueo, la original no interviene en ningún total, desglose, pago,
+  vale ni ticket; la sustitutiva sí. Repetir con «Por diferencias» y
+  comprobar que en ese caso la original continúa apareciendo y computando.
+- Con el webservice interno de ventas activo, la cola contiene
+  `VENTA_CONFIRMADA` para la rectificativa y `VENTA_SUSTITUIDA` para la
+  original. Esta última no aparece en `ventas/lineas.php` ni en sus totales.
 
 **I7 — Facturar ticket (F3).** Seleccionar un ticket (SIMPLIFICADA)
 consolidado → «Facturar ticket (F3)» → elegir cliente, serie (viene la
