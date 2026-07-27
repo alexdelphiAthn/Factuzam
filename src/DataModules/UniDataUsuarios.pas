@@ -32,13 +32,14 @@ type
   private
     function UsuarioEsGrupo(sUsuario:string):boolean;
   public
-    { Public declarations }
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
   end;
 
 implementation
 
 uses
-  inLibtb, inMtoUsuarios;
+  inLibtb;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -69,8 +70,12 @@ begin
   inherited;
   unqryEmpresas.Connection := ConexionPrincipal;
   unqryGrupos.Connection := ConexionPrincipal;
-  unqryEmpresas.MasterSource :=  (GetOwnerForm<TfrmMtoUsuarios>).dsTablaG;
-  //unqry
+end;
+
+procedure TdmUsuarios.AsignarMaestroCabecera(ADataSource: TDataSource);
+begin
+  inherited;
+  unqryEmpresas.MasterSource := ADataSource;
 end;
 
 procedure TdmUsuarios.unqryTablaGAfterInsert(DataSet: TDataSet);

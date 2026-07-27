@@ -22,7 +22,6 @@ uses
   Data.DB,
   Uni,
   inLibFTicket,        // Donde está tu TTicketTermico
-  inMtoPreviewTicket,  // Donde está tu TFormVisualizador
   inLibData,
   inLibUnidadesMedida, // Decimales por unidad en la cantidad
   inLibDir,            // Para GetUserFolderTickets

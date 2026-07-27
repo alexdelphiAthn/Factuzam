@@ -134,7 +134,7 @@ implementation
 uses
   inLibWin, inMtoPrincipal,
   inMtoModalCargarEfectosRemesa, inMtoModalRegistrarPago,
-  inMtoModalSepaRemesaVenta;
+  inMtoModalSepaRemesaVenta, inLibSepaRemesasVenta;
 
 {$R *.dfm}
 

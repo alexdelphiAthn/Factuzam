@@ -115,6 +115,8 @@ type
     procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
     // Override: abre las queries detalle tras unqryTablaG. Llamada
     // desde TfrmMtoGen.AbrirTablaPrincipalAsync.
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AbrirDetalles; override;
   end;
 
@@ -123,7 +125,6 @@ implementation
 uses
   inLibLog, inLibtb,
   System.Diagnostics, System.UITypes, Vcl.Dialogs,
-  inMtoDevolucionesCompra,
   inLibDevolucionesCompraMovimientos,
   inLibContadorLineas,
   inLibComprasImpuestos,
@@ -163,10 +164,14 @@ begin
   // Master-detail server-side: el WHERE del SQL toma los valores de
   // dsTablaG (master), evitando descargar fza_devoluciones_compra_lineas
   // entera y filtrar en cliente.
-  unqryDevolucionesCompraLineas.MasterSource :=
-    (GetOwnerForm<TfrmMtoDevolucionesCompra>).dsTablaG;
-  unqryMovimientosProveedor.MasterSource :=
-    (GetOwnerForm<TfrmMtoDevolucionesCompra>).dsTablaG;
+end;
+
+procedure TdmDevolucionesCompra.AsignarMaestroCabecera(
+  ADataSource: TDataSource);
+begin
+  inherited;
+  unqryDevolucionesCompraLineas.MasterSource := ADataSource;
+  unqryMovimientosProveedor.MasterSource := ADataSource;
 end;
 
 procedure TdmDevolucionesCompra.DataModuleDestroy(Sender: TObject);

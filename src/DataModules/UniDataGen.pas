@@ -47,6 +47,7 @@ type
     FPerfilesUsuario: IPerfilesUsuario;
     FParametrosApp: IParametrosAplicacion;
     FParametrosCaja: IParametrosCaja;
+    FOnActivarFicha: TNotifyEvent;
     function GetCurrentForm: TComponent;
     function GetAuditoriaDatos: IServicioAuditoriaDatos;
     function GetConexiones: IServicioConexiones;
@@ -64,6 +65,9 @@ type
     procedure HeredarPerfilesUsuario(AOwner: TComponent);
     procedure HeredarParametros(AOwner: TComponent);
   protected
+    // DataSource de la cabecera (dsTablaG del Mto), empujado por el
+    // form via AsignarMaestroCabecera.
+    FMaestroCabecera: TDataSource;
     procedure DoCreate; reintroduce; virtual;
     function GetOwnerForm<T: TComponent>: T;
     function HasOwnerForm: Boolean;
@@ -97,6 +101,14 @@ type
     procedure AsignarParametros(
       const AParametrosApp: IParametrosAplicacion;
       const AParametrosCaja: IParametrosCaja);
+    // El form empuja el DataSource de su cabecera (dsTablaG); el DM ya
+    // no sube a buscarlo con GetOwnerForm. Cada TdmXxx sobreescribe
+    // para cablear los MasterSource de sus detalles.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); virtual;
+    // Aviso al insertar en la tabla principal: el form suscrito activa
+    // su pestania de ficha (antes el DM tocaba pcPantalla del form).
+    property OnActivarFicha: TNotifyEvent
+      read FOnActivarFicha write FOnActivarFicha;
     function CrearConexionTrabajo(
       AOwner: TComponent;
       AUso: TUsoConexionTrabajo
@@ -137,7 +149,7 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
-  Vcl.Forms, inMtoGen, inLibData;
+  Vcl.Forms, inLibData;
 
 {$R *.dfm}
 
@@ -497,16 +509,18 @@ begin
                                           Ord(DataSet.State)));
 end;
 
-procedure TdmBase.unqryTablaGBeforeInsert(DataSet: TDataSet);
-var
-  LForm: TfrmMtoGen;
+// Guarda el maestro empujado por el form; los TdmXxx sobreescriben y
+// cablean aqui los MasterSource de sus queries de detalle.
+procedure TdmBase.AsignarMaestroCabecera(ADataSource: TDataSource);
 begin
-  LForm := GetOwnerForm<TfrmMtoGen>;
-  if Assigned(LForm) then
-  begin
-    if LForm.tsFicha.TabVisible then
-       LForm.pcPantalla.ActivePage := LForm.tsFicha;
-  end;
+  FMaestroCabecera := ADataSource;
+end;
+
+procedure TdmBase.unqryTablaGBeforeInsert(DataSet: TDataSet);
+begin
+  // El DM ya no toca la UI: avisa y el form activa su pestania Ficha.
+  if Assigned(FOnActivarFicha) then
+    FOnActivarFicha(Self);
   if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
     Log.LogEvento(Self.UnitName, DataSet.Name, 'BeforeInsert', '');
 end;

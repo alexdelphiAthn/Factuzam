@@ -39,16 +39,21 @@ type
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryTablaGAfterScroll(DataSet: TDataSet);
   private
-    { Private declarations }
+    FOnNuevoProceso: TNotifyEvent;
+    FOnProcesoCambiado: TNotifyEvent;
   public
+    // El DM avisa; el form mueve pestanias/foco y refresca el editor
+    // (antes el DM tocaba la UI del Mto directamente).
+    property OnNuevoProceso: TNotifyEvent
+      read FOnNuevoProceso write FOnNuevoProceso;
+    property OnProcesoCambiado: TNotifyEvent
+      read FOnProcesoCambiado write FOnProcesoCambiado;
     procedure GetCodigoAutoGeneradorProcesos;
     //procedure GetCodigoAutoRetencion;
   end;
 
 implementation
 
-uses
-  inMtoGeneradorProcesos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -60,22 +65,16 @@ procedure TdmGeneradorProcesos.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
   unqryTablaG.FindField('CODIGO_GENERADOR_PROCESO_GP').AsString := '0';
-  // Foco al editor SQL tras insertar
-  with GetOwnerForm<TfrmMtoGeneradorProcesos> do
-  begin
-    pcPantalla.ActivePage := tsFicha;
-    pcPestana.ActivePage := tsSQL;
-    if DBSynEdit1.CanFocus then
-      DBSynEdit1.SetFocus;
-  end;
+  // Foco al editor SQL tras insertar: lo hace el form suscrito.
+  if Assigned(FOnNuevoProceso) then
+    FOnNuevoProceso(Self);
 end;
 
 procedure TdmGeneradorProcesos.unqryTablaGAfterScroll(DataSet: TDataSet);
 begin
   inherited;
-//  (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1.Text :=
-// DataSet.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString;
-  (GetOwnerForm<TfrmMtoGeneradorProcesos>).SynEdit1StatusChange(nil, [scAll]);
+  if Assigned(FOnProcesoCambiado) then
+    FOnProcesoCambiado(Self);
 end;
 
 procedure TdmGeneradorProcesos.DataModuleCreate(Sender: TObject);

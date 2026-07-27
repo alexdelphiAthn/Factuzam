@@ -34,6 +34,8 @@ type
       const ATipo, AReferencia, AEntidad: string): Integer;
     procedure RecalcularRemesa(const ASerie, ANumero: string);
   public
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AbrirDetalles; override;
     procedure RefrescarDatos;
     function ActualizarFechaCargo(AFecha: TDateTime): Boolean;
@@ -51,8 +53,6 @@ type
 
 implementation
 
-uses
-  inMtoRemesasCompra;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -61,19 +61,19 @@ uses
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TdmRemesasCompra.DataModuleCreate(Sender: TObject);
-var
-  frm: TfrmMtoRemesasCompra;
 begin
   inherited;
   unqryTablaG.Connection := ConexionPrincipal;
   unqryEfectosRemesa.Connection := ConexionPrincipal;
   unqryBancosEmpresa.Connection := ConexionPrincipal;
-  frm := GetOwnerForm<TfrmMtoRemesasCompra>;
-  if frm <> nil then
-  begin
-    unqryEfectosRemesa.MasterSource := frm.dsTablaG;
-    unqryBancosEmpresa.MasterSource := frm.dsTablaG;
-  end;
+end;
+
+procedure TdmRemesasCompra.AsignarMaestroCabecera(
+  ADataSource: TDataSource);
+begin
+  inherited;
+  unqryEfectosRemesa.MasterSource := ADataSource;
+  unqryBancosEmpresa.MasterSource := ADataSource;
 end;
 
 procedure TdmRemesasCompra.AbrirDetalles;

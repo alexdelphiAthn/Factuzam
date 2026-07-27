@@ -232,6 +232,9 @@ type
     // Mueve el foco del grid principal un bloque de filas (Ctrl+AvPag /
     // Ctrl+RePag). AAvanzar=True baja el bloque, False lo sube.
     procedure MoverFocoGridBloque(AAvanzar: Boolean);
+    // Suscrito a TdmBase.OnActivarFicha: al insertar en la tabla
+    // principal el form activa su pestania de ficha (el DM no toca UI).
+    procedure ActivarFichaDesdeDM(Sender: TObject);
 //    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
 //                                        const sName: string;
 //                                        const sProfile: string;
@@ -1157,6 +1160,14 @@ begin
   AplicarPermisosPantalla;
 end;
 
+// El TdmBase avisa al insertar en la tabla principal; el form decide
+// la pestania (antes TdmBase tocaba pcPantalla/tsFicha directamente).
+procedure TfrmMtoGen.ActivarFichaDesdeDM(Sender: TObject);
+begin
+  if tsFicha.TabVisible then
+    pcPantalla.ActivePage := tsFicha;
+end;
+
 procedure TfrmMtoGen.CrearTablaPrincipal;
 var
   sNameModule: string;
@@ -1205,6 +1216,14 @@ begin
       swTramo := TStopwatch.StartNew;
       (tdmDataModule as TdmBase).ReasignarConexion(FConn);
       msReasignar := swTramo.ElapsedMilliseconds;
+    end;
+    if Assigned(tdmDataModule) then
+    begin
+      // El DM ya no busca dsTablaG con GetOwnerForm: el form empuja el
+      // maestro y se suscribe al aviso de insercion (misma pauta que
+      // TdmFacturas en la Fase 3).
+      (tdmDataModule as TdmBase).AsignarMaestroCabecera(dsTablaG);
+      (tdmDataModule as TdmBase).OnActivarFicha := ActivarFichaDesdeDM;
     end;
   end;
   inherited;

@@ -37,7 +37,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inMtoGrupos, inLibLog, System.Diagnostics;
+uses inLibLog, System.Diagnostics;
 
 {$R *.dfm}
 

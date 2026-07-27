@@ -135,6 +135,8 @@ type
     procedure OpenTables;
     // Override: abre las queries detalle tras unqryTablaG. Llamada
     // desde TfrmMtoGen.AbrirTablaPrincipalAsync.
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AbrirDetalles; override;
   end;
 
@@ -143,7 +145,6 @@ implementation
 uses
   inLibLog, inLibtb, inLibContadorLineas,
   System.Diagnostics, System.UITypes, Vcl.Dialogs,
-  inMtoFacturasCompra,
   inLibComprasImpuestos,
   inLibData,
   inLibArticulosValidador;
@@ -176,14 +177,18 @@ begin
   unqryAlmacenesFacc.Connection         := ConexionPrincipal;
   unstrdprcGetContadorFacc.Connection   := ConexionPrincipal;
   unqryDefArticuloFacc.Connection       := ConexionPrincipal;
-  // Master-detail server-side: el WHERE del SQL toma los valores de
-  // dsTablaG (master), evitando descargar fza_facturas_compra_lineas
-  // entera y filtrar en cliente.
-  unqryFacturasCompraLineas.MasterSource :=
-    (GetOwnerForm<TfrmMtoFacturasCompra>).dsTablaG;
   unqryEfectos.Connection := ConexionPrincipal;
-  unqryEfectos.MasterSource :=
-    (GetOwnerForm<TfrmMtoFacturasCompra>).dsTablaG;
+end;
+
+// Master-detail server-side: el WHERE del SQL toma los valores de
+// dsTablaG (master), evitando descargar fza_facturas_compra_lineas
+// entera y filtrar en cliente.
+procedure TdmFacturasCompra.AsignarMaestroCabecera(
+  ADataSource: TDataSource);
+begin
+  inherited;
+  unqryFacturasCompraLineas.MasterSource := ADataSource;
+  unqryEfectos.MasterSource := ADataSource;
 end;
 
 procedure TdmFacturasCompra.DataModuleDestroy(Sender: TObject);

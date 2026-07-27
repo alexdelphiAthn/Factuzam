@@ -66,6 +66,8 @@ type
     // Override: abre los lookups (Paises, Ivas). Las queries de detail
     // (Retenciones, Series, Historia/Facturacion) son lazy y se abren
     // al activar su sub-pestaña.
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AbrirDetalles; override;
     procedure AsegurarRetencionesAbierta;
     procedure AsegurarSeriesAbierta;
@@ -76,7 +78,7 @@ type
 implementation
 
 uses
-  inLibtb, inMtoEmpresas, inLibLog, System.Diagnostics,
+  inLibtb, inLibLog, System.Diagnostics,
   inLibFormatoDocumento, inLibIBAN;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -429,13 +431,16 @@ begin
   unqryTablaG.AfterPost                  := unqryTablaGAfterPost;
   unqryTablaG.BeforeInsert               := unqryTablaGBeforeInsert;
   unqryTablaG.BeforeEdit                 := unqryTablaGBeforeEdit;
-  unqryFacturasEmpresas.MasterSource :=
-                                       (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
-  unqryFacturasLineasEmpresas.MasterSource :=
-                                       (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
-  unqryRetenciones.MasterSource    :=  (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
-  unqrySeries.MasterSource         :=  (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
-  unqryBancos.MasterSource         :=  (GetOwnerForm<TfrmMtoEmpresas>).dsTablaG;
+end;
+
+procedure TdmEmpresas.AsignarMaestroCabecera(ADataSource: TDataSource);
+begin
+  inherited;
+  unqryFacturasEmpresas.MasterSource := ADataSource;
+  unqryFacturasLineasEmpresas.MasterSource := ADataSource;
+  unqryRetenciones.MasterSource := ADataSource;
+  unqrySeries.MasterSource := ADataSource;
+  unqryBancos.MasterSource := ADataSource;
 end;
 
 procedure TdmEmpresas.AbrirDetalles;

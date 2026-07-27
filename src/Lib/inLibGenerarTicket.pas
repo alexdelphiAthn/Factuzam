@@ -19,7 +19,6 @@ uses
   System.SysUtils, System.Classes, Data.DB, Uni,
   UniDataCaja,
   inLibFTicket,        // Donde está tu TTicketTermico
-  inMtoPreviewTicket,  // Donde está tu TFormVisualizador
   inLibFaseCobro,      // Para TDatosFaseCobro
   inLibParametrosIntf;
 

@@ -21,24 +21,12 @@ uses
   cxTextEdit, cxDropDownEdit, cxMaskEdit, cxCalendar, cxLabel, cxButtons,
   cxGraphics, cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData,
   cxFilter, cxData, cxDataStorage, cxGrid, cxGridLevel, cxGridCustomView,
-  cxGridCustomTableView, cxGridTableView, cxGridDBTableView;
+  cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
+  inLibSepaRemesasVenta;
 
 type
-  TSepaClienteRemesaVenta = record
-    CodigoCliente: string;
-    NombreCliente: string;
-    IdMandato: string;
-    FechaFirma: TDateTime;
-  end;
-
-  TListaSepaClientesRemesaVenta = array of TSepaClienteRemesaVenta;
-
-  TDatosSepaRemesaVenta = record
-    CodigoAcreedor: string;
-    TipoSecuencia: string;
-    Clientes: TListaSepaClientesRemesaVenta;
-  end;
-
+  // TDatosSepaRemesaVenta y sus tipos auxiliares viven ahora en
+  // inLibSepaRemesasVenta, compartidos con UniDataRemesasVenta.
   TfrmModalSepaRemesaVenta = class(TForm)
   private
     FCbbTipoSecuencia: TcxComboBox;

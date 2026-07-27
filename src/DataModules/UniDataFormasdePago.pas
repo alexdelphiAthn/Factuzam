@@ -36,13 +36,15 @@ type
   public
     procedure GetCodigoAutoFormasdePago;
     //procedure GetCodigoAutoRetencion;
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AbrirDetalles; override;
   end;
 
 implementation
 
 uses
-  inMtoFormasdePago, inLibLog, System.Diagnostics;
+  inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -70,9 +72,13 @@ begin
   unstrdprcContador.Connection := ConexionPrincipal;
   unqryFacturas.Connection := ConexionPrincipal;
   unqryFacturasLineas.Connection := ConexionPrincipal;
-  unqryFacturas.MasterSource := (GetOwnerForm<TfrmMtoFormasdePago>).dsTablaG;
-  unqryFacturasLineas.MasterSource :=
-                                   (GetOwnerForm<TfrmMtoFormasdePago>).dsTablaG;
+end;
+
+procedure TdmFormasdePago.AsignarMaestroCabecera(ADataSource: TDataSource);
+begin
+  inherited;
+  unqryFacturas.MasterSource := ADataSource;
+  unqryFacturasLineas.MasterSource := ADataSource;
 end;
 
 procedure TdmFormasdePago.AbrirDetalles;

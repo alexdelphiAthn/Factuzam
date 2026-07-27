@@ -26,12 +26,11 @@ type
   private
     { Private declarations }
   public
-    { Public declarations }
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
   end;
 implementation
 
-uses
-  inMtoAlmacenes;
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 {$R *.dfm}
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -40,7 +39,12 @@ begin
   inherited;
   qryAlmacenesCajas.Connection := ConexionPrincipal;
   qryAlmacenesCajas.Open;
-  qryAlmacenesCajas.MasterSource := (GetOwnerForm<TfrmMtoAlmacenes>).dsTablaG;
+end;
+
+procedure TdmAlmacenes.AsignarMaestroCabecera(ADataSource: TDataSource);
+begin
+  inherited;
+  qryAlmacenesCajas.MasterSource := ADataSource;
 end;
 
 

@@ -32,8 +32,6 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inMtoUsuariosPerfiles;
-
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;

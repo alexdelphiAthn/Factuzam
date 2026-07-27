@@ -37,7 +37,7 @@ type
 implementation
 
 uses
-  inMtoAtributosBasicos, inLibLog, System.Diagnostics;
+  inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

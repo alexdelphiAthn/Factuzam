@@ -38,9 +38,6 @@ type
 
 implementation
 
-uses
-  inMtoTarifas;
-
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}

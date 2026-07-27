@@ -82,7 +82,7 @@ type
 implementation
 
 uses
-  inMtoProveedores, inLibLog, inLibDocumentoFiscal,
+  inLibLog, inLibDocumentoFiscal,
   inLibtb, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}

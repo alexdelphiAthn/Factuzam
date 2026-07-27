@@ -196,6 +196,9 @@ type
     FSearchEngine: TSynEditSearch;
     FEditorActualBusqueda: TCustomSynEdit;
     FAppEvents: TApplicationEvents;
+    // Suscritos a los avisos del DM (el DM ya no toca la UI).
+    procedure NuevoProcesoDesdeDM(Sender: TObject);
+    procedure ProcesoCambiadoDesdeDM(Sender: TObject);
     procedure AppEventsMessage(var Msg: TMsg; var Handled: Boolean);
     procedure ActionBuscarExecute(Sender: TObject);
     procedure ActionReemplazarExecute(Sender: TObject);
@@ -1416,12 +1419,30 @@ begin
   end;
 end;
 
+// El DM avisa al insertar: pestania de ficha, pagina SQL y foco al
+// editor (antes lo hacia el propio DM tocando el form).
+procedure TfrmMtoGeneradorProcesos.NuevoProcesoDesdeDM(Sender: TObject);
+begin
+  pcPantalla.ActivePage := tsFicha;
+  pcPestana.ActivePage := tsSQL;
+  if DBSynEdit1.CanFocus then
+    DBSynEdit1.SetFocus;
+end;
+
+// El DM avisa al cambiar de registro: refresca el estado del editor.
+procedure TfrmMtoGeneradorProcesos.ProcesoCambiadoDesdeDM(Sender: TObject);
+begin
+  SynEdit1StatusChange(nil, [scAll]);
+end;
+
 procedure TfrmMtoGeneradorProcesos.CrearTablaPrincipal;
 begin
   DBSynEdit1.BeginUpdate;
   syndtEstructura.BeginUpdate;
   inherited;
   dmmGeneradorProcesos := tdmDataModule as TdmGeneradorProcesos;
+  dmmGeneradorProcesos.OnNuevoProceso := NuevoProcesoDesdeDM;
+  dmmGeneradorProcesos.OnProcesoCambiado := ProcesoCambiadoDesdeDM;
   tvMetadatostvVista.DataController.DataSource :=
                                                dmmGeneradorProcesos.dsContenido;
   tvVista.DataController.DataSource := dmmGeneradorProcesos.dsVista;

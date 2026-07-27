@@ -42,13 +42,15 @@ type
     { Private declarations }
   public
     { Public declarations }
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AbrirDetalles; override;
   end;
 
 implementation
 
 uses
-  inMtoAtributosConjuntos, inLibLog, System.Diagnostics;
+  inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -57,20 +59,24 @@ uses
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TdmAtributosConjuntos.DataModuleCreate(Sender: TObject);
-var
-  LDsTablaG: TDataSource;
 begin
   inherited;
-  // Solo Connection + MasterSource. Los .Open se han movido a AbrirDetalles.
-  LDsTablaG := (GetOwnerForm<TfrmMtoAtributosConjuntos>).dsTablaG;
+  // Solo Connection. Los .Open estan en AbrirDetalles y los
+  // MasterSource en AsignarMaestroCabecera.
   unqryValoresLookup.Connection := ConexionPrincipal;
   unqryVariacionesLookup.Connection := ConexionPrincipal;
   unqryAtributosLookup.Connection := ConexionPrincipal;
   unqryAtributosBasicosLookup.Connection := ConexionPrincipal;
   unqryConjuntoDetalle.Connection := ConexionPrincipal;
-  unqryConjuntoDetalle.MasterSource := LDsTablaG;
   unqryArticulosConjunto.Connection := ConexionPrincipal;
-  unqryArticulosConjunto.MasterSource := LDsTablaG;
+end;
+
+procedure TdmAtributosConjuntos.AsignarMaestroCabecera(
+  ADataSource: TDataSource);
+begin
+  inherited;
+  unqryConjuntoDetalle.MasterSource := ADataSource;
+  unqryArticulosConjunto.MasterSource := ADataSource;
 end;
 
 procedure TdmAtributosConjuntos.AbrirDetalles;

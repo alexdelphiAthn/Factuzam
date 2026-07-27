@@ -36,13 +36,15 @@ type
     { Private declarations }
   public
     { Public declarations }
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AbrirDetalles; override;
   end;
 
 implementation
 
 uses
-  inMtoVariaciones, inLibLog, System.Diagnostics;
+  inLibLog, System.Diagnostics;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -51,17 +53,20 @@ uses
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TdmVariaciones.DataModuleCreate(Sender: TObject);
-var
-  LDsTablaG: TDataSource;
 begin
   inherited;
-  // Solo Connection + MasterSource. Los .Open se han movido a AbrirDetalles.
-  LDsTablaG := (GetOwnerForm<TfrmMtoVariaciones>).dsTablaG;
+  // Solo Connection. Los .Open estan en AbrirDetalles y los
+  // MasterSource en AsignarMaestroCabecera.
   unqryArticulosVariacion.Connection := ConexionPrincipal;
-  unqryArticulosVariacion.MasterSource := LDsTablaG;
   unqryAtributosVariacion.Connection := ConexionPrincipal;
-  unqryAtributosVariacion.MasterSource := LDsTablaG;
   unqrySkusArticulo.Connection := ConexionPrincipal;
+end;
+
+procedure TdmVariaciones.AsignarMaestroCabecera(ADataSource: TDataSource);
+begin
+  inherited;
+  unqryArticulosVariacion.MasterSource := ADataSource;
+  unqryAtributosVariacion.MasterSource := ADataSource;
 end;
 
 procedure TdmVariaciones.AbrirDetalles;

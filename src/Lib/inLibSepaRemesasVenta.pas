@@ -25,6 +25,24 @@ type
     Total: Currency;
   end;
 
+  // Datos del dialogo SEPA (acreedor, secuencia y mandatos por
+  // cliente). Viven aqui para que UniDataRemesasVenta y el modal los
+  // compartan sin que el DM dependa de una unidad inMto*.
+  TSepaClienteRemesaVenta = record
+    CodigoCliente: string;
+    NombreCliente: string;
+    IdMandato: string;
+    FechaFirma: TDateTime;
+  end;
+
+  TListaSepaClientesRemesaVenta = array of TSepaClienteRemesaVenta;
+
+  TDatosSepaRemesaVenta = record
+    CodigoAcreedor: string;
+    TipoSecuencia: string;
+    Clientes: TListaSepaClientesRemesaVenta;
+  end;
+
 function GenerarSepaRemesaVenta(AConn: TUniConnection; const ASerie,
   ANumero, AArchivo: string): TResultadoSepaRemesaVenta;
 function CalcularCodigoAcreedorSepaEspanol(const ANif: string): string;

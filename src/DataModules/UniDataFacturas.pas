@@ -236,7 +236,7 @@ public
     // Cablea los detalles (lineas, recibos, efectos, consolidacion,
     // errores, movimientos) al datasource de cabecera que aporta el
     // form. Antes DataModuleCreate lo tomaba del form directamente.
-    procedure AsignarMaestroCabecera(ADataSource: TDataSource);
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     property OnCampoInvalido: TCampoInvalidoEvent
       read FOnCampoInvalido write FOnCampoInvalido;
     property OnNuevaFactura: TNotifyEvent
@@ -1230,6 +1230,7 @@ end;
 
 procedure TdmFacturas.AsignarMaestroCabecera(ADataSource: TDataSource);
 begin
+  inherited;
   unqryLinfac.MasterSource := ADataSource;
   unqryRecibos.MasterSource := ADataSource;
   unqryEfectosVenta.MasterSource := ADataSource;

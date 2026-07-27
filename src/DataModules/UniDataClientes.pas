@@ -58,6 +58,8 @@ type
     // Override: abre los lookups (Paises, FormaPago, Tarifas). Las
     // queries de detail (FacturasClientes, FacturasLineasClientes,
     // Depositos) son lazy: se abren al activar su sub-pestaña.
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AbrirDetalles; override;
     procedure AsegurarHistoriaFacturacionAbierta;
     procedure AsegurarDepositosAbierta;
@@ -69,7 +71,7 @@ type
 implementation
 
 uses
-  inMtoClientes, inLibtb,
+  inLibtb,
   inLibLog,
   System.Diagnostics;
 
@@ -130,10 +132,14 @@ begin
   unqryFacturasClientes.Connection := ConexionPrincipal;
   unqryFacturasLineasClientes.Connection := ConexionPrincipal;
   unqryPaises.Connection := ConexionPrincipal;
-  var LForm := GetOwnerForm<TfrmMtoClientes>;
-  unqryFacturasClientes.MasterSource := LForm.dsTablaG;
-  unqryFacturasLineasClientes.MasterSource := LForm.dsTablaG;
-  unqryDepositos.MasterSource := LForm.dsTablaG;
+end;
+
+procedure TdmClientes.AsignarMaestroCabecera(ADataSource: TDataSource);
+begin
+  inherited;
+  unqryFacturasClientes.MasterSource := ADataSource;
+  unqryFacturasLineasClientes.MasterSource := ADataSource;
+  unqryDepositos.MasterSource := ADataSource;
 end;
 
 procedure TdmClientes.AbrirDetalles;

@@ -78,6 +78,9 @@ type
     procedure unqrySkusBeforeDelete(DataSet: TDataSet);
     procedure unqryDetallesAtributosBeforePost(DataSet: TDataSet);
   private
+    // Vista de stock del Mto de Articulos, empujada por el form via
+    // AsignarVistaStock (el DM ya no la busca con GetOwnerForm).
+    FVistaStock: TcxGridDBTableView;
     procedure AsegurarSkuBase(const ACodArt: string);
     procedure QuitarEscribiblesVista;
     procedure ActualizarSkuActivo(const aSku, aActivo: string);
@@ -99,6 +102,11 @@ type
     // TfrmMtoGen.AbrirTablaPrincipalAsync DENTRO del thread del Open de
     // unqryTablaG. Antes de este refactor los Opens vivian en
     // DataModuleCreate y bloqueaban la UI 17-21 segundos al abrir el tab.
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm. El
+    // TdmArticulos temporal del boton 'Pegatinas' nunca recibe estas
+    // llamadas, igual que antes el GetOwnerForm le devolvia nil.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
+    procedure AsignarVistaStock(AVista: TcxGridDBTableView);
     procedure AbrirDetalles; override;
     // En main thread tras AbrirDetalles: reactiva los TDataSource que
     // se desactivaron durante el thread y dispara manualmente el
@@ -133,7 +141,6 @@ type
 implementation
 
 uses
-  inMtoArticulos,
 
   System.Diagnostics,
   inLibtb;
@@ -437,7 +444,9 @@ begin
   unqryStockArticulos.Close;
   sArt := unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
   unqryStockArticulos.ParamByName('CODIGO_ART_ART').AsString := sArt;
-  tvArticulosStock := (GetOwnerForm<TfrmMtoArticulos>).tvStock;
+  tvArticulosStock := FVistaStock;
+  if tvArticulosStock = nil then
+    Exit;
   if sArt <> '' then
   begin
     swTramo := TStopwatch.StartNew;
@@ -655,30 +664,25 @@ begin
   unqryDetallesAtributos.Connection := ConexionPrincipal;
   unqryAtributosBasicosLookup.Connection := ConexionPrincipal;
   unqryUnidadesMedidaLookup.Connection := ConexionPrincipal;
-  // Las MasterSource solo aplican cuando el DM se instancia desde el
-  // Mto de Articulos (Owner = TfrmMtoArticulos). Si lo crea otro
-  // contexto puntual (p.ej. el boton 'Pegatinas' del Mto de Albaranes
-  // de Compra crea un TdmArticulos temporal solo para reutilizar las
-  // queries de etiquetas) el GetOwnerForm devuelve nil y aqui hariamos
-  // un AV. Saltamos la asignacion si no hay form de articulos.
-  if GetOwnerForm<TfrmMtoArticulos> <> nil then
-  begin
-    unqryVariacionesArticulos.MasterSource :=
-                                      (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
-    unqrySkus.MasterSource :=
-                                      (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
-    unqryLinFacturasArticulos.MasterSource :=
-                                      (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
-    unqryTarifasArticulos.MasterSource :=
-                                      (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
-    unqryProveedoresArticulos.MasterSource :=
-                                      (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
-    unqryMovimientosArticulos.MasterSource :=
-                                      (GetOwnerForm<TfrmMtoArticulos>).dsTablaG;
-  end;
   // El detalle de atributos sigue al SKU activo (master) para mostrar sólo
   // las filas del SKU posicionado en la rejilla superior.
   unqryDetallesAtributos.MasterSource := dsSkus;
+end;
+
+procedure TdmArticulos.AsignarMaestroCabecera(ADataSource: TDataSource);
+begin
+  inherited;
+  unqryVariacionesArticulos.MasterSource := ADataSource;
+  unqrySkus.MasterSource := ADataSource;
+  unqryLinFacturasArticulos.MasterSource := ADataSource;
+  unqryTarifasArticulos.MasterSource := ADataSource;
+  unqryProveedoresArticulos.MasterSource := ADataSource;
+  unqryMovimientosArticulos.MasterSource := ADataSource;
+end;
+
+procedure TdmArticulos.AsignarVistaStock(AVista: TcxGridDBTableView);
+begin
+  FVistaStock := AVista;
 end;
 
 procedure TdmArticulos.AbrirDetalles;

@@ -17,7 +17,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Variants, UniDataGen, Data.DB,
-  MemDS, DBAccess, Uni, inLibUser, UniDataConn, inMtoModalSepaRemesaVenta;
+  MemDS, DBAccess, Uni, inLibUser, UniDataConn, inLibSepaRemesasVenta;
 
 type
   TdmRemesasVenta = class(TdmBase)
@@ -34,6 +34,8 @@ type
       const ATipo, AReferencia, AEntidad: string): Integer;
     procedure RecalcularRemesa(const ASerie, ANumero: string);
   public
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AbrirDetalles; override;
     procedure RefrescarDatos;
     function ActualizarFechaCobro(AFecha: TDateTime): Boolean;
@@ -55,8 +57,6 @@ type
 
 implementation
 
-uses
-  inLibSepaRemesasVenta, inMtoRemesasVenta;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -65,19 +65,19 @@ uses
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TdmRemesasVenta.DataModuleCreate(Sender: TObject);
-var
-  frm: TfrmMtoRemesasVenta;
 begin
   inherited;
   unqryTablaG.Connection := ConexionPrincipal;
   unqryEfectosRemesa.Connection := ConexionPrincipal;
   unqryBancosEmpresa.Connection := ConexionPrincipal;
-  frm := GetOwnerForm<TfrmMtoRemesasVenta>;
-  if frm <> nil then
-  begin
-    unqryEfectosRemesa.MasterSource := frm.dsTablaG;
-    unqryBancosEmpresa.MasterSource := frm.dsTablaG;
-  end;
+end;
+
+procedure TdmRemesasVenta.AsignarMaestroCabecera(
+  ADataSource: TDataSource);
+begin
+  inherited;
+  unqryEfectosRemesa.MasterSource := ADataSource;
+  unqryBancosEmpresa.MasterSource := ADataSource;
 end;
 
 procedure TdmRemesasVenta.AbrirDetalles;

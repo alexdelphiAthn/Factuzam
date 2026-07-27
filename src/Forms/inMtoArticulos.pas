@@ -1946,6 +1946,8 @@ begin
   if FAtributosStock = nil then
     FAtributosStock := TDictionary<string, string>.Create;
   dmmArticulos := tdmDataModule as TdmArticulos;
+  // La vista de stock se empuja al DM (ya no la busca con GetOwnerForm).
+  dmmArticulos.AsignarVistaStock(tvStock);
   cbbFamilia.Properties.ListSource := dmmArticulos.dsFamiliaArticulos;
   cbbTipoCantidad.Properties.ListSource := dmmArticulos.dsUnidadesMedidaLookup;
   tvTarifas.DataController.DataSource := dmmArticulos.dsTarifasArticulos;

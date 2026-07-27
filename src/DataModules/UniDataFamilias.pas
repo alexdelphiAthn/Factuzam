@@ -43,12 +43,16 @@ type
   public
     procedure GetCodigoAutoFamilia;
     //procedure GetCodigoAutoRetencion;
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
+    // Los .Open de los detalles salen de DataModuleCreate: alli el
+    // maestro aun no esta cableado (AsignarMaestroCabecera llega justo
+    // despues de crear el DM, y AbrirDetalles despues de abrir TablaG).
+    procedure AbrirDetalles; override;
   end;
 
 implementation
 
-uses
-  inMtoFamilias;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -122,14 +126,26 @@ begin
   unqryArticulosFamilias.Connection := ConexionPrincipal;
   unqrySubFamilias.Connection := ConexionPrincipal;
   unqryFamiliasAtributos.Connection := ConexionPrincipal;
-  unqryArticulosFamilias.MasterSource :=
-                                       (GetOwnerForm<TfrmMtoFamilias>).dsTablaG;
-  unqryFamiliasAtributos.MasterSource :=
-                                       (GetOwnerForm<TfrmMtoFamilias>).dsTablaG;
-  unqryArticulosFamilias.Open;
-  unqrySubFamilias.Open;
-  unqryFamiliasAtributos.Open;
-  unqryPropiedades.Open;
+end;
+
+procedure TdmFamilias.AsignarMaestroCabecera(ADataSource: TDataSource);
+begin
+  inherited;
+  unqryArticulosFamilias.MasterSource := ADataSource;
+  unqryFamiliasAtributos.MasterSource := ADataSource;
+end;
+
+procedure TdmFamilias.AbrirDetalles;
+begin
+  inherited;
+  if not unqryArticulosFamilias.Active then
+    unqryArticulosFamilias.Open;
+  if not unqrySubFamilias.Active then
+    unqrySubFamilias.Open;
+  if not unqryFamiliasAtributos.Active then
+    unqryFamiliasAtributos.Open;
+  if not unqryPropiedades.Active then
+    unqryPropiedades.Open;
 end;
 
 procedure TdmFamilias.GetCodigoAutoFamilia;

@@ -57,6 +57,8 @@ type
     dsLineas: TDataSource;
     dsCompartidos: TDataSource;
     property Ambito: TDocTrabajoAmbito read FAmbito;
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AbrirDetalles; override;
     procedure CambiarAmbito(const AAmbito: TDocTrabajoAmbito);
     procedure CargarAlmacenesEtiquetasDoc(AIdDtr: Int64; ALV: TcxListView);
@@ -81,7 +83,7 @@ implementation
 
 uses
   System.Generics.Collections, System.Variants,
-  UniDataArticulos, inMtoDocumentosTrabajo;
+  UniDataArticulos;
 
 {$R *.dfm}
 
@@ -221,9 +223,15 @@ begin
     '         LIMIT 1) ';
 end;
 
+procedure TdmDocumentosTrabajo.AsignarMaestroCabecera(
+  ADataSource: TDataSource);
+begin
+  inherited;
+  unqryLineas.MasterSource := ADataSource;
+  unqryCompartidos.MasterSource := ADataSource;
+end;
+
 procedure TdmDocumentosTrabajo.ConfigurarQueries;
-var
-  frm: TfrmMtoDocumentosTrabajo;
 begin
   ConfigurarSqlCabecera;
   unqryTablaG.KeyFields := 'ID_DTR';
@@ -266,10 +274,9 @@ begin
   unqryLineas.KeyFields := 'ID_DTL';
   unqryLineas.MasterFields := 'ID_DTR';
   unqryLineas.DetailFields := 'ID_DTR_DTL';
-  frm := GetOwnerForm<TfrmMtoDocumentosTrabajo>;
-  if frm <> nil then
+  if FMaestroCabecera <> nil then
   begin
-    unqryLineas.MasterSource := frm.dsTablaG;
+    unqryLineas.MasterSource := FMaestroCabecera;
   end;
   // ATTR1..5 / NUM_ATRIBUTOS / ID_AC_PIVOT: columnas del contrato
   // ColumnSKUcxGrid (documentos_trabajo_columnas_sku.sql).
@@ -346,8 +353,6 @@ begin
 end;
 
 procedure TdmDocumentosTrabajo.ConfigurarQueryCompartidos;
-var
-  frm: TfrmMtoDocumentosTrabajo;
 begin
   unqryCompartidos.Connection := ConexionPrincipal;
   unqryCompartidos.SQL.Text :=
@@ -358,10 +363,9 @@ begin
   unqryCompartidos.KeyFields := 'ID_DTC';
   unqryCompartidos.MasterFields := 'ID_DTR';
   unqryCompartidos.DetailFields := 'ID_DTR_DTC';
-  frm := GetOwnerForm<TfrmMtoDocumentosTrabajo>;
-  if frm <> nil then
+  if FMaestroCabecera <> nil then
   begin
-    unqryCompartidos.MasterSource := frm.dsTablaG;
+    unqryCompartidos.MasterSource := FMaestroCabecera;
   end;
   unqryCompartidos.SQLInsert.Text :=
     'INSERT INTO fza_documentos_trabajo_compartidos ' +
@@ -771,18 +775,18 @@ begin
 end;
 
 procedure TdmDocumentosTrabajo.AbrirDetalles;
-var
-  frm: TfrmMtoDocumentosTrabajo;
 begin
   inherited;
-  frm := GetOwnerForm<TfrmMtoDocumentosTrabajo>;
-  if (frm <> nil) and (unqryLineas.MasterSource = nil) then
+  // Cinturon: si las queries se configuraron antes de recibir el
+  // maestro, recablear aqui antes de abrir.
+  if (FMaestroCabecera <> nil) and (unqryLineas.MasterSource = nil) then
   begin
-    unqryLineas.MasterSource := frm.dsTablaG;
+    unqryLineas.MasterSource := FMaestroCabecera;
   end;
-  if (frm <> nil) and (unqryCompartidos.MasterSource = nil) then
+  if (FMaestroCabecera <> nil) and
+     (unqryCompartidos.MasterSource = nil) then
   begin
-    unqryCompartidos.MasterSource := frm.dsTablaG;
+    unqryCompartidos.MasterSource := FMaestroCabecera;
   end;
   if not unqryLineas.Active then
   begin

@@ -117,6 +117,8 @@ type
                                                const ASerie, ANumero,
                                                      AAlmacenesCsv: string);
     procedure OpenTables;
+    // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AbrirDetalles; override;
   end;
 
@@ -126,7 +128,6 @@ uses
   inLibLog, inLibtb, inLibContadorLineas,
   System.Diagnostics, System.UITypes, System.Generics.Collections,
   Vcl.Dialogs, ComCtrls, cxListView,
-  inMtoPedidosCompra,
   inLibPedidosCompra,
   inLibComprasImpuestos,
   inLibData,
@@ -330,13 +331,17 @@ begin
   unqryTemporadasPedc.Open;
   unqryFormasPago.Connection          := ConexionPrincipal;
   unqryAlmacenesPedc.Connection       := ConexionPrincipal;
-  unqryPedidosCompraLineas.MasterSource :=
-    (GetOwnerForm<TfrmMtoPedidosCompra>).dsTablaG;
+  unqryAlbaranesPedc.Connection := ConexionPrincipal;
+end;
+
+procedure TdmPedidosCompra.AsignarMaestroCabecera(
+  ADataSource: TDataSource);
+begin
+  inherited;
+  unqryPedidosCompraLineas.MasterSource := ADataSource;
   // Albaranes de compra creados desde este pedido (master-detail por
   // NUMERO_PED_ALBC / SERIE_PED_ALBC). Solo lectura, para la pestania.
-  unqryAlbaranesPedc.Connection := ConexionPrincipal;
-  unqryAlbaranesPedc.MasterSource :=
-    (GetOwnerForm<TfrmMtoPedidosCompra>).dsTablaG;
+  unqryAlbaranesPedc.MasterSource := ADataSource;
 end;
 
 procedure TdmPedidosCompra.DataModuleDestroy(Sender: TObject);

@@ -26,11 +26,12 @@ type
     FChkMargen: TCheckBox;
     FEdtReferencia: TEdit;
     FEdtToken: TEdit;
+    FContenido: TControl;
     FEdtUrl: TEdit;
     FGuardado: Boolean;
     procedure Construir;
-    function NuevoCampo(const AEtiqueta, AValor: string;
-      AOculto: Boolean): TEdit;
+    function NuevoCampo(const AEtiqueta, APista, AValor,
+      APrompt: string; AOculto: Boolean): TEdit;
     procedure OnCancelarClick(Sender: TObject);
     procedure OnGuardarClick(Sender: TObject);
   public
@@ -44,23 +45,41 @@ uses
   System.Types, System.UITypes, FMX.Types, FMX.Layouts,
   VentasConfig;
 
-function TfrmConfig.NuevoCampo(const AEtiqueta, AValor: string;
-  AOculto: Boolean): TEdit;
+{ Cada campo son tres controles apilados: rótulo en negrita, una línea de
+  ayuda en gris que dice qué va ahí, y la caja. Los tres van alineados
+  arriba, así que el orden en que se crean es el orden en que se ven. }
+function TfrmConfig.NuevoCampo(const AEtiqueta, APista, AValor,
+  APrompt: string; AOculto: Boolean): TEdit;
 var
   lblEtiqueta: TLabel;
+  lblPista: TLabel;
 begin
   lblEtiqueta := TLabel.Create(Self);
-  lblEtiqueta.Parent := Self;
+  lblEtiqueta.Parent := FContenido;
   lblEtiqueta.Align := TAlignLayout.Top;
-  lblEtiqueta.Height := 26;
-  lblEtiqueta.Margins.Rect := RectF(14, 10, 14, 0);
+  lblEtiqueta.Height := 24;
+  lblEtiqueta.Margins.Rect := RectF(14, 16, 14, 0);
   lblEtiqueta.Text := AEtiqueta;
+  lblEtiqueta.TextSettings.Font.Size := 15;
+  lblEtiqueta.TextSettings.Font.Style := [TFontStyle.fsBold];
+  lblEtiqueta.StyledSettings := [TStyledSetting.FontColor];
+  lblPista := TLabel.Create(Self);
+  lblPista.Parent := FContenido;
+  lblPista.Align := TAlignLayout.Top;
+  lblPista.Height := 34;
+  lblPista.Margins.Rect := RectF(14, 0, 14, 4);
+  lblPista.Text := APista;
+  lblPista.TextSettings.Font.Size := 12;
+  lblPista.TextSettings.FontColor := TAlphaColorRec.Gray;
+  lblPista.TextSettings.WordWrap := True;
+  lblPista.StyledSettings := [];
   Result := TEdit.Create(Self);
-  Result.Parent := Self;
+  Result.Parent := FContenido;
   Result.Align := TAlignLayout.Top;
-  Result.Height := 44;
+  Result.Height := 46;
   Result.Margins.Rect := RectF(14, 0, 14, 0);
   Result.Text := AValor;
+  Result.TextPrompt := APrompt;
   Result.Password := AOculto;
 end;
 
@@ -70,6 +89,7 @@ var
   btnGuardar: TButton;
   layBotones: TLayout;
   lblTitulo: TLabel;
+  scbCampos: TVertScrollBox;
 begin
   Self.Caption := 'Configuración';
   layBotones := TLayout.Create(Self);
@@ -93,18 +113,40 @@ begin
   lblTitulo := TLabel.Create(Self);
   lblTitulo.Parent := Self;
   lblTitulo.Align := TAlignLayout.Top;
-  lblTitulo.Height := 44;
+  lblTitulo.Height := 38;
   lblTitulo.Margins.Rect := RectF(14, 12, 14, 0);
   lblTitulo.Text := 'Conexión con el webservice';
   lblTitulo.TextSettings.Font.Size := 19;
   lblTitulo.TextSettings.Font.Style := [TFontStyle.fsBold];
   lblTitulo.StyledSettings := [];
-  FEdtUrl := NuevoCampo('URL base de la API', oConfig.UrlBase, False);
-  FEdtToken := NuevoCampo('Token de la credencial', oConfig.Token, True);
-  FEdtReferencia := NuevoCampo('Referencia de la instalación',
-    oConfig.Referencia, False);
+  // Con el teclado abierto la pantalla se queda sin sitio, así que los
+  // campos van en un scroll y los botones se quedan fijos abajo.
+  scbCampos := TVertScrollBox.Create(Self);
+  scbCampos.Parent := Self;
+  scbCampos.Align := TAlignLayout.Client;
+  FContenido := scbCampos;
+  FEdtUrl := NuevoCampo(
+    'URL de la API',
+    'Dirección del webservice, terminada en /api/v1/',
+    oConfig.UrlBase,
+    'https://webservice.veryverifactu.com/api/v1/',
+    False);
+  FEdtToken := NuevoCampo(
+    'Token de la credencial',
+    'El que dio CertApiWeb al crear la API. Solo se enseña una vez, ' +
+    'así que si se ha perdido hay que crear otra credencial.',
+    oConfig.Token,
+    'fza_...',
+    True);
+  FEdtReferencia := NuevoCampo(
+    'Referencia de cliente',
+    'Nombre de la instalación, el mismo que tiene configurado ' +
+    'Factuzam. Distingue mayúsculas de minúsculas.',
+    oConfig.Referencia,
+    'MI-TIENDA',
+    False);
   FChkMargen := TCheckBox.Create(Self);
-  FChkMargen.Parent := Self;
+  FChkMargen.Parent := FContenido;
   FChkMargen.Align := TAlignLayout.Top;
   FChkMargen.Height := 44;
   FChkMargen.Margins.Rect := RectF(14, 14, 14, 0);
