@@ -181,6 +181,8 @@
         <DCCReference Include="src\Lib\inLibUser.pas"/>
         <DCCReference Include="src\Lib\inLibWin.pas"/>
         <DCCReference Include="src\Lib\inLibShowMto.pas"/>
+        <DCCReference Include="src\Lib\inLibRegistroPantallas.pas"/>
+        <DCCReference Include="src\Lib\inLibVentanaEmbebidaIntf.pas"/>
         <DCCReference Include="src\Lib\inLibUnitForm.pas"/>
         <DCCReference Include="src\Lib\inLibMsg.pas"/>
         <DCCReference Include="src\Lib\inLibNet.pas"/>
@@ -221,6 +223,7 @@
         <DCCReference Include="src\Core\inMtoPrincipal.pas">
             <Form>frmMtoPrincipal</Form>
         </DCCReference>
+        <DCCReference Include="src\Core\inMtoCatalogoPantallas.pas"/>
         <DCCReference Include="src\Forms\inMtoGen.pas">
             <Form>frmMtoGen</Form>
         </DCCReference>
