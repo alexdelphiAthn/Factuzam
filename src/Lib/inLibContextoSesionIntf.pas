@@ -16,6 +16,8 @@ unit inLibContextoSesionIntf;
 interface
 
 type
+  TLogSesionProc = procedure(const ATexto: string) of object;
+
   TIdentidadSesion = record
     Usuario  : string;
     Grupo    : string;
@@ -48,14 +50,20 @@ type
 
   IContextoSesionAplicacion = interface
     ['{EC179077-3766-447E-8117-E5B6714444EC}']
+    function GetCerrandoAplicacion: Boolean;
     function GetIdentidad: TIdentidadSesion;
     function GetUbicacion: TUbicacionSesion;
+    procedure LogSesion(const ATexto: string);
+    property CerrandoAplicacion: Boolean
+      read GetCerrandoAplicacion;
     property Identidad: TIdentidadSesion read GetIdentidad;
     property Ubicacion: TUbicacionSesion read GetUbicacion;
   end;
 
   IGestorContextoSesion = interface
     ['{EB158CD4-A7EE-4AA4-AEA6-92CD19A9E715}']
+    procedure AsignarLogSesion(ALogSesion: TLogSesionProc);
+    procedure MarcarCierreAplicacion;
     procedure EstablecerIdentidad(const AIdentidad: TIdentidadSesion);
     procedure CambiarUbicacion(const AUbicacion: TUbicacionSesion);
   end;

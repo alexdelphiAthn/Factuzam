@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoAlbaranesCompra                                          }
 {    Tipo:       Formulario (Mto)                                              }
@@ -1187,6 +1187,7 @@ begin
   //    Sesiones, con los nombres ALBC/ALBCLIN/ALBCCEL.
   cfgT := Default(TGridTallasConfig);
   cfgT.Conexion           := dmmAlbaranesCompra.unqryTablaG.Connection;
+  cfgT.ContextoSesion     := ContextoSesion;
   cfgT.Usuario            := IdentidadSesion.Usuario;
   cfgT.Grid               := tvLineasAlbaran;
   cfgT.SourceMaster       := dsTablaG;
@@ -1787,6 +1788,7 @@ begin
     dmmAlbaranesCompra.DesempaquetarAtributosLineas;
   Cfg := Default(TConfigColumnasSku);
   Cfg.Conexion := dmmAlbaranesCompra.unqryTablaG.Connection;
+  Cfg.ContextoSesion := ContextoSesion;
   Cfg.View := tvLineasAlbaran;
   Cfg.Cds := ds;
   Cfg.Modo := FModoEntradaSel;

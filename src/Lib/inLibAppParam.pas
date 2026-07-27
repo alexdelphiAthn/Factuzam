@@ -17,21 +17,30 @@ unit inLibAppParam;
 interface
 
 uses
-  inLibParametrosIntf, inLibParametrosBase, inLibPerfilesUsuarioIntf;
+  System.SyncObjs,
+  inLibParametrosIntf, inLibParametrosBase, inLibPerfilesUsuarioIntf,
+  inLibLicenciaAplicacion;
 
 type
   TParametrosAplicacion = class(
     TParametrosBase,
-    IParametrosAplicacion
+    IParametrosAplicacion,
+    IGestorLicenciaAplicacion
   )
   private
+    FBloqueoLicencia: TCriticalSection;
+    FResultadoLicencia: TResultadoLicenciaAplicacion;
     procedure InicializarParametrosApp(
       const AUsuario, AGrupo: string);
   protected
     procedure DespuesDeRecargar; override;
   public
     constructor Create(const APerfilesUsuario: IPerfilesUsuario);
+    destructor Destroy; override;
+    procedure EstablecerLicencia(
+      const AResultado: TResultadoLicenciaAplicacion);
     function GetPath(const ANombre: string): string;
+    function Licencia: TResultadoLicenciaAplicacion;
   end;
 
 function CrearParametrosAplicacion(
@@ -63,6 +72,37 @@ begin
       'appVerifactuInstalacionUrl'
     )
   );
+  FBloqueoLicencia := TCriticalSection.Create;
+  FResultadoLicencia :=
+    TResultadoLicenciaAplicacion.CrearNoComprobada;
+end;
+
+destructor TParametrosAplicacion.Destroy;
+begin
+  FreeAndNil(FBloqueoLicencia);
+  inherited;
+end;
+
+procedure TParametrosAplicacion.EstablecerLicencia(
+  const AResultado: TResultadoLicenciaAplicacion);
+begin
+  FBloqueoLicencia.Acquire;
+  try
+    FResultadoLicencia := AResultado;
+  finally
+    FBloqueoLicencia.Release;
+  end;
+end;
+
+function TParametrosAplicacion.Licencia:
+  TResultadoLicenciaAplicacion;
+begin
+  FBloqueoLicencia.Acquire;
+  try
+    Result := FResultadoLicencia;
+  finally
+    FBloqueoLicencia.Release;
+  end;
 end;
 
 procedure TParametrosAplicacion.InicializarParametrosApp(

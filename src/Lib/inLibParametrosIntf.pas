@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibParametrosIntf                                           }
 {    Tipo:       Librería                                                      }
@@ -14,6 +14,9 @@
 unit inLibParametrosIntf;
 
 interface
+
+uses
+  inLibLicenciaAplicacion;
 
 type
   TTipoParametro = (tpString, tpInteger, tpBoolean);
@@ -46,10 +49,18 @@ type
   IParametrosAplicacion = interface(IParametros)
     ['{CB15A18C-2433-4955-B98D-DD510E13C73C}']
     function GetPath(const ANombre: string): string;
+    function Licencia: TResultadoLicenciaAplicacion;
+  end;
+
+  IGestorLicenciaAplicacion = interface
+    ['{F16F6241-A32D-4817-B058-087526946877}']
+    procedure EstablecerLicencia(
+      const AResultado: TResultadoLicenciaAplicacion);
   end;
 
   IParametrosCaja = interface(IParametros)
     ['{0A32C4BB-1E8D-41AC-9EDE-B2189CED5713}']
+    function ImpresoraCaja: string;
     function TarifaDefecto: string;
     function NivelesFamiliaArqueo: Integer;
   end;

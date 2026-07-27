@@ -72,6 +72,8 @@ begin
     FSQLPendiente := False;
   if Assigned(FMonitor) then
     FMonitor.Active := AActivo;
+  if Assigned(FRegistro) then
+    FRegistro.EstablecerVisible(AActivo);
 end;
 
 procedure TServicioMonitorSQLUniDAC.Invalidar;
@@ -81,6 +83,8 @@ begin
   FSQLPendiente := False;
   FSQLActual := '';
   FMonitor := nil;
+  if Assigned(FRegistro) then
+    FRegistro.Invalidar;
   FRegistro := nil;
 end;
 

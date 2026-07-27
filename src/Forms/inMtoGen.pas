@@ -397,7 +397,6 @@ implementation
 {$R *.dfm}
 
 uses inMtoGenSearch,
-     inLibGlobalVar,
      inLibData,
      inLibConexionesIntf,
      inLibUnitForm,
@@ -1461,7 +1460,7 @@ begin
     Exit;
   // Si la app se esta cerrando no arrancamos trabajo nuevo: la tarea quedaria
   // huerfana usando una conexion que el cierre esta a punto de liberar.
-  if inLibGlobalVar.oCerrandoApp then
+  if ContextoSesion.CerrandoAplicacion then
     Exit;
   if FTareasActivas = nil then
     FTareasActivas := TList<ITask>.Create;
@@ -1494,9 +1493,10 @@ begin
           try
             // Si la app se esta cerrando, este callback puede llegar a
             // ejecutarse (via CheckSynchronize) cuando el form ya esta
-            // liberado. Salimos sin tocar nada: leer oCerrandoApp es seguro
+            // liberado. Salimos sin tocar nada: leer el contexto de sesión
+            // es seguro.
             // porque es una global, no un campo del form muerto.
-            if inLibGlobalVar.oCerrandoApp then
+            if ContextoSesion.CerrandoAplicacion then
               Exit;
             // Quitar esta tarea de la lista ANTES del callback (si el
             // callback lanza otra task, no queremos contar esta vez).
@@ -1766,7 +1766,7 @@ begin
       begin
         if (tdmDataModule <> nil) and (tdmDataModule is TdmBase) then
           TdmBase(tdmDataModule).CancelarEjecucionActiva;
-        if inLibGlobalVar.oCerrandoApp then
+        if ContextoSesion.CerrandoAplicacion then
           // Apagado de la app: BreakExec ya pedido y espera ACOTADA. Si
           // una consulta sigue atascada contra MySQL preferimos fugar
           // sus objetos (abajo) a dejar la app congelada cerrando o el
@@ -1942,8 +1942,8 @@ begin
     FreeAndNil(qry);
   end;
   // Invalidar cache para que la proxima apertura no use guias borradas
-  if oInfGuiasCache <> nil then
-    oInfGuiasCache.Invalidar;
+  if Assigned(InformesGuiasCache) then
+    InformesGuiasCache.Invalidar;
 end;
 
 procedure TfrmMtoGen.AplicarGuiasGrid(AQuery: TUniQuery);
@@ -1957,7 +1957,10 @@ var
 begin
   if AQuery = nil then
     Exit;
-  guiaResult := EnriquecerQueryConGuias(Self.Name, AQuery);
+  guiaResult := EnriquecerQueryConGuias(
+    InformesGuiasCache,
+    Self.Name,
+    AQuery);
   try
     if not guiaResult.Exito then
     begin
@@ -2256,10 +2259,10 @@ begin
     FreeAndNil(frm);
   end;
   // Recargar cache de guias
-  if oInfGuiasCache <> nil then
+  if Assigned(InformesGuiasCache) then
   begin
-    oInfGuiasCache.Invalidar;
-    oInfGuiasCache.Precargar;
+    InformesGuiasCache.Invalidar;
+    InformesGuiasCache.Precargar;
   end;
   // Obtener TUniQuery: del data module o del DataSource (búsquedas)
   unqry := nil;
@@ -2293,7 +2296,10 @@ begin
         unqry.Close;
         unqry.SQL.Text := FSqlOriginalTablaG;
       end;
-      guiaResult := EnriquecerQueryConGuias(Self.Name, unqry);
+      guiaResult := EnriquecerQueryConGuias(
+        InformesGuiasCache,
+        Self.Name,
+        unqry);
       try
         if guiaResult.Exito and (guiaResult.CamposNuevos.Count > 0) then
         begin

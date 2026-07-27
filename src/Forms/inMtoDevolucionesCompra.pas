@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoDevolucionesCompra                                          }
 {    Tipo:       Formulario (Mto)                                              }
@@ -1408,6 +1408,7 @@ begin
   //    Sesiones, con los nombres DEVC/DEVCLIN/DEVCCEL.
   cfgT := Default(TGridTallasConfig);
   cfgT.Conexion           := dmmDevolucionesCompra.unqryTablaG.Connection;
+  cfgT.ContextoSesion     := ContextoSesion;
   cfgT.Usuario            := IdentidadSesion.Usuario;
   cfgT.Grid               := tvLineasDevolucion;
   cfgT.SourceMaster       := dsTablaG;
@@ -2473,6 +2474,7 @@ begin
     dmmDevolucionesCompra.DesempaquetarAtributosLineas;
   Cfg := Default(TConfigColumnasSku);
   Cfg.Conexion := dmmDevolucionesCompra.unqryTablaG.Connection;
+  Cfg.ContextoSesion := ContextoSesion;
   Cfg.View := tvLineasDevolucion;
   Cfg.Cds := ds;
   Cfg.Modo := FModoEntradaSel;

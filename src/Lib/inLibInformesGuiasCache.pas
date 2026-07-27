@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibInformesGuiasCache                                       }
 {    Tipo:       Libreria                                                      }
@@ -43,11 +43,33 @@ type
   TListaGuias      = TList<TInformeGuiaItem>;
   TGuiasPorInforme = TObjectDictionary<string, TListaGuias>;
 
-  TInformesGuiasCache = class
+  IInformesGuiasCache = interface
+    ['{6315909C-BE4B-473A-B544-5B741D3B3135}']
+    function GetCargada: Boolean;
+    procedure Precargar(AConn: TUniConnection = nil);
+    procedure Invalidar;
+    function Obtener(
+      const AInforme,
+      AFormato: string): TArray<TInformeGuiaItem>;
+    property Cargada: Boolean read GetCargada;
+  end;
+
+  IProveedorInformesGuiasCache = interface
+    ['{66B8ACD5-A749-4F89-BFE5-900284F848A7}']
+    function GetInformesGuiasCache: IInformesGuiasCache;
+    property InformesGuiasCache: IInformesGuiasCache
+      read GetInformesGuiasCache;
+  end;
+
+  TInformesGuiasCache = class(
+    TInterfacedObject,
+    IInformesGuiasCache
+  )
   private
     FPorInforme: TGuiasPorInforme;
     FConexion: TUniConnection;
     FCargada:    Boolean;
+    function GetCargada: Boolean;
   public
     constructor Create(AConexion: TUniConnection);
     destructor  Destroy; override;
@@ -59,7 +81,7 @@ type
     // resultado viene ordenado por ORDEN_INFGUI, CODIGO_INFGUI.
     function    Obtener(const aInforme,
                         aFormato: string): TArray<TInformeGuiaItem>;
-    property    Cargada: Boolean read FCargada;
+    property    Cargada: Boolean read GetCargada;
   end;
 
 implementation
@@ -76,6 +98,11 @@ destructor TInformesGuiasCache.Destroy;
 begin
   FreeAndNil(FPorInforme);
   inherited;
+end;
+
+function TInformesGuiasCache.GetCargada: Boolean;
+begin
+  Result := FCargada;
 end;
 
 procedure TInformesGuiasCache.Invalidar;

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoPrincipal                                                }
 {    Tipo:       Formulario (Core)                                             }
@@ -50,7 +50,8 @@ uses
   System.Diagnostics,
   System.Threading,
   dxGDIPlusClasses, cxImage, Vcl.Imaging.pngimage,
-  inLibContextoSesionIntf, inLibParametrosIntf, inLibShowMto;
+  inLibContextoSesionIntf, inLibParametrosIntf, inLibShowMto,
+  inLibLicenciaAplicacion;
 
 const
   WM_FREECONTROL = WM_USER + 1;
@@ -294,7 +295,8 @@ type
     FLogoBgNombre:  TObject;
     FLogoBgVersion: TObject;
     procedure InicializarAplicacion(
-      const AContextoSesion: IContextoSesionAplicacion);
+      const AContextoSesion: IContextoSesionAplicacion;
+      const AResultadoLicencia: TResultadoLicenciaAplicacion);
     procedure CerrarSplashInicio(aMinimoMs: Integer);
     procedure CrearLogoFondoBg;
     procedure CentrarLogoFondoBg;
@@ -346,12 +348,10 @@ uses inLibUser,
   inLibAppParam,
   inLibUnidadesMedida,
   inLibFotos,
-  inLibBuscarImpresora,
   inLibVerifactu,
   inLibVerifactuInstalacion,
   inLibVerifactuCola,
   inLibVentasWsCola,
-  inLibLicenciaAplicacion,
   inLibCertificates,
   inMtoGen,
   inMtoFotoArticulo,
@@ -366,6 +366,42 @@ uses inLibUser,
 const
   URL_MANUAL_WEB = 'https://www.veryverifactu.com/manual/index.html';
   URL_FORO_SOPORTE = 'https://foro.veryverifactu.com/';
+
+type
+  TVisorMonitorSQLMemo = class(
+    TInterfacedObject,
+    IVisorMonitorSQL
+  )
+  private
+    FMemo: TcxMemo;
+  public
+    constructor Create(AMemo: TcxMemo);
+    procedure EstablecerVisible(AVisible: Boolean);
+    procedure MostrarSQL(const ASQL: string);
+  end;
+
+constructor TVisorMonitorSQLMemo.Create(AMemo: TcxMemo);
+begin
+  inherited Create;
+  FMemo := AMemo;
+end;
+
+procedure TVisorMonitorSQLMemo.EstablecerVisible(AVisible: Boolean);
+begin
+  if Assigned(FMemo) then
+  begin
+    FMemo.Visible := AVisible;
+    if Assigned(FMemo.Parent) then
+      FMemo.Parent.Visible := AVisible;
+  end;
+end;
+
+procedure TVisorMonitorSQLMemo.MostrarSQL(const ASQL: string);
+begin
+  if Assigned(FMemo) and FMemo.Visible then
+    FMemo.Lines.Add(
+      FormatDateTime('hh:nn:ss.zzz', Now) + ' - ' + ASQL);
+end;
 
 function EsEventoNoVerifactuArranqueCierre(ATipoEvento: Integer): Boolean;
 begin
@@ -541,7 +577,7 @@ procedure TfrmMtoPrincipal.AplicarTituloVentana;
 var
   sTitulo: string;
 begin
-  if EstadoLicenciaEsDemo(oLicenciaAplicacionEstado) then
+  if EstadoLicenciaEsDemo(ParametrosApp.Licencia.Estado) then
     sTitulo := oAppName + ' DEMO ' + oVersion
   else
     sTitulo := oAppName + ' ' + oVersion;
@@ -600,15 +636,18 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.InicializarAplicacion(
-  const AContextoSesion: IContextoSesionAplicacion);
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AResultadoLicencia: TResultadoLicenciaAplicacion);
 var
   sDis: string;
   ServicioMonitorSQL: IServicioMonitorSQL;
   RegistroMonitorSQL: IRegistroMonitorSQL;
+  VisorMonitorSQL: IVisorMonitorSQL;
   IdentidadActual: TIdentidadSesion;
   UbicacionActual: TUbicacionSesion;
   ParametrosAppCreados: IParametrosAplicacion;
   ParametrosCajaCreados: IParametrosCaja;
+  GestorLicencia: IGestorLicenciaAplicacion;
 
   procedure AplicarTema;
   var
@@ -654,7 +693,6 @@ begin
   FCancelaOperacionSolicitada := False;
   FEnOperacionLarga := False;
   sDis := '';
-  oMemoSQL := cxMemo1;
   // Splash no-modal al arrancar. Lo mantenemos visible mientras corre el
   // resto de la inicializacion y garantizamos un suelo de 1000 ms para
   // que la marca se lea aunque todo termine en 250 ms.
@@ -672,7 +710,10 @@ begin
   end;
   FormManager := TEmbeddedFormManager.Create(Self.pcPrincipal);
   FDmConn     := TdmConn.Create(Self);
-  RegistroMonitorSQL := TRegistroMonitorSQLLog.Create(inLibLog.Log);
+  VisorMonitorSQL := TVisorMonitorSQLMemo.Create(cxMemo1);
+  RegistroMonitorSQL := TRegistroMonitorSQLLog.Create(
+    inLibLog.Log,
+    VisorMonitorSQL);
   ServicioMonitorSQL :=
     TServicioMonitorSQLUniDAC.Create(
       FDmConn.UniSQLMonitor1,
@@ -696,9 +737,18 @@ begin
     IdentidadActual.Usuario,
     IdentidadActual.Grupo
   );
+  if not Supports(
+    ParametrosAppCreados,
+    IGestorLicenciaAplicacion,
+    GestorLicencia
+  ) then
+    raise Exception.Create(
+      'Los parámetros no admiten el estado de licencia.');
+  GestorLicencia.EstablecerLicencia(AResultadoLicencia);
   inLibLog.Log.LogInfo('Arranque: creando parámetros de caja');
   ParametrosCajaCreados := CrearParametrosCaja(
     PerfilesUsuario,
+    ContextoSesion,
     IdentidadActual.Usuario,
     IdentidadActual.Grupo
   );
@@ -751,17 +801,21 @@ begin
   // Cache de unidades de medida: decimales por unidad y factores de
   // conversion. La usan ficha de articulo, lineas de documento e informes.
   oUnidades.Cargar;
-  oNomImpresoraCaja := GetImpresoraCaja(ParametrosCaja, ContextoSesion);
   // Trazar la impresora resuelta: si queda '' o 'DEBUG', el F9 global de
   // abrir cajon no se activa fuera de caja (ver ImpresoraCajaAsignada).
   inLibLog.Log.LogInfo('Arranque: impresora de caja resuelta = "' +
-                       oNomImpresoraCaja + '"');
+                       ParametrosCaja.ImpresoraCaja + '"');
   // Hilo de la cola Verifactu: arranca siempre; cada ciclo consulta el
   // parámetro appVerifactuActivo, así puede activarse sin reiniciar
-  TVerifactuCola.IniciarHilo(Conexiones, ParametrosApp, ParametrosCaja,
+  TVerifactuCola.IniciarHilo(
+    Conexiones,
+    ContextoSesion,
+    ParametrosApp,
+    ParametrosCaja,
     IdentidadSesion.Usuario);
   TVentasWsCola.IniciarHilo(
     Conexiones,
+    ContextoSesion,
     ParametrosApp,
     IdentidadSesion.Usuario);
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
@@ -1062,9 +1116,9 @@ begin
   swTotal := TStopwatch.StartNew;
   Log.LogInfo('Arranque: PrecargarCachesSerie INICIO');
   PerfilesUsuario.PrecargarPerfilesUsuario;
-  FreeAndNil(oInfGuiasCache);
-  oInfGuiasCache := TInformesGuiasCache.Create(ConexionPrincipal);
-  oInfGuiasCache.Precargar;
+  AsignarInformesGuiasCache(
+    TInformesGuiasCache.Create(ConexionPrincipal));
+  InformesGuiasCache.Precargar;
   FreeAndNil(oConfigCampos);
   oConfigCampos := TConfigCamposCache.Create(ConexionPrincipal);
   oConfigCampos.Precargar;
@@ -1146,8 +1200,8 @@ begin
   errInfGuias := '';
   errConfig := '';
   errPermisos := '';
-  FreeAndNil(oInfGuiasCache);
-  oInfGuiasCache := TInformesGuiasCache.Create(ConexionPrincipal);
+  AsignarInformesGuiasCache(
+    TInformesGuiasCache.Create(ConexionPrincipal));
   FreeAndNil(oConfigCampos);
   oConfigCampos  := TConfigCamposCache.Create(ConexionPrincipal);
   // Cada tarea escribe solo en SUS variables (sin estado compartido) y captura
@@ -1167,7 +1221,7 @@ begin
       msInfGuias := EjecutarCargaWorker(
         procedure(c: TUniConnection)
         begin
-          oInfGuiasCache.Precargar(c);
+          InformesGuiasCache.Precargar(c);
         end, errInfGuias);
     end);
   t3 := TTask.Run(
@@ -1509,14 +1563,19 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.FormClose(Sender: TObject; var Action: TCloseAction);
-//var
-//  I: Integer;
+var
+  GestorContexto: IGestorContextoSesion;
 begin
   // Señalar a las tareas de segundo plano que la app se esta cerrando, ANTES
   // de empezar a liberar formularios y conexiones. Asi no arrancan trabajo
   // nuevo ni tocan formularios en destruccion (ver inMtoGen.EjecutarEnBackground
   // y el destructor de TfrmMtoGen).
-  inLibGlobalVar.oCerrandoApp := True;
+  if Supports(
+    ContextoSesion,
+    IGestorContextoSesion,
+    GestorContexto
+  ) then
+    GestorContexto.MarcarCierreAplicacion;
   RegistrarEventoFiscalSeguro(ParametrosApp,
     ConexionPrincipal,
     IdentidadSesion.Usuario,
@@ -1569,11 +1628,9 @@ begin
     if Assigned(Conexiones) then
       Conexiones.Invalidar;
     AsignarConexiones(nil);
-    // Caches globales de la sesion: liberarlas evita la fuga en
-    // re-login; oMemoSQL a nil deja el log sin puntero colgante.
-    FreeAndNil(oInfGuiasCache);
+    // Caches de la sesión: liberarlas evita la fuga en re-login.
+    AsignarInformesGuiasCache(nil);
     FreeAndNil(oConfigCampos);
-    oMemoSQL := nil;
     FreeAndNil(FDmConn);
   finally
     inLibLog.Log.LogInfo('Ventana principal Cerrada');
@@ -1652,11 +1709,12 @@ begin
       Handled := True;
     end
     else if (Msg.wParam = WPARAM(VK_F9)) and
-       (ImpresoraCajaAsignada or Assigned(frmMtoMenuCaja)) and
+       (ImpresoraCajaAsignada(ParametrosCaja) or
+        Assigned(frmMtoMenuCaja)) and
        (GetKeyState(VK_CONTROL) >= 0) and (GetKeyState(VK_MENU) >= 0) and
        (GetKeyState(VK_SHIFT) >= 0) then
     begin
-      AbrirCajonSinVenta(Permisos);
+      AbrirCajonSinVenta(Permisos, ParametrosCaja);
       Handled := True;
     end
     // Ctrl+E: consulta de articulos similares desde cualquier ventana.
@@ -1695,11 +1753,12 @@ begin
   // despacha y este punto no llega a ejecutarse (no hay doble apertura).
   if (Message.CharCode = VK_F9) and
      (HiWord(Message.KeyData) and KF_REPEAT = 0) and
-     (ImpresoraCajaAsignada or Assigned(frmMtoMenuCaja)) and
+     (ImpresoraCajaAsignada(ParametrosCaja) or
+      Assigned(frmMtoMenuCaja)) and
      (GetKeyState(VK_CONTROL) >= 0) and (GetKeyState(VK_MENU) >= 0) and
      (GetKeyState(VK_SHIFT) >= 0) then
   begin
-    AbrirCajonSinVenta(Permisos);
+    AbrirCajonSinVenta(Permisos, ParametrosCaja);
     Result := True;
     Exit;
   end;

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibColumnasSkuIntf                                          }
 {    Tipo:       Libreria (interfaces)                                         }
@@ -27,7 +27,8 @@ unit inLibColumnasSkuIntf;
 interface
 
 uses
-  System.Classes, Data.DB, Uni, cxGridDBTableView;
+  System.Classes, Data.DB, Uni, cxGridDBTableView,
+  inLibContextoSesionIntf;
 
 type
   // Modo de entrada de articulos en el grid del documento.
@@ -70,6 +71,7 @@ type
   // Todo lo que necesita un modo para montarse sobre el grid del documento.
   TConfigColumnasSku = record
     Conexion: TUniConnection;
+    ContextoSesion: IContextoSesionAplicacion;
     View: TcxGridDBTableView;
     Cds: TDataSet;
     Campos: TCamposColumnasSku;

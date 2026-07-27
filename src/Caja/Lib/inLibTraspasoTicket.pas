@@ -102,7 +102,8 @@ var
 begin
   if (AConn = nil) or (not AConn.Connected) then
     Exit;
-  // Impresora parametrizada (vgerDefPrinter -> oNomImpresoraCaja); si viene
+  // Impresora parametrizada
+  // (vgerDefPrinter -> ParametrosCaja.ImpresoraCaja); si viene
   // vacia, preview.
   sImpresora := ANombreImpresora;
   if Trim(sImpresora) = '' then

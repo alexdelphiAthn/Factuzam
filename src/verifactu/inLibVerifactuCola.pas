@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Uni, inLibConexionesIntf,
-  inLibParametrosIntf;
+  inLibParametrosIntf, inLibContextoSesionIntf;
 
 type
   TVerifactuCola = class
@@ -94,6 +94,7 @@ type
     // Arranque tras el logon y parada al cerrar (ver inMtoPrincipal)
     class procedure IniciarHilo(
       const AConexiones: IServicioConexiones;
+      const AContextoSesion: IContextoSesionAplicacion;
       const AParametrosApp: IParametrosAplicacion;
       const AParametrosCaja: IParametrosCaja;
       const AUsuario: string);
@@ -104,7 +105,7 @@ implementation
 
 uses
   Winapi.Windows, Data.DB,
-  inLibGlobalVar, inLibLog,
+  inLibLog,
   inLibVerifactu, inLibVerifactuEnvio, inLibRelojFiscal,
   inLibVentasWsCola;
 
@@ -123,10 +124,12 @@ type
   private
     FConn:              TUniConnection;
     FConexiones:        IServicioConexiones;
+    FContextoSesion:    IContextoSesionAplicacion;
     FParametrosApp:     IParametrosAplicacion;
     FParametrosCaja:    IParametrosCaja;
     FUsuario:           string;
     FAvisoNoDisponible: Boolean;
+    function PuedeContinuar: Boolean;
     procedure ProcesarPendientes;
     // Devuelve los segundos de espera que pide la AEAT tras el envío
     // (control de flujo TiempoEsperaEnvio); 0 si no procede esperar
@@ -146,6 +149,7 @@ type
   public
     constructor Create(
       const AConexiones: IServicioConexiones;
+      const AContextoSesion: IContextoSesionAplicacion;
       const AParametrosApp: IParametrosAplicacion;
       const AParametrosCaja: IParametrosCaja;
       const AUsuario: string); reintroduce;
@@ -669,14 +673,19 @@ end;
 
 class procedure TVerifactuCola.IniciarHilo(
   const AConexiones: IServicioConexiones;
+  const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
   const AUsuario: string);
 begin
   if oHiloCola = nil then
   begin
-    oHiloCola := THiloVerifactuCola.Create(AConexiones, AParametrosApp,
-      AParametrosCaja, AUsuario);
+    oHiloCola := THiloVerifactuCola.Create(
+      AConexiones,
+      AContextoSesion,
+      AParametrosApp,
+      AParametrosCaja,
+      AUsuario);
     oHiloCola.FreeOnTerminate := False;
     oHiloCola.Start;
     inLibLog.Log.LogInfo('Cola Verifactu: hilo iniciado');
@@ -700,18 +709,22 @@ end;
 
 constructor THiloVerifactuCola.Create(
   const AConexiones: IServicioConexiones;
+  const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
   const AUsuario: string);
 begin
   if not Assigned(AConexiones) then
     raise EArgumentNilException.Create('AConexiones');
+  if not Assigned(AContextoSesion) then
+    raise EArgumentNilException.Create('AContextoSesion');
   if not Assigned(AParametrosApp) then
     raise EArgumentNilException.Create('AParametrosApp');
   if not Assigned(AParametrosCaja) then
     raise EArgumentNilException.Create('AParametrosCaja');
   inherited Create(True);
   FConexiones := AConexiones;
+  FContextoSesion := AContextoSesion;
   FParametrosApp := AParametrosApp;
   FParametrosCaja := AParametrosCaja;
   FUsuario := AUsuario;
@@ -722,6 +735,7 @@ begin
   FreeAndNil(FConn);
   FParametrosCaja := nil;
   FParametrosApp := nil;
+  FContextoSesion := nil;
   FConexiones := nil;
   inherited;
 end;
@@ -730,12 +744,12 @@ procedure THiloVerifactuCola.Execute;
 begin
   NameThreadForDebugging('VerifactuCola');
   FAvisoNoDisponible := False;
-  while (not Terminated) and (not oCerrandoApp) do
+  while (not Terminated) and (not FContextoSesion.CerrandoAplicacion) do
   begin
     // La espera va primero: deja respirar el arranque de la app y
     // permite cerrar sin procesar nada a medias
     EsperarCiclo;
-    if (not Terminated) and (not oCerrandoApp) and
+    if (not Terminated) and (not FContextoSesion.CerrandoAplicacion) and
        (ModoVerifactu(FParametrosApp) = mvVerifactu) then
     begin
       try
@@ -763,6 +777,13 @@ begin
   EsperarSegundos(iSegundos);
 end;
 
+function THiloVerifactuCola.PuedeContinuar: Boolean;
+begin
+  Result := not Terminated;
+  if Result then
+    Result := not FContextoSesion.CerrandoAplicacion;
+end;
+
 procedure THiloVerifactuCola.EsperarSegundos(ASegundos: Integer);
 var
   iPasos: Integer;
@@ -774,7 +795,7 @@ begin
     ASegundos := 300;
   iPasos := ASegundos * 10;
   iPaso  := 0;
-  while (iPaso < iPasos) and (not Terminated) and (not oCerrandoApp) do
+  while (iPaso < iPasos) and PuedeContinuar do
   begin
     Sleep(100);
     Inc(iPaso);
@@ -839,7 +860,7 @@ begin
         ' ORDER BY ID_VFCOLA ' +
         ' LIMIT 25';
       Qry.Open;
-      while (not Qry.Eof) and (not Terminated) and (not oCerrandoApp) do
+      while (not Qry.Eof) and PuedeContinuar do
       begin
         iEspera := ProcesarFila(Qry.FieldByName(fidvfcola).AsLargeInt,
                                 Qry.FieldByName(fserievfcola).AsString,

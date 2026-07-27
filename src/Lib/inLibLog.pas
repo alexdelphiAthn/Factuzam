@@ -80,9 +80,8 @@ type
     // unidad (modulo Pascal), objeto (form / control / dataset), evento
     // (Click, Show, BeforePost, Execute...) y un detalle libre.
     procedure LogEvento(const AUnidad, AObjeto, AEvento, ADetalle: string);
-    // Cronometro instrumentado. Escribe al log y, si el monitor SQL
-    // (oMemoSQL) esta visible, tambien suelta una linea ahi para que el
-    // usuario vea las metricas junto a las queries. Patron tipico:
+    // Cronometro instrumentado. Escribe al log para medir operaciones.
+    // Patron tipico:
     //   sw := TStopwatch.StartNew;
     //   ...trabajo...
     //   Log.LogPerf('Articulos.AfterScroll', 'CargarPropiedades',
@@ -93,7 +92,6 @@ type
     function IsLogTypeEnabled(ALogType: TLogType): Boolean;
     procedure AsignarMonitorSQL(
       const AMonitorSQL: IServicioMonitorSQL);
-    procedure MostrarSQLMonitor(const ASQL: string);
     property InstanceID: string read FInstanceID;
   end;
 var
@@ -217,15 +215,6 @@ procedure TLog.AsignarMonitorSQL(
 begin
   FMonitorSQL := AMonitorSQL;
 end;
-
-procedure TLog.MostrarSQLMonitor(const ASQL: string);
-begin
-  if Assigned(oMemoSQL) and
-     oMemoSQL.Visible then
-    oMemoSQL.Lines.Add(
-      FormatDateTime('hh:nn:ss.zzz', Now) + ' - ' + ASQL);
-end;
-
 
 procedure TLog.WriteToLogInternal(const AMessage: string);
 var
@@ -352,11 +341,8 @@ end;
 procedure TLog.LogPerf(const ATag, ADetalle: string; AElapsedMs: Int64);
 begin
   // Gateado por ltPerf: si appModoDebug está apagado, esta llamada es no-op.
-  // Solo al archivo de log general — TLog.WriteToLog ya es thread-safe
-  // (mutex interno). NO tocamos oMemoSQL: es un TcxMemo de DevExpress
-  // y NO es thread-safe. Si necesitas ver las metricas junto al log
-  // SQL en debug, abre el archivo de log LOG_yyyy_mm_dd_hhnnss_*.log
-  // en paralelo.
+  // Solo al archivo de log general: TLog.WriteToLog ya es thread-safe.
+  // El visor SQL pertenece a la UI y no recibe métricas desde workers.
   WriteToLog(Format('[PERF:%s] %s | %d ms',
                     [ATag, ADetalle, AElapsedMs]),
              ltPerf);
@@ -827,15 +813,6 @@ begin
 
   if Assigned(Log.FMonitorSQL) then
     Log.FMonitorSQL.EstablecerActivo(bSQLFinal);
-
-  // El memo SQL en pantalla acompaña al modo: si se activa SQL, se muestra;
-  // si se desactiva, se oculta junto con su panel contenedor.
-  if Assigned(oMemoSQL) then
-  begin
-    oMemoSQL.Visible := bSQLFinal;
-    if Assigned(oMemoSQL.Parent) then
-      oMemoSQL.Parent.Visible := bSQLFinal;
-  end;
 
   Log.LogInfo(Format(
     'Modos log aplicados: appModoDebug=%s, appModoDebugSQL=%s, ' +

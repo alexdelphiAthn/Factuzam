@@ -83,7 +83,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibGlobalVar, UniDataCaja, inLibGenerarTicketCaja,
+  UniDataCaja, inLibGenerarTicketCaja,
   inMtoGenSearch, Data.DB;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -312,7 +312,7 @@ begin
       FAlmacen,
       FCaja,
       sNumOp,
-      oNomImpresoraCaja);
+      ParametrosCaja.ImpresoraCaja);
   finally
     FreeAndNil(dm);
   end;

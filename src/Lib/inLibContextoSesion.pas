@@ -27,11 +27,15 @@ type
   )
   private
     FBloqueo: TCriticalSection;
+    FCerrandoAplicacion: Boolean;
     FIdentidad: TIdentidadSesion;
+    FLogSesion: TLogSesionProc;
     FUbicacion: TUbicacionSesion;
   protected
+    function GetCerrandoAplicacion: Boolean;
     function GetIdentidad: TIdentidadSesion;
     function GetUbicacion: TUbicacionSesion;
+    procedure LogSesion(const ATexto: string);
     property Identidad: TIdentidadSesion read GetIdentidad;
     property Ubicacion: TUbicacionSesion read GetUbicacion;
   public
@@ -40,6 +44,8 @@ type
       const AUbicacion: TUbicacionSesion
     );
     destructor Destroy; override;
+    procedure AsignarLogSesion(ALogSesion: TLogSesionProc);
+    procedure MarcarCierreAplicacion;
     procedure EstablecerIdentidad(
       const AIdentidad: TIdentidadSesion
     ); virtual;
@@ -56,7 +62,9 @@ constructor TContextoSesionAplicacion.Create(
 begin
   inherited Create;
   FBloqueo := TCriticalSection.Create;
+  FCerrandoAplicacion := False;
   FIdentidad := AIdentidad;
+  FLogSesion := nil;
   FUbicacion := AUbicacion;
 end;
 
@@ -64,6 +72,16 @@ destructor TContextoSesionAplicacion.Destroy;
 begin
   FBloqueo.Free;
   inherited;
+end;
+
+function TContextoSesionAplicacion.GetCerrandoAplicacion: Boolean;
+begin
+  FBloqueo.Acquire;
+  try
+    Result := FCerrandoAplicacion;
+  finally
+    FBloqueo.Release;
+  end;
 end;
 
 function TContextoSesionAplicacion.GetIdentidad: TIdentidadSesion;
@@ -81,6 +99,41 @@ begin
   FBloqueo.Acquire;
   try
     Result := FUbicacion;
+  finally
+    FBloqueo.Release;
+  end;
+end;
+
+procedure TContextoSesionAplicacion.LogSesion(const ATexto: string);
+var
+  LogActivo: TLogSesionProc;
+begin
+  FBloqueo.Acquire;
+  try
+    LogActivo := FLogSesion;
+  finally
+    FBloqueo.Release;
+  end;
+  if Assigned(LogActivo) then
+    LogActivo(ATexto);
+end;
+
+procedure TContextoSesionAplicacion.AsignarLogSesion(
+  ALogSesion: TLogSesionProc);
+begin
+  FBloqueo.Acquire;
+  try
+    FLogSesion := ALogSesion;
+  finally
+    FBloqueo.Release;
+  end;
+end;
+
+procedure TContextoSesionAplicacion.MarcarCierreAplicacion;
+begin
+  FBloqueo.Acquire;
+  try
+    FCerrandoAplicacion := True;
   finally
     FBloqueo.Release;
   end;

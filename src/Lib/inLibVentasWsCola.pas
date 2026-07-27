@@ -17,7 +17,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Uni, inLibConexionesIntf,
-  inLibParametrosIntf;
+  inLibParametrosIntf, inLibContextoSesionIntf;
 
 type
   TVentasWsCola = class
@@ -56,6 +56,7 @@ type
       const ASerie, ANumero, ARutaPdf: string); static;
     class procedure IniciarHilo(
       const AConexiones: IServicioConexiones;
+      const AContextoSesion: IContextoSesionAplicacion;
       const AParametrosApp: IParametrosAplicacion;
       const AUsuario: string); static;
     class procedure DetenerHilo; static;
@@ -73,6 +74,7 @@ type
   private
     FConn: TUniConnection;
     FConexiones: IServicioConexiones;
+    FContextoSesion: IContextoSesionAplicacion;
     FParametrosApp: IParametrosAplicacion;
     FUsuario: string;
     FAvisoConfiguracion: Boolean;
@@ -87,6 +89,7 @@ type
   public
     constructor Create(
       const AConexiones: IServicioConexiones;
+      const AContextoSesion: IContextoSesionAplicacion;
       const AParametrosApp: IParametrosAplicacion;
       const AUsuario: string); reintroduce;
     destructor Destroy; override;
@@ -337,6 +340,7 @@ end;
 
 class procedure TVentasWsCola.IniciarHilo(
   const AConexiones: IServicioConexiones;
+  const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
   const AUsuario: string);
 begin
@@ -344,6 +348,7 @@ begin
   begin
     oHiloVentasWs := THiloVentasWsCola.Create(
       AConexiones,
+      AContextoSesion,
       AParametrosApp,
       AUsuario);
     oHiloVentasWs.FreeOnTerminate := False;
@@ -365,15 +370,19 @@ end;
 
 constructor THiloVentasWsCola.Create(
   const AConexiones: IServicioConexiones;
+  const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
   const AUsuario: string);
 begin
   if not Assigned(AConexiones) then
     raise EArgumentNilException.Create('AConexiones');
+  if not Assigned(AContextoSesion) then
+    raise EArgumentNilException.Create('AContextoSesion');
   if not Assigned(AParametrosApp) then
     raise EArgumentNilException.Create('AParametrosApp');
   inherited Create(True);
   FConexiones := AConexiones;
+  FContextoSesion := AContextoSesion;
   FParametrosApp := AParametrosApp;
   FUsuario := AUsuario;
 end;
@@ -382,6 +391,7 @@ destructor THiloVentasWsCola.Destroy;
 begin
   FreeAndNil(FConn);
   FConexiones := nil;
+  FContextoSesion := nil;
   FParametrosApp := nil;
   inherited;
 end;
@@ -390,10 +400,10 @@ procedure THiloVentasWsCola.Execute;
 begin
   NameThreadForDebugging('VentasWsCola');
   FAvisoConfiguracion := False;
-  while (not Terminated) and (not oCerrandoApp) do
+  while (not Terminated) and (not FContextoSesion.CerrandoAplicacion) do
   begin
     EsperarCiclo;
-    if (not Terminated) and (not oCerrandoApp) then
+    if (not Terminated) and (not FContextoSesion.CerrandoAplicacion) then
     begin
       try
         ProcesarPendientes;
@@ -429,7 +439,7 @@ begin
   iPasos := ASegundos * 10;
   iPaso := 0;
   while (iPaso < iPasos) and (not Terminated) and
-        (not oCerrandoApp) do
+        (not FContextoSesion.CerrandoAplicacion) do
   begin
     Sleep(100);
     Inc(iPaso);
@@ -463,7 +473,7 @@ begin
         ' ORDER BY ID_VWSC LIMIT 10';
       Qry.Open;
       while (not Qry.Eof) and (not Terminated) and
-            (not oCerrandoApp) do
+            (not FContextoSesion.CerrandoAplicacion) do
       begin
         ProcesarFila(Qry.FieldByName('ID_VWSC').AsLargeInt);
         Qry.Next;

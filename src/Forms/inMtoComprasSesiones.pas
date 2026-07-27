@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoComprasSesiones                                          }
 {    Tipo:       Formulario (Mto)                                              }
@@ -446,6 +446,7 @@ type
     FDupColorTexto      : string;
     FDupColorBasico     : string;
     FDupMargen          : Double;
+    procedure LogSes(const ATexto: string);
     procedure CargarBasicosColor;
     procedure CargarConjuntosTallas;
     procedure BuscarProveedor;
@@ -549,7 +550,8 @@ uses
   inMtoModalIncidencias,
   inMtoModalRepetirModelo,
   inLibFotosNube,
-  inLibComprasImpuestos;
+  inLibComprasImpuestos,
+  inLibContextoSesionIntf;
 
 const
   fIdVaColor = 'CO';
@@ -557,6 +559,12 @@ const
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TfrmMtoComprasSesiones.LogSes(const ATexto: string);
+begin
+  if Assigned(ContextoSesion) then
+    ContextoSesion.LogSesion(ATexto);
+end;
 
 // ===========================================================================
 //   TJvEnterAsTab — apagar mientras el grid tiene foco
@@ -986,7 +994,8 @@ end;
 
 procedure TfrmMtoComprasSesiones.FormCreate(Sender: TObject);
 var
-  i, IdxBase : Integer;
+  GestorContexto: IGestorContextoSesion;
+  i, IdxBase: Integer;
 begin
   // OJO: TODO lo que vaya a usar el `inherited` (que ejecuta
   // ProcesarPerfiles -> CrearTablaPrincipal -> abre unqrySesionLin -> el
@@ -1059,9 +1068,9 @@ begin
 
   CargarBasicosColor;
 
-  // Enganchar el callback de log: cualquier punto del DM o de la lib
-  // que llame a LogSes(...) vuelca aqui. Se desengancha en FormDestroy.
-  inLibGlobalVar.oLogSesion := Self.LogMsg;
+  // El contexto distribuye el log de la sesion sin estado global mutable.
+  if Supports(ContextoSesion, IGestorContextoSesion, GestorContexto) then
+    GestorContexto.AsignarLogSesion(Self.LogMsg);
   LogMsg('Form abierto. version=' + inLibGlobalVar.oVersion);
 end;
 
@@ -1282,6 +1291,8 @@ begin
 end;
 
 procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
+var
+  GestorContexto: IGestorContextoSesion;
 begin
   // Cerrar la query del lookup y soltar la connection ANTES del
   // inherited: TfrmMtoGen.FormDestroy libera el DataModule y, por
@@ -1301,10 +1312,9 @@ begin
     FQryConjuntosTallas.Connection := nil;
     FreeAndNil(FQryConjuntosTallas);
   end;
-  // Desenganchar el log antes del inherited (que libera el form): si
-  // algun chivato disparara LogSes durante la destruccion del DM no
-  // queremos que intente escribir en mLog ya liberado.
-  inLibGlobalVar.oLogSesion := nil;
+  // Desenganchar antes de liberar el memo que recibe los mensajes.
+  if Supports(ContextoSesion, IGestorContextoSesion, GestorContexto) then
+    GestorContexto.AsignarLogSesion(nil);
   FreeAndNil(FNombresConjunto);
   FreeAndNil(FGestorTallas);
   FreeAndNil(FBmpSwatch);
@@ -1778,6 +1788,7 @@ begin
 
   cfg := Default(TGridTallasConfig);
   cfg.Conexion           := ConexionPrincipal;
+  cfg.ContextoSesion     := ContextoSesion;
   cfg.Usuario            := IdentidadSesion.Usuario;
   cfg.Grid               := tvLineas;
   cfg.SourceMaster       := dsTablaG;

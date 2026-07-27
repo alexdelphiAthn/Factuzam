@@ -26,9 +26,14 @@ type
   )
   private
     FLog: TLog;
+    FVisor: IVisorMonitorSQL;
     function GetMonitorizacionActiva: Boolean;
   public
-    constructor Create(ALog: TLog);
+    constructor Create(
+      ALog: TLog;
+      const AVisor: IVisorMonitorSQL);
+    procedure EstablecerVisible(AVisible: Boolean);
+    procedure Invalidar;
     procedure RegistrarSQL(
       const ASQL: string;
       ATiempoMs: Int64;
@@ -40,10 +45,25 @@ type
 
 implementation
 
-constructor TRegistroMonitorSQLLog.Create(ALog: TLog);
+constructor TRegistroMonitorSQLLog.Create(
+  ALog: TLog;
+  const AVisor: IVisorMonitorSQL);
 begin
   inherited Create;
   FLog := ALog;
+  FVisor := AVisor;
+end;
+
+procedure TRegistroMonitorSQLLog.EstablecerVisible(AVisible: Boolean);
+begin
+  if Assigned(FVisor) then
+    FVisor.EstablecerVisible(AVisible);
+end;
+
+procedure TRegistroMonitorSQLLog.Invalidar;
+begin
+  FVisor := nil;
+  FLog := nil;
 end;
 
 function TRegistroMonitorSQLLog.GetMonitorizacionActiva: Boolean;
@@ -64,8 +84,8 @@ end;
 
 procedure TRegistroMonitorSQLLog.MostrarSQL(const ASQL: string);
 begin
-  if Assigned(FLog) then
-    FLog.MostrarSQLMonitor(ASQL);
+  if Assigned(FVisor) then
+    FVisor.MostrarSQL(ASQL);
 end;
 
 end.

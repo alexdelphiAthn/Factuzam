@@ -362,7 +362,6 @@ implementation
 uses
   inMtoCajaMenu,
   inLibGridCantidad,
-  inLibGlobalVar,
   inLibUser,
   inLibLog,
   inMtoCajaFaseCobro, inLibDevExp, inLibtb,
@@ -717,23 +716,6 @@ begin
   if PintarCeldaSwatchSiAplica(ConexionPrincipal,ACanvas, AViewInfo, nil) then
     ADone := True;
 end;
-
-//procedure TfrmMtoOpeCaja.LogPerfCaja(const AContexto, ADetalles: string);
-//begin
-//  // Replica el formato '-- PERF -- HH:NN:SS.zzz [PERF:ctx] det' que ya se
-//  // usa para articulos. Escribe directamente al cxMemo de SQL para que
-//  // aparezca intercalado con las trazas de UniSQLMonitor, y al log si
-//  // esta activo.
-////  if Assigned(oMemoSQL) then
-////    oMemoSQL.Lines.Add(
-////      Format('-- PERF -- %s  [PERF:%s] %s',////             [FormatDateTime('hh:nn:ss.zzz',Now),AContexto,ADetalles]));
-////  try
-////    inLibLog.Log.LogInfo(
-////      Format('[PERF:%s] %s', [AContexto, ADetalles]));
-////  except
-////    // inLibLog puede no estar inicializado en sesiones cortas; no rompemos.
-////  end;
-//end;
 
 function TfrmMtoOpeCaja.ValidarSkuParaVenta(const SkuFinal: string): Boolean;
 var
@@ -3422,7 +3404,7 @@ begin
                                   FCodigoCaja,
                                   NumeroGenerado,
                                   frmFaseCobro.DatosCobro,
-                                  oNomImpresoraCaja,
+                                  ParametrosCaja.ImpresoraCaja,
                                   False,
                                   FFecha,
                                   slRutasTicketPdf);
@@ -3441,7 +3423,7 @@ begin
                          FCodigoCaja,
                          NumeroGenerado,
                          frmFaseCobro.DatosCobro,
-                         oNomImpresoraCaja,
+                         ParametrosCaja.ImpresoraCaja,
                          True,
                          FFecha);
                ImprimirT(ParametrosApp, ConexionPrincipal, FCodigoEmpresa,
@@ -3449,14 +3431,14 @@ begin
                          FCodigoCaja,
                          NumeroGenerado,
                          frmFaseCobro.DatosCobro,
-                         oNomImpresoraCaja,
+                         ParametrosCaja.ImpresoraCaja,
                          False,
                          FFecha,
                          slRutasTicketPdf);
              end;
            tiSinTicket:
              // F11: no imprime ticket pero abre la cajonera
-             AbrirCajonSinVenta(Permisos);
+             AbrirCajonSinVenta(Permisos, ParametrosCaja);
          end;
          if slRutasTicketPdf.Count = 0 then
          begin

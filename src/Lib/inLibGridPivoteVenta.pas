@@ -663,6 +663,7 @@ begin
   FreeAndNil(FGestor);
   CfgT := Default(TGridTallasConfig);
   CfgT.Conexion := FCfg.Conexion;
+  CfgT.ContextoSesion := FConfig.ContextoSesion;
   CfgT.Usuario := FCfg.Usuario;
   CfgT.Grid := FConfig.View;
   CfgT.SourceMaster := FCfg.SourceMaster;

@@ -88,7 +88,6 @@ implementation
 
 uses
   inLibLog,
-  inLibGlobalVar,
   inLibEAN13,
   inLibComprasSesiones,
   inLibFotos,
@@ -122,11 +121,12 @@ begin
 end;
 
 // Aviso de paso omitido o degradado: rastro en el log tecnico y en la
-// pestania Log de la pantalla de sesiones (LogSes es no-op si no esta).
-procedure AvisoPaso(const ATexto: string);
+// pestania Log de la pantalla de sesiones cuando esta activa.
+procedure AvisoPaso(ADM: TdmComprasSesiones; const ATexto: string);
 begin
   Log.LogWarning('inLibComprasSesionesMaterializar: ' + ATexto);
-  LogSes('  AVISO: ' + ATexto);
+  if Assigned(ADM) and Assigned(ADM.ContextoSesion) then
+    ADM.ContextoSesion.LogSesion('  AVISO: ' + ATexto);
 end;
 
 // ---------------------------------------------------------------------------
@@ -2363,7 +2363,7 @@ begin
         // ultimo recurso: no se pudo persistir el error en la sesion,
         // pero al menos queda rastro en el log
         on E2: Exception do
-          AvisoPaso('No se pudo persistir MENSAJE_ERROR_SES: ' +
+          AvisoPaso(ADM, 'No se pudo persistir MENSAJE_ERROR_SES: ' +
                     E2.Message);
       end;
     end;
@@ -2547,7 +2547,7 @@ begin
       except
         // best-effort: sin fotos no se aborta, pero queda rastro
         on E: Exception do
-          AvisoPaso('0h fotos: ' + E.Message);
+          AvisoPaso(ADM, '0h fotos: ' + E.Message);
       end;
 
       // 0i. cabecera del articulo
@@ -2591,7 +2591,8 @@ begin
           q.ExecSQL;
         end
         else
-          AvisoPaso('0j omitido: fza_albaranes_compra(_lineas) no existe');
+          AvisoPaso(ADM,
+            '0j omitido: fza_albaranes_compra(_lineas) no existe');
       end;
       // 0j-bis. Limpiar fza_compras_sesiones_documentos. Si se vuelve a
       //         materializar, los INSERT IGNORE meterian otra vez los
@@ -2611,7 +2612,8 @@ begin
         q.ExecSQL;
       end
       else
-        AvisoPaso('0j-bis omitido: fza_compras_sesiones_documentos ' +
+        AvisoPaso(ADM,
+          '0j-bis omitido: fza_compras_sesiones_documentos ' +
                   'no existe');
 
       // 1. Borrar los movimientos de almacen que esta sesion creo. Solo
@@ -2702,7 +2704,8 @@ begin
           q.ExecSQL;
       end
       else
-        AvisoPaso('1b.1 omitido: falta fza_articulos_pdte_recibir ' +
+        AvisoPaso(ADM,
+          '1b.1 omitido: falta fza_articulos_pdte_recibir ' +
                   'o fza_compras_sesiones_documentos');
       // 1b.2 Lineas del pedido de compra
       if (bTienePedCLin and bTieneSesDocs) then
@@ -2720,7 +2723,8 @@ begin
           q.ExecSQL;
       end
       else
-        AvisoPaso('1b.2 omitido: falta fza_pedidos_compra_lineas ' +
+        AvisoPaso(ADM,
+          '1b.2 omitido: falta fza_pedidos_compra_lineas ' +
                   'o fza_compras_sesiones_documentos');
       // 1b.3 Cabeceras del pedido de compra
       if (bTienePedC and bTieneSesDocs) then
@@ -2738,7 +2742,8 @@ begin
           q.ExecSQL;
       end
       else
-        AvisoPaso('1b.3 omitido: falta fza_pedidos_compra ' +
+        AvisoPaso(ADM,
+          '1b.3 omitido: falta fza_pedidos_compra ' +
                   'o fza_compras_sesiones_documentos');
       // 1b.4 Fallback: tambien borramos por la ruta antigua (NUMERO_DOC_PDR
       // = sNumSes) por compatibilidad con sesiones materializadas antes de
@@ -2758,7 +2763,8 @@ begin
           q.ExecSQL;
       end
       else
-        AvisoPaso('1b.4 omitido: fza_articulos_pdte_recibir no existe');
+        AvisoPaso(ADM,
+          '1b.4 omitido: fza_articulos_pdte_recibir no existe');
 
       // 2. Cabecera vuelve a BORRADOR + limpiamos referencias a docs.
       q.SQL.Text :=

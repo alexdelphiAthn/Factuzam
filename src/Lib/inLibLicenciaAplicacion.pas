@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibLicenciaAplicacion                                       }
 {    Tipo:       Libreria                                                      }
@@ -23,6 +23,20 @@ type
                                elaInvalida,
                                elaNoEncontrada,
                                elaSinNifEmpresa);
+
+  TResultadoLicenciaAplicacion = record
+    Comprobada: Boolean;
+    BBDD: string;
+    Estado: TEstadoLicenciaAplicacion;
+    Mensaje: string;
+    class function CrearNoComprobada:
+      TResultadoLicenciaAplicacion; static;
+    class function Crear(
+      AComprobada: Boolean;
+      const ABBDD: string;
+      AEstado: TEstadoLicenciaAplicacion;
+      const AMensaje: string): TResultadoLicenciaAplicacion; static;
+  end;
 
 const
   LIMITE_FACTURAS_DEMO_DIA     = 10;
@@ -50,6 +64,24 @@ implementation
 
 uses
   DB, MemDS, DBAccess, IniFiles, Math, System.Hash, inLibDir;
+
+class function TResultadoLicenciaAplicacion.CrearNoComprobada:
+  TResultadoLicenciaAplicacion;
+begin
+  Result := Crear(False, '', elaInvalida, '');
+end;
+
+class function TResultadoLicenciaAplicacion.Crear(
+  AComprobada: Boolean;
+  const ABBDD: string;
+  AEstado: TEstadoLicenciaAplicacion;
+  const AMensaje: string): TResultadoLicenciaAplicacion;
+begin
+  Result.Comprobada := AComprobada;
+  Result.BBDD := ABBDD;
+  Result.Estado := AEstado;
+  Result.Mensaje := AMensaje;
+end;
 
 const
   CLAVE_MAESTRA_LICENCIA = 'Fzam_Tarabudillo_2026_Private!';

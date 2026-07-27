@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibGridTallasInline                                         }
 {    Tipo:       Libreria                                                      }
@@ -63,7 +63,8 @@ uses
   Data.DB, DBAccess, Uni,
   cxControls, cxClasses, cxEdit, cxTextEdit, cxCurrencyEdit, cxCustomData,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
-  JvEnterTab;
+  JvEnterTab,
+  inLibContextoSesionIntf;
 
 type
   TPosConjunto = record
@@ -88,6 +89,7 @@ type
   TGridTallasConfig = record
     // -- objetos del form --
     Conexion         : TUniConnection;
+    ContextoSesion   : IContextoSesionAplicacion;
     Usuario          : string;
     Grid             : TcxGridDBTableView;
     SourceMaster     : TDataSource;       // cabecera del documento
@@ -154,6 +156,7 @@ type
     function  ColsInsertNumero: string;
     function  ValsInsertNumero: string;
     procedure ParamNumero(AQuery: TUniQuery);
+    procedure LogSes(const ATexto: string);
   public
     constructor Create(const ACfg: TGridTallasConfig);
     destructor  Destroy; override;
@@ -248,8 +251,7 @@ implementation
 
 uses
   System.Math, System.Types,
-  Vcl.Graphics, Vcl.StdCtrls, Vcl.ExtCtrls,
-  inLibGlobalVar;
+  Vcl.Graphics, Vcl.StdCtrls, Vcl.ExtCtrls;
 
 { TGestorGridTallas }
 
@@ -260,6 +262,12 @@ begin
   if FCfg.MaxColumnas <= 0 then FCfg.MaxColumnas := 20;
   if FCfg.IdFilaFijo  <= 0 then FCfg.IdFilaFijo  := 1;
   FConjuntoPos := TDictionary<Integer, TArrPosConjunto>.Create;
+end;
+
+procedure TGestorGridTallas.LogSes(const ATexto: string);
+begin
+  if Assigned(FCfg.ContextoSesion) then
+    FCfg.ContextoSesion.LogSesion(ATexto);
 end;
 
 destructor TGestorGridTallas.Destroy;

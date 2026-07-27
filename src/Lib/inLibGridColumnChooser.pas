@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibGridColumnChooser                                        }
 {    Tipo:       Libreria                                                      }
@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  Vcl.Forms, Data.DB, DBAccess, Uni;
+  Vcl.Forms, Data.DB, DBAccess, Uni, inLibInformesGuiasCache;
 
 type
   TGridGuiaResult = record
@@ -32,8 +32,10 @@ type
 
 // Enriquece la query del grid con LEFT JOIN de las guias definidas
 // en fza_informes_guias (con prefijo GRID:) para el formulario dado.
-function EnriquecerQueryConGuias(const AFormName: string;
-                                 AQuery: TUniQuery): TGridGuiaResult;
+function EnriquecerQueryConGuias(
+  const ACache: IInformesGuiasCache;
+  const AFormName: string;
+  AQuery: TUniQuery): TGridGuiaResult;
 
 // Muestra un dialogo para elegir que columnas nuevas incorporar al grid.
 function ElegirColumnasNuevas(AOwner: TForm;
@@ -43,7 +45,7 @@ implementation
 
 uses
   Vcl.CheckLst, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Controls, Vcl.Dialogs,
-  inLibGlobalVar, inLibLog, inLibInformesGuiasCache, UniDataConn;
+  inLibLog, UniDataConn;
 
 // ============================================================================
 // Enriquecimiento de query con LEFT JOIN
@@ -67,8 +69,10 @@ begin
   end;
 end;
 
-function EnriquecerQueryConGuias(const AFormName: string;
-                                 AQuery: TUniQuery): TGridGuiaResult;
+function EnriquecerQueryConGuias(
+  const ACache: IInformesGuiasCache;
+  const AFormName: string;
+  AQuery: TUniQuery): TGridGuiaResult;
 var
   arrGuias: TArray<TInformeGuiaItem>;
   iGuia, k, nPares, iSuf: Integer;
@@ -84,10 +88,10 @@ begin
   Result.ColumnasVisibles := TStringList.Create;
   Result.ColumnasVisibles.CaseSensitive := False;
   Result.SqlOriginal := AQuery.SQL.Text;
-  if (oInfGuiasCache = nil) or (not oInfGuiasCache.Cargada) then
+  if not Assigned(ACache) or (not ACache.Cargada) then
     Exit;
   // Buscamos con prefijo GRID:
-  arrGuias := oInfGuiasCache.Obtener('GRID:' + AFormName, '');
+  arrGuias := ACache.Obtener('GRID:' + AFormName, '');
   if Length(arrGuias) = 0 then
     Exit;
   qryColsExt := TUniQuery.Create(nil);

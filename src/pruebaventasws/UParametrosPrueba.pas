@@ -16,7 +16,8 @@ unit UParametrosPrueba;
 interface
 
 uses
-  inLibParametrosIntf;
+  inLibParametrosIntf,
+  inLibLicenciaAplicacion;
 
 type
   { Implementación mínima de IParametrosAplicacion. Sustituye a la tabla
@@ -37,6 +38,7 @@ type
       const ADefault: Integer = 0
     ): Integer;
     function GetPath(const ANombre: string): string;
+    function Licencia: TResultadoLicenciaAplicacion;
     function GetString(
       const AKey: string;
       const ADefault: string = ''
@@ -87,6 +89,12 @@ end;
 function TParametrosPrueba.GetPath(const ANombre: string): string;
 begin
   Result := '';
+end;
+
+function TParametrosPrueba.Licencia:
+  TResultadoLicenciaAplicacion;
+begin
+  Result := TResultadoLicenciaAplicacion.CrearNoComprobada;
 end;
 
 end.

@@ -159,7 +159,7 @@ implementation
 {$R *.dfm}
 
 uses inLibtb, inLibGenerarTicketBD, inLibGenerarTicketCaja,
-     inLibGlobalVar, inLibLog, inLibFotos, inMtoFotoArticulo,
+     inLibLog, inLibFotos, inMtoFotoArticulo,
      inLibTraspasoTicket, inLibShowMto, inMtoPrincipal, Uni,
      inLibVerifactu, inLibVerifactuCola, inMtoModalFacturarTicket,
      inMtoCajaOpe, inLibCorreoTickets, inLibAtributosPaleta;
@@ -819,7 +819,7 @@ end;
 
 procedure TfrmConsultaOpe.btnReimprimirClick(Sender: TObject);
 begin
-  ReimprimirOperacion(oNomImpresoraCaja);
+  ReimprimirOperacion(ParametrosCaja.ImpresoraCaja);
 end;
 
 procedure TfrmConsultaOpe.btnReimprimirOtrosClick(Sender: TObject);

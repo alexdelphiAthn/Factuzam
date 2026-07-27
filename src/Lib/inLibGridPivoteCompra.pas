@@ -178,6 +178,7 @@ type
     function  ResolverSkuCelda(AKey: Int64; out ASku: string): Boolean;
     function  CrearLineaRealDesdeCelda(AKey: Int64;
                 ACantidad: Double; out ALineaReal: string): Boolean;
+    procedure LogSes(const ATexto: string);
   public
     constructor Create(const ACfg: TGridPivoteCompraConfig);
     destructor Destroy; override;
@@ -298,7 +299,6 @@ const
 implementation
 
 uses
-  inLibGlobalVar,
   inLibLog;
 
 constructor TGridPivoteCompra.Create(const ACfg: TGridPivoteCompraConfig);
@@ -333,6 +333,12 @@ begin
   FOrigColIndexCol         := -1;
   FOrigColIndexColProv     := -1;
   FAlturaFilaOriginal      := 0;
+end;
+
+procedure TGridPivoteCompra.LogSes(const ATexto: string);
+begin
+  if Assigned(FCfg.ContextoSesion) then
+    FCfg.ContextoSesion.LogSesion(ATexto);
 end;
 
 destructor TGridPivoteCompra.Destroy;

@@ -306,6 +306,7 @@ type
                               const AVal: TValoresAttrTallas;
                               AOrdTalla: Integer;
                               const ATalla: string): string;
+    procedure LogSes(const ATexto: string);
   public
     constructor Create(const AConfig: TConfigColumnasSku;
                        const ACfgTallas: TGridTallasConfig);
@@ -319,9 +320,6 @@ type
   end;
 
 implementation
-
-uses
-  inLibGlobalVar;
 
 class procedure TDistribuidorTallas.RegistrarEjecutor(
   AClase: TClaseEjecutorDistribuidorTallas);
@@ -375,6 +373,12 @@ begin
   FTimerRecarga.Enabled := False;
   FTimerRecarga.Interval := 1;
   FTimerRecarga.OnTimer := TimerRecargaTimer;
+end;
+
+procedure TModoEntradaTallas.LogSes(const ATexto: string);
+begin
+  if Assigned(FConfig.ContextoSesion) then
+    FConfig.ContextoSesion.LogSesion(ATexto);
 end;
 
 destructor TModoEntradaTallas.Destroy;

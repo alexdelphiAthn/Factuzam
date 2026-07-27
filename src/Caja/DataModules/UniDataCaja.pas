@@ -19,7 +19,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.ExtCtrls, Data.DB, Datasnap.Provider,
   Datasnap.DBClient, Uni, MemDS, DBAccess, system.Math, UniDataGen,
-  inLibGlobalVar, system.StrUtils, inLibFaseCobro, Windows,
+  system.StrUtils, inLibFaseCobro, Windows,
   inLibContextoSesionIntf, inLibParametrosIntf;
 
 type
@@ -1287,7 +1287,7 @@ begin
   begin
     ImprimirRecordatorio(FConexion, FContextoSesion.Ubicacion.Empresa,
       Cab.CodigoCliente,
-      oNomImpresoraCaja);
+      FParametrosCaja.ImpresoraCaja);
     Result := True;
     Exit;
   end;
@@ -1367,9 +1367,9 @@ begin
          FormatDateTime('dd/mm/yyyy', dUltimaFechaSerie),
          FormatDateTime('dd/mm/yyyy', Cab.Fecha)]);
   end;
-  if RequiereFactura and oLicenciaAplicacionComprobada then
+  if RequiereFactura and FParametrosApp.Licencia.Comprobada then
     ValidarLimiteDemoFacturas(FConexion,
-                              oLicenciaAplicacionEstado,
+                              FParametrosApp.Licencia.Estado,
                               Cab.Fecha);
   if DatosCobro.ImporteEntregado <
                 cdsCabecera.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency then
@@ -1813,10 +1813,10 @@ begin
                                 AAlmacen,
                                 ACaja,
                                 sOpeCaja,
-                                oNomImpresoraCaja);
+                                FParametrosCaja.ImpresoraCaja);
       ImprimirRecordatorio(FConexion, FContextoSesion.Ubicacion.Empresa,
         Cab.CodigoCliente,
-        oNomImpresoraCaja);
+        FParametrosCaja.ImpresoraCaja);
     end;
     try
       cdsLineas.DisableControls;

@@ -181,8 +181,12 @@ compras, que es todo lo que hacen esos modales.
 
 # Fase 4 — sacar el estado global (2 días, riesgo medio-alto)
 
-`inLibGlobalVar` tiene hoy 76 líneas y **12 variables globales**, y
-participa en el ciclo de 8 unidades de librería. La infraestructura de
+Estado a 27/07/2026: C1 y C2 implementados y compilados. Pruebas funcionales
+pendientes. Detalle en `refactorizacion_fase4_resultados.md`.
+
+`inLibGlobalVar` tenía al iniciar esta fase 76 líneas y **12 variables
+globales**, y participaba en el ciclo de 8 unidades de librería. La
+infraestructura de
 inyección de `TfrmBase` ya existe de fases anteriores, así que esto es
 migrar, no diseñar: `IParametros`/`IParametrosAplicacion`/
 `IParametrosCaja` están en `inLibParametrosIntf` y
@@ -195,7 +199,7 @@ monitor SQL; `oInfGuiasCache` al colaborador de guías que sale de D2.
 Quedarían solo `oAppName`, `oVersion` y `oAll`, que son constantes de
 verdad y pueden pasar a `const`.
 
-**C2 — credenciales.** `inMtoLogon` (línea 165) expone `sPass`, `sPassEn`
+**C2 — credenciales.** `inMtoLogon` (línea 165) exponía `sPass`, `sPassEn`
 y `sUserPassOK` como variables globales de la sección `interface`.
 Cualquier unidad del proyecto puede leer la contraseña de la base de
 datos. Encapsular en el propio formulario de logon y devolver solo el
@@ -217,6 +221,10 @@ resultado.
 ---
 
 # Fase 5 — la red de seguridad (2-3 días, riesgo nulo)
+
+Estado a 27/07/2026: **terminada**. Proyecto DUnitX creado y validado en
+Debug/Win64, Debug/Win32 y Release/Win64: 16/16 pruebas en verde y sin
+fugas. Detalle en `refactorizacion_fase5_resultados.md`.
 
 **Proyecto DUnitX.** Este es el punto 22 de la lista y lo subo aquí
 arriba a propósito: es lo único que hace que la Fase 6 sea razonable.

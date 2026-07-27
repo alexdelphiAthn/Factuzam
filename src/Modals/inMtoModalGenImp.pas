@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalGenImp                                              }
 {    Tipo:       Formulario (Modal)                                            }
@@ -323,15 +323,17 @@ begin
   // LEFT JOIN, asi que los campos extra son nativos del master en el
   // .frx (`[<UserName>."CAMPO"]`) y no hay datasets paralelos que
   // filtrar.
-  // Las guias se sirven del cache en memoria precargado al login
-  // (oInfGuiasCache.Precargar). Asi no se vuelve a BBDD en cada click.
-  if (oInfGuiasCache = nil) or (not oInfGuiasCache.Cargada) then
+  // Las guías se sirven del colaborador precargado al iniciar sesión.
+  if not Assigned(InformesGuiasCache) or
+     (not InformesGuiasCache.Cargada) then
     Exit;
   if (sElegido = '') or SameText(sElegido, 'Predeterminado') then
     sFormatoBuscado := ''
   else
     sFormatoBuscado := sElegido;
-  arrGuias := oInfGuiasCache.Obtener(Self.Name, sFormatoBuscado);
+  arrGuias := InformesGuiasCache.Obtener(
+    Self.Name,
+    sFormatoBuscado);
   if Length(arrGuias) = 0 then
     Exit;
   qryColsExt := TUniQuery.Create(nil);
@@ -672,8 +674,8 @@ begin
   end;
   // Si ConsolidarGuiasParaFormato inserto nuevas filas en fza_informes_guias,
   // refrescamos el cache para que el proximo AbrirGuiasRuntime las vea.
-  if oInfGuiasCache <> nil then
-    oInfGuiasCache.Precargar;
+  if Assigned(InformesGuiasCache) then
+    InformesGuiasCache.Precargar;
 end;
 
 procedure TfrmPrint.EditarGuiasParaFormato(const aFormato: string;
@@ -695,8 +697,8 @@ begin
     oForm.ShowModal;
     // El usuario pudo dar de alta / modificar / borrar guias en el modal:
     // refrescamos el cache para que el proximo Imprimir / PDF lo vea.
-    if oInfGuiasCache <> nil then
-      oInfGuiasCache.Precargar;
+    if Assigned(InformesGuiasCache) then
+      InformesGuiasCache.Precargar;
   finally
     FreeAndNil(oForm);
   end;
@@ -757,8 +759,8 @@ begin
       oWiz.FReport  := frxrprt1;
       oWiz.ShowModal;
       // El wizard puede haber dado de alta / editado guias: refresco cache.
-      if oInfGuiasCache <> nil then
-        oInfGuiasCache.Precargar;
+      if Assigned(InformesGuiasCache) then
+        InformesGuiasCache.Precargar;
       if oWiz.sFicha = 'S' then
       begin
         sElegido           := oWiz.sFormato;

@@ -42,7 +42,8 @@ uses
   JvEnterTab, Uni, inLibPermisosIntf, inLibConexionesIntf,
   inLibAuditoriaDatosIntf, inLibMonitorSQLIntf,
   inLibContextoSesionIntf, inLibFiltrosGuardadosIntf,
-  inLibPerfilesUsuarioIntf, inLibParametrosIntf;
+  inLibPerfilesUsuarioIntf, inLibParametrosIntf,
+  inLibInformesGuiasCache;
 
 type
   TEnterAsTabEstado = record
@@ -59,7 +60,8 @@ type
     IProveedorContextoSesion,
     IProveedorFiltrosGuardados,
     IProveedorPerfilesUsuario,
-    IProveedorParametros
+    IProveedorParametros,
+    IProveedorInformesGuiasCache
   )
     Localizer1: TcxLocalizer;
     jvntrstb1: TJvEnterAsTab;
@@ -74,6 +76,7 @@ type
     FPerfilesUsuario: IPerfilesUsuario;
     FParametrosApp: IParametrosAplicacion;
     FParametrosCaja: IParametrosCaja;
+    FInformesGuiasCache: IInformesGuiasCache;
     FEnterAsTabEstados: array of TEnterAsTabEstado;
     FEnterAsTabTemporalActivo: Boolean;
     function GetPermisos: IPermisosAplicacion;
@@ -87,6 +90,7 @@ type
     function GetPerfilesUsuario: IPerfilesUsuario;
     function GetParametrosApp: IParametrosAplicacion;
     function GetParametrosCaja: IParametrosCaja;
+    function GetInformesGuiasCache: IInformesGuiasCache;
     function GetConexionPrincipal: TUniConnection;
     procedure HeredarConexiones(AOwner: TComponent);
     procedure HeredarAuditoriaDatos(AOwner: TComponent);
@@ -95,6 +99,7 @@ type
     procedure HeredarFiltrosGuardados(AOwner: TComponent);
     procedure HeredarPerfilesUsuario(AOwner: TComponent);
     procedure HeredarParametros(AOwner: TComponent);
+    procedure HeredarInformesGuiasCache(AOwner: TComponent);
     procedure GuardarEnterAsTabDe(AOwner: TComponent);
     function EnterAsTabGuardado(AComp: TJvEnterAsTab): Boolean;
   protected
@@ -129,6 +134,8 @@ type
     procedure AsignarParametros(
       const AParametrosApp: IParametrosAplicacion;
       const AParametrosCaja: IParametrosCaja);
+    procedure AsignarInformesGuiasCache(
+      const AInformesGuiasCache: IInformesGuiasCache);
     // Articulo/sku del registro/linea en foco, para la consulta de stock
     // global (Ctrl+U, capturado en inMtoPrincipal). Por defecto vacio; los
     // formularios con articulo activo lo sobreescriben.
@@ -149,6 +156,8 @@ type
     property PerfilesUsuario: IPerfilesUsuario read GetPerfilesUsuario;
     property ParametrosApp: IParametrosAplicacion read GetParametrosApp;
     property ParametrosCaja: IParametrosCaja read GetParametrosCaja;
+    property InformesGuiasCache: IInformesGuiasCache
+      read GetInformesGuiasCache;
     property ConexionPrincipal: TUniConnection read GetConexionPrincipal;
   end;
 
@@ -180,6 +189,7 @@ begin
   HeredarFiltrosGuardados(AOwner);
   HeredarPerfilesUsuario(AOwner);
   HeredarParametros(AOwner);
+  HeredarInformesGuiasCache(AOwner);
   inherited Create(AOwner);
 end;
 
@@ -195,6 +205,7 @@ begin
   HeredarFiltrosGuardados(AOwner);
   HeredarPerfilesUsuario(AOwner);
   HeredarParametros(AOwner);
+  HeredarInformesGuiasCache(AOwner);
   inherited Create(AOwner);
 end;
 
@@ -325,6 +336,28 @@ begin
   end;
 end;
 
+procedure TfrmBase.HeredarInformesGuiasCache(AOwner: TComponent);
+var
+  Proveedor: IProveedorInformesGuiasCache;
+begin
+  FInformesGuiasCache := nil;
+  if Supports(
+    AOwner,
+    IProveedorInformesGuiasCache,
+    Proveedor
+  ) then
+    FInformesGuiasCache := Proveedor.InformesGuiasCache;
+  if not Assigned(FInformesGuiasCache) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorInformesGuiasCache,
+       Proveedor
+     ) then
+    FInformesGuiasCache := Proveedor.InformesGuiasCache;
+end;
+
 procedure TfrmBase.AsignarPermisos(
   const APermisos: IPermisosAplicacion);
 begin
@@ -373,6 +406,12 @@ procedure TfrmBase.AsignarParametros(
 begin
   FParametrosApp := AParametrosApp;
   FParametrosCaja := AParametrosCaja;
+end;
+
+procedure TfrmBase.AsignarInformesGuiasCache(
+  const AInformesGuiasCache: IInformesGuiasCache);
+begin
+  FInformesGuiasCache := AInformesGuiasCache;
 end;
 
 function TfrmBase.GetPermisos: IPermisosAplicacion;
@@ -434,6 +473,11 @@ end;
 function TfrmBase.GetParametrosCaja: IParametrosCaja;
 begin
   Result := FParametrosCaja;
+end;
+
+function TfrmBase.GetInformesGuiasCache: IInformesGuiasCache;
+begin
+  Result := FInformesGuiasCache;
 end;
 
 function TfrmBase.GetConexionPrincipal: TUniConnection;

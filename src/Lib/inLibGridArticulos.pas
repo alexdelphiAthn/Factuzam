@@ -35,7 +35,8 @@ uses
   cxEdit, cxTextEdit, cxButtonEdit, cxDropDownEdit,
   cxEditRepositoryItems, cxDBExtLookupComboBox, cxGrid,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
-  inLibArticulosValidador, inLibArticulosAtributosLookup, inLibAtributosPaleta;
+  inLibArticulosValidador, inLibArticulosAtributosLookup, inLibAtributosPaleta,
+  inLibContextoSesionIntf;
 
 type
   // Nombres de los campos del cds que usa la controladora. Cada host los
@@ -59,6 +60,7 @@ type
   TGridArticulosLineas = class
   private
     FConn: TUniConnection;
+    FContextoSesion: IContextoSesionAplicacion;
     FView: TcxGridDBTableView;
     FCds: TDataSet;
     FCampos: TCamposGridArt;
@@ -197,9 +199,11 @@ type
     procedure AutoCompletarAtributosUnicos(const ACodArt: string);
     procedure RellenarAtributosDesdeSku(const ACodArt, ASku: string);
     function CdsEditando: Boolean;
+    procedure LogSes(const ATexto: string);
   public
     constructor Create(AConn: TUniConnection; AView: TcxGridDBTableView;
-                       ACds: TDataSet; const ACampos: TCamposGridArt);
+      ACds: TDataSet; const ACampos: TCamposGridArt;
+      const AContextoSesion: IContextoSesionAplicacion);
     destructor Destroy; override;
     // Crea la columna de articulo + las 5 columnas de atributo y engancha el
     // OnInitEdit del View. El host anade sus columnas DESPUES sobre el View.
@@ -229,7 +233,7 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inLibGenBusq;
+  inLibGenBusq;
 
 type
   // Acceso a OnExit (protegido en TWinControl) de los editores in-place
@@ -237,12 +241,13 @@ type
   THackWinCtrl = class(TWinControl);
 
 constructor TGridArticulosLineas.Create(AConn: TUniConnection;
-                                        AView: TcxGridDBTableView;
-                                        ACds: TDataSet;
-                                        const ACampos: TCamposGridArt);
+  AView: TcxGridDBTableView; ACds: TDataSet;
+  const ACampos: TCamposGridArt;
+  const AContextoSesion: IContextoSesionAplicacion);
 begin
   inherited Create;
   FConn := AConn;
+  FContextoSesion := AContextoSesion;
   FView := AView;
   FCds := ACds;
   FCampos := ACampos;
@@ -260,6 +265,12 @@ begin
   FTimerBusq.Enabled := False;
   FTimerBusq.Interval := 350;
   FTimerBusq.OnTimer := TimerBusqTimer;
+end;
+
+procedure TGridArticulosLineas.LogSes(const ATexto: string);
+begin
+  if Assigned(FContextoSesion) then
+    FContextoSesion.LogSesion(ATexto);
 end;
 
 destructor TGridArticulosLineas.Destroy;

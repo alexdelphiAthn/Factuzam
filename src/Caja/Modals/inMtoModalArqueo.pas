@@ -307,7 +307,7 @@ implementation
 
 {$R *.dfm}
 
-uses inLibGlobalVar, inLibPermisosIntf, inLibLog,
+uses inLibPermisosIntf, inLibLog,
      inMtoModalArqueosHistCaja,
      inLibTiraCajaTicket, inMtoModalTiraCaja, inLibVerifactu;
 
@@ -451,7 +451,7 @@ begin
                              FEmpresa, FAlmacen, FCaja,
                              FechaDesdeSeleccionada,
                              FechaHastaSeleccionada,
-                             oNomImpresoraCaja);
+                             ParametrosCaja.ImpresoraCaja);
     finally
       Screen.Cursor := crDefault;
     end;
@@ -533,7 +533,9 @@ begin
                                FCaja,
                                FechaDesdeSeleccionada,
                                FechaHastaSeleccionada,
-                               SeleccionSeries, bQR, oNomImpresoraCaja,
+                               SeleccionSeries,
+                               bQR,
+                               ParametrosCaja.ImpresoraCaja,
                                bCronologico,
                                bIncluirTraspasos, bIncluirIngresos,
                                bIncluirGastos, bIncluirCredito,
@@ -1390,7 +1392,7 @@ begin
     sDesglose,
     sObs,
     sVendedor + ' - ' + sNombreVendedor,
-    oNomImpresoraCaja);
+    ParametrosCaja.ImpresoraCaja);
 end;
 
 initialization

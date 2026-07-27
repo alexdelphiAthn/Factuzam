@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoAlbaranes                                                }
 {    Tipo:       Formulario (Mto)                                              }
@@ -744,6 +744,7 @@ begin
     dmmAlbaranes.DesempaquetarAtributosLineas;
   Cfg := Default(TConfigColumnasSku);
   Cfg.Conexion := dmmAlbaranes.unqryTablaG.Connection;
+  Cfg.ContextoSesion := ContextoSesion;
   Cfg.View := tvLineasAlbaran;
   Cfg.Cds := ds;
   Cfg.Modo := FModoEntradaSel;
@@ -768,6 +769,7 @@ begin
   if FModoEntradaSel = mcsTallasInline then
   begin
     CfgT := Default(TGridTallasConfig);
+    CfgT.ContextoSesion := ContextoSesion;
     CfgT.Usuario := IdentidadSesion.Usuario;
     CfgT.Grid := tvLineasAlbaran;
     CfgT.SourceMaster := dsTablaG;

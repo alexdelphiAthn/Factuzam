@@ -42,6 +42,9 @@ Linux64/
 link.res
 ppas.sh
 src/utilfmt80/Ancho80
+tests/bin/
+tests/dcu/
+tests/FactuzamTests.res
 
 # Contraseña de la conexión es distinta en cada punto
 UniDataConn.dfm

@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Uni,
-  inLibPermisosIntf;
+  inLibPermisosIntf, inLibParametrosIntf;
 
 procedure ImprimirTicketOperacionCaja(
   AConexion: TUniConnection;
@@ -31,19 +31,21 @@ procedure ImprimirTicketOperacionCaja(
 // Apertura manual del cajon portamonedas sin venta asociada (tecla F9
 // global en cualquier ventana del programa). Comprueba el permiso
 // 'caja.abrirCajon' y manda el pulso de apertura por la impresora de
-// tickets de parametros (vgerDefPrinter -> oNomImpresoraCaja).
+// tickets resuelta por los parámetros de caja.
 procedure AbrirCajonSinVenta(
-  const APermisos: IPermisosAplicacion);
+  const APermisos: IPermisosAplicacion;
+  const AParametrosCaja: IParametrosCaja);
 
 // True si hay impresora de tickets real asignada en parametros
-// (oNomImpresoraCaja con valor no vacio y distinto de 'DEBUG').
-function ImpresoraCajaAsignada: Boolean;
+// (valor no vacío y distinto de 'DEBUG').
+function ImpresoraCajaAsignada(
+  const AParametrosCaja: IParametrosCaja): Boolean;
 
 implementation
 
 uses
   Data.DB, DBAccess, Vcl.Dialogs,
-  inLibGlobalVar, inLibFTicket, inLibPreviewTicket, inLibDir,
+  inLibFTicket, inLibPreviewTicket, inLibDir,
   inLibGenerarTicket;
 
 procedure ImprimirTicketOperacionCaja(
@@ -143,16 +145,23 @@ begin
   end;
 end;
 
-function ImpresoraCajaAsignada: Boolean;
+function ImpresoraCajaAsignada(
+  const AParametrosCaja: IParametrosCaja): Boolean;
 var
   sImpresora: string;
 begin
-  sImpresora := Trim(oNomImpresoraCaja);
-  Result := (sImpresora <> '') and (UpperCase(sImpresora) <> 'DEBUG');
+  Result := Assigned(AParametrosCaja);
+  if Result then
+  begin
+    sImpresora := Trim(AParametrosCaja.ImpresoraCaja);
+    Result := (sImpresora <> '') and
+              (UpperCase(sImpresora) <> 'DEBUG');
+  end;
 end;
 
 procedure AbrirCajonSinVenta(
-  const APermisos: IPermisosAplicacion);
+  const APermisos: IPermisosAplicacion;
+  const AParametrosCaja: IParametrosCaja);
 var
   Ticket: TTicketTermico;
 begin
@@ -163,12 +172,13 @@ begin
        PERMISO_CAJA_ABRIR_CAJON,
        paPermitir)) then
     ShowMessage('No tiene permiso para abrir el cajón.')
-  else if not ImpresoraCajaAsignada then
+  else if not ImpresoraCajaAsignada(AParametrosCaja) then
     ShowMessage('No hay impresora de tickets configurada en parámetros ' +
                 '(vgerDefPrinter); no se puede abrir el cajón.')
   else
   begin
-    Ticket := TTicketTermico.Create(oNomImpresoraCaja);
+    Ticket := TTicketTermico.Create(
+      AParametrosCaja.ImpresoraCaja);
     try
       Ticket.AbrirCajon;
       Ticket.Imprimir;

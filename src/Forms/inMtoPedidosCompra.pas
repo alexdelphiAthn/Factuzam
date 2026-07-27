@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoPedidosCompra                                            }
 {    Tipo:       Formulario (Mto)                                              }
@@ -1421,6 +1421,7 @@ begin
   // 1. Gestor inline de tallas (libreria existente).
   cfgT := Default(TGridTallasConfig);
   cfgT.Conexion           := dmmPedidosCompra.unqryTablaG.Connection;
+  cfgT.ContextoSesion     := ContextoSesion;
   cfgT.Usuario            := IdentidadSesion.Usuario;
   cfgT.Grid               := tvLineasPedido;
   cfgT.SourceMaster       := dsTablaG;
@@ -3044,6 +3045,7 @@ begin
     dmmPedidosCompra.DesempaquetarAtributosLineas;
   Cfg := Default(TConfigColumnasSku);
   Cfg.Conexion := dmmPedidosCompra.unqryTablaG.Connection;
+  Cfg.ContextoSesion := ContextoSesion;
   Cfg.View := tvLineasPedido;
   Cfg.Cds := ds;
   Cfg.Modo := FModoEntradaSel;
@@ -3098,6 +3100,7 @@ begin
     // consolidadas por articulo+color y cantidades por celda de talla
     // en fza_pedidos_compra_celdas.
     CfgT := Default(TGridTallasConfig);
+    CfgT.ContextoSesion := ContextoSesion;
     CfgT.Usuario := IdentidadSesion.Usuario;
     CfgT.Grid := tvLineasPedido;
     CfgT.SourceMaster := dsTablaG;

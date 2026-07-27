@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoDocumentosTrabajo                                        }
 {    Tipo:       Formulario (Mto)                                              }
@@ -249,6 +249,7 @@ begin
     dmmDocumentosTrabajo.DesempaquetarAtributosLineas;
   Cfg := Default(TConfigColumnasSku);
   Cfg.Conexion := dmmDocumentosTrabajo.unqryTablaG.Connection;
+  Cfg.ContextoSesion := ContextoSesion;
   Cfg.View := tvLineasDTR;
   Cfg.Cds := ds;
   Cfg.Modo := FModoEntradaSel;
@@ -269,6 +270,7 @@ begin
   if FModoEntradaSel = mcsTallasInline then
   begin
     CfgT := Default(TGridTallasConfig);
+    CfgT.ContextoSesion := ContextoSesion;
     CfgT.Usuario := IdentidadSesion.Usuario;
     CfgT.Grid := tvLineasDTR;
     CfgT.SourceMaster := dsTablaG;

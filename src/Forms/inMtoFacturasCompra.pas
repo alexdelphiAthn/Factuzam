@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFacturasCompra                                          }
 {    Tipo:       Formulario (Mto)                                              }
@@ -755,6 +755,7 @@ begin
   //    Sesiones, con los nombres FACC/FACCLIN/FACCCEL.
   cfgT := Default(TGridTallasConfig);
   cfgT.Conexion           := dmmFacturasCompra.unqryTablaG.Connection;
+  cfgT.ContextoSesion     := ContextoSesion;
   cfgT.Usuario            := IdentidadSesion.Usuario;
   cfgT.Grid               := tvLineasFactura;
   cfgT.SourceMaster       := dsTablaG;
@@ -1321,6 +1322,7 @@ begin
     dmmFacturasCompra.DesempaquetarAtributosLineas;
   Cfg := Default(TConfigColumnasSku);
   Cfg.Conexion := dmmFacturasCompra.unqryTablaG.Connection;
+  Cfg.ContextoSesion := ContextoSesion;
   Cfg.View := tvLineasFactura;
   Cfg.Cds := ds;
   Cfg.Modo := FModoEntradaSel;

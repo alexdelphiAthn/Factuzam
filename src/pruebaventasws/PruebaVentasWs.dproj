@@ -12,7 +12,7 @@
     <Platform Condition="'$(Platform)'==''">Win32</Platform>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Base)'!=''">
-    <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Vcl;System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
+    <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Vcl;Vcl.Imaging;System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
     <DCC_UnitSearchPath>..\Lib;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     <DCC_ExeOutput>.\bin</DCC_ExeOutput>
     <DCC_DcuOutput>.\dcu</DCC_DcuOutput>

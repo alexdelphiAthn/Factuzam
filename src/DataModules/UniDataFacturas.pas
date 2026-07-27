@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataFacturas                                               }
 {    Tipo:       Data Module                                                   }
@@ -251,7 +251,6 @@ public
 implementation
 
 uses
-  inLibGlobalVar,
   inLibtb,
   inLibLog,
   System.Diagnostics,
@@ -2696,10 +2695,10 @@ begin
     else
       if ((State = dsEdit) or (State = dsInsert)) then
       begin
-        if (State = dsInsert) and oLicenciaAplicacionComprobada and
+        if (State = dsInsert) and ParametrosApp.Licencia.Comprobada and
            (FieldByName('FECHA_FAC').AsString <> '') then
           ValidarLimiteDemoFacturas(ConexionPrincipal,
-                                    oLicenciaAplicacionEstado,
+                                    ParametrosApp.Licencia.Estado,
                                     FieldByName('FECHA_FAC').AsDateTime);
         if (FieldByName('NUMERO_FAC').AsString = '0') then
           GetCodigoAutoFactura;

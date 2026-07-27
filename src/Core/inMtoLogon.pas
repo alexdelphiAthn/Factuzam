@@ -43,7 +43,7 @@ uses
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
   dxSkinWhiteprint, dxSkinXmas2008Blue, dascript, UniScript,
-  inLibContextoSesionIntf;
+  inLibContextoSesionIntf, inLibLicenciaAplicacion;
 
 type
   EInvalidUser = class(Exception);
@@ -110,7 +110,10 @@ type
     FCerrarAplicacion: Boolean;
     FEnOperacionLarga: Boolean;
     FCancelaOperacionSolicitada: Boolean;
+    FPasswordConexion: string;
+    FPasswordConexionEncriptado: string;
     FResultadoInicioSesion: TResultadoInicioSesion;
+    FResultadoLicencia: TResultadoLicenciaAplicacion;
     procedure CambiarPass(f:TUniConnection);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
                               var Action: TErrorAction);
@@ -149,15 +152,15 @@ type
     function DebeCerrarAplicacion:Boolean;
     property ResultadoInicioSesion: TResultadoInicioSesion
       read FResultadoInicioSesion;
+    property ResultadoLicencia: TResultadoLicenciaAplicacion
+      read FResultadoLicencia;
   end;
 var
   frmLogon          : TfrmLogon;
-  sPass, sPassEn, sUserPassOK: string;
 
 implementation
 
 uses  inLibWin,
-      inLibGlobalVar,
       inlibtb,
       inLibMsg,
       inLibDir,
@@ -171,7 +174,6 @@ uses  inLibWin,
       Core_Helpers,
       inLibDBStructure,
       inMtoModalScriptLog,
-      inLibLicenciaAplicacion,
       inLibBackupWorker;
 
 {$R *.dfm}
@@ -199,9 +201,9 @@ var
   unqryTestBD: TUniQuery;
   SqlScript: TUniScript; // <-- Declaramos el nuevo componente
 begin
-  sPass := InputBox(SSolicitudPassBBDD, '', '');
+  FPasswordConexion := InputBox(SSolicitudPassBBDD, '', '');
   ConstruirConexionConnect(ucConexion, edtUserBD.Text,
-    sPass,
+    FPasswordConexion,
     edtHostName.Text,
     edtPortBD.Text,
     'information_schema');
@@ -221,7 +223,7 @@ begin
        ucConexion.Disconnect;
        ConstruirConexionConnect(ucConexion,
                              edtUserBD.Text,
-                             sPass,
+                             FPasswordConexion,
                              edtHostName.Text,
                              edtPortBD.Text,
                              edtNomBD.Text);
@@ -283,28 +285,25 @@ begin
   {$IFDEF DEBUG}
     inliblog.Log.LogInfo('Arrancando en modo Debug');
   {$ENDIF}
-  sUserPassOK := 'false';
   FCerrarAplicacion := False;
   FEnOperacionLarga := False;
   FCancelaOperacionSolicitada := False;
   FWorkerOperacion := nil;
-  oLicenciaAplicacionComprobada := False;
-  oLicenciaAplicacionBBDD := '';
-  oLicenciaAplicacionEstado := elaInvalida;
-  oLicenciaAplicacionMensaje := '';
+  FResultadoLicencia :=
+    TResultadoLicenciaAplicacion.CrearNoComprobada;
   Self.Position := poScreenCenter;
   edtUser.Text := '';
 
   GetIniValues;
 
-  sPassEn := leCadINIDir('ConnData',
+  FPasswordConexionEncriptado := leCadINIDir('ConnData',
                          'PasswordEn',
                          '2qJFaDfegP/9y6RDno1FRg==',
                          GetUserFolder);
-  if (sPassEn.Length > 2) then
+  if (FPasswordConexionEncriptado.Length > 2) then
   begin
     try
-      sPass := DecriptAES(sPassEn);
+      FPasswordConexion := DecriptAES(FPasswordConexionEncriptado);
     except
       on E: Exception do
         raise EPassWordCorrupt.Create(SErrorDecryptPassBBDD);
@@ -315,7 +314,7 @@ begin
   try
     ConstruirConexionConnect(ucConexion,
                              edtUserBD.Text,
-                             sPass,
+                             FPasswordConexion,
                              edtHostName.Text,
                              edtPortBD.Text,
                              'information_schema');
@@ -364,7 +363,7 @@ begin
   try
     ConstruirConexionConnect(ucConexion,
                              edtUserBD.Text,
-                             sPass,
+                             FPasswordConexion,
                              edtHostName.Text,
                              edtPortBD.Text,
                              edtNomBD.Text);
@@ -406,7 +405,6 @@ begin
         esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
         if tbUsers.Active then
           tbUsers.Close;
-        sUserPassOK := 'false';
         InvalidarResultadoInicioSesion;
         ModalResult := mrNone;
       end;
@@ -421,7 +419,7 @@ var
   sPasswordConexion: string;
 begin
   Result := False;
-  sPasswordConexion := sPass;
+  sPasswordConexion := FPasswordConexion;
   if edtPassBD.Text <> '' then
     sPasswordConexion := edtPassBD.Text;
   if ucConexion.Connected and SameText(ucConexion.Database, edtNomBD.Text) then
@@ -478,7 +476,7 @@ begin
                                    edtHostName.Text,
                                    edtPortBD.Text,
                                    edtNomBD.Text);
-          sPass := sPasswordConexion;
+          FPasswordConexion := sPasswordConexion;
           Result := True;
         except
           on E: Exception do
@@ -503,8 +501,8 @@ begin
   Result := False;
   if ConexionAplicacionPreparada then
   begin
-    if oLicenciaAplicacionComprobada and
-       SameText(oLicenciaAplicacionBBDD, ucConexion.Database) then
+    if FResultadoLicencia.Comprobada and
+       SameText(FResultadoLicencia.BBDD, ucConexion.Database) then
       Result := True
     else
       Result := ProcesarLicenciaAplicacion;
@@ -523,10 +521,10 @@ var
   iNumeroNifs: Integer;
 begin
   Result := True;
-  oLicenciaAplicacionComprobada := False;
-  oLicenciaAplicacionBBDD := ucConexion.Database;
-  oLicenciaAplicacionEstado := elaInvalida;
-  oLicenciaAplicacionMensaje := '';
+  FResultadoLicencia.Comprobada := False;
+  FResultadoLicencia.BBDD := ucConexion.Database;
+  FResultadoLicencia.Estado := elaInvalida;
+  FResultadoLicencia.Mensaje := '';
   if HayConmutadorRegistroLicencia then
   begin
     Result := False;
@@ -539,9 +537,9 @@ begin
                                      sDetalleNifs,
                                      sRutaIni) then
       begin
-        oLicenciaAplicacionComprobada := True;
-        oLicenciaAplicacionEstado := elaValida;
-        oLicenciaAplicacionMensaje := 'Licencia establecida.';
+        FResultadoLicencia.Comprobada := True;
+        FResultadoLicencia.Estado := elaValida;
+        FResultadoLicencia.Mensaje := 'Licencia establecida.';
         inliblog.Log.LogInfo('Licencia establecida. Código: ' + sCodigo);
         ShowMessage(Format(SLicenciaEstablecida,
                            [sCodigo, iNumeroNifs, sRutaIni,
@@ -549,9 +547,9 @@ begin
       end
       else
       begin
-        oLicenciaAplicacionComprobada := True;
-        oLicenciaAplicacionEstado := elaSinNifEmpresa;
-        oLicenciaAplicacionMensaje := 'No hay NIF de empresa configurado.';
+        FResultadoLicencia.Comprobada := True;
+        FResultadoLicencia.Estado := elaSinNifEmpresa;
+        FResultadoLicencia.Mensaje := 'No hay NIF de empresa configurado.';
         inliblog.Log.LogInfo(
           'No se establece licencia porque no hay NIF de empresa.');
         ShowMessage(SLicenciaNoEstablecidaSinNif);
@@ -559,7 +557,7 @@ begin
     except
       on E: Exception do
       begin
-        oLicenciaAplicacionMensaje := E.Message;
+        FResultadoLicencia.Mensaje := E.Message;
         inliblog.Log.LogError('Error estableciendo licencia: ' + E.Message);
         ShowMessage(Format(SErrorEstablecerLicencia, [E.Message]));
       end;
@@ -574,9 +572,9 @@ begin
                                      sCodigoEsperado,
                                      sCodigoGuardado) then
       begin
-        oLicenciaAplicacionComprobada := True;
-        oLicenciaAplicacionEstado := Estado;
-        oLicenciaAplicacionMensaje := sMensaje;
+        FResultadoLicencia.Comprobada := True;
+        FResultadoLicencia.Estado := Estado;
+        FResultadoLicencia.Mensaje := sMensaje;
         if Estado = elaSinNifEmpresa then
           inliblog.Log.LogInfo(sMensaje)
         else
@@ -584,9 +582,9 @@ begin
       end
       else
       begin
-        oLicenciaAplicacionComprobada := True;
-        oLicenciaAplicacionEstado := Estado;
-        oLicenciaAplicacionMensaje := 'Copia DEMO. ' + sMensaje;
+        FResultadoLicencia.Comprobada := True;
+        FResultadoLicencia.Estado := Estado;
+        FResultadoLicencia.Mensaje := 'Copia DEMO. ' + sMensaje;
         inliblog.Log.LogWarning('Aplicación en modo DEMO. ' + sMensaje);
         inliblog.Log.LogError('Código guardado: ' + sCodigoGuardado +
                               ' Código esperado: ' + sCodigoEsperado);
@@ -595,9 +593,9 @@ begin
     except
       on E: Exception do
       begin
-        oLicenciaAplicacionComprobada := True;
-        oLicenciaAplicacionEstado := elaInvalida;
-        oLicenciaAplicacionMensaje := 'Copia DEMO. ' + E.Message;
+        FResultadoLicencia.Comprobada := True;
+        FResultadoLicencia.Estado := elaInvalida;
+        FResultadoLicencia.Mensaje := 'Copia DEMO. ' + E.Message;
         inliblog.Log.LogError('Error validando licencia: ' + E.Message);
         inliblog.Log.LogWarning('Aplicación en modo DEMO por error ' +
                                 'validando licencia.');
@@ -910,7 +908,7 @@ var
   Worker: TBackupWorker;
 begin
   ConstruirConexionConnect(ucConexion, edtUserBD.Text,
-    sPass,
+    FPasswordConexion,
     edtHostName.Text,
     edtPortBD.Text,
     edtNomBD.Text);
@@ -918,7 +916,7 @@ begin
   saveDialog.Title := 'Guardar copia de seguridad';
   saveDialog.DefaultFolder := GetCurrentDir;
   saveDialog.DefaultExtension := '.crypt';
-  savedialog.FileName := 'copiaseguridad_' + sPassEn +
+  savedialog.FileName := 'copiaseguridad_' + FPasswordConexionEncriptado +
                                        FormatDateTime('_dd_mm', Now) + '.crypt';
   if (saveDialog.Execute) then
   begin
@@ -935,10 +933,10 @@ begin
         StrToIntDef(edtPortBD.Text, 3306),
         edtNomBD.Text,
         edtUserBD.Text,
-        sPass,
+        FPasswordConexion,
         saveDialog.FileName,
         True,
-        AnsiString(sPass));
+        AnsiString(FPasswordConexion));
       Worker.OnProgreso := WorkerProgreso;
       Worker.OnFinalizar := BackupFinalizar;
       FCancelaOperacionSolicitada := False;
@@ -962,9 +960,9 @@ var
 begin
   bDesencriptar := False;
   sPassDesencriptar := '';
-  sPass := InputBox(SGetPassBBDD, '', '');
+  FPasswordConexion := InputBox(SGetPassBBDD, '', '');
   ConstruirConexionConnect(ucConexion, edtUserBD.Text,
-    sPass,
+    FPasswordConexion,
     edtHostName.Text,
     edtPortBD.Text,
     'information_schema');
@@ -999,7 +997,7 @@ begin
     if SameText(ExtractFileExt(openDialog.FileName), '.crypt') then
     begin
       bDesencriptar := True;
-      sPassDesencriptar := AnsiString(sPass);
+      sPassDesencriptar := AnsiString(FPasswordConexion);
     end;
     MostrarBarraProgreso('Preparando restauración...');
     Worker := TRestoreWorker.Create(
@@ -1007,7 +1005,7 @@ begin
       StrToIntDef(edtPortBD.Text, 3306),
       edtNomBD.Text,
       edtUserBD.Text,
-      sPass,
+      FPasswordConexion,
       openDialog.FileName,
       sPassDesencriptar,
       bDesencriptar);
@@ -1026,7 +1024,7 @@ begin
   escribirini;
   ConstruirConexionConnect( ucConexion,
                             edtUserBD.Text,
-                            sPass,
+                            FPasswordConexion,
                             edtHostName.Text,
                             edtPortBD.Text,
                             edtNomBD.Text);
@@ -1057,8 +1055,8 @@ begin
       qryCommand.ParamByName('PASS').AsString := sNewPass;
       qryCommand.ExecSQL;
       sPassEnBD := EncriptAES(sNewPass);
-      sPass := sNewPass;
-      ShowMessageFmt(SPasswordBBDDChanged, [sPass]);
+      FPasswordConexion := sNewPass;
+      ShowMessageFmt(SPasswordBBDDChanged, [FPasswordConexion]);
       Log.LogInfo(sPasswordBBDDChanged);
       esCadIniDir('ConnData', 'PasswordEn', sPassEnBD, GetUserFolder);
       FreeAndNil(qryCommand);
@@ -1107,7 +1105,7 @@ var
 begin
   inherited;
   bAllowChange := False;
-  if (sPass = 'Zamora2023') then
+  if (FPasswordConexion = 'Zamora2023') then
     bAllowChange := True
   else
   begin
@@ -1119,7 +1117,7 @@ begin
       ucConexion.Disconnect;
     ConstruirConexionConnect( ucConexion,
                               edtUserBD.Text,
-                              sPass,
+                              FPasswordConexion,
                               edtHostName.Text,
                               edtPortBD.Text,
                               'information_schema');
@@ -1182,7 +1180,6 @@ begin
             tbUsers.FieldByName('ALMACEN_DEFECTO_USU').AsString,
             tbUsers.FieldByName('CAJA_DEFECTO_USU').AsString));
       tbUsers.Close;
-      sUserPassOK := 'true';
       SetIniValues;
       PostMessage(Handle, WM_CLOSE, 0, 0);
       ModalResult := mrOK;
@@ -1252,9 +1249,13 @@ begin
   esCadIniDir('ConnData', 'Puerto', edtPortBD.Text, GetUserFolder);
   if (edtPassBD.Text <> '') then
   begin
-    sPass := edtPassBD.Text;
-    sPassEn := EncriptAES(sPass);
-    esCadIniDir('ConnData', 'PasswordEn', sPassEn, GetUserFolder);
+    FPasswordConexion := edtPassBD.Text;
+    FPasswordConexionEncriptado := EncriptAES(FPasswordConexion);
+    esCadIniDir(
+      'ConnData',
+      'PasswordEn',
+      FPasswordConexionEncriptado,
+      GetUserFolder);
   end;
 end;
 

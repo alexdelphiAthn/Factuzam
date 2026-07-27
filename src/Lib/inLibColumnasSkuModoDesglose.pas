@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibColumnasSkuModoDesglose                                  }
 {    Tipo:       Libreria                                                      }
@@ -72,8 +72,12 @@ begin
     Campos.AttrValor[i] := AConfig.Campos.AttrValor[i];
     Campos.AttrNombre[i] := AConfig.Campos.AttrNombre[i];
   end;
-  FGrid := TGridArticulosLineas.Create(AConfig.Conexion, AConfig.View,
-                                       AConfig.Cds, Campos);
+  FGrid := TGridArticulosLineas.Create(
+    AConfig.Conexion,
+    AConfig.View,
+    AConfig.Cds,
+    Campos,
+    AConfig.ContextoSesion);
   FGrid.OnResuelto := GridResuelto;
   FGrid.AlmacenStock := AConfig.AlmacenStock;
   FGrid.AceptarNoCatalogo := AConfig.AceptarNoCatalogo;

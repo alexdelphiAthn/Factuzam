@@ -34,7 +34,7 @@ uses
   cxGridDBTableView, cxGrid, dxScrollbarAnnotations,
   // Acceso a datos
   Uni,
-  inMtoFrmBase, inLibGlobalVar, inLibArqueoTicket;
+  inMtoFrmBase, inLibArqueoTicket;
 
 type
   TfrmModalArqueosHistCaja = class(TfrmBase)
@@ -184,7 +184,7 @@ begin
       FEmpresa,
       FAlmacen,
       FCaja,
-                                         sCod, oNomImpresoraCaja);
+                                         sCod, ParametrosCaja.ImpresoraCaja);
   finally
     Screen.Cursor := crDefault;
   end;
@@ -203,7 +203,7 @@ begin
   Screen.Cursor := crHourGlass;
   try
     TArqueoTicket.ImprimirCierreDesdeHistorico(FConn, ContextoSesion,
-      FEmpresa, FAlmacen, FCaja, sCod, oNomImpresoraCaja);
+      FEmpresa, FAlmacen, FCaja, sCod, ParametrosCaja.ImpresoraCaja);
   finally
     Screen.Cursor := crDefault;
   end;

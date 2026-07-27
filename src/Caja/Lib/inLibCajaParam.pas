@@ -17,7 +17,9 @@ unit inLibCajaParam;
 interface
 
 uses
-  inLibParametrosIntf, inLibParametrosBase, inLibPerfilesUsuarioIntf;
+  System.SyncObjs,
+  inLibParametrosIntf, inLibParametrosBase, inLibPerfilesUsuarioIntf,
+  inLibContextoSesionIntf;
 
 type
   TParametrosCaja = class(
@@ -25,29 +27,43 @@ type
     IParametrosCaja
   )
   private
+    FBloqueoImpresora: TCriticalSection;
+    FContextoSesion: IContextoSesionAplicacion;
+    FImpresoraCaja: string;
     procedure InicializarParametrosCaja(
       const AUsuario, AGrupo: string);
+  protected
+    procedure DespuesDeRecargar; override;
   public
-    constructor Create(const APerfilesUsuario: IPerfilesUsuario);
+    constructor Create(
+      const APerfilesUsuario: IPerfilesUsuario;
+      const AContextoSesion: IContextoSesionAplicacion);
+    destructor Destroy; override;
+    function ImpresoraCaja: string;
     function NivelesFamiliaArqueo: Integer;
     function TarifaDefecto: string;
   end;
 
 function CrearParametrosCaja(
   const APerfilesUsuario: IPerfilesUsuario;
+  const AContextoSesion: IContextoSesionAplicacion;
   const AUsuario, AGrupo: string
 ): IParametrosCaja;
 
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils, inLibBuscarImpresora;
 
 { TParametrosCaja }
 
 constructor TParametrosCaja.Create(
-  const APerfilesUsuario: IPerfilesUsuario);
+  const APerfilesUsuario: IPerfilesUsuario;
+  const AContextoSesion: IContextoSesionAplicacion);
 begin
+  if not Assigned(AContextoSesion) then
+    raise EArgumentNilException.Create(
+      'No se ha proporcionado el contexto para la impresora de caja.');
   inherited Create(
     APerfilesUsuario,
     'frmMtoCajaParam',
@@ -60,6 +76,41 @@ begin
       'Divider'
     )
   );
+  FBloqueoImpresora := TCriticalSection.Create;
+  FContextoSesion := AContextoSesion;
+  FImpresoraCaja := '';
+end;
+
+destructor TParametrosCaja.Destroy;
+begin
+  FContextoSesion := nil;
+  FreeAndNil(FBloqueoImpresora);
+  inherited;
+end;
+
+procedure TParametrosCaja.DespuesDeRecargar;
+var
+  sImpresora: string;
+begin
+  sImpresora := GetImpresoraCaja(
+    Self as IParametrosCaja,
+    FContextoSesion);
+  FBloqueoImpresora.Acquire;
+  try
+    FImpresoraCaja := sImpresora;
+  finally
+    FBloqueoImpresora.Release;
+  end;
+end;
+
+function TParametrosCaja.ImpresoraCaja: string;
+begin
+  FBloqueoImpresora.Acquire;
+  try
+    Result := FImpresoraCaja;
+  finally
+    FBloqueoImpresora.Release;
+  end;
 end;
 
 procedure TParametrosCaja.InicializarParametrosCaja(
@@ -257,12 +308,15 @@ end;
 
 function CrearParametrosCaja(
   const APerfilesUsuario: IPerfilesUsuario;
+  const AContextoSesion: IContextoSesionAplicacion;
   const AUsuario, AGrupo: string
 ): IParametrosCaja;
 var
   Parametros: TParametrosCaja;
 begin
-  Parametros := TParametrosCaja.Create(APerfilesUsuario);
+  Parametros := TParametrosCaja.Create(
+    APerfilesUsuario,
+    AContextoSesion);
   // Mismo orden que en la factoria de aplicacion: el interfaz gobierna
   // la vida del objeto antes de inicializar, por si algun hook toma una
   // referencia temporal a Self durante la carga.

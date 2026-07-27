@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoPedidos                                                  }
 {    Tipo:       Formulario (Mto)                                              }
@@ -1450,6 +1450,7 @@ begin
     dmmPedidos.DesempaquetarAtributosLineas;
   Cfg := Default(TConfigColumnasSku);
   Cfg.Conexion := dmmPedidos.unqryTablaG.Connection;
+  Cfg.ContextoSesion := ContextoSesion;
   Cfg.View := tvPedidosLineas;
   Cfg.Cds := ds;
   Cfg.Modo := FModoEntradaSel;

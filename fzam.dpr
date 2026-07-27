@@ -391,7 +391,8 @@ uses
 {$R fondo.res}
 
 function CrearContextoSesionInicial(
-  out AContextoSesion: IContextoSesionAplicacion): Boolean;
+  out AContextoSesion: IContextoSesionAplicacion;
+  out AResultadoLicencia: TResultadoLicenciaAplicacion): Boolean;
 var
   frmLogon: TfrmLogon;
   AutoLoginCorrecto: Boolean;
@@ -399,6 +400,8 @@ var
 begin
   Result := False;
   AContextoSesion := nil;
+  AResultadoLicencia :=
+    TResultadoLicenciaAplicacion.CrearNoComprobada;
   frmLogon := TfrmLogon.Create(Application);
   try
     if not frmLogon.DebeCerrarAplicacion then
@@ -415,6 +418,7 @@ begin
       ResultadoInicioSesion := frmLogon.ResultadoInicioSesion;
       if ResultadoInicioSesion.Autenticado then
       begin
+        AResultadoLicencia := frmLogon.ResultadoLicencia;
         AContextoSesion := TContextoSesionAplicacion.Create(
           ResultadoInicioSesion.Identidad,
           ResultadoInicioSesion.Ubicacion);
@@ -428,6 +432,8 @@ end;
 
 begin
   var ContextoSesionInicial: IContextoSesionAplicacion;
+  var GestorContextoCierre: IGestorContextoSesion;
+  var ResultadoLicenciaInicial: TResultadoLicenciaAplicacion;
 //  {$IFDEF DEBUG}
 //      ReportMemoryLeaksOnShutdown := True;
 //  {$ENDIF}
@@ -444,7 +450,9 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.Title := 'Fzam';
-  if CrearContextoSesionInicial(ContextoSesionInicial) then
+  if CrearContextoSesionInicial(
+    ContextoSesionInicial,
+    ResultadoLicenciaInicial) then
   begin
     // Fuente global para toda la aplicacion
     Application.DefaultFont.Name   := 'Lucida Sans';
@@ -452,7 +460,9 @@ begin
     Screen.MenuFont.Name := 'Lucida Sans';
     Screen.MenuFont.Size := 11;
     Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
-    frmMtoPrincipal.InicializarAplicacion(ContextoSesionInicial);
+    frmMtoPrincipal.InicializarAplicacion(
+      ContextoSesionInicial,
+      ResultadoLicenciaInicial);
     // Diagnóstico: con /teststack se encola una excepción de prueba
     // para verificar JCL stack trace + AppException + log + modal.
 //  if FindCmdLineSwitch('teststack', True) then
@@ -463,7 +473,12 @@ begin
     try
       Application.Run;
     finally
-      inLibGlobalVar.oCerrandoApp := True;
+      if Supports(
+        ContextoSesionInicial,
+        IGestorContextoSesion,
+        GestorContextoCierre
+      ) then
+        GestorContextoCierre.MarcarCierreAplicacion;
       TVentasWsCola.DetenerHilo;
       TVerifactuCola.DetenerHilo;
     end;

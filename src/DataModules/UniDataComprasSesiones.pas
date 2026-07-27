@@ -1,4 +1,4 @@
-unit UniDataComprasSesiones;
+﻿unit UniDataComprasSesiones;
 
 {
   Unidad: UniDataComprasSesiones
@@ -165,6 +165,7 @@ type
                         // defecto del documento", no el del proveedor.
                         // RecargarProveedorSesion lo resetea a 0 al navegar
                         // a otra sesion o proveedor.
+    procedure LogSes(const ATexto: string);
     procedure ConfigurarSqlCabecera;
     procedure AjustarCamposDerivadosCabecera;
     procedure CalcularTotalesLineaActual;
@@ -200,7 +201,6 @@ implementation
 
 uses
   System.Variants,
-  inLibGlobalVar,
   inLibtb,
   inLibComprasSesiones,
   inLibComprasSesionesMaterializar,
@@ -211,6 +211,12 @@ uses
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
+
+procedure TdmComprasSesiones.LogSes(const ATexto: string);
+begin
+  if Assigned(ContextoSesion) then
+    ContextoSesion.LogSesion(ATexto);
+end;
 
 procedure TdmComprasSesiones.AjustarCamposDerivadosCabecera;
 const

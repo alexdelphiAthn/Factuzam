@@ -3575,6 +3575,7 @@ begin
         dmmFacturas.DesempaquetarAtributosLineas;
       Cfg := Default(TConfigColumnasSku);
       Cfg.Conexion := dmmFacturas.unqryTablaG.Connection;
+      Cfg.ContextoSesion := ContextoSesion;
       Cfg.View := tvLineasFactura;
       Cfg.Cds := ds;
       Cfg.Modo := FModoEntradaSel;

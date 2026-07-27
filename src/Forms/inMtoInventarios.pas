@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoInventarios                                              }
 {    Tipo:       Formulario (Mto)                                              }
@@ -888,6 +888,7 @@ begin
   end;
   Cfg := Default(TConfigColumnasSku);
   Cfg.Conexion := ConexionPrincipal;
+  Cfg.ContextoSesion := ContextoSesion;
   Cfg.View := tvLineas;
   Cfg.Cds := dmmInventarios.cdsLineas;
   Cfg.Modo := FModoEntradaSel;

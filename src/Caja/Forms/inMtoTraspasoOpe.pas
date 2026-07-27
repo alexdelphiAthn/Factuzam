@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoTraspasoOpe                                              }
 {    Tipo:       Formulario (Mto)                                              }
@@ -29,7 +29,7 @@ uses
   cxButtonEdit, cxSpinEdit, cxDropDownEdit, cxButtons, cxClasses, cxGridLevel,
   cxGridCustomTableView, cxGridCustomView, cxGridTableView, cxGridDBTableView,
   cxGrid, cxSplitter, Vcl.Imaging.PngImage, System.Generics.Collections,
-  Data.DB, Datasnap.DBClient, Uni, inLibGlobalVar, UniDataTraspaso,
+  Data.DB, Datasnap.DBClient, Uni, UniDataTraspaso,
   inLibTraspasoTicket, inLibGridArticulos, inLibArticulosValidador,
   inLibPermisosIntf, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
   Vcl.Menus, dxCoreGraphics, JvComponentBase, JvEnterTab,
@@ -234,7 +234,8 @@ begin
     ConexionPrincipal,
     FView,
     FDatos.cdsLineas,
-                                           Campos);
+    Campos,
+    ContextoSesion);
   FGridCtrl.OnResuelto := GridResuelto;
   FGridCtrl.Construir;
   // Columnas propias del traspaso.
@@ -1024,7 +1025,7 @@ begin
         ConexionPrincipal,
         sNum,
         sSer,
-        oNomImpresoraCaja);
+        ParametrosCaja.ImpresoraCaja);
   end;
 end;
 
@@ -1138,7 +1139,7 @@ begin
           ShowMessage(Format('Solicitud %s/%s enviada.', [sSer, sNum]));
           // Ticket de la solicitud: cada SKU con stock origen / destino.
           TTraspasoTicket.ImprimirSolicitud(ConexionPrincipal, sNum, sSer,
-                                            oNomImpresoraCaja);
+                                            ParametrosCaja.ImpresoraCaja);
           AplicarModo(mtSolicitar);
         end;
       except
@@ -1296,7 +1297,7 @@ begin
                 sNumOp,
                 sOrigen,
                 sDestino,
-                sEmpleado, FDatos.cdsLineas, oNomImpresoraCaja);
+                sEmpleado, FDatos.cdsLineas, ParametrosCaja.ImpresoraCaja);
             AplicarModo(mtAtender);
           end;
         end
@@ -1326,7 +1327,7 @@ begin
             sNumOp,
             sOrigen,
             sDestino,
-            sEmpleado, FDatos.cdsLineas, oNomImpresoraCaja);
+            sEmpleado, FDatos.cdsLineas, ParametrosCaja.ImpresoraCaja);
         AplicarModo(mtTraspaso);
       end;
     end;
