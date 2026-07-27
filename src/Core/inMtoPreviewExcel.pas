@@ -62,9 +62,69 @@ var
 
 implementation
 
-uses inLibdxSpreadSheetStrs_ESP, inLibFormatoExcel;
+uses
+  inLibdxSpreadSheetStrs_ESP, inLibFormatoExcel, inLibPreviewExcel;
+
+type
+  TSesionPreviewExcelMto = class(TSesionPreviewExcel)
+  private
+    FFormulario: TfrmMtoPreviewExcel;
+  public
+    constructor Create(AOwner: TComponent);
+    destructor Destroy; override;
+    function HojaCalculo: TdxSpreadSheet; override;
+    procedure AsignarPopupParent(APadre: TCustomForm); override;
+    procedure AsignarNombreArchivo(const ANombre: string); override;
+    procedure Mostrar; override;
+  end;
+
+  TProveedorPreviewExcelMto = class(TProveedorPreviewExcel)
+  public
+    class function Crear(AOwner: TComponent): TSesionPreviewExcel;
+      override;
+  end;
 
 {$R *.dfm}
+
+constructor TSesionPreviewExcelMto.Create(AOwner: TComponent);
+begin
+  inherited Create;
+  FFormulario := TfrmMtoPreviewExcel.Create(AOwner);
+end;
+
+destructor TSesionPreviewExcelMto.Destroy;
+begin
+  FreeAndNil(FFormulario);
+  inherited;
+end;
+
+function TSesionPreviewExcelMto.HojaCalculo: TdxSpreadSheet;
+begin
+  Result := FFormulario.dxSpreadSheet1;
+end;
+
+procedure TSesionPreviewExcelMto.AsignarPopupParent(
+  APadre: TCustomForm);
+begin
+  FFormulario.PopupParent := APadre;
+end;
+
+procedure TSesionPreviewExcelMto.AsignarNombreArchivo(
+  const ANombre: string);
+begin
+  FFormulario.DialogoGuardar.FileName := ANombre;
+end;
+
+procedure TSesionPreviewExcelMto.Mostrar;
+begin
+  FFormulario.ShowModal;
+end;
+
+class function TProveedorPreviewExcelMto.Crear(
+  AOwner: TComponent): TSesionPreviewExcel;
+begin
+  Result := TSesionPreviewExcelMto.Create(AOwner);
+end;
 
 procedure TfrmMtoPreviewExcel.actSalirExecute(Sender: TObject);
 begin
@@ -148,5 +208,11 @@ begin
   MaximizarVentana;
   Msg.Result := 0;
 end;
+
+initialization
+  TPreviewExcel.RegistrarProveedor(TProveedorPreviewExcelMto);
+
+finalization
+  TPreviewExcel.RegistrarProveedor(nil);
 
 end.

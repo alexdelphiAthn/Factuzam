@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataCaja                                                   }
 {    Tipo:       Data Module                                                   }
@@ -131,6 +131,7 @@ type
   TRellenarAtributosEvent = procedure(ASku: string) of object;
   TOnUpdateTotalEvent =
                      procedure(Sender: TObject; NuevoTotal: Currency) of object;
+  TRecalcularLineasEvent = procedure of object;
 
   TdmCajaOpe = class(TDataModule)
     cdsLineas:TClientDataSet;
@@ -155,6 +156,7 @@ type
     FOnRellenarArticulo:  TRellenarArticuloEvent;
     FOnRellenarAtributos: TRellenarAtributosEvent;
     FOnUpdateTotal: TOnUpdateTotalEvent;
+    FOnRecalcularLineas: TRecalcularLineasEvent;
     // Serie/numero reales de la ultima factura grabada por
     // GrabarFacturaSimplificada. La cola y la rectificativa Verifactu los
     // necesitan fiables: cdsCabecera puede quedar con SERIE_FAC='0'.
@@ -360,6 +362,9 @@ type
     property OnRellenarAtributos: TRellenarAtributosEvent
                                   read FOnRellenarAtributos
                                   write FOnRellenarAtributos;
+    property OnRecalcularLineas: TRecalcularLineasEvent
+                                 read FOnRecalcularLineas
+                                 write FOnRecalcularLineas;
     property UltSerieFacturaGrabada:  string read FUltSerieFacGrabada;
     property UltNumeroFacturaGrabada: string read FUltNumeroFacGrabada;
     function SiguienteOpCaja(AEmpresa,
@@ -423,7 +428,6 @@ implementation
 
 uses inLibtb,
      inLibData,
-     inMtoCajaOpe,
      inLibDevExp,
      inLibFacturas,
      inLibVerifactu,
@@ -715,12 +719,9 @@ begin
     finally
       cdsLineas.EnableControls;
     end;
-    // GridRecalc UNA SOLA VEZ al final, fuera del bucle
-    GridRecalc(FConexion, nil,
-               (Owner as TfrmMtoOpeCaja).tvLineasOpe,
-               cdsLineas,
-               cdsCabecera,
-               OnUpdateTotal);
+    // Recalculo UNA SOLA VEZ al final, fuera del bucle.
+    if Assigned(FOnRecalcularLineas) then
+      FOnRecalcularLineas;
   finally
     FreeAndNil(QryDep);
   end;
@@ -2169,11 +2170,8 @@ procedure TdmCajaOpe.cdsLineasAfterDelete(DataSet: TDataSet);
 begin
   if not DataSet.ControlsDisabled then
   begin
-    GridRecalc(FConexion, nil,
-             (Owner as TfrmMtoOpeCaja).tvLineasOpe,
-             cdsLineas,
-             cdsCabecera,
-             OnUpdateTotal);
+    if Assigned(FOnRecalcularLineas) then
+      FOnRecalcularLineas;
   end;
 end;
 
@@ -2231,11 +2229,8 @@ if not DataSet.ControlsDisabled then
     // 1. Desenganchamos el evento para evitar el bucle infinito
     cdsLineas.AfterPost := nil;
     try
-      GridRecalc(FConexion, nil,
-                 (Owner as TfrmMtoOpeCaja).tvLineasOpe,
-                 cdsLineas,
-                 cdsCabecera,
-                 OnUpdateTotal);
+      if Assigned(FOnRecalcularLineas) then
+        FOnRecalcularLineas;
     finally
       // 2. Lo volvemos a enganchar al terminar
       cdsLineas.AfterPost := cdsLineasAfterPost;

@@ -65,6 +65,25 @@ uses
   inLibPerfilesUsuarioIntf;
 
 type
+  TEjecutorPermisoLayout = class
+  public
+    class function Solicitar(const AFormKey, ADescripcion: string;
+                             out APermisos: string): Boolean;
+                             virtual; abstract;
+  end;
+
+  TClaseEjecutorPermisoLayout = class of TEjecutorPermisoLayout;
+
+  TSolicitudPermisoLayout = class
+  private
+    class var FClaseEjecutor: TClaseEjecutorPermisoLayout;
+  public
+    class procedure RegistrarEjecutor(
+      AClase: TClaseEjecutorPermisoLayout);
+    class function Solicitar(const AFormKey, ADescripcion: string;
+                             out APermisos: string): Boolean;
+  end;
+
   // ---------------------------------------------------------------------------
   // Lee perfil al construirse, ofrece métodos Restaurar*
   // ---------------------------------------------------------------------------
@@ -133,8 +152,25 @@ implementation
 
 uses
   Vcl.Dialogs,
-  inLibLog, inLibtb, inMtoModalGenImpSave,
+  inLibLog, inLibtb,
   cxGridDBDataDefinitions;
+
+class procedure TSolicitudPermisoLayout.RegistrarEjecutor(
+  AClase: TClaseEjecutorPermisoLayout);
+begin
+  FClaseEjecutor := AClase;
+end;
+
+class function TSolicitudPermisoLayout.Solicitar(
+  const AFormKey, ADescripcion: string;
+  out APermisos: string): Boolean;
+begin
+  if not Assigned(FClaseEjecutor) then
+    raise Exception.Create(
+      'No se ha registrado el diálogo de permisos de layout.');
+  Result := FClaseEjecutor.Solicitar(
+    AFormKey, ADescripcion, APermisos);
+end;
 
 // =============================================================================
 // TLayoutLoader
@@ -333,40 +369,34 @@ end;
 // nada y devuelve False.
 function TLayoutSaver.PreguntarYGrabar(const ADescripcion: string): Boolean;
 var
-  formulario: TfrmModalGenImpSave;
   sPermisos: string;
   i: Integer;
   Lote: TPerfilList;
   Item: TPerfilItem;
 begin
   Result := False;
-  if FClaves.Count = 0 then Exit;
-  formulario := TfrmModalGenImpSave.Create(Application);
-  try
-    formulario.edtDescripcion.Enabled := False;
-    formulario.edtNombreOrigen.Text   := FFormKey;
-    formulario.edtDescripcion.Text    := ADescripcion;
-    formulario.ShowModal;
-    if formulario.sFicha <> 'S' then Exit;
-    sPermisos := formulario.cbbPermisos.Text;
-  finally
-    FreeAndNil(formulario);
-  end;
-  Lote := TPerfilList.Create;
-  try
-    for i := 0 to FClaves.Count - 1 do
+  if FClaves.Count > 0 then
+  begin
+    if TSolicitudPermisoLayout.Solicitar(
+      FFormKey, ADescripcion, sPermisos) then
     begin
-      Item.UserGroup := sPermisos;
-      Item.KeyPerfil := FFormKey;
-      Item.SubKey    := FClaves.Names[i];
-      Item.Value     := FClaves.ValueFromIndex[i];
-      Lote.Add(Item);
+      Lote := TPerfilList.Create;
+      try
+        for i := 0 to FClaves.Count - 1 do
+        begin
+          Item.UserGroup := sPermisos;
+          Item.KeyPerfil := FFormKey;
+          Item.SubKey    := FClaves.Names[i];
+          Item.Value     := FClaves.ValueFromIndex[i];
+          Lote.Add(Item);
+        end;
+        FPerfilesUsuario.GrabarPerfiles(Lote);
+      finally
+        FreeAndNil(Lote);
+      end;
+      Result := True;
     end;
-    FPerfilesUsuario.GrabarPerfiles(Lote);
-  finally
-    FreeAndNil(Lote);
   end;
-  Result := True;
 end;
 
 // =============================================================================
@@ -377,26 +407,17 @@ function ResetearLayout(
   const AFormKey: string;
   const APerfilesUsuario: IPerfilesUsuario): Boolean;
 var
-  formulario: TfrmModalGenImpSave;
   sPermisos: string;
 begin
   Result := False;
-  formulario := TfrmModalGenImpSave.Create(Application);
-  try
-    formulario.edtNombreOrigen.Text := AFormKey;
-    formulario.edtDescripcion.Enabled := False;
-    formulario.edtDescripcion.Text := 'Resetear Layout';
-    formulario.ShowModal;
-    if formulario.sFicha <> 'S' then
-      Exit;
-    sPermisos := formulario.cbbPermisos.Text;
-  finally
-    FreeAndNil(formulario);
+  if TSolicitudPermisoLayout.Solicitar(
+    AFormKey, 'Resetear Layout', sPermisos) then
+  begin
+    APerfilesUsuario.EliminarPerfil(sPermisos, AFormKey);
+    ShowMessage('Layout reseteado.' + sLineBreak +
+                'Se aplicará la próxima vez que abra el formulario.');
+    Result := True;
   end;
-  APerfilesUsuario.EliminarPerfil(sPermisos, AFormKey);
-  ShowMessage('Layout reseteado.' + sLineBreak +
-              'Se aplicará la próxima vez que abra el formulario.');
-  Result := True;
 end;
 
 end.

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibColumnasSkuModoTallas                                    }
 {    Tipo:       Libreria                                                      }
@@ -43,6 +43,42 @@ uses
   inLibArticulosAtributosLookup, inLibAtributosPaleta;
 
 type
+  TParametrosDistribuidorTallas = record
+    Conexion: TUniConnection;
+    Usuario: string;
+    TablaCeldas: string;
+    CampoSerie: string;
+    CampoNumero: string;
+    CampoLinea: string;
+    CampoFila: string;
+    CampoAlmacen: string;
+    CampoAtributoValor: string;
+    CampoCantidad: string;
+    Serie: string;
+    Numero: string;
+    Linea: Integer;
+    IdConjuntoPivot: Integer;
+  end;
+
+  TEjecutorDistribuidorTallas = class
+  public
+    class function Ejecutar(
+      const AParametros: TParametrosDistribuidorTallas): Boolean;
+      virtual; abstract;
+  end;
+
+  TClaseEjecutorDistribuidorTallas = class of TEjecutorDistribuidorTallas;
+
+  TDistribuidorTallas = class
+  private
+    class var FClaseEjecutor: TClaseEjecutorDistribuidorTallas;
+  public
+    class procedure RegistrarEjecutor(
+      AClase: TClaseEjecutorDistribuidorTallas);
+    class function Ejecutar(
+      const AParametros: TParametrosDistribuidorTallas): Boolean;
+  end;
+
   // Valores / nombres de los 5 atributos posibles de una linea.
   TValoresAttrTallas = array[1..5] of string;
 
@@ -285,7 +321,22 @@ type
 implementation
 
 uses
-  inLibGlobalVar, inMtoModalDistribuidor;
+  inLibGlobalVar;
+
+class procedure TDistribuidorTallas.RegistrarEjecutor(
+  AClase: TClaseEjecutorDistribuidorTallas);
+begin
+  FClaseEjecutor := AClase;
+end;
+
+class function TDistribuidorTallas.Ejecutar(
+  const AParametros: TParametrosDistribuidorTallas): Boolean;
+begin
+  if not Assigned(FClaseEjecutor) then
+    raise Exception.Create(
+      'No se ha registrado el distribuidor de tallas por almacén.');
+  Result := FClaseEjecutor.Ejecutar(AParametros);
+end;
 
 type
   // Acceso a OnExit (protegido en TWinControl) de los editores in-place.
@@ -1485,7 +1536,7 @@ end;
 
 procedure TModoEntradaTallas.AbrirDistribuidorLinea;
 var
-  Modal: TfrmModalDistribuidor;
+  Parametros: TParametrosDistribuidorTallas;
   dsM: TDataSet;
   iLinea, iAc, idxRec: Integer;
 begin
@@ -1498,29 +1549,26 @@ begin
     if FConfig.Cds.State in [dsEdit, dsInsert] then
       FConfig.Cds.Post;
     dsM := FCfgTallas.SourceMaster.DataSet;
+    Parametros := Default(TParametrosDistribuidorTallas);
+    Parametros.Conexion := FConfig.Conexion;
+    Parametros.Usuario := FCfgTallas.Usuario;
+    Parametros.TablaCeldas := FCfgTallas.TablaCeldas;
+    Parametros.CampoSerie := FCfgTallas.FieldSerieCel;
+    Parametros.CampoNumero := FCfgTallas.FieldNumeroCel;
+    Parametros.CampoLinea := FCfgTallas.FieldLineaCel;
+    Parametros.CampoFila := FCfgTallas.FieldFilaCel;
+    Parametros.CampoAlmacen := FCfgTallas.FieldAlmacenCel;
+    Parametros.CampoAtributoValor := FCfgTallas.FieldAvPivotCel;
+    Parametros.CampoCantidad := FCfgTallas.FieldCantidadCel;
+    Parametros.Serie := dsM.FieldByName(
+      FCfgTallas.FieldSerieMaster).AsString;
+    Parametros.Numero := dsM.FieldByName(
+      FCfgTallas.FieldNumeroMaster).AsString;
+    Parametros.Linea := iLinea;
+    Parametros.IdConjuntoPivot := iAc;
     FDistribAbierto := True;
-    Modal := TfrmModalDistribuidor.Create(Application);
-    // Sin el caFree heredado: liberamos a mano en el finally.
-    Modal.OnClose := nil;
     try
-      // El distribuidor de sesiones, redirigido a la tabla de celdas
-      // de ESTE documento (parametrizacion nueva del modal).
-      Modal.ConfigurarCeldas(FCfgTallas.TablaCeldas,
-                             FCfgTallas.FieldSerieCel,
-                             FCfgTallas.FieldNumeroCel,
-                             FCfgTallas.FieldLineaCel,
-                             FCfgTallas.FieldFilaCel,
-                             FCfgTallas.FieldAlmacenCel,
-                             FCfgTallas.FieldAvPivotCel,
-                             FCfgTallas.FieldCantidadCel);
-      Modal.Preparar(FConfig.Conexion, FCfgTallas.Usuario,
-                     dsM.FieldByName(
-                       FCfgTallas.FieldSerieMaster).AsString,
-                     dsM.FieldByName(
-                       FCfgTallas.FieldNumeroMaster).AsString,
-                     iLinea, iAc);
-      Modal.ShowModal;
-      if Modal.Confirmado then
+      if TDistribuidorTallas.Ejecutar(Parametros) then
       begin
         // Mismo orden que PersistirCeldaActiva: totales de la linea y
         // recarga de sus celdas, con la carga como ultimo toque.
@@ -1532,7 +1580,6 @@ begin
           FCfgTallas.Grid.Site.Invalidate;
       end;
     finally
-      FreeAndNil(Modal);
       FDistribAbierto := False;
     end;
   end;

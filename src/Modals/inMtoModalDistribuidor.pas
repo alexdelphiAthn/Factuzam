@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalDistribuidor                                        }
 {    Tipo:       Formulario (Modal)                                            }
@@ -136,7 +136,46 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibLog;
+  inLibLog, inLibColumnasSkuModoTallas;
+
+type
+  TEjecutorDistribuidorTallasMto = class(TEjecutorDistribuidorTallas)
+  public
+    class function Ejecutar(
+      const AParametros: TParametrosDistribuidorTallas): Boolean;
+      override;
+  end;
+
+class function TEjecutorDistribuidorTallasMto.Ejecutar(
+  const AParametros: TParametrosDistribuidorTallas): Boolean;
+var
+  oFormulario: TfrmModalDistribuidor;
+begin
+  oFormulario := TfrmModalDistribuidor.Create(Application);
+  oFormulario.OnClose := nil;
+  try
+    oFormulario.ConfigurarCeldas(
+      AParametros.TablaCeldas,
+      AParametros.CampoSerie,
+      AParametros.CampoNumero,
+      AParametros.CampoLinea,
+      AParametros.CampoFila,
+      AParametros.CampoAlmacen,
+      AParametros.CampoAtributoValor,
+      AParametros.CampoCantidad);
+    oFormulario.Preparar(
+      AParametros.Conexion,
+      AParametros.Usuario,
+      AParametros.Serie,
+      AParametros.Numero,
+      AParametros.Linea,
+      AParametros.IdConjuntoPivot);
+    oFormulario.ShowModal;
+    Result := oFormulario.Confirmado;
+  finally
+    FreeAndNil(oFormulario);
+  end;
+end;
 
 procedure TfrmModalDistribuidor.FormCreate(Sender: TObject);
 begin
@@ -703,5 +742,12 @@ begin
   sFicha := 'N';
   PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
+
+initialization
+  TDistribuidorTallas.RegistrarEjecutor(
+    TEjecutorDistribuidorTallasMto);
+
+finalization
+  TDistribuidorTallas.RegistrarEjecutor(nil);
 
 end.

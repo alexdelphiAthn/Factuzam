@@ -31,7 +31,7 @@ uses
   inLibArqueo,
   inLibArqueoPersistencia,
   inLibFTicket,
-  inMtoPreviewTicket,
+  inLibPreviewTicket,
   inLibDir,
   inLibContextoSesionIntf,
   inLibParametrosIntf;

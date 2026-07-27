@@ -90,7 +90,16 @@ implementation
 
 uses
   SynPdf, inLibDir, Vcl.Imaging.PngImage, Vcl.Printers, System.IOUtils,
-  System.UITypes;
+  System.UITypes, inLibPreviewTicket;
+
+type
+  TEjecutorPreviewTicketMto = class(TEjecutorPreviewTicket)
+  public
+    class procedure Ejecutar(ATicket: TTicketTermico;
+                             const AComandos, ARutaPDF,
+                                   ANombreImpresora: string;
+                             ASoloPDF: Boolean); override;
+  end;
 
 const
   ANCHO_PAPEL_MM = 80;
@@ -109,6 +118,14 @@ const
   MARGEN_PAPEL_FINAL = 50;
   MARGEN_CRECIMIENTO_PAPEL = 500;
   ALTO_MINIMO_PREVIEW = 320;
+
+class procedure TEjecutorPreviewTicketMto.Ejecutar(
+  ATicket: TTicketTermico; const AComandos, ARutaPDF,
+  ANombreImpresora: string; ASoloPDF: Boolean);
+begin
+  ImprimirOPrevisualizarTicket(
+    ATicket, AComandos, ARutaPDF, ANombreImpresora, ASoloPDF);
+end;
 
 procedure TFormVisualizador.ReiniciarEstadoTicket;
 begin
@@ -1035,5 +1052,11 @@ begin
     ShowMessage('PNG guardado en: ' + SaveDialog1.FileName);
   end;
 end;
+
+initialization
+  TPreviewTicket.RegistrarEjecutor(TEjecutorPreviewTicketMto);
+
+finalization
+  TPreviewTicket.RegistrarEjecutor(nil);
 
 end.

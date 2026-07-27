@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalGenImpSave                                          }
 {    Tipo:       Formulario (Modal)                                            }
@@ -48,9 +48,40 @@ type
 implementation
 
 uses
-  inLibGlobalVar;
+  inLibGlobalVar, inLibLayoutForm;
+
+type
+  TEjecutorPermisoLayoutMto = class(TEjecutorPermisoLayout)
+  public
+    class function Solicitar(const AFormKey, ADescripcion: string;
+                             out APermisos: string): Boolean; override;
+  end;
 
 {$R *.dfm}
+
+class function TEjecutorPermisoLayoutMto.Solicitar(
+  const AFormKey, ADescripcion: string;
+  out APermisos: string): Boolean;
+var
+  oFormulario: TfrmModalGenImpSave;
+begin
+  Result := False;
+  APermisos := '';
+  oFormulario := TfrmModalGenImpSave.Create(Application);
+  try
+    oFormulario.edtNombreOrigen.Text := AFormKey;
+    oFormulario.edtDescripcion.Enabled := False;
+    oFormulario.edtDescripcion.Text := ADescripcion;
+    oFormulario.ShowModal;
+    if oFormulario.sFicha = 'S' then
+    begin
+      APermisos := oFormulario.cbbPermisos.Text;
+      Result := True;
+    end;
+  finally
+    FreeAndNil(oFormulario);
+  end;
+end;
 
 procedure TfrmModalGenImpSave.btnCancelarClick(Sender: TObject);
 begin
@@ -93,5 +124,12 @@ begin
     end;
   end;
 end;
+
+initialization
+  TSolicitudPermisoLayout.RegistrarEjecutor(
+    TEjecutorPermisoLayoutMto);
+
+finalization
+  TSolicitudPermisoLayout.RegistrarEjecutor(nil);
 
 end.

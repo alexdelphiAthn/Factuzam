@@ -64,9 +64,7 @@ implementation
 
 uses
   inLibVerifactu, inLibFormatoDocumento, inLibGenerarTicket,
-  // Previsualizador de tickets (ImprimirOPrevisualizarTicket). Unica
-  // dependencia inMto* viva de esta libreria; pendiente de extraer en B4.
-  inMtoPreviewTicket;
+  inLibPreviewTicket;
 
 // Función auxiliar para rellenar con ceros (LPAD)
 function LPAD(const AValue: string;

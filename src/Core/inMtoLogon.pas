@@ -184,12 +184,8 @@ var
   Respuesta: Integer;
 begin
   // Aquí podemos registrar el error en un log o preguntar al usuario
-  Respuesta := MessageDlg(
-    'Ocurrió un error ejecutando la siguiente sentencia:' + sLineBreak +
-    SQL + sLineBreak + sLineBreak +
-    'Detalle del error: ' + E.Message + sLineBreak + sLineBreak +
-    '¿Deseas ignorar el error y continuar con el script?',
-    mtError, [mbYes, mbNo], 0);
+  Respuesta := MessageDlg(Format(SErrorSentenciaScript, [SQL, E.Message]),
+                          mtError, [mbYes, mbNo], 0);
   if Respuesta = mrYes then
     // Ignora la sentencia fallida y continúa con la número 3
     Action := eaContinue
@@ -203,7 +199,7 @@ var
   unqryTestBD: TUniQuery;
   SqlScript: TUniScript; // <-- Declaramos el nuevo componente
 begin
-  sPass := InputBox('Introduzca password de la BBDD', '','');
+  sPass := InputBox(SSolicitudPassBBDD, '', '');
   ConstruirConexionConnect(ucConexion, edtUserBD.Text,
     sPass,
     edtHostName.Text,
@@ -251,7 +247,7 @@ begin
       SqlScript.Execute;
 
       Log.LogInfo('El script se ejecutó exitosamente');
-      ShowMessage('El script se ejecutó exitosamente');
+      ShowMessage(SScriptEjecutado);
     finally
       FreeAndNil(SqlScript);
     end;
@@ -259,7 +255,7 @@ begin
   else
   begin
     Log.LogInfo('El script no fue ejecutado');
-    ShowMessage('El script no fue ejecutado');
+    ShowMessage(SScriptNoEjecutado);
   end;
 
   FreeAndNil(unqryTestBD);
@@ -328,9 +324,7 @@ begin
     begin
       inliblog.Log.LogError('Fallo al conectar al servidor MySQL: ' +
                             E.ClassName + ': ' + E.Message);
-      ShowMessage('No se pudo conectar al servidor MySQL/MariaDB:' +
-                  sLineBreak + E.Message + sLineBreak + sLineBreak +
-                  'Revise la configuración pulsando "Configurar BBDD".');
+      ShowMessage(Format(SErrorConexionServidorBBDD, [E.Message]));
       chkAuto.Checked := False;
       esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
       if not pnlBBDD.Visible then
@@ -346,9 +340,8 @@ begin
   begin
     inliblog.Log.LogError('Estructura BBDD no válida: ' +
                           CheckResult.FormattedMessage);
-    ShowMessage(CheckResult.FormattedMessage + sLineBreak + sLineBreak +
-                'Puede usar "Subir script" para crear/actualizar la ' +
-                'base de datos, o "Recuperar copia" para restaurar un backup.');
+    ShowMessage(Format(SErrorEstructuraBBDD,
+                       [CheckResult.FormattedMessage]));
 
     // Desactivamos auto-login para no entrar en bucle
     chkAuto.Checked := False;
@@ -380,8 +373,8 @@ begin
     begin
       inliblog.Log.LogError('Fallo al conectar a ' + edtNomBD.Text + ': ' +
                             E.ClassName + ': ' + E.Message);
-      ShowMessage('No se pudo conectar a la base de datos "' +
-                  edtNomBD.Text + '":' + sLineBreak + E.Message);
+      ShowMessage(Format(SErrorConexionBBDD,
+                         [edtNomBD.Text, E.Message]));
       chkAuto.Checked := False;
       esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
       if not pnlBBDD.Visible then
@@ -408,9 +401,7 @@ begin
       begin
         inliblog.Log.LogError('Fallo en auto-login: ' +
                               E.ClassName + ': ' + E.Message);
-        ShowMessage('No se pudo completar el inicio automático:' +
-                    sLineBreak + E.Message + sLineBreak + sLineBreak +
-                    'Introduzca sus credenciales manualmente.');
+        ShowMessage(Format(SErrorInicioAutomatico, [E.Message]));
         chkAuto.Checked := False;
         esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
         if tbUsers.Active then
@@ -453,9 +444,7 @@ begin
       begin
         inliblog.Log.LogError('Fallo al conectar al servidor MySQL: ' +
                               E.ClassName + ': ' + E.Message);
-        ShowMessage('No se pudo conectar al servidor MySQL/MariaDB:' +
-                    sLineBreak + E.Message + sLineBreak + sLineBreak +
-                    'Revise la configuración pulsando "Configurar BBDD".');
+        ShowMessage(Format(SErrorConexionServidorBBDD, [E.Message]));
         chkAuto.Checked := False;
         esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
         if not pnlBBDD.Visible then
@@ -469,10 +458,8 @@ begin
       begin
         inliblog.Log.LogError('Estructura BBDD no válida: ' +
                               CheckResult.FormattedMessage);
-        ShowMessage(CheckResult.FormattedMessage + sLineBreak + sLineBreak +
-                    'Puede usar "Subir script" para crear/actualizar la ' +
-                    'base de datos, o "Recuperar copia" para restaurar un ' +
-                    'backup.');
+        ShowMessage(Format(SErrorEstructuraBBDD,
+                           [CheckResult.FormattedMessage]));
         chkAuto.Checked := False;
         esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
         if not pnlBBDD.Visible then
@@ -498,8 +485,8 @@ begin
           begin
             inliblog.Log.LogError('Fallo al conectar a ' + edtNomBD.Text +
                                   ': ' + E.ClassName + ': ' + E.Message);
-            ShowMessage('No se pudo conectar a la base de datos "' +
-                        edtNomBD.Text + '":' + sLineBreak + E.Message);
+            ShowMessage(Format(SErrorConexionBBDD,
+                               [edtNomBD.Text, E.Message]));
             chkAuto.Checked := False;
             esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
             if not pnlBBDD.Visible then
@@ -556,11 +543,9 @@ begin
         oLicenciaAplicacionEstado := elaValida;
         oLicenciaAplicacionMensaje := 'Licencia establecida.';
         inliblog.Log.LogInfo('Licencia establecida. Código: ' + sCodigo);
-        ShowMessage('Licencia establecida.' + sLineBreak + sLineBreak +
-                    'Código: ' + sCodigo + sLineBreak +
-                    'NIF de empresa: ' + IntToStr(iNumeroNifs) + sLineBreak +
-                    'INI: ' + sRutaIni + sLineBreak + sLineBreak +
-                    Trim(sDetalleNifs));
+        ShowMessage(Format(SLicenciaEstablecida,
+                           [sCodigo, iNumeroNifs, sRutaIni,
+                            Trim(sDetalleNifs)]));
       end
       else
       begin
@@ -569,19 +554,14 @@ begin
         oLicenciaAplicacionMensaje := 'No hay NIF de empresa configurado.';
         inliblog.Log.LogInfo(
           'No se establece licencia porque no hay NIF de empresa.');
-        ShowMessage('No se ha establecido licencia.' + sLineBreak +
-                    sLineBreak +
-                    'No hay NIF de empresa configurado.' + sLineBreak +
-                    'Mientras no haya NIF de empresa, no se exigirá ' +
-                    'licencia.');
+        ShowMessage(SLicenciaNoEstablecidaSinNif);
       end;
     except
       on E: Exception do
       begin
         oLicenciaAplicacionMensaje := E.Message;
         inliblog.Log.LogError('Error estableciendo licencia: ' + E.Message);
-        ShowMessage('No se pudo establecer la licencia.' + sLineBreak +
-                    sLineBreak + E.Message);
+        ShowMessage(Format(SErrorEstablecerLicencia, [E.Message]));
       end;
     end;
   end
@@ -610,9 +590,7 @@ begin
         inliblog.Log.LogWarning('Aplicación en modo DEMO. ' + sMensaje);
         inliblog.Log.LogError('Código guardado: ' + sCodigoGuardado +
                               ' Código esperado: ' + sCodigoEsperado);
-        ShowMessage('Modo DEMO: limitado a ' +
-                    IntToStr(LIMITE_FACTURAS_DEMO_DIA) +
-                    ' facturas al día.');
+        ShowMessage(Format(SModoDemo, [LIMITE_FACTURAS_DEMO_DIA]));
       end;
     except
       on E: Exception do
@@ -623,9 +601,7 @@ begin
         inliblog.Log.LogError('Error validando licencia: ' + E.Message);
         inliblog.Log.LogWarning('Aplicación en modo DEMO por error ' +
                                 'validando licencia.');
-        ShowMessage('Modo DEMO: limitado a ' +
-                    IntToStr(LIMITE_FACTURAS_DEMO_DIA) +
-                    ' facturas al día.');
+        ShowMessage(Format(SModoDemo, [LIMITE_FACTURAS_DEMO_DIA]));
       end;
     end;
   end;
@@ -825,11 +801,8 @@ begin
   if FEnOperacionLarga then
   begin
     if FCancelaOperacionSolicitada then
-      ShowMessage('La cancelación ya está solicitada. Espere a que termine ' +
-                  'la sentencia actual.')
-    else if MessageDlg('Hay una operación en curso moviendo datos.' +
-                       sLineBreak + sLineBreak +
-                       '¿Desea abandonar la operación en curso?',
+      ShowMessage(SCancelacionSolicitada)
+    else if MessageDlg(SPreguntaCancelarOperacion,
                        mtWarning, [mbYes, mbNo], 0) = mrYes then
     begin
       FCancelaOperacionSolicitada := True;
@@ -880,17 +853,16 @@ begin
   FCancelaOperacionSolicitada := False;
   OcultarBarraProgreso;
   if bCancelada then
-    ShowMessage('Operación cancelada.')
+    ShowMessage(SOperacionCancelada)
   else if AExito then
   begin
     Log.LogInfo(edtUser.Text + ' Guardó copia exitosamente');
-    ShowMessage('La copia se guardó exitosamente');
+    ShowMessage(SCopiaSeguridadGuardada);
   end
   else
   begin
     Log.LogError('La copia falló: ' + AError);
-    ShowMessage('No se pudo crear la copia de seguridad.' +
-                sLineBreak + AError);
+    ShowMessage(Format(SErrorCrearCopiaSeguridad, [AError]));
   end;
 end;
 
@@ -908,8 +880,7 @@ begin
   begin
     if ALogBuffer <> nil then
       FreeAndNil(ALogBuffer);
-    ShowMessage('Operación cancelada. La base de datos puede haber quedado ' +
-                'parcialmente restaurada.');
+    ShowMessage(SRestauracionCancelada);
   end
   else
   begin
@@ -928,8 +899,7 @@ begin
     else
     begin
       Log.LogError('Error en restauración: ' + AError);
-      ShowMessage('Hubo problemas al restaurar la copia.' +
-                  sLineBreak + AError);
+      ShowMessage(Format(SErrorRestaurarCopiaSeguridad, [AError]));
     end;
   end;
 end;
@@ -954,8 +924,8 @@ begin
   begin
     if FileExists(savedialog.FileName) then
     begin
-      iButtonSel := MessageDlg('¿Desea reemplazar el fichero existente?',
-        mtCustom, [mbYes, mbNo], 0);
+      iButtonSel := MessageDlg(SPreguntaReemplazarFichero,
+                               mtCustom, [mbYes, mbNo], 0);
     end;
     if ((iButtonSel = mrYes) or (not FileExists(saveDialog.FileName))) then
     begin
@@ -979,7 +949,7 @@ begin
   else
   begin
     Log.LogError('La copia se canceló');
-    ShowMessage('La copia se canceló');
+    ShowMessage(SCopiaSeguridadCancelada);
   end;
 end;
 
@@ -1048,7 +1018,7 @@ begin
     Worker.Start;
   end
   else
-    ShowMessage('Se canceló la carga del script.');
+    ShowMessage(SCargaScriptCancelada);
 end;
 
 procedure TfrmLogon.btnTestClick(Sender: TObject);
@@ -1078,7 +1048,7 @@ begin
     if (Application.MessageBox(PWideChar(SWantDefChgBBDD),
                                PWideChar(SAdvMsg), MB_YESNO ) = ID_YES ) then
     begin
-      sNewPass := InputBox('Introduzca el nuevo password de la BBDD', '','');
+      sNewPass := InputBox(SSolicitudNuevoPassBBDD, '', '');
       qryCommand := TUniQuery.Create(nil);
       qryCommand.Connection := f;
       qryCommand.SQL.Text := 'FLUSH PRIVILEGES;';
@@ -1185,8 +1155,8 @@ begin
     end
     else if not ExisteUser(edtUser.Text, ucConexion) then
     begin
-      Log.LogError('El nombre de usuario no existe');
-      raise EInvalidUser.Create('El nombre de usuario no existe');
+      Log.LogError(SUsuarioNoExiste);
+      raise EInvalidUser.Create(SUsuarioNoExiste);
     end
     else if not LoginCorrecto(edtUser.Text, edtPass.Text, ucConexion) then
     begin

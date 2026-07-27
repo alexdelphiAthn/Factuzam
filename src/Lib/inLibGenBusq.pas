@@ -22,95 +22,79 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
       System.StrUtils, DCPrijndael, dcpbase64,DCPcrypt2, System.NetEncoding,
       inLibUser, Datasnap.Provider, Datasnap.DBClient, System.DateUtils,
       MidasLib,   Datasnap.Midas,   Soap.SOAPMidas, Datasnap.Win.MidasCon,
-      Dialogs, vcl.consts, inLibMsg, inMtoGenSearch;
+      Dialogs, vcl.consts, inLibMsg;
 
 
 type
-  TBusquedaUtils = class
+  TEjecutorBusqueda = class
   public
-  class function EjecutarBusqueda(AConexion: TUniConnection;
-                                const ACaption: string;
-                                ADataSet: TCustomDADataSet;
-                                const AName: String;
-                             AParentForm: TCustomForm = nil): Boolean; overload;
+    class function EjecutarBusqueda(AConexion: TUniConnection;
+                                    const ACaption: string;
+                                    ADataSet: TCustomDADataSet;
+                                    const AName: string;
+                                    AParentForm: TCustomForm = nil):
+                                    Boolean; overload; virtual; abstract;
+    class function EjecutarBusqueda(AConexion: TUniConnection;
+                                    const ACaption, ASql,
+                                          ACampoResultado: string;
+                                    out AValorDevuelto: string;
+                                    const AName: string;
+                                    AParentForm: TCustomForm = nil):
+                                    Boolean; overload; virtual; abstract;
+  end;
 
-  class function EjecutarBusqueda(AConexion: TUniConnection;
-                                const ACaption: string;
-                                const ASql: string;
-                                const CampoResultado: string;
-                                out ValorDevuelto: string;
-                                const AName: String;
-                                AParentForm: TCustomForm = nil
-                               ): Boolean; overload;
-end;
+  TClaseEjecutorBusqueda = class of TEjecutorBusqueda;
+
+  TBusquedaUtils = class
+  private
+    class var FClaseEjecutor: TClaseEjecutorBusqueda;
+  public
+    class procedure RegistrarEjecutor(AClase: TClaseEjecutorBusqueda);
+    class function EjecutarBusqueda(AConexion: TUniConnection;
+                                    const ACaption: string;
+                                    ADataSet: TCustomDADataSet;
+                                    const AName: string;
+                                    AParentForm: TCustomForm = nil):
+                                    Boolean; overload;
+    class function EjecutarBusqueda(AConexion: TUniConnection;
+                                    const ACaption, ASql,
+                                          ACampoResultado: string;
+                                    out AValorDevuelto: string;
+                                    const AName: string;
+                                    AParentForm: TCustomForm = nil):
+                                    Boolean; overload;
+  end;
 
 implementation
 
-class function TBusquedaUtils.EjecutarBusqueda(AConexion: TUniConnection;
-                                const ACaption: string;
-                                ADataSet: TCustomDADataSet;
-                                const AName: String;
-                             AParentForm: TCustomForm = nil): Boolean;
-var
-  formulario: TfrmMtoSearch;
+class procedure TBusquedaUtils.RegistrarEjecutor(
+  AClase: TClaseEjecutorBusqueda);
 begin
-  formulario := TfrmMtoSearch.Create(nil);
-  try
-    formulario.Caption := ACaption;
-    formulario.Name := AName;
-    if Assigned(AParentForm) then
-      formulario.PopupParent := AParentForm;
-    ADataSet.Connection := AConexion;
-    formulario.dsTablaG.DataSet := ADataSet;
-    if not ADataSet.Active then
-      ADataSet.Open;
-    formulario.ProcesarPerfiles;
-    formulario.ShowModal;
-    Result := (formulario.sFicha = 'S');
-  finally
-    FreeAndNil(formulario);
-  end;
+  FClaseEjecutor := AClase;
 end;
 
 class function TBusquedaUtils.EjecutarBusqueda(AConexion: TUniConnection;
-                                               const ACaption: string;
-                                               const ASql: string;
-                                               const CampoResultado: string;
-                                               out ValorDevuelto: string;
-                                               const AName: String;
-                                               AParentForm: TCustomForm = nil): Boolean;
-var
-  formulario: TfrmMtoSearch;
-  QueryTemp: TUniQuery;
+  const ACaption: string; ADataSet: TCustomDADataSet; const AName: string;
+  AParentForm: TCustomForm): Boolean;
 begin
-  Result := False;
-  formulario := TfrmMtoSearch.Create(nil);
-  QueryTemp := TUniQuery.Create(formulario);
-  try
-    formulario.Caption := ACaption;
-    formulario.Name := AName;
+  if not Assigned(FClaseEjecutor) then
+    raise Exception.Create(
+      'No se ha registrado el ejecutor de búsquedas genéricas.');
+  Result := FClaseEjecutor.EjecutarBusqueda(
+    AConexion, ACaption, ADataSet, AName, AParentForm);
+end;
 
-    // --- NUEVO: Asignar el PopupParent si se ha pasado como parámetro ---
-    if Assigned(AParentForm) then
-      formulario.PopupParent := AParentForm;
-    // --------------------------------------------------------------------
-
-    QueryTemp.Connection := AConexion;
-    QueryTemp.SQL.Text := ASql;
-    formulario.dsTablaG.DataSet := QueryTemp;
-    QueryTemp.Open;
-    formulario.ProcesarPerfiles;
-    formulario.ShowModal;
-
-    if ((formulario.sFicha = 'S') and (QueryTemp.RecordCount > 0)) then
-    begin
-      ValorDevuelto := QueryTemp.FieldByName(CampoResultado).AsString;
-      Result := True;
-    end;
-  finally
-    FreeAndNil(QueryTemp);
-    FreeAndNil(formulario);
-  end;
+class function TBusquedaUtils.EjecutarBusqueda(AConexion: TUniConnection;
+  const ACaption, ASql, ACampoResultado: string;
+  out AValorDevuelto: string; const AName: string;
+  AParentForm: TCustomForm): Boolean;
+begin
+  if not Assigned(FClaseEjecutor) then
+    raise Exception.Create(
+      'No se ha registrado el ejecutor de búsquedas genéricas.');
+  Result := FClaseEjecutor.EjecutarBusqueda(
+    AConexion, ACaption, ASql, ACampoResultado, AValorDevuelto, AName,
+    AParentForm);
 end;
 
 end.

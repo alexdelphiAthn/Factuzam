@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 27/07/2026 7:55:07
+-- Backup generado: 27/07/2026 12:36:46
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -6169,7 +6169,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 556, 3, 'S', 'S', '2026-07-27 07:54:25', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 557, 3, 'S', 'S', '2026-07-27 12:36:26', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 28, 2, 'S', 'S', '2026-07-07 08:17:26', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -21548,8 +21548,59 @@ SELECT COUNT(*) AS permisos_restantes
 --          (''Todos'',      ''menu.ArticulosPropiedades'', ''S''),
 --          (''Vendedores'', ''menu.ArticulosPropiedades'', ''N'');
 -- ============================================================================
-', '2026-07-27 07:54:25', '2026-07-27 07:54:25', 'Administrador', 'Administrador');
--- 85 registros exportados
+', '2026-07-27 07:54:25', '2026-07-27 07:54:25', 'Administrador', 'Administrador'),
+  ('556', 'limpiar_permisos_menu_huerfanos', '-- ============================================================================
+-- limpiar_permisos_menu_huerfanos.sql
+-- ----------------------------------------------------------------------------
+-- Quita filas huerfanas de fza_permisos cuyo CODIGO_PERM ''menu.<X>'' no
+-- corresponde ya a NINGUNA pantalla (CALL_WINF de fza_winforms) NI a ningun
+-- item de menu real de inMtoPrincipal.dfm.
+--
+-- Como se detecto (cruce en frio, 27/07/2026, pasada B2/B3):
+--   codigos ''menu.%'' de fza_permisos  ==  { menu.<CALL> }  U  { menu.<NombreItem> }
+--   Los unicos codigos que no casan con nada son:
+--     * menu.ArticulosPropiedades -> pantalla inexistente. Se limpia en su
+--       propio script: limpiar_winform_articulospropiedades.sql.
+--     * menu.mnuFormaPagoVenta    -> el item ''mnuFormaPagoVenta'' NO existe en
+--       el menu (solo aparece en src/Core/__history, era un item viejo
+--       renombrado/retirado) y tampoco es un CALL. La forma de pago viva es
+--       CALL=''FormasdePago'' (atajo Ctrl+Q) y el item ''Formasdepago2''
+--       (''Formas de pago documentos''). CodigoMenu() nunca genera este codigo
+--       y TienePermiso() nunca lo consulta: metadato muerto.
+--
+-- Al borrarlo NO se pierde control de acceso a ninguna pantalla real: el
+-- permiso de Formas de Pago sigue en ''menu.FormasdePago'' y ''menu.Formasdepago2''.
+--
+-- Idempotente (el segundo pase no borra nada). NO tocar factuzam_original.sql.
+-- Aplicar a las BBDD existentes (desarrollo y clientes) tras revisar el
+-- SELECT previo.
+-- ============================================================================
+-- 1) Comprobacion previa: mira que se va a borrar antes de lanzar el DELETE.
+SELECT ''permiso huerfano a borrar'' AS que, p.USUARIO_GRUPO_PERM,
+       p.CODIGO_PERM, p.VALOR_PERM, p.DESCRIPCION_PERM
+  FROM fza_permisos p
+ WHERE p.CODIGO_PERM = ''menu.mnuFormaPagoVenta'';
+-- 2) Borrado (idempotente). Cubre todos los usuarios/grupos con ese codigo.
+DELETE FROM fza_permisos
+ WHERE CODIGO_PERM = ''menu.mnuFormaPagoVenta'';
+-- 3) Verificacion: debe devolver 0.
+SELECT COUNT(*) AS filas_restantes
+  FROM fza_permisos
+ WHERE CODIGO_PERM = ''menu.mnuFormaPagoVenta'';
+-- ============================================================================
+-- ROLLBACK (solo si necesitas restaurar; normalmente NO hace falta). Los
+-- valores son los de la demo; en tu BBDD los grupos/usuarios pueden variar.
+-- ----------------------------------------------------------------------------
+-- INSERT INTO fza_permisos
+--   (USUARIO_GRUPO_PERM, CODIGO_PERM, VALOR_PERM, DESCRIPCION_PERM,
+--    INSTANTE_ALTA, USUARIO_ALTA)
+--   VALUES (''Alfredo'',    ''menu.mnuFormaPagoVenta'', ''S'', ''Formas de pago'',
+--           NOW(), ''Administrador''),
+--          (''Vendedores'', ''menu.mnuFormaPagoVenta'', ''N'', ''Formas de pago'',
+--           NOW(), ''Administrador'');
+-- ============================================================================
+', '2026-07-27 12:36:26', '2026-07-27 12:36:26', 'Administrador', 'Administrador');
+-- 86 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -24235,7 +24286,6 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
   ('Alfredo', 'menu.mnuCajaParam', 'S', 'Parámetros de Caja', NULL, '2026-07-02 17:18:11', 'Administrador', NULL),
   ('Alfredo', 'menu.mnuCrearArtculosyunpedidoounalbarn', 'S', 'Crear artículos y un pedido o un albarán', NULL, '2026-07-02 17:18:10', 'Administrador', NULL),
   ('Alfredo', 'menu.mnuEjecutarScript', 'S', 'Recuperar Copia de Seguridad', NULL, '2026-07-02 17:18:13', 'Administrador', NULL),
-  ('Alfredo', 'menu.mnuFormaPagoVenta', 'S', 'Formas de pago', NULL, '2026-07-02 17:18:15', 'Administrador', NULL),
   ('Alfredo', 'menu.mnuForoSoporte', 'S', 'Foro de soporte', NULL, '2026-07-02 17:18:13', 'Administrador', NULL),
   ('Alfredo', 'menu.mnuInvocarLogin', 'S', 'Invocar login', NULL, '2026-07-02 17:18:10', 'Administrador', NULL),
   ('Alfredo', 'menu.mnuListadoDocsProveedor', 'S', 'Listado de documentos proveedor', NULL, '2026-07-02 17:18:11', 'Administrador', NULL),
@@ -24497,9 +24547,9 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
   ('QATEST', 'RemesasVenta.excel', 'S', 'Exportar a Excel', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
   ('QATEST', 'RemesasVenta.imprimir', 'S', 'Imprimir informes', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
   ('QATEST', 'RemesasVenta.insertar', 'S', 'Alta de registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
-  ('QATEST', 'RemesasVenta.modificar', 'S', 'Modificar registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL);
+  ('QATEST', 'RemesasVenta.modificar', 'S', 'Modificar registros', NULL, '2026-07-23 17:23:44', 'Administrador', NULL),
+  ('Todos', 'accion.borrarRegistro', 'S', 'Borrar registros', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL);
 INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `DESCRIPCION_PERM`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES
-  ('Todos', 'accion.borrarRegistro', 'S', 'Borrar registros', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'accion.crearGuias', 'S', 'Crear guías de grid/informes', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'accion.exportarExcel', 'S', 'Exportar grid a Excel', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
   ('Todos', 'accion.grabarLayout', 'S', 'Guardar layout (Alt+F12)', NULL, '2026-05-27 06:43:17', 'SISTEMA', NULL),
@@ -24615,7 +24665,6 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
   ('Vendedores', 'menu.mnuCajaParam', 'N', 'Parámetros de Caja', NULL, '2026-06-02 20:15:25', 'Administrador', NULL),
   ('Vendedores', 'menu.mnuCrearArtculosyunpedidoounalbarn', 'N', 'Crear artículos y un pedido o un albarán', NULL, '2026-06-02 20:08:49', 'Administrador', NULL),
   ('Vendedores', 'menu.mnuEjecutarScript', 'N', 'Recuperar Copia de Seguridad', NULL, '2026-06-02 20:07:56', 'Administrador', NULL),
-  ('Vendedores', 'menu.mnuFormaPagoVenta', 'N', 'Formas de pago', NULL, '2026-06-02 20:08:41', 'Administrador', NULL),
   ('Vendedores', 'menu.mnuLisVentas', 'N', 'Ventas', NULL, '2026-06-02 20:08:45', 'Administrador', NULL),
   ('Vendedores', 'menu.mnuParmetrosdeEntorno', 'N', 'Parámetros del entorno', NULL, '2026-06-02 20:07:56', 'Administrador', NULL),
   ('Vendedores', 'menu.MovimientosAlmacen', 'N', 'Movimientos de almacén', NULL, '2026-06-02 19:50:24', 'Administrador', NULL),
@@ -24631,7 +24680,7 @@ INSERT INTO `fza_permisos` (`USUARIO_GRUPO_PERM`, `CODIGO_PERM`, `VALOR_PERM`, `
   ('Vendedores', 'menu.Usuarios', 'N', 'Usuarios', NULL, '2026-06-02 20:07:56', 'Administrador', NULL),
   ('Vendedores', 'menu.UsuariosPerfiles', 'N', 'Perfiles', NULL, '2026-06-02 20:07:56', 'Administrador', NULL),
   ('Vendedores', 'menu.Variaciones', 'N', 'Tipos de Variaciones', NULL, '2026-06-02 19:49:58', 'Administrador', NULL);
--- 632 registros exportados
+-- 630 registros exportados
 
 
 -- Tabla: fza_propiedades
@@ -25415,7 +25464,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-27 07:47:16', '2026-07-27 07:47:16', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-27 12:36:09', '2026-07-27 12:36:09', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Vendedores', 'S', '012', '2026-07-02 18:49:30', '2026-07-02 18:49:30', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1'),
   ('QATEST', '6E797DC797D26129DAE46F17A7255650', 'QA_PRUEBAS', 'S', NULL, '2026-07-24 19:49:59', '2026-07-24 19:49:59', '2026-07-23 17:18:45', 'Administrador', 'Administrador', NULL, NULL);
 -- 3 registros exportados
@@ -44710,4 +44759,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 27/07/2026 7:55:09
+-- Backup completado: 27/07/2026 12:36:48

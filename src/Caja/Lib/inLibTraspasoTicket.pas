@@ -21,7 +21,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Data.DB, Uni,
-  inLibFTicket, inMtoPreviewTicket, inLibDir;
+  inLibFTicket, inLibPreviewTicket, inLibDir;
 
 type
   TTraspasoTicket = class

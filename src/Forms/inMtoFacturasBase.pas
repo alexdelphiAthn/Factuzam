@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFacturasBase                                             }
 {    Tipo:       Formulario (Mto)                                              }
@@ -701,7 +701,6 @@ uses
   inLibFacturas,
   inLibGridCantidad,
   inLibFotos,
-  inLibDefaultValues,
   inLibArticulosValidador,
   inLibArticulosResolver,
   inMtoGenSearch,
@@ -2985,7 +2984,6 @@ begin
                                     'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
     dmmFacturas.unqryArtDataLinFac.ParamByName('FECHA_FAC').AsDateTime :=
                   dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
-    //      TLibDefaults.Configurar(formulario, esArticulo, True);
     if TBusquedaUtils.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de Artículos en Lineas de ' +

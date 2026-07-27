@@ -43,7 +43,7 @@ implementation
 
 uses
   Data.DB, DBAccess, Vcl.Dialogs,
-  inLibGlobalVar, inLibFTicket, inMtoPreviewTicket, inLibDir,
+  inLibGlobalVar, inLibFTicket, inLibPreviewTicket, inLibDir,
   inLibGenerarTicket;
 
 procedure ImprimirTicketOperacionCaja(

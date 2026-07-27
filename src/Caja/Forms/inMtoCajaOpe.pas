@@ -248,6 +248,7 @@ type
     function RellenarDatosArticuloEnDataset(Codigo: string): Boolean;
     procedure RecalcularPrecioDesdeSku(sSKU:string);
     procedure ActualizarLabelTotal(Sender: TObject; NuevoTotal: Currency);
+    procedure RecalcularLineasDesdeDM;
     procedure ConsultarStock(const CodigoInput: string);
     function  ValidarSkuParaVenta(const SkuFinal: string): Boolean;
     procedure EliminarLineaPorValidacion;
@@ -2777,6 +2778,17 @@ begin
   lblTotal.Caption := Format('Total %m', [NuevoTotal]);
 end;
 
+procedure TfrmMtoOpeCaja.RecalcularLineasDesdeDM;
+begin
+  GridRecalc(
+    ConexionPrincipal,
+    nil,
+    tvLineasOpe,
+    DatosCaja.cdsLineas,
+    DatosCaja.cdsCabecera,
+    ActualizarLabelTotal);
+end;
+
 procedure TfrmMtoOpeCaja.btnCodigoClienteExit(Sender: TObject);
 var
   Edit: TcxCustomEdit;
@@ -3944,6 +3956,7 @@ begin
   DatosCaja.OnUpdateTotal := ActualizarLabelTotal;
   DatosCaja.OnRellenarArticulo  := RellenarDatosArticuloEnDataset;
   DatosCaja.OnRellenarAtributos := RellenarAtributosDesdeSku;
+  DatosCaja.OnRecalcularLineas := RecalcularLineasDesdeDM;
   lblFechaCaja.OnDblClick := lblFechaCajaDblClick;
   tvEmpleado.Visible :=
     ParametrosCaja.GetBool('vgerShowEmpleadoLinea', True);

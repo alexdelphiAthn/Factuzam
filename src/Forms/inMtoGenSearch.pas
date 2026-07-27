@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoGenSearch                                                }
 {    Tipo:       Formulario (Mto)                                              }
@@ -84,7 +84,88 @@ var
 
 implementation
 
+uses
+  inLibGenBusq;
+
+type
+  TEjecutorBusquedaMto = class(TEjecutorBusqueda)
+  public
+    class function EjecutarBusqueda(AConexion: TUniConnection;
+                                    const ACaption: string;
+                                    ADataSet: TCustomDADataSet;
+                                    const AName: string;
+                                    AParentForm: TCustomForm = nil):
+                                    Boolean; overload; override;
+    class function EjecutarBusqueda(AConexion: TUniConnection;
+                                    const ACaption, ASql,
+                                          ACampoResultado: string;
+                                    out AValorDevuelto: string;
+                                    const AName: string;
+                                    AParentForm: TCustomForm = nil):
+                                    Boolean; overload; override;
+  end;
+
 {$R *.dfm}
+
+class function TEjecutorBusquedaMto.EjecutarBusqueda(
+  AConexion: TUniConnection; const ACaption: string;
+  ADataSet: TCustomDADataSet; const AName: string;
+  AParentForm: TCustomForm): Boolean;
+var
+  oFormulario: TfrmMtoSearch;
+begin
+  oFormulario := TfrmMtoSearch.Create(nil);
+  try
+    oFormulario.Caption := ACaption;
+    oFormulario.Name := AName;
+    if Assigned(AParentForm) then
+      oFormulario.PopupParent := AParentForm;
+    ADataSet.Connection := AConexion;
+    oFormulario.dsTablaG.DataSet := ADataSet;
+    if not ADataSet.Active then
+      ADataSet.Open;
+    oFormulario.ProcesarPerfiles;
+    oFormulario.ShowModal;
+    Result := oFormulario.sFicha = 'S';
+  finally
+    FreeAndNil(oFormulario);
+  end;
+end;
+
+class function TEjecutorBusquedaMto.EjecutarBusqueda(
+  AConexion: TUniConnection; const ACaption, ASql,
+  ACampoResultado: string; out AValorDevuelto: string;
+  const AName: string; AParentForm: TCustomForm): Boolean;
+var
+  oFormulario: TfrmMtoSearch;
+  qryTemporal: TUniQuery;
+begin
+  Result := False;
+  oFormulario := TfrmMtoSearch.Create(nil);
+  qryTemporal := TUniQuery.Create(oFormulario);
+  try
+    oFormulario.Caption := ACaption;
+    oFormulario.Name := AName;
+    if Assigned(AParentForm) then
+      oFormulario.PopupParent := AParentForm;
+    qryTemporal.Connection := AConexion;
+    qryTemporal.SQL.Text := ASql;
+    oFormulario.dsTablaG.DataSet := qryTemporal;
+    qryTemporal.Open;
+    oFormulario.ProcesarPerfiles;
+    oFormulario.ShowModal;
+    if ((oFormulario.sFicha = 'S') and
+        (qryTemporal.RecordCount > 0)) then
+    begin
+      AValorDevuelto := qryTemporal.FieldByName(
+        ACampoResultado).AsString;
+      Result := True;
+    end;
+  finally
+    FreeAndNil(qryTemporal);
+    FreeAndNil(oFormulario);
+  end;
+end;
 
 procedure TfrmMtoSearch.AddValorDefecto(const aCampo: string;
                                         const aValor: Variant);
@@ -462,5 +543,11 @@ begin
   else
     Result := aValor;
 end;
+
+initialization
+  TBusquedaUtils.RegistrarEjecutor(TEjecutorBusquedaMto);
+
+finalization
+  TBusquedaUtils.RegistrarEjecutor(nil);
 
 end.

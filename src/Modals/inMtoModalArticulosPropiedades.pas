@@ -1,7 +1,7 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:       inLibArticulosPropiedades                                     }
-{    Tipo:       Librería                                                      }
+{  Módulo:       inMtoModalArticulosPropiedades                                }
+{    Tipo:       Formulario (Modal)                                            }
 { Versión:       1.0.0                                                         }
 {   Fecha:       11/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
@@ -12,7 +12,7 @@
 {    Gestión dinámica de propiedades de artículo.                              }
 {    Inyecta controles en la pestaña de propiedades y persiste sus valores.    }
 {******************************************************************************}
-unit inLibArticulosPropiedades;
+unit inMtoModalArticulosPropiedades;
 
 {
   Unidad: inLibArticuloPropiedades

@@ -135,8 +135,8 @@ uses
   Vcl.Forms,
   dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetGraphics,
   dxSpreadSheetTypes, dxSpreadSheetStyles, dxHashUtils,
-  inMtoPreviewTicket, inLibDir, inLibFormatoDocumento, inLibVerifactu,
-  inMtoPreviewExcel, inLibDevExcel;
+  inLibPreviewTicket, inLibDir, inLibFormatoDocumento, inLibVerifactu,
+  inLibPreviewExcel, inLibDevExcel;
 
 // =============================================================================
 //   Helpers de formato
@@ -1018,7 +1018,7 @@ const
   cCOB   = 8;
   cPEN   = 9;
 var
-  Frm: TfrmMtoPreviewExcel;
+  oPreview: TSesionPreviewExcel;
   Sheet: TdxSpreadSheetTableView;
   Ope: TUniQuery;
   r, i: Integer;
@@ -1329,11 +1329,12 @@ begin
   nGas := 0;
   nDep := 0;
   bVerCoste := AValorarTraspasos;
-  Frm := TfrmMtoPreviewExcel.Create(AOwner);
+  oPreview := TPreviewExcel.Crear(AOwner);
   try
-    if Frm.dxSpreadSheet1.SheetCount = 0 then
-      Frm.dxSpreadSheet1.AddSheet('Tira de Caja', TdxSpreadSheetTableView);
-    Sheet := Frm.dxSpreadSheet1.ActiveSheetAsTable;
+    if oPreview.HojaCalculo.SheetCount = 0 then
+      oPreview.HojaCalculo.AddSheet(
+        'Tira de Caja', TdxSpreadSheetTableView);
+    Sheet := oPreview.HojaCalculo.ActiveSheetAsTable;
     if Sheet <> nil then
     begin
       Sheet.BeginUpdate;
@@ -1427,13 +1428,13 @@ begin
         Sheet.EndUpdate;
       end;
       if AOwner is TForm then
-        Frm.PopupParent := TForm(AOwner);
-      Frm.DialogoGuardar.FileName := 'TiraCaja_' +
-        FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
-      Frm.ShowModal;
+        oPreview.AsignarPopupParent(TForm(AOwner));
+      oPreview.AsignarNombreArchivo('TiraCaja_' +
+        FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now));
+      oPreview.Mostrar;
     end;
   finally
-    FreeAndNil(Frm);
+    FreeAndNil(oPreview);
   end;
 end;
 

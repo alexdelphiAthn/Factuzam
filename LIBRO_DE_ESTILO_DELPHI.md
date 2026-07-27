@@ -29,6 +29,7 @@ este cubre el código Pascal / Delphi que lo consume.
 7. **Todos los dfm se guardan como utf8 con BOM**, y también los pas y dpr.
 8. **Acentos dentro de dfm y pas se ponen nativos áéñ y no como ansi (old legacy)**.
 9. **Los finales de linea siempre son CRLF y no LF**, estamos programando en windows.
+10.**No generar hints ni warnings**, mantener limpia la compilación.
 ---
 
 ## 2. Estructura de directorios
@@ -718,12 +719,25 @@ Estas son convenciones que ya están en el código y que conviene
 ✗  Mezclar tabs y espacios (solo espacios)
 ✗  Mensajes de UI en inglés
 ✗  Variables globales fuera de inLibGlobalVar
+✗  Unidades inLib* o UniData* usando unidades inMto*
 ✗  uses circulares — romper moviendo a uses de implementation
 ✗  Nombres de unidad con tilde o eñe en el fichero
 ✗  TForm con código de negocio: la lógica va a inLib*
 ✗  Llamar a inherited al final del handler; va al principio
 ✗  Acceder a campos privados (F*) de otra clase
 ```
+
+La capa inferior no conoce formularios concretos. Si una librería o un data
+module necesita una operación visual, se invierte la dependencia mediante una
+interfaz, un callback explícito o un ejecutor registrado por la capa `inMto*`.
+La comprobación automática se ejecuta desde la raíz del repositorio:
+
+```powershell
+.\scripts\comprobar_dependencias_capas.ps1
+```
+
+El script falla ante cualquier dependencia de este tipo. No se mantienen
+excepciones ni listas blancas.
 
 ---
 
