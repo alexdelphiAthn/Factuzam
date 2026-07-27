@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataInventarios                                            }
 {    Tipo:       Data Module                                                   }
@@ -235,7 +235,8 @@ uses
   inLibUser,            // Usuario logueado
   inLibLog,             // Log.LogInfo para metricas
   inLibData,
-  UniDataConn;
+  UniDataConn,
+  inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -590,10 +591,7 @@ begin
   // ese vacio, que despues hace reventar el TClientDataSet en Post con
   // un cryptico "Field value required" desde DSBase / MidasLib.
   if Trim(DataSet.FieldByName('SERIE_INV').AsString) = '' then
-    raise Exception.Create(
-      'No se puede grabar el inventario sin una serie. Selecciona una ' +
-      'serie en la cabecera (campo SERIE), o configura una serie por ' +
-      'defecto de tipo IN para la empresa en fza_empresas_series.');
+    raise Exception.Create(SErrorSerieInventarioObligatoria);
   // Forzamos campos de auditoría
   if DataSet.State = dsInsert then
   begin
@@ -695,16 +693,11 @@ var
 begin
   Result := '';
   if not FColumnaContadorLineas then
-    raise Exception.Create(
-      'No se puede reservar la linea del inventario: falta la columna ' +
-      'fza_inventarios.CONTADOR_LINEAS_INV. Ejecuta el script ' +
-      'DESARROLLOS EN CURSO\inventarios_contador_lineas.sql.');
+    raise Exception.Create(SErrorContadorLineasInventarioNoInstalado);
   if (Trim(FCodigoEmpresa) = '') or (Trim(FCodigoAlmacen) = '') or
      (Trim(FSerie) = '') or (Trim(FNumero) = '') or
      (Trim(FNumero) = '0') then
-    raise Exception.Create(
-      'No se puede reservar la linea: graba primero la cabecera del ' +
-      'inventario para tener empresa, almacen, serie y numero definitivos.');
+    raise Exception.Create(SErrorCabeceraInventarioSinGrabarParaReserva);
   bTransPropia := not ConexionPrincipal.InTransaction;
   if bTransPropia then
     ConexionPrincipal.StartTransaction;
@@ -727,9 +720,7 @@ begin
       qry.ParamByName('NUMERO').AsString := FNumero;
       qry.Open;
       if qry.Eof then
-        raise Exception.Create(
-          'No se ha encontrado la cabecera del inventario para reservar ' +
-          'la siguiente linea.');
+        raise Exception.Create(SErrorCabeceraInventarioNoEncontrada);
       iNuevaLinea := qry.FieldByName('NV').AsInteger + 1;
       qry.Close;
       qry.SQL.Text :=
@@ -746,8 +737,7 @@ begin
       qry.ParamByName('NUMERO').AsString := FNumero;
       qry.ExecSQL;
       if qry.RowsAffected = 0 then
-        raise Exception.Create(
-          'No se ha podido actualizar el contador de lineas del inventario.');
+        raise Exception.Create(SErrorActualizarContadorLineasInventario);
       if bTransPropia and ConexionPrincipal.InTransaction then
         ConexionPrincipal.Commit;
       Result := Format('%.4d', [iNuevaLinea]);
@@ -999,21 +989,13 @@ begin
   // EDBClient 'Field value required' generico antes incluso de mandar
   // nada a la BBDD. Cazamos cada caso aqui con un mensaje claro.
   if Trim(DataSet.FieldByName('CODIGO_EMP_INVLIN').AsString) = '' then
-    raise Exception.Create(
-      'La cabecera del inventario no tiene empresa. Selecciona una ' +
-      'empresa antes de anadir lineas.');
+    raise Exception.Create(SErrorEmpresaCabeceraInventarioObligatoria);
   if Trim(DataSet.FieldByName('CODIGO_ALM_INVLIN').AsString) = '' then
-    raise Exception.Create(
-      'La cabecera del inventario no tiene almacen. Selecciona un ' +
-      'almacen antes de anadir lineas.');
+    raise Exception.Create(SErrorAlmacenCabeceraInventarioObligatorio);
   if Trim(DataSet.FieldByName('SERIE_INV_INVLIN').AsString) = '' then
-    raise Exception.Create(
-      'La cabecera del inventario no tiene serie. Vuelve a la pestana ' +
-      'Cabecera, selecciona una serie y vuelve a intentar grabar la linea.');
+    raise Exception.Create(SErrorSerieCabeceraInventarioObligatoria);
   if Trim(DataSet.FieldByName('NUMERO_INV_INVLIN').AsString) = '' then
-    raise Exception.Create(
-      'La cabecera del inventario no tiene numero. Graba primero la ' +
-      'cabecera para que el sistema asigne el numero.');
+    raise Exception.Create(SErrorNumeroCabeceraInventarioObligatorio);
 
   // Linea sin articulo: cancelar silenciosamente en vez de lanzar
   // excepcion. El cxGrid hace Post automatico al navegar con las
@@ -1067,10 +1049,7 @@ begin
       Valor := Trim(DataSet.FieldByName('ATTR' + IntToStr(i) +
                                                           '_VALOR').AsString);
       if Valor = '' then
-        raise Exception.CreateFmt(
-          'La línea %s del artículo %s requiere %d atributos y el atributo ' +
-          'nº %d está sin rellenar. Completa todos los selectores ' +
-          '(Color, Talla, …) o elimina la línea.',
+        raise Exception.CreateFmt(SErrorAtributoLineaInventarioObligatorio,
           [DataSet.FieldByName('LINEA_INVLIN').AsString,
            CodArticulo, NumAtr, i]);
       SkuRebuilt := SkuRebuilt + '/' + Valor;
@@ -1089,19 +1068,9 @@ begin
   if (CodSku <> CodArticulo) and (not SkuExiste(CodSku)) then
   begin
     if MessageDlg(
-         Format(
-           'El SKU "%s" no existe en la base de datos.'#13#10#13#10 +
-           '¿Quieres crearlo automáticamente con los atributos seleccionados ' +
-           'y guardar la línea?'#13#10#13#10 +
-           'Sí: se crea el SKU (fza_articulos_skus + fza_atributos_sku) y ' +
-           'se graba la línea.'#13#10 +
-           'No: no se graba. Cambia los atributos a una combinación válida ' +
-           'o pulsa "- Eliminar línea".',
-           [CodSku]),
+         Format(SPreguntaCrearSkuInventario, [CodSku]),
          mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
-      raise Exception.CreateFmt(
-        'SKU "%s" no existe. La línea no se ha grabado. Cambia los ' +
-        'atributos o elimina la línea.', [CodSku]);
+      raise Exception.CreateFmt(SErrorSkuInventarioNoExiste, [CodSku]);
 
     for i := 0 to 4 do
       Atribs[i] := DataSet.FieldByName('ATTR' + IntToStr(i + 1) +
@@ -1124,8 +1093,7 @@ end;
 procedure TdmInventarios.cdsLineasBeforeDelete(DataSet: TDataSet);
 begin
   if GetEstadoInventario <> 'ABIERTO' then
-    raise Exception.Create(
-      'No se pueden eliminar líneas: el inventario no está ABIERTO');
+    raise Exception.Create(SErrorEliminarLineasInventarioNoAbierto);
 end;
 
 procedure TdmInventarios.cdsLineasBeforeInsert(DataSet: TDataSet);
@@ -1150,12 +1118,8 @@ begin
     except
       on E: Exception do
       begin
-        raise Exception.Create(
-          'No se puede a' + #241 + 'adir una l' + #237 + 'nea: ' +
-          'la cabecera del inventario no se ha podido grabar.' + sLineBreak +
-          E.Message + sLineBreak +
-          'Completa los datos obligatorios de la cabecera y vuelve a ' +
-          'intentarlo.');
+        raise Exception.Create(Format(SErrorAnadirLineaCabeceraInventario,
+                                      [E.Message]));
       end;
     end;
     SetClavesActivas(
@@ -1184,8 +1148,7 @@ end;
 procedure TdmInventarios.RecalcularTeorico;
 begin
   if GetEstadoInventario <> 'ABIERTO' then
-    raise Exception.Create(
-      'Solo se puede recalcular un inventario en estado ABIERTO');
+    raise Exception.Create(SErrorRecalcularInventarioNoAbierto);
 
   // Aseguramos que cualquier cambio pendiente se persiste antes de llamar al
   // SP. Si la linea recien insertada esta incompleta (sin articulo picado)
@@ -1221,8 +1184,7 @@ end;
 procedure TdmInventarios.PreAplicarValidaciones;
 begin
   if GetEstadoInventario <> 'ABIERTO' then
-    raise Exception.Create(
-      'Solo se puede aplicar un inventario en estado ABIERTO');
+    raise Exception.Create(SErrorAplicarInventarioNoAbierto);
 
   // Post defensivo + ApplyUpdates: vuelca cambios pendientes del cdsLineas
   // (buffer cliente) a BBDD via el provider. Debe correr en main thread
@@ -1248,9 +1210,7 @@ begin
   // ningún movimiento, y cualquier línea con diferencia 0 se purga al
   // entrar en la SP, dejando un inventario vacío y aplicado.
   if (not cdsLineas.Active) or cdsLineas.IsEmpty then
-    raise Exception.Create(
-      'No se puede aplicar un inventario sin líneas. Añade al menos una ' +
-      'línea con diferencia de cantidad o de coste antes de regularizar.');
+    raise Exception.Create(SErrorAplicarInventarioSinLineas);
 end;
 
 procedure TdmInventarios.EjecutarSPAplicar;
@@ -1312,8 +1272,7 @@ end;
 procedure TdmInventarios.EliminarRegularizacion;
 begin
   if GetEstadoInventario <> 'APLICADO' then
-    raise Exception.Create(
-      'Solo se puede eliminar la regularización de un inventario APLICADO');
+    raise Exception.Create(SErrorEliminarRegularizacionInventarioNoAplicado);
 
   unspEliminarRegul.Close;
   unspEliminarRegul.ParamByName('p_EMPRESA').AsString := FCodigoEmpresa;
@@ -1333,8 +1292,7 @@ var
   qry: TUniQuery;
 begin
   if GetEstadoInventario <> 'ABIERTO' then
-    raise Exception.Create(
-      'Solo se pueden cargar artículos en un inventario ABIERTO');
+    raise Exception.Create(SErrorCargarArticulosInventarioNoAbierto);
 
   qry := TUniQuery.Create(nil);
   try
@@ -1400,8 +1358,7 @@ var
   qry: TUniQuery;
 begin
   if GetEstadoInventario <> 'ABIERTO' then
-    raise Exception.Create(
-      'Solo se pueden cargar artículos en un inventario ABIERTO');
+    raise Exception.Create(SErrorCargarArticulosInventarioNoAbierto);
 
   qry := TUniQuery.Create(nil);
   try
@@ -1466,8 +1423,7 @@ var
   qry: TUniQuery;
 begin
   if GetEstadoInventario <> 'ABIERTO' then
-    raise Exception.Create(
-      'Solo se pueden cargar artículos en un inventario ABIERTO');
+    raise Exception.Create(SErrorCargarArticulosInventarioNoAbierto);
 
   qry := TUniQuery.Create(nil);
   try
@@ -1532,7 +1488,7 @@ begin
   // estén ya en el inventario actual, asignándoles cantidad física = 0
   // (porque NO se han contado / son los que faltan).
   if GetEstadoInventario <> 'ABIERTO' then
-    raise Exception.Create('Solo se puede completar un inventario ABIERTO');
+    raise Exception.Create(SErrorCompletarInventarioNoAbierto);
 
   qry := TUniQuery.Create(nil);
   try
@@ -1608,11 +1564,9 @@ begin
   // Devuelve el número de líneas insertadas.
   Result := 0;
   if Trim(ACodigoArticulo) = '' then
-    raise Exception.Create(
-      'Debe indicar un artículo (la línea actual está vacía).');
+    raise Exception.Create(SErrorArticuloLineaInventarioObligatorio);
   if GetEstadoInventario <> 'ABIERTO' then
-    raise Exception.Create(
-      'Solo se pueden añadir SKUs en un inventario ABIERTO');
+    raise Exception.Create(SErrorAnadirSkusInventarioNoAbierto);
 
   qry := TUniQuery.Create(nil);
   try
@@ -1762,9 +1716,7 @@ begin
       begin
         qry.Close;
         raise Exception.CreateFmt(
-          'No se encontró el valor "%s" en el atributo nº %d del artículo %s. '
-            +
-          'No se ha podido crear el SKU %s.',
+          SErrorValorAtributoSkuInventarioNoEncontrado,
           [ValorAtrib, i + 1, ACodigoArticulo, ASku]);
       end;
       IdAv := qry.FieldByName('ID_AV').AsInteger;
@@ -1834,8 +1786,7 @@ begin
   // Cada línea de la lista debe tener: SKU;CANTIDAD_FISICA  (separador ; o tab)
   // O bien solo el SKU (cantidad física = 1)
   if GetEstadoInventario <> 'ABIERTO' then
-    raise Exception.Create(
-      'Solo se pueden cargar artículos en un inventario ABIERTO');
+    raise Exception.Create(SErrorCargarArticulosInventarioNoAbierto);
 
   qry := TUniQuery.Create(nil);
   try

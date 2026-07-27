@@ -369,7 +369,7 @@ uses
   System.Diagnostics,
   inMtoPrincipal, inMtoModalAddBlockInventario,
   // Factoria del contrato de entrada (prueba ColumnSKUcxGrid).
-  inLibColumnasSku;
+  inLibColumnasSku, inLibColumnasDocumento;
 
 {$R *.dfm}
 
@@ -886,18 +886,11 @@ begin
     dmmInventarios.DesempaquetarAlCargar := True;
     AsegurarDesempaquetadoAtributos;
   end;
-  Cfg := Default(TConfigColumnasSku);
-  Cfg.Conexion := ConexionPrincipal;
-  Cfg.ContextoSesion := ContextoSesion;
-  Cfg.View := tvLineas;
-  Cfg.Cds := dmmInventarios.cdsLineas;
-  Cfg.Modo := FModoEntradaSel;
-  Cfg.AlmacenStock :=
-    dsTablaG.DataSet.FieldByName('CODIGO_ALM_INV').AsString;
-  Cfg.Distribuido := False;
-  Cfg.Campos.CodigoArt := 'CODIGO_ART_INVLIN';
-  Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_INVLIN';
-  Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_INVLIN';
+  Cfg := CrearConfigColumnasSkuDocumento(
+    ConexionPrincipal, ContextoSesion, tvLineas,
+    dmmInventarios.cdsLineas, FModoEntradaSel,
+    dsTablaG.DataSet.FieldByName(
+      'CODIGO_ALM_INV').AsString, 'INVLIN');
   Cfg.Campos.Cantidad := 'CANTIDAD_FISICA_INVLIN';
   // El almacen es de CABECERA en inventario: sin columna de linea.
   Cfg.Campos.Almacen := '';
@@ -983,46 +976,14 @@ end;
 
 procedure TfrmMtoInventarios.MostrarColumnasAtributoGlobales;
 var
-  Qry: TUniQuery;
   i, j, iAncho: Integer;
-  iOrden: Integer;
   Col: TcxGridColumn;
   cds: TDataSet;
   Bm: TBookmark;
   AnchoMax: array[1..5] of Integer;
 begin
-  // Nombres globales de atributos (mismo origen que el mapa de la
-  // paleta), ordenados. Al resolver un articulo, la controladora
-  // re-rotula/oculta segun SUS atributos. Copiado del banco de
-  // pruebas ColumnSKUcxGrid.
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := ConexionPrincipal;
-    Qry.SQL.Text :=
-      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
-      '       MIN(ORDEN_VA) AS ORDEN' +
-      '  FROM fza_variaciones_atributos' +
-      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
-      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
-    Qry.Open;
-    iOrden := 1;
-    while (not Qry.Eof) and (iOrden <= 5) do
-    begin
-      for i := 0 to tvLineas.ColumnCount - 1 do
-      begin
-        Col := tvLineas.Columns[i];
-        if Col.Tag = iOrden then
-        begin
-          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
-          Col.Visible := True;
-        end;
-      end;
-      Inc(iOrden);
-      Qry.Next;
-    end;
-  finally
-    FreeAndNil(Qry);
-  end;
+  MostrarColumnasAtributoGlobalesDocumento(
+    ConexionPrincipal, tvLineas);
   // Ancho segun el VALOR mas largo cargado + margen del swatch (44 =
   // cuadrado 18 + separacion 6 + margenes 10 + aire 10): AZUL_CIELO
   // quedaba ilegible con el ancho por defecto. Solo crece, como en el
@@ -1303,16 +1264,14 @@ end;
 procedure TfrmMtoInventarios.actIraArticuloExecute(Sender: TObject);
 begin
   inherited;
-   if (pcDetail.ActivePage = tsDetalle) then
-      with tvLineas.DataController.DataSet do
-  ShowMto(Self.Owner,
-          'Articulos',
-          FieldByName('CODIGO_ART_INVLIN').AsString)
+  if pcDetail.ActivePage = tsDetalle then
+    ShowMtoCodigoDataSet(Self.Owner, 'Articulos',
+      tvLineas.DataController.DataSet,
+      'CODIGO_ART_INVLIN')
   else
-      with tvMovs.DataController.DataSet do
-  ShowMto(Self.Owner,
-          'Articulos',
-          FieldByName('CODIGO_ART_MOV').AsString);
+    ShowMtoCodigoDataSet(Self.Owner, 'Articulos',
+      tvMovs.DataController.DataSet,
+      'CODIGO_ART_MOV');
 end;
 
 procedure TfrmMtoInventarios.ActualizarColumnasDinamicas(

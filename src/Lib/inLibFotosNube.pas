@@ -74,7 +74,7 @@ uses
   System.IOUtils, System.StrUtils, System.JSON,
   System.Net.HttpClient, System.Net.URLClient, System.NetEncoding,
   System.Zip,
-  inLibFactuzamApi;
+  inLibFactuzamApi, inLibMsg;
 
 const
   cParDirFotos = 'appDirFotos';
@@ -90,17 +90,17 @@ begin
   faltan := TStringList.Create;
   try
     if TClienteFactuzamApi.UrlBase(AParametrosApp) = '' then
-      faltan.Add('  - URL general del servicio web');
+      faltan.Add(STextoParametroUrlFotosNube);
     if TClienteFactuzamApi.Token(AParametrosApp) = '' then
-      faltan.Add('  - API key / token de la instalación');
+      faltan.Add(STextoParametroTokenFotosNube);
     if TClienteFactuzamApi.Referencia(AParametrosApp) = '' then
-      faltan.Add('  - Referencia global de la instalación');
+      faltan.Add(STextoParametroReferenciaFotosNube);
     if Trim(AParametrosApp.GetPath(cParDirFotos)) = '' then
-      faltan.Add('  - Carpeta de fotos (appDirFotos)');
+      faltan.Add(STextoParametroCarpetaFotosNube);
     Result := faltan.Count = 0;
     if not Result then
-      AMensaje := 'Configura primero estos parámetros (Parámetros de la ' +
-                  'aplicación -> Servicios web):' + sLineBreak + faltan.Text;
+      AMensaje := Format(SErrorParametrosFotosNubeFaltantes,
+        [faltan.Text]);
   finally
     FreeAndNil(faltan);
   end;
@@ -163,7 +163,7 @@ begin
     FreeAndNil(texto);
   end;
   if Result = '' then
-    Result := Format('El servidor respondió con código %d.', [AStatus]);
+    Result := Format(SErrorServidorFotosNubeHttp, [AStatus]);
 end;
 
 function DescargarFotosArticulo(
@@ -205,8 +205,7 @@ begin
         resp := http.Get(sUrlFull, cuerpo);
       except
         on E: Exception do
-          AMensaje := 'No se pudo conectar con el servidor de fotos: ' +
-                      E.Message;
+          AMensaje := Format(SErrorConexionServidorFotosNube, [E.Message]);
       end;
       if resp <> nil then
       begin

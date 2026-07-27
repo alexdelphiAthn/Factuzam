@@ -436,8 +436,8 @@ begin
     // Un fallo del calculo no puede quedar silenciado: la linea se
     // grabaria con totales obsoletos o a cero. Se aborta la edicion.
     if not Totales.ProcesarFacturaCompleta then
-      raise Exception.Create('Error al recalcular totales de la ' +
-                             'factura: ' + Totales.MensajeError);
+      raise Exception.CreateFmt(SErrorRecalcularTotalesFactura,
+        [Totales.MensajeError]);
     if Assigned(EventoUpdateTotal) then
       EventoUpdateTotal(nil, Totales.Totales.TotalLiquido);
   finally
@@ -607,7 +607,7 @@ begin
       Result := SP.Params.ParamByName('pcont').AsString;
     except
       on E: Exception do
-        ShowMessage('Error al generar contador automático: ' + E.Message);
+        ShowMessage(Format(SErrorGenerarContadorAutomatico, [E.Message]));
     end;
   finally
     FreeAndNil(SP);
@@ -731,7 +731,8 @@ begin
       except
         on E: Exception do
         begin
-          ShowMessage(SConnFailBBDD + E.ClassName + ' Mensaje: ' + E.Message);
+          ShowMessage(Format(SErrorConexionBbddConExcepcion,
+            [SConnFailBBDD, E.ClassName, E.Message]));
           raise;
           Exit;
         end;
@@ -1235,7 +1236,7 @@ begin
     Result  := IntToStr(CalculaDC(sBanco, sNumero));
   end
   else
-    Result := 'Número de Cuenta Inválido';
+    Result := SErrorNumeroCuentaInvalido;
 end;
 
 function TomarLetra(S: String):String;
@@ -1255,7 +1256,7 @@ begin
   if (sResul <> '?') then
     Result := LetraNIF(sResul)
   else
-    Result := ' NIF No Válido';
+    Result := SErrorNifNoValido;
 end;
 
 function SoloLetraNIF(S:String):Char;
@@ -1317,8 +1318,8 @@ begin
   if (AsNIF <> '') then
     if ( (AsNIF[1] >= '0') and (AsNIF[1] <= '9') ) then
       if ( SoloLetraNIF( AsNIF ) <> TomarLetra( AsNIF ) ) then
-        Raise Exception.Create('Letra DNI Incorrecta. Correcta ' + TomarLetra(
-          AsNIF) );
+        Raise Exception.CreateFmt(SErrorLetraDniIncorrecta,
+          [TomarLetra(AsNIF)]);
 end;
 
 function CheckIBAN(Aiban: string): Boolean;

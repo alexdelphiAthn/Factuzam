@@ -67,7 +67,7 @@ type
 implementation
 
 uses
-  Winapi.Windows;
+  Winapi.Windows, inLibMsg;
 
 const
   ESC = #27;
@@ -371,14 +371,14 @@ begin
   end;
   // === IMPRESIÓN REAL ===
   if not OpenPrinter(PChar(ANombreImpresora), hPrinter, nil) then
-    raise Exception.CreateFmt('No se pudo abrir la impresora: %s',
+    raise Exception.CreateFmt(SErrorAbrirImpresoraTicket,
                               [ANombreImpresora]);
   try
     DocInfo.pDocName := 'Ticket Fzam';
     DocInfo.pOutputFile := nil;
     DocInfo.pDatatype := 'RAW';
     if (StartDocPrinter(hPrinter, 1, @DocInfo) = 0) then
-      raise Exception.Create('Error al iniciar documento');
+      raise Exception.Create(SErrorIniciarDocumentoImpresora);
     try
       if StartPagePrinter(hPrinter) then
       begin
@@ -418,7 +418,7 @@ begin
                               @DatosRaw[0],
                               Length(DatosRaw),
                               BytesEscritos) then
-            raise Exception.Create('Error al escribir en impresora');
+            raise Exception.Create(SErrorEscribirImpresora);
         finally
           EndPagePrinter(hPrinter);
         end;

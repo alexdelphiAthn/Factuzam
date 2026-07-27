@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataAlbaranes                                              }
 {    Tipo:       Data Module                                                   }
@@ -133,7 +133,7 @@ implementation
 uses
   inLibtb, inLibLog, System.Diagnostics,
   System.UITypes, Vcl.Dialogs, inLibArticulosValidador,
-  inLibVentasImpuestos, inLibContadorLineas, inLibData;
+  inLibVentasImpuestos, inLibContadorLineas, inLibData, inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -453,14 +453,11 @@ begin
     end;
     if iBloqueos > 0 then
     begin
-      MessageDlg('No se puede borrar el albaran: ya esta facturado. ' +
-                 'Borra o deshaz primero la factura vinculada.',
+      MessageDlg(SAvisoAlbaranFacturado,
                  mtWarning, [mbOk], 0);
       Abort;
     end;
-    if MessageDlg(Format('¿Borrar el albaran %s / %s?' + sLineBreak +
-                         'Se eliminaran sus lineas y se revertiran los ' +
-                         'movimientos de stock.',
+    if MessageDlg(Format(SPreguntaBorrarAlbaran,
                          [sSerie, sNumero]),
                   mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     begin
@@ -633,7 +630,7 @@ begin
   if (unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil) and
      (Trim(unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString) = '') then
   begin
-    MessageDlg('Debe seleccionar el almacén de salida del albarán.',
+    MessageDlg(SAvisoAlmacenSalidaAlbaranObligatorio,
                mtWarning, [mbOk], 0);
     Abort;
   end;
@@ -696,8 +693,7 @@ begin
   // Post de linea sin articulo ni SKU no debe llegar a BBDD ni
   // consumir contador de lineas.
   if LineaAlbaranVacia(DataSet) then
-    raise Exception.Create(
-      'La línea del albarán no tiene artículo; no se puede guardar.');
+    raise Exception.Create(SErrorLineaAlbaranSinArticulo);
   AsignarNumeroLineaAlbaran(DataSet);
   SincronizarAlmacenLinea(DataSet);
   with unqryAlbaranesLineas do
@@ -766,8 +762,7 @@ begin
           sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
-        raise Exception.Create(
-          'Graba la cabecera del albaran antes de guardar lineas.');
+        raise Exception.Create(SErrorCabeceraAlbaranSinGrabar);
       if DataSet.FindField('NUMERO_ALB_ALBLIN') <> nil then
         DataSet.FieldByName('NUMERO_ALB_ALBLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_ALB_ALBLIN') <> nil then
@@ -781,9 +776,8 @@ begin
       // copia en memoria desfasada es inocua: el helper toma siempre
       // MAX(LINEA_ALBLIN) como suelo.
       if iNuevaLinea = 0 then
-        raise Exception.Create(
-          'No se pudo asignar número de línea: la cabecera ' + sSerie +
-          '/' + sNumero + ' no existe en la base de datos.');
+        raise Exception.Create(Format(SErrorAsignarLineaAlbaran,
+                                      [sSerie, sNumero]));
       DataSet.FieldByName('LINEA_ALBLIN').AsString :=
         Format('%.4d', [iNuevaLinea]);
     end;
@@ -906,12 +900,9 @@ begin
     sNumero := Trim(ParamByName('pcont').AsString);
     if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
        (iNumero <= 0) then
-      raise Exception.Create(
-        'No se pudo obtener un numero de albaran valido. ' +
-        'Revise el contador AV de la serie ' +
-        unqryTablaG.FieldByName('SERIE_ALB').AsString +
-        ' y empresa ' +
-        unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString + '.');
+      raise Exception.Create(Format(SErrorContadorAlbaran,
+        [unqryTablaG.FieldByName('SERIE_ALB').AsString,
+         unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString]));
     unqryTablaG.FieldByName('NUMERO_ALB').AsString := sNumero;
   end;
 end;

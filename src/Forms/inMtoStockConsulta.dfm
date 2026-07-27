@@ -37,16 +37,27 @@
       Proportional = True
       Stretch = True
     end
+    object btnOperacionesCaja: TcxButton
+      Left = 16
+      Top = 12
+      Width = 120
+      Height = 28
+      Hint = 'Muestra las operaciones de caja de la talla seleccionada'
+      Caption = 'Op de Caja'
+      ShowHint = True
+      TabOrder = 0
+      OnClick = btnOperacionesCajaClick
+    end
     object lblArt: TcxLabel
       Left = 16
-      Top = 14
+      Top = 54
       Caption = 'Art'#237'culo'
-      TabOrder = 1
+      TabOrder = 2
       Transparent = True
     end
     object btnArt: TcxButtonEdit
       Left = 90
-      Top = 12
+      Top = 52
       Properties.Buttons = <
         item
           Default = True
@@ -54,21 +65,21 @@
         end>
       Properties.OnButtonClick = btnArtPropertiesButtonClick
       Properties.OnEditValueChanged = btnArtPropertiesEditValueChanged
-      TabOrder = 0
+      TabOrder = 1
       Width = 200
     end
     object lblDescr: TcxLabel
       Left = 16
-      Top = 46
-      TabOrder = 2
+      Top = 86
+      TabOrder = 3
       Transparent = True
     end
     object lblInfo: TcxLabel
       Left = 16
-      Top = 78
+      Top = 118
       Anchors = [akLeft, akTop, akRight]
       Properties.WordWrap = True
-      TabOrder = 3
+      TabOrder = 4
       Transparent = True
       ExplicitWidth = 459
       Width = 461
@@ -82,7 +93,7 @@
       Properties.Alignment.Horz = taCenter
       Properties.Alignment.Vert = taVCenter
       Properties.WordWrap = True
-      TabOrder = 4
+      TabOrder = 5
       Transparent = False
       Visible = False
       Height = 34

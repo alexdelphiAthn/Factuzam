@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inLibMigAtributos                                             }
 {    Tipo:       Librería de migración (sin formulario)                        }
-{ Versión:       1.1.0                                                         }
+{ Versión:       1.1.1                                                         }
 {                                                                              }
 {  Descripción:                                                                }
 {    Migra los CATÁLOGOS MAESTROS de colores y tallas del ERP "Herreras"      }
@@ -50,12 +50,11 @@ uses
 // =========================================================================
 
 // Convierte un entero RGB (R + G*256 + B*65536, formato Windows) a '#RRGGBB'.
-// Si el valor es 0 o NULL devuelve cadena vacía.
+// El valor 0 es negro (#000000). El NULL se trata antes de llamar.
 function ColorIntAHex(iValor: Integer): string;
 var
   iR, iG, iB: Integer;
 begin
-  if iValor <= 0 then Exit('');
   iR := iValor and $FF;
   iG := (iValor shr 8)  and $FF;
   iB := (iValor shr 16) and $FF;
@@ -152,41 +151,58 @@ end;
 procedure InsertarAtributoBasico(Eng: TMigEngine;
                                   const sIdVa, sCodigo, sNombre,
                                   sDescripcion, sHex: string; iOrden: Integer);
-var qChk, qIns: TUniQuery;
+var
+  qChk, qIns: TUniQuery;
 begin
   qChk := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
   try
     qChk.Connection := Eng.ConDst;
     qChk.SQL.Text   :=
-      'SELECT 1 FROM fza_atributos_basicos ' +
+      'SELECT ID_ATB, HEX_ATB FROM fza_atributos_basicos ' +
       'WHERE ID_VA_ATB = :v AND CODIGO_ATB = :c';
     qChk.ParamByName('v').AsString := sIdVa;
     qChk.ParamByName('c').AsString := sCodigo;
     qChk.Open;
-    if not qChk.IsEmpty then Exit;
-    qChk.Close;
-
     qIns.Connection := Eng.ConDst;
-    qIns.SQL.Text   :=
-      'INSERT INTO fza_atributos_basicos (' +
-        'ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, DESCRIPCION_ATB, HEX_ATB, ' +
-        'ORDEN_ATB, ESACTIVO_ATB, ' +
-        'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'VALUES (:v, :c, :n, :d, :h, :o, ''S'', ' +
-              ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, ' +
-              ':USUARIO_MODIF)';
-    qIns.ParamByName('v').AsString := sIdVa;
-    qIns.ParamByName('c').AsString := sCodigo;
-    qIns.ParamByName('n').AsString := sNombre;
-    qIns.ParamByName('d').AsString := sDescripcion;
-    if sHex <> '' then
-      qIns.ParamByName('h').AsString := sHex
-    else
-      qIns.ParamByName('h').Clear;
-    qIns.ParamByName('o').AsInteger := iOrden;
-    RellenarAuditoria(qIns, Eng.Usuario);
-    qIns.ExecSQL;
+    if qChk.IsEmpty then
+    begin
+      qIns.SQL.Text :=
+        'INSERT INTO fza_atributos_basicos (' +
+          'ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, DESCRIPCION_ATB, HEX_ATB, ' +
+          'ORDEN_ATB, ESACTIVO_ATB, ' +
+          'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+        'VALUES (:v, :c, :n, :d, :h, :o, ''S'', ' +
+                ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, ' +
+                ':USUARIO_MODIF)';
+      qIns.ParamByName('v').AsString := sIdVa;
+      qIns.ParamByName('c').AsString := sCodigo;
+      qIns.ParamByName('n').AsString := sNombre;
+      qIns.ParamByName('d').AsString := sDescripcion;
+      if sHex <> '' then
+        qIns.ParamByName('h').AsString := sHex
+      else
+        qIns.ParamByName('h').Clear;
+      qIns.ParamByName('o').AsInteger := iOrden;
+      RellenarAuditoria(qIns, Eng.Usuario);
+      qIns.ExecSQL;
+    end
+    else if (sHex <> '') and
+            (Trim(qChk.FieldByName('HEX_ATB').AsString) = '') then
+    begin
+      // Completa paletas omitidas por migraciones anteriores.
+      qIns.SQL.Text :=
+        'UPDATE fza_atributos_basicos ' +
+        'SET HEX_ATB = :h, INSTANTE_MODIF = :im, USUARIO_MODIF = :um ' +
+        'WHERE ID_ATB = :id';
+      qIns.ParamByName('h').AsString := sHex;
+      qIns.ParamByName('im').AsDateTime := Now;
+      qIns.ParamByName('um').AsString := Eng.Usuario;
+      qIns.ParamByName('id').AsInteger :=
+        qChk.FieldByName('ID_ATB').AsInteger;
+      qIns.ExecSQL;
+    end;
+    qChk.Close;
   finally
     qIns.Free;
     qChk.Free;
@@ -248,10 +264,12 @@ begin
       sCodOrigen := Trim(qSrc.FieldByName('ColorBasico').AsString);
       sDesc      := Trim(qSrc.FieldByName('Descripcion').AsString);
       if qSrc.FieldByName('ColorPaleta').IsNull then
-        iColorRGB := 0
+        sHex := ''
       else
+      begin
         iColorRGB := qSrc.FieldByName('ColorPaleta').AsInteger;
-      sHex       := ColorIntAHex(iColorRGB);
+        sHex := ColorIntAHex(iColorRGB);
+      end;
 
       if (sCodOrigen = '') and (sDesc = '') then
       begin
@@ -302,7 +320,7 @@ begin
   // e insertamos los nuevos en LOTE. Antes se hacia un SELECT de comprobacion
   // por cada color (miles): tardaba minutos y, con la transaccion abierta,
   // bloqueaba el resto de la migracion (Lock wait timeout en tallas).
-  Eng.Log('  segunda pasada: codigos de color proveedor (ac.Color) de ocartcol...');
+  Eng.Log('  segunda pasada: codigos de proveedor de ocartcol...');
   oColExist := TDictionary<string, Boolean>.Create;
   qExist    := TUniQuery.Create(nil);
   bulkCol   := TBulkInsert.Create(Eng.ConDst, 'fza_atributos_valores',

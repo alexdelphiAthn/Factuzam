@@ -326,6 +326,7 @@ uses inLibUser,
   inLibMonitorSQLUniDAC,
   inLibMonitorSQLLog,
   inLibLog,
+  inLibMsg,
   inLibDir,
   inMtoSplash,
   inMtoAppParam,
@@ -479,11 +480,11 @@ var
   function TextoDias(ADias: Integer): string;
   begin
     if ADias <= 0 then
-      Result := 'queda menos de 1 día'
+      Result := SCertificadoQuedaMenosUnDia
     else if ADias = 1 then
-      Result := 'queda 1 día'
+      Result := SCertificadoQuedaUnDia
     else
-      Result := 'quedan ' + IntToStr(ADias) + ' días';
+      Result := Format(SCertificadoQuedanDias, [ADias]);
   end;
 
   procedure AgregarAviso(const ATexto: string);
@@ -538,25 +539,24 @@ begin
             begin
               if dCaducidad < Now then
               begin
-                AgregarAviso('certificado electrónico caducado el ' +
-                  FormatDateTime('dd/mm/yyyy hh:nn', dCaducidad) + '.');
+                AgregarAviso(
+                  Format(SAvisoCertificadoCaducado,
+                         [FormatDateTime('dd/mm/yyyy hh:nn', dCaducidad)]));
               end
               else if dCaducidad < IncDay(Now, DIAS_AVISO_CERTIFICADO) then
               begin
                 iDias := Trunc(dCaducidad - Now);
-                AgregarAviso('certificado electrónico caduca el ' +
-                  FormatDateTime('dd/mm/yyyy hh:nn', dCaducidad) +
-                  ' (' + TextoDias(iDias) + ').');
+                AgregarAviso(
+                  Format(SAvisoCertificadoProximoCaducar,
+                         [FormatDateTime('dd/mm/yyyy hh:nn', dCaducidad),
+                          TextoDias(iDias)]));
               end;
             end;
             Qry.Next;
           end;
           if Avisos.Count > 0 then
           begin
-            MessageDlg('Atención: hay certificados electrónicos próximos a ' +
-                       'caducar o ya caducados.' + sLineBreak + sLineBreak +
-                       Avisos.Text + sLineBreak +
-                       'Revise la ficha de empresa y renueve el certificado.',
+            MessageDlg(Format(SAvisoCertificadosCaducidad, [Avisos.Text]),
                        mtWarning, [mbOK], 0);
           end;
         except
@@ -680,7 +680,7 @@ var
 begin
   if not Assigned(AContextoSesion) then
     raise EArgumentNilException.Create(
-      'No se ha proporcionado el contexto de inicio de sesión.');
+      SErrorContextoInicioSesionNoProporcionado);
   AsignarContextoSesion(AContextoSesion);
   IdentidadActual := ContextoSesion.Identidad;
   UbicacionActual := ContextoSesion.Ubicacion;
@@ -742,8 +742,7 @@ begin
     IGestorLicenciaAplicacion,
     GestorLicencia
   ) then
-    raise Exception.Create(
-      'Los parámetros no admiten el estado de licencia.');
+    raise Exception.Create(SErrorParametrosSinEstadoLicencia);
   GestorLicencia.EstablecerLicencia(AResultadoLicencia);
   inLibLog.Log.LogInfo('Arranque: creando parámetros de caja');
   ParametrosCajaCreados := CrearParametrosCaja(
@@ -757,15 +756,13 @@ begin
     IParametrosEdicion,
     FParametrosAppEdicion
   ) then
-    raise Exception.Create(
-      'Los parámetros de aplicación no ofrecen el contrato de edición.');
+    raise Exception.Create(SErrorParametrosAplicacionSinContratoEdicion);
   if not Supports(
     ParametrosCajaCreados,
     IParametrosEdicion,
     FParametrosCajaEdicion
   ) then
-    raise Exception.Create(
-      'Los parámetros de caja no ofrecen el contrato de edición.');
+    raise Exception.Create(SErrorParametrosCajaSinContratoEdicion);
   AsignarParametros(ParametrosAppCreados, ParametrosCajaCreados);
   FDmConn.AsignarParametrosApp(ParametrosAppCreados);
   oFotos.AsignarConexion(ConexionPrincipal, ParametrosApp);
@@ -1153,8 +1150,7 @@ begin
   try
     try
       if not Assigned(Conexiones) then
-        raise Exception.Create(
-          'No está disponible el servicio de conexiones.');
+        raise Exception.Create(SErrorServicioConexionesNoDisponible);
       c := Conexiones.CrearConexion(
         nil,
         uctPrecarga);
@@ -1268,19 +1264,13 @@ end;
 
 procedure TfrmMtoPrincipal.AvisarFalloCargaPermisos(
   const ADetalle: string);
-var
-  sMensaje: string;
 begin
   if not FFalloCargaPermisosAvisado then
   begin
     FFalloCargaPermisosAvisado := True;
     Log.LogError('No se pudieron cargar los permisos: ' + ADetalle);
-    sMensaje :=
-      'No se pudieron cargar los permisos.' + sLineBreak +
-      'El acceso se ha restringido por seguridad.' + sLineBreak +
-      'Revise el registro de la aplicación en:' + sLineBreak +
-      GetLogFolder;
-    MessageDlg(sMensaje, mtWarning, [mbOK], 0);
+    MessageDlg(Format(SAvisoCargaPermisosRestringidos, [GetLogFolder]),
+               mtWarning, [mbOK], 0);
   end;
 end;
 
@@ -1373,17 +1363,16 @@ begin
   FCancelaOperacionSolicitada := False;
   OcultarBarraProgreso;
   if bCancelada then
-    ShowMessage('Operación cancelada.')
+    ShowMessage(SOperacionCancelada)
   else if AExito then
   begin
     inLibLog.Log.LogInfo('Copia de seguridad creada exitosamente');
-    ShowMessage('La copia se guardó exitosamente.');
+    ShowMessage(SInfoCopiaSeguridadGuardada);
   end
   else
   begin
     inLibLog.Log.LogError('Fallo al crear copia de seguridad: ' + AError);
-    ShowMessage('No se pudo crear la copia de seguridad.' +
-                sLineBreak + AError);
+    ShowMessage(Format(SErrorCrearCopiaSeguridad, [AError]));
   end;
 end;
 
@@ -1401,8 +1390,7 @@ begin
   begin
     if ALogBuffer <> nil then
       FreeAndNil(ALogBuffer);
-    ShowMessage('Operación cancelada. La base de datos puede haber quedado ' +
-                'parcialmente modificada.');
+    ShowMessage(SAvisoRestauracionCancelada);
   end
   else
   begin
@@ -1418,12 +1406,11 @@ begin
     end;
     LogForm.Show;
     if AExito then
-      ShowMessage('El script se ejecutó exitosamente')
+      ShowMessage(SScriptEjecutado)
     else
     begin
       inLibLog.Log.LogError('Error en restauración: ' + AError);
-      ShowMessage('Hubo problemas al ejecutar el script.' +
-                  sLineBreak + AError);
+      ShowMessage(Format(SErrorEjecutarScript, [AError]));
     end;
   end;
 end;
@@ -1438,11 +1425,8 @@ begin
   if FEnOperacionLarga then
   begin
     if FCancelaOperacionSolicitada then
-      ShowMessage('La cancelación ya está solicitada. Espere a que termine ' +
-                  'la sentencia actual.')
-    else if MessageDlg('Hay una operación en curso moviendo datos.' +
-                       sLineBreak + sLineBreak +
-                       '¿Desea abandonar la operación en curso?',
+      ShowMessage(SCancelacionSolicitada)
+    else if MessageDlg(SPreguntaCancelarOperacion,
                        mtWarning, [mbYes, mbNo], 0) = mrYes then
     begin
       FCancelaOperacionSolicitada := True;
@@ -1541,14 +1525,13 @@ begin
       begin
         inLibLog.Log.LogInfo('Copia de seguridad creada en ' +
                              saveDialog.FileName);
-        ShowMessage('La copia se guardó exitosamente.');
+        ShowMessage(SInfoCopiaSeguridadGuardada);
       end
       else
       begin
         inLibLog.Log.LogError('Fallo al crear copia de seguridad: ' +
                               sError);
-        ShowMessage('No se pudo crear la copia de seguridad.' + sLineBreak +
-                    sError);
+        ShowMessage(Format(SErrorCrearCopiaSeguridad, [sError]));
       end;
     finally
       OcultarBarraProgreso;
@@ -1652,7 +1635,7 @@ begin
     CanClose := True
   else if (pcPrincipal.PageCount = 0) then
   begin
-    if MessageDlg('¿Quiere salir de la aplicación Fzam?',
+    if MessageDlg(SPreguntaSalirAplicacion,
                   mtConfirmation, [mbYes, mbNo], 0) = mrNo then
     begin
       CanClose := False; // Cancela el cierre
@@ -1914,19 +1897,15 @@ begin
     end;
     if ContieneDDL(SqlTexto) then
     begin
-      var Respuesta := MessageDlg(
-        'ATENCIÓN: El script contiene sentencias DDL (modifican la ' +
-        'estructura de la base de datos).' + sLineBreak +
-        'En MySQL/MariaDB, estos cambios provocan un guardado automático y ' +
-        'NO son reversibles en caso de error.' + sLineBreak + sLineBreak +
-        '¿Deseas realizar una copia de seguridad antes de continuar?',
-          mtWarning, [mbYes, mbNo, mbCancel], 0);
+      var Respuesta := MessageDlg(SPreguntaCopiaSeguridadAntesDDL,
+                                  mtWarning,
+                                  [mbYes, mbNo, mbCancel], 0);
       case Respuesta of
         mrYes:
           begin
             if not CopiaSeguridad then
             begin
-              ShowMessage('Operación cancelada. El script no se ejecutará.');
+              ShowMessage(SInfoScriptCancelado);
               Exit;
             end;
           end;
@@ -2059,7 +2038,7 @@ begin
                             nil,
                             SW_SHOWNORMAL);
   if Resultado <= 32 then
-    ShowMessage('No se ha podido abrir la dirección: ' + AUrl);
+    ShowMessage(Format(SErrorAbrirDireccion, [AUrl]));
 end;
 
 procedure TfrmMtoPrincipal.mnuAcercadeClick(Sender: TObject);

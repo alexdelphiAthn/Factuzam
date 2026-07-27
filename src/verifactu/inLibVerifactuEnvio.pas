@@ -83,7 +83,7 @@ uses
   System.TimeSpan, System.NetEncoding, System.Net.HttpClient,
   System.Net.URLClient, Data.DB,
   inLibGlobalVar, inLibVerifactu, inLibVerifactuInstalacion,
-  inLibXades;
+  inLibMsg, inLibXades;
 
 const
   // Endpoints oficiales del servicio SOAP de Verifactu. Con certificado
@@ -128,9 +128,14 @@ type
     NifCliente:      string;
     NombreCliente:   string;
     // Factura original rectificada (solo en R1/R5)
+    TipoRectificativa: string;  // I = diferencias; S = sustitutiva
     RectSerie:       string;
     RectNumero:      string;
     RectFecha:       string;  // dd-mm-yyyy
+    RectBase:        Currency;
+    RectCuota:       Currency;
+    RectCuotaRe:     Currency;
+    TieneImporteRectificacion: Boolean;
     CuotaTotal:      Currency;
     ImporteTotal:    Currency;
     SerialCert:      string;
@@ -333,7 +338,8 @@ begin
     Qry.SQL.Text :=
       ' SELECT f.CODIGO_EMP_FAC, f.NIF_EMPRESA_FAC, ' +
       '        f.RAZON_SOCIAL_EMPRESA_FAC, ' +
-      '        f.FECHA_FAC, f.TIPO_FAC, f.NIF_CLIENTE_FAC, ' +
+      '        f.FECHA_FAC, f.TIPO_FAC, f.TIPO_RECTIFICATIVA_FAC, ' +
+      '        f.NIF_CLIENTE_FAC, ' +
       '        f.RAZON_SOCIAL_CLIENTE_FAC, ' +
       '        f.TOTAL_IMPUESTOS_FAC, f.TOTAL_LIQUIDO_FAC, ' +
       '        f.TOTAL_RETENCION_FAC, ' +
@@ -388,9 +394,25 @@ begin
         FormatDateTime('dd-mm-yyyy', ADatos.FechaFac);
       sTipoFac := Qry.FieldByName('TIPO_FAC').AsString;
       ADatos.TipoFactura := TipoFacturaVerifactu(sTipoFac);
+      ADatos.TipoRectificativa := '';
       ADatos.RectSerie   := '';
       ADatos.RectNumero  := '';
       ADatos.RectFecha   := '';
+      ADatos.RectBase    := 0;
+      ADatos.RectCuota   := 0;
+      ADatos.RectCuotaRe := 0;
+      ADatos.TieneImporteRectificacion := False;
+      if SameText(sTipoFac, 'RECTIFICATIVA') then
+      begin
+        ADatos.TipoRectificativa := UpperCase(Trim(
+          Qry.FieldByName('TIPO_RECTIFICATIVA_FAC').AsString));
+        if ADatos.TipoRectificativa = '' then
+          ADatos.TipoRectificativa := 'I';
+        if (ADatos.TipoRectificativa <> 'I') and
+           (ADatos.TipoRectificativa <> 'S') then
+          raise Exception.Create(
+            'El tipo fiscal de rectificativa debe ser I o S.');
+      end;
       ADatos.NifCliente :=
         NormalizarNifVerifactu(Qry.FieldByName('NIF_CLIENTE_FAC').AsString);
       ADatos.NombreCliente :=
@@ -484,7 +506,16 @@ begin
         Qry.Close;
         Qry.SQL.Text :=
           ' SELECT o.SERIE_FAC, o.NUMERO_FAC, o.TIPO_FAC, ' +
-          '        DATE_FORMAT(o.FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT ' +
+          '        DATE_FORMAT(o.FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT, ' +
+          '        COALESCE(o.TOTAL_BASES_FAC, 0) AS BASE_RECT, ' +
+          '        COALESCE(o.TOTAL_IVAN_FAC, 0) + ' +
+          '        COALESCE(o.TOTAL_IVAR_FAC, 0) + ' +
+          '        COALESCE(o.TOTAL_IVAS_FAC, 0) + ' +
+          '        COALESCE(o.TOTAL_IVAE_FAC, 0) AS CUOTA_RECT, ' +
+          '        COALESCE(o.TOTAL_REN_FAC, 0) + ' +
+          '        COALESCE(o.TOTAL_RER_FAC, 0) + ' +
+          '        COALESCE(o.TOTAL_RES_FAC, 0) + ' +
+          '        COALESCE(o.TOTAL_REE_FAC, 0) AS CUOTA_RE_RECT ' +
           ' FROM fza_facturas_relaciones r ' +
           ' JOIN fza_facturas o ' +
           '   ON o.SERIE_FAC  = r.SERIE_FAC_ORIGEN_FACREL ' +
@@ -501,7 +532,16 @@ begin
           Qry.Close;
           Qry.SQL.Text :=
             ' SELECT SERIE_FAC, NUMERO_FAC, TIPO_FAC, ' +
-            '        DATE_FORMAT(FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT ' +
+            '        DATE_FORMAT(FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT, ' +
+            '        COALESCE(TOTAL_BASES_FAC, 0) AS BASE_RECT, ' +
+            '        COALESCE(TOTAL_IVAN_FAC, 0) + ' +
+            '        COALESCE(TOTAL_IVAR_FAC, 0) + ' +
+            '        COALESCE(TOTAL_IVAS_FAC, 0) + ' +
+            '        COALESCE(TOTAL_IVAE_FAC, 0) AS CUOTA_RECT, ' +
+            '        COALESCE(TOTAL_REN_FAC, 0) + ' +
+            '        COALESCE(TOTAL_RER_FAC, 0) + ' +
+            '        COALESCE(TOTAL_RES_FAC, 0) + ' +
+            '        COALESCE(TOTAL_REE_FAC, 0) AS CUOTA_RE_RECT ' +
             ' FROM fza_facturas ' +
             ' WHERE SERIE_FAC_ABONO_FAC  = :SERIE ' +
             '   AND NUMERO_FAC_ABONO_FAC = :NUMERO ' +
@@ -522,6 +562,13 @@ begin
             ADatos.RectSerie  := Qry.FieldByName('SERIE_FAC').AsString;
             ADatos.RectNumero := Qry.FieldByName('NUMERO_FAC').AsString;
             ADatos.RectFecha  := Qry.FieldByName('FECHA_TXT').AsString;
+            ADatos.RectBase   :=
+              Qry.FieldByName('BASE_RECT').AsCurrency;
+            ADatos.RectCuota  :=
+              Qry.FieldByName('CUOTA_RECT').AsCurrency;
+            ADatos.RectCuotaRe :=
+              Qry.FieldByName('CUOTA_RE_RECT').AsCurrency;
+            ADatos.TieneImporteRectificacion := True;
           end
           else if SameText(Qry.FieldByName('TIPO_FAC').AsString,
                            'SIMPLIFICADA') then
@@ -622,9 +669,8 @@ begin
   sNif := NormalizarNifVerifactu(
             AParametrosApp.GetString('appVerifactuSifNif', ''));
   if Length(sNif) <> 9 then
-    raise Exception.Create('Parámetro appVerifactuSifNif (NIF del ' +
-      'productor del software) vacío o no válido: "' + sNif + '". ' +
-      'Rellenarlo en Parámetros de aplicación, categoría Verifactu.');
+    raise Exception.CreateFmt(SErrorNifProductorSoftwareVerifactuInvalido,
+      [sNif]);
   ValidarInstalacionSif(ADatos.NumeroInstalacion,
                         ADatos.VersionInstalacion,
                         ADatos.CodigoSifInstalacion,
@@ -804,6 +850,8 @@ var
   sRectificativa: string;
   sRectificadas:  string;
   sSustituidas:   string;
+  sImporteRectificacion: string;
+  sFechaOperacion: string;
   sDestinatarios: string;
   sDescripcion:   string;
   sIdType:        string;
@@ -830,8 +878,15 @@ begin
   else
     sSubsanacion := '';
   if Copy(ADatos.TipoFactura, 1, 1) = 'R' then
+  begin
+    if (ADatos.TipoRectificativa <> 'I') and
+       (ADatos.TipoRectificativa <> 'S') then
+      raise Exception.Create(
+        'El tipo fiscal de rectificativa debe ser I o S.');
     sRectificativa :=
-      '<sum1:TipoRectificativa>I</sum1:TipoRectificativa>'
+      '<sum1:TipoRectificativa>' + ADatos.TipoRectificativa +
+      '</sum1:TipoRectificativa>';
+  end
   else
     sRectificativa := '';
   // Referencia a la factura original rectificada (si se conoce)
@@ -865,6 +920,38 @@ begin
       '</sum1:IDFacturaSustituida></sum1:FacturasSustituidas>'
   else
     sSustituidas := '';
+  // La modalidad sustitutiva informa los importes de la factura original.
+  // En la modalidad por diferencias este bloque no debe enviarse.
+  if (Copy(ADatos.TipoFactura, 1, 1) = 'R') and
+     (ADatos.TipoRectificativa = 'S') then
+  begin
+    if not ADatos.TieneImporteRectificacion then
+      raise Exception.Create(
+        'La rectificativa sustitutiva no tiene los importes originales.');
+    sImporteRectificacion :=
+      '<sum1:ImporteRectificacion>' +
+      '<sum1:BaseRectificada>' +
+      FormatearImporteVerifactu(ADatos.RectBase) +
+      '</sum1:BaseRectificada>' +
+      '<sum1:CuotaRectificada>' +
+      FormatearImporteVerifactu(ADatos.RectCuota) +
+      '</sum1:CuotaRectificada>';
+    if Abs(ADatos.RectCuotaRe) > 0.001 then
+      sImporteRectificacion := sImporteRectificacion +
+        '<sum1:CuotaRecargoRectificado>' +
+        FormatearImporteVerifactu(ADatos.RectCuotaRe) +
+        '</sum1:CuotaRecargoRectificado>';
+    sImporteRectificacion := sImporteRectificacion +
+      '</sum1:ImporteRectificacion>';
+  end
+  else
+    sImporteRectificacion := '';
+  if (Copy(ADatos.TipoFactura, 1, 1) = 'R') and
+     (ADatos.RectFecha <> '') then
+    sFechaOperacion := '<sum1:FechaOperacion>' + ADatos.RectFecha +
+      '</sum1:FechaOperacion>'
+  else
+    sFechaOperacion := '';
   // Las completas (F1, F3) y las rectificativas de completas (R1)
   // exigen identificar al destinatario
   if MatchText(ADatos.TipoFactura, ['F1', 'R1', 'F3']) then
@@ -876,9 +963,8 @@ begin
       // oficial expedido por el pais de residencia (resto del mundo). No se
       // exige el NIF de 9 caracteres, pero si que haya identificacion.
       if Trim(ADatos.NifCliente) = '' then
-        raise Exception.Create('La factura ' + ADatos.TipoFactura + ' ' +
-          ASerie + '\' + ANumero + ' a cliente extranjero requiere el ' +
-          'NIF-IVA del destinatario.');
+        raise Exception.CreateFmt(SErrorFacturaExtranjeraSinNifIva,
+          [ADatos.TipoFactura, ASerie, ANumero]);
       if ADatos.EsClienteUE then
         sIdType := '02'
       else
@@ -897,9 +983,8 @@ begin
     else
     begin
       if Length(ADatos.NifCliente) <> 9 then
-        raise Exception.Create('La factura ' + ADatos.TipoFactura + ' ' +
-          ASerie + '\' + ANumero + ' requiere un NIF de cliente válido y ' +
-          'tiene "' + ADatos.NifCliente + '"');
+        raise Exception.CreateFmt(SErrorFacturaSinNifClienteValido,
+          [ADatos.TipoFactura, ASerie, ANumero, ADatos.NifCliente]);
       sDestinatarios := '<sum1:Destinatarios><sum1:IDDestinatario>' +
         '<sum1:NombreRazon>' + EscaparXml(ADatos.NombreCliente) +
         '</sum1:NombreRazon>' +
@@ -927,6 +1012,8 @@ begin
     sRectificativa +
     sRectificadas +
     sSustituidas +
+    sImporteRectificacion +
+    sFechaOperacion +
     '<sum1:DescripcionOperacion>' + EscaparXml(sDescripcion) +
     '</sum1:DescripcionOperacion>' +
     sDestinatarios +
@@ -1151,9 +1238,8 @@ begin
   if Result then
   begin
     if Length(ADatos.NifEmisor) <> 9 then
-      raise Exception.Create('NIF de la empresa emisora vacío o no ' +
-        'válido para Verifactu: "' + ADatos.NifEmisor + '". Revisar la ' +
-        'ficha de la empresa (NIF de 9 caracteres, sin guiones).');
+      raise Exception.CreateFmt(SErrorNifEmisorVerifactuInvalido,
+        [ADatos.NifEmisor]);
     ObtenerCadenaParaEnvio(AConn, AUsuario, ADatos.NifEmisor, ACadena);
     sFhGen := FechaHoraHusoGen(Now);
     sSif   := ConstruirSistemaInformatico(AParametrosApp, AConn, ADatos);
@@ -1191,8 +1277,8 @@ begin
                                   ASerie, ANumero,
                                   ATipoOperacion, oDatos, oCadena,
                                   sRegistro, sHuella) then
-    Result.MensajeError := 'Factura ' + ASerie + '\' + ANumero +
-                           ' no encontrada para el registro fiscal'
+    Result.MensajeError := Format(SErrorFacturaRegistroFiscalNoEncontrada,
+      [ASerie, ANumero])
   else
   begin
     Result.Ok := True;
@@ -1237,7 +1323,8 @@ begin
         end;
       except
         on E: Exception do
-          Result.MensajeError := '(QR PNG no generado: ' + E.Message + ') ';
+          Result.MensajeError := Format(SAvisoQrPngNoGenerado,
+            [E.Message]);
       end;
     end;
   end;
@@ -1273,8 +1360,8 @@ begin
     // Fila de la cola sin factura real (huérfana, p.ej. 0\0): no se
     // lanza excepción; se devuelve el error para que la cola lo deje
     // únicamente en el log de Verifactu (RegistrarEventoVerifactu).
-    Result.MensajeError := 'Factura ' + ASerie + '\' + ANumero +
-                           ' no encontrada para el envío Verifactu'
+    Result.MensajeError := Format(SErrorFacturaEnvioVerifactuNoEncontrada,
+      [ASerie, ANumero])
   else
   begin
     if VerifactuFirmaCertificado(AParametrosApp) then
@@ -1300,9 +1387,9 @@ begin
     begin
       sDescErr := ExtraerEtiqueta(sCuerpo, 'faultstring');
       if sDescErr = '' then
-        sDescErr := 'Respuesta inesperada del servicio';
-      Result.MensajeError := 'AEAT HTTP ' + IntToStr(iStatus) + ': ' +
-                             sDescErr;
+        sDescErr := SErrorRespuestaServicioInesperada;
+      Result.MensajeError := Format(SErrorRespuestaHttpAeat,
+        [iStatus, sDescErr]);
     end
     else
     begin
@@ -1359,20 +1446,21 @@ begin
             end;
           except
             on E: Exception do
-              Result.MensajeError := '(QR PNG no generado: ' +
-                                     E.Message + ') ';
+              Result.MensajeError := Format(SAvisoQrPngNoGenerado,
+                [E.Message]);
           end;
         end;
         if bDuplicado or
            SameText(sEstadoRegistro, 'AceptadoConErrores') then
-          Result.MensajeError := Trim(Result.MensajeError + 'AEAT [' +
-                                      sCodigoErr + '] ' + sDescErr);
+          Result.MensajeError := Trim(Result.MensajeError +
+            Format(SErrorRespuestaRegistroAeat, [sCodigoErr, sDescErr]));
       end
       else
       begin
         if (sCodigoErr = '') and (sDescErr = '') then
-          sDescErr := 'EstadoEnvio: ' + sEstadoEnvio;
-        Result.MensajeError := Trim('AEAT [' + sCodigoErr + '] ' + sDescErr);
+          sDescErr := Format(SErrorEstadoEnvioAeat, [sEstadoEnvio]);
+        Result.MensajeError := Trim(Format(SErrorRespuestaRegistroAeat,
+          [sCodigoErr, sDescErr]));
       end;
     end;
   end;

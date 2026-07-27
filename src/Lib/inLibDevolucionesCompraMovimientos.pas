@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibDevolucionesCompraMovimientos                               }
 {    Tipo:       Librería (sin formulario)                                     }
@@ -63,7 +63,7 @@ procedure RevertirMovimientosDesdeDevolucionCompra(AConn: TUniConnection;
 implementation
 
 uses
-  inLibtb;
+  inLibtb, inLibMsg;
 
 // Carga los datos minimos del devolucion necesarios para construir los
 // movimientos: empresa (para el parametro p_CODIGO_EMPRESA_MOV) y
@@ -89,7 +89,7 @@ begin
     q.Open;
     if q.Eof then
       raise Exception.CreateFmt(
-        'Devolucion de compra %s/%s no encontrada para generar movimientos.',
+        SErrorDevolucionCompraMovimientosNoEncontrada,
         [ASerieDevc, ANumDevc]);
     ACodigoEmp    := q.FieldByName('CODIGO_EMP_DEVC').AsString;
     ACodigoAlmCab := q.FieldByName('CODIGO_ALM_DEVC').AsString;
@@ -129,8 +129,8 @@ begin
     qChk.Open;
     if qChk.FieldByName('N').AsInteger > 0 then
       raise Exception.CreateFmt(
-        'La devolucion %s/%s ya tiene movimientos generados. Revierte antes de ' +
-        'volver a generar.', [ASerieDevc, ANumDevc]);
+        SErrorDevolucionCompraMovimientosYaGenerados,
+        [ASerieDevc, ANumDevc]);
   finally
     FreeAndNil(qChk);
   end;
@@ -276,8 +276,8 @@ begin
     end;
     if iCount = 0 then
       raise Exception.CreateFmt(
-        'La devolucion %s/%s no tiene ninguna linea o celda con cantidad > 0 ' +
-        'para generar movimientos.', [ASerieDevc, ANumDevc]);
+        SErrorDevolucionCompraSinCantidadParaMovimientos,
+        [ASerieDevc, ANumDevc]);
   finally
     FreeAndNil(qSrc);
     FreeAndNil(spIns);

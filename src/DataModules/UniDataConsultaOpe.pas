@@ -120,7 +120,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibLog;
+uses inLibLog, inLibMsg;
 
 {$R *.dfm}
 
@@ -671,8 +671,8 @@ begin
       q.Close;
       // Registramos pero no propagamos: un fallo en una pestaña no debe
       // tirar el maestro ni las demas pestañas.
-      showmessage((Format('[ConsultaOpe] Error abriendo %s: %s',
-                                     [sNombre, E.Message])));
+      ShowMessage(Format(SErrorAbrirConsultaOpe,
+                         [sNombre, E.Message]));
     end;
   end;
 end;

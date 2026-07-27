@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibInventarioNube                                           }
 {    Tipo:       Librería                                                      }
@@ -51,7 +51,7 @@ uses
   System.JSON, System.Generics.Collections, System.NetEncoding,
   System.Net.HttpClient, System.Net.URLClient,
   Data.DB,
-  inLibFactuzamApi;
+  inLibFactuzamApi, inLibMsg;
 
 // ============================================================================
 //   Configuración y transporte
@@ -67,15 +67,15 @@ begin
   faltan := TStringList.Create;
   try
     if TClienteFactuzamApi.UrlBase(AParametrosApp) = '' then
-      faltan.Add('  - URL general del servicio web');
+      faltan.Add(STextoParametroUrlInventarioNube);
     if TClienteFactuzamApi.Token(AParametrosApp) = '' then
-      faltan.Add('  - API key / token de la instalación');
+      faltan.Add(STextoParametroTokenInventarioNube);
     if TClienteFactuzamApi.Referencia(AParametrosApp) = '' then
-      faltan.Add('  - Referencia global de la instalación');
+      faltan.Add(STextoParametroReferenciaInventarioNube);
     Result := faltan.Count = 0;
     if not Result then
-      AMensaje := 'Configura primero estos parámetros (Parámetros de la ' +
-                  'aplicación -> Servicios web):' + sLineBreak + faltan.Text;
+      AMensaje := Format(SErrorParametrosInventarioNubeFaltantes,
+        [faltan.Text]);
   finally
     FreeAndNil(faltan);
   end;
@@ -113,7 +113,7 @@ begin
     FreeAndNil(jval);
   end;
   if Result = '' then
-    Result := Format('El servidor respondió con código %d.', [AStatus]);
+    Result := Format(SErrorServidorInventarioNubeHttp, [AStatus]);
 end;
 
 function PostNube(
@@ -145,7 +145,8 @@ begin
       ARespuesta := LeerStream(resp);
     except
       on E: Exception do
-        AMensaje := 'No se pudo conectar con el servidor: ' + E.Message;
+        AMensaje := Format(SErrorConexionServidorInventarioNube,
+          [E.Message]);
     end;
   finally
     FreeAndNil(resp);
@@ -179,7 +180,8 @@ begin
       ARespuesta := LeerStream(resp);
     except
       on E: Exception do
-        AMensaje := 'No se pudo conectar con el servidor: ' + E.Message;
+        AMensaje := Format(SErrorConexionServidorInventarioNube,
+          [E.Message]);
     end;
   finally
     FreeAndNil(resp);
@@ -283,7 +285,7 @@ begin
       end;
       Result := AIdRecuento > 0;
       if not Result then
-        AMensaje := 'El servidor no devolvió id_recuento';
+        AMensaje := SErrorInventarioNubeSinIdRecuento;
     end
     else if iStatus <> 0 then
       AMensaje := MensajeError(sResp, iStatus);

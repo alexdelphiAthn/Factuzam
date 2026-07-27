@@ -30,6 +30,13 @@ SELECT t.orden AS orden_aplicacion,
                      AND COLUMN_NAME = 'SERIE_FAC_ABONO_FAC'
                      AND CHARACTER_MAXIMUM_LENGTH >= 20)
     UNION ALL
+    SELECT 25, 'facturas_tipo_rectificativa.sql',
+           'fza_facturas.TIPO_RECTIFICATIVA_FAC',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_facturas'
+                     AND COLUMN_NAME = 'TIPO_RECTIFICATIVA_FAC')
+    UNION ALL
     SELECT 30, 'verifactu_menu.sql',
            'fza_winforms VerifactuCola + VerifactuLog',
            (SELECT COUNT(*) FROM fza_winforms

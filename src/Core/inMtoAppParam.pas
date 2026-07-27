@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoAppParam                                                 }
 {    Tipo:       Formulario (Core)                                             }
@@ -120,7 +120,7 @@ uses
    dxSkinsLookAndFeelPainter,
    dxSkinsDefaultPainters, dxSkinsForm,
   FileCtrl, inLibPathTokens,               // SelectDirectory
-  inLibLayoutForm, inLibVerifactu, inLibFactuzamApi;
+  inLibLayoutForm, inLibVerifactu, inLibFactuzamApi, inLibMsg;
 
 procedure RegistrarCambioConfiguracionVerifactuSeguro(
   const AParametrosApp: IParametrosAplicacion;
@@ -162,12 +162,11 @@ var
 begin
   inherited;
   if not Supports(Owner, IProveedorParametrosEdicion, Proveedor) then
-    raise Exception.Create(
-      'No se ha configurado el proveedor de edición de parámetros.');
+    raise Exception.Create(SErrorProveedorEdicionParametrosNoConfigurado);
   FParametrosEdicion := Proveedor.ParametrosAppEdicion;
   if not Assigned(FParametrosEdicion) then
     raise Exception.Create(
-      'No se han configurado los parámetros de aplicación editables.');
+      SErrorParametrosAplicacionEditablesNoConfigurados);
   if jvntrstb1 <> nil then
     jvntrstb1.EnterAsTab := False;
   FBools             := TList<PBoolean>.Create;
@@ -787,7 +786,7 @@ begin
 
     if GuardadosCount > 0 then
     begin
-      ShowMessage(Format('Se guardaron %d parámetros para: %s',
+      ShowMessage(Format(SInfoParametrosGuardados,
                          [GuardadosCount, sUsuarioGrupo]));
 
       // Recargamos en memoria si afecta al usuario/grupo actual
@@ -816,16 +815,14 @@ begin
           'Parámetros guardados para ' + sUsuarioGrupo + ': ' +
           IntToStr(GuardadosCount));
       if IgnoradosCount > 0 then
-        ShowMessage(Format('Se ignoraron %d parámetros restringidos. ' +
-                           'Solo un usuario administrador puede cambiarlos.',
+        ShowMessage(Format(SAvisoParametrosRestringidosIgnorados,
                            [IgnoradosCount]));
     end
     else if IgnoradosCount > 0 then
-      ShowMessage(Format('No se guardaron %d parámetros restringidos. ' +
-                         'Solo un usuario administrador puede cambiarlos.',
+      ShowMessage(Format(SAvisoParametrosRestringidosNoGuardados,
                          [IgnoradosCount]))
     else
-      ShowMessage('No se detectaron cambios para guardar.');
+      ShowMessage(SInfoSinCambiosParametros);
   finally
     FreeAndNil(qry);
   end;
@@ -844,7 +841,7 @@ begin
     Layout.GuardarGeometria(Self);
     Layout.GuardarDividerInspector('Divider', JvInspector1);
     if Layout.PreguntarYGrabar('Personalización Parámetros Aplicación') then
-      ShowMessage('Layout guardado.');
+      ShowMessage(SInfoLayoutGuardado);
   finally
     FreeAndNil(Layout);
   end;
@@ -970,7 +967,7 @@ begin
     Close;
     Exit;
   end;
-  if MessageDlg('¿Seguro que desea salir sin guardar?',
+  if MessageDlg(SPreguntaSalirSinGuardar,
                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     Close;
 end;
@@ -1050,19 +1047,17 @@ begin
 
     if usuarios.Count = 0 then
     begin
-      ShowMessage(
-        'No hay usuarios con parámetros guardados para este formulario.');
+      ShowMessage(SAvisoSinUsuariosParametrosGuardados);
       Exit;
     end;
 
     sUsuario := usuarios[0];
-    if InputQuery('Cambiar usuario',
-                  'Usuarios disponibles:' + sLineBreak + usuarios.CommaText +
-                  sLineBreak + sLineBreak + 'Introduce el nombre de usuario:',
+    if InputQuery(STituloCambiarUsuario,
+                  Format(SSolicitudCambiarUsuario, [usuarios.CommaText]),
                   sUsuario) then
     begin
       if usuarios.IndexOf(sUsuario) < 0 then
-        ShowMessage('Usuario no encontrado: ' + sUsuario)
+        ShowMessage(Format(SErrorUsuarioNoEncontrado, [sUsuario]))
       else
       begin
         CargarParametros(JvInspector1, sUsuario, '');

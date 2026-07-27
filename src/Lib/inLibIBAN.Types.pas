@@ -116,15 +116,11 @@ implementation
 
 uses
   System.SysUtils,
-  inLibIBAN.Funcs;
+  inLibIBAN.Funcs,
+  inLibMsg;
 
 const
   _PrefixFormatPapelIBAN = 'IBAN';
-
-resourcestring
-  IBANInvalidoStr = 'IBAN Inválido';
-  PaisIBANInvalidoStr = 'Pais del IBAN Inválido';
-  DcIBANInvalidoStr = 'Digito Control del IBAN Inválido';
 
 { TrBancoCuentaInfo }
 
@@ -326,7 +322,7 @@ begin
   Result := TIBANFuncs.Mod97(AValidar) = 1;
 
   if (not Result) then
-     TIBANFuncs.AddNotNil(IBANInvalidoStr, Errores);
+     TIBANFuncs.AddNotNil(SErrorIbanInvalido, Errores);
 end;
 
 function TrBancoIBANInfo.IsValid_Pais(inPais: string): Boolean;
@@ -357,14 +353,14 @@ begin
   if ((Self.Pais.IsEmpty) or (Self.Pais.Length < 2) or
       (not Self.IsValid_Pais(Self.Pais))) then // Tiene que ser solo letras
   begin
-     TIBANFuncs.AddNotNil(PaisIBANInvalidoStr, Errores);
+     TIBANFuncs.AddNotNil(SErrorPaisIbanInvalidoTipos, Errores);
      Result := False;
   end;
 
   if ((Self.DC.IsEmpty) or (Self.DC.Length < 2) or
       (StrToIntDef(Self.DC, -1) = -1)) then //Tiene que ser Integer
   begin
-     TIBANFuncs.AddNotNil(DcIBANInvalidoStr, Errores);
+     TIBANFuncs.AddNotNil(SErrorDigitoControlIbanInvalidoTipos, Errores);
      Result := False;
   end;
 end;

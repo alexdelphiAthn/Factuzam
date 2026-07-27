@@ -321,6 +321,9 @@ type
 
 implementation
 
+uses
+  inLibMsg;
+
 class procedure TDistribuidorTallas.RegistrarEjecutor(
   AClase: TClaseEjecutorDistribuidorTallas);
 begin
@@ -331,8 +334,7 @@ class function TDistribuidorTallas.Ejecutar(
   const AParametros: TParametrosDistribuidorTallas): Boolean;
 begin
   if not Assigned(FClaseEjecutor) then
-    raise Exception.Create(
-      'No se ha registrado el distribuidor de tallas por almacén.');
+    raise Exception.Create(SErrorDistribuidorTallasNoRegistrado);
   Result := FClaseEjecutor.Ejecutar(AParametros);
 end;
 
@@ -688,9 +690,7 @@ begin
     LogSes(Format('ModoTallas.%s: INVARIANTE ROTO unidades ' +
                   'antes=%.4f despues=%.4f; se deshace la conversion',
                   [AContexto, AAntes, ADespues]));
-    raise Exception.CreateFmt(
-      'La conversión de tallas alteraría las unidades del documento ' +
-      '(%s: antes %.2f, después %.2f). Se deshacen los cambios.',
+    raise Exception.CreateFmt(SErrorInvarianteUnidadesTallas,
       [AContexto, AAntes, ADespues]);
   end;
 end;
@@ -1372,9 +1372,7 @@ begin
         ' ORDER BY CODIGO_ALM_ALM LIMIT 1';
       Qry.Open;
       if Qry.Eof then
-        raise Exception.Create(
-          'Formato distribuido: se necesita un almacén por defecto ' +
-          'y no hay almacenes activos definidos.');
+        raise Exception.Create(SErrorAlmacenDistribucionTallasNoDisponible);
       FConfig.AlmacenStock := Qry.Fields[0].AsString;
       LogSes('ModoTallas: sin almacen por defecto; se asume "' +
              FConfig.AlmacenStock + '" (primer almacen activo)');
@@ -2900,7 +2898,7 @@ begin
     else
       // Feedback como el desglose: sin aviso parecia que el Enter no
       // hacia nada cuando la entrada no existe (SKU no dado de alta).
-      ShowMessage('Artículo/SKU no encontrado: ' + Trim(AEntrada));
+      ShowMessage(Format(SErrorArticuloSkuNoEncontrado, [Trim(AEntrada)]));
   end;
 end;
 

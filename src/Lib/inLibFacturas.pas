@@ -281,7 +281,7 @@ type
 
 implementation
 
-uses inLibLog;
+uses inLibLog, inLibMsg;
 
 function IfThen(AValue: Boolean;
                 const ATrue: string;
@@ -319,14 +319,14 @@ begin
   _sMensajeError := '';
   if (_dPorIva < 0) or (_dPorIva > 100) then
   begin
-    _sMensajeError := 'El porcentaje de IVA debe estar entre 0 y 100';
+    _sMensajeError := SErrorPorcentajeIvaFueraRango;
     raise Exception.Create(_sMensajeError);
     Result := False;
     Exit;
   end;
   if (_dPreSiva < 0) or (_dPreCiva < 0) then
   begin
-    _sMensajeError := 'Los precios no pueden ser negativos';
+    _sMensajeError := SErrorPrecioFacturaNegativo;
     raise Exception.Create(_sMensajeError);
     Result := False;
     Exit;

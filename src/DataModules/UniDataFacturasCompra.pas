@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataFacturasCompra                                        }
 {    Tipo:       Data Module                                                   }
@@ -147,7 +147,8 @@ uses
   System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inLibComprasImpuestos,
   inLibData,
-  inLibArticulosValidador;
+  inLibArticulosValidador,
+  inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -551,9 +552,7 @@ begin
         unqryTablaG.FieldByName('NUMERO_FACC').AsString;
       qChk.Open;
       if qChk.FieldByName('N').AsInteger = 0 then
-        raise Exception.Create(
-          'No se puede cerrar la factura: no tiene lineas con cantidad ' +
-          'mayor que 0. Añade lineas antes de cerrar.');
+        raise Exception.Create(SErrorCerrarFacturaCompraSinLineas);
     finally
       FreeAndNil(qChk);
     end;
@@ -613,13 +612,8 @@ begin
       iBloqueos := q.FieldByName('N').AsInteger;
       q.Close;
       if iBloqueos > 0 then
-        raise Exception.Create(
-          'No se puede borrar la factura: tiene efectos pagados, ' +
-          'remesados o conciliados.');
-      if MessageDlg(Format('¿Borrar la factura de compra %s / %s?' +
-                           sLineBreak +
-                           'Se eliminaran sus lineas y efectos, y se ' +
-                           'desmarcaran los albaranes vinculados.',
+        raise Exception.Create(SErrorBorrarFacturaCompraEfectosPagados);
+      if MessageDlg(Format(SPreguntaBorrarFacturaCompra,
                            [sSerie, sNumero]),
                     mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
       begin
@@ -796,8 +790,7 @@ begin
           sNumero, sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
-        raise Exception.Create(
-          'Graba la cabecera de la factura antes de guardar lineas.');
+        raise Exception.Create(SErrorCabeceraFacturaCompraSinGrabar);
       if DataSet.FindField('NUMERO_FACC_FACCLIN') <> nil then
         DataSet.FieldByName('NUMERO_FACC_FACCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_FACC_FACCLIN') <> nil then
@@ -852,12 +845,9 @@ begin
     sNumero := Trim(ParamByName('pcont').AsString);
     if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
        (iNumero <= 0) then
-      raise Exception.Create(
-        'No se pudo obtener un numero de factura de compra valido. ' +
-        'Revise el contador FP de la serie ' +
-        unqryTablaG.FieldByName('SERIE_FACC').AsString +
-        ' y empresa ' +
-        unqryTablaG.FieldByName('CODIGO_EMP_FACC').AsString + '.');
+      raise Exception.Create(Format(SErrorContadorFacturaCompra,
+        [unqryTablaG.FieldByName('SERIE_FACC').AsString,
+         unqryTablaG.FieldByName('CODIGO_EMP_FACC').AsString]));
     unqryTablaG.FieldByName('NUMERO_FACC').AsString := sNumero;
   end;
 end;

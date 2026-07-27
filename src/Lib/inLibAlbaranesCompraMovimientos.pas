@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibAlbaranesCompraMovimientos                               }
 {    Tipo:       Librería (sin formulario)                                     }
@@ -60,7 +60,7 @@ procedure RevertirMovimientosDesdeAlbaranCompra(AConn: TUniConnection;
 implementation
 
 uses
-  inLibtb;
+  inLibtb, inLibMsg;
 
 // Carga los datos minimos del albaran necesarios para construir los
 // movimientos: empresa (para el parametro p_CODIGO_EMPRESA_MOV) y
@@ -87,8 +87,7 @@ begin
     q.ParamByName('n').AsString := ANumAlbc;
     q.Open;
     if q.Eof then
-      raise Exception.CreateFmt(
-        'Albaran de compra %s/%s no encontrado para generar movimientos.',
+      raise Exception.CreateFmt(SErrorAlbaranCompraMovimientosNoEncontrado,
         [ASerieAlbc, ANumAlbc]);
     ACodigoEmp    := q.FieldByName('CODIGO_EMP_ALBC').AsString;
     ACodigoAlmCab := q.FieldByName('CODIGO_ALM_ALBC').AsString;
@@ -311,9 +310,8 @@ begin
     qChk.ParamByName('n').AsString := ANumAlbc;
     qChk.Open;
     if qChk.FieldByName('N').AsInteger > 0 then
-      raise Exception.CreateFmt(
-        'El albaran %s/%s ya tiene movimientos generados. Revierte antes de ' +
-        'volver a generar.', [ASerieAlbc, ANumAlbc]);
+      raise Exception.CreateFmt(SErrorAlbaranCompraMovimientosYaGenerados,
+                                [ASerieAlbc, ANumAlbc]);
   finally
     FreeAndNil(qChk);
   end;
@@ -490,8 +488,8 @@ begin
     end;
     if iCount = 0 then
       raise Exception.CreateFmt(
-        'El albaran %s/%s no tiene ninguna linea o celda con cantidad > 0 ' +
-        'para generar movimientos.', [ASerieAlbc, ANumAlbc]);
+        SErrorAlbaranCompraSinCantidadParaMovimientos,
+        [ASerieAlbc, ANumAlbc]);
     ActualizarArticulosProveedorDesdeAlbaranCompra(AConn, ASerieAlbc,
       ANumAlbc, AUsuario);
     ActualizarCostesSkuDesdeAlbaranCompra(AConn, ASerieAlbc, ANumAlbc,

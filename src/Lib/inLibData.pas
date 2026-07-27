@@ -39,6 +39,9 @@ function BuscarTabla(AQuery: TUniQuery;
 
 implementation
 
+uses
+  inLibMsg;
+
 function BuscarTabla(AQuery: TUniQuery;
                      const AClavePrimaria,
                      AValoresBusqueda: string): Boolean;
@@ -144,9 +147,8 @@ begin
   begin
     Result := PrimerAlmacenEmpresa(AConexion, AEmpresa);
     if Result = '' then
-      raise Exception.Create(
-        'La empresa ' + Trim(AEmpresa) +
-        ' no tiene ningún almacén activo disponible.');
+      raise Exception.Create(Format(SErrorEmpresaSinAlmacenActivo,
+                                    [Trim(AEmpresa)]));
   end;
 end;
 
@@ -242,9 +244,8 @@ begin
     else
       // Lanzamos excepción para que la transacción de caja se detenga si hay un
       // error de configuración
-      raise Exception.Create(
-        'No se ha encontrado un almacén de depósitos (TIPO_USO_ALM = ' +
-        '''DEPÓSITO'') activo para la empresa ' + AEmpresa + '.');
+      raise Exception.Create(Format(SErrorAlmacenDepositosEmpresaNoEncontrado,
+                                    [AEmpresa]));
   finally
     FreeAndNil(QryAlm);
   end;

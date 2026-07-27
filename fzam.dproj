@@ -943,6 +943,10 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibComprasSesiones.pas"/>
         <DCCReference Include="src\Lib\inLibGridTallasInline.pas"/>
+        <DCCReference Include="src\Lib\inLibColumnasDocumento.pas"/>
+        <DCCReference Include="src\Lib\inLibBusquedasCompra.pas"/>
+        <DCCReference Include="src\Lib\inLibValidacionDocumento.pas"/>
+        <DCCReference Include="src\Lib\inLibPresentacionDocumento.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesMaterializar.pas"/>
         <DCCReference Include="src\Lib\inLibAlbaranesCompraMovimientos.pas"/>
         <DCCReference Include="src\Lib\inLibDevolucionesCompraMovimientos.pas"/>
@@ -981,6 +985,9 @@
         </DCCReference>
         <DCCReference Include="src\Forms\inMtoStockConsulta.pas">
             <Form>frmStockConsulta</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalOperacionesCajaSku.pas">
+            <Form>frmModalOperacionesCajaSku</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalFotoArticulo.pas"/>
         <DCCReference Include="src\Modals\inMtoModalFiltroArt.pas"/>

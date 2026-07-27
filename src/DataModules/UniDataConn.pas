@@ -51,7 +51,8 @@ implementation
 uses inLibDir,
      inLibtb,
      inLibWin,
-     inLibLog;
+     inLibLog,
+     inLibMsg;
 
 {$R *.dfm}
 
@@ -136,8 +137,7 @@ begin
   except
     on E: Exception do
       {$IFDEF DEBUG}
-      ShowMessage(
-        'No se pudo fijar la colación de la sesión: ' + E.Message);
+      ShowMessage(Format(SAvisoColacionSesion, [E.Message]));
       {$ENDIF}
   end;
   // Ejecutamos un comando SQL directo al servidor nada más conectar.
@@ -149,8 +149,7 @@ begin
     // Si falla (por permisos), no bloqueamos la app, pero queda registrado.
     on E: Exception do
       {$IFDEF DEBUG}
-      ShowMessage(
-        'No se pudo establecer el timeout del servidor: ' + E.Message);
+      ShowMessage(Format(SAvisoTimeoutServidor, [E.Message]));
       {$ENDIF}
   end;
 end;
@@ -162,47 +161,34 @@ var
 begin
   bEsErrorGenerico := False;
   case E.ErrorCode of
-    1062: sMensaje :=
-      'Ya existe un registro con ese valor (entrada duplicada).';
+    1062: sMensaje := SErrorBBDDDuplicado;
     1048,
-    1364: sMensaje := 'Hay campos obligatorios sin rellenar.';
-    1054: sMensaje := 'Campo desconocido en la consulta SQL: ' + E.Message;
-    1146: sMensaje :=
-      'La tabla consultada no existe en la base de datos: ' + E.Message;
+    1364: sMensaje := SErrorBBDDCamposObligatorios;
+    1054: sMensaje := Format(SErrorBBDDCampoDesconocido, [E.Message]);
+    1146: sMensaje := Format(SErrorBBDDTablaNoExiste, [E.Message]);
     1142,
-    1143: sMensaje := 'No tiene permisos suficientes para realizar esta ' +
-                      'acción en la base de datos.';
+    1143: sMensaje := SErrorBBDDSinPermisos;
     1216,
-    1452: sMensaje :=
-      'El valor no existe en la tabla relacionada (clave foránea).';
+    1452: sMensaje := SErrorBBDDClaveForaneaNoExiste;
     1217,
-    1451: sMensaje :=
-      'No se puede eliminar: existen registros que dependen de este.';
-    1406: sMensaje := 'El dato introducido es demasiado largo para el campo.';
-    1045: sMensaje := 'Acceso denegado: usuario o contraseña incorrectos.';
-    2003: sMensaje :=
-      'No se puede conectar al servidor MySQL. Comprueba la red y el puerto.';
-    2006: sMensaje := 'La conexión con el servidor MySQL se ha perdido.';
-    2013: sMensaje :=
-      'Se perdió la conexión durante la ejecución de la consulta.';
-    1205: sMensaje := 'El servidor está ocupado (Tiempo de espera de ' +
-                      'bloqueo). Inténtalo de nuevo.';
-    1213: sMensaje :=
-      'Se ha producido un bloqueo cruzado (Deadlock). Inténtalo de nuevo.';
-    1050: sMensaje :=
-      'La tabla o vista ya existe en la base de datos ' + E.Message;
+    1451: sMensaje := SErrorBBDDRegistroDependiente;
+    1406: sMensaje := SErrorBBDDDatoDemasiadoLargo;
+    1045: sMensaje := SErrorBBDDCredencialesIncorrectas;
+    2003: sMensaje := SErrorBBDDConexionServidor;
+    2006: sMensaje := SErrorBBDDConexionPerdida;
+    2013: sMensaje := SErrorBBDDConexionPerdidaConsulta;
+    1205: sMensaje := SErrorBBDDTimeoutBloqueo;
+    1213: sMensaje := SErrorBBDDDeadlock;
+    1050: sMensaje := Format(SErrorBBDDTablaYaExiste, [E.Message]);
     1304:
       begin
         // Opción rápida y sencilla: Adjuntamos el mensaje original de MySQL
         // que contiene el nombre del procedimiento.
-        sMensaje := 'El procedimiento o función ya existe en la base de datos.'
-          + sLineBreak +
-                    'Detalle del servidor: ' + E.Message;
+        sMensaje := Format(SErrorBBDDProcedimientoYaExiste, [E.Message]);
       end;
   else
     // Errores no catalogados: mostrar mensaje original
-    sMensaje := Format('Error en base de datos [%d]:%s%s',
-                       [E.ErrorCode, sLineBreak, E.Message]);
+    sMensaje := Format(SErrorBBDDGenerico, [E.ErrorCode, E.Message]);
     bEsErrorGenerico := True;
   end;
   // En DEBUG o si el usuario activó appModoDebug, anexamos el error MySQL
@@ -212,8 +198,8 @@ begin
        FParametrosApp.GetBool('appModoDebug', False)){$ENDIF} then
   begin
     if (not bEsErrorGenerico) and (E.ErrorCode <> 0) then
-      sMensaje := sMensaje + Format('%s(MySQL %d: %s)',
-                                     [sLineBreak, E.ErrorCode, E.Message]);
+      sMensaje := sMensaje + Format(SDetalleErrorMySQL,
+                                    [E.ErrorCode, E.Message]);
   end;
   // Guardamos en el log siempre el error real
   inLibLog.Log.LogError(Format('MySQL %d: %s', [E.ErrorCode, E.Message]));

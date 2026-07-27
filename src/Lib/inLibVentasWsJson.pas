@@ -46,7 +46,7 @@ uses
   System.Classes, System.DateUtils, System.NetEncoding,
   System.Hash, System.IOUtils,
   Data.DB,
-  inLibFactuzamApi;
+  inLibFactuzamApi, inLibMsg;
 
 function LeerCampoBinario(ACampo: TField): TBytes;
 var
@@ -174,8 +174,8 @@ begin
       Qry.ParamByName('NUMERO').AsString := ANumero;
       Qry.Open;
       if Qry.IsEmpty then
-        raise Exception.Create('No existe la factura ' + ASerie + '\' +
-                               ANumero + ' para enviarla al webservice.');
+        raise Exception.CreateFmt(SErrorFacturaWebserviceNoExiste,
+          [ASerie, ANumero]);
       oCabecera := RegistroAJson(Qry);
       Result := oCabecera;
     except

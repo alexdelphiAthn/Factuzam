@@ -39,7 +39,7 @@ implementation
 
 uses
   System.Classes, System.IOUtils, System.Math, System.StrUtils, Data.DB,
-  DBAccess, inLibDocumentoFiscal, inLibXades;
+  DBAccess, inLibDocumentoFiscal, inLibXades, inLibMsg;
 
 const
   cNsFacturae =
@@ -459,44 +459,49 @@ procedure ValidarObligatorio(AErrores: TStrings; const ATexto,
                              AValor: string);
 begin
   if Trim(AValor) = '' then
-    AErrores.Add('- Falta ' + ATexto + '.');
+    AErrores.Add(Format(SErrorFacturaeFaltaCampo, [ATexto]));
 end;
 
 procedure ValidarParte(AErrores: TStrings; const ATexto, ANif, ARazon,
                        ADireccion, ACp, APoblacion, AProvincia,
                        APais: string);
 begin
-  ValidarObligatorio(AErrores, 'NIF de ' + ATexto, ANif);
-  ValidarObligatorio(AErrores, 'razon social de ' + ATexto, ARazon);
-  ValidarObligatorio(AErrores, 'direccion de ' + ATexto, ADireccion);
-  ValidarObligatorio(AErrores, 'codigo postal de ' + ATexto, ACp);
-  ValidarObligatorio(AErrores, 'poblacion de ' + ATexto, APoblacion);
-  ValidarObligatorio(AErrores, 'provincia de ' + ATexto, AProvincia);
+  ValidarObligatorio(AErrores, Format(STextoNifParteFacturae, [ATexto]),
+    ANif);
+  ValidarObligatorio(AErrores,
+    Format(STextoRazonSocialParteFacturae, [ATexto]), ARazon);
+  ValidarObligatorio(AErrores,
+    Format(STextoDireccionParteFacturae, [ATexto]), ADireccion);
+  ValidarObligatorio(AErrores,
+    Format(STextoCodigoPostalParteFacturae, [ATexto]), ACp);
+  ValidarObligatorio(AErrores,
+    Format(STextoPoblacionParteFacturae, [ATexto]), APoblacion);
+  ValidarObligatorio(AErrores,
+    Format(STextoProvinciaParteFacturae, [ATexto]), AProvincia);
   if (APais = 'ESP') and (Trim(ANif) <> '') and
      (not DocumentoFiscalValido(ANif)) then
-    AErrores.Add('- ' + MensajeDocumentoFiscalInvalido(ANif) + ' (' +
-      ATexto + ').');
+    AErrores.Add(Format(SErrorDocumentoFiscalParteFacturae,
+      [MensajeDocumentoFiscalInvalido(ANif), ATexto]));
 end;
 
 procedure ValidarCodigoDir3(AErrores: TStrings; const ATexto,
                             ACodigo: string);
 begin
   if Trim(ACodigo) = '' then
-    AErrores.Add('- Falta el codigo DIR3 de ' + ATexto + '.')
+    AErrores.Add(Format(SErrorFaltaCodigoDir3Facturae, [ATexto]))
   else if Length(Trim(ACodigo)) > 10 then
-    AErrores.Add('- El codigo DIR3 de ' + ATexto +
-      ' supera 10 caracteres.');
+    AErrores.Add(Format(SErrorCodigoDir3LargoFacturae, [ATexto]));
 end;
 
 procedure ValidarDir3Facturae(AErrores: TStrings; ACabecera: TDataSet);
 begin
-  ValidarCodigoDir3(AErrores, 'la oficina contable',
+  ValidarCodigoDir3(AErrores, STextoOficinaContableFacturae,
     CampoDir3Facturae(ACabecera, 'CODIGO_OFICINA_CONTABLE_FAC',
       cDir3RespaldoOficina));
-  ValidarCodigoDir3(AErrores, 'el organo gestor',
+  ValidarCodigoDir3(AErrores, STextoOrganoGestorFacturae,
     CampoDir3Facturae(ACabecera, 'CODIGO_ORGANO_GESTOR_FAC',
       cDir3RespaldoOrgano));
-  ValidarCodigoDir3(AErrores, 'la unidad tramitadora',
+  ValidarCodigoDir3(AErrores, STextoUnidadTramitadoraFacturae,
     CampoDir3Facturae(ACabecera, 'CODIGO_UNIDAD_TRAMITADORA_FAC',
       cDir3RespaldoUnidad));
 end;
@@ -508,12 +513,10 @@ begin
   begin
     if CampoPersonaFisicaFacturae(ACabecera,
        'NOMBRE_PERSONA_CLIENTE_FAC') = '' then
-      AErrores.Add('- El cliente tiene NIF/NIE de persona física. Rellene ' +
-        'el nombre en Parámetros eDoc.');
+      AErrores.Add(SErrorNombrePersonaFisicaFacturae);
     if CampoPersonaFisicaFacturae(ACabecera,
        'APELLIDOS_PERSONA_CLIENTE_FAC') = '' then
-      AErrores.Add('- El cliente tiene NIF/NIE de persona física. Rellene ' +
-        'los apellidos en Parámetros eDoc.');
+      AErrores.Add(SErrorApellidosPersonaFisicaFacturae);
   end;
 end;
 
@@ -521,8 +524,7 @@ procedure ValidarFormaPagoFacturae(AErrores: TStrings; ACabecera: TDataSet);
 begin
   if NormalizarCodigoPagoFacturae(
      CampoStr(ACabecera, 'CODIGO_FACTURAE_FP')) = '' then
-    AErrores.Add('- El codigo Facturae de la forma de pago debe estar ' +
-      'entre 01 y 19.');
+    AErrores.Add(SErrorCodigoPagoFacturaeInvalido);
 end;
 
 procedure ValidarFactura(ACabecera, ALineas: TDataSet);
@@ -535,14 +537,14 @@ begin
   oErrores := TStringList.Create;
   try
     if ACabecera.IsEmpty then
-      oErrores.Add('- No existe la factura seleccionada.');
+      oErrores.Add(SErrorFacturaeNoExiste);
     if not SameText(CampoStr(ACabecera, 'TIPO_FAC'), 'NORMAL') then
-      oErrores.Add('- El eDoc solo se emite desde venta mayor NORMAL.');
+      oErrores.Add(SErrorFacturaeTipoVentaInvalido);
     if CampoStr(ACabecera, 'ESCONSOLIDADA_FAC') <> 'S' then
-      oErrores.Add('- La factura debe estar consolidada antes de emitir eDoc.');
+      oErrores.Add(SErrorFacturaeNoConsolidada);
     if CampoFecha(ACabecera, 'FECHA_FAC') <= 0 then
-      oErrores.Add('- Falta la fecha oficial de la factura.');
-    ValidarParte(oErrores, 'empresa emisora',
+      oErrores.Add(SErrorFacturaeFechaOficialFaltante);
+    ValidarParte(oErrores, STextoEmpresaEmisoraFacturae,
       CampoStr(ACabecera, 'NIF_EMPRESA_FAC'),
       CampoStr(ACabecera, 'RAZON_SOCIAL_EMPRESA_FAC'),
       CampoStr(ACabecera, 'DIRECCION1_EMPRESA_FAC'),
@@ -551,7 +553,7 @@ begin
       CampoStr(ACabecera, 'PROVINCIA_EMPRESA_FAC'),
       CodigoPaisFacturae(CampoStr(ACabecera, 'CODIGO_PAI_EMPRESA_FAC'),
                          CampoStr(ACabecera, 'NOMBRE_PAI_EMPRESA_FAC')));
-    ValidarParte(oErrores, 'cliente',
+    ValidarParte(oErrores, STextoClienteFacturae,
       CampoStr(ACabecera, 'NIF_CLIENTE_FAC'),
       CampoStr(ACabecera, 'RAZON_SOCIAL_CLIENTE_FAC'),
       CampoStr(ACabecera, 'DIRECCION1_CLIENTE_FAC'),
@@ -572,26 +574,26 @@ begin
       dBaseLinea := BaseLinea(ALineas);
       dBaseLineas := dBaseLineas + dBaseLinea;
       if Trim(CampoStr(ALineas, 'DESCRIPCION_ARTICULO_FACLIN')) = '' then
-        oErrores.Add('- La linea ' + CampoStr(ALineas, 'LINEA_FACLIN') +
-          ' no tiene descripcion.');
+        oErrores.Add(Format(SErrorLineaFacturaeSinDescripcion,
+          [CampoStr(ALineas, 'LINEA_FACLIN')]));
       if Abs(CampoFloat(ALineas, 'CANTIDAD_FACLIN')) <= 0.000001 then
-        oErrores.Add('- La linea ' + CampoStr(ALineas, 'LINEA_FACLIN') +
-          ' tiene cantidad cero.');
+        oErrores.Add(Format(SErrorLineaFacturaeCantidadCero,
+          [CampoStr(ALineas, 'LINEA_FACLIN')]));
       ALineas.Next;
     end;
     if iLineas = 0 then
-      oErrores.Add('- La factura no tiene lineas.');
+      oErrores.Add(SErrorFacturaeSinLineas);
     if Abs(dBaseLineas - CampoFloat(ACabecera, 'TOTAL_BASES_FAC')) > 0.05 then
-      oErrores.Add('- La suma de bases de lineas no cuadra con cabecera.');
+      oErrores.Add(SErrorBasesFacturaeNoCuadran);
     if Abs(CampoFloat(ACabecera, 'TOTAL_BASES_FAC') +
        CampoFloat(ACabecera, 'TOTAL_IMPUESTOS_FAC') -
        CampoFloat(ACabecera, 'TOTAL_RETENCION_FAC') -
        CampoFloat(ACabecera, 'TOTAL_LIQUIDO_FAC')) > 0.05 then
-      oErrores.Add('- Los totales de cabecera no cuadran.');
+      oErrores.Add(SErrorTotalesFacturaeNoCuadran);
     ALineas.First;
     if oErrores.Count > 0 then
-      raise Exception.Create('No se puede emitir eDoc Facturae:' +
-        sLineBreak + oErrores.Text);
+      raise Exception.Create(Format(SErrorEmitirFacturae,
+        [oErrores.Text]));
   finally
     FreeAndNil(oErrores);
   end;
@@ -624,8 +626,7 @@ begin
     FreeAndNil(Qry);
   end;
   if (ASerial = '') and (ATitular = '') then
-    raise Exception.Create('La empresa de la factura no tiene certificado ' +
-      'configurado para firmar eDoc Facturae.');
+    raise Exception.Create(SErrorCertificadoFacturaeNoConfigurado);
 end;
 
 procedure AnadirPaymentDetails(ASb: TStringBuilder; ACabecera: TDataSet);
@@ -1003,9 +1004,9 @@ var
   sCarpeta: string;
 begin
   if AConn = nil then
-    raise Exception.Create('No hay conexion de base de datos para emitir eDoc.');
+    raise Exception.Create(SErrorConexionFacturaeNoDisponible);
   if Trim(AArchivo) = '' then
-    raise Exception.Create('No se ha indicado el fichero de salida eDoc.');
+    raise Exception.Create(SErrorFicheroSalidaFacturaeNoIndicado);
   QryCab := TUniQuery.Create(nil);
   QryLin := TUniQuery.Create(nil);
   try

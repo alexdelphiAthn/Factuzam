@@ -140,6 +140,9 @@ function LineasSinSkuRequerido(AConexion: TUniConnection;
 
 implementation
 
+uses
+  inLibMsg;
+
 const
   TIPOS_LEGIBLES: array[TArtTipoCoincidencia] of string =
     ('Desconocido', 'CodigoArt', 'CodigoSku', 'CodigoBarras', 'RefProveedor');
@@ -389,7 +392,7 @@ begin
     if q.IsEmpty then
     begin
       R.Encontrado := False;
-      R.Mensaje    := 'No existe el artículo "' + R.CodigoArticulo + '"';
+      R.Mensaje := Format(SErrorArticuloNoExiste, [R.CodigoArticulo]);
       Exit;
     end;
     R.EsActivoArticulo := q.FieldByName('ESACTIVO_ART').AsString = 'S';
@@ -505,7 +508,7 @@ begin
   sEnt := NormalizarEntradaLector(AEntrada);
   if sEnt = '' then
   begin
-    Result.Mensaje := 'Entrada vacía.';
+    Result.Mensaje := SErrorEntradaArticuloVacia;
     Exit;
   end;
   // Lectura con pistola: restringimos a la fila EAN de la vista para que solo
@@ -541,12 +544,9 @@ begin
     if q.IsEmpty then
     begin
       if ASoloCodigoBarras then
-        Result.Mensaje :=
-          'No se encontró "' + sEnt + '" como código de barras.'
+        Result.Mensaje := Format(SErrorCodigoBarrasNoEncontrado, [sEnt])
       else
-        Result.Mensaje :=
-          'No se encontró "' + sEnt + '" como artículo, SKU, código de barras ' +
-          'ni modelo de proveedor.';
+        Result.Mensaje := Format(SErrorArticuloEntradaNoEncontrado, [sEnt]);
       Exit;
     end;
     Result.CodigoArticulo      := q.FieldByName('CODIGO_PADRE').AsString;
@@ -578,19 +578,18 @@ begin
     RellenarProveedorMatch(Result, sEnt);
 
   if Result.Encontrado and Result.RequiereSku then
-    Result.Mensaje :=
-      'El artículo "' + Result.CodigoArticulo + '" tiene SKUs (talla/color). ' +
-      'Indica un SKU concreto antes de continuar.'
+    Result.Mensaje := Format(SAvisoArticuloRequiereSku,
+                             [Result.CodigoArticulo])
   else if Result.Encontrado and (not Result.TieneSku) then
   begin
     // Localizado y activo pero sin ninguna unidad (SKU) activa que vender:
     // p. ej. variación sin tallas/colores. Motivo exacto, no "no encontrado".
     if Result.EsVariacion then
-      Result.Mensaje := 'El artículo "' + Result.CodigoArticulo +
-        '" no tiene tallas/colores (SKU) activos para vender.'
+      Result.Mensaje := Format(SErrorArticuloVariacionSinSkusActivos,
+                               [Result.CodigoArticulo])
     else
-      Result.Mensaje := 'El artículo "' + Result.CodigoArticulo +
-        '" no tiene ninguna unidad (SKU) activa para vender.';
+      Result.Mensaje := Format(SErrorArticuloSinSkusActivos,
+                               [Result.CodigoArticulo]);
   end;
 end;
 
@@ -606,9 +605,8 @@ begin
     Result.RequiereSku := False;
     RellenarDatosArticulo(Result);
     if Result.RequiereSku then
-      Result.Mensaje :=
-        'El SKU "' + ACodigoSkuPreferido + '" no pertenece a "' +
-        Result.CodigoArticulo + '" o no está activo.';
+      Result.Mensaje := Format(SErrorSkuNoPerteneceArticulo,
+        [ACodigoSkuPreferido, Result.CodigoArticulo]);
   end;
 end;
 

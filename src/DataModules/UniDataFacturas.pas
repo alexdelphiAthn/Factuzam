@@ -262,7 +262,8 @@ uses
   inLibArticulosValidador,
   inLibLicenciaAplicacion,
   inLibVentasImpuestos,
-  inLibContadorLineas;
+  inLibContadorLineas,
+  inLibMsg;
 
 {$R *.dfm}
 
@@ -444,31 +445,26 @@ begin
       bRepercute := False;
     if (not AIsError) and SameText(sAmbito, 'UE') and (not bUE) then
     begin
-      ShowMessage('La operacion "' + sTipo + '" es intracomunitaria, pero el ' +
-        'cliente no es de la UE (pais ' + sPais + '). Corrija el tipo de ' +
-        'operacion o el pais del cliente.');
+      ShowMessage(Format(SErrorOperacionIntracomunitariaClienteNoUE,
+                         [sTipo, sPais]));
       AIsError := True;
     end;
     if (not AIsError) and SameText(sAmbito, 'EXTRA_UE') and
        (bUE or (not bExtr)) then
     begin
-      ShowMessage('La operacion "' + sTipo + '" es exportacion fuera de la ' +
-        'UE, pero el cliente es comunitario o nacional. Corrija el tipo o el ' +
-        'pais del cliente.');
+      ShowMessage(Format(SErrorOperacionExportacionClienteNoExtranjero,
+                         [sTipo]));
       AIsError := True;
     end;
     if (not AIsError) and (not bRepercute) and (Abs(dCuota) > 0.01) then
     begin
-      ShowMessage('La operacion no repercute IVA (intracomunitaria, ISP o ' +
-        'exportacion), pero la factura tiene IVA (' +
-        FormatFloat('#,##0.00', dCuota) + '). Revise el IVA o el tipo de ' +
-        'operacion.');
+      ShowMessage(Format(SErrorOperacionSinIvaConCuota,
+                         [FormatFloat('#,##0.00', dCuota)]));
       AIsError := True;
     end;
     if (not AIsError) and bExtr and (sNif = '') then
     begin
-      ShowMessage('El cliente es extranjero (pais ' + sPais + ') y Verifactu ' +
-        'exige su NIF-IVA. Indique el NIF del cliente.');
+      ShowMessage(Format(SErrorNifIvaClienteExtranjero, [sPais]));
       AIsError := True;
     end;
   end;
@@ -690,15 +686,15 @@ begin
           begin
             // Si hay error, mostrar mensaje
             if facTotales.MensajeError <> '' then
-              ShowMessage(
-                'Error al calcular borrador: ' + facTotales.MensajeError);
+              ShowMessage(Format(SErrorCalcularBorradorDetalle,
+                                 [facTotales.MensajeError]));
           end;
         finally
           FreeAndNil(facTotales);
         end;
       except
         on E: Exception do
-          ShowMessage('Error en cálculo de borrador: ' + E.Message);
+          ShowMessage(Format(SErrorCalculoBorrador, [E.Message]));
       end;
     finally
       unqryLinFac.ReadOnly := bReadOnlyLineas;
@@ -1852,7 +1848,7 @@ begin
     3: fPorcen := FindField('PORCENTAJE_IVAE_FAC').AsCurrency;
     else
     begin
-      ShowMessage('Tipo de Iva incorrecto');
+      ShowMessage(SErrorTipoIvaFactura);
       fPorcen := unqryLinFac.FindField('PORCENTAJE_IVAN_FAC').AsCurrency;
       unqryLinFac.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString := 'N';
     end;
@@ -2251,15 +2247,11 @@ begin
      (DataSet.FieldByName(ffasefac).AsString <> '') and
      (not SameText(DataSet.FieldByName(ffasefac).AsString, 'BORRADOR')) then
   begin
-    ShowMessage('El borrador está en fase ' +
-                DataSet.FieldByName(ffasefac).AsString +
-                ': ya se ha lanzado a Verifactu y no puede borrarse. ' +
-                'Use Anular registro fiscal o emita una rectificativa.');
+    ShowMessage(Format(SErrorBorrarBorradorFase,
+                       [DataSet.FieldByName(ffasefac).AsString]));
     Abort;
   end;
-  if MessageDlg(Format('¿Borrar la factura %s / %s?' + sLineBreak +
-                       'Se eliminaran sus lineas, recibos/efectos y ' +
-                       'movimientos de stock.',
+  if MessageDlg(Format(SPreguntaBorrarFactura,
                        [unqryTablaG.FieldByName(fseriefac).AsString,
                         unqryTablaG.FieldByName(fnrofac).AsString]),
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
@@ -2303,8 +2295,7 @@ begin
         qryBorrarEfectos.Open;
         if qryBorrarEfectos.FieldByName('N').AsInteger > 0 then
         begin
-          ShowMessage('El borrador tiene efectos de cobro cobrados, ' +
-                      'conciliados o remesados. No puede borrarse.');
+          ShowMessage(SErrorBorrarBorradorEfectosCobrados);
           Abort;
         end;
         qryBorrarEfectos.Close;
@@ -2463,8 +2454,8 @@ begin
     except
       on E: Exception do
       begin
-        ShowMessage('No se puede insertar líneas sin grabar primero la ' +
-                    'cabecera: ' + E.Message);
+        ShowMessage(Format(SErrorInsertarLineasCabeceraFactura,
+                           [E.Message]));
         Abort;
       end;
     end;
@@ -2474,7 +2465,7 @@ begin
      (unqryTablaG.FieldByName('NUMERO_FAC').AsString = '0') or
      (unqryTablaG.FieldByName('SERIE_FAC').AsString = '') then
   begin
-    ShowMessage('Debe grabar primero el borrador antes de añadir líneas');
+    ShowMessage(SErrorBorradorSinGrabarParaLineas);
     Abort;
   end;
   // Verificar estado de consolidación
@@ -2585,8 +2576,7 @@ begin
                           'FC')) and
         (IsError = False)) then
     begin
-      ShowMessage('Esta serie es usada por otra empresa.' +
-                  ' Debe cambiar la serie ');
+      ShowMessage(SErrorSerieFacturaOtraEmpresa);
       SenalarCampoInvalido(cvfSerie);
       IsError := True;
     end;
@@ -2594,21 +2584,21 @@ begin
        (FieldByName('TIPO_FAC').AsString <> 'SIMPLIFICADA') and
        (IsError = False) then
     begin
-      ShowMessage('Debe escribir la razón social del cliente del borrador');
+      ShowMessage(SErrorRazonSocialClienteBorrador);
       SenalarCampoInvalido(cvfRazonSocialCliente);
       IsError := True;
     end;
     if (FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsSTring = '') and
        (IsError = False) then
     begin
-      ShowMessage('Debe escribir la razón social de la empresa del borrador');
+      ShowMessage(SErrorRazonSocialEmpresaBorrador);
       SenalarCampoInvalido(cvfRazonSocialEmpresa);
       IsError := True;
     end;
     if (FieldByName('SERIE_FAC').AsString = '') and
        (IsError = False) then
     begin
-      ShowMessage('Debe seleccionar una serie del borrador');
+      ShowMessage(SErrorSerieBorradorObligatoria);
       SenalarCampoInvalido(cvfSerie);
       IsError := True;
     end;
@@ -2617,7 +2607,7 @@ begin
         (FieldByName('TIPO_FAC').AsString <> 'SIMPLIFICADA') then
     begin
       IsError := True;
-      ShowMessage('Debe seleccionar un pais para cliente y empresa.');
+      ShowMessage(SErrorPaisClienteEmpresaBorrador);
     end;
     // Las validaciones de coherencia solo corren mientras la factura es un
     // borrador editable (no en los posts programaticos de consolidacion /
@@ -2629,7 +2619,7 @@ begin
     if (not IsError) and bValidar and
        (FieldByName('FECHA_FAC').AsString = '') then
     begin
-      ShowMessage('Debe indicar la fecha del borrador.');
+      ShowMessage(SErrorFechaBorradorObligatoria);
       SenalarCampoInvalido(cvfFecha);
       IsError := True;
     end;
@@ -2642,9 +2632,9 @@ begin
        (not DocumentoFiscalValido(
           FieldByName('NIF_CLIENTE_FAC').AsString)) then
     begin
-      ShowMessage('El NIF/CIF/NIE del cliente no es valido: ' +
-        MensajeDocumentoFiscalInvalido(
-          FieldByName('NIF_CLIENTE_FAC').AsString));
+      ShowMessage(Format(SErrorNifClienteFactura,
+        [MensajeDocumentoFiscalInvalido(
+           FieldByName('NIF_CLIENTE_FAC').AsString)]));
       SenalarCampoInvalido(cvfNifCliente);
       IsError := True;
     end;
@@ -2654,9 +2644,9 @@ begin
        (not DocumentoFiscalValido(
           FieldByName('NIF_EMPRESA_FAC').AsString)) then
     begin
-      ShowMessage('El NIF/CIF/NIE de la empresa no es valido: ' +
-        MensajeDocumentoFiscalInvalido(
-          FieldByName('NIF_EMPRESA_FAC').AsString));
+      ShowMessage(Format(SErrorNifEmpresaFactura,
+        [MensajeDocumentoFiscalInvalido(
+           FieldByName('NIF_EMPRESA_FAC').AsString)]));
       SenalarCampoInvalido(cvfNifEmpresa);
       IsError := True;
     end;
@@ -2673,12 +2663,10 @@ begin
       if (dtUltima > 0) and
          (FieldByName('FECHA_FAC').AsDateTime < dtUltima) then
       begin
-        ShowMessage('La fecha ' +
-          FormatDateTime('dd/mm/yyyy',
-                         FieldByName('FECHA_FAC').AsDateTime) +
-          ' es anterior al ultimo borrador de la serie (' +
-          FormatDateTime('dd/mm/yyyy', dtUltima) +
-          '). La numeracion debe seguir orden cronologico.');
+        ShowMessage(Format(SErrorFechaFacturaAnteriorSerie,
+          [FormatDateTime('dd/mm/yyyy',
+                          FieldByName('FECHA_FAC').AsDateTime),
+           FormatDateTime('dd/mm/yyyy', dtUltima)]));
         SenalarCampoInvalido(cvfFecha);
         IsError := True;
       end;
@@ -2687,10 +2675,10 @@ begin
     if (not IsError) and bValidar and
        (FieldByName('FECHA_FAC').AsString <> '') and
        (FieldByName('FECHA_FAC').AsDateTime > Date) then
-      ShowMessage('Aviso: la fecha del borrador es posterior a hoy.');
+      ShowMessage(SAvisoFechaBorradorFutura);
     if IsError then
     begin
-      raise Exception.Create('No se ha grabado la cabecera del borrador');
+      raise Exception.Create(SErrorCabeceraBorradorSinGrabar);
     end
     else
       if ((State = dsEdit) or (State = dsInsert)) then
@@ -2710,18 +2698,16 @@ begin
         if bValidar and
            ((Trim(FieldByName('NUMERO_FAC').AsString) = '') or
             (FieldByName('NUMERO_FAC').AsString = '0')) then
-          raise Exception.Create('No se ha podido asignar numero a la ' +
-            'factura (serie ' + FieldByName('SERIE_FAC').AsString +
-            '). Revise el contador de la serie.');
+          raise Exception.Create(Format(SErrorAsignarNumeroFactura,
+            [FieldByName('SERIE_FAC').AsString]));
         // Aviso (no bloquea): salto en la numeracion. La ley exige numeracion
         // correlativa, asi que el numero o numeros que falten deben cubrirse.
         if bValidar and (State = dsInsert) and
            HayHuecoNumeracion(FieldByName('SERIE_FAC').AsString,
                               FieldByName('CODIGO_EMP_FAC').AsString,
                               FieldByName('NUMERO_FAC').AsString) then
-          ShowMessage('Aviso: hay un salto en la numeracion de la serie ' +
-            FieldByName('SERIE_FAC').AsString + '. La ley exige numeracion ' +
-            'correlativa: el numero o numeros que falten deben cubrirse.');
+          ShowMessage(Format(SAvisoHuecoNumeracionFactura,
+            [FieldByName('SERIE_FAC').AsString]));
         ActualizarAuditoria(DataSet);
       end;
   end;

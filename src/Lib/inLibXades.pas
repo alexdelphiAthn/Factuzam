@@ -75,7 +75,7 @@ implementation
 
 uses
   System.Classes, System.DateUtils, System.Hash, System.NetEncoding,
-  System.StrUtils, System.TimeSpan, Winapi.Windows;
+  System.StrUtils, System.TimeSpan, Winapi.Windows, inLibMsg;
 
 const
   cCrypt32 = 'crypt32.dll';
@@ -419,23 +419,23 @@ begin
   hHash := 0;
   if not CryptAcquireContextW(hProv, nil, nil, PROV_RSA_AES,
                               CRYPT_VERIFYCONTEXT) then
-    raise EXadesError.Create('No se pudo abrir el proveedor criptografico.');
+    raise EXadesError.Create(SErrorAbrirProveedorCriptografico);
   try
     if not CryptCreateHash(hProv, AAlgId, 0, 0, hHash) then
-      raise EXadesError.Create('No se pudo crear el hash criptografico.');
+      raise EXadesError.Create(SErrorCrearHashCriptografico);
     try
       if Length(ABytes) > 0 then
         if not CryptHashData(hHash, PByte(@ABytes[0]),
                              DWORD(Length(ABytes)), 0) then
-          raise EXadesError.Create('No se pudo calcular el hash.');
+          raise EXadesError.Create(SErrorCalcularHash);
       dwTam := 0;
       if not CryptGetHashParam(hHash, HP_HASHVAL, nil, dwTam, 0) then
-        raise EXadesError.Create('No se pudo obtener el tamano del hash.');
+        raise EXadesError.Create(SErrorObtenerTamanoHash);
       SetLength(Result, dwTam);
       if dwTam > 0 then
         if not CryptGetHashParam(hHash, HP_HASHVAL, PByte(@Result[0]),
                                  dwTam, 0) then
-          raise EXadesError.Create('No se pudo obtener el valor del hash.');
+          raise EXadesError.Create(SErrorObtenerValorHash);
     finally
       CryptDestroyHash(hHash);
     end;
@@ -497,8 +497,8 @@ end;
 function MensajeErrorCripto(const AOperacion: string; ACodigo: DWORD):
   string;
 begin
-  Result := AOperacion + '. Codigo: ' + CodigoErrorHex(ACodigo) + '. ' +
-    SysErrorMessage(ACodigo);
+  Result := Format(SErrorOperacionCriptografica,
+    [AOperacion, CodigoErrorHex(ACodigo), SysErrorMessage(ACodigo)]);
 end;
 
 procedure LanzarErrorCripto(const AOperacion: string);
@@ -517,13 +517,8 @@ begin
   dwError := GetLastError;
   if dwError = NTE_BAD_ALGID then
   begin
-    sMensaje :=
-      'El proveedor criptografico del certificado no admite SHA-256 para ' +
-      'firma RSA. No se puede generar XAdES rsa-sha256 con ese certificado ' +
-      'tal como esta instalado. Reinstala o importa el certificado con un ' +
-      'proveedor compatible con SHA-256, como Microsoft Enhanced RSA and ' +
-      'AES Cryptographic Provider o Microsoft Software Key Storage ' +
-      'Provider. ' + MensajeErrorCripto(AOperacion, dwError);
+    sMensaje := Format(SErrorProveedorCertificadoSinSha256,
+      [MensajeErrorCripto(AOperacion, dwError)]);
     raise EXadesError.Create(sMensaje);
   end
   else
@@ -698,14 +693,13 @@ var
 begin
   GetSystemTimeAsFileTime(oAhora);
   if CompareFileTime(oAhora, ACert^.pCertInfo^.NotBefore) < 0 then
-    sEstado := 'todavia no es valido'
+    sEstado := STextoCertificadoTodaviaNoValido
   else
-    sEstado := 'esta caducado';
+    sEstado := STextoCertificadoCaducado;
   sDesde := FechaCertificadoTexto(ACert^.pCertInfo^.NotBefore);
   sHasta := FechaCertificadoTexto(ACert^.pCertInfo^.NotAfter);
-  Result := 'El certificado configurado ' + sEstado + '. Vigencia: ' +
-            sDesde + ' - ' + sHasta + '. Seleccione un certificado vigente ' +
-            'en la ficha de empresa.';
+  Result := Format(SErrorCertificadoNoVigente,
+    [sEstado, sDesde, sHasta]);
 end;
 
 function CertificadoCoincide(ACert: PXadesCertContext;
@@ -775,9 +769,7 @@ begin
     if sErrorNoVigente <> '' then
       raise EXadesError.Create(sErrorNoVigente)
     else
-      raise EXadesError.Create('No se encontro en el almacen personal de ' +
-        'Windows un certificado vigente que coincida con el numero de serie ' +
-        'o titular configurado.');
+      raise EXadesError.Create(SErrorCertificadoVigenteNoEncontrado);
   end;
 end;
 
@@ -787,8 +779,7 @@ var
   pCert: PXadesCertContext;
 begin
   if (Trim(ASerialCert) = '') and (Trim(ATitularCert) = '') then
-    raise EXadesError.Create('No hay un certificado configurado en la ' +
-      'ficha de la empresa.');
+    raise EXadesError.Create(SErrorCertificadoEmpresaNoConfigurado);
   pCert := BuscarCertificado(ASerialCert, ATitularCert);
   // BuscarCertificado exige que exista en MY y que esté vigente.
   CertFreeCertificateContext(pCert);
@@ -802,22 +793,19 @@ var
 begin
   hHash := 0;
   if not CryptCreateHash(hProv, CALG_SHA_256, 0, 0, hHash) then
-    LanzarErrorFirmaCapiSha256(
-      'No se pudo crear el hash SHA-256 para firmar');
+    LanzarErrorFirmaCapiSha256(SErrorCrearHashSha256Firma);
   try
     if not CryptHashData(hHash, PunteroBytes(ADatos),
                          DWORD(Length(ADatos)), 0) then
-      LanzarErrorFirmaCapiSha256(
-        'No se pudieron cargar los datos a firmar');
+      LanzarErrorFirmaCapiSha256(SErrorCargarDatosFirma);
     iTam := 0;
     if not CryptSignHashW(hHash, dwKeySpec, nil, 0, nil, iTam) then
-      LanzarErrorFirmaCapiSha256(
-        'No se pudo calcular el tamano de la firma SHA-256');
+      LanzarErrorFirmaCapiSha256(SErrorCalcularTamanoFirmaSha256);
     SetLength(Result, iTam);
     if iTam > 0 then
     begin
       if not CryptSignHashW(hHash, dwKeySpec, nil, 0, @Result[0], iTam) then
-        LanzarErrorFirmaCapiSha256('No se pudo firmar con SHA-256');
+        LanzarErrorFirmaCapiSha256(SErrorFirmarSha256);
       InvertirBytes(Result);
     end;
   finally
@@ -841,8 +829,8 @@ begin
                             DWORD(Length(aHash)), nil, 0, iTam,
                             NCRYPT_PAD_PKCS1_FLAG);
   if iEstado <> ERROR_SUCCESS then
-    raise EXadesError.CreateFmt('NCryptSignHash fallo al calcular el ' +
-      'tamano de la firma. Codigo: %d', [iEstado]);
+    raise EXadesError.CreateFmt(SErrorCalcularTamanoFirmaNCrypt,
+      [iEstado]);
   SetLength(Result, iTam);
   if iTam > 0 then
   begin
@@ -850,8 +838,7 @@ begin
                               DWORD(Length(aHash)), @Result[0], iTam,
                               iTam, NCRYPT_PAD_PKCS1_FLAG);
     if iEstado <> ERROR_SUCCESS then
-      raise EXadesError.CreateFmt('NCryptSignHash fallo al firmar. ' +
-        'Codigo: %d', [iEstado]);
+      raise EXadesError.CreateFmt(SErrorFirmaNCrypt, [iEstado]);
   end;
 end;
 
@@ -873,8 +860,7 @@ begin
     dwFlags := dwFlags or CRYPT_ACQUIRE_SILENT_FLAG;
   if not CryptAcquireCertificatePrivateKey(ACert, dwFlags, nil, hKey,
                                             dwKeySpec, bLiberar) then
-    LanzarErrorCripto(
-      'No se pudo abrir la clave privada del certificado');
+    LanzarErrorCripto(SErrorAbrirClavePrivadaCertificado);
   try
     if dwKeySpec = CERT_NCRYPT_KEY_SPEC then
       Result := FirmarCngSha256(hKey, ADatos)
@@ -958,7 +944,7 @@ begin
     begin
       iFin := BuscarFinEtiqueta(AXml, i);
       if iFin = 0 then
-        raise EXadesError.Create('XML mal formado al canonicalizar.');
+        raise EXadesError.Create(SErrorXmlMalFormadoCanonicalizar);
       sEtiqueta := Copy(AXml, i, iFin - i + 1);
       if EtiquetaEsVacia(sEtiqueta, iMarcaCierre) then
       begin
@@ -1087,13 +1073,13 @@ begin
   Result := AXml;
   iRaiz := PosPrimerElementoRaiz(Result);
   if iRaiz = 0 then
-    raise EXadesError.Create('No se encontro el elemento raiz del XML.');
+    raise EXadesError.Create(SErrorElementoRaizXmlNoEncontrado);
   ANombreRaiz := NombreElementoRaiz(Result, iRaiz);
   if ANombreRaiz = '' then
-    raise EXadesError.Create('No se pudo determinar el nombre del nodo raiz.');
+    raise EXadesError.Create(SErrorNombreNodoRaizNoDeterminado);
   iFin := BuscarFinEtiqueta(Result, iRaiz);
   if iFin = 0 then
-    raise EXadesError.Create('No se encontro el cierre de la apertura raiz.');
+    raise EXadesError.Create(SErrorCierreAperturaRaizNoEncontrado);
   sEtiqueta := Copy(Result, iRaiz, iFin - iRaiz + 1);
   if (AIdNodo <> '') and (not EtiquetaAperturaTieneId(sEtiqueta)) then
   begin
@@ -1128,8 +1114,8 @@ begin
   sCierre := '</' + ANombreRaiz + '>';
   iCierre := UltimaPos(sCierre, AXml);
   if iCierre = 0 then
-    raise EXadesError.Create('No se encontro el cierre del nodo raiz ' +
-      ANombreRaiz + '.');
+    raise EXadesError.CreateFmt(SErrorCierreNodoRaizNoEncontrado,
+      [ANombreRaiz]);
   Result := Copy(AXml, 1, iCierre - 1) + AFirma +
             Copy(AXml, iCierre, MaxInt);
 end;
@@ -1143,8 +1129,8 @@ begin
   sCierre := '</' + ANombreNodo + '>';
   iCierre := UltimaPos(sCierre, AXml);
   if iCierre = 0 then
-    raise EXadesError.Create('No se encontro el cierre del nodo ' +
-      ANombreNodo + '.');
+    raise EXadesError.CreateFmt(SErrorCierreNodoNoEncontrado,
+      [ANombreNodo]);
   Result := Copy(AXml, 1, iCierre - 1) + AFirma +
             Copy(AXml, iCierre, MaxInt);
 end;

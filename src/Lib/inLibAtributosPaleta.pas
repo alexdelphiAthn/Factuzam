@@ -58,6 +58,12 @@ function ObtenerInfoBasicoArticulo(AConexion: TUniConnection;
                                    const ACodArt, AIdVA, AValor: string;
                                    out AInfo: TInfoBasico): Boolean;
 
+// Devuelve los codigos basicos de una variacion usados por los SKU activos
+// de un articulo, ordenados como la paleta.
+function SqlBasicosArticulo: string;
+function ObtenerBasicosArticulo(AConexion: TUniConnection;
+                                const ACodArt, AIdVA: string): TArray<string>;
+
 // Convierte '#RRGGBB' o '#RGB' a TColor. Devuelve clNone si no parseable.
 function HexToColor(const AHex: string): TColor;
 
@@ -340,6 +346,62 @@ begin
   if GCacheArticulo <> nil then
     GCacheArticulo.Clear;
   GCacheCargado := False;
+end;
+
+function SqlBasicosArticulo: string;
+begin
+  Result :=
+    'SELECT ATB.CODIGO_ATB, MIN(ATB.ORDEN_ATB) AS ORDEN_ATB, ' +
+    '       MIN(ATB.NOMBRE_ATB) AS NOMBRE_ATB ' +
+    '  FROM fza_articulos_skus SK ' +
+    '  JOIN fza_atributos_sku SA ' +
+    '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
+    '  JOIN fza_atributos_valores AV ' +
+    '    ON AV.ID_AV = SA.ID_AV_SA ' +
+    '   AND AV.ID_VA_AV = :va ' +
+    '  JOIN fza_atributos_basicos ATB ' +
+    '    ON ATB.ID_VA_ATB = :va ' +
+    '   AND (ATB.ID_ATB = AV.ID_ATB_AV ' +
+    '        OR (AV.ID_ATB_AV IS NULL AND ATB.CODIGO_ATB = AV.AV)) ' +
+    ' WHERE SK.CODIGO_ART_SKU = :art ' +
+    '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
+    '   AND COALESCE(AV.ESACTIVO_AV, ''S'') = ''S'' ' +
+    '   AND COALESCE(ATB.ESACTIVO_ATB, ''S'') = ''S'' ' +
+    ' GROUP BY ATB.CODIGO_ATB ' +
+    ' ORDER BY ORDEN_ATB, NOMBRE_ATB, ATB.CODIGO_ATB';
+end;
+
+function ObtenerBasicosArticulo(AConexion: TUniConnection;
+  const ACodArt, AIdVA: string): TArray<string>;
+var
+  i: Integer;
+  oConsulta: TUniQuery;
+  sArticulo: string;
+begin
+  SetLength(Result, 0);
+  sArticulo := Trim(ACodArt);
+  if sArticulo <> '' then
+  begin
+    oConsulta := TUniQuery.Create(nil);
+    try
+      oConsulta.Connection := AConexion;
+      oConsulta.SQL.Text := SqlBasicosArticulo;
+      oConsulta.ParamByName('va').AsString := AIdVA;
+      oConsulta.ParamByName('art').AsString := sArticulo;
+      oConsulta.Open;
+      SetLength(Result, oConsulta.RecordCount);
+      i := 0;
+      while not oConsulta.Eof do
+      begin
+        Result[i] :=
+          oConsulta.FieldByName('CODIGO_ATB').AsString;
+        Inc(i);
+        oConsulta.Next;
+      end;
+    finally
+      oConsulta.Free;
+    end;
+  end;
 end;
 
 function ObtenerInfoBasico(AConexion: TUniConnection;

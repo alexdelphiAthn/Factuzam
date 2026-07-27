@@ -307,7 +307,8 @@ implementation
 
 uses
   inLibArticulosValidador,
-  Winapi.GDIPOBJ, Winapi.GDIPAPI;
+  Winapi.GDIPOBJ, Winapi.GDIPAPI,
+  inLibMsg;
 
 { TFotoInfo }
 
@@ -786,16 +787,8 @@ begin
           if sExt = '.webp' then sCodec := 'WebP Imaging Extensions'
           else if sExt = '.avif' then sCodec := 'AV1 Video Extension'
           else sCodec := 'HEIF Image Extensions';
-          raise EInvalidGraphic.Create(
-            'No se puede importar ' + UpperCase(Copy(sExt, 2, MaxInt)) +
-            ' en este equipo: falta el codec "' + sCodec + '".' +
-            sLineBreak + sLineBreak +
-            'Instálalo gratis desde Microsoft Store y reintenta.' +
-            sLineBreak + sLineBreak +
-            'Alternativa: guarda la imagen en PNG o JPG y vuelve a' +
-            ' subirla.' +
-            sLineBreak + sLineBreak +
-            'Error original: ' + E.Message);
+          raise EInvalidGraphic.Create(Format(SErrorImportarImagenCodec,
+            [UpperCase(Copy(sExt, 2, MaxInt)), sCodec, E.Message]));
         end;
       end;
       Result := wic;
@@ -1017,13 +1010,14 @@ var
 begin
   Result.Clear;
   if (ACodArt = '') then
-    raise Exception.Create('No se puede guardar foto sin codigo de articulo.');
+    raise Exception.Create(SErrorGuardarFotoSinCodigoArticulo);
   if not FileExists(AFicheroOrigen) then
-    raise Exception.Create('El fichero origen no existe: ' + AFicheroOrigen);
+    raise Exception.Create(Format(SErrorFicheroOrigenFotoNoExiste,
+      [AFicheroOrigen]));
 
   sDirBase := DirBase;
   if sDirBase = '' then
-    raise Exception.Create('El parametro appDirFotos no esta configurado.');
+    raise Exception.Create(SErrorDirectorioFotosNoConfigurado);
 
   ForceDirectories(sDirBase + cSubdir300);
   ForceDirectories(sDirBase + cSubdir600);
@@ -1148,7 +1142,7 @@ begin
   Result.Clear;
   info := Resolver(ACodArt, ACodSku);
   if not info.Encontrada then
-    raise Exception.Create('No hay foto registrada para rotar.');
+    raise Exception.Create(SErrorFotoNoRegistradaParaRotar);
 
   // Rotamos la fila que resolvio, sea cual sea su nivel: foto del
   // articulo, prefijo, o SKU exacto. Asi una rotacion desde un SKU que
@@ -1592,17 +1586,18 @@ var
 begin
   Result.Clear;
   if ASerieSes = '' then
-    raise Exception.Create('Foto de sesion: falta SERIE_SES.');
+    raise Exception.Create(SErrorFotoSesionSinSerie);
   if ANumeroSes = '' then
-    raise Exception.Create('Foto de sesion: falta NUMERO_SES.');
+    raise Exception.Create(SErrorFotoSesionSinNumero);
   if ALinea <= 0 then
-    raise Exception.Create('Foto de sesion: LINEA debe ser > 0.');
+    raise Exception.Create(SErrorFotoSesionLineaInvalida);
   if not FileExists(AFicheroOrigen) then
-    raise Exception.Create('El fichero origen no existe: ' + AFicheroOrigen);
+    raise Exception.Create(Format(SErrorFicheroOrigenFotoNoExiste,
+      [AFicheroOrigen]));
 
   sDirBase := DirBase;
   if sDirBase = '' then
-    raise Exception.Create('El parametro appDirFotos no esta configurado.');
+    raise Exception.Create(SErrorDirectorioFotosNoConfigurado);
   ForceDirectories(sDirBase + cSubdir300);
   ForceDirectories(sDirBase + cSubdir600);
   ForceDirectories(sDirBase + cSubdirReal);

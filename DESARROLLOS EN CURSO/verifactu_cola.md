@@ -167,15 +167,16 @@ formado. Causas por orden de probabilidad:
 La consulta de operaciones de caja (`inMtoConsultaOpe`) lleva tres
 botones que operan sobre la factura del ticket seleccionado:
 
-- **Rectificar**: confirma y carga la venta en una ventana de caja
-  libre (o nueva) con las **líneas del ticket en negativo**, editables
-  (`TfrmMtoOpeCaja.CargarRectificacion`). La fase de cobro muestra en el
+- **Rectificar**: pide la modalidad y carga la venta en una ventana de
+  caja libre (o nueva), con líneas negativas por diferencias o positivas
+  en una sustitutiva (`TfrmMtoOpeCaja.CargarRectificacion`). La fase de
+  cobro muestra en el
   título «RECTIFICA a la factura serie\número», el combo de series
   carga las de **subtipo RECTIFICATIVA** y el documento se graba como
   `TIPO_FAC='RECTIFICATIVA'`; al terminar se enlaza
   (original → `FASE_FAC='RECTIFICADA'` + columnas ABONO apuntando a la
-  rectificativa, comentario «ESTA FACTURA ANULA Y RECTIFICA…») y se
-  encola (registro R5/R1). En modo rectificación el F8 (factura
+  rectificativa), se guarda su modalidad fiscal y se encola el registro
+  R5/R1. En modo rectificación el F8 (factura
   completa) queda bloqueado.
 - **Anular Factura Verifactu**: encola el `RegistroAnulacion` del
   ticket (exige que esté consolidado).
@@ -290,7 +291,8 @@ existía) queda integrado con Verifactu. Al crear el abono con
 `PRC_CREAR_FACTURA_ABONO`, `TVerifactuCola.EncolarRectificativa`:
 
 - Marca la nueva como `TIPO_FAC='RECTIFICATIVA'` y añade a sus
-  comentarios «ESTA FACTURA ANULA Y RECTIFICA A LA serie\número».
+  comentarios «ESTA FACTURA RECTIFICA POR DIFERENCIAS A LA
+  serie\número».
 - La **original** pasa a `FASE_FAC='RECTIFICADA'` y guarda en sus
   columnas `SERIE/NUMERO_FAC_ABONO_FAC` la rectificativa (el antecesor
   apunta a su sucesor).
@@ -301,7 +303,9 @@ existía) queda integrado con Verifactu. Al crear el abono con
   `IDX_FAC_ABONO`).
 
 Requiere ejecutar `verifactu_rectificativas.sql` (ensancha las columnas
-de enlace a varchar(20) y crea el índice del lookup inverso).
+de enlace a varchar(20) y crea el índice del lookup inverso) y
+`facturas_tipo_rectificativa.sql` (añade
+`TIPO_RECTIFICATIVA_FAC`).
 
 **Rectificativa desde caja (Buscar operaciones → Rectificar).** La
 rectificativa nacida en caja se grababa en Verifactu con serie/número
@@ -312,13 +316,19 @@ y nunca recibe el número real (que vive en la variable interna
 Número=0`, se encolaba un registro fantasma `0\0` que la AEAT rechazaba y
 el enlace ABONO de la original se rompía. Solución:
 
-- `TdmCajaOpe.GrabarFacturaSimplificada` expone la serie/número reales de
-  la última factura grabada en `UltSerieFacturaGrabada` /
-  `UltNumeroFacturaGrabada`, e `inMtoCajaOpe` los usa al encolar la
-  rectificativa en vez de `cdsCabecera`.
+- `TdmCajaOpe.GrabarFacturaSimplificada` enlaza y registra fiscalmente la
+  rectificativa dentro de la misma transacción que crea la factura.
 - `EncolarRectificativa` no encola si la serie o el número llegan vacíos o
   a `'0'`: deja un evento de error en el log en lugar del registro
   fantasma.
+- Antes de presentar la operación, caja pide **Por diferencias** o
+  **Sustitutiva**. Conserva `I` o `S` en
+  `TIPO_RECTIFICATIVA_FAC`.
+- Por diferencias presenta las líneas en negativo y envía
+  `TipoRectificativa=I`, sin `ImporteRectificacion`.
+- Sustitutiva presenta los importes corregidos en positivo y envía
+  `TipoRectificativa=S` con `ImporteRectificacion`: base, cuota y, si
+  existe, recargo de equivalencia de la factura original.
 
 **Log Verifactu (registro de eventos).** El Mto del log
 (`inMtoVerifactuLog`) es de solo consulta: se bloquean alta, edición y
@@ -449,8 +459,7 @@ fase de cobro; venta inexistente → **Anular**.
 - Devoluciones de caja: hoy van como F2 con importes negativos (igual
   que la factura). Si la AEAT las rechaza, habrá que emitirlas como
   rectificativas R5.
-- Banda exenta: motivo `E1` fijo. Rectificativas: `R5` por diferencias
-  (`TipoRectificativa=I`) sin bloque de facturas rectificadas.
+- Banda exenta: motivo `E1` fijo.
 - La cadena solo avanza con registros aceptados; un registro rechazado
   se regenera entero (nueva huella y FechaHoraHuso) en el reintento.
 - Si la AEAT acepta pero la persistencia local fallara justo después

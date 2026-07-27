@@ -102,6 +102,7 @@ type
     btnCodigoEmpleado: TcxButtonEdit;
     lblTarifa: TcxLabel;
     lblInstrucciones: TcxLabel;
+    lblTipoRectificativa: TcxLabel;
     pnlBusqueda: TPanel;
     cxgrdStock: TcxGrid;
     dbtvStock: TcxGridDBTableView;
@@ -223,6 +224,7 @@ type
     // CargarRectificacion desde Buscar operaciones)
     FSerieRectifica:  string;
     FNumeroRectifica: string;
+    FTipoRectificativa: TTipoRectificativaCaja;
     FCaptionPrevio:   string;
     FUltimoTickReloj: TDateTime;
     FEnfoqueArticuloPendiente: Boolean;
@@ -344,10 +346,11 @@ type
     function IntentarCerrar:Boolean;
     // True si no hay venta a medias (sin líneas pendientes)
     function OperacionVacia: Boolean;
-    // Carga la operación como rectificación del ticket indicado: líneas
-    // del original en negativo (editables), cliente del original y, al
-    // cobrar, serie rectificativa y TIPO_FAC='RECTIFICATIVA'
-    procedure CargarRectificacion(const ASerie, ANumero: string);
+    // Carga la operación como rectificación del ticket indicado. El tipo
+    // decide el signo de las líneas y la leyenda de la operación de caja.
+    procedure CargarRectificacion(
+      const ASerie, ANumero: string;
+      ATipoRectificativa: TTipoRectificativaCaja);
     property NumeroCajaActual: Integer read FNumeroCajaActual
                                        write FNumeroCajaActual;
   end;
@@ -365,7 +368,7 @@ uses
   inLibUser,
   inLibLog,
   inMtoCajaFaseCobro, inLibDevExp, inLibtb,
-  UniDataFacturas, inMtoModalImpFac, inLibVerifactuCola,
+  UniDataFacturas, inMtoModalImpFac,
   inLibFacturas, inLibGenBusq, inLibGenerarTicket,
   inLibGenerarTicketCaja, inLibGenerarTicketBD, inLibVentasWsCola,
   inLibFacturaPdfBlob,
@@ -507,6 +510,8 @@ begin
   FCodigoCaja    := ACaja;
   FFecha         := AFecha;
   FUltimoTickReloj := Now;
+  lblTipoRectificativa.Caption := '';
+  lblTipoRectificativa.Visible := False;
 
   if Assigned(DatosCaja) then
   begin
@@ -3392,7 +3397,10 @@ begin
                                               sTipoFactura,
                                               dtFechaFactura,
                                               FFecha,
-                                              frmFaseCobro.FNumeroManual) then
+                                              frmFaseCobro.FNumeroManual,
+                                              FTipoRectificativa,
+                                              FSerieRectifica,
+                                              FNumeroRectifica) then
        begin
          // El codigo del vale emitido lo genera GrabarFacturaSimplificada;
          // hay que devolverlo a DatosCobro para que el ticket lo imprima.
@@ -3474,24 +3482,13 @@ begin
              slRutasTicketPdf[slRutasTicketPdf.Count - 1],
              'TicketTermico');
          end;
-         // Rectificación: enlazar original→rectificativa (fase
-         // RECTIFICADA + columnas ABONO), comentario y encolado; y
-         // salir del modo
+         // La rectificativa se enlaza y registra fiscalmente dentro de la
+         // misma transacción que la factura. Aquí solo salimos del modo.
          if FNumeroRectifica <> '' then
          begin
-           // Serie/numero FIABLES de la rectificativa recien grabada. Antes
-           // se leian de cdsCabecera, que queda con SERIE_FAC='0', y se
-           // encolaba un registro fantasma 0\0 en Verifactu
-           TVerifactuCola.EncolarRectificativa(
-             ParametrosApp,
-             ParametrosCaja,
-             ConexionPrincipal,
-             IdentidadSesion.Usuario,
-             FSerieRectifica, FNumeroRectifica,
-             DatosCaja.UltSerieFacturaGrabada,
-             DatosCaja.UltNumeroFacturaGrabada);
            FSerieRectifica  := '';
            FNumeroRectifica := '';
+           FTipoRectificativa := trcNinguna;
            if FCaptionPrevio <> '' then
              Caption := FCaptionPrevio;
          end;
@@ -3544,13 +3541,31 @@ begin
   end;
 end;
 
-procedure TfrmMtoOpeCaja.CargarRectificacion(const ASerie, ANumero: string);
+procedure TfrmMtoOpeCaja.CargarRectificacion(
+  const ASerie, ANumero: string;
+  ATipoRectificativa: TTipoRectificativaCaja);
 var
   Qry:     TUniQuery;
   i:       Integer;
   oCampo:  TField;
   oDestino: TField;
+  dSigno: Double;
+  sTipoRectificativa: string;
 begin
+  case ATipoRectificativa of
+    trcDiferencias:
+      begin
+        dSigno := -1;
+        sTipoRectificativa := 'POR DIFERENCIAS';
+      end;
+    trcSustitutiva:
+      begin
+        dSigno := 1;
+        sTipoRectificativa := 'SUSTITUTIVA';
+      end;
+  else
+    raise Exception.Create('Debe indicar el tipo de rectificativa.');
+  end;
   Qry := TUniQuery.Create(nil);
   try
     Qry.Connection := ConexionPrincipal;
@@ -3578,8 +3593,8 @@ begin
     DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString :=
       Qry.FieldByName('CODIGO_CLI_FAC').AsString;
     DatosCaja.cdsCabecera.Post;
-    // Líneas del original en negativo (el cajero puede quitar o ajustar
-    // las que no se rectifican)
+    // El cajero puede quitar o ajustar las líneas que no se rectifican.
+    // Por diferencias se presentan en negativo; sustitutiva, en positivo.
     Qry.Close;
     Qry.SQL.Text :=
       ' SELECT * FROM fza_facturas_lineas ' +
@@ -3601,20 +3616,21 @@ begin
           if (oDestino <> nil) and (not oCampo.IsNull) then
             oDestino.Value := oCampo.Value;
         end;
-        // Importes y cantidades en negativo
+        // Fuerza el signo solicitado aunque el original contenga ajustes.
         if DatosCaja.cdsLineas.FindField('CANTIDAD_FACLIN') <> nil then
           DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat :=
-            -Qry.FieldByName('CANTIDAD_FACLIN').AsFloat;
+            dSigno * Abs(Qry.FieldByName('CANTIDAD_FACLIN').AsFloat);
         if (DatosCaja.cdsLineas.FindField('TOTAL_FACLIN') <> nil) and
            (Qry.FindField('TOTAL_FACLIN') <> nil) then
           DatosCaja.cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency :=
-            -Qry.FieldByName('TOTAL_FACLIN').AsCurrency;
+            dSigno * Abs(Qry.FieldByName('TOTAL_FACLIN').AsCurrency);
         if (DatosCaja.cdsLineas.FindField(
               'TOTAL_FAC_SIVA_FACLIN') <> nil) and
            (Qry.FindField('TOTAL_FAC_SIVA_FACLIN') <> nil) then
           DatosCaja.cdsLineas.FieldByName(
             'TOTAL_FAC_SIVA_FACLIN').AsCurrency :=
-            -Qry.FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency;
+            dSigno * Abs(
+              Qry.FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency);
         DatosCaja.cdsLineas.Post;
         Qry.Next;
       end;
@@ -3626,9 +3642,14 @@ begin
   end;
   FSerieRectifica  := ASerie;
   FNumeroRectifica := ANumero;
+  FTipoRectificativa := ATipoRectificativa;
   if FCaptionPrevio = '' then
     FCaptionPrevio := Caption;
-  Caption := FCaptionPrevio + '  —  RECTIFICA a ' + ASerie + '\' + ANumero;
+  Caption := FCaptionPrevio + '  —  RECTIFICATIVA ' + sTipoRectificativa +
+    ' de ' + ASerie + '\' + ANumero;
+  lblTipoRectificativa.Caption := 'RECTIFICATIVA' + sLineBreak +
+    sTipoRectificativa;
+  lblTipoRectificativa.Visible := True;
 end;
 
 procedure TfrmMtoOpeCaja.ImprimirFacturaA4(const ASerie, ANumero: string);

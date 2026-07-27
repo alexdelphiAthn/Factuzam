@@ -1,7 +1,7 @@
 ﻿-- ========================================
--- Backup generado: 23/07/2026 18:33:28
+-- Backup generado: 27/07/2026 12:36:46
 -- Base de datos: Factuzam
--- Demo regenerada: 24/07/2026 19:45:56 desde factuzam_original.sql; datos demo conservados.
+-- Demo regenerada: 27/07/2026 20:16:36 desde factuzam_original.sql; datos demo conservados.
 -- Compatibilidad MariaDB 10.2.41: CURRENT_TIMESTAMP sin parentesis, CREATE TABLE conservador, INSERT grandes troceados e indices integrados en CREATE TABLE.
 -- ========================================
 
@@ -4149,7 +4149,7 @@ CREATE TABLE `fza_caja_operaciones` (
 /*!40000 ALTER TABLE `fza_caja_operaciones` DISABLE KEYS */;
 
 /*!40000 ALTER TABLE `fza_caja_operaciones` ENABLE KEYS */;
--- 72 registros exportados
+-- 81 registros exportados
 
 -- Datos de fza_caja_operaciones
 
@@ -4252,7 +4252,7 @@ CREATE TABLE `fza_caja_pagos` (
   INDEX `FK_PAGO_FORMAP` (`CODIGO_FP_CFP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
--- 159 registros exportados
+-- 164 registros exportados
 
 -- Datos de fza_caja_pagos
 
@@ -4455,7 +4455,7 @@ CREATE TABLE `fza_caja_vales` (
   INDEX `IDX_VALES_RED_OP` (`CODIGO_EMP_RED_VL`, `CODIGO_ALM_RED_VL`, `CODIGO_CAJA_RED_VL`, `NUMERO_OPERACION_RED_VL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
--- 12 registros exportados
+-- 14 registros exportados
 
 -- Datos de fza_caja_vales
 
@@ -6565,7 +6565,7 @@ CREATE TABLE `fza_efectos_venta` (
   INDEX `IDX_EFV_VENCIMIENTO` (`FECHA_VENCIMIENTO_EFV`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
--- 1 registros exportados
+-- 2 registros exportados
 
 -- Datos de fza_efectos_venta
 
@@ -6929,7 +6929,7 @@ CREATE TABLE `fza_facturas` (
   INDEX `IDX_FAC_ABONO` (`SERIE_FAC_ABONO_FAC`, `NUMERO_FAC_ABONO_FAC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
--- 167 registros exportados
+-- 173 registros exportados
 
 -- Datos de fza_facturas
 
@@ -7368,7 +7368,7 @@ CREATE TABLE `fza_facturas_consolidaciones` (
   UNIQUE INDEX `UK_FACTURA` (`SERIE_FAC_FACCON`, `NUMERO_FAC_FACCON`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
--- 12 registros exportados
+-- 18 registros exportados
 
 -- Datos de fza_facturas_consolidaciones
 
@@ -7451,7 +7451,7 @@ CREATE TABLE `fza_facturas_lineas` (
   INDEX `IDX_FAC_LIN_FAMILIA` (`CODIGO_FAM_FACLIN`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
--- 213 registros exportados
+-- 219 registros exportados
 
 -- Datos de fza_facturas_lineas
 
@@ -7904,7 +7904,7 @@ CREATE TABLE `fza_generadorprocesos` (
   PRIMARY KEY (`CODIGO_GENERADOR_PROCESO_GP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
--- 83 registros exportados
+-- 86 registros exportados
 
 -- Datos de fza_generadorprocesos
 
@@ -9057,6 +9057,7 @@ CREATE TABLE `fza_movimientos_almacen` (
   `CODIGO_ALM_DOC_MOV` varchar(10) NULL DEFAULT NULL COMMENT 'Almacén/Tienda donde se originó el ticket/operación',
   `NUMERO_OPERACION_DOC_MOV` varchar(20) NULL DEFAULT NULL COMMENT 'Número de operación de caja que causó el movimiento',
   `CODIGO_CAJA_DOC_MOV` varchar(10) NULL DEFAULT NULL COMMENT 'Código de caja donde se originó la operación',
+  `CLAVE_FCVE_MOV` varchar(50) NULL DEFAULT NULL,
   PRIMARY KEY (`NUMERO_MOV`),
   INDEX `IDX_FECHA_MOV` (`FECHA_MOV`),
   INDEX `IDX_MOV_ALMACEN_FECHA` (`CODIGO_ALM_MOV`, `FECHA_MOV`),
@@ -9064,10 +9065,11 @@ CREATE TABLE `fza_movimientos_almacen` (
   INDEX `IDX_MOV_OP_CAJA` (`CODIGO_EMP_MOV`, `CODIGO_ALM_DOC_MOV`, `CODIGO_CAJA_DOC_MOV`, `NUMERO_OPERACION_DOC_MOV`),
   INDEX `IDX_MOV_SKU_FECHA` (`CODIGO_UNIDAD_MOV`, `FECHA_MOV`),
   INDEX `IDX_REF_MOV` (`TIPO_DOC_REF_MOV`, `SERIE_DOC_REF_MOV`, `NUMERO_DOC_REF_MOV`, `LINEA_REF_MOV`),
-  INDEX `IDX_SKU_ALM_MOV` (`CODIGO_UNIDAD_MOV`, `CODIGO_ALM_MOV`, `FECHA_MOV`)
+  INDEX `IDX_SKU_ALM_MOV` (`CODIGO_UNIDAD_MOV`, `CODIGO_ALM_MOV`, `FECHA_MOV`),
+  UNIQUE INDEX `UX_MOV_CLAVE_FCVE` (`CLAVE_FCVE_MOV`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
--- 780 registros exportados
+-- 786 registros exportados
 
 -- Datos de fza_movimientos_almacen
 
@@ -10627,7 +10629,7 @@ CREATE TABLE `fza_permisos` (
   PRIMARY KEY (`USUARIO_GRUPO_PERM`,`CODIGO_PERM`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
--- 635 registros exportados
+-- 630 registros exportados
 
 -- Datos de fza_permisos
 
@@ -11575,7 +11577,7 @@ CREATE TABLE `fza_remesas_venta` (
   INDEX `IDX_REMV_ESTADO` (`ESTADO_REMV`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
--- 1 registros exportados
+-- 2 registros exportados
 
 -- Datos de fza_remesas_venta
 
@@ -11975,7 +11977,7 @@ CREATE TABLE `fza_usuarios_perfiles` (
   INDEX `IDX_KEYPERFIL` (`KEY_USUPER`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
--- 10204 registros exportados
+-- 10209 registros exportados
 
 -- Datos de fza_usuarios_perfiles
 
@@ -23181,6 +23183,11 @@ CREATE TABLE `fza_ventas_ws_cola` (
   UNIQUE INDEX `UQ_VWSC_EVENTO` (`ID_EVENTO_VWSC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
+/*!40000 ALTER TABLE `fza_ventas_ws_cola` DISABLE KEYS */;
+
+/*!40000 ALTER TABLE `fza_ventas_ws_cola` ENABLE KEYS */;
+-- 2 registros exportados
+
 -- Tabla: fza_verifactu_cadena
 
 DROP TABLE IF EXISTS `fza_verifactu_cadena`;
@@ -23229,7 +23236,7 @@ CREATE TABLE `fza_verifactu_cola` (
 /*!40000 ALTER TABLE `fza_verifactu_cola` DISABLE KEYS */;
 
 /*!40000 ALTER TABLE `fza_verifactu_cola` ENABLE KEYS */;
--- 15 registros exportados
+-- 21 registros exportados
 
 -- Datos de fza_verifactu_cola
 
@@ -23281,7 +23288,7 @@ CREATE TABLE `fza_verifactu_eventos` (
 /*!40000 ALTER TABLE `fza_verifactu_eventos` DISABLE KEYS */;
 
 /*!40000 ALTER TABLE `fza_verifactu_eventos` ENABLE KEYS */;
--- 615 registros exportados
+-- 621 registros exportados
 
 -- Datos de fza_verifactu_eventos
 
@@ -23975,7 +23982,7 @@ CREATE TABLE `fza_winforms` (
   PRIMARY KEY (`CALL_WINF`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
--- 53 registros exportados
+-- 52 registros exportados
 
 -- Datos de fza_winforms
 
@@ -32231,4 +32238,4 @@ SET FOREIGN_KEY_CHECKS=1;
 SET SQL_NOTES=@OLD_SQL_NOTES;
 COMMIT;
 
--- Backup completado: 23/07/2026 18:33:33
+-- Backup completado: 27/07/2026 12:36:48

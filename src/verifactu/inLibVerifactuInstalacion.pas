@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibVerifactuInstalacion                                     }
 {    Tipo:       Librería                                                      }
@@ -69,7 +69,7 @@ uses
   System.Classes, System.IOUtils, System.JSON, System.Net.HttpClient,
   System.Net.URLClient,
   Data.DB,
-  inLibGlobalVar, inLibLog, inLibFactuzamApi;
+  inLibGlobalVar, inLibLog, inLibFactuzamApi, inLibMsg;
 
 const
   cUrlServicios = 'https://webservice.veryverifactu.com/api/v1/';
@@ -190,7 +190,7 @@ begin
     FreeAndNil(oJson);
   end;
   if Result = '' then
-    Result := Format('El servicio respondió con HTTP %d.', [AEstadoHttp]);
+    Result := Format(SErrorServicioInstalacionHttp, [AEstadoHttp]);
 end;
 
 function PedirNumeroInstalacionServicio(
@@ -220,9 +220,9 @@ begin
     sReferencia := TClienteFactuzamApi.Referencia(AParametrosApp);
     sToken := TClienteFactuzamApi.Token(AParametrosApp);
     if sReferencia = '' then
-      raise Exception.Create('Falta la referencia global de la instalación.');
+      raise Exception.Create(SErrorReferenciaGlobalInstalacionFaltante);
     if sToken = '' then
-      raise Exception.Create('Falta la API key de la instalación.');
+      raise Exception.Create(SErrorApiKeyInstalacionFaltante);
     oReqJson.AddPair('referencia', sReferencia);
     oCuerpo := TStringStream.Create(oReqJson.ToString, TEncoding.UTF8);
     try
@@ -241,7 +241,7 @@ begin
       oRespJson := TJSONObject.ParseJSONValue(sRespuesta);
       try
         if not (oRespJson is TJSONObject) then
-          raise Exception.Create('El servicio no devolvió JSON válido.');
+          raise Exception.Create(SErrorServicioJsonInvalido);
         oDatos := TJSONObject(oRespJson).GetValue('datos');
         if oDatos is TJSONObject then
           Result := JsonString(TJSONObject(oDatos), 'numero_instalacion');
@@ -252,7 +252,7 @@ begin
         if Result = '' then
           Result := JsonString(TJSONObject(oRespJson), 'NumeroInstalacion');
         if Result = '' then
-          raise Exception.Create('El servicio no devolvió NumeroInstalacion.');
+          raise Exception.Create(SErrorServicioSinNumeroInstalacion);
       finally
         FreeAndNil(oRespJson);
       end;
@@ -285,9 +285,9 @@ begin
   sReferencia := TClienteFactuzamApi.Referencia(AParametrosApp);
   sToken := TClienteFactuzamApi.Token(AParametrosApp);
   if sReferencia = '' then
-    raise Exception.Create('Falta la referencia global de la instalación.');
+    raise Exception.Create(SErrorReferenciaGlobalInstalacionFaltante);
   if sToken = '' then
-    raise Exception.Create('Falta la API key de la instalación.');
+    raise Exception.Create(SErrorApiKeyInstalacionFaltante);
   oHttp := THTTPClient.Create;
   oReqJson := TJSONObject.Create;
   try
@@ -312,22 +312,19 @@ begin
       oRespJson := TJSONObject.ParseJSONValue(sRespuesta);
       try
         if not (oRespJson is TJSONObject) then
-          raise Exception.Create('El servicio no devolvió JSON válido.');
+          raise Exception.Create(SErrorServicioJsonInvalido);
         oDatos := TJSONObject(oRespJson).GetValue('datos');
         if not (oDatos is TJSONObject) then
-          raise Exception.Create('El servicio no devolvió los datos de la ' +
-                                 'declaración responsable.');
+          raise Exception.Create(SErrorServicioSinDatosDeclaracion);
         sVersion := JsonString(TJSONObject(oDatos), 'version');
         sCodigoSif := JsonString(TJSONObject(oDatos), 'sif');
         if not SameText(sVersion, AVersion) then
-          raise Exception.Create('La declaración recibida no corresponde ' +
-                                 'a la versión solicitada.');
+          raise Exception.Create(SErrorDeclaracionVersionNoSolicitada);
         if not SameText(sCodigoSif, cCodigoSifFactuzam) then
-          raise Exception.Create('La declaración recibida no corresponde ' +
-                                 'al SIF FZ.');
+          raise Exception.Create(SErrorDeclaracionSifIncorrecto);
         Result := JsonString(TJSONObject(oDatos), 'contenido_html');
         if Trim(Result) = '' then
-          raise Exception.Create('La declaración descargada está vacía.');
+          raise Exception.Create(SErrorDeclaracionDescargadaVacia);
       finally
         FreeAndNil(oRespJson);
       end;
@@ -471,8 +468,8 @@ begin
     oHttp.ResponseTimeout := 20000;
     oResp := oHttp.Get(cUrlDeclaracionPublica);
     if oResp.StatusCode <> 200 then
-      raise Exception.CreateFmt('La página pública respondió con HTTP %d.',
-                                [oResp.StatusCode]);
+      raise Exception.CreateFmt(SErrorPaginaPublicaHttp,
+        [oResp.StatusCode]);
     Result := oResp.ContentAsString(TEncoding.UTF8);
   finally
     FreeAndNil(oHttp);
@@ -496,8 +493,7 @@ begin
       AParametrosApp,
       AVersion);
     if not DeclaracionCoincideSifVersion(Result, AVersion) then
-      raise Exception.Create('El webservice devolvió una declaración de ' +
-                             'otra versión.');
+      raise Exception.Create(SErrorDeclaracionWebserviceOtraVersion);
     GuardarDeclaracionCacheSif(AVersion, Result, 'webservice');
   except
     on E: Exception do
@@ -523,8 +519,7 @@ begin
     try
       Result := DescargarDeclaracionPublicaSif;
       if not DeclaracionCoincideSifVersion(Result, AVersion) then
-        raise Exception.Create('La página pública corresponde a otra ' +
-                               'versión.');
+        raise Exception.Create(SErrorDeclaracionPaginaPublicaOtraVersion);
       GuardarDeclaracionCacheSif(AVersion, Result, 'pagina_publica');
     except
       on E: Exception do
@@ -535,9 +530,8 @@ begin
     end;
   end;
   if Result = '' then
-    raise Exception.Create('No hay una declaración responsable disponible ' +
-      'para la versión ' + AVersion + '. Webservice: ' + sErrorServicio +
-      '. Caché: ' + sErrorCache + '. Página pública: ' + sErrorPublica);
+    raise Exception.CreateFmt(SErrorDeclaracionResponsableNoDisponible,
+      [AVersion, sErrorServicio, sErrorCache, sErrorPublica]);
 end;
 
 procedure AsegurarDeclaracionResponsableSif(
@@ -652,8 +646,7 @@ var
   sNumero:string;
 begin
   if not ObtenerEmpresaInstalacionSif(AConn, ACodigoEmpresa, Result) then
-    raise Exception.Create('No hay empresa configurada para solicitar el ' +
-      'número de instalación SIF.');
+    raise Exception.Create(SErrorEmpresaInstalacionSifNoConfigurada);
   if Result.EsValido then
   begin
     sNumero := Trim(Result.Numero);
@@ -663,10 +656,10 @@ begin
     sNumero := '';
   end;
   if Trim(Result.RazonSocial) = '' then
-    raise Exception.Create('La empresa no tiene razón social.');
+    raise Exception.Create(SErrorEmpresaSinRazonSocial);
   if Length(Result.Nif) <> 9 then
-    raise Exception.Create('El NIF de la empresa no es válido: "' +
-      Result.Nif + '".');
+    raise Exception.CreateFmt(SErrorNifEmpresaInstalacionInvalido,
+      [Result.Nif]);
   if sNumero = '' then
   begin
     sNumero := PedirNumeroInstalacionServicio(
@@ -748,21 +741,17 @@ begin
   sVersion := Trim(AVersion);
   sSif := Trim(ACodigoSif);
   if sNumero = '' then
-    raise Exception.Create('La empresa ' + Trim(ANombreEmpresa) + ' (' +
-      Trim(ANifEmpresa) + ') no tiene número de instalación SIF. ' +
-      'Genéralo desde Archivo > Empresas.');
+    raise Exception.CreateFmt(SErrorEmpresaSinNumeroInstalacionSif,
+      [Trim(ANombreEmpresa), Trim(ANifEmpresa)]);
   if not SameText(sSif, cCodigoSifFactuzam) then
-    raise Exception.Create('El número de instalación SIF de la empresa ' +
-      Trim(ANombreEmpresa) + ' no corresponde al SIF FZ.');
+    raise Exception.CreateFmt(SErrorNumeroInstalacionSifIncorrecto,
+      [Trim(ANombreEmpresa)]);
   if sVersion = '' then
-    raise Exception.Create('El número de instalación SIF de la empresa ' +
-      Trim(ANombreEmpresa) + ' no tiene versión asociada. Genéralo de ' +
-      'nuevo desde Archivo > Empresas.');
+    raise Exception.CreateFmt(SErrorNumeroInstalacionSinVersion,
+      [Trim(ANombreEmpresa)]);
   if not SameText(sVersion, oVersion) then
-    raise Exception.Create('El número de instalación SIF de la empresa ' +
-      Trim(ANombreEmpresa) + ' fue generado para la versión ' + sVersion +
-      ' y la versión actual es ' + oVersion + '. Genéralo de nuevo desde ' +
-      'Archivo > Empresas.');
+    raise Exception.CreateFmt(SErrorVersionNumeroInstalacionIncorrecta,
+      [Trim(ANombreEmpresa), sVersion, oVersion]);
 end;
 
 end.

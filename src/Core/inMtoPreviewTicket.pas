@@ -90,7 +90,7 @@ implementation
 
 uses
   SynPdf, inLibDir, Vcl.Imaging.PngImage, Vcl.Printers, System.IOUtils,
-  System.UITypes, inLibPreviewTicket;
+  System.UITypes, inLibPreviewTicket, inLibMsg;
 
 type
   TEjecutorPreviewTicketMto = class(TEjecutorPreviewTicket)
@@ -340,10 +340,8 @@ begin
     begin
       if sErrorImpresion <> '' then
       begin
-        MessageDlg('No se pudo enviar el ticket a la impresora "' +
-                   ANombreImpresora + '".' + sLineBreak +
-                   sErrorImpresion + sLineBreak +
-                   'Se abrirá la vista previa.',
+        MessageDlg(Format(SErrorEnviarTicketImpresora,
+                          [ANombreImpresora, sErrorImpresion]),
                    mtWarning, [mbOk], 0);
       end;
       oPreview.ShowModal;
@@ -958,7 +956,7 @@ var
 begin
   if FComandos = '' then
   begin
-    ShowMessage('No hay comandos ESC/POS para enviar a la impresora.');
+    ShowMessage(SAvisoSinComandosESCPOSImpresora);
     Exit;
   end;
 
@@ -977,10 +975,11 @@ begin
   // 2. Usar tu librería para enviar el ticket de forma nativa
   try
     EnviarComandoRAW(NombreImpresoraElegida, FComandos);
-    ShowMessage('Ticket enviado correctamente a: ' + NombreImpresoraElegida);
+    ShowMessage(Format(SInfoTicketEnviadoImpresora,
+                       [NombreImpresoraElegida]));
   except
     on E: Exception do
-      ShowMessage('Error al imprimir: ' + E.Message);
+      ShowMessage(Format(SErrorImprimir, [E.Message]));
   end;
 end;
 
@@ -1034,9 +1033,9 @@ begin
       bPDFGuardado := True;
     end
     else
-      ShowMessage('No hay comandos ESC/POS para generar el PDF.');
+      ShowMessage(SAvisoSinComandosESCPOSPDF);
     if bPDFGuardado then
-      ShowMessage('PDF guardado en: ' + sDestino);
+      ShowMessage(Format(SInfoPDFGuardado, [sDestino]));
   end;
 end;
 
@@ -1049,7 +1048,7 @@ begin
   if SaveDialog1.Execute then
   begin
     GuardarPNG(SaveDialog1.FileName);
-    ShowMessage('PNG guardado en: ' + SaveDialog1.FileName);
+    ShowMessage(Format(SInfoPNGGuardado, [SaveDialog1.FileName]));
   end;
 end;
 

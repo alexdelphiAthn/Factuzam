@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibColumnasSkuModoSku                                       }
 {    Tipo:       Libreria                                                      }
@@ -144,6 +144,9 @@ type
   end;
 
 implementation
+
+uses
+  inLibMsg;
 
 type
   // Acceso a OnEnter/OnExit (protegidos en TWinControl) de los editores
@@ -844,7 +847,7 @@ begin
   Result := '';
   Atribs := FLookup.ObtenerAtributos(ACodArt);
   if Length(Atribs) = 0 then
-    ShowMessage('El artículo no tiene atributos definidos: ' + ACodArt)
+    ShowMessage(Format(SAvisoArticuloSinAtributos, [ACodArt]))
   else
   begin
     Result := ACodArt;

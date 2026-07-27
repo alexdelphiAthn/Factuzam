@@ -2,7 +2,7 @@
 {                                                                              }
 {  Modulo:       inMtoStockConsulta                                            }
 {    Tipo:       Formulario (flotante, fsStayOnTop)                            }
-{ Version:       0.6.0                                                         }
+{ Version:       0.7.0                                                         }
 {   Fecha:       22/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -46,6 +46,8 @@
 {    Almacen y checklist nuevo de colores en la pestana Por Color.             }
 {    v0.2: pivote dinamico, colores con swatch en cabecera, panel de           }
 {    precios/proveedores. Estado "Prestadas" sigue siendo stub.                }
+{    v0.7: botón "Op de Caja" para consultar en un modal las operaciones DE,   }
+{    DV y VE del SKU seleccionado en una celda de talla.                       }
 {******************************************************************************}
 unit inMtoStockConsulta;
 
@@ -107,6 +109,7 @@ type
 
   TfrmStockConsulta = class(TfrmBase)
     pnlCabecera   : TPanel;
+      btnOperacionesCaja: TcxButton;
       lblArt        : TcxLabel;
       btnArt        : TcxButtonEdit;
       lblDescr      : TcxLabel;
@@ -141,6 +144,7 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnArtPropertiesButtonClick(Sender: TObject; AButtonIndex: Integer);
     procedure btnArtPropertiesEditValueChanged(Sender: TObject);
+    procedure btnOperacionesCajaClick(Sender: TObject);
     procedure cbbEstadoPropertiesEditValueChanged(Sender: TObject);
     procedure lstAlmacenesClick(Sender: TObject);
     procedure lstColoresClick(Sender: TObject);
@@ -255,6 +259,8 @@ type
     function  EstadoBaseSelectFor(AEstado: TEstadoStock): string;
     function  ResolverCodigoSkuDocumentoTrabajo(const AColor, ATalla: string;
               out ACodigoSku, AMensaje: string): Boolean;
+    function  ResolverSkuCeldaOperacionesCaja(
+              out ACodigoSku, AMensaje: string): Boolean;
     function  ResolverCeldaDocumentoTrabajo(out ALinea:
               TDocTrabajoLineaOrigen; out AMensaje: string): Boolean;
     procedure ReconstruirColumnas(const ATallas: TArray<TInfoColumna>;
@@ -291,7 +297,8 @@ uses
   System.StrUtils,
   inLibAtributosPaleta,
   inLibGenBusq, inLibUser,
-  inLibArticulosValidador;
+  inLibArticulosValidador,
+  inMtoModalOperacionesCajaSku;
 
 {$R *.dfm}
 
@@ -1094,6 +1101,134 @@ begin
   begin
     AMensaje := 'La celda seleccionada coincide con varios SKUs. ' +
                 'Acote color, talla o almacen antes de agregarla.';
+  end;
+end;
+
+function TfrmStockConsulta.ResolverSkuCeldaOperacionesCaja(
+  out ACodigoSku, AMensaje: string): Boolean;
+var
+  rec     : TcxCustomGridRecord;
+  col     : TcxGridDBColumn;
+  sCampo  : string;
+  sGrupo  : string;
+  sColor  : string;
+  sTalla  : string;
+  iTalla  : Integer;
+  colores : TArray<string>;
+begin
+  Result := False;
+  ACodigoSku := '';
+  AMensaje := '';
+  rec := nil;
+  col := nil;
+  sCampo := '';
+  sGrupo := '';
+  sColor := '';
+  sTalla := '';
+  iTalla := -1;
+  if Trim(FCodArt) = '' then
+  begin
+    AMensaje := 'Seleccione primero un artículo.';
+  end;
+  if AMensaje = '' then
+  begin
+    rec := tvStock.Controller.FocusedRecord;
+    if rec = nil then
+    begin
+      AMensaje := 'Seleccione una celda de talla.';
+    end;
+  end;
+  if AMensaje = '' then
+  begin
+    if tvStock.Controller.FocusedColumn is TcxGridDBColumn then
+    begin
+      col := TcxGridDBColumn(tvStock.Controller.FocusedColumn);
+    end
+    else
+    begin
+      AMensaje := 'Seleccione una celda de talla.';
+    end;
+  end;
+  if AMensaje = '' then
+  begin
+    sCampo := col.DataBinding.FieldName;
+    if StartsText('T', sCampo) and
+       TryStrToInt(Copy(sCampo, 2, MaxInt), iTalla) and
+       (iTalla >= 0) and (iTalla <= High(FColumnas)) then
+    begin
+      sTalla := FColumnas[iTalla].Codigo;
+    end
+    else if SameText(sCampo, 'TOTAL') and (Length(FColumnas) = 0) then
+    begin
+      sTalla := '';
+    end
+    else
+    begin
+      AMensaje := 'Seleccione una columna de talla.';
+    end;
+  end;
+  if (AMensaje = '') and (FColGrupo = nil) then
+  begin
+    AMensaje := 'No se ha podido identificar la fila seleccionada.';
+  end;
+  if AMensaje = '' then
+  begin
+    sGrupo := VarToStr(rec.Values[FColGrupo.Index]);
+    if FEsModoColor then
+    begin
+      sColor := sGrupo;
+    end
+    else
+    begin
+      colores := ColoresSeleccionadosLista;
+      if Length(colores) = 1 then
+      begin
+        sColor := colores[0];
+      end
+      else if (Length(colores) = 0) and
+              (lstColores.Items.Count = 0) then
+      begin
+        sColor := '';
+      end
+      else
+      begin
+        AMensaje :=
+          'Seleccione un único color o cambie a la vista Por colores.';
+      end;
+    end;
+  end;
+  if AMensaje = '' then
+  begin
+    Result := ResolverCodigoSkuDocumentoTrabajo(
+                sColor, sTalla, ACodigoSku, AMensaje);
+    if (not Result) and
+       (Pos('varios SKUs', AMensaje) > 0) then
+    begin
+      AMensaje := 'La talla seleccionada corresponde a varios SKU. ' +
+                  'Seleccione un único color o use la vista Por colores.';
+    end;
+  end;
+end;
+
+procedure TfrmStockConsulta.btnOperacionesCajaClick(Sender: TObject);
+var
+  sCodigoSku : string;
+  sMensaje   : string;
+begin
+  if ResolverSkuCeldaOperacionesCaja(sCodigoSku, sMensaje) then
+  begin
+    TfrmModalOperacionesCajaSku.Ejecutar(
+      Self,
+      ConexionPrincipal,
+      sCodigoSku,
+      lblDescr.Caption);
+  end
+  else
+  begin
+    Application.MessageBox(
+      PChar(sMensaje),
+      'Operaciones de caja',
+      MB_OK or MB_ICONINFORMATION or MB_TOPMOST or MB_SETFOREGROUND);
   end;
 end;
 

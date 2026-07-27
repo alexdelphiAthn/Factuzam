@@ -299,7 +299,7 @@ const
 implementation
 
 uses
-  inLibLog;
+  inLibLog, inLibMsg;
 
 constructor TGridPivoteCompra.Create(const ACfg: TGridPivoteCompraConfig);
 begin
@@ -423,9 +423,9 @@ begin
   AMensaje := '';
   sCodigo := Trim(ACodigoAtbColor);
   if sCodigo = '' then
-    AMensaje := 'Selecciona un color.'
+    AMensaje := SErrorColorCompraNoSeleccionado
   else if FCfg.Conexion = nil then
-    AMensaje := 'No hay conexión para resolver el color.'
+    AMensaje := SErrorConexionResolverColorCompra
   else
   begin
     q := TUniQuery.Create(nil);
@@ -441,7 +441,7 @@ begin
       q.ParamByName('cod').AsString := sCodigo;
       q.Open;
       if q.IsEmpty then
-        AMensaje := 'No existe el color básico "' + sCodigo + '".'
+        AMensaje := Format(SErrorColorBasicoCompraNoExiste, [sCodigo])
       else
       begin
         iIdAtb := q.FieldByName('ID_ATB').AsInteger;
@@ -497,7 +497,7 @@ begin
         end;
         Result := AIdAv > 0;
         if not Result then
-          AMensaje := 'No se pudo resolver el color "' + sCodigo + '".';
+          AMensaje := Format(SErrorResolverColorCompra, [sCodigo]);
       end;
     finally
       FreeAndNil(q);
@@ -541,8 +541,8 @@ begin
     q.Open;
     while not q.Eof do
     begin
-      incidencias.Add('- Articulo SIN sistema de tallas: ' +
-                      q.FieldByName('ART').AsString);
+      incidencias.Add(Format(SErrorArticuloSinSistemaTallasPivote,
+        [q.FieldByName('ART').AsString]));
       q.Next;
     end;
     q.Close;
@@ -568,8 +568,7 @@ begin
     q.Open;
     while not q.Eof do
     begin
-      incidencias.Add(Format(
-        '- Articulo %s: sistema "%s" con %d tallas (maximo %d).',
+      incidencias.Add(Format(SErrorSistemaTallasSuperaMaximoPivote,
         [q.FieldByName('ART').AsString,
          q.FieldByName('SISTEMA').AsString,
          q.FieldByName('N').AsInteger,
@@ -601,8 +600,7 @@ begin
     q.Open;
     while not q.Eof do
     begin
-      incidencias.Add(Format(
-        '- SKU %s (art %s): talla "%s" fuera del sistema asignado.',
+      incidencias.Add(Format(SErrorSkuFueraSistemaTallasPivote,
         [q.FieldByName('SKU').AsString,
          q.FieldByName('ART').AsString,
          q.FieldByName('TALLA').AsString]));
@@ -611,10 +609,7 @@ begin
     q.Close;
     if incidencias.Count > 0 then
     begin
-      AMensaje := 'No se puede activar el modo pivote por tallas:' +
-                  sLineBreak + sLineBreak +
-                  incidencias.Text + sLineBreak +
-                  'Se mantiene la vista plana (linea por SKU).';
+      AMensaje := Format(SErrorActivarPivoteTallas, [incidencias.Text]);
       Result := False;
     end;
   finally
@@ -2753,18 +2748,17 @@ begin
   AMensaje := '';
   rTotal := 0;
   if not FActivo then
-    AMensaje := 'Activa las tallas en horizontal antes de elegir color.'
+    AMensaje := SErrorActivarTallasHorizontalesParaColor
   else if not GetLineaActiva(iLinea, sLinea) then
-    AMensaje := 'No hay una línea activa para cambiar el color.'
+    AMensaje := SErrorLineaActivaColorNoDisponible
   else if FPivotTotalPedido.TryGetValue(iLinea, rTotal) and
           (Abs(rTotal) > 0.000001) then
-    AMensaje := 'El color se elige antes de introducir cantidades. ' +
-                'Crea una línea de color nueva para no mezclar tallas.'
+    AMensaje := SErrorColorCompraConCantidades
   else if ResolverAvColorBasico(ACodigoAtbColor, iIdAv, sValorAv,
                                 sNombreColor, AMensaje) then
   begin
     if (FCfg.SourceLineas = nil) or (not FCfg.SourceLineas.Active) then
-      AMensaje := 'No está abierta la consulta de líneas.'
+      AMensaje := SErrorConsultaLineasCompraNoAbierta
     else
     begin
       ds := FCfg.SourceLineas;
@@ -2781,12 +2775,12 @@ begin
       end;
       if (not bLineaActual) and
          (not ds.Locate(FCfg.FieldLinea, sLineaLocate, [])) then
-        AMensaje := 'No se encontró la línea activa para cambiar el color.'
+        AMensaje := SErrorLineaActivaColorNoEncontrada
       else
       begin
         sArt := Trim(ds.FieldByName(FCfg.FieldArt).AsString);
         if sArt = '' then
-          AMensaje := 'La línea activa no tiene artículo.'
+          AMensaje := SErrorLineaActivaCompraSinArticulo
         else
         begin
           sVarSku := '';

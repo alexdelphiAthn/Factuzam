@@ -72,9 +72,21 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="..\src\Lib\inLibAtributosPaleta.pas"/>
+        <DCCReference Include="..\src\Lib\inLibColumnasDocumento.pas"/>
+        <DCCReference Include="..\src\Lib\inLibBusquedasCompra.pas"/>
+        <DCCReference Include="..\src\Lib\inLibValidacionDocumento.pas"/>
+        <DCCReference Include="..\src\Lib\inLibPresentacionDocumento.pas"/>
+        <DCCReference Include="..\src\Lib\inLibShowMto.pas"/>
         <DCCReference Include="..\src\Lib\inLibImpuestosComun.pas"/>
         <DCCReference Include="..\src\Lib\inLibComprasImpuestos.pas"/>
         <DCCReference Include="..\src\Lib\inLibVentasImpuestos.pas"/>
+        <DCCReference Include="PruebasAtributosPaleta.pas"/>
+        <DCCReference Include="PruebasColumnasDocumento.pas"/>
+        <DCCReference Include="PruebasBusquedasCompra.pas"/>
+        <DCCReference Include="PruebasValidacionTallasCompra.pas"/>
+        <DCCReference Include="PruebasPresentacionDocumento.pas"/>
+        <DCCReference Include="PruebasNavegacionDocumento.pas"/>
         <DCCReference Include="PruebasImpuestosComun.pas"/>
         <DCCReference Include="PruebasTotalesDocumentos.pas"/>
         <BuildConfiguration Include="Base">

@@ -252,6 +252,38 @@ cada zona. Lo ordeno por retorno.
 
 ## D1 — `TfrmMtoDocumentoBase` (la mayor duplicación que queda)
 
+Estado a 27/07/2026: **fascículos 6A a 6P terminados**. La creación,
+visibilidad, captions de modo, carga de nombres de atributo por artículo y
+globales, configuración del gestor/pivote, desmontaje del modo,
+configuración base de columnas SKU, columnas host y configuración del
+pivote por bandas están centralizados en
+`inLibColumnasDocumento` para los cuatro documentos de compra que contenían
+esa duplicación. Las búsquedas comunes de artículos y SKUs viven en
+`inLibBusquedasCompra`. La validación previa a activar tallas en horizontal
+y la persistencia de cabeceras de compra, pedidos y albaranes de venta viven
+en `inLibValidacionDocumento`. La carga de básicos de color por artículo
+vive en `inLibAtributosPaleta`. Pedidos, albaranes y facturas de venta e
+inventarios reutilizan ya la configuración SKU y los nombres globales de
+`inLibColumnasDocumento`. Los textos de proveedor y totales de prendas se
+comparten mediante `inLibPresentacionDocumento`. La batería DUnitX pasa
+por `inLibShowMto`. La batería DUnitX pasa 52/52. Detalles en
+`refactorizacion_fase6a_resultados.md` y
+`refactorizacion_fase6b_resultados.md` y
+`refactorizacion_fase6c_resultados.md` y
+`refactorizacion_fase6d_resultados.md` y
+`refactorizacion_fase6e_resultados.md` y
+`refactorizacion_fase6f_resultados.md` y
+`refactorizacion_fase6g_resultados.md` y
+`refactorizacion_fase6h_resultados.md` y
+`refactorizacion_fase6i_resultados.md` y
+`refactorizacion_fase6j_resultados.md` y
+`refactorizacion_fase6k_resultados.md` y
+`refactorizacion_fase6l_resultados.md` y
+`refactorizacion_fase6m_resultados.md` y
+`refactorizacion_fase6n_resultados.md` y
+`refactorizacion_fase6o_resultados.md` y
+`refactorizacion_fase6p_resultados.md`.
+
 Los seis formularios de la familia suman **16.335 líneas** y comparten
 **40 métodos con el mismo nombre en tres o más de ellos**:
 `CrearTablaPrincipal`, `CrearColumnasTallas`, `CrearColumnasAtributos`,

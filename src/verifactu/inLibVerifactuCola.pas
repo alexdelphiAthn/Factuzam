@@ -83,7 +83,9 @@ type
                                          const AUsuario: string;
                                          const ASerieOriginal,
                                          ANumeroOriginal,
-                                         ASerieRect, ANumeroRect: string);
+                                         ASerieRect, ANumeroRect: string;
+                                         const ATipoRectificativa: string =
+                                         'I');
     // Histórico N:1 de rectificaciones/sustituciones
     // (fza_facturas_relaciones): cada hija guarda su factura de origen
     class procedure RegistrarRelacionFactura(AConn: TUniConnection;
@@ -105,7 +107,7 @@ implementation
 
 uses
   Winapi.Windows, Data.DB,
-  inLibLog,
+  inLibLog, inLibMsg,
   inLibVerifactu, inLibVerifactuEnvio, inLibRelojFiscal,
   inLibVentasWsCola;
 
@@ -236,9 +238,7 @@ var
   sEstado: string;
 begin
   if not ColumnasFirmaFacturacionDisponibles(AQry.Connection) then
-    raise Exception.Create('Faltan columnas de firma en ' +
-      'fza_facturas_consolidaciones. Aplique el script ' +
-      'DESARROLLOS EN CURSO\verifactu_registros_firmados.sql.');
+    raise Exception.Create(SErrorColumnasFirmaFacturacionNoDisponibles);
   AQry.SQL.Text :=
     ' UPDATE fza_verifactu_cadena ' +
     ' SET CONTADOR_VFCAD = :CONTADOR, ' +
@@ -457,10 +457,9 @@ begin
     ValidarRequisitosFiscalesEmision(AParametrosApp, AQryTrx.Connection,
       ASerie, ANumero);
     ExigirRelojFiscal(AParametrosApp,
-      'Registro de facturación NO VERI*FACTU');
+      STextoRegistroFacturacionNoVerifactu);
     if not VerifactuFirmaCertificado(AParametrosApp) then
-      raise Exception.Create('El modo NO VERI*FACTU exige firmar el ' +
-        'registro de facturación con certificado oficial.');
+      raise Exception.Create(SErrorFirmaRegistroNoVerifactuObligatoria);
     oResultado := GenerarRegistroFacturaLocal(AParametrosApp,
       AQryTrx.Connection, AUsuario, ASerie, ANumero, ATipoOperacion);
     if not oResultado.Ok then
@@ -549,10 +548,24 @@ class procedure TVerifactuCola.EncolarRectificativa(
                                                     const ASerieOriginal,
                                                     ANumeroOriginal,
                                                     ASerieRect,
-                                                    ANumeroRect: string);
+                                                    ANumeroRect: string;
+                                                    const
+                                                    ATipoRectificativa:
+                                                    string);
 var
   Qry: TUniQuery;
+  sComentario: string;
+  sTipoRectificativa: string;
 begin
+  sTipoRectificativa := UpperCase(Trim(ATipoRectificativa));
+  if (sTipoRectificativa <> 'I') and
+     (sTipoRectificativa <> 'S') then
+    raise Exception.Create(
+      'El tipo fiscal de rectificativa debe ser I o S.');
+  if sTipoRectificativa = 'S' then
+    sComentario := ' ESTA FACTURA RECTIFICA POR SUSTITUCIÓN A LA '
+  else
+    sComentario := ' ESTA FACTURA RECTIFICA POR DIFERENCIAS A LA ';
   // Guarda: una rectificativa sin serie/numero validos (p.ej. '0'/'0' por
   // una cabecera de caja que no se vuelca) encolaria un registro fantasma
   // que la AEAT rechaza y rompe el enlace ABONO de la original. Se deja
@@ -575,6 +588,7 @@ begin
       Qry.SQL.Text :=
         ' UPDATE fza_facturas ' +
         ' SET TIPO_FAC = ''RECTIFICATIVA'', ' +
+        '     TIPO_RECTIFICATIVA_FAC = :TIPORECT, ' +
         '     FASE_FAC = ''BORRADOR'', ' +
         '     SERIE_FAC_ABONO_FAC  = NULL, ' +
         '     NUMERO_FAC_ABONO_FAC = NULL, ' +
@@ -585,8 +599,8 @@ begin
         ' WHERE SERIE_FAC  = :SERIE ' +
         '   AND NUMERO_FAC = :NUMERO';
       Qry.ParamByName('COMENTARIO').AsString :=
-        ' ESTA FACTURA ANULA Y RECTIFICA A LA ' + ASerieOriginal + '\' +
-        ANumeroOriginal;
+        sComentario + ASerieOriginal + '\' + ANumeroOriginal;
+      Qry.ParamByName('TIPORECT').AsString := sTipoRectificativa;
       Qry.ParamByName('USUARIO').AsString := AUsuario;
       Qry.ParamByName('SERIE').AsString   := ASerieRect;
       Qry.ParamByName('NUMERO').AsString  := ANumeroRect;
@@ -620,6 +634,7 @@ begin
             RegistrarEventoVerifactu(AParametrosApp, AConn, AUsuario,
               cEventoVerifactuEncolado,
               'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
+              ' tipo ' + sTipoRectificativa +
               ' encolada desde Facturas', '', ASerieRect, ANumeroRect);
           end;
         mvNoVerifactu:

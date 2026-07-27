@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataFormasdePago                                           }
 {    Tipo:       Data Module                                                   }
@@ -44,7 +44,7 @@ type
 implementation
 
 uses
-  inLibLog, System.Diagnostics;
+  inLibLog, System.Diagnostics, inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -170,9 +170,8 @@ begin
     if Length(sCodigo) = 1 then
       sCodigo := '0' + sCodigo;
     if not CodigoFacturaeFormaPagoValido(sCodigo) then
-      raise ERangeError.CreateFmt('%s no es un codigo Facturae valido ' +
-        'para el campo Codigo Facturae de Formas de Pago. Use 01..19.',
-        [oCampo.AsString]);
+      raise ERangeError.CreateFmt(SErrorCodigoFacturaeFormaPago,
+                                 [oCampo.AsString]);
     oCampo.AsString := sCodigo;
   end;
 end;
@@ -187,9 +186,8 @@ begin
   with unqryTablaG do
   begin
     if Trim(FindField('DESCRIPCION_FORMA_PAGO_FP').AsString) = '' then
-      raise ERangeError.CreateFmt('%s no es un valor válido ' +
-                                  'para el campo Descripción de Formas de Pago',
-               [FindField('DESCRIPCION_FORMA_PAGO_FP').AsString]);
+      raise ERangeError.CreateFmt(SErrorDescripcionFormaPago,
+        [FindField('DESCRIPCION_FORMA_PAGO_FP').AsString]);
     NormalizarCodigoFacturaeFormaPago(DataSet);
     GetCodigoAutoFormasdePago;
   end;

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibColumnasSku                                              }
 {    Tipo:       Libreria (factoria)                                           }
@@ -59,7 +59,8 @@ uses
   inLibArticulosAtributosLookup,
   inLibColumnasSkuModoSku,
   inLibColumnasSkuModoDesglose,
-  inLibColumnasSkuModoTallas;
+  inLibColumnasSkuModoTallas,
+  inLibMsg;
 
 type
   TProveedorValoresSku = class(TInterfacedObject, IProveedorValoresSku)
@@ -135,8 +136,7 @@ begin
   Cfg.Modo := DetectarModoColumnasSku(AConfig);
   if Cfg.Modo in [mcsTallasInline, mcsTallasHorPed] then
     // Estos modos necesitan configuracion propia del documento.
-    raise Exception.Create(
-      'El modo de tallas horizontal requiere su factoria especifica');
+    raise Exception.Create(SErrorFactoriaTallasHorizontalObligatoria);
   if Cfg.Modo = mcsDesglose then
     Result := TModoEntradaDesglose.Create(Cfg)
   else

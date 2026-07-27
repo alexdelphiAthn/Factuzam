@@ -270,6 +270,9 @@ procedure TestBinance;
 
 implementation
 
+uses
+  inLibMsg;
+
 function GetPriceBinance(const SymbolPair: string): Double;
 var
   Client: THTTPClient;
@@ -376,17 +379,16 @@ begin
     Response := FHttpClient.Get(AURL);
     case Response.StatusCode of
       200: Result := Response.ContentAsString(TEncoding.UTF8);
-      429: raise ECoinGeckoError.Create(
-        'Rate limit alcanzado (429). Espera un momento.');
-      else raise ECoinGeckoError.CreateFmt(
-             'HTTP %d: %s', [Response.StatusCode, Response.StatusText]);
+      429: raise ECoinGeckoError.Create(SErrorLimitePeticionesCripto);
+      else raise ECoinGeckoError.CreateFmt(SErrorHttpCripto,
+             [Response.StatusCode, Response.StatusText]);
     end;
   except
     on E: ECoinGeckoError do begin FLastError := E.Message; raise; end;
     on E: Exception do
     begin
       FLastError := E.Message;
-      raise ECoinGeckoError.Create('Error de red: ' + E.Message);
+      raise ECoinGeckoError.Create(Format(SErrorRedCripto, [E.Message]));
     end;
   end;
 end;
@@ -540,7 +542,7 @@ begin
   Raw  := DoGet(URL);
   JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
   if not Assigned(JSON) then
-    raise ECoinGeckoError.Create('Respuesta JSON inválida');
+    raise ECoinGeckoError.Create(SErrorJsonCripto);
 
   CoinList := TList<TCoinPrice>.Create;
   try
@@ -613,7 +615,7 @@ begin
   Raw     := DoGet(URL);
   JSONArr := TJSONObject.ParseJSONValue(Raw) as TJSONArray;
   if not Assigned(JSONArr) then
-    raise ECoinGeckoError.Create('Respuesta JSON inválida');
+    raise ECoinGeckoError.Create(SErrorJsonCripto);
 
   List := TList<TCoinMarket>.Create;
   try
@@ -689,7 +691,7 @@ begin
   Raw  := DoGet(URL);
   JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
   if not Assigned(JSON) then
-    raise ECoinGeckoError.Create('Respuesta JSON inválida');
+    raise ECoinGeckoError.Create(SErrorJsonCripto);
   try
     Result.ID     := SafeStr(JSON, 'id');
     Result.Symbol := SafeStr(JSON, 'symbol');
@@ -778,7 +780,7 @@ begin
   Raw  := DoGet(URL);
   JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
   if not Assigned(JSON) then
-    raise ECoinGeckoError.Create('Respuesta JSON inválida');
+    raise ECoinGeckoError.Create(SErrorJsonCripto);
   try
     MarketData := JSON.GetValue<TJSONObject>('market_data');
     if Assigned(MarketData) then
@@ -817,7 +819,7 @@ begin
   Raw  := DoGet(URL);
   JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
   if not Assigned(JSON) then
-    raise ECoinGeckoError.Create('Respuesta JSON inválida');
+    raise ECoinGeckoError.Create(SErrorJsonCripto);
 
   List := TList<TChartPoint>.Create;
   try
@@ -878,7 +880,7 @@ begin
   Raw  := DoGet(URL);
   JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
   if not Assigned(JSON) then
-    raise ECoinGeckoError.Create('Respuesta JSON inválida');
+    raise ECoinGeckoError.Create(SErrorJsonCripto);
 
   List := TList<TCoinSearchResult>.Create;
   try
@@ -913,7 +915,7 @@ begin
   Raw     := DoGet(URL);
   JSONArr := TJSONObject.ParseJSONValue(Raw) as TJSONArray;
   if not Assigned(JSONArr) then
-    raise ECoinGeckoError.Create('Respuesta JSON inválida');
+    raise ECoinGeckoError.Create(SErrorJsonCripto);
 
   List := TList<string>.Create;
   try

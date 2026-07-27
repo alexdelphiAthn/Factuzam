@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataVariaciones                                            }
 {    Tipo:       Data Module                                                   }
@@ -44,7 +44,7 @@ type
 implementation
 
 uses
-  inLibLog, System.Diagnostics;
+  inLibLog, System.Diagnostics, inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -113,7 +113,7 @@ procedure TdmVariaciones.unqryAtributosVariacionBeforePost(DataSet: TDataSet);
 begin
   inherited;
   if Trim(DataSet.FieldByName('ID_ATB_VA').AsString) = '' then
-    raise Exception.Create('El código del atributo es obligatorio.');
+    raise Exception.Create(SErrorCodigoAtributoVariacionObligatorio);
 end;
 
 initialization

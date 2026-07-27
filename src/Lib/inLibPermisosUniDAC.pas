@@ -32,7 +32,7 @@ implementation
 
 uses
   System.SysUtils, System.Generics.Collections,
-  inLibPermisos;
+  inLibPermisos, inLibMsg;
 
 class function TCargadorPermisosUniDAC.Cargar(
   AConexion: TUniConnection;
@@ -43,8 +43,7 @@ var
   Regla: TReglaPermiso;
 begin
   if (AConexion = nil) or (not AConexion.Connected) then
-    raise Exception.Create(
-      'No hay conexión disponible para cargar los permisos.');
+    raise Exception.Create(SErrorConexionPermisosNoDisponible);
   Reglas := TList<TReglaPermiso>.Create;
   try
     qry := TUniQuery.Create(nil);

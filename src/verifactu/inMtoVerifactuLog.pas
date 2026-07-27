@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoVerifactuLog                                             }
 {    Tipo:       Formulario (Mto)                                              }
@@ -70,7 +70,8 @@ implementation
 
 uses
   inLibWin, inMtoPrincipal, inLibShowMto,
-  inLibVerifactuNoVerifactuExport, inLibVerifactuNoVerifactuVerify;
+  inLibMsg, inLibVerifactuNoVerifactuExport,
+  inLibVerifactuNoVerifactuVerify;
 
 {$R *.dfm}
 
@@ -154,13 +155,9 @@ begin
       oResultado := ExportarRegistrosNoVerifactu(ParametrosApp,
         ConexionPrincipal,
         IdentidadSesion.Usuario, oDialogo.FileName);
-      MessageDlg('Exportacion NO VERI*FACTU generada:' + sLineBreak +
-        oResultado.ArchivoEventos + sLineBreak +
-        oResultado.ArchivoFacturacion + sLineBreak + sLineBreak +
-        'Eventos: ' + IntToStr(oResultado.Eventos) + sLineBreak +
-        'Registros de facturacion: ' +
-        IntToStr(oResultado.RegistrosFactura) + sLineBreak +
-        'Firmas: registros internos XAdES',
+      MessageDlg(Format(SInfoExportacionNoVerifactuGenerada,
+        [oResultado.ArchivoEventos, oResultado.ArchivoFacturacion,
+         oResultado.Eventos, oResultado.RegistrosFactura]),
         mtInformation, [mbOK], 0);
     end;
   finally
@@ -193,13 +190,11 @@ begin
       TFile.WriteAllText(sInforme, sResumen + sLineBreak + sLineBreak +
         oResultado.Detalle, TEncoding.UTF8);
       if oResultado.Errores = 0 then
-        MessageDlg('Verificacion NO VERI*FACTU correcta.' + sLineBreak +
-          sResumen + sLineBreak + sLineBreak + 'Informe:' + sLineBreak +
-          sInforme, mtInformation, [mbOK], 0)
+        MessageDlg(Format(SInfoVerificacionNoVerifactuCorrecta,
+          [sResumen, sInforme]), mtInformation, [mbOK], 0)
       else
-        MessageDlg('Verificacion NO VERI*FACTU con errores.' + sLineBreak +
-          sResumen + sLineBreak + sLineBreak + 'Informe:' + sLineBreak +
-          sInforme, mtError, [mbOK], 0);
+        MessageDlg(Format(SErrorVerificacionNoVerifactu,
+          [sResumen, sInforme]), mtError, [mbOK], 0);
     end;
   finally
     FreeAndNil(oDialogo);

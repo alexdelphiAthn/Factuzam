@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataAtributosConjuntos                                     }
 {    Tipo:       Data Module                                                   }
@@ -50,7 +50,7 @@ type
 implementation
 
 uses
-  inLibLog, System.Diagnostics;
+  inLibLog, System.Diagnostics, inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -127,7 +127,7 @@ procedure TdmAtributosConjuntos.unqryConjuntoDetalleBeforePost(
 begin
   inherited;
   if DataSet.FieldByName('ID_AV_ACD').IsNull then
-    raise Exception.Create('Selecciona un valor para añadirlo a la colección.');
+    raise Exception.Create(SErrorValorColeccionAtributosObligatorio);
   ActualizarAuditoria(DataSet);
 end;
 

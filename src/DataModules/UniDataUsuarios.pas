@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataUsuarios                                               }
 {    Tipo:       Data Module                                                   }
@@ -39,7 +39,7 @@ type
 implementation
 
 uses
-  inLibtb;
+  inLibtb, inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -120,14 +120,12 @@ begin
     if (sUsuario = '') or
        SimbolosProhibidos(sUsuario, PerfilesUsuario) then
     begin
-      ShowMessageFmt('%s no es un valor de registro válido ' +
-                     'para el campo usuario', [sUsuario]);
+      ShowMessageFmt(SErrorNombreUsuario, [sUsuario]);
       bError := True;
     end;
     if (UsuarioEsGrupo(sUsuario)) then
     begin
-      ShowMessageFmt('El usuario %s coincide con un grupo del sistema',
-                     [sUsuario]);
+      ShowMessageFmt(SErrorUsuarioCoincideGrupo, [sUsuario]);
       bError := True;
     end;
     if bError then

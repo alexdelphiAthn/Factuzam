@@ -100,7 +100,7 @@ implementation
 
 uses
   inLibArticulosAtributosLookup, inLibArticulosValidador,
-  inLibAtributosPaleta, inLibGenBusq, inLibLog;
+  inLibAtributosPaleta, inLibGenBusq, inLibLog, inLibMsg;
 
 const
   ID_AV_SIN_TALLA = 0;
@@ -538,8 +538,7 @@ begin
       DataSet.FieldByName(CAMPO_LINEA_VISTA).AsInteger);
   if iLineaBase > 0 then
   begin
-    if MessageDlg('¿Está seguro de que desea eliminar esta línea ' +
-                  '(todas sus tallas)?',
+    if MessageDlg(SPreguntaEliminarLineaTallasVenta,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       if BorrarLineasGrupo(iLineaBase) > 0 then
@@ -2401,7 +2400,7 @@ begin
         DisplayValue := CampoTexto(CdsLineas, FCfg.FieldArt);
     end;
     if Error then
-      ErrorText := 'Artículo/SKU no encontrado.';
+      ErrorText := SErrorArticuloSkuNoEncontradoSinDetalle;
   end;
 end;
 
@@ -2667,7 +2666,7 @@ begin
               bBorrar := (AValor <= 0) and (rEntregada <= 0);
               if bBorrar then
                 bBorrar := MessageDlg(
-                  'La cantidad queda a cero. ¿Borrar la línea del SKU?',
+                  SPreguntaEliminarLineaSkuCantidadCero,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes;
               if bBorrar then
                 Ds.Delete
@@ -2726,7 +2725,7 @@ begin
       else if ABanda = bpvPedida then
         CrearLineaDesdeCelda(AKey, AValor, sLineaReal)
       else
-        MessageDlg('No existe línea de pedido para esa talla.',
+        MessageDlg(SInfoLineaPedidoTallaNoExiste,
                   mtInformation, [mbOk], 0);
     finally
       FGuardandoCantidad := False;
@@ -2956,7 +2955,7 @@ begin
   try
     Atribs := Lookup.ObtenerAtributos(ACodArt);
     if Length(Atribs) = 0 then
-      ShowMessage('El artículo no tiene atributos definidos: ' + ACodArt)
+      ShowMessage(Format(SAvisoArticuloSinAtributos, [ACodArt]))
     else
     begin
       Result := ACodArt;
@@ -3073,7 +3072,7 @@ begin
       Result := True;
     end
     else
-      ShowMessage('Artículo/SKU no encontrado: ' + Trim(AEntrada));
+      ShowMessage(Format(SErrorArticuloSkuNoEncontrado, [Trim(AEntrada)]));
   end;
 end;
 

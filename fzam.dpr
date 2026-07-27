@@ -357,6 +357,12 @@ uses
   inMtoModalCrearAlbaranSesion in 'src\Modals\inMtoModalCrearAlbaranSesion.pas' {frmModalCrearAlbaranSesion},
   inLibComprasSesiones in 'src\Lib\inLibComprasSesiones.pas',
   inLibGridTallasInline in 'src\Lib\inLibGridTallasInline.pas',
+  inLibColumnasDocumento in 'src\Lib\inLibColumnasDocumento.pas',
+  inLibBusquedasCompra in 'src\Lib\inLibBusquedasCompra.pas',
+  inLibValidacionDocumento in
+    'src\Lib\inLibValidacionDocumento.pas',
+  inLibPresentacionDocumento in
+    'src\Lib\inLibPresentacionDocumento.pas',
   inLibComprasSesionesMaterializar in 'src\Lib\inLibComprasSesionesMaterializar.pas',
   inLibAlbaranesCompraMovimientos in 'src\Lib\inLibAlbaranesCompraMovimientos.pas',
   inLibDevolucionesCompraMovimientos in 'src\Lib\inLibDevolucionesCompraMovimientos.pas',
@@ -380,6 +386,9 @@ uses
   inLibFotosNube in 'src\Lib\inLibFotosNube.pas',
   inMtoFotoArticulo in 'src\Forms\inMtoFotoArticulo.pas' {frmFotoArticulo},
   inMtoStockConsulta in 'src\Forms\inMtoStockConsulta.pas' {frmStockConsulta},
+  inMtoModalOperacionesCajaSku in
+    'src\Modals\inMtoModalOperacionesCajaSku.pas'
+    {frmModalOperacionesCajaSku},
   inMtoModalFotoArticulo in 'src\Modals\inMtoModalFotoArticulo.pas',
   inMtoModalFiltroArt in 'src\Modals\inMtoModalFiltroArt.pas',
   inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones},

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataDevolucionesCompra                                        }
 {    Tipo:       Data Module                                                   }
@@ -129,7 +129,8 @@ uses
   inLibContadorLineas,
   inLibComprasImpuestos,
   inLibData,
-  inLibArticulosValidador;
+  inLibArticulosValidador,
+  inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -253,8 +254,7 @@ end;
 procedure TdmDevolucionesCompra.ValidarAlmacenSalida;
 begin
   if Trim(unqryTablaG.FieldByName('CODIGO_ALM_DEVC').AsString) = '' then
-    raise Exception.Create(
-      'Debe seleccionar el almacen de salida de la devolucion.');
+    raise Exception.Create(SErrorAlmacenSalidaDevolucionCompra);
 end;
 
 procedure TdmDevolucionesCompra.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -375,16 +375,11 @@ begin
     end;
     if iBloqueos > 0 then
     begin
-      MessageDlg('No se puede borrar la devolucion de compra: ya esta ' +
-                 'facturada. Borra o deshaz primero la factura de compra ' +
-                 'vinculada.',
+      MessageDlg(SAvisoDevolucionCompraFacturada,
                  mtWarning, [mbOk], 0);
       Abort;
     end;
-    if MessageDlg(Format('¿Borrar la devolucion de compra %s / %s?' +
-                         sLineBreak +
-                         'Se eliminaran sus lineas y se revertiran los ' +
-                         'movimientos de stock.',
+    if MessageDlg(Format(SPreguntaBorrarDevolucionCompra,
                          [sSerie, sNumero]),
                   mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     begin
@@ -471,8 +466,7 @@ begin
       'CODIGO_UNIDAD_DEVCLIN');
     if (Trim(FieldByName('NUMERO_DEVC_DEVCLIN').AsString) = '') or
        (Trim(FieldByName('NUMERO_DEVC_DEVCLIN').AsString) = '0') then
-      raise Exception.Create(
-        'Graba la cabecera de la devolucion antes de guardar lineas.');
+      raise Exception.Create(SErrorCabeceraDevolucionCompraSinGrabar);
     if (FindField('CANTIDAD_DEVCLIN') <> nil) and
        (FindField('PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN') <> nil) and
        (FindField('TOTAL_DEVCLIN') <> nil) then
@@ -538,8 +532,7 @@ begin
           sNumero, sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
-        raise Exception.Create(
-          'Graba la cabecera de la devolucion antes de guardar lineas.');
+        raise Exception.Create(SErrorCabeceraDevolucionCompraSinGrabar);
       if DataSet.FindField('NUMERO_DEVC_DEVCLIN') <> nil then
         DataSet.FieldByName('NUMERO_DEVC_DEVCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_DEVC_DEVCLIN') <> nil then
@@ -603,12 +596,9 @@ begin
     sNumero := Trim(ParamByName('pcont').AsString);
     if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
        (iNumero <= 0) then
-      raise Exception.Create(
-        'No se pudo obtener un numero de devolucion de compra valido. ' +
-        'Revise el contador DC de la serie ' +
-        unqryTablaG.FieldByName('SERIE_DEVC').AsString +
-        ' y empresa ' +
-        unqryTablaG.FieldByName('CODIGO_EMP_DEVC').AsString + '.');
+      raise Exception.Create(Format(SErrorContadorDevolucionCompra,
+        [unqryTablaG.FieldByName('SERIE_DEVC').AsString,
+         unqryTablaG.FieldByName('CODIGO_EMP_DEVC').AsString]));
     unqryTablaG.FieldByName('NUMERO_DEVC').AsString := sNumero;
   end;
 end;

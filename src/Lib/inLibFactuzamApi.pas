@@ -67,7 +67,7 @@ implementation
 
 uses
   System.Classes, System.JSON, System.NetEncoding,
-  System.Net.HttpClient, System.Net.URLClient;
+  System.Net.HttpClient, System.Net.URLClient, inLibMsg;
 
 { Crea el cliente HTTP con los tiempos de espera y la credencial ya
   puestos. Todas las llamadas de la API comparten esta configuración. }
@@ -189,7 +189,7 @@ begin
   Result.Ok := (AEstadoHttp >= 200) and (AEstadoHttp < 300);
   Result.EstadoHttp := AEstadoHttp;
   Result.IdPeticion := '';
-  Result.Mensaje := 'Respuesta HTTP ' + IntToStr(AEstadoHttp);
+  Result.Mensaje := Format(SErrorRespuestaHttpFactuzamApi, [AEstadoHttp]);
   oValor := TJSONObject.ParseJSONValue(AContenido);
   if oValor is TJSONObject then
   begin
@@ -227,7 +227,7 @@ begin
   Result.IdPeticion := '';
   Result.Mensaje := '';
   if not Configurada(AParametrosApp) then
-    Result.Mensaje := 'La API de Factuzam no está configurada.'
+    Result.Mensaje := SErrorFactuzamApiNoConfigurada
   else
   begin
     oHttp := CrearClienteHttp(Token(AParametrosApp));
@@ -242,7 +242,7 @@ begin
         Result := LeerRespuesta(
           oRespuesta.ContentAsString(TEncoding.UTF8),
           oRespuesta.StatusCode,
-          'Evento recibido correctamente.');
+          SInfoEventoFactuzamApiRecibido);
       finally
         FreeAndNil(oCuerpo);
       end;
@@ -269,7 +269,7 @@ begin
   Result.Mensaje := '';
   AContenido := '';
   if not Configurada(AParametrosApp) then
-    Result.Mensaje := 'La API de Factuzam no está configurada.'
+    Result.Mensaje := SErrorFactuzamApiNoConfigurada
   else
   begin
     sUrl := ComponerUrl(AParametrosApp, ARuta);
@@ -283,7 +283,7 @@ begin
       Result := LeerRespuesta(
         AContenido,
         oRespuesta.StatusCode,
-        'Consulta realizada correctamente.');
+        SInfoConsultaFactuzamApiRealizada);
     finally
       FreeAndNil(oHttp);
     end;
@@ -307,7 +307,7 @@ begin
   Result.IdPeticion := '';
   Result.Mensaje := '';
   if not Configurada(AParametrosApp) then
-    Result.Mensaje := 'La API de Factuzam no está configurada.'
+    Result.Mensaje := SErrorFactuzamApiNoConfigurada
   else
   begin
     sUrl := ComponerUrl(AParametrosApp, ARuta);
@@ -331,13 +331,14 @@ begin
             FreeAndNil(oDestino);
           end;
           Result.Ok := True;
-          Result.Mensaje := 'Documento guardado en ' + ARutaDestino;
+          Result.Mensaje := Format(SInfoDocumentoFactuzamApiGuardado,
+            [ARutaDestino]);
         end
         else
           Result := LeerRespuesta(
             TextoDesdeFlujo(oMemoria),
             oRespuesta.StatusCode,
-            'Documento descargado.');
+            SInfoDocumentoFactuzamApiDescargado);
       finally
         FreeAndNil(oMemoria);
       end;

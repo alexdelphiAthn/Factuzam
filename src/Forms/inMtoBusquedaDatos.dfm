@@ -202,11 +202,31 @@
             TabOrder = 21
             Transparent = True
           end
-          object cbbProveedor: TcxComboBox
+          object cbbProveedor: TcxLookupComboBox
             Left = 274
             Top = 137
-            Properties.DropDownListStyle = lsFixedList
+            Properties.DropDownListStyle = lsEditList
+            Properties.DropDownRows = 15
+            Properties.DropDownWidth = 480
+            Properties.KeyFieldNames = 'CODIGO_PRV_PRV'
+            Properties.ListColumns = <
+              item
+                Caption = 'C'#243'digo'
+                Width = 110
+                FieldName = 'CODIGO_PRV_PRV'
+              end
+              item
+                Caption = 'Nombre'
+                Width = 350
+                FieldName = 'RAZON_SOCIAL_PRV'
+              end>
+            Properties.ListFieldIndex = 1
+            Properties.ListOptions.CaseInsensitive = True
+            Properties.ListOptions.ShowHeader = True
+            Properties.ListSource = dsProveedoresBusqueda
+            Properties.Nullstring = '(Todos)'
             TabOrder = 18
+            OnKeyPress = cbbProveedorKeyPress
             Width = 300
           end
           object lblTemporada: TcxLabel
@@ -329,6 +349,15 @@
   end
   object unqryResultados: TUniQuery
     Left = 640
+    Top = 264
+  end
+  object unqryProveedoresBusqueda: TUniQuery
+    Left = 760
+    Top = 264
+  end
+  object dsProveedoresBusqueda: TDataSource
+    DataSet = unqryProveedoresBusqueda
+    Left = 880
     Top = 264
   end
 end

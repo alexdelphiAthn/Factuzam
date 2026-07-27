@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataAlbaranesCompra                                        }
 {    Tipo:       Data Module                                                   }
@@ -144,7 +144,8 @@ uses
   inLibAlbaranesCompraMovimientos,
   inLibComprasImpuestos,
   inLibData,
-  inLibArticulosValidador;
+  inLibArticulosValidador,
+  inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -519,7 +520,7 @@ begin
   if (unqryTablaG.FindField('CODIGO_ALM_ALBC') <> nil) and
      (Trim(unqryTablaG.FieldByName('CODIGO_ALM_ALBC').AsString) = '') then
   begin
-    MessageDlg('Debe seleccionar el almacén destino del albarán de compra.',
+    MessageDlg(SAvisoAlmacenDestinoAlbaranCompraObligatorio,
                mtWarning, [mbOk], 0);
     Abort;
   end;
@@ -624,16 +625,11 @@ begin
     end;
     if iBloqueos > 0 then
     begin
-      MessageDlg('No se puede borrar el albaran de compra: ya esta ' +
-                 'facturado. Borra o deshaz primero la factura de compra ' +
-                 'vinculada.',
+      MessageDlg(SAvisoAlbaranCompraFacturado,
                  mtWarning, [mbOk], 0);
       Abort;
     end;
-    if MessageDlg(Format('¿Borrar el albaran de compra %s / %s?' +
-                         sLineBreak +
-                         'Se eliminaran sus lineas y se revertiran los ' +
-                         'movimientos de stock.',
+    if MessageDlg(Format(SPreguntaBorrarAlbaranCompra,
                          [sSerie, sNumero]),
                   mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     begin
@@ -826,8 +822,7 @@ begin
           sNumero, sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
-        raise Exception.Create(
-          'Graba la cabecera del albaran antes de guardar lineas.');
+        raise Exception.Create(SErrorCabeceraAlbaranSinGrabar);
       if DataSet.FindField('NUMERO_ALBC_ALBCLIN') <> nil then
         DataSet.FieldByName('NUMERO_ALBC_ALBCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_ALBC_ALBCLIN') <> nil then
@@ -888,12 +883,9 @@ begin
     sNumero := Trim(ParamByName('pcont').AsString);
     if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
        (iNumero <= 0) then
-      raise Exception.Create(
-        'No se pudo obtener un numero de albaran de compra valido. ' +
-        'Revise el contador AB de la serie ' +
-        unqryTablaG.FieldByName('SERIE_ALBC').AsString +
-        ' y empresa ' +
-        unqryTablaG.FieldByName('CODIGO_EMP_ALBC').AsString + '.');
+      raise Exception.Create(Format(SErrorContadorAlbaranCompra,
+        [unqryTablaG.FieldByName('SERIE_ALBC').AsString,
+         unqryTablaG.FieldByName('CODIGO_EMP_ALBC').AsString]));
     unqryTablaG.FieldByName('NUMERO_ALBC').AsString := sNumero;
   end;
 end;

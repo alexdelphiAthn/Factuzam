@@ -38,6 +38,17 @@ type
   procedure ShowMto(AOwner: TComponent;
                     ACall:String;
                     ABusq:string = '');
+  function CodigoMtoDataSet(ADataSet: TDataSet;
+    const ACampoCodigo: string): string;
+  function ClaveMtoDataSet(ADataSet: TDataSet;
+    const ACampoSerie, ACampoNumero: string): string;
+  procedure ShowMtoCodigoDataSet(AOwner: TComponent;
+    const ACall: string; ADataSet: TDataSet;
+    const ACampoCodigo: string);
+  procedure ShowMtoDocumentoDataSet(AOwner: TComponent;
+    const ACall: string; ADataSet: TDataSet;
+    const ACampoSerie, ACampoNumero: string;
+    const AMensajeVacio: string = '');
   function ResolverCallFactura(AConexion: TUniConnection;
     const ANumero, ASerie: string): string;
   // Crea el data module de la pantalla desde el registro de clases. El
@@ -53,6 +64,51 @@ implementation
       inLibLog,
       inLibRegistroPantallas,
       inLibVentanaEmbebidaIntf;
+
+function CodigoMtoDataSet(ADataSet: TDataSet;
+  const ACampoCodigo: string): string;
+begin
+  Result := '';
+  if Assigned(ADataSet) and ADataSet.Active and
+     (not ADataSet.IsEmpty) then
+    Result := Trim(ADataSet.FieldByName(ACampoCodigo).AsString);
+end;
+
+function ClaveMtoDataSet(ADataSet: TDataSet;
+  const ACampoSerie, ACampoNumero: string): string;
+var
+  sNumero: string;
+  sSerie: string;
+begin
+  Result := '';
+  sSerie := CodigoMtoDataSet(ADataSet, ACampoSerie);
+  sNumero := CodigoMtoDataSet(ADataSet, ACampoNumero);
+  if (sSerie <> '') and (sNumero <> '') then
+    Result := sSerie + ',' + sNumero;
+end;
+
+procedure ShowMtoCodigoDataSet(AOwner: TComponent;
+  const ACall: string; ADataSet: TDataSet;
+  const ACampoCodigo: string);
+begin
+  ShowMto(AOwner, ACall,
+    CodigoMtoDataSet(ADataSet, ACampoCodigo));
+end;
+
+procedure ShowMtoDocumentoDataSet(AOwner: TComponent;
+  const ACall: string; ADataSet: TDataSet;
+  const ACampoSerie, ACampoNumero: string;
+  const AMensajeVacio: string);
+var
+  sClave: string;
+begin
+  sClave := ClaveMtoDataSet(
+    ADataSet, ACampoSerie, ACampoNumero);
+  if sClave <> '' then
+    ShowMto(AOwner, ACall, sClave)
+  else if AMensajeVacio <> '' then
+    ShowMessage(AMensajeVacio);
+end;
 
 // Numero de instancia (2..N) de la pantalla ACall que hay en la
 // pestania activa; 0 si la pestania activa no es de esta pantalla. Se

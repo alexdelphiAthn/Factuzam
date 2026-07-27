@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataArticulos                                              }
 {    Tipo:       Data Module                                                   }
@@ -143,7 +143,8 @@ implementation
 uses
 
   System.Diagnostics,
-  inLibtb;
+  inLibtb,
+  inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -260,11 +261,9 @@ begin
   if DataSet.State = dsInsert then
   begin
     if Trim(sSku) = '' then
-      raise ERangeError.Create(
-        'Indique el código de SKU al añadir un nuevo código de barras. ' +
-        'Para crear un SKU nuevo use la pestaña SKUs.');
+      raise ERangeError.Create(SErrorCodigoSkuCodigoBarrasObligatorio);
     if (fldCB = nil) then
-      raise ERangeError.Create('Falta el campo CODIGO_BARRAS_CB.');
+      raise ERangeError.Create(SErrorCampoCodigoBarrasAusente);
     ActualizarAuditoria(DataSet);
     Exit; // El framework lanza SQLInsert
   end;
@@ -290,7 +289,7 @@ begin
   if DataSet.State = dsInsert then
   begin
     if Trim(DataSet.FieldByName('CODIGO_UNIDAD_SKU').AsString) = '' then
-      raise ERangeError.Create('Indique el código del SKU.');
+      raise ERangeError.Create(SErrorCodigoSkuObligatorio);
     // Article code se hereda del master/detail, pero por seguridad lo
     // forzamos al artículo activo si está vacío.
     if Trim(DataSet.FieldByName('CODIGO_ART_SKU').AsString) = '' then
@@ -393,9 +392,7 @@ begin
   // sin ID_CB no hay nada que borrar en fza_codigos_barras.
   fldId := DataSet.FindField('ID_CB');
   if (fldId = nil) or fldId.IsNull then
-    raise ERangeError.Create(
-      'Esta fila no representa un código de barras existente. No hay ' +
-      'nada que eliminar.');
+    raise ERangeError.Create(SErrorFilaCodigoBarrasInexistente);
 end;
 
 procedure TdmArticulos.unqryProveedoresArticulosBeforePost(DataSet: TDataSet);
@@ -407,9 +404,8 @@ begin
     begin
       if (ArticuloTieneProvPrin(FindField('CODIGO_ART_ART').AsString)) then
       begin
-        raise ERangeError.CreateFmt('%s ya tiene un proveedor principal ' +
-                                    'asociado a este artículo.',
-                                       [FindField('CODIGO_ART_ART').AsString]);
+        raise ERangeError.CreateFmt(SErrorProveedorPrincipalArticulo,
+                                   [FindField('CODIGO_ART_ART').AsString]);
       end;
     end;
   ActualizarAuditoria(DataSet);
@@ -868,9 +864,8 @@ begin
     if (sDescripcion = '') or
        SimbolosProhibidos(sDescripcion, PerfilesUsuario) then
     begin
-      raise ERangeError.CreateFmt('%s no es un valor válido ' +
-                                       'para el campo Descripción de Artículos',
-               [FindField('DESCRIPCION_ART').AsString]);
+      raise ERangeError.CreateFmt(SErrorDescripcionArticulo,
+                                 [FindField('DESCRIPCION_ART').AsString]);
     end
     else
       GetCodigoAutoArticulo;
@@ -927,8 +922,7 @@ begin
       // De >0 a 0 estando activa -> preguntar si desactivar
       if (oldPrecio > 0) and (newPrecio = 0) and (esActivo = 'S') then
       begin
-        if MessageDlg('El precio de salida pasa a 0. ' +
-                      '¿Desea desactivar la tarifa?',
+        if MessageDlg(SPreguntaDesactivarTarifaSinPrecio,
                       mtConfirmation, [mbYes, mbNo], 0) = mrYes then
           FindField('ESACTIVO_ARTTAR').AsString := 'N';
       end;
@@ -936,8 +930,7 @@ begin
       // De 0 a >0 estando inactiva -> preguntar si activar
       if (oldPrecio = 0) and (newPrecio > 0) and (esActivo = 'N') then
       begin
-        if MessageDlg('El precio de salida es mayor que 0. ' +
-                      '¿Desea activar la tarifa?',
+        if MessageDlg(SPreguntaActivarTarifaConPrecio,
                       mtConfirmation, [mbYes, mbNo], 0) = mrYes then
           FindField('ESACTIVO_ARTTAR').AsString := 'S';
       end;
@@ -974,8 +967,7 @@ begin
                                 FindField('FECHA_HASTA_ARTTAR')))
       then
       begin
-        ShowMessageFmt('No se pueden grabar dos precios para una tarifa ' +
-                       'activa en fechas concurrentes para el artículo/SKU %s',
+        ShowMessageFmt(SErrorTarifaFechasConcurrentes,
                        [FindField('CODIGO_UNIDAD_ARTTAR').AsString]);
         Abort;
       end;

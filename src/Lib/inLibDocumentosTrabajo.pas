@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibDocumentosTrabajo                                        }
 {    Tipo:       Libreria                                                      }
@@ -60,7 +60,7 @@ implementation
 
 uses
   Vcl.Dialogs, Vcl.Forms, Winapi.Windows,
-  inLibGenBusq, inLibArticulosResolver;
+  inLibGenBusq, inLibArticulosResolver, inLibMsg;
 
 procedure TDocTrabajoLineaOrigen.Clear;
 begin
@@ -144,14 +144,14 @@ begin
     frmParent := TCustomForm(AOwner);
   end;
   iResp := Application.MessageBox(
-    'Si = crear un Documento de Trabajo nuevo.' + sLineBreak +
-    'No = agregar a uno abierto existente.',
-    'Agregar a Documento de Trabajo',
+    PWideChar(SPreguntaCrearDocumentoTrabajo),
+    PWideChar(STituloAgregarDocumentoTrabajo),
     MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON2);
   if iResp = IDYES then
   begin
     sTitulo := 'Documento de trabajo ' + FormatDateTime('dd/mm/yyyy hh:nn', Now);
-    if InputQuery('Nuevo Documento de Trabajo', 'Titulo', sTitulo) then
+    if InputQuery(STituloNuevoDocumentoTrabajo,
+                  SSolicitudTituloDocumentoTrabajo, sTitulo) then
     begin
       if Trim(sTitulo) <> '' then
       begin
@@ -347,11 +347,11 @@ begin
   ResolverSkuSiEsUnico(AConexion, AParametrosCaja, rLinea);
   if Trim(rLinea.CodigoArticulo) = '' then
   begin
-    raise Exception.Create('No hay articulo activo para agregar.');
+    raise Exception.Create(SErrorArticuloDocumentoTrabajoNoActivo);
   end;
   if Trim(rLinea.CodigoSku) = '' then
   begin
-    raise Exception.Create('El articulo tiene varios SKUs. Selecciona una unidad concreta.');
+    raise Exception.Create(SErrorArticuloDocumentoTrabajoVariosSkus);
   end;
   CompletarDatosArticulo(AConexion, rLinea);
   if Trim(rLinea.Origen) = '' then
@@ -363,8 +363,8 @@ begin
   begin
     InsertarLineaDocumentoTrabajo(AConexion, AContextoSesion, iIdDtr,
       rLinea);
-    Application.MessageBox('Unidad agregada al Documento de Trabajo.',
-                           'Documento de Trabajo',
+    Application.MessageBox(PWideChar(SInfoUnidadAgregadaDocumentoTrabajo),
+                           PWideChar(STituloDocumentoTrabajo),
                            MB_OK + MB_ICONINFORMATION);
     Result := True;
   end;

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataEfectosCompra                                           }
 {    Tipo:       Data Module                                                    }
@@ -46,6 +46,9 @@ type
 
 implementation
 
+uses
+  inLibMsg;
+
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
@@ -68,14 +71,11 @@ begin
   dImportePagado := DataSet.FieldByName('IMPORTE_PAGADO_EFEC').AsFloat;
   if (sSerieRem <> '') or (sNumeroRem <> '') or
      (sEstado = 'REMESADO') then
-    raise Exception.Create(
-      'No se puede borrar el efecto: pertenece a una remesa. ' +
-      'Quítalo desde Remesas de pago.');
+    raise Exception.Create(SErrorBorrarEfectoCompraRemesado);
   if (dImportePagado > 0.0001) or (sConciliado = 'S') or
      (sEstado = 'PAGADO') or (sEstado = 'DEVUELTO') or
      (sEstado = 'CONCILIADO') then
-    raise Exception.Create(
-      'No se puede borrar el efecto: tiene pago o conciliación registrada.');
+    raise Exception.Create(SErrorBorrarEfectoCompraPagado);
 end;
 
 function TdmEfectosCompra.FusionarEfectosPendientes(
@@ -161,15 +161,11 @@ begin
       dTotal := q.FieldByName('TOTAL').AsFloat;
       q.Close;
       if iValidos <> Length(AClaves) then
-        raise Exception.Create(
-          'Solo se pueden fusionar efectos pendientes, sin pagos, sin ' +
-          'remesa y sin conciliación previa.');
+        raise Exception.Create(SErrorFusionarEfectosCompraEstado);
       if (iEmpresas <> 1) or (iProveedores <> 1) then
-        raise Exception.Create(
-          'Solo se pueden fusionar efectos de la misma empresa y proveedor.');
+        raise Exception.Create(SErrorFusionarEfectosCompraOrigen);
       if dTotal <= 0.0001 then
-        raise Exception.Create(
-          'Los efectos seleccionados no tienen importe pendiente.');
+        raise Exception.Create(SErrorFusionarEfectosCompraSinPendiente);
       sSerieDestino := AClaves[0].SerieFac;
       sNumeroDestino := AClaves[0].NumeroFac;
       q.SQL.Text :=

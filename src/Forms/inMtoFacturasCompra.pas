@@ -288,6 +288,10 @@ uses
   inLibArticulosResolver,
   inLibArticulosValidador,
   inLibGridCantidad,
+  inLibColumnasDocumento,
+  inLibBusquedasCompra,
+  inLibValidacionDocumento,
+  inLibPresentacionDocumento,
   inLibComprasImpuestos,
   inLibAtributosPaleta,
   UniDataArticulos,
@@ -366,7 +370,6 @@ end;
 
 function TfrmMtoFacturasCompra.BuscarArticuloFacturaCompra: string;
 var
-  qry : TUniQuery;
   sPrv: string;
 begin
   Result := '';
@@ -378,63 +381,24 @@ begin
       MessageDlg('Selecciona un proveedor antes de buscar artículos.',
                  mtInformation, [mbOk], 0)
     else
-    begin
-      qry := TUniQuery.Create(nil);
-      try
-        qry.Connection := dmmFacturasCompra.unqryTablaG.Connection;
-        qry.SQL.Text :=
-          'SELECT art.CODIGO_ART_ART, art.ESACTIVO_ART, art.ORDEN_ART, ' +
-          '       art.DESCRIPCION_ART, art.CODIGO_FAM_ART, ' +
-          '       fam.DESCRIPCION_FAM, art.TIPO_IVA_ART, ' +
-          '       iva.NOMBRE_TIPO_IVA_IVATIP, art.TIPO_CANTIDAD_ART, ' +
-          '       ap.CODIGO_PRV_AP, prv.RAZON_SOCIAL_PRV, prv.NOMBRE_PRV, ' +
-          '       ap.REF_PROVEEDOR_AP AS REF_PROVEEDOR, ' +
-          '       ap.PRECIO_ULT_COMPRA_AP, ap.FECHA_VALIDEZ_AP ' +
-          '  FROM fza_articulos_proveedores ap ' +
-          '  JOIN fza_articulos art ' +
-          '    ON art.CODIGO_ART_ART = ap.CODIGO_ART_AP ' +
-          '  LEFT JOIN fza_articulos_familias fam ' +
-          '    ON fam.CODIGO_FAM_FAM = art.CODIGO_FAM_ART ' +
-          '  LEFT JOIN fza_ivas_tipos iva ' +
-          '    ON iva.CODIGO_ABREVIATURA_IVA_IVATIP = art.TIPO_IVA_ART ' +
-          '  LEFT JOIN fza_proveedores prv ' +
-          '    ON prv.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP ' +
-          ' WHERE ap.CODIGO_PRV_AP = :prv ' +
-          '   AND COALESCE(art.ESACTIVO_ART, ''S'') = ''S'' ' +
-          ' ORDER BY art.ORDEN_ART, art.CODIGO_ART_ART';
-        qry.ParamByName('prv').AsString := sPrv;
-        if TBusquedaUtils.EjecutarBusqueda(
-          ConexionPrincipal,
-          'Búsqueda de artículos',
-             qry,
-             'frmMtoFaccArtSearch',
-             Self) and (qry.FindField('CODIGO_ART_ART') <> nil) then
-          Result := qry.FieldByName('CODIGO_ART_ART').AsString;
-      finally
-        FreeAndNil(qry);
-      end;
-    end;
+      Result := BuscarArticuloProveedorCompra(
+        dmmFacturasCompra.unqryTablaG.Connection, sPrv,
+        'Búsqueda de artículos', 'frmMtoFaccArtSearch', Self);
   end;
 end;
 
 function TfrmMtoFacturasCompra.ArticuloLineaActivaFacturaCompra: string;
-var
-  ds: TDataSet;
 begin
   Result := '';
   if Assigned(dmmFacturasCompra) then
-  begin
-    ds := dmmFacturasCompra.unqryFacturasCompraLineas;
-    if Assigned(ds) and ds.Active and (not ds.IsEmpty) and
-       (ds.FindField('CODIGO_ART_FACCLIN') <> nil) then
-      Result := Trim(ds.FieldByName('CODIGO_ART_FACCLIN').AsString);
-  end;
+    Result := ValorTextoDataSetCompra(
+      dmmFacturasCompra.unqryFacturasCompraLineas,
+      'CODIGO_ART_FACCLIN');
 end;
 
 function TfrmMtoFacturasCompra.BuscarSkuFacturaCompra(
   const ACodigoArt: string): string;
 var
-  qry : TUniQuery;
   sArt: string;
 begin
   Result := '';
@@ -446,88 +410,17 @@ begin
     MessageDlg('Selecciona un artículo antes de buscar sus SKUs.',
                mtInformation, [mbOk], 0)
   else
-  begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := dmmFacturasCompra.unqryTablaG.Connection;
-      qry.SQL.Text :=
-        'SELECT SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU, ' +
-        '       GROUP_CONCAT(AV.AV ORDER BY COALESCE(VA.ORDEN_VA, 999), ' +
-        '                    AV.ORDEN_AV SEPARATOR '' / '') AS ATRIBUTOS ' +
-        '  FROM fza_articulos_skus SK ' +
-        '  LEFT JOIN fza_atributos_sku SA ' +
-        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
-        '  LEFT JOIN fza_atributos_valores AV ' +
-        '    ON AV.ID_AV = SA.ID_AV_SA ' +
-        '  LEFT JOIN fza_variaciones_atributos VA ' +
-        '    ON VA.ID_VAR_VA = SK.CODIGO_VAR_SKU ' +
-        '   AND VA.ID_ATB_VA = AV.ID_VA_AV ' +
-        ' WHERE SK.CODIGO_ART_SKU = :art ' +
-        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
-        ' GROUP BY SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU ' +
-        ' ORDER BY SK.CODIGO_UNIDAD_SKU';
-      qry.ParamByName('art').AsString := sArt;
-      if TBusquedaUtils.EjecutarBusqueda(
-        ConexionPrincipal,
-        'SKUs del artículo ' + sArt,
-           qry,
-           'frmMtoFaccSkuSearch',
-           Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
-        Result := qry.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
+    Result := BuscarSkuArticuloCompra(
+      dmmFacturasCompra.unqryTablaG.Connection, sArt,
+      'SKUs del artículo ' + sArt,
+      'frmMtoFaccSkuSearch', Self);
 end;
 
 procedure TfrmMtoFacturasCompra.CargarBasicosColorArticulo(
   const ACodigoArt: string);
-var
-  q   : TUniQuery;
-  i   : Integer;
-  sArt: string;
 begin
-  SetLength(FBasicosColor, 0);
-  sArt := Trim(ACodigoArt);
-  if sArt <> '' then
-  begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := ConexionPrincipal;
-      q.SQL.Text :=
-        'SELECT ATB.CODIGO_ATB, MIN(ATB.ORDEN_ATB) AS ORDEN_ATB, ' +
-        '       MIN(ATB.NOMBRE_ATB) AS NOMBRE_ATB ' +
-        '  FROM fza_articulos_skus SK ' +
-        '  JOIN fza_atributos_sku SA ' +
-        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
-        '  JOIN fza_atributos_valores AV ' +
-        '    ON AV.ID_AV = SA.ID_AV_SA ' +
-        '   AND AV.ID_VA_AV = :va ' +
-        '  JOIN fza_atributos_basicos ATB ' +
-        '    ON ATB.ID_VA_ATB = :va ' +
-        '   AND (ATB.ID_ATB = AV.ID_ATB_AV ' +
-        '        OR (AV.ID_ATB_AV IS NULL AND ATB.CODIGO_ATB = AV.AV)) ' +
-        ' WHERE SK.CODIGO_ART_SKU = :art ' +
-        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
-        '   AND COALESCE(AV.ESACTIVO_AV, ''S'') = ''S'' ' +
-        '   AND COALESCE(ATB.ESACTIVO_ATB, ''S'') = ''S'' ' +
-        ' GROUP BY ATB.CODIGO_ATB ' +
-        ' ORDER BY ORDEN_ATB, NOMBRE_ATB, ATB.CODIGO_ATB';
-      q.ParamByName('va').AsString := ID_VA_COLOR;
-      q.ParamByName('art').AsString := sArt;
-      q.Open;
-      SetLength(FBasicosColor, q.RecordCount);
-      i := 0;
-      while not q.Eof do
-      begin
-        FBasicosColor[i] := q.FieldByName('CODIGO_ATB').AsString;
-        Inc(i);
-        q.Next;
-      end;
-    finally
-      FreeAndNil(q);
-    end;
-  end;
+  FBasicosColor := ObtenerBasicosArticulo(
+    ConexionPrincipal, ACodigoArt, ID_VA_COLOR);
 end;
 
 procedure TfrmMtoFacturasCompra.FormCreate(Sender: TObject);
@@ -696,135 +589,58 @@ end;
 // Cada columna tiene Tag = 1..N (posicion en el conjunto pivot) y se
 // hace visible / oculta por el gestor segun el conjunto activo.
 procedure TfrmMtoFacturasCompra.CrearColumnasTallas;
-var
-  i        : Integer;
-  col      : TcxGridDBColumn;
-  curProps : TcxCurrencyEditProperties;
 begin
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-  begin
-    col := tvLineasFactura.CreateColumn;
-    col.Name    := 'dbcLinFaccTalla' + Format('%.2d', [i + 1]);
-    col.Caption := '';
-    col.Width   := 50;
-    col.Tag     := i + 1;
-    col.Visible := False;
-    col.DataBinding.ValueTypeClass := TcxFloatValueType;
-    col.PropertiesClass := TcxCurrencyEditProperties;
-    curProps := TcxCurrencyEditProperties(col.Properties);
-    curProps.DisplayFormat := '#,##0';
-    FTallaColumns[i] := col;
-  end;
+  CrearColumnasTallasDocumento(tvLineasFactura, 'dbcLinFaccTalla',
+    50, FTallaColumns);
 end;
 
-// Crea CANT_ATRIB_MAX columnas no-bound para mostrar los valores de
-// los atributos del SKU de cada linea (modo "atributo por columna",// estilo inventarios). Read-only y no persistentes: solo
-// visualizacion. La carga real de valores por SKU queda como TODO.
+// Columnas no-bound y de solo lectura para el desglose visual del SKU.
 procedure TfrmMtoFacturasCompra.CrearColumnasAtributos;
-var
-  i: Integer;
-  col: TcxGridDBColumn;
 begin
-  for i := 0 to CANT_ATRIB_MAX - 1 do
-  begin
-    col := tvLineasFactura.CreateColumn;
-    col.Name    := 'dbcLinFaccAtrib' + Format('%.2d', [i + 1]);
-    col.Caption := '';
-    col.Width   := 90;
-    col.Tag     := -(i + 1);  // tag negativo para no chocar con tallas
-    col.Visible := False;
-    col.Options.Editing := False;
-    FAtribColumns[i] := col;
-  end;
+  CrearColumnasAtributosDocumento(tvLineasFactura,
+    'dbcLinFaccAtrib', FAtribColumns);
 end;
 
 procedure TfrmMtoFacturasCompra.InicializarGestorYPivote;
 var
-  cfgT : TGridTallasConfig;
-  cfgP : TGridPivoteCompraConfig;
-  i    : Integer;
-  arr  : TArray<TcxGridDBColumn>;
+  oBase: TConfigPivoteDocumentoCompra;
+  oConfigTallas: TGridTallasConfig;
+  oConfigPivote: TGridPivoteCompraConfig;
 begin
-  if FGestorTallas <> nil then FreeAndNil(FGestorTallas);
-  if FPivote       <> nil then FreeAndNil(FPivote);
-  if dmmFacturasCompra = nil then Exit;
-  SetLength(arr, CANT_TALLAS_MAX);
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-    arr[i] := FTallaColumns[i];
-  // 1. Gestor inline de tallas (libreria existente). Mismo patron que
-  //    Sesiones, con los nombres FACC/FACCLIN/FACCCEL.
-  cfgT := Default(TGridTallasConfig);
-  cfgT.Conexion           := dmmFacturasCompra.unqryTablaG.Connection;
-  cfgT.ContextoSesion     := ContextoSesion;
-  cfgT.Usuario            := IdentidadSesion.Usuario;
-  cfgT.Grid               := tvLineasFactura;
-  cfgT.SourceMaster       := dsTablaG;
-  cfgT.SourceLineas       := dmmFacturasCompra.dsFacturasCompraLineas;
-  cfgT.ColumnasTallas     := arr;
-  cfgT.FieldSerieMaster   := 'SERIE_FACC';
-  cfgT.FieldNumeroMaster  := 'NUMERO_FACC';
-  cfgT.FieldLinea         := 'LINEA_FACCLIN';
-  cfgT.FieldConjuntoPivot := 'ID_AC_PIVOT_FACCLIN';
-  cfgT.FieldPrecioBase    := 'PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN';
-  cfgT.FieldTotalUds      := 'TOTAL_UNIDADES_FACCLIN';
-  cfgT.FieldTotalLinea    := 'TOTAL_FACCLIN';
-  cfgT.TablaCeldas        := 'fza_facturas_compra_celdas';
-  cfgT.FieldSerieCel      := 'SERIE_FACC_FACCCEL';
-  cfgT.FieldNumeroCel     := 'NUMERO_FACC_FACCCEL';
-  cfgT.FieldLineaCel      := 'LINEA_FACC_FACCCEL';
-  cfgT.FieldFilaCel       := 'ID_FILA_FACC_FACCCEL';
-  cfgT.FieldAvPivotCel    := 'ID_AV_PIVOT_FACCCEL';
-  cfgT.FieldCantidadCel   := 'CANTIDAD_FACCCEL';
-  cfgT.FieldAlmacenCel    := 'CODIGO_ALM_FACCCEL';
-  cfgT.IdFilaFijo         := 1;
-  cfgT.MaxColumnas        := CANT_TALLAS_MAX;
-  FGestorTallas := TGestorGridTallas.Create(cfgT);
-  // Hookea el OnEditValueChanged de cada columna talla al gestor para
-  // que persista la celda y refresque totales al teclear.
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-    if FTallaColumns[i] <> nil then
-    begin
-      TcxCurrencyEditProperties(FTallaColumns[i].Properties).
-        OnEditValueChanged := TallaEditValueChangedHook;
-      TcxCurrencyEditProperties(FTallaColumns[i].Properties).
-        OnValidate := TallaValidateHook;
-    end;
-  // 2. Orquestador de pivote (libreria nueva, compartida con pedidos).
-  cfgP := Default(TGridPivoteCompraConfig);
-  cfgP.Conexion             := dmmFacturasCompra.unqryTablaG.Connection;
-  cfgP.ContextoSesion       := ContextoSesion;
-  cfgP.Grid                 := tvLineasFactura;
-  cfgP.SourceMaster         := dsTablaG;
-  cfgP.SourceLineas         := dmmFacturasCompra.unqryFacturasCompraLineas;
-  cfgP.Gestor               := FGestorTallas;
-  cfgP.ColColorPivot        := FColColorPivot;
-  cfgP.ColumnasTallas       := arr;
-  cfgP.MaxColumnasTallas    := CANT_TALLAS_MAX;
-  cfgP.TablaLineas          := 'fza_facturas_compra_lineas';
-  cfgP.FieldSerieMaster     := 'SERIE_FACC';
-  cfgP.FieldNumeroMaster    := 'NUMERO_FACC';
-  cfgP.FieldSerieLin        := 'SERIE_FACC_FACCLIN';
-  cfgP.FieldNumeroLin       := 'NUMERO_FACC_FACCLIN';
-  cfgP.FieldLinea           := 'LINEA_FACCLIN';
-  cfgP.FieldArt             := 'CODIGO_ART_FACCLIN';
-  cfgP.FieldSku             := 'CODIGO_UNIDAD_FACCLIN';
-  cfgP.FieldCantidad        := 'CANTIDAD_FACCLIN';
-  cfgP.FieldPrecioBase      := 'PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN';
-  cfgP.FieldTotalUds        := 'TOTAL_UNIDADES_FACCLIN';
-  cfgP.FieldTotalLinea      := 'TOTAL_FACCLIN';
-  cfgP.FieldIdAcPivot       := 'ID_AC_PIVOT_FACCLIN';
-  cfgP.FieldAlmacen         := 'CODIGO_ALMACEN_FACCLIN';
-  cfgP.FieldAlmacenMaster   := 'CODIGO_ALM_FACC';
-  cfgP.CamposOcultosEnPivote := TArray<string>.Create(
-    'CODIGO_UNIDAD_FACCLIN',
-    'CANTIDAD_FACCLIN',
-    'TOTAL_FACCLIN');
-  FPivote := TGridPivoteCompra.Create(cfgP);
+  if Assigned(FGestorTallas) then
+    FreeAndNil(FGestorTallas);
+  if Assigned(FPivote) then
+    FreeAndNil(FPivote);
+  if Assigned(dmmFacturasCompra) then
+  begin
+    oBase := Default(TConfigPivoteDocumentoCompra);
+    oBase.Conexion := dmmFacturasCompra.unqryTablaG.Connection;
+    oBase.ContextoSesion := ContextoSesion;
+    oBase.Usuario := IdentidadSesion.Usuario;
+    oBase.Vista := tvLineasFactura;
+    oBase.SourceMaster := dsTablaG;
+    oBase.SourceLineas :=
+      dmmFacturasCompra.dsFacturasCompraLineas;
+    oBase.ConsultaLineas :=
+      dmmFacturasCompra.unqryFacturasCompraLineas;
+    oBase.ColumnasTallas := CopiarColumnasDocumento(FTallaColumns);
+    oBase.ColColorPivot := FColColorPivot;
+    oBase.PrefijoCabecera := 'FACC';
+    oBase.PrefijoLinea := 'FACCLIN';
+    oBase.PrefijoCelda := 'FACCCEL';
+    oBase.NombreTablaDocumento := 'facturas';
+    oBase.AplicarContextoPivote := True;
+    oConfigTallas := CrearConfigTallasDocumentoCompra(oBase);
+    FGestorTallas := TGestorGridTallas.Create(oConfigTallas);
+    ConfigurarEventosTallasDocumento(FTallaColumns,
+      TallaEditValueChangedHook, TallaValidateHook);
+    oConfigPivote := CrearConfigPivoteDocumentoCompra(oBase,
+      FGestorTallas);
+    FPivote := TGridPivoteCompra.Create(oConfigPivote);
+  end;
 end;
 
 procedure TfrmMtoFacturasCompra.RefrescarVisibilidadTallas;
-var
-  i: Integer;
 begin
   // Sin pivote activo: ocultar todas las columnas talla. Con pivote
   // activo: delega en el gestor para mostrar solo las que aplican y
@@ -833,23 +649,18 @@ begin
   // porque en compras la cantidad por SKU vive en la linea, no en
   // una tabla de celdas como en sesiones).
   if (FPivote = nil) or (not FPivote.Activo) or (FGestorTallas = nil) then
+    EstablecerVisibilidadColumnasDocumento(FTallaColumns, False)
+  else
   begin
-    for i := 0 to CANT_TALLAS_MAX - 1 do
-      if FTallaColumns[i] <> nil then
-        FTallaColumns[i].Visible := False;
-    Exit;
+    FGestorTallas.RecalcularMaxColumnas;
+    FGestorTallas.ActualizarCaptionsLineaActiva;
   end;
-  FGestorTallas.RecalcularMaxColumnas;
-  FGestorTallas.ActualizarCaptionsLineaActiva;
 end;
 
 procedure TfrmMtoFacturasCompra.RefrescarVisibilidadAtributos;
-var
-  i: Integer;
 begin
-  for i := 0 to CANT_ATRIB_MAX - 1 do
-    if FAtribColumns[i] <> nil then
-      FAtribColumns[i].Visible := FMostrarAtributos;
+  EstablecerVisibilidadColumnasDocumento(FAtribColumns,
+    FMostrarAtributos);
   if FMostrarAtributos then
     CargarCaptionsAtributosLineaActiva;
 end;
@@ -859,41 +670,12 @@ end;
 // VALORES por SKU se hara en un hito posterior (cuando este el flujo
 // completo de edicion de SKU por talla / color).
 procedure TfrmMtoFacturasCompra.CargarCaptionsAtributosLineaActiva;
-var
-  i: Integer;
-  sArt: string;
-  qry: TUniQuery;
-  iCol: Integer;
 begin
-  if dmmFacturasCompra = nil then Exit;
-  qry := dmmFacturasCompra.unqryDefArticuloFacc;
-  if qry = nil then Exit;
-
-  // Reset de captions a placeholder.
-  for i := 0 to CANT_ATRIB_MAX - 1 do
-    if FAtribColumns[i] <> nil then
-      FAtribColumns[i].Caption := 'Atributo ' + IntToStr(i + 1);
-
-  if (dmmFacturasCompra.unqryFacturasCompraLineas = nil) or
-     (not dmmFacturasCompra.unqryFacturasCompraLineas.Active) or
-     (dmmFacturasCompra.unqryFacturasCompraLineas.IsEmpty) then Exit;
-  sArt := dmmFacturasCompra.unqryFacturasCompraLineas.
-            FieldByName('CODIGO_ART_FACCLIN').AsString;
-  if sArt = '' then Exit;
-
-  qry.Close;
-  qry.ParamByName('ARTICULO').AsString := sArt;
-  qry.Open;
-  iCol := 0;
-  while (not qry.Eof) and (iCol < CANT_ATRIB_MAX) do
-  begin
-    if FAtribColumns[iCol] <> nil then
-      FAtribColumns[iCol].Caption :=
-        qry.FieldByName('NOMBRE_ATRIBUTO').AsString;
-    Inc(iCol);
-    qry.Next;
-  end;
-  qry.Close;
+  if Assigned(dmmFacturasCompra) then
+    CargarCaptionsAtributosDocumento(
+      dmmFacturasCompra.unqryDefArticuloFacc,
+      dmmFacturasCompra.unqryFacturasCompraLineas,
+      'CODIGO_ART_FACCLIN', FAtribColumns);
 end;
 
 procedure TfrmMtoFacturasCompra.btnTallasHorizontalClick(Sender: TObject);
@@ -1118,51 +900,22 @@ begin
 end;
 
 procedure TfrmMtoFacturasCompra.ActualizarLabelProveedor;
-var
-  sCodigo : string;
-  sNombre : string;
-  sRazon  : string;
 begin
-  // Resuelve NOMBRE_PRV + RAZON_SOCIAL_PRV (via el lookup unqryPrvDataFacc)
-  // y los pinta en el rotulo. Se antepone el nombre comercial: es el que
-  // el usuario reconoce a simple vista; la razon social solo se anade
-  // entre parentesis como referencia si difiere.
-  sCodigo := '';
-  if (dmmFacturasCompra <> nil) and Assigned(dmmFacturasCompra.unqryTablaG) and
-     dmmFacturasCompra.unqryTablaG.Active and
-     (not dmmFacturasCompra.unqryTablaG.IsEmpty) then
-    sCodigo :=
-      Trim(dmmFacturasCompra.unqryTablaG.FieldByName('CODIGO_PRV_FACC').AsString);
-  if sCodigo = '' then
-    lblProveedorNombreFacc.Caption := ''
-  else if (dmmFacturasCompra.unqryPrvDataFacc <> nil) and
-          dmmFacturasCompra.unqryPrvDataFacc.Active and
-          dmmFacturasCompra.unqryPrvDataFacc.Locate('CODIGO_PRV_PRV', sCodigo, []) then
-  begin
-    sRazon  := dmmFacturasCompra.unqryPrvDataFacc.FieldByName('RAZON_SOCIAL_PRV').AsString;
-    sNombre := dmmFacturasCompra.unqryPrvDataFacc.FieldByName('NOMBRE_PRV').AsString;
-    // Si no hay nombre comercial cargado, caemos a la razon social como
-    // rotulo principal. Si hay nombre y difiere de la razon social, la
-    // razon social se anade entre parentesis como referencia.
-    if Trim(sNombre) = '' then
-      lblProveedorNombreFacc.Caption := sCodigo + ' - ' + sRazon
-    else if not SameText(Trim(sNombre), Trim(sRazon)) then
-      lblProveedorNombreFacc.Caption :=
-        sCodigo + ' - ' + sNombre + '  (' + sRazon + ')'
-    else
-      lblProveedorNombreFacc.Caption := sCodigo + ' - ' + sNombre;
-  end
+  if Assigned(dmmFacturasCompra) then
+    lblProveedorNombreFacc.Caption := TextoProveedorDocumento(
+      dmmFacturasCompra.unqryTablaG,
+      dmmFacturasCompra.unqryPrvDataFacc,
+      'CODIGO_PRV_FACC')
   else
-    lblProveedorNombreFacc.Caption := sCodigo + ' - (proveedor no encontrado)';
+    lblProveedorNombreFacc.Caption := '';
 end;
 
 procedure TfrmMtoFacturasCompra.ActualizarLabelPrendas;
 begin
-  if (dmmFacturasCompra <> nil) and Assigned(dmmFacturasCompra.unqryTablaG) and
-     dmmFacturasCompra.unqryTablaG.Active and
-     (not dmmFacturasCompra.unqryTablaG.IsEmpty) then
-    lblTotalPrendasFacc.Caption :=
-      FormatFloat('#,##0', dmmFacturasCompra.TotalPrendasFactura)
+  if Assigned(dmmFacturasCompra) then
+    lblTotalPrendasFacc.Caption := TextoTotalPrendasDocumento(
+      dmmFacturasCompra.unqryTablaG,
+      dmmFacturasCompra.TotalPrendasFactura)
   else
     lblTotalPrendasFacc.Caption := '0';
 end;
@@ -1240,17 +993,9 @@ end;
 
 procedure TfrmMtoFacturasCompra.ActualizarCaptionModoLineas;
 begin
-  if not FColsModoConstruido then
-    tsLineasFactura.Caption := 'Líneas '
-  else
-    case FModoEntradaSel of
-      mcsSku:
-        tsLineasFactura.Caption := 'Líneas [SKU]';
-      mcsTallasHorPed:
-        tsLineasFactura.Caption := 'Líneas [Tallas horiz.]';
-    else
-      tsLineasFactura.Caption := 'Líneas [Desglose]';
-    end;
+  tsLineasFactura.Caption := CaptionModoLineasDocumento(
+    'Líneas', 'Líneas ', FColsModoConstruido,
+    FModoEntradaSel, False);
 end;
 
 procedure TfrmMtoFacturasCompra.KeyDown(var Key: Word;
@@ -1278,92 +1023,37 @@ procedure TfrmMtoFacturasCompra.ConstruirModoEntrada;
 var
   Cfg: TConfigColumnasSku;
   CfgPV: TGridPivoteVentaConfig;
-  i: Integer;
   ds: TDataSet;
   bDegradarASku: Boolean;
+  ModoEfectivo: TModoColumnasSku;
 begin
   if (dmmFacturasCompra = nil) or (csDestroying in ComponentState) then
     Exit;
   ds := dmmFacturasCompra.unqryFacturasCompraLineas;
   if not ds.Active then
     Exit;
-  // Teardown del modo anterior (patron albaranes de compra).
-  if tvLineasFactura.Controller.EditingController.IsEditing then
-    try
-      tvLineasFactura.Controller.EditingController.HideEdit(False);
-    except
-      on E: EInvalidOperation do
-        ;
-    end;
-  if ds.State in dsEditModes then
-    ds.Cancel;
-  if FModoEntrada <> nil then
-    FModoEntrada.Desmontar;
-  tvLineasFactura.OnInitEdit := nil;
-  tvLineasFactura.OnEditKeyDown := nil;
-  tvLineasFactura.OnEditing := nil;
-  tvLineasFactura.OnFocusedRecordChanged := nil;
-  tvLineasFactura.OnFocusedItemChanged := nil;
-  tvLineasFactura.OnCustomDrawCell := nil;
-  // El ClearItems mata TODAS las columnas: las del dfm y las del
-  // pivote de compras retirado. Fuera las referencias ANTES de que
-  // ningun repintado o refresco las toque.
-  tvLineasFactura.ClearItems;
-  FModoEntrada := nil;
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-    FTallaColumns[i] := nil;
-  for i := 0 to CANT_ATRIB_MAX - 1 do
-    FAtribColumns[i] := nil;
-  FColColorPivot := nil;
+  PrepararReconstruccionModoDocumento(tvLineasFactura, ds,
+    FModoEntrada, FTallaColumns, FAtribColumns, FColColorPivot);
   // Solo el DESGLOSE liga columnas a ATTRn: desempaquetar SKU->ATTR
   // (columnas reales _FACCLIN; idempotente por linea). SKU y tallas
   // horizontal derivan del propio SKU: sin posts al navegar.
   if FModoEntradaSel = mcsAuto then
     dmmFacturasCompra.DesempaquetarAtributosLineas;
-  Cfg := Default(TConfigColumnasSku);
-  Cfg.Conexion := dmmFacturasCompra.unqryTablaG.Connection;
-  Cfg.ContextoSesion := ContextoSesion;
-  Cfg.View := tvLineasFactura;
-  Cfg.Cds := ds;
-  Cfg.Modo := FModoEntradaSel;
-  Cfg.AlmacenStock := Trim(dmmFacturasCompra.unqryTablaG.
-    FieldByName('CODIGO_ALM_FACC').AsString);
-  Cfg.Distribuido := False;
-  Cfg.Campos.CodigoArt := 'CODIGO_ART_FACCLIN';
-  Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_FACCLIN';
-  Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_FACCLIN';
-  Cfg.Campos.Cantidad := 'CANTIDAD_FACCLIN';
-  Cfg.Campos.Almacen := 'CODIGO_ALMACEN_FACCLIN';
-  Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_FACCLIN';
-  for i := 1 to 5 do
-  begin
-    Cfg.Campos.AttrValor[i] :=
-      'ATTR' + IntToStr(i) + '_VALOR_FACCLIN';
-    Cfg.Campos.AttrNombre[i] :=
-      'ATTR' + IntToStr(i) + '_NOMBRE_FACCLIN';
-  end;
+  Cfg := CrearConfigColumnasSkuDocumento(
+    dmmFacturasCompra.unqryTablaG.Connection,
+    ContextoSesion, tvLineasFactura, ds, FModoEntradaSel,
+    Trim(dmmFacturasCompra.unqryTablaG.
+      FieldByName('CODIGO_ALM_FACC').AsString), 'FACCLIN');
   if FModoEntradaSel = mcsTallasHorPed then
   begin
-    CfgPV := Default(TGridPivoteVentaConfig);
-    CfgPV.Conexion := dmmFacturasCompra.unqryTablaG.Connection;
-    CfgPV.Usuario := IdentidadSesion.Usuario;
-    CfgPV.SourceMaster := dsTablaG;
-    CfgPV.SourceLineas := dmmFacturasCompra.dsFacturasCompraLineas;
-    CfgPV.FieldSerieMaster := 'SERIE_FACC';
-    CfgPV.FieldNumeroMaster := 'NUMERO_FACC';
-    CfgPV.FieldLinea := 'LINEA_FACCLIN';
-    CfgPV.FieldArt := 'CODIGO_ART_FACCLIN';
-    CfgPV.FieldSku := 'CODIGO_UNIDAD_FACCLIN';
-    CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_FACCLIN';
-    CfgPV.FieldTipoCantidad := 'TIPO_CANTIDAD_ARTICULO_FACCLIN';
+    CfgPV := CrearConfigPivoteBandasDocumentoCompra(
+      dmmFacturasCompra.unqryTablaG.Connection,
+      IdentidadSesion.Usuario, dsTablaG,
+      dmmFacturasCompra.dsFacturasCompraLineas,
+      'FACC', 'FACCLIN',
+      'PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN',
+      CANT_TALLAS_MAX);
     // Factura de compra: UNA sola cantidad por linea -> banda unica.
-    CfgPV.FieldCantidadPedida := 'CANTIDAD_FACCLIN';
-    CfgPV.FieldCantidadEntregada := '';
-    CfgPV.FieldCantidadAAlbaranar := '';
-    CfgPV.FieldPrecioBase := 'PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN';
-    CfgPV.FieldAlmacen := 'CODIGO_ALMACEN_FACCLIN';
-    CfgPV.FieldAlmacenMaster := 'CODIGO_ALM_FACC';
-    CfgPV.MaxColumnas := CANT_TALLAS_MAX;
     CfgPV.BandaUnica := True;
     // La columna Total del host pasa a UNIDADES del grupo en pivote.
     CfgPV.FieldTotalUdsGrupo := 'TOTAL_FACCLIN';
@@ -1411,102 +1101,35 @@ begin
     // las columnas ATTR en la BBDD) y, en desglose, mostrar Color y
     // Talla con nombres globales desde el principio (patron albaranes
     // de compra).
-    case DetectarModoColumnasSku(Cfg) of
-      mcsSku:
-        tsLineasFactura.Caption := 'Líneas [SKU]';
-      mcsTallasHorPed:
-        tsLineasFactura.Caption := 'Líneas [Tallas horiz.]';
-    else
-      begin
-        tsLineasFactura.Caption := 'Líneas [Desglose]';
-        MostrarColumnasAtributoGlobalesFacc;
-      end;
-    end;
+    ModoEfectivo := DetectarModoColumnasSku(Cfg);
+    tsLineasFactura.Caption := CaptionModoLineasDocumento(
+      'Líneas', 'Líneas ', True, ModoEfectivo, False);
+    if not (ModoEfectivo in [mcsSku, mcsTallasHorPed]) then
+      MostrarColumnasAtributoGlobalesFacc;
   end;
 end;
 
 procedure TfrmMtoFacturasCompra.MostrarColumnasAtributoGlobalesFacc;
-var
-  Qry: TUniQuery;
-  i, iOrden: Integer;
-  Col: TcxGridColumn;
 begin
-  // Nombres globales de atributos para ver Color/Talla desde el
-  // principio (mismo helper que pedidos/facturas de venta).
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := dmmFacturasCompra.unqryTablaG.Connection;
-    Qry.SQL.Text :=
-      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
-      '       MIN(ORDEN_VA) AS ORDEN' +
-      '  FROM fza_variaciones_atributos' +
-      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
-      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
-    Qry.Open;
-    iOrden := 1;
-    while (not Qry.Eof) and (iOrden <= 5) do
-    begin
-      // Solo las columnas del contrato (Tag positivo 1..5); las
-      // FAtribColumns propias llevan Tag negativo y no chocan.
-      for i := 0 to tvLineasFactura.ColumnCount - 1 do
-      begin
-        Col := tvLineasFactura.Columns[i];
-        if Col.Tag = iOrden then
-        begin
-          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
-          Col.Visible := True;
-        end;
-      end;
-      Inc(iOrden);
-      Qry.Next;
-    end;
-  finally
-    FreeAndNil(Qry);
-  end;
+  MostrarColumnasAtributoGlobalesDocumento(
+    dmmFacturasCompra.unqryTablaG.Connection,
+    tvLineasFactura);
 end;
 
 procedure TfrmMtoFacturasCompra.CrearColumnasHostFacturaCompra;
-  function Col(const ACaption, ACampo: string; AAncho: Integer;
-               AEditable: Boolean): TcxGridDBColumn;
-  begin
-    Result := tvLineasFactura.CreateColumn as TcxGridDBColumn;
-    Result.Caption := ACaption;
-    Result.DataBinding.FieldName := ACampo;
-    Result.Width := AAncho;
-    Result.Options.Editing := AEditable;
-  end;
 var
-  ColLinea, ColCantidad, ColTipoCantidad: TcxGridDBColumn;
-  ColPrecioCompra: TcxGridDBColumn;
+  Columnas: TColumnasHostDocumentoCompra;
 begin
-  // Columnas propias de la factura de compra tras el ClearItems del
-  // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
-  ColLinea := Col('Línea', 'LINEA_FACCLIN', 60, False);
-  Col('Modelo prov.', 'REF_PRV_FACCLIN', 130, True);
-  Col('Descripción', 'DESCRIPCION_ARTICULO_FACCLIN', 260, False);
-  if FModoEntradaSel <> mcsTallasHorPed then
-  begin
-    ColCantidad := Col('Cantidad', 'CANTIDAD_FACCLIN', 80, True);
-    ColTipoCantidad := Col('', 'TIPO_CANTIDAD_ARTICULO_FACCLIN',
-                           90, False);
-    VincularCantidadGrid(ColCantidad, ColTipoCantidad);
-  end;
-  ColPrecioCompra := Col('Precio compra',
-    'PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN', 130, True);
-  ColPrecioCompra.PropertiesClass := TcxCurrencyEditProperties;
-  TcxCurrencyEditProperties(ColPrecioCompra.Properties).DisplayFormat :=
+  Columnas := CrearColumnasHostDocumentoCompra(
+    tvLineasFactura, FModoEntradaSel, 'FACCLIN');
+  if Assigned(Columnas.ColCantidad) then
+    VincularCantidadGrid(Columnas.ColCantidad,
+      Columnas.ColTipoCantidad);
+  Columnas.ColPrecioCompra.PropertiesClass :=
+    TcxCurrencyEditProperties;
+  TcxCurrencyEditProperties(
+    Columnas.ColPrecioCompra.Properties).DisplayFormat :=
     '#,##0.00 €';
-  Col('% IVA', 'PORCENTAJE_IVA_FACCLIN', 70, True);
-  // En pivote la vista vuelca aqui las UNIDADES del grupo (la libreria
-  // machaca TOTAL en la copia visual); en el resto de modos, importe.
-  if FModoEntradaSel = mcsTallasHorPed then
-    Col('Total uds.', 'TOTAL_FACCLIN', 100, False)
-  else
-    Col('Total', 'TOTAL_FACCLIN', 100, False);
-  Col('Almacén', 'CODIGO_ALMACEN_FACCLIN', 90, True);
-  // Orden normal del documento: la LINEA delante del bloque de
-  // articulo que creo el modo (las columnas del host nacen detras).
-  ColLinea.Index := 0;
 end;
 
 procedure TfrmMtoFacturasCompra.ModoEntradaResuelto(const ACodArt, ASku,
@@ -1553,74 +1176,17 @@ begin
 end;
 
 procedure TfrmMtoFacturasCompra.AsegurarCabeceraPersistidaParaLineas;
-var
-  dsCab: TDataSet;
-  dsLin: TDataSet;
-  sNumero: string;
-
-  function ValorLinea(const ACampo: string): string;
-  var
-    Campo: TField;
-  begin
-    Result := '';
-    Campo := dsLin.FindField(ACampo);
-    if Campo <> nil then
-      Result := Trim(Campo.AsString);
-  end;
-
-  function LineaActualVacia: Boolean;
-  begin
-    Result := (ValorLinea('CODIGO_ART_FACCLIN') = '') and
-              (ValorLinea('CODIGO_UNIDAD_FACCLIN') = '');
-  end;
-
-  procedure SincronizarCabeceraEnLinea;
-  begin
-    if Assigned(dsLin) and dsLin.Active and
-       (dsLin.State in dsEditModes) then
-    begin
-      if dsLin.FindField('NUMERO_FACC_FACCLIN') <> nil then
-        dsLin.FieldByName('NUMERO_FACC_FACCLIN').AsString :=
-          dsCab.FieldByName('NUMERO_FACC').AsString;
-      if dsLin.FindField('SERIE_FACC_FACCLIN') <> nil then
-        dsLin.FieldByName('SERIE_FACC_FACCLIN').AsString :=
-          dsCab.FieldByName('SERIE_FACC').AsString;
-    end;
-  end;
-
 begin
   if not Assigned(dmmFacturasCompra) then
     raise Exception.Create('No esta inicializada la factura de compra.')
   else
-  begin
-    dsCab := dmmFacturasCompra.unqryTablaG;
-    dsLin := dmmFacturasCompra.unqryFacturasCompraLineas;
-    if (dsCab = nil) or (not dsCab.Active) or
-       (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
-      raise Exception.Create(
-        'Crea o selecciona una factura antes de añadir lineas.');
-    sNumero := Trim(dsCab.FieldByName('NUMERO_FACC').AsString);
-    if Assigned(dsLin) and dsLin.Active and (dsLin.State = dsInsert) and
-       ((sNumero = '') or (sNumero = '0')) and LineaActualVacia then
-      dsLin.Cancel;
-    if (dsCab.State in dsEditModes) or (sNumero = '') or (sNumero = '0') then
-    begin
-      if not (dsCab.State in dsEditModes) then
-        dsCab.Edit;
-      if (dsCab.FindField('ESPIVOTE_HORIZONTAL_FACC') <> nil) and
-         (Trim(dsCab.FieldByName('ESPIVOTE_HORIZONTAL_FACC').AsString) = '')
-         then
-        dsCab.FieldByName('ESPIVOTE_HORIZONTAL_FACC').AsString := 'N';
-      dsCab.Post;
-    end;
-    SincronizarCabeceraEnLinea;
-    if Assigned(dsLin) and dsLin.Active and
-       (not (dsLin.State in dsEditModes)) then
-    begin
-      dsLin.Close;
-      dsLin.Open;
-    end;
-  end;
+    AsegurarCabeceraPersistidaCompra(
+      dmmFacturasCompra.unqryTablaG,
+      dmmFacturasCompra.unqryFacturasCompraLineas,
+      CrearConfiguracionTallasCompra(
+        'una factura', 'FACC', 'FACCLIN',
+        'fza_facturas_compra_lineas'),
+      nil);
 end;
 
 procedure TfrmMtoFacturasCompra.AsegurarPrimeraLineaFacturaCompra;
@@ -1650,113 +1216,19 @@ end;
 
 function TfrmMtoFacturasCompra.PuedeActivarTallasHorizontal(
   var AMensaje: string): Boolean;
-var
-  dsCab      : TDataSet;
-  dsLin      : TDataSet;
-  q          : TUniQuery;
-  incidencias: TStringList;
-  sSerie     : string;
-  sNumero    : string;
-
-  function ValorLinea(const ACampo: string): string;
-  var
-    Campo: TField;
-  begin
-    Result := '';
-    Campo := dsLin.FindField(ACampo);
-    if Campo <> nil then
-      Result := Trim(Campo.AsString);
-  end;
-
-  function LineaActualTieneArticulo: Boolean;
-  begin
-    Result := (ValorLinea('CODIGO_ART_FACCLIN') <> '') or
-              (ValorLinea('CODIGO_UNIDAD_FACCLIN') <> '');
-  end;
-
-  function LineaActualTieneSistemaTallas: Boolean;
-  var
-    Campo: TField;
-  begin
-    Result := False;
-    Campo := dsLin.FindField('ID_AC_PIVOT_FACCLIN');
-    if Campo <> nil then
-      Result := (not Campo.IsNull) and (Campo.AsInteger > 0);
-  end;
-
 begin
-  Result := False;
   AMensaje := '';
-  if (dmmFacturasCompra = nil) or (FPivote = nil) then
-    Result := True
-  else
-  begin
-    dsCab := dmmFacturasCompra.unqryTablaG;
-    dsLin := dmmFacturasCompra.unqryFacturasCompraLineas;
-    if (dsCab = nil) or (not dsCab.Active) or dsCab.IsEmpty then
-      AMensaje := 'Crea o selecciona una factura antes de activar tallas.'
-    else if Assigned(dsLin) and dsLin.Active and
-            (dsLin.State in dsEditModes) then
-    begin
-      if LineaActualTieneArticulo and
-         (not LineaActualTieneSistemaTallas) then
-        AMensaje :=
-          'El articulo en curso no tiene sistema de tallas asignado.'
-      else if LineaActualTieneArticulo then
-      begin
-        AsegurarCabeceraPersistidaParaLineas;
-        if dsLin.State in dsEditModes then
-          dsLin.Post;
-      end
-      else if dsCab.State = dsInsert then
-        AMensaje :=
-          'En alta, selecciona primero un articulo con sistema de tallas.';
-    end
-    else if dsCab.State = dsInsert then
-      AMensaje :=
-        'En alta, selecciona primero un articulo con sistema de tallas.';
-    if AMensaje = '' then
-    begin
-      sNumero := Trim(dsCab.FieldByName('NUMERO_FACC').AsString);
-      if (sNumero = '') or (sNumero = '0') then
-        AsegurarCabeceraPersistidaParaLineas;
-      sSerie := Trim(dsCab.FieldByName('SERIE_FACC').AsString);
-      sNumero := Trim(dsCab.FieldByName('NUMERO_FACC').AsString);
-      incidencias := TStringList.Create;
-      q := TUniQuery.Create(nil);
-      try
-        q.Connection := dmmFacturasCompra.unqryTablaG.Connection;
-        q.SQL.Text :=
-          'SELECT DISTINCT L.CODIGO_ART_FACCLIN AS ART ' +
-          '  FROM fza_facturas_compra_lineas L ' +
-          ' WHERE L.SERIE_FACC_FACCLIN = :serie ' +
-          '   AND L.NUMERO_FACC_FACCLIN = :numero ' +
-          '   AND COALESCE(TRIM(L.CODIGO_ART_FACCLIN), '''') <> '''' ' +
-          '   AND (L.ID_AC_PIVOT_FACCLIN IS NULL ' +
-          '        OR L.ID_AC_PIVOT_FACCLIN = 0) ' +
-          ' ORDER BY ART';
-        q.ParamByName('serie').AsString := sSerie;
-        q.ParamByName('numero').AsString := sNumero;
-        q.Open;
-        while not q.Eof do
-        begin
-          incidencias.Add('- Articulo sin sistema de tallas: ' +
-                          q.FieldByName('ART').AsString);
-          q.Next;
-        end;
-        if incidencias.Count > 0 then
-          AMensaje := 'No se puede activar tallas en horizontal:' +
-                      sLineBreak + sLineBreak +
-                      incidencias.Text + sLineBreak +
-                      'Asigna un sistema de tallas o elimina la linea.'
-        else
-          Result := FPivote.ValidarPivotePosible(AMensaje);
-      finally
-        FreeAndNil(q);
-        FreeAndNil(incidencias);
-      end;
-    end;
-  end;
+  Result := True;
+  if Assigned(dmmFacturasCompra) and Assigned(FPivote) then
+    Result := PuedeActivarTallasHorizontalCompra(
+      dmmFacturasCompra.unqryTablaG,
+      dmmFacturasCompra.unqryFacturasCompraLineas,
+      dmmFacturasCompra.unqryTablaG.Connection,
+      CrearConfiguracionTallasCompra(
+        'una factura', 'FACC', 'FACCLIN',
+        'fza_facturas_compra_lineas'),
+      AsegurarCabeceraPersistidaParaLineas,
+      FPivote.ValidarPivotePosible, AMensaje);
 end;
 
 procedure TfrmMtoFacturasCompra.AplicarArticuloFacturaCompra(
@@ -2120,25 +1592,18 @@ end;
 procedure TfrmMtoFacturasCompra.actArticulosExecute(Sender: TObject);
 begin
   inherited;
-  with tvLineasFactura.DataController.DataSet do
-    ShowMto(Self.Owner,
-            'Articulos',
-            FieldByName('CODIGO_ART_FACCLIN').AsString);
+  ShowMtoCodigoDataSet(Self.Owner, 'Articulos',
+    tvLineasFactura.DataController.DataSet,
+    'CODIGO_ART_FACCLIN');
 end;
 
 procedure TfrmMtoFacturasCompra.actIrProveedorExecute(Sender: TObject);
-var
-  sPrv: string;
 begin
-  sPrv := '';
-  if Assigned(dmmFacturasCompra) and
-     (not dmmFacturasCompra.unqryTablaG.IsEmpty) then
-    sPrv := Trim(dmmFacturasCompra.unqryTablaG.
-                   FieldByName('CODIGO_PRV_FACC').AsString);
-  if sPrv = '' then
-    ShowMto(Self.Owner, 'Proveedores')
+  if Assigned(dmmFacturasCompra) then
+    ShowMtoCodigoDataSet(Self.Owner, 'Proveedores',
+      dmmFacturasCompra.unqryTablaG, 'CODIGO_PRV_FACC')
   else
-    ShowMto(Self.Owner, 'Proveedores', sPrv);
+    ShowMto(Self.Owner, 'Proveedores');
 end;
 
 procedure TfrmMtoFacturasCompra.cbbCODIGO_PRV_FACCPropertiesEditValueChanged(

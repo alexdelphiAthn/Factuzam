@@ -106,7 +106,7 @@ implementation
 
 uses
   System.DateUtils, System.Generics.Defaults, inLibWin,
-  inLibGlobalVar;
+  inLibGlobalVar, inLibMsg;
 
 type
   TLogFileInfo = record
@@ -177,11 +177,11 @@ begin
                                 FormatDateTime('yyyy_mm_dd_hhnnss', Now) +
                                 '_' + FInstanceID + '.log');
   if not IsFileAccessible(FLogFileName) then
-    raise Exception.CreateFmt('No se puede acceder a %s. Faltan permisos.',
+    raise Exception.CreateFmt(SErrorAccesoFicheroLog,
                               [FLogFileName]);
   FMutexHandle := CreateMutex(nil, False, PChar(MUTEX_NAME));
   if FMutexHandle = 0 then
-    raise Exception.Create('Error al crear mutex: ' + MUTEX_NAME);
+    raise Exception.Create(Format(SErrorCrearMutexLog, [MUTEX_NAME]));
   // SQL logging desactivado por defecto
   FLogFlags := [ltInfo, ltWarning, ltError];
   IsNewFile := (FileGetSize(FLogFileName) = 0);
@@ -775,7 +775,7 @@ var
 begin
   if not Assigned(AParametros) then
     raise EArgumentNilException.Create(
-      'No se han proporcionado los parámetros de aplicación.');
+      SErrorParametrosAplicacionNoProporcionados);
   // Flags 'Depuración' (modest-fermat-WUvkF): switches gordos.
   bDebug := AParametros.GetBool('appModoDebug', False);
   bDebugSQL :=

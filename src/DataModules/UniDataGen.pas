@@ -149,7 +149,7 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
-  Vcl.Forms, inLibData;
+  Vcl.Forms, inLibData, inLibMsg;
 
 {$R *.dfm}
 
@@ -306,16 +306,14 @@ end;
 function TdmBase.GetIdentidadSesion: TIdentidadSesion;
 begin
   if not Assigned(FContextoSesion) then
-    raise Exception.Create(
-      'No se ha configurado el contexto de sesión del módulo de datos.');
+    raise Exception.Create(SErrorContextoSesionModuloDatosNoConfigurado);
   Result := FContextoSesion.Identidad;
 end;
 
 function TdmBase.GetUbicacionSesion: TUbicacionSesion;
 begin
   if not Assigned(FContextoSesion) then
-    raise Exception.Create(
-      'No se ha configurado el contexto de sesión del módulo de datos.');
+    raise Exception.Create(SErrorContextoSesionModuloDatosNoConfigurado);
   Result := FContextoSesion.Ubicacion;
 end;
 
@@ -341,8 +339,7 @@ begin
     Result := FConexiones.ConexionPrincipal;
   if not Assigned(Result) and
      not (csDesigning in ComponentState) then
-    raise Exception.Create(
-      'No se ha configurado el servicio de conexiones de datos.');
+    raise Exception.Create(SErrorServicioConexionesDatosNoConfigurado);
 end;
 
 function TdmBase.CrearConexionTrabajo(
@@ -350,8 +347,7 @@ function TdmBase.CrearConexionTrabajo(
   AUso: TUsoConexionTrabajo): TUniConnection;
 begin
   if not Assigned(FConexiones) then
-    raise Exception.Create(
-      'No se ha configurado el servicio de conexiones de datos.');
+    raise Exception.Create(SErrorServicioConexionesDatosNoConfigurado);
   Result := FConexiones.CrearConexion(AOwner, AUso);
 end;
 
@@ -360,8 +356,7 @@ begin
   if Assigned(FAuditoriaDatos) then
     FAuditoriaDatos.Actualizar(DataSet)
   else if not (csDesigning in ComponentState) then
-    raise Exception.Create(
-      'No se ha configurado el servicio de auditoría de datos.');
+    raise Exception.Create(SErrorServicioAuditoriaDatosNoConfigurado);
 end;
 
 procedure TdmBase.DoCreate;

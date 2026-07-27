@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataPedidos                                                }
 {    Tipo:       Data Module                                                   }
@@ -145,7 +145,7 @@ implementation
 uses
   inLibtb, inLibLog, System.Diagnostics, System.UITypes,
   Vcl.Dialogs, inLibVentasImpuestos, inLibContadorLineas, JclDebug,
-  inLibData;
+  inLibData, inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -516,10 +516,7 @@ begin
   begin
     Abort;
   end;
-  if MessageDlg(Format('¿Borrar el pedido de venta %s / %s?' +
-                       sLineBreak +
-                       'Se eliminaran sus lineas y se descontara el ' +
-                       'pendiente de servir en stock.',
+  if MessageDlg(Format(SPreguntaBorrarPedidoVenta,
                        [sSerie, sNumero]),
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
   begin
@@ -672,8 +669,7 @@ begin
   if LineaPedidoVacia(DataSet) then
   begin
     VolcarPilaPostLineaVacia;
-    raise Exception.Create(
-      'La línea del pedido no tiene artículo; no se puede guardar.');
+    raise Exception.Create(SErrorLineaPedidoSinArticulo);
   end;
   AsignarNumeroLineaPedido(DataSet);
   NormalizarArticuloSkuEnDataSet(ConexionPrincipal, unqryPedidosLineas,
@@ -744,8 +740,7 @@ begin
           sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
-        raise Exception.Create(
-          'Graba la cabecera del pedido antes de guardar lineas.');
+        raise Exception.Create(SErrorCabeceraPedidoSinGrabar);
       if DataSet.FindField('NUMERO_PED_PEDLIN') <> nil then
         DataSet.FieldByName('NUMERO_PED_PEDLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_PED_PEDLIN') <> nil then
@@ -759,9 +754,8 @@ begin
       // copia en memoria queda desfasada no pasa nada: el helper toma
       // siempre MAX(LINEA_PEDLIN) como suelo.
       if iNuevaLinea = 0 then
-        raise Exception.Create(
-          'No se pudo asignar número de línea: la cabecera ' + sSerie +
-          '/' + sNumero + ' no existe en la base de datos.');
+        raise Exception.Create(Format(SErrorAsignarLineaPedido,
+                                      [sSerie, sNumero]));
       DataSet.FieldByName('LINEA_PEDLIN').AsString :=
         Format('%.4d', [iNuevaLinea]);
     end;
@@ -1023,7 +1017,7 @@ begin
   if (unqryTablaG.FindField('CODIGO_ALM_PED') <> nil) and
      (Trim(unqryTablaG.FieldByName('CODIGO_ALM_PED').AsString) = '') then
   begin
-    MessageDlg('Debe seleccionar el almacén de salida del pedido.',
+    MessageDlg(SAvisoAlmacenSalidaPedidoObligatorio,
                mtWarning, [mbOk], 0);
     Abort;
   end;
@@ -1038,14 +1032,13 @@ begin
     sCliente := Trim(unqryTablaG.FieldByName('CODIGO_CLI_PED').AsString);
   if (sCliente = '') or (sCliente = '0') then
   begin
-    MessageDlg('Debe seleccionar un cliente antes de guardar el pedido.',
+    MessageDlg(SAvisoClientePedidoObligatorio,
                mtWarning, [mbOk], 0);
     Abort;
   end;
   if not ClienteExiste(sCliente) then
   begin
-    MessageDlg('El cliente ' + sCliente + ' no existe. Seleccione un ' +
-               'cliente válido antes de guardar el pedido.',
+    MessageDlg(Format(SAvisoClientePedidoNoExiste, [sCliente]),
                mtWarning, [mbOk], 0);
     Abort;
   end;
@@ -1942,7 +1935,7 @@ begin
   sAlmacen := Trim(UbicacionSesion.Almacen);
   if sAlmacen = '' then
   begin
-    MessageDlg('Debe seleccionar el almacén de salida del pedido.',
+    MessageDlg(SAvisoAlmacenSalidaPedidoObligatorio,
                mtWarning, [mbOk], 0);
     Abort;
   end;

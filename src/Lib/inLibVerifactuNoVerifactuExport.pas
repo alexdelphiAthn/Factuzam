@@ -41,7 +41,7 @@ implementation
 
 uses
   System.Classes, System.IOUtils, System.Hash, System.NetEncoding, Data.DB,
-  DBAccess, inLibGlobalVar, inLibVerifactu;
+  DBAccess, inLibGlobalVar, inLibMsg, inLibVerifactu;
 
 const
   cNsFactuzamNoVerifactu = 'urn:factuzam:no-verifactu:v1';
@@ -255,22 +255,18 @@ begin
   begin
     sError := '';
     if not VerifactuFirmaCertificado(AParametrosApp) then
-      sError := 'No se puede exportar NO VERI*FACTU legal: el modo ' +
-        'NO VERI*FACTU exige firma electrónica con certificado oficial.'
+      sError := SErrorExportarNoVerifactuSinCertificado
     else if not ColumnasFirmaEventosDisponibles(AConn) then
-      sError := 'No se puede exportar NO VERI*FACTU legal: faltan ' +
-        'columnas de firma en fza_verifactu_eventos.'
+      sError := SErrorExportarNoVerifactuSinColumnasEventos
     else if not ColumnasFirmaFacturacionDisponibles(AConn) then
-      sError := 'No se puede exportar NO VERI*FACTU legal: faltan ' +
-        'columnas de firma en fza_facturas_consolidaciones.'
+      sError := SErrorExportarNoVerifactuSinColumnasFacturacion
     else
     begin
       iEventos := ContarEventosSinFirma(AConn);
       iFacturas := ContarFacturasSinFirma(AConn);
       if (iEventos > 0) or (iFacturas > 0) then
-        sError := Format('No se puede exportar NO VERI*FACTU legal: ' +
-          '%d evento(s) y %d registro(s) de facturación no tienen firma ' +
-          'XAdES y datos de certificado.', [iEventos, iFacturas]);
+        sError := Format(SErrorExportarNoVerifactuRegistrosSinFirma,
+          [iEventos, iFacturas]);
     end;
     if sError <> '' then
     begin
@@ -519,9 +515,9 @@ var
   sXmlFacturacion: string;
 begin
   if AConn = nil then
-    raise Exception.Create('No hay conexion para exportar NO VERI*FACTU.');
+    raise Exception.Create(SErrorConexionExportarNoVerifactu);
   if Trim(AArchivoBase) = '' then
-    raise Exception.Create('No se ha indicado archivo base de exportacion.');
+    raise Exception.Create(SErrorArchivoBaseExportacionNoIndicado);
   ValidarExportacionLegalNoVerifactu(AParametrosApp, AConn, AUsuario);
   Result.TitularCertificado := '';
   Result.SerieCertificado := '';

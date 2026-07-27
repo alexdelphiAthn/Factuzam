@@ -45,7 +45,7 @@ type
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils, inLibMsg;
 
 constructor TServicioConexionesUniDAC.Create(
   AConexionPrincipal: TUniConnection);
@@ -102,8 +102,7 @@ function TServicioConexionesUniDAC.CrearConexion(
   AUso: TUsoConexionTrabajo): TUniConnection;
 begin
   if not Assigned(FConexionPrincipal) then
-    raise Exception.Create(
-      'No hay conexión principal para crear una conexión de trabajo.');
+    raise Exception.Create(SErrorConexionPrincipalTrabajoNoDisponible);
   Result := TUniConnection.Create(AOwner);
   try
     CopiarConfiguracion(Result, AUso);

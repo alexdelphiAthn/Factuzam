@@ -603,7 +603,7 @@ uses
   inLibAtributosPaleta,
   inLibLog,             // Log.LogPerf para cronometros del AfterScroll
   System.Diagnostics,   // TStopwatch
-  inLibtb;
+  inLibtb, inLibMsg;
 
 {$R *.dfm}
 
@@ -856,9 +856,7 @@ begin
   // 3. Validamos que haya un esquema de variación asignado
   if (CodArticulo = '') or (TipoVariacion = '') then
   begin
-    ShowMessage(
-      'El artículo debe tener asignado un "Tipo de variación" y estar ' +
-      'guardado para poder generar SKUs.');
+    ShowMessage(SErrorArticuloSinTipoVariacion);
     // Mandamos al usuario al combo para que lo elija
     FCbbTipoVariacion.SetFocus;
     Exit;
@@ -1221,14 +1219,13 @@ begin
   ds := dmmArticulos.unqryTarifasArticulos;
   if (ds = nil) or (not ds.Active) or ds.IsEmpty then
   begin
-    ShowMessage('Selecciona primero un precio de tarifa.');
+    ShowMessage(SErrorPrecioTarifaNoSeleccionado);
     Exit;
   end;
   unicoFld := ds.FindField('CODIGO_UNICO_ARTTAR');
   if (unicoFld = nil) or unicoFld.IsNull then
   begin
-    ShowMessage('Esta fila aún no tiene precio guardado en la tarifa. ' +
-                'Pulsa primero "Añadir precio" para crear el registro.');
+    ShowMessage(SErrorPrecioTarifaNoGuardado);
     Exit;
   end;
   unico := unicoFld.AsInteger;
@@ -1395,7 +1392,7 @@ begin
     sErrorProp := FGestorProp.Validar;
     if sErrorProp <> '' then
     begin
-      ShowMessage('Revisión requerida: ' + sErrorProp);
+      ShowMessage(Format(SAvisoRevisionArticulo, [sErrorProp]));
       pcDetail.ActivePage := tsPropiedades;
       Exit;
     end;
@@ -1404,7 +1401,7 @@ begin
     except
       on E: Exception do
       begin
-        ShowMessage('Error al guardar propiedades: ' + E.Message);
+        ShowMessage(Format(SErrorGuardarPropiedadesArticulo, [E.Message]));
         Exit;
       end;
     end;
@@ -1440,7 +1437,7 @@ begin
   except
     on E: Exception do
     begin
-      ShowMessage('Error al guardar variaciones: ' + E.Message);
+      ShowMessage(Format(SErrorGuardarVariacionesArticulo, [E.Message]));
       Exit;
     end;
   end;
@@ -1477,9 +1474,8 @@ var
 begin
   inherited;
   if Application.MessageBox(
-       '¿Desea reconstruir la tabla de stock a partir de los movimientos de ' +
-       'almacén? Esta operación borrará el stock actual y lo regenerará.',
-       'Reconstruir Stock',
+       PChar(SPreguntaReconstruirStock),
+       PChar(STituloReconstruirStock),
        MB_YESNO + MB_ICONQUESTION) <> ID_YES then
     Exit;
 
@@ -1494,7 +1490,7 @@ begin
       on E: Exception do
       begin
         Screen.Cursor := crDefault;
-        ShowMessage('Error al reconstruir el stock: ' + E.Message);
+        ShowMessage(Format(SErrorReconstruirStock, [E.Message]));
         Exit;
       end;
     end;
@@ -1503,7 +1499,7 @@ begin
   end;
 
   if sMensaje = '' then
-    sMensaje := 'Stock reconstruido.';
+    sMensaje := SInfoStockReconstruido;
   ShowMessage(sMensaje);
 end;
 
@@ -1516,7 +1512,7 @@ begin
     Abort;
   if (not dsTablaG.Dataset.Active) or dsTablaG.Dataset.IsEmpty then
   begin
-    ShowMessage('Seleccione primero un artículo para imprimir sus etiquetas.');
+    ShowMessage(SErrorArticuloNoSeleccionadoImprimirEtiquetas);
     Exit;
   end;
   formulario := TfrmPrintEtiqArt.Create(Application);
@@ -1553,8 +1549,7 @@ begin
     dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
   if CodArticulo = '' then
   begin
-    ShowMessage(
-      'Seleccione o guarde un artículo antes de generar códigos de barras.');
+    ShowMessage(SErrorArticuloNoSeleccionadoGenerarCodigos);
     Exit;
   end;
 
@@ -1612,22 +1607,12 @@ begin
     begin
       qrySkus.Close;
       if iLimpiados = 0 then
-        ShowMessage('El artículo no tiene SKUs activos.');
+        ShowMessage(SErrorArticuloSinSkusActivosGenerarCodigos);
       Exit;
     end;
 
     if MessageDlg(
-         '¿Generar códigos de barras pendientes?'           + sLineBreak +
-         sLineBreak +
-         'Para cada SKU activo:'                            + sLineBreak +
-         '  · Si no tiene principal: se genera un EAN-13 ' +
-                'interno (prefijo "' + CB_PREFIJO + '").'   + sLineBreak +
-         '  · Si tiene principal pero no fila vacía: se ' +
-                'crea una fila vacía para el código del '   +
-                'fabricante (a rellenar manualmente).'     + sLineBreak +
-         '  · Si ya tiene ambos, se respeta.'                + sLineBreak +
-         sLineBreak +
-         'Pulse Sí para continuar.',
+         Format(SPreguntaGenerarCodigosBarras, [CB_PREFIJO]),
          mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     begin
       qrySkus.Close;
@@ -1700,11 +1685,7 @@ begin
     dmmArticulos.unqryVariacionesArticulos.Close;
     dmmArticulos.unqryVariacionesArticulos.Open;
     ActualizarVisibilidadVariaciones;
-    ShowMessage(Format('Generación finalizada.' + sLineBreak +
-                       '- EAN-13 internos creados: %d' + sLineBreak +
-                       '- Filas vacías de fabricante creadas: %d' + sLineBreak +
-                       '- SKUs ya completos (saltados): %d' + sLineBreak +
-                       '- Placeholders _FAB_ obsoletos eliminados: %d',
+    ShowMessage(Format(SInfoGeneracionCodigosBarras,
                        [iGenerados, iVacios, iSaltados, iLimpiados]));
   finally
     FreeAndNil(qryInsert);
@@ -1727,7 +1708,7 @@ begin
     dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
   if CodArticulo = '' then
   begin
-    ShowMessage('Seleccione o guarde un artículo antes de verificar.');
+    ShowMessage(SErrorArticuloNoSeleccionadoVerificarCodigos);
     Exit;
   end;
 
@@ -1765,27 +1746,19 @@ begin
       else
       begin
         Inc(iKo);
-        sErrores := sErrores + sLineBreak + '  ' + sCodigo + '  (SKU ' + sSku +
-                    ', Tipo ' + sTipo + ', Long ' + IntToStr(Length(sCodigo)) +
-                    ')';
+        sErrores := sErrores + sLineBreak +
+          Format(SErrorDetalleCodigoBarrasInvalido,
+            [sCodigo, sSku, sTipo, Length(sCodigo)]);
       end;
       qry.Next;
     end;
     qry.Close;
 
     if iKo = 0 then
-      ShowMessage(Format('Verificación OK.' + sLineBreak +
-                         '- EAN-13 válidos: %d' + sLineBreak +
-                         '- EAN-8  válidos: %d' + sLineBreak +
-                         '- Pendientes (placeholder/vacío): %d',
+      ShowMessage(Format(SInfoVerificacionCodigosBarrasCorrecta,
                          [iOk13, iOk8, iSkip]))
     else
-      ShowMessage(Format('Verificación con incidencias.' + sLineBreak +
-                         '- EAN-13 válidos: %d' + sLineBreak +
-                         '- EAN-8  válidos: %d' + sLineBreak +
-                         '- NO válidos: %d' + sLineBreak +
-                         '- Pendientes: %d' + sLineBreak +
-                         'Códigos no válidos:%s',
+      ShowMessage(Format(SAvisoVerificacionCodigosBarras,
                          [iOk13, iOk8, iKo, iSkip, sErrores]));
   finally
     FreeAndNil(qry);
@@ -2376,7 +2349,7 @@ begin
       FreeAndNil(oList);
       Screen.Cursor := crDefault;
     end;
-    ShowMessage('Precarga guardada.');
+    ShowMessage(SInfoPrecargaArticuloGuardada);
   end;
 end;
 
@@ -2850,23 +2823,15 @@ var
   CodGlobal, CodAdHoc, Texto: string;
 begin
   CodGlobal := StringReplace(Trim(AValorAv), ' ', '_', [rfReplaceAll]);
-  if CodGlobal = '' then CodGlobal := '(sin valor)';
+  if CodGlobal = '' then CodGlobal := STextoAtributoBasicoSinValor;
   CodAdHoc  := Format('AD_%s_%s', [ACodArt, CodGlobal]);
 
-  Texto :=
-    'Este SKU todavia no tiene un atributo basico asignado para ' +
-    'este valor.' + #13#10#13#10 +
-    'Si       -> Crear basico GLOBAL "' + CodGlobal + '"' + #13#10 +
-    '            (compartido con otros articulos que usen ese valor)' +
-    #13#10#13#10 +
-    'No       -> Crear basico AD-HOC "' + CodAdHoc + '"' + #13#10 +
-    '            (exclusivo de este articulo)' +
-    #13#10#13#10 +
-    'Cancelar -> No crear nada por ahora.';
+  Texto := Format(SPreguntaCrearAtributoBasicoSku,
+    [CodGlobal, CodAdHoc]);
 
   case Application.MessageBox(
          PChar(Texto),
-         'Como crear el atributo basico',
+         PChar(STituloCrearAtributoBasico),
          MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON1) of
     ID_YES : Result := abGlobal;
     ID_NO  : Result := abAdHoc;
@@ -3306,27 +3271,27 @@ var
 begin
   if not ObtenerColorSkuActual(CodArt, Color) then
   begin
-    MessageDlg('Seleccione un SKU con color para activar o desactivar ' +
-               'todos los SKU de ese color.', mtInformation, [mbOK], 0);
+    MessageDlg(SErrorSkuColorNoSeleccionado,
+               mtInformation, [mbOK], 0);
     Exit;
   end;
   if aActivo = 'S' then
-    sInf := 'activar'
+    sInf := STextoActivarSkusColor
   else
-    sInf := 'desactivar';
-  if MessageDlg(Format('Va a %s TODOS los SKU del color "%s" de este ' +
-                       'articulo. Continuar?', [sInf, Color]),
+    sInf := STextoDesactivarSkusColor;
+  if MessageDlg(Format(SPreguntaCambiarActivoSkusColor, [sInf, Color]),
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
   nAfectados := dmmArticulos.ActualizarSkusColorActivo(CodArt, Color, aActivo);
   // Refrescamos el grid de SKU para reflejar el nuevo estado de ESACTIVO_SKU.
   if Assigned(dmmArticulos.unqrySkus) and dmmArticulos.unqrySkus.Active then
     dmmArticulos.unqrySkus.Refresh;
   if aActivo = 'S' then
-    sPP := 'activado'
+    sPP := STextoSkusColorActivados
   else
-    sPP := 'desactivado';
-  MessageDlg(Format('%d SKU del color "%s" se han %s.',
-                    [nAfectados, Color, sPP]), mtInformation, [mbOK], 0);
+    sPP := STextoSkusColorDesactivados;
+  MessageDlg(Format(SInfoSkusColorActualizados,
+                    [nAfectados, Color, sPP]),
+             mtInformation, [mbOK], 0);
 end;
 
 procedure TfrmMtoArticulos.btnColorSkusClick(Sender: TObject);

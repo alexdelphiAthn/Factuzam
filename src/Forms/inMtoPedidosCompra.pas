@@ -400,6 +400,10 @@ uses
   inLibArticulosResolver,
   inLibArticulosValidador,
   inLibGridCantidad,
+  inLibColumnasDocumento,
+  inLibBusquedasCompra,
+  inLibValidacionDocumento,
+  inLibPresentacionDocumento,
   inLibComprasImpuestos,
   inMtoModalSelAlmacenPedido, inMtoModalDocsCreados, inMtoModalEtiqPed,
   inLibShowMto, inLibGenBusq, UniDataArticulos,
@@ -440,7 +444,6 @@ end;
 
 function TfrmMtoPedidosCompra.BuscarArticuloPedidoCompra: string;
 var
-  qry : TUniQuery;
   sPrv: string;
 begin
   Result := '';
@@ -452,63 +455,24 @@ begin
       MessageDlg('Selecciona un proveedor antes de buscar artículos.',
                  mtInformation, [mbOk], 0)
     else
-    begin
-      qry := TUniQuery.Create(nil);
-      try
-        qry.Connection := dmmPedidosCompra.unqryTablaG.Connection;
-        qry.SQL.Text :=
-          'SELECT art.CODIGO_ART_ART, art.ESACTIVO_ART, art.ORDEN_ART, ' +
-          '       art.DESCRIPCION_ART, art.CODIGO_FAM_ART, ' +
-          '       fam.DESCRIPCION_FAM, art.TIPO_IVA_ART, ' +
-          '       iva.NOMBRE_TIPO_IVA_IVATIP, art.TIPO_CANTIDAD_ART, ' +
-          '       ap.CODIGO_PRV_AP, prv.RAZON_SOCIAL_PRV, prv.NOMBRE_PRV, ' +
-          '       ap.REF_PROVEEDOR_AP AS REF_PROVEEDOR, ' +
-          '       ap.PRECIO_ULT_COMPRA_AP, ap.FECHA_VALIDEZ_AP ' +
-          '  FROM fza_articulos_proveedores ap ' +
-          '  JOIN fza_articulos art ' +
-          '    ON art.CODIGO_ART_ART = ap.CODIGO_ART_AP ' +
-          '  LEFT JOIN fza_articulos_familias fam ' +
-          '    ON fam.CODIGO_FAM_FAM = art.CODIGO_FAM_ART ' +
-          '  LEFT JOIN fza_ivas_tipos iva ' +
-          '    ON iva.CODIGO_ABREVIATURA_IVA_IVATIP = art.TIPO_IVA_ART ' +
-          '  LEFT JOIN fza_proveedores prv ' +
-          '    ON prv.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP ' +
-          ' WHERE ap.CODIGO_PRV_AP = :prv ' +
-          '   AND COALESCE(art.ESACTIVO_ART, ''S'') = ''S'' ' +
-          ' ORDER BY art.ORDEN_ART, art.CODIGO_ART_ART';
-        qry.ParamByName('prv').AsString := sPrv;
-        if TBusquedaUtils.EjecutarBusqueda(
-          ConexionPrincipal,
-          'Búsqueda de artículos',
-             qry,
-             'frmMtoDevcArtSearch',
-             Self) and (qry.FindField('CODIGO_ART_ART') <> nil) then
-          Result := qry.FieldByName('CODIGO_ART_ART').AsString;
-      finally
-        FreeAndNil(qry);
-      end;
-    end;
+      Result := BuscarArticuloProveedorCompra(
+        dmmPedidosCompra.unqryTablaG.Connection, sPrv,
+        'Búsqueda de artículos', 'frmMtoDevcArtSearch', Self);
   end;
 end;
 
 function TfrmMtoPedidosCompra.ArticuloLineaActivaPedidoCompra: string;
-var
-  ds: TDataSet;
 begin
   Result := '';
   if Assigned(dmmPedidosCompra) then
-  begin
-    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if Assigned(ds) and ds.Active and (not ds.IsEmpty) and
-       (ds.FindField('CODIGO_ART_PEDCLIN') <> nil) then
-      Result := Trim(ds.FieldByName('CODIGO_ART_PEDCLIN').AsString);
-  end;
+    Result := ValorTextoDataSetCompra(
+      dmmPedidosCompra.unqryPedidosCompraLineas,
+      'CODIGO_ART_PEDCLIN');
 end;
 
 function TfrmMtoPedidosCompra.BuscarSkuPedidoCompra(
   const ACodigoArt: string): string;
 var
-  qry : TUniQuery;
   sArt: string;
 begin
   Result := '';
@@ -520,221 +484,41 @@ begin
     MessageDlg('Selecciona un artículo antes de buscar sus SKUs.',
                mtInformation, [mbOk], 0)
   else
-  begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := dmmPedidosCompra.unqryTablaG.Connection;
-      qry.SQL.Text :=
-        'SELECT SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU, ' +
-        '       GROUP_CONCAT(AV.AV ORDER BY COALESCE(VA.ORDEN_VA, 999), ' +
-        '                    AV.ORDEN_AV SEPARATOR '' / '') AS ATRIBUTOS ' +
-        '  FROM fza_articulos_skus SK ' +
-        '  LEFT JOIN fza_atributos_sku SA ' +
-        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
-        '  LEFT JOIN fza_atributos_valores AV ' +
-        '    ON AV.ID_AV = SA.ID_AV_SA ' +
-        '  LEFT JOIN fza_variaciones_atributos VA ' +
-        '    ON VA.ID_VAR_VA = SK.CODIGO_VAR_SKU ' +
-        '   AND VA.ID_ATB_VA = AV.ID_VA_AV ' +
-        ' WHERE SK.CODIGO_ART_SKU = :art ' +
-        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
-        ' GROUP BY SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU ' +
-        ' ORDER BY SK.CODIGO_UNIDAD_SKU';
-      qry.ParamByName('art').AsString := sArt;
-      if TBusquedaUtils.EjecutarBusqueda(
-        ConexionPrincipal,
-        'SKUs del artículo ' + sArt,
-           qry,
-           'frmMtoPedcSkuSearch',
-           Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
-        Result := qry.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
+    Result := BuscarSkuArticuloCompra(
+      dmmPedidosCompra.unqryTablaG.Connection, sArt,
+      'SKUs del artículo ' + sArt,
+      'frmMtoPedcSkuSearch', Self);
 end;
 
 procedure TfrmMtoPedidosCompra.AsegurarCabeceraPersistidaParaLineas;
-var
-  dsCab  : TDataSet;
-  dsLin  : TDataSet;
-  sNumero: string;
-
-  function ValorLinea(const ACampo: string): string;
-  var
-    Campo: TField;
-  begin
-    Result := '';
-    Campo := dsLin.FindField(ACampo);
-    if Campo <> nil then
-      Result := Trim(Campo.AsString);
-  end;
-
-  function LineaActualVacia: Boolean;
-  begin
-    Result := (ValorLinea('CODIGO_ART_PEDCLIN') = '') and
-              (ValorLinea('CODIGO_UNIDAD_PEDCLIN') = '');
-  end;
-
-  procedure SincronizarCabeceraEnLinea;
-  begin
-    if Assigned(dsLin) and dsLin.Active and
-       (dsLin.State in dsEditModes) then
-    begin
-      if dsLin.FindField('NUMERO_PEDC_PEDCLIN') <> nil then
-        dsLin.FieldByName('NUMERO_PEDC_PEDCLIN').AsString :=
-          dsCab.FieldByName('NUMERO_PEDC').AsString;
-      if dsLin.FindField('SERIE_PEDC_PEDCLIN') <> nil then
-        dsLin.FieldByName('SERIE_PEDC_PEDCLIN').AsString :=
-          dsCab.FieldByName('SERIE_PEDC').AsString;
-    end;
-  end;
-
 begin
   if not Assigned(dmmPedidosCompra) then
     raise Exception.Create('No esta inicializado el pedido de compra.')
   else
-  begin
-    dsCab := dmmPedidosCompra.unqryTablaG;
-    dsLin := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if (dsCab = nil) or (not dsCab.Active) or
-       (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
-      raise Exception.Create(
-        'Crea o selecciona un pedido antes de añadir lineas.');
-    sNumero := Trim(dsCab.FieldByName('NUMERO_PEDC').AsString);
-    if Assigned(dsLin) and dsLin.Active and (dsLin.State = dsInsert) and
-       ((sNumero = '') or (sNumero = '0')) and LineaActualVacia then
-      dsLin.Cancel;
-    if (dsCab.State in dsEditModes) or (sNumero = '') or
-       (sNumero = '0') then
-    begin
-      if not (dsCab.State in dsEditModes) then
-        dsCab.Edit;
-      if (dsCab.FindField('ESPIVOTE_HORIZONTAL_PEDC') <> nil) and
-         (Trim(dsCab.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString) = '')
-         then
-        dsCab.FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString := 'N';
-      dsCab.Post;
-    end;
-    SincronizarCabeceraEnLinea;
-    if Assigned(dsLin) and dsLin.Active and
-       (not (dsLin.State in dsEditModes)) then
-    begin
-      dsLin.Close;
-      dsLin.Open;
-    end;
-  end;
+    AsegurarCabeceraPersistidaCompra(
+      dmmPedidosCompra.unqryTablaG,
+      dmmPedidosCompra.unqryPedidosCompraLineas,
+      CrearConfiguracionTallasCompra(
+        'un pedido', 'PEDC', 'PEDCLIN',
+        'fza_pedidos_compra_lineas'),
+      nil);
 end;
 
 function TfrmMtoPedidosCompra.PuedeActivarTallasHorizontal(
   var AMensaje: string): Boolean;
-var
-  dsCab      : TDataSet;
-  dsLin      : TDataSet;
-  q          : TUniQuery;
-  incidencias: TStringList;
-  sSerie     : string;
-  sNumero    : string;
-
-  function ValorLinea(const ACampo: string): string;
-  var
-    Campo: TField;
-  begin
-    Result := '';
-    Campo := dsLin.FindField(ACampo);
-    if Campo <> nil then
-      Result := Trim(Campo.AsString);
-  end;
-
-  function LineaActualTieneArticulo: Boolean;
-  begin
-    Result := (ValorLinea('CODIGO_ART_PEDCLIN') <> '') or
-              (ValorLinea('CODIGO_UNIDAD_PEDCLIN') <> '');
-  end;
-
-  function LineaActualTieneSistemaTallas: Boolean;
-  var
-    Campo: TField;
-  begin
-    Result := False;
-    Campo := dsLin.FindField('ID_AC_PIVOT_PEDCLIN');
-    if Campo <> nil then
-      Result := (not Campo.IsNull) and (Campo.AsInteger > 0);
-  end;
-
 begin
-  Result := False;
   AMensaje := '';
-  if (dmmPedidosCompra = nil) or (FPivote = nil) then
-    Result := True
-  else
-  begin
-    dsCab := dmmPedidosCompra.unqryTablaG;
-    dsLin := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if (dsCab = nil) or (not dsCab.Active) or dsCab.IsEmpty then
-      AMensaje := 'Crea o selecciona un pedido antes de activar tallas.'
-    else if Assigned(dsLin) and dsLin.Active and
-            (dsLin.State in dsEditModes) then
-    begin
-      if LineaActualTieneArticulo and
-         (not LineaActualTieneSistemaTallas) then
-        AMensaje :=
-          'El articulo en curso no tiene sistema de tallas asignado.'
-      else if LineaActualTieneArticulo then
-      begin
-        AsegurarCabeceraPersistidaParaLineas;
-        if dsLin.State in dsEditModes then
-          dsLin.Post;
-      end
-      else if dsCab.State = dsInsert then
-        AMensaje :=
-          'En alta, selecciona primero un articulo con sistema de tallas.';
-    end
-    else if dsCab.State = dsInsert then
-      AMensaje :=
-        'En alta, selecciona primero un articulo con sistema de tallas.';
-    if AMensaje = '' then
-    begin
-      sNumero := Trim(dsCab.FieldByName('NUMERO_PEDC').AsString);
-      if (sNumero = '') or (sNumero = '0') then
-        AsegurarCabeceraPersistidaParaLineas;
-      sSerie := Trim(dsCab.FieldByName('SERIE_PEDC').AsString);
-      sNumero := Trim(dsCab.FieldByName('NUMERO_PEDC').AsString);
-      incidencias := TStringList.Create;
-      q := TUniQuery.Create(nil);
-      try
-        q.Connection := dmmPedidosCompra.unqryTablaG.Connection;
-        q.SQL.Text :=
-          'SELECT DISTINCT L.CODIGO_ART_PEDCLIN AS ART ' +
-          '  FROM fza_pedidos_compra_lineas L ' +
-          ' WHERE L.SERIE_PEDC_PEDCLIN = :serie ' +
-          '   AND L.NUMERO_PEDC_PEDCLIN = :numero ' +
-          '   AND COALESCE(TRIM(L.CODIGO_ART_PEDCLIN), '''') <> '''' ' +
-          '   AND (L.ID_AC_PIVOT_PEDCLIN IS NULL ' +
-          '        OR L.ID_AC_PIVOT_PEDCLIN = 0) ' +
-          ' ORDER BY ART';
-        q.ParamByName('serie').AsString := sSerie;
-        q.ParamByName('numero').AsString := sNumero;
-        q.Open;
-        while not q.Eof do
-        begin
-          incidencias.Add('- Articulo sin sistema de tallas: ' +
-                          q.FieldByName('ART').AsString);
-          q.Next;
-        end;
-        if incidencias.Count > 0 then
-          AMensaje := 'No se puede activar tallas en horizontal:' +
-                      sLineBreak + sLineBreak +
-                      incidencias.Text + sLineBreak +
-                      'Asigna un sistema de tallas o elimina la linea.'
-        else
-          Result := FPivote.ValidarPivotePosible(AMensaje);
-      finally
-        FreeAndNil(q);
-        FreeAndNil(incidencias);
-      end;
-    end;
-  end;
+  Result := True;
+  if Assigned(dmmPedidosCompra) and Assigned(FPivote) then
+    Result := PuedeActivarTallasHorizontalCompra(
+      dmmPedidosCompra.unqryTablaG,
+      dmmPedidosCompra.unqryPedidosCompraLineas,
+      dmmPedidosCompra.unqryTablaG.Connection,
+      CrearConfiguracionTallasCompra(
+        'un pedido', 'PEDC', 'PEDCLIN',
+        'fza_pedidos_compra_lineas'),
+      AsegurarCabeceraPersistidaParaLineas,
+      FPivote.ValidarPivotePosible, AMensaje);
 end;
 
 procedure TfrmMtoPedidosCompra.AplicarArticuloPedidoCompra(
@@ -1292,45 +1076,15 @@ begin
 end;
 
 procedure TfrmMtoPedidosCompra.CrearColumnasTallas;
-var
-  i        : Integer;
-  col      : TcxGridDBColumn;
-  curProps : TcxCurrencyEditProperties;
 begin
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-  begin
-    col := tvLineasPedido.CreateColumn;
-    col.Name    := 'dbcLinPedcTalla' + Format('%.2d', [i + 1]);
-    col.Caption := '';
-    col.Width   := ANCHO_TALLA_PX;
-    col.Tag     := i + 1;
-    col.Visible := False;
-    col.DataBinding.ValueTypeClass := TcxFloatValueType;
-    col.PropertiesClass := TcxCurrencyEditProperties;
-    curProps := TcxCurrencyEditProperties(col.Properties);
-    curProps.DisplayFormat := '#,##0';
-    FTallaColumns[i] := col;
-  end;
+  CrearColumnasTallasDocumento(tvLineasPedido, 'dbcLinPedcTalla',
+    ANCHO_TALLA_PX, FTallaColumns);
 end;
 
 procedure TfrmMtoPedidosCompra.CrearColumnasAtributos;
-var
-  i: Integer;
-  col: TcxGridDBColumn;
 begin
-  for i := 0 to CANT_ATRIB_MAX - 1 do
-  begin
-    col := tvLineasPedido.CreateColumn;
-    col.Name    := 'dbcLinPedcAtrib' + Format('%.2d', [i + 1]);
-    col.Caption := '';
-    col.Width   := 90;
-    col.Tag     := -(i + 1);  // tag negativo para no chocar con tallas
-    col.Visible := False;
-    col.Options.Editing := False;
-    // El valor se deriva del SKU de la fila al pintar (modo Desglose).
-    col.OnGetDataText := AtribGetDataText;
-    FAtribColumns[i] := col;
-  end;
+  CrearColumnasAtributosDocumento(tvLineasPedido,
+    'dbcLinPedcAtrib', FAtribColumns, AtribGetDataText);
 end;
 
 procedure TfrmMtoPedidosCompra.AtribGetDataText(
@@ -1357,157 +1111,62 @@ end;
 
 procedure TfrmMtoPedidosCompra.CargarBasicosColorArticulo(
   const ACodigoArt: string);
-var
-  q   : TUniQuery;
-  i   : Integer;
-  sArt: string;
 begin
-  SetLength(FBasicosColor, 0);
-  sArt := Trim(ACodigoArt);
-  if sArt <> '' then
-  begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := ConexionPrincipal;
-      q.SQL.Text :=
-        'SELECT ATB.CODIGO_ATB, MIN(ATB.ORDEN_ATB) AS ORDEN_ATB, ' +
-        '       MIN(ATB.NOMBRE_ATB) AS NOMBRE_ATB ' +
-        '  FROM fza_articulos_skus SK ' +
-        '  JOIN fza_atributos_sku SA ' +
-        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
-        '  JOIN fza_atributos_valores AV ' +
-        '    ON AV.ID_AV = SA.ID_AV_SA ' +
-        '   AND AV.ID_VA_AV = :va ' +
-        '  JOIN fza_atributos_basicos ATB ' +
-        '    ON ATB.ID_VA_ATB = :va ' +
-        '   AND (ATB.ID_ATB = AV.ID_ATB_AV ' +
-        '        OR (AV.ID_ATB_AV IS NULL AND ATB.CODIGO_ATB = AV.AV)) ' +
-        ' WHERE SK.CODIGO_ART_SKU = :art ' +
-        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
-        '   AND COALESCE(AV.ESACTIVO_AV, ''S'') = ''S'' ' +
-        '   AND COALESCE(ATB.ESACTIVO_ATB, ''S'') = ''S'' ' +
-        ' GROUP BY ATB.CODIGO_ATB ' +
-        ' ORDER BY ORDEN_ATB, NOMBRE_ATB, ATB.CODIGO_ATB';
-      q.ParamByName('va').AsString := ID_VA_COLOR;
-      q.ParamByName('art').AsString := sArt;
-      q.Open;
-      SetLength(FBasicosColor, q.RecordCount);
-      i := 0;
-      while not q.Eof do
-      begin
-        FBasicosColor[i] := q.FieldByName('CODIGO_ATB').AsString;
-        Inc(i);
-        q.Next;
-      end;
-    finally
-      FreeAndNil(q);
-    end;
-  end;
+  FBasicosColor := ObtenerBasicosArticulo(
+    ConexionPrincipal, ACodigoArt, ID_VA_COLOR);
 end;
 
 procedure TfrmMtoPedidosCompra.InicializarGestorYPivote;
 var
-  cfgT : TGridTallasConfig;
-  cfgP : TGridPivoteCompraConfig;
-  i    : Integer;
-  arr  : TArray<TcxGridDBColumn>;
+  oBase: TConfigPivoteDocumentoCompra;
+  oConfigTallas: TGridTallasConfig;
+  oConfigPivote: TGridPivoteCompraConfig;
 begin
-  if FGestorTallas <> nil then FreeAndNil(FGestorTallas);
-  if FPivote       <> nil then FreeAndNil(FPivote);
-  if dmmPedidosCompra = nil then Exit;
-  SetLength(arr, CANT_TALLAS_MAX);
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-    arr[i] := FTallaColumns[i];
-  // 1. Gestor inline de tallas (libreria existente).
-  cfgT := Default(TGridTallasConfig);
-  cfgT.Conexion           := dmmPedidosCompra.unqryTablaG.Connection;
-  cfgT.ContextoSesion     := ContextoSesion;
-  cfgT.Usuario            := IdentidadSesion.Usuario;
-  cfgT.Grid               := tvLineasPedido;
-  cfgT.SourceMaster       := dsTablaG;
-  cfgT.SourceLineas       := dmmPedidosCompra.dsPedidosCompraLineas;
-  cfgT.ColumnasTallas     := arr;
-  cfgT.FieldSerieMaster   := 'SERIE_PEDC';
-  cfgT.FieldNumeroMaster  := 'NUMERO_PEDC';
-  cfgT.FieldLinea         := 'LINEA_PEDCLIN';
-  cfgT.FieldConjuntoPivot := 'ID_AC_PIVOT_PEDCLIN';
-  cfgT.FieldPrecioBase    := 'PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN';
-  cfgT.FieldTotalUds      := 'TOTAL_UNIDADES_PEDCLIN';
-  cfgT.FieldTotalLinea    := 'TOTAL_PEDCLIN';
-  cfgT.TablaCeldas        := 'fza_pedidos_compra_celdas';
-  cfgT.FieldSerieCel      := 'SERIE_PEDC_PEDCCEL';
-  cfgT.FieldNumeroCel     := 'NUMERO_PEDC_PEDCCEL';
-  cfgT.FieldLineaCel      := 'LINEA_PEDC_PEDCCEL';
-  cfgT.FieldFilaCel       := 'ID_FILA_PEDC_PEDCCEL';
-  cfgT.FieldAvPivotCel    := 'ID_AV_PIVOT_PEDCCEL';
-  cfgT.FieldCantidadCel   := 'CANTIDAD_PEDCCEL';
-  cfgT.FieldAlmacenCel    := 'CODIGO_ALM_PEDCCEL';
-  cfgT.IdFilaFijo         := 1;
-  cfgT.MaxColumnas        := CANT_TALLAS_MAX;
-  FGestorTallas := TGestorGridTallas.Create(cfgT);
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-    if FTallaColumns[i] <> nil then
-    begin
-      TcxCurrencyEditProperties(FTallaColumns[i].Properties).
-        OnEditValueChanged := TallaEditValueChangedHook;
-      TcxCurrencyEditProperties(FTallaColumns[i].Properties).
-        OnValidate := TallaValidateHook;
-    end;
-  // 2. Orquestador de pivote (libreria nueva compartida con albaranes).
-  cfgP := Default(TGridPivoteCompraConfig);
-  cfgP.Conexion             := dmmPedidosCompra.unqryTablaG.Connection;
-  cfgP.ContextoSesion       := ContextoSesion;
-  cfgP.Grid                 := tvLineasPedido;
-  cfgP.SourceMaster         := dsTablaG;
-  cfgP.SourceLineas         := dmmPedidosCompra.unqryPedidosCompraLineas;
-  cfgP.Gestor               := FGestorTallas;
-  cfgP.ColColorPivot          := FColColorPivot;
-  cfgP.ColColorProveedorPivot := FColColorProveedorPivot;
-  cfgP.ColumnasTallas       := arr;
-  cfgP.MaxColumnasTallas    := CANT_TALLAS_MAX;
-  cfgP.TablaLineas          := 'fza_pedidos_compra_lineas';
-  cfgP.FieldSerieMaster     := 'SERIE_PEDC';
-  cfgP.FieldNumeroMaster    := 'NUMERO_PEDC';
-  cfgP.FieldSerieLin        := 'SERIE_PEDC_PEDCLIN';
-  cfgP.FieldNumeroLin       := 'NUMERO_PEDC_PEDCLIN';
-  cfgP.FieldLinea           := 'LINEA_PEDCLIN';
-  cfgP.FieldArt             := 'CODIGO_ART_PEDCLIN';
-  cfgP.FieldSku             := 'CODIGO_UNIDAD_PEDCLIN';
-  cfgP.FieldCantidad        := 'CANTIDAD_PEDCLIN';
-  cfgP.FieldPrecioBase      := 'PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN';
-  cfgP.FieldTotalUds        := 'TOTAL_UNIDADES_PEDCLIN';
-  cfgP.FieldTotalLinea      := 'TOTAL_PEDCLIN';
-  cfgP.FieldCantidadRecibida:= 'CANTIDAD_RECIBIDA_PEDCLIN';
-  cfgP.FieldCantidadRecibida:= 'CANTIDAD_RECIBIDA_PEDCLIN';
-  cfgP.FieldIdAcPivot       := 'ID_AC_PIVOT_PEDCLIN';
-  cfgP.FieldAlmacen         := 'CODIGO_ALMACEN_PEDCLIN';
-  cfgP.FieldAlmacenMaster   := 'CODIGO_ALM_PEDC';
-  // FieldColorTexto solo si la columna existe en BBDD. Asi no crasheamos
-  // si el usuario aun no ha aplicado el ALTER de pedidos_compra.sql que
-  // anyade COLOR_TEXTO_PEDCLIN.
-  if ColumnaPedidosCompraExiste('COLOR_TEXTO_PEDCLIN') then
-    cfgP.FieldColorTexto    := 'COLOR_TEXTO_PEDCLIN';
-  cfgP.CamposOcultosEnPivote := TArray<string>.Create(
-    'CODIGO_UNIDAD_PEDCLIN',
-    'CANTIDAD_PEDCLIN',
-    'CANTIDAD_RECIBIDA_PEDCLIN',
-    'TOTAL_PEDCLIN');
-  FPivote := TGridPivoteCompra.Create(cfgP);
+  if Assigned(FGestorTallas) then
+    FreeAndNil(FGestorTallas);
+  if Assigned(FPivote) then
+    FreeAndNil(FPivote);
+  if Assigned(dmmPedidosCompra) then
+  begin
+    oBase := Default(TConfigPivoteDocumentoCompra);
+    oBase.Conexion := dmmPedidosCompra.unqryTablaG.Connection;
+    oBase.ContextoSesion := ContextoSesion;
+    oBase.Usuario := IdentidadSesion.Usuario;
+    oBase.Vista := tvLineasPedido;
+    oBase.SourceMaster := dsTablaG;
+    oBase.SourceLineas := dmmPedidosCompra.dsPedidosCompraLineas;
+    oBase.ConsultaLineas :=
+      dmmPedidosCompra.unqryPedidosCompraLineas;
+    oBase.ColumnasTallas := CopiarColumnasDocumento(FTallaColumns);
+    oBase.ColColorPivot := FColColorPivot;
+    oBase.ColColorProveedorPivot := FColColorProveedorPivot;
+    oBase.PrefijoCabecera := 'PEDC';
+    oBase.PrefijoLinea := 'PEDCLIN';
+    oBase.PrefijoCelda := 'PEDCCEL';
+    oBase.NombreTablaDocumento := 'pedidos';
+    oBase.AplicarContextoPivote := True;
+    oBase.TieneCantidadRecibida := True;
+    if ColumnaPedidosCompraExiste('COLOR_TEXTO_PEDCLIN') then
+      oBase.CampoColorTexto := 'COLOR_TEXTO_PEDCLIN';
+    oConfigTallas := CrearConfigTallasDocumentoCompra(oBase);
+    FGestorTallas := TGestorGridTallas.Create(oConfigTallas);
+    ConfigurarEventosTallasDocumento(FTallaColumns,
+      TallaEditValueChangedHook, TallaValidateHook);
+    oConfigPivote := CrearConfigPivoteDocumentoCompra(oBase,
+      FGestorTallas);
+    FPivote := TGridPivoteCompra.Create(oConfigPivote);
+  end;
 end;
 
 procedure TfrmMtoPedidosCompra.RefrescarVisibilidadTallas;
-var
-  i: Integer;
 begin
   if (FPivote = nil) or (not FPivote.Activo) or (FGestorTallas = nil) then
+    EstablecerVisibilidadColumnasDocumento(FTallaColumns, False)
+  else
   begin
-    for i := 0 to CANT_TALLAS_MAX - 1 do
-      if FTallaColumns[i] <> nil then
-        FTallaColumns[i].Visible := False;
-    Exit;
+    FGestorTallas.RecalcularMaxColumnas;
+    FGestorTallas.ActualizarCaptionsLineaActiva;
   end;
-  FGestorTallas.RecalcularMaxColumnas;
-  FGestorTallas.ActualizarCaptionsLineaActiva;
 end;
 
 procedure TfrmMtoPedidosCompra.RefrescarVisibilidadAtributos;
@@ -1534,9 +1193,8 @@ begin
         end;
     end;
   end;
-  for i := 0 to CANT_ATRIB_MAX - 1 do
-    if FAtribColumns[i] <> nil then
-      FAtribColumns[i].Visible := FMostrarAtributos;
+  EstablecerVisibilidadColumnasDocumento(FAtribColumns,
+    FMostrarAtributos);
   if FMostrarAtributos then
     CargarCaptionsAtributosLineaActiva;
 end;
@@ -1545,37 +1203,12 @@ end;
 // aplica como captions de las columnas ATTRn. La carga de VALORES por
 // SKU queda como TODO (hito posterior).
 procedure TfrmMtoPedidosCompra.CargarCaptionsAtributosLineaActiva;
-var
-  i: Integer;
-  sArt: string;
-  qry: TUniQuery;
-  iCol: Integer;
 begin
-  if dmmPedidosCompra = nil then Exit;
-  qry := dmmPedidosCompra.unqryDefArticuloPedc;
-  if qry = nil then Exit;
-  for i := 0 to CANT_ATRIB_MAX - 1 do
-    if FAtribColumns[i] <> nil then
-      FAtribColumns[i].Caption := 'Atributo ' + IntToStr(i + 1);
-  if (dmmPedidosCompra.unqryPedidosCompraLineas = nil) or
-     (not dmmPedidosCompra.unqryPedidosCompraLineas.Active) or
-     (dmmPedidosCompra.unqryPedidosCompraLineas.IsEmpty) then Exit;
-  sArt := dmmPedidosCompra.unqryPedidosCompraLineas.
-            FieldByName('CODIGO_ART_PEDCLIN').AsString;
-  if sArt = '' then Exit;
-  qry.Close;
-  qry.ParamByName('ARTICULO').AsString := sArt;
-  qry.Open;
-  iCol := 0;
-  while (not qry.Eof) and (iCol < CANT_ATRIB_MAX) do
-  begin
-    if FAtribColumns[iCol] <> nil then
-      FAtribColumns[iCol].Caption :=
-        qry.FieldByName('NOMBRE_ATRIBUTO').AsString;
-    Inc(iCol);
-    qry.Next;
-  end;
-  qry.Close;
+  if Assigned(dmmPedidosCompra) then
+    CargarCaptionsAtributosDocumento(
+      dmmPedidosCompra.unqryDefArticuloPedc,
+      dmmPedidosCompra.unqryPedidosCompraLineas,
+      'CODIGO_ART_PEDCLIN', FAtribColumns);
 end;
 
 procedure TfrmMtoPedidosCompra.PersistirPreferenciaPivote;
@@ -1652,19 +1285,9 @@ end;
 
 procedure TfrmMtoPedidosCompra.ActualizarCaptionModoLineas;
 begin
-  if not FColsModoConstruido then
-    tsLineasPedido.Caption := 'Líneas'
-  else
-    case FModoEntradaSel of
-      mcsSku:
-        tsLineasPedido.Caption := 'Líneas [SKU]';
-      mcsTallasInline:
-        tsLineasPedido.Caption := 'Líneas [Tallas horiz.]';
-      mcsTallasHorPed:
-        tsLineasPedido.Caption := 'Líneas [Tallas horiz. bandas]';
-    else
-      tsLineasPedido.Caption := 'Líneas [Desglose]';
-    end;
+  tsLineasPedido.Caption := CaptionModoLineasDocumento(
+    'Líneas', 'Líneas', FColsModoConstruido,
+    FModoEntradaSel, True);
 end;
 
 procedure TfrmMtoPedidosCompra.KeyDown(var Key: Word; Shift: TShiftState);
@@ -1865,42 +1488,14 @@ begin
 end;
 
 procedure TfrmMtoPedidosCompra.ActualizarLabelProveedor;
-var
-  sCodigo : string;
-  sNombre : string;
-  sRazon  : string;
 begin
-  // Resuelve NOMBRE_PRV + RAZON_SOCIAL_PRV (via el lookup unqryPrvDataPedc)
-  // y los pinta en el rotulo. Se antepone el nombre comercial: es el que
-  // el usuario reconoce a simple vista; la razon social solo se anade
-  // entre parentesis como referencia si difiere.
-  sCodigo := '';
-  if (dmmPedidosCompra <> nil) and Assigned(dmmPedidosCompra.unqryTablaG) and
-     dmmPedidosCompra.unqryTablaG.Active and
-     (not dmmPedidosCompra.unqryTablaG.IsEmpty) then
-    sCodigo :=
-      Trim(dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_PRV_PEDC').AsString);
-  if sCodigo = '' then
-    lblProveedorNombrePedc.Caption := ''
-  else if (dmmPedidosCompra.unqryPrvDataPedc <> nil) and
-          dmmPedidosCompra.unqryPrvDataPedc.Active and
-          dmmPedidosCompra.unqryPrvDataPedc.Locate('CODIGO_PRV_PRV', sCodigo, []) then
-  begin
-    sRazon  := dmmPedidosCompra.unqryPrvDataPedc.FieldByName('RAZON_SOCIAL_PRV').AsString;
-    sNombre := dmmPedidosCompra.unqryPrvDataPedc.FieldByName('NOMBRE_PRV').AsString;
-    // Si no hay nombre comercial cargado, caemos a la razon social como
-    // rotulo principal. Si hay nombre y difiere de la razon social, la
-    // razon social se anade entre parentesis como referencia.
-    if Trim(sNombre) = '' then
-      lblProveedorNombrePedc.Caption := sCodigo + ' - ' + sRazon
-    else if not SameText(Trim(sNombre), Trim(sRazon)) then
-      lblProveedorNombrePedc.Caption :=
-        sCodigo + ' - ' + sNombre + '  (' + sRazon + ')'
-    else
-      lblProveedorNombrePedc.Caption := sCodigo + ' - ' + sNombre;
-  end
+  if Assigned(dmmPedidosCompra) then
+    lblProveedorNombrePedc.Caption := TextoProveedorDocumento(
+      dmmPedidosCompra.unqryTablaG,
+      dmmPedidosCompra.unqryPrvDataPedc,
+      'CODIGO_PRV_PEDC')
   else
-    lblProveedorNombrePedc.Caption := sCodigo + ' - (proveedor no encontrado)';
+    lblProveedorNombrePedc.Caption := '';
 end;
 
 // Hook AfterPost del detail: encadena la logica original del DM con la
@@ -1990,25 +1585,18 @@ end;
 procedure TfrmMtoPedidosCompra.actArticulosExecute(Sender: TObject);
 begin
   inherited;
-    with tvLineasPedido.DataController.DataSet do
-      ShowMto(Self.Owner,
-              'Articulos',
-              FieldByName('CODIGO_ART_PEDCLIN').AsString);
+  ShowMtoCodigoDataSet(Self.Owner, 'Articulos',
+    tvLineasPedido.DataController.DataSet,
+    'CODIGO_ART_PEDCLIN');
 end;
 
 procedure TfrmMtoPedidosCompra.actIrProveedorExecute(Sender: TObject);
-var
-  sPrv: string;
 begin
-  sPrv := '';
-  if Assigned(dmmPedidosCompra) and
-     (not dmmPedidosCompra.unqryTablaG.IsEmpty) then
-    sPrv := Trim(dmmPedidosCompra.unqryTablaG.
-                   FieldByName('CODIGO_PRV_PEDC').AsString);
-  if sPrv = '' then
-    ShowMto(Self.Owner, 'Proveedores')
+  if Assigned(dmmPedidosCompra) then
+    ShowMtoCodigoDataSet(Self.Owner, 'Proveedores',
+      dmmPedidosCompra.unqryTablaG, 'CODIGO_PRV_PEDC')
   else
-    ShowMto(Self.Owner, 'Proveedores', sPrv);
+    ShowMto(Self.Owner, 'Proveedores');
 end;
 
 procedure TfrmMtoPedidosCompra.btnCODIGO_EMP_PEDCPropertiesButtonClick(
@@ -2316,22 +1904,15 @@ end;
 // abre la ficha del albaran de compra seleccionado en la rejilla. Solo
 // actua si esa pestania esta activa y hay un albaran en la fila actual.
 procedure TfrmMtoPedidosCompra.actIrDocumentoExecute(Sender: TObject);
-var
-  sSerie, sNumero: string;
 begin
   inherited;
   if (pcPedido.ActivePage = tsAlbaranesPedc) and
      (dmmPedidosCompra <> nil) and
      dmmPedidosCompra.unqryAlbaranesPedc.Active and
      (not dmmPedidosCompra.unqryAlbaranesPedc.IsEmpty) then
-  begin
-    sSerie  := Trim(dmmPedidosCompra.unqryAlbaranesPedc.
-                      FieldByName('SERIE_ALBC').AsString);
-    sNumero := Trim(dmmPedidosCompra.unqryAlbaranesPedc.
-                      FieldByName('NUMERO_ALBC').AsString);
-    if (sSerie <> '') and (sNumero <> '') then
-      ShowMto(Self.Owner, 'AlbaranesCompra', sSerie + ',' + sNumero);
-  end;
+    ShowMtoDocumentoDataSet(Self.Owner, 'AlbaranesCompra',
+      dmmPedidosCompra.unqryAlbaranesPedc,
+      'SERIE_ALBC', 'NUMERO_ALBC');
 end;
 
 function TfrmMtoPedidosCompra.AlmacenEfectivoPrimeraLinea(
@@ -2988,9 +2569,9 @@ var
   Cfg: TConfigColumnasSku;
   CfgPV: TGridPivoteVentaConfig;
   CfgT: TGridTallasConfig;
-  i: Integer;
   ds: TDataSet;
   bDegradarASku: Boolean;
+  ModoEfectivo: TModoColumnasSku;
 begin
   if (dmmPedidosCompra = nil) or (csDestroying in ComponentState) or
      FConstruyendoModo then
@@ -3008,34 +2589,8 @@ begin
   // por cada post de linea (segundos de cascada al entrar al modo).
   dmmPedidosCompra.IniciarReorganizacionLineas;
   try
-  // Teardown del modo anterior (patron pedidos de venta).
-  if tvLineasPedido.Controller.EditingController.IsEditing then
-    try
-      tvLineasPedido.Controller.EditingController.HideEdit(False);
-    except
-      on E: EInvalidOperation do
-        ;
-    end;
-  if ds.State in dsEditModes then
-    ds.Cancel;
-  if FModoEntrada <> nil then
-    FModoEntrada.Desmontar;
-  tvLineasPedido.OnInitEdit := nil;
-  tvLineasPedido.OnEditKeyDown := nil;
-  tvLineasPedido.OnEditing := nil;
-  tvLineasPedido.OnFocusedRecordChanged := nil;
-  tvLineasPedido.OnFocusedItemChanged := nil;
-  tvLineasPedido.OnCustomDrawCell := nil;
-  // El ClearItems mata TODAS las columnas: las del dfm y las del
-  // pivote de compras retirado. Fuera las referencias ANTES de que
-  // ningun repintado o refresco las toque.
-  tvLineasPedido.ClearItems;
-  FModoEntrada := nil;
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-    FTallaColumns[i] := nil;
-  for i := 0 to CANT_ATRIB_MAX - 1 do
-    FAtribColumns[i] := nil;
-  FColColorPivot := nil;
+  PrepararReconstruccionModoDocumento(tvLineasPedido, ds,
+    FModoEntrada, FTallaColumns, FAtribColumns, FColColorPivot);
   FColColorProveedorPivot := nil;
   colLineaPedcARecibir := nil;
   // Solo el DESGLOSE liga columnas a ATTRn: desempaquetar SKU->ATTR
@@ -3043,51 +2598,24 @@ begin
   // derivan del propio SKU: sin posts al navegar.
   if FModoEntradaSel = mcsAuto then
     dmmPedidosCompra.DesempaquetarAtributosLineas;
-  Cfg := Default(TConfigColumnasSku);
-  Cfg.Conexion := dmmPedidosCompra.unqryTablaG.Connection;
-  Cfg.ContextoSesion := ContextoSesion;
-  Cfg.View := tvLineasPedido;
-  Cfg.Cds := ds;
-  Cfg.Modo := FModoEntradaSel;
-  Cfg.AlmacenStock := Trim(dmmPedidosCompra.unqryTablaG.
-    FieldByName('CODIGO_ALM_PEDC').AsString);
-  Cfg.Distribuido := False;
-  Cfg.Campos.CodigoArt := 'CODIGO_ART_PEDCLIN';
-  Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_PEDCLIN';
-  Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_PEDCLIN';
-  Cfg.Campos.Cantidad := 'CANTIDAD_PEDCLIN';
-  Cfg.Campos.Almacen := 'CODIGO_ALMACEN_PEDCLIN';
-  Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_PEDCLIN';
-  for i := 1 to 5 do
-  begin
-    Cfg.Campos.AttrValor[i] :=
-      'ATTR' + IntToStr(i) + '_VALOR_PEDCLIN';
-    Cfg.Campos.AttrNombre[i] :=
-      'ATTR' + IntToStr(i) + '_NOMBRE_PEDCLIN';
-  end;
+  Cfg := CrearConfigColumnasSkuDocumento(
+    dmmPedidosCompra.unqryTablaG.Connection,
+    ContextoSesion, tvLineasPedido, ds, FModoEntradaSel,
+    Trim(dmmPedidosCompra.unqryTablaG.
+      FieldByName('CODIGO_ALM_PEDC').AsString), 'PEDCLIN');
   if FModoEntradaSel = mcsTallasHorPed then
   begin
-    CfgPV := Default(TGridPivoteVentaConfig);
-    CfgPV.Conexion := dmmPedidosCompra.unqryTablaG.Connection;
-    CfgPV.Usuario := IdentidadSesion.Usuario;
-    CfgPV.SourceMaster := dsTablaG;
-    CfgPV.SourceLineas := dmmPedidosCompra.dsPedidosCompraLineas;
-    CfgPV.FieldSerieMaster := 'SERIE_PEDC';
-    CfgPV.FieldNumeroMaster := 'NUMERO_PEDC';
-    CfgPV.FieldLinea := 'LINEA_PEDCLIN';
-    CfgPV.FieldArt := 'CODIGO_ART_PEDCLIN';
-    CfgPV.FieldSku := 'CODIGO_UNIDAD_PEDCLIN';
-    CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_PEDCLIN';
-    CfgPV.FieldTipoCantidad := 'TIPO_CANTIDAD_ARTICULO_PEDCLIN';
+    CfgPV := CrearConfigPivoteBandasDocumentoCompra(
+      dmmPedidosCompra.unqryTablaG.Connection,
+      IdentidadSesion.Usuario, dsTablaG,
+      dmmPedidosCompra.dsPedidosCompraLineas,
+      'PEDC', 'PEDCLIN',
+      'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN',
+      CANT_TALLAS_MAX);
     // Compra sobre las bandas del pivote de venta: Pedido /
     // A recibir (banda de servicio) / Pendiente.
-    CfgPV.FieldCantidadPedida := 'CANTIDAD_PEDCLIN';
     CfgPV.FieldCantidadEntregada := 'CANTIDAD_RECIBIDA_PEDCLIN';
     CfgPV.FieldCantidadAAlbaranar := 'CANTIDAD_A_RECIBIR_PEDCLIN';
-    CfgPV.FieldPrecioBase := 'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN';
-    CfgPV.FieldAlmacen := 'CODIGO_ALMACEN_PEDCLIN';
-    CfgPV.FieldAlmacenMaster := 'CODIGO_ALM_PEDC';
-    CfgPV.MaxColumnas := CANT_TALLAS_MAX;
     CfgPV.BandaUnica := False;
     CfgPV.TextoBandaAAlbaranar := 'A recibir';
     CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
@@ -3156,19 +2684,12 @@ begin
     // Rotulo por modo EFECTIVO (Auto puede degradar a SKU si faltan
     // las columnas ATTR) y, en desglose, mostrar Color/Talla con los
     // nombres globales desde el principio (paso de pedidos de venta).
-    case DetectarModoColumnasSku(Cfg) of
-      mcsSku:
-        tsLineasPedido.Caption := 'Líneas [SKU]';
-      mcsTallasInline:
-        tsLineasPedido.Caption := 'Líneas [Tallas horiz.]';
-      mcsTallasHorPed:
-        tsLineasPedido.Caption := 'Líneas [Tallas horiz. bandas]';
-    else
-      begin
-        tsLineasPedido.Caption := 'Líneas [Desglose]';
-        MostrarColumnasAtributoGlobalesPedc;
-      end;
-    end;
+    ModoEfectivo := DetectarModoColumnasSku(Cfg);
+    tsLineasPedido.Caption := CaptionModoLineasDocumento(
+      'Líneas', 'Líneas', True, ModoEfectivo, True);
+    if not (ModoEfectivo in
+      [mcsSku, mcsTallasInline, mcsTallasHorPed]) then
+      MostrarColumnasAtributoGlobalesPedc;
   end;
   finally
     dmmPedidosCompra.FinalizarReorganizacionLineas;
@@ -3186,86 +2707,57 @@ begin
 end;
 
 procedure TfrmMtoPedidosCompra.MostrarColumnasAtributoGlobalesPedc;
-var
-  Qry: TUniQuery;
-  i, iOrden: Integer;
-  Col: TcxGridColumn;
 begin
-  // Nombres globales de atributos para ver Color/Talla desde el
-  // principio (mismo helper que pedidos/facturas de venta).
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := dmmPedidosCompra.unqryTablaG.Connection;
-    Qry.SQL.Text :=
-      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
-      '       MIN(ORDEN_VA) AS ORDEN' +
-      '  FROM fza_variaciones_atributos' +
-      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
-      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
-    Qry.Open;
-    iOrden := 1;
-    while (not Qry.Eof) and (iOrden <= 5) do
-    begin
-      for i := 0 to tvLineasPedido.ColumnCount - 1 do
-      begin
-        Col := tvLineasPedido.Columns[i];
-        if Col.Tag = iOrden then
-        begin
-          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
-          Col.Visible := True;
-        end;
-      end;
-      Inc(iOrden);
-      Qry.Next;
-    end;
-  finally
-    FreeAndNil(Qry);
-  end;
+  MostrarColumnasAtributoGlobalesDocumento(
+    dmmPedidosCompra.unqryTablaG.Connection,
+    tvLineasPedido);
 end;
 
 procedure TfrmMtoPedidosCompra.CrearColumnasHostPedidoCompra;
-  function Col(const ACaption, ACampo: string; AAncho: Integer;
-               AEditable: Boolean): TcxGridDBColumn;
-  begin
-    Result := tvLineasPedido.CreateColumn as TcxGridDBColumn;
-    Result.Caption := ACaption;
-    Result.DataBinding.FieldName := ACampo;
-    Result.Width := AAncho;
-    Result.Options.Editing := AEditable;
-  end;
 var
   ColLinea, ColPedida, ColRecibida, ColARecibir,
   ColTipoCantidad: TcxGridDBColumn;
 begin
   // Columnas propias del pedido de compra tras el ClearItems del
   // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
-  ColLinea := Col('Línea', 'LINEA_PEDCLIN', 55, False);
-  Col('Modelo prov.', 'REF_PRV_PEDCLIN', 130, True);
-  Col('Descripción', 'DESCRIPCION_ARTICULO_PEDCLIN', 240, False);
+  ColLinea := CrearColumnaHostDocumento(
+    tvLineasPedido, 'Línea', 'LINEA_PEDCLIN', 55, False);
+  CrearColumnaHostDocumento(tvLineasPedido, 'Modelo prov.',
+    'REF_PRV_PEDCLIN', 130, True);
+  CrearColumnaHostDocumento(tvLineasPedido, 'Descripción',
+    'DESCRIPCION_ARTICULO_PEDCLIN', 240, False);
   if FModoEntradaSel <> mcsTallasHorPed then
   begin
     // En el inline la cantidad PEDIDA se teclea por celda de talla y
     // CANTIDAD_PEDCLIN pasa a ser el TOTAL de la linea consolidada:
     // solo lectura en ese modo.
-    ColPedida := Col('Pedida', 'CANTIDAD_PEDCLIN', 70,
-                     FModoEntradaSel <> mcsTallasInline);
-    ColRecibida := Col('Recibida', 'CANTIDAD_RECIBIDA_PEDCLIN', 75,
-                       False);
-    ColARecibir := Col('A recibir', 'CANTIDAD_A_RECIBIR_PEDCLIN',
-                       80, True);
+    ColPedida := CrearColumnaHostDocumento(
+      tvLineasPedido, 'Pedida', 'CANTIDAD_PEDCLIN', 70,
+      FModoEntradaSel <> mcsTallasInline);
+    ColRecibida := CrearColumnaHostDocumento(
+      tvLineasPedido, 'Recibida', 'CANTIDAD_RECIBIDA_PEDCLIN',
+      75, False);
+    ColARecibir := CrearColumnaHostDocumento(
+      tvLineasPedido, 'A recibir',
+      'CANTIDAD_A_RECIBIR_PEDCLIN', 80, True);
     ColARecibir.PropertiesClass := TcxCurrencyEditProperties;
     TcxCurrencyEditProperties(ColARecibir.Properties).
       OnEditValueChanged := ARecibirCampoEditValueChanged;
-    ColTipoCantidad := Col('', 'TIPO_CANTIDAD_ARTICULO_PEDCLIN',
-                           90, False);
+    ColTipoCantidad := CrearColumnaHostDocumento(
+      tvLineasPedido, '', 'TIPO_CANTIDAD_ARTICULO_PEDCLIN',
+      90, False);
     VincularCantidadGrid(ColPedida, ColTipoCantidad);
     VincularCantidadGrid(ColRecibida, ColTipoCantidad);
     VincularCantidadGrid(ColARecibir, ColTipoCantidad);
   end;
-  Col('Precio compra', 'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN', 130, True);
-  Col('% IVA', 'PORCENTAJE_IVA_PEDCLIN', 70, True);
-  Col('Total', 'TOTAL_PEDCLIN', 95, False);
-  Col('Almacén', 'CODIGO_ALMACEN_PEDCLIN', 80, True);
+  CrearColumnaHostDocumento(tvLineasPedido, 'Precio compra',
+    'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN', 130, True);
+  CrearColumnaHostDocumento(tvLineasPedido, '% IVA',
+    'PORCENTAJE_IVA_PEDCLIN', 70, True);
+  CrearColumnaHostDocumento(tvLineasPedido, 'Total',
+    'TOTAL_PEDCLIN', 95, False);
+  CrearColumnaHostDocumento(tvLineasPedido, 'Almacén',
+    'CODIGO_ALMACEN_PEDCLIN', 80, True);
   // Orden normal del documento: la LINEA delante del bloque de
   // articulo que creo el modo (las columnas del host nacen detras).
   ColLinea.Index := 0;

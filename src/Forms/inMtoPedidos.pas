@@ -271,6 +271,7 @@ type
                              ACodigoSku: string): Double;
     procedure PivoteVentaCrearLineaSku(const ACodigoSku: string);
     procedure PivoteVentaBandaCambiada(ABanda: TBandaPivoteVenta);
+    procedure ValidarClienteParaLineas;
     procedure AsegurarCabeceraPersistidaParaLineas;
     procedure AsegurarPrimeraLineaPedido;
     procedure PrepararModoAltaLineas;
@@ -315,7 +316,8 @@ uses
   inLibArticulosValidador, inLibVentasImpuestos, inLibtb,
   inLibGridTallasInline,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
-  inLibColumnasSku;
+  inLibColumnasSku, inLibColumnasDocumento,
+  inLibValidacionDocumento, inLibPresentacionDocumento;
 
 {$R *.dfm}
 
@@ -812,10 +814,9 @@ end;
 
 procedure TfrmMtoPedidos.ActualizarLabelPrendas;
 begin
-  if (dmmPedidos <> nil) and Assigned(dmmPedidos.unqryTablaG) and
-     dmmPedidos.unqryTablaG.Active and (not dmmPedidos.unqryTablaG.IsEmpty) then
-    lblTotalPrendasPed.Caption :=
-      FormatFloat('#,##0', dmmPedidos.TotalPrendasPedido)
+  if Assigned(dmmPedidos) then
+    lblTotalPrendasPed.Caption := TextoTotalPrendasDocumento(
+      dmmPedidos.unqryTablaG, dmmPedidos.TotalPrendasPedido)
   else
     lblTotalPrendasPed.Caption := '0';
 end;
@@ -1142,100 +1143,45 @@ begin
     AplicarArticuloPedido(sSku);
 end;
 
+procedure TfrmMtoPedidos.ValidarClienteParaLineas;
+var
+  sCliente: string;
+begin
+  sCliente := Trim(dmmPedidos.unqryTablaG.FieldByName(
+    'CODIGO_CLI_PED').AsString);
+  if not dmmPedidos.ClienteExiste(sCliente) then
+  begin
+    if (sCliente = '') or (sCliente = '0') then
+      MessageDlg('Debe seleccionar un cliente antes de añadir líneas.',
+        mtWarning, [mbOk], 0)
+    else
+      MessageDlg('El cliente ' + sCliente + ' no existe. Seleccione un ' +
+        'cliente válido antes de añadir líneas.',
+        mtWarning, [mbOk], 0);
+    pcCab.ActivePage := tsCabecera;
+    if btnCODIGO_CLI.CanFocus then
+      btnCODIGO_CLI.SetFocus;
+    Abort;
+  end;
+end;
+
 procedure TfrmMtoPedidos.AsegurarCabeceraPersistidaParaLineas;
 var
-  dsCab: TDataSet;
-  dsLin: TDataSet;
-  sCliente: string;
-  sNumero: string;
-  bReAppend: Boolean;
-
-  function ValorLinea(const ACampo: string): string;
-  var
-    Campo: TField;
-  begin
-    Result := '';
-    Campo := dsLin.FindField(ACampo);
-    if Campo <> nil then
-      Result := Trim(Campo.AsString);
-  end;
-
-  function LineaActualVacia: Boolean;
-  begin
-    Result := (ValorLinea('CODIGO_ART_PEDLIN') = '') and
-              (ValorLinea('CODIGOPRODPS_PEDLIN') = '');
-  end;
-
-  procedure SincronizarCabeceraEnLinea;
-  begin
-    if Assigned(dsLin) and dsLin.Active and
-       (dsLin.State in dsEditModes) then
-    begin
-      if dsLin.FindField('NUMERO_PED_PEDLIN') <> nil then
-        dsLin.FieldByName('NUMERO_PED_PEDLIN').AsString :=
-          dsCab.FieldByName('NUMERO_PED').AsString;
-      if dsLin.FindField('SERIE_PED_PEDLIN') <> nil then
-        dsLin.FieldByName('SERIE_PED_PEDLIN').AsString :=
-          dsCab.FieldByName('SERIE_PED').AsString;
-    end;
-  end;
-
+  oConfiguracion: TConfiguracionPersistenciaDocumento;
 begin
   if not Assigned(dmmPedidos) then
     raise Exception.Create('No esta inicializado el pedido.')
   else
   begin
-    dsCab := dmmPedidos.unqryTablaG;
-    dsLin := dmmPedidos.unqryPedidosLineas;
-    if (dsCab = nil) or (not dsCab.Active) or
-       (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
-      raise Exception.Create(
-        'Crea o selecciona un pedido antes de anadir lineas.');
-    sCliente := Trim(dsCab.FieldByName('CODIGO_CLI_PED').AsString);
-    if not dmmPedidos.ClienteExiste(sCliente) then
-    begin
-      if (sCliente = '') or (sCliente = '0') then
-        MessageDlg('Debe seleccionar un cliente antes de añadir líneas.',
-                   mtWarning, [mbOk], 0)
-      else
-        MessageDlg('El cliente ' + sCliente + ' no existe. Seleccione un ' +
-                   'cliente válido antes de añadir líneas.',
-                   mtWarning, [mbOk], 0);
-      pcCab.ActivePage := tsCabecera;
-      if btnCODIGO_CLI.CanFocus then
-        btnCODIGO_CLI.SetFocus;
-      Abort;
-    end;
-    sNumero := Trim(dsCab.FieldByName('NUMERO_PED').AsString);
-    // La linea vacia en insercion (auto-anadida al entrar al grid) se
-    // cancela SOLO si hay que postear la cabecera: ese Post arrastra
-    // el suyo via CheckBrowseMode y choca con la guarda de linea sin
-    // articulo. Se RECREA al final para que al usuario no le
-    // "desaparezca" la linea que acababa de anadir.
-    bReAppend := False;
-    if (dsCab.State in dsEditModes) or (sNumero = '') or
-       (sNumero = '0') then
-    begin
-      if Assigned(dsLin) and dsLin.Active and
-         (dsLin.State = dsInsert) and LineaActualVacia then
-      begin
-        dsLin.Cancel;
-        bReAppend := True;
-      end;
-      if not (dsCab.State in dsEditModes) then
-        dsCab.Edit;
-      dsCab.Post;
-    end;
-    SincronizarCabeceraEnLinea;
-    if Assigned(dsLin) and dsLin.Active and
-       (not (dsLin.State in dsEditModes)) then
-    begin
-      dsLin.Close;
-      dsLin.Open;
-    end;
-    if bReAppend and Assigned(dsLin) and dsLin.Active and
-       (not (dsLin.State in dsEditModes)) then
-      dsLin.Append;
+    oConfiguracion := CrearConfiguracionPersistenciaDocumento(
+      'Crea o selecciona un pedido antes de anadir lineas.',
+      'PED', 'PEDLIN');
+    oConfiguracion.CampoProductoLinea :=
+      'CODIGOPRODPS_PEDLIN';
+    oConfiguracion.RecrearLineaVacia := True;
+    AsegurarCabeceraPersistidaDocumento(
+      dmmPedidos.unqryTablaG, dmmPedidos.unqryPedidosLineas,
+      oConfiguracion, ValidarClienteParaLineas);
   end;
 end;
 
@@ -1384,7 +1330,6 @@ procedure TfrmMtoPedidos.ConstruirModoEntrada;
 var
   Cfg: TConfigColumnasSku;
   CfgPV: TGridPivoteVentaConfig;
-  i: Integer;
   ds: TDataSet;
 begin
   if (dmmPedidos = nil) or (csDestroying in ComponentState) then
@@ -1448,27 +1393,11 @@ begin
   // (columnas reales _PEDLIN; idempotente por linea).
   if FModoEntradaSel <> mcsSku then
     dmmPedidos.DesempaquetarAtributosLineas;
-  Cfg := Default(TConfigColumnasSku);
-  Cfg.Conexion := dmmPedidos.unqryTablaG.Connection;
-  Cfg.ContextoSesion := ContextoSesion;
-  Cfg.View := tvPedidosLineas;
-  Cfg.Cds := ds;
-  Cfg.Modo := FModoEntradaSel;
-  Cfg.AlmacenStock :=
-    dmmPedidos.unqryTablaG.FieldByName('CODIGO_ALM_PED').AsString;
-  Cfg.Distribuido := False;
-  Cfg.Campos.CodigoArt := 'CODIGO_ART_PEDLIN';
-  Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_PEDLIN';
-  Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_PEDLIN';
-  Cfg.Campos.Cantidad := 'CANTIDAD_PEDLIN';
-  Cfg.Campos.Almacen := 'CODIGO_ALMACEN_PEDLIN';
-  Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_PEDLIN';
-  for i := 1 to 5 do
-  begin
-    Cfg.Campos.AttrValor[i] := 'ATTR' + IntToStr(i) + '_VALOR_PEDLIN';
-    Cfg.Campos.AttrNombre[i] :=
-      'ATTR' + IntToStr(i) + '_NOMBRE_PEDLIN';
-  end;
+  Cfg := CrearConfigColumnasSkuDocumento(
+    dmmPedidos.unqryTablaG.Connection, ContextoSesion,
+    tvPedidosLineas, ds, FModoEntradaSel,
+    dmmPedidos.unqryTablaG.FieldByName(
+      'CODIGO_ALM_PED').AsString, 'PEDLIN');
   // Precio por SKU para la consolidacion del modo tallas: lineas con
   // precio distinto no fusionan.
   Cfg.ObtenerPrecioSku := PrecioSkuTallas;
@@ -1590,41 +1519,9 @@ begin
 end;
 
 procedure TfrmMtoPedidos.MostrarColumnasAtributoGlobalesPed;
-var
-  Qry: TUniQuery;
-  i, iOrden: Integer;
-  Col: TcxGridColumn;
 begin
-  // Nombres globales de atributos para ver Color/Talla desde el
-  // principio (mismo helper que inventarios / DTR).
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := dmmPedidos.unqryTablaG.Connection;
-    Qry.SQL.Text :=
-      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
-      '       MIN(ORDEN_VA) AS ORDEN' +
-      '  FROM fza_variaciones_atributos' +
-      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
-      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
-    Qry.Open;
-    iOrden := 1;
-    while (not Qry.Eof) and (iOrden <= 5) do
-    begin
-      for i := 0 to tvPedidosLineas.ColumnCount - 1 do
-      begin
-        Col := tvPedidosLineas.Columns[i];
-        if Col.Tag = iOrden then
-        begin
-          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
-          Col.Visible := True;
-        end;
-      end;
-      Inc(iOrden);
-      Qry.Next;
-    end;
-  finally
-    FreeAndNil(Qry);
-  end;
+  MostrarColumnasAtributoGlobalesDocumento(
+    dmmPedidos.unqryTablaG.Connection, tvPedidosLineas);
 end;
 
 procedure TfrmMtoPedidos.ModoEntradaResuelto(const ACodArt, ASku,
@@ -1974,22 +1871,15 @@ end;
 // abre la ficha del albaran de venta seleccionado en la rejilla. Solo
 // actua si esa pestania esta activa y hay un albaran en la fila actual.
 procedure TfrmMtoPedidos.actIrDocumentoExecute(Sender: TObject);
-var
-  sSerie, sNumero: string;
 begin
   inherited;
   if (pcPedido.ActivePage = tsAlbaranes) and
      (dmmPedidos <> nil) and
      dmmPedidos.unqryAlbaranes.Active and
      (not dmmPedidos.unqryAlbaranes.IsEmpty) then
-  begin
-    sSerie  := Trim(dmmPedidos.unqryAlbaranes.FieldByName(
-                    'SERIE_ALB').AsString);
-    sNumero := Trim(dmmPedidos.unqryAlbaranes.FieldByName(
-                    'NUMERO_ALB').AsString);
-    if (sSerie <> '') and (sNumero <> '') then
-      ShowMto(Self.Owner, 'Albaranes', sSerie + ',' + sNumero);
-  end;
+    ShowMtoDocumentoDataSet(Self.Owner, 'Albaranes',
+      dmmPedidos.unqryAlbaranes,
+      'SERIE_ALB', 'NUMERO_ALB');
 end;
 
 initialization

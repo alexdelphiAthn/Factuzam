@@ -37,7 +37,7 @@ type
 implementation
 
 uses
-  inLibLog, System.Diagnostics;
+  inLibLog, System.Diagnostics, inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -82,12 +82,11 @@ begin
      (Trim(DataSet.FieldByName('NOMBRE_ATB').AsString) = '') then
     Abort;
   if Trim(DataSet.FieldByName('ID_VA_ATB').AsString) = '' then
-    raise Exception.Create(
-      'Indica el atributo (CO para color, TAL para talla, etc.).');
+    raise Exception.Create(SErrorAtributoBasicoObligatorio);
   if Trim(DataSet.FieldByName('CODIGO_ATB').AsString) = '' then
-    raise Exception.Create('El código del atributo básico es obligatorio.');
+    raise Exception.Create(SErrorCodigoAtributoBasicoObligatorio);
   if Trim(DataSet.FieldByName('NOMBRE_ATB').AsString) = '' then
-    raise Exception.Create('El nombre del atributo básico es obligatorio.');
+    raise Exception.Create(SErrorNombreAtributoBasicoObligatorio);
   ActualizarAuditoria(DataSet);
 end;
 

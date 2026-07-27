@@ -172,6 +172,9 @@ function FrankfurterConvert(AAmount: Double;
 
 implementation
 
+uses
+  inLibMsg;
+
 { TFrankfurterResult }
 
 function TFrankfurterResult.GetRate(const ACode: string): Double;
@@ -188,8 +191,8 @@ var
 begin
   Rate := GetRate(ATargetCode);
   if Rate = 0 then
-    raise EFrankfurterError.CreateFmt(
-      'Divisa "%s" no encontrada en el resultado', [ATargetCode]);
+    raise EFrankfurterError.CreateFmt(SErrorDivisaNoEncontrada,
+                                     [ATargetCode]);
   Result := AAmount * Rate;
 end;
 
@@ -224,8 +227,8 @@ begin
     if Response.StatusCode = 200 then
       Result := Response.ContentAsString(TEncoding.UTF8)
     else
-      raise EFrankfurterError.CreateFmt(
-        'HTTP %d: %s', [Response.StatusCode, Response.StatusText]);
+      raise EFrankfurterError.CreateFmt(SErrorHttpDivisas,
+        [Response.StatusCode, Response.StatusText]);
   except
     on E: EFrankfurterError do
     begin
@@ -235,7 +238,7 @@ begin
     on E: Exception do
     begin
       FLastError := E.Message;
-      raise EFrankfurterError.Create('Error de red: ' + E.Message);
+      raise EFrankfurterError.Create(Format(SErrorRedDivisas, [E.Message]));
     end;
   end;
 end;
@@ -341,7 +344,7 @@ begin
   Raw  := DoGet(URL);
   JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
   if not Assigned(JSON) then
-    raise EFrankfurterError.Create('Respuesta JSON inválida');
+    raise EFrankfurterError.Create(SErrorJsonDivisas);
   try
     ParseRatesInto(JSON, Result);
   finally
@@ -364,7 +367,7 @@ begin
   Raw     := DoGet(URL);
   JSON    := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
   if not Assigned(JSON) then
-    raise EFrankfurterError.Create('Respuesta JSON inválida');
+    raise EFrankfurterError.Create(SErrorJsonDivisas);
   try
     ParseRatesInto(JSON, Result);
   finally
@@ -398,7 +401,7 @@ begin
   Raw  := DoGet(URL);
   JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
   if not Assigned(JSON) then
-    raise EFrankfurterError.Create('Respuesta JSON inválida');
+    raise EFrankfurterError.Create(SErrorJsonDivisas);
   try
     // La API devuelve "rates": { "2025-01-02": { "USD": 1.04, ... }, ... }
     RatesObj := JSON.GetValue<TJSONObject>('rates');
@@ -436,7 +439,7 @@ begin
   Raw  := DoGet(URL);
   JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
   if not Assigned(JSON) then
-    raise EFrankfurterError.Create('Respuesta JSON inválida');
+    raise EFrankfurterError.Create(SErrorJsonDivisas);
   try
     ParseRatesInto(JSON, Res);
     Result := Res.GetRate(ATo);
@@ -461,7 +464,7 @@ begin
     Raw  := DoGet(URL);
     JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
     if not Assigned(JSON) then
-      raise EFrankfurterError.Create('Respuesta JSON inválida');
+      raise EFrankfurterError.Create(SErrorJsonDivisas);
     try
       // Respuesta: { "AUD": "Australian Dollar", "BGN": "Bulgarian Lev", ... }
       for Pair in JSON do

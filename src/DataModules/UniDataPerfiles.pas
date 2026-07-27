@@ -101,7 +101,7 @@ var
 implementation
 
 uses
-  Vcl.Forms, inLibLog, System.SysConst;
+  Vcl.Forms, inLibLog, System.SysConst, inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -183,8 +183,7 @@ begin
     Result := FConexiones.ConexionPrincipal;
   if not Assigned(Result) and
      not (csDesigning in ComponentState) then
-    raise Exception.Create(
-      'No se ha configurado el servicio de conexiones de datos.');
+    raise Exception.Create(SErrorServicioConexionesDatosNoConfigurado);
 end;
 
 function TdmPerfiles.GetContextoSesion: IContextoSesionAplicacion;
@@ -198,8 +197,7 @@ begin
   if Assigned(FContextoSesion) then
     Result := FContextoSesion.Identidad
   else if not (csDesigning in ComponentState) then
-    raise Exception.Create(
-      'No se ha configurado el contexto de sesión.');
+    raise Exception.Create(SErrorContextoSesionPerfilesNoConfigurado);
 end;
 
 procedure TdmPerfiles.ActualizarAuditoria(DataSet: TDataSet);
@@ -207,8 +205,7 @@ begin
   if Assigned(FAuditoriaDatos) then
     FAuditoriaDatos.Actualizar(DataSet)
   else if not (csDesigning in ComponentState) then
-    raise Exception.Create(
-      'No se ha configurado el servicio de auditoría de datos.');
+    raise Exception.Create(SErrorServicioAuditoriaDatosNoConfigurado);
 end;
 
 procedure TdmPerfiles.DataModuleCreate(Sender: TObject);

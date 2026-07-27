@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataTarifasCambios                                         }
 {    Tipo:       Data Module                                                   }
@@ -57,7 +57,7 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
-  inLibUser;
+  inLibUser, inLibMsg;
 
 {$R *.dfm}
 
@@ -172,9 +172,9 @@ procedure TdmTarifasCambios.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
   if Trim(DataSet.FieldByName('NOMBRE_TARC').AsString) = '' then
-    raise Exception.Create('El nombre de la sesion es obligatorio.');
+    raise Exception.Create(SErrorNombreSesionCambioTarifaObligatorio);
   if Trim(DataSet.FieldByName('CODIGO_TAR_DESTINO_TARC').AsString) = '' then
-    raise Exception.Create('La tarifa destino es obligatoria.');
+    raise Exception.Create(SErrorTarifaDestinoObligatoria);
   if Trim(DataSet.FieldByName('CAMPO_ORIGEN_TARC').AsString) = '' then
     DataSet.FieldByName('CAMPO_ORIGEN_TARC').AsString := 'PRECIO_ORIGEN';
   if Trim(DataSet.FieldByName('CAMPO_DESTINO_TARC').AsString) = '' then

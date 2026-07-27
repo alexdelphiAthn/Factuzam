@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibSepaRemesasVenta                                        }
 {    Tipo:       Librería                                                      }
@@ -51,7 +51,7 @@ function CodigoAcreedorSepaValido(const AValor: string): Boolean;
 implementation
 
 uses
-  inLibDocumentoFiscal, inLibIBAN, uDJMSepa1914XML;
+  inLibDocumentoFiscal, inLibIBAN, inLibMsg, uDJMSepa1914XML;
 
 function SoloAlfanumerico(const AValor: string): string;
 var
@@ -92,9 +92,9 @@ function NormalizarIban(const AIban, ATexto: string): string;
 begin
   Result := UpperCase(TIBAN.FormatearElectronico(AIban));
   if Result = '' then
-    raise Exception.Create(ATexto + ' sin IBAN.');
+    raise Exception.CreateFmt(SErrorContextoSinIban, [ATexto]);
   if not TIBAN.ValidarIBAN(Result) then
-    raise Exception.Create(ATexto + ' con IBAN no válido: ' + Result);
+    raise Exception.CreateFmt(SErrorContextoIbanNoValido, [ATexto, Result]);
 end;
 
 function CadenaSepaADigitos(const AValor: string): string;
@@ -174,8 +174,7 @@ var
 begin
   sNif := LimpiarDocumentoFiscal(ANif);
   if not DocumentoFiscalValido(sNif) then
-    raise Exception.Create('NIF de empresa no válido para acreedor SEPA: ' +
-      ANif);
+    raise Exception.CreateFmt(SErrorNifEmpresaAcreedorSepaNoValido, [ANif]);
   sBase := '000' + sNif + 'ES00';
   iDc := 98 - Modulo97(CadenaSepaADigitos(sBase));
   Result := 'ES' + DosDigitos(iDc) + '000' + sNif;
@@ -199,8 +198,8 @@ function CrearIdMandato(AEfecto: TDataSet): string;
 begin
   Result := ValorCampoStr(AEfecto, 'ID_MANDATO_SEPA_CLI');
   if Result = '' then
-    raise Exception.Create('Cliente ' + ValorCampoStr(AEfecto, 'NOMBRE_CLI') +
-      ' sin mandato SEPA.');
+    raise Exception.CreateFmt(SErrorClienteSinMandatoSepa,
+      [ValorCampoStr(AEfecto, 'NOMBRE_CLI')]);
 end;
 
 function CrearConcepto(AEfecto: TDataSet): string;
@@ -297,10 +296,10 @@ begin
   Result.NumCobros := 0;
   Result.Total := 0;
   if AConn = nil then
-    raise Exception.Create('No hay conexión para generar la remesa SEPA.');
+    raise Exception.Create(SErrorConexionGenerarRemesaSepa);
   sArchivo := Result.Archivo;
   if sArchivo = '' then
-    raise Exception.Create('Indica el archivo de salida SEPA.');
+    raise Exception.Create(SErrorArchivoSalidaSepaNoIndicado);
   sCarpeta := ExtractFilePath(sArchivo);
   if (sCarpeta <> '') and (not DirectoryExists(sCarpeta)) then
     ForceDirectories(sCarpeta);
@@ -311,31 +310,32 @@ begin
   try
     AbrirCabecera(qCabecera, ASerie, ANumero);
     if qCabecera.IsEmpty then
-      raise Exception.Create('No se encuentra la remesa de venta.');
+      raise Exception.Create(SErrorRemesaVentaNoEncontrada);
     sCodigoEmp := ValorCampoStr(qCabecera, 'CODIGO_EMP_REMV');
     sNombreEmpresa := ValorCampoStr(qCabecera, 'RAZON_SOCIAL_EMP');
     if sNombreEmpresa = '' then
       sNombreEmpresa := sCodigoEmp;
     sIbanEmpresa := NormalizarIban(ValorCampoStr(qCabecera, 'IBAN_REMV'),
-      'Banco de cobro de la remesa');
+      STextoBancoCobroRemesa);
     dFechaCargo := ValorCampoFecha(qCabecera, 'FECHA_CARGO_REMV', 0);
     if dFechaCargo <= 0 then
-      raise Exception.Create('La remesa no tiene fecha de cobro.');
+      raise Exception.Create(SErrorRemesaSinFechaCobro);
     sTipoSecuencia := UpperCase(ValorCampoStr(qCabecera,
       'TIPO_SECUENCIA_SEPA_REMV'));
     if sTipoSecuencia = '' then
       sTipoSecuencia := 'RCUR';
     AbrirBanco(qBanco, sCodigoEmp, sIbanEmpresa);
     if qBanco.IsEmpty then
-      raise Exception.Create('No se encuentra el banco de cobro de la remesa.');
+      raise Exception.Create(SErrorBancoCobroRemesaNoEncontrado);
     sBicEmpresa := '';
     sBicEmpresa := UpperCase(ValorCampoStr(qBanco, 'BIC'));
     sIdAcreedor := UpperCase(ValorCampoStr(qBanco,
       'CODIGO_ACREEDOR_SEPA_EMPBAN'));
     if sIdAcreedor = '' then
-      raise Exception.Create('El banco de cobro no tiene código acreedor SEPA.');
+      raise Exception.Create(SErrorBancoCobroSinCodigoAcreedorSepa);
     if not CodigoAcreedorSepaValido(sIdAcreedor) then
-      raise Exception.Create('Código acreedor SEPA no válido: ' + sIdAcreedor);
+      raise Exception.CreateFmt(SErrorCodigoAcreedorSepaNoValido,
+        [sIdAcreedor]);
     oSepa.SetInfoPresentador(Now, sNombreEmpresa, sIdAcreedor, dFechaCargo);
     oSepa.SetTipoSecuencia(sTipoSecuencia);
     oSepa.AddOrdenante('REMV-' + SoloAlfanumerico(ASerie) + '-' +
@@ -346,14 +346,14 @@ begin
     begin
       sNombreCliente := ValorCampoStr(qEfectos, 'NOMBRE_CLI');
       if sNombreCliente = '' then
-        raise Exception.Create('Efecto sin nombre de cliente.');
+        raise Exception.Create(SErrorEfectoSinNombreCliente);
       sIbanCliente := NormalizarIban(ValorCampoStr(qEfectos, 'IBAN_CLI'),
-        'Cliente ' + sNombreCliente);
+        Format(STextoClienteSepa, [sNombreCliente]));
       dFechaFirma := ValorCampoFecha(qEfectos,
         'FECHA_FIRMA_MANDATO_SEPA_CLI', 0);
       if dFechaFirma <= 0 then
-        raise Exception.Create('Cliente ' + sNombreCliente +
-          ' sin fecha de firma del mandato SEPA.');
+        raise Exception.CreateFmt(SErrorClienteSinFechaFirmaMandatoSepa,
+          [sNombreCliente]);
       oSepa.AddCobro(CrearIdCobro(qEfectos),
         qEfectos.FieldByName('IMPORTE').AsCurrency, CrearIdMandato(qEfectos),
         dFechaFirma, '', sNombreCliente, sIbanCliente, CrearConcepto(qEfectos),
@@ -364,7 +364,7 @@ begin
       qEfectos.Next;
     end;
     if Result.NumCobros = 0 then
-      raise Exception.Create('La remesa no tiene efectos pendientes.');
+      raise Exception.Create(SErrorRemesaVentaSinEfectosPendientes);
     bFicheroAbierto := False;
     try
       oSepa.CreateFile(sArchivo);

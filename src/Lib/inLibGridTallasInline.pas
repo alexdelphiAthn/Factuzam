@@ -251,7 +251,8 @@ implementation
 
 uses
   System.Math, System.Types,
-  Vcl.Graphics, Vcl.StdCtrls, Vcl.ExtCtrls;
+  Vcl.Graphics, Vcl.StdCtrls, Vcl.ExtCtrls,
+  inLibMsg;
 
 { TGestorGridTallas }
 
@@ -804,10 +805,7 @@ begin
   arr := GetPosicionesConjunto(iAc);
   if Length(arr) <= FCfg.MaxColumnas then Exit;
 
-  MessageDlg(Format(
-    'El sistema de tallas seleccionado tiene %d valores; el ' +
-    'maximo admitido es %d. Elige un sistema con menos tallas ' +
-    'o reduce el conjunto antes de usarlo aqui.',
+  MessageDlg(Format(SAvisoSistemaTallasSuperaMaximo,
     [Length(arr), FCfg.MaxColumnas]),
     mtError, [mbOk], 0);
   if not (Lineas.State in [dsEdit, dsInsert]) then Lineas.Edit;

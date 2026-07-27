@@ -1,4 +1,4 @@
-{*******************************************************}
+﻿{*******************************************************}
 {                                                       }
 {       FactuZam                                        }
 {                                                       }
@@ -126,7 +126,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibUser;
+  inLibWin, inLibUser, inLibMsg;
 
 {$R *.dfm}
 
@@ -178,7 +178,7 @@ procedure TfrmMtoComprasPlantillas.btnDelPropClick(Sender: TObject);
 begin
   inherited;
   if unqryPlantillaProps.IsEmpty then Exit;
-  if MessageDlg('¿Borrar la propiedad?',
+  if MessageDlg(SPreguntaBorrarPropiedadPlantillaCompra,
                 mtConfirmation,
                 [mbYes, mbNo],
                 0) = mrYes then
@@ -195,7 +195,7 @@ procedure TfrmMtoComprasPlantillas.btnDelKitClick(Sender: TObject);
 begin
   inherited;
   if unqryPlantillaKits.IsEmpty then Exit;
-  if MessageDlg('¿Borrar el kit?',
+  if MessageDlg(SPreguntaBorrarKitPlantillaCompra,
                 mtConfirmation,
                 [mbYes, mbNo],
                 0) = mrYes then

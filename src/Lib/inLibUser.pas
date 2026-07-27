@@ -67,7 +67,7 @@ procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
 implementation
 
 uses
-  inLibDir, inLibWin,
+  inLibDir, inLibWin, inLibMsg,
   inLibLog;
 
 // Dentro de inLibUser.pas
@@ -76,8 +76,7 @@ procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
   const APerfilesUsuario: IPerfilesUsuario);
 begin
   if not Assigned(APerfilesUsuario) then
-    raise Exception.Create(
-      'No se ha configurado el servicio de perfiles de usuario.');
+    raise Exception.Create(SErrorServicioPerfilesUsuarioNoConfigurado);
   APerfilesUsuario.CargarPerfilFormulario(
     AFormName,
     sUsuario,
@@ -159,8 +158,7 @@ procedure GetFormUserProfile(
   const APerfilesUsuario: IPerfilesUsuario);
 begin
   if not Assigned(APerfilesUsuario) then
-    raise Exception.Create(
-      'No se ha configurado el servicio de perfiles de usuario.');
+    raise Exception.Create(SErrorServicioPerfilesUsuarioNoConfigurado);
   APerfilesUsuario.CargarPerfilFormulario(AFormName, APerfilDic);
 end;
 

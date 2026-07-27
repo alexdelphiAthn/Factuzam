@@ -132,7 +132,8 @@ implementation
 
 uses
   inLibtb,
-  inLibAlbaranesCompraMovimientos;
+  inLibAlbaranesCompraMovimientos,
+  inLibMsg;
 
 // Recalcula ESTADO_PEDC en funcion de la cantidad pendiente total.
 // Reglas:
@@ -498,9 +499,7 @@ begin
     end;
     q.Close;
     if oCeldas.Count = 0 then
-      AMensaje := Format(
-        'No hay lineas pendientes de recibir para el almacen "%s" ' +
-        'en el pedido %s/%s.',
+      AMensaje := Format(SErrorPedidoCompraSinPendientesAlmacen,
         [ACodigoAlm, ASeriePedc, ANumPedc])
     else
       Result := CrearAlbaranDesdePedidoConCantidades(AConn, ASeriePedc,
@@ -537,7 +536,7 @@ begin
   ANumAlbc := '';
   if Trim(ACodigoAlm) = '' then
   begin
-    AMensaje := 'Debes seleccionar un almacen.';
+    AMensaje := SErrorAlmacenPedidoCompraNoSeleccionado;
     Exit;
   end;
   // Filtra y suma celdas validas (cantidad > 0, almacen coincide).
@@ -547,9 +546,7 @@ begin
       rTotalCeldas := rTotalCeldas + c.Cantidad;
   if rTotalCeldas <= 0 then
   begin
-    AMensaje := Format(
-      'No hay cantidades "A recibir" tecleadas para el almacen "%s" ' +
-      'en el pedido %s/%s.',
+    AMensaje := Format(SErrorPedidoCompraSinCantidadesRecibir,
       [ACodigoAlm, ASeriePedc, ANumPedc]);
     Exit;
   end;
@@ -557,7 +554,7 @@ begin
   ANumAlbc := inLibtb.ObtenerSiguienteContador(AConn, 'AB', AUsuario);
   if Trim(ANumAlbc) = '' then
   begin
-    AMensaje := 'No se pudo obtener un numero de albaran del contador "AB".';
+    AMensaje := SErrorContadorAlbaranCompraNoDisponible;
     Exit;
   end;
   // 2. Cabecera del albaran (misma que en el flujo clasico).
@@ -791,8 +788,7 @@ begin
   end;
   if iLineaAlbc = 0 then
   begin
-    AMensaje := 'No se pudo crear ninguna linea del albaran (lineas origen ' +
-                'no encontradas o sin pendiente de recibir).';
+    AMensaje := SErrorCrearLineasAlbaranCompra;
     // Borramos la cabecera huerfana.
     qIns := TUniQuery.Create(nil);
     try
@@ -859,7 +855,7 @@ begin
       FreeAndNil(qIns);
     end;
   end;
-  AMensaje := Format('Albaran %s/%s creado correctamente (%d lineas).',
+  AMensaje := Format(SInfoAlbaranCompraCreado,
                      [ASerieAlbc, ANumAlbc, iLineaAlbc div 10]);
   Result := True;
 end;
@@ -1014,12 +1010,12 @@ begin
   AMensaje := '';
   if Trim(ACodigoAlm) = '' then
   begin
-    AMensaje := 'Debes seleccionar un almacen.';
+    AMensaje := SErrorAlmacenPedidoCompraNoSeleccionado;
     Exit;
   end;
   if (Trim(ASerieAlbcDestino) = '') or (Trim(ANumAlbcDestino) = '') then
   begin
-    AMensaje := 'Debes seleccionar el albaran de destino.';
+    AMensaje := SErrorAlbaranCompraDestinoNoSeleccionado;
     Exit;
   end;
   // 1. Comprobar pendientes para ese almacen.
@@ -1045,8 +1041,7 @@ begin
     q.Close;
     if iCount = 0 then
     begin
-      AMensaje := Format(
-        'No hay lineas pendientes de recibir para el almacen "%s" en el pedido %s/%s.',
+      AMensaje := Format(SErrorPedidoCompraSinPendientesAlmacen,
         [ACodigoAlm, ASeriePedc, ANumPedc]);
       Exit;
     end;
@@ -1176,7 +1171,7 @@ begin
   RegenerarMovimientosYCerrarAlbaranCompra(AConn,
     ASerieAlbcDestino, ANumAlbcDestino, ASeriePedc, ANumPedc,
     AUsuario, AIdPvTemporada);
-  AMensaje := Format('Lineas incorporadas al albaran %s/%s.',
+  AMensaje := Format(SInfoLineasIncorporadasAlbaranCompra,
                      [ASerieAlbcDestino, ANumAlbcDestino]);
   Result := True;
 end;
@@ -1202,12 +1197,12 @@ begin
   AMensaje := '';
   if Trim(ACodigoAlm) = '' then
   begin
-    AMensaje := 'Debes seleccionar un almacen.';
+    AMensaje := SErrorAlmacenPedidoCompraNoSeleccionado;
     Exit;
   end;
   if (Trim(ASerieAlbcDestino) = '') or (Trim(ANumAlbcDestino) = '') then
   begin
-    AMensaje := 'Debes seleccionar el albaran de destino.';
+    AMensaje := SErrorAlbaranCompraDestinoNoSeleccionado;
     Exit;
   end;
   // Filtra y suma celdas validas (cantidad > 0, almacen coincide).
@@ -1217,9 +1212,7 @@ begin
       rTotalCeldas := rTotalCeldas + c.Cantidad;
   if rTotalCeldas <= 0 then
   begin
-    AMensaje := Format(
-      'No hay cantidades "A recibir" tecleadas para el almacen "%s" ' +
-      'en el pedido %s/%s.',
+    AMensaje := Format(SErrorPedidoCompraSinCantidadesRecibir,
       [ACodigoAlm, ASeriePedc, ANumPedc]);
     Exit;
   end;
@@ -1370,14 +1363,13 @@ begin
   end;
   if iInsertadas = 0 then
   begin
-    AMensaje := 'No se pudo incorporar ninguna linea (lineas origen no ' +
-                'encontradas o sin pendiente de recibir).';
+    AMensaje := SErrorIncorporarLineasAlbaranCompra;
     Exit;
   end;
   RegenerarMovimientosYCerrarAlbaranCompra(AConn,
     ASerieAlbcDestino, ANumAlbcDestino, ASeriePedc, ANumPedc,
     AUsuario, AIdPvTemporada);
-  AMensaje := Format('Lineas incorporadas al albaran %s/%s (%d lineas).',
+  AMensaje := Format(SInfoLineasIncorporadasAlbaranCompraConCantidad,
                      [ASerieAlbcDestino, ANumAlbcDestino, iInsertadas]);
   Result := True;
 end;

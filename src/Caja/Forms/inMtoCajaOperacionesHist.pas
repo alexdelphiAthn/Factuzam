@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaOperacionesHist                                      }
 {    Tipo:       Formulario (Mto)                                              }
@@ -608,7 +608,7 @@ begin
     '       MAX(COALESCE(f.CODIGO_CLI_FAC, o.CODIGO_CLI_OPCAJA)) ' +
     '         AS CLIENTE, ' +
     '       MAX(cli.RAZON_SOCIAL_CLI) AS RAZON_SOCIAL_CLI, ' +
-    '       MAX(o.USUARIO_ALTA) AS EMPLEADO ' +
+    '       MAX(o.CODIGO_EMPLEADO_OPCAJA) AS EMPLEADO ' +
     '  FROM fza_caja_operaciones o ' +
     '  LEFT JOIN fza_facturas f ' +
     '    ON f.CODIGO_EMP_FAC = o.CODIGO_EMP_OPCAJA ' +

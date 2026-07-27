@@ -63,7 +63,7 @@ procedure ValidarLimiteDemoFacturas(AConexion: TUniConnection;
 implementation
 
 uses
-  DB, MemDS, DBAccess, IniFiles, Math, System.Hash, inLibDir;
+  DB, MemDS, DBAccess, IniFiles, Math, System.Hash, inLibDir, inLibMsg;
 
 class function TResultadoLicenciaAplicacion.CrearNoComprobada:
   TResultadoLicenciaAplicacion;
@@ -161,12 +161,9 @@ begin
     iFacturas := ContarFacturasDemoDia(AConexion, AFecha);
     if iFacturas >= LIMITE_FACTURAS_DEMO_DIA then
     begin
-      raise Exception.Create(
-        'Límite DEMO.' + sLineBreak + sLineBreak +
-        'Ya se han emitido ' + IntToStr(iFacturas) + ' facturas el día ' +
-        FormatDateTime('dd/mm/yyyy', AFecha) + '.' + sLineBreak +
-        'El límite de la copia DEMO es ' +
-        IntToStr(LIMITE_FACTURAS_DEMO_DIA) + ' facturas al día.');
+      raise Exception.Create(Format(SErrorLimiteDemoFacturas,
+        [iFacturas, FormatDateTime('dd/mm/yyyy', AFecha),
+         LIMITE_FACTURAS_DEMO_DIA]));
     end;
   end;
 end;
@@ -335,7 +332,7 @@ begin
     CargarNifsEmpresas(AConexion, Nifs);
     ANumeroNifs := Nifs.Count;
     if ANumeroNifs = 0 then
-      ADetalleNifs := 'No hay NIF de empresa configurado.'
+      ADetalleNifs := SErrorNifEmpresaLicenciaNoConfigurado
     else
     begin
       ACodigo := GenerarCodigoLicencia(Nifs);
@@ -367,7 +364,7 @@ begin
     if Nifs.Count = 0 then
     begin
       AEstado := elaSinNifEmpresa;
-      AMensaje := 'No hay NIF de empresa; no se exige licencia.';
+      AMensaje := SInfoLicenciaSinNifEmpresa;
       Result := True;
     end
     else
@@ -377,19 +374,18 @@ begin
       if ACodigoGuardado = '' then
       begin
         AEstado := elaNoEncontrada;
-        AMensaje := 'No se encontró licencia de aplicación.';
+        AMensaje := SErrorLicenciaNoEncontrada;
       end
       else if SameText(ACodigoGuardado, ACodigoEsperado) then
       begin
         AEstado := elaValida;
-        AMensaje := 'Licencia de aplicación válida.';
+        AMensaje := SInfoLicenciaValida;
         Result := True;
       end
       else
       begin
         AEstado := elaInvalida;
-        AMensaje := 'La licencia de aplicación no coincide con los NIF ' +
-                    'de empresa configurados.';
+        AMensaje := SErrorLicenciaNifsNoCoinciden;
       end;
     end;
   finally

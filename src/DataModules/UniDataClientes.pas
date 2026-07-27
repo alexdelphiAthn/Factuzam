@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataClientes                                               }
 {    Tipo:       Data Module                                                   }
@@ -73,7 +73,8 @@ implementation
 uses
   inLibtb,
   inLibLog,
-  System.Diagnostics;
+  System.Diagnostics,
+  inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -338,10 +339,9 @@ procedure TdmClientes.unqryTablaGBeforeDelete(DataSet: TDataSet);
 begin
   inherited;
   if (unqryFacturasClientes.RecordCount > 0) then
-    if not ( Application.MessageBox( 'El cliente tiene facturas emitidas, ' +
-                                   ' ¿Desea realmente borrar el registro?',
-                                   'Mensaje Advertencia',
-                                   MB_YESNO ) = ID_YES ) then
+    if not (Application.MessageBox(
+      PWideChar(SPreguntaBorrarClienteConFacturas),
+      PWideChar(SAdvMsg), MB_YESNO) = ID_YES) then
       Abort;
 end;
 
@@ -359,9 +359,8 @@ begin
   begin
     if (Trim(FindField('RAZON_SOCIAL_CLI').AsString) = '') then
     begin
-      raise ERangeError.CreateFmt('%s no es un valor válido ' +
-                                        'para el campo Razón Social de Cliente',
-               [FindField('RAZON_SOCIAL_CLI').AsString]);
+      raise ERangeError.CreateFmt(SErrorRazonSocialCliente,
+                                 [FindField('RAZON_SOCIAL_CLI').AsString]);
     end
     else
       GetCodigoAutoCliente;

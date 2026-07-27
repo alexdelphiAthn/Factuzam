@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibRelojFiscal                                             }
 {    Tipo:       Libreria                                                      }
@@ -37,7 +37,7 @@ implementation
 
 uses
   System.Classes, System.DateUtils, System.StrUtils,
-  IdSNTP;
+  IdSNTP, inLibMsg;
 
 const
   cServidoresNtpDefecto = 'time.google.com,time.windows.com,pool.ntp.org';
@@ -115,7 +115,7 @@ begin
       dHoraSistema := Now;
       AHoraNtp := Ntp.DateTime;
       if AHoraNtp = 0 then
-        AMensajeError := 'sin respuesta NTP valida'
+        AMensajeError := SErrorRespuestaNtpNoValida
       else
       begin
         ADiferencia := Round((AHoraNtp - dHoraSistema) * SecsPerDay);
@@ -173,12 +173,11 @@ begin
           AResultado.Ok := Abs(iDiferencia) <= iMargen;
           if AResultado.Ok then
             AResultado.Mensaje := Format(
-              'Reloj fiscal correcto. Servidor=%s, diferencia=%d s.',
+              SInfoRelojFiscalCorrecto,
               [sServidor, iDiferencia])
           else
             AResultado.Mensaje := Format(
-              'Reloj del sistema fuera de margen legal. Servidor=%s, ' +
-              'diferencia=%d s, margen=%d s.',
+              SErrorRelojSistemaFueraMargenLegal,
               [sServidor, iDiferencia, iMargen]);
           Result := AResultado.Ok;
           bComprobado := True;
@@ -194,7 +193,7 @@ begin
     end;
     if not bComprobado then
     begin
-      AResultado.Mensaje := 'No se pudo comprobar el reloj fiscal contra NTP.';
+      AResultado.Mensaje := SErrorComprobarRelojFiscalNtp;
       if sErrores <> '' then
         AResultado.Mensaje := AResultado.Mensaje + ' ' + sErrores;
       Result := False;

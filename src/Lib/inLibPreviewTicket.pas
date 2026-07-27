@@ -50,6 +50,9 @@ procedure ImprimirOPrevisualizarTicket(ATicket: TTicketTermico;
 
 implementation
 
+uses
+  inLibMsg;
+
 class procedure TPreviewTicket.RegistrarEjecutor(
   AClase: TClaseEjecutorPreviewTicket);
 begin
@@ -61,8 +64,7 @@ class procedure TPreviewTicket.Ejecutar(ATicket: TTicketTermico;
   ASoloPDF: Boolean);
 begin
   if not Assigned(FClaseEjecutor) then
-    raise Exception.Create(
-      'No se ha registrado el previsualizador de tickets.');
+    raise Exception.Create(SErrorPreviewTicketNoRegistrado);
   FClaseEjecutor.Ejecutar(
     ATicket, AComandos, ARutaPDF, ANombreImpresora, ASoloPDF);
 end;

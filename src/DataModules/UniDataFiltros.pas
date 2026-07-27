@@ -82,7 +82,7 @@ var
 implementation
 
 uses
-  Vcl.Forms;
+  Vcl.Forms, inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -161,8 +161,7 @@ begin
     Result := FConexiones.ConexionPrincipal;
   if not Assigned(Result) and
      not (csDesigning in ComponentState) then
-    raise Exception.Create(
-      'No se ha configurado el servicio de conexiones de datos.');
+    raise Exception.Create(SErrorServicioConexionesDatosNoConfigurado);
 end;
 
 function TdmFiltros.GetContextoSesion: IContextoSesionAplicacion;
@@ -176,8 +175,7 @@ begin
   if Assigned(FContextoSesion) then
     Result := FContextoSesion.Identidad
   else if not (csDesigning in ComponentState) then
-    raise Exception.Create(
-      'No se ha configurado el contexto de sesión.');
+    raise Exception.Create(SErrorContextoSesionFiltrosNoConfigurado);
 end;
 
 procedure TdmFiltros.DataModuleCreate(Sender: TObject);

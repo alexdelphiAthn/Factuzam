@@ -176,6 +176,35 @@
       OnExit = btnCodigoClienteExit
       Width = 121
     end
+    object lblTipoRectificativa: TcxLabel
+      Left = 1118
+      Top = 6
+      Anchors = [akTop, akRight]
+      AutoSize = False
+      Caption = 'RECTIFICATIVA'#13#10'POR DIFERENCIAS'
+      ParentFont = False
+      Style.BorderStyle = ebsOffice11
+      Style.Font.Charset = DEFAULT_CHARSET
+      Style.Font.Color = clMaroon
+      Style.Font.Height = -18
+      Style.Font.Name = 'Arial Black'
+      Style.Font.Pitch = fpFixed
+      Style.Font.Style = [fsBold]
+      Style.Font.Quality = fqClearTypeNatural
+      Style.TextColor = clMaroon
+      Style.IsFontAssigned = True
+      Properties.Alignment.Horz = taCenter
+      Properties.Alignment.Vert = taVCenter
+      Properties.LabelStyle = cxlsRaised
+      Properties.WordWrap = True
+      TabOrder = 9
+      Transparent = True
+      Visible = False
+      Height = 77
+      Width = 229
+      AnchorX = 1233
+      AnchorY = 45
+    end
   end
   object pnlCli: TPanel [1]
     Left = 0

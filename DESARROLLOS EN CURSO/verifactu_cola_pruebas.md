@@ -371,7 +371,8 @@ simplificadas) tras encolar/enviar alguna factura.
 Seleccionar una factura simplificada consolidada → botón Rectificar →
 marcar «Abonar» → Generar. Esperar un ciclo del hilo.
 - Se crea el abono (líneas en negativo) con `TIPO_FAC='RECTIFICATIVA'`
-  y el comentario «ESTA FACTURA ANULA Y RECTIFICA A LA serie\número».
+  y el comentario «ESTA FACTURA RECTIFICA POR DIFERENCIAS A LA
+  serie\número».
 - La ORIGINAL pasa a `FASE_FAC='RECTIFICADA'` y sus columnas
   `SERIE/NUMERO_FAC_ABONO_FAC` apuntan a la rectificativa.
 - En `PETICION_COMPLETA_FACCON` de la rectificativa: `TipoFactura=R5`
@@ -379,6 +380,17 @@ marcar «Abonar» → Generar. Esperar un ciclo del hilo.
   `TipoRectificativa=I` y bloque `FacturasRectificadas` con la
   original; `ImporteTotal` negativo.
 - La rectificativa queda consolidada (`FASE_FAC='ONLINE'`) con su QR.
+
+**I6b — Rectificativa sustitutiva desde caja.** (Tras ejecutar también
+`facturas_tipo_rectificativa.sql`.) En Buscar/Modificar seleccionar un
+ticket, pulsar Rectificar y elegir «Sustitutiva».
+- Las líneas se presentan en positivo y conservan su descripción original.
+- `TIPO_RECTIFICATIVA_FAC='S'` en la nueva factura.
+- En `PETICION_COMPLETA_FACCON`: `TipoFactura=R5` (R1 si la original era
+  completa), `TipoRectificativa=S`, `FacturasRectificadas` apunta a la
+  original e `ImporteRectificacion` contiene `BaseRectificada`,
+  `CuotaRectificada` y, cuando corresponda, `CuotaRecargoRectificado`.
+- El desglose y el importe total son los importes corregidos positivos.
 
 **I7 — Facturar ticket (F3).** Seleccionar un ticket (SIMPLIFICADA)
 consolidado → «Facturar ticket (F3)» → elegir cliente, serie (viene la
@@ -410,18 +422,18 @@ a la operación, cobrar con el botón **Factura** (o F8) → elegir serie
 rectificativa con el botón de series de Empresas, o a mano con subtipo
 `RECTIFICATIVA`.) En Buscar operaciones, seleccionar una venta con
 ticket → **Rectificar** → confirmar.
-- Se abre/reutiliza una ventana de ventas con las líneas del ticket en
-  negativo y el cliente del original; el título indica «RECTIFICA a
-  serie\número». Las líneas se pueden ajustar o borrar.
+- Se abre/reutiliza una ventana de ventas con el signo correspondiente a
+  la modalidad y el cliente del original; la leyenda externa al grid
+  muestra el tipo y la referencia. Las líneas se pueden ajustar o borrar.
 - Al cobrar (F12), la fase de cobro muestra la referencia en el título
   y el combo de series solo ofrece series de subtipo RECTIFICATIVA
   (p. ej. R1); el F8 está bloqueado en este modo.
 - Tras grabar: el documento nuevo es `TIPO_FAC='RECTIFICATIVA'` con la
   serie R1; la original pasa a `FASE_FAC='RECTIFICADA'` con sus
   columnas ABONO apuntando a la rectificativa; la rectificativa lleva
-  el comentario «ESTA FACTURA ANULA Y RECTIFICA A LA serie\número»; el
-  registro sale como R5/R1 con `FacturasRectificadas`, y el ticket
-  térmico se imprime con su QR.
+  el comentario de la modalidad; el registro sale como R5/R1 con
+  `FacturasRectificadas` y los datos fiscales I/S correspondientes, y el
+  ticket térmico se imprime con su QR.
 
 **I11 — Botonera de Buscar operaciones.** Comprobar los tres botones:
 Rectificar (I10), «Anular Factura Verifactu» (encola la anulación del

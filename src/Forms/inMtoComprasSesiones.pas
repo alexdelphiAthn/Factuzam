@@ -551,6 +551,8 @@ uses
   inMtoModalRepetirModelo,
   inLibFotosNube,
   inLibComprasImpuestos,
+  inLibMsg,
+  inLibPresentacionDocumento,
   inLibContextoSesionIntf;
 
 const
@@ -916,7 +918,7 @@ begin
   // desde btnAddLinea / btnNuevoColor como desde el navigator del grid.
   if Dmm.unqryTablaG.IsEmpty then
   begin
-    MessageDlg('Crea y graba la cabecera de la sesion antes de anadir lineas.',
+    MessageDlg(SErrorCabeceraSesionAntesLineas,
                mtInformation, [mbOk], 0);
     Abort;
   end;
@@ -1148,7 +1150,7 @@ begin
   // sesion); siempre lista los docs de la sesion enfocada. Tambien lo
   // dispara el boton lateral "Ir a Ped / Alb" desde cualquier pestania.
   if (Dmm.unqrySesDocs = nil) or Dmm.unqrySesDocs.IsEmpty then
-    ShowMessage('La sesion no tiene documentos creados.')
+    ShowMessage(SErrorSesionSinDocumentosCreados)
   else
   begin
     sTipo   := Dmm.unqrySesDocs.FieldByName('TIPO').AsString;
@@ -1161,9 +1163,8 @@ begin
     else if SameText(sTipo, 'PEDC') then
       ShowMto(frmMtoPrincipal, 'PedidosCompra', sSerie + ',' + sNumero)
     else
-      ShowMessage(Format(
-        'No hay mantenimiento disponible para el tipo de documento "%s".',
-        [sTipo]));
+      ShowMessage(Format(SErrorMantenimientoTipoDocumentoNoDisponible,
+                         [sTipo]));
   end;
 end;
 
@@ -1186,10 +1187,7 @@ begin
     cbbSerie.Properties.Items);
   if cbbSerie.Properties.Items.Count = 0 then
   begin
-    if MessageDlg('No hay series de sesiones de compra (tipo SE) para la ' +
-                  'empresa "' + sEmpresa + '".' + sLineBreak +
-                  'Se dan de alta en Empresas -> Series. ' +
-                  '¿Abrir el mantenimiento de Empresas ahora?',
+    if MessageDlg(Format(SPreguntaAbrirSeriesSesionCompra, [sEmpresa]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       ShowMto(frmMtoPrincipal, 'Empresas');
   end;
@@ -1205,10 +1203,9 @@ begin
   // ShortCut Ctrl+A. El TActionList scope a este form garantiza que el
   // shortcut solo se procesa cuando esta pestania esta activa; otras
   // instancias o Mtos abiertos no reciben el evento.
-  with tvLineas.DataController.DataSet do
-  ShowMto(Self.Owner,
-          'Articulos',
-          FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString);
+  ShowMtoCodigoDataSet(Self.Owner, 'Articulos',
+    tvLineas.DataController.DataSet,
+    'CODIGO_ART_TENTATIVO_SESLIN');
 end;
 
 procedure TfrmMtoComprasSesiones.actIrAlbaranesCompraExecute(Sender: TObject);
@@ -1244,9 +1241,9 @@ begin
   // que "+ Foto" (oFotos.GuardarSesion con CODIGO_UNIDAD = ''). El atajo
   // global Ctrl+F abre la foto flotante de esa misma linea.
   if Dmm.unqryTablaG.IsEmpty then
-    ShowMessage('No hay sesion activa.')
+    ShowMessage(SErrorSesionCompraNoActiva)
   else if Dmm.unqrySesionLin.IsEmpty then
-    ShowMessage('Selecciona o crea una linea antes de descargar fotos.')
+    ShowMessage(SErrorLineaSesionDescargarFotosNoSeleccionada)
   else
   begin
     if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -1259,7 +1256,7 @@ begin
     sCodArt := Trim(Dmm.unqrySesionLin.FieldByName(
                       'CODIGO_ART_TENTATIVO_SESLIN').AsString);
     if sCodArt = '' then
-      ShowMessage('La linea activa no tiene codigo de articulo.')
+      ShowMessage(SErrorLineaSesionSinCodigoArticulo)
     else
     begin
       Screen.Cursor := crHourGlass;
@@ -1273,8 +1270,7 @@ begin
         Screen.Cursor := crDefault;
       end;
       if not bOK then
-        ShowMessage('No se pudieron descargar las fotos del articulo ' +
-                    sCodArt + ':' + sLineBreak + sMsg)
+        ShowMessage(Format(SErrorDescargarFotosArticulo, [sCodArt, sMsg]))
       else
       begin
         sFile := ElegirFotoRepresentativa(archivos);
@@ -1283,7 +1279,7 @@ begin
             sFile, IdentidadSesion.Usuario);
         // Borrar los PNG temporales extraidos (no dejar huerfanos).
         LimpiarDescargaTemporal(archivos);
-        ShowMessage(Format('Descargadas %d foto(s) del articulo %s.',
+        ShowMessage(Format(SInfoFotosArticuloDescargadas,
           [Length(archivos), sCodArt]));
       end;
     end;
@@ -1389,7 +1385,7 @@ begin
   // Abre inMtoGenSearch sobre vi_proveedores y vuelca el CODIGO_PRV_PRV
   // elegido en CODIGO_PRV_SES de la cabecera de la sesion.
   if Dmm.unqryTablaG.IsEmpty then
-    MessageDlg('Crea o selecciona una sesion antes de elegir el proveedor.',
+    MessageDlg(SErrorSesionElegirProveedorNoSeleccionada,
                mtInformation, [mbOk], 0)
   else if TBusquedaUtils.EjecutarBusqueda(
     ConexionPrincipal,
@@ -1405,40 +1401,13 @@ begin
 end;
 
 procedure TfrmMtoComprasSesiones.ActualizarLabelProveedor;
-var
-  sCodigo : string;
-  sNombre : string;
-  sRazon  : string;
 begin
-  // Resuelve NOMBRE_PRV + RAZON_SOCIAL_PRV (via el lookup unqryProveedores) y
-  // los pinta en el rotulo para que se vea con claridad quien es el proveedor.
-  // Se antepone el nombre comercial (NOMBRE_PRV): es el que el usuario
-  // reconoce a simple vista; la razon social solo se anade entre parentesis
-  // como referencia si difiere.
-  sCodigo := '';
-  if (Dmm <> nil) and Assigned(Dmm.unqryTablaG) and Dmm.unqryTablaG.Active and
-     (not Dmm.unqryTablaG.IsEmpty) then
-    sCodigo := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
-  if sCodigo = '' then
-    lblProveedorNombre.Caption := ''
-  else if (Dmm.unqryProveedores <> nil) and Dmm.unqryProveedores.Active and
-          Dmm.unqryProveedores.Locate('CODIGO_PRV_PRV', sCodigo, []) then
-  begin
-    sRazon  := Dmm.unqryProveedores.FieldByName('RAZON_SOCIAL_PRV').AsString;
-    sNombre := Dmm.unqryProveedores.FieldByName('NOMBRE_PRV').AsString;
-    // Si no hay nombre comercial cargado, caemos a la razon social como
-    // rotulo principal. Si hay nombre y difiere de la razon social, la
-    // razon social se anade entre parentesis como referencia.
-    if Trim(sNombre) = '' then
-      lblProveedorNombre.Caption := sCodigo + ' - ' + sRazon
-    else if not SameText(Trim(sNombre), Trim(sRazon)) then
-      lblProveedorNombre.Caption :=
-        sCodigo + ' - ' + sNombre + '  (' + sRazon + ')'
-    else
-      lblProveedorNombre.Caption := sCodigo + ' - ' + sNombre;
-  end
+  if Assigned(Dmm) then
+    lblProveedorNombre.Caption := TextoProveedorDocumento(
+      Dmm.unqryTablaG, Dmm.unqryProveedores,
+      'CODIGO_PRV_SES')
   else
-    lblProveedorNombre.Caption := sCodigo + ' - (proveedor no encontrado)';
+    lblProveedorNombre.Caption := '';
 end;
 
 // ===========================================================================
@@ -1595,11 +1564,10 @@ begin
   // Popup con los kits del proveedor de la sesion; el elegido se aplica
   // sobre la linea con foco del grid de articulos.
   if Dmm.unqrySesionLin.IsEmpty then
-    MessageDlg('Selecciona o crea una linea de articulo primero.',
+    MessageDlg(SErrorLineaArticuloSesionNoSeleccionada,
                mtInformation, [mbOk], 0)
   else if (not Dmm.unqryPrvKits.Active) or Dmm.unqryPrvKits.IsEmpty then
-    MessageDlg('El proveedor de la sesion no tiene kits definidos. Se ' +
-               'crean en Proveedores, pestaña Compras.',
+    MessageDlg(SErrorProveedorSesionSinKits,
                mtInformation, [mbOk], 0)
   else
   begin
@@ -1656,7 +1624,7 @@ begin
   else
     sKit := Trim(VarToStr(cbbKitProv.EditValue));
   if sKit = '' then
-    MessageDlg('Elige un kit del proveedor en el desplegable.',
+    MessageDlg(SErrorKitProveedorDesplegableNoSeleccionado,
                mtInformation, [mbOk], 0)
   else
     AplicarKitALineaActual(sKit);
@@ -1668,8 +1636,7 @@ begin
   // Aplica el kit seleccionado en el grid de la pestaña Proveedor sobre
   // la linea con foco del grid de articulos.
   if (not Dmm.unqryPrvKits.Active) or Dmm.unqryPrvKits.IsEmpty then
-    MessageDlg('El proveedor de la sesion no tiene kits definidos. Se ' +
-               'crean en Proveedores, pestaña Compras.',
+    MessageDlg(SErrorProveedorSesionSinKits,
                mtInformation, [mbOk], 0)
   else
     AplicarKitALineaActual(
@@ -1682,17 +1649,10 @@ begin
 end;
 
 procedure TfrmMtoComprasSesiones.btnIrProveedorClick(Sender: TObject);
-var
-  sPrv : string;
 begin
   inherited;
-  sPrv := '';
-  if not Dmm.unqryTablaG.IsEmpty then
-    sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
-  if sPrv = '' then
-    ShowMto(Self.Owner, 'Proveedores')
-  else
-    ShowMto(Self.Owner, 'Proveedores', sPrv);
+  ShowMtoCodigoDataSet(Self.Owner, 'Proveedores',
+    Dmm.unqryTablaG, 'CODIGO_PRV_SES');
 end;
 
 // ===========================================================================
@@ -2221,7 +2181,7 @@ begin
     LogSes('btnDelLineaClick: detail vacio, salida');
     Exit;
   end;
-  if MessageDlg('Borrar la linea seleccionada?',
+  if MessageDlg(SPreguntaBorrarLineaSesionCompra,
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
   begin
     LogSes('btnDelLineaClick: cancelado por el usuario');
@@ -2248,12 +2208,12 @@ begin
   // foto de sesion a fza_articulos_fotos.
   if Dmm.unqryTablaG.IsEmpty then
   begin
-    ShowMessage('No hay sesion activa.');
+    ShowMessage(SErrorSesionCompraNoActiva);
     Exit;
   end;
   if Dmm.unqrySesionLin.IsEmpty then
   begin
-    ShowMessage('Selecciona o crea una linea antes de asignar foto.');
+    ShowMessage(SErrorLineaSesionAsignarFotoNoSeleccionada);
     Exit;
   end;
   if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -2278,12 +2238,12 @@ begin
     info := inLibFotos.oFotos.GuardarSesion(sSerie, sNumero, iLinea,
       sCodArt, '', dlgFoto.FileName, IdentidadSesion.Usuario);
     if info.Encontrada then
-      ShowMessage('Foto asignada a la linea ' + IntToStr(iLinea) + '.')
+      ShowMessage(Format(SInfoFotoLineaSesionAsignada, [iLinea]))
     else
-      ShowMessage('No se pudo asignar la foto.');
+      ShowMessage(SErrorAsignarFotoSesion);
   except
     on E: Exception do
-      ShowMessage('Error guardando foto: ' + E.Message);
+      ShowMessage(Format(SErrorGuardarFotoSesion, [E.Message]));
   end;
 end;
 
@@ -2314,7 +2274,7 @@ begin
   if Dmm.unqryTablaG.IsEmpty then
   begin
     LogSes('  cabecera vacia, salida');
-    ShowMessage('No hay sesion activa.');
+    ShowMessage(SErrorSesionCompraNoActiva);
     Exit;
   end;
   LogSes(Format('  sesion=%s/%s, estado=%s, lineas master.CONTADOR=%d',
@@ -2325,8 +2285,7 @@ begin
   if Dmm.unqryTablaG.FieldByName('ESTADO_SES').AsString = 'CERRADA' then
   begin
     LogSes('  sesion ya CERRADA, abortar');
-    ShowMessage('La sesion ya esta cerrada. No se puede materializar dos ' +
-                'veces.');
+    ShowMessage(SErrorSesionYaMaterializada);
     Exit;
   end;
   if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -2356,11 +2315,7 @@ begin
   begin
     LogSes(Format('  NormalizarDuplicadosIntraSesion: %d linea(s) marcadas REUSAR',
                   [iAutoFix]));
-    ShowMessage(Format(
-      'Se han detectado y marcado %d linea(s) como REUSAR de codigos ' +
-      'repetidos dentro de esta sesion (variantes color/SKU del mismo ' +
-      'articulo). La materializacion crea el articulo una sola vez.',
-      [iAutoFix]));
+    ShowMessage(Format(SInfoDuplicadosSesionMarcadosReusar, [iAutoFix]));
     Dmm.unqrySesionLin.Refresh;
   end;
 
@@ -2491,7 +2446,7 @@ begin
       // clasico solo uno. Sin docs (caso 'sin albaran ni pedido') no
       // abrimos modal: simple ShowMessage.
       if oListaDocs.Count = 0 then
-        ShowMessage('Sesion materializada (sin documentos).')
+        ShowMessage(SInfoSesionMaterializadaSinDocumentos)
       else
       begin
         frmDocs := TfrmModalDocsCreados.Create(Self);
@@ -2554,21 +2509,16 @@ begin
   if Dmm.unqryTablaG.IsEmpty then
   begin
     LogSes('  cabecera vacia, salida');
-    ShowMessage('No hay sesion activa.');
+    ShowMessage(SErrorSesionCompraNoActiva);
     Exit;
   end;
   if Dmm.unqryTablaG.FieldByName('ESTADO_SES').AsString <> 'CERRADA' then
   begin
     LogSes('  sesion no esta CERRADA, abortar');
-    ShowMessage('La sesion no esta CERRADA. Solo se pueden revertir ' +
-                'sesiones materializadas.');
+    ShowMessage(SErrorSesionNoCerradaParaReversion);
     Exit;
   end;
-  if MessageDlg('Se borraran los movimientos de almacen creados por esta ' +
-                'sesion y volvera a BORRADOR.' + sLineBreak + sLineBreak +
-                'Los articulos / SKUs / codigos de barras se conservan ' +
-                '(re-materializar es idempotente).' + sLineBreak +
-                sLineBreak + 'Continuar?',
+  if MessageDlg(SPreguntaRevertirSesionCompra,
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
   begin
     LogSes('  cancelado por el usuario');
@@ -2581,13 +2531,13 @@ begin
     if RevertirMaterializacion(Dmm, IdentidadSesion.Usuario, sErr) then
     begin
       LogSes('  reversion OK, master.Refresh');
-      ShowMessage('Sesion revertida. Estado: BORRADOR.');
+      ShowMessage(SInfoSesionRevertida);
       Dmm.unqryTablaG.Refresh;
     end
     else
     begin
       LogSes('  reversion KO: ' + sErr);
-      ShowMessage('No se pudo revertir la sesion:' + sLineBreak + sErr);
+      ShowMessage(Format(SErrorRevertirSesionCompra, [sErr]));
     end;
   finally
     Screen.Cursor := crDefault;
@@ -2606,7 +2556,7 @@ begin
     Abort;
   if Dmm.unqryTablaG.IsEmpty then
   begin
-    ShowMessage('No hay sesion activa que imprimir.');
+    ShowMessage(SErrorSesionActivaImprimirNoDisponible);
     Exit;
   end;
   // Persistir cualquier edicion pendiente para que el report vea los
@@ -3173,8 +3123,7 @@ begin
   // del grid). Un click selecciona y cierra; Esc o click fuera cancelan.
   if Length(FOpcionesTallas) = 0 then
   begin
-    MessageDlg('No hay sistemas de tallas activos en ' +
-               'fza_atributos_conjuntos (ID_VA_AC=''TAL'').',
+    MessageDlg(SErrorSistemasTallasSesionNoDisponibles,
                mtInformation, [mbOk], 0);
     Exit;
   end;
@@ -3185,9 +3134,8 @@ begin
   // permite anadir colores o tallas nuevos sobre ese mismo sistema.
   if SameText(ds.FieldByName('ACCION_DUPLICADO_SESLIN').AsString, 'REUSAR') then
   begin
-    MessageDlg('El sistema de tallas no se puede cambiar en un modelo que ' +
-               'ya existe: queda fijado al del articulo. Solo puedes anadir ' +
-               'colores o tallas nuevos.', mtInformation, [mbOk], 0);
+    MessageDlg(SErrorCambiarSistemaTallasModeloExistente,
+               mtInformation, [mbOk], 0);
     Exit;
   end;
   IdActual := ds.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
@@ -3244,7 +3192,7 @@ begin
   // la linea con foco; si no hay (sesion sin lineas) avisamos.
   if Dmm.unqrySesionLin.IsEmpty then
   begin
-    MessageDlg('Anade una linea (o ponte sobre una) para asignarle familia.',
+    MessageDlg(SErrorLineaSesionAsignarFamiliaNoSeleccionada,
                mtInformation, [mbOk], 0);
     Exit;
   end;
@@ -3966,8 +3914,8 @@ var
 begin
   if Length(FBasicosColor) = 0 then
   begin
-    MessageDlg('No hay colores basicos cargados en fza_atributos_basicos ' +
-               'para ID_VA=''CO''.', mtInformation, [mbOk], 0);
+    MessageDlg(SErrorColoresBasicosSesionNoDisponibles,
+               mtInformation, [mbOk], 0);
     Exit;
   end;
 

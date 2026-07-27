@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataFamilias                                               }
 {    Tipo:       Data Module                                                   }
@@ -53,6 +53,8 @@ type
 
 implementation
 
+uses
+  inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -100,7 +102,7 @@ begin
                                 unqryTablaG.FindField(
                                   'CODIGO_FAM_FAM').AsString) then
     begin
-      ShowMessage('Propiedad Duplicada');
+      ShowMessage(SAvisoPropiedadFamiliaDuplicada);
       Abort;
     end;
   end;
@@ -213,17 +215,15 @@ begin
   begin
     if Trim(FindField('NOMBRE_FAM_FAM').AsString) = '' then
     begin
-      raise ERangeError.CreateFmt('%s no es un valor válido ' +
-                                       'para el campo Nombre de Familias',
-               [FindField('NOMBRE_FAM_FAM').AsString]);
+      raise ERangeError.CreateFmt(SErrorNombreFamilia,
+                                 [FindField('NOMBRE_FAM_FAM').AsString]);
     end
     else
     if (FindField('CODIGO_FAM_FAM').AsString =
         FindField('CODIGO_SUBFAMILIA_FAM').AsString) then
     begin
-      raise ERangeError.CreateFmt('%s no puede ser padre e hijo a la vez. ' +
-                                       'Revise campo Familia Padre',
-               [FindField('CODIGO_SUBFAMILIA_FAM').AsString]);
+      raise ERangeError.CreateFmt(SErrorFamiliaPadreIgualHija,
+                                 [FindField('CODIGO_SUBFAMILIA_FAM').AsString]);
     end
     else
       if (FindField('CODIGO_FAM_FAM').AsString = '0') then

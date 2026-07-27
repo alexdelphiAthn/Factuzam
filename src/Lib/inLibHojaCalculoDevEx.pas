@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibHojaCalculoDevEx                                         }
 {    Tipo:       Librería (adaptador)                                          }
@@ -94,6 +94,9 @@ function CrearLectorDevEx(
   const AControl: TdxSpreadSheet): ILectorHojaCalculo;
 
 implementation
+
+uses
+  inLibMsg;
 
 class procedure TEscritorHojaCalculoDevEx.MezclarDx(
   const ATabla: TdxSpreadSheetTableView;
@@ -215,15 +218,13 @@ end;
 procedure TEscritorHojaCalculoDevEx.AsegurarTabla;
 begin
   if FTabla = nil then
-    raise EHojaCalculo.Create(
-      'No hay hoja activa: llama a NuevaHoja antes de escribir.');
+    raise EHojaCalculo.Create(SErrorHojaCalculoNoActiva);
 end;
 
 procedure TEscritorHojaCalculoDevEx.NuevaHoja(const ANombre: string);
 begin
   if FControl = nil then
-    raise EHojaCalculo.Create(
-      'NuevaHoja requiere un control TdxSpreadSheet.');
+    raise EHojaCalculo.Create(SErrorControlHojaCalculoObligatorio);
   FControl.ClearAll;
   FTabla := FControl.AddSheet(ANombre, TdxSpreadSheetTableView)
     as TdxSpreadSheetTableView;
@@ -335,7 +336,7 @@ procedure TEscritorHojaCalculoDevEx.Guardar(const ARuta: string);
 begin
   if FControl = nil then
     raise EHojaCalculo.Create(
-      'Guardar requiere un control TdxSpreadSheet, no una vista suelta.');
+      SErrorGuardarHojaCalculoControlObligatorio);
   FControl.SaveToFile(ARuta);
 end;
 

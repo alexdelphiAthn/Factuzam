@@ -306,8 +306,13 @@ uses
   inLibArticulosResolver,
   inLibArticulosValidador,
   inLibGridCantidad,
+  inLibColumnasDocumento,
+  inLibBusquedasCompra,
+  inLibValidacionDocumento,
+  inLibPresentacionDocumento,
   inLibComprasImpuestos,
   inLibAtributosPaleta,
+  inLibMsg,
   UniDataArticulos,
   inMtoModalImpAlbCompra,
   inMtoModalImpAlbCompraV,
@@ -349,7 +354,6 @@ end;
 
 function TfrmMtoAlbaranesCompra.BuscarArticuloAlbaranCompra: string;
 var
-  qry : TUniQuery;
   sPrv: string;
 begin
   Result := '';
@@ -358,342 +362,80 @@ begin
     sPrv := Trim(dmmAlbaranesCompra.unqryTablaG.
                    FieldByName('CODIGO_PRV_ALBC').AsString);
     if (sPrv = '') or (sPrv = '0') then
-      MessageDlg('Selecciona un proveedor antes de buscar artículos.',
+      MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulos,
                  mtInformation, [mbOk], 0)
     else
-    begin
-      qry := TUniQuery.Create(nil);
-      try
-        qry.Connection := dmmAlbaranesCompra.unqryTablaG.Connection;
-        qry.SQL.Text :=
-          'SELECT art.CODIGO_ART_ART, art.ESACTIVO_ART, art.ORDEN_ART, ' +
-          '       art.DESCRIPCION_ART, art.CODIGO_FAM_ART, ' +
-          '       fam.DESCRIPCION_FAM, art.TIPO_IVA_ART, ' +
-          '       iva.NOMBRE_TIPO_IVA_IVATIP, art.TIPO_CANTIDAD_ART, ' +
-          '       ap.CODIGO_PRV_AP, prv.RAZON_SOCIAL_PRV, prv.NOMBRE_PRV, ' +
-          '       ap.REF_PROVEEDOR_AP AS REF_PROVEEDOR, ' +
-          '       ap.PRECIO_ULT_COMPRA_AP, ap.FECHA_VALIDEZ_AP ' +
-          '  FROM fza_articulos_proveedores ap ' +
-          '  JOIN fza_articulos art ' +
-          '    ON art.CODIGO_ART_ART = ap.CODIGO_ART_AP ' +
-          '  LEFT JOIN fza_articulos_familias fam ' +
-          '    ON fam.CODIGO_FAM_FAM = art.CODIGO_FAM_ART ' +
-          '  LEFT JOIN fza_ivas_tipos iva ' +
-          '    ON iva.CODIGO_ABREVIATURA_IVA_IVATIP = art.TIPO_IVA_ART ' +
-          '  LEFT JOIN fza_proveedores prv ' +
-          '    ON prv.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP ' +
-          ' WHERE ap.CODIGO_PRV_AP = :prv ' +
-          '   AND COALESCE(art.ESACTIVO_ART, ''S'') = ''S'' ' +
-          ' ORDER BY art.ORDEN_ART, art.CODIGO_ART_ART';
-        qry.ParamByName('prv').AsString := sPrv;
-        if TBusquedaUtils.EjecutarBusqueda(
-          ConexionPrincipal,
-          'Búsqueda de artículos',
-             qry,
-             'frmMtoDevcArtSearch',
-             Self) and (qry.FindField('CODIGO_ART_ART') <> nil) then
-          Result := qry.FieldByName('CODIGO_ART_ART').AsString;
-      finally
-        FreeAndNil(qry);
-      end;
-    end;
+      Result := BuscarArticuloProveedorCompra(
+        dmmAlbaranesCompra.unqryTablaG.Connection, sPrv,
+        'Búsqueda de artículos', 'frmMtoDevcArtSearch', Self);
   end;
 end;
 
 function TfrmMtoAlbaranesCompra.ArticuloLineaActivaAlbaranCompra: string;
-var
-  ds: TDataSet;
 begin
   Result := '';
   if Assigned(dmmAlbaranesCompra) then
-  begin
-    ds := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
-    if Assigned(ds) and ds.Active and (not ds.IsEmpty) and
-       (ds.FindField('CODIGO_ART_ALBCLIN') <> nil) then
-      Result := Trim(ds.FieldByName('CODIGO_ART_ALBCLIN').AsString);
-  end;
+    Result := ValorTextoDataSetCompra(
+      dmmAlbaranesCompra.unqryAlbaranesCompraLineas,
+      'CODIGO_ART_ALBCLIN');
 end;
 
 function TfrmMtoAlbaranesCompra.BuscarSkuAlbaranCompra(
   const ACodigoArt: string): string;
 var
-  qry : TUniQuery;
   sArt: string;
 begin
   Result := '';
   sArt := Trim(ACodigoArt);
   if not Assigned(dmmAlbaranesCompra) then
-    MessageDlg('No está abierto el albarán de compra.',
+    MessageDlg(SErrorAlbaranCompraNoAbierto,
                mtInformation, [mbOk], 0)
   else if sArt = '' then
-    MessageDlg('Selecciona un artículo antes de buscar sus SKUs.',
+    MessageDlg(SErrorArticuloNoSeleccionadoBuscarSkusAlbaranCompra,
                mtInformation, [mbOk], 0)
   else
-  begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := dmmAlbaranesCompra.unqryTablaG.Connection;
-      qry.SQL.Text :=
-        'SELECT SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU, ' +
-        '       GROUP_CONCAT(AV.AV ORDER BY COALESCE(VA.ORDEN_VA, 999), ' +
-        '                    AV.ORDEN_AV SEPARATOR '' / '') AS ATRIBUTOS ' +
-        '  FROM fza_articulos_skus SK ' +
-        '  LEFT JOIN fza_atributos_sku SA ' +
-        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
-        '  LEFT JOIN fza_atributos_valores AV ' +
-        '    ON AV.ID_AV = SA.ID_AV_SA ' +
-        '  LEFT JOIN fza_variaciones_atributos VA ' +
-        '    ON VA.ID_VAR_VA = SK.CODIGO_VAR_SKU ' +
-        '   AND VA.ID_ATB_VA = AV.ID_VA_AV ' +
-        ' WHERE SK.CODIGO_ART_SKU = :art ' +
-        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
-        ' GROUP BY SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU ' +
-        ' ORDER BY SK.CODIGO_UNIDAD_SKU';
-      qry.ParamByName('art').AsString := sArt;
-      if TBusquedaUtils.EjecutarBusqueda(
-        ConexionPrincipal,
-        'SKUs del artículo ' + sArt,
-           qry,
-           'frmMtoAlbcSkuSearch',
-           Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
-        Result := qry.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
+    Result := BuscarSkuArticuloCompra(
+      dmmAlbaranesCompra.unqryTablaG.Connection, sArt,
+      'SKUs del artículo ' + sArt,
+      'frmMtoAlbcSkuSearch', Self);
 end;
 
 procedure TfrmMtoAlbaranesCompra.CargarBasicosColorArticulo(
   const ACodigoArt: string);
-var
-  q   : TUniQuery;
-  i   : Integer;
-  sArt: string;
 begin
-  SetLength(FBasicosColor, 0);
-  sArt := Trim(ACodigoArt);
-  if sArt <> '' then
-  begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := ConexionPrincipal;
-      q.SQL.Text :=
-        'SELECT ATB.CODIGO_ATB, MIN(ATB.ORDEN_ATB) AS ORDEN_ATB, ' +
-        '       MIN(ATB.NOMBRE_ATB) AS NOMBRE_ATB ' +
-        '  FROM fza_articulos_skus SK ' +
-        '  JOIN fza_atributos_sku SA ' +
-        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
-        '  JOIN fza_atributos_valores AV ' +
-        '    ON AV.ID_AV = SA.ID_AV_SA ' +
-        '   AND AV.ID_VA_AV = :va ' +
-        '  JOIN fza_atributos_basicos ATB ' +
-        '    ON ATB.ID_VA_ATB = :va ' +
-        '   AND (ATB.ID_ATB = AV.ID_ATB_AV ' +
-        '        OR (AV.ID_ATB_AV IS NULL AND ATB.CODIGO_ATB = AV.AV)) ' +
-        ' WHERE SK.CODIGO_ART_SKU = :art ' +
-        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
-        '   AND COALESCE(AV.ESACTIVO_AV, ''S'') = ''S'' ' +
-        '   AND COALESCE(ATB.ESACTIVO_ATB, ''S'') = ''S'' ' +
-        ' GROUP BY ATB.CODIGO_ATB ' +
-        ' ORDER BY ORDEN_ATB, NOMBRE_ATB, ATB.CODIGO_ATB';
-      q.ParamByName('va').AsString := ID_VA_COLOR;
-      q.ParamByName('art').AsString := sArt;
-      q.Open;
-      SetLength(FBasicosColor, q.RecordCount);
-      i := 0;
-      while not q.Eof do
-      begin
-        FBasicosColor[i] := q.FieldByName('CODIGO_ATB').AsString;
-        Inc(i);
-        q.Next;
-      end;
-    finally
-      FreeAndNil(q);
-    end;
-  end;
+  FBasicosColor := ObtenerBasicosArticulo(
+    ConexionPrincipal, ACodigoArt, ID_VA_COLOR);
 end;
 
 procedure TfrmMtoAlbaranesCompra.AsegurarCabeceraPersistidaParaLineas;
-var
-  dsCab  : TDataSet;
-  dsLin  : TDataSet;
-  sNumero: string;
-
-  function ValorLinea(const ACampo: string): string;
-  var
-    Campo: TField;
-  begin
-    Result := '';
-    Campo := dsLin.FindField(ACampo);
-    if Campo <> nil then
-      Result := Trim(Campo.AsString);
-  end;
-
-  function LineaActualVacia: Boolean;
-  begin
-    Result := (ValorLinea('CODIGO_ART_ALBCLIN') = '') and
-              (ValorLinea('CODIGO_UNIDAD_ALBCLIN') = '');
-  end;
-
-  procedure SincronizarCabeceraEnLinea;
-  begin
-    if Assigned(dsLin) and dsLin.Active and
-       (dsLin.State in dsEditModes) then
-    begin
-      if dsLin.FindField('NUMERO_ALBC_ALBCLIN') <> nil then
-        dsLin.FieldByName('NUMERO_ALBC_ALBCLIN').AsString :=
-          dsCab.FieldByName('NUMERO_ALBC').AsString;
-      if dsLin.FindField('SERIE_ALBC_ALBCLIN') <> nil then
-        dsLin.FieldByName('SERIE_ALBC_ALBCLIN').AsString :=
-          dsCab.FieldByName('SERIE_ALBC').AsString;
-    end;
-  end;
-
 begin
   if not Assigned(dmmAlbaranesCompra) then
-    raise Exception.Create('No esta inicializado el albaran de compra.')
+    raise Exception.Create(SErrorAlbaranCompraNoInicializado)
   else
-  begin
-    dsCab := dmmAlbaranesCompra.unqryTablaG;
-    dsLin := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
-    if (dsCab = nil) or (not dsCab.Active) or
-       (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
-      raise Exception.Create(
-        'Crea o selecciona un albaran antes de añadir lineas.');
-    sNumero := Trim(dsCab.FieldByName('NUMERO_ALBC').AsString);
-    if Assigned(dsLin) and dsLin.Active and (dsLin.State = dsInsert) and
-       ((sNumero = '') or (sNumero = '0')) and LineaActualVacia then
-      dsLin.Cancel;
-    if (dsCab.State in dsEditModes) or (sNumero = '') or
-       (sNumero = '0') then
-    begin
-      if not (dsCab.State in dsEditModes) then
-        dsCab.Edit;
-      if (dsCab.FindField('ESPIVOTE_HORIZONTAL_ALBC') <> nil) and
-         (Trim(dsCab.FieldByName('ESPIVOTE_HORIZONTAL_ALBC').AsString) = '')
-         then
-        dsCab.FieldByName('ESPIVOTE_HORIZONTAL_ALBC').AsString := 'N';
-      dsCab.Post;
-    end;
-    SincronizarCabeceraEnLinea;
-    if Assigned(dsLin) and dsLin.Active and
-       (not (dsLin.State in dsEditModes)) then
-    begin
-      dsLin.Close;
-      dsLin.Open;
-    end;
-  end;
+    AsegurarCabeceraPersistidaCompra(
+      dmmAlbaranesCompra.unqryTablaG,
+      dmmAlbaranesCompra.unqryAlbaranesCompraLineas,
+      CrearConfiguracionTallasCompra(
+        STextoAlbaranCompra, 'ALBC', 'ALBCLIN',
+        'fza_albaranes_compra_lineas'),
+      nil);
 end;
 
 function TfrmMtoAlbaranesCompra.PuedeActivarTallasHorizontal(
   var AMensaje: string): Boolean;
-var
-  dsCab      : TDataSet;
-  dsLin      : TDataSet;
-  q          : TUniQuery;
-  incidencias: TStringList;
-  sSerie     : string;
-  sNumero    : string;
-
-  function ValorLinea(const ACampo: string): string;
-  var
-    Campo: TField;
-  begin
-    Result := '';
-    Campo := dsLin.FindField(ACampo);
-    if Campo <> nil then
-      Result := Trim(Campo.AsString);
-  end;
-
-  function LineaActualTieneArticulo: Boolean;
-  begin
-    Result := (ValorLinea('CODIGO_ART_ALBCLIN') <> '') or
-              (ValorLinea('CODIGO_UNIDAD_ALBCLIN') <> '');
-  end;
-
-  function LineaActualTieneSistemaTallas: Boolean;
-  var
-    Campo: TField;
-  begin
-    Result := False;
-    Campo := dsLin.FindField('ID_AC_PIVOT_ALBCLIN');
-    if Campo <> nil then
-      Result := (not Campo.IsNull) and (Campo.AsInteger > 0);
-  end;
-
 begin
-  Result := False;
   AMensaje := '';
-  if (dmmAlbaranesCompra = nil) or (FPivote = nil) then
-    Result := True
-  else
-  begin
-    dsCab := dmmAlbaranesCompra.unqryTablaG;
-    dsLin := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
-    if (dsCab = nil) or (not dsCab.Active) or dsCab.IsEmpty then
-      AMensaje := 'Crea o selecciona un albaran antes de activar tallas.'
-    else if Assigned(dsLin) and dsLin.Active and
-            (dsLin.State in dsEditModes) then
-    begin
-      if LineaActualTieneArticulo and
-         (not LineaActualTieneSistemaTallas) then
-        AMensaje :=
-          'El articulo en curso no tiene sistema de tallas asignado.'
-      else if LineaActualTieneArticulo then
-      begin
-        AsegurarCabeceraPersistidaParaLineas;
-        if dsLin.State in dsEditModes then
-          dsLin.Post;
-      end
-      else if dsCab.State = dsInsert then
-        AMensaje :=
-          'En alta, selecciona primero un articulo con sistema de tallas.';
-    end
-    else if dsCab.State = dsInsert then
-      AMensaje :=
-        'En alta, selecciona primero un articulo con sistema de tallas.';
-    if AMensaje = '' then
-    begin
-      sNumero := Trim(dsCab.FieldByName('NUMERO_ALBC').AsString);
-      if (sNumero = '') or (sNumero = '0') then
-        AsegurarCabeceraPersistidaParaLineas;
-      sSerie := Trim(dsCab.FieldByName('SERIE_ALBC').AsString);
-      sNumero := Trim(dsCab.FieldByName('NUMERO_ALBC').AsString);
-      incidencias := TStringList.Create;
-      q := TUniQuery.Create(nil);
-      try
-        q.Connection := dmmAlbaranesCompra.unqryTablaG.Connection;
-        q.SQL.Text :=
-          'SELECT DISTINCT L.CODIGO_ART_ALBCLIN AS ART ' +
-          '  FROM fza_albaranes_compra_lineas L ' +
-          ' WHERE L.SERIE_ALBC_ALBCLIN = :serie ' +
-          '   AND L.NUMERO_ALBC_ALBCLIN = :numero ' +
-          '   AND COALESCE(TRIM(L.CODIGO_ART_ALBCLIN), '''') <> '''' ' +
-          '   AND (L.ID_AC_PIVOT_ALBCLIN IS NULL ' +
-          '        OR L.ID_AC_PIVOT_ALBCLIN = 0) ' +
-          ' ORDER BY ART';
-        q.ParamByName('serie').AsString := sSerie;
-        q.ParamByName('numero').AsString := sNumero;
-        q.Open;
-        while not q.Eof do
-        begin
-          incidencias.Add('- Articulo sin sistema de tallas: ' +
-                          q.FieldByName('ART').AsString);
-          q.Next;
-        end;
-        if incidencias.Count > 0 then
-          AMensaje := 'No se puede activar tallas en horizontal:' +
-                      sLineBreak + sLineBreak +
-                      incidencias.Text + sLineBreak +
-                      'Asigna un sistema de tallas o elimina la linea.'
-        else
-          Result := FPivote.ValidarPivotePosible(AMensaje);
-      finally
-        FreeAndNil(q);
-        FreeAndNil(incidencias);
-      end;
-    end;
-  end;
+  Result := True;
+  if Assigned(dmmAlbaranesCompra) and Assigned(FPivote) then
+    Result := PuedeActivarTallasHorizontalCompra(
+      dmmAlbaranesCompra.unqryTablaG,
+      dmmAlbaranesCompra.unqryAlbaranesCompraLineas,
+      dmmAlbaranesCompra.unqryTablaG.Connection,
+      CrearConfiguracionTallasCompra(
+        STextoAlbaranCompra, 'ALBC', 'ALBCLIN',
+        'fza_albaranes_compra_lineas'),
+      AsegurarCabeceraPersistidaParaLineas,
+      FPivote.ValidarPivotePosible, AMensaje);
 end;
 
 procedure TfrmMtoAlbaranesCompra.AplicarArticuloAlbaranCompra(
@@ -960,10 +702,7 @@ begin
     cbbSERIE_ALBC.Properties.Items);
   if cbbSERIE_ALBC.Properties.Items.Count = 0 then
   begin
-    if MessageDlg('No hay series de albaranes de compra (tipo AB) para la ' +
-                  'empresa "' + sEmpresa + '".' + sLineBreak +
-                  'Se dan de alta en Empresas -> Series. ' +
-                  '¿Abrir el mantenimiento de Empresas ahora?',
+    if MessageDlg(Format(SPreguntaAbrirSeriesAlbaranCompra, [sEmpresa]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       ShowMto(Self.Owner, 'Empresas');
   end;
@@ -1128,135 +867,58 @@ end;
 // Cada columna tiene Tag = 1..N (posicion en el conjunto pivot) y se
 // hace visible / oculta por el gestor segun el conjunto activo.
 procedure TfrmMtoAlbaranesCompra.CrearColumnasTallas;
-var
-  i        : Integer;
-  col      : TcxGridDBColumn;
-  curProps : TcxCurrencyEditProperties;
 begin
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-  begin
-    col := tvLineasAlbaran.CreateColumn;
-    col.Name    := 'dbcLinAlbcTalla' + Format('%.2d', [i + 1]);
-    col.Caption := '';
-    col.Width   := 50;
-    col.Tag     := i + 1;
-    col.Visible := False;
-    col.DataBinding.ValueTypeClass := TcxFloatValueType;
-    col.PropertiesClass := TcxCurrencyEditProperties;
-    curProps := TcxCurrencyEditProperties(col.Properties);
-    curProps.DisplayFormat := '#,##0';
-    FTallaColumns[i] := col;
-  end;
+  CrearColumnasTallasDocumento(tvLineasAlbaran, 'dbcLinAlbcTalla',
+    50, FTallaColumns);
 end;
 
-// Crea CANT_ATRIB_MAX columnas no-bound para mostrar los valores de
-// los atributos del SKU de cada linea (modo "atributo por columna",// estilo inventarios). Read-only y no persistentes: solo
-// visualizacion. La carga real de valores por SKU queda como TODO.
+// Columnas no-bound y de solo lectura para el desglose visual del SKU.
 procedure TfrmMtoAlbaranesCompra.CrearColumnasAtributos;
-var
-  i: Integer;
-  col: TcxGridDBColumn;
 begin
-  for i := 0 to CANT_ATRIB_MAX - 1 do
-  begin
-    col := tvLineasAlbaran.CreateColumn;
-    col.Name    := 'dbcLinAlbcAtrib' + Format('%.2d', [i + 1]);
-    col.Caption := '';
-    col.Width   := 90;
-    col.Tag     := -(i + 1);  // tag negativo para no chocar con tallas
-    col.Visible := False;
-    col.Options.Editing := False;
-    FAtribColumns[i] := col;
-  end;
+  CrearColumnasAtributosDocumento(tvLineasAlbaran,
+    'dbcLinAlbcAtrib', FAtribColumns);
 end;
 
 procedure TfrmMtoAlbaranesCompra.InicializarGestorYPivote;
 var
-  cfgT : TGridTallasConfig;
-  cfgP : TGridPivoteCompraConfig;
-  i    : Integer;
-  arr  : TArray<TcxGridDBColumn>;
+  oBase: TConfigPivoteDocumentoCompra;
+  oConfigTallas: TGridTallasConfig;
+  oConfigPivote: TGridPivoteCompraConfig;
 begin
-  if FGestorTallas <> nil then FreeAndNil(FGestorTallas);
-  if FPivote       <> nil then FreeAndNil(FPivote);
-  if dmmAlbaranesCompra = nil then Exit;
-  SetLength(arr, CANT_TALLAS_MAX);
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-    arr[i] := FTallaColumns[i];
-  // 1. Gestor inline de tallas (libreria existente). Mismo patron que
-  //    Sesiones, con los nombres ALBC/ALBCLIN/ALBCCEL.
-  cfgT := Default(TGridTallasConfig);
-  cfgT.Conexion           := dmmAlbaranesCompra.unqryTablaG.Connection;
-  cfgT.ContextoSesion     := ContextoSesion;
-  cfgT.Usuario            := IdentidadSesion.Usuario;
-  cfgT.Grid               := tvLineasAlbaran;
-  cfgT.SourceMaster       := dsTablaG;
-  cfgT.SourceLineas       := dmmAlbaranesCompra.dsAlbaranesCompraLineas;
-  cfgT.ColumnasTallas     := arr;
-  cfgT.FieldSerieMaster   := 'SERIE_ALBC';
-  cfgT.FieldNumeroMaster  := 'NUMERO_ALBC';
-  cfgT.FieldLinea         := 'LINEA_ALBCLIN';
-  cfgT.FieldConjuntoPivot := 'ID_AC_PIVOT_ALBCLIN';
-  cfgT.FieldPrecioBase    := 'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN';
-  cfgT.FieldTotalUds      := 'TOTAL_UNIDADES_ALBCLIN';
-  cfgT.FieldTotalLinea    := 'TOTAL_ALBCLIN';
-  cfgT.TablaCeldas        := 'fza_albaranes_compra_celdas';
-  cfgT.FieldSerieCel      := 'SERIE_ALBC_ALBCCEL';
-  cfgT.FieldNumeroCel     := 'NUMERO_ALBC_ALBCCEL';
-  cfgT.FieldLineaCel      := 'LINEA_ALBC_ALBCCEL';
-  cfgT.FieldFilaCel       := 'ID_FILA_ALBC_ALBCCEL';
-  cfgT.FieldAvPivotCel    := 'ID_AV_PIVOT_ALBCCEL';
-  cfgT.FieldCantidadCel   := 'CANTIDAD_ALBCCEL';
-  cfgT.FieldAlmacenCel    := 'CODIGO_ALM_ALBCCEL';
-  cfgT.IdFilaFijo         := 1;
-  cfgT.MaxColumnas        := CANT_TALLAS_MAX;
-  FGestorTallas := TGestorGridTallas.Create(cfgT);
-  // Hookea el OnEditValueChanged de cada columna talla. En pivote compra
-  // actualiza la linea SKU real; fuera de pivote usa el gestor inline.
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-    if FTallaColumns[i] <> nil then
-    begin
-      TcxCurrencyEditProperties(FTallaColumns[i].Properties).
-        OnEditValueChanged := TallaEditValueChangedHook;
-      TcxCurrencyEditProperties(FTallaColumns[i].Properties).
-        OnValidate := TallaValidateHook;
-    end;
-  // 2. Orquestador de pivote (libreria nueva, compartida con pedidos).
-  cfgP := Default(TGridPivoteCompraConfig);
-  cfgP.Conexion             := dmmAlbaranesCompra.unqryTablaG.Connection;
-  cfgP.ContextoSesion       := ContextoSesion;
-  cfgP.Grid                 := tvLineasAlbaran;
-  cfgP.SourceMaster         := dsTablaG;
-  cfgP.SourceLineas         := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
-  cfgP.Gestor               := FGestorTallas;
-  cfgP.ColColorPivot        := FColColorPivot;
-  cfgP.ColumnasTallas       := arr;
-  cfgP.MaxColumnasTallas    := CANT_TALLAS_MAX;
-  cfgP.TablaLineas          := 'fza_albaranes_compra_lineas';
-  cfgP.FieldSerieMaster     := 'SERIE_ALBC';
-  cfgP.FieldNumeroMaster    := 'NUMERO_ALBC';
-  cfgP.FieldSerieLin        := 'SERIE_ALBC_ALBCLIN';
-  cfgP.FieldNumeroLin       := 'NUMERO_ALBC_ALBCLIN';
-  cfgP.FieldLinea           := 'LINEA_ALBCLIN';
-  cfgP.FieldArt             := 'CODIGO_ART_ALBCLIN';
-  cfgP.FieldSku             := 'CODIGO_UNIDAD_ALBCLIN';
-  cfgP.FieldCantidad        := 'CANTIDAD_ALBCLIN';
-  cfgP.FieldPrecioBase      := 'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN';
-  cfgP.FieldTotalUds        := 'TOTAL_UNIDADES_ALBCLIN';
-  cfgP.FieldTotalLinea      := 'TOTAL_ALBCLIN';
-  cfgP.FieldIdAcPivot       := 'ID_AC_PIVOT_ALBCLIN';
-  cfgP.FieldAlmacen         := 'CODIGO_ALMACEN_ALBCLIN';
-  cfgP.FieldAlmacenMaster   := 'CODIGO_ALM_ALBC';
-  cfgP.CamposOcultosEnPivote := TArray<string>.Create(
-    'CODIGO_UNIDAD_ALBCLIN',
-    'CANTIDAD_ALBCLIN',
-    'TOTAL_ALBCLIN');
-  FPivote := TGridPivoteCompra.Create(cfgP);
+  if Assigned(FGestorTallas) then
+    FreeAndNil(FGestorTallas);
+  if Assigned(FPivote) then
+    FreeAndNil(FPivote);
+  if Assigned(dmmAlbaranesCompra) then
+  begin
+    oBase := Default(TConfigPivoteDocumentoCompra);
+    oBase.Conexion := dmmAlbaranesCompra.unqryTablaG.Connection;
+    oBase.ContextoSesion := ContextoSesion;
+    oBase.Usuario := IdentidadSesion.Usuario;
+    oBase.Vista := tvLineasAlbaran;
+    oBase.SourceMaster := dsTablaG;
+    oBase.SourceLineas :=
+      dmmAlbaranesCompra.dsAlbaranesCompraLineas;
+    oBase.ConsultaLineas :=
+      dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
+    oBase.ColumnasTallas := CopiarColumnasDocumento(FTallaColumns);
+    oBase.ColColorPivot := FColColorPivot;
+    oBase.PrefijoCabecera := 'ALBC';
+    oBase.PrefijoLinea := 'ALBCLIN';
+    oBase.PrefijoCelda := 'ALBCCEL';
+    oBase.NombreTablaDocumento := 'albaranes';
+    oBase.AplicarContextoPivote := True;
+    oConfigTallas := CrearConfigTallasDocumentoCompra(oBase);
+    FGestorTallas := TGestorGridTallas.Create(oConfigTallas);
+    ConfigurarEventosTallasDocumento(FTallaColumns,
+      TallaEditValueChangedHook, TallaValidateHook);
+    oConfigPivote := CrearConfigPivoteDocumentoCompra(oBase,
+      FGestorTallas);
+    FPivote := TGridPivoteCompra.Create(oConfigPivote);
+  end;
 end;
 
 procedure TfrmMtoAlbaranesCompra.RefrescarVisibilidadTallas;
-var
-  i: Integer;
 begin
   // Sin pivote activo: ocultar todas las columnas talla. Con pivote
   // activo: delega en el gestor para mostrar solo las que aplican y
@@ -1265,23 +927,18 @@ begin
   // porque en compras la cantidad por SKU vive en la linea, no en
   // una tabla de celdas como en sesiones).
   if (FPivote = nil) or (not FPivote.Activo) or (FGestorTallas = nil) then
+    EstablecerVisibilidadColumnasDocumento(FTallaColumns, False)
+  else
   begin
-    for i := 0 to CANT_TALLAS_MAX - 1 do
-      if FTallaColumns[i] <> nil then
-        FTallaColumns[i].Visible := False;
-    Exit;
+    FGestorTallas.RecalcularMaxColumnas;
+    FGestorTallas.ActualizarCaptionsLineaActiva;
   end;
-  FGestorTallas.RecalcularMaxColumnas;
-  FGestorTallas.ActualizarCaptionsLineaActiva;
 end;
 
 procedure TfrmMtoAlbaranesCompra.RefrescarVisibilidadAtributos;
-var
-  i: Integer;
 begin
-  for i := 0 to CANT_ATRIB_MAX - 1 do
-    if FAtribColumns[i] <> nil then
-      FAtribColumns[i].Visible := FMostrarAtributos;
+  EstablecerVisibilidadColumnasDocumento(FAtribColumns,
+    FMostrarAtributos);
   if FMostrarAtributos then
     CargarCaptionsAtributosLineaActiva;
 end;
@@ -1291,41 +948,12 @@ end;
 // VALORES por SKU se hara en un hito posterior (cuando este el flujo
 // completo de edicion de SKU por talla / color).
 procedure TfrmMtoAlbaranesCompra.CargarCaptionsAtributosLineaActiva;
-var
-  i: Integer;
-  sArt: string;
-  qry: TUniQuery;
-  iCol: Integer;
 begin
-  if dmmAlbaranesCompra = nil then Exit;
-  qry := dmmAlbaranesCompra.unqryDefArticuloAlbc;
-  if qry = nil then Exit;
-
-  // Reset de captions a placeholder.
-  for i := 0 to CANT_ATRIB_MAX - 1 do
-    if FAtribColumns[i] <> nil then
-      FAtribColumns[i].Caption := 'Atributo ' + IntToStr(i + 1);
-
-  if (dmmAlbaranesCompra.unqryAlbaranesCompraLineas = nil) or
-     (not dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Active) or
-     (dmmAlbaranesCompra.unqryAlbaranesCompraLineas.IsEmpty) then Exit;
-  sArt := dmmAlbaranesCompra.unqryAlbaranesCompraLineas.
-            FieldByName('CODIGO_ART_ALBCLIN').AsString;
-  if sArt = '' then Exit;
-
-  qry.Close;
-  qry.ParamByName('ARTICULO').AsString := sArt;
-  qry.Open;
-  iCol := 0;
-  while (not qry.Eof) and (iCol < CANT_ATRIB_MAX) do
-  begin
-    if FAtribColumns[iCol] <> nil then
-      FAtribColumns[iCol].Caption :=
-        qry.FieldByName('NOMBRE_ATRIBUTO').AsString;
-    Inc(iCol);
-    qry.Next;
-  end;
-  qry.Close;
+  if Assigned(dmmAlbaranesCompra) then
+    CargarCaptionsAtributosDocumento(
+      dmmAlbaranesCompra.unqryDefArticuloAlbc,
+      dmmAlbaranesCompra.unqryAlbaranesCompraLineas,
+      'CODIGO_ART_ALBCLIN', FAtribColumns);
 end;
 
 procedure TfrmMtoAlbaranesCompra.btnTallasHorizontalClick(Sender: TObject);
@@ -1394,7 +1022,7 @@ begin
   if dmmAlbaranesCompra = nil then Exit;
   if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
   begin
-    ShowMessage('No hay albaran de compra activo que imprimir.');
+    ShowMessage(SErrorAlbaranCompraSinImpresionActivo);
     Exit;
   end;
   if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -1426,7 +1054,7 @@ begin
   if dmmAlbaranesCompra = nil then Exit;
   if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
   begin
-    ShowMessage('No hay albaran de compra activo que imprimir.');
+    ShowMessage(SErrorAlbaranCompraSinImpresionActivo);
     Exit;
   end;
   if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -1460,7 +1088,7 @@ begin
   if dmmAlbaranesCompra = nil then Exit;
   if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
   begin
-    ShowMessage('No hay albaran de compra activo.');
+    ShowMessage(SErrorAlbaranCompraNoActivo);
     Exit;
   end;
   if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -1518,9 +1146,8 @@ begin
     dmmAlbaranesCompra.unqryTablaG.Connection,
     dmmAlbaranesCompra.unqryAlbaranesCompraLineas, 'ALBCLIN');
   if (sLineasSinSku <> '') and
-     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
-                 'con variaciones sin SKU asignado. ' +
-                 '¿Grabar de todas formas?',
+     (MessageDlg(Format(SPreguntaGrabarAlbaranCompraSinSku,
+                 [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) <> mrYes) then
     Exit;
   if Assigned(FPivote) and FPivote.Activo and
@@ -1576,42 +1203,14 @@ begin
 end;
 
 procedure TfrmMtoAlbaranesCompra.ActualizarLabelProveedor;
-var
-  sCodigo : string;
-  sNombre : string;
-  sRazon  : string;
 begin
-  // Resuelve NOMBRE_PRV + RAZON_SOCIAL_PRV (via el lookup unqryPrvDataAlbc)
-  // y los pinta en el rotulo. Se antepone el nombre comercial: es el que
-  // el usuario reconoce a simple vista; la razon social solo se anade
-  // entre parentesis como referencia si difiere.
-  sCodigo := '';
-  if (dmmAlbaranesCompra <> nil) and Assigned(dmmAlbaranesCompra.unqryTablaG) and
-     dmmAlbaranesCompra.unqryTablaG.Active and
-     (not dmmAlbaranesCompra.unqryTablaG.IsEmpty) then
-    sCodigo :=
-      Trim(dmmAlbaranesCompra.unqryTablaG.FieldByName('CODIGO_PRV_ALBC').AsString);
-  if sCodigo = '' then
-    lblProveedorNombreAlbc.Caption := ''
-  else if (dmmAlbaranesCompra.unqryPrvDataAlbc <> nil) and
-          dmmAlbaranesCompra.unqryPrvDataAlbc.Active and
-          dmmAlbaranesCompra.unqryPrvDataAlbc.Locate('CODIGO_PRV_PRV', sCodigo, []) then
-  begin
-    sRazon  := dmmAlbaranesCompra.unqryPrvDataAlbc.FieldByName('RAZON_SOCIAL_PRV').AsString;
-    sNombre := dmmAlbaranesCompra.unqryPrvDataAlbc.FieldByName('NOMBRE_PRV').AsString;
-    // Si no hay nombre comercial cargado, caemos a la razon social como
-    // rotulo principal. Si hay nombre y difiere de la razon social, la
-    // razon social se anade entre parentesis como referencia.
-    if Trim(sNombre) = '' then
-      lblProveedorNombreAlbc.Caption := sCodigo + ' - ' + sRazon
-    else if not SameText(Trim(sNombre), Trim(sRazon)) then
-      lblProveedorNombreAlbc.Caption :=
-        sCodigo + ' - ' + sNombre + '  (' + sRazon + ')'
-    else
-      lblProveedorNombreAlbc.Caption := sCodigo + ' - ' + sNombre;
-  end
+  if Assigned(dmmAlbaranesCompra) then
+    lblProveedorNombreAlbc.Caption := TextoProveedorDocumento(
+      dmmAlbaranesCompra.unqryTablaG,
+      dmmAlbaranesCompra.unqryPrvDataAlbc,
+      'CODIGO_PRV_ALBC')
   else
-    lblProveedorNombreAlbc.Caption := sCodigo + ' - (proveedor no encontrado)';
+    lblProveedorNombreAlbc.Caption := '';
 end;
 
 // Hook AfterPost del detail: encadena la logica original del DM
@@ -1701,17 +1300,9 @@ end;
 
 procedure TfrmMtoAlbaranesCompra.ActualizarCaptionModoLineas;
 begin
-  if not FColsModoConstruido then
-    tsLineasAlbaran.Caption := '&1_Líneas '
-  else
-    case FModoEntradaSel of
-      mcsSku:
-        tsLineasAlbaran.Caption := '&1_Líneas [SKU]';
-      mcsTallasHorPed:
-        tsLineasAlbaran.Caption := '&1_Líneas [Tallas horiz.]';
-    else
-      tsLineasAlbaran.Caption := '&1_Líneas [Desglose]';
-    end;
+  tsLineasAlbaran.Caption := CaptionModoLineasDocumento(
+    '&1_Líneas', '&1_Líneas ', FColsModoConstruido,
+    FModoEntradaSel, False);
 end;
 
 procedure TfrmMtoAlbaranesCompra.KeyDown(var Key: Word;
@@ -1739,9 +1330,9 @@ procedure TfrmMtoAlbaranesCompra.ConstruirModoEntrada;
 var
   Cfg: TConfigColumnasSku;
   CfgPV: TGridPivoteVentaConfig;
-  i: Integer;
   ds: TDataSet;
   bDegradarASku: Boolean;
+  ModoEfectivo: TModoColumnasSku;
 begin
   if (dmmAlbaranesCompra = nil) or (csDestroying in ComponentState) then
     Exit;
@@ -1753,83 +1344,28 @@ begin
   // post de linea (cascada de segundos al entrar al modo).
   dmmAlbaranesCompra.IniciarReorganizacionLineas;
   try
-  // Teardown del modo anterior (patron pedidos de compra).
-  if tvLineasAlbaran.Controller.EditingController.IsEditing then
-    try
-      tvLineasAlbaran.Controller.EditingController.HideEdit(False);
-    except
-      on E: EInvalidOperation do
-        ;
-    end;
-  if ds.State in dsEditModes then
-    ds.Cancel;
-  if FModoEntrada <> nil then
-    FModoEntrada.Desmontar;
-  tvLineasAlbaran.OnInitEdit := nil;
-  tvLineasAlbaran.OnEditKeyDown := nil;
-  tvLineasAlbaran.OnEditing := nil;
-  tvLineasAlbaran.OnFocusedRecordChanged := nil;
-  tvLineasAlbaran.OnFocusedItemChanged := nil;
-  tvLineasAlbaran.OnCustomDrawCell := nil;
-  // El ClearItems mata TODAS las columnas: las del dfm y las del
-  // pivote de compras retirado. Fuera las referencias ANTES de que
-  // ningun repintado o refresco las toque.
-  tvLineasAlbaran.ClearItems;
-  FModoEntrada := nil;
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-    FTallaColumns[i] := nil;
-  for i := 0 to CANT_ATRIB_MAX - 1 do
-    FAtribColumns[i] := nil;
-  FColColorPivot := nil;
+  PrepararReconstruccionModoDocumento(tvLineasAlbaran, ds,
+    FModoEntrada, FTallaColumns, FAtribColumns, FColColorPivot);
   // Solo el DESGLOSE liga columnas a ATTRn: desempaquetar SKU->ATTR
   // (columnas reales _ALBCLIN; idempotente por linea). SKU y tallas
   // horizontal derivan del propio SKU: sin posts al navegar.
   if FModoEntradaSel = mcsAuto then
     dmmAlbaranesCompra.DesempaquetarAtributosLineas;
-  Cfg := Default(TConfigColumnasSku);
-  Cfg.Conexion := dmmAlbaranesCompra.unqryTablaG.Connection;
-  Cfg.ContextoSesion := ContextoSesion;
-  Cfg.View := tvLineasAlbaran;
-  Cfg.Cds := ds;
-  Cfg.Modo := FModoEntradaSel;
-  Cfg.AlmacenStock := Trim(dmmAlbaranesCompra.unqryTablaG.
-    FieldByName('CODIGO_ALM_ALBC').AsString);
-  Cfg.Distribuido := False;
-  Cfg.Campos.CodigoArt := 'CODIGO_ART_ALBCLIN';
-  Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_ALBCLIN';
-  Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_ALBCLIN';
-  Cfg.Campos.Cantidad := 'CANTIDAD_ALBCLIN';
-  Cfg.Campos.Almacen := 'CODIGO_ALMACEN_ALBCLIN';
-  Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_ALBCLIN';
-  for i := 1 to 5 do
-  begin
-    Cfg.Campos.AttrValor[i] :=
-      'ATTR' + IntToStr(i) + '_VALOR_ALBCLIN';
-    Cfg.Campos.AttrNombre[i] :=
-      'ATTR' + IntToStr(i) + '_NOMBRE_ALBCLIN';
-  end;
+  Cfg := CrearConfigColumnasSkuDocumento(
+    dmmAlbaranesCompra.unqryTablaG.Connection,
+    ContextoSesion, tvLineasAlbaran, ds, FModoEntradaSel,
+    Trim(dmmAlbaranesCompra.unqryTablaG.
+      FieldByName('CODIGO_ALM_ALBC').AsString), 'ALBCLIN');
   if FModoEntradaSel = mcsTallasHorPed then
   begin
-    CfgPV := Default(TGridPivoteVentaConfig);
-    CfgPV.Conexion := dmmAlbaranesCompra.unqryTablaG.Connection;
-    CfgPV.Usuario := IdentidadSesion.Usuario;
-    CfgPV.SourceMaster := dsTablaG;
-    CfgPV.SourceLineas := dmmAlbaranesCompra.dsAlbaranesCompraLineas;
-    CfgPV.FieldSerieMaster := 'SERIE_ALBC';
-    CfgPV.FieldNumeroMaster := 'NUMERO_ALBC';
-    CfgPV.FieldLinea := 'LINEA_ALBCLIN';
-    CfgPV.FieldArt := 'CODIGO_ART_ALBCLIN';
-    CfgPV.FieldSku := 'CODIGO_UNIDAD_ALBCLIN';
-    CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_ALBCLIN';
-    CfgPV.FieldTipoCantidad := 'TIPO_CANTIDAD_ARTICULO_ALBCLIN';
+    CfgPV := CrearConfigPivoteBandasDocumentoCompra(
+      dmmAlbaranesCompra.unqryTablaG.Connection,
+      IdentidadSesion.Usuario, dsTablaG,
+      dmmAlbaranesCompra.dsAlbaranesCompraLineas,
+      'ALBC', 'ALBCLIN',
+      'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN',
+      CANT_TALLAS_MAX);
     // Albaran de compra: UNA sola cantidad por linea -> banda unica.
-    CfgPV.FieldCantidadPedida := 'CANTIDAD_ALBCLIN';
-    CfgPV.FieldCantidadEntregada := '';
-    CfgPV.FieldCantidadAAlbaranar := '';
-    CfgPV.FieldPrecioBase := 'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN';
-    CfgPV.FieldAlmacen := 'CODIGO_ALMACEN_ALBCLIN';
-    CfgPV.FieldAlmacenMaster := 'CODIGO_ALM_ALBC';
-    CfgPV.MaxColumnas := CANT_TALLAS_MAX;
     CfgPV.BandaUnica := True;
     // La columna Total del host pasa a UNIDADES del grupo en pivote.
     CfgPV.FieldTotalUdsGrupo := 'TOTAL_ALBCLIN';
@@ -1877,17 +1413,11 @@ begin
     // las columnas ATTR en la BBDD) y, en desglose, mostrar Color y
     // Talla con nombres globales desde el principio (patron pedidos
     // de compra).
-    case DetectarModoColumnasSku(Cfg) of
-      mcsSku:
-        tsLineasAlbaran.Caption := '&1_Líneas [SKU]';
-      mcsTallasHorPed:
-        tsLineasAlbaran.Caption := '&1_Líneas [Tallas horiz.]';
-    else
-      begin
-        tsLineasAlbaran.Caption := '&1_Líneas [Desglose]';
-        MostrarColumnasAtributoGlobalesAlbc;
-      end;
-    end;
+    ModoEfectivo := DetectarModoColumnasSku(Cfg);
+    tsLineasAlbaran.Caption := CaptionModoLineasDocumento(
+      '&1_Líneas', '&1_Líneas ', True, ModoEfectivo, False);
+    if not (ModoEfectivo in [mcsSku, mcsTallasHorPed]) then
+      MostrarColumnasAtributoGlobalesAlbc;
   end;
   finally
     dmmAlbaranesCompra.FinalizarReorganizacionLineas;
@@ -1895,82 +1425,21 @@ begin
 end;
 
 procedure TfrmMtoAlbaranesCompra.MostrarColumnasAtributoGlobalesAlbc;
-var
-  Qry: TUniQuery;
-  i, iOrden: Integer;
-  Col: TcxGridColumn;
 begin
-  // Nombres globales de atributos para ver Color/Talla desde el
-  // principio (mismo helper que pedidos/facturas de venta).
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := dmmAlbaranesCompra.unqryTablaG.Connection;
-    Qry.SQL.Text :=
-      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
-      '       MIN(ORDEN_VA) AS ORDEN' +
-      '  FROM fza_variaciones_atributos' +
-      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
-      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
-    Qry.Open;
-    iOrden := 1;
-    while (not Qry.Eof) and (iOrden <= 5) do
-    begin
-      // Solo las columnas del contrato (Tag positivo 1..5); las
-      // FAtribColumns propias llevan Tag negativo y no chocan.
-      for i := 0 to tvLineasAlbaran.ColumnCount - 1 do
-      begin
-        Col := tvLineasAlbaran.Columns[i];
-        if Col.Tag = iOrden then
-        begin
-          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
-          Col.Visible := True;
-        end;
-      end;
-      Inc(iOrden);
-      Qry.Next;
-    end;
-  finally
-    FreeAndNil(Qry);
-  end;
+  MostrarColumnasAtributoGlobalesDocumento(
+    dmmAlbaranesCompra.unqryTablaG.Connection,
+    tvLineasAlbaran);
 end;
 
 procedure TfrmMtoAlbaranesCompra.CrearColumnasHostAlbaranCompra;
-  function Col(const ACaption, ACampo: string; AAncho: Integer;
-               AEditable: Boolean): TcxGridDBColumn;
-  begin
-    Result := tvLineasAlbaran.CreateColumn as TcxGridDBColumn;
-    Result.Caption := ACaption;
-    Result.DataBinding.FieldName := ACampo;
-    Result.Width := AAncho;
-    Result.Options.Editing := AEditable;
-  end;
 var
-  ColLinea, ColCantidad, ColTipoCantidad: TcxGridDBColumn;
+  Columnas: TColumnasHostDocumentoCompra;
 begin
-  // Columnas propias del albaran de compra tras el ClearItems del
-  // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
-  ColLinea := Col('Línea', 'LINEA_ALBCLIN', 60, False);
-  Col('Modelo prov.', 'REF_PRV_ALBCLIN', 130, True);
-  Col('Descripción', 'DESCRIPCION_ARTICULO_ALBCLIN', 260, False);
-  if FModoEntradaSel <> mcsTallasHorPed then
-  begin
-    ColCantidad := Col('Cantidad', 'CANTIDAD_ALBCLIN', 80, True);
-    ColTipoCantidad := Col('', 'TIPO_CANTIDAD_ARTICULO_ALBCLIN',
-                           90, False);
-    VincularCantidadGrid(ColCantidad, ColTipoCantidad);
-  end;
-  Col('Precio compra', 'PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN', 130, True);
-  Col('% IVA', 'PORCENTAJE_IVA_ALBCLIN', 70, True);
-  // En pivote la vista vuelca aqui las UNIDADES del grupo (la libreria
-  // machaca TOTAL en la copia visual); en el resto de modos, importe.
-  if FModoEntradaSel = mcsTallasHorPed then
-    Col('Total uds.', 'TOTAL_ALBCLIN', 100, False)
-  else
-    Col('Total', 'TOTAL_ALBCLIN', 100, False);
-  Col('Almacén', 'CODIGO_ALMACEN_ALBCLIN', 90, True);
-  // Orden normal del documento: la LINEA delante del bloque de
-  // articulo que creo el modo (las columnas del host nacen detras).
-  ColLinea.Index := 0;
+  Columnas := CrearColumnasHostDocumentoCompra(
+    tvLineasAlbaran, FModoEntradaSel, 'ALBCLIN');
+  if Assigned(Columnas.ColCantidad) then
+    VincularCantidadGrid(Columnas.ColCantidad,
+      Columnas.ColTipoCantidad);
 end;
 
 procedure TfrmMtoAlbaranesCompra.ModoEntradaResuelto(const ACodArt, ASku,
@@ -2019,25 +1488,18 @@ end;
 procedure TfrmMtoAlbaranesCompra.actArticulosExecute(Sender: TObject);
 begin
   inherited;
-  with tvLineasAlbaran.DataController.DataSet do
-    ShowMto(Self.Owner,
-            'Articulos',
-            FieldByName('CODIGO_ART_ALBCLIN').AsString);
+  ShowMtoCodigoDataSet(Self.Owner, 'Articulos',
+    tvLineasAlbaran.DataController.DataSet,
+    'CODIGO_ART_ALBCLIN');
 end;
 
 procedure TfrmMtoAlbaranesCompra.actIrProveedorExecute(Sender: TObject);
-var
-  sPrv: string;
 begin
-  sPrv := '';
-  if Assigned(dmmAlbaranesCompra) and
-     (not dmmAlbaranesCompra.unqryTablaG.IsEmpty) then
-    sPrv := Trim(dmmAlbaranesCompra.unqryTablaG.
-                   FieldByName('CODIGO_PRV_ALBC').AsString);
-  if sPrv = '' then
-    ShowMto(Self.Owner, 'Proveedores')
+  if Assigned(dmmAlbaranesCompra) then
+    ShowMtoCodigoDataSet(Self.Owner, 'Proveedores',
+      dmmAlbaranesCompra.unqryTablaG, 'CODIGO_PRV_ALBC')
   else
-    ShowMto(Self.Owner, 'Proveedores', sPrv);
+    ShowMto(Self.Owner, 'Proveedores');
 end;
 
 procedure TfrmMtoAlbaranesCompra.btnCODIGO_EMP_ALBCPropertiesButtonClick(
@@ -2051,8 +1513,8 @@ begin
   begin
     ds := dmmAlbaranesCompra.unqryTablaG;
     if ds.IsEmpty then
-      MessageDlg('Crea o selecciona un albarán de compra antes de ' +
-                 'elegir la empresa.', mtInformation, [mbOk], 0)
+      MessageDlg(SErrorAlbaranCompraNecesarioElegirEmpresa,
+                 mtInformation, [mbOk], 0)
     else if TBusquedaUtils.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de empresas',
@@ -2090,8 +1552,8 @@ begin
   begin
     ds := dmmAlbaranesCompra.unqryTablaG;
     if ds.IsEmpty then
-      MessageDlg('Crea o selecciona un albarán de compra antes de ' +
-                 'elegir el proveedor.', mtInformation, [mbOk], 0)
+      MessageDlg(SErrorAlbaranCompraNecesarioElegirProveedor,
+                 mtInformation, [mbOk], 0)
     else if TBusquedaUtils.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de proveedores',
@@ -2293,21 +1755,20 @@ var
 begin
   if (FPivote = nil) or (not FPivote.Activo) then
   begin
-    MessageDlg('Activa las tallas en horizontal antes de elegir color.',
+    MessageDlg(SErrorActivarTallasHorizontalesParaColor,
                mtInformation, [mbOk], 0);
   end
   else
   begin
     sArt := ArticuloLineaActivaAlbaranCompra;
     if sArt = '' then
-      MessageDlg('Selecciona un artículo antes de elegir color.',
+      MessageDlg(SErrorArticuloNoSeleccionadoElegirColor,
                  mtInformation, [mbOk], 0)
     else
     begin
       CargarBasicosColorArticulo(sArt);
       if Length(FBasicosColor) = 0 then
-        MessageDlg('El artículo "' + sArt + '" no tiene colores básicos ' +
-                   'activos en sus SKUs.',
+        MessageDlg(Format(SErrorArticuloSinColoresBasicosActivos, [sArt]),
                    mtInformation, [mbOk], 0)
       else
       begin
@@ -2343,41 +1804,25 @@ end;
 // mano y no procede de ningun pedido, avisamos en lugar de abrir un Mto
 // vacio.
 procedure TfrmMtoAlbaranesCompra.actIrDocumentoExecute(Sender: TObject);
-var
-  sSeriePed, sNumeroPed: string;
 begin
   inherited;
   if (dmmAlbaranesCompra <> nil) and
      (not dmmAlbaranesCompra.unqryTablaG.IsEmpty) then
-  begin
-    sSeriePed  := Trim(dmmAlbaranesCompra.unqryTablaG.
-                         FieldByName('SERIE_PED_ALBC').AsString);
-    sNumeroPed := Trim(dmmAlbaranesCompra.unqryTablaG.
-                         FieldByName('NUMERO_PED_ALBC').AsString);
-    if (sSeriePed <> '') and (sNumeroPed <> '') then
-      ShowMto(Self.Owner, 'PedidosCompra', sSeriePed + ',' + sNumeroPed)
-    else
-      ShowMessage('Este albaran no procede de ningun pedido de compra.');
-  end;
+    ShowMtoDocumentoDataSet(Self.Owner, 'PedidosCompra',
+      dmmAlbaranesCompra.unqryTablaG,
+      'SERIE_PED_ALBC', 'NUMERO_PED_ALBC',
+      SAvisoAlbaranCompraSinPedido);
 end;
 
 procedure TfrmMtoAlbaranesCompra.actIrFacturaCreadaExecute(Sender: TObject);
-var
-  sSerieFac, sNumeroFac: string;
 begin
   inherited;
   if (dmmAlbaranesCompra <> nil) and
      (not dmmAlbaranesCompra.unqryTablaG.IsEmpty) then
-  begin
-    sSerieFac  := Trim(dmmAlbaranesCompra.unqryTablaG.
-                         FieldByName('SERIE_FAC_ALBC').AsString);
-    sNumeroFac := Trim(dmmAlbaranesCompra.unqryTablaG.
-                         FieldByName('NUMERO_FAC_ALBC').AsString);
-    if (sSerieFac <> '') and (sNumeroFac <> '') then
-      ShowMto(Self.Owner, 'FacturasCompra', sSerieFac + ',' + sNumeroFac)
-    else
-      ShowMessage('Este albaran no tiene factura de compra creada.');
-  end;
+    ShowMtoDocumentoDataSet(Self.Owner, 'FacturasCompra',
+      dmmAlbaranesCompra.unqryTablaG,
+      'SERIE_FAC_ALBC', 'NUMERO_FAC_ALBC',
+      SAvisoAlbaranCompraSinFactura);
 end;
 
 procedure TfrmMtoAlbaranesCompra.btnAnadirLineaClick(Sender: TObject);
@@ -2390,7 +1835,7 @@ end;
 procedure TfrmMtoAlbaranesCompra.btnBorrarLineaClick(Sender: TObject);
 begin
   inherited;
-  if MessageDlg('Esta seguro de que desea eliminar esta linea?',
+  if MessageDlg(SPreguntaEliminarLineaAlbaranCompra,
                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Delete;
 end;

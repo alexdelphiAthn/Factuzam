@@ -691,7 +691,7 @@ begin
   if not bGuardar then Exit;
 
   Screen.Cursor := crHourGlass;
-  (tdmDataModule as TdmBase).ResetGridsProfile('', Self.Name, sPermisos);
+  PerfilesUsuario.EliminarPerfil(sPermisos, Self.Name);
   oList := TPerfilList.Create;
   try
     // 1. Perfiles comunes

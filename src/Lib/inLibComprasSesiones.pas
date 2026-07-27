@@ -281,7 +281,8 @@ implementation
 
 uses
   System.Math,
-  System.StrUtils;
+  System.StrUtils,
+  inLibMsg;
 
 const
   COL_WIDTH      = 60;
@@ -696,17 +697,14 @@ begin
     // Modo conjunto: picker pendiente. Avisamos para no dejar al usuario
     // confundido (sin esto pulsar el boton no hacia absolutamente nada).
     MessageDlg(
-      'El selector de valores del conjunto fila aun no esta implementado.' +
-      sLineBreak + sLineBreak +
-      'Mientras tanto, en la cabecera deja vacio el campo "Conjunto fila" ' +
-      'para teclear los colores libremente.',
+      SAvisoSelectorConjuntoFilaNoImplementado,
       mtInformation, [mbOk], 0);
     Exit;
   end;
 
   // Pedir el texto de la fila
   sTexto := '';
-  if not InputQuery('Nueva fila', 'Nombre de la fila (color del proveedor):',
+  if not InputQuery(STituloNuevaFilaCompra, SSolicitudNombreFilaCompra,
                     sTexto) then Exit;
   sTexto := Trim(sTexto);
   if sTexto = '' then Exit;
@@ -775,8 +773,7 @@ begin
   if FDM.unqryTablaG.FieldByName('ID_AC_PIVOT_SES').IsNull then
   begin
     MessageDlg(
-      'Selecciona primero un "Conjunto pivot" en la cabecera de la sesion ' +
-      'para poder anadirle un valor (talla).',
+      SAvisoConjuntoPivotCompraObligatorio,
       mtWarning, [mbOk], 0);
     Exit;
   end;
@@ -796,7 +793,7 @@ begin
     if q.IsEmpty then
     begin
       q.Close;
-      MessageDlg('El conjunto pivot no existe en la BBDD.',
+      MessageDlg(SErrorConjuntoPivotCompraNoExiste,
                  mtError, [mbOk], 0);
       Exit;
     end;
@@ -816,15 +813,15 @@ begin
 
     // Inputs del usuario: nombre del valor y orden.
     sNombreNueva := '';
-    if not InputQuery('Anadir talla / valor pivot',
-                      'Nombre del valor (ej: XXL, 47):', sNombreNueva) then
+    if not InputQuery(STituloAnadirValorPivotCompra,
+                      SSolicitudNombreValorPivotCompra, sNombreNueva) then
       Exit;
     sNombreNueva := Trim(sNombreNueva);
     if sNombreNueva = '' then Exit;
 
     sOrdenStr := IntToStr(iOrdenSugerido);
-    if not InputQuery('Anadir talla / valor pivot',
-        'Orden (los SKUs se ordenan por este numero; usa pasos de 10).',
+    if not InputQuery(STituloAnadirValorPivotCompra,
+        SSolicitudOrdenValorPivotCompra,
         sOrdenStr) then Exit;
     iOrden := StrToIntDef(Trim(sOrdenStr), iOrdenSugerido);
 
@@ -997,18 +994,17 @@ begin
   Result   := False;
   AResumen := '';
   if (ADM = nil) or ADM.unqryTablaG.IsEmpty then
-    AResumen := 'No hay sesion activa.'
+    AResumen := SErrorSesionCompraNoActiva
   else if ADM.unqrySesionLin.IsEmpty then
-    AResumen := 'Selecciona o crea una linea de articulo primero.'
+    AResumen := SErrorLineaArticuloSesionNoSeleccionada
   else
   begin
     iLinea := ADM.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
     iAc    := ADM.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
     if iLinea <= 0 then
-      AResumen := 'La linea aun no tiene numero. Graba la sesion primero.'
+      AResumen := SErrorLineaSesionSinNumero
     else if iAc <= 0 then
-      AResumen := 'La linea no tiene sistema de tallas. Asignale uno en la ' +
-                  'columna "Sistema tallas" antes de aplicar el kit.'
+      AResumen := SErrorSistemaTallasLineaSesionObligatorio
     else
     begin
       // El tallaje del kit DEBE coincidir con el de la linea; si no, se
@@ -1031,7 +1027,7 @@ begin
         q.ParamByName('kit').AsString := ACodigoKit;
         q.Open;
         if q.IsEmpty then
-          AResumen := Format('El kit %s no existe para el proveedor %s.',
+          AResumen := Format(SErrorKitProveedorNoExiste,
                              [ACodigoKit, ACodigoPrv])
         else
         begin
@@ -1043,13 +1039,9 @@ begin
           if sNomLin = '' then
             sNomLin := IntToStr(iAc);
           if iAcKit <= 0 then
-            AResumen := Format('El kit %s no tiene sistema de tallas. ' +
-              'Asignaselo en Proveedores, pestaña Compras, para poder ' +
-              'comprobar que coincide con el de la linea.', [ACodigoKit])
+            AResumen := Format(SErrorKitSinSistemaTallas, [ACodigoKit])
           else if iAcKit <> iAc then
-            AResumen := Format('El tallaje del kit no coincide con el de ' +
-              'la linea: kit = "%s", linea = "%s". Cambia el sistema de ' +
-              'tallas de la linea o elige un kit de su mismo tallaje.',
+            AResumen := Format(SErrorTallajeKitNoCoincide,
               [sNomKit, sNomLin])
           else
             Result := True;
@@ -1080,7 +1072,7 @@ begin
   Result   := False;
   AResumen := '';
   if AGestor = nil then
-    AResumen := 'Gestor de tallas no inicializado.'
+    AResumen := SErrorGestorTallasNoInicializado
   else if ValidarKitSobreLineaActual(ADM, ACodigoPrv, ACodigoKit,
                                      AResumen) then
   begin
@@ -1103,8 +1095,7 @@ begin
       q.ParamByName('kit').AsString := ACodigoKit;
       q.Open;
       if q.IsEmpty then
-        AResumen := Format('El kit %s no tiene tallas definidas. ' +
-          'Completalo en Proveedores, pestaña Compras.', [ACodigoKit])
+        AResumen := Format(SErrorKitSinTallasDefinidas, [ACodigoKit])
       else
       begin
         while not q.Eof do
@@ -1140,12 +1131,10 @@ begin
     begin
       Result := True;
       if sSinCasar <> '' then
-        AResumen := 'Tallas del kit sin correspondencia en el sistema ' +
-                    'de la linea (no aplicadas): ' + sSinCasar;
+        AResumen := Format(SAvisoTallasKitSinCorrespondencia, [sSinCasar]);
     end
     else if AResumen = '' then
-      AResumen := 'Ninguna talla del kit casa con el sistema de tallas ' +
-                  'de la linea.';
+      AResumen := SErrorTallasKitSinCorrespondencia;
   end;
 end;
 
@@ -1161,7 +1150,7 @@ begin
     Result := ValidarSesionDetallado(ADM, inc);
     if Result then AError := ''
     else if inc.Count > 0 then AError := inc[0]
-    else AError := 'Hay incidencias sin detalle.';
+    else AError := SErrorSesionIncidenciasSinDetalle;
   finally
     FreeAndNil(inc);
   end;
@@ -1178,9 +1167,10 @@ var
   var
     sLin: string;
   begin
-    if ALinea > 0 then sLin := Format('Linea %d', [ALinea])
-    else sLin := 'Cabecera';
-    AIncidencias.Add(Format('[%s] %s: %s', [ATipo, sLin, AMensaje]));
+    if ALinea > 0 then sLin := Format(STextoLineaIncidenciaSesion, [ALinea])
+    else sLin := STextoCabeceraIncidenciaSesion;
+    AIncidencias.Add(Format(SFormatoIncidenciaSesion,
+      [ATipo, sLin, AMensaje]));
   end;
 
 begin
@@ -1189,7 +1179,7 @@ begin
   AIncidencias.Clear;
   if ADM.unqryTablaG.IsEmpty then
   begin
-    AIncidencias.Add('[CABECERA] No hay sesion activa.');
+    AIncidencias.Add(SErrorSesionInactivaIncidencia);
     Exit(False);
   end;
 
@@ -1198,15 +1188,15 @@ begin
 
   // ---- Cabecera ----
   if Trim(ADM.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString) = '' then
-    AnadirInc(0, 'CABECERA', 'Falta CODIGO_EMP_SES (Empresa).');
+    AnadirInc(0, STipoIncidenciaCabecera, SErrorEmpresaSesionFaltante);
   if Trim(ADM.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString) = '' then
-    AnadirInc(0, 'CABECERA', 'Falta CODIGO_PRV_SES (Proveedor).');
+    AnadirInc(0, STipoIncidenciaCabecera, SErrorProveedorSesionFaltante);
   // Si la cabecera marca generar albaran, exigimos almacen
   if (ADM.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S')
      and (Trim(ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString) = '')
   then
-    AnadirInc(0, 'CABECERA',
-        'ESGENERA_ALBARAN=S pero no hay CODIGO_ALM_SES (Almacen).');
+    AnadirInc(0, STipoIncidenciaCabecera,
+        SErrorAlmacenSesionFaltante);
 
   q := TUniQuery.Create(nil);
   try
@@ -1220,7 +1210,7 @@ begin
     q.ParamByName('n').AsString := sNum;
     q.Open;
     if q.FieldByName('N').AsInteger = 0 then
-      AnadirInc(0, 'CABECERA', 'La sesion no tiene lineas.');
+      AnadirInc(0, STipoIncidenciaCabecera, SErrorSesionSinLineas);
     q.Close;
 
     // ---- Duplicados intra-sesion sin resolver (mismo CODIGO_ART_TENTATIVO
@@ -1262,10 +1252,8 @@ begin
     while not q.Eof do
     begin
       AnadirInc(q.FieldByName('LINEA_SESLIN').AsInteger,
-          'DUP_INTRA',
-          Format('Codigo %s repetido dentro de la sesion (primera vez en ' +
-                 'linea %d). Marca esta linea como REUSAR o cambia el ' +
-                 'codigo.',
+          STipoIncidenciaDuplicadoInterno,
+          Format(SErrorCodigoDuplicadoInternoSesion,
                  [q.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString,
                   q.FieldByName('PRIMERA').AsInteger]));
       q.Next;
@@ -1293,12 +1281,11 @@ begin
     while not q.Eof do
     begin
       AnadirInc(q.FieldByName('LINEA_SESLIN').AsInteger,
-          'DUPLICADO',
-          Format('Codigo %s ya existe en fza_articulos%s. ' +
-                 'Decide REUSAR o RENOMBRAR.',
+          STipoIncidenciaDuplicado,
+          Format(SErrorCodigoDuplicadoSesion,
                  [q.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString,
                   IfThen(q.FieldByName('ESACTIVO_ART').AsString = 'N',
-                         ' (inactivo)', '')]));
+                         STextoArticuloInactivoSesion, '')]));
       q.Next;
     end;
     q.Close;
@@ -1316,8 +1303,8 @@ begin
     while not q.Eof do
     begin
       AnadirInc(q.FieldByName('LINEA_SESLIN').AsInteger,
-          'CODIGO',
-          'La linea no tiene CODIGO_ART_TENTATIVO_SESLIN.');
+          STipoIncidenciaCodigo,
+          SErrorLineaSesionSinCodigo);
       q.Next;
     end;
     q.Close;
@@ -1336,8 +1323,8 @@ begin
     while not q.Eof do
     begin
       AnadirInc(q.FieldByName('LINEA_SESLIN').AsInteger,
-          'DESCRIPCION',
-          Format('Linea sin descripcion (codigo %s).',
+          STipoIncidenciaDescripcion,
+          Format(SErrorLineaSesionSinDescripcion,
                  [q.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString]));
       q.Next;
     end;
@@ -1362,8 +1349,8 @@ begin
     while not q.Eof do
     begin
       AnadirInc(q.FieldByName('LINEA_SESLIN').AsInteger,
-          'CANTIDADES',
-          Format('Linea MATRIZ sin cantidades por talla (codigo %s - %s).',
+          STipoIncidenciaCantidades,
+          Format(SErrorLineaMatrizSinCantidades,
                  [q.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString,
                   q.FieldByName('DESCRIPCION_SESLIN').AsString]));
       q.Next;
@@ -1384,8 +1371,8 @@ begin
     while not q.Eof do
     begin
       AnadirInc(q.FieldByName('LINEA_SESLIN').AsInteger,
-          'SISTEMA_TALLAS',
-          Format('Linea MATRIZ sin sistema de tallas (codigo %s).',
+          STipoIncidenciaSistemaTallas,
+          Format(SErrorLineaMatrizSinSistemaTallas,
                  [q.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString]));
       q.Next;
     end;

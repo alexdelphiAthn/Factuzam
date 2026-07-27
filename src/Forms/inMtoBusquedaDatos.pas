@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoBusquedaDatos                                            }
 {    Tipo:       Formulario (Mto)                                              }
@@ -27,7 +27,8 @@ uses
   Vcl.ActnList, Vcl.Dialogs, dxShellDialogs, JvComponentBase, JvEnterTab,
   cxLocalization, Vcl.StdCtrls, cxRadioGroup, cxNavigator, cxDBNavigator,
   Vcl.Buttons, cxGridCustomTableView, cxGridTableView, cxGridLevel, cxClasses,
-  cxGridCustomView, cxGrid, cxPC, inLibDocumentosTrabajo;
+  cxGridCustomView, cxGrid, cxPC, cxLookupEdit, cxDBLookupEdit,
+  cxDBLookupComboBox, inLibDocumentosTrabajo;
 
 type
   TfrmMtoBusquedaDatos = class(TfrmMtoSearch)
@@ -55,9 +56,11 @@ type
     lblFamilia: TcxLabel;
     cbbFamilia: TcxComboBox;
     lblProveedor: TcxLabel;
-    cbbProveedor: TcxComboBox;
+    cbbProveedor: TcxLookupComboBox;
     lblTemporada: TcxLabel;
     cbbTemporada: TcxComboBox;
+    unqryProveedoresBusqueda: TUniQuery;
+    dsProveedoresBusqueda: TDataSource;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnBuscarClick(Sender: TObject);
@@ -67,6 +70,7 @@ type
     procedure edtValorKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure cbbCampoPropertiesChange(Sender: TObject);
+    procedure cbbProveedorKeyPress(Sender: TObject; var Key: Char);
     procedure edtValorPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure cxGrdDBTabPrinColorCustomDrawCell(
@@ -79,10 +83,13 @@ type
     FPopupGridOriginal: TNotifyEvent;
     FTimerPrecarga: TTimer;
     FCronometroApertura: TStopwatch;
+    FBusquedaProveedor: string;
+    FInstanteBusquedaProveedor: UInt64;
     procedure InicializarListas;
     procedure CargarFiltrosPrecarga;
     procedure CargarCombo(ACombo: TcxComboBox; const ASQL,
       ACampoCodigo, ACampoNombre: string);
+    procedure SeleccionarProveedorPorInicio;
     procedure ActualizarInterfazCampo;
     procedure ActualizarColumnasColor;
     procedure ConfigurarMenuContextual;
@@ -103,6 +110,7 @@ type
       out ALinea: TDocTrabajoLineaOrigen;
       out AMensaje: string): Boolean;
     function CodigoCombo(ACombo: TcxComboBox): string;
+    function CodigoProveedor: string;
     procedure TimerPrecargaTimer(Sender: TObject);
   protected
     function DebeAjustarColumnasAutomaticamente: Boolean; override;
@@ -118,7 +126,7 @@ var
 implementation
 
 uses
-  inLibLog, inLibShowMto, inLibAtributosPaleta;
+  inLibLog, inLibShowMto, inLibAtributosPaleta, inLibMsg;
 
 {$R *.dfm}
 
@@ -173,9 +181,13 @@ begin
   inherited;
   unqryResultados.Connection := ConexionPrincipal;
   unqryResultados.ReadOnly := True;
+  unqryProveedoresBusqueda.Connection := ConexionPrincipal;
+  unqryProveedoresBusqueda.ReadOnly := True;
   dsTablaG.DataSet := unqryResultados;
   FColumnasCreadas := False;
   FAltoCriterios := pnlCriterios.Height;
+  FBusquedaProveedor := '';
+  FInstanteBusquedaProveedor := 0;
   InicializarListas;
   cxGrdDBTabPrin.FilterRow.Visible := True;
   cxGrdDBTabPrin.OptionsView.GroupByBox := True;
@@ -322,12 +334,14 @@ begin
     ' WHERE IFNULL(ESACTIVO_FAM, ''S'') = ''S'' ' +
     ' ORDER BY ORDEN_FAM, CODIGO_FAM_FAM',
     'COD', 'NOM');
-  CargarCombo(cbbProveedor,
-    'SELECT CODIGO_PRV_PRV AS COD, RAZON_SOCIAL_PRV AS NOM ' +
+  unqryProveedoresBusqueda.Close;
+  unqryProveedoresBusqueda.SQL.Text :=
+    'SELECT CODIGO_PRV_PRV, RAZON_SOCIAL_PRV ' +
     '  FROM fza_proveedores ' +
     ' WHERE IFNULL(ESACTIVO_PRV, ''S'') = ''S'' ' +
-    ' ORDER BY RAZON_SOCIAL_PRV, CODIGO_PRV_PRV',
-    'COD', 'NOM');
+    ' ORDER BY RAZON_SOCIAL_PRV, CODIGO_PRV_PRV';
+  unqryProveedoresBusqueda.Open;
+  cbbProveedor.EditValue := Null;
   CargarCombo(cbbTemporada,
     'SELECT PV AS COD, PV AS NOM ' +
     '  FROM fza_propiedades_valores ' +
@@ -387,7 +401,9 @@ begin
   cbbStock.ItemIndex := 1;
   cbbLimite.ItemIndex := 0;
   cbbFamilia.ItemIndex := 0;
-  cbbProveedor.ItemIndex := 0;
+  cbbProveedor.EditValue := Null;
+  FBusquedaProveedor := '';
+  FInstanteBusquedaProveedor := 0;
   cbbTemporada.ItemIndex := 0;
   chkDistinguirMayusculas.Checked := False;
   edtBusqGlobal.Clear;
@@ -399,6 +415,68 @@ end;
 procedure TfrmMtoBusquedaDatos.cbbCampoPropertiesChange(Sender: TObject);
 begin
   ActualizarInterfazCampo;
+end;
+
+procedure TfrmMtoBusquedaDatos.cbbProveedorKeyPress(Sender: TObject;
+  var Key: Char);
+const
+  INTERVALO_BUSQUEDA_MS = 1500;
+var
+  iInstanteActual: UInt64;
+begin
+  if Key = #8 then
+  begin
+    if FBusquedaProveedor <> '' then
+      Delete(FBusquedaProveedor, Length(FBusquedaProveedor), 1);
+    SeleccionarProveedorPorInicio;
+    Key := #0;
+  end
+  else if Key >= #32 then
+  begin
+    iInstanteActual := GetTickCount64;
+    if (iInstanteActual - FInstanteBusquedaProveedor) >
+       INTERVALO_BUSQUEDA_MS then
+      FBusquedaProveedor := '';
+    FBusquedaProveedor := FBusquedaProveedor + Key;
+    FInstanteBusquedaProveedor := iInstanteActual;
+    SeleccionarProveedorPorInicio;
+    Key := #0;
+  end;
+end;
+
+procedure TfrmMtoBusquedaDatos.SeleccionarProveedorPorInicio;
+var
+  sBusqueda: string;
+  sCodigo: string;
+  sCodigoEncontrado: string;
+  sNombre: string;
+begin
+  sBusqueda := FBusquedaProveedor;
+  sCodigoEncontrado := '';
+  if sBusqueda = '' then
+    cbbProveedor.EditValue := Null
+  else if unqryProveedoresBusqueda.Active then
+  begin
+    unqryProveedoresBusqueda.First;
+    while (not unqryProveedoresBusqueda.Eof) and
+          (sCodigoEncontrado = '') do
+    begin
+      sCodigo := Trim(unqryProveedoresBusqueda.FieldByName(
+                                           'CODIGO_PRV_PRV').AsString);
+      sNombre := Trim(unqryProveedoresBusqueda.FieldByName(
+                                         'RAZON_SOCIAL_PRV').AsString);
+      if SameText(Copy(sCodigo, 1, Length(sBusqueda)), sBusqueda) or
+         SameText(Copy(sNombre, 1, Length(sBusqueda)), sBusqueda) then
+        sCodigoEncontrado := sCodigo;
+      unqryProveedoresBusqueda.Next;
+    end;
+    if sCodigoEncontrado <> '' then
+    begin
+      cbbProveedor.EditValue := sCodigoEncontrado;
+      if not cbbProveedor.DroppedDown then
+        cbbProveedor.DroppedDown := True;
+    end;
+  end;
 end;
 
 procedure TfrmMtoBusquedaDatos.ActualizarInterfazCampo;
@@ -597,7 +675,7 @@ begin
   Result := True;
   sValor := Trim(edtValor.Text);
   sFamilia := CodigoCombo(cbbFamilia);
-  sProveedor := CodigoCombo(cbbProveedor);
+  sProveedor := CodigoProveedor;
   sTemporada := CodigoCombo(cbbTemporada);
   bProximidad := cbbCampo.ItemIndex = CAMPO_PROXIMIDAD_COLOR;
   if bProximidad then
@@ -606,8 +684,8 @@ begin
                                     iVerde, iAzul);
     if not Result then
     begin
-      MessageDlg('Indique un color de paleta válido por código, nombre ' +
-        'o HEX (#RRGGBB).', mtWarning, [mbOK], 0);
+      MessageDlg(SErrorColorPaletaBusquedaInvalido,
+        mtWarning, [mbOK], 0);
     end;
   end;
   if Result then
@@ -1005,6 +1083,11 @@ begin
     else
       Result := sTexto;
   end;
+end;
+
+function TfrmMtoBusquedaDatos.CodigoProveedor: string;
+begin
+  Result := Trim(VarToStr(cbbProveedor.EditValue));
 end;
 
 function TfrmMtoBusquedaDatos.ObtenerLimite: Integer;

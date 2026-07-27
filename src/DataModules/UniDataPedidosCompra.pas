@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       UniDataPedidosCompra                                          }
 {    Tipo:       Data Module                                                   }
@@ -132,7 +132,8 @@ uses
   inLibComprasImpuestos,
   inLibData,
   inLibArticulosValidador,
-  UniDataArticulos;
+  UniDataArticulos,
+  inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -565,7 +566,7 @@ begin
   if (unqryTablaG.FindField('CODIGO_ALM_PEDC') <> nil) and
      (Trim(unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString) = '') then
   begin
-    MessageDlg('Debe seleccionar el almacén destino del pedido de compra.',
+    MessageDlg(SAvisoAlmacenDestinoPedidoCompraObligatorio,
                mtWarning, [mbOk], 0);
     Abort;
   end;
@@ -629,9 +630,7 @@ begin
   sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
   sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
   if (sSerie = '') or (sNumero = '') then Exit;
-  if MessageDlg(Format('¿Borrar el pedido de compra %s / %s?' +
-                       sLineBreak +
-                       'Se eliminaran sus lineas y pendientes de recibir.',
+  if MessageDlg(Format(SPreguntaBorrarPedidoCompra,
                        [sSerie, sNumero]),
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
   begin
@@ -782,8 +781,7 @@ begin
           sNumero, sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
-        raise Exception.Create(
-          'Graba la cabecera del pedido antes de guardar lineas.');
+        raise Exception.Create(SErrorCabeceraPedidoSinGrabar);
       if DataSet.FindField('NUMERO_PEDC_PEDCLIN') <> nil then
         DataSet.FieldByName('NUMERO_PEDC_PEDCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_PEDC_PEDCLIN') <> nil then
@@ -1192,12 +1190,9 @@ begin
     sNumero := Trim(ParamByName('pcont').AsString);
     if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
        (iNumero <= 0) then
-      raise Exception.Create(
-        'No se pudo obtener un numero de pedido de compra valido. ' +
-        'Revise el contador PC de la serie ' +
-        unqryTablaG.FieldByName('SERIE_PEDC').AsString +
-        ' y empresa ' +
-        unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString + '.');
+      raise Exception.Create(Format(SErrorContadorPedidoCompra,
+        [unqryTablaG.FieldByName('SERIE_PEDC').AsString,
+         unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString]));
     unqryTablaG.FieldByName('NUMERO_PEDC').AsString := sNumero;
   end;
 end;

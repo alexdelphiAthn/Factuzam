@@ -232,3 +232,39 @@ vistas_importadas=97
 rutinas_importadas=76
 sha256=4F2506B24F09CEF1A374CDB70DEAF77CB87E0E7F395623066387C583D0E90140
 
+Regeneracion temporal factuzam_demo.sql
+Fecha: 2026-07-27 20:17:56
+backup_previo=factuzam_demo.sql.bak-antes-regenerar-20260727-201756
+origen=factuzam_original.sql (backup 27/07/2026 12:36:48)
+tablas_original=144
+tablas_demo_previa=144
+tablas_con_insert_demo=108
+tablas_original_con_insert_sin_insert_demo=4
+- original_data_no_copiada=fza_albaranes_celdas
+- original_data_no_copiada=fza_documentos_trabajo_celdas
+- original_data_no_copiada=fza_pedidos_celdas
+- original_data_no_copiada=fza_ventas_ws_cola
+tablas_con_cambio_estructural=1
+- tabla_actualizada=fza_movimientos_almacen
+- columna_nueva=CLAVE_FCVE_MOV
+- indice_nuevo=UX_MOV_CLAVE_FCVE
+vistas_con_cambio_estructural=0
+procedimientos_con_cambio_estructural=0
+indices_integrados_en_create_table=250
+tablas_actualizadas_con_indices=94
+alter_add_index_restantes=0
+current_timestamp_parentesis_ejecutable=0
+create_or_replace_table_ejecutable=0
+vistas_union_corregidas=fza_caja_depositos_view,vi_atributos_sku_basico,vi_caja_busqueda_unificada,viest_dia
+insert_statements=160
+insert_hashes_preserved=True
+max_insert_bytes=131179
+insert_grande_mayor_512k=0
+importacion_temporal_mariadb_local_12_3=OK
+tablas_importadas=144
+vistas_importadas=97
+rutinas_importadas=76
+columna_fcve_importada=1
+indice_fcve_importado=1
+sha256=B1E30B8F48C54CBFC887CC6BFD2895D940247DD6E46AA5045BE49019190E4CA4
+

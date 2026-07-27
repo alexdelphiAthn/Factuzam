@@ -78,8 +78,7 @@ class function TBusquedaUtils.EjecutarBusqueda(AConexion: TUniConnection;
   AParentForm: TCustomForm): Boolean;
 begin
   if not Assigned(FClaseEjecutor) then
-    raise Exception.Create(
-      'No se ha registrado el ejecutor de búsquedas genéricas.');
+    raise Exception.Create(SErrorEjecutorBusquedasNoRegistrado);
   Result := FClaseEjecutor.EjecutarBusqueda(
     AConexion, ACaption, ADataSet, AName, AParentForm);
 end;
@@ -90,8 +89,7 @@ class function TBusquedaUtils.EjecutarBusqueda(AConexion: TUniConnection;
   AParentForm: TCustomForm): Boolean;
 begin
   if not Assigned(FClaseEjecutor) then
-    raise Exception.Create(
-      'No se ha registrado el ejecutor de búsquedas genéricas.');
+    raise Exception.Create(SErrorEjecutorBusquedasNoRegistrado);
   Result := FClaseEjecutor.EjecutarBusqueda(
     AConexion, ACaption, ASql, ACampoResultado, AValorDevuelto, AName,
     AParentForm);

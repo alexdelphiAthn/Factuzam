@@ -723,7 +723,8 @@ uses
   inLibDir,
   inLibtb,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
-  inLibColumnasSku;
+  inLibColumnasSku, inLibColumnasDocumento,
+  inLibPresentacionDocumento;
 
 {$R *.dfm}
 
@@ -1077,10 +1078,8 @@ end;
 procedure TfrmMtoFacturasBase.btnIraArticuloClick(Sender: TObject);
 begin
   inherited;
-  with tvLineasFactura.DataController.DataSet do
-  ShowMto(Self.Owner,
-          'Articulos',
-          FieldByName(fcodart).AsString);
+  ShowMtoCodigoDataSet(Self.Owner, 'Articulos',
+    tvLineasFactura.DataController.DataSet, fcodart);
 end;
 
 procedure TfrmMtoFacturasBase.actArticuloExecute(Sender: TObject);
@@ -1107,24 +1106,17 @@ end;
 procedure TfrmMtoFacturasBase.actMovimientoExecute(Sender: TObject);
 var
   ds: TDataSet;
-  sNumMov: string;
 begin
   inherited;
   // Ctrl+M: ir al movimiento de almacen seleccionado en la pestaña
   // Movimientos. Navegamos a 'MovimientosAlmacen' por PK (NUMERO_MOV) via
   // ShowMto. Fuera de esa pestaña, abrimos el listado sin localizar.
-  sNumMov := '';
+  ds := nil;
   if (pcDetail.ActivePage = tsMovimientosFac) and
      Assigned(tvMovimientosFac.DataController.DataSet) then
-  begin
     ds := tvMovimientosFac.DataController.DataSet;
-    if ds.Active and (not ds.IsEmpty) then
-      sNumMov := Trim(ds.FieldByName('NUMERO_MOV').AsString);
-  end;
-  if sNumMov <> '' then
-    ShowMto(Self.Owner, 'MovimientosAlmacen', sNumMov)
-  else
-    ShowMto(Self.Owner, 'MovimientosAlmacen');
+  ShowMtoCodigoDataSet(Self.Owner, 'MovimientosAlmacen',
+    ds, 'NUMERO_MOV');
 end;
 
 procedure TfrmMtoFacturasBase.ActualizarComboSeries;
@@ -2710,11 +2702,9 @@ begin
   begin
     FActualizandoLabelPrendas := True;
     try
-      if (dmmFacturas <> nil) and Assigned(dmmFacturas.unqryTablaG) and
-         dmmFacturas.unqryTablaG.Active and
-         (not dmmFacturas.unqryTablaG.IsEmpty) then
-        lblTotalPrendasFactura.Caption :=
-          FormatFloat('#,##0', dmmFacturas.TotalPrendasFactura)
+      if Assigned(dmmFacturas) then
+        lblTotalPrendasFactura.Caption := TextoTotalPrendasDocumento(
+          dmmFacturas.unqryTablaG, dmmFacturas.TotalPrendasFactura)
       else
         lblTotalPrendasFactura.Caption := '0';
     finally
@@ -2956,19 +2946,17 @@ end;
 procedure TfrmMtoFacturasBase.btnIrAClienteClick(Sender: TObject);
 begin
   inherited;
-    with cxGrdDBTabPrin.DataController.DataSet do
-  ShowMto(Self.Owner,
-          'Clientes',
-          FieldByName('CODIGO_CLI_FAC').AsString);
+  ShowMtoCodigoDataSet(Self.Owner, 'Clientes',
+    cxGrdDBTabPrin.DataController.DataSet,
+    'CODIGO_CLI_FAC');
 end;
 
 procedure TfrmMtoFacturasBase.btnIrAEmpresaClick(Sender: TObject);
 begin
   inherited;
-  ShowMto(Self.Owner,
-          'Empresas',
-          cxGrdDBTabPrin.DataController.DataSet.FieldByName(
-                                            'CODIGO_EMP_FAC').AsString);
+  ShowMtoCodigoDataSet(Self.Owner, 'Empresas',
+    cxGrdDBTabPrin.DataController.DataSet,
+    'CODIGO_EMP_FAC');
 end;
 
 procedure TfrmMtoFacturasBase.
@@ -3515,7 +3503,6 @@ procedure TfrmMtoFacturasBase.ConstruirModoEntrada;
 var
   Cfg: TConfigColumnasSku;
   CfgPV: TGridPivoteVentaConfig;
-  i: Integer;
   ds: TDataSet;
   bClasico: Boolean;
 begin
@@ -3573,31 +3560,18 @@ begin
       // (columnas reales _FACLIN; idempotente por linea).
       if FModoEntradaSel <> mcsSku then
         dmmFacturas.DesempaquetarAtributosLineas;
-      Cfg := Default(TConfigColumnasSku);
-      Cfg.Conexion := dmmFacturas.unqryTablaG.Connection;
-      Cfg.ContextoSesion := ContextoSesion;
-      Cfg.View := tvLineasFactura;
-      Cfg.Cds := ds;
-      Cfg.Modo := FModoEntradaSel;
-      if dmmFacturas.unqryTablaG.FindField('CODIGO_ALM_FAC') <> nil then
-        Cfg.AlmacenStock := Trim(dmmFacturas.unqryTablaG.
-          FieldByName('CODIGO_ALM_FAC').AsString);
-      Cfg.Distribuido := False;
+      Cfg := CrearConfigColumnasSkuDocumento(
+        dmmFacturas.unqryTablaG.Connection, ContextoSesion,
+        tvLineasFactura, ds, FModoEntradaSel, '', 'FACLIN');
+      if dmmFacturas.unqryTablaG.FindField(
+        'CODIGO_ALM_FAC') <> nil then
+        Cfg.AlmacenStock := Trim(
+          dmmFacturas.unqryTablaG.FieldByName(
+            'CODIGO_ALM_FAC').AsString);
       // La venta mayor factura tambien articulos fuera de catalogo:
       // el modo acepta el codigo tecleado como linea libre (sin SKU).
       Cfg.AceptarNoCatalogo := EsVentaMayorNormal;
-      Cfg.Campos.CodigoArt := 'CODIGO_ART_FACLIN';
-      Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_FACLIN';
-      Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_FACLIN';
-      Cfg.Campos.Cantidad := 'CANTIDAD_FACLIN';
-      Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_FACLIN';
-      for i := 1 to 5 do
-      begin
-        Cfg.Campos.AttrValor[i] :=
-          'ATTR' + IntToStr(i) + '_VALOR_FACLIN';
-        Cfg.Campos.AttrNombre[i] :=
-          'ATTR' + IntToStr(i) + '_NOMBRE_FACLIN';
-      end;
+      Cfg.Campos.Almacen := '';
       // Precio por SKU para la consolidacion VISUAL del modo tallas:
       // filas con precio distinto no fusionan.
       Cfg.ObtenerPrecioSku := PrecioSkuTallas;
@@ -3674,6 +3648,7 @@ procedure TfrmMtoFacturasBase.CrearColumnasHostFactura(bClasico: Boolean);
   end;
 var
   bTallas: Boolean;
+  ctbVendedorLinea: TcxGridDBColumn;
 begin
   // Columnas propias del documento tras el ClearItems del contrato. Se
   // REASIGNAN las referencias ctb* del dfm para que la logica existente
@@ -3681,6 +3656,10 @@ begin
   // siga funcionando sobre las columnas recreadas.
   bTallas := (not bClasico) and (FModoEntradaSel = mcsTallasHorPed);
   ctbLINEA_FACTURA_LINEA := Col('Nro Linea', 'LINEA_FACLIN', 60, False);
+  ctbVendedorLinea := nil;
+  if SameText(TipoFacturaFiltro, 'SIMPLIFICADA') then
+    ctbVendedorLinea := Col('Vendedor', 'CODIGO_VENDEDOR_FACLIN',
+                            90, False);
   if bClasico then
   begin
     // Articulo + SKU clasicos con sus handlers de siempre (alta de
@@ -3922,44 +3901,14 @@ begin
   // Orden normal del documento: la LINEA delante del bloque de articulo
   // que creo el modo (las columnas del host nacen detras).
   ctbLINEA_FACTURA_LINEA.Index := 0;
+  if Assigned(ctbVendedorLinea) then
+    ctbVendedorLinea.Index := 1;
 end;
 
 procedure TfrmMtoFacturasBase.MostrarColumnasAtributoGlobalesFac;
-var
-  Qry: TUniQuery;
-  i, iOrden: Integer;
-  Col: TcxGridColumn;
 begin
-  // Nombres globales de atributos para ver Color/Talla desde el
-  // principio (mismo helper que pedidos / inventarios / DTR).
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := dmmFacturas.unqryTablaG.Connection;
-    Qry.SQL.Text :=
-      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
-      '       MIN(ORDEN_VA) AS ORDEN' +
-      '  FROM fza_variaciones_atributos' +
-      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
-      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
-    Qry.Open;
-    iOrden := 1;
-    while (not Qry.Eof) and (iOrden <= 5) do
-    begin
-      for i := 0 to tvLineasFactura.ColumnCount - 1 do
-      begin
-        Col := tvLineasFactura.Columns[i];
-        if Col.Tag = iOrden then
-        begin
-          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
-          Col.Visible := True;
-        end;
-      end;
-      Inc(iOrden);
-      Qry.Next;
-    end;
-  finally
-    FreeAndNil(Qry);
-  end;
+  MostrarColumnasAtributoGlobalesDocumento(
+    dmmFacturas.unqryTablaG.Connection, tvLineasFactura);
 end;
 
 procedure TfrmMtoFacturasBase.ModoEntradaResuelto(const ACodArt, ASku,

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataMovimientosAlmacen                                     }
 {    Tipo:       Data Module                                                   }
@@ -37,6 +37,9 @@ type
 
 implementation
 
+uses
+  inLibMsg;
+
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
@@ -45,10 +48,7 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TdmMovimientosAlmacen.BloquearEdicion(const aOp: string);
 begin
-  ShowMessage(
-    'No se permite ' + aOp + ' movimientos de almacén manualmente.' + #13#10 +
-    'Usa el proceso correspondiente (albarán, factura, traspaso, ' +
-    'regularización de inventario...).');
+  ShowMessage(Format(SAvisoEdicionMovimientoAlmacen, [aOp]));
   Abort;
 end;
 

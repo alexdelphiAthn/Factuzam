@@ -167,7 +167,7 @@ var
 implementation
 
 uses
-  inLibLog;
+  inLibLog, inLibMsg;
 
 {$R *.dfm}
 {$R CXLOCALIZATION.res}
@@ -442,16 +442,14 @@ end;
 function TfrmBase.GetIdentidadSesion: TIdentidadSesion;
 begin
   if not Assigned(FContextoSesion) then
-    raise Exception.Create(
-      'No se ha configurado el contexto de sesión del formulario.');
+    raise Exception.Create(SErrorContextoSesionFormularioNoConfigurado);
   Result := FContextoSesion.Identidad;
 end;
 
 function TfrmBase.GetUbicacionSesion: TUbicacionSesion;
 begin
   if not Assigned(FContextoSesion) then
-    raise Exception.Create(
-      'No se ha configurado el contexto de sesión del formulario.');
+    raise Exception.Create(SErrorContextoSesionFormularioNoConfigurado);
   Result := FContextoSesion.Ubicacion;
 end;
 
@@ -492,8 +490,7 @@ begin
   if Assigned(FAuditoriaDatos) then
     FAuditoriaDatos.Actualizar(DataSet)
   else if not (csDesigning in ComponentState) then
-    raise Exception.Create(
-      'No se ha configurado el servicio de auditoría de datos.');
+    raise Exception.Create(SErrorServicioAuditoriaDatosNoConfigurado);
 end;
 
 procedure TfrmBase.CerrarMonitorSQLPendiente;

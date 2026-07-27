@@ -23,6 +23,8 @@ uses
   inLibContextoSesionIntf, inLibParametrosIntf;
 
 type
+  TTipoRectificativaCaja = (trcNinguna, trcDiferencias, trcSustitutiva);
+
   TDatosCabeceraFactura = record
     // identificación
     Fecha:               TDateTime;
@@ -118,6 +120,7 @@ type
     PorcIva:             Double;
     TotalSIva:           Currency;
     TotalCIva:           Currency;
+    Vendedor:            string;
     // campos de depósito
     VieneDeDeposito:     string;   // 'S', 'A', ''
     AccionDeposito:      string;   // 'COBRAR', 'NUEVO_DEP', 'AUMENTAR_DEP', ...
@@ -353,7 +356,12 @@ type
                                                           'SIMPLIFICADA';
                                      AFechaFactura: TDateTime = 0;
                                      AFechaOperacion: TDateTime = 0;
-                                     const ANumeroManual: string = ''): Boolean;
+                                     const ANumeroManual: string = '';
+                                     ATipoRectificativa:
+                                       TTipoRectificativaCaja = trcNinguna;
+                                     const ASerieRectificada: string = '';
+                                     const ANumeroRectificado: string = ''):
+                                       Boolean;
     property OnUpdateTotal: TOnUpdateTotalEvent read FOnUpdateTotal
                                                 write FOnUpdateTotal;
     property OnRellenarArticulo:  TRellenarArticuloEvent
@@ -580,6 +588,7 @@ begin
     Result.PorcIva             := FieldByName('PORCENTAJE_IVA_FACLIN').AsFloat;
     Result.TotalSIva := FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency;
     Result.TotalCIva           := FieldByName('TOTAL_FACLIN').AsCurrency;
+    Result.Vendedor := FieldByName('CODIGO_VENDEDOR_FACLIN').AsString;
     Result.VieneDeDeposito     := FieldByName('VIENE_DE_DEPOSITO').AsString;
     Result.AccionDeposito      := FieldByName('ACCION_DEPOSITO').AsString;
     Result.PrecioOriginalDep   := FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency;
@@ -1192,7 +1201,11 @@ function TdmCajaOpe.GrabarFacturaSimplificada(
                           const ATipoFactura: string = 'SIMPLIFICADA';
                           AFechaFactura: TDateTime = 0;
                           AFechaOperacion: TDateTime = 0;
-                          const ANumeroManual: string = ''): Boolean;
+                          const ANumeroManual: string = '';
+                          ATipoRectificativa:
+                            TTipoRectificativaCaja = trcNinguna;
+                          const ASerieRectificada: string = '';
+                          const ANumeroRectificado: string = ''): Boolean;
 var
   QryTrx:              TUniQuery;
   uspQryTrx:           TUniStoredProc;
@@ -1211,6 +1224,8 @@ var
   TieneDepositosPendientes:boolean;
   TotalVentasNormales, TotalDevolucionesNormales: Currency;
   FechaOperacion: TDateTime;
+  sConceptoOperacion: string;
+  sTipoRectificativaFiscal: string;
   // ---------------------------------------------------------------------------
   // Inserta línea fiscal de anticipo (Solo si hay factura)
   // ---------------------------------------------------------------------------
@@ -1231,7 +1246,7 @@ procedure InsertarLineaAnticipo(const Lin: TDatosLineaFactura;
       Lin.Descripcion, '', '', '', 'SERVICIO', 'Uds',
       1, '', 'S', PrecioBase, 0, 0, PrecioBase, AImporte,
       Lin.TipoIva, Lin.PorcIva, PrecioBase, AImporte,
-      UsuarioCaja, AEmpresa, AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
+      Lin.Vendedor, AEmpresa, AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
   end;
 
 begin
@@ -1242,6 +1257,28 @@ begin
   ValeGenerado   := '';
   FechaOperacion := FechaCajaConHora(AFechaOperacion);
   UsuarioCaja     := cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString;
+  case ATipoRectificativa of
+    trcDiferencias:
+      begin
+        sConceptoOperacion := 'Rectificativa por diferencias';
+        sTipoRectificativaFiscal := 'I';
+      end;
+    trcSustitutiva:
+      begin
+        sConceptoOperacion := 'Rectificativa sustitutiva';
+        sTipoRectificativaFiscal := 'S';
+      end;
+  else
+    begin
+      sConceptoOperacion := '';
+      sTipoRectificativaFiscal := '';
+    end;
+  end;
+  if (sConceptoOperacion <> '') and
+     (Trim(ASerieRectificada) <> '') and
+     (Trim(ANumeroRectificado) <> '') then
+    sConceptoOperacion := sConceptoOperacion + ' de ' +
+      ASerieRectificada + '\' + ANumeroRectificado;
   // Generamos el número global de caja que agrupará toda la operación
   AlmacenDeposito := ObtenerAlmacenDepositoEmpresa(FConexion, AEmpresa);
   if cdsCabecera.State in [dsEdit, dsInsert] then cdsCabecera.Post;
@@ -1463,6 +1500,9 @@ begin
       while not cdsLineas.Eof do
       begin
         Lin := LeerLineaActual(cdsLineas);
+        Lin.Vendedor := Trim(Lin.Vendedor);
+        if Lin.Vendedor = '' then
+          Lin.Vendedor := UsuarioCaja;
         // -------------------------------------------------------------------
         // CASO A: ABONO DE ANTICIPO PREVIO
         // -------------------------------------------------------------------
@@ -1476,7 +1516,7 @@ begin
               Lin.Cantidad, Lin.Tarifa, Lin.EsImpIncl, Lin.PrecioSalida,
               Lin.PorcDto, Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva,
               Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva,
-              UsuarioCaja, AEmpresa, AAlmacen, ACaja, NumOperacionVE, '',
+              Lin.Vendedor, AEmpresa, AAlmacen, ACaja, NumOperacionVE, '',
               UsuarioCaja);
           if Abs(Lin.TotalCIva) > 0.001 then
             InsertarOperacionCaja(
@@ -1581,7 +1621,7 @@ begin
             Lin.Cantidad,
             Lin.Tarifa, Lin.EsImpIncl, Lin.PrecioSalida, Lin.PorcDto,
             Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva, Lin.TipoIva,
-            Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, UsuarioCaja, AEmpresa,
+            Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, Lin.Vendedor, AEmpresa,
             AAlmacen, ACaja, NumOperacionVE, NumMovGenerado, UsuarioCaja);
         end;
         if Lin.TipoArticulo = 'ESTANDAR' then
@@ -1622,17 +1662,27 @@ begin
     begin
       // Solo registra operación si realmente hubo alguna venta de tienda normal
       if TotalVentasNormales > 0 then
+      begin
+        if ATipoRectificativa = trcNinguna then
+          sConceptoOperacion := 'Venta';
         InsertarOperacionCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE',
           TotalVentasNormales, UsuarioCaja, FechaOperacion, NumFactura,
           SerieGenerada,
-          Cab.CodigoCliente, 'Venta');
+          Cab.CodigoCliente, sConceptoOperacion, ASerieRectificada,
+          ANumeroRectificado);
+      end;
       if TotalDevolucionesNormales > 0 then
+      begin
+        if ATipoRectificativa = trcNinguna then
+          sConceptoOperacion := 'Devolución de Venta';
         InsertarOperacionCaja(
           QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DV',
           -TotalDevolucionesNormales, UsuarioCaja, FechaOperacion, NumFactura,
           SerieGenerada,
-          Cab.CodigoCliente, 'Devolución de Venta');
+          Cab.CodigoCliente, sConceptoOperacion, ASerieRectificada,
+          ANumeroRectificado);
+      end;
     end;
     // =======================================================================
     // PASO 4.6: REGISTRO FISCAL
@@ -1642,18 +1692,38 @@ begin
     // =======================================================================
     if RequiereFactura then
     begin
-      case ModoVerifactu(FParametrosApp) of
-        mvVerifactu:
-          TVerifactuCola.EncolarFactura(FParametrosApp, FParametrosCaja,
-            QryTrx, IdentidadSesion.Usuario, SerieGenerada, NumFactura);
-        mvNoVerifactu:
-          TVerifactuCola.RegistrarFacturaNoVerifactu(FParametrosApp,
+      if SameText(ATipoFactura, 'RECTIFICATIVA') then
+      begin
+        if (Trim(ASerieRectificada) = '') or
+           (Trim(ANumeroRectificado) = '') then
+          raise Exception.Create(
+            'La rectificativa no tiene factura original asociada.');
+        TVerifactuCola.EncolarRectificativa(
+          FParametrosApp,
+          FParametrosCaja,
+          FConexion,
+          IdentidadSesion.Usuario,
+          ASerieRectificada,
+          ANumeroRectificado,
+          SerieGenerada,
+          NumFactura,
+          sTipoRectificativaFiscal);
+      end
+      else
+      begin
+        case ModoVerifactu(FParametrosApp) of
+          mvVerifactu:
+            TVerifactuCola.EncolarFactura(FParametrosApp, FParametrosCaja,
+              QryTrx, IdentidadSesion.Usuario, SerieGenerada, NumFactura);
+          mvNoVerifactu:
+            TVerifactuCola.RegistrarFacturaNoVerifactu(FParametrosApp,
+              FParametrosCaja, QryTrx, IdentidadSesion.Usuario,
+              SerieGenerada, NumFactura);
+        else
+          TVerifactuCola.MarcarFacturaSinVerifactu(FParametrosApp,
             FParametrosCaja, QryTrx, IdentidadSesion.Usuario,
             SerieGenerada, NumFactura);
-      else
-        TVerifactuCola.MarcarFacturaSinVerifactu(FParametrosApp,
-          FParametrosCaja, QryTrx, IdentidadSesion.Usuario,
-          SerieGenerada, NumFactura);
+        end;
       end;
     end;
     // =======================================================================

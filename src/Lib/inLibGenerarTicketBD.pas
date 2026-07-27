@@ -64,7 +64,7 @@ implementation
 
 uses
   inLibVerifactu, inLibFormatoDocumento, inLibGenerarTicket,
-  inLibPreviewTicket;
+  inLibPreviewTicket, inLibMsg;
 
 // Función auxiliar para rellenar con ceros (LPAD)
 function LPAD(const AValue: string;
@@ -472,8 +472,7 @@ begin
     QryCab.ParamByName('OP').AsString   := ANumeroOperacion;
     QryCab.Open;
     if QryCab.IsEmpty then
-      raise Exception.Create('No se ha encontrado la operación en la caja ' +
-                             'especificada.');
+      raise Exception.Create(SErrorOperacionCajaNoEncontrada);
     FechaOperacion :=
       QryCab.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime;
     if (Frac(FechaOperacion) = 0) and

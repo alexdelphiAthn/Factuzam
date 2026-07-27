@@ -40,7 +40,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibtb, inLibLog, System.Diagnostics;
+uses inLibtb, inLibLog, System.Diagnostics, inLibMsg;
 
 {$R *.dfm}
 
@@ -83,16 +83,14 @@ begin
     if (sCodigo = '') or
        SimbolosProhibidos(sCodigo, PerfilesUsuario) then
     begin
-      ShowMessageFmt('%s no es un valor de registro válido ' +
-                                                  'para el campo Código de IVA',
-                                                                     [sCodigo]);
+      ShowMessageFmt(SErrorCodigoIva, [sCodigo]);
       bError := True;
     end;
     if ((FindField('IVA_IVAGRP').AsString = '0') or
         (not ExisteGrupoZonaIVA(FindField('IVA_IVAGRP').AsString))) then
     begin
-      ShowMessageFmt('%s no es un valor válido o no existe para grupo de IVAS',
-                                        [FindField('IVA_IVAGRP').AsString]);
+      ShowMessageFmt(SErrorGrupoIvaNoExiste,
+                     [FindField('IVA_IVAGRP').AsString]);
       bError := True;
     end;
     if (not(bError)) then
@@ -115,12 +113,8 @@ begin
                                     FindField('FECHA_DESDE_IVA'),
                                     FindField('FECHA_HASTA_IVA')))) then
         begin
-          raise ERangeError.CreateFmt('Error de Rango en las fechas. ' +
-                                 'Error en la fecha.' + 'O se han establecido'+
-                                 ' dos periodos activos en el mismo periodo' +
-                                 ' para la zona %s',
-                                  [FindField(
-                                    'DESCRIPCION_IVA_IVAGRP').AsString]);
+          raise ERangeError.CreateFmt(SErrorRangoFechasIva,
+            [FindField('DESCRIPCION_IVA_IVAGRP').AsString]);
         end;
       end;
       if (assigned(unqrySol)) then

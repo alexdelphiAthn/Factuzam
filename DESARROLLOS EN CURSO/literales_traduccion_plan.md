@@ -95,18 +95,18 @@ Estados permitidos: `PENDIENTE`, `EN CURSO`, `COMPILADO`, `PROBADO` y
 | Tanda | Alcance | Candidatos | Estado |
 |---|---|---:|---|
 | M00 | `src/Core/inMtoLogon.pas` | Piloto | COMPILADO |
-| M01 | Core, excepto Logon | 38 | PENDIENTE |
-| M02 | DataModules `UniDataA*` a `UniDataC*` | 33 | PENDIENTE |
-| M03 | DataModules `UniDataD*` a `UniDataF*` | 78 | PENDIENTE |
-| M04 | DataModules `UniDataG*` a `UniDataM*` | 37 | PENDIENTE |
-| M05 | Resto de DataModules | 33 | PENDIENTE |
-| M06 | Lib `inLibA*` a `inLibD*` | 60 | PENDIENTE |
-| M07 | Lib `inLibE*` a `inLibH*` | 29 | PENDIENTE |
-| M08 | Lib `inLibI*` a `inLibP*` y resto intermedio | 17 | PENDIENTE |
-| M09 | Lib `inLibQ*` a `inLibZ*` | 36 | PENDIENTE |
-| M10 | `Lib3par` propia y `verifactu` | 47 | PENDIENTE |
-| M11 | Forms `inMtoA*` a `inMtoB*` | 52 | PENDIENTE |
-| M12 | Forms `inMtoC*` | 53 | PENDIENTE |
+| M01 | Core, excepto Logon | 42 | COMPILADO |
+| M02 | DataModules `UniDataA*` a `UniDataC*` | 36 | COMPILADO |
+| M03 | DataModules `UniDataD*` a `UniDataF*` | 81 | COMPILADO |
+| M04 | DataModules `UniDataG*` a `UniDataM*` | 38 | COMPILADO |
+| M05 | Resto de DataModules | 35 | COMPILADO |
+| M06 | Lib `inLibA*` a `inLibD*` | 94 | COMPILADO |
+| M07 | Lib `inLibE*` a `inLibH*` | 94 | COMPILADO |
+| M08 | Lib `inLibI*` a `inLibP*` y resto intermedio | 51 | COMPILADO |
+| M09 | Lib `inLibQ*` a `inLibZ*` | 157 | COMPILADO |
+| M10 | `Lib3par` propia y `verifactu` | 53 | COMPILADO |
+| M11 | Forms `inMtoA*` a `inMtoB*` | 69 | COMPILADO |
+| M12 | Forms `inMtoC*` | 57 | COMPILADO |
 | M13 | Forms `inMtoD*` a `inMtoE*` | 58 | PENDIENTE |
 | M14 | Forms `inMtoF*` | 77 | PENDIENTE |
 | M15 | Forms `inMtoG*` a `inMtoI*` | 77 | PENDIENTE |
@@ -257,6 +257,18 @@ test; si solo compila, el estado permanece en `COMPILADO`.
 | Fecha | Tanda | Build | Auditoría estática | Smoke test | Incidencias |
 |---|---|---|---|---|---|
 | 27/07/2026 | M00 | Win32 Debug OK | Sin literales en diálogos | No ejecutado | Ninguna |
+| 27/07/2026 | M01 | Win32 Debug OK | 42 revisados; 0 directos | No ejecutado | Un hint previo |
+| 27/07/2026 | M02 | Win32 Debug OK | 36 revisados; 0 directos | No ejecutado | Un hint previo |
+| 27/07/2026 | M03 | Win32 Debug OK | 81 revisados; 0 directos | No ejecutado | Un hint previo |
+| 27/07/2026 | M04 | Win32 Debug OK | 38 revisados; 0 directos | No ejecutado | Un hint previo |
+| 27/07/2026 | M05 | Win32 Debug OK | 35 revisados; 0 directos | No ejecutado | Un hint previo |
+| 27/07/2026 | M06 | Win32 Debug OK | 94 revisados; 0 directos | No ejecutado | Un hint previo |
+| 27/07/2026 | M07 | Win32 Debug OK | 94 revisados; 0 directos | No ejecutado | Un hint previo |
+| 27/07/2026 | M08 | Win32 Debug OK | 51 revisados; 0 directos | No ejecutado | Un hint previo |
+| 27/07/2026 | M09 | Win32 Debug OK | 157 revisados; 0 directos | No ejecutado | Un hint previo |
+| 27/07/2026 | M10 | Win32 Debug OK | 53 revisados; 0 directos | No ejecutado | Un hint previo |
+| 27/07/2026 | M11 | Win32 Debug OK | 69 revisados; 0 directos | No ejecutado | Un hint previo |
+| 27/07/2026 | M12 | Win32 Debug OK | 57 revisados; 0 directos | No ejecutado | Un hint previo |
 
 ## Criterio de finalización
 

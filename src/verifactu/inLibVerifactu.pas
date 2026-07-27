@@ -175,7 +175,7 @@ uses
   Vcl.Imaging.pngimage,
   DelphiZXIngQRCode, frxDBSet,
   inLibGlobalVar, inLibFotos, inLibXades,
-  inLibRelojFiscal, inLibVerifactuInstalacion;
+  inLibMsg, inLibRelojFiscal, inLibVerifactuInstalacion;
 
 const
   cNsEventosSif =
@@ -342,8 +342,8 @@ begin
   ADatos.CodigoSifInstalacion := '';
   ADatos.EsMultiOT := 'N';
   if Length(ADatos.NifProductor) <> 9 then
-    raise Exception.Create('Parámetro appVerifactuSifNif vacío o no ' +
-      'válido: "' + ADatos.NifProductor + '".');
+    raise Exception.CreateFmt(SErrorNifProductorEventoVerifactuInvalido,
+      [ADatos.NifProductor]);
   Qry := TUniQuery.Create(nil);
   try
     Qry.Connection := AConn;
@@ -359,8 +359,7 @@ begin
       ' LIMIT 1';
     Qry.Open;
     if Qry.IsEmpty then
-      raise Exception.Create('No hay empresa configurada para registrar ' +
-        'eventos Verifactu.');
+      raise Exception.Create(SErrorEmpresaEventosVerifactuNoConfigurada);
     ADatos.NombreObligado :=
       Trim(Qry.FieldByName('RAZON_SOCIAL_EMP').AsString);
     ADatos.NifObligado := NormalizarNifVerifactu(
@@ -381,8 +380,8 @@ begin
     FreeAndNil(Qry);
   end;
   if Length(ADatos.NifObligado) <> 9 then
-    raise Exception.Create('NIF de la empresa emisora vacío o no válido ' +
-      'para firmar eventos NO VERI*FACTU: "' + ADatos.NifObligado + '".');
+    raise Exception.CreateFmt(SErrorNifEmisorEventoNoVerifactuInvalido,
+      [ADatos.NifObligado]);
   ValidarInstalacionSif(ADatos.IdInstalacion,
                         ADatos.VersionInstalacion,
                         ADatos.CodigoSifInstalacion,
@@ -654,8 +653,8 @@ begin
       Qry.ParamByName('NUMERO').AsString := ANumero;
       Qry.Open;
       if Qry.IsEmpty then
-        raise Exception.Create('No existe la factura ' + ASerie + '\' +
-          ANumero + ' para validar sus requisitos fiscales.');
+        raise Exception.CreateFmt(SErrorFacturaRequisitosFiscalesNoExiste,
+          [ASerie, ANumero]);
       sCodigoEmpresa :=
         Trim(Qry.FieldByName('CODIGO_EMP_FAC').AsString);
       sNombreEmpresa :=
@@ -678,13 +677,12 @@ begin
     if sNombreEmpresa = '' then
       sNombreEmpresa := sCodigoEmpresa;
     if Length(sNifEmpresa) <> 9 then
-      raise Exception.Create('La empresa ' + sNombreEmpresa +
-        ' no tiene un NIF válido para la emisión fiscal.');
+      raise Exception.CreateFmt(SErrorEmpresaSinNifEmisionFiscal,
+        [sNombreEmpresa]);
     sNifProductor := NormalizarNifVerifactu(
       AParametrosApp.GetString('appVerifactuSifNif', ''));
     if Length(sNifProductor) <> 9 then
-      raise Exception.Create('El parámetro appVerifactuSifNif no contiene ' +
-        'un NIF de productor válido.');
+      raise Exception.Create(SErrorNifProductorVerifactuInvalido);
     ValidarInstalacionSif(sNumeroInstalacion, sVersionInstalacion,
       sCodigoSif, sNombreEmpresa, sNifEmpresa);
     try
@@ -692,13 +690,12 @@ begin
         sTitularCertificado);
     except
       on E: Exception do
-        raise Exception.Create('La empresa ' + sNombreEmpresa +
-          ' no dispone de un certificado fiscal utilizable: ' + E.Message);
+        raise Exception.CreateFmt(SErrorCertificadoFiscalEmpresaNoUtilizable,
+          [sNombreEmpresa, E.Message]);
     end;
     if NoVerifactuActivo(AParametrosApp) and
        (not VerifactuFirmaCertificado(AParametrosApp)) then
-      raise Exception.Create('El modo NO VERI*FACTU exige activar la firma ' +
-        'con certificado en appVerifactuFirmaCertificado.');
+      raise Exception.Create(SErrorFirmaCertificadoNoVerifactuDesactivada);
   end;
 end;
 
@@ -1289,8 +1286,8 @@ begin
       try
         if (Trim(DatosEmpresa.SerialCert) = '') or
            (Trim(DatosEmpresa.TitularCert) = '') then
-          raise Exception.Create('No hay certificado configurado en ' +
-            'Empresas para firmar eventos NO VERI*FACTU.');
+          raise Exception.Create(
+            SErrorCertificadoEventosNoVerifactuNoConfigurado);
         sXmlFirmado := FirmarXmlEventoSif(sXml, sHashPropio,
                                           DatosEmpresa.SerialCert,
                                           DatosEmpresa.TitularCert,
@@ -1362,12 +1359,12 @@ begin
     Qry.Execute;
     if NoVerifactuActivo(AParametrosApp) and
        (sErrorFirma <> '') then
-      raise Exception.Create('No se pudo firmar el evento NO VERI*FACTU: ' +
-                             sErrorFirma);
+      raise Exception.CreateFmt(SErrorFirmarEventoNoVerifactu,
+        [sErrorFirma]);
     if NoVerifactuActivo(AParametrosApp) and
        (sErrorReloj <> '') then
-      raise Exception.Create('No se pudo validar el reloj del evento ' +
-                             'NO VERI*FACTU: ' + sErrorReloj);
+      raise Exception.CreateFmt(SErrorRelojEventoNoVerifactu,
+        [sErrorReloj]);
   finally
     FreeAndNil(Qry);
   end;

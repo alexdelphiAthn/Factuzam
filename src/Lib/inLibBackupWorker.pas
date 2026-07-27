@@ -136,10 +136,8 @@ uses
   MySQLUniProvider, UniScript,
   System.StrUtils,
   inLibDBStructure,
-  inLibtb;
-
-const
-  SOperacionCancelada = 'Operación cancelada por el usuario.';
+  inLibtb,
+  inLibMsg;
 
 function CrearCopiaSeguridadBD(const AHost: string; APort: Integer;
                                const ADatabase, AUser, APassword: string;
@@ -259,7 +257,7 @@ procedure TBackupWorker.EngineProgress(const AEtapa: string;
   APaso, ATotal, AFilaGlobal, AFilasGlobalTotal: Integer);
 begin
   if Terminated then
-    raise EAbort.Create(SOperacionCancelada)
+    raise EAbort.Create(SErrorOperacionCanceladaUsuario)
   else
   begin
     FProgresoEtapa := AEtapa;
@@ -333,7 +331,7 @@ end;
 procedure TRestoreWorker.ComprobarCancelacion;
 begin
   if Terminated then
-    raise EAbort.Create(SOperacionCancelada);
+    raise EAbort.Create(SErrorOperacionCanceladaUsuario);
 end;
 
 function TRestoreWorker.EsCreacionVista(const ASQL: string): Boolean;
@@ -750,9 +748,8 @@ begin
   CheckResult := TDBStructureChecker.Check(AConn, FDatabase);
   if not CheckResult.IsOK then
   begin
-    raise Exception.Create('La restauración terminó, pero la estructura ' +
-                           'mínima no está completa.' + sLineBreak +
-                           CheckResult.FormattedMessage);
+    raise Exception.Create(Format(SErrorRestauracionEstructuraIncompleta,
+                                  [CheckResult.FormattedMessage]));
   end;
 end;
 
@@ -800,10 +797,10 @@ begin
         Conn.Server := FHost;
         Conn.Port := FPort;
         if Trim(FDatabase) = '' then
-          raise Exception.Create('El nombre de la BBDD de destino está vacío.');
+          raise Exception.Create(SErrorNombreBBDDDestinoVacio);
         if not FileExists(FRutaFichero) then
-          raise Exception.Create('No existe el fichero de copia: ' +
-                                 FRutaFichero);
+          raise Exception.Create(Format(SErrorFicheroCopiaNoExiste,
+                                        [FRutaFichero]));
         Conn.Database := 'information_schema';
         Conn.Username := FUser;
         Conn.Password := FPassword;
@@ -843,9 +840,7 @@ begin
               end;
               if Trim(s) = '' then
               begin
-                raise Exception.Create(
-                  'No se pudo desencriptar la copia. Revise la contraseña ' +
-                  'o seleccione un fichero SQL sin cifrar.');
+                raise Exception.Create(SErrorDesencriptarCopia);
               end;
               ComprobarCancelacion;
               SqlScript.SQL.Text := s;
@@ -901,7 +896,7 @@ begin
       if FPrimerError <> '' then
         FError := FPrimerError
       else
-        FError := 'La restauración no finalizó correctamente.';
+        FError := SErrorRestauracionNoFinalizada;
     end;
     Synchronize(SyncFinalizar);
   end;

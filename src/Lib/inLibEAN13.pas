@@ -33,14 +33,16 @@ function EsEAN13Valido(const ACodigo: string): Boolean;
 
 implementation
 
+uses
+  inLibMsg;
+
 function CalcularDigitoEAN8(const ACodigo7: string): Char;
 var
   i, SumaImpares, SumaPares, Total, Resto, DigitoControl: Integer;
 begin
   // Validamos que al menos tenga 7 caracteres
   if Length(ACodigo7) < 7 then
-    raise Exception.Create(
-      'El código debe tener al menos 7 dígitos para calcular el control.');
+    raise Exception.Create(SErrorCodigoEanMinimo7Digitos);
 
   SumaImpares := 0;
   SumaPares := 0;
@@ -49,8 +51,7 @@ begin
   begin
     // Validación de seguridad para asegurar que son solo números
     if not CharInSet(ACodigo7[i], ['0'..'9']) then
-      raise Exception.Create(
-        'El código de barras contiene caracteres no numéricos.');
+      raise Exception.Create(SErrorCodigoBarrasNoNumerico);
 
     // OJO a la diferencia con EAN-13:
     // En EAN-8, las posiciones IMPARES se multiplican por 3
@@ -94,8 +95,7 @@ var
 begin
   // Validamos que al menos tenga 12 caracteres para evitar Access Violations
   if Length(ACodigo12) < 12 then
-    raise Exception.Create(
-      'El código debe tener al menos 12 dígitos para calcular el control.');
+    raise Exception.Create(SErrorCodigoEanMinimo12Digitos);
 
   SumaImpares := 0;
   SumaPares := 0;
@@ -105,8 +105,7 @@ begin
   begin
     // Validación de seguridad por si el string trae letras o basura
     if not CharInSet(ACodigo12[i], ['0'..'9']) then
-      raise Exception.Create(
-        'El código de barras contiene caracteres no numéricos.');
+      raise Exception.Create(SErrorCodigoBarrasNoNumerico);
 
     // Convertimos el char a entero restando el valor ASCII del '0'
     if (i mod 2) <> 0 then

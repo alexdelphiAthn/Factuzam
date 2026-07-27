@@ -66,7 +66,7 @@ implementation
 
 uses
   Winapi.Windows, Data.DB, System.Hash, System.IOUtils,
-  inLibGlobalVar, inLibLog,
+  inLibGlobalVar, inLibLog, inLibMsg,
   inLibVentasWsJson, inLibFactuzamApi;
 
 type
@@ -175,8 +175,8 @@ begin
     iIdCola := EncolarInterno(AQryTrx, AUsuario, sTipoEvento, ASerie,
       ANumero);
     if iIdCola = 0 then
-      raise Exception.Create('No se pudo encolar la venta ' + ASerie +
-        '\' + ANumero + ' para el webservice.');
+      raise Exception.CreateFmt(SErrorEncolarVentaWebservice,
+        [ASerie, ANumero]);
   end;
 end;
 

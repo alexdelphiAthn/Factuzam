@@ -47,6 +47,9 @@ type
 
 implementation
 
+uses
+  inLibMsg;
+
 class procedure TPreviewExcel.RegistrarProveedor(
   AClase: TClaseProveedorPreviewExcel);
 begin
@@ -57,8 +60,7 @@ class function TPreviewExcel.Crear(
   AOwner: TComponent): TSesionPreviewExcel;
 begin
   if not Assigned(FClaseProveedor) then
-    raise Exception.Create(
-      'No se ha registrado el previsualizador de hojas de cálculo.');
+    raise Exception.Create(SErrorPreviewExcelNoRegistrado);
   Result := FClaseProveedor.Crear(AOwner);
 end;
 

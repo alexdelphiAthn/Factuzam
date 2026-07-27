@@ -27,9 +27,9 @@ uses
   cxMaskEdit, cxDropDownEdit, cxButtonEdit, cxContainer, cxLabel,
   cxSplitter, cxButtons, Vcl.Imaging.PngImage,
   inMtoFrmBase, inLibVentasCalendario, inLibLayoutForm,
-  UniDataConsultaOpe, dxCore, cxDateUtils, dxCoreGraphics, cxCurrencyEdit,
-  cxClasses, cxGridCustomView, JvComponentBase, JvEnterTab, cxLocalization,
-  Vcl.Menus;
+  UniDataConsultaOpe, UniDataCaja, dxCore, cxDateUtils, dxCoreGraphics,
+  cxCurrencyEdit, cxClasses, cxGridCustomView, JvComponentBase, JvEnterTab,
+  cxLocalization, Vcl.Menus;
 
 type
   TfrmConsultaOpe = class(TfrmBase)
@@ -119,6 +119,9 @@ type
     FCaja:       string;
     // Factura de la operación seleccionada (pestaña Factura)
     function FacturaSeleccionada(out ASerie, ANumero: string): Boolean;
+    function SeleccionarTipoRectificativa(
+      const ASerie, ANumero: string;
+      out ATipoRectificativa: TTipoRectificativaCaja): Boolean;
     procedure RecargarMaestro;
     procedure GuardarLayout;
     procedure RestaurarLayout;
@@ -162,7 +165,7 @@ uses inLibtb, inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibLog, inLibFotos, inMtoFotoArticulo,
      inLibTraspasoTicket, inLibShowMto, inMtoPrincipal, Uni,
      inLibVerifactu, inLibVerifactuCola, inMtoModalFacturarTicket,
-     inMtoCajaOpe, inLibCorreoTickets, inLibAtributosPaleta;
+     inMtoCajaOpe, inLibCorreoTickets, inLibAtributosPaleta, inLibMsg;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -387,7 +390,7 @@ begin
   //Anulación Verifactu (RegistroAnulacion) de la factura del ticket
   bBorrarMovimientos := True;
   if not FacturaSeleccionada(sSerie, sNumero) then
-    ShowMessage('La operación seleccionada no tiene borrador.')
+    ShowMessage(SErrorOperacionSinBorrador)
   else
   begin
     Qry := TUniQuery.Create(nil);
@@ -401,10 +404,10 @@ begin
       Qry.ParamByName('NUMERO').AsString := sNumero;
       Qry.Open;
       if Qry.IsEmpty or (Qry.Fields[0].AsString <> 'S') then
-        ShowMessage('El borrador ' + sSerie + '\' + sNumero + ' aún no ' +
-                    'está cerrado fiscalmente: no se puede anular.')
-      else if MessageDlg('¿Anular fiscalmente el borrador ' + sSerie +
-                         '\' + sNumero + '?', mtConfirmation,
+        ShowMessage(Format(SErrorBorradorNoCerradoFiscalmente,
+                           [sSerie, sNumero]))
+      else if MessageDlg(Format(SPreguntaAnularFiscalmenteBorrador,
+                               [sSerie, sNumero]), mtConfirmation,
                          [mbYes, mbNo], 0) = mrYes then
       begin
         EsFacturaSimplificada := SameText(
@@ -412,9 +415,8 @@ begin
         if EsFacturaSimplificada then
         begin
           bBorrarMovimientos := MessageDlg(
-            '¿Desea borrar también los movimientos de almacén asociados ' +
-            'al ticket ' + sSerie + '\' + sNumero + '?' + sLineBreak +
-            'Se revertirá el stock de sus líneas.', mtConfirmation,
+            Format(SPreguntaBorrarMovimientosTicketAnulado,
+                   [sSerie, sNumero]), mtConfirmation,
             [mbYes, mbNo], 0) = mrYes;
         end;
         Qry.Close;
@@ -430,8 +432,7 @@ begin
                 cEventoVerifactuEncolado,
                 'Anulación encolada desde Buscar operaciones', '',
                 sSerie, sNumero);
-              ShowMessage('Anulación encolada: el hilo Verifactu la ' +
-                          'enviará en el próximo ciclo.');
+              ShowMessage(SInfoAnulacionVerifactuEncolada);
             end;
           mvNoVerifactu:
             begin
@@ -439,7 +440,7 @@ begin
                 ParametrosCaja, Qry,
                 IdentidadSesion.Usuario, sSerie, sNumero, 'ANULACION',
                 bBorrarMovimientos);
-              ShowMessage('Anulación registrada y firmada en NO VERI*FACTU.');
+              ShowMessage(SInfoAnulacionNoVerifactuRegistrada);
             end;
         else
           begin
@@ -447,7 +448,7 @@ begin
               ParametrosCaja, Qry,
               IdentidadSesion.Usuario, sSerie, sNumero, 'ANULACION',
               bBorrarMovimientos);
-            ShowMessage('Anulación registrada en modo SIN VERIFACTU.');
+            ShowMessage(SInfoAnulacionSinVerifactuRegistrada);
           end;
         end;
       end;
@@ -470,7 +471,7 @@ begin
   dtFecha := 0;
   bSigue  := False;
   if not FacturaSeleccionada(sSerie, sNumero) then
-    ShowMessage('La operación seleccionada no tiene borrador.')
+    ShowMessage(SErrorOperacionSinBorrador)
   else
   begin
     Qry := TUniQuery.Create(nil);
@@ -486,8 +487,7 @@ begin
       if Qry.IsEmpty or
          (not SameText(Qry.FieldByName('TIPO_FAC').AsString,
                        'SIMPLIFICADA')) then
-        ShowMessage('Solo se crea un borrador normal desde un borrador ' +
-                    'SIMPLIFICADO (ticket).')
+        ShowMessage(SErrorFacturarTicketRequiereSimplificado)
       else
       begin
         dtFecha := Qry.FieldByName('FECHA_FAC').AsDateTime;
@@ -502,10 +502,10 @@ begin
                                                FEmpresa, FAlmacen,
                                                dtFecha);
       if oRes.Aceptado then
-        ShowMessage('Creado el borrador ' + oRes.SerieNueva + '\' +
-                    oRes.NumeroNueva + ' en sustitución del ticket ' +
-                    sSerie + '\' + sNumero + ' en modo fiscal ' +
-                    ModoVerifactuTexto(ParametrosApp) + ' (F3).');
+        ShowMessage(Format(SInfoBorradorSustitucionTicketCreado,
+                          [oRes.SerieNueva, oRes.NumeroNueva,
+                           sSerie, sNumero,
+                           ModoVerifactuTexto(ParametrosApp)]));
     end;
   end;
 end;
@@ -518,12 +518,13 @@ var
   sSerie:  string;
   sNumero: string;
   bSigue:  Boolean;
+  TipoRectificativa: TTipoRectificativaCaja;
 begin
-  //Rectificar: carga la venta en caja con las líneas en negativo; al
-  //cobrar saldrá con serie rectificativa y quedará enlazada
+  // Rectificar carga la venta con el signo del tipo elegido; al cobrar
+  // saldrá con serie rectificativa y quedará enlazada.
   bSigue := False;
   if not FacturaSeleccionada(sSerie, sNumero) then
-    ShowMessage('La operación seleccionada no tiene borrador.')
+    ShowMessage(SErrorOperacionSinBorrador)
   else
   begin
     Qry := TUniQuery.Create(nil);
@@ -539,18 +540,15 @@ begin
       if Qry.IsEmpty or
          SameText(Qry.FieldByName('TIPO_FAC').AsString,
                   'RECTIFICATIVA') then
-        ShowMessage('No se puede rectificar una rectificativa.')
+        ShowMessage(SErrorRectificarRectificativa)
       else
         bSigue := True;
     finally
       FreeAndNil(Qry);
     end;
   end;
-  if bSigue and
-     (MessageDlg('¿Rectificar el borrador ' + sSerie + '\' + sNumero +
-                 '? Se cargará la venta en caja con las líneas en ' +
-                 'negativo para ajustarla y cobrarla.',
-                 mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
+  if bSigue and SeleccionarTipoRectificativa(
+    sSerie, sNumero, TipoRectificativa) then
   begin
     // Ventana de ventas libre, o una nueva si todas están ocupadas
     FormularioCaja := nil;
@@ -568,11 +566,77 @@ begin
         Format('Operación - (Caja Real %s)', [FCaja]);
       FormularioCaja.PrepararValores(FEmpresa, FAlmacen, FCaja, Now);
     end;
-    FormularioCaja.CargarRectificacion(sSerie, sNumero);
+    FormularioCaja.CargarRectificacion(
+      sSerie, sNumero, TipoRectificativa);
     FormularioCaja.Show;
     FormularioCaja.BringToFront;
     if FormularioCaja.WindowState = wsMinimized then
       FormularioCaja.WindowState := wsNormal;
+  end;
+end;
+
+function TfrmConsultaOpe.SeleccionarTipoRectificativa(
+  const ASerie, ANumero: string;
+  out ATipoRectificativa: TTipoRectificativaCaja): Boolean;
+const
+  AnchoBoton = 125;
+  SeparacionBotones = 8;
+var
+  oDialogo: TForm;
+  oBoton: TButton;
+  i: Integer;
+  iBotones: Integer;
+  iIzquierda: Integer;
+begin
+  Result := False;
+  ATipoRectificativa := trcNinguna;
+  oDialogo := CreateMessageDialog(
+    Format(SPreguntaRectificarBorrador, [ASerie, ANumero]),
+    mtConfirmation, [mbYes, mbNo, mbCancel]);
+  try
+    oDialogo.Caption := 'Tipo de rectificativa';
+    if oDialogo.ClientWidth < 440 then
+      oDialogo.ClientWidth := 440;
+    iBotones := 0;
+    for i := 0 to oDialogo.ComponentCount - 1 do
+    begin
+      if oDialogo.Components[i] is TButton then
+        Inc(iBotones);
+    end;
+    iIzquierda := (oDialogo.ClientWidth -
+      (iBotones * AnchoBoton) -
+      ((iBotones - 1) * SeparacionBotones)) div 2;
+    for i := 0 to oDialogo.ComponentCount - 1 do
+    begin
+      if oDialogo.Components[i] is TButton then
+      begin
+        oBoton := TButton(oDialogo.Components[i]);
+        case oBoton.ModalResult of
+          mrYes:
+            oBoton.Caption := 'Por diferencias';
+          mrNo:
+            oBoton.Caption := 'Sustitutiva';
+          mrCancel:
+            oBoton.Caption := 'Cancelar';
+        end;
+        oBoton.SetBounds(iIzquierda, oBoton.Top, AnchoBoton, oBoton.Height);
+        Inc(iIzquierda, AnchoBoton + SeparacionBotones);
+      end;
+    end;
+    case oDialogo.ShowModal of
+      mrYes:
+        begin
+          ATipoRectificativa := trcDiferencias;
+          Result := True;
+        end;
+      mrNo:
+        begin
+          ATipoRectificativa := trcSustitutiva;
+          Result := True;
+        end;
+    end;
+  finally
+    FreeAndNil(oDialogo);
   end;
 end;
 
@@ -714,7 +778,7 @@ begin
     Layout.GuardarGrid('FacturaCab',  cxViewFacCab);
     Layout.GuardarGrid('FacturaLin',  cxViewFacLin);
     if Layout.PreguntarYGrabar('Personalizacion Consulta Operaciones') then
-      ShowMessage('Layout guardado.');
+      ShowMessage(SInfoLayoutGuardado);
   finally
     FreeAndNil(Layout);
   end;
@@ -853,13 +917,13 @@ begin
       sEmail := Datos.EmailCliente;
       bContinuar := Datos.Encontrada;
       if not bContinuar then
-        ShowMessage('No se ha encontrado la operación seleccionada.')
+        ShowMessage(SErrorOperacionCorreoNoEncontrada)
       else if sEmail = '' then
-        bContinuar := InputQuery('Enviar documentación',
-          'Correo electrónico:', sEmail);
+        bContinuar := InputQuery(STituloEnviarDocumentacion,
+          SSolicitudCorreoElectronico, sEmail);
       if bContinuar and (Trim(sEmail) = '') then
       begin
-        ShowMessage('Indique una dirección de correo electrónico.');
+        ShowMessage(SErrorCorreoElectronicoObligatorio);
         bContinuar := False;
       end;
       if bContinuar then
@@ -875,8 +939,7 @@ begin
             sEmail, sMensaje) then
             ShowMessage(sMensaje)
           else
-            ShowMessage('No se ha podido enviar el correo.' + sLineBreak +
-              sMensaje);
+            ShowMessage(Format(SErrorEnviarCorreoOperacion, [sMensaje]));
         finally
           Screen.Cursor := crDefault;
         end;
@@ -922,7 +985,7 @@ begin
       if (not FdmConsulta.TieneFactura)
          and (not FdmConsulta.TieneDepositos)
          and (not FdmConsulta.EsOperacionCaja) then
-        ShowMessage('Esta operación no tiene ticket asociado.')
+        ShowMessage(SErrorOperacionSinTicket)
       else if Trim(sCliente) <> '' then
         ImprimirRecordatorio(
           ConexionPrincipal,

@@ -218,6 +218,9 @@ function DescuentoTarifaVigente(AConexion: TUniConnection;
 
 implementation
 
+uses
+  inLibMsg;
+
 { Helpers de records ──────────────────────────────────────────────────────── }
 
 procedure TArticuloPrecio.Clear;
@@ -656,7 +659,7 @@ begin
   Result.Clear;
   if ACodigoArt = '' then
   begin
-    Result.Mensaje := 'Falta código de artículo.';
+    Result.Mensaje := SErrorCodigoArticuloResolverObligatorio;
     Exit;
   end;
 
@@ -710,7 +713,7 @@ begin
     q.Open;
     if q.IsEmpty then
     begin
-      Result.Mensaje := 'No existe el artículo "' + ACodigoArt + '".';
+      Result.Mensaje := Format(SErrorArticuloResolverNoExiste, [ACodigoArt]);
       Exit;
     end;
     Result.CodigoArticulo      := q.FieldByName('CODIGO_ART_ART').AsString;
@@ -740,9 +743,8 @@ begin
   // sin tocar precio/PMP/coste: el llamante pedirá talla/color y volverá.
   if Result.RequiereSku then
   begin
-    Result.Mensaje :=
-      'El artículo "' + ACodigoArt + '" tiene SKUs. ' +
-      'Indica uno para obtener precio definitivo.';
+    Result.Mensaje := Format(SAvisoArticuloResolverRequiereSku,
+                             [ACodigoArt]);
     Exit;
   end;
 

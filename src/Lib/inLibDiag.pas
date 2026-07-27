@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibDiag                                                     }
 {    Tipo:       Librería                                                      }
@@ -35,7 +35,7 @@ procedure ProbarStackTrace;
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils, inLibMsg;
 
 // Cada capa concatena su nombre a la traza para que el compilador
 // no pueda colapsar la llamada (tail call) ni inlinearla. Así
@@ -43,9 +43,7 @@ uses
 
 procedure LanzarExcepcionProfunda(const ATraza: string);
 begin
-  raise Exception.CreateFmt
-    ('Prueba forzada con /teststack [%s]: JCL stack trace activo',
-     [ATraza]);
+  raise Exception.CreateFmt(SErrorPruebaPilaJcl, [ATraza]);
 end;
 
 procedure CapaProfunda(const ATraza: string);

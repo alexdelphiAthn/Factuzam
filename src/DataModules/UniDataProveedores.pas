@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataProveedores                                            }
 {    Tipo:       Data Module                                                   }
@@ -83,7 +83,7 @@ implementation
 
 uses
   inLibLog, inLibDocumentoFiscal,
-  inLibtb, System.Diagnostics;
+  inLibtb, System.Diagnostics, inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -229,9 +229,9 @@ procedure TdmProveedores.unqryKitsBeforeInsert(DataSet: TDataSet);
 begin
   inherited;
   if unqryTablaG.IsEmpty then
-    raise Exception.Create('Selecciona un proveedor antes de crear kits.');
+    raise Exception.Create(SErrorProveedorKitsNoSeleccionado);
   if unqryTablaG.State = dsInsert then
-    raise Exception.Create('Graba el proveedor antes de crear kits.');
+    raise Exception.Create(SErrorProveedorKitsSinGrabar);
 end;
 
 procedure TdmProveedores.unqryKitsAfterInsert(DataSet: TDataSet);
@@ -251,9 +251,9 @@ procedure TdmProveedores.unqryKitsBeforePost(DataSet: TDataSet);
 begin
   inherited;
   if Trim(unqryKits.FieldByName('CODIGO_PRVKIT').AsString) = '' then
-    raise Exception.Create('El kit necesita un código (p. ej. CURVA-STD).');
+    raise Exception.Create(SErrorCodigoKitProveedorObligatorio);
   if Trim(unqryKits.FieldByName('NOMBRE_PRVKIT').AsString) = '' then
-    raise Exception.Create('El kit necesita un nombre.');
+    raise Exception.Create(SErrorNombreKitProveedorObligatorio);
   unqryKits.FieldByName('USUARIO_MODIF').AsString    := IdentidadSesion.Usuario;
   unqryKits.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
@@ -285,7 +285,7 @@ procedure TdmProveedores.unqryKitsDetBeforeInsert(DataSet: TDataSet);
 begin
   inherited;
   if unqryKits.IsEmpty then
-    raise Exception.Create('Crea o selecciona un kit antes de añadir tallas.');
+    raise Exception.Create(SErrorKitProveedorNoSeleccionadoParaTallas);
   if unqryKits.State in [dsInsert, dsEdit] then
     unqryKits.Post;
 end;
@@ -331,8 +331,7 @@ procedure TdmProveedores.unqryKitsDetBeforePost(DataSet: TDataSet);
 begin
   inherited;
   if Trim(unqryKitsDet.FieldByName('VALOR_DESTINO_PRVKITD').AsString) = '' then
-    raise Exception.Create('La fila del kit necesita la talla destino ' +
-      '(p. ej. 38, M).');
+    raise Exception.Create(SErrorTallaDestinoKitProveedorObligatoria);
   unqryKitsDet.FieldByName('USUARIO_MODIF').AsString    := IdentidadSesion.Usuario;
   unqryKitsDet.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
@@ -343,13 +342,12 @@ var
   iAc : Integer;
 begin
   if unqryKits.IsEmpty then
-    raise Exception.Create('Selecciona o crea un kit primero.');
+    raise Exception.Create(SErrorKitProveedorNoSeleccionado);
   if unqryKits.State in [dsInsert, dsEdit] then
     unqryKits.Post;
   iAc := unqryKits.FieldByName('ID_AC_TALLAS_PRVKIT').AsInteger;
   if iAc <= 0 then
-    raise Exception.Create('El kit no tiene sistema de tallas. Asigna uno ' +
-      'en la columna "Sistema tallas" para poder generar sus tallas.');
+    raise Exception.Create(SErrorSistemaTallasKitProveedorObligatorio);
   q := TUniQuery.Create(nil);
   try
     q.Connection := ConexionPrincipal;
@@ -386,8 +384,7 @@ begin
       'PV',
       IdentidadSesion.Usuario);
     if Trim(sContador) = '' then
-      raise Exception.Create('No se pudo generar el código automático ' +
-        'del proveedor.');
+      raise Exception.Create(SErrorCodigoAutomaticoProveedor);
     unqryTablaG.FindField('CODIGO_PRV_PRV').AsString := sContador;
   end;
   if unqryTablaG.FindField('ORDEN_PRV').AsString = '0' then
@@ -397,8 +394,7 @@ begin
       'PO',
       IdentidadSesion.Usuario);
     if Trim(sContador) = '' then
-      raise Exception.Create('No se pudo generar el orden automático ' +
-        'del proveedor.');
+      raise Exception.Create(SErrorOrdenAutomaticoProveedor);
     unqryTablaG.FindField('ORDEN_PRV').AsString := sContador;
   end;
 end;

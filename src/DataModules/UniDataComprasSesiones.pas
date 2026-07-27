@@ -206,7 +206,8 @@ uses
   inLibComprasSesionesMaterializar,
   inLibContadorLineas,
   inLibComprasImpuestos,
-  inLibData;
+  inLibData,
+  inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -682,9 +683,7 @@ begin
   oFldDist := DataSet.FindField('ESFORMATO_DISTRIBUIDO_SES');
   if (oFldDist <> nil) and (DataSet.State = dsEdit) and
      (VarToStr(oFldDist.OldValue) <> VarToStr(oFldDist.NewValue)) then
-    raise Exception.Create(
-      'No se puede cambiar el formato distribuido de una sesion ya creada. ' +
-      'Crea una sesion nueva con el modo deseado.');
+    raise Exception.Create(SErrorCambiarFormatoSesion);
   sNumero  := unqryTablaG.FieldByName('NUMERO_SES').AsString;
   sSerie   := Trim(unqryTablaG.FieldByName('SERIE_SES').AsString);
   sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
@@ -692,10 +691,9 @@ begin
   if (sNumero = '') or (sNumero = '0') then
   begin
     if sEmpresa = '' then
-      raise Exception.Create('Selecciona una empresa antes de grabar la sesion.');
+      raise Exception.Create(SErrorEmpresaSesionObligatoria);
     if sSerie = '' then
-      raise Exception.Create('Teclea una serie antes de grabar la sesion ' +
-        '(p.ej. ' + sEmpresa + '-SE-1).');
+      raise Exception.Create(Format(SErrorSerieSesionObligatoria, [sEmpresa]));
     // Si el usuario teclea una serie que no existe en fza_empresas_series,
     // la creamos al vuelo para que el SP PRC_GET_NEXT_CONT_FACT_SERIE
     // pueda devolver el contador. Asi el usuario no tiene que ir antes
@@ -703,10 +701,8 @@ begin
     AsegurarSerieEnEmpresasSeries(sEmpresa, sSerie);
     GetCodigoAutoSesion;
     if unqryTablaG.FieldByName('NUMERO_SES').AsString = '' then
-      raise Exception.Create('No se pudo obtener el siguiente numero. ' +
-        'Revisa que exista una fila en fza_contadores para (TIPO_DOC=SE, ' +
-        'EMPRESA=' + sEmpresa + ', SERIE=' + sSerie + ') o que el SP ' +
-        'PRC_GET_NEXT_CONT_FACT_SERIE este disponible.');
+      raise Exception.Create(Format(SErrorContadorSesion,
+                                    [sEmpresa, sSerie]));
   end;
   RefrescarTotalesSesion;
   PersistirTotalesSesion;
@@ -987,8 +983,7 @@ begin
       'ES',
       IdentidadSesion.Usuario);
     if Trim(sCodigoSer) = '' then
-      raise Exception.Create('No se pudo obtener CODIGO_SERIE_EMPSER del ' +
-        'contador ES via PRC_GET_NEXT_CONT.');
+      raise Exception.Create(SErrorCodigoSerieEmpresa);
 
     q.SQL.Text :=
       'INSERT INTO fza_empresas_series ' +

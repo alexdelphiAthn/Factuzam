@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalFacRec                                              }
 {    Tipo:       Formulario (Modal)                                            }
@@ -128,7 +128,7 @@ begin
                ParametrosCaja, ConexionPrincipal,
                IdentidadSesion.Usuario,
                edtSerieOrigen.Text, edtNumFacOrigen.Text,
-               edtSerieFacAbono.Text, edtNumFacAbono.Text);
+               edtSerieFacAbono.Text, edtNumFacAbono.Text, 'I');
              unqryTablaG.Refresh;
           end;
         end;

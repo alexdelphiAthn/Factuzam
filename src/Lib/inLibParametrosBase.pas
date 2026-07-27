@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibParametrosBase                                           }
 {    Tipo:       Librería                                                      }
@@ -86,6 +86,9 @@ type
 
 implementation
 
+uses
+  inLibMsg;
+
 { TParametroDef }
 
 constructor TParametroDef.Create(
@@ -111,7 +114,7 @@ begin
   inherited Create;
   if not Assigned(APerfilesUsuario) then
     raise EArgumentNilException.Create(
-      'No se ha proporcionado el servicio de perfiles de usuario.');
+      SErrorServicioPerfilesNoProporcionado);
   FSeccionCritica := TCriticalSection.Create;
   FDefiniciones :=
     TObjectDictionary<string, TParametroDef>.Create([doOwnsValues]);
@@ -211,7 +214,7 @@ begin
       Perfil
     ) then
       raise Exception.CreateFmt(
-        'No se pudo cargar el perfil de parámetros "%s".',
+        SErrorCargarPerfilParametros,
         [FFormularioPerfil]
       );
     if not Assigned(Perfil) then

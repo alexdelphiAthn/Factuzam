@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoClientes                                                 }
 {    Tipo:       Formulario (Mto)                                              }
@@ -463,6 +463,7 @@ uses
   inMtoModalCliEti,
   inLibDir,
   inLibIBAN,
+  inLibMsg,
   inLibPermisosIntf,
   inMtoPrincipal,
   Uni;
@@ -680,7 +681,7 @@ begin
     end;
   end;
   if not(EsIBANErr) then
-    ShowMessage('IBAN Validado OK');
+    ShowMessage(SInfoIbanValidado);
   FreeAndNil(stErr);
 end;
 

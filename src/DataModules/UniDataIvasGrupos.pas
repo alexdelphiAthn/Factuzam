@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataIvasGrupos                                             }
 {    Tipo:       Data Module                                                   }
@@ -32,6 +32,9 @@ type
   end;
 
 implementation
+
+uses
+  inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -69,13 +72,11 @@ begin
     sDescripcion := Trim(FindField('DESCRIPCION_IVA_IVAGRP').AsString);
     if (sDescripcion = '') or
        SimbolosProhibidos(sDescripcion, PerfilesUsuario) then
-      raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
-                                  'para el campo Descripción de Grupos de IVA',
+      raise ERangeError.CreateFmt(SErrorDescripcionGrupoIva,
                                   [sDescripcion]);
     if (sCodigo = '') or
        SimbolosProhibidos(sCodigo, PerfilesUsuario) then
-      raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
-                                  'para el campo Código de Grupos de IVA',
+      raise ERangeError.CreateFmt(SErrorCodigoGrupoIva,
                                   [sCodigo]);
     if (FindField('ESDEFAULT_IVA_IVAGRP').AsString = 'S') then
     begin
@@ -90,8 +91,7 @@ begin
                                ' AND IVA_IVAGRP <> ' + sCodigo;
         unqrySol.Open;
         if (unqrySol.RecordCount > 0) then
-          raise EDataBaseError.Create('No es posible marcar dos grupos de IVA' +
-                                      ' como Grupo de IVA por Defecto');
+          raise EDataBaseError.Create(SErrorDosGruposIvaPredeterminados);
       finally
         FreeAndNil(unqrySol);
       end;

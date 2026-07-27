@@ -233,7 +233,7 @@ type
 implementation
 
 uses
-  inLibGenBusq;
+  inLibGenBusq, inLibMsg;
 
 type
   // Acceso a OnExit (protegido en TWinControl) de los editores in-place
@@ -1458,7 +1458,7 @@ begin
     else
     begin
       Error := True;
-      ErrorText := 'Artículo/SKU no encontrado: ' + sEntrada;
+      ErrorText := Format(SErrorArticuloSkuNoEncontrado, [sEntrada]);
     end;
   end;
 end;
@@ -1520,7 +1520,7 @@ begin
   Avs := FLookup.ObtenerAvsEnSkus(sArtPadre, AOrden);
   if Length(Avs) = 0 then
   begin
-    ShowMessage('No hay valores definidos para este atributo.');
+    ShowMessage(SErrorValoresAtributoNoDefinidos);
     Exit;
   end;
   SetLength(AvsStr, Length(Avs));

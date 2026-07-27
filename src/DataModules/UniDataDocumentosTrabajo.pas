@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataDocumentosTrabajo                                      }
 {    Tipo:       Data Module                                                   }
@@ -83,7 +83,7 @@ implementation
 
 uses
   System.Generics.Collections, System.Variants,
-  UniDataArticulos;
+  UniDataArticulos, inLibMsg;
 
 {$R *.dfm}
 
@@ -696,13 +696,13 @@ begin
   sTipo := UpperCase(Trim(ATipo));
   if (sTipo <> '') and (sTipo <> 'USUARIO') and (sTipo <> 'GRUPO') then
   begin
-    raise ERangeError.Create('El tipo de destino debe ser USUARIO o GRUPO.');
+    raise ERangeError.Create(SErrorTipoDestinoDocumentoTrabajo);
   end;
   if sTipo <> '' then
   begin
     if not ExisteDestinoCompartir(ADestino, sTipo) then
     begin
-      raise ERangeError.Create('El usuario o grupo indicado no existe.');
+      raise ERangeError.Create(SErrorDestinoCompartidoNoExiste);
     end;
     Result := sTipo;
   end
@@ -716,7 +716,7 @@ begin
   end
   else
   begin
-    raise ERangeError.Create('El usuario o grupo indicado no existe.');
+    raise ERangeError.Create(SErrorDestinoCompartidoNoExiste);
   end;
 end;
 
@@ -730,12 +730,12 @@ begin
   sDestino := Trim(ADestino);
   if sDestino = '' then
   begin
-    raise ERangeError.Create('Indique el usuario o grupo con el que comparte.');
+    raise ERangeError.Create(SErrorDestinoCompartirObligatorio);
   end;
   if not PuedeEditarDocumentoActual then
   begin
     raise ERangeError.Create(
-      'Solo el propietario puede compartir el Documento de Trabajo.');
+      SErrorCompartirDocumentoTrabajoSoloPropietario);
   end;
   if unqryTablaG.State in dsEditModes then
   begin
@@ -743,14 +743,12 @@ begin
   end;
   if unqryTablaG.FieldByName('ID_DTR').IsNull then
   begin
-    raise ERangeError.Create(
-      'Grabe primero la cabecera del Documento de Trabajo.');
+    raise ERangeError.Create(SErrorCabeceraDocumentoTrabajoSinGrabar);
   end;
   sTipo := NormalizarTipoDestino(sDestino, ATipo);
   if SameText(sTipo, 'USUARIO') and SameText(sDestino, IdentidadSesion.Usuario) then
   begin
-    raise ERangeError.Create(
-      'No es necesario compartir el documento consigo mismo.');
+    raise ERangeError.Create(SErrorCompartirDocumentoTrabajoConsigoMismo);
   end;
   if not unqryCompartidos.Active then
   begin
@@ -844,8 +842,7 @@ procedure TdmDocumentosTrabajo.unqryTablaGBeforeDelete(DataSet: TDataSet);
 begin
   if not PuedeEditarDocumentoActual then
   begin
-    raise ERangeError.Create(
-      'Solo el propietario puede borrar un Documento de Trabajo.');
+    raise ERangeError.Create(SErrorBorrarDocumentoTrabajoSoloPropietario);
   end;
 end;
 
@@ -874,12 +871,11 @@ begin
   end;
   if not SameText(DataSet.FieldByName('USUARIO_DTR').AsString, IdentidadSesion.Usuario) then
   begin
-    raise ERangeError.Create(
-      'El propietario del Documento de Trabajo no se puede cambiar.');
+    raise ERangeError.Create(SErrorCambiarPropietarioDocumentoTrabajo);
   end;
   if Trim(DataSet.FieldByName('TITULO_DTR').AsString) = '' then
   begin
-    raise ERangeError.Create('Indique el titulo del Documento de Trabajo.');
+    raise ERangeError.Create(SErrorTituloDocumentoTrabajoObligatorio);
   end;
   if Trim(DataSet.FieldByName('ESTADO_DTR').AsString) = '' then
   begin
@@ -941,7 +937,7 @@ begin
   if not PuedeEditarDocumentoActual then
   begin
     raise ERangeError.Create(
-      'Solo el propietario puede borrar lineas del Documento de Trabajo.');
+      SErrorBorrarLineasDocumentoTrabajoSoloPropietario);
   end;
 end;
 
@@ -950,12 +946,11 @@ begin
   if not PuedeEditarDocumentoActual then
   begin
     raise ERangeError.Create(
-      'Solo el propietario puede editar lineas del Documento de Trabajo.');
+      SErrorEditarLineasDocumentoTrabajoSoloPropietario);
   end;
   if DataSet.FieldByName('ID_DTR_DTL').IsNull then
   begin
-    raise ERangeError.Create(
-      'Grabe primero la cabecera del Documento de Trabajo.');
+    raise ERangeError.Create(SErrorCabeceraDocumentoTrabajoSinGrabar);
   end;
   if Trim(DataSet.FieldByName('LINEA_DTL').AsString) = '' then
   begin
@@ -963,11 +958,11 @@ begin
   end;
   if Trim(DataSet.FieldByName('CODIGO_ART_DTL').AsString) = '' then
   begin
-    raise ERangeError.Create('Indique el articulo de la linea.');
+    raise ERangeError.Create(SErrorArticuloLineaDocumentoTrabajoObligatorio);
   end;
   if Trim(DataSet.FieldByName('CODIGO_UNIDAD_DTL').AsString) = '' then
   begin
-    raise ERangeError.Create('Indique el SKU/unidad de la linea.');
+    raise ERangeError.Create(SErrorSkuLineaDocumentoTrabajoObligatorio);
   end;
   if DataSet.FieldByName('INSTANTE_STOCK_DTL').IsNull then
   begin
@@ -1056,7 +1051,7 @@ begin
   if not PuedeEditarDocumentoActual then
   begin
     raise ERangeError.Create(
-      'Solo el propietario puede dejar de compartir el Documento de Trabajo.');
+      SErrorDejarCompartirDocumentoTrabajoSoloPropietario);
   end;
 end;
 
@@ -1068,12 +1063,11 @@ begin
   if not PuedeEditarDocumentoActual then
   begin
     raise ERangeError.Create(
-      'Solo el propietario puede compartir el Documento de Trabajo.');
+      SErrorCompartirDocumentoTrabajoSoloPropietario);
   end;
   if DataSet.FieldByName('ID_DTR_DTC').IsNull then
   begin
-    raise ERangeError.Create(
-      'Grabe primero la cabecera del Documento de Trabajo.');
+    raise ERangeError.Create(SErrorCabeceraDocumentoTrabajoSinGrabar);
   end;
   sDestino := Trim(DataSet.FieldByName('USUARIO_GRUPO_DTC').AsString);
   if sDestino = '' then
@@ -1082,15 +1076,13 @@ begin
   end;
   if sDestino = '' then
   begin
-    raise ERangeError.Create(
-      'Indique el usuario o grupo con el que se comparte.');
+    raise ERangeError.Create(SErrorDestinoCompartidoObligatorio);
   end;
   sTipo := NormalizarTipoDestino(
     sDestino, DataSet.FieldByName('TIPO_DESTINO_DTC').AsString);
   if SameText(sTipo, 'USUARIO') and SameText(sDestino, IdentidadSesion.Usuario) then
   begin
-    raise ERangeError.Create(
-      'No es necesario compartir el documento consigo mismo.');
+    raise ERangeError.Create(SErrorCompartirDocumentoTrabajoConsigoMismo);
   end;
   DataSet.FieldByName('TIPO_DESTINO_DTC').AsString := sTipo;
   DataSet.FieldByName('USUARIO_GRUPO_DTC').AsString := sDestino;

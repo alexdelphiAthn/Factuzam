@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataRemesasVenta                                           }
 {    Tipo:       Data Module                                                    }
@@ -57,6 +57,8 @@ type
 
 implementation
 
+uses
+  inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -638,7 +640,7 @@ begin
   ADatos.TipoSecuencia := 'RCUR';
   SetLength(ADatos.Clientes, 0);
   if not (unqryTablaG.Active and (not unqryTablaG.IsEmpty)) then
-    raise Exception.Create('Selecciona una remesa.');
+    raise Exception.Create(SErrorRemesaVentaNoSeleccionada);
   q := TUniQuery.Create(nil);
   try
     q.Connection := ConexionPrincipal;
@@ -659,7 +661,7 @@ begin
       unqryTablaG.FieldByName('NUMERO_REMV').AsString;
     q.Open;
     if q.IsEmpty then
-      raise Exception.Create('No se encuentra la remesa de venta.');
+      raise Exception.Create(SErrorRemesaVentaNoEncontrada);
     ADatos.CodigoAcreedor := UpperCase(ValorCampoStrSepa(q,
       'CODIGO_ACREEDOR_SEPA_EMPBAN'));
     sNifEmpresa := ValorCampoStrSepa(q, 'NIF_EMP');
@@ -702,7 +704,7 @@ begin
       unqryTablaG.FieldByName('NUMERO_REMV').AsString;
     q.Open;
     if q.IsEmpty then
-      raise Exception.Create('La remesa no tiene efectos pendientes.');
+      raise Exception.Create(SErrorRemesaVentaSinEfectosPendientes);
     i := 0;
     while not q.Eof do
     begin
@@ -765,7 +767,7 @@ begin
         q.ParamByName('iban').AsString := sIban;
         q.ExecSQL;
         if q.RowsAffected = 0 then
-          raise Exception.Create('No se pudo guardar el código acreedor SEPA.');
+          raise Exception.Create(SErrorGuardarCodigoAcreedorSepa);
         q.SQL.Text :=
           'UPDATE fza_remesas_venta ' +
           '   SET TIPO_SECUENCIA_SEPA_REMV = :tipo, ' +
@@ -795,8 +797,8 @@ begin
             ADatos.Clientes[i].CodigoCliente;
           q.ExecSQL;
           if q.RowsAffected = 0 then
-            raise Exception.Create('No se pudo guardar el mandato SEPA del ' +
-              'cliente ' + ADatos.Clientes[i].CodigoCliente + '.');
+            raise Exception.Create(Format(SErrorGuardarMandatoSepaCliente,
+              [ADatos.Clientes[i].CodigoCliente]));
           Inc(i);
         end;
         if bTxOwned then

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataEmpresas                                               }
 {    Tipo:       Data Module                                                   }
@@ -79,7 +79,7 @@ implementation
 
 uses
   inLibtb, inLibLog, System.Diagnostics,
-  inLibFormatoDocumento, inLibIBAN;
+  inLibFormatoDocumento, inLibIBAN, inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -92,15 +92,8 @@ function TdmEmpresas.ConfirmarCambioCriticoEmpresa(
 var
   sMensaje: string;
 begin
-  sMensaje :=
-    'Atención: ' + sAccion + ' una empresa puede anular la licencia ' +
-    'del programa o invalidar el sistema Verifactu existente.' + sLineBreak +
-    sLineBreak +
-    'Revise que los datos fiscales, certificados y la instalación SIF ' +
-    'siguen siendo correctos.' + sLineBreak +
-    sLineBreak +
-    '¿Desea continuar?';
-  Result := Application.MessageBox(PChar(sMensaje), 'Mensaje Advertencia',
+  sMensaje := Format(SPreguntaCambioCriticoEmpresa, [sAccion]);
+  Result := Application.MessageBox(PChar(sMensaje), PChar(SAdvMsg),
                                    MB_YESNO or MB_ICONWARNING) = ID_YES;
 end;
 
@@ -135,9 +128,8 @@ begin
     if ((FindField('PORCENTAJE_EMPRET').AsInteger <= 0) or
         (FindField('PORCENTAJE_EMPRET').IsNull)) then
     begin
-      raise ERangeError.CreateFmt('%d no es un valor válido ' +
-                                                        ' para %% de Retención',
-             [FindField('PORCENTAJE_EMPRET').AsInteger]);
+      raise ERangeError.CreateFmt(SErrorPorcentajeRetencionEmpresa,
+                                 [FindField('PORCENTAJE_EMPRET').AsInteger]);
       bSinErrores := False;
     end;
     if (bSinErrores) then
@@ -157,9 +149,8 @@ begin
                                             FindField('FECHA_HASTA_EMPRET')))
        ) then
     begin
-      raise ERangeError.CreateFmt('No se pueden grabar dos porcentajes ' +
-                                ' activos en la misma fecha para la empresa %s',
-                              [FindField('CODIGO_EMP_EMPRET').AsString]);
+      raise ERangeError.CreateFmt(SErrorRetencionesEmpresaConcurrentes,
+                                 [FindField('CODIGO_EMP_EMPRET').AsString]);
       bSinErrores := False;
     end;
   end;
@@ -203,9 +194,8 @@ begin
          FindField('EMPSER').AsString,
          PerfilesUsuario) then
     begin
-      raise ERangeError.CreateFmt('%s no es un valor válido ' +
-                                                     ' para serie por Empresa ',
-             [FindField('EMPSER').AsString]);
+      raise ERangeError.CreateFmt(SErrorSerieEmpresa,
+                                 [FindField('EMPSER').AsString]);
       bSinErrores := False;
     end;
 //    if (State = dsEdit) then
@@ -270,8 +260,7 @@ begin
       stErr := TStringList.Create;
       try
         if (not TIBAN.ValidarIBAN(sIban, stErr)) then
-          raise ERangeError.CreateFmt('IBAN no válido para el banco de ' +
-                                      'la empresa: %s', [stErr.Text]);
+          raise ERangeError.CreateFmt(SErrorIbanEmpresa, [stErr.Text]);
       finally
         FreeAndNil(stErr);
       end;
@@ -592,10 +581,9 @@ begin
   end;
   if unqryFacturasEmpresas.RecordCount > 0 then
   begin
-    if not (Application.MessageBox('La empresa tiene facturas emitidas, ' +
-                                  ' ¿Desea realmente borrar el registro?',
-                                  'Mensaje Advertencia',
-                                  MB_YESNO) = ID_YES) then
+    if not (Application.MessageBox(
+      PWideChar(SPreguntaBorrarEmpresaConFacturas),
+      PWideChar(SAdvMsg), MB_YESNO) = ID_YES) then
     begin
       Abort;
     end;
@@ -659,16 +647,14 @@ begin
     if (sRazonSocial = '') or
        SimbolosProhibidos(sRazonSocial, PerfilesUsuario) then
     begin
-      raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
-                                        'para el campo Razón Social de Empresa',
-                                                                [sRazonSocial]);
+      raise ERangeError.CreateFmt(SErrorRazonSocialEmpresa,
+                                 [sRazonSocial]);
     end;
     if (sCodigoEmpresa = '') or
        SimbolosProhibidos(sCodigoEmpresa, PerfilesUsuario) then
     begin
-      raise ERangeError.CreateFmt('%s no es un valor de registro válido ' +
-                                              'para el campo Código de Empresa',
-                                                              [sCodigoEmpresa]);
+      raise ERangeError.CreateFmt(SErrorCodigoEmpresa,
+                                 [sCodigoEmpresa]);
     end;
     if bError then
       Abort

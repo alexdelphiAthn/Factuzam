@@ -92,7 +92,8 @@ uses
   inLibComprasSesiones,
   inLibFotos,
   inLibtb,
-  inLibAlbaranesCompraMovimientos;
+  inLibAlbaranesCompraMovimientos,
+  inLibMsg;
 
 // ---------------------------------------------------------------------------
 // Soporte de reversion: tablas opcionales y avisos con rastro
@@ -158,7 +159,7 @@ begin
   if sPref = '' then sPref := '21';
   iLenSeq := 12 - Length(sPref);
   if iLenSeq <= 0 then
-    raise Exception.Create('PREFIJO_EAN_SES demasiado largo: ' + sPref);
+    raise Exception.Create(Format(SErrorPrefijoEanSesionLargo, [sPref]));
 
   q := TUniQuery.Create(nil);
   try
@@ -427,9 +428,8 @@ begin
       // El básico es importante: si la línea referencia uno que no existe
       // en la paleta, fallar explícitamente en vez de clasificar mal en silencio.
       if idAtb = 0 then
-        raise Exception.CreateFmt(
-          'No existe el color básico CODIGO_ATB=%s. Créalo en Mto ' +
-          'Atributos Básicos antes de materializar.', [ACodigoAtbColor]);
+        raise Exception.CreateFmt(SErrorColorBasicoMaterializacionNoExiste,
+                                  [ACodigoAtbColor]);
     end;
 
     // 3. Comprobar si el color (AV) ya existe (identidad = valor del color).
@@ -1299,8 +1299,7 @@ var
 begin
   sCodigoAlmCab := ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
   if sCodigoAlmCab = '' then
-    raise Exception.Create('Falta CODIGO_ALM_SES en la cabecera de la sesion ' +
-                           'para generar el albaran de compra.');
+    raise Exception.Create(SErrorAlmacenSesionParaAlbaranCompra);
 
   iLineaSeq := 0;
   qC := TUniQuery.Create(nil);
@@ -1588,8 +1587,7 @@ var
 begin
   sCodigoAlmCab := ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
   if sCodigoAlmCab = '' then
-    raise Exception.Create('Falta CODIGO_ALM_SES en la cabecera de la sesion ' +
-                           'para generar el pedido de compra.');
+    raise Exception.Create(SErrorAlmacenSesionParaPedidoCompra);
   iLineaSeq := 0;
   qC := TUniQuery.Create(nil);
   try
@@ -1863,8 +1861,7 @@ begin
   if not ADM.unqryTablaG.FieldByName('FECHA_SES').IsNull then
     dFechaPedido := ADM.unqryTablaG.FieldByName('FECHA_SES').AsDateTime;
   if sCodigoAlmCab = '' then
-    raise Exception.Create('Falta CODIGO_ALM_SES en la cabecera de la sesion ' +
-                           'para generar el pedido pendiente de recibir.');
+    raise Exception.Create(SErrorAlmacenSesionParaPendienteRecibir);
 
   qC   := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
@@ -2390,17 +2387,17 @@ begin
 
   if ADM = nil then
   begin
-    AMsgError := 'DataModule no inicializado.';
+    AMsgError := SErrorDataModuleSesionNoInicializado;
     Exit;
   end;
   if ADM.unqryTablaG.IsEmpty then
   begin
-    AMsgError := 'No hay sesion activa.';
+    AMsgError := SErrorSesionCompraNoActiva;
     Exit;
   end;
   if ADM.unqryTablaG.FieldByName('ESTADO_SES').AsString <> 'CERRADA' then
   begin
-    AMsgError := 'La sesion no esta CERRADA, no hay nada que revertir.';
+    AMsgError := SErrorSesionNoCerradaParaRevertir;
     Exit;
   end;
 

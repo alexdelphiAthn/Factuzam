@@ -292,7 +292,8 @@ uses
   inMtoModalFacturarAlbaranesFechas, inLibFotos, inLibGridCantidad,
   inLibGenBusq, inLibShowMto, inLibFiltroUsuario, Uni,
   inLibArticulosResolver, inLibArticulosValidador, inLibVentasImpuestos,
-  inLibtb, inLibUser, inLibColumnasSku;
+  inLibtb, inLibUser, inLibColumnasSku, inLibColumnasDocumento,
+  inLibValidacionDocumento, inLibPresentacionDocumento, inLibMsg;
 
 {$R *.dfm}
 
@@ -319,10 +320,7 @@ begin
     cbbSERIE_ALB.Properties.Items);
   if cbbSERIE_ALB.Properties.Items.Count = 0 then
   begin
-    if MessageDlg('No hay series de albaranes de venta mayor (tipo AV) ' +
-                  'para la empresa "' + sEmpresa + '".' + sLineBreak +
-                  'Se dan de alta en Empresas -> Series. ' +
-                  '¿Abrir el mantenimiento de Empresas ahora?',
+    if MessageDlg(Format(SPreguntaAbrirSeriesAlbaranVenta, [sEmpresa]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       ShowMto(Self.Owner, 'Empresas');
@@ -427,10 +425,10 @@ begin
   Result := '';
   sArt := Trim(ACodigoArt);
   if not Assigned(dmmAlbaranes) then
-    MessageDlg('No está abierto el albarán de venta.',
+    MessageDlg(SErrorAlbaranVentaNoAbierto,
                mtInformation, [mbOk], 0)
   else if sArt = '' then
-    MessageDlg('Selecciona un artículo antes de buscar sus SKUs.',
+    MessageDlg(SErrorArticuloNoSeleccionadoBuscarSkusAlbaranVenta,
                mtInformation, [mbOk], 0)
   else
   begin
@@ -708,7 +706,6 @@ procedure TfrmMtoAlbaranes.ConstruirModoEntrada;
 var
   Cfg: TConfigColumnasSku;
   CfgT: TGridTallasConfig;
-  i: Integer;
   ds: TDataSet;
 begin
   if (dmmAlbaranes = nil) or (csDestroying in ComponentState) then
@@ -742,27 +739,11 @@ begin
   // (columnas reales _ALBLIN; idempotente por comparacion).
   if FModoEntradaSel <> mcsSku then
     dmmAlbaranes.DesempaquetarAtributosLineas;
-  Cfg := Default(TConfigColumnasSku);
-  Cfg.Conexion := dmmAlbaranes.unqryTablaG.Connection;
-  Cfg.ContextoSesion := ContextoSesion;
-  Cfg.View := tvLineasAlbaran;
-  Cfg.Cds := ds;
-  Cfg.Modo := FModoEntradaSel;
-  Cfg.AlmacenStock :=
-    dmmAlbaranes.unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString;
-  Cfg.Distribuido := False;
-  Cfg.Campos.CodigoArt := 'CODIGO_ART_ALBLIN';
-  Cfg.Campos.CodigoUnidad := 'CODIGO_UNIDAD_ALBLIN';
-  Cfg.Campos.Descripcion := 'DESCRIPCION_ARTICULO_ALBLIN';
-  Cfg.Campos.Cantidad := 'CANTIDAD_ALBLIN';
-  Cfg.Campos.Almacen := 'CODIGO_ALMACEN_ALBLIN';
-  Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_ALBLIN';
-  for i := 1 to 5 do
-  begin
-    Cfg.Campos.AttrValor[i] := 'ATTR' + IntToStr(i) + '_VALOR_ALBLIN';
-    Cfg.Campos.AttrNombre[i] :=
-      'ATTR' + IntToStr(i) + '_NOMBRE_ALBLIN';
-  end;
+  Cfg := CrearConfigColumnasSkuDocumento(
+    dmmAlbaranes.unqryTablaG.Connection, ContextoSesion,
+    tvLineasAlbaran, ds, FModoEntradaSel,
+    dmmAlbaranes.unqryTablaG.FieldByName(
+      'CODIGO_ALM_ALB').AsString, 'ALBLIN');
   // Precio por SKU para la consolidacion del modo tallas: lineas con
   // precio distinto no fusionan.
   Cfg.ObtenerPrecioSku := PrecioSkuTallasAlb;
@@ -892,41 +873,9 @@ begin
 end;
 
 procedure TfrmMtoAlbaranes.MostrarColumnasAtributoGlobalesAlb;
-var
-  Qry: TUniQuery;
-  i, iOrden: Integer;
-  Col: TcxGridColumn;
 begin
-  // Nombres globales de atributos para ver Color/Talla desde el
-  // principio (mismo helper que pedidos / inventarios).
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := dmmAlbaranes.unqryTablaG.Connection;
-    Qry.SQL.Text :=
-      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
-      '       MIN(ORDEN_VA) AS ORDEN' +
-      '  FROM fza_variaciones_atributos' +
-      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
-      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
-    Qry.Open;
-    iOrden := 1;
-    while (not Qry.Eof) and (iOrden <= 5) do
-    begin
-      for i := 0 to tvLineasAlbaran.ColumnCount - 1 do
-      begin
-        Col := tvLineasAlbaran.Columns[i];
-        if Col.Tag = iOrden then
-        begin
-          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
-          Col.Visible := True;
-        end;
-      end;
-      Inc(iOrden);
-      Qry.Next;
-    end;
-  finally
-    FreeAndNil(Qry);
-  end;
+  MostrarColumnasAtributoGlobalesDocumento(
+    dmmAlbaranes.unqryTablaG.Connection, tvLineasAlbaran);
 end;
 
 procedure TfrmMtoAlbaranes.cxgrdLineasAlbaranExit(Sender: TObject);
@@ -1020,10 +969,9 @@ end;
 
 procedure TfrmMtoAlbaranes.ActualizarLabelPrendas;
 begin
-  if (dmmAlbaranes <> nil) and Assigned(dmmAlbaranes.unqryTablaG) and
-     dmmAlbaranes.unqryTablaG.Active and (not dmmAlbaranes.unqryTablaG.IsEmpty) then
-    lblTotalPrendasAlb.Caption :=
-      FormatFloat('#,##0', dmmAlbaranes.TotalPrendasAlbaran)
+  if Assigned(dmmAlbaranes) then
+    lblTotalPrendasAlb.Caption := TextoTotalPrendasDocumento(
+      dmmAlbaranes.unqryTablaG, dmmAlbaranes.TotalPrendasAlbaran)
   else
     lblTotalPrendasAlb.Caption := '0';
 end;
@@ -1204,9 +1152,8 @@ begin
     dmmAlbaranes.unqryTablaG.Connection,
     dmmAlbaranes.unqryAlbaranesLineas, 'ALBLIN');
   if (sLineasSinSku = '') or
-     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
-                 'con variaciones sin SKU asignado. ' +
-                 '¿Grabar de todas formas?',
+     (MessageDlg(Format(SPreguntaGrabarAlbaranVentaSinSku,
+                 [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
     inherited;
@@ -1461,82 +1408,20 @@ end;
 
 procedure TfrmMtoAlbaranes.AsegurarCabeceraPersistidaParaLineas;
 var
-  dsCab: TDataSet;
-  dsLin: TDataSet;
-  sNumero: string;
-  bReAppend: Boolean;
-
-  function ValorLinea(const ACampo: string): string;
-  var
-    Campo: TField;
-  begin
-    Result := '';
-    Campo := dsLin.FindField(ACampo);
-    if Campo <> nil then
-      Result := Trim(Campo.AsString);
-  end;
-
-  function LineaActualVacia: Boolean;
-  begin
-    Result := (ValorLinea('CODIGO_ART_ALBLIN') = '') and
-              (ValorLinea('CODIGO_UNIDAD_ALBLIN') = '');
-  end;
-
-  procedure SincronizarCabeceraEnLinea;
-  begin
-    if Assigned(dsLin) and dsLin.Active and
-       (dsLin.State in dsEditModes) then
-    begin
-      if dsLin.FindField('NUMERO_ALB_ALBLIN') <> nil then
-        dsLin.FieldByName('NUMERO_ALB_ALBLIN').AsString :=
-          dsCab.FieldByName('NUMERO_ALB').AsString;
-      if dsLin.FindField('SERIE_ALB_ALBLIN') <> nil then
-        dsLin.FieldByName('SERIE_ALB_ALBLIN').AsString :=
-          dsCab.FieldByName('SERIE_ALB').AsString;
-    end;
-  end;
-
+  oConfiguracion: TConfiguracionPersistenciaDocumento;
 begin
   if not Assigned(dmmAlbaranes) then
-    raise Exception.Create('No esta inicializado el albaran.')
+    raise Exception.Create(SErrorAlbaranVentaNoInicializado)
   else
   begin
-    dsCab := dmmAlbaranes.unqryTablaG;
-    dsLin := dmmAlbaranes.unqryAlbaranesLineas;
-    if (dsCab = nil) or (not dsCab.Active) or
-       (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
-      raise Exception.Create(
-        'Crea o selecciona un albaran antes de anadir lineas.');
-    sNumero := Trim(dsCab.FieldByName('NUMERO_ALB').AsString);
-    // La linea vacia en insercion (auto-anadida al entrar al grid) se
-    // cancela SOLO si hay que postear la cabecera: ese Post arrastra
-    // el suyo via CheckBrowseMode y choca con la guarda de linea sin
-    // articulo. Se RECREA al final para que al usuario no le
-    // "desaparezca" la linea que acababa de anadir.
-    bReAppend := False;
-    if (dsCab.State in dsEditModes) or (sNumero = '') or
-       (sNumero = '0') then
-    begin
-      if Assigned(dsLin) and dsLin.Active and
-         (dsLin.State = dsInsert) and LineaActualVacia then
-      begin
-        dsLin.Cancel;
-        bReAppend := True;
-      end;
-      if not (dsCab.State in dsEditModes) then
-        dsCab.Edit;
-      dsCab.Post;
-    end;
-    SincronizarCabeceraEnLinea;
-    if Assigned(dsLin) and dsLin.Active and
-       (not (dsLin.State in dsEditModes)) then
-    begin
-      dsLin.Close;
-      dsLin.Open;
-    end;
-    if bReAppend and Assigned(dsLin) and dsLin.Active and
-       (not (dsLin.State in dsEditModes)) then
-      dsLin.Append;
+    oConfiguracion := CrearConfiguracionPersistenciaDocumento(
+      SErrorCrearSeleccionarAlbaranAntesLineas,
+      'ALB', 'ALBLIN');
+    oConfiguracion.RecrearLineaVacia := True;
+    AsegurarCabeceraPersistidaDocumento(
+      dmmAlbaranes.unqryTablaG,
+      dmmAlbaranes.unqryAlbaranesLineas,
+      oConfiguracion, nil);
   end;
 end;
 
@@ -1600,7 +1485,7 @@ end;
 procedure TfrmMtoAlbaranes.btnBorrarLineaClick(Sender: TObject);
 begin
   inherited;
-  if MessageDlg('¿Está seguro de que desea eliminar esta línea?',
+  if MessageDlg(SPreguntaEliminarLineaAlbaranVenta,
                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     dmmAlbaranes.unqryAlbaranesLineas.Delete;
 end;
@@ -1619,13 +1504,12 @@ begin
   ds := dmmAlbaranes.unqryAlbaranesLineas;
   if not ds.Active or (ds.RecordCount = 0) then
   begin
-    ShowMessage('El albarán no tiene líneas.');
+    ShowMessage(SErrorAlbaranVentaSinLineas);
     Exit;
   end;
   if tvLineasAlbaran.Controller.SelectedRowCount = 0 then
   begin
-    ShowMessage('Seleccione las líneas para crear borrador en la rejilla ' +
-                '(Ctrl+click para selección múltiple).');
+    ShowMessage(SAvisoSeleccionarLineasBorradorAlbaran);
     Exit;
   end;
   lst := TList<string>.Create;
@@ -1653,16 +1537,16 @@ begin
 
     if lst.Count = 0 then
     begin
-      ShowMessage('Las líneas seleccionadas ya tienen borrador.');
+      ShowMessage(SAvisoLineasAlbaranConBorrador);
       Exit;
     end;
-    if MessageDlg(Format('¿Generar borrador con %d línea(s) del albarán?',
+    if MessageDlg(Format(SPreguntaGenerarBorradorLineasAlbaran,
                          [lst.Count]),
                   mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
     if dmmAlbaranes.CrearFacturaDesdeAlbaran(sNumFac, sSerFac, lst) then
-      ShowMessageFmt('Borrador creado: %s / %s', [sSerFac, sNumFac])
+      ShowMessageFmt(SInfoBorradorFacturaCreado, [sSerFac, sNumFac])
     else
-      ShowMessage('No se pudo crear el borrador.');
+      ShowMessage(SErrorCrearBorradorFactura);
   finally
     FreeAndNil(lst);
   end;
@@ -1678,15 +1562,15 @@ begin
   if not dmmAlbaranes.unqryAlbaranesLineas.Active or
      (dmmAlbaranes.unqryAlbaranesLineas.RecordCount = 0) then
   begin
-    ShowMessage('El albarán no tiene líneas.');
+    ShowMessage(SErrorAlbaranVentaSinLineas);
     Exit;
   end;
-  if MessageDlg('¿Crear borrador con todas las líneas pendientes del albarán?',
+  if MessageDlg(SPreguntaGenerarBorradorTodoAlbaran,
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
   if dmmAlbaranes.CrearFacturaDesdeAlbaran(sNumFac, sSerFac, nil) then
-    ShowMessageFmt('Borrador creado: %s / %s', [sSerFac, sNumFac])
+    ShowMessageFmt(SInfoBorradorFacturaCreado, [sSerFac, sNumFac])
   else
-    ShowMessage('No se pudo crear el borrador.');
+    ShowMessage(SErrorCrearBorradorFactura);
 end;
 
 procedure TfrmMtoAlbaranes.btnFacturarPorFechasClick(Sender: TObject);
@@ -1718,22 +1602,14 @@ end;
 // mano y no procede de ningun pedido, avisamos en lugar de abrir un Mto
 // vacio.
 procedure TfrmMtoAlbaranes.actIrDocumentoExecute(Sender: TObject);
-var
-  sSeriePed, sNumeroPed: string;
 begin
   inherited;
   if (dmmAlbaranes <> nil) and
      (not dmmAlbaranes.unqryTablaG.IsEmpty) then
-  begin
-    sSeriePed  := Trim(dmmAlbaranes.unqryTablaG.
-                         FieldByName('SERIE_PED_ALB').AsString);
-    sNumeroPed := Trim(dmmAlbaranes.unqryTablaG.
-                         FieldByName('NUMERO_PED_ALB').AsString);
-    if (sSeriePed <> '') and (sNumeroPed <> '') then
-      ShowMto(Self.Owner, 'Pedidos', sSeriePed + ',' + sNumeroPed)
-    else
-      ShowMessage('Este albaran no procede de ningun pedido de venta.');
-  end;
+    ShowMtoDocumentoDataSet(Self.Owner, 'Pedidos',
+      dmmAlbaranes.unqryTablaG,
+      'SERIE_PED_ALB', 'NUMERO_PED_ALB',
+      SAvisoAlbaranSinPedidoVenta);
 end;
 
 procedure TfrmMtoAlbaranes.actIrFacturaCreadaExecute(Sender: TObject);
@@ -1758,7 +1634,7 @@ begin
       ShowMto(Self.Owner, sCallFactura, sSerieFac + ',' + sNumeroFac);
     end
     else
-      ShowMessage('Este albaran no tiene borrador creado.');
+      ShowMessage(SAvisoAlbaranSinBorrador);
   end;
 end;
 

@@ -23,7 +23,7 @@ uses
    cxGroupBox, cxRadioGroup, Vcl.Buttons,
    System.Win.Registry, Winapi.Messages,
    system.math,IdGlobal, IdHash, IdHashMessageDigest, System.IOUtils,
-   inLibPerfilesUsuarioIntf;
+   inLibPerfilesUsuarioIntf, inLibMsg;
 
 //  function IsOpenMDI(sName: String; Owner : TComponent):boolean; overload;
 //  function IsOpenMDI(sName: String; Owner : TComponent;
@@ -400,7 +400,8 @@ begin
         begin
         sleep(0);
         {$IFDEF DEBUG}
-          ShowMessage(oCon.ClassName + ' is not TcxLabel');
+          ShowMessage(Format(SDepuracionComponenteNoTcxLabel,
+            [oCon.ClassName]));
         {$ENDIF }
         end;
     end;
@@ -418,7 +419,8 @@ begin
       begin
         sleep(0);
         {$IFDEF DEBUG}
-          ShowMessage(oCon.ClassName + ' is not tcxTabSheet ');
+          ShowMessage(Format(SDepuracionComponenteNoTcxTabSheet,
+            [oCon.ClassName]));
         {$ENDIF }
       end;
     end;
@@ -435,7 +437,8 @@ begin
       begin
         sleep(0);
         {$IFDEF DEBUG}
-          ShowMessage(oCon.ClassName + ' is not TcxDBCheckBox');
+          ShowMessage(Format(SDepuracionComponenteNoTcxDbCheckBox,
+            [oCon.ClassName]));
         {$ENDIF }
       end;
     end;
@@ -452,7 +455,8 @@ begin
         begin
           sleep(0);
           {$IFDEF DEBUG}
-            ShowMessage(oCon.ClassName + ' is not TcxButton');
+            ShowMessage(Format(SDepuracionComponenteNoTcxButton,
+              [oCon.ClassName]));
           {$ENDIF }
         end;
     end;
@@ -469,7 +473,8 @@ begin
         begin
           sleep(0);
           {$IFDEF DEBUG}
-            ShowMessage(oCon.ClassName + ' is not TcxGroupBox');
+            ShowMessage(Format(SDepuracionComponenteNoTcxGroupBox,
+              [oCon.ClassName]));
           {$ENDIF }
         end;
     end;
@@ -486,7 +491,8 @@ begin
         begin
           sleep(0);
           {$IFDEF DEBUG}
-            ShowMessage(oCon.ClassName + ' is not TcxDBRadioGroup');
+            ShowMessage(Format(SDepuracionComponenteNoTcxDbRadioGroup,
+              [oCon.ClassName]));
           {$ENDIF }
         end;
     end;
@@ -503,7 +509,8 @@ begin
         begin
           sleep(0);
           {$IFDEF DEBUG}
-            ShowMessage(oCon.ClassName + ' is not TSpeedButton');
+            ShowMessage(Format(SDepuracionComponenteNoSpeedButton,
+              [oCon.ClassName]));
           {$ENDIF }
         end;
     end;
@@ -520,7 +527,8 @@ begin
         begin
           sleep(0);
           {$IFDEF DEBUG}
-            ShowMessage(oCon.ClassName + ' is not TcxRadioButton');
+            ShowMessage(Format(SDepuracionComponenteNoTcxRadioButton,
+              [oCon.ClassName]));
           {$ENDIF }
         end;
     end;
@@ -642,7 +650,7 @@ begin
    strStream :=  idhttp1.Get(AsUrl);
 
   except
-    Raise Exception.Create('La imagen no existe');
+    Raise Exception.Create(SErrorImagenNoExiste);
     Exit;
   end;
   AmemStream := TMemoryStream.Create;

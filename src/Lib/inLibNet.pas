@@ -23,7 +23,7 @@ implementation
 uses  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
       System.Classes, System.Math, Vcl.Graphics,
       Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-      IdHTTP, IdSSLOpenSSL, System.JSON;
+      IdHTTP, IdSSLOpenSSL, System.JSON, inLibMsg;
 
 function FormatSqlOnlineSqlformatOrg(sSQL: String): String;
 var
@@ -55,10 +55,10 @@ begin
     JsonResponseStr := HttpReq.Post('https://sqlformat.org/api/v1/format',
                                     Parameters);
     if JsonResponseStr.IsEmpty then
-      raise Exception.Create('Respuesta vacía del servicio de formateo SQL');
+      raise Exception.Create(SErrorRespuestaFormateadorSqlVacia);
     JsonTmp := TJSONObject.ParseJSONValue(JsonResponseStr);
     if (JsonTmp = nil) or (JsonTmp.FindValue('result') = nil) then
-      raise Exception.Create('Respuesta JSON inesperada del formateador SQL');
+      raise Exception.Create(SErrorRespuestaFormateadorSqlInesperada);
     Result := JsonTmp.FindValue('result').Value;
   finally
     FreeAndNil(JsonTmp);

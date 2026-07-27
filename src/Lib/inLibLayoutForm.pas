@@ -152,7 +152,7 @@ implementation
 
 uses
   Vcl.Dialogs,
-  inLibLog, inLibtb,
+  inLibLog, inLibtb, inLibMsg,
   cxGridDBDataDefinitions;
 
 class procedure TSolicitudPermisoLayout.RegistrarEjecutor(
@@ -166,8 +166,7 @@ class function TSolicitudPermisoLayout.Solicitar(
   out APermisos: string): Boolean;
 begin
   if not Assigned(FClaseEjecutor) then
-    raise Exception.Create(
-      'No se ha registrado el diálogo de permisos de layout.');
+    raise Exception.Create(SErrorDialogoPermisosLayoutNoRegistrado);
   Result := FClaseEjecutor.Solicitar(
     AFormKey, ADescripcion, APermisos);
 end;
@@ -411,11 +410,10 @@ var
 begin
   Result := False;
   if TSolicitudPermisoLayout.Solicitar(
-    AFormKey, 'Resetear Layout', sPermisos) then
+    AFormKey, STextoResetearLayout, sPermisos) then
   begin
     APerfilesUsuario.EliminarPerfil(sPermisos, AFormKey);
-    ShowMessage('Layout reseteado.' + sLineBreak +
-                'Se aplicará la próxima vez que abra el formulario.');
+    ShowMessage(SInfoLayoutReseteado);
     Result := True;
   end;
 end;

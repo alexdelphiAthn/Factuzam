@@ -9,9 +9,29 @@ uses
   MidasLib,
   DUnitX.Loggers.Console,
   DUnitX.TestFramework,
+  inLibAtributosPaleta in
+    '..\src\Lib\inLibAtributosPaleta.pas',
+  inLibColumnasDocumento in
+    '..\src\Lib\inLibColumnasDocumento.pas',
+  inLibBusquedasCompra in
+    '..\src\Lib\inLibBusquedasCompra.pas',
+  inLibValidacionDocumento in
+    '..\src\Lib\inLibValidacionDocumento.pas',
+  inLibPresentacionDocumento in
+    '..\src\Lib\inLibPresentacionDocumento.pas',
+  inLibShowMto in '..\src\Lib\inLibShowMto.pas',
   inLibImpuestosComun in '..\src\Lib\inLibImpuestosComun.pas',
   inLibComprasImpuestos in '..\src\Lib\inLibComprasImpuestos.pas',
   inLibVentasImpuestos in '..\src\Lib\inLibVentasImpuestos.pas',
+  PruebasAtributosPaleta in 'PruebasAtributosPaleta.pas',
+  PruebasColumnasDocumento in 'PruebasColumnasDocumento.pas',
+  PruebasBusquedasCompra in 'PruebasBusquedasCompra.pas',
+  PruebasValidacionTallasCompra in
+    'PruebasValidacionTallasCompra.pas',
+  PruebasPresentacionDocumento in
+    'PruebasPresentacionDocumento.pas',
+  PruebasNavegacionDocumento in
+    'PruebasNavegacionDocumento.pas',
   PruebasImpuestosComun in 'PruebasImpuestosComun.pas',
   PruebasTotalesDocumentos in 'PruebasTotalesDocumentos.pas';
 

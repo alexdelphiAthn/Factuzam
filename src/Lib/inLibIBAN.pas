@@ -118,16 +118,11 @@ type
 
 implementation
 
+uses
+  inLibMsg;
+
 const
   PREFIJO_PAPEL_IBAN = 'IBAN';
-
-resourcestring
-  IBANInvalidoStr = 'IBAN Inválido';
-  PaisIBANInvalidoStr = 'País del IBAN Inválido';
-  DcIBANInvalidoStr = 'Dígito Control del IBAN Inválido';
-  LongitudCCCInvalidaStr = 'Longitud de Número de Cuenta incorrecta';
-  CCCInvalidoStr = 'Número de Cuenta incorrecto';
-  DCInvalidoStr = 'DC Incorrecto, es %s y debería ser %s';
 
 {******************************************************************************}
 {* Funciones auxiliares internas                                              *}
@@ -280,7 +275,7 @@ begin
 
   if ((isSpanish) and (not isValid)) then
   begin
-    AddError(LongitudCCCInvalidaStr, Errores);
+    AddError(SErrorLongitudCuentaBancariaInvalida, Errores);
     Exit(False);
   end;
 
@@ -296,13 +291,14 @@ begin
     iDC := CalculaDC(sBanco, sCta);
     if (iDC <> StrToInt(sDC)) then
     begin
-      AddError(Format(DCInvalidoStr, [sDC, IntToStr(iDC)]), Errores);
+      AddError(Format(SErrorDigitoControlCuentaBancaria,
+        [sDC, IntToStr(iDC)]), Errores);
       Exit(False);
     end;
   end
   else if ((isValid) and (isSpanish) and not(isNumeric)) then
   begin
-    AddError(CCCInvalidoStr, Errores);
+    AddError(SErrorCuentaBancariaInvalida, Errores);
     Exit(False);
   end;
 
@@ -464,14 +460,14 @@ begin
 
   if ((Self.Pais.IsEmpty) or (Self.Pais.Length < 2)) then
   begin
-    AddError(PaisIBANInvalidoStr, Errores);
+    AddError(SErrorPaisIbanInvalido, Errores);
     Result := False;
   end;
 
   if ((Self.DC.IsEmpty) or (Self.DC.Length < 2) or
       (StrToIntDef(Self.DC, -1) = -1)) then
   begin
-    AddError(DcIBANInvalidoStr, Errores);
+    AddError(SErrorDigitoControlIbanInvalido, Errores);
     Result := False;
   end;
 
@@ -483,7 +479,7 @@ begin
   Result := Mod97(AValidar) = 1;
 
   if not Result then
-    AddError(IBANInvalidoStr, Errores);
+    AddError(SErrorIbanInvalido, Errores);
 end;
 
 constructor TrBancoIBANInfo.Build(const inPais, inDC: string);
