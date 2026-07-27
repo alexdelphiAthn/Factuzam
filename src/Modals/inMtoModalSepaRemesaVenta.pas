@@ -51,7 +51,7 @@ type
 implementation
 
 uses
-  Vcl.Dialogs, inLibSepaRemesasVenta;
+  Vcl.Dialogs;
 
 function LimpiarValorSepa(const AValor: string): string;
 begin

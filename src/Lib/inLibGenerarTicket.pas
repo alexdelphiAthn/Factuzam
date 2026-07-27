@@ -47,7 +47,10 @@ uses
 implementation
 
 uses
-  inLibDir, inLibUnidadesMedida, inLibVerifactu, inLibFormatoDocumento;
+  inLibDir, inLibUnidadesMedida, inLibVerifactu, inLibFormatoDocumento,
+  // Previsualizador de tickets (ImprimirOPrevisualizarTicket). Unica
+  // dependencia inMto* viva de esta libreria; pendiente de extraer en B4.
+  inMtoPreviewTicket;
 
 const
   CAMPOS_PIE_TICKET_CAJA: array[0..3] of string = (
