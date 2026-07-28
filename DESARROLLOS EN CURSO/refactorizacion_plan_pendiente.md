@@ -343,6 +343,25 @@ hacerse **manteniendo `inLibtb` como fachada** que reexporta, para que
 ningún `uses` se rompa, y solo después ir migrando los `uses` de los
 dependientes por tandas.
 
+Estado a 28/07/2026: **D3.3 terminado; 3 de 9 fascículos**.
+
+- D3.1 extrae a `inLibDatasets` las claves, la metadata, el estado de
+  datasets y la validación de periodos.
+- D3.2 extrae a `inLibValoresAutomaticos` las series, los contadores y
+  los valores configurados por defecto.
+- D3.3 extrae a `inLibCadenas` las coincidencias, los símbolos por
+  perfil y las utilidades ANSI.
+
+`inLibtb` baja acumuladamente de 1.523 a 1.005 líneas
+(-518; -34,0 %) y conserva las firmas como fachada. Sus dependencias
+directas de producción bajan de 49 a 11 unidades, incluida la propia
+fachada. La batería DUnitX pasa 129/129 en Debug/Win64, Debug/Win32 y
+Release/Win64. Resultados en `refactorizacion_fase6ab_resultados.md`,
+`refactorizacion_fase6ac_resultados.md` y
+`refactorizacion_fase6ad_resultados.md`.
+
+Siguiente fascículo: **D3.4**, construcción de conexiones heredadas.
+
 ## D4 — trocear los métodos largos (48 por encima de 200 líneas)
 
 Los peores, medidos hoy:

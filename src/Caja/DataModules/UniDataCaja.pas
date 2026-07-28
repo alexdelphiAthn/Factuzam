@@ -440,7 +440,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibtb,
+uses inLibValoresAutomaticos,
      inLibData,
      inLibDevExp,
      inLibFacturas,

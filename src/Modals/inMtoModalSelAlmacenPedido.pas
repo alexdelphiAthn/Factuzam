@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalSelAlmacenPedido                                    }
 {    Tipo:       Formulario (Modal)                                            }
@@ -119,7 +119,7 @@ type
 implementation
 
 uses
-  inLibtb, inLibFormatoDocumento, inLibMsg;
+  inLibValoresAutomaticos, inLibFormatoDocumento, inLibMsg;
 
 {$R *.dfm}
 

@@ -251,7 +251,7 @@ public
 implementation
 
 uses
-  inLibtb,
+  inLibValoresAutomaticos,
   inLibLog,
   System.Diagnostics,
   inLibFacturas,

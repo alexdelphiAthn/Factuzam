@@ -42,6 +42,10 @@ type
     procedure ClavePrimaria_UsaProviderFlags;
     [Test]
     procedure EstadoDatasets_GrabaYCancelaPorFachada;
+    [Test]
+    procedure PeriodoUnico_UnRegistroEsValido;
+    [Test]
+    procedure PeriodoUnico_DetectaSolapamiento;
   end;
 
 implementation
@@ -180,6 +184,79 @@ begin
       'NOMBRE').AsString);
   Assert.IsFalse(
     inLibtb.CheckOpenDatasets(FModulo));
+end;
+
+procedure TPruebasDatasets.
+  PeriodoUnico_UnRegistroEsValido;
+var
+  oCandidato: TClientDataSet;
+  oPeriodos: TClientDataSet;
+begin
+  oCandidato := TClientDataSet.Create(nil);
+  oPeriodos := TClientDataSet.Create(nil);
+  try
+    oCandidato.FieldDefs.Add(
+      'FECHA_INICIO', ftDate);
+    oCandidato.FieldDefs.Add(
+      'FECHA_FIN', ftDate);
+    oCandidato.CreateDataSet;
+    oCandidato.AppendRecord([
+      EncodeDate(2026, 2, 1),
+      EncodeDate(2026, 2, 28)]);
+    oPeriodos.FieldDefs.Assign(
+      oCandidato.FieldDefs);
+    oPeriodos.CreateDataSet;
+    oPeriodos.AppendRecord([
+      EncodeDate(2026, 1, 1),
+      EncodeDate(2026, 1, 31)]);
+    Assert.IsTrue(
+      inLibDatasets.ExistePeriodoUnico(
+        oPeriodos,
+        oCandidato.FieldByName('FECHA_INICIO'),
+        oCandidato.FieldByName('FECHA_FIN')));
+  finally
+    FreeAndNil(oPeriodos);
+    FreeAndNil(oCandidato);
+  end;
+end;
+
+procedure TPruebasDatasets.
+  PeriodoUnico_DetectaSolapamiento;
+var
+  oCandidato: TClientDataSet;
+  oPeriodos: TClientDataSet;
+begin
+  oCandidato := TClientDataSet.Create(nil);
+  oPeriodos := TClientDataSet.Create(nil);
+  try
+    oCandidato.FieldDefs.Add(
+      'FECHA_INICIO', ftDate);
+    oCandidato.FieldDefs.Add(
+      'FECHA_FIN', ftDate);
+    oCandidato.CreateDataSet;
+    oCandidato.AppendRecord([
+      EncodeDate(2026, 1, 15),
+      EncodeDate(2026, 2, 15)]);
+    oPeriodos.FieldDefs.Assign(
+      oCandidato.FieldDefs);
+    oPeriodos.CreateDataSet;
+    oPeriodos.AppendRecord([
+      EncodeDate(2026, 1, 1),
+      EncodeDate(2026, 1, 31)]);
+    oPeriodos.AppendRecord([
+      EncodeDate(2026, 3, 1),
+      EncodeDate(2026, 3, 31)]);
+    Assert.AreEqual(2, oPeriodos.RecordCount);
+    oPeriodos.First;
+    Assert.IsFalse(
+      inLibDatasets.ExistePeriodoUnico(
+        oPeriodos,
+        oCandidato.FieldByName('FECHA_INICIO'),
+        oCandidato.FieldByName('FECHA_FIN')));
+  finally
+    FreeAndNil(oPeriodos);
+    FreeAndNil(oCandidato);
+  end;
 end;
 
 end.

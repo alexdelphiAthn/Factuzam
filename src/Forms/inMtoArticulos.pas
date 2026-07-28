@@ -603,7 +603,7 @@ uses
   inLibAtributosPaleta,
   inLibLog,             // Log.LogPerf para cronometros del AfterScroll
   System.Diagnostics,   // TStopwatch
-  inLibtb, inLibMsg;
+  inLibValoresAutomaticos, inLibMsg;
 
 {$R *.dfm}
 

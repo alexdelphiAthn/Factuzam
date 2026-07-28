@@ -40,7 +40,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibtb, inLibLog, System.Diagnostics, inLibMsg;
+uses inLibCadenas, inLibDatasets, inLibLog, System.Diagnostics, inLibMsg;
 
 {$R *.dfm}
 

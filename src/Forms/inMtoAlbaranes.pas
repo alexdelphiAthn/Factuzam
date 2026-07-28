@@ -292,7 +292,8 @@ uses
   inMtoModalFacturarAlbaranesFechas, inLibGridCantidad,
   inLibGenBusq, inLibShowMto, inLibFiltroUsuario, Uni,
   inLibArticulosResolver, inLibArticulosValidador, inLibVentasImpuestos,
-  inLibtb, inLibUser, inLibColumnasSku, inLibColumnasDocumento,
+  inLibValoresAutomaticos, inLibUser, inLibColumnasSku,
+  inLibColumnasDocumento,
   inLibValidacionDocumento, inLibPresentacionDocumento, inLibMsg;
 
 {$R *.dfm}

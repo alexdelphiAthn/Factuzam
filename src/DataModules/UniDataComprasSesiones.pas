@@ -201,7 +201,7 @@ implementation
 
 uses
   System.Variants,
-  inLibtb,
+  inLibValoresAutomaticos,
   inLibComprasSesiones,
   inLibComprasSesionesMaterializar,
   inLibContadorLineas,

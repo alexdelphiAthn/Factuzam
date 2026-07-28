@@ -71,7 +71,7 @@ type
 implementation
 
 uses
-  inLibtb,
+  inLibValoresAutomaticos,
   inLibLog,
   System.Diagnostics,
   inLibMsg;
@@ -262,7 +262,7 @@ begin
   inherited;
   AplicarValoresPorDefecto(ConexionPrincipal, unqryTablaG, 'fza_clientes');
   unqryTablaG.FindField('CODIGO_FP_CLI').AsString :=
-                                            GetDefaultValue(
+                                            ObtenerValorPorDefecto(
                                               ConexionPrincipal,
                                               'fza_formas_pago',
                                                             'CODIGO_FP_FP',

@@ -123,7 +123,7 @@ type
 implementation
 
 uses
-  inLibLog, inLibtb,
+  inLibLog, inLibValoresAutomaticos,
   System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inLibDevolucionesCompraMovimientos,
   inLibContadorLineas,

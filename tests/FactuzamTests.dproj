@@ -1,4 +1,4 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{E93654F6-79B6-4847-ADDE-B833A998DC6D}</ProjectGuid>
         <MainSource>FactuzamTests.dpr</MainSource>
@@ -82,7 +82,11 @@
         <DCCReference Include="..\src\Lib\inLibGestorTareasMto.pas"/>
         <DCCReference Include="..\src\Lib\inLibGestorArticulosMto.pas"/>
         <DCCReference Include="..\src\Lib\inLibDiag.pas"/>
+        <DCCReference Include="..\src\Lib\inLibCadenas.pas"/>
+        <DCCReference Include="..\src\Lib\inLibConexionesIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibConexionesUniDAC.pas"/>
         <DCCReference Include="..\src\Lib\inLibDatasets.pas"/>
+        <DCCReference Include="..\src\Lib\inLibValoresAutomaticos.pas"/>
         <DCCReference Include="..\src\Lib\inLibtb.pas"/>
         <DCCReference Include="..\src\Lib\inLibBusquedasCompra.pas"/>
         <DCCReference Include="..\src\Lib\inLibValidacionDocumento.pas"/>
@@ -100,7 +104,10 @@
         <DCCReference Include="PruebasGestorTareasMto.pas"/>
         <DCCReference Include="PruebasGestorArticulosMto.pas"/>
         <DCCReference Include="PruebasDiagnosticoMetadata.pas"/>
+        <DCCReference Include="PruebasCadenas.pas"/>
+        <DCCReference Include="PruebasConexiones.pas"/>
         <DCCReference Include="PruebasDatasets.pas"/>
+        <DCCReference Include="PruebasValoresAutomaticos.pas"/>
         <DCCReference Include="PruebasBusquedasCompra.pas"/>
         <DCCReference Include="PruebasValidacionTallasCompra.pas"/>
         <DCCReference Include="PruebasPresentacionDocumento.pas"/>

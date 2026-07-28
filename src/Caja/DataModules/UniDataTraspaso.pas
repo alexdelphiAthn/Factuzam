@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataTraspaso                                               }
 {    Tipo:       Data Module                                                   }
@@ -20,7 +20,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Data.DB, Datasnap.DBClient, Uni, MemDS,
-  DBAccess, System.Math, System.StrUtils, inLibtb,
+  DBAccess, System.Math, System.StrUtils, inLibValoresAutomaticos,
   inLibContextoSesionIntf;
 
 type
@@ -509,7 +509,7 @@ var
   QryFecha: TUniQuery;
   sNumeroMov: string;
 begin
-  sNumeroMov := inLibtb.ObtenerSiguienteContador(FConexion, 'MV',
+  sNumeroMov := ObtenerSiguienteContador(FConexion, 'MV',
     IdentidadSesion.Usuario);
   uspMov := TUniStoredProc.Create(nil);
   try
@@ -811,7 +811,7 @@ begin
   if SameText(sAlmacenPropio, AAlmacenOrigen) then
     raise EValidacionTraspaso.Create(SErrorSolicitudTraspasoMismoAlmacen);
   sEmpContra := ObtenerEmpresaAlmacen(AAlmacenOrigen);
-  ANumero := inLibtb.ObtenerSiguienteContador(FConexion, 'TS',
+  ANumero := ObtenerSiguienteContador(FConexion, 'TS',
     IdentidadSesion.Usuario);
   ASerie := 'TS';
   QryTrx := TUniQuery.Create(nil);

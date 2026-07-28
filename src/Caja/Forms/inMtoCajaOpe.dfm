@@ -1,4 +1,4 @@
-﻿inherited frmMtoOpeCaja: TfrmMtoOpeCaja
+inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   Caption = 'Operaci'#243'n de Caja'
   ClientHeight = 413
   ClientWidth = 1355
@@ -10,8 +10,8 @@
   OnKeyDown = FormKeyDown
   OnKeyPress = FormKeyPress
   OnShow = FormShow
-  ExplicitWidth = 1373
-  ExplicitHeight = 477
+  ExplicitWidth = 1371
+  ExplicitHeight = 452
   TextHeight = 22
   object pnlUp: TPanel [0]
     Left = 0
@@ -20,6 +20,10 @@
     Height = 89
     Align = alTop
     TabOrder = 0
+    ExplicitWidth = 1353
+    DesignSize = (
+      1355
+      89)
     object lblFecha: TcxLabel
       Left = 11
       Top = 27
@@ -177,7 +181,7 @@
       Width = 121
     end
     object lblTipoRectificativa: TcxLabel
-      Left = 1118
+      Left = 1116
       Top = 6
       Anchors = [akTop, akRight]
       AutoSize = False
@@ -200,9 +204,10 @@
       TabOrder = 9
       Transparent = True
       Visible = False
+      ExplicitLeft = 1114
       Height = 77
       Width = 229
-      AnchorX = 1233
+      AnchorX = 1231
       AnchorY = 45
     end
   end
@@ -213,6 +218,8 @@
     Height = 324
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 1353
+    ExplicitHeight = 316
     object pnlAccionesIzq: TPanel
       Left = 1
       Top = 225
@@ -220,10 +227,12 @@
       Height = 98
       Align = alBottom
       TabOrder = 1
+      ExplicitTop = 217
+      ExplicitWidth = 1351
       object pnlTotal: TPanel
-        Left = 924
+        Left = 942
         Top = 1
-        Width = 428
+        Width = 410
         Height = 96
         Align = alRight
         BevelOuter = bvNone
@@ -253,19 +262,21 @@
           Properties.Orientation = cxoRight
           Properties.WordWrap = True
           TabOrder = 0
+          ExplicitLeft = 18
           Height = 96
-          Width = 428
-          AnchorX = 428
+          Width = 410
+          AnchorX = 410
         end
       end
       object pnlBotones: TPanel
         Left = 1
         Top = 1
-        Width = 923
+        Width = 941
         Height = 96
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
+        ExplicitWidth = 921
         object btnF12: TcxButton
           Left = 10
           Top = 6
@@ -422,15 +433,15 @@
           OnClick = btnF2Click
         end
         object btnF10: TcxButton
-          Left = 810
+          Left = 812
           Top = 6
           Width = 96
           Height = 57
+          Hint = 'Buscar / Modificar operaciones'
           Caption = 'F10'
           Colors.Default = clBlue
           Colors.Normal = clBlue
           Colors.NormalText = clNavy
-          Hint = 'Buscar / Modificar operaciones'
           TabOrder = 8
           Font.Charset = ANSI_CHARSET
           Font.Color = clBlue
@@ -443,63 +454,63 @@
           OnClick = btnF10Click
         end
         object lblCobro: TcxLabel
-          Left = 32
+          Left = 28
           Top = 71
           Caption = 'Cobro'
           TabOrder = 9
           Transparent = True
         end
         object lblBuscar: TcxLabel
-          Left = 132
+          Left = 125
           Top = 71
           Caption = 'Buscar'
           TabOrder = 10
           Transparent = True
         end
         object lblEliminar: TcxLabel
-          Left = 225
+          Left = 218
           Top = 71
           Caption = 'Eliminar'
           TabOrder = 11
           Transparent = True
         end
         object lblTextoTarifa: TcxLabel
-          Left = 337
+          Left = 329
           Top = 71
           Caption = 'Tarifa'
           TabOrder = 12
           Transparent = True
         end
         object lblBusqTick: TcxLabel
-          Left = 425
+          Left = 411
           Top = 71
           Caption = 'B'#250'sq Tick'
           TabOrder = 13
           Transparent = True
         end
         object lblIndIVA: TcxLabel
-          Left = 531
+          Left = 520
           Top = 71
           Caption = 'Ind. IVA'
           TabOrder = 14
           Transparent = True
         end
         object lblOtro: TcxLabel
-          Left = 643
+          Left = 635
           Top = 71
           Caption = 'Otro'
           TabOrder = 15
           Transparent = True
         end
         object lblCargarCta: TcxLabel
-          Left = 717
+          Left = 704
           Top = 71
           Caption = 'Cargar cta.'
           TabOrder = 16
           Transparent = True
         end
         object lblBuscarModificar: TcxLabel
-          Left = 811
+          Left = 813
           Top = 71
           Caption = 'Buscar/Mod.'
           TabOrder = 17
@@ -514,11 +525,13 @@
       Height = 224
       Align = alClient
       TabOrder = 0
+      ExplicitWidth = 1351
+      ExplicitHeight = 216
       object cxgrdLineasOpe: TcxGrid
         Left = 1
         Top = 1
-        Width = 1353
-        Height = 106
+        Width = 1351
+        Height = 98
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -531,8 +544,8 @@
         TabOrder = 0
         OnEnter = cxGrid1Enter
         OnExit = cxGrid1Exit
-        ExplicitWidth = 1351
-        ExplicitHeight = 98
+        ExplicitWidth = 1349
+        ExplicitHeight = 90
         object tvLineasOpe: TcxGridDBTableView
           OnKeyDown = cxGrid1DBTableView1KeyDown
           OnMouseDown = cxGrid1DBTableView1MouseDown
@@ -547,7 +560,6 @@
           OptionsBehavior.FocusCellOnTab = True
           OptionsBehavior.GoToNextCellOnEnter = True
           OptionsBehavior.FocusCellOnCycle = True
-          OptionsBehavior.ImmediateEditor = True
           OptionsData.Appending = True
           OptionsView.NoDataToDisplayInfoText = 'No hay art'#237'culos'
           OptionsView.ColumnAutoWidth = True
@@ -634,8 +646,8 @@
             DataBinding.FieldName = 'FECHA_DEPOSITO_DEP'
             PropertiesClassName = 'TcxTextEditProperties'
             Properties.ReadOnly = True
-            Options.Editing = False
             Visible = False
+            Options.Editing = False
             Width = 120
           end
         end
@@ -645,22 +657,22 @@
       end
       object pnlBusqueda: TPanel
         Left = 1
-        Top = 115
-        Width = 1353
+        Top = 107
+        Width = 1351
         Height = 116
         Align = alBottom
         TabOrder = 1
-        ExplicitTop = 107
-        ExplicitWidth = 1351
+        ExplicitTop = 99
+        ExplicitWidth = 1349
         object pnlFotoStock: TPanel
-          Left = 1232
+          Left = 1230
           Top = 1
           Width = 120
           Height = 114
           Align = alRight
           BevelOuter = bvLowered
           TabOrder = 1
-          ExplicitLeft = 1230
+          ExplicitLeft = 1228
           object imgFotoStock: TImage
             Left = 1
             Top = 1
@@ -673,18 +685,18 @@
           end
         end
         object splFotoStock: TcxSplitter
-          Left = 1222
+          Left = 1220
           Top = 1
           Width = 10
           Height = 114
           AlignSplitter = salRight
           Control = pnlFotoStock
-          ExplicitLeft = 1220
+          ExplicitLeft = 1218
         end
         object cxgrdStock: TcxGrid
           Left = 1
           Top = 1
-          Width = 1221
+          Width = 1219
           Height = 114
           Align = alClient
           Font.Charset = ANSI_CHARSET
@@ -698,7 +710,7 @@
           TabOrder = 0
           OnEnter = cxGrid1Enter
           OnExit = cxGrid1Exit
-          ExplicitWidth = 1219
+          ExplicitWidth = 1217
           object dbtvStock: TcxGridDBTableView
             OnKeyDown = cxGrid1DBTableView1KeyDown
             OnCustomDrawCell = dbtvStockCustomDrawCell
@@ -726,14 +738,14 @@
       end
       object splOpe: TcxSplitter
         Left = 1
-        Top = 107
-        Width = 8
+        Top = 99
+        Width = 1351
         Height = 8
         HotZoneClassName = 'TcxMediaPlayer8Style'
         AlignSplitter = salBottom
         AutoSnap = True
-        ExplicitTop = 99
-        ExplicitWidth = 1351
+        ExplicitTop = 91
+        ExplicitWidth = 1349
       end
     end
   end

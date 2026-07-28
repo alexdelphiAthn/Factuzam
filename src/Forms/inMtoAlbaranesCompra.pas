@@ -301,7 +301,7 @@ uses
   System.StrUtils,
   inLibFiltroUsuario,
   inLibLog,
-  inLibtb,
+  inLibValoresAutomaticos,
   inLibArticulosResolver,
   inLibArticulosValidador,
   inLibGridCantidad,

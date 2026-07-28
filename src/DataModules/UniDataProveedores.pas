@@ -83,7 +83,7 @@ implementation
 
 uses
   inLibLog, inLibDocumentoFiscal,
-  inLibtb, System.Diagnostics, inLibMsg;
+  inLibValoresAutomaticos, System.Diagnostics, inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

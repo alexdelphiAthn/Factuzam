@@ -143,7 +143,7 @@ type
 implementation
 
 uses
-  inLibtb, inLibLog, System.Diagnostics, System.UITypes,
+  inLibValoresAutomaticos, inLibLog, System.Diagnostics, System.UITypes,
   Vcl.Dialogs, inLibVentasImpuestos, inLibContadorLineas, JclDebug,
   inLibData, inLibMsg;
 

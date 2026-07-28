@@ -162,6 +162,7 @@ implementation
 
 uses  inLibWin,
       inlibtb,
+      inLibConexionesUniDAC,
       inLibMsg,
       inLibDir,
       inLibLog,
@@ -202,7 +203,7 @@ var
   SqlScript: TUniScript; // <-- Declaramos el nuevo componente
 begin
   FPasswordConexion := InputBox(SSolicitudPassBBDD, '', '');
-  ConstruirConexionConnect(ucConexion, edtUserBD.Text,
+  ConfigurarYConectarMySQL(ucConexion, edtUserBD.Text,
     FPasswordConexion,
     edtHostName.Text,
     edtPortBD.Text,
@@ -221,7 +222,7 @@ begin
      if ucConexion.Connected = true then
      begin
        ucConexion.Disconnect;
-       ConstruirConexionConnect(ucConexion,
+       ConfigurarYConectarMySQL(ucConexion,
                              edtUserBD.Text,
                              FPasswordConexion,
                              edtHostName.Text,
@@ -312,7 +313,7 @@ begin
 
   // --- 1. Conexión a information_schema para validar estructura ---
   try
-    ConstruirConexionConnect(ucConexion,
+    ConfigurarYConectarMySQL(ucConexion,
                              edtUserBD.Text,
                              FPasswordConexion,
                              edtHostName.Text,
@@ -361,7 +362,7 @@ begin
     ucConexion.Disconnect;
 
   try
-    ConstruirConexionConnect(ucConexion,
+    ConfigurarYConectarMySQL(ucConexion,
                              edtUserBD.Text,
                              FPasswordConexion,
                              edtHostName.Text,
@@ -430,7 +431,7 @@ begin
       ucConexion.Disconnect;
     bServidorConectado := False;
     try
-      ConstruirConexionConnect(ucConexion,
+      ConfigurarYConectarMySQL(ucConexion,
                                edtUserBD.Text,
                                sPasswordConexion,
                                edtHostName.Text,
@@ -470,7 +471,7 @@ begin
         if ucConexion.Connected then
           ucConexion.Disconnect;
         try
-          ConstruirConexionConnect(ucConexion,
+          ConfigurarYConectarMySQL(ucConexion,
                                    edtUserBD.Text,
                                    sPasswordConexion,
                                    edtHostName.Text,
@@ -907,7 +908,7 @@ var
   iButtonSel: Integer;
   Worker: TBackupWorker;
 begin
-  ConstruirConexionConnect(ucConexion, edtUserBD.Text,
+  ConfigurarYConectarMySQL(ucConexion, edtUserBD.Text,
     FPasswordConexion,
     edtHostName.Text,
     edtPortBD.Text,
@@ -961,7 +962,7 @@ begin
   bDesencriptar := False;
   sPassDesencriptar := '';
   FPasswordConexion := InputBox(SGetPassBBDD, '', '');
-  ConstruirConexionConnect(ucConexion, edtUserBD.Text,
+  ConfigurarYConectarMySQL(ucConexion, edtUserBD.Text,
     FPasswordConexion,
     edtHostName.Text,
     edtPortBD.Text,
@@ -1022,7 +1023,7 @@ end;
 procedure TfrmLogon.btnTestClick(Sender: TObject);
 begin
   escribirini;
-  ConstruirConexionConnect( ucConexion,
+  ConfigurarYConectarMySQL(ucConexion,
                             edtUserBD.Text,
                             FPasswordConexion,
                             edtHostName.Text,
@@ -1115,7 +1116,7 @@ begin
   begin
     if ucConexion.Connected then
       ucConexion.Disconnect;
-    ConstruirConexionConnect( ucConexion,
+    ConfigurarYConectarMySQL(ucConexion,
                               edtUserBD.Text,
                               FPasswordConexion,
                               edtHostName.Text,

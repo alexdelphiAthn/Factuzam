@@ -313,7 +313,8 @@ uses
   inMtoModalImportarPedidosPS, inLibGridCantidad,
   inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibGenBusq,
   inLibShowMto, inLibFiltroUsuario, Uni, inLibArticulosResolver,
-  inLibArticulosValidador, inLibVentasImpuestos, inLibtb,
+  inLibArticulosValidador, inLibVentasImpuestos,
+  inLibValoresAutomaticos,
   inLibGridTallasInline,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku, inLibColumnasDocumento,

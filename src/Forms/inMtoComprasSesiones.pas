@@ -544,7 +544,7 @@ uses
   Vcl.Clipbrd,
   inLibAtributosPaleta,
   inLibFotos,
-  inLibtb,
+  inLibValoresAutomaticos,
   inMtoModalSelFamilia,
   inMtoModalImpSesion,
   inMtoModalIncidencias,

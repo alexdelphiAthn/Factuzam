@@ -297,7 +297,8 @@ uses
   inMtoModalImpFacCompra,
   inMtoModalImpFacCompraV,
   inLibShowMto, inMtoModalRegistrarPago,
-  inMtoModalSeleccionarBanco, inLibGenBusq, inLibtb,
+  inMtoModalSeleccionarBanco, inLibGenBusq,
+  inLibValoresAutomaticos,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku;
 

@@ -131,7 +131,7 @@ type
 implementation
 
 uses
-  inLibtb, inLibLog, System.Diagnostics,
+  inLibValoresAutomaticos, inLibLog, System.Diagnostics,
   System.UITypes, Vcl.Dialogs, inLibArticulosValidador,
   inLibVentasImpuestos, inLibContadorLineas, inLibData, inLibMsg;
 
@@ -2093,7 +2093,7 @@ begin
             Params.CreateParam(ftString, 'p_CODIGO_CAJA_DOC_MOV', ptInput);
             Params.CreateParam(ftString, 'p_CODCLIENTE',          ptInput);
             Params.CreateParam(ftString, 'p_CODARTICULO',         ptInput);
-            sNumeroMov := inLibtb.ObtenerSiguienteContador(
+            sNumeroMov := ObtenerSiguienteContador(
               ConexionPrincipal,
               'MV',
               IdentidadSesion.Usuario);

@@ -131,7 +131,7 @@ function IncorporarAlbaranDesdePedidoConCantidades(AConn: TUniConnection;
 implementation
 
 uses
-  inLibtb,
+  inLibValoresAutomaticos,
   inLibAlbaranesCompraMovimientos,
   inLibMsg;
 
@@ -551,7 +551,8 @@ begin
     Exit;
   end;
   // 1. Reservar NUMERO_ALBC del contador 'AB'.
-  ANumAlbc := inLibtb.ObtenerSiguienteContador(AConn, 'AB', AUsuario);
+  ANumAlbc := ObtenerSiguienteContador(
+    AConn, 'AB', AUsuario);
   if Trim(ANumAlbc) = '' then
   begin
     AMensaje := SErrorContadorAlbaranCompraNoDisponible;

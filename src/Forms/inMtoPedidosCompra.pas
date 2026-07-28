@@ -395,7 +395,7 @@ uses
   inLibAtributosPaleta,
   inLibPedidosCompra,
   inLibLog,
-  inLibtb,
+  inLibValoresAutomaticos,
   inLibArticulosResolver,
   inLibArticulosValidador,
   inLibGridCantidad,

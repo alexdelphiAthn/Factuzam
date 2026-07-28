@@ -371,7 +371,7 @@ uses
   inLibGridCantidad,
   inLibUser,
   inLibLog,
-  inMtoCajaFaseCobro, inLibDevExp, inLibtb,
+  inMtoCajaFaseCobro, inLibDevExp, inLibValoresAutomaticos,
   UniDataFacturas, inMtoModalImpFac,
   inLibFacturas, inLibGenBusq, inLibGenerarTicket,
   inLibGenerarTicketCaja, inLibGenerarTicketBD, inLibVentasWsCola,

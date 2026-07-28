@@ -20,6 +20,13 @@ uses
   Uni,
   inLibConexionesIntf;
 
+procedure ConfigurarConexionMySQL(
+  AConexion: TUniConnection;
+  const AUsuario, APassword, AServidor, APuerto, ABaseDatos: string);
+procedure ConfigurarYConectarMySQL(
+  AConexion: TUniConnection;
+  const AUsuario, APassword, AServidor, APuerto, ABaseDatos: string);
+
 type
   TServicioConexionesUniDAC = class(
     TInterfacedObject,
@@ -45,7 +52,87 @@ type
 implementation
 
 uses
-  System.SysUtils, inLibMsg;
+  System.SysUtils, Vcl.Dialogs, inLibMsg;
+
+procedure ConfigurarCredencialesMySQL(
+  AConexion: TUniConnection;
+  const AUsuario, APassword, AServidor, APuerto, ABaseDatos: string);
+begin
+  AConexion.ConnectString :=
+    'Provider Name=MySQL;User ID=' + AUsuario +
+    ';Password=' + APassword +
+    ';Data Source=' + AServidor +
+    ';Database=' + ABaseDatos +
+    ';Login Prompt=False';
+  AConexion.Server := AServidor;
+  AConexion.Database := ABaseDatos;
+  AConexion.Username := AUsuario;
+  AConexion.Password := APassword;
+  AConexion.Port := StrToIntDef(
+    APuerto, 3306);
+  AConexion.SpecificOptions.Values[
+    'MySQL.UseUnicode'] := 'True';
+end;
+
+procedure ConfigurarConexionMySQL(
+  AConexion: TUniConnection;
+  const AUsuario, APassword, AServidor, APuerto, ABaseDatos: string);
+begin
+  ConfigurarCredencialesMySQL(
+    AConexion,
+    AUsuario,
+    APassword,
+    AServidor,
+    APuerto,
+    ABaseDatos);
+  AConexion.SpecificOptions.Values[
+    'MySQL.Charset'] := 'utf8mb4';
+  AConexion.SpecificOptions.Values[
+    'MySQL.Protocol'] := 'mpDefault';
+  AConexion.Pooling := True;
+  AConexion.PoolingOptions.ConnectionLifetime := 0;
+  AConexion.PoolingOptions.Validate := True;
+  AConexion.PoolingOptions.MinPoolSize := 3;
+  AConexion.PoolingOptions.MaxPoolSize := 20;
+  AConexion.SpecificOptions.Values[
+    'MySQL.Interactive'] := 'True';
+  AConexion.SpecificOptions.Values[
+    'ConnectionTimeout'] := '5';
+  AConexion.Options.LocalFailover := True;
+  AConexion.Options.DisconnectedMode := True;
+end;
+
+procedure ConfigurarYConectarMySQL(
+  AConexion: TUniConnection;
+  const AUsuario, APassword, AServidor, APuerto, ABaseDatos: string);
+begin
+  ConfigurarCredencialesMySQL(
+    AConexion,
+    AUsuario,
+    APassword,
+    AServidor,
+    APuerto,
+    ABaseDatos);
+  if not AConexion.Connected then
+  begin
+    try
+      AConexion.Connect;
+    except
+      on E: Exception do
+      begin
+        ShowMessage(
+          Format(
+            SErrorConexionBbddConExcepcion,
+            [
+              SConnFailBBDD,
+              E.ClassName,
+              E.Message
+            ]));
+        raise;
+      end;
+    end;
+  end;
+end;
 
 constructor TServicioConexionesUniDAC.Create(
   AConexionPrincipal: TUniConnection);

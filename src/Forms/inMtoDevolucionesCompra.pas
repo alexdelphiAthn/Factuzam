@@ -326,7 +326,8 @@ uses
   inLibMsg,
   inMtoModalImpDevCompra,
   inMtoModalImpDevCompraV,
-  inMtoModalEtiqDev, inLibShowMto, inLibGenBusq, inLibtb,
+  inMtoModalEtiqDev, inLibShowMto, inLibGenBusq,
+  inLibValoresAutomaticos,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku;
 

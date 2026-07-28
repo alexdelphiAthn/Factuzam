@@ -16,7 +16,7 @@ unit inLibDatasets;
 interface
 
 uses
-  System.Variants, System.Classes, Data.DB, Uni;
+  System.Variants, System.Classes, Data.DB;
 
 function KeyValuesToStr(const AValores: Variant): string;
 function StrToKeyValues(
@@ -27,7 +27,7 @@ procedure GrabarDatasets(AModulo: TDataModule);
 procedure CancelarDatasets(AModulo: TDataModule);
 function CheckOpenDatasets(AModulo: TDataModule): Boolean;
 function ExistePeriodoUnico(
-  AConsulta: TUniQuery;
+  ADataSet: TDataSet;
   ACampoFechaInicio: TField;
   ACampoFechaFin: TField): Boolean;
 
@@ -35,7 +35,7 @@ implementation
 
 uses
   System.SysUtils, System.DateUtils,
-  Datasnap.Provider, Datasnap.DBClient;
+  Uni, Datasnap.Provider, Datasnap.DBClient, MidasLib;
 
 function KeyValuesToStr(const AValores: Variant): string;
 var
@@ -303,7 +303,7 @@ begin
 end;
 
 function ExistePeriodoUnico(
-  AConsulta: TUniQuery;
+  ADataSet: TDataSet;
   ACampoFechaInicio: TField;
   ACampoFechaFin: TField): Boolean;
 var
@@ -327,7 +327,7 @@ begin
   bFechaInicioNula := ACampoFechaInicio.IsNull;
   dFechaInicio := ACampoFechaInicio.AsDateTime;
   dFechaFin := ACampoFechaFin.AsDateTime;
-  if AConsulta.RecordCount > 1 then
+  if ADataSet.RecordCount > 1 then
   begin
     if not bFechaFinNula and
        (CompareDate(
@@ -342,7 +342,7 @@ begin
         oCliente := TClientDataSet.Create(nil);
         oProveedor :=
           TDataSetProvider.Create(oCliente);
-        oProveedor.DataSet := AConsulta;
+        oProveedor.DataSet := ADataSet;
         oCliente.SetProvider(oProveedor);
         oCliente.Open;
         oCliente.First;

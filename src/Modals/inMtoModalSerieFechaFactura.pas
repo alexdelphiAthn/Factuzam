@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalSerieFechaFactura                                   }
 {    Tipo:       Formulario (Modal)                                            }
@@ -57,7 +57,7 @@ type
 implementation
 
 uses
-  inLibtb, inLibMsg;
+  inLibValoresAutomaticos, inLibMsg;
 
 {$R *.dfm}
 

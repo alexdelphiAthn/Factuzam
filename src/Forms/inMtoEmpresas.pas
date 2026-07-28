@@ -353,7 +353,7 @@ uses
   inLibFotos,
   inLibVerifactuInstalacion,
   inLibMsg,
-  inLibtb,
+  inLibValoresAutomaticos,
   inMtoPrincipal,
   inMtoFacturasBase,
   inMtoArticulos,

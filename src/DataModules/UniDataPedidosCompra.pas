@@ -125,7 +125,7 @@ type
 implementation
 
 uses
-  inLibLog, inLibtb, inLibContadorLineas,
+  inLibLog, inLibValoresAutomaticos, inLibContadorLineas,
   System.Diagnostics, System.UITypes, System.Generics.Collections,
   Vcl.Dialogs, ComCtrls, cxListView,
   inLibPedidosCompra,

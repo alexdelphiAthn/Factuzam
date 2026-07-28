@@ -18,7 +18,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-   inLibUser, inLibtb;
+   inLibUser, inLibCadenas, inLibValoresAutomaticos;
 
 type
   TdmIvasGrupos = class(TdmBase)
@@ -111,7 +111,7 @@ begin
   if unqryTablaG.FindField('IVA_IVAGRP').AsString = '0' then
   begin
     unqryTablaG.FindField('IVA_IVAGRP').AsString :=
-                                                 ObtenerSiguienteContador(
+                          inLibValoresAutomaticos.ObtenerSiguienteContador(
                                                    ConexionPrincipal,
                                                    'IG',
                                                    IdentidadSesion.Usuario);

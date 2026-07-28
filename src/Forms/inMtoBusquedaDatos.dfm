@@ -224,7 +224,6 @@
             Properties.ListOptions.CaseInsensitive = True
             Properties.ListOptions.ShowHeader = True
             Properties.ListSource = dsProveedoresBusqueda
-            Properties.Nullstring = '(Todos)'
             TabOrder = 18
             OnKeyPress = cbbProveedorKeyPress
             Width = 300

@@ -26,7 +26,14 @@ uses
   inLibGestorArticulosMto in
     '..\src\Lib\inLibGestorArticulosMto.pas',
   inLibDiag in '..\src\Lib\inLibDiag.pas',
+  inLibCadenas in '..\src\Lib\inLibCadenas.pas',
+  inLibConexionesIntf in
+    '..\src\Lib\inLibConexionesIntf.pas',
+  inLibConexionesUniDAC in
+    '..\src\Lib\inLibConexionesUniDAC.pas',
   inLibDatasets in '..\src\Lib\inLibDatasets.pas',
+  inLibValoresAutomaticos in
+    '..\src\Lib\inLibValoresAutomaticos.pas',
   inLibtb in '..\src\Lib\inLibtb.pas',
   inLibBusquedasCompra in
     '..\src\Lib\inLibBusquedasCompra.pas',
@@ -48,7 +55,11 @@ uses
   PruebasGestorTareasMto in 'PruebasGestorTareasMto.pas',
   PruebasGestorArticulosMto in 'PruebasGestorArticulosMto.pas',
   PruebasDiagnosticoMetadata in 'PruebasDiagnosticoMetadata.pas',
+  PruebasCadenas in 'PruebasCadenas.pas',
+  PruebasConexiones in 'PruebasConexiones.pas',
   PruebasDatasets in 'PruebasDatasets.pas',
+  PruebasValoresAutomaticos in
+    'PruebasValoresAutomaticos.pas',
   PruebasBusquedasCompra in 'PruebasBusquedasCompra.pas',
   PruebasValidacionTallasCompra in
     'PruebasValidacionTallasCompra.pas',

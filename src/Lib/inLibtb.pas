@@ -20,15 +20,13 @@ uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
       Classes, COMObj, ComCtrls, ExtActns, OleCtrls, Forms, inifiles, Uni,
       SQLBuilder4D, SQLBuilder4D.Parser, SQLBuilder4D.Parser.GaSQLParser,
       System.StrUtils, DCPrijndael, dcpbase64,DCPcrypt2, System.NetEncoding,
-      inLibUser, Datasnap.Provider, Datasnap.DBClient, System.DateUtils,
-      MidasLib,   Datasnap.Midas,   Soap.SOAPMidas, Datasnap.Win.MidasCon,
-      Dialogs, vcl.consts, inLibMsg, inLibFacturas,
-      inLibPerfilesUsuarioIntf;
+      inLibUser, inLibFacturas,
+      inLibPerfilesUsuarioIntf, inLibCadenas;
 
 type
   TUpdateTotalEvent = procedure(Sender: TObject;
                                 NuevoTotal: Currency) of object;
-  TStringArray = array of string;
+  TStringArray = inLibCadenas.TArrayCadenas;
   function EncriptAES(s:String):String;
   function EncriptAESPass(s:String; sPass:AnsiString):String;
   function DecriptAES(s:String):String;
@@ -120,7 +118,8 @@ type
 implementation
 
 uses
-  inLibDatasets;
+  inLibConexionesUniDAC, inLibDatasets, inLibValoresAutomaticos,
+  inLibMsg;
 
 function KeyValuesToStr(const V: Variant): string;
 begin
@@ -158,6 +157,113 @@ function CheckOpenDatasets(AModule: TDataModule): Boolean;
 begin
   Result :=
     inLibDatasets.CheckOpenDatasets(AModule);
+end;
+
+function HayCoincidencia(str1, str2: string): string;
+begin
+  Result := inLibCadenas.HayCoincidencia(
+    str1, str2);
+end;
+
+function SimbolosProhibidos(
+  const s: String;
+  const APerfilesUsuario: IPerfilesUsuario): Boolean;
+begin
+  Result := inLibCadenas.SimbolosProhibidos(
+    s, APerfilesUsuario);
+end;
+
+function AnsiSplit(const str: string;
+                   const separator: string): TStringArray;
+begin
+  Result := inLibCadenas.SepararAnsi(
+    str, separator);
+end;
+
+function AnsiOccurs(
+  const str, substr: string): Integer;
+begin
+  Result := inLibCadenas.ContarOcurrenciasAnsi(
+    str, substr);
+end;
+
+procedure ConstruirConexion(conUni: TUniConnection;
+                            sUser,
+                            sPassword,
+                            sHostName,
+                            sPort,
+                            sDataBase: String);
+begin
+  inLibConexionesUniDAC.ConfigurarConexionMySQL(
+    conUni,
+    sUser,
+    sPassword,
+    sHostName,
+    sPort,
+    sDataBase);
+end;
+
+procedure ConstruirConexionConnect(conUni: TUniConnection;
+                                   sUser,
+                                   sPassword,
+                                   sHostName,
+                                   sPort,
+                                   sDataBase: String);
+begin
+  inLibConexionesUniDAC.ConfigurarYConectarMySQL(
+    conUni,
+    sUser,
+    sPassword,
+    sHostName,
+    sPort,
+    sDataBase);
+end;
+
+function ObtenerSeriePropiaAlmacen(AConexion: TUniConnection;
+                                   const AEmpresa, ATipoDoc,
+                                   AAlmacen: string): string;
+begin
+  Result := inLibValoresAutomaticos.ObtenerSeriePropiaAlmacen(
+    AConexion, AEmpresa, ATipoDoc, AAlmacen);
+end;
+
+function ObtenerSerieDefecto(AConexion: TUniConnection;
+                             const AEmpresa, ATipoDoc: string;
+                             const AAlmacen: string): string;
+begin
+  Result := inLibValoresAutomaticos.ObtenerSerieDefecto(
+    AConexion, AEmpresa, ATipoDoc, AAlmacen);
+end;
+
+procedure CargarSeriesEmpresa(AConexion: TUniConnection;
+                              const AEmpresa, ATipoDoc: string;
+                              AItems: TStrings);
+begin
+  inLibValoresAutomaticos.CargarSeriesEmpresa(
+    AConexion, AEmpresa, ATipoDoc, AItems);
+end;
+
+function GetDefaultValue(AConexion: TUniConnection;
+  const ATable, AField, AConditionField: string): string;
+begin
+  Result := inLibValoresAutomaticos.ObtenerValorPorDefecto(
+    AConexion, ATable, AField, AConditionField);
+end;
+
+function ObtenerSiguienteContador(AConexion: TUniConnection;
+                                  const ATipoDoc,
+                                  AUsuario: string): string;
+begin
+  Result := inLibValoresAutomaticos.ObtenerSiguienteContador(
+    AConexion, ATipoDoc, AUsuario);
+end;
+
+procedure AplicarValoresPorDefecto(AConexion: TUniConnection;
+                                   AunqryDestino: TDataSet;
+                                   const NombreTabla: string);
+begin
+  inLibValoresAutomaticos.AplicarValoresPorDefecto(
+    AConexion, AunqryDestino, NombreTabla);
 end;
 
 procedure ActualizarLineaFacturaGen(AConexion: TUniConnection;
@@ -238,338 +344,6 @@ begin
       EventoUpdateTotal(nil, Totales.Totales.TotalLiquido);
   finally
     FreeAndNil(Totales);
-  end;
-end;
-
-// Serie ligada en exclusiva a un almacen (CODIGO_ALM_EMPSER = almacen)
-// para la empresa + tipo de documento, vigente por fechas. Devuelve ''
-// si el almacen no tiene serie propia. Es la pieza que usa el flujo
-// "un documento por almacen": cada documento toma la serie de SU almacen.
-function ObtenerSeriePropiaAlmacen(AConexion: TUniConnection;
-                                   const AEmpresa, ATipoDoc,
-                                   AAlmacen: string): string;
-var
-  q: TUniQuery;
-begin
-  Result := '';
-  if (Trim(AEmpresa) <> '') and (Trim(ATipoDoc) <> '') and
-     (Trim(AAlmacen) <> '') then
-  begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := AConexion;
-      q.SQL.Text :=
-        'SELECT EMPSER FROM fza_empresas_series ' +
-        ' WHERE CODIGO_EMP_EMPSER = :emp ' +
-        '   AND TIPO_DOC_EMPSER   = :tip ' +
-        '   AND CODIGO_ALM_EMPSER = :alm ' +
-        '   AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
-        '   AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= CURDATE()) ' +
-        ' LIMIT 1';
-      q.ParamByName('emp').AsString := AEmpresa;
-      q.ParamByName('tip').AsString := ATipoDoc;
-      q.ParamByName('alm').AsString := AAlmacen;
-      q.Open;
-      if not q.IsEmpty then
-        Result := q.FieldByName('EMPSER').AsString;
-    finally
-      FreeAndNil(q);
-    end;
-  end;
-end;
-
-// Serie por defecto de la empresa para un tipo de documento. Si llega
-// AAlmacen, la prioridad es: 1) serie propia del almacen
-// (CODIGO_ALM_EMPSER = almacen), 2) serie generica (sin almacen). Sin
-// AAlmacen se mantiene el comportamiento historico: primera serie del
-// tipo, este o no ligada a un almacen.
-function ObtenerSerieDefecto(AConexion: TUniConnection;
-                             const AEmpresa, ATipoDoc: string;
-                             const AAlmacen: string = ''): string;
-var
-  q: TUniQuery;
-  sFiltroAlm: string;
-begin
-  Result := '';
-  if (Trim(AEmpresa) <> '') and (Trim(ATipoDoc) <> '') then
-  begin
-    if Trim(AAlmacen) <> '' then
-      Result := ObtenerSeriePropiaAlmacen(AConexion, AEmpresa, ATipoDoc,
-        AAlmacen);
-    if Result = '' then
-    begin
-      // Con almacen informado, la serie generica no puede ser una
-      // ligada a OTRO almacen: se exige CODIGO_ALM_EMPSER vacio.
-      sFiltroAlm := '';
-      if Trim(AAlmacen) <> '' then
-        sFiltroAlm := '   AND IFNULL(CODIGO_ALM_EMPSER, '''') = '''' ';
-      q := TUniQuery.Create(nil);
-      try
-        q.Connection := AConexion;
-        q.SQL.Text :=
-          'SELECT EMPSER FROM fza_empresas_series ' +
-          ' WHERE CODIGO_EMP_EMPSER = :emp ' +
-          '   AND TIPO_DOC_EMPSER   = :tip ' +
-          '   AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
-          '   AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= CURDATE()) ' +
-          sFiltroAlm +
-          ' LIMIT 1';
-        q.ParamByName('emp').AsString := AEmpresa;
-        q.ParamByName('tip').AsString := ATipoDoc;
-        q.Open;
-        if not q.IsEmpty then
-          Result := q.FieldByName('EMPSER').AsString;
-      finally
-        FreeAndNil(q);
-      end;
-    end;
-  end;
-end;
-
-// Rellena AItems con las series vigentes de la empresa para el tipo de
-// documento (genericas y ligadas a almacen). Alimenta los combos de
-// serie de los modales: el usuario ve todas y puede cambiar la
-// propuesta que acompanya al almacen.
-procedure CargarSeriesEmpresa(AConexion: TUniConnection;
-                              const AEmpresa, ATipoDoc: string;
-                              AItems: TStrings);
-var
-  q: TUniQuery;
-begin
-  AItems.Clear;
-  if (Trim(AEmpresa) <> '') and (Trim(ATipoDoc) <> '') then
-  begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := AConexion;
-      q.SQL.Text :=
-        'SELECT DISTINCT EMPSER FROM fza_empresas_series ' +
-        ' WHERE CODIGO_EMP_EMPSER = :emp ' +
-        '   AND TIPO_DOC_EMPSER   = :tip ' +
-        '   AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
-        '   AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= CURDATE()) ' +
-        ' ORDER BY EMPSER';
-      q.ParamByName('emp').AsString := AEmpresa;
-      q.ParamByName('tip').AsString := ATipoDoc;
-      q.Open;
-      while not q.Eof do
-      begin
-        AItems.Add(q.FieldByName('EMPSER').AsString);
-        q.Next;
-      end;
-    finally
-      FreeAndNil(q);
-    end;
-  end;
-end;
-
-function GetDefaultValue(AConexion: TUniConnection;
-  const ATable, AField, AConditionField: string): string;
-var
-  unqry: TUniQuery;
-begin
-  Result := ''; // Valor por defecto inicial
-  unqry := TUniQuery.Create(nil);
-  try
-    unqry.Connection := AConexion;
-    unqry.SQL.Text := Format('SELECT %s FROM %s WHERE %s = %s LIMIT 1',
-                             [AField, ATable, AConditionField, QuotedStr('S')]);
-    unqry.Open;
-    if not unqry.Eof then
-      Result := unqry.Fields[0].AsString;
-  finally
-    FreeAndNil(unqry);
-  end;
-end;
-
-function ObtenerSiguienteContador(AConexion: TUniConnection;
-                                  const ATipoDoc,
-                                  AUsuario: string): string;
-var
-  SP: TUniStoredProc;
-begin
-  Result := '';
-  SP := TUniStoredProc.Create(nil);
-  try
-    SP.Connection := AConexion;
-    SP.StoredProcName := 'PRC_GET_NEXT_CONT';
-    SP.Params.Clear;
-    SP.Params.CreateParam(ftString, 'pTipoDoc', ptInput).AsString := ATipoDoc;
-    SP.Params.CreateParam(ftString, 'pUSUARIO_MODIF', ptInput).AsString :=
-      AUsuario;
-    SP.Params.CreateParam(ftString, 'pcont', ptOutput);
-    try
-      SP.Execute;
-      Result := SP.Params.ParamByName('pcont').AsString;
-    except
-      on E: Exception do
-        ShowMessage(Format(SErrorGenerarContadorAutomatico, [E.Message]));
-    end;
-  finally
-    FreeAndNil(SP);
-  end;
-end;
-
-procedure AplicarValoresPorDefecto(AConexion: TUniConnection;
-                                   AunqryDestino: TDataSet;
-                                   const NombreTabla: string);
-var
-  qryDefaults: TUniQuery; // O TFDQuery, según uses
-begin
-  if ((AunqryDestino.State <> dsInsert) and
-      (AunqryDestino.State <> dsEdit)) then
-    AunqryDestino.Edit;
-  qryDefaults := TUniQuery.Create(nil);
-  try
-    qryDefaults.Connection := AConexion;
-    // Buscamos todos los valores configurados para esa tabla específica
-    qryDefaults.SQL.Text := 'SELECT CAMPO_OBJETIVO_DEF_VD, ' +
-                            '       VALOR_DEF_VD, ' +
-                            '       TIPO_DATO_DEF_VD ' +
-                            '  FROM fza_valores_defecto ' +
-                            ' WHERE TABLA_OBJETIVO_DEF_VD = ' +
-                                                         QuotedStr(NombreTabla);
-    qryDefaults.Open;
-    while not qryDefaults.Eof do
-    begin
-      var oField := AunqryDestino.FindField(
-                        qryDefaults.FieldByName(
-                          'CAMPO_OBJETIVO_DEF_VD').AsString);
-      if Assigned(oField) then
-      begin
-        var sValor := qryDefaults.FieldByName('VALOR_DEF_VD').AsString;
-        var sTipo  := qryDefaults.FieldByName('TIPO_DATO_DEF_VD').AsString;
-        if sTipo = 'INTEGER' then
-          oField.AsInteger := StrToIntDef(sValor, 0)
-        else if sTipo = 'FLOAT' then
-          oField.AsFloat := StrToFloatDef(sValor, 0)
-        else
-          oField.AsString := sValor;
-      end;
-      qryDefaults.Next;
-    end;
-  finally
-    FreeAndNil(qryDefaults);
-  end;
-end;
-
-function HayCoincidencia(str1, str2: string): String;
-var
-  i, j: integer;
-  sResul:string;
-  coincidencia: boolean;
-begin
-  coincidencia := false;
-  sResul := '';
-  i := 1;
-  while (i <= Length(str1)) and not coincidencia do
-  begin
-    j := 1;
-    while (j <= Length(str2)) and not coincidencia do
-    begin
-      if str1[i] = str2[j] then
-      begin
-        coincidencia := true;
-        sResul := str1[i];
-      end;
-      Inc(j);
-    end;
-    Inc(i);
-  end;
-  Result := sResul;
-end;
-
-function SimbolosProhibidos(
-  const s: String;
-  const APerfilesUsuario: IPerfilesUsuario): Boolean;
-const
-  SIMBOLOS_PREDETERMINADOS = 'ºª,="'':;·|.,¨{}~^][()/+€%*';
-var
-  sSimbolos:string;
-  sError:string;
-begin
-  sSimbolos := SIMBOLOS_PREDETERMINADOS;
-  if Assigned(APerfilesUsuario) then
-    sSimbolos := APerfilesUsuario.ObtenerValorPerfil(
-      'inLibtb',
-      'oSimbolosProhibidos',
-      SIMBOLOS_PREDETERMINADOS);
-  sError := HayCoincidencia(s, sSimbolos);
-  if sError <> '' then
-    Result := True
-  else
-    Result := False;
-end;
-
-procedure ConstruirConexionConnect(conUni:TUniConnection;
-                                   sUser,
-                                   sPassword,
-                                   sHostName,
-                                   sPort,
-                                   sDataBase:String);
-begin
-  with Conuni do
-  begin
-    sPassword := sPassword;
-    ConnectString := 'Provider Name=MySQL;User ID=' + sUser + ';Password=' +
-                     sPassword + ';Data Source=' + sHostName+
-                     ';Database=' + sDataBase+ ';Login Prompt=False';
-    Server := sHostName;
-    Database := sDatabase;
-    Username := sUser;
-    Password := sPassword;
-    Port := StrToIntDef(sPort, 3306);
-    SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
-    if (Connected = False) then
-    begin
-      try
-        Connect;
-      except
-        on E: Exception do
-        begin
-          ShowMessage(Format(SErrorConexionBbddConExcepcion,
-            [SConnFailBBDD, E.ClassName, E.Message]));
-          raise;
-          Exit;
-        end;
-      end;
-    end;
-  end;
-end;
-
-procedure ConstruirConexion(conUni:TUniConnection; sUser,
-                                                   sPassword,
-                                                   sHostName,
-                                                   sPort,
-                                                   sDataBase:String);
-begin
-  with Conuni do
-  begin
-    sPassword := sPassword;
-    ConnectString := 'Provider Name=MySQL;User ID=' + sUser + ';Password=' +
-                     sPassword + ';Data Source=' + sHostName+
-                     ';Database=' + sDataBase+ ';Login Prompt=False';
-    Server := sHostName;
-    Database := sDatabase;
-    Username := sUser;
-    Password := sPassword;
-    Port := StrToIntDef(sPort, 3306);
-    SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
-    SpecificOptions.Values['MySQL.Charset'] := 'utf8mb4';
-    SpecificOptions.Values['MySQL.Protocol'] := 'mpDefault';
-    Pooling := True;
-    PoolingOptions.ConnectionLifetime := 0;
-    PoolingOptions.Validate := True;
-    PoolingOptions.MinPoolSize := 3;
-    PoolingOptions.MaxPoolSize := 20;
-    SpecificOptions.Values['MySQL.Interactive'] := 'True';
-    SpecificOptions.Values['ConnectionTimeout'] := '5';
-    Options.LocalFailover := True;
-    // Modo desconectado en la conexión principal, igual que las clonadas:
-    // libera la conexión física entre operaciones y la reabre al vuelo, así
-    // una conexión muerta del pool no propaga errores (antes iba en False).
-    Options.DisconnectedMode := True;
-    // SpecificOptions.Values['MySQL.Compress'] := 'True';
   end;
 end;
 
@@ -1179,50 +953,6 @@ end;
 function NomEjecutable:String;
 begin
   //Result:= Copy( sName, 3, 255 );
-end;
-
-function AnsiSplit(const str: string;
-                 const separator: string): TStringArray;
-// Devuelve un arreglo con las partes de "str" separadas por
-// "separator"
-// Versión ANSI
-var
- i, n: integer;
- p, q, s: PChar;
-begin
- SetLength(Result, AnsiOccurs(str, separator)+1);
- p := PChar(str);
- s := PChar(separator);
- n := Length(separator);
- i := 0;
- repeat
-   q := AnsiStrPos(p, s);
-   if q = nil then q := AnsiStrScan(p, #0);
-   SetString(Result[i], p, q - p);
-   p := q + n;
-   inc(i);
- until q^ = #0;
-end;
-
-function AnsiOccurs(const str: string; const substr: string): integer;
-// Devuelve la cantidad de veces que una subcadena está en una cadena
-// Versión ANSI
-var
- p, q: PChar;
- n: integer;
-begin
-  Result := 0;
-  n := Length(substr);
-  if n = 0 then exit;
-  q := PChar(Pointer(substr));
-  p := PChar(Pointer(str));
-  while p <> nil do begin
-    p := AnsiStrPos(p, q);
-    if p <> nil then begin
-      inc(Result);
-      inc(p, n);
-    end;
-  end;
 end;
 
 function ExistePeriodoUnico(qryData:TUniQuery;

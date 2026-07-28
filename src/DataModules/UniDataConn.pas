@@ -50,6 +50,7 @@ implementation
 
 uses inLibDir,
      inLibtb,
+     inLibConexionesUniDAC,
      inLibWin,
      inLibLog,
      inLibMsg;
@@ -112,7 +113,13 @@ begin
     Options.LocalFailover := True;
     Options.DisconnectedMode := True;
   end;
-  ConstruirConexion(conUni, sUser, sPasswordEn, sHostName, sPort, sDatabase);
+  ConfigurarConexionMySQL(
+    conUni,
+    sUser,
+    sPasswordEn,
+    sHostName,
+    sPort,
+    sDatabase);
 end;
 
 procedure TdmConn.conUniAfterConnect(Sender: TObject);

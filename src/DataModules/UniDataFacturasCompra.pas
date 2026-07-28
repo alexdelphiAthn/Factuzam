@@ -143,7 +143,7 @@ type
 implementation
 
 uses
-  inLibLog, inLibtb, inLibContadorLineas,
+  inLibLog, inLibValoresAutomaticos, inLibContadorLineas,
   System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inLibComprasImpuestos,
   inLibData,

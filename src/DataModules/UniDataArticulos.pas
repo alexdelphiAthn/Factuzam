@@ -143,7 +143,7 @@ implementation
 uses
 
   System.Diagnostics,
-  inLibtb,
+  inLibCadenas, inLibDatasets, inLibValoresAutomaticos,
   inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -564,9 +564,10 @@ end;
 procedure TdmArticulos.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  AplicarValoresPorDefecto(ConexionPrincipal, unqryTablaG, 'fza_articulos');
+  inLibValoresAutomaticos.AplicarValoresPorDefecto(
+    ConexionPrincipal, unqryTablaG, 'fza_articulos');
   unqryTablaG.FindField('CODIGO_FAM_ART').AsString :=
-                                   GetDefaultValue(
+                                   ObtenerValorPorDefecto(
                                      ConexionPrincipal,
                                      'vi_articulos_familias_list',
                                                    'CODIGO_FAM_FAM',
@@ -836,7 +837,7 @@ begin
   if unqryTablaG.FindField('CODIGO_ART_ART').AsString = '0' then
   begin
     unqryTablaG.FindField('CODIGO_ART_ART').AsString :=
-                                                 ObtenerSiguienteContador(
+                          inLibValoresAutomaticos.ObtenerSiguienteContador(
                                                    ConexionPrincipal,
                                                    'AR',
                                                    IdentidadSesion.Usuario);
@@ -844,7 +845,7 @@ begin
   if unqryTablaG.FindField('ORDEN_ART').AsString = '0' then
   begin
       unqryTablaG.FindField('ORDEN_ART').AsString :=
-                                                 ObtenerSiguienteContador(
+                          inLibValoresAutomaticos.ObtenerSiguienteContador(
                                                    ConexionPrincipal,
                                                    'AO',
                                                    IdentidadSesion.Usuario);

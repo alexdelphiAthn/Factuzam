@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalFacturarTicket                                      }
 {    Tipo:       Formulario (Modal)                                            }
@@ -78,7 +78,7 @@ type
 implementation
 
 uses
-  inLibtb, inLibVerifactu, inLibVerifactuCola,
+  inLibValoresAutomaticos, inLibVerifactu, inLibVerifactuCola,
   inMtoGenSearch, inLibDocumentoFiscal, inLibMsg;
 
 {$R *.dfm}

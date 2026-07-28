@@ -28,7 +28,8 @@ uses
   cxGridTableView, cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, MemDS,
   DBAccess, Uni, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, JvComponentBase, JvEnterTab, dxShellDialogs,
-  cxMaskEdit, cxDropDownEdit, inLibtb, inMtoModalAltaRapida, inLibDevExp,
+  cxMaskEdit, cxDropDownEdit, inLibValoresAutomaticos,
+  inMtoModalAltaRapida, inLibDevExp,
   inLibConfigCampos;
 
 type

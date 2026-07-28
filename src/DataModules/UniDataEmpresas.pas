@@ -78,7 +78,8 @@ type
 implementation
 
 uses
-  inLibtb, inLibLog, System.Diagnostics,
+  inLibCadenas, inLibDatasets, inLibValoresAutomaticos, inLibLog,
+  System.Diagnostics,
   inLibFormatoDocumento, inLibIBAN, inLibMsg;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -315,9 +316,10 @@ end;
 procedure TdmEmpresas.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  AplicarValoresPorDefecto(ConexionPrincipal, unqryTablaG, 'fza_empresas');
+  inLibValoresAutomaticos.AplicarValoresPorDefecto(
+    ConexionPrincipal, unqryTablaG, 'fza_empresas');
   unqryTablaG.FindField('GRUPO_ZONA_IVA_EMP').AsString :=
-       GetDefaultValue(
+       ObtenerValorPorDefecto(
          ConexionPrincipal,
          'vi_ivas_grupos',
          'IVA_IVAGRP',
@@ -557,7 +559,7 @@ begin
   if unqryTablaG.FindField('CODIGO_EMP_EMP').AsString = '0' then
   begin
       unqryTablaG.FindField('CODIGO_EMP_EMP').AsString :=
-                                                 ObtenerSiguienteContador(
+                          inLibValoresAutomaticos.ObtenerSiguienteContador(
                                                    ConexionPrincipal,
                                                    'EM',
                                                    IdentidadSesion.Usuario);
@@ -565,7 +567,7 @@ begin
   if unqryTablaG.FindField('ORDEN_EMP').AsString = '0' then
   begin
       unqryTablaG.FindField('ORDEN_EMP').AsString :=
-                                                 ObtenerSiguienteContador(
+                          inLibValoresAutomaticos.ObtenerSiguienteContador(
                                                    ConexionPrincipal,
                                                    'EO',
                                                    IdentidadSesion.Usuario);
@@ -668,7 +670,7 @@ begin
   if unqryRetenciones.FindField('CODIGO_RETENCION_EMPRET').AsString = '0' then
   begin
       unqryRetenciones.FindField('CODIGO_RETENCION_EMPRET').AsString :=
-                                                 ObtenerSiguienteContador(
+                          inLibValoresAutomaticos.ObtenerSiguienteContador(
                                                    ConexionPrincipal,
                                                    'RT',
                                                    IdentidadSesion.Usuario);
@@ -680,7 +682,7 @@ begin
   if unqrySeries.FindField('CODIGO_SERIE_EMPSER').AsString = '0' then
   begin
       unqrySeries.FindField('CODIGO_SERIE_EMPSER').AsString :=
-                                                ObtenerSiguienteContador(
+                         inLibValoresAutomaticos.ObtenerSiguienteContador(
                                                   ConexionPrincipal,
                                                   'ES',
                                                   IdentidadSesion.Usuario);
@@ -692,7 +694,7 @@ begin
   if unqryBancos.FindField('CODIGO_EMPBAN').AsString = '0' then
   begin
       unqryBancos.FindField('CODIGO_EMPBAN').AsString :=
-                                                ObtenerSiguienteContador(
+                         inLibValoresAutomaticos.ObtenerSiguienteContador(
                                                   ConexionPrincipal,
                                                   'EB',
                                                   IdentidadSesion.Usuario);

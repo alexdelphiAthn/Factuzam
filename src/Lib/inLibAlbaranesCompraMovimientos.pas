@@ -60,7 +60,7 @@ procedure RevertirMovimientosDesdeAlbaranCompra(AConn: TUniConnection;
 implementation
 
 uses
-  inLibtb, inLibMsg;
+  inLibValoresAutomaticos, inLibMsg;
 
 // Carga los datos minimos del albaran necesarios para construir los
 // movimientos: empresa (para el parametro p_CODIGO_EMPRESA_MOV) y
@@ -456,7 +456,8 @@ begin
         qSrc.Next;
         Continue;
       end;
-      sNumeroMov := inLibtb.ObtenerSiguienteContador(AConn, 'MV', AUsuario);
+      sNumeroMov := ObtenerSiguienteContador(
+        AConn, 'MV', AUsuario);
       // LINEA_ALBCLIN ya viene en formato '0010', '0020', etc. Lo
       // reusamos tal cual como LINEA_MOV.
       sLinea := qSrc.FieldByName('LINEA').AsString;
