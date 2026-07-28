@@ -83,6 +83,8 @@
         <DCCReference Include="..\src\Lib\inLibGestorArticulosMto.pas"/>
         <DCCReference Include="..\src\Lib\inLibDiag.pas"/>
         <DCCReference Include="..\src\Lib\inLibCadenas.pas"/>
+        <DCCReference Include="..\src\Lib\inLibCifrado.pas"/>
+        <DCCReference Include="..\src\Lib\inLibConfiguracionIni.pas"/>
         <DCCReference Include="..\src\Lib\inLibConexionesIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibConexionesUniDAC.pas"/>
         <DCCReference Include="..\src\Lib\inLibDatasets.pas"/>
@@ -105,6 +107,8 @@
         <DCCReference Include="PruebasGestorArticulosMto.pas"/>
         <DCCReference Include="PruebasDiagnosticoMetadata.pas"/>
         <DCCReference Include="PruebasCadenas.pas"/>
+        <DCCReference Include="PruebasCifrado.pas"/>
+        <DCCReference Include="PruebasConfiguracionIni.pas"/>
         <DCCReference Include="PruebasConexiones.pas"/>
         <DCCReference Include="PruebasDatasets.pas"/>
         <DCCReference Include="PruebasValoresAutomaticos.pas"/>

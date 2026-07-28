@@ -191,6 +191,55 @@
     Left = 208
     Top = 128
   end
+  object unqrySesionFotos: TUniQuery
+    SQL.Strings = (
+      'SELECT F.SERIE_SES_CSF,'
+      '       F.NUMERO_SES_CSF,'
+      '       F.LINEA_CSF,'
+      '       COALESCE(L.CODIGO_ART_TENTATIVO_SESLIN,'
+      '                F.CODIGO_ART_TENTATIVO_CSF)'
+      '         AS CODIGO_ART_TENTATIVO_CSF,'
+      '       F.CODIGO_UNIDAD_CSF,'
+      '       CASE'
+      '         WHEN COALESCE(F.CODIGO_UNIDAD_CSF, '#39#39') = '#39#39
+      '         THEN '#39'Art'#237'culo'#39
+      '         ELSE CONCAT('#39'SKU '#39', F.CODIGO_UNIDAD_CSF)'
+      '       END AS ASIGNACION_FOTO,'
+      '       L.REF_PRV_SESLIN,'
+      '       L.DESCRIPCION_SESLIN,'
+      '       L.COLOR_TEXTO_SESLIN,'
+      '       F.NOMBRE_FOT_CSF,'
+      '       F.INSTANTE_MODIF,'
+      '       F.USUARIO_MODIF'
+      '  FROM fza_compras_sesiones_fotos F'
+      '  LEFT JOIN fza_compras_sesiones_lineas L'
+      '    ON L.SERIE_SES_SESLIN = F.SERIE_SES_CSF'
+      '   AND L.NUMERO_SES_SESLIN = F.NUMERO_SES_CSF'
+      '   AND L.LINEA_SESLIN = F.LINEA_CSF'
+      ' WHERE F.SERIE_SES_CSF = :SERIE_SES'
+      '   AND F.NUMERO_SES_CSF = :NUMERO_SES'
+      ' ORDER BY F.LINEA_CSF, F.CODIGO_UNIDAD_CSF')
+    MasterFields = 'SERIE_SES;NUMERO_SES'
+    DetailFields = 'SERIE_SES_CSF;NUMERO_SES_CSF'
+    Left = 352
+    Top = 72
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'SERIE_SES'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'NUMERO_SES'
+        Value = nil
+      end>
+  end
+  object dsSesionFotos: TDataSource
+    DataSet = unqrySesionFotos
+    Left = 352
+    Top = 128
+  end
   object unqrySesionFil: TUniQuery
     SQL.Strings = (
       'SELECT * FROM fza_compras_sesiones_lineas_filas'

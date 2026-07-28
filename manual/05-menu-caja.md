@@ -1,16 +1,18 @@
-# 05 · Menú Caja
+# 05 · Menú TPV
 
 [◀ Volver al índice](README.md)
 
-El menú **Caja** es el **punto de venta (TPV)** para la venta al detalle en
+El menú **TPV** es el punto de venta para la venta al detalle en
 tienda: cobrar a clientes de mostrador, emitir tickets/facturas
 simplificadas, gestionar el efectivo de la caja y cuadrarla (arqueo).
 
 Estructura del menú:
 
 ```
-Caja
+TPV
 ├── Menú de Caja
+├── Listados
+│   └── Listado de operaciones de venta
 ├── Parámetros de Caja
 ├── Formas de Pago Caja
 ├── Depósitos de Clientes
@@ -25,7 +27,7 @@ Caja
 
 Una jornada normal de tienda sigue este orden:
 
-1. Entrar en **Caja ▸ Menú de Caja** y seleccionar la empresa, el almacén y
+1. Entrar en **TPV ▸ Menú de Caja** y seleccionar la empresa, el almacén y
    la caja física del puesto.
 2. Revisar la **Fecha de Caja**. Si se está registrando una jornada atrasada,
    cambiarla antes de hacer ventas.
@@ -48,6 +50,23 @@ La caja separa tres cosas que conviene no mezclar:
 > Para evitar descuadres, una operación de venta no se considera terminada
 > hasta que la fase de cobro se valida. Volver con **Esc** desde cobro deja el
 > ticket abierto y no graba nada.
+
+---
+
+## Listados
+
+### Listado de operaciones de venta
+
+**Ruta:** *TPV ▸ Listados ▸ Listado de operaciones de venta*
+
+Genera un informe A4 horizontal con el detalle de las ventas del TPV. El
+formulario propone desde el 1 de enero del año actual hasta hoy y muestra la
+empresa, el almacén y la caja activos de la sesión.
+
+El informe incluye artículo, color, talla, proveedor, modelo, descripción,
+cantidad, bruto, descuento, neto del artículo, ingresos, vendedor, formas de
+pago y documento. Los resultados se ordenan por fecha y operación, con
+totales por caja y por fecha.
 
 ---
 

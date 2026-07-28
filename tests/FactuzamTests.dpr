@@ -27,6 +27,9 @@ uses
     '..\src\Lib\inLibGestorArticulosMto.pas',
   inLibDiag in '..\src\Lib\inLibDiag.pas',
   inLibCadenas in '..\src\Lib\inLibCadenas.pas',
+  inLibCifrado in '..\src\Lib\inLibCifrado.pas',
+  inLibConfiguracionIni in
+    '..\src\Lib\inLibConfiguracionIni.pas',
   inLibConexionesIntf in
     '..\src\Lib\inLibConexionesIntf.pas',
   inLibConexionesUniDAC in
@@ -56,6 +59,8 @@ uses
   PruebasGestorArticulosMto in 'PruebasGestorArticulosMto.pas',
   PruebasDiagnosticoMetadata in 'PruebasDiagnosticoMetadata.pas',
   PruebasCadenas in 'PruebasCadenas.pas',
+  PruebasCifrado in 'PruebasCifrado.pas',
+  PruebasConfiguracionIni in 'PruebasConfiguracionIni.pas',
   PruebasConexiones in 'PruebasConexiones.pas',
   PruebasDatasets in 'PruebasDatasets.pas',
   PruebasValoresAutomaticos in

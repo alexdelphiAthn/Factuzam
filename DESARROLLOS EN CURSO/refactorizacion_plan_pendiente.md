@@ -343,7 +343,7 @@ hacerse **manteniendo `inLibtb` como fachada** que reexporta, para que
 ningún `uses` se rompa, y solo después ir migrando los `uses` de los
 dependientes por tandas.
 
-Estado a 28/07/2026: **D3.4 terminado; 4 de 9 fascículos**.
+Estado a 28/07/2026: **D3.7 terminado; 7 de 9 fascículos**.
 
 - D3.1 extrae a `inLibDatasets` las claves, la metadata, el estado de
   datasets y la validación de periodos.
@@ -353,17 +353,26 @@ Estado a 28/07/2026: **D3.4 terminado; 4 de 9 fascículos**.
   perfil y las utilidades ANSI.
 - D3.4 lleva la configuración y conexión heredadas a
   `inLibConexionesUniDAC`.
+- D3.5 extrae a `inLibCifrado` el AES/Base64 compatible con las
+  credenciales y las copias ya persistidas.
+- D3.6 elimina cuatro prototipos de búsqueda y filtro sin consumidores,
+  y reduce `inLibGenBusq` a sus cinco dependencias reales.
+- D3.7 centraliza configuración y licencia en
+  `inLibConfiguracionIni`, y poda los helpers y rutas sin consumidores.
 
-`inLibtb` baja acumuladamente de 1.523 a 966 líneas
-(-557; -36,6 %) y conserva las firmas como fachada. Sus dependencias
-directas de producción bajan de 50 a 12 unidades, incluida la propia
-fachada. La batería DUnitX pasa 133/133 en Debug/Win64, Debug/Win32 y
+`inLibtb` baja acumuladamente de 1.523 a 567 líneas
+(-956; -62,8 %) y conserva las firmas vivas como fachada. Sus dependencias
+directas de producción bajan de 50 a 9 unidades, incluida la propia
+fachada. La batería DUnitX pasa 147/147 en Debug/Win64, Debug/Win32 y
 Release/Win64. Resultados en `refactorizacion_fase6ab_resultados.md`,
 `refactorizacion_fase6ac_resultados.md`,
 `refactorizacion_fase6ad_resultados.md` y
-`refactorizacion_fase6ae_resultados.md`.
+`refactorizacion_fase6ae_resultados.md` y
+`refactorizacion_fase6af_resultados.md` y
+`refactorizacion_fase6ag_resultados.md` y
+`refactorizacion_fase6ah_resultados.md`.
 
-Siguiente fascículo: **D3.5**, cifrado AES.
+Siguiente fascículo: **D3.8**, NIF, CCC e IBAN.
 
 ## D4 — trocear los métodos largos (48 por encima de 200 líneas)
 

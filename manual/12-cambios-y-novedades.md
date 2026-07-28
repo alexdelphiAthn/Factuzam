@@ -13,6 +13,7 @@ un mapa rápido de cambios.
 
 | Novedad | Dónde verlo |
 |---------|-------------|
+| **Listado de operaciones de venta del TPV** por fechas, con detalle de artículos, cobros y totales por caja y día. | [TPV ▸ Listados](05-menu-caja.md#listados) |
 | **Documentos de Trabajo**: listas de artículos/SKUs para compartir, imprimir etiquetas y enviar a albarán, TPV, inventario o cambio de tarifas. | [Almacén ▸ Documentos de Trabajo](06-menu-almacen.md#documentos-de-trabajo) |
 | **Búsqueda de datos de artículos** con `[Ctrl]+[E]` desde cualquier ventana: por talla, color, proximidad de paleta, stock y perfiles guardados. | [Conceptos comunes ▸ Búsqueda de datos](01-conceptos-comunes.md#busqueda-de-datos-de-articulos-ctrle) |
 | **Cuenta de cliente en el TPV** (F2): carga de depósitos y abonos a cuenta, cancelación por signo y reparto del cobro parcial en depósitos. | [Caja ▸ Ventas](05-menu-caja.md#ventas-f5-la-pantalla-de-venta) |

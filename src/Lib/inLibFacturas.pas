@@ -239,6 +239,7 @@ type
     _codigoIVA: string;
     _mensajeError: string;
     _LineaenEdicion:TLinFac;
+    function LineaActualPendienteDeResolver: Boolean;
     procedure InicializarTotales;
     procedure InicializarConfiguracion;
     procedure LeerDatosFactura;
@@ -890,34 +891,64 @@ begin
   end;
 end;
 
+function TFacturaTotales.LineaActualPendienteDeResolver: Boolean;
+var
+  CampoCodigo: TField;
+  CampoDescripcion: TField;
+  CampoNumeroAtributos: TField;
+  CampoSku: TField;
+begin
+  Result := False;
+  if Assigned(_unqryLineas) and _unqryLineas.Active and
+     (_unqryLineas.State in dsEditModes) then
+  begin
+    CampoCodigo := _unqryLineas.FindField(fcodart);
+    CampoDescripcion := _unqryLineas.FindField(fdesart);
+    CampoNumeroAtributos := _unqryLineas.FindField(
+      'NUM_ATRIBUTOS_REQ_FACTURA_LINEA');
+    CampoSku := _unqryLineas.FindField('CODIGO_UNIDAD_FACLIN');
+    if Assigned(CampoCodigo) and Assigned(CampoDescripcion) then
+      Result := (Trim(CampoCodigo.AsString) <> '') and
+                (Trim(CampoDescripcion.AsString) = '');
+    if not Result and Assigned(CampoNumeroAtributos) and Assigned(CampoSku) then
+      Result := (CampoNumeroAtributos.AsInteger > 0) and
+                (Pos('/', Trim(CampoSku.AsString)) = 0);
+  end;
+end;
+
 function TFacturaTotales.ProcesarFacturaCompleta: Boolean;
 begin
-//  Result := False;
   _mensajeError := '';
-  try
-    // Leer configuración de la factura
-    LeerDatosFactura;
-    // Aplicar reglas de negocio
-    AplicarReglas;
-    // Validar configuración
-    ValidarConfiguracion;
-    // Procesar líneas y calcular totales
-    RecorrerYCalcularLineasConClientDataSet;
-    CalcularTotalesFactura;
-    // Actualizar en la base de datos
-    if _unqryFac.State <> dsEdit then
-      _unqryFac.Edit;
-    ActualizarTotalesEnDataSet;
-    Result := True;
-  except
-    on E: Exception do
-    begin
-      _mensajeError := E.Message;
-      // Se registra la causa original; el llamante decide si aborta
-      if Assigned(Log) then
-        Log.LogError('TFacturaTotales.ProcesarFacturaCompleta (' +
-                     E.ClassName + '): ' + E.Message);
-      Result := False;
+  Result := True;
+  // La búsqueda puede escribir el artículo antes de que el editor termine de
+  // resolver la descripción o el SKU con atributos. No se fuerza el Post de
+  // esa línea intermedia; el evento final volverá a solicitar el cálculo.
+  if not LineaActualPendienteDeResolver then
+  begin
+    try
+      // Leer configuración de la factura
+      LeerDatosFactura;
+      // Aplicar reglas de negocio
+      AplicarReglas;
+      // Validar configuración
+      ValidarConfiguracion;
+      // Procesar líneas y calcular totales
+      RecorrerYCalcularLineasConClientDataSet;
+      CalcularTotalesFactura;
+      // Actualizar en la base de datos
+      if _unqryFac.State <> dsEdit then
+        _unqryFac.Edit;
+      ActualizarTotalesEnDataSet;
+    except
+      on E: Exception do
+      begin
+        _mensajeError := E.Message;
+        // Se registra la causa original; el llamante decide si aborta
+        if Assigned(Log) then
+          Log.LogError('TFacturaTotales.ProcesarFacturaCompleta (' +
+                       E.ClassName + '): ' + E.Message);
+        Result := False;
+      end;
     end;
   end;
 end;

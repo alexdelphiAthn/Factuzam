@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 27/07/2026 22:42:31
+-- Backup generado: 28/07/2026 13:29:17
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -6169,7 +6169,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 558, 3, 'S', 'S', '2026-07-27 22:42:13', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 559, 3, 'S', 'S', '2026-07-28 13:29:04', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 28, 2, 'S', 'S', '2026-07-07 08:17:26', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -22216,8 +22216,204 @@ DELIMITER ;
 --   -- agrupando por proveedor y, dentro, por familia raíz, solo con ventas
 --   CALL PRC_GET_MOV_VENTAS_ART(''2026-05-01'',''2026-05-31'',''2026-01-01'',''01'','''','''','''','''',''PRV'',''FAM'','''',1,''S'');
 -- ---------------------------------------------------------------------
-', '2026-07-27 22:42:13', '2026-07-27 22:42:13', 'Administrador', 'Administrador');
--- 87 registros exportados
+', '2026-07-27 22:42:13', '2026-07-27 22:42:13', 'Administrador', 'Administrador'),
+  ('558', 'etiquetas_articulos', '-- ============================================================================
+-- Etiquetas de Articulo / SKU
+-- Diseño DDL siguiendo LIBRO_DE_ESTILO_BBDD.md
+--
+-- Soporta el modal `TfrmPrintEtiqArt` (src/Modals/inMtoModalEtiqArt) lanzado
+-- desde la pestaña Stock del mantenimiento de artículos. La pantalla cruza
+-- esta vista con `fza_articulos_tarifas` (tarifa + fecha de aplicación) y con
+-- `fza_articulos_stockactual` (almacenes seleccionados) en tiempo de consulta.
+-- ============================================================================
+
+-- ---------------------------------------------------------------------------
+-- IDEMPOTENCIA
+-- ---------------------------------------------------------------------------
+-- Re-ejecutable: DROP VIEW IF EXISTS + CREATE VIEW. Sin datos asociados.
+-- ---------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------
+-- 1. Vista vi_articulos_skus_etiquetas
+-- ---------------------------------------------------------------------------
+-- Una fila por SKU. Trae:
+--   - Atributos pivotados (ATR_CO, ATR_TAL) más texto agregado ATRIBUTOS_TXT
+--     y DESCRIPCION_SKU (los valores concatenados con " / ", orden ORDEN_VA).
+--   - Propiedades pivotadas a NIVEL ARTÍCULO (PROP_MARCA, PROP_MATERIAL,
+--     PROP_GENERO, PROP_ESTILO, PROP_ORIGEN, PROP_COMPOSICION). Resuelve
+--     ID_PV_ARTPROP contra `fza_propiedades_valores`; si la propiedad es de
+--     valor libre cae a VALOR_LIBRE_ARTPROP. Además expone PROPIEDADES_TXT
+--     con TODAS las propiedades del artículo en un único campo
+--     "Nombre: Valor | Nombre: Valor".
+--   - TEMPORADA resuelta POR SKU (es propiedad de nivel COLOR), en el CTE
+--     sku_temp por especificidad SKU -> COLOR -> ARTÍCULO, igual que
+--     vi_articulos_propiedades_efectivas. Así la etiqueta de cada SKU muestra
+--     la temporada de SU color:
+--       * PROP_TEMPORADA: texto largo ("Primavera/Verano 2026").
+--       * DESCRIPCION_TEMPORADA: contenido original de DESCRIPCION_PV.
+--       * COD_TEMPORADA : código corto ("PV26"), guardado en DESCRIPCION_PV
+--         del valor de la propiedad TEMPORADA. Se conserva por compatibilidad
+--         con los formatos de etiquetas existentes.
+--   - Proveedor principal (CODIGO_PRV_PRV, RAZON_SOCIAL_PRV, NOMBRE_PRV,
+--     REF_PROVEEDOR). NOMBRE_PRV es el nombre comercial; la etiqueta por
+--     defecto lo usa como "nombre de proveedor".
+--   - Código de barras marcado como principal del SKU.
+--
+-- Nota sobre extensibilidad: el conjunto fijo de columnas PROP_* y ATR_*
+-- cubre los casos más usados en etiquetas. Si se añade un nuevo atributo o
+-- propiedad imprescindible para etiquetas, se amplía la vista aquí y se
+-- vuelve a desplegar; PROPIEDADES_TXT/ATRIBUTOS_TXT cubren los demás como
+-- texto agregado, sin tocar la vista.
+-- ---------------------------------------------------------------------------
+
+DROP VIEW IF EXISTS `vi_articulos_skus_etiquetas`;
+CREATE ALGORITHM=UNDEFINED VIEW `vi_articulos_skus_etiquetas` AS
+WITH
+  sku_atrib AS (
+    SELECT
+      `sa`.`CODIGO_UNIDAD_SKU_SA`                                   AS `CODIGO_UNIDAD_SKU`,
+      MAX(CASE WHEN `av`.`ID_VA_AV` = ''CO''  THEN `av`.`AV` END)     AS `ATR_CO`,
+      MAX(CASE WHEN `av`.`ID_VA_AV` = ''TAL'' THEN `av`.`AV` END)     AS `ATR_TAL`,
+      GROUP_CONCAT(CONCAT(COALESCE(`va`.`NOMBRE_VA`, `av`.`ID_VA_AV`),
+                          '': '', `av`.`AV`)
+                   ORDER BY COALESCE(`va`.`ORDEN_VA`, 99), `av`.`ID_VA_AV`
+                   SEPARATOR '' / '')                                 AS `ATRIBUTOS_TXT`,
+      GROUP_CONCAT(`av`.`AV`
+                   ORDER BY COALESCE(`va`.`ORDEN_VA`, 99), `av`.`ID_VA_AV`
+                   SEPARATOR '' / '')                                 AS `DESCRIPCION_SKU`
+    FROM `fza_atributos_sku` `sa`
+    INNER JOIN `fza_atributos_valores` `av`
+            ON `av`.`ID_AV` = `sa`.`ID_AV_SA`
+    LEFT  JOIN `fza_variaciones_atributos` `va`
+            ON `va`.`ID_ATB_VA` = `av`.`ID_VA_AV`
+    GROUP BY `sa`.`CODIGO_UNIDAD_SKU_SA`
+  ),
+  art_prop AS (
+    SELECT
+      `ap`.`CODIGO_ART_ART`                                         AS `CODIGO_ART_ART`,
+      MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = ''MARCA''
+               THEN COALESCE(`pv`.`PV`, `ap`.`VALOR_LIBRE_ARTPROP`) END) AS `PROP_MARCA`,
+      MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = ''MATERIAL''
+               THEN COALESCE(`pv`.`PV`, `ap`.`VALOR_LIBRE_ARTPROP`) END) AS `PROP_MATERIAL`,
+      -- TEMPORADA no se pivota aqui (nivel articulo): es propiedad de nivel
+      -- COLOR y se resuelve POR SKU en el CTE sku_temp (PROP_TEMPORADA y
+      -- COD_TEMPORADA), para que la etiqueta muestre la temporada del color.
+      MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = ''GENERO''
+               THEN COALESCE(`pv`.`PV`, `ap`.`VALOR_LIBRE_ARTPROP`) END) AS `PROP_GENERO`,
+      MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = ''ESTILO''
+               THEN COALESCE(`pv`.`PV`, `ap`.`VALOR_LIBRE_ARTPROP`) END) AS `PROP_ESTILO`,
+      MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = ''ORIGEN''
+               THEN COALESCE(`pv`.`PV`, `ap`.`VALOR_LIBRE_ARTPROP`) END) AS `PROP_ORIGEN`,
+      MAX(CASE WHEN `ap`.`CODIGO_PROP_ARTPROP` = ''COMPOSICION''
+               THEN COALESCE(`pv`.`PV`, `ap`.`VALOR_LIBRE_ARTPROP`) END) AS `PROP_COMPOSICION`,
+      GROUP_CONCAT(
+        CONCAT(COALESCE(`p`.`NOMBRE_PROP_PROP`, `ap`.`CODIGO_PROP_ARTPROP`),
+               '': '',
+               COALESCE(`pv`.`PV`, `ap`.`VALOR_LIBRE_ARTPROP`, ''''))
+        ORDER BY `ap`.`CODIGO_PROP_ARTPROP`
+        SEPARATOR '' | ''
+      )                                                             AS `PROPIEDADES_TXT`
+    FROM `fza_articulos_propiedades` `ap`
+    LEFT JOIN `fza_propiedades` `p`
+           ON `p`.`CODIGO_PROP_ARTPROP` = `ap`.`CODIGO_PROP_ARTPROP`
+    LEFT JOIN `fza_propiedades_valores` `pv`
+           ON `pv`.`ID_PV_ARTPROP` = `ap`.`ID_PV_ARTPROP`
+    GROUP BY `ap`.`CODIGO_ART_ART`
+  ),
+  sku_temp AS (
+    -- Temporada resuelta POR SKU con especificidad SKU -> COLOR -> ARTICULO
+    -- (mismo patron que vi_articulos_propiedades_efectivas). TEMPORADA es de
+    -- nivel COLOR: cada etiqueta muestra la temporada de SU color, no un
+    -- agregado del articulo. El "color" es el prefijo ART/COLOR del
+    -- CODIGO_UNIDAD_SKU (SUBSTRING_INDEX hasta antes de la talla).
+    SELECT
+      `sku`.`CODIGO_UNIDAD_SKU`                                   AS `CODIGO_UNIDAD_SKU`,
+      COALESCE(`tpv`.`PV`,
+               `tps`.`VALOR_LIBRE_ARTPROP`,
+               `tpc`.`VALOR_LIBRE_ARTPROP`,
+               `tpa`.`VALOR_LIBRE_ARTPROP`)                       AS `PROP_TEMPORADA`,
+      `tpv`.`DESCRIPCION_PV`                                      AS `DESCRIPCION_TEMPORADA`,
+      `tpv`.`DESCRIPCION_PV`                                      AS `COD_TEMPORADA`
+    FROM `fza_articulos_skus` `sku`
+    LEFT JOIN `fza_articulos_propiedades` `tps`
+           ON `tps`.`CODIGO_ART_ART`        = `sku`.`CODIGO_ART_SKU`
+          AND `tps`.`CODIGO_PROP_ARTPROP`   = ''TEMPORADA''
+          AND `tps`.`CODIGO_UNIDAD_ARTPROP` = `sku`.`CODIGO_UNIDAD_SKU`
+    LEFT JOIN `fza_articulos_propiedades` `tpc`
+           ON `tpc`.`CODIGO_ART_ART`        = `sku`.`CODIGO_ART_SKU`
+          AND `tpc`.`CODIGO_PROP_ARTPROP`   = ''TEMPORADA''
+          AND `tpc`.`CODIGO_UNIDAD_ARTPROP` = CASE
+                WHEN CHAR_LENGTH(`sku`.`CODIGO_UNIDAD_SKU`)
+                   - CHAR_LENGTH(REPLACE(`sku`.`CODIGO_UNIDAD_SKU`, ''/'', '''')) >= 2
+                THEN SUBSTRING_INDEX(`sku`.`CODIGO_UNIDAD_SKU`, ''/'', 2)
+                ELSE NULL END
+    LEFT JOIN `fza_articulos_propiedades` `tpa`
+           ON `tpa`.`CODIGO_ART_ART`        = `sku`.`CODIGO_ART_SKU`
+          AND `tpa`.`CODIGO_PROP_ARTPROP`   = ''TEMPORADA''
+          AND `tpa`.`CODIGO_UNIDAD_ARTPROP` = ''''
+    LEFT JOIN `fza_propiedades_valores` `tpv`
+           ON `tpv`.`ID_PV_ARTPROP` = COALESCE(`tps`.`ID_PV_ARTPROP`,
+                                               `tpc`.`ID_PV_ARTPROP`,
+                                               `tpa`.`ID_PV_ARTPROP`)
+  ),
+  cb_prin AS (
+    SELECT `CODIGO_UNIDAD_CB`,
+           MAX(`CODIGO_BARRAS_CB`) AS `CODIGO_BARRAS_CB`
+    FROM `fza_codigos_barras`
+    WHERE `ESPRINCIPAL_CB` = ''S''
+    GROUP BY `CODIGO_UNIDAD_CB`
+  )
+SELECT
+  `sku`.`CODIGO_UNIDAD_SKU`                                         AS `CODIGO_UNIDAD_SKU`,
+  `sku`.`CODIGO_ART_SKU`                                            AS `CODIGO_ART_ART`,
+  `sku`.`CODIGO_VAR_SKU`                                            AS `CODIGO_VAR_SKU`,
+  `sku`.`ESACTIVO_SKU`                                              AS `ESACTIVO_SKU`,
+  `art`.`ESACTIVO_ART`                                              AS `ESACTIVO_ART`,
+  `art`.`DESCRIPCION_ART`                                           AS `DESCRIPCION_ART`,
+  `art`.`TIPO_ART`                                                  AS `TIPO_ART`,
+  `art`.`TIPO_IVA_ART`                                              AS `TIPO_IVA_ART`,
+  `art`.`CODIGO_FAM_ART`                                            AS `CODIGO_FAM_ART`,
+  `fam`.`NOMBRE_FAM_FAM`                                            AS `NOMBRE_FAM_FAM`,
+  `fam`.`DESCRIPCION_FAM`                                           AS `DESCRIPCION_FAM`,
+  `sa`.`ATR_CO`                                                     AS `ATR_CO`,
+  `sa`.`ATR_TAL`                                                    AS `ATR_TAL`,
+  `sa`.`ATRIBUTOS_TXT`                                              AS `ATRIBUTOS_TXT`,
+  `sa`.`DESCRIPCION_SKU`                                            AS `DESCRIPCION_SKU`,
+  `apr`.`PROP_MARCA`                                                AS `PROP_MARCA`,
+  `apr`.`PROP_MATERIAL`                                             AS `PROP_MATERIAL`,
+  `st`.`PROP_TEMPORADA`                                             AS `PROP_TEMPORADA`,
+  `st`.`DESCRIPCION_TEMPORADA`                                      AS `DESCRIPCION_TEMPORADA`,
+  `st`.`COD_TEMPORADA`                                              AS `COD_TEMPORADA`,
+  `apr`.`PROP_GENERO`                                               AS `PROP_GENERO`,
+  `apr`.`PROP_ESTILO`                                               AS `PROP_ESTILO`,
+  `apr`.`PROP_ORIGEN`                                               AS `PROP_ORIGEN`,
+  `apr`.`PROP_COMPOSICION`                                          AS `PROP_COMPOSICION`,
+  `apr`.`PROPIEDADES_TXT`                                           AS `PROPIEDADES_TXT`,
+  `ap`.`CODIGO_PRV_AP`                                              AS `CODIGO_PRV_PRV`,
+  `prv`.`RAZON_SOCIAL_PRV`                                          AS `RAZON_SOCIAL_PRV`,
+  `prv`.`NOMBRE_PRV`                                                AS `NOMBRE_PRV`,
+  `ap`.`REF_PROVEEDOR_AP`                                           AS `REF_PROVEEDOR`,
+  `cb`.`CODIGO_BARRAS_CB`                                           AS `CODIGO_BARRAS_CB`
+FROM `fza_articulos_skus` `sku`
+INNER JOIN `fza_articulos`            `art`
+        ON `art`.`CODIGO_ART_ART` = `sku`.`CODIGO_ART_SKU`
+LEFT  JOIN `fza_articulos_familias`   `fam`
+        ON `fam`.`CODIGO_FAM_FAM` = `art`.`CODIGO_FAM_ART`
+LEFT  JOIN `sku_atrib`                `sa`
+        ON `sa`.`CODIGO_UNIDAD_SKU` = `sku`.`CODIGO_UNIDAD_SKU`
+LEFT  JOIN `art_prop`                 `apr`
+        ON `apr`.`CODIGO_ART_ART` = `sku`.`CODIGO_ART_SKU`
+LEFT  JOIN `sku_temp`                 `st`
+        ON `st`.`CODIGO_UNIDAD_SKU` = `sku`.`CODIGO_UNIDAD_SKU`
+LEFT  JOIN `fza_articulos_proveedores` `ap`
+        ON `ap`.`CODIGO_ART_AP` = `sku`.`CODIGO_ART_SKU`
+       AND `ap`.`ESPROVEEDORPRINCIPAL_AP` = ''S''
+LEFT  JOIN `fza_proveedores`          `prv`
+        ON `prv`.`CODIGO_PRV_PRV` = `ap`.`CODIGO_PRV_AP`
+LEFT  JOIN `cb_prin`                  `cb`
+        ON `cb`.`CODIGO_UNIDAD_CB` = `sku`.`CODIGO_UNIDAD_SKU`;
+', '2026-07-28 13:29:04', '2026-07-28 13:29:04', 'Administrador', 'Administrador');
+-- 88 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -26081,7 +26277,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-27 22:41:45', '2026-07-27 22:41:45', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-28 13:28:53', '2026-07-28 13:28:53', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Vendedores', 'S', '012', '2026-07-02 18:49:30', '2026-07-02 18:49:30', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1'),
   ('QATEST', '6E797DC797D26129DAE46F17A7255650', 'QA_PRUEBAS', 'S', NULL, '2026-07-24 19:49:59', '2026-07-24 19:49:59', '2026-07-23 17:18:45', 'Administrador', 'Administrador', NULL, NULL);
 -- 3 registros exportados
@@ -37733,7 +37929,7 @@ CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_skus` AS select `fza_articulos_sk
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_skus_con_coste` AS select `sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,`sku`.`CODIGO_ART_SKU` AS `CODIGO_ART_SKU`,`sku`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,`sku`.`ESACTIVO_SKU` AS `ESACTIVO_SKU`,`skuc`.`PRECIO_ULT_COMPRA_SKUC` AS `PRECIO_ULT_COMPRA_SKUC`,`skuc`.`FECHA_ULT_COMPRA_SKUC` AS `FECHA_ULT_COMPRA_SKUC`,`sku`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`sku`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`sku`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`sku`.`USUARIO_MODIF` AS `USUARIO_MODIF` from (`fza_articulos_skus` `sku` left join `fza_articulos_skus_costes` `skuc` on(`skuc`.`CODIGO_UNIDAD_SKU_SKUC` = `sku`.`CODIGO_UNIDAD_SKU`));
 
 -- Vista: vi_articulos_skus_etiquetas
-CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_skus_etiquetas` AS with sku_atrib as (select `sa`.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD_SKU`,max(case when `av`.`ID_VA_AV` = 'CO' then `av`.`AV` end) AS `ATR_CO`,max(case when `av`.`ID_VA_AV` = 'TAL' then `av`.`AV` end) AS `ATR_TAL`,group_concat(concat(coalesce(`va`.`NOMBRE_VA`,`av`.`ID_VA_AV`),': ',`av`.`AV`) order by coalesce(`va`.`ORDEN_VA`,99) ASC,`av`.`ID_VA_AV` ASC separator ' / ') AS `ATRIBUTOS_TXT`,group_concat(`av`.`AV` order by coalesce(`va`.`ORDEN_VA`,99) ASC,`av`.`ID_VA_AV` ASC separator ' / ') AS `DESCRIPCION_SKU` from ((`fza_atributos_sku` `sa` join `fza_atributos_valores` `av` on(`av`.`ID_AV` = `sa`.`ID_AV_SA`)) left join `fza_variaciones_atributos` `va` on(`va`.`ID_ATB_VA` = `av`.`ID_VA_AV`)) group by `sa`.`CODIGO_UNIDAD_SKU_SA`), art_prop as (select `ap`.`CODIGO_ART_ART` AS `CODIGO_ART_ART`,max(case when `ap`.`CODIGO_PROP_ARTPROP` = 'MARCA' then coalesce(`pv`.`PV`,`ap`.`VALOR_LIBRE_ARTPROP`) end) AS `PROP_MARCA`,max(case when `ap`.`CODIGO_PROP_ARTPROP` = 'MATERIAL' then coalesce(`pv`.`PV`,`ap`.`VALOR_LIBRE_ARTPROP`) end) AS `PROP_MATERIAL`,max(case when `ap`.`CODIGO_PROP_ARTPROP` = 'GENERO' then coalesce(`pv`.`PV`,`ap`.`VALOR_LIBRE_ARTPROP`) end) AS `PROP_GENERO`,max(case when `ap`.`CODIGO_PROP_ARTPROP` = 'ESTILO' then coalesce(`pv`.`PV`,`ap`.`VALOR_LIBRE_ARTPROP`) end) AS `PROP_ESTILO`,max(case when `ap`.`CODIGO_PROP_ARTPROP` = 'ORIGEN' then coalesce(`pv`.`PV`,`ap`.`VALOR_LIBRE_ARTPROP`) end) AS `PROP_ORIGEN`,max(case when `ap`.`CODIGO_PROP_ARTPROP` = 'COMPOSICION' then coalesce(`pv`.`PV`,`ap`.`VALOR_LIBRE_ARTPROP`) end) AS `PROP_COMPOSICION`,group_concat(concat(coalesce(`p`.`NOMBRE_PROP_PROP`,`ap`.`CODIGO_PROP_ARTPROP`),': ',coalesce(`pv`.`PV`,`ap`.`VALOR_LIBRE_ARTPROP`,'')) order by `ap`.`CODIGO_PROP_ARTPROP` ASC separator ' | ') AS `PROPIEDADES_TXT` from ((`fza_articulos_propiedades` `ap` left join `fza_propiedades` `p` on(`p`.`CODIGO_PROP_ARTPROP` = `ap`.`CODIGO_PROP_ARTPROP`)) left join `fza_propiedades_valores` `pv` on(`pv`.`ID_PV_ARTPROP` = `ap`.`ID_PV_ARTPROP`)) group by `ap`.`CODIGO_ART_ART`), sku_temp as (select `sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,coalesce(`tpv`.`PV`,`tps`.`VALOR_LIBRE_ARTPROP`,`tpc`.`VALOR_LIBRE_ARTPROP`,`tpa`.`VALOR_LIBRE_ARTPROP`) AS `PROP_TEMPORADA`,`tpv`.`DESCRIPCION_PV` AS `COD_TEMPORADA` from ((((`fza_articulos_skus` `sku` left join `fza_articulos_propiedades` `tps` on(`tps`.`CODIGO_ART_ART` = `sku`.`CODIGO_ART_SKU` and `tps`.`CODIGO_PROP_ARTPROP` = 'TEMPORADA' and `tps`.`CODIGO_UNIDAD_ARTPROP` = `sku`.`CODIGO_UNIDAD_SKU`)) left join `fza_articulos_propiedades` `tpc` on(`tpc`.`CODIGO_ART_ART` = `sku`.`CODIGO_ART_SKU` and `tpc`.`CODIGO_PROP_ARTPROP` = 'TEMPORADA' and `tpc`.`CODIGO_UNIDAD_ARTPROP` = case when char_length(`sku`.`CODIGO_UNIDAD_SKU`) - char_length(replace(`sku`.`CODIGO_UNIDAD_SKU`,'/','')) >= 2 then substring_index(`sku`.`CODIGO_UNIDAD_SKU`,'/',2) else NULL end)) left join `fza_articulos_propiedades` `tpa` on(`tpa`.`CODIGO_ART_ART` = `sku`.`CODIGO_ART_SKU` and `tpa`.`CODIGO_PROP_ARTPROP` = 'TEMPORADA' and `tpa`.`CODIGO_UNIDAD_ARTPROP` = '')) left join `fza_propiedades_valores` `tpv` on(`tpv`.`ID_PV_ARTPROP` = coalesce(`tps`.`ID_PV_ARTPROP`,`tpc`.`ID_PV_ARTPROP`,`tpa`.`ID_PV_ARTPROP`)))), cb_prin as (select `fza_codigos_barras`.`CODIGO_UNIDAD_CB` AS `CODIGO_UNIDAD_CB`,max(`fza_codigos_barras`.`CODIGO_BARRAS_CB`) AS `CODIGO_BARRAS_CB` from `fza_codigos_barras` where `fza_codigos_barras`.`ESPRINCIPAL_CB` = 'S' group by `fza_codigos_barras`.`CODIGO_UNIDAD_CB`)select `sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,`sku`.`CODIGO_ART_SKU` AS `CODIGO_ART_ART`,`sku`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,`sku`.`ESACTIVO_SKU` AS `ESACTIVO_SKU`,`art`.`ESACTIVO_ART` AS `ESACTIVO_ART`,`art`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`art`.`TIPO_ART` AS `TIPO_ART`,`art`.`TIPO_IVA_ART` AS `TIPO_IVA_ART`,`art`.`CODIGO_FAM_ART` AS `CODIGO_FAM_ART`,`fam`.`NOMBRE_FAM_FAM` AS `NOMBRE_FAM_FAM`,`fam`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,`sa`.`ATR_CO` AS `ATR_CO`,`sa`.`ATR_TAL` AS `ATR_TAL`,`sa`.`ATRIBUTOS_TXT` AS `ATRIBUTOS_TXT`,`sa`.`DESCRIPCION_SKU` AS `DESCRIPCION_SKU`,`apr`.`PROP_MARCA` AS `PROP_MARCA`,`apr`.`PROP_MATERIAL` AS `PROP_MATERIAL`,`st`.`PROP_TEMPORADA` AS `PROP_TEMPORADA`,`st`.`COD_TEMPORADA` AS `COD_TEMPORADA`,`apr`.`PROP_GENERO` AS `PROP_GENERO`,`apr`.`PROP_ESTILO` AS `PROP_ESTILO`,`apr`.`PROP_ORIGEN` AS `PROP_ORIGEN`,`apr`.`PROP_COMPOSICION` AS `PROP_COMPOSICION`,`apr`.`PROPIEDADES_TXT` AS `PROPIEDADES_TXT`,`ap`.`CODIGO_PRV_AP` AS `CODIGO_PRV_PRV`,`prv`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`prv`.`NOMBRE_PRV` AS `NOMBRE_PRV`,`ap`.`REF_PROVEEDOR_AP` AS `REF_PROVEEDOR`,`cb`.`CODIGO_BARRAS_CB` AS `CODIGO_BARRAS_CB` from ((((((((`fza_articulos_skus` `sku` join `fza_articulos` `art` on(`art`.`CODIGO_ART_ART` = `sku`.`CODIGO_ART_SKU`)) left join `fza_articulos_familias` `fam` on(`fam`.`CODIGO_FAM_FAM` = `art`.`CODIGO_FAM_ART`)) left join `sku_atrib` `sa` on(`sa`.`CODIGO_UNIDAD_SKU` = `sku`.`CODIGO_UNIDAD_SKU`)) left join `art_prop` `apr` on(`apr`.`CODIGO_ART_ART` = `sku`.`CODIGO_ART_SKU`)) left join `sku_temp` `st` on(`st`.`CODIGO_UNIDAD_SKU` = `sku`.`CODIGO_UNIDAD_SKU`)) left join `fza_articulos_proveedores` `ap` on(`ap`.`CODIGO_ART_AP` = `sku`.`CODIGO_ART_SKU` and `ap`.`ESPROVEEDORPRINCIPAL_AP` = 'S')) left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `ap`.`CODIGO_PRV_AP`)) left join `cb_prin` `cb` on(`cb`.`CODIGO_UNIDAD_CB` = `sku`.`CODIGO_UNIDAD_SKU`));
+CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_skus_etiquetas` AS with sku_atrib as (select `sa`.`CODIGO_UNIDAD_SKU_SA` AS `CODIGO_UNIDAD_SKU`,max(case when `av`.`ID_VA_AV` = 'CO' then `av`.`AV` end) AS `ATR_CO`,max(case when `av`.`ID_VA_AV` = 'TAL' then `av`.`AV` end) AS `ATR_TAL`,group_concat(concat(coalesce(`va`.`NOMBRE_VA`,`av`.`ID_VA_AV`),': ',`av`.`AV`) order by coalesce(`va`.`ORDEN_VA`,99) ASC,`av`.`ID_VA_AV` ASC separator ' / ') AS `ATRIBUTOS_TXT`,group_concat(`av`.`AV` order by coalesce(`va`.`ORDEN_VA`,99) ASC,`av`.`ID_VA_AV` ASC separator ' / ') AS `DESCRIPCION_SKU` from ((`fza_atributos_sku` `sa` join `fza_atributos_valores` `av` on(`av`.`ID_AV` = `sa`.`ID_AV_SA`)) left join `fza_variaciones_atributos` `va` on(`va`.`ID_ATB_VA` = `av`.`ID_VA_AV`)) group by `sa`.`CODIGO_UNIDAD_SKU_SA`), art_prop as (select `ap`.`CODIGO_ART_ART` AS `CODIGO_ART_ART`,max(case when `ap`.`CODIGO_PROP_ARTPROP` = 'MARCA' then coalesce(`pv`.`PV`,`ap`.`VALOR_LIBRE_ARTPROP`) end) AS `PROP_MARCA`,max(case when `ap`.`CODIGO_PROP_ARTPROP` = 'MATERIAL' then coalesce(`pv`.`PV`,`ap`.`VALOR_LIBRE_ARTPROP`) end) AS `PROP_MATERIAL`,max(case when `ap`.`CODIGO_PROP_ARTPROP` = 'GENERO' then coalesce(`pv`.`PV`,`ap`.`VALOR_LIBRE_ARTPROP`) end) AS `PROP_GENERO`,max(case when `ap`.`CODIGO_PROP_ARTPROP` = 'ESTILO' then coalesce(`pv`.`PV`,`ap`.`VALOR_LIBRE_ARTPROP`) end) AS `PROP_ESTILO`,max(case when `ap`.`CODIGO_PROP_ARTPROP` = 'ORIGEN' then coalesce(`pv`.`PV`,`ap`.`VALOR_LIBRE_ARTPROP`) end) AS `PROP_ORIGEN`,max(case when `ap`.`CODIGO_PROP_ARTPROP` = 'COMPOSICION' then coalesce(`pv`.`PV`,`ap`.`VALOR_LIBRE_ARTPROP`) end) AS `PROP_COMPOSICION`,group_concat(concat(coalesce(`p`.`NOMBRE_PROP_PROP`,`ap`.`CODIGO_PROP_ARTPROP`),': ',coalesce(`pv`.`PV`,`ap`.`VALOR_LIBRE_ARTPROP`,'')) order by `ap`.`CODIGO_PROP_ARTPROP` ASC separator ' | ') AS `PROPIEDADES_TXT` from ((`fza_articulos_propiedades` `ap` left join `fza_propiedades` `p` on(`p`.`CODIGO_PROP_ARTPROP` = `ap`.`CODIGO_PROP_ARTPROP`)) left join `fza_propiedades_valores` `pv` on(`pv`.`ID_PV_ARTPROP` = `ap`.`ID_PV_ARTPROP`)) group by `ap`.`CODIGO_ART_ART`), sku_temp as (select `sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,coalesce(`tpv`.`PV`,`tps`.`VALOR_LIBRE_ARTPROP`,`tpc`.`VALOR_LIBRE_ARTPROP`,`tpa`.`VALOR_LIBRE_ARTPROP`) AS `PROP_TEMPORADA`,`tpv`.`DESCRIPCION_PV` AS `DESCRIPCION_TEMPORADA`,`tpv`.`DESCRIPCION_PV` AS `COD_TEMPORADA` from ((((`fza_articulos_skus` `sku` left join `fza_articulos_propiedades` `tps` on(`tps`.`CODIGO_ART_ART` = `sku`.`CODIGO_ART_SKU` and `tps`.`CODIGO_PROP_ARTPROP` = 'TEMPORADA' and `tps`.`CODIGO_UNIDAD_ARTPROP` = `sku`.`CODIGO_UNIDAD_SKU`)) left join `fza_articulos_propiedades` `tpc` on(`tpc`.`CODIGO_ART_ART` = `sku`.`CODIGO_ART_SKU` and `tpc`.`CODIGO_PROP_ARTPROP` = 'TEMPORADA' and `tpc`.`CODIGO_UNIDAD_ARTPROP` = case when char_length(`sku`.`CODIGO_UNIDAD_SKU`) - char_length(replace(`sku`.`CODIGO_UNIDAD_SKU`,'/','')) >= 2 then substring_index(`sku`.`CODIGO_UNIDAD_SKU`,'/',2) else NULL end)) left join `fza_articulos_propiedades` `tpa` on(`tpa`.`CODIGO_ART_ART` = `sku`.`CODIGO_ART_SKU` and `tpa`.`CODIGO_PROP_ARTPROP` = 'TEMPORADA' and `tpa`.`CODIGO_UNIDAD_ARTPROP` = '')) left join `fza_propiedades_valores` `tpv` on(`tpv`.`ID_PV_ARTPROP` = coalesce(`tps`.`ID_PV_ARTPROP`,`tpc`.`ID_PV_ARTPROP`,`tpa`.`ID_PV_ARTPROP`)))), cb_prin as (select `fza_codigos_barras`.`CODIGO_UNIDAD_CB` AS `CODIGO_UNIDAD_CB`,max(`fza_codigos_barras`.`CODIGO_BARRAS_CB`) AS `CODIGO_BARRAS_CB` from `fza_codigos_barras` where `fza_codigos_barras`.`ESPRINCIPAL_CB` = 'S' group by `fza_codigos_barras`.`CODIGO_UNIDAD_CB`)select `sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,`sku`.`CODIGO_ART_SKU` AS `CODIGO_ART_ART`,`sku`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,`sku`.`ESACTIVO_SKU` AS `ESACTIVO_SKU`,`art`.`ESACTIVO_ART` AS `ESACTIVO_ART`,`art`.`DESCRIPCION_ART` AS `DESCRIPCION_ART`,`art`.`TIPO_ART` AS `TIPO_ART`,`art`.`TIPO_IVA_ART` AS `TIPO_IVA_ART`,`art`.`CODIGO_FAM_ART` AS `CODIGO_FAM_ART`,`fam`.`NOMBRE_FAM_FAM` AS `NOMBRE_FAM_FAM`,`fam`.`DESCRIPCION_FAM` AS `DESCRIPCION_FAM`,`sa`.`ATR_CO` AS `ATR_CO`,`sa`.`ATR_TAL` AS `ATR_TAL`,`sa`.`ATRIBUTOS_TXT` AS `ATRIBUTOS_TXT`,`sa`.`DESCRIPCION_SKU` AS `DESCRIPCION_SKU`,`apr`.`PROP_MARCA` AS `PROP_MARCA`,`apr`.`PROP_MATERIAL` AS `PROP_MATERIAL`,`st`.`PROP_TEMPORADA` AS `PROP_TEMPORADA`,`st`.`DESCRIPCION_TEMPORADA` AS `DESCRIPCION_TEMPORADA`,`st`.`COD_TEMPORADA` AS `COD_TEMPORADA`,`apr`.`PROP_GENERO` AS `PROP_GENERO`,`apr`.`PROP_ESTILO` AS `PROP_ESTILO`,`apr`.`PROP_ORIGEN` AS `PROP_ORIGEN`,`apr`.`PROP_COMPOSICION` AS `PROP_COMPOSICION`,`apr`.`PROPIEDADES_TXT` AS `PROPIEDADES_TXT`,`ap`.`CODIGO_PRV_AP` AS `CODIGO_PRV_PRV`,`prv`.`RAZON_SOCIAL_PRV` AS `RAZON_SOCIAL_PRV`,`prv`.`NOMBRE_PRV` AS `NOMBRE_PRV`,`ap`.`REF_PROVEEDOR_AP` AS `REF_PROVEEDOR`,`cb`.`CODIGO_BARRAS_CB` AS `CODIGO_BARRAS_CB` from ((((((((`fza_articulos_skus` `sku` join `fza_articulos` `art` on(`art`.`CODIGO_ART_ART` = `sku`.`CODIGO_ART_SKU`)) left join `fza_articulos_familias` `fam` on(`fam`.`CODIGO_FAM_FAM` = `art`.`CODIGO_FAM_ART`)) left join `sku_atrib` `sa` on(`sa`.`CODIGO_UNIDAD_SKU` = `sku`.`CODIGO_UNIDAD_SKU`)) left join `art_prop` `apr` on(`apr`.`CODIGO_ART_ART` = `sku`.`CODIGO_ART_SKU`)) left join `sku_temp` `st` on(`st`.`CODIGO_UNIDAD_SKU` = `sku`.`CODIGO_UNIDAD_SKU`)) left join `fza_articulos_proveedores` `ap` on(`ap`.`CODIGO_ART_AP` = `sku`.`CODIGO_ART_SKU` and `ap`.`ESPROVEEDORPRINCIPAL_AP` = 'S')) left join `fza_proveedores` `prv` on(`prv`.`CODIGO_PRV_PRV` = `ap`.`CODIGO_PRV_AP`)) left join `cb_prin` `cb` on(`cb`.`CODIGO_UNIDAD_CB` = `sku`.`CODIGO_UNIDAD_SKU`));
 
 -- Vista: vi_articulos_skus_extendida
 CREATE ALGORITHM=UNDEFINED  VIEW `vi_articulos_skus_extendida` AS select `sku`.`CODIGO_UNIDAD_SKU` AS `CODIGO_UNIDAD_SKU`,`sku`.`CODIGO_ART_SKU` AS `CODIGO_ART_SKU`,`sku`.`CODIGO_VAR_SKU` AS `CODIGO_VAR_SKU`,`sku`.`ESACTIVO_SKU` AS `ESACTIVO_SKU`,`cb`.`ID_CB` AS `ID_CB`,`cb`.`CODIGO_BARRAS_CB` AS `CODIGO_BARRAS_CB`,`cb`.`TIPO_CODIGO_CB` AS `TIPO_CODIGO_CB`,`cb`.`ESPRINCIPAL_CB` AS `ESPRINCIPAL_CB`,coalesce(`stk`.`STOCK_TOTAL`,0) AS `STOCK_TOTAL`,`sku`.`INSTANTE_MODIF` AS `INSTANTE_MODIF`,`sku`.`INSTANTE_ALTA` AS `INSTANTE_ALTA`,`sku`.`USUARIO_ALTA` AS `USUARIO_ALTA`,`sku`.`USUARIO_MODIF` AS `USUARIO_MODIF` from ((`fza_articulos_skus` `sku` join `fza_codigos_barras` `cb` on(`cb`.`CODIGO_UNIDAD_CB` = `sku`.`CODIGO_UNIDAD_SKU`)) left join (select `fza_articulos_stockactual`.`CODIGO_UNIDAD_STK` AS `CODIGO_UNIDAD_STK`,sum(`fza_articulos_stockactual`.`CANTIDAD_STK`) AS `STOCK_TOTAL` from `fza_articulos_stockactual` group by `fza_articulos_stockactual`.`CODIGO_UNIDAD_STK`) `stk` on(`sku`.`CODIGO_UNIDAD_SKU` = `stk`.`CODIGO_UNIDAD_STK`));
@@ -45395,4 +45591,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 27/07/2026 22:42:33
+-- Backup completado: 28/07/2026 13:29:19

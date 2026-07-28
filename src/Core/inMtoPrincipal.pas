@@ -115,10 +115,13 @@ type
     EfectosVenta1: TMenuItem;
     RemesasVenta1: TMenuItem;
     CargarEfectosVenta1: TMenuItem;
+    mnuTPVListados: TMenuItem;
+    mnuListadoOperacionesVenta: TMenuItem;
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuInvocarLoginClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure mnuCajaParamClick(Sender: TObject);
+    procedure mnuListadoOperacionesVentaClick(Sender: TObject);
     procedure mnuParmetrosdeEntornoClick(Sender: TObject);
 //    procedure mnuPropiedadesValoresClick(Sender: TObject);
     procedure mnuVerifactuDeclaracionClick(Sender: TObject);
@@ -337,6 +340,7 @@ uses inLibUser,
   inLibGenerarTicketCaja,
   inMtoStockConsulta,
   inMtoModalListadoVentas,
+  inMtoModalImpOperacionesVenta,
   inMtoModalScriptLog,
   inMtoModalImpBalanceTallas,
   inMtoModalImpBalanceSinTallas,
@@ -2140,6 +2144,23 @@ begin
       frmMtoCajaParam.ShowModal;
     finally
       FreeAndNil(frmMtoCajaParam);
+    end;
+  end;
+end;
+
+procedure TfrmMtoPrincipal.mnuListadoOperacionesVentaClick(
+  Sender: TObject);
+var
+  frmListado: TfrmPrintOperacionesVenta;
+begin
+  inherited;
+  if mnuListadoOperacionesVenta.Visible then
+  begin
+    frmListado := TfrmPrintOperacionesVenta.Create(Self);
+    try
+      frmListado.ShowModal;
+    finally
+      FreeAndNil(frmListado);
     end;
   end;
 end;

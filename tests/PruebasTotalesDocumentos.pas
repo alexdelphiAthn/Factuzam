@@ -29,6 +29,8 @@ type
       const ANombre: string; ATamano: Integer = 20);
     procedure AgregarCampoFloat(ADataSet: TClientDataSet;
       const ANombre: string);
+    procedure AgregarCampoEntero(ADataSet: TClientDataSet;
+      const ANombre: string);
     procedure AgregarCamposCabecera;
     procedure AgregarCamposLineas;
     procedure AgregarLinea(const ATipoIva: string; APorcentajeIva,
@@ -56,12 +58,16 @@ type
     procedure PrendasCompra_PriorizaTotalUnidades;
     [Test]
     procedure PrendasVenta_NoInterfiereConUnaEdicion;
+    [Test]
+    procedure Factura_PosponerCalculoMientrasResuelveReferencia;
+    [Test]
+    procedure Factura_PosponerCalculoMientrasResuelveSku;
   end;
 
 implementation
 
 uses
-  inLibComprasImpuestos, inLibVentasImpuestos;
+  inLibComprasImpuestos, inLibFacturas, inLibVentasImpuestos;
 
 const
   MARGEN: Double = 0.000001;
@@ -80,6 +86,12 @@ procedure TPruebasTotalesDocumentos.AgregarCampoFloat(
   ADataSet: TClientDataSet; const ANombre: string);
 begin
   ADataSet.FieldDefs.Add(ANombre, ftFloat);
+end;
+
+procedure TPruebasTotalesDocumentos.AgregarCampoEntero(
+  ADataSet: TClientDataSet; const ANombre: string);
+begin
+  ADataSet.FieldDefs.Add(ANombre, ftInteger);
 end;
 
 procedure TPruebasTotalesDocumentos.AgregarCamposCabecera;
@@ -146,6 +158,10 @@ begin
   AgregarCampoFloat(FLineas, 'CANTIDAD_LIN');
   AgregarCampoFloat(FLineas, 'TOTAL_UNIDADES_LIN');
   AgregarCampoTexto(FLineas, 'INCLUIR');
+  AgregarCampoTexto(FLineas, 'CODIGO_ART_FACLIN');
+  AgregarCampoTexto(FLineas, 'DESCRIPCION_ARTICULO_FACLIN', 100);
+  AgregarCampoTexto(FLineas, 'CODIGO_UNIDAD_FACLIN', 100);
+  AgregarCampoEntero(FLineas, 'NUM_ATRIBUTOS_REQ_FACTURA_LINEA');
 end;
 
 procedure TPruebasTotalesDocumentos.AgregarLinea(
@@ -373,6 +389,46 @@ begin
     'TIPO_IVA_ARTICULO_LIN');
   Assert.AreEqual(Double(0), rTotal, MARGEN);
   Assert.AreEqual(Integer(dsInsert), Integer(FLineas.State));
+end;
+
+procedure TPruebasTotalesDocumentos.
+  Factura_PosponerCalculoMientrasResuelveReferencia;
+var
+  oTotales: TFacturaTotales;
+begin
+  FLineas.Append;
+  FLineas.FieldByName('CODIGO_ART_FACLIN').AsString := '5050003';
+  oTotales := TFacturaTotales.Create(nil, FCabecera, FLineas);
+  try
+    Assert.IsTrue(oTotales.ProcesarFacturaCompleta);
+    Assert.AreEqual(Integer(dsInsert), Integer(FLineas.State));
+    Assert.AreEqual('5050003',
+      FLineas.FieldByName('CODIGO_ART_FACLIN').AsString);
+  finally
+    FreeAndNil(oTotales);
+  end;
+end;
+
+procedure TPruebasTotalesDocumentos.
+  Factura_PosponerCalculoMientrasResuelveSku;
+var
+  oTotales: TFacturaTotales;
+begin
+  FLineas.Append;
+  FLineas.FieldByName('CODIGO_ART_FACLIN').AsString := '5050003';
+  FLineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString :=
+    'GAFAS UNISEX LINEA RECTA';
+  FLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := '5050003';
+  FLineas.FieldByName('NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger := 2;
+  oTotales := TFacturaTotales.Create(nil, FCabecera, FLineas);
+  try
+    Assert.IsTrue(oTotales.ProcesarFacturaCompleta);
+    Assert.AreEqual(Integer(dsInsert), Integer(FLineas.State));
+    Assert.AreEqual('5050003',
+      FLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString);
+  finally
+    FreeAndNil(oTotales);
+  end;
 end;
 
 end.

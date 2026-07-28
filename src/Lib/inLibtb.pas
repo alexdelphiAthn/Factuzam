@@ -16,11 +16,8 @@ unit inLibtb;
 
 interface
 
-uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
-      Classes, COMObj, ComCtrls, ExtActns, OleCtrls, Forms, inifiles, Uni,
-      SQLBuilder4D, SQLBuilder4D.Parser, SQLBuilder4D.Parser.GaSQLParser,
-      System.StrUtils, DCPrijndael, dcpbase64,DCPcrypt2, System.NetEncoding,
-      inLibUser, inLibFacturas,
+uses
+      DB, Classes, Uni,
       inLibPerfilesUsuarioIntf, inLibCadenas;
 
 type
@@ -39,19 +36,11 @@ type
   function DevDC(AsNcuenta:String):String;
   function TomarLetra(S: String):String;
   function SonNumeros(S:String):boolean;
-  function NomEjecutable:String;
   function AnsiOccurs(const str: string; const substr: string): integer;
   function AnsiSplit(const str: string; const separator: string): TStringArray;
   function SoloLetraNIF(S:String):Char;
   procedure ComprobarNIF(AsNIF:String);
-  function leCadINI (clave, cadena : string; defecto : string) : string;
-  function leCadINIDir (clave, cadena : string;
-                        defecto : string; sDir:string) : string;
-  function FileSinExtension(AsFile: string):string;
-  procedure esCadINI (clave, cadena, valor : string);
-  procedure esCadINIDir (clave, cadena, valor, sDir : string);
   function CheckIBAN(Aiban: string): Boolean;
-  procedure SetFilterSQL(var AqryConsulta: TUniSQL);
   procedure ConstruirConexion(conUni:TUniConnection; sUser,
                                                 sPassword,
                                                 sHostName,
@@ -65,15 +54,6 @@ type
   function SimbolosProhibidos(
     const s: String;
     const APerfilesUsuario: IPerfilesUsuario): Boolean;
-  procedure BusqDataBase(sqlConsulta: TUniQuery;
-                        sBusqueda:String;
-                        var ConsultaO:string);
-  procedure BusqDataBaseMD(AqryMaster, AqryDetail: TUniQuery;
-                         sBusqueda: String;
-                         var sSQLOrigMaster, sSQLOrigDetail: String;
-                         const sNombreTablaDetalle: String;
-                         const sCondicionJoin: String);
-  function ObtenerCadenaFiltro(AQuery: TUniQuery; sBusqueda: String): String;
   function ExistePeriodoUnico( qryData:TUniQuery;
                                fFechaIni,
                                fFechaFin:TField
@@ -118,7 +98,9 @@ type
 implementation
 
 uses
-  inLibConexionesUniDAC, inLibDatasets, inLibValoresAutomaticos,
+  SysUtils, Variants,
+  inLibCifrado, inLibConexionesUniDAC, inLibDatasets,
+  inLibFacturas, inLibValoresAutomaticos,
   inLibMsg;
 
 function KeyValuesToStr(const V: Variant): string;
@@ -347,426 +329,50 @@ begin
   end;
 end;
 
-function DecryptData(Data: string; AKey: AnsiString; AIv: AnsiString): string;
-    function Base64DecodeBytes(Input: TBytes): TBytes;
-    var
-      ilen, rlen: integer;
-    begin
-      ilen := Length(Input);
-      SetLength(result, (ilen div 4) * 3);
-      rlen := Base64Decode(@Input[0], @result[0], ilen);
-      SetLength(result, rlen);
-    end;
-var
-  key, iv, src, dest: TBytes;
-  cipher: TDCP_rijndael;
-  slen, pad: integer;
-begin
-  try
-    // Validar la longitud de los datos de entrada
-    if Length(Data) = 0 then
-      raise Exception.Create('Datos de entrada vacíos');
-    key := TEncoding.ASCII.GetBytes(String(AKey));
-    iv := TEncoding.ASCII.GetBytes(String(AIv));
-    src := Base64DecodeBytes(TEncoding.UTF8.GetBytes(Data));
-    //  Validar la longitud de los datos de entrada
-    //  después de la decodificación Base64
-    if Length(src) = 0 then
-      raise Exception.Create('Error al decodificar Base64');
-    cipher := TDCP_rijndael.Create(nil);
-    try
-      cipher.CipherMode := cmCBC;
-      slen := Length(src);
-  //    if slen mod cipher.BlockSize <> 0 then
-  //      raise Exception.Create('Longitud de datos no válida');
-      SetLength(dest, slen);
-      cipher.Init(key[0], 256, @iv[0]); // DCP uses key size in BITS not BYTES
-      cipher.Decrypt(src[0], dest[0], slen);
-      // Validar la longitud de los datos después de la desencriptación
-      if Length(dest) = 0 then
-        raise Exception.Create('Error durante la desencriptación');
-      pad := dest[slen - 1];
-      SetLength(dest, slen - pad);
-      Result := TEncoding.UTF8.GetString(dest);
-    finally
-      if (cipher <> nil) then
-        FreeAndNil(cipher);
-    end;
-    except
-  // Manejar cualquier excepción aquí
-    on E: Exception do
-      Exit;
-  end;
-end;
-
-function EncryptData(Data: string; AKey: AnsiString; AIv: AnsiString): string;
-    function Base64EncodeBytes(Input: TBytes): TBytes;
-    var
-      ilen: integer;
-    begin
-      ilen := Length(Input);
-      SetLength(result, ((ilen + 2) div 3) * 4);
-      Base64Encode(@Input[0], @result[0], ilen);
-    end;
-var
-  cipher: TDCP_rijndael;
-  key, iv, src, dest, b64: TBytes;
-  index, slen, bsize, pad: integer;
-begin
-  key := TEncoding.ASCII.GetBytes(String(AKey));
-  iv := TEncoding.ASCII.GetBytes(String(AIv));
-  src := TEncoding.UTF8.GetBytes(Data);
-  cipher := TDCP_rijndael.Create(nil);
-  try
-    cipher.CipherMode := cmCBC;
-    slen := Length(src);
-    bsize := (cipher.BlockSize div 8);
-    pad := bsize - (slen mod bsize);
-    Inc(slen, pad);
-    SetLength(src, slen);
-    for index := pad downto 1 do
-    begin
-      src[slen - index] := pad;
-    end;
-    SetLength(dest, slen);
-    cipher.Init(key[0], 256, @iv[0]); // DCP uses key size in BITS not BYTES
-    cipher.Encrypt(src[0], dest[0], slen);
-    b64 := Base64EncodeBytes(dest);
-    result := TEncoding.Default.GetString(b64);
-  finally
-    FreeAndNil(cipher);
-  end;
-end;
-
 function EncriptAESPass(s:String; sPass:AnsiString):String;
-var
-   Adata: String;
-   AKey, IV: AnsiString;
 begin
-  AKey := 'Key1234567890-1234567890-1234567' + sPass;
-  IV := '12345678901234561234567890123456';
-  Adata := EncryptData(s,akey,iv);
-  Result := Adata;
+  Result := inLibCifrado.CifrarAESConContrasena(
+    s,
+    sPass);
 end;
 
 function EncriptAES(s:String):String;
-var
-   Adata:String;
-   AKey, IV: AnsiString;
 begin
-  AKey := 'Key1234567890-1234567890-1234567';
-  IV := '12345678901234561234567890123456';
-  Adata := EncryptData(s,akey,iv);
-  Result := Adata;
+  Result := inLibCifrado.CifrarAES(s);
 end;
 
 function DecriptAESPass(s:String; sPass:AnsiString):String;
-var
-  Adata: String;
-  AKey, IV : AnsiString;
 begin
-  AKey := ('Key1234567890-1234567890-1234567'+ sPass);
-  IV := ('12345678901234561234567890123456');
-  adata := decryptdata(s, akey, iv);
-  Result := (Adata);
+  Result := inLibCifrado.DescifrarAESConContrasena(
+    s,
+    sPass);
 end;
 
 function DecriptAES(s:String):String;
-var
-  Adata : String;
-  AKey, IV : AnsiString;
 begin
-  AKey := ('Key1234567890-1234567890-1234567');
-  IV := ('12345678901234561234567890123456');
-  adata := decryptdata(s, akey, iv);
-  Result := (Adata);
+  Result := inLibCifrado.DescifrarAES(s);
 end;
 
-procedure SetFilterSQL(var AqryConsulta: TUniSQL);
-var
- sSQL:string;
+function EncryptData(
+  Data: string;
+  AKey: AnsiString;
+  AIv: AnsiString): string;
 begin
-  sSQL := AqryConsulta.SQL.Text;
+  Result := inLibCifrado.CifrarDatosAES(
+    Data,
+    AKey,
+    AIv);
 end;
 
-function ObtenerCadenaFiltro(AQuery: TUniQuery; sBusqueda: String): String;
-var
-  i: Integer;
-  sLike: string;
-  // Variables para lógica de fecha/hora si la deseas conservar
-//  bModoFecha: Boolean;
-  sTextoBuscar: String;
+function DecryptData(
+  Data: string;
+  AKey: AnsiString;
+  AIv: AnsiString): string;
 begin
-  Result := '';
-  if sBusqueda = '' then Exit;
-  // --- Lógica de limpieza (Fechas/Horas) que definimos antes ---
-  sTextoBuscar := sBusqueda;
-  // Aquí puedes poner tu IF de "//" o "::" si quieres limpiar sTextoBuscar
-  // ...
-  sLike := '';
-  // Aseguramos que la query tenga info de campos (por si estaba cerrada)
-  if not AQuery.Active then AQuery.FieldDefs.Update;
-  for i := 0 to AQuery.FieldCount - 1 do
-  begin
-    if AQuery.Fields[i].DataType in [ftSmallint, ftInteger, ftWord, ftCurrency,
-       ftBCD, ftLargeint, ftFMTBcd, ftLongWord, ftShortint, ftString,
-       ftWideString, ftMemo, ftFmtMemo, ftWideMemo] then
-    begin
-       // Usamos FieldName. Si tu SQL tiene Joins y alias,
-       //asegúrate que FieldName lo refleje
-       // o pásale el alias a esta función.
-       sLike := sLike + AQuery.Fields[i].FieldName + ' LIKE ' +
-                QuotedStr('%' + sTextoBuscar + '%') + ' OR ';
-    end;
-  end;
-  if sLike <> '' then
-  begin
-    // Quitamos el último " OR "
-    sLike := LeftStr(sLike, Length(sLike) - 4);
-    // Devolvemos entre paréntesis para proteger la lógica
-    Result := '(' + sLike + ')';
-  end;
-end;
-
-procedure BusqDataBaseMD(AqryMaster, AqryDetail: TUniQuery;
-                         sBusqueda: String;
-                         var sSQLOrigMaster, sSQLOrigDetail: String;
-                         const sNombreTablaDetalle: String; // Ej: 'FACTURAS'
-                         // Ej: 'FACTURAS.IDCLIENTE = CLIENTES.ID'
-                         const sCondicionJoin: String);
-var
-  vParserMaster, vParserDetail: ISQLParserSelect;
-  sFiltroMaster, sFiltroDetail: String;
-  sCondicionFinalMaster: String;
-  sCondicionExists: String;
-begin
-  // 1. Guardar/Restaurar SQL Original
-  if sSQLOrigMaster = '' then sSQLOrigMaster := AqryMaster.SQL.Text;
-  if sSQLOrigDetail = '' then sSQLOrigDetail := AqryDetail.SQL.Text;
-  // Restauramos siempre antes de procesar para no acumular filtros
-  AqryMaster.SQL.Text := sSQLOrigMaster;
-  AqryDetail.SQL.Text := sSQLOrigDetail;
-  if sBusqueda = '' then
-  begin
-    AqryMaster.Open;
-    AqryDetail.Open;
-    Exit;
-  end;
-  // 2. Obtener las cadenas de filtro (el texto LIKE ... OR ...)
-  // Nota: Asegúrate que las queries estén abiertas o tengan FieldDefs
-  // actualizados
-  if not AqryMaster.Active then AqryMaster.Open;
-  if not AqryDetail.Active then AqryDetail.Open;
-  sFiltroMaster := ObtenerCadenaFiltro(AqryMaster, sBusqueda);
-  sFiltroDetail := ObtenerCadenaFiltro(AqryDetail, sBusqueda);
-  // 3. Configurar Parsers
-  vParserMaster := TGaSQLParserFactory.Select(AqryMaster.SQL.Text);
-  vParserDetail := TGaSQLParserFactory.Select(AqryDetail.SQL.Text);
-  // ---------------------------------------------------------
-  // A. APLICAR AL DETALLE (Solo sus campos)
-  // ---------------------------------------------------------
-  if sFiltroDetail <> '' then
-  begin
-    // Añadimos con AND al resto de condiciones que tenga el detalle
-    vParserDetail.AddWhere(sFiltroDetail, pcAnd);
-    AqryDetail.SQL.Text := vParserDetail.ToString;
-  end;
-  // ---------------------------------------------------------
-  // B. APLICAR AL MAESTRO (Sus campos OR Exists Detalle)
-  // ---------------------------------------------------------
-  // Construimos el bloque EXISTS a mano
-  sCondicionExists := '';
-  if sFiltroDetail <> '' then
-  begin
-    sCondicionExists := Format('EXISTS (SELECT 1 FROM %s WHERE %s AND %s)',
-                        [sNombreTablaDetalle, sCondicionJoin, sFiltroDetail]);
-  end;
-  // Combinamos: (FiltroMaestro) OR (FiltroExists)
-  sCondicionFinalMaster := '';
-  if (sFiltroMaster <> '') and (sCondicionExists <> '') then
-    sCondicionFinalMaster :=
-      '(' + sFiltroMaster + ' OR ' + sCondicionExists + ')'
-  else if sFiltroMaster <> '' then
-    sCondicionFinalMaster := sFiltroMaster
-  else if sCondicionExists <> '' then
-    sCondicionFinalMaster := sCondicionExists;
-  if sCondicionFinalMaster <> '' then
-  begin
-    // Inyectamos al parser del maestro. El parser se encarga de WHERE/ORDER BY
-    vParserMaster.AddWhere(sCondicionFinalMaster, pcAnd);
-    AqryMaster.SQL.Text := vParserMaster.ToString;
-  end;
-  // 4. Reabrir con los nuevos SQLs
-  AqryMaster.Open;
-  AqryDetail.Open;
-  // Liberar interfaces (aunque en Delphi moderno se liberan solas, es bueno
-  // ponerlas a nil)
-  vParserMaster := nil;
-  vParserDetail := nil;
-end;
-
-procedure BusqDataBase(sqlConsulta: TUniQuery;
-                       sBusqueda:String;
-                       var ConsultaO:string);
-var
-  index:integer;
-  vSQLParserSelect: ISQLParserSelect;
-  sLike:string;
-  sConsulta:string;
-begin
-  sConsulta :=  sqlConsulta.SQL.Text;
-  if ( ConsultaO = '' ) then
-    ConsultaO := sConsulta;
-  if ( ConsultaO <> sConsulta ) then
-  begin
-    sConsulta := ConsultaO; //reseteo la consulta porque ha habido otras búsq.
-    sqlConsulta.SQL.text := ConsultaO;
-  end;
-  if sBusqueda <> '' then
-  begin
-    vSQLParserSelect :=  TGaSQLParserFactory.Select(sConsulta);
-    vSQLParserSelect.AddWhere('(1=1)', pcAnd);
-    if sqlConsulta.Active = False then
-      sqlConsulta.Active := True;
-    for index := 0 to ( sqlConsulta.FieldCount - 1 ) do
-    begin
-      if ( (sqlConsulta.Fields[index].DataType in   [ftSmallint,
-                                                      ftInteger,
-                                                      ftWord,
-                                                      ftCurrency,
-                                                      ftBCD,
-                                                      ftLargeint,
-                                                      ftFMTBcd,
-                                                      ftLongWord,
-                                                      ftShortint,
-                                                      ftString,
-                                                      ftWideString,
-                                                      ftMemo,
-                                                      ftFmtMemo,
-                                                      ftWideMemo] ) ) then
-      begin
-        sLike := sLike + sqlConsulta.Fields[index].FieldName + ' LIKE ' +
-                 QuotedStr('%' + sBusqueda + '%') + ' Or ';
-      end;
-    end;
-    sLike := LeftStr(sLike, Length(sLike) - 4 );
-    vSQLParserSelect.AddWhere(sLike, pcAnd);
-    sqlConsulta.SQL.text := vSQLParserSelect.ToString;
-    vSQLParserSelect := nil;
-  end;
-  sqlConsulta.Open;
-end;
-
-function ParametroIniAplicacion: string;
-begin
-  Result := Trim(ParamStr(1));
-  if (Result <> '') and CharInSet(Result[1], ['/', '-']) then
-    Result := '';
-end;
-
-procedure esCadINI (clave, cadena, valor : string);
-var
-   sIniFile,
-   sParametroIni:string;
-begin
-  sParametroIni := ParametroIniAplicacion;
-  if (SameText(sParametroIni, '')) then
-    sIniFile := ExtractFilePath(ParamStr(0))
-      + FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
-  else
-    sIniFile := ExtractFilePath(ParamStr(0)) + sParametroIni;
-  with tinifile.create (sIniFile) do
-  try
-    writeString (clave, cadena, valor);
-  finally
-    free;
-  end;
-end;
-
-procedure esCadINIDir (clave, cadena, valor, sDir : string);
-var
-   sIniFile,
-   sParametroIni:string;
-begin
-  sParametroIni := ParametroIniAplicacion;
-  if SameText(sParametroIni, '') then
-    sIniFile := sDir + FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
-  else
-    sIniFile := sDir + sParametroIni;
-  with tinifile.create (sIniFile) do
-  try
-    writeString (clave, cadena, valor);
-  finally
-    free;
-  end;
-end;
-
-function FileSinExtension(AsFile: string):string;
-begin
-  Result := ExtractFilePath(AsFile) + copy(ExtractFileName(AsFile), 1,
-                        pos(ExtractFileExt(AsFile), ExtractFileName(AsFile)) - 1);
-end;
-
-function leCadINI (clave, cadena : string; defecto : string) : string;
-var
-  sIniFile,
-  sParametroIni:string;
-begin
-  sParametroIni := ParametroIniAplicacion;
-  if sParametroIni = '' then
-    sIniFile := ExtractFilePath(ParamStr(0)) +
-                         FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
-  else
-    sIniFile := ExtractFilePath(ParamStr(0)) + sParametroIni;
-  with tinifile.create (sIniFile) do
-  try
-    result := readString (clave, cadena, defecto);
-    if result = defecto then
-      esCadINI(clave, cadena, defecto);
-  finally
-    free;
-  end;
-end;
-
-function leCadINIDir (clave, cadena : string;
-                      defecto : string;
-                      sDir:string) : string;
-var
-  sIniFile,
-  sParametroIni:string;
-begin
-  sParametroIni := ParametroIniAplicacion;
-  if sParametroIni = '' then
-    sIniFile := sDir + FileSinExtension(ExtractFileName(ParamStr(0))) + '.ini'
-  else
-    sIniFile := sDir + sParametroIni;
-  with tinifile.create (sIniFile) do
-  try
-    result := readString (clave, cadena, defecto);
-    if result = defecto then
-      esCadINIDir(clave, cadena, defecto, sDir);
-  finally
-    free;
-  end;
-end;
-
-function GetAppFolder:String;
-begin
- result:= ExtractFilePath(Application.EXEName);
-end;
-
-procedure CrearFichBBDD(sDataSourc:String);
-var
-    ctCatalog :  Variant;
-begin
-  //if not(DirectoryExists(GetBBDDFolder) ) then
-    //CrearBBDD
-  ctCatalog := CreateOleObject('ADOX.Catalog');
-
-  try
-    ctCatalog.Create(sDataSourc);
-  finally
-  end;
+  Result := inLibCifrado.DescifrarDatosAES(
+    Data,
+    AKey,
+    AIv);
 end;
 
 function LetraNIF(ADNI: String): Char;
@@ -948,11 +554,6 @@ begin
     Result := True
   else
     Result := False;
-end;
-
-function NomEjecutable:String;
-begin
-  //Result:= Copy( sName, 3, 255 );
 end;
 
 function ExistePeriodoUnico(qryData:TUniQuery;

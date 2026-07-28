@@ -757,15 +757,19 @@ begin
     Exit;
   end;
   sUser := Trim(edUsuario.Text);
-  if sUser = '' then sUser := 'MIGRADOR';
+  if sUser = '' then
+    sUser := 'MIGRADOR';
   if MessageDlg(Format(
        'Se van a BORRAR del destino "%s" todas las filas que haya '#13#10 +
-       'creado una migracion previa (USUARIO_ALTA = "%s") en las '#13#10 +
-       '46 tablas que toca el migrador: facturas, pedidos, albaranes, '#13#10 +
-       'movimientos, compras, caja, inventarios, skus, articulos, '#13#10 +
-       'clientes, proveedores, almacenes, empresas, contadores,...).'#13#10#13#10 +
-       'NO se tocan tablas de SISTEMA ni filas creadas por otros '#13#10 +
-       'usuarios (demo, Administrador, etc.).'#13#10#13#10 +
+       'creado una migracion previa (USUARIO_ALTA = "%s") de:'#13#10 +
+       '- articulos, SKUs, colores/tallas, tarifas, fotos y stock;'#13#10 +
+       '- documentos de venta, compra, inventario y movimientos;'#13#10 +
+       '- ventas/caja, vales y arqueos.'#13#10#13#10 +
+       'SE CONSERVAN usuarios, parametros, perfiles, permisos, clientes,'#13#10 +
+       'proveedores, empleados, datos de empresa, bancos, series,'#13#10 +
+       'contadores, almacenes, cajas, formas de pago e impuestos.'#13#10#13#10 +
+       'Tampoco se tocan filas creadas por otros usuarios (demo,'#13#10 +
+       'Administrador, etc.).'#13#10#13#10 +
        'Util para volver a ejecutar la migracion desde cero.'#13#10 +
        '¿Continuar?', [edDstBase.Text, sUser]),
        mtWarning, [mbYes, mbNo], 0) <> mrYes then

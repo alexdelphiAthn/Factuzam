@@ -49,7 +49,8 @@ var
 implementation
 
 uses inLibDir,
-     inLibtb,
+     inLibCifrado,
+     inLibConfiguracionIni,
      inLibConexionesUniDAC,
      inLibWin,
      inLibLog,
@@ -91,14 +92,18 @@ var
   sPort,
   sUser: string;
 begin
-  sDatabase := leCadINIDir('ConnData', 'Database','factuzam', GetUserFolder);
-  sHostName :=  leCadINIDir('ConnData', 'HostName','127.0.0.1', GetUserFolder);
-  sPasswordEn := DecriptAES(leCadINIDir('ConnData',
+  sDatabase := LeerCadenaIni(
+    'ConnData', 'Database', 'factuzam', GetUserFolder);
+  sHostName := LeerCadenaIni(
+    'ConnData', 'HostName', '127.0.0.1', GetUserFolder);
+  sPasswordEn := DescifrarAES(LeerCadenaIni('ConnData',
                             'PasswordEn',
                             '2qJFaDfegP/9y6RDno1FRg==',
                             GetUserFolder));
-  sPort :=  leCadINIDir('ConnData', 'Puerto','3310', GetUserFolder);
-  sUser :=  leCadINIDir('ConnData', 'User', 'root', GetUserFolder);
+  sPort := LeerCadenaIni(
+    'ConnData', 'Puerto', '3310', GetUserFolder);
+  sUser := LeerCadenaIni(
+    'ConnData', 'User', 'root', GetUserFolder);
   with Conuni do
   begin
     Pooling := True;

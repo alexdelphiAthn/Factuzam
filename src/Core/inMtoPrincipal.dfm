@@ -1144,11 +1144,18 @@
       end
     end
     object mnuCaja: TMenuItem
-      Caption = 'Ca&ja'
+      Caption = '&TPV'
       object mnuMenuCaja: TMenuItem
         Caption = 'Men'#250' de Caja'
         ShortCut = 116
         OnClick = mnuMenuCajaClick
+      end
+      object mnuTPVListados: TMenuItem
+        Caption = 'Listados'
+        object mnuListadoOperacionesVenta: TMenuItem
+          Caption = 'Listado de operaciones de venta'
+          OnClick = mnuListadoOperacionesVentaClick
+        end
       end
       object mnuCajaParam: TMenuItem
         Caption = '&Par'#225'metros de Caja'

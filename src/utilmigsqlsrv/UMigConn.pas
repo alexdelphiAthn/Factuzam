@@ -67,12 +67,11 @@ type
     // Devuelve cuantas filas borro en total.
     function LimpiarDatosDemoDestino: Integer;
 
-    // Borra del destino TODO lo que haya creado una corrida previa
-    // del migrador, identificado por USUARIO_ALTA = sUsuario (por
-    // defecto 'MIGRADOR'). Procesa las tablas en orden inverso de
-    // dependencias (hijos primero) para evitar dejar huerfanos.
-    // Devuelve cuantas filas borro en total. Permite re-ejecutar la
-    // migracion desde cero sin restos.
+    // Borra del destino los articulos, SKUs, stock, documentos y ventas
+    // creados por una corrida previa del migrador. Conserva usuarios,
+    // perfiles, parametros, maestros, empresas, contadores y almacenes.
+    // Procesa las tablas en orden inverso de dependencias para evitar
+    // dejar huerfanos. Devuelve cuantas filas borro en total.
     function ResetearMigracionAnterior(const sUsuario: string): Integer;
 
     // Borra COMPLETAMENTE la BBDD destino con DROP DATABASE. El
@@ -338,11 +337,13 @@ function TdmMig.ResetearMigracionAnterior(
 const
   // Orden INVERSO de dependencias (hijos primero, padres despues)
   // para que los DELETE no dejen huerfanos en otras tablas.
-  // Cubre TODO lo que escribe el migrador bajo USUARIO_ALTA: documentos
-  // (facturas, compras), caja, movimientos, articulos y maestros. Solo
-  // tablas con columna USUARIO_ALTA (el DELETE filtra por ella).
-  aTablas: array[0..52] of string = (
+  // Solo incluye catalogo de articulos, stock, documentos y ventas.
+  // Las tablas de configuracion y maestros se conservan.
+  aTablas: array[0..44] of string = (
     // Documentos comerciales, caja y movimientos (hojas primero)
+    'fza_caja_arqueos_recuento',
+    'fza_caja_arqueos',
+    'fza_caja_vales',
     'fza_efectos_compra',
     'fza_remesas_compra',
     'fza_facturas_lineas',
@@ -353,6 +354,8 @@ const
     'fza_pedidos',
     'fza_facturas_compra_lineas',
     'fza_facturas_compra',
+    'fza_devoluciones_compra_lineas',
+    'fza_devoluciones_compra',
     'fza_albaranes_compra_lineas',
     'fza_albaranes_compra',
     'fza_pedidos_compra_lineas',
@@ -361,7 +364,6 @@ const
     'fza_caja_pagos',
     'fza_caja_operaciones',
     'fza_depositos_cliente',
-    'fza_caja_formas_pago',
     // Inventarios
     'fza_inventarios_lineas',
     'fza_inventarios',
@@ -387,43 +389,49 @@ const
     'fza_articulos',
     'fza_articulos_familias',
     'fza_atributos_basicos',
-    'fza_atributos_valores',
-    // Entorno / maestros
-    'fza_empresas_series',
-    'fza_contadores',
-    'fza_clientes',
-    'fza_proveedores',
-    'fza_empleados',
-    'fza_empresas_bancos',
-    'fza_almacenes',
-    'fza_empresas',
-    'fza_tipos_efecto',
-    'fza_formas_pago',
-    'fza_ivas',
-    'fza_ivas_grupos'
+    'fza_atributos_valores'
   );
 var
   i, iSub: Integer;
   qDel:    TUniQuery;
   sUser:   string;
+  procedure EjecutarBorrado(const sSql: string);
+  begin
+    qDel.SQL.Text := sSql;
+    qDel.ParamByName('u').AsString := sUser;
+    qDel.ExecSQL;
+    iSub := qDel.RowsAffected;
+    if iSub > 0 then
+      Inc(Result, iSub);
+  end;
 begin
   sUser := Trim(sUsuario);
-  if sUser = '' then sUser := 'MIGRADOR';
-  if not conDst.Connected then conDst.Open;
+  if sUser = '' then
+    sUser := 'MIGRADOR';
+  if not conDst.Connected then
+    conDst.Open;
   Result := 0;
   qDel := TUniQuery.Create(nil);
   try
     qDel.Connection := conDst;
+    // Stockactual no tiene auditoria. Se borra solo el stock de los SKUs
+    // que va a eliminar este mismo reset.
+    EjecutarBorrado(
+      'DELETE stk ' +
+      '  FROM fza_articulos_stockactual stk ' +
+      '  JOIN fza_articulos_skus sku ' +
+      '    ON sku.CODIGO_UNIDAD_SKU = stk.CODIGO_UNIDAD_STK ' +
+      ' WHERE sku.USUARIO_ALTA = :u');
+    // Los ejes de variacion tampoco tienen auditoria. Se eliminan solo
+    // cuando pertenecen a una variacion creada por el migrador.
+    EjecutarBorrado(
+      'DELETE va ' +
+      '  FROM fza_variaciones_atributos va ' +
+      '  JOIN fza_variaciones v ON v.CODIGO_VAR = va.ID_VAR_VA ' +
+      ' WHERE v.USUARIO_ALTA = :u');
     for i := Low(aTablas) to High(aTablas) do
-    begin
-      qDel.SQL.Text := Format(
-        'DELETE FROM `%s` WHERE USUARIO_ALTA = :u', [aTablas[i]]);
-      qDel.ParamByName('u').AsString := sUser;
-      qDel.ExecSQL;
-      iSub := qDel.RowsAffected;
-      if iSub > 0 then
-        Inc(Result, iSub);
-    end;
+      EjecutarBorrado(Format(
+        'DELETE FROM `%s` WHERE USUARIO_ALTA = :u', [aTablas[i]]));
   finally
     qDel.Free;
   end;

@@ -178,6 +178,8 @@
         <DCCReference Include="src\Lib\inLibLog.pas"/>
         <DCCReference Include="src\Lib\inLibDiag.pas"/>
         <DCCReference Include="src\Lib\inLibCadenas.pas"/>
+        <DCCReference Include="src\Lib\inLibCifrado.pas"/>
+        <DCCReference Include="src\Lib\inLibConfiguracionIni.pas"/>
         <DCCReference Include="src\Lib\inLibDatasets.pas"/>
         <DCCReference Include="src\Lib\inLibValoresAutomaticos.pas"/>
         <DCCReference Include="src\Lib\inLibtb.pas"/>
@@ -615,6 +617,9 @@
         </DCCReference>
         <DCCReference Include="src\Caja\Modals\inMtoModalImpOperaciones.pas">
             <Form>frmPrintOperaciones</Form>
+        </DCCReference>
+        <DCCReference Include="src\Caja\Modals\inMtoModalImpOperacionesVenta.pas">
+            <Form>frmPrintOperacionesVenta</Form>
         </DCCReference>
         <DCCReference Include="src\Caja\Modals\inMtoModalImpPagos.pas">
             <Form>frmPrintPagos</Form>

@@ -136,7 +136,7 @@ uses
   MySQLUniProvider, UniScript,
   System.StrUtils,
   inLibDBStructure,
-  inLibtb,
+  inLibCifrado,
   inLibMsg;
 
 function CrearCopiaSeguridadBD(const AHost: string; APort: Integer;
@@ -202,7 +202,9 @@ begin
             s := Writer.GetScript;
             s := StringReplace(s, 'DEFINER=`root`@`localhost`', '',
                                [rfReplaceAll, rfIgnoreCase]);
-            s := EncriptAESPass(s, APassEncriptar);
+            s := CifrarAESConContrasena(
+              s,
+              APassEncriptar);
             MyText := TStringList.Create;
             try
               MyText.Text := s;
@@ -834,7 +836,9 @@ begin
               MyText := TStringList.Create;
               try
                 MyText.LoadFromFile(FRutaFichero);
-                s := DecriptAESPass(MyText.Text, FPassDesencriptar);
+                s := DescifrarAESConContrasena(
+                  MyText.Text,
+                  FPassDesencriptar);
               finally
                 FreeAndNil(MyText);
               end;

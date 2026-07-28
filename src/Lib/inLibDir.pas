@@ -9,155 +9,79 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Acceso a carpetas especiales de Windows.                                  }
-{    Resuelve rutas de sistema, perfil de usuario y carpetas de la aplicación. }
+{    Acceso a las carpetas de Windows utilizadas por la aplicación.            }
 {******************************************************************************}
 unit inLibDir;
 
 interface
 
-uses  Forms, SysUtils, Variants, ShlObj, Windows, System.IOUtils ;
-
-
 const
-  CSIDL_DESKTOP             = $0000; { <desktop> }
-  CSIDL_INTERNET            = $0001; { Internet Explorer (icon on desktop) }
-  CSIDL_PROGRAMS            = $0002; { Start Menu\Programs }
-  CSIDL_CONTROLS            = $0003; { My Computer\Control Panel }
-  CSIDL_PRINTERS            = $0004; { My Computer\Printers }
-  CSIDL_PERSONAL            = $0005; { My Documents.  This is equivalent to
-                                          CSIDL_MYDOCUMENTS in XP and above }
-  CSIDL_FAVORITES           = $0006; { <user name>\Favorites }
-  CSIDL_STARTUP             = $0007; { Start Menu\Programs\Startup }
-  CSIDL_RECENT              = $0008; { <user name>\Recent }
-  CSIDL_SENDTO              = $0009; { <user name>\SendTo }
-  CSIDL_BITBUCKET           = $000a; { <desktop>\Recycle Bin }
-  CSIDL_STARTMENU           = $000b; { <user name>\Start Menu }
-  CSIDL_MYDOCUMENTS         = $000c; { logical "My Documents" desktop icon }
-  CSIDL_MYMUSIC             = $000d; { "My Music" folder }
-  CSIDL_MYVIDEO             = $000e; { "My Video" folder }
-  CSIDL_DESKTOPDIRECTORY    = $0010; { <user name>\Desktop }
-  CSIDL_DRIVES              = $0011; { My Computer }
-  CSIDL_NETWORK             = $0012; { Network Neighborhood
-                                                        (My Network Places) }
-  CSIDL_NETHOOD             = $0013; { <user name>\nethood }
-  CSIDL_FONTS               = $0014; { windows\fonts }
-  CSIDL_TEMPLATES           = $0015; { <user name>\appdata\roaming\template
-                                                                     folder }
-  CSIDL_COMMON_STARTMENU    = $0016; { All Users\Start Menu }
-  CSIDL_COMMON_PROGRAMS     = $0017; { All Users\Start Menu\Programs }
-  CSIDL_COMMON_STARTUP      = $0018; { All Users\Startup }
-  CSIDL_COMMON_DESKTOPDIRECTORY  = $0019; { All Users\Desktop }
-  CSIDL_APPDATA                  = $001a; { <user name>\Application Data }
-  CSIDL_PRINTHOOD                = $001b; { <user name>\PrintHood }
-  CSIDL_LOCAL_APPDATA            = $001c; { <user name>\Local Settings\
-                                               Application Data (non roaming) }
-  CSIDL_ALTSTARTUP               = $001d; { non localized startup }
-  CSIDL_COMMON_ALTSTARTUP        = $001e; { non localized common startup }
-  CSIDL_COMMON_FAVORITES         = $001f; { User favourites }
-  CSIDL_INTERNET_CACHE           = $0020; { temporary inter files }
-  CSIDL_COOKIES                  = $0021; { <user name>\Local Settings\
-                                                   Application Data\..\cookies }
-  CSIDL_HISTORY                  = $0022; { <user name>\Local Settings\
-                                                    Application Data\..\history}
-  CSIDL_COMMON_APPDATA           = $0023; { All Users\Application Data }
-  CSIDL_WINDOWS                  = $0024; { GetWindowsDirectory() }
-  CSIDL_SYSTEM                   = $0025; { GetSystemDirectory() }
-  CSIDL_PROGRAM_FILES            = $0026; { C:\Program Files }
-  CSIDL_MYPICTURES               = $0027; { C:\Program Files\My Pictures }
-  CSIDL_PROFILE                  = $0028; { USERPROFILE }
-  CSIDL_SYSTEMX86                = $0029; { x86 system directory on RISC }
-  CSIDL_PROGRAM_FILESX86         = $002a; { x86 C:\Program Files on RISC }
-  CSIDL_PROGRAM_FILES_COMMON     = $002b; { C:\Program Files\Common }
-  CSIDL_PROGRAM_FILES_COMMONX86  = $002c; { x86 C:\Program Files\Common on RISC}
-  CSIDL_COMMON_TEMPLATES         = $002d; { All Users\Templates }
-  CSIDL_COMMON_DOCUMENTS         = $002e; { All Users\Documents }
-  CSIDL_COMMON_ADMINTOOLS        = $002f; { All Users\Start Menu\Programs\
-                                                          Administrative Tools }
-  CSIDL_ADMINTOOLS               = $0030; { <user name>\Start Menu\Programs\
-                                                          Administrative Tools }
-  CSIDL_CONNECTIONS              = $0031; { Network and Dial-up Connections }
-  CSIDL_COMMON_MUSIC             = $0035; { All Users\My Music }
-  CSIDL_COMMON_PICTURES          = $0036; { All Users\My Pictures }
-  CSIDL_COMMON_VIDEO             = $0037; { All Users\My Video }
-  CSIDL_RESOURCES                = $0038; { Resource Directory }
-  CSIDL_RESOURCES_LOCALIZED      = $0039; { Localized Resource Directory }
-  CSIDL_CDBURN_AREA              = $003b; { USERPROFILE\Local Settings\}
+  CSIDL_MYDOCUMENTS = $000C;
+  CSIDL_DESKTOPDIRECTORY = $0010;
+  CSIDL_LOCAL_APPDATA = $001C;
 
-function NomApp:String;
-function DirApp:String;
-//function GetDirUser(sUser:String):String;
-//procedure SetDirUser(sFolder: String; sUser:String);
-//procedure GetDefaultUser(var sUser:String; var sDir:String);
-function GetSpecialFolderPath(CSIDLFolder: Integer): string;
-function GetUserFolder:String;
-function GetUserDeskFolder:String;
-function GetTempPath:String;
-function GetLogFolder:String;
-function GetUserFolderTickets:String;
+function DirApp: String;
+function GetSpecialFolderPath(ACarpetaCSIDL: Integer): string;
+function GetUserFolder: String;
+function GetUserDeskFolder: String;
+function GetLogFolder: String;
+function GetUserFolderTickets: String;
 
 implementation
 
-function GetTempPath:String;
-begin
-  Result := TPath.GetTempPath;
-end;
+uses
+  Forms, ShlObj, SysUtils, Windows;
 
-{http://delphiprogrammingdiary.blogspot.com/2017/08/
-                                    how-to-get-windows-special-directories.html}
-function GetSpecialFolderPath(CSIDLFolder: Integer): string;
+function GetSpecialFolderPath(
+  ACarpetaCSIDL: Integer): string;
 var
-   FilePath: array [0..MAX_PATH] of char;
+  aRuta: array [0..MAX_PATH] of Char;
 begin
-  SHGetFolderPath(0, CSIDLFolder, 0, 0, FilePath);
-  Result := FilePath;
+  SHGetFolderPath(
+    0,
+    ACarpetaCSIDL,
+    0,
+    0,
+    aRuta);
+  Result := aRuta;
 end;
 
-function GetUserFolderTickets:String;
+function GetUserFolderTickets: String;
 begin
-  ForceDirectories(GetSpecialFolderPath(
-    CSIDL_LOCAL_APPDATA)+ '\factuzam\tickets\');
-  Result := GetSpecialFolderPath(CSIDL_LOCAL_APPDATA)+ '\factuzam\tickets\';
+  Result := GetSpecialFolderPath(
+    CSIDL_LOCAL_APPDATA) +
+    '\factuzam\tickets\';
+  ForceDirectories(Result);
 end;
 
-function GetUserFolder:String;
+function GetUserFolder: String;
 begin
-  ForceDirectories(GetSpecialFolderPath(CSIDL_LOCAL_APPDATA)+ '\factuzam\');
-  Result := GetSpecialFolderPath(CSIDL_LOCAL_APPDATA)+ '\factuzam\';
+  Result := GetSpecialFolderPath(
+    CSIDL_LOCAL_APPDATA) +
+    '\factuzam\';
+  ForceDirectories(Result);
 end;
 
-function GetLogFolder:String;
+function GetLogFolder: String;
 begin
-  ForceDirectories(GetSpecialFolderPath(CSIDL_LOCAL_APPDATA)+
-                                                      '\factuzam\log\archive\');
-  ForceDirectories(GetSpecialFolderPath(CSIDL_LOCAL_APPDATA)+ '\factuzam\log\');
-  Result := GetSpecialFolderPath(CSIDL_LOCAL_APPDATA)+ '\factuzam\log\';
-
+  Result := GetSpecialFolderPath(
+    CSIDL_LOCAL_APPDATA) +
+    '\factuzam\log\';
+  ForceDirectories(
+    Result + 'archive\');
+  ForceDirectories(Result);
 end;
 
-function GetUserDeskFolder:String;
+function GetUserDeskFolder: String;
 begin
-  Result := GetSpecialFolderPath(CSIDL_DESKTOPDIRECTORY);
+  Result := GetSpecialFolderPath(
+    CSIDL_DESKTOPDIRECTORY);
 end;
 
-function NomApp:String;
-var
-  sRegion:String;
-  iPos:Integer;
+function DirApp: String;
 begin
- sRegion   := ExtractFileName( Application.ExeName );
- iPos := Pos( '.', sRegion );
- if iPos > 0 then
-   Delete( sRegion, iPos, 255 );
- Result := sRegion;
+  Result := ExtractFilePath(
+    Application.ExeName);
 end;
-
-function DirApp:String;
-begin
-  Result := ExtractFilePath(Application.ExeName);
-end;
-
-
-
 
 end.

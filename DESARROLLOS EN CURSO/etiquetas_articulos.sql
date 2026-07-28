@@ -31,8 +31,10 @@
 --     vi_articulos_propiedades_efectivas. Así la etiqueta de cada SKU muestra
 --     la temporada de SU color:
 --       * PROP_TEMPORADA: texto largo ("Primavera/Verano 2026").
+--       * DESCRIPCION_TEMPORADA: contenido original de DESCRIPCION_PV.
 --       * COD_TEMPORADA : código corto ("PV26"), guardado en DESCRIPCION_PV
---         del valor de la propiedad TEMPORADA.
+--         del valor de la propiedad TEMPORADA. Se conserva por compatibilidad
+--         con los formatos de etiquetas existentes.
 --   - Proveedor principal (CODIGO_PRV_PRV, RAZON_SOCIAL_PRV, NOMBRE_PRV,
 --     REF_PROVEEDOR). NOMBRE_PRV es el nombre comercial; la etiqueta por
 --     defecto lo usa como "nombre de proveedor".
@@ -111,6 +113,7 @@ WITH
                `tps`.`VALOR_LIBRE_ARTPROP`,
                `tpc`.`VALOR_LIBRE_ARTPROP`,
                `tpa`.`VALOR_LIBRE_ARTPROP`)                       AS `PROP_TEMPORADA`,
+      `tpv`.`DESCRIPCION_PV`                                      AS `DESCRIPCION_TEMPORADA`,
       `tpv`.`DESCRIPCION_PV`                                      AS `COD_TEMPORADA`
     FROM `fza_articulos_skus` `sku`
     LEFT JOIN `fza_articulos_propiedades` `tps`
@@ -160,6 +163,7 @@ SELECT
   `apr`.`PROP_MARCA`                                                AS `PROP_MARCA`,
   `apr`.`PROP_MATERIAL`                                             AS `PROP_MATERIAL`,
   `st`.`PROP_TEMPORADA`                                             AS `PROP_TEMPORADA`,
+  `st`.`DESCRIPCION_TEMPORADA`                                      AS `DESCRIPCION_TEMPORADA`,
   `st`.`COD_TEMPORADA`                                              AS `COD_TEMPORADA`,
   `apr`.`PROP_GENERO`                                               AS `PROP_GENERO`,
   `apr`.`PROP_ESTILO`                                               AS `PROP_ESTILO`,

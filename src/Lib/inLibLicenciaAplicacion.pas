@@ -63,7 +63,8 @@ procedure ValidarLimiteDemoFacturas(AConexion: TUniConnection;
 implementation
 
 uses
-  DB, MemDS, DBAccess, IniFiles, Math, System.Hash, inLibDir, inLibMsg;
+  DB, MemDS, DBAccess, IniFiles, Math, System.Hash,
+  inLibConfiguracionIni, inLibDir, inLibMsg;
 
 class function TResultadoLicenciaAplicacion.CrearNoComprobada:
   TResultadoLicenciaAplicacion;
@@ -89,13 +90,6 @@ const
   CLAVE_CODIGO           = 'Code';
   HASH_CONMUTADOR_REG    =
     '636846B83B12EC337655B2DBB30A4FDD0A38D7FF681C3A102C513614951F05F9';
-
-function ParametroIniAplicacion: string;
-begin
-  Result := Trim(ParamStr(1));
-  if (Result <> '') and CharInSet(Result[1], ['/', '-']) then
-    Result := '';
-end;
 
 function NormalizarConmutador(const AValor: string): string;
 begin
@@ -169,15 +163,9 @@ begin
 end;
 
 function RutaIniLicenciaAplicacion: string;
-var
-  sParametroIni: string;
 begin
-  sParametroIni := ParametroIniAplicacion;
-  if sParametroIni = '' then
-    Result := IncludeTrailingPathDelimiter(GetUserFolder) +
-              ChangeFileExt(ExtractFileName(ParamStr(0)), '.ini')
-  else
-    Result := IncludeTrailingPathDelimiter(GetUserFolder) + sParametroIni;
+  Result := RutaIniAplicacion(
+    GetUserFolder);
 end;
 
 function NormalizarNifLicencia(const ANif: string): string;

@@ -1380,6 +1380,74 @@
                 end
               end
             end
+            object tsFotosProvisionales: TcxTabSheet
+              Caption = '&5_Fotos provisionales'
+              ImageIndex = 4
+              object cxgrdFotosProvisionales: TcxGrid
+                Left = 0
+                Top = 0
+                Width = 1082
+                Height = 372
+                Align = alClient
+                TabOrder = 0
+                object tvFotosProvisionales: TcxGridDBTableView
+                  OptionsBehavior.IncSearch = True
+                  OptionsData.Deleting = False
+                  OptionsData.DeletingConfirmation = False
+                  OptionsData.Editing = False
+                  OptionsData.Inserting = False
+                  OptionsView.GroupByBox = False
+                  object dbcFotoLinea: TcxGridDBColumn
+                    Caption = 'L'#237'nea'
+                    DataBinding.FieldName = 'LINEA_CSF'
+                    Width = 65
+                  end
+                  object dbcFotoArticulo: TcxGridDBColumn
+                    Caption = 'C'#243'd. art'#237'culo'
+                    DataBinding.FieldName = 'CODIGO_ART_TENTATIVO_CSF'
+                    Width = 125
+                  end
+                  object dbcFotoModeloProveedor: TcxGridDBColumn
+                    Caption = 'Modelo prov.'
+                    DataBinding.FieldName = 'REF_PRV_SESLIN'
+                    Width = 120
+                  end
+                  object dbcFotoDescripcion: TcxGridDBColumn
+                    Caption = 'Descripci'#243'n'
+                    DataBinding.FieldName = 'DESCRIPCION_SESLIN'
+                    Width = 230
+                  end
+                  object dbcFotoColor: TcxGridDBColumn
+                    Caption = 'Color'
+                    DataBinding.FieldName = 'COLOR_TEXTO_SESLIN'
+                    Width = 110
+                  end
+                  object dbcFotoUnidad: TcxGridDBColumn
+                    Caption = 'Asignada a'
+                    DataBinding.FieldName = 'ASIGNACION_FOTO'
+                    Width = 120
+                  end
+                  object dbcFotoFichero: TcxGridDBColumn
+                    Caption = 'Fichero'
+                    DataBinding.FieldName = 'NOMBRE_FOT_CSF'
+                    Width = 170
+                  end
+                  object dbcFotoInstante: TcxGridDBColumn
+                    Caption = 'Modificada'
+                    DataBinding.FieldName = 'INSTANTE_MODIF'
+                    Width = 130
+                  end
+                  object dbcFotoUsuario: TcxGridDBColumn
+                    Caption = 'Usuario'
+                    DataBinding.FieldName = 'USUARIO_MODIF'
+                    Width = 100
+                  end
+                end
+                object glFotosProvisionales: TcxGridLevel
+                  GridView = tvFotosProvisionales
+                end
+              end
+            end
           end
         end
         object splSplitterFicha: TcxSplitter
@@ -1801,6 +1869,38 @@
               TabOrder = 12
               Width = 60
             end
+          end
+        end
+        object gbFotoProvisional: TcxGroupBox
+          Left = 770
+          Top = 36
+          Anchors = [akTop, akRight]
+          Caption = ' Foto provisional de la l'#237'nea '
+          TabOrder = 3
+          Height = 250
+          Width = 310
+          object imgFotoProvisional: TImage
+            Left = 8
+            Top = 24
+            Width = 294
+            Height = 184
+            Anchors = [akLeft, akTop, akRight, akBottom]
+            Center = True
+            Proportional = True
+            Stretch = True
+          end
+          object lblFotoProvisionalAsignacion: TcxLabel
+            Left = 8
+            Top = 212
+            Anchors = [akLeft, akRight, akBottom]
+            AutoSize = False
+            Caption = 'Seleccione una l'#237'nea de la sesi'#243'n.'
+            Properties.Alignment.Horz = taCenter
+            Properties.WordWrap = True
+            TabOrder = 0
+            Transparent = True
+            Height = 30
+            Width = 294
           end
         end
       end

@@ -161,7 +161,8 @@ var
 implementation
 
 uses  inLibWin,
-      inlibtb,
+      inLibCifrado,
+      inLibConfiguracionIni,
       inLibConexionesUniDAC,
       inLibMsg,
       inLibDir,
@@ -297,14 +298,15 @@ begin
 
   GetIniValues;
 
-  FPasswordConexionEncriptado := leCadINIDir('ConnData',
+  FPasswordConexionEncriptado := LeerCadenaIni('ConnData',
                          'PasswordEn',
                          '2qJFaDfegP/9y6RDno1FRg==',
                          GetUserFolder);
   if (FPasswordConexionEncriptado.Length > 2) then
   begin
     try
-      FPasswordConexion := DecriptAES(FPasswordConexionEncriptado);
+      FPasswordConexion := DescifrarAES(
+        FPasswordConexionEncriptado);
     except
       on E: Exception do
         raise EPassWordCorrupt.Create(SErrorDecryptPassBBDD);
@@ -326,7 +328,8 @@ begin
                             E.ClassName + ': ' + E.Message);
       ShowMessage(Format(SErrorConexionServidorBBDD, [E.Message]));
       chkAuto.Checked := False;
-      esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
+      EscribirCadenaIni(
+        'UserInfo', 'AutoLogin', 'No', GetUserFolder);
       if not pnlBBDD.Visible then
         btnConfClick(Self);
       Exit;
@@ -345,7 +348,8 @@ begin
 
     // Desactivamos auto-login para no entrar en bucle
     chkAuto.Checked := False;
-    esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
+    EscribirCadenaIni(
+      'UserInfo', 'AutoLogin', 'No', GetUserFolder);
 
     // Abrimos el panel de configuración
     if not pnlBBDD.Visible then
@@ -376,7 +380,8 @@ begin
       ShowMessage(Format(SErrorConexionBBDD,
                          [edtNomBD.Text, E.Message]));
       chkAuto.Checked := False;
-      esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
+      EscribirCadenaIni(
+        'UserInfo', 'AutoLogin', 'No', GetUserFolder);
       if not pnlBBDD.Visible then
         btnConfClick(Self);
       Exit;
@@ -403,7 +408,8 @@ begin
                               E.ClassName + ': ' + E.Message);
         ShowMessage(Format(SErrorInicioAutomatico, [E.Message]));
         chkAuto.Checked := False;
-        esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
+        EscribirCadenaIni(
+          'UserInfo', 'AutoLogin', 'No', GetUserFolder);
         if tbUsers.Active then
           tbUsers.Close;
         InvalidarResultadoInicioSesion;
@@ -445,7 +451,8 @@ begin
                               E.ClassName + ': ' + E.Message);
         ShowMessage(Format(SErrorConexionServidorBBDD, [E.Message]));
         chkAuto.Checked := False;
-        esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
+        EscribirCadenaIni(
+          'UserInfo', 'AutoLogin', 'No', GetUserFolder);
         if not pnlBBDD.Visible then
           btnConfClick(Self);
       end;
@@ -460,7 +467,8 @@ begin
         ShowMessage(Format(SErrorEstructuraBBDD,
                            [CheckResult.FormattedMessage]));
         chkAuto.Checked := False;
-        esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
+        EscribirCadenaIni(
+          'UserInfo', 'AutoLogin', 'No', GetUserFolder);
         if not pnlBBDD.Visible then
           btnConfClick(Self);
         if ucConexion.Connected then
@@ -487,7 +495,8 @@ begin
             ShowMessage(Format(SErrorConexionBBDD,
                                [edtNomBD.Text, E.Message]));
             chkAuto.Checked := False;
-            esCadINIDir('UserInfo', 'AutoLogin', 'No', GetUserFolder);
+            EscribirCadenaIni(
+              'UserInfo', 'AutoLogin', 'No', GetUserFolder);
             if not pnlBBDD.Visible then
               btnConfClick(Self);
           end;
@@ -1055,11 +1064,12 @@ begin
       qryCommand.SQL.Text := 'ALTER USER root@localhost IDENTIFIED BY :PASS;';
       qryCommand.ParamByName('PASS').AsString := sNewPass;
       qryCommand.ExecSQL;
-      sPassEnBD := EncriptAES(sNewPass);
+      sPassEnBD := CifrarAES(sNewPass);
       FPasswordConexion := sNewPass;
       ShowMessageFmt(SPasswordBBDDChanged, [FPasswordConexion]);
       Log.LogInfo(sPasswordBBDDChanged);
-      esCadIniDir('ConnData', 'PasswordEn', sPassEnBD, GetUserFolder);
+      EscribirCadenaIni(
+        'ConnData', 'PasswordEn', sPassEnBD, GetUserFolder);
       FreeAndNil(qryCommand);
     end;
   end;
@@ -1244,15 +1254,20 @@ end;
 
 procedure TfrmLogon.escribirini;
 begin
-  esCadIniDir('ConnData', 'HostName', edtHostName.Text, GetUserFolder);
-  esCadIniDir('ConnData', 'Database', edtNomBD.Text, GetUserFolder);
-  esCadIniDir('ConnData', 'User', edtUserBD.Text, GetUserFolder);
-  esCadIniDir('ConnData', 'Puerto', edtPortBD.Text, GetUserFolder);
+  EscribirCadenaIni(
+    'ConnData', 'HostName', edtHostName.Text, GetUserFolder);
+  EscribirCadenaIni(
+    'ConnData', 'Database', edtNomBD.Text, GetUserFolder);
+  EscribirCadenaIni(
+    'ConnData', 'User', edtUserBD.Text, GetUserFolder);
+  EscribirCadenaIni(
+    'ConnData', 'Puerto', edtPortBD.Text, GetUserFolder);
   if (edtPassBD.Text <> '') then
   begin
     FPasswordConexion := edtPassBD.Text;
-    FPasswordConexionEncriptado := EncriptAES(FPasswordConexion);
-    esCadIniDir(
+    FPasswordConexionEncriptado := CifrarAES(
+      FPasswordConexion);
+    EscribirCadenaIni(
       'ConnData',
       'PasswordEn',
       FPasswordConexionEncriptado,
@@ -1262,12 +1277,14 @@ end;
 
 procedure tfrmLogon.leerini;
 begin
-  edtHostName.Text := leCadIniDir('ConnData', 'HostName', '127.0.0.1',
+  edtHostName.Text := LeerCadenaIni('ConnData', 'HostName', '127.0.0.1',
                                                                  GetUserFolder);
-  edtNomBD.Text := leCadIniDir('ConnData', 'Database', 'factuzam',
+  edtNomBD.Text := LeerCadenaIni('ConnData', 'Database', 'factuzam',
                                                                  GetUserFolder);
-  edtUserBD.Text := leCadIniDir('ConnData', 'User', 'root', GetUserFolder);
-  edtPortBD.Text := leCadIniDir('ConnData', 'Puerto', '3306', GetUserFolder);
+  edtUserBD.Text := LeerCadenaIni(
+    'ConnData', 'User', 'root', GetUserFolder);
+  edtPortBD.Text := LeerCadenaIni(
+    'ConnData', 'Puerto', '3306', GetUserFolder);
 end;
 
 procedure TfrmLogon.FormKeyDown(Sender: TObject; var Key: Word;
@@ -1295,17 +1312,22 @@ procedure TfrmLogon.SetIniValues;
 begin
   if (chkRememberUser.Checked = True) then
   begin
-    esCadINIDir('UserInfo', 'RememberUser', 'Yes', GetUserFolder);
-    esCadINIDir('UserInfo', 'NomUser', edtUser.Text, GetUserFolder);
+    EscribirCadenaIni(
+      'UserInfo', 'RememberUser', 'Yes', GetUserFolder);
+    EscribirCadenaIni(
+      'UserInfo', 'NomUser', edtUser.Text, GetUserFolder);
   end;
   if (chkRememberPassword.Checked = True) then
   begin
-    esCadINIDir('UserInfo', 'RememberPassword', 'Yes', GetUserFolder);
-    esCadINIDir('UserInfo', 'PasswordEn',
-                                       EncriptAES(edtPass.Text), GetUserFolder);
+    EscribirCadenaIni(
+      'UserInfo', 'RememberPassword', 'Yes', GetUserFolder);
+    EscribirCadenaIni('UserInfo', 'PasswordEn',
+                                       CifrarAES(edtPass.Text),
+                                       GetUserFolder);
   end;
   if (chkAuto.Checked = True) then
-      esCadINIDir('UserInfo', 'AutoLogin', 'Yes', GetUserFolder);
+      EscribirCadenaIni(
+        'UserInfo', 'AutoLogin', 'Yes', GetUserFolder);
   escribirini;
 end;
 
@@ -1321,15 +1343,15 @@ var
   sAutoRun,
   sRememberPassword     : string;
 begin
-  sRememberUser := leCadINIDir( 'UserInfo',
+  sRememberUser := LeerCadenaIni('UserInfo',
                                 'RememberUser',
                                 'No',
                                 GetUserFolder);
-  sAutoRun := leCadINIDir('UserInfo',
+  sAutoRun := LeerCadenaIni('UserInfo',
                           'AutoLogin',
                           'No',
                           GetUserFolder);
-  sRememberPassword := leCadINIDir('UserInfo',
+  sRememberPassword := LeerCadenaIni('UserInfo',
     'RememberPassword',
     'No',
     GetUserFolder);
@@ -1340,7 +1362,7 @@ begin
   if SameText(sRememberUser, 'Yes') then
   begin
     chkRememberUser.Checked := True;
-    edtUser.Text := leCadINIDir('UserInfo',
+    edtUser.Text := LeerCadenaIni('UserInfo',
                                 'NomUser',
                                 'Administrador',
                                 GetUserFolder);
@@ -1348,7 +1370,7 @@ begin
   if SameText(sRememberPassword, 'Yes') then
   begin
     chkRememberPassword.Checked := True;
-    edtPass.Text := DecriptAES(leCadINIDir('UserInfo',
+    edtPass.Text := DescifrarAES(LeerCadenaIni('UserInfo',
                                            'PasswordEn',
                                            'q7heHfD7ENowuvRQhW56Og==',
                                            GetUserFolder));

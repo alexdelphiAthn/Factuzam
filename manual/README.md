@@ -34,7 +34,7 @@ El fichero es `Factuzam_DEMO_1.0.15.202606240020.alpha.exe`.
 | [02 · Menú Archivo](02-menu-archivo.md) | Datos maestros: Empresas, Almacenes, Clientes, Proveedores, Artículos y Tablas Auxiliares. |
 | [03 · Menú Compras](03-menu-compras.md) | Sesiones de compra, Pedidos, Albaranes, Devoluciones a proveedor y Facturas de compra. |
 | [04 · Menú Ventas Mayor](04-menu-ventas-mayor.md) | Facturación a mayor: Borradores, cartera de cobro, Pedidos, Albaranes y Listados de ventas. |
-| [05 · Menú Caja](05-menu-caja.md) | Punto de venta (TPV): menú de caja, parámetros, depósitos, históricos, arqueos y facturas simplificadas. |
+| [05 · Menú TPV](05-menu-caja.md) | Punto de venta: listados, menú de caja, parámetros, depósitos, históricos, arqueos y facturas simplificadas. |
 | [06 · Menú Almacén](06-menu-almacen.md) | Movimientos de almacén, Inventarios, Documentos de Trabajo e Informes de stock. |
 | [07 · Menú Otros](07-menu-otros.md) | Parámetros del entorno, IVA, Contadores, Formas de pago documentos, Usuarios/Permisos, Copias de seguridad y Generador de procesos. |
 | [08 · Menú Ayuda](08-menu-ayuda.md) | Manual web, Foro de soporte y Acerca de (versión). |
@@ -48,10 +48,10 @@ El fichero es `Factuzam_DEMO_1.0.15.202606240020.alpha.exe`.
 ## La barra de menú de un vistazo
 
 ```
-Archivo        Compras        Ventas Mayor   Caja           Almacén        Otros          Verifactu      Ayuda
+Archivo        Compras        Ventas Mayor   TPV            Almacén        Otros          Verifactu      Ayuda
 ─────────      ─────────      ────────────   ─────          ────────       ─────          ─────────      ─────
 Empresas       Sesiones       Pedidos        Menú de Caja   Movimientos    Parám. entorno Declaración    Manual web
-Almacenes      Pedidos        Albaranes      Parám. de Caja Inventarios    Grupos de IVA  Cola envíos    Foro soporte
+Almacenes      Pedidos        Albaranes      Listados       Inventarios    Grupos de IVA  Cola envíos    Foro soporte
 Clientes       Albaranes      Borradores     Formas Pago    Doc. Trabajo   Impuesto IVA   Log            Acerca de
 Proveedores    Devoluciones   Efectos cobro  Depósitos      Informes       Contadores
 Artículos      Crear borrad.  Remesas cobro  Históricos                    Formas pago docs

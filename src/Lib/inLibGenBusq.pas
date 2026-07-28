@@ -15,15 +15,9 @@
 unit inLibGenBusq;
 
 interface
-uses  SysUtils, Variants, DB, ADODB, ExtCtrls, DBCtrls, Controls, Grids,
-      Classes, COMObj, ComCtrls, ExtActns, OleCtrls, Forms, inifiles, Uni,
-      DBAccess,
-      SQLBuilder4D, SQLBuilder4D.Parser, SQLBuilder4D.Parser.GaSQLParser,
-      System.StrUtils, DCPrijndael, dcpbase64,DCPcrypt2, System.NetEncoding,
-      inLibUser, Datasnap.Provider, Datasnap.DBClient, System.DateUtils,
-      MidasLib,   Datasnap.Midas,   Soap.SOAPMidas, Datasnap.Win.MidasCon,
-      Dialogs, vcl.consts, inLibMsg;
 
+uses
+  Forms, Uni, DBAccess;
 
 type
   TEjecutorBusqueda = class
@@ -66,6 +60,9 @@ type
   end;
 
 implementation
+
+uses
+  SysUtils, inLibMsg;
 
 class procedure TBusquedaUtils.RegistrarEjecutor(
   AClase: TClaseEjecutorBusqueda);

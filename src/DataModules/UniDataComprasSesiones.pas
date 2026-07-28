@@ -1,19 +1,19 @@
 ﻿unit UniDataComprasSesiones;
 
-{
-  Unidad: UniDataComprasSesiones
-  DataModule de Sesiones de Compra (pre-pedidos / pre-albaranes).
-
-  Contiene los TUniQuery sobre todas las tablas fza_compras_sesiones*,
-  los DataSource asociados y las consultas auxiliares para listar
-  proveedores, familias, variaciones, conjuntos de atributos y propiedades
-  necesarios al formulario.
-
-  PRINCIPIO: nada de lo que escribe el usuario en una sesión BORRADOR toca
-  las tablas maestras (fza_articulos, fza_articulos_skus, fza_codigos_barras
-  o fza_articulos_proveedores). La materialización es código explícito
-  ubicado en inLibComprasSesionesMaterializar.
-}
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       UniDataComprasSesiones                                        }
+{    Tipo:       Data Module                                                   }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       28/07/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Datos de las sesiones de compra, sus líneas, fotos provisionales y        }
+{    consultas auxiliares para materializar artículos y documentos.            }
+{******************************************************************************}
 
 interface
 
@@ -32,6 +32,9 @@ type
     // Alimenta la pestania 'Documentos' del Mto.
     unqrySesDocs: TUniQuery;
     dsSesDocs: TDataSource;
+    // Fotos provisionales asociadas a las líneas de la sesión.
+    unqrySesionFotos: TUniQuery;
+    dsSesionFotos: TDataSource;
 
     unqrySesionFil: TUniQuery;
     dsSesionFil: TDataSource;
