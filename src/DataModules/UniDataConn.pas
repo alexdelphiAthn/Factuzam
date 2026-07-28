@@ -114,12 +114,7 @@ begin
     Options.DisconnectedMode := True;
   end;
   ConfigurarConexionMySQL(
-    conUni,
-    sUser,
-    sPasswordEn,
-    sHostName,
-    sPort,
-    sDatabase);
+    conUni, sUser, sPasswordEn, sHostName, sPort, sDatabase);
 end;
 
 procedure TdmConn.conUniAfterConnect(Sender: TObject);

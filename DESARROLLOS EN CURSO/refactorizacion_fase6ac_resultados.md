@@ -19,9 +19,10 @@ La fachada baja un 13,4 %. El alcance productivo completo crece un
 comprobable de asignación. Las 179 líneas de
 `PruebasValoresAutomaticos.pas` quedan excluidas.
 
-Las unidades Pascal de producción que contienen una referencia a
-`inLibtb`, incluida la fachada, bajan de 47 a 16 en este fascículo.
-Desde el inicio de D3 han bajado de 49 a 16.
+Las dependencias directas de producción sobre `inLibtb`, incluida la
+fachada, bajan de 48 a 17 en este fascículo. Desde el inicio de D3 han
+bajado de 50 a 17. El recuento se corrigió en D3.4 para incluir el
+`inlibtb` en minúsculas de `inMtoLogon`.
 
 Balance acumulado de D3:
 

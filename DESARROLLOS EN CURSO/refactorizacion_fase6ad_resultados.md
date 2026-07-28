@@ -19,9 +19,10 @@ La fachada baja un 6,0 %. El alcance productivo completo crece un
 de `PruebasCadenas.pas` quedan excluidas.
 
 Las dependencias directas de producción sobre `inLibtb`, incluida la
-fachada, bajan de 16 a 11. Se mantiene deliberadamente el texto
+fachada, bajan de 17 a 12. Se mantiene deliberadamente el texto
 `inLibtb` como clave del perfil histórico de símbolos; no es una
-dependencia de unidad.
+dependencia de unidad. El recuento se corrigió en D3.4 para incluir el
+`inlibtb` en minúsculas de `inMtoLogon`.
 
 Balance acumulado de D3:
 
@@ -29,7 +30,7 @@ Balance acumulado de D3:
 - unidades especializadas: 814 líneas;
 - núcleo completo: 1.523 a 1.819 líneas, **+296**;
 - alcance productivo acumulado: **+317 líneas**;
-- dependencias directas de `inLibtb`: 49 a 11.
+- dependencias directas de `inLibtb`: 50 a 12.
 
 ## Implementación
 

@@ -19,9 +19,10 @@ La fachada baja un 19,0 %. El alcance productivo completo crece un
 separación de dependencias. Las 262 líneas de `PruebasDatasets.pas`
 quedan excluidas.
 
-Al iniciar la tanda había 49 unidades Pascal de producción que contenían
-una referencia a `inLibtb`, incluida la propia fachada. Quedan 47:
-46 consumidores y la fachada.
+Al iniciar la tanda había 50 dependencias directas de producción sobre
+`inLibtb`, incluida la propia fachada. Quedan 48: 47 consumidores y la
+fachada. Este recuento se corrigió en D3.4 para incluir el `inlibtb` en
+minúsculas de `inMtoLogon`.
 
 ## Implementación
 
