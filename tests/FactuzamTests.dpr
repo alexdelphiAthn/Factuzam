@@ -26,6 +26,8 @@ uses
   inLibGestorArticulosMto in
     '..\src\Lib\inLibGestorArticulosMto.pas',
   inLibDiag in '..\src\Lib\inLibDiag.pas',
+  inLibDatasets in '..\src\Lib\inLibDatasets.pas',
+  inLibtb in '..\src\Lib\inLibtb.pas',
   inLibBusquedasCompra in
     '..\src\Lib\inLibBusquedasCompra.pas',
   inLibValidacionDocumento in
@@ -46,6 +48,7 @@ uses
   PruebasGestorTareasMto in 'PruebasGestorTareasMto.pas',
   PruebasGestorArticulosMto in 'PruebasGestorArticulosMto.pas',
   PruebasDiagnosticoMetadata in 'PruebasDiagnosticoMetadata.pas',
+  PruebasDatasets in 'PruebasDatasets.pas',
   PruebasBusquedasCompra in 'PruebasBusquedasCompra.pas',
   PruebasValidacionTallasCompra in
     'PruebasValidacionTallasCompra.pas',

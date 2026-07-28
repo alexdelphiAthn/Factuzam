@@ -28,6 +28,7 @@ uses
   inLibGlobalVar in 'src\Lib\inLibGlobalVar.pas',
   inLibLog in 'src\Lib\inLibLog.pas',
   inLibDiag in 'src\Lib\inLibDiag.pas',
+  inLibDatasets in 'src\Lib\inLibDatasets.pas',
   inLibtb in 'src\Lib\inLibtb.pas',
   inLibUser in 'src\Lib\inLibUser.pas',
   inLibWin in 'src\Lib\inLibWin.pas',

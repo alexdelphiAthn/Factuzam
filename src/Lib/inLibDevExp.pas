@@ -106,7 +106,7 @@ type
 implementation
 
   uses inLibWin,
-       inLibtb,
+       inLibtb, inLibDatasets,
        inLibDir, uGenericIfThen,
        inLibConfigCampos;
 
@@ -502,7 +502,9 @@ begin
   end;
   if sCamposClave = '' then
   begin
-    sCamposClave := ObtenerClavePrimaria(oDBDataCtrl.DataSet);
+    sCamposClave :=
+      inLibDatasets.ObtenerClavePrimaria(
+        oDBDataCtrl.DataSet);
     if (sCamposClave <> '') and
        CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave) then
       oDBDataCtrl.KeyFieldNames := sCamposClave;
@@ -531,7 +533,9 @@ begin
 
   if sFocusedIDString <> '' then
   begin
-    vLocateValues := StrToKeyValues(sFocusedIDString, sCamposClave);
+    vLocateValues :=
+      inLibDatasets.StrToKeyValues(
+        sFocusedIDString, sCamposClave);
     bFound := oDBDataCtrl.DataSet.Locate(
       sCamposClave,
       vLocateValues,
@@ -590,7 +594,9 @@ begin
   end;
   if sCamposClave = '' then
   begin
-    sCamposClave := ObtenerClavePrimaria(oDBDataCtrl.DataSet);
+    sCamposClave :=
+      inLibDatasets.ObtenerClavePrimaria(
+        oDBDataCtrl.DataSet);
     if (sCamposClave <> '') and
        CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave) then
       oDBDataCtrl.KeyFieldNames := sCamposClave;
@@ -611,7 +617,10 @@ begin
     if not VarIsNull(vValoresClave) and not VarIsEmpty(vValoresClave) then
     begin
       // USAMOS LA NUEVA FUNCIÓN AQUÍ:
-      Add(AcxgrdtvVista.Name + '_FocusedID', KeyValuesToStr(vValoresClave));
+      Add(
+        AcxgrdtvVista.Name + '_FocusedID',
+        inLibDatasets.KeyValuesToStr(
+          vValoresClave));
     end;
   end;
   // 1. Recolección de propiedades de columnas (Para el Batch)

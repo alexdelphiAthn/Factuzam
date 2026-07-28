@@ -177,6 +177,7 @@
         <DCCReference Include="src\Lib\inLibGlobalVar.pas"/>
         <DCCReference Include="src\Lib\inLibLog.pas"/>
         <DCCReference Include="src\Lib\inLibDiag.pas"/>
+        <DCCReference Include="src\Lib\inLibDatasets.pas"/>
         <DCCReference Include="src\Lib\inLibtb.pas"/>
         <DCCReference Include="src\Lib\inLibUser.pas"/>
         <DCCReference Include="src\Lib\inLibWin.pas"/>

@@ -119,249 +119,45 @@ type
 
 implementation
 
-// Convierte el valor (sea simple o un array de varios campos) a un texto para
-// guardarlo
-function KeyValuesToStr(const V: Variant): string;
-var
-  i: Integer;
-begin
-  Result := '';
-  if VarIsNull(V) or VarIsEmpty(V) then Exit;
+uses
+  inLibDatasets;
 
-  // Si es una clave compuesta (Array)
-  if VarIsArray(V) then
-  begin
-    for i := VarArrayLowBound(V, 1) to VarArrayHighBound(V, 1) do
-    begin
-      if Result <> '' then
-        Result := Result + '|'; // Usamos el "pipe" (|) como separador
-      Result := Result + VarToStr(V[i]);
-    end;
-  end
-  else // Si es una clave simple
-    Result := VarToStr(V);
+function KeyValuesToStr(const V: Variant): string;
+begin
+  Result := inLibDatasets.KeyValuesToStr(V);
 end;
 
-// Convierte el texto guardado de vuelta al formato que necesita el Locate
-// (Variante simple o Array)
 function StrToKeyValues(const S: string; const FieldNames: string): Variant;
-var
-  slCampos, slValores: TStringList;
-  i: Integer;
 begin
-  // Si no hay punto y coma, es clave simple
-  if Pos(';', FieldNames) = 0 then
-  begin
-    Result := S;
-    Exit;
-  end;
-
-  // Es clave compuesta, reconstruimos el array
-  slCampos := TStringList.Create;
-  slValores := TStringList.Create;
-  try
-    slCampos.Delimiter := ';';
-    slCampos.StrictDelimiter := True;
-    slCampos.DelimitedText := FieldNames;
-
-    slValores.Delimiter := '|';
-    slValores.StrictDelimiter := True;
-    slValores.DelimitedText := S;
-
-    // Creamos un array de variantes del tamaño exacto de los campos clave
-    Result := VarArrayCreate([0, slCampos.Count - 1], varVariant);
-
-    for i := 0 to slCampos.Count - 1 do
-    begin
-      if i < slValores.Count then
-        Result[i] := slValores[i]
-      else
-        Result[i] := Null; // Por seguridad, si falta algún valor
-    end;
-  finally
-    FreeAndNil(slCampos);
-    FreeAndNil(slValores);
-  end;
+  Result := inLibDatasets.StrToKeyValues(
+    S, FieldNames);
 end;
 
 function ExtraerTablaDeSQL(const aSQL: string): string;
-var
-  sUp: string;
-  iNivel, i, iIni, iEnd: Integer;
-  bEncontrado: Boolean;
-  // True si en la posicion p arranca la palabra clave FROM con limites de
-  // palabra a ambos lados (asi no se confunde con sufijos tipo DATEFROM).
-  function HayFromEn(p: Integer): Boolean;
-  begin
-    Result := (p + 3 <= Length(sUp)) and (Copy(sUp, p, 4) = 'FROM');
-    if Result and (p > 1) and
-       not CharInSet(sUp[p - 1], [' ', #9, #10, #13, '(', ')', ',']) then
-      Result := False;
-    if Result and (p + 4 <= Length(sUp)) and
-       not CharInSet(sUp[p + 4], [' ', #9, #10, #13, '(']) then
-      Result := False;
-  end;
 begin
-  Result := '';
-  // Sin Trim: las posiciones se calculan sobre sUp y el Copy final lee de
-  // aSQL, por lo que ambas cadenas deben compartir los mismos indices.
-  sUp := UpperCase(aSQL);
-  // Buscamos el primer FROM a nivel 0 de parentesis. Asi se ignoran las
-  // subconsultas del SELECT (p.ej. un (SELECT COUNT(*) FROM otra_tabla ...)
-  // que calcula una columna): su FROM no es el de la tabla principal y
-  // devolvia una PK ajena, reventando el grid con "Key Field not found".
-  iNivel := 0;
-  i := 1;
-  iIni := 0;
-  bEncontrado := False;
-  while (i <= Length(sUp)) and not bEncontrado do
-  begin
-    if sUp[i] = '(' then
-      Inc(iNivel)
-    else if (sUp[i] = ')') and (iNivel > 0) then
-      Dec(iNivel)
-    else if (iNivel = 0) and HayFromEn(i) then
-    begin
-      iIni := i + 4;
-      bEncontrado := True;
-    end;
-    Inc(i);
-  end;
-  if bEncontrado then
-  begin
-    // Saltar el hueco entre FROM y el nombre de la tabla.
-    while (iIni <= Length(sUp)) and
-          CharInSet(sUp[iIni], [' ', #9, #10, #13]) do
-      Inc(iIni);
-    iEnd := iIni;
-    while (iEnd <= Length(sUp)) and
-          not CharInSet(sUp[iEnd], [' ', #13, #10, #9, '(', ',', ';']) do
-      Inc(iEnd);
-    Result := Trim(Copy(aSQL, iIni, iEnd - iIni));
-    if (Length(Result) >= 2) and (Result[1] = '`') then
-      Result := Copy(Result, 2, Length(Result) - 2);
-  end;
+  Result := inLibDatasets.ExtraerTablaDeSQL(aSQL);
 end;
 
 function ObtenerClavePrimaria(ADataSet: TDataSet): string;
-var
-  i: Integer;
-  sTabla: string;
-  qry: TUniQuery;
 begin
-  Result := '';
-  if not Assigned(ADataSet) or not ADataSet.Active then
-    Exit;
-  // 1. Intento nativo UniDAC: KeyFields asignado manualmente
-  if ADataSet is TUniQuery then
-  begin
-    Result := TUniQuery(ADataSet).KeyFields;
-    if Result <> '' then
-      Exit;
-  end;
-  // 2. ProviderFlags: campos marcados como clave primaria
-  for i := 0 to ADataSet.FieldCount - 1 do
-  begin
-    if pfInKey in ADataSet.Fields[i].ProviderFlags then
-    begin
-      if Result <> '' then
-        Result := Result + ';';
-      Result := Result + ADataSet.Fields[i].FieldName;
-    end;
-  end;
-  if Result <> '' then
-    Exit;
-  // 3. Fallback: consultar information_schema por la PK de la tabla
-  if (ADataSet is TUniQuery) and
-     Assigned(TUniQuery(ADataSet).Connection) then
-  begin
-    // Extraer nombre de tabla del SQL (busca FROM xxx)
-    sTabla := ExtraerTablaDeSQL(TUniQuery(ADataSet).SQL.Text);
-    if sTabla = '' then
-      Exit;
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := TUniQuery(ADataSet).Connection;
-      qry.SQL.Text :=
-        'SELECT COLUMN_NAME ' +
-        '  FROM information_schema.KEY_COLUMN_USAGE ' +
-        ' WHERE TABLE_SCHEMA = database() ' +
-        '   AND TABLE_NAME = :TAB ' +
-        '   AND CONSTRAINT_NAME = ''PRIMARY'' ' +
-        ' ORDER BY ORDINAL_POSITION';
-      qry.ParamByName('TAB').AsString := sTabla;
-      qry.Open;
-      while not qry.Eof do
-      begin
-        if Result <> '' then
-          Result := Result + ';';
-        Result := Result + qry.FieldByName('COLUMN_NAME').AsString;
-        qry.Next;
-      end;
-      qry.Close;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
+  Result :=
+    inLibDatasets.ObtenerClavePrimaria(ADataSet);
 end;
 
 procedure GrabarDatasets(AModule: TDataModule);
-var
-  i: Integer;
-  LDataSet: TDataSet;
 begin
-  if AModule = nil then Exit;
-  for i := 0 to AModule.ComponentCount - 1 do
-  begin
-    if AModule.Components[i] is TDataSet then
-    begin
-      LDataSet := TDataSet(AModule.Components[i]);
-      if LDataSet.Active and (LDataSet.State in [dsEdit, dsInsert]) then
-      begin
-        LDataSet.Post;
-      end;
-    end;
-  end;
+  inLibDatasets.GrabarDatasets(AModule);
 end;
 
 procedure CancelarDatasets(AModule: TDataModule);
-var
-  i: Integer;
-  LDataSet: TDataSet;
 begin
-  if AModule = nil then Exit;
-  for i := 0 to AModule.ComponentCount - 1 do
-  begin
-    if AModule.Components[i] is TDataSet then
-    begin
-      LDataSet := TDataSet(AModule.Components[i]);
-      if LDataSet.Active and (LDataSet.State in [dsEdit, dsInsert]) then
-      begin
-        LDataSet.Cancel;
-      end;
-    end;
-  end;
+  inLibDatasets.CancelarDatasets(AModule);
 end;
 
 function CheckOpenDatasets(AModule: TDataModule): Boolean;
-var
-  i: Integer;
-  LDataSet: TDataSet;
 begin
-  Result := False;
-  if AModule = nil then Exit;
-  for i := 0 to AModule.ComponentCount - 1 do
-  begin
-    if AModule.Components[i] is TDataSet then
-    begin
-      LDataSet := TDataSet(AModule.Components[i]);
-      if LDataSet.Active and (LDataSet.State in [dsEdit, dsInsert]) then
-      begin
-        Result := True;
-        Exit;
-      end;
-    end;
-  end;
+  Result :=
+    inLibDatasets.CheckOpenDatasets(AModule);
 end;
 
 procedure ActualizarLineaFacturaGen(AConexion: TUniConnection;
@@ -1432,92 +1228,9 @@ end;
 function ExistePeriodoUnico(qryData:TUniQuery;
                             fFechaIni,
                             fFechaFin:TField): boolean;
-var
- Dsp: TDataSetProvider;
- cli: TClientDataset;
- bFechaOrd, bFechaFinNul, bFechaIniNul:Boolean;
- iCom,iCom2 : Integer;
- dtFechaIni, dtFechaFin:TDateTime;
- sFechaIni, sFechaFin : String;
 begin
-  // cli sin inicializar provocaba lecturas de basura de pila en Assigned().
-  cli := nil;
-  sFechaIni := fFechaIni.FieldName;
-  sFechaFin := fFechaFin.FieldName;
-  bFechaOrd := True;
-  bFechaFinNul := fFechaFin.Isnull;
-  bFechaIniNul := fFechaIni.Isnull;
-  dtFechaIni := fFechaIni.AsDateTime;
-  dtFechaFin := fFechaFin.AsDateTime;
-  if ((qryData.RecordCount) > 1) then
-  begin
-    if ( (not(bFechaFinNul)) and
-         (CompareDate(dtFechaIni, dtFechaFin) > 0)
-       ) then
-    begin
-      bFechaOrd := False;
-    end;
-    if bFechaIniNul and bFechaOrd then
-    begin
-      bFechaOrd := False;
-    end;
-    try
-      if ((bFechaOrd)) then
-      begin
-        cli := TClientDataSet.Create(nil);
-        Dsp := TDataSetProvider.Create(cli);
-        Dsp.DataSet := qryData;
-        cli.SetProvider(Dsp);
-        cli.Open;
-        cli.First;
-      end;
-      while ( (Assigned(cli)) and (not(cli.Eof)) and ((bFechaOrd))) do
-      begin
-        if (bFechaFinNul) then
-        begin
-          if (cli.FieldByName(sFechaFin).isnull) then
-            bFechaOrd := False;
-          // FECHA_HASTA tiene que ser menor que dFechaFin, sino dar error
-          // Si hay dos fechas_fin null ha de dar error.
-          if (bFechaOrd) then
-          begin
-            iCom := CompareDate(cli.FieldByName(sFechaFin).AsDateTime,
-                                dtFechaIni);
-            if ((iCom > 0)) then
-              bFechaOrd := False;
-          end;
-        end;
-          {CompareDate compares the date parts of two timestamps A and B
-          and returns the following results:
-          < 0
-          if the day part of A is earlier than the day part of B.
-          0
-          if A and B are the on same day (times may differ) .
-          > 0
-          if the day part of A is later than the day part of B.}
-        if ((bFechaFinNul = False) and (bFechaOrd = True)) then
-        begin
-          iCom := CompareDate(cli.FieldByName(sFechaIni).AsDateTime,
-                              dtFechaFin);
-          iCom2 := CompareDate(cli.FieldByName(sFechaFin).AsDateTime,
-                               dtFechaIni);
-          if ((iCom < 0) and (iCom2 > 0)) then
-            bFechaOrd := False;
-        end;
-        cli.Next;
-      end;
-    finally
-      if assigned(cli) then
-      begin
-        cli.Close;
-        // Dsp tiene a cli como Owner: se libera con el.
-        FreeAndNil(cli);
-      end;
-    end;
-    Result := bFechaOrd;
-  end
-  else
-    Result := true;
+  Result := inLibDatasets.ExistePeriodoUnico(
+    qryData, fFechaIni, fFechaFin);
 end;
 
 end.

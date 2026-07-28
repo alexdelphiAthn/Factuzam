@@ -98,8 +98,6 @@ function GetUserFolderTickets:String;
 
 implementation
 
-uses inLibtb;
-
 function GetTempPath:String;
 begin
   Result := TPath.GetTempPath;
