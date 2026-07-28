@@ -116,7 +116,7 @@ implementation
 
 uses
   System.NetEncoding, inLibContextoSesionIntf, inLibGenBusq,
-  inMtoModalGuardarFiltro;
+  inMtoModalGuardarFiltro, inLibMsg;
 
 type
   TcxFilterControlAcceso = class(TcxFilterControl)
@@ -498,7 +498,7 @@ begin
   inherited;
   if IdFiltroSeleccionado = 0 then
   begin
-    ShowMessage('Seleccione un filtro de la lista.');
+    ShowMessage(SErrorFiltroNoSeleccionado);
   end
   else
   begin
@@ -506,7 +506,7 @@ begin
     if (sFiltroBase64 = '') or
        (Trim(FControlFiltro.FilterCaption) = '') then
     begin
-      ShowMessage('El filtro no tiene condiciones para aplicar.');
+      ShowMessage(SErrorFiltroSinCondicionesAplicar);
     end
     else
     begin
@@ -529,7 +529,7 @@ begin
   if (sFiltroBase64 = '') or
      (Trim(FControlFiltro.FilterCaption) = '') then
   begin
-    ShowMessage('El filtro no tiene condiciones para guardar.');
+    ShowMessage(SErrorFiltroSinCondicionesGuardar);
   end
   else
   begin
@@ -542,7 +542,7 @@ begin
       sDescripcion,
       sFiltroBase64);
     CargarFiltroEnEditor(sFiltroBase64);
-    ShowMessage('Cambios del filtro guardados correctamente.');
+    ShowMessage(SInfoCambiosFiltroGuardados);
   end;
 end;
 
@@ -557,19 +557,16 @@ begin
   inherited;
   if FFiltroActualBase64 = '' then
   begin
-    ShowMessage('La pantalla no tiene ningún filtro aplicado.');
+    ShowMessage(SErrorPantallaSinFiltroAplicado);
   end
   else
   begin
     sFiltroGuardado :=
       FiltrosGuardados.CargarFiltroBase64(IdFiltroSeleccionado);
-    sMensaje :=
-      'Filtro guardado actualmente:' + sLineBreak +
-      ResumirFiltro(sFiltroGuardado) + sLineBreak + sLineBreak +
-      'Se reemplazará por el filtro actual de la pantalla:' +
-      sLineBreak + ResumirFiltro(FFiltroActualBase64) +
-      sLineBreak + sLineBreak + '¿Desea continuar?';
-    if Application.MessageBox(PChar(sMensaje), 'Reemplazar filtro',
+    sMensaje := Format(SPreguntaReemplazarFiltro,
+      [ResumirFiltro(sFiltroGuardado),
+       ResumirFiltro(FFiltroActualBase64)]);
+    if Application.MessageBox(PChar(sMensaje), PChar(STituloReemplazarFiltro),
        MB_YESNO + MB_ICONQUESTION) = ID_YES then
     begin
       sNombre := FListadoFiltros.FieldByName('NOMBRE_FILT').AsString;
@@ -581,7 +578,7 @@ begin
         sDescripcion,
         FFiltroActualBase64);
       CargarFiltroEnEditor(FFiltroActualBase64);
-      ShowMessage('Filtro reemplazado correctamente.');
+      ShowMessage(SInfoFiltroReemplazado);
     end;
   end;
 end;
@@ -599,7 +596,7 @@ begin
   if (sFiltroBase64 = '') or
      (Trim(FControlFiltro.FilterCaption) = '') then
   begin
-    ShowMessage('El filtro no tiene condiciones para guardar.');
+    ShowMessage(SErrorFiltroSinCondicionesGuardar);
   end
   else
   begin
@@ -617,8 +614,7 @@ begin
         res.Nombre);
       if iIdFiltro > 0 then
       begin
-        ShowMessage('Ya existe un filtro propio con ese nombre. ' +
-                    'Indique un nombre diferente.');
+        ShowMessage(SErrorFiltroPropioDuplicado);
       end
       else
       begin
@@ -629,7 +625,7 @@ begin
           res.Descripcion,
           sFiltroBase64);
         CargarDatos;
-        ShowMessage('Copia del filtro guardada correctamente.');
+        ShowMessage(SInfoCopiaFiltroGuardada);
       end;
     end;
   end;
@@ -642,7 +638,7 @@ begin
   inherited;
   if IdFiltroSeleccionado = 0 then
   begin
-    ShowMessage('Seleccione un filtro de la lista.');
+    ShowMessage(SErrorFiltroNoSeleccionado);
   end
   else
   begin
@@ -665,12 +661,12 @@ begin
   inherited;
   if IdFiltroSeleccionado = 0 then
   begin
-    ShowMessage('Seleccione un filtro de la lista.');
+    ShowMessage(SErrorFiltroNoSeleccionado);
   end
   else
   begin
-    if Application.MessageBox('¿Borrar el filtro seleccionado?',
-                              'Confirmar borrado',
+    if Application.MessageBox(PChar(SPreguntaBorrarFiltro),
+                              PChar(STituloConfirmarBorradoFiltro),
                               MB_YESNO + MB_ICONQUESTION) = ID_YES then
     begin
       FiltrosGuardados.BorrarFiltro(IdFiltroSeleccionado);
@@ -757,10 +753,8 @@ begin
       'GRUPO',
       IdentidadActual.Grupo);
     RefrescarCompartidoCon;
-    ShowMessage(
-      'Filtro compartido con tu grupo (' +
-      IdentidadActual.Grupo +
-      ').');
+    ShowMessage(Format(SInfoFiltroCompartidoGrupo,
+                       [IdentidadActual.Grupo]));
   end;
 end;
 
@@ -772,7 +766,7 @@ begin
     'TODOS',
     '');
   RefrescarCompartidoCon;
-  ShowMessage('Filtro compartido con todos los usuarios.');
+  ShowMessage(SInfoFiltroCompartidoTodos);
 end;
 
 procedure TfrmModalGestionFiltros.btnQuitarCompartidoClick(Sender: TObject);

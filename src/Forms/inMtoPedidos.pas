@@ -317,7 +317,7 @@ uses
   inLibGridTallasInline,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku, inLibColumnasDocumento,
-  inLibValidacionDocumento, inLibPresentacionDocumento;
+  inLibValidacionDocumento, inLibPresentacionDocumento, inLibMsg;
 
 {$R *.dfm}
 
@@ -364,10 +364,7 @@ begin
     cbbSERIE_PED.Properties.Items);
   if cbbSERIE_PED.Properties.Items.Count = 0 then
   begin
-    if MessageDlg('No hay series de pedidos de venta mayor (tipo PE) ' +
-                  'para la empresa "' + sEmpresa + '".' + sLineBreak +
-                  'Se dan de alta en Empresas -> Series. ' +
-                  '¿Abrir el mantenimiento de Empresas ahora?',
+    if MessageDlg(Format(SPreguntaAbrirSeriesPedidoVenta, [sEmpresa]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       ShowMto(Self.Owner, 'Empresas');
@@ -460,10 +457,10 @@ begin
   Result := '';
   sArt := Trim(ACodigoArt);
   if not Assigned(dmmPedidos) then
-    MessageDlg('No está abierto el pedido de venta.',
+    MessageDlg(SErrorPedidoVentaNoAbierto,
                mtInformation, [mbOk], 0)
   else if sArt = '' then
-    MessageDlg('Selecciona un artículo antes de buscar sus SKUs.',
+    MessageDlg(SErrorArticuloNoSeleccionadoBuscarSkusPedidoVenta,
                mtInformation, [mbOk], 0)
   else
   begin
@@ -746,12 +743,8 @@ end;
 
 function TfrmMtoPedidos.SqlRestriccionUsuario: string;
 begin
-  Result := SqlFiltroEmpAlmCaja(
-    ContextoSesion,
-    ParametrosApp,
-    'CODIGO_EMP_PED',
-    'CODIGO_ALM_PED',
-    '');
+  Result := SqlFiltroDocumento(
+    ContextoSesion, ParametrosApp, 'PED');
 end;
 
 procedure TfrmMtoPedidos.CrearTablaPrincipal;
@@ -864,9 +857,8 @@ begin
     dmmPedidos.unqryTablaG.Connection,
     dmmPedidos.unqryPedidosLineas, 'PEDLIN');
   if (sLineasSinSku = '') or
-     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
-                 'con variaciones sin SKU asignado. ' +
-                 '¿Grabar de todas formas?',
+     (MessageDlg(Format(SPreguntaGrabarPedidoVentaSinSku,
+                        [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
     inherited;
@@ -1123,11 +1115,10 @@ begin
   if not dmmPedidos.ClienteExiste(sCliente) then
   begin
     if (sCliente = '') or (sCliente = '0') then
-      MessageDlg('Debe seleccionar un cliente antes de añadir líneas.',
+      MessageDlg(SErrorClienteNoSeleccionadoPedidoVenta,
         mtWarning, [mbOk], 0)
     else
-      MessageDlg('El cliente ' + sCliente + ' no existe. Seleccione un ' +
-        'cliente válido antes de añadir líneas.',
+      MessageDlg(Format(SErrorClientePedidoVentaNoExiste, [sCliente]),
         mtWarning, [mbOk], 0);
     pcCab.ActivePage := tsCabecera;
     if btnCODIGO_CLI.CanFocus then
@@ -1141,11 +1132,11 @@ var
   oConfiguracion: TConfiguracionPersistenciaDocumento;
 begin
   if not Assigned(dmmPedidos) then
-    raise Exception.Create('No esta inicializado el pedido.')
+    raise Exception.Create(SErrorPedidoVentaNoInicializado)
   else
   begin
     oConfiguracion := CrearConfiguracionPersistenciaDocumento(
-      'Crea o selecciona un pedido antes de anadir lineas.',
+      SErrorCrearSeleccionarPedidoAntesLineas,
       'PED', 'PEDLIN');
     oConfiguracion.CampoProductoLinea :=
       'CODIGOPRODPS_PEDLIN';
@@ -1530,12 +1521,11 @@ begin
   // refrescar (bug 09/07/26).
   if Supports(FModoEntrada, IPivoteVentaBorrarGrupo, BorradorGrupo) then
   begin
-    if MessageDlg('¿Está seguro de que desea eliminar esta línea ' +
-                  '(todas sus tallas)?',
+    if MessageDlg(SPreguntaEliminarLineaPedidoVentaConTallas,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       BorradorGrupo.BorrarGrupoActual;
   end
-  else if MessageDlg('¿Está seguro de que desea eliminar esta línea?',
+  else if MessageDlg(SPreguntaEliminarLineaPedidoVenta,
                 mtConfirmation,
                 [mbYes, mbNo],
                 0) = mrYes then
@@ -1606,7 +1596,7 @@ end;
 procedure TfrmMtoPedidos.btnEntregarTodoClick(Sender: TObject);
 begin
   inherited;
-  if MessageDlg('Marcar todas las líneas pendientes para albaranar?',
+  if MessageDlg(SPreguntaMarcarLineasPendientesAlbaranar,
                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     RellenarLineasAlEntregarTodo;
 end;
@@ -1635,7 +1625,7 @@ begin
   ds := dmmPedidos.unqryPedidosLineas;
   if not ds.Active or (ds.RecordCount = 0) then
   begin
-    ShowMessage('El pedido no tiene líneas');
+    ShowMessage(SErrorPedidoVentaSinLineas);
     Exit;
   end;
   // Aviso: lineas con articulo con variaciones y sin SKU asignado no
@@ -1643,9 +1633,8 @@ begin
   sLineasSinSku := LineasSinSkuRequerido(
     dmmPedidos.unqryTablaG.Connection, ds, 'PEDLIN');
   if (sLineasSinSku <> '') and
-     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
-                 'con variaciones sin SKU asignado y no moverán stock. ' +
-                 '¿Crear el albarán de todas formas?',
+     (MessageDlg(Format(SPreguntaCrearAlbaranPedidoVentaSinSku,
+                        [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) <> mrYes) then
     Exit;
   lst := TList<TPair<string, Currency>>.Create;
@@ -1707,8 +1696,7 @@ begin
       end;
     end;
     if lst.Count = 0 then
-      ShowMessage(
-        'No hay líneas con cantidad a albaranar para crear el albarán.')
+      ShowMessage(SErrorPedidoVentaSinCantidadAlbaranar)
     else
     begin
       sSerie  := dmmPedidos.unqryTablaG.FieldByName('SERIE_PED').AsString;
@@ -1793,9 +1781,9 @@ begin
           end;
         end
         else if res.EsExistente then
-          ShowMessage('No se pudo anadir al albaran.')
+          ShowMessage(SErrorAnadirAlbaranDesdePedidoVenta)
         else
-          ShowMessage('No se pudo crear el albaran.');
+          ShowMessage(SErrorCrearAlbaranDesdePedidoVenta);
       end;
     end;
   finally

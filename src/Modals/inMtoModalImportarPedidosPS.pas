@@ -69,6 +69,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 procedure TfrmModalImportarPedidosPS.FormCreate(Sender: TObject);
 begin
   FResumen := TPrestaPedidoResumenList.Create;
@@ -133,7 +136,7 @@ var
 begin
   if dmPedidos = nil then
   begin
-    ShowMessage('No hay datamodule de pedidos asignado.');
+    ShowMessage(SErrorDataModulePedidosNoAsignado);
     Exit;
   end;
   importados := 0;
@@ -173,7 +176,7 @@ begin
     FreeAndNil(conn);
     Screen.Cursor := crDefault;
   end;
-  ShowMessageFmt('Importación finalizada. Pedidos importados: %d. Errores: %d.',
+  ShowMessageFmt(SInfoImportacionPedidosFinalizada,
                  [importados, errores]);
 end;
 

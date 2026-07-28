@@ -292,6 +292,7 @@ uses
   inLibPresentacionDocumento,
   inLibComprasImpuestos,
   inLibAtributosPaleta,
+  inLibMsg,
   UniDataArticulos,
   inMtoModalImpFacCompra,
   inMtoModalImpFacCompraV,
@@ -327,10 +328,7 @@ begin
     cbbSERIE_FACC.Properties.Items);
   if cbbSERIE_FACC.Properties.Items.Count = 0 then
   begin
-    if MessageDlg('No hay series de facturas de compra (tipo FP) para la ' +
-                  'empresa "' + sEmpresa + '".' + sLineBreak +
-                  'Se dan de alta en Empresas -> Series. ' +
-                  '¿Abrir el mantenimiento de Empresas ahora?',
+    if MessageDlg(Format(SPreguntaAbrirSeriesFacturaCompra, [sEmpresa]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       ShowMto(Self.Owner, 'Empresas');
@@ -364,7 +362,7 @@ begin
     sPrv := Trim(dmmFacturasCompra.unqryTablaG.
                    FieldByName('CODIGO_PRV_FACC').AsString);
     if (sPrv = '') or (sPrv = '0') then
-      MessageDlg('Selecciona un proveedor antes de buscar artículos.',
+      MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulosFacturaCompra,
                  mtInformation, [mbOk], 0)
     else
       Result := BuscarArticuloProveedorCompra(
@@ -390,10 +388,10 @@ begin
   Result := '';
   sArt := Trim(ACodigoArt);
   if not Assigned(dmmFacturasCompra) then
-    MessageDlg('No está abierta la factura de compra.',
+    MessageDlg(SErrorFacturaCompraNoAbierta,
                mtInformation, [mbOk], 0)
   else if sArt = '' then
-    MessageDlg('Selecciona un artículo antes de buscar sus SKUs.',
+    MessageDlg(SErrorArticuloNoSeleccionadoBuscarSkusFacturaCompra,
                mtInformation, [mbOk], 0)
   else
     Result := BuscarSkuArticuloCompra(
@@ -466,13 +464,8 @@ end;
 
 function TfrmMtoFacturasCompra.SqlRestriccionUsuario: string;
 begin
-  // Documentos de compra: empresa y almacén (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja(
-    ContextoSesion,
-    ParametrosApp,
-    'CODIGO_EMP_FACC',
-    'CODIGO_ALM_FACC',
-    '');
+  Result := SqlFiltroDocumento(
+    ContextoSesion, ParametrosApp, 'FACC');
 end;
 
 procedure TfrmMtoFacturasCompra.CrearTablaPrincipal;
@@ -654,9 +647,9 @@ begin
   if not PuedeImprimir then
     Abort;
   if dmmFacturasCompra = nil then
-    ShowMessage('No hay factura de compra activa que imprimir.')
+    ShowMessage(SErrorFacturaCompraSinImpresionActiva)
   else if dmmFacturasCompra.unqryTablaG.IsEmpty then
-    ShowMessage('No hay factura de compra activa que imprimir.')
+    ShowMessage(SErrorFacturaCompraSinImpresionActiva)
   else
   begin
     if dmmFacturasCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -690,9 +683,9 @@ begin
   if not PuedeImprimir then
     Abort;
   if dmmFacturasCompra = nil then
-    ShowMessage('No hay factura de compra activa que imprimir.')
+    ShowMessage(SErrorFacturaCompraSinImpresionActiva)
   else if dmmFacturasCompra.unqryTablaG.IsEmpty then
-    ShowMessage('No hay factura de compra activa que imprimir.')
+    ShowMessage(SErrorFacturaCompraSinImpresionActiva)
   else
   begin
     if dmmFacturasCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -721,8 +714,7 @@ begin
   inherited;
   if not PuedeImprimir then
     Abort;
-  ShowMessage('Etiquetas de borrador de compra: pendiente (hito de ' +
-              'informes).');
+  ShowMessage(SAvisoEtiquetasBorradorCompraPendientes);
 end;
 
 procedure TfrmMtoFacturasCompra.btnAtributosColumnaClick(Sender: TObject);
@@ -749,9 +741,8 @@ begin
     dmmFacturasCompra.unqryTablaG.Connection,
     dmmFacturasCompra.unqryFacturasCompraLineas, 'FACCLIN');
   if (sLineasSinSku <> '') and
-     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
-                 'con variaciones sin SKU asignado. ' +
-                 '¿Grabar de todas formas?',
+     (MessageDlg(Format(SPreguntaGrabarFacturaCompraSinSku,
+                        [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) <> mrYes) then
     Exit;
   if Assigned(FPivote) and FPivote.Activo and
@@ -1038,7 +1029,7 @@ end;
 procedure TfrmMtoFacturasCompra.AsegurarCabeceraPersistidaParaLineas;
 begin
   if not Assigned(dmmFacturasCompra) then
-    raise Exception.Create('No esta inicializada la factura de compra.')
+    raise Exception.Create(SErrorFacturaCompraNoInicializada)
   else
     AsegurarCabeceraPersistidaCompra(
       dmmFacturasCompra.unqryTablaG,
@@ -1404,21 +1395,20 @@ var
 begin
   if (FPivote = nil) or (not FPivote.Activo) then
   begin
-    MessageDlg('Activa las tallas en horizontal antes de elegir color.',
+    MessageDlg(SErrorActivarTallasHorizontalesParaColor,
                mtInformation, [mbOk], 0);
   end
   else
   begin
     sArt := ArticuloLineaActivaFacturaCompra;
     if sArt = '' then
-      MessageDlg('Selecciona un artículo antes de elegir color.',
+      MessageDlg(SErrorArticuloNoSeleccionadoElegirColor,
                  mtInformation, [mbOk], 0)
     else
     begin
       CargarBasicosColorArticulo(sArt);
       if Length(FBasicosColor) = 0 then
-        MessageDlg('El artículo "' + sArt + '" no tiene colores básicos ' +
-                   'activos en sus SKUs.',
+        MessageDlg(Format(SErrorArticuloSinColoresBasicosActivos, [sArt]),
                    mtInformation, [mbOk], 0)
       else
       begin
@@ -1499,8 +1489,8 @@ begin
   begin
     ds := dmmFacturasCompra.unqryTablaG;
     if ds.IsEmpty then
-      MessageDlg('Crea o selecciona una factura de compra antes de ' +
-                 'elegir el proveedor.', mtInformation, [mbOk], 0)
+      MessageDlg(SErrorFacturaCompraElegirProveedorNoSeleccionada,
+                 mtInformation, [mbOk], 0)
     else if TBusquedaUtils.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de proveedores',
@@ -1547,20 +1537,17 @@ begin
     selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, ConexionPrincipal,
                                                    sEmp, ubePago, sPref);
     if not selBanco.Aceptado then
-      ShowMessage('Generación de efectos cancelada.')
+      ShowMessage(SInfoGeneracionEfectosPagoCancelada)
     else
     begin
       iRes := dmmFacturasCompra.GenerarEfectos(selBanco.CodigoEmpban,
                                                selBanco.Iban);
       if iRes > 0 then
-        ShowMessage(Format('Generados %d efecto(s) de pago.', [iRes]))
+        ShowMessage(Format(SInfoEfectosPagoGenerados, [iRes]))
       else if iRes = 0 then
-        ShowMessage('No se generaron efectos. Revisa que el borrador tenga ' +
-                    'forma de pago y total, y que no tenga ya efectos ' +
-                    'pagados ' +
-                    'o remesados.')
+        ShowMessage(SAvisoEfectosPagoNoGenerados)
       else
-        ShowMessage('No hay borrador activo (o hubo un error al generar).');
+        ShowMessage(SErrorGenerarEfectosPagoSinBorrador);
     end;
   end;
 end;
@@ -1595,16 +1582,16 @@ begin
         iRes := dmmFacturasCompra.RegistrarPagoEfecto(iEfe, frm.Fecha,
                   frm.Importe, frm.Tipo, frm.Referencia);
         if iRes > 0 then
-          ShowMessage('Efecto conciliado.')
+          ShowMessage(SInfoEfectoConciliado)
         else
-          ShowMessage('No se pudo conciliar el efecto.');
+          ShowMessage(SErrorConciliarEfecto);
       end;
     finally
       frm.Free;
     end;
   end
   else
-    ShowMessage('Selecciona un efecto en la rejilla de la pestana Efectos.');
+    ShowMessage(SErrorEfectoCompraNoSeleccionado);
 end;
 
 procedure TfrmMtoFacturasCompra.btnAnadirLineaClick(Sender: TObject);
@@ -1617,7 +1604,7 @@ end;
 procedure TfrmMtoFacturasCompra.btnBorrarLineaClick(Sender: TObject);
 begin
   inherited;
-  if MessageDlg('Esta seguro de que desea eliminar esta linea?',
+  if MessageDlg(SPreguntaEliminarLineaFacturaCompra,
                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     dmmFacturasCompra.unqryFacturasCompraLineas.Delete;
 end;

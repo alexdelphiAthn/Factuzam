@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoPermisosArbol                                            }
 {    Tipo:       Formulario (Mto)                                              }
@@ -122,7 +122,7 @@ var
 implementation
 
 uses
-  System.StrUtils, System.Rtti, inMtoPrincipal;
+  System.StrUtils, System.Rtti, inMtoPrincipal, inLibMsg;
 
 {$R *.dfm}
 
@@ -597,7 +597,7 @@ procedure TfrmMtoPermisosArbol.AplicarRama(ANode: TcxTreeListNode;
   end;
 begin
   if ANode = nil then
-    ShowMessage('Selecciona primero un nodo del arbol.')
+    ShowMessage(SErrorNodoPermisosNoSeleccionado)
   else
   begin
     Screen.Cursor := crHourGlass;
@@ -628,7 +628,7 @@ procedure TfrmMtoPermisosArbol.HeredarRama(ANode: TcxTreeListNode);
   end;
 begin
   if ANode = nil then
-    ShowMessage('Selecciona primero un nodo del arbol.')
+    ShowMessage(SErrorNodoPermisosNoSeleccionado)
   else
   begin
     Screen.Cursor := crHourGlass;
@@ -758,27 +758,26 @@ begin
   idx := cbbDestino.ItemIndex;
   if (io < 0) or (idx < 0) or (io > High(FSujetos)) or
      (idx > High(FSujetos)) then
-    ShowMessage('Selecciona un origen y un destino.')
+    ShowMessage(SErrorOrigenDestinoPermisosNoSeleccionados)
   else
   begin
     org := FSujetos[io];
     dst := FSujetos[idx];
     if SameText(org.Nombre, dst.Nombre) then
-      ShowMessage('El origen y el destino no pueden ser el mismo.')
+      ShowMessage(SErrorOrigenDestinoPermisosIguales)
     else
     begin
       reempl := (rgModo.ItemIndex = 1);
       if reempl then
-        sModo := 'Se reemplazaran todos los permisos del destino.'
+        sModo := SInfoModoReemplazarPermisos
       else
-        sModo := 'Se agregaran o actualizaran los permisos en el destino.';
+        sModo := SInfoModoCombinarPermisos;
       if chkSoloMenu.Checked then
-        sFiltro := 'Alcance: solo permisos de menu.'
+        sFiltro := SInfoAlcancePermisosMenu
       else
-        sFiltro := 'Alcance: todos los permisos.';
-      msg := Format('Copiar permisos de "%s" a "%s"?',
-                    [org.Nombre, dst.Nombre]) +
-             sLineBreak + sModo + sLineBreak + sFiltro;
+        sFiltro := SInfoAlcanceTodosPermisos;
+      msg := Format(SPreguntaCopiarPermisos,
+                    [org.Nombre, dst.Nombre, sModo, sFiltro]);
       if MessageDlg(msg, mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       begin
         Screen.Cursor := crHourGlass;
@@ -791,7 +790,7 @@ begin
         finally
           Screen.Cursor := crDefault;
         end;
-        ShowMessage(Format('%d permisos copiados de "%s" a "%s".',
+        ShowMessage(Format(SInfoPermisosCopiados,
                            [n, org.Nombre, dst.Nombre]));
         if SameText(dst.Nombre, FSujetoActual.Nombre) then
           CargarValoresSujeto;

@@ -213,6 +213,11 @@
         <DCCReference Include="src\Lib\inLibPermisosUniDAC.pas"/>
         <DCCReference Include="src\Lib\inLibPermisosAdmin.pas"/>
         <DCCReference Include="src\Lib\inLibFiltroUsuario.pas"/>
+        <DCCReference Include="src\Lib\inLibGestorFiltrosMto.pas"/>
+        <DCCReference Include="src\Lib\inLibGestorPerfilesMto.pas"/>
+        <DCCReference Include="src\Lib\inLibGestorGuiasGridMto.pas"/>
+        <DCCReference Include="src\Lib\inLibGestorTareasMto.pas"/>
+        <DCCReference Include="src\Lib\inLibGestorArticulosMto.pas"/>
         <DCCReference Include="src\Lib\inLibLicenciaAplicacion.pas"/>
         <DCCReference Include="src\Core\inMtoFrmBase.pas">
             <Form>frmBase</Form>

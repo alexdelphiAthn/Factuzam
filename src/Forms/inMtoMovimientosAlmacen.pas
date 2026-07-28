@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoMovimientosAlmacen                                       }
 {    Tipo:       Formulario (Mto)                                              }
@@ -123,7 +123,7 @@ implementation
 
 uses
   inLibWin, inLibUser, inMtoPrincipal, inLibShowMto, inLibGridCantidad,
-  inLibFiltroUsuario;
+  inLibFiltroUsuario, inLibMsg;
 
 {$R *.dfm}
 
@@ -478,9 +478,7 @@ begin
       begin
         OcultarProgresoCarga;
         Screen.Cursor := cursorPrev;
-        MessageDlg(Format('La selección cargaría %s registros, demasiados ' +
-          'para mostrarlos de una vez.' + sLineBreak +
-          'Acota los filtros (años / almacenes) y vuelve a intentarlo.',
+        MessageDlg(Format(SAvisoLimiteRegistrosMovimientosAlmacen,
           [FormatFloat('#,##0', nTotal)]), mtWarning, [mbOK], 0);
       end
       else

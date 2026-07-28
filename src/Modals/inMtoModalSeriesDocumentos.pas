@@ -62,6 +62,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 procedure ForceReferenceToClass(C: TClass);
 begin
 end;
@@ -115,19 +118,21 @@ begin
   sSerie := Trim(txtSerie.Text);
   if sSerie = '' then
   begin
-    MessageDlg('Introduzca la serie.', mtWarning, [mbOk], 0);
+    MessageDlg(SErrorSerieDocumentoNoIndicada, mtWarning, [mbOk], 0);
     txtSerie.SetFocus;
   end
   else if VarIsNull(dteFechaDesde.EditValue) or
           VarIsEmpty(dteFechaDesde.EditValue) then
   begin
-    MessageDlg('Introduzca la fecha de inicio.', mtWarning, [mbOk], 0);
+    MessageDlg(SErrorFechaInicioDocumentoNoIndicada,
+               mtWarning, [mbOk], 0);
     dteFechaDesde.SetFocus;
   end
   else if VarIsNull(dteFechaHasta.EditValue) or
           VarIsEmpty(dteFechaHasta.EditValue) then
   begin
-    MessageDlg('Introduzca la fecha de fin.', mtWarning, [mbOk], 0);
+    MessageDlg(SErrorFechaFinDocumentoNoIndicada,
+               mtWarning, [mbOk], 0);
     dteFechaHasta.SetFocus;
   end
   else
@@ -136,7 +141,7 @@ begin
     dtHasta := VarToDateTime(dteFechaHasta.EditValue);
     if dtHasta < dtDesde then
     begin
-      MessageDlg('La fecha de fin no puede ser anterior al inicio.',
+      MessageDlg(SErrorRangoFechasDocumentoNoValido,
                  mtWarning, [mbOk], 0);
       dteFechaHasta.SetFocus;
     end

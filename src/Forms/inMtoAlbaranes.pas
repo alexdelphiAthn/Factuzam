@@ -867,12 +867,8 @@ end;
 
 function TfrmMtoAlbaranes.SqlRestriccionUsuario: string;
 begin
-  Result := SqlFiltroEmpAlmCaja(
-    ContextoSesion,
-    ParametrosApp,
-    'CODIGO_EMP_ALB',
-    'CODIGO_ALM_ALB',
-    '');
+  Result := SqlFiltroDocumento(
+    ContextoSesion, ParametrosApp, 'ALB');
 end;
 
 procedure TfrmMtoAlbaranes.CrearTablaPrincipal;

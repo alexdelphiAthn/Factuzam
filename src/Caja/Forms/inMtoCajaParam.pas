@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaParam                                                }
 {    Tipo:       Formulario (Core)                                             }
@@ -105,7 +105,7 @@ implementation
 {$R *.dfm}
 
 uses
-  StrUtils, inLibLayoutForm;
+  StrUtils, inLibLayoutForm, inLibMsg;
 
 // ----------------------------------------------------------------------
 // GESTIÓN DE MEMORIA Y CICLO DE VIDA
@@ -117,12 +117,10 @@ var
 begin
   inherited;
   if not Supports(Owner, IProveedorParametrosEdicion, Proveedor) then
-    raise Exception.Create(
-      'No se ha configurado el proveedor de edición de parámetros.');
+    raise Exception.Create(SErrorProveedorParametrosCajaNoConfigurado);
   FParametrosEdicion := Proveedor.ParametrosCajaEdicion;
   if not Assigned(FParametrosEdicion) then
-    raise Exception.Create(
-      'No se han configurado los parámetros de caja editables.');
+    raise Exception.Create(SErrorParametrosCajaEditablesNoConfigurados);
   if jvntrstb1 <> nil then
     jvntrstb1.EnterAsTab := False;
   FBools := TList<PBoolean>.Create;
@@ -339,7 +337,7 @@ begin
     Layout.GuardarGeometria(Self);
     Layout.GuardarDividerInspector('Divider', JvInspector1);
     if Layout.PreguntarYGrabar('Personalización Parámetros Caja') then
-      ShowMessage('Layout guardado.');
+      ShowMessage(SInfoLayoutCajaGuardado);
   finally
     FreeAndNil(Layout);
   end;
@@ -499,7 +497,7 @@ begin
     end;
     if GuardadosCount > 0 then
     begin
-      ShowMessage(Format('Se han guardado %d parámetros correctamente para: %s',
+      ShowMessage(Format(SInfoParametrosCajaGuardados,
                          [GuardadosCount, sUsuarioGrupo]));
       if (sUsuarioGrupo = IdentidadSesion.Usuario) or
          (sUsuarioGrupo = IdentidadSesion.Grupo) or
@@ -511,7 +509,7 @@ begin
     end
     else
     begin
-      ShowMessage('No se han detectado cambios para guardar.');
+      ShowMessage(SInfoParametrosCajaSinCambios);
     end;
   finally
     FreeAndNil(qry);
@@ -674,7 +672,7 @@ begin
     Close;
     Exit;
   end;
-  if MessageDlg('¿Está seguro de que desea salir sin guardar?',
+  if MessageDlg(SPreguntaSalirParametrosCajaSinGuardar,
                 mtConfirmation,
                 [mbYes, mbNo],
                 0) = mrYes then
@@ -753,18 +751,19 @@ begin
 
     if usuarios.Count = 0 then
     begin
-      ShowMessage(
-        'No hay usuarios con parámetros guardados para este formulario.');
+      ShowMessage(SInfoUsuariosParametrosCajaNoEncontrados);
       Exit;
     end;
 
     sUsuario := usuarios[0];
-    if InputQuery('Cambiar usuario',
-                  'Usuarios disponibles:' + sLineBreak + usuarios.CommaText + sLineBreak + sLineBreak + 'Introduce el nombre de usuario:',
+    if InputQuery(STituloCambiarUsuarioParametrosCaja,
+                  Format(SSolicitudCambiarUsuarioParametrosCaja,
+                    [usuarios.CommaText]),
                   sUsuario) then
     begin
       if usuarios.IndexOf(sUsuario) < 0 then
-        ShowMessage('Usuario no encontrado: ' + sUsuario)
+        ShowMessage(Format(SErrorUsuarioParametrosCajaNoEncontrado,
+          [sUsuario]))
       else
       begin
         CargarParametros(JvInspector1, sUsuario, '');

@@ -407,7 +407,7 @@ uses
   inMtoModalSelAlmacenPedido, inMtoModalDocsCreados, inMtoModalEtiqPed,
   inLibShowMto, inLibGenBusq, UniDataArticulos,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
-  inLibColumnasSku;
+  inLibColumnasSku, inLibMsg;
 
 {$R *.dfm}
 
@@ -439,7 +439,7 @@ begin
     sPrv := Trim(dmmPedidosCompra.unqryTablaG.
                    FieldByName('CODIGO_PRV_PEDC').AsString);
     if (sPrv = '') or (sPrv = '0') then
-      MessageDlg('Selecciona un proveedor antes de buscar artículos.',
+      MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulosPedidoCompra,
                  mtInformation, [mbOk], 0)
     else
       Result := BuscarArticuloProveedorCompra(
@@ -465,10 +465,10 @@ begin
   Result := '';
   sArt := Trim(ACodigoArt);
   if not Assigned(dmmPedidosCompra) then
-    MessageDlg('No está abierto el pedido de compra.',
+    MessageDlg(SErrorPedidoCompraNoAbierto,
                mtInformation, [mbOk], 0)
   else if sArt = '' then
-    MessageDlg('Selecciona un artículo antes de buscar sus SKUs.',
+    MessageDlg(SErrorArticuloNoSeleccionadoBuscarSkusPedidoCompra,
                mtInformation, [mbOk], 0)
   else
     Result := BuscarSkuArticuloCompra(
@@ -480,13 +480,13 @@ end;
 procedure TfrmMtoPedidosCompra.AsegurarCabeceraPersistidaParaLineas;
 begin
   if not Assigned(dmmPedidosCompra) then
-    raise Exception.Create('No esta inicializado el pedido de compra.')
+    raise Exception.Create(SErrorPedidoCompraNoInicializado)
   else
     AsegurarCabeceraPersistidaCompra(
       dmmPedidosCompra.unqryTablaG,
       dmmPedidosCompra.unqryPedidosCompraLineas,
       CrearConfiguracionTallasCompra(
-        'un pedido', 'PEDC', 'PEDCLIN',
+        STextoPedidoCompra, 'PEDC', 'PEDCLIN',
         'fza_pedidos_compra_lineas'),
       nil);
 end;
@@ -502,7 +502,7 @@ begin
       dmmPedidosCompra.unqryPedidosCompraLineas,
       dmmPedidosCompra.unqryTablaG.Connection,
       CrearConfiguracionTallasCompra(
-        'un pedido', 'PEDC', 'PEDCLIN',
+        STextoPedidoCompra, 'PEDC', 'PEDCLIN',
         'fza_pedidos_compra_lineas'),
       AsegurarCabeceraPersistidaParaLineas,
       FPivote.ValidarPivotePosible, AMensaje);
@@ -1007,13 +1007,8 @@ end;
 
 function TfrmMtoPedidosCompra.SqlRestriccionUsuario: string;
 begin
-  // Documentos de compra: empresa y almacén (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja(
-    ContextoSesion,
-    ParametrosApp,
-    'CODIGO_EMP_PEDC',
-    'CODIGO_ALM_PEDC',
-    '');
+  Result := SqlFiltroDocumento(
+    ContextoSesion, ParametrosApp, 'PEDC');
 end;
 
 procedure TfrmMtoPedidosCompra.CrearTablaPrincipal;
@@ -1276,14 +1271,14 @@ begin
   inherited;
   if (FPivote = nil) or (not FPivote.Activo) or (not FPivote.Expandido) then
   begin
-    MessageDlg('Activa "Expandir recibidos" antes de usar este atajo.',
+    MessageDlg(SErrorExpandirRecibidosNoActivo,
                mtInformation, [mbOk], 0);
     Exit;
   end;
   iCeldas := FPivote.RecibirFilaEntera;
   RefrescarCantidadAAlbaranar;
   if iCeldas = 0 then
-    MessageDlg('No hay tallas pendientes de recibir en la fila activa.',
+    MessageDlg(SInfoTallasPendientesRecibirNoDisponibles,
                mtInformation, [mbOk], 0);
 end;
 
@@ -1317,7 +1312,7 @@ begin
     iRellenadas := RellenarARecibirVerticalTodo;
   RefrescarCantidadAAlbaranar;
   if iRellenadas = 0 then
-    MessageDlg('No hay nada pendiente de recibir en el pedido.',
+    MessageDlg(SInfoPedidoCompraSinPendientesRecibir,
                mtInformation, [mbOk], 0);
 end;
 
@@ -1340,9 +1335,8 @@ begin
     dmmPedidosCompra.unqryTablaG.Connection,
     dmmPedidosCompra.unqryPedidosCompraLineas, 'PEDCLIN');
   if (sLineasSinSku <> '') and
-     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
-                 'con variaciones sin SKU asignado. ' +
-                 '¿Grabar de todas formas?',
+     (MessageDlg(Format(SPreguntaGrabarPedidoCompraSinSku,
+                        [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) <> mrYes) then
     Exit;
   if Assigned(FPivote) and FPivote.Activo and
@@ -1550,8 +1544,8 @@ begin
   begin
     ds := dmmPedidosCompra.unqryTablaG;
     if ds.IsEmpty then
-      MessageDlg('Crea o selecciona un pedido de compra antes de ' +
-                 'elegir la empresa.', mtInformation, [mbOk], 0)
+      MessageDlg(SErrorPedidoCompraNecesarioElegirEmpresa,
+                 mtInformation, [mbOk], 0)
     else if TBusquedaUtils.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de empresas',
@@ -1589,8 +1583,8 @@ begin
   begin
     ds := dmmPedidosCompra.unqryTablaG;
     if ds.IsEmpty then
-      MessageDlg('Crea o selecciona un pedido de compra antes de ' +
-                 'elegir el proveedor.', mtInformation, [mbOk], 0)
+      MessageDlg(SErrorPedidoCompraNecesarioElegirProveedor,
+                 mtInformation, [mbOk], 0)
     else if TBusquedaUtils.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de proveedores',
@@ -1792,21 +1786,21 @@ var
 begin
   if (FPivote = nil) or (not FPivote.Activo) then
   begin
-    MessageDlg('Activa las tallas en horizontal antes de elegir color.',
+    MessageDlg(SErrorTallasHorizontalesNecesariasElegirColor,
                mtInformation, [mbOk], 0);
   end
   else
   begin
     sArt := ArticuloLineaActivaPedidoCompra;
     if sArt = '' then
-      MessageDlg('Selecciona un artículo antes de elegir color.',
+      MessageDlg(SErrorArticuloNoSeleccionadoElegirColorPedidoCompra,
                  mtInformation, [mbOk], 0)
     else
     begin
       CargarBasicosColorArticulo(sArt);
       if Length(FBasicosColor) = 0 then
-        MessageDlg('El artículo "' + sArt + '" no tiene colores básicos ' +
-                   'activos en sus SKUs.',
+        MessageDlg(Format(SErrorArticuloPedidoCompraSinColoresBasicos,
+                          [sArt]),
                    mtInformation, [mbOk], 0)
       else
       begin
@@ -1991,7 +1985,7 @@ end;
 procedure TfrmMtoPedidosCompra.btnBorrarLineaClick(Sender: TObject);
 begin
   inherited;
-  if MessageDlg('Esta seguro de que desea eliminar esta linea?',
+  if MessageDlg(SPreguntaEliminarLineaPedidoCompra,
                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     dmmPedidosCompra.unqryPedidosCompraLineas.Delete;
 end;
@@ -2253,10 +2247,7 @@ begin
     cbbSERIE_PEDC.Properties.Items);
   if cbbSERIE_PEDC.Properties.Items.Count = 0 then
   begin
-    if MessageDlg('No hay series de pedidos de compra (tipo PC) para la ' +
-                  'empresa "' + sEmpresa + '".' + sLineBreak +
-                  'Se dan de alta en Empresas -> Series. ' +
-                  '¿Abrir el mantenimiento de Empresas ahora?',
+    if MessageDlg(Format(SPreguntaAbrirSeriesPedidoCompra, [sEmpresa]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       ShowMto(Self.Owner, 'Empresas');
   end;
@@ -2276,7 +2267,7 @@ begin
     Exit;
   if dmmPedidosCompra.unqryTablaG.IsEmpty then
   begin
-    ShowMessage('No hay pedido de compra activo.');
+    ShowMessage(SErrorPedidoCompraNoActivo);
     Exit;
   end;
   if dmmPedidosCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -2318,7 +2309,7 @@ begin
   if dmmPedidosCompra = nil then Exit;
   if dmmPedidosCompra.unqryTablaG.IsEmpty then
   begin
-    ShowMessage('No hay pedido activo del que crear albaran.');
+    ShowMessage(SErrorPedidoCompraNoActivoCrearAlbaran);
     Exit;
   end;
   if dmmPedidosCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -2477,7 +2468,8 @@ begin
       begin
         if bTxOwned and ConexionPrincipal.InTransaction then
           ConexionPrincipal.Rollback;
-        MessageDlg('Error al crear el albaran: ' + E.Message,
+        MessageDlg(Format(SErrorCrearAlbaranDesdePedidoCompra,
+                          [E.Message]),
                    mtError, [mbOk], 0);
       end;
     end;

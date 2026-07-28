@@ -13,6 +13,19 @@ uses
     '..\src\Lib\inLibAtributosPaleta.pas',
   inLibColumnasDocumento in
     '..\src\Lib\inLibColumnasDocumento.pas',
+  inLibFiltroUsuario in
+    '..\src\Lib\inLibFiltroUsuario.pas',
+  inLibGestorFiltrosMto in
+    '..\src\Lib\inLibGestorFiltrosMto.pas',
+  inLibGestorPerfilesMto in
+    '..\src\Lib\inLibGestorPerfilesMto.pas',
+  inLibGestorGuiasGridMto in
+    '..\src\Lib\inLibGestorGuiasGridMto.pas',
+  inLibGestorTareasMto in
+    '..\src\Lib\inLibGestorTareasMto.pas',
+  inLibGestorArticulosMto in
+    '..\src\Lib\inLibGestorArticulosMto.pas',
+  inLibDiag in '..\src\Lib\inLibDiag.pas',
   inLibBusquedasCompra in
     '..\src\Lib\inLibBusquedasCompra.pas',
   inLibValidacionDocumento in
@@ -26,6 +39,13 @@ uses
   inLibRectificativas in '..\src\Lib\inLibRectificativas.pas',
   PruebasAtributosPaleta in 'PruebasAtributosPaleta.pas',
   PruebasColumnasDocumento in 'PruebasColumnasDocumento.pas',
+  PruebasFiltroUsuario in 'PruebasFiltroUsuario.pas',
+  PruebasGestorFiltrosMto in 'PruebasGestorFiltrosMto.pas',
+  PruebasGestorPerfilesMto in 'PruebasGestorPerfilesMto.pas',
+  PruebasGestorGuiasGridMto in 'PruebasGestorGuiasGridMto.pas',
+  PruebasGestorTareasMto in 'PruebasGestorTareasMto.pas',
+  PruebasGestorArticulosMto in 'PruebasGestorArticulosMto.pas',
+  PruebasDiagnosticoMetadata in 'PruebasDiagnosticoMetadata.pas',
   PruebasBusquedasCompra in 'PruebasBusquedasCompra.pas',
   PruebasValidacionTallasCompra in
     'PruebasValidacionTallasCompra.pas',

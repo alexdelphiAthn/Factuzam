@@ -106,6 +106,12 @@ type
     [Test]
     procedure Foto_SeleccionaCabeceraYDetalleDeLaVista;
     [Test]
+    procedure DataModule_ReutilizaOCreaInstancia;
+    [Test]
+    procedure DataModule_RechazaClaseIncompatible;
+    [Test]
+    procedure TablaPrincipal_CableaCabeceraLineasDetallesYClave;
+    [Test]
     procedure ConfigSku_DerivaCamposPorPrefijo;
     [Test]
     procedure ColumnaHost_AplicaPropiedades;
@@ -131,9 +137,16 @@ uses
   System.Classes, Winapi.Windows, Vcl.Forms, Data.DB, Datasnap.DBClient, Uni,
   cxButtonEdit, cxDataStorage, cxCurrencyEdit,
   inLibColumnasSkuIntf, inLibGridTallasInline, inLibGridPivoteCompra,
-  inLibGridPivoteVenta, inLibColumnasDocumento;
+  inLibGridPivoteVenta, inLibColumnasDocumento, UniDataGen;
 
 type
+  TdmDocumentoPrueba = class(TdmBase)
+  protected
+    procedure DoCreate; override;
+  public
+    property MaestroCabecera: TDataSource read FMaestroCabecera;
+  end;
+
   TModoEntradaPrueba = class(TInterfacedObject, IModoEntradaGrid)
   private
     FConstrucciones: Integer;
@@ -161,6 +174,10 @@ type
     property Construcciones: Integer read FConstrucciones;
     property EditoresMostrados: Integer read FEditoresMostrados;
   end;
+
+procedure TdmDocumentoPrueba.DoCreate;
+begin
+end;
 
 constructor TModoEntradaPrueba.Create(AFallarAlConstruir: Boolean;
   AFallarAlDesmontar: Boolean);
@@ -937,6 +954,94 @@ begin
   finally
     FVista.DataController.DataSource := nil;
     FreeAndNil(oDetalle);
+    FreeAndNil(oCabecera);
+  end;
+end;
+
+procedure TPruebasColumnasDocumento.
+  DataModule_ReutilizaOCreaInstancia;
+var
+  oActual: TObject;
+  oPropietario: TComponent;
+  oResultado: TdmBase;
+begin
+  oActual := nil;
+  oPropietario := TComponent.Create(nil);
+  try
+    oResultado := AsegurarDataModuleDocumento(
+      oPropietario, oActual, TdmDocumentoPrueba);
+    Assert.IsTrue(oActual = oResultado);
+    Assert.IsTrue(oResultado is TdmDocumentoPrueba);
+    Assert.IsTrue(oResultado.Owner = oPropietario);
+    Assert.AreEqual(1, oPropietario.ComponentCount);
+    Assert.IsTrue(oResultado = AsegurarDataModuleDocumento(
+      oPropietario, oActual, TdmDocumentoPrueba));
+    Assert.AreEqual(1, oPropietario.ComponentCount);
+  finally
+    FreeAndNil(oPropietario);
+  end;
+end;
+
+procedure TPruebasColumnasDocumento.
+  DataModule_RechazaClaseIncompatible;
+var
+  bExcepcion: Boolean;
+  oActual: TObject;
+begin
+  bExcepcion := False;
+  oActual := TObject.Create;
+  try
+    try
+      AsegurarDataModuleDocumento(
+        nil, oActual, TdmDocumentoPrueba);
+    except
+      on EInvalidCast do
+        bExcepcion := True;
+    end;
+    Assert.IsTrue(bExcepcion);
+  finally
+    FreeAndNil(oActual);
+  end;
+end;
+
+procedure TPruebasColumnasDocumento.
+  TablaPrincipal_CableaCabeceraLineasDetallesYClave;
+var
+  oCabecera: TDataSource;
+  oDataModule: TdmDocumentoPrueba;
+  oDetalle: TDataSource;
+  oQueryUno: TUniQuery;
+  oQueryDos: TUniQuery;
+  sClave: string;
+begin
+  oCabecera := TDataSource.Create(nil);
+  oDataModule := TdmDocumentoPrueba.Create(nil);
+  oDetalle := TDataSource.Create(nil);
+  oQueryUno := TUniQuery.Create(nil);
+  oQueryDos := TUniQuery.Create(nil);
+  try
+    sClave := 'ANTERIOR';
+    ConfigurarTablaPrincipalDocumento(
+      oDataModule, oCabecera, FVista, oDetalle,
+      [oQueryUno, oQueryDos], sClave, 'SERIE;NUMERO');
+    Assert.IsTrue(oCabecera.DataSet = oDataModule.unqryTablaG);
+    Assert.IsTrue(oDataModule.MaestroCabecera = oCabecera);
+    Assert.IsTrue(FVista.DataController.DataSource = oDetalle);
+    Assert.IsTrue(oQueryUno.MasterSource = oCabecera);
+    Assert.IsTrue(oQueryDos.MasterSource = oCabecera);
+    Assert.AreEqual('SERIE;NUMERO', sClave);
+    ConfigurarTablaPrincipalDocumento(
+      nil, nil, nil, nil, [], sClave, '');
+    Assert.AreEqual('SERIE;NUMERO', sClave);
+  finally
+    FVista.DataController.DataSource := nil;
+    oQueryDos.MasterSource := nil;
+    oQueryUno.MasterSource := nil;
+    oCabecera.DataSet := nil;
+    FreeAndNil(oQueryDos);
+    FreeAndNil(oQueryUno);
+    FreeAndNil(oDetalle);
+    FreeAndNil(oDataModule);
     FreeAndNil(oCabecera);
   end;
 end;

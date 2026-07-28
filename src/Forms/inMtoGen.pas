@@ -49,8 +49,11 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier, dxSkinValentine,
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
-  dxSkinXmas2008Blue, System.Generics.Collections, System.Actions, Vcl.ActnList,
-  System.Threading, inLibPermisosIntf, inLibVentanaEmbebidaIntf;
+  dxSkinXmas2008Blue, System.Actions, Vcl.ActnList,
+  inLibPermisosIntf, inLibVentanaEmbebidaIntf,
+  inLibGestorFiltrosMto, inLibGestorPerfilesMto,
+  inLibGestorGuiasGridMto, inLibGestorTareasMto,
+  inLibGestorArticulosMto;
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   THackWinControl = class(TWinControl);
@@ -167,24 +170,7 @@ type
     // Se libera en Destroy DESPUES del data module para que los Close
     // implicitos de las queries no queden colgando.
     FConn: TUniConnection;
-    // Overlay para Fase 2 (background): panel que cubre el Mto entero
-    // mientras corre una tarea en thread. Otros tabs siguen interactivos
-    // porque cada Mto vive embebido en su propio TcxTabSheet.
-    FOverlayOcupado: TPanel;
-    FTareasEnCurso: Integer;
-    // Lista de ITask vivos para poder esperarlos en Destroy. Sin esto,
-    // cerrar un tab mientras un Open async sigue ejecutando provoca AV:
-    // el thread accederia a la TUniQuery / FConn ya liberadas. La lista
-    // se crea lazy en EjecutarEnBackground y se libera en Destroy
-    // despues del WaitForAll.
-    FTareasActivas: TList<ITask>;
-    // Popup de selector de columnas (boton derecho en grid)
-    FPopMenuColumnas: TPopupMenu;
-    FSqlOriginalTablaG: string;
     FSqlBaseBusquedaExterna: string;
-    FCamposGuia: TStringList;
-    FCamposGuiaTabla: TStringList;
-    FColumnasVisiblesGuia: TStringList;
     // Hooks del dataset principal original (en el data module).
     FBeforeInsertOrig: TDataSetNotifyEvent;
     FBeforeEditOrig: TDataSetNotifyEvent;
@@ -192,25 +178,28 @@ type
     FBeforeDeleteOrig: TDataSetNotifyEvent;
     FGuardianBorradoInstalado: Boolean;
     FDesactivandoPorBorrado: Boolean;
-    FFiltroMenuBase64: string;
-    FBusqGlobalMenu: string;
+    FGestorFiltros: TGestorFiltrosMto;
+    FGestorPerfiles: TGestorPerfilesMto;
+    FGestorGuias: TGestorGuiasGridMto;
+    FGestorTareas: TGestorTareasMto;
+    FGestorArticulos: TGestorArticulosMto;
     function GetConexionTrabajo: TUniConnection;
+    function AplicacionCerrando: Boolean;
+    function ObtenerConsultaGuias: TUniQuery;
     function FiltroGridActivo: Boolean;
+    function FotoArticuloVisible: Boolean;
+    function SolicitarDestinoPerfil(
+      const ADescripcion: string;
+      ADescripcionEditable: Boolean;
+      out APermisos: string): Boolean;
+    function SolicitarDatosFiltro: TDatosGuardadoFiltroMto;
+    function EjecutarGestionFiltros(
+      const AFiltroActualBase64: string
+    ): TResultadoGestionFiltroMto;
     procedure MoverRegistroGridFiltrado(AAvanzar: Boolean);
     procedure NavegadorButtonClick(Sender: TObject;
                                    AButtonIndex: Integer;
                                    var ADone: Boolean);
-    // Filtros guardados (desplegable junto a "Guardar Excel"). Guardan y
-    // comparten DataController.Filter de la lista principal con nombre
-    // propio, independiente del layout de columnas.
-    procedure CargarMenuFiltros;
-    function SerializarFiltroActualBase64: string;
-    function ExtraerBusquedaGlobalDelFiltro: string;
-    procedure RestaurarFiltroCapturado;
-    procedure AplicarFiltroDesdeBase64(const ABase64: string);
-    procedure AplicarFiltroGuardadoClick(Sender: TObject);
-    procedure GuardarFiltroActualClick(Sender: TObject);
-    procedure GestionarFiltrosClick(Sender: TObject);
     procedure InstalarGuardianBorrado;
     procedure GuardianBeforeInsert(DataSet: TDataSet);
     procedure GuardianBeforeEdit(DataSet: TDataSet);
@@ -218,12 +207,15 @@ type
     procedure GuardianBeforeDelete(DataSet: TDataSet);
     procedure OcultarComponentesPorTexto(
       const AFragmentos: array of string);
-    procedure PopMenuColumnasPopup(Sender: TObject);
-    procedure PopMenuColumnaClick(Sender: TObject);
-    procedure PopMenuNuevaGuiaClick(Sender: TObject);
-    procedure PopMenuRenombrarClick(Sender: TObject);
-    procedure BorrarGuiasGrid;
-    procedure CargarPerfilesComunes(sUser:string = 'Todos');
+    procedure CancelarTareasActivas;
+    procedure EjecutarModalGuias;
+    procedure OcultarFotoArticulo;
+    procedure MostrarFotoArticulo(const ACodArt, ACodSku: string);
+    procedure VincularFotoArticulo(
+      const ADataSources: TArray<TDataSource>);
+    procedure MostrarStockArticulo(const ACodArt, ACodSku: string);
+    procedure ResetearGridPerfil(
+      const ANombreGrid, ANombreFormulario, APermisos: string);
     // Decide que dialogo mostrar al ejecutar actEliminarRegistro segun
     // NombreCampoESACTIVO y ContarHijosActivos.
     function PreguntarAccionBorrado: TAccionBorrado;
@@ -242,14 +234,6 @@ type
   protected
     property ConexionTrabajo: TUniConnection read GetConexionTrabajo;
     procedure AplicarGuiasGrid(AQuery: TUniQuery);
-    // Recorre los campos abiertos y deja en el log un error por cada
-    // columna cuyo nombre empieza por `ES` (boolean por convencion del
-    // proyecto) pero esta tipada como numerica. Sirve para cazar las
-    // EConvertError 'X is not a valid floating point value' que se
-    // disparan al fetch — la fuente real suele ser metadata de vista
-    // desactualizada tras un ALTER TABLE.
-    procedure DiagnosticarCamposBooleanos(AQuery: TUniQuery;
-                                          const AContexto: string);
     // Indica si las teclas de navegacion (PgUp, PgDn, Home, End, Ins, F2)
     // deben activar las acciones del TActionList base. Los Mtos con
     // editores multilinea (SynEdit, etc.) sobreescriben para devolver
@@ -268,6 +252,7 @@ type
   public
     tdmDataModule:TObject;
     sDataModuleName:string;
+    // Alias no propietario del perfil que conserva la API de descendientes.
     oPerfilDic : TProfileDicc;
     sUso:string;
     pkFieldName:string;
@@ -403,20 +388,16 @@ uses inMtoGenSearch,
      inLibShowMto,
      inLibLog,
      inMtoModalGenImpSave,
-     inLibFiltrosGuardadosIntf, inMtoModalGuardarFiltro,
+     inMtoModalGuardarFiltro,
      inMtoModalGestionFiltros,
-     System.NetEncoding,
      UniDataGen, uGenericIfThen, inMtoPrincipal,
-     inLibFotos, inMtoFotoArticulo, inMtoStockConsulta,
-     inLibGridColumnChooser, inMtoModalGridGuias,
-     inLibInformesGuiasCache,
+     inMtoFotoArticulo, inMtoStockConsulta,
+     inMtoModalGridGuias,
      inLibFiltroUsuario,    // restricción por empresa/almacén/caja
      SQLBuilder4D, SQLBuilder4D.Parser, SQLBuilder4D.Parser.GaSQLParser,
      System.Diagnostics,    // TStopwatch para cronometrar carga inicial
-     System.StrUtils,       // StartsText en DiagnosticarCamposBooleanos
-     System.TypInfo,        // GetEnumName del TFieldType en el log
-     Vcl.ComCtrls;          // TProgressBar marquee en overlay de carga
-     // System.Threading ya esta en el interface (para TList<ITask>).
+     System.TypInfo, inLibDiag,
+     inLibMsg;
 
 function TfrmMtoGen.GetConexionTrabajo: TUniConnection;
 begin
@@ -424,162 +405,111 @@ begin
   if not Assigned(Result) then
     Result := ConexionPrincipal;
   if not Assigned(Result) then
-    raise Exception.Create(
-      'No está disponible la conexión de trabajo.');
+    raise Exception.Create(SErrorConexionTrabajoNoDisponible);
+end;
+
+function TfrmMtoGen.AplicacionCerrando: Boolean;
+begin
+  Result := ContextoSesion.CerrandoAplicacion;
+end;
+
+procedure TfrmMtoGen.CancelarTareasActivas;
+begin
+  if (tdmDataModule <> nil) and
+     (tdmDataModule is TdmBase) then
+    TdmBase(tdmDataModule).CancelarEjecucionActiva;
+end;
+
+function TfrmMtoGen.FotoArticuloVisible: Boolean;
+begin
+  Result := Assigned(frmFotoArticulo) and frmFotoArticulo.Visible;
+end;
+
+procedure TfrmMtoGen.OcultarFotoArticulo;
+begin
+  if Assigned(frmFotoArticulo) then
+    frmFotoArticulo.Hide;
+end;
+
+procedure TfrmMtoGen.MostrarFotoArticulo(const ACodArt, ACodSku: string);
+begin
+  MostrarFotoFlotante(Self, ACodArt, ACodSku);
+end;
+
+procedure TfrmMtoGen.VincularFotoArticulo(
+  const ADataSources: TArray<TDataSource>);
+begin
+  if Assigned(frmFotoArticulo) then
+    frmFotoArticulo.VincularDataSources(ADataSources,
+      ResolverArtSkuActivo);
+end;
+
+procedure TfrmMtoGen.MostrarStockArticulo(const ACodArt, ACodSku: string);
+begin
+  inMtoStockConsulta.MostrarStockConsulta(ACodArt, ACodSku);
+end;
+
+function TfrmMtoGen.ObtenerConsultaGuias: TUniQuery;
+begin
+  Result := nil;
+  if (tdmDataModule <> nil) and
+     (tdmDataModule is TdmBase) then
+    Result := TdmBase(tdmDataModule).unqryTablaG
+  else if Assigned(dsTablaG) and
+          Assigned(dsTablaG.DataSet) and
+          (dsTablaG.DataSet is TUniQuery) then
+    Result := TUniQuery(dsTablaG.DataSet);
+end;
+
+procedure TfrmMtoGen.AplicarGuiasGrid(
+  AQuery: TUniQuery);
+begin
+  FGestorGuias.Aplicar(AQuery);
 end;
 
 procedure TfrmMtoGen.AbrirPerfiles(bTabVisible:Boolean);
 begin
-  if (bTabVisible = true) then
+  if tdmDataModule = nil then
   begin
-    if (tdmDataModule = nil) then //es caja de busqueda modal
-    begin
-      with (Self as TfrmMtoSearch).unqryPerfiles do
-      begin
-        if ((Pos('Nothing', SQL.Text) > 0) or
-            (Trim(SQL.Text) = '')
-           ) then
-        begin
-          SQL.Text :='SELECT * '+
-                     '  FROM fza_usuarios_perfiles ' +
-                     ' WHERE (KEY_USUPER = :NameFormModule)';
-          ParamByName('NameFormModule').AsString := Self.Name;
-        end;
-        if not Active then
-        begin
-          Connection := ConexionTrabajo;
-          Open;
-        end;
-      end;
-    end
-    else //es modulo mantenimiento
-      begin
-        with (tdmDataModule as TdmBase).unqryPerfiles do
-        begin
-          tvPerfil.DataController.DataSource :=
-                                          (tdmDataModule as TdmBase).dsPerfiles;
-          if ( (Pos('Nothing', SQL.Text) > 0) or
-               (Trim(SQL.Text) = '') or
-               (Pos(':NameDataModule', SQL.Text ) > 0)
-             ) then
-          begin
-            SQL.Text :=   'SELECT * '+
-                          '  FROM fza_usuarios_perfiles ' +
-                          ' WHERE ((KEY_USUPER = :NameDataModule) ' +
-                          '    OR  (KEY_USUPER = :NameFormModule)) ';
-            ParamByName('NameDataModule').AsString := Self.Name;
-            ParamByName('NameFormModule').AsString :=
-                                                (tdmDataModule as TdmBase).Name;
-          end;
-          if not Active then
-          begin
-            Connection := ConexionTrabajo;
-            Open;
-          end;
-        end;
-      end;
+    FGestorPerfiles.AbrirPerfiles(
+      bTabVisible,
+      (Self as TfrmMtoSearch).unqryPerfiles,
+      '',
+      ConexionTrabajo);
+  end
+  else
+  begin
+    tvPerfil.DataController.DataSource :=
+      (tdmDataModule as TdmBase).dsPerfiles;
+    FGestorPerfiles.AbrirPerfiles(
+      bTabVisible,
+      (tdmDataModule as TdmBase).unqryPerfiles,
+      (tdmDataModule as TdmBase).Name,
+      ConexionTrabajo);
   end;
 end;
 
 procedure TfrmMtoGen.AplicarEtiquetas;
-var
-  i:integer;
-  cxGrid: TcxCustomGridTableView;
-  oGrids: TList<TcxCustomGridTableView>;
 begin
-  // El dataset puede ser TUniQuery (mantenimientos normales) o
-  // TUniStoredProc (formularios de busqueda lanzados con un SP, p.ej.
-  // F3 en caja -> BuscarArticulo -> PRC_BUSQUEDA_ARTICULOS). Si es
-  // stored proc no hay tabla origen que mostrar: usamos el nombre del
-  // SP. Antes hacia 'as TUniQuery' a secas y reventaba con EInvalidCast.
-  if (DsTablaG.Dataset <> nil) then
-  begin
-    if DsTablaG.Dataset is TUniQuery then
-      lblTablaOrigen.Caption :=
-        GetTableNameFromQuery(TUniQuery(DsTablaG.Dataset).SQL.Text)
-    else if DsTablaG.Dataset is TUniStoredProc then
-      lblTablaOrigen.Caption := TUniStoredProc(DsTablaG.Dataset).StoredProcName
-    else
-      lblTablaOrigen.Caption := '';
-  end;
-  oGrids := TList<TcxCustomGridTableView>.Create;
-  try
-    for i := 0 to Self.ComponentCount - 1 do
-      if Self.Components[i] is TcxCustomGridTableView then
-        oGrids.Add(TcxCustomGridTableView(Self.Components[i]));
-    if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oCreateItems', 'False')),
-                'True') then
-    begin
-      for cxGrid in oGrids do
-      begin
-        if SameText(Trim(GetPerfilValueDef(oPerfilDic,
-                          cxGrid.Name
-                            + '__oCreateItems', 'False')), 'True') then
-        begin
-          // Creamos sólo las columnas para los Fields que aún no estén en
-          // la vista. La llamada antigua a DataController.CreateAllItems
-          // duplicaba todas las columnas existentes (del DFM y de la
-          // ejecución previa de CrearTablaPrincipal) en cada apertura del
-          // form, lo que descolocaba el orden tras Alt+F12.
-          cxGrid.BeginUpdate;
-          try
-            CrearItemsFaltantes(cxGrid);
-          finally
-            cxGrid.EndUpdate;
-          end;
-        end;
-      end;
-    end;
-    if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oApplyWidth', 'False')),
-                'True') then
-    begin
-      for cxGrid in oGrids do
-      begin
-        // Segunda validación segura
-        if SameText(Trim(GetPerfilValueDef(oPerfilDic,
-                          cxGrid.Name + '__oApplyWidth', 'False')), 'True') then
-        begin
-          PonerAnchosTitulos(cxGrid, Self.Name, oPerfilDic);
-          RestaurarFocoGrid(cxGrid, oPerfilDic);
-        end;
-      end;
-    end;
-  finally
-    FreeAndNil(oGrids);
-  end;
-  Self.Caption := GetPerfilValueDef(oPerfilDic, 'Caption', Self.Caption);
-  if SameText(Trim(GetPerfilValueDef(oPerfilDic, 'oRenameComponents', 'False')),
-              'True') then
-    SetLabelForm(Self, oPerfilDic);
-
+  FGestorPerfiles.AplicarEtiquetas;
 end;
 
 procedure TfrmMtoGen.btnCargarCaptionsClick(Sender: TObject);
 begin
   inherited;
-  CargarCaptions(Self, Self.Owner, PerfilesUsuario);
+  FGestorPerfiles.CargarCaptions;
 end;
 
 procedure TfrmMtoGen.btnCargarColumnasClick(Sender: TObject);
-var
-  i:Integer;
-  cxGrid : TcxCustomGridTableView;
 begin
   inherited;
-  for i:= 0 to Self.Componentcount - 1 do
-  begin
-      if (Self.Components[i] is TcxCustomGridTableView) then
-    begin
-      cxGrid := TcxCustomGridTableView(Self.Components[i]);
-      GetSettingsColumn(cxGrid, Self.Name, Self.Owner, PerfilesUsuario);
-    end;
-  end;
+  FGestorPerfiles.CargarColumnas;
 end;
 
 procedure TfrmMtoGen.btnCargarVblesGlobClick(Sender: TObject);
 begin
   inherited;
-  CargarPerfilesComunes;
+  FGestorPerfiles.CargarPerfilesComunes;
   CargarPerfilesParticulares;
 end;
 
@@ -603,7 +533,7 @@ begin
       GrabarDatasets(tdmDataModule as TDataModule);
       if ConnGrabar.InTransaction then
         ConnGrabar.Commit;
-      ShowMessage('Datos guardados correctamente');
+      ShowMessage(SInfoDatosGuardados);
     except
       on E: EAbort do
       begin
@@ -618,7 +548,7 @@ begin
       begin
         if ConnGrabar.InTransaction then
           ConnGrabar.Rollback;
-        raise Exception.Create('Error al grabar: ' + E.Message);
+        raise Exception.Create(Format(SErrorGrabarDatos, [E.Message]));
       end;
     end;
   finally
@@ -637,18 +567,17 @@ begin
   if (tdmDataModule <> nil) and
      CheckOpenDatasets(tdmDataModule as TDataModule) then
   begin
-    if Application.MessageBox('Hay datos no grabados. ' +
-                              '¿Desea grabar los cambios?',
-                              'Mensaje de Advertencia',
+    if Application.MessageBox(PChar(SPreguntaGrabarCambiosPendientes),
+                              PChar(STituloMensajeAdvertenciaGen),
                               MB_YESNO + MB_ICONQUESTION) = ID_YES then
     begin
       btnGrabarClick(Sender);
-      ShowMessage('Cambios grabados');
+      ShowMessage(SInfoCambiosGrabados);
     end
     else
     begin
       CancelarDatasets(tdmDataModule as TDataModule);
-      ShowMessage('Cambios revertidos/cancelados');
+      ShowMessage(SInfoCambiosCancelados);
     end;
   end;
   if (Self.Parent is TcxTabSheet) then
@@ -660,152 +589,16 @@ begin
 end;
 
 procedure TfrmMtoGen.sbGrabarGridClick(Sender: TObject);
-var
-  formulario: TfrmModalGenImpSave;
-  bGuardar: Boolean;
-  sPermisos: string;
-  i: Integer;
-  cxGrid: TcxCustomGridTableView;
-  oList: TPerfilList;
-  item: TPerfilItem;
-  ConnPerfiles: TUniConnection;
 begin
   inherited;
-  bGuardar := False;
-
-  formulario := TfrmModalGenImpSave.Create(Application);
-  try
-    formulario.edtDescripcion.Enabled := False;
-    formulario.edtNombreOrigen.Text   := Self.Name;
-    formulario.edtDescripcion.Text    := 'Grabar Grids';
-    formulario.ShowModal;
-    if formulario.sFicha = 'S' then
-    begin
-      bGuardar  := True;
-      sPermisos := formulario.cbbPermisos.Text;
-    end;
-  finally
-    FreeAndNil(formulario);
-  end;
-
-  if not bGuardar then Exit;
-
-  Screen.Cursor := crHourGlass;
-  PerfilesUsuario.EliminarPerfil(sPermisos, Self.Name);
-  oList := TPerfilList.Create;
-  try
-    // 1. Perfiles comunes
-    item.UserGroup := sPermisos;
-    item.KeyPerfil := Self.Name;
-    for var par in [
-      TPair<string,string>.Create('oRenameComponents',
-        GetPerfilValueDef(oPerfilDic, 'oRenameComponents', 'False')),
-      TPair<string,string>.Create('oCreateItems',
-        GetPerfilValueDef(oPerfilDic, 'oCreateItems',      'False')),
-      TPair<string,string>.Create('oBusqGlobal',
-        GetPerfilValueDef(oPerfilDic, 'oBusqGlobal',       'Grid')),
-      TPair<string,string>.Create('oApplyWidth',       'True'),
-      TPair<string,string>.Create('oMostrarPerfil',
-        GetPerfilValueDef(oPerfilDic, 'oMostrarPerfil',    'False')),
-      TPair<string,string>.Create('oGetSQLFromDB',
-        GetPerfilValueDef(oPerfilDic, 'oGetSQLFromDB',     'False'))
-    ] do
-    begin
-      item.SubKey := par.Key;
-      item.Value  := par.Value;
-      oList.Add(item);
-    end;
-
-    // 2. Ajustes de cada grid
-    for i := 0 to Self.ComponentCount - 1 do
-      if Self.Components[i] is TcxCustomGridTableView then
-      begin
-        cxGrid := TcxCustomGridTableView(Self.Components[i]);
-
-        // reset sigue siendo su propia transacción (borra primero)
-
-
-        item.SubKey := cxGrid.Name + '__oApplyWidth';
-        item.Value  := 'True';
-        oList.Add(item);
-
-        item.SubKey := cxGrid.Name + '__oCreateItems';
-        item.Value  := GetPerfilValueDef(oPerfilDic,
-                                         cxGrid.Name + '__oCreateItems',
-                                         'False');
-        oList.Add(item);
-
-        CollectSettingsColumnProfile(
-          cxGrid,
-          Self.Name,
-          sPermisos,
-          PerfilesUsuario,
-          oList);
-      end;
-
-    // 3. Perfiles particulares del Mto (hook para descendientes — por
-    // ejemplo TfrmMtoArticulos lo usa para grabar los filtros de carga
-    // de la pestanya Lista).
-    RecogerPerfilesParticulares(oList, sPermisos);
-
-    ConnPerfiles := ConexionPrincipal;
-    if not Assigned(ConnPerfiles) then
-      raise Exception.Create(
-        'No está disponible la conexión principal.');
-    ConnPerfiles.StartTransaction;
-    try
-      PerfilesUsuario.GrabarPerfiles(oList);
-      // aquí puedes seguir llamando a GrabarPerfilDatam / CargarCaptions
-      // si antes los refactorizas también para que acepten la lista
-      ConnPerfiles.Commit;
-    except
-      ConnPerfiles.Rollback;
-      raise;
-    end;
-  finally
-    FreeAndNil(oList);
-    Screen.Cursor := crDefault;
-  end;
+  FGestorPerfiles.GrabarLayout(
+    'Grabar Grids', ConexionPrincipal);
 end;
 
 procedure TfrmMtoGen.sbResetGridClick(Sender: TObject);
-var
-  formulario: TfrmModalGenImpSave;
-  bGuardar: Boolean;
-  sPermisos:String;
-  i:Integer;
-  cxGrid : TcxCustomGridTableView;
 begin
   inherited;
-  bGuardar := False;
-  formulario := TfrmModalGenImpSave.Create(Self);
-  try
-    formulario.edtNombreOrigen.Text := Self.Name;
-    formulario.edtDescripcion.Text := 'Reset Grids';
-    formulario.ShowModal;
-    if (formulario.sFicha = 'S') then
-    begin
-      bGuardar := True;
-      sPermisos := formulario.cbbPermisos.Text;
-    end;
-  finally
-    FreeAndNil(formulario);
-  end;
-  if bGuardar then
-  begin
-    for i:= 0 to Self.Componentcount - 1 do
-    begin
-      if (Self.Components[i] is TcxCustomGridTableView) then
-      begin
-        cxGrid := TcxCustomGridTableView(Self.Components[i]);
-        (tdmDataModule as TdmBase).ResetGridsProfile(cxGrid.Name,
-                                                     Self.Name,
-                                                     sPermisos);
-      end;
-    end;
-    // Borrar guias de grid asociadas al layout
-    BorrarGuiasGrid;
-  end;
+  FGestorPerfiles.ResetearLayout('Reset Grids');
 end;
 
 procedure TfrmMtoGen.sbBestFitClick(Sender: TObject);
@@ -906,8 +699,7 @@ procedure TfrmMtoGen.GuardianBeforeInsert(DataSet: TDataSet);
 begin
   if not PuedeAccionMto(apmInsertar) then
   begin
-    ShowMessage(
-      'No tienes permiso para insertar registros en esta pantalla.');
+    ShowMessage(SErrorPermisoInsertarRegistro);
     Abort;
   end
   else if Assigned(FBeforeInsertOrig) then
@@ -919,8 +711,7 @@ begin
   if (not FDesactivandoPorBorrado) and
      (not PuedeAccionMto(apmModificar)) then
   begin
-    ShowMessage(
-      'No tienes permiso para modificar registros en esta pantalla.');
+    ShowMessage(SErrorPermisoModificarRegistro);
     Abort;
   end
   else if Assigned(FBeforeEditOrig) then
@@ -939,8 +730,7 @@ begin
      PuedeAccionMto(apmModificar));
   if not bPermitido then
   begin
-    ShowMessage(
-      'No tienes permiso para guardar este registro.');
+    ShowMessage(SErrorPermisoGuardarRegistro);
     Abort;
   end
   else if Assigned(FBeforePostOrig) then
@@ -953,8 +743,7 @@ var
 begin
   if not PuedeAccionMto(apmBorrar) then
   begin
-    ShowMessage(
-      'No tienes permiso para borrar registros en esta pantalla.');
+    ShowMessage(SErrorPermisoBorrarRegistro);
     Abort;
   end
   else
@@ -1047,19 +836,6 @@ begin
                 paPermitir);
 end;
 
-procedure TfrmMtoGen.CargarPerfilesComunes(sUser:string = 'Todos');
-begin
-  with PerfilesUsuario do
-  begin
-    GrabarPerfil(sUser, Self.Name, 'oRenameComponents', 'False' );
-    GrabarPerfil(sUser, Self.Name, 'oCreateItems', 'False' );
-    GrabarPerfil(sUser, Self.Name, 'oBusqGlobal', 'Grid' );
-    GrabarPerfil(sUser, Self.Name, 'oApplyWidth', 'True' );
-    GrabarPerfil(sUser, Self.Name, 'oMostrarPerfil', 'False' );
-    GrabarPerfil(sUser, Self.Name, 'oGetSQLFromDB', 'False' );
-  end;
-end;
-
 procedure TfrmMtoGen.CargarPerfilesParticulares;
 begin
   if (tdmDataModule <> nil) then
@@ -1072,6 +848,13 @@ end;
 procedure TfrmMtoGen.RecogerPerfilesParticulares(var oList: TPerfilList;
                                                  const sPermisos: string);
 begin
+end;
+
+procedure TfrmMtoGen.ResetearGridPerfil(
+  const ANombreGrid, ANombreFormulario, APermisos: string);
+begin
+  (tdmDataModule as TdmBase).ResetGridsProfile(
+    ANombreGrid, ANombreFormulario, APermisos);
 end;
 
 procedure TfrmMtoGen.PrepararBusquedaExterna(const ABusq: string);
@@ -1255,9 +1038,8 @@ begin
       TdmBase(tdmDataModule).FCurrentForm := Self;
       if Assigned(dsTablaG) then
         dsTablaG.DataSet := TdmBase(tdmDataModule).unqryTablaG;
-      if GetPerfilValueDef(oPerfilDic,
-                           'oGetSQLFromDB',
-                           'False') = 'True' then
+      if FGestorPerfiles.Valor(
+           'oGetSQLFromDB', 'False') = 'True' then
       begin
         GetFormUserProfile(TdmBase(tdmDataModule).FoPerfilDic,
                            TdmBase(tdmDataModule).Name,
@@ -1273,8 +1055,7 @@ begin
     try
       swTramo := TStopwatch.StartNew;
       if not Assigned(Conexiones) then
-        raise Exception.Create(
-          'No está disponible el servicio de conexiones.');
+        raise Exception.Create(SErrorServicioConexionesNoDisponible);
       FConn := Conexiones.CrearConexion(
         Self,
         uctMantenimiento);
@@ -1377,161 +1158,14 @@ begin
 end;
 
 procedure TfrmMtoGen.BloquearTabPorOcupado(Bloquear: Boolean);
-var
-  lblTexto: TLabel;
-  bar: TProgressBar;
 begin
-  if Bloquear then
-  begin
-    Inc(FTareasEnCurso);
-    if FOverlayOcupado = nil then
-    begin
-      FOverlayOcupado := TPanel.Create(Self);
-      FOverlayOcupado.Parent := Self;
-      // SetBounds + Anchors en vez de alClient: alClient compite con
-      // otros controles alineados del Mto (pcPantalla, pButtonRightBar...)
-      // y a veces el overlay quedaba con altura cero (no se veia nada).
-      // Cubrimos manualmente todo el form y nos anclamos a los 4 bordes
-      // para seguir el resize.
-      FOverlayOcupado.SetBounds(0, 0, Self.ClientWidth, Self.ClientHeight);
-      FOverlayOcupado.Anchors := [akLeft, akTop, akRight, akBottom];
-      FOverlayOcupado.BevelOuter := bvNone;
-      FOverlayOcupado.Color := $00F5E6CC;   // azul-crema claro, contrasta
-      FOverlayOcupado.ParentBackground := False;
-      FOverlayOcupado.Caption := '';
-
-      // Label y barra los posicionamos con SetBounds (no alClient) para
-      // que coexistan sin taparse — alClient en el label se comeria el
-      // espacio de la barra.
-      lblTexto := TLabel.Create(FOverlayOcupado);
-      lblTexto.Parent := FOverlayOcupado;
-      lblTexto.AutoSize := False;
-      lblTexto.SetBounds(0,
-                         (FOverlayOcupado.ClientHeight div 2) - 40,
-                         FOverlayOcupado.ClientWidth,
-                         30);
-      lblTexto.Anchors := [akLeft, akTop, akRight];
-      lblTexto.Alignment := taCenter;
-      lblTexto.Layout := tlCenter;
-      lblTexto.Caption := 'Cargando datos, espera por favor...';
-      lblTexto.Font.Style := [fsBold];
-      lblTexto.Font.Size := 11;
-      lblTexto.Font.Color := clNavy;
-      lblTexto.Transparent := True;
-
-      // Barra "marquee": animacion continua sin necesitar %. La pinta
-      // el message pump del main thread, asi que solo se ve cuando hay
-      // pump corriendo (= camino async). Para el camino sincrono el
-      // cursor global Screen.Cursor = crHourGlass cubre el feedback.
-      bar := TProgressBar.Create(FOverlayOcupado);
-      bar.Parent := FOverlayOcupado;
-      bar.SetBounds((FOverlayOcupado.ClientWidth div 2) - 150,
-                    (FOverlayOcupado.ClientHeight div 2) + 5,
-                    300, 18);
-      bar.Anchors := [];
-      bar.Style := pbstMarquee;
-      bar.MarqueeInterval := 30;
-    end;
-    // Asegurar que cubre el form aunque haya cambiado de tamaño desde
-    // la ultima vez.
-    FOverlayOcupado.SetBounds(0, 0, Self.ClientWidth, Self.ClientHeight);
-    FOverlayOcupado.BringToFront;
-    FOverlayOcupado.Visible := True;
-    Self.Cursor := crHourGlass;
-  end
-  else
-  begin
-    if FTareasEnCurso > 0 then
-      Dec(FTareasEnCurso);
-    if (FTareasEnCurso = 0) and Assigned(FOverlayOcupado) then
-    begin
-      FOverlayOcupado.Visible := False;
-      Self.Cursor := crDefault;
-    end;
-  end;
+  FGestorTareas.Bloquear(Bloquear);
 end;
 
 procedure TfrmMtoGen.EjecutarEnBackground(AccionBG: TProc;
                                           AlTerminar: TProc<string>);
-var
-  LTask: ITask;
 begin
-  if not Assigned(AccionBG) then
-    Exit;
-  // Si la app se esta cerrando no arrancamos trabajo nuevo: la tarea quedaria
-  // huerfana usando una conexion que el cierre esta a punto de liberar.
-  if ContextoSesion.CerrandoAplicacion then
-    Exit;
-  if FTareasActivas = nil then
-    FTareasActivas := TList<ITask>.Create;
-  BloquearTabPorOcupado(True);
-  LTask := TTask.Run(
-    procedure
-    var
-      LErrMsg: string;
-    begin
-      LErrMsg := '';
-      try
-        AccionBG();
-      except
-        on E: Exception do
-        begin
-          // Logueamos el error real (con tipo) y propagamos solo el
-          // mensaje al callback. Si necesitaramos el tipo de excepcion
-          // tendriamos que envolverlo en una clase wrapper; para el
-          // piloto basta con el mensaje.
-          inLibLog.Log.LogError('[EjecutarEnBackground] ' +
-            E.ClassName + ': ' + E.Message);
-          LErrMsg := E.Message;
-          if LErrMsg = '' then
-            LErrMsg := E.ClassName;
-        end;
-      end;
-      TThread.Queue(nil,
-        procedure
-        begin
-          try
-            // Si la app se esta cerrando, este callback puede llegar a
-            // ejecutarse (via CheckSynchronize) cuando el form ya esta
-            // liberado. Salimos sin tocar nada: leer el contexto de sesión
-            // es seguro.
-            // porque es una global, no un campo del form muerto.
-            if ContextoSesion.CerrandoAplicacion then
-              Exit;
-            // Quitar esta tarea de la lista ANTES del callback (si el
-            // callback lanza otra task, no queremos contar esta vez).
-            // Si el form se esta destruyendo, FTareasActivas puede ser nil.
-            if Assigned(FTareasActivas) then
-              FTareasActivas.Remove(LTask);
-            // Tambien comprobamos csDestroying: si el form se cerro
-            // mientras la tarea corria, no hay UI que actualizar y los
-            // componentes (FOverlayOcupado, dsTablaG...) ya estan
-            // liberados.
-            if not (csDestroying in ComponentState) then
-            begin
-              // OJO: el overlay se quita DESPUES del callback. Asi el
-              // usuario no puede interactuar mientras AlTerminar
-              // ejecuta trabajo pesado (p. ej. AbrirDetalles abre 11
-              // queries detalle). Si lo quitamos antes, eventos del
-              // form (cambio de cursor, click en pestaña, ...) se
-              // disparan con queries aun cerradas -> "Cannot perform
-              // operation on closed dataset".
-              try
-                if Assigned(AlTerminar) then
-                  AlTerminar(LErrMsg);
-              finally
-                BloquearTabPorOcupado(False);
-              end;
-            end;
-          except
-            on E: Exception do
-              inLibLog.Log.LogError(
-                '[EjecutarEnBackground.AlTerminar] ' +
-                E.ClassName + ': ' + E.Message);
-          end;
-        end);
-    end);
-  FTareasActivas.Add(LTask);
+  FGestorTareas.Ejecutar(AccionBG, AlTerminar);
 end;
 
 procedure TfrmMtoGen.AbrirTablaPrincipalAsync;
@@ -1621,9 +1255,10 @@ begin
       // Diagnostico defensivo: cazar columnas ES* tipadas como numericas
       // antes de que el Refresh del navegador rompa con EConvertError
       // 'N' is not a valid floating point value. Solo loguea, no aborta.
-      DiagnosticarCamposBooleanos(unqry, Self.Name);
+      inLibDiag.DiagnosticarCamposBooleanos(
+        unqry, Self.Name);
       // (b) Enriquecer query con guias de grid (LEFT JOIN runtime)
-      AplicarGuiasGrid(unqry);
+      FGestorGuias.Aplicar(unqry);
       // (c) Revincular grid solo si lo soltamos antes (yaActiva = False).
       // Si la query ya estaba activa al entrar, dsTablaG.DataSet sigue
       // apuntando al original y no tocamos.
@@ -1642,8 +1277,7 @@ begin
       // (e) Restaurar posicion del cursor guardada en el perfil.
       // AplicarEtiquetas lo intenta en FormCreate pero el dataset
       // aun no tiene datos; aqui ya esta abierto y vinculado.
-      if oPerfilDic <> nil then
-        RestaurarFocoGrid(cxGrdDBTabPrin, oPerfilDic);
+      FGestorPerfiles.RestaurarFoco(cxGrdDBTabPrin);
       // (f) Hook de borrar (Delete -> Desactivar). Idempotente.
       InstalarGuardianBorrado;
       // (g) Hook post-precarga (main thread): los Mtos que necesiten
@@ -1718,12 +1352,12 @@ begin
       dmDat.AbrirDetalles;
       // Diagnostico defensivo: cazar columnas ES* tipadas como numericas
       // antes de que el Refresh del navegador rompa con EConvertError.
-      DiagnosticarCamposBooleanos(unqry, Self.Name);
+      inLibDiag.DiagnosticarCamposBooleanos(
+        unqry, Self.Name);
       // Enriquecer con guias de grid (LEFT JOIN runtime)
-      AplicarGuiasGrid(unqry);
+      FGestorGuias.Aplicar(unqry);
       // Restaurar posicion del cursor guardada en el perfil
-      if oPerfilDic <> nil then
-        RestaurarFocoGrid(cxGrdDBTabPrin, oPerfilDic);
+      FGestorPerfiles.RestaurarFoco(cxGrdDBTabPrin);
       // Hook de borrar (Delete -> Desactivar). Idempotente.
       InstalarGuardianBorrado;
       inLibLog.Log.LogPerf('Carga/sync', Self.Name + ' | OK',
@@ -1753,43 +1387,19 @@ destructor TfrmMtoGen.Destroy;
 var
   bTareasVivas: Boolean;
 begin
+  bTareasVivas := False;
   if Assigned(dsTablaG) then
     dsTablaG.DataSet := nil;
-  // ANTES de liberar nada relacionado con BBDD (data module, FConn),
-  // esperar a que terminen las tareas en background. Si quedaran tareas
-  // vivas accederian a TUniQuery / TUniConnection ya liberadas → AV.
-  bTareasVivas := False;
-  if Assigned(FTareasActivas) then
-  begin
-    try
-      if FTareasActivas.Count > 0 then
-      begin
-        if (tdmDataModule <> nil) and (tdmDataModule is TdmBase) then
-          TdmBase(tdmDataModule).CancelarEjecucionActiva;
-        if ContextoSesion.CerrandoAplicacion then
-          // Apagado de la app: BreakExec ya pedido y espera ACOTADA. Si
-          // una consulta sigue atascada contra MySQL preferimos fugar
-          // sus objetos (abajo) a dejar la app congelada cerrando o el
-          // proceso en memoria (cuelgue visto en produccion 14/07/26:
-          // vi_paises bloqueada 27,5 s al cerrar la pestaña).
-          bTareasVivas :=
-            not TTask.WaitForAll(FTareasActivas.ToArray, 15000)
-        else
-          // Cierre de una sola pestaña: si MySQL no responde en 5s
-          // asumimos tarea atascada antes que dejar la app colgada
-          // cerrando un tab.
-          bTareasVivas :=
-            not TTask.WaitForAll(FTareasActivas.ToArray, 5000);
-      end;
-    except
-      // WaitForAll puede lanzar si alguna tarea fallo — lo ignoramos
-      // porque solo queremos drenar, no propagar. Una tarea que lanzo
-      // ya termino: no cuenta como viva.
-    end;
-    FreeAndNil(FTareasActivas);
-  end;
-  if (oPerfilDic <> nil) then
-    FreeAndNil(oPerfilDic);
+  if Assigned(FGestorTareas) then
+    bTareasVivas := FGestorTareas.EsperarFinalizacion(
+      CancelarTareasActivas,
+      ContextoSesion.CerrandoAplicacion);
+  FreeAndNil(FGestorTareas);
+  FreeAndNil(FGestorArticulos);
+  oPerfilDic := nil;
+  FreeAndNil(FGestorPerfiles);
+  FreeAndNil(FGestorFiltros);
+  FreeAndNil(FGestorGuias);
   if bTareasVivas then
   begin
     // Tarea de fondo aun bloqueada (p.ej. consulta MySQL atascada): la
@@ -1831,11 +1441,6 @@ begin
   end;
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
                                                    Self.Caption + ' Cerrada');
-  // Caches de guias del grid: se creaban al usar el column chooser y
-  // nunca se liberaban (fuga por cada pestaña abierta).
-  FreeAndNil(FCamposGuia);
-  FreeAndNil(FCamposGuiaTabla);
-  FreeAndNil(FColumnasVisiblesGuia);
   frmMtoGen := nil;
   inherited;
 end;
@@ -1872,8 +1477,8 @@ begin
   // de este Mto (vinculados con Ctrl+F), la desenganchamos antes
   // de que sus DataSources se liberen con el data module. Asi no
   // quedan punteros colgando en FHooksDataSource.
-  if Assigned(frmFotoArticulo) then
-    frmFotoArticulo.VincularDataSources([], nil);
+  if Assigned(FGestorArticulos) then
+    FGestorArticulos.DesvincularFoto;
   if Assigned(cxGrdDBTabPrin) then
     cxGrdDBTabPrin.DataController.DataSource := nil;
 
@@ -1893,24 +1498,38 @@ var
 begin
   swTotal := TStopwatch.StartNew;
   inherited;
+  FGestorTareas := TGestorTareasMto.Create(
+    Self, AplicacionCerrando);
+  FGestorArticulos := TGestorArticulosMto.Create(
+    dsTablaG, ResolverArtSkuActivo,
+    DataSourcesParaFoto, FotoArticuloVisible,
+    OcultarFotoArticulo, MostrarFotoArticulo,
+    VincularFotoArticulo, MostrarStockArticulo);
+  FGestorGuias := TGestorGuiasGridMto.Create(
+    Self, cxgrdPrincipal, cxGrdDBTabPrin,
+    InformesGuiasCache, GetConexionTrabajo,
+    ObtenerConsultaGuias, EjecutarModalGuias);
+  FGestorPerfiles := TGestorPerfilesMto.Create(
+    Self, dsTablaG, lblTablaOrigen, PerfilesUsuario,
+    SolicitarDestinoPerfil, RecogerPerfilesParticulares,
+    ResetearGridPerfil, FGestorGuias.BorrarGuias);
+  FGestorFiltros := TGestorFiltrosMto.Create(
+    Self, cxGrdDBTabPrin, edtBusqGlobal, tmrBusqGlobal,
+    pmFiltros, FiltrosGuardados, SolicitarDatosFiltro,
+    EjecutarGestionFiltros);
   Self.HandleNeeded; //da problemas
   nvNavegador.Buttons.OnButtonClick := NavegadorButtonClick;
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
                                                      Self.Caption + ' Abierta');
   tsFichCab := nil;
   tsFichBut := nil;
-  FCamposGuia := nil;
-  FSqlOriginalTablaG := '';
   FSqlBaseBusquedaExterna := '';
   Self.Position  := poScreenCenter;
-  // Popup de columnas: boton derecho en el grid principal
-  FPopMenuColumnas := TPopupMenu.Create(Self);
-  FPopMenuColumnas.OnPopup := PopMenuColumnasPopup;
-  cxgrdPrincipal.PopupMenu := FPopMenuColumnas;
   swTramo := TStopwatch.StartNew;
   ProcesarPerfiles;
   msProcesarPerfiles := swTramo.ElapsedMilliseconds;
-  sModoBusq := GetPerfilValueDef(oPerfilDic, 'oBusqGlobal', 'Database');
+  sModoBusq := FGestorPerfiles.Valor(
+    'oBusqGlobal', 'Database');
   if sModoBusq = 'DataBase' then
   begin
     rbBBDD.Checked := true;
@@ -1924,462 +1543,6 @@ begin
   inLibLog.Log.LogPerf(Self.Name + '.FormCreate',
     'ProcesarPerfiles=' + IntToStr(msProcesarPerfiles) + ' ms',
     swTotal.ElapsedMilliseconds);
-end;
-
-procedure TfrmMtoGen.BorrarGuiasGrid;
-var
-  qry: TUniQuery;
-begin
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionTrabajo;
-    qry.SQL.Text :=
-      'DELETE FROM fza_informes_guias ' +
-      ' WHERE INFORME_INFGUI = :INF';
-    qry.ParamByName('INF').AsString := 'GRID:' + Self.Name;
-    qry.Execute;
-  finally
-    FreeAndNil(qry);
-  end;
-  // Invalidar cache para que la proxima apertura no use guias borradas
-  if Assigned(InformesGuiasCache) then
-    InformesGuiasCache.Invalidar;
-end;
-
-procedure TfrmMtoGen.AplicarGuiasGrid(AQuery: TUniQuery);
-var
-  guiaResult: TGridGuiaResult;
-  i: Integer;
-  col: TcxGridDBColumn;
-  sField: string;
-  bYaExiste: Boolean;
-  j: Integer;
-begin
-  if AQuery = nil then
-    Exit;
-  guiaResult := EnriquecerQueryConGuias(
-    InformesGuiasCache,
-    Self.Name,
-    AQuery);
-  try
-    if not guiaResult.Exito then
-    begin
-      FreeAndNil(guiaResult.CamposNuevos);
-      Exit;
-    end;
-    if guiaResult.CamposNuevos.Count = 0 then
-    begin
-      FreeAndNil(guiaResult.CamposNuevos);
-      Exit;
-    end;
-    FSqlOriginalTablaG := guiaResult.SqlOriginal;
-    // Reabrir query con SQL enriquecido
-    try
-      AQuery.Open;
-    except
-      on E: Exception do
-      begin
-        inLibLog.Log.LogError(
-          'AplicarGuiasGrid: error al reabrir query enriquecida: ' +
-          E.Message);
-        // Restaurar el SQL original y reabrir. Si no, el dataset queda
-        // cerrado con el SQL roto y cualquier Refresh posterior del
-        // navegador dispara el mismo error al usuario.
-        try
-          AQuery.Close;
-          AQuery.SQL.Text := guiaResult.SqlOriginal;
-          AQuery.Open;
-        except
-          on E2: Exception do
-            inLibLog.Log.LogError(
-              'AplicarGuiasGrid: tampoco abre el SQL original tras ' +
-              'restaurar: ' + E2.Message);
-        end;
-        Exit;
-      end;
-    end;
-    // Crear columnas dinamicas en el grid para los campos nuevos
-    cxGrdDBTabPrin.BeginUpdate;
-    try
-      for i := 0 to guiaResult.CamposNuevos.Count - 1 do
-      begin
-        sField := guiaResult.CamposNuevos[i];
-        // No duplicar si ya existe
-        bYaExiste := False;
-        for j := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
-          if SameText(
-            (cxGrdDBTabPrin.Columns[j] as TcxGridDBColumn)
-              .DataBinding.FieldName, sField) then
-          begin
-            bYaExiste := True;
-            Break;
-          end;
-        if bYaExiste then
-          Continue;
-        col := cxGrdDBTabPrin.CreateColumn as TcxGridDBColumn;
-        col.DataBinding.FieldName := sField;
-        col.Caption := sField;
-        // Visible solo si está en la lista guardada de columnas visibles
-        col.Visible :=
-          guiaResult.ColumnasVisibles.IndexOf(sField) >= 0;
-      end;
-    finally
-      cxGrdDBTabPrin.EndUpdate;
-    end;
-    // Guardar listas para re-aplicar visibilidad tras AplicarEtiquetas
-    FreeAndNil(FCamposGuia);
-    FCamposGuia := TStringList.Create;
-    FCamposGuia.Assign(guiaResult.CamposNuevos);
-    FreeAndNil(FCamposGuiaTabla);
-    FCamposGuiaTabla := TStringList.Create;
-    FCamposGuiaTabla.Assign(guiaResult.CamposTabla);
-    FreeAndNil(FColumnasVisiblesGuia);
-    FColumnasVisiblesGuia := TStringList.Create;
-    FColumnasVisiblesGuia.Assign(guiaResult.ColumnasVisibles);
-  finally
-    FreeAndNil(guiaResult.CamposNuevos);
-    FreeAndNil(guiaResult.CamposTabla);
-    FreeAndNil(guiaResult.ColumnasVisibles);
-  end;
-end;
-
-procedure TfrmMtoGen.DiagnosticarCamposBooleanos(AQuery: TUniQuery;
-                                                 const AContexto: string);
-var
-  i: Integer;
-  f: TField;
-  sTipo: string;
-begin
-  if (AQuery = nil) or (not AQuery.Active) then
-    Exit;
-  for i := 0 to AQuery.FieldCount - 1 do
-  begin
-    f := AQuery.Fields[i];
-    if not StartsText('ES', f.FieldName) then
-      Continue;
-    // Tipos que disparan ConvertToFloat / ConvertToInteger en MyDAC al
-    // intentar leer una columna varchar(1) con 'S' / 'N'. Cualificamos
-    // con Data.DB porque System.TypInfo.TFloatType tambien declara
-    // ftSingle y ftExtended y choca al estar mas abajo en el uses.
-    if f.DataType in [Data.DB.ftFloat, Data.DB.ftCurrency, Data.DB.ftBCD,
-                      Data.DB.ftFMTBcd, Data.DB.ftSingle, Data.DB.ftExtended,
-                      Data.DB.ftInteger, Data.DB.ftSmallint,
-                      Data.DB.ftLargeint, Data.DB.ftWord, Data.DB.ftByte] then
-    begin
-      sTipo := GetEnumName(TypeInfo(TFieldType), Ord(f.DataType));
-      inLibLog.Log.LogError(Format(
-        '[DiagnosticarCamposBooleanos] %s: campo "%s" tipado como %s ' +
-        'pero por convencion deberia ser varchar(1) S/N. Causa probable: ' +
-        'metadata de vista desactualizada tras ALTER TABLE. ' +
-        'Solucion: DROP VIEW + CREATE VIEW de la vista usada por el grid.',
-        [AContexto, f.FieldName, sTipo]));
-    end;
-  end;
-end;
-
-// ============================================================================
-// Popup de selector de columnas (boton derecho en grid)
-// ============================================================================
-
-procedure TfrmMtoGen.PopMenuColumnasPopup(Sender: TObject);
-var
-  i: Integer;
-  col: TcxGridDBColumn;
-  mi, miSep, miGuia, miSub: TMenuItem;
-  sCaption, sField, sTabla: string;
-  dicSubMenus: TDictionary<string, TMenuItem>;
-begin
-  FPopMenuColumnas.Items.Clear;
-  dicSubMenus := TDictionary<string, TMenuItem>.Create;
-  try
-    for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
-    begin
-      col := cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn;
-      sField := col.DataBinding.FieldName;
-      if sField = '' then
-        Continue;
-      mi := TMenuItem.Create(FPopMenuColumnas);
-      sCaption := col.Caption;
-      if sCaption = '' then
-        sCaption := sField;
-      mi.Caption := sCaption;
-      mi.Checked := col.Visible;
-      mi.AutoCheck := False;
-      mi.Tag := i;
-      mi.OnClick := PopMenuColumnaClick;
-      // Determinar si es columna guía y a qué tabla pertenece
-      sTabla := '';
-      if (FCamposGuiaTabla <> nil) then
-        sTabla := FCamposGuiaTabla.Values[sField];
-      if sTabla <> '' then
-      begin
-        if not dicSubMenus.TryGetValue(sTabla, miSub) then
-        begin
-          miSub := TMenuItem.Create(FPopMenuColumnas);
-          miSub.Caption := 'Guía: ' + sTabla;
-          dicSubMenus.Add(sTabla, miSub);
-        end;
-        miSub.Add(mi);
-      end
-      else
-        FPopMenuColumnas.Items.Add(mi);
-    end;
-    // Separador + submenús por tabla + acciones
-    miSep := TMenuItem.Create(FPopMenuColumnas);
-    miSep.Caption := '-';
-    FPopMenuColumnas.Items.Add(miSep);
-    for miSub in dicSubMenus.Values do
-      FPopMenuColumnas.Items.Add(miSub);
-  finally
-    FreeAndNil(dicSubMenus);
-  end;
-  miGuia := TMenuItem.Create(FPopMenuColumnas);
-  miGuia.Caption := 'Renombrar columna...';
-  miGuia.OnClick := PopMenuRenombrarClick;
-  FPopMenuColumnas.Items.Add(miGuia);
-  miGuia := TMenuItem.Create(FPopMenuColumnas);
-  miGuia.Caption := 'Nueva guía...';
-  miGuia.OnClick := PopMenuNuevaGuiaClick;
-  FPopMenuColumnas.Items.Add(miGuia);
-end;
-
-procedure TfrmMtoGen.PopMenuColumnaClick(Sender: TObject);
-var
-  mi: TMenuItem;
-  col: TcxGridDBColumn;
-begin
-  mi := TMenuItem(Sender);
-  if (mi.Tag >= 0) and (mi.Tag < cxGrdDBTabPrin.ColumnCount) then
-  begin
-    col := cxGrdDBTabPrin.Columns[mi.Tag] as TcxGridDBColumn;
-    col.Visible := not col.Visible;
-  end;
-end;
-
-procedure TfrmMtoGen.PopMenuRenombrarClick(Sender: TObject);
-var
-  frm: TForm;
-  pnlBot: TPanel;
-  btnOK, btnCancel: TButton;
-  i, iTop: Integer;
-  col: TcxGridDBColumn;
-  lblAntiguo: TLabel;
-  edtNuevo: TEdit;
-  edits: TStringList;
-begin
-  edits := TStringList.Create;
-  frm := TForm.Create(Self);
-  try
-    frm.Caption := 'Renombrar columnas';
-    frm.Width := 620;
-    frm.Position := poMainFormCenter;
-    frm.BorderStyle := bsDialog;
-    // Crear pares (antiguo -> nuevo) para cada columna visible
-    iTop := 12;
-    for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
-    begin
-      col := cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn;
-      if (col.DataBinding.FieldName = '') or (not col.Visible) then
-        Continue;
-      lblAntiguo := TLabel.Create(frm);
-      lblAntiguo.Parent := frm;
-      lblAntiguo.Left := 12;
-      lblAntiguo.Top := iTop + 3;
-      lblAntiguo.Width := 250;
-      lblAntiguo.Caption := col.DataBinding.FieldName;
-      lblAntiguo.Font.Color := clGray;
-      edtNuevo := TEdit.Create(frm);
-      edtNuevo.Parent := frm;
-      edtNuevo.Left := 270;
-      edtNuevo.Top := iTop;
-      edtNuevo.Width := 320;
-      edtNuevo.Text := col.Caption;
-      edtNuevo.Tag := i;
-      edits.AddObject(col.DataBinding.FieldName, edtNuevo);
-      iTop := iTop + 30;
-    end;
-    frm.ClientHeight := iTop + 55;
-    pnlBot := TPanel.Create(frm);
-    pnlBot.Parent := frm;
-    pnlBot.Align := alBottom;
-    pnlBot.Height := 45;
-    pnlBot.BevelOuter := bvNone;
-    btnOK := TButton.Create(pnlBot);
-    btnOK.Parent := pnlBot;
-    btnOK.Caption := 'Aplicar';
-    btnOK.ModalResult := mrOk;
-    btnOK.Left := 370;
-    btnOK.Top := 8;
-    btnOK.Width := 110;
-    btnOK.Height := 30;
-    btnCancel := TButton.Create(pnlBot);
-    btnCancel.Parent := pnlBot;
-    btnCancel.Caption := 'Cancelar';
-    btnCancel.ModalResult := mrCancel;
-    btnCancel.Left := 490;
-    btnCancel.Top := 8;
-    btnCancel.Width := 110;
-    btnCancel.Height := 30;
-    if frm.ShowModal = mrOk then
-    begin
-      for i := 0 to edits.Count - 1 do
-      begin
-        edtNuevo := TEdit(edits.Objects[i]);
-        col := cxGrdDBTabPrin.Columns[edtNuevo.Tag] as TcxGridDBColumn;
-        if edtNuevo.Text <> col.Caption then
-          col.Caption := edtNuevo.Text;
-      end;
-    end;
-  finally
-    FreeAndNil(frm);
-    FreeAndNil(edits);
-  end;
-end;
-
-procedure TfrmMtoGen.PopMenuNuevaGuiaClick(Sender: TObject);
-var
-  frm: TfrmModalGridGuias;
-  oDS: TDataSet;
-  guiaResult: TGridGuiaResult;
-  camposElegidos: TStringList;
-  i: Integer;
-  col: TcxGridDBColumn;
-  unqry: TUniQuery;
-begin
-  // Abrir mantenimiento de guias del grid
-  frm := TfrmModalGridGuias.Create(Application);
-  try
-    frm.sFormulario := Self.Name;
-    oDS := nil;
-    if Assigned(dsTablaG) and Assigned(dsTablaG.DataSet) then
-      oDS := dsTablaG.DataSet;
-    frm.FDataSet := oDS;
-    frm.ShowModal;
-  finally
-    FreeAndNil(frm);
-  end;
-  // Recargar cache de guias
-  if Assigned(InformesGuiasCache) then
-  begin
-    InformesGuiasCache.Invalidar;
-    InformesGuiasCache.Precargar;
-  end;
-  // Obtener TUniQuery: del data module o del DataSource (búsquedas)
-  unqry := nil;
-  if (tdmDataModule <> nil) and (tdmDataModule is TdmBase) then
-    unqry := TdmBase(tdmDataModule).unqryTablaG
-  else if Assigned(dsTablaG) and Assigned(dsTablaG.DataSet) and
-          (dsTablaG.DataSet is TUniQuery) then
-    unqry := TUniQuery(dsTablaG.DataSet);
-  if (unqry <> nil) and (unqry.Active) then
-    begin
-      // Limpiar columnas de guías anteriores del grid
-      if (FCamposGuia <> nil) and (FCamposGuia.Count > 0) then
-      begin
-        cxGrdDBTabPrin.BeginUpdate;
-        try
-          for i := cxGrdDBTabPrin.ColumnCount - 1 downto 0 do
-          begin
-            if FCamposGuia.IndexOf(
-              (cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn)
-                .DataBinding.FieldName) >= 0 then
-              cxGrdDBTabPrin.Columns[i].Free;
-          end;
-        finally
-          cxGrdDBTabPrin.EndUpdate;
-        end;
-        FreeAndNil(FCamposGuia);
-      end;
-      // Restaurar SQL original si ya estaba enriquecido
-      if FSqlOriginalTablaG <> '' then
-      begin
-        unqry.Close;
-        unqry.SQL.Text := FSqlOriginalTablaG;
-      end;
-      guiaResult := EnriquecerQueryConGuias(
-        InformesGuiasCache,
-        Self.Name,
-        unqry);
-      try
-        if guiaResult.Exito and (guiaResult.CamposNuevos.Count > 0) then
-        begin
-          FSqlOriginalTablaG := guiaResult.SqlOriginal;
-          // Dejar elegir columnas al usuario
-          camposElegidos := ElegirColumnasNuevas(Self,
-                                                 guiaResult.CamposNuevos);
-          try
-            // Reabrir query con SQL enriquecido
-            unqry.Open;
-            // Crear o actualizar columnas en el grid
-            cxGrdDBTabPrin.BeginUpdate;
-            try
-              for i := 0 to guiaResult.CamposNuevos.Count - 1 do
-              begin
-                var sField := guiaResult.CamposNuevos[i];
-                var bVisible :=
-                  camposElegidos.IndexOf(sField) >= 0;
-                var bYaExiste := False;
-                var j: Integer;
-                for j := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
-                begin
-                  if SameText(
-                    (cxGrdDBTabPrin.Columns[j] as TcxGridDBColumn)
-                      .DataBinding.FieldName, sField) then
-                  begin
-                    cxGrdDBTabPrin.Columns[j].Visible := bVisible;
-                    bYaExiste := True;
-                    Break;
-                  end;
-                end;
-                if not bYaExiste then
-                begin
-                  col := cxGrdDBTabPrin.CreateColumn as TcxGridDBColumn;
-                  col.DataBinding.FieldName := sField;
-                  col.Caption := sField;
-                  col.Visible := bVisible;
-                end;
-              end;
-            finally
-              cxGrdDBTabPrin.EndUpdate;
-            end;
-            // Guardar nombres de campos guia para limpieza
-            FreeAndNil(FCamposGuia);
-            FCamposGuia := TStringList.Create;
-            FCamposGuia.Assign(guiaResult.CamposNuevos);
-            // Persistir columnas visibles en fza_informes_guias
-            var qryVis := TUniQuery.Create(nil);
-            try
-              qryVis.Connection := ConexionTrabajo;
-              qryVis.SQL.Text :=
-                'UPDATE fza_informes_guias ' +
-                '   SET COLUMNAS_VISIBLES_INFGUI = :VIS ' +
-                ' WHERE INFORME_INFGUI = :INF';
-              camposElegidos.StrictDelimiter := True;
-              camposElegidos.Delimiter := ';';
-              qryVis.ParamByName('VIS').AsString :=
-                camposElegidos.DelimitedText;
-              qryVis.ParamByName('INF').AsString :=
-                'GRID:' + Self.Name;
-              qryVis.Execute;
-            finally
-              FreeAndNil(qryVis);
-            end;
-          finally
-            FreeAndNil(camposElegidos);
-          end;
-        end
-        else
-        begin
-          // No hay guias o fallo: reabrir con SQL original si lo cerramos
-          if not unqry.Active then
-            unqry.Open;
-        end;
-      finally
-        FreeAndNil(guiaResult.CamposNuevos);
-        FreeAndNil(guiaResult.CamposTabla);
-        FreeAndNil(guiaResult.ColumnasVisibles);
-      end;
-    end;
 end;
 
 procedure TfrmMtoGen.FormKeyDown(Sender: TObject; var Key: Word;
@@ -2578,13 +1741,13 @@ begin
   iHijos := ContarHijosActivos;
   sDescHijos := DescripcionHijos;
   if sDescHijos = '' then
-    sDescHijos := 'registros asociados';
+    sDescHijos := SDescripcionHijosGenerica;
   // Caso 1: tabla no desactivable y sin hijos -> confirmacion simple Si/No.
   if (not bDesactivable) and (iHijos = 0) then
   begin
     if Application.MessageBox(
-        '¿Estás seguro de que deseas eliminar este registro?',
-        'Confirmar eliminación',
+        PChar(SPreguntaEliminarRegistro),
+        PChar(STituloConfirmarEliminacion),
         MB_YESNO + MB_ICONWARNING) = ID_YES then
       Result := abContinuar
     else
@@ -2594,13 +1757,10 @@ begin
   // Caso 2: tabla no desactivable pero tiene hijos -> avisar y Si/No.
   if not bDesactivable then
   begin
-    sMsg := Format('Hay %d %s vinculados a este registro.',
-                   [iHijos, sDescHijos]) + sLineBreak + sLineBreak +
-            'No se recomienda eliminarlo: se rompera la relacion con' +
-            sLineBreak + 'los registros hijos.' + sLineBreak + sLineBreak +
-            '¿Deseas eliminarlo de todas formas?';
+    sMsg := Format(SPreguntaEliminarRegistroConHijos,
+                   [iHijos, sDescHijos]);
     if Application.MessageBox(PChar(sMsg),
-        'Confirmar eliminación',
+        PChar(STituloConfirmarEliminacion),
         MB_YESNO + MB_ICONWARNING + MB_DEFBUTTON2) = ID_YES then
       Result := abContinuar
     else
@@ -2609,19 +1769,13 @@ begin
   end;
   // Caso 3 y 4: tabla desactivable, con o sin hijos.
   if iHijos > 0 then
-    sMsg := Format('Hay %d %s vinculados a este registro.',
-                   [iHijos, sDescHijos]) + sLineBreak + sLineBreak +
-            'No se recomienda eliminarlo. Te sugerimos DESACTIVARLO' +
-            sLineBreak + 'para conservar el historico.'
+    sMsg := Format(SAvisoDesactivarRegistroConHijos,
+                   [iHijos, sDescHijos])
   else
-    sMsg := 'Este registro puede DESACTIVARSE en lugar de eliminarse' +
-            sLineBreak + 'para conservar el historico.';
-  sMsg := sMsg + sLineBreak + sLineBreak +
-          'Sí       = Desactivar (recomendado)' + sLineBreak +
-          'No       = Eliminar definitivamente' + sLineBreak +
-          'Cancelar = No hacer nada';
+    sMsg := SAvisoDesactivarRegistroSinHijos;
+  sMsg := sMsg + STextoOpcionesBorradoRegistro;
   iResp := Application.MessageBox(PChar(sMsg),
-             'Confirmar eliminación',
+             PChar(STituloConfirmarEliminacion),
              MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON1);
   case iResp of
     ID_YES:    Result := abDesactivar;
@@ -2743,45 +1897,19 @@ begin
 end;
 
 procedure TfrmMtoGen.actFotoArticuloExecute(Sender: TObject);
-var
-  sArt: string;
-  sSku: string;
 begin
-  // Toggle: si la foto ya está visible, ocultarla
-  if Assigned(frmFotoArticulo) and frmFotoArticulo.Visible then
-  begin
-    frmFotoArticulo.Hide;
-    Exit;
-  end;
-  sArt := '';
-  sSku := '';
-  ResolverArtSkuActivo(sArt, sSku);
-  if sArt <> '' then
-  begin
-    MostrarFotoFlotante(Self, sArt, sSku);
-    if Assigned(frmFotoArticulo) then
-      frmFotoArticulo.VincularDataSources(DataSourcesParaFoto,
-                                          ResolverArtSkuActivo);
-  end;
+  FGestorArticulos.AlternarFoto;
 end;
 
 procedure TfrmMtoGen.actConsultaStockExecute(Sender: TObject);
-var
-  sArt: string;
-  sSku: string;
 begin
-  sArt := '';
-  sSku := '';
-  ResolverArtSkuActivo(sArt, sSku);
-  inMtoStockConsulta.MostrarStockConsulta(sArt, sSku);
+  FGestorArticulos.ConsultarStock;
 end;
 
 procedure TfrmMtoGen.ResolverArtSkuActivo(out ACodArt, ACodSku: string);
 begin
-  ACodArt := '';
-  ACodSku := '';
-  if (dsTablaG <> nil) and (dsTablaG.DataSet <> nil) then
-    inLibFotos.LeerArtSkuDeDataSet(dsTablaG.DataSet, ACodArt, ACodSku);
+  FGestorArticulos.ResolverPorDefecto(
+    ACodArt, ACodSku);
 end;
 
 procedure TfrmMtoGen.ResolverArtSkuStock(out ACodArt, ACodSku: string);
@@ -2791,10 +1919,7 @@ end;
 
 function TfrmMtoGen.DataSourcesParaFoto: TArray<TDataSource>;
 begin
-  // Default: solo el data source principal. Los Mtos que tengan
-  // sub-grids con articulo / SKU activo sobreescriben para anadir
-  // tambien esos DataSources.
-  Result := [dsTablaG];
+  Result := FGestorArticulos.DataSourcesPorDefecto;
 end;
 
 function TfrmMtoGen.NombreCampoESACTIVO: string;
@@ -2863,28 +1988,12 @@ end;
 
 procedure TfrmMtoGen.ProcesarPerfiles;
 begin
-  inLibUser.GetFormUserProfile(oPerfilDic,
-                               Self.Name,
-                               IdentidadSesion.Usuario,
-                               IdentidadSesion.Grupo,
-                               PerfilesUsuario);
+  FGestorPerfiles.CargarPerfil(
+    IdentidadSesion.Usuario, IdentidadSesion.Grupo);
+  oPerfilDic := FGestorPerfiles.Perfil;
   CrearTablaPrincipal;
   AplicarEtiquetas;
-  // Re-aplicar visibilidad de columnas guía: CreateAllItems y
-  // AplicarEtiquetas/PonerAnchosTitulos pueden haberlas hecho visibles
-  if (FCamposGuia <> nil) and (FColumnasVisiblesGuia <> nil) then
-  begin
-    var k: Integer;
-    for k := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
-    begin
-      var sFld :=
-        (cxGrdDBTabPrin.Columns[k] as TcxGridDBColumn)
-          .DataBinding.FieldName;
-      if FCamposGuia.IndexOf(sFld) >= 0 then
-        cxGrdDBTabPrin.Columns[k].Visible :=
-          FColumnasVisiblesGuia.IndexOf(sFld) >= 0;
-    end;
-  end;
+  FGestorGuias.ReaplicarVisibilidad;
   // Permisos por pantalla: ocultan/deshabilitan los controles segun
   // consultar, insertar, modificar, borrar, excel e imprimir.
   AplicarPermisosPantalla;
@@ -2959,6 +2068,49 @@ begin
     ExportarExcel(ParametrosApp, cxGrdPrincipal, 'Listado');
 end;
 
+procedure TfrmMtoGen.EjecutarModalGuias;
+var
+  oFormulario: TfrmModalGridGuias;
+begin
+  oFormulario := TfrmModalGridGuias.Create(Application);
+  try
+    oFormulario.sFormulario := Self.Name;
+    oFormulario.FDataSet := nil;
+    if Assigned(dsTablaG) and
+       Assigned(dsTablaG.DataSet) then
+      oFormulario.FDataSet := dsTablaG.DataSet;
+    oFormulario.ShowModal;
+  finally
+    FreeAndNil(oFormulario);
+  end;
+end;
+
+function TfrmMtoGen.SolicitarDestinoPerfil(
+  const ADescripcion: string;
+  ADescripcionEditable: Boolean;
+  out APermisos: string): Boolean;
+var
+  oFormulario: TfrmModalGenImpSave;
+begin
+  Result := False;
+  APermisos := '';
+  oFormulario := TfrmModalGenImpSave.Create(Application);
+  try
+    oFormulario.edtNombreOrigen.Text := Self.Name;
+    oFormulario.edtDescripcion.Text := ADescripcion;
+    oFormulario.edtDescripcion.Enabled :=
+      ADescripcionEditable;
+    oFormulario.ShowModal;
+    if oFormulario.sFicha = 'S' then
+    begin
+      APermisos := oFormulario.cbbPermisos.Text;
+      Result := True;
+    end;
+  finally
+    FreeAndNil(oFormulario);
+  end;
+end;
+
 // ===========================================================================
 //   Filtros guardados (desplegable junto a "Guardar Excel")
 // ===========================================================================
@@ -2969,374 +2121,32 @@ end;
 // fza_filtros_guardados_compartidos).
 
 procedure TfrmMtoGen.sbFiltrosClick(Sender: TObject);
-var
-  pt: TPoint;
 begin
-  tmrBusqGlobal.Enabled := False;
-  if edtBusqGlobal.Text <> '' then
-  begin
-    BusqAllGrid(cxGrdDBTabPrin,
-                edtBusqGlobal.Text);
-  end;
-  FBusqGlobalMenu := edtBusqGlobal.Text;
-  if cxGrdDBTabPrin.DataController.Filter.IsEmpty then
-  begin
-    FFiltroMenuBase64 := '';
-  end
-  else
-  begin
-    FFiltroMenuBase64 := SerializarFiltroActualBase64;
-  end;
-  CargarMenuFiltros;
-  pt := sbFiltros.ClientToScreen(Point(0, sbFiltros.Height));
-  pmFiltros.Popup(pt.X, pt.Y);
+  FGestorFiltros.MostrarMenu(sbFiltros);
 end;
 
-procedure TfrmMtoGen.CargarMenuFiltros;
+function TfrmMtoGen.SolicitarDatosFiltro:
+  TDatosGuardadoFiltroMto;
 var
-  oLista: TFiltrosGuardadosList;
-  info: TFiltroGuardadoInfo;
-  oItem: TMenuItem;
-  oSeparador: TMenuItem;
+  oResultado: TGuardarFiltroResult;
 begin
-  pmFiltros.Items.Clear;
-  if Assigned(FiltrosGuardados) then
-  begin
-    oLista := FiltrosGuardados.ListarFiltros(
-      Self.Name,
-      cxGrdDBTabPrin.Name);
-    try
-      if oLista.Count = 0 then
-      begin
-        oItem := TMenuItem.Create(pmFiltros);
-        oItem.Caption := '(Sin filtros guardados)';
-        oItem.Enabled := False;
-        pmFiltros.Items.Add(oItem);
-      end
-      else
-      begin
-        for info in oLista do
-        begin
-          oItem := TMenuItem.Create(pmFiltros);
-          if info.EsPropio then
-            oItem.Caption := info.Nombre
-          else
-            oItem.Caption := info.Nombre + ' (' + info.Propietario + ')';
-          oItem.Tag := info.Id;
-          oItem.OnClick := AplicarFiltroGuardadoClick;
-          pmFiltros.Items.Add(oItem);
-        end;
-      end;
-    finally
-      FreeAndNil(oLista);
-    end;
-  end;
-  oSeparador := TMenuItem.Create(pmFiltros);
-  oSeparador.Caption := '-';
-  pmFiltros.Items.Add(oSeparador);
-  oItem := TMenuItem.Create(pmFiltros);
-  oItem.Caption := 'Guardar filtro actual...';
-  oItem.OnClick := GuardarFiltroActualClick;
-  pmFiltros.Items.Add(oItem);
-  oItem := TMenuItem.Create(pmFiltros);
-  oItem.Caption := 'Gestionar y compartir filtros...';
-  oItem.OnClick := GestionarFiltrosClick;
-  pmFiltros.Items.Add(oItem);
+  oResultado := TfrmModalGuardarFiltro.Ejecutar(Self);
+  Result.Aceptado := oResultado.Aceptado;
+  Result.Nombre := oResultado.Nombre;
+  Result.Descripcion := oResultado.Descripcion;
 end;
 
-function TfrmMtoGen.SerializarFiltroActualBase64: string;
+function TfrmMtoGen.EjecutarGestionFiltros(
+  const AFiltroActualBase64: string):
+  TResultadoGestionFiltroMto;
 var
-  oStreamBin: TMemoryStream;
-  oStreamB64: TStringStream;
+  oResultado: TGestionFiltrosResult;
 begin
-  Result := '';
-  oStreamBin := TMemoryStream.Create;
-  oStreamB64 := TStringStream.Create('');
-  try
-    cxGrdDBTabPrin.DataController.Filter.SaveToStream(oStreamBin);
-    oStreamBin.Position := 0;
-    TNetEncoding.Base64.Encode(oStreamBin, oStreamB64);
-    Result := oStreamB64.DataString;
-  finally
-    FreeAndNil(oStreamB64);
-    FreeAndNil(oStreamBin);
-  end;
-end;
-
-function TfrmMtoGen.ExtraerBusquedaGlobalDelFiltro: string;
-  function TextoDesdeLike(const AValor: string): string;
-  var
-    sValor: string;
-  begin
-    Result := '';
-    sValor := Trim(AValor);
-    if (Length(sValor) >= 2) and
-       (sValor[1] = '%') and
-       (sValor[Length(sValor)] = '%') then
-    begin
-      Result := Copy(sValor, 2, Length(sValor) - 2);
-    end;
-  end;
-  function TextoBusquedaLista(
-    ALista: TcxFilterCriteriaItemList): string;
-  var
-    i: Integer;
-    bValido: Boolean;
-    oItemBase: TcxCustomFilterCriteriaItem;
-    oItem: TcxFilterCriteriaItem;
-    sTexto: string;
-    sTextoItem: string;
-  begin
-    Result := '';
-    sTexto := '';
-    bValido := Assigned(ALista) and
-               (ALista.BoolOperatorKind = fboOr) and
-               (ALista.Count > 0);
-    i := 0;
-    oItem := nil;
-    while bValido and (i < ALista.Count) do
-    begin
-      oItemBase := ALista.Items[i];
-      bValido := (not oItemBase.IsItemList) and
-                 (oItemBase is TcxFilterCriteriaItem);
-      if bValido then
-      begin
-        oItem := TcxFilterCriteriaItem(oItemBase);
-        bValido := oItem.OperatorKind = foLike;
-      end;
-      if bValido then
-      begin
-        sTextoItem := TextoDesdeLike(VarToStr(oItem.Value));
-        if sTextoItem = '' then
-        begin
-          sTextoItem := TextoDesdeLike(oItem.DisplayValue);
-        end;
-        bValido := sTextoItem <> '';
-      end;
-      if bValido then
-      begin
-        if sTexto = '' then
-        begin
-          sTexto := sTextoItem;
-        end
-        else
-        begin
-          bValido := SameText(sTexto, sTextoItem);
-        end;
-      end;
-      Inc(i);
-    end;
-    if bValido then
-    begin
-      Result := sTexto;
-    end;
-  end;
-var
-  i: Integer;
-  oItemBase: TcxCustomFilterCriteriaItem;
-  oRaiz: TcxFilterCriteriaItemList;
-begin
-  Result := '';
-  oRaiz := cxGrdDBTabPrin.DataController.Filter.Root;
-  if oRaiz.BoolOperatorKind = fboOr then
-  begin
-    Result := TextoBusquedaLista(oRaiz);
-  end;
-  if (Result = '') and (oRaiz.BoolOperatorKind = fboAnd) then
-  begin
-    i := 0;
-    while (Result = '') and (i < oRaiz.Count) do
-    begin
-      oItemBase := oRaiz.Items[i];
-      if oItemBase.IsItemList then
-      begin
-        Result := TextoBusquedaLista(
-          TcxFilterCriteriaItemList(oItemBase));
-      end;
-      Inc(i);
-    end;
-  end;
-end;
-
-procedure TfrmMtoGen.RestaurarFiltroCapturado;
-begin
-  if not (csDestroying in ComponentState) then
-  begin
-    tmrBusqGlobal.Enabled := False;
-    if edtBusqGlobal.Text <> FBusqGlobalMenu then
-    begin
-      edtBusqGlobal.Text := FBusqGlobalMenu;
-    end;
-    tmrBusqGlobal.Enabled := False;
-    if FBusqGlobalMenu <> '' then
-    begin
-      BusqAllGrid(cxGrdDBTabPrin,
-                  FBusqGlobalMenu);
-    end
-    else if FFiltroMenuBase64 <> '' then
-    begin
-      AplicarFiltroDesdeBase64(FFiltroMenuBase64);
-    end;
-  end;
-end;
-
-procedure TfrmMtoGen.AplicarFiltroDesdeBase64(const ABase64: string);
-var
-  oStreamBin: TMemoryStream;
-  oStreamB64: TStringStream;
-  sBusqGlobal: string;
-begin
-  if ABase64 = '' then
-  begin
-    ShowMessage('El filtro seleccionado no tiene condiciones guardadas.');
-  end
-  else
-  begin
-    oStreamB64 := TStringStream.Create(ABase64);
-    oStreamBin := TMemoryStream.Create;
-    try
-      oStreamB64.Position := 0;
-      TNetEncoding.Base64.Decode(oStreamB64, oStreamBin);
-      oStreamBin.Position := 0;
-      cxGrdDBTabPrin.DataController.Filter.LoadFromStream(oStreamBin);
-      cxGrdDBTabPrin.DataController.Filter.Active :=
-        not cxGrdDBTabPrin.DataController.Filter.IsEmpty;
-      sBusqGlobal := ExtraerBusquedaGlobalDelFiltro;
-      tmrBusqGlobal.Enabled := False;
-      if edtBusqGlobal.Text <> sBusqGlobal then
-      begin
-        edtBusqGlobal.Text := sBusqGlobal;
-      end;
-      tmrBusqGlobal.Enabled := False;
-      FBusqGlobalMenu := sBusqGlobal;
-      FFiltroMenuBase64 := ABase64;
-    finally
-      FreeAndNil(oStreamBin);
-      FreeAndNil(oStreamB64);
-    end;
-  end;
-end;
-
-procedure TfrmMtoGen.AplicarFiltroGuardadoClick(Sender: TObject);
-var
-  sFiltroBase64: string;
-begin
-  tmrBusqGlobal.Enabled := False;
-  sFiltroBase64 := FiltrosGuardados.CargarFiltroBase64(
-    (Sender as TMenuItem).Tag);
-  AplicarFiltroDesdeBase64(sFiltroBase64);
-  tmrBusqGlobal.Enabled := False;
-end;
-
-procedure TfrmMtoGen.GuardarFiltroActualClick(Sender: TObject);
-var
-  res: TGuardarFiltroResult;
-  sFiltroBase64: string;
-  sBusqGlobal: string;
-  iIdFiltro: Int64;
-begin
-  if tmrBusqGlobal.Enabled then
-  begin
-    tmrBusqGlobal.Enabled := False;
-    BusqAllGrid(cxGrdDBTabPrin,
-                edtBusqGlobal.Text);
-  end;
-  sFiltroBase64 := '';
-  sBusqGlobal := edtBusqGlobal.Text;
-  if (sBusqGlobal = '') and (FBusqGlobalMenu <> '') then
-  begin
-    sBusqGlobal := FBusqGlobalMenu;
-  end;
-  tmrBusqGlobal.Enabled := False;
-  if edtBusqGlobal.Text <> sBusqGlobal then
-  begin
-    edtBusqGlobal.Text := sBusqGlobal;
-  end;
-  tmrBusqGlobal.Enabled := False;
-  if sBusqGlobal <> '' then
-  begin
-    BusqAllGrid(cxGrdDBTabPrin,
-                sBusqGlobal);
-    sFiltroBase64 := SerializarFiltroActualBase64;
-    BusqAllGrid(cxGrdDBTabPrin,
-                sBusqGlobal);
-  end
-  else if not cxGrdDBTabPrin.DataController.Filter.IsEmpty then
-  begin
-    sFiltroBase64 := SerializarFiltroActualBase64;
-  end
-  else if FFiltroMenuBase64 <> '' then
-  begin
-    sFiltroBase64 := FFiltroMenuBase64;
-    AplicarFiltroDesdeBase64(sFiltroBase64);
-  end;
-  if sFiltroBase64 = '' then
-  begin
-    ShowMessage('No hay ningun filtro aplicado en la lista para guardar.');
-  end
-  else
-  begin
-    try
-      FFiltroMenuBase64 := sFiltroBase64;
-      FBusqGlobalMenu := sBusqGlobal;
-      RestaurarFiltroCapturado;
-      TThread.ForceQueue(nil,
-        procedure
-        begin
-          RestaurarFiltroCapturado;
-        end);
-      res := TfrmModalGuardarFiltro.Ejecutar(Self);
-      if res.Aceptado then
-      begin
-        iIdFiltro := FiltrosGuardados.BuscarFiltroPropio(
-          Self.Name,
-          cxGrdDBTabPrin.Name,
-          res.Nombre);
-        if iIdFiltro > 0 then
-        begin
-          if Application.MessageBox(
-              'Ya existe un filtro propio con ese nombre. ' +
-              'Desea sobrescribirlo?',
-              'Sobrescribir filtro',
-              MB_YESNO + MB_ICONQUESTION) = ID_YES then
-          begin
-            FiltrosGuardados.SobrescribirFiltro(
-              iIdFiltro,
-              res.Nombre,
-              res.Descripcion,
-              sFiltroBase64);
-            ShowMessage('Filtro sobrescrito correctamente.');
-          end;
-        end
-        else
-        begin
-          FiltrosGuardados.GuardarFiltroNuevo(
-            Self.Name,
-            cxGrdDBTabPrin.Name,
-            res.Nombre,
-            res.Descripcion,
-            sFiltroBase64);
-          ShowMessage('Filtro guardado correctamente.');
-        end;
-      end;
-    finally
-      RestaurarFiltroCapturado;
-    end;
-  end;
-end;
-
-procedure TfrmMtoGen.GestionarFiltrosClick(Sender: TObject);
-var
-  res: TGestionFiltrosResult;
-begin
-  res := TfrmModalGestionFiltros.Ejecutar(Self, Self.Name,
-                                          cxGrdDBTabPrin.Name,
-                                          cxGrdDBTabPrin,
-                                          FFiltroMenuBase64);
-  if res.Aplicado then
-  begin
-    AplicarFiltroDesdeBase64(res.FiltroBase64);
-  end;
+  oResultado := TfrmModalGestionFiltros.Ejecutar(
+    Self, Self.Name, cxGrdDBTabPrin.Name,
+    cxGrdDBTabPrin, AFiltroActualBase64);
+  Result.Aplicado := oResultado.Aplicado;
+  Result.FiltroBase64 := oResultado.FiltroBase64;
 end;
 
 initialization

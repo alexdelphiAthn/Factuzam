@@ -99,6 +99,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 
 procedure TfrmMtoModalGenerarSKUS.GenerarCombinaciones(Nivel: Integer;
   NombreSKU, IdsValores: string);
@@ -286,30 +289,27 @@ begin
 
       if FDimensiones.Count = 0 then
       begin
-        ShowMessage('No hay dimensiones definidas para este tipo de ' +
-                    'variación.');
+        ShowMessage(SErrorDimensionesSkuNoDefinidas);
         Exit;
       end;
 
       if DimensionesSinValores.Count = FDimensiones.Count then
       begin
-        ShowMessage('No has marcado ningún valor para generar SKUs.');
+        ShowMessage(SErrorValoresSkuNoSeleccionados);
         Exit;
       end;
 
       if DimensionesSinValores.Count > 0 then
       begin
-        ShowMessage(
-          'Debes marcar al menos un valor en cada dimensión del artículo.' +
-          sLineBreak + 'Falta marcar valores en: ' +
-          DimensionesSinValores.CommaText);
+        ShowMessage(Format(SErrorValoresDimensionesSkuIncompletos,
+                           [DimensionesSinValores.CommaText]));
         Exit;
       end;
     finally
       FreeAndNil(DimensionesSinValores);
     end;
     GenerarCombinaciones(0, '', '');
-    ShowMessage('¡Combinaciones generadas con éxito!');
+    ShowMessage(SInfoCombinacionesSkuGeneradas);
   finally
     FreeAndNil(DimDict);
   end;
@@ -363,8 +363,8 @@ var
   qTemp: TUniQuery;
 begin
   // 1. INPUTS DEL USUARIO
-  NuevoNombre := Trim(InputBox('Añadir nuevo valor',
-    'Introduce el nombre del nuevo atributo (Ej: XXL, Turquesa):', ''));
+  NuevoNombre := Trim(InputBox(STituloAnadirValorSku,
+    SSolicitudNombreValorSku, ''));
   if NuevoNombre = '' then
     Exit;
   // 2. DIMENSIÓN SELECCIONADA (Ej: 'CO' para Color)
@@ -397,10 +397,8 @@ begin
     end;
     OrdenSugerido := CalcularSiguienteOrdenValor(IdAtrSel,
                                                   IdConjuntoAsignado);
-    OrdenStr := Trim(InputBox('Añadir nuevo valor',
-      'Introduce el ORDEN (Ej: 10, 20, 30...).' + sLineBreak + sLineBreak +
-      'ATENCIÓN: El orden asignado será global y afectará a todos los ' +
-      'artículos que usen este valor en el futuro.',
+    OrdenStr := Trim(InputBox(STituloAnadirValorSku,
+      SSolicitudOrdenNuevoValorSku,
       IntToStr(OrdenSugerido)));
     if OrdenStr = '' then
       Exit;
@@ -442,15 +440,8 @@ begin
     if IdConjuntoAsignado > 0 then
     begin
       Respuesta := MessageDlg(
-        'Va a utilizar el valor "' + NuevoNombre + '".' + sLineBreak +
-        sLineBreak +
-        '¿Desea guardarlo de forma permanente en el conjunto global "' +
-        NombreConjunto + '" ' +
-        'para que aparezca disponible siempre para otros artículos?' +
-        sLineBreak + sLineBreak +
-        '[SÍ] -> Añadir al conjunto global' + sLineBreak +
-        '[NO] -> Usar SOLO ESTA VEZ para generar el SKU (no se guarda en el' +
-        ' conjunto)',
+        Format(SPreguntaGuardarValorSkuGlobal,
+               [NuevoNombre, NombreConjunto]),
         mtConfirmation, [mbYes, mbNo, mbCancel], 0);
 
       if Respuesta = mrCancel then Exit;
@@ -472,11 +463,7 @@ begin
     else
     begin
       Respuesta := MessageDlg(
-        'El artículo no tiene un conjunto global asignado.' + sLineBreak +
-        sLineBreak + 'El valor "' + NuevoNombre + '" se utilizará SOLO ESTA ' +
-        'VEZ para generar el SKU de este artículo, pero no se guardará en ' +
-        'ninguna lista de conjuntos.' + sLineBreak + sLineBreak +
-        '¿Desea continuar?',
+        Format(SPreguntaUsarValorSkuTemporal, [NuevoNombre]),
         mtConfirmation, [mbYes, mbNo], 0);
       if Respuesta <> mrYes then Exit;
     end;
@@ -605,8 +592,8 @@ begin
   if IdVal <= 0 then Exit;
 
   // 2. Solicitar el nuevo orden al usuario
-  OrdenStr := Trim(InputBox('Cambiar orden del valor',
-    'Orden de "' + NombreVal + '" (número entero, los más bajos van primero y prevalence el orden del sistema):',
+  OrdenStr := Trim(InputBox(STituloCambiarOrdenValorSku,
+    Format(SSolicitudOrdenValorSku, [NombreVal]),
     IntToStr(OrdenActual)));
 
   if OrdenStr = '' then Exit;
@@ -614,7 +601,7 @@ begin
 
   if Orden < 0 then
   begin
-    ShowMessage('Por favor, introduce un número entero válido, (mayor o igual a 0).');
+    ShowMessage(SErrorOrdenValorSkuNoValido);
     Exit;
   end;
 
@@ -640,9 +627,7 @@ begin
       if Trim(NombreConjunto) <> '' then
       begin
         if MessageDlg(
-          'Este valor proviene de un sistema de colores o atributos (' + NombreConjunto + ').' + sLineBreak + sLineBreak +
-          'ATENCIÓN: Este cambio implica un cambio que puede afectar a otros artículos que compartan este sistema.' + sLineBreak + sLineBreak +
-          '¿Desea continuar?',
+          Format(SPreguntaCambiarOrdenValorSkuGlobal, [NombreConjunto]),
           mtWarning, [mbYes, mbNo], 0) <> mrYes then
         begin
           Exit; // Si el usuario pulsa "No", abortamos la operación silenciosamente
@@ -680,14 +665,14 @@ begin
   NombreAtr := unqryMaestro.FieldByName('NOMBRE_ATRIBUTO').AsString;
   OrdenActual := unqryMaestro.FieldByName('ORDEN_ACA').AsInteger;
   if IdAtr = '' then Exit;
-  OrdenStr := Trim(InputBox('Cambiar orden',
-    'Orden de "' + NombreAtr + '" dentro del SKU (número entero, ' +
-    'los más bajos van primero):', IntToStr(OrdenActual)));
+  OrdenStr := Trim(InputBox(STituloCambiarOrdenAtributoSku,
+    Format(SSolicitudOrdenAtributoSku, [NombreAtr]),
+    IntToStr(OrdenActual)));
   if OrdenStr = '' then Exit;
   Orden := StrToIntDef(OrdenStr, -1);
   if Orden <= 0 then
   begin
-    ShowMessage('Introduce un número entero mayor que 0.');
+    ShowMessage(SErrorOrdenAtributoSkuNoValido);
     Exit;
   end;
   GuardarOrdenAtributo(IdAtr, Orden);

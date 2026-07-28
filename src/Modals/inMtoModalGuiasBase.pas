@@ -105,7 +105,7 @@ implementation
 {$R *.dfm}
 
 uses
-  UniDataConn, inLibUser, inLibLog;
+  UniDataConn, inLibUser, inLibLog, inLibMsg;
 
 procedure TfrmModalGuiasBase.FormCreate(Sender: TObject);
 begin
@@ -289,23 +289,23 @@ begin
   sTabla  := cbbTabla.Text;
   if sCodigo = '' then
   begin
-    ShowMessage('Escribe un código para la guía.');
+    ShowMessage(SErrorCodigoGuiaNoIndicado);
     edtCodigo.SetFocus;
     Exit;
   end;
   if sTabla = '' then
   begin
-    ShowMessage('Selecciona una tabla externa.');
+    ShowMessage(SErrorTablaExternaGuiaNoSeleccionada);
     Exit;
   end;
   if lbCamposMaster.ItemIndex < 0 then
   begin
-    ShowMessage('Selecciona el campo master.');
+    ShowMessage(SErrorCampoMasterGuiaNoSeleccionado);
     Exit;
   end;
   if lbCamposTabla.ItemIndex < 0 then
   begin
-    ShowMessage('Selecciona el campo detail (de la tabla).');
+    ShowMessage(SErrorCampoDetailGuiaNoSeleccionado);
     Exit;
   end;
   sMaster := ObtenerCampoMasterSeleccionado;
@@ -329,7 +329,7 @@ begin
   unqryGuias.FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
   ConfigurarGuiaNueva;
   unqryGuias.Post;
-  ShowMessage(Format('Guía "%s" añadida: %s.%s → %s',
+  ShowMessage(Format(SInfoGuiaAnadida,
     [sCodigo, sTabla, sDetail, sMaster]));
   edtCodigo.Text := '';
 end;
@@ -338,11 +338,11 @@ procedure TfrmModalGuiasBase.btnEliminarClick(Sender: TObject);
 begin
   if unqryGuias.IsEmpty then
   begin
-    ShowMessage('No hay guías para eliminar.');
+    ShowMessage(SInfoGuiasEliminarNoEncontradas);
     Exit;
   end;
   if MessageDlg(
-    Format('¿Eliminar la guía "%s"?',
+    Format(SPreguntaEliminarGuia,
       [unqryGuias.FieldByName('CODIGO_INFGUI').AsString]),
     mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     unqryGuias.Delete;

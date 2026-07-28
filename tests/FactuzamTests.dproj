@@ -42,7 +42,7 @@
         <DCC_S>false</DCC_S>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>..\src\Lib;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\src\Lib;..\src\DataModules;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_ExeOutput>.\bin\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_DcuOutput>.\dcu\$(Platform)\$(Config)</DCC_DcuOutput>
         <SanitizedProjectName>FactuzamTests</SanitizedProjectName>
@@ -72,8 +72,16 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="..\src\DataModules\UniDataGen.pas"/>
         <DCCReference Include="..\src\Lib\inLibAtributosPaleta.pas"/>
         <DCCReference Include="..\src\Lib\inLibColumnasDocumento.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFiltroUsuario.pas"/>
+        <DCCReference Include="..\src\Lib\inLibGestorFiltrosMto.pas"/>
+        <DCCReference Include="..\src\Lib\inLibGestorPerfilesMto.pas"/>
+        <DCCReference Include="..\src\Lib\inLibGestorGuiasGridMto.pas"/>
+        <DCCReference Include="..\src\Lib\inLibGestorTareasMto.pas"/>
+        <DCCReference Include="..\src\Lib\inLibGestorArticulosMto.pas"/>
+        <DCCReference Include="..\src\Lib\inLibDiag.pas"/>
         <DCCReference Include="..\src\Lib\inLibBusquedasCompra.pas"/>
         <DCCReference Include="..\src\Lib\inLibValidacionDocumento.pas"/>
         <DCCReference Include="..\src\Lib\inLibPresentacionDocumento.pas"/>
@@ -83,6 +91,13 @@
         <DCCReference Include="..\src\Lib\inLibVentasImpuestos.pas"/>
         <DCCReference Include="PruebasAtributosPaleta.pas"/>
         <DCCReference Include="PruebasColumnasDocumento.pas"/>
+        <DCCReference Include="PruebasFiltroUsuario.pas"/>
+        <DCCReference Include="PruebasGestorFiltrosMto.pas"/>
+        <DCCReference Include="PruebasGestorPerfilesMto.pas"/>
+        <DCCReference Include="PruebasGestorGuiasGridMto.pas"/>
+        <DCCReference Include="PruebasGestorTareasMto.pas"/>
+        <DCCReference Include="PruebasGestorArticulosMto.pas"/>
+        <DCCReference Include="PruebasDiagnosticoMetadata.pas"/>
         <DCCReference Include="PruebasBusquedasCompra.pas"/>
         <DCCReference Include="PruebasValidacionTallasCompra.pas"/>
         <DCCReference Include="PruebasPresentacionDocumento.pas"/>

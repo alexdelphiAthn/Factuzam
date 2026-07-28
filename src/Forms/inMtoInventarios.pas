@@ -362,6 +362,7 @@ uses
   inLibArticulosAtributosLookup,
   inLibAtributosPaleta,
   inLibLog,
+  inLibMsg,
   inLibInventarioExcel, inLibHojaCalculoDevEx,
   inLibInventarioNube,
   inMtoPreviewExcel,
@@ -397,20 +398,13 @@ begin
   Result := Assigned(dmmInventarios) and
             dmmInventarios.ColumnasRecuentoRemoto;
   if not Result then
-    ShowMessage('La base de datos no tiene aplicada la migración de recuento ' +
-                'remoto de inventarios. Ejecuta el script ' +
-                'DESARROLLOS EN CURSO\recuento_inventarios_factuzam.sql.');
+    ShowMessage(SErrorMigracionRecuentoInventariosNoAplicada);
 end;
 
 function TfrmMtoInventarios.SqlRestriccionUsuario: string;
 begin
-  // Inventarios: empresa y almacén (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja(
-    ContextoSesion,
-    ParametrosApp,
-    'CODIGO_EMP_INV',
-    'CODIGO_ALM_INV',
-    '');
+  Result := SqlFiltroDocumento(
+    ContextoSesion, ParametrosApp, 'INV');
 end;
 
 procedure TfrmMtoInventarios.CrearTablaPrincipal;
@@ -555,11 +549,9 @@ begin
           on E: Exception do
           begin
             Result := False;
-            ShowMessage(
-              'No se ha podido grabar automaticamente la cabecera del ' +
-              'inventario:' + #13#10 + E.Message + #13#10#13#10 +
-              'Completa los datos en la pestana Cabecera y vuelve a ' +
-              'intentar anadir la linea.');
+            ShowMessage(Format(
+              SErrorGrabarCabeceraInventarioAutomaticamente,
+              [E.Message]));
             pcDetail.ActivePage := tsCabecera;
           end;
         end;
@@ -638,11 +630,9 @@ begin
       except
         on E: Exception do
         begin
-          ShowMessage(
-            'No se ha podido grabar automáticamente la cabecera del '+
-            'inventario:'#13#10 + E.Message + #13#10#13#10 +
-            'Completa los datos en la pestaña Cabecera y vuelve a entrar '+
-            'en Detalle.');
+          ShowMessage(Format(
+            SErrorGrabarCabeceraInventarioAutomaticamenteDetalle,
+            [E.Message]));
           pcDetail.ActivePage := tsCabecera;
           Exit;
         end;
@@ -1490,7 +1480,7 @@ begin
   if not PuedeEditar then
   begin
     AAllow := False;
-    ShowMessage('El inventario no está ABIERTO. No se puede editar.');
+    ShowMessage(SErrorInventarioNoAbiertoEditar);
   end;
 end;
 
@@ -1734,7 +1724,7 @@ begin
   if Descripcion = '' then
   begin
     Error := True;
-    ErrorText := 'El artículo no existe';
+    ErrorText := SErrorArticuloInventarioNoExiste;
     Exit;
   end;
 
@@ -1882,7 +1872,7 @@ var
 begin
   if not PuedeEditar then
   begin
-    ShowMessage('El inventario no está ABIERTO. No se puede editar.');
+    ShowMessage(SErrorInventarioNoAbiertoEditar);
     Exit;
   end;
   Col := tvLineas.Controller.FocusedColumn;
@@ -1902,7 +1892,7 @@ begin
   CargarAvsValidos(ArtPadre, Orden, Avs);
   if Length(Avs) = 0 then
   begin
-    ShowMessage('No hay valores definidos para este atributo.');
+    ShowMessage(SErrorValoresAtributoNoDefinidos);
     Exit;
   end;
 
@@ -2234,7 +2224,7 @@ var
        (not dmmInventarios.cdsLineas.Active) then
     begin
       AError := True;
-      AErrorText := 'No hay líneas de inventario abiertas.';
+      AErrorText := SErrorLineasInventarioNoAbiertas;
       Exit;
     end;
     if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
@@ -2242,7 +2232,7 @@ var
     if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
     begin
       AError := True;
-      AErrorText := 'No se ha podido poner la línea en edición.';
+      AErrorText := SErrorLineaInventarioNoEditable;
       Exit;
     end;
     Result := True;
@@ -2272,8 +2262,7 @@ begin
   if not Encontrado then
   begin
     AError := True;
-    AErrorText := 'No se ha encontrado ningún artículo con ese código, SKU o ' +
-                  'código de barras';
+    AErrorText := SErrorArticuloInventarioNoEncontrado;
     inLibLog.Log.LogPerf('RellenarLineaDesdeBusqueda(NO ENCONTRADO)',
       Format('input=%s | Resolver=%d', [AInput, msResolver]),
       swTotal.ElapsedMilliseconds);
@@ -2285,8 +2274,7 @@ begin
   if not SameText(TipoArt, 'ESTANDAR') then
   begin
     AError := True;
-    AErrorText := Format('El artículo %s es de tipo "%s" y no controla ' +
-                         'stock; no se puede inventariar.',
+    AErrorText := Format(SErrorArticuloInventarioTipoSinStock,
                          [CodPadre, TipoArt]);
     Exit;
   end;
@@ -2297,9 +2285,7 @@ begin
     if NumAtr > 0 then
     begin
       AError := True;
-      AErrorText := Format(
-        'El artículo %s tiene atributos. En modo SKU introduce un SKU ' +
-        'completo o activa "Ver atributos en columnas".',
+      AErrorText := Format(SErrorArticuloInventarioAtributosSinSku,
         [CodPadre]);
       Exit;
     end;
@@ -2461,16 +2447,13 @@ end;
 
 procedure TfrmMtoInventarios.btnRecalcularClick(Sender: TObject);
 begin
-  if MessageDlg(
-       'Esto recalculará las cantidades teóricas y precios medios ' +
-       'de todas las líneas a partir del Kardex actual.' + #13#10 + #13#10 +
-       '¿Continuar?',
+  if MessageDlg(SPreguntaRecalcularInventario,
        mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
 
   Screen.Cursor := crHourGlass;
   try
     dmmInventarios.RecalcularTeorico;
-    ShowMessage('Recálculo completado correctamente.');
+    ShowMessage(SInfoRecalculoInventario);
   finally
     Screen.Cursor := crDefault;
   end;
@@ -2478,12 +2461,7 @@ end;
 
 procedure TfrmMtoInventarios.btnAplicarClick(Sender: TObject);
 begin
-  if MessageDlg(
-       'Esto aplicará el inventario y generará movimientos de regularización'
-         + #13#10 +
-       'en el Kardex. La operación NO se podrá deshacer fácilmente.' + #13#10
-         + #13#10 +
-       '¿Aplicar el inventario?',
+  if MessageDlg(SPreguntaAplicarInventario,
        mtWarning, [mbYes, mbNo], 0) <> mrYes then Exit;
 
   // Fase 2: el regularizar se parte en 3 tramos. (1) validacion +
@@ -2495,7 +2473,7 @@ begin
   except
     on E: Exception do
     begin
-      ShowMessage('No se puede aplicar el inventario:' + #13#10 + E.Message);
+      ShowMessage(Format(SErrorAplicarInventario, [E.Message]));
       Exit;
     end;
   end;
@@ -2509,7 +2487,7 @@ begin
     begin
       if ErrMsg <> '' then
       begin
-        ShowMessage('Error al aplicar el inventario:' + #13#10 + ErrMsg);
+        ShowMessage(Format(SErrorAplicacionInventario, [ErrMsg]));
         Exit;
       end;
       try
@@ -2517,12 +2495,12 @@ begin
       except
         on E: Exception do
         begin
-          ShowMessage('El inventario se aplico, pero fallo el refresco:' +
-                      #13#10 + E.Message);
+          ShowMessage(Format(SErrorRefrescarInventarioAplicado,
+                             [E.Message]));
           Exit;
         end;
       end;
-      ShowMessage('Inventario aplicado correctamente.');
+      ShowMessage(SInfoInventarioAplicado);
       pcDetail.ActivePage := tsMovsRegul;
     end);
 end;
@@ -2559,13 +2537,9 @@ begin
   begin
     Estado := EstadoActual;
     if Estado = '' then
-      ShowMessage('No hay ningún inventario seleccionado todavía. ' +
-                  'Crea uno o selecciónalo en la lista antes de añadir ' +
-                  'líneas.')
+      ShowMessage(SErrorInventarioNoSeleccionadoAnadirLineas)
     else
-      ShowMessage(Format('No se pueden añadir líneas: el inventario ' +
-                         'está en estado "%s" (solo se pueden editar ' +
-                         'inventarios ABIERTOS).', [Estado]));
+      ShowMessage(Format(SErrorAnadirLineasInventarioEstado, [Estado]));
     Exit;
   end;
 
@@ -2608,7 +2582,7 @@ begin
 
   if dmmInventarios.cdsLineas.IsEmpty then
   begin
-    ShowMessage('Sitúate sobre una línea con artículo para añadir sus SKUs.');
+    ShowMessage(SErrorLineaInventarioNoSeleccionadaParaSkus);
     Exit;
   end;
 
@@ -2618,7 +2592,7 @@ begin
                           'CODIGO_ART_INVLIN').AsString);
   if CodigoArticulo = '' then
   begin
-    ShowMessage('La línea actual no tiene artículo asignado.');
+    ShowMessage(SErrorLineaInventarioSinArticulo);
     Exit;
   end;
 
@@ -2634,7 +2608,7 @@ begin
       on E: Exception do
       begin
         Screen.Cursor := crDefault;
-        ShowMessage('Error al añadir SKUs: ' + E.Message);
+        ShowMessage(Format(SErrorAnadirSkusInventario, [E.Message]));
         Exit;
       end;
     end;
@@ -2643,12 +2617,9 @@ begin
   end;
 
   if Insertados = 0 then
-    ShowMessage(Format('No se ha añadido ningún SKU. El artículo %s no tiene ' +
-                       'movimientos en este almacén o todos sus SKUs ya están '
-                         +
-                       'en el inventario.', [CodigoArticulo]))
+    ShowMessage(Format(SInfoSinSkusAnadidosInventario, [CodigoArticulo]))
   else
-    ShowMessage(Format('Añadidos %d SKUs del artículo %s.',
+    ShowMessage(Format(SInfoSkusAnadidosInventario,
                        [Insertados, CodigoArticulo]));
 end;
 
@@ -2657,7 +2628,7 @@ begin
   if not PuedeEditar then Exit;
   if dmmInventarios.cdsLineas.IsEmpty then Exit;
 
-  if MessageDlg('¿Eliminar la línea seleccionada?',
+  if MessageDlg(SPreguntaEliminarLineaInventario,
        mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     dmmInventarios.cdsLineas.Delete;
@@ -2673,24 +2644,17 @@ procedure TfrmMtoInventarios.btnEliminarRegularizacionClick(Sender: TObject);
 begin
   if EstadoActual <> 'APLICADO' then
   begin
-    ShowMessage(
-      'Solo puedes eliminar la regularización de un inventario APLICADO.');
+    ShowMessage(SErrorEliminarRegularizacionInventarioEstado);
     Exit;
   end;
 
-  if MessageDlg(
-       'Esto BORRARÁ todos los movimientos generados por este inventario,'
-         + #13#10 +
-       'devolverá el inventario al estado ABIERTO y recalculará el Kardex.'
-         + #13#10 + #13#10 +
-       '¿Continuar?',
+  if MessageDlg(SPreguntaEliminarRegularizacionInventario,
        mtWarning, [mbYes, mbNo], 0) <> mrYes then Exit;
 
   Screen.Cursor := crHourGlass;
   try
     dmmInventarios.EliminarRegularizacion;
-    ShowMessage(
-      'Regularización eliminada. El inventario vuelve a estar ABIERTO.');
+    ShowMessage(SInfoRegularizacionInventarioEliminada);
   finally
     Screen.Cursor := crDefault;
   end;
@@ -2704,7 +2668,7 @@ begin
     Abort;
   if dmmInventarios.unqryTablaG.IsEmpty then
   begin
-    ShowMessage('No hay inventario activo.');
+    ShowMessage(SErrorInventarioNoActivo);
     Exit;
   end;
   Screen.Cursor := crHourGlass;
@@ -2756,19 +2720,18 @@ var
 begin
   if not PuedeEditar then
   begin
-    ShowMessage('El inventario debe estar ABIERTO.'); Exit;
+    ShowMessage(SErrorInventarioDebeEstarAbierto); Exit;
   end;
 
   Familia :=
     dmmInventarios.unqryFamilias.FieldByName('CODIGO_FAM_FAM').AsString;
   if Familia = '' then
   begin
-    ShowMessage('Selecciona primero una familia.'); Exit;
+    ShowMessage(SErrorFamiliaInventarioNoSeleccionada); Exit;
   end;
 
   if MessageDlg(
-       Format('¿Cargar todos los SKUs de la familia "%s" al inventario?',
-              [Familia]),
+       Format(SPreguntaCargarFamiliaInventario, [Familia]),
        mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
 
   Screen.Cursor := crHourGlass;
@@ -2787,19 +2750,18 @@ var
 begin
   if not PuedeEditar then
   begin
-    ShowMessage('El inventario debe estar ABIERTO.'); Exit;
+    ShowMessage(SErrorInventarioDebeEstarAbierto); Exit;
   end;
 
   Proveedor :=
     dmmInventarios.unqryProveedores.FieldByName('CODIGO_PRV_PRV').AsString;
   if Proveedor = '' then
   begin
-    ShowMessage('Selecciona primero un proveedor.'); Exit;
+    ShowMessage(SErrorProveedorInventarioNoSeleccionado); Exit;
   end;
 
   if MessageDlg(
-       Format('¿Cargar todos los SKUs del proveedor "%s" al inventario?',
-              [Proveedor]),
+       Format(SPreguntaCargarProveedorInventario, [Proveedor]),
        mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
 
   Screen.Cursor := crHourGlass;
@@ -2816,15 +2778,10 @@ procedure TfrmMtoInventarios.btnCompletarClick(Sender: TObject);
 begin
   if not PuedeEditar then
   begin
-    ShowMessage('El inventario debe estar ABIERTO.'); Exit;
+    ShowMessage(SErrorInventarioDebeEstarAbierto); Exit;
   end;
 
-  if MessageDlg(
-       'Esto añadirá al inventario todos los SKUs con stock que NO ' + #13#10 +
-       'estén ya en el inventario, con cantidad física = 0.' + #13#10
-         + #13#10 +
-       'Útil para detectar artículos que faltó contar.' + #13#10 + #13#10 +
-       '¿Continuar?',
+  if MessageDlg(SPreguntaCompletarInventario,
        mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
 
   Screen.Cursor := crHourGlass;
@@ -2841,12 +2798,10 @@ procedure TfrmMtoInventarios.btnCargarTodoClick(Sender: TObject);
 begin
   if not PuedeEditar then
   begin
-    ShowMessage('El inventario debe estar ABIERTO.'); Exit;
+    ShowMessage(SErrorInventarioDebeEstarAbierto); Exit;
   end;
 
-  if MessageDlg(
-       'Esto cargará TODOS los SKUs con stock al inventario, ' + #13#10 +
-       'con cantidad física = teórica. ¿Continuar?',
+  if MessageDlg(SPreguntaCargarTodoInventario,
        mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
 
   Screen.Cursor := crHourGlass;
@@ -2876,20 +2831,20 @@ var
 begin
   if not PuedeEditar then
   begin
-    ShowMessage('El inventario debe estar ABIERTO.');
+    ShowMessage(SErrorInventarioDebeEstarAbierto);
     Exit;
   end;
 
   ds := dsTablaG.DataSet;
   if (ds = nil) or ds.IsEmpty then
   begin
-    ShowMessage('Selecciona primero un inventario.');
+    ShowMessage(SErrorInventarioNoSeleccionado);
     Exit;
   end;
 
   if ds.State in [dsInsert, dsEdit] then
   begin
-    if MessageDlg('El inventario esta en edicion. Guardar antes?',
+    if MessageDlg(SPreguntaGuardarInventarioEnEdicion,
                   mtConfirmation, [mbYes, mbNo, mbCancel], 0) = mrYes then
       ds.Post
     else
@@ -2911,9 +2866,7 @@ begin
     CargarLineasYRefrescar;
 
     if MessageDlg(
-         Format(
-           'Se anadieron %d lineas (%d articulos distintos).' + sLineBreak +
-                '?Quieres calcular ahora las cantidades teoricas y PMP?',
+         Format(SPreguntaRecalcularTrasCargarBloqueInventario,
                 [res.NumLineas, res.NumArticulos]),
          mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       btnRecalcularDetalleClick(nil);
@@ -2931,7 +2884,7 @@ var
 begin
   if not PuedeEditar then
   begin
-    ShowMessage('El inventario debe estar ABIERTO.');
+    ShowMessage(SErrorInventarioDebeEstarAbierto);
     Exit;
   end;
   dlgAbrir.Filter :=
@@ -2942,7 +2895,7 @@ begin
   Archivo := dlgAbrir.FileName;
   if not FileExists(Archivo) then
   begin
-    ShowMessage('El archivo no existe.');
+    ShowMessage(SErrorArchivoImportacionInventarioNoExiste);
     Exit;
   end;
   Lista := nil;
@@ -2965,14 +2918,14 @@ begin
     Lista.LoadFromFile(Archivo);
     for i := 0 to Lista.Count - 1 do
       Lista[i] := StringReplace(Lista[i], ';', '=', [rfReplaceAll]);
-    sMsg := Format('Leidas %d lineas del CSV.', [Lista.Count]);
+    sMsg := Format(SInfoLineasCsvInventarioLeidas, [Lista.Count]);
   end;
   if (Lista = nil) or (Lista.Count = 0) then
   begin
     if sMsg <> '' then
       ShowMessage(sMsg)
     else
-      ShowMessage('No se encontraron datos para importar.');
+      ShowMessage(SErrorImportacionInventarioSinDatos);
     FreeAndNil(Lista);
     Exit;
   end;
@@ -3046,10 +2999,8 @@ begin
       dmmInventarios.CargarDesdeListaSkus(ListaNuevos);
     pcDetail.ActivePage := tsDetalle;
     CargarLineasYRefrescar;
-    ShowMessage(
-      sMsg + #13#10 +
-      Format('%d actualizados, %d nuevos insertados.',
-        [iActualizados, iNuevos]));
+    ShowMessage(Format(SInfoImportacionInventario,
+                       [sMsg, iActualizados, iNuevos]));
   finally
     Screen.Cursor := crDefault;
     FreeAndNil(Lista);
@@ -3068,13 +3019,13 @@ var
 begin
   if dmmInventarios.unqryTablaG.IsEmpty then
   begin
-    ShowMessage('No hay inventario activo.');
+    ShowMessage(SErrorInventarioNoActivo);
     Exit;
   end;
   if dmmInventarios.unqryTablaG.FieldByName('ESTADO_INV').AsString <>
      'ABIERTO' then
   begin
-    ShowMessage('Solo se puede enviar a recuento un inventario ABIERTO.');
+    ShowMessage(SErrorEnviarRecuentoInventarioNoAbierto);
     Exit;
   end;
   if not ComprobarRecuentoRemotoDisponible then
@@ -3084,8 +3035,8 @@ begin
   sSerie  := dmmInventarios.unqryTablaG.FieldByName('SERIE_INV').AsString;
   sNumero := dmmInventarios.unqryTablaG.FieldByName('NUMERO_INV').AsString;
   sDesc   := dmmInventarios.unqryTablaG.FieldByName('DESCRIPCION_INV').AsString;
-  if MessageDlg('Se enviará este inventario al servidor para recontarlo con ' +
-       'la app. ¿Continuar?', mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+  if MessageDlg(SPreguntaEnviarRecuentoInventario,
+       mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     Exit;
   Screen.Cursor := crHourGlass;
   try
@@ -3106,11 +3057,10 @@ begin
         '   AND SERIE_INV = :S AND NUMERO_INV = :N',
         [IntToStr(idRec), sEmp, sAlm, sSerie, sNumero]);
       dmmInventarios.unqryTablaG.Refresh;
-      ShowMessage('Inventario enviado a recuento (referencia ' +
-                  IntToStr(idRec) + ').');
+      ShowMessage(Format(SInfoInventarioEnviadoRecuento, [idRec]));
     end
     else
-      ShowMessage('No se pudo enviar: ' + sMsg);
+      ShowMessage(Format(SErrorEnviarRecuentoInventario, [sMsg]));
   finally
     Screen.Cursor := crDefault;
   end;
@@ -3125,7 +3075,7 @@ var
 begin
   if dmmInventarios.unqryTablaG.IsEmpty then
   begin
-    ShowMessage('No hay inventario activo.');
+    ShowMessage(SErrorInventarioNoActivo);
     Exit;
   end;
   if not ComprobarRecuentoRemotoDisponible then
@@ -3134,13 +3084,13 @@ begin
                            'ID_RECUENTO_REMOTO_INV').AsString, 0);
   if idRec <= 0 then
   begin
-    ShowMessage('Este inventario no se ha enviado a recuento todavía.');
+    ShowMessage(SErrorInventarioNoEnviadoRecuento);
     Exit;
   end;
   if dmmInventarios.unqryTablaG.FieldByName('ESTADO_INV').AsString <>
      'ABIERTO' then
   begin
-    ShowMessage('Solo se puede recoger sobre un inventario ABIERTO.');
+    ShowMessage(SErrorRecogerRecuentoInventarioNoAbierto);
     Exit;
   end;
   sEmp    := dmmInventarios.unqryTablaG.FieldByName('CODIGO_EMP_INV').AsString;
@@ -3174,12 +3124,11 @@ begin
       if Assigned(tvLineas) then
         tvLineas.DataController.Refresh;
       dmmInventarios.unqryTablaG.Refresh;
-      ShowMessage(Format('Recuento recogido: %d lecturas, %d SKUs. ' +
-        'Revisa las físicas y APLICA cuando quieras.',
+      ShowMessage(Format(SInfoRecuentoInventarioRecogido,
         [iNumEv, Lista.Count]));
     end
     else
-      ShowMessage('No se pudo recoger: ' + sMsg);
+      ShowMessage(Format(SErrorRecogerRecuentoInventario, [sMsg]));
   finally
     FreeAndNil(Lista);
     Screen.Cursor := crDefault;

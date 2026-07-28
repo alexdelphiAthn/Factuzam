@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoTarifasCambios                                           }
 {    Tipo:       Formulario (Mto)                                              }
@@ -100,7 +100,7 @@ var
 implementation
 
 uses
-  inMtoModalCargarSesionTarifa;
+  inMtoModalCargarSesionTarifa, inLibMsg;
 
 {$R *.dfm}
 
@@ -539,7 +539,7 @@ begin
     dsTablaG.DataSet.Post;
   if (not Assigned(dsTablaG.DataSet)) or dsTablaG.DataSet.IsEmpty then
   begin
-    ShowMessage('Selecciona o crea primero una sesion.');
+    ShowMessage(SErrorSesionTarifaNoSeleccionada);
     Result := False;
   end;
 end;
@@ -572,7 +572,7 @@ begin
     if sMensaje <> '' then
       ShowMessage(sMensaje)
     else
-      ShowMessage(Format('%d lineas recalculadas.', [iLineas]));
+      ShowMessage(Format(SInfoLineasSesionTarifaRecalculadas, [iLineas]));
   end;
 end;
 
@@ -586,17 +586,17 @@ begin
   begin
     iLineas := dmmTarifasCambios.RecalcularSesionActual(sMensaje);
     if sMensaje <> '' then
-      ShowMessage('No se pudo calcular la sesion: ' + sMensaje)
-    else if MessageDlg(Format('%d lineas recalculadas. Aplicar las ' +
-                              'lineas marcadas a la tarifa destino?',
+      ShowMessage(Format(SErrorCalcularSesionTarifa, [sMensaje]))
+    else if MessageDlg(Format(SPreguntaAplicarSesionTarifa,
                               [iLineas]),
                        mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       iLineasAplicadas := dmmTarifasCambios.AplicarSesionActual(sMensaje);
       if sMensaje <> '' then
-        ShowMessage('No se pudo aplicar la sesion: ' + sMensaje)
+        ShowMessage(Format(SErrorAplicarSesionTarifa, [sMensaje]))
       else
-        ShowMessage(Format('%d lineas aplicadas.', [iLineasAplicadas]));
+        ShowMessage(Format(SInfoLineasSesionTarifaAplicadas,
+                           [iLineasAplicadas]));
     end;
   end;
 end;

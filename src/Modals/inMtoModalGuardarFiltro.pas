@@ -55,6 +55,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 procedure ForceReferenceToClass(C: TClass);
 begin
 end;
@@ -89,7 +92,7 @@ begin
   inherited;
   if Trim(txtNombre.Text) = '' then
   begin
-    ShowMessage('Indique un nombre para el filtro.');
+    ShowMessage(SErrorNombreFiltroNoIndicado);
   end
   else
   begin

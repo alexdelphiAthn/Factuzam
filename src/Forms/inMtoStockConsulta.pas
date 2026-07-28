@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoStockConsulta                                            }
 {    Tipo:       Formulario (flotante, fsStayOnTop)                            }
@@ -298,7 +298,7 @@ uses
   inLibAtributosPaleta,
   inLibGenBusq, inLibUser,
   inLibArticulosValidador,
-  inMtoModalOperacionesCajaSku;
+  inMtoModalOperacionesCajaSku, inLibMsg;
 
 {$R *.dfm}
 
@@ -738,7 +738,7 @@ begin
   if Resolucion.Encontrado then
     SetArticuloSku(Resolucion.CodigoArticulo, Resolucion.CodigoSku)
   else
-    MostrarError('Código de barras no encontrado: ' + ACodigo);
+    MostrarError(Format(SErrorCodigoBarrasStockNoEncontrado, [ACodigo]));
 end;
 
 procedure TfrmStockConsulta.CrearComboCoincidencias;
@@ -953,8 +953,7 @@ begin
         if q.IsEmpty then
         begin
           if AMostrarError then
-            MostrarError('No se encontró "' + sEntrada + '" como artículo, ' +
-                         'SKU, código de barras ni referencia de proveedor.');
+            MostrarError(Format(SErrorEntradaStockNoEncontrada, [sEntrada]));
           SetArticuloSku(sEntrada, '');
         end
         else
@@ -1017,7 +1016,7 @@ begin
   end
   else
   begin
-    Application.MessageBox(PChar(sMsg), 'Documento de Trabajo',
+    Application.MessageBox(PChar(sMsg), PChar(STituloDocumentoTrabajo),
       MB_OK or MB_ICONINFORMATION or MB_TOPMOST or MB_SETFOREGROUND);
   end;
 end;
@@ -1095,12 +1094,11 @@ begin
   end
   else if iCount = 0 then
   begin
-    AMensaje := 'No se ha encontrado un SKU activo para la celda seleccionada.';
+    AMensaje := SErrorSkuCeldaStockNoEncontrado;
   end
   else
   begin
-    AMensaje := 'La celda seleccionada coincide con varios SKUs. ' +
-                'Acote color, talla o almacen antes de agregarla.';
+    AMensaje := SErrorCeldaStockVariosSkus;
   end;
 end;
 
@@ -1128,14 +1126,14 @@ begin
   iTalla := -1;
   if Trim(FCodArt) = '' then
   begin
-    AMensaje := 'Seleccione primero un artículo.';
+    AMensaje := SErrorArticuloStockNoSeleccionadoOperaciones;
   end;
   if AMensaje = '' then
   begin
     rec := tvStock.Controller.FocusedRecord;
     if rec = nil then
     begin
-      AMensaje := 'Seleccione una celda de talla.';
+      AMensaje := SErrorCeldaTallaStockNoSeleccionada;
     end;
   end;
   if AMensaje = '' then
@@ -1146,7 +1144,7 @@ begin
     end
     else
     begin
-      AMensaje := 'Seleccione una celda de talla.';
+      AMensaje := SErrorCeldaTallaStockNoSeleccionada;
     end;
   end;
   if AMensaje = '' then
@@ -1164,12 +1162,12 @@ begin
     end
     else
     begin
-      AMensaje := 'Seleccione una columna de talla.';
+      AMensaje := SErrorColumnaTallaStockNoSeleccionada;
     end;
   end;
   if (AMensaje = '') and (FColGrupo = nil) then
   begin
-    AMensaje := 'No se ha podido identificar la fila seleccionada.';
+    AMensaje := SErrorFilaStockNoIdentificada;
   end;
   if AMensaje = '' then
   begin
@@ -1192,8 +1190,7 @@ begin
       end
       else
       begin
-        AMensaje :=
-          'Seleccione un único color o cambie a la vista Por colores.';
+        AMensaje := SErrorColorStockNoUnico;
       end;
     end;
   end;
@@ -1204,8 +1201,7 @@ begin
     if (not Result) and
        (Pos('varios SKUs', AMensaje) > 0) then
     begin
-      AMensaje := 'La talla seleccionada corresponde a varios SKU. ' +
-                  'Seleccione un único color o use la vista Por colores.';
+      AMensaje := SErrorTallaStockVariosSkus;
     end;
   end;
 end;
@@ -1227,7 +1223,7 @@ begin
   begin
     Application.MessageBox(
       PChar(sMensaje),
-      'Operaciones de caja',
+      PChar(STituloOperacionesCajaStock),
       MB_OK or MB_ICONINFORMATION or MB_TOPMOST or MB_SETFOREGROUND);
   end;
 end;
@@ -1260,26 +1256,26 @@ begin
   iTalla := -1;
   if Trim(FCodArt) = '' then
   begin
-    AMensaje := 'Seleccione primero un articulo.';
+    AMensaje := SErrorArticuloStockNoSeleccionadoDocumento;
   end;
   if (AMensaje = '') and (not FEsModoTodo) and
      (EstadoActual <> esExistencias) then
   begin
-    AMensaje := 'Cambie el estado a Existencias para agregar stock disponible.';
+    AMensaje := SErrorEstadoStockNoEsExistencias;
   end;
   if AMensaje = '' then
   begin
     rec := tvStock.Controller.FocusedRecord;
     if rec = nil then
     begin
-      AMensaje := 'Seleccione una celda de stock.';
+      AMensaje := SErrorCeldaStockNoSeleccionada;
     end;
   end;
   if AMensaje = '' then
   begin
     if not (tvStock.Controller.FocusedColumn is TcxGridDBColumn) then
     begin
-      AMensaje := 'Seleccione una celda de cantidad.';
+      AMensaje := SErrorCeldaCantidadStockNoSeleccionada;
     end;
   end;
   if AMensaje = '' then
@@ -1292,8 +1288,7 @@ begin
          (StrToIntDef(VarToStr(rec.Values[FColEstado.Index]), -1) <>
           Ord(esExistencias)) then
       begin
-        AMensaje :=
-          'Seleccione la fila de Existencias para agregar stock disponible.';
+        AMensaje := SErrorFilaExistenciasStockNoSeleccionada;
       end;
     end;
   end;
@@ -1311,13 +1306,12 @@ begin
     end
     else
     begin
-      AMensaje :=
-        'Seleccione una columna de talla o una columna Total sin tallas.';
+      AMensaje := SErrorColumnaStockDocumentoNoSeleccionada;
     end;
   end;
   if (AMensaje = '') and (FColGrupo = nil) then
   begin
-    AMensaje := 'No se ha podido leer el grupo de la fila.';
+    AMensaje := SErrorGrupoFilaStockNoLeido;
   end;
   if AMensaje = '' then
   begin
@@ -1332,8 +1326,7 @@ begin
       end
       else
       begin
-        AMensaje :=
-          'Seleccione un solo almacen para agregar una unidad concreta.';
+        AMensaje := SErrorAlmacenStockNoUnico;
       end;
     end
     else
@@ -1350,7 +1343,7 @@ begin
       end
       else
       begin
-        AMensaje := 'Seleccione un solo color para agregar una unidad concreta.';
+        AMensaje := SErrorColorStockUnidadNoUnico;
       end;
     end;
   end;
@@ -1386,7 +1379,7 @@ end;
 // colgada; MB_TOPMOST + MB_SETFOREGROUND fuerzan el aviso al frente.
 procedure TfrmStockConsulta.MostrarError(const AMsg: string);
 begin
-  Application.MessageBox(PChar(AMsg), 'Consulta de stock',
+  Application.MessageBox(PChar(AMsg), PChar(STituloConsultaStock),
     MB_OK or MB_ICONERROR or MB_TOPMOST or MB_SETFOREGROUND);
 end;
 
@@ -2150,7 +2143,8 @@ begin
   FFotosFiltrosCache[ADimension] := FFotosFiltros[ADimension];
   if Trim(FCodArt) = '' then
   begin
-    MostrarMensajeFotosRelacionadas('Seleccione primero un artículo.');
+    MostrarMensajeFotosRelacionadas(
+      SErrorArticuloStockNoSeleccionadoFotos);
     FFotosCargadas[ADimension] := True;
   end
   else
@@ -2223,7 +2217,7 @@ begin
       q.Open;
       if q.IsEmpty then
         MostrarMensajeFotosRelacionadas(
-          'No hay otros artículos con stock para este filtrado.')
+          SInfoArticulosRelacionadosStockNoDisponibles)
       else
       begin
         while not q.Eof do

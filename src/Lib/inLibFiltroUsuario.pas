@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibFiltroUsuario                                            }
 {    Tipo:       Librería                                                      }
@@ -51,6 +51,13 @@ function SqlFiltroEmpAlmCaja(
                              const AColEmpresa,
                              AColAlmacen,
                              AColCaja: string): string;
+// Deriva las columnas estándar de un documento a partir de su sufijo.
+// Las facturas de venta pueden incluir además la dimensión de caja.
+function SqlFiltroDocumento(
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion;
+  const APrefijoCampos: string;
+  AIncluirCaja: Boolean = False): string;
 // Inyecta AFiltro (fragmentos ' AND col = valor') en el WHERE de nivel
 // superior de ASql. Si la SQL no tiene WHERE de nivel superior añade
 // ' WHERE 1 = 1' + AFiltro. El punto de inserción es justo antes del
@@ -143,6 +150,24 @@ begin
     if (AColCaja <> '') and (Ubicacion.Caja <> '') then
       Result := Result + Fragmento(AColCaja, Ubicacion.Caja);
   end;
+end;
+
+function SqlFiltroDocumento(
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion;
+  const APrefijoCampos: string;
+  AIncluirCaja: Boolean): string;
+var
+  sColumnaCaja: string;
+begin
+  sColumnaCaja := '';
+  if AIncluirCaja then
+    sColumnaCaja := 'CODIGO_CAJA_' + APrefijoCampos;
+  Result := SqlFiltroEmpAlmCaja(
+    AContextoSesion, AParametrosApp,
+    'CODIGO_EMP_' + APrefijoCampos,
+    'CODIGO_ALM_' + APrefijoCampos,
+    sColumnaCaja);
 end;
 
 function InyectarFiltroSql(const ASql, AFiltro: string): string;

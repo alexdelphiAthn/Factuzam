@@ -753,13 +753,8 @@ end;
 
 function TfrmMtoAlbaranesCompra.SqlRestriccionUsuario: string;
 begin
-  // Documentos de compra: empresa y almacén (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja(
-    ContextoSesion,
-    ParametrosApp,
-    'CODIGO_EMP_ALBC',
-    'CODIGO_ALM_ALBC',
-    '');
+  Result := SqlFiltroDocumento(
+    ContextoSesion, ParametrosApp, 'ALBC');
 end;
 
 procedure TfrmMtoAlbaranesCompra.CrearTablaPrincipal;

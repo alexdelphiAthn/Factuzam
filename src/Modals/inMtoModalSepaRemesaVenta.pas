@@ -51,7 +51,7 @@ type
 implementation
 
 uses
-  Vcl.Dialogs;
+  Vcl.Dialogs, inLibMsg;
 
 function LimpiarValorSepa(const AValor: string): string;
 begin
@@ -258,14 +258,13 @@ function TfrmModalSepaRemesaVenta.DatosValidos: Boolean;
 begin
   Result := False;
   if Trim(FEdtCodigoAcreedor.Text) = '' then
-    ShowMessage('Indica el código acreedor SEPA.')
+    ShowMessage(SErrorCodigoAcreedorSepaNoIndicado)
   else if Length(Trim(FEdtCodigoAcreedor.Text)) > 35 then
-    ShowMessage('El código acreedor SEPA no puede superar 35 caracteres.')
+    ShowMessage(SErrorLongitudCodigoAcreedorSepa)
   else if not CodigoAcreedorSepaValido(FEdtCodigoAcreedor.Text) then
-    ShowMessage('Código acreedor SEPA no válido. En España debe tener ' +
-      'formato ESkkZZZ seguido del NIF.')
+    ShowMessage(SErrorFormatoCodigoAcreedorSepaNoValido)
   else if not TipoSecuenciaValido(FCbbTipoSecuencia.Text) then
-    ShowMessage('Secuencia SEPA no válida.')
+    ShowMessage(SErrorSecuenciaSepaNoValida)
   else
   begin
     Result := True;
@@ -277,18 +276,18 @@ begin
       if Trim(FCdsClientes.FieldByName('ID_MANDATO').AsString) = '' then
       begin
         Result := False;
-        ShowMessage('Hay clientes sin mandato SEPA.');
+        ShowMessage(SErrorClientesSinMandatoSepa);
       end
       else if Length(Trim(FCdsClientes.FieldByName('ID_MANDATO').AsString)) >
               35 then
       begin
         Result := False;
-        ShowMessage('Hay mandatos SEPA de más de 35 caracteres.');
+        ShowMessage(SErrorMandatosSepaLongitudNoValida);
       end
       else if FCdsClientes.FieldByName('FECHA_FIRMA').IsNull then
       begin
         Result := False;
-        ShowMessage('Hay clientes sin fecha de firma del mandato SEPA.');
+        ShowMessage(SErrorClientesSinFechaFirmaMandatoSepa);
       end;
       if Result then
         FCdsClientes.Next;

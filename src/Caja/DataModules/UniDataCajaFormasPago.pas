@@ -34,6 +34,9 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
+uses
+  inLibMsg;
+
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -60,11 +63,9 @@ begin
   with unqryTablaG do
   begin
     if Trim(FindField('CODIGO_FP_CFP').AsString) = '' then
-      raise ERangeError.Create(
-                  'El Código de la Forma de Pago es obligatorio');
+      raise ERangeError.Create(SErrorCodigoFormaPagoCajaObligatorio);
     if Trim(FindField('DESCRIPCION_FORMA_PAGO_CFP').AsString) = '' then
-      raise ERangeError.Create(
-                  'La Descripción de la Forma de Pago es obligatoria');
+      raise ERangeError.Create(SErrorDescripcionFormaPagoCajaObligatoria);
   end;
 end;
 

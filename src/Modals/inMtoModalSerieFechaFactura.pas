@@ -57,7 +57,7 @@ type
 implementation
 
 uses
-  inLibtb;
+  inLibtb, inLibMsg;
 
 {$R *.dfm}
 
@@ -97,9 +97,9 @@ end;
 procedure TfrmModalSerieFechaFactura.btnAceptarClick(Sender: TObject);
 begin
   if Trim(VarToStr(cbbSerie.EditValue)) = '' then
-    ShowMessage('Seleccione la serie del borrador.')
+    ShowMessage(SErrorSerieBorradorNoSeleccionada)
   else if dtFecha.Date <= 0 then
-    ShowMessage('Indique la fecha del borrador.')
+    ShowMessage(SErrorFechaBorradorNoIndicada)
   else
   begin
     FResultado.Aceptado := True;

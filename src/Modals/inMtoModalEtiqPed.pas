@@ -64,6 +64,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 procedure TfrmPrintEtiqPed.FormCreate(Sender: TObject);
 begin
   // Comparte Name con etiquetas de articulo para reutilizar formatos y guias.
@@ -127,7 +130,7 @@ procedure TfrmPrintEtiqPed.preparar_consulta;
 begin
   if ObtenerCodigoTarifa = '' then
   begin
-    ShowMessage('Seleccione una tarifa antes de imprimir.');
+    ShowMessage(SErrorTarifaEtiquetasNoSeleccionada);
     Abort;
   end;
   DMPedc.CrearDataSetEtiquetasPed(

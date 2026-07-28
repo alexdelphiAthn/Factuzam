@@ -108,17 +108,17 @@ Estados permitidos: `PENDIENTE`, `EN CURSO`, `COMPILADO`, `PROBADO` y
 | M11 | Forms `inMtoA*` a `inMtoB*` | 69 | COMPILADO |
 | M12 | Forms `inMtoC*` | 57 | COMPILADO |
 | M13 | Forms `inMtoD*` a `inMtoE*` | 66 | COMPILADO |
-| M14 | Forms `inMtoF*` | 77 | PENDIENTE |
-| M15 | Forms `inMtoG*` a `inMtoI*` | 77 | PENDIENTE |
-| M16 | Forms `inMtoJ*` a `inMtoP*` | 40 | PENDIENTE |
-| M17 | Forms `inMtoQ*` a `inMtoZ*` | 76 | PENDIENTE |
-| M18 | Modals `inMtoModalA*` a `inMtoModalF*` | 43 | PENDIENTE |
-| M19 | Modals `inMtoModalG*` a `inMtoModalM*` | 42 | PENDIENTE |
-| M20 | Modals `inMtoModalN*` a `inMtoModalZ*` | 33 | PENDIENTE |
-| M21 | Caja: DataModules y Lib | 30 | PENDIENTE |
-| M22 | Caja: Forms `inMtoA*` a `inMtoM*` | 52 | PENDIENTE |
-| M23 | Caja: Forms `inMtoN*` a `inMtoZ*` | 18 | PENDIENTE |
-| M24 | Caja: Modals | 10 | PENDIENTE |
+| M14 | Forms `inMtoF*` | 83 | COMPILADO |
+| M15 | Forms `inMtoG*` a `inMtoI*` | 103 | COMPILADO |
+| M16 | Forms `inMtoJ*` a `inMtoP*` | 48 | COMPILADO |
+| M17 | Forms `inMtoQ*` a `inMtoZ*` | 113 | COMPILADO |
+| M18 | Modals `inMtoModalA*` a `inMtoModalF*` | 70 | COMPILADO |
+| M19 | Modals `inMtoModalG*` a `inMtoModalM*` | 52 | COMPILADO |
+| M20 | Modals `inMtoModalN*` a `inMtoModalZ*` | 34 | COMPILADO |
+| M21 | Caja: DataModules y Lib | 32 | COMPILADO |
+| M22 | Caja: Forms `inMtoA*` a `inMtoM*` | 67 | COMPILADO |
+| M23 | Caja: Forms `inMtoN*` a `inMtoZ*` | 22 | COMPILADO |
+| M24 | Caja: Modals | 19 | COMPILADO |
 
 Orden recomendado: M01, M11-M20, M02-M10 y M21-M24. Así se limpian primero
 los textos de UI directa y después las capas de negocio, donde hay que decidir
@@ -270,6 +270,17 @@ test; si solo compila, el estado permanece en `COMPILADO`.
 | 27/07/2026 | M11 | Win32 Debug OK | 69 revisados; 0 directos | No ejecutado | Un hint previo |
 | 27/07/2026 | M12 | Win32 Debug OK | 57 revisados; 0 directos | No ejecutado | Un hint previo |
 | 27/07/2026 | M13 | Win32 Debug OK | 66 revisados; 0 directos | No ejecutado | Un hint previo |
+| 28/07/2026 | M14 | Win32 Debug OK | 83 revisados; 0 directos | No ejecutado | Un hint previo |
+| 28/07/2026 | M15 | Win32 Debug OK | 103 revisados; 0 directos | No ejecutado | Un hint previo |
+| 28/07/2026 | M16 | Win32 Debug OK | 48 revisados; 0 directos | No ejecutado | Un hint previo |
+| 28/07/2026 | M17 | Win32 Debug OK | 113 revisados; 0 directos | No ejecutado | Un hint previo |
+| 28/07/2026 | M18 | Win32 Debug OK | 70 revisados; 0 directos | No ejecutado | Un hint previo |
+| 28/07/2026 | M19 | Win32 Debug OK | 52 revisados; 0 directos | No ejecutado | Un hint previo |
+| 28/07/2026 | M20 | Win32 Debug OK | 34 revisados; 0 directos | No ejecutado | Un hint previo |
+| 28/07/2026 | M21 | Win32 Debug OK | 32 revisados; 0 directos | No ejecutado | Un hint previo |
+| 28/07/2026 | M22 | Win32 Debug OK | 67 revisados; 0 directos | No ejecutado | Un hint previo |
+| 28/07/2026 | M23 | Win32 Debug OK | 22 revisados; 0 directos | No ejecutado | Un hint previo |
+| 28/07/2026 | M24 | Win32 Debug OK | 19 revisados; 0 directos | No ejecutado | Un hint previo |
 
 ## Criterio de finalización
 

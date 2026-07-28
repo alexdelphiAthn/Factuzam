@@ -61,12 +61,15 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 procedure TfrmMtoModalEmpCer.btnAceptarClick(Sender: TObject);
 begin
   inherited;
   if tvCertificados.Controller.FocusedRecord = nil then
   begin
-    ShowMessage('Seleccione un certificado.');
+    ShowMessage(SErrorCertificadoNoSeleccionado);
   end
   else
   begin

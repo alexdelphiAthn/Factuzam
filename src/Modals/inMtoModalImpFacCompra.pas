@@ -55,7 +55,7 @@ type
 implementation
 
 uses
-  inMtoPreviewExcel, inLibDocCompraExcel;
+  inMtoPreviewExcel, inLibDocCompraExcel, inLibMsg;
 
 {$R *.dfm}
 
@@ -65,7 +65,7 @@ var
   cfg: TDocCompraCabCfg;
 begin
   if dmFacc = nil then
-    ShowMessage('No hay factura de compra preparada para exportar.')
+    ShowMessage(SErrorFacturaCompraExportarNoPreparada)
   else
   begin
     dmFacc.PrepararPrint(edtSerie.Text, edtNumero.Text);

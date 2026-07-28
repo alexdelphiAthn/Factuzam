@@ -80,7 +80,7 @@ type
 implementation
 
 uses
-  inLibShowMto;
+  inLibShowMto, inLibMsg;
 
 {$R *.dfm}
 
@@ -166,7 +166,7 @@ var
   iOperaciones: Integer;
 begin
   if (FConn = nil) or (not FConn.Connected) then
-    raise Exception.Create('No hay una conexión disponible para la consulta.');
+    raise Exception.Create(SErrorConexionOperacionesCajaSkuNoDisponible);
   FQry.Close;
   FQry.Connection := FConn;
   FQry.SQL.Text :=

@@ -385,7 +385,8 @@ uses
   inLibCorreoTickets,
   inLibDir,
   System.StrUtils,
-  inMtoConsultaOpe;
+  inMtoConsultaOpe,
+  inLibMsg;
 
 procedure TfrmMtoOpeCaja.ActualizarFoco;
 begin
@@ -444,7 +445,7 @@ begin
   if dtFechaBase = 0 then
     dtFechaBase := Now;
   sHora := FormatDateTime('hh:nn', dtFechaBase);
-  if InputQuery('Hora de caja', 'Hora (HH:MM)', sHora) then
+  if InputQuery(STituloHoraCaja, SSolicitudHoraCaja, sHora) then
   begin
     if TryStrToTime(sHora, dtHora) then
     begin
@@ -456,7 +457,7 @@ begin
         frmMtoMenuCaja.ActualizarFechaCaja(FFecha);
     end
     else
-      ShowMessage('Hora no válida. Use HH:MM.');
+      ShowMessage(SErrorHoraCajaNoValida);
   end
   else
   begin
@@ -751,15 +752,13 @@ begin
       qry.Open;
       if qry.IsEmpty then
       begin
-        ShowMessage('El SKU "' + SkuLimpio + '" no existe en ' +
-                    'fza_articulos_skus. No se puede vender.');
+        ShowMessage(Format(SErrorSkuVentaCajaNoExiste, [SkuLimpio]));
         Result := False;
         Exit;
       end;
       if qry.FieldByName('ESACTIVO_SKU').AsString <> 'S' then
       begin
-        ShowMessage('El SKU "' + SkuLimpio + '" no está activo. ' +
-                    'No se puede vender.');
+        ShowMessage(Format(SErrorSkuVentaCajaNoActivo, [SkuLimpio]));
         Result := False;
         Exit;
       end;
@@ -804,7 +803,7 @@ begin
         if bAvisarSinStock then
           ShowMessage(MensajeStock)
         else
-          ShowMessage('Artículo sin stock. Compruebe stock en almacén.');
+          ShowMessage(SErrorArticuloVentaCajaSinStock);
         if bChkStockOnly then
         begin
           Result := False;
@@ -906,7 +905,7 @@ begin
     if Trim(DatosCaja.cdsCabecera.FieldByName(
                                        'CODIGO_CAJERO_FAC').AsString) = '' then
     begin
-      ShowMessage('Da de alta el vendedor antes de leer artículos.');
+      ShowMessage(SErrorVendedorCajaNoAsignado);
       if btnCodigoEmpleado.CanFocus then
         btnCodigoEmpleado.SetFocus;
     end
@@ -928,7 +927,8 @@ begin
       end;
       sSku := Resolucion.CodigoSku;
       if not Resolucion.Encontrado then
-        ShowMessage('Código de barras no encontrado: ' + ACodigo)
+        ShowMessage(Format(SErrorCodigoBarrasVentaCajaNoEncontrado,
+          [ACodigo]))
       else if (Trim(sSku) <> '') and not ValidarSkuParaVenta(sSku) then
       begin
         // SKU no vendible (inactivo o sin stock con bloqueo): ValidarSku ya
@@ -1010,8 +1010,7 @@ begin
         DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
       if (VieneDeDep = 'S') or (VieneDeDep = 'A') then
       begin
-        ShowMessage(
-          'No se puede cancelar o eliminar una línea vinculada a un depósito.');
+        ShowMessage(SErrorLineaDepositoCajaNoCancelable);
         Exit;
       end;
     end;
@@ -1398,7 +1397,7 @@ begin
     if FMotivoRechazoArticulo <> '' then
       ErrorText := FMotivoRechazoArticulo
     else
-      ErrorText := 'ARTÍCULO NO ENCONTRADO O DESCATALOGADO';
+      ErrorText := SErrorArticuloCajaNoEncontradoDescatalogado;
   end;
 end;
 
@@ -1495,8 +1494,7 @@ begin
     if Abs(NuevaCant) <> Abs(CantOriginal) then
     begin
       Error := True;
-      ErrorText := 'En artículos de depósito solo está permitido cambiar el ' +
-                   'signo de la cantidad.';
+      ErrorText := SErrorCantidadArticuloDepositoCajaNoValida;
     end
     else
     begin
@@ -2126,7 +2124,7 @@ begin
           if FMotivoRechazoArticulo <> '' then
             ShowMessage(FMotivoRechazoArticulo)
           else
-            ShowMessage('Artículo no encontrado');
+            ShowMessage(SErrorArticuloVentaCajaNoEncontrado);
           Key := 0;
           Exit;
         end;
@@ -2370,8 +2368,7 @@ begin
     end;
     if DatosCaja.cdsLineas.RecordCount > 0 then
     begin
-      if MessageDlg('Hay líneas en la venta actual.' + sLineBreak +
-                    '¿Desea CANCELAR LA VENTA y salir?',
+      if MessageDlg(SPreguntaCancelarVentaCaja,
                     mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       begin
         Close;
@@ -2556,8 +2553,7 @@ begin
   if (FCodigoEmpresa = '') or
      (FCodigoAlmacen = '') or
      (FCodigoCaja = '') then
-    ShowMessage('No hay empresa/almacén/caja asignados. ' +
-                'Selecciona una caja antes de buscar operaciones.')
+    ShowMessage(SErrorUbicacionCajaBuscarOperacionesNoAsignada)
   else
   begin
     Formulario := TfrmConsultaOpe.Create(Application, Permisos);
@@ -2600,10 +2596,7 @@ begin
     VieneDeDep := DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
     if (VieneDeDep = 'S') or (VieneDeDep = 'A') then
     begin
-      ShowMessage(
-        'No se puede eliminar una línea vinculada a un depósito.' + sLineBreak +
-                  'Cambie la cantidad a negativo si necesita ' +
-                  'revertirla.');
+      ShowMessage(SErrorLineaDepositoCajaNoEliminable);
       Exit;
     end;
   end;
@@ -2653,8 +2646,7 @@ procedure TfrmMtoOpeCaja.actSalirExecute(Sender: TObject);
 begin
   if (DatosCaja.cdsLineas.Active) and (not DatosCaja.cdsLineas.IsEmpty) then
   begin
-    if MessageDlg('Hay una venta en curso.' + sLineBreak +
-                  '¿Desea BORRAR LA VENTA y salir?',
+    if MessageDlg(SPreguntaBorrarVentaCaja,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
@@ -2998,7 +2990,7 @@ begin
     if sNomCliente = '' then
     begin
       Error := True;
-      ErrorText := 'El código de cliente no existe.';
+      ErrorText := SErrorCodigoClienteCajaNoExiste;
     end
     else
     begin
@@ -3178,7 +3170,7 @@ begin
     else
     begin
       Error := True;
-      ErrorText := 'No se encontró ningún empleado válido.';
+      ErrorText := SErrorEmpleadoCajaNoEncontrado;
       lblNombreEmpleado.Caption := '';
     end;
   finally
@@ -3516,7 +3508,8 @@ begin
            // Vale emitido como reembolso o cambio: avisar al cajero para
            // que lo entregue al cliente. El vale ya queda grabado en
            // fza_caja_vales (estado PENDIENTE) y es canjeable.
-           ShowMessage('Entregue el vale al cliente: ' + CodigoValeGenerado);
+           ShowMessage(Format(SInfoValeCajaEntregar,
+             [CodigoValeGenerado]));
          end;
          if frmFaseCobro.EnviarEmail then
          begin
@@ -3530,9 +3523,8 @@ begin
                frmFaseCobro.EmailEnvio, sMensajeCorreo) then
                ShowMessage(sMensajeCorreo)
              else
-               ShowMessage('La operación se ha guardado correctamente, ' +
-                 'pero no se ha podido enviar el correo.' + sLineBreak +
-                 sMensajeCorreo);
+               ShowMessage(Format(SErrorCorreoOperacionCajaNoEnviado,
+                 [sMensajeCorreo]));
            finally
              Screen.Cursor := crDefault;
            end;
@@ -3585,7 +3577,7 @@ begin
         sTipoRectificativa := 'SUSTITUTIVA';
       end;
   else
-    raise Exception.Create('Debe indicar el tipo de rectificativa.');
+    raise Exception.Create(SErrorTipoRectificativaCajaNoIndicado);
   end;
   Qry := TUniQuery.Create(nil);
   try
@@ -3599,8 +3591,8 @@ begin
     Qry.ParamByName('NUMERO').AsString := ANumero;
     Qry.Open;
     if Qry.IsEmpty then
-      raise Exception.Create('No se encontró el borrador ' + ASerie +
-                             '\' + ANumero + ' a rectificar.');
+      raise Exception.Create(Format(SErrorBorradorRectificarCajaNoEncontrado,
+        [ASerie, ANumero]));
     if not (DatosCaja.cdsCabecera.State in [dsEdit, dsInsert]) then
       DatosCaja.cdsCabecera.Edit;
     for i := 0 to Qry.FieldCount - 1 do
@@ -3711,7 +3703,7 @@ begin
     DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString;
   if (Trim(sCodigoCliente) = '') or (Trim(sCodigoCliente) = '0') then
   begin
-    ShowMessage('Debe seleccionar un cliente para cargar sus depósitos.');
+    ShowMessage(SErrorClienteDepositosCajaNoSeleccionado);
     Exit;
   end;
 
@@ -4291,7 +4283,7 @@ begin
   CargarAvsValidos(ArtPadre, Orden, Avs);
   if Length(Avs) = 0 then
   begin
-    ShowMessage('No hay valores definidos para este atributo.');
+    ShowMessage(SErrorValoresAtributoCajaNoDefinidos);
     Exit;
   end;
 
@@ -4434,7 +4426,7 @@ begin
     Layout.GuardarAnchoPanel('FotoStockWidth',    pnlFotoStock);
     Layout.GuardarGrid('Lineas', tvLineasOpe);
     if Layout.PreguntarYGrabar('Personalización Caja') then
-      ShowMessage('Layout guardado.');
+      ShowMessage(SInfoLayoutCajaGuardado);
   finally
     FreeAndNil(Layout);
   end;
@@ -4452,8 +4444,7 @@ begin
       BringToFront;
     end;
     if MessageDlg(
-      Format('La Operación %d tiene artículos pendientes.' + sLineBreak +
-                         '¿Desea ELIMINARLA y cerrar?', [Self.Tag]),
+      Format(SPreguntaEliminarOperacionCajaPendiente, [Self.Tag]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then

@@ -78,6 +78,9 @@ type
 
 implementation
 
+uses
+  inLibMsg;
+
 constructor TfrmModalFiltroArt.Create(AOwner: TComponent);
 begin
   // CreateNew: sin .dfm, montamos la UI a mano en ConstruirUI.
@@ -328,9 +331,7 @@ begin
     end;
     if n > FUmbral then
       bSeguir := MessageDlg(
-        Format('Aún se cargarán %d artículos, por encima del límite ' +
-               'recomendado de %d.' + sLineBreak +
-               'La carga puede tardar. ¿Continuar igualmente?',
+        Format(SPreguntaSuperarLimiteCargaArticulos,
                [n, FUmbral]),
         mtWarning, [mbYes, mbNo], 0) = mrYes;
   end;

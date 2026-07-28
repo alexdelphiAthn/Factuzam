@@ -85,7 +85,7 @@ var
 implementation
 
 uses
-  inLibGenBusq;
+  inLibGenBusq, inLibMsg;
 
 type
   TEjecutorBusquedaMto = class(TEjecutorBusqueda)
@@ -427,8 +427,7 @@ begin
           FConfigAlta.TipoDocContador,
           IdentidadSesion.Usuario);
         if sCodigoFinal = '' then
-          raise Exception.Create(
-            'No se pudo obtener el contador automático.');
+          raise Exception.Create(SErrorContadorAutomaticoBusqueda);
       end;
       Qry.SQL.Text := 'SELECT * FROM ' + FConfigAlta.Tabla + ' WHERE 1=0';
       Qry.Open;
@@ -449,7 +448,7 @@ begin
       Qry.Post;
       Conn.Commit;
       Result := True;
-      ShowMessage('Registro ' + sCodigoFinal + ' creado correctamente.');
+      ShowMessage(Format(SInfoRegistroBusquedaCreado, [sCodigoFinal]));
       if Assigned(cxGrdDBTabPrin.DataController.DataSource) and
          (cxGrdDBTabPrin.DataController.DataSource.DataSet.Active) then
       begin
@@ -464,8 +463,7 @@ begin
       begin
         Conn.Rollback;
         if Qry.State in [dsInsert, dsEdit] then Qry.Cancel;
-        ShowMessage('Error al insertar (se ha cancelado la operación): ' +
-                                                                     E.Message);
+        ShowMessage(Format(SErrorInsertarRegistroBusqueda, [E.Message]));
         Result := False;
       end;
     end;

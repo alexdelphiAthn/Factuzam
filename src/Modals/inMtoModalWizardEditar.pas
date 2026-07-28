@@ -159,7 +159,7 @@ implementation
 {$R *.dfm}
 
 uses
-  UniDataConn, inLibUser, inLibGlobalVar;
+  UniDataConn, inLibUser, inLibGlobalVar, inLibMsg;
 
 const
   ITEM_NUEVO = '<< Nuevo formato >>';
@@ -315,13 +315,13 @@ begin
   // Validar que tenemos nombre antes de pasar al paso 2.
   if NombreFinal = '' then
   begin
-    ShowMessage('Indique un nombre para el formato.');
+    ShowMessage(SErrorNombreFormatoWizardNoIndicado);
     Stop := True;
     Exit;
   end;
   if SameText(NombreFinal, ITEM_NUEVO) then
   begin
-    ShowMessage('Escriba un nombre nuevo para el formato.');
+    ShowMessage(SErrorNombreFormatoWizardNoModificado);
     Stop := True;
     Exit;
   end;
@@ -796,27 +796,22 @@ begin
 
   if sDS = '' then
   begin
-    ShowMessage('1) Selecciona el dataset master (cabecera o detalle) ' +
-                'en la lista de la izquierda.');
+    ShowMessage(SErrorDatasetMasterWizardNoSeleccionado);
     Exit;
   end;
   if sCampos = '' then
   begin
-    ShowMessage('2) Marca al menos un campo del master ' +
-                '(Master fields).');
+    ShowMessage(SErrorCamposMasterWizardNoSeleccionados);
     Exit;
   end;
   if sTabla = '' then
   begin
-    ShowMessage('3) Selecciona la tabla o vista externa que quieres ligar.');
+    ShowMessage(SErrorTablaExternaWizardNoSeleccionada);
     Exit;
   end;
   if sCampoTabla = '' then
   begin
-    ShowMessage('4) Selecciona el campo (o campos) de la tabla externa ' +
-                'que se cruzan con el master. Para seleccionar varios ' +
-                'usa Ctrl o Mayus; el orden de seleccion determina el ' +
-                'pareo con los Master fields (k=1,2,...).');
+    ShowMessage(SErrorCamposTablaExternaWizardNoSeleccionados);
     Exit;
   end;
 

@@ -166,7 +166,7 @@ uses
   inLibFotos,
   inMtoArticulos,
   inMtoFamilias,
-  inMtoProveedores, inMtoModalAddBlockTarifa, inMtoPrincipal;
+  inMtoProveedores, inMtoModalAddBlockTarifa, inMtoPrincipal, inLibMsg;
 
 {$R *.dfm}
 
@@ -217,14 +217,13 @@ begin
 
   if (dsTablaG.DataSet = nil) or (dsTablaG.DataSet.IsEmpty) then
   begin
-    ShowMessage('Selecciona primero una tarifa.');
+    ShowMessage(SErrorTarifaNoSeleccionada);
     Exit;
   end;
 
   if dsTablaG.State in [dsInsert, dsEdit] then
   begin
-    if MessageDlg(
-      'La tarifa actual esta en edicion. Guardar antes de continuar?',
+    if MessageDlg(SPreguntaGuardarTarifaAntesContinuar,
                   mtConfirmation, [mbYes, mbNo, mbCancel], 0) = mrYes then
       dsTablaG.DataSet.Post
     else

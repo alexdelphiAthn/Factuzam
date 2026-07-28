@@ -1,4 +1,4 @@
-# Restricción de consulta por empresa/almacén/caja del usuario
+﻿# Restricción de consulta por empresa/almacén/caja del usuario
 
 Parámetro que limita al usuario a consultar solo los documentos y
 operaciones de su empresa/almacén/caja por defecto (`fza_usuarios`).
@@ -35,6 +35,9 @@ empresa/almacén/caja ya existen en `fza_usuarios`
   columna y valor. Columna `''` = esa pantalla no tiene esa dimensión.
   El `OR IS NULL` evita excluir documentos sin esa dimensión (p. ej.
   facturas de mayor con `CODIGO_CAJA_FAC` NULL — bug B1 de las pruebas).
+- `SqlFiltroDocumento(prefijo, incluirCaja)`: deriva las columnas
+  estándar `CODIGO_EMP_*`, `CODIGO_ALM_*` y, solo cuando se solicita,
+  `CODIGO_CAJA_*`; lo usan los ocho documentos refactorizados.
 - `InyectarFiltroSql(sql, filtro)`: mete el filtro en el WHERE de nivel
   superior de una SELECT (añade `WHERE 1 = 1` si no hay), insertando
   antes del primer GROUP BY / HAVING / ORDER BY / LIMIT de nivel
@@ -55,8 +58,8 @@ empresa/almacén/caja ya existen en `fza_usuarios`
 | Pantalla                | Columnas filtradas                                  |
 |-------------------------|-----------------------------------------------------|
 | Facturas (base/normal)  | `CODIGO_EMP_FAC`, `CODIGO_ALM_FAC`, `CODIGO_CAJA_FAC` |
-| Albaranes venta         | `CODIGO_EMP_ALB` (solo empresa en cabecera)         |
-| Pedidos venta           | `CODIGO_EMP_PED` (solo empresa en cabecera)         |
+| Albaranes venta         | `CODIGO_EMP_ALB`, `CODIGO_ALM_ALB`                  |
+| Pedidos venta           | `CODIGO_EMP_PED`, `CODIGO_ALM_PED`                  |
 | Facturas compra         | `CODIGO_EMP_FACC`, `CODIGO_ALM_FACC`                |
 | Albaranes compra        | `CODIGO_EMP_ALBC`, `CODIGO_ALM_ALBC`                |
 | Pedidos compra          | `CODIGO_EMP_PEDC`, `CODIGO_ALM_PEDC`                |

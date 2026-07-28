@@ -54,7 +54,8 @@ implementation
 uses
   System.IOUtils,
   Data.DB, Uni,
-  inLibGlobalVar, inLibVerifactuInstalacion, inLibParametrosIntf;
+  inLibGlobalVar, inLibVerifactuInstalacion, inLibParametrosIntf,
+  inLibMsg;
 
 {$R *.dfm}
 
@@ -383,8 +384,7 @@ begin
     FWebDeclaracion.Navigate(sArchivo);
     if not EsperarCargaWeb(FWebDeclaracion, 15000) then
     begin
-      raise Exception.Create('No se pudo preparar el documento de ' +
-        'impresión.');
+      raise Exception.Create(SErrorPrepararImpresionDeclaracionResponsable);
     end;
     vEntrada := EmptyParam;
     vSalida := EmptyParam;
@@ -394,8 +394,7 @@ begin
   except
     on E: Exception do
     begin
-      ShowMessage('No se pudo imprimir la declaración responsable:' +
-        sLineBreak + E.Message);
+      ShowMessage(SErrorImprimirDeclaracionResponsable + E.Message);
     end;
   end;
   btnImprimir.Enabled := True;
@@ -414,11 +413,10 @@ begin
       ConexionPrincipal,
       IdentidadSesion.Usuario, '');
     lblInstalacionEstado.Caption := 'Número disponible y guardado.';
-    ShowMessage('Número de instalación SIF disponible: ' + oEstado.Numero);
+    ShowMessage(SInfoNumeroInstalacionSifDisponible + oEstado.Numero);
   except
     on E: Exception do
-      ShowMessage('No se pudo generar el número de instalación SIF:' +
-        sLineBreak + E.Message);
+      ShowMessage(SErrorGenerarNumeroInstalacionSif + E.Message);
   end;
   ActualizarInstalacion;
 end;

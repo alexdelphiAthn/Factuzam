@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaFaseCobro                                            }
 {    Tipo:       Formulario (Mto)                                              }
@@ -210,7 +210,7 @@ implementation
 {$R *.dfm}
 
 uses inMtoCajaSeleccionVale, inMtoModalSerieFechaFactura,
-     UniDataCaja, inLibDocumentoFiscal, inLibCorreoTickets;
+     UniDataCaja, inLibDocumentoFiscal, inLibCorreoTickets, inLibMsg;
 
 procedure TfrmMtoCajaFaseCobro.CargarComboSeries;
 var
@@ -287,16 +287,14 @@ var
 begin
   //F8 -> grabar la venta como factura completa (A4), no como ticket
   if FRectificaA <> '' then
-    ShowMessage('Una rectificación se cierra como ticket rectificativo,' +
-                ' no como borrador normal.')
+    ShowMessage(SErrorRectificacionCajaNoAdmiteBorrador)
   else if (Trim(FCodigoCliente) = '') or (Trim(FCodigoCliente) = '0') then
-    ShowMessage('Asigne un cliente a la operación para emitir borrador.')
+    ShowMessage(SErrorClienteBorradorCajaNoAsignado)
   else if Trim(FNifCliente) = '' then
-    ShowMessage('El cliente no tiene NIF: complételo en su ficha para ' +
-                'poder emitir borrador normal.')
+    ShowMessage(SErrorNifClienteBorradorCajaNoIndicado)
   else if PaisEsEspana(FCodigoPaisCliente, FNombrePaisCliente) and
           (not DocumentoFiscalValido(FNifCliente)) then
-    ShowMessage('El NIF/CIF/NIE del cliente no es valido: ' +
+    ShowMessage(SErrorDocumentoFiscalClienteCajaNoValido +
                 MensajeDocumentoFiscalInvalido(FNifCliente))
   else if ValidarYConfirmar then
   begin
@@ -385,10 +383,7 @@ begin
   begin
     Result := False;
     MessageDlg(
-      Format('No se puede emitir en la serie "%s".' + sLineBreak +
-             'El último ticket de esa serie tiene fecha %s, posterior ' +
-             'a la fecha %s.' + sLineBreak +
-             'Elija otra serie para emitir con esta fecha.',
+      Format(SErrorFechaSerieEmisionCajaNoValida,
              [ASerie,
               FormatDateTime('dd/mm/yyyy', dUltima),
               FormatDateTime('dd/mm/yyyy', AFecha)]),
@@ -425,10 +420,7 @@ begin
       iMax   := Qry.FieldByName('NMAX').AsLargeInt;
       if (iFilas > 0) and (iFilas <> iMax - iMin + 1) then
         MessageDlg(
-          Format('La serie "%s" tiene huecos en la numeración: faltan %d ' +
-                 'números entre el %d y el %d.' + sLineBreak +
-                 'Recuerde que la numeración debe ser correlativa según la ' +
-                 'ley.',
+          Format(SAvisoHuecosNumeracionSerieCaja,
                  [ASerie, (iMax - iMin + 1) - iFilas, iMin, iMax]),
           mtWarning, [mbOK], 0);
     finally
@@ -463,7 +455,7 @@ begin
   ANumeroFmt := '';
   iNum := StrToInt64Def(Trim(ANumero), 0);
   if iNum <= 0 then
-    MessageDlg('El número de borrador indicado no es válido.',
+    MessageDlg(SErrorNumeroBorradorCajaNoValido,
       mtError, [mbOK], 0)
   else
   begin
@@ -488,11 +480,10 @@ begin
       iLen    := Qry.FieldByName('NLEN').AsInteger;
       iExiste := Qry.FieldByName('NEXISTE').AsLargeInt;
       if iExiste > 0 then
-        MessageDlg(Format('El número %d ya existe en la serie "%s".',
+        MessageDlg(Format(SErrorNumeroBorradorCajaExistente,
           [iNum, ASerie]), mtError, [mbOK], 0)
       else if (iMax <= iMin) or (iNum <= iMin) or (iNum >= iMax) then
-        MessageDlg(Format('El número %d no es un hueco de la serie "%s": ' +
-          'los huecos están entre el %d y el %d.',
+        MessageDlg(Format(SErrorNumeroBorradorCajaNoEsHueco,
           [iNum, ASerie, iMin, iMax]), mtError, [mbOK], 0)
       else
       begin
@@ -607,11 +598,11 @@ begin
       begin
         FEmailEnvio := Trim(FEmailEnvio);
         if FEmailEnvio = '' then
-          bContinuar := InputQuery('Enviar documentación',
-            'Correo electrónico:', FEmailEnvio);
+          bContinuar := InputQuery(STituloEnviarDocumentacionCaja,
+            SSolicitudCorreoDocumentacionCaja, FEmailEnvio);
         if bContinuar and (Trim(FEmailEnvio) = '') then
         begin
-          ShowMessage('Indique una dirección de correo electrónico.');
+          ShowMessage(SErrorCorreoDocumentacionCajaNoIndicado);
           bContinuar := False;
         end;
       end;
@@ -1110,7 +1101,7 @@ begin
   // 1. Validar que tenemos un cliente válido y con permisos para dejar a deber
   if not FDatosCobro.PuedeDejarEnCuenta then
   begin
-    ShowMessage('Operación denegada: Este cliente no tiene crédito permitido.');
+    ShowMessage(SErrorCreditoClienteCajaNoPermitido);
     Exit;
   end;
   // 2. Comprobar que realmente hay algo que prestar
@@ -1118,7 +1109,7 @@ begin
      (not FDatosCobro.EsDevolucionEconomica) and
      (FDatosCobro.ImporteTotalPagar > 0) then
   begin
-    ShowMessage('No hay importe pendiente para pasar a crédito.');
+    ShowMessage(SErrorImporteCreditoCajaNoPendiente);
     Exit;
   end;
   // 3. Aplicar TODO el total pendiente a la cuenta del cliente

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFacturasSimplif                                          }
 {    Tipo:       Formulario (Mto) descendiente                                 }
@@ -91,7 +91,7 @@ type
 implementation
 
 uses
-  inLibUser, inLibFiltroUsuario;
+  inLibUser, inLibFiltroUsuario, inLibMsg;
 
 {$R *.dfm}
 
@@ -427,9 +427,7 @@ begin
         begin
           OcultarProgresoCarga;
           Screen.Cursor := cursorPrev;
-          MessageDlg(Format('La selección cargaría %s registros, demasiados ' +
-            'para mostrarlos de una vez.' + sLineBreak +
-            'Acota los filtros (años / almacenes) y vuelve a intentarlo.',
+          MessageDlg(Format(SAvisoLimiteRegistrosFacturaSimplificada,
             [FormatFloat('#,##0', nTotal)]), mtWarning, [mbOK], 0);
         end
         else

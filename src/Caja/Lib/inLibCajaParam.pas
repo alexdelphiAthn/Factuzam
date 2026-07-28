@@ -53,7 +53,7 @@ function CrearParametrosCaja(
 implementation
 
 uses
-  System.SysUtils, inLibBuscarImpresora;
+  System.SysUtils, inLibBuscarImpresora, inLibMsg;
 
 { TParametrosCaja }
 
@@ -63,7 +63,7 @@ constructor TParametrosCaja.Create(
 begin
   if not Assigned(AContextoSesion) then
     raise EArgumentNilException.Create(
-      'No se ha proporcionado el contexto para la impresora de caja.');
+      SErrorContextoImpresoraCajaNoProporcionado);
   inherited Create(
     APerfilesUsuario,
     'frmMtoCajaParam',

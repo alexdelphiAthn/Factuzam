@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaPagosHist                                            }
 {    Tipo:       Formulario (Mto)                                              }
@@ -91,7 +91,7 @@ implementation
 
 uses
   inLibWin, inLibUser, inMtoPrincipal,
-  inMtoModalGenImpSave, inMtoModalImpPagos, inLibFiltroUsuario;
+  inMtoModalGenImpSave, inMtoModalImpPagos, inLibFiltroUsuario, inLibMsg;
 
 {$R *.dfm}
 
@@ -374,7 +374,7 @@ begin
       FreeAndNil(oList);
       Screen.Cursor := crDefault;
     end;
-    ShowMessage('Precarga guardada.');
+    ShowMessage(SInfoPrecargaCajaGuardada);
   end;
 end;
 

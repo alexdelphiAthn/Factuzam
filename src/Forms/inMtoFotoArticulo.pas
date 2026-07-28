@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFotoArticulo                                             }
 {    Tipo:       Formulario (Mto)                                              }
@@ -142,6 +142,9 @@ procedure MostrarFotoFlotante(AOwner: TComponent;
                               const ACodArt, ACodSku: string);
 
 implementation
+
+uses
+  inLibMsg;
 
 {$R *.dfm}
 
@@ -350,7 +353,7 @@ begin
   // del grupo": el color es el ultimo segmento del nivel y se elige el PNG
   // de ese color. Los demas PNG (y el temporal) se borran tras integrar.
   if FCodigoArt = '' then
-    ShowMessage('No hay articulo activo para descargar fotos.')
+    ShowMessage(SErrorFotoArticuloNoActivoDescargar)
   else
   begin
     Screen.Cursor := crHourGlass;
@@ -364,8 +367,8 @@ begin
       Screen.Cursor := crDefault;
     end;
     if not bOK then
-      ShowMessage('No se pudieron descargar las fotos del articulo ' +
-                  FCodigoArt + ':' + sLineBreak + sMsg)
+      ShowMessage(Format(SErrorDescargarFotosArticulo,
+                         [FCodigoArt, sMsg]))
     else
     begin
       sClave := ClaveNivelSeleccionado;
@@ -389,7 +392,7 @@ begin
       SetArticuloSku(FCodigoArt, FCodigoSku);
       // Borrar los PNG temporales extraidos (no dejar huerfanos).
       LimpiarDescargaTemporal(archivos);
-      ShowMessage(Format('Descargadas %d foto(s) del articulo %s.',
+      ShowMessage(Format(SInfoFotosArticuloDescargadas,
                          [Length(archivos), FCodigoArt]));
     end;
   end;
@@ -587,7 +590,7 @@ begin
   inherited;
   if FCodigoArt = '' then
   begin
-    ShowMessage('No hay artículo activo.');
+    ShowMessage(SErrorFotoArticuloNoActivo);
     Exit;
   end;
   if not dlgAbrirFoto.Execute then Exit;
@@ -597,7 +600,7 @@ begin
   except
     on E: Exception do
     begin
-      ShowMessage('No se pudo guardar la foto: ' + E.Message);
+      ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
       Exit;
     end;
   end;
@@ -611,13 +614,13 @@ begin
   inherited;
   if FCodigoSku = '' then
   begin
-    ShowMessage('No hay SKU activo. Usa "Cambiar foto del artículo".');
+    ShowMessage(SErrorFotoSkuNoActivo);
     Exit;
   end;
   sClave := ClaveNivelSeleccionado;
   if sClave = '' then
   begin
-    ShowMessage('No hay nivel de atributos seleccionado en el combo.');
+    ShowMessage(SErrorNivelAtributosFotoNoSeleccionado);
     Exit;
   end;
   if not dlgAbrirFoto.Execute then Exit;
@@ -627,7 +630,7 @@ begin
   except
     on E: Exception do
     begin
-      ShowMessage('No se pudo guardar la foto: ' + E.Message);
+      ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
       Exit;
     end;
   end;
@@ -638,7 +641,7 @@ procedure TfrmFotoArticulo.btnQuitarClick(Sender: TObject);
 begin
   inherited;
   if not FUltimaInfo.Encontrada then Exit;
-  if MessageDlg('¿Eliminar la foto actual?', mtConfirmation,
+  if MessageDlg(SPreguntaEliminarFotoActual, mtConfirmation,
                 [mbYes, mbNo], 0) <> mrYes then Exit;
   // Borramos exactamente la fila que resolvio (articulo, prefijo o SKU)
   oFotos.Eliminar(FCodigoArt, FUltimaInfo.ClaveResuelta);

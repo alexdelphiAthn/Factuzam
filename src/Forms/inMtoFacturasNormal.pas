@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoFacturasNormal                                           }
 {    Tipo:       Formulario (Mto) descendiente                                 }
@@ -57,7 +57,7 @@ type
 implementation
 
 uses
-  inLibFacturae;
+  inLibFacturae, inLibMsg;
 
 {$R *.dfm}
 
@@ -115,21 +115,20 @@ begin
      (not dsTablaG.DataSet.Active) or
      dsTablaG.DataSet.IsEmpty then
   begin
-    ShowMessage('Seleccione un borrador de venta mayor.');
+    ShowMessage(SErrorBorradorVentaMayorNoSeleccionado);
     Abort;
   end;
   if (dsTablaG.DataSet.State = dsInsert) or
      (dsTablaG.DataSet.State = dsEdit) then
   begin
-    ShowMessage('Guarde los cambios antes de emitir el eDoc.');
+    ShowMessage(SErrorGuardarAntesEmitirEdoc);
     Abort;
   end;
   if FaltanDatosPersonaFisicaFacturae(dsTablaG.DataSet) then
   begin
     pcPantalla.ActivePage := tsFicha;
     pcCab.ActivePage := tsParametrosEDoc;
-    ShowMessage('El cliente tiene NIF/NIE de persona física.' + sLineBreak +
-      'Rellene nombre y apellidos en Parámetros eDoc antes de emitir.');
+    ShowMessage(SErrorPersonaFisicaEdocSinDatos);
     if txtNOMBRE_PERSONA_CLIENTE_FACTURA.CanFocus then
       txtNOMBRE_PERSONA_CLIENTE_FACTURA.SetFocus;
     Abort;
@@ -147,8 +146,7 @@ begin
       oResultado := EmitirFacturae(ConexionPrincipal, ContextoSesion,
         sSerie, sNumero, oDialogo.FileName);
       dsTablaG.DataSet.Refresh;
-      ShowMessage('eDoc emitido correctamente:' + sLineBreak +
-        oResultado.Archivo);
+      ShowMessage(Format(SInfoEdocEmitido, [oResultado.Archivo]));
     end;
   finally
     FreeAndNil(oDialogo);

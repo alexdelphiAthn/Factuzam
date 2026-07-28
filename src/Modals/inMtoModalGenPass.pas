@@ -50,6 +50,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 procedure TfrmModalGenPass.btnCancelarClick(Sender: TObject);
 begin
   inherited;
@@ -61,7 +64,7 @@ begin
   inherited;
   if (edtPassword.Text <> edtPasswordCon.Text) then
   begin
-    ShowMessage('Las contraseñas no coinciden');
+    ShowMessage(SErrorContrasenasNoCoinciden);
   end
   else
   begin

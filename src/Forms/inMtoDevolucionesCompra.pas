@@ -1111,13 +1111,8 @@ end;
 
 function TfrmMtoDevolucionesCompra.SqlRestriccionUsuario: string;
 begin
-  // Documentos de compra: empresa y almacén (no llevan caja)
-  Result := SqlFiltroEmpAlmCaja(
-    ContextoSesion,
-    ParametrosApp,
-    'CODIGO_EMP_DEVC',
-    'CODIGO_ALM_DEVC',
-    '');
+  Result := SqlFiltroDocumento(
+    ContextoSesion, ParametrosApp, 'DEVC');
 end;
 
 procedure TfrmMtoDevolucionesCompra.CrearTablaPrincipal;

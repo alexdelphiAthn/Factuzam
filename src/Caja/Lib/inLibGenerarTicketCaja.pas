@@ -46,7 +46,7 @@ implementation
 uses
   Data.DB, DBAccess, Vcl.Dialogs,
   inLibFTicket, inLibPreviewTicket, inLibDir,
-  inLibGenerarTicket;
+  inLibGenerarTicket, inLibMsg;
 
 procedure ImprimirTicketOperacionCaja(
   AConexion: TUniConnection;
@@ -171,10 +171,9 @@ begin
      (not APermisos.TienePermiso(
        PERMISO_CAJA_ABRIR_CAJON,
        paPermitir)) then
-    ShowMessage('No tiene permiso para abrir el cajón.')
+    ShowMessage(SErrorPermisoAbrirCajon)
   else if not ImpresoraCajaAsignada(AParametrosCaja) then
-    ShowMessage('No hay impresora de tickets configurada en parámetros ' +
-                '(vgerDefPrinter); no se puede abrir el cajón.')
+    ShowMessage(SErrorImpresoraTicketsCajaNoConfigurada)
   else
   begin
     Ticket := TTicketTermico.Create(

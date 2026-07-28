@@ -252,7 +252,8 @@ uses
   inMtoPrincipal,
   inMtoArticulos,
   inMtoClientes,
-  inMtoFacturasBase;
+  inMtoFacturasBase,
+  inLibMsg;
 
 {$R *.dfm}
 
@@ -471,7 +472,7 @@ begin
     dmmProveedores.unqryKits.Cancel
   else if not dmmProveedores.unqryKits.IsEmpty then
   begin
-    if MessageDlg('¿Borrar el kit seleccionado y todas sus tallas?',
+    if MessageDlg(SPreguntaBorrarKitProveedor,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       dmmProveedores.unqryKits.Delete;
   end;

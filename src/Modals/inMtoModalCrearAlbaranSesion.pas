@@ -125,7 +125,7 @@ type
 implementation
 
 uses
-  inLibtb;
+  inLibtb, inLibMsg;
 
 {$R *.dfm}
 
@@ -334,24 +334,24 @@ begin
   inherited;
   if (not GetGenAlbaran) and (not GetGenPedido) then
   begin
-    ShowMessage('Marca al menos uno: Albaran y/o Pedido.');
+    ShowMessage(SErrorTipoDocumentoSesionNoSeleccionado);
     Exit;
   end;
   if GetGenAlbaran and (Trim(cbbSerieAlb.Text) = '') then
   begin
-    ShowMessage('Indica la serie del albaran.');
+    ShowMessage(SErrorSerieAlbaranSesionNoIndicada);
     if cbbSerieAlb.CanFocus then cbbSerieAlb.SetFocus;
     Exit;
   end;
   if GetGenPedido and (Trim(cbbSeriePed.Text) = '') then
   begin
-    ShowMessage('Indica la serie del pedido.');
+    ShowMessage(SErrorSeriePedidoSesionNoIndicada);
     if cbbSeriePed.CanFocus then cbbSeriePed.SetFocus;
     Exit;
   end;
   if (GetGenAlbaran or GetGenPedido) and (GetAlmacen = '') then
   begin
-    ShowMessage('Indica un almacen destino.');
+    ShowMessage(SErrorAlmacenDestinoSesionNoIndicado);
     if cbbAlmacen.CanFocus then cbbAlmacen.SetFocus;
     Exit;
   end;

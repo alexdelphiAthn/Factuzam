@@ -153,6 +153,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -891,7 +894,7 @@ begin
     if not FQModalSolic.Active then
       FQModalSolic.Open;
     if FQModalSolic.IsEmpty then
-      ShowMessage('No hay solicitudes pendientes de atender.')
+      ShowMessage(SErrorSolicitudesTraspasoPendientesNoEncontradas)
     else
     begin
       Dlg := TForm.CreateNew(Self);
@@ -1002,7 +1005,7 @@ begin
           ActualizarTotal;
         end
         else
-          ShowMessage('No se pudo cargar la solicitud.');
+          ShowMessage(SErrorCargarSolicitudTraspaso);
       end;
     end;
   finally
@@ -1037,15 +1040,15 @@ begin
     Exit;
   if Trim(FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString) = '' then
   begin
-    ShowMessage('Trae primero una solicitud (F8) para cerrarla.');
+    ShowMessage(SErrorSolicitudTraspasoCerrarNoCargada);
     Exit;
   end;
-  if MessageDlg('¿Cerrar la solicitud dejando las líneas sin servir como ' +
-                'no atendidas?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  if MessageDlg(SPreguntaCerrarSolicitudTraspaso,
+                mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     if FDatos.CerrarSolicitud then
     begin
-      ShowMessage('Solicitud cerrada.');
+      ShowMessage(SInfoSolicitudTraspasoCerrada);
       AplicarModo(mtAtender);
     end;
   end;
@@ -1059,17 +1062,17 @@ begin
   // cada linea (servir 0) y la resuelve como DENEGADO TOTAL sin mover stock. El
   // solicitante lo vera en su historico (F7). Para denegar solo algunas lineas,// sirve unas con cantidad y deja otras a 0 con su motivo,y pulsa F12.
   if FModo <> mtAtender then
-    ShowMessage('Denegar solo aplica al atender una solicitud.')
+    ShowMessage(SErrorDenegarSolicitudTraspasoModoNoValido)
   else if Trim(FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString) = '' then
-    ShowMessage('Trae primero una solicitud (F8) para denegarla.')
+    ShowMessage(SErrorSolicitudTraspasoDenegarNoCargada)
   else
   begin
     sMotivo := '';
-    if InputQuery('Denegar petición',
-                  'Motivo del rechazo (lo verá quien la pidió):', sMotivo) then
+    if InputQuery(STituloDenegarSolicitudTraspaso,
+                  SSolicitudMotivoRechazoTraspaso, sMotivo) then
     begin
       if Trim(sMotivo) = '' then
-        ShowMessage('Debes indicar un motivo para denegar.')
+        ShowMessage(SErrorMotivoDenegacionTraspasoNoIndicado)
       else
       begin
         FDatos.cdsLineas.DisableControls;
@@ -1093,7 +1096,7 @@ begin
         try
           if FDatos.GrabarDenegacion then
           begin
-            ShowMessage('Petición denegada (DENEGADO TOTAL).');
+            ShowMessage(SInfoPeticionTraspasoDenegada);
             AplicarModo(mtAtender);
           end;
         except
@@ -1130,13 +1133,13 @@ begin
   begin
     sOrigen := DestinoSeleccionado;
     if sOrigen = '' then
-      ShowMessage('Selecciona el almacén al que solicitas.')
+      ShowMessage(SErrorAlmacenOrigenSolicitudNoSeleccionado)
     else
     begin
       try
         if FDatos.GrabarSolicitud(sOrigen, sNum, sSer) then
         begin
-          ShowMessage(Format('Solicitud %s/%s enviada.', [sSer, sNum]));
+          ShowMessage(Format(SInfoSolicitudTraspasoEnviada, [sSer, sNum]));
           // Ticket de la solicitud: cada SKU con stock origen / destino.
           TTraspasoTicket.ImprimirSolicitud(ConexionPrincipal, sNum, sSer,
                                             ParametrosCaja.ImpresoraCaja);
@@ -1202,7 +1205,7 @@ var
 begin
   if Trim(txtEmpleado.Text) = '' then
   begin
-    ShowMessage('Indica el empleado responsable del traspaso.');
+    ShowMessage(SErrorEmpleadoTraspasoNoIndicado);
     Result := False;
   end
   else if FDatos.ValidarEmpleado(Trim(txtEmpleado.Text), sCod, sNom) then
@@ -1216,7 +1219,8 @@ begin
   end
   else
   begin
-    ShowMessage('Empleado no encontrado: ' + txtEmpleado.Text);
+    ShowMessage(Format(SErrorEmpleadoTraspasoNoEncontrado,
+      [txtEmpleado.Text]));
     Result := False;
   end;
 end;
@@ -1254,7 +1258,7 @@ begin
       sNumSol := FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString;
       sSerSol := FDatos.cdsCabecera.FieldByName('SERIE_SOL').AsString;
       if sDestino = '' then
-        ShowMessage('Carga primero una solicitud (botón Cargar solicitud).')
+        ShowMessage(SErrorSolicitudTraspasoAtenderNoCargada)
       else
       begin
         // Reparto por linea: cuenta lo que se sirve (CANTIDAD>0) y exige motivo
@@ -1281,16 +1285,14 @@ begin
           FDatos.cdsLineas.EnableControls;
         end;
         if bFaltaMotivo then
-          ShowMessage('Indica el motivo en las líneas que deniegas ' +
-                      '(las que sirves a 0).')
+          ShowMessage(SErrorMotivoLineasTraspasoNoIndicado)
         else if iServidas > 0 then
         begin
           // Hay algo que servir: traspaso de lo servido; lo denegado queda
           // registrado con su motivo. Estado COMPLETADO TOTAL/PARCIAL.
           if FDatos.GrabarTraspaso(sDestino, sNumOp, sNumSol, sSerSol) then
           begin
-            ShowMessage(Format('Solicitud atendida. Traspaso %s grabado.',
-                               [sNumOp]));
+            ShowMessage(Format(SInfoSolicitudTraspasoAtendida, [sNumOp]));
             if AConTicket then
               TTraspasoTicket.ImprimirTraspaso(
                 ConexionPrincipal,
@@ -1301,13 +1303,13 @@ begin
             AplicarModo(mtAtender);
           end;
         end
-        else if MessageDlg('No has marcado nada para servir. ¿Denegar toda ' +
-                  'la petición?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+        else if MessageDlg(SPreguntaDenegarPeticionTraspasoCompleta,
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
         begin
           // Todo a 0: denegacion total (con el motivo por linea), sin traspaso.
           if FDatos.GrabarDenegacion then
           begin
-            ShowMessage('Petición denegada (DENEGADO TOTAL).');
+            ShowMessage(SInfoPeticionTraspasoDenegada);
             AplicarModo(mtAtender);
           end;
         end;
@@ -1317,10 +1319,10 @@ begin
     begin
       sDestino := DestinoSeleccionado;
       if sDestino = '' then
-        ShowMessage('Selecciona el almacén destino.')
+        ShowMessage(SErrorAlmacenDestinoTraspasoNoSeleccionado)
       else if FDatos.GrabarTraspaso(sDestino, sNumOp) then
       begin
-        ShowMessage(Format('Traspaso %s grabado correctamente.', [sNumOp]));
+        ShowMessage(Format(SInfoTraspasoGrabado, [sNumOp]));
         if AConTicket then
           TTraspasoTicket.ImprimirTraspaso(
             ConexionPrincipal,

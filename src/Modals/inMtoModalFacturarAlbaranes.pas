@@ -98,7 +98,7 @@ type
 implementation
 
 uses
-  inLibUser, inLibGenBusq, inLibFormatoDocumento;
+  inLibUser, inLibGenBusq, inLibFormatoDocumento, inLibMsg;
 
 {$R *.dfm}
 
@@ -266,7 +266,7 @@ begin
   sEmp := Trim(btnEmpresa.Text);
   sPrv := Trim(btnProveedor.Text);
   if (sEmp = '') or (sPrv = '') then
-    ShowMessage('Indica empresa y proveedor.')
+    ShowMessage(SErrorEmpresaProveedorFacturacionNoIndicados)
   else
   begin
     CargarProveedorNombre(sPrv);
@@ -276,8 +276,7 @@ begin
     FQryAlb.Open;
     CargarFacturasAbiertas(sEmp, sPrv);
     if FQryAlb.IsEmpty then
-      ShowMessage('No hay albaranes pendientes de crear borrador para ese ' +
-                  'proveedor.');
+      ShowMessage(SInfoAlbaranesPendientesProveedorNoEncontrados);
   end;
 end;
 
@@ -330,8 +329,7 @@ begin
   // Sin seleccion: ofrecer facturar TODOS los albaranes listados.
   else if FQryAlb.Active and (not FQryAlb.IsEmpty) then
   begin
-    if MessageDlg('No has marcado albaranes (Ctrl/Mayus+clic para elegir).' +
-                  sLineBreak + 'Crear borrador con TODOS los listados?',
+    if MessageDlg(SPreguntaFacturarTodosAlbaranesListados,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       FQryAlb.DisableControls;
@@ -384,8 +382,7 @@ begin
     begin
       bSeguir := ResolverFacturaExistente(sSerieAcum, sNumAcum);
       if not bSeguir then
-        ShowMessage('Elige el borrador existente al que incorporar los ' +
-                    'albaranes.');
+        ShowMessage(SErrorBorradorAlbaranesExistenteNoSeleccionado);
     end;
     if bSeguir then
     begin
@@ -414,9 +411,7 @@ begin
       FFacSerie   := sSerieAcum;
       FFacNumero  := sNumAcum;
       FConfirmado := nOk > 0;
-      ShowMessage(Format(
-        'Generados %d albaran(es) en el borrador %s / %s.' + sLineBreak +
-        'Omitidos (ya asociados o incompatibles): %d.',
+      ShowMessage(Format(SInfoAlbaranesGeneradosEnBorrador,
         [nOk, sSerieAcum, sNumAcum, nSkip]));
       if FConfirmado then
         ModalResult := mrOk;

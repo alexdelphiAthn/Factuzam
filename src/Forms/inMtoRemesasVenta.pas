@@ -134,7 +134,7 @@ implementation
 uses
   inLibWin, inMtoPrincipal,
   inMtoModalCargarEfectosRemesa, inMtoModalRegistrarPago,
-  inMtoModalSepaRemesaVenta, inLibSepaRemesasVenta;
+  inMtoModalSepaRemesaVenta, inLibSepaRemesasVenta, inLibMsg;
 
 {$R *.dfm}
 
@@ -246,21 +246,20 @@ function TfrmMtoRemesasVenta.EliminarRemesaActual: Boolean;
 begin
   Result := False;
   if not RemesaSeleccionada then
-    ShowMessage('Selecciona una remesa.')
+    ShowMessage(SErrorRemesaVentaNoSeleccionada)
   else if dmmRemesasVenta.RemesaTieneCobro then
-    ShowMessage('No se puede eliminar una remesa con cobro realizado.')
-  else if MessageDlg('¿Eliminar la remesa seleccionada? Los efectos ' +
-          'volveran a quedar pendientes de remesar.',
+    ShowMessage(SErrorEliminarRemesaVentaConCobro)
+  else if MessageDlg(SPreguntaEliminarRemesaVenta,
           mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     if dmmRemesasVenta.EliminarRemesa then
     begin
-      ShowMessage('Remesa eliminada.');
+      ShowMessage(SInfoRemesaVentaEliminada);
       ActualizarBancoCobro;
       Result := True;
     end
     else
-      ShowMessage('No se pudo eliminar la remesa.');
+      ShowMessage(SErrorEliminarRemesaVenta);
   end;
 end;
 
@@ -313,7 +312,7 @@ begin
   if not RemesaSeleccionada then
     CrearRemesaDesdeEfectos
   else if dmmRemesasVenta.RemesaTieneCobro then
-    ShowMessage('No se pueden añadir efectos a una remesa con cobro realizado.')
+    ShowMessage(SErrorAnadirEfectosRemesaVentaConCobro)
   else
   begin
     q := dmmRemesasVenta.unqryTablaG;
@@ -337,21 +336,20 @@ procedure TfrmMtoRemesasVenta.btnQuitarEfectoClick(Sender: TObject);
 begin
   inherited;
   if not RemesaSeleccionada then
-    ShowMessage('Selecciona una remesa.')
+    ShowMessage(SErrorRemesaVentaNoSeleccionada)
   else if not dmmRemesasVenta.unqryEfectosRemesa.Active then
-    ShowMessage('No hay efectos cargados.')
+    ShowMessage(SErrorEfectosRemesaVentaNoCargados)
   else if dmmRemesasVenta.unqryEfectosRemesa.IsEmpty then
-    ShowMessage('Selecciona un efecto de la remesa.')
+    ShowMessage(SErrorEfectoRemesaVentaNoSeleccionado)
   else if dmmRemesasVenta.RemesaTieneCobro then
-    ShowMessage('No se pueden quitar efectos de una remesa con cobro ' +
-                'realizado.')
-  else if MessageDlg('¿Quitar el efecto seleccionado de la remesa?',
+    ShowMessage(SErrorQuitarEfectosRemesaVentaConCobro)
+  else if MessageDlg(SPreguntaQuitarEfectoRemesaVenta,
           mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     if dmmRemesasVenta.QuitarEfectoActual then
-      ShowMessage('Efecto quitado de la remesa.')
+      ShowMessage(SInfoEfectoRemesaVentaQuitado)
     else
-      ShowMessage('No se pudo quitar el efecto.');
+      ShowMessage(SErrorQuitarEfectoRemesaVenta);
     ActualizarBancoCobro;
   end;
 end;
@@ -365,33 +363,33 @@ var
 begin
   inherited;
   if not RemesaSeleccionada then
-    ShowMessage('Selecciona una remesa.')
+    ShowMessage(SErrorRemesaVentaNoSeleccionada)
   else if not BancoRemesaAsignado then
-    ShowMessage('Asigna primero el banco de cobro de la remesa.')
+    ShowMessage(SErrorBancoCobroRemesaNoAsignado)
   else if not dmmRemesasVenta.unqryEfectosRemesa.Active then
-    ShowMessage('No hay efectos cargados.')
+    ShowMessage(SErrorEfectosRemesaVentaNoCargados)
   else if dmmRemesasVenta.unqryEfectosRemesa.IsEmpty then
-    ShowMessage('Selecciona un efecto de la remesa.')
+    ShowMessage(SErrorEfectoRemesaVentaNoSeleccionado)
   else
   begin
     q := dmmRemesasVenta.unqryEfectosRemesa;
     fPend := q.FieldByName('IMPORTE_PENDIENTE_EFV').AsFloat;
     if fPend <= 0.0001 then
-      ShowMessage('El efecto seleccionado no tiene importe pendiente.')
+      ShowMessage(SErrorEfectoRemesaVentaSinPendiente)
     else
     begin
       frm := TfrmModalRegistrarPago.Create(nil);
       try
-        frm.SetDatos(Format('Efecto %d - pendiente %.2f',
+        frm.SetDatos(Format(STextoEfectoPendienteRemesaVenta,
           [q.FieldByName('NUMERO_EFV').AsInteger, fPend]), fPend);
         if frm.ShowModal = mrOk then
         begin
           iRes := dmmRemesasVenta.RegistrarCobroEfectoActual(frm.Fecha,
             frm.Importe, frm.Tipo, frm.Referencia);
           if iRes > 0 then
-            ShowMessage('Efecto conciliado.')
+            ShowMessage(SInfoEfectoRemesaVentaConciliado)
           else
-            ShowMessage('No se pudo conciliar el efecto.');
+            ShowMessage(SErrorConciliarEfectoRemesaVenta);
           ActualizarBancoCobro;
         end;
       finally
@@ -409,27 +407,28 @@ var
 begin
   inherited;
   if not RemesaSeleccionada then
-    ShowMessage('Selecciona una remesa.')
+    ShowMessage(SErrorRemesaVentaNoSeleccionada)
   else if not BancoRemesaAsignado then
-    ShowMessage('Asigna primero el banco de cobro de la remesa.')
+    ShowMessage(SErrorBancoCobroRemesaNoAsignado)
   else
   begin
     fPend := dmmRemesasVenta.PendienteRemesa;
     if fPend <= 0.0001 then
-      ShowMessage('La remesa no tiene importe pendiente.')
+      ShowMessage(SErrorRemesaVentaSinImportePendiente)
     else
     begin
       frm := TfrmModalRegistrarPago.Create(nil);
       try
-        frm.SetDatos(Format('Remesa pendiente %.2f', [fPend]), fPend);
+        frm.SetDatos(Format(STextoRemesaVentaPendiente, [fPend]), fPend);
         if frm.ShowModal = mrOk then
         begin
           iRes := dmmRemesasVenta.RegistrarCobroRemesa(frm.Fecha,
             frm.Importe, frm.Tipo, frm.Referencia);
           if iRes > 0 then
-            ShowMessage(Format('Conciliados %d efecto(s).', [iRes]))
+            ShowMessage(Format(SInfoEfectosRemesaVentaConciliados,
+                               [iRes]))
           else
-            ShowMessage('No se pudo conciliar la remesa.');
+            ShowMessage(SErrorConciliarRemesaVenta);
           ActualizarBancoCobro;
         end;
       finally
@@ -445,19 +444,19 @@ var
 begin
   inherited;
   if not RemesaSeleccionada then
-    ShowMessage('Selecciona una remesa.')
+    ShowMessage(SErrorRemesaVentaNoSeleccionada)
   else
   begin
     sCodigo := VarToStr(cbbBancoCobroRemesa.EditValue);
     if sCodigo = '' then
-      ShowMessage('Selecciona un banco de cobro.')
+      ShowMessage(SErrorBancoCobroNoSeleccionado)
     else if dmmRemesasVenta.AsignarBancoRemesa(sCodigo) then
     begin
-      ShowMessage('Banco de cobro asignado.');
+      ShowMessage(SInfoBancoCobroRemesaAsignado);
       ActualizarBancoCobro;
     end
     else
-      ShowMessage('No se pudo asignar el banco de cobro.');
+      ShowMessage(SErrorAsignarBancoCobroRemesa);
   end;
 end;
 
@@ -479,7 +478,7 @@ var
 begin
   Result := False;
   if not RemesaSeleccionada then
-    ShowMessage('Selecciona una remesa.')
+    ShowMessage(SErrorRemesaVentaNoSeleccionada)
   else
   begin
     sFecha := FormatDateTime('dd/mm/yyyy', Date);
@@ -488,21 +487,22 @@ begin
       sFecha := FormatDateTime('dd/mm/yyyy',
         dmmRemesasVenta.unqryTablaG.FieldByName('FECHA_CARGO_REMV')
           .AsDateTime);
-    if InputQuery('Fecha de cobro', 'Fecha de cobro:', sFecha) then
+    if InputQuery(STituloFechaCobroRemesa, SSolicitudFechaCobroRemesa,
+                  sFecha) then
     begin
       if TryStrToDate(sFecha, dFecha) then
       begin
         if dmmRemesasVenta.ActualizarFechaCobro(dFecha) then
         begin
-          ShowMessage('Fecha de cobro actualizada.');
+          ShowMessage(SInfoFechaCobroRemesaActualizada);
           Result := True;
         end
         else
-          ShowMessage('No se pudo actualizar la fecha de cobro.');
+          ShowMessage(SErrorActualizarFechaCobroRemesa);
         ActualizarBancoCobro;
       end
       else
-        ShowMessage('Fecha no válida.');
+        ShowMessage(SErrorFechaCobroRemesaNoValida);
     end;
   end;
 end;
@@ -517,9 +517,9 @@ var
 begin
   inherited;
   if not RemesaSeleccionada then
-    ShowMessage('Selecciona una remesa.')
+    ShowMessage(SErrorRemesaVentaNoSeleccionada)
   else if not BancoRemesaAsignado then
-    ShowMessage('Asigna primero el banco de cobro de la remesa.')
+    ShowMessage(SErrorBancoCobroRemesaNoAsignado)
   else
   begin
     bSeguir := True;
@@ -528,7 +528,7 @@ begin
     if bSeguir then
     begin
       if dmmRemesasVenta.PendienteRemesa <= 0.0001 then
-        ShowMessage('La remesa no tiene importe pendiente.')
+        ShowMessage(SErrorRemesaVentaSinImportePendiente)
       else
       begin
         try
@@ -553,7 +553,7 @@ begin
                 finally
                   Screen.Cursor := crDefault;
                 end;
-                ShowMessage(Format('Orden SEPA generada con %d cobro(s).',
+                ShowMessage(Format(SInfoOrdenSepaRemesaVentaGenerada,
                   [iCobros]));
                 ActualizarBancoCobro;
               end;
@@ -566,7 +566,8 @@ begin
           begin
             if Screen.Cursor <> crDefault then
               Screen.Cursor := crDefault;
-            ShowMessage('No se pudo generar la orden SEPA: ' + E.Message);
+            ShowMessage(Format(SErrorGenerarOrdenSepaRemesaVenta,
+                               [E.Message]));
           end;
         end;
       end;

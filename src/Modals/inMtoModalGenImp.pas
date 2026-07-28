@@ -159,7 +159,7 @@ uses
   inMtoModalGenImpSave, inLibUser, inLibPathTokens,
   System.Generics.Collections, System.Rtti, inLibFotos, inLibVerifactu,
   inMtoModalInformesGuias, inMtoModalWizardEditar, inLibLog,
-  inLibInformesGuiasCache;
+  inLibInformesGuiasCache, inLibMsg;
 
 {$R *.dfm}
 
@@ -737,8 +737,7 @@ begin
   // que no, vamos directos al flujo clasico de edicion (Consultar_
   // Formularios + DesignReport). Cancelar sale sin abrir el diseñador.
   iRespuesta := MessageDlg(
-    '¿Desea añadir o editar campos extra del informe ' +
-    'provenientes de otras tablas o vistas externas?',
+    SPreguntaEditarCamposExtraInforme,
     mtConfirmation, [mbYes, mbNo, mbCancel], 0);
   if iRespuesta = mrCancel then
   begin
@@ -1140,12 +1139,10 @@ begin
     if not((IdentidadSesion.GrupoRaiz = 'S') or
         (IdentidadSesion.Usuario = sUserProp) or
         (IdentidadSesion.Grupo = sUserProp)) then
-      ShowMessageFmt('No tiene privilegios suficientes ' +
-                     'para borrar el formato de %s. '+
-                     'Consulte con el Administrador', [sUserProp])
+      ShowMessageFmt(SErrorPrivilegiosBorrarFormato, [sUserProp])
     else
     begin
-      iButtonSel := MessageDlg('¿Está seguro de borrar el formato?',
+      iButtonSel := MessageDlg(SPreguntaBorrarFormato,
                                mtCustom,[mbYes,mbNo], 0);
       if (iButtonSel = mrYes) then
       begin
@@ -1322,9 +1319,8 @@ begin
       // de sobreescribir un formato existente.
       if bExiste and (not FFormatoFijado) then
       begin
-        if Application.MessageBox('El informe ya existe. ' +
-                                  '¿Desea reemplazar el informe?',
-                                  'Mensaje Advertencia',
+        if Application.MessageBox(PChar(SPreguntaReemplazarInforme),
+                                  PChar(STituloAdvertenciaInforme),
                                   MB_YESNO) <> ID_YES then
           bGuardar := False;
       end;

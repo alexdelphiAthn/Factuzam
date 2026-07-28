@@ -201,7 +201,7 @@ uses
   inLibWin, inLibUser, inLibShowMto, inMtoPrincipal,
   inMtoModalGenImpSave, inMtoModalImpOperaciones, inMtoPreviewExcel,
   inLibDevExcel, inLibFotos, inLibFiltroUsuario,
-  dxSpreadSheetGraphics;
+  dxSpreadSheetGraphics, inLibMsg;
 
 {$R *.dfm}
 
@@ -709,9 +709,7 @@ begin
       begin
         OcultarProgresoCarga;
         Screen.Cursor := cursorPrev;
-        MessageDlg(Format('La selección cargaría %s registros, demasiados ' +
-          'para mostrarlos de una vez.' + sLineBreak +
-          'Acota los filtros (años / almacenes) y vuelve a intentarlo.',
+        MessageDlg(Format(SAvisoLimiteOperacionesCaja,
           [FormatFloat('#,##0', nTotal)]), mtWarning, [mbOK], 0);
       end
       else
@@ -1069,7 +1067,7 @@ begin
      (not Assigned(dmmCajaOperacionesHist.unqryTablaG)) or
      (not dmmCajaOperacionesHist.unqryTablaG.Active) or
      dmmCajaOperacionesHist.unqryTablaG.IsEmpty then
-    ShowMessage('No hay ninguna operación seleccionada para exportar.')
+    ShowMessage(SErrorOperacionCajaExportarNoSeleccionada)
   else
   begin
     try
@@ -1814,7 +1812,7 @@ begin
       FreeAndNil(oList);
       Screen.Cursor := crDefault;
     end;
-    ShowMessage('Precarga guardada.');
+    ShowMessage(SInfoPrecargaCajaGuardada);
   end;
 end;
 

@@ -279,7 +279,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser;
+  inLibUser, inLibMsg;
 
 // ============================================================================
 //   API publica del hijo
@@ -341,13 +341,13 @@ end;
 function TfrmModalAddBlockBase.TextoConfirmacion(
   ANumPendientes: Integer): string;
 begin
-  Result := Format('Se van a insertar %d articulos. Continuar?',
+  Result := Format(SPreguntaConfirmarAddBlock,
                    [ANumPendientes]);
 end;
 
 function TfrmModalAddBlockBase.TextoExito(ANumInsertados: Integer): string;
 begin
-  Result := Format('%d articulos anadidos correctamente.', [ANumInsertados]);
+  Result := Format(SInfoArticulosAnadidosAddBlock, [ANumInsertados]);
 end;
 
 function TfrmModalAddBlockBase.TextoExcluirYaCargados: string;
@@ -756,7 +756,7 @@ procedure TfrmModalAddBlockBase.btnLimpiarFiltrosClick(Sender: TObject);
 var
   i: Integer;
 begin
-  if MessageDlg('Limpiar todos los filtros?', mtConfirmation,
+  if MessageDlg(SPreguntaLimpiarFiltrosAddBlock, mtConfirmation,
                 [mbYes, mbNo], 0) <> mrYes then
     Exit;
   btnQuitarSelFamiliasClick(nil);
@@ -1209,8 +1209,7 @@ begin
   if chkSoloConStock.Checked and
      (Length(RecogerCodigosAlmacenesSeleccionados) = 0) then
   begin
-    ShowMessage('Has activado "Solo con stock" pero no hay almacenes ' +
-                'seleccionados en la pestana Almacenes.');
+    ShowMessage(SErrorAlmacenesSoloStockAddBlock);
     pcFiltros.ActivePage := tsAlmacenes;
     Exit;
   end;
@@ -1243,7 +1242,7 @@ var
 begin
   if (not FSqlPreview.Active) or (FSqlPreview.RecordCount = 0) then
   begin
-    if MessageDlg('No has previsualizado. Previsualizar ahora?',
+    if MessageDlg(SPreguntaPrevisualizarAddBlock,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       btnPrevisualizarClick(nil);
@@ -1270,8 +1269,7 @@ begin
 
   if pendientes = 0 then
   begin
-    ShowMessage(
-      'Todos los articulos del filtro ya estan cargados. Nada que insertar.');
+    ShowMessage(SInfoArticulosYaCargadosAddBlock);
     Exit;
   end;
 

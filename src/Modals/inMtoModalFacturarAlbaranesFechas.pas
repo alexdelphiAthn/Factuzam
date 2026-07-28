@@ -74,6 +74,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 procedure TfrmModalFacturarAlbaranesFechas.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -170,7 +173,7 @@ var
 begin
   if dmmAlbaranes = nil then
   begin
-    ShowMessage('No hay datamodule de albaranes asignado.');
+    ShowMessage(SErrorDataModuleAlbaranesNoAsignado);
     Exit;
   end;
   lst := TStringList.Create;
@@ -186,7 +189,7 @@ begin
     end;
     if lst.Count = 0 then
     begin
-      ShowMessage('No hay albaranes seleccionados.');
+      ShowMessage(SErrorAlbaranesNoSeleccionados);
       Exit;
     end;
     Screen.Cursor := crHourGlass;
@@ -197,7 +200,7 @@ begin
       generadas := dmmAlbaranes.FacturarAlbaranesLista(lst,
                                                        chkAgruparPorCliente.Checked);
       lblEstado.Caption := Format('Generados %d borradores', [generadas]);
-      ShowMessageFmt('Proceso finalizado. Borradores generados: %d.',
+      ShowMessageFmt(SInfoBorradoresGenerados,
                      [generadas]);
       btnBuscarClick(nil);
     finally

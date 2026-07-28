@@ -119,7 +119,7 @@ type
 implementation
 
 uses
-  inLibtb, inLibFormatoDocumento;
+  inLibtb, inLibFormatoDocumento, inLibMsg;
 
 {$R *.dfm}
 
@@ -326,7 +326,8 @@ begin
   vAlm := cbbAlmacen.EditValue;
   if VarIsNull(vAlm) or VarIsEmpty(vAlm) or (Trim(VarToStr(vAlm)) = '') then
   begin
-    MessageDlg('Selecciona un almacen.', mtInformation, [mbOk], 0);
+    MessageDlg(SErrorAlmacenPedidoNoSeleccionado,
+               mtInformation, [mbOk], 0);
     if cbbAlmacen.CanFocus then cbbAlmacen.SetFocus;
     Exit;
   end;
@@ -342,7 +343,7 @@ begin
     // grid (el cursor del dataset sigue a la fila con foco).
     if unqryAlbExist.IsEmpty then
     begin
-      MessageDlg('No hay albaranes a los que incorporar; crea uno nuevo.',
+      MessageDlg(SInfoAlbaranesIncorporarNoDisponibles,
                  mtInformation, [mbOk], 0);
       Exit;
     end;
@@ -358,7 +359,8 @@ begin
     // Modo clasico: crear albaran nuevo (requiere serie).
     if Trim(cbbSerieAlb.Text) = '' then
     begin
-      MessageDlg('Indica la serie del albaran.', mtInformation, [mbOk], 0);
+      MessageDlg(SErrorSerieAlbaranPedidoNoIndicada,
+                 mtInformation, [mbOk], 0);
       if cbbSerieAlb.CanFocus then cbbSerieAlb.SetFocus;
       Exit;
     end;

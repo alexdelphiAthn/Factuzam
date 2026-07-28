@@ -58,6 +58,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 class function TfrmModalCargarSesionTarifa.Ejecutar(AOwner: TComponent;
   AConn: TUniConnection; ACodigoTarc: Integer;
   const ACodigoTarOrig, ACodigoTarDest: string): TCargarSesionTarifaResult;
@@ -175,14 +178,14 @@ end;
 function TfrmModalCargarSesionTarifa.TextoConfirmacion(
   ANumPendientes: Integer): string;
 begin
-  Result := Format('Se van a cargar %d articulos en la sesion. Continuar?',
+  Result := Format(SPreguntaConfirmarCargaSesionTarifa,
                    [ANumPendientes]);
 end;
 
 function TfrmModalCargarSesionTarifa.TextoExito(
   ANumInsertados: Integer): string;
 begin
-  Result := Format('%d articulos cargados en la sesion.', [ANumInsertados]);
+  Result := Format(SInfoArticulosCargadosSesionTarifa, [ANumInsertados]);
 end;
 
 function TfrmModalCargarSesionTarifa.TextoExcluirYaCargados: string;
@@ -282,7 +285,7 @@ begin
         on E: Exception do
         begin
           FConn.Rollback;
-          ShowMessage('Error al cargar la sesion: ' + E.Message);
+          ShowMessage(SErrorCargarSesionTarifa + E.Message);
           Result := False;
         end;
       end;

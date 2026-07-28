@@ -90,7 +90,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser;
+  inLibUser, inLibMsg;
 
 class function TfrmModalAddBlockInventario.Ejecutar(AOwner: TComponent;
   AConn: TUniConnection;
@@ -154,7 +154,7 @@ begin
   if (FEmpresa = '') or (FAlmacen = '') or (FSerie = '') or (FNro = '') then
   begin
     Result := False;
-    AMensaje := 'No se ha recibido la clave del inventario destino.';
+    AMensaje := SErrorDestinoInventarioAddBlock;
   end;
 end;
 
@@ -243,21 +243,14 @@ end;
 function TfrmModalAddBlockInventario.TextoConfirmacion(
   ANumPendientes: Integer): string;
 begin
-  Result := Format(
-    'Se van a anadir %d articulos al inventario %s/%s/%s/%s.' + sLineBreak +
-    'Cada articulo generara una linea por cada SKU con stock>0.' + sLineBreak +
-    'Las cantidades teoricas se calcularan despues con "Recalcular ' +
-    'teorico/PMP".' + sLineBreak + sLineBreak +
-    'Continuar?',
+  Result := Format(SPreguntaConfirmarInventarioAddBlock,
     [ANumPendientes, FEmpresa, FAlmacen, FSerie, FNro]);
 end;
 
 function TfrmModalAddBlockInventario.TextoExito(
   ANumInsertados: Integer): string;
 begin
-  Result := Format(
-    '%d lineas anadidas al inventario.' + sLineBreak +
-    'Recuerda pulsar "Recalcular teorico/PMP" para rellenar las cantidades.',
+  Result := Format(SInfoLineasInventarioAddBlock,
     [ANumInsertados]);
 end;
 
@@ -439,7 +432,7 @@ begin
       on E: Exception do
       begin
         FConn.Rollback;
-        ShowMessage('Error al insertar lineas de inventario: ' + E.Message);
+        ShowMessage(SErrorInsertarLineasInventarioAddBlock + E.Message);
         Result := False;
       end;
     end;

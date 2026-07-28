@@ -79,7 +79,7 @@ implementation
 
 uses
   inLibtb, inLibVerifactu, inLibVerifactuCola,
-  inMtoGenSearch, inLibDocumentoFiscal;
+  inMtoGenSearch, inLibDocumentoFiscal, inLibMsg;
 
 {$R *.dfm}
 
@@ -181,11 +181,11 @@ begin
   sCliente := FCliente;
   sSerie   := VarToStr(cbbSerie.EditValue);
   if Trim(sCliente) = '' then
-    ShowMessage('Seleccione el cliente del borrador.')
+    ShowMessage(SErrorClienteBorradorNoSeleccionado)
   else if Trim(sSerie) = '' then
-    ShowMessage('Seleccione la serie del borrador.')
+    ShowMessage(SErrorSerieBorradorNoSeleccionada)
   else if dtFecha.Date <= 0 then
-    ShowMessage('Indique la fecha del borrador.')
+    ShowMessage(SErrorFechaBorradorNoIndicada)
   else
   begin
     ValidarClienteFacturaNormal(sCliente);
@@ -210,13 +210,13 @@ begin
     Qry.ParamByName('CLIENTE').AsString := ACliente;
     Qry.Open;
     if Qry.IsEmpty then
-      raise Exception.Create('El cliente seleccionado no existe.');
+      raise Exception.Create(SErrorClienteFacturarTicketNoExiste);
     if Trim(Qry.FieldByName('RAZON_SOCIAL_CLI').AsString) = '' then
-      raise Exception.Create('La F3 necesita la razon social del cliente.');
+      raise Exception.Create(SErrorRazonSocialFacturarTicketObligatoria);
     if PaisEsEspana(Qry.FieldByName('CODIGO_PAI_CLI').AsString,
                     Qry.FieldByName('NOMBRE_PAI_CLI').AsString) and
        (not DocumentoFiscalValido(Qry.FieldByName('NIF_CLI').AsString)) then
-      raise Exception.Create('El NIF/CIF/NIE del cliente no es valido: ' +
+      raise Exception.Create(SErrorDocumentoFiscalFacturarTicketNoValido +
         MensajeDocumentoFiscalInvalido(Qry.FieldByName('NIF_CLI').AsString));
   finally
     FreeAndNil(Qry);
@@ -359,8 +359,7 @@ begin
         'SIMPLIFICADA ' + FSerieTicket + '\' + FNumeroTicket;
       Qry.Execute;
       if Qry.RowsAffected = 0 then
-        raise Exception.Create('No se pudo crear el borrador: ticket o ' +
-                               'cliente no encontrados.');
+        raise Exception.Create(SErrorCrearBorradorFacturarTicket);
       // Líneas: copia tal cual del ticket (importes en positivo)
       Qry.SQL.Text :=
         ' INSERT INTO fza_facturas_lineas ' +

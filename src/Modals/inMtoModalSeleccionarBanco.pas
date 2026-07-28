@@ -87,6 +87,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 class function TfrmModalSeleccionarBanco.Ejecutar(
@@ -107,8 +110,7 @@ begin
     if frm.FQry.IsEmpty then
     begin
       // Sin cuentas activas: se informa y se sigue sin banco asignado.
-      ShowMessage('La empresa no tiene cuentas bancarias activas. ' +
-                  'El documento se generará sin banco de empresa asignado.');
+      ShowMessage(SInfoEmpresaSinCuentasBancarias);
       frm.FResultado.Aceptado := True;
     end
     else

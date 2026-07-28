@@ -89,7 +89,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser;
+  inLibUser, inLibMsg;
 
 class function TfrmModalAddBlockDocumentoTrabajo.Ejecutar(
   AOwner: TComponent; AConn: TUniConnection; AIdDtr: Int64;
@@ -207,11 +207,11 @@ begin
   end;
   if FIdDtr <= 0 then
   begin
-    AMensaje := 'No se ha recibido el Documento de Trabajo destino.';
+    AMensaje := SErrorDestinoDocumentoTrabajoAddBlock;
   end
   else if AlmacenesCargaSql = '' then
   begin
-    AMensaje := 'Seleccione al menos un almacen para cargar articulos.';
+    AMensaje := SErrorAlmacenesDocumentoTrabajoAddBlock;
   end
   else
   begin
@@ -258,20 +258,14 @@ end;
 function TfrmModalAddBlockDocumentoTrabajo.TextoConfirmacion(
   ANumPendientes: Integer): string;
 begin
-  Result := Format(
-    'Se van a cargar %d articulos en el Documento de Trabajo "%s".' +
-    sLineBreak +
-    'Se anadira una linea por cada SKU con stock positivo en los ' +
-    'almacenes seleccionados.' + sLineBreak +
-    'La cantidad operativa de cada linea sera 1.' + sLineBreak +
-    sLineBreak + 'Continuar?',
+  Result := Format(SPreguntaConfirmarDocumentoTrabajoAddBlock,
     [ANumPendientes, FTitulo]);
 end;
 
 function TfrmModalAddBlockDocumentoTrabajo.TextoExito(
   ANumInsertados: Integer): string;
 begin
-  Result := Format('%d lineas anadidas al Documento de Trabajo.',
+  Result := Format(SInfoLineasDocumentoTrabajoAddBlock,
                    [ANumInsertados]);
 end;
 
@@ -455,7 +449,8 @@ begin
         on E: Exception do
         begin
           FConn.Rollback;
-          ShowMessage('Error al insertar lineas del documento: ' + E.Message);
+          ShowMessage(SErrorInsertarLineasDocumentoTrabajoAddBlock +
+                      E.Message);
           Result := False;
         end;
       end;

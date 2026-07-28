@@ -84,7 +84,7 @@ implementation
 
 uses
   UniDataCaja, inLibGenerarTicketCaja,
-  inMtoGenSearch, Data.DB;
+  inMtoGenSearch, Data.DB, inLibMsg;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -240,16 +240,16 @@ begin
   if Trim(btnEmpleado.Text) = '' then
   begin
     Application.MessageBox(
-      'Introduzca el empleado que realiza la operación.',
-      'Aviso', MB_OK or MB_ICONWARNING);
+      PChar(SErrorEmpleadoGastoCajaNoIndicado),
+      PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
     btnEmpleado.SetFocus;
     Exit;
   end;
   if txtImporte.Value <= 0 then
   begin
     Application.MessageBox(
-      'Introduzca un importe mayor que cero.',
-      'Aviso', MB_OK or MB_ICONWARNING);
+      PChar(SErrorImporteGastoCajaNoValido),
+      PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
     txtImporte.SetFocus;
     Exit;
   end;

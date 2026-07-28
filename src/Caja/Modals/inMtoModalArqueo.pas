@@ -293,7 +293,7 @@ implementation
 uses inLibPermisosIntf, inLibLog,
      inMtoModalArqueosHistCaja,
      inLibTiraCajaTicket, inMtoModalTiraCaja, inLibVerifactu,
-     inLibRectificativas;
+     inLibRectificativas, inLibMsg;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -434,7 +434,7 @@ begin
   begin
     Log.LogWarning('Intento de imprimir el resumen de arqueo sin permiso');
     MessageDlg(
-      'No tiene permiso para consultar el resumen del arqueo.',
+      SErrorPermisoResumenArqueoCaja,
       mtWarning,
       [mbOK],
       0);
@@ -496,8 +496,8 @@ begin
   if Length(Series) = 0 then
   begin
     Application.MessageBox(
-      'No hay operaciones facturadas en el rango seleccionado.',
-      'Tira de Caja', MB_OK or MB_ICONINFORMATION);
+      PChar(SInfoOperacionesFacturadasArqueoCajaNoEncontradas),
+      PChar(STituloTiraCaja), MB_OK or MB_ICONINFORMATION);
     Exit;
   end;
   // El QR solo aplica con Verifactu activo (envío PRE o PRO).
@@ -1139,9 +1139,9 @@ begin
   if sVendedor = '' then
   begin
     Application.MessageBox(
-      'Debe indicar el número de empleado de caja del vendedor que ' +
-      'realiza el cierre.',
-      'Vendedor obligatorio', MB_OK or MB_ICONWARNING);
+      PChar(SErrorVendedorArqueoCajaNoIndicado),
+      PChar(STituloVendedorArqueoCajaObligatorio),
+      MB_OK or MB_ICONWARNING);
     pcArqueo.ActivePage := tsRecuento;
     txtVendedorCodigo.SetFocus;
     Exit;
@@ -1150,8 +1150,9 @@ begin
   if sNombreVendedor = '' then
   begin
     Application.MessageBox(
-      'El número de empleado indicado no existe o no está activo.',
-      'Vendedor no válido', MB_OK or MB_ICONWARNING);
+      PChar(SErrorVendedorArqueoCajaNoValido),
+      PChar(STituloVendedorArqueoCajaNoValido),
+      MB_OK or MB_ICONWARNING);
     pcArqueo.ActivePage := tsRecuento;
     txtVendedorCodigo.SetFocus;
     Exit;
@@ -1178,9 +1179,8 @@ begin
     if qryChk.FieldByName('N').AsInteger > 0 then
     begin
       Application.MessageBox(
-        'Ya existe un cierre que solapa este rango y caja. ' +
-        'No se permite doble cierre.',
-        'Arqueo duplicado', MB_OK or MB_ICONWARNING);
+        PChar(SErrorArqueoCajaDuplicado),
+        PChar(STituloArqueoCajaDuplicado), MB_OK or MB_ICONWARNING);
       Exit;
     end;
   finally
@@ -1191,25 +1191,15 @@ begin
      and (tvRecuento.DataController.RecordCount = 0) then
   begin
     Application.MessageBox(
-      'No hay datos de recuento. Pulse Recalcular primero.',
-      'Aviso', MB_OK or MB_ICONWARNING);
+      PChar(SErrorRecuentoArqueoCajaNoDisponible),
+      PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
     Exit;
   end;
   if Application.MessageBox(
-       PChar(
-       'Se va a grabar el arqueo con los importes recontados.' +
-       #13#10 +
-       'Periodo: ' +
-       FormatDateTime('dd/mm/yyyy hh:nn:ss',
-                      FechaDesdeSeleccionada) +
-       ' - ' +
-       FormatDateTime('dd/mm/yyyy hh:nn:ss',
-                      FechaHastaSeleccionada) +
-       #13#10 +
-       'Las operaciones del rango quedarán marcadas.' +
-       #13#10#13#10 +
-       '¿Desea continuar?'),
-       'Confirmar Arqueo',
+       PChar(Format(SPreguntaGrabarArqueoCaja,
+         [FormatDateTime('dd/mm/yyyy hh:nn:ss', FechaDesdeSeleccionada),
+          FormatDateTime('dd/mm/yyyy hh:nn:ss', FechaHastaSeleccionada)])),
+       PChar(STituloConfirmarArqueoCaja),
        MB_YESNO or MB_ICONQUESTION) <> IDYES then
     Exit;
   dRetirada := Currency(txtRetiradaImporte.Value);

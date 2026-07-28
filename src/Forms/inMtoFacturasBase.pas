@@ -1055,8 +1055,7 @@ begin
   if not PuedeImprimir then
     Abort;
   if EsVentaMayorNormal then
-    ShowMessage('La impresión de efectos de cobro se gestiona desde ' +
-                'Remesas de Cobro.')
+    ShowMessage(SInfoImpresionEfectosCobroEnRemesas)
   else
   begin
     form := TfrmPrintRecFac.Create(Application);
@@ -1272,10 +1271,9 @@ begin
     qCobros := dmmFacturas.unqryRecibos;
   if (qCobros <> nil) and (qCobros.RecordCount > 0) then
   begin
-    sMensaje := 'Hay ' + TextoCobroPlural +
-                ' creados, ¿desea reemplazarlos?';
+    sMensaje := Format(SPreguntaReemplazarCobros, [TextoCobroPlural]);
     if ( Application.MessageBox( PChar(sMensaje),
-                                 'Mensaje Advertencia',
+                                 PChar(STituloMensajeAdvertencia),
                                  MB_YESNO ) = ID_YES ) then
       bReemplazar := True
     else
@@ -1291,7 +1289,8 @@ begin
     selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, ConexionPrincipal,
                                                    sEmp, ubeCobro, sPref);
     if not selBanco.Aceptado then
-      ShowMessage('Generación de ' + TextoCobroPlural + ' cancelada.')
+      ShowMessage(Format(SInfoGeneracionCobrosCancelada,
+                         [TextoCobroPlural]))
     else
     begin
       if EsVentaMayorNormal then
@@ -1299,14 +1298,11 @@ begin
         iRes := dmmFacturas.GenerarEfectosVenta(selBanco.CodigoEmpban,
                                                 selBanco.Iban);
         if iRes > 0 then
-          ShowMessage(Format('Generados %d efecto(s) de cobro.', [iRes]))
+          ShowMessage(Format(SInfoEfectosCobroGenerados, [iRes]))
         else if iRes = 0 then
-          ShowMessage('No se generaron efectos. Revisa que el borrador ' +
-                      'tenga forma de pago y total, y que no tenga efectos ' +
-                      'cobrados o remesados.')
+          ShowMessage(SAvisoEfectosCobroNoGenerados)
         else
-          ShowMessage('No hay borrador activo o no se pudieron generar ' +
-                      'efectos.');
+          ShowMessage(SErrorGenerarEfectosCobroSinBorrador);
       end
       else
       begin
@@ -1352,8 +1348,7 @@ begin
      (dsTablaG.DataSet.FieldByName(fescon).AsString <> 'S') and
      (ModoVerifactu(ParametrosApp) <> mvSinVerifactu) then
   begin
-    ShowMessage('El borrador está pendiente: use el botón Consolidar ' +
-                'antes de imprimirlo en este modo fiscal.');
+    ShowMessage(SAvisoBorradorPendienteImpresionFiscal);
     Abort;
   end;
   form := TfrmPrintFac.Create(Application);  // Owner = Application
@@ -1435,8 +1430,8 @@ begin
       begin
         if bTransaccionPropia and ConnGrabar.InTransaction then
           ConnGrabar.Rollback;
-        raise Exception.Create('No se pudo guardar la factura antes de ' +
-                               'imprimir: ' + E.Message);
+        raise Exception.Create(Format(SErrorGuardarFacturaAntesImprimir,
+                                     [E.Message]));
       end;
     end;
   end;
@@ -1449,9 +1444,9 @@ begin
   begin
     dmmFacturas.AsegurarEfectosVentaAbierta;
     if dmmFacturas.CambiarEstadoEfectoVenta('DEVUELTO') then
-      ShowMessage('Efecto marcado como devuelto.')
+      ShowMessage(SInfoEfectoMarcadoDevuelto)
     else
-      ShowMessage('No se pudo marcar el efecto como devuelto.');
+      ShowMessage(SErrorMarcarEfectoDevuelto);
   end
   else
     CambiarEstadoRecibo('Devuelto');
@@ -1464,9 +1459,9 @@ begin
   begin
     dmmFacturas.AsegurarEfectosVentaAbierta;
     if dmmFacturas.CambiarEstadoEfectoVenta('PENDIENTE') then
-      ShowMessage('Efecto marcado como pendiente.')
+      ShowMessage(SInfoEfectoMarcadoPendiente)
     else
-      ShowMessage('No se pudo marcar el efecto como pendiente.');
+      ShowMessage(SErrorMarcarEfectoPendiente);
   end
   else
     CambiarEstadoRecibo('Emitido');
@@ -1492,7 +1487,7 @@ begin
       iEfe := q.FieldByName('NUMERO_EFV').AsInteger;
       fPend := q.FieldByName('IMPORTE_PENDIENTE_EFV').AsFloat;
       if fPend <= 0.0001 then
-        ShowMessage('El efecto seleccionado no tiene importe pendiente.')
+        ShowMessage(SErrorEfectoSinImportePendiente)
       else
       begin
         frm := TfrmModalRegistrarPago.Create(nil);
@@ -1509,9 +1504,9 @@ begin
             iRes := dmmFacturas.RegistrarCobroEfectoVenta(iEfe, frm.Fecha,
                       frm.Importe, frm.Tipo, frm.Referencia);
             if iRes > 0 then
-              ShowMessage('Efecto conciliado.')
+              ShowMessage(SInfoEfectoConciliado)
             else
-              ShowMessage('No se pudo conciliar el efecto.');
+              ShowMessage(SErrorConciliarEfecto);
           end;
         finally
           frm.Free;
@@ -1519,7 +1514,7 @@ begin
       end;
     end
     else
-      ShowMessage('Selecciona un efecto en la rejilla.');
+      ShowMessage(SErrorEfectoNoSeleccionado);
   end
   else
     CambiarEstadoRecibo('Pagado');
@@ -1976,7 +1971,7 @@ begin
       end
       else
       begin
-        ShowMessage('No se encontró la tarifa seleccionada');
+        ShowMessage(SErrorTarifaSeleccionadaNoEncontrada);
       end;
     end;
   end;
@@ -2124,16 +2119,8 @@ end;
 
 function TfrmMtoFacturasBase.SqlRestriccionUsuario: string;
 begin
-  // Con appRestringirEmpAlmCaja activo, el usuario solo consulta las
-  // facturas de su empresa/almacén/caja (fza_usuarios). Aplica a las
-  // dos variantes; simplificadas además lo integra en su
-  // ConstruirWhereFacturas al recomponer la SQL con filtros propios.
-  Result := SqlFiltroEmpAlmCaja(
-    ContextoSesion,
-    ParametrosApp,
-    'CODIGO_EMP_FAC',
-                                'CODIGO_ALM_FAC',
-                                'CODIGO_CAJA_FAC');
+  Result := SqlFiltroDocumento(
+    ContextoSesion, ParametrosApp, 'FAC', True);
 end;
 
 procedure TfrmMtoFacturasBase.CrearTablaPrincipal;
@@ -2288,23 +2275,21 @@ begin
   EsFacturaSimplificada := SameText(
     dsTablaG.DataSet.FieldByName(ftipofac).AsString, 'SIMPLIFICADA');
   if Trim(sNumero) = '' then
-    ShowMessage('Seleccione un borrador en la lista.')
+    ShowMessage(SErrorBorradorListaNoSeleccionado)
   else if dsTablaG.DataSet.FieldByName(
             'ESCONSOLIDADA_FAC').AsString <> 'S' then
-    ShowMessage('El borrador ' + sSerie + '\' + sNumero + ' aún no está ' +
-                'cerrado fiscalmente: no se puede ' +
-                LowerCase(AAccion) + '.')
-  else if MessageDlg('¿' + AAccion + ' fiscalmente el borrador ' +
-                     sSerie + '\' + sNumero + '?', mtConfirmation,
+    ShowMessage(Format(SErrorBorradorNoCerradoAccionFiscal,
+                       [sSerie, sNumero, LowerCase(AAccion)]))
+  else if MessageDlg(Format(SPreguntaAccionFiscalBorrador,
+                           [AAccion, sSerie, sNumero]), mtConfirmation,
                      [mbYes, mbNo], 0) = mrYes then
   begin
     if SameText(ATipoOperacion, 'ANULACION') and
        EsFacturaSimplificada then
     begin
       bBorrarMovimientos := MessageDlg(
-        '¿Desea borrar también los movimientos de almacén asociados ' +
-        'al ticket ' + sSerie + '\' + sNumero + '?' + sLineBreak +
-        'Se revertirá el stock de sus líneas.', mtConfirmation,
+        Format(SPreguntaBorrarMovimientosTicketAnulado,
+               [sSerie, sNumero]), mtConfirmation,
         [mbYes, mbNo], 0) = mrYes;
     end;
     Qry := TUniQuery.Create(nil);
@@ -2335,16 +2320,14 @@ begin
         IdentidadSesion.Usuario,
         cEventoVerifactuEncolado,
         AAccion + ' encolada desde Borradores', '', sSerie, sNumero);
-      ShowMessage(AAccion + ' encolada: el hilo Verifactu la enviará en ' +
-                  'el próximo ciclo. Puede seguirla en la columna ' +
-                  '"Cola Verifactu" y en Verifactu - Cola de Envíos.');
+      ShowMessage(Format(SInfoAccionFiscalEncolada, [AAccion]));
     end
     else if NoVerifactuActivo(ParametrosApp) then
     begin
-      ShowMessage(AAccion + ' registrada y firmada en NO VERI*FACTU.');
+      ShowMessage(Format(SInfoAccionFiscalNoVerifactu, [AAccion]));
     end
     else
-      ShowMessage(AAccion + ' registrada en modo SIN VERIFACTU.');
+      ShowMessage(Format(SInfoAccionFiscalSinVerifactu, [AAccion]));
     dsTablaG.DataSet.Refresh;
   end;
 end;
@@ -2362,26 +2345,25 @@ begin
      (not dsTablaG.DataSet.Active) or
      dsTablaG.DataSet.IsEmpty then
   begin
-    ShowMessage('Seleccione un borrador en la lista.');
+    ShowMessage(SErrorBorradorListaNoSeleccionado);
     Abort;
   end;
   sSerie  := dsTablaG.DataSet.FieldByName(fseriefac).AsString;
   sNumero := dsTablaG.DataSet.FieldByName(fnrofac).AsString;
   sFase   := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
   if (sFase <> '') and (not SameText(sFase, 'BORRADOR')) then
-    ShowMessage('El borrador ' + sSerie + '\' + sNumero +
-                ' ya se lanzó fiscalmente (fase ' + sFase + ').')
+    ShowMessage(Format(SErrorBorradorYaLanzadoFiscalmente,
+                       [sSerie, sNumero, sFase]))
   else if ContarHijosActivos = 0 then
-    ShowMessage('El borrador no tiene líneas: no se puede lanzar.')
+    ShowMessage(SErrorBorradorSinLineasLanzar)
   else if SameText(dsTablaG.DataSet.FieldByName(ftipofac).AsString,
                    'NORMAL') and
           (Trim(dsTablaG.DataSet.FieldByName(
                   'NIF_CLIENTE_FAC').AsString) = '') then
-    ShowMessage('Un borrador NORMAL necesita el NIF del cliente para ' +
-                'el registro fiscal. Complete los datos del cliente.')
-  else if MessageDlg('¿Lanzar fiscalmente el borrador ' + sSerie + '\' +
-                     sNumero + '? Dejará de estar en borrador y de ser ' +
-                     'editable.', mtConfirmation, [mbYes, mbNo], 0) =
+    ShowMessage(SErrorBorradorNormalSinNif)
+  else if MessageDlg(Format(SPreguntaLanzarBorradorFiscal,
+                           [sSerie, sNumero]), mtConfirmation,
+                     [mbYes, mbNo], 0) =
           mrYes then
   begin
       Qry := TUniQuery.Create(nil);
@@ -2415,15 +2397,14 @@ begin
     // es imprimible; una reimpresion posterior refresca el blob.
     GenerarPdfFacturaConsolidada(sSerie, sNumero);
     if VerifactuActivo(ParametrosApp) then
-      ShowMessage('Borrador ' + sSerie + '\' + sNumero +
-                  ' en VERIFACTU_PENDIENTE: el QR ya puede imprimirse ' +
-                  'y el envío a la AEAT queda en la cola Verifactu.')
+      ShowMessage(Format(SInfoBorradorVerifactuPendiente,
+                         [sSerie, sNumero]))
     else if NoVerifactuActivo(ParametrosApp) then
-      ShowMessage('Borrador ' + sSerie + '\' + sNumero +
-                  ' registrado y firmado en NO VERI*FACTU.')
+      ShowMessage(Format(SInfoBorradorNoVerifactuRegistrado,
+                         [sSerie, sNumero]))
     else
-      ShowMessage('Borrador ' + sSerie + '\' + sNumero +
-                  ' emitido en modo SIN VERIFACTU.');
+      ShowMessage(Format(SInfoBorradorSinVerifactuEmitido,
+                         [sSerie, sNumero]));
   end;
 end;
 
@@ -2445,21 +2426,19 @@ begin
      (not dsTablaG.DataSet.Active) or
      dsTablaG.DataSet.IsEmpty then
   begin
-    ShowMessage('Seleccione un borrador en la lista.');
+    ShowMessage(SErrorBorradorListaNoSeleccionado);
     Abort;
   end;
   sSerie  := dsTablaG.DataSet.FieldByName(fseriefac).AsString;
   sNumero := dsTablaG.DataSet.FieldByName(fnrofac).AsString;
   sFase   := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
   if dsTablaG.DataSet.FieldByName(fescon).AsString = 'S' then
-    ShowMessage('El borrador ' + sSerie + '\' + sNumero + ' ya está ' +
-                'consolidado en la AEAT: no puede volver a borrador. ' +
-                'Use Anular fiscal o emita una rectificativa.')
+    ShowMessage(Format(SErrorBorradorConsolidadoNoReabrible,
+                       [sSerie, sNumero]))
   else if (sFase = '') or SameText(sFase, 'BORRADOR') then
-    ShowMessage('El borrador ya está en BORRADOR.')
-  else if MessageDlg('¿Devolver a BORRADOR el documento ' + sSerie +
-                     '\' + sNumero + ' y anular su envío pendiente a ' +
-                     'la AEAT?', mtConfirmation, [mbYes, mbNo], 0) =
+    ShowMessage(SInfoBorradorYaEnBorrador)
+  else if MessageDlg(Format(SPreguntaDevolverBorrador, [sSerie, sNumero]),
+                     mtConfirmation, [mbYes, mbNo], 0) =
           mrYes then
   begin
     Qry := TUniQuery.Create(nil);
@@ -2486,13 +2465,9 @@ begin
           sEstado := Qry.FieldByName('ESTADO_VFCOLA').AsString;
         Qry.Close;
         if SameText(sEstado, 'ENVIADA') then
-          raise Exception.Create('El alta ya fue aceptada por la ' +
-            'AEAT: no se puede volver a borrador. Use Anular ' +
-            'fiscal o emita una rectificativa.');
+          raise Exception.Create(SErrorAltaAeatAceptadaNoReabrible);
         if SameText(sEstado, 'PROCESANDO') then
-          raise Exception.Create('El hilo Verifactu está enviando ' +
-            'este borrador ahora mismo. Espere unos segundos y ' +
-            'vuelva a intentarlo.');
+          raise Exception.Create(SErrorBorradorEnProcesoNoReabrible);
         if sEstado <> '' then
         begin
           // Aparcar: ERROR con intentos al tope para que el hilo no
@@ -2548,12 +2523,7 @@ begin
       ConexionPrincipal,
       IdentidadSesion.Usuario, 'VENTA_REABIERTA', sSerie, sNumero);
     dsTablaG.DataSet.Refresh;
-    ShowMessage('Borrador ' + sSerie + '\' + sNumero + ' de nuevo en ' +
-                'BORRADOR. Corrija los datos (si el error es de la ' +
-                'empresa, arréglelo en Empresas y use "Dar de Alta o ' +
-                'Actualizar Empresa" en la pestaña Datos Empresa ' +
-                'Emisora para refrescar la copia del borrador) y ' +
-                'pulse Consolidar para relanzarla.');
+    ShowMessage(Format(SInfoBorradorReabierto, [sSerie, sNumero]));
   end;
 end;
 
@@ -2573,11 +2543,10 @@ begin
   sSerie  := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
   sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
   if Trim(sNumero) = '' then
-    ShowMessage('Seleccione un borrador en la lista.')
+    ShowMessage(SErrorBorradorListaNoSeleccionado)
   else if not SameText(dsTablaG.DataSet.FieldByName(
                          'TIPO_FAC').AsString, 'SIMPLIFICADA') then
-    ShowMessage('Solo se crea un borrador normal desde un borrador ' +
-                'SIMPLIFICADO (ticket).')
+    ShowMessage(SErrorFacturarTicketRequiereSimplificado)
   else
   begin
     oRes := TfrmModalFacturarTicket.Ejecutar(Self, sSerie, sNumero,
@@ -2586,10 +2555,10 @@ begin
               dsTablaG.DataSet.FieldByName('FECHA_FAC').AsDateTime);
     if oRes.Aceptado then
     begin
-      ShowMessage('Creado el borrador ' + oRes.SerieNueva + '\' +
-                  oRes.NumeroNueva + ' en sustitución del ticket ' +
-                  sSerie + '\' + sNumero + ' en modo fiscal ' +
-                  ModoVerifactuTexto(ParametrosApp) + ' (F3).');
+      ShowMessage(Format(SInfoBorradorSustitucionTicketCreado,
+                         [oRes.SerieNueva, oRes.NumeroNueva,
+                          sSerie, sNumero,
+                          ModoVerifactuTexto(ParametrosApp)]));
       dsTablaG.DataSet.Refresh;
     end;
   end;
@@ -3155,9 +3124,8 @@ begin
     dmmFacturas.unqryTablaG.Connection,
     dmmFacturas.unqryLinFac, 'FACLIN');
   if (sLineasSinSku <> '') and
-     (MessageDlg('Las líneas ' + sLineasSinSku + ' tienen artículos ' +
-                 'con variaciones sin SKU asignado. ' +
-                 '¿Grabar de todas formas?',
+     (MessageDlg(Format(SPreguntaGrabarFacturaVentaSinSku,
+                        [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) <> mrYes) then
     Exit;
   with dmmFacturas do
@@ -3203,7 +3171,7 @@ begin
         except
           on E: Exception do
           begin
-            ShowMessage('Debe completar los datos del borrador: ' + E.Message);
+            ShowMessage(Format(SErrorCompletarDatosBorrador, [E.Message]));
             Exit;
           end;
         end;
@@ -3240,8 +3208,7 @@ begin
           on E: Exception do
           begin
             Result := False;
-            ShowMessage('Debe completar los datos del borrador: ' +
-                        E.Message);
+            ShowMessage(Format(SErrorCompletarDatosBorrador, [E.Message]));
           end;
         end;
       end;

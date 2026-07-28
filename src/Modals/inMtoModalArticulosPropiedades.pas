@@ -164,7 +164,7 @@ type
 
 implementation
 
-uses uGenericIfThen;
+uses uGenericIfThen, inLibMsg;
 
 const
   ALTO_FILA      = 26;
@@ -792,8 +792,8 @@ begin
   idx := (Sender as TcxButton).Tag;
   if (idx < 0) or (idx >= FSlots.Count) then Exit;
 
-  if MessageDlg('¿Quitar la propiedad "' + FSlots[idx].NombrePropiedad +
-                '" de este artículo?',
+  if MessageDlg(Format(SPreguntaQuitarPropiedadArticulo,
+                       [FSlots[idx].NombrePropiedad]),
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
   S := FSlots[idx];
   S.Eliminar := True;
@@ -837,8 +837,7 @@ begin
   if (idx >= 0) and (idx < FSlots.Count) then
   begin
     if FCodigoArticulo = '' then
-      ShowMessage('Primero guarde el artículo antes de fijar valores por ' +
-                  'color.')
+      ShowMessage(SErrorArticuloNoGuardadoValoresColor)
     else
       AbrirEditorPorUnidad(FSlots[idx]);
   end;
@@ -869,7 +868,7 @@ var
 begin
   if FCodigoArticulo = '' then
   begin
-    ShowMessage('Primero guarde el artículo antes de añadir propiedades.');
+    ShowMessage(SErrorArticuloNoGuardadoAnadirPropiedades);
     Exit;
   end;
   Excluidos := TStringList.Create;
@@ -974,8 +973,8 @@ begin
       end;
       if not TieneValor then
       begin
-        Result := 'La propiedad "' + S.NombrePropiedad +
-                                       '" es obligatoria para esta familia.';
+        Result := Format(SErrorPropiedadObligatoriaFamilia,
+                         [S.NombrePropiedad]);
         Exit;
       end;
     end;

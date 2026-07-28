@@ -51,6 +51,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 procedure TfrmMtoModalScriptLog.FormCreate(Sender: TObject);
 begin
   KeyPreview := True;
@@ -65,9 +68,7 @@ begin
   Result := True;
   if FOperacionEnCurso then
   begin
-    Result := MessageDlg('Hay una operación en curso moviendo datos.' +
-                         sLineBreak + sLineBreak +
-                         '¿Desea abandonar la operación en curso?',
+    Result := MessageDlg(SPreguntaCancelarOperacion,
                          mtWarning, [mbYes, mbNo], 0) = mrYes;
     if Result then
     begin
@@ -136,7 +137,7 @@ begin
     if dlg.Execute then
     begin
       LogMemo.Lines.SaveToFile(dlg.FileName, TEncoding.UTF8);
-      ShowMessage('Log guardado en ' + dlg.FileName);
+      ShowMessage(Format(SInfoLogGuardado, [dlg.FileName]));
     end;
   finally
     dlg.Free;

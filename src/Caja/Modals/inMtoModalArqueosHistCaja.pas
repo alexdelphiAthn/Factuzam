@@ -88,6 +88,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmModalArqueosHistCaja }
@@ -173,7 +176,7 @@ begin
   sCod := ArqueoSeleccionado;
   if sCod = '' then
   begin
-    ShowMessage('Seleccione un arqueo del listado.');
+    ShowMessage(SErrorArqueoCajaNoSeleccionado);
     Exit;
   end;
   Screen.Cursor := crHourGlass;
@@ -197,7 +200,7 @@ begin
   sCod := ArqueoSeleccionado;
   if sCod = '' then
   begin
-    ShowMessage('Seleccione un arqueo del listado.');
+    ShowMessage(SErrorArqueoCajaNoSeleccionado);
     Exit;
   end;
   Screen.Cursor := crHourGlass;

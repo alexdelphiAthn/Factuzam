@@ -108,7 +108,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.Math, Vcl.Themes, inLibDivCurr, inLibCriptoCurr;
+  System.Math, Vcl.Themes, inLibDivCurr, inLibCriptoCurr, inLibMsg;
 
 { TfrmCajaReferenciaPago }
 
@@ -287,7 +287,7 @@ begin
      (Trim(edtReferencia.Text) = '') and
      gbReferencia.Visible then
   begin
-    ShowMessage('Debe introducir la referencia del pago.');
+    ShowMessage(SErrorReferenciaPagoCajaNoIndicada);
     if edtReferencia.CanFocus then
       edtReferencia.SetFocus;
     Exit;
@@ -297,7 +297,7 @@ begin
   begin
     if edtFactorCambio.Value <= 0 then
     begin
-      ShowMessage('El factor de cambio debe ser mayor que cero.');
+      ShowMessage(SErrorFactorCambioCajaNoValido);
       if edtFactorCambio.CanFocus then
         edtFactorCambio.SetFocus;
       Exit;
@@ -308,7 +308,7 @@ begin
   begin
     if Trim(edtTxHash.Text) = '' then
     begin
-      ShowMessage('Debe introducir el hash de la transacción blockchain.');
+      ShowMessage(SErrorHashBlockchainCajaNoIndicado);
       if edtTxHash.CanFocus then
         edtTxHash.SetFocus;
       Exit;

@@ -108,7 +108,7 @@ var
 implementation
 
 uses
-  inLibFormatoDocumento;
+  inLibFormatoDocumento, inLibMsg;
 
 {$R *.dfm}
 
@@ -259,7 +259,8 @@ begin
   begin
     // El almacen es obligatorio: las lineas nuevas necesitan saber de
     // que almacen sale la mercancia (genera los movimientos de salida).
-    MessageDlg('Selecciona un almacen.', mtInformation, [mbOk], 0);
+    MessageDlg(SErrorAlmacenAlbaranNoSeleccionado,
+               mtInformation, [mbOk], 0);
     if cbbAlmacen.CanFocus then
       cbbAlmacen.SetFocus;
   end
@@ -269,7 +270,7 @@ begin
     vAlb := cbbAlbaran.EditValue;
     if VarIsNull(vAlb) or VarIsEmpty(vAlb) or (Trim(VarToStr(vAlb)) = '') then
     begin
-      MessageDlg('Selecciona el albaran al que anadir las lineas.',
+      MessageDlg(SErrorAlbaranDestinoNoSeleccionado,
                  mtInformation, [mbOk], 0);
       if cbbAlbaran.CanFocus then
         cbbAlbaran.SetFocus;

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaMenu                                                 }
 {    Tipo:       Formulario (Mto)                                              }
@@ -177,7 +177,7 @@ implementation
 uses
   inLibPermisosIntf,
   DateUtils, inMtoConsultaOpe, inMtoPrincipal,
-  inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja;
+  inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja, inLibMsg;
 
 {$R *.dfm}
 
@@ -251,7 +251,7 @@ begin
     FCaja    := UbicacionSesion.Caja;
     if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
     begin
-      ShowMessage('Error al asignar Empresa Almacén Caja');
+      ShowMessage(SErrorAsignarUbicacionCaja);
       Exit;
     end
     else
@@ -366,12 +366,12 @@ begin
   if dtFechaBase = 0 then
     dtFechaBase := Now;
   sHora := FormatDateTime('hh:nn', dtFechaBase);
-  if InputQuery('Hora de caja', 'Hora (HH:MM)', sHora) then
+  if InputQuery(STituloHoraCaja, SSolicitudHoraCaja, sHora) then
   begin
     if TryStrToTime(sHora, dtHora) then
       ActualizarFechaCaja(DateOf(dtFechaBase) + Frac(dtHora))
     else
-      ShowMessage('Hora no válida. Use HH:MM.');
+      ShowMessage(SErrorHoraCajaNoValida);
   end
   else
     ActualizarFechaCaja(Now);
@@ -383,8 +383,7 @@ var
 begin
   if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
   begin
-    ShowMessage('No hay empresa/almacén/caja asignados. ' +
-                'Selecciona una caja antes de buscar operaciones.');
+    ShowMessage(SErrorUbicacionCajaBuscarOperacionesNoAsignada);
     Exit;
   end;
   frm := TfrmConsultaOpe.Create(Application, Permisos);
@@ -758,8 +757,7 @@ procedure TfrmMtoMenuCaja.lblArqueoClick(Sender: TObject);
 begin
   if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
   begin
-    ShowMessage('No hay empresa/almacén/caja asignados. ' +
-                'Selecciona una caja antes de hacer arqueo.');
+    ShowMessage(SErrorUbicacionCajaArqueoNoAsignada);
     Exit;
   end;
   TfrmModalArqueo.Ejecutar(Self,
@@ -799,8 +797,7 @@ var
   frmTraspaso: TfrmMtoOpeTraspaso;
 begin
   if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
-    ShowMessage('No hay empresa/almacén/caja asignados. ' +
-                'Selecciona una caja antes de hacer traspasos.')
+    ShowMessage(SErrorUbicacionCajaTraspasoNoAsignada)
   else
   begin
     frmTraspaso := TfrmMtoOpeTraspaso.Create(Application, Permisos);

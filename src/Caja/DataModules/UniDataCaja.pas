@@ -449,7 +449,8 @@ uses inLibtb,
      inLibGenerarTicketBD,
      inLibDocumentoFiscal,
      inLibLicenciaAplicacion,
-     inLibRectificativas;
+     inLibRectificativas,
+     inLibMsg;
 
 {$R *.dfm}
 
@@ -462,11 +463,9 @@ var
   ProveedorContexto: IProveedorContextoSesion;
 begin
   if not Assigned(AParametrosApp) then
-    raise Exception.Create(
-      'No se han configurado los parámetros de aplicación.');
+    raise Exception.Create(SErrorParametrosAplicacionCajaNoConfigurados);
   if not Assigned(AParametrosCaja) then
-    raise Exception.Create(
-      'No se han configurado los parámetros del módulo de caja.');
+    raise Exception.Create(SErrorParametrosModuloCajaNoConfigurados);
   FConexion := AConexion;
   FParametrosApp := AParametrosApp;
   FParametrosCaja := AParametrosCaja;
@@ -485,8 +484,7 @@ end;
 function TdmCajaOpe.GetIdentidadSesion: TIdentidadSesion;
 begin
   if not Assigned(FContextoSesion) then
-    raise Exception.Create(
-      'No se ha configurado el contexto de sesión del módulo de caja.');
+    raise Exception.Create(SErrorContextoSesionCajaNoConfigurado);
   Result := FContextoSesion.Identidad;
 end;
 
@@ -1298,7 +1296,7 @@ begin
   if cdsCabecera.State in [dsEdit, dsInsert] then cdsCabecera.Post;
   if cdsLineas.State   in [dsEdit, dsInsert] then cdsLineas.Post;
   if cdsLineas.IsEmpty then
-    raise Exception.Create('No se puede grabar una operación sin líneas.');
+    raise Exception.Create(SErrorOperacionCajaSinLineas);
   Cab          := LeerCabecera(cdsCabecera);
   // Factura completa desde F8: fecha elegida en el modal de fase cobro
   if AFechaFactura > 0 then
@@ -1383,15 +1381,14 @@ begin
   if RequiereFactura and SameText(ATipoFactura, 'NORMAL') then
   begin
     if Trim(Cab.RazonSocialCli) = '' then
-      raise Exception.Create('La factura normal necesita la razon social ' +
-        'del cliente.');
+      raise Exception.Create(SErrorRazonSocialClienteFacturaCajaObligatoria);
     if PaisEsEspana(Cab.CodigoPaisCli, Cab.NombrePaisCli) and
        (not DocumentoFiscalValido(Cab.NifCli)) then
-      raise Exception.Create('El NIF/CIF/NIE del cliente no es valido: ' +
+      raise Exception.Create(SErrorDocumentoFiscalClienteCajaNoValido +
         MensajeDocumentoFiscalInvalido(Cab.NifCli));
     if PaisEsEspana(Cab.CodigoPaisEmp, Cab.NombrePaisEmp) and
        (not DocumentoFiscalValido(Cab.NifEmp)) then
-      raise Exception.Create('El NIF/CIF/NIE de la empresa no es valido: ' +
+      raise Exception.Create(SErrorDocumentoFiscalEmpresaCajaNoValido +
         MensajeDocumentoFiscalInvalido(Cab.NifEmp));
   end;
   // =======================================================================
@@ -1410,10 +1407,7 @@ begin
     if (dUltimaFechaSerie > 0) and
        (Trunc(Cab.Fecha) < Trunc(dUltimaFechaSerie)) then
       raise Exception.CreateFmt(
-        'No se puede grabar el ticket en la serie "%s".' + sLineBreak +
-        'El último ticket de esa serie tiene fecha %s, posterior a la ' +
-        'fecha de caja %s.' + sLineBreak +
-        'Cambie la serie para emitir un ticket con esta fecha.',
+        SErrorFechaTicketSerieNoValida,
         [ASerieElegida,
          FormatDateTime('dd/mm/yyyy', dUltimaFechaSerie),
          FormatDateTime('dd/mm/yyyy', Cab.Fecha)]);
@@ -1427,7 +1421,7 @@ begin
   begin
     TransformarLineasParaCobroParcial(cdsLineas, DatosCobro.ImporteEntregado);
     if not CuadrarFacturaEnMemoria(cdsCabecera, cdsLineas) then
-      raise Exception.Create('No se pudo cuadrar tras cobro parcial.');
+      raise Exception.Create(SErrorCuadreCobroParcialCaja);
     Cab := LeerCabecera(cdsCabecera);
     if AFechaFactura > 0 then
       Cab.Fecha := AFechaFactura;
@@ -1710,8 +1704,7 @@ begin
       begin
         if (Trim(ASerieRectificada) = '') or
            (Trim(ANumeroRectificado) = '') then
-          raise Exception.Create(
-            'La rectificativa no tiene factura original asociada.');
+          raise Exception.Create(SErrorFacturaRectificativaCajaSinOriginal);
         TVerifactuCola.EncolarRectificativa(
           FParametrosApp,
           FParametrosCaja,
@@ -1922,9 +1915,7 @@ begin
     on E: Exception do
     begin
       FConexion.Rollback;
-      raise Exception.Create(
-        'Error al guardar el ticket. No se ha registrado la operación.' +
-        sLineBreak + 'Motivo: ' + E.Message);
+      raise Exception.CreateFmt(SErrorGuardarTicketCaja, [E.Message]);
     end;
   end;
   finally
@@ -1959,8 +1950,8 @@ begin
     // y sumarizar
     Result := CalculadorFiscal.ProcesarFacturaCompleta;
     if not Result then
-      raise Exception.Create(
-        'Error al cuadrar la factura: ' + CalculadorFiscal.MensajeError);
+      raise Exception.CreateFmt(SErrorCuadrarFacturaCaja,
+                                [CalculadorFiscal.MensajeError]);
   finally
     FreeAndNil(CalculadorFiscal);
   end;
@@ -2574,9 +2565,7 @@ begin
   FilasAfectadas := QryTrx.RowsAffected;
   if FilasAfectadas <> 1 then
     raise Exception.CreateFmt(
-      'No se pudo redimir el vale "%s". Filas afectadas: %d. ' +
-      'Posibles causas: el vale no existe, ya fue redimido, esta caducado o ' +
-      'anulado.',
+      SErrorRedimirValeCaja,
       [ACodigoVale, FilasAfectadas]);
 end;
 

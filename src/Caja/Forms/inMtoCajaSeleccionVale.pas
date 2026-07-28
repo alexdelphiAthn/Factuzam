@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaSeleccionVale                                        }
 {    Tipo:       Formulario (Mto)                                              }
@@ -112,6 +112,9 @@ type
 implementation
 
 {$R *.dfm}
+
+uses
+  inLibMsg;
 
 { TfrmMtoCajaSeleccionVale }
 
@@ -326,7 +329,7 @@ begin
   Result := False;
   if FMemVales.IsEmpty or (FMemVales.Bof and FMemVales.Eof) then
   begin
-    ShowMessage('No hay ningún vale seleccionado.');
+    ShowMessage(SErrorValeCajaNoSeleccionado);
     Exit;
   end;
   bPinObligatorio :=
@@ -337,15 +340,13 @@ begin
   begin
     if PinIntroducido = '' then
     begin
-      ShowMessage(
-        'Introduzca el PIN de seguridad del vale para poder canjearlo.');
+      ShowMessage(SErrorPinValeCajaNoIndicado);
       edtPin.SetFocus;
       Exit;
     end;
     if not SameText(PinIntroducido, PinReal) then
     begin
-      ShowMessage('El PIN de seguridad no es correcto.' + sLineBreak +
-                  'Verifique el código que aparece en el vale físico.');
+      ShowMessage(SErrorPinValeCajaIncorrecto);
       edtPin.Text := '';
       edtPin.SetFocus;
       Exit;

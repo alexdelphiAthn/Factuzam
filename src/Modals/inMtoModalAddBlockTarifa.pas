@@ -122,6 +122,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 // ============================================================================
 //   API publica
 // ============================================================================
@@ -332,7 +335,7 @@ begin
 
   if ObtenerCodigoTarifaActual = '' then
   begin
-    AMensaje := 'Selecciona la tarifa destino antes de previsualizar.';
+    AMensaje := SErrorTarifaDestinoAddBlockNoSeleccionada;
     Exit;
   end;
 
@@ -340,20 +343,19 @@ begin
   begin
     if ObtenerCodigoTarifaOrigen = '' then
     begin
-      AMensaje := 'Selecciona la tarifa origen para copiar precios.';
+      AMensaje := SErrorTarifaOrigenAddBlockNoSeleccionada;
       Exit;
     end;
     if SameText(ObtenerCodigoTarifaOrigen, ObtenerCodigoTarifaActual) then
     begin
-      AMensaje :=
-        'La tarifa origen no puede ser la misma que la tarifa destino.';
+      AMensaje := SErrorTarifasAddBlockCoincidentes;
       Exit;
     end;
   end;
 
   if chkAjustarPrecio.Checked and (spnMultiplo.Value <= 0) then
   begin
-    AMensaje := 'El multiplo del ajuste debe ser mayor que 0.';
+    AMensaje := SErrorMultiploAjusteAddBlockNoValido;
     Exit;
   end;
 
@@ -428,14 +430,13 @@ end;
 function TfrmModalAddBlockTarifa.TextoConfirmacion(
   ANumPendientes: Integer): string;
 begin
-  Result :=
-    Format('Se van a insertar %d articulos en la tarifa "%s". Continuar?',
+  Result := Format(SPreguntaConfirmarTarifaAddBlock,
                    [ANumPendientes, ObtenerCodigoTarifaActual]);
 end;
 
 function TfrmModalAddBlockTarifa.TextoExito(ANumInsertados: Integer): string;
 begin
-  Result := Format('%d articulos anadidos a la tarifa correctamente.',
+  Result := Format(SInfoArticulosTarifaAddBlockAnadidos,
                    [ANumInsertados]);
 end;
 
@@ -580,7 +581,7 @@ begin
       on E: Exception do
       begin
         FConn.Rollback;
-        ShowMessage('Error al insertar: ' + E.Message);
+        ShowMessage(SErrorInsertarTarifaAddBlock + E.Message);
         Result := False;
       end;
     end;

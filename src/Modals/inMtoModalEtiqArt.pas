@@ -87,6 +87,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 procedure TfrmPrintEtiqArt.AfterReportLoaded;
 var
   i: Integer;
@@ -292,7 +295,7 @@ begin
   try
     Layout.GuardarGeometria(Self);
     if Layout.PreguntarYGrabar('Personalizacion Impresion Etiquetas Articulo')
-      then ShowMessage('Layout guardado.');
+      then ShowMessage(SInfoLayoutEtiquetasGuardado);
   finally
     FreeAndNil(Layout);
   end;
@@ -325,7 +328,7 @@ var
 begin
   if ObtenerCodigoTarifa = '' then
   begin
-    ShowMessage('Seleccione una tarifa antes de imprimir.');
+    ShowMessage(SErrorTarifaEtiquetasNoSeleccionada);
     Abort;
   end;
   if Assigned(FCrearDataSetExterno) then

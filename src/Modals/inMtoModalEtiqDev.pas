@@ -70,6 +70,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 procedure TfrmPrintEtiqDev.FormCreate(Sender: TObject);
 begin
   // El Name del form coincide con el del modal de etiquetas de
@@ -142,7 +145,7 @@ procedure TfrmPrintEtiqDev.preparar_consulta;
 begin
   if ObtenerCodigoTarifa = '' then
   begin
-    ShowMessage('Seleccione una tarifa antes de imprimir.');
+    ShowMessage(SErrorTarifaEtiquetasNoSeleccionada);
     Abort;
   end;
   // Generamos el dataset filtrado a los SKUs del devolucion (lo crea el

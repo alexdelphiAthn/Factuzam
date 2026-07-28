@@ -50,6 +50,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 class function TfrmModalEnviarDestino.Ejecutar(AOwner: TComponent;
   AConn: TUniConnection; const ATitulo, AEmpresa,
   ATipoDocSerie: string; var AAlm, ASerie, ANumero: string): Boolean;
@@ -118,7 +121,7 @@ begin
       ANumero := Trim(frm.txtNumero.Text);
       Result := (AAlm <> '') and (ASerie <> '') and (ANumero <> '');
       if not Result then
-        ShowMessage('Almacén, serie y número son obligatorios.');
+        ShowMessage(SErrorDestinoEnvioIncompleto);
     end;
   finally
     FreeAndNil(q);

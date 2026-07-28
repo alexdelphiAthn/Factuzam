@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoGeneradorProcesos                                        }
 {    Tipo:       Formulario (Mto)                                              }
@@ -258,6 +258,7 @@ uses
   inLibDevExp,
 
   inLibDir,
+  inLibMsg,
   Vcl.Clipbrd,
   ts.Editor.CodeFormatters, inMtoPrincipal;
 
@@ -396,7 +397,7 @@ begin
 
   // Buscamos en el editor que memorizamos
   if FEditorActualBusqueda.SearchReplace(Dialog.FindText, '', Opciones) = 0 then
-    MessageDlg('Texto no encontrado.', mtInformation, [mbOK], 0);
+    MessageDlg(SInfoTextoNoEncontrado, mtInformation, [mbOK], 0);
 end;
 
 procedure TfrmMtoGeneradorProcesos.DoReplace(Sender: TObject);
@@ -417,15 +418,15 @@ begin
   if FEditorActualBusqueda.SearchReplace(Dialog.FindText,
                                          Dialog.ReplaceText,
                                          Opciones) = 0 then
-    MessageDlg('Texto no encontrado.', mtInformation, [mbOK], 0);
+    MessageDlg(SInfoTextoNoEncontrado, mtInformation, [mbOK], 0);
 end;
 
 procedure TfrmMtoGeneradorProcesos.BuscarGlobal;
 var
   TextoBuscar: string;
 begin
-  if InputQuery('Búsqueda Global',
-                'Introduce el texto a buscar en todos los procesos:',
+  if InputQuery(STituloBusquedaGlobal,
+                SSolicitudTextoBusquedaGlobal,
                 TextoBuscar) then
   begin
     if Trim(TextoBuscar) = '' then Exit;
@@ -447,7 +448,8 @@ begin
 
         if RecordCount = 0 then
         begin
-          MessageDlg('No se encontraron procesos que contengan: ' + TextoBuscar,
+          MessageDlg(Format(SInfoProcesosBusquedaNoEncontrados,
+                            [TextoBuscar]),
                      mtInformation,
                      [mbOK],
                      0);
@@ -572,11 +574,8 @@ begin
   var MsgCorta := E.Message;
   if Length(MsgCorta) > 20 then
     MsgCorta := Copy(MsgCorta, 1, 20) + '...';
-  Respuesta := MessageDlg(
-    'Ocurrió un error ejecutando el script.' +  sLineBreak +
-    'Detalle del error: ' + MsgCorta + sLineBreak + sLineBreak +
-    '¿Desea ignorar el error y continuar con el script?',
-    mtError, [mbYes, mbNo], 0);
+  Respuesta := MessageDlg(Format(SPreguntaIgnorarErrorScript, [MsgCorta]),
+                          mtError, [mbYes, mbNo], 0);
   if Respuesta = mrYes then
     Action := eaContinue  // Ignora la sentencia fallida
   else
@@ -655,8 +654,7 @@ begin
 
         if sScriptCompleto = '' then
         begin
-          ShowMessage(
-            'No hay estructura o script disponible para este metadato.');
+          ShowMessage(SErrorMetadatoSinScript);
           Exit;
         end;
 
@@ -968,11 +966,11 @@ begin
   iFilas := AVista.DataController.RecordCount;
   bContinuar := iFilas > 0;
   if not bContinuar then
-    ShowMessage('No hay datos que copiar.');
+    ShowMessage(SErrorDatosCopiarNoDisponibles);
   // Aviso para volcados muy grandes al portapapeles
   if ((bContinuar) and (iFilas > 50000)) then
-    bContinuar := MessageDlg('Vas a copiar ' + IntToStr(iFilas) +
-                             ' filas al portapapeles. ¿Continuar?',
+    bContinuar := MessageDlg(Format(SPreguntaCopiarFilasPortapapeles,
+                                    [iFilas]),
                              mtConfirmation, [mbYes, mbNo], 0) = mrYes;
   if bContinuar then
   begin
@@ -1084,11 +1082,8 @@ begin
       if Length(sMsgCorta) > 60 then
         sMsgCorta := Copy(sMsgCorta, 1, 60) + '...';
       // Preguntamos si seguimos con el resto del script
-      ASeguir := MessageDlg('Ocurrió un error ejecutando ' + sCaption + '.' +
-                            sLineBreak + 'Detalle: ' + sMsgCorta +
-                            sLineBreak + sLineBreak +
-                            '¿Desea ignorar el error y continuar con el ' +
-                            'script?',
+      ASeguir := MessageDlg(Format(SPreguntaIgnorarErrorComandoScript,
+                                  [sCaption, sMsgCorta]),
                             mtError, [mbYes, mbNo], 0) = mrYes;
     end
     else
@@ -1255,7 +1250,7 @@ begin
                                      FormatDateTime('hh:nn:ss.zzz', Now) +
                                      '): ' + sLineBreak + sSQL + sLineBreak +
                                      '-- ' + E2.Message);
-                  ShowMessage('Error en ejecución: ' + E2.Message);
+                  ShowMessage(Format(SErrorEjecucionProceso, [E2.Message]));
                 end;
               end;
             end;
@@ -1285,7 +1280,7 @@ begin
             except on E: Exception do
               begin
                 cxmResul.Lines.Add(E.Message);
-                ShowMessage('Error en comando SQL: ' + E.Message);
+                ShowMessage(Format(SErrorComandoSqlProceso, [E.Message]));
               end;
             end;
           finally

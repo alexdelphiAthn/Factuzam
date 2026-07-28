@@ -252,7 +252,8 @@ cada zona. Lo ordeno por retorno.
 
 ## D1 — `TfrmMtoDocumentoBase` (la mayor duplicación que queda)
 
-Estado a 27/07/2026: **fascículos 6A a 6S terminados**. La creación,
+Estado a 28/07/2026: **D1 terminado; fascículos 6A a 6U cerrados**.
+La creación,
 visibilidad, captions de modo, carga de nombres de atributo por artículo y
 globales, configuración del gestor/pivote, desmontaje del modo,
 configuración base de columnas SKU, columnas host y configuración del
@@ -275,7 +276,14 @@ entrada al grid también se comparten en esa fachada. El teclado F1, los
 ciclos y saltos de modo y la persistencia de la preferencia del pivote se
 centralizan igualmente. La resolución del artículo/SKU activo y las
 fuentes de refresco de la foto parten ya de la misma vista de líneas en
-los ocho documentos. La batería DUnitX pasa 70/70. Detalles en
+los ocho documentos. La creación o reutilización del DataModule, el
+enlace de cabecera y líneas, los maestros de detalle y la clave de
+navegación de `CrearTablaPrincipal` también se comparten, conservando
+la preparación fiscal de facturas y el lookup de empresa de inventarios.
+La restricción de consulta deriva ya las columnas estándar de empresa y
+almacén para los ocho documentos y añade caja solo en facturas de venta,
+sin cambiar la exención de administradores ni la tolerancia a `NULL`.
+La batería DUnitX pasa 78/78. Detalles en
 `refactorizacion_fase6a_resultados.md` y
 `refactorizacion_fase6b_resultados.md` y
 `refactorizacion_fase6c_resultados.md` y
@@ -294,9 +302,11 @@ los ocho documentos. La batería DUnitX pasa 70/70. Detalles en
 `refactorizacion_fase6p_resultados.md` y
 `refactorizacion_fase6q_resultados.md` y
 `refactorizacion_fase6r_resultados.md` y
-`refactorizacion_fase6s_resultados.md`.
+`refactorizacion_fase6s_resultados.md` y
+`refactorizacion_fase6t_resultados.md` y
+`refactorizacion_fase6u_resultados.md`.
 
-Los seis formularios de la familia suman **16.335 líneas** y comparten
+Los ocho formularios de la familia suman **19.964 líneas** y comparten
 **40 métodos con el mismo nombre en tres o más de ellos**:
 `CrearTablaPrincipal`, `CrearColumnasTallas`, `CrearColumnasAtributos`,
 `InicializarGestorYPivote`, `ConstruirModoEntrada`, `ResolverArtSkuActivo`,
@@ -304,17 +314,10 @@ Los seis formularios de la familia suman **16.335 líneas** y comparten
 que ya funcionó con `inLibImpuestosComun`: extraer de dos en dos métodos,
 compilar, y no seguir hasta que compile limpio.
 
-Empezar por los que no tocan datos: `CrearColumnasTallas`,
-`CrearColumnasAtributos`, `RefrescarVisibilidadTallas`,
-`RefrescarVisibilidadAtributos`, `ActualizarCaption*`. Dejar
-`CrearTablaPrincipal` y `SqlRestriccionUsuario` para el final, que son los
-que deciden qué ve cada usuario.
-
-**Pruebas por fascículo:** abrir los seis documentos, comprobar columnas
-de tallas y atributos, y una vez llegados a `SqlRestriccionUsuario`,
-repetir con un usuario restringido a empresa/almacén (hay un documento
-específico, `restriccion_usuario_emp_alm_caja_pruebas.md`, que sirve tal
-cual).
+El recorrido D1 queda cerrado. La comprobación automatizada pasa 78/78
+y cada informe 6A–6U conserva su plan manual. Para la restricción de
+usuario falta repetir con BBDD la matriz descrita en
+`restriccion_usuario_emp_alm_caja_pruebas.md`.
 
 ## D2 — partir `TfrmMtoGen` (3.243 líneas)
 
@@ -323,6 +326,14 @@ pantalla, guías de grid, tareas + overlay, dominio de artículos y
 diagnóstico. Uno por sesión de trabajo, extrayendo a clase con su propia
 unidad y dejando en `TfrmMtoGen` una referencia. Después de B1 y B2 su
 fan-out habrá bajado bastante, lo que hace esto más llevadero.
+
+Estado a 28/07/2026: **D2 terminado; 6 de 6 colaboradores**. Los
+filtros guardados, perfiles de pantalla, guías, tareas y artículos viven
+en sus cinco gestores. El diagnóstico de metadata vive en `inLibDiag`.
+`TfrmMtoGen` baja de 3.346 a 2.156 líneas y la batería DUnitX pasa
+109/109. Detalles en los resultados 6V, 6W, 6X, 6Y, 6Z y 6AA. El
+siguiente bloque es D3: partir `inLibtb` manteniendo una fachada
+compatible.
 
 ## D3 — partir `inLibtb` (1.524 líneas, **44 unidades dependientes**)
 

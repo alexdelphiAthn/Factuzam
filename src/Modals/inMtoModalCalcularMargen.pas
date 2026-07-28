@@ -101,6 +101,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsg;
+
 // ============================================================================
 //   API pública
 // ============================================================================
@@ -187,19 +190,19 @@ begin
 
   if edtCoste.Value <= 0 then
   begin
-    ShowMessage('El precio de coste debe ser mayor que cero.');
+    ShowMessage(SErrorPrecioCosteMargenNoValido);
     Exit;
   end;
 
   if edtMargen.Value <= 0 then
   begin
-    ShowMessage('El margen debe ser mayor que cero.');
+    ShowMessage(SErrorMargenNoValido);
     Exit;
   end;
 
   if edtAjuste.Value < 0 then
   begin
-    ShowMessage('El ajuste no puede ser negativo.');
+    ShowMessage(SErrorAjusteMargenNoValido);
     Exit;
   end;
 
@@ -210,7 +213,7 @@ begin
   begin
     if not PersistirCambios(msg) then
     begin
-      ShowMessage('No se han podido guardar los cambios: ' + msg);
+      ShowMessage(SErrorGuardarCambiosMargen + msg);
       Exit;
     end;
   end;
@@ -311,10 +314,7 @@ begin
         if filasCoste = 0 then
         begin
           FConn.Rollback;
-          AMensaje :=
-            'El artículo no tiene un proveedor marcado como principal. ' +
-                      'Asigna uno en la pestaña Proveedores antes de guardar ' +
-                      'el coste.';
+          AMensaje := SErrorProveedorPrincipalCosteNoAsignado;
           Exit;
         end;
       end;

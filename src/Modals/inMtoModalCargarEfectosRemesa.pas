@@ -122,7 +122,7 @@ function ConfigRemesaVenta: TConfigRemesa;
 implementation
 
 uses
-  inLibUser, inLibGenBusq;
+  inLibUser, inLibGenBusq, inLibMsg;
 
 {$R *.dfm}
 
@@ -342,7 +342,7 @@ begin
   inherited;
   sEmp := Trim(btnEmpresa.Text);
   if sEmp = '' then
-    ShowMessage('Indica la empresa.')
+    ShowMessage(SErrorEmpresaEfectosRemesaNoIndicada)
   else
   begin
     // Sin fecha "hasta" -> tope lejano (todos los pendientes).
@@ -356,7 +356,7 @@ begin
     FQryEfe.Open;
     CargarRemesasAbiertas(sEmp);
     if FQryEfe.IsEmpty then
-      ShowMessage('No hay efectos pendientes sin remesar para esa empresa.');
+      ShowMessage(SInfoEfectosPendientesRemesaNoEncontrados);
   end;
 end;
 
@@ -401,7 +401,7 @@ begin
   bSeguir := True;
   if nSel = 0 then
   begin
-    ShowMessage('Marca al menos un efecto (Ctrl/Mayus+clic).');
+    ShowMessage(SErrorEfectosRemesaNoSeleccionados);
     bSeguir := False;
   end;
   sSerieRem := '';
@@ -414,7 +414,7 @@ begin
       if (cbbRemExistente.ItemIndex < 0) or
          (cbbRemExistente.ItemIndex >= FRemSeries.Count) then
       begin
-        ShowMessage('Elige la remesa existente.');
+        ShowMessage(SErrorRemesaExistenteNoSeleccionada);
         bSeguir := False;
       end
       else
@@ -468,8 +468,7 @@ begin
     FRemSerie   := sSerieRem;
     FRemNumero  := sNumRem;
     FConfirmado := nOk > 0;
-    ShowMessage(Format('Cargados %d efecto(s) en la remesa %s / %s.' +
-      sLineBreak + 'Omitidos (ya remesados o %s): %d.',
+    ShowMessage(Format(SInfoEfectosCargadosRemesa,
       [nOk, sSerieRem, sNumRem, FConfig.TextoOmitidos, nSkip]));
     if FConfirmado then
       ModalResult := mrOk;
