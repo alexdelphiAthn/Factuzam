@@ -39,8 +39,17 @@ const
     '       ISNULL(v.AlmacenRcgdo, 0) AS AlmacenRcgdo, ' +
     '       ISNULL(v.CajaRcgdo, 0) AS CajaRcgdo, ' +
     '       ISNULL(v.OperacionRcgdo, 0) AS OperacionRcgdo, v.FechaRcgdo, ' +
-    '       ISNULL(almr.Abreviatura, '''') AS AbrevAlmR ' +
+    '       ISNULL(almr.Abreviatura, '''') AS AbrevAlmR, ' +
+    '       CASE WHEN ISNULL(c.TipoDoc, '''') = ''VE'' ' +
+    '                  AND ISNULL(c.Tipo, '''') <> ''C'' ' +
+    '            THEN CAST(ISNULL(c.Ejercicio, 0) AS varchar(10)) + ''.'' + ' +
+    '                 LTRIM(RTRIM(ISNULL(c.Serie, ''''))) ' +
+    '            ELSE '''' END AS SeriePago ' +
     'FROM dbo.occajvale v ' +
+    'LEFT JOIN dbo.occaj c ON c.Empresa = v.Empresa ' +
+    '                     AND c.Almacen = v.Almacen ' +
+    '                     AND c.Caja = v.Caja ' +
+    '                     AND c.Operacion = v.Operacion ' +
     'LEFT JOIN dbo.ocalm alm  ON alm.Empresa  = v.Empresa ' +
     '                       AND alm.Almacen  = v.Almacen ' +
     'LEFT JOIN dbo.ocalm almr ON almr.Empresa = v.EmpresaRcgdo ' +
@@ -75,12 +84,13 @@ const
     '   FACTOR_CAMBIO_PAGO, IMPORTE_DIVISA_PAGO, REFERENCIA_FACPAG, ' +
     '   OBSERVACIONES_PAGO, INSTANTE_ALTA, INSTANTE_MODIF, ' +
     '   USUARIO_ALTA) ' +
-    'SELECT :emp, :alm, :caja, '''', :num, ' +
+    'SELECT :emp, :alm, :caja, :serie, :num, ' +
     '       COALESCE((SELECT MAX(pm.NUMERO_LINEA_PAGO) + 1 ' +
     '                   FROM fza_caja_pagos pm ' +
     '                  WHERE pm.CODIGO_EMP_PAGO = :emp ' +
     '                    AND pm.CODIGO_ALM_PAGO = :alm ' +
     '                    AND pm.CODIGO_CAJA_PAGO = :caja ' +
+    '                    AND pm.SERIE_OPERACION_PAGO = :serie ' +
     '                    AND pm.NUMERO_OPERACION_PAGO = :num), 1), ' +
     '       ''VALE'', -ABS(:imp), 0, NULL, NULL, 1, 0, :cod, ' +
     '       :obs, :INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA ' +
@@ -89,6 +99,7 @@ const
     '        WHERE p.CODIGO_EMP_PAGO = :emp ' +
     '          AND p.CODIGO_ALM_PAGO = :alm ' +
     '          AND p.CODIGO_CAJA_PAGO = :caja ' +
+    '          AND p.SERIE_OPERACION_PAGO = :serie ' +
     '          AND p.NUMERO_OPERACION_PAGO = :num ' +
     '          AND p.CODIGO_FP_CFP = ''VALE'' ' +
     '          AND p.IMPORTE_ENTREGADO_PAGO < 0 ' +
@@ -96,20 +107,33 @@ const
     '               OR ABS(p.IMPORTE_ENTREGADO_PAGO + ABS(:imp)) < 0.005))';
 var
   qSrc, qIns, qPago:    TUniQuery;
+  qLimpiarPago:          TUniQuery;
   iEmp, iAlm, iCaja, iOpe: Integer;
-  sEmp, sAlm, sCaja, sNumOp, sCod, sObs: string;
+  sEmp, sAlm, sAlmRed, sCaja, sNumOp, sSeriePago, sCod, sObs: string;
   fImporte:             Double;
   bRedimido:            Boolean;
   bValeGrabado:         Boolean;
 begin
   qIns := TUniQuery.Create(nil);
   qPago := TUniQuery.Create(nil);
+  qLimpiarPago := TUniQuery.Create(nil);
   qSrc := NuevoQOrigen(Eng, cSel);
   qSrc.UniDirectional := True;
   try
     qIns.Connection := Eng.ConDst;
     qIns.SQL.Text   := cIns;
     qPago.Connection := Eng.ConDst;
+    // Rehacer los apuntes de vales de este migrador permite corregir las
+    // filas antiguas, que se grababan con serie vacia antes que las ventas.
+    qLimpiarPago.Connection := Eng.ConDst;
+    qLimpiarPago.SQL.Text :=
+      'DELETE p FROM fza_caja_pagos p ' +
+      'INNER JOIN fza_caja_vales v ON v.CODIGO_VL = p.REFERENCIA_FACPAG ' +
+      'WHERE p.USUARIO_ALTA = :u AND v.USUARIO_ALTA = :u ' +
+      '  AND p.CODIGO_FP_CFP = ''VALE'' ' +
+      '  AND p.IMPORTE_ENTREGADO_PAGO < 0';
+    qLimpiarPago.ParamByName('u').AsString := Eng.Usuario;
+    qLimpiarPago.ExecSQL;
     qPago.SQL.Text := cInsFormaPagoVale;
     qPago.ParamByName('ua').AsString := Eng.Usuario;
     qPago.ParamByName('um').AsString := Eng.Usuario;
@@ -132,6 +156,7 @@ begin
         sAlm := IntToStr(iAlm);
       sCaja  := IntToStr(iCaja);
       sNumOp := Format('%.8d', [iOpe]);
+      sSeriePago := Trim(qSrc.FieldByName('SeriePago').AsString);
       // CODIGO_VL unico por operacion de emision (mismo formato que la app).
       sCod   := Format('VALE_%s_%s_%s_%s', [sEmp, sAlm, sCaja, sNumOp]);
       fImporte := qSrc.FieldByName('ValeEmitido').AsFloat;
@@ -155,10 +180,12 @@ begin
         qIns.ParamByName('impred').AsFloat  := fImporte;
         qIns.ParamByName('empr').AsString   :=
           IntToStr(qSrc.FieldByName('EmpresaRcgdo').AsInteger);
-        sAlm := UpperCase(Trim(qSrc.FieldByName('AbrevAlmR').AsString));
-        if sAlm = '' then
-          sAlm := IntToStr(qSrc.FieldByName('AlmacenRcgdo').AsInteger);
-        qIns.ParamByName('almr').AsString  := sAlm;
+        sAlmRed := UpperCase(Trim(
+          qSrc.FieldByName('AbrevAlmR').AsString));
+        if sAlmRed = '' then
+          sAlmRed := IntToStr(
+            qSrc.FieldByName('AlmacenRcgdo').AsInteger);
+        qIns.ParamByName('almr').AsString  := sAlmRed;
         qIns.ParamByName('cajar').AsString :=
           IntToStr(qSrc.FieldByName('CajaRcgdo').AsInteger);
         qIns.ParamByName('numr').AsString  :=
@@ -201,6 +228,7 @@ begin
         qPago.ParamByName('emp').AsString := sEmp;
         qPago.ParamByName('alm').AsString := sAlm;
         qPago.ParamByName('caja').AsString := sCaja;
+        qPago.ParamByName('serie').AsString := sSeriePago;
         qPago.ParamByName('num').AsString := sNumOp;
         qPago.ParamByName('imp').AsFloat := fImporte;
         qPago.ParamByName('cod').AsString := sCod;
@@ -220,6 +248,7 @@ begin
       qSrc.Next;
     end;
   finally
+    qLimpiarPago.Free;
     qPago.Free;
     qIns.Free;
     qSrc.Free;

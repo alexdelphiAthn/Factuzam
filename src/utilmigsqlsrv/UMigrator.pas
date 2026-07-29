@@ -1377,9 +1377,10 @@ begin
      (sCodigo = 'albaranes_compra') or
      (sCodigo = 'devoluciones_compra') then
     Result := 3
-  // facturas va DESPUES de movimientos: al terminar enlaza cada movimiento
-  // con su factura (REF_MOV) y necesita los movimientos ya migrados.
-  else if (sCodigo = 'facturas') then
+  // Facturas va despues de movimientos. Vales va despues de ventas porque
+  // anyade el apunte negativo tras las lineas de pago de la operacion.
+  else if (sCodigo = 'facturas') or
+          (sCodigo = 'vales') then
     Result := 4
   else if (sCodigo = 'facturas_venta_mayor') or
           (sCodigo = 'facturas_compra') then

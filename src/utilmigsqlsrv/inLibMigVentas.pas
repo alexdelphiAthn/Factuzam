@@ -849,7 +849,7 @@ const
     '   CODIGO_FP_CFP, FACTOR_CAMBIO_PAGO, IMPORTE_DIVISA_PAGO, ' +
     '   IMPORTE_ENTREGADO_PAGO, IMPORTE_CAMBIO_PAGO, ' +
     '   INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA) ' +
-    'VALUES (:emp, :alm, :caja, '''', :num, :linea, :fp, 1, 0, ' +
+    'VALUES (:emp, :alm, :caja, :serie, :num, :linea, :fp, 1, 0, ' +
     '        :imp, 0, :INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA)';
   cInsDep =
     'INSERT INTO fza_depositos_cliente ' +
@@ -872,6 +872,7 @@ var
   iNroDoc:                   Integer;
   iLineaPago:                Integer;
   sEmp, sAlm, sCaja, sNum:   string;
+  sSeriePago:                string;
   sTipoOp, sCli, sConcepto:  string;
   sDepSku, sIdDep:           string;
   sIdDepAux:                 string;
@@ -890,6 +891,7 @@ var
       qPago.ParamByName('emp').AsString    := sEmp;
       qPago.ParamByName('alm').AsString    := sAlm;
       qPago.ParamByName('caja').AsString   := sCaja;
+      qPago.ParamByName('serie').AsString  := sSeriePago;
       qPago.ParamByName('num').AsString    := sNum;
       qPago.ParamByName('linea').AsInteger := iLineaPago;
       qPago.ParamByName('fp').AsString     := sFp;
@@ -1010,12 +1012,14 @@ begin
       // Solo las VENTA (TipoDoc='VE' y Tipo<>'C') generan factura; el resto la
       // deja vacia. (NroFactura/SerieFactura del legacy vienen vacios en venta
       // detalle; el numero real de factura es NroDoc.)
+      sSeriePago := '';
       if (UpperCase(Trim(qSrc.FieldByName('TipoDoc').AsString)) = 'VE')
       and (UpperCase(Trim(qSrc.FieldByName('Tipo').AsString)) <> 'C') then
       begin
-        qOp.ParamByName('sfac').AsString :=
+        sSeriePago :=
           Format('%d.%s', [qSrc.FieldByName('Ejercicio').AsInteger,
                  Trim(qSrc.FieldByName('Serie').AsString)]);
+        qOp.ParamByName('sfac').AsString := sSeriePago;
         qOp.ParamByName('nfac').AsString := IntToStr(iNroDoc);
       end
       else

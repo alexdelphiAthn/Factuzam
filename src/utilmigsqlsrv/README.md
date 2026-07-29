@@ -255,7 +255,7 @@ workers de la actual han terminado.
 | 1 | almacenes · clientes · articulos · tallajes · bancos_empresa | Wave 0 |
 | 2 | articulos_colores · articulos_tallas · articulos_tallajes_asign · skus | Wave 1 |
 | 3 | inventarios · movimientos · ventas · pedidos_venta · albaranes_venta · pedidos_compra · albaranes_compra · devoluciones_compra | Wave 2 |
-| 4 | facturas | Wave 3 |
+| 4 | facturas · vales | Wave 3 |
 | 5 | facturas_venta_mayor · facturas_compra | Wave 4 |
 | 6 | efectos_compra | Wave 5 |
 | 7 | remesas_compra | Wave 6 |

@@ -82,6 +82,13 @@ pago `VALE` (vales de tienda) se asegura al arrancar con un `INSERT IGNORE`.
 No se migran `Euros` (redundante con `Efectivo` en la época del euro) ni
 `ValeEmitido` (es un vale entregado como cambio, no un cobro).
 
+En las ventas, `SERIE_OPERACION_PAGO` usa la misma serie
+`<Ejercicio>.<Serie>` que la factura. El dominio **Vales** se ejecuta después
+de **Ventas** y añade el apunte negativo del vale emitido en la siguiente
+línea libre. Al reejecutarlo elimina y reconstruye únicamente esos apuntes
+del usuario migrador, corrigiendo también los generados con serie vacía por
+versiones anteriores.
+
 ---
 
 ## Resolución de códigos
