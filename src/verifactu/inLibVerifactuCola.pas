@@ -236,19 +236,11 @@ begin
   end;
 end;
 
-procedure GuardarRegistroNoVerifactu(AQry: TUniQuery;
-                                     const AUsuario: string;
-                                     const ASerie, ANumero,
-                                     ATipoOperacion: string;
-                                     const AResultado:
-                                     TResultadoEnvioVerifactu;
-                                     ABorrarMovimientos: Boolean);
-var
-  oPngStream: TBytesStream;
-  sEstado: string;
+procedure ActualizarCadenaNoVerifactu(
+  AQry: TUniQuery;
+  const AUsuario, ASerie, ANumero: string;
+  const AResultado: TResultadoEnvioVerifactu);
 begin
-  if not ColumnasFirmaFacturacionDisponibles(AQry.Connection) then
-    raise Exception.Create(SErrorColumnasFirmaFacturacionNoDisponibles);
   AQry.SQL.Text :=
     ' UPDATE fza_verifactu_cadena ' +
     ' SET CONTADOR_VFCAD = :CONTADOR, ' +
@@ -267,62 +259,82 @@ begin
   AQry.ParamByName('USUARIO').AsString  := AUsuario;
   AQry.ParamByName('NIF').AsString      := AResultado.IssuerIrsId;
   AQry.Execute;
+end;
+
+function ObtenerEstadoRegistroNoVerifactu(
+  const ATipoOperacion: string): string;
+begin
   if ATipoOperacion = 'ANULACION' then
-    sEstado := 'NOVERIF_ANULADO'
+    Result := 'NOVERIF_ANULADO'
   else if ATipoOperacion = 'SUBSANACION' then
-    sEstado := 'NOVERIF_SUBSANADO'
+    Result := 'NOVERIF_SUBSANADO'
   else
-    sEstado := 'NOVERIF_REGISTRADO';
-  if ATipoOperacion = 'ANULACION' then
-  begin
-    AQry.SQL.Text :=
-      ' UPDATE fza_facturas_consolidaciones ' +
-      ' SET CHAIN_NUMBER_FACCON = :CHAINNUM, ' +
-      '     CHAIN_HASH_FACCON = :CHAINHASH, ' +
-      '     ISSUER_IRS_ID_CONSOLIDACION_FACCON = :ISSUERID, ' +
-      '     ISSUED_TIME_FACCON = :ISSUEDTIME, ' +
-      '     FECHA_PROCESAMIENTO_FACCON = NOW(), ' +
-      '     ESTADO_FACCON = :ESTADO, ' +
-      '     REGISTRO_XML_FACCON = :REGISTROXML, ' +
-      '     FIRMA_DIGITAL_FACCON = :FIRMA, ' +
-      '     SERIE_CERTIFICADO_FACCON = :SERIECERT, ' +
-      '     TITULAR_CERTIFICADO_FACCON = :TITULARCERT, ' +
-      '     HUELLA_CERTIFICADO_FACCON = :HUELLACERT ' +
-      ' WHERE SERIE_FAC_FACCON = :SERIE ' +
-      '   AND NUMERO_FAC_FACCON = :NUMERO';
-  end
-  else
-  begin
-    AQry.SQL.Text :=
-      ' INSERT INTO fza_facturas_consolidaciones ' +
-      ' (ID_FACCON, SERIE_FAC_FACCON, NUMERO_FAC_FACCON, ' +
-      '  ISSUER_IRS_ID_CONSOLIDACION_FACCON, ISSUED_TIME_FACCON, ' +
-      '  CHAIN_NUMBER_FACCON, CHAIN_HASH_FACCON, ' +
-      '  VERIFACTU_URL_FACCON, QRCODE_BASE64_FACCON, ' +
-      '  QRCODE_PNG_FACCON, ' +
-      '  FECHA_PROCESAMIENTO_FACCON, ESTADO_FACCON, ' +
-      '  REGISTRO_XML_FACCON, FIRMA_DIGITAL_FACCON, ' +
-      '  SERIE_CERTIFICADO_FACCON, TITULAR_CERTIFICADO_FACCON, ' +
-      '  HUELLA_CERTIFICADO_FACCON) ' +
-      ' SELECT IFNULL(MAX(ID_FACCON), 0) + 1, :SERIE, :NUMERO, ' +
-      '        :ISSUERID, :ISSUEDTIME, :CHAINNUM, :CHAINHASH, ' +
-      '        NULLIF(:URL, ''''), NULLIF(:QRBASE64, ''''), :QRPNG, ' +
-      '        NOW(), :ESTADO, :REGISTROXML, :FIRMA, :SERIECERT, ' +
-      '        :TITULARCERT, :HUELLACERT ' +
-      ' FROM fza_facturas_consolidaciones ' +
-      ' ON DUPLICATE KEY UPDATE ' +
-      '  ESTADO_FACCON = VALUES(ESTADO_FACCON), ' +
-      '  CHAIN_NUMBER_FACCON = VALUES(CHAIN_NUMBER_FACCON), ' +
-      '  CHAIN_HASH_FACCON = VALUES(CHAIN_HASH_FACCON), ' +
-      '  VERIFACTU_URL_FACCON = VALUES(VERIFACTU_URL_FACCON), ' +
-      '  QRCODE_BASE64_FACCON = VALUES(QRCODE_BASE64_FACCON), ' +
-      '  QRCODE_PNG_FACCON = VALUES(QRCODE_PNG_FACCON), ' +
-      '  REGISTRO_XML_FACCON = VALUES(REGISTRO_XML_FACCON), ' +
-      '  FIRMA_DIGITAL_FACCON = VALUES(FIRMA_DIGITAL_FACCON), ' +
-      '  SERIE_CERTIFICADO_FACCON = VALUES(SERIE_CERTIFICADO_FACCON), ' +
-      '  TITULAR_CERTIFICADO_FACCON = VALUES(TITULAR_CERTIFICADO_FACCON), ' +
-      '  HUELLA_CERTIFICADO_FACCON = VALUES(HUELLA_CERTIFICADO_FACCON)';
-  end;
+    Result := 'NOVERIF_REGISTRADO';
+end;
+
+procedure PrepararActualizacionAnulacionNoVerifactu(
+  AQry: TUniQuery);
+begin
+  AQry.SQL.Text :=
+    ' UPDATE fza_facturas_consolidaciones ' +
+    ' SET CHAIN_NUMBER_FACCON = :CHAINNUM, ' +
+    '     CHAIN_HASH_FACCON = :CHAINHASH, ' +
+    '     ISSUER_IRS_ID_CONSOLIDACION_FACCON = :ISSUERID, ' +
+    '     ISSUED_TIME_FACCON = :ISSUEDTIME, ' +
+    '     FECHA_PROCESAMIENTO_FACCON = NOW(), ' +
+    '     ESTADO_FACCON = :ESTADO, ' +
+    '     REGISTRO_XML_FACCON = :REGISTROXML, ' +
+    '     FIRMA_DIGITAL_FACCON = :FIRMA, ' +
+    '     SERIE_CERTIFICADO_FACCON = :SERIECERT, ' +
+    '     TITULAR_CERTIFICADO_FACCON = :TITULARCERT, ' +
+    '     HUELLA_CERTIFICADO_FACCON = :HUELLACERT ' +
+    ' WHERE SERIE_FAC_FACCON = :SERIE ' +
+    '   AND NUMERO_FAC_FACCON = :NUMERO';
+end;
+
+procedure PrepararAltaConsolidacionNoVerifactu(
+  AQry: TUniQuery);
+begin
+  AQry.SQL.Text :=
+    ' INSERT INTO fza_facturas_consolidaciones ' +
+    ' (ID_FACCON, SERIE_FAC_FACCON, NUMERO_FAC_FACCON, ' +
+    '  ISSUER_IRS_ID_CONSOLIDACION_FACCON, ISSUED_TIME_FACCON, ' +
+    '  CHAIN_NUMBER_FACCON, CHAIN_HASH_FACCON, ' +
+    '  VERIFACTU_URL_FACCON, QRCODE_BASE64_FACCON, ' +
+    '  QRCODE_PNG_FACCON, ' +
+    '  FECHA_PROCESAMIENTO_FACCON, ESTADO_FACCON, ' +
+    '  REGISTRO_XML_FACCON, FIRMA_DIGITAL_FACCON, ' +
+    '  SERIE_CERTIFICADO_FACCON, TITULAR_CERTIFICADO_FACCON, ' +
+    '  HUELLA_CERTIFICADO_FACCON) ' +
+    ' SELECT IFNULL(MAX(ID_FACCON), 0) + 1, :SERIE, :NUMERO, ' +
+    '        :ISSUERID, :ISSUEDTIME, :CHAINNUM, :CHAINHASH, ' +
+    '        NULLIF(:URL, ''''), NULLIF(:QRBASE64, ''''), :QRPNG, ' +
+    '        NOW(), :ESTADO, :REGISTROXML, :FIRMA, :SERIECERT, ' +
+    '        :TITULARCERT, :HUELLACERT ' +
+    ' FROM fza_facturas_consolidaciones ' +
+    ' ON DUPLICATE KEY UPDATE ' +
+    '  ESTADO_FACCON = VALUES(ESTADO_FACCON), ' +
+    '  CHAIN_NUMBER_FACCON = VALUES(CHAIN_NUMBER_FACCON), ' +
+    '  CHAIN_HASH_FACCON = VALUES(CHAIN_HASH_FACCON), ' +
+    '  VERIFACTU_URL_FACCON = VALUES(VERIFACTU_URL_FACCON), ' +
+    '  QRCODE_BASE64_FACCON = VALUES(QRCODE_BASE64_FACCON), ' +
+    '  QRCODE_PNG_FACCON = VALUES(QRCODE_PNG_FACCON), ' +
+    '  REGISTRO_XML_FACCON = VALUES(REGISTRO_XML_FACCON), ' +
+    '  FIRMA_DIGITAL_FACCON = VALUES(FIRMA_DIGITAL_FACCON), ' +
+    '  SERIE_CERTIFICADO_FACCON = VALUES(SERIE_CERTIFICADO_FACCON), ' +
+    '  TITULAR_CERTIFICADO_FACCON = ' +
+    '    VALUES(TITULAR_CERTIFICADO_FACCON), ' +
+    '  HUELLA_CERTIFICADO_FACCON = ' +
+    '    VALUES(HUELLA_CERTIFICADO_FACCON)';
+end;
+
+procedure AsignarParametrosConsolidacionNoVerifactu(
+  AQry: TUniQuery;
+  const ASerie, ANumero, ATipoOperacion: string;
+  const AResultado: TResultadoEnvioVerifactu);
+var
+  oPngStream: TBytesStream;
+begin
   AQry.ParamByName('SERIE').AsString := ASerie;
   AQry.ParamByName('NUMERO').AsString := ANumero;
   AQry.ParamByName('ISSUERID').AsString := AResultado.IssuerIrsId;
@@ -330,7 +342,8 @@ begin
   AQry.ParamByName('ISSUEDTIME').AsDateTime := AResultado.IssuedTime;
   AQry.ParamByName('CHAINNUM').AsString := AResultado.ChainNumber;
   AQry.ParamByName('CHAINHASH').AsString := AResultado.ChainHash;
-  AQry.ParamByName('ESTADO').AsString := sEstado;
+  AQry.ParamByName('ESTADO').AsString :=
+    ObtenerEstadoRegistroNoVerifactu(ATipoOperacion);
   if ATipoOperacion <> 'ANULACION' then
   begin
     AQry.ParamByName('URL').AsString      := AResultado.VerifactuUrl;
@@ -356,7 +369,26 @@ begin
     AResultado.TitularCertificado;
   AQry.ParamByName('HUELLACERT').AsString :=
     AResultado.HuellaCertificado;
+end;
+
+procedure GuardarConsolidacionNoVerifactu(
+  AQry: TUniQuery;
+  const ASerie, ANumero, ATipoOperacion: string;
+  const AResultado: TResultadoEnvioVerifactu);
+begin
+  if ATipoOperacion = 'ANULACION' then
+    PrepararActualizacionAnulacionNoVerifactu(AQry)
+  else
+    PrepararAltaConsolidacionNoVerifactu(AQry);
+  AsignarParametrosConsolidacionNoVerifactu(
+    AQry, ASerie, ANumero, ATipoOperacion, AResultado);
   AQry.Execute;
+end;
+
+procedure MarcarFacturaRegistradaNoVerifactu(
+  AQry: TUniQuery;
+  const AUsuario, ASerie, ANumero, ATipoOperacion: string);
+begin
   AQry.SQL.Text :=
     ' UPDATE fza_facturas ' +
     ' SET ESCONSOLIDADA_FAC = ''S'', ' +
@@ -374,6 +406,25 @@ begin
   AQry.ParamByName('SERIE').AsString := ASerie;
   AQry.ParamByName('NUMERO').AsString := ANumero;
   AQry.Execute;
+end;
+
+procedure GuardarRegistroNoVerifactu(AQry: TUniQuery;
+                                     const AUsuario: string;
+                                     const ASerie, ANumero,
+                                     ATipoOperacion: string;
+                                     const AResultado:
+                                     TResultadoEnvioVerifactu;
+                                     ABorrarMovimientos: Boolean);
+begin
+  if not ColumnasFirmaFacturacionDisponibles(AQry.Connection) then
+    raise Exception.Create(
+      SErrorColumnasFirmaFacturacionNoDisponibles);
+  ActualizarCadenaNoVerifactu(
+    AQry, AUsuario, ASerie, ANumero, AResultado);
+  GuardarConsolidacionNoVerifactu(
+    AQry, ASerie, ANumero, ATipoOperacion, AResultado);
+  MarcarFacturaRegistradaNoVerifactu(
+    AQry, AUsuario, ASerie, ANumero, ATipoOperacion);
   if (ATipoOperacion = 'ANULACION') and ABorrarMovimientos then
     TVerifactuCola.BorrarMovimientosFactura(AQry, ASerie, ANumero);
 end;

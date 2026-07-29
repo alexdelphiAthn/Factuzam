@@ -359,125 +359,137 @@ end;
 // la linea no tiene ninguna informacion de color (el SKU sale sin color).
 // NOTA: dos proveedores con texto distinto para el mismo color basico
 // generan AV/SKU distintos (identidad por proveedor, decision de negocio).
+function ResolverIdColorBasico(
+  AQuery: TUniQuery;
+  const ACodigoAtbColor: string): Integer;
+begin
+  Result := 0;
+  if Trim(ACodigoAtbColor) <> '' then
+  begin
+    AQuery.SQL.Text :=
+      'SELECT ID_ATB FROM fza_atributos_basicos ' +
+      ' WHERE ID_VA_ATB = ''CO'' AND CODIGO_ATB = :cod LIMIT 1';
+    AQuery.ParamByName('cod').AsString := ACodigoAtbColor;
+    AQuery.Open;
+    if not AQuery.IsEmpty then
+      Result := AQuery.FieldByName('ID_ATB').AsInteger;
+    AQuery.Close;
+    if Result = 0 then
+      raise Exception.CreateFmt(
+        SErrorColorBasicoMaterializacionNoExiste,
+        [ACodigoAtbColor]);
+  end;
+end;
+
+function BuscarValorColor(
+  AQuery: TUniQuery;
+  const AValor: string;
+  out ATieneColorBasico: Boolean): Integer;
+begin
+  Result := 0;
+  ATieneColorBasico := False;
+  AQuery.SQL.Text :=
+    'SELECT ID_AV, ID_ATB_AV FROM fza_atributos_valores ' +
+    ' WHERE ID_VA_AV = ''CO'' AND AV = :v LIMIT 1';
+  AQuery.ParamByName('v').AsString := AValor;
+  AQuery.Open;
+  if not AQuery.IsEmpty then
+  begin
+    Result := AQuery.FieldByName('ID_AV').AsInteger;
+    ATieneColorBasico :=
+      not AQuery.FieldByName('ID_ATB_AV').IsNull;
+  end;
+  AQuery.Close;
+end;
+
+procedure AsignarColorBasicoAValor(
+  AQuery: TUniQuery;
+  AIdValor, AIdColorBasico: Integer);
+begin
+  AQuery.SQL.Text :=
+    'UPDATE fza_atributos_valores ' +
+    '   SET ID_ATB_AV = :ia ' +
+    ' WHERE ID_AV = :idav';
+  AQuery.ParamByName('ia').AsInteger := AIdColorBasico;
+  AQuery.ParamByName('idav').AsInteger := AIdValor;
+  AQuery.ExecSQL;
+end;
+
+function CrearValorColor(
+  AQuery: TUniQuery;
+  const AValor, ADescripcion, AUsuario: string;
+  AIdColorBasico: Integer): Integer;
+begin
+  if AIdColorBasico > 0 then
+  begin
+    AQuery.SQL.Text :=
+      'INSERT INTO fza_atributos_valores ' +
+      '  (ID_VA_AV, AV, DESCRIPCION_AV, ID_ATB_AV, ' +
+      '   ESACTIVO_AV, ORDEN_AV, INSTANTE_ALTA, USUARIO_ALTA, ' +
+      '   INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'VALUES (''CO'', :v, :d, :ia, ''S'', 0, ' +
+      '        NOW(), :u, NOW(), :u)';
+    AQuery.ParamByName('ia').AsInteger := AIdColorBasico;
+  end
+  else
+    AQuery.SQL.Text :=
+      'INSERT INTO fza_atributos_valores ' +
+      '  (ID_VA_AV, AV, DESCRIPCION_AV, ESACTIVO_AV, ORDEN_AV, ' +
+      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, ' +
+      '   USUARIO_MODIF) ' +
+      'VALUES (''CO'', :v, :d, ''S'', 0, NOW(), :u, NOW(), :u)';
+  AQuery.ParamByName('v').AsString := AValor;
+  AQuery.ParamByName('d').AsString := Trim(ADescripcion);
+  AQuery.ParamByName('u').AsString := AUsuario;
+  AQuery.ExecSQL;
+  AQuery.SQL.Text :=
+    'SELECT ID_AV FROM fza_atributos_valores ' +
+    ' WHERE ID_VA_AV = ''CO'' AND AV = :v ' +
+    ' ORDER BY ID_AV DESC LIMIT 1';
+  AQuery.ParamByName('v').AsString := AValor;
+  AQuery.Open;
+  Result := 0;
+  if not AQuery.IsEmpty then
+    Result := AQuery.FieldByName('ID_AV').AsInteger;
+  AQuery.Close;
+end;
+
 function ResolverIdAvColorLinea(AConn: TUniConnection;
                                  const AColorTexto, ACodigoAtbColor,
                                        AUsuario: string;
                                  out AValor: string): Integer;
 var
-  q     : TUniQuery;
-  idAtb : Integer;
-  sAv   : string;
+  q: TUniQuery;
+  iIdColorBasico: Integer;
+  sValor: string;
+  bTieneColorBasico: Boolean;
 begin
   Result := 0;
   AValor := '';
-
-  // 1. Valor que llevará el SKU: texto del proveedor saneado y, si no hay,
-  // el código del básico como compatibilidad.
-  sAv := SanearColorSku(AColorTexto);
-  if sAv = '' then
-    sAv := SanearColorSku(ACodigoAtbColor);
-
-  // Si no hay ningún texto útil para el color, salimos sin hacer nada.
-  if sAv = '' then Exit;
-
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := AConn;
-
-    // 2. Resolver primero el ID del color básico (ID_ATB) si viene informado.
-    // Lo hacemos al principio porque nos servirá tanto si creamos el AV
-    // como si lo actualizamos.
-    idAtb := 0;
-    if Trim(ACodigoAtbColor) <> '' then
-    begin
-      q.SQL.Text :=
-        'SELECT ID_ATB FROM fza_atributos_basicos ' +
-        ' WHERE ID_VA_ATB = ''CO'' AND CODIGO_ATB = :cod LIMIT 1';
-      q.ParamByName('cod').AsString := ACodigoAtbColor;
-      q.Open;
-
-      if not q.IsEmpty then
-        idAtb := q.FieldByName('ID_ATB').AsInteger;
-      q.Close;
-
-      // El básico es importante: si la línea referencia uno que no existe
-      // en la paleta, fallar explícitamente en vez de clasificar mal en silencio.
-      if idAtb = 0 then
-        raise Exception.CreateFmt(SErrorColorBasicoMaterializacionNoExiste,
-                                  [ACodigoAtbColor]);
+  sValor := SanearColorSku(AColorTexto);
+  if sValor = '' then
+    sValor := SanearColorSku(ACodigoAtbColor);
+  if sValor <> '' then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := AConn;
+      iIdColorBasico :=
+        ResolverIdColorBasico(q, ACodigoAtbColor);
+      Result := BuscarValorColor(
+        q, sValor, bTieneColorBasico);
+      if Result = 0 then
+        Result := CrearValorColor(
+          q, sValor, AColorTexto, AUsuario, iIdColorBasico)
+      else if (not bTieneColorBasico) and
+              (iIdColorBasico > 0) then
+        AsignarColorBasicoAValor(
+          q, Result, iIdColorBasico);
+      if Result > 0 then
+        AValor := sValor;
+    finally
+      FreeAndNil(q);
     end;
-
-    // 3. Comprobar si el color (AV) ya existe (identidad = valor del color).
-    q.SQL.Text :=
-      'SELECT ID_AV, ID_ATB_AV FROM fza_atributos_valores ' +
-      ' WHERE ID_VA_AV = ''CO'' AND AV = :v LIMIT 1';
-    q.ParamByName('v').AsString := sAv;
-    q.Open;
-
-    if not q.IsEmpty then
-    begin
-      // 4. El color ya existe: lo reusamos.
-      Result := q.FieldByName('ID_AV').AsInteger;
-      AValor := sAv;
-
-      // FIX: Si el color existe pero NO tenía color básico asignado,
-      // y la línea actual SÍ trae un básico, actualizamos el registro.
-      if q.FieldByName('ID_ATB_AV').IsNull and (idAtb > 0) then
-      begin
-        q.Close;
-        q.SQL.Text :=
-          'UPDATE fza_atributos_valores ' +
-          '   SET ID_ATB_AV = :ia ' +
-          ' WHERE ID_AV = :idav';
-        q.ParamByName('ia').AsInteger   := idAtb;
-        q.ParamByName('idav').AsInteger := Result;
-        q.ExecSQL;
-      end;
-    end
-    else
-    begin
-      // 5. El color no existe: lo creamos.
-      q.Close;
-
-      if idAtb > 0 then
-      begin
-        q.SQL.Text :=
-          'INSERT INTO fza_atributos_valores ' +
-          '  (ID_VA_AV, AV, DESCRIPCION_AV, ID_ATB_AV, ESACTIVO_AV, ' +
-          '   ORDEN_AV, INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, ' +
-          '   USUARIO_MODIF) ' +
-          'VALUES (''CO'', :v, :d, :ia, ''S'', 0, NOW(), :u, NOW(), :u)';
-        q.ParamByName('ia').AsInteger := idAtb;
-      end
-      else
-      begin
-        q.SQL.Text :=
-          'INSERT INTO fza_atributos_valores ' +
-          '  (ID_VA_AV, AV, DESCRIPCION_AV, ESACTIVO_AV, ORDEN_AV, ' +
-          '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-          'VALUES (''CO'', :v, :d, ''S'', 0, NOW(), :u, NOW(), :u)';
-      end;
-
-      q.ParamByName('v').AsString := sAv;
-      q.ParamByName('d').AsString := Trim(AColorTexto);
-      q.ParamByName('u').AsString := AUsuario;
-      q.ExecSQL;
-
-      // Recuperar el ID recién creado
-      q.SQL.Text :=
-        'SELECT ID_AV FROM fza_atributos_valores ' +
-        ' WHERE ID_VA_AV = ''CO'' AND AV = :v ' +
-        ' ORDER BY ID_AV DESC LIMIT 1';
-      q.ParamByName('v').AsString := sAv;
-      q.Open;
-      if not q.IsEmpty then
-      begin
-        Result := q.FieldByName('ID_AV').AsInteger;
-        AValor := sAv;
-      end;
-    end;
-  finally
-    FreeAndNil(q);
   end;
 end;
 
@@ -508,225 +520,278 @@ begin
     Result := '';
 end;
 
+function CargarColorLineaSku(
+  AConn: TUniConnection;
+  const ASerieSesion, ANumeroSesion, AUsuario: string;
+  ALinea: Integer;
+  out AValorColor: string): Integer;
+var
+  q: TUniQuery;
+  sColorTexto: string;
+  sCodigoAtbColor: string;
+begin
+  sColorTexto := '';
+  sCodigoAtbColor := '';
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := AConn;
+    q.SQL.Text :=
+      'SELECT COLOR_TEXTO_SESLIN, CODIGO_ATB_COLOR_SESLIN ' +
+      '  FROM fza_compras_sesiones_lineas ' +
+      ' WHERE SERIE_SES_SESLIN = :s ' +
+      '   AND NUMERO_SES_SESLIN = :n ' +
+      '   AND LINEA_SESLIN = :l';
+    q.ParamByName('s').AsString := ASerieSesion;
+    q.ParamByName('n').AsString := ANumeroSesion;
+    q.ParamByName('l').AsInteger := ALinea;
+    q.Open;
+    if not q.IsEmpty then
+    begin
+      sColorTexto :=
+        q.FieldByName('COLOR_TEXTO_SESLIN').AsString;
+      sCodigoAtbColor :=
+        q.FieldByName('CODIGO_ATB_COLOR_SESLIN').AsString;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+  Result := ResolverIdAvColorLinea(
+    AConn, sColorTexto, sCodigoAtbColor, AUsuario, AValorColor);
+end;
+
+procedure AsociarColorBasicoArticulo(
+  AQuery: TUniQuery;
+  const ACodigoArticulo, AUsuario: string;
+  AIdColor: Integer);
+begin
+  if AIdColor > 0 then
+  begin
+    AQuery.SQL.Text :=
+      'INSERT IGNORE INTO fza_articulos_atributos_basicos ' +
+      '  (CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, ' +
+      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, ' +
+      '   USUARIO_MODIF) ' +
+      'SELECT :art, AV.ID_AV, AV.ID_ATB_AV, ' +
+      '       NOW(), :u, NOW(), :u ' +
+      '  FROM fza_atributos_valores AV ' +
+      ' WHERE AV.ID_AV = :av ' +
+      '   AND AV.ID_ATB_AV IS NOT NULL';
+    AQuery.ParamByName('art').AsString := ACodigoArticulo;
+    AQuery.ParamByName('av').AsInteger := AIdColor;
+    AQuery.ParamByName('u').AsString := AUsuario;
+    AQuery.ExecSQL;
+  end;
+end;
+
+function CrearConsultaSkusSesion(
+  AConn: TUniConnection;
+  const ASerieSesion, ANumeroSesion: string;
+  ALinea: Integer): TUniQuery;
+begin
+  Result := TUniQuery.Create(nil);
+  Result.Connection := AConn;
+  Result.SQL.Text :=
+    'SELECT C.ID_FILA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL, ' +
+    '       SUM(C.CANTIDAD_SESCEL) AS CANTIDAD_TOTAL, ' +
+    '       AVP.AV AS VAL_PIVOT, ' +
+    '       (SELECT GROUP_CONCAT(AV2.AV SEPARATOR ''/'') ' +
+    '          FROM fza_compras_sesiones_lineas_filas_atr FA ' +
+    '          JOIN fza_atributos_valores AV2 ' +
+    '            ON AV2.ID_AV = FA.ID_AV_SESFILAT ' +
+    '         WHERE FA.SERIE_SES_SESFILAT = C.SERIE_SES_SESCEL ' +
+    '           AND FA.NUMERO_SES_SESFILAT = C.NUMERO_SES_SESCEL ' +
+    '           AND FA.LINEA_SES_SESFILAT = C.LINEA_SES_SESCEL ' +
+    '           AND FA.ID_FILA_SESFILAT = C.ID_FILA_SES_SESCEL) ' +
+    '       AS VAL_FILA, ' +
+    '       (SELECT MIN(FA.ID_AV_SESFILAT) ' +
+    '          FROM fza_compras_sesiones_lineas_filas_atr FA ' +
+    '         WHERE FA.SERIE_SES_SESFILAT = C.SERIE_SES_SESCEL ' +
+    '           AND FA.NUMERO_SES_SESFILAT = C.NUMERO_SES_SESCEL ' +
+    '           AND FA.LINEA_SES_SESFILAT = C.LINEA_SES_SESCEL ' +
+    '           AND FA.ID_FILA_SESFILAT = C.ID_FILA_SES_SESCEL) ' +
+    '       AS ID_AV_FILA ' +
+    '  FROM fza_compras_sesiones_celdas C ' +
+    '  JOIN fza_atributos_valores AVP ' +
+    '    ON AVP.ID_AV = C.ID_AV_PIVOT_SESCEL ' +
+    ' WHERE C.SERIE_SES_SESCEL = :s ' +
+    '   AND C.NUMERO_SES_SESCEL = :n ' +
+    '   AND C.LINEA_SES_SESCEL = :l ' +
+    '   AND C.CANTIDAD_SESCEL > 0 ' +
+    ' GROUP BY C.SERIE_SES_SESCEL, C.NUMERO_SES_SESCEL, ' +
+    '          C.LINEA_SES_SESCEL, C.ID_FILA_SES_SESCEL, ' +
+    '          C.ID_AV_PIVOT_SESCEL, AVP.AV';
+  Result.ParamByName('s').AsString := ASerieSesion;
+  Result.ParamByName('n').AsString := ANumeroSesion;
+  Result.ParamByName('l').AsInteger := ALinea;
+  Result.Open;
+end;
+
+procedure InsertarSkuMaterializado(
+  AQuery: TUniQuery;
+  const ACodigoSku, ACodigoArticulo, AUsuario: string);
+begin
+  AQuery.SQL.Text :=
+    'INSERT IGNORE INTO fza_articulos_skus ' +
+    '  (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ' +
+    '   ESACTIVO_SKU, INSTANTE_ALTA, USUARIO_ALTA, ' +
+    '   INSTANTE_MODIF, USUARIO_MODIF) ' +
+    'VALUES (:sku, :art, ''TC'', ''S'', NOW(), :u, NOW(), :u)';
+  AQuery.ParamByName('sku').AsString := ACodigoSku;
+  AQuery.ParamByName('art').AsString := ACodigoArticulo;
+  AQuery.ParamByName('u').AsString := AUsuario;
+  AQuery.ExecSQL;
+end;
+
+procedure InsertarAtributoSkuMaterializado(
+  AQuery: TUniQuery;
+  const ACodigoSku, AUsuario: string;
+  AIdValor: Integer);
+begin
+  if AIdValor > 0 then
+  begin
+    AQuery.SQL.Text :=
+      'INSERT IGNORE INTO fza_atributos_sku ' +
+      '  (CODIGO_UNIDAD_SKU_SA, ID_AV_SA, INSTANTE_ALTA, ' +
+      '   USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'VALUES (:sku, :av, NOW(), :u, NOW(), :u)';
+    AQuery.ParamByName('sku').AsString := ACodigoSku;
+    AQuery.ParamByName('av').AsInteger := AIdValor;
+    AQuery.ParamByName('u').AsString := AUsuario;
+    AQuery.ExecSQL;
+  end;
+end;
+
+procedure InsertarTemporadaColorSku(
+  AQuery: TUniQuery;
+  const ACodigoArticulo, ACodigoSku, AUsuario: string;
+  AIdPropiedadTemporada: Integer);
+var
+  sPrefijoColor: string;
+begin
+  sPrefijoColor := PrefijoColorSku(ACodigoSku);
+  if (AIdPropiedadTemporada > 0) and
+     (sPrefijoColor <> '') then
+  begin
+    AQuery.SQL.Text :=
+      'INSERT IGNORE INTO fza_articulos_propiedades ' +
+      '  (CODIGO_ART_ART, CODIGO_PROP_ARTPROP, ' +
+      '   CODIGO_UNIDAD_ARTPROP, ID_PV_ARTPROP, ' +
+      '   VALOR_LIBRE_ARTPROP, INSTANTE_ALTA, USUARIO_ALTA) ' +
+      'VALUES (:art, ''TEMPORADA'', :uni, :pv, NULL, NOW(), :u)';
+    AQuery.ParamByName('art').AsString := ACodigoArticulo;
+    AQuery.ParamByName('uni').AsString := sPrefijoColor;
+    AQuery.ParamByName('pv').AsInteger :=
+      AIdPropiedadTemporada;
+    AQuery.ParamByName('u').AsString := AUsuario;
+    AQuery.ExecSQL;
+  end;
+end;
+
+procedure AsegurarEan13Sku(
+  AConn: TUniConnection;
+  AQuery: TUniQuery;
+  const ACodigoSku, APrefijoEan, AUsuario: string);
+var
+  sEan13: string;
+  bTieneEan13: Boolean;
+begin
+  AQuery.SQL.Text :=
+    'SELECT COUNT(*) AS N FROM fza_codigos_barras ' +
+    ' WHERE CODIGO_UNIDAD_CB = :sku ' +
+    '   AND TIPO_CODIGO_CB = ''EAN13''';
+  AQuery.ParamByName('sku').AsString := ACodigoSku;
+  AQuery.Open;
+  bTieneEan13 := AQuery.FieldByName('N').AsInteger > 0;
+  AQuery.Close;
+  if not bTieneEan13 then
+  begin
+    sEan13 := GenerarEAN13Local(AConn, APrefijoEan);
+    AQuery.SQL.Text :=
+      'INSERT IGNORE INTO fza_codigos_barras ' +
+      '  (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
+      '   ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, ' +
+      '   INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'VALUES (:cb, :sku, ''EAN13'', ''S'', ' +
+      '        NOW(), :u, NOW(), :u)';
+    AQuery.ParamByName('cb').AsString := sEan13;
+    AQuery.ParamByName('sku').AsString := ACodigoSku;
+    AQuery.ParamByName('u').AsString := AUsuario;
+    AQuery.ExecSQL;
+  end;
+end;
+
+procedure ProcesarSkuSesion(
+  AConn: TUniConnection;
+  AConsulta, AOperacion: TUniQuery;
+  const ACodigoArticulo, AUsuario, APrefijoEan,
+        AValorColor: string;
+  AIdColor, AIdPropiedadTemporada: Integer);
+var
+  sCodigoSku: string;
+  sValorPivot: string;
+  sValorFila: string;
+  iIdPivot: Integer;
+  iIdFila: Integer;
+begin
+  sValorPivot := AConsulta.FieldByName('VAL_PIVOT').AsString;
+  sValorFila := AConsulta.FieldByName('VAL_FILA').AsString;
+  iIdPivot :=
+    AConsulta.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
+  iIdFila := AConsulta.FieldByName('ID_AV_FILA').AsInteger;
+  if (iIdFila = 0) and (AIdColor > 0) then
+  begin
+    iIdFila := AIdColor;
+    sValorFila := AValorColor;
+  end;
+  if sValorFila = '' then
+    sCodigoSku := ACodigoArticulo + '/' + sValorPivot
+  else
+    sCodigoSku :=
+      ACodigoArticulo + '/' + sValorFila + '/' + sValorPivot;
+  InsertarSkuMaterializado(
+    AOperacion, sCodigoSku, ACodigoArticulo, AUsuario);
+  InsertarAtributoSkuMaterializado(
+    AOperacion, sCodigoSku, AUsuario, iIdFila);
+  InsertarAtributoSkuMaterializado(
+    AOperacion, sCodigoSku, AUsuario, iIdPivot);
+  InsertarTemporadaColorSku(
+    AOperacion, ACodigoArticulo, sCodigoSku, AUsuario,
+    AIdPropiedadTemporada);
+  AsegurarEan13Sku(
+    AConn, AOperacion, sCodigoSku, APrefijoEan, AUsuario);
+end;
+
 procedure InsertarSkusYBarras(AConn: TUniConnection;
                               const ASerieSes, ANumSes, ACodigoArt,
                                     AUsuario, APrefijoEAN: string;
                               ALinea: Integer;
                               AIdPvTemporada: Integer);
 var
-  qC, qIns, qBar, qLin: TUniQuery;
-  sCodigoSKU : string;
-  sPrefColor : string;
-  sEAN13     : string;
-  sValPivot, sValFila: string;
-  iAvPivot, iAvFila: Integer;
-  sColorTexto, sCodigoAtbColor, sValColor: string;
-  iAvColor: Integer;
+  qC: TUniQuery;
+  qOperacion: TUniQuery;
+  sValorColor: string;
+  iIdColor: Integer;
 begin
-  qC   := TUniQuery.Create(nil);
-  qIns := TUniQuery.Create(nil);
-  qBar := TUniQuery.Create(nil);
-  qLin := TUniQuery.Create(nil);
+  iIdColor := CargarColorLineaSku(
+    AConn, ASerieSes, ANumSes, AUsuario, ALinea, sValorColor);
+  qOperacion := TUniQuery.Create(nil);
+  qC := nil;
   try
-    qC.Connection   := AConn;
-    qIns.Connection := AConn;
-    qBar.Connection := AConn;
-    qLin.Connection := AConn;
-
-    // Cargar color denormalizado de la linea (COLOR_TEXTO_SESLIN /
-    // CODIGO_ATB_COLOR_SESLIN). El grid de la sesion no usa la tabla
-    // fza_compras_sesiones_lineas_filas_atr para el color: lo guarda
-    // plano en la linea. Si no hay color, iAvColor queda en 0 y los
-    // SKUs salen sin color (escenario sin matriz color).
-    qLin.SQL.Text :=
-      'SELECT COLOR_TEXTO_SESLIN, CODIGO_ATB_COLOR_SESLIN ' +
-      '  FROM fza_compras_sesiones_lineas ' +
-      ' WHERE SERIE_SES_SESLIN = :s ' +
-      '   AND NUMERO_SES_SESLIN = :n ' +
-      '   AND LINEA_SESLIN = :l';
-    qLin.ParamByName('s').AsString  := ASerieSes;
-    qLin.ParamByName('n').AsString  := ANumSes;
-    qLin.ParamByName('l').AsInteger := ALinea;
-    qLin.Open;
-    sColorTexto     := '';
-    sCodigoAtbColor := '';
-    if not qLin.IsEmpty then
-    begin
-      sColorTexto     := qLin.FieldByName('COLOR_TEXTO_SESLIN').AsString;
-      sCodigoAtbColor := qLin.FieldByName('CODIGO_ATB_COLOR_SESLIN').AsString;
-    end;
-    qLin.Close;
-    iAvColor := ResolverIdAvColorLinea(AConn, sColorTexto, sCodigoAtbColor,
-                                        AUsuario, sValColor);
-
-    // Asociar el atributo basico (color) al articulo en
-    // fza_articulos_atributos_basicos (AAB). Sin esto:
-    //   - el panel "Atributos del SKU + Atributo basico" en la ficha
-    //     del articulo sale vacio (su query JOINea AAB).
-    //   - las etiquetas de articulo no encuentran el HEX del color.
-    //   - el modal de "Atributo basico" del Mto no muestra el color.
-    // El ID_ATB lo tomamos de fza_atributos_valores.ID_ATB_AV del propio
-    // ID_AV resuelto. Idempotente: INSERT IGNORE por PK (CODIGO_ART, ID_AV).
-    if iAvColor > 0 then
-    begin
-      qIns.SQL.Text :=
-        'INSERT IGNORE INTO fza_articulos_atributos_basicos ' +
-        '  (CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, ' +
-        '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-        'SELECT :art, AV.ID_AV, AV.ID_ATB_AV, NOW(), :u, NOW(), :u ' +
-        '  FROM fza_atributos_valores AV ' +
-        ' WHERE AV.ID_AV = :av ' +
-        '   AND AV.ID_ATB_AV IS NOT NULL';
-      qIns.ParamByName('art').AsString := ACodigoArt;
-      qIns.ParamByName('av').AsInteger := iAvColor;
-      qIns.ParamByName('u').AsString   := AUsuario;
-      qIns.ExecSQL;
-    end;
-
-    // Una fila por SKU único (linea, fila, pivot) sumando cantidades
-    // de todos los almacenes. El SKU y su EAN13 son a nivel de artículo,
-    // no de almacén: 1 SKU por (color, talla), regardless of warehouse.
-    qC.SQL.Text :=
-      'SELECT C.ID_FILA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL, ' +
-      '       SUM(C.CANTIDAD_SESCEL) AS CANTIDAD_TOTAL, ' +
-      '       AVP.AV AS VAL_PIVOT, ' +
-      '       (SELECT GROUP_CONCAT(AV2.AV SEPARATOR ''/'') ' +
-      '          FROM fza_compras_sesiones_lineas_filas_atr FA ' +
-      '          JOIN fza_atributos_valores AV2 ON AV2.ID_AV = ' +
-      'FA.ID_AV_SESFILAT ' +
-      '         WHERE FA.SERIE_SES_SESFILAT = C.SERIE_SES_SESCEL ' +
-      '           AND FA.NUMERO_SES_SESFILAT = C.NUMERO_SES_SESCEL ' +
-      '           AND FA.LINEA_SES_SESFILAT  = C.LINEA_SES_SESCEL ' +
-      '           AND FA.ID_FILA_SESFILAT    = C.ID_FILA_SES_SESCEL) AS ' +
-      'VAL_FILA, ' +
-      '       (SELECT MIN(FA.ID_AV_SESFILAT) ' +
-      '          FROM fza_compras_sesiones_lineas_filas_atr FA ' +
-      '         WHERE FA.SERIE_SES_SESFILAT = C.SERIE_SES_SESCEL ' +
-      '           AND FA.NUMERO_SES_SESFILAT = C.NUMERO_SES_SESCEL ' +
-      '           AND FA.LINEA_SES_SESFILAT  = C.LINEA_SES_SESCEL ' +
-      '           AND FA.ID_FILA_SESFILAT    = C.ID_FILA_SES_SESCEL) AS ' +
-      'ID_AV_FILA ' +
-      '  FROM fza_compras_sesiones_celdas C ' +
-      '  JOIN fza_atributos_valores AVP ON AVP.ID_AV = C.ID_AV_PIVOT_SESCEL ' +
-      ' WHERE C.SERIE_SES_SESCEL = :s AND C.NUMERO_SES_SESCEL = :n ' +
-      '   AND C.LINEA_SES_SESCEL = :l AND C.CANTIDAD_SESCEL > 0 ' +
-      ' GROUP BY C.SERIE_SES_SESCEL, C.NUMERO_SES_SESCEL, C.LINEA_SES_SESCEL, ' +
-      '          C.ID_FILA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL, AVP.AV';
-    qC.ParamByName('s').AsString  := ASerieSes;
-    qC.ParamByName('n').AsString  := ANumSes;
-    qC.ParamByName('l').AsInteger := ALinea;
-    qC.Open;
-
+    qOperacion.Connection := AConn;
+    AsociarColorBasicoArticulo(
+      qOperacion, ACodigoArt, AUsuario, iIdColor);
+    qC := CrearConsultaSkusSesion(
+      AConn, ASerieSes, ANumSes, ALinea);
     while not qC.Eof do
     begin
-      sValPivot := qC.FieldByName('VAL_PIVOT').AsString;
-      sValFila  := qC.FieldByName('VAL_FILA').AsString;
-      iAvPivot  := qC.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
-      iAvFila   := qC.FieldByName('ID_AV_FILA').AsInteger;
-
-      // Fallback al color denormalizado de la linea cuando no hay
-      // fila formal en _filas_atr (caso del grid plano de muestrarios).
-      if (iAvFila = 0) and (iAvColor > 0) then
-      begin
-        iAvFila  := iAvColor;
-        sValFila := sValColor;
-      end;
-
-      if sValFila = '' then
-        sCodigoSKU := ACodigoArt + '/' + sValPivot
-      else
-        sCodigoSKU := ACodigoArt + '/' + sValFila + '/' + sValPivot;
-
-      // SKU
-      qIns.SQL.Text :=
-        'INSERT IGNORE INTO fza_articulos_skus ' +
-        '  (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ESACTIVO_SKU, ' +
-        '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-        'VALUES (:sku, :art, ''TC'', ''S'', NOW(), :u, NOW(), :u)';
-      qIns.ParamByName('sku').AsString := sCodigoSKU;
-      qIns.ParamByName('art').AsString := ACodigoArt;
-      qIns.ParamByName('u').AsString   := AUsuario;
-      qIns.ExecSQL;
-
-      // Atributos del SKU (fila)
-      if iAvFila > 0 then
-      begin
-        qIns.SQL.Text :=
-          'INSERT IGNORE INTO fza_atributos_sku ' +
-          '  (CODIGO_UNIDAD_SKU_SA, ID_AV_SA, INSTANTE_ALTA, USUARIO_ALTA, ' +
-          '   INSTANTE_MODIF, USUARIO_MODIF) ' +
-          'VALUES (:sku, :av, NOW(), :u, NOW(), :u)';
-        qIns.ParamByName('sku').AsString := sCodigoSKU;
-        qIns.ParamByName('av').AsInteger := iAvFila;
-        qIns.ParamByName('u').AsString   := AUsuario;
-        qIns.ExecSQL;
-      end;
-
-      // Atributos del SKU (pivot)
-      qIns.SQL.Text :=
-        'INSERT IGNORE INTO fza_atributos_sku ' +
-        '  (CODIGO_UNIDAD_SKU_SA, ID_AV_SA, INSTANTE_ALTA, USUARIO_ALTA, ' +
-        '   INSTANTE_MODIF, USUARIO_MODIF) ' +
-        'VALUES (:sku, :av, NOW(), :u, NOW(), :u)';
-      qIns.ParamByName('sku').AsString := sCodigoSKU;
-      qIns.ParamByName('av').AsInteger := iAvPivot;
-      qIns.ParamByName('u').AsString   := AUsuario;
-      qIns.ExecSQL;
-
-      // Propagacion de temporada a nivel COLOR (Fase 4): cada color
-      // comprado en la sesion recibe la temporada de cabecera en su
-      // propio CODIGO_UNIDAD_ARTPROP (= ART/COLOR, los dos primeros
-      // segmentos del SKU, igual que la vista efectiva). INSERT IGNORE:
-      // no pisa la temporada de un color ya fijado en una sesion previa
-      // y convive con la del articulo (InsertarTemporadaCabecera).
-      sPrefColor := PrefijoColorSku(sCodigoSKU);
-      if (AIdPvTemporada > 0) and (sPrefColor <> '') then
-      begin
-        qIns.SQL.Text :=
-          'INSERT IGNORE INTO fza_articulos_propiedades ' +
-          '  (CODIGO_ART_ART, CODIGO_PROP_ARTPROP, CODIGO_UNIDAD_ARTPROP, ' +
-          '   ID_PV_ARTPROP, VALOR_LIBRE_ARTPROP, INSTANTE_ALTA, ' +
-          '   USUARIO_ALTA) ' +
-          'VALUES (:art, ''TEMPORADA'', :uni, :pv, NULL, NOW(), :u)';
-        qIns.ParamByName('art').AsString := ACodigoArt;
-        qIns.ParamByName('uni').AsString := sPrefColor;
-        qIns.ParamByName('pv').AsInteger := AIdPvTemporada;
-        qIns.ParamByName('u').AsString   := AUsuario;
-        qIns.ExecSQL;
-      end;
-
-      // EAN13 — solo si el SKU no tiene ya un codigo de barras EAN13
-      // (idempotencia entre materializaciones tras un Revertir).
-      qBar.SQL.Text :=
-        'SELECT COUNT(*) AS N FROM fza_codigos_barras ' +
-        ' WHERE CODIGO_UNIDAD_CB = :sku AND TIPO_CODIGO_CB = ''EAN13''';
-      qBar.ParamByName('sku').AsString := sCodigoSKU;
-      qBar.Open;
-      if qBar.FieldByName('N').AsInteger = 0 then
-      begin
-        qBar.Close;
-        sEAN13 := GenerarEAN13Local(AConn, APrefijoEAN);
-
-        qBar.SQL.Text :=
-          'INSERT IGNORE INTO fza_codigos_barras ' +
-          '  (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
-          '   ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, ' +
-          '   INSTANTE_MODIF, USUARIO_MODIF) ' +
-          'VALUES (:cb, :sku, ''EAN13'', ''S'', NOW(), :u, NOW(), :u)';
-        qBar.ParamByName('cb').AsString  := sEAN13;
-        qBar.ParamByName('sku').AsString := sCodigoSKU;
-        qBar.ParamByName('u').AsString   := AUsuario;
-        qBar.ExecSQL;
-      end
-      else
-        qBar.Close;
-
+      ProcesarSkuSesion(
+        AConn, qC, qOperacion, ACodigoArt, AUsuario,
+        APrefijoEAN, sValorColor, iIdColor, AIdPvTemporada);
       qC.Next;
     end;
   finally
     FreeAndNil(qC);
-    FreeAndNil(qIns);
-    FreeAndNil(qBar);
+    FreeAndNil(qOperacion);
   end;
 end;
 
@@ -1258,6 +1323,61 @@ end;
 // Itera celdas de la sesion agrupadas por (SKU, almacen) y crea una
 // linea en fza_albaranes_compra_lineas por cada combinacion con
 // cantidad > 0. LINEA_ALBCLIN se asigna secuencial (010, 020, 030...).
+function CrearConsultaLineasDocumentoCompra(
+  AConn: TUniConnection;
+  const ASerieSesion, ANumeroSesion, AAlmacenCabecera,
+        AFiltroAlmacen: string): TUniQuery;
+begin
+  Result := TUniQuery.Create(nil);
+  Result.Connection := AConn;
+  Result.SQL.Text :=
+    'SELECT CASE WHEN L.ACCION_DUPLICADO_SESLIN = ''REUSAR'' ' +
+    '       THEN L.CODIGO_ART_REUSAR_SESLIN ' +
+    '       ELSE L.CODIGO_ART_TENTATIVO_SESLIN END AS CODIGO_ART, ' +
+    '       C.ID_AV_PIVOT_SESCEL, ' +
+    '       IFNULL(L.ID_AC_PIVOT_SESLIN, 0) AS ID_AC_PIVOT, ' +
+    '       IFNULL(L.CODIGO_ATB_COLOR_SESLIN, '''') AS COD_COLOR, ' +
+    '       IFNULL(L.COLOR_TEXTO_SESLIN, '''') AS COLOR_TEXTO, ' +
+    '       IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), ' +
+    '              :alm_cab) AS ALM_EFE, ' +
+    '       SUM(C.CANTIDAD_SESCEL) AS CANTIDAD_TOTAL, ' +
+    '       L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
+    '       L.CODIGO_FAM_SESLIN, ' +
+    '       CASE WHEN IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
+    '       THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
+    '                     NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+    '       ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+    '       END AS TIPO_IVA, L.TIPO_LINEA_SESLIN, ' +
+    '       IFNULL(L.REF_PRV_SESLIN, '''') AS REF_PRV ' +
+    '  FROM fza_compras_sesiones_celdas C ' +
+    '  JOIN fza_compras_sesiones_lineas L ' +
+    '    ON L.SERIE_SES_SESLIN = C.SERIE_SES_SESCEL ' +
+    '   AND L.NUMERO_SES_SESLIN = C.NUMERO_SES_SESCEL ' +
+    '   AND L.LINEA_SESLIN = C.LINEA_SES_SESCEL ' +
+    '  JOIN fza_compras_sesiones S ' +
+    '    ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
+    '   AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
+    ' WHERE C.SERIE_SES_SESCEL = :s ' +
+    '   AND C.NUMERO_SES_SESCEL = :n ' +
+    '   AND C.CANTIDAD_SESCEL > 0 ' +
+    '   AND L.TIPO_LINEA_SESLIN <> ''SERVICIO'' ' +
+    '   AND (:falm = '''' OR ' +
+    '        IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), ' +
+    '               :alm_cab) = :falm) ' +
+    ' GROUP BY CODIGO_ART, C.ID_AV_PIVOT_SESCEL, ID_AC_PIVOT, ' +
+    '          COD_COLOR, COLOR_TEXTO, ALM_EFE, ' +
+    '          L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
+    '          L.CODIGO_FAM_SESLIN, TIPO_IVA, ' +
+    '          L.TIPO_LINEA_SESLIN, REF_PRV ' +
+    ' ORDER BY CODIGO_ART, COD_COLOR, ' +
+    '          C.ID_AV_PIVOT_SESCEL, ALM_EFE';
+  Result.ParamByName('alm_cab').AsString := AAlmacenCabecera;
+  Result.ParamByName('falm').AsString := AFiltroAlmacen;
+  Result.ParamByName('s').AsString := ASerieSesion;
+  Result.ParamByName('n').AsString := ANumeroSesion;
+  Result.Open;
+end;
+
 procedure InsertarLineasAlbaranCompra(AConn: TUniConnection;
                                        ADM: TdmComprasSesiones;
                                        const ASerieSes, ANumSes,
@@ -1275,60 +1395,10 @@ begin
   sCodigoAlmCab := ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
   if sCodigoAlmCab = '' then
     raise Exception.Create(SErrorAlmacenSesionParaAlbaranCompra);
-
   iLineaSeq := 0;
-  qC := TUniQuery.Create(nil);
+  qC := CrearConsultaLineasDocumentoCompra(
+    AConn, ASerieSes, ANumSes, sCodigoAlmCab, AFiltroAlmacen);
   try
-    qC.Connection := AConn;
-    // Agrupamos por (articulo, pivot=talla, color, almacen). El SKU real
-    // se resuelve por grupo con ResolverCodigoSku. CLAVE: agrupamos por
-    // CODIGO_ATB_COLOR_SESLIN (el atributo basico de color de la linea),
-    // NO por ID_VA_FILA_SESLIN (que es 'CO', un position string). El
-    // ID_AV numerico de cada color se resuelve dentro del bucle.
-    qC.SQL.Text :=
-      'SELECT  ' +
-      '    CASE WHEN L.ACCION_DUPLICADO_SESLIN = ''REUSAR'' ' +
-      '         THEN L.CODIGO_ART_REUSAR_SESLIN ' +
-      '         ELSE L.CODIGO_ART_TENTATIVO_SESLIN END AS CODIGO_ART, ' +
-      '    C.ID_AV_PIVOT_SESCEL, ' +
-      '    IFNULL(L.ID_AC_PIVOT_SESLIN, 0) AS ID_AC_PIVOT, ' +
-      '    IFNULL(L.CODIGO_ATB_COLOR_SESLIN, '''') AS COD_COLOR, ' +
-      '    IFNULL(L.COLOR_TEXTO_SESLIN, '''')     AS COLOR_TEXTO, ' +
-      '    IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), :alm_cab) AS ALM_EFE, ' +
-      '    SUM(C.CANTIDAD_SESCEL) AS CANTIDAD_TOTAL, ' +
-      '    L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
-      '    L.CODIGO_FAM_SESLIN, ' +
-      '    CASE WHEN IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
-      '         THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
-      '                       NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
-      '         ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
-      '    END AS TIPO_IVA, ' +
-      '    L.TIPO_LINEA_SESLIN, ' +
-      '    IFNULL(L.REF_PRV_SESLIN, '''') AS REF_PRV ' +
-      '  FROM fza_compras_sesiones_celdas C ' +
-      '  JOIN fza_compras_sesiones_lineas L ' +
-      '    ON L.SERIE_SES_SESLIN  = C.SERIE_SES_SESCEL ' +
-      '   AND L.NUMERO_SES_SESLIN = C.NUMERO_SES_SESCEL ' +
-      '   AND L.LINEA_SESLIN      = C.LINEA_SES_SESCEL ' +
-      '  JOIN fza_compras_sesiones S ' +
-      '    ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
-      '   AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
-      ' WHERE C.SERIE_SES_SESCEL  = :s ' +
-      '   AND C.NUMERO_SES_SESCEL = :n ' +
-      '   AND C.CANTIDAD_SESCEL   > 0 ' +
-      '   AND L.TIPO_LINEA_SESLIN <> ''SERVICIO'' ' +
-      '   AND (:falm = '''' OR IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), :alm_cab) = :falm) ' +
-      ' GROUP BY CODIGO_ART, C.ID_AV_PIVOT_SESCEL, ID_AC_PIVOT, COD_COLOR, ' +
-      '          COLOR_TEXTO, ALM_EFE, ' +
-      '          L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
-      '          L.CODIGO_FAM_SESLIN, TIPO_IVA, L.TIPO_LINEA_SESLIN, REF_PRV ' +
-      ' ORDER BY CODIGO_ART, COD_COLOR, C.ID_AV_PIVOT_SESCEL, ALM_EFE';
-    qC.ParamByName('alm_cab').AsString := sCodigoAlmCab;
-    qC.ParamByName('falm').AsString := AFiltroAlmacen;
-    qC.ParamByName('s').AsString := ASerieSes;
-    qC.ParamByName('n').AsString := ANumSes;
-    qC.Open;
-
     while not qC.Eof do
     begin
       sCodigoArt := qC.FieldByName('CODIGO_ART').AsString;
@@ -1354,27 +1424,18 @@ begin
           AUsuario, sCodigoSku);  // sCodigoSku se reusa como out, se sobreescribe abajo
 
       sCodigoSku := ResolverCodigoSku(AConn, sCodigoArt, iIdAvPivot, iIdAvFila);
-      if sCodigoSku = '' then
+      if sCodigoSku <> '' then
       begin
-        qC.Next;
-        Continue;
+        sNombreFam := '';
+        iLineaSeq := iLineaSeq + 1;
+        sLineaAlbc := Format('%.4d', [iLineaSeq * 10]);
+        InsertarLineaAlbaranCompra(AConn,
+          ASerieAlbc, ANumAlbc, sLineaAlbc,
+          sCodigoArt, sCodigoSku, sCodigoFam, sNombreFam,
+          sDescripcion, sCodigoAlm, sTipoIva,
+          qC.FieldByName('REF_PRV').AsString,
+          AUsuario, rCantidad, rCoste, rPorIva, iIdAcPivot);
       end;
-
-      // El NOMBRE_FAM lo dejamos vacio aqui — se puede rellenar despues
-      // con un JOIN si hace falta para reports. Lineas se numeran de 10
-      // en 10 para permitir intercalado posterior si fuera necesario.
-      sNombreFam := '';
-      iLineaSeq := iLineaSeq + 1;
-      sLineaAlbc := Format('%.4d', [iLineaSeq * 10]);
-
-      InsertarLineaAlbaranCompra(AConn,
-        ASerieAlbc, ANumAlbc, sLineaAlbc,
-        sCodigoArt, sCodigoSku, sCodigoFam, sNombreFam, sDescripcion,
-        sCodigoAlm, sTipoIva,
-        qC.FieldByName('REF_PRV').AsString,
-        AUsuario,
-        rCantidad, rCoste, rPorIva, iIdAcPivot);
-
       qC.Next;
     end;
   finally
@@ -1564,52 +1625,9 @@ begin
   if sCodigoAlmCab = '' then
     raise Exception.Create(SErrorAlmacenSesionParaPedidoCompra);
   iLineaSeq := 0;
-  qC := TUniQuery.Create(nil);
+  qC := CrearConsultaLineasDocumentoCompra(
+    AConn, ASerieSes, ANumSes, sCodigoAlmCab, AFiltroAlmacen);
   try
-    qC.Connection := AConn;
-    qC.SQL.Text :=
-      'SELECT  ' +
-      '    CASE WHEN L.ACCION_DUPLICADO_SESLIN = ''REUSAR'' ' +
-      '         THEN L.CODIGO_ART_REUSAR_SESLIN ' +
-      '         ELSE L.CODIGO_ART_TENTATIVO_SESLIN END AS CODIGO_ART, ' +
-      '    C.ID_AV_PIVOT_SESCEL, ' +
-      '    IFNULL(L.ID_AC_PIVOT_SESLIN, 0) AS ID_AC_PIVOT, ' +
-      '    IFNULL(L.CODIGO_ATB_COLOR_SESLIN, '''') AS COD_COLOR, ' +
-      '    IFNULL(L.COLOR_TEXTO_SESLIN, '''')     AS COLOR_TEXTO, ' +
-      '    IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), :alm_cab) AS ALM_EFE, ' +
-      '    SUM(C.CANTIDAD_SESCEL) AS CANTIDAD_TOTAL, ' +
-      '    L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
-      '    L.CODIGO_FAM_SESLIN, ' +
-      '    CASE WHEN IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
-      '         THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
-      '                       NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
-      '         ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
-      '    END AS TIPO_IVA, ' +
-      '    L.TIPO_LINEA_SESLIN, ' +
-      '    IFNULL(L.REF_PRV_SESLIN, '''') AS REF_PRV ' +
-      '  FROM fza_compras_sesiones_celdas C ' +
-      '  JOIN fza_compras_sesiones_lineas L ' +
-      '    ON L.SERIE_SES_SESLIN  = C.SERIE_SES_SESCEL ' +
-      '   AND L.NUMERO_SES_SESLIN = C.NUMERO_SES_SESCEL ' +
-      '   AND L.LINEA_SESLIN      = C.LINEA_SES_SESCEL ' +
-      '  JOIN fza_compras_sesiones S ' +
-      '    ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
-      '   AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
-      ' WHERE C.SERIE_SES_SESCEL  = :s ' +
-      '   AND C.NUMERO_SES_SESCEL = :n ' +
-      '   AND C.CANTIDAD_SESCEL   > 0 ' +
-      '   AND L.TIPO_LINEA_SESLIN <> ''SERVICIO'' ' +
-      '   AND (:falm = '''' OR IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), :alm_cab) = :falm) ' +
-      ' GROUP BY CODIGO_ART, C.ID_AV_PIVOT_SESCEL, ID_AC_PIVOT, COD_COLOR, ' +
-      '          COLOR_TEXTO, ALM_EFE, ' +
-      '          L.PRECIO_COMPRA_SESLIN, L.DESCRIPCION_SESLIN, ' +
-      '          L.CODIGO_FAM_SESLIN, TIPO_IVA, L.TIPO_LINEA_SESLIN, REF_PRV ' +
-      ' ORDER BY CODIGO_ART, COD_COLOR, C.ID_AV_PIVOT_SESCEL, ALM_EFE';
-    qC.ParamByName('alm_cab').AsString := sCodigoAlmCab;
-    qC.ParamByName('falm').AsString := AFiltroAlmacen;
-    qC.ParamByName('s').AsString := ASerieSes;
-    qC.ParamByName('n').AsString := ANumSes;
-    qC.Open;
     while not qC.Eof do
     begin
       sCodigoArt := qC.FieldByName('CODIGO_ART').AsString;
@@ -1630,22 +1648,19 @@ begin
           qC.FieldByName('COD_COLOR').AsString,
           AUsuario, sCodigoSku);
       sCodigoSku := ResolverCodigoSku(AConn, sCodigoArt, iIdAvPivot, iIdAvFila);
-      if sCodigoSku = '' then
+      if sCodigoSku <> '' then
       begin
-        qC.Next;
-        Continue;
+        sNombreFam := '';
+        iLineaSeq := iLineaSeq + 1;
+        sLineaPedc := Format('%.4d', [iLineaSeq * 10]);
+        InsertarLineaPedidoCompra(AConn,
+          ASeriePedc, ANumPedc, sLineaPedc,
+          sCodigoArt, sCodigoSku, sCodigoFam, sNombreFam,
+          sDescripcion, sCodigoAlm, sTipoIva,
+          qC.FieldByName('REF_PRV').AsString,
+          qC.FieldByName('COLOR_TEXTO').AsString,
+          AUsuario, rCantidad, rCoste, rPorIva, iIdAcPivot);
       end;
-      sNombreFam := '';
-      iLineaSeq := iLineaSeq + 1;
-      sLineaPedc := Format('%.4d', [iLineaSeq * 10]);
-      InsertarLineaPedidoCompra(AConn,
-        ASeriePedc, ANumPedc, sLineaPedc,
-        sCodigoArt, sCodigoSku, sCodigoFam, sNombreFam, sDescripcion,
-        sCodigoAlm, sTipoIva,
-        qC.FieldByName('REF_PRV').AsString,
-        qC.FieldByName('COLOR_TEXTO').AsString,
-        AUsuario,
-        rCantidad, rCoste, rPorIva, iIdAcPivot);
       qC.Next;
     end;
   finally
@@ -1817,150 +1832,188 @@ end;
 // ASerieSes/ANumSes son los de la sesion (para resolver lineas y celdas).
 // ASerieDoc/ANumDoc son los del pedido generado (van como SERIE_DOC_PDR /
 // NUMERO_DOC_PDR de la tabla).
+function CrearConsultaPendientesRecibir(
+  AConn: TUniConnection;
+  const ASerieSesion, ANumeroSesion,
+        AAlmacenCabecera: string): TUniQuery;
+begin
+  Result := TUniQuery.Create(nil);
+  Result.Connection := AConn;
+  Result.SQL.Text :=
+    'SELECT C.LINEA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL, ' +
+    '       C.CANTIDAD_SESCEL, ' +
+    '       IFNULL(NULLIF(C.CODIGO_ALM_SESCEL,''''), ' +
+    '              :alm_cab) AS ALM_EFE, ' +
+    '       L.CODIGO_ART_TENTATIVO_SESLIN, ' +
+    '       L.CODIGO_ART_REUSAR_SESLIN, ' +
+    '       L.ACCION_DUPLICADO_SESLIN, ' +
+    '       CASE WHEN IFNULL(' +
+    '         S.ESIVA_EXENTO_INTRACOMUNITARIO_SES, ''N'') <> ''S'' ' +
+    '       AND IFNULL(S.ESIVA_RECARGO_COMPRAS_SES, ' +
+    '         IFNULL(E.ESIVA_RECARGO_COMPRAS_EMP, ''N'')) = ''S'' ' +
+    '       THEN L.PRECIO_COMPRA_SESLIN * ' +
+    '       (1 + (CASE (CASE WHEN IFNULL(' +
+    '         S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
+    '       THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
+    '         NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+    '       ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') END) ' +
+    '       WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_IVA, 0) ' +
+    '       WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_IVA, 0) ' +
+    '       WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_IVA, 0) ' +
+    '       WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_IVA, 0) ' +
+    '       ELSE 0 END + CASE (CASE WHEN IFNULL(' +
+    '         S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
+    '       THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
+    '         NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+    '       ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') END) ' +
+    '       WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
+    '       WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
+    '       WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
+    '       WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
+    '       ELSE 0 END) / 100) ' +
+    '       ELSE L.PRECIO_COMPRA_SESLIN END ' +
+    '       AS PRECIO_COMPRA_SESLIN, ' +
+    '       L.TIPO_LINEA_SESLIN, L.ID_VA_FILA_SESLIN ' +
+    '  FROM fza_compras_sesiones_celdas C ' +
+    '  JOIN fza_compras_sesiones_lineas L ' +
+    '    ON L.SERIE_SES_SESLIN = C.SERIE_SES_SESCEL ' +
+    '   AND L.NUMERO_SES_SESLIN = C.NUMERO_SES_SESCEL ' +
+    '   AND L.LINEA_SESLIN = C.LINEA_SES_SESCEL ' +
+    '  JOIN fza_compras_sesiones S ' +
+    '    ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
+    '   AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
+    '  LEFT JOIN fza_empresas E ' +
+    '    ON E.CODIGO_EMP_EMP = S.CODIGO_EMP_SES ' +
+    '  LEFT JOIN vi_ivas_empresa V ' +
+    '    ON V.CODIGO_EMP_EMP = S.CODIGO_EMP_SES ' +
+    '   AND V.ESDEFAULT_IVA_IVAGRP = ''S'' ' +
+    ' WHERE C.SERIE_SES_SESCEL = :s ' +
+    '   AND C.NUMERO_SES_SESCEL = :n ' +
+    '   AND C.CANTIDAD_SESCEL > 0 ' +
+    ' ORDER BY C.LINEA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL';
+  Result.ParamByName('alm_cab').AsString := AAlmacenCabecera;
+  Result.ParamByName('s').AsString := ASerieSesion;
+  Result.ParamByName('n').AsString := ANumeroSesion;
+  Result.Open;
+end;
+
+procedure InsertarPendienteRecibirSesion(
+  AQuery: TUniQuery;
+  const ACodigoSku, ACodigoAlmacen, ASerieDocumento,
+        ANumeroDocumento, ACodigoArticulo, ACodigoProveedor,
+        ACodigoEmpresa, AUsuario: string;
+  ALinea: Integer;
+  ACantidad, APrecio: Double;
+  AFechaPedido: TDateTime);
+begin
+  AQuery.SQL.Text :=
+    'INSERT IGNORE INTO fza_articulos_pdte_recibir ' +
+    '  (CODIGO_UNIDAD_PDR, CODIGO_ALM_PDR, SERIE_DOC_PDR, ' +
+    '   NUMERO_DOC_PDR, LINEA_PDR, CODIGO_ART_PDR, ' +
+    '   CODIGO_PRV_PDR, CODIGO_EMP_PDR, CANTIDAD_PDR, ' +
+    '   PRECIO_COMPRA_PDR, FECHA_PEDIDO_PDR, ' +
+    '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, ' +
+    '   USUARIO_MODIF) ' +
+    'VALUES (:sku, :alm, :s, :n, :l, :art, :prv, :emp, ' +
+    '        :qty, :pre, :fped, NOW(), :u, NOW(), :u) ' +
+    'ON DUPLICATE KEY UPDATE CANTIDAD_PDR = :qty, ' +
+    '  PRECIO_COMPRA_PDR = :pre, FECHA_PEDIDO_PDR = :fped, ' +
+    '  INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
+  AQuery.ParamByName('sku').AsString := ACodigoSku;
+  AQuery.ParamByName('alm').AsString := ACodigoAlmacen;
+  AQuery.ParamByName('s').AsString := ASerieDocumento;
+  AQuery.ParamByName('n').AsString := ANumeroDocumento;
+  AQuery.ParamByName('l').AsInteger := ALinea;
+  AQuery.ParamByName('art').AsString := ACodigoArticulo;
+  AQuery.ParamByName('prv').AsString := ACodigoProveedor;
+  AQuery.ParamByName('emp').AsString := ACodigoEmpresa;
+  AQuery.ParamByName('qty').AsFloat := ACantidad;
+  AQuery.ParamByName('pre').AsFloat := APrecio;
+  AQuery.ParamByName('fped').AsDateTime := AFechaPedido;
+  AQuery.ParamByName('u').AsString := AUsuario;
+  AQuery.ExecSQL;
+end;
+
+procedure ProcesarPendienteRecibirSesion(
+  AConn: TUniConnection;
+  AConsulta, AOperacion: TUniQuery;
+  const ASerieDocumento, ANumeroDocumento,
+        ACodigoProveedor, ACodigoEmpresa, AUsuario: string;
+  AFechaPedido: TDateTime);
+var
+  sCodigoArticulo: string;
+  sCodigoSku: string;
+  iIdFila: Integer;
+begin
+  if AConsulta.FieldByName(
+    'TIPO_LINEA_SESLIN').AsString <> 'SERVICIO' then
+  begin
+    if AConsulta.FieldByName(
+      'ACCION_DUPLICADO_SESLIN').AsString = 'REUSAR' then
+      sCodigoArticulo := AConsulta.FieldByName(
+        'CODIGO_ART_REUSAR_SESLIN').AsString
+    else
+      sCodigoArticulo := AConsulta.FieldByName(
+        'CODIGO_ART_TENTATIVO_SESLIN').AsString;
+    iIdFila := 0;
+    if not AConsulta.FieldByName(
+      'ID_VA_FILA_SESLIN').IsNull then
+      iIdFila := StrToIntDef(
+        AConsulta.FieldByName('ID_VA_FILA_SESLIN').AsString, 0);
+    sCodigoSku := ResolverCodigoSku(
+      AConn, sCodigoArticulo,
+      AConsulta.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger,
+      iIdFila);
+    if sCodigoSku <> '' then
+      InsertarPendienteRecibirSesion(
+        AOperacion, sCodigoSku,
+        AConsulta.FieldByName('ALM_EFE').AsString,
+        ASerieDocumento, ANumeroDocumento, sCodigoArticulo,
+        ACodigoProveedor, ACodigoEmpresa, AUsuario,
+        AConsulta.FieldByName('LINEA_SES_SESCEL').AsInteger,
+        AConsulta.FieldByName('CANTIDAD_SESCEL').AsFloat,
+        AConsulta.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat,
+        AFechaPedido);
+  end;
+end;
+
 procedure GenerarPedidoPdteRecibir(AConn: TUniConnection;
                                     ADM: TdmComprasSesiones;
                                     const ASerieSes, ANumSes,
                                           ASerieDoc, ANumDoc,
                                           AUsuario: string);
 var
-  qC, qIns: TUniQuery;
-  sCodigoArt, sCodigoSku, sCodigoAlm, sCodigoAlmCab,
-  sCodigoEmp: string;
-  iIdAvPivot, iIdAvFila, iLinea: Integer;
-  rCantidad, rCoste: Double;
+  qC: TUniQuery;
+  qIns: TUniQuery;
+  sCodigoAlmCab: string;
+  sCodigoEmpresa: string;
+  sCodigoProveedor: string;
   dFechaPedido: TDateTime;
 begin
-  sCodigoAlmCab := ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
-  sCodigoEmp    := ADM.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
-  dFechaPedido  := Date;
-  if not ADM.unqryTablaG.FieldByName('FECHA_SES').IsNull then
-    dFechaPedido := ADM.unqryTablaG.FieldByName('FECHA_SES').AsDateTime;
+  sCodigoAlmCab :=
+    ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
   if sCodigoAlmCab = '' then
-    raise Exception.Create(SErrorAlmacenSesionParaPendienteRecibir);
-
-  qC   := TUniQuery.Create(nil);
+    raise Exception.Create(
+      SErrorAlmacenSesionParaPendienteRecibir);
+  sCodigoEmpresa :=
+    ADM.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
+  sCodigoProveedor :=
+    ADM.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString;
+  dFechaPedido := Date;
+  if not ADM.unqryTablaG.FieldByName('FECHA_SES').IsNull then
+    dFechaPedido :=
+      ADM.unqryTablaG.FieldByName('FECHA_SES').AsDateTime;
+  qC := CrearConsultaPendientesRecibir(
+    AConn, ASerieSes, ANumSes, sCodigoAlmCab);
   qIns := TUniQuery.Create(nil);
   try
-    qC.Connection   := AConn;
     qIns.Connection := AConn;
-
-    qC.SQL.Text :=
-      'SELECT C.LINEA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL, ' +
-      '       C.CANTIDAD_SESCEL, ' +
-      '       IFNULL(NULLIF(C.CODIGO_ALM_SESCEL,''''), :alm_cab) AS ALM_EFE, ' +
-      '       L.CODIGO_ART_TENTATIVO_SESLIN, L.CODIGO_ART_REUSAR_SESLIN, ' +
-      '       L.ACCION_DUPLICADO_SESLIN, ' +
-      '       CASE WHEN IFNULL(S.ESIVA_EXENTO_INTRACOMUNITARIO_SES, ''N'') <> ''S'' ' +
-      '             AND IFNULL(S.ESIVA_RECARGO_COMPRAS_SES, ' +
-      '                        IFNULL(E.ESIVA_RECARGO_COMPRAS_EMP, ''N'')) = ''S'' ' +
-      '            THEN L.PRECIO_COMPRA_SESLIN * ' +
-      '              (1 + (CASE (CASE WHEN IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
-      '                       THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
-      '                                     NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
-      '                       ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') END) ' +
-      '                       WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_IVA, 0) ' +
-      '                       WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_IVA, 0) ' +
-      '                       WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_IVA, 0) ' +
-      '                       WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_IVA, 0) ' +
-      '                       ELSE 0 END + ' +
-      '                     CASE (CASE WHEN IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
-      '                       THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
-      '                                     NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
-      '                       ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') END) ' +
-      '                       WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
-      '                       WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
-      '                       WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
-      '                       WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
-      '                       ELSE 0 END) / 100) ' +
-      '            ELSE L.PRECIO_COMPRA_SESLIN END AS PRECIO_COMPRA_SESLIN, ' +
-      '       L.TIPO_LINEA_SESLIN, ' +
-      '       L.ID_VA_FILA_SESLIN ' +
-      '  FROM fza_compras_sesiones_celdas C ' +
-      '  JOIN fza_compras_sesiones_lineas L ' +
-      '    ON L.SERIE_SES_SESLIN  = C.SERIE_SES_SESCEL ' +
-      '   AND L.NUMERO_SES_SESLIN = C.NUMERO_SES_SESCEL ' +
-      '   AND L.LINEA_SESLIN      = C.LINEA_SES_SESCEL ' +
-      '  JOIN fza_compras_sesiones S ' +
-      '    ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
-      '   AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
-      '  LEFT JOIN fza_empresas E ON E.CODIGO_EMP_EMP = S.CODIGO_EMP_SES ' +
-      '  LEFT JOIN vi_ivas_empresa V ' +
-      '    ON V.CODIGO_EMP_EMP = S.CODIGO_EMP_SES ' +
-      '   AND V.ESDEFAULT_IVA_IVAGRP = ''S'' ' +
-      ' WHERE C.SERIE_SES_SESCEL  = :s ' +
-      '   AND C.NUMERO_SES_SESCEL = :n ' +
-      '   AND C.CANTIDAD_SESCEL   > 0 ' +
-      ' ORDER BY C.LINEA_SES_SESCEL, C.ID_AV_PIVOT_SESCEL';
-    qC.ParamByName('alm_cab').AsString := sCodigoAlmCab;
-    qC.ParamByName('s').AsString := ASerieSes;
-    qC.ParamByName('n').AsString := ANumSes;
-    qC.Open;
-
     while not qC.Eof do
     begin
-      iLinea     := qC.FieldByName('LINEA_SES_SESCEL').AsInteger;
-      iIdAvPivot := qC.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
-      rCantidad  := qC.FieldByName('CANTIDAD_SESCEL').AsFloat;
-      sCodigoAlm := qC.FieldByName('ALM_EFE').AsString;
-      rCoste     := qC.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
-
-      if qC.FieldByName('ACCION_DUPLICADO_SESLIN').AsString = 'REUSAR' then
-        sCodigoArt := qC.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString
-      else
-        sCodigoArt := qC.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString;
-
-      // Lineas SERVICIO no tienen SKU ni stock pendiente.
-      if qC.FieldByName('TIPO_LINEA_SESLIN').AsString = 'SERVICIO' then
-      begin
-        qC.Next;
-        Continue;
-      end;
-
-      iIdAvFila := 0;
-      if not qC.FieldByName('ID_VA_FILA_SESLIN').IsNull then
-        iIdAvFila :=
-                StrToIntDef(qC.FieldByName('ID_VA_FILA_SESLIN').AsString, 0);
-
-      sCodigoSku := ResolverCodigoSku(AConn, sCodigoArt,
-                                       iIdAvPivot, iIdAvFila);
-      if sCodigoSku = '' then
-      begin
-        qC.Next;
-        Continue;
-      end;
-
-      // UPSERT por PK (SKU, ALM, SERIE_DOC, NUMERO_DOC, LINEA): si por
-      // alguna razon se materializa dos veces, suma cantidad y mantiene
-      // ultimo precio / fechas.
-      qIns.SQL.Text :=
-        'INSERT IGNORE INTO fza_articulos_pdte_recibir ' +
-        '  (CODIGO_UNIDAD_PDR, CODIGO_ALM_PDR, SERIE_DOC_PDR, NUMERO_DOC_PDR, ' +
-        '   LINEA_PDR, CODIGO_ART_PDR, CODIGO_PRV_PDR, CODIGO_EMP_PDR, ' +
-        '   CANTIDAD_PDR, PRECIO_COMPRA_PDR, FECHA_PEDIDO_PDR, ' +
-        '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-        'VALUES (:sku, :alm, :s, :n, :l, :art, :prv, :emp, ' +
-        '        :qty, :pre, :fped, NOW(), :u, NOW(), :u) ' +
-        'ON DUPLICATE KEY UPDATE ' +
-        '  CANTIDAD_PDR      = :qty, ' +
-        '  PRECIO_COMPRA_PDR = :pre, ' +
-        '  FECHA_PEDIDO_PDR  = :fped, ' +
-        '  INSTANTE_MODIF    = NOW(), ' +
-        '  USUARIO_MODIF     = :u';
-      qIns.ParamByName('sku').AsString  := sCodigoSku;
-      qIns.ParamByName('alm').AsString  := sCodigoAlm;
-      qIns.ParamByName('s').AsString    := ASerieDoc;
-      qIns.ParamByName('n').AsString    := ANumDoc;
-      qIns.ParamByName('l').AsInteger   := iLinea;
-      qIns.ParamByName('art').AsString  := sCodigoArt;
-      qIns.ParamByName('prv').AsString  :=
-                          ADM.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString;
-      qIns.ParamByName('emp').AsString  := sCodigoEmp;
-      qIns.ParamByName('qty').AsFloat   := rCantidad;
-      qIns.ParamByName('pre').AsFloat   := rCoste;
-      qIns.ParamByName('fped').AsDateTime := dFechaPedido;
-      qIns.ParamByName('u').AsString    := AUsuario;
-      qIns.ExecSQL;
-
+      ProcesarPendienteRecibirSesion(
+        AConn, qC, qIns, ASerieDoc, ANumDoc,
+        sCodigoProveedor, sCodigoEmpresa, AUsuario,
+        dFechaPedido);
       qC.Next;
     end;
   finally
@@ -2016,6 +2069,56 @@ begin
     ADatos.SeriePedido := ADatos.SerieSesion;
 end;
 
+procedure PrepararConsultaArticulosMaterializacion(
+  AQuery: TUniQuery;
+  const ADatos: TDatosMaterializacion);
+begin
+  AQuery.Connection := ADatos.Conexion;
+  AQuery.SQL.Text :=
+    'SELECT L.*, ' +
+    ' CASE WHEN ' +
+    'IFNULL(S.ESIVA_EXENTO_INTRACOMUNITARIO_SES, ''N'') <> ''S'' ' +
+    ' AND IFNULL(S.ESIVA_RECARGO_COMPRAS_SES, ' +
+    ' IFNULL(E.ESIVA_RECARGO_COMPRAS_EMP, ''N'')) = ''S'' ' +
+    ' THEN L.PRECIO_COMPRA_SESLIN * ' +
+    ' (1 + (CASE (CASE WHEN ' +
+    ' IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
+    ' THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
+    ' NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+    ' ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') END) ' +
+    ' WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_IVA, 0) ' +
+    ' WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_IVA, 0) ' +
+    ' WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_IVA, 0) ' +
+    ' WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_IVA, 0) ' +
+    ' ELSE 0 END + ' +
+    ' CASE (CASE WHEN ' +
+    ' IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
+    ' THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
+    ' NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
+    ' ELSE COALESCE(NULLIF(S.TIPO_IVA_SES, ''''), ''N'') END) ' +
+    ' WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
+    ' WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
+    ' WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
+    ' WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
+    ' ELSE 0 END) / 100) ' +
+    ' ELSE L.PRECIO_COMPRA_SESLIN END AS PRECIO_COSTE_PROVEEDOR ' +
+    ' FROM fza_compras_sesiones_lineas L ' +
+    ' JOIN fza_compras_sesiones S ' +
+    ' ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
+    ' AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
+    ' LEFT JOIN fza_empresas E ' +
+    ' ON E.CODIGO_EMP_EMP = S.CODIGO_EMP_SES ' +
+    ' LEFT JOIN vi_ivas_empresa V ' +
+    ' ON V.CODIGO_EMP_EMP = S.CODIGO_EMP_SES ' +
+    ' AND V.ESDEFAULT_IVA_IVAGRP = ''S'' ' +
+    ' WHERE L.SERIE_SES_SESLIN = :s ' +
+    ' AND L.NUMERO_SES_SESLIN = :n ' +
+    ' ORDER BY L.LINEA_SESLIN';
+  AQuery.ParamByName('s').AsString := ADatos.SerieSesion;
+  AQuery.ParamByName('n').AsString := ADatos.NumeroSesion;
+  AQuery.Open;
+end;
+
 procedure MaterializarArticulos(const ADatos: TDatosMaterializacion;
                                 const AUsuario: string);
 var
@@ -2027,63 +2130,7 @@ var
 begin
   qLin := TUniQuery.Create(nil);
   try
-    qLin.Connection := ADatos.Conexion;
-    qLin.SQL.Text :=
-      'SELECT L.*, ' +
-      '       CASE WHEN ' +
-      'IFNULL(S.ESIVA_EXENTO_INTRACOMUNITARIO_SES, ''N'') <> ''S'' ' +
-      '             AND IFNULL(S.ESIVA_RECARGO_COMPRAS_SES, ' +
-      '             IFNULL(E.ESIVA_RECARGO_COMPRAS_EMP, ''N'')) = ''S'' ' +
-      '            THEN L.PRECIO_COMPRA_SESLIN * ' +
-      '              (1 + (CASE (CASE WHEN ' +
-      'IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
-      '                       THEN COALESCE(' +
-      'NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
-      '                       NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
-      '                       ELSE COALESCE(' +
-      'NULLIF(S.TIPO_IVA_SES, ''''), ''N'') END) ' +
-      '                       WHEN ''N'' THEN ' +
-      'IFNULL(V.PORCENTAJE_NORMAL_IVA, 0) ' +
-      '                       WHEN ''R'' THEN ' +
-      'IFNULL(V.PORCENTAJE_REDUCIDO_IVA, 0) ' +
-      '                       WHEN ''S'' THEN ' +
-      'IFNULL(V.PORCENTAJE_SUPERREDUCIDO_IVA, 0) ' +
-      '                       WHEN ''E'' THEN ' +
-      'IFNULL(V.PORCENTAJE_EXENTO_IVA, 0) ' +
-      '                       ELSE 0 END + ' +
-      '                     CASE (CASE WHEN ' +
-      'IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
-      '                       THEN COALESCE(' +
-      'NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
-      '                       NULLIF(S.TIPO_IVA_SES, ''''), ''N'') ' +
-      '                       ELSE COALESCE(' +
-      'NULLIF(S.TIPO_IVA_SES, ''''), ''N'') END) ' +
-      '                       WHEN ''N'' THEN ' +
-      'IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
-      '                       WHEN ''R'' THEN ' +
-      'IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
-      '                       WHEN ''S'' THEN ' +
-      'IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
-      '                       WHEN ''E'' THEN ' +
-      'IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
-      '                       ELSE 0 END) / 100) ' +
-      '            ELSE L.PRECIO_COMPRA_SESLIN END ' +
-      'AS PRECIO_COSTE_PROVEEDOR ' +
-      '  FROM fza_compras_sesiones_lineas L ' +
-      '  JOIN fza_compras_sesiones S ' +
-      '    ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
-      '   AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
-      '  LEFT JOIN fza_empresas E ' +
-      '    ON E.CODIGO_EMP_EMP = S.CODIGO_EMP_SES ' +
-      '  LEFT JOIN vi_ivas_empresa V ' +
-      '    ON V.CODIGO_EMP_EMP = S.CODIGO_EMP_SES ' +
-      '   AND V.ESDEFAULT_IVA_IVAGRP = ''S'' ' +
-      ' WHERE L.SERIE_SES_SESLIN = :s ' +
-      '   AND L.NUMERO_SES_SESLIN = :n ' +
-      ' ORDER BY L.LINEA_SESLIN';
-    qLin.ParamByName('s').AsString := ADatos.SerieSesion;
-    qLin.ParamByName('n').AsString := ADatos.NumeroSesion;
-    qLin.Open;
+    PrepararConsultaArticulosMaterializacion(qLin, ADatos);
     while not qLin.Eof do
     begin
       iLin := qLin.FieldByName('LINEA_SESLIN').AsInteger;
@@ -2435,112 +2482,174 @@ begin
       ASeriePedido, ANumeroPedido, AAlmacen);
 end;
 
-function EjecutarMaterializacionSesion(ADM: TdmComprasSesiones;
-  const AParametros: TParametrosMaterializacionSesion;
-  out AResultado: TResultadoMaterializacionSesion): Boolean;
-var
-  oConexion: TUniConnection;
-  oQry: TUniQuery;
-  bTxOwned: Boolean;
-  bGeneraPedido: Boolean;
-  bGeneraAlbaran: Boolean;
-  bPrimera: Boolean;
-  sAlmacen: string;
-  sEmpresa: string;
-  sSerieAlbaran: string;
-  sSeriePedido: string;
-  sSeriePedidoTmp: string;
-  sNumeroPedidoTmp: string;
-  sSerieAlbaranTmp: string;
-  sNumeroAlbaranTmp: string;
+procedure InicializarResultadoMaterializacion(
+  out AResultado: TResultadoMaterializacionSesion);
 begin
-  Result := False;
   AResultado.SeriePedido := '';
   AResultado.NumeroPedido := '';
   AResultado.SerieAlbaran := '';
   AResultado.NumeroAlbaran := '';
   AResultado.MensajeError := '';
   AResultado.Documentos := nil;
-  bGeneraPedido :=
-    ADM.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString = 'S';
-  bGeneraAlbaran :=
-    ADM.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S';
+end;
+
+function CrearConsultaAlmacenesMaterializacion(
+  ADM: TdmComprasSesiones;
+  AConexion: TUniConnection): TUniQuery;
+begin
+  Result := TUniQuery.Create(nil);
+  Result.Connection := AConexion;
+  Result.SQL.Text :=
+    'SELECT DISTINCT IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), ' +
+    '                       :alm_cab) AS ALM ' +
+    '  FROM fza_compras_sesiones_celdas C ' +
+    ' WHERE C.SERIE_SES_SESCEL = :s ' +
+    '   AND C.NUMERO_SES_SESCEL = :n ' +
+    '   AND C.CANTIDAD_SESCEL > 0 ' +
+    ' ORDER BY ALM';
+  Result.ParamByName('alm_cab').AsString :=
+    ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
+  Result.ParamByName('s').AsString :=
+    ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
+  Result.ParamByName('n').AsString :=
+    ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+  Result.Open;
+end;
+
+function ResolverSerieDocumentoAlmacen(
+  AConexion: TUniConnection;
+  const AEmpresa, ATipoDocumento, AAlmacen,
+        ASerieAlternativa: string): string;
+begin
+  Result := ObtenerSeriePropiaAlmacen(
+    AConexion, AEmpresa, ATipoDocumento, AAlmacen);
+  if Result = '' then
+    Result := ASerieAlternativa;
+end;
+
+procedure MaterializarDocumentosAlmacen(
+  ADM: TdmComprasSesiones;
+  AGeneraPedido, AGeneraAlbaran: Boolean;
+  const AParametros: TParametrosMaterializacionSesion;
+  const AAlmacen, ASeriePedido, ASerieAlbaran: string;
+  ASoloDocumentos: Boolean;
+  var AResultado: TResultadoMaterializacionSesion);
+var
+  sSeriePedidoTmp: string;
+  sNumeroPedidoTmp: string;
+  sSerieAlbaranTmp: string;
+  sNumeroAlbaranTmp: string;
+begin
+  if not MaterializarSesion(
+    ADM, AGeneraPedido, AGeneraAlbaran, AParametros.Usuario,
+    ASerieAlbaran, ASeriePedido,
+    sSeriePedidoTmp, sNumeroPedidoTmp,
+    sSerieAlbaranTmp, sNumeroAlbaranTmp,
+    AResultado.MensajeError, AAlmacen, ASoloDocumentos) then
+    raise Exception.Create(AResultado.MensajeError);
+  GuardarPrimerDocumento(
+    AResultado, sSeriePedidoTmp, sNumeroPedidoTmp,
+    sSerieAlbaranTmp, sNumeroAlbaranTmp);
+  AgregarDocumentosGenerados(
+    AResultado, AGeneraPedido, AGeneraAlbaran,
+    sSeriePedidoTmp, sNumeroPedidoTmp,
+    sSerieAlbaranTmp, sNumeroAlbaranTmp, AAlmacen);
+end;
+
+procedure MaterializarDocumentosPorAlmacen(
+  ADM: TdmComprasSesiones;
+  AConexion: TUniConnection;
+  AGeneraPedido, AGeneraAlbaran: Boolean;
+  const AParametros: TParametrosMaterializacionSesion;
+  var AResultado: TResultadoMaterializacionSesion);
+var
+  oQry: TUniQuery;
+  bPrimera: Boolean;
+  sAlmacen: string;
+  sEmpresa: string;
+  sSerieAlbaran: string;
+  sSeriePedido: string;
+begin
   sEmpresa :=
     ADM.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
+  oQry := CrearConsultaAlmacenesMaterializacion(ADM, AConexion);
+  try
+    bPrimera := True;
+    while not oQry.Eof do
+    begin
+      sAlmacen := oQry.FieldByName('ALM').AsString;
+      sSerieAlbaran := ResolverSerieDocumentoAlmacen(
+        AConexion, sEmpresa, 'AB', sAlmacen,
+        AParametros.SerieAlbaran);
+      sSeriePedido := ResolverSerieDocumentoAlmacen(
+        AConexion, sEmpresa, 'PC', sAlmacen,
+        AParametros.SeriePedido);
+      MaterializarDocumentosAlmacen(
+        ADM, AGeneraPedido, AGeneraAlbaran, AParametros,
+        sAlmacen, sSeriePedido, sSerieAlbaran,
+        not bPrimera, AResultado);
+      bPrimera := False;
+      oQry.Next;
+    end;
+  finally
+    FreeAndNil(oQry);
+  end;
+end;
+
+procedure MaterializarDocumentoUnico(
+  ADM: TdmComprasSesiones;
+  AGeneraPedido, AGeneraAlbaran: Boolean;
+  const AParametros: TParametrosMaterializacionSesion;
+  var AResultado: TResultadoMaterializacionSesion);
+var
+  sAlmacen: string;
+begin
+  if not MaterializarSesion(
+    ADM, AGeneraPedido, AGeneraAlbaran, AParametros.Usuario,
+    AParametros.SerieAlbaran, AParametros.SeriePedido,
+    AResultado.SeriePedido, AResultado.NumeroPedido,
+    AResultado.SerieAlbaran, AResultado.NumeroAlbaran,
+    AResultado.MensajeError) then
+    raise Exception.Create(AResultado.MensajeError);
+  sAlmacen :=
+    ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
+  AgregarDocumentosGenerados(
+    AResultado, AGeneraPedido, AGeneraAlbaran,
+    AResultado.SeriePedido, AResultado.NumeroPedido,
+    AResultado.SerieAlbaran, AResultado.NumeroAlbaran,
+    sAlmacen);
+end;
+
+function EjecutarMaterializacionSesion(ADM: TdmComprasSesiones;
+  const AParametros: TParametrosMaterializacionSesion;
+  out AResultado: TResultadoMaterializacionSesion): Boolean;
+var
+  oConexion: TUniConnection;
+  bTxOwned: Boolean;
+  bGeneraPedido: Boolean;
+  bGeneraAlbaran: Boolean;
+begin
+  Result := False;
+  InicializarResultadoMaterializacion(AResultado);
+  bGeneraPedido :=
+    ADM.unqryTablaG.FieldByName(
+      'ESGENERA_PEDIDO_SES').AsString = 'S';
+  bGeneraAlbaran :=
+    ADM.unqryTablaG.FieldByName(
+      'ESGENERA_ALBARAN_SES').AsString = 'S';
   oConexion := ADM.ConexionPrincipal;
   bTxOwned := not oConexion.InTransaction;
   if bTxOwned then
     oConexion.StartTransaction;
   try
     if AParametros.UnDocumentoPorAlmacen then
-    begin
-      oQry := TUniQuery.Create(nil);
-      try
-        oQry.Connection := oConexion;
-        oQry.SQL.Text :=
-          'SELECT DISTINCT IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), ' +
-          '                       :alm_cab) AS ALM ' +
-          '  FROM fza_compras_sesiones_celdas C ' +
-          ' WHERE C.SERIE_SES_SESCEL = :s ' +
-          '   AND C.NUMERO_SES_SESCEL = :n ' +
-          '   AND C.CANTIDAD_SESCEL > 0 ' +
-          ' ORDER BY ALM';
-        oQry.ParamByName('alm_cab').AsString :=
-          ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
-        oQry.ParamByName('s').AsString :=
-          ADM.unqryTablaG.FieldByName('SERIE_SES').AsString;
-        oQry.ParamByName('n').AsString :=
-          ADM.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-        oQry.Open;
-        bPrimera := True;
-        while not oQry.Eof do
-        begin
-          sAlmacen := oQry.FieldByName('ALM').AsString;
-          sSerieAlbaran := ObtenerSeriePropiaAlmacen(
-            oConexion, sEmpresa, 'AB', sAlmacen);
-          if sSerieAlbaran = '' then
-            sSerieAlbaran := AParametros.SerieAlbaran;
-          sSeriePedido := ObtenerSeriePropiaAlmacen(
-            oConexion, sEmpresa, 'PC', sAlmacen);
-          if sSeriePedido = '' then
-            sSeriePedido := AParametros.SeriePedido;
-          if not MaterializarSesion(
-            ADM, bGeneraPedido, bGeneraAlbaran, AParametros.Usuario,
-            sSerieAlbaran, sSeriePedido,
-            sSeriePedidoTmp, sNumeroPedidoTmp,
-            sSerieAlbaranTmp, sNumeroAlbaranTmp,
-            AResultado.MensajeError, sAlmacen, not bPrimera) then
-            raise Exception.Create(AResultado.MensajeError);
-          bPrimera := False;
-          GuardarPrimerDocumento(AResultado,
-            sSeriePedidoTmp, sNumeroPedidoTmp,
-            sSerieAlbaranTmp, sNumeroAlbaranTmp);
-          AgregarDocumentosGenerados(AResultado,
-            bGeneraPedido, bGeneraAlbaran,
-            sSeriePedidoTmp, sNumeroPedidoTmp,
-            sSerieAlbaranTmp, sNumeroAlbaranTmp, sAlmacen);
-          oQry.Next;
-        end;
-      finally
-        FreeAndNil(oQry);
-      end;
-    end
+      MaterializarDocumentosPorAlmacen(
+        ADM, oConexion, bGeneraPedido, bGeneraAlbaran,
+        AParametros, AResultado)
     else
-    begin
-      if not MaterializarSesion(
-        ADM, bGeneraPedido, bGeneraAlbaran, AParametros.Usuario,
-        AParametros.SerieAlbaran, AParametros.SeriePedido,
-        AResultado.SeriePedido, AResultado.NumeroPedido,
-        AResultado.SerieAlbaran, AResultado.NumeroAlbaran,
-        AResultado.MensajeError) then
-        raise Exception.Create(AResultado.MensajeError);
-      sAlmacen :=
-        ADM.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
-      AgregarDocumentosGenerados(AResultado,
-        bGeneraPedido, bGeneraAlbaran,
-        AResultado.SeriePedido, AResultado.NumeroPedido,
-        AResultado.SerieAlbaran, AResultado.NumeroAlbaran, sAlmacen);
-    end;
+      MaterializarDocumentoUnico(
+        ADM, bGeneraPedido, bGeneraAlbaran,
+        AParametros, AResultado);
     if bTxOwned and oConexion.InTransaction then
       oConexion.Commit;
     Result := True;

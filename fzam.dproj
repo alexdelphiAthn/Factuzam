@@ -195,6 +195,10 @@
         <DCCReference Include="src\Lib\inLibIBAN.pas"/>
         <DCCReference Include="src\Lib\inLibSepaRemesasVenta.pas"/>
         <DCCReference Include="src\Lib\inLibFacturas.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasServiciosIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasBorrado.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasEfectos.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasMovimientos.pas"/>
         <DCCReference Include="src\Lib\inLibFacturaPdfBlob.pas"/>
         <DCCReference Include="src\Lib\inLibFormatoDocumento.pas"/>
         <DCCReference Include="src\Lib\inLibInformesGuiasCache.pas"/>
@@ -540,6 +544,8 @@
         <DCCReference Include="src\Caja\Forms\inMtoCajaOpe.pas">
             <Form>frmMtoOpeCaja</Form>
         </DCCReference>
+        <DCCReference Include="src\Caja\Forms\inMtoCajaImpresorVenta.pas"/>
+        <DCCReference Include="src\Caja\Forms\inMtoCajaGrabadorVenta.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataCaja.pas">
             <Form>dmCajaOpe</Form>
         </DCCReference>
@@ -593,6 +599,10 @@
         <DCCReference Include="src\Caja\Lib\inLibCajaVentanasIntf.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaDatosFactura.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaTipos.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaVentaIntf.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaStock.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaDescuentos.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaCierreVenta.pas"/>
         <DCCReference Include="src\Lib\inLibCriptoCurr.pas"/>
         <DCCReference Include="src\Lib\inLibDivCurr.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoCajaSeleccionVale.pas">
@@ -696,6 +706,8 @@
         <DCCReference Include="src\verifactu\inLibVerifactu.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactuEnvio.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactuCola.pas"/>
+        <DCCReference Include="src\verifactu\inLibEmisionFiscalIntf.pas"/>
+        <DCCReference Include="src\verifactu\inLibEmisionFiscal.pas"/>
         <DCCReference Include="src\verifactu\inMtoVerifactuCola.pas">
             <Form>frmMtoVerifactuCola</Form>
         </DCCReference>

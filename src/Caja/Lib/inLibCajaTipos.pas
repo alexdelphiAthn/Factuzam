@@ -23,6 +23,11 @@ type
   TTratamientoMovimientosRectificativa = (
     tmrMantenerOriginales,
     tmrReemplazarOriginales);
+  TTipoImpresionVenta = (
+    tiConTicket,
+    tiSinTicket,
+    tiTicketRegalo,
+    tiFactura);
 
 implementation
 

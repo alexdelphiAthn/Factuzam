@@ -55,7 +55,7 @@ uses
   cxLabel, cxDropDownEdit, cxButtons,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGrid, cxCheckBox,
-  DBAccess, Uni;
+  Data.DB, DBAccess, Uni;
 
 type
   { Un slot = un atributo del tipo de variación + el conjunto asignado }
@@ -114,6 +114,16 @@ type
     property Modificado    : Boolean read FModificado;
   end;
 
+procedure AsegurarSkuArticuloSinVariaciones(
+  AConexion: TUniConnection;
+  const ACodigoArticulo, AUsuario: string);
+procedure AsegurarSkuArticuloActivo(
+  AConexion: TUniConnection;
+  const ACodigoArticulo, AUsuario: string);
+function ArticuloTieneSkuActivo(
+  AConexion: TUniConnection;
+  const ACodigoArticulo: string): Boolean;
+
 implementation
 
 uses
@@ -125,6 +135,140 @@ const
   MARGEN_H      = 8;
   ANCHO_LABEL   = 160;
   ANCHO_COMBO   = 280;
+
+function ArticuloTieneSkuActivo(
+  AConexion: TUniConnection;
+  const ACodigoArticulo: string): Boolean;
+var
+  Consulta: TUniQuery;
+begin
+  Result := False;
+  if ACodigoArticulo <> '' then
+  begin
+    Consulta := TUniQuery.Create(nil);
+    try
+      Consulta.Connection := AConexion;
+      Consulta.SQL.Text :=
+        'SELECT 1 FROM fza_articulos_skus ' +
+        ' WHERE CODIGO_ART_SKU = :codigo ' +
+        '   AND ESACTIVO_SKU = ''S'' ' +
+        ' LIMIT 1';
+      Consulta.ParamByName('codigo').AsString := ACodigoArticulo;
+      Consulta.Open;
+      Result := not Consulta.IsEmpty;
+    finally
+      FreeAndNil(Consulta);
+    end;
+  end;
+end;
+
+procedure InsertarSkuBaseArticulo(
+  AConexion: TUniConnection;
+  const ACodigoArticulo, AUsuario: string);
+var
+  Consulta: TUniQuery;
+begin
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := AConexion;
+    Consulta.SQL.Text :=
+      'INSERT INTO fza_articulos_skus ' +
+      '  (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ' +
+      '   ESACTIVO_SKU, INSTANTE_ALTA, USUARIO_ALTA, ' +
+      '   USUARIO_MODIF) ' +
+      'VALUES (:sku, :art, ''-'', ''S'', ' +
+      '        CURRENT_TIMESTAMP, :usuario, :usuario)';
+    Consulta.ParamByName('sku').AsString := ACodigoArticulo;
+    Consulta.ParamByName('art').AsString := ACodigoArticulo;
+    Consulta.ParamByName('usuario').AsString := AUsuario;
+    Consulta.ExecSQL;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+procedure AsegurarSkuArticuloSinVariaciones(
+  AConexion: TUniConnection;
+  const ACodigoArticulo, AUsuario: string);
+var
+  Consulta: TUniQuery;
+  bTieneVariaciones: Boolean;
+  bTieneSku: Boolean;
+begin
+  if ACodigoArticulo <> '' then
+  begin
+    Consulta := TUniQuery.Create(nil);
+    try
+      Consulta.Connection := AConexion;
+      Consulta.SQL.Text :=
+        'SELECT ESVARIACION_ART FROM fza_articulos ' +
+        ' WHERE CODIGO_ART_ART = :codigo';
+      Consulta.ParamByName('codigo').AsString := ACodigoArticulo;
+      Consulta.Open;
+      bTieneVariaciones := (not Consulta.IsEmpty) and
+        (Consulta.FieldByName('ESVARIACION_ART').AsString = 'S');
+      Consulta.Close;
+      bTieneSku := False;
+      if not bTieneVariaciones then
+      begin
+        Consulta.SQL.Text :=
+          'SELECT 1 FROM fza_articulos_skus ' +
+          ' WHERE CODIGO_ART_SKU = :codigo ' +
+          ' LIMIT 1';
+        Consulta.ParamByName('codigo').AsString := ACodigoArticulo;
+        Consulta.Open;
+        bTieneSku := not Consulta.IsEmpty;
+      end;
+    finally
+      FreeAndNil(Consulta);
+    end;
+    if (not bTieneVariaciones) and (not bTieneSku) then
+      InsertarSkuBaseArticulo(
+        AConexion, ACodigoArticulo, AUsuario);
+  end;
+end;
+
+procedure AsegurarSkuArticuloActivo(
+  AConexion: TUniConnection;
+  const ACodigoArticulo, AUsuario: string);
+var
+  Consulta: TUniQuery;
+  bExisteSkuBase: Boolean;
+begin
+  if (ACodigoArticulo <> '') and
+     (not ArticuloTieneSkuActivo(AConexion, ACodigoArticulo)) then
+  begin
+    Consulta := TUniQuery.Create(nil);
+    try
+      Consulta.Connection := AConexion;
+      Consulta.SQL.Text :=
+        'SELECT 1 FROM fza_articulos_skus ' +
+        ' WHERE CODIGO_UNIDAD_SKU = :sku ' +
+        ' LIMIT 1';
+      Consulta.ParamByName('sku').AsString := ACodigoArticulo;
+      Consulta.Open;
+      bExisteSkuBase := not Consulta.IsEmpty;
+      Consulta.Close;
+      if bExisteSkuBase then
+      begin
+        Consulta.SQL.Text :=
+          'UPDATE fza_articulos_skus ' +
+          '   SET ESACTIVO_SKU = ''S'', ' +
+          '       INSTANTE_MODIF = CURRENT_TIMESTAMP, ' +
+          '       USUARIO_MODIF = :usuario ' +
+          ' WHERE CODIGO_UNIDAD_SKU = :sku';
+        Consulta.ParamByName('sku').AsString := ACodigoArticulo;
+        Consulta.ParamByName('usuario').AsString := AUsuario;
+        Consulta.ExecSQL;
+      end
+      else
+        InsertarSkuBaseArticulo(
+          AConexion, ACodigoArticulo, AUsuario);
+    finally
+      FreeAndNil(Consulta);
+    end;
+  end;
+end;
 
 { ══════════════════════════════════════════════════════════════════════════ }
 { Constructor / Destructor                                                   }

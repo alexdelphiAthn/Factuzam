@@ -1094,23 +1094,11 @@ begin
   if iLinea <= 0 then
     Exit;
   LogSes(Format('BeforeDelete: limpiando SESCEL linea=%d', [iLinea]));
-  with TUniQuery.Create(nil) do
-  try
-    Connection := ConexionPrincipal;
-    SQL.Text :=
-      'DELETE FROM fza_compras_sesiones_celdas ' +
-      ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
-      '   AND LINEA_SES_SESCEL = :l';
-    ParamByName('s').AsString :=
-      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    ParamByName('n').AsString :=
-      Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-    ParamByName('l').AsInteger := iLinea;
-    ExecSQL;
-    LogSes(Format('  SESCEL borradas (filas=%d)', [RowsAffected]));
-  finally
-    Free;
-  end;
+  BorrarCeldasLineaSesion(
+    ConexionPrincipal,
+    Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
+    Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
+    iLinea);
 end;
 
 procedure TfrmMtoComprasSesiones.unqrySesionLinAfterDeleteHook(
@@ -1481,31 +1469,9 @@ begin
 end;
 
 procedure TfrmMtoComprasSesiones.CargarBasicosColor;
-var
-  q : TUniQuery;
-  i : Integer;
 begin
-  SetLength(FBasicosColor, 0);
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-    q.SQL.Text :=
-      'SELECT CODIGO_ATB FROM fza_atributos_basicos ' +
-      ' WHERE ID_VA_ATB = :va AND ESACTIVO_ATB = ''S'' ' +
-      ' ORDER BY ORDEN_ATB, NOMBRE_ATB';
-    q.ParamByName('va').AsString := fIdVaColor;
-    q.Open;
-    SetLength(FBasicosColor, q.RecordCount);
-    i := 0;
-    while not q.Eof do
-    begin
-      FBasicosColor[i] := q.FieldByName('CODIGO_ATB').AsString;
-      Inc(i);
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
+  FBasicosColor := ConsultarCodigosBasicosActivos(
+    ConexionPrincipal, fIdVaColor);
 end;
 
 // ===========================================================================
@@ -2770,7 +2736,6 @@ var
   i, iSrcIdx         : Integer;
   arr                : TArrPosConjunto;
   v                  : Variant;
-  q                  : TUniQuery;
 begin
   // Duplica la linea activa con todos los datos comerciales (codigo,// familia,modelo prov.,descripcion,sistema de tallas). Segun AModo:
   //   'C' (otro color): precios y cantidades por talla copiados;
@@ -2806,26 +2771,11 @@ begin
   //     intermedio para quedar justo a continuacion en el grid (que
   //     ordena por LINEA). Si la origen es la ultima, dejamos el
   //     LINEA por defecto del AfterInsert (CONTADOR+10).
-  iSiguiente := 0;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-    q.SQL.Text :=
-      'SELECT MIN(LINEA_SESLIN) AS SIGUIENTE ' +
-      '  FROM fza_compras_sesiones_lineas ' +
-      ' WHERE SERIE_SES_SESLIN = :s AND NUMERO_SES_SESLIN = :n ' +
-      '   AND LINEA_SESLIN > :l';
-    q.ParamByName('s').AsString  :=
-      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString  :=
-      Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-    q.ParamByName('l').AsInteger := iSrcLinea;
-    q.Open;
-    if not q.FieldByName('SIGUIENTE').IsNull then
-      iSiguiente := q.FieldByName('SIGUIENTE').AsInteger;
-  finally
-    FreeAndNil(q);
-  end;
+  iSiguiente := ObtenerSiguienteLineaSesion(
+    ConexionPrincipal,
+    Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
+    Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
+    iSrcLinea);
 
   // 2. Snapshot de cantidades por talla desde Values[] del cxGrid.
   SetLength(cantidades, CANT_TALLAS_MAX);
@@ -2958,62 +2908,34 @@ begin
     end);
 end;
 
-procedure TfrmMtoComprasSesiones.CopiarCantidadesEntreLineas(ALineaOrigen,
-  ALineaDestino: Integer);
+procedure TfrmMtoComprasSesiones.CopiarCantidadesEntreLineas(
+  ALineaOrigen, ALineaDestino: Integer);
 var
-  q : TUniQuery;
+  sSerie: string;
+  sNumero: string;
+  Cantidades: TCantidadesPivotSesion;
+  Cantidad: TCantidadPivotSesion;
 begin
-  // Limpia las celdas del destino y replica las del origen. En formato
-  // distribuido se copia celda a celda preservando almacen (helper con
-  // update de totales); en formato clasico se agrega por talla y se
-  // persiste via gestor con almacen vacio, igual que las ediciones
-  // manuales (mezclar ambos caminos duplicaria filas por talla y las
-  // cantidades se sumarian al recargar).
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-    q.SQL.Text :=
-      'DELETE FROM fza_compras_sesiones_celdas ' +
-      ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
-      '   AND LINEA_SES_SESCEL = :l';
-    q.ParamByName('s').AsString :=
-      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    q.ParamByName('n').AsString :=
-      Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-    q.ParamByName('l').AsInteger := ALineaDestino;
-    q.ExecSQL;
-    if Dmm.unqryTablaG.FieldByName(
-         'ESFORMATO_DISTRIBUIDO_SES').AsString = 'S' then
-      CopiarCeldasDistribuidasOtroColor(ALineaOrigen, ALineaDestino)
-    else
-    begin
-      q.SQL.Text :=
-        'SELECT ID_AV_PIVOT_SESCEL, SUM(CANTIDAD_SESCEL) AS TOTAL ' +
-        '  FROM fza_compras_sesiones_celdas ' +
-        ' WHERE SERIE_SES_SESCEL = :s AND NUMERO_SES_SESCEL = :n ' +
-        '   AND LINEA_SES_SESCEL = :l ' +
-        ' GROUP BY ID_AV_PIVOT_SESCEL';
-      q.ParamByName('s').AsString :=
-        Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-      q.ParamByName('n').AsString :=
-        Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-      q.ParamByName('l').AsInteger := ALineaOrigen;
-      q.Open;
-      while not q.Eof do
-      begin
-        if (q.FieldByName('TOTAL').AsFloat > 0) and
-           Assigned(FGestorTallas) then
-          FGestorTallas.PersistirCantidad(ALineaDestino,
-            q.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger,
-            q.FieldByName('TOTAL').AsFloat);
-        q.Next;
-      end;
-    end;
-  finally
-    FreeAndNil(q);
+  sSerie := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+  sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+  if Dmm.unqryTablaG.FieldByName(
+       'ESFORMATO_DISTRIBUIDO_SES').AsString = 'S' then
+    CopiarCeldasDistribuidasOtroColor(
+      ALineaOrigen, ALineaDestino)
+  else
+  begin
+    BorrarCeldasLineaSesion(
+      ConexionPrincipal, sSerie, sNumero, ALineaDestino);
+    Cantidades := ConsultarCantidadesLineaSesion(
+      ConexionPrincipal, sSerie, sNumero, ALineaOrigen);
+    for Cantidad in Cantidades do
+      if (Cantidad.Cantidad > 0) and Assigned(FGestorTallas) then
+        FGestorTallas.PersistirCantidad(
+          ALineaDestino,
+          Cantidad.IdValorPivot,
+          Cantidad.Cantidad);
   end;
 end;
-
 procedure TfrmMtoComprasSesiones.AplicarCopiaEnLineaActual(
   const AModo: string);
 var
@@ -3428,7 +3350,6 @@ var
   sTecleado  : string;
   sExpandido : string;
   ds         : TDataSet;
-  q          : TUniQuery;
   sNombre    : string;
 begin
   inherited;
@@ -3468,23 +3389,10 @@ begin
   // comportamiento que ExpandirCodigoFamiliaActiva por simetria con F3
   // / tipeo en la columna Familia).
   if ds.FieldByName('DESCRIPCION_SESLIN').AsString <> '' then Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-    q.SQL.Text :=
-      'SELECT NOMBRE_FAM_FAM FROM fza_articulos_familias ' +
-      ' WHERE CODIGO_FAM_FAM = :p';
-    q.ParamByName('p').AsString := sTecleado;
-    q.Open;
-    if not q.IsEmpty then
-    begin
-      sNombre := q.FieldByName('NOMBRE_FAM_FAM').AsString;
-      if sNombre <> '' then
-        ds.FieldByName('DESCRIPCION_SESLIN').AsString := sNombre;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
+  sNombre := ObtenerNombreFamiliaSesion(
+    ConexionPrincipal, sTecleado);
+  if sNombre <> '' then
+    ds.FieldByName('DESCRIPCION_SESLIN').AsString := sNombre;
 end;
 
 procedure TfrmMtoComprasSesiones.dbcLinRefPrvPropertiesEditValueChanged(
@@ -3536,7 +3444,6 @@ var
   sExpandido : string;
   sTentativo : string;
   sNombre    : string;
-  q          : TUniQuery;
 begin
   // Helper compartido por F3 y OnEditValueChanged de la columna Familia:
   // pone CODIGO_FAM_SESLIN, intenta expandir a CODIGO_ART_TENTATIVO via
@@ -3564,21 +3471,8 @@ begin
   begin
     sNombre := ANombreFam;
     if sNombre = '' then
-    begin
-      q := TUniQuery.Create(nil);
-      try
-        q.Connection := ConexionPrincipal;
-        q.SQL.Text :=
-          'SELECT NOMBRE_FAM_FAM FROM fza_articulos_familias ' +
-          ' WHERE CODIGO_FAM_FAM = :p';
-        q.ParamByName('p').AsString := ACodigoFam;
-        q.Open;
-        if not q.IsEmpty then
-          sNombre := q.FieldByName('NOMBRE_FAM_FAM').AsString;
-      finally
-        FreeAndNil(q);
-      end;
-    end;
+      sNombre := ObtenerNombreFamiliaSesion(
+        ConexionPrincipal, ACodigoFam);
     if sNombre <> '' then
       ds.FieldByName('DESCRIPCION_SESLIN').AsString := sNombre;
   end;
@@ -3787,81 +3681,17 @@ begin
 end;
 
 procedure TfrmMtoComprasSesiones.CopiarCeldasDistribuidasOtroColor(
-                                  ALineaOrigen, ALineaDestino: Integer);
-var
-  oQry : TUniQuery;
-  sSer, sNum, sAlmCab : string;
+  ALineaOrigen, ALineaDestino: Integer);
 begin
-  // Replica las celdas (almacen, talla, cantidad) de la linea origen
-  // en la linea destino. NORMALIZA CODIGO_ALM_SESCEL: si la celda
-  // origen lo tiene vacio (residuo de cuando la sesion era no
-  // distribuida), la copia con el CODIGO_ALM_SES de cabecera. Sin esta
-  // normalizacion, el modal distribuidor de la linea nueva no veria
-  // esas celdas (las ignora por sCod='') y los totales del grid no
-  // cuadrarian con el cuadrante que el usuario ve.
-  sSer    := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-  sNum    := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-  sAlmCab := Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
-  oQry := TUniQuery.Create(nil);
-  try
-    oQry.Connection := ConexionPrincipal;
-    oQry.SQL.Text :=
-      'INSERT INTO fza_compras_sesiones_celdas ' +
-      '  (SERIE_SES_SESCEL, NUMERO_SES_SESCEL, LINEA_SES_SESCEL, ' +
-      '   ID_FILA_SES_SESCEL, CODIGO_ALM_SESCEL, ID_AV_PIVOT_SESCEL, ' +
-      '   CANTIDAD_SESCEL, INSTANTE_ALTA, USUARIO_ALTA, ' +
-      '   INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'SELECT SERIE_SES_SESCEL, NUMERO_SES_SESCEL, :ldst, ' +
-      '       ID_FILA_SES_SESCEL, ' +
-      '       IFNULL(NULLIF(CODIGO_ALM_SESCEL, ''''), :alm_cab), ' +
-      '       ID_AV_PIVOT_SESCEL, ' +
-      '       CANTIDAD_SESCEL, NOW(), :u, NOW(), :u ' +
-      '  FROM fza_compras_sesiones_celdas ' +
-      ' WHERE SERIE_SES_SESCEL  = :s ' +
-      '   AND NUMERO_SES_SESCEL = :n ' +
-      '   AND LINEA_SES_SESCEL  = :lsrc ' +
-      '   AND CANTIDAD_SESCEL   > 0';
-    oQry.ParamByName('s').AsString    := sSer;
-    oQry.ParamByName('n').AsString    := sNum;
-    oQry.ParamByName('lsrc').AsInteger := ALineaOrigen;
-    oQry.ParamByName('ldst').AsInteger := ALineaDestino;
-    oQry.ParamByName('alm_cab').AsString := sAlmCab;
-    oQry.ParamByName('u').AsString    := IdentidadSesion.Usuario;
-    oQry.ExecSQL;
-    // Tras copiar, refrescar totales de la linea destino para que
-    // TOTAL_UNIDADES_SESLIN y TOTAL_LINEA_SESLIN cuadren con la suma
-    // de celdas (si no, las columnas Uds/Total del grid principal
-    // salen a 0 para la nueva linea aunque las cantidades por talla
-    // esten bien).
-    oQry.SQL.Text :=
-      'UPDATE fza_compras_sesiones_lineas ' +
-      '   SET TOTAL_UNIDADES_SESLIN = ' +
-      '         (SELECT COALESCE(SUM(CANTIDAD_SESCEL), 0) ' +
-      '            FROM fza_compras_sesiones_celdas ' +
-      '           WHERE SERIE_SES_SESCEL  = :s ' +
-      '             AND NUMERO_SES_SESCEL = :n ' +
-      '             AND LINEA_SES_SESCEL  = :l), ' +
-      '       TOTAL_LINEA_SESLIN    = ' +
-      '         (SELECT COALESCE(SUM(CANTIDAD_SESCEL), 0) ' +
-      '            FROM fza_compras_sesiones_celdas ' +
-      '           WHERE SERIE_SES_SESCEL  = :s ' +
-      '             AND NUMERO_SES_SESCEL = :n ' +
-      '             AND LINEA_SES_SESCEL  = :l) * ' +
-      '         PRECIO_COMPRA_SESLIN, ' +
-      '       INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u ' +
-      ' WHERE SERIE_SES_SESLIN  = :s ' +
-      '   AND NUMERO_SES_SESLIN = :n ' +
-      '   AND LINEA_SESLIN      = :l';
-    oQry.ParamByName('s').AsString  := sSer;
-    oQry.ParamByName('n').AsString  := sNum;
-    oQry.ParamByName('l').AsInteger := ALineaDestino;
-    oQry.ParamByName('u').AsString  := IdentidadSesion.Usuario;
-    oQry.ExecSQL;
-  finally
-    FreeAndNil(oQry);
-  end;
+  CopiarCeldasDistribuidasSesion(
+    ConexionPrincipal,
+    Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
+    Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
+    Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString,
+    IdentidadSesion.Usuario,
+    ALineaOrigen,
+    ALineaDestino);
 end;
-
 procedure TfrmMtoComprasSesiones.AbrirDistribuidor(
   const ACodigoKit: string);
 var

@@ -55,7 +55,8 @@ uses
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
   dxSkinWhiteprint, dxSkinXmas2008Blue,
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
-  inLibColumnasSkuIntf, inLibGridPivoteVenta;
+  inLibColumnasSkuIntf, inLibGridPivoteVenta,
+  inLibFacturasServiciosIntf, inLibEmisionFiscalIntf;
 
 type
   TfrmMtoFacturasBase = class(TfrmMtoGen)
@@ -567,9 +568,18 @@ type
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
     FConstruyendoModo: Boolean;
-    // La validacion del DM senala un campo logico; aqui se traduce a
-    // pestania + foco. Suscrito a dmmFacturas.OnCampoInvalido.
+    // La excepcion de dominio senala un campo logico; el form decide
+    // como presentar el error y donde colocar el foco.
     procedure SenalarCampoValidacion(ACampo: TCampoValidacionFac);
+    procedure MostrarResultadoOperacion(
+      const AResultado: TResultadoOperacionFactura);
+    procedure MostrarResultadoBorrado(
+      const AResultado: TResultadoBorradoFactura);
+    procedure MostrarAdvertenciaFactura(const AMensaje: string);
+    procedure MostrarErrorValidacion(
+      const AError: EValidacionFactura);
+    function ConfirmarBorradoFactura(
+      const ASerie, ANumero: string): Boolean;
     procedure NuevaFacturaDesdeInsert(Sender: TObject);
     procedure SeriesCambiadasDesdeDM(Sender: TObject);
     // Conmuta que precio es editable (s/IVA o c/IVA) segun la tarifa
@@ -624,10 +634,12 @@ type
     // a una fase fiscal cerrada y solo caben Anular o Rectificar.
     procedure ActualizarBloqueoEdicion;
     procedure AsignarControles;
-    // Encola en fza_verifactu_cola una ANULACION o SUBSANACION de la
-    // factura seleccionada en la lista; el hilo Verifactu la envía
-    procedure EncolarOperacionVerifactu(const ATipoOperacion,
-                                        AAccion: string);
+    // Ejecuta una ANULACION o SUBSANACION con la estrategia fiscal activa.
+    procedure EjecutarOperacionFiscal(
+      const ATipoOperacion, AAccion: string);
+    function EmitirFiscalmente(
+      const ASolicitud: TSolicitudEmisionFiscal
+    ): TResultadoEmisionFiscal;
     // Carga perezosa de sub-pestañas detail. Cada pestaña se asegura de
     // que su query este abierta solo cuando el usuario la activa, evitando
     // refresh master/detail innecesario al cambiar de factura cuando la
@@ -710,7 +722,7 @@ uses
   inMtoModalSeleccionarBanco,
   inLibUser,
   inLibVerifactu,
-  inLibVerifactuCola,
+  inLibEmisionFiscal,
   inLibVentasWsCola,
   inMtoModalFacturarTicket,
   inLibLog,
@@ -2067,8 +2079,11 @@ begin
   inherited;
   dmmFacturas := TdmFacturas(AsegurarDataModuleDocumento(
     Self, tdmDataModule, TdmFacturas));
-  // El DM ya no toca la UI: senala campos y este form pone pestania/foco.
-  dmmFacturas.OnCampoInvalido := SenalarCampoValidacion;
+  dmmFacturas.OnResultadoOperacion := MostrarResultadoOperacion;
+  dmmFacturas.OnResultadoBorrado := MostrarResultadoBorrado;
+  dmmFacturas.OnAdvertencia := MostrarAdvertenciaFactura;
+  dmmFacturas.OnValidacion := MostrarErrorValidacion;
+  dmmFacturas.OnConfirmarBorrado := ConfirmarBorradoFactura;
   dmmFacturas.OnNuevaFactura := NuevaFacturaDesdeInsert;
   dmmFacturas.OnSeriesCambiadas := SeriesCambiadasDesdeDM;
   dmmFacturas.OnLinFacEstado := AplicarEdicionPreciosLinea;
@@ -2197,14 +2212,28 @@ begin
   Result := 'vi_facturas';
 end;
 
-procedure TfrmMtoFacturasBase.EncolarOperacionVerifactu(
+function TfrmMtoFacturasBase.EmitirFiscalmente(
+  const ASolicitud: TSolicitudEmisionFiscal
+): TResultadoEmisionFiscal;
+var
+  Servicio: IServicioEmisionFiscal;
+begin
+  Servicio := CrearServicioEmisionFiscal(
+    ParametrosApp,
+    ParametrosCaja,
+    ConexionPrincipal);
+  Result := Servicio.Emitir(ASolicitud);
+end;
+
+procedure TfrmMtoFacturasBase.EjecutarOperacionFiscal(
   const ATipoOperacion, AAccion: string);
 var
-  Qry:                  TUniQuery;
-  sSerie:               string;
-  sNumero:              string;
-  bBorrarMovimientos:   Boolean;
+  sSerie: string;
+  sNumero: string;
+  bBorrarMovimientos: Boolean;
   EsFacturaSimplificada: Boolean;
+  Solicitud: TSolicitudEmisionFiscal;
+  Resultado: TResultadoEmisionFiscal;
 begin
   sSerie  := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
   sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
@@ -2229,52 +2258,26 @@ begin
                [sSerie, sNumero]), mtConfirmation,
         [mbYes, mbNo], 0) = mrYes;
     end;
-    Qry := TUniQuery.Create(nil);
-    try
-      Qry.Connection := ConexionPrincipal;
-      case ModoVerifactu(ParametrosApp) of
-        mvVerifactu:
-          TVerifactuCola.EncolarFactura(ParametrosApp, ParametrosCaja, Qry,
-            IdentidadSesion.Usuario, sSerie, sNumero, ATipoOperacion,
-            bBorrarMovimientos);
-        mvNoVerifactu:
-          TVerifactuCola.RegistrarFacturaNoVerifactu(ParametrosApp,
-            ParametrosCaja, Qry,
-            IdentidadSesion.Usuario, sSerie, sNumero, ATipoOperacion,
-            bBorrarMovimientos);
-      else
-        TVerifactuCola.MarcarFacturaSinVerifactu(ParametrosApp,
-          ParametrosCaja, Qry,
-          IdentidadSesion.Usuario, sSerie, sNumero, ATipoOperacion,
-          bBorrarMovimientos);
-      end;
-    finally
-      FreeAndNil(Qry);
-    end;
-    if VerifactuActivo(ParametrosApp) then
-    begin
-      RegistrarEventoVerifactu(ParametrosApp, ConexionPrincipal,
-        IdentidadSesion.Usuario,
-        cEventoVerifactuEncolado,
-        AAccion + ' encolada desde Borradores', '', sSerie, sNumero);
-      ShowMessage(Format(SInfoAccionFiscalEncolada, [AAccion]));
-    end
-    else if NoVerifactuActivo(ParametrosApp) then
-    begin
-      ShowMessage(Format(SInfoAccionFiscalNoVerifactu, [AAccion]));
-    end
-    else
-      ShowMessage(Format(SInfoAccionFiscalSinVerifactu, [AAccion]));
+    Solicitud := TSolicitudEmisionFiscal.ParaOperacion(
+      sSerie,
+      sNumero,
+      IdentidadSesion.Usuario,
+      ATipoOperacion,
+      AAccion,
+      bBorrarMovimientos);
+    Resultado := EmitirFiscalmente(Solicitud);
+    ShowMessage(Resultado.Mensaje);
     dsTablaG.DataSet.Refresh;
   end;
 end;
 
 procedure TfrmMtoFacturasBase.btnConsolidarClick(Sender: TObject);
 var
-  Qry:     TUniQuery;
-  sSerie:  string;
+  sSerie: string;
   sNumero: string;
-  sFase:   string;
+  sFase: string;
+  Solicitud: TSolicitudEmisionFiscal;
+  Resultado: TResultadoEmisionFiscal;
 begin
   // Lanzamiento manual de una factura en borrador. La fase final depende
   // del modo fiscal: SIN, VERIFACTU o NO_VERIFACTU.
@@ -2303,45 +2306,17 @@ begin
                      [mbYes, mbNo], 0) =
           mrYes then
   begin
-      Qry := TUniQuery.Create(nil);
-      try
-        Qry.Connection := ConexionPrincipal;
-      case ModoVerifactu(ParametrosApp) of
-        mvVerifactu:
-          TVerifactuCola.EncolarFactura(ParametrosApp, ParametrosCaja, Qry,
-            IdentidadSesion.Usuario, sSerie, sNumero);
-        mvNoVerifactu:
-          TVerifactuCola.RegistrarFacturaNoVerifactu(ParametrosApp,
-            ParametrosCaja, Qry,
-            IdentidadSesion.Usuario, sSerie, sNumero);
-      else
-        TVerifactuCola.MarcarFacturaSinVerifactu(ParametrosApp,
-          ParametrosCaja, Qry,
-          IdentidadSesion.Usuario, sSerie, sNumero);
-      end;
-    finally
-      FreeAndNil(Qry);
-    end;
-    if VerifactuActivo(ParametrosApp) then
-      RegistrarEventoVerifactu(ParametrosApp, ConexionPrincipal,
-        IdentidadSesion.Usuario,
-        cEventoVerifactuEncolado,
-        'Lanzamiento manual (Consolidar) desde Borradores', '',
-        sSerie, sNumero);
+    Solicitud := TSolicitudEmisionFiscal.ParaConsolidacion(
+      sSerie,
+      sNumero,
+      IdentidadSesion.Usuario);
+    Resultado := EmitirFiscalmente(Solicitud);
     dsTablaG.DataSet.Refresh;
     // Archivado del PDF recien lanzado en fza_facturas.PDF_FAC. En modo
     // VERIFACTU la fase es VERIFACTU_PENDIENTE pero el QR tributario ya
     // es imprimible; una reimpresion posterior refresca el blob.
     GenerarPdfFacturaConsolidada(sSerie, sNumero);
-    if VerifactuActivo(ParametrosApp) then
-      ShowMessage(Format(SInfoBorradorVerifactuPendiente,
-                         [sSerie, sNumero]))
-    else if NoVerifactuActivo(ParametrosApp) then
-      ShowMessage(Format(SInfoBorradorNoVerifactuRegistrado,
-                         [sSerie, sNumero]))
-    else
-      ShowMessage(Format(SInfoBorradorSinVerifactuEmitido,
-                         [sSerie, sNumero]));
+    ShowMessage(Resultado.Mensaje);
   end;
 end;
 
@@ -2467,7 +2442,7 @@ end;
 procedure TfrmMtoFacturasBase.btnVerifactuAnularClick(Sender: TObject);
 begin
   // Anulación fiscal de la factura activa según modo Verifactu.
-  EncolarOperacionVerifactu('ANULACION', 'Anulación');
+  EjecutarOperacionFiscal('ANULACION', 'Anulación');
 end;
 
 procedure TfrmMtoFacturasBase.btnVerifactuFacturarClick(Sender: TObject);
@@ -3951,10 +3926,58 @@ begin
   end;
 end;
 
+procedure TfrmMtoFacturasBase.MostrarResultadoOperacion(
+  const AResultado: TResultadoOperacionFactura);
+begin
+  if (not AResultado.Exito) and
+     (AResultado.Mensaje <> '') then
+  begin
+    ShowMessage(AResultado.Mensaje);
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.MostrarResultadoBorrado(
+  const AResultado: TResultadoBorradoFactura);
+begin
+  if (not AResultado.Permitido) and
+     (AResultado.Mensaje <> '') then
+  begin
+    ShowMessage(AResultado.Mensaje);
+  end;
+end;
+
+procedure TfrmMtoFacturasBase.MostrarAdvertenciaFactura(
+  const AMensaje: string);
+begin
+  if AMensaje <> '' then
+    ShowMessage(AMensaje);
+end;
+
+function TfrmMtoFacturasBase.ConfirmarBorradoFactura(
+  const ASerie, ANumero: string): Boolean;
+begin
+  Result :=
+    MessageDlg(
+      Format(SPreguntaBorrarFactura, [ASerie, ANumero]),
+      mtConfirmation,
+      [mbYes, mbNo],
+      0) = mrYes;
+end;
+
+procedure TfrmMtoFacturasBase.MostrarErrorValidacion(
+  const AError: EValidacionFactura);
+begin
+  ShowMessage(AError.Message);
+  SenalarCampoValidacion(AError.Campo);
+end;
+
 procedure TfrmMtoFacturasBase.SenalarCampoValidacion(
   ACampo: TCampoValidacionFac);
 begin
   case ACampo of
+    cvfNinguno:
+    begin
+    end;
     cvfSerie:
     begin
       pcCab.ActivePage := tsCabecera;
@@ -3987,6 +4010,20 @@ begin
       if txtNIF_EMPRESA_FACTURA.CanFocus then
         txtNIF_EMPRESA_FACTURA.SetFocus;
     end;
+    cvfPais:
+    begin
+      pcCab.ActivePage := tsDatosCliente;
+      if txtPAIS_CLIENTE_FACTURA1.CanFocus then
+        txtPAIS_CLIENTE_FACTURA1.SetFocus;
+    end;
+    cvfOperacionFiscal:
+    begin
+      pcCab.ActivePage := tsCabecera;
+      if cbbTipoOperVerifactu.CanFocus then
+        cbbTipoOperVerifactu.SetFocus;
+    end;
+    cvfTipoIva:
+      pcDetail.ActivePage := tsLineasFactura;
   end;
 end;
 

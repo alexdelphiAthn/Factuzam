@@ -1427,6 +1427,57 @@ begin
   end;
 end;
 
+function LeerTextoDataset(
+  ADataSet: TDataSet;
+  const ACampo: string): string;
+var
+  Campo: TField;
+begin
+  Result := '';
+  Campo := ADataSet.FindField(ACampo);
+  if Campo <> nil then
+    Result := Trim(Campo.AsString);
+end;
+
+function LeerNumeroDataset(
+  ADataSet: TDataSet;
+  const ACampo: string): Double;
+var
+  Campo: TField;
+begin
+  Result := 0;
+  Campo := ADataSet.FindField(ACampo);
+  if (Campo <> nil) and (not Campo.IsNull) then
+    Result := Campo.AsFloat;
+end;
+
+procedure MostrarEstadoStockDevolucionCompra(
+  AEstado: TEstadoStockDevolucionCompra);
+begin
+  case AEstado of
+    esdcProveedorNoIndicado:
+      MessageDlg(
+        SErrorProveedorDevolucionFilaNoSeleccionado,
+        mtWarning, [mbOk], 0);
+    esdcAlmacenNoIndicado:
+      MessageDlg(
+        SErrorAlmacenDevolucionFilaNoSeleccionado,
+        mtWarning, [mbOk], 0);
+    esdcArticuloNoIndicado:
+      MessageDlg(
+        SErrorArticuloDevolucionFilaNoSeleccionado,
+        mtInformation, [mbOk], 0);
+    esdcRequiereColor:
+      MessageDlg(
+        SErrorColorDevolucionFilaNoSeleccionado,
+        mtInformation, [mbOk], 0);
+    esdcSinStock:
+      MessageDlg(
+        SErrorStockDevolucionFilaNoDisponible,
+        mtInformation, [mbOk], 0);
+  end;
+end;
+
 procedure TfrmMtoDevolucionesCompra.DevolverTodoStock;
 var
   dsCab: TDataSet;
@@ -1436,48 +1487,6 @@ var
   bPivotActivo: Boolean;
   Estado: TEstadoStockDevolucionCompra;
   Parametros: TParametrosStockDevolucionCompra;
-
-  function LeerTextoCabecera(const ACampo: string): string;
-  var
-    Campo: TField;
-  begin
-    Result := '';
-    Campo := dsCab.FindField(ACampo);
-    if Campo <> nil then
-      Result := Trim(Campo.AsString);
-  end;
-
-  function LeerNumeroCabecera(const ACampo: string): Double;
-  var
-    Campo: TField;
-  begin
-    Result := 0;
-    Campo := dsCab.FindField(ACampo);
-    if (Campo <> nil) and (not Campo.IsNull) then
-      Result := Campo.AsFloat;
-  end;
-
-  procedure MostrarEstado(AEstado: TEstadoStockDevolucionCompra);
-  begin
-    case AEstado of
-      esdcProveedorNoIndicado:
-        MessageDlg(SErrorProveedorDevolucionFilaNoSeleccionado,
-          mtWarning, [mbOk], 0);
-      esdcAlmacenNoIndicado:
-        MessageDlg(SErrorAlmacenDevolucionFilaNoSeleccionado,
-          mtWarning, [mbOk], 0);
-      esdcArticuloNoIndicado:
-        MessageDlg(SErrorArticuloDevolucionFilaNoSeleccionado,
-          mtInformation, [mbOk], 0);
-      esdcRequiereColor:
-        MessageDlg(SErrorColorDevolucionFilaNoSeleccionado,
-          mtInformation, [mbOk], 0);
-      esdcSinStock:
-        MessageDlg(SErrorStockDevolucionFilaNoDisponible,
-          mtInformation, [mbOk], 0);
-    end;
-  end;
-
 begin
   if dmmDevolucionesCompra <> nil then
   begin
@@ -1495,12 +1504,14 @@ begin
           mtInformation, [mbOk], 0)
       else
       begin
-        Parametros.Serie := LeerTextoCabecera('SERIE_DEVC');
-        Parametros.Numero := LeerTextoCabecera('NUMERO_DEVC');
+        Parametros.Serie := LeerTextoDataset(
+          dsCab, 'SERIE_DEVC');
+        Parametros.Numero := LeerTextoDataset(
+          dsCab, 'NUMERO_DEVC');
         Parametros.CodigoProveedor :=
-          LeerTextoCabecera('CODIGO_PRV_DEVC');
+          LeerTextoDataset(dsCab, 'CODIGO_PRV_DEVC');
         Parametros.CodigoAlmacen :=
-          LeerTextoCabecera('CODIGO_ALM_DEVC');
+          LeerTextoDataset(dsCab, 'CODIGO_ALM_DEVC');
         Parametros.CodigoArticulo :=
           ValorLineaActiva('CODIGO_ART_DEVCLIN');
         Parametros.Usuario := IdentidadSesion.Usuario;
@@ -1509,17 +1520,17 @@ begin
           Parametros.Serie, Parametros.Numero, sLinea,
           Parametros.IdColor);
         Parametros.IvaNormal :=
-          LeerNumeroCabecera('PORCENTAJE_IVAN_DEVC');
+          LeerNumeroDataset(dsCab, 'PORCENTAJE_IVAN_DEVC');
         Parametros.IvaReducido :=
-          LeerNumeroCabecera('PORCENTAJE_IVAR_DEVC');
+          LeerNumeroDataset(dsCab, 'PORCENTAJE_IVAR_DEVC');
         Parametros.IvaSuperreducido :=
-          LeerNumeroCabecera('PORCENTAJE_IVAS_DEVC');
+          LeerNumeroDataset(dsCab, 'PORCENTAJE_IVAS_DEVC');
         Parametros.IvaExento :=
-          LeerNumeroCabecera('PORCENTAJE_IVAE_DEVC');
+          LeerNumeroDataset(dsCab, 'PORCENTAJE_IVAE_DEVC');
         Estado := ConsultarEstadoStockDevolucionCompra(
           ConexionPrincipal, Parametros);
         if Estado <> esdcDisponible then
-          MostrarEstado(Estado)
+          MostrarEstadoStockDevolucionCompra(Estado)
         else if MessageDlg(SPreguntaPrepararStockFilaDevolucion,
           mtConfirmation, [mbYes, mbNo], 0) = mrYes then
         begin
@@ -1543,7 +1554,7 @@ begin
                 mtInformation, [mbOk], 0);
             end
             else
-              MostrarEstado(Estado);
+              MostrarEstadoStockDevolucionCompra(Estado);
           finally
             Screen.Cursor := crDefault;
             if not dsLin.Active then

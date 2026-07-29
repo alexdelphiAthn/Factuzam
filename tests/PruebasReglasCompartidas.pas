@@ -26,12 +26,17 @@ type
     procedure ColorSku_EliminaSimbolosYNormalizaSeparadores;
     [Test]
     procedure Perfil_DevuelveValorConfiguradoOPredeterminado;
+    [Test]
+    procedure FiltroArticulos_EscapaValoresCsv;
+    [Test]
+    procedure FiltroArticulos_ComponeSoloReglasSolicitadas;
   end;
 
 implementation
 
 uses
   System.SysUtils,
+  inLibArticulosFiltro,
   inLibComprasSesionesReglas,
   inLibPerfilesUsuarioIntf,
   inLibPerfilesUsuarioValores;
@@ -78,6 +83,37 @@ begin
   finally
     FreeAndNil(oPerfil);
   end;
+end;
+
+procedure TPruebasReglasCompartidas.FiltroArticulos_EscapaValoresCsv;
+begin
+  Assert.AreEqual(
+    '''VERANO'', ''O''''HARA''',
+    ConvertirCsvEnListaSql('VERANO; O''HARA ; ;'));
+end;
+
+procedure TPruebasReglasCompartidas.
+  FiltroArticulos_ComponeSoloReglasSolicitadas;
+var
+  Filtro: TFiltroArticulos;
+  sSql: string;
+begin
+  Filtro.Estado := efaActivos;
+  Filtro.SoloConStock := True;
+  Filtro.TemporadasCsv := 'VERANO';
+  Filtro.ProveedoresCsv := '';
+  Filtro.FamiliasCsv := '0101;0102';
+  sSql := ConstruirSqlFiltroArticulos(Filtro);
+  Assert.IsTrue(Pos(
+    'vi_articulos.ESACTIVO_ART = ''S''', sSql) > 0);
+  Assert.IsTrue(Pos(
+    'EXISTS (SELECT 1 FROM fza_articulos_skus', sSql) > 0);
+  Assert.IsTrue(Pos(
+    'vi_articulos.TEMPORADA_ART IN (''VERANO'')', sSql) > 0);
+  Assert.IsTrue(Pos(
+    'vi_articulos.CODIGO_FAM_ART IN (''0101'', ''0102'')',
+    sSql) > 0);
+  Assert.IsTrue(Pos('CODIGO_PRV_AP IN', sSql) = 0);
 end;
 
 initialization

@@ -71,6 +71,13 @@ type
     LblTotalCol : TcxLabel;
   end;
 
+  TCantidadPivotSesion = record
+    IdValorPivot: Integer;
+    Cantidad: Double;
+  end;
+
+  TCantidadesPivotSesion = array of TCantidadPivotSesion;
+
   TGestorMatrizCompras = class
   private
     FContenedor   : TScrollBox;
@@ -277,6 +284,21 @@ function ResolverDuplicadoIntraSesion(AConn: TUniConnection;
 procedure AplicarDuplicadoEnLinea(ADM: TdmComprasSesiones;
                                    const AResul: TResolverDuplicadoSesion);
 
+function ConsultarCodigosBasicosActivos(AConn: TUniConnection;
+  const AIdVariacion: string): TArray<string>;
+function ObtenerSiguienteLineaSesion(AConn: TUniConnection;
+  const ASerie, ANumero: string; ALineaActual: Integer): Integer;
+function ObtenerNombreFamiliaSesion(AConn: TUniConnection;
+  const ACodigoFamilia: string): string;
+function ConsultarCantidadesLineaSesion(AConn: TUniConnection;
+  const ASerie, ANumero: string;
+  ALinea: Integer): TCantidadesPivotSesion;
+procedure BorrarCeldasLineaSesion(AConn: TUniConnection;
+  const ASerie, ANumero: string; ALinea: Integer);
+procedure CopiarCeldasDistribuidasSesion(AConn: TUniConnection;
+  const ASerie, ANumero, AAlmacenCabecera, AUsuario: string;
+  ALineaOrigen, ALineaDestino: Integer);
+
 implementation
 
 uses
@@ -292,6 +314,219 @@ const
   ROW_HEIGHT     = 28;
   HEADER_HEIGHT  = 32;
   PAD_X          = 6;
+
+function ConsultarCodigosBasicosActivos(AConn: TUniConnection;
+  const AIdVariacion: string): TArray<string>;
+var
+  Consulta: TUniQuery;
+  iIndice: Integer;
+begin
+  Result := nil;
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := AConn;
+    Consulta.SQL.Text :=
+      'SELECT CODIGO_ATB FROM fza_atributos_basicos ' +
+      ' WHERE ID_VA_ATB = :va AND ESACTIVO_ATB = ''S'' ' +
+      ' ORDER BY ORDEN_ATB, NOMBRE_ATB';
+    Consulta.ParamByName('va').AsString := AIdVariacion;
+    Consulta.Open;
+    SetLength(Result, Consulta.RecordCount);
+    iIndice := 0;
+    while not Consulta.Eof do
+    begin
+      Result[iIndice] := Consulta.FieldByName('CODIGO_ATB').AsString;
+      Inc(iIndice);
+      Consulta.Next;
+    end;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+function ObtenerSiguienteLineaSesion(AConn: TUniConnection;
+  const ASerie, ANumero: string; ALineaActual: Integer): Integer;
+var
+  Consulta: TUniQuery;
+begin
+  Result := 0;
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := AConn;
+    Consulta.SQL.Text :=
+      'SELECT MIN(LINEA_SESLIN) AS SIGUIENTE ' +
+      '  FROM fza_compras_sesiones_lineas ' +
+      ' WHERE SERIE_SES_SESLIN = :s ' +
+      '   AND NUMERO_SES_SESLIN = :n ' +
+      '   AND LINEA_SESLIN > :l';
+    Consulta.ParamByName('s').AsString := ASerie;
+    Consulta.ParamByName('n').AsString := ANumero;
+    Consulta.ParamByName('l').AsInteger := ALineaActual;
+    Consulta.Open;
+    if not Consulta.FieldByName('SIGUIENTE').IsNull then
+      Result := Consulta.FieldByName('SIGUIENTE').AsInteger;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+function ObtenerNombreFamiliaSesion(AConn: TUniConnection;
+  const ACodigoFamilia: string): string;
+var
+  Consulta: TUniQuery;
+begin
+  Result := '';
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := AConn;
+    Consulta.SQL.Text :=
+      'SELECT NOMBRE_FAM_FAM FROM fza_articulos_familias ' +
+      ' WHERE CODIGO_FAM_FAM = :codigo';
+    Consulta.ParamByName('codigo').AsString := ACodigoFamilia;
+    Consulta.Open;
+    if not Consulta.IsEmpty then
+      Result := Consulta.FieldByName('NOMBRE_FAM_FAM').AsString;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+function ConsultarCantidadesLineaSesion(AConn: TUniConnection;
+  const ASerie, ANumero: string;
+  ALinea: Integer): TCantidadesPivotSesion;
+var
+  Consulta: TUniQuery;
+  iIndice: Integer;
+begin
+  Result := nil;
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := AConn;
+    Consulta.SQL.Text :=
+      'SELECT ID_AV_PIVOT_SESCEL, ' +
+      '       SUM(CANTIDAD_SESCEL) AS TOTAL ' +
+      '  FROM fza_compras_sesiones_celdas ' +
+      ' WHERE SERIE_SES_SESCEL = :s ' +
+      '   AND NUMERO_SES_SESCEL = :n ' +
+      '   AND LINEA_SES_SESCEL = :l ' +
+      ' GROUP BY ID_AV_PIVOT_SESCEL';
+    Consulta.ParamByName('s').AsString := ASerie;
+    Consulta.ParamByName('n').AsString := ANumero;
+    Consulta.ParamByName('l').AsInteger := ALinea;
+    Consulta.Open;
+    SetLength(Result, Consulta.RecordCount);
+    iIndice := 0;
+    while not Consulta.Eof do
+    begin
+      Result[iIndice].IdValorPivot :=
+        Consulta.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
+      Result[iIndice].Cantidad :=
+        Consulta.FieldByName('TOTAL').AsFloat;
+      Inc(iIndice);
+      Consulta.Next;
+    end;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+procedure BorrarCeldasLineaSesion(AConn: TUniConnection;
+  const ASerie, ANumero: string; ALinea: Integer);
+var
+  Consulta: TUniQuery;
+begin
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := AConn;
+    Consulta.SQL.Text :=
+      'DELETE FROM fza_compras_sesiones_celdas ' +
+      ' WHERE SERIE_SES_SESCEL = :s ' +
+      '   AND NUMERO_SES_SESCEL = :n ' +
+      '   AND LINEA_SES_SESCEL = :l';
+    Consulta.ParamByName('s').AsString := ASerie;
+    Consulta.ParamByName('n').AsString := ANumero;
+    Consulta.ParamByName('l').AsInteger := ALinea;
+    Consulta.ExecSQL;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+procedure CopiarCeldasDistribuidasSesion(AConn: TUniConnection;
+  const ASerie, ANumero, AAlmacenCabecera, AUsuario: string;
+  ALineaOrigen, ALineaDestino: Integer);
+var
+  Consulta: TUniQuery;
+  bTxOwned: Boolean;
+begin
+  bTxOwned := not AConn.InTransaction;
+  if bTxOwned then
+    AConn.StartTransaction;
+  try
+    BorrarCeldasLineaSesion(
+      AConn, ASerie, ANumero, ALineaDestino);
+    Consulta := TUniQuery.Create(nil);
+    try
+      Consulta.Connection := AConn;
+      Consulta.SQL.Text :=
+        'INSERT INTO fza_compras_sesiones_celdas ' +
+        '  (SERIE_SES_SESCEL, NUMERO_SES_SESCEL, ' +
+        '   LINEA_SES_SESCEL, ID_FILA_SES_SESCEL, ' +
+        '   CODIGO_ALM_SESCEL, ID_AV_PIVOT_SESCEL, ' +
+        '   CANTIDAD_SESCEL, INSTANTE_ALTA, USUARIO_ALTA, ' +
+        '   INSTANTE_MODIF, USUARIO_MODIF) ' +
+        'SELECT SERIE_SES_SESCEL, NUMERO_SES_SESCEL, :ldst, ' +
+        '       ID_FILA_SES_SESCEL, ' +
+        '       IFNULL(NULLIF(CODIGO_ALM_SESCEL, ''''), :alm_cab), ' +
+        '       ID_AV_PIVOT_SESCEL, CANTIDAD_SESCEL, ' +
+        '       NOW(), :u, NOW(), :u ' +
+        '  FROM fza_compras_sesiones_celdas ' +
+        ' WHERE SERIE_SES_SESCEL = :s ' +
+        '   AND NUMERO_SES_SESCEL = :n ' +
+        '   AND LINEA_SES_SESCEL = :lsrc ' +
+        '   AND CANTIDAD_SESCEL > 0';
+      Consulta.ParamByName('s').AsString := ASerie;
+      Consulta.ParamByName('n').AsString := ANumero;
+      Consulta.ParamByName('lsrc').AsInteger := ALineaOrigen;
+      Consulta.ParamByName('ldst').AsInteger := ALineaDestino;
+      Consulta.ParamByName('alm_cab').AsString := AAlmacenCabecera;
+      Consulta.ParamByName('u').AsString := AUsuario;
+      Consulta.ExecSQL;
+      Consulta.SQL.Text :=
+        'UPDATE fza_compras_sesiones_lineas ' +
+        '   SET TOTAL_UNIDADES_SESLIN = ' +
+        '         (SELECT COALESCE(SUM(CANTIDAD_SESCEL), 0) ' +
+        '            FROM fza_compras_sesiones_celdas ' +
+        '           WHERE SERIE_SES_SESCEL = :s ' +
+        '             AND NUMERO_SES_SESCEL = :n ' +
+        '             AND LINEA_SES_SESCEL = :l), ' +
+        '       TOTAL_LINEA_SESLIN = ' +
+        '         (SELECT COALESCE(SUM(CANTIDAD_SESCEL), 0) ' +
+        '            FROM fza_compras_sesiones_celdas ' +
+        '           WHERE SERIE_SES_SESCEL = :s ' +
+        '             AND NUMERO_SES_SESCEL = :n ' +
+        '             AND LINEA_SES_SESCEL = :l) * ' +
+        '         PRECIO_COMPRA_SESLIN, ' +
+        '       INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u ' +
+        ' WHERE SERIE_SES_SESLIN = :s ' +
+        '   AND NUMERO_SES_SESLIN = :n ' +
+        '   AND LINEA_SESLIN = :l';
+      Consulta.ParamByName('s').AsString := ASerie;
+      Consulta.ParamByName('n').AsString := ANumero;
+      Consulta.ParamByName('l').AsInteger := ALineaDestino;
+      Consulta.ParamByName('u').AsString := AUsuario;
+      Consulta.ExecSQL;
+    finally
+      FreeAndNil(Consulta);
+    end;
+    if bTxOwned and AConn.InTransaction then
+      AConn.Commit;
+  except
+    if bTxOwned and AConn.InTransaction then
+      AConn.Rollback;
+    raise;
+  end;
+end;
 
 { TGestorMatrizCompras }
 

@@ -32,7 +32,8 @@ uses
   cxDBExtLookupComboBox, MemDS, DBAccess, cxEditRepositoryItems, system.UITypes,
   System.Actions, Vcl.ActnList, Vcl.Imaging.PngImage, inLibFotos,
   System.Generics.Collections, System.Diagnostics, cxLocalization,
-  inLibLectorScanner, inLibCajaTipos, inLibCajaVentanasIntf;
+  inLibLectorScanner, inLibCajaTipos, inLibCajaVentanasIntf,
+  inLibCajaVentaIntf;
 
 const
   WM_CANCELAR_LINEA = WM_APP + 100;
@@ -230,6 +231,10 @@ type
     FCaptionPrevio:   string;
     FUltimoTickReloj: TDateTime;
     FEnfoqueArticuloPendiente: Boolean;
+    FPoliticaStockVenta: IPoliticaStockVenta;
+    FRepartidorDescuento: IRepartidorDescuento;
+    FImpresorVenta: IImpresorVenta;
+    FServicioCierreVenta: IServicioCierreVenta;
     procedure GuardarLayoutCaja;
     procedure RestaurarLayoutCaja;
     procedure AbrirBuscarModificar;
@@ -259,9 +264,10 @@ type
     procedure BuscarEmpleados;
     procedure BuscarClientes;
     function HayLineasConDeposito: Boolean;
-    procedure RepartirDescuentoGlobalLinea(ImporteDescuentoGlobal: Currency);
-    // Vista previa A4 (FastReport) de la factura completa creada con F8
-    procedure ImprimirFacturaA4(const ASerie, ANumero: string);
+    procedure ProcesarResultadoCierre(
+      const AResultado: TResultadoCierreVenta;
+      AEnviarEmail: Boolean;
+      const AEmailEnvio: string);
     procedure WMSaltarAtributo(var Msg: TMessage); message WM_SALTAR_ATRIBUTO;
     procedure DsLineasDataChange(Sender: TObject; Field: TField);
     procedure RefrescarFotoStock;
@@ -372,10 +378,7 @@ uses
   inLibUser,
   inLibLog,
   inMtoCajaFaseCobro, inLibDevExp, inLibValoresAutomaticos,
-  UniDataFacturas, inMtoModalImpFac,
-  inLibFacturas, inLibGenBusq, inLibGenerarTicket,
-  inLibGenerarTicketCaja, inLibGenerarTicketBD, inLibVentasWsCola,
-  inLibFacturaPdfBlob,
+  inLibFacturas, inLibGenBusq,
   inMtoModalGenImpSave, inLibLayoutForm,
   inLibArticulosValidador, inLibArticulosResolver,
   inLibArticulosAtributosLookup,
@@ -383,7 +386,8 @@ uses
   inLibShowMto,
   inMtoStockConsulta,
   inLibCorreoTickets,
-  inLibDir,
+  inLibCajaStock, inLibCajaDescuentos, inLibCajaCierreVenta,
+  inMtoCajaImpresorVenta, inMtoCajaGrabadorVenta,
   System.StrUtils,
   inLibMsg;
 
@@ -726,91 +730,14 @@ end;
 
 function TfrmMtoOpeCaja.ValidarSkuParaVenta(const SkuFinal: string): Boolean;
 var
-  qry: TUniQuery;
-  Cantidad: Double;
-  MensajeStock: string;
-  SkuLimpio: string;
-  bChkStockOnly: Boolean;
-  bAvisarSinStock: Boolean;
+  Resultado: TResultadoPoliticaStockVenta;
 begin
-  Result := True;
-  SkuLimpio := Trim(SkuFinal);
-  if SkuLimpio = '' then Exit;
-
-  if ParametrosCaja.GetBool('vgerChkExistOnly', True) then
-  begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := ConexionPrincipal;
-      qry.SQL.Text :=
-        'SELECT ESACTIVO_SKU FROM fza_articulos_skus ' +
-        ' WHERE CODIGO_UNIDAD_SKU = :SKU';
-      qry.ParamByName('SKU').AsString := SkuLimpio;
-      qry.Open;
-      if qry.IsEmpty then
-      begin
-        ShowMessage(Format(SErrorSkuVentaCajaNoExiste, [SkuLimpio]));
-        Result := False;
-        Exit;
-      end;
-      if qry.FieldByName('ESACTIVO_SKU').AsString <> 'S' then
-      begin
-        ShowMessage(Format(SErrorSkuVentaCajaNoActivo, [SkuLimpio]));
-        Result := False;
-        Exit;
-      end;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
-
-  // vgerChkStockOnly bloquea la venta sin stock. vgerAvisoStockWarning,// cuando trae texto,sirve como aviso informativo aunque no se bloquee.
-  bChkStockOnly := ParametrosCaja.GetBool('vgerChkStockOnly', False);
-  MensajeStock :=
-    Trim(ParametrosCaja.GetString('vgerAvisoStockWarning', ''));
-  bAvisarSinStock := MensajeStock <> '';
-
-  if bChkStockOnly or bAvisarSinStock then
-  begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := ConexionPrincipal;
-      if Trim(FCodigoAlmacen) <> '' then
-      begin
-        qry.SQL.Text :=
-          'SELECT COALESCE(SUM(CANTIDAD_STK), 0) AS QTY ' +
-          '  FROM fza_articulos_stockactual ' +
-          ' WHERE CODIGO_UNIDAD_STK = :SKU ' +
-          '   AND CODIGO_ALM_STK    = :ALM';
-        qry.ParamByName('SKU').AsString := SkuLimpio;
-        qry.ParamByName('ALM').AsString := FCodigoAlmacen;
-      end
-      else
-      begin
-        qry.SQL.Text :=
-          'SELECT COALESCE(SUM(CANTIDAD_STK), 0) AS QTY ' +
-          '  FROM fza_articulos_stockactual ' +
-          ' WHERE CODIGO_UNIDAD_STK = :SKU';
-        qry.ParamByName('SKU').AsString := SkuLimpio;
-      end;
-      qry.Open;
-      Cantidad := qry.FieldByName('QTY').AsFloat;
-      if Cantidad <= 0 then
-      begin
-        if bAvisarSinStock then
-          ShowMessage(MensajeStock)
-        else
-          ShowMessage(SErrorArticuloVentaCajaSinStock);
-        if bChkStockOnly then
-        begin
-          Result := False;
-          Exit;
-        end;
-      end;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
+  Resultado := FPoliticaStockVenta.Validar(
+    SkuFinal,
+    FCodigoAlmacen);
+  if Resultado.Mensaje <> '' then
+    ShowMessage(Resultado.Mensaje);
+  Result := Resultado.Permitida;
 end;
 
 procedure TfrmMtoOpeCaja.EliminarLineaPorValidacion;
@@ -3182,93 +3109,6 @@ begin
 //  tvLineasOpe.ApplyBestFit(nil, True, False);
 end;
 
-procedure TfrmMtoOpeCaja.RepartirDescuentoGlobalLinea(
-  ImporteDescuentoGlobal: Currency);
-var
-  TotalBrutoVenta: Currency;
-  Proporcion: Double;
-  DescuentoAplicarLinea: Currency;
-  DescuentoAcumulado: Currency;
-  Cantidad: Double;
-  PrecioSalida: Currency;
-  DescuentoUnitario: Currency;
-  Bkm: TBookmark;
-begin
-  if ImporteDescuentoGlobal = 0 then Exit;
-
-  // 1. Calcular el Total Bruto sumando el importe de todas las líneas
-  TotalBrutoVenta := 0;
-  DatosCaja.cdsLineas.DisableControls;
-  Bkm := DatosCaja.cdsLineas.GetBookmark;
-  try
-    DatosCaja.cdsLineas.First;
-    while not DatosCaja.cdsLineas.Eof do
-    begin
-      TotalBrutoVenta := TotalBrutoVenta +
-        (DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat *
-         DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency);
-      DatosCaja.cdsLineas.Next;
-    end;
-
-    if TotalBrutoVenta = 0 then Exit; // Evitar división por cero
-
-    // 2. Repartir el descuento línea a línea utilizando los campos reales
-    DescuentoAcumulado := 0;
-    DatosCaja.cdsLineas.First;
-    while not DatosCaja.cdsLineas.Eof do
-    begin
-      DatosCaja.cdsLineas.Edit;
-
-      Cantidad :=
-        DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat;
-      if Cantidad = 0 then Cantidad := 1; // Protección matemática
-
-      PrecioSalida :=
-        DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency;
-
-      // Calculamos el % de peso de esta línea sobre el total del ticket
-      Proporcion := (Cantidad * PrecioSalida) / TotalBrutoVenta;
-
-      // Asignamos el descuento total que le toca a esta fila
-      // (Si es la última línea, le damos el resto para que cuadre exactamente
-      // al céntimo)
-      DatosCaja.cdsLineas.Next;
-      if DatosCaja.cdsLineas.Eof then
-        DescuentoAplicarLinea := ImporteDescuentoGlobal - DescuentoAcumulado
-      else
-        DescuentoAplicarLinea :=
-          SimpleRoundTo(ImporteDescuentoGlobal * Proporcion, -2);
-
-      DatosCaja.cdsLineas.Prior; // Volvemos a la línea actual
-
-      // --- LÓGICA DE CAMPOS REALES DE LA BASE DE DATOS ---
-      DescuentoUnitario := DescuentoAplicarLinea / Cantidad;
-
-      // 1. Guardar el nuevo Precio con Descuento Unitario (PRECIO_DTO_FACLIN)
-      DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency :=
-        PrecioSalida - DescuentoUnitario;
-
-      // 2. Calcular y guardar el Porcentaje de descuento exacto
-      // (PORCENTAJE_DTO_FACLIN)
-      if PrecioSalida <> 0 then
-        DatosCaja.cdsLineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat :=
-          SimpleRoundTo((DescuentoUnitario / PrecioSalida) * 100, -2)
-      else
-        DatosCaja.cdsLineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat := 0;
-
-      DescuentoAcumulado := DescuentoAcumulado + DescuentoAplicarLinea;
-
-      DatosCaja.cdsLineas.Post;
-      DatosCaja.cdsLineas.Next;
-    end;
-  finally
-    if DatosCaja.cdsLineas.BookmarkValid(Bkm) then
-      DatosCaja.cdsLineas.GotoBookmark(Bkm);
-    DatosCaja.cdsLineas.FreeBookmark(Bkm);
-    DatosCaja.cdsLineas.EnableControls;
-  end;
-end;
-
 function TfrmMtoOpeCaja.HayLineasConDeposito: Boolean;
 var
   Bkm: TBookmark;
@@ -3298,14 +3138,72 @@ begin
   end;
 end;
 
+procedure TfrmMtoOpeCaja.ProcesarResultadoCierre(
+  const AResultado: TResultadoCierreVenta;
+  AEnviarEmail: Boolean;
+  const AEmailEnvio: string);
+var
+  sMensajeCorreo: string;
+begin
+  if FNumeroRectifica <> '' then
+  begin
+    if FTipoRectificativa = trcSustitutiva then
+      RefrescarConsultasOperacionesCaja;
+    FSerieRectifica := '';
+    FNumeroRectifica := '';
+    FTipoRectificativa := trcNinguna;
+    FTratamientoMovRectificativa := tmrMantenerOriginales;
+    if FCaptionPrevio <> '' then
+      Caption := FCaptionPrevio;
+  end;
+  if AResultado.CodigoValeGenerado <> '' then
+  begin
+    ShowMessage(Format(
+      SInfoValeCajaEntregar,
+      [AResultado.CodigoValeGenerado]));
+  end;
+  if AEnviarEmail then
+  begin
+    Screen.Cursor := crHourGlass;
+    try
+      if EnviarDocumentacionOperacion(
+        ParametrosApp,
+        ConexionPrincipal,
+        FCodigoEmpresa,
+        FCodigoAlmacen,
+        FCodigoCaja,
+        AResultado.NumeroGenerado,
+        AEmailEnvio,
+        sMensajeCorreo) then
+      begin
+        ShowMessage(sMensajeCorreo);
+      end
+      else
+      begin
+        ShowMessage(Format(
+          SErrorCorreoOperacionCajaNoEnviado,
+          [sMensajeCorreo]));
+      end;
+    finally
+      Screen.Cursor := crDefault;
+    end;
+  end;
+  PrepararValores(
+    FCodigoEmpresa,
+    FCodigoAlmacen,
+    FCodigoCaja,
+    FFecha);
+end;
+
 procedure TfrmMtoOpeCaja.btnF12Click(Sender: TObject);
 var
   frmFaseCobro: TfrmMtoCajaFaseCobro;
   ObjTotales: TFacturaTotales;
-  NumeroGenerado: string;
-  CodigoValeGenerado: string;
-  sMensajeCorreo: string;
-  slRutasTicketPdf: TStringList;
+  Solicitud: TSolicitudCierreVenta;
+  Resultado: TResultadoCierreVenta;
+  sSerieDocumento: string;
+  sTipoFactura: string;
+  dtFechaFactura: TDateTime;
 begin
   if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
   begin
@@ -3329,12 +3227,12 @@ begin
   ActualizarRelojCaja;
   SincronizarFechaCajaCabecera;
   frmFaseCobro := nil;
-  slRutasTicketPdf := TStringList.Create;
+  ObjTotales := nil;
   try
     ObjTotales := TFacturaTotales.Create(
       ConexionPrincipal,
       DatosCaja.cdsCabecera,
-                                         DatosCaja.cdsLineas);
+      DatosCaja.cdsLineas);
     ObjTotales.ProcesarFacturaCompleta;
     frmFaseCobro := TfrmMtoCajaFaseCobro.Create(Self);
     frmFaseCobro.CargarDatosDesdeFactura(ObjTotales);
@@ -3359,177 +3257,59 @@ begin
       frmFaseCobro.FRectificaA := FSerieRectifica + '\' + FNumeroRectifica;
     if frmFaseCobro.ShowModal = mrOk then
     begin
-       if frmFaseCobro.DatosCobro.ImporteDescuentoGlobal > 0 then
-       begin
-         // Repartimos el importe del descuento entre todas las líneas
-         RepartirDescuentoGlobalLinea(
-                                frmFaseCobro.DatosCobro.ImporteDescuentoGlobal);
-         ObjTotales.ProcesarFacturaCompleta;
-       end;
-       // Factura completa (F8): serie y fecha del modal; la venta se
-       // graba como NORMAL en lugar de SIMPLIFICADA
-       var sSerieDoc := frmFaseCobro.cbbSERIE_FAC.Text;
-       var sTipoFactura := 'SIMPLIFICADA';
-       var dtFechaFactura: TDateTime := 0;
-       if frmFaseCobro.TipoImpresion = tiFactura then
-       begin
-         sSerieDoc      := frmFaseCobro.FSerieFactura;
-         sTipoFactura   := 'NORMAL';
-         dtFechaFactura := frmFaseCobro.FFechaFactura;
-       end;
-       // Modo rectificación: el documento sale como RECTIFICATIVA con
-       // la serie rectificativa elegida en fase de cobro
-       if (frmFaseCobro.TipoImpresion <> tiFactura) and
-          (FNumeroRectifica <> '') then
-         sTipoFactura := 'RECTIFICATIVA';
-       ActualizarRelojCaja;
-       SincronizarFechaCajaCabecera;
-       frmFaseCobro.FFecha := FFecha;
-       if DatosCaja.GrabarFacturaSimplificada(FCodigoEmpresa,
-                                              FCodigoAlmacen,
-                                              FCodigoCaja,
-                                              sSerieDoc,
-                                              frmFaseCobro.DatosCobro,
-                                              sSerieDoc,
-                                              NumeroGenerado,
-                                              CodigoValeGenerado,
-                                              sTipoFactura,
-                                              dtFechaFactura,
-                                              FFecha,
-                                              frmFaseCobro.FNumeroManual,
-                                              FTipoRectificativa,
-                                              FSerieRectifica,
-                                              FNumeroRectifica,
-                                              FTratamientoMovRectificativa) then
-       begin
-         // El codigo del vale emitido lo genera GrabarFacturaSimplificada;
-         // hay que devolverlo a DatosCobro para que el ticket lo imprima.
-         frmFaseCobro.DatosCobro.CodigoValeEmitido := CodigoValeGenerado;
-         case frmFaseCobro.TipoImpresion of
-           tiConTicket: ImprimirT(ParametrosApp, ConexionPrincipal,
-                                  FCodigoEmpresa,
-                                  FCodigoAlmacen,
-                                  FCodigoCaja,
-                                  NumeroGenerado,
-                                  frmFaseCobro.DatosCobro,
-                                  ParametrosCaja.ImpresoraCaja,
-                                  False,
-                                  FFecha,
-                                  slRutasTicketPdf);
-           tiFactura:
-             // Sin ticket térmico: vista previa A4 en FastReport para
-             // imprimir/exportar
-             ImprimirFacturaA4(
-               DatosCaja.cdsCabecera.FieldByName('SERIE_FAC').AsString,
-               DatosCaja.cdsCabecera.FieldByName('NUMERO_FAC').AsString);
-           tiTicketRegalo:
-             begin
-               // F10: ticket regalo (sin precios ni QR) y, además, el
-               // ticket fiscal completo con precios y QR Verifactu
-               ImprimirT(ParametrosApp, ConexionPrincipal, FCodigoEmpresa,
-                         FCodigoAlmacen,
-                         FCodigoCaja,
-                         NumeroGenerado,
-                         frmFaseCobro.DatosCobro,
-                         ParametrosCaja.ImpresoraCaja,
-                         True,
-                         FFecha);
-               ImprimirT(ParametrosApp, ConexionPrincipal, FCodigoEmpresa,
-                         FCodigoAlmacen,
-                         FCodigoCaja,
-                         NumeroGenerado,
-                         frmFaseCobro.DatosCobro,
-                         ParametrosCaja.ImpresoraCaja,
-                         False,
-                         FFecha,
-                         slRutasTicketPdf);
-             end;
-           tiSinTicket:
-             // F11: no imprime ticket pero abre la cajonera
-             AbrirCajonSinVenta(Permisos, ParametrosCaja);
-         end;
-         if slRutasTicketPdf.Count = 0 then
-         begin
-           try
-             ImprimirTicketDesdeBD(
-               ParametrosApp,
-               ConexionPrincipal,
-               FCodigoEmpresa,
-               FCodigoAlmacen,
-               FCodigoCaja, NumeroGenerado, 'DEBUG', slRutasTicketPdf, True);
-           except
-             on E: Exception do
-               Log.LogError('No se pudo generar el PDF de respaldo del ' +
-                 'ticket ' + DatosCaja.UltSerieFacturaGrabada + '\' +
-                 DatosCaja.UltNumeroFacturaGrabada + ': ' + E.Message);
-           end;
-         end;
-         if slRutasTicketPdf.Count > 0 then
-         begin
-           TVentasWsCola.AdjuntarTicketPdfSeguro(
-             ParametrosCaja,
-             ConexionPrincipal,
-             IdentidadSesion.Usuario,
-             DatosCaja.UltSerieFacturaGrabada,
-             DatosCaja.UltNumeroFacturaGrabada,
-             slRutasTicketPdf[slRutasTicketPdf.Count - 1]);
-           // Archivado en fza_facturas.PDF_FAC: el ultimo PDF de la
-           // lista es el ticket fiscal completo (con precios y QR); el
-           // regalo se genera sin ruta y no llega a la lista
-           GuardarPdfFacturaEnBlob(ConexionPrincipal, ContextoSesion,
-             DatosCaja.UltSerieFacturaGrabada,
-             DatosCaja.UltNumeroFacturaGrabada,
-             slRutasTicketPdf[slRutasTicketPdf.Count - 1],
-             'TicketTermico');
-         end;
-         // La rectificativa se enlaza y registra fiscalmente dentro de la
-         // misma transacción que la factura. Aquí solo salimos del modo.
-         if FNumeroRectifica <> '' then
-         begin
-           if FTipoRectificativa = trcSustitutiva then
-             RefrescarConsultasOperacionesCaja;
-           FSerieRectifica  := '';
-           FNumeroRectifica := '';
-           FTipoRectificativa := trcNinguna;
-           FTratamientoMovRectificativa :=
-             tmrMantenerOriginales;
-           if FCaptionPrevio <> '' then
-             Caption := FCaptionPrevio;
-         end;
-         if CodigoValeGenerado <> '' then
-         begin
-           // Vale emitido como reembolso o cambio: avisar al cajero para
-           // que lo entregue al cliente. El vale ya queda grabado en
-           // fza_caja_vales (estado PENDIENTE) y es canjeable.
-           ShowMessage(Format(SInfoValeCajaEntregar,
-             [CodigoValeGenerado]));
-         end;
-         if frmFaseCobro.EnviarEmail then
-         begin
-           Screen.Cursor := crHourGlass;
-           try
-             if EnviarDocumentacionOperacion(
-               ParametrosApp,
-               ConexionPrincipal,
-               FCodigoEmpresa,
-               FCodigoAlmacen, FCodigoCaja, NumeroGenerado,
-               frmFaseCobro.EmailEnvio, sMensajeCorreo) then
-               ShowMessage(sMensajeCorreo)
-             else
-               ShowMessage(Format(SErrorCorreoOperacionCajaNoEnviado,
-                 [sMensajeCorreo]));
-           finally
-             Screen.Cursor := crDefault;
-           end;
-         end;
-         // 4. Limpiar la interfaz y los datasets para el siguiente cliente
-         PrepararValores(FCodigoEmpresa, FCodigoAlmacen, FCodigoCaja, FFecha);
-       end;
+      if frmFaseCobro.DatosCobro.ImporteDescuentoGlobal > 0 then
+      begin
+        AplicarRepartoDescuentoDataSet(
+          FRepartidorDescuento,
+          DatosCaja.cdsLineas,
+          frmFaseCobro.DatosCobro.ImporteDescuentoGlobal);
+        ObjTotales.ProcesarFacturaCompleta;
+      end;
+      sSerieDocumento := frmFaseCobro.cbbSERIE_FAC.Text;
+      sTipoFactura := 'SIMPLIFICADA';
+      dtFechaFactura := 0;
+      if frmFaseCobro.TipoImpresion = tiFactura then
+      begin
+        sSerieDocumento := frmFaseCobro.FSerieFactura;
+        sTipoFactura := 'NORMAL';
+        dtFechaFactura := frmFaseCobro.FFechaFactura;
+      end;
+      if (frmFaseCobro.TipoImpresion <> tiFactura) and
+         (FNumeroRectifica <> '') then
+      begin
+        sTipoFactura := 'RECTIFICATIVA';
+      end;
+      ActualizarRelojCaja;
+      SincronizarFechaCajaCabecera;
+      frmFaseCobro.FFecha := FFecha;
+      Solicitud := Default(TSolicitudCierreVenta);
+      Solicitud.TipoImpresion := frmFaseCobro.TipoImpresion;
+      Solicitud.Grabacion.CodigoEmpresa := FCodigoEmpresa;
+      Solicitud.Grabacion.CodigoAlmacen := FCodigoAlmacen;
+      Solicitud.Grabacion.CodigoCaja := FCodigoCaja;
+      Solicitud.Grabacion.SerieDocumento := sSerieDocumento;
+      Solicitud.Grabacion.TipoFactura := sTipoFactura;
+      Solicitud.Grabacion.FechaFactura := dtFechaFactura;
+      Solicitud.Grabacion.FechaOperacion := FFecha;
+      Solicitud.Grabacion.NumeroManual := frmFaseCobro.FNumeroManual;
+      Solicitud.Grabacion.TipoRectificativa := FTipoRectificativa;
+      Solicitud.Grabacion.SerieRectificada := FSerieRectifica;
+      Solicitud.Grabacion.NumeroRectificado := FNumeroRectifica;
+      Solicitud.Grabacion.TratamientoMovimientos :=
+        FTratamientoMovRectificativa;
+      Solicitud.Grabacion.DatosCobro := frmFaseCobro.DatosCobro;
+      Resultado := FServicioCierreVenta.Ejecutar(Solicitud);
+      if Resultado.Grabada then
+      begin
+        ProcesarResultadoCierre(
+          Resultado,
+          frmFaseCobro.EnviarEmail,
+          frmFaseCobro.EmailEnvio);
+      end;
     end;
   finally
     if Assigned(frmFaseCobro) then
       FreeAndNil(frmFaseCobro);
-    FreeAndNil(slRutasTicketPdf);
     FreeAndNil(ObjTotales);
   end;
 end;
@@ -3662,34 +3442,6 @@ begin
   lblTipoRectificativa.Caption := 'RECTIFICATIVA' + sLineBreak +
     sTipoRectificativa;
   lblTipoRectificativa.Visible := True;
-end;
-
-procedure TfrmMtoOpeCaja.ImprimirFacturaA4(const ASerie, ANumero: string);
-var
-  dm:   TdmFacturas;
-  form: TfrmPrintFac;
-  sRutaPdf: string;
-begin
-  // Mismo visor de formatos FastReport que usa el Mto de Facturas; el
-  // data module se crea al vuelo solo para las queries de impresión
-  dm   := TdmFacturas.Create(Self);
-  form := nil;
-  try
-    form := TfrmPrintFac.Create(Application);
-    form.edtSerie.Text  := ASerie;
-    form.edtNroFac.Text := ANumero;
-    form.dmFac := dm;
-    form.ShowModal;
-    if not FileExists(form.UltimaRutaPdf) then
-    begin
-      sRutaPdf := GetUserFolderTickets + 'Factura_' +
-        FormatDateTime('yyyy_mm_dd_hh_nn_ss_zzz', Now) + '.pdf';
-      form.ExportarPdfActual(sRutaPdf);
-    end;
-  finally
-    FreeAndNil(form);
-    FreeAndNil(dm);
-  end;
 end;
 
 procedure TfrmMtoOpeCaja.CargarDepositosF2;
@@ -3861,6 +3613,10 @@ end;
 
 procedure TfrmMtoOpeCaja.FormDestroy(Sender: TObject);
 begin
+  FServicioCierreVenta := nil;
+  FImpresorVenta := nil;
+  FRepartidorDescuento := nil;
+  FPoliticaStockVenta := nil;
   FreeAndNil(FLector);
   FreeAndNil(FBmpSwatchBoton);
 end;
@@ -3962,6 +3718,22 @@ begin
   // tvArticuloPropertiesValidate.
   DatosCaja := TdmCajaOpe.Create(Self, ConexionPrincipal, ParametrosApp,
     ParametrosCaja);
+  FPoliticaStockVenta := TPoliticaStockVenta.Create(
+    ConexionPrincipal,
+    ParametrosCaja);
+  FRepartidorDescuento := TRepartidorDescuento.Create;
+  FImpresorVenta := TImpresorVentaVcl.Create(
+    Self,
+    ParametrosApp,
+    ConexionPrincipal,
+    ParametrosCaja,
+    Permisos);
+  FServicioCierreVenta := TServicioCierreVenta.Create(
+    TGrabadorVentaCaja.Create(DatosCaja),
+    FImpresorVenta,
+    ParametrosCaja,
+    ContextoSesion,
+    ConexionPrincipal);
   dsLineas.DataSet := DatosCaja.cdsLineas;
   dsStock.DataSet := DatosCaja.qryStock;
   dsLineas.OnDataChange := DsLineasDataChange;

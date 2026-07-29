@@ -1,4 +1,4 @@
-unit inLibDevolucionesCompraStock;
+﻿unit inLibDevolucionesCompraStock;
 
 {
   Caso de uso para preparar la devolucion de todo el stock disponible

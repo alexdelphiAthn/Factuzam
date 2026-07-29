@@ -47,6 +47,12 @@ uses
   inLibIBAN in 'src\Lib\inLibIBAN.pas',
   inLibSepaRemesasVenta in 'src\Lib\inLibSepaRemesasVenta.pas',
   inLibFacturas in 'src\Lib\inLibFacturas.pas',
+  inLibFacturasServiciosIntf in
+    'src\Lib\inLibFacturasServiciosIntf.pas',
+  inLibFacturasBorrado in 'src\Lib\inLibFacturasBorrado.pas',
+  inLibFacturasEfectos in 'src\Lib\inLibFacturasEfectos.pas',
+  inLibFacturasMovimientos in
+    'src\Lib\inLibFacturasMovimientos.pas',
   inLibDevolucionesCompraStock in 'src\Lib\inLibDevolucionesCompraStock.pas',
   inLibFacturaPdfBlob in 'src\Lib\inLibFacturaPdfBlob.pas',
   inLibFormatoDocumento in 'src\Lib\inLibFormatoDocumento.pas',
@@ -180,6 +186,10 @@ uses
     'src\Modals\inMtoModalSeriesDocumentos.pas' {frmModalSeriesDocumentos},
   inMtoCajaMenu in 'src\Caja\Forms\inMtoCajaMenu.pas' {frmMtoMenuCaja},
   inMtoCajaOpe in 'src\Caja\Forms\inMtoCajaOpe.pas' {frmMtoOpeCaja},
+  inMtoCajaImpresorVenta in
+    'src\Caja\Forms\inMtoCajaImpresorVenta.pas',
+  inMtoCajaGrabadorVenta in
+    'src\Caja\Forms\inMtoCajaGrabadorVenta.pas',
   UniDataCaja in 'src\Caja\DataModules\UniDataCaja.pas' {dmCajaOpe},
   inMtoTraspasoOpe in 'src\Caja\Forms\inMtoTraspasoOpe.pas' {frmMtoOpeTraspaso},
   UniDataTraspaso in 'src\Caja\DataModules\UniDataTraspaso.pas' {dmTraspaso: TDataModule},
@@ -208,6 +218,10 @@ uses
   inLibCajaVentanasIntf in 'src\Caja\Lib\inLibCajaVentanasIntf.pas',
   inLibCajaDatosFactura in 'src\Caja\Lib\inLibCajaDatosFactura.pas',
   inLibCajaTipos in 'src\Caja\Lib\inLibCajaTipos.pas',
+  inLibCajaVentaIntf in 'src\Caja\Lib\inLibCajaVentaIntf.pas',
+  inLibCajaStock in 'src\Caja\Lib\inLibCajaStock.pas',
+  inLibCajaDescuentos in 'src\Caja\Lib\inLibCajaDescuentos.pas',
+  inLibCajaCierreVenta in 'src\Caja\Lib\inLibCajaCierreVenta.pas',
   inLibCriptoCurr in 'src\Lib\inLibCriptoCurr.pas',
   inLibDivCurr in 'src\Lib\inLibDivCurr.pas',
   inMtoCajaSeleccionVale in 'src\Caja\Forms\inMtoCajaSeleccionVale.pas' {frmMtoCajaSeleccionVale},
@@ -259,6 +273,8 @@ uses
   inMtoModalArticulosPropiedades in
     'src\Modals\inMtoModalArticulosPropiedades.pas',
   inLibArticulosVariaciones in 'src\Lib\inLibArticulosVariaciones.pas',
+  inLibArticulosCodigosBarras in 'src\Lib\inLibArticulosCodigosBarras.pas',
+  inLibArticulosFiltro in 'src\Lib\inLibArticulosFiltro.pas',
   inMtoModalAceptCancel in 'src\Modals\inMtoModalAceptCancel.pas' {frmModalAceptCancel},
   inMtoModalGenerarSKUs in 'src\Modals\inMtoModalGenerarSKUs.pas' {frmMtoModalGenerarSKUS},
   inLibFTicket in 'src\Lib\inLibFTicket.pas',
@@ -285,6 +301,9 @@ uses
   inLibVerifactu in 'src\verifactu\inLibVerifactu.pas',
   inLibVerifactuEnvio in 'src\verifactu\inLibVerifactuEnvio.pas',
   inLibVerifactuCola in 'src\verifactu\inLibVerifactuCola.pas',
+  inLibEmisionFiscalIntf in
+    'src\verifactu\inLibEmisionFiscalIntf.pas',
+  inLibEmisionFiscal in 'src\verifactu\inLibEmisionFiscal.pas',
   inMtoVerifactuCola in 'src\verifactu\inMtoVerifactuCola.pas' {frmMtoVerifactuCola},
   UniDataVerifactuCola in 'src\verifactu\UniDataVerifactuCola.pas' {dmVerifactuCola: TDataModule},
   inMtoVerifactuLog in 'src\verifactu\inMtoVerifactuLog.pas' {frmMtoVerifactuLog},

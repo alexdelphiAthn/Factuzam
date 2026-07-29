@@ -42,7 +42,7 @@
         <DCC_S>false</DCC_S>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>..\src\Lib;..\src\DataModules;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\src\Lib;..\src\Lib3par;..\src\DataModules;..\src\verifactu;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_ExeOutput>.\bin\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_DcuOutput>.\dcu\$(Platform)\$(Config)</DCC_DcuOutput>
         <SanitizedProjectName>FactuzamTests</SanitizedProjectName>
@@ -98,6 +98,11 @@
         <DCCReference Include="..\src\Lib\inLibImpuestosComun.pas"/>
         <DCCReference Include="..\src\Lib\inLibComprasImpuestos.pas"/>
         <DCCReference Include="..\src\Lib\inLibVentasImpuestos.pas"/>
+        <DCCReference Include="..\src\Caja\Lib\inLibCajaTipos.pas"/>
+        <DCCReference Include="..\src\Caja\Lib\inLibFaseCobro.pas"/>
+        <DCCReference Include="..\src\Caja\Lib\inLibCajaVentaIntf.pas"/>
+        <DCCReference Include="..\src\Caja\Lib\inLibCajaDescuentos.pas"/>
+        <DCCReference Include="..\src\Caja\Lib\inLibCajaCierreVenta.pas"/>
         <DCCReference Include="..\src\Lib\inLibComprasSesionesReglas.pas"/>
         <DCCReference Include="..\src\Lib\inLibPerfilesUsuarioValores.pas"/>
         <DCCReference Include="PruebasAtributosPaleta.pas"/>
@@ -123,6 +128,9 @@
         <DCCReference Include="PruebasImpuestosComun.pas"/>
         <DCCReference Include="PruebasTotalesDocumentos.pas"/>
         <DCCReference Include="PruebasReglasCompartidas.pas"/>
+        <DCCReference Include="PruebasCajaVenta.pas"/>
+        <DCCReference Include="PruebasFacturasServicios.pas"/>
+        <DCCReference Include="PruebasEmisionFiscal.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

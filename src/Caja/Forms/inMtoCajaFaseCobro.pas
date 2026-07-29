@@ -31,12 +31,11 @@ uses
   cxCheckBox,
   // Acceso a Datos y Librerías Propias
   Uni, MemDS, VirtualTable,
-  inMtoFrmBase, inLibFacturas, inLibFaseCobro,
+  inMtoFrmBase, inLibFacturas, inLibFaseCobro, inLibCajaTipos,
   inMtoCajaReferenciaPago, System.UITypes, dxGDIPlusClasses, cxImage;
 
 type
-  TTipoImpresionTicket = (tiConTicket, tiSinTicket, tiTicketRegalo,
-                          tiFactura);
+  TTipoImpresionTicket = inLibCajaTipos.TTipoImpresionVenta;
   TfrmMtoCajaFaseCobro = class(TfrmBase)
     pnlPrincipal: TPanel;
     pnlIzquierdo: TPanel;

@@ -383,6 +383,87 @@ uses inLibValoresAutomaticos,
 
 {$R *.dfm}
 
+type
+  TGrabacionFacturaCaja = class
+  private
+    FDataModule: TdmCajaOpe;
+    FDatosCobro: TDatosFaseCobro;
+    FQuery: TUniQuery;
+    FCabecera: TDatosCabeceraFactura;
+    FEmpresa: string;
+    FAlmacen: string;
+    FCaja: string;
+    FSerieElegida: string;
+    FSerieGenerada: string;
+    FTipoFactura: string;
+    FNumeroManual: string;
+    FSerieRectificada: string;
+    FNumeroRectificado: string;
+    FFechaFactura: TDateTime;
+    FFechaOperacion: TDateTime;
+    FTipoRectificativa: TTipoRectificativaCaja;
+    FTratamientoMovimientos:
+      TTratamientoMovimientosRectificativa;
+    FUsuario: string;
+    FAlmacenDeposito: string;
+    FNumeroFactura: string;
+    FNumeroOperacion: string;
+    FValeGenerado: string;
+    FConceptoOperacion: string;
+    FTipoRectificativaFiscal: string;
+    FRequiereFactura: Boolean;
+    FGenerarMovimientos: Boolean;
+    FTransaccionActiva: Boolean;
+    FTotalVentasNormales: Currency;
+    FTotalDevolucionesNormales: Currency;
+    FNumeroLineaPago: Integer;
+    procedure CargarContexto;
+    function OperacionTieneNovedad: Boolean;
+    procedure AtenderOperacionSinNovedad;
+    procedure DeterminarSiRequiereFactura;
+    procedure ValidarSolicitud;
+    procedure AjustarCobroParcial;
+    procedure IniciarTransaccion;
+    function ObtenerNumeroFactura: string;
+    procedure CrearFacturaSiProcede;
+    procedure InsertarLineaAnticipo(
+      const ALinea: TDatosLineaFactura;
+      AImporte: Currency);
+    procedure ProcesarAnticipoPrevio(
+      const ALinea: TDatosLineaFactura);
+    procedure ProcesarNuevoDeposito(
+      const ALinea: TDatosLineaFactura);
+    procedure ProcesarVenta(
+      const ALinea: TDatosLineaFactura);
+    procedure ProcesarLineas;
+    procedure SincronizarContadorLineas;
+    procedure RegistrarTotalesVenta;
+    procedure RegistrarFiscalmente;
+    procedure RegistrarFormasPago;
+    procedure RegistrarValesRecogidos;
+    procedure EmitirVale;
+    function HayDepositosPendientes: Boolean;
+    procedure ConfirmarTransaccion;
+    procedure ImprimirDocumentosDeposito;
+    procedure LimpiarLineasSinImporte;
+    procedure RevertirTransaccion;
+  public
+    constructor Create(
+      ADataModule: TdmCajaOpe;
+      ADatosCobro: TDatosFaseCobro;
+      const AEmpresa, AAlmacen, ACaja, ASerieElegida,
+      ASerieGenerada, ATipoFactura: string;
+      AFechaFactura, AFechaOperacion: TDateTime;
+      const ANumeroManual: string;
+      ATipoRectificativa: TTipoRectificativaCaja;
+      const ASerieRectificada, ANumeroRectificado: string;
+      ATratamientoMovimientos:
+        TTratamientoMovimientosRectificativa);
+    destructor Destroy; override;
+    function Ejecutar(
+      out ANumeroGenerado, AValeGenerado: string): Boolean;
+  end;
+
 constructor TdmCajaOpe.Create(
   AOwner: TComponent;
   AConexion: TUniConnection;
@@ -1052,732 +1133,869 @@ begin
   end;
 end;
 
-function TdmCajaOpe.GrabarFacturaSimplificada(
-                          const AEmpresa,
-                                AAlmacen,
-                                ACaja,
-                                ASerieElegida: string;
-                          DatosCobro:          TDatosFaseCobro;
-                          SerieGenerada:   string;
-                          out NumeroGenerado:  string;
-                          out ValeGenerado:    string;
-                          const ATipoFactura: string = 'SIMPLIFICADA';
-                          AFechaFactura: TDateTime = 0;
-                          AFechaOperacion: TDateTime = 0;
-                          const ANumeroManual: string = '';
-                          ATipoRectificativa:
-                            TTipoRectificativaCaja = trcNinguna;
-                          const ASerieRectificada: string = '';
-                          const ANumeroRectificado: string = '';
-                          ATratamientoMovimientos:
-                            TTratamientoMovimientosRectificativa =
-                              tmrMantenerOriginales): Boolean;
-var
-  QryTrx:              TUniQuery;
-  uspQryTrx:           TUniStoredProc;
-  Cab:                 TDatosCabeceraFactura;
-  Lin:                 TDatosLineaFactura;
-  NumOperacionVE:      String;
-  TotalFactura:        Currency;
-  AlmacenDeposito,
-  AlmacenOrigenSalida,
-  TipoMov,
-  NumMovGenerado:      string;
-  NumFactura:          string;
-  UsuarioCaja:         string;
-  NumLineaPago:        Integer;
-  RequiereFactura:     Boolean;
-  TieneDepositosPendientes:boolean;
-  TotalVentasNormales, TotalDevolucionesNormales: Currency;
-  FechaOperacion: TDateTime;
-  sConceptoOperacion: string;
-  sTipoRectificativaFiscal: string;
-  bGenerarMovimientos: Boolean;
-  // ---------------------------------------------------------------------------
-  // Inserta línea fiscal de anticipo (Solo si hay factura)
-  // ---------------------------------------------------------------------------
-procedure InsertarLineaAnticipo(const Lin: TDatosLineaFactura;
-                                  AImporte: Currency);
-  var
-    PrecioBase: Currency;
-  begin
-    if not RequiereFactura then
-      Exit;
-    if Lin.PorcIva = 0 then
-      PrecioBase := AImporte
-    else
-      PrecioBase := AImporte / (1 + Lin.PorcIva / 100);
-    InsertarLineaFactura(
-      QryTrx, SerieGenerada, NumFactura,
-      Lin.Linea, 'ANTICIPO', 'ANTICIPO',
-      Lin.Descripcion, '', '', '', 'SERVICIO', 'Uds',
-      1, '', 'S', PrecioBase, 0, 0, PrecioBase, AImporte,
-      Lin.TipoIva, Lin.PorcIva, PrecioBase, AImporte,
-      Lin.Vendedor, AEmpresa, AAlmacen, ACaja, NumOperacionVE, '', UsuarioCaja);
-  end;
-
+constructor TGrabacionFacturaCaja.Create(
+  ADataModule: TdmCajaOpe;
+  ADatosCobro: TDatosFaseCobro;
+  const AEmpresa, AAlmacen, ACaja, ASerieElegida,
+  ASerieGenerada, ATipoFactura: string;
+  AFechaFactura, AFechaOperacion: TDateTime;
+  const ANumeroManual: string;
+  ATipoRectificativa: TTipoRectificativaCaja;
+  const ASerieRectificada, ANumeroRectificado: string;
+  ATratamientoMovimientos:
+    TTratamientoMovimientosRectificativa);
 begin
-  SerieGenerada  := ASerieElegida;
-  NumFactura  := '0';
-  FUltSerieFacGrabada  := '';
-  FUltNumeroFacGrabada := '';
-  ValeGenerado   := '';
-  FechaOperacion := FechaCajaConHora(AFechaOperacion);
-  UsuarioCaja     := cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString;
-  case ATipoRectificativa of
+  inherited Create;
+  FDataModule := ADataModule;
+  FDatosCobro := ADatosCobro;
+  FEmpresa := AEmpresa;
+  FAlmacen := AAlmacen;
+  FCaja := ACaja;
+  FSerieElegida := ASerieElegida;
+  FSerieGenerada := ASerieGenerada;
+  FTipoFactura := ATipoFactura;
+  FFechaFactura := AFechaFactura;
+  FFechaOperacion := FechaCajaConHora(AFechaOperacion);
+  FNumeroManual := ANumeroManual;
+  FTipoRectificativa := ATipoRectificativa;
+  FSerieRectificada := ASerieRectificada;
+  FNumeroRectificado := ANumeroRectificado;
+  FTratamientoMovimientos := ATratamientoMovimientos;
+end;
+
+destructor TGrabacionFacturaCaja.Destroy;
+begin
+  FreeAndNil(FQuery);
+  inherited;
+end;
+
+procedure TGrabacionFacturaCaja.CargarContexto;
+begin
+  FNumeroFactura := '0';
+  FNumeroOperacion := '';
+  FValeGenerado := '';
+  FDataModule.FUltSerieFacGrabada := '';
+  FDataModule.FUltNumeroFacGrabada := '';
+  FUsuario := FDataModule.cdsCabecera.FieldByName(
+    'CODIGO_CAJERO_FAC').AsString;
+  case FTipoRectificativa of
     trcDiferencias:
       begin
-        sConceptoOperacion := 'Rectificativa por diferencias';
-        sTipoRectificativaFiscal := 'I';
+        FConceptoOperacion := 'Rectificativa por diferencias';
+        FTipoRectificativaFiscal := 'I';
       end;
     trcSustitutiva:
       begin
-        sConceptoOperacion := 'Rectificativa sustitutiva';
-        sTipoRectificativaFiscal := 'S';
+        FConceptoOperacion := 'Rectificativa sustitutiva';
+        FTipoRectificativaFiscal := 'S';
       end;
   else
     begin
-      sConceptoOperacion := '';
-      sTipoRectificativaFiscal := '';
+      FConceptoOperacion := '';
+      FTipoRectificativaFiscal := '';
     end;
   end;
-  bGenerarMovimientos := DebeGenerarMovimientosRectificativa(
-    sTipoRectificativaFiscal,
-    ATratamientoMovimientos = tmrReemplazarOriginales);
-  if (sConceptoOperacion <> '') and
-     (Trim(ASerieRectificada) <> '') and
-     (Trim(ANumeroRectificado) <> '') then
-    sConceptoOperacion := sConceptoOperacion + ' de ' +
-      ASerieRectificada + '\' + ANumeroRectificado;
-  // Generamos el número global de caja que agrupará toda la operación
-  AlmacenDeposito := ObtenerAlmacenDepositoEmpresa(FConexion, AEmpresa);
-  if cdsCabecera.State in [dsEdit, dsInsert] then cdsCabecera.Post;
-  if cdsLineas.State   in [dsEdit, dsInsert] then cdsLineas.Post;
-  if cdsLineas.IsEmpty then
+  FGenerarMovimientos := DebeGenerarMovimientosRectificativa(
+    FTipoRectificativaFiscal,
+    FTratamientoMovimientos = tmrReemplazarOriginales);
+  if (FConceptoOperacion <> '') and
+     (Trim(FSerieRectificada) <> '') and
+     (Trim(FNumeroRectificado) <> '') then
+    FConceptoOperacion := FConceptoOperacion + ' de ' +
+      FSerieRectificada + '\' + FNumeroRectificado;
+  FAlmacenDeposito := ObtenerAlmacenDepositoEmpresa(
+    FDataModule.FConexion, FEmpresa);
+  if FDataModule.cdsCabecera.State in [dsEdit, dsInsert] then
+    FDataModule.cdsCabecera.Post;
+  if FDataModule.cdsLineas.State in [dsEdit, dsInsert] then
+    FDataModule.cdsLineas.Post;
+  if FDataModule.cdsLineas.IsEmpty then
     raise Exception.Create(SErrorOperacionCajaSinLineas);
-  Cab          := LeerCabecera(cdsCabecera);
-  // Factura completa desde F8: fecha elegida en el modal de fase cobro
-  if AFechaFactura > 0 then
-    Cab.Fecha := AFechaFactura;
-  TotalFactura := DatosCobro.ImporteEntregado;
-  // =======================================================================
-  // 0. FILTRO DE NOVEDAD (Cero novedad = cero operaciones en BD)
-  // =======================================================================
-  var HayNovedad := False;
+  FCabecera := LeerCabecera(FDataModule.cdsCabecera);
+  if FFechaFactura > 0 then
+    FCabecera.Fecha := FFechaFactura;
+end;
 
-  cdsLineas.DisableControls;
+function TGrabacionFacturaCaja.OperacionTieneNovedad: Boolean;
+var
+  sAccion: string;
+begin
+  Result := False;
+  FDataModule.cdsLineas.DisableControls;
   try
-    cdsLineas.First;
-    while not cdsLineas.Eof do
+    FDataModule.cdsLineas.First;
+    while (not FDataModule.cdsLineas.Eof) and (not Result) do
     begin
-      var sAccion := Trim(cdsLineas.FieldByName('ACCION_DEPOSITO').AsString);
-      // Novedad tambien cuando hay devolucion (total negativo o
-      // lineas devueltas) o se emite un vale como reembolso: en esos
-      // casos el cliente no entrega dinero (ImporteEntregado = 0) y
-      // sin esto la operacion se descartaba sin grabar.
-      if (DatosCobro.ImporteEntregado > 0) or
-         DatosCobro.EsDevolucionEconomica or
-         DatosCobro.TieneArticulosDevueltos or
-         (DatosCobro.ImporteValeEmitido > 0) or
-         (sAccion = 'CANCELAR') or
-         (sAccion = 'NUEVO_DEP') then
-      begin
-        HayNovedad := True;
-        Break;
-      end;
-      cdsLineas.Next;
+      sAccion := Trim(FDataModule.cdsLineas.FieldByName(
+        'ACCION_DEPOSITO').AsString);
+      Result :=
+        (FDatosCobro.ImporteEntregado > 0) or
+        FDatosCobro.EsDevolucionEconomica or
+        FDatosCobro.TieneArticulosDevueltos or
+        (FDatosCobro.ImporteValeEmitido > 0) or
+        (sAccion = 'CANCELAR') or
+        (sAccion = 'NUEVO_DEP');
+      if not Result then
+        FDataModule.cdsLineas.Next;
     end;
   finally
-    cdsLineas.EnableControls;
+    FDataModule.cdsLineas.EnableControls;
   end;
-  if not HayNovedad then
-  begin
-    ImprimirRecordatorio(FConexion, FContextoSesion.Ubicacion.Empresa,
-      Cab.CodigoCliente,
-      FParametrosCaja.ImpresoraCaja);
-    Result := True;
-    Exit;
-  end;
-  // =======================================================================
-  // PASO 0.5: DETERMINAR SI REQUIERE FACTURA (TICKET)
-  // =======================================================================
-  RequiereFactura := False;
-  cdsLineas.DisableControls;
+end;
+
+procedure TGrabacionFacturaCaja.AtenderOperacionSinNovedad;
+begin
+  ImprimirRecordatorio(
+    FDataModule.FConexion,
+    FDataModule.FContextoSesion.Ubicacion.Empresa,
+    FCabecera.CodigoCliente,
+    FDataModule.FParametrosCaja.ImpresoraCaja);
+end;
+
+procedure TGrabacionFacturaCaja.DeterminarSiRequiereFactura;
+var
+  sAccion: string;
+  dTotalLiquido: Currency;
+begin
+  FRequiereFactura := False;
+  dTotalLiquido := FDataModule.cdsCabecera.FieldByName(
+    'TOTAL_LIQUIDO_FAC').AsCurrency;
+  FDataModule.cdsLineas.DisableControls;
   try
-    cdsLineas.First;
-    while not cdsLineas.Eof do
+    FDataModule.cdsLineas.First;
+    while (not FDataModule.cdsLineas.Eof) and
+          (not FRequiereFactura) do
     begin
-      var Accion := Trim(cdsLineas.FieldByName('ACCION_DEPOSITO').AsString);
-      if (Accion = '') or (Accion = 'COBRAR') then
-      begin
-        RequiereFactura := True;
-        Break;
-      end;
-      if (Accion = 'CANCELAR') then
-      begin
-        if cdsCabecera.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency <> 0 then
-        begin
-          RequiereFactura := True;
-          Break;
-        end;
-      end;
-      if (Accion = 'NUEVO_DEP') or (Accion = 'AUMENTAR_DEP') then
-      begin
-        if cdsCabecera.FieldByName(
-                                'TOTAL_LIQUIDO_FAC').AsCurrency > 0.001 then
-        begin
-          RequiereFactura := True;
-          Break;
-        end;
-      end;
-      cdsLineas.Next;
+      sAccion := Trim(FDataModule.cdsLineas.FieldByName(
+        'ACCION_DEPOSITO').AsString);
+      FRequiereFactura :=
+        (sAccion = '') or
+        (sAccion = 'COBRAR') or
+        ((sAccion = 'CANCELAR') and (dTotalLiquido <> 0)) or
+        (((sAccion = 'NUEVO_DEP') or
+          (sAccion = 'AUMENTAR_DEP')) and
+         (dTotalLiquido > 0.001));
+      if not FRequiereFactura then
+        FDataModule.cdsLineas.Next;
     end;
   finally
-    cdsLineas.EnableControls;
+    FDataModule.cdsLineas.EnableControls;
   end;
-  DatosCobro.FRequiereFactura := RequiereFactura;
-  if RequiereFactura and SameText(ATipoFactura, 'NORMAL') then
+  FDatosCobro.FRequiereFactura := FRequiereFactura;
+end;
+
+procedure TGrabacionFacturaCaja.ValidarSolicitud;
+var
+  dUltimaFechaSerie: TDateTime;
+begin
+  if FRequiereFactura and SameText(FTipoFactura, 'NORMAL') then
   begin
-    if Trim(Cab.RazonSocialCli) = '' then
-      raise Exception.Create(SErrorRazonSocialClienteFacturaCajaObligatoria);
-    if PaisEsEspana(Cab.CodigoPaisCli, Cab.NombrePaisCli) and
-       (not DocumentoFiscalValido(Cab.NifCli)) then
-      raise Exception.Create(SErrorDocumentoFiscalClienteCajaNoValido +
-        MensajeDocumentoFiscalInvalido(Cab.NifCli));
-    if PaisEsEspana(Cab.CodigoPaisEmp, Cab.NombrePaisEmp) and
-       (not DocumentoFiscalValido(Cab.NifEmp)) then
-      raise Exception.Create(SErrorDocumentoFiscalEmpresaCajaNoValido +
-        MensajeDocumentoFiscalInvalido(Cab.NifEmp));
+    if Trim(FCabecera.RazonSocialCli) = '' then
+      raise Exception.Create(
+        SErrorRazonSocialClienteFacturaCajaObligatoria);
+    if PaisEsEspana(
+         FCabecera.CodigoPaisCli, FCabecera.NombrePaisCli) and
+       (not DocumentoFiscalValido(FCabecera.NifCli)) then
+      raise Exception.Create(
+        SErrorDocumentoFiscalClienteCajaNoValido +
+        MensajeDocumentoFiscalInvalido(FCabecera.NifCli));
+    if PaisEsEspana(
+         FCabecera.CodigoPaisEmp, FCabecera.NombrePaisEmp) and
+       (not DocumentoFiscalValido(FCabecera.NifEmp)) then
+      raise Exception.Create(
+        SErrorDocumentoFiscalEmpresaCajaNoValido +
+        MensajeDocumentoFiscalInvalido(FCabecera.NifEmp));
   end;
-  // =======================================================================
-  // CONTROL DE FECHA POR SERIE (correlatividad temporal)
-  // El ticket no puede llevar una fecha anterior a la del ultimo ticket ya
-  // emitido en la misma serie. Si la fecha de caja es menor se aborta la
-  // venta antes de abrir transaccion (sin consumir numeracion) y se avisa
-  // sugiriendo cambiar de serie. No aplica a operaciones sin factura.
-  // =======================================================================
-  if RequiereFactura and (ANumeroManual = '') then
+  if FRequiereFactura and (FNumeroManual = '') then
   begin
-    var dUltimaFechaSerie := FechaUltimoTicketSerie(
-      FConexion,
-      AEmpresa,
-      ASerieElegida);
+    dUltimaFechaSerie := TdmCajaOpe.FechaUltimoTicketSerie(
+      FDataModule.FConexion, FEmpresa, FSerieElegida);
     if (dUltimaFechaSerie > 0) and
-       (Trunc(Cab.Fecha) < Trunc(dUltimaFechaSerie)) then
+       (Trunc(FCabecera.Fecha) < Trunc(dUltimaFechaSerie)) then
       raise Exception.CreateFmt(
         SErrorFechaTicketSerieNoValida,
-        [ASerieElegida,
+        [FSerieElegida,
          FormatDateTime('dd/mm/yyyy', dUltimaFechaSerie),
-         FormatDateTime('dd/mm/yyyy', Cab.Fecha)]);
+         FormatDateTime('dd/mm/yyyy', FCabecera.Fecha)]);
   end;
-  if RequiereFactura and FParametrosApp.Licencia.Comprobada then
-    ValidarLimiteDemoFacturas(FConexion,
-                              FParametrosApp.Licencia.Estado,
-                              Cab.Fecha);
-  if DatosCobro.ImporteEntregado <
-                cdsCabecera.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency then
+  if FRequiereFactura and
+     FDataModule.FParametrosApp.Licencia.Comprobada then
+    ValidarLimiteDemoFacturas(
+      FDataModule.FConexion,
+      FDataModule.FParametrosApp.Licencia.Estado,
+      FCabecera.Fecha);
+end;
+
+procedure TGrabacionFacturaCaja.AjustarCobroParcial;
+begin
+  if FDatosCobro.ImporteEntregado <
+     FDataModule.cdsCabecera.FieldByName(
+       'TOTAL_LIQUIDO_FAC').AsCurrency then
   begin
-    TransformarLineasParaCobroParcial(cdsLineas, DatosCobro.ImporteEntregado);
-    if not CuadrarFacturaEnMemoria(cdsCabecera, cdsLineas) then
+    FDataModule.TransformarLineasParaCobroParcial(
+      FDataModule.cdsLineas, FDatosCobro.ImporteEntregado);
+    if not FDataModule.CuadrarFacturaEnMemoria(
+      FDataModule.cdsCabecera, FDataModule.cdsLineas) then
       raise Exception.Create(SErrorCuadreCobroParcialCaja);
-    Cab := LeerCabecera(cdsCabecera);
-    if AFechaFactura > 0 then
-      Cab.Fecha := AFechaFactura;
+    FCabecera := LeerCabecera(FDataModule.cdsCabecera);
+    if FFechaFactura > 0 then
+      FCabecera.Fecha := FFechaFactura;
   end;
-  // =======================================================================
-  // INICIO DE LA TRANSACCIÓN GLOBAL EN BASE DE DATOS
-  // =======================================================================
-  FConexion.StartTransaction;
-  var sOpeCaja := SiguienteOpCaja(AEmpresa, AAlmacen, ACaja, UsuarioCaja);
-  NumOperacionVE := sOpeCaja;
-  NumeroGenerado := sOpeCaja;
-  QryTrx := TUniQuery.Create(nil);
-  try try
-    QryTrx.Connection := FConexion;
-    // =======================================================================
-    // PASO 1 Y 3: NÚMERO Y CABECERA (SOLO SI REQUIERE FACTURA)
-    // =======================================================================
-    if RequiereFactura then
+end;
+
+procedure TGrabacionFacturaCaja.IniciarTransaccion;
+begin
+  FDataModule.FConexion.StartTransaction;
+  FTransaccionActiva := True;
+  FNumeroOperacion := FDataModule.SiguienteOpCaja(
+    FEmpresa, FAlmacen, FCaja, FUsuario);
+  FQuery := TUniQuery.Create(nil);
+  FQuery.Connection := FDataModule.FConexion;
+end;
+
+function TGrabacionFacturaCaja.ObtenerNumeroFactura: string;
+var
+  oStoredProc: TUniStoredProc;
+begin
+  if FNumeroManual <> '' then
+    Result := FNumeroManual
+  else
+  begin
+    oStoredProc := TUniStoredProc.Create(nil);
+    try
+      oStoredProc.Connection := FDataModule.FConexion;
+      oStoredProc.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
+      oStoredProc.Prepare;
+      oStoredProc.ParamByName('pserie').AsString := FSerieGenerada;
+      oStoredProc.ParamByName('pTipoDoc').AsString := 'FC';
+      oStoredProc.ParamByName(
+        'pEMPRESA_CONTADOR').AsString := FEmpresa;
+      oStoredProc.ParamByName(
+        'pUSUARIOMODIF').AsString := FUsuario;
+      oStoredProc.Execute;
+      Result := oStoredProc.ParamByName('pcont').AsString;
+    finally
+      FreeAndNil(oStoredProc);
+    end;
+  end;
+end;
+
+procedure TGrabacionFacturaCaja.CrearFacturaSiProcede;
+begin
+  if FRequiereFactura then
+  begin
+    FNumeroFactura := ObtenerNumeroFactura;
+    FDatosCobro.TotalesFactura.Cabecera.Edit;
+    FDatosCobro.TotalesFactura.Cabecera.FieldByName(
+      'SERIE_FAC').AsString := FSerieElegida;
+    FDatosCobro.TotalesFactura.Cabecera.FieldByName(
+      'NUMERO_FAC').AsString := FNumeroFactura;
+    FDatosCobro.TotalesFactura.Cabecera.Post;
+    FDataModule.InsertarCabeceraFactura(
+      FQuery, FSerieGenerada, FNumeroFactura, FCabecera.Fecha,
+      FTipoFactura, 'BORRADOR', FEmpresa, FCabecera.RazonSocialEmp,
+      FCabecera.NifEmp, FCabecera.MovilEmp, FCabecera.EmailEmp,
+      FCabecera.Direccion1Emp, FCabecera.Direccion2Emp,
+      FCabecera.PoblacionEmp, FCabecera.ProvinciaEmp,
+      FCabecera.CPostalEmp, FCabecera.CodigoPaisEmp,
+      FCabecera.NombrePaisEmp, FCabecera.EsRetencionesEmp,
+      FCabecera.GrupoZonaIvaEmp, FCabecera.CodigoCliente,
+      FCabecera.RazonSocialCli, FCabecera.NifCli,
+      FCabecera.MovilCli, FCabecera.EmailCli,
+      FCabecera.Direccion1Cli, FCabecera.Direccion2Cli,
+      FCabecera.PoblacionCli, FCabecera.ProvinciaCli,
+      FCabecera.CPostalCli, FCabecera.CodigoPaisCli,
+      FCabecera.NombrePaisCli, FCabecera.CodigoOficinaContable,
+      FCabecera.CodigoOrganoGestor,
+      FCabecera.CodigoUnidadTramitadora, FCabecera.CodigoIva,
+      FCabecera.Tarifa, FCabecera.EsIvaRecargo,
+      FCabecera.EsIvaExento, FCabecera.EsImpInclTarifa,
+      FCabecera.PorcIvaN, FCabecera.TotalIvaN,
+      FCabecera.PorcReN, FCabecera.TotalReN, FCabecera.BaseIN,
+      FCabecera.PorcIvaR, FCabecera.TotalIvaR,
+      FCabecera.PorcReR, FCabecera.TotalReR, FCabecera.BaseIR,
+      FCabecera.PorcIvaS, FCabecera.TotalIvaS,
+      FCabecera.PorcReS, FCabecera.TotalReS, FCabecera.BaseIS,
+      FCabecera.PorcIvaE, FCabecera.TotalIvaE,
+      FCabecera.PorcReE, FCabecera.TotalReE, FCabecera.BaseIE,
+      FCabecera.TotalBases, FCabecera.TotalImpuestos,
+      FCabecera.TotalRetencion, FCabecera.PorcRetencion,
+      FCabecera.TotalLiquido, FCabecera.FormaPago,
+      FCabecera.Comentarios, '', '', FAlmacen, FCaja, FUsuario,
+      FNumeroOperacion, FUsuario);
+    FDataModule.FUltSerieFacGrabada := FSerieGenerada;
+    FDataModule.FUltNumeroFacGrabada := FNumeroFactura;
+  end
+  else
+  begin
+    FSerieGenerada := '';
+    FNumeroFactura := '0';
+  end;
+end;
+
+procedure TGrabacionFacturaCaja.InsertarLineaAnticipo(
+  const ALinea: TDatosLineaFactura;
+  AImporte: Currency);
+var
+  dPrecioBase: Currency;
+begin
+  if FRequiereFactura then
+  begin
+    if ALinea.PorcIva = 0 then
+      dPrecioBase := AImporte
+    else
+      dPrecioBase := AImporte / (1 + ALinea.PorcIva / 100);
+    FDataModule.InsertarLineaFactura(
+      FQuery, FSerieGenerada, FNumeroFactura,
+      ALinea.Linea, 'ANTICIPO', 'ANTICIPO',
+      ALinea.Descripcion, '', '', '', 'SERVICIO', 'Uds',
+      1, '', 'S', dPrecioBase, 0, 0, dPrecioBase, AImporte,
+      ALinea.TipoIva, ALinea.PorcIva, dPrecioBase, AImporte,
+      ALinea.Vendedor, FEmpresa, FAlmacen, FCaja,
+      FNumeroOperacion, '', FUsuario);
+  end;
+end;
+
+procedure TGrabacionFacturaCaja.ProcesarAnticipoPrevio(
+  const ALinea: TDatosLineaFactura);
+begin
+  if FRequiereFactura and (Abs(ALinea.TotalCIva) > 0.001) then
+    FDataModule.InsertarLineaFactura(
+      FQuery, FSerieGenerada, FNumeroFactura, ALinea.Linea,
+      ALinea.Articulo, ALinea.Sku, ALinea.Descripcion,
+      ALinea.DescripcionVariacion, ALinea.Familia,
+      ALinea.NombreFamilia, ALinea.TipoArticulo,
+      ALinea.TipoCantidad, ALinea.Cantidad, ALinea.Tarifa,
+      ALinea.EsImpIncl, ALinea.PrecioSalida, ALinea.PorcDto,
+      ALinea.PrecioDto, ALinea.PrecioSIva, ALinea.PrecioCIva,
+      ALinea.TipoIva, ALinea.PorcIva, ALinea.TotalSIva,
+      ALinea.TotalCIva, ALinea.Vendedor, FEmpresa, FAlmacen,
+      FCaja, FNumeroOperacion, '', FUsuario);
+  if Abs(ALinea.TotalCIva) > 0.001 then
+    FDataModule.InsertarOperacionCaja(
+      FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion, 'CB',
+      ALinea.TotalCIva, FUsuario, FFechaOperacion, FNumeroFactura,
+      FSerieGenerada, FCabecera.CodigoCliente,
+      'Consumo de anticipo: ' + ALinea.Descripcion,
+      '', '', '', '', '', 'N', ALinea.IdDeposito);
+end;
+
+procedure TGrabacionFacturaCaja.ProcesarNuevoDeposito(
+  const ALinea: TDatosLineaFactura);
+var
+  sIdDeposito: string;
+begin
+  if ALinea.TotalCIva > 0 then
+    InsertarLineaAnticipo(ALinea, ALinea.TotalCIva);
+  if ALinea.AccionDeposito = 'AUMENTAR_DEP' then
+  begin
+    FDataModule.AumentarAnticipoDeposito(
+      FQuery, FCabecera.CodigoCliente, ALinea.Sku,
+      FUsuario, ALinea.TotalCIva);
+    if ALinea.TotalCIva > 0 then
+      FDataModule.InsertarOperacionCaja(
+        FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
+        'CB', ALinea.TotalCIva, FUsuario, FFechaOperacion,
+        FNumeroFactura, FSerieGenerada, FCabecera.CodigoCliente,
+        'Cobro a cuenta: ' + ALinea.Descripcion,
+        '', '', '', '', '', 'N', ALinea.IdDeposito);
+  end
+  else
+  begin
+    sIdDeposito := '';
+    FDataModule.CrearNuevoDepositoCliente(
+      FQuery, FEmpresa, FCabecera.CodigoCliente,
+      ALinea.Articulo, ALinea.Sku, FUsuario,
+      ALinea.PrecioOriginalDep, ALinea.TotalCIva,
+      FAlmacen, FAlmacenDeposito, ALinea.Cantidad,
+      ALinea.TipoIva, ALinea.PorcIva, ALinea.EsImpIncl,
+      FCaja, FNumeroOperacion, FFechaOperacion, sIdDeposito);
+    FDataModule.InsertarOperacionCaja(
+      FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
+      'DE', ALinea.TotalCIva, FUsuario, FFechaOperacion,
+      FNumeroFactura, FSerieGenerada, FCabecera.CodigoCliente,
+      'Depósito: ' + ALinea.Descripcion,
+      '', '', '', '', '', 'N', sIdDeposito);
+  end;
+end;
+
+procedure TGrabacionFacturaCaja.ProcesarVenta(
+  const ALinea: TDatosLineaFactura);
+var
+  sAlmacenOrigen: string;
+  sTipoMovimiento: string;
+  sNumeroMovimiento: string;
+  sIdDeposito: string;
+  dImporteCierre: Currency;
+begin
+  if (ALinea.TipoArticulo = 'ESTANDAR') and
+     FGenerarMovimientos then
+    sNumeroMovimiento := ObtenerSiguienteContador(
+      FDataModule.FConexion, 'MV', FUsuario)
+  else
+    sNumeroMovimiento := '';
+  if ALinea.VieneDeDeposito = 'S' then
+  begin
+    sIdDeposito := '';
+    sAlmacenOrigen := FAlmacenDeposito;
+    FDataModule.CerrarDepositoCliente(
+      FQuery, FCabecera.CodigoCliente, ALinea.Sku,
+      FUsuario, sIdDeposito);
+    dImporteCierre := ALinea.PrecioOriginalDep;
+    if dImporteCierre = 0 then
+      dImporteCierre := ALinea.TotalCIva;
+    FDataModule.InsertarOperacionCaja(
+      FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
+      'DE', -dImporteCierre, FUsuario, FFechaOperacion,
+      FNumeroFactura, FSerieGenerada, FCabecera.CodigoCliente,
+      'Cierre depósito: ' + ALinea.Descripcion,
+      '', '', '', '', '', 'N', sIdDeposito);
+    FDataModule.InsertarOperacionCaja(
+      FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
+      'VE', ALinea.TotalCIva, FUsuario, FFechaOperacion,
+      FNumeroFactura, FSerieGenerada, FCabecera.CodigoCliente,
+      'Venta depósito: ' + ALinea.Descripcion,
+      '', '', '', '', '', 'N', sIdDeposito);
+  end
+  else
+  begin
+    sAlmacenOrigen := FAlmacen;
+    if ALinea.TotalCIva > 0 then
+      FTotalVentasNormales :=
+        FTotalVentasNormales + ALinea.TotalCIva
+    else
+      FTotalDevolucionesNormales :=
+        FTotalDevolucionesNormales + Abs(ALinea.TotalCIva);
+  end;
+  if ALinea.Cantidad < 0 then
+    sTipoMovimiento := 'E'
+  else
+    sTipoMovimiento := 'S';
+  if FRequiereFactura and (Abs(ALinea.TotalCIva) > 0.001) then
+    FDataModule.InsertarLineaFactura(
+      FQuery, FSerieGenerada, FNumeroFactura, ALinea.Linea,
+      ALinea.Articulo, ALinea.Sku, ALinea.Descripcion,
+      ALinea.DescripcionVariacion, ALinea.Familia,
+      ALinea.NombreFamilia, ALinea.TipoArticulo,
+      ALinea.TipoCantidad, ALinea.Cantidad, ALinea.Tarifa,
+      ALinea.EsImpIncl, ALinea.PrecioSalida, ALinea.PorcDto,
+      ALinea.PrecioDto, ALinea.PrecioSIva, ALinea.PrecioCIva,
+      ALinea.TipoIva, ALinea.PorcIva, ALinea.TotalSIva,
+      ALinea.TotalCIva, ALinea.Vendedor, FEmpresa, FAlmacen,
+      FCaja, FNumeroOperacion, sNumeroMovimiento, FUsuario);
+  if (ALinea.TipoArticulo = 'ESTANDAR') and
+     FGenerarMovimientos then
+    FDataModule.InsertarMovimientoAlmacen(
+      FQuery, 'VE', FSerieGenerada, FNumeroFactura,
+      ALinea.Linea, FEmpresa, sAlmacenOrigen, FCaja, '',
+      sTipoMovimiento, ALinea.Sku, ALinea.Cantidad, 0,
+      FUsuario, FAlmacen, FNumeroOperacion,
+      FCabecera.CodigoCliente, ALinea.Articulo,
+      FFechaOperacion, sNumeroMovimiento);
+end;
+
+procedure TGrabacionFacturaCaja.ProcesarLineas;
+var
+  Linea: TDatosLineaFactura;
+begin
+  FTotalVentasNormales := 0;
+  FTotalDevolucionesNormales := 0;
+  FDataModule.cdsLineas.DisableControls;
+  try
+    FDataModule.cdsLineas.First;
+    while not FDataModule.cdsLineas.Eof do
     begin
-      if ANumeroManual <> '' then
-        // Relleno de hueco: el usuario indica el numero. No se llama al
-        // contador (PRC_GET_NEXT_CONT_FACT_SERIE) ni se avanza la serie.
-        NumFactura := ANumeroManual
+      Linea := LeerLineaActual(FDataModule.cdsLineas);
+      Linea.Vendedor := Trim(Linea.Vendedor);
+      if Linea.Vendedor = '' then
+        Linea.Vendedor := FUsuario;
+      if Linea.VieneDeDeposito = 'A' then
+        ProcesarAnticipoPrevio(Linea)
+      else if (Linea.AccionDeposito = 'NUEVO_DEP') or
+              (Linea.AccionDeposito = 'AUMENTAR_DEP') then
+        ProcesarNuevoDeposito(Linea)
       else
-      begin
-        uspQryTrx := TUniStoredProc.Create(nil);
-        try
-          uspQryTrx.Connection := FConexion;
-          uspQryTrx.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
-          uspQryTrx.Prepare;
-          uspQryTrx.ParamByName('pserie').AsString   := SerieGenerada;
-          uspQryTrx.ParamByName('pTipoDoc').AsString := 'FC';
-          uspQryTrx.ParamByName('pEMPRESA_CONTADOR').AsString := AEmpresa;
-          uspQryTrx.ParamByName('pUSUARIOMODIF').AsString := UsuarioCaja;
-          uspQryTrx.Execute;
-          NumFactura := uspQryTrx.ParamByName('pcont').AsString;
-        finally
-          FreeAndNil(uspQryTrx);
-        end;
-      end;
-      DatosCobro.TotalesFactura.Cabecera.Edit;
-      DatosCobro.TotalesFactura.Cabecera.FieldByName(
-                                    'SERIE_FAC').AsString := ASerieElegida;
-      DatosCobro.TotalesFactura.Cabecera.FieldByName(
-                                    'NUMERO_FAC').AsString := NumFactura;
-      DatosCobro.TotalesFactura.Cabecera.Post;
-      InsertarCabeceraFactura(
-        QryTrx, SerieGenerada, NumFactura, Cab.Fecha, ATipoFactura,
-        'BORRADOR', AEmpresa, Cab.RazonSocialEmp, Cab.NifEmp, Cab.MovilEmp,
-        Cab.EmailEmp,Cab.Direccion1Emp, Cab.Direccion2Emp, Cab.PoblacionEmp,
-        Cab.ProvinciaEmp, Cab.CPostalEmp, Cab.CodigoPaisEmp, Cab.NombrePaisEmp,
-        Cab.EsRetencionesEmp, Cab.GrupoZonaIvaEmp, Cab.CodigoCliente,
-        Cab.RazonSocialCli, Cab.NifCli, Cab.MovilCli, Cab.EmailCli,
-        Cab.Direccion1Cli, Cab.Direccion2Cli,
-        Cab.PoblacionCli, Cab.ProvinciaCli, Cab.CPostalCli, Cab.CodigoPaisCli,
-        Cab.NombrePaisCli, Cab.CodigoOficinaContable, Cab.CodigoOrganoGestor,
-        Cab.CodigoUnidadTramitadora, Cab.CodigoIva, Cab.Tarifa,
-        Cab.EsIvaRecargo, Cab.EsIvaExento, Cab.EsImpInclTarifa,
-        Cab.PorcIvaN, Cab.TotalIvaN, Cab.PorcReN, Cab.TotalReN, Cab.BaseIN,
-        Cab.PorcIvaR, Cab.TotalIvaR, Cab.PorcReR, Cab.TotalReR, Cab.BaseIR,
-        Cab.PorcIvaS, Cab.TotalIvaS, Cab.PorcReS, Cab.TotalReS, Cab.BaseIS,
-        Cab.PorcIvaE, Cab.TotalIvaE, Cab.PorcReE, Cab.TotalReE, Cab.BaseIE,
-        Cab.TotalBases, Cab.TotalImpuestos, Cab.TotalRetencion,
-        Cab.PorcRetencion, Cab.TotalLiquido, Cab.FormaPago, Cab.Comentarios,
-        '', '', AAlmacen, ACaja, UsuarioCaja, NumOperacionVE, UsuarioCaja);
-      // Serie/numero reales de la factura recien creada, para que la cola
-      // y la rectificativa Verifactu no dependan de cdsCabecera (queda '0')
-      FUltSerieFacGrabada  := SerieGenerada;
-      FUltNumeroFacGrabada := NumFactura;
+        ProcesarVenta(Linea);
+      FDataModule.cdsLineas.Next;
+    end;
+  finally
+    FDataModule.cdsLineas.EnableControls;
+  end;
+end;
+
+procedure TGrabacionFacturaCaja.SincronizarContadorLineas;
+begin
+  if FRequiereFactura then
+  begin
+    FQuery.SQL.Text :=
+      'UPDATE fza_facturas SET CONTADOR_LINEAS_FAC = (' +
+      '  SELECT LPAD(IFNULL(MAX(CAST(LINEA_FACLIN AS UNSIGNED)),0),' +
+      '              3,''0'') ' +
+      '    FROM fza_facturas_lineas ' +
+      '   WHERE NUMERO_FAC_FACLIN = :pnumfac ' +
+      '     AND SERIE_FAC_FACLIN = :pserie' +
+      ') WHERE NUMERO_FAC = :pnumfac AND SERIE_FAC = :pserie';
+    FQuery.ParamByName('pnumfac').AsString := FNumeroFactura;
+    FQuery.ParamByName('pserie').AsString := FSerieGenerada;
+    FQuery.Execute;
+  end;
+end;
+
+procedure TGrabacionFacturaCaja.RegistrarTotalesVenta;
+begin
+  if FRequiereFactura then
+  begin
+    if FTotalVentasNormales > 0 then
+    begin
+      if FTipoRectificativa = trcNinguna then
+        FConceptoOperacion := 'Venta';
+      FDataModule.InsertarOperacionCaja(
+        FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
+        'VE', FTotalVentasNormales, FUsuario, FFechaOperacion,
+        FNumeroFactura, FSerieGenerada, FCabecera.CodigoCliente,
+        FConceptoOperacion, FSerieRectificada, FNumeroRectificado);
+    end;
+    if FTotalDevolucionesNormales > 0 then
+    begin
+      if FTipoRectificativa = trcNinguna then
+        FConceptoOperacion := 'Devolución de Venta';
+      FDataModule.InsertarOperacionCaja(
+        FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
+        'DV', -FTotalDevolucionesNormales, FUsuario,
+        FFechaOperacion, FNumeroFactura, FSerieGenerada,
+        FCabecera.CodigoCliente, FConceptoOperacion,
+        FSerieRectificada, FNumeroRectificado);
+    end;
+  end;
+end;
+
+procedure TGrabacionFacturaCaja.RegistrarFiscalmente;
+begin
+  if FRequiereFactura then
+  begin
+    if SameText(FTipoFactura, 'RECTIFICATIVA') then
+    begin
+      if (Trim(FSerieRectificada) = '') or
+         (Trim(FNumeroRectificado) = '') then
+        raise Exception.Create(
+          SErrorFacturaRectificativaCajaSinOriginal);
+      TVerifactuCola.EncolarRectificativa(
+        FDataModule.FParametrosApp,
+        FDataModule.FParametrosCaja,
+        FDataModule.FConexion,
+        FDataModule.IdentidadSesion.Usuario,
+        FSerieRectificada, FNumeroRectificado,
+        FSerieGenerada, FNumeroFactura,
+        FTipoRectificativaFiscal,
+        FTratamientoMovimientos = tmrReemplazarOriginales);
     end
     else
     begin
-      SerieGenerada := '';
-      NumFactura := '0';
-    end;
-    TotalVentasNormales := 0;
-    TotalDevolucionesNormales := 0;
-    // =======================================================================
-    // PASO 4: LÍNEAS
-    // =======================================================================
-    cdsLineas.DisableControls;
-    try
-      cdsLineas.First;
-      while not cdsLineas.Eof do
-      begin
-        Lin := LeerLineaActual(cdsLineas);
-        Lin.Vendedor := Trim(Lin.Vendedor);
-        if Lin.Vendedor = '' then
-          Lin.Vendedor := UsuarioCaja;
-        // -------------------------------------------------------------------
-        // CASO A: ABONO DE ANTICIPO PREVIO
-        // -------------------------------------------------------------------
-        if Lin.VieneDeDeposito = 'A' then
-        begin
-          if RequiereFactura and (Abs(Lin.TotalCIva) > 0.001) then
-            InsertarLineaFactura(
-              QryTrx, SerieGenerada, NumFactura, Lin.Linea, Lin.Articulo,
-              Lin.Sku, Lin.Descripcion, Lin.DescripcionVariacion, Lin.Familia,
-              Lin.NombreFamilia, Lin.TipoArticulo, Lin.TipoCantidad,
-              Lin.Cantidad, Lin.Tarifa, Lin.EsImpIncl, Lin.PrecioSalida,
-              Lin.PorcDto, Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva,
-              Lin.TipoIva, Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva,
-              Lin.Vendedor, AEmpresa, AAlmacen, ACaja, NumOperacionVE, '',
-              UsuarioCaja);
-          if Abs(Lin.TotalCIva) > 0.001 then
-            InsertarOperacionCaja(
-              QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'CB',
-              Lin.TotalCIva, UsuarioCaja, FechaOperacion, NumFactura,
-              SerieGenerada,
-              Cab.CodigoCliente, 'Consumo de anticipo: ' + Lin.Descripcion,
-              '', '', '', '', '', 'N', Lin.idDeposito);
-          cdsLineas.Next;
-          Continue;
-        end;
-        // -------------------------------------------------------------------
-        // CASO C: NUEVO DEPÓSITO O AUMENTO DE ANTICIPO
-        // -------------------------------------------------------------------
-        if (Lin.AccionDeposito = 'NUEVO_DEP') or
-           (Lin.AccionDeposito = 'AUMENTAR_DEP') then
-        begin
-          if Lin.TotalCIva > 0 then
-            InsertarLineaAnticipo(Lin, Lin.TotalCIva);
-          if Lin.AccionDeposito = 'AUMENTAR_DEP' then
-          begin
-            AumentarAnticipoDeposito(QryTrx, Cab.CodigoCliente,
-                                     Lin.Sku, UsuarioCaja, Lin.TotalCIva);
-            if Lin.TotalCIva > 0 then
-              InsertarOperacionCaja(
-                QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'CB',
-                Lin.TotalCIva, UsuarioCaja, FechaOperacion, NumFactura,
-                SerieGenerada,
-                Cab.CodigoCliente, 'Cobro a cuenta: ' + Lin.Descripcion,
-                '', '', '', '', '', 'N', lin.idDeposito);
-          end
-          else
-          begin
-            var IdDepGenerado:String := '';
-            CrearNuevoDepositoCliente(
-              QryTrx, AEmpresa, Cab.CodigoCliente, Lin.Articulo, Lin.Sku,
-              UsuarioCaja,
-              Lin.PrecioOriginalDep, Lin.TotalCIva, AAlmacen, AlmacenDeposito,
-              Lin.Cantidad, Lin.TipoIva, Lin.PorcIva, Lin.EsImpIncl,
-              ACaja,
-              sOpeCaja, FechaOperacion, IdDepGenerado);
-            InsertarOperacionCaja(
-              QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DE', Lin.TotalCIva,
-              UsuarioCaja, FechaOperacion, NumFactura, SerieGenerada,
-              Cab.CodigoCliente,
-              'Depósito: ' + Lin.Descripcion,
-              '', '', '', '', '', 'N',
-              IdDepGenerado);
-          end;
-          cdsLineas.Next;
-          Continue;
-        end;
-        // -------------------------------------------------------------------
-        // CASO D: VENTA NORMAL O COBRO TOTAL DE DEPÓSITO EXISTENTE
-        // -------------------------------------------------------------------
-        if (Lin.TipoArticulo = 'ESTANDAR') and bGenerarMovimientos then
-          NumMovGenerado := ObtenerSiguienteContador(
-            FConexion,
-            'MV',
-            IdentidadSesion.Usuario)
-        else
-          NumMovGenerado := '';
-        if Lin.VieneDeDeposito = 'S' then
-        begin
-          var idDep:String := '';
-          AlmacenOrigenSalida := AlmacenDeposito;
-          CerrarDepositoCliente(QryTrx, Cab.CodigoCliente, Lin.Sku,
-                                UsuarioCaja, idDep);
-          // ¡CORRECCIÓN! Usar Lin.TotalCIva si PrecioOriginalDep venía a cero
-          var ImporteCierreDE := Lin.PrecioOriginalDep;
-          if ImporteCierreDE = 0 then ImporteCierreDE := Lin.TotalCIva;
-          InsertarOperacionCaja(QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja,
-            'DE', -ImporteCierreDE, UsuarioCaja, FechaOperacion, NumFactura,
-            SerieGenerada, Cab.CodigoCliente, 'Cierre depósito: ' +
-            Lin.Descripcion, '', '', '', '', '', 'N', idDep);
-          InsertarOperacionCaja(
-            QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE', Lin.TotalCIva,
-            UsuarioCaja, FechaOperacion, NumFactura, SerieGenerada,
-            Cab.CodigoCliente,
-            'Venta depósito: ' + Lin.Descripcion,
-            '', '', '', '', '', 'N', idDep);
-        end
-        else
-        begin
-          AlmacenOrigenSalida := AAlmacen;
-          if Lin.TotalCIva > 0 then
-            TotalVentasNormales := TotalVentasNormales + Lin.TotalCIva
-          else
-            TotalDevolucionesNormales :=
-              TotalDevolucionesNormales + Abs(Lin.TotalCIva);
-        end;
-        if Lin.Cantidad < 0 then
-          TipoMov := 'E'
-        else
-          TipoMov := 'S';
-        if RequiereFactura and (Abs(Lin.TotalCIva) > 0.001) then
-        begin
-          InsertarLineaFactura(
-            QryTrx, SerieGenerada, NumFactura, Lin.Linea, Lin.Articulo,
-            Lin.Sku, Lin.Descripcion, Lin.DescripcionVariacion, Lin.Familia,
-            Lin.NombreFamilia, Lin.TipoArticulo, Lin.TipoCantidad,
-            Lin.Cantidad,
-            Lin.Tarifa, Lin.EsImpIncl, Lin.PrecioSalida, Lin.PorcDto,
-            Lin.PrecioDto, Lin.PrecioSIva, Lin.PrecioCIva, Lin.TipoIva,
-            Lin.PorcIva, Lin.TotalSIva, Lin.TotalCIva, Lin.Vendedor, AEmpresa,
-            AAlmacen, ACaja, NumOperacionVE, NumMovGenerado, UsuarioCaja);
-        end;
-        if (Lin.TipoArticulo = 'ESTANDAR') and bGenerarMovimientos then
-          InsertarMovimientoAlmacen(
-            QryTrx, 'VE', SerieGenerada, NumFactura, Lin.Linea,
-            AEmpresa, AlmacenOrigenSalida, ACaja, '', TipoMov, Lin.Sku,
-            Lin.Cantidad, 0, UsuarioCaja, AAlmacen, NumOperacionVE,
-            Cab.CodigoCliente, Lin.Articulo, FechaOperacion,
-            NumMovGenerado);
-        cdsLineas.Next;
-      end;
-    finally
-      cdsLineas.EnableControls;
-    end;
-    // =======================================================================
-    // PASO 4.1: SINCRONIZAR CONTADOR_LINEAS_FAC CON LA ULTIMA LINEA INSERTADA
-    // El INSERT de cabecera no lo escribe, asi que al reabrir la factura
-    // desde inMtoFacturasBase el calculo del siguiente nro de linea arrancaria
-    // desde 0 y chocaria con la PK '...-010'.
-    // =======================================================================
-    if RequiereFactura then
-    begin
-      QryTrx.SQL.Text :=
-        'UPDATE fza_facturas SET CONTADOR_LINEAS_FAC = (' +
-        '  SELECT LPAD(IFNULL(MAX(CAST(LINEA_FACLIN AS UNSIGNED)),0),3,''0'')' +
-        '    FROM fza_facturas_lineas' +
-        '   WHERE NUMERO_FAC_FACLIN = :pnumfac' +
-        '     AND SERIE_FAC_FACLIN  = :pserie' +
-        ') WHERE NUMERO_FAC = :pnumfac AND SERIE_FAC = :pserie';
-      QryTrx.ParamByName('pnumfac').AsString := NumFactura;
-      QryTrx.ParamByName('pserie').AsString  := SerieGenerada;
-      QryTrx.Execute;
-    end;
-    // =======================================================================
-    // PASO 4.5: REGISTRAR EL TOTAL DE LA VENTA NORMAL EN CAJA
-    // =======================================================================
-    if RequiereFactura then
-    begin
-      // Solo registra operación si realmente hubo alguna venta de tienda normal
-      if TotalVentasNormales > 0 then
-      begin
-        if ATipoRectificativa = trcNinguna then
-          sConceptoOperacion := 'Venta';
-        InsertarOperacionCaja(
-          QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VE',
-          TotalVentasNormales, UsuarioCaja, FechaOperacion, NumFactura,
-          SerieGenerada,
-          Cab.CodigoCliente, sConceptoOperacion, ASerieRectificada,
-          ANumeroRectificado);
-      end;
-      if TotalDevolucionesNormales > 0 then
-      begin
-        if ATipoRectificativa = trcNinguna then
-          sConceptoOperacion := 'Devolución de Venta';
-        InsertarOperacionCaja(
-          QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'DV',
-          -TotalDevolucionesNormales, UsuarioCaja, FechaOperacion, NumFactura,
-          SerieGenerada,
-          Cab.CodigoCliente, sConceptoOperacion, ASerieRectificada,
-          ANumeroRectificado);
-      end;
-    end;
-    // =======================================================================
-    // PASO 4.6: REGISTRO FISCAL
-    // Dentro de la transacción: la factura nace con su registro fiscal.
-    // El modo fiscal decide si se encola en AEAT, se registra localmente
-    // como NO VERI*FACTU o se marca como SIN VERIFACTU.
-    // =======================================================================
-    if RequiereFactura then
-    begin
-      if SameText(ATipoFactura, 'RECTIFICATIVA') then
-      begin
-        if (Trim(ASerieRectificada) = '') or
-           (Trim(ANumeroRectificado) = '') then
-          raise Exception.Create(SErrorFacturaRectificativaCajaSinOriginal);
-        TVerifactuCola.EncolarRectificativa(
-          FParametrosApp,
-          FParametrosCaja,
-          FConexion,
-          IdentidadSesion.Usuario,
-          ASerieRectificada,
-          ANumeroRectificado,
-          SerieGenerada,
-          NumFactura,
-          sTipoRectificativaFiscal,
-          ATratamientoMovimientos = tmrReemplazarOriginales);
-      end
+      case ModoVerifactu(FDataModule.FParametrosApp) of
+        mvVerifactu:
+          TVerifactuCola.EncolarFactura(
+            FDataModule.FParametrosApp,
+            FDataModule.FParametrosCaja, FQuery,
+            FDataModule.IdentidadSesion.Usuario,
+            FSerieGenerada, FNumeroFactura);
+        mvNoVerifactu:
+          TVerifactuCola.RegistrarFacturaNoVerifactu(
+            FDataModule.FParametrosApp,
+            FDataModule.FParametrosCaja, FQuery,
+            FDataModule.IdentidadSesion.Usuario,
+            FSerieGenerada, FNumeroFactura);
       else
-      begin
-        case ModoVerifactu(FParametrosApp) of
-          mvVerifactu:
-            TVerifactuCola.EncolarFactura(FParametrosApp, FParametrosCaja,
-              QryTrx, IdentidadSesion.Usuario, SerieGenerada, NumFactura);
-          mvNoVerifactu:
-            TVerifactuCola.RegistrarFacturaNoVerifactu(FParametrosApp,
-              FParametrosCaja, QryTrx, IdentidadSesion.Usuario,
-              SerieGenerada, NumFactura);
-        else
-          TVerifactuCola.MarcarFacturaSinVerifactu(FParametrosApp,
-            FParametrosCaja, QryTrx, IdentidadSesion.Usuario,
-            SerieGenerada, NumFactura);
-        end;
+        TVerifactuCola.MarcarFacturaSinVerifactu(
+          FDataModule.FParametrosApp,
+          FDataModule.FParametrosCaja, FQuery,
+          FDataModule.IdentidadSesion.Usuario,
+          FSerieGenerada, FNumeroFactura);
       end;
-    end;
-    // =======================================================================
-    // PASO 5: FORMAS DE PAGO (Se ejecuta siempre que haya importe)
-    // Las lineas con CODIGO_FP_CFP='VALE' se omiten aqui: las inserta PASO 6
-    // junto con la operacion 'VR' y la marca de redimido en fza_caja_vales,
-    // garantizando que la REFERENCIA al codigo de vale quede registrada.
-    // =======================================================================
-    NumLineaPago := 0;
-    DatosCobro.MemTablePagos.First;
-    while not DatosCobro.MemTablePagos.Eof do
-    begin
-      var CodigoFP  :=
-        DatosCobro.MemTablePagos.FieldByName('CODIGO_FP_CFP').AsString;
-      var ImporteFP :=
-        DatosCobro.MemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat;
-      if (Abs(ImporteFP) > 0.001) and (CodigoFP <> 'VALE') then
-      begin
-        Inc(NumLineaPago);
-        // La referencia (código de bono, autorización de tarjeta, TxID…) y
-        // los datos de divisa se capturan en memoria durante la fase de cobro
-        // (inLibFaseCobro). Hay que pasarlos aquí o no llegan a la BD y el
-        // histórico de pagos los muestra vacíos.
-        var DivisaFP  :=
-          DatosCobro.MemTablePagos.FieldByName('CODIGO_DIVISA').AsString;
-        var FactorFP  :=
-          DatosCobro.MemTablePagos.FieldByName('FACTOR_CAMBIO').AsFloat;
-        var ImpDivFP  :=
-          DatosCobro.MemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat;
-        var ReferenFP :=
-          DatosCobro.MemTablePagos.FieldByName('REFERENCIA').AsString;
-        InsertarPagoCaja(
-          QryTrx, AEmpresa, AAlmacen, ACaja, SerieGenerada, NumOperacionVE,
-          NumLineaPago,
-          CodigoFP, ImporteFP,
-          DatosCobro.MemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency,
-          DivisaFP, '', FactorFP, ImpDivFP, ReferenFP);
-      end;
-      DatosCobro.MemTablePagos.Next;
-    end;
-    // =======================================================================
-    // PASO 6: VALES
-    // =======================================================================
-    if DatosCobro.ValesRecogidos <> nil then
-    for var i := 0 to DatosCobro.ValesRecogidos.Count - 1 do
-    begin
-      if Abs(DatosCobro.ValesRecogidos[i].ImporteAplicado) > 0.001 then
-      begin
-        Inc(NumLineaPago);
-        InsertarPagoCaja(
-          QryTrx, AEmpresa, AAlmacen, ACaja, SerieGenerada, NumOperacionVE,
-          NumLineaPago,
-          'VALE', DatosCobro.ValesRecogidos[i].ImporteAplicado, 0,
-          '', '', 1, 0,
-          DatosCobro.ValesRecogidos[i].CodigoVale);   // <-- referencia al vale
-        InsertarOperacionCaja(
-          QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VR',
-          DatosCobro.ValesRecogidos[i].ImporteAplicado, UsuarioCaja,
-          FechaOperacion, NumFactura, SerieGenerada, Cab.CodigoCliente,
-          'Vale canjeado: ' + DatosCobro.ValesRecogidos[i].CodigoVale);
-        // Marcar el vale como redimido. La nueva firma recibe QryTrx para
-        // unirse a la transaccion, ademas del importe y la empresa.
-        MarcarValeComoCanjeado(
-          QryTrx,
-          DatosCobro.ValesRecogidos[i].CodigoVale,
-          AEmpresa, AAlmacen, ACaja, NumOperacionVE,
-          SerieGenerada, NumFactura,
-          DatosCobro.ValesRecogidos[i].ImporteAplicado);
-      end;
-    end;
-    // =======================================================================
-    // PASO 6.5: VALE EMITIDO
-    // La fase de cobro puede emitir un vale como reembolso de una
-    // devolucion o como cambio entregado en vale. Hay que crearlo en
-    // fza_caja_vales para que exista, se pueda canjear y lo sume el
-    // arqueo (que lee IMPORTE_NOMINAL_VL de esa tabla), y registrar la
-    // operacion de caja 'VL'. Sin esto el vale no se materializaba.
-    // =======================================================================
-    if DatosCobro.ImporteValeEmitido > 0.001 then
-    begin
-      var CodigoValeEmi := Format('VALE_%s_%s_%s_%s',
-        [AEmpresa, AAlmacen, ACaja, NumOperacionVE]);
-      var TieneCaducidadVale :=
-        FParametrosCaja.GetBool('vgerCaducidadDefVale', False);
-      QryTrx.SQL.Text :=
-        'INSERT INTO fza_caja_vales (' +
-        '  CODIGO_VL, ESTADO_VL, IMPORTE_NOMINAL_VL,' +
-        '  FECHA_EMISION_VL, FECHA_CADUCIDAD_VL,' +
-        '  CODIGO_EMP_EMI_VL, CODIGO_ALM_EMI_VL, CODIGO_CAJA_EMI_VL,' +
-        '  NUMERO_OPERACION_EMI_VL, SERIE_FAC_EMI_VL, NUMERO_FAC_EMI_VL,' +
-        '  CODIGO_CLI_VL, USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA) ' +
-        'VALUES (' +
-        '  :CODIGO, ''PENDIENTE'', :IMPORTE,' +
-        '  :FEMISION, :FCADUCIDAD,' +
-        '  :EMP, :ALM, :CAJA,' +
-        '  :NUMOPE, :SERIE, :NUMFAC,' +
-        '  :CLIENTE, :USUARIO, :USUARIO, NOW())';
-      QryTrx.ParamByName('CODIGO').AsString    := CodigoValeEmi;
-      QryTrx.ParamByName('IMPORTE').AsCurrency :=
-        DatosCobro.ImporteValeEmitido;
-      QryTrx.ParamByName('FEMISION').AsDateTime := FechaOperacion;
-      if TieneCaducidadVale then
-        QryTrx.ParamByName('FCADUCIDAD').AsDateTime :=
-          FechaOperacion +
-          FParametrosCaja.GetInt('vgerDiasCaducidadVale', 365)
-      else
-        QryTrx.ParamByName('FCADUCIDAD').Clear;
-      QryTrx.ParamByName('EMP').AsString     := AEmpresa;
-      QryTrx.ParamByName('ALM').AsString     := AAlmacen;
-      QryTrx.ParamByName('CAJA').AsString    := ACaja;
-      QryTrx.ParamByName('NUMOPE').AsString  := NumOperacionVE;
-      QryTrx.ParamByName('SERIE').AsString   := SerieGenerada;
-      QryTrx.ParamByName('NUMFAC').AsString  := NumFactura;
-      QryTrx.ParamByName('CLIENTE').AsString := Cab.CodigoCliente;
-      QryTrx.ParamByName('USUARIO').AsString := UsuarioCaja;
-      QryTrx.Execute;
-      // Linea de pago que refleja el reembolso entregado como vale,
-      // en negativo y con el codigo del vale como referencia (igual
-      // que un vale recogido deja su linea de pago).
-      Inc(NumLineaPago);
-      InsertarPagoCaja(
-        QryTrx, AEmpresa, AAlmacen, ACaja, SerieGenerada, NumOperacionVE,
-        NumLineaPago, 'VALE', -DatosCobro.ImporteValeEmitido, 0,
-        '', '', 1, 0, CodigoValeEmi);
-      InsertarOperacionCaja(
-        QryTrx, AEmpresa, AAlmacen, ACaja, sOpeCaja, 'VL',
-        -DatosCobro.ImporteValeEmitido, UsuarioCaja,
-        FechaOperacion, NumFactura, SerieGenerada, Cab.CodigoCliente,
-        'Vale emitido: ' + CodigoValeEmi);
-      ValeGenerado := CodigoValeEmi;
-    end;
-    // =======================================================================
-    // PASO 7: ALBARÁN DE DEPÓSITO
-    // =======================================================================
-    TieneDepositosPendientes := False;
-    cdsLineas.First;
-    while not cdsLineas.Eof do
-    begin
-      var Accion := cdsLineas.FieldByName('ACCION_DEPOSITO').AsString;
-      if (Accion = 'NUEVO_DEP') or
-         (Accion = 'AUMENTAR_DEP') or
-         (Accion='CANCELAR') then
-      begin
-        TieneDepositosPendientes := True;
-        Break;
-      end;
-      cdsLineas.Next;
-    end;
-    // =======================================================================
-    // CONFIRMAR
-    // =======================================================================
-    FConexion.Commit;
-    if TieneDepositosPendientes and (sOpeCaja <> '') then
-    begin
-      ImprimirResguardoDeposito(FConexion,
-                                AEmpresa,
-                                AAlmacen,
-                                ACaja,
-                                sOpeCaja,
-                                FParametrosCaja.ImpresoraCaja);
-      ImprimirRecordatorio(FConexion, FContextoSesion.Ubicacion.Empresa,
-        Cab.CodigoCliente,
-        FParametrosCaja.ImpresoraCaja);
-    end;
-    try
-      cdsLineas.DisableControls;
-      cdsLineas.First;
-      while not cdsLineas.Eof do
-      begin
-        if (Abs(cdsLineas.FieldByName(
-                                'TOTAL_FACLIN').AsCurrency)) < 0.001 then
-          cdsLineas.Delete
-        else
-          cdsLineas.Next;
-      end;
-    finally
-      cdsLineas.EnableControls;
-    end;
-    Result := True;
-  except
-    on E: Exception do
-    begin
-      FConexion.Rollback;
-      raise Exception.CreateFmt(SErrorGuardarTicketCaja, [E.Message]);
     end;
   end;
+end;
+
+procedure TGrabacionFacturaCaja.RegistrarFormasPago;
+var
+  sCodigoFormaPago: string;
+  sDivisa: string;
+  sReferencia: string;
+  dImporte: Double;
+  dFactor: Double;
+  dImporteDivisa: Double;
+begin
+  FNumeroLineaPago := 0;
+  FDatosCobro.MemTablePagos.First;
+  while not FDatosCobro.MemTablePagos.Eof do
+  begin
+    sCodigoFormaPago := FDatosCobro.MemTablePagos.FieldByName(
+      'CODIGO_FP_CFP').AsString;
+    dImporte := FDatosCobro.MemTablePagos.FieldByName(
+      'IMPORTE_ENTREGADO').AsFloat;
+    if (Abs(dImporte) > 0.001) and
+       (sCodigoFormaPago <> 'VALE') then
+    begin
+      Inc(FNumeroLineaPago);
+      sDivisa := FDatosCobro.MemTablePagos.FieldByName(
+        'CODIGO_DIVISA').AsString;
+      dFactor := FDatosCobro.MemTablePagos.FieldByName(
+        'FACTOR_CAMBIO').AsFloat;
+      dImporteDivisa := FDatosCobro.MemTablePagos.FieldByName(
+        'IMPORTE_DIVISA').AsFloat;
+      sReferencia := FDatosCobro.MemTablePagos.FieldByName(
+        'REFERENCIA').AsString;
+      FDataModule.InsertarPagoCaja(
+        FQuery, FEmpresa, FAlmacen, FCaja,
+        FSerieGenerada, FNumeroOperacion, FNumeroLineaPago,
+        sCodigoFormaPago, dImporte,
+        FDatosCobro.MemTablePagos.FieldByName(
+          'IMPORTE_CAMBIO').AsCurrency,
+        sDivisa, '', dFactor, dImporteDivisa, sReferencia);
+    end;
+    FDatosCobro.MemTablePagos.Next;
+  end;
+end;
+
+procedure TGrabacionFacturaCaja.RegistrarValesRecogidos;
+var
+  iVale: Integer;
+begin
+  if FDatosCobro.ValesRecogidos <> nil then
+  begin
+    for iVale := 0 to FDatosCobro.ValesRecogidos.Count - 1 do
+    begin
+      if Abs(
+        FDatosCobro.ValesRecogidos[iVale].ImporteAplicado) > 0.001 then
+      begin
+        Inc(FNumeroLineaPago);
+        FDataModule.InsertarPagoCaja(
+          FQuery, FEmpresa, FAlmacen, FCaja,
+          FSerieGenerada, FNumeroOperacion, FNumeroLineaPago,
+          'VALE',
+          FDatosCobro.ValesRecogidos[iVale].ImporteAplicado,
+          0, '', '', 1, 0,
+          FDatosCobro.ValesRecogidos[iVale].CodigoVale);
+        FDataModule.InsertarOperacionCaja(
+          FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
+          'VR',
+          FDatosCobro.ValesRecogidos[iVale].ImporteAplicado,
+          FUsuario, FFechaOperacion, FNumeroFactura,
+          FSerieGenerada, FCabecera.CodigoCliente,
+          'Vale canjeado: ' +
+          FDatosCobro.ValesRecogidos[iVale].CodigoVale);
+        FDataModule.MarcarValeComoCanjeado(
+          FQuery,
+          FDatosCobro.ValesRecogidos[iVale].CodigoVale,
+          FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
+          FSerieGenerada, FNumeroFactura,
+          FDatosCobro.ValesRecogidos[iVale].ImporteAplicado);
+      end;
+    end;
+  end;
+end;
+
+procedure TGrabacionFacturaCaja.EmitirVale;
+var
+  sCodigoVale: string;
+  bTieneCaducidad: Boolean;
+begin
+  if FDatosCobro.ImporteValeEmitido > 0.001 then
+  begin
+    sCodigoVale := Format(
+      'VALE_%s_%s_%s_%s',
+      [FEmpresa, FAlmacen, FCaja, FNumeroOperacion]);
+    bTieneCaducidad := FDataModule.FParametrosCaja.GetBool(
+      'vgerCaducidadDefVale', False);
+    FQuery.SQL.Text :=
+      'INSERT INTO fza_caja_vales (' +
+      '  CODIGO_VL, ESTADO_VL, IMPORTE_NOMINAL_VL,' +
+      '  FECHA_EMISION_VL, FECHA_CADUCIDAD_VL,' +
+      '  CODIGO_EMP_EMI_VL, CODIGO_ALM_EMI_VL,' +
+      '  CODIGO_CAJA_EMI_VL, NUMERO_OPERACION_EMI_VL,' +
+      '  SERIE_FAC_EMI_VL, NUMERO_FAC_EMI_VL,' +
+      '  CODIGO_CLI_VL, USUARIO_ALTA, USUARIO_MODIF,' +
+      '  INSTANTE_ALTA) VALUES (' +
+      '  :CODIGO, ''PENDIENTE'', :IMPORTE, :FEMISION,' +
+      '  :FCADUCIDAD, :EMP, :ALM, :CAJA, :NUMOPE,' +
+      '  :SERIE, :NUMFAC, :CLIENTE, :USUARIO,' +
+      '  :USUARIO, NOW())';
+    FQuery.ParamByName('CODIGO').AsString := sCodigoVale;
+    FQuery.ParamByName('IMPORTE').AsCurrency :=
+      FDatosCobro.ImporteValeEmitido;
+    FQuery.ParamByName('FEMISION').AsDateTime := FFechaOperacion;
+    if bTieneCaducidad then
+      FQuery.ParamByName('FCADUCIDAD').AsDateTime :=
+        FFechaOperacion +
+        FDataModule.FParametrosCaja.GetInt(
+          'vgerDiasCaducidadVale', 365)
+    else
+      FQuery.ParamByName('FCADUCIDAD').Clear;
+    FQuery.ParamByName('EMP').AsString := FEmpresa;
+    FQuery.ParamByName('ALM').AsString := FAlmacen;
+    FQuery.ParamByName('CAJA').AsString := FCaja;
+    FQuery.ParamByName('NUMOPE').AsString := FNumeroOperacion;
+    FQuery.ParamByName('SERIE').AsString := FSerieGenerada;
+    FQuery.ParamByName('NUMFAC').AsString := FNumeroFactura;
+    FQuery.ParamByName('CLIENTE').AsString :=
+      FCabecera.CodigoCliente;
+    FQuery.ParamByName('USUARIO').AsString := FUsuario;
+    FQuery.Execute;
+    Inc(FNumeroLineaPago);
+    FDataModule.InsertarPagoCaja(
+      FQuery, FEmpresa, FAlmacen, FCaja,
+      FSerieGenerada, FNumeroOperacion, FNumeroLineaPago,
+      'VALE', -FDatosCobro.ImporteValeEmitido, 0,
+      '', '', 1, 0, sCodigoVale);
+    FDataModule.InsertarOperacionCaja(
+      FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
+      'VL', -FDatosCobro.ImporteValeEmitido, FUsuario,
+      FFechaOperacion, FNumeroFactura, FSerieGenerada,
+      FCabecera.CodigoCliente, 'Vale emitido: ' + sCodigoVale);
+    FValeGenerado := sCodigoVale;
+  end;
+end;
+
+function TGrabacionFacturaCaja.HayDepositosPendientes: Boolean;
+var
+  sAccion: string;
+begin
+  Result := False;
+  FDataModule.cdsLineas.First;
+  while (not FDataModule.cdsLineas.Eof) and (not Result) do
+  begin
+    sAccion := FDataModule.cdsLineas.FieldByName(
+      'ACCION_DEPOSITO').AsString;
+    Result :=
+      (sAccion = 'NUEVO_DEP') or
+      (sAccion = 'AUMENTAR_DEP') or
+      (sAccion = 'CANCELAR');
+    if not Result then
+      FDataModule.cdsLineas.Next;
+  end;
+end;
+
+procedure TGrabacionFacturaCaja.ConfirmarTransaccion;
+begin
+  FDataModule.FConexion.Commit;
+  FTransaccionActiva := False;
+end;
+
+procedure TGrabacionFacturaCaja.ImprimirDocumentosDeposito;
+begin
+  if HayDepositosPendientes and (FNumeroOperacion <> '') then
+  begin
+    ImprimirResguardoDeposito(
+      FDataModule.FConexion, FEmpresa, FAlmacen, FCaja,
+      FNumeroOperacion,
+      FDataModule.FParametrosCaja.ImpresoraCaja);
+    ImprimirRecordatorio(
+      FDataModule.FConexion,
+      FDataModule.FContextoSesion.Ubicacion.Empresa,
+      FCabecera.CodigoCliente,
+      FDataModule.FParametrosCaja.ImpresoraCaja);
+  end;
+end;
+
+procedure TGrabacionFacturaCaja.LimpiarLineasSinImporte;
+begin
+  FDataModule.cdsLineas.DisableControls;
+  try
+    FDataModule.cdsLineas.First;
+    while not FDataModule.cdsLineas.Eof do
+    begin
+      if Abs(FDataModule.cdsLineas.FieldByName(
+        'TOTAL_FACLIN').AsCurrency) < 0.001 then
+        FDataModule.cdsLineas.Delete
+      else
+        FDataModule.cdsLineas.Next;
+    end;
   finally
-    FreeAndNil(QryTrx);
+    FDataModule.cdsLineas.EnableControls;
+  end;
+end;
+
+procedure TGrabacionFacturaCaja.RevertirTransaccion;
+begin
+  if FTransaccionActiva and
+     FDataModule.FConexion.InTransaction then
+    FDataModule.FConexion.Rollback;
+  FTransaccionActiva := False;
+end;
+
+function TGrabacionFacturaCaja.Ejecutar(
+  out ANumeroGenerado, AValeGenerado: string): Boolean;
+begin
+  ANumeroGenerado := '';
+  AValeGenerado := '';
+  CargarContexto;
+  if OperacionTieneNovedad then
+  begin
+    DeterminarSiRequiereFactura;
+    ValidarSolicitud;
+    AjustarCobroParcial;
+    try
+      IniciarTransaccion;
+      CrearFacturaSiProcede;
+      ProcesarLineas;
+      SincronizarContadorLineas;
+      RegistrarTotalesVenta;
+      RegistrarFiscalmente;
+      RegistrarFormasPago;
+      RegistrarValesRecogidos;
+      EmitirVale;
+      ConfirmarTransaccion;
+      ImprimirDocumentosDeposito;
+      LimpiarLineasSinImporte;
+      Result := True;
+    except
+      on E: Exception do
+      begin
+        RevertirTransaccion;
+        raise Exception.CreateFmt(
+          SErrorGuardarTicketCaja, [E.Message]);
+      end;
+    end;
+  end
+  else
+  begin
+    AtenderOperacionSinNovedad;
+    Result := True;
+  end;
+  ANumeroGenerado := FNumeroOperacion;
+  AValeGenerado := FValeGenerado;
+end;
+
+function TdmCajaOpe.GrabarFacturaSimplificada(
+  const AEmpresa, AAlmacen, ACaja, ASerieElegida: string;
+  DatosCobro: TDatosFaseCobro;
+  SerieGenerada: string;
+  out NumeroGenerado: string;
+  out ValeGenerado: string;
+  const ATipoFactura: string = 'SIMPLIFICADA';
+  AFechaFactura: TDateTime = 0;
+  AFechaOperacion: TDateTime = 0;
+  const ANumeroManual: string = '';
+  ATipoRectificativa:
+    TTipoRectificativaCaja = trcNinguna;
+  const ASerieRectificada: string = '';
+  const ANumeroRectificado: string = '';
+  ATratamientoMovimientos:
+    TTratamientoMovimientosRectificativa =
+      tmrMantenerOriginales): Boolean;
+var
+  Grabacion: TGrabacionFacturaCaja;
+begin
+  Grabacion := TGrabacionFacturaCaja.Create(
+    Self, DatosCobro, AEmpresa, AAlmacen, ACaja,
+    ASerieElegida, SerieGenerada, ATipoFactura,
+    AFechaFactura, AFechaOperacion, ANumeroManual,
+    ATipoRectificativa, ASerieRectificada,
+    ANumeroRectificado, ATratamientoMovimientos);
+  try
+    Result := Grabacion.Ejecutar(
+      NumeroGenerado, ValeGenerado);
+  finally
+    FreeAndNil(Grabacion);
   end;
 end;
 

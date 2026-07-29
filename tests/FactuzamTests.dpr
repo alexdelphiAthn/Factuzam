@@ -51,6 +51,12 @@ uses
   inLibComprasImpuestos in '..\src\Lib\inLibComprasImpuestos.pas',
   inLibVentasImpuestos in '..\src\Lib\inLibVentasImpuestos.pas',
   inLibRectificativas in '..\src\Lib\inLibRectificativas.pas',
+  inLibArticulosFiltro in '..\src\Lib\inLibArticulosFiltro.pas',
+  inLibCajaTipos in '..\src\Caja\Lib\inLibCajaTipos.pas',
+  inLibFaseCobro in '..\src\Caja\Lib\inLibFaseCobro.pas',
+  inLibCajaVentaIntf in '..\src\Caja\Lib\inLibCajaVentaIntf.pas',
+  inLibCajaDescuentos in '..\src\Caja\Lib\inLibCajaDescuentos.pas',
+  inLibCajaCierreVenta in '..\src\Caja\Lib\inLibCajaCierreVenta.pas',
   inLibComprasSesionesReglas in
     '..\src\Lib\inLibComprasSesionesReglas.pas',
   inLibPerfilesUsuarioValores in
@@ -83,7 +89,10 @@ uses
   PruebasImpuestosComun in 'PruebasImpuestosComun.pas',
   PruebasTotalesDocumentos in 'PruebasTotalesDocumentos.pas',
   PruebasRectificativas in 'PruebasRectificativas.pas',
-  PruebasReglasCompartidas in 'PruebasReglasCompartidas.pas';
+  PruebasReglasCompartidas in 'PruebasReglasCompartidas.pas',
+  PruebasCajaVenta in 'PruebasCajaVenta.pas',
+  PruebasFacturasServicios in 'PruebasFacturasServicios.pas',
+  PruebasEmisionFiscal in 'PruebasEmisionFiscal.pas';
 
 var
   oEjecutor: ITestRunner;

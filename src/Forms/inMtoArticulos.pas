@@ -503,15 +503,7 @@ type
     FPrecargaPendiente: Boolean;
     procedure CargarTemporadasFiltro;
     procedure LeerFiltrosPerfil;
-    // Construye el WHERE de vi_articulos a partir de los controles de
-    // estado/stock y de los CSV de temporada/proveedor/familia recibidos.
-    // Se reutiliza desde ConstruirSqlArticulos para centralizar el filtro.
-    function  ConstruirWhereArticulos(const aTempCsv, aPrvCsv,
-                                      aFamCsv: string): string;
     function  ConstruirSqlArticulos: string;
-    // Convierte un CSV ';' en lista IN (...) ya entrecomillada, o '' si
-    // viene vacio.
-    function  CsvAInList(const aCsv: string): string;
     // Lee el estado marcado del ccbFiltroTemporadaArt como CSV ';'.
     function  CsvTemporadasControl: string;
     procedure AplicarFiltrosArticulos;
@@ -594,10 +586,12 @@ uses
   inMtoModalFiltroArt,
   inMtoModalGenImpSave, // dialogo de ambito para "Guardar precarga"
   inLibEAN13,
+  inLibArticulosCodigosBarras,
+  inLibArticulosFiltro,
   inLibAtributosPaleta,
   inLibLog,             // Log.LogPerf para cronometros del AfterScroll
   System.Diagnostics,   // TStopwatch
-  inLibValoresAutomaticos, inLibMsg;
+  inLibMsg;
 
 {$R *.dfm}
 
@@ -724,115 +718,17 @@ begin
 end;
 
 procedure TfrmMtoArticulos.AsegurarSkuArticuloSinVariaciones(
-                                                     const aCodArticulo: string);
-var
-  qry: TUniQuery;
-  bTieneVar: Boolean;
+  const aCodArticulo: string);
 begin
-  if aCodArticulo = '' then Exit;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-
-    // 1) ¿El artículo tiene variaciones? Si las tiene, no hacemos nada
-    qry.SQL.Text := 'SELECT ESVARIACION_ART FROM fza_articulos ' +
-                    ' WHERE CODIGO_ART_ART = :C';
-    qry.ParamByName('C').AsString := aCodArticulo;
-    qry.Open;
-    bTieneVar := (not qry.IsEmpty) and
-                 (qry.FieldByName('ESVARIACION_ART').AsString = 'S');
-    qry.Close;
-    if bTieneVar then Exit;
-
-    // 2) ¿Existe ya algún SKU para este artículo?
-    qry.SQL.Text := 'SELECT 1 FROM fza_articulos_skus ' +
-                    ' WHERE CODIGO_ART_SKU = :C LIMIT 1';
-    qry.ParamByName('C').AsString := aCodArticulo;
-    qry.Open;
-    if not qry.IsEmpty then Exit;
-    qry.Close;
-
-    // 3) Insertamos un SKU "fantasma" con CODIGO_UNIDAD_SKU = código artículo
-    qry.SQL.Text :=
-      'INSERT INTO fza_articulos_skus '                                     +
-      '   (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ESACTIVO_SKU,' +
-      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '                    +
-      'VALUES (:SKU, :ART, ''-'', ''S'', CURRENT_TIMESTAMP, :USR, :USR)';
-    qry.ParamByName('SKU').AsString := aCodArticulo;
-    qry.ParamByName('ART').AsString := aCodArticulo;
-    qry.ParamByName('USR').AsString := IdentidadSesion.Usuario;
-    qry.ExecSQL;
-  finally
-    FreeAndNil(qry);
-  end;
+  inLibArticulosVariaciones.AsegurarSkuArticuloSinVariaciones(
+    ConexionPrincipal, aCodArticulo, IdentidadSesion.Usuario);
 end;
-
-procedure TfrmMtoArticulos.AsegurarSkuArticulo(const aCodArticulo: string);
-var
-  qry: TUniQuery;
-  bExisteFantasma: Boolean;
+procedure TfrmMtoArticulos.AsegurarSkuArticulo(
+  const aCodArticulo: string);
 begin
-  // Variante "fuerte" para acciones explícitas del usuario sobre códigos de
-  // barras: si el artículo no tiene NINGÚN SKU activo (incluyendo artículos
-  // con variaciones cuyas combinaciones aún no se han generado), creamos —o
-  // reactivamos— un SKU "fantasma" con CODIGO_UNIDAD_SKU = código artículo
-  // para que la generación/verificación nunca falle por "no hay SKUs activos".
-  if aCodArticulo = '' then Exit;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-
-    // 1) ¿Ya existe algún SKU activo para este artículo? Nada que hacer.
-    qry.SQL.Text := 'SELECT 1 FROM fza_articulos_skus '       +
-                    ' WHERE CODIGO_ART_SKU = :C '             +
-                    '   AND ESACTIVO_SKU = ''S'' LIMIT 1';
-    qry.ParamByName('C').AsString := aCodArticulo;
-    qry.Open;
-    if not qry.IsEmpty then
-    begin
-      qry.Close;
-      Exit;
-    end;
-    qry.Close;
-
-    // 2) ¿Hay un SKU fantasma previo (mismo código que el artículo) inactivo?
-    //    Si existe lo reactivamos en vez de insertar otro nuevo (PK colisiona).
-    qry.SQL.Text := 'SELECT 1 FROM fza_articulos_skus '       +
-                    ' WHERE CODIGO_UNIDAD_SKU = :SKU LIMIT 1';
-    qry.ParamByName('SKU').AsString := aCodArticulo;
-    qry.Open;
-    bExisteFantasma := not qry.IsEmpty;
-    qry.Close;
-
-    if bExisteFantasma then
-    begin
-      qry.SQL.Text :=
-        'UPDATE fza_articulos_skus '                                        +
-        '   SET ESACTIVO_SKU = ''S'', '                                     +
-        '       INSTANTE_MODIF = CURRENT_TIMESTAMP, '                       +
-        '       USUARIO_MODIF = :USR '                                      +
-        ' WHERE CODIGO_UNIDAD_SKU = :SKU';
-      qry.ParamByName('SKU').AsString := aCodArticulo;
-      qry.ParamByName('USR').AsString := IdentidadSesion.Usuario;
-      qry.ExecSQL;
-      Exit;
-    end;
-
-    // 3) Insertamos el SKU "fantasma" con CODIGO_UNIDAD_SKU = código artículo
-    qry.SQL.Text :=
-      'INSERT INTO fza_articulos_skus '                                     +
-      '   (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ESACTIVO_SKU,' +
-      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '                    +
-      'VALUES (:SKU, :ART, ''-'', ''S'', CURRENT_TIMESTAMP, :USR, :USR)';
-    qry.ParamByName('SKU').AsString := aCodArticulo;
-    qry.ParamByName('ART').AsString := aCodArticulo;
-    qry.ParamByName('USR').AsString := IdentidadSesion.Usuario;
-    qry.ExecSQL;
-  finally
-    FreeAndNil(qry);
-  end;
+  inLibArticulosVariaciones.AsegurarSkuArticuloActivo(
+    ConexionPrincipal, aCodArticulo, IdentidadSesion.Usuario);
 end;
-
 procedure TfrmMtoArticulos.addSkuAllClick(Sender: TObject);
 var
   CodArticulo, TipoVariacion: string;
@@ -1523,171 +1419,48 @@ begin
 end;
 
 procedure TfrmMtoArticulos.btnGenerarCBClick(Sender: TObject);
-const
-  // EAN-13 interno para artículos: prefijo '21' + 10 dígitos contador + control
-  CB_TIPO_DOC    = 'BA';
-  CB_PREFIJO     = '21';
-  CB_NUM_DIGITOS = 10;
-  CB_TIPO_INT    = 'EAN13';
 var
-  qrySkus, qryInsert, qryDel: TUniQuery;
-  CodArticulo, sSku, sCounter, sCodigo12, sCodigoCB: string;
-  iGenerados, iVacios, iSaltados, iLimpiados: Integer;
+  sCodigoArticulo: string;
+  bGenerado: Boolean;
+  Resultado: TResultadoCodigosBarrasArticulo;
 begin
   inherited;
-  // 1) Asegurar que el artículo está guardado
   if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
     dmmArticulos.unqryTablaG.Post;
-
-  CodArticulo :=
+  sCodigoArticulo :=
     dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
-  if CodArticulo = '' then
+  if sCodigoArticulo = '' then
+    ShowMessage(SErrorArticuloNoSeleccionadoGenerarCodigos)
+  else if MessageDlg(
+    Format(SPreguntaGenerarCodigosBarras, ['21']),
+    mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
-    ShowMessage(SErrorArticuloNoSeleccionadoGenerarCodigos);
-    Exit;
-  end;
-
-  // Garantizamos que el artículo tenga al menos un SKU activo (= código
-  // artículo) aunque tenga variaciones sin combinaciones generadas aún.
-  AsegurarSkuArticulo(CodArticulo);
-
-  qrySkus   := TUniQuery.Create(nil);
-  qryInsert := TUniQuery.Create(nil);
-  qryDel    := TUniQuery.Create(nil);
-  iGenerados := 0;
-  iVacios    := 0;
-  iSaltados  := 0;
-  try
-    qrySkus.Connection   := ConexionPrincipal;
-    qryInsert.Connection := ConexionPrincipal;
-    qryDel.Connection    := ConexionPrincipal;
-
-    // 2) Limpieza: placeholders _FAB_ residuales de versiones anteriores.
-    qryDel.SQL.Text :=
-      'DELETE cb FROM fza_codigos_barras cb '                          +
-      '  JOIN fza_articulos_skus sku '                                 +
-      '    ON sku.CODIGO_UNIDAD_SKU = cb.CODIGO_UNIDAD_CB '            +
-      ' WHERE sku.CODIGO_ART_SKU = :ART '                              +
-      '   AND LEFT(cb.CODIGO_BARRAS_CB, 5) = ''_FAB_''';
-    qryDel.ParamByName('ART').AsString := CodArticulo;
-    qryDel.ExecSQL;
-    iLimpiados := qryDel.RowsAffected;
-
-    // 3) Botón progresivo, idempotente. Por cada SKU activo:
-    //      Fase A: si aún no tiene principal (ESPRINCIPAL_CB='S') →
-    //              crear EAN-13 interno como principal.
-    //      Fase B: si ya tiene principal pero no tiene fila vacía →
-    //              crear fila vacía (CODIGO_BARRAS_CB='') para el código
-    //              del fabricante (a rellenar manualmente).
-    //      Fase C: si ya tiene principal y vacía → no hacer nada.
-    //    Pulsando dos veces el usuario obtiene primero los principales
-    //    y luego los huecos para los códigos de fabricante.
-    qrySkus.SQL.Text :=
-      'SELECT sku.CODIGO_UNIDAD_SKU, '                                 +
-      '       (SELECT COUNT(*) FROM fza_codigos_barras p '             +
-      '         WHERE p.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU '     +
-      '           AND p.ESPRINCIPAL_CB = ''S'') AS NUM_PRIN, '         +
-      '       (SELECT COUNT(*) FROM fza_codigos_barras v '             +
-      '         WHERE v.CODIGO_UNIDAD_CB = sku.CODIGO_UNIDAD_SKU '     +
-      '           AND COALESCE(v.CODIGO_BARRAS_CB, '''') = '''') '     +
-      '              AS NUM_EMPTY '                                    +
-      '  FROM fza_articulos_skus sku '                                 +
-      ' WHERE sku.CODIGO_ART_SKU = :ART '                              +
-      '   AND sku.ESACTIVO_SKU = ''S''';
-    qrySkus.ParamByName('ART').AsString := CodArticulo;
-    qrySkus.Open;
-
-    if qrySkus.RecordCount = 0 then
-    begin
-      qrySkus.Close;
-      if iLimpiados = 0 then
-        ShowMessage(SErrorArticuloSinSkusActivosGenerarCodigos);
-      Exit;
-    end;
-
-    if MessageDlg(
-         Format(SPreguntaGenerarCodigosBarras, [CB_PREFIJO]),
-         mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
-    begin
-      qrySkus.Close;
-      Exit;
-    end;
-
     Screen.Cursor := crHourGlass;
     try
-      qrySkus.First;
-      while not qrySkus.Eof do
-      begin
-        sSku := qrySkus.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-
-        if qrySkus.FieldByName('NUM_PRIN').AsInteger = 0 then
-        begin
-          // Fase A: principal con contador EAN-13
-          sCounter := ObtenerSiguienteContador(
-            ConexionPrincipal,
-            CB_TIPO_DOC,
-            IdentidadSesion.Usuario);
-          if Length(sCounter) > CB_NUM_DIGITOS then
-            sCounter := Copy(sCounter, Length(sCounter) - CB_NUM_DIGITOS + 1,
-                             CB_NUM_DIGITOS)
-          else
-            sCounter := StringOfChar('0', CB_NUM_DIGITOS - Length(sCounter)) +
-                        sCounter;
-          sCodigo12 := CB_PREFIJO + sCounter;
-          sCodigoCB := sCodigo12 + CalcularDigitoEAN13(sCodigo12);
-
-          qryInsert.SQL.Text :=
-            'INSERT INTO fza_codigos_barras '                          +
-            '   (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
-            '    ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-            'VALUES (:CB, :SKU, :TIPO, ''S'', '                        +
-            '        CURRENT_TIMESTAMP, :USR, :USR)';
-          qryInsert.ParamByName('CB').AsString   := sCodigoCB;
-          qryInsert.ParamByName('SKU').AsString  := sSku;
-          qryInsert.ParamByName('TIPO').AsString := CB_TIPO_INT;
-          qryInsert.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
-          qryInsert.ExecSQL;
-          Inc(iGenerados);
-        end
-        else if qrySkus.FieldByName('NUM_EMPTY').AsInteger = 0 then
-        begin
-          // Fase B: fila vacía para el código del fabricante
-          qryInsert.SQL.Text :=
-            'INSERT INTO fza_codigos_barras '                          +
-            '   (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
-            '    ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-            'VALUES ('''', :SKU, ''EAN13'', ''N'', '                   +
-            '        CURRENT_TIMESTAMP, :USR, :USR)';
-          qryInsert.ParamByName('SKU').AsString := sSku;
-          qryInsert.ParamByName('USR').AsString := IdentidadSesion.Usuario;
-          qryInsert.ExecSQL;
-          Inc(iVacios);
-        end
-        else
-          Inc(iSaltados);
-
-        qrySkus.Next;
-      end;
+      bGenerado := GenerarCodigosBarrasArticulo(
+        ConexionPrincipal,
+        sCodigoArticulo,
+        IdentidadSesion.Usuario,
+        Resultado);
     finally
       Screen.Cursor := crDefault;
-      qrySkus.Close;
     end;
-
-    // Close+Open en lugar de Refresh: las filas recién insertadas necesitan
-    // que el dataset reabra la vista para que ID_CB aparezca en la rejilla
-    // (Refresh sobre detail master/detail no siempre repuebla los IDs).
-    dmmArticulos.unqryVariacionesArticulos.Close;
-    dmmArticulos.unqryVariacionesArticulos.Open;
-    ActualizarVisibilidadVariaciones;
-    ShowMessage(Format(SInfoGeneracionCodigosBarras,
-                       [iGenerados, iVacios, iSaltados, iLimpiados]));
-  finally
-    FreeAndNil(qryInsert);
-    FreeAndNil(qrySkus);
-    FreeAndNil(qryDel);
+    if not bGenerado then
+      ShowMessage(SErrorArticuloSinSkusActivosGenerarCodigos)
+    else
+    begin
+      dmmArticulos.unqryVariacionesArticulos.Close;
+      dmmArticulos.unqryVariacionesArticulos.Open;
+      ActualizarVisibilidadVariaciones;
+      ShowMessage(Format(
+        SInfoGeneracionCodigosBarras,
+        [Resultado.PrincipalesGenerados,
+         Resultado.FilasFabricanteCreadas,
+         Resultado.SkusSinCambios,
+         Resultado.MarcadoresAntiguosEliminados]));
+    end;
   end;
 end;
-
 procedure TfrmMtoArticulos.btnVerificarCBClick(Sender: TObject);
 var
   qry: TUniQuery;
@@ -2086,32 +1859,6 @@ begin
   oList.Add(item);
 end;
 
-function TfrmMtoArticulos.CsvAInList(const aCsv: string): string;
-var
-  lst: TStringList;
-  i: Integer;
-begin
-  // CSV ';' -> 'a', 'b', 'c'  (entrecomillado para el IN). Vacio si no hay
-  // nada. Duplicamos comillas via QuotedStr aunque los valores vengan de
-  // listas controladas (temporadas/codigos), por higiene anti-inyeccion.
-  Result := '';
-  if Trim(aCsv) = '' then Exit;
-  lst := TStringList.Create;
-  try
-    lst.Delimiter := ';';
-    lst.StrictDelimiter := True;
-    lst.DelimitedText := aCsv;
-    for i := 0 to lst.Count - 1 do
-      if Trim(lst[i]) <> '' then
-      begin
-        if Result <> '' then Result := Result + ', ';
-        Result := Result + QuotedStr(Trim(lst[i]));
-      end;
-  finally
-    FreeAndNil(lst);
-  end;
-end;
-
 function TfrmMtoArticulos.CsvTemporadasControl: string;
 var
   i: Integer;
@@ -2126,58 +1873,24 @@ begin
     end;
 end;
 
-function TfrmMtoArticulos.ConstruirWhereArticulos(const aTempCsv, aPrvCsv,
-                                                  aFamCsv: string): string;
-var
-  sb: TStringBuilder;
-  sEstado, sIn: string;
-begin
-  sb := TStringBuilder.Create;
-  try
-    sb.AppendLine('WHERE 1 = 1');
-    // Filtro estado: ItemIndex 0=Todos, 1=Solo activos, 2=Solo inactivos
-    case cbbFiltroEstadoArt.ItemIndex of
-      1: sEstado := 'S';
-      2: sEstado := 'N';
-    else
-      sEstado := '';
-    end;
-    if sEstado <> '' then
-      sb.AppendLine('  AND vi_articulos.ESACTIVO_ART = ' + QuotedStr(sEstado));
-    // Filtro stock: existencia > 0 en al menos un SKU/almacen
-    if chkFiltroConStockArt.Checked then
-      sb.AppendLine(
-        '  AND EXISTS (SELECT 1 FROM fza_articulos_skus sk ' +
-                      ' JOIN fza_articulos_stockactual stk ' +
-                      '   ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU ' +
-                      ' WHERE sk.CODIGO_ART_SKU = vi_articulos.CODIGO_ART_ART ' +
-                      '   AND stk.CANTIDAD_STK > 0)');
-    // Filtro temporadas (CSV del control o del dialogo)
-    sIn := CsvAInList(aTempCsv);
-    if sIn <> '' then
-      sb.AppendLine('  AND vi_articulos.TEMPORADA_ART IN (' + sIn + ')');
-    // Filtro proveedores (codigo del proveedor principal del articulo)
-    sIn := CsvAInList(aPrvCsv);
-    if sIn <> '' then
-      sb.AppendLine('  AND vi_articulos.CODIGO_PRV_AP IN (' + sIn + ')');
-    // Filtro familias
-    sIn := CsvAInList(aFamCsv);
-    if sIn <> '' then
-      sb.AppendLine('  AND vi_articulos.CODIGO_FAM_ART IN (' + sIn + ')');
-    Result := sb.ToString;
-  finally
-    FreeAndNil(sb);
-  end;
-end;
-
 function TfrmMtoArticulos.ConstruirSqlArticulos: string;
+var
+  Filtro: TFiltroArticulos;
 begin
-  Result := 'SELECT * FROM vi_articulos' + sLineBreak +
-            ConstruirWhereArticulos(CsvTemporadasControl,
-                                    FFiltroProvCsv, FFiltroFamCsv) +
-            'ORDER BY vi_articulos.ORDEN_ART';
+  case cbbFiltroEstadoArt.ItemIndex of
+    1:
+      Filtro.Estado := efaActivos;
+    2:
+      Filtro.Estado := efaInactivos;
+  else
+    Filtro.Estado := efaTodos;
+  end;
+  Filtro.SoloConStock := chkFiltroConStockArt.Checked;
+  Filtro.TemporadasCsv := CsvTemporadasControl;
+  Filtro.ProveedoresCsv := FFiltroProvCsv;
+  Filtro.FamiliasCsv := FFiltroFamCsv;
+  Result := ConstruirSqlFiltroArticulos(Filtro);
 end;
-
 procedure TfrmMtoArticulos.AplicarFiltrosArticulos;
 begin
   // Cambio manual de filtros (estado/stock/temporadas) o boton "Cargar
